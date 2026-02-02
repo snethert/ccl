@@ -64,6 +64,17 @@ A character stream transmits character units.
 
 The microkernel performs no line discipline.
 
+4.3 Additional Stream Types
+
+The Lisp runtime may expose higher-level stream types built on byte or character endpoints:
+   •   Two-way streams (paired input/output endpoints)
+   •   Echoing streams (input echoed to an output endpoint)
+   •   Broadcast streams (writes fan out to multiple output endpoints)
+   •   Concatenated streams (reads pull sequentially from multiple input endpoints)
+   •   Synonym streams (indirect references to dynamically bound streams)
+
+These are Lisp-level compositions and do not require special microkernel support beyond the base stream operations.
+
 ⸻
 
 5. Encoding and Text Conversion
@@ -74,10 +85,7 @@ Text conversion rules are:
    •   The microkernel may expose character streams directly (for UI terminals and similar devices).
    •   The Lisp runtime is responsible for buffering and for mapping between character streams and byte streams when needed.
 
-If the system is in “ASCII-only” mode:
-   •   Character streams deliver and accept only ASCII code points.
-   •   Lisp treats characters as integers in the ASCII range (or an internal character abstraction backed by that range).
-   •   Non-ASCII input on a character stream must be rejected, replaced, or escaped by the endpoint’s policy (implementation-defined), but must not silently produce ambiguous values.
+Character encoding is an endpoint policy and may be declared without being supported by the Lisp runtime. The microkernel does not validate or transform character encodings; it only delivers character units or octets as defined by the endpoint.
 
 Future UTF-8 support, if added, must be layered as:
    •   A byte stream carrying UTF-8 bytes
@@ -240,7 +248,18 @@ No other global stream state is required.
 
 ⸻
 
-14. Guarantees
+14. SID Shim Behavior (fd masquerade)
+
+SIDs are designed to masquerade as file descriptors for Lisp’s purposes.
+   •   Lisp may treat SIDs as fd-like integers.
+   •   The microkernel does not implement a full POSIX stack.
+   •   Only the stream operations defined in this spec are required.
+
+This shim behavior exists solely to keep fd-oriented Lisp code working without emulating POSIX file descriptors beyond stream I/O semantics.
+
+⸻
+
+15. Guarantees
    •   Streams are per-runner.
    •   Standard streams are resolved per-runner.
    •   Root standard streams are unclosable.
