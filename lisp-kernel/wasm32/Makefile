@@ -33,15 +33,15 @@ PLATFORM_H = platform-wasm32.h
 .c.o:
 	$(CC) --target=$(WASM_TARGET) -include ../$(PLATFORM_H) -c $< $(CDEFINES) $(CDEBUG) $(COPT) $(WFORMAT) -o $@
 
-# COBJ  = pmcl-kernel.o gc-common.o arm-gc.o bits.o  arm-exceptions.o \
-# 	image.o thread_manager.o lisp-debug.o memory.o unix-calls.o
+COBJ  = pmcl-kernel.o gc-common.o wasm-gc.o wasm-cstack.o wasm-exceptions.o bits.o \
+	image.o thread_manager.o lisp-debug.o memory.o unix-calls.o
 
-# DEBUGOBJ = lispdcmd.o plprint.o plsym.o albt.o arm_print.o
-# KERNELOBJ= $(COBJ) arm-asmutils.o  imports.o
+DEBUGOBJ =
+KERNELOBJ= $(COBJ)
 
-# CHEADERS = area.h bits.h arm-constants.h lisp-errors.h gc.h lisp.h \
-# 	lisp-exceptions.h lisp_globals.h macros.h memprotect.h image.h \
-# 	threads.h arm-exceptions.h $(PLATFORM_H)
+CHEADERS = area.h bits.h arm-constants.h lisp-errors.h gc.h lisp.h \
+	lisp-exceptions.h lisp_globals.h macros.h memprotect.h image.h \
+	threads.h constants.h $(PLATFORM_H)
 
 # Subprims linked into the kernel ?
 # Yes:
@@ -64,8 +64,7 @@ PLATFORM_H = platform-wasm32.h
 
 # $(SPOBJ): $(SPINC)
 # $(ASMOBJ): $(SPINC)
-# $(COBJ): $(CHEADERS)
-# $(DEBUGOBJ): $(CHEADERS) lispdcmd.h
+$(COBJ): $(CHEADERS)
 
 
 cclean:

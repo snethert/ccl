@@ -624,10 +624,12 @@ suspend_resume_handler(int signo, siginfo_t *info, ExceptionInformation *context
 */
   
 #ifdef WASM32
-static void *wasm_cstack_base = NULL;
-static natural wasm_cstack_size = 0;
-static void *wasm_cstack_sp = NULL;
-static area *wasm_cstack_area = NULL;
+/* Boot-time fallback: allow stack setup before a TCR exists, then
+ * transfer ownership to the first TCR when it is created.
+ */
+static void *wasm_boot_cstack_base = NULL;
+static natural wasm_boot_cstack_size = 0;
+static void *wasm_boot_cstack_sp = NULL;
 
 static Boolean
 wasm_ptr_in_cstack(void *p, void *low, void *high)
@@ -687,34 +689,61 @@ wasm_relocate_cstack_pointers(BytePtr new_low,
 void
 wasm_set_cstack_bounds(void *base, natural size)
 {
-  wasm_cstack_base = base;
-  wasm_cstack_size = size;
+  TCR *tcr = get_tcr(false);
+  if (tcr != NULL) {
+    tcr->wasm_cstack_base = base;
+    tcr->wasm_cstack_size = size;
+  } else {
+    wasm_boot_cstack_base = base;
+    wasm_boot_cstack_size = size;
+  }
 }
 
 void
 wasm_set_cstack_pointer(void *sp)
 {
-  wasm_cstack_sp = sp;
-  if (wasm_cstack_area != NULL) {
-    wasm_cstack_area->active = (BytePtr)sp;
+  TCR *tcr = get_tcr(false);
+  if (tcr != NULL) {
+    tcr->wasm_cstack_sp = sp;
+    if (tcr->wasm_cstack_area != NULL) {
+      tcr->wasm_cstack_area->active = (BytePtr)sp;
+    }
+  } else {
+    wasm_boot_cstack_sp = sp;
   }
+}
+
+void *
+wasm_get_cstack_pointer(void)
+{
+  TCR *tcr = get_tcr(false);
+  if ((tcr != NULL) && (tcr->wasm_cstack_sp != NULL)) {
+    return tcr->wasm_cstack_sp;
+  }
+  if (wasm_boot_cstack_sp != NULL) {
+    return wasm_boot_cstack_sp;
+  }
+  return (void *)__builtin_frame_address(0);
 }
 
 natural
 current_stack_pointer(void)
 {
-  if (wasm_cstack_sp != NULL) {
-    return (natural)wasm_cstack_sp;
-  }
-  return (natural)__builtin_frame_address(0);
+  return (natural)wasm_get_cstack_pointer();
 }
 
 void
 os_get_current_thread_stack_bounds(void **base, natural *size)
 {
-  if ((wasm_cstack_base != NULL) && (wasm_cstack_size != 0)) {
-    *base = wasm_cstack_base;
-    *size = wasm_cstack_size;
+  TCR *tcr = get_tcr(false);
+  if ((tcr != NULL) && (tcr->wasm_cstack_base != NULL) && (tcr->wasm_cstack_size != 0)) {
+    *base = tcr->wasm_cstack_base;
+    *size = tcr->wasm_cstack_size;
+    return;
+  }
+  if ((wasm_boot_cstack_base != NULL) && (wasm_boot_cstack_size != 0)) {
+    *base = wasm_boot_cstack_base;
+    *size = wasm_boot_cstack_size;
     return;
   }
   *base = (void *)current_stack_pointer();
@@ -726,16 +755,32 @@ wasm_relocate_cstack(void *new_base)
 {
   BytePtr old_base, old_low, old_high, new_low, new_high;
   ptrdiff_t delta;
-  TCR *tcr;
+  TCR *tcr = get_tcr(false);
+  void *base;
+  natural size;
+  area *cs_area;
+  void *sp;
 
-  if ((wasm_cstack_base == NULL) || (wasm_cstack_size == 0)) {
+  if (tcr != NULL) {
+    base = tcr->wasm_cstack_base;
+    size = tcr->wasm_cstack_size;
+    cs_area = tcr->wasm_cstack_area;
+    sp = tcr->wasm_cstack_sp;
+  } else {
+    base = wasm_boot_cstack_base;
+    size = wasm_boot_cstack_size;
+    cs_area = NULL;
+    sp = wasm_boot_cstack_sp;
+  }
+
+  if ((base == NULL) || (size == 0)) {
     return;
   }
 
-  old_base = (BytePtr)wasm_cstack_base;
-  old_low = old_base - wasm_cstack_size;
+  old_base = (BytePtr)base;
+  old_low = old_base - size;
   old_high = old_base;
-  new_low = (BytePtr)new_base - wasm_cstack_size;
+  new_low = (BytePtr)new_base - size;
   new_high = (BytePtr)new_base;
   delta = (char *)new_base - (char *)old_base;
 
@@ -743,26 +788,31 @@ wasm_relocate_cstack(void *new_base)
     return;
   }
 
-  memmove(new_low, old_low, wasm_cstack_size);
+  memmove(new_low, old_low, size);
 
-  if (wasm_cstack_sp != NULL) {
-    wasm_cstack_sp = (char *)wasm_cstack_sp + delta;
+  if (sp != NULL) {
+    sp = (char *)sp + delta;
   }
 
-  wasm_cstack_base = new_base;
+  if (tcr != NULL) {
+    tcr->wasm_cstack_base = new_base;
+    tcr->wasm_cstack_sp = sp;
+  } else {
+    wasm_boot_cstack_base = new_base;
+    wasm_boot_cstack_sp = sp;
+  }
 
-  if (wasm_cstack_area != NULL) {
-    wasm_cstack_area->low = (char *)wasm_cstack_area->low + delta;
-    wasm_cstack_area->high = (char *)wasm_cstack_area->high + delta;
-    wasm_cstack_area->softlimit = (char *)wasm_cstack_area->softlimit + delta;
-    wasm_cstack_area->hardlimit = (char *)wasm_cstack_area->hardlimit + delta;
-    if (wasm_cstack_area->active != NULL) {
-      wasm_cstack_area->active = (char *)wasm_cstack_area->active + delta;
+  if (cs_area != NULL) {
+    cs_area->low = (char *)cs_area->low + delta;
+    cs_area->high = (char *)cs_area->high + delta;
+    cs_area->softlimit = (char *)cs_area->softlimit + delta;
+    cs_area->hardlimit = (char *)cs_area->hardlimit + delta;
+    if (cs_area->active != NULL) {
+      cs_area->active = (char *)cs_area->active + delta;
     }
   }
 
-  tcr = get_tcr(false);
-  if ((tcr != NULL) && (TCR_AUX(tcr)->cs_area == wasm_cstack_area)) {
+  if ((tcr != NULL) && (TCR_AUX(tcr)->cs_area == cs_area)) {
     TCR_AUX(tcr)->cs_limit = (LispObj)((char *)TCR_AUX(tcr)->cs_limit + delta);
   }
 
@@ -778,8 +828,10 @@ wasm_memory_grow_and_relocate(uint32_t pages)
     return -1;
   }
   wasm_relocate_cstack((void *)((old_pages + pages) << 16));
-  if (wasm_cstack_sp != NULL) {
-    wasm_set_cstack_pointer(wasm_cstack_sp);
+  if (get_tcr(false) != NULL) {
+    wasm_set_cstack_pointer(get_tcr(false)->wasm_cstack_sp);
+  } else if (wasm_boot_cstack_sp != NULL) {
+    wasm_set_cstack_pointer(wasm_boot_cstack_sp);
   }
   return (int32_t)old_pages;
 #else
@@ -1715,7 +1767,16 @@ thread_init_tcr(TCR *tcr, void *stack_base, natural stack_size)
   TCR_AUX(tcr)->cs_area = a;
   a->owner = tcr;
 #ifdef WASM32
-  wasm_cstack_area = a;
+  tcr->wasm_cstack_area = a;
+  if (tcr->wasm_cstack_base == NULL) {
+    tcr->wasm_cstack_base = stack_base;
+  }
+  if (tcr->wasm_cstack_size == 0) {
+    tcr->wasm_cstack_size = stack_size;
+  }
+  if (tcr->wasm_cstack_sp == NULL) {
+    tcr->wasm_cstack_sp = (void *)current_stack_pointer();
+  }
 #endif
 #ifdef ARM
   tcr->last_lisp_frame = (natural)(a->high);

@@ -317,6 +317,12 @@ typedef struct tcr {
   void *safe_ref_address;
   int architecture_version;
   void *nfp;
+#ifdef WASM32
+  void *wasm_cstack_base;
+  natural wasm_cstack_size;
+  void *wasm_cstack_sp;
+  struct area *wasm_cstack_area;
+#endif
   LispObj spare[20];            /* allocate new things here */
   LispObj sptab[256];           /* subprims table */
 } TCR;

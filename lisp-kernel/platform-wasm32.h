@@ -43,6 +43,7 @@ typedef struct {
 #define set_xpGPR(x,gpr,new) (xpGPR((x),(gpr)) = (natural)(new))
 #define xpPC(x) ((pc)((x)->pc))
 #define set_xpPC(x,new) ((x)->pc = (natural)(new))
+#define xpLR(x) ((pc)((x)->gpr[14]))
 
 #define SIGNUM_FOR_INTN_TRAP 0
 #define IS_MAYBE_INT_TRAP(info,xp) (0)
@@ -54,5 +55,11 @@ typedef struct {
 /* Manual stack hooks for wasm hosts. */
 void wasm_set_cstack_bounds(void *base, natural size);
 void wasm_set_cstack_pointer(void *sp);
+void *wasm_get_cstack_pointer(void);
 void wasm_relocate_cstack(void *new_base);
 int32_t wasm_memory_grow_and_relocate(uint32_t pages);
+
+natural wasm_cstack_push_frame(TCR *tcr, LispObj savefn, pc savelr, LispObj savevsp);
+void wasm_cstack_pop_frame(TCR *tcr, natural old_last_lisp_frame);
+BytePtr wasm_cstack_push_alloc_marker(TCR *tcr, LispObj next);
+void wasm_cstack_pop_alloc_marker(TCR *tcr, BytePtr old_sp);
