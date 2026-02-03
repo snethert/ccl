@@ -16,6 +16,13 @@
 
 
 #include "threads.h"
+#include <string.h>
+#include <stddef.h>
+#ifdef WASM32
+#include <stdint.h>
+#include "gc.h"
+#include "lisp-exceptions.h"
+#endif
 
 
 typedef struct {
@@ -616,7 +623,171 @@ suspend_resume_handler(int signo, siginfo_t *info, ExceptionInformation *context
   end from which it grows.
 */
   
-#ifdef WINDOWS
+#ifdef WASM32
+static void *wasm_cstack_base = NULL;
+static natural wasm_cstack_size = 0;
+static void *wasm_cstack_sp = NULL;
+static area *wasm_cstack_area = NULL;
+
+static Boolean
+wasm_ptr_in_cstack(void *p, void *low, void *high)
+{
+  return ((p >= low) && (p < high));
+}
+
+static void
+wasm_relocate_cstack_pointers(BytePtr new_low,
+                              BytePtr new_high,
+                              BytePtr old_low,
+                              BytePtr old_high,
+                              ptrdiff_t delta)
+{
+  LispObj *current = (LispObj *)(wasm_cstack_sp ? wasm_cstack_sp : new_low);
+  LispObj *limit = (LispObj *)new_high;
+  LispObj header;
+  lisp_frame *frame;
+
+  while (current < limit) {
+    header = *current;
+
+    if (header == lisp_frame_marker) {
+      frame = (lisp_frame *)current;
+      /* savevsp/savefn/savelr aren't cstack addresses. */
+      current += sizeof(lisp_frame)/sizeof(LispObj);
+    } else if ((header == stack_alloc_marker) || (header == 0)) {
+      LispObj next = current[1];
+      if (wasm_ptr_in_cstack((void *)next, old_low, old_high)) {
+        current[1] = (LispObj)(((char *)next) + delta);
+      }
+      current += 2;
+    } else if ((header & fixnummask) == 0) {
+      if (wasm_ptr_in_cstack((void *)header, old_low, old_high)) {
+        *current = (LispObj)(((char *)header) + delta);
+        current = (LispObj *)(((char *)header) + delta);
+      } else {
+        current = (LispObj *)header;
+      }
+    } else if (nodeheader_tag_p(fulltag_of(header))) {
+      natural elements = header_element_count(header);
+      current++;
+      while (elements--) {
+        current++;
+      }
+      if (((natural)current) & sizeof(natural)) {
+        current++;
+      }
+    } else if (immheader_tag_p(fulltag_of(header))) {
+      current = (LispObj *)skip_over_ivector((natural)current, header);
+    } else {
+      Bug(NULL, "Unknown stack word at 0x" LISP ":\n", current);
+    }
+  }
+}
+
+void
+wasm_set_cstack_bounds(void *base, natural size)
+{
+  wasm_cstack_base = base;
+  wasm_cstack_size = size;
+}
+
+void
+wasm_set_cstack_pointer(void *sp)
+{
+  wasm_cstack_sp = sp;
+  if (wasm_cstack_area != NULL) {
+    wasm_cstack_area->active = (BytePtr)sp;
+  }
+}
+
+natural
+current_stack_pointer(void)
+{
+  if (wasm_cstack_sp != NULL) {
+    return (natural)wasm_cstack_sp;
+  }
+  return (natural)__builtin_frame_address(0);
+}
+
+void
+os_get_current_thread_stack_bounds(void **base, natural *size)
+{
+  if ((wasm_cstack_base != NULL) && (wasm_cstack_size != 0)) {
+    *base = wasm_cstack_base;
+    *size = wasm_cstack_size;
+    return;
+  }
+  *base = (void *)current_stack_pointer();
+  *size = WASM_DEFAULT_CSTACK_SIZE;
+}
+
+void
+wasm_relocate_cstack(void *new_base)
+{
+  BytePtr old_base, old_low, old_high, new_low, new_high;
+  ptrdiff_t delta;
+  TCR *tcr;
+
+  if ((wasm_cstack_base == NULL) || (wasm_cstack_size == 0)) {
+    return;
+  }
+
+  old_base = (BytePtr)wasm_cstack_base;
+  old_low = old_base - wasm_cstack_size;
+  old_high = old_base;
+  new_low = (BytePtr)new_base - wasm_cstack_size;
+  new_high = (BytePtr)new_base;
+  delta = (char *)new_base - (char *)old_base;
+
+  if (delta == 0) {
+    return;
+  }
+
+  memmove(new_low, old_low, wasm_cstack_size);
+
+  if (wasm_cstack_sp != NULL) {
+    wasm_cstack_sp = (char *)wasm_cstack_sp + delta;
+  }
+
+  wasm_cstack_base = new_base;
+
+  if (wasm_cstack_area != NULL) {
+    wasm_cstack_area->low = (char *)wasm_cstack_area->low + delta;
+    wasm_cstack_area->high = (char *)wasm_cstack_area->high + delta;
+    wasm_cstack_area->softlimit = (char *)wasm_cstack_area->softlimit + delta;
+    wasm_cstack_area->hardlimit = (char *)wasm_cstack_area->hardlimit + delta;
+    if (wasm_cstack_area->active != NULL) {
+      wasm_cstack_area->active = (char *)wasm_cstack_area->active + delta;
+    }
+  }
+
+  tcr = get_tcr(false);
+  if ((tcr != NULL) && (TCR_AUX(tcr)->cs_area == wasm_cstack_area)) {
+    TCR_AUX(tcr)->cs_limit = (LispObj)((char *)TCR_AUX(tcr)->cs_limit + delta);
+  }
+
+  wasm_relocate_cstack_pointers(new_low, new_high, old_low, old_high, delta);
+}
+
+int32_t
+wasm_memory_grow_and_relocate(uint32_t pages)
+{
+#if defined(__wasm__)
+  uint32_t old_pages = __builtin_wasm_memory_grow(0, pages);
+  if (old_pages == (uint32_t)-1) {
+    return -1;
+  }
+  wasm_relocate_cstack((void *)((old_pages + pages) << 16));
+  if (wasm_cstack_sp != NULL) {
+    wasm_set_cstack_pointer(wasm_cstack_sp);
+  }
+  return (int32_t)old_pages;
+#else
+  (void)pages;
+  return -1;
+#endif
+}
+#elif defined(WINDOWS)
 void
 os_get_current_thread_stack_bounds(void **base, natural *size)
 {
@@ -1543,6 +1714,9 @@ thread_init_tcr(TCR *tcr, void *stack_base, natural stack_size)
   UNLOCK(lisp_global(TCR_AREA_LOCK),tcr);
   TCR_AUX(tcr)->cs_area = a;
   a->owner = tcr;
+#ifdef WASM32
+  wasm_cstack_area = a;
+#endif
 #ifdef ARM
   tcr->last_lisp_frame = (natural)(a->high);
 #endif
@@ -2770,7 +2944,3 @@ rwlock_destroy(rwlock *rw)
 #endif
   free((void *)(rw->malloced_ptr));
 }
-
-
-
-
