@@ -49,6 +49,21 @@ wasm_cstack_pop_frame(TCR *tcr, natural old_last_lisp_frame)
   tcr->last_lisp_frame = old_last_lisp_frame;
 }
 
+natural
+wasm_enter_lisp_frame(TCR *tcr, LispObj savefn, pc savelr, LispObj savevsp)
+{
+  /* All wasm entry paths must use this wrapper to keep last_lisp_frame
+   * consistent for debugger/backtrace and GC stack scanning.
+   */
+  return wasm_cstack_push_frame(tcr, savefn, savelr, savevsp);
+}
+
+void
+wasm_exit_lisp_frame(TCR *tcr, natural old_last_lisp_frame)
+{
+  wasm_cstack_pop_frame(tcr, old_last_lisp_frame);
+}
+
 BytePtr
 wasm_cstack_push_alloc_marker(TCR *tcr, LispObj next)
 {

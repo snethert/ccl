@@ -19,6 +19,12 @@
 #include "threads.h"
 #include "platform-wasm32.h"
 
+Boolean
+lisp_frame_p(lisp_frame *spPtr)
+{
+  return (spPtr->marker == lisp_frame_marker);
+}
+
 void
 restore_soft_stack_limit(unsigned stkreg)
 {
