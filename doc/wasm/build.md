@@ -67,6 +67,28 @@ Expected imports (current model):
 - `env.memory`
 - `env.__indirect_function_table`
 
+## Run The Node Smoke Test
+
+This validates:
+
+- `call_indirect` subprims dispatch via `wasm_call_subprim_fixnum`
+- manual cstack relocation across `memory.grow`
+
+After building `doc/wasm/js/wasmcl.wasm`, run:
+
+```bash
+node doc/wasm/js/smoke-test.mjs
+```
+
+## Load A Heap Image (Boot-Only)
+
+The kernel can also load an OpenMCL heap image from a host-provided byte blob
+and return to JS **without** entering Lisp yet (it skips `start_lisp`).
+
+```bash
+node doc/wasm/js/load-image.mjs /path/to/ccl.image
+```
+
 ## JS Wiring (Sketch-Level)
 
 See:

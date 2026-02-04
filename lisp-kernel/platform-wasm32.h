@@ -93,3 +93,7 @@ void wasm_cstack_pop_alloc_marker(TCR *tcr, BytePtr old_sp);
 Boolean lisp_frame_p(lisp_frame *spPtr);
 natural wasm_enter_lisp_frame(TCR *tcr, LispObj savefn, pc savelr, LispObj savevsp);
 void wasm_exit_lisp_frame(TCR *tcr, natural old_last_lisp_frame);
+
+/* Host logging hook (required import). */
+__attribute__((import_module("env"), import_name("wasm_host_log")))
+void wasm_host_log(const char *bytes, unsigned len);

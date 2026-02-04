@@ -30,8 +30,16 @@ start_lisp(TCR *tcr, LispObj arg)
 {
   (void)tcr;
   (void)arg;
-  __builtin_trap();
+  Bug(NULL, "WASM start_lisp not implemented");
   __builtin_unreachable();
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_get_lisp_nil")))
+LispObj
+wasm_get_lisp_nil(void)
+{
+  extern LispObj lisp_nil;
+  return lisp_nil;
 }
 
 #endif /* WASM32 */

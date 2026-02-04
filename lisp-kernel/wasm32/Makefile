@@ -38,7 +38,7 @@ PLATFORM_H = platform-wasm32.h
 	$(CC) --target=$(WASM_TARGET) -include ../$(PLATFORM_H) -c $< $(CDEFINES) $(CDEBUG) $(COPT) $(WFORMAT) -o $@
 
 COBJ  = pmcl-kernel.o gc-common.o wasm-gc.o wasm-cstack.o wasm-exceptions.o wasm-subprims.o wasm-subprims-standin.o \
-	wasm-no-wasi-libc.o wasm-kernel-stubs.o \
+	wasm-subprims-smoke.o wasm-no-wasi-libc.o wasm-kernel-stubs.o \
 	bits.o image.o thread_manager.o lisp-debug.o memory.o unix-calls.o
 
 DEBUGOBJ =
@@ -88,6 +88,7 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_ccl_start \
 	  --export=wasm_set_current_tcr --export=wasm_get_current_tcr \
 	  --export=wasm_set_cstack_bounds --export=wasm_set_cstack_pointer --export=wasm_get_cstack_pointer \
+	  --export=wasm_memory_grow_and_relocate \
 	  --export=wasm_call_subprim_fixnum \
 	  -o ../../doc/wasm/js/wasmcl.wasm $(KERNELOBJ)
 

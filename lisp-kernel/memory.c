@@ -24,6 +24,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdarg.h>
+#include <limits.h>
 #include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -431,12 +432,38 @@ MapFile(LogicalAddress addr, natural pos, natural nbytes, int permissions, int f
   return true;
 #endif
 #elif defined(WASM32)
-  (void)addr;
-  (void)pos;
-  (void)nbytes;
   (void)permissions;
-  (void)fd;
-  return false;
+  if (nbytes == 0) {
+    return true;
+  }
+
+  size_t total = 0;
+  off_t opos = LSEEK(fd, 0, SEEK_CUR);
+
+  if (opos < 0) {
+    return false;
+  }
+  if (!CommitMemory(addr, nbytes)) {
+    return false;
+  }
+  if (LSEEK(fd, (off_t)pos, SEEK_SET) < 0) {
+    return false;
+  }
+
+  while (total < nbytes) {
+    size_t want = nbytes - total;
+    if (want > INT_MAX) {
+      want = INT_MAX;
+    }
+    signed_natural got = (signed_natural)read(fd, addr + total, want);
+    if (got <= 0) {
+      return false;
+    }
+    total += (size_t)got;
+  }
+
+  (void)LSEEK(fd, opos, SEEK_SET);
+  return true;
 #else
   return mmap(addr, nbytes, permissions, MAP_PRIVATE|MAP_FIXED, fd, pos) != MAP_FAILED;
 #endif

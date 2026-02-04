@@ -11,7 +11,7 @@
 #include "wasm-subprims-map.h"
 
 #define DECL_SUBPRIM(name) \
-  __attribute__((used, visibility("default"), export_name(#name))) void name(void)
+  __attribute__((used, weak, visibility("default"), export_name(#name))) void name(void)
 #define SUBPRIM_STUB(name) \
   DECL_SUBPRIM(name) { Bug(NULL, "WASM subprim not implemented: %s", #name); }
 

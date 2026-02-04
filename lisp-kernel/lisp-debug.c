@@ -1620,7 +1620,15 @@ Bug(ExceptionInformation *xp, const char *format, ...)
   va_start(args, format);
   vsnprintf(s, sizeof(s),format, args);
   va_end(args);
+#ifdef WASM32
+  (void)xp;
+  wasm_host_log(s, (unsigned)strlen(s));
+  wasm_host_log("\n", 1);
+  __builtin_trap();
+  __builtin_unreachable();
+#else
   lisp_Debugger(xp, NULL, debug_entry_bug, false, s);
+#endif
 
 }
 
@@ -1633,7 +1641,15 @@ FBug(ExceptionInformation *xp, const char *format, ...)
   va_start(args, format);
   vsnprintf(s, sizeof(s),format, args);
   va_end(args);
+#ifdef WASM32
+  (void)xp;
+  wasm_host_log(s, (unsigned)strlen(s));
+  wasm_host_log("\n", 1);
+  __builtin_trap();
+  __builtin_unreachable();
+#else
   lisp_Debugger(xp, NULL, debug_entry_bug, true, s);
+#endif
 }
 
 void

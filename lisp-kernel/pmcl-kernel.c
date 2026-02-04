@@ -393,7 +393,11 @@ unsigned unsigned_max(unsigned x, unsigned y)
 }
 
 natural
+#ifdef WASM32
+reserved_area_size = (128 << 20);
+#else
 reserved_area_size = MAXIMUM_MAPPABLE_MEMORY;
+#endif
 
 BytePtr reserved_region_end = NULL;
 
@@ -937,8 +941,21 @@ Fatal(StringPtr param0, StringPtr param1)
     free(fatal_spare_ptr);
     fatal_spare_ptr = NULL;
   }
+#ifdef WASM32
+  if (param0) {
+    wasm_host_log(param0, (unsigned)strlen(param0));
+  }
+  wasm_host_log("\n", 1);
+  if (param1) {
+    wasm_host_log(param1, (unsigned)strlen(param1));
+  }
+  wasm_host_log("\n", 1);
+  __builtin_trap();
+  __builtin_unreachable();
+#else
   fprintf(dbgout, "Fatal error: %s\n%s\n", param0, param1);
   _exit(-1);
+#endif
 }
 
 void
@@ -1231,6 +1248,10 @@ wchar_t *image_name = NULL;
 char *image_name = NULL;
 #endif
 int batch_flag = 0;
+
+#ifdef WASM32
+static int wasm_boot_only = 0;
+#endif
 
 
 natural
@@ -2242,6 +2263,10 @@ main
 #endif
 #endif
 #ifdef WASM32
+  if (wasm_boot_only) {
+    wasm_boot_only = 0;
+    return 0;
+  }
   {
     TCR *wasm_tcr = wasm_get_tcr(false);
     TCR *entry_tcr = (wasm_tcr != NULL) ? wasm_tcr : tcr;
@@ -2259,7 +2284,11 @@ main
 #else
   start_lisp(TCR_TO_TSD(tcr), 0);
 #endif
+#ifdef WASM32
+  return 0;
+#else
   _exit(0);
+#endif
 }
 
 area *
@@ -2453,6 +2482,9 @@ load_image(
 #endif
 #endif
   if (image_nil == 0) {
+#ifdef WASM32
+    Fatal("Couldn't load lisp heap image", (StringPtr)path);
+#else
 #ifdef WINDOWS
     char *fmt = "Couldn't load lisp heap image from %ls";
 #else
@@ -2466,6 +2498,7 @@ load_image(
       fprintf(dbgout, ": %s\n", strerror(err));
     }
     exit(-1);
+#endif /* !WASM32 */
   }
   return image_nil;
 }
@@ -2855,5 +2888,16 @@ wasm_ccl_start(void)
 #else
   return main(1, argv);
 #endif
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_ccl_load_image")))
+int
+wasm_ccl_load_image(uint32_t image_bytes_ptr, uint32_t image_bytes_len)
+{
+  extern void wasm_set_boot_image(uint32_t bytes_ptr, uint32_t bytes_len);
+
+  wasm_set_boot_image(image_bytes_ptr, image_bytes_len);
+  wasm_boot_only = 1;
+  return wasm_ccl_start();
 }
 #endif

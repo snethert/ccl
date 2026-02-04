@@ -18,6 +18,25 @@ export function createCclImports({
   // Most wasm toolchains use the default indirect function table name for
   // `call_indirect` (function-pointer) dispatch.
   env.__indirect_function_table = subprimsTable;
+  if (!env.wasm_host_log) {
+    const decoder = typeof TextDecoder !== "undefined" ? new TextDecoder("utf-8") : null;
+    env.wasm_host_log = (ptr, len) => {
+      try {
+        if (!decoder || !memory) {
+          // eslint-disable-next-line no-console
+          console.error(`wasm_host_log(${ptr}, ${len})`);
+          return;
+        }
+        const u8 = new Uint8Array(memory.buffer, ptr >>> 0, len >>> 0);
+        const msg = decoder.decode(u8);
+        // eslint-disable-next-line no-console
+        console.error(msg);
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error(`wasm_host_log failed: ${e}`);
+      }
+    };
+  }
 
   // NOTE: The C side uses `import_module("ccl")`.
   const ccl = {
@@ -38,11 +57,22 @@ export function createSharedCclRuntime({
   memoryMaximumPages = undefined,
   createMemory = true,
 } = {}) {
-  const subprimsTable = new WebAssembly.Table({
-    element: "funcref",
-    initial: subprimsTableInitial,
-    maximum: subprimsTableMaximum,
-  });
+  // API compatibility: some runtimes still expect `element: "anyfunc"` (older
+  // name for the function reference type) instead of `"funcref"`.
+  let subprimsTable;
+  try {
+    subprimsTable = new WebAssembly.Table({
+      element: "funcref",
+      initial: subprimsTableInitial,
+      maximum: subprimsTableMaximum,
+    });
+  } catch (_e) {
+    subprimsTable = new WebAssembly.Table({
+      element: "anyfunc",
+      initial: subprimsTableInitial,
+      maximum: subprimsTableMaximum,
+    });
+  }
 
   const memory = createMemory
     ? new WebAssembly.Memory({
