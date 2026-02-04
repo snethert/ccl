@@ -209,6 +209,17 @@ Closing behavior:
    •   Closing a normal stream releases the endpoint.
    •   Closing an unclosable stream is a no-op.
 
+10.1 Stream open kinds (initial)
+
+`STREAM_OPEN` uses a **kind** registry to choose endpoint behavior.
+
+   •   `PIPE` — in-memory byte FIFO (arg_len MUST be 0)
+   •   `NAMED_RO` — read-only named byte source (arg bytes are UTF-8 name/path)
+
+For `NAMED_RO`, the microkernel resolves the name to a byte source (e.g. an
+in-memory registry or a backing store) and returns the stream size in the
+response payload as described in `doc/wasm/kernel-request-abi.md:254`.
+
 ⸻
 
 11. Read Semantics and Buffering

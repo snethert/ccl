@@ -8,6 +8,7 @@ Key objects (created in JS):
 * `WebAssembly.Table` (wired to `env.__indirect_function_table` for `call_indirect`)
 * Optional: `WebAssembly.Memory` `env.memory` (if you want multiple modules to share one linear memory)
 * A JS microkernel that implements the `ccl.kernel_request` ABI (see `microkernel.mjs`)
+* Optional: a lightweight world/runner manager (`world-kernel.mjs`) that composes the microkernel with runner lifecycle helpers
 
 The subprims table order must match the ARM `sptab` order. The canonical list
 is extracted from `lisp-kernel/arm-spentry.s` and checked in as:
@@ -21,6 +22,14 @@ is extracted from `lisp-kernel/arm-spentry.s` and checked in as:
 3. Install subprims into the shared table by matching export names from `subprims-map.json`.
 4. Call the exported `wasm_set_cstack_bounds(base, size)` to establish a manual control stack region.
 5. Call the kernel entrypoint `wasm_ccl_start`.
+
+`world-kernel.mjs` provides a minimal reference API for:
+
+* registering images
+* creating worlds and runners
+* loading an image into a runner
+* feeding stdin / closing stdin
+* querying runner objects via `getRunner(runnerId)`
 
 This design supports incremental optimization: a later-loaded module can
 override any table slot with a faster handwritten WASM implementation.

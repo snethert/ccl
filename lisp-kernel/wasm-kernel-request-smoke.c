@@ -10,8 +10,16 @@
 #include "wasm-host.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+extern int lisp_open(char *path, int flags, mode_t mode);
+extern ssize_t lisp_read(int fd, void *buf, size_t count);
+extern int lisp_close(int fd);
+extern int lisp_stat(char *path, void *buf);
 
 __attribute__((used, visibility("default"), export_name("wasm_kernel_caps_abi_version")))
 uint32_t
@@ -97,6 +105,51 @@ void
 wasm_kernel_request_smoke_drop(uint32_t request_id)
 {
   wasm_kernel_request_drop(request_id);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_kernel_request_smoke_named_roundtrip")))
+int32_t
+wasm_kernel_request_smoke_named_roundtrip(void)
+{
+  static const char name[] = "named.bin";
+  static const uint8_t expected[] = {0x00, 0x11, 0x22, 0x33, 0xaa, 0xbb, 0xcc, 0xdd};
+  uint8_t buf[sizeof(expected)];
+  struct stat st;
+
+  int fd = lisp_open((char *)name, O_RDONLY, 0);
+  if (fd < 0) {
+    return -errno;
+  }
+
+  ssize_t n = lisp_read(fd, buf, sizeof(buf));
+  if (n < 0) {
+    int e = errno;
+    (void)lisp_close(fd);
+    return -e;
+  }
+  if ((size_t)n != sizeof(expected)) {
+    (void)lisp_close(fd);
+    return -1;
+  }
+  for (size_t i = 0; i < sizeof(expected); i++) {
+    if (buf[i] != expected[i]) {
+      (void)lisp_close(fd);
+      return -1;
+    }
+  }
+
+  if (lisp_close(fd) < 0) {
+    return -errno;
+  }
+
+  if (lisp_stat((char *)name, &st) < 0) {
+    return -errno;
+  }
+  if ((uint64_t)st.st_size != (uint64_t)sizeof(expected)) {
+    return -1;
+  }
+
+  return 0;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_kernel_request_smoke_pipe_roundtrip")))

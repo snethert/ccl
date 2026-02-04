@@ -267,6 +267,56 @@ wasm_kernel_stream_open(uint32_t kind, const void *arg, uint32_t arg_len, uint32
 }
 
 int32_t
+wasm_kernel_stream_open_named(const char *name,
+                              uint32_t name_len,
+                              uint32_t *out_sid,
+                              uint64_t *out_size)
+{
+  struct payload {
+    uint32_t kind;
+    uint32_t flags;
+    uint32_t arg_ptr;
+    uint32_t arg_len;
+  } p;
+  uint8_t resp[8];
+  uint32_t n = 0;
+
+  if (out_sid) {
+    *out_sid = 0;
+  }
+  if (out_size) {
+    *out_size = 0;
+  }
+  if (out_sid == NULL) {
+    return -EINVAL;
+  }
+
+  p.kind = KERNEL_STREAM_KIND_NAMED_RO;
+  p.flags = 0;
+  p.arg_ptr = (name_len != 0) ? (uint32_t)(uintptr_t)name : 0;
+  p.arg_len = name_len;
+
+  int32_t r = wasm_kernel_request_copy(KERNEL_OP_STREAM_OPEN, &p, (uint32_t)sizeof(p),
+                                       resp, (uint32_t)sizeof(resp), &n);
+  if (r < 0) {
+    return r;
+  }
+  if (n != sizeof(resp)) {
+    return -EINVAL;
+  }
+  if (r < 3) {
+    return -EINVAL;
+  }
+  *out_sid = (uint32_t)r;
+  if (out_size) {
+    uint64_t size = 0;
+    memcpy(&size, resp, sizeof(size));
+    *out_size = size;
+  }
+  return 0;
+}
+
+int32_t
 wasm_kernel_stream_close(uint32_t sid)
 {
   struct payload {

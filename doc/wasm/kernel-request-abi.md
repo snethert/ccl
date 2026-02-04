@@ -271,7 +271,7 @@ Payload length MUST be 16 bytes.
 `arg_ptr/arg_len` is an uninterpreted byte string whose meaning depends on
 `kind`. (For example, a future `FILE` kind might treat it as UTF-8 path bytes.)
 
-Response payload: none (`kernel_response_size = 0`).
+Response payload: **kind-specific**.
 
 `kernel_result`:
 
@@ -281,6 +281,19 @@ Response payload: none (`kernel_response_size = 0`).
 Initial `kind` registry:
 
 - `0`: `PIPE` (in-memory byte FIFO; `arg_len` MUST be 0)
+- `1`: `NAMED_RO` (read-only named byte source; `arg_len` is UTF-8 path/name bytes)
+
+`PIPE` response payload: none (`kernel_response_size = 0`).
+
+`NAMED_RO` response payload (`kernel_response_size = 8`):
+
+```
+offset  size  field
+0x00    u64   size_bytes
+```
+
+If no named source exists for the provided name, the request MUST complete with
+`kernel_result == -ENOENT`.
 
 ### `KERNEL_OP_STREAM_CLOSE`
 

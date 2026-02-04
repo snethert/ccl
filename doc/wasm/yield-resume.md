@@ -110,3 +110,18 @@ The kernel now exports a minimal stepping interface (see `lisp-kernel/wasm-ccl-s
 
 This is a correctness/portability baseline for Stage 2. The full Lisp runtime will
 eventually use the same boundary to yield when any host capability would block.
+
+## Lisp-level yield hook (bring-up scaffolding)
+
+The Lisp stream layer now exposes a minimal hook to unwind to a host-controlled
+boundary when I/O would block:
+
+- `ccl::*wasm-yield-on-eagain*` (default `NIL`)
+- When true, `EWOULDBLOCK/EAGAIN` in `with-eagain` causes a `throw :wasm-yield`
+  carrying a small plist `(:direction <keyword> :fd <integer>)`.
+- The toplevel loop (`toplevel-loop`) catches `:wasm-yield` and returns to the
+  caller, allowing the embedding to regain control.
+
+This does **not** provide full continuation semantics; it is a coarse-grained
+bring-up tool. The real Stage-2 integration will still require explicit
+stepping at safe boundaries (Option A).

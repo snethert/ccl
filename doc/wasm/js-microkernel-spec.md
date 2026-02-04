@@ -55,6 +55,8 @@ The kernel exposes a minimal API to create and manage worlds/runners and to deli
 * `sendToRunner(runnerId, message)`
 * `registerImage(imageId, imageData)`
 
+**Reference implementation (bring-up):** see `doc/wasm/js/world-kernel.mjs`.
+
 ### Runner API (guest-side)
 
 Runners call a narrow host surface, implemented as WASM imports, to request capabilities.

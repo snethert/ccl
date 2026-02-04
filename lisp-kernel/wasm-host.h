@@ -28,6 +28,7 @@
 
 /* Stream kind registry (KERNEL_OP_STREAM_OPEN.kind). */
 #define KERNEL_STREAM_KIND_PIPE 0u
+#define KERNEL_STREAM_KIND_NAMED_RO 1u
 
 /*
  * Host ABI note (copy-based responses, MVP).
@@ -102,6 +103,12 @@ int32_t wasm_kernel_stream_read(uint32_t sid_or_fd, void *buf, uint32_t cap, uin
 
 int32_t wasm_kernel_stream_open(uint32_t kind, const void *arg, uint32_t arg_len, uint32_t *out_sid);
 int32_t wasm_kernel_stream_close(uint32_t sid);
+
+/* Named byte sources (read-only). */
+int32_t wasm_kernel_stream_open_named(const char *name,
+                                      uint32_t name_len,
+                                      uint32_t *out_sid,
+                                      uint64_t *out_size);
 
 int32_t wasm_kernel_time_now(uint64_t *out_unix_ms);
 

@@ -20,16 +20,20 @@ export const KERNEL_OP_TIME_NOW = 0x00000004;
 export const KERNEL_OP_STREAM_OPEN = 0x00000005;
 export const KERNEL_OP_STREAM_CLOSE = 0x00000006;
 
+export const KERNEL_STREAM_KIND_PIPE = 0x00000000;
+export const KERNEL_STREAM_KIND_NAMED_RO = 0x00000001;
+
 // Minimal errno set. The kernel and microkernel must agree on numeric values.
 // For wasm32-wasi bring-up builds, use wasi-libc/WASI errno numbers.
 export const ERRNO = Object.freeze({
   // Values from /usr/include/wasm32-wasi/wasi/api.h:
   // __WASI_ERRNO_2BIG=1, __WASI_ERRNO_AGAIN=6, __WASI_ERRNO_BADF=8,
-  // __WASI_ERRNO_INVAL=28, __WASI_ERRNO_NOSYS=52.
+  // __WASI_ERRNO_NOENT=44, __WASI_ERRNO_INVAL=28, __WASI_ERRNO_NOSYS=52.
   E2BIG: 1,
   EWOULDBLOCK: 6, // EAGAIN
   EBADF: 8,
   EINVAL: 28,
+  ENOENT: 44,
   ENOSYS: 52,
 });
 
@@ -89,20 +93,24 @@ function encodeCapsResponse({ capabilityBits = 0, maxResponseBytes = 0 } = {}) {
   return new Uint8Array(buf);
 }
 
-function encodeTimeNowResponse(nowMs) {
+function encodeU64LE(value) {
   const buf = new ArrayBuffer(8);
   const dv = new DataView(buf);
-  const ms = typeof nowMs === "bigint" ? nowMs : BigInt(Math.trunc(nowMs));
+  const v = typeof value === "bigint" ? value : BigInt(Math.trunc(value));
   if (typeof dv.setBigUint64 === "function") {
-    dv.setBigUint64(0, ms, true);
+    dv.setBigUint64(0, v, true);
   } else {
     // Older runtimes: encode via two u32 lanes.
-    const lo = Number(ms & 0xffffffffn) >>> 0;
-    const hi = Number((ms >> 32n) & 0xffffffffn) >>> 0;
+    const lo = Number(v & 0xffffffffn) >>> 0;
+    const hi = Number((v >> 32n) & 0xffffffffn) >>> 0;
     dv.setUint32(0, lo, true);
     dv.setUint32(4, hi, true);
   }
   return new Uint8Array(buf);
+}
+
+function encodeTimeNowResponse(nowMs) {
+  return encodeU64LE(nowMs);
 }
 
 function readU32LE(memory, ptr) {
@@ -163,6 +171,8 @@ export function createMicrokernel({
   // If true, some requests may remain PENDING until host data arrives.
   // This is a Stage-2 (async) feature; leave false for Stage-1 sync bring-up.
   asyncStdin = false,
+  // Optional initial named byte sources (Map, array of [name, bytes], or object).
+  namedBytes = null,
   // Optional hooks for tests/embedding:
   logSink = null, // (level, text, bytes) => void
   now = () => Date.now(),
@@ -176,6 +186,15 @@ export function createMicrokernel({
   const logs = [];
   const decoder = typeof TextDecoder !== "undefined" ? new TextDecoder("utf-8") : null;
 
+  function decodeUtf8(bytes) {
+    if (decoder) return decoder.decode(bytes);
+    let out = "";
+    for (let i = 0; i < bytes.length; i++) {
+      out += String.fromCharCode(bytes[i]);
+    }
+    return out;
+  }
+
   // Per-runner stream table (SID -> endpoint).
   //
   // Standard streams:
@@ -186,6 +205,36 @@ export function createMicrokernel({
   // SIDs >= 3 are allocated via KERNEL_OP_STREAM_OPEN.
   const streams = new Map();
   let nextSid = 3;
+
+  const namedBlobs = new Map();
+
+  function registerNamedBlob(name, bytes) {
+    if (name == null || name === "") {
+      throw new Error("registerNamedBlob: name is required");
+    }
+    namedBlobs.set(String(name), normalizeBytes(bytes));
+  }
+
+  function registerNamedBlobs(entries) {
+    if (!entries) return;
+    if (entries instanceof Map) {
+      for (const [name, bytes] of entries.entries()) {
+        registerNamedBlob(name, bytes);
+      }
+      return;
+    }
+    if (Array.isArray(entries)) {
+      for (const [name, bytes] of entries) {
+        registerNamedBlob(name, bytes);
+      }
+      return;
+    }
+    if (typeof entries === "object") {
+      for (const [name, bytes] of Object.entries(entries)) {
+        registerNamedBlob(name, bytes);
+      }
+    }
+  }
 
   // Simple stdin queue for STREAM_READ (sid 0). Empty-but-not-closed returns EWOULDBLOCK (or PENDING in Stage 2).
   const stdinQueue = [];
@@ -232,10 +281,39 @@ export function createMicrokernel({
     };
   }
 
+  function createNamedReadStream(bytes) {
+    const data = normalizeBytes(bytes);
+    let off = 0;
+    let closed = false;
+
+    return {
+      kind: "named-ro",
+      readable: true,
+      writable: false,
+      size: data.length,
+      read(maxBytes) {
+        if (closed) return new Uint8Array(0);
+        const want = u32(maxBytes);
+        if (want === 0) return new Uint8Array(0);
+        const remain = data.length - off;
+        if (remain <= 0) return new Uint8Array(0);
+        const take = Math.min(remain, want);
+        const chunk = data.subarray(off, off + take);
+        off += take;
+        return chunk;
+      },
+      close() {
+        closed = true;
+      },
+    };
+  }
+
   // Install standard streams.
   streams.set(0, { kind: "stdin", readable: true, writable: false });
   streams.set(1, { kind: "stdout", readable: false, writable: true });
   streams.set(2, { kind: "stderr", readable: false, writable: true });
+
+  registerNamedBlobs(namedBytes);
 
   function recordRequestDone(id, result, responseBytes = null) {
     requests.set(id, {
@@ -420,7 +498,7 @@ export function createMicrokernel({
           recordRequestDone(id, -ERRNO.EBADF);
           break;
         }
-        if (stream.kind === "pipe") {
+        if (typeof stream.read === "function") {
           const chunk = stream.read(u32(maxBytes));
           if (chunk && chunk.length) {
             recordRequestDone(id, chunk.length, chunk);
@@ -463,7 +541,7 @@ export function createMicrokernel({
           break;
         }
 
-        if (u32(kind) === 0) { // PIPE
+        if (u32(kind) === KERNEL_STREAM_KIND_PIPE) {
           if (u32(argLen) !== 0) {
             recordRequestError(id, ERRNO.EINVAL);
             break;
@@ -471,6 +549,24 @@ export function createMicrokernel({
           const sid = nextSid++;
           streams.set(sid, createPipeStream());
           recordRequestDone(id, sid);
+          break;
+        }
+
+        if (u32(kind) === KERNEL_STREAM_KIND_NAMED_RO) {
+          if (u32(argLen) === 0) {
+            recordRequestError(id, ERRNO.EINVAL);
+            break;
+          }
+          const nameBytes = sliceBytes(memory, argPtr, argLen);
+          const name = decodeUtf8(nameBytes);
+          const blob = namedBlobs.get(name);
+          if (!blob) {
+            recordRequestDone(id, -ERRNO.ENOENT);
+            break;
+          }
+          const sid = nextSid++;
+          streams.set(sid, createNamedReadStream(blob));
+          recordRequestDone(id, sid, encodeU64LE(blob.length));
           break;
         }
 
@@ -588,7 +684,9 @@ export function createMicrokernel({
     imports,
     feedStdin,
     closeStdin,
+    registerNamedBlob,
+    registerNamedBlobs,
     getLogs: () => logs.slice(),
-    _debug: { requests, pendingStdinReads, streams },
+    _debug: { requests, pendingStdinReads, streams, namedBlobs },
   };
 }

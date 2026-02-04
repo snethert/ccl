@@ -40,6 +40,9 @@
 #endif
 #include <fcntl.h>
 #include <stdlib.h>
+#ifdef WASM32
+#include <string.h>
+#endif
 
 #ifdef WASM32
 #include "wasm-host.h"
@@ -49,10 +52,10 @@
 ssize_t
 lisp_read(int fd, void *buf, size_t count)
 {
-  if (fd != 0) {
+  if (fd < 0) {
     (void)buf;
     (void)count;
-    errno = ENOSYS;
+    errno = EBADF;
     return -1;
   }
 
@@ -68,10 +71,10 @@ lisp_read(int fd, void *buf, size_t count)
 ssize_t
 lisp_write(int fd, void *buf, size_t count)
 {
-  if (fd != 1 && fd != 2) {
+  if (fd < 0) {
     (void)buf;
     (void)count;
-    errno = ENOSYS;
+    errno = EBADF;
     return -1;
   }
 
@@ -86,11 +89,36 @@ lisp_write(int fd, void *buf, size_t count)
 int
 lisp_open(char *path, int flags, mode_t mode)
 {
-  (void)path;
-  (void)flags;
   (void)mode;
-  errno = ENOSYS;
-  return -1;
+  if (path == NULL) {
+    errno = EINVAL;
+    return -1;
+  }
+
+  if ((flags & O_ACCMODE) != O_RDONLY) {
+    errno = EACCES;
+    return -1;
+  }
+  if (flags & (O_CREAT | O_TRUNC | O_APPEND | O_EXCL)) {
+    errno = EACCES;
+    return -1;
+  }
+
+  size_t len = strlen(path);
+  if (len == 0) {
+    errno = ENOENT;
+    return -1;
+  }
+
+  uint32_t sid = 0;
+  uint64_t size = 0;
+  int32_t r = wasm_kernel_stream_open_named(path, (uint32_t)len, &sid, &size);
+  if (r < 0) {
+    errno = -r;
+    return -1;
+  }
+  (void)size;
+  return (int)sid;
 }
 
 int
@@ -115,9 +143,17 @@ lisp_lseek(int fd, int64_t offset, int whence)
 int
 lisp_close(int fd)
 {
-  (void)fd;
-  errno = ENOSYS;
-  return -1;
+  if (fd < 0) {
+    errno = EBADF;
+    return -1;
+  }
+
+  int32_t r = wasm_kernel_stream_close((uint32_t)fd);
+  if (r < 0) {
+    errno = -r;
+    return -1;
+  }
+  return 0;
 }
 
 int
@@ -132,10 +168,34 @@ lisp_ftruncate(int fd, off_t length)
 int
 lisp_stat(char *path, void *buf)
 {
-  (void)path;
-  (void)buf;
-  errno = ENOSYS;
-  return -1;
+  if (path == NULL || buf == NULL) {
+    errno = EINVAL;
+    return -1;
+  }
+
+  size_t len = strlen(path);
+  if (len == 0) {
+    errno = ENOENT;
+    return -1;
+  }
+
+  uint32_t sid = 0;
+  uint64_t size = 0;
+  int32_t r = wasm_kernel_stream_open_named(path, (uint32_t)len, &sid, &size);
+  if (r < 0) {
+    errno = -r;
+    return -1;
+  }
+  (void)wasm_kernel_stream_close(sid);
+
+  struct stat *st = (struct stat *)buf;
+  memset(st, 0, sizeof(*st));
+  st->st_mode = (mode_t)(S_IFREG | S_IRUSR | S_IRGRP | S_IROTH);
+  st->st_nlink = 1;
+  st->st_size = (off_t)size;
+  st->st_blksize = 4096;
+  st->st_blocks = (blkcnt_t)((size + 511) / 512);
+  return 0;
 }
 
 int

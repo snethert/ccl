@@ -37,6 +37,9 @@ const microkernel = createMicrokernel({
   memory: runtime.memory,
 });
 
+const namedBytes = new Uint8Array([0x00, 0x11, 0x22, 0x33, 0xaa, 0xbb, 0xcc, 0xdd]);
+microkernel.registerNamedBlob("named.bin", namedBytes);
+
 const kernel = await instantiateWasm(
   kernelBytes,
   createCclImports({
@@ -50,9 +53,15 @@ assert(
   typeof kernel.instance.exports.wasm_kernel_request_smoke_pipe_roundtrip === "function",
   "missing wasm_kernel_request_smoke_pipe_roundtrip export",
 );
+assert(
+  typeof kernel.instance.exports.wasm_kernel_request_smoke_named_roundtrip === "function",
+  "missing wasm_kernel_request_smoke_named_roundtrip export",
+);
 
 const r = kernel.instance.exports.wasm_kernel_request_smoke_pipe_roundtrip() | 0;
 assert(r === 0, `expected pipe roundtrip success, got ${r}`);
 
-console.log("PASS: stream open/close smoke test");
+const r2 = kernel.instance.exports.wasm_kernel_request_smoke_named_roundtrip() | 0;
+assert(r2 === 0, `expected named stream roundtrip success, got ${r2}`);
 
+console.log("PASS: stream open/close smoke test");

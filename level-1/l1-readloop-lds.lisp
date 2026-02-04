@@ -27,11 +27,25 @@
 
 (defun toplevel-loop ()
   (loop
-    (if (eq (catch :toplevel 
-              (run-read-loop :break-level 0 )) $xstkover)
-      (format t "~&;[Stacks reset due to overflow.]")
-      (when (eq *current-process* *initial-process*)
-        (toplevel)))))
+    (let ((yielded
+           (if *wasm-yield-on-eagain*
+             (catch :wasm-yield
+               (progn
+                 (if (eq (catch :toplevel
+                           (run-read-loop :break-level 0)) $xstkover)
+                   (format t "~&;[Stacks reset due to overflow.]")
+                   (when (eq *current-process* *initial-process*)
+                     (toplevel)))
+                 nil))
+             (progn
+               (if (eq (catch :toplevel
+                         (run-read-loop :break-level 0)) $xstkover)
+                 (format t "~&;[Stacks reset due to overflow.]")
+                 (when (eq *current-process* *initial-process*)
+                   (toplevel)))
+               nil))))
+      (when yielded
+        (return yielded)))))
 
 
 (defvar *defined-toplevel-commands* ())

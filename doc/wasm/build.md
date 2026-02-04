@@ -136,5 +136,5 @@ python3 scripts/wasm/generate_subprims_artifacts.py
 ## Bring-Up Status / Limitations
 
 - Many OS/POSIX interfaces are stubbed out for WASM32 bring-up.
-- `start_lisp` is currently a stub (traps) until the real entry/loader path is implemented.
+- `start_lisp` currently returns to the host without entering the real Lisp toplevel; use `wasm_ccl_step` for the Stage‑2 stepping baseline while the true entry/loader path is integrated.
 - The “no-WASI libc” shims are intentionally minimal (bump `malloc`, no real stdio/formatting).

@@ -21,14 +21,31 @@ pid_t main_thread_pid = 0;
 LispObj ret1valn = 0;
 LispObj nvalret = 0;
 LispObj popj = 0;
+extern LispObj lisp_nil;
 
 LispObj
 start_lisp(TCR *tcr, LispObj arg)
 {
-  (void)tcr;
   (void)arg;
-  Bug(NULL, "WASM start_lisp not implemented");
-  __builtin_unreachable();
+  if (tcr != NULL) {
+    tcr->valence = TCR_STATE_LISP;
+  }
+
+  /* Bring-up behavior:
+   * The full Lisp toplevel loop isn't wired for WASM yet. Return to the host
+   * without trapping so the embedding can drive execution via wasm_ccl_step.
+   */
+  {
+    static const char msg[] =
+      "WASM start_lisp: toplevel loop not wired; returning to host\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+  }
+
+  if (tcr != NULL) {
+    tcr->valence = TCR_STATE_FOREIGN;
+  }
+
+  return lisp_nil;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_get_lisp_nil")))

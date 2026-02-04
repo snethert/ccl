@@ -58,6 +58,13 @@ carrying:
 The condition type name is `CAPABILITY-UNAVAILABLE` (or an equivalent exported
 type), but the payload MUST be programmatically inspectable.
 
+**Implementation note (current Lisp runtime):** when
+`ccl::*capability-unavailable-on-enosys*` is true, stream I/O errors that
+surface `ENOSYS`/`EACCES` signal `CAPABILITY-UNAVAILABLE` with
+`:capability :io/stream` and an `:operation` string (e.g. `"read"`/`"write"`).
+Enable this flag in the WASM image/bring-up path to get explicit capability
+failures instead of generic stream errors.
+
 ## Matrix
 
 ### 1. Files, pathnames, `LOAD`, compilation artifacts
@@ -223,4 +230,3 @@ Opinionated defaults consistent with the project constraints:
 This matrix is the decision mechanism: when a CLHS-ish feature comes up, decide
 whether it is core, capability-backed, or rejected, and record the exact failure
 mode.
-

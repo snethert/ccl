@@ -127,6 +127,16 @@
 
 (define-condition simple-error (simple-condition error) ())
 
+(define-condition capability-unavailable (error)
+  ((capability :initarg :capability :reader capability-unavailable-capability)
+   (operation :initarg :operation :reader capability-unavailable-operation)
+   (details :initarg :details :initform nil :reader capability-unavailable-details))
+  (:report (lambda (c stream)
+             (with-slots (capability operation details) c
+               (format stream "Capability ~s unavailable for ~s." capability operation)
+               (when details
+                 (format stream " Details: ~s" details))))))
+
 (define-condition simple-storage-condition (simple-condition storage-condition) ())
 (define-condition stack-overflow-condition (simple-storage-condition) ())
 
@@ -1450,4 +1460,3 @@
   (check-error-global '*standard-output* #'is-output-stream-p #'terminal-io)
   (check-error-global '*error-output* #'is-output-stream-p #'standard-output)
   (check-error-global '*trace-output* #'is-output-stream-p #'standard-output))
-

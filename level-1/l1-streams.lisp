@@ -281,6 +281,9 @@
 
 (defvar *elements-per-buffer* 2048)  ; default buffer size for file io
 
+(defparameter *capability-unavailable-on-enosys* nil
+  "When true, ENOSYS/EACCES stream I/O errors signal CAPABILITY-UNAVAILABLE.")
+
 (defmethod streamp ((x t))
   nil)
 
@@ -288,9 +291,16 @@
   t)
 
 (defmethod stream-io-error ((stream stream) error-number context)
-  (error 'simple-stream-error :stream stream
-	 :format-control (format nil "~a during ~a"
-				 (%strerror error-number) context)))
+  (if (and *capability-unavailable-on-enosys*
+           (or (= error-number #$ENOSYS)
+               (= error-number #$EACCES)))
+    (error 'capability-unavailable
+           :capability :io/stream
+           :operation context
+           :details (list :stream stream :errno error-number))
+    (error 'simple-stream-error :stream stream
+	   :format-control (format nil "~a during ~a"
+				   (%strerror error-number) context))))
 
 
 
@@ -5434,7 +5444,19 @@
                                  :address fdset
                                  :unsigned-fullword)))))
 
+(defparameter *wasm-yield-on-eagain* nil
+  "When true, EWOULDBLOCK/EAGAIN at stream boundaries yields to the host
+instead of blocking in-process. Intended for the WASM Stage-2 stepping model.")
+
+(defvar *wasm-last-yield* nil)
+
+(defun %wasm-yield (direction fd)
+  (setf *wasm-last-yield* (list :direction direction :fd fd))
+  (throw :wasm-yield *wasm-last-yield*))
+
 (defun process-input-would-block (fd)
+  (when *wasm-yield-on-eagain*
+    (%wasm-yield :input fd))
   #+windows-target (declare (ignore fd))
   #+windows-target t
   #-windows-target
@@ -5470,6 +5492,8 @@
 
 
 (defun process-output-would-block (fd)
+  (when *wasm-yield-on-eagain*
+    (%wasm-yield :output fd))
   #+windows-target (declare (ignore fd))
   #+windows-target t
   #-windows-target
