@@ -11,6 +11,7 @@ import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import { createCclImports, createSharedCclRuntime, instantiateWasm } from "./ccl-loader.mjs";
+import { createMicrokernel } from "./microkernel.mjs";
 
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
@@ -35,11 +36,18 @@ const runtime = createSharedCclRuntime({
   subprimsTableInitial: 256,
 });
 
+const microkernel = createMicrokernel({
+  memory: runtime.memory,
+  writeStdout: () => {},
+  writeStderr: () => {},
+});
+
 const kernel = await instantiateWasm(
   kernelBytes,
   createCclImports({
     memory: runtime.memory,
     subprimsTable: runtime.subprimsTable,
+    microkernel,
   }),
 );
 
@@ -82,4 +90,3 @@ try {
   console.error(`wasm_ccl_load_image trapped: ${e}`);
   process.exit(3);
 }
-

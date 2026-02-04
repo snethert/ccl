@@ -7,6 +7,7 @@ Key objects (created in JS):
 
 * `WebAssembly.Table` (wired to `env.__indirect_function_table` for `call_indirect`)
 * Optional: `WebAssembly.Memory` `env.memory` (if you want multiple modules to share one linear memory)
+* A JS microkernel that implements the `ccl.kernel_request` ABI (see `microkernel.mjs`)
 
 The subprims table order must match the ARM `sptab` order. The canonical list
 is extracted from `lisp-kernel/arm-spentry.s` and checked in as:
@@ -15,7 +16,7 @@ is extracted from `lisp-kernel/arm-spentry.s` and checked in as:
 
 `demo-runner.mjs` shows one possible convention:
 
-1. Instantiate the kernel with `{ env: { memory, __indirect_function_table }, ccl: { subprims_table } }`.
+1. Instantiate the kernel with `{ env: { memory, __indirect_function_table }, ccl: { ...kernel_request imports..., subprims_table } }`.
 2. Instantiate one or more "provider" modules that export subprim functions.
 3. Install subprims into the shared table by matching export names from `subprims-map.json`.
 4. Call the exported `wasm_set_cstack_bounds(base, size)` to establish a manual control stack region.

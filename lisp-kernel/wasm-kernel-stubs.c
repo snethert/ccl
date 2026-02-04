@@ -22,9 +22,6 @@ LispObj ret1valn = 0;
 LispObj nvalret = 0;
 LispObj popj = 0;
 
-/* imports.s provides this on other platforms. */
-LispObj import_ptrs_base = 0;
-
 LispObj
 start_lisp(TCR *tcr, LispObj arg)
 {

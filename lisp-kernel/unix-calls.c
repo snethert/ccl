@@ -42,27 +42,45 @@
 #include <stdlib.h>
 
 #ifdef WASM32
+#include "wasm-host.h"
 /* No WASI, no POSIX. These are placeholders for the FFI imports table.
  * The JS microkernel should provide real implementations later.
  */
 ssize_t
 lisp_read(int fd, void *buf, size_t count)
 {
-  (void)fd;
-  (void)buf;
-  (void)count;
-  errno = ENOSYS;
-  return -1;
+  if (fd != 0) {
+    (void)buf;
+    (void)count;
+    errno = ENOSYS;
+    return -1;
+  }
+
+  uint32_t nread = 0;
+  int32_t r = wasm_kernel_stream_read((uint32_t)fd, buf, (uint32_t)count, &nread);
+  if (r < 0) {
+    errno = -r;
+    return -1;
+  }
+  return (ssize_t)r;
 }
 
 ssize_t
 lisp_write(int fd, void *buf, size_t count)
 {
-  (void)fd;
-  (void)buf;
-  (void)count;
-  errno = ENOSYS;
-  return -1;
+  if (fd != 1 && fd != 2) {
+    (void)buf;
+    (void)count;
+    errno = ENOSYS;
+    return -1;
+  }
+
+  int32_t r = wasm_kernel_stream_write((uint32_t)fd, buf, (uint32_t)count);
+  if (r < 0) {
+    errno = -r;
+    return -1;
+  }
+  return (ssize_t)r;
 }
 
 int

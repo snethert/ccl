@@ -11,6 +11,8 @@ the resulting `wasmcl.wasm` must **not** import `wasi_snapshot_preview1.*`.
 - Provide a minimal C “libc shim” inside the kernel (`lisp-kernel/wasm-no-wasi-libc.c`).
 - The host (JS microkernel) provides `env.memory` (imported linear memory).
 - The host (JS microkernel) provides `env.__indirect_function_table` (imported function table for `call_indirect`).
+- The host (JS microkernel) provides the **kernel_request ABI** imports under module `ccl`
+  (`kernel_request`, `kernel_poll`, `kernel_result`, `kernel_response_size`, `kernel_copy_response`, `kernel_drop_request`).
 - The host must call `wasm_set_cstack_bounds(base, size)` before starting Lisp.
 - The host may also call `wasm_set_cstack_pointer(sp)` to set/restore the cstack SP.
 
@@ -66,6 +68,12 @@ Expected imports (current model):
 
 - `env.memory`
 - `env.__indirect_function_table`
+- `ccl.kernel_request`
+- `ccl.kernel_poll`
+- `ccl.kernel_result`
+- `ccl.kernel_response_size`
+- `ccl.kernel_copy_response`
+- `ccl.kernel_drop_request`
 
 ## Run The Node Smoke Test
 
@@ -73,11 +81,13 @@ This validates:
 
 - `call_indirect` subprims dispatch via `wasm_call_subprim_fixnum`
 - manual cstack relocation across `memory.grow`
+- kernel_request ABI wiring via `kernel-request-smoke.mjs`
 
 After building `doc/wasm/js/wasmcl.wasm`, run:
 
 ```bash
 node doc/wasm/js/smoke-test.mjs
+node doc/wasm/js/kernel-request-smoke.mjs
 ```
 
 ## Load A Heap Image (Boot-Only)

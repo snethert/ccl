@@ -9,6 +9,10 @@
 export function createCclImports({
   memory = null,
   subprimsTable,
+  // Optional: kernel_request ABI provider. Accept either:
+  //  - { imports: { kernel_request, ... } } (the object returned by createMicrokernel), or
+  //  - { kernel_request, ... } (raw import function bag)
+  microkernel = null,
   extra = {},
 } = {}) {
   if (!subprimsTable) throw new Error("createCclImports: subprimsTable is required");
@@ -39,7 +43,13 @@ export function createCclImports({
   }
 
   // NOTE: The C side uses `import_module("ccl")`.
+  // NOTE: The kernel_request ABI is copy-based for now (kernel_copy_response).
+  // TODO(zero-copy): Optional future ABI extensions may write responses directly
+  // into `memory` (caller-provided buffers or a shared arena/ring buffer) to avoid
+  // this extra copy; the copy-based path remains the required baseline.
+  const microkernelImports = microkernel ? (microkernel.imports ?? microkernel) : null;
   const ccl = {
+    ...(microkernelImports ?? {}),
     ...extra.ccl,
     // Optional/compat: if your link step imports a named table, wire it here.
     subprims_table: subprimsTable,

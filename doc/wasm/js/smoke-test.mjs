@@ -18,6 +18,7 @@ import {
   installSubprimsTable,
   instantiateWasm,
 } from "./ccl-loader.mjs";
+import { createMicrokernel } from "./microkernel.mjs";
 
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
@@ -42,6 +43,13 @@ const runtime = createSharedCclRuntime({
   createMemory: true,
 });
 
+// The kernel now imports the kernel_request ABI; provide a minimal microkernel.
+const microkernel = createMicrokernel({
+  memory: runtime.memory,
+  writeStdout: () => {},
+  writeStderr: () => {},
+});
+
 const logs = [];
 const decoder = typeof TextDecoder !== "undefined" ? new TextDecoder("utf-8") : null;
 function wasm_host_log(ptr, len) {
@@ -56,6 +64,7 @@ const kernel = await instantiateWasm(
   createCclImports({
     memory: runtime.memory,
     subprimsTable: runtime.subprimsTable,
+    microkernel,
     extra: { env: { wasm_host_log } },
   }),
 );

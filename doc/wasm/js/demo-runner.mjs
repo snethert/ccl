@@ -13,6 +13,7 @@ import {
   instantiateWasm,
   installSubprimsTable,
 } from "./ccl-loader.mjs";
+import { createMicrokernel } from "./microkernel.mjs";
 
 // Update these URLs to point at your built artifacts.
 const kernelUrl = new URL("wasmcl.wasm", import.meta.url);
@@ -25,12 +26,17 @@ const runtime = createSharedCclRuntime({
   subprimsTableInitial: 256,
 });
 
+const microkernel = createMicrokernel({
+  memory: runtime.memory,
+});
+
 const kernelBytes = await fetchBytes(kernelUrl);
 const kernel = await instantiateWasm(
   kernelBytes,
   createCclImports({
     memory: runtime.memory,
     subprimsTable: runtime.subprimsTable,
+    microkernel,
   }),
 );
 
@@ -54,6 +60,7 @@ try {
     createCclImports({
       memory: runtime.memory,
       subprimsTable: runtime.subprimsTable,
+      microkernel,
     }),
   );
   providers.push({ exports: subprims.instance.exports });
