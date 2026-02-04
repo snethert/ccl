@@ -9,6 +9,13 @@
   `lisp-kernel/wasm32/Makefile` builds `doc/wasm/js/wasmcl.wasm`.
 - **KERNEL_IMPORTS table (WASM):** ✅  
   Table points at kernel-owned functions and stubs.
+- **Subprims readiness flag (host-set):** ✅  
+  `wasm_set_subprims_ready` / `wasm_get_subprims_ready` exports.
+- **Subprims provider module (separate build):** ⚠️  
+  `lisp-kernel/wasm32/subprims/Makefile` builds `doc/wasm/js/subprims.wasm`.
+- **Tier‑0 subprims (C, partial semantics):** ⚠️  
+  `_SPmkcatch1v`, `_SPnthrow1value`, `_SPfuncall` exist but lack non‑local
+  transfer and codegen calling convention.
 - **kernel_request ABI wrappers:** ✅  
   Synchronous + staged helpers in `wasm-host.c`.
 - **Streams (stdin/stdout/stderr):** ✅  

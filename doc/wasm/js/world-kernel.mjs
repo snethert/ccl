@@ -16,6 +16,19 @@ function normalizeBytes(bytes) {
   throw new TypeError("expected Uint8Array/ArrayBuffer/view");
 }
 
+const REQUIRED_SUBPRIMS = ["_SPmkcatch1v", "_SPfuncall", "_SPnthrow1value"];
+
+function hasRequiredSubprims(exports) {
+  return REQUIRED_SUBPRIMS.every((name) => typeof exports?.[name] === "function");
+}
+
+function setSubprimsReady(kernel, ready) {
+  const fn = kernel?.instance?.exports?.wasm_set_subprims_ready;
+  if (typeof fn === "function") {
+    fn(ready ? 1 : 0);
+  }
+}
+
 export function createKernel({
   kernelBytes,
   subprimsBytes = null,
@@ -114,6 +127,7 @@ export function createKernel({
     );
 
     const providers = [{ exports: kernel.instance.exports }];
+    let subprimsReady = false;
     if (subprimsBytes) {
       const subprims = await instantiateWasm(
         subprimsBytes,
@@ -121,9 +135,11 @@ export function createKernel({
           memory: runtime.memory,
           subprimsTable: runtime.subprimsTable,
           microkernel,
+          extra: { ccl: kernel.instance.exports },
         }),
       );
       providers.push({ exports: subprims.instance.exports });
+      subprimsReady = hasRequiredSubprims(subprims.instance.exports);
     }
 
     if (subprimsMap) {
@@ -133,6 +149,7 @@ export function createKernel({
         providers,
       });
     }
+    setSubprimsReady(kernel, subprimsReady);
 
     const runnerId = nextRunnerId++;
     const runner = {

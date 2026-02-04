@@ -56,6 +56,20 @@ make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi clean
 make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi
 ```
 
+## Build The Subprims Provider (Scaffold)
+
+This optional build produces a separate `subprims.wasm` module for the shared
+subprims table:
+
+```bash
+make -C lisp-kernel/wasm32/subprims WASM_TARGET=wasm32-wasi clean
+make -C lisp-kernel/wasm32/subprims WASM_TARGET=wasm32-wasi
+```
+
+The JS host should only call `wasm_set_subprims_ready(1)` when the provider
+exports the required Tier 0 subprims (`_SPmkcatch1v`, `_SPfuncall`,
+`_SPnthrow1value`).
+
 ## Verify “No WASI Runtime”
 
 Confirm there are **no** `wasi_snapshot_preview1` imports:
@@ -116,6 +130,7 @@ The demo runner:
 - Instantiates the kernel with a shared `WebAssembly.Memory` and `WebAssembly.Table`.
 - Installs subprims into the shared table by matching export names.
 - Calls `wasm_set_cstack_bounds` to establish a manual control stack region.
+- Calls `wasm_set_subprims_ready(1)` when a real subprims provider module is installed.
 - Calls `wasm_ccl_start` to enter the kernel.
 
 ## Subprims Artifacts

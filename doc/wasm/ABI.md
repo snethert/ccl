@@ -72,6 +72,14 @@ kernel instance when instantiating provider/compiled-code modules.
 - The host must establish a manual cstack region before starting the kernel
   (via `wasm_set_cstack_bounds(base, size)`).
 
+## Register File (WASM32)
+
+- WASM32 builds add `tcr->wasm_gprs[16]` as an in-memory register file.
+- The ARM register index macros (`arg_z`, `nargs`, `Rfn`, etc.) are used as
+  indices into this array.
+- `tcr->save_vsp` / `tcr->save_tsp` are treated as the canonical VSP/TSP
+  pointers for WASM subprims.
+
 ## Migration Implications
 
 The following changes will be required (no code included here):

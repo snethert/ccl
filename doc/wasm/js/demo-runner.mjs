@@ -20,6 +20,19 @@ const kernelUrl = new URL("wasmcl.wasm", import.meta.url);
 const subprimsUrl = new URL("subprims.wasm", import.meta.url);
 const subprimsMapUrl = new URL("../subprims-map.json", import.meta.url);
 
+const REQUIRED_SUBPRIMS = ["_SPmkcatch1v", "_SPfuncall", "_SPnthrow1value"];
+
+function hasRequiredSubprims(exports) {
+  return REQUIRED_SUBPRIMS.every((name) => typeof exports?.[name] === "function");
+}
+
+function setSubprimsReady(kernel, ready) {
+  const fn = kernel?.instance?.exports?.wasm_set_subprims_ready;
+  if (typeof fn === "function") {
+    fn(ready ? 1 : 0);
+  }
+}
+
 const runtime = createSharedCclRuntime({
   // These sizes are placeholders.
   memoryInitialPages: 256, // 16 MiB
@@ -52,6 +65,7 @@ if (typeof kernel.instance.exports.wasm_set_cstack_bounds === "function") {
 // installed into the shared table. Later modules can override earlier ones.
 const providers = [];
 providers.push({ exports: kernel.instance.exports });
+let subprimsReady = false;
 
 try {
   const subprimsBytes = await fetchBytes(subprimsUrl);
@@ -61,9 +75,11 @@ try {
       memory: runtime.memory,
       subprimsTable: runtime.subprimsTable,
       microkernel,
+      extra: { ccl: kernel.instance.exports },
     }),
   );
   providers.push({ exports: subprims.instance.exports });
+  subprimsReady = hasRequiredSubprims(subprims.instance.exports);
 } catch (e) {
   // eslint-disable-next-line no-console
   console.warn(`subprims provider not loaded: ${e}`);
@@ -78,6 +94,7 @@ const { installed, needed } = installSubprimsTable({
 });
 // eslint-disable-next-line no-console
 console.log(`installed ${installed}/${needed} subprims`);
+setSubprimsReady(kernel, subprimsReady);
 
 // Start the kernel. We expect an explicit export to avoid relying on `main`.
 if (typeof kernel.instance.exports.wasm_ccl_start !== "function") {

@@ -20,8 +20,9 @@ is extracted from `lisp-kernel/arm-spentry.s` and checked in as:
 1. Instantiate the kernel with `{ env: { memory, __indirect_function_table }, ccl: { ...kernel_request imports..., subprims_table } }`.
 2. Instantiate one or more "provider" modules that export subprim functions.
 3. Install subprims into the shared table by matching export names from `subprims-map.json`.
-4. Call the exported `wasm_set_cstack_bounds(base, size)` to establish a manual control stack region.
-5. Call the kernel entrypoint `wasm_ccl_start`.
+4. If the provider exports the Tier 0 subprims (`_SPmkcatch1v`, `_SPfuncall`, `_SPnthrow1value`), call `wasm_set_subprims_ready(1)`.
+5. Call the exported `wasm_set_cstack_bounds(base, size)` to establish a manual control stack region.
+6. Call the kernel entrypoint `wasm_ccl_start`.
 
 `world-kernel.mjs` provides a minimal reference API for:
 

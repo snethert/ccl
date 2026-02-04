@@ -242,6 +242,22 @@ typedef struct lisp_frame {
   LispObj savelr;
 } lisp_frame;
 
+#ifdef WASM32
+typedef struct catch_frame {
+  LispObj header;
+  LispObj link;
+  LispObj mvflag;
+  LispObj catch_tag;
+  LispObj db_link;
+  LispObj xframe;
+  LispObj last_lisp_frame;
+  LispObj nfp;
+} catch_frame;
+
+#define catch_frame_element_count ((sizeof(catch_frame)/sizeof(LispObj))-1)
+#define catch_frame_header make_header(subtag_catch_frame,catch_frame_element_count)
+#endif
+
 #define stack_alloc_marker SUBTAG(fulltag_imm,1)
 #define lisp_frame_marker SUBTAG(fulltag_imm,2)
 #define unbound SUBTAG(fulltag_imm, 6)
@@ -322,6 +338,7 @@ typedef struct tcr {
   natural wasm_cstack_size;
   void *wasm_cstack_sp;
   struct area *wasm_cstack_area;
+  LispObj wasm_gprs[16];
 #endif
   LispObj spare[20];            /* allocate new things here */
   LispObj sptab[256];           /* subprims table */

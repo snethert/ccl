@@ -69,6 +69,19 @@ const kernel = await instantiateWasm(
   }),
 );
 
+assert(
+  typeof kernel.instance.exports.wasm_get_subprims_ready === "function",
+  "missing wasm_get_subprims_ready export",
+);
+assert(
+  typeof kernel.instance.exports.wasm_set_subprims_ready === "function",
+  "missing wasm_set_subprims_ready export",
+);
+kernel.instance.exports.wasm_set_subprims_ready(1);
+assert(kernel.instance.exports.wasm_get_subprims_ready() === 1, "subprims ready flag set failed");
+kernel.instance.exports.wasm_set_subprims_ready(0);
+assert(kernel.instance.exports.wasm_get_subprims_ready() === 0, "subprims ready flag clear failed");
+
 const subprimsMap = JSON.parse((await readFileUrl(subprimsMapUrl)).toString("utf8"));
 
 const providers = [{ exports: kernel.instance.exports }];
