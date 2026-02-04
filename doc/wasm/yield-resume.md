@@ -87,26 +87,26 @@ efficiently without spinning.
 - Implement **Option C (blocking waits)** as an optional Stage 3 optimization where available.
 - Only consider **Option B (asyncify/stack switching)** if Option A becomes prohibitively invasive for the desired UX/performance.
 
-## Minimal Stage 2 API sketch (not yet implemented)
+**Current bring-up status:** the reference microkernel does not implement
+`kernel_wait` yet; Stage 3 is intentionally deferred until a SharedArrayBuffer +
+Atomics embedding is in place.
 
-One workable minimal interface is:
+## Minimal Stage 2 API (implemented for bring-up)
 
-- `wasm_ccl_init(...) -> i32` (idempotent; sets up runtime state)
+The kernel now exports a minimal stepping interface (see `lisp-kernel/wasm-ccl-step.c:1`):
+
+- `wasm_ccl_init() -> i32` (idempotent; resets stepping state)
 - `wasm_ccl_step(deadlineMs: i32) -> i32`
+- `wasm_ccl_blocked_request_id() -> u32` (0 if not blocked on a request)
+- `wasm_ccl_exit_code() -> i32`
+- `wasm_ccl_last_error() -> i32` (0 if no trapped error)
 
-Where `wasm_ccl_step` returns one of:
+`wasm_ccl_step` currently returns:
 
-- `STEP_RUNNING`: made progress; host may call again soon
-- `STEP_BLOCKED`: waiting on a host request; host should arrange completion and later resume
-- `STEP_EXITED`: clean shutdown
-- `STEP_TRAPPED`: fatal error
+- `0` (`STEP_RUNNING`): made progress; host may call again soon
+- `1` (`STEP_BLOCKED`): waiting for host data (`kernel_request` is PENDING) or would-block (`-EWOULDBLOCK`)
+- `2` (`STEP_EXITED`): clean shutdown (EOF for the current bring-up loop)
+- `3` (`STEP_TRAPPED`): fatal error (see `wasm_ccl_last_error`)
 
-If blocked, the kernel needs to expose *what it is waiting on* (e.g. a request ID),
-either by:
-
-- returning it via the step result (packing), or
-- writing it to a small shared struct in linear memory, or
-- providing an additional export to query it.
-
-This is intentionally left open until the first real async operation is wired end-to-end.
-
+This is a correctness/portability baseline for Stage 2. The full Lisp runtime will
+eventually use the same boundary to yield when any host capability would block.

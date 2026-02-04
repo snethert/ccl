@@ -23,6 +23,11 @@
 #define KERNEL_OP_STREAM_WRITE 0x00000002u
 #define KERNEL_OP_STREAM_READ 0x00000003u
 #define KERNEL_OP_TIME_NOW 0x00000004u
+#define KERNEL_OP_STREAM_OPEN 0x00000005u
+#define KERNEL_OP_STREAM_CLOSE 0x00000006u
+
+/* Stream kind registry (KERNEL_OP_STREAM_OPEN.kind). */
+#define KERNEL_STREAM_KIND_PIPE 0u
 
 /*
  * Host ABI note (copy-based responses, MVP).
@@ -61,6 +66,23 @@ uint32_t kernel_copy_response(uint32_t requestId, void *dstPtr, uint32_t dstLen)
 __attribute__((import_module("ccl"), import_name("kernel_drop_request")))
 void kernel_drop_request(uint32_t requestId);
 
+/* Stage-2 building blocks: manual request lifecycle. */
+int32_t wasm_kernel_request_begin(uint32_t opcode,
+                                  const void *payload,
+                                  uint32_t payload_len,
+                                  uint32_t *out_request_id);
+
+uint32_t wasm_kernel_request_status(uint32_t request_id);
+int32_t wasm_kernel_request_get_result(uint32_t request_id);
+uint32_t wasm_kernel_request_response_size_u32(uint32_t request_id);
+
+int32_t wasm_kernel_request_copy_response(uint32_t request_id,
+                                         void *out_buf,
+                                         uint32_t out_cap,
+                                         uint32_t *out_len);
+
+void wasm_kernel_request_drop(uint32_t request_id);
+
 /* Synchronous helper used by the current bring-up (Stage 1). */
 int32_t wasm_kernel_request_copy(uint32_t opcode,
                                  const void *payload,
@@ -78,9 +100,11 @@ int32_t wasm_kernel_stream_write(uint32_t sid_or_fd, const void *bytes, uint32_t
 
 int32_t wasm_kernel_stream_read(uint32_t sid_or_fd, void *buf, uint32_t cap, uint32_t *out_nread);
 
+int32_t wasm_kernel_stream_open(uint32_t kind, const void *arg, uint32_t arg_len, uint32_t *out_sid);
+int32_t wasm_kernel_stream_close(uint32_t sid);
+
 int32_t wasm_kernel_time_now(uint64_t *out_unix_ms);
 
 #endif /* WASM32 */
 
 #endif /* __ccl_wasm_host_h__ */
-

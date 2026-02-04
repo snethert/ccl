@@ -62,6 +62,10 @@ All functions below are imported from the WASM module namespace `ccl`.
 
 After `kernel_drop_request`, the `requestId` becomes invalid and may be reused.
 
+**Implementation note (reference microkernel):** `kernel_drop_request` is
+idempotent (repeated drops are ignored). Guests must still follow the ABI rule
+and drop each request exactly once; idempotence is a safety net for bring-up.
+
 ## Status codes
 
 `kernel_poll` and `kernel_wait` return one of:
@@ -139,6 +143,8 @@ All opcodes are `u32`.
 - `KERNEL_OP_STREAM_WRITE = 0x0000_0002`
 - `KERNEL_OP_STREAM_READ  = 0x0000_0003`
 - `KERNEL_OP_TIME_NOW     = 0x0000_0004`
+- `KERNEL_OP_STREAM_OPEN  = 0x0000_0005`
+- `KERNEL_OP_STREAM_CLOSE = 0x0000_0006`
 
 Unrecognized opcodes MUST complete with `kernel_result == -ENOSYS`.
 
@@ -168,6 +174,10 @@ Initial `capability_bits` allocation (others reserved, must be 0 for now):
 - bit 1: `kernel_wait` is implemented and usable (Stage 3)
 - bit 2: shared memory/Atomics available (environment-dependent)
 - bit 3: zero-copy response variants available (TODO)
+
+**Implementation note (reference microkernel):** capability bit 0 is set when the
+microkernel is configured to allow PENDING requests (currently `asyncStdin: true`
+and only for stdin `STREAM_READ`).
 
 `kernel_result`: `0` on success; negative errno on failure.
 
@@ -232,6 +242,68 @@ Response payload: raw bytes read.
 In Stage 2 (async baseline), reads that would block SHOULD return `-EWOULDBLOCK`
 or remain PENDING until data arrives (implementation choice, must be documented
 by the microkernel).
+
+**Implementation note (reference microkernel):**
+
+- For `sid_or_fd == 0` (stdin), empty-but-not-closed reads return:
+  - `PENDING` when the microkernel is configured with `asyncStdin: true`, or
+  - `DONE` with `kernel_result == -EWOULDBLOCK` when `asyncStdin: false` (Stage 1).
+- For `PIPE` streams opened via `KERNEL_OP_STREAM_OPEN(kind=PIPE)`, empty reads
+  return `DONE` with `kernel_result == -EWOULDBLOCK` (no PENDING behavior yet).
+
+### `KERNEL_OP_STREAM_OPEN`
+
+Open/allocate a new stream endpoint and return a fresh `sid` scoped to the
+current runner.
+
+Payload:
+
+```
+offset  size  field
+0x00    u32   kind          (endpoint kind; registry below)
+0x04    u32   flags         (reserved, must be 0)
+0x08    u32   arg_ptr       (guest pointer to kind-specific bytes; optional)
+0x0c    u32   arg_len       (bytes; optional)
+```
+
+Payload length MUST be 16 bytes.
+
+`arg_ptr/arg_len` is an uninterpreted byte string whose meaning depends on
+`kind`. (For example, a future `FILE` kind might treat it as UTF-8 path bytes.)
+
+Response payload: none (`kernel_response_size = 0`).
+
+`kernel_result`:
+
+- `>= 3`: the allocated stream id (`sid`)
+- `< 0`: negative errno
+
+Initial `kind` registry:
+
+- `0`: `PIPE` (in-memory byte FIFO; `arg_len` MUST be 0)
+
+### `KERNEL_OP_STREAM_CLOSE`
+
+Close a previously opened stream.
+
+Payload:
+
+```
+offset  size  field
+0x00    u32   sid
+0x04    u32   flags   (reserved, must be 0)
+```
+
+Payload length MUST be 8 bytes.
+
+Response payload: none (`kernel_response_size = 0`).
+
+`kernel_result`:
+
+- `0`: success
+- `< 0`: negative errno (e.g. `-EBADF`)
+
+Closing standard streams (SIDs 0/1/2) MUST be a no-op that returns success.
 
 ### `KERNEL_OP_TIME_NOW`
 

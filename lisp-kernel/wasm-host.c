@@ -15,6 +15,78 @@
 #include <string.h>
 
 int32_t
+wasm_kernel_request_begin(uint32_t opcode,
+                          const void *payload,
+                          uint32_t payload_len,
+                          uint32_t *out_request_id)
+{
+  if (out_request_id == NULL) {
+    return -EINVAL;
+  }
+  uint32_t request_id = kernel_request(opcode, payload, payload_len);
+  if (request_id == 0) {
+    return -EINVAL;
+  }
+  *out_request_id = request_id;
+  return 0;
+}
+
+uint32_t
+wasm_kernel_request_status(uint32_t request_id)
+{
+  return kernel_poll(request_id);
+}
+
+int32_t
+wasm_kernel_request_get_result(uint32_t request_id)
+{
+  return kernel_result(request_id);
+}
+
+uint32_t
+wasm_kernel_request_response_size_u32(uint32_t request_id)
+{
+  return kernel_response_size(request_id);
+}
+
+int32_t
+wasm_kernel_request_copy_response(uint32_t request_id,
+                                  void *out_buf,
+                                  uint32_t out_cap,
+                                  uint32_t *out_len)
+{
+  if (out_len) {
+    *out_len = 0;
+  }
+
+  uint32_t need = kernel_response_size(request_id);
+  if (need == 0) {
+    return 0;
+  }
+  if (need > out_cap) {
+    return -E2BIG;
+  }
+  if (out_buf == NULL) {
+    return -EINVAL;
+  }
+
+  uint32_t copied = kernel_copy_response(request_id, out_buf, out_cap);
+  if (copied != need) {
+    return -EINVAL;
+  }
+  if (out_len) {
+    *out_len = copied;
+  }
+  return 0;
+}
+
+void
+wasm_kernel_request_drop(uint32_t request_id)
+{
+  kernel_drop_request(request_id);
+}
+
+int32_t
 wasm_kernel_request_copy(uint32_t opcode,
                          const void *payload,
                          uint32_t payload_len,
@@ -158,6 +230,58 @@ wasm_kernel_stream_read(uint32_t sid_or_fd, void *buf, uint32_t cap, uint32_t *o
 }
 
 int32_t
+wasm_kernel_stream_open(uint32_t kind, const void *arg, uint32_t arg_len, uint32_t *out_sid)
+{
+  struct payload {
+    uint32_t kind;
+    uint32_t flags;
+    uint32_t arg_ptr;
+    uint32_t arg_len;
+  } p;
+  uint32_t n = 0;
+
+  if (out_sid) {
+    *out_sid = 0;
+  }
+  if (out_sid == NULL) {
+    return -EINVAL;
+  }
+
+  p.kind = kind;
+  p.flags = 0;
+  p.arg_ptr = (arg_len != 0) ? (uint32_t)(uintptr_t)arg : 0;
+  p.arg_len = arg_len;
+
+  int32_t r = wasm_kernel_request_copy(KERNEL_OP_STREAM_OPEN, &p, (uint32_t)sizeof(p), NULL, 0, &n);
+  if (r < 0) {
+    return r;
+  }
+  if (n != 0) {
+    return -EINVAL;
+  }
+  if (r < 3) {
+    return -EINVAL;
+  }
+  *out_sid = (uint32_t)r;
+  return 0;
+}
+
+int32_t
+wasm_kernel_stream_close(uint32_t sid)
+{
+  struct payload {
+    uint32_t sid;
+    uint32_t flags;
+  } p;
+
+  p.sid = sid;
+  p.flags = 0;
+
+  int32_t r = wasm_kernel_request_copy(KERNEL_OP_STREAM_CLOSE, &p, (uint32_t)sizeof(p), NULL, 0, NULL);
+  return r;
+}
+
+int32_t
 wasm_kernel_time_now(uint64_t *out_unix_ms)
 {
   uint64_t ms = 0;
@@ -177,4 +301,3 @@ wasm_kernel_time_now(uint64_t *out_unix_ms)
 }
 
 #endif /* WASM32 */
-

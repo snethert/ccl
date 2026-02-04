@@ -822,13 +822,4 @@ fsync(int fd)
   return -1;
 }
 
-time_t
-time(time_t *tloc)
-{
-  if (tloc) {
-    *tloc = 0;
-  }
-  return (time_t)0;
-}
-
 #endif /* WASM32 */

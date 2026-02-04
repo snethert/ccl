@@ -37,9 +37,9 @@ PLATFORM_H = platform-wasm32.h
 .c.o:
 	$(CC) --target=$(WASM_TARGET) -include ../$(PLATFORM_H) -c $< $(CDEFINES) $(CDEBUG) $(COPT) $(WFORMAT) -o $@
 
-COBJ  = pmcl-kernel.o gc-common.o wasm-gc.o wasm-cstack.o wasm-exceptions.o wasm-host.o wasm-kernel-imports.o wasm-kernel-request-smoke.o wasm-subprims.o wasm-subprims-standin.o \
-	wasm-subprims-smoke.o wasm-no-wasi-libc.o wasm-kernel-stubs.o \
-	bits.o image.o thread_manager.o lisp-debug.o memory.o unix-calls.o
+COBJ  = pmcl-kernel.o gc-common.o wasm-gc.o wasm-cstack.o wasm-exceptions.o wasm-host.o wasm-time.o wasm-kernel-imports.o wasm-kernel-request-smoke.o wasm-step-demo.o wasm-ccl-step.o wasm-subprims.o wasm-subprims-standin.o \
+		wasm-subprims-smoke.o wasm-no-wasi-libc.o wasm-kernel-stubs.o \
+		bits.o image.o thread_manager.o lisp-debug.o memory.o unix-calls.o
 
 DEBUGOBJ =
 KERNELOBJ= $(COBJ)

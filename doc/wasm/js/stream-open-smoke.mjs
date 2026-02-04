@@ -1,0 +1,58 @@
+/*
+ * Stream lifecycle smoke test (STREAM_OPEN / STREAM_CLOSE).
+ *
+ * Validates that the WASM kernel can allocate a non-standard stream SID,
+ * perform I/O on it, close it, and observe EBADF afterwards.
+ */
+
+import fs from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+
+import { createMicrokernel } from "./microkernel.mjs";
+import { createCclImports, createSharedCclRuntime, instantiateWasm } from "./ccl-loader.mjs";
+
+function fail(msg) {
+  console.error(`FAIL: ${msg}`);
+  process.exit(1);
+}
+
+function assert(cond, msg) {
+  if (!cond) fail(msg);
+}
+
+function readFileUrl(url) {
+  return fs.readFile(fileURLToPath(url));
+}
+
+const kernelUrl = new URL("./wasmcl.wasm", import.meta.url);
+const kernelBytes = await readFileUrl(kernelUrl);
+
+const runtime = createSharedCclRuntime({
+  memoryInitialPages: 8,
+  subprimsTableInitial: 256,
+  createMemory: true,
+});
+
+const microkernel = createMicrokernel({
+  memory: runtime.memory,
+});
+
+const kernel = await instantiateWasm(
+  kernelBytes,
+  createCclImports({
+    memory: runtime.memory,
+    subprimsTable: runtime.subprimsTable,
+    microkernel,
+  }),
+);
+
+assert(
+  typeof kernel.instance.exports.wasm_kernel_request_smoke_pipe_roundtrip === "function",
+  "missing wasm_kernel_request_smoke_pipe_roundtrip export",
+);
+
+const r = kernel.instance.exports.wasm_kernel_request_smoke_pipe_roundtrip() | 0;
+assert(r === 0, `expected pipe roundtrip success, got ${r}`);
+
+console.log("PASS: stream open/close smoke test");
+

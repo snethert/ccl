@@ -88,6 +88,10 @@ After building `doc/wasm/js/wasmcl.wasm`, run:
 ```bash
 node doc/wasm/js/smoke-test.mjs
 node doc/wasm/js/kernel-request-smoke.mjs
+node doc/wasm/js/stream-open-smoke.mjs
+node doc/wasm/js/pending-stdin-smoke.mjs
+node doc/wasm/js/step-demo.mjs
+node doc/wasm/js/ccl-step-smoke.mjs
 ```
 
 ## Load A Heap Image (Boot-Only)

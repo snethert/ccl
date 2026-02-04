@@ -60,6 +60,20 @@ const abiVersion = kernel.instance.exports.wasm_kernel_caps_abi_version() >>> 0;
 assert(abiVersion === KERNEL_ABI_VERSION, `unexpected ABI version: got=${abiVersion} want=${KERNEL_ABI_VERSION}`);
 
 assert(
+  typeof kernel.instance.exports.wasm_kernel_request_smoke_time_now_ms === "function",
+  "missing wasm_kernel_request_smoke_time_now_ms export",
+);
+const nowMs = BigInt(Date.now());
+const gotMs = kernel.instance.exports.wasm_kernel_request_smoke_time_now_ms();
+assert(typeof gotMs === "bigint", `unexpected time type: ${typeof gotMs}`);
+assert(gotMs > 0n, "expected TIME_NOW to return non-zero ms");
+{
+  const diff = gotMs >= nowMs ? gotMs - nowMs : nowMs - gotMs;
+  // The microkernel's default `now()` uses Date.now(); allow some slack.
+  assert(diff < 5_000n, `unexpected TIME_NOW drift: diff_ms=${diff}`);
+}
+
+assert(
   typeof kernel.instance.exports.wasm_kernel_request_smoke_write === "function",
   "missing wasm_kernel_request_smoke_write export",
 );

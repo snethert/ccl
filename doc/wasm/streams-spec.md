@@ -9,10 +9,14 @@ It defines:
    •   Stream ownership
    •   Standard streams
    •   Per-runner stream resolution
-   •   Byte and character stream semantics
-   •   Buffering and encoding responsibilities
+   •   Byte-stream semantics as exposed by the kernel_request ABI
+   •   Buffering and encoding responsibilities (Lisp-side)
    •   Network-backed stream endpoints
    •   Minimal JS microkernel state required to support streams
+
+This document describes the *conceptual* stream system. The concrete I/O ABI is
+defined by `doc/wasm/kernel-request-abi.md:1` (opcodes `STREAM_READ`,
+`STREAM_WRITE`, and the `STREAM_OPEN`/`STREAM_CLOSE` lifecycle operations).
 
 ⸻
 
@@ -45,8 +49,8 @@ A stream endpoint has a type and directionality.
 4.1 Byte Streams
 
 A byte stream transmits octets (0–255).
-   •   Read returns a single octet or an end-of-stream condition.
-   •   Write accepts a single octet.
+   •   Read returns up to N octets (possibly fewer), or an end-of-stream condition.
+   •   Write accepts a sequence of octets.
    •   No encoding interpretation is performed by the JS microkernel.
 
 Byte streams are required to support:
@@ -57,12 +61,15 @@ Byte streams are required to support:
 
 4.2 Character Streams
 
-A character stream transmits character units.
-   •   Read returns a single character unit or an end-of-stream condition.
-   •   Write accepts a single character unit.
-   •   Character units are implementation-defined but must be consistent within a stream.
+CCL supports “character streams” at the Lisp level, but the kernel_request ABI
+does not currently expose a distinct character-stream transport.
 
-The microkernel performs no line discipline.
+In the WASM bring-up baseline, the JS microkernel exposes **byte streams only**.
+Any character stream behavior (buffering, newline translation, encoding/decoding,
+`READ-CHAR`/`READ-LINE` semantics, etc.) is implemented in Lisp on top of byte
+streams.
+
+The microkernel performs no line discipline and does not interpret encodings.
 
 ⸻
 
@@ -94,19 +101,19 @@ The root Lisp runner is created with the following fixed SIDs:
 
 SID 0 — Standard Input
    •   Readable
-   •   Character stream
+   •   Byte stream (conventionally UTF-8 text, but treated as bytes)
    •   Bound to the interactive input device
    •   Unclosable
 
 SID 1 — Standard Output
    •   Writable
-   •   Character stream
+   •   Byte stream (conventionally UTF-8 text, but treated as bytes)
    •   Bound to the primary output sink
    •   Unclosable
 
 SID 2 — Standard Error
    •   Writable
-   •   Character stream
+   •   Byte stream (conventionally UTF-8 text, but treated as bytes)
    •   Bound to the error output sink
    •   Unclosable
 
@@ -187,12 +194,16 @@ Managing output interleaving is the user’s responsibility.
 
 10. Stream Operations
 
-The JS microkernel must support the following operations per runner:
-   •   Allocate a new stream endpoint and assign an SID
-   •   Query endpoint properties (type, direction, open/closed)
-   •   Read one unit from an SID (octet for byte streams; character unit for character streams)
-   •   Write one unit to an SID (octet for byte streams; character unit for character streams)
-   •   Close an SID
+The JS microkernel must support the following operations per runner (via the
+kernel_request ABI):
+
+   •   Allocate a new stream endpoint and assign an SID (`STREAM_OPEN`)
+   •   Close an SID (`STREAM_CLOSE`)
+   •   Read bytes from an SID (`STREAM_READ`)
+   •   Write bytes to an SID (`STREAM_WRITE`)
+
+SIDs 0/1/2 are reserved for standard streams. Stream allocation via
+`STREAM_OPEN` returns SIDs >= 3.
 
 Closing behavior:
    •   Closing a normal stream releases the endpoint.
@@ -202,7 +213,8 @@ Closing behavior:
 
 11. Read Semantics and Buffering
 
-The microkernel delivers single units (octet or character unit). It does not buffer for Lisp semantics.
+The microkernel delivers raw bytes. It does not buffer for Lisp semantics beyond
+whatever buffering is inherent in the chosen endpoint implementation.
 
 All buffering and parsing is the responsibility of the Lisp runtime.
    •   Byte stream buffering: implemented in Lisp when higher-level operations require it.

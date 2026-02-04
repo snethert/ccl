@@ -17,6 +17,8 @@ export const KERNEL_OP_LOG = 0x00000001;
 export const KERNEL_OP_STREAM_WRITE = 0x00000002;
 export const KERNEL_OP_STREAM_READ = 0x00000003;
 export const KERNEL_OP_TIME_NOW = 0x00000004;
+export const KERNEL_OP_STREAM_OPEN = 0x00000005;
+export const KERNEL_OP_STREAM_CLOSE = 0x00000006;
 
 // Minimal errno set. The kernel and microkernel must agree on numeric values.
 // For wasm32-wasi bring-up builds, use wasi-libc/WASI errno numbers.
@@ -124,10 +126,43 @@ function normalizeBytes(bytes) {
   throw new TypeError("expected Uint8Array/ArrayBuffer/view");
 }
 
+function takeFromQueue(queue, maxBytes) {
+  const want = u32(maxBytes);
+  if (want === 0) return new Uint8Array(0);
+
+  let available = 0;
+  for (const c of queue) {
+    available += c.bytes.length - c.off;
+    if (available >= want) break;
+  }
+  if (available === 0) return null;
+
+  const n = Math.min(want, available);
+  const out = new Uint8Array(n);
+  let outOff = 0;
+
+  while (outOff < n && queue.length) {
+    const head = queue[0];
+    const remain = head.bytes.length - head.off;
+    const take = Math.min(remain, n - outOff);
+    out.set(head.bytes.subarray(head.off, head.off + take), outOff);
+    head.off += take;
+    outOff += take;
+    if (head.off >= head.bytes.length) {
+      queue.shift();
+    }
+  }
+
+  return out;
+}
+
 export function createMicrokernel({
   memory,
   writeStdout = defaultStdoutWriter,
   writeStderr = defaultStderrWriter,
+  // If true, some requests may remain PENDING until host data arrives.
+  // This is a Stage-2 (async) feature; leave false for Stage-1 sync bring-up.
+  asyncStdin = false,
   // Optional hooks for tests/embedding:
   logSink = null, // (level, text, bytes) => void
   now = () => Date.now(),
@@ -135,58 +170,87 @@ export function createMicrokernel({
   if (!memory) throw new Error("createMicrokernel: memory is required");
 
   const requests = new Map(); // id -> { status, result, response: Uint8Array }
+  const pendingStdinReads = []; // request ids waiting on stdin
   let nextRequestId = 1;
 
   const logs = [];
   const decoder = typeof TextDecoder !== "undefined" ? new TextDecoder("utf-8") : null;
 
-  // Simple stdin queue for STREAM_READ (sid 0). Empty-but-not-closed returns EWOULDBLOCK.
+  // Per-runner stream table (SID -> endpoint).
+  //
+  // Standard streams:
+  //   0 stdin (readable)
+  //   1 stdout (writable)
+  //   2 stderr (writable)
+  //
+  // SIDs >= 3 are allocated via KERNEL_OP_STREAM_OPEN.
+  const streams = new Map();
+  let nextSid = 3;
+
+  // Simple stdin queue for STREAM_READ (sid 0). Empty-but-not-closed returns EWOULDBLOCK (or PENDING in Stage 2).
   const stdinQueue = [];
   let stdinClosed = false;
 
   function feedStdin(bytes) {
     stdinQueue.push({ bytes: normalizeBytes(bytes), off: 0 });
+    drainPendingStdinReads();
   }
 
   function closeStdin() {
     stdinClosed = true;
+    drainPendingStdinReads();
   }
 
   function takeStdin(maxBytes) {
-    const want = u32(maxBytes);
-    if (want === 0) return new Uint8Array(0);
-
-    let available = 0;
-    for (const c of stdinQueue) {
-      available += c.bytes.length - c.off;
-      if (available >= want) break;
-    }
-    if (available === 0) return null;
-
-    const n = Math.min(want, available);
-    const out = new Uint8Array(n);
-    let outOff = 0;
-
-    while (outOff < n && stdinQueue.length) {
-      const head = stdinQueue[0];
-      const remain = head.bytes.length - head.off;
-      const take = Math.min(remain, n - outOff);
-      out.set(head.bytes.subarray(head.off, head.off + take), outOff);
-      head.off += take;
-      outOff += take;
-      if (head.off >= head.bytes.length) {
-        stdinQueue.shift();
-      }
-    }
-
-    return out;
+    return takeFromQueue(stdinQueue, maxBytes);
   }
+
+  function createPipeStream() {
+    const q = [];
+    let closed = false;
+
+    return {
+      kind: "pipe",
+      readable: true,
+      writable: true,
+      write(bytes) {
+        if (closed) return i32(-ERRNO.EBADF);
+        const b = normalizeBytes(bytes);
+        if (b.length) q.push({ bytes: b, off: 0 });
+        return i32(b.length);
+      },
+      read(maxBytes) {
+        if (maxBytes === 0) return new Uint8Array(0);
+        const chunk = takeFromQueue(q, maxBytes);
+        if (chunk && chunk.length) return chunk;
+        if (closed) return new Uint8Array(0); // EOF
+        return null; // empty
+      },
+      close() {
+        closed = true;
+      },
+    };
+  }
+
+  // Install standard streams.
+  streams.set(0, { kind: "stdin", readable: true, writable: false });
+  streams.set(1, { kind: "stdout", readable: false, writable: true });
+  streams.set(2, { kind: "stderr", readable: false, writable: true });
 
   function recordRequestDone(id, result, responseBytes = null) {
     requests.set(id, {
       status: KERNEL_STATUS_DONE,
       result: i32(result),
       response: responseBytes ? normalizeBytes(responseBytes) : new Uint8Array(0),
+    });
+  }
+
+  function recordRequestPending(id, pending) {
+    requests.set(id, {
+      status: KERNEL_STATUS_PENDING,
+      result: 0,
+      response: new Uint8Array(0),
+      pending,
     });
   }
 
@@ -197,6 +261,43 @@ export function createMicrokernel({
       result: i32(-Math.abs(errno | 0)),
       response: new Uint8Array(0),
     });
+  }
+
+  function drainPendingStdinReads() {
+    for (;;) {
+      if (pendingStdinReads.length === 0) return;
+
+      const id = pendingStdinReads[0];
+      const req = requests.get(id);
+      if (!req) {
+        pendingStdinReads.shift();
+        continue;
+      }
+      if (req.status !== KERNEL_STATUS_PENDING || req.pending?.kind !== "stdin_read") {
+        pendingStdinReads.shift();
+        continue;
+      }
+
+      const maxBytes = u32(req.pending.maxBytes);
+      if (maxBytes === 0) {
+        pendingStdinReads.shift();
+        recordRequestDone(id, 0);
+        continue;
+      }
+
+      const chunk = takeStdin(maxBytes);
+      if (chunk && chunk.length) {
+        pendingStdinReads.shift();
+        recordRequestDone(id, chunk.length, chunk);
+        continue;
+      }
+      if (stdinClosed) {
+        pendingStdinReads.shift();
+        recordRequestDone(id, 0);
+        continue;
+      }
+      return;
+    }
   }
 
   function kernel_request(opcode, payloadPtr, payloadLen) {
@@ -216,8 +317,8 @@ export function createMicrokernel({
           recordRequestError(id, ERRNO.EINVAL);
           break;
         }
-        // Stage 1 sync host: no async completion, no wait, no shared-memory assumptions.
-        const caps = encodeCapsResponse({ capabilityBits: 0, maxResponseBytes: 0 });
+        const capabilityBits = asyncStdin ? 0x1 : 0; // bit0: requests may return PENDING
+        const caps = encodeCapsResponse({ capabilityBits, maxResponseBytes: 0 });
         recordRequestDone(id, 0, caps);
         break;
       }
@@ -268,12 +369,23 @@ export function createMicrokernel({
         if (sid === 1) {
           writeStdout(bytes);
           recordRequestDone(id, bytes.length);
-        } else if (sid === 2) {
+          break;
+        }
+        if (sid === 2) {
           writeStderr(bytes);
           recordRequestDone(id, bytes.length);
-        } else {
-          recordRequestDone(id, -ERRNO.ENOSYS);
+          break;
         }
+        const stream = streams.get(u32(sid));
+        if (!stream || !stream.writable) {
+          recordRequestDone(id, -ERRNO.EBADF);
+          break;
+        }
+        if (stream.kind === "pipe") {
+          recordRequestDone(id, stream.write(bytes));
+          break;
+        }
+        recordRequestDone(id, -ERRNO.ENOSYS);
         break;
       }
 
@@ -284,18 +396,42 @@ export function createMicrokernel({
         }
         const sid = readU32LE(memory, u32(payloadPtr) + 0);
         const maxBytes = readU32LE(memory, u32(payloadPtr) + 4);
-        if (sid !== 0) {
-          recordRequestDone(id, -ERRNO.ENOSYS);
+        if (u32(maxBytes) === 0) {
+          recordRequestDone(id, 0);
           break;
         }
-        const chunk = takeStdin(maxBytes);
-        if (chunk && chunk.length) {
-          recordRequestDone(id, chunk.length, chunk);
-        } else if (stdinClosed) {
-          recordRequestDone(id, 0);
-        } else {
-          recordRequestDone(id, -ERRNO.EWOULDBLOCK);
+        if (sid === 0) {
+          const chunk = takeStdin(maxBytes);
+          if (chunk && chunk.length) {
+            recordRequestDone(id, chunk.length, chunk);
+          } else if (stdinClosed) {
+            recordRequestDone(id, 0);
+          } else if (asyncStdin) {
+            recordRequestPending(id, { kind: "stdin_read", maxBytes: u32(maxBytes) });
+            pendingStdinReads.push(id);
+          } else {
+            recordRequestDone(id, -ERRNO.EWOULDBLOCK);
+          }
+          break;
         }
+
+        const stream = streams.get(u32(sid));
+        if (!stream || !stream.readable) {
+          recordRequestDone(id, -ERRNO.EBADF);
+          break;
+        }
+        if (stream.kind === "pipe") {
+          const chunk = stream.read(u32(maxBytes));
+          if (chunk && chunk.length) {
+            recordRequestDone(id, chunk.length, chunk);
+          } else if (chunk) {
+            recordRequestDone(id, 0);
+          } else {
+            recordRequestDone(id, -ERRNO.EWOULDBLOCK);
+          }
+          break;
+        }
+        recordRequestDone(id, -ERRNO.ENOSYS);
         break;
       }
 
@@ -306,6 +442,68 @@ export function createMicrokernel({
         }
         const t = now();
         recordRequestDone(id, 0, encodeTimeNowResponse(t));
+        break;
+      }
+
+      case KERNEL_OP_STREAM_OPEN: {
+        if (u32(payloadLen) !== 16) {
+          recordRequestError(id, ERRNO.EINVAL);
+          break;
+        }
+        const kind = readU32LE(memory, u32(payloadPtr) + 0);
+        const flags = readU32LE(memory, u32(payloadPtr) + 4);
+        const argPtr = readU32LE(memory, u32(payloadPtr) + 8);
+        const argLen = readU32LE(memory, u32(payloadPtr) + 12);
+        if (flags !== 0) {
+          recordRequestError(id, ERRNO.EINVAL);
+          break;
+        }
+        if (u32(argLen) !== 0 && !inBounds(memory, argPtr, argLen)) {
+          recordRequestError(id, ERRNO.EINVAL);
+          break;
+        }
+
+        if (u32(kind) === 0) { // PIPE
+          if (u32(argLen) !== 0) {
+            recordRequestError(id, ERRNO.EINVAL);
+            break;
+          }
+          const sid = nextSid++;
+          streams.set(sid, createPipeStream());
+          recordRequestDone(id, sid);
+          break;
+        }
+
+        recordRequestDone(id, -ERRNO.ENOSYS);
+        break;
+      }
+
+      case KERNEL_OP_STREAM_CLOSE: {
+        if (u32(payloadLen) !== 8) {
+          recordRequestError(id, ERRNO.EINVAL);
+          break;
+        }
+        const sid = readU32LE(memory, u32(payloadPtr) + 0);
+        const flags = readU32LE(memory, u32(payloadPtr) + 4);
+        if (flags !== 0) {
+          recordRequestError(id, ERRNO.EINVAL);
+          break;
+        }
+        if (u32(sid) <= 2) {
+          recordRequestDone(id, 0);
+          break;
+        }
+        const stream = streams.get(u32(sid));
+        if (!stream) {
+          recordRequestDone(id, -ERRNO.EBADF);
+          break;
+        }
+        try {
+          stream.close?.();
+        } finally {
+          streams.delete(u32(sid));
+        }
+        recordRequestDone(id, 0);
         break;
       }
 
@@ -366,7 +564,15 @@ export function createMicrokernel({
 
   function kernel_drop_request(requestId) {
     // Idempotent drop (required: guest must drop exactly once; host ignores repeats).
-    requests.delete(u32(requestId));
+    const id = u32(requestId);
+    const req = requests.get(id);
+    if (req?.status === KERNEL_STATUS_PENDING && req.pending?.kind === "stdin_read") {
+      const idx = pendingStdinReads.indexOf(id);
+      if (idx >= 0) {
+        pendingStdinReads.splice(idx, 1);
+      }
+    }
+    requests.delete(id);
   }
 
   const imports = {
@@ -383,6 +589,6 @@ export function createMicrokernel({
     feedStdin,
     closeStdin,
     getLogs: () => logs.slice(),
-    _debug: { requests },
+    _debug: { requests, pendingStdinReads, streams },
   };
 }
