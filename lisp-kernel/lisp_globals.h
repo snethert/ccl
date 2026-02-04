@@ -133,6 +133,12 @@ extern LispObj lisp_nil;
 #define nrs_symbol(s) (((lispsymbol *) (nil_value-fulltag_nil+dnode_size))[(s)]) 
 #endif
 
+#ifdef WASM32
+/* Mirror the ARM lowmem layout for wasm32 bring-up. */
+#define lisp_global(g) (((LispObj *) (nil_value-fulltag_nil-dnode_size))[(g)])
+#define nrs_symbol(s) (((lispsymbol *) (nil_value-fulltag_nil+dnode_size))[(s)])
+#endif
+
 #define nrs_T 				(nrs_symbol(0))		/* t */
 #define nrs_NILSYM			(nrs_symbol(1))		/* nil */
 #define nrs_ERRDISP			(nrs_symbol(2))		/* %err-disp */

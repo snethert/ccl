@@ -149,6 +149,11 @@ typedef struct area_list {
 #define CS_OVERFLOW_FORCE_LIMIT ((natural)(-(sizeof(lisp_frame))))
 #endif
 
+#ifdef WASM32
+/* We reuse the ARM lisp_frame layout/marker scheme. */
+#define CS_OVERFLOW_FORCE_LIMIT ((natural)(-(sizeof(lisp_frame))))
+#endif
+
 
 
 #if (WORD_SIZE==64)

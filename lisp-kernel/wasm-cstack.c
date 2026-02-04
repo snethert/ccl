@@ -16,8 +16,24 @@
 
 #ifdef WASM32
 #include "lisp.h"
+#include "lisp-exceptions.h"
 #include "threads.h"
-#include "platform-wasm32.h"
+
+static void
+wasm_cstack_bounds_or_bust(TCR *tcr, BytePtr sp, natural need)
+{
+  BytePtr base = (BytePtr)tcr->wasm_cstack_base;
+  natural size = tcr->wasm_cstack_size;
+  BytePtr low;
+
+  if ((base == NULL) || (size == 0)) {
+    Bug(NULL, "WASM cstack bounds not initialized (call wasm_set_cstack_bounds first)");
+  }
+  low = base - size;
+  if ((sp < low) || (sp > base) || ((natural)(sp - low) < need)) {
+    Bug(NULL, "WASM cstack pointer out of bounds");
+  }
+}
 
 natural
 wasm_cstack_push_frame(TCR *tcr, LispObj savefn, pc savelr, LispObj savevsp)
@@ -26,6 +42,7 @@ wasm_cstack_push_frame(TCR *tcr, LispObj savefn, pc savelr, LispObj savevsp)
   BytePtr sp = (BytePtr)wasm_get_cstack_pointer();
   lisp_frame *frame;
 
+  wasm_cstack_bounds_or_bust(tcr, sp, sizeof(lisp_frame));
   sp -= sizeof(lisp_frame);
   frame = (lisp_frame *)sp;
   frame->marker = lisp_frame_marker;
@@ -43,8 +60,14 @@ void
 wasm_cstack_pop_frame(TCR *tcr, natural old_last_lisp_frame)
 {
   BytePtr sp = (BytePtr)wasm_get_cstack_pointer();
+  lisp_frame *frame = (lisp_frame *)sp;
+
+  if (frame->marker != lisp_frame_marker) {
+    Bug(NULL, "WASM cstack pop: not at a lisp frame");
+  }
 
   sp += sizeof(lisp_frame);
+  wasm_cstack_bounds_or_bust(tcr, sp, 0);
   wasm_set_cstack_pointer(sp);
   tcr->last_lisp_frame = old_last_lisp_frame;
 }
@@ -71,6 +94,7 @@ wasm_cstack_push_alloc_marker(TCR *tcr, LispObj next)
   LispObj *p;
 
   (void)tcr;
+  wasm_cstack_bounds_or_bust(tcr, sp, (2 * sizeof(LispObj)));
   sp -= (2 * sizeof(LispObj));
   p = (LispObj *)sp;
   p[0] = stack_alloc_marker;
@@ -84,6 +108,7 @@ void
 wasm_cstack_pop_alloc_marker(TCR *tcr, BytePtr old_sp)
 {
   (void)tcr;
+  wasm_cstack_bounds_or_bust(tcr, old_sp, 0);
   wasm_set_cstack_pointer(old_sp);
 }
 #endif

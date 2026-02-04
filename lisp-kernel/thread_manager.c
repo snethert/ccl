@@ -20,8 +20,29 @@
 #include <stddef.h>
 #ifdef WASM32
 #include <stdint.h>
+#include <stdatomic.h>
 #include "gc.h"
 #include "lisp-exceptions.h"
+#include "area.h"
+struct wasm_semaphore;
+#endif
+
+#ifdef WASM32
+static TCR *wasm_current_tcr = NULL;
+
+__attribute__((used, visibility("default"), export_name("wasm_set_current_tcr")))
+void
+wasm_set_current_tcr(TCR *tcr)
+{
+  wasm_current_tcr = tcr;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_get_current_tcr")))
+TCR *
+wasm_get_current_tcr(void)
+{
+  return wasm_current_tcr;
+}
 #endif
 
 
@@ -44,6 +65,37 @@ store_conditional(natural*, natural, natural);
 
 extern signed_natural
 atomic_swap(signed_natural*, signed_natural);
+
+#ifdef WASM32
+/* Simple single-threaded implementations. (When wasm threads are enabled,
+ * these should become real atomics.)
+ */
+natural
+store_conditional(natural *p, natural old, natural new)
+{
+  natural cur = *p;
+  if (cur == old) {
+    *p = new;
+  }
+  return cur;
+}
+
+signed_natural
+atomic_swap(signed_natural *p, signed_natural val)
+{
+  signed_natural old = *p;
+  *p = val;
+  return old;
+}
+
+natural
+atomic_ior(natural *p, natural mask)
+{
+  natural old = *p;
+  *p = old | mask;
+  return old;
+}
+#endif
 
 #ifdef USE_FUTEX
 #define futex_wait(futex,val) syscall(SYS_futex,futex,FUTEX_WAIT,val)
@@ -175,6 +227,10 @@ raise_thread_interrupt(TCR *target)
 int
 raise_thread_interrupt(TCR *target)
 {
+#ifdef WASM32
+  (void)target;
+  return ESRCH;
+#else
   pthread_t thread = (pthread_t)TCR_AUX(target)->osid;
 #ifdef DARWIN_not_yet
   if (use_mach_exception_handling) {
@@ -185,6 +241,7 @@ raise_thread_interrupt(TCR *target)
     return pthread_kill(thread, SIGNAL_FOR_PROCESS_INTERRUPT);
   }
   return ESRCH;
+#endif /* !WASM32 */
 }
 #endif
 
@@ -250,7 +307,7 @@ get_spin_lock(signed_natural *p, TCR *tcr)
         return;
       }
     }
-#ifndef WINDOWS
+#if !defined(WINDOWS) && !defined(WASM32)
     sched_yield();
 #endif
   }
@@ -459,6 +516,9 @@ sem_wait_forever(SEMAPHORE s)
   int status;
 
   do {
+#ifdef USE_WASM_SEMAPHORES
+    status = SEM_WAIT(s);
+#endif
 #ifdef USE_MACH_SEMAPHORES
     status = SEM_WAIT(s);
 #endif
@@ -474,6 +534,12 @@ sem_wait_forever(SEMAPHORE s)
 int
 wait_on_semaphore(void *s, int seconds, int millis)
 {
+#ifdef USE_WASM_SEMAPHORES
+  (void)s;
+  (void)seconds;
+  (void)millis;
+  return ENOSYS;
+#endif
 #ifdef USE_POSIX_SEMAPHORES
   int nanos = (millis % 1000) * 1000000;
   int status;
@@ -540,7 +606,13 @@ signal_semaphore(SEMAPHORE s)
 }
 
   
-#ifdef WINDOWS
+#ifdef WASM32
+LispObj
+current_thread_osid()
+{
+  return 0;
+}
+#elif defined(WINDOWS)
 LispObj
 current_thread_osid()
 {
@@ -644,7 +716,14 @@ wasm_relocate_cstack_pointers(BytePtr new_low,
                               BytePtr old_high,
                               ptrdiff_t delta)
 {
-  LispObj *current = (LispObj *)(wasm_cstack_sp ? wasm_cstack_sp : new_low);
+  TCR *tcr = wasm_get_tcr(false);
+  void *start_sp = NULL;
+  if (tcr != NULL) {
+    start_sp = tcr->wasm_cstack_sp;
+  } else {
+    start_sp = wasm_boot_cstack_sp;
+  }
+  LispObj *current = (LispObj *)(start_sp ? start_sp : new_low);
   LispObj *limit = (LispObj *)new_high;
   LispObj header;
   lisp_frame *frame;
@@ -686,23 +765,32 @@ wasm_relocate_cstack_pointers(BytePtr new_low,
   }
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_set_cstack_bounds")))
 void
 wasm_set_cstack_bounds(void *base, natural size)
 {
-  TCR *tcr = get_tcr(false);
+  TCR *tcr = wasm_get_tcr(false);
   if (tcr != NULL) {
     tcr->wasm_cstack_base = base;
     tcr->wasm_cstack_size = size;
+    if (tcr->wasm_cstack_sp == NULL) {
+      /* Default to an empty cstack (SP at base) if the host only set bounds. */
+      wasm_set_cstack_pointer(base);
+    }
   } else {
     wasm_boot_cstack_base = base;
     wasm_boot_cstack_size = size;
+    if (wasm_boot_cstack_sp == NULL) {
+      wasm_boot_cstack_sp = base;
+    }
   }
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_set_cstack_pointer")))
 void
 wasm_set_cstack_pointer(void *sp)
 {
-  TCR *tcr = get_tcr(false);
+  TCR *tcr = wasm_get_tcr(false);
   if (tcr != NULL) {
     tcr->wasm_cstack_sp = sp;
     if (tcr->wasm_cstack_area != NULL) {
@@ -713,17 +801,25 @@ wasm_set_cstack_pointer(void *sp)
   }
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_get_cstack_pointer")))
 void *
 wasm_get_cstack_pointer(void)
 {
-  TCR *tcr = get_tcr(false);
+  TCR *tcr = wasm_get_tcr(false);
   if ((tcr != NULL) && (tcr->wasm_cstack_sp != NULL)) {
     return tcr->wasm_cstack_sp;
   }
   if (wasm_boot_cstack_sp != NULL) {
     return wasm_boot_cstack_sp;
   }
-  return (void *)__builtin_frame_address(0);
+  if ((tcr != NULL) && (tcr->wasm_cstack_base != NULL)) {
+    return tcr->wasm_cstack_base;
+  }
+  if (wasm_boot_cstack_base != NULL) {
+    return wasm_boot_cstack_base;
+  }
+  Bug(NULL, "WASM cstack not initialized (call wasm_set_cstack_bounds before start)");
+  return NULL;
 }
 
 natural
@@ -735,7 +831,7 @@ current_stack_pointer(void)
 void
 os_get_current_thread_stack_bounds(void **base, natural *size)
 {
-  TCR *tcr = get_tcr(false);
+  TCR *tcr = wasm_get_tcr(false);
   if ((tcr != NULL) && (tcr->wasm_cstack_base != NULL) && (tcr->wasm_cstack_size != 0)) {
     *base = tcr->wasm_cstack_base;
     *size = tcr->wasm_cstack_size;
@@ -746,8 +842,7 @@ os_get_current_thread_stack_bounds(void **base, natural *size)
     *size = wasm_boot_cstack_size;
     return;
   }
-  *base = (void *)current_stack_pointer();
-  *size = WASM_DEFAULT_CSTACK_SIZE;
+  Bug(NULL, "WASM cstack bounds not initialized (call wasm_set_cstack_bounds before start)");
 }
 
 void
@@ -755,7 +850,7 @@ wasm_relocate_cstack(void *new_base)
 {
   BytePtr old_base, old_low, old_high, new_low, new_high;
   ptrdiff_t delta;
-  TCR *tcr = get_tcr(false);
+  TCR *tcr = wasm_get_tcr(false);
   void *base;
   natural size;
   area *cs_area;
@@ -816,6 +911,13 @@ wasm_relocate_cstack(void *new_base)
     TCR_AUX(tcr)->cs_limit = (LispObj)((char *)TCR_AUX(tcr)->cs_limit + delta);
   }
 
+  if ((tcr != NULL) && (tcr->last_lisp_frame != 0)) {
+    void *last_frame = (void *)tcr->last_lisp_frame;
+    if (wasm_ptr_in_cstack(last_frame, old_low, old_high)) {
+      tcr->last_lisp_frame = (natural)(((char *)last_frame) + delta);
+    }
+  }
+
   wasm_relocate_cstack_pointers(new_low, new_high, old_low, old_high, delta);
 }
 
@@ -828,14 +930,62 @@ wasm_memory_grow_and_relocate(uint32_t pages)
     return -1;
   }
   wasm_relocate_cstack((void *)((old_pages + pages) << 16));
-  if (get_tcr(false) != NULL) {
-    wasm_set_cstack_pointer(get_tcr(false)->wasm_cstack_sp);
+  if (wasm_get_tcr(false) != NULL) {
+    wasm_set_cstack_pointer(wasm_get_tcr(false)->wasm_cstack_sp);
   } else if (wasm_boot_cstack_sp != NULL) {
     wasm_set_cstack_pointer(wasm_boot_cstack_sp);
   }
   return (int32_t)old_pages;
 #else
   (void)pages;
+  return -1;
+#endif
+}
+
+int
+wasm_grow_cstack(natural min_bytes)
+{
+#if WASM_ALLOW_MEMORY_GROWTH
+  TCR *tcr = wasm_get_tcr(false);
+  natural grow_bytes, new_size;
+  uint32_t pages;
+  area *cs_area;
+  BytePtr base, lowlimit;
+
+  if ((tcr == NULL) || (tcr->wasm_cstack_base == NULL) || (tcr->wasm_cstack_size == 0)) {
+    return -1;
+  }
+
+  grow_bytes = (min_bytes != 0) ? min_bytes : WASM_DEFAULT_CSTACK_SIZE;
+  grow_bytes = (grow_bytes + WASM_PAGE_SIZE - 1) & ~(WASM_PAGE_SIZE - 1);
+  pages = (uint32_t)(grow_bytes >> 16);
+  if (pages == 0) {
+    return -1;
+  }
+  if (wasm_memory_grow_and_relocate(pages) < 0) {
+    return -1;
+  }
+
+  new_size = tcr->wasm_cstack_size + grow_bytes;
+  tcr->wasm_cstack_size = new_size;
+  cs_area = tcr->wasm_cstack_area;
+  if (cs_area != NULL) {
+    base = (BytePtr)tcr->wasm_cstack_base;
+    cs_area->low = base - new_size;
+    cs_area->high = base;
+    lowlimit = (BytePtr)((((natural)base - new_size) + 4095) & ~4095);
+    if (new_size > (CSTACK_HARDPROT + CSTACK_SOFTPROT)) {
+      cs_area->hardlimit = lowlimit + CSTACK_HARDPROT;
+      cs_area->softlimit = cs_area->hardlimit + CSTACK_SOFTPROT;
+    } else {
+      cs_area->softlimit = cs_area->hardlimit = lowlimit;
+    }
+    tcr->cs_limit = (LispObj)ptr_to_lispobj(cs_area->softlimit);
+  }
+
+  return 0;
+#else
+  (void)min_bytes;
   return -1;
 #endif
 }
@@ -899,9 +1049,24 @@ os_get_current_thread_stack_bounds(void **base, natural *size)
 }
 #endif
 
+/* Forward definition needed for allocation in new_semaphore(). */
+#ifdef USE_WASM_SEMAPHORES
+struct wasm_semaphore {
+  _Atomic int32_t count;
+  _Atomic int32_t waiters;
+};
+#endif
+
 void *
 new_semaphore(int count)
 {
+#ifdef USE_WASM_SEMAPHORES
+  struct wasm_semaphore *s = calloc(1, sizeof(struct wasm_semaphore));
+  if (s) {
+    atomic_store_explicit(&s->count, count, memory_order_relaxed);
+  }
+  return s;
+#endif
 #ifdef USE_POSIX_SEMAPHORES
   sem_t *s = malloc(sizeof(sem_t));
   sem_init(s, 0, count);
@@ -920,6 +1085,136 @@ new_semaphore(int count)
   return CreateSemaphore(NULL, count, 0x7fffL, NULL);
 #endif
 }
+
+#ifdef USE_WASM_SEMAPHORES
+static int
+wasm_futex_wait32(_Atomic int32_t *addr, int32_t expected, int64_t timeout_ns)
+{
+#ifdef __wasm_threads__
+  return __builtin_wasm_memory_atomic_wait32((int32_t *)addr, expected, timeout_ns);
+#else
+  (void)addr;
+  (void)expected;
+  (void)timeout_ns;
+  return 1;
+#endif
+}
+
+static int
+wasm_futex_wake32(_Atomic int32_t *addr, int32_t count)
+{
+#ifdef __wasm_threads__
+  return __builtin_wasm_memory_atomic_notify((int32_t *)addr, count);
+#else
+  (void)addr;
+  (void)count;
+  return 0;
+#endif
+}
+
+static int64_t
+wasm_timeout_from_timespec(const struct timespec *t)
+{
+  if (t == NULL) {
+    return -1;
+  }
+#ifdef CLOCK_REALTIME
+  struct timespec now;
+  if (clock_gettime(CLOCK_REALTIME, &now) == 0) {
+    int64_t sec = (int64_t)t->tv_sec - (int64_t)now.tv_sec;
+    int64_t nsec = (int64_t)t->tv_nsec - (int64_t)now.tv_nsec;
+    int64_t total = sec * 1000000000LL + nsec;
+    if (total < 0) {
+      return 0;
+    }
+    return total;
+  }
+#endif
+  return 0;
+}
+
+int
+wasm_sem_wait(SEMAPHORE s)
+{
+#ifndef __wasm_threads__
+  /* Single-threaded WASM has no futex/Atomics.wait; fail fast instead of spinning. */
+  (void)s;
+  return ENOSYS;
+#else
+  for (;;) {
+    int32_t current = atomic_load_explicit(&s->count, memory_order_acquire);
+    while (current > 0) {
+      if (atomic_compare_exchange_weak_explicit(&s->count, &current, current - 1,
+                                                memory_order_acq_rel,
+                                                memory_order_acquire)) {
+        return 0;
+      }
+    }
+
+    atomic_fetch_add_explicit(&s->waiters, 1, memory_order_acq_rel);
+    for (;;) {
+      current = atomic_load_explicit(&s->count, memory_order_acquire);
+      if (current > 0) {
+        break;
+      }
+      wasm_futex_wait32(&s->count, 0, -1);
+    }
+    atomic_fetch_sub_explicit(&s->waiters, 1, memory_order_acq_rel);
+  }
+#endif
+}
+
+int
+wasm_sem_timedwait(SEMAPHORE s, const struct timespec *t)
+{
+#ifndef __wasm_threads__
+  /* Single-threaded WASM has no futex/Atomics.wait; fail fast instead of spinning. */
+  (void)s;
+  (void)t;
+  return ENOSYS;
+#else
+  int64_t timeout_ns = wasm_timeout_from_timespec(t);
+  for (;;) {
+    int32_t current = atomic_load_explicit(&s->count, memory_order_acquire);
+    while (current > 0) {
+      if (atomic_compare_exchange_weak_explicit(&s->count, &current, current - 1,
+                                                memory_order_acq_rel,
+                                                memory_order_acquire)) {
+        return 0;
+      }
+    }
+
+    if (timeout_ns == 0) {
+      return ETIMEDOUT;
+    }
+
+    atomic_fetch_add_explicit(&s->waiters, 1, memory_order_acq_rel);
+    int rc = wasm_futex_wait32(&s->count, 0, timeout_ns);
+    atomic_fetch_sub_explicit(&s->waiters, 1, memory_order_acq_rel);
+    if (rc != 0 && timeout_ns >= 0) {
+      return ETIMEDOUT;
+    }
+    if (timeout_ns > 0) {
+      timeout_ns = 0;
+    }
+  }
+#endif
+}
+
+void
+wasm_sem_post(SEMAPHORE s, int count)
+{
+  if (count <= 0) {
+    return;
+  }
+  atomic_fetch_add_explicit(&s->count, count, memory_order_release);
+  int32_t waiters = atomic_load_explicit(&s->waiters, memory_order_acquire);
+  if (waiters > 0) {
+    int32_t to_wake = (count < waiters) ? count : waiters;
+    wasm_futex_wake32(&s->count, to_wake);
+  }
+}
+#endif
 
 RECURSIVE_LOCK
 new_recursive_lock()
@@ -958,6 +1253,9 @@ void
 destroy_semaphore(void **s)
 {
   if (*s) {
+#ifdef USE_WASM_SEMAPHORES
+    free(*s);
+#endif
 #ifdef USE_POSIX_SEMAPHORES
     sem_destroy((sem_t *)*s);
     free(*s);    
@@ -983,6 +1281,22 @@ void *
 tsd_get(LispObj key)
 {
   return TlsGetValue((DWORD)key);
+}
+#elif defined(WASM32)
+static void *wasm_tsd_single = NULL;
+
+void
+tsd_set(LispObj key, void *datum)
+{
+  (void)key;
+  wasm_tsd_single = datum;
+}
+
+void *
+tsd_get(LispObj key)
+{
+  (void)key;
+  return wasm_tsd_single;
 }
 #else
 void
@@ -1472,6 +1786,22 @@ init_arm_tcr_sptab(TCR *tcr)
   }
 }
 #endif       
+
+#ifdef WASM32
+void
+init_wasm_tcr_sptab(TCR *tcr)
+{
+  extern LispObj *sptab;
+  extern LispObj *sptab_end;
+  extern void wasm_init_sptab(void);
+  LispObj *p, *q;
+
+  wasm_init_sptab();
+  for (p = sptab, q = tcr->sptab; p < sptab_end; p++, q++) {
+    *q = *p;
+  }
+}
+#endif
   
   
 
@@ -1487,7 +1817,7 @@ new_tcr(natural vstack_size, natural tstack_size)
     *allocate_tstack_holding_area_lock(natural);
   area *a;
   int i;
-#ifndef WINDOWS
+#if !defined(WINDOWS) && !defined(WASM32)
   sigset_t sigmask;
 
   sigemptyset(&sigmask);
@@ -1504,6 +1834,9 @@ new_tcr(natural vstack_size, natural tstack_size)
 #ifdef ARM
   init_arm_tcr_sptab(tcr);
   tcr->architecture_version = (arm_architecture_version-ARM_ARCHITECTURE_v7) << fixnumshift;
+#endif
+#ifdef WASM32
+  init_wasm_tcr_sptab(tcr);
 #endif
 #ifdef X86
   setup_tcr_extra_segment(tcr);
@@ -1525,11 +1858,11 @@ new_tcr(natural vstack_size, natural tstack_size)
   tcr->vs_area = a;
   a->owner = tcr;
   tcr->save_vsp = (LispObj *) a->active;  
-#ifndef ARM
+#if !defined(ARM) && !defined(WASM32)
   a = allocate_tstack_holding_area_lock(tstack_size);
 #endif
   UNLOCK(lisp_global(TCR_AREA_LOCK),tcr);
-#ifndef ARM
+#if !defined(ARM) && !defined(WASM32)
   tcr->ts_area = a;
   a->owner = tcr;
   tcr->save_tsp = (LispObj *) a->active;
@@ -1610,7 +1943,7 @@ shutdown_thread_tcr(void *arg)
     LOCK(lisp_global(TCR_AREA_LOCK),current);
     vs = tcr->vs_area;
     tcr->vs_area = NULL;
-#ifndef ARM
+#if !defined(ARM) && !defined(WASM32)
     ts = tcr->ts_area;
     tcr->ts_area = NULL;
 #endif
@@ -1619,7 +1952,7 @@ shutdown_thread_tcr(void *arg)
     if (vs) {
       condemn_area_holding_area_lock(vs);
     }
-#ifndef ARM
+#if !defined(ARM) && !defined(WASM32)
     if (ts) {
       condemn_area_holding_area_lock(ts);
     }
@@ -1696,7 +2029,7 @@ tcr_cleanup(void *arg)
   if (a) {
     a->active = a->high;
   }
-#ifndef ARM
+#if !defined(ARM) && !defined(WASM32)
   a = tcr->ts_area;
   if (a) {
     a->active = a->high;
@@ -1730,6 +2063,9 @@ tcr_cleanup(void *arg)
 void *
 current_native_thread_id()
 {
+#ifdef WASM32
+  return NULL;
+#else
   return ((void *) (natural)
 #ifdef LINUX
 #ifdef __NR_gettid
@@ -1751,6 +2087,7 @@ current_native_thread_id()
 	  GetCurrentThreadId()
 #endif
 	  );
+#endif
 }
 
 
@@ -1775,8 +2112,13 @@ thread_init_tcr(TCR *tcr, void *stack_base, natural stack_size)
     tcr->wasm_cstack_size = stack_size;
   }
   if (tcr->wasm_cstack_sp == NULL) {
-    tcr->wasm_cstack_sp = (void *)current_stack_pointer();
+    tcr->wasm_cstack_sp = stack_base;
   }
+  if (tcr->wasm_cstack_sp != NULL) {
+    a->active = (BytePtr)tcr->wasm_cstack_sp;
+  }
+  wasm_set_current_tcr(tcr);
+  tcr->last_lisp_frame = (natural)(a->high);
 #endif
 #ifdef ARM
   tcr->last_lisp_frame = (natural)(a->high);
@@ -1886,6 +2228,12 @@ init_threads(void * stack_base, TCR *tcr)
   lisp_global(TCR_KEY) = TlsAlloc();
   pCancelIoEx = windows_find_symbol(NULL, "CancelIoEx");
   pCancelSynchronousIo = windows_find_symbol(NULL, "CancelSynchronousIo");
+#elif defined(WASM32)
+  /* Single-threaded bring-up: treat TCR_KEY as a dummy and use a module-global
+   * current TCR instead of OS TLS.
+   */
+  lisp_global(TCR_KEY) = 0;
+  wasm_set_current_tcr(tcr);
 #else
   pthread_key_create((pthread_key_t *)&(lisp_global(TCR_KEY)), shutdown_thread_tcr);
   thread_signal_setup();
@@ -1908,7 +2256,7 @@ lisp_thread_entry(void *param)
   thread_activation *activation = (thread_activation *)param;
   TCR *tcr = new_tcr(activation->vsize, activation->tsize);
   LispObj *start_vsp;
-#ifndef WINDOWS
+#if !defined(WINDOWS) && !defined(WASM32)
   sigset_t mask, old_mask;
 
   sigemptyset(&mask);
@@ -1917,13 +2265,15 @@ lisp_thread_entry(void *param)
 
   register_thread_tcr(tcr);
 
-#ifndef WINDOWS
+#if !defined(WINDOWS) && !defined(WASM32)
   pthread_cleanup_push(tcr_cleanup,(void *)tcr);
 #endif
   tcr->vs_area->active -= node_size;
   *(--tcr->save_vsp) = lisp_nil;
   start_vsp = tcr->save_vsp;
+#ifndef WASM32
   enable_fp_exceptions();
+#endif
   SET_TCR_FLAG(tcr,TCR_FLAG_BIT_AWAITING_PRESET);
   activation->tcr = tcr;
   SEM_RAISE(activation->created);
@@ -1931,10 +2281,27 @@ lisp_thread_entry(void *param)
     SEM_RAISE(TCR_AUX(tcr)->reset_completion);
     SEM_WAIT_FOREVER(TCR_AUX(tcr)->activate);
     /* Now go run some lisp code */
+#ifdef WASM32
+    {
+      TCR *wasm_tcr = wasm_get_tcr(false);
+      TCR *entry_tcr = (wasm_tcr != NULL) ? wasm_tcr : tcr;
+      natural old_last_lisp_frame = 0;
+
+      if (wasm_tcr != NULL) {
+        old_last_lisp_frame = wasm_enter_lisp_frame(wasm_tcr, 0, 0,
+                                                    (LispObj)entry_tcr->save_vsp);
+      }
+      start_lisp(TCR_TO_TSD(entry_tcr), 0);
+      if (wasm_tcr != NULL) {
+        wasm_exit_lisp_frame(wasm_tcr, old_last_lisp_frame);
+      }
+    }
+#else
     start_lisp(TCR_TO_TSD(tcr),0);
+#endif
     tcr->save_vsp = start_vsp;
   } while (tcr->flags & (1<<TCR_FLAG_BIT_AWAITING_PRESET));
-#ifndef WINDOWS
+#if !defined(WINDOWS) && !defined(WASM32)
   pthread_cleanup_pop(true);
 #else
   tcr_cleanup(tcr);
@@ -2045,6 +2412,17 @@ create_system_thread(size_t stack_size,
   }
   return won;
 }
+#elif defined(WASM32)
+Boolean
+create_system_thread(size_t stack_size, void *stackaddr,
+                     void *(*start_routine)(void *), void *param)
+{
+  (void)stack_size;
+  (void)stackaddr;
+  (void)start_routine;
+  (void)param;
+  return false;
+}
 #else
 Boolean
 create_system_thread(size_t stack_size,  void *stackaddr,
@@ -2094,6 +2472,8 @@ get_tcr(Boolean create)
 {
 #ifdef HAVE_TLS
   TCR *current = current_tcr;
+#elif defined(WASM32)
+  TCR *current = wasm_get_current_tcr();
 #elif defined(WIN_32)
   TCR *current = ((TCR *)((char *)NtCurrentTeb() + TCR_BIAS))->linear;
 #else
@@ -2129,6 +2509,9 @@ get_tcr(Boolean create)
 #define NSAVEREGS 0
 #endif
 #ifdef ARM
+#define NSAVEREGS 0
+#endif
+#ifdef WASM32
 #define NSAVEREGS 0
 #endif
     for (i = 0; i < NSAVEREGS; i++) {
@@ -2337,6 +2720,10 @@ Boolean mach_suspend_tcr(TCR *tcr)
 Boolean
 suspend_tcr(TCR *tcr)
 {
+#ifdef WASM32
+  (void)tcr;
+  return false;
+#else
   int suspend_count = atomic_incf(&(tcr->suspend_count)), kill_return;
   pthread_t thread;
   if (suspend_count == 1) {
@@ -2356,10 +2743,11 @@ suspend_tcr(TCR *tcr)
     return true;
   }
   return false;
+#endif
 }
 #endif
 
-#ifdef WINDOWS
+#if defined(WINDOWS) || defined(WASM32)
 Boolean
 tcr_suspend_ack(TCR *tcr)
 {
@@ -2381,6 +2769,10 @@ tcr_suspend_ack(TCR *tcr)
 Boolean
 kill_tcr(TCR *tcr)
 {
+#ifdef WASM32
+  (void)tcr;
+  return false;
+#else
   TCR *current = get_tcr(true);
   Boolean result = false;
 
@@ -2412,6 +2804,7 @@ kill_tcr(TCR *tcr)
   }
   UNLOCK(lisp_global(TCR_AREA_LOCK), current);
   return result;
+#endif
 }
 
 Boolean
@@ -2552,7 +2945,7 @@ normalize_dead_tcr_areas(TCR *tcr)
     a->active = a->high;
   }
 
-#ifndef ARM
+#if !defined(ARM) && !defined(WASM32)
   a = tcr->ts_area;
   if (a) {
     a->active = a->high;

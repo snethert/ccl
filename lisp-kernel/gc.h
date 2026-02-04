@@ -59,6 +59,11 @@
 #define is_node_fulltag(f)  ((1<<(f))&((1<<fulltag_cons)|(1<<fulltag_misc)))
 #endif
 
+#ifdef WASM32
+/* wasm32 uses the same fulltag conventions as the 32-bit ARM backend. */
+#define is_node_fulltag(f)  ((1<<(f))&((1<<fulltag_cons)|(1<<fulltag_misc)))
+#endif
+
 extern LispObj GCarealow, GCareadynamiclow;
 extern natural GCndnodes_in_area, GCndynamic_dnodes_in_area;
 extern bitvector GCmarkbits, GCdynamic_markbits,managed_static_refbits,global_refidx,dynamic_refidx,managed_static_refidx;
@@ -119,7 +124,7 @@ typedef unsigned char qnode;
 #define VOID_ALLOCPTR ((LispObj)(-dnode_size))
 #endif
 
-#ifndef WINDOWS
+#if !defined(WINDOWS) && !defined(WASM32)
 #include <sys/resource.h>
 typedef struct rusage paging_info;
 #else

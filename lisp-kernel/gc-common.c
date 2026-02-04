@@ -2018,6 +2018,19 @@ new_heap_segment(ExceptionInformation *xp, natural need, Boolean extend, TCR *tc
         if (resize_dynamic_heap(a->active, (newlimit-oldlimit)+extend_by)) {
           break;
         }
+#ifdef WASM32
+#if WASM_ALLOW_MEMORY_GROWTH
+        {
+          natural grow_bytes = (newlimit - oldlimit) + extend_by;
+          natural pages = (grow_bytes + WASM_PAGE_SIZE - 1) / WASM_PAGE_SIZE;
+          if (pages && (wasm_memory_grow_and_relocate((uint32_t)pages) >= 0)) {
+            if (resize_dynamic_heap(a->active, (newlimit-oldlimit)+extend_by)) {
+              break;
+            }
+          }
+        }
+#endif
+#endif
         extend_by = align_to_power_of_2(extend_by>>1,log2_allocation_quantum);
         if (extend_by < 4<<20) {
           return false;

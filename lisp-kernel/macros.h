@@ -82,6 +82,12 @@
 #define immheader_tag_p(tag) (tag == fulltag_immheader)
 #endif
 
+#ifdef WASM32
+/* wasm32 uses the same fulltag conventions as the 32-bit ARM backend. */
+#define nodeheader_tag_p(tag) (tag == fulltag_nodeheader)
+#define immheader_tag_p(tag) (tag == fulltag_immheader)
+#endif
+
 #ifdef VC
 #define inline
 #define __attribute__(x)

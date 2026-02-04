@@ -30,11 +30,14 @@
 #ifdef LINUX
 #include <strings.h>
 #endif
+#ifdef WASM32
+#include <stdint.h>
+#endif
 #ifdef DARWIN
 #include <pthread.h>
 #endif
 
-#ifndef WINDOWS
+#if !defined(WINDOWS) && !defined(WASM32)
 #include <sys/mman.h>
 
 /*
@@ -52,6 +55,16 @@ void
 allocation_failure(Boolean pointerp, natural size)
 {
   char buf[64];
+#ifdef WASM32
+#if WASM_ALLOW_MEMORY_GROWTH
+  {
+    natural pages = (size + WASM_PAGE_SIZE - 1) / WASM_PAGE_SIZE;
+    if (pages) {
+      (void)wasm_memory_grow_and_relocate((uint32_t)pages);
+    }
+  }
+#endif
+#endif
   sprintf(buf, "Can't allocate %s of size " DECIMAL " bytes.", pointerp ? "pointer" : "handle", size);
   Fatal(":   Kernel memory allocation failure.  ", buf);
 }
@@ -92,6 +105,41 @@ ReserveMemoryForHeap(LogicalAddress want, natural totalsize)
       return NULL;
     }
   }
+#elif defined(WASM32)
+  /* WASM32: linear memory only. Reserve by ensuring the module memory is big enough
+   * and return a heap base aligned like other backends.
+   */
+#if defined(__wasm__)
+  extern char __heap_base;
+  BytePtr base = (BytePtr)&__heap_base;
+  /* Keep the heap aligned to heap segments (64KiB). */
+  base = (BytePtr)align_to_power_of_2(base, log2_heap_segment_size);
+
+  /* Ensure memory extends far enough to cover the reserved heap region. */
+  natural needed = (natural)base + totalsize + heap_segment_size;
+  natural have = ((natural)__builtin_wasm_memory_size(0)) << 16;
+  if (needed > have) {
+#if WASM_ALLOW_MEMORY_GROWTH
+    uint32_t pages = (uint32_t)((needed - have + WASM_PAGE_SIZE - 1) / WASM_PAGE_SIZE);
+    if (pages == 0 || wasm_memory_grow_and_relocate(pages) < 0) {
+      return NULL;
+    }
+    have = ((natural)__builtin_wasm_memory_size(0)) << 16;
+    if (needed > have) {
+      return NULL;
+    }
+#else
+    (void)want;
+    return NULL;
+#endif
+  }
+  (void)want;
+  start = (LogicalAddress)base;
+#else
+  (void)want;
+  (void)totalsize;
+  start = NULL;
+#endif
 #else
   start = mmap((void *)want,
 	       totalsize + heap_segment_size,
@@ -143,6 +191,26 @@ CommitMemory (LogicalAddress start, natural len)
     return false;
   }
   return true;
+#elif defined(WASM32)
+#if defined(__wasm__)
+  natural end = (natural)start + len;
+  natural have = ((natural)__builtin_wasm_memory_size(0)) << 16;
+  if (end > have) {
+#if WASM_ALLOW_MEMORY_GROWTH
+    uint32_t pages = (uint32_t)((end - have + WASM_PAGE_SIZE - 1) / WASM_PAGE_SIZE);
+    if (pages == 0 || wasm_memory_grow_and_relocate(pages) < 0) {
+      return false;
+    }
+#else
+    return false;
+#endif
+  }
+  return true;
+#else
+  (void)start;
+  (void)len;
+  return false;
+#endif
 #else
   int i;
   void *addr;
@@ -171,6 +239,9 @@ UnCommitMemory (LogicalAddress start, natural len) {
     Fatal("mmap error", "");
     return;
   }
+#elif defined(WASM32)
+  (void)start;
+  (void)len;
 #else
   if (len) {
     madvise(start, len, MADV_DONTNEED);
@@ -198,6 +269,14 @@ MapMemory(LogicalAddress addr, natural nbytes, int protection)
     wperror("MapMemory");
   }
   return p;
+#elif defined(WASM32)
+  (void)protection;
+  if (addr) {
+    (void)CommitMemory(addr, nbytes);
+    return addr;
+  }
+  /* Fallback: allocate from the C heap. */
+  return (LogicalAddress)malloc(nbytes);
 #else
   {
     int flags = MAP_PRIVATE|MAP_ANON;
@@ -216,6 +295,8 @@ MapMemoryForStack(natural nbytes)
 #endif
 #ifdef WINDOWS
   return VirtualAlloc(0, nbytes, MEM_RESERVE|MEM_COMMIT, MEMPROTECT_RWX);
+#elif defined(WASM32)
+  return (LogicalAddress)malloc(nbytes);
 #else
   return mmap(NULL, nbytes, MEMPROTECT_RWX, MAP_PRIVATE|MAP_ANON, -1, 0);
 #endif
@@ -233,6 +314,10 @@ UnMapMemory(LogicalAddress addr, natural nbytes)
 #endif
 #ifdef WINDOWS
   return !VirtualFree(addr, 0, MEM_RELEASE);
+#elif defined(WASM32)
+  (void)addr;
+  (void)nbytes;
+  return 0;
 #else
   return munmap(addr, nbytes);
 #endif
@@ -253,6 +338,10 @@ ProtectMemory(LogicalAddress addr, natural nbytes)
     Bug(NULL, "couldn't protect " DECIMAL " bytes at 0x" LISP ", errno = %d", nbytes, addr, status);
   }
   return status;
+#elif defined(WASM32)
+  (void)addr;
+  (void)nbytes;
+  return 0;
 #else
   int status = mprotect(addr, nbytes, PROT_READ | PROT_EXEC);
   
@@ -280,6 +369,10 @@ UnProtectMemory(LogicalAddress addr, natural nbytes)
 #ifdef WINDOWS
   DWORD oldProtect;
   return VirtualProtect(addr, nbytes, MEMPROTECT_RWX, &oldProtect);
+#elif defined(WASM32)
+  (void)addr;
+  (void)nbytes;
+  return 0;
 #else
   return mprotect(addr, nbytes, PROT_READ|PROT_WRITE|PROT_EXEC);
 #endif
@@ -337,6 +430,13 @@ MapFile(LogicalAddress addr, natural pos, natural nbytes, int permissions, int f
 
   return true;
 #endif
+#elif defined(WASM32)
+  (void)addr;
+  (void)pos;
+  (void)nbytes;
+  (void)permissions;
+  (void)fd;
+  return false;
 #else
   return mmap(addr, nbytes, permissions, MAP_PRIVATE|MAP_FIXED, fd, pos) != MAP_FAILED;
 #endif
@@ -913,6 +1013,8 @@ ReserveMemory(natural size)
                    MEM_RESERVE,
                    PAGE_NOACCESS);
   return p;
+#elif defined(WASM32)
+  return (LogicalAddress)malloc(size);
 #else
   p = mmap(NULL,size,PROT_NONE,MAP_PRIVATE|MAP_ANON|MAP_NORESERVE,-1,0);
   if (p == MAP_FAILED) {

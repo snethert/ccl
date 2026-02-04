@@ -35,9 +35,181 @@
 #include <sys/syscall.h>
 #include <sys/time.h>
 #include <stdint.h>
+#ifndef WASM32
 #include <signal.h>
+#endif
 #include <fcntl.h>
 #include <stdlib.h>
+
+#ifdef WASM32
+/* No WASI, no POSIX. These are placeholders for the FFI imports table.
+ * The JS microkernel should provide real implementations later.
+ */
+ssize_t
+lisp_read(int fd, void *buf, size_t count)
+{
+  (void)fd;
+  (void)buf;
+  (void)count;
+  errno = ENOSYS;
+  return -1;
+}
+
+ssize_t
+lisp_write(int fd, void *buf, size_t count)
+{
+  (void)fd;
+  (void)buf;
+  (void)count;
+  errno = ENOSYS;
+  return -1;
+}
+
+int
+lisp_open(char *path, int flags, mode_t mode)
+{
+  (void)path;
+  (void)flags;
+  (void)mode;
+  errno = ENOSYS;
+  return -1;
+}
+
+int
+lisp_fchmod(int fd, mode_t mode)
+{
+  (void)fd;
+  (void)mode;
+  errno = ENOSYS;
+  return -1;
+}
+
+int64_t
+lisp_lseek(int fd, int64_t offset, int whence)
+{
+  (void)fd;
+  (void)offset;
+  (void)whence;
+  errno = ENOSYS;
+  return -1;
+}
+
+int
+lisp_close(int fd)
+{
+  (void)fd;
+  errno = ENOSYS;
+  return -1;
+}
+
+int
+lisp_ftruncate(int fd, off_t length)
+{
+  (void)fd;
+  (void)length;
+  errno = ENOSYS;
+  return -1;
+}
+
+int
+lisp_stat(char *path, void *buf)
+{
+  (void)path;
+  (void)buf;
+  errno = ENOSYS;
+  return -1;
+}
+
+int
+lisp_fstat(int fd, void *buf)
+{
+  (void)fd;
+  (void)buf;
+  errno = ENOSYS;
+  return -1;
+}
+
+int
+lisp_lstat(char *path, void *buf)
+{
+  (void)path;
+  (void)buf;
+  errno = ENOSYS;
+  return -1;
+}
+
+int
+lisp_futex(int *uaddr, int op, int val, void *timeout, int *uaddr2, int val3)
+{
+  (void)uaddr;
+  (void)op;
+  (void)val;
+  (void)timeout;
+  (void)uaddr2;
+  (void)val3;
+  errno = ENOSYS;
+  return -1;
+}
+
+DIR *
+lisp_opendir(char *path)
+{
+  (void)path;
+  errno = ENOSYS;
+  return NULL;
+}
+
+struct dirent *
+lisp_readdir(DIR *dir)
+{
+  (void)dir;
+  errno = ENOSYS;
+  return NULL;
+}
+
+int
+lisp_closedir(DIR *dir)
+{
+  (void)dir;
+  errno = ENOSYS;
+  return -1;
+}
+
+int
+lisp_pipe(int pipefd[2])
+{
+  (void)pipefd;
+  errno = ENOSYS;
+  return -1;
+}
+
+int
+lisp_gettimeofday(struct timeval *tp, void *tzp)
+{
+  (void)tp;
+  (void)tzp;
+  errno = ENOSYS;
+  return -1;
+}
+
+int
+lisp_sigexit(int signum)
+{
+  (void)signum;
+  errno = ENOSYS;
+  return -1;
+}
+
+char *
+lisp_realpath(const char *file_name, char *resolved_name)
+{
+  (void)file_name;
+  (void)resolved_name;
+  errno = ENOSYS;
+  return NULL;
+}
+
+#else /* !WASM32 */
 
 ssize_t
 lisp_read(int fd, void *buf, size_t count)
@@ -168,3 +340,5 @@ lisp_realpath(const char *file_name, char *resolved_name)
 {
   return realpath(file_name, resolved_name);
 }
+
+#endif /* WASM32 */

@@ -17,7 +17,25 @@
 #ifdef WASM32
 #include "lisp.h"
 #include "threads.h"
-#include "platform-wasm32.h"
+
+/* No OS page protection, but lots of the kernel expects 4KiB page arithmetic. */
+int page_size = 4096;
+int log2_page_size = 12;
+
+void
+adjust_exception_pc(ExceptionInformation *xp, int delta)
+{
+  if (xp == NULL) {
+    return;
+  }
+  xpPC(xp) = xpPC(xp) + delta;
+}
+
+void
+exception_init()
+{
+  /* No signals on WASM32. */
+}
 
 Boolean
 lisp_frame_p(lisp_frame *spPtr)
@@ -28,7 +46,7 @@ lisp_frame_p(lisp_frame *spPtr)
 void
 restore_soft_stack_limit(unsigned stkreg)
 {
-  TCR *tcr = get_tcr(false);
+  TCR *tcr = wasm_get_tcr(false);
   area *a;
 
   (void)stkreg;
@@ -39,6 +57,12 @@ restore_soft_stack_limit(unsigned stkreg)
   if (a == NULL) {
     return;
   }
+#if WASM_ALLOW_MEMORY_GROWTH
+  if (((natural)tcr->cs_limit == CS_OVERFLOW_FORCE_LIMIT) ||
+      ((BytePtr)ptr_from_lispobj(tcr->cs_limit) <= a->hardlimit)) {
+    wasm_grow_cstack(WASM_DEFAULT_CSTACK_SIZE);
+  }
+#endif
   tcr->cs_limit = (LispObj)ptr_to_lispobj(a->softlimit);
 }
 #endif

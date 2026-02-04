@@ -888,7 +888,6 @@ mark_vstack_area(area *a)
 void
 mark_cstack_area(area *a)
 {
-#ifdef WASM32
   LispObj *current = (LispObj *)(a->active)
     , *limit = (LispObj*)(a->high), header;
   lisp_frame *frame;
@@ -926,9 +925,6 @@ mark_cstack_area(area *a)
   if (current != limit) {
     Bug(NULL, "Ran off the end of cstack area\n");
   }
-#else
-  (void)a;
-#endif
 }
 
 

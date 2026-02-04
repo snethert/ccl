@@ -19,6 +19,11 @@
 
 
 
+/*
+ * WASM32 doesn't have POSIX signals or ucontext; the kernel handles traps via
+ * its own mechanisms.
+ */
+#ifndef WASM32
 #include <signal.h>
 #ifndef WINDOWS
 #ifdef DARWIN
@@ -29,8 +34,9 @@
 #endif
 #endif
 #endif
+#endif /* !WASM32 */
 
-#ifdef WINDOWS
+#if defined(WINDOWS)
 #define MAP_FAILED ((void *)(-1))
 
 #define MEMPROTECT_NONE PAGE_NOACCESS
@@ -38,6 +44,16 @@
 #define MEMPROTECT_RW   PAGE_READWRITE
 #define MEMPROTECT_RX   PAGE_EXECUTE_READ
 #define MEMPROTECT_RWX  PAGE_EXECUTE_READWRITE
+
+#elif defined(WASM32)
+/* No mprotect/mmap protections in wasm linear memory. */
+#define MAP_FAILED ((void *)(-1))
+
+#define MEMPROTECT_NONE 0
+#define MEMPROTECT_RO   0
+#define MEMPROTECT_RW   0
+#define MEMPROTECT_RX   0
+#define MEMPROTECT_RWX  0
 
 #else
 

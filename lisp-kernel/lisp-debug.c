@@ -30,7 +30,7 @@
 
 
 #include <fcntl.h>
-#ifndef WINDOWS
+#if !defined(WINDOWS) && !defined(WASM32)
 #include <sys/socket.h>
 #include <dlfcn.h>
 #endif
@@ -185,25 +185,27 @@ stdin_is_dev_null()
 char *
 foreign_name_and_offset(natural addr, int *delta)
 {
-#ifndef WINDOWS
-  Dl_info info;
-#endif
-  char *ret = NULL;
-
   if (delta) {
     *delta = 0;
   }
-#ifndef WINDOWS
-#ifndef ANDROID
-  if (dladdr((void *)addr, &info)) {
-    ret = (char *)info.dli_sname;
-    if (delta) {
-      *delta = ((natural)addr - (natural)info.dli_saddr);
+
+#if !defined(WINDOWS) && !defined(WASM32) && !defined(ANDROID)
+  {
+    Dl_info info;
+    char *ret = NULL;
+
+    if (dladdr((void *)addr, &info)) {
+      ret = (char *)info.dli_sname;
+      if (delta) {
+        *delta = ((natural)addr - (natural)info.dli_saddr);
+      }
     }
+    return ret;
   }
+#else
+  (void)addr;
+  return NULL;
 #endif
-#endif
-  return ret;
 }
 
 
@@ -212,7 +214,7 @@ foreign_name_and_offset(natural addr, int *delta)
 #define fpurge __fpurge
 #endif
 
-#ifdef WINDOWS
+#if defined(WINDOWS) || defined(WASM32)
 void
 fpurge (FILE* file)
 {
@@ -370,7 +372,7 @@ show_lisp_register(ExceptionInformation *xp, char *label, int r)
 void
 describe_siginfo(siginfo_t *info)
 {
-#if defined(WINDOWS) || defined(FREEBSD) || defined(DARWIN)
+#if defined(WINDOWS) || defined(FREEBSD) || defined(DARWIN) || defined(WASM32)
   /*
    * It's not surprising that Windows doesn't have this signal stuff.
    * It is somewhat surprising that FreeBSD 6.x lacks the si_code
@@ -428,7 +430,7 @@ describe_memfault(ExceptionInformation *xp, siginfo_t *info)
 	  dsisr & (1<<25) ? "Write" : "Read",
 	  dsisr & (1<<27) ? "protected" : "unmapped",
 	  addr);
-#elif !defined(WINDOWS)
+#elif !defined(WINDOWS) && !defined(WASM32)
   if (info) {
 #ifdef X86
     if ((info->si_signo == SIGNUM_FOR_INTN_TRAP) &&
@@ -842,6 +844,12 @@ debug_advance_pc(ExceptionInformation *xp, siginfo_t *info, int arg)
 debug_command_return
 debug_identify_exception(ExceptionInformation *xp, siginfo_t *info, int arg)
 {
+#ifdef WASM32
+  (void)xp;
+  (void)info;
+  (void)arg;
+  return debug_continue;
+#else
 #ifndef X86
   pc program_counter = xpPC(xp);
   opcode instruction = 0;
@@ -877,6 +885,7 @@ debug_identify_exception(ExceptionInformation *xp, siginfo_t *info, int arg)
     break;
   }
   return debug_continue;
+#endif /* !WASM32 */
 }
 
 char *
@@ -934,6 +943,12 @@ debug_get_u5_value(char *prompt)
 debug_command_return
 debug_show_symbol(ExceptionInformation *xp, siginfo_t *info, int arg)
 {
+#ifdef WASM32
+  (void)xp;
+  (void)info;
+  (void)arg;
+  return debug_continue;
+#else
   char *pname = debug_get_string_value("symbol name");
   extern void *plsym(ExceptionInformation *,char*);
   
@@ -941,17 +956,26 @@ debug_show_symbol(ExceptionInformation *xp, siginfo_t *info, int arg)
     plsym(xp, pname);
   }
   return debug_continue;
+#endif
 }
 
 debug_command_return
 debug_show_lisp_version(ExceptionInformation *xp, siginfo_t *info, int arg)
 {
+#ifdef WASM32
+  (void)xp;
+  (void)info;
+  (void)arg;
+  fprintf(dbgout, "Lisp kernel vc revision: %s\n", kernel_vc_revision);
+  return debug_continue;
+#else
   extern void *plsym(ExceptionInformation *,char*);
 
   fprintf(dbgout, "Lisp kernel vc revision: %s\n", kernel_vc_revision);
   if (xp)
     plsym(xp, "*OPENMCL-VERSION*");
   return debug_continue;
+#endif
 }
 
 debug_command_return
@@ -971,6 +995,9 @@ debug_thread_info(ExceptionInformation *xp, siginfo_t *info, int arg)
     fprintf(dbgout, "Value (lisp) stack area: low = 0x" LISP ", high = 0x" LISP "\n",
             (natural)(vs_area->low), (natural)vs_area->high);
     if (xp) {
+#ifdef WASM32
+      fprintf(dbgout, "Exception stack pointer = 0x" LISP "\n", (natural)0);
+#else
       fprintf(dbgout, "Exception stack pointer = 0x" LISP "\n",
 #ifdef PPC
               (natural)(xpGPR(xp,1))
@@ -982,6 +1009,7 @@ debug_thread_info(ExceptionInformation *xp, siginfo_t *info, int arg)
               (natural)(xpGPR(xp,Rsp))
 #endif
               );
+#endif /* !WASM32 */
     }
   }
   return debug_continue;
@@ -1282,6 +1310,12 @@ debug_help(ExceptionInformation *xp, siginfo_t *info, int arg) {
 debug_command_return
 debug_backtrace(ExceptionInformation *xp, siginfo_t *info, int arg)
 {
+#ifdef WASM32
+  (void)xp;
+  (void)info;
+  (void)arg;
+  return debug_continue;
+#else
   extern LispObj current_stack_pointer();
   extern void plbt_sp(LispObj);
   extern void plbt(ExceptionInformation *);
@@ -1294,6 +1328,7 @@ debug_backtrace(ExceptionInformation *xp, siginfo_t *info, int arg)
 #endif
   }
   return debug_continue;
+#endif
 }
 
 debug_command_return
@@ -1606,4 +1641,3 @@ lisp_bug(char *string)
 {
   Bug(NULL, "Bug in Clozure CL system code:\n%s", string);
 }
-

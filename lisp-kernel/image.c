@@ -21,7 +21,7 @@
 #include "gc.h"
 #include <errno.h>
 #include <unistd.h>
-#ifndef WINDOWS
+#if !defined(WINDOWS) && !defined(WASM32)
 #include <sys/mman.h>
 #endif
 #include <stdio.h>
@@ -714,6 +714,5 @@ save_application(int fd, Boolean egc_was_enabled)
 }
 
       
-
 
 

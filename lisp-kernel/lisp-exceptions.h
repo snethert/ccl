@@ -36,6 +36,12 @@ typedef enum {
 #ifdef WINDOWS
 typedef EXCEPTION_RECORD siginfo_t;  /* Not even close to being the right thing to do */
 #endif
+#ifdef WASM32
+/* WASM32 has no POSIX siginfo_t; keep the API shape without exposing signals. */
+typedef struct siginfo_t_dummy {
+  int dummy;
+} siginfo_t;
+#endif
 
 
 void
@@ -98,6 +104,8 @@ exception_init();
 
 #ifdef WINDOWS
 #define ALLOW_EXCEPTIONS(context) // blank stare for now
+#elif defined(WASM32)
+#define ALLOW_EXCEPTIONS(context) /* no signals on WASM32 */
 #else
 #define ALLOW_EXCEPTIONS(context) \
 pthread_sigmask(SIG_SETMASK, (sigset_t *)(&context->uc_sigmask), NULL);
@@ -154,4 +162,3 @@ void reset_lisp_process(ExceptionInformation *);
 void terminate_lisp(void);
 
 #endif /* __lisp_exceptions_h__ */
-

@@ -23,11 +23,13 @@
 #include "lisp-exceptions.h"
 #include <stdio.h>
 #include <stdlib.h>
-#ifndef WINDOWS
+#if !defined(WINDOWS) && !defined(WASM32)
 #include <sys/mman.h>
 #endif
 #include <fcntl.h>
+#ifndef WASM32
 #include <signal.h>
+#endif
 #include <errno.h>
 #ifndef WINDOWS
 #include <sys/utsname.h>
@@ -192,7 +194,9 @@ ensure_stack_limit(size_t stack_size)
   os_get_current_thread_stack_bounds(&ignored, &totalsize);
 
   return (size_t)totalsize-(size_t)(CSTACK_HARDPROT+CSTACK_SOFTPROT);
-
+#elif defined(WASM32)
+  /* No OS-enforced stack limits; the host provides a manual control stack. */
+  return stack_size;
 #else
   struct rlimit limits;
   rlim_t cur_stack_limit, max_stack_limit;
@@ -832,13 +836,13 @@ shrink_dynamic_area(natural delta)
   return true;
 }
 
-#ifndef WINDOWS
+#if !defined(WINDOWS) && !defined(WASM32)
 natural user_signal_semaphores[NSIG];
 sigset_t user_signals_reserved;
 #endif
 
 
-#ifndef WINDOWS
+#if !defined(WINDOWS) && !defined(WASM32)
 void
 user_signal_handler (int signum, siginfo_t *info, ExceptionInformation *context)
 {
@@ -873,6 +877,9 @@ register_user_signal_handler()
   signal(SIGINT, SIG_IGN);
 
   SetConsoleCtrlHandler(ControlEventHandler,TRUE);
+#elif defined(WASM32)
+  /* No signals on WASM32. */
+  return;
 #else
   install_signal_handler(SIGINT, (void *)user_signal_handler, 0);
   install_signal_handler(SIGTERM, (void *)user_signal_handler, 0);
@@ -885,6 +892,11 @@ wait_for_signal(int signo, int seconds, int milliseconds)
 {
 #ifdef WINDOWS
   return EINVAL;
+#elif defined(WASM32)
+  (void)signo;
+  (void)seconds;
+  (void)milliseconds;
+  return ENOSYS;
 #else
   if ((signo <= 0) || (signo >= NSIG)) {
     return EINVAL;
@@ -1043,6 +1055,10 @@ char *real_executable_name = NULL;
 char *
 ensure_real_path(char *path)
 {
+#ifdef WASM32
+  /* No filesystem; keep the caller-provided string. */
+  return path;
+#else
   char buf[PATH_MAX*2], *p, *q;
   int n;
 
@@ -1055,11 +1071,15 @@ ensure_real_path(char *path)
   q = malloc(n+1);
   strcpy(q,p);
   return q;
+#endif
 }
 
 char *
 determine_executable_name(char *argv0)
 {
+#ifdef WASM32
+  return argv0;
+#else
 #ifdef DARWIN
   uint32_t len = 1024;
   char exepath[1024], *p = NULL;
@@ -1111,6 +1131,7 @@ determine_executable_name(char *argv0)
   return ensure_real_path(argv0);
 #endif
   return ensure_real_path(argv0);
+#endif /* !WASM32 */
 }
 #endif
 
@@ -1448,6 +1469,12 @@ terminate_lisp()
 {
   _exit(EXIT_FAILURE);
 }
+#elif defined(WASM32)
+void
+terminate_lisp()
+{
+  _exit(-1);
+}
 #else
 pid_t main_thread_pid = (pid_t)0;
 
@@ -1577,7 +1604,10 @@ natural os_major_version = 0;
 void
 check_os_version(char *progname)
 {
-#ifdef WINDOWS
+#ifdef WASM32
+  (void)progname;
+  os_major_version = 0;
+#elif defined(WINDOWS)
   /* We should be able to run with any version of Windows that actually gets here executing the binary, so don't do anything for now. */
 #else
   struct utsname uts;
@@ -2026,7 +2056,7 @@ main
 #endif
 #endif
 
-#ifndef WINDOWS
+#if !defined(WINDOWS) && !defined(WASM32)
   main_thread_pid = getpid();
 #endif
   tcr_area_lock = (void *)new_recursive_lock();
@@ -2105,6 +2135,10 @@ main
 #ifdef ARM
   lisp_global(SUBPRIMS_BASE) = (LispObj)(9<<12);
 #endif
+#ifdef WASM32
+  /* WASM uses fixnum subprim indices; SUBPRIMS_BASE is a sentinel. */
+  lisp_global(SUBPRIMS_BASE) = (LispObj)0;
+#endif
 
   lisp_global(RET1VALN) = (LispObj)&ret1valn;
   lisp_global(LEXPR_RETURN) = (LispObj)&nvalret;
@@ -2138,17 +2172,32 @@ main
 
   init_consing_areas();
   tcr = new_tcr(initial_stack_size, MIN_TSTACK_SIZE);
+#ifdef WASM32
+  {
+    void *cstack_base;
+    natural cstack_size;
+    extern void os_get_current_thread_stack_bounds(void **, natural *);
+
+    os_get_current_thread_stack_bounds(&cstack_base, &cstack_size);
+    stack_base = (BytePtr)cstack_base - cstack_size;
+    init_threads((void *)(stack_base), tcr);
+    thread_init_tcr(tcr, cstack_base, cstack_size);
+  }
+#else
   stack_base = initial_stack_bottom()-xStackSpace();
   init_threads((void *)(stack_base), tcr);
   thread_init_tcr(tcr, current_sp, current_sp-stack_base);
+#endif
 
   if (lisp_global(STATIC_CONSES) == 0) {
     lisp_global(STATIC_CONSES) = lisp_nil;
   }
 
   lisp_global(EXCEPTION_LOCK) = ptr_to_lispobj(new_recursive_lock());
+#ifndef WASM32
   enable_fp_exceptions();
   register_user_signal_handler();
+#endif
 
 #ifdef PPC
   lisp_global(ALTIVEC_PRESENT) = altivec_present << fixnumshift;
@@ -2165,7 +2214,7 @@ main
   lisp_global(STATICALLY_LINKED) = 1 << fixnumshift;
 #endif
   TCR_AUX(tcr)->prev = TCR_AUX(tcr)->next = tcr;
-#ifndef WINDOWS
+#if !defined(WINDOWS) && !defined(WASM32)
   lisp_global(INTERRUPT_SIGNAL) = (LispObj) box_fixnum(SIGNAL_FOR_PROCESS_INTERRUPT);
 #endif
   tcr->vs_area->active -= node_size;
@@ -2192,7 +2241,24 @@ main
 #endif
 #endif
 #endif
+#ifdef WASM32
+  {
+    TCR *wasm_tcr = wasm_get_tcr(false);
+    TCR *entry_tcr = (wasm_tcr != NULL) ? wasm_tcr : tcr;
+    natural old_last_lisp_frame = 0;
+
+    if (wasm_tcr != NULL) {
+      old_last_lisp_frame = wasm_enter_lisp_frame(wasm_tcr, 0, 0,
+                                                  (LispObj)entry_tcr->save_vsp);
+    }
+    start_lisp(TCR_TO_TSD(entry_tcr), 0);
+    if (wasm_tcr != NULL) {
+      wasm_exit_lisp_frame(wasm_tcr, old_last_lisp_frame);
+    }
+  }
+#else
   start_lisp(TCR_TO_TSD(tcr), 0);
+#endif
   _exit(0);
 }
 
@@ -2232,7 +2298,15 @@ xStackSpace()
 }
 
 #ifndef DARWIN
-#ifdef WINDOWS
+#ifdef WASM32
+void *
+xGetSharedLibrary(char *path, int mode)
+{
+  (void)path;
+  (void)mode;
+  return NULL;
+}
+#elif defined(WINDOWS)
 extern void *windows_open_shared_library(char *);
 
 void *
@@ -2454,6 +2528,7 @@ xFindSymbol(void* handle, char *name)
   extern void *windows_find_symbol(void *, char *);
   return windows_find_symbol(handle, name);
 #endif
+  return NULL;
 }
 #if defined(LINUX) || defined(FREEBSD) || defined(SOLARIS)
 #if WORD_SIZE == 64
@@ -2517,7 +2592,7 @@ get_r_debug()
 }
 #endif
 
-#ifdef WINDOWS
+#if defined(WINDOWS) || defined(WASM32)
 void
 sample_paging_info(paging_info *stats)
 {
@@ -2681,6 +2756,10 @@ init_ccl_for_android(ANativeActivity *activity)
 #ifdef ARM
   lisp_global(SUBPRIMS_BASE) = (LispObj)(9<<12);
 #endif
+#ifdef WASM32
+  /* WASM uses fixnum subprim indices; SUBPRIMS_BASE is a sentinel. */
+  lisp_global(SUBPRIMS_BASE) = (LispObj)0;
+#endif
   lisp_global(RET1VALN) = (LispObj)&ret1valn;
   lisp_global(LEXPR_RETURN) = (LispObj)&nvalret;
   lisp_global(LEXPR_RETURN1V) = (LispObj)&popj;
@@ -2759,3 +2838,22 @@ android_main(struct android_app* state)
 }
 #endif
 
+#ifdef WASM32
+/*
+ * JS entrypoint: avoid relying on exporting `main` and avoid requiring the
+ * host to construct argv in linear memory.
+ */
+__attribute__((used, visibility("default"), export_name("wasm_ccl_start")))
+int
+wasm_ccl_start(void)
+{
+  static char arg0[] = "wasmcl";
+  static char *argv[] = {arg0, NULL};
+
+#ifdef CCLSHARED
+  return cclmain(1, argv);
+#else
+  return main(1, argv);
+#endif
+}
+#endif

@@ -17,13 +17,17 @@
 #include <stdlib.h>
 #ifndef WINDOWS
 #include <unistd.h>
+#ifndef WASM32
 #include <sys/mman.h>
+#endif
 #endif
 #undef __argv
 #include <stdio.h>
 #ifndef WINDOWS
+#ifndef WASM32
 #include <pthread.h>
 #include <dlfcn.h>
+#endif
 #endif
 #ifdef WINDOWS
 #include <process.h>
@@ -43,6 +47,7 @@
 #undef USE_MACH_SEMAPHORES
 #define USE_POSIX_SEMAPHORES
 #undef USE_WINDOWS_SEMAPHORES
+#undef USE_WASM_SEMAPHORES
 
 #ifdef DARWIN
 #define USE_MACH_SEMAPHORES 1
@@ -57,6 +62,13 @@ struct timespec {
   int tv_nsec;
 };
 #endif
+#endif
+
+#ifdef WASM32
+#undef USE_MACH_SEMAPHORES
+#undef USE_POSIX_SEMAPHORES
+#undef USE_WINDOWS_SEMAPHORES
+#define USE_WASM_SEMAPHORES 1
 #endif
 
 #ifdef USE_POSIX_SEMAPHORES
@@ -80,7 +92,9 @@ struct timespec {
 
 #ifndef WINDOWS
 #ifndef ANDROID
+#ifndef WASM32
 #include <sched.h>
+#endif
 #endif
 #endif
 
@@ -99,7 +113,9 @@ struct timespec {
 #endif
 
 #ifndef WINDOWS
+#ifndef WASM32
 #include <syslog.h>
+#endif
 #endif
 
 Boolean extern threads_initialized;
@@ -133,6 +149,17 @@ typedef sem_t * SEMAPHORE;
 #define SEM_TIMEDWAIT(s,t) sem_timedwait((SEMAPHORE)s,(struct timespec *)t)
 #endif
 
+#ifdef USE_WASM_SEMAPHORES
+typedef struct wasm_semaphore * SEMAPHORE;
+int wasm_sem_wait(SEMAPHORE s);
+int wasm_sem_timedwait(SEMAPHORE s, const struct timespec *t);
+void wasm_sem_post(SEMAPHORE s, int count);
+#define SEM_WAIT(s) wasm_sem_wait((SEMAPHORE)s)
+#define SEM_RAISE(s) wasm_sem_post((SEMAPHORE)s, 1)
+#define SEM_BROADCAST(s, count) wasm_sem_post((SEMAPHORE)s, (count))
+#define SEM_TIMEDWAIT(s,t) wasm_sem_timedwait((SEMAPHORE)s,(const struct timespec *)(t))
+#endif
+
 #ifdef USE_MACH_SEMAPHORES
 typedef semaphore_t SEMAPHORE;
 #define SEM_WAIT(s) semaphore_wait((SEMAPHORE)(natural)s)
@@ -146,6 +173,10 @@ int wait_on_semaphore(void *s, int seconds, int millis);
 void sem_wait_forever(SEMAPHORE s);
 
 #ifdef USE_POSIX_SEMAPHORES
+#define SEM_WAIT_FOREVER(s) sem_wait_forever((SEMAPHORE)s)
+#endif
+
+#ifdef USE_WASM_SEMAPHORES
 #define SEM_WAIT_FOREVER(s) sem_wait_forever((SEMAPHORE)s)
 #endif
 
