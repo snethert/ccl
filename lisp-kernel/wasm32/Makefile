@@ -20,9 +20,11 @@ VPATH = ../
 RM = /bin/rm
 # compile with clang for wasm32
 WASM_TARGET ?= wasm32-unknown-unknown
+WASM_ALLOW_MEMORY_GROWTH ?= 1
+WASM_LD ?= wasm-ld-18
 CC = clang
 # Set to wasm32-wasi if targeting WASI.
-CDEFINES = -DWASM32 -D_REENTRANT -DVC_REVISION=$(VC_REVISION)
+CDEFINES = -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=$(WASM_ALLOW_MEMORY_GROWTH) -D_REENTRANT -DVC_REVISION=$(VC_REVISION)
 CDEBUG = -g
 COPT = -O2
 # Once in a while, -Wformat says something useful.  The odds are against that,
@@ -30,11 +32,14 @@ COPT = -O2
 WFORMAT = -Wno-format
 PLATFORM_H = platform-wasm32.h
 
+.DEFAULT_GOAL := all
+
 .c.o:
 	$(CC) --target=$(WASM_TARGET) -include ../$(PLATFORM_H) -c $< $(CDEFINES) $(CDEBUG) $(COPT) $(WFORMAT) -o $@
 
-COBJ  = pmcl-kernel.o gc-common.o wasm-gc.o wasm-cstack.o wasm-exceptions.o bits.o \
-	image.o thread_manager.o lisp-debug.o memory.o unix-calls.o
+COBJ  = pmcl-kernel.o gc-common.o wasm-gc.o wasm-cstack.o wasm-exceptions.o wasm-subprims.o wasm-subprims-standin.o \
+	wasm-no-wasi-libc.o wasm-kernel-stubs.o \
+	bits.o image.o thread_manager.o lisp-debug.o memory.o unix-calls.o
 
 DEBUGOBJ =
 KERNELOBJ= $(COBJ)
@@ -68,10 +73,23 @@ $(COBJ): $(CHEADERS)
 
 
 cclean:
-	$(RM) -f $(KERNELOBJ) $(DEBUGOBJ) ../../wasmcl
+	$(RM) -f $(KERNELOBJ) $(DEBUGOBJ) ../../doc/wasm/js/wasmcl.wasm
 
 clean:	cclean
 	$(RM) -f $(SPOBJ)
+
+.PHONY: all wasmcl
+
+all: wasmcl
+
+wasmcl: $(KERNELOBJ)
+	mkdir -p ../../doc/wasm/js
+	$(WASM_LD) --no-entry --import-memory --import-table \
+	  --export=wasm_ccl_start \
+	  --export=wasm_set_current_tcr --export=wasm_get_current_tcr \
+	  --export=wasm_set_cstack_bounds --export=wasm_set_cstack_pointer --export=wasm_get_cstack_pointer \
+	  --export=wasm_call_subprim_fixnum \
+	  -o ../../doc/wasm/js/wasmcl.wasm $(KERNELOBJ)
 
 # strip:	../../armcl
 # 	strip -g ../../armcl
