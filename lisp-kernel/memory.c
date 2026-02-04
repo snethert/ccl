@@ -200,6 +200,15 @@ CommitMemory (LogicalAddress start, natural len)
 #if WASM_ALLOW_MEMORY_GROWTH
     uint32_t pages = (uint32_t)((end - have + WASM_PAGE_SIZE - 1) / WASM_PAGE_SIZE);
     if (pages == 0 || wasm_memory_grow_and_relocate(pages) < 0) {
+#ifdef WASM32
+      char buf[128];
+      int n = snprintf(buf, sizeof(buf),
+                       "WASM CommitMemory failed: start=0x%lx len=0x%lx have=0x%lx\n",
+                       (unsigned long)start, (unsigned long)len, (unsigned long)have);
+      if (n > 0) {
+        wasm_host_log(buf, (unsigned)n);
+      }
+#endif
       return false;
     }
 #else
@@ -441,12 +450,20 @@ MapFile(LogicalAddress addr, natural pos, natural nbytes, int permissions, int f
   off_t opos = LSEEK(fd, 0, SEEK_CUR);
 
   if (opos < 0) {
+#ifdef WASM32
+    static const char msg[] = "WASM MapFile: tell failed\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+#endif
     return false;
   }
   if (!CommitMemory(addr, nbytes)) {
     return false;
   }
   if (LSEEK(fd, (off_t)pos, SEEK_SET) < 0) {
+#ifdef WASM32
+    static const char msg[] = "WASM MapFile: seek failed\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+#endif
     return false;
   }
 
@@ -457,6 +474,15 @@ MapFile(LogicalAddress addr, natural pos, natural nbytes, int permissions, int f
     }
     signed_natural got = (signed_natural)read(fd, addr + total, want);
     if (got <= 0) {
+#ifdef WASM32
+      char buf[128];
+      int n = snprintf(buf, sizeof(buf),
+                       "WASM MapFile: read failed (want=%lu got=%ld)\n",
+                       (unsigned long)want, (long)got);
+      if (n > 0) {
+        wasm_host_log(buf, (unsigned)n);
+      }
+#endif
       return false;
     }
     total += (size_t)got;

@@ -117,7 +117,9 @@ Proposed approach:
 ### `_SPfuncall`
 - Use `nfn`/`fn` register semantics consistent with ARM.
 - Consume `nargs` and arguments on VSP.
-- Enter the function’s codevector entrypoint (ABI to be defined by codegen).
+- Enter the function’s entrypoint via `call_indirect` using the fixnum table
+  index stored in `_function.entrypoint` (see `doc/wasm/ABI.md`).
+- Mirror the top 3 VSP arguments into `arg_z/arg_y/arg_x` before dispatch.
 
 ### `_SPnthrow1value`
 - Implement the unwind loop (`nthrow1v` in ARM).

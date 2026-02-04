@@ -13,19 +13,22 @@
   `wasm_set_subprims_ready` / `wasm_get_subprims_ready` exports.
 - **Subprims provider module (separate build):** ⚠️  
   `lisp-kernel/wasm32/subprims/Makefile` builds `doc/wasm/js/subprims.wasm`.
-- **Tier‑0 subprims (C, partial semantics):** ⚠️  
-  `_SPmkcatch1v`, `_SPnthrow1value`, `_SPfuncall` exist but lack non‑local
-  transfer and codegen calling convention.
+- **Tier‑0 subprims (C):** ✅  
+  `_SPmkcatch1v`, `_SPnthrow1value`, `_SPfuncall` implemented with cooperative
+  unwind + table‑index function entry ABI; `_SPfuncall` syncs arg regs from
+  VSP per WASM calling convention (see `doc/wasm/ABI.md`).
 - **kernel_request ABI wrappers:** ✅  
   Synchronous + staged helpers in `wasm-host.c`.
 - **Streams (stdin/stdout/stderr):** ✅  
   `lisp_read/lisp_write` routed through `kernel_request`.
 - **Named read‑only stream open/stat:** ✅  
   `lisp_open/lisp_stat` via `NAMED_RO` stream kind.
-- **Real Lisp toplevel entry:** ❌  
-  `start_lisp` returns to host; no Lisp REPL yet.
+- **Real Lisp toplevel entry:** ⚠️  
+  `start_lisp` can run a stub toplevel loop with the minimal boot image; real
+  Lisp REPL still pending.
 - **Image boot path:** ⚠️  
-  `wasm_ccl_load_image` exists; real Lisp entry still pending.
+  `wasm_ccl_load_image` + minimal image generator load successfully (boot-only);
+  real root image still pending.
 
 ## JS microkernel / host
 
@@ -55,6 +58,11 @@
 
 - **Subprims ABI decisions:** ✅  
   Table‑index calling convention documented.
+- **WASM function entry ABI:** ✅  
+  Entry points are fixnum table indices; cooperative unwind flag defined.
+- **WASM GC root discipline (doc):** ✅  
+  Operand stack excluded; TCR register file is authoritative; spill rules
+  documented in `doc/wasm/ABI.md`.
 - **WASM codegen & runtime integration:** ❌  
   Compiler emission + real subprims integration pending.
 

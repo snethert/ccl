@@ -117,6 +117,22 @@ and return to JS **without** entering Lisp yet (it skips `start_lisp`).
 node doc/wasm/js/load-image.mjs /path/to/ccl.image
 ```
 
+## Generate A Minimal WASM Image
+
+Build a tiny bring-up image with a stub toplevel function entrypoint:
+
+```bash
+python3 scripts/wasm/make_minimal_image.py --output doc/wasm/minimal.image
+```
+
+The default entrypoint table index is `200` (see `doc/wasm/ABI.md`).
+
+To exercise the toplevel loop with the minimal image:
+
+```bash
+node doc/wasm/js/load-image.mjs --run doc/wasm/minimal.image
+```
+
 ## JS Wiring (Sketch-Level)
 
 See:
@@ -151,5 +167,5 @@ python3 scripts/wasm/generate_subprims_artifacts.py
 ## Bring-Up Status / Limitations
 
 - Many OS/POSIX interfaces are stubbed out for WASM32 bring-up.
-- `start_lisp` currently returns to the host without entering the real Lisp toplevel; use `wasm_ccl_step` for the Stage‑2 stepping baseline while the true entry/loader path is integrated.
+- `start_lisp` can run a stub toplevel loop when the minimal image + boot entrypoint are installed; the real Lisp toplevel is still pending, so use `wasm_ccl_step` for the Stage‑2 stepping baseline while the full entry/loader path is integrated.
 - The “no-WASI libc” shims are intentionally minimal (bump `malloc`, no real stdio/formatting).

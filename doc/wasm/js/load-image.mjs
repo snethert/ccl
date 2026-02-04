@@ -5,12 +5,18 @@
  *
  * Usage:
  *   node doc/wasm/js/load-image.mjs /path/to/ccl.image
+ *   node doc/wasm/js/load-image.mjs --run /path/to/ccl.image
  */
 
 import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
-import { createCclImports, createSharedCclRuntime, instantiateWasm } from "./ccl-loader.mjs";
+import {
+  createCclImports,
+  createSharedCclRuntime,
+  instantiateWasm,
+  installSubprimsTable,
+} from "./ccl-loader.mjs";
 import { createMicrokernel } from "./microkernel.mjs";
 
 function fail(msg) {
@@ -18,9 +24,11 @@ function fail(msg) {
   process.exit(1);
 }
 
-const imagePath = process.argv[2];
+const args = process.argv.slice(2);
+const runToplevel = args.includes("--run");
+const imagePath = args.find((arg) => !arg.startsWith("--"));
 if (!imagePath) {
-  console.error("Usage: node doc/wasm/js/load-image.mjs /path/to/ccl.image");
+  console.error("Usage: node doc/wasm/js/load-image.mjs [--run] /path/to/ccl.image");
   process.exit(2);
 }
 
@@ -50,6 +58,35 @@ const kernel = await instantiateWasm(
     microkernel,
   }),
 );
+
+let subprims = null;
+let subprimsMap = null;
+if (runToplevel) {
+  const subprimsUrl = new URL("subprims.wasm", import.meta.url);
+  const subprimsBytes = await fs.readFile(fileURLToPath(subprimsUrl));
+  const subprimsMapUrl = new URL("../subprims-map.json", import.meta.url);
+  subprimsMap = JSON.parse(await fs.readFile(fileURLToPath(subprimsMapUrl), "utf-8"));
+
+  subprims = await instantiateWasm(
+    subprimsBytes,
+    createCclImports({
+      memory: runtime.memory,
+      subprimsTable: runtime.subprimsTable,
+      microkernel,
+      extra: { ccl: kernel.instance.exports },
+    }),
+  );
+
+  installSubprimsTable({
+    table: runtime.subprimsTable,
+    subprimsMap,
+    providers: [{ exports: kernel.instance.exports }, { exports: subprims.instance.exports }],
+  });
+
+  if (typeof kernel.instance.exports.wasm_set_subprims_ready === "function") {
+    kernel.instance.exports.wasm_set_subprims_ready(1);
+  }
+}
 
 const pageSize = 65536;
 const cstackSize = 1 << 20; // 1 MiB
@@ -89,4 +126,29 @@ try {
 } catch (e) {
   console.error(`wasm_ccl_load_image trapped: ${e}`);
   process.exit(3);
+}
+
+if (runToplevel) {
+  const bootEntry = kernel.instance.exports.wasm_boot_entry;
+  const runToplevelFn = kernel.instance.exports.wasm_run_toplevel;
+  if (typeof bootEntry !== "function") {
+    fail("kernel missing export wasm_boot_entry");
+  }
+  if (typeof runToplevelFn !== "function") {
+    fail("kernel missing export wasm_run_toplevel");
+  }
+
+  const bootIndex = 200;
+  if (runtime.subprimsTable.length <= bootIndex) {
+    runtime.subprimsTable.grow(bootIndex - runtime.subprimsTable.length + 1);
+  }
+  runtime.subprimsTable.set(bootIndex, bootEntry);
+
+  try {
+    const rc = runToplevelFn();
+    console.log(`wasm_run_toplevel rc=${rc}`);
+  } catch (e) {
+    console.error(`wasm_run_toplevel trapped: ${e}`);
+    process.exit(4);
+  }
 }

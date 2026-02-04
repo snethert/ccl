@@ -28,6 +28,14 @@
 #include <limits.h>
 #include <time.h>
 
+#ifdef WASM32
+static void
+wasm_image_log(const char *msg, size_t len)
+{
+  wasm_host_log(msg, (unsigned)len);
+}
+#endif
+
 
 #if defined(PPC64) || defined(X8632)
 #define RELOCATABLE_FULLTAG_MASK \
@@ -224,6 +232,10 @@ load_image_section(int fd, openmcl_image_section_header *sect)
                    align_to_power_of_2(mem_size,log2_page_size),
                    MEMPROTECT_RX,
                    fd)) {
+#ifdef WASM32
+        static const char msg[] = "WASM image load: readonly map failed\n";
+        wasm_image_log(msg, sizeof(msg) - 1);
+#endif
         return;
       }
     }
@@ -239,6 +251,10 @@ load_image_section(int fd, openmcl_image_section_header *sect)
 		 align_to_power_of_2(mem_size,log2_page_size),
 		 MEMPROTECT_RWX,
 		 fd)) {
+#ifdef WASM32
+      static const char msg[] = "WASM image load: static map failed\n";
+      wasm_image_log(msg, sizeof(msg) - 1);
+#endif
       return;
     }
     a = new_area(static_space_active, static_space_limit, AREA_STATIC);
@@ -254,6 +270,10 @@ load_image_section(int fd, openmcl_image_section_header *sect)
 		 align_to_power_of_2(mem_size,log2_page_size),
 		 MEMPROTECT_RWX,
 		 fd)) {
+#ifdef WASM32
+      static const char msg[] = "WASM image load: dynamic map failed\n";
+      wasm_image_log(msg, sizeof(msg) - 1);
+#endif
       return;
     }
 
@@ -273,6 +293,10 @@ load_image_section(int fd, openmcl_image_section_header *sect)
                    align_to_power_of_2(mem_size,log2_page_size),
                    MEMPROTECT_RWX,
                    fd)) {
+#ifdef WASM32
+        static const char msg[] = "WASM image load: managed static map failed\n";
+        wasm_image_log(msg, sizeof(msg) - 1);
+#endif
         return;
       }
       if (!CommitMemory(global_mark_ref_bits,refbits_size)) {
@@ -284,6 +308,10 @@ load_image_section(int fd, openmcl_image_section_header *sect)
                    refbits_size,
                    MEMPROTECT_RW,
                    fd)) {
+#ifdef WASM32
+        static const char msg[] = "WASM image load: managed static refbits map failed\n";
+        wasm_image_log(msg, sizeof(msg) - 1);
+#endif
         return;
       }
       /* Should change image format and store this in the image */
@@ -324,6 +352,10 @@ load_image_section(int fd, openmcl_image_section_header *sect)
                    align_to_power_of_2(mem_size,log2_page_size),
                    MEMPROTECT_RWX,
                    fd)) {
+#ifdef WASM32
+        static const char msg[] = "WASM image load: static cons map failed\n";
+        wasm_image_log(msg, sizeof(msg) - 1);
+#endif
         return;
       }
     }
@@ -347,6 +379,7 @@ load_openmcl_image(int fd, openmcl_image_file_header *h)
 {
   LispObj image_nil = 0;
   area *a;
+  Boolean saw_static = false;
   if (find_openmcl_image_file_header(fd, h)) {
     int i, nsections = h->nsections;
     openmcl_image_section_header sections[nsections], *sect=sections;
@@ -356,10 +389,19 @@ load_openmcl_image(int fd, openmcl_image_file_header *h)
       ((signed_natural)(h->section_data_offset_high) << 32L) | h->section_data_offset_low;
 #endif
 
+#ifdef WASM32
+    if (read (fd, sections, nsections*sizeof(openmcl_image_section_header)) !=
+	nsections * sizeof(openmcl_image_section_header)) {
+      static const char msg[] = "WASM image load: section header read failed\n";
+      wasm_image_log(msg, sizeof(msg) - 1);
+      return 0;
+    }
+#else
     if (read (fd, sections, nsections*sizeof(openmcl_image_section_header)) !=
 	nsections * sizeof(openmcl_image_section_header)) {
       return 0;
     }
+#endif
 #if WORD_SIZE == 64
     LSEEK(fd, section_data_delta, SEEK_CUR);
 #endif
@@ -367,6 +409,10 @@ load_openmcl_image(int fd, openmcl_image_file_header *h)
       load_image_section(fd, sect);
       a = sect->area;
       if (a == NULL) {
+#ifdef WASM32
+        static const char msg[] = "WASM image load: section map failed\n";
+        wasm_image_log(msg, sizeof(msg) - 1);
+#endif
 	return 0;
       }
     }
@@ -375,6 +421,7 @@ load_openmcl_image(int fd, openmcl_image_file_header *h)
       a = sect->area;
       switch(sect->code) {
       case AREA_STATIC:
+        saw_static = true;
 	nilreg_area = a;
 #ifdef PPC
 #ifdef PPC64
@@ -390,7 +437,7 @@ load_openmcl_image(int fd, openmcl_image_file_header *h)
 	image_nil = (LispObj)(a->low) + (1024*4) + fulltag_cons;
 #endif
 #endif
-#ifdef ARM
+#if defined(ARM) || defined(WASM32)
 	image_nil = (LispObj)(a->low) + (1024*4) + fulltag_nil;
 #endif
 	set_nil(image_nil);
@@ -450,6 +497,21 @@ load_openmcl_image(int fd, openmcl_image_file_header *h)
       }
     }
   }
+#ifdef WASM32
+  else {
+    static const char msg[] = "WASM image load: header not found\n";
+    wasm_image_log(msg, sizeof(msg) - 1);
+  }
+  if (image_nil == 0) {
+    if (!saw_static) {
+      static const char msg[] = "WASM image load: missing static section\n";
+      wasm_image_log(msg, sizeof(msg) - 1);
+    } else {
+      static const char msg[] = "WASM image load: nil not set\n";
+      wasm_image_log(msg, sizeof(msg) - 1);
+    }
+  }
+#endif
   return image_nil;
 }
  
@@ -714,5 +776,3 @@ save_application(int fd, Boolean egc_was_enabled)
 }
 
       
-
-

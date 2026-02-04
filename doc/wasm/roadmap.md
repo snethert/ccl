@@ -11,10 +11,10 @@ separate from the detailed checklists in `porting-status.md`.
 
 - **Kernel bring‑up:** ✅ core WASM build + ABI surface in place.
 - **JS microkernel MVP:** ✅ kernel_request MVP + runner scaffolding.
-- **Subprims provider:** ⚠️ Tier‑0 stubs exist; semantics + codegen ABI pending.
+- **Subprims provider:** ✅ Tier‑0 semantics + ABI defined (awaiting codegen use).
 - **Lisp runtime (Level‑1):** ⚠️ capability errors + yield path done; streams/FS policy pending.
-- **Compiler/backend (WASM):** ❌ no real codegen yet.
-- **Image + real toplevel:** ⚠️ loader stubs exist; no usable boot image/toplevel.
+- **Compiler/backend (WASM):** ❌ no real codegen yet (calling convention defined).
+- **Image + real toplevel:** ⚠️ minimal boot image loads + stub toplevel hook returns; no real Lisp toplevel.
 - **Concurrency model:** ⏸ deferred (single‑threaded baseline first).
 
 ## Roadmap phases
@@ -36,10 +36,8 @@ separate from the detailed checklists in `porting-status.md`.
 
 ### Phase 3 — Subprims provider (Tier‑0)
 **Goal:** Reach Lisp toplevel path and return cleanly to host.
-**Status:** ⚠️
-**Remaining:**
-- `_SPnthrow1value` non‑local transfer
-- `_SPfuncall` calling convention (needs codegen ABI)
+**Status:** ✅
+**Notes:** Cooperative unwind + table‑index entry ABI in place; requires codegen.
 
 ### Phase 4 — Lisp runtime integration (Level‑1)
 **Goal:** Usable runtime surface under WASM constraints.
@@ -52,15 +50,15 @@ separate from the detailed checklists in `porting-status.md`.
 **Goal:** Emit real WASM code compatible with the subprims ABI.
 **Status:** ❌
 **Remaining:**
-- WASM codegen + fixup of subprims ABI
-- Real `_SPfuncall` and function entrypoints
+- WASM codegen + integration with table‑index entrypoints
+- Cooperative unwind checks for `wasm_pending_throw`
 
 ### Phase 6 — Image + real toplevel
 **Goal:** Boot a real Lisp image and enter `toplevel-loop`.
 **Status:** ⚠️
 **Remaining:**
-- WASM‑compatible image policy
-- Loader + toplevel wiring
+- WASM‑compatible image policy (root image + cloning semantics)
+- Real Lisp toplevel image + `start_lisp` wiring once codegen exists
 
 ### Phase 7 — Concurrency model
 **Goal:** Runner‑based parallelism where available.
@@ -69,6 +67,5 @@ separate from the detailed checklists in `porting-status.md`.
 
 ## Near‑term focus (next 1–2 phases)
 
-1) Complete Tier‑0 subprims semantics.  
-2) Define/implement the WASM codegen calling convention.  
-3) Produce a minimal boot image to exercise `toplevel-loop`.
+1) Implement WASM codegen emission that honors the calling convention.  
+2) Wire `start_lisp` to real toplevel + loader once codegen exists.

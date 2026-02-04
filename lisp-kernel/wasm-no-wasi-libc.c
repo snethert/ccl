@@ -31,6 +31,8 @@ FILE *const stderr = (FILE *)0;
 
 /* Declared in platform-wasm32.h, but keep this file standalone. */
 extern int32_t wasm_memory_grow_and_relocate(uint32_t pages);
+__attribute__((import_module("env"), import_name("wasm_host_log")))
+void wasm_host_log(const char *bytes, unsigned len);
 
 static uintptr_t
 align_up_uintptr(uintptr_t p, uintptr_t a)
@@ -748,6 +750,13 @@ off_t
 lseek(int fd, off_t offset, int whence)
 {
   if ((fd != wasm_boot_image_fd) || (wasm_boot_image_bytes == NULL)) {
+    char buf[96];
+    int n = snprintf(buf, sizeof(buf),
+                     "WASM lseek: invalid fd=%d boot=%s\n",
+                     fd, (wasm_boot_image_bytes == NULL) ? "null" : "set");
+    if (n > 0) {
+      wasm_host_log(buf, (unsigned)n);
+    }
     errno = EBADF;
     return (off_t)-1;
   }
@@ -783,9 +792,11 @@ lseek(int fd, off_t offset, int whence)
 off_t
 __wasilibc_tell(int fd)
 {
-  (void)fd;
-  errno = ENOSYS;
-  return (off_t)-1;
+  if ((fd != wasm_boot_image_fd) || (wasm_boot_image_bytes == NULL)) {
+    errno = EBADF;
+    return (off_t)-1;
+  }
+  return (off_t)wasm_boot_image_off;
 }
 
 int

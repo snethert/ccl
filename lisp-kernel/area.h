@@ -160,7 +160,7 @@ typedef struct area_list {
 #define PURESPACE_RESERVE 0x2000000000LL /* 128 GB */
 #define PURESPACE_SIZE (1LL<<30LL)
 #else
-#ifdef ARM
+#if defined(ARM) || defined(WASM32)
 #define PURESPACE_RESERVE (64<<20)
 #define PURESPACE_SIZE (32<<20)
 #else

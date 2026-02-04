@@ -64,6 +64,10 @@ TCR *wasm_get_current_tcr(void);
 The host can connect multiple modules by importing these functions from the
 kernel instance when instantiating provider/compiled-code modules.
 
+**Note:** We are not currently passing `TCR*` as an explicit parameter to
+entrypoints. That remains a possible future ABI variant, but the current design
+assumes `wasm_get_current_tcr()` is the single authoritative access path.
+
 ## Calling Convention
 
 - Subprims are `void` C functions with **no explicit arguments**.
@@ -72,6 +76,20 @@ kernel instance when instantiating provider/compiled-code modules.
 - The host must establish a manual cstack region before starting the kernel
   (via `wasm_set_cstack_bounds(base, size)`).
 
+## GC Roots and Spill Rules
+
+- The WASM operand stack is **never** part of the GC root set.
+- GC roots live in **TCR fields** plus the **explicit Lisp stacks** in linear
+  memory (VSP/TSP/cstack).
+- The TCR register file (`tcr->wasm_gprs`) is the **authoritative** source of
+  register state at safepoints.
+- If compiled code caches registers in WASM locals, it **must spill** those
+  cached values back into `tcr->wasm_gprs` before:
+  - any call that may trigger GC,
+  - any call into runtime helpers or subprims,
+  - any host/kernel boundary (`kernel_request`),
+  - any explicit safepoint check or cooperative yield.
+
 ## Register File (WASM32)
 
 - WASM32 builds add `tcr->wasm_gprs[16]` as an in-memory register file.
@@ -79,6 +97,39 @@ kernel instance when instantiating provider/compiled-code modules.
   indices into this array.
 - `tcr->save_vsp` / `tcr->save_tsp` are treated as the canonical VSP/TSP
   pointers for WASM subprims.
+
+## Lisp Function Entry ABI (WASM32)
+
+- `_function.entrypoint` is a **fixnum table index** (not a PC/address).
+- `_function.codevector` mirrors the same index (GC sanity check).
+- Entry functions have signature `void ()` and use the **current TCR**
+  (`wasm_get_current_tcr`) plus the register file/VSP for arguments/results.
+- `nargs` is a fixnum count. Arguments live on the VSP (stack grows down).
+  `_SPfuncall` mirrors the top 3 VSP arguments into `arg_z/arg_y/arg_x` for
+  ARM‑compatible calling semantics.
+- Single‑value return uses `arg_z` with `nargs = 1`. Multi‑value returns
+  remain Tier‑1 (values on VSP + `nargs` count).
+- `_SPfuncall` resolves `nfn` (symbol → fcell, function → entrypoint) and
+  dispatches via `call_indirect` using the entrypoint index.
+
+### Boot Entry Stub (Bring‑Up)
+
+- Minimal boot images may point `%toplevel-function%` at a stub function object.
+- The stub entrypoint is a **table index**; current bring‑up uses **index 200**.
+- The host should install the kernel export `wasm_boot_entry` at that table slot.
+
+### Non‑local Transfer (Tier‑0, cooperative unwind)
+
+- `_SPnthrow1value` unwinds the catch chain and restores TCR state, then sets
+  `tcr->wasm_pending_throw` to a non‑zero fixnum. The single value remains in
+  `arg_z` with `nargs = 1`; VSP is restored to the target catch frame’s
+  `save_vsp`.
+- **Generated code MUST** check `tcr->wasm_pending_throw` after calls and
+  propagate the unwind by returning without further work.
+- The catch cleanup point **MUST** clear `tcr->wasm_pending_throw` once control
+  is re‑established.
+- Unwind‑protect frames remain Tier‑1; the provider currently traps if such a
+  frame is encountered.
 
 ## Migration Implications
 

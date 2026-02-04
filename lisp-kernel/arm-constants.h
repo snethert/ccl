@@ -252,6 +252,7 @@ typedef struct catch_frame {
   LispObj xframe;
   LispObj last_lisp_frame;
   LispObj nfp;
+  LispObj save_vsp;
 } catch_frame;
 
 #define catch_frame_element_count ((sizeof(catch_frame)/sizeof(LispObj))-1)
@@ -339,6 +340,7 @@ typedef struct tcr {
   void *wasm_cstack_sp;
   struct area *wasm_cstack_area;
   LispObj wasm_gprs[16];
+  LispObj wasm_pending_throw;
 #endif
   LispObj spare[20];            /* allocate new things here */
   LispObj sptab[256];           /* subprims table */
