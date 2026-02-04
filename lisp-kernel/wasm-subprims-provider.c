@@ -12,7 +12,7 @@ __attribute__((import_module("ccl"), import_name("wasm_get_cstack_pointer")))
 void *wasm_get_cstack_pointer(void);
 
 __attribute__((import_module("ccl"), import_name("wasm_set_cstack_pointer")))
-void wasm_set_cstack_pointer(void *sp);
+void wasm_set_cstack_pointer(void *stack_ptr);
 
 static void
 wasm_subprims_trap(void)
@@ -36,19 +36,19 @@ wasm_set_reg(TCR *tcr, int reg, LispObj value)
 static inline catch_frame *
 wasm_alloc_catch_frame(void)
 {
-  BytePtr sp = (BytePtr)wasm_get_cstack_pointer();
+  BytePtr stack_ptr = (BytePtr)wasm_get_cstack_pointer();
   size_t bytes = sizeof(catch_frame);
-  sp -= bytes;
-  wasm_set_cstack_pointer(sp);
-  return (catch_frame *)sp;
+  stack_ptr -= bytes;
+  wasm_set_cstack_pointer(stack_ptr);
+  return (catch_frame *)stack_ptr;
 }
 
 static inline void
 wasm_free_catch_frame(catch_frame *cf)
 {
-  BytePtr sp = (BytePtr)cf;
-  sp += sizeof(catch_frame);
-  wasm_set_cstack_pointer(sp);
+  BytePtr stack_ptr = (BytePtr)cf;
+  stack_ptr += sizeof(catch_frame);
+  wasm_set_cstack_pointer(stack_ptr);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPmkcatch1v")))
@@ -111,8 +111,8 @@ _SPfuncall(void)
     wasm_subprims_trap();
   }
 
-  LispObj nfn = wasm_reg(tcr, Rfn);
-  if (nfn == (LispObj)nil_value) {
+  LispObj fn_value = wasm_reg(tcr, Rfn);
+  if (fn_value == (LispObj)nil_value) {
     return;
   }
 
