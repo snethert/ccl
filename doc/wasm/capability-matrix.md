@@ -32,6 +32,7 @@ It does **not** define the concrete kernel request ABI; see
 The keywords below are the canonical capability identifiers.
 
 - `:io/stream` — stream plumbing + standard stream endpoints (stdin/stdout/stderr)
+- `:persist/ephemeral` — in-memory key/value persistence (lost on reload)
 - `:persist/store` — key/value persistence (IndexedDB / OPFS / Cache, etc.)
 - `:fs/virtual` — pathname layer over `:persist/store`
 - `:net/http` — fetch-like HTTP client
@@ -72,11 +73,10 @@ failures instead of generic stream errors.
 **CLHS features:** `OPEN`, `WITH-OPEN-FILE`, `CLOSE`, `READ/WRITE-SEQUENCE`,
 `FILE-LENGTH`, `FILE-POSITION`
 
-- Requires: `:persist/store` for persistence; `:fs/virtual` if you want pathnames.
+- Requires: `:persist/ephemeral` or `:persist/store` for file bytes; `:fs/virtual`
+  if you want pathnames.
 - Browser mapping: “file” = named object in store; stream is a view over bytes.
-- Absent: `CAPABILITY-UNAVAILABLE` for `:persist/store` (or implement explicitly
-  in-memory “ephemeral files” behind a distinct capability such as
-  `:persist/ephemeral`).
+- Absent: `CAPABILITY-UNAVAILABLE` for `:persist/ephemeral`/`:persist/store`.
 
 **CLHS features:** pathnames (`MAKE-PATHNAME`, `PARSE-NAMESTRING`, logical
 pathnames, `TRANSLATE-PATHNAME`, `*DEFAULT-PATHNAME-DEFAULTS*`)
@@ -92,7 +92,7 @@ pathnames, `TRANSLATE-PATHNAME`, `*DEFAULT-PATHNAME-DEFAULTS*`)
 **CLHS features:** `PROBE-FILE`, `TRUENAME`, `RENAME-FILE`, `DELETE-FILE`,
 `DIRECTORY`
 
-- Requires: `:persist/store` + `:fs/virtual`.
+- Requires: `:persist/ephemeral` or `:persist/store` + `:fs/virtual`.
 - Browser mapping: store metadata index; `DIRECTORY` is a prefix/query over keys
   unless you emulate a directory tree.
 - Absent: `CAPABILITY-UNAVAILABLE`.
@@ -100,8 +100,8 @@ pathnames, `TRANSLATE-PATHNAME`, `*DEFAULT-PATHNAME-DEFAULTS*`)
 **CLHS feature:** `LOAD`
 
 - Requires: minimum `:io/stream` if loading from an existing stream; plus
-  `:persist/store`/`:fs/virtual` if loading by name; plus your module/dylink
-  story if loading compiled code.
+  `:persist/ephemeral`/`:persist/store` and `:fs/virtual` if loading by name;
+  plus your module/dylink story if loading compiled code.
 - Browser mapping: `(load "x")` resolves via `:fs/virtual` to bytes, then the
   loader (source or fasl).
 - Absent: if only named loads fail, `(load stream)` may still work if streams
@@ -109,9 +109,9 @@ pathnames, `TRANSLATE-PATHNAME`, `*DEFAULT-PATHNAME-DEFAULTS*`)
 
 **CLHS features:** `COMPILE-FILE`, `COMPILE-FILE-PATHNAME`
 
-- Requires: `:persist/store` if it writes an output artifact; may require
-  `:worker/spawn` if you offload compilation; may require `:sharedmem`
-  depending on design.
+- Requires: `:persist/ephemeral` or `:persist/store` if it writes an output
+  artifact; may require `:worker/spawn` if you offload compilation; may require
+  `:sharedmem` depending on design.
 - Browser mapping: compile to your chosen artifact (fasl-like bytes or wasm
   module); store under a deterministic key; return a pathname-like designator if
   `:fs/virtual` exists.
@@ -222,8 +222,9 @@ Opinionated defaults consistent with the project constraints:
 
 - Always implement: `:io/stream`, conditions/restarts, reader/printer, packages,
   compiler core, loader core.
-- Implement if possible: `:persist/store` + `:fs/virtual` (so `LOAD` and
-  `COMPILE-FILE` are sane).
+- Implement for browser MVP: `:persist/ephemeral` + `:fs/virtual` (so `LOAD` and
+  `COMPILE-FILE` are sane without persistence).
+- Implement if possible: `:persist/store` + `:fs/virtual` for persistence.
 - Only implement threads if `:sharedmem` is available; otherwise “no threads”.
 - Networking and UI are explicit add-ons; never implicit assumptions.
 

@@ -1,0 +1,71 @@
+# Quicklisp in CCL→WASM
+
+**Status:** Draft  
+**Purpose:** Capture the agreed Quicklisp support plan, including filesystem
+expectations, capability gating, and browser/headless behavior.
+
+## Summary
+
+Quicklisp must be usable in the browser without relying on a POSIX model. The plan
+is to provide a minimal virtual filesystem (VFS) that is capability‑gated and
+can start as fully in‑memory storage. Quicklisp should be available immediately
+from the start of a session and, when HTTP is available, be allowed to download
+libraries and update itself by default.
+
+## Capability profile
+
+**Always in browser MVP**
+- `:fs/virtual`
+- `:persist/ephemeral`
+- `:io/stream`
+- `:time/clock`, `:time/timers`
+
+**Conditional**
+- `:net/http` when network is allowed
+- `:persist/store` when IndexedDB persistence is enabled
+
+**Behavior**
+- If `:net/http` is present, Quicklisp updates and downloads are allowed by
+  default.
+- If `:net/http` is absent, Quicklisp runs offline against the preloaded dist.
+- If `:persist/store` is present, downloaded artifacts and metadata persist
+  across reloads.
+
+## VFS design (minimal, Quicklisp‑compatible)
+
+**Goals**
+- Provide just enough filesystem behavior for Quicklisp/ASDF to function.
+- Keep the VFS explicitly host‑capability‑gated.
+
+**Minimal operations to support**
+- `OPEN` (read/write)
+- `PROBE-FILE`, `TRUENAME`
+- `DIRECTORY`
+- `FILE-WRITE-DATE`, `FILE-LENGTH`, `FILE-POSITION`
+- `RENAME-FILE`, `DELETE-FILE`
+- `ENSURE-DIRECTORIES-EXIST`
+
+If a required capability is missing, signal `CAPABILITY-UNAVAILABLE` with the
+appropriate `:capability` key and operation name.
+
+## Storage model and migration path
+
+**Phase 1: In‑memory VFS**
+- Backing store is a map: path → `{bytes, mtime, mode, type, size}`.
+- Lost on page reload.
+
+**Phase 2: IndexedDB persistence**
+- Same VFS API; swap the backing store.
+- Use a minimal metadata index to implement `DIRECTORY` queries.
+
+## Overlay layout
+
+The VFS should support a read‑only “blob registry” mount for preloaded dist
+content, and a writable overlay for Quicklisp’s caches and downloads.
+
+**Resolution order**
+1. Writable overlay
+2. Read‑only blob mounts
+
+This keeps preloaded assets immutable while still letting Quicklisp write its
+state.
