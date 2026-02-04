@@ -70,6 +70,16 @@ High-level responsibilities you’ve described or implied:
 
 In spirit, the JS microkernel is the “world,” and a runner is a process that lives inside it.
 
+## Capability model (host feature matrix)
+
+Because browser embeddings differ (sandboxed iframe vs. dedicated worker, `crossOriginIsolated` vs. not, storage policy, networking policy, etc.), the system uses an explicit capability model:
+
+* The microkernel advertises which host capabilities exist in the current embedding.
+* When Lisp code requests a missing capability, it MUST fail explicitly (no silent fallback).
+* The Lisp-level failure mode is a condition of type `CAPABILITY-UNAVAILABLE` carrying a canonical capability key and operation name.
+
+The canonical capability keys and the CLHS-ish feature mapping live in `doc/wasm/capability-matrix.md:1`.
+
 ### 2) The Lisp backend (CCL-derived)
 
 On the Lisp side, the target is **a real Common Lisp environment**—but “real” in the sense of language machinery and developer experience, not “real” in the sense of pretending the browser is Unix.
