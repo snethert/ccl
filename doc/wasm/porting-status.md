@@ -17,6 +17,9 @@
   `_SPmkcatch1v`, `_SPnthrow1value`, `_SPfuncall` implemented with cooperative
   unwind + table‑index function entry ABI; `_SPfuncall` syncs arg regs from
   VSP per WASM calling convention (see `doc/wasm/ABI.md`).
+- **Tier‑1 subprims (C):** ⚠️  
+  `_SPthrow`, `_SPnthrowvalues`, `_SPmkcatchmv` implemented; unwind‑protect
+  frames still trap in the WASM provider.
 - **kernel_request ABI wrappers:** ✅  
   Synchronous + staged helpers in `wasm-host.c`.
 - **Streams (stdin/stdout/stderr):** ✅  

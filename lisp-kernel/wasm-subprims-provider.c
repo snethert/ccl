@@ -27,6 +27,15 @@ wasm_reg(TCR *tcr, int reg)
   return tcr->wasm_gprs[reg];
 }
 
+static inline signed_natural
+wasm_unbox_fixnum_or_trap(LispObj value)
+{
+  if (tag_of(value) != tag_fixnum) {
+    wasm_subprims_trap();
+  }
+  return unbox_fixnum(value);
+}
+
 static inline void
 wasm_set_reg(TCR *tcr, int reg, LispObj value)
 {
@@ -45,22 +54,25 @@ wasm_pending_throw_p(TCR *tcr)
   return tcr->wasm_pending_throw != 0;
 }
 
-static void
-wasm_sync_arg_regs_from_vsp(TCR *tcr)
+static inline LispObj *
+wasm_vsp_or_trap(TCR *tcr)
 {
-  LispObj nargs_val = wasm_reg(tcr, nargs);
-  if (tag_of(nargs_val) != tag_fixnum) {
-    wasm_subprims_trap();
-  }
-  signed_natural count = unbox_fixnum(nargs_val);
-  if (count <= 0) {
-    return;
-  }
-
   LispObj *vsp_ptr = (LispObj *)wasm_reg(tcr, vsp);
   if (vsp_ptr == NULL) {
     wasm_subprims_trap();
   }
+  return vsp_ptr;
+}
+
+static void
+wasm_sync_arg_regs_from_vsp(TCR *tcr)
+{
+  signed_natural count = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, nargs));
+  if (count <= 0) {
+    return;
+  }
+
+  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
 
   if (count >= 1) {
     wasm_set_reg(tcr, arg_z, vsp_ptr[0]);
@@ -138,6 +150,31 @@ _SPmkcatch1v(void)
   tcr->catch_top = ptr_to_lispobj((BytePtr)cf + fulltag_misc);
 }
 
+__attribute__((used, visibility("default"), export_name("_SPmkcatchmv")))
+void
+_SPmkcatchmv(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    wasm_subprims_trap();
+  }
+
+  catch_frame *cf = wasm_alloc_catch_frame();
+  memset(cf, 0, sizeof(*cf));
+
+  cf->header = catch_frame_header;
+  cf->link = tcr->catch_top;
+  cf->mvflag = box_fixnum(1);
+  cf->catch_tag = wasm_reg(tcr, arg_z);
+  cf->db_link = (LispObj)tcr->db_link;
+  cf->xframe = (LispObj)tcr->xframe;
+  cf->last_lisp_frame = (LispObj)tcr->last_lisp_frame;
+  cf->nfp = (LispObj)tcr->nfp;
+  cf->save_vsp = wasm_reg(tcr, vsp);
+
+  tcr->catch_top = ptr_to_lispobj((BytePtr)cf + fulltag_misc);
+}
+
 __attribute__((used, visibility("default"), export_name("_SPnthrow1value")))
 void
 _SPnthrow1value(void)
@@ -147,7 +184,7 @@ _SPnthrow1value(void)
     wasm_subprims_trap();
   }
 
-  signed_natural frame_count = unbox_fixnum(wasm_reg(tcr, imm0));
+  signed_natural frame_count = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, imm0));
   if (frame_count <= 0) {
     return;
   }
@@ -189,12 +226,125 @@ _SPnthrow1value(void)
   wasm_set_pending_throw(tcr, box_fixnum(1));
 }
 
+__attribute__((used, visibility("default"), export_name("_SPnthrowvalues")))
+void
+_SPnthrowvalues(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    wasm_subprims_trap();
+  }
+
+  signed_natural frame_count = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, imm0));
+  if (frame_count <= 0) {
+    return;
+  }
+
+  tcr->unwinding = 1;
+
+  while (frame_count-- > 0) {
+    LispObj catch_top = tcr->catch_top;
+    if (catch_top == 0 || catch_top == (LispObj)nil_value) {
+      wasm_subprims_trap();
+    }
+
+    catch_frame *cf = (catch_frame *)ptr_from_lispobj(untag(catch_top));
+    special_binding *target_db = (special_binding *)cf->db_link;
+
+    tcr->catch_top = cf->link;
+    tcr->xframe = (xframe_list *)cf->xframe;
+    tcr->last_lisp_frame = (natural)cf->last_lisp_frame;
+    tcr->nfp = (void *)cf->nfp;
+
+    if (tcr->db_link != target_db) {
+      wasm_unbind_to(tcr, target_db);
+    }
+
+    if (cf->catch_tag == (LispObj)unbound_marker) {
+      /* Unwind-protect frames are Tier-1; trap for now. */
+      wasm_subprims_trap();
+    }
+
+    if (frame_count == 0) {
+      signed_natural count = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, nargs));
+      if (count < 0) {
+        wasm_subprims_trap();
+      }
+      LispObj *src = wasm_vsp_or_trap(tcr);
+      LispObj *dest = (LispObj *)cf->save_vsp;
+      if (dest == NULL) {
+        wasm_subprims_trap();
+      }
+      LispObj *cursor = src + count;
+      while (count-- > 0) {
+        LispObj value = *--cursor;
+        *--dest = value;
+      }
+      wasm_set_reg(tcr, vsp, (LispObj)dest);
+    }
+
+    wasm_free_catch_frame(cf);
+  }
+
+  tcr->unwinding = 0;
+  wasm_set_pending_throw(tcr, box_fixnum(1));
+}
+
 typedef void (*wasm_lisp_fn)(void);
 
 static inline void
 wasm_call_entry_index(uint32_t index)
 {
   ((wasm_lisp_fn)(uintptr_t)index)();
+}
+
+__attribute__((used, visibility("default"), export_name("_SPthrow")))
+void
+_SPthrow(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    wasm_subprims_trap();
+  }
+
+  signed_natural count = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, nargs));
+  if (count < 0) {
+    wasm_subprims_trap();
+  }
+
+  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj throw_tag = vsp_ptr[count];
+
+  LispObj catch_top = tcr->catch_top;
+  signed_natural frame_count = 0;
+  catch_frame *target = NULL;
+  while (catch_top != 0 && catch_top != (LispObj)nil_value) {
+    catch_frame *cf = (catch_frame *)ptr_from_lispobj(untag(catch_top));
+    if (cf->catch_tag == throw_tag) {
+      target = cf;
+      break;
+    }
+    catch_top = cf->link;
+    frame_count++;
+  }
+
+  if (target == NULL) {
+    wasm_subprims_trap();
+  }
+
+  if (target->mvflag == 0) {
+    if (count == 0) {
+      *--vsp_ptr = (LispObj)nil_value;
+      wasm_set_reg(tcr, vsp, (LispObj)vsp_ptr);
+    } else {
+      vsp_ptr = vsp_ptr + (count - 1);
+      wasm_set_reg(tcr, vsp, (LispObj)vsp_ptr);
+    }
+    wasm_set_reg(tcr, nargs, box_fixnum(1));
+  }
+
+  wasm_set_reg(tcr, imm0, box_fixnum(frame_count + 1));
+  _SPnthrowvalues();
 }
 
 __attribute__((used, visibility("default"), export_name("_SPfuncall")))
