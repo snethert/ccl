@@ -65,6 +65,9 @@
   documented in `doc/wasm/ABI.md`.
 - **WASM codegen & runtime integration:** ❌  
   Compiler emission + real subprims integration pending.
+- **Funcall calling convention smoke test:** ✅  
+  `funcall-smoke.mjs` validates VSP args → `arg_z/arg_y/arg_x` sync and
+  single‑value return in `arg_z`.
 
 ## Tests
 

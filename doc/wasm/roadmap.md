@@ -5,7 +5,7 @@ separate from the detailed checklists in `porting-status.md`.
 
 **Status key:** ✅ done · ⚠️ partial · ❌ not started · ⏸ deferred
 
-**Last updated:** 2026‑02‑04
+**Last updated:** 2026‑02‑05
 
 ## Current snapshot (one‑screen summary)
 
@@ -13,7 +13,7 @@ separate from the detailed checklists in `porting-status.md`.
 - **JS microkernel MVP:** ✅ kernel_request MVP + runner scaffolding.
 - **Subprims provider:** ✅ Tier‑0 semantics + ABI defined (awaiting codegen use).
 - **Lisp runtime (Level‑1):** ⚠️ capability errors + yield path done; streams/FS policy pending.
-- **Compiler/backend (WASM):** ❌ no real codegen yet (calling convention defined).
+- **Compiler/backend (WASM):** ⚠️ calling convention implemented + smoke test; no real codegen yet.
 - **Image + real toplevel:** ⚠️ minimal boot image loads + stub toplevel hook returns; no real Lisp toplevel.
 - **Concurrency model:** ⏸ deferred (single‑threaded baseline first).
 
@@ -48,9 +48,9 @@ separate from the detailed checklists in `porting-status.md`.
 
 ### Phase 5 — Compiler/backend (WASM codegen)
 **Goal:** Emit real WASM code compatible with the subprims ABI.
-**Status:** ❌
+**Status:** ⚠️
 **Remaining:**
-- WASM codegen + integration with table‑index entrypoints
+- WASM codegen + integration with table‑index entrypoints (calling convention smoke test passes)
 - Cooperative unwind checks for `wasm_pending_throw`
 
 ### Phase 6 — Image + real toplevel

@@ -101,6 +101,7 @@ After building `doc/wasm/js/wasmcl.wasm`, run:
 
 ```bash
 node doc/wasm/js/smoke-test.mjs
+node doc/wasm/js/funcall-smoke.mjs
 node doc/wasm/js/kernel-request-smoke.mjs
 node doc/wasm/js/stream-open-smoke.mjs
 node doc/wasm/js/pending-stdin-smoke.mjs

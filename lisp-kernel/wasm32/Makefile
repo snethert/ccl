@@ -91,6 +91,7 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_memory_grow_and_relocate \
 	  --export=wasm_call_subprim_fixnum \
 	  --export=wasm_boot_entry --export=wasm_run_toplevel \
+	  --export=wasm_test_entry --export=wasm_test_funcall \
 	  -o ../../doc/wasm/js/wasmcl.wasm $(KERNELOBJ)
 
 # strip:	../../armcl

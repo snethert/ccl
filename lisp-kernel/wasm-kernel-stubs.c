@@ -31,7 +31,9 @@ enum {
   WASM_SUBPRIM_MKCATCH1V_INDEX = 25,
   WASM_SUBPRIM_NTHROW1VALUE_INDEX = 41,
   /* Keep in sync with scripts/wasm/make_minimal_image.py and load-image.mjs. */
-  WASM_BOOT_ENTRY_INDEX = 200
+  WASM_BOOT_ENTRY_INDEX = 200,
+  /* Smoke-test entrypoint for the WASM calling convention. */
+  WASM_TEST_ENTRY_INDEX = 201
 };
 
 static inline LispObj
@@ -103,6 +105,30 @@ wasm_boot_entry(void)
   }
   tcr->wasm_gprs[arg_z] = lisp_nil;
   tcr->wasm_gprs[nargs] = box_fixnum(1);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_test_entry")))
+void
+wasm_test_entry(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return;
+  }
+
+  LispObj arg = tcr->wasm_gprs[arg_z];
+  if (tag_of(arg) != tag_fixnum) {
+    tcr->wasm_gprs[arg_z] = lisp_nil;
+  } else {
+    tcr->wasm_gprs[arg_z] = arg + box_fixnum(1);
+  }
+  tcr->wasm_gprs[nargs] = box_fixnum(1);
+
+  /* Allow the stub to terminate the toplevel loop if used as %toplevel-function%. */
+  LispObj *vsp_ptr = (LispObj *)tcr->wasm_gprs[vsp];
+  if (vsp_ptr != NULL) {
+    *vsp_ptr = lisp_nil;
+  }
 }
 
 LispObj
@@ -196,6 +222,53 @@ wasm_run_toplevel(void)
   tcr->valence = TCR_STATE_FOREIGN;
   wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
   return rc;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_test_funcall")))
+LispObj
+wasm_test_funcall(uint32_t raw_arg)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return lisp_nil;
+  }
+  if (!wasm_subprims_ready) {
+    return lisp_nil;
+  }
+
+  LispObj fn_obj[3] __attribute__((aligned(8)));
+  LispObj entry_fixnum = box_fixnum(WASM_TEST_ENTRY_INDEX);
+  fn_obj[0] = make_header(subtag_function, 2);
+  fn_obj[1] = entry_fixnum;
+  fn_obj[2] = entry_fixnum;
+  LispObj fn_value = (LispObj)((BytePtr)fn_obj + fulltag_misc);
+
+  LispObj *saved_vsp = tcr->save_vsp;
+  if (saved_vsp == NULL) {
+    return lisp_nil;
+  }
+
+  natural old_last_lisp_frame = wasm_enter_lisp_frame(tcr, 0, 0, (LispObj)saved_vsp);
+  tcr->valence = TCR_STATE_LISP;
+  tcr->wasm_pending_throw = 0;
+
+  LispObj *vsp_ptr = saved_vsp;
+  *--vsp_ptr = box_fixnum((signed_natural)raw_arg);
+
+  tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+  tcr->wasm_gprs[nargs] = box_fixnum(1);
+  tcr->wasm_gprs[nfn] = fn_value;
+  tcr->wasm_gprs[Rfn] = fn_value;
+
+  wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_FUNCALL_INDEX));
+
+  LispObj result = tcr->wasm_gprs[arg_z];
+  tcr->save_vsp = saved_vsp;
+  tcr->wasm_gprs[vsp] = (LispObj)saved_vsp;
+  tcr->valence = TCR_STATE_FOREIGN;
+  wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
+
+  return result;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_get_lisp_nil")))
