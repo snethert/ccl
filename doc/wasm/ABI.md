@@ -143,13 +143,18 @@ assumes `wasm_get_current_tcr()` is the single authoritative access path.
   `arg_z` and return a single fixnum in `arg_z`.
 - Compiled WASM modules can also import lightweight register helpers:
   - `wasm_get_arg_z` / `wasm_get_arg_y` (read incoming arguments)
-  - `wasm_set_arg_z` / `wasm_set_arg_y` (update argument registers)
+  - `wasm_get_nargs` (read the raw argument count)
+  - `wasm_set_arg_z` / `wasm_set_arg_y` / `wasm_set_arg_x` (update argument registers)
   - `wasm_set_nargs` (set the fixnum argument count)
+  - `wasm_set_nfn` (update `nfn`/`Rfn` for `_SPfuncall`)
+  - `wasm_set_imm0` (set `imm0` to a LispObj/fixnum)
   - `wasm_get_nfn` (read current function object)
 - Multi‑value helpers are available for bring‑up:
   - `wasm_return_values2`, `wasm_return_values3`, `wasm_return_values4`
     set `arg_z`, push values onto the VSP, and set `nargs` (returning the
     primary value).
+  - `wasm_vpush` pushes a single LispObj onto the VSP (updates `vsp` + `save_vsp`).
+  - `wasm_vpop` pops a single LispObj from the VSP (updates `vsp` + `save_vsp`).
   - `wasm_get_mv` returns the Nth value (0‑based, raw index) from `arg_z`/VSP.
   - `wasm_get_mv_indexed` accepts a **fixnum** index and returns the Nth value.
   - `wasm_restore_vsp` pops extra values when `nargs > 1` and resets VSP.
@@ -190,8 +195,11 @@ remains pending.
   propagate the unwind by returning without further work.
 - The catch cleanup point **MUST** clear `tcr->wasm_pending_throw` once control
   is re‑established.
-- Unwind‑protect frames remain Tier‑1; the provider currently traps if such a
-  frame is encountered.
+- Compiled modules may use `wasm_clear_pending_throw` to clear the pending-throw
+  flag after a successful `nthrow`-based exit from a local catch.
+- Unwind‑protect frames are Tier‑1 (cooperative). Generated code should branch
+  to cleanup on `pending_throw`, run the cleanup form, then propagate the
+  pending throw. Current bring‑up preserves the **primary** value only.
 
 ## Migration Implications
 

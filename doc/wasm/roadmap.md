@@ -11,9 +11,9 @@ separate from the detailed checklists in `porting-status.md`.
 
 - **Kernel bring‑up:** ✅ core WASM build + ABI surface in place.
 - **JS microkernel MVP:** ✅ kernel_request MVP + runner scaffolding.
-- **Subprims provider:** ✅ Tier‑0 semantics + ABI defined (awaiting codegen use).
+- **Subprims provider:** ✅ Tier‑0 semantics + ABI defined and exercised by compiled modules.
 - **Lisp runtime (Level‑1):** ✅ capability errors + yield path + WASM stream classes + virtual FS policy.
-- **Compiler/backend (WASM):** ⚠️ basic expression lowering (lexicals/let/setq/call/values/mv-bind/nth-value) + fixnum ops + local `block`/`tagbody` control flow + generic module emission; non‑local control flow and closures pending.
+- **Compiler/backend (WASM):** ⚠️ MVP emission for constants, fixnum ops, calls, multi‑value (2–4 + `values` >4 via VSP push), and local control flow (`if`, `block/return-from`, `tagbody/go`) with compiled-module registry install; `catch`/`throw` routed through subprims; cooperative `unwind-protect` cleanup + closure capture now in place (primary values only).
 - **Image + real toplevel:** ⚠️ minimal boot image loads + stub toplevel hook returns; no real Lisp toplevel.
 - **Concurrency model:** ⏸ deferred (single‑threaded baseline first).
 
@@ -50,9 +50,9 @@ separate from the detailed checklists in `porting-status.md`.
 **Goal:** Emit real WASM code compatible with the subprims ABI.
 **Status:** ⚠️
 **Remaining:**
-- Non‑local control flow (`catch/throw`, `unwind-protect`) + pending‑throw propagation
-- Full multi‑value coverage beyond 4 values (higher‑arity mv paths, `multiple-value-call`)
-- Spill/restore discipline for closed‑over variables and closures
+- Full multi‑value coverage beyond 4 values (higher‑arity mv paths, multi‑form `multiple-value-call`) — `values` now supports >4, mvcall + unwind-protect preserve full values
+- Extend cooperative `unwind-protect` to preserve full multiple values (currently primary only)
+- Spill/restore discipline around all subprim calls (closure allocation paths still partial)
 
 ### Phase 6 — Image + real toplevel
 **Goal:** Boot a real Lisp image and enter `toplevel-loop`.
@@ -68,5 +68,5 @@ separate from the detailed checklists in `porting-status.md`.
 
 ## Near‑term focus (next 1–2 phases)
 
-1) Implement WASM codegen emission that honors the calling convention.  
-2) Wire `start_lisp` to real toplevel + loader once codegen exists.
+1) Finish full multi‑value propagation (`multiple-value-call`, unwind‑protect mv) and tighten spill/restore discipline.  
+2) Wire `start_lisp` to real toplevel + loader in the browser.

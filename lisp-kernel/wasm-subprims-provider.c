@@ -68,6 +68,108 @@ wasm_vsp_or_trap(TCR *tcr)
 }
 
 static void
+wasm_push_value_set(TCR *tcr)
+{
+  signed_natural count = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, nargs));
+  if (count < 0) {
+    wasm_subprims_trap();
+  }
+
+  LispObj *old_vsp = wasm_vsp_or_trap(tcr);
+  LispObj *prev_frame = (LispObj *)tcr->save_tsp;
+
+  const signed_natural header_words = 4;
+  signed_natural total_words = count + header_words;
+  LispObj *new_vsp = old_vsp - total_words;
+
+  signed_natural older_offset = (prev_frame != NULL) ? (signed_natural)(prev_frame - new_vsp) : 0;
+  signed_natural old_vsp_offset = (signed_natural)(old_vsp - new_vsp);
+
+  new_vsp[0] = box_fixnum(older_offset);
+  new_vsp[1] = box_fixnum(0);
+  new_vsp[2] = box_fixnum(count);
+  new_vsp[3] = box_fixnum(old_vsp_offset);
+
+  if (prev_frame != NULL) {
+    signed_natural younger_offset = (signed_natural)(new_vsp - prev_frame);
+    prev_frame[1] = box_fixnum(younger_offset);
+  }
+
+  if (count > 0) {
+    new_vsp[4] = wasm_reg(tcr, arg_z);
+    if (count > 1) {
+      for (signed_natural i = 1; i < count; i++) {
+        new_vsp[4 + i] = old_vsp[i];
+      }
+    }
+  }
+
+  wasm_set_reg(tcr, vsp, (LispObj)new_vsp);
+  tcr->save_vsp = new_vsp;
+  tcr->save_tsp = new_vsp;
+  wasm_set_reg(tcr, nargs, box_fixnum(0));
+}
+
+static void
+wasm_recover_value_sets(TCR *tcr)
+{
+  LispObj *newest = (LispObj *)tcr->save_tsp;
+  if (newest == NULL) {
+    return;
+  }
+
+  LispObj *oldest = newest;
+  for (;;) {
+    signed_natural older = wasm_unbox_fixnum_or_trap(oldest[0]);
+    if (older == 0) {
+      break;
+    }
+    oldest = oldest + older;
+  }
+
+  signed_natural total = 0;
+  for (LispObj *cur = newest; cur != NULL; ) {
+    total += wasm_unbox_fixnum_or_trap(cur[2]);
+    signed_natural older = wasm_unbox_fixnum_or_trap(cur[0]);
+    if (older == 0) {
+      break;
+    }
+    cur = cur + older;
+  }
+
+  if (total <= 0) {
+    signed_natural old_vsp_offset = wasm_unbox_fixnum_or_trap(oldest[3]);
+    LispObj *old_vsp = oldest + old_vsp_offset;
+    wasm_set_reg(tcr, arg_z, (LispObj)nil_value);
+    wasm_set_reg(tcr, nargs, box_fixnum(0));
+    wasm_set_reg(tcr, vsp, (LispObj)old_vsp);
+    tcr->save_vsp = old_vsp;
+    tcr->save_tsp = NULL;
+    return;
+  }
+
+  LispObj *new_vsp = newest - total;
+  signed_natural out = 0;
+  for (LispObj *cur = oldest; cur != NULL; ) {
+    signed_natural count = wasm_unbox_fixnum_or_trap(cur[2]);
+    for (signed_natural j = 0; j < count; j++) {
+      new_vsp[out++] = cur[4 + j];
+    }
+    signed_natural younger = wasm_unbox_fixnum_or_trap(cur[1]);
+    if (younger == 0) {
+      break;
+    }
+    cur = cur + younger;
+  }
+
+  wasm_set_reg(tcr, arg_z, new_vsp[0]);
+  wasm_set_reg(tcr, vsp, (LispObj)new_vsp);
+  tcr->save_vsp = new_vsp;
+  wasm_set_reg(tcr, nargs, box_fixnum(total));
+  tcr->save_tsp = NULL;
+}
+
+static void
 wasm_sync_arg_regs_from_vsp(TCR *tcr)
 {
   signed_natural count = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, nargs));
@@ -348,6 +450,39 @@ _SPthrow(void)
 
   wasm_set_reg(tcr, imm0, box_fixnum(frame_count + 1));
   _SPnthrowvalues();
+}
+
+__attribute__((used, visibility("default"), export_name("_SPsave_values")))
+void
+_SPsave_values(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    wasm_subprims_trap();
+  }
+  wasm_push_value_set(tcr);
+}
+
+__attribute__((used, visibility("default"), export_name("_SPadd_values")))
+void
+_SPadd_values(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    wasm_subprims_trap();
+  }
+  wasm_push_value_set(tcr);
+}
+
+__attribute__((used, visibility("default"), export_name("_SPrecover_values")))
+void
+_SPrecover_values(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    wasm_subprims_trap();
+  }
+  wasm_recover_value_sets(tcr);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPfuncall")))

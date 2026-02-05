@@ -145,5 +145,12 @@ if [ "$SMOKE" -eq 1 ]; then
     echo "error: node not found (install nodejs)" >&2
     exit 1
   fi
+  SMOKE_MODULES="$ROOT_DIR/doc/wasm/wasm-smoke-modules.json"
+  if command -v ccl >/dev/null 2>&1; then
+    run "$ROOT_DIR/scripts/wasm/compile-smoke-modules.sh" --output "$SMOKE_MODULES"
+  elif [ ! -f "$SMOKE_MODULES" ]; then
+    echo "error: ccl not found and $SMOKE_MODULES is missing. Install CCL or generate the bundle." >&2
+    exit 1
+  fi
   run "$node_cmd" "$ROOT_DIR/doc/wasm/js/all-smoke.mjs"
 fi

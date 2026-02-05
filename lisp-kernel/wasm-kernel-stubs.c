@@ -416,6 +416,17 @@ wasm_set_arg_y(LispObj value)
   tcr->wasm_gprs[arg_y] = value;
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_set_arg_x")))
+void
+wasm_set_arg_x(LispObj value)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return;
+  }
+  tcr->wasm_gprs[arg_x] = value;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_set_nargs")))
 void
 wasm_set_nargs(uint32_t count)
@@ -427,6 +438,29 @@ wasm_set_nargs(uint32_t count)
   tcr->wasm_gprs[nargs] = box_fixnum((signed_natural)count);
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_set_nfn")))
+void
+wasm_set_nfn(LispObj value)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return;
+  }
+  tcr->wasm_gprs[nfn] = value;
+  tcr->wasm_gprs[Rfn] = value;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_set_imm0")))
+void
+wasm_set_imm0(LispObj value)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return;
+  }
+  tcr->wasm_gprs[imm0] = value;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_get_nfn")))
 LispObj
 wasm_get_nfn(void)
@@ -436,6 +470,25 @@ wasm_get_nfn(void)
     return lisp_nil;
   }
   return tcr->wasm_gprs[nfn];
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_get_nargs")))
+uint32_t
+wasm_get_nargs(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return 0;
+  }
+  LispObj raw = tcr->wasm_gprs[nargs];
+  if (tag_of(raw) != tag_fixnum) {
+    return 1;
+  }
+  signed_natural count = unbox_fixnum(raw);
+  if (count < 0) {
+    return 0;
+  }
+  return (uint32_t)count;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_return_arg_z")))
@@ -602,6 +655,41 @@ wasm_restore_vsp(void)
   tcr->wasm_gprs[nargs] = box_fixnum(1);
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_vpush")))
+void
+wasm_vpush(LispObj value)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return;
+  }
+  LispObj *vsp_ptr = tcr->save_vsp;
+  if (vsp_ptr == NULL) {
+    return;
+  }
+  *--vsp_ptr = value;
+  tcr->save_vsp = vsp_ptr;
+  tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_vpop")))
+LispObj
+wasm_vpop(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return lisp_nil;
+  }
+  LispObj *vsp_ptr = tcr->save_vsp;
+  if (vsp_ptr == NULL) {
+    return lisp_nil;
+  }
+  LispObj value = *vsp_ptr++;
+  tcr->save_vsp = vsp_ptr;
+  tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+  return value;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_pending_throw_p")))
 uint32_t
 wasm_pending_throw_p(void)
@@ -611,6 +699,17 @@ wasm_pending_throw_p(void)
     return 0;
   }
   return tcr->wasm_pending_throw ? 1 : 0;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_clear_pending_throw")))
+void
+wasm_clear_pending_throw(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return;
+  }
+  tcr->wasm_pending_throw = 0;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_return_fixnum_add")))

@@ -11,11 +11,11 @@
   Table points at kernel-owned functions and stubs.
 - **Subprims readiness flag (host-set):** ✅  
   `wasm_set_subprims_ready` / `wasm_get_subprims_ready` exports.
-- **Compiled module registry hook:** ⚠️  
+- **Compiled module registry hook:** ✅  
   `%wasm-compiled-modules%` nilreg slot added; kernel exports
-  `wasm_get_compiled_module_registry` and compiler records stub module
-  entries in the registry (loader wiring pending).
-- **Subprims provider module (separate build):** ⚠️  
+  `wasm_get_compiled_module_registry`, compiler records module entries, and
+  JS loader installs them via `installCompiledModulesFromRegistry`.
+- **Subprims provider module (separate build):** ✅  
   `lisp-kernel/wasm32/subprims/Makefile` builds `doc/wasm/js/subprims.wasm`.
 - **Tier‑0 subprims (C):** ✅  
   `_SPmkcatch1v`, `_SPnthrow1value`, `_SPfuncall` implemented with cooperative
@@ -29,13 +29,16 @@
   `_SPfix_overflow` + `_SPmakes32` implemented in both kernel and provider;
   provider imports `wasm_box_signed_64` from the kernel to allocate bignums.
 - **Tier‑1 subprims (C):** ⚠️  
-  `_SPthrow`, `_SPnthrowvalues`, `_SPmkcatchmv` implemented; unwind‑protect
-  frames still trap in the WASM provider.
+  `_SPthrow`, `_SPnthrowvalues`, `_SPmkcatchmv` implemented; provider still
+  traps on native unwind‑protect frames, but the WASM compiler now emits
+  cooperative cleanup in‑module (primary value only).
 - **kernel_request ABI wrappers:** ✅  
   Synchronous + staged helpers in `wasm-host.c`.
 - **Compiled-code helper exports:** ✅  
-  `wasm_get_arg_y`, `wasm_set_arg_{z,y}`, `wasm_set_nargs`, `wasm_get_nfn`,
-  `wasm_funcall{0,1,2}`, `wasm_funcall{0,1,2}_mv`,
+  `wasm_get_arg_y`, `wasm_get_nargs`, `wasm_set_arg_{z,y,x}`, `wasm_set_nargs`,
+  `wasm_set_nfn`, `wasm_set_imm0`, `wasm_get_nfn`, `wasm_vpush`, `wasm_vpop`,
+  `wasm_clear_pending_throw`,
+  `wasm_call_subprim_fixnum`, `wasm_funcall{0,1,2}`, `wasm_funcall{0,1,2}_mv`,
   `wasm_return_values{2,3,4}`, `wasm_get_mv`, `wasm_get_mv_indexed`,
   `wasm_restore_vsp`.
 - **Streams (stdin/stdout/stderr):** ✅  
@@ -84,47 +87,50 @@
 - **WASM GC root discipline (doc):** ✅  
   Operand stack excluded; TCR register file is authoritative; spill rules
   documented in `doc/wasm/ABI.md`.
-- **WASM target arch description (compiler):** ⚠️  
+- **WASM target arch description (compiler):** ✅  
   `compiler/WASM/wasm-arch.lisp` defines a WASM32 target arch with ARM layout
-  and subprim indices; backend emission still missing.
-- **WASM backend scaffold (compiler):** ⚠️  
+  and subprim indices.
+- **WASM backend scaffold (compiler):** ✅  
   `compiler/WASM/wasm-backend.lisp` + `lib/wasmenv.lisp` provide a minimal
-  backend entry; code emission not implemented.
+  backend entry and route `p2-compile` through WASM2 emission.
 - **WASM p2 dispatch (compiler):** ⚠️  
   `compiler/WASM/wasm2.lisp` lowers basic expressions (lexicals, let/setq,
   call, if, progn, values/mv-bind/nth-value) into a minimal IR and emits
-  generic modules; local control flow (`block`/`return-from`, `tagbody`/`go`)
-  now lowers via structured WASM IR, while `catch`/`unwind-protect` and
-  closures remain pending.
-- **WASM codegen state scaffold (compiler):** ⚠️  
-  `compiler/WASM/wasm2.lisp` now initializes backend state (register masks,
-  target sizes) but still traps before emission.
-- **WASM constant IR (compiler):** ⚠️  
-  Initial `wasm-ir` capture records constant forms (`nil`, `t`, `fixnum`,
-  `immediate`) while real emission is pending.
-- **Constant-return entry stub (kernel):** ⚠️  
+  generic modules; `values` now supports >4 values via VSP pushes (MVP helper).
+  Local control flow (`block`/`return-from`, `tagbody`/`go`) lowers via
+  structured WASM IR. `catch`/`throw` implemented; `unwind-protect`
+  now compiles to cooperative cleanup (primary value only) and closures
+  capture cells for inherited vars. `multiple-value-call` now supports
+  multi-form mvcall and `unwind-protect` preserves full multiple values.
+- **WASM codegen state scaffold (compiler):** ✅  
+  `compiler/WASM/wasm2.lisp` initializes backend state (register masks,
+  target sizes) and emits WASM modules.
+- **WASM constant IR (compiler):** ✅  
+  `wasm-ir` capture records constant forms (`nil`, `t`, `fixnum`,
+  `immediate`) and drives WASM emission.
+- **Constant-return entry stub (kernel):** ✅  
   `wasm_const_entry` returns the constant stored in the current function
   object (slot 2) and falls back to `wasm_set_const_value` for bring-up.
-- **WASM constant-function metadata (compiler):** ⚠️  
+- **WASM constant-function metadata (compiler):** ✅  
   `compiler/WASM/wasm2.lisp` tags constant-return forms with
   `wasm-const-value` + `wasm-entry-index` in `afunc-lfun-info`.
-- **WASM constant-function objects (compiler):** ⚠️  
+- **WASM constant-function objects (compiler):** ✅  
   `compiler/WASM/wasm2.lisp` now synthesizes a minimal function object that
   points at `wasm_const_entry` and stores the constant value in slot 2.
-- **WASM constant IR emitter (compiler):** ⚠️  
+- **WASM constant IR emitter (compiler):** ✅  
   `compiler/WASM/wasm2.lisp` now emits a minimal WASM module for constant
   forms and records the module bytes + export name in `afunc-lfun-info`.
-- **WASM fixnum add IR emitter (compiler):** ⚠️  
+- **WASM fixnum add IR emitter (compiler):** ✅  
   `compiler/WASM/wasm2.lisp` now emits a minimal WASM module for fixnum add
   and records the module bytes + export name in `afunc-lfun-info`.
-- **WASM fixnum sub IR emitter (compiler):** ⚠️  
+- **WASM fixnum sub IR emitter (compiler):** ✅  
   `compiler/WASM/wasm2.lisp` now emits a minimal WASM module for fixnum sub
   and records the module bytes + export name in `afunc-lfun-info`.
-- **WASM fixnum mul/ash/log IR emitters (compiler):** ⚠️  
+- **WASM fixnum mul/ash/log IR emitters (compiler):** ✅  
   `compiler/WASM/wasm2.lisp` now emits minimal WASM modules for fixnum mul,
   fixnum ash, and fixnum logand/logior/logxor/lognot, recording module bytes +
   export names in `afunc-lfun-info`.
-- **WASM fixnum neg IR emitter (compiler):** ⚠️  
+- **WASM fixnum neg IR emitter (compiler):** ✅  
   `compiler/WASM/wasm2.lisp` emits a minimal WASM module for fixnum negation
   (`%ineg`/`%%ineg`) and records module bytes + export name.
 - **WASM fixnum-overflow operator (compiler):** ⚠️  
@@ -134,10 +140,13 @@
   `lib/compile-ccl.lisp` + `lib/systems.lisp` include WASM compiler modules;
   no target build integration yet.
 - **WASM vinsn templates (compiler):** ⚠️  
-  Stub `compiler/WASM/wasm-vinsns.lisp` added; templates not implemented.
+  Minimal template registration added in `compiler/WASM/wasm-vinsns.lisp`;
+  no target-specific templates yet.
 - **WASM codegen & runtime integration:** ⚠️  
-  Generic modules emitted for basic forms with call helpers; `block`/`tagbody`
-  now lower in WASM2, while `catch`/`unwind-protect` remain pending.
+  Generic modules emitted for basic forms with call helpers and compiled
+  module registry installs; `block`/`tagbody` lower in WASM2. `catch`/`throw`
+  route through subprims with pending-throw clearing; `unwind-protect`
+  cleanup and closures are now supported (cooperative, primary value only).
 - **Funcall calling convention smoke test:** ✅  
   `funcall-smoke.mjs` validates VSP args → `arg_z/arg_y/arg_x` sync and
   single‑value return in `arg_z`.
@@ -147,9 +156,11 @@
 - **WASM smoke tests:** ✅  
   `smoke-test.mjs`, `kernel-request-smoke.mjs`, `stream-open-smoke.mjs`,
   `pending-stdin-smoke.mjs`, `ccl-step-smoke.mjs`, `funcall-smoke.mjs`,
-  `const-funcall-smoke.mjs`, `const-module-smoke.mjs`,
+  `const-funcall-smoke.mjs`, `const-module-smoke.mjs`, `if-smoke.mjs`,
+  `if-arg-smoke.mjs`, `identity-smoke.mjs`, `identity-y-smoke.mjs`,
   `fixnum-add-smoke.mjs`, `fixnum-sub-smoke.mjs`, `fixnum-ops-smoke.mjs`,
-  `fixnum-overflow-smoke.mjs`, `mv-helpers-smoke.mjs`.
+  `fixnum-overflow-smoke.mjs`, `compiler-smoke.mjs`, `mv-helpers-smoke.mjs`,
+  `mvcall-smoke.mjs`.
 
 ## Major Gaps / Next Blockers
 

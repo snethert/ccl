@@ -129,6 +129,17 @@ node doc/wasm/js/all-smoke.mjs
 node doc/wasm/js/<new-test>.mjs
 ```
 
+## Compile WASM Smoke Modules
+
+Generate the compiler-emitted module bundle used by `compiler-smoke.mjs`:
+
+```bash
+scripts/wasm/compile-smoke-modules.sh --output doc/wasm/wasm-smoke-modules.json
+```
+
+`scripts/wasm/{macos,linux}-setup.sh --smoke` will run this automatically when
+`ccl` is available on the host.
+
 ## Load A Heap Image (Boot-Only)
 
 The kernel can also load an OpenMCL heap image from a host-provided byte blob

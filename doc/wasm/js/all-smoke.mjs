@@ -20,7 +20,9 @@ const tests = [
   "./fixnum-sub-smoke.mjs",
   "./fixnum-ops-smoke.mjs",
   "./fixnum-overflow-smoke.mjs",
-  "./mv-helpers-smoke.mjs"
+  "./compiler-smoke.mjs",
+  "./mv-helpers-smoke.mjs",
+  "./mvcall-smoke.mjs"
 ];
 
 for (const test of tests) {
