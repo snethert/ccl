@@ -1,0 +1,8 @@
+{
+  "version": "0",
+  "events": [
+    { "seq": 1, "type": "layout:set", "payload": { "layout": { "root": "split", "ratio": 0.4 } } },
+    { "seq": 2, "type": "selection:set", "payload": { "target": "issue-42" } },
+    { "seq": 3, "type": "snapshot", "payload": {} }
+  ]
+}

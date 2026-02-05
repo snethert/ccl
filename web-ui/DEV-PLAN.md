@@ -149,6 +149,12 @@ Exit criteria:
 - Event logs replay to identical snapshots across multiple runs.
 - Headless browser tests run and can validate DOM or canvas outputs deterministically.
 
+### Phase 0 Progress
+- Implemented event log schema and validator.
+- Implemented snapshot serializer and diff helper.
+- Implemented deterministic replay harness with validation.
+- Added baseline fixtures and tests for focus, command enablement, layout, and selection.
+
 ## Phase 1 Detailed Plan (Core Model and Command System)
 
 ### Objectives
