@@ -66,6 +66,9 @@
 - **WASM GC root discipline (doc):** ✅  
   Operand stack excluded; TCR register file is authoritative; spill rules
   documented in `doc/wasm/ABI.md`.
+- **WASM target arch description (compiler):** ⚠️  
+  `compiler/WASM/wasm-arch.lisp` defines a WASM32 target arch with ARM layout
+  and subprim indices; backend emission still missing.
 - **WASM codegen & runtime integration:** ❌  
   Compiler emission + real subprims integration pending.
 - **Funcall calling convention smoke test:** ✅  
