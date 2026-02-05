@@ -13,7 +13,7 @@ separate from the detailed checklists in `porting-status.md`.
 - **JS microkernel MVP:** ✅ kernel_request MVP + runner scaffolding.
 - **Subprims provider:** ✅ Tier‑0 semantics + ABI defined and exercised by compiled modules.
 - **Lisp runtime (Level‑1):** ✅ capability errors + yield path + WASM stream classes + virtual FS policy.
-- **Compiler/backend (WASM):** ⚠️ MVP emission for constants, fixnum ops, calls, multi‑value (2–4 + `values` >4 via VSP push), and local control flow (`if`, `block/return-from`, `tagbody/go`) with compiled-module registry install; `catch`/`throw` routed through subprims; cooperative `unwind-protect` cleanup + closure capture now in place (primary values only).
+- **Compiler/backend (WASM):** ⚠️ MVP emission for constants, fixnum ops, calls, multi‑value (2–4 + `values` >4 via VSP push), and local control flow (`if`, `block/return-from`, `tagbody/go`) with compiled-module registry install; `catch`/`throw` routed through subprims; cooperative `unwind-protect` cleanup + closure capture now in place with multi‑value preservation.
 - **Image + real toplevel:** ⚠️ minimal boot image loads + stub toplevel hook returns; no real Lisp toplevel.
 - **Concurrency model:** ⏸ deferred (single‑threaded baseline first).
 
@@ -50,8 +50,6 @@ separate from the detailed checklists in `porting-status.md`.
 **Goal:** Emit real WASM code compatible with the subprims ABI.
 **Status:** ⚠️
 **Remaining:**
-- Full multi‑value coverage beyond 4 values (higher‑arity mv paths, multi‑form `multiple-value-call`) — `values` now supports >4, mvcall + unwind-protect preserve full values
-- Extend cooperative `unwind-protect` to preserve full multiple values (currently primary only)
 - Spill/restore discipline around all subprim calls (closure allocation paths still partial)
 
 ### Phase 6 — Image + real toplevel
@@ -68,5 +66,5 @@ separate from the detailed checklists in `porting-status.md`.
 
 ## Near‑term focus (next 1–2 phases)
 
-1) Finish full multi‑value propagation (`multiple-value-call`, unwind‑protect mv) and tighten spill/restore discipline.  
+1) Tighten spill/restore discipline around all subprim calls (closure allocation paths still partial).  
 2) Wire `start_lisp` to real toplevel + loader in the browser.

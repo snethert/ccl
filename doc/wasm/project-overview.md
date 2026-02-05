@@ -36,7 +36,7 @@ Finally, record decisions and tradeoffs:
 * **Safepoints are assumed** in generated code (same category of “given” as type checks): for interrupts, cancellation, and any future concurrency coordination.
 * **Strings start as ASCII-only** with an explicit plan not to paint yourself into a corner for later UTF-8 support.
 * Threads/concurrency are an execution-model decision, not a language requirement: you are willing to begin **single-threaded** (particularly for sandboxed iframe compatibility), and later add true parallelism where the platform permits it.
-* **Quicklisp must run even in the browser**: provide a minimal capability-gated virtual filesystem (in-memory at first, IndexedDB later) so Quicklisp/ASDF see the file operations they expect.
+* **Quicklisp compatibility is a post‑MVP goal**: design the capability‑gated VFS so Quicklisp/ASDF can be enabled later, but keep it out of the current MVP scope.
 
 ## Big architecture: two halves
 

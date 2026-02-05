@@ -4,8 +4,8 @@
 
 (in-package "CCL")
 
-(declaim (special %wasm-compiled-modules *wasm2-next-entry-index*
-                  *wasm2-skip-next-nx-defops*))
+(defvar %wasm-compiled-modules% nil)
+(declaim (special %wasm-compiled-modules *wasm2-next-entry-index*))
 
 (defparameter *wasm-smoke-functions*
   '((ccl::wasm-smoke-const
@@ -77,17 +77,22 @@
 
 (defun parse-argv (argv)
   (let ((out nil)
-        (args argv))
+        (args argv)
+        (seen-delimiter nil))
     (loop while args do
       (let ((arg (pop args)))
         (cond
+          ((string= arg "--")
+           (setf seen-delimiter t))
           ((string= arg "--output")
            (let ((val (pop args)))
              (unless val
                (error "Missing value for --output"))
              (push (cons :output val) out)))
+          (seen-delimiter
+           (error "Unknown argument: ~s" arg))
           (t
-           (error "Unknown argument: ~s" arg)))))
+           nil))))
     out))
 
 (defun json-escape-string (s)
@@ -116,11 +121,19 @@
   (write-char #\] out))
 
 (defun function-entry-index (fn)
-  (let* ((entry (uvref fn 0)))
-    (unless (fixnump entry)
-      (error "Unexpected function entry: ~s" entry))
-    (ash entry (- (arch::target-fixnum-shift
-                   (backend-target-arch (find-backend :wasm32)))))))
+  (let* ((info (%lfun-info fn))
+         (entry (and info (getf info 'wasm-entry-index))))
+    (if entry
+      entry
+      (let* ((raw (uvref fn 0)))
+        (unless (fixnump raw)
+          (error "Unexpected function entry: ~s" raw))
+        (let* ((host-shift (arch::target-fixnum-shift
+                            (backend-target-arch *host-backend*)))
+               (target-shift (arch::target-fixnum-shift
+                              (backend-target-arch (find-backend :wasm32))))
+               (host-unboxed (ash raw (- host-shift))))
+          (ash host-unboxed (- target-shift)))))))
 
 (defun compile-smoke-functions ()
   (setf %wasm-compiled-modules% nil)
@@ -144,44 +157,22 @@
       (error "Cannot determine repository root"))
     (truename (merge-pathnames "../../" (make-pathname :name nil :type nil :defaults script)))))
 
-(defun load-source-interpreted (pathname)
-  "Load a Lisp source file by reading and EVALing each form.
-Avoids host compiler issues during bootstrap."
-  (let* ((truename (truename pathname)))
-    (with-open-file (in truename :direction :input)
-      (let ((*load-pathname* pathname)
-            (*load-truename* truename)
-            (*loading-files* (cons truename *loading-files*)))
-        (loop for form = (read in nil :eof)
-              until (eq form :eof)
-              do (eval form)))))
-  t)
-
 (defun load-wasm-backend ()
   (let* ((root (repo-root-from-script)))
     (flet ((load-rel (path)
-             (load (merge-pathnames path root)))
-           (load-rel-interpreted (path)
-             (load-source-interpreted (merge-pathnames path root))))
-      (when (and (boundp '*next-nx-operators*)
-                 (not (assq 'with-downward-closures *next-nx-operators*)))
-        ;; Avoid shifting existing operator ids: append missing operator.
-        (setf *next-nx-operators*
-              (append *next-nx-operators*
-                      (list '(with-downward-closures 0 :infer)))))
+             (load (merge-pathnames path root))))
       ;; Load WASM-specific modules explicitly to avoid require/module-provider issues.
-      ;; Keep definitions interpreted to avoid host-compiler incompatibilities.
-      (let ((*compile-definitions* nil)
-            (*warn-if-redefine-kernel* nil)
-            (*wasm2-skip-next-nx-defops* t))
-        (load-rel "compiler/ARM/arm-arch.lisp")
-        (load-rel "lib/armenv.lisp")
-        (load-rel "lib/wasmenv.lisp")
-        (load-rel "compiler/WASM/wasm-arch.lisp")
-        (load-rel "compiler/WASM/wasm-vinsns.lisp")
-        ;; Interpreted load to bypass host-compiler bug in wasm2.lisp.
-        (load-rel-interpreted "compiler/WASM/wasm2.lisp")
-        (load-rel "compiler/WASM/wasm-backend.lisp")))))
+      (let ((*warn-if-redefine-kernel* nil))
+        (let ((*compile-definitions* nil))
+          (load-rel "compiler/ARM/arm-arch.lisp")
+          (load-rel "lib/armenv.lisp")
+          (load-rel "lib/wasmenv.lisp")
+          (load-rel "compiler/backend.lisp")
+          (load-rel "compiler/WASM/wasm-arch.lisp")
+          (load-rel "compiler/WASM/wasm-vinsns.lisp"))
+        (let ((*compile-definitions* t))
+          (load-rel "compiler/WASM/wasm2.lisp")
+          (load-rel "compiler/WASM/wasm-backend.lisp"))))))
 
 (defun sorted-compiled-modules ()
   (sort (copy-list %wasm-compiled-modules%)

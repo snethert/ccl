@@ -8,14 +8,36 @@
   (require "NXENV")
   (require "WASMENV"))
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (unless (assq 'with-downward-closures *next-nx-operators*)
+    (push '(with-downward-closures 0 :infer) *next-nx-operators*)))
+
 (defun wasm2-unimplemented (&rest args)
   (error "WASM2: unimplemented opcode or feature: ~s" args))
 
 (defvar *wasm2-specials* nil)
+(defvar *wasm2-record-symbols* nil)
+(defvar %wasm-compiled-modules% nil)
 
-(declaim (special *wasm2-skip-next-nx-defops*))
-(unless (and (boundp '*wasm2-skip-next-nx-defops*)
-             *wasm2-skip-next-nx-defops*)
+(defconstant +wasm2-closure-cells-base+ 3)
+
+(declaim (special *wasm2-skip-next-nx-defops* *nx1-operators*
+                  *wasm2-cur-afunc* *wasm2-vstack* *wasm2-cstack*
+                  *wasm2-target-fixnum-shift* *wasm2-target-node-shift*
+                  *wasm2-target-bits-in-word* *wasm2-target-node-size*
+                  *wasm2-ir* *wasm2-locals* *wasm2-local-count*
+                  *wasm2-temp-local* *wasm2-label-counter*
+                  *wasm2-block-stack* *wasm2-tagbody-stack*
+                  *wasm2-tagbody-global-map*
+                  *wasm2-next-entry-index* *wasm2-emit-local-count*
+                  *wasm2-pending-throw-label*
+                  %wasm-compiled-modules%))
+(unless (or (and (boundp '*wasm2-skip-next-nx-defops*)
+                 *wasm2-skip-next-nx-defops*)
+            (and (boundp '*nx1-operators*)
+                 (hash-table-p *nx1-operators*)
+                 (> (hash-table-count *nx1-operators*) 0)
+                 (gethash 'with-downward-closures *nx1-operators*)))
   (next-nx-defops))
 
 (defun initialize-wasm2-specials ()
@@ -63,9 +85,10 @@
 
 (defwasm2 wasm2-fixnum fixnum (seg vreg xfer value)
   (declare (ignore seg vreg))
-  (if (wasm2-returning-p xfer)
-    (wasm2-emit-constant-return value)
-    (wasm2-emit-const value))
+  (let* ((boxed (wasm2-box-fixnum value)))
+    (if (wasm2-returning-p xfer)
+      (wasm2-emit-constant-return boxed)
+      (wasm2-emit-const boxed)))
   nil)
 
 (defwasm2 wasm2-fixnum-add-no-overflow fixnum-add-no-overflow (seg vreg xfer x y)
@@ -92,6 +115,18 @@
       (wasm2-emit :fixnum-add)))
   nil)
 
+(defwasm2 wasm2-add2 add2 (seg vreg xfer x y)
+  (declare (ignore vreg))
+  (if (and (wasm2-returning-p xfer)
+           (wasm2-arg0-form-p x)
+           (wasm2-arg1-form-p y))
+    (wasm2-emit-fixnum-add)
+    (progn
+      (wasm2-form seg nil nil x)
+      (wasm2-form seg nil nil y)
+      (wasm2-emit :fixnum-add)))
+  nil)
+
 (defwasm2 wasm2-fixnum-sub-no-overflow fixnum-sub-no-overflow (seg vreg xfer x y)
   (declare (ignore vreg))
   (if (and (wasm2-returning-p xfer)
@@ -105,6 +140,18 @@
   nil)
 
 (defwasm2 wasm2-fixnum-sub-overflow fixnum-sub-overflow (seg vreg xfer x y)
+  (declare (ignore vreg))
+  (if (and (wasm2-returning-p xfer)
+           (wasm2-arg0-form-p x)
+           (wasm2-arg1-form-p y))
+    (wasm2-emit-fixnum-sub)
+    (progn
+      (wasm2-form seg nil nil x)
+      (wasm2-form seg nil nil y)
+      (wasm2-emit :fixnum-sub)))
+  nil)
+
+(defwasm2 wasm2-sub2 sub2 (seg vreg xfer x y)
   (declare (ignore vreg))
   (if (and (wasm2-returning-p xfer)
            (wasm2-arg0-form-p x)
@@ -141,6 +188,18 @@
   nil)
 
 (defwasm2 wasm2-%i* %i* (seg vreg xfer x y)
+  (declare (ignore vreg))
+  (if (and (wasm2-returning-p xfer)
+           (wasm2-arg0-form-p x)
+           (wasm2-arg1-form-p y))
+    (wasm2-emit-fixnum-mul)
+    (progn
+      (wasm2-form seg nil nil x)
+      (wasm2-form seg nil nil y)
+      (wasm2-emit :fixnum-mul)))
+  nil)
+
+(defwasm2 wasm2-mul2 mul2 (seg vreg xfer x y)
   (declare (ignore vreg))
   (if (and (wasm2-returning-p xfer)
            (wasm2-arg0-form-p x)
@@ -300,10 +359,20 @@
           ((nx-null val) (values (target-nil-value) t))
           ((nx-t val) (values (target-t-value) t))
           ((and (acode-p val) (eq (acode-operator val) (%nx1-operator fixnum)))
-           (values (car (acode-operands val)) t))
+           (values (wasm2-box-fixnum (car (acode-operands val))) t))
           ((and (acode-p val) (eq (acode-operator val) (%nx1-operator immediate)))
            (values (car (acode-operands val)) t))
           (t (values nil nil)))))
+
+(defun wasm2-constant-symbol (form)
+  (let* ((val (nx2-constant-form-value (acode-unwrapped-form-value form))))
+    (when (and val (symbolp val))
+      (return-from wasm2-constant-symbol val)))
+  (when (and (acode-p form)
+             (eq (acode-operator form) (%nx1-operator immediate)))
+    (let* ((val (car (acode-operands form))))
+      (when (symbolp val)
+        val))))
 
 (defun wasm2-trivial-p (form)
   (let* ((op (acode-operator form)))
@@ -483,19 +552,30 @@
         (loop for tag in taglist
               for idx from 1
               for label in tag-labels
-              do (setf (gethash tag tag-map) idx)
-                 (setf (gethash tag tag-label-map) label))
+              do (let* ((key (wasm2-tag-key tag)))
+                   (setf (gethash key tag-map) idx)
+                   (setf (gethash key tag-label-map) label)
+                   (unless (eq key tag)
+                     (setf (gethash tag tag-map) idx)
+                     (setf (gethash tag tag-label-map) label))))
         (let* ((ctx (make-wasm2-tagbody-context :tag-map tag-map
                                                 :loop-label loop-label
                                                 :state-local state-local))
                (*wasm2-tagbody-stack* (cons ctx *wasm2-tagbody-stack*)))
+          (when *wasm2-tagbody-global-map*
+            (dolist (tag taglist)
+              (let* ((key (wasm2-tag-key tag)))
+                (setf (gethash key *wasm2-tagbody-global-map*) ctx)
+                (unless (eq key tag)
+                  (setf (gethash tag *wasm2-tagbody-global-map*) ctx)))))
           (let* ((segments nil)
                  (current-label entry-label)
                  (current-forms nil))
             (dolist (form body)
               (if (and (acode-p form) (eq (acode-operator form) tagop))
                 (let* ((tag (cdar (acode-operands form)))
-                       (label (gethash tag tag-label-map)))
+                       (label (or (gethash tag tag-label-map)
+                                  (gethash (wasm2-tag-key tag) tag-label-map))))
                   (push (cons current-label (nreverse current-forms)) segments)
                   (setf current-label label)
                   (setf current-forms nil))
@@ -522,21 +602,23 @@
                                   (seg-body (append (segment-ir forms)
                                                    (list (cons :const (list (1+ idx)))
                                                          (cons :local.set (list state-local))
-                                                         (cons :br (list loop-label)))))
-                                  (body (append inner seg-body)))
-                             (setf inner (list (cons :block (list seg-label body))))))
+                                                         (cons :br (list loop-label))))))
+                             (setf inner (append (list (cons :block (list seg-label inner)))
+                                                 seg-body))))
                   (wasm2-emit :const 0)
                   (wasm2-emit :local.set state-local)
                   (wasm2-emit :block exit-label (list (list :loop loop-label inner)))
                   (wasm2-emit-const (target-nil-value)))))))))
-  nil)
+  nil))
 
 (defwasm2 wasm2-local-go local-go (seg vreg xfer tag)
-  (declare (ignore vreg xfer))
-  (let* ((ctx (wasm2-find-tagbody-context tag)))
+  (declare (ignore seg vreg xfer))
+  (let* ((ctx (or (wasm2-find-tagbody-context tag)
+                  (car *wasm2-tagbody-stack*))))
     (unless ctx
       (wasm2-unimplemented))
-    (let* ((idx (gethash tag (wasm2-tagbody-context-tag-map ctx))))
+    (let* ((idx (or (gethash tag (wasm2-tagbody-context-tag-map ctx))
+                    (gethash (wasm2-tag-key tag) (wasm2-tagbody-context-tag-map ctx)))))
       (unless idx
         (wasm2-unimplemented))
       (wasm2-emit :const idx)
@@ -606,6 +688,38 @@
 
 (defwasm2 wasm2-with-downward-closures with-downward-closures (seg vreg xfer vars vals body p2decls)
   (wasm2-let* seg vreg xfer vars vals body p2decls))
+
+(defwasm2 wasm2-lambda lambda-list (seg vreg xfer req opt rest keys auxen body p2decls &optional code-note)
+  (declare (ignore vreg xfer p2decls code-note))
+  (flet ((empty-spec-p (spec)
+           (or (null spec)
+               (and (listp spec) (every #'null spec)))))
+    (when (or (not (empty-spec-p opt))
+              rest
+              (not (empty-spec-p keys))
+              (not (empty-spec-p auxen)))
+      (wasm2-unimplemented)))
+  (when (> (length req) 2)
+    (wasm2-unimplemented))
+  (when (some #'wasm2-var-closed-p req)
+    (wasm2-unimplemented))
+  (wasm2-form seg nil $backend-return body)
+  nil)
+
+(defwasm2 wasm2-typed-form typed-form (seg vreg xfer typespec form &optional check)
+  (declare (ignore typespec check))
+  (wasm2-form seg vreg xfer form)
+  nil)
+
+(defwasm2 wasm2-type-asserted-form type-asserted-form (seg vreg xfer typespec form &optional check)
+  (declare (ignore typespec check))
+  (wasm2-form seg vreg xfer form)
+  nil)
+
+(defwasm2 wasm2-%decls-body %decls-body (seg vreg xfer form p2decls)
+  (declare (ignore p2decls))
+  (wasm2-form seg vreg xfer form)
+  nil)
 
 (defwasm2 wasm2-values values (seg vreg xfer forms)
   (declare (ignore vreg))
@@ -846,6 +960,85 @@
          (argc (length args))
          (mvpass (wasm2-mv-p xfer))
          (tmp (wasm2-ensure-temp-local)))
+    (flet ((emit-fixnum-binary (opcode x y)
+             (if (and (wasm2-returning-p xfer)
+                      (wasm2-arg0-form-p x)
+                      (wasm2-arg1-form-p y))
+               (progn
+                 (wasm2-emit opcode)
+                 (wasm2-emit :return))
+               (progn
+                 (wasm2-form seg nil nil x)
+                 (wasm2-form seg nil nil y)
+                 (wasm2-emit opcode))))
+           (emit-fixnum-unary (opcode x)
+             (if (and (wasm2-returning-p xfer)
+                      (wasm2-arg0-form-p x))
+               (progn
+                 (wasm2-emit opcode)
+                 (wasm2-emit :return))
+               (progn
+                 (wasm2-form seg nil nil x)
+                 (wasm2-emit opcode)))))
+      (let* ((name (wasm2-constant-symbol fn)))
+        (when name
+          (case name
+            ((fixnum-ash)
+             (when (= argc 2)
+               (emit-fixnum-binary :fixnum-ash (first args) (second args))
+               (return-from wasm2-emit-call nil)))
+            ((%i+)
+             (when (= argc 2)
+               (emit-fixnum-binary :fixnum-add (first args) (second args))
+               (return-from wasm2-emit-call nil)))
+            ((%i-)
+             (when (= argc 2)
+               (emit-fixnum-binary :fixnum-sub (first args) (second args))
+               (return-from wasm2-emit-call nil)))
+            ((%i*)
+             (when (= argc 2)
+               (emit-fixnum-binary :fixnum-mul (first args) (second args))
+               (return-from wasm2-emit-call nil)))
+            ((logand)
+             (when (= argc 2)
+               (emit-fixnum-binary :fixnum-logand (first args) (second args))
+               (return-from wasm2-emit-call nil)))
+            ((%ilogand2)
+             (when (= argc 2)
+               (emit-fixnum-binary :fixnum-logand (first args) (second args))
+               (return-from wasm2-emit-call nil)))
+            ((logior)
+             (when (= argc 2)
+               (emit-fixnum-binary :fixnum-logior (first args) (second args))
+               (return-from wasm2-emit-call nil)))
+            ((%ilogior2)
+             (when (= argc 2)
+               (emit-fixnum-binary :fixnum-logior (first args) (second args))
+               (return-from wasm2-emit-call nil)))
+            ((logxor)
+             (when (= argc 2)
+               (emit-fixnum-binary :fixnum-logxor (first args) (second args))
+               (return-from wasm2-emit-call nil)))
+            ((%ilogxor2)
+             (when (= argc 2)
+               (emit-fixnum-binary :fixnum-logxor (first args) (second args))
+               (return-from wasm2-emit-call nil)))
+            ((lognot)
+             (when (= argc 1)
+               (emit-fixnum-unary :fixnum-lognot (first args))
+               (return-from wasm2-emit-call nil)))
+            ((%ilognot)
+             (when (= argc 1)
+               (emit-fixnum-unary :fixnum-lognot (first args))
+               (return-from wasm2-emit-call nil)))
+            ((%ineg)
+             (when (= argc 1)
+               (emit-fixnum-unary :fixnum-neg (first args))
+               (return-from wasm2-emit-call nil)))
+            ((%%ineg)
+             (when (= argc 1)
+               (emit-fixnum-unary :fixnum-neg (first args))
+               (return-from wasm2-emit-call nil)))))))
     (wasm2-form seg nil nil fn)
     (dolist (arg args)
       (wasm2-form seg nil nil arg))
@@ -918,6 +1111,7 @@
 (defvar *wasm2-label-counter* 0)
 (defvar *wasm2-block-stack* nil)
 (defvar *wasm2-tagbody-stack* nil)
+(defvar *wasm2-tagbody-global-map* nil)
 (defvar *wasm2-next-entry-index* 300)
 (defvar *wasm2-emit-local-count* 0)
 (defvar *wasm2-pending-throw-label* nil)
@@ -954,10 +1148,20 @@
   (prog1 *wasm2-label-counter*
     (incf *wasm2-label-counter*)))
 
+(defun wasm2-tag-key (tag)
+  (if (and (consp tag) (symbolp (car tag)))
+    (car tag)
+    tag))
+
 (defun wasm2-find-tagbody-context (tag)
-  (dolist (ctx *wasm2-tagbody-stack* nil)
-    (when (gethash tag (wasm2-tagbody-context-tag-map ctx))
-      (return ctx))))
+  (let* ((key (wasm2-tag-key tag)))
+    (or (dolist (ctx *wasm2-tagbody-stack* nil)
+          (when (or (gethash tag (wasm2-tagbody-context-tag-map ctx))
+                    (gethash key (wasm2-tagbody-context-tag-map ctx)))
+            (return ctx)))
+        (when *wasm2-tagbody-global-map*
+          (or (gethash tag *wasm2-tagbody-global-map*)
+              (gethash key *wasm2-tagbody-global-map*))))))
 
 (defun wasm2-reset-locals ()
   (setf *wasm2-locals* (make-hash-table :test #'eq))
@@ -1222,7 +1426,6 @@
 (defconstant +wasm-identity-y-entry-index+ 216)
 (defconstant +wasm-identity-y-export-name+ "ccl_identity_y_entry")
 (defconstant +wasm-identity-y-module-version+ 1)
-(defconstant +wasm2-closure-cells-base+ 3)
 
 (defun wasm2-push-u8 (vec byte)
   (vector-push-extend (logand byte #xff) vec)
@@ -1239,7 +1442,7 @@
             (return))
           (progn
             (wasm2-push-u8 vec (logior byte #x80))
-            (setf v rest)))))))
+            (setf v rest))))))
   vec)
 
 (defun wasm2-emit-sleb32 (vec value)
@@ -1368,14 +1571,15 @@
   (wasm2-push-u8 body #x0b)) ; end
 
 (defun wasm2-emit-generic-if (body then-ir else-ir label-stack)
-  (wasm2-emit-call-index body (wasm2-generic-import-index :get-lisp-nil))
-  (wasm2-push-u8 body #x47) ; i32.ne
-  (wasm2-push-u8 body #x04) ; if
-  (wasm2-push-u8 body #x7f) ; blocktype i32
-  (wasm2-emit-generic-ir body then-ir label-stack)
-  (wasm2-push-u8 body #x05) ; else
-  (wasm2-emit-generic-ir body else-ir label-stack)
-  (wasm2-push-u8 body #x0b)) ; end
+  (let ((if-label :if))
+    (wasm2-emit-call-index body (wasm2-generic-import-index :get-lisp-nil))
+    (wasm2-push-u8 body #x47) ; i32.ne
+    (wasm2-push-u8 body #x04) ; if
+    (wasm2-push-u8 body #x7f) ; blocktype i32
+    (wasm2-emit-generic-ir body then-ir (cons if-label label-stack))
+    (wasm2-push-u8 body #x05) ; else
+    (wasm2-emit-generic-ir body else-ir (cons if-label label-stack))
+    (wasm2-push-u8 body #x0b))) ; end
 
 (defun wasm2-emit-fixnum-op (body op-key)
   (wasm2-emit-call-index body (wasm2-generic-import-index :set-arg-y))
@@ -1444,6 +1648,12 @@
         (:set-arg1
          (wasm2-emit-call-index body (wasm2-generic-import-index :set-arg-y)))
         (:set-arg2
+         (wasm2-emit-call-index body (wasm2-generic-import-index :set-arg-x)))
+        (:set-arg-z
+         (wasm2-emit-call-index body (wasm2-generic-import-index :set-arg-z)))
+        (:set-arg-y
+         (wasm2-emit-call-index body (wasm2-generic-import-index :set-arg-y)))
+        (:set-arg-x
          (wasm2-emit-call-index body (wasm2-generic-import-index :set-arg-x)))
         (:set-nargs
          (wasm2-push-u8 body #x41)
@@ -2703,11 +2913,12 @@
     (when (and (consp lambda-form) (consp (cdr lambda-form)))
       (or (encode-lambda-list (cadr lambda-form)) 0))))
 
-(defun wasm2-compile (afunc &optional lambda-form)
-  (declare (ignore lambda-form))
+(defun wasm2-compile (afunc &optional lambda-form *wasm2-record-symbols*)
   (dolist (a (afunc-inner-functions afunc))
     (unless (afunc-lfun a)
-      (wasm2-compile a (afunc-lambdaform a))))
+      (wasm2-compile a
+                     (if lambda-form (afunc-lambdaform a))
+                     *wasm2-record-symbols*)))
   (let* ((*wasm2-cur-afunc* afunc)
          (*wasm2-vstack* 0)
          (*wasm2-cstack* 0)
@@ -2731,17 +2942,8 @@
          (*wasm2-temp-local* nil)
          (*wasm2-label-counter* 0)
          (*wasm2-block-stack* nil)
-         (*wasm2-tagbody-stack* nil))
-    (declare (ignore *wasm2-cur-afunc* *wasm2-vstack* *wasm2-cstack*
-                     *wasm2-target-fixnum-shift* *wasm2-target-node-shift*
-                     *wasm2-target-bits-in-word* *wasm2-target-node-size*
-                     *backend-vinsns* *backend-node-regs* *backend-node-temps*
-                     *available-backend-node-temps* *backend-imm-temps*
-                     *available-backend-imm-temps* *backend-fp-temps*
-                     *available-backend-fp-temps* *backend-crf-temps*
-                     *available-backend-crf-temps*
-                     *wasm2-locals* *wasm2-local-count* *wasm2-temp-local*
-                     *wasm2-label-counter* *wasm2-block-stack* *wasm2-tagbody-stack*))
+         (*wasm2-tagbody-stack* nil)
+         (*wasm2-tagbody-global-map* (make-hash-table :test #'eq)))
     (wasm2-reset-locals)
     (backend-apply-acode (afunc-acode afunc) nil nil $backend-return)
     (let* ((ir (nreverse *wasm2-ir*))
@@ -2824,7 +3026,7 @@
           (setf (afunc-argsword afunc) bits)
           (setf (afunc-lfun afunc)
                 (wasm2-make-const-function +wasm-fixnum-mul-entry-index+ 0 bits))
-        (return-from wasm2-compile afunc))
+        (return-from wasm2-compile afunc)))
       (when (wasm2-fixnum-ash-ir-p ir)
         (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
           (let* ((module-bytes (wasm2-fixnum-ash-module-bytes)))
@@ -2840,7 +3042,7 @@
           (setf (afunc-argsword afunc) bits)
           (setf (afunc-lfun afunc)
                 (wasm2-make-const-function +wasm-fixnum-ash-entry-index+ 0 bits))
-        (return-from wasm2-compile afunc))
+        (return-from wasm2-compile afunc)))
       (when (wasm2-fixnum-logand-ir-p ir)
         (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
           (let* ((module-bytes (wasm2-fixnum-logand-module-bytes)))
@@ -2856,7 +3058,7 @@
           (setf (afunc-argsword afunc) bits)
           (setf (afunc-lfun afunc)
                 (wasm2-make-const-function +wasm-fixnum-logand-entry-index+ 0 bits))
-        (return-from wasm2-compile afunc))
+        (return-from wasm2-compile afunc)))
       (when (wasm2-fixnum-logior-ir-p ir)
         (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
           (let* ((module-bytes (wasm2-fixnum-logior-module-bytes)))
@@ -2872,7 +3074,7 @@
           (setf (afunc-argsword afunc) bits)
           (setf (afunc-lfun afunc)
                 (wasm2-make-const-function +wasm-fixnum-logior-entry-index+ 0 bits))
-        (return-from wasm2-compile afunc))
+        (return-from wasm2-compile afunc)))
       (when (wasm2-fixnum-logxor-ir-p ir)
         (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
           (let* ((module-bytes (wasm2-fixnum-logxor-module-bytes)))
@@ -2888,7 +3090,7 @@
           (setf (afunc-argsword afunc) bits)
           (setf (afunc-lfun afunc)
                 (wasm2-make-const-function +wasm-fixnum-logxor-entry-index+ 0 bits))
-        (return-from wasm2-compile afunc))
+        (return-from wasm2-compile afunc)))
       (when (wasm2-fixnum-lognot-ir-p ir)
         (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
           (let* ((module-bytes (wasm2-fixnum-lognot-module-bytes)))
@@ -2904,7 +3106,7 @@
           (setf (afunc-argsword afunc) bits)
           (setf (afunc-lfun afunc)
                 (wasm2-make-const-function +wasm-fixnum-lognot-entry-index+ 0 bits))
-        (return-from wasm2-compile afunc))
+        (return-from wasm2-compile afunc)))
       (when (wasm2-fixnum-neg-ir-p ir)
         (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
           (let* ((module-bytes (wasm2-fixnum-neg-module-bytes)))
@@ -2920,7 +3122,7 @@
           (setf (afunc-argsword afunc) bits)
           (setf (afunc-lfun afunc)
                 (wasm2-make-const-function +wasm-fixnum-neg-entry-index+ 0 bits))
-        (return-from wasm2-compile afunc))
+        (return-from wasm2-compile afunc)))
       (multiple-value-bind (true-val false-val ok) (wasm2-if-arg0-const-ir-p ir)
         (when ok
           (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
@@ -3004,5 +3206,6 @@
         (setf (afunc-lfun afunc)
               (wasm2-make-const-function entry-index 0 bits))
         (return-from wasm2-compile afunc))))
+  )
 
 (provide "WASM2")

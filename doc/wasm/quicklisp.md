@@ -1,16 +1,17 @@
 # Quicklisp in CCL→WASM
 
-**Status:** Draft  
-**Purpose:** Capture the agreed Quicklisp support plan, including filesystem
+**Status:** Deferred (post‑MVP)  
+**Purpose:** Capture the future Quicklisp support plan, including filesystem
 expectations, capability gating, and browser/headless behavior.
 
 ## Summary
 
-Quicklisp must be usable in the browser without relying on a POSIX model. The plan
-is to provide a minimal virtual filesystem (VFS) that is capability‑gated and
-can start as fully in‑memory storage. Quicklisp should be available immediately
-from the start of a session and, when HTTP is available, be allowed to download
-libraries and update itself by default.
+Quicklisp is not part of the current MVP. When enabled, it must be usable in the
+browser without relying on a POSIX model. The plan is to provide a minimal
+virtual filesystem (VFS) that is capability‑gated and can start as fully
+in‑memory storage. Quicklisp should become available once capability negotiation
+and storage backends are wired; when HTTP is available, it can download libraries
+and update itself by default.
 
 ## Capability profile
 

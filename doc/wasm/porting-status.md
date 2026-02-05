@@ -31,7 +31,7 @@
 - **Tier‑1 subprims (C):** ⚠️  
   `_SPthrow`, `_SPnthrowvalues`, `_SPmkcatchmv` implemented; provider still
   traps on native unwind‑protect frames, but the WASM compiler now emits
-  cooperative cleanup in‑module (primary value only).
+  cooperative cleanup in‑module with multi‑value preservation.
 - **kernel_request ABI wrappers:** ✅  
   Synchronous + staged helpers in `wasm-host.c`.
 - **Compiled-code helper exports:** ✅  
@@ -99,9 +99,9 @@
   generic modules; `values` now supports >4 values via VSP pushes (MVP helper).
   Local control flow (`block`/`return-from`, `tagbody`/`go`) lowers via
   structured WASM IR. `catch`/`throw` implemented; `unwind-protect`
-  now compiles to cooperative cleanup (primary value only) and closures
-  capture cells for inherited vars. `multiple-value-call` now supports
-  multi-form mvcall and `unwind-protect` preserves full multiple values.
+  now compiles to cooperative cleanup with full multiple-value preservation,
+  and closures capture cells for inherited vars. `multiple-value-call` now
+  supports multi-form mvcall.
 - **WASM codegen state scaffold (compiler):** ✅  
   `compiler/WASM/wasm2.lisp` initializes backend state (register masks,
   target sizes) and emits WASM modules.
@@ -146,7 +146,7 @@
   Generic modules emitted for basic forms with call helpers and compiled
   module registry installs; `block`/`tagbody` lower in WASM2. `catch`/`throw`
   route through subprims with pending-throw clearing; `unwind-protect`
-  cleanup and closures are now supported (cooperative, primary value only).
+  cleanup and closures are now supported (cooperative, multi-value preserved).
 - **Funcall calling convention smoke test:** ✅  
   `funcall-smoke.mjs` validates VSP args → `arg_z/arg_y/arg_x` sync and
   single‑value return in `arg_z`.
