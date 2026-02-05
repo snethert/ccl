@@ -5,7 +5,7 @@
     "focus": null,
     "focusHistory": [],
     "idCounters": {
-      "layout": 0,
+      "layout": 3,
       "presentation": 0,
       "task": 1,
       "widget": 1,
@@ -13,8 +13,40 @@
       "workspace": 1
     },
     "layout": {
-      "ratio": 0.4,
-      "root": "split"
+      "nodes": {
+        "layout-0": {
+          "children": [
+            "layout-1",
+            "layout-2"
+          ],
+          "id": "layout-0",
+          "kind": "split",
+          "props": {
+            "axis": "h",
+            "weights": [
+              0.4,
+              0.6
+            ]
+          }
+        },
+        "layout-1": {
+          "children": [],
+          "id": "layout-1",
+          "kind": "leaf",
+          "props": {
+            "windowId": "w1"
+          }
+        },
+        "layout-2": {
+          "children": [],
+          "id": "layout-2",
+          "kind": "leaf",
+          "props": {
+            "windowId": "w2"
+          }
+        }
+      },
+      "rootId": "layout-0"
     },
     "presentations": {},
     "selection": {

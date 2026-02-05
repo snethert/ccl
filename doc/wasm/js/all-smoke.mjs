@@ -24,6 +24,7 @@ const tests = [
   "./compiler-smoke.mjs",
   "./float-smoke.mjs",
   "./web-ui-list-smoke.mjs",
+  "./web-ui-layout-focus-smoke.mjs",
   "./closure-unwind-mv-smoke.mjs",
   "./mv-helpers-smoke.mjs",
   "./mvcall-smoke.mjs"

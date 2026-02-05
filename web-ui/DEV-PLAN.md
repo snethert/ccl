@@ -240,6 +240,18 @@ Exit criteria:
 
 ### Phase 1 Progress
 - Implemented initial state graph utilities and focus helpers.
+
+### Phase 2 Progress
+- Implemented DOM backend primitives: `measureText`, `hitTest`, `captureEvents`, `invalidate` with browser harness checks.
+- Implemented DOM renderer diff/patch with keyed updates and structural regression tests.
+- Implemented baseline widgets (button, label, text input, list) with command wiring and snapshots.
+- Added list widget smoke test and wired into WASM smoke runner.
+
+### Phase 3 Progress
+- Added deterministic layout model with split/tabs/dock nodes and mutation helpers.
+- Added layout drift tests and updated layout snapshot fixtures.
+- Added focus reconciliation helper and browser harness check.
+- Added layout/focus smoke test and wired into WASM smoke runner.
 - Implemented command registry, key binding, and deterministic routing.
 - Added unit tests for routing precedence and focus history.
 - Added context helpers and a module index for consistent imports.

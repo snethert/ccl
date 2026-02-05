@@ -1,5 +1,14 @@
 import { allocateId, initIdCounters } from "./ids.mjs";
 import { normalizeSelection } from "./selection.mjs";
+import {
+  normalizeLayout,
+  createLayout,
+  splitLayoutNode,
+  wrapInTabsNode,
+  setActiveTabNode,
+  dockLayoutNode
+} from "./layout.mjs";
+import { normalizeFocusTarget, normalizeFocusHistory, setFocus as setFocusCore } from "./focus.mjs";
 
 const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layout"];
 
@@ -85,8 +94,8 @@ export function createState(options = {}) {
     windows: options.windows ?? {},
     widgets: options.widgets ?? {},
     presentations: options.presentations ?? {},
-    focus: options.focus ?? null,
-    focusHistory: Array.isArray(options.focusHistory) ? [...options.focusHistory] : [],
+    focus: normalizeFocusTarget(options.focus ?? null),
+    focusHistory: normalizeFocusHistory(options.focusHistory ?? []),
     selection: normalizeSelection(options.selection ?? null),
     commands: options.commands ?? {},
     layout: options.layout ?? null,
@@ -94,6 +103,8 @@ export function createState(options = {}) {
     ...options
   };
   state = ensureWorkspace(state);
+  const normalized = normalizeLayout(state.layout, state.idCounters);
+  state = { ...state, layout: normalized.layout, idCounters: normalized.counters };
   return state;
 }
 
@@ -197,7 +208,8 @@ export function addPresentation(state, presentation) {
 }
 
 export function setLayout(state, layout) {
-  return { ...state, layout };
+  const normalized = normalizeLayout(layout, state.idCounters);
+  return { ...state, layout: normalized.layout, idCounters: normalized.counters };
 }
 
 export function setSelection(state, selection) {
@@ -205,14 +217,30 @@ export function setSelection(state, selection) {
 }
 
 export function setFocus(state, target, reason = "command", seq = null) {
-  const entry = {
-    seq: seq ?? state.focusHistory.length + 1,
-    target,
-    reason
-  };
-  return {
-    ...state,
-    focus: target,
-    focusHistory: [...state.focusHistory, entry]
-  };
+  return setFocusCore(state, target, reason, seq);
+}
+
+export function initLayout(state, rootSpec) {
+  const created = createLayout(rootSpec, state.idCounters);
+  return { ...state, layout: created.layout, idCounters: created.counters };
+}
+
+export function splitLayout(state, targetId, axis = "h", ratio = 0.5, options = {}) {
+  const updated = splitLayoutNode(state.layout, state.idCounters, targetId, axis, ratio, options);
+  return { ...state, layout: updated.layout, idCounters: updated.counters };
+}
+
+export function wrapInTabs(state, targetId, options = {}) {
+  const updated = wrapInTabsNode(state.layout, state.idCounters, targetId, options);
+  return { ...state, layout: updated.layout, idCounters: updated.counters };
+}
+
+export function setActiveTab(state, tabsId, tabId) {
+  const updated = setActiveTabNode(state.layout, state.idCounters, tabsId, tabId);
+  return { ...state, layout: updated.layout, idCounters: updated.counters };
+}
+
+export function dockLayout(state, targetId, region) {
+  const updated = dockLayoutNode(state.layout, state.idCounters, targetId, region);
+  return { ...state, layout: updated.layout, idCounters: updated.counters };
 }

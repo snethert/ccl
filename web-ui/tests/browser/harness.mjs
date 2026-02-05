@@ -2,6 +2,7 @@ import { replayEvents } from "../replay-harness.mjs";
 import { snapshotToString, stableStringify } from "../snapshot.mjs";
 import { createRegistry, registerCommand } from "../../src/commands.mjs";
 import { createState, addTask, addWindow, addWidget } from "../../src/state.mjs";
+import { reconcileFocus, resolveFocusTargetFromElement } from "../../src/focus.mjs";
 import { createElement, createText } from "../../src/vdom.mjs";
 import { renderWindow } from "../../src/widgets.mjs";
 import { createDomBackend, createDomRoot } from "../../backends/dom/renderer.mjs";
@@ -188,6 +189,11 @@ async function run() {
   }
   const commandListOk = listItemId === "alpha";
 
+  const focusState = reconcileFocus(widgetState, { target: runButton, seq: 1 }, {
+    resolveTarget: (element) => resolveFocusTargetFromElement(element, widgetState)
+  });
+  const focusOk = focusState.focus?.widgetId === "btn-run" && focusState.focus?.windowId === "win-1";
+
   const measure = domBackend.measureText("Hello", { font: "16px monospace" });
   const measureOk = Number.isFinite(measure.width) && measure.width > 0 && measure.height > 0;
 
@@ -237,6 +243,7 @@ async function run() {
     domReuseOk &&
     commandDomOk &&
     commandInvokeOk &&
+    focusOk &&
     measureOk &&
     hitTestOk &&
     captureEventsOk &&
@@ -252,6 +259,7 @@ async function run() {
     commandInvokeOk,
     commandInputOk,
     commandListOk,
+    focusOk,
     measureOk,
     hitTestOk,
     captureEventsOk,

@@ -1,6 +1,7 @@
 import { serializeState } from "./snapshot.mjs";
 import { validateEvents } from "./event-log.mjs";
 import { setFocus } from "../src/focus.mjs";
+import { setLayout } from "../src/state.mjs";
 import { executeCommand } from "../src/commands.mjs";
 import { makeContext } from "../src/context.mjs";
 
@@ -54,7 +55,7 @@ export function defaultHandlers(registry = null) {
       commands[payload.id] = { enabled: false, reason: payload.reason || "" };
       return { ...state, commands };
     },
-    "layout:set": (state, payload) => ({ ...state, layout: payload.layout })
+    "layout:set": (state, payload) => setLayout(state, payload.layout)
   };
 }
 

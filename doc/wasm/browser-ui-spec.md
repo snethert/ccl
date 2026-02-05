@@ -7,8 +7,12 @@ This document defines the UI toolkit for a browser-hosted CCL runtime running on
 
 Out of scope for this document:
 - Full desktop OS window integration outside the browser page.
+- Emulating a full OS desktop; this toolkit provides a disciplined workspace inside a single page.
 - A full theming marketplace or arbitrary app-defined DOM/CSS manipulation as the default.
 - A standalone custom renderer that bypasses all browser primitives (DOM/Canvas/WebGL).
+
+Constraints that shape the design:
+- Text input/IME is delegated to native DOM inputs where necessary (composition, selection, accessibility).
 
 ## Normative Language
 The key words MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY are to be interpreted as described in RFC 2119.
@@ -23,9 +27,10 @@ The key words MUST, MUST NOT, SHOULD, SHOULD NOT, and MAY are to be interpreted 
 ## Design Principles
 - Determinism over cleverness.
 - User intent is authoritative; the system never rearranges or redirects without explicit commands.
-- All UI-relevant state is Lisp data and inspectable.
+- All authoritative UI state is Lisp data; the backend exposes only transient measurements and input signals.
 - Errors are interactive events with recovery options, not modal interruptions.
 - Applications target toolkit abstractions, not the DOM.
+- Reentrancy is controlled: commands run to completion or yield; no implicit nested command dispatch.
 
 ## Design Synthesis (Best of Both Worlds)
 The system intentionally combines three layers:
@@ -46,6 +51,8 @@ The following invariants MUST hold at all times:
 - All windows belong to exactly one task.
 - There is a single authoritative focus target at any time.
 - UI state changes occur only via commands.
+- No command may synchronously block the UI thread; cooperative waiting MUST yield to the host.
+- Backend callbacks MUST NOT mutate UI state directly; they enqueue commands.
 - Every command has a stable ID and an inspectable enablement reason.
 - UI state can be serialized without querying the DOM.
 - Rendering is derived solely from Lisp state; DOM/Canvas/WebGL are outputs.
@@ -55,15 +62,18 @@ The following invariants MUST hold at all times:
 - The toolkit targets an abstract UI backend with DOM as the first implementation.
 - Canvas 2D and WebGL are additional backends for high-frequency and custom rendering.
 - Mixed composition is allowed (DOM chrome + Canvas/WebGL views).
+- DOM owns text editing, accessibility, and selection; Canvas/WebGL owns high-frequency visuals.
 - Direct DOM access exists only for internal tooling or explicit capability-gated escapes.
+- Any escape hatch MUST be capability-gated and MUST register its effects in inspectable state.
 - Backend implementations MAY expose native handles for tests or tooling, but those handles MUST map back to stable widget/presentation IDs before command dispatch.
 
 ### Rendering model
 - UI is described as a declarative Lisp UI tree with stable identity keys.
-- Rendering uses a retained tree or immediate tree with diff/patch.
+- Stage 2 uses a retained tree with diff/patch; immediate mode MAY exist only inside Canvas/WebGL views.
 - Output records (rendered subtrees + cache) support incremental redisplay.
 - Canvas/WebGL backends render from a scene/paint tree derived from the UI tree.
 - Hit-testing is backend-agnostic and uses stable IDs from the UI tree.
+- Hit-testing MUST be stable under scrolling, transforms, and DPR changes; IDs are derived from widget identity, not backend node identity.
 
 ### State model
 - UI state is structured Lisp data:
@@ -72,6 +82,7 @@ The following invariants MUST hold at all times:
   - widget models and presentation trees
   - background jobs and errors
 - UI updates are a pure function of state plus explicit side effects (commands).
+- Commands are the only state transition boundary; the renderer is read-only over state.
 
 ## Core Requirements
 ### Deterministic focus rules
@@ -80,6 +91,8 @@ The following invariants MUST hold at all times:
 - Closing a window MUST restore focus to the previous focused window in the same task, otherwise to a defined fallback.
 - Keyboard focus and active window MUST be unambiguous and visible.
 - Browser focus/blur events MUST be treated as input signals; Lisp focus state is authoritative.
+- IME composition MUST NOT be interrupted by focus reconciliation; reconciliation defers while composing.
+- Pointer lock, fullscreen, and browser-level shortcuts are treated as external constraints; focus state records these constraints.
 
 Acceptance checks:
 - Focus transitions are reproducible for identical action sequences.
@@ -89,16 +102,19 @@ Acceptance checks:
 - The toolkit MUST support docking, splitting, tab groups, and optional floating panels.
 - Layout actions MUST mutate persistent layout state and be restored verbatim.
 - The system MUST NOT auto-rebalance or reflow due to content changes or background events.
+- Content size changes MUST introduce scrollbars, not layout mutation.
 - Default layouts MUST apply only on first creation and MUST NOT reapply silently.
 
 Acceptance checks:
-- Restored layouts match prior state within trivial pixel tolerances.
+- Restored layouts match prior state within <= 1 CSS pixel (or <= 1 device pixel converted to CSS pixels).
 - No rearrangement caused by content changes, task completion, or theme changes.
 
 ### Explicit, inspectable state
 - Inspectable representations MUST exist for tasks, windows, focus history, command enablement, job queues, and recent errors.
 - The UI MUST expose busy indicators, disabled reasons, and background job status.
 - A standard command MUST open a System State inspector window.
+- All "why" questions have a first-class object: FocusReason, DisableReason, WindowCause, JobCause.
+- A deterministic event log (ring buffer) records command dispatch, focus transitions, and backend signals for replay.
 
 Acceptance checks:
 - Users can answer why something is disabled, what is running, and why a window exists without leaving the environment.
@@ -108,6 +124,8 @@ Acceptance checks:
 - Errors MUST open an interactive debugger window tied to the current task.
 - The debugger MUST show the condition, stack, locals, and restarts.
 - Alerts SHOULD be modeless; modality is reserved for irreversible actions.
+- Debugger windows MUST be rate-limited/coalesced per task to prevent error storms.
+- Errors in background jobs produce a job-error object and MAY open a debugger window by policy; they MUST NOT spam-focus.
 
 Acceptance checks:
 - Errors during interaction create debugger windows, not blocking browser alerts.
@@ -128,6 +146,8 @@ Acceptance checks:
 - Keybindings MUST map to commands, not widget callbacks.
 - Resolution MUST be centralized with explicit precedence rules (global, task, context).
 - The system MUST provide a command palette and keybinding viewer.
+- Default keybinding resolution is inspectable as a trace (matched scopes, rejected scopes, final command).
+- Text fields have an explicit "text editing mode" command layer so editor shortcuts do not leak into global bindings.
 
 Acceptance checks:
 - Shortcuts either work consistently or are explicitly disabled with an inspectable reason.
@@ -136,6 +156,8 @@ Acceptance checks:
 - Widgets MAY declare presentations for the objects they render.
 - Presentation translators MUST map (presentation type, gesture) to commands.
 - Presentation trees MUST be inspectable; "what did I click" resolves to a typed object.
+- Presentation translators MUST be deterministic and side-effect-free during enablement checks.
+- Presentations include a stable object reference strategy (object-id + epoch) so persisted UI doesn’t resurrect stale pointers.
 
 Acceptance checks:
 - A user can invoke context-appropriate commands based on the object they selected, not just the widget they clicked.
@@ -144,6 +166,9 @@ Acceptance checks:
 - Canvas/WebGL views MUST support hit-testing, focus, and command routing via stable IDs.
 - Text measurement and font metrics MUST be provided through backend interfaces.
 - Canvas/WebGL views MUST integrate with layout, focus, and persistence like any other widget.
+- `measureText` MUST be cached per font key; the backend reports cache misses.
+- Canvas/WebGL views MUST provide an accessibility proxy strategy (focusable regions + label/role mapping) or explicitly declare themselves non-accessible.
+- Text editing uses DOM inputs for composition, selection, and accessibility; Canvas/WebGL text editing is not the baseline.
 
 Acceptance checks:
 - Canvas/WebGL views participate in focus and command routing without bypassing the system.
@@ -184,13 +209,17 @@ Bring-up baseline (Phase 2): button, label, text input, list.
 ### Requirements
 - UI event handling MUST remain responsive under large inspector trees, logs, and compilation.
 - Rendering MUST be incremental; avoid full-tree rerenders on small changes.
+- Renderer must support incremental commits; long diffs are chunked over frames with visible progress.
 - Canvas/WebGL views SHOULD use dirty-rect or region invalidation.
 - Long operations MUST be background tasks with inspectable progress and no UI-thread blocking.
+- All expensive inspectors (10k+ nodes) MUST be virtualized; no recursive pretty-print on the UI thread.
 
 ## Safety and Isolation
 - UI actions MUST be restart-safe; errors cannot corrupt global UI state.
 - Apps MUST interact via toolkit APIs, not raw DOM.
 - Privileged operations MUST require explicit capabilities and policy mediation.
+- Capability mediation is a command, not an API call (so it is logged, inspectable, and restartable).
+- A "safe mode" can disable all capability-granted escapes and still bring up REPL/inspector/debugger.
 
 ## Developer Experience
 - All UI state MUST be debuggable from within the environment.
@@ -212,6 +241,15 @@ Bring-up baseline (Phase 2): button, label, text input, list.
 - The renderer diffs UI trees and patches the DOM or issues draw commands to Canvas/WebGL.
 - DOM nodes are never the source of truth; they mirror Lisp state.
 
+### Event loop boundary
+Define a single UI turn:
+- Backend signals enqueue input events.
+- Input events are resolved to commands.
+- Commands run to completion or yield, producing state deltas.
+- Renderer commits are scheduled (rAF/microtask policy).
+- Backend updates complete and may enqueue further signals.
+Lisp code runs only within command execution boundaries and explicit yields.
+
 ### Backend interface (minimal, Stage 2 baseline)
 - `render(tree)` renders a UI tree to the backend. Diff/patch MAY be internal.
 - `measureText(text, options)` returns font metrics (width/height/ascent/descent) with deterministic defaults.
@@ -232,6 +270,7 @@ Bring-up baseline (Phase 2): button, label, text input, list.
 - Maintain authoritative focus state in Lisp: active task, active window, focused widget.
 - DOM focus/blur is treated as a signal; mismatches trigger reconciliation.
 - Focus changes carry a reason code for debugging and replay.
+- Reconciliation is best-effort and never destructive; if the browser refuses focus, record refusal reason and leave Lisp focus unchanged.
 
 ### Layout manager
 - Layout operations mutate a persistent layout tree (splits, tabs, docks).
@@ -241,6 +280,7 @@ Bring-up baseline (Phase 2): button, label, text input, list.
 - All command execution is wrapped in restart-friendly error handling.
 - Errors create a debugger window attached to the current task.
 - Provide standard restarts (abort, retry, use default, inspect state).
+- The debugger itself is restart-safe; debugger rendering errors fall back to a minimal textual condition viewer.
 
 ### Background tasks and progress
 - Background jobs are first-class objects in the task state.
@@ -265,6 +305,8 @@ Bring-up baseline (Phase 2): button, label, text input, list.
 - Provide a command routing test suite that verifies scope precedence and disabled reasons.
 - Provide a rendering diff test suite for output record stability.
 - Provide a Canvas/WebGL hit-test test suite with fixed fixtures.
+- Provide IME and text editing tests: composition, dead keys, mobile virtual keyboard, selection persistence.
+- Deterministic replay: record backend signals + command log; assert resulting focus/layout hashes.
 
 ## External System Lessons (Research-Grounded)
 These are the recurring difficulties and constraints observed in other windowing systems and the browser, and how they motivate the design:
@@ -284,35 +326,8 @@ These are the recurring difficulties and constraints observed in other windowing
 - Uninspectable state and "mystery disabled" controls: Prevented by command enablement reasons and System State inspector.
 - Gesture/hit-test mismatches in Canvas/WebGL: Prevented by backend-agnostic hit-testing with stable IDs.
 
-## Feature Test Matrix (Maintainable)
-Legend:
-- Y = supported by design
-- P = partial support or depends on configuration
-- V = varies by platform or toolkit
-- N = not supported
-
-Note: The matrix includes only features with publicly documented behavior in the referenced systems. Rows are intended to be expanded as more verified data is added.
-
-| ID | Feature | CCL Browser UI | Win32 | AppKit | GTK | Qt | X11/ICCCM | Wayland | Browser DOM |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| F-01 | Focus changes are explicitly reasoned and inspectable | Y | V | V | P | Y | P | P | P |
-| F-02 | Focus cannot be stolen arbitrarily | Y | Y | V | V | V | P | Y | P |
-| F-03 | Single focus target per window/surface | Y | V | Y | Y | Y | P | Y | Y |
-| F-04 | Centralized event routing / responder chain | Y | V | Y | V | V | V | V | V |
-| F-05 | UI toolkits are main-thread constrained | Y | V | Y | Y | Y | V | V | Y |
-| F-06 | Layout persistence is first-class | Y | V | V | V | V | V | V | V |
-| F-07 | Restart-based error recovery in UI | Y | N | N | N | N | N | N | N |
-| F-08 | Focus events delivered as enter/leave signals | P | V | V | V | V | V | Y | P |
-| F-09 | Typed presentations and semantic interaction | Y | V | V | V | V | V | V | N |
-| F-10 | Incremental redisplay/output records | Y | V | V | V | V | V | V | P |
-| F-11 | GUI builder / rapid UI construction | P | V | V | V | V | V | V | V |
-| F-12 | Canvas/WebGL as first-class render backend | Y | P | P | P | P | P | V | P |
-| F-13 | Mixed DOM + custom rendering composition | Y | V | V | V | V | V | V | P |
-
-Matrix maintenance notes:
-- Add new rows only when a feature can be verified with a stable source.
-- Prefer explicit references for each feature in the References section.
-- Avoid assuming parity between toolkits; use V when behavior is toolkit- or platform-specific.
+## Feature Test Matrix
+The feature test matrix is maintained in Appendix A to keep normative sections free of comparative content.
 
 ## Acceptance Checklist (High-Leverage)
 - Focus behavior is repeatable and never surprising.
@@ -334,3 +349,22 @@ Matrix maintenance notes:
 - X11 ICCCM input focus conventions: https://www.x.org/releases/X11R7.7/doc/xorg-docs/icccm/icccm.html
 - MDN Window.focus behavior: https://developer.mozilla.org/en-US/docs/Web/API/Window/focus
 - MDN Document.activeElement behavior: https://developer.mozilla.org/en-US/docs/Web/API/Document/activeElement
+
+## Appendix A: Feature Test Matrix
+This appendix tracks design-intent coverage for the CCL Browser UI. Comparative columns are deferred until each row has explicit sources.
+
+| ID | Feature | Status | Notes |
+| --- | --- | --- | --- |
+| F-01 | Focus changes are explicitly reasoned and inspectable | Design intent | Focus reasons are first-class. |
+| F-02 | Focus cannot be stolen arbitrarily | Design intent | Best-effort; browser constraints are recorded. |
+| F-03 | Single focus target per window/surface | Design intent | Authoritative focus state in Lisp. |
+| F-04 | Centralized event routing / responder chain | Design intent | Commands and resolver precedence. |
+| F-05 | UI toolkits are main-thread constrained | Design intent | No blocking commands; yield when needed. |
+| F-06 | Layout persistence is first-class | Design intent | Layout is serialized and restored. |
+| F-07 | Restart-based error recovery in UI | Design intent | Debugger windows with restarts. |
+| F-08 | Focus events delivered as enter/leave signals | Design intent | Backend signals enqueue commands. |
+| F-09 | Typed presentations and semantic interaction | Design intent | Object-id + epoch strategy. |
+| F-10 | Incremental redisplay/output records | Design intent | Retained tree + diff. |
+| F-11 | GUI builder / rapid UI construction | Design intent | Builder output remains inspectable. |
+| F-12 | Canvas/WebGL as first-class render backend | Design intent | DOM for text editing. |
+| F-13 | Mixed DOM + custom rendering composition | Design intent | DOM owns text editing and accessibility. |

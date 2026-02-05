@@ -7,6 +7,11 @@ export {
   addWidget,
   addPresentation,
   setLayout,
+  initLayout,
+  splitLayout,
+  wrapInTabs,
+  setActiveTab,
+  dockLayout,
   setSelection,
   setFocus
 } from "./state.mjs";
@@ -21,7 +26,14 @@ export {
   executeCommand
 } from "./commands.mjs";
 export { makeContext } from "./context.mjs";
-export { FOCUS_REASONS } from "./focus.mjs";
+export {
+  FOCUS_REASONS,
+  normalizeFocusTarget,
+  sameFocusTarget,
+  resolveFocusTargetFromElement,
+  reconcileFocus
+} from "./focus.mjs";
+export { normalizeLayout, createLayout } from "./layout.mjs";
 export { normalizeSelection } from "./selection.mjs";
 export { createElement, createText, h, normalizeChildren } from "./vdom.mjs";
 export { createRoot } from "./renderer.mjs";

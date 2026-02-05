@@ -1,7 +1,35 @@
 {
   "version": "0",
   "events": [
-    { "seq": 1, "type": "layout:set", "payload": { "layout": { "root": "split", "ratio": 0.4 } } },
+    {
+      "seq": 1,
+      "type": "layout:set",
+      "payload": {
+        "layout": {
+          "rootId": "layout-0",
+          "nodes": {
+            "layout-0": {
+              "id": "layout-0",
+              "kind": "split",
+              "children": ["layout-1", "layout-2"],
+              "props": { "axis": "h", "weights": [0.4, 0.6] }
+            },
+            "layout-1": {
+              "id": "layout-1",
+              "kind": "leaf",
+              "children": [],
+              "props": { "windowId": "w1" }
+            },
+            "layout-2": {
+              "id": "layout-2",
+              "kind": "leaf",
+              "children": [],
+              "props": { "windowId": "w2" }
+            }
+          }
+        }
+      }
+    },
     { "seq": 2, "type": "command:execute", "payload": { "id": "selection.set", "selection": { "target": "issue-42" } } },
     { "seq": 3, "type": "snapshot", "payload": {} }
   ]

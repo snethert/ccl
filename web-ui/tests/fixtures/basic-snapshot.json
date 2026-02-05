@@ -7,12 +7,22 @@
         "reason": "Nothing selected."
       }
     },
-    "focus": "w1",
+    "focus": {
+      "presentationId": null,
+      "taskId": null,
+      "widgetId": null,
+      "windowId": "w1"
+    },
     "focusHistory": [
       {
         "reason": "command",
         "seq": 1,
-        "target": "w1"
+        "target": {
+          "presentationId": null,
+          "taskId": null,
+          "widgetId": null,
+          "windowId": "w1"
+        }
       }
     ],
     "idCounters": {
