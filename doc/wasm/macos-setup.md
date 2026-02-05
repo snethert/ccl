@@ -5,16 +5,17 @@ for the current **no-WASI runtime** CCL WASM32 kernel build.
 
 ## 1) Install Packages (Homebrew)
 
-Match the Linux clang-18 toolchain:
+Install a wasm-capable toolchain (Apple clang can parse wasm targets but cannot
+emit wasm objects):
 
 ```bash
-brew install llvm@18
+brew install llvm lld wasi-libc
 ```
 
-WASI headers + WASM utilities:
+WASM utilities:
 
 ```bash
-brew install wasi-libc wabt binaryen
+brew install wabt binaryen
 ```
 
 Optional: compiler-rt / libc++ runtimes for WASI (only if you hit builtins/link errors):
@@ -31,48 +32,35 @@ brew install node python
 
 ## 2) Environment Setup
 
-Point the build at Homebrew's LLVM and wasm-ld:
+Use the helper script to export a working toolchain:
 
 ```bash
-export LLVM_ROOT="$(brew --prefix llvm@18)"
-export PATH="$LLVM_ROOT/bin:$PATH"
-export WASM_LD="$LLVM_ROOT/bin/wasm-ld"
+source scripts/wasm/env.sh
 ```
 
-Find the WASI sysroot/headers installed by `wasi-libc`:
+This sets:
+
+- `CC` to Homebrew `clang` with `-D__wasi__` and the WASI headers.
+- `WASM_LD` to Homebrew `wasm-ld` (from `lld`).
+
+To inspect the effective values:
 
 ```bash
-find "$(brew --prefix wasi-libc)" -maxdepth 4 -type d \
-  \( -name wasi-sysroot -o -path "*/include/wasm32-wasi" \)
+scripts/wasm/macos-setup.sh --print-env
 ```
-
-If you see a `wasi-sysroot` directory, set:
-
-```bash
-export WASI_SYSROOT="/path/to/wasi-sysroot"
-```
-
-Then use:
-
-```bash
-export CC="$LLVM_ROOT/bin/clang --sysroot=$WASI_SYSROOT"
-```
-
-If you only see `include/wasm32-wasi` (no sysroot), set `WASI_SYSROOT` to its parent
-and keep `--sysroot` as above.
 
 ## 3) Build The Kernel + Subprims
 
 ```bash
-make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi CC="$CC" WASM_LD="$WASM_LD" clean
-make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi CC="$CC" WASM_LD="$WASM_LD"
+make -C lisp-kernel/wasm32 clean
+make -C lisp-kernel/wasm32
 ```
 
 Subprims provider (optional):
 
 ```bash
-make -C lisp-kernel/wasm32/subprims WASM_TARGET=wasm32-wasi CC="$CC" WASM_LD="$WASM_LD" clean
-make -C lisp-kernel/wasm32/subprims WASM_TARGET=wasm32-wasi CC="$CC" WASM_LD="$WASM_LD"
+make -C lisp-kernel/wasm32/subprims clean
+make -C lisp-kernel/wasm32/subprims
 ```
 
 ## 4) Verify "No WASI Runtime" + Smoke Tests
@@ -122,15 +110,15 @@ brew install emscripten
 
 ## Hidden Gotchas
 
-1. The Makefiles default to `clang` and `wasm-ld-18`. On macOS you'll typically
-   have `wasm-ld` without the version suffix. Always pass `WASM_LD=...` (and
-   `CC=...`) to avoid name mismatches.
-2. `wasi-libc` provides headers, but some toolchains lack the WASI compiler-rt
+1. Apple clang can parse wasm targets but cannot emit wasm object code.
+   Use Homebrew `llvm` + `lld`.
+2. The Makefiles default to `clang` and `wasm-ld-18`. The recommended path
+   is to `source scripts/wasm/env.sh`, which sets `CC` and `WASM_LD`.
+3. `wasi-libc` provides headers, but some toolchains lack the WASI compiler-rt
    builtins (`libclang_rt.builtins-wasm32.a`). If you see errors like
    `undefined symbol: __muloti4`, install `wasi-runtimes` or switch to a
    full `wasi-sdk` sysroot.
-3. Keep the build **no-WASI runtime**: compile with `--target=wasm32-wasi`
-   for headers, but link freestanding with `wasm-ld` and do **not** link
-   against `wasi-libc`.
-4. `source ./emsdk_env.sh` mutates `PATH` (and can override Node/Clang).
+4. Keep the build **no-WASI runtime**: compile with WASI headers but link
+   freestanding with `wasm-ld` and do **not** link against `wasi-libc`.
+5. `source ./emsdk_env.sh` mutates `PATH` (and can override Node/Clang).
    Use a separate shell when building with the Homebrew LLVM toolchain.

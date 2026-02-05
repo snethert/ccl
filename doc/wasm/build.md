@@ -6,7 +6,9 @@ the resulting `wasmcl.wasm` must **not** import `wasi_snapshot_preview1.*`.
 
 ## Summary (Current Decisions)
 
-- Compile with `--target=wasm32-wasi` to use the distro-provided WASI headers.
+- Compile with a wasm32 target and WASI headers.
+  - Linux: `--target=wasm32-wasi`.
+  - macOS: Homebrew `clang` with `-D__wasi__` and `-isystem .../include/wasm32-wasi` (see `scripts/wasm/env.sh`).
 - Link **freestanding** with `wasm-ld` and **do not** link against `wasi-libc`.
 - Provide a minimal C “libc shim” inside the kernel (`lisp-kernel/wasm-no-wasi-libc.c`).
 - The host (JS microkernel) provides `env.memory` (imported linear memory).
@@ -83,7 +85,7 @@ Build output is currently produced by `lisp-kernel/wasm32/Makefile` into:
 
 - `doc/wasm/js/wasmcl.wasm`
 
-Build command:
+Build command (Linux / `--target=wasm32-wasi` toolchains):
 
 ```bash
 make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi clean
@@ -143,29 +145,14 @@ This validates:
 - manual cstack relocation across `memory.grow`
 - kernel_request ABI wiring via `kernel-request-smoke.mjs`
 
-After building `doc/wasm/js/wasmcl.wasm`, run:
-
-```bash
-node doc/wasm/js/smoke-test.mjs
-node doc/wasm/js/funcall-smoke.mjs
-node doc/wasm/js/const-funcall-smoke.mjs
-node doc/wasm/js/const-module-smoke.mjs
-node doc/wasm/js/kernel-request-smoke.mjs
-node doc/wasm/js/stream-open-smoke.mjs
-node doc/wasm/js/pending-stdin-smoke.mjs
-node doc/wasm/js/step-demo.mjs
-node doc/wasm/js/ccl-step-smoke.mjs
-node doc/wasm/js/fixnum-add-smoke.mjs
-node doc/wasm/js/fixnum-sub-smoke.mjs
-node doc/wasm/js/fixnum-ops-smoke.mjs
-node doc/wasm/js/fixnum-overflow-smoke.mjs
-```
-
-To run them all in one invocation:
+After building `doc/wasm/js/wasmcl.wasm`, run all smoke tests:
 
 ```bash
 node doc/wasm/js/all-smoke.mjs
 ```
+
+To run a single test, invoke it directly. The authoritative list is in
+`doc/wasm/js/all-smoke.mjs`.
 
 These smoke tests are sandbox-safe. External tests (LMDB and IndexedDB) are
 documented in `doc/testing.md`.

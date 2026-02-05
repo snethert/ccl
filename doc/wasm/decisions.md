@@ -35,8 +35,9 @@ growth.
 ## ADR-0004 — No WASI runtime (freestanding link)
 
 **Status:** Accepted  
-**Decision:** Build with `--target=wasm32-wasi` for headers but link
-freestanding (no `wasi_snapshot_preview1` imports).  
+**Decision:** Compile with a wasm32 target + WASI headers (e.g.
+`--target=wasm32-wasi` on Linux; on macOS use `-D__wasi__` with WASI headers),
+but link freestanding (no `wasi_snapshot_preview1` imports).  
 **Why:** Keep the kernel portable and host-controlled; avoid implicit POSIX.  
 **References:** `doc/wasm/build.md:1`
 
