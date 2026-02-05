@@ -155,6 +155,7 @@ Exit criteria:
 - Implemented deterministic replay harness with validation.
 - Added baseline fixtures and tests for focus, command enablement, layout, and selection.
 - Added headless browser harness (Playwright-backed) for DOM and canvas checks.
+- Added a local web-ui dev dependency for Playwright to enable headless runs.
 
 ## Phase 1 Detailed Plan (Core Model and Command System)
 
@@ -233,3 +234,9 @@ Exit criteria:
 - Focus history matches across multiple replays with identical inputs.
 - Command enablement reasons are inspectable and stable.
 - State can be serialized without renderer or DOM references.
+
+### Phase 1 Progress
+- Implemented initial state graph utilities and focus helpers.
+- Implemented command registry, key binding, and deterministic routing.
+- Added unit tests for routing precedence and focus history.
+- Added context helpers and a module index for consistent imports.
