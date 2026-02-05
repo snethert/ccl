@@ -3,6 +3,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+ENV_SH="$ROOT_DIR/scripts/wasm/env.sh"
 
 INSTALL=0
 INSTALL_RUNTIMES=0
@@ -79,67 +80,89 @@ if ! need_cmd brew; then
 fi
 
 if [ "$INSTALL" -eq 1 ]; then
-  run brew install llvm@18 wasi-libc wabt binaryen node python
+  run brew install llvm lld wasi-libc wabt binaryen node python
 fi
 
 if [ "$INSTALL_RUNTIMES" -eq 1 ]; then
   run brew install wasi-runtimes
 fi
 
-LLVM_ROOT="$(brew --prefix llvm@18 2>/dev/null || true)"
-if [ -z "$LLVM_ROOT" ] || [ ! -d "$LLVM_ROOT" ]; then
-  echo "error: llvm@18 not found. Run with --install." >&2
-  exit 1
+if [ -f "$ENV_SH" ]; then
+  # shellcheck source=/dev/null
+  source "$ENV_SH" || true
 fi
 
-WASI_PREFIX="$(brew --prefix wasi-libc 2>/dev/null || true)"
-if [ -z "$WASI_PREFIX" ] || [ ! -d "$WASI_PREFIX" ]; then
-  echo "error: wasi-libc not found. Run with --install." >&2
-  exit 1
+if [ -z "${CC:-}" ] || [ -z "${WASM_LD:-}" ]; then
+  LLVM_ROOT="$(brew --prefix llvm 2>/dev/null || true)"
+  if [ -z "$LLVM_ROOT" ] || [ ! -d "$LLVM_ROOT" ]; then
+    LLVM_ROOT="$(brew --prefix llvm@18 2>/dev/null || true)"
+  fi
+  if [ -z "$LLVM_ROOT" ] || [ ! -d "$LLVM_ROOT" ]; then
+    echo "error: llvm not found. Run with --install." >&2
+    exit 1
+  fi
+
+  LLD_ROOT="$(brew --prefix lld 2>/dev/null || true)"
+  if [ -z "$LLD_ROOT" ] || [ ! -d "$LLD_ROOT" ]; then
+    LLD_ROOT="$LLVM_ROOT"
+  fi
+
+  WASI_PREFIX="$(brew --prefix wasi-libc 2>/dev/null || true)"
+  if [ -z "$WASI_PREFIX" ] || [ ! -d "$WASI_PREFIX" ]; then
+    echo "error: wasi-libc not found. Run with --install." >&2
+    exit 1
+  fi
+
+  WASI_SYSROOT=""
+  if [ -d "$WASI_PREFIX/share/wasi-sysroot" ]; then
+    WASI_SYSROOT="$WASI_PREFIX/share/wasi-sysroot"
+  elif [ -d "$WASI_PREFIX/wasi-sysroot" ]; then
+    WASI_SYSROOT="$WASI_PREFIX/wasi-sysroot"
+  elif [ -d "$WASI_PREFIX/include/wasm32-wasi" ]; then
+    WASI_SYSROOT="$WASI_PREFIX"
+  fi
+
+  if [ -z "$WASI_SYSROOT" ]; then
+    echo "error: could not locate WASI sysroot or headers under $WASI_PREFIX" >&2
+    exit 1
+  fi
+
+  WASI_INCLUDE="$WASI_SYSROOT/include/wasm32-wasi"
+  if [ ! -d "$WASI_INCLUDE" ]; then
+    echo "error: could not locate WASI headers under $WASI_SYSROOT" >&2
+    exit 1
+  fi
+
+  export PATH="$LLVM_ROOT/bin:$PATH"
+
+  CC_CMD="$LLVM_ROOT/bin/clang"
+  WASM_LD="$LLD_ROOT/bin/wasm-ld"
+  if [ ! -x "$WASM_LD" ] && [ -x "$LLVM_ROOT/bin/wasm-ld" ]; then
+    WASM_LD="$LLVM_ROOT/bin/wasm-ld"
+  fi
+
+  if [ ! -x "$CC_CMD" ]; then
+    echo "error: clang not found at $CC_CMD" >&2
+    exit 1
+  fi
+  if [ ! -x "$WASM_LD" ]; then
+    echo "error: wasm-ld not found at $WASM_LD" >&2
+    exit 1
+  fi
+
+  CC="$CC_CMD -D__wasi__ -isystem $WASI_INCLUDE"
 fi
-
-WASI_SYSROOT=""
-if [ -d "$WASI_PREFIX/share/wasi-sysroot" ]; then
-  WASI_SYSROOT="$WASI_PREFIX/share/wasi-sysroot"
-elif [ -d "$WASI_PREFIX/wasi-sysroot" ]; then
-  WASI_SYSROOT="$WASI_PREFIX/wasi-sysroot"
-elif [ -d "$WASI_PREFIX/include/wasm32-wasi" ]; then
-  WASI_SYSROOT="$WASI_PREFIX"
-fi
-
-if [ -z "$WASI_SYSROOT" ]; then
-  echo "error: could not locate WASI sysroot or headers under $WASI_PREFIX" >&2
-  exit 1
-fi
-
-export PATH="$LLVM_ROOT/bin:$PATH"
-
-CC_CMD="$LLVM_ROOT/bin/clang"
-WASM_LD="$LLVM_ROOT/bin/wasm-ld"
-
-if [ ! -x "$CC_CMD" ]; then
-  echo "error: clang not found at $CC_CMD" >&2
-  exit 1
-fi
-if [ ! -x "$WASM_LD" ]; then
-  echo "error: wasm-ld not found at $WASM_LD" >&2
-  exit 1
-fi
-
-CC="$CC_CMD --sysroot=$WASI_SYSROOT"
 
 if [ "$PRINT_ENV" -eq 1 ]; then
   cat <<EOF
-export LLVM_ROOT="$LLVM_ROOT"
-export PATH="$LLVM_ROOT/bin:\$PATH"
-export WASM_LD="$WASM_LD"
-export WASI_SYSROOT="$WASI_SYSROOT"
 export CC='$CC'
+export WASM_LD="$WASM_LD"
 EOF
   exit 0
 fi
 
-MAKE_ARGS=("WASM_TARGET=wasm32-wasi" "CC=$CC" "WASM_LD=$WASM_LD")
+WASM_TARGET="${WASM_TARGET:-wasm32-unknown-unknown}"
+MAKE_ARGS=("WASM_TARGET=$WASM_TARGET" "CC=$CC" "WASM_LD=$WASM_LD")
 
 if [ "$BUILD" -eq 1 ]; then
   if [ "$CLEAN" -eq 1 ]; then

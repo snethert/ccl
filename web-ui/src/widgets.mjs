@@ -63,8 +63,16 @@ function buildContext(state, widget, options, windowId, taskId) {
   });
 }
 
-function applyCommandProps(props, widget, options, ctx, handlerName = "onClick", buildCtx = null) {
-  const commandId = resolveCommandId(widget);
+function applyCommandProps(
+  props,
+  widget,
+  options,
+  ctx,
+  handlerName = "onClick",
+  buildCtx = null,
+  commandIdOverride = null
+) {
+  const commandId = commandIdOverride ?? resolveCommandId(widget);
   if (!commandId) {
     return { props, commandId: null, enabled: true };
   }
@@ -95,6 +103,51 @@ function applyCommandProps(props, widget, options, ctx, handlerName = "onClick",
   return { props: nextProps, commandId, enabled: enablement.enabled };
 }
 
+function resolveItemCommandId(item, widget) {
+  if (item && typeof item === "object" && !Array.isArray(item)) {
+    return (
+      item.command ??
+      item.commandId ??
+      widget.props?.itemCommand ??
+      widget.props?.command ??
+      widget.model?.itemCommand ??
+      widget.model?.command ??
+      null
+    );
+  }
+  return widget.props?.itemCommand ?? widget.props?.command ?? widget.model?.itemCommand ?? widget.model?.command ?? null;
+}
+
+function normalizeListItems(items) {
+  if (!Array.isArray(items)) return [];
+  return items.map((item, index) => {
+    if (item && typeof item === "object" && !Array.isArray(item)) {
+      const id = item.id ?? item.key ?? index;
+      const label = item.label ?? item.text ?? item.value ?? id;
+      return {
+        raw: item,
+        id: String(id),
+        key: String(id),
+        label: String(label ?? ""),
+        className: item.className ?? null,
+        disabled: Boolean(item.disabled),
+        selected: Boolean(item.selected),
+        commandId: item.command ?? item.commandId ?? null
+      };
+    }
+    return {
+      raw: item,
+      id: String(item ?? index),
+      key: String(item ?? index),
+      label: String(item ?? ""),
+      className: null,
+      disabled: false,
+      selected: false,
+      commandId: null
+    };
+  });
+}
+
 function renderContainer(state, widget, options = {}) {
   const props = pickProps(widget.props, ["id", "className", "style", "title", "role"]);
   const mergedClass = mergeClassNames("ui-widget ui-container", props.className);
@@ -122,6 +175,61 @@ function renderButton(state, widget, options = {}) {
   const ctx = buildContext(state, widget, options, windowId, taskId);
   const command = applyCommandProps({ ...props, ...base, type }, widget, options, ctx);
   return createElement("button", command.props, [createText(String(label))], widget.id);
+}
+
+function renderList(state, widget, options = {}) {
+  const props = pickProps(widget.props, ["id", "className", "style", "title", "role"]);
+  const mergedClass = mergeClassNames("ui-widget ui-list", props.className);
+  const base = widgetBaseProps(widget, mergedClass);
+  const items = normalizeListItems(widget.props?.items ?? widget.model?.items ?? []);
+  const windowId = resolveWindowId(state, widget, options.windowId ?? null);
+  const taskId = resolveTaskId(state, windowId, options.taskId ?? null);
+  const ctx = buildContext(state, widget, options, windowId, taskId);
+
+  const children = items.map((item, index) => {
+    const itemId = item.id;
+    const itemKey = item.key;
+    const liClass = mergeClassNames("ui-list-item", item.className, item.selected ? "is-selected" : null);
+    const liProps = {
+      className: liClass,
+      "data-item-id": itemId,
+      "data-item-index": index,
+      "data-list-id": widget.id
+    };
+
+    const buttonProps = {
+      type: "button",
+      className: "ui-list-button",
+      "data-item-id": itemId,
+      "data-item-index": index,
+      "data-list-id": widget.id
+    };
+    if (item.disabled) {
+      buttonProps.disabled = true;
+    }
+    const commandId = item.commandId ?? resolveItemCommandId(item.raw, widget);
+    const command = applyCommandProps(
+      buttonProps,
+      widget,
+      options,
+      ctx,
+      "onClick",
+      (baseCtx, event) => ({
+        ...baseCtx,
+        listId: widget.id,
+        item: item.raw,
+        itemId,
+        itemIndex: index,
+        eventType: event?.type ?? null
+      }),
+      commandId
+    );
+
+    const button = createElement("button", command.props, [createText(item.label)], `${itemKey}-button`);
+    return createElement("li", liProps, [button], itemKey);
+  });
+
+  return createElement("ul", { ...props, ...base }, children, widget.id);
 }
 
 function renderTextInput(state, widget, options = {}) {
@@ -176,6 +284,8 @@ export function renderWidget(state, widgetId, options = {}) {
       return renderLabel(widget);
     case "button":
       return renderButton(state, widget, options);
+    case "list":
+      return renderList(state, widget, options);
     case "text-input":
     case "text-area":
       return renderTextInput(state, widget, options);

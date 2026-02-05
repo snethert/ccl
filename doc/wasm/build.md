@@ -54,6 +54,15 @@ This sets:
 - `CC` to Homebrew `clang` with WASI headers and `-D__wasi__`
 - `WASM_LD` to Homebrew `wasm-ld`
 
+## Toolchain Sanity Check
+
+After `source scripts/wasm/env.sh`, verify the toolchain:
+
+```bash
+$CC --version
+$WASM_LD --version
+```
+
 ## Note About `wasi-libc` Layout
 
 On Mint/Ubuntu, `wasi-libc` does **not** ship a `wasi-sysroot/` directory (that
