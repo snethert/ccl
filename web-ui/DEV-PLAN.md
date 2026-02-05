@@ -156,6 +156,7 @@ Exit criteria:
 - Added baseline fixtures and tests for focus, command enablement, layout, and selection.
 - Added headless browser harness (Playwright-backed) for DOM and canvas checks.
 - Added a local web-ui dev dependency for Playwright to enable headless runs.
+- Headless harness skips on launch failure unless `WEB_UI_STRICT_BROWSER_TESTS=1` is set.
 
 ## Phase 1 Detailed Plan (Core Model and Command System)
 
@@ -240,3 +241,5 @@ Exit criteria:
 - Implemented command registry, key binding, and deterministic routing.
 - Added unit tests for routing precedence and focus history.
 - Added context helpers and a module index for consistent imports.
+- Expanded state model to cover workspace, widgets, presentations, and ID counters.
+- Added state graph unit tests for task/window/widget wiring.

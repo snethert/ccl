@@ -1,11 +1,53 @@
 {
+  "workspace": {
+    "id": "workspace-0",
+    "title": "Default",
+    "taskIds": ["t1"],
+    "activeTaskId": "t1",
+    "metadata": {}
+  },
   "tasks": {
-    "t1": { "id": "t1", "title": "Test" }
+    "t1": {
+      "id": "t1",
+      "title": "Test",
+      "windowIds": ["w1"],
+      "activeWindowId": "w1",
+      "metadata": {}
+    }
   },
   "windows": {
-    "w1": { "id": "w1", "task": "t1" }
+    "w1": {
+      "id": "w1",
+      "taskId": "t1",
+      "title": "Main",
+      "kind": "document",
+      "rootWidgetId": "widget-0",
+      "metadata": {}
+    }
   },
+  "widgets": {
+    "widget-0": {
+      "id": "widget-0",
+      "kind": "root",
+      "parentId": null,
+      "windowId": "w1",
+      "childIds": [],
+      "props": {},
+      "model": {}
+    }
+  },
+  "presentations": {},
   "focus": null,
+  "focusHistory": [],
   "selection": null,
-  "commands": {}
+  "commands": {},
+  "layout": null,
+  "idCounters": {
+    "workspace": 1,
+    "task": 1,
+    "window": 1,
+    "widget": 1,
+    "presentation": 0,
+    "layout": 0
+  }
 }

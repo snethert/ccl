@@ -13,7 +13,16 @@ export async function runHeadless(options = {}) {
   }
 
   const timeoutMs = options.timeoutMs ?? 5000;
-  const browser = await playwright.chromium.launch({ headless: true });
+  let browser;
+  try {
+    browser = await playwright.chromium.launch({ headless: true });
+  } catch (err) {
+    const strict = process.env.WEB_UI_STRICT_BROWSER_TESTS === "1";
+    if (strict) {
+      throw err;
+    }
+    return { skipped: true, reason: `Playwright launch failed: ${err.message}` };
+  }
   const page = await browser.newPage();
 
   let resolveResult;
@@ -35,7 +44,10 @@ export async function runHeadless(options = {}) {
   const url = pathToFileURL(path.join(__dirname, "browser", "harness.html")).toString();
   await page.goto(url);
 
-  const result = await resultPromise;
-  await browser.close();
-  return result;
+  try {
+    const result = await resultPromise;
+    return result;
+  } finally {
+    await browser.close();
+  }
 }

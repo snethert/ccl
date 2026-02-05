@@ -8,18 +8,58 @@
       }
     },
     "focus": "w1",
+    "focusHistory": [],
+    "idCounters": {
+      "layout": 0,
+      "presentation": 0,
+      "task": 1,
+      "widget": 1,
+      "window": 1,
+      "workspace": 1
+    },
+    "layout": null,
+    "presentations": {},
     "selection": null,
     "tasks": {
       "t1": {
+        "activeWindowId": "w1",
         "id": "t1",
-        "title": "Test"
+        "metadata": {},
+        "title": "Test",
+        "windowIds": [
+          "w1"
+        ]
+      }
+    },
+    "widgets": {
+      "widget-0": {
+        "childIds": [],
+        "id": "widget-0",
+        "kind": "root",
+        "model": {},
+        "parentId": null,
+        "props": {},
+        "windowId": "w1"
       }
     },
     "windows": {
       "w1": {
         "id": "w1",
-        "task": "t1"
+        "kind": "document",
+        "metadata": {},
+        "rootWidgetId": "widget-0",
+        "taskId": "t1",
+        "title": "Main"
       }
+    },
+    "workspace": {
+      "activeTaskId": "t1",
+      "id": "workspace-0",
+      "metadata": {},
+      "taskIds": [
+        "t1"
+      ],
+      "title": "Default"
     }
   }
 }
