@@ -99,6 +99,8 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_return_fixnum_logand --export=wasm_return_fixnum_logior \
 	  --export=wasm_return_fixnum_logxor --export=wasm_return_fixnum_lognot \
 	  --export=wasm_return_fixnum_neg \
+	  --export=wasm_box_signed_64 \
+	  --export=_SPfix_overflow --export=_SPmakes32 \
 	  -o ../../doc/wasm/js/wasmcl.wasm $(KERNELOBJ)
 
 # strip:	../../armcl

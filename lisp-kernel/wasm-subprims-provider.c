@@ -14,6 +14,9 @@ void *wasm_get_cstack_pointer(void);
 __attribute__((import_module("ccl"), import_name("wasm_set_cstack_pointer")))
 void wasm_set_cstack_pointer(void *stack_ptr);
 
+__attribute__((import_module("ccl"), import_name("wasm_box_signed_64")))
+LispObj wasm_box_signed_64(TCR *tcr, int64_t value);
+
 static void
 wasm_subprims_trap(void)
 {
@@ -396,5 +399,36 @@ _SPfuncall(void)
   if (wasm_pending_throw_p(tcr)) {
     return;
   }
+}
+
+__attribute__((used, visibility("default"), export_name("_SPmakes32")))
+void
+_SPmakes32(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    wasm_subprims_trap();
+  }
+
+  LispObj raw = wasm_reg(tcr, imm0);
+  int32_t val = (tag_of(raw) == tag_fixnum) ? (int32_t)unbox_fixnum(raw) : (int32_t)raw;
+  wasm_set_reg(tcr, arg_z, wasm_box_signed_64(tcr, (int64_t)val));
+  wasm_set_reg(tcr, nargs, box_fixnum(1));
+}
+
+__attribute__((used, visibility("default"), export_name("_SPfix_overflow")))
+void
+_SPfix_overflow(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    wasm_subprims_trap();
+  }
+
+  int32_t val = (int32_t)unbox_fixnum(wasm_reg(tcr, arg_z));
+  int32_t adjust = (int32_t)(3u << (nbits_in_word - 2));
+  val ^= adjust;
+  wasm_set_reg(tcr, arg_z, wasm_box_signed_64(tcr, (int64_t)val));
+  wasm_set_reg(tcr, nargs, box_fixnum(1));
 }
 #endif

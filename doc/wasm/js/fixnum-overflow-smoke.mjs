@@ -22,15 +22,11 @@ function assert(cond, msg) {
   if (!cond) fail(msg);
 }
 
-function assertTrap(fn, msg) {
-  let trapped = false;
-  try {
-    fn();
-  } catch (err) {
-    trapped = true;
-  }
-  assert(trapped, msg);
-}
+const FULLTAG_MASK = 0x7;
+const FULLTAG_MISC = 0x6;
+const SUBTAG_MASK = 0xff;
+const SUBTAG_BIGNUM = 0x7;
+const NUM_SUBTAG_BITS = 8;
 
 function readFileUrl(url) {
   return fs.readFile(fileURLToPath(url));
@@ -212,6 +208,13 @@ await installOp(
 );
 
 await installOp(
+  207,
+  "wasm_return_fixnum_ash",
+  "ccl_fixnum_ash_entry",
+  kernel.instance.exports.wasm_return_fixnum_ash,
+);
+
+await installOp(
   212,
   "wasm_return_fixnum_neg",
   "ccl_fixnum_neg_entry",
@@ -223,6 +226,36 @@ const fixnumBits = 32 - fixnumShift;
 const maxFixnum = (1 << (fixnumBits - 1)) - 1;
 const minFixnum = -1 << (fixnumBits - 1);
 
+function readU32(mem, addr) {
+  return new DataView(mem.buffer).getUint32(addr >>> 0, true);
+}
+
+function bignumToBigInt(mem, obj, label) {
+  assert((obj & FULLTAG_MASK) === FULLTAG_MISC, `${label}: expected bignum tag`);
+  const headerAddr = (obj - FULLTAG_MISC) >>> 0;
+  const header = readU32(mem, headerAddr);
+  const subtag = header & SUBTAG_MASK;
+  const count = header >>> NUM_SUBTAG_BITS;
+  assert(subtag === SUBTAG_BIGNUM, `${label}: unexpected subtag ${subtag}`);
+  assert(count > 0, `${label}: invalid bignum length ${count}`);
+  let value = 0n;
+  for (let i = 0; i < count; i++) {
+    const digit = BigInt(readU32(mem, headerAddr + 4 + i * 4));
+    value += digit << (32n * BigInt(i));
+  }
+  const msd = readU32(mem, headerAddr + 4 + (count - 1) * 4);
+  if (msd & 0x80000000) {
+    value -= 1n << (32n * BigInt(count));
+  }
+  return value;
+}
+
+function assertBignum(mem, obj, expected, label) {
+  const actual = bignumToBigInt(mem, obj, label);
+  const expectedValue = BigInt(expected);
+  assert(actual === expectedValue, `${label}: unexpected bignum value ${actual} expected ${expectedValue}`);
+}
+
 const addMax = kernel.instance.exports.wasm_test_entry_funcall2(204, maxFixnum, 0) >> 2;
 assert(addMax === maxFixnum, `unexpected max add result: got=${addMax} expected=${maxFixnum}`);
 
@@ -232,19 +265,16 @@ assert(subMin === minFixnum, `unexpected min sub result: got=${subMin} expected=
 const negResult = kernel.instance.exports.wasm_test_entry_funcall2(212, 5, 0) >> 2;
 assert(negResult === -5, `unexpected neg result: got=${negResult} expected=-5`);
 
-assertTrap(
-  () => kernel.instance.exports.wasm_test_entry_funcall2(204, maxFixnum, 1),
-  "expected add overflow trap",
-);
+const addOverflow = kernel.instance.exports.wasm_test_entry_funcall2(204, maxFixnum, 1) >>> 0;
+assertBignum(runtime.memory, addOverflow, maxFixnum + 1, "add overflow");
 
-assertTrap(
-  () => kernel.instance.exports.wasm_test_entry_funcall2(205, minFixnum, 1),
-  "expected sub overflow trap",
-);
+const subOverflow = kernel.instance.exports.wasm_test_entry_funcall2(205, minFixnum, 1) >>> 0;
+assertBignum(runtime.memory, subOverflow, minFixnum - 1, "sub overflow");
 
-assertTrap(
-  () => kernel.instance.exports.wasm_test_entry_funcall2(212, minFixnum, 0),
-  "expected neg overflow trap",
-);
+const negOverflow = kernel.instance.exports.wasm_test_entry_funcall2(212, minFixnum, 0) >>> 0;
+assertBignum(runtime.memory, negOverflow, -minFixnum, "neg overflow");
+
+const ashOverflow = kernel.instance.exports.wasm_test_entry_funcall2(207, 1, 40) >>> 0;
+assertBignum(runtime.memory, ashOverflow, 1n << 40n, "ash overflow");
 
 console.log("PASS: wasm fixnum overflow smoke test");

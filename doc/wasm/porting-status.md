@@ -19,7 +19,10 @@
   VSP per WASM calling convention (see `doc/wasm/ABI.md`).
 - **Fixnum helpers (kernel):** ⚠️  
   `wasm_return_fixnum_{add,sub,mul,ash,log*,neg}` helpers exist; arithmetic
-  helpers now trap on overflow (bignum allocation pending).
+  helpers allocate 1–2 digit bignums on overflow (minimal heap allocator).
+- **Subprims (kernel + provider):** ✅  
+  `_SPfix_overflow` + `_SPmakes32` implemented in both kernel and provider;
+  provider imports `wasm_box_signed_64` from the kernel to allocate bignums.
 - **Tier‑1 subprims (C):** ⚠️  
   `_SPthrow`, `_SPnthrowvalues`, `_SPmkcatchmv` implemented; unwind‑protect
   frames still trap in the WASM provider.
@@ -111,7 +114,7 @@
   (`%ineg`/`%%ineg`) and records module bytes + export name.
 - **WASM fixnum-overflow operator (compiler):** ⚠️  
   `fixnum-overflow` now routes to overflow‑checked fixnum ops; overflow
-  currently traps until bignum allocation exists in WASM.
+  allocates a 1–2 digit bignum in WASM (full bignum support still pending).
 - **Compiler module wiring (compiler):** ⚠️  
   `lib/compile-ccl.lisp` + `lib/systems.lisp` include WASM compiler modules;
   no target build integration yet.

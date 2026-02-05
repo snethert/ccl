@@ -142,9 +142,12 @@ assumes `wasm_get_current_tcr()` is the single authoritative access path.
 - Minimal fixnum negation code can import `wasm_return_fixnum_neg` to negate
   `arg_z` and return a single fixnum in `arg_z`.
 
-**Overflow note (bring‑up):** the fixnum arithmetic helpers currently **trap
-on overflow** (bignum allocation is not implemented yet in WASM). This keeps
-overflow visible during bring‑up; full bignum support will replace the traps.
+**Overflow note (bring‑up):** the fixnum arithmetic helpers now allocate
+**1–2 digit bignums on overflow** via a minimal WASM heap allocator; this is
+enough for add/sub/neg and 64‑bit products. `_SPfix_overflow` and `_SPmakes32`
+are implemented in both the kernel and provider; the provider imports the
+kernel’s `wasm_box_signed_64` helper for bignum allocation. Full bignum support
+(arbitrary digits, canonicalization, GC integration) remains pending.
 
 ### Non‑local Transfer (Tier‑0, cooperative unwind)
 

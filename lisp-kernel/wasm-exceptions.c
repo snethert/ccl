@@ -37,6 +37,20 @@ exception_init()
   /* No signals on WASM32. */
 }
 
+void
+platform_new_heap_segment(ExceptionInformation *xp, TCR *tcr, BytePtr low, BytePtr high)
+{
+  if (tcr == NULL) {
+    return;
+  }
+  tcr->last_allocptr = (void *)high;
+  tcr->save_allocptr = (void *)high;
+  tcr->save_allocbase = (void *)low;
+  if (xp != NULL) {
+    xpGPR(xp, allocptr) = (LispObj)high;
+  }
+}
+
 Boolean
 lisp_frame_p(lisp_frame *spPtr)
 {
