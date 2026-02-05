@@ -15,6 +15,7 @@ import {
   createCclImports,
   createSharedCclRuntime,
   instantiateWasm,
+  installCompiledModulesFromRegistry,
   installSubprimsTable,
 } from "./ccl-loader.mjs";
 import { createMicrokernel } from "./microkernel.mjs";
@@ -123,6 +124,13 @@ try {
   const rc = kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
   const nil = kernel.instance.exports.wasm_get_lisp_nil() >>> 0;
   console.log(`wasm_ccl_load_image rc=${rc} lisp_nil=0x${nil.toString(16)}`);
+  const { installed, count } = await installCompiledModulesFromRegistry({
+    kernel,
+    memory: runtime.memory,
+    subprimsTable: runtime.subprimsTable,
+    microkernel,
+  });
+  console.log(`compiled modules installed ${installed}/${count}`);
 } catch (e) {
   console.error(`wasm_ccl_load_image trapped: ${e}`);
   process.exit(3);

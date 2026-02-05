@@ -19,6 +19,7 @@ export const KERNEL_OP_STREAM_READ = 0x00000003;
 export const KERNEL_OP_TIME_NOW = 0x00000004;
 export const KERNEL_OP_STREAM_OPEN = 0x00000005;
 export const KERNEL_OP_STREAM_CLOSE = 0x00000006;
+export const KERNEL_OP_COMPILED_MODULES_REFRESH = 0x00000007;
 
 export const KERNEL_STREAM_KIND_PIPE = 0x00000000;
 export const KERNEL_STREAM_KIND_NAMED_RO = 0x00000001;
@@ -176,12 +177,16 @@ export function createMicrokernel({
   // Optional hooks for tests/embedding:
   logSink = null, // (level, text, bytes) => void
   now = () => Date.now(),
+  compiledModulesInstaller = null, // ({ registry, nil, memory, microkernel }) => installed count
+  compiledModulesAsync = false,
 } = {}) {
   if (!memory) throw new Error("createMicrokernel: memory is required");
 
   const requests = new Map(); // id -> { status, result, response: Uint8Array }
   const pendingStdinReads = []; // request ids waiting on stdin
   let nextRequestId = 1;
+  const supportsPending = asyncStdin || compiledModulesAsync;
+  let api = null;
 
   const logs = [];
   const decoder = typeof TextDecoder !== "undefined" ? new TextDecoder("utf-8") : null;
@@ -395,7 +400,7 @@ export function createMicrokernel({
           recordRequestError(id, ERRNO.EINVAL);
           break;
         }
-        const capabilityBits = asyncStdin ? 0x1 : 0; // bit0: requests may return PENDING
+        const capabilityBits = supportsPending ? 0x1 : 0; // bit0: requests may return PENDING
         const caps = encodeCapsResponse({ capabilityBits, maxResponseBytes: 0 });
         recordRequestDone(id, 0, caps);
         break;
@@ -603,6 +608,43 @@ export function createMicrokernel({
         break;
       }
 
+      case KERNEL_OP_COMPILED_MODULES_REFRESH: {
+        if (u32(payloadLen) !== 8) {
+          recordRequestError(id, ERRNO.EINVAL);
+          break;
+        }
+        if (typeof compiledModulesInstaller !== "function") {
+          recordRequestDone(id, -ERRNO.ENOSYS);
+          break;
+        }
+        const registry = readU32LE(memory, u32(payloadPtr) + 0);
+        const nil = readU32LE(memory, u32(payloadPtr) + 4);
+        const result = compiledModulesInstaller({ registry, nil, memory, microkernel: api });
+        if (result && typeof result.then === "function") {
+          if (!compiledModulesAsync) {
+            recordRequestDone(id, -ERRNO.EWOULDBLOCK);
+            break;
+          }
+          recordRequestPending(id, { kind: "compiled_modules" });
+          result.then((res) => {
+            const req = requests.get(id);
+            if (!req || req.status !== KERNEL_STATUS_PENDING) return;
+            const installed = typeof res === "number" ? res : (res?.installed ?? 0);
+            recordRequestDone(id, installed);
+          }).catch((_e) => {
+            const req = requests.get(id);
+            if (!req || req.status !== KERNEL_STATUS_PENDING) return;
+            recordRequestDone(id, -ERRNO.EINVAL);
+          });
+          break;
+        }
+        {
+          const installed = typeof result === "number" ? result : (result?.installed ?? 0);
+          recordRequestDone(id, installed);
+        }
+        break;
+      }
+
       default:
         recordRequestDone(id, -ERRNO.ENOSYS);
         break;
@@ -680,7 +722,7 @@ export function createMicrokernel({
     kernel_drop_request,
   };
 
-  return {
+  api = {
     imports,
     feedStdin,
     closeStdin,
@@ -689,4 +731,5 @@ export function createMicrokernel({
     getLogs: () => logs.slice(),
     _debug: { requests, pendingStdinReads, streams, namedBlobs },
   };
+  return api;
 }

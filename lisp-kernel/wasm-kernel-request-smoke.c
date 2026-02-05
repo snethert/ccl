@@ -8,6 +8,8 @@
 #ifdef WASM32
 
 #include "wasm-host.h"
+#include "lisp.h"
+#include "lisp_globals.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -194,6 +196,17 @@ wasm_kernel_request_smoke_pipe_roundtrip(void)
     return (r < 0) ? r : -1;
   }
   return 0;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_kernel_request_smoke_compiled_modules_refresh")))
+int32_t
+wasm_kernel_request_smoke_compiled_modules_refresh(void)
+{
+  LispObj registry = nrs_WASM_COMPILED_MODULES.vcell;
+  if (registry == 0 || registry == lisp_nil) {
+    return 0;
+  }
+  return wasm_kernel_compiled_modules_refresh((uint32_t)registry, (uint32_t)lisp_nil);
 }
 
 #endif /* WASM32 */

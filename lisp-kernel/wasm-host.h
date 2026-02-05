@@ -25,6 +25,7 @@
 #define KERNEL_OP_TIME_NOW 0x00000004u
 #define KERNEL_OP_STREAM_OPEN 0x00000005u
 #define KERNEL_OP_STREAM_CLOSE 0x00000006u
+#define KERNEL_OP_COMPILED_MODULES_REFRESH 0x00000007u
 
 /* Stream kind registry (KERNEL_OP_STREAM_OPEN.kind). */
 #define KERNEL_STREAM_KIND_PIPE 0u
@@ -103,6 +104,7 @@ int32_t wasm_kernel_stream_read(uint32_t sid_or_fd, void *buf, uint32_t cap, uin
 
 int32_t wasm_kernel_stream_open(uint32_t kind, const void *arg, uint32_t arg_len, uint32_t *out_sid);
 int32_t wasm_kernel_stream_close(uint32_t sid);
+int32_t wasm_kernel_compiled_modules_refresh(uint32_t registry, uint32_t nil);
 
 /* Named byte sources (read-only). */
 int32_t wasm_kernel_stream_open_named(const char *name,

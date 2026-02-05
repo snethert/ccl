@@ -5,6 +5,7 @@
 const tests = [
   "./smoke-test.mjs",
   "./kernel-request-smoke.mjs",
+  "./compiled-modules-refresh-smoke.mjs",
   "./stream-open-smoke.mjs",
   "./pending-stdin-smoke.mjs",
   "./ccl-step-smoke.mjs",

@@ -10,6 +10,7 @@
 #include "lisp.h"
 #include "lisp-exceptions.h"
 #include "lisp_globals.h"
+#include "wasm-host.h"
 #include "wasm-subprims.h"
 
 #include <stdint.h>
@@ -47,6 +48,21 @@ wasm_subprim_fixnum(uint32_t index)
 }
 
 static uint32_t wasm_subprims_ready = 0;
+static LispObj wasm_last_compiled_modules = 0;
+
+static void
+wasm_maybe_refresh_compiled_modules(void)
+{
+  LispObj registry = nrs_WASM_COMPILED_MODULES.vcell;
+  if (registry == wasm_last_compiled_modules) {
+    return;
+  }
+  wasm_last_compiled_modules = registry;
+  if (registry == lisp_nil) {
+    return;
+  }
+  (void)wasm_kernel_compiled_modules_refresh((uint32_t)registry, (uint32_t)lisp_nil);
+}
 
 __attribute__((used, visibility("default"), export_name("wasm_set_subprims_ready")))
 void
@@ -83,6 +99,7 @@ wasm_toplevel_loop(TCR *tcr)
     tcr->wasm_gprs[Rfn] = topfn;
     wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_FUNCALL_INDEX));
     if (tcr->wasm_pending_throw) {
+      wasm_maybe_refresh_compiled_modules();
       return 1;
     }
 
@@ -92,6 +109,7 @@ wasm_toplevel_loop(TCR *tcr)
     if (tcr->wasm_pending_throw) {
       tcr->wasm_pending_throw = 0;
     }
+    wasm_maybe_refresh_compiled_modules();
   }
 }
 

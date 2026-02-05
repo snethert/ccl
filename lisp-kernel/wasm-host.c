@@ -332,6 +332,20 @@ wasm_kernel_stream_close(uint32_t sid)
 }
 
 int32_t
+wasm_kernel_compiled_modules_refresh(uint32_t registry, uint32_t nil)
+{
+  struct payload {
+    uint32_t registry;
+    uint32_t nil;
+  } p;
+
+  p.registry = registry;
+  p.nil = nil;
+
+  return wasm_kernel_request_copy(KERNEL_OP_COMPILED_MODULES_REFRESH, &p, (uint32_t)sizeof(p), NULL, 0, NULL);
+}
+
+int32_t
 wasm_kernel_time_now(uint64_t *out_unix_ms)
 {
   uint64_t ms = 0;

@@ -111,6 +111,12 @@ export async function instantiateWasm(bytes, imports) {
   return { instance, module };
 }
 
+export function instantiateWasmSync(bytes, imports) {
+  const module = new WebAssembly.Module(bytes);
+  const instance = new WebAssembly.Instance(module, imports);
+  return { instance, module };
+}
+
 export function installSubprimsTable({
   table,
   subprimsMap, // { symbols: ["_SP...", ...], count: N }
@@ -341,6 +347,70 @@ export async function installCompiledModulesFromRegistry({
   let installed = 0;
   for (const entry of entries) {
     const { instance } = await instantiateWasm(entry.moduleBytes, imports);
+    const fn = instance?.exports?.[entry.exportName];
+    if (typeof fn !== "function") {
+      if (verbose) {
+        // eslint-disable-next-line no-console
+        console.warn(`compiled module missing export ${entry.exportName}`);
+      }
+      continue;
+    }
+
+    if (subprimsTable.length <= entry.entryIndex) {
+      subprimsTable.grow(entry.entryIndex - subprimsTable.length + 1);
+    }
+    subprimsTable.set(entry.entryIndex, fn);
+    installed++;
+  }
+
+  return { installed, count: entries.length, entries };
+}
+
+export function installCompiledModulesFromRegistrySync({
+  kernel,
+  memory,
+  subprimsTable,
+  microkernel = null,
+  extra = {},
+  registry = null,
+  nil = null,
+  verbose = false,
+} = {}) {
+  if (!memory) throw new Error("installCompiledModulesFromRegistrySync: memory is required");
+  if (!subprimsTable) throw new Error("installCompiledModulesFromRegistrySync: subprimsTable is required");
+
+  const kernelExports = kernel?.instance?.exports ?? kernel?.exports ?? kernel;
+  if (!kernelExports) throw new Error("installCompiledModulesFromRegistrySync: kernel exports are required");
+
+  if (registry == null) {
+    const getRegistry = kernelExports.wasm_get_compiled_module_registry;
+    if (typeof getRegistry !== "function") {
+      throw new Error("installCompiledModulesFromRegistrySync: missing wasm_get_compiled_module_registry export");
+    }
+    registry = getRegistry() >>> 0;
+  }
+  if (nil == null) {
+    const getNil = kernelExports.wasm_get_lisp_nil;
+    if (typeof getNil !== "function") {
+      throw new Error("installCompiledModulesFromRegistrySync: missing wasm_get_lisp_nil export");
+    }
+    nil = getNil() >>> 0;
+  }
+
+  const entries = decodeCompiledModuleRegistry({ memory, registry, nil });
+  if (entries.length === 0) return { installed: 0, count: 0, entries: [] };
+
+  const extraCcl = { ...(extra.ccl ?? {}), ...kernelExports };
+  const imports = createCclImports({
+    memory,
+    subprimsTable,
+    microkernel,
+    extra: { ...extra, ccl: extraCcl },
+  });
+
+  let installed = 0;
+  for (const entry of entries) {
+    const { instance } = instantiateWasmSync(entry.moduleBytes, imports);
     const fn = instance?.exports?.[entry.exportName];
     if (typeof fn !== "function") {
       if (verbose) {

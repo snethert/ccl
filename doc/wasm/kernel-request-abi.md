@@ -145,6 +145,7 @@ All opcodes are `u32`.
 - `KERNEL_OP_TIME_NOW     = 0x0000_0004`
 - `KERNEL_OP_STREAM_OPEN  = 0x0000_0005`
 - `KERNEL_OP_STREAM_CLOSE = 0x0000_0006`
+- `KERNEL_OP_COMPILED_MODULES_REFRESH = 0x0000_0007`
 
 Unrecognized opcodes MUST complete with `kernel_result == -ENOSYS`.
 
@@ -330,6 +331,27 @@ offset  size  field
 ```
 
 `kernel_result`: `0` on success; negative errno on failure.
+
+### `KERNEL_OP_COMPILED_MODULES_REFRESH`
+
+Request that the host refresh the compiled module table using the Lisp registry.
+
+Payload:
+
+```
+offset  size  field
+0x00    u32   registry   (Lisp object pointer to %wasm-compiled-modules%)
+0x04    u32   nil        (Lisp object pointer to NIL)
+```
+
+Payload length MUST be 8 bytes.
+
+Response payload: none (`kernel_response_size = 0`).
+
+`kernel_result`:
+
+- `>= 0`: number of compiled modules installed
+- `< 0`: negative errno (e.g. `-ENOSYS` if unsupported)
 
 ## Validation and robustness requirements (host-side)
 

@@ -20,6 +20,7 @@ Detailed layouts remain in `doc/wasm/kernel-request-abi.md`.
 | `0x0000_0004` | `KERNEL_OP_TIME_NOW` | Implemented | Unix ms |
 | `0x0000_0005` | `KERNEL_OP_STREAM_OPEN` | Implemented | `PIPE`, `NAMED_RO` |
 | `0x0000_0006` | `KERNEL_OP_STREAM_CLOSE` | Implemented | Close stream SID |
+| `0x0000_0007` | `KERNEL_OP_COMPILED_MODULES_REFRESH` | Draft | Refresh compiled module registry |
 
 ## Stream Kinds (STREAM_OPEN)
 

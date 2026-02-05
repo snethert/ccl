@@ -6,7 +6,14 @@
  * designed for bring-up and tests, not production deployments.
  */
 
-import { createCclImports, createSharedCclRuntime, instantiateWasm, installSubprimsTable } from "./ccl-loader.mjs";
+import {
+  createCclImports,
+  createSharedCclRuntime,
+  instantiateWasm,
+  installCompiledModulesFromRegistry,
+  installCompiledModulesFromRegistrySync,
+  installSubprimsTable,
+} from "./ccl-loader.mjs";
 import { createMicrokernel } from "./microkernel.mjs";
 
 function normalizeBytes(bytes) {
@@ -107,6 +114,8 @@ export function createKernel({
       subprimsTableMaximum: options.subprimsTableMaximum ?? subprimsTableMaximum,
     });
 
+    let kernel = null;
+
     const microkernel = createMicrokernel({
       memory: runtime.memory,
       asyncStdin: options.asyncStdin ?? asyncStdin,
@@ -115,9 +124,22 @@ export function createKernel({
       writeStderr: options.writeStderr ?? writeStderr,
       logSink: options.logSink ?? logSink,
       now: options.now ?? now,
+      compiledModulesInstaller: ({ registry, nil }) => {
+        if (!kernel) return 0;
+        const { installed } = installCompiledModulesFromRegistrySync({
+          kernel,
+          memory: runtime.memory,
+          subprimsTable: runtime.subprimsTable,
+          microkernel,
+          registry,
+          nil,
+          verbose: options.verboseInstallCompiledModules ?? false,
+        });
+        return installed;
+      },
     });
 
-    const kernel = await instantiateWasm(
+    kernel = await instantiateWasm(
       kernelBytes,
       createCclImports({
         memory: runtime.memory,
@@ -197,6 +219,15 @@ export function createKernel({
       return kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
     };
 
+    runner.installCompiledModules = (opts = {}) =>
+      installCompiledModulesFromRegistry({
+        kernel: kernel.instance,
+        memory: runtime.memory,
+        subprimsTable: runtime.subprimsTable,
+        microkernel,
+        ...opts,
+      });
+
     runner.start = () => {
       if (typeof kernel.instance.exports.wasm_ccl_start !== "function") {
         throw new Error("runner.start: kernel missing export wasm_ccl_start");
@@ -216,6 +247,11 @@ export function createKernel({
 
     if (world.imageId && options.autoloadImage !== false) {
       runner.loadImage(world.imageId);
+      if (options.autoInstallCompiledModules !== false) {
+        await runner.installCompiledModules({
+          verbose: options.verboseInstallCompiledModules ?? false,
+        });
+      }
     }
 
     return runnerId;
