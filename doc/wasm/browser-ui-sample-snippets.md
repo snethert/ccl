@@ -1,270 +1,90 @@
-## Browser UI Sample App Snippets
+## Browser UI Sample Snippets (Revised)
 
 Status: Draft
 
-This document provides representative UI code snippets for a sample application built on the browser CCL UI toolkit. The snippets illustrate the intended programming model: tasks, windows, declarative view trees, centralized commands, restart-based error handling, explicit focus, and persistent layout.
+This document provides representative UI snippets for building different kinds of tools on the browser CCL UI toolkit. The snippets are intentionally small and focus on patterns: tasks, windows, presentations, commands, Canvas/WebGL views, and inspectable state. They are examples, not a full application.
 
-The sample app is a lightweight "Issue Tracker" task. The code uses hypothetical `ui:` and `model:` APIs consistent with the toolkit spec. These snippets are not a full app; they are a reference collection of patterns.
-
-## 1. Task and Window Definitions
+## 1. A Devtools Workspace Task (REPL + Inspector + Editor)
 
 ```lisp
-(defclass issue-task ()
-  ((id          :initarg :id :reader task-id)
-   (title       :initarg :title :accessor task-title)
-   (issues      :initform (make-array 0 :adjustable t :fill-pointer 0)
-                :accessor task-issues)
-   (selection   :initform nil :accessor task-selection)
-   (focus       :initform nil :accessor task-focus)
-   (jobs        :initform nil :accessor task-jobs)))
+(defclass devtools-task ()
+  ((id      :initarg :id :reader task-id)
+   (title   :initarg :title :accessor task-title)))
 
-(defmethod ui:task-default-windows ((t issue-task))
-  (list (make-instance 'issue-list-window :task t)
-        (make-instance 'issue-detail-window :task t)))
+(defmethod ui:task-default-windows ((t devtools-task))
+  (list (make-instance 'repl-window :task t)
+        (make-instance 'inspector-window :task t)
+        (make-instance 'editor-window :task t)))
 
-(defclass issue-list-window ()
-  ((task :initarg :task :reader window-task)))
-
-(defmethod ui:window-title ((w issue-list-window))
-  (format nil "Issues: ~a" (task-title (window-task w))))
-
-(defclass issue-detail-window ()
-  ((task :initarg :task :reader window-task)))
-
-(defmethod ui:window-title ((w issue-detail-window))
-  (format nil "Details: ~a" (task-title (window-task w))))
-```
-
-## 2. Declarative View Trees
-
-```lisp
-(defmethod ui:window-view ((w issue-list-window))
-  (let* ((t (window-task w))
-         (m (make-instance 'issue-list-model :task t)))
-    (ui:vbox
-     (ui:toolbar
-      (ui:button :label "New"    :command 'issue.new)
-      (ui:button :label "Open"   :command 'issue.open)
-      (ui:button :label "Delete" :command 'issue.delete))
-     (ui:list-view :model m)
-     (ui:status-bar :items (issue-status-items t)))))
-
-(defmethod ui:window-view ((w issue-detail-window))
-  (let* ((t (window-task w))
-         (sel (task-selection t)))
-    (ui:vbox
-     (ui:header (if sel (issue-title sel) "No Issue Selected"))
-     (ui:split-vertical
-      (ui:panel
-       (ui:form
-        (ui:text-field :label "Title"  :model (issue-title-model sel))
-        (ui:text-area  :label "Body"   :model (issue-body-model sel))
-        (ui:toggle     :label "Open"   :model (issue-open-model sel))))
-      (ui:panel
-       (ui:table-view :model (issue-event-model sel)))))))
-```
-
-## 3. List Model Protocol
-
-```lisp
-(defclass issue-list-model ()
-  ((task :initarg :task :reader model-task)
-   (selection :initform nil :accessor model-selection)))
-
-(defmethod ui:list-count ((m issue-list-model))
-  (length (task-issues (model-task m))))
-
-(defmethod ui:list-item ((m issue-list-model) i)
-  (aref (task-issues (model-task m)) i))
-
-(defmethod ui:list-key ((m issue-list-model) i)
-  (issue-id (ui:list-item m i)))
-
-(defmethod ui:list-selection ((m issue-list-model))
-  (model-selection m))
-
-(defmethod ui:set-list-selection ((m issue-list-model) sel)
-  (setf (model-selection m) sel)
-  (setf (task-selection (model-task m)) sel))
-
-(defmethod ui:list-activate ((m issue-list-model) i)
-  (ui:execute-command 'issue.open :index i))
-```
-
-## 4. Commands with Enablement Reasons
-
-```lisp
-(ui:defcommand issue.open
-  (:doc "Open the selected issue in the detail pane.")
-  (:enabled (lambda (ctx)
-              (if (ui:selection ctx)
-                  (values t nil)
-                  (values nil "No issue selected."))))
-  (:exec (lambda (ctx)
-           (let ((issue (ui:selection ctx)))
-             (ui:focus-window (ui:window-by-id ctx 'issue-detail) :reason :command)
-             (ui:invalidate issue)))))
-
-(ui:defcommand issue.delete
-  (:doc "Delete the selected issue.")
-  (:enabled (lambda (ctx)
-              (if (ui:selection ctx)
-                  (values t nil)
-                  (values nil "Nothing selected."))))
-  (:exec (lambda (ctx)
-           (let* ((t (ui:current-task ctx))
-                  (issue (ui:selection ctx)))
-             (ui:confirm
-              :title "Delete issue?"
-              :message (format nil "Delete ~a?" (issue-title issue))
-              :on-confirm (lambda ()
-                            (issue-delete t issue)
-                            (ui:invalidate t)))))))
-```
-
-## 5. Keybinding Resolution (Centralized)
-
-```lisp
-(ui:defkeymap issue.global
-  (:scope :global)
-  (:bind "Cmd-N" 'issue.new)
-  (:bind "Cmd-O" 'issue.open)
-  (:bind "Cmd-Backspace" 'issue.delete))
-
-(ui:defkeymap issue.list-context
-  (:scope :context :context-id 'issue-list-view)
-  (:bind "Enter" 'issue.open)
-  (:bind "Delete" 'issue.delete))
-```
-
-## 6. Explicit Focus Transitions
-
-```lisp
-(ui:defcommand issue.focus-list
-  (:doc "Focus the issue list.")
-  (:exec (lambda (ctx)
-           (ui:focus-widget
-            (ui:find-widget ctx :id 'issue-list)
-            :reason :command))))
-
-(ui:defcommand issue.focus-detail
-  (:doc "Focus the issue detail form.")
-  (:exec (lambda (ctx)
-           (ui:focus-widget
-            (ui:find-widget ctx :id 'issue-title-field)
-            :reason :command))))
-```
-
-## 7. Persistent Layout Commands
-
-```lisp
-(ui:defcommand issue.layout-default
-  (:doc "Restore the default issue layout.")
+(ui:defcommand devtools.layout-default
+  (:doc "Apply the default devtools layout.")
   (:exec (lambda (ctx)
            (ui:apply-layout
             ctx
             (ui:layout
              (ui:split-horizontal
-              (ui:tab-group :id 'left-pane :windows '(issue-list-window))
-              (ui:tab-group :id 'right-pane :windows '(issue-detail-window))
+              (ui:tab-group :id 'left-pane :windows '(repl-window inspector-window))
+              (ui:tab-group :id 'right-pane :windows '(editor-window))
               :ratio 0.35))))))
 ```
 
-## 8. Background Jobs and Progress
+## 2. Command Palette (Centralized Commands)
 
 ```lisp
-(ui:defcommand issue.sync
-  (:doc "Sync issues from the server.")
-  (:exec (lambda (ctx)
-           (ui:enqueue-job
-            ctx
-            (make-instance 'issue-sync-job
-                           :task (ui:current-task ctx))))) )
+(defclass command-palette-model ()
+  ((query :initform "" :accessor palette-query)))
 
-(defclass issue-sync-job ()
-  ((task :initarg :task :reader job-task)
-   (progress :initform 0 :accessor job-progress)))
+(defmethod ui:list-count ((m command-palette-model))
+  (length (ui:commands-matching (palette-query m))))
 
-(defmethod ui:job-run ((j issue-sync-job))
-  (restart-case
-      (progn
-        (issue-sync (job-task j) :on-progress (lambda (p)
-                                               (setf (job-progress j) p)
-                                               (ui:invalidate (job-task j)))))
-    (retry () :report "Retry" (ui:job-run j))
-    (use-cache () :report "Use cached data" (issue-load-cache (job-task j)))
-    (cancel () :report "Cancel" nil)))
+(defmethod ui:list-item ((m command-palette-model) i)
+  (nth i (ui:commands-matching (palette-query m))))
+
+(defmethod ui:list-activate ((m command-palette-model) i)
+  (ui:execute-command (ui:command-id (ui:list-item m i))))
+
+(defmethod ui:window-view ((w command-palette-window))
+  (let ((m (make-instance 'command-palette-model)))
+    (ui:vbox
+     (ui:text-field :label "Command" :model (ui:text-model m :slot 'query))
+     (ui:list-view :model m))))
 ```
 
-## 9. Restart-Based Error Handling in Commands
+## 3. Inspector Window (Object-Centric UI)
 
 ```lisp
-(ui:defcommand issue.import
-  (:doc "Import issues from a file.")
-  (:exec (lambda (ctx)
-           (let ((t (ui:current-task ctx)))
-             (restart-case
-                 (issue-import t (ui:prompt-file "Import from"))
-               (use-empty () :report "Use empty list" (issue-clear t))
-               (retry () :report "Retry" (ui:execute-command 'issue.import))
-               (cancel () :report "Cancel" nil))
-             (ui:invalidate t)))))
-```
+(defclass inspector-window ()
+  ((task   :initarg :task :reader window-task)
+   (object :initarg :object :accessor inspector-object)))
 
-## 10. System State Inspector Entry Point
+(defmethod ui:window-view ((w inspector-window))
+  (ui:vbox
+   (ui:header "Inspector")
+   (ui:object-view :object (inspector-object w))
+   (ui:tree-view :model (ui:object-tree-model (inspector-object w)))))
 
-```lisp
-(ui:defcommand system.inspect-state
-  (:doc "Open System State inspector.")
+(ui:defcommand system.inspect-selection
+  (:doc "Inspect the current selection.")
+  (:enabled (lambda (ctx)
+              (if (ui:selection ctx)
+                  (values t nil)
+                  (values nil "Nothing selected."))))
   (:exec (lambda (ctx)
            (ui:open-window
-            (make-instance 'system-inspector-window
-                           :state (ui:system-state ctx)
-                           :task (ui:current-task ctx))
+            (make-instance 'inspector-window
+                           :task (ui:current-task ctx)
+                           :object (ui:selection ctx))
             :focus t))))
 ```
 
-## 11. Disabled Reason Display
-
-```lisp
-(defmethod ui:render-button ((b ui:button) ctx)
-  (multiple-value-bind (enabled reason)
-      (ui:command-enabled-p (ui:button-command b) ctx)
-    (ui:dom-button
-     :label (ui:button-label b)
-     :disabled (not enabled)
-     :tooltip (or reason ""))))
-```
-
-## 12. Persisting Task and Layout State
-
-```lisp
-(defmethod ui:serialize-task ((t issue-task))
-  (list :id (task-id t)
-        :title (task-title t)
-        :issues (serialize-issues (task-issues t))
-        :selection (when (task-selection t)
-                     (issue-id (task-selection t)))))
-
-(defmethod ui:serialize-layout ((ctx ui:context))
-  (ui:layout->plist (ui:current-layout ctx)))
-
-(defmethod ui:restore-task ((data list))
-  (let ((t (make-instance 'issue-task
-                          :id (getf data :id)
-                          :title (getf data :title))))
-    (setf (task-issues t) (deserialize-issues (getf data :issues)))
-    t))
-```
-
-## 13. Debugger Window Skeleton
+## 4. Debugger Window (Restarts Are First-Class)
 
 ```lisp
 (defclass debugger-window ()
-  ((task :initarg :task :reader window-task)
+  ((task      :initarg :task :reader window-task)
    (condition :initarg :condition :reader dbg-condition)
-   (stack :initarg :stack :reader dbg-stack)
-   (restarts :initarg :restarts :reader dbg-restarts)))
+   (stack     :initarg :stack :reader dbg-stack)
+   (restarts  :initarg :restarts :reader dbg-restarts)))
 
 (defmethod ui:window-view ((w debugger-window))
   (ui:vbox
@@ -274,22 +94,149 @@ The sample app is a lightweight "Issue Tracker" task. The code uses hypothetical
    (ui:panel (ui:restart-list :restarts (dbg-restarts w)))))
 ```
 
-## 14. Notifications and Status
+## 5. Presentation + Translator (Semantic Interaction)
 
 ```lisp
-(defun issue-status-items (t)
-  (list (ui:status-item :label (format nil "~a issues" (length (task-issues t))))
-        (ui:status-item :label (format nil "Jobs: ~a" (length (task-jobs t))))))
+(ui:defpresentation issue
+  (:type issue)
+  (:render (lambda (issue)
+             (ui:hbox
+              (ui:icon :name (if (issue-open-p issue) "open" "closed"))
+              (ui:label :text (issue-title issue))))))
 
-(ui:defcommand issue.notify-sync-done
-  (:doc "Notify when sync completes.")
+(ui:deftranslator issue.open
+  (:from issue :gesture :primary-click)
+  (:to-command 'issue.open))
+
+(ui:deftranslator issue.inspect
+  (:from issue :gesture :alt-click)
+  (:to-command 'system.inspect-selection))
+```
+
+## 6. Diagram Editor (Canvas View + Hit Testing)
+
+```lisp
+(defclass diagram-model ()
+  ((nodes :initform nil :accessor diagram-nodes)
+   (links :initform nil :accessor diagram-links)
+   (selection :initform nil :accessor diagram-selection)))
+
+(defmethod ui:window-view ((w diagram-window))
+  (let ((m (diagram-model (window-task w))))
+    (ui:vbox
+     (ui:toolbar
+      (ui:button :label "New Node" :command 'diagram.new-node))
+     (ui:canvas-view
+      :id 'diagram-canvas
+      :model m
+      :render #'diagram-render
+      :hit-test #'diagram-hit-test))))
+
+(defun diagram-render (m ctx)
+  (ui:draw-grid ctx)
+  (dolist (n (diagram-nodes m))
+    (ui:draw-rect ctx (node-bounds n)
+                  :fill (if (eq n (diagram-selection m)) :accent :panel))
+    (ui:draw-text ctx (node-title n) (node-title-pos n)))
+  (dolist (l (diagram-links m))
+    (ui:draw-line ctx (link-start l) (link-end l))))
+
+(defun diagram-hit-test (m x y)
+  (find-if (lambda (n) (point-in-rect-p x y (node-bounds n)))
+           (diagram-nodes m)))
+
+(ui:defcommand diagram.new-node
   (:exec (lambda (ctx)
-           (ui:notify :title "Sync" :message "Issue sync completed."))))
+           (let ((m (diagram-model (ui:current-task ctx))))
+             (push (make-node :title "New" :pos (random-pos)) (diagram-nodes m))
+             (ui:invalidate m)))))
+```
+
+## 7. Timeline Viewer (Canvas + Commands)
+
+```lisp
+(defclass timeline-model ()
+  ((events :initform nil :accessor timeline-events)
+   (selection :initform nil :accessor timeline-selection)))
+
+(defmethod ui:window-view ((w timeline-window))
+  (ui:canvas-view
+   :id 'timeline
+   :model (timeline-model (window-task w))
+   :render #'timeline-render
+   :hit-test #'timeline-hit-test))
+
+(defun timeline-render (m ctx)
+  (dolist (e (timeline-events m))
+    (ui:draw-bar ctx (event-bounds e)
+                 :fill (if (eq e (timeline-selection m)) :accent :muted))))
+```
+
+## 8. Log Viewer (Virtualized Table)
+
+```lisp
+(defclass log-model ()
+  ((rows :initform #() :accessor log-rows)
+   (selection :initform nil :accessor log-selection)))
+
+(defmethod ui:table-row-count ((m log-model))
+  (length (log-rows m)))
+
+(defmethod ui:table-row ((m log-model) i)
+  (aref (log-rows m) i))
+
+(defmethod ui:window-view ((w log-window))
+  (ui:table-view :model (log-model (window-task w)) :virtualized t))
+```
+
+## 9. Mixed DOM + Canvas Composition
+
+```lisp
+(defmethod ui:window-view ((w profiler-window))
+  (ui:split-horizontal
+   (ui:tree-view :model (profile-tree (window-task w)))
+   (ui:canvas-view :model (profile-flamegraph (window-task w))
+                   :render #'flamegraph-render
+                   :hit-test #'flamegraph-hit-test)
+   :ratio 0.3))
+```
+
+## 10. Background Jobs and Progress
+
+```lisp
+(defclass compile-job ()
+  ((task :initarg :task :reader job-task)
+   (progress :initform 0 :accessor job-progress)))
+
+(defmethod ui:job-run ((j compile-job))
+  (compile-all (job-task j)
+               :on-progress (lambda (p)
+                              (setf (job-progress j) p)
+                              (ui:invalidate (job-task j)))))
+
+(defmethod ui:window-view ((w build-window))
+  (ui:vbox
+   (ui:progress-bar :value (job-progress (current-job (window-task w))))
+   (ui:log-view :model (build-log (window-task w)))))
+```
+
+## 11. Rapid UI Construction (Builder Output Shape)
+
+```lisp
+(ui:quick-window
+ :task task
+ :title "Quick Scratch"
+ :content (ui:vbox
+           (ui:label :text "Scratchpad")
+           (ui:text-area :model (scratch-model task))
+           (ui:hbox
+            (ui:button :label "Run" :command 'scratch.run)
+            (ui:button :label "Clear" :command 'scratch.clear))))
 ```
 
 ## Notes
 - Commands are the only way to mutate UI state; widgets request commands, they do not directly change global state.
-- Focus changes are always explicit and carry a reason code for debugging.
+- Presentations enable object-aware interaction and command discovery.
+- Canvas/WebGL views participate in hit-testing, focus, and command routing via stable IDs.
 - Layout modifications are commands that update the persistent layout tree.
 - Errors are surfaced via debugger windows with restarts, not modal alerts.
-
