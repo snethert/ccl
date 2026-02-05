@@ -13,7 +13,7 @@ separate from the detailed checklists in `porting-status.md`.
 - **JS microkernel MVP:** ✅ kernel_request MVP + runner scaffolding.
 - **Subprims provider:** ✅ Tier‑0 semantics + ABI defined (awaiting codegen use).
 - **Lisp runtime (Level‑1):** ⚠️ capability errors + yield path done; streams/FS policy pending.
-- **Compiler/backend (WASM):** ⚠️ calling convention implemented + smoke test; no real codegen yet.
+- **Compiler/backend (WASM):** ⚠️ calling convention implemented + smoke test; WASM32 target arch scaffolded; no real codegen yet.
 - **Image + real toplevel:** ⚠️ minimal boot image loads + stub toplevel hook returns; no real Lisp toplevel.
 - **Concurrency model:** ⏸ deferred (single‑threaded baseline first).
 
