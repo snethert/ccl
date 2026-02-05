@@ -18,6 +18,7 @@
 (defvar *wasm2-specials* nil)
 (defvar *wasm2-record-symbols* nil)
 (defvar %wasm-compiled-modules% nil)
+(defvar *wasm2-spillable-locals* nil)
 
 (defconstant +wasm2-closure-cells-base+ 3)
 
@@ -27,9 +28,11 @@
                   *wasm2-target-bits-in-word* *wasm2-target-node-size*
                   *wasm2-ir* *wasm2-locals* *wasm2-local-count*
                   *wasm2-temp-local* *wasm2-label-counter*
+                  *wasm2-spillable-locals*
                   *wasm2-block-stack* *wasm2-tagbody-stack*
                   *wasm2-tagbody-global-map*
                   *wasm2-next-entry-index* *wasm2-emit-local-count*
+                  *wasm2-emit-spillable-locals*
                   *wasm2-pending-throw-label*
                   %wasm-compiled-modules%))
 (unless (or (and (boundp '*wasm2-skip-next-nx-defops*)
@@ -544,7 +547,7 @@
       (let* ((entry-label (wasm2-allocate-label))
              (loop-label (wasm2-allocate-label))
              (exit-label (wasm2-allocate-label))
-             (state-local (wasm2-allocate-temp))
+             (state-local (wasm2-allocate-raw-temp))
              (tag-map (make-hash-table :test #'eq))
              (tag-label-map (make-hash-table :test #'eq))
              (tag-labels (mapcar (lambda (_tag) (declare (ignore _tag)) (wasm2-allocate-label))
@@ -1114,6 +1117,7 @@
 (defvar *wasm2-tagbody-global-map* nil)
 (defvar *wasm2-next-entry-index* 300)
 (defvar *wasm2-emit-local-count* 0)
+(defvar *wasm2-emit-spillable-locals* nil)
 (defvar *wasm2-pending-throw-label* nil)
 
 (defstruct wasm2-tagbody-context
@@ -1167,11 +1171,15 @@
   (setf *wasm2-locals* (make-hash-table :test #'eq))
   (setf *wasm2-local-count* 0)
   (setf *wasm2-temp-local* nil)
+  (setf *wasm2-spillable-locals* nil)
   nil)
 
-(defun wasm2-allocate-local ()
-  (prog1 *wasm2-local-count*
-    (incf *wasm2-local-count*)))
+(defun wasm2-allocate-local (&optional (spillp t))
+  (let* ((idx *wasm2-local-count*))
+    (incf *wasm2-local-count*)
+    (when spillp
+      (push idx *wasm2-spillable-locals*))
+    idx))
 
 (defun wasm2-ensure-local (var)
   (or (gethash var *wasm2-locals*)
@@ -1180,6 +1188,9 @@
 
 (defun wasm2-allocate-temp ()
   (wasm2-allocate-local))
+
+(defun wasm2-allocate-raw-temp ()
+  (wasm2-allocate-local nil))
 
 (defun wasm2-ensure-temp-local ()
   (or *wasm2-temp-local*
@@ -1535,20 +1546,19 @@
   (wasm2-push-u8 body #x10)
   (wasm2-emit-uleb body index))
 
-(defun wasm2-emit-spill-locals (body &optional (count *wasm2-emit-local-count*))
-  (when (> count 0)
-    (dotimes (i count)
+(defun wasm2-emit-spill-locals (body &optional locals)
+  (let* ((spill-locals (or locals *wasm2-emit-spillable-locals*)))
+    (dolist (idx spill-locals)
       (wasm2-push-u8 body #x20) ; local.get
-      (wasm2-emit-uleb body i)
+      (wasm2-emit-uleb body idx)
       (wasm2-emit-call-index body (wasm2-generic-import-index :vpush)))))
 
-(defun wasm2-emit-restore-locals (body &optional (count *wasm2-emit-local-count*))
-  (when (> count 0)
-    (dotimes (i count)
-      (let* ((idx (- count 1 i)))
-        (wasm2-emit-call-index body (wasm2-generic-import-index :vpop))
-        (wasm2-push-u8 body #x21) ; local.set
-        (wasm2-emit-uleb body idx)))))
+(defun wasm2-emit-restore-locals (body &optional locals)
+  (let* ((spill-locals (or locals *wasm2-emit-spillable-locals*)))
+    (dolist (idx (reverse spill-locals))
+      (wasm2-emit-call-index body (wasm2-generic-import-index :vpop))
+      (wasm2-push-u8 body #x21) ; local.set
+      (wasm2-emit-uleb body idx))))
 
 (defun wasm2-emit-pending-throw-guard (body)
   (wasm2-emit-call-index body (wasm2-generic-import-index :pending-throw))
@@ -1752,7 +1762,7 @@
         (t
          (error "Unhandled WASM2 IR opcode ~s" op))))))
 
-(defun wasm2-generic-module-bytes (ir export-name local-count)
+(defun wasm2-generic-module-bytes (ir export-name local-count &optional spillable-locals)
   (let* ((out (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
          (types (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
          (imports (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
@@ -1842,7 +1852,8 @@
             (wasm2-emit-sleb32 body (logand nil-value #xffffffff))
             (wasm2-push-u8 body #x21) ; local.set
             (wasm2-emit-uleb body i))))
-      (let* ((*wasm2-emit-local-count* local-count))
+      (let* ((*wasm2-emit-local-count* local-count)
+             (*wasm2-emit-spillable-locals* spillable-locals))
         (wasm2-emit-pending-throw-guard body)
         (wasm2-emit-generic-ir body ir))
       (wasm2-push-u8 body #x0b)
@@ -3192,7 +3203,10 @@
       (let* ((bits (or (wasm2-const-lfun-bits afunc) 0))
              (entry-index (wasm2-allocate-entry-index))
              (export-name (format nil "ccl_generic_entry_~d" entry-index))
-             (module-bytes (wasm2-generic-module-bytes ir export-name *wasm2-local-count*)))
+             (spillable-locals (nreverse *wasm2-spillable-locals*))
+             (module-bytes (wasm2-generic-module-bytes ir export-name
+                                                       *wasm2-local-count*
+                                                       spillable-locals)))
         (wasm2-register-compiled-module module-bytes
                                         export-name
                                         entry-index
