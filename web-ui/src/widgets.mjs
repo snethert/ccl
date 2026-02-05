@@ -63,7 +63,7 @@ function buildContext(state, widget, options, windowId, taskId) {
   });
 }
 
-function applyCommandProps(props, widget, options, ctx) {
+function applyCommandProps(props, widget, options, ctx, handlerName = "onClick", buildCtx = null) {
   const commandId = resolveCommandId(widget);
   if (!commandId) {
     return { props, commandId: null, enabled: true };
@@ -85,10 +85,11 @@ function applyCommandProps(props, widget, options, ctx) {
       nextProps["data-disabled-reason"] = enablement.reason;
     }
   }
-  nextProps.onClick = (event) => {
-    const result = executeCommand(registry, commandId, ctx);
+  nextProps[handlerName] = (event) => {
+    const commandCtx = buildCtx ? buildCtx(ctx, event) : ctx;
+    const result = executeCommand(registry, commandId, commandCtx);
     if (options?.onCommandResult) {
-      options.onCommandResult({ commandId, ctx, result, event });
+      options.onCommandResult({ commandId, ctx: commandCtx, result, event });
     }
   };
   return { props: nextProps, commandId, enabled: enablement.enabled };
@@ -123,6 +124,45 @@ function renderButton(state, widget, options = {}) {
   return createElement("button", command.props, [createText(String(label))], widget.id);
 }
 
+function renderTextInput(state, widget, options = {}) {
+  const props = pickProps(widget.props, [
+    "id",
+    "className",
+    "style",
+    "title",
+    "disabled",
+    "placeholder",
+    "value",
+    "type",
+    "rows",
+    "cols"
+  ]);
+  const mergedClass = mergeClassNames("ui-widget ui-text-input", props.className);
+  const base = widgetBaseProps(widget, mergedClass);
+  const value = widget.props?.value ?? widget.model?.value ?? "";
+  const windowId = resolveWindowId(state, widget, options.windowId ?? null);
+  const taskId = resolveTaskId(state, windowId, options.taskId ?? null);
+  const ctx = buildContext(state, widget, options, windowId, taskId);
+  const command = applyCommandProps(
+    { ...props, ...base, value },
+    widget,
+    options,
+    ctx,
+    "onInput",
+    (inputCtx, event) => ({
+      ...inputCtx,
+      inputValue: event?.target?.value ?? ""
+    })
+  );
+  const multiline = widget.kind === "text-area" || widget.props?.multiline || widget.model?.multiline;
+  if (multiline) {
+    const { type, ...rest } = command.props;
+    return createElement("textarea", rest, [], widget.id);
+  }
+  const type = props.type ?? "text";
+  return createElement("input", { ...command.props, type }, [], widget.id);
+}
+
 export function renderWidget(state, widgetId, options = {}) {
   const widget = state.widgets?.[widgetId];
   if (!widget) {
@@ -136,6 +176,9 @@ export function renderWidget(state, widgetId, options = {}) {
       return renderLabel(widget);
     case "button":
       return renderButton(state, widget, options);
+    case "text-input":
+    case "text-area":
+      return renderTextInput(state, widget, options);
     default:
       return renderContainer(state, widget, options);
   }

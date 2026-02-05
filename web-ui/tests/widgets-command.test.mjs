@@ -77,3 +77,38 @@ test("button command wiring dispatches through registry", () => {
   blockedButton.props.onClick({ type: "click" });
   assert.equal(calls, 1);
 });
+
+test("text input command wiring provides input value", () => {
+  const registry = createRegistry();
+  let lastValue = null;
+
+  registerCommand(registry, {
+    id: "demo.input",
+    exec: (ctx) => {
+      lastValue = ctx.inputValue ?? null;
+    }
+  });
+
+  let state = createState();
+  state = addTask(state, { id: "task-1", title: "Task" });
+  state = addWindow(state, { id: "win-1", taskId: "task-1", kind: "document" });
+  state = addWidget(state, { id: "root", kind: "container", windowId: "win-1" });
+  state = addWidget(state, {
+    id: "widget-input",
+    kind: "text-input",
+    parentId: "root",
+    props: { placeholder: "Type", command: "demo.input" }
+  });
+
+  const tree = renderWindow(state, "win-1", { registry });
+  const input = findByWidgetId(tree, "widget-input");
+
+  assert.ok(input, "input exists");
+  assert.equal(input.tag, "input");
+  assert.equal(input.props.type, "text");
+  assert.equal(input.props["data-command-id"], "demo.input");
+  assert.equal(typeof input.props.onInput, "function");
+
+  input.props.onInput({ target: { value: "hello" } });
+  assert.equal(lastValue, "hello");
+});

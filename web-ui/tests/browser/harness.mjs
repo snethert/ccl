@@ -94,6 +94,7 @@ async function run() {
 
   const registry = createRegistry();
   let commandCalls = 0;
+  let inputValue = null;
   registerCommand(registry, {
     id: "demo.run",
     exec: () => {
@@ -103,6 +104,12 @@ async function run() {
   registerCommand(registry, {
     id: "demo.blocked",
     enabled: () => [false, "Blocked"]
+  });
+  registerCommand(registry, {
+    id: "demo.input",
+    exec: (ctx) => {
+      inputValue = ctx.inputValue ?? null;
+    }
   });
 
   let widgetState = createState();
@@ -121,24 +128,38 @@ async function run() {
     parentId: "root-widget",
     props: { label: "Blocked", command: "demo.blocked" }
   });
+  widgetState = addWidget(widgetState, {
+    id: "input-text",
+    kind: "text-input",
+    parentId: "root-widget",
+    props: { placeholder: "Type", command: "demo.input" }
+  });
 
   const widgetRoot = createDomRoot(widgetRenderTarget, { document });
   widgetRoot.render(renderWindow(widgetState, "win-1", { registry }));
 
   const runButton = widgetRenderTarget.querySelector("[data-widget-id='btn-run']");
   const blockedButton = widgetRenderTarget.querySelector("[data-widget-id='btn-blocked']");
+  const input = widgetRenderTarget.querySelector("[data-widget-id='input-text']");
   const commandDomOk =
     runButton &&
     blockedButton &&
+    input &&
     runButton.getAttribute("data-command-id") === "demo.run" &&
     blockedButton.getAttribute("data-command-id") === "demo.blocked" &&
     blockedButton.disabled === true &&
-    blockedButton.getAttribute("data-disabled-reason") === "Blocked";
+    blockedButton.getAttribute("data-disabled-reason") === "Blocked" &&
+    input.getAttribute("data-command-id") === "demo.input";
 
   if (runButton) {
     runButton.click();
   }
+  if (input) {
+    input.value = "hello";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }
   const commandInvokeOk = commandCalls === 1;
+  const commandInputOk = inputValue === "hello";
 
   const canvas = document.createElement("canvas");
   canvas.width = 10;
@@ -165,6 +186,7 @@ async function run() {
     domReuseOk,
     commandDomOk,
     commandInvokeOk,
+    commandInputOk,
     canvasOk
   };
 
