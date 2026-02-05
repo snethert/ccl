@@ -126,7 +126,7 @@ The chunk store must support:
 - get_chunk(id) -> bytes (or a range of bytes)
 - delete_chunk(id)
 
-### VFS Operations (ASDF/Quicklisp minimum)
+### VFS Operations (minimum)
 
 - open(path, mode, options) -> stream handle
   - modes: read, write, read-write, create, truncate, append
@@ -157,6 +157,128 @@ Error behavior:
 - Missing capability: CAPABILITY-UNAVAILABLE
 - Unsupported feature: -ENOSYS
 
+## Kernel Request ABI Mapping (Minimum)
+
+This section defines the payload and response layouts for the minimal
+persistence operations. Opcode values are assigned in
+doc/wasm/kernel-opcode-registry.md; names are listed here for clarity.
+
+All integers are little-endian. Strings are UTF-8 bytes, not NUL-terminated.
+
+### Common Path Payload (single path)
+
+```
+offset  size  field
+0x00    u32   flags        (reserved, must be 0)
+0x04    u32   path_ptr     (guest pointer)
+0x08    u32   path_len     (bytes)
+0x0c    u32   reserved     (0)
+```
+
+### Common Path Payload (two paths)
+
+```
+offset  size  field
+0x00    u32   flags        (reserved, must be 0)
+0x04    u32   src_ptr      (guest pointer)
+0x08    u32   src_len      (bytes)
+0x0c    u32   dst_ptr      (guest pointer)
+0x10    u32   dst_len      (bytes)
+0x14    u32   reserved     (0)
+```
+
+### KERNEL_OP_FS_PROBE
+
+Payload: common path payload (single path).
+
+Response payload (24 bytes):
+
+```
+offset  size  field
+0x00    u32   kind         (0=file, 1=dir)
+0x04    u32   flags        (bit0=readonly, others 0)
+0x08    u64   size_bytes   (0 for dir)
+0x10    u64   mtime_ms     (unix ms)
+```
+
+Result: 0 on success; -ENOENT if missing.
+
+### KERNEL_OP_FS_TRUENAME
+
+Payload: common path payload (single path).
+
+Response payload: normalized path bytes.
+
+Result: 0 on success; -ENOENT if missing.
+
+### KERNEL_OP_FS_DIRECTORY
+
+Payload: common path payload (single path).
+
+Response payload: packed entry list.
+
+```
+offset  size  field
+0x00    u32   count
+0x04    ...   entries
+
+entry:
+0x00    u32   kind         (0=file, 1=dir)
+0x04    u32   path_len
+0x08    u8[]  path_bytes   (length = path_len)
+```
+
+Entries are packed with no padding; the next entry begins immediately after
+its path bytes. Returned paths are normalized and do not include trailing
+slashes.
+
+Result: 0 on success; -ENOENT if directory missing.
+
+### KERNEL_OP_FS_FILE_WRITE_DATE
+
+Payload: common path payload (single path).
+
+Response payload (8 bytes):
+
+```
+offset  size  field
+0x00    u64   mtime_ms
+```
+
+Result: 0 on success; -ENOENT if missing.
+
+### KERNEL_OP_FS_RENAME
+
+Payload: common path payload (two paths).
+
+Result: 0 on success; -ENOENT if source missing; -EACCES for read-only
+targets; -EXDEV if mounts differ.
+
+### KERNEL_OP_FS_DELETE
+
+Payload: common path payload (single path).
+
+Result: 0 on success; -ENOENT if missing; -EISDIR if path is a directory.
+
+### KERNEL_OP_FS_ENSURE_DIRS
+
+Payload: common path payload (single path).
+
+Result: 0 on success; -EACCES for read-only mounts.
+
+### KERNEL_OP_FS_DELETE_EMPTY_DIR
+
+Payload: common path payload (single path).
+
+Result: 0 on success; -ENOENT if missing; -ENOTEMPTY if non-empty.
+
+### KERNEL_OP_FS_DELETE_TREE
+
+Payload: common path payload (single path), with flags bit0 set to 1 to
+acknowledge recursive deletion. If bit0 is 0, return -EINVAL.
+
+Result: 0 on success; -ENOENT if missing.
+
 ## Stream Integration
 
 - File streams are implemented as stream endpoints backed by the chunk store.
@@ -164,6 +286,29 @@ Error behavior:
 - STREAM_READ and STREAM_WRITE operate on the current file position in the
   stream endpoint.
 - FILE-POSITION is implemented in Lisp using stream operations and metadata.
+
+### STREAM_OPEN FILE kind (proposed)
+
+This spec requires a file-backed stream kind for STREAM_OPEN.
+
+Arg payload (passed via STREAM_OPEN arg_ptr/arg_len):
+
+```
+offset  size  field
+0x00    u32   mode_flags
+0x04    u32   path_ptr
+0x08    u32   path_len
+0x0c    u32   reserved
+```
+
+mode_flags:
+- 0x1 READ
+- 0x2 WRITE
+- 0x4 CREATE
+- 0x8 TRUNCATE
+- 0x10 APPEND
+
+STREAM_OPEN returns a stream SID on success or a negative errno on failure.
 
 ## Overlay and Mount Semantics
 
@@ -211,7 +356,7 @@ Error behavior:
 - On upgrade, migration must preserve file data and metadata.
 - The service must reject incompatible schema versions with a clear error.
 
-## Minimal ASDF and Quicklisp Compatibility Notes
+## Minimal ASDF Compatibility Notes
 
 - DIRECTORY must support prefix listing and wildcard filtering at the Lisp
   layer without loading file contents.
