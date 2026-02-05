@@ -121,6 +121,9 @@ To run them all in one invocation:
 node doc/wasm/js/all-smoke.mjs
 ```
 
+These smoke tests are sandbox-safe. External tests (LMDB and IndexedDB) are
+documented in `doc/testing.md`.
+
 **Standing rule:** Every smoke test must be standalone and must be added to
 `doc/wasm/js/all-smoke.mjs`. When a new smoke test is created, run:
 

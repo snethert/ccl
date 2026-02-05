@@ -87,6 +87,9 @@ Run all JS smoke tests:
 node doc/wasm/js/all-smoke.mjs
 ```
 
+These smoke tests are sandbox-safe. External tests (LMDB and IndexedDB) are
+listed in `doc/testing.md`.
+
 ## Automation Script
 
 There is a helper script that sets the toolchain env and runs the build:

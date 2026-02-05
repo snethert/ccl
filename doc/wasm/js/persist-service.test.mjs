@@ -4,6 +4,11 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+// External-test policy:
+// - LMDB integration is gated by CCL_ENABLE_LMDB_TESTS=1.
+// - IndexedDB tests run in the browser via doc/wasm/js/idb-smoke.html.
+// See doc/testing.md for details.
+
 import {
   createPersistenceService,
   createInMemoryPersistenceStore,
