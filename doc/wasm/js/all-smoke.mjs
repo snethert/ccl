@@ -22,6 +22,7 @@ const tests = [
   "./fixnum-ops-smoke.mjs",
   "./fixnum-overflow-smoke.mjs",
   "./compiler-smoke.mjs",
+  "./closure-unwind-mv-smoke.mjs",
   "./mv-helpers-smoke.mjs",
   "./mvcall-smoke.mjs"
 ];

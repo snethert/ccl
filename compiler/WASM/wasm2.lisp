@@ -19,6 +19,7 @@
 (defvar *wasm2-record-symbols* nil)
 (defvar %wasm-compiled-modules% nil)
 (defvar *wasm2-spillable-locals* nil)
+(defvar *wasm2-spilling-p* nil)
 
 (defconstant +wasm2-closure-cells-base+ 3)
 
@@ -29,11 +30,13 @@
                   *wasm2-ir* *wasm2-locals* *wasm2-local-count*
                   *wasm2-temp-local* *wasm2-label-counter*
                   *wasm2-spillable-locals*
+                  *wasm2-spilling-p*
                   *wasm2-block-stack* *wasm2-tagbody-stack*
                   *wasm2-tagbody-global-map*
                   *wasm2-next-entry-index* *wasm2-emit-local-count*
                   *wasm2-emit-spillable-locals*
                   *wasm2-pending-throw-label*
+                  *wasm2-use-arg-regs*
                   %wasm-compiled-modules%))
 (unless (or (and (boundp '*wasm2-skip-next-nx-defops*)
                  *wasm2-skip-next-nx-defops*)
@@ -387,24 +390,30 @@
         (eq op (%nx1-operator simple-function)))))
 
 (defun wasm2-test-arg0-p (testform)
-  (let* ((var (nx2-lexical-reference-p testform))
-         (arg0 (wasm2-arg0-name *wasm2-cur-afunc*)))
-    (and var arg0 (eq (var-name var) arg0) (not (wasm2-var-closed-p var)))))
+  (when *wasm2-use-arg-regs*
+    (let* ((var (nx2-lexical-reference-p testform))
+           (arg0 (wasm2-arg0-name *wasm2-cur-afunc*)))
+      (and var arg0 (eq (var-name var) arg0) (not (wasm2-var-closed-p var))))))
 
 (defun wasm2-test-arg1-p (testform)
-  (let* ((var (nx2-lexical-reference-p testform))
-         (arg1 (wasm2-arg1-name *wasm2-cur-afunc*)))
-    (and var arg1 (eq (var-name var) arg1) (not (wasm2-var-closed-p var)))))
+  (when *wasm2-use-arg-regs*
+    (let* ((var (nx2-lexical-reference-p testform))
+           (arg1 (wasm2-arg1-name *wasm2-cur-afunc*)))
+      (and var arg1 (eq (var-name var) arg1) (not (wasm2-var-closed-p var))))))
+
+(defvar *wasm2-use-arg-regs* nil)
 
 (defun wasm2-arg0-form-p (form)
-  (let* ((var (nx2-lexical-reference-p form))
-         (arg0 (wasm2-arg0-name *wasm2-cur-afunc*)))
-    (and var arg0 (eq (var-name var) arg0) (not (wasm2-var-closed-p var)))))
+  (when *wasm2-use-arg-regs*
+    (let* ((var (nx2-lexical-reference-p form))
+           (arg0 (wasm2-arg0-name *wasm2-cur-afunc*)))
+      (and var arg0 (eq (var-name var) arg0) (not (wasm2-var-closed-p var))))))
 
 (defun wasm2-arg1-form-p (form)
-  (let* ((var (nx2-lexical-reference-p form))
-         (arg1 (wasm2-arg1-name *wasm2-cur-afunc*)))
-    (and var arg1 (eq (var-name var) arg1) (not (wasm2-var-closed-p var)))))
+  (when *wasm2-use-arg-regs*
+    (let* ((var (nx2-lexical-reference-p form))
+           (arg1 (wasm2-arg1-name *wasm2-cur-afunc*)))
+      (and var arg1 (eq (var-name var) arg1) (not (wasm2-var-closed-p var))))))
 
 (defwasm2 wasm2-if if (seg vreg xfer testform true false)
   (let* ((test-val (nx2-constant-form-value (acode-unwrapped-form-value testform))))
@@ -444,7 +453,7 @@
       (progn
     (wasm2-multiple-value-body seg valform)
     (wasm2-emit :drop)))
-    (wasm2-emit-call-subprim throw-fixnum)
+    (wasm2-emit-call-subprim-no-spill throw-fixnum)
     (wasm2-emit :pending-throw-branch)
     (wasm2-emit :return))
   nil)
@@ -458,13 +467,13 @@
                          (subprim-name->offset (if mv-pass '.SPnthrowvalues '.SPnthrow1value)))))
     (wasm2-form seg nil nil tag)
     (wasm2-emit :set-arg0)
-    (wasm2-emit-call-subprim mkcatch-fixnum)
+    (wasm2-emit-call-subprim-no-spill mkcatch-fixnum)
     (if mv-pass
       (wasm2-multiple-value-body seg valform)
       (wasm2-form seg nil nil valform))
     (wasm2-emit :set-arg0)
     (wasm2-emit :set-imm0 (wasm2-box-fixnum 1))
-    (wasm2-emit-call-subprim nthrow-fixnum)
+    (wasm2-emit-call-subprim-no-spill nthrow-fixnum)
     (wasm2-emit :clear-pending-throw)
     (if (wasm2-returning-p xfer)
       (wasm2-emit :return)
@@ -482,12 +491,13 @@
                              (lambda ()
                                (let ((*wasm2-pending-throw-label* cleanup-label))
                                  (wasm2-form seg nil $backend-mvpass protected-form)
-                                 (wasm2-emit-call-subprim save-fixnum))))))
+                                 (wasm2-emit-call-subprim-no-spill save-fixnum)
+                                 (wasm2-emit :drop))))))
         (wasm2-emit :block cleanup-label protected-ir)
         (wasm2-form seg nil nil cleanup-form)
         (wasm2-emit :drop)
         (wasm2-emit :pending-throw-return)
-        (wasm2-emit-call-subprim recover-fixnum)
+        (wasm2-emit-call-subprim-no-spill recover-fixnum)
         (if (wasm2-returning-p xfer)
           (wasm2-emit :return)
           (wasm2-emit :arg0)))
@@ -809,11 +819,11 @@
          (wasm2-emit :arg0)))
       (t
        (wasm2-multiple-value-body seg (car args))
-       (wasm2-emit-call-subprim save-fixnum)
+       (wasm2-emit-call-subprim-no-spill save-fixnum)
        (dolist (form (cdr args))
          (wasm2-multiple-value-body seg form)
-         (wasm2-emit-call-subprim add-fixnum))
-       (wasm2-emit-call-subprim recover-fixnum)
+         (wasm2-emit-call-subprim-no-spill add-fixnum))
+       (wasm2-emit-call-subprim-no-spill recover-fixnum)
        (wasm2-emit :local.get fn-temp)
        (wasm2-emit :set-nfn)
        (wasm2-emit-call-subprim funcall-fixnum)
@@ -870,11 +880,14 @@
            (vsize (+ (length inherited-vars) +wasm2-closure-cells-base+ 2))
            (subtag (wasm2-box-fixnum (nx-lookup-target-uvector-subtag :function)))
            (count (wasm2-box-fixnum vsize))
+           (entry-index (getf (afunc-lfun-info afunc) 'wasm-entry-index))
+           (entry-fixnum (if entry-index
+                           (wasm2-box-fixnum entry-index)
+                           (uvref lfun 0)))
+           (code-fixnum entry-fixnum)
            (misc-alloc (wasm2-subprim-fixnum '.SPmisc-alloc))
            (misc-set (wasm2-subprim-fixnum '.SPmisc-set))
-           (misc-ref (wasm2-subprim-fixnum '.SPmisc-ref))
-           (vec-temp (wasm2-allocate-temp))
-           (val-temp (wasm2-allocate-temp)))
+           (vec-temp (wasm2-allocate-temp)))
       (wasm2-emit :const count)
       (wasm2-emit :set-arg1)
       (wasm2-emit :const subtag)
@@ -884,73 +897,59 @@
       (wasm2-emit :local.set vec-temp)
 
       ;; slot 0: entrypoint
-      (wasm2-emit-const lfun)
-      (wasm2-emit :const (wasm2-box-fixnum 0))
-      (wasm2-emit :set-arg0)
-      (wasm2-emit :set-arg1)
-      (wasm2-emit-call-subprim misc-ref)
-      (wasm2-emit :arg0)
-      (wasm2-emit :local.set val-temp)
       (wasm2-emit :local.get vec-temp)
       (wasm2-emit :const (wasm2-box-fixnum 0))
-      (wasm2-emit :local.get val-temp)
-      (wasm2-emit :set-arg0)
-      (wasm2-emit :set-arg1)
+      (wasm2-emit :const entry-fixnum)
       (wasm2-emit :set-arg2)
+      (wasm2-emit :set-arg1)
+      (wasm2-emit :set-arg0)
       (wasm2-emit-call-subprim misc-set)
 
       ;; slot 1: codevector
-      (wasm2-emit-const lfun)
-      (wasm2-emit :const (wasm2-box-fixnum 1))
-      (wasm2-emit :set-arg0)
-      (wasm2-emit :set-arg1)
-      (wasm2-emit-call-subprim misc-ref)
-      (wasm2-emit :arg0)
-      (wasm2-emit :local.set val-temp)
       (wasm2-emit :local.get vec-temp)
       (wasm2-emit :const (wasm2-box-fixnum 1))
-      (wasm2-emit :local.get val-temp)
-      (wasm2-emit :set-arg0)
-      (wasm2-emit :set-arg1)
+      (wasm2-emit :const code-fixnum)
       (wasm2-emit :set-arg2)
+      (wasm2-emit :set-arg1)
+      (wasm2-emit :set-arg0)
       (wasm2-emit-call-subprim misc-set)
 
       ;; slot 2: lfun
       (wasm2-emit :local.get vec-temp)
       (wasm2-emit :const (wasm2-box-fixnum 2))
-      (wasm2-emit-const lfun)
-      (wasm2-emit :set-arg0)
-      (wasm2-emit :set-arg1)
+      (wasm2-emit :const (target-nil-value))
       (wasm2-emit :set-arg2)
+      (wasm2-emit :set-arg1)
+      (wasm2-emit :set-arg0)
       (wasm2-emit-call-subprim misc-set)
 
       ;; slots 3..: captured cells
       (loop for var in inherited-vars
             for idx from 0
-            do (wasm2-emit :local.get vec-temp)
-               (wasm2-emit :const (wasm2-box-fixnum (+ +wasm2-closure-cells-base+ idx)))
-               (wasm2-emit-closed-var-cell var)
-               (wasm2-emit :set-arg0)
-               (wasm2-emit :set-arg1)
-               (wasm2-emit :set-arg2)
-               (wasm2-emit-call-subprim misc-set))
+               do (wasm2-emit :local.get vec-temp)
+                  (wasm2-emit :const (wasm2-box-fixnum (+ +wasm2-closure-cells-base+ idx)))
+                  (wasm2-emit-closed-var-cell var)
+                  (wasm2-emit :set-arg2)
+                  (wasm2-emit :set-arg1)
+                  (wasm2-emit :set-arg0)
+                  (wasm2-emit-call-subprim misc-set))
 
       ;; name slot
       (wasm2-emit :local.get vec-temp)
       (wasm2-emit :const (wasm2-box-fixnum (+ +wasm2-closure-cells-base+ (length inherited-vars))))
       (wasm2-emit :const (target-nil-value))
-      (wasm2-emit :set-arg0)
-      (wasm2-emit :set-arg1)
       (wasm2-emit :set-arg2)
+      (wasm2-emit :set-arg1)
+      (wasm2-emit :set-arg0)
       (wasm2-emit-call-subprim misc-set)
 
       ;; lfun-bits slot (trampoline)
       (wasm2-emit :local.get vec-temp)
       (wasm2-emit :const (wasm2-box-fixnum (+ +wasm2-closure-cells-base+ (length inherited-vars) 1)))
       (wasm2-emit :const (wasm2-box-fixnum (ash 1 $lfbits-trampoline-bit)))
-      (wasm2-emit :set-arg0)
-      (wasm2-emit :set-arg1)
       (wasm2-emit :set-arg2)
+      (wasm2-emit :set-arg1)
+      (wasm2-emit :set-arg0)
       (wasm2-emit-call-subprim misc-set)
 
       (wasm2-emit :local.get vec-temp)))
@@ -1048,7 +1047,11 @@
     (ecase argc
       (0 (wasm2-emit (if mvpass :call0-mv :call0) tmp))
       (1 (wasm2-emit (if mvpass :call1-mv :call1) tmp))
-      (2 (wasm2-emit (if mvpass :call2-mv :call2) tmp)))))
+      (2 (wasm2-emit (if mvpass :call2-mv :call2) tmp)))
+    (when (wasm2-returning-p xfer)
+      ;; Consume the wasm stack result; arg regs already hold the values.
+      (wasm2-emit :drop)
+      (wasm2-emit :return))))
 
 (defwasm2 wasm2-call call (seg vreg xfer fn arglist &optional spread-p)
   (declare (ignore vreg))
@@ -1215,35 +1218,43 @@
   (let* ((slot (wasm2-closed-var-slot var))
          (misc-ref (wasm2-subprim-fixnum '.SPmisc-ref)))
     (if slot
-      (progn
-        (wasm2-emit :get-nfn)
-        (wasm2-emit :const (wasm2-box-fixnum slot))
-        (wasm2-emit :set-arg0)
-        (wasm2-emit :set-arg1)
-        (wasm2-emit-call-subprim misc-ref)
-        (wasm2-emit :arg0))
-      (let* ((idx (wasm2-ensure-local var)))
+      (wasm2-with-spilled-locals
+        (lambda ()
+          (wasm2-emit :get-nfn)
+          (wasm2-emit :const (wasm2-box-fixnum slot))
+          (wasm2-emit :set-arg1)
+          (wasm2-emit :set-arg0)
+          (wasm2-emit-call-subprim misc-ref)
+          (wasm2-emit :arg0)))
+      (let* ((idx (wasm2-ensure-local (nx-root-var var))))
         (wasm2-emit :local.get idx)))))
 
 (defun wasm2-emit-closed-var-value (var)
   (let* ((misc-ref (wasm2-subprim-fixnum '.SPmisc-ref)))
-    (wasm2-emit-closed-var-cell var)
-    (wasm2-emit :const (wasm2-box-fixnum 0))
-    (wasm2-emit :set-arg0)
-    (wasm2-emit :set-arg1)
-    (wasm2-emit-call-subprim misc-ref)
-    (wasm2-emit :arg0)))
+    (wasm2-with-spilled-locals
+      (lambda ()
+        (wasm2-emit-closed-var-cell var)
+        (wasm2-emit :const (wasm2-box-fixnum 0))
+        (wasm2-emit :set-arg1)
+        (wasm2-emit :set-arg0)
+        (wasm2-emit-call-subprim misc-ref)
+        (wasm2-emit :arg0)))))
 
 (defun wasm2-emit-closed-var-set (seg var value-form)
-  (let* ((misc-set (wasm2-subprim-fixnum '.SPmisc-set)))
-    (wasm2-emit-closed-var-cell var)
-    (wasm2-emit :const (wasm2-box-fixnum 0))
+  (let* ((misc-set (wasm2-subprim-fixnum '.SPmisc-set))
+         (val-temp (wasm2-allocate-temp)))
     (wasm2-form seg nil nil value-form)
-    (wasm2-emit :set-arg0)
-    (wasm2-emit :set-arg1)
-    (wasm2-emit :set-arg2)
-    (wasm2-emit-call-subprim misc-set)
-    (wasm2-emit :arg0)))
+    (wasm2-emit :local.set val-temp)
+    (wasm2-with-spilled-locals
+      (lambda ()
+        (wasm2-emit-closed-var-cell var)
+        (wasm2-emit :const (wasm2-box-fixnum 0))
+        (wasm2-emit :local.get val-temp)
+        (wasm2-emit :set-arg2)
+        (wasm2-emit :set-arg1)
+        (wasm2-emit :set-arg0)
+        (wasm2-emit-call-subprim misc-set)
+        (wasm2-emit :arg0)))))
 
 (defun wasm2-emit-make-closed-var-cell (seg value-form)
   (let* ((val-temp (wasm2-allocate-temp))
@@ -1264,9 +1275,9 @@
     (wasm2-emit :local.get vec-temp)
     (wasm2-emit :const (wasm2-box-fixnum 0))
     (wasm2-emit :local.get val-temp)
-    (wasm2-emit :set-arg0)
-    (wasm2-emit :set-arg1)
     (wasm2-emit :set-arg2)
+    (wasm2-emit :set-arg1)
+    (wasm2-emit :set-arg0)
     (wasm2-emit-call-subprim misc-set)
     (wasm2-emit :local.get vec-temp)))
 
@@ -1288,18 +1299,20 @@
     (wasm2-emit :local.get vec-temp)
     (wasm2-emit :const (wasm2-box-fixnum 0))
     (wasm2-emit :local.get val-temp)
-    (wasm2-emit :set-arg0)
-    (wasm2-emit :set-arg1)
     (wasm2-emit :set-arg2)
+    (wasm2-emit :set-arg1)
+    (wasm2-emit :set-arg0)
     (wasm2-emit-call-subprim misc-set)
     (wasm2-emit :local.get vec-temp)))
 
 (defun wasm2-arg0-var-p (var)
-  (and (wasm2-arg0-var-name-p var)
+  (and *wasm2-use-arg-regs*
+       (wasm2-arg0-var-name-p var)
        (not (wasm2-var-closed-p var))))
 
 (defun wasm2-arg1-var-p (var)
-  (and (wasm2-arg1-var-name-p var)
+  (and *wasm2-use-arg-regs*
+       (wasm2-arg1-var-name-p var)
        (not (wasm2-var-closed-p var))))
 
 (defun wasm2-arg0-var-name-p (var)
@@ -1317,6 +1330,20 @@
   (let ((*wasm2-ir* nil))
     (funcall thunk)
     (nreverse *wasm2-ir*)))
+
+(defun wasm2-arg-prologue-ir ()
+  (unless *wasm2-use-arg-regs*
+    (wasm2-with-ir
+      (lambda ()
+        (dolist (var (afunc-all-vars *wasm2-cur-afunc*))
+          (when (and (not (wasm2-var-closed-p var))
+                     (or (wasm2-arg0-var-name-p var)
+                         (wasm2-arg1-var-name-p var)))
+            (let* ((idx (wasm2-ensure-local var)))
+              (if (wasm2-arg0-var-name-p var)
+                (wasm2-emit :arg0)
+                (wasm2-emit :arg1))
+              (wasm2-emit :local.set idx))))))))
 
 (defun wasm2-closed-arg-prologue-ir ()
   (wasm2-with-ir
@@ -1345,10 +1372,22 @@
   (wasm2-emit :const value)
   nil)
 
+(defun wasm2-with-spilled-locals (thunk)
+  (if *wasm2-spilling-p*
+    (funcall thunk)
+    (let ((*wasm2-spilling-p* t))
+      (wasm2-emit :spill-locals)
+      (funcall thunk)
+      (wasm2-emit :restore-locals))))
+
 (defun wasm2-emit-call-subprim (fixnum)
-  (wasm2-emit :spill-locals)
-  (wasm2-emit :call-subprim fixnum)
-  (wasm2-emit :restore-locals))
+  (wasm2-with-spilled-locals
+    (lambda ()
+      (wasm2-emit :call-subprim fixnum))))
+
+;; For VSP-sensitive subprims that do not GC: avoid spilling via VSP.
+(defun wasm2-emit-call-subprim-no-spill (fixnum)
+  (wasm2-emit :call-subprim fixnum))
 
 (defun wasm2-emit-fixnum-add ()
   (wasm2-emit :fixnum-add)
@@ -2926,10 +2965,9 @@
 
 (defun wasm2-compile (afunc &optional lambda-form *wasm2-record-symbols*)
   (dolist (a (afunc-inner-functions afunc))
-    (unless (afunc-lfun a)
-      (wasm2-compile a
-                     (if lambda-form (afunc-lambdaform a))
-                     *wasm2-record-symbols*)))
+    (wasm2-compile a
+                   (if lambda-form (afunc-lambdaform a))
+                   *wasm2-record-symbols*))
   (let* ((*wasm2-cur-afunc* afunc)
          (*wasm2-vstack* 0)
          (*wasm2-cstack* 0)
@@ -2958,9 +2996,12 @@
     (wasm2-reset-locals)
     (backend-apply-acode (afunc-acode afunc) nil nil $backend-return)
     (let* ((ir (nreverse *wasm2-ir*))
-           (prologue-ir (wasm2-closed-arg-prologue-ir)))
-      (when prologue-ir
-        (setf ir (append prologue-ir ir)))
+           (closed-prologue-ir (wasm2-closed-arg-prologue-ir))
+           (arg-prologue-ir (wasm2-arg-prologue-ir)))
+      (when closed-prologue-ir
+        (setf ir (append closed-prologue-ir ir)))
+      (when arg-prologue-ir
+        (setf ir (append arg-prologue-ir ir)))
       (unless (wasm2-ir-ends-with-return-p ir)
         (setf ir (append ir
                          (list (cons :set-arg-z nil)
@@ -3215,6 +3256,7 @@
               (list* 'wasm-module-bytes module-bytes
                      'wasm-module-export export-name
                      'wasm-module-version 1
+                     'wasm-entry-index entry-index
                      (afunc-lfun-info afunc)))
         (setf (afunc-argsword afunc) bits)
         (setf (afunc-lfun afunc)

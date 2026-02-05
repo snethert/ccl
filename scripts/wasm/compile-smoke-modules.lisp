@@ -73,7 +73,20 @@
            (if x (go end))
            (setq y 2)
           end)
-         y)))))
+         y)))
+    (ccl::wasm-smoke-closure-unwind-mv
+     (lambda ()
+       (let* ((x 10)
+              (f (lambda (y)
+                   (declare (fixnum y))
+                   (%i+ x y))))
+         (declare (fixnum x))
+         (multiple-value-bind (a b c d e fval)
+             (unwind-protect
+                 (values 1 2 3 4 5 6)
+               (setq x (%i+ x 1)))
+           (declare (ignore b c d e fval))
+           (funcall f a)))))))
 
 (defun parse-argv (argv)
   (let ((out nil)

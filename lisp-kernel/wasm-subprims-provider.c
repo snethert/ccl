@@ -17,6 +17,9 @@ void wasm_set_cstack_pointer(void *stack_ptr);
 __attribute__((import_module("ccl"), import_name("wasm_box_signed_64")))
 LispObj wasm_box_signed_64(TCR *tcr, int64_t value);
 
+__attribute__((import_module("ccl"), import_name("wasm_misc_alloc")))
+LispObj wasm_misc_alloc(TCR *tcr, unsigned subtag, signed_natural count);
+
 static void
 wasm_subprims_trap(void)
 {
@@ -529,11 +532,140 @@ _SPfuncall(void)
     wasm_subprims_trap();
   }
 
-  wasm_call_entry_index((uint32_t)unbox_fixnum(entry));
+  {
+    uint32_t entry_index = (uint32_t)unbox_fixnum(entry);
+    wasm_call_entry_index(entry_index);
+  }
 
   if (wasm_pending_throw_p(tcr)) {
     return;
   }
+}
+
+__attribute__((used, visibility("default"), export_name("_SPmisc_alloc")))
+void
+_SPmisc_alloc(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    static const char msg[] = "WASM _SPmisc_alloc: null TCR\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    wasm_subprims_trap();
+  }
+
+  LispObj subtag_val = wasm_reg(tcr, arg_z);
+  if (tag_of(subtag_val) != tag_fixnum) {
+    static const char msg[] = "WASM _SPmisc_alloc: subtag not fixnum\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    wasm_subprims_trap();
+  }
+  LispObj count_val = wasm_reg(tcr, arg_y);
+  if (tag_of(count_val) != tag_fixnum) {
+    static const char msg[] = "WASM _SPmisc_alloc: count not fixnum\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    wasm_subprims_trap();
+  }
+
+  signed_natural subtag = unbox_fixnum(subtag_val);
+  signed_natural count = unbox_fixnum(count_val);
+  if ((subtag & fulltagmask) != fulltag_nodeheader) {
+    static const char msg[] = "WASM _SPmisc_alloc: bad subtag\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    wasm_subprims_trap();
+  }
+
+  LispObj obj = wasm_misc_alloc(tcr, (unsigned)subtag, count);
+  if (obj == (LispObj)nil_value) {
+    static const char msg[] = "WASM _SPmisc_alloc: kernel alloc failed\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    wasm_subprims_trap();
+  }
+  wasm_set_reg(tcr, arg_z, obj);
+  wasm_set_reg(tcr, nargs, box_fixnum(1));
+}
+
+__attribute__((used, visibility("default"), export_name("_SPmisc_ref")))
+void
+_SPmisc_ref(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    wasm_subprims_trap();
+  }
+
+  LispObj obj = wasm_reg(tcr, arg_z);
+  signed_natural index = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, arg_y));
+  if (index < 0 || fulltag_of(obj) != fulltag_misc) {
+    wasm_subprims_trap();
+  }
+
+  LispObj header = header_of(obj);
+  unsigned subtag = header_subtag(header);
+  if ((subtag & fulltagmask) != fulltag_nodeheader) {
+    wasm_subprims_trap();
+  }
+
+  signed_natural count = header_element_count(header);
+  if (index >= count) {
+    wasm_subprims_trap();
+  }
+
+  LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
+  LispObj value = data[index];
+  wasm_set_reg(tcr, arg_z, value);
+  wasm_set_reg(tcr, nargs, box_fixnum(1));
+}
+
+__attribute__((used, visibility("default"), export_name("_SPmisc_set")))
+void
+_SPmisc_set(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    static const char msg[] = "WASM _SPmisc_set: null TCR\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    wasm_subprims_trap();
+  }
+
+  LispObj obj = wasm_reg(tcr, arg_z);
+  LispObj index_val = wasm_reg(tcr, arg_y);
+  if (tag_of(index_val) != tag_fixnum) {
+    static const char msg[] = "WASM _SPmisc_set: index not fixnum\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    wasm_subprims_trap();
+  }
+  signed_natural index = unbox_fixnum(index_val);
+  LispObj value = wasm_reg(tcr, arg_x);
+  if (index < 0) {
+    static const char msg[] = "WASM _SPmisc_set: index negative\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    wasm_subprims_trap();
+  }
+  if (fulltag_of(obj) != fulltag_misc) {
+    static const char msg[] = "WASM _SPmisc_set: obj not misc\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    wasm_subprims_trap();
+  }
+
+  LispObj header = header_of(obj);
+  unsigned subtag = header_subtag(header);
+  if ((subtag & fulltagmask) != fulltag_nodeheader) {
+    static const char msg[] = "WASM _SPmisc_set: bad header subtag\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    wasm_subprims_trap();
+  }
+
+  signed_natural count = header_element_count(header);
+  if (index >= count) {
+    static const char msg[] = "WASM _SPmisc_set: index OOB\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    wasm_subprims_trap();
+  }
+
+  LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
+  data[index] = value;
+  wasm_set_reg(tcr, arg_z, value);
+  wasm_set_reg(tcr, nargs, box_fixnum(1));
 }
 
 __attribute__((used, visibility("default"), export_name("_SPmakes32")))
