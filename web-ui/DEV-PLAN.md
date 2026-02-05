@@ -26,13 +26,15 @@ Exit criteria:
 
 ### Phase 2: DOM Backend and Diff/Patch Rendering
 Goals:
-- Backend interface for render, measure, hit-test, invalidate, capture-events.
+- Backend interface for render, `measureText`, `hitTest`, `invalidate`, `captureEvents` (DOM backends may use callback-based invalidation).
 - DOM renderer with stable keys and incremental patching.
-- Basic widgets (buttons, lists, text inputs) with command wiring.
+- Basic widgets (button, label, text input, list) with command wiring.
+- DOM nodes carry stable IDs via data attributes for hit testing and instrumentation.
 
 Exit criteria:
 - DOM snapshots are stable across runs.
 - Diff/patch passes all structural update tests.
+- Backend interface checks pass in the browser harness.
 
 ### Phase 3: Layout and Focus Determinism
 Goals:

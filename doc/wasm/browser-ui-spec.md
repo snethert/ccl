@@ -56,6 +56,7 @@ The following invariants MUST hold at all times:
 - Canvas 2D and WebGL are additional backends for high-frequency and custom rendering.
 - Mixed composition is allowed (DOM chrome + Canvas/WebGL views).
 - Direct DOM access exists only for internal tooling or explicit capability-gated escapes.
+- Backend implementations MAY expose native handles for tests or tooling, but those handles MUST map back to stable widget/presentation IDs before command dispatch.
 
 ### Rendering model
 - UI is described as a declarative Lisp UI tree with stable identity keys.
@@ -149,6 +150,8 @@ Acceptance checks:
 
 ## Toolkit Surface Requirements
 ### Core widgets (minimum viable)
+Bring-up baseline (Phase 2): button, label, text input, list.
+
 - Layout: split panes (H/V), tab groups, scroll containers, docking manager.
 - Controls: buttons, toggles, checkboxes, radio groups.
 - Inputs: single-line and multiline text inputs.
@@ -209,12 +212,16 @@ Acceptance checks:
 - The renderer diffs UI trees and patches the DOM or issues draw commands to Canvas/WebGL.
 - DOM nodes are never the source of truth; they mirror Lisp state.
 
-### Backend interface (minimal)
-- `render(tree)` renders a UI tree to the backend.
-- `measure(text, font)` returns font metrics.
-- `hit-test(x, y)` returns widget/presentation IDs.
-- `invalidate(ids)` marks dirty nodes or regions.
-- `capture-events` routes pointer/keyboard events with stable IDs.
+### Backend interface (minimal, Stage 2 baseline)
+- `render(tree)` renders a UI tree to the backend. Diff/patch MAY be internal.
+- `measureText(text, options)` returns font metrics (width/height/ascent/descent) with deterministic defaults.
+- `hitTest(point, options)` returns a backend handle; the handle MUST be resolvable to stable widget/presentation IDs.
+- `invalidate(callback|ids)` coalesces updates. DOM backends MAY schedule a callback (e.g., rAF); Canvas/WebGL SHOULD support id/region invalidation.
+- `captureEvents(target, handlers, options)` attaches listeners and returns a disposer. Events MUST be resolved to stable IDs before command routing.
+
+### DOM backend pragmatics (Stage 2)
+- DOM nodes SHOULD carry stable IDs via data attributes (e.g., `data-widget-id`, `data-command-id`) to support hit-testing and instrumentation.
+- `hitTest` MAY use `elementFromPoint` as long as mapping to stable IDs is deterministic.
 
 ### Command system
 - Commands include ID, docstring, enablement predicate, and execution function.
