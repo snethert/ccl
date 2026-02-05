@@ -40,3 +40,21 @@ lisp-kernel/darwinx8664/mach_exc_server.c
 lisp-kernel/darwinx8664/probes.h
 lisp-kernel/static-linuxppc/external-functions.h
 
+# node.js
+/node_modules/
+/web-ui/node_modules/
+/npm-debug.log*
+/yarn-debug.log*
+/yarn-error.log*
+/pnpm-debug.log*
+/.pnpm-debug.log*
+
+# Playwright
+/web-ui/playwright-report/
+/web-ui/test-results/
+/web-ui/.cache/ms-playwright/
+
+# env files
+.env
+.env.*
+!.env.example
