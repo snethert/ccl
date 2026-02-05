@@ -12,8 +12,8 @@ separate from the detailed checklists in `porting-status.md`.
 - **Kernel bring‑up:** ✅ core WASM build + ABI surface in place.
 - **JS microkernel MVP:** ✅ kernel_request MVP + runner scaffolding.
 - **Subprims provider:** ✅ Tier‑0 semantics + ABI defined (awaiting codegen use).
-- **Lisp runtime (Level‑1):** ⚠️ capability errors + yield path done; streams/FS policy pending.
-- **Compiler/backend (WASM):** ⚠️ calling convention implemented + smoke test; WASM32 target arch scaffolded; no real codegen yet.
+- **Lisp runtime (Level‑1):** ✅ capability errors + yield path + WASM stream classes + virtual FS policy.
+- **Compiler/backend (WASM):** ⚠️ basic expression lowering (lexicals/let/setq/call/values/mv-bind/nth-value) + fixnum ops + local `block`/`tagbody` control flow + generic module emission; non‑local control flow and closures pending.
 - **Image + real toplevel:** ⚠️ minimal boot image loads + stub toplevel hook returns; no real Lisp toplevel.
 - **Concurrency model:** ⏸ deferred (single‑threaded baseline first).
 
@@ -41,17 +41,18 @@ separate from the detailed checklists in `porting-status.md`.
 
 ### Phase 4 — Lisp runtime integration (Level‑1)
 **Goal:** Usable runtime surface under WASM constraints.
-**Status:** ⚠️
-**Remaining:**
-- WASM‑specific stream classes
-- Virtual filesystem/pathname policy
+**Status:** ✅
+**Delivered:**
+- WASM‑specific stream classes + `open` defaulting to `wasm-stream`
+- Virtual filesystem/pathname policy with capability‑unavailable errors for mutating ops
 
 ### Phase 5 — Compiler/backend (WASM codegen)
 **Goal:** Emit real WASM code compatible with the subprims ABI.
 **Status:** ⚠️
 **Remaining:**
-- WASM codegen + integration with table‑index entrypoints (calling convention smoke test passes)
-- Cooperative unwind checks for `wasm_pending_throw`
+- Non‑local control flow (`catch/throw`, `unwind-protect`) + pending‑throw propagation
+- Full multi‑value coverage beyond 4 values (higher‑arity mv paths, `multiple-value-call`)
+- Spill/restore discipline for closed‑over variables and closures
 
 ### Phase 6 — Image + real toplevel
 **Goal:** Boot a real Lisp image and enter `toplevel-loop`.

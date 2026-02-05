@@ -12,10 +12,15 @@ const tests = [
   "./funcall-smoke.mjs",
   "./const-funcall-smoke.mjs",
   "./const-module-smoke.mjs",
+  "./if-smoke.mjs",
+  "./if-arg-smoke.mjs",
+  "./identity-smoke.mjs",
+  "./identity-y-smoke.mjs",
   "./fixnum-add-smoke.mjs",
   "./fixnum-sub-smoke.mjs",
   "./fixnum-ops-smoke.mjs",
-  "./fixnum-overflow-smoke.mjs"
+  "./fixnum-overflow-smoke.mjs",
+  "./mv-helpers-smoke.mjs"
 ];
 
 for (const test of tests) {

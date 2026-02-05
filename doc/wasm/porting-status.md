@@ -11,6 +11,10 @@
   Table points at kernel-owned functions and stubs.
 - **Subprims readiness flag (host-set):** ✅  
   `wasm_set_subprims_ready` / `wasm_get_subprims_ready` exports.
+- **Compiled module registry hook:** ⚠️  
+  `%wasm-compiled-modules%` nilreg slot added; kernel exports
+  `wasm_get_compiled_module_registry` and compiler records stub module
+  entries in the registry (loader wiring pending).
 - **Subprims provider module (separate build):** ⚠️  
   `lisp-kernel/wasm32/subprims/Makefile` builds `doc/wasm/js/subprims.wasm`.
 - **Tier‑0 subprims (C):** ✅  
@@ -19,7 +23,8 @@
   VSP per WASM calling convention (see `doc/wasm/ABI.md`).
 - **Fixnum helpers (kernel):** ⚠️  
   `wasm_return_fixnum_{add,sub,mul,ash,log*,neg}` helpers exist; arithmetic
-  helpers allocate 1–2 digit bignums on overflow (minimal heap allocator).
+  helpers allocate bignums on overflow via the minimal heap allocator (1–2
+  digits for add/sub/neg/mul; arbitrary digits for large `ash` shifts).
 - **Subprims (kernel + provider):** ✅  
   `_SPfix_overflow` + `_SPmakes32` implemented in both kernel and provider;
   provider imports `wasm_box_signed_64` from the kernel to allocate bignums.
@@ -28,6 +33,11 @@
   frames still trap in the WASM provider.
 - **kernel_request ABI wrappers:** ✅  
   Synchronous + staged helpers in `wasm-host.c`.
+- **Compiled-code helper exports:** ✅  
+  `wasm_get_arg_y`, `wasm_set_arg_{z,y}`, `wasm_set_nargs`, `wasm_get_nfn`,
+  `wasm_funcall{0,1,2}`, `wasm_funcall{0,1,2}_mv`,
+  `wasm_return_values{2,3,4}`, `wasm_get_mv`, `wasm_get_mv_indexed`,
+  `wasm_restore_vsp`.
 - **Streams (stdin/stdout/stderr):** ✅  
   `lisp_read/lisp_write` routed through `kernel_request`.
 - **Named read‑only stream open/stat:** ✅  
@@ -58,10 +68,12 @@
   Implemented; gated by `*capability-unavailable-on-enosys*`.
 - **Yield on EWOULDBLOCK:** ✅  
   `*wasm-yield-on-eagain*` + toplevel catch hook.
-- **Stream classes for WASM:** ⚠️  
-  Uses existing FD stream system; richer stream kinds pending.
-- **Filesystem/pathnames:** ❌  
-  Policy for `:fs/virtual` not finalized.
+- **Stream classes for WASM:** ✅  
+  `wasm-stream` classes layered on `fd-stream`; `open` defaults to
+  `wasm-stream` and standard streams are WASM‑compatible.
+- **Filesystem/pathnames:** ✅  
+  `:fs/virtual` policy enforced; mutating operations signal
+  `capability-unavailable` and `current-directory-name` is `/`.
 
 ## Compiler / backend
 
@@ -78,9 +90,12 @@
 - **WASM backend scaffold (compiler):** ⚠️  
   `compiler/WASM/wasm-backend.lisp` + `lib/wasmenv.lisp` provide a minimal
   backend entry; code emission not implemented.
-- **WASM p2 dispatch stub (compiler):** ⚠️  
-  `compiler/WASM/wasm2.lisp` defines a placeholder `*wasm2-specials*` dispatch
-  table that traps until real codegen exists.
+- **WASM p2 dispatch (compiler):** ⚠️  
+  `compiler/WASM/wasm2.lisp` lowers basic expressions (lexicals, let/setq,
+  call, if, progn, values/mv-bind/nth-value) into a minimal IR and emits
+  generic modules; local control flow (`block`/`return-from`, `tagbody`/`go`)
+  now lowers via structured WASM IR, while `catch`/`unwind-protect` and
+  closures remain pending.
 - **WASM codegen state scaffold (compiler):** ⚠️  
   `compiler/WASM/wasm2.lisp` now initializes backend state (register masks,
   target sizes) but still traps before emission.
@@ -120,8 +135,9 @@
   no target build integration yet.
 - **WASM vinsn templates (compiler):** ⚠️  
   Stub `compiler/WASM/wasm-vinsns.lisp` added; templates not implemented.
-- **WASM codegen & runtime integration:** ❌  
-  Compiler emission + real subprims integration pending.
+- **WASM codegen & runtime integration:** ⚠️  
+  Generic modules emitted for basic forms with call helpers; `block`/`tagbody`
+  now lower in WASM2, while `catch`/`unwind-protect` remain pending.
 - **Funcall calling convention smoke test:** ✅  
   `funcall-smoke.mjs` validates VSP args → `arg_z/arg_y/arg_x` sync and
   single‑value return in `arg_z`.
@@ -133,12 +149,12 @@
   `pending-stdin-smoke.mjs`, `ccl-step-smoke.mjs`, `funcall-smoke.mjs`,
   `const-funcall-smoke.mjs`, `const-module-smoke.mjs`,
   `fixnum-add-smoke.mjs`, `fixnum-sub-smoke.mjs`, `fixnum-ops-smoke.mjs`,
-  `fixnum-overflow-smoke.mjs`.
+  `fixnum-overflow-smoke.mjs`, `mv-helpers-smoke.mjs`.
 
 ## Major Gaps / Next Blockers
 
 - Real Lisp toplevel entry (`start_lisp`) and event/step integration.
 - Image format and loader policy (root image, cloning, module loading).
 - Capability negotiation protocol beyond `CAPS` bitfield.
-- Pathname/FS policy for `:fs/virtual` and persistent storage.
+- Persistent storage policy beyond read‑only named streams.
 - Shared‑heap threading protocol (if pursued).

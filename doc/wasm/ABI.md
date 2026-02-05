@@ -141,13 +141,44 @@ assumes `wasm_get_current_tcr()` is the single authoritative access path.
   on `arg_z` and return a single fixnum in `arg_z`.
 - Minimal fixnum negation code can import `wasm_return_fixnum_neg` to negate
   `arg_z` and return a single fixnum in `arg_z`.
+- Compiled WASM modules can also import lightweight register helpers:
+  - `wasm_get_arg_z` / `wasm_get_arg_y` (read incoming arguments)
+  - `wasm_set_arg_z` / `wasm_set_arg_y` (update argument registers)
+  - `wasm_set_nargs` (set the fixnum argument count)
+  - `wasm_get_nfn` (read current function object)
+- Multi‑value helpers are available for bring‑up:
+  - `wasm_return_values2`, `wasm_return_values3`, `wasm_return_values4`
+    set `arg_z`, push values onto the VSP, and set `nargs` (returning the
+    primary value).
+  - `wasm_get_mv` returns the Nth value (0‑based, raw index) from `arg_z`/VSP.
+  - `wasm_get_mv_indexed` accepts a **fixnum** index and returns the Nth value.
+  - `wasm_restore_vsp` pops extra values when `nargs > 1` and resets VSP.
+- Compiled modules can perform Lisp calls via:
+  - `wasm_funcall0`, `wasm_funcall1`, `wasm_funcall2` (function object +
+    0–2 arguments). These helpers set up VSP/nargs and call `_SPfuncall`
+    internally, returning the primary value and discarding extra values.
+  - `wasm_funcall0_mv`, `wasm_funcall1_mv`, `wasm_funcall2_mv` preserve
+    multiple values on the VSP for mv‑pass contexts.
 
-**Overflow note (bring‑up):** the fixnum arithmetic helpers now allocate
-**1–2 digit bignums on overflow** via a minimal WASM heap allocator; this is
-enough for add/sub/neg and 64‑bit products. `_SPfix_overflow` and `_SPmakes32`
-are implemented in both the kernel and provider; the provider imports the
-kernel’s `wasm_box_signed_64` helper for bignum allocation. Full bignum support
-(arbitrary digits, canonicalization, GC integration) remains pending.
+### Compiled Module Registry (Bring‑Up)
+
+- The nilreg symbol `%wasm-compiled-modules%` is reserved to hold a registry
+  of compiled WASM modules embedded in the image.
+- The kernel exports `wasm_get_compiled_module_registry` to return the current
+  value of that symbol (LispObj). The host can use this to discover modules
+  after `wasm_ccl_load_image`.
+- The registry is a list of **simple vectors**. Each entry vector has 4 slots:
+  1) `module-bytes` (u8 vector), 2) `export-name` (string),
+  3) `entry-index` (fixnum), 4) `module-version` (fixnum).
+
+**Overflow note (bring‑up):** the fixnum arithmetic helpers allocate bignums
+via a minimal WASM heap allocator. Add/sub/neg and 64‑bit products produce
+**1–2 digit bignums**, while large `ash` shifts can produce **arbitrary‑digit
+bignums** (including negative values via two’s‑complement digits). `_SPfix_overflow`
+and `_SPmakes32` are implemented in both the kernel and provider; the provider
+imports the kernel’s `wasm_box_signed_64` helper for bignum allocation. Full
+bignum support (arbitrary digits beyond fixnum‑derived ops, GC integration)
+remains pending.
 
 ### Non‑local Transfer (Tier‑0, cooperative unwind)
 

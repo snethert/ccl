@@ -94,11 +94,22 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_test_entry --export=wasm_test_funcall --export=wasm_test_const_funcall \
 	  --export=wasm_test_entry_funcall --export=wasm_test_entry_funcall2 \
 	  --export=wasm_const_entry --export=wasm_set_const_value --export=wasm_return_constant \
+	  --export=wasm_get_arg_z --export=wasm_get_arg_y \
+	  --export=wasm_set_arg_z --export=wasm_set_arg_y --export=wasm_set_nargs --export=wasm_get_nfn \
+	  --export=wasm_return_arg_z --export=wasm_return_arg_y \
+	  --export=wasm_return_values2 --export=wasm_return_values3 --export=wasm_return_values4 \
+	  --export=wasm_get_mv --export=wasm_get_mv_indexed --export=wasm_restore_vsp \
+	  --export=wasm_funcall0 --export=wasm_funcall1 --export=wasm_funcall2 \
+	  --export=wasm_funcall0_mv --export=wasm_funcall1_mv --export=wasm_funcall2_mv \
+	  --export=wasm_get_lisp_nil \
+	  --export=wasm_pending_throw_p \
 	  --export=wasm_return_fixnum_add --export=wasm_return_fixnum_sub \
 	  --export=wasm_return_fixnum_mul --export=wasm_return_fixnum_ash \
 	  --export=wasm_return_fixnum_logand --export=wasm_return_fixnum_logior \
 	  --export=wasm_return_fixnum_logxor --export=wasm_return_fixnum_lognot \
 	  --export=wasm_return_fixnum_neg \
+	  --export=wasm_test_entry_funcall1_raw \
+	  --export=wasm_get_compiled_module_registry \
 	  --export=wasm_box_signed_64 \
 	  --export=_SPfix_overflow --export=_SPmakes32 \
 	  -o ../../doc/wasm/js/wasmcl.wasm $(KERNELOBJ)
