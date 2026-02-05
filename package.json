@@ -1,0 +1,29 @@
+{
+  "name": "ccl",
+  "version": "1.0.0",
+  "description": "This is the source code for Clozure CL.",
+  "main": "index.js",
+  "directories": {
+    "doc": "doc",
+    "example": "examples",
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "node --test doc/wasm/js/persist-service.test.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/snethert/ccl.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/snethert/ccl/issues"
+  },
+  "homepage": "https://github.com/snethert/ccl#readme",
+  "dependencies": {
+    "lmdb": "^3.5.1"
+  }
+}
