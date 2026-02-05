@@ -154,6 +154,7 @@ Exit criteria:
 - Implemented snapshot serializer and diff helper.
 - Implemented deterministic replay harness with validation.
 - Added baseline fixtures and tests for focus, command enablement, layout, and selection.
+- Added headless browser harness (Playwright-backed) for DOM and canvas checks.
 
 ## Phase 1 Detailed Plan (Core Model and Command System)
 
