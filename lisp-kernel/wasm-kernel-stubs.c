@@ -300,6 +300,100 @@ wasm_alloc_node_vector_initialized(TCR *tcr, unsigned subtag, signed_natural cou
   return obj;
 }
 
+static int
+wasm_ivector_total_bytes(unsigned subtag, signed_natural count, size_t *bytes_out)
+{
+  if (count < 0) {
+    static const char msg[] = "WASM misc_alloc: negative count\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    return 0;
+  }
+
+  size_t element_count = (size_t)count;
+  size_t total = 0;
+
+  if (subtag <= max_32_bit_ivector_subtag) {
+    if (element_count > ((SIZE_MAX - 4u) >> 2)) {
+      static const char msg[] = "WASM misc_alloc: size overflow\n";
+      wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+      return 0;
+    }
+    total = 4u + (element_count << 2);
+  } else if (subtag <= max_8_bit_ivector_subtag) {
+    if (element_count > (SIZE_MAX - 4u)) {
+      static const char msg[] = "WASM misc_alloc: size overflow\n";
+      wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+      return 0;
+    }
+    total = 4u + element_count;
+  } else if (subtag <= max_16_bit_ivector_subtag) {
+    if (element_count > ((SIZE_MAX - 4u) >> 1)) {
+      static const char msg[] = "WASM misc_alloc: size overflow\n";
+      wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+      return 0;
+    }
+    total = 4u + (element_count << 1);
+  } else if (subtag == subtag_complex_double_float_vector) {
+    if (element_count > ((SIZE_MAX - 8u) >> 4)) {
+      static const char msg[] = "WASM misc_alloc: size overflow\n";
+      wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+      return 0;
+    }
+    total = 8u + (element_count << 4);
+  } else if (subtag == subtag_bit_vector) {
+    if (element_count > (SIZE_MAX - 7u)) {
+      static const char msg[] = "WASM misc_alloc: size overflow\n";
+      wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+      return 0;
+    }
+    total = 4u + ((element_count + 7u) >> 3);
+  } else {
+    if (element_count > ((SIZE_MAX - 8u) >> 3)) {
+      static const char msg[] = "WASM misc_alloc: size overflow\n";
+      wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+      return 0;
+    }
+    total = 8u + (element_count << 3);
+  }
+
+  *bytes_out = wasm_align_dnode(total);
+  return 1;
+}
+
+static LispObj
+wasm_alloc_ivector_uninitialized(TCR *tcr, unsigned subtag, signed_natural count)
+{
+  size_t bytes = 0;
+  if (!wasm_ivector_total_bytes(subtag, count, &bytes)) {
+    return lisp_nil;
+  }
+
+  if (!wasm_reserve_heap_segment(tcr, bytes)) {
+    static const char msg[] = "WASM misc_alloc: reserve failed\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    return lisp_nil;
+  }
+
+  BytePtr alloc_ptr = (BytePtr)tcr->save_allocptr;
+  BytePtr alloc_base = (BytePtr)tcr->save_allocbase;
+  BytePtr newptr = alloc_ptr - (signed_natural)bytes;
+  if (newptr < alloc_base) {
+    static const char msg[] = "WASM misc_alloc: allocptr underflow\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    return lisp_nil;
+  }
+
+  tcr->save_allocptr = (void *)newptr;
+  LispObj obj = (LispObj)(newptr + fulltag_misc);
+  header_of(obj) = make_header(subtag, count);
+
+  if (bytes > misc_data_offset) {
+    memset((BytePtr)obj + misc_data_offset, 0, bytes - misc_data_offset);
+  }
+
+  return obj;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_misc_alloc")))
 LispObj
 wasm_misc_alloc(TCR *tcr, unsigned subtag, signed_natural count)
@@ -309,13 +403,18 @@ wasm_misc_alloc(TCR *tcr, unsigned subtag, signed_natural count)
     wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
     return lisp_nil;
   }
-  if ((subtag & fulltagmask) != fulltag_nodeheader) {
-    static const char msg[] = "WASM misc_alloc: bad subtag\n";
-    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
-    return lisp_nil;
+
+  unsigned tag = subtag & fulltagmask;
+  if (tag == fulltag_nodeheader) {
+    return wasm_alloc_node_vector_initialized(tcr, subtag, count);
+  }
+  if (tag == fulltag_immheader) {
+    return wasm_alloc_ivector_uninitialized(tcr, subtag, count);
   }
 
-  return wasm_alloc_node_vector_initialized(tcr, subtag, count);
+  static const char msg[] = "WASM misc_alloc: bad subtag\n";
+  wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+  return lisp_nil;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_box_signed_64")))

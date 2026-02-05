@@ -568,7 +568,8 @@ _SPmisc_alloc(void)
 
   signed_natural subtag = unbox_fixnum(subtag_val);
   signed_natural count = unbox_fixnum(count_val);
-  if ((subtag & fulltagmask) != fulltag_nodeheader) {
+  unsigned tag = subtag & fulltagmask;
+  if (tag != fulltag_nodeheader && tag != fulltag_immheader) {
     static const char msg[] = "WASM _SPmisc_alloc: bad subtag\n";
     wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
     wasm_subprims_trap();

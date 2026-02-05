@@ -34,6 +34,26 @@ wasm-ld-18 --version
 wasm-objdump --version
 ```
 
+## Prerequisites (macOS + Homebrew)
+
+Install a wasm-capable toolchain. Apple clang can parse wasm targets but
+cannot emit wasm objects; you need Homebrew LLVM + LLD:
+
+```bash
+brew install llvm lld wasi-libc
+```
+
+Use the helper to export the correct toolchain variables:
+
+```bash
+source scripts/wasm/env.sh
+```
+
+This sets:
+
+- `CC` to Homebrew `clang` with WASI headers and `-D__wasi__`
+- `WASM_LD` to Homebrew `wasm-ld`
+
 ## Note About `wasi-libc` Layout
 
 On Mint/Ubuntu, `wasi-libc` does **not** ship a `wasi-sysroot/` directory (that
@@ -42,6 +62,11 @@ layout comes from `wasi-sdk`). The headers live under:
 - `/usr/include/wasm32-wasi`
 
 That’s why `dpkg -L wasi-libc | rg 'wasi-sysroot$'` returns nothing.
+
+On macOS/Homebrew, headers live under:
+
+- `/usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi`
+- or `/opt/homebrew/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi`
 
 ## Build The Kernel
 
@@ -56,6 +81,12 @@ make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi clean
 make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi
 ```
 
+On macOS (after `source scripts/wasm/env.sh`), just run:
+
+```bash
+make -C lisp-kernel/wasm32
+```
+
 ## Build The Subprims Provider (Scaffold)
 
 This optional build produces a separate `subprims.wasm` module for the shared
@@ -64,6 +95,12 @@ subprims table:
 ```bash
 make -C lisp-kernel/wasm32/subprims WASM_TARGET=wasm32-wasi clean
 make -C lisp-kernel/wasm32/subprims WASM_TARGET=wasm32-wasi
+```
+
+On macOS (after `source scripts/wasm/env.sh`), just run:
+
+```bash
+make -C lisp-kernel/wasm32/subprims
 ```
 
 The JS host should only call `wasm_set_subprims_ready(1)` when the provider

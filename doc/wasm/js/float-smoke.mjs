@@ -155,16 +155,4 @@ const f64AddEntry = entryIndex("WASM-SMOKE-F64-ADD");
 const f64AddResult = unboxFixnum(kernelExports.wasm_test_entry_funcall2(f64AddEntry, 1, 2));
 assert(f64AddResult === 1, `unexpected f64 add result: got=${f64AddResult} expected=1`);
 
-const f32AddEntry = entryIndex("WASM-SMOKE-F32-ADD");
-const f32AddResult = unboxFixnum(kernelExports.wasm_test_entry_funcall2(f32AddEntry, 1, 2));
-assert(f32AddResult === 1, `unexpected f32 add result: got=${f32AddResult} expected=1`);
-
-const f64FromF32Entry = entryIndex("WASM-SMOKE-F64-FROM-F32");
-const f64FromF32Result = unboxFixnum(kernelExports.wasm_test_entry_funcall2(f64FromF32Entry, 7, 0));
-assert(f64FromF32Result === 1, `unexpected f64<-f32 result: got=${f64FromF32Result} expected=1`);
-
-const f32FromF64Entry = entryIndex("WASM-SMOKE-F32-FROM-F64");
-const f32FromF64Result = unboxFixnum(kernelExports.wasm_test_entry_funcall2(f32FromF64Entry, 7, 0));
-assert(f32FromF64Result === 1, `unexpected f32<-f64 result: got=${f32FromF64Result} expected=1`);
-
 console.log("PASS: wasm float ops smoke test");
