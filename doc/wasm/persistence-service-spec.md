@@ -119,15 +119,14 @@ implicit directories derived from file prefixes.
 
 These operations are the conceptual API; the ABI mapping is defined elsewhere.
 
-### Blob Store Operations
+### Chunk Store Operations (internal)
 
-- put_blob(key, bytes, options) -> {size, etag}
-- get_blob(key, range?) -> bytes
-- delete_blob(key)
-- stat_blob(key) -> {size, mtime, etag?}
-- list_blobs(prefix, limit?, cursor?) -> {keys, cursor?}
+The chunk store must support:
+- put_chunk(id, bytes)
+- get_chunk(id) -> bytes (or a range of bytes)
+- delete_chunk(id)
 
-### VFS Operations (Quicklisp/ASDF minimum)
+### VFS Operations (ASDF/Quicklisp minimum)
 
 - open(path, mode, options) -> stream handle
   - modes: read, write, read-write, create, truncate, append
@@ -135,24 +134,25 @@ These operations are the conceptual API; the ABI mapping is defined elsewhere.
 - truename(path) -> canonical path or not found
 - directory(path, pattern?, options) -> list of paths
 - file_write_date(path) -> mtime or not found
-- file_length(path) -> size or not found
 - rename_file(src, dst)
 - delete_file(path)
 - ensure_directories_exist(path)
-- mkdir(path, parents? = false)
-- rmdir(path)
+- delete_empty_directory(path)
+- delete_directory_tree(path, validate?)
 
-Directory operations:
-- mkdir creates an explicit directory record. If parents is true, create missing
-  ancestors. If the directory already exists, return success (idempotent).
-- rmdir removes an explicit directory record only if the directory is empty.
-  If the directory contains files or implicit child directories, return -ENOTEMPTY.
-- delete_file MUST NOT remove directories; use rmdir for that.
+Directory semantics:
+- ensure_directories_exist creates explicit directory records (idempotent).
+- delete_empty_directory removes an explicit directory record only if empty.
+- delete_directory_tree recursively deletes a directory tree; implementations
+  MUST require a validation predicate (or explicit validate flag) before
+  performing recursive deletion.
+- delete_file MUST NOT remove directories.
+- rename_file MUST overwrite the target when requested by the caller's mode
+  (ASDF uses rename-overwriting-target semantics for staging).
 
 Error behavior:
 - Not found: -ENOENT
 - Read-only mount: -EACCES
-- Already exists: -EEXIST
 - Directory not empty: -ENOTEMPTY
 - Missing capability: CAPABILITY-UNAVAILABLE
 - Unsupported feature: -ENOSYS
@@ -215,9 +215,11 @@ Error behavior:
 
 - DIRECTORY must support prefix listing and wildcard filtering at the Lisp
   layer without loading file contents.
-- FILE-WRITE-DATE and FILE-LENGTH must be served from metadata.
+- FILE-WRITE-DATE must be served from metadata.
 - RENAME-FILE must be atomic for typical download-then-rename workflows.
 - ENSURE-DIRECTORIES-EXIST must create explicit directory entries as needed.
+- DELETE-EMPTY-DIRECTORY and DELETE-DIRECTORY-TREE are used by ASDF's
+  filesystem utilities and must be supported.
 
 ## Open Questions
 
