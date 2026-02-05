@@ -366,6 +366,31 @@ STREAM_OPEN returns a stream SID on success or a negative errno on failure.
 - DELETE-EMPTY-DIRECTORY and DELETE-DIRECTORY-TREE are used by ASDF's
   filesystem utilities and must be supported.
 
+## Development Roadmap Checklist
+
+1. [ ] Register opcodes in doc/wasm/kernel-opcode-registry.md for all FS ops in this spec.
+2. [ ] Mirror payload/response layouts in doc/wasm/kernel-request-abi.md.
+3. [ ] Implement path normalization: normalizePath(pathBytes) -> string (no ., .., duplicate slashes).
+4. [ ] Implement chunk store API: putChunk, getChunk (range), deleteChunk.
+5. [ ] Implement metadata index API: getMeta, putMeta, deleteMeta, listByPrefix.
+6. [ ] Implement mount resolution: resolveRead and resolveWrite with overlay-first semantics.
+7. [ ] Implement ensureDirectoriesExist with explicit directory records.
+8. [ ] Implement directory listing: directory(path) returns explicit and implicit dirs.
+9. [ ] Implement probeFile and truename using normalized paths.
+10. [ ] Implement fileWriteDate from metadata without reading content.
+11. [ ] Implement renameFile with overwrite semantics and -EXDEV on cross-mount.
+12. [ ] Implement deleteFile with -EISDIR for directories.
+13. [ ] Implement deleteEmptyDirectory and deleteDirectoryTree with validation requirement.
+14. [ ] Implement write staging: beginWrite, write, commit, abort with atomic commit.
+15. [ ] Wire microkernel op handlers for all FS opcodes; return negative errno on failure.
+16. [ ] Add STREAM_OPEN FILE kind and mode flags (READ/WRITE/CREATE/TRUNCATE/APPEND).
+17. [ ] Implement file-backed stream endpoint with position tracking and mode enforcement.
+18. [ ] Add in-memory backend (ephemeral) using maps for metadata and chunks.
+19. [ ] Add persistent backend (IndexedDB or OPFS) with transactional updates.
+20. [ ] Add startup recovery for incomplete staged writes.
+21. [ ] Add chunk GC to delete unreferenced chunks.
+22. [ ] Add JS-side validation harness for create/read/rename/delete and directory ops.
+
 ## Open Questions
 
 - What default chunk_size is optimal for IDB in target browsers?
