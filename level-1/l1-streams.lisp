@@ -3750,6 +3750,10 @@
 (defmethod map-to-basic-stream-class-name ((name (eql 'fd-stream)))
   'basic-stream)
 
+#+wasm32-target
+(defmethod map-to-basic-stream-class-name ((name (eql 'wasm-stream)))
+  'basic-stream)
+
 (defun allocate-basic-stream (class)
   (if (subtypep class 'basic-file-stream)
     (gvector :basic-stream (%class-own-wrapper class) 0 nil nil nil nil nil)
@@ -5676,6 +5680,29 @@ instead of blocking in-process. Intended for the WASM Stage-2 stepping model.")
 (defclass fd-binary-io-stream (fd-io-stream buffered-binary-io-stream-mixin)
     ())
 
+#+wasm32-target
+(progn
+  (defclass wasm-stream (fd-stream) ())
+  (defmethod stream-domain ((s wasm-stream))
+    :file)
+  (defmethod print-object ((s wasm-stream) out)
+    (print-unreadable-object (s out :type t :identity t)
+      (let* ((ioblock (stream-ioblock s nil))
+             (sid (and ioblock (ioblock-device ioblock)))
+             (encoding (and ioblock (encoding-name (ioblock-encoding ioblock)))))
+        (if sid
+          (format out "~s (sid/~d)" encoding sid)
+          (format out "~s" :closed)))))
+  (defclass wasm-input-stream (fd-input-stream) ())
+  (defclass wasm-output-stream (fd-output-stream) ())
+  (defclass wasm-io-stream (fd-io-stream) ())
+  (defclass wasm-character-input-stream (fd-character-input-stream) ())
+  (defclass wasm-character-output-stream (fd-character-output-stream) ())
+  (defclass wasm-character-io-stream (fd-character-io-stream) ())
+  (defclass wasm-binary-input-stream (fd-binary-input-stream) ())
+  (defclass wasm-binary-output-stream (fd-binary-output-stream) ())
+  (defclass wasm-binary-io-stream (fd-binary-io-stream) ()))
+
 (defun fd-stream-advance (s ioblock read-p)
   (let* ((fd (ioblock-device ioblock))
          (buf (ioblock-inbuf ioblock))
@@ -5798,6 +5825,20 @@ instead of blocking in-process. Intended for the WASM Stage-2 stepping model.")
 	'fd-binary-input-stream)
       'fd-binary-output-stream)))
 
+#+wasm32-target
+(defmethod select-stream-class ((class (eql 'wasm-stream)) in-p out-p char-p)
+  (if char-p
+    (if in-p
+      (if out-p
+        'wasm-character-io-stream
+        'wasm-character-input-stream)
+      'wasm-character-output-stream)
+    (if in-p
+      (if out-p
+        'wasm-binary-io-stream
+        'wasm-binary-input-stream)
+      'wasm-binary-output-stream)))
+
 (defstruct (input-selection (:include dll-node))
   (package nil :type (or null string package))
   (source-file nil :type (or null string pathname))
@@ -5911,6 +5952,9 @@ instead of blocking in-process. Intended for the WASM Stage-2 stepping model.")
                        :OVERWRITE, :APPEND, :SUPERSEDE or NIL
    :IF-DOES-NOT-EXIST - one of :ERROR, :CREATE or NIL
   See the manual for details."
+  #+wasm32-target
+  (when (eq class 'file-stream)
+    (setq class 'wasm-stream))
   (loop
     (restart-case
       (return

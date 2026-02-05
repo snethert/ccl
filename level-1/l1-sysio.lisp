@@ -773,6 +773,16 @@ is :UNIX.")
                      (full-pathname filename)
                      filename))
          (pathname (pathname filename))) 
+    #+wasm32-target
+    (when (member direction '(:output :io))
+      (wasm-fs-unavailable "open"
+                           (list :direction direction :path filename)))
+    #+wasm32-target
+    (when (eq if-does-not-exist :create)
+      (wasm-fs-unavailable "open"
+                           (list :direction direction
+                                 :if-does-not-exist if-does-not-exist
+                                 :path filename)))
     (block open
       (if (or (memq element-type '(:default character base-char))
 	      (subtypep element-type 'character))

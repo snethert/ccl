@@ -216,6 +216,13 @@ check_all_areas(TCR *tcr)
       check_range((LispObj *)a->active, (LispObj *)a->high, true);
       break;
 
+    case AREA_VOID:
+    case AREA_TSTACK:
+    case AREA_READONLY:
+    case AREA_STATIC_CONS:
+    case AREA_WATCHED:
+      break;
+
     }
     a = a->succ;
     code = (a->code);
@@ -1528,7 +1535,7 @@ purify_displaced_object(LispObj obj, area *dest, natural disp)
 
   new = ptr_to_lispobj(free)+disp;
 
-  memcpy(free, (BytePtr)old, physbytes);
+  memmove(free, (BytePtr)old, physbytes);
   /* Leave a trail of breadcrumbs.  Or maybe just one breadcrumb. */
   /* Actually, it's best to always leave a trail, for two reasons.
      a) We may be walking the same heap that we're leaving forwaring

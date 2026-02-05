@@ -173,6 +173,9 @@
 
 (defparameter %toplevel-catch% ':toplevel)
 
+(defvar %wasm-compiled-modules% nil
+  "Registry of compiled WASM modules embedded in the image.")
+
 
 
 (defparameter *warn-if-redefine-kernel* nil
@@ -329,4 +332,3 @@ the command-line argument --terminal-encoding (-K)")
    When false, those effects persist until superseded.")
 
 ;;; end of L1-init.lisp
-

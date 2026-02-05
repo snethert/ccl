@@ -154,3 +154,208 @@ export function installSubprimsTable({
 
   return { installed, needed };
 }
+
+const FULLTAG_MASK = 0x7;
+const TAGMASK = 0x3;
+const FIXNUM_SHIFT = 2;
+const FULLTAG_CONS = 0x5;
+const FULLTAG_MISC = 0x6;
+const FULLTAG_NODEHEADER = 0x2;
+const FULLTAG_IMMHEADER = 0x7;
+const NUM_SUBTAG_BITS = 8;
+const SUBTAG_MASK = 0xff;
+const SUBTAG_SIMPLE_VECTOR = (31 << 3) | FULLTAG_NODEHEADER;
+const SUBTAG_U8_VECTOR = (24 << 3) | FULLTAG_IMMHEADER;
+const SUBTAG_SIMPLE_BASE_STRING = (23 << 3) | FULLTAG_IMMHEADER;
+
+function u32(x) {
+  return x >>> 0;
+}
+
+function readU32(view, addr) {
+  return view.getUint32(u32(addr), true);
+}
+
+function isFixnum(obj) {
+  return (obj & TAGMASK) === 0;
+}
+
+function fixnumValue(obj) {
+  return obj >> FIXNUM_SHIFT;
+}
+
+function isCons(obj) {
+  return (obj & FULLTAG_MASK) === FULLTAG_CONS;
+}
+
+function untag(obj, fulltag) {
+  return u32(obj - fulltag);
+}
+
+function readMiscHeader(view, obj) {
+  if ((obj & FULLTAG_MASK) !== FULLTAG_MISC) {
+    throw new Error(`expected misc object, got 0x${u32(obj).toString(16)}`);
+  }
+  const base = untag(obj, FULLTAG_MISC);
+  const header = readU32(view, base);
+  return {
+    base,
+    header,
+    subtag: header & SUBTAG_MASK,
+    count: header >>> NUM_SUBTAG_BITS,
+  };
+}
+
+function readSimpleVector(view, obj) {
+  const { base, subtag, count } = readMiscHeader(view, obj);
+  if (subtag !== SUBTAG_SIMPLE_VECTOR) {
+    throw new Error(`expected simple-vector subtag, got 0x${subtag.toString(16)}`);
+  }
+  const out = new Array(count);
+  let offset = base + 4;
+  for (let i = 0; i < count; i++) {
+    out[i] = readU32(view, offset);
+    offset += 4;
+  }
+  return out;
+}
+
+function readU8Vector(view, memory, obj, expectedSubtag) {
+  const { base, subtag, count } = readMiscHeader(view, obj);
+  if (expectedSubtag != null && subtag !== expectedSubtag) {
+    throw new Error(`unexpected u8-vector subtag 0x${subtag.toString(16)}`);
+  }
+  const bytes = new Uint8Array(memory.buffer, base + 4, count);
+  return new Uint8Array(bytes);
+}
+
+function decodeBaseString(view, memory, obj) {
+  const { base, subtag, count } = readMiscHeader(view, obj);
+  if (subtag !== SUBTAG_SIMPLE_BASE_STRING) {
+    throw new Error(`expected base string subtag, got 0x${subtag.toString(16)}`);
+  }
+  const codes = new Array(count);
+  let offset = base + 4;
+  for (let i = 0; i < count; i++) {
+    codes[i] = readU32(view, offset) & 0xff;
+    offset += 4;
+  }
+  if (typeof TextDecoder !== "undefined") {
+    return new TextDecoder("utf-8").decode(Uint8Array.from(codes));
+  }
+  let out = "";
+  for (let i = 0; i < codes.length; i++) {
+    out += String.fromCharCode(codes[i]);
+  }
+  return out;
+}
+
+export function decodeCompiledModuleRegistry({ memory, registry, nil }) {
+  if (!memory) throw new Error("decodeCompiledModuleRegistry: memory is required");
+  if (registry == null) throw new Error("decodeCompiledModuleRegistry: registry is required");
+  if (nil == null) throw new Error("decodeCompiledModuleRegistry: nil is required");
+
+  const nilObj = u32(nil);
+  let list = u32(registry);
+  if (list === nilObj) return [];
+
+  const view = new DataView(memory.buffer);
+  const entries = [];
+  let guard = 0;
+
+  while (list !== nilObj) {
+    if (!isCons(list)) {
+      throw new Error(`compiled module registry is not a list: 0x${list.toString(16)}`);
+    }
+    const base = untag(list, FULLTAG_CONS);
+    const car = readU32(view, base);
+    const cdr = readU32(view, base + 4);
+
+    const vec = readSimpleVector(view, car);
+    if (vec.length < 4) {
+      throw new Error(`compiled module entry too short: ${vec.length}`);
+    }
+
+    const moduleBytes = readU8Vector(view, memory, vec[0], SUBTAG_U8_VECTOR);
+    const exportName = decodeBaseString(view, memory, vec[1]);
+    if (!isFixnum(vec[2]) || !isFixnum(vec[3])) {
+      throw new Error("compiled module entry index/version must be fixnums");
+    }
+    const entryIndex = fixnumValue(vec[2]);
+    const moduleVersion = fixnumValue(vec[3]);
+
+    entries.push({ moduleBytes, exportName, entryIndex, moduleVersion });
+
+    list = cdr;
+    guard++;
+    if (guard > 100000) {
+      throw new Error("compiled module registry appears cyclic");
+    }
+  }
+
+  return entries;
+}
+
+export async function installCompiledModulesFromRegistry({
+  kernel,
+  memory,
+  subprimsTable,
+  microkernel = null,
+  extra = {},
+  registry = null,
+  nil = null,
+  verbose = false,
+} = {}) {
+  if (!memory) throw new Error("installCompiledModulesFromRegistry: memory is required");
+  if (!subprimsTable) throw new Error("installCompiledModulesFromRegistry: subprimsTable is required");
+
+  const kernelExports = kernel?.instance?.exports ?? kernel?.exports ?? kernel;
+  if (!kernelExports) throw new Error("installCompiledModulesFromRegistry: kernel exports are required");
+
+  if (registry == null) {
+    const getRegistry = kernelExports.wasm_get_compiled_module_registry;
+    if (typeof getRegistry !== "function") {
+      throw new Error("installCompiledModulesFromRegistry: missing wasm_get_compiled_module_registry export");
+    }
+    registry = getRegistry() >>> 0;
+  }
+  if (nil == null) {
+    const getNil = kernelExports.wasm_get_lisp_nil;
+    if (typeof getNil !== "function") {
+      throw new Error("installCompiledModulesFromRegistry: missing wasm_get_lisp_nil export");
+    }
+    nil = getNil() >>> 0;
+  }
+
+  const entries = decodeCompiledModuleRegistry({ memory, registry, nil });
+  if (entries.length === 0) return { installed: 0, count: 0, entries: [] };
+
+  const extraCcl = { ...(extra.ccl ?? {}), ...kernelExports };
+  const imports = createCclImports({
+    memory,
+    subprimsTable,
+    microkernel,
+    extra: { ...extra, ccl: extraCcl },
+  });
+
+  let installed = 0;
+  for (const entry of entries) {
+    const { instance } = await instantiateWasm(entry.moduleBytes, imports);
+    const fn = instance?.exports?.[entry.exportName];
+    if (typeof fn !== "function") {
+      if (verbose) {
+        // eslint-disable-next-line no-console
+        console.warn(`compiled module missing export ${entry.exportName}`);
+      }
+      continue;
+    }
+
+    if (subprimsTable.length <= entry.entryIndex) {
+      subprimsTable.grow(entry.entryIndex - subprimsTable.length + 1);
+    }
+    subprimsTable.set(entry.entryIndex, fn);
+    installed++;
+  }
+
+  return { installed, count: entries.length, entries };
+}

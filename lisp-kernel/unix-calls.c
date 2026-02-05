@@ -46,6 +46,26 @@
 
 #ifdef WASM32
 #include "wasm-host.h"
+static const char *
+wasm_normalize_named_path(const char *path, size_t *out_len)
+{
+  if (out_len) {
+    *out_len = 0;
+  }
+  if (path == NULL) {
+    return NULL;
+  }
+  size_t len = strlen(path);
+  const char *p = path;
+  while (len > 0 && *p == '/') {
+    p++;
+    len--;
+  }
+  if (out_len) {
+    *out_len = len;
+  }
+  return p;
+}
 /* No WASI, no POSIX. These are placeholders for the FFI imports table.
  * The JS microkernel should provide real implementations later.
  */
@@ -104,7 +124,8 @@ lisp_open(char *path, int flags, mode_t mode)
     return -1;
   }
 
-  size_t len = strlen(path);
+  size_t len = 0;
+  const char *name = wasm_normalize_named_path(path, &len);
   if (len == 0) {
     errno = ENOENT;
     return -1;
@@ -112,7 +133,7 @@ lisp_open(char *path, int flags, mode_t mode)
 
   uint32_t sid = 0;
   uint64_t size = 0;
-  int32_t r = wasm_kernel_stream_open_named(path, (uint32_t)len, &sid, &size);
+  int32_t r = wasm_kernel_stream_open_named(name, (uint32_t)len, &sid, &size);
   if (r < 0) {
     errno = -r;
     return -1;
@@ -173,7 +194,8 @@ lisp_stat(char *path, void *buf)
     return -1;
   }
 
-  size_t len = strlen(path);
+  size_t len = 0;
+  const char *name = wasm_normalize_named_path(path, &len);
   if (len == 0) {
     errno = ENOENT;
     return -1;
@@ -181,7 +203,7 @@ lisp_stat(char *path, void *buf)
 
   uint32_t sid = 0;
   uint64_t size = 0;
-  int32_t r = wasm_kernel_stream_open_named(path, (uint32_t)len, &sid, &size);
+  int32_t r = wasm_kernel_stream_open_named(name, (uint32_t)len, &sid, &size);
   if (r < 0) {
     errno = -r;
     return -1;

@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import {
   createCclImports,
   createSharedCclRuntime,
+  installCompiledModulesFromRegistry,
   installSubprimsTable,
   instantiateWasm,
 } from "./ccl-loader.mjs";
@@ -24,81 +25,6 @@ function assert(cond, msg) {
 
 function readFileUrl(url) {
   return fs.readFile(fileURLToPath(url));
-}
-
-function pushU8(buf, byte) {
-  buf.push(byte & 0xff);
-}
-
-function pushUleb(buf, value) {
-  let v = value >>> 0;
-  do {
-    let byte = v & 0x7f;
-    v >>>= 7;
-    if (v !== 0) byte |= 0x80;
-    pushU8(buf, byte);
-  } while (v !== 0);
-}
-
-function pushString(buf, str) {
-  pushUleb(buf, str.length);
-  for (let i = 0; i < str.length; i++) {
-    pushU8(buf, str.charCodeAt(i));
-  }
-}
-
-function section(id, contents) {
-  const out = [];
-  pushU8(out, id);
-  pushUleb(out, contents.length);
-  out.push(...contents);
-  return out;
-}
-
-function buildCallModule(importName, exportName) {
-  const out = [];
-  out.push(0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00);
-
-  const types = [];
-  pushUleb(types, 1);
-  pushU8(types, 0x60);
-  pushUleb(types, 0);
-  pushUleb(types, 0);
-
-  const imports = [];
-  pushUleb(imports, 1);
-  pushString(imports, "ccl");
-  pushString(imports, importName);
-  pushU8(imports, 0x00);
-  pushUleb(imports, 0);
-
-  const funcs = [];
-  pushUleb(funcs, 1);
-  pushUleb(funcs, 0);
-
-  const exports = [];
-  pushUleb(exports, 1);
-  pushString(exports, exportName);
-  pushU8(exports, 0x00);
-  pushUleb(exports, 1);
-
-  const code = [];
-  const body = [];
-  pushUleb(body, 0);
-  pushU8(body, 0x10);
-  pushUleb(body, 0);
-  pushU8(body, 0x0b);
-  pushUleb(code, 1);
-  pushUleb(code, body.length);
-  code.push(...body);
-
-  out.push(...section(1, types));
-  out.push(...section(2, imports));
-  out.push(...section(3, funcs));
-  out.push(...section(7, exports));
-  out.push(...section(10, code));
-
-  return new Uint8Array(out);
 }
 
 const kernelUrl = new URL("./wasmcl.wasm", import.meta.url);
@@ -176,57 +102,25 @@ new Uint8Array(runtime.memory.buffer).set(imageBytes, blobBase);
 assert(typeof kernel.instance.exports.wasm_ccl_load_image === "function", "missing wasm_ccl_load_image export");
 kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
 
-function installOp(entryIndex, importName, exportName, helper) {
-  const moduleBytes = buildCallModule(importName, exportName);
-  return instantiateWasm(moduleBytes, { ccl: { [importName]: helper } }).then((mod) => {
-    if (runtime.subprimsTable.length <= entryIndex) {
-      runtime.subprimsTable.grow(entryIndex - runtime.subprimsTable.length + 1);
-    }
-    runtime.subprimsTable.set(entryIndex, mod.instance.exports[exportName]);
-  });
+const { installed, entries } = await installCompiledModulesFromRegistry({
+  kernel: kernel.instance.exports,
+  memory: runtime.memory,
+  subprimsTable: runtime.subprimsTable,
+  microkernel,
+});
+assert(installed > 0, "no compiled modules installed");
+
+function ensureEntry(entryIndex) {
+  const entry = entries.find((item) => item.entryIndex === entryIndex);
+  assert(entry, `missing compiled module entry ${entryIndex}`);
 }
 
-await installOp(
-  206,
-  "wasm_return_fixnum_mul",
-  "ccl_fixnum_mul_entry",
-  kernel.instance.exports.wasm_return_fixnum_mul,
-);
-
-await installOp(
-  207,
-  "wasm_return_fixnum_ash",
-  "ccl_fixnum_ash_entry",
-  kernel.instance.exports.wasm_return_fixnum_ash,
-);
-
-await installOp(
-  208,
-  "wasm_return_fixnum_logand",
-  "ccl_fixnum_logand_entry",
-  kernel.instance.exports.wasm_return_fixnum_logand,
-);
-
-await installOp(
-  209,
-  "wasm_return_fixnum_logior",
-  "ccl_fixnum_logior_entry",
-  kernel.instance.exports.wasm_return_fixnum_logior,
-);
-
-await installOp(
-  210,
-  "wasm_return_fixnum_logxor",
-  "ccl_fixnum_logxor_entry",
-  kernel.instance.exports.wasm_return_fixnum_logxor,
-);
-
-await installOp(
-  211,
-  "wasm_return_fixnum_lognot",
-  "ccl_fixnum_lognot_entry",
-  kernel.instance.exports.wasm_return_fixnum_lognot,
-);
+ensureEntry(206);
+ensureEntry(207);
+ensureEntry(208);
+ensureEntry(209);
+ensureEntry(210);
+ensureEntry(211);
 
 const mulResult = kernel.instance.exports.wasm_test_entry_funcall2(206, 6, 7) >> 2;
 assert(mulResult === 42, `unexpected fixnum mul result: got=${mulResult} expected=42`);

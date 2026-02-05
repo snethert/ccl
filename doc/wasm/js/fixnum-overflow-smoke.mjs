@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import {
   createCclImports,
   createSharedCclRuntime,
+  installCompiledModulesFromRegistry,
   installSubprimsTable,
   instantiateWasm,
 } from "./ccl-loader.mjs";
@@ -30,81 +31,6 @@ const NUM_SUBTAG_BITS = 8;
 
 function readFileUrl(url) {
   return fs.readFile(fileURLToPath(url));
-}
-
-function pushU8(buf, byte) {
-  buf.push(byte & 0xff);
-}
-
-function pushUleb(buf, value) {
-  let v = value >>> 0;
-  do {
-    let byte = v & 0x7f;
-    v >>>= 7;
-    if (v !== 0) byte |= 0x80;
-    pushU8(buf, byte);
-  } while (v !== 0);
-}
-
-function pushString(buf, str) {
-  pushUleb(buf, str.length);
-  for (let i = 0; i < str.length; i++) {
-    pushU8(buf, str.charCodeAt(i));
-  }
-}
-
-function section(id, contents) {
-  const out = [];
-  pushU8(out, id);
-  pushUleb(out, contents.length);
-  out.push(...contents);
-  return out;
-}
-
-function buildCallModule(importName, exportName) {
-  const out = [];
-  out.push(0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00);
-
-  const types = [];
-  pushUleb(types, 1);
-  pushU8(types, 0x60);
-  pushUleb(types, 0);
-  pushUleb(types, 0);
-
-  const imports = [];
-  pushUleb(imports, 1);
-  pushString(imports, "ccl");
-  pushString(imports, importName);
-  pushU8(imports, 0x00);
-  pushUleb(imports, 0);
-
-  const funcs = [];
-  pushUleb(funcs, 1);
-  pushUleb(funcs, 0);
-
-  const exports = [];
-  pushUleb(exports, 1);
-  pushString(exports, exportName);
-  pushU8(exports, 0x00);
-  pushUleb(exports, 1);
-
-  const code = [];
-  const body = [];
-  pushUleb(body, 0);
-  pushU8(body, 0x10);
-  pushUleb(body, 0);
-  pushU8(body, 0x0b);
-  pushUleb(code, 1);
-  pushUleb(code, body.length);
-  code.push(...body);
-
-  out.push(...section(1, types));
-  out.push(...section(2, imports));
-  out.push(...section(3, funcs));
-  out.push(...section(7, exports));
-  out.push(...section(10, code));
-
-  return new Uint8Array(out);
 }
 
 const kernelUrl = new URL("./wasmcl.wasm", import.meta.url);
@@ -155,7 +81,6 @@ assert(typeof kernel.instance.exports.wasm_set_subprims_ready === "function", "m
 kernel.instance.exports.wasm_set_subprims_ready(1);
 
 assert(typeof kernel.instance.exports.wasm_test_entry_funcall2 === "function", "missing wasm_test_entry_funcall2 export");
-assert(typeof kernel.instance.exports.wasm_return_fixnum_neg === "function", "missing wasm_return_fixnum_neg export");
 
 const imageBytes = await readFileUrl(imageUrl);
 const imageLen = imageBytes.byteLength >>> 0;
@@ -183,43 +108,23 @@ new Uint8Array(runtime.memory.buffer).set(imageBytes, blobBase);
 assert(typeof kernel.instance.exports.wasm_ccl_load_image === "function", "missing wasm_ccl_load_image export");
 kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
 
-function installOp(entryIndex, importName, exportName, helper) {
-  const moduleBytes = buildCallModule(importName, exportName);
-  return instantiateWasm(moduleBytes, { ccl: { [importName]: helper } }).then((mod) => {
-    if (runtime.subprimsTable.length <= entryIndex) {
-      runtime.subprimsTable.grow(entryIndex - runtime.subprimsTable.length + 1);
-    }
-    runtime.subprimsTable.set(entryIndex, mod.instance.exports[exportName]);
-  });
+const { installed, entries } = await installCompiledModulesFromRegistry({
+  kernel: kernel.instance.exports,
+  memory: runtime.memory,
+  subprimsTable: runtime.subprimsTable,
+  microkernel,
+});
+assert(installed > 0, "no compiled modules installed");
+
+function ensureEntry(entryIndex) {
+  const entry = entries.find((item) => item.entryIndex === entryIndex);
+  assert(entry, `missing compiled module entry ${entryIndex}`);
 }
 
-await installOp(
-  204,
-  "wasm_return_fixnum_add",
-  "ccl_fixnum_add_entry",
-  kernel.instance.exports.wasm_return_fixnum_add,
-);
-
-await installOp(
-  205,
-  "wasm_return_fixnum_sub",
-  "ccl_fixnum_sub_entry",
-  kernel.instance.exports.wasm_return_fixnum_sub,
-);
-
-await installOp(
-  207,
-  "wasm_return_fixnum_ash",
-  "ccl_fixnum_ash_entry",
-  kernel.instance.exports.wasm_return_fixnum_ash,
-);
-
-await installOp(
-  212,
-  "wasm_return_fixnum_neg",
-  "ccl_fixnum_neg_entry",
-  kernel.instance.exports.wasm_return_fixnum_neg,
-);
+ensureEntry(204);
+ensureEntry(205);
+ensureEntry(207);
+ensureEntry(212);
 
 const fixnumShift = 2;
 const fixnumBits = 32 - fixnumShift;
@@ -274,7 +179,10 @@ assertBignum(runtime.memory, subOverflow, minFixnum - 1, "sub overflow");
 const negOverflow = kernel.instance.exports.wasm_test_entry_funcall2(212, minFixnum, 0) >>> 0;
 assertBignum(runtime.memory, negOverflow, -minFixnum, "neg overflow");
 
-const ashOverflow = kernel.instance.exports.wasm_test_entry_funcall2(207, 1, 40) >>> 0;
-assertBignum(runtime.memory, ashOverflow, 1n << 40n, "ash overflow");
+const ashOverflow = kernel.instance.exports.wasm_test_entry_funcall2(207, 1, 70) >>> 0;
+assertBignum(runtime.memory, ashOverflow, 1n << 70n, "ash overflow");
+
+const ashNegOverflow = kernel.instance.exports.wasm_test_entry_funcall2(207, -1, 40) >>> 0;
+assertBignum(runtime.memory, ashNegOverflow, -1n << 40n, "ash negative overflow");
 
 console.log("PASS: wasm fixnum overflow smoke test");

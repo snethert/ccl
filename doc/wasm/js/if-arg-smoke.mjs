@@ -1,9 +1,9 @@
 /*
- * WASM32 fixnum sub smoke test.
+ * WASM32 if-arg smoke test.
  *
  * Validates:
- *  1) Compiled module registry installs fixnum-sub entry into the table
- *  2) _SPfuncall dispatch with 2 args via arg_z/arg_y
+ *  1) Compiled module registry installs if-arg entry into the table
+ *  2) if returns arg_z when non-NIL, else returns the embedded constant
  */
 
 import fs from "node:fs/promises";
@@ -78,7 +78,10 @@ installSubprimsTable({
 assert(typeof kernel.instance.exports.wasm_set_subprims_ready === "function", "missing wasm_set_subprims_ready export");
 kernel.instance.exports.wasm_set_subprims_ready(1);
 
-assert(typeof kernel.instance.exports.wasm_test_entry_funcall2 === "function", "missing wasm_test_entry_funcall2 export");
+assert(
+  typeof kernel.instance.exports.wasm_test_entry_funcall1_raw === "function",
+  "missing wasm_test_entry_funcall1_raw export",
+);
 
 const imageBytes = await readFileUrl(imageUrl);
 const imageLen = imageBytes.byteLength >>> 0;
@@ -114,14 +117,21 @@ const { installed, entries } = await installCompiledModulesFromRegistry({
 });
 assert(installed > 0, "no compiled modules installed");
 
-const entryIndex = 205;
+const entryIndex = 214;
 const entry = entries.find((item) => item.entryIndex === entryIndex);
 assert(entry, `missing compiled module entry ${entryIndex}`);
 
-const a = 30;
-const b = 12;
-const result = kernel.instance.exports.wasm_test_entry_funcall2(entryIndex, a, b) >>> 0;
-const resultFixnum = result >> 2;
-assert(resultFixnum === a - b, `unexpected fixnum sub result: got=${resultFixnum} expected=${a - b}`);
+const nilValue = kernel.instance.exports.wasm_get_lisp_nil() >>> 0;
+const elseFixnum = 17;
+const elseValue = (elseFixnum << 2) >>> 0;
 
-console.log("PASS: wasm fixnum sub smoke test");
+const fixnumShift = 2;
+const testValue = (9 << fixnumShift) >>> 0;
+
+const resultTrue = kernel.instance.exports.wasm_test_entry_funcall1_raw(entryIndex, testValue) >>> 0;
+assert(resultTrue === testValue, `unexpected true branch result: got=0x${resultTrue.toString(16)} expected=0x${testValue.toString(16)}`);
+
+const resultFalse = kernel.instance.exports.wasm_test_entry_funcall1_raw(entryIndex, nilValue) >>> 0;
+assert(resultFalse === elseValue, `unexpected false branch result: got=0x${resultFalse.toString(16)} expected=0x${elseValue.toString(16)}`);
+
+console.log("PASS: wasm if-arg smoke test");

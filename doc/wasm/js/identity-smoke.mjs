@@ -1,9 +1,9 @@
 /*
- * WASM32 fixnum sub smoke test.
+ * WASM32 identity smoke test.
  *
  * Validates:
- *  1) Compiled module registry installs fixnum-sub entry into the table
- *  2) _SPfuncall dispatch with 2 args via arg_z/arg_y
+ *  1) Compiled module registry installs identity entry into the table
+ *  2) identity returns arg_z
  */
 
 import fs from "node:fs/promises";
@@ -78,7 +78,10 @@ installSubprimsTable({
 assert(typeof kernel.instance.exports.wasm_set_subprims_ready === "function", "missing wasm_set_subprims_ready export");
 kernel.instance.exports.wasm_set_subprims_ready(1);
 
-assert(typeof kernel.instance.exports.wasm_test_entry_funcall2 === "function", "missing wasm_test_entry_funcall2 export");
+assert(
+  typeof kernel.instance.exports.wasm_test_entry_funcall1_raw === "function",
+  "missing wasm_test_entry_funcall1_raw export",
+);
 
 const imageBytes = await readFileUrl(imageUrl);
 const imageLen = imageBytes.byteLength >>> 0;
@@ -114,14 +117,18 @@ const { installed, entries } = await installCompiledModulesFromRegistry({
 });
 assert(installed > 0, "no compiled modules installed");
 
-const entryIndex = 205;
+const entryIndex = 215;
 const entry = entries.find((item) => item.entryIndex === entryIndex);
 assert(entry, `missing compiled module entry ${entryIndex}`);
 
-const a = 30;
-const b = 12;
-const result = kernel.instance.exports.wasm_test_entry_funcall2(entryIndex, a, b) >>> 0;
-const resultFixnum = result >> 2;
-assert(resultFixnum === a - b, `unexpected fixnum sub result: got=${resultFixnum} expected=${a - b}`);
+const fixnumShift = 2;
+const testValue = (42 << fixnumShift) >>> 0;
+const nilValue = kernel.instance.exports.wasm_get_lisp_nil() >>> 0;
 
-console.log("PASS: wasm fixnum sub smoke test");
+const resultValue = kernel.instance.exports.wasm_test_entry_funcall1_raw(entryIndex, testValue) >>> 0;
+assert(resultValue === testValue, `unexpected identity result: got=0x${resultValue.toString(16)} expected=0x${testValue.toString(16)}`);
+
+const resultNil = kernel.instance.exports.wasm_test_entry_funcall1_raw(entryIndex, nilValue) >>> 0;
+assert(resultNil === nilValue, `unexpected identity nil result: got=0x${resultNil.toString(16)} expected=0x${nilValue.toString(16)}`);
+
+console.log("PASS: wasm identity smoke test");

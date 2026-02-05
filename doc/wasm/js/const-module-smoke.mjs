@@ -2,7 +2,7 @@
  * WASM32 constant module smoke test.
  *
  * Validates:
- *  1) Minimal const module emitter shape (i32.const -> wasm_return_constant)
+ *  1) Compiled module registry installs wasm_const_entry into the table
  *  2) _SPfuncall dispatch through table entry to a compiled module
  */
 
@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import {
   createCclImports,
   createSharedCclRuntime,
+  installCompiledModulesFromRegistry,
   installSubprimsTable,
   instantiateWasm,
 } from "./ccl-loader.mjs";
@@ -28,100 +29,6 @@ function assert(cond, msg) {
 
 function readFileUrl(url) {
   return fs.readFile(fileURLToPath(url));
-}
-
-function pushU8(buf, byte) {
-  buf.push(byte & 0xff);
-}
-
-function pushUleb(buf, value) {
-  let v = value >>> 0;
-  do {
-    let byte = v & 0x7f;
-    v >>>= 7;
-    if (v !== 0) byte |= 0x80;
-    pushU8(buf, byte);
-  } while (v !== 0);
-}
-
-function pushSleb32(buf, value) {
-  let v = value | 0;
-  while (true) {
-    let byte = v & 0x7f;
-    v >>= 7;
-    const signBit = byte & 0x40;
-    const done = (v === 0 && signBit === 0) || (v === -1 && signBit !== 0);
-    if (!done) byte |= 0x80;
-    pushU8(buf, byte);
-    if (done) break;
-  }
-}
-
-function pushString(buf, str) {
-  pushUleb(buf, str.length);
-  for (let i = 0; i < str.length; i++) {
-    pushU8(buf, str.charCodeAt(i));
-  }
-}
-
-function section(id, contents) {
-  const out = [];
-  pushU8(out, id);
-  pushUleb(out, contents.length);
-  out.push(...contents);
-  return out;
-}
-
-function buildConstModule(constValue) {
-  const out = [];
-  out.push(0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00);
-
-  const types = [];
-  pushUleb(types, 2);
-  pushU8(types, 0x60);
-  pushUleb(types, 1);
-  pushU8(types, 0x7f);
-  pushUleb(types, 0);
-  pushU8(types, 0x60);
-  pushUleb(types, 0);
-  pushUleb(types, 0);
-
-  const imports = [];
-  pushUleb(imports, 1);
-  pushString(imports, "ccl");
-  pushString(imports, "wasm_return_constant");
-  pushU8(imports, 0x00);
-  pushUleb(imports, 0);
-
-  const funcs = [];
-  pushUleb(funcs, 1);
-  pushUleb(funcs, 1);
-
-  const exports = [];
-  pushUleb(exports, 1);
-  pushString(exports, "ccl_const_entry");
-  pushU8(exports, 0x00);
-  pushUleb(exports, 1);
-
-  const code = [];
-  const body = [];
-  pushUleb(body, 0);
-  pushU8(body, 0x41);
-  pushSleb32(body, constValue);
-  pushU8(body, 0x10);
-  pushUleb(body, 0);
-  pushU8(body, 0x0b);
-  pushUleb(code, 1);
-  pushUleb(code, body.length);
-  code.push(...body);
-
-  out.push(...section(1, types));
-  out.push(...section(2, imports));
-  out.push(...section(3, funcs));
-  out.push(...section(7, exports));
-  out.push(...section(10, code));
-
-  return new Uint8Array(out);
 }
 
 const kernelUrl = new URL("./wasmcl.wasm", import.meta.url);
@@ -171,7 +78,6 @@ installSubprimsTable({
 assert(typeof kernel.instance.exports.wasm_set_subprims_ready === "function", "missing wasm_set_subprims_ready export");
 kernel.instance.exports.wasm_set_subprims_ready(1);
 
-assert(typeof kernel.instance.exports.wasm_return_constant === "function", "missing wasm_return_constant export");
 assert(typeof kernel.instance.exports.wasm_test_entry_funcall === "function", "missing wasm_test_entry_funcall export");
 
 const imageBytes = await readFileUrl(imageUrl);
@@ -200,21 +106,21 @@ new Uint8Array(runtime.memory.buffer).set(imageBytes, blobBase);
 assert(typeof kernel.instance.exports.wasm_ccl_load_image === "function", "missing wasm_ccl_load_image export");
 kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
 
-const entryIndex = 203;
-const value = 23;
-const constValue = value << 2;
-const moduleBytes = buildConstModule(constValue);
-const constModule = await instantiateWasm(moduleBytes, {
-  ccl: { wasm_return_constant: kernel.instance.exports.wasm_return_constant },
+const { installed, entries } = await installCompiledModulesFromRegistry({
+  kernel: kernel.instance.exports,
+  memory: runtime.memory,
+  subprimsTable: runtime.subprimsTable,
+  microkernel,
 });
+assert(installed > 0, "no compiled modules installed");
 
-if (runtime.subprimsTable.length <= entryIndex) {
-  runtime.subprimsTable.grow(entryIndex - runtime.subprimsTable.length + 1);
-}
-runtime.subprimsTable.set(entryIndex, constModule.instance.exports.ccl_const_entry);
+const entryIndex = 202;
+const constValue = 23;
+const entry = entries.find((item) => item.entryIndex === entryIndex);
+assert(entry, `missing compiled module entry ${entryIndex}`);
 
-const result = kernel.instance.exports.wasm_test_entry_funcall(entryIndex, value) >>> 0;
+const result = kernel.instance.exports.wasm_test_entry_funcall(entryIndex, constValue) >>> 0;
 const resultFixnum = result >> 2;
-assert(resultFixnum === value, `unexpected const module result: got=${resultFixnum} expected=${value}`);
+assert(resultFixnum === constValue, `unexpected const module result: got=${resultFixnum} expected=${constValue}`);
 
 console.log("PASS: wasm const module smoke test");

@@ -310,7 +310,7 @@ wasm_kernel_stream_open_named(const char *name,
   *out_sid = (uint32_t)r;
   if (out_size) {
     uint64_t size = 0;
-    memcpy(&size, resp, sizeof(size));
+    memmove(&size, resp, sizeof(size));
     *out_size = size;
   }
   return 0;

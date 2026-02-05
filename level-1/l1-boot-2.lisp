@@ -126,6 +126,7 @@ present and false otherwise. This variable shouldn't be set by user code.")
                                                  (#_GetStdHandle #$STD_INPUT_HANDLE))))
                                (make-fd-stream infd
                                   :basic t
+                                  #+wasm32-target :class #+wasm32-target 'wasm-stream
                                   :sharing :lock
                                   :direction :input
                                   :interactive (or (not *batch-flag*)
@@ -136,11 +137,15 @@ present and false otherwise. This variable shouldn't be set by user code.")
     (setq *stdout* (make-fd-stream #-windows-target 1
                                    #+windows-target (%ptr-to-int
                                                      (#_GetStdHandle #$STD_OUTPUT_HANDLE))
-                                   :basic t :direction :output :sharing :lock :encoding encoding-name #+windows-target :line-termination #+windows-target :msdos))
+                                   :basic t
+                                   #+wasm32-target :class #+wasm32-target 'wasm-stream
+                                   :direction :output :sharing :lock :encoding encoding-name #+windows-target :line-termination #+windows-target :msdos))
     (setq *stderr* (make-fd-stream #-windows-target 2
                                    #+windows-target (%ptr-to-int
                                                      (#_GetStdHandle #$STD_ERROR_HANDLE))
-                                   :basic t :direction :output :sharing :lock :encoding encoding-name #+windows-target :line-termination #+windows-target :crlf))
+                                   :basic t
+                                   #+wasm32-target :class #+wasm32-target 'wasm-stream
+                                   :direction :output :sharing :lock :encoding encoding-name #+windows-target :line-termination #+windows-target :crlf))
     (add-auto-flush-stream *stdout*)
     (add-auto-flush-stream *stderr*)
     (if *batch-flag*
@@ -154,11 +159,15 @@ present and false otherwise. This variable shouldn't be set by user code.")
             (setq
              *terminal-input* (make-fd-stream tty-fd
                                               :basic t
+                                              #+wasm32-target :class #+wasm32-target 'wasm-stream
                                               :direction :input
                                               :interactive t
                                               :sharing :lock
                                               :encoding encoding-name)
-             *terminal-output* (make-fd-stream tty-fd :basic t :direction :output :sharing :lock :encoding encoding-name)
+             *terminal-output* (make-fd-stream tty-fd
+                                               :basic t
+                                               #+wasm32-target :class #+wasm32-target 'wasm-stream
+                                               :direction :output :sharing :lock :encoding encoding-name)
              *terminal-io* (make-echoing-two-way-stream
                             *terminal-input* *terminal-output*))
             (add-auto-flush-stream *terminal-output*))
@@ -392,7 +401,6 @@ present and false otherwise. This variable shouldn't be set by user code.")
     (setq *%fasload-verbose* nil)
     )
 )
-
 
 
 

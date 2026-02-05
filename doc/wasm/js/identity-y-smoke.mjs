@@ -1,9 +1,9 @@
 /*
- * WASM32 fixnum sub smoke test.
+ * WASM32 identity-y smoke test.
  *
  * Validates:
- *  1) Compiled module registry installs fixnum-sub entry into the table
- *  2) _SPfuncall dispatch with 2 args via arg_z/arg_y
+ *  1) Compiled module registry installs identity-y entry into the table
+ *  2) identity-y returns arg_y
  */
 
 import fs from "node:fs/promises";
@@ -78,7 +78,10 @@ installSubprimsTable({
 assert(typeof kernel.instance.exports.wasm_set_subprims_ready === "function", "missing wasm_set_subprims_ready export");
 kernel.instance.exports.wasm_set_subprims_ready(1);
 
-assert(typeof kernel.instance.exports.wasm_test_entry_funcall2 === "function", "missing wasm_test_entry_funcall2 export");
+assert(
+  typeof kernel.instance.exports.wasm_test_entry_funcall2 === "function",
+  "missing wasm_test_entry_funcall2 export",
+);
 
 const imageBytes = await readFileUrl(imageUrl);
 const imageLen = imageBytes.byteLength >>> 0;
@@ -114,14 +117,16 @@ const { installed, entries } = await installCompiledModulesFromRegistry({
 });
 assert(installed > 0, "no compiled modules installed");
 
-const entryIndex = 205;
+const entryIndex = 216;
 const entry = entries.find((item) => item.entryIndex === entryIndex);
 assert(entry, `missing compiled module entry ${entryIndex}`);
 
-const a = 30;
-const b = 12;
-const result = kernel.instance.exports.wasm_test_entry_funcall2(entryIndex, a, b) >>> 0;
-const resultFixnum = result >> 2;
-assert(resultFixnum === a - b, `unexpected fixnum sub result: got=${resultFixnum} expected=${a - b}`);
+const fixnumShift = 2;
+const argA = 7;
+const argB = 42;
+const expected = (argB << fixnumShift) >>> 0;
 
-console.log("PASS: wasm fixnum sub smoke test");
+const result = kernel.instance.exports.wasm_test_entry_funcall2(entryIndex, argA, argB) >>> 0;
+assert(result === expected, `unexpected identity-y result: got=0x${result.toString(16)} expected=0x${expected.toString(16)}`);
+
+console.log("PASS: wasm identity-y smoke test");

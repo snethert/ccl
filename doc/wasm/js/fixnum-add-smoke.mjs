@@ -2,7 +2,7 @@
  * WASM32 fixnum add smoke test.
  *
  * Validates:
- *  1) Minimal fixnum-add module emitter shape (call wasm_return_fixnum_add)
+ *  1) Compiled module registry installs fixnum-add entry into the table
  *  2) _SPfuncall dispatch with 2 args via arg_z/arg_y
  */
 
@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import {
   createCclImports,
   createSharedCclRuntime,
+  installCompiledModulesFromRegistry,
   installSubprimsTable,
   instantiateWasm,
 } from "./ccl-loader.mjs";
@@ -28,81 +29,6 @@ function assert(cond, msg) {
 
 function readFileUrl(url) {
   return fs.readFile(fileURLToPath(url));
-}
-
-function pushU8(buf, byte) {
-  buf.push(byte & 0xff);
-}
-
-function pushUleb(buf, value) {
-  let v = value >>> 0;
-  do {
-    let byte = v & 0x7f;
-    v >>>= 7;
-    if (v !== 0) byte |= 0x80;
-    pushU8(buf, byte);
-  } while (v !== 0);
-}
-
-function pushString(buf, str) {
-  pushUleb(buf, str.length);
-  for (let i = 0; i < str.length; i++) {
-    pushU8(buf, str.charCodeAt(i));
-  }
-}
-
-function section(id, contents) {
-  const out = [];
-  pushU8(out, id);
-  pushUleb(out, contents.length);
-  out.push(...contents);
-  return out;
-}
-
-function buildFixnumAddModule() {
-  const out = [];
-  out.push(0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00);
-
-  const types = [];
-  pushUleb(types, 1);
-  pushU8(types, 0x60);
-  pushUleb(types, 0);
-  pushUleb(types, 0);
-
-  const imports = [];
-  pushUleb(imports, 1);
-  pushString(imports, "ccl");
-  pushString(imports, "wasm_return_fixnum_add");
-  pushU8(imports, 0x00);
-  pushUleb(imports, 0);
-
-  const funcs = [];
-  pushUleb(funcs, 1);
-  pushUleb(funcs, 0);
-
-  const exports = [];
-  pushUleb(exports, 1);
-  pushString(exports, "ccl_fixnum_add_entry");
-  pushU8(exports, 0x00);
-  pushUleb(exports, 1);
-
-  const code = [];
-  const body = [];
-  pushUleb(body, 0);
-  pushU8(body, 0x10);
-  pushUleb(body, 0);
-  pushU8(body, 0x0b);
-  pushUleb(code, 1);
-  pushUleb(code, body.length);
-  code.push(...body);
-
-  out.push(...section(1, types));
-  out.push(...section(2, imports));
-  out.push(...section(3, funcs));
-  out.push(...section(7, exports));
-  out.push(...section(10, code));
-
-  return new Uint8Array(out);
 }
 
 const kernelUrl = new URL("./wasmcl.wasm", import.meta.url);
@@ -152,7 +78,6 @@ installSubprimsTable({
 assert(typeof kernel.instance.exports.wasm_set_subprims_ready === "function", "missing wasm_set_subprims_ready export");
 kernel.instance.exports.wasm_set_subprims_ready(1);
 
-assert(typeof kernel.instance.exports.wasm_return_fixnum_add === "function", "missing wasm_return_fixnum_add export");
 assert(typeof kernel.instance.exports.wasm_test_entry_funcall2 === "function", "missing wasm_test_entry_funcall2 export");
 
 const imageBytes = await readFileUrl(imageUrl);
@@ -181,16 +106,17 @@ new Uint8Array(runtime.memory.buffer).set(imageBytes, blobBase);
 assert(typeof kernel.instance.exports.wasm_ccl_load_image === "function", "missing wasm_ccl_load_image export");
 kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
 
-const entryIndex = 204;
-const moduleBytes = buildFixnumAddModule();
-const addModule = await instantiateWasm(moduleBytes, {
-  ccl: { wasm_return_fixnum_add: kernel.instance.exports.wasm_return_fixnum_add },
+const { installed, entries } = await installCompiledModulesFromRegistry({
+  kernel: kernel.instance.exports,
+  memory: runtime.memory,
+  subprimsTable: runtime.subprimsTable,
+  microkernel,
 });
+assert(installed > 0, "no compiled modules installed");
 
-if (runtime.subprimsTable.length <= entryIndex) {
-  runtime.subprimsTable.grow(entryIndex - runtime.subprimsTable.length + 1);
-}
-runtime.subprimsTable.set(entryIndex, addModule.instance.exports.ccl_fixnum_add_entry);
+const entryIndex = 204;
+const entry = entries.find((item) => item.entryIndex === entryIndex);
+assert(entry, `missing compiled module entry ${entryIndex}`);
 
 const a = 10;
 const b = 12;

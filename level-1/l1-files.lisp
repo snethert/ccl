@@ -94,6 +94,13 @@
       (signal-file-error $xillwild name))
     (namestring-unquote name)))
 
+#+wasm32-target
+(defun wasm-fs-unavailable (operation &optional details)
+  (error 'capability-unavailable
+         :capability :fs/virtual
+         :operation operation
+         :details details))
+
 ;; TODO: change callers and get rid of this.
 (defun native-untranslated-namestring (path)
   (native-translated-namestring path))
@@ -1392,6 +1399,26 @@ a host-structure or string."
   (let* ((namestring (defaulted-native-namestring path))
 	 (err (%delete-file namestring)))
     (or (eql 0 err) (signal-file-error err path))))
+
+#+wasm32-target
+(defun cwd (path)
+  (declare (ignore path))
+  (wasm-fs-unavailable "chdir"))
+
+#+wasm32-target
+(defun create-file (path &key (if-exists :error) (create-directory t))
+  (declare (ignore path if-exists create-directory))
+  (wasm-fs-unavailable "create-file"))
+
+#+wasm32-target
+(defun %create-file (path &key (if-exists :error) (create-directory t))
+  (declare (ignore path if-exists create-directory))
+  (wasm-fs-unavailable "create-file"))
+
+#+wasm32-target
+(defun delete-file (path)
+  (declare (ignore path))
+  (wasm-fs-unavailable "delete-file"))
 
 (defvar *known-backends* ())
 

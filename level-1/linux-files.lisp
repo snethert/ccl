@@ -998,6 +998,24 @@ of the shell itself."
       (format nil "OS Error ~d" errno)
       (%get-cstring p))))
 
+#+wasm32-target
+(progn
+  (defun current-directory-name ()
+    "/")
+
+  (defun %realpath (namestring)
+    (let* ((name (if (zerop (length namestring)) "/" namestring)))
+      (multiple-value-bind (win mode size mtime inode uid blksize rmtime gid dev)
+          (%stat name)
+        (declare (ignore mode size mtime inode uid blksize rmtime gid dev))
+        (and win name))))
+
+  (defun %probe-file-x (namestring)
+    (let* ((realpath (%realpath namestring)))
+      (if realpath
+        (values realpath (%unix-file-kind realpath))
+        (values nil nil)))))
+
 #+windows-target
 (progn
 (defun get-last-windows-error ()
@@ -2605,5 +2623,4 @@ not, why not; and what its result code was if it completed."
         (declare (fixnum s))
         (when (> s skew) (setq skew s))))))
 )
-
 

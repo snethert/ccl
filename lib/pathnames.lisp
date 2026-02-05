@@ -435,6 +435,35 @@
 	    "full-pathname returned relative path ~s??" path)
     (%process-directory-result (%directory "/" dir path '(:absolute) keys (%make-directory-result)))))
 
+#+wasm32-target
+(progn
+  (defun %wasm-fs-unavailable (operation &optional details)
+    (if (fboundp 'wasm-fs-unavailable)
+      (funcall 'wasm-fs-unavailable operation details)
+      (error 'capability-unavailable
+             :capability :fs/virtual
+             :operation operation
+             :details details)))
+
+  (defun rename-file (file new-name &key (if-exists :error))
+    (declare (ignore file new-name if-exists))
+    (%wasm-fs-unavailable "rename-file"))
+
+  (defun create-directory (path &key (mode #o777))
+    (declare (ignore path mode))
+    (%wasm-fs-unavailable "create-directory"))
+
+  (defun ensure-directories-exist (pathspec &key verbose (mode #o777))
+    (declare (ignore pathspec verbose mode))
+    (%wasm-fs-unavailable "ensure-directories-exist"))
+
+  (defun directory (path &key (directories t) (files t) (all t)
+                          (directory-pathnames t) (include-emacs-lockfiles nil)
+                          test (follow-links t))
+    (declare (ignore path directories files all directory-pathnames
+                     include-emacs-lockfiles test follow-links))
+    (%wasm-fs-unavailable "directory")))
+
 (defun %directory (native-dir rest path so-far keys result)
   (multiple-value-bind (native-sub-dir wild rest) (%split-dir rest)
     (%some-specific native-dir native-sub-dir wild rest path so-far keys result)))
