@@ -6,6 +6,8 @@
  * without SharedArrayBuffer/Atomics.
  */
 
+import { createPersistenceService } from "./persist-service.mjs";
+
 export const KERNEL_ABI_VERSION = 1;
 
 export const KERNEL_STATUS_PENDING = 0;
@@ -20,22 +22,38 @@ export const KERNEL_OP_TIME_NOW = 0x00000004;
 export const KERNEL_OP_STREAM_OPEN = 0x00000005;
 export const KERNEL_OP_STREAM_CLOSE = 0x00000006;
 export const KERNEL_OP_COMPILED_MODULES_REFRESH = 0x00000007;
+export const KERNEL_OP_FS_PROBE = 0x00000008;
+export const KERNEL_OP_FS_TRUENAME = 0x00000009;
+export const KERNEL_OP_FS_DIRECTORY = 0x0000000a;
+export const KERNEL_OP_FS_FILE_WRITE_DATE = 0x0000000b;
+export const KERNEL_OP_FS_RENAME = 0x0000000c;
+export const KERNEL_OP_FS_DELETE = 0x0000000d;
+export const KERNEL_OP_FS_ENSURE_DIRS = 0x0000000e;
+export const KERNEL_OP_FS_DELETE_EMPTY_DIR = 0x0000000f;
+export const KERNEL_OP_FS_DELETE_TREE = 0x00000010;
 
 export const KERNEL_STREAM_KIND_PIPE = 0x00000000;
 export const KERNEL_STREAM_KIND_NAMED_RO = 0x00000001;
+export const KERNEL_STREAM_KIND_FILE = 0x00000002;
 
 // Minimal errno set. The kernel and microkernel must agree on numeric values.
 // For wasm32-wasi bring-up builds, use wasi-libc/WASI errno numbers.
 export const ERRNO = Object.freeze({
-  // Values from /usr/include/wasm32-wasi/wasi/api.h:
-  // __WASI_ERRNO_2BIG=1, __WASI_ERRNO_AGAIN=6, __WASI_ERRNO_BADF=8,
-  // __WASI_ERRNO_NOENT=44, __WASI_ERRNO_INVAL=28, __WASI_ERRNO_NOSYS=52.
+  // Values from wasi-libc (wasi/api.h):
+  // __WASI_ERRNO_2BIG=1, __WASI_ERRNO_ACCES=2, __WASI_ERRNO_AGAIN=6,
+  // __WASI_ERRNO_BADF=8, __WASI_ERRNO_INVAL=28, __WASI_ERRNO_ISDIR=31,
+  // __WASI_ERRNO_NOENT=44, __WASI_ERRNO_NOTEMPTY=55, __WASI_ERRNO_NOSYS=52,
+  // __WASI_ERRNO_XDEV=75.
   E2BIG: 1,
+  EACCES: 2,
   EWOULDBLOCK: 6, // EAGAIN
   EBADF: 8,
   EINVAL: 28,
+  EISDIR: 31,
   ENOENT: 44,
+  ENOTEMPTY: 55,
   ENOSYS: 52,
+  EXDEV: 75,
 });
 
 function u32(x) {
@@ -110,6 +128,28 @@ function encodeU64LE(value) {
   return new Uint8Array(buf);
 }
 
+const _textEncoder = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
+
+function encodeUtf8(text) {
+  if (_textEncoder) return _textEncoder.encode(String(text));
+  const s = String(text);
+  const out = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i) & 0xff;
+  return out;
+}
+
+function writeU64LE(dv, offset, value) {
+  const v = typeof value === "bigint" ? value : BigInt(Math.trunc(value));
+  if (typeof dv.setBigUint64 === "function") {
+    dv.setBigUint64(offset, v, true);
+  } else {
+    const lo = Number(v & 0xffffffffn) >>> 0;
+    const hi = Number((v >> 32n) & 0xffffffffn) >>> 0;
+    dv.setUint32(offset, lo, true);
+    dv.setUint32(offset + 4, hi, true);
+  }
+}
+
 function encodeTimeNowResponse(nowMs) {
   return encodeU64LE(nowMs);
 }
@@ -179,6 +219,7 @@ export function createMicrokernel({
   now = () => Date.now(),
   compiledModulesInstaller = null, // ({ registry, nil, memory, microkernel }) => installed count
   compiledModulesAsync = false,
+  persistence = null,
 } = {}) {
   if (!memory) throw new Error("createMicrokernel: memory is required");
 
@@ -187,6 +228,11 @@ export function createMicrokernel({
   let nextRequestId = 1;
   const supportsPending = asyncStdin || compiledModulesAsync;
   let api = null;
+
+  const persistenceConfig = persistence === true ? {} : persistence;
+  const persistenceService = persistenceConfig
+    ? createPersistenceService({ ...persistenceConfig, errno: ERRNO, now })
+    : null;
 
   const logs = [];
   const decoder = typeof TextDecoder !== "undefined" ? new TextDecoder("utf-8") : null;
@@ -319,6 +365,64 @@ export function createMicrokernel({
   streams.set(2, { kind: "stderr", readable: false, writable: true });
 
   registerNamedBlobs(namedBytes);
+
+  function readPathPayload(payloadPtr, payloadLen, allowFlags = false) {
+    if (u32(payloadLen) !== 16) return { error: ERRNO.EINVAL };
+    const flags = readU32LE(memory, u32(payloadPtr) + 0);
+    const pathPtr = readU32LE(memory, u32(payloadPtr) + 4);
+    const pathLen = readU32LE(memory, u32(payloadPtr) + 8);
+    if (!allowFlags && flags !== 0) return { error: ERRNO.EINVAL };
+    if (u32(pathLen) !== 0 && !inBounds(memory, pathPtr, pathLen)) return { error: ERRNO.EINVAL };
+    return { flags: u32(flags), pathBytes: sliceBytes(memory, pathPtr, pathLen) };
+  }
+
+  function readPathPairPayload(payloadPtr, payloadLen) {
+    if (u32(payloadLen) !== 24) return { error: ERRNO.EINVAL };
+    const flags = readU32LE(memory, u32(payloadPtr) + 0);
+    const srcPtr = readU32LE(memory, u32(payloadPtr) + 4);
+    const srcLen = readU32LE(memory, u32(payloadPtr) + 8);
+    const dstPtr = readU32LE(memory, u32(payloadPtr) + 12);
+    const dstLen = readU32LE(memory, u32(payloadPtr) + 16);
+    if (flags !== 0) return { error: ERRNO.EINVAL };
+    if (u32(srcLen) !== 0 && !inBounds(memory, srcPtr, srcLen)) return { error: ERRNO.EINVAL };
+    if (u32(dstLen) !== 0 && !inBounds(memory, dstPtr, dstLen)) return { error: ERRNO.EINVAL };
+    return {
+      flags: u32(flags),
+      srcBytes: sliceBytes(memory, srcPtr, srcLen),
+      dstBytes: sliceBytes(memory, dstPtr, dstLen),
+    };
+  }
+
+  function encodeProbeResponse(info) {
+    const buf = new ArrayBuffer(24);
+    const dv = new DataView(buf);
+    dv.setUint32(0, info.kind === "dir" ? 1 : 0, true);
+    dv.setUint32(4, info.readonly ? 1 : 0, true);
+    writeU64LE(dv, 8, info.size ?? 0);
+    writeU64LE(dv, 16, info.mtimeMs ?? 0);
+    return new Uint8Array(buf);
+  }
+
+  function encodeDirectoryResponse(entries) {
+    let total = 4;
+    const encoded = [];
+    for (const entry of entries) {
+      const pathBytes = encodeUtf8(entry.path);
+      encoded.push({ kind: entry.kind, pathBytes });
+      total += 8 + pathBytes.length;
+    }
+    const buf = new ArrayBuffer(total);
+    const dv = new DataView(buf);
+    dv.setUint32(0, encoded.length, true);
+    let off = 4;
+    for (const item of encoded) {
+      dv.setUint32(off, item.kind === "dir" ? 1 : 0, true);
+      dv.setUint32(off + 4, item.pathBytes.length, true);
+      new Uint8Array(buf, off + 8, item.pathBytes.length).set(item.pathBytes);
+      off += 8 + item.pathBytes.length;
+    }
+    return new Uint8Array(buf);
+  }
 
   function recordRequestDone(id, result, responseBytes = null) {
     requests.set(id, {
@@ -505,6 +609,10 @@ export function createMicrokernel({
         }
         if (typeof stream.read === "function") {
           const chunk = stream.read(u32(maxBytes));
+          if (typeof chunk === "number") {
+            recordRequestDone(id, i32(chunk));
+            break;
+          }
           if (chunk && chunk.length) {
             recordRequestDone(id, chunk.length, chunk);
           } else if (chunk) {
@@ -575,6 +683,46 @@ export function createMicrokernel({
           break;
         }
 
+        if (u32(kind) === KERNEL_STREAM_KIND_FILE) {
+          if (!persistenceService) {
+            recordRequestDone(id, -ERRNO.ENOSYS);
+            break;
+          }
+          if (u32(argLen) !== 16) {
+            recordRequestError(id, ERRNO.EINVAL);
+            break;
+          }
+          const modeFlags = readU32LE(memory, u32(argPtr) + 0);
+          const pathPtr = readU32LE(memory, u32(argPtr) + 4);
+          const pathLen = readU32LE(memory, u32(argPtr) + 8);
+          const reserved = readU32LE(memory, u32(argPtr) + 12);
+          if (reserved !== 0) {
+            recordRequestError(id, ERRNO.EINVAL);
+            break;
+          }
+          if (u32(pathLen) !== 0 && !inBounds(memory, pathPtr, pathLen)) {
+            recordRequestError(id, ERRNO.EINVAL);
+            break;
+          }
+          const res = persistenceService.openFile(sliceBytes(memory, pathPtr, pathLen), u32(modeFlags));
+          if (!res.ok) {
+            recordRequestDone(id, -res.errno);
+            break;
+          }
+          const sid = nextSid++;
+          const handle = res.value;
+          streams.set(sid, {
+            kind: "file",
+            readable: !!handle.readable,
+            writable: !!handle.writable,
+            read: handle.read,
+            write: handle.write,
+            close: handle.close,
+          });
+          recordRequestDone(id, sid);
+          break;
+        }
+
         recordRequestDone(id, -ERRNO.ENOSYS);
         break;
       }
@@ -605,6 +753,158 @@ export function createMicrokernel({
           streams.delete(u32(sid));
         }
         recordRequestDone(id, 0);
+        break;
+      }
+
+      case KERNEL_OP_FS_PROBE: {
+        if (!persistenceService) {
+          recordRequestDone(id, -ERRNO.ENOSYS);
+          break;
+        }
+        const payload = readPathPayload(payloadPtr, payloadLen);
+        if (payload.error) {
+          recordRequestError(id, payload.error);
+          break;
+        }
+        const res = persistenceService.probe(payload.pathBytes);
+        if (!res.ok) {
+          recordRequestDone(id, -res.errno);
+          break;
+        }
+        recordRequestDone(id, 0, encodeProbeResponse(res.value));
+        break;
+      }
+
+      case KERNEL_OP_FS_TRUENAME: {
+        if (!persistenceService) {
+          recordRequestDone(id, -ERRNO.ENOSYS);
+          break;
+        }
+        const payload = readPathPayload(payloadPtr, payloadLen);
+        if (payload.error) {
+          recordRequestError(id, payload.error);
+          break;
+        }
+        const res = persistenceService.truename(payload.pathBytes);
+        if (!res.ok) {
+          recordRequestDone(id, -res.errno);
+          break;
+        }
+        recordRequestDone(id, 0, encodeUtf8(res.value));
+        break;
+      }
+
+      case KERNEL_OP_FS_DIRECTORY: {
+        if (!persistenceService) {
+          recordRequestDone(id, -ERRNO.ENOSYS);
+          break;
+        }
+        const payload = readPathPayload(payloadPtr, payloadLen);
+        if (payload.error) {
+          recordRequestError(id, payload.error);
+          break;
+        }
+        const res = persistenceService.directory(payload.pathBytes);
+        if (!res.ok) {
+          recordRequestDone(id, -res.errno);
+          break;
+        }
+        recordRequestDone(id, 0, encodeDirectoryResponse(res.value));
+        break;
+      }
+
+      case KERNEL_OP_FS_FILE_WRITE_DATE: {
+        if (!persistenceService) {
+          recordRequestDone(id, -ERRNO.ENOSYS);
+          break;
+        }
+        const payload = readPathPayload(payloadPtr, payloadLen);
+        if (payload.error) {
+          recordRequestError(id, payload.error);
+          break;
+        }
+        const res = persistenceService.fileWriteDate(payload.pathBytes);
+        if (!res.ok) {
+          recordRequestDone(id, -res.errno);
+          break;
+        }
+        recordRequestDone(id, 0, encodeU64LE(res.value));
+        break;
+      }
+
+      case KERNEL_OP_FS_RENAME: {
+        if (!persistenceService) {
+          recordRequestDone(id, -ERRNO.ENOSYS);
+          break;
+        }
+        const payload = readPathPairPayload(payloadPtr, payloadLen);
+        if (payload.error) {
+          recordRequestError(id, payload.error);
+          break;
+        }
+        const res = persistenceService.renameFile(payload.srcBytes, payload.dstBytes);
+        recordRequestDone(id, res.ok ? 0 : -res.errno);
+        break;
+      }
+
+      case KERNEL_OP_FS_DELETE: {
+        if (!persistenceService) {
+          recordRequestDone(id, -ERRNO.ENOSYS);
+          break;
+        }
+        const payload = readPathPayload(payloadPtr, payloadLen);
+        if (payload.error) {
+          recordRequestError(id, payload.error);
+          break;
+        }
+        const res = persistenceService.deleteFile(payload.pathBytes);
+        recordRequestDone(id, res.ok ? 0 : -res.errno);
+        break;
+      }
+
+      case KERNEL_OP_FS_ENSURE_DIRS: {
+        if (!persistenceService) {
+          recordRequestDone(id, -ERRNO.ENOSYS);
+          break;
+        }
+        const payload = readPathPayload(payloadPtr, payloadLen);
+        if (payload.error) {
+          recordRequestError(id, payload.error);
+          break;
+        }
+        const res = persistenceService.ensureDirs(payload.pathBytes);
+        recordRequestDone(id, res.ok ? 0 : -res.errno);
+        break;
+      }
+
+      case KERNEL_OP_FS_DELETE_EMPTY_DIR: {
+        if (!persistenceService) {
+          recordRequestDone(id, -ERRNO.ENOSYS);
+          break;
+        }
+        const payload = readPathPayload(payloadPtr, payloadLen);
+        if (payload.error) {
+          recordRequestError(id, payload.error);
+          break;
+        }
+        const res = persistenceService.deleteEmptyDirectory(payload.pathBytes);
+        recordRequestDone(id, res.ok ? 0 : -res.errno);
+        break;
+      }
+
+      case KERNEL_OP_FS_DELETE_TREE: {
+        if (!persistenceService) {
+          recordRequestDone(id, -ERRNO.ENOSYS);
+          break;
+        }
+        const payload = readPathPayload(payloadPtr, payloadLen, true);
+        if (payload.error) {
+          recordRequestError(id, payload.error);
+          break;
+        }
+        const validate = (payload.flags & 0x1) !== 0;
+        const res = persistenceService.deleteDirectoryTree(payload.pathBytes, validate);
+        recordRequestDone(id, res.ok ? 0 : -res.errno);
         break;
       }
 
@@ -729,7 +1029,8 @@ export function createMicrokernel({
     registerNamedBlob,
     registerNamedBlobs,
     getLogs: () => logs.slice(),
-    _debug: { requests, pendingStdinReads, streams, namedBlobs },
+    persistence: persistenceService,
+    _debug: { requests, pendingStdinReads, streams, namedBlobs, persistence: persistenceService },
   };
   return api;
 }

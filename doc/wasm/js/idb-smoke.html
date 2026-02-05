@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IndexedDB Persistence Smoke</title>
+    <style>
+      body {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        margin: 24px;
+        background: #0b0d12;
+        color: #e6e6e6;
+      }
+      h1 { font-size: 18px; margin: 0 0 12px; }
+      #status { margin: 12px 0; padding: 8px 10px; border-radius: 6px; }
+      .ok { background: #0f2f1a; color: #8cf2b6; }
+      .fail { background: #2f1010; color: #f29a9a; }
+      pre { background: #141823; padding: 12px; border-radius: 6px; overflow: auto; }
+      .muted { color: #9aa3b2; }
+    </style>
+  </head>
+  <body>
+    <h1>IndexedDB Persistence Smoke</h1>
+    <div id="status" class="muted">Running…</div>
+    <pre id="log"></pre>
+
+    <script type="module">
+      const logEl = document.getElementById("log");
+      const statusEl = document.getElementById("status");
+      const log = (line) => { logEl.textContent += line + "\n"; };
+
+      const params = new URLSearchParams(location.search);
+      const dbName = params.get("db") || "ccl-idb-smoke";
+      const runId = params.get("run") || Math.random().toString(36).slice(2, 8);
+
+      async function run() {
+        const { createIndexedDbPersistenceStore, createPersistenceService, FILE_MODE_READ, FILE_MODE_WRITE, FILE_MODE_CREATE, FILE_MODE_TRUNCATE } =
+          await import("./persist-service.mjs");
+        const { ERRNO } = await import("./microkernel.mjs");
+
+        log(`db: ${dbName}`);
+        log(`run: ${runId}`);
+
+        const store = await createIndexedDbPersistenceStore({ dbName });
+        const svc = createPersistenceService({ errno: ERRNO, overlay: store });
+
+        const enc = new TextEncoder();
+        const dec = new TextDecoder();
+        const path = `/idb-${runId}.txt`;
+        const writeHandle = svc.openFile(enc.encode(path), FILE_MODE_WRITE | FILE_MODE_CREATE | FILE_MODE_TRUNCATE);
+        if (!writeHandle.ok) throw new Error(`openFile write failed: ${writeHandle.errno}`);
+        writeHandle.value.write(enc.encode("hello idb"));
+        writeHandle.value.close();
+        await store.persist.flush();
+
+        const store2 = await createIndexedDbPersistenceStore({ dbName });
+        const svc2 = createPersistenceService({ errno: ERRNO, overlay: store2 });
+        const readHandle = svc2.openFile(enc.encode(path), FILE_MODE_READ);
+        if (!readHandle.ok) throw new Error(`openFile read failed: ${readHandle.errno}`);
+        const data = readHandle.value.read(1024);
+        readHandle.value.close();
+        const text = dec.decode(data);
+
+        if (text !== "hello idb") {
+          throw new Error(`read mismatch: ${text}`);
+        }
+
+        statusEl.textContent = "PASS: IndexedDB persistence ok";
+        statusEl.className = "ok";
+        log("PASS: readback matched");
+      }
+
+      run().catch((err) => {
+        statusEl.textContent = "FAIL: IndexedDB persistence";
+        statusEl.className = "fail";
+        log(String(err && err.stack ? err.stack : err));
+        console.error(err);
+      });
+    </script>
+  </body>
+</html>

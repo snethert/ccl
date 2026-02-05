@@ -256,6 +256,68 @@ wasm_alloc_bignum_uninitialized(TCR *tcr, unsigned digits, uint32_t **data_out)
   return obj;
 }
 
+static LispObj
+wasm_alloc_node_vector_initialized(TCR *tcr, unsigned subtag, signed_natural count)
+{
+  if (count < 0) {
+    static const char msg[] = "WASM misc_alloc: negative count\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    return lisp_nil;
+  }
+
+  size_t words = 1 + (size_t)count;
+  if (words > (SIZE_MAX / node_size)) {
+    static const char msg[] = "WASM misc_alloc: size overflow\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    return lisp_nil;
+  }
+
+  size_t bytes = wasm_align_dnode(words * node_size);
+  if (!wasm_reserve_heap_segment(tcr, bytes)) {
+    static const char msg[] = "WASM misc_alloc: reserve failed\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    return lisp_nil;
+  }
+
+  BytePtr alloc_ptr = (BytePtr)tcr->save_allocptr;
+  BytePtr alloc_base = (BytePtr)tcr->save_allocbase;
+  BytePtr newptr = alloc_ptr - (signed_natural)bytes;
+  if (newptr < alloc_base) {
+    static const char msg[] = "WASM misc_alloc: allocptr underflow\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    return lisp_nil;
+  }
+
+  tcr->save_allocptr = (void *)newptr;
+  LispObj obj = (LispObj)(newptr + fulltag_misc);
+  header_of(obj) = make_header(subtag, count);
+
+  LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
+  for (signed_natural i = 0; i < count; i++) {
+    data[i] = lisp_nil;
+  }
+
+  return obj;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_misc_alloc")))
+LispObj
+wasm_misc_alloc(TCR *tcr, unsigned subtag, signed_natural count)
+{
+  if (tcr == NULL) {
+    static const char msg[] = "WASM misc_alloc: null TCR\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    return lisp_nil;
+  }
+  if ((subtag & fulltagmask) != fulltag_nodeheader) {
+    static const char msg[] = "WASM misc_alloc: bad subtag\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    return lisp_nil;
+  }
+
+  return wasm_alloc_node_vector_initialized(tcr, subtag, count);
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_box_signed_64")))
 LispObj
 wasm_box_signed_64(TCR *tcr, int64_t value)
