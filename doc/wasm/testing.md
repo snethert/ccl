@@ -6,7 +6,6 @@ WASM-specific commands in one place.
 ## Sandbox-Safe
 
 - `node doc/wasm/js/all-smoke.mjs`
-- `node --test doc/wasm/js/persist-service.test.mjs`
 
 ## External / Host-Only
 

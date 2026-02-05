@@ -8,14 +8,13 @@ that requires native services, browsers, or privileged OS access.
 
 - Run all sandbox-safe tests: `scripts/tests/run-sandbox-tests.sh`
 - WASM JS smoke tests: `node doc/wasm/js/all-smoke.mjs`
-- WASM persistence unit tests (LMDB disabled): `node --test doc/wasm/js/persist-service.test.mjs`
 - Web UI node tests (no browser): `npm --prefix web-ui run test:sandbox`
 
 ## External / Host-Only
 
 - Run all host-only tests: `scripts/tests/run-external-tests.sh`
 - LMDB smoke: `node doc/wasm/js/lmdb-smoke.mjs`
-- WASM persistence tests with LMDB: `CCL_ENABLE_LMDB_TESTS=1 node --test doc/wasm/js/persist-service.test.mjs`
+- WASM persistence tests: `CCL_ENABLE_LMDB_TESTS=1 node --test doc/wasm/js/persist-service.test.mjs`
 - IndexedDB browser smoke server: `node scripts/wasm/idb-smoke-server.mjs`
 - IndexedDB browser smoke page: open `http://127.0.0.1:5173/doc/wasm/js/idb-smoke.html`
 - Web UI headless browser tests: `WEB_UI_ENABLE_BROWSER_TESTS=1 npm --prefix web-ui run test:browser`
