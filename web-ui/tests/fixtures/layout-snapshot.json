@@ -17,7 +17,15 @@
       "root": "split"
     },
     "presentations": {},
-    "selection": "issue-42",
+    "selection": {
+      "anchorId": "issue-42",
+      "id": "issue-42",
+      "kind": "item",
+      "metadata": {},
+      "targetIds": [
+        "issue-42"
+      ]
+    },
     "tasks": {
       "t1": {
         "activeWindowId": "w1",

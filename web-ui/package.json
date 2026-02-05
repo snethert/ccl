@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "npm run test:sandbox",
-    "test:sandbox": "node --test tests/basic.test.mjs tests/commands.test.mjs tests/event-log.test.mjs tests/focus.test.mjs tests/layout.test.mjs tests/selection.test.mjs tests/state.test.mjs",
+    "test:sandbox": "node --test tests/basic.test.mjs tests/commands.test.mjs tests/event-log.test.mjs tests/focus.test.mjs tests/layout.test.mjs tests/renderer.test.mjs tests/selection.test.mjs tests/state.test.mjs tests/widgets-command.test.mjs tests/widgets.test.mjs",
     "test:browser": "WEB_UI_ENABLE_BROWSER_TESTS=1 node --test tests/browser.test.mjs"
   },
   "devDependencies": {

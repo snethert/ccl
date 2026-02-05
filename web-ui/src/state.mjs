@@ -1,4 +1,5 @@
 import { allocateId, initIdCounters } from "./ids.mjs";
+import { normalizeSelection } from "./selection.mjs";
 
 const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layout"];
 
@@ -86,7 +87,7 @@ export function createState(options = {}) {
     presentations: options.presentations ?? {},
     focus: options.focus ?? null,
     focusHistory: Array.isArray(options.focusHistory) ? [...options.focusHistory] : [],
-    selection: options.selection ?? null,
+    selection: normalizeSelection(options.selection ?? null),
     commands: options.commands ?? {},
     layout: options.layout ?? null,
     idCounters,
@@ -200,7 +201,7 @@ export function setLayout(state, layout) {
 }
 
 export function setSelection(state, selection) {
-  return { ...state, selection };
+  return { ...state, selection: normalizeSelection(selection) };
 }
 
 export function setFocus(state, target, reason = "command", seq = null) {

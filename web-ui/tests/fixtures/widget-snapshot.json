@@ -1,0 +1,89 @@
+{
+  "kind": "element",
+  "tag": "root",
+  "props": {},
+  "children": [
+    {
+      "kind": "element",
+      "tag": "section",
+      "props": {
+        "className": "ui-window",
+        "data-task-id": "task-1",
+        "data-window-id": "win-1",
+        "data-window-kind": "document"
+      },
+      "children": [
+        {
+          "kind": "element",
+          "tag": "div",
+          "props": {
+            "className": "ui-widget ui-container root",
+            "data-widget-id": "widget-root",
+            "data-widget-kind": "container",
+            "id": "widget-root"
+          },
+          "children": [
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label",
+                "data-widget-id": "widget-label",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Hello"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "button",
+              "props": {
+                "className": "ui-widget ui-button",
+                "data-widget-id": "widget-btn",
+                "data-widget-kind": "button",
+                "disabled": true,
+                "type": "button"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Run"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "div",
+              "props": {
+                "className": "ui-widget ui-container stack",
+                "data-widget-id": "widget-stack",
+                "data-widget-kind": "container"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "span",
+                  "props": {
+                    "className": "ui-widget ui-label",
+                    "data-widget-id": "widget-info",
+                    "data-widget-kind": "label"
+                  },
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Nested"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

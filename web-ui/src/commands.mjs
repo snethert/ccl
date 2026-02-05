@@ -1,8 +1,23 @@
 const DEFAULT_PRECEDENCE = ["global", "task", "context", "widget"];
+const DEFAULT_NAMESPACE_POLICY = "allow";
 
-export function createRegistry(precedence = DEFAULT_PRECEDENCE) {
+function normalizeCreateArgs(args) {
+  if (Array.isArray(args)) {
+    return { precedence: args };
+  }
+  if (args && typeof args === "object") {
+    return args;
+  }
+  return {};
+}
+
+export function createRegistry(options = DEFAULT_PRECEDENCE) {
+  const resolved = normalizeCreateArgs(options);
+  const precedence = resolved.precedence ?? DEFAULT_PRECEDENCE;
   return {
     precedence,
+    namespacePolicy: resolved.namespacePolicy ?? DEFAULT_NAMESPACE_POLICY,
+    version: resolved.version ?? "0",
     commands: new Map(),
     keymaps: {
       global: new Map(),
@@ -13,14 +28,37 @@ export function createRegistry(precedence = DEFAULT_PRECEDENCE) {
   };
 }
 
+function validateCommandId(registry, id) {
+  if (!id || typeof id !== "string") {
+    throw new Error("Command must have a string id");
+  }
+  if (registry.namespacePolicy === "require-dot" && !id.includes(".")) {
+    throw new Error(`Command id must be namespaced: ${id}`);
+  }
+}
+
+export function normalizeCommand(command) {
+  if (!command || typeof command !== "object") {
+    throw new Error("Command must be an object");
+  }
+  return {
+    id: command.id,
+    title: command.title ?? command.id,
+    doc: command.doc ?? null,
+    scope: command.scope ?? "global",
+    enabled: command.enabled ?? null,
+    exec: command.exec ?? null,
+    metadata: command.metadata ?? {}
+  };
+}
+
 export function registerCommand(registry, command) {
-  if (!command || !command.id) {
-    throw new Error("Command must have an id");
+  const normalized = normalizeCommand(command);
+  validateCommandId(registry, normalized.id);
+  if (registry.commands.has(normalized.id)) {
+    throw new Error(`Command already registered: ${normalized.id}`);
   }
-  if (registry.commands.has(command.id)) {
-    throw new Error(`Command already registered: ${command.id}`);
-  }
-  registry.commands.set(command.id, command);
+  registry.commands.set(normalized.id, normalized);
   return registry;
 }
 

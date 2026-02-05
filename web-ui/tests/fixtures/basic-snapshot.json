@@ -8,7 +8,13 @@
       }
     },
     "focus": "w1",
-    "focusHistory": [],
+    "focusHistory": [
+      {
+        "reason": "command",
+        "seq": 1,
+        "target": "w1"
+      }
+    ],
     "idCounters": {
       "layout": 0,
       "presentation": 0,

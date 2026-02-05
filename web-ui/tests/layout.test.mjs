@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 
 import { replayEvents } from "./replay-harness.mjs";
 import { snapshotToString, stableStringify } from "./snapshot.mjs";
+import { createRegistry, registerCommand } from "../src/commands.mjs";
+import { setSelection } from "../src/state.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,7 +22,12 @@ test("layout and selection changes are captured in snapshots", () => {
   const eventLog = loadJson("fixtures/layout-events.json");
   const expectedSnapshot = loadJson("fixtures/layout-snapshot.json");
 
-  const result = replayEvents(initialState, eventLog.events);
+  const registry = createRegistry();
+  registerCommand(registry, {
+    id: "selection.set",
+    exec: (ctx) => ({ state: setSelection(ctx.state, ctx.payload.selection) })
+  });
+  const result = replayEvents(initialState, eventLog.events, { registry });
   const snapshot = snapshotToString(result.snapshots[0]);
 
   assert.equal(snapshot, stableStringify(expectedSnapshot));

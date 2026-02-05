@@ -1,0 +1,59 @@
+{
+  "kind": "element",
+  "tag": "div",
+  "attrs": {
+    "id": "dom-render-target"
+  },
+  "children": [
+    {
+      "kind": "element",
+      "tag": "div",
+      "attrs": {
+        "class": "pane active",
+        "data-role": "main",
+        "id": "view"
+      },
+      "children": [
+        {
+          "kind": "element",
+          "tag": "button",
+          "attrs": {
+            "data-key": "btn"
+          },
+          "children": [
+            {
+              "kind": "text",
+              "text": "Go"
+            }
+          ]
+        },
+        {
+          "kind": "element",
+          "tag": "span",
+          "attrs": {
+            "data-key": "label"
+          },
+          "children": [
+            {
+              "kind": "text",
+              "text": "Hello"
+            }
+          ]
+        },
+        {
+          "kind": "element",
+          "tag": "span",
+          "attrs": {
+            "data-key": "extra"
+          },
+          "children": [
+            {
+              "kind": "text",
+              "text": "New"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

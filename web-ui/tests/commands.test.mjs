@@ -52,3 +52,9 @@ test("enablement reasons are returned and enforce dispatch", () => {
   assert.equal(exec.ok, false);
   assert.equal(exec.reason, "No selection");
 });
+
+test("namespace policy can enforce namespaced ids", () => {
+  const registry = createRegistry({ namespacePolicy: "require-dot" });
+  assert.throws(() => registerCommand(registry, { id: "plain" }));
+  registerCommand(registry, { id: "ns.command" });
+});
