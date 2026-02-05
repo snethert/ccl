@@ -108,6 +108,17 @@ test("widget adapter renders a window tree via the renderer", async () => {
     parentId: "widget-stack",
     props: { text: "Nested" }
   });
+  state = addWidget(state, {
+    id: "widget-list",
+    kind: "list",
+    parentId: "widget-root",
+    props: {
+      items: [
+        { id: "alpha", label: "Alpha" },
+        { id: "beta", label: "Beta", selected: true }
+      ]
+    }
+  });
 
   const tree = renderWindow(state, "win-1");
   root.render(tree);

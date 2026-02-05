@@ -159,3 +159,101 @@ test("renderer rejects duplicate keys", () => {
   ]);
   assert.throws(() => root.render(tree), /Duplicate key/);
 });
+
+test("renderer replaces nodes when keyed type changes", () => {
+  const backend = createMockBackend();
+  const container = backend.createElement("root");
+  const root = createRoot(backend, container);
+
+  const tree1 = createElement(
+    "div",
+    { id: "root" },
+    [createElement("span", { "data-key": "swap" }, [createText("Old")], "swap")],
+    "root"
+  );
+
+  root.render(tree1);
+
+  const previous = findByDataKey(container, "swap");
+
+  const tree2 = createElement(
+    "div",
+    { id: "root" },
+    [createElement("button", { "data-key": "swap" }, [createText("New")], "swap")],
+    "root"
+  );
+
+  root.render(tree2);
+
+  const next = findByDataKey(container, "swap");
+  assert.notStrictEqual(next, previous);
+  assert.deepEqual(serialize(container), {
+    kind: "element",
+    tag: "root",
+    props: {},
+    children: [
+      {
+        kind: "element",
+        tag: "div",
+        props: { id: "root" },
+        children: [
+          {
+            kind: "element",
+            tag: "button",
+            props: { "data-key": "swap" },
+            children: [{ kind: "text", text: "New" }]
+          }
+        ]
+      }
+    ]
+  });
+});
+
+test("renderer removes nodes missing from next tree", () => {
+  const backend = createMockBackend();
+  const container = backend.createElement("root");
+  const root = createRoot(backend, container);
+
+  const tree1 = createElement(
+    "div",
+    { id: "root" },
+    [
+      createElement("span", { "data-key": "keep" }, [createText("Keep")], "keep"),
+      createElement("span", { "data-key": "drop" }, [createText("Drop")], "drop")
+    ],
+    "root"
+  );
+
+  root.render(tree1);
+
+  const tree2 = createElement(
+    "div",
+    { id: "root" },
+    [createElement("span", { "data-key": "keep" }, [createText("Keep")], "keep")],
+    "root"
+  );
+
+  root.render(tree2);
+
+  assert.strictEqual(findByDataKey(container, "drop"), null);
+  assert.deepEqual(serialize(container), {
+    kind: "element",
+    tag: "root",
+    props: {},
+    children: [
+      {
+        kind: "element",
+        tag: "div",
+        props: { id: "root" },
+        children: [
+          {
+            kind: "element",
+            tag: "span",
+            props: { "data-key": "keep" },
+            children: [{ kind: "text", text: "Keep" }]
+          }
+        ]
+      }
+    ]
+  });
+});

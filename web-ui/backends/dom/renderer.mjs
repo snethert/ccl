@@ -18,6 +18,23 @@ function ensureDocument(doc, container) {
 export function createDomBackend({ document: doc, container } = {}) {
   const documentRef = ensureDocument(doc, container);
   const listeners = new WeakMap();
+  let measureContext = null;
+  const viewRef = documentRef.defaultView ?? globalThis;
+
+  function getMeasureContext() {
+    if (measureContext) return measureContext;
+    const canvas = documentRef.createElement("canvas");
+    measureContext = canvas.getContext("2d");
+    return measureContext;
+  }
+
+  function parseFontSize(font) {
+    if (!font) return 12;
+    const match = String(font).match(/(\d+(?:\.\d+)?)px/);
+    if (!match) return 12;
+    const size = Number.parseFloat(match[1]);
+    return Number.isFinite(size) ? size : 12;
+  }
 
   function setEvent(node, name, handler) {
     const event = eventName(name);
@@ -141,6 +158,77 @@ export function createDomBackend({ document: doc, container } = {}) {
     },
     destroy(node) {
       clearAllEvents(node);
+    },
+    measureText(text, options = {}) {
+      const ctx = getMeasureContext();
+      if (!ctx) {
+        return { width: 0, height: 0, ascent: 0, descent: 0 };
+      }
+      const font = options.font ?? "12px monospace";
+      ctx.font = font;
+      const metrics = ctx.measureText(String(text ?? ""));
+      const fontSize = parseFontSize(font);
+      const ascent = metrics.actualBoundingBoxAscent ?? fontSize * 0.8;
+      const descent = metrics.actualBoundingBoxDescent ?? fontSize * 0.2;
+      const height = ascent + descent;
+      return {
+        width: metrics.width,
+        height,
+        ascent,
+        descent
+      };
+    },
+    hitTest(point, options = {}) {
+      const x = point?.x ?? 0;
+      const y = point?.y ?? 0;
+      if (typeof documentRef.elementFromPoint !== "function") {
+        return null;
+      }
+      const element = documentRef.elementFromPoint(x, y);
+      if (!element) return null;
+      const target = options.container ?? null;
+      if (target && !target.contains(element)) {
+        return null;
+      }
+      return element;
+    },
+    captureEvents(target, handlers = {}, options = {}) {
+      if (!target) return () => {};
+      const capture = options.capture ?? true;
+      const passive = options.passive ?? false;
+      const entries = [];
+      for (const [event, handler] of Object.entries(handlers)) {
+        if (typeof handler !== "function") continue;
+        const listener = (evt) => handler(evt);
+        target.addEventListener(event, listener, { capture, passive });
+        entries.push({ event, listener });
+      }
+      return () => {
+        for (const entry of entries) {
+          target.removeEventListener(entry.event, entry.listener, { capture });
+        }
+      };
+    },
+    invalidate(callback) {
+      if (typeof callback !== "function") return () => {};
+      if (typeof viewRef?.requestAnimationFrame !== "function") {
+        const timeoutId = viewRef?.setTimeout
+          ? viewRef.setTimeout(() => callback(), 0)
+          : setTimeout(() => callback(), 0);
+        return () => {
+          if (viewRef?.clearTimeout) {
+            viewRef.clearTimeout(timeoutId);
+          } else {
+            clearTimeout(timeoutId);
+          }
+        };
+      }
+      const handle = viewRef.requestAnimationFrame(() => callback());
+      return () => {
+        if (typeof viewRef.cancelAnimationFrame === "function") {
+          viewRef.cancelAnimationFrame(handle);
+        }
+      };
     }
   };
 }

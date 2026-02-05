@@ -4,7 +4,7 @@ import { createRegistry, registerCommand } from "../../src/commands.mjs";
 import { createState, addTask, addWindow, addWidget } from "../../src/state.mjs";
 import { createElement, createText } from "../../src/vdom.mjs";
 import { renderWindow } from "../../src/widgets.mjs";
-import { createDomRoot } from "../../backends/dom/renderer.mjs";
+import { createDomBackend, createDomRoot } from "../../backends/dom/renderer.mjs";
 
 async function loadJson(relPath) {
   const response = await fetch(relPath);
@@ -32,6 +32,7 @@ async function run() {
   domRenderTarget.id = "dom-render-target";
   root.appendChild(domRenderTarget);
 
+  const domBackend = createDomBackend({ document, container: domRenderTarget });
   const domRoot = createDomRoot(domRenderTarget, { document });
   const tree1 = createElement(
     "div",
@@ -95,6 +96,7 @@ async function run() {
   const registry = createRegistry();
   let commandCalls = 0;
   let inputValue = null;
+  let listItemId = null;
   registerCommand(registry, {
     id: "demo.run",
     exec: () => {
@@ -109,6 +111,12 @@ async function run() {
     id: "demo.input",
     exec: (ctx) => {
       inputValue = ctx.inputValue ?? null;
+    }
+  });
+  registerCommand(registry, {
+    id: "demo.item",
+    exec: (ctx) => {
+      listItemId = ctx.itemId ?? null;
     }
   });
 
@@ -134,6 +142,18 @@ async function run() {
     parentId: "root-widget",
     props: { placeholder: "Type", command: "demo.input" }
   });
+  widgetState = addWidget(widgetState, {
+    id: "list-widget",
+    kind: "list",
+    parentId: "root-widget",
+    props: {
+      itemCommand: "demo.item",
+      items: [
+        { id: "alpha", label: "Alpha" },
+        { id: "beta", label: "Beta" }
+      ]
+    }
+  });
 
   const widgetRoot = createDomRoot(widgetRenderTarget, { document });
   widgetRoot.render(renderWindow(widgetState, "win-1", { registry }));
@@ -141,15 +161,18 @@ async function run() {
   const runButton = widgetRenderTarget.querySelector("[data-widget-id='btn-run']");
   const blockedButton = widgetRenderTarget.querySelector("[data-widget-id='btn-blocked']");
   const input = widgetRenderTarget.querySelector("[data-widget-id='input-text']");
+  const listItem = widgetRenderTarget.querySelector("[data-item-id='alpha']");
   const commandDomOk =
     runButton &&
     blockedButton &&
     input &&
+    listItem &&
     runButton.getAttribute("data-command-id") === "demo.run" &&
     blockedButton.getAttribute("data-command-id") === "demo.blocked" &&
     blockedButton.disabled === true &&
     blockedButton.getAttribute("data-disabled-reason") === "Blocked" &&
-    input.getAttribute("data-command-id") === "demo.input";
+    input.getAttribute("data-command-id") === "demo.input" &&
+    listItem.getAttribute("data-command-id") === "demo.item";
 
   if (runButton) {
     runButton.click();
@@ -160,6 +183,43 @@ async function run() {
   }
   const commandInvokeOk = commandCalls === 1;
   const commandInputOk = inputValue === "hello";
+  if (listItem) {
+    listItem.click();
+  }
+  const commandListOk = listItemId === "alpha";
+
+  const measure = domBackend.measureText("Hello", { font: "16px monospace" });
+  const measureOk = Number.isFinite(measure.width) && measure.width > 0 && measure.height > 0;
+
+  const hitTestTarget = document.createElement("div");
+  hitTestTarget.style.cssText = "position: relative; width: 60px; height: 60px;";
+  const hitButton = document.createElement("button");
+  hitButton.textContent = "Hit";
+  hitButton.setAttribute("data-hit", "target");
+  hitButton.style.cssText = "position: absolute; left: 10px; top: 10px; width: 20px; height: 20px;";
+  hitTestTarget.appendChild(hitButton);
+  root.appendChild(hitTestTarget);
+
+  const rect = hitButton.getBoundingClientRect();
+  const hit = domBackend.hitTest(
+    { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+    { container: hitTestTarget }
+  );
+  const hitTestOk = hit === hitButton;
+
+  let capturedTarget = null;
+  const releaseCapture = domBackend.captureEvents(hitTestTarget, {
+    click: (event) => {
+      capturedTarget = event.target;
+    }
+  });
+  hitButton.click();
+  releaseCapture();
+  const captureEventsOk = capturedTarget === hitButton;
+
+  const invalidateOk = await new Promise((resolve) => {
+    domBackend.invalidate(() => resolve(true));
+  });
 
   const canvas = document.createElement("canvas");
   canvas.width = 10;
@@ -177,6 +237,10 @@ async function run() {
     domReuseOk &&
     commandDomOk &&
     commandInvokeOk &&
+    measureOk &&
+    hitTestOk &&
+    captureEventsOk &&
+    invalidateOk &&
     canvasOk;
   const payload = {
     ok,
@@ -187,6 +251,11 @@ async function run() {
     commandDomOk,
     commandInvokeOk,
     commandInputOk,
+    commandListOk,
+    measureOk,
+    hitTestOk,
+    captureEventsOk,
+    invalidateOk,
     canvasOk
   };
 

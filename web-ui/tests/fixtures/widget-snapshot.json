@@ -80,6 +80,71 @@
                   ]
                 }
               ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list",
+                "data-widget-id": "widget-list",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "widget-list"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "className": "ui-list-button",
+                        "data-item-id": "alpha",
+                        "data-item-index": 0,
+                        "data-list-id": "widget-list",
+                        "type": "button"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Alpha"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item is-selected",
+                    "data-list-id": "widget-list"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "className": "ui-list-button",
+                        "data-item-id": "beta",
+                        "data-item-index": 1,
+                        "data-list-id": "widget-list",
+                        "type": "button"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Beta"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }

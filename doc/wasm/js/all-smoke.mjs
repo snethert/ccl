@@ -23,6 +23,7 @@ const tests = [
   "./fixnum-overflow-smoke.mjs",
   "./compiler-smoke.mjs",
   "./float-smoke.mjs",
+  "./web-ui-list-smoke.mjs",
   "./closure-unwind-mv-smoke.mjs",
   "./mv-helpers-smoke.mjs",
   "./mvcall-smoke.mjs"

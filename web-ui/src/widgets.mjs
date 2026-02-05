@@ -192,8 +192,6 @@ function renderList(state, widget, options = {}) {
     const liClass = mergeClassNames("ui-list-item", item.className, item.selected ? "is-selected" : null);
     const liProps = {
       className: liClass,
-      "data-item-id": itemId,
-      "data-item-index": index,
       "data-list-id": widget.id
     };
 

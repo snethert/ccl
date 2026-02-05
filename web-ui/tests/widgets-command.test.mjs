@@ -20,6 +20,21 @@ function findByWidgetId(node, id) {
   return null;
 }
 
+function findByDataAttr(node, attr, value) {
+  if (!node || node.kind !== "element") {
+    return null;
+  }
+  if (node.props?.[attr] === value) {
+    return node;
+  }
+  const children = node.children ?? [];
+  for (const child of children) {
+    const found = findByDataAttr(child, attr, value);
+    if (found) return found;
+  }
+  return null;
+}
+
 test("button command wiring dispatches through registry", () => {
   const registry = createRegistry();
   let calls = 0;
@@ -111,4 +126,47 @@ test("text input command wiring provides input value", () => {
 
   input.props.onInput({ target: { value: "hello" } });
   assert.equal(lastValue, "hello");
+});
+
+test("list item command wiring provides item context", () => {
+  const registry = createRegistry();
+  let lastCtx = null;
+
+  registerCommand(registry, {
+    id: "demo.item",
+    exec: (ctx) => {
+      lastCtx = ctx;
+    }
+  });
+
+  let state = createState();
+  state = addTask(state, { id: "task-1", title: "Task" });
+  state = addWindow(state, { id: "win-1", taskId: "task-1", kind: "document" });
+  state = addWidget(state, { id: "root", kind: "container", windowId: "win-1" });
+  state = addWidget(state, {
+    id: "widget-list",
+    kind: "list",
+    parentId: "root",
+    props: {
+      itemCommand: "demo.item",
+      items: [
+        { id: "alpha", label: "Alpha" },
+        { id: "beta", label: "Beta" }
+      ]
+    }
+  });
+
+  const tree = renderWindow(state, "win-1", { registry });
+  const itemButton = findByDataAttr(tree, "data-item-id", "alpha");
+
+  assert.ok(itemButton, "list item exists");
+  assert.equal(itemButton.tag, "button");
+  assert.equal(itemButton.props["data-command-id"], "demo.item");
+  assert.equal(typeof itemButton.props.onClick, "function");
+
+  itemButton.props.onClick({ type: "click" });
+  assert.ok(lastCtx, "command context set");
+  assert.equal(lastCtx.itemId, "alpha");
+  assert.equal(lastCtx.itemIndex, 0);
+  assert.equal(lastCtx.listId, "widget-list");
 });
