@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Web UI Event Log",
+  "type": "object",
+  "required": ["version", "events"],
+  "properties": {
+    "version": { "type": "string" },
+    "events": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/event" }
+    }
+  },
+  "$defs": {
+    "event": {
+      "type": "object",
+      "required": ["seq", "type", "payload"],
+      "properties": {
+        "seq": { "type": "integer", "minimum": 0 },
+        "ts": { "type": "integer", "minimum": 0 },
+        "type": { "type": "string" },
+        "target": { "type": "string" },
+        "payload": { "type": "object" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

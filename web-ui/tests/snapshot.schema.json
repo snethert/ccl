@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Web UI State Snapshot",
+  "type": "object",
+  "required": ["version", "state"],
+  "properties": {
+    "version": { "type": "string" },
+    "state": { "type": "object" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,11 @@
+{
+  "tasks": {
+    "t1": { "id": "t1", "title": "Test" }
+  },
+  "windows": {
+    "w1": { "id": "w1", "task": "t1" }
+  },
+  "focus": null,
+  "selection": null,
+  "commands": {}
+}

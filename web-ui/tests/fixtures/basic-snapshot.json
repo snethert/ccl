@@ -1,0 +1,25 @@
+{
+  "version": "0",
+  "state": {
+    "commands": {
+      "issue.delete": {
+        "enabled": false,
+        "reason": "Nothing selected."
+      }
+    },
+    "focus": "w1",
+    "selection": null,
+    "tasks": {
+      "t1": {
+        "id": "t1",
+        "title": "Test"
+      }
+    },
+    "windows": {
+      "w1": {
+        "id": "w1",
+        "task": "t1"
+      }
+    }
+  }
+}

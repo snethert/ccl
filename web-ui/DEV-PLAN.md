@@ -1,0 +1,228 @@
+# Web UI Development Plan
+
+Status: Draft
+
+## Staged Plan (High Level)
+
+### Phase 0: Test Harness First
+Goals:
+- Deterministic event log format for pointer, keyboard, focus, layout, and command events.
+- UI tree snapshot serializer with stable output.
+- Test runner that can execute in headless browser and node.
+
+Exit criteria:
+- A trivial UI tree can be rendered, serialized, and compared in tests.
+- Event logs can be replayed deterministically with identical snapshots.
+
+### Phase 1: Core Model and Command System
+Goals:
+- Task, window, command, focus, and selection state models.
+- Central command dispatch with enablement reasons.
+- Focus history and deterministic transitions.
+
+Exit criteria:
+- Command routing precedence is deterministic under test.
+- Focus history replay produces identical results for a fixed event log.
+
+### Phase 2: DOM Backend and Diff/Patch Rendering
+Goals:
+- Backend interface for render, measure, hit-test, invalidate, capture-events.
+- DOM renderer with stable keys and incremental patching.
+- Basic widgets (buttons, lists, text inputs) with command wiring.
+
+Exit criteria:
+- DOM snapshots are stable across runs.
+- Diff/patch passes all structural update tests.
+
+### Phase 3: Layout and Focus Determinism
+Goals:
+- Split panes, tabs, docking layout model with persistence hooks.
+- Explicit focus manager and reconciliation with DOM focus.
+
+Exit criteria:
+- Layout drift tests pass for recorded sequences.
+- Focus transitions are reproducible under stress tests.
+
+### Phase 4: Inspectability and Debugger UX
+Goals:
+- System state inspector window.
+- Debugger window shell with restart list.
+
+Exit criteria:
+- Errors open debugger windows without breaking layout.
+- Inspector shows full task/window/command/focus state.
+
+### Phase 5: Canvas Backend
+Goals:
+- Canvas view with stable IDs, hit-testing, and text measurement.
+- Draw list and dirty-node invalidation.
+
+Exit criteria:
+- Canvas hit-test fixtures pass deterministically.
+- Canvas views participate in focus and command routing.
+
+### Phase 6: WebGL Backend
+Goals:
+- Minimal WebGL renderer for a small scene subset.
+- Shared hit-testing path consistent with Canvas.
+
+Exit criteria:
+- WebGL rendering and hit tests match Canvas behavior.
+
+### Phase 7: Persistence and Migration
+Goals:
+- Layout and task serialization with schema versioning.
+- Migration hooks and reversible upgrades where possible.
+
+Exit criteria:
+- Serialize/restore equivalence tests pass across versions.
+
+### Phase 8: Performance and Scale
+Goals:
+- Virtualized list/tree/table widgets.
+- Renderer batching and dirty-rect updates.
+
+Exit criteria:
+- 10k row lists remain interactive.
+- Typical diagrams/timelines meet frame budget targets.
+
+## Phase 0 Detailed Plan (Test Harness First)
+
+### Objectives
+- Establish deterministic test execution across node and headless browser.
+- Define event log, snapshot, and replay formats before any renderer exists.
+- Make it possible to validate core invariants without a UI backend.
+
+### Deliverables
+- Event log schema for pointer, keyboard, command, focus, layout, and job events.
+- Snapshot serializer for UI state, focus history, command enablement, and selection.
+- Deterministic replay harness that replays event logs against a pure state model.
+- Headless browser runner for DOM and canvas tests, gated behind the same log format.
+- Golden test fixtures for core invariants and regression detection.
+
+### Work Breakdown
+
+1. Define the event log schema.
+- Event envelope with monotonic sequence number, timestamp, type, target ID, and payload.
+- Canonical types: `command`, `focus`, `pointer`, `keyboard`, `layout`, `job`, `snapshot`.
+- Strict validation rules and schema versioning.
+
+2. Define the snapshot format.
+- Stable ordering for tasks, windows, widgets, and command registry entries.
+- Explicit capture of focus target, focus history, selection, and enabled/disabled reasons.
+- Serialization that avoids nondeterministic fields or runtime addresses.
+
+3. Build the replay harness.
+- Pure state transition runner that consumes event logs and produces snapshots.
+- Deterministic error capture with restart metadata when applicable.
+- Support for replaying partial logs to isolate regressions.
+
+4. Implement the test runner.
+- Node-based runner for state-only tests.
+- Headless browser runner for DOM/Canvas tests using the same event log format.
+- Golden snapshot comparison with diffs that highlight structural changes.
+
+5. Create baseline fixtures.
+- Small UI tree with known IDs and deterministic ordering.
+- Known focus sequence and command enablement states.
+- Layout mutation fixture with expected serialization.
+
+6. Establish determinism rules.
+- All timers and randomness must be seeded and controllable.
+- Async events must be timestamped and ordered by the log, not wall time.
+- Font metrics and text measurement must be mocked or fixed for snapshot tests.
+
+### Phase 0 APIs to Define
+- `ui:record-event`, `ui:replay-events`
+- `ui:serialize-state`, `ui:serialize-focus`, `ui:serialize-commands`
+- `ui:diff-snapshots`
+
+### Future Pain Points to Anticipate Now
+- Nondeterminism from timers, randomness, or asynchronous event ordering.
+- Snapshot churn due to unstable IDs or ordering.
+- Cross-platform font metric differences in DOM/canvas snapshots.
+- Brittle golden tests without clear diff tooling.
+- Mixing side effects into command execution without an event log boundary.
+
+### Phase 0 Exit Criteria
+- A minimal state graph can be serialized and compared in golden tests.
+- Event logs replay to identical snapshots across multiple runs.
+- Headless browser tests run and can validate DOM or canvas outputs deterministically.
+
+## Phase 1 Detailed Plan (Core Model and Command System)
+
+### Objectives
+- Define the authoritative UI state graph.
+- Implement deterministic command routing and enablement.
+- Implement explicit focus state and focus history.
+- Build first-class selection and activation semantics.
+- Establish testable invariants without any renderer dependency.
+
+### Deliverables
+- UI state data model.
+- Command registry and dispatcher.
+- Focus manager with reason codes.
+- Selection model with stable IDs.
+- Deterministic event log replay harness for commands and focus.
+- Unit and integration tests for routing and focus history.
+
+### Work Breakdown
+
+1. Define the core state graph.
+- Structures for workspace, task, window, and widget nodes.
+- Stable IDs for tasks, windows, widgets, and presentations.
+- Serialization-friendly shapes without DOM references.
+
+2. Define the command system.
+- Command object: ID, doc, enablement predicate, exec function.
+- Command registry with namespace rules and versioning strategy.
+- Command context object with accessors to current task/window/selection.
+
+3. Implement deterministic command routing.
+- Explicit routing precedence: global, task, context, widget.
+- Conflict handling and deterministic tie-breaking rules.
+- Command enablement with structured reasons.
+
+4. Implement focus state and history.
+- Single authoritative focus target at all times.
+- Reason codes for focus changes.
+- History ring buffer with deterministic replay.
+
+5. Implement selection model.
+- Selection as a first-class object with stable IDs.
+- Selection updates only through commands.
+- Selection observers for command enablement.
+
+6. Build event log and replay.
+- Event log schema for command invocations and focus changes.
+- Replay driver that mutates state without any rendering.
+- Snapshot serializer for state and focus history.
+
+7. Tests.
+- Command routing precedence tests.
+- Enablement reason tests.
+- Focus history determinism tests.
+- Selection update tests.
+
+### Phase 1 APIs to Define
+- `ui:define-command` or `ui:defcommand`
+- `ui:command-enabled-p`
+- `ui:execute-command`
+- `ui:current-task`, `ui:current-window`, `ui:selection`
+- `ui:focus-target`, `ui:focus-history`
+
+### Future Pain Points to Anticipate Now
+- Command context drift: commands may read stale selection or focus if state updates are not ordered.
+- Event ordering: asynchronous input can reorder command effects unless log order is authoritative.
+- ID stability: stable keys are needed before rendering is implemented.
+- Global mutable state: avoid hidden globals that cannot be serialized.
+- Enablement reason explosion: use structured reasons to avoid string-only semantics.
+- Hard-to-replay commands: keep side effects explicit and isolate them from the core state.
+- Testing without a renderer: ensure state transitions do not depend on DOM signals.
+- Performance cost of history: cap history size and provide pruning rules.
+
+### Phase 1 Exit Criteria
+- All command routes are deterministic under replay.
+- Focus history matches across multiple replays with identical inputs.
+- Command enablement reasons are inspectable and stable.
+- State can be serialized without renderer or DOM references.

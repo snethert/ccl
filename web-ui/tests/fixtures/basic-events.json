@@ -1,0 +1,8 @@
+{
+  "version": "0",
+  "events": [
+    { "seq": 1, "type": "focus:set", "payload": { "target": "w1" } },
+    { "seq": 2, "type": "command:disable", "payload": { "id": "issue.delete", "reason": "Nothing selected." } },
+    { "seq": 3, "type": "snapshot", "payload": {} }
+  ]
+}
