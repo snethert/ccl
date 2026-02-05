@@ -71,6 +71,10 @@
     arm-lap
 ))
 
+(defparameter *wasm-compiler-modules*
+  '(wasm-arch
+    wasmenv))
+
 (defparameter *ppc32-compiler-backend-modules*
   '(ppc32-backend ppc32-vinsns))
 
@@ -93,6 +97,9 @@
 
 (defparameter *arm-compiler-backend-modules*
   '(arm-backend arm-vinsns arm2))
+
+(defparameter *wasm-compiler-backend-modules*
+  '(wasm-backend wasm-vinsns wasm2))
 
 
 
@@ -179,7 +186,8 @@
              (:freebsdx8632 'ffi-freebsdx8632)
              (:linuxarm 'ffi-linuxarm)
              (:androidarm 'ffi-androidarm)
-             (:darwinarm 'ffi-darwinarm)))))
+             (:darwinarm 'ffi-darwinarm)
+             (:wasm32 nil)))))
 
 
 (defun target-compiler-modules (&optional (target
@@ -199,7 +207,9 @@
                     *x8664-compiler-backend-modules*
                     *x86-compiler-backend-modules*))
     (:arm (append *arm-compiler-modules*
-                  *arm-compiler-backend-modules*))))
+                  *arm-compiler-backend-modules*))
+    (:wasm32 (append *wasm-compiler-modules*
+                     *wasm-compiler-backend-modules*))))
 
 (defparameter *other-lib-modules*
   '(streams pathnames backtrace
@@ -933,4 +943,3 @@ the lisp and run REBUILD-CCL again.")
               (when exit
                 (quit (if failed-tests 1 0)))
               failed-tests)))))))
-

@@ -119,6 +119,32 @@ assumes `wasm_get_current_tcr()` is the single authoritative access path.
 - The host should install the kernel export `wasm_boot_entry` at that table slot.
 - The funcall smoke test uses a second stub entrypoint at **index 201**
   (`wasm_test_entry`) to validate the calling convention.
+- The compiler constant-return stub uses **index 202** (`wasm_const_entry`).
+  The entrypoint reads the constant from the current function object
+  (`uvref` slot 2 / `deref(fn, 3)`), falling back to `wasm_set_const_value`
+  if no function object is available.
+- Minimal compiled code can import `wasm_return_constant` to set `arg_z` and
+  `nargs` without hardcoding TCR offsets. The constant-only codegen uses this
+  helper and exports the entrypoint as `ccl_const_entry`.
+- Minimal fixnum add code can import `wasm_return_fixnum_add` to consume
+  `arg_z`/`arg_y` (as fixnums) and return a single fixnum in `arg_z`.
+- Minimal fixnum sub code can import `wasm_return_fixnum_sub` to consume
+  `arg_z`/`arg_y` (as fixnums) and return a single fixnum in `arg_z`.
+- Minimal fixnum mul code can import `wasm_return_fixnum_mul` to consume
+  `arg_z`/`arg_y` (as fixnums) and return a single fixnum in `arg_z`.
+- Minimal fixnum ash code can import `wasm_return_fixnum_ash` to consume
+  `arg_z`/`arg_y` (as fixnums) and return a single fixnum in `arg_z`.
+- Minimal fixnum logand/logior/logxor code can import `wasm_return_fixnum_logand`,
+  `wasm_return_fixnum_logior`, or `wasm_return_fixnum_logxor` to operate on
+  `arg_z`/`arg_y` and return a single fixnum in `arg_z`.
+- Minimal fixnum lognot code can import `wasm_return_fixnum_lognot` to operate
+  on `arg_z` and return a single fixnum in `arg_z`.
+- Minimal fixnum negation code can import `wasm_return_fixnum_neg` to negate
+  `arg_z` and return a single fixnum in `arg_z`.
+
+**Overflow note (bring‑up):** the fixnum arithmetic helpers currently **trap
+on overflow** (bignum allocation is not implemented yet in WASM). This keeps
+overflow visible during bring‑up; full bignum support will replace the traps.
 
 ### Non‑local Transfer (Tier‑0, cooperative unwind)
 

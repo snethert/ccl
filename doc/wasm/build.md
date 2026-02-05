@@ -102,11 +102,31 @@ After building `doc/wasm/js/wasmcl.wasm`, run:
 ```bash
 node doc/wasm/js/smoke-test.mjs
 node doc/wasm/js/funcall-smoke.mjs
+node doc/wasm/js/const-funcall-smoke.mjs
+node doc/wasm/js/const-module-smoke.mjs
 node doc/wasm/js/kernel-request-smoke.mjs
 node doc/wasm/js/stream-open-smoke.mjs
 node doc/wasm/js/pending-stdin-smoke.mjs
 node doc/wasm/js/step-demo.mjs
 node doc/wasm/js/ccl-step-smoke.mjs
+node doc/wasm/js/fixnum-add-smoke.mjs
+node doc/wasm/js/fixnum-sub-smoke.mjs
+node doc/wasm/js/fixnum-ops-smoke.mjs
+node doc/wasm/js/fixnum-overflow-smoke.mjs
+```
+
+To run them all in one invocation:
+
+```bash
+node doc/wasm/js/all-smoke.mjs
+```
+
+**Standing rule:** Every smoke test must be standalone and must be added to
+`doc/wasm/js/all-smoke.mjs`. When a new smoke test is created, run:
+
+```bash
+node doc/wasm/js/all-smoke.mjs
+node doc/wasm/js/<new-test>.mjs
 ```
 
 ## Load A Heap Image (Boot-Only)

@@ -91,7 +91,14 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_memory_grow_and_relocate \
 	  --export=wasm_call_subprim_fixnum \
 	  --export=wasm_boot_entry --export=wasm_run_toplevel \
-	  --export=wasm_test_entry --export=wasm_test_funcall \
+	  --export=wasm_test_entry --export=wasm_test_funcall --export=wasm_test_const_funcall \
+	  --export=wasm_test_entry_funcall --export=wasm_test_entry_funcall2 \
+	  --export=wasm_const_entry --export=wasm_set_const_value --export=wasm_return_constant \
+	  --export=wasm_return_fixnum_add --export=wasm_return_fixnum_sub \
+	  --export=wasm_return_fixnum_mul --export=wasm_return_fixnum_ash \
+	  --export=wasm_return_fixnum_logand --export=wasm_return_fixnum_logior \
+	  --export=wasm_return_fixnum_logxor --export=wasm_return_fixnum_lognot \
+	  --export=wasm_return_fixnum_neg \
 	  -o ../../doc/wasm/js/wasmcl.wasm $(KERNELOBJ)
 
 # strip:	../../armcl

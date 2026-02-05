@@ -79,3 +79,11 @@ for bring‑up.
 an implementation hook in the stream layer (feature‑gated).  
 **Why:** Explicit failure is required for portable embeddings.  
 **References:** `doc/wasm/capability-matrix.md:50`
+
+## ADR-0010 — Track WASM 3.0 in spec research
+
+**Status:** Accepted  
+**Decision:** Include WASM 3.0 in spec research and compatibility checks.  
+**Why:** WebAssembly 3.0 may change or clarify platform expectations that
+affect the backend and host ABI decisions.  
+**References:** (tracking note; update with concrete spec links as they are adopted)
