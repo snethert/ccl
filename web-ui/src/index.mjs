@@ -73,6 +73,9 @@ export {
   bindKey,
   resolveKey,
   resolveKeyWithTrace,
+  registerPresentationTranslator,
+  resolvePresentationCommand,
+  executePresentationCommand,
   commandEnabled,
   executeCommand
 } from "./commands.mjs";

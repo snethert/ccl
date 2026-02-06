@@ -635,6 +635,24 @@ function summarizeTasks(state) {
   return items;
 }
 
+function summarizePresentations(state) {
+  const items = [];
+  const entries = Object.values(state.presentations ?? {}).sort((a, b) => (a.id ?? "").localeCompare(b.id ?? ""));
+  for (const presentation of entries) {
+    const type = presentation.type ?? "presentation";
+    const objectId = presentation.objectId ?? "unknown";
+    const widgetId = presentation.widgetId ?? "none";
+    items.push({
+      id: `pres-${presentation.id ?? "unknown"}`,
+      label: `${type}(${objectId}) widget=${widgetId}`
+    });
+  }
+  if (items.length === 0) {
+    items.push({ id: "pres-none", label: "No presentations" });
+  }
+  return items;
+}
+
 function buildCommandPaletteItems(registry, options = {}) {
   if (!registry) {
     return [{ id: "cmd-none", label: "No command registry available" }];
@@ -875,6 +893,7 @@ function buildInspectorSections(state) {
     tasks: summarizeTasks(state),
     focus: summarizeFocus(state),
     commands: summarizeCommands(state),
+    presentations: summarizePresentations(state),
     windows: summarizeWindows(state),
     jobs: summarizeJobs(state),
     errors: summarizeErrors(state),
@@ -921,6 +940,7 @@ export function openInspectorWindow(state, options = {}) {
     ["tasks", "Tasks"],
     ["focus", "Focus"],
     ["commands", "Commands"],
+    ["presentations", "Presentations"],
     ["windows", "Windows"],
     ["jobs", "Jobs"],
     ["errors", "Errors"],

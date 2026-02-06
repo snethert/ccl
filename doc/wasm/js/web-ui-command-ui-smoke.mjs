@@ -35,6 +35,8 @@ import {
   bindCommandSurfaceDefaults,
   createRegistry,
   registerCommand,
+  registerPresentationTranslator,
+  resolvePresentationCommand,
   executeCommand,
   bindKey,
   resolveKey
@@ -45,6 +47,7 @@ registerCommand(registry, { id: "alpha.run", title: "Alpha Run" });
 registerCommand(registry, { id: "beta.build", title: "Beta Build" });
 registerCommand(registry, { id: "gamma.test", title: "Gamma Test" });
 registerCommand(registry, { id: "delta.pick", title: "Delta Pick" });
+registerPresentationTranslator(registry, "file", "click", () => "alpha.run");
 bindKey(registry, "global", "K", "alpha.run");
 bindKey(registry, "task", "B", "beta.build", "task-1");
 bindKey(registry, "context", "C", "gamma.test", "ctx-1");
@@ -58,6 +61,14 @@ bindCommandSurfaceDefaults(registry);
 
 let state = createState();
 state = addTask(state, { id: "task-1", title: "Task" });
+
+const resolvedPresentation = resolvePresentationCommand(
+  registry,
+  { id: "pres-1", type: "file", objectId: "file-1" },
+  "click",
+  {}
+);
+assert.equal(resolvedPresentation.commandId, "alpha.run");
 
 const openedPalette = executeCommand(registry, COMMAND_PALETTE_OPEN_COMMAND, {
   state,

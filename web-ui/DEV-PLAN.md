@@ -271,6 +271,7 @@ Exit criteria:
 - Added inspector and debugger window shells with coalesced error handling.
 - Added reason object tracking for focus and disablement.
 - Added inspector/debugger tests and smoke tests wired into WASM smoke runner.
+- Added presentation translator registry and inspector presentation listing.
 - Implemented command registry, key binding, and deterministic routing.
 - Added unit tests for routing precedence and focus history.
 - Added context helpers and a module index for consistent imports.

@@ -7,6 +7,9 @@ import {
   bindKey,
   resolveKey,
   resolveKeyWithTrace,
+  registerPresentationTranslator,
+  resolvePresentationCommand,
+  executePresentationCommand,
   commandEnabled,
   executeCommand,
   makeContext
@@ -122,6 +125,24 @@ test("enablement reasons are returned and enforce dispatch", () => {
   const exec = executeCommand(registry, "cmd.disabled", ctx);
   assert.equal(exec.ok, false);
   assert.equal(exec.reason, "No selection");
+});
+
+test("presentation translators resolve commands deterministically", () => {
+  const registry = createRegistry();
+  registerCommand(registry, { id: "cmd.present", exec: () => "ok" });
+  registerPresentationTranslator(registry, "file", "click", (presentation) => ({
+    commandId: "cmd.present",
+    context: { presentationId: presentation.id }
+  }));
+
+  const presentation = { id: "pres-1", type: "file", objectId: "file-1" };
+  const resolved = resolvePresentationCommand(registry, presentation, "click", {});
+  assert.equal(resolved.commandId, "cmd.present");
+  assert.equal(resolved.context.presentationId, "pres-1");
+
+  const executed = executePresentationCommand(registry, presentation, "click", { state: { selection: null } });
+  assert.equal(executed.ok, true);
+  assert.equal(executed.result, "ok");
 });
 
 test("namespace policy can enforce namespaced ids", () => {

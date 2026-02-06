@@ -19,6 +19,7 @@ export function createRegistry(options = DEFAULT_PRECEDENCE) {
     namespacePolicy: resolved.namespacePolicy ?? DEFAULT_NAMESPACE_POLICY,
     version: resolved.version ?? "0",
     commands: new Map(),
+    presentationTranslators: new Map(),
     keymaps: {
       global: new Map(),
       task: new Map(),
@@ -26,6 +27,10 @@ export function createRegistry(options = DEFAULT_PRECEDENCE) {
       widget: new Map()
     }
   };
+}
+
+function presentationKey(type, gesture) {
+  return `${type ?? "unknown"}:${gesture ?? "default"}`;
 }
 
 function validateCommandId(registry, id) {
@@ -200,4 +205,49 @@ export function executeCommand(registry, id, ctx) {
     return { ok: true, result: null };
   }
   return { ok: true, result: cmd.exec(ctx) };
+}
+
+export function registerPresentationTranslator(registry, type, gesture, translator) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  if (typeof translator !== "function") {
+    throw new Error("Translator must be a function");
+  }
+  const key = presentationKey(type, gesture);
+  if (registry.presentationTranslators.has(key)) {
+    throw new Error(`Translator already registered: ${key}`);
+  }
+  registry.presentationTranslators.set(key, translator);
+  return registry;
+}
+
+export function resolvePresentationCommand(registry, presentation, gesture, ctx = {}) {
+  if (!registry) return null;
+  const type = presentation?.type ?? presentation?.presentationType ?? null;
+  const key = presentationKey(type, gesture);
+  const translator = registry.presentationTranslators.get(key);
+  if (!translator) return null;
+  const result = translator(presentation, gesture, ctx);
+  if (!result) return null;
+  if (typeof result === "string") {
+    return { commandId: result, context: ctx };
+  }
+  if (typeof result === "object") {
+    const commandId = result.commandId ?? result.id ?? null;
+    if (!commandId) return null;
+    return { commandId, context: result.context ?? ctx };
+  }
+  return null;
+}
+
+export function executePresentationCommand(registry, presentation, gesture, ctx = {}) {
+  const resolved = resolvePresentationCommand(registry, presentation, gesture, ctx);
+  if (!resolved?.commandId) {
+    return { ok: false, reason: "No presentation command" };
+  }
+  return executeCommand(registry, resolved.commandId, {
+    ...ctx,
+    presentation
+  });
 }

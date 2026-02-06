@@ -159,6 +159,7 @@ Acceptance checks:
 - Presentation trees MUST be inspectable; "what did I click" resolves to a typed object.
 - Presentation translators MUST be deterministic and side-effect-free during enablement checks.
 - Presentations include a stable object reference strategy (object-id + epoch) so persisted UI doesn’t resurrect stale pointers.
+- Presentation resolution MUST return a command id (or null) without mutating state.
 
 Acceptance checks:
 - A user can invoke context-appropriate commands based on the object they selected, not just the widget they clicked.

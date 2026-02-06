@@ -106,11 +106,16 @@ function pickProps(props, allowedKeys = []) {
 }
 
 function widgetBaseProps(widget, baseClass) {
-  return {
+  const props = {
     "data-widget-id": widget.id,
     "data-widget-kind": widget.kind,
     className: baseClass
   };
+  const presentationId = widget.props?.presentationId ?? widget.model?.presentationId ?? null;
+  if (presentationId) {
+    props["data-presentation-id"] = presentationId;
+  }
+  return props;
 }
 
 function resolveWindowId(state, widget, fallbackWindowId = null) {
