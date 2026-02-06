@@ -15,6 +15,7 @@ import {
   applyCommandPaletteSelection,
   resolveCommandPaletteSelection,
   refreshCommandPaletteWindow,
+  refreshKeybindingWindow,
   registerCommandPaletteCommands,
   registerCommandSurfaceCommands,
   bindCommandPaletteDefaults,
@@ -28,8 +29,12 @@ import {
 const registry = createRegistry();
 registerCommand(registry, { id: "alpha.run", title: "Alpha Run" });
 registerCommand(registry, { id: "beta.build", title: "Beta Build" });
+registerCommand(registry, { id: "gamma.test", title: "Gamma Test" });
+registerCommand(registry, { id: "delta.pick", title: "Delta Pick" });
 bindKey(registry, "global", "K", "alpha.run");
 bindKey(registry, "task", "B", "beta.build", "task-1");
+bindKey(registry, "context", "C", "gamma.test", "ctx-1");
+bindKey(registry, "widget", "W", "delta.pick", "widget-1");
 registerCommandPaletteCommands(registry);
 registerCommandSurfaceCommands(registry);
 bindCommandPaletteDefaults(registry, { taskId: "task-1" });
@@ -66,7 +71,7 @@ assert.ok(filteredItems[0].label.includes("beta.build"));
 state = refreshCommandPaletteWindow(state, paletteWindow.id, { registry, filter: "" });
 state = applyCommandPaletteSelection(state, { registry, windowId: paletteWindow.id, delta: 1 });
 const selected = resolveCommandPaletteSelection(state, { windowId: paletteWindow.id });
-assert.equal(selected.commandId, "beta.build");
+assert.equal(selected.commandId, "delta.pick");
 assert.equal(COMMAND_PALETTE_SELECT_NEXT_COMMAND, "ui.command-palette.select-next");
 
 const bound = resolveKey(registry, "ArrowDown", { taskId: "task-1" });
@@ -89,9 +94,19 @@ assert.equal(openedKeybindings.ok, true);
 state = openedKeybindings.result;
 const keybindingWindow = Object.values(state.windows).find((win) => win.metadata?.role === "keybindings");
 assert.ok(keybindingWindow, "keybinding window exists");
+state = refreshKeybindingWindow(state, keybindingWindow.id, {
+  registry,
+  traceKey: "W",
+  contextId: "ctx-1",
+  widgetId: "widget-1"
+});
 const keybindingItems = state.widgets[keybindingWindow.metadata.widgets.listId].props.items;
 assert.ok(keybindingItems.some((item) => item.label.includes("global: K → alpha.run")));
 assert.ok(keybindingItems.some((item) => item.label.includes("task(task-1): B → beta.build")));
+assert.ok(keybindingItems.some((item) => item.label.includes("context(ctx-1): C → gamma.test")));
+assert.ok(keybindingItems.some((item) => item.label.includes("widget(widget-1): W → delta.pick")));
+const traceItems = state.widgets[keybindingWindow.metadata.widgets.traceListId].props.items;
+assert.ok(traceItems.some((item) => item.label.includes("widget(widget-1): W → delta.pick")));
 
 const closedKeybindings = executeCommand(registry, KEYBINDINGS_CLOSE_COMMAND, {
   state,

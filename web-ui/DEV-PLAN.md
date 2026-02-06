@@ -317,3 +317,4 @@ Exit criteria:
 - Added command palette command registrations for filter/navigation/execute.
 - Added default palette keybindings (ArrowUp/ArrowDown/Enter) for task scope.
 - Added open/close commands for command palette and keybinding viewer windows.
+- Added keybinding trace panel and context/widget scope coverage in command UI tests.

@@ -144,7 +144,7 @@ Acceptance checks:
 ### Centralized command and keybinding system
 - Commands MUST be first-class objects with IDs, docs, enablement predicates, and execution functions.
 - Keybindings MUST map to commands, not widget callbacks.
-- Resolution MUST be centralized with explicit precedence rules (global, task, context).
+- Resolution MUST be centralized with explicit precedence rules (global, task, context, widget).
 - The system MUST provide a command palette and keybinding viewer.
 - Default keybinding resolution is inspectable as a trace (matched scopes, rejected scopes, final command).
 - Text fields have an explicit "text editing mode" command layer so editor shortcuts do not leak into global bindings.
@@ -316,6 +316,7 @@ Lisp code runs only within command execution boundaries and explicit yields.
 - Palette implementations MAY hide internal commands from the listing.
 - Palette bindings SHOULD map ArrowUp/ArrowDown/Enter to selection and execution commands for the palette scope.
 - Keybinding viewer entries SHOULD encode scope, scope id (if any), key, and command id in a human-readable label.
+- The keybinding viewer SHOULD expose a trace panel for a selected key showing scope decisions in order.
 
 ### Focus manager
 - Maintain authoritative focus state in Lisp: active task, active window, focused widget.

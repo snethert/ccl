@@ -10,7 +10,7 @@ import {
   dockLayoutNode
 } from "./layout.mjs";
 import { normalizeFocusTarget, normalizeFocusHistory, setFocus as setFocusCore } from "./focus.mjs";
-import { registerCommand, executeCommand, bindKey } from "./commands.mjs";
+import { registerCommand, executeCommand, bindKey, resolveKeyWithTrace } from "./commands.mjs";
 
 const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layout", "reason", "error", "job"];
 export const COMMAND_PALETTE_FILTER_COMMAND = "ui.command-palette.filter";
@@ -554,6 +554,45 @@ function buildKeybindingItems(registry) {
     items.push({ id: "kb-empty", label: "No keybindings registered" });
   }
   return items;
+}
+
+function buildKeybindingTraceContext(options, taskId) {
+  const override = options?.traceContext ?? {};
+  return {
+    taskId: override.taskId ?? options?.taskId ?? taskId ?? null,
+    contextId: override.contextId ?? options?.contextId ?? null,
+    widgetId: override.widgetId ?? options?.widgetId ?? null
+  };
+}
+
+function buildKeybindingTraceItems(registry, options = {}) {
+  if (!registry) {
+    return [{ id: "kb-trace-none", label: "No keybinding registry available" }];
+  }
+  const key = options.key ?? null;
+  if (!key) {
+    return [{ id: "kb-trace-empty", label: "No key selected for trace" }];
+  }
+  const ctx = options.context ?? {};
+  const resolved = resolveKeyWithTrace(registry, key, ctx);
+  const trace = Array.isArray(resolved.trace) ? resolved.trace : [];
+  if (trace.length === 0) {
+    return [{ id: "kb-trace-empty", label: "No trace available" }];
+  }
+  return trace.map((entry, index) => {
+    const scopeLabel = entry.scopeId ? `${entry.scope}(${entry.scopeId})` : entry.scope;
+    const commandLabel = entry.commandId ?? "unbound";
+    let suffix = "";
+    if (entry.matched) {
+      suffix = " (match)";
+    } else if (entry.reason) {
+      suffix = ` (${entry.reason})`;
+    }
+    return {
+      id: `kb-trace-${index}-${entry.scope}`,
+      label: `${scopeLabel}: ${entry.key} → ${commandLabel}${suffix}`
+    };
+  });
 }
 
 function summarizeWindows(state) {
@@ -1144,9 +1183,40 @@ export function openKeybindingWindow(state, options = {}) {
   });
   ids.listId = listAlloc.id;
 
+  const traceKey = options.traceKey ?? null;
+  const traceContext = buildKeybindingTraceContext(options, taskId);
+  const traceItems = buildKeybindingTraceItems(options.registry ?? null, {
+    key: traceKey,
+    context: traceContext
+  });
+
+  let traceLabelAlloc = allocateWidgetId(nextState, "keybindings-trace-label");
+  const traceLabel = traceKey ? `Keybinding Trace: ${traceKey}` : "Keybinding Trace";
+  nextState = addWidget(traceLabelAlloc.state, {
+    id: traceLabelAlloc.id,
+    kind: "label",
+    parentId: ids.rootId,
+    props: { text: traceLabel }
+  });
+  ids.traceLabelId = traceLabelAlloc.id;
+
+  let traceListAlloc = allocateWidgetId(nextState, "keybindings-trace-list");
+  nextState = addWidget(traceListAlloc.state, {
+    id: traceListAlloc.id,
+    kind: "list",
+    parentId: ids.rootId,
+    props: { items: traceItems }
+  });
+  ids.traceListId = traceListAlloc.id;
+
   nextState = updateWindow(nextState, allocWindow.id, (window) => ({
     ...window,
-    metadata: { ...(window.metadata ?? {}), role: "keybindings", widgets: ids }
+    metadata: {
+      ...(window.metadata ?? {}),
+      role: "keybindings",
+      widgets: ids,
+      trace: { key: traceKey, context: traceContext }
+    }
   }));
 
   return nextState;
@@ -1162,9 +1232,41 @@ export function refreshKeybindingWindow(state, windowId, options = {}) {
     return state;
   }
   const items = buildKeybindingItems(options.registry ?? null);
-  return updateWidget(state, widgets.listId, (widget) => ({
+  let nextState = updateWidget(state, widgets.listId, (widget) => ({
     ...widget,
     props: { ...(widget.props ?? {}), items }
+  }));
+
+  const existingTrace = window.metadata?.trace ?? {};
+  const traceKey = options.traceKey ?? existingTrace.key ?? null;
+  const traceContext = buildKeybindingTraceContext(
+    { ...options, traceContext: options.traceContext ?? existingTrace.context ?? {} },
+    window.taskId
+  );
+  if (widgets.traceLabelId) {
+    const traceLabel = traceKey ? `Keybinding Trace: ${traceKey}` : "Keybinding Trace";
+    nextState = updateWidget(nextState, widgets.traceLabelId, (widget) => ({
+      ...widget,
+      props: { ...(widget.props ?? {}), text: traceLabel }
+    }));
+  }
+  if (widgets.traceListId) {
+    const traceItems = buildKeybindingTraceItems(options.registry ?? null, {
+      key: traceKey,
+      context: traceContext
+    });
+    nextState = updateWidget(nextState, widgets.traceListId, (widget) => ({
+      ...widget,
+      props: { ...(widget.props ?? {}), items: traceItems }
+    }));
+  }
+
+  return updateWindow(nextState, windowId, (nextWindow) => ({
+    ...nextWindow,
+    metadata: {
+      ...(nextWindow.metadata ?? {}),
+      trace: { key: traceKey, context: traceContext }
+    }
   }));
 }
 

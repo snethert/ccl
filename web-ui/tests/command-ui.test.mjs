@@ -29,8 +29,12 @@ function makeRegistry() {
   const registry = createRegistry();
   registerCommand(registry, { id: "alpha.run", title: "Alpha Run" });
   registerCommand(registry, { id: "beta.build", title: "Beta Build" });
+  registerCommand(registry, { id: "gamma.test", title: "Gamma Test" });
+  registerCommand(registry, { id: "delta.pick", title: "Delta Pick" });
   bindKey(registry, "global", "K", "alpha.run");
   bindKey(registry, "task", "B", "beta.build", "task-1");
+  bindKey(registry, "context", "C", "gamma.test", "ctx-1");
+  bindKey(registry, "widget", "W", "delta.pick", "widget-1");
   return registry;
 }
 
@@ -156,7 +160,13 @@ test("keybinding viewer lists bindings", () => {
   state = addTask(state, { id: "task-1", title: "Task" });
   const registry = makeRegistry();
 
-  state = openKeybindingWindow(state, { registry, taskId: "task-1" });
+  state = openKeybindingWindow(state, {
+    registry,
+    taskId: "task-1",
+    traceKey: "W",
+    contextId: "ctx-1",
+    widgetId: "widget-1"
+  });
   const viewer = Object.values(state.windows).find((win) => win.metadata?.role === "keybindings");
   assert.ok(viewer);
   const listId = viewer.metadata.widgets.listId;
@@ -164,4 +174,11 @@ test("keybinding viewer lists bindings", () => {
 
   assert.ok(items.some((item) => item.label.includes("global: K → alpha.run")));
   assert.ok(items.some((item) => item.label.includes("task(task-1): B → beta.build")));
+  assert.ok(items.some((item) => item.label.includes("context(ctx-1): C → gamma.test")));
+  assert.ok(items.some((item) => item.label.includes("widget(widget-1): W → delta.pick")));
+
+  const traceListId = viewer.metadata.widgets.traceListId;
+  const traceItems = state.widgets[traceListId].props.items;
+  assert.ok(traceItems.some((item) => item.label.includes("widget(widget-1): W → delta.pick")));
+  assert.ok(traceItems.some((item) => item.label.includes("context(ctx-1): W →")));
 });
