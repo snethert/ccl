@@ -264,6 +264,7 @@ Exit criteria:
 - Added layout drift tests and updated layout snapshot fixtures.
 - Added focus reconciliation helper and browser harness check.
 - Added layout/focus smoke test and wired into WASM smoke runner.
+- Added layout command registrations and command tests for split/tabs/dock/active-tab.
 
 ### Phase 4 Progress
 - Added event log ring buffer and deterministic recording in replay harness.

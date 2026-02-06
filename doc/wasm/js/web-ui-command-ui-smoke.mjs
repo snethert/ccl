@@ -4,6 +4,7 @@ import {
   createState,
   addTask,
   addWindow,
+  initLayout,
   COMMAND_PALETTE_FILTER_COMMAND,
   COMMAND_PALETTE_EXECUTE_COMMAND,
   COMMAND_PALETTE_SELECT_NEXT_COMMAND,
@@ -17,6 +18,10 @@ import {
   TASK_SWITCH_COMMAND,
   TASK_CLOSE_COMMAND,
   TASK_ARCHIVE_COMMAND,
+  LAYOUT_SPLIT_COMMAND,
+  LAYOUT_TABS_COMMAND,
+  LAYOUT_DOCK_COMMAND,
+  LAYOUT_SET_ACTIVE_TAB_COMMAND,
   applyCommandPaletteFilter,
   applyCommandPaletteSelection,
   resolveCommandPaletteSelection,
@@ -24,6 +29,7 @@ import {
   refreshKeybindingWindow,
   registerCommandPaletteCommands,
   registerTaskCommands,
+  registerLayoutCommands,
   registerCommandSurfaceCommands,
   bindCommandPaletteDefaults,
   bindCommandSurfaceDefaults,
@@ -45,6 +51,7 @@ bindKey(registry, "context", "C", "gamma.test", "ctx-1");
 bindKey(registry, "widget", "W", "delta.pick", "widget-1");
 registerCommandPaletteCommands(registry);
 registerTaskCommands(registry);
+registerLayoutCommands(registry);
 registerCommandSurfaceCommands(registry);
 bindCommandPaletteDefaults(registry, { taskId: "task-1" });
 bindCommandSurfaceDefaults(registry);
@@ -156,6 +163,48 @@ const archivedTask = executeCommand(registry, TASK_ARCHIVE_COMMAND, {
 assert.equal(archivedTask.ok, true);
 state = archivedTask.result;
 assert.equal(state.workspace.activeTaskId, "task-1");
+
+state = addWindow(state, { id: "layout-win-1", taskId: "task-1", title: "Layout Win 1" });
+state = addWindow(state, { id: "layout-win-2", taskId: "task-1", title: "Layout Win 2" });
+state = addWindow(state, { id: "layout-win-3", taskId: "task-1", title: "Layout Win 3" });
+state = initLayout(state, { kind: "leaf", windowId: "layout-win-1" });
+
+const splitLayout = executeCommand(registry, LAYOUT_SPLIT_COMMAND, {
+  state,
+  windowId: "layout-win-1",
+  newWindowId: "layout-win-2",
+  axis: "v",
+  ratio: 0.4
+});
+assert.equal(splitLayout.ok, true);
+state = splitLayout.result;
+
+const tabsLayout = executeCommand(registry, LAYOUT_TABS_COMMAND, {
+  state,
+  layoutId: Object.entries(state.layout.nodes).find(([, node]) => node.kind === "leaf" && node.props?.windowId === "layout-win-1")?.[0],
+  newWindowId: "layout-win-3",
+  activateNew: true
+});
+assert.equal(tabsLayout.ok, true);
+state = tabsLayout.result;
+
+const tabsId = Object.entries(state.layout.nodes).find(([, node]) => node.kind === "tabs")?.[0];
+const tabId = Object.entries(state.layout.nodes).find(([, node]) => node.kind === "leaf" && node.props?.windowId === "layout-win-3")?.[0];
+const setActive = executeCommand(registry, LAYOUT_SET_ACTIVE_TAB_COMMAND, {
+  state,
+  tabsId,
+  tabId
+});
+assert.equal(setActive.ok, true);
+state = setActive.result;
+
+const dockedLayout = executeCommand(registry, LAYOUT_DOCK_COMMAND, {
+  state,
+  layoutId: tabId,
+  region: "right"
+});
+assert.equal(dockedLayout.ok, true);
+state = dockedLayout.result;
 
 const closedKeybindings = executeCommand(registry, KEYBINDINGS_CLOSE_COMMAND, {
   state,

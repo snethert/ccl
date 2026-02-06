@@ -27,6 +27,10 @@ export const TASK_LIST_COMMAND = "ui.task.list";
 export const TASK_SWITCH_COMMAND = "ui.task.switch";
 export const TASK_CLOSE_COMMAND = "ui.task.close";
 export const TASK_ARCHIVE_COMMAND = "ui.task.archive";
+export const LAYOUT_SPLIT_COMMAND = "ui.layout.split";
+export const LAYOUT_TABS_COMMAND = "ui.layout.tabs";
+export const LAYOUT_DOCK_COMMAND = "ui.layout.dock";
+export const LAYOUT_SET_ACTIVE_TAB_COMMAND = "ui.layout.set-active-tab";
 
 function ensureCounters(counters) {
   if (counters) {
@@ -1224,6 +1228,41 @@ function resolveTaskTargetId(state, ctx, options = {}) {
   );
 }
 
+function findLayoutLeafForWindow(layout, windowId) {
+  if (!layout?.nodes || !windowId) return null;
+  for (const [id, node] of Object.entries(layout.nodes)) {
+    if (node?.kind === "leaf" && node.props?.windowId === windowId) {
+      return id;
+    }
+  }
+  return null;
+}
+
+function findLayoutParent(layout, childId) {
+  if (!layout?.nodes || !childId) return null;
+  for (const [id, node] of Object.entries(layout.nodes)) {
+    const children = node?.children ?? [];
+    if (children.includes(childId)) {
+      return { parentId: id, parent: node };
+    }
+  }
+  return null;
+}
+
+function resolveLayoutTargetId(state, ctx) {
+  const direct =
+    ctx?.layoutId ??
+    ctx?.targetLayoutId ??
+    ctx?.item?.layoutId ??
+    ctx?.itemId ??
+    null;
+  if (direct) {
+    return direct;
+  }
+  const windowId = ctx?.windowId ?? state.focus?.windowId ?? null;
+  return findLayoutLeafForWindow(state.layout, windowId);
+}
+
 export function applyCommandPaletteFilter(state, options = {}) {
   const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
   const windowId =
@@ -1447,6 +1486,103 @@ export function registerTaskCommands(registry, options = {}) {
         return ctx.state;
       }
       return archiveTask(ctx.state, target, { reason: "command" });
+    }
+  });
+
+  return registry;
+}
+
+export function registerLayoutCommands(registry, options = {}) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  const splitId = options.splitCommandId ?? LAYOUT_SPLIT_COMMAND;
+  const tabsId = options.tabsCommandId ?? LAYOUT_TABS_COMMAND;
+  const dockId = options.dockCommandId ?? LAYOUT_DOCK_COMMAND;
+  const activeTabId = options.activeTabCommandId ?? LAYOUT_SET_ACTIVE_TAB_COMMAND;
+
+  const ensure = (id, command) => {
+    if (!registry.commands.has(id)) {
+      registerCommand(registry, { ...command, id });
+    }
+  };
+
+  ensure(splitId, {
+    title: "Split Layout",
+    doc: "Split the active layout leaf.",
+    enabled: (ctx) => {
+      const target = resolveLayoutTargetId(ctx.state, ctx);
+      return target ? { enabled: true, reason: null } : { enabled: false, reason: "No layout target" };
+    },
+    exec: (ctx) => {
+      const target = resolveLayoutTargetId(ctx.state, ctx);
+      if (!target) return ctx.state;
+      const axis = ctx.axis ?? "h";
+      const ratio = Number.isFinite(ctx.ratio) ? ctx.ratio : 0.5;
+      const insert = ctx.insert ?? "after";
+      const windowId = ctx.newWindowId ?? null;
+      return splitLayout(ctx.state, target, axis, ratio, { insert, windowId });
+    }
+  });
+
+  ensure(tabsId, {
+    title: "Wrap In Tabs",
+    doc: "Wrap the active layout leaf in a tabs container.",
+    enabled: (ctx) => {
+      const target = resolveLayoutTargetId(ctx.state, ctx);
+      return target ? { enabled: true, reason: null } : { enabled: false, reason: "No layout target" };
+    },
+    exec: (ctx) => {
+      const target = resolveLayoutTargetId(ctx.state, ctx);
+      if (!target) return ctx.state;
+      const newWindowId = ctx.newWindowId ?? null;
+      const newTab = newWindowId ? { windowId: newWindowId } : null;
+      return wrapInTabs(ctx.state, target, {
+        newTab,
+        insert: ctx.insert ?? "after",
+        activateNew: Boolean(ctx.activateNew)
+      });
+    }
+  });
+
+  ensure(activeTabId, {
+    title: "Activate Tab",
+    doc: "Set the active tab in a tabs container.",
+    enabled: (ctx) => {
+      const tabsIdValue = ctx.tabsId ?? null;
+      const tabId = ctx.tabId ?? resolveLayoutTargetId(ctx.state, ctx);
+      if (!tabsIdValue || !tabId) {
+        return { enabled: false, reason: "No tab target" };
+      }
+      return { enabled: true, reason: null };
+    },
+    exec: (ctx) => {
+      const tabId = ctx.tabId ?? resolveLayoutTargetId(ctx.state, ctx);
+      const layout = ctx.state.layout;
+      let tabsIdValue = ctx.tabsId ?? null;
+      if (!tabsIdValue && layout && tabId) {
+        const parent = findLayoutParent(layout, tabId);
+        if (parent?.parent?.kind === "tabs") {
+          tabsIdValue = parent.parentId;
+        }
+      }
+      if (!tabsIdValue || !tabId) return ctx.state;
+      return setActiveTab(ctx.state, tabsIdValue, tabId);
+    }
+  });
+
+  ensure(dockId, {
+    title: "Dock Layout",
+    doc: "Dock the active layout leaf into a region.",
+    enabled: (ctx) => {
+      const target = resolveLayoutTargetId(ctx.state, ctx);
+      return target ? { enabled: true, reason: null } : { enabled: false, reason: "No layout target" };
+    },
+    exec: (ctx) => {
+      const target = resolveLayoutTargetId(ctx.state, ctx);
+      if (!target) return ctx.state;
+      const region = ctx.region ?? "left";
+      return dockLayout(ctx.state, target, region);
     }
   });
 

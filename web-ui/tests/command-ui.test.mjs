@@ -5,6 +5,7 @@ import {
   createState,
   addTask,
   addWindow,
+  initLayout,
   COMMAND_PALETTE_FILTER_COMMAND,
   COMMAND_PALETTE_EXECUTE_COMMAND,
   COMMAND_PALETTE_SELECT_NEXT_COMMAND,
@@ -18,6 +19,10 @@ import {
   TASK_SWITCH_COMMAND,
   TASK_CLOSE_COMMAND,
   TASK_ARCHIVE_COMMAND,
+  LAYOUT_SPLIT_COMMAND,
+  LAYOUT_TABS_COMMAND,
+  LAYOUT_DOCK_COMMAND,
+  LAYOUT_SET_ACTIVE_TAB_COMMAND,
   applyCommandPaletteFilter,
   applyCommandPaletteSelection,
   resolveCommandPaletteSelection,
@@ -27,6 +32,7 @@ import {
   refreshKeybindingWindow,
   registerCommandPaletteCommands,
   registerTaskCommands,
+  registerLayoutCommands,
   registerCommandSurfaceCommands,
   bindCommandPaletteDefaults,
   bindCommandSurfaceDefaults
@@ -208,6 +214,75 @@ test("task commands list, switch, archive, and close", () => {
   assert.equal(closed.ok, true);
   state = closed.result;
   assert.equal(state.tasks["task-1"], undefined);
+});
+
+test("layout commands split, tabs, dock, and activate tabs", () => {
+  const registry = createRegistry();
+  registerLayoutCommands(registry);
+
+  let state = createState();
+  state = addTask(state, { id: "task-1", title: "Task One" });
+  state = addWindow(state, { id: "win-1", taskId: "task-1", title: "Win 1" });
+  state = addWindow(state, { id: "win-2", taskId: "task-1", title: "Win 2" });
+  state = addWindow(state, { id: "win-3", taskId: "task-1", title: "Win 3" });
+  state = initLayout(state, { kind: "leaf", windowId: "win-1" });
+
+  let split = executeCommand(registry, LAYOUT_SPLIT_COMMAND, {
+    state,
+    windowId: "win-1",
+    newWindowId: "win-2",
+    axis: "v",
+    ratio: 0.4
+  });
+  assert.equal(split.ok, true);
+  state = split.result;
+  const splitRoot = state.layout.nodes[state.layout.rootId];
+  assert.equal(splitRoot.kind, "split");
+  assert.ok(
+    Object.values(state.layout.nodes).some(
+      (node) => node.kind === "leaf" && node.props?.windowId === "win-2"
+    )
+  );
+
+  const leafWin1 = Object.entries(state.layout.nodes).find(
+    ([, node]) => node.kind === "leaf" && node.props?.windowId === "win-1"
+  )?.[0];
+  assert.ok(leafWin1);
+
+  let tabs = executeCommand(registry, LAYOUT_TABS_COMMAND, {
+    state,
+    layoutId: leafWin1,
+    newWindowId: "win-3",
+    activateNew: true
+  });
+  assert.equal(tabs.ok, true);
+  state = tabs.result;
+  const tabsNodeEntry = Object.entries(state.layout.nodes).find(([, node]) => node.kind === "tabs");
+  assert.ok(tabsNodeEntry);
+  const tabsId = tabsNodeEntry[0];
+  const leafWin3 = Object.entries(state.layout.nodes).find(
+    ([, node]) => node.kind === "leaf" && node.props?.windowId === "win-3"
+  )?.[0];
+  assert.ok(leafWin3);
+
+  let activeTab = executeCommand(registry, LAYOUT_SET_ACTIVE_TAB_COMMAND, {
+    state,
+    tabsId,
+    tabId: leafWin3
+  });
+  assert.equal(activeTab.ok, true);
+  state = activeTab.result;
+  assert.equal(state.layout.nodes[tabsId].props.activeId, leafWin3);
+
+  let docked = executeCommand(registry, LAYOUT_DOCK_COMMAND, {
+    state,
+    layoutId: leafWin1,
+    region: "right"
+  });
+  assert.equal(docked.ok, true);
+  state = docked.result;
+  const dockNode = Object.values(state.layout.nodes).find((node) => node.kind === "dock");
+  assert.ok(dockNode);
 });
 
 test("keybinding viewer lists bindings", () => {

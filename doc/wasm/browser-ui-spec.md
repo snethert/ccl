@@ -330,6 +330,7 @@ Lisp code runs only within command execution boundaries and explicit yields.
 ### Layout manager
 - Layout operations mutate a persistent layout tree (splits, tabs, docks).
 - No automatic rebalancing; layout changes are explicit commands.
+- Layout mutations MUST be exposed as commands (split, wrap-in-tabs, set-active-tab, dock).
 
 ### Error handling and debugger integration
 - All command execution is wrapped in restart-friendly error handling.
