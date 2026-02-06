@@ -312,6 +312,7 @@ Lisp code runs only within command execution boundaries and explicit yields.
 - The palette maintains an explicit selected item; navigation updates selection without mutating command order.
 - Executing the selected item MUST use the target command id.
 - Palette navigation and execution MUST be exposed as commands (e.g., select-next, select-prev, execute-selected).
+- Opening/closing the command palette and keybinding viewer MUST be exposed as commands.
 - Palette implementations MAY hide internal commands from the listing.
 - Palette bindings SHOULD map ArrowUp/ArrowDown/Enter to selection and execution commands for the palette scope.
 - Keybinding viewer entries SHOULD encode scope, scope id (if any), key, and command id in a human-readable label.

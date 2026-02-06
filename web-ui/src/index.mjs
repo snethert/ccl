@@ -5,6 +5,7 @@ export {
   addTask,
   addWindow,
   addWidget,
+  removeWindow,
   addPresentation,
   setLayout,
   initLayout,
@@ -25,6 +26,10 @@ export {
   COMMAND_PALETTE_SELECT_NEXT_COMMAND,
   COMMAND_PALETTE_SELECT_PREV_COMMAND,
   COMMAND_PALETTE_EXECUTE_SELECTION_COMMAND,
+  COMMAND_PALETTE_OPEN_COMMAND,
+  COMMAND_PALETTE_CLOSE_COMMAND,
+  KEYBINDINGS_OPEN_COMMAND,
+  KEYBINDINGS_CLOSE_COMMAND,
   raiseError,
   acknowledgeError,
   upsertJob,
@@ -32,13 +37,16 @@ export {
   setFocus,
   openCommandPaletteWindow,
   refreshCommandPaletteWindow,
+  closeCommandPaletteWindow,
   applyCommandPaletteFilter,
   applyCommandPaletteSelection,
   resolveCommandPaletteSelection,
   registerCommandPaletteCommands,
+  registerCommandSurfaceCommands,
   bindCommandPaletteDefaults,
   openKeybindingWindow,
-  refreshKeybindingWindow
+  refreshKeybindingWindow,
+  closeKeybindingWindow
 } from "./state.mjs";
 export {
   createRegistry,

@@ -316,3 +316,4 @@ Exit criteria:
 - Added palette selection state helpers and selected-item execution metadata.
 - Added command palette command registrations for filter/navigation/execute.
 - Added default palette keybindings (ArrowUp/ArrowDown/Enter) for task scope.
+- Added open/close commands for command palette and keybinding viewer windows.

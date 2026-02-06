@@ -8,6 +8,10 @@ import {
   COMMAND_PALETTE_EXECUTE_COMMAND,
   COMMAND_PALETTE_SELECT_NEXT_COMMAND,
   COMMAND_PALETTE_EXECUTE_SELECTION_COMMAND,
+  COMMAND_PALETTE_OPEN_COMMAND,
+  COMMAND_PALETTE_CLOSE_COMMAND,
+  KEYBINDINGS_OPEN_COMMAND,
+  KEYBINDINGS_CLOSE_COMMAND,
   applyCommandPaletteFilter,
   applyCommandPaletteSelection,
   resolveCommandPaletteSelection,
@@ -15,6 +19,7 @@ import {
   refreshCommandPaletteWindow,
   openKeybindingWindow,
   registerCommandPaletteCommands,
+  registerCommandSurfaceCommands,
   bindCommandPaletteDefaults
 } from "../src/state.mjs";
 import { createRegistry, registerCommand, bindKey, executeCommand, resolveKey } from "../src/commands.mjs";
@@ -111,6 +116,39 @@ test("palette command registration wires navigation and execution", () => {
 
   const resolved = resolveKey(registry, "ArrowDown", { taskId: "task-1" });
   assert.equal(resolved, COMMAND_PALETTE_SELECT_NEXT_COMMAND);
+});
+
+test("command surface open/close commands toggle windows", () => {
+  const registry = createRegistry();
+  registerCommandSurfaceCommands(registry);
+
+  let state = createState();
+  state = addTask(state, { id: "task-1", title: "Task" });
+  const ctx = makeContext(state, { taskId: "task-1" });
+
+  const openedPalette = executeCommand(registry, COMMAND_PALETTE_OPEN_COMMAND, ctx);
+  assert.equal(openedPalette.ok, true);
+  state = openedPalette.result;
+  let palette = Object.values(state.windows).find((win) => win.metadata?.role === "command-palette");
+  assert.ok(palette);
+
+  const closedPalette = executeCommand(registry, COMMAND_PALETTE_CLOSE_COMMAND, { ...ctx, state });
+  assert.equal(closedPalette.ok, true);
+  state = closedPalette.result;
+  palette = Object.values(state.windows).find((win) => win.metadata?.role === "command-palette");
+  assert.equal(palette, undefined);
+
+  const openedKeybindings = executeCommand(registry, KEYBINDINGS_OPEN_COMMAND, { ...ctx, state });
+  assert.equal(openedKeybindings.ok, true);
+  state = openedKeybindings.result;
+  let viewer = Object.values(state.windows).find((win) => win.metadata?.role === "keybindings");
+  assert.ok(viewer);
+
+  const closedKeybindings = executeCommand(registry, KEYBINDINGS_CLOSE_COMMAND, { ...ctx, state });
+  assert.equal(closedKeybindings.ok, true);
+  state = closedKeybindings.result;
+  viewer = Object.values(state.windows).find((win) => win.metadata?.role === "keybindings");
+  assert.equal(viewer, undefined);
 });
 
 test("keybinding viewer lists bindings", () => {

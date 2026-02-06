@@ -7,13 +7,16 @@ import {
   COMMAND_PALETTE_EXECUTE_COMMAND,
   COMMAND_PALETTE_SELECT_NEXT_COMMAND,
   COMMAND_PALETTE_EXECUTE_SELECTION_COMMAND,
+  COMMAND_PALETTE_OPEN_COMMAND,
+  COMMAND_PALETTE_CLOSE_COMMAND,
+  KEYBINDINGS_OPEN_COMMAND,
+  KEYBINDINGS_CLOSE_COMMAND,
   applyCommandPaletteFilter,
   applyCommandPaletteSelection,
   resolveCommandPaletteSelection,
-  openCommandPaletteWindow,
   refreshCommandPaletteWindow,
-  openKeybindingWindow,
   registerCommandPaletteCommands,
+  registerCommandSurfaceCommands,
   bindCommandPaletteDefaults,
   createRegistry,
   registerCommand,
@@ -28,12 +31,18 @@ registerCommand(registry, { id: "beta.build", title: "Beta Build" });
 bindKey(registry, "global", "K", "alpha.run");
 bindKey(registry, "task", "B", "beta.build", "task-1");
 registerCommandPaletteCommands(registry);
+registerCommandSurfaceCommands(registry);
 bindCommandPaletteDefaults(registry, { taskId: "task-1" });
 
 let state = createState();
 state = addTask(state, { id: "task-1", title: "Task" });
 
-state = openCommandPaletteWindow(state, { registry, taskId: "task-1" });
+const openedPalette = executeCommand(registry, COMMAND_PALETTE_OPEN_COMMAND, {
+  state,
+  taskId: "task-1"
+});
+assert.equal(openedPalette.ok, true);
+state = openedPalette.result;
 const paletteWindow = Object.values(state.windows).find((win) => win.metadata?.role === "command-palette");
 assert.ok(paletteWindow, "command palette window exists");
 const filterId = paletteWindow.metadata.widgets.filterId;
@@ -72,11 +81,32 @@ assert.equal(execSelected.ok, true);
 assert.equal(execSelected.result.ok, true);
 assert.equal(execSelected.result.result, null);
 
-state = openKeybindingWindow(state, { registry, taskId: "task-1" });
+const openedKeybindings = executeCommand(registry, KEYBINDINGS_OPEN_COMMAND, {
+  state,
+  taskId: "task-1"
+});
+assert.equal(openedKeybindings.ok, true);
+state = openedKeybindings.result;
 const keybindingWindow = Object.values(state.windows).find((win) => win.metadata?.role === "keybindings");
 assert.ok(keybindingWindow, "keybinding window exists");
 const keybindingItems = state.widgets[keybindingWindow.metadata.widgets.listId].props.items;
 assert.ok(keybindingItems.some((item) => item.label.includes("global: K → alpha.run")));
 assert.ok(keybindingItems.some((item) => item.label.includes("task(task-1): B → beta.build")));
+
+const closedKeybindings = executeCommand(registry, KEYBINDINGS_CLOSE_COMMAND, {
+  state,
+  taskId: "task-1"
+});
+assert.equal(closedKeybindings.ok, true);
+state = closedKeybindings.result;
+assert.ok(!Object.values(state.windows).some((win) => win.metadata?.role === "keybindings"));
+
+const closedPalette = executeCommand(registry, COMMAND_PALETTE_CLOSE_COMMAND, {
+  state,
+  taskId: "task-1"
+});
+assert.equal(closedPalette.ok, true);
+state = closedPalette.result;
+assert.ok(!Object.values(state.windows).some((win) => win.metadata?.role === "command-palette"));
 
 console.log("PASS: web-ui command palette smoke test");

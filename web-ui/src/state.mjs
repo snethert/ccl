@@ -18,6 +18,10 @@ export const COMMAND_PALETTE_EXECUTE_COMMAND = "ui.command-palette.execute";
 export const COMMAND_PALETTE_SELECT_NEXT_COMMAND = "ui.command-palette.select-next";
 export const COMMAND_PALETTE_SELECT_PREV_COMMAND = "ui.command-palette.select-prev";
 export const COMMAND_PALETTE_EXECUTE_SELECTION_COMMAND = "ui.command-palette.execute-selected";
+export const COMMAND_PALETTE_OPEN_COMMAND = "ui.command-palette.open";
+export const COMMAND_PALETTE_CLOSE_COMMAND = "ui.command-palette.close";
+export const KEYBINDINGS_OPEN_COMMAND = "ui.keybindings.open";
+export const KEYBINDINGS_CLOSE_COMMAND = "ui.keybindings.close";
 
 function ensureCounters(counters) {
   if (counters) {
@@ -213,6 +217,101 @@ export function addWidget(state, widget) {
     widgets,
     windows
   };
+}
+
+function collectWidgetSubtreeIds(widgets, rootIds) {
+  const childrenByParent = new Map();
+  for (const [id, widget] of Object.entries(widgets ?? {})) {
+    const parentId = widget.parentId;
+    if (!parentId) continue;
+    let list = childrenByParent.get(parentId);
+    if (!list) {
+      list = [];
+      childrenByParent.set(parentId, list);
+    }
+    list.push(id);
+  }
+  const pending = [...new Set(rootIds.filter(Boolean))];
+  const toRemove = new Set();
+  while (pending.length > 0) {
+    const current = pending.pop();
+    if (!current || toRemove.has(current)) continue;
+    toRemove.add(current);
+    const children = childrenByParent.get(current);
+    if (children) {
+      pending.push(...children);
+    }
+  }
+  return toRemove;
+}
+
+export function removeWindow(state, windowId, options = {}) {
+  const window = state.windows?.[windowId];
+  if (!window) {
+    return state;
+  }
+  const widgets = state.widgets ?? {};
+  const rootIds = [];
+  if (window.rootWidgetId) {
+    rootIds.push(window.rootWidgetId);
+  }
+  for (const [id, widget] of Object.entries(widgets)) {
+    if (widget.windowId === windowId) {
+      rootIds.push(id);
+    }
+  }
+  const toRemove = collectWidgetSubtreeIds(widgets, rootIds);
+
+  let nextWidgets = widgets;
+  if (toRemove.size > 0) {
+    nextWidgets = {};
+    for (const [id, widget] of Object.entries(widgets)) {
+      if (!toRemove.has(id)) {
+        nextWidgets[id] = widget;
+      }
+    }
+  } else {
+    nextWidgets = { ...widgets };
+  }
+
+  let nextState = { ...state, widgets: nextWidgets };
+
+  if (toRemove.size > 0 && nextState.presentations) {
+    const nextPresentations = {};
+    for (const [id, presentation] of Object.entries(nextState.presentations)) {
+      if (presentation.widgetId && toRemove.has(presentation.widgetId)) {
+        continue;
+      }
+      nextPresentations[id] = presentation;
+    }
+    nextState = { ...nextState, presentations: nextPresentations };
+  }
+
+  const nextWindows = { ...nextState.windows };
+  delete nextWindows[windowId];
+  nextState = { ...nextState, windows: nextWindows };
+
+  const tasks = { ...nextState.tasks };
+  const task = tasks[window.taskId];
+  if (task) {
+    const windowIds = task.windowIds.filter((id) => id !== windowId);
+    const activeWindowId = task.activeWindowId === windowId ? (windowIds[0] ?? null) : task.activeWindowId;
+    tasks[window.taskId] = { ...task, windowIds, activeWindowId };
+  }
+  nextState = { ...nextState, tasks };
+
+  if (nextState.windowCauses && nextState.windowCauses[windowId]) {
+    const nextCauses = { ...nextState.windowCauses };
+    delete nextCauses[windowId];
+    nextState = { ...nextState, windowCauses: nextCauses };
+  }
+
+  const focus = nextState.focus;
+  if (focus && (focus.windowId === windowId || (focus.widgetId && toRemove.has(focus.widgetId)))) {
+    nextState = setFocusCore(nextState, null, options.reason ?? "command");
+  }
+
+  return nextState;
 }
 
 export function addPresentation(state, presentation) {
@@ -751,6 +850,22 @@ export function refreshCommandPaletteWindow(state, windowId, options = {}) {
   return nextState;
 }
 
+export function closeCommandPaletteWindow(state, options = {}) {
+  const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
+  const windowId =
+    options.windowId ??
+    findWindowByRole(state, "command-palette", taskId)?.id ??
+    null;
+  if (!windowId) {
+    return state;
+  }
+  const window = state.windows?.[windowId];
+  if (!window || window.metadata?.role !== "command-palette") {
+    return state;
+  }
+  return removeWindow(state, windowId, { reason: options.reason ?? "command" });
+}
+
 export function applyCommandPaletteFilter(state, options = {}) {
   const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
   const windowId =
@@ -893,6 +1008,71 @@ export function registerCommandPaletteCommands(registry, options = {}) {
   return registry;
 }
 
+export function registerCommandSurfaceCommands(registry, options = {}) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  const paletteOpenId = options.paletteOpenCommandId ?? COMMAND_PALETTE_OPEN_COMMAND;
+  const paletteCloseId = options.paletteCloseCommandId ?? COMMAND_PALETTE_CLOSE_COMMAND;
+  const keybindingsOpenId = options.keybindingsOpenCommandId ?? KEYBINDINGS_OPEN_COMMAND;
+  const keybindingsCloseId = options.keybindingsCloseCommandId ?? KEYBINDINGS_CLOSE_COMMAND;
+  const filterCommandId = options.filterCommandId ?? COMMAND_PALETTE_FILTER_COMMAND;
+
+  const ensure = (id, command) => {
+    if (!registry.commands.has(id)) {
+      registerCommand(registry, { ...command, id });
+    }
+  };
+
+  ensure(paletteOpenId, {
+    title: "Command Palette",
+    doc: "Open the command palette.",
+    metadata: { paletteHidden: true },
+    exec: (ctx) =>
+      openCommandPaletteWindow(ctx.state, {
+        registry,
+        taskId: ctx.taskId,
+        filter: ctx.filter ?? ctx.inputValue ?? "",
+        filterCommandId
+      })
+  });
+
+  ensure(paletteCloseId, {
+    title: "Close Command Palette",
+    doc: "Close the command palette.",
+    metadata: { paletteHidden: true },
+    exec: (ctx) =>
+      closeCommandPaletteWindow(ctx.state, {
+        taskId: ctx.taskId,
+        windowId: ctx.windowId
+      })
+  });
+
+  ensure(keybindingsOpenId, {
+    title: "Keybindings",
+    doc: "Open the keybinding viewer.",
+    metadata: { paletteHidden: true },
+    exec: (ctx) =>
+      openKeybindingWindow(ctx.state, {
+        registry,
+        taskId: ctx.taskId
+      })
+  });
+
+  ensure(keybindingsCloseId, {
+    title: "Close Keybindings",
+    doc: "Close the keybinding viewer.",
+    metadata: { paletteHidden: true },
+    exec: (ctx) =>
+      closeKeybindingWindow(ctx.state, {
+        taskId: ctx.taskId,
+        windowId: ctx.windowId
+      })
+  });
+
+  return registry;
+}
+
 export function bindCommandPaletteDefaults(registry, options = {}) {
   if (!registry) {
     throw new Error("Registry is required");
@@ -986,6 +1166,22 @@ export function refreshKeybindingWindow(state, windowId, options = {}) {
     ...widget,
     props: { ...(widget.props ?? {}), items }
   }));
+}
+
+export function closeKeybindingWindow(state, options = {}) {
+  const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
+  const windowId =
+    options.windowId ??
+    findWindowByRole(state, "keybindings", taskId)?.id ??
+    null;
+  if (!windowId) {
+    return state;
+  }
+  const window = state.windows?.[windowId];
+  if (!window || window.metadata?.role !== "keybindings") {
+    return state;
+  }
+  return removeWindow(state, windowId, { reason: options.reason ?? "command" });
 }
 
 export function raiseError(state, error, options = {}) {
