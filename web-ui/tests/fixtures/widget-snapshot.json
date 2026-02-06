@@ -150,10 +150,13 @@
               "kind": "element",
               "tag": "canvas",
               "props": {
+                "aria-hidden": "true",
                 "className": "ui-widget ui-canvas-view",
+                "data-accessible": "false",
                 "data-widget-id": "widget-canvas",
                 "data-widget-kind": "canvas-view",
                 "height": 60,
+                "role": "presentation",
                 "width": 80
               },
               "children": []
@@ -162,10 +165,13 @@
               "kind": "element",
               "tag": "canvas",
               "props": {
+                "aria-hidden": "true",
                 "className": "ui-widget ui-webgl-view",
+                "data-accessible": "false",
                 "data-widget-id": "widget-webgl",
                 "data-widget-kind": "webgl-view",
                 "height": 90,
+                "role": "presentation",
                 "width": 120
               },
               "children": []

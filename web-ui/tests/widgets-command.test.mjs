@@ -211,6 +211,8 @@ test("canvas view command wiring uses hit testing", () => {
   assert.ok(canvas, "canvas view exists");
   assert.equal(canvas.tag, "canvas");
   assert.equal(canvas.props["data-command-id"], "demo.canvas");
+  assert.equal(canvas.props["aria-hidden"], "true");
+  assert.equal(canvas.props.role, "presentation");
   assert.equal(typeof canvas.props.onClick, "function");
 
   const target = {
@@ -265,6 +267,8 @@ test("webgl view command wiring uses hit testing", () => {
   assert.ok(canvas, "webgl view exists");
   assert.equal(canvas.tag, "canvas");
   assert.equal(canvas.props["data-command-id"], "demo.webgl");
+  assert.equal(canvas.props["aria-hidden"], "true");
+  assert.equal(canvas.props.role, "presentation");
   assert.equal(typeof canvas.props.onClick, "function");
 
   const target = {
@@ -277,4 +281,66 @@ test("webgl view command wiring uses hit testing", () => {
   assert.equal(lastCtx.webglId, "widget-webgl");
   assert.equal(lastCtx.hitId, "rect-1");
   assert.equal(lastCtx.hitKind, "rect");
+});
+
+test("canvas view exposes accessibility props when enabled", () => {
+  let state = createState();
+  state = addTask(state, { id: "task-1", title: "Task" });
+  state = addWindow(state, { id: "win-1", taskId: "task-1", kind: "document" });
+  state = addWidget(state, { id: "root", kind: "container", windowId: "win-1" });
+  state = addWidget(state, {
+    id: "widget-canvas",
+    kind: "canvas-view",
+    parentId: "root",
+    props: {
+      width: 100,
+      height: 80,
+      accessibility: {
+        enabled: true,
+        label: "Chart",
+        role: "img",
+        tabIndex: 0
+      }
+    }
+  });
+
+  const tree = renderWindow(state, "win-1", {});
+  const canvas = findByWidgetId(tree, "widget-canvas");
+
+  assert.ok(canvas, "canvas view exists");
+  assert.equal(canvas.props["data-accessible"], "true");
+  assert.equal(canvas.props["aria-label"], "Chart");
+  assert.equal(canvas.props.role, "img");
+  assert.equal(canvas.props.tabIndex, 0);
+});
+
+test("webgl view exposes accessibility props when enabled", () => {
+  let state = createState();
+  state = addTask(state, { id: "task-1", title: "Task" });
+  state = addWindow(state, { id: "win-1", taskId: "task-1", kind: "document" });
+  state = addWidget(state, { id: "root", kind: "container", windowId: "win-1" });
+  state = addWidget(state, {
+    id: "widget-webgl",
+    kind: "webgl-view",
+    parentId: "root",
+    props: {
+      width: 100,
+      height: 80,
+      accessibility: {
+        enabled: true,
+        label: "Scene",
+        role: "img",
+        tabIndex: 0
+      }
+    }
+  });
+
+  const tree = renderWindow(state, "win-1", {});
+  const canvas = findByWidgetId(tree, "widget-webgl");
+
+  assert.ok(canvas, "webgl view exists");
+  assert.equal(canvas.props["data-accessible"], "true");
+  assert.equal(canvas.props["aria-label"], "Scene");
+  assert.equal(canvas.props.role, "img");
+  assert.equal(canvas.props.tabIndex, 0);
 });

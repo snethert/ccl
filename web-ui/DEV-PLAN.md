@@ -286,6 +286,7 @@ Exit criteria:
 - Updated DOM backend to handle canvas render hooks.
 - Added unit tests for canvas scene building, hit testing, and measure cache behavior.
 - Extended widget snapshots and command wiring tests for canvas views.
+- Added accessibility proxy defaults for canvas/webgl views (non-accessible by default, explicit labels/roles when enabled).
 - Extended browser harness to validate canvas backend hit testing and canvas-view commands.
 - Added web-ui canvas smoke test and wired it into the WASM smoke runner.
 

@@ -170,6 +170,7 @@ Acceptance checks:
 - Canvas/WebGL views MUST integrate with layout, focus, and persistence like any other widget.
 - `measureText` MUST be cached per font key; the backend reports cache misses.
 - Canvas/WebGL views MUST provide an accessibility proxy strategy (focusable regions + label/role mapping) or explicitly declare themselves non-accessible.
+- Canvas/WebGL views default to non-accessible; accessibility proxies are enabled only when explicitly configured (label/role/tabIndex).
 - Text editing uses DOM inputs for composition, selection, and accessibility; Canvas/WebGL text editing is not the baseline.
 
 Acceptance checks:

@@ -118,6 +118,30 @@ function widgetBaseProps(widget, baseClass) {
   return props;
 }
 
+function resolveAccessibilityProps(widget, defaults = {}) {
+  const config = widget.props?.accessibility ?? widget.model?.accessibility ?? null;
+  const enabled = Boolean(config?.enabled);
+  if (!enabled) {
+    return {
+      role: "presentation",
+      "aria-hidden": "true",
+      "data-accessible": "false"
+    };
+  }
+  const label = config?.label ?? defaults.label ?? null;
+  const role = config?.role ?? "img";
+  const tabIndex = Number.isInteger(config?.tabIndex) ? config.tabIndex : 0;
+  const props = {
+    role,
+    tabIndex,
+    "data-accessible": "true"
+  };
+  if (label) {
+    props["aria-label"] = String(label);
+  }
+  return props;
+}
+
 function resolveWindowId(state, widget, fallbackWindowId = null) {
   if (widget.windowId) return widget.windowId;
   let current = widget;
@@ -720,6 +744,7 @@ function renderCanvasView(state, widget, options = {}) {
   const ctx = buildContext(state, widget, options, windowId, taskId);
   const registry = options?.registry ?? null;
   const defaultCommandId = resolveCommandId(widget);
+  const a11yProps = resolveAccessibilityProps(widget, { label: "Canvas view" });
 
   const onCanvasRender = (node) => {
     if (!node) return;
@@ -767,6 +792,7 @@ function renderCanvasView(state, widget, options = {}) {
   const canvasProps = {
     ...props,
     ...base,
+    ...a11yProps,
     width,
     height,
     __canvasRender: onCanvasRender,
@@ -793,6 +819,7 @@ function renderWebGLView(state, widget, options = {}) {
   const ctx = buildContext(state, widget, options, windowId, taskId);
   const registry = options?.registry ?? null;
   const defaultCommandId = resolveCommandId(widget);
+  const a11yProps = resolveAccessibilityProps(widget, { label: "WebGL view" });
 
   const onWebGLRender = (node) => {
     if (!node) return;
@@ -840,6 +867,7 @@ function renderWebGLView(state, widget, options = {}) {
   const canvasProps = {
     ...props,
     ...base,
+    ...a11yProps,
     width,
     height,
     __webglRender: onWebGLRender,
