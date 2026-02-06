@@ -24,7 +24,6 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdarg.h>
-#include <limits.h>
 #include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -32,6 +31,7 @@
 #include <strings.h>
 #endif
 #ifdef WASM32
+#include <limits.h>
 #include <stdint.h>
 #endif
 #ifdef DARWIN

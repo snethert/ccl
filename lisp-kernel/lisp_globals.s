@@ -151,10 +151,11 @@ nrs_symbol_extra = symbol.size-nrs_symbol_fulltag
 	 _struct_pad(nrs_symbol_fulltag)
 	 _struct_label(foreign_thread_control)
 	 _struct_pad(nrs_symbol_extra)	/* %foreign-thread-control */
-
+	__ifdef(`WASM32')
 	 _struct_pad(nrs_symbol_fulltag)
 	 _struct_label(wasm_compiled_modules)
 	 _struct_pad(nrs_symbol_extra)	/* %wasm-compiled-modules% */
+	__endif
         _ends
 
 

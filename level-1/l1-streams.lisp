@@ -281,6 +281,7 @@
 
 (defvar *elements-per-buffer* 2048)  ; default buffer size for file io
 
+#+wasm32-target
 (defparameter *capability-unavailable-on-enosys* nil
   "When true, ENOSYS/EACCES stream I/O errors signal CAPABILITY-UNAVAILABLE.")
 
@@ -291,16 +292,17 @@
   t)
 
 (defmethod stream-io-error ((stream stream) error-number context)
-  (if (and *capability-unavailable-on-enosys*
-           (or (= error-number #$ENOSYS)
-               (= error-number #$EACCES)))
+  #+wasm32-target
+  (when (and *capability-unavailable-on-enosys*
+             (or (= error-number #$ENOSYS)
+                 (= error-number #$EACCES)))
     (error 'capability-unavailable
            :capability :io/stream
            :operation context
-           :details (list :stream stream :errno error-number))
-    (error 'simple-stream-error :stream stream
-	   :format-control (format nil "~a during ~a"
-				   (%strerror error-number) context))))
+           :details (list :stream stream :errno error-number)))
+  (error 'simple-stream-error :stream stream
+	 :format-control (format nil "~a during ~a"
+				 (%strerror error-number) context)))
 
 
 
@@ -5448,17 +5450,21 @@
                                  :address fdset
                                  :unsigned-fullword)))))
 
+#+wasm32-target
 (defparameter *wasm-yield-on-eagain* nil
   "When true, EWOULDBLOCK/EAGAIN at stream boundaries yields to the host
 instead of blocking in-process. Intended for the WASM Stage-2 stepping model.")
 
+#+wasm32-target
 (defvar *wasm-last-yield* nil)
 
+#+wasm32-target
 (defun %wasm-yield (direction fd)
   (setf *wasm-last-yield* (list :direction direction :fd fd))
   (throw :wasm-yield *wasm-last-yield*))
 
 (defun process-input-would-block (fd)
+  #+wasm32-target
   (when *wasm-yield-on-eagain*
     (%wasm-yield :input fd))
   #+windows-target (declare (ignore fd))
@@ -5496,6 +5502,7 @@ instead of blocking in-process. Intended for the WASM Stage-2 stepping model.")
 
 
 (defun process-output-would-block (fd)
+  #+wasm32-target
   (when *wasm-yield-on-eagain*
     (%wasm-yield :output fd))
   #+windows-target (declare (ignore fd))

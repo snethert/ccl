@@ -173,6 +173,7 @@
 
 (defparameter %toplevel-catch% ':toplevel)
 
+#+wasm32-target
 (defvar %wasm-compiled-modules% nil
   "Registry of compiled WASM modules embedded in the image.")
 

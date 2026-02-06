@@ -28,6 +28,7 @@
 (defconstant platform-cpu-sparc (ash 1 3))
 (defconstant platform-cpu-x86 (ash 2 3))
 (defconstant platform-cpu-arm (ash 3 3))
+#+wasm32-target
 (defconstant platform-cpu-wasm (ash 4 3))
 (defconstant platform-os-vxworks 0)
 (defconstant platform-os-linux 1)
@@ -36,6 +37,7 @@
 (defconstant platform-os-freebsd 4)
 (defconstant platform-os-windows 5)
 (defconstant platform-os-android 6)
+#+wasm32-target
 (defconstant platform-os-wasm 7)
 
 (defun backend-real-lowmem-bias (backend)
@@ -580,7 +582,6 @@
 
 
      
-
 
 
 

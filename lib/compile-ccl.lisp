@@ -71,6 +71,7 @@
     arm-lap
 ))
 
+#+wasm32-target
 (defparameter *wasm-compiler-modules*
   '(wasm-arch
     wasmenv))
@@ -98,6 +99,7 @@
 (defparameter *arm-compiler-backend-modules*
   '(arm-backend arm-vinsns arm2))
 
+#+wasm32-target
 (defparameter *wasm-compiler-backend-modules*
   '(wasm-backend wasm-vinsns wasm2))
 
@@ -187,6 +189,7 @@
              (:linuxarm 'ffi-linuxarm)
              (:androidarm 'ffi-androidarm)
              (:darwinarm 'ffi-darwinarm)
+             #+wasm32-target
              (:wasm32 nil)))))
 
 
@@ -208,6 +211,7 @@
                     *x86-compiler-backend-modules*))
     (:arm (append *arm-compiler-modules*
                   *arm-compiler-backend-modules*))
+    #+wasm32-target
     (:wasm32 (append *wasm-compiler-modules*
                      *wasm-compiler-backend-modules*))))
 

@@ -42,14 +42,14 @@
     (,platform-os-freebsd . :freebsd)
     (,platform-os-windows . :windows)
     (,platform-os-android . :android)
-    (,platform-os-wasm . :wasm)))
+    #+wasm32-target (,platform-os-wasm . :wasm)))
 
 (defparameter *platform-cpu-names*
   `((,platform-cpu-ppc . :ppc)
     (,platform-cpu-sparc . :sparc)
     (,platform-cpu-x86 . :x86)
     (,platform-cpu-arm . :arm)
-    (,platform-cpu-wasm . :wasm)))
+    #+wasm32-target (,platform-cpu-wasm . :wasm)))
 
 (defun host-platform ()
   (let* ((pf (%get-kernel-global 'host-platform)))
@@ -119,7 +119,6 @@
 (catch :toplevel
   (init-logical-directories)
   )
-
 
 
 

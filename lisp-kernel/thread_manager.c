@@ -16,9 +16,9 @@
 
 
 #include "threads.h"
+#ifdef WASM32
 #include <string.h>
 #include <stddef.h>
-#ifdef WASM32
 #include <stdint.h>
 #include <stdatomic.h>
 #include "gc.h"

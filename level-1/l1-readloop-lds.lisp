@@ -25,6 +25,7 @@
   (declare (dynamic-extent args))
   (apply *read-loop-function* args))
 
+#+wasm32-target
 (defun toplevel-loop ()
   (loop
     (let ((yielded
@@ -46,6 +47,15 @@
                nil))))
       (when yielded
         (return yielded)))))
+
+#-wasm32-target
+(defun toplevel-loop ()
+  (loop
+    (if (eq (catch :toplevel 
+              (run-read-loop :break-level 0 )) $xstkover)
+      (format t "~&;[Stacks reset due to overflow.]")
+      (when (eq *current-process* *initial-process*)
+        (toplevel)))))
 
 
 (defvar *defined-toplevel-commands* ())

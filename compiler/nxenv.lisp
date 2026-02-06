@@ -437,16 +437,11 @@
        (setq ,op (%car ,ops) ,num (%i- ,num 1))
        (when ,op
          (destructuring-bind (,name ,flags ,type) ,op
-       (setf (gethash ,name *nx1-operators*) 
+         (setf (gethash ,name *nx1-operators*) 
                (logior ,flags ,num)
                (svref *acode-operator-types* ,num)
                ,type)))
        (setq ,ops (cdr ,ops)))))
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  ;; Preserve existing operator ids by inserting at the head of the list.
-  (unless (assq 'with-downward-closures *next-nx-operators*)
-    (push '(with-downward-closures 0 :infer) *next-nx-operators*)))
 
 (defconstant $fbitnextmethargsp 0)
 (defconstant $fbitmethodp 1)
@@ -582,3 +577,4 @@
 
 
 (provide "NXENV")
+

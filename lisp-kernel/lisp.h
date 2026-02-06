@@ -64,7 +64,9 @@ print_lisp_object(LispObj);
 #define PLATFORM_CPU_SPARC (1<<3)
 #define PLATFORM_CPU_X86 (2<<3)
 #define PLATFORM_CPU_ARM (3<<3)
+#ifdef WASM32
 #define PLATFORM_CPU_WASM (4<<3)
+#endif
 #define PLATFORM_OS_VXWORKS 0
 #define PLATFORM_OS_LINUX 1
 #define PLATFORM_OS_SOLARIS 2
@@ -72,7 +74,9 @@ print_lisp_object(LispObj);
 #define PLATFORM_OS_FREEBSD 4
 #define PLATFORM_OS_WINDOWS 5
 #define PLATFORM_OS_ANDROID 6
+#ifdef WASM32
 #define PLATFORM_OS_WASM 7
+#endif
 
 
 

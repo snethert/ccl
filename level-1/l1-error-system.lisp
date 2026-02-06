@@ -127,6 +127,7 @@
 
 (define-condition simple-error (simple-condition error) ())
 
+#+wasm32-target
 (define-condition capability-unavailable (error)
   ((capability :initarg :capability :reader capability-unavailable-capability)
    (operation :initarg :operation :reader capability-unavailable-operation)
