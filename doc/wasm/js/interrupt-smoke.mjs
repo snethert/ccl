@@ -4,9 +4,8 @@
  * This is a minimal end-to-end harness that:
  *  - instantiates the kernel,
  *  - calls the microkernel interrupt request hook,
- *  - steps the runner once to ensure no trap.
- *
- * It does not assert interrupt delivery yet; that wiring is pending.
+ *  - steps the runner once to ensure no trap,
+ *  - asserts the pending flag is cleared after delivery (when wired).
  */
 
 import fs from "node:fs/promises";
@@ -132,6 +131,8 @@ runtime.subprimsTable.set(bootIndex, ex.wasm_boot_entry);
 
 assert(typeof ex.wasm_ccl_init === "function", "missing wasm_ccl_init export");
 assert(typeof ex.wasm_ccl_step === "function", "missing wasm_ccl_step export");
+assert(typeof ex.wasm_get_current_tcr === "function", "missing wasm_get_current_tcr export");
+assert(typeof ex.wasm_get_interrupt_pending_tcr === "function", "missing wasm_get_interrupt_pending_tcr export");
 
 const initr = ex.wasm_ccl_init() | 0;
 assert(initr === 0, `expected init success, got ${initr}`);
@@ -147,15 +148,17 @@ if (!interruptRequested) {
 const st = ex.wasm_ccl_step(0) | 0;
 if (st === STEP_TRAPPED) {
   const last = typeof ex.wasm_ccl_last_error === "function" ? (ex.wasm_ccl_last_error() | 0) : 0;
-  if (interruptRequested) {
-    console.log(`PASS: interrupt smoke test (runner trapped with last_error=${last})`);
-  } else {
-    fail(`unexpected trap status ${st} (last_error=${last})`);
-  }
+  fail(`unexpected trap status ${st} (last_error=${last})`);
 } else if (st === STEP_EXITED) {
   console.log("PASS: interrupt smoke test (runner exited cleanly)");
 } else if (st === STEP_BLOCKED || st === STEP_RUNNING) {
   console.log("PASS: interrupt smoke test (runner stepped without trap)");
 } else {
   fail(`unexpected step status ${st}`);
+}
+
+if (interruptRequested) {
+  const tcr = ex.wasm_get_current_tcr() >>> 0;
+  const pending = ex.wasm_get_interrupt_pending_tcr(tcr) | 0;
+  assert(pending === 0, `expected interrupt_pending cleared, got ${pending}`);
 }

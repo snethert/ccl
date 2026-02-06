@@ -81,6 +81,15 @@ On macOS/Homebrew, headers live under:
 
 ## Build The Kernel
 
+**IMPORTANT (macOS/Homebrew):** You MUST run the toolchain setup script **before**
+invoking `make`, otherwise the build will fail (commonly with
+`fatal error: 'errno.h' file not found`).
+
+```bash
+source scripts/wasm/env.sh
+make -C lisp-kernel/wasm32 CC="$CC"
+```
+
 Build output is currently produced by `lisp-kernel/wasm32/Makefile` into:
 
 - `doc/wasm/js/wasmcl.wasm`
@@ -95,7 +104,7 @@ make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi
 On macOS (after `source scripts/wasm/env.sh`), just run:
 
 ```bash
-make -C lisp-kernel/wasm32
+make -C lisp-kernel/wasm32 CC="$CC"
 ```
 
 ## Build The Subprims Provider (Scaffold)
@@ -111,7 +120,7 @@ make -C lisp-kernel/wasm32/subprims WASM_TARGET=wasm32-wasi
 On macOS (after `source scripts/wasm/env.sh`), just run:
 
 ```bash
-make -C lisp-kernel/wasm32/subprims
+make -C lisp-kernel/wasm32/subprims CC="$CC"
 ```
 
 The JS host should only call `wasm_set_subprims_ready(1)` when the provider

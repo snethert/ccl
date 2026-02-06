@@ -47,6 +47,94 @@ wasm_subprim_fixnum(uint32_t index)
   return box_fixnum(index);
 }
 
+static inline LispObj
+wasm_nrs_symbol_lispobj(lispsymbol *sym)
+{
+  return ptr_to_lispobj((BytePtr)sym + fulltag_misc);
+}
+
+typedef void (*wasm_lisp_fn)(void);
+
+static inline void
+wasm_call_entry_index(uint32_t index)
+{
+  ((wasm_lisp_fn)(uintptr_t)index)();
+}
+
+static void
+wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
+{
+  if (fn_value == (LispObj)nil_value) {
+    __builtin_trap();
+  }
+
+  if (fulltag_of(fn_value) != fulltag_misc) {
+    __builtin_trap();
+  }
+
+  LispObj header = header_of(fn_value);
+  int subtag = header_subtag(header);
+  if (subtag == subtag_symbol) {
+    lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(fn_value));
+    fn_value = sym->fcell;
+    if (fulltag_of(fn_value) != fulltag_misc) {
+      __builtin_trap();
+    }
+    header = header_of(fn_value);
+    subtag = header_subtag(header);
+  }
+
+  if (subtag != subtag_function) {
+    __builtin_trap();
+  }
+
+  tcr->wasm_gprs[nfn] = fn_value;
+  tcr->wasm_gprs[Rfn] = fn_value;
+
+  LispObj entry = deref(fn_value, 1);
+  if (tag_of(entry) != tag_fixnum) {
+    __builtin_trap();
+  }
+
+  {
+    uint32_t entry_index = (uint32_t)unbox_fixnum(entry);
+    wasm_call_entry_index(entry_index);
+  }
+}
+
+static int
+wasm_interrupts_enabled(TCR *tcr)
+{
+  LispObj *tlb = tcr->tlb_pointer;
+  if (tlb == NULL) {
+    return 0;
+  }
+  LispObj level = tlb[INTERRUPT_LEVEL_BINDING_INDEX];
+  if (tag_of(level) != tag_fixnum) {
+    return 0;
+  }
+  return unbox_fixnum(level) >= 0;
+}
+
+static int
+wasm_maybe_deliver_interrupt(TCR *tcr)
+{
+  if (tcr == NULL) {
+    return 0;
+  }
+  if (tcr->interrupt_pending <= 0) {
+    return 0;
+  }
+  if (!wasm_interrupts_enabled(tcr)) {
+    return 0;
+  }
+
+  tcr->wasm_gprs[arg_z] = lisp_nil;
+  tcr->wasm_gprs[nargs] = box_fixnum(0);
+  wasm_call_lisp_function(tcr, wasm_nrs_symbol_lispobj(&nrs_CMAIN));
+  return tcr->wasm_pending_throw ? 1 : 0;
+}
+
 static uint32_t wasm_subprims_ready = 0;
 static LispObj wasm_last_compiled_modules = 0;
 
@@ -89,6 +177,13 @@ wasm_toplevel_loop(TCR *tcr)
 {
   for (;;) {
     LispObj *vsp_ptr = (LispObj *)tcr->wasm_gprs[vsp];
+    if (vsp_ptr == NULL) {
+      return -1;
+    }
+    if (wasm_maybe_deliver_interrupt(tcr)) {
+      return WASM_TOPLEVEL_PENDING_THROW;
+    }
+    vsp_ptr = (LispObj *)tcr->wasm_gprs[vsp];
     if (vsp_ptr == NULL) {
       return -1;
     }

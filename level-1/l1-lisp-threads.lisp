@@ -380,7 +380,7 @@
 	   (when tcr
 	     (push (cons function args)
 		   (lisp-thread.interrupt-functions thread))
-	     (eql 0 (%tcr-interrupt tcr))))))
+           (eql 0 (%tcr-interrupt tcr))))))
       (:reset
        ;; Preset the thread with a function that'll return to the :reset
        ;; state
@@ -397,7 +397,56 @@
 	 (thread-enable thread (process-termination-semaphore process) (1- (integer-length (process-allocation-quantum process))) 0)
          t)))))
 
+#+wasm32-target
+(defvar *wasm-ui-interrupt-hook* nil
+  "Optional hook called when a pending interrupt is handled on WASM.")
+
+#+wasm32-target
+(defvar *wasm-interrupt-count* 0
+  "WASM-only counter for handled interrupts (testing/diagnostics).")
+
+#+wasm32-target
+(defvar *wasm-ui-interrupt-signal-queue* nil
+  "WASM-only stub queue for UI interrupt signals.")
+
+#+wasm32-target
+(defvar *wasm-ui-yield-reason* nil
+  "WASM-only stub storage for the last UI yield reason.")
+
+#+wasm32-target
+(defun wasm-enqueue-ui-signal (signal)
+  (push signal *wasm-ui-interrupt-signal-queue*)
+  signal)
+
+#+wasm32-target
+(defun wasm-yield-ui-turn (reason)
+  (setf *wasm-ui-yield-reason* reason)
+  reason)
+
+#+wasm32-target
+(defun wasm-default-ui-interrupt-hook ()
+  (wasm-enqueue-ui-signal
+   (list :type "ui:interrupt" :payload (list :reason "interrupt")))
+  (wasm-yield-ui-turn "interrupt-pending"))
+
+#+wasm32-target
+(unless (functionp *wasm-ui-interrupt-hook*)
+  (setf *wasm-ui-interrupt-hook* #'wasm-default-ui-interrupt-hook))
+
+#+wasm32-target
+(defun wasm-handle-pending-interrupt ()
+  (let* ((thread *current-lisp-thread*)
+         (tcr (and thread (lisp-thread.tcr thread))))
+    (when tcr
+      (let ((off (- target::tcr.interrupt-pending target::tcr-bias)))
+        (unless (eql 0 (%fixnum-ref tcr off))
+          (%fixnum-set tcr off 0)
+          (incf *wasm-interrupt-count*)
+          (when (functionp *wasm-ui-interrupt-hook*)
+            (funcall *wasm-ui-interrupt-hook*)))))))
+
 (defun thread-handle-interrupts ()
+  #+wasm32-target (wasm-handle-pending-interrupt)
   (let* ((thread *current-lisp-thread*))
     (with-process-whostate ("Active")
       (loop
@@ -1221,4 +1270,3 @@ no longer being used."
       (remove-from-all-processes proc)
       (let* ((ts (process-termination-semaphore proc)))
         (when ts (signal-semaphore ts))))))
-

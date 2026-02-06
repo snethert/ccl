@@ -51,8 +51,18 @@ wasm_request_interrupt_tcr(TCR *tcr)
   if (tcr == NULL) {
     return 0;
   }
-  tcr->interrupt_pending = 1;
+  tcr->interrupt_pending = 1 << fixnumshift;
   return 1;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_get_interrupt_pending_tcr")))
+int32_t
+wasm_get_interrupt_pending_tcr(TCR *tcr)
+{
+  if (tcr == NULL) {
+    return 0;
+  }
+  return tcr->interrupt_pending;
 }
 #endif
 

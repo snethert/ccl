@@ -78,9 +78,21 @@ The canonical CCL path for deferred interrupts is:
 
 In the WASM bring-up, the **intended** path is the same: the poll path should
 trigger an interrupt trap/handler entry that ultimately calls
-`raise_thread_interrupt`. As of now, the WASM-specific trap/handler hookup is
-**not fully wired** (see `doc/wasm/subprims-execution-prompt.md` for the pending
-interrupt delivery TODO).
+`raise_thread_interrupt`. In the current WASM integration, pending interrupts
+are delivered cooperatively by calling `cmain` (which runs
+`thread-handle-interrupts`) when `interrupt_pending` is set and interrupts are
+enabled. This happens at the toplevel loop boundary and when interrupts are
+re-enabled in `_SPbind_interrupt_level*` / `_SPunbind_interrupt_level`.
+
+On WASM, `thread-handle-interrupts` begins with a WASM-only hook:
+
+- `wasm-handle-pending-interrupt` reads `tcr.interrupt-pending`, clears it,
+  increments `*wasm-interrupt-count*`, and calls `*wasm-ui-interrupt-hook*`.
+- The default hook (`wasm-default-ui-interrupt-hook`) enqueues a UI signal
+  (`ui:interrupt`) and yields the UI turn.
+
+This keeps the interrupt delivery path Lisp-visible and deterministic while
+leaving non-WASM platforms unchanged.
 
 ### Host API Expectations
 

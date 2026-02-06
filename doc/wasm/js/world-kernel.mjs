@@ -308,6 +308,15 @@ export function createKernel({
       return kernel.instance.exports.wasm_ccl_step(deadlineMs);
     };
 
+    runner.requestInterrupt = (options = {}) => {
+      const exports = kernel?.instance?.exports;
+      if (!exports) {
+        throw new Error("runner.requestInterrupt: kernel exports unavailable");
+      }
+      const tcr = options.tcr ?? runner.getCurrentTcr();
+      return microkernel.requestInterrupt({ ...options, exports, tcr });
+    };
+
     runners.set(runnerId, runner);
     world.runners.add(runnerId);
 
@@ -352,6 +361,14 @@ export function createKernel({
     return runners.get(runnerId) ?? null;
   }
 
+  function requestInterrupt(runnerId, options = {}) {
+    const runner = runners.get(runnerId);
+    if (!runner) {
+      throw new Error(`requestInterrupt: unknown runnerId ${runnerId}`);
+    }
+    return runner.requestInterrupt(options);
+  }
+
   function sendToRunner(runnerId, message) {
     const runner = runners.get(runnerId);
     if (!runner) {
@@ -381,6 +398,7 @@ export function createKernel({
     createRunner,
     getWorld,
     getRunner,
+    requestInterrupt,
     terminateRunner,
     terminateWorld,
     sendToRunner,

@@ -15,6 +15,16 @@ The MVP interrupt system is complete when:
 - UI integration respects turn boundaries and IME composition constraints.
 - A smoke test proves end-to-end behavior in the JS harness.
 
+## Current Decisions (WASM Bring-up)
+
+- **Flag location:** `tcr.interrupt_pending` (per-runner, in linear memory).
+- **Host API:** `wasm_request_interrupt_tcr(tcr)` via the JS microkernel.
+- **Delivery:** `wasm_maybe_deliver_interrupt` calls `cmain` when pending + enabled.
+- **Lisp hook:** `thread-handle-interrupts` begins with `wasm-handle-pending-interrupt`
+  (clears flag, increments `*wasm-interrupt-count*`, calls `*wasm-ui-interrupt-hook*`).
+- **UI mapping:** default hook enqueues `ui:interrupt` and yields the UI turn.
+- **Platform scope:** all changes are `#+wasm32-target` (other platforms unchanged).
+
 ## Step-by-Step Plan
 
 ### 1) Define the Interrupt Flag Location (Runtime)
@@ -99,4 +109,3 @@ re-entrant command execution.
 - Add `Atomics.notify` wakeups when runners are blocked in workers.
 - Define memory ordering for shared interrupt flags.
 - Add latency measurement / diagnostics for safepoint frequency.
-

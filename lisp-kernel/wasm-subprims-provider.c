@@ -116,6 +116,7 @@ static LispObj wasm_misc_ref_dispatch(TCR *tcr, LispObj obj, signed_natural inde
 static void wasm_misc_set_dispatch(TCR *tcr, LispObj obj, signed_natural index, LispObj value);
 static void wasm_call_lisp_function(TCR *tcr, LispObj fn_value);
 static void wasm_bind_interrupt_level(TCR *tcr, LispObj new_value);
+static void wasm_maybe_deliver_interrupt(TCR *tcr);
 static void wasm_sync_arg_regs_from_vsp(TCR *tcr);
 static inline LispObj *wasm_vsp_or_trap(TCR *tcr);
 
@@ -5116,8 +5117,7 @@ _SPbind_interrupt_level_0(void)
   wasm_bind_interrupt_level(tcr, box_fixnum(0));
 
   if (tag_of(old_value) == tag_fixnum && unbox_fixnum(old_value) < 0) {
-    /* Pending interrupt delivery is not yet wired for wasm. */
-    (void)tcr;
+    wasm_maybe_deliver_interrupt(tcr);
   }
 }
 
@@ -5147,7 +5147,17 @@ _SPbind_interrupt_level(void)
     _SPbind_interrupt_level_0();
     return;
   }
+  LispObj *tlb = tcr->tlb_pointer;
+  if (tlb == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj old_value = tlb[INTERRUPT_LEVEL_BINDING_INDEX];
   wasm_bind_interrupt_level(tcr, value);
+  if (tag_of(old_value) == tag_fixnum && unbox_fixnum(old_value) < 0) {
+    if (tag_of(value) == tag_fixnum && unbox_fixnum(value) >= 0) {
+      wasm_maybe_deliver_interrupt(tcr);
+    }
+  }
 }
 
 __attribute__((used, visibility("default"), export_name("_SPunbind_interrupt_level")))
@@ -5175,8 +5185,7 @@ _SPunbind_interrupt_level(void)
 
   if (tag_of(old_value) == tag_fixnum && unbox_fixnum(old_value) < 0) {
     if (tag_of(value) == tag_fixnum && unbox_fixnum(value) >= 0) {
-      /* Pending interrupt delivery is not yet wired for wasm. */
-      (void)tcr;
+      wasm_maybe_deliver_interrupt(tcr);
     }
   }
 }
@@ -5230,6 +5239,30 @@ wasm_bind_interrupt_level(TCR *tcr, LispObj new_value)
   tcr->db_link = (special_binding *)new_vsp;
   tcr->save_vsp = new_vsp;
   wasm_set_reg(tcr, vsp, (LispObj)new_vsp);
+}
+
+static void
+wasm_maybe_deliver_interrupt(TCR *tcr)
+{
+  if (tcr == NULL) {
+    return;
+  }
+  if (tcr->interrupt_pending <= 0) {
+    return;
+  }
+
+  LispObj *tlb = tcr->tlb_pointer;
+  if (tlb == NULL) {
+    return;
+  }
+  LispObj level = tlb[INTERRUPT_LEVEL_BINDING_INDEX];
+  if (tag_of(level) != tag_fixnum || unbox_fixnum(level) < 0) {
+    return;
+  }
+
+  wasm_set_reg(tcr, arg_z, lisp_nil);
+  wasm_set_reg(tcr, nargs, box_fixnum(0));
+  wasm_call_lisp_function(tcr, wasm_nrs_symbol_lispobj(&nrs_CMAIN));
 }
 
 __attribute__((used, visibility("default"), export_name("_SPunbind_n")))
