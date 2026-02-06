@@ -24,6 +24,10 @@ is extracted from `lisp-kernel/arm-spentry.s` and checked in as:
 5. Call the exported `wasm_set_cstack_bounds(base, size)` to establish a manual control stack region.
 6. Install the boot entrypoint (the minimal image uses table index 200 → `wasm_boot_entry`), then choose an entry path: `wasm_ccl_start` (boot + `start_lisp`), `wasm_ccl_start_lisp` (enter `start_lisp` after a boot‑only load), `wasm_run_toplevel` (one-shot toplevel), or `wasm_ccl_step` (host-stepped toplevel).
 
+If you load a heap image via `wasm_ccl_load_image`, install compiled modules
+from the registry (see `installCompiledModulesFromRegistry`) before entering
+`start_lisp` or stepping the toplevel.
+
 `world-kernel.mjs` provides a minimal reference API for:
 
 * registering images
