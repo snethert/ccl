@@ -198,6 +198,39 @@ export function createKernel({
       imageLoaded: false,
     };
 
+    runner.getCurrentTcr = () => {
+      const fn = kernel?.instance?.exports?.wasm_get_current_tcr;
+      if (typeof fn !== "function") {
+        throw new Error("runner.getCurrentTcr: kernel missing export wasm_get_current_tcr");
+      }
+      return fn() >>> 0;
+    };
+
+    runner.getToplevelSlot = () => {
+      const ex = kernel?.instance?.exports;
+      if (typeof ex?.wasm_get_tcr_toplevel_function !== "function") {
+        throw new Error("runner.getToplevelSlot: kernel missing export wasm_get_tcr_toplevel_function");
+      }
+      const tcr = runner.getCurrentTcr();
+      return ex.wasm_get_tcr_toplevel_function(tcr) >>> 0;
+    };
+
+    runner.setToplevelSlot = (funValue) => {
+      const ex = kernel?.instance?.exports;
+      if (typeof ex?.wasm_set_tcr_toplevel_function !== "function") {
+        throw new Error("runner.setToplevelSlot: kernel missing export wasm_set_tcr_toplevel_function");
+      }
+      const tcr = runner.getCurrentTcr();
+      let fun = funValue;
+      if (fun == null) {
+        if (typeof ex?.wasm_get_lisp_nil !== "function") {
+          throw new Error("runner.setToplevelSlot: kernel missing export wasm_get_lisp_nil");
+        }
+        fun = ex.wasm_get_lisp_nil() >>> 0;
+      }
+      return ex.wasm_set_tcr_toplevel_function(tcr, fun >>> 0) >>> 0;
+    };
+
     runner.loadImage = (imageIdOrBytes) => {
       const cached = images.get(String(imageIdOrBytes));
       if (!cached && typeof imageIdOrBytes === "string") {
