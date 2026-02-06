@@ -13,6 +13,7 @@
       "log": [],
       "safeMode": false
     },
+    "domEscapes": [],
     "disableReasons": {
       "reason-1": {
         "details": {},

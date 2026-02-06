@@ -13,6 +13,7 @@ const DEFAULT_ALLOWLIST = {
   windows: true,
   widgets: true,
   layout: true,
+  domEscapes: true,
   capabilities: true,
   selection: true,
   focus: true,
@@ -232,6 +233,7 @@ export function sanitizeState(state, options = {}) {
   if (allowlist.windows) out.windows = sanitizeMap(state.windows ?? {});
   if (allowlist.widgets) out.widgets = sanitizeMap(state.widgets ?? {});
   if (allowlist.layout) out.layout = sanitizeRecord(state.layout ?? {});
+  if (allowlist.domEscapes) out.domEscapes = sanitizeValue(state.domEscapes ?? []) ?? [];
   if (allowlist.capabilities) out.capabilities = sanitizeRecord(state.capabilities ?? {});
   if (allowlist.selection) out.selection = sanitizeValue(state.selection ?? null) ?? null;
   if (allowlist.focus) out.focus = sanitizeValue(state.focus ?? null) ?? null;

@@ -64,7 +64,7 @@ The following invariants MUST hold at all times:
 - Mixed composition is allowed (DOM chrome + Canvas/WebGL views).
 - DOM owns text editing, accessibility, and selection; Canvas/WebGL owns high-frequency visuals.
 - Direct DOM access exists only for internal tooling or explicit capability-gated escapes.
-- Any escape hatch MUST be capability-gated and MUST register its effects in inspectable state.
+- Any escape hatch MUST be capability-gated and MUST register its effects in inspectable state (DOM escape log).
 - Backend implementations MAY expose native handles for tests or tooling, but those handles MUST map back to stable widget/presentation IDs before command dispatch.
 
 ### Rendering model
@@ -261,6 +261,7 @@ The persisted `state` MUST NOT include:
 - Privileged operations MUST require explicit capabilities and policy mediation.
 - Capability mediation is a command, not an API call (so it is logged, inspectable, and restartable).
 - Capability grants/revocations are reflected in inspectable state; safe mode is toggled via commands.
+- DOM escape commands MUST append to a DOM escape log (target + detail) that is visible in the inspector.
 - A "safe mode" can disable all capability-granted escapes and still bring up REPL/inspector/debugger.
 
 ## Developer Experience

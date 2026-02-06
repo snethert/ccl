@@ -27,6 +27,7 @@ import {
   CAPABILITY_REVOKE_COMMAND,
   SAFE_MODE_ENABLE_COMMAND,
   SAFE_MODE_DISABLE_COMMAND,
+  DOM_ESCAPE_COMMAND,
   applyCommandPaletteFilter,
   applyCommandPaletteSelection,
   resolveCommandPaletteSelection,
@@ -36,6 +37,7 @@ import {
   registerTaskCommands,
   registerLayoutCommands,
   registerCapabilityCommands,
+  registerDomEscapeCommands,
   registerCommandSurfaceCommands,
   bindCommandPaletteDefaults,
   bindCommandSurfaceDefaults,
@@ -58,7 +60,6 @@ registerCommand(registry, { id: "alpha.run", title: "Alpha Run" });
 registerCommand(registry, { id: "beta.build", title: "Beta Build" });
 registerCommand(registry, { id: "gamma.test", title: "Gamma Test" });
 registerCommand(registry, { id: "delta.pick", title: "Delta Pick" });
-registerCommand(registry, { id: "dom.escape", title: "DOM Escape", capability: "dom.escape" });
 registerPresentationTranslator(registry, "file", "click", () => "alpha.run");
 bindKey(registry, "global", "K", "alpha.run");
 bindKey(registry, "task", "B", "beta.build", "task-1");
@@ -69,6 +70,7 @@ registerTaskCommands(registry);
 registerLayoutCommands(registry);
 registerCommandSurfaceCommands(registry);
 registerCapabilityCommands(registry);
+registerDomEscapeCommands(registry);
 bindCommandPaletteDefaults(registry, { taskId: "task-1" });
 bindCommandSurfaceDefaults(registry);
 
@@ -83,7 +85,7 @@ const resolvedPresentation = resolvePresentationCommand(
 );
 assert.equal(resolvedPresentation.commandId, "alpha.run");
 
-const blockedEscape = executeCommand(registry, "dom.escape", { state });
+const blockedEscape = executeCommand(registry, DOM_ESCAPE_COMMAND, { state, target: "#root" });
 assert.equal(blockedEscape.ok, false);
 assert.equal(blockedEscape.reason, "Missing capability: dom.escape");
 
@@ -95,14 +97,20 @@ const grantedEscape = executeCommand(registry, CAPABILITY_GRANT_COMMAND, { state
 assert.equal(grantedEscape.ok, true);
 state = grantedEscape.result;
 
-const allowedEscape = executeCommand(registry, "dom.escape", { state });
+const allowedEscape = executeCommand(registry, DOM_ESCAPE_COMMAND, {
+  state,
+  target: "#root",
+  detail: { reason: "probe" }
+});
 assert.equal(allowedEscape.ok, true);
+state = allowedEscape.result;
+assert.equal(state.domEscapes.length, 1);
 
 const safeModeEnabled = executeCommand(registry, SAFE_MODE_ENABLE_COMMAND, { state });
 assert.equal(safeModeEnabled.ok, true);
 state = safeModeEnabled.result;
 
-const blockedBySafeMode = executeCommand(registry, "dom.escape", { state });
+const blockedBySafeMode = executeCommand(registry, DOM_ESCAPE_COMMAND, { state, target: "#root" });
 assert.equal(blockedBySafeMode.ok, false);
 assert.equal(blockedBySafeMode.reason, "Safe mode");
 
@@ -114,7 +122,7 @@ const revokedEscape = executeCommand(registry, CAPABILITY_REVOKE_COMMAND, { stat
 assert.equal(revokedEscape.ok, true);
 state = revokedEscape.result;
 
-const blockedAfterRevoke = executeCommand(registry, "dom.escape", { state });
+const blockedAfterRevoke = executeCommand(registry, DOM_ESCAPE_COMMAND, { state, target: "#root" });
 assert.equal(blockedAfterRevoke.ok, false);
 assert.equal(blockedAfterRevoke.reason, "Missing capability: dom.escape");
 

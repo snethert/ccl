@@ -6,11 +6,13 @@ import {
   executeCommand,
   createState,
   registerCapabilityCommands,
+  registerDomEscapeCommands,
   CAPABILITY_REQUEST_COMMAND,
   CAPABILITY_GRANT_COMMAND,
   CAPABILITY_REVOKE_COMMAND,
   SAFE_MODE_ENABLE_COMMAND,
   SAFE_MODE_DISABLE_COMMAND,
+  DOM_ESCAPE_COMMAND,
   makeContext
 } from "../src/index.mjs";
 
@@ -51,4 +53,37 @@ test("capability commands mutate state and log", () => {
   assert.equal(result.ok, true);
   state = result.result;
   assert.deepEqual(state.capabilities.granted, []);
+});
+
+test("dom escape command is capability-gated and logged", () => {
+  const registry = createRegistry();
+  registerCapabilityCommands(registry);
+  registerDomEscapeCommands(registry);
+
+  let state = createState();
+  let ctx = makeContext(state);
+
+  let blocked = executeCommand(registry, DOM_ESCAPE_COMMAND, {
+    ...ctx,
+    target: "#root",
+    detail: { reason: "probe" }
+  });
+  assert.equal(blocked.ok, false);
+  assert.equal(blocked.reason, "Missing capability: dom.escape");
+
+  state = executeCommand(registry, CAPABILITY_GRANT_COMMAND, {
+    ...ctx,
+    capability: "dom.escape"
+  }).result;
+  ctx = makeContext(state);
+
+  const allowed = executeCommand(registry, DOM_ESCAPE_COMMAND, {
+    ...ctx,
+    target: "#root",
+    detail: { reason: "probe" }
+  });
+  assert.equal(allowed.ok, true);
+  state = allowed.result;
+  assert.equal(state.domEscapes.length, 1);
+  assert.equal(state.domEscapes[0].target, "#root");
 });

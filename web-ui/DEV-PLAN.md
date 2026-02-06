@@ -281,6 +281,7 @@ Exit criteria:
 - Expanded state model to cover workspace, widgets, presentations, and ID counters.
 - Added state graph unit tests for task/window/widget wiring.
 - Added capability gating state with safe mode commands and inspector coverage.
+- Added DOM escape command logging with inspector visibility (capability-gated).
 
 ### Phase 5 Progress
 - Added canvas scene normalization, draw traversal, and hit-testing helpers.

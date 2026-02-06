@@ -15,6 +15,7 @@ import { registerCommand, executeCommand, bindKey, resolveKeyWithTrace } from ".
 const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layout", "reason", "error", "job"];
 const UI_TURN_PHASES = ["signals", "commands", "render", "backend", "idle"];
 const UI_TURN_HISTORY_LIMIT = 8;
+const DOM_ESCAPE_HISTORY_LIMIT = 32;
 export const COMMAND_PALETTE_FILTER_COMMAND = "ui.command-palette.filter";
 export const COMMAND_PALETTE_EXECUTE_COMMAND = "ui.command-palette.execute";
 export const COMMAND_PALETTE_SELECT_NEXT_COMMAND = "ui.command-palette.select-next";
@@ -38,6 +39,7 @@ export const CAPABILITY_GRANT_COMMAND = "ui.capability.grant";
 export const CAPABILITY_REVOKE_COMMAND = "ui.capability.revoke";
 export const SAFE_MODE_ENABLE_COMMAND = "ui.safe-mode.enable";
 export const SAFE_MODE_DISABLE_COMMAND = "ui.safe-mode.disable";
+export const DOM_ESCAPE_COMMAND = "ui.dom.escape";
 
 function ensureCounters(counters) {
   if (counters) {
@@ -107,6 +109,54 @@ function normalizePresentation(presentation) {
     bounds: presentation.bounds ?? null,
     metadata: presentation.metadata ?? {}
   };
+}
+
+function sanitizeDomEscapeDetail(detail) {
+  if (detail === null || detail === undefined) return {};
+  const type = typeof detail;
+  if (type === "string" || type === "number" || type === "boolean") {
+    return { value: detail };
+  }
+  if (Array.isArray(detail) || type === "object") {
+    try {
+      return JSON.parse(JSON.stringify(detail));
+    } catch (err) {
+      return {};
+    }
+  }
+  return {};
+}
+
+function normalizeDomEscape(entry, index) {
+  if (!entry || typeof entry !== "object") {
+    return {
+      id: `dom-escape-${index + 1}`,
+      kind: "dom.escape",
+      target: null,
+      detail: {},
+      capability: "dom.escape",
+      taskId: null,
+      windowId: null,
+      commandId: DOM_ESCAPE_COMMAND,
+      ts: null
+    };
+  }
+  return {
+    id: entry.id ?? `dom-escape-${index + 1}`,
+    kind: entry.kind ?? "dom.escape",
+    target: entry.target ?? null,
+    detail: sanitizeDomEscapeDetail(entry.detail ?? null),
+    capability: entry.capability ?? "dom.escape",
+    taskId: entry.taskId ?? null,
+    windowId: entry.windowId ?? null,
+    commandId: entry.commandId ?? DOM_ESCAPE_COMMAND,
+    ts: Number.isInteger(entry.ts) ? entry.ts : null
+  };
+}
+
+function normalizeDomEscapes(entries) {
+  if (!Array.isArray(entries)) return [];
+  return entries.map((entry, index) => normalizeDomEscape(entry, index));
 }
 
 function normalizeUiSignal(signal, index) {
@@ -225,6 +275,7 @@ export function createState(options = {}) {
     windows: options.windows ?? {},
     widgets: options.widgets ?? {},
     presentations: options.presentations ?? {},
+    domEscapes: normalizeDomEscapes(options.domEscapes ?? null),
     ui: normalizeUiState(options.ui ?? null),
     capabilities: normalizeCapabilities(options.capabilities ?? null),
     focus: normalizeFocusTarget(options.focus ?? null),
@@ -644,6 +695,20 @@ export function hasCapability(state, capability) {
 export function setLayout(state, layout) {
   const normalized = normalizeLayout(layout, state.idCounters);
   return { ...state, layout: normalized.layout, idCounters: normalized.counters };
+}
+
+export function recordDomEscape(state, entry, options = {}) {
+  const escapes = normalizeDomEscapes(state.domEscapes ?? null);
+  const normalized = normalizeDomEscape(
+    { ...entry, ts: entry?.ts ?? options.ts ?? null },
+    escapes.length
+  );
+  const nextEscapes = [...escapes, normalized];
+  const trimmed =
+    nextEscapes.length > DOM_ESCAPE_HISTORY_LIMIT
+      ? nextEscapes.slice(nextEscapes.length - DOM_ESCAPE_HISTORY_LIMIT)
+      : nextEscapes;
+  return { ...state, domEscapes: trimmed };
 }
 
 export function recordEvent(state, entry) {
@@ -1241,6 +1306,17 @@ function summarizeUiTurn(state) {
   return items;
 }
 
+function summarizeDomEscapes(state) {
+  const escapes = normalizeDomEscapes(state.domEscapes ?? null);
+  if (escapes.length === 0) {
+    return [{ id: "dom-escape-none", label: "No DOM escapes recorded" }];
+  }
+  return escapes.map((entry) => ({
+    id: entry.id ?? "dom-escape",
+    label: `${entry.kind ?? "dom.escape"}${entry.target ? ` → ${entry.target}` : ""}`
+  }));
+}
+
 function summarizeCapabilities(state) {
   const capabilities = normalizeCapabilities(state.capabilities ?? null);
   const items = [];
@@ -1271,6 +1347,7 @@ function buildInspectorSections(state) {
     focus: summarizeFocus(state),
     commands: summarizeCommands(state),
     capabilities: summarizeCapabilities(state),
+    domEscapes: summarizeDomEscapes(state),
     turns: summarizeUiTurn(state),
     presentations: summarizePresentations(state),
     windows: summarizeWindows(state),
@@ -1320,6 +1397,7 @@ export function openInspectorWindow(state, options = {}) {
     ["focus", "Focus"],
     ["commands", "Commands"],
     ["capabilities", "Capabilities"],
+    ["domEscapes", "DOM Escapes"],
     ["turns", "UI Turn"],
     ["presentations", "Presentations"],
     ["windows", "Windows"],
@@ -2106,6 +2184,40 @@ export function registerCapabilityCommands(registry, options = {}) {
         commandId: safeModeDisableId
       })
   });
+
+  return registry;
+}
+
+export function registerDomEscapeCommands(registry, options = {}) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  const escapeId = options.escapeCommandId ?? DOM_ESCAPE_COMMAND;
+  const capability = options.capability ?? "dom.escape";
+
+  if (!registry.commands.has(escapeId)) {
+    registerCommand(registry, {
+      id: escapeId,
+      title: "DOM Escape",
+      doc: "Execute a capability-gated DOM escape hatch.",
+      capability,
+      exec: (ctx) => {
+        const detail = ctx.detail ?? ctx.payload?.detail ?? null;
+        const target = ctx.target ?? ctx.payload?.target ?? null;
+        const kind = ctx.kind ?? ctx.payload?.kind ?? "dom.escape";
+        return recordDomEscape(ctx.state, {
+          kind,
+          target,
+          detail,
+          capability,
+          taskId: ctx.taskId ?? null,
+          windowId: ctx.windowId ?? null,
+          commandId: escapeId,
+          ts: ctx.ts ?? null
+        });
+      }
+    });
+  }
 
   return registry;
 }
