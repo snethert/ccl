@@ -298,6 +298,21 @@
               (nx1-form :value base)
               (nx1-form :value offset)))
 
+;; WASM32 needs these as operators (lowered in wasm2); other backends keep
+;; normal function-call semantics.
+(defnx1 nx1-%tcr-toplevel-function ((%tcr-toplevel-function)) context (tcr)
+  (if (eq (backend-name *target-backend*) :wasm32)
+    (make-acode (%nx1-default-operator)
+                (nx1-form :value tcr))
+    (nx1-typed-call context '%tcr-toplevel-function (list tcr))))
+
+(defnx1 nx1-%set-tcr-toplevel-function ((%set-tcr-toplevel-function)) context (tcr fun)
+  (if (eq (backend-name *target-backend*) :wasm32)
+    (make-acode (%nx1-default-operator)
+                (nx1-form :value tcr)
+                (nx1-form :value fun))
+    (nx1-typed-call context '%set-tcr-toplevel-function (list tcr fun))))
+
 (defnx1 nx1-fixnum-ref-double-float ((%fixnum-ref-double-float)) context (base &optional (index 0))
   (make-acode (%nx1-operator typed-form)
                'double-float
@@ -2210,4 +2225,3 @@
 possibly because it's the result of macroexpansion. DECLARE expressions
 can only appear in specified contexts and must be actual subexpressions
 of the containing forms." w))
-

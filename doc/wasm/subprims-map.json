@@ -131,6 +131,8 @@
     "_SPeabi_ff_call_simple",
     "_SPdebind",
     "_SPeabi_callback",
-    "_SPeabi_ff_callhf"
+    "_SPeabi_ff_callhf",
+    "_SPwasm_macro_apply_stub",
+    "_SPwasm_udf_stub"
   ]
 }

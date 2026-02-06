@@ -4,7 +4,7 @@
  * Validates:
  *  1) Host CCL emits real WASM modules for basic forms.
  *  2) JS loader installs compiled modules into the shared table.
- *  3) Basic forms execute end-to-end (constants, fixnum ops, control flow).
+ *  3) Basic forms execute end-to-end (constants, fixnum ops, control flow, FFI).
  */
 
 import fs from "node:fs/promises";
@@ -14,6 +14,7 @@ import {
   createCclImports,
   createSharedCclRuntime,
   installSubprimsTable,
+  installConstPoolBytes,
   instantiateWasm,
 } from "./ccl-loader.mjs";
 import { createMicrokernel } from "./microkernel.mjs";
@@ -113,6 +114,8 @@ assert(typeof kernel.instance.exports.wasm_ccl_load_image === "function", "missi
 kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
 
 const kernelExports = kernel.instance.exports;
+assert(typeof kernelExports.wasm_get_lisp_nil === "function", "missing wasm_get_lisp_nil export");
+const nilValue = kernelExports.wasm_get_lisp_nil() >>> 0;
 const imports = createCclImports({
   memory: runtime.memory,
   subprimsTable: runtime.subprimsTable,
@@ -124,20 +127,42 @@ const modules = Array.isArray(bundle.modules) ? bundle.modules : [];
 const functions = Array.isArray(bundle.functions) ? bundle.functions : [];
 assert(modules.length > 0, "wasm-smoke-modules.json contains no modules");
 
-let installed = 0;
-for (const entry of modules) {
-  const bytes = Uint8Array.from(entry.moduleBytes ?? []);
-  const { instance } = await instantiateWasm(bytes, imports);
-  const fn = instance?.exports?.[entry.exportName];
-  assert(typeof fn === "function", `compiled module missing export ${entry.exportName}`);
-  const idx = entry.entryIndex >>> 0;
-  if (runtime.subprimsTable.length <= idx) {
-    runtime.subprimsTable.grow(idx - runtime.subprimsTable.length + 1);
+async function installBundle(label) {
+  let installed = 0;
+  for (const entry of modules) {
+    if (entry.constPoolBytes?.length) {
+      const poolResult = installConstPoolBytes({
+        kernelExports,
+        memory: runtime.memory,
+        entryIndex: entry.entryIndex,
+        constPoolBytes: entry.constPoolBytes,
+      });
+      if ((poolResult >>> 0) === nilValue) {
+        fail(`const pool install failed for ${entry.exportName} (entryIndex=${entry.entryIndex})`);
+      }
+      if (typeof kernelExports.wasm_pending_throw_p === "function" &&
+          kernelExports.wasm_pending_throw_p() >>> 0) {
+        fail(`const pool install signaled pending throw for ${entry.exportName} (entryIndex=${entry.entryIndex})`);
+      }
+    }
+    const bytes = Uint8Array.from(entry.moduleBytes ?? []);
+    const { instance } = await instantiateWasm(bytes, imports);
+    const fn = instance?.exports?.[entry.exportName];
+    assert(typeof fn === "function", `compiled module missing export ${entry.exportName}`);
+    const idx = entry.entryIndex >>> 0;
+    if (runtime.subprimsTable.length <= idx) {
+      runtime.subprimsTable.grow(idx - runtime.subprimsTable.length + 1);
+    }
+    runtime.subprimsTable.set(idx, fn);
+    installed++;
   }
-  runtime.subprimsTable.set(idx, fn);
-  installed++;
+  if (installed === 0) {
+    fail(`no compiled modules installed from bundle (${label})`);
+  }
+  return installed;
 }
-assert(installed > 0, "no compiled modules installed from bundle");
+
+await installBundle("initial");
 
 function entryIndex(name) {
   const item = functions.find((fn) => fn.name === name);
@@ -149,7 +174,6 @@ assert(typeof kernelExports.wasm_test_entry_funcall === "function", "missing was
 assert(typeof kernelExports.wasm_test_entry_funcall2 === "function", "missing wasm_test_entry_funcall2 export");
 assert(typeof kernelExports.wasm_test_entry_funcall1_raw === "function", "missing wasm_test_entry_funcall1_raw export");
 
-const nilValue = kernelExports.wasm_get_lisp_nil() >>> 0;
 const fixnumShift = 2;
 function fixnum(n) {
   return (n << fixnumShift) >>> 0;
@@ -158,6 +182,14 @@ function fixnum(n) {
 const constEntry = entryIndex("WASM-SMOKE-CONST");
 const constResult = kernelExports.wasm_test_entry_funcall(constEntry, 0) >> 2;
 assert(constResult === 23, `unexpected const result: got=${constResult} expected=23`);
+
+const symbolEntry = entryIndex("WASM-SMOKE-SYMBOL");
+const symbolResult = kernelExports.wasm_test_entry_funcall(symbolEntry, 0) >>> 0;
+assert(symbolResult !== nilValue, "unexpected symbol result: got NIL");
+
+const ffiEntry = entryIndex("WASM-SMOKE-FFI-ADD");
+const ffiResult = kernelExports.wasm_test_entry_funcall2(ffiEntry, 10, 32) >> 2;
+assert(ffiResult === 42, `unexpected ffi-add result: got=${ffiResult} expected=42`);
 
 const addEntry = entryIndex("WASM-SMOKE-ADD");
 const addResult = kernelExports.wasm_test_entry_funcall2(addEntry, 10, 32) >> 2;
@@ -230,5 +262,9 @@ assert(tagbodyFalse === 2, `unexpected tagbody false result: got=${tagbodyFalse}
 const mvcallEntry = entryIndex("WASM-SMOKE-MVCALL");
 const mvcallResult = kernelExports.wasm_test_entry_funcall(mvcallEntry, 0) >> 2;
 assert(mvcallResult === 42, `unexpected mvcall result: got=${mvcallResult} expected=42`);
+
+await installBundle("reload");
+const symbolReload = kernelExports.wasm_test_entry_funcall(symbolEntry, 0) >>> 0;
+assert(symbolReload === symbolResult, "symbol identity changed across reload");
 
 console.log("PASS: wasm compiler emission smoke test");

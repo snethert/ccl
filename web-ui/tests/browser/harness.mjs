@@ -15,6 +15,13 @@ import {
   KERNEL_OP_UI_RENDER,
   KERNEL_OP_UI_MEASURE_TEXT
 } from "../../../doc/wasm/js/microkernel.mjs";
+import {
+  createCclImports,
+  createSharedCclRuntime,
+  installConstPoolBytes,
+  installSubprimsTable,
+  instantiateWasm
+} from "../../../doc/wasm/js/ccl-loader.mjs";
 import { createUiBridge } from "../../bridge/ui-bridge.mjs";
 
 const _bridgeEncoder = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
@@ -319,6 +326,14 @@ async function loadJson(relPath) {
     throw new Error(`Failed to load ${relPath}: ${response.status}`);
   }
   return response.json();
+}
+
+async function loadBytes(relPath) {
+  const response = await fetch(relPath);
+  if (!response.ok) {
+    throw new Error(`Failed to load ${relPath}: ${response.status}`);
+  }
+  return response.arrayBuffer();
 }
 
 async function run() {
@@ -1133,6 +1148,149 @@ async function run() {
   const uiBridgeOk =
     uiBridgeRenderOk && uiBridgeDomOk && uiBridgeEventOk && uiBridgeMeasureOk && uiBridgeCanvasOk && uiBridgeWebglOk;
 
+  let wasmUiOk = false;
+  let wasmUiInfo = null;
+  if (uiBundleOk) {
+    try {
+      const wasmBridgeTarget = document.createElement("div");
+      wasmBridgeTarget.id = "wasm-ui-target";
+      root.appendChild(wasmBridgeTarget);
+
+      const wasmUiBridge = createUiBridge({ container: wasmBridgeTarget, document });
+      const runtime = createSharedCclRuntime({
+        memoryInitialPages: 256,
+        subprimsTableInitial: 256
+      });
+      const wasmMicrokernel = createMicrokernel({ memory: runtime.memory, uiService: wasmUiBridge });
+
+      const kernelBytes = await loadBytes("/doc/wasm/js/wasmcl.wasm");
+      const kernel = await instantiateWasm(
+        kernelBytes,
+        createCclImports({
+          memory: runtime.memory,
+          subprimsTable: runtime.subprimsTable,
+          microkernel: wasmMicrokernel
+        })
+      );
+      const kernelExports = kernel.instance.exports;
+
+      const subprimsBytes = await loadBytes("/doc/wasm/js/subprims.wasm");
+      const subprimsMap = await loadJson("/doc/wasm/subprims-map.json");
+      const subprims = await instantiateWasm(
+        subprimsBytes,
+        createCclImports({
+          memory: runtime.memory,
+          subprimsTable: runtime.subprimsTable,
+          microkernel: wasmMicrokernel,
+          extra: { ccl: kernelExports }
+        })
+      );
+
+      installSubprimsTable({
+        table: runtime.subprimsTable,
+        subprimsMap,
+        providers: [{ exports: kernelExports }, { exports: subprims.instance.exports }]
+      });
+
+      if (typeof kernelExports.wasm_set_subprims_ready !== "function") {
+        throw new Error("missing wasm_set_subprims_ready export");
+      }
+      kernelExports.wasm_set_subprims_ready(1);
+
+      if (typeof kernelExports.wasm_set_cstack_bounds !== "function" ||
+          typeof kernelExports.wasm_ccl_load_image !== "function") {
+        throw new Error("missing image load exports");
+      }
+
+      const imageBytes = new Uint8Array(await loadBytes("/doc/wasm/minimal.image"));
+      const imageLen = imageBytes.byteLength >>> 0;
+      const pageSize = 65536;
+      const cstackSize = 1 << 20;
+      const reserve = 4 << 20;
+      const needBytes = imageLen + cstackSize + reserve;
+      let haveBytes = runtime.memory.buffer.byteLength;
+      if (needBytes > haveBytes) {
+        const growPages = Math.ceil((needBytes - haveBytes) / pageSize);
+        runtime.memory.grow(growPages);
+        haveBytes = runtime.memory.buffer.byteLength;
+      }
+      const cstackBase = runtime.memory.buffer.byteLength;
+      kernelExports.wasm_set_cstack_bounds(cstackBase, cstackSize);
+      const blobBase = (cstackBase - cstackSize - imageLen) & ~15;
+      if (blobBase < 0) {
+        throw new Error("not enough memory to place boot image below cstack");
+      }
+      new Uint8Array(runtime.memory.buffer).set(imageBytes, blobBase);
+      kernelExports.wasm_ccl_load_image(blobBase, imageLen);
+
+      const uiBundle = await loadJson("/doc/wasm/wasm-ui-modules.json");
+      const uiModules = Array.isArray(uiBundle?.modules) ? uiBundle.modules : [];
+      const uiFunctions = Array.isArray(uiBundle?.functions) ? uiBundle.functions : [];
+      if (!uiModules.length) {
+        throw new Error("wasm-ui-modules.json contains no modules");
+      }
+
+      const nilValue = typeof kernelExports.wasm_get_lisp_nil === "function"
+        ? (kernelExports.wasm_get_lisp_nil() >>> 0)
+        : 0;
+
+      const uiImports = createCclImports({
+        memory: runtime.memory,
+        subprimsTable: runtime.subprimsTable,
+        microkernel: wasmMicrokernel,
+        extra: { ccl: kernelExports }
+      });
+
+      for (const entry of uiModules) {
+        if (entry.constPoolBytes?.length) {
+          const poolResult = installConstPoolBytes({
+            kernelExports,
+            memory: runtime.memory,
+            entryIndex: entry.entryIndex,
+            constPoolBytes: entry.constPoolBytes
+          });
+          if ((poolResult >>> 0) === nilValue) {
+            throw new Error(`const pool install failed for ${entry.exportName}`);
+          }
+          if (typeof kernelExports.wasm_pending_throw_p === "function" &&
+              kernelExports.wasm_pending_throw_p() >>> 0) {
+            throw new Error(`const pool install signaled pending throw for ${entry.exportName}`);
+          }
+        }
+        const bytes = Uint8Array.from(entry.moduleBytes ?? []);
+        const { instance } = await instantiateWasm(bytes, uiImports);
+        const fn = instance?.exports?.[entry.exportName];
+        if (typeof fn !== "function") {
+          throw new Error(`compiled UI module missing export ${entry.exportName}`);
+        }
+        const idx = entry.entryIndex >>> 0;
+        if (runtime.subprimsTable.length <= idx) {
+          runtime.subprimsTable.grow(idx - runtime.subprimsTable.length + 1);
+        }
+        runtime.subprimsTable.set(idx, fn);
+      }
+
+      const turnEntry = uiFunctions.find((fn) => fn?.name === "WASM-UI-TURN")?.entryIndex;
+      if (turnEntry == null) {
+        throw new Error("missing WASM-UI-TURN entry");
+      }
+      if (typeof kernelExports.wasm_test_entry_funcall !== "function") {
+        throw new Error("missing wasm_test_entry_funcall export");
+      }
+      const turnResult = kernelExports.wasm_test_entry_funcall(turnEntry >>> 0, 0) >> 2;
+      if (typeof wasmUiBridge.flush === "function") {
+        wasmUiBridge.flush();
+      }
+      const wasmButton = wasmBridgeTarget.querySelector("[data-widget-id='widget-1']");
+      wasmUiOk = turnResult === 0 && Boolean(wasmButton && wasmButton.textContent === "Click");
+      wasmUiInfo = { turnResult };
+    } catch (err) {
+      wasmUiInfo = { error: err?.message ?? String(err) };
+    }
+  } else {
+    wasmUiInfo = { error: "missing wasm-ui-modules.json" };
+  }
+
   const ok =
     uiBundleOk &&
     snapshotMatch &&
@@ -1168,11 +1326,14 @@ async function run() {
     webglBackendHitOk &&
     webglMeasureOk &&
     persistenceOk &&
-    uiBridgeOk;
+    uiBridgeOk &&
+    wasmUiOk;
   const payload = {
     ok,
     uiBundleOk,
     uiBundleInfo,
+    wasmUiOk,
+    wasmUiInfo,
     snapshotMatch,
     domOk,
     domSnapshotMatch,

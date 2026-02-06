@@ -31,6 +31,8 @@ export const KERNEL_OP_FS_DELETE = 0x0000000d;
 export const KERNEL_OP_FS_ENSURE_DIRS = 0x0000000e;
 export const KERNEL_OP_FS_DELETE_EMPTY_DIR = 0x0000000f;
 export const KERNEL_OP_FS_DELETE_TREE = 0x00000010;
+export const KERNEL_OP_STREAM_SEEK = 0x00000011;
+export const KERNEL_OP_STREAM_TRUNCATE = 0x00000012;
 export const KERNEL_OP_UI_POLL = 0x00000020;
 export const KERNEL_OP_UI_RENDER = 0x00000021;
 export const KERNEL_OP_UI_MEASURE_TEXT = 0x00000022;
@@ -174,6 +176,28 @@ function encodeTimeNowResponse(nowMs) {
 function readU32LE(memory, ptr) {
   const dv = new DataView(memory.buffer);
   return dv.getUint32(u32(ptr), true);
+}
+
+function readU64LE(memory, ptr) {
+  const lo = readU32LE(memory, ptr);
+  const hi = readU32LE(memory, u32(ptr) + 4);
+  return (BigInt(hi) << 32n) | BigInt(lo);
+}
+
+function readI64LE(memory, ptr) {
+  return BigInt.asIntN(64, readU64LE(memory, ptr));
+}
+
+const MAX_SAFE_BIGINT = BigInt(Number.MAX_SAFE_INTEGER);
+
+function toSafeNumber(value) {
+  if (typeof value === "bigint") {
+    if (value > MAX_SAFE_BIGINT || value < -MAX_SAFE_BIGINT) return null;
+    return Number(value);
+  }
+  if (!Number.isFinite(value)) return null;
+  if (Math.abs(value) > Number.MAX_SAFE_INTEGER) return null;
+  return Math.trunc(value);
 }
 
 function sliceBytes(memory, ptr, len) {
@@ -629,8 +653,13 @@ export function createMicrokernel({
           recordRequestDone(id, -ERRNO.EBADF);
           break;
         }
-        if (stream.kind === "pipe") {
-          recordRequestDone(id, stream.write(bytes));
+        if (typeof stream.write === "function") {
+          const wrote = stream.write(bytes);
+          if (typeof wrote === "number") {
+            recordRequestDone(id, i32(wrote));
+          } else {
+            recordRequestDone(id, -ERRNO.EINVAL);
+          }
           break;
         }
         recordRequestDone(id, -ERRNO.ENOSYS);
@@ -684,6 +713,96 @@ export function createMicrokernel({
           break;
         }
         recordRequestDone(id, -ERRNO.ENOSYS);
+        break;
+      }
+
+      case KERNEL_OP_STREAM_SEEK: {
+        if (u32(payloadLen) !== 16) {
+          recordRequestError(id, ERRNO.EINVAL);
+          break;
+        }
+        const sid = readU32LE(memory, u32(payloadPtr) + 0);
+        const whence = readU32LE(memory, u32(payloadPtr) + 4);
+        const offset = readI64LE(memory, u32(payloadPtr) + 8);
+        if (u32(sid) <= 2) {
+          recordRequestDone(id, -ERRNO.EBADF);
+          break;
+        }
+        const stream = streams.get(u32(sid));
+        if (!stream || typeof stream.seek !== "function") {
+          recordRequestDone(id, -ERRNO.EBADF);
+          break;
+        }
+        const offNum = toSafeNumber(offset);
+        if (offNum == null) {
+          recordRequestDone(id, -ERRNO.E2BIG);
+          break;
+        }
+        let res;
+        try {
+          res = stream.seek(u32(whence), offNum);
+        } catch (_e) {
+          recordRequestDone(id, -ERRNO.EINVAL);
+          break;
+        }
+        if (typeof res === "number") {
+          if (res < 0) {
+            recordRequestDone(id, i32(res));
+            break;
+          }
+          recordRequestDone(id, 0, encodeU64LE(res));
+          break;
+        }
+        if (typeof res === "bigint") {
+          recordRequestDone(id, 0, encodeU64LE(res));
+          break;
+        }
+        recordRequestDone(id, -ERRNO.EINVAL);
+        break;
+      }
+
+      case KERNEL_OP_STREAM_TRUNCATE: {
+        if (u32(payloadLen) !== 16) {
+          recordRequestError(id, ERRNO.EINVAL);
+          break;
+        }
+        const sid = readU32LE(memory, u32(payloadPtr) + 0);
+        const flags = readU32LE(memory, u32(payloadPtr) + 4);
+        const length = readU64LE(memory, u32(payloadPtr) + 8);
+        if (flags !== 0) {
+          recordRequestError(id, ERRNO.EINVAL);
+          break;
+        }
+        if (u32(sid) <= 2) {
+          recordRequestDone(id, -ERRNO.EBADF);
+          break;
+        }
+        const stream = streams.get(u32(sid));
+        if (!stream || typeof stream.truncate !== "function") {
+          recordRequestDone(id, -ERRNO.EBADF);
+          break;
+        }
+        if (length < 0n) {
+          recordRequestDone(id, -ERRNO.EINVAL);
+          break;
+        }
+        const lenNum = toSafeNumber(length);
+        if (lenNum == null || lenNum < 0) {
+          recordRequestDone(id, -ERRNO.E2BIG);
+          break;
+        }
+        let res;
+        try {
+          res = stream.truncate(lenNum);
+        } catch (_e) {
+          recordRequestDone(id, -ERRNO.EINVAL);
+          break;
+        }
+        if (typeof res === "number" && res < 0) {
+          recordRequestDone(id, i32(res));
+          break;
+        }
+        recordRequestDone(id, 0);
         break;
       }
 
@@ -778,6 +897,8 @@ export function createMicrokernel({
             writable: !!handle.writable,
             read: handle.read,
             write: handle.write,
+            seek: handle.seek,
+            truncate: handle.truncate,
             close: handle.close,
           });
           recordRequestDone(id, sid);

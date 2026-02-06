@@ -9,6 +9,7 @@
   (require "WASMENV")
   (require "WASM-ARCH")
   (require "WASM-VINSNS")
+  (require "WASM-FFI")
   (require "WASM2"))
 
 (defvar *wasm-backend*
@@ -30,6 +31,8 @@
                 :name :wasm32
                 :target-arch-name :wasm32
                 :target-arch wasm::*wasm32-target-arch*))
+
+(setup-wasm-ftd *wasm-backend*)
 
 (pushnew *wasm-backend* *known-backends* :key #'backend-name)
 

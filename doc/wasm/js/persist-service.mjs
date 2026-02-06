@@ -603,6 +603,7 @@ export function createPersistenceService({ errno, now = () => Date.now(), chunkS
 
       let buffer = null;
       let length = 0;
+      const existingSize = existing ? existing.size >>> 0 : 0;
       if (wantWrite) {
         if (wantTruncate || !existing) {
           buffer = new Uint8Array(0);
@@ -619,6 +620,11 @@ export function createPersistenceService({ errno, now = () => Date.now(), chunkS
         position = wantWrite ? length : (existing ? existing.size >>> 0 : 0);
       }
 
+      function fileSize() {
+        if (buffer) return length;
+        return existingSize;
+      }
+
       const handle = {
         readable: wantRead,
         writable: wantWrite,
@@ -626,7 +632,7 @@ export function createPersistenceService({ errno, now = () => Date.now(), chunkS
           if (!this.readable) return -errno.EBADF;
           const meta = overlayStore.meta.get(path) || roMeta;
           if (buffer) {
-            const end = Math.min(buffer.length, position + maxBytes);
+            const end = Math.min(length, position + maxBytes);
             const out = buffer.subarray(position, end);
             position = end;
             return new Uint8Array(out);
@@ -651,6 +657,48 @@ export function createPersistenceService({ errno, now = () => Date.now(), chunkS
           position = end;
           length = Math.max(length, end);
           return data.length;
+        },
+        seek(whence, offset) {
+          const offNum = Number(offset);
+          if (!Number.isFinite(offNum)) return -errno.EINVAL;
+          const off = Math.trunc(offNum);
+          let base = 0;
+          switch (whence >>> 0) {
+          case 0: // SEEK_SET
+            base = 0;
+            break;
+          case 1: // SEEK_CUR
+            base = position;
+            break;
+          case 2: // SEEK_END
+            base = fileSize();
+            break;
+          default:
+            return -errno.EINVAL;
+          }
+          const next = base + off;
+          if (next < 0) return -errno.EINVAL;
+          position = next;
+          return position;
+        },
+        truncate(newLength) {
+          if (!this.writable) return -errno.EBADF;
+          const lenNum = Number(newLength);
+          if (!Number.isFinite(lenNum)) return -errno.EINVAL;
+          const nextLen = Math.trunc(lenNum);
+          if (nextLen < 0) return -errno.EINVAL;
+          if (!buffer) {
+            buffer = new Uint8Array(nextLen);
+            length = nextLen;
+            return 0;
+          }
+          if (nextLen > buffer.length) {
+            const next = new Uint8Array(nextLen);
+            if (length) next.set(buffer.subarray(0, length));
+            buffer = next;
+          }
+          length = nextLen;
+          return 0;
         },
         close() {
           if (!this.writable) return 0;

@@ -105,7 +105,11 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_get_mv --export=wasm_get_mv_indexed --export=wasm_restore_vsp \
 	  --export=wasm_spill_push --export=wasm_spill_pop \
 	  --export=wasm_funcall0 --export=wasm_funcall1 --export=wasm_funcall2 \
+	  --export=wasm_funcall3 --export=wasm_funcall4 --export=wasm_funcall5 --export=wasm_funcall6 \
+	  --export=wasm_funcall7 --export=wasm_funcall8 --export=wasm_funcall9 --export=wasm_funcall10 \
 	  --export=wasm_funcall0_mv --export=wasm_funcall1_mv --export=wasm_funcall2_mv \
+	  --export=wasm_funcall3_mv --export=wasm_funcall4_mv --export=wasm_funcall5_mv --export=wasm_funcall6_mv \
+	  --export=wasm_funcall7_mv --export=wasm_funcall8_mv --export=wasm_funcall9_mv --export=wasm_funcall10_mv \
 	  --export=wasm_get_lisp_nil \
 	  --export=wasm_pending_throw_p \
 	  --export=wasm_return_fixnum_add --export=wasm_return_fixnum_sub \
@@ -115,6 +119,9 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_return_fixnum_neg \
 	  --export=wasm_test_entry_funcall1_raw \
 	  --export=wasm_get_compiled_module_registry \
+	  --export=wasm_kernel_ui_poll --export=wasm_kernel_ui_render --export=wasm_kernel_ui_measure_text \
+	  --export=wasm_ffi_test_add \
+	  --export=wasm_const_pool_install --export=wasm_const_pool_ref \
 	  --export=wasm_box_signed_64 \
 	  --export=_SPfix_overflow --export=_SPmakes32 \
 	  -o ../../doc/wasm/js/wasmcl.wasm $(KERNELOBJ)

@@ -209,17 +209,17 @@
 (defun %macro-have (symbol macro-function)
   (declare (special %macro-code%))      ; magically set by xloader.
   (%fhave symbol
-          #-arm-target (vector %macro-code% macro-function)
-          #+arm-target (%fix-fn-entrypoint (gvector :pseudofunction 0 %macro-code% macro-function))))
+          #-(or arm-target wasm32-target) (vector %macro-code% macro-function)
+          #+(or arm-target wasm32-target) (%fix-fn-entrypoint (gvector :pseudofunction 0 %macro-code% macro-function))))
 
 
 (defun special-operator-p (symbol)
   "If the symbol globally names a special form, return T, otherwise NIL."
   (let ((def (fboundp symbol)))
-    (and #-arm-target (typep def 'simple-vector)
-         #+arm-target (= (typecode def) arm::subtag-pseudofunction)
-         (not (lfunp #-arm-target (svref def 1)
-                     #+arm-target (uvref def 2))))))
+    (and #-(or arm-target wasm32-target) (typep def 'simple-vector)
+         #+(or arm-target wasm32-target) (= (typecode def) arm::subtag-pseudofunction)
+         (not (lfunp #-(or arm-target wasm32-target) (svref def 1)
+                     #+(or arm-target wasm32-target) (uvref def 2))))))
 
 (defun special-form-p (x) (special-operator-p x))
 

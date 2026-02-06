@@ -5,16 +5,27 @@
 (in-package "CCL")
 
 (defvar %wasm-compiled-modules% nil)
-(declaim (special %wasm-compiled-modules *wasm2-next-entry-index*))
+(declaim (special %wasm-compiled-modules *wasm2-next-entry-index*
+                  *wasm2-enable-const-pool*))
 
 (defparameter *wasm-smoke-functions*
   '((ccl::wasm-smoke-const
      (lambda ()
        23))
+    (ccl::wasm-smoke-symbol
+     (lambda ()
+       :allow-other-keys))
     (ccl::wasm-smoke-add
      (lambda (x y)
        (declare (fixnum x y))
        (%i+ x y)))
+    (ccl::wasm-smoke-ffi-add
+     (lambda (x y)
+       (declare (fixnum x y))
+       (external-call "wasm_ffi_test_add"
+                      :signed-fullword x
+                      :signed-fullword y
+                      :signed-fullword)))
     (ccl::wasm-smoke-sub
      (lambda (x y)
        (declare (fixnum x y))
@@ -168,15 +179,20 @@
   (setf %wasm-compiled-modules% nil)
   (when (boundp '*wasm2-next-entry-index*)
     (setf *wasm2-next-entry-index* 300))
-  (let ((results nil))
-    (dolist (entry *wasm-smoke-functions*)
-      (destructuring-bind (name lambda-form) entry
-        (multiple-value-bind (fn warnings)
-            (compile-named-function lambda-form :name name :target :wasm32)
-          (declare (ignore warnings))
-          (push (list :name (symbol-name name)
-                      :entry-index (function-entry-index fn))
-                results))))
+  (let* ((backend (find-backend :wasm32))
+         (*target-ftd* (or (and backend (backend-target-foreign-type-data backend))
+                           *target-ftd*))
+         (results nil))
+    (let ((*wasm2-enable-const-pool* t))
+      (declare (special *wasm2-enable-const-pool*))
+      (dolist (entry *wasm-smoke-functions*)
+        (destructuring-bind (name lambda-form) entry
+          (multiple-value-bind (fn warnings)
+              (compile-named-function lambda-form :name name :target :wasm32)
+            (declare (ignore warnings))
+            (push (list :name (symbol-name name)
+                        :entry-index (function-entry-index fn))
+                  results)))))
   (nreverse results)))
 
 (defun repo-root-from-script ()
@@ -204,6 +220,8 @@
           (load-rel "compiler/WASM/wasm-arch.lisp")
           (load-rel "compiler/WASM/wasm-vinsns.lisp"))
         (let ((*compile-definitions* t))
+          (load-rel "compiler/WASM/wasm-ffi.lisp")
+          (load-rel "compiler/acode-rewrite.lisp")
           (load-rel "compiler/WASM/wasm2.lisp")
           (load-rel "compiler/WASM/wasm-backend.lisp"))))))
 
@@ -242,6 +260,9 @@
              (princ (svref entry 3) out)
              (write-string ",\"moduleBytes\":" out)
              (json-write-bytes out (svref entry 0))
+             (when (and (> (length entry) 4) (svref entry 4))
+               (write-string ",\"constPoolBytes\":" out)
+               (json-write-bytes out (svref entry 4)))
              (write-char #\} out))
     (write-string "]}" out)
     (terpri out)))

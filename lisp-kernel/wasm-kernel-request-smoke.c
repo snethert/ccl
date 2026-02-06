@@ -20,7 +20,10 @@
 
 extern int lisp_open(char *path, int flags, mode_t mode);
 extern ssize_t lisp_read(int fd, void *buf, size_t count);
+extern ssize_t lisp_write(int fd, void *buf, size_t count);
+extern int64_t lisp_lseek(int fd, int64_t offset, int whence);
 extern int lisp_close(int fd);
+extern int lisp_ftruncate(int fd, off_t length);
 extern int lisp_stat(char *path, void *buf);
 
 __attribute__((used, visibility("default"), export_name("wasm_kernel_caps_abi_version")))
@@ -194,6 +197,87 @@ wasm_kernel_request_smoke_pipe_roundtrip(void)
   r = wasm_kernel_stream_read(sid, buf, (uint32_t)sizeof(buf), &nread);
   if (r != -EBADF) {
     return (r < 0) ? r : -1;
+  }
+  return 0;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_kernel_request_smoke_file_seek_truncate")))
+int32_t
+wasm_kernel_request_smoke_file_seek_truncate(void)
+{
+  static char name[] = "seek-truncate-c.bin";
+  static const uint8_t data[] = {0x41, 0x42, 0x43, 0x44, 0x45};
+  uint8_t buf[sizeof(data)];
+
+  int fd = lisp_open(name, O_RDWR | O_CREAT | O_TRUNC, 0);
+  if (fd < 0) {
+    return -errno;
+  }
+
+  ssize_t nwritten = lisp_write(fd, (void *)data, sizeof(data));
+  if (nwritten != (ssize_t)sizeof(data)) {
+    int e = (nwritten < 0) ? errno : EIO;
+    (void)lisp_close(fd);
+    return -e;
+  }
+
+  if (lisp_lseek(fd, 0, SEEK_SET) < 0) {
+    int e = errno;
+    (void)lisp_close(fd);
+    return -e;
+  }
+
+  ssize_t nread = lisp_read(fd, buf, sizeof(buf));
+  if (nread != (ssize_t)sizeof(data)) {
+    int e = (nread < 0) ? errno : EIO;
+    (void)lisp_close(fd);
+    return -e;
+  }
+  for (size_t i = 0; i < sizeof(data); i++) {
+    if (buf[i] != data[i]) {
+      (void)lisp_close(fd);
+      return -EIO;
+    }
+  }
+
+  if (lisp_ftruncate(fd, 3) < 0) {
+    int e = errno;
+    (void)lisp_close(fd);
+    return -e;
+  }
+
+  int64_t endpos = lisp_lseek(fd, 0, SEEK_END);
+  if (endpos < 0) {
+    int e = errno;
+    (void)lisp_close(fd);
+    return -e;
+  }
+  if (endpos != 3) {
+    (void)lisp_close(fd);
+    return -EIO;
+  }
+
+  if (lisp_lseek(fd, 0, SEEK_SET) < 0) {
+    int e = errno;
+    (void)lisp_close(fd);
+    return -e;
+  }
+
+  nread = lisp_read(fd, buf, sizeof(buf));
+  if (nread != 3) {
+    int e = (nread < 0) ? errno : EIO;
+    (void)lisp_close(fd);
+    return -e;
+  }
+  for (size_t i = 0; i < 3; i++) {
+    if (buf[i] != data[i]) {
+      (void)lisp_close(fd);
+      return -EIO;
+    }
+  }
+
+  if (lisp_close(fd) < 0) {
+    return -errno;
   }
   return 0;
 }

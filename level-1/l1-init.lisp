@@ -177,6 +177,10 @@
 (defvar %wasm-compiled-modules% nil
   "Registry of compiled WASM modules embedded in the image.")
 
+#+wasm32-target
+(defvar %wasm-const-pools% nil
+  "Registry of constant pools keyed by compiled module entry index.")
+
 
 
 (defparameter *warn-if-redefine-kernel* nil

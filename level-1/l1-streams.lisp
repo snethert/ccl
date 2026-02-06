@@ -5451,7 +5451,7 @@
                                  :unsigned-fullword)))))
 
 #+wasm32-target
-(defparameter *wasm-yield-on-eagain* nil
+(defparameter *wasm-yield-on-eagain* t
   "When true, EWOULDBLOCK/EAGAIN at stream boundaries yields to the host
 instead of blocking in-process. Intended for the WASM Stage-2 stepping model.")
 

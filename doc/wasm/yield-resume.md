@@ -119,7 +119,7 @@ boundary.
 The Lisp stream layer now exposes a minimal hook to unwind to a host-controlled
 boundary when I/O would block:
 
-- `ccl::*wasm-yield-on-eagain*` (default `NIL`)
+- `ccl::*wasm-yield-on-eagain*` (default `T` on `wasm32`)
 - When true, `EWOULDBLOCK/EAGAIN` in `with-eagain` causes a `throw :wasm-yield`
   carrying a small plist `(:direction <keyword> :fd <integer>)`.
 - The toplevel loop (`toplevel-loop`) catches `:wasm-yield` and returns to the

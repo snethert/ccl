@@ -21,6 +21,20 @@ Detailed layouts remain in `doc/wasm/kernel-request-abi.md`.
 | `0x0000_0005` | `KERNEL_OP_STREAM_OPEN` | Implemented | `PIPE`, `NAMED_RO` |
 | `0x0000_0006` | `KERNEL_OP_STREAM_CLOSE` | Implemented | Close stream SID |
 | `0x0000_0007` | `KERNEL_OP_COMPILED_MODULES_REFRESH` | Draft | Refresh compiled module registry |
+| `0x0000_0008` | `KERNEL_OP_FS_PROBE` | Implemented | Persistence service |
+| `0x0000_0009` | `KERNEL_OP_FS_TRUENAME` | Implemented | Persistence service |
+| `0x0000_000A` | `KERNEL_OP_FS_DIRECTORY` | Implemented | Persistence service |
+| `0x0000_000B` | `KERNEL_OP_FS_FILE_WRITE_DATE` | Implemented | Persistence service |
+| `0x0000_000C` | `KERNEL_OP_FS_RENAME` | Implemented | Persistence service |
+| `0x0000_000D` | `KERNEL_OP_FS_DELETE` | Implemented | Persistence service |
+| `0x0000_000E` | `KERNEL_OP_FS_ENSURE_DIRS` | Implemented | Persistence service |
+| `0x0000_000F` | `KERNEL_OP_FS_DELETE_EMPTY_DIR` | Implemented | Persistence service |
+| `0x0000_0010` | `KERNEL_OP_FS_DELETE_TREE` | Implemented | Persistence service |
+| `0x0000_0011` | `KERNEL_OP_STREAM_SEEK` | Implemented | File streams only |
+| `0x0000_0012` | `KERNEL_OP_STREAM_TRUNCATE` | Implemented | File streams only |
+| `0x0000_0020` | `KERNEL_OP_UI_POLL` | Draft | Poll UI event batch |
+| `0x0000_0021` | `KERNEL_OP_UI_RENDER` | Draft | Submit UI render tree/patch |
+| `0x0000_0022` | `KERNEL_OP_UI_MEASURE_TEXT` | Draft | Text measurement |
 
 ## Stream Kinds (STREAM_OPEN)
 
@@ -28,6 +42,7 @@ Detailed layouts remain in `doc/wasm/kernel-request-abi.md`.
 |---:|---|---|---|
 | `0` | `PIPE` | Implemented | In‑memory FIFO |
 | `1` | `NAMED_RO` | Implemented | Read‑only named byte source |
+| `2` | `FILE` | Implemented | Persistence service file stream |
 
 ## Versioning
 

@@ -174,7 +174,8 @@ extern LispObj lisp_nil;
 #define nrs_FOREIGN_THREAD_CONTROL      (nrs_symbol(32))        /* %foreign-thread-control */
 #ifdef WASM32
 #define nrs_WASM_COMPILED_MODULES       (nrs_symbol(33))        /* %wasm-compiled-modules% */
-#define num_nilreg_symbols 34
+#define nrs_WASM_CONST_POOLS            (nrs_symbol(34))        /* %wasm-const-pools% */
+#define num_nilreg_symbols 35
 #else
 #define num_nilreg_symbols 33
 #endif

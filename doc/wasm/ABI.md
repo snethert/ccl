@@ -183,6 +183,12 @@ assumes `wasm_get_current_tcr()` is the single authoritative access path.
 - The registry is a list of **simple vectors**. Each entry vector has 4 slots:
   1) `module-bytes` (u8 vector), 2) `export-name` (string),
   3) `entry-index` (fixnum), 4) `module-version` (fixnum).
+  A 5th optional slot MAY be present: `const-pool-bytes` (u8 vector, see
+  `doc/wasm/const-pool.md`).
+
+- The kernel exports `wasm_const_pool_install(entry_index, ptr, len)` to
+  install a constant pool for a compiled module and `wasm_const_pool_ref` for
+  lookup from generated code.
 
 **Overflow note (bring‑up):** the fixnum arithmetic helpers allocate bignums
 via a minimal WASM heap allocator. Add/sub/neg and 64‑bit products produce

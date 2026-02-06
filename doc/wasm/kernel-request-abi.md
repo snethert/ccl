@@ -50,6 +50,23 @@ All functions below are imported from the WASM module namespace `ccl`.
 - `0`: do not block (equivalent to `kernel_poll`)
 - `>0`: wait up to `deadlineMs` milliseconds
 
+### External-call imports (WASM FFI, MVP)
+
+WASM `external-call` forms are lowered to **direct WASM imports** from the
+module namespace `ccl` (the same namespace as `kernel_request`).
+
+- **Import name:** the literal external name string passed to `external-call`.
+- **Signature:** all parameters and the result are `i32`.
+- **Supported arities:** 0, 1, 2, 3, 4, 5, 7 parameters (current compiler support).
+- **Supported argument types:** `:address`, `:signed/unsigned-fullword`,
+  `:signed/unsigned-halfword`, `:signed/unsigned-byte`.
+- **Supported result types:** `:void` or integer types listed above.
+- **Unsupported:** `:address` results, floats, structs, callbacks, or varargs.
+
+Pointer arguments are 32‑bit linear‑memory offsets. Callers are responsible for
+passing valid pointers and lengths. Unsupported types or arities are compile‑time
+errors in the WASM backend.
+
 ## Interrupt ABI (host-side flags)
 
 Interrupt delivery is **cooperative** in the baseline WASM model. There is no
@@ -159,6 +176,17 @@ All opcodes are `u32`.
 - `KERNEL_OP_STREAM_OPEN  = 0x0000_0005`
 - `KERNEL_OP_STREAM_CLOSE = 0x0000_0006`
 - `KERNEL_OP_COMPILED_MODULES_REFRESH = 0x0000_0007`
+- `KERNEL_OP_FS_PROBE     = 0x0000_0008`
+- `KERNEL_OP_FS_TRUENAME  = 0x0000_0009`
+- `KERNEL_OP_FS_DIRECTORY = 0x0000_000A`
+- `KERNEL_OP_FS_FILE_WRITE_DATE = 0x0000_000B`
+- `KERNEL_OP_FS_RENAME    = 0x0000_000C`
+- `KERNEL_OP_FS_DELETE    = 0x0000_000D`
+- `KERNEL_OP_FS_ENSURE_DIRS = 0x0000_000E`
+- `KERNEL_OP_FS_DELETE_EMPTY_DIR = 0x0000_000F`
+- `KERNEL_OP_FS_DELETE_TREE = 0x0000_0010`
+- `KERNEL_OP_STREAM_SEEK  = 0x0000_0011`
+- `KERNEL_OP_STREAM_TRUNCATE = 0x0000_0012`
 - `KERNEL_OP_UI_POLL      = 0x0000_0020`
 - `KERNEL_OP_UI_RENDER    = 0x0000_0021`
 - `KERNEL_OP_UI_MEASURE_TEXT = 0x0000_0022`
@@ -299,6 +327,7 @@ Initial `kind` registry:
 
 - `0`: `PIPE` (in-memory byte FIFO; `arg_len` MUST be 0)
 - `1`: `NAMED_RO` (read-only named byte source; `arg_len` is UTF-8 path/name bytes)
+- `2`: `FILE` (persistence service file; `arg_len` points to file-open payload, see `doc/wasm/persistence-service-spec.md`)
 
 `PIPE` response payload: none (`kernel_response_size = 0`).
 
@@ -311,6 +340,8 @@ offset  size  field
 
 If no named source exists for the provided name, the request MUST complete with
 `kernel_result == -ENOENT`.
+
+`FILE` response payload: none (`kernel_response_size = 0`).
 
 ### `KERNEL_OP_STREAM_CLOSE`
 
@@ -334,6 +365,61 @@ Response payload: none (`kernel_response_size = 0`).
 - `< 0`: negative errno (e.g. `-EBADF`)
 
 Closing standard streams (SIDs 0/1/2) MUST be a no-op that returns success.
+
+### `KERNEL_OP_STREAM_SEEK`
+
+Seek to a new position within a stream.
+
+Payload:
+
+```
+offset  size  field
+0x00    u32   sid
+0x04    u32   whence   (0=SEEK_SET, 1=SEEK_CUR, 2=SEEK_END)
+0x08    i64   offset
+```
+
+Payload length MUST be 16 bytes.
+
+Response payload (`kernel_response_size = 8`):
+
+```
+offset  size  field
+0x00    u64   new_position
+```
+
+`kernel_result`:
+
+- `0`: success
+- `< 0`: negative errno (e.g. `-EINVAL`, `-EBADF`, `-ENOSYS`)
+
+`STREAM_SEEK` is required for `FILE` streams; other stream kinds may return
+`-ENOSYS` or `-EBADF`.
+
+### `KERNEL_OP_STREAM_TRUNCATE`
+
+Resize a file-backed stream to a new length.
+
+Payload:
+
+```
+offset  size  field
+0x00    u32   sid
+0x04    u32   flags   (reserved, must be 0)
+0x08    u64   length
+```
+
+Payload length MUST be 16 bytes.
+
+Response payload: none (`kernel_response_size = 0`).
+
+`kernel_result`:
+
+- `0`: success
+- `< 0`: negative errno (e.g. `-EINVAL`, `-EBADF`, `-ENOSYS`)
+
+`STREAM_TRUNCATE` is required for `FILE` streams; other stream kinds may return
+`-ENOSYS` or `-EBADF`.
 
 ### `KERNEL_OP_TIME_NOW`
 

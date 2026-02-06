@@ -8,6 +8,7 @@
 #ifdef WASM32
 
 #include "lisp.h"
+#include "gc.h"
 #include "lisp-exceptions.h"
 #include "lisp_globals.h"
 #include "wasm-host.h"
@@ -84,7 +85,7 @@ wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
     subtag = header_subtag(header);
   }
 
-  if (subtag != subtag_function) {
+  if (subtag != subtag_function && subtag != subtag_pseudofunction) {
     __builtin_trap();
   }
 
@@ -1380,6 +1381,130 @@ wasm_funcall2(LispObj fn_value, LispObj arg0, LispObj arg1)
   return wasm_funcall_common(tcr, fn_value, args, 2, 0);
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_funcall7")))
+LispObj
+wasm_funcall7(LispObj fn_value, LispObj arg0, LispObj arg1, LispObj arg2, LispObj arg3, LispObj arg4, LispObj arg5, LispObj arg6)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  LispObj args[7];
+  args[0] = arg0;
+  args[1] = arg1;
+  args[2] = arg2;
+  args[3] = arg3;
+  args[4] = arg4;
+  args[5] = arg5;
+  args[6] = arg6;
+  return wasm_funcall_common(tcr, fn_value, args, 7, 0);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_funcall8")))
+LispObj
+wasm_funcall8(LispObj fn_value, LispObj arg0, LispObj arg1, LispObj arg2, LispObj arg3, LispObj arg4, LispObj arg5, LispObj arg6, LispObj arg7)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  LispObj args[8];
+  args[0] = arg0;
+  args[1] = arg1;
+  args[2] = arg2;
+  args[3] = arg3;
+  args[4] = arg4;
+  args[5] = arg5;
+  args[6] = arg6;
+  args[7] = arg7;
+  return wasm_funcall_common(tcr, fn_value, args, 8, 0);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_funcall9")))
+LispObj
+wasm_funcall9(LispObj fn_value, LispObj arg0, LispObj arg1, LispObj arg2, LispObj arg3, LispObj arg4, LispObj arg5, LispObj arg6, LispObj arg7, LispObj arg8)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  LispObj args[9];
+  args[0] = arg0;
+  args[1] = arg1;
+  args[2] = arg2;
+  args[3] = arg3;
+  args[4] = arg4;
+  args[5] = arg5;
+  args[6] = arg6;
+  args[7] = arg7;
+  args[8] = arg8;
+  return wasm_funcall_common(tcr, fn_value, args, 9, 0);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_funcall10")))
+LispObj
+wasm_funcall10(LispObj fn_value, LispObj arg0, LispObj arg1, LispObj arg2, LispObj arg3, LispObj arg4, LispObj arg5, LispObj arg6, LispObj arg7, LispObj arg8, LispObj arg9)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  LispObj args[10];
+  args[0] = arg0;
+  args[1] = arg1;
+  args[2] = arg2;
+  args[3] = arg3;
+  args[4] = arg4;
+  args[5] = arg5;
+  args[6] = arg6;
+  args[7] = arg7;
+  args[8] = arg8;
+  args[9] = arg9;
+  return wasm_funcall_common(tcr, fn_value, args, 10, 0);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_funcall3")))
+LispObj
+wasm_funcall3(LispObj fn_value, LispObj arg0, LispObj arg1, LispObj arg2)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  LispObj args[3];
+  args[0] = arg0;
+  args[1] = arg1;
+  args[2] = arg2;
+  return wasm_funcall_common(tcr, fn_value, args, 3, 0);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_funcall4")))
+LispObj
+wasm_funcall4(LispObj fn_value, LispObj arg0, LispObj arg1, LispObj arg2, LispObj arg3)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  LispObj args[4];
+  args[0] = arg0;
+  args[1] = arg1;
+  args[2] = arg2;
+  args[3] = arg3;
+  return wasm_funcall_common(tcr, fn_value, args, 4, 0);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_funcall5")))
+LispObj
+wasm_funcall5(LispObj fn_value, LispObj arg0, LispObj arg1, LispObj arg2, LispObj arg3, LispObj arg4)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  LispObj args[5];
+  args[0] = arg0;
+  args[1] = arg1;
+  args[2] = arg2;
+  args[3] = arg3;
+  args[4] = arg4;
+  return wasm_funcall_common(tcr, fn_value, args, 5, 0);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_funcall6")))
+LispObj
+wasm_funcall6(LispObj fn_value, LispObj arg0, LispObj arg1, LispObj arg2, LispObj arg3, LispObj arg4, LispObj arg5)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  LispObj args[6];
+  args[0] = arg0;
+  args[1] = arg1;
+  args[2] = arg2;
+  args[3] = arg3;
+  args[4] = arg4;
+  args[5] = arg5;
+  return wasm_funcall_common(tcr, fn_value, args, 6, 0);
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_funcall0_mv")))
 LispObj
 wasm_funcall0_mv(LispObj fn_value)
@@ -1407,6 +1532,130 @@ wasm_funcall2_mv(LispObj fn_value, LispObj arg0, LispObj arg1)
   args[0] = arg0;
   args[1] = arg1;
   return wasm_funcall_common(tcr, fn_value, args, 2, 1);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_funcall7_mv")))
+LispObj
+wasm_funcall7_mv(LispObj fn_value, LispObj arg0, LispObj arg1, LispObj arg2, LispObj arg3, LispObj arg4, LispObj arg5, LispObj arg6)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  LispObj args[7];
+  args[0] = arg0;
+  args[1] = arg1;
+  args[2] = arg2;
+  args[3] = arg3;
+  args[4] = arg4;
+  args[5] = arg5;
+  args[6] = arg6;
+  return wasm_funcall_common(tcr, fn_value, args, 7, 1);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_funcall8_mv")))
+LispObj
+wasm_funcall8_mv(LispObj fn_value, LispObj arg0, LispObj arg1, LispObj arg2, LispObj arg3, LispObj arg4, LispObj arg5, LispObj arg6, LispObj arg7)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  LispObj args[8];
+  args[0] = arg0;
+  args[1] = arg1;
+  args[2] = arg2;
+  args[3] = arg3;
+  args[4] = arg4;
+  args[5] = arg5;
+  args[6] = arg6;
+  args[7] = arg7;
+  return wasm_funcall_common(tcr, fn_value, args, 8, 1);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_funcall9_mv")))
+LispObj
+wasm_funcall9_mv(LispObj fn_value, LispObj arg0, LispObj arg1, LispObj arg2, LispObj arg3, LispObj arg4, LispObj arg5, LispObj arg6, LispObj arg7, LispObj arg8)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  LispObj args[9];
+  args[0] = arg0;
+  args[1] = arg1;
+  args[2] = arg2;
+  args[3] = arg3;
+  args[4] = arg4;
+  args[5] = arg5;
+  args[6] = arg6;
+  args[7] = arg7;
+  args[8] = arg8;
+  return wasm_funcall_common(tcr, fn_value, args, 9, 1);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_funcall10_mv")))
+LispObj
+wasm_funcall10_mv(LispObj fn_value, LispObj arg0, LispObj arg1, LispObj arg2, LispObj arg3, LispObj arg4, LispObj arg5, LispObj arg6, LispObj arg7, LispObj arg8, LispObj arg9)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  LispObj args[10];
+  args[0] = arg0;
+  args[1] = arg1;
+  args[2] = arg2;
+  args[3] = arg3;
+  args[4] = arg4;
+  args[5] = arg5;
+  args[6] = arg6;
+  args[7] = arg7;
+  args[8] = arg8;
+  args[9] = arg9;
+  return wasm_funcall_common(tcr, fn_value, args, 10, 1);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_funcall3_mv")))
+LispObj
+wasm_funcall3_mv(LispObj fn_value, LispObj arg0, LispObj arg1, LispObj arg2)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  LispObj args[3];
+  args[0] = arg0;
+  args[1] = arg1;
+  args[2] = arg2;
+  return wasm_funcall_common(tcr, fn_value, args, 3, 1);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_funcall4_mv")))
+LispObj
+wasm_funcall4_mv(LispObj fn_value, LispObj arg0, LispObj arg1, LispObj arg2, LispObj arg3)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  LispObj args[4];
+  args[0] = arg0;
+  args[1] = arg1;
+  args[2] = arg2;
+  args[3] = arg3;
+  return wasm_funcall_common(tcr, fn_value, args, 4, 1);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_funcall5_mv")))
+LispObj
+wasm_funcall5_mv(LispObj fn_value, LispObj arg0, LispObj arg1, LispObj arg2, LispObj arg3, LispObj arg4)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  LispObj args[5];
+  args[0] = arg0;
+  args[1] = arg1;
+  args[2] = arg2;
+  args[3] = arg3;
+  args[4] = arg4;
+  return wasm_funcall_common(tcr, fn_value, args, 5, 1);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_funcall6_mv")))
+LispObj
+wasm_funcall6_mv(LispObj fn_value, LispObj arg0, LispObj arg1, LispObj arg2, LispObj arg3, LispObj arg4, LispObj arg5)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  LispObj args[6];
+  args[0] = arg0;
+  args[1] = arg1;
+  args[2] = arg2;
+  args[3] = arg3;
+  args[4] = arg4;
+  args[5] = arg5;
+  return wasm_funcall_common(tcr, fn_value, args, 6, 1);
 }
 
 LispObj
@@ -1788,6 +2037,561 @@ wasm_test_entry_funcall1_raw(uint32_t entry_index, LispObj arg)
   wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
 
   return result;
+}
+
+static uint32_t
+wasm_const_pool_read_u32(const uint8_t *bytes,
+                         uint32_t len,
+                         uint32_t *offset,
+                         int *ok)
+{
+  if (!ok || !*ok) {
+    return 0;
+  }
+  if (!bytes || !offset || (*offset + 4u) > len) {
+    if (ok) *ok = 0;
+    return 0;
+  }
+  uint32_t pos = *offset;
+  uint32_t v = (uint32_t)bytes[pos]
+               | ((uint32_t)bytes[pos + 1] << 8)
+               | ((uint32_t)bytes[pos + 2] << 16)
+               | ((uint32_t)bytes[pos + 3] << 24);
+  *offset = pos + 4u;
+  return v;
+}
+
+static const uint8_t *
+wasm_const_pool_read_bytes(const uint8_t *bytes,
+                           uint32_t len,
+                           uint32_t *offset,
+                           uint32_t count,
+                           int *ok)
+{
+  if (!ok || !*ok) {
+    return NULL;
+  }
+  if (!bytes || !offset || (*offset + count) > len) {
+    if (ok) *ok = 0;
+    return NULL;
+  }
+  const uint8_t *out = bytes + *offset;
+  *offset += count;
+  return out;
+}
+
+static int
+wasm_lisp_string_equals_bytes(LispObj str,
+                              const uint8_t *bytes,
+                              uint32_t len)
+{
+  if (!bytes) {
+    return 0;
+  }
+  if (fulltag_of(str) != fulltag_misc) {
+    return 0;
+  }
+  LispObj header = header_of(str);
+  if (header_subtag(header) != subtag_simple_base_string) {
+    return 0;
+  }
+  uint32_t count = (uint32_t)header_element_count(header);
+  if (count != len) {
+    return 0;
+  }
+  uint32_t *data = (uint32_t *)((BytePtr)str + misc_data_offset);
+  for (uint32_t i = 0; i < len; i++) {
+    if ((data[i] & 0xffu) != bytes[i]) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+static int
+wasm_package_names_contains(LispObj names,
+                            const uint8_t *bytes,
+                            uint32_t len)
+{
+  LispObj list = names;
+  while (list != lisp_nil) {
+    if (fulltag_of(list) != fulltag_cons) {
+      return 0;
+    }
+    cons *cell = (cons *)ptr_from_lispobj(untag(list));
+    if (wasm_lisp_string_equals_bytes(cell->car, bytes, len)) {
+      return 1;
+    }
+    list = cell->cdr;
+  }
+  return 0;
+}
+
+static LispObj
+wasm_find_package_named_bytes(const uint8_t *bytes, uint32_t len)
+{
+  LispObj list = nrs_ALL_PACKAGES.vcell;
+  while (list != lisp_nil) {
+    if (fulltag_of(list) != fulltag_cons) {
+      break;
+    }
+    cons *cell = (cons *)ptr_from_lispobj(untag(list));
+    LispObj pkg_obj = cell->car;
+    if (fulltag_of(pkg_obj) == fulltag_misc) {
+      LispObj header = header_of(pkg_obj);
+      if (header_subtag(header) == subtag_package) {
+        package *pkg = (package *)ptr_from_lispobj(untag(pkg_obj));
+        if (wasm_package_names_contains(pkg->names, bytes, len)) {
+          return pkg_obj;
+        }
+      }
+    }
+    list = cell->cdr;
+  }
+  return lisp_nil;
+}
+
+static int
+wasm_symbol_package_matches(lispsymbol *rawsym, LispObj package)
+{
+  if (package == (LispObj)0) {
+    return 1;
+  }
+  LispObj predicate = rawsym->package_predicate;
+  if (fulltag_of(predicate) == fulltag_cons) {
+    predicate = car(predicate);
+  }
+  return predicate == package;
+}
+
+static LispObj
+wasm_find_symbol_in_range_bytes(LispObj *start,
+                                LispObj *end,
+                                const uint8_t *name,
+                                uint32_t len,
+                                LispObj package)
+{
+  LispObj header;
+  LispObj tag;
+  while (start < end) {
+    header = *start;
+    tag = fulltag_of(header);
+    if (header_subtag(header) == subtag_symbol) {
+      LispObj pname = deref(ptr_to_lispobj(start), 1);
+      LispObj pname_header = header_of(pname);
+      if ((header_subtag(pname_header) == subtag_simple_base_string) &&
+          ((uint32_t)header_element_count(pname_header) == len)) {
+        uint32_t *p = (uint32_t *)ptr_from_lispobj(pname + misc_data_offset);
+        int match = 1;
+        for (uint32_t i = 0; i < len; i++) {
+          if ((p[i] & 0xffu) != name[i]) {
+            match = 0;
+            break;
+          }
+        }
+        if (match) {
+          lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(ptr_to_lispobj(start));
+          if (wasm_symbol_package_matches(rawsym, package)) {
+            return ptr_to_lispobj(start) + fulltag_misc;
+          }
+        }
+      }
+    }
+    if (nodeheader_tag_p(tag)) {
+      start += (~1 & (2 + header_element_count(header)));
+    } else if (immheader_tag_p(tag)) {
+      start = (LispObj *)skip_over_ivector((natural)start, header);
+    } else {
+      start += 2;
+    }
+  }
+  return (LispObj)0;
+}
+
+static LispObj
+wasm_find_symbol_named_bytes(const uint8_t *name, uint32_t len, LispObj package)
+{
+  area *a = ((area *)ptr_from_lispobj(lisp_global(ALL_AREAS)))->succ;
+  while (a->code != AREA_VOID) {
+    area_code code = a->code;
+    if ((code == AREA_STATIC) || (code == AREA_DYNAMIC) || (code == AREA_MANAGED_STATIC)) {
+      LispObj sym = wasm_find_symbol_in_range_bytes((LispObj *)a->low,
+                                                    (LispObj *)a->active,
+                                                    name,
+                                                    len,
+                                                    package);
+      if (sym) {
+        return sym;
+      }
+    }
+    a = a->succ;
+  }
+  return (LispObj)0;
+}
+
+static LispObj
+wasm_const_pool_make_base_string(TCR *tcr, const uint8_t *bytes, uint32_t len)
+{
+  if (tcr == NULL) {
+    return lisp_nil;
+  }
+  LispObj obj = wasm_misc_alloc(tcr, subtag_simple_base_string, (signed_natural)len);
+  if (obj == lisp_nil) {
+    return lisp_nil;
+  }
+  uint32_t *data = (uint32_t *)((BytePtr)obj + misc_data_offset);
+  for (uint32_t i = 0; i < len; i++) {
+    data[i] = (uint32_t)bytes[i];
+  }
+  return obj;
+}
+
+static LispObj
+wasm_const_pool_find_symbol_in_pools(const uint8_t *name_bytes, uint32_t name_len, LispObj package)
+{
+  if (!name_bytes || name_len == 0) {
+    return (LispObj)0;
+  }
+
+  LispObj table = nrs_WASM_CONST_POOLS.vcell;
+  if (table == lisp_nil) {
+    return (LispObj)0;
+  }
+  if (fulltag_of(table) != fulltag_misc || header_subtag(header_of(table)) != subtag_simple_vector) {
+    return (LispObj)0;
+  }
+
+  uint32_t table_count = (uint32_t)header_element_count(header_of(table));
+  LispObj *table_data = (LispObj *)((BytePtr)table + misc_data_offset);
+  for (uint32_t i = 0; i < table_count; i++) {
+    LispObj pool = table_data[i];
+    if (pool == lisp_nil) {
+      continue;
+    }
+    if (fulltag_of(pool) != fulltag_misc || header_subtag(header_of(pool)) != subtag_simple_vector) {
+      continue;
+    }
+    uint32_t pool_count = (uint32_t)header_element_count(header_of(pool));
+    LispObj *pool_data = (LispObj *)((BytePtr)pool + misc_data_offset);
+    for (uint32_t j = 0; j < pool_count; j++) {
+      LispObj sym = pool_data[j];
+      if (fulltag_of(sym) != fulltag_misc || header_subtag(header_of(sym)) != subtag_symbol) {
+        continue;
+      }
+      lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(untag(sym));
+      if (!wasm_symbol_package_matches(rawsym, package)) {
+        continue;
+      }
+      if (wasm_lisp_string_equals_bytes(rawsym->pname, name_bytes, name_len)) {
+        return sym;
+      }
+    }
+  }
+  return (LispObj)0;
+}
+
+static LispObj
+wasm_const_pool_make_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj package)
+{
+  if (tcr == NULL || !name_bytes || name_len == 0) {
+    return (LispObj)0;
+  }
+
+  LispObj pname = wasm_const_pool_make_base_string(tcr, name_bytes, name_len);
+  if (pname == lisp_nil) {
+    return (LispObj)0;
+  }
+
+  const signed_natural count = (signed_natural)((sizeof(lispsymbol) / sizeof(LispObj)) - 1);
+  LispObj sym_obj = wasm_misc_alloc(tcr, subtag_symbol, count);
+  if (sym_obj == lisp_nil) {
+    return (LispObj)0;
+  }
+
+  lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(sym_obj));
+  sym->pname = pname;
+  sym->vcell = undefined;
+  sym->fcell = nrs_UDF.vcell;
+  sym->package_predicate = package ? package : lisp_nil;
+  sym->flags = box_fixnum(0);
+  sym->plist = lisp_nil;
+  sym->binding_index = box_fixnum(0);
+
+  if (package != (LispObj)0 && package == nrs_KEYWORD_PACKAGE.vcell) {
+    sym->vcell = sym_obj;
+  }
+
+  return sym_obj;
+}
+
+static LispObj
+wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg)
+{
+  if (tcr == NULL || name_bytes == NULL || name_len == 0) {
+    return (LispObj)0;
+  }
+
+  static LispObj intern_sym = (LispObj)0;
+  if (intern_sym == (LispObj)0) {
+    static const uint8_t intern_name[] = { 'I', 'N', 'T', 'E', 'R', 'N' };
+    intern_sym = wasm_find_symbol_named_bytes(intern_name, (uint32_t)sizeof(intern_name), (LispObj)0);
+    if (!intern_sym) {
+      return (LispObj)0;
+    }
+  }
+
+  LispObj name_str = wasm_const_pool_make_base_string(tcr, name_bytes, name_len);
+  if (name_str == lisp_nil) {
+    return (LispObj)0;
+  }
+
+  LispObj pkg_arg = pkg;
+  if (pkg_arg == (LispObj)0) {
+    pkg_arg = nrs_PACKAGE.vcell;
+  }
+
+  LispObj result = wasm_funcall2(intern_sym, name_str, pkg_arg);
+  if (tcr->wasm_pending_throw) {
+    tcr->wasm_pending_throw = 0;
+    return (LispObj)0;
+  }
+  if (result == lisp_nil) {
+    return (LispObj)0;
+  }
+  return result;
+}
+
+static LispObj
+wasm_const_pool_table_ensure(TCR *tcr, uint32_t entry_index)
+{
+  if (tcr == NULL) {
+    return lisp_nil;
+  }
+
+  LispObj table = nrs_WASM_CONST_POOLS.vcell;
+  if (table == lisp_nil) {
+    uint32_t count = entry_index + 1u;
+    LispObj obj = wasm_misc_alloc(tcr, subtag_simple_vector, (signed_natural)count);
+    if (obj == lisp_nil) {
+      return lisp_nil;
+    }
+    nrs_WASM_CONST_POOLS.vcell = obj;
+    return obj;
+  }
+
+  if (fulltag_of(table) != fulltag_misc || header_subtag(header_of(table)) != subtag_simple_vector) {
+    return lisp_nil;
+  }
+
+  uint32_t count = (uint32_t)header_element_count(header_of(table));
+  if (entry_index < count) {
+    return table;
+  }
+
+  uint32_t new_count = entry_index + 1u;
+  LispObj obj = wasm_misc_alloc(tcr, subtag_simple_vector, (signed_natural)new_count);
+  if (obj == lisp_nil) {
+    return lisp_nil;
+  }
+
+  LispObj *dst = (LispObj *)((BytePtr)obj + misc_data_offset);
+  LispObj *src = (LispObj *)((BytePtr)table + misc_data_offset);
+  for (uint32_t i = 0; i < new_count; i++) {
+    dst[i] = (i < count) ? src[i] : lisp_nil;
+  }
+
+  nrs_WASM_CONST_POOLS.vcell = obj;
+  return obj;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_const_pool_install")))
+LispObj
+wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t payload_len)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return lisp_nil;
+  }
+
+  if (payload_ptr == 0 || payload_len < 8u) {
+    return lisp_nil;
+  }
+
+  const uint8_t *bytes = (const uint8_t *)(uintptr_t)payload_ptr;
+  uint32_t offset = 0;
+  int ok = 1;
+
+  uint32_t version = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+  uint32_t count = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+  if (!ok || version != 1u) {
+    return lisp_nil;
+  }
+
+  LispObj pool = wasm_misc_alloc(tcr, subtag_simple_vector, (signed_natural)count);
+  if (pool == lisp_nil) {
+    return lisp_nil;
+  }
+  LispObj *pool_data = (LispObj *)((BytePtr)pool + misc_data_offset);
+
+  for (uint32_t i = 0; i < count; i++) {
+    uint32_t tag = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+    if (!ok) {
+      return lisp_nil;
+    }
+    switch (tag) {
+      case 1: { /* symbol */
+        uint32_t name_len = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        const uint8_t *name_bytes = wasm_const_pool_read_bytes(bytes, payload_len, &offset, name_len, &ok);
+        uint32_t pkg_len = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        const uint8_t *pkg_bytes = wasm_const_pool_read_bytes(bytes, payload_len, &offset, pkg_len, &ok);
+        if (!ok || !name_bytes) {
+          return lisp_nil;
+        }
+        LispObj pkg = (LispObj)0;
+        if (pkg_len > 0 && pkg_bytes) {
+          if (pkg_len == 7 &&
+              pkg_bytes[0] == 'K' && pkg_bytes[1] == 'E' && pkg_bytes[2] == 'Y' &&
+              pkg_bytes[3] == 'W' && pkg_bytes[4] == 'O' && pkg_bytes[5] == 'R' &&
+              pkg_bytes[6] == 'D') {
+            pkg = nrs_KEYWORD_PACKAGE.vcell;
+          } else {
+            LispObj found = wasm_find_package_named_bytes(pkg_bytes, pkg_len);
+            if (found == lisp_nil) {
+              return lisp_nil;
+            }
+            pkg = found;
+          }
+        }
+        LispObj sym = wasm_find_symbol_named_bytes(name_bytes, name_len, pkg);
+        if (!sym) {
+          sym = wasm_const_pool_intern_symbol(tcr, name_bytes, name_len, pkg);
+          if (!sym) {
+            sym = wasm_const_pool_find_symbol_in_pools(name_bytes, name_len, pkg);
+          }
+          if (!sym) {
+            sym = wasm_const_pool_make_symbol(tcr, name_bytes, name_len, pkg);
+          }
+          if (!sym) {
+            return lisp_nil;
+          }
+        }
+        pool_data[i] = sym;
+        break;
+      }
+      case 2: { /* string */
+        uint32_t len = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        const uint8_t *data = wasm_const_pool_read_bytes(bytes, payload_len, &offset, len, &ok);
+        if (!ok || !data) {
+          return lisp_nil;
+        }
+        LispObj str = wasm_const_pool_make_base_string(tcr, data, len);
+        if (str == lisp_nil) {
+          return lisp_nil;
+        }
+        pool_data[i] = str;
+        break;
+      }
+      case 3: { /* vector */
+        uint32_t vcount = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        if (!ok) {
+          return lisp_nil;
+        }
+        LispObj vec = wasm_misc_alloc(tcr, subtag_simple_vector, (signed_natural)vcount);
+        if (vec == lisp_nil) {
+          return lisp_nil;
+        }
+        LispObj *vec_data = (LispObj *)((BytePtr)vec + misc_data_offset);
+        for (uint32_t j = 0; j < vcount; j++) {
+          uint32_t idx = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+          if (!ok || idx >= i) {
+            return lisp_nil;
+          }
+          vec_data[j] = pool_data[idx];
+        }
+        pool_data[i] = vec;
+        break;
+      }
+      case 4: { /* function */
+        uint32_t name_len = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        const uint8_t *name_bytes = wasm_const_pool_read_bytes(bytes, payload_len, &offset, name_len, &ok);
+        uint32_t pkg_len = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        const uint8_t *pkg_bytes = wasm_const_pool_read_bytes(bytes, payload_len, &offset, pkg_len, &ok);
+        if (!ok || !name_bytes) {
+          return lisp_nil;
+        }
+        LispObj pkg = (LispObj)0;
+        if (pkg_len > 0 && pkg_bytes) {
+          if (pkg_len == 7 &&
+              pkg_bytes[0] == 'K' && pkg_bytes[1] == 'E' && pkg_bytes[2] == 'Y' &&
+              pkg_bytes[3] == 'W' && pkg_bytes[4] == 'O' && pkg_bytes[5] == 'R' &&
+              pkg_bytes[6] == 'D') {
+            pkg = nrs_KEYWORD_PACKAGE.vcell;
+          } else {
+            LispObj found = wasm_find_package_named_bytes(pkg_bytes, pkg_len);
+            if (found == lisp_nil) {
+              return lisp_nil;
+            }
+            pkg = found;
+          }
+        }
+        LispObj sym = wasm_find_symbol_named_bytes(name_bytes, name_len, pkg);
+        if (!sym) {
+          sym = wasm_const_pool_intern_symbol(tcr, name_bytes, name_len, pkg);
+          if (!sym) {
+            return lisp_nil;
+          }
+        }
+        lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(untag(sym));
+        LispObj fn = rawsym->fcell;
+        if (fn == nrs_UDF.vcell) {
+          return lisp_nil;
+        }
+        pool_data[i] = fn;
+        break;
+      }
+      default:
+        return lisp_nil;
+    }
+  }
+
+  LispObj table = wasm_const_pool_table_ensure(tcr, entry_index);
+  if (table == lisp_nil) {
+    return lisp_nil;
+  }
+  LispObj *table_data = (LispObj *)((BytePtr)table + misc_data_offset);
+  table_data[entry_index] = pool;
+  return pool;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_const_pool_ref")))
+LispObj
+wasm_const_pool_ref(uint32_t entry_index, uint32_t const_index)
+{
+  LispObj table = nrs_WASM_CONST_POOLS.vcell;
+  if (table == lisp_nil) {
+    return lisp_nil;
+  }
+  if (fulltag_of(table) != fulltag_misc || header_subtag(header_of(table)) != subtag_simple_vector) {
+    return lisp_nil;
+  }
+  uint32_t count = (uint32_t)header_element_count(header_of(table));
+  if (entry_index >= count) {
+    return lisp_nil;
+  }
+  LispObj *table_data = (LispObj *)((BytePtr)table + misc_data_offset);
+  LispObj pool = table_data[entry_index];
+  if (pool == lisp_nil) {
+    return lisp_nil;
+  }
+  if (fulltag_of(pool) != fulltag_misc || header_subtag(header_of(pool)) != subtag_simple_vector) {
+    return lisp_nil;
+  }
+  uint32_t pool_count = (uint32_t)header_element_count(header_of(pool));
+  if (const_index >= pool_count) {
+    return lisp_nil;
+  }
+  LispObj *pool_data = (LispObj *)((BytePtr)pool + misc_data_offset);
+  return pool_data[const_index];
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_get_lisp_nil")))

@@ -1059,6 +1059,15 @@
                   *xload-target-backend*)))
           (locally (declare (ftype (function (t) t) xload-arm-set-entrypoint))
             (xload-arm-set-entrypoint udf-object))))
+       (:wasm32
+        ;; WASM32 uses ARM layout but entrypoints are fixnum table indices.
+        (let* ((udf-object (xload-make-gvector :pseudofunction 2)))
+          (setf (xload-%svref udf-object 1)
+                (xload-save-code-vector
+                 (backend-xload-info-udf-code
+                  *xload-target-backend*)))
+          (locally (declare (ftype (function (t) t) xload-wasm-set-entrypoint))
+            (xload-wasm-set-entrypoint udf-object))))
        (otherwise
         ;; The undefined-function object is a 1-element simple-vector (not
         ;; a function vector).  The code-vector in its 0th element should
@@ -1067,7 +1076,7 @@
           (setf (xload-%svref udf-object 0)
                 (xload-save-code-vector
                  (backend-xload-info-udf-code
-                  *xload-target-backend*))))))
+                  *xload-target-backend*)))))))
       (let* ((udf-object (xload-make-gvector :simple-vector 1)))
         (setf (xload-%svref udf-object 0) (backend-xload-info-udf-code
                                            *xload-target-backend*))))

@@ -420,6 +420,20 @@
                               :descent (ccl:paref metrics :double-float 3))
                         0))))))))
 
+(defun %ui-eagain-p (value)
+  (let ((eagain (symbol-value (read-from-string "#$EAGAIN"))))
+    (eql value (- eagain))))
+
+(defun %ui-maybe-yield-on-pending (state result allow-pending)
+  #+wasm32-target
+  (when (and allow-pending (numberp result) (%ui-eagain-p result))
+    (setf (ui-state-yield-reason state) "ui-poll-pending")
+    (when (fboundp 'ccl::wasm-yield-ui-turn)
+      (ccl::wasm-yield-ui-turn "ui-poll-pending"))
+    (when (and (boundp 'ccl::*wasm-yield-on-eagain*)
+               ccl::*wasm-yield-on-eagain*)
+      (throw :wasm-yield (list :ui "poll" :reason "pending")))))
+
 (defun ui-example-tree ()
   (ui-element "div"
               '(("className" . "root")
@@ -683,6 +697,7 @@
     (when events
       (dolist (event events)
         (ui-enqueue-event state event)))
+    (%ui-maybe-yield-on-pending state result allow-pending)
     (values state result)))
 
 (defun %inject-prop (props key value)

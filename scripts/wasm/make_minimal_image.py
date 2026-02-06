@@ -52,7 +52,7 @@ STATIC_BASE = 0x03FFF000
 
 # nrs layout (arm-constants.s)
 NRS_ORIGIN = DNODE_SIZE - FULLTAG_NIL
-NRS_SYMBOL_COUNT = 34
+NRS_SYMBOL_COUNT = 35
 SYMBOL_SIZE = 32
 
 # area.h (WASM32 follows the ARM lowmem layout)
@@ -79,6 +79,7 @@ AREA_DYNAMIC = 9 << 2
 TOPLCATCH_INDEX = 15
 TOPLFUNC_INDEX = 16
 WASM_MODULES_INDEX = 33
+WASM_CONST_POOLS_INDEX = 34
 
 COMPILED_CONST_VALUE = 23
 COMPILED_MODULES = [
@@ -677,6 +678,8 @@ def build_static_area(function_ptr: int, compiled_modules_ptr: int) -> bytearray
             vcell = function_ptr
         elif i == WASM_MODULES_INDEX:
             vcell = compiled_modules_ptr
+        elif i == WASM_CONST_POOLS_INDEX:
+            vcell = NIL_VALUE
 
         # pname, vcell, fcell, package-predicate, flags, plist, binding-index
         write_u32(buf, off + 4, NIL_VALUE)

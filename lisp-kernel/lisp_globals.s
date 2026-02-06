@@ -155,6 +155,9 @@ nrs_symbol_extra = symbol.size-nrs_symbol_fulltag
 	 _struct_pad(nrs_symbol_fulltag)
 	 _struct_label(wasm_compiled_modules)
 	 _struct_pad(nrs_symbol_extra)	/* %wasm-compiled-modules% */
+	 _struct_pad(nrs_symbol_fulltag)
+	 _struct_label(wasm_const_pools)
+	 _struct_pad(nrs_symbol_extra)	/* %wasm-const-pools% */
 	__endif
         _ends
 

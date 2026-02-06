@@ -196,6 +196,8 @@ export function createKernel({
       cstackSize: options.cstackSize ?? cstackSize,
       reserveBytes: options.reserveBytes ?? reserveBytes,
       imageLoaded: false,
+      compiledModulesInstalled: false,
+      bootEntryInstalled: false,
     };
 
     runner.getCurrentTcr = () => {
@@ -264,20 +266,50 @@ export function createKernel({
       }
       const rc = kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
       runner.imageLoaded = true;
+      runner.compiledModulesInstalled = false;
       return rc;
     };
 
-    runner.installCompiledModules = (opts = {}) =>
-      installCompiledModulesFromRegistry({
+    runner.installCompiledModules = async (opts = {}) => {
+      const res = await installCompiledModulesFromRegistry({
         kernel: kernel.instance,
         memory: runtime.memory,
         subprimsTable: runtime.subprimsTable,
         microkernel,
         ...opts,
       });
+      runner.compiledModulesInstalled = true;
+      return res;
+    };
+
+    runner.installCompiledModulesSync = (opts = {}) => {
+      const res = installCompiledModulesFromRegistrySync({
+        kernel: kernel.instance,
+        memory: runtime.memory,
+        subprimsTable: runtime.subprimsTable,
+        microkernel,
+        ...opts,
+      });
+      runner.compiledModulesInstalled = true;
+      return res;
+    };
+
+    function ensureBootEntryInstalled() {
+      if (runner.bootEntryInstalled) return;
+      const ex = kernel?.instance?.exports;
+      if (typeof ex?.wasm_boot_entry !== "function") return;
+      installBootEntry(kernel, runtime.subprimsTable);
+      runner.bootEntryInstalled = true;
+    }
+
+    function ensureCompiledModulesInstalled() {
+      if (!runner.imageLoaded || runner.compiledModulesInstalled) return;
+      runner.installCompiledModulesSync();
+    }
 
     runner.start = () => {
-      installBootEntry(kernel, runtime.subprimsTable);
+      ensureBootEntryInstalled();
+      ensureCompiledModulesInstalled();
       if (runner.imageLoaded) {
         if (typeof kernel.instance.exports.wasm_ccl_start_lisp !== "function") {
           throw new Error("runner.start: kernel missing export wasm_ccl_start_lisp");
@@ -297,7 +329,8 @@ export function createKernel({
       if (typeof kernel.instance.exports.wasm_ccl_start_lisp !== "function") {
         throw new Error("runner.startLisp: kernel missing export wasm_ccl_start_lisp");
       }
-      installBootEntry(kernel, runtime.subprimsTable);
+      ensureBootEntryInstalled();
+      ensureCompiledModulesInstalled();
       return kernel.instance.exports.wasm_ccl_start_lisp();
     };
 
@@ -305,6 +338,8 @@ export function createKernel({
       if (typeof kernel.instance.exports.wasm_ccl_step !== "function") {
         throw new Error("runner.step: kernel missing export wasm_ccl_step");
       }
+      ensureBootEntryInstalled();
+      ensureCompiledModulesInstalled();
       return kernel.instance.exports.wasm_ccl_step(deadlineMs);
     };
 

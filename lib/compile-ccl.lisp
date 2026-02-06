@@ -110,6 +110,7 @@
 (defparameter *x8632-xload-modules* '(xx8632fasload xfasload heap-image ))
 (defparameter *x8664-xload-modules* '(xx8664fasload xfasload heap-image ))
 (defparameter *arm-xload-modules* '(xarmfasload xfasload heap-image ))
+(defparameter *wasm-xload-modules* '(xwasmfasload xfasload heap-image ))
 
 
 ;;; Not too OS-specific.
@@ -151,7 +152,8 @@
     ((:ppc32 :ppc64) *ppc-xload-modules*)
     (:x8632 *x8632-xload-modules*)
     (:x8664 *x8664-xload-modules*)
-    (:arm *arm-xload-modules*)))
+    (:arm *arm-xload-modules*)
+    (:wasm32 *wasm-xload-modules*)))
 
 
 

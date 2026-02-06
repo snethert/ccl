@@ -285,6 +285,7 @@ Result: 0 on success; -ENOENT if missing.
 - STREAM_OPEN must accept a file-open kind with path and mode flags.
 - STREAM_READ and STREAM_WRITE operate on the current file position in the
   stream endpoint.
+- STREAM_SEEK and STREAM_TRUNCATE apply to file-backed streams only.
 - FILE-POSITION is implemented in Lisp using stream operations and metadata.
 
 ### STREAM_OPEN FILE kind (proposed)

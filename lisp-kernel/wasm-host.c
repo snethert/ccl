@@ -332,6 +332,55 @@ wasm_kernel_stream_close(uint32_t sid)
 }
 
 int32_t
+wasm_kernel_stream_seek(uint32_t sid, int64_t offset, uint32_t whence, uint64_t *out_pos)
+{
+  struct payload {
+    uint32_t sid;
+    uint32_t whence;
+    int64_t offset;
+  } p;
+  uint64_t pos = 0;
+  uint32_t n = 0;
+
+  if (out_pos) {
+    *out_pos = 0;
+  }
+
+  p.sid = sid;
+  p.whence = whence;
+  p.offset = offset;
+
+  int32_t r = wasm_kernel_request_copy(KERNEL_OP_STREAM_SEEK, &p, (uint32_t)sizeof(p),
+                                       &pos, (uint32_t)sizeof(pos), &n);
+  if (r < 0) {
+    return r;
+  }
+  if (n != sizeof(pos)) {
+    return -EINVAL;
+  }
+  if (out_pos) {
+    *out_pos = pos;
+  }
+  return 0;
+}
+
+int32_t
+wasm_kernel_stream_truncate(uint32_t sid, uint64_t length)
+{
+  struct payload {
+    uint32_t sid;
+    uint32_t flags;
+    uint64_t length;
+  } p;
+
+  p.sid = sid;
+  p.flags = 0;
+  p.length = length;
+
+  return wasm_kernel_request_copy(KERNEL_OP_STREAM_TRUNCATE, &p, (uint32_t)sizeof(p), NULL, 0, NULL);
+}
+
+int32_t
 wasm_kernel_compiled_modules_refresh(uint32_t registry, uint32_t nil)
 {
   struct payload {
@@ -362,6 +411,83 @@ wasm_kernel_time_now(uint64_t *out_unix_ms)
     *out_unix_ms = ms;
   }
   return 0;
+}
+
+int32_t
+wasm_kernel_ui_poll(uint32_t max_events,
+                    uint32_t max_bytes,
+                    uint32_t flags,
+                    void *out_buf,
+                    uint32_t out_cap,
+                    uint32_t *out_len,
+                    uint32_t *out_count)
+{
+  struct payload {
+    uint32_t max_events;
+    uint32_t max_bytes;
+    uint32_t flags;
+  } p;
+
+  p.max_events = max_events;
+  p.max_bytes = max_bytes;
+  p.flags = flags;
+
+  int32_t r = wasm_kernel_request_copy(KERNEL_OP_UI_POLL, &p, (uint32_t)sizeof(p), out_buf, out_cap, out_len);
+  if (r < 0) {
+    return r;
+  }
+  if (out_count) {
+    *out_count = (uint32_t)r;
+  }
+  return r;
+}
+
+int32_t
+wasm_kernel_ui_render(const void *payload, uint32_t payload_len)
+{
+  return wasm_kernel_request_copy(KERNEL_OP_UI_RENDER, payload, payload_len, NULL, 0, NULL);
+}
+
+int32_t
+wasm_kernel_ui_measure_text(const char *font,
+                            uint32_t font_len,
+                            const char *text,
+                            uint32_t text_len,
+                            struct wasm_ui_text_metrics *out_metrics)
+{
+  struct payload {
+    uint32_t font_ptr;
+    uint32_t font_len;
+    uint32_t text_ptr;
+    uint32_t text_len;
+  } p;
+
+  p.font_ptr = (uint32_t)(uintptr_t)font;
+  p.font_len = font_len;
+  p.text_ptr = (uint32_t)(uintptr_t)text;
+  p.text_len = text_len;
+
+  struct wasm_ui_text_metrics metrics;
+  uint32_t n = 0;
+  int32_t r = wasm_kernel_request_copy(KERNEL_OP_UI_MEASURE_TEXT, &p, (uint32_t)sizeof(p),
+                                       &metrics, (uint32_t)sizeof(metrics), &n);
+  if (r < 0) {
+    return r;
+  }
+  if (n != sizeof(metrics)) {
+    return -EINVAL;
+  }
+  if (out_metrics) {
+    *out_metrics = metrics;
+  }
+  return 0;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_ffi_test_add")))
+int32_t
+wasm_ffi_test_add(int32_t a, int32_t b)
+{
+  return a + b;
 }
 
 #endif /* WASM32 */

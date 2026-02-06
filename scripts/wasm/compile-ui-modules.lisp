@@ -9,7 +9,8 @@
     (make-package "CCL.WASM-UI" :use '(:cl))))
 
 (defvar %wasm-compiled-modules% nil)
-(declaim (special %wasm-compiled-modules *wasm2-next-entry-index*))
+(declaim (special %wasm-compiled-modules *wasm2-next-entry-index*
+                  *wasm2-enable-const-pool*))
 
 (defparameter *wasm-ui-functions*
   '((ccl::wasm-ui-demo
@@ -25,17 +26,6 @@
            (ccl.wasm-ui::ui-poll-events :max-events 8 :max-bytes 65536 :allow-pending nil)
          (declare (ignore _events))
          count)))))
-
-(defparameter *wasm-ui-stub-functions*
-  '((ccl::wasm-ui-demo
-     (lambda ()
-       0))
-    (ccl::wasm-ui-turn
-     (lambda ()
-       0))
-    (ccl::wasm-ui-poll
-     (lambda ()
-       0))))
 
 (defun parse-argv (argv)
   (let ((out nil)
@@ -97,29 +87,38 @@
                (host-unboxed (ash raw (- host-shift))))
           (ash host-unboxed (- target-shift)))))))
 
+(defun function-lambda-form (sym)
+  (multiple-value-bind (form _closurep _name)
+      (function-lambda-expression (symbol-function sym))
+    (declare (ignore _closurep _name))
+    form))
+
 (defun compile-ui-functions ()
   (setf %wasm-compiled-modules% nil)
   (when (boundp '*wasm2-next-entry-index*)
     (setf *wasm2-next-entry-index* 320))
-  (labels ((compile-entries (entries)
-             (let ((results nil))
-               (dolist (entry entries)
-                 (destructuring-bind (name lambda-form) entry
-                   (multiple-value-bind (fn warnings)
-                       (compile-named-function lambda-form :name name :target :wasm32)
-                     (declare (ignore warnings))
-                     (push (list :name (symbol-name name)
-                                 :entry-index (function-entry-index fn))
-                           results))))
-               (nreverse results))))
-    (handler-case
-        (compile-entries *wasm-ui-functions*)
-      (type-error (err)
-        (declare (ignore err))
-        ;; WASM2 cannot compile non-immediate symbol constants yet.
-        ;; Fall back to stub functions until constant pools/FFI land.
-        (setf %wasm-compiled-modules% nil)
-        (compile-entries *wasm-ui-stub-functions*)))))
+  (let* ((backend (find-backend :wasm32))
+         (*target-ftd* (or (and backend (backend-target-foreign-type-data backend))
+                           *target-ftd*)))
+    (labels ((compile-entries (entries)
+               (let ((results nil))
+                 (dolist (entry entries)
+                   (destructuring-bind (name lambda-form) entry
+                     (let ((resolved-form
+                            (if (eq name 'ccl::wasm-ui-turn)
+                              (or (function-lambda-form 'ccl::wasm-ui-turn)
+                                  lambda-form)
+                              lambda-form)))
+                       (multiple-value-bind (fn warnings)
+                           (compile-named-function resolved-form :name name :target :wasm32)
+                         (declare (ignore warnings))
+                         (push (list :name (symbol-name name)
+                                     :entry-index (function-entry-index fn))
+                               results)))))
+                 (nreverse results))))
+      (let ((*wasm2-enable-const-pool* t))
+        (declare (special *wasm2-enable-const-pool*))
+        (compile-entries *wasm-ui-functions*)))))
 
 (defun repo-root-from-script ()
   (let* ((script (or *load-truename*
@@ -146,6 +145,8 @@
           (load-rel "compiler/WASM/wasm-arch.lisp")
           (load-rel "compiler/WASM/wasm-vinsns.lisp"))
         (let ((*compile-definitions* t))
+          (load-rel "compiler/WASM/wasm-ffi.lisp")
+          (load-rel "compiler/acode-rewrite.lisp")
           (load-rel "compiler/WASM/wasm2.lisp")
           (load-rel "compiler/WASM/wasm-backend.lisp"))))))
 
@@ -184,13 +185,17 @@
              (princ (svref entry 3) out)
              (write-string ",\"moduleBytes\":" out)
              (json-write-bytes out (svref entry 0))
+             (when (and (> (length entry) 4) (svref entry 4))
+               (write-string ",\"constPoolBytes\":" out)
+               (json-write-bytes out (svref entry 4)))
              (write-char #\} out))
     (write-string "]}" out)
     (terpri out)))
 
 (defun main ()
   (load-wasm-backend)
-  (load (merge-pathnames "lib/wasm-ui.lisp" (repo-root-from-script)))
+  (let ((*compile-definitions* nil))
+    (load (merge-pathnames "lib/wasm-ui.lisp" (repo-root-from-script))))
   (let* ((argv (parse-argv ccl:*command-line-argument-list*))
          (output (or (cdr (assoc :output argv))
                      (namestring (merge-pathnames "doc/wasm/wasm-ui-modules.json")))))

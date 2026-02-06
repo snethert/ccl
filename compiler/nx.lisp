@@ -293,6 +293,8 @@
                   (env (new-lexical-environment env)))
              (setf (lexenv.variables env) 'barrier)
              (let* ((*target-backend* (or (if target (find-backend target)) *host-backend*))
+                    (*target-ftd* (or (backend-target-foreign-type-data *target-backend*)
+                                      *target-ftd*))
                     (*nx-target-fixnum-type*
                      (target-word-size-case
                       (32 *nx-32-bit-fixnum-type*)
@@ -364,4 +366,3 @@
 
 (defparameter *nx-end* (cons nil nil))
 (provide 'nx)
-

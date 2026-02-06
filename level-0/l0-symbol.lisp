@@ -217,10 +217,10 @@
 
 (defun %global-macro-function (symbol)
   (let* ((fbinding (fboundp symbol)))
-    (if (and #-arm-target (typep fbinding 'simple-vector)
-             #+arm-target (= (typecode fbinding) arm::subtag-pseudofunction)
-             (= (the fixnum (uvsize fbinding)) #-arm-target 2 #+arm-target 3))
-      (let* ((fun (%svref fbinding #-arm-target 1 #+arm-target 2)))
+    (if (and #-(or arm-target wasm32-target) (typep fbinding 'simple-vector)
+             #+(or arm-target wasm32-target) (= (typecode fbinding) arm::subtag-pseudofunction)
+             (= (the fixnum (uvsize fbinding)) #-(or arm-target wasm32-target) 2 #+(or arm-target wasm32-target) 3))
+      (let* ((fun (%svref fbinding #-(or arm-target wasm32-target) 1 #+(or arm-target wasm32-target) 2)))
         (if (functionp fun) fun)))))
 
 (defun %symbol-binding-address (sym)
@@ -268,4 +268,3 @@
           (setf (gethash idx binding-index-reverse-map) sym))))))
 
        
-

@@ -386,10 +386,10 @@
                 (if (eq structname 'logical-pathname)
                   (%pathname-equal x y t))))))))))
 
-#+(or ppc32-target arm-target)
+#+(or ppc32-target arm-target wasm32-target)
 (progn
 (defparameter *nodeheader-types*
-  #(#+arm-target pseudofunction #+ppc32-target bogus ; 0
+  #(#+(or arm-target wasm32-target) pseudofunction #+ppc32-target bogus ; 0
     ratio                               ; 1
     bogus                               ; 2
     complex                             ; 3
@@ -1106,4 +1106,3 @@
     (or cell
         (and create?
              (setf (gethash name %find-classes%) (make-class-cell name))))))
-

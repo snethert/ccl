@@ -20,6 +20,13 @@
 (defvar %wasm-compiled-modules% nil)
 (defvar *wasm2-spillable-locals* nil)
 (defvar *wasm2-spilling-p* nil)
+;; Default const-pool on for wasm2; bind to NIL to reproduce pre-pool behavior.
+(defvar *wasm2-enable-const-pool* t)
+(defvar *wasm2-const-pool* nil)
+(defvar *wasm2-const-pool-map* nil)
+(defvar *wasm2-external-imports* nil)
+(defvar *wasm2-external-import-map* nil)
+(defvar *wasm2-emit-entry-index* nil)
 
 (defconstant +wasm2-closure-cells-base+ 3)
 
@@ -37,6 +44,10 @@
                   *wasm2-emit-spillable-locals*
                   *wasm2-pending-throw-label*
                   *wasm2-use-arg-regs*
+                  *wasm2-enable-const-pool* *wasm2-const-pool* *wasm2-const-pool-map*
+                  *wasm2-generic-imports*
+                  *wasm2-external-imports* *wasm2-external-import-map*
+                  *wasm2-emit-entry-index*
                   %wasm-compiled-modules%))
 (unless (or (and (boundp '*wasm2-skip-next-nx-defops*)
                  *wasm2-skip-next-nx-defops*)
@@ -1322,18 +1333,32 @@
     (wasm2-form seg nil nil fn)
     (dolist (arg args)
       (wasm2-form seg nil nil arg))
-    (ecase argc
+    (case argc
       (0 (wasm2-emit (if mvpass :call0-mv :call0) tmp))
       (1 (wasm2-emit (if mvpass :call1-mv :call1) tmp))
-      (2 (wasm2-emit (if mvpass :call2-mv :call2) tmp)))
+      (2 (wasm2-emit (if mvpass :call2-mv :call2) tmp))
+      (3 (wasm2-emit (if mvpass :call3-mv :call3) tmp))
+      (4 (wasm2-emit (if mvpass :call4-mv :call4) tmp))
+      (5 (wasm2-emit (if mvpass :call5-mv :call5) tmp))
+      (6 (wasm2-emit (if mvpass :call6-mv :call6) tmp))
+      (7 (wasm2-emit (if mvpass :call7-mv :call7) tmp))
+      (8 (wasm2-emit (if mvpass :call8-mv :call8) tmp))
+      (9 (wasm2-emit (if mvpass :call9-mv :call9) tmp))
+      (10 (wasm2-emit (if mvpass :call10-mv :call10) tmp))
+      (t (error "WASM2: unsupported call arity: ~d" argc))))
     (when (wasm2-returning-p xfer)
       ;; Consume the wasm stack result; arg regs already hold the values.
       (wasm2-emit :drop)
-      (wasm2-emit :return))))
+      (wasm2-emit :return)))
 
 (defwasm2 wasm2-call call (seg vreg xfer fn arglist &optional spread-p)
   (declare (ignore vreg))
   (wasm2-emit-call seg fn arglist spread-p xfer)
+  nil)
+
+(defwasm2 wasm2-ff-call wasm-ff-call (seg vreg xfer name argspecs argvals resultspec &optional monitor)
+  (declare (ignore vreg monitor))
+  (wasm2-emit-external-call seg xfer name argspecs argvals resultspec)
   nil)
 
 (defwasm2 wasm2-builtin-call builtin-call (seg vreg xfer fn arglist)
@@ -1355,10 +1380,19 @@
       (wasm2-form seg nil nil arg))
     (when spread-p
       (wasm2-unimplemented))
-    (ecase argc
+    (case argc
       (0 (wasm2-emit (if mvpass :call0-mv :call0) tmp))
       (1 (wasm2-emit (if mvpass :call1-mv :call1) tmp))
-      (2 (wasm2-emit (if mvpass :call2-mv :call2) tmp))))
+      (2 (wasm2-emit (if mvpass :call2-mv :call2) tmp))
+      (3 (wasm2-emit (if mvpass :call3-mv :call3) tmp))
+      (4 (wasm2-emit (if mvpass :call4-mv :call4) tmp))
+      (5 (wasm2-emit (if mvpass :call5-mv :call5) tmp))
+      (6 (wasm2-emit (if mvpass :call6-mv :call6) tmp))
+      (7 (wasm2-emit (if mvpass :call7-mv :call7) tmp))
+      (8 (wasm2-emit (if mvpass :call8-mv :call8) tmp))
+      (9 (wasm2-emit (if mvpass :call9-mv :call9) tmp))
+      (10 (wasm2-emit (if mvpass :call10-mv :call10) tmp))
+      (t (error "WASM2: unsupported call arity: ~d" argc))))
   nil)
 
 (defwasm2 wasm2-self-call self-call (seg vreg xfer arglist &optional spread-p)
@@ -1375,10 +1409,19 @@
       (wasm2-form seg nil nil arg))
     (when spread-p
       (wasm2-unimplemented))
-    (ecase argc
+    (case argc
       (0 (wasm2-emit (if mvpass :call0-mv :call0) tmp))
       (1 (wasm2-emit (if mvpass :call1-mv :call1) tmp))
-      (2 (wasm2-emit (if mvpass :call2-mv :call2) tmp))))
+      (2 (wasm2-emit (if mvpass :call2-mv :call2) tmp))
+      (3 (wasm2-emit (if mvpass :call3-mv :call3) tmp))
+      (4 (wasm2-emit (if mvpass :call4-mv :call4) tmp))
+      (5 (wasm2-emit (if mvpass :call5-mv :call5) tmp))
+      (6 (wasm2-emit (if mvpass :call6-mv :call6) tmp))
+      (7 (wasm2-emit (if mvpass :call7-mv :call7) tmp))
+      (8 (wasm2-emit (if mvpass :call8-mv :call8) tmp))
+      (9 (wasm2-emit (if mvpass :call9-mv :call9) tmp))
+      (10 (wasm2-emit (if mvpass :call10-mv :call10) tmp))
+      (t (error "WASM2: unsupported call arity: ~d" argc))))
   nil)
 
 (defvar *wasm2-cur-afunc* nil)
@@ -1413,10 +1456,15 @@
   loop-label
   state-local)
 
-(defun wasm2-register-compiled-module (module-bytes export-name entry-index module-version)
+(defun wasm2-register-compiled-module (module-bytes export-name entry-index module-version
+                                         &optional const-pool-bytes)
   (when module-bytes
-    (let* ((entry (make-array 4 :initial-contents
-                              (list module-bytes export-name entry-index module-version))))
+    (let* ((entry (if const-pool-bytes
+                    (make-array 5 :initial-contents
+                                (list module-bytes export-name entry-index module-version
+                                      const-pool-bytes))
+                    (make-array 4 :initial-contents
+                                (list module-bytes export-name entry-index module-version)))))
       (unless (find entry-index %wasm-compiled-modules%
                     :key (lambda (item) (svref item 2))
                     :test #'eql)
@@ -1655,15 +1703,147 @@
             (wasm2-emit :local.set (wasm2-ensure-local var))))))))
 
 (defun wasm2-emit-constant-return (value)
-  (wasm2-emit :const value)
+  (wasm2-emit-const value)
   (wasm2-emit :set-arg-z)
   (wasm2-emit :set-nargs 1)
   (wasm2-emit :return)
   nil)
 
 (defun wasm2-emit-const (value)
-  (wasm2-emit :const value)
+  (if (integerp value)
+    (wasm2-emit :const value)
+    (if *wasm2-enable-const-pool*
+      (let ((index (wasm2-const-pool-index value)))
+        (wasm2-emit :const-pool-ref index))
+      (error "WASM2: non-immediate constant requires const-pool: ~S" value)))
   nil)
+
+(defun wasm2-reset-const-pool ()
+  (setf *wasm2-const-pool* (make-array 0 :adjustable t :fill-pointer 0))
+  (setf *wasm2-const-pool-map* (make-hash-table :test #'equal))
+  *wasm2-const-pool*)
+
+(defun wasm2-const-pool-entry (value)
+  (cond
+    ((symbolp value)
+     (list :type "symbol"
+           :name (symbol-name value)
+           :package (let ((pkg (symbol-package value)))
+                      (when pkg (package-name pkg)))))
+    ((stringp value)
+     (list :type "string" :value value))
+    ((and (vectorp value) (not (stringp value)))
+     (list :type "vector"
+           :elements (map 'list #'wasm2-const-pool-index value)))
+    ((functionp value)
+     (let ((name (function-name value)))
+       (unless (symbolp name)
+         (error "WASM2: unsupported function constant: ~S" value))
+       (list :type "function"
+             :name (symbol-name name)
+             :package (let ((pkg (symbol-package name)))
+                        (when pkg (package-name pkg))))))
+    (t
+     (error "WASM2: unsupported const-pool value: ~S" value))))
+
+(defun wasm2-const-pool-index (value)
+  (let ((existing (and *wasm2-const-pool-map*
+                       (gethash value *wasm2-const-pool-map*))))
+    (if existing
+      existing
+      (let ((idx (fill-pointer *wasm2-const-pool*))
+            (entry (wasm2-const-pool-entry value)))
+        (vector-push-extend entry *wasm2-const-pool*)
+        (setf (gethash value *wasm2-const-pool-map*) idx)
+        idx))))
+
+(defun wasm2-const-pool-entries ()
+  (when *wasm2-const-pool*
+    (let ((out nil))
+      (dotimes (i (fill-pointer *wasm2-const-pool*) (nreverse out))
+        (push (aref *wasm2-const-pool* i) out)))))
+
+(defconstant +wasm2-const-pool-version+ 1)
+(defconstant +wasm2-const-pool-tag-symbol+ 1)
+(defconstant +wasm2-const-pool-tag-string+ 2)
+(defconstant +wasm2-const-pool-tag-vector+ 3)
+(defconstant +wasm2-const-pool-tag-function+ 4)
+
+(defun wasm2-const-pool-emit-u32 (out value)
+  (let ((v (logand value #xffffffff)))
+    (vector-push-extend (ldb (byte 8 0) v) out)
+    (vector-push-extend (ldb (byte 8 8) v) out)
+    (vector-push-extend (ldb (byte 8 16) v) out)
+    (vector-push-extend (ldb (byte 8 24) v) out))
+  out)
+
+(defun wasm2-const-pool-emit-string (out value)
+  (let* ((s (string value))
+         (len (length s)))
+    (wasm2-const-pool-emit-u32 out len)
+    (dotimes (i len)
+      (vector-push-extend (logand (char-code (char s i)) #xff) out)))
+  out)
+
+(defun wasm2-const-pool-emit-maybe-string (out value)
+  (if value
+    (wasm2-const-pool-emit-string out value)
+    (wasm2-const-pool-emit-u32 out 0)))
+
+(defun wasm2-const-pool-bytes (entries)
+  (when entries
+    (let ((out (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0)))
+      (wasm2-const-pool-emit-u32 out +wasm2-const-pool-version+)
+      (wasm2-const-pool-emit-u32 out (length entries))
+      (dolist (entry entries)
+        (let ((etype (getf entry :type)))
+          (cond
+            ((string= etype "symbol")
+             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-symbol+)
+             (wasm2-const-pool-emit-string out (getf entry :name))
+             (wasm2-const-pool-emit-maybe-string out (getf entry :package)))
+            ((string= etype "string")
+             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-string+)
+             (wasm2-const-pool-emit-string out (getf entry :value)))
+            ((string= etype "vector")
+             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-vector+)
+             (let ((elements (getf entry :elements)))
+               (wasm2-const-pool-emit-u32 out (length elements))
+               (dolist (idx elements)
+                 (wasm2-const-pool-emit-u32 out idx))))
+            ((string= etype "function")
+             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-function+)
+             (wasm2-const-pool-emit-string out (getf entry :name))
+             (wasm2-const-pool-emit-maybe-string out (getf entry :package)))
+            (t
+             (error "WASM2: unknown const-pool entry type: ~S" etype)))))
+      out)))
+
+(defun wasm2-reset-external-imports ()
+  (setf *wasm2-external-imports* nil)
+  (setf *wasm2-external-import-map* (make-hash-table :test #'equal))
+  *wasm2-external-imports*)
+
+(defun wasm2-external-import-index (name type-index)
+  (let ((entry (and *wasm2-external-import-map*
+                    (gethash name *wasm2-external-import-map*))))
+    (if entry
+      (let ((idx (car entry))
+            (existing-type (cdr entry)))
+        (unless (eql existing-type type-index)
+          (error "WASM2: external import ~s type mismatch: ~s vs ~s"
+                 name existing-type type-index))
+        idx)
+      (let ((idx (length *wasm2-external-imports*)))
+        (setf *wasm2-external-imports*
+              (append *wasm2-external-imports* (list (list name type-index))))
+        (setf (gethash name *wasm2-external-import-map*)
+              (cons idx type-index))
+        idx))))
+
+(defun wasm2-external-import-call-index (name type-index)
+  (+ (length *wasm2-generic-imports*)
+     (wasm2-external-import-index name type-index)))
 
 (defun wasm2-with-spilled-locals (thunk)
   (if *wasm2-spilling-p*
@@ -1681,6 +1861,48 @@
 ;; For VSP-sensitive subprims that do not GC: avoid spilling via VSP.
 (defun wasm2-emit-call-subprim-no-spill (fixnum)
   (wasm2-emit :call-subprim-no-spill fixnum))
+
+(defun wasm2-macptr->fixnum-fn ()
+  (or (and (fboundp 'macptr->fixnum)
+           (symbol-function 'macptr->fixnum))
+      (error "WASM2: macptr->fixnum is not defined")))
+
+(defun wasm2-emit-external-arg (seg spec arg)
+  (case spec
+    ((:signed-fullword :unsigned-fullword :signed-halfword :unsigned-halfword :signed-byte :unsigned-byte)
+     (wasm2-form seg nil nil arg)
+     (wasm2-emit-unbox-fixnum))
+    (:address
+     (let ((tmp (wasm2-ensure-temp-local)))
+       (wasm2-emit-const (wasm2-macptr->fixnum-fn))
+       (wasm2-form seg nil nil arg)
+       (wasm2-emit :call1 tmp)
+       (wasm2-emit-unbox-fixnum)))
+    (t
+     (error "WASM2: unsupported external-call arg type: ~s" spec))))
+
+(defun wasm2-emit-external-call (seg xfer name argspecs argvals resultspec)
+  (let* ((argc (length argspecs))
+         (type-index (wasm2-external-call-type-index argc))
+         (import-index (wasm2-external-import-call-index name type-index)))
+    (loop for spec in argspecs
+          for arg in argvals
+          do (wasm2-emit-external-arg seg spec arg))
+    (wasm2-with-spilled-locals
+      (lambda ()
+        (wasm2-emit :call-external import-index)))
+    (cond
+      ((eq resultspec :void)
+       (wasm2-emit :drop)
+       (wasm2-emit-const (target-nil-value)))
+      ((eq resultspec :address)
+       (error "WASM2: external-call :address results are not supported"))
+      (t
+       (wasm2-emit-box-fixnum)))
+    (when (wasm2-returning-p xfer)
+      (wasm2-emit :set-arg-z)
+      (wasm2-emit :set-nargs 1)
+      (wasm2-emit :return))))
 
 (defun wasm2-validate-spill-discipline (ir &optional (depth 0))
   (let ((cur depth))
@@ -1768,6 +1990,10 @@
 (defun wasm2-emit-unbox-fixnum ()
   (wasm2-emit :const *wasm2-target-fixnum-shift*)
   (wasm2-emit :i32-shr-s))
+
+(defun wasm2-emit-box-fixnum ()
+  (wasm2-emit :const *wasm2-target-fixnum-shift*)
+  (wasm2-emit :i32-shl))
 
 (defun wasm2-emit-unbox-single ()
   (wasm2-emit :const *wasm2-target-fulltag-misc*)
@@ -1992,6 +2218,13 @@
 (defconstant +wasm2-type-i32-i32-i32+ 4)
 (defconstant +wasm2-type-i32-i32-ret+ 5)
 (defconstant +wasm2-type-i32-i32-i32-i32+ 6)
+(defconstant +wasm2-type-i32x5-i32+ 7)
+(defconstant +wasm2-type-i32x6-i32+ 8)
+(defconstant +wasm2-type-i32x7-i32+ 9)
+(defconstant +wasm2-type-i32x8-i32+ 10)
+(defconstant +wasm2-type-i32x9-i32+ 11)
+(defconstant +wasm2-type-i32x10-i32+ 12)
+(defconstant +wasm2-type-i32x11-i32+ 13)
 
 (defparameter *wasm2-generic-imports*
   (list
@@ -2001,6 +2234,7 @@
    (list :get-nfn "wasm_get_nfn" +wasm2-type-void-i32+)
    (list :get-nargs "wasm_get_nargs" +wasm2-type-void-i32+)
    (list :get-lisp-nil "wasm_get_lisp_nil" +wasm2-type-void-i32+)
+   (list :const-pool-ref "wasm_const_pool_ref" +wasm2-type-i32-i32+)
    (list :return-constant "wasm_return_constant" +wasm2-type-i32-void+)
    (list :set-arg-z "wasm_set_arg_z" +wasm2-type-i32-void+)
    (list :set-arg-y "wasm_set_arg_y" +wasm2-type-i32-void+)
@@ -2019,9 +2253,25 @@
    (list :funcall0 "wasm_funcall0" +wasm2-type-i32-i32-ret+)
    (list :funcall1 "wasm_funcall1" +wasm2-type-i32-i32+)
    (list :funcall2 "wasm_funcall2" +wasm2-type-i32-i32-i32+)
+   (list :funcall3 "wasm_funcall3" +wasm2-type-i32-i32-i32-i32+)
+   (list :funcall4 "wasm_funcall4" +wasm2-type-i32x5-i32+)
+   (list :funcall5 "wasm_funcall5" +wasm2-type-i32x6-i32+)
+   (list :funcall6 "wasm_funcall6" +wasm2-type-i32x7-i32+)
+   (list :funcall7 "wasm_funcall7" +wasm2-type-i32x8-i32+)
+   (list :funcall8 "wasm_funcall8" +wasm2-type-i32x9-i32+)
+   (list :funcall9 "wasm_funcall9" +wasm2-type-i32x10-i32+)
+   (list :funcall10 "wasm_funcall10" +wasm2-type-i32x11-i32+)
    (list :funcall0-mv "wasm_funcall0_mv" +wasm2-type-i32-i32-ret+)
    (list :funcall1-mv "wasm_funcall1_mv" +wasm2-type-i32-i32+)
    (list :funcall2-mv "wasm_funcall2_mv" +wasm2-type-i32-i32-i32+)
+   (list :funcall3-mv "wasm_funcall3_mv" +wasm2-type-i32-i32-i32-i32+)
+   (list :funcall4-mv "wasm_funcall4_mv" +wasm2-type-i32x5-i32+)
+   (list :funcall5-mv "wasm_funcall5_mv" +wasm2-type-i32x6-i32+)
+   (list :funcall6-mv "wasm_funcall6_mv" +wasm2-type-i32x7-i32+)
+   (list :funcall7-mv "wasm_funcall7_mv" +wasm2-type-i32x8-i32+)
+   (list :funcall8-mv "wasm_funcall8_mv" +wasm2-type-i32x9-i32+)
+   (list :funcall9-mv "wasm_funcall9_mv" +wasm2-type-i32x10-i32+)
+   (list :funcall10-mv "wasm_funcall10_mv" +wasm2-type-i32x11-i32+)
    (list :return-values2 "wasm_return_values2" +wasm2-type-i32-i32+)
    (list :return-values3 "wasm_return_values3" +wasm2-type-i32-i32-i32+)
    (list :return-values4 "wasm_return_values4" +wasm2-type-i32-i32-i32-i32+)
@@ -2038,6 +2288,19 @@
    (list :get-current-tcr "wasm_get_current_tcr" +wasm2-type-void-i32+)
    (list :get-tcr-toplevel-function "wasm_get_tcr_toplevel_function" +wasm2-type-i32-i32-ret+)
    (list :set-tcr-toplevel-function "wasm_set_tcr_toplevel_function" +wasm2-type-i32-i32+)))
+
+(defun wasm2-external-call-type-index (argc)
+  (case argc
+    (0 +wasm2-type-void-i32+)
+    (1 +wasm2-type-i32-i32-ret+)
+    (2 +wasm2-type-i32-i32+)
+    (3 +wasm2-type-i32-i32-i32+)
+    (4 +wasm2-type-i32-i32-i32-i32+)
+    (5 +wasm2-type-i32x5-i32+)
+    (6 +wasm2-type-i32x6-i32+)
+    (7 +wasm2-type-i32x7-i32+)
+    (t
+     (error "WASM2: unsupported external-call arity: ~d" argc))))
 
 (defun wasm2-generic-import-index (key)
   (or (position key *wasm2-generic-imports* :key #'car :test #'eq)
@@ -2135,6 +2398,15 @@
         (:const
          (wasm2-push-u8 body #x41)
          (wasm2-emit-sleb32 body (logand (car args) #xffffffff)))
+        (:const-pool-ref
+         (let ((entry-index *wasm2-emit-entry-index*))
+           (unless entry-index
+             (error "WASM2: const-pool-ref emitted without entry index"))
+           (wasm2-push-u8 body #x41)
+           (wasm2-emit-sleb32 body (logand entry-index #xffffffff))
+           (wasm2-push-u8 body #x41)
+           (wasm2-emit-sleb32 body (logand (car args) #xffffffff))
+           (wasm2-emit-call-index body (wasm2-generic-import-index :const-pool-ref))))
         (:f32-const
          (wasm2-emit-f32-const body (car args)))
         (:f64-const
@@ -2254,9 +2526,25 @@
         (:call0 (wasm2-emit-call-with-pending body :funcall0 (car args) label-stack))
         (:call1 (wasm2-emit-call-with-pending body :funcall1 (car args) label-stack))
         (:call2 (wasm2-emit-call-with-pending body :funcall2 (car args) label-stack))
+        (:call3 (wasm2-emit-call-with-pending body :funcall3 (car args) label-stack))
+        (:call4 (wasm2-emit-call-with-pending body :funcall4 (car args) label-stack))
+        (:call5 (wasm2-emit-call-with-pending body :funcall5 (car args) label-stack))
+        (:call6 (wasm2-emit-call-with-pending body :funcall6 (car args) label-stack))
+        (:call7 (wasm2-emit-call-with-pending body :funcall7 (car args) label-stack))
+        (:call8 (wasm2-emit-call-with-pending body :funcall8 (car args) label-stack))
+        (:call9 (wasm2-emit-call-with-pending body :funcall9 (car args) label-stack))
+        (:call10 (wasm2-emit-call-with-pending body :funcall10 (car args) label-stack))
         (:call0-mv (wasm2-emit-call-with-pending body :funcall0-mv (car args) label-stack))
         (:call1-mv (wasm2-emit-call-with-pending body :funcall1-mv (car args) label-stack))
         (:call2-mv (wasm2-emit-call-with-pending body :funcall2-mv (car args) label-stack))
+        (:call3-mv (wasm2-emit-call-with-pending body :funcall3-mv (car args) label-stack))
+        (:call4-mv (wasm2-emit-call-with-pending body :funcall4-mv (car args) label-stack))
+        (:call5-mv (wasm2-emit-call-with-pending body :funcall5-mv (car args) label-stack))
+        (:call6-mv (wasm2-emit-call-with-pending body :funcall6-mv (car args) label-stack))
+        (:call7-mv (wasm2-emit-call-with-pending body :funcall7-mv (car args) label-stack))
+        (:call8-mv (wasm2-emit-call-with-pending body :funcall8-mv (car args) label-stack))
+        (:call9-mv (wasm2-emit-call-with-pending body :funcall9-mv (car args) label-stack))
+        (:call10-mv (wasm2-emit-call-with-pending body :funcall10-mv (car args) label-stack))
         (:call-subprim
          (wasm2-push-u8 body #x41)
          (wasm2-emit-sleb32 body (logand (car args) #xffffffff))
@@ -2265,6 +2553,8 @@
          (wasm2-push-u8 body #x41)
          (wasm2-emit-sleb32 body (logand (car args) #xffffffff))
          (wasm2-emit-call-index body (wasm2-generic-import-index :call-subprim)))
+        (:call-external
+         (wasm2-emit-call-index body (car args)))
         (:return-values2
          (wasm2-emit-call-index body (wasm2-generic-import-index :return-values2)))
         (:return-values3
@@ -2333,18 +2623,19 @@
         (t
          (error "Unhandled WASM2 IR opcode ~s" op))))))
 
-(defun wasm2-generic-module-bytes (ir export-name local-types &optional spillable-locals)
+(defun wasm2-generic-module-bytes (ir export-name local-types &optional spillable-locals entry-index)
   (let* ((out (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
          (types (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
          (imports (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
          (funcs (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
          (exports (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
          (code (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
+         (external-imports (or *wasm2-external-imports* nil))
          (local-count (length local-types)))
     (wasm2-emit-bytes out '(0 #x61 #x73 #x6d 1 0 0 0))
 
     ;; Types
-    (wasm2-emit-uleb types 7)
+    (wasm2-emit-uleb types 14)
     ;; 0: () -> i32
     (wasm2-push-u8 types #x60)
     (wasm2-emit-uleb types 0)
@@ -2387,13 +2678,70 @@
       (wasm2-push-u8 types #x7f))
     (wasm2-emit-uleb types 1)
     (wasm2-push-u8 types #x7f)
+    ;; 7: (i32 i32 i32 i32 i32) -> i32
+    (wasm2-push-u8 types #x60)
+    (wasm2-emit-uleb types 5)
+    (dotimes (_i 5)
+      (wasm2-push-u8 types #x7f))
+    (wasm2-emit-uleb types 1)
+    (wasm2-push-u8 types #x7f)
+    ;; 8: (i32 i32 i32 i32 i32 i32) -> i32
+    (wasm2-push-u8 types #x60)
+    (wasm2-emit-uleb types 6)
+    (dotimes (_i 6)
+      (wasm2-push-u8 types #x7f))
+    (wasm2-emit-uleb types 1)
+    (wasm2-push-u8 types #x7f)
+    ;; 9: (i32 i32 i32 i32 i32 i32 i32) -> i32
+    (wasm2-push-u8 types #x60)
+    (wasm2-emit-uleb types 7)
+    (dotimes (_i 7)
+      (wasm2-push-u8 types #x7f))
+    (wasm2-emit-uleb types 1)
+    (wasm2-push-u8 types #x7f)
+    ;; 10: (i32 i32 i32 i32 i32 i32 i32 i32) -> i32
+    (wasm2-push-u8 types #x60)
+    (wasm2-emit-uleb types 8)
+    (dotimes (_i 8)
+      (wasm2-push-u8 types #x7f))
+    (wasm2-emit-uleb types 1)
+    (wasm2-push-u8 types #x7f)
+    ;; 11: (i32 i32 i32 i32 i32 i32 i32 i32 i32) -> i32
+    (wasm2-push-u8 types #x60)
+    (wasm2-emit-uleb types 9)
+    (dotimes (_i 9)
+      (wasm2-push-u8 types #x7f))
+    (wasm2-emit-uleb types 1)
+    (wasm2-push-u8 types #x7f)
+    ;; 12: (i32 i32 i32 i32 i32 i32 i32 i32 i32 i32) -> i32
+    (wasm2-push-u8 types #x60)
+    (wasm2-emit-uleb types 10)
+    (dotimes (_i 10)
+      (wasm2-push-u8 types #x7f))
+    (wasm2-emit-uleb types 1)
+    (wasm2-push-u8 types #x7f)
+    ;; 13: (i32 i32 i32 i32 i32 i32 i32 i32 i32 i32 i32) -> i32
+    (wasm2-push-u8 types #x60)
+    (wasm2-emit-uleb types 11)
+    (dotimes (_i 11)
+      (wasm2-push-u8 types #x7f))
+    (wasm2-emit-uleb types 1)
+    (wasm2-push-u8 types #x7f)
 
     ;; Imports (memory + functions)
-    (wasm2-emit-uleb imports (1+ (length *wasm2-generic-imports*)))
+    (wasm2-emit-uleb imports (+ 1
+                                (length *wasm2-generic-imports*)
+                                (length external-imports)))
     (wasm2-emit-import-memory imports)
     (dolist (imp *wasm2-generic-imports*)
       (destructuring-bind (_key name type-index) imp
         (declare (ignore _key))
+        (wasm2-emit-string imports "ccl")
+        (wasm2-emit-string imports name)
+        (wasm2-push-u8 imports 0)
+        (wasm2-emit-uleb imports type-index)))
+    (dolist (imp external-imports)
+      (destructuring-bind (name type-index) imp
         (wasm2-emit-string imports "ccl")
         (wasm2-emit-string imports name)
         (wasm2-push-u8 imports 0)
@@ -2404,7 +2752,8 @@
     (wasm2-emit-uleb funcs +wasm2-type-void-void+)
 
     ;; Export
-    (let* ((func-index (length *wasm2-generic-imports*)))
+    (let* ((func-index (+ (length *wasm2-generic-imports*)
+                          (length external-imports))))
       (wasm2-emit-uleb exports 1)
       (wasm2-emit-string exports export-name)
       (wasm2-push-u8 exports 0)
@@ -2422,7 +2771,8 @@
               (wasm2-push-u8 body #x21) ; local.set
               (wasm2-emit-uleb body i)))))
       (let* ((*wasm2-emit-local-count* local-count)
-             (*wasm2-emit-spillable-locals* spillable-locals))
+             (*wasm2-emit-spillable-locals* spillable-locals)
+             (*wasm2-emit-entry-index* entry-index))
         (wasm2-validate-spill-discipline ir)
         (wasm2-emit-pending-throw-guard body)
         (wasm2-emit-generic-ir body ir))
@@ -3545,12 +3895,21 @@
          (*wasm2-label-counter* 0)
          (*wasm2-block-stack* nil)
          (*wasm2-tagbody-stack* nil)
-         (*wasm2-tagbody-global-map* (make-hash-table :test #'eq)))
+         (*wasm2-tagbody-global-map* (make-hash-table :test #'eq))
+         (*wasm2-const-pool* nil)
+         (*wasm2-const-pool-map* nil)
+         (*wasm2-external-imports* nil)
+         (*wasm2-external-import-map* nil))
     (wasm2-reset-locals)
+    (wasm2-reset-external-imports)
+    (when *wasm2-enable-const-pool*
+      (wasm2-reset-const-pool))
     (backend-apply-acode (afunc-acode afunc) nil nil $backend-return)
     (let* ((ir (nreverse *wasm2-ir*))
            (closed-prologue-ir (wasm2-closed-arg-prologue-ir))
-           (arg-prologue-ir (wasm2-arg-prologue-ir)))
+           (arg-prologue-ir (wasm2-arg-prologue-ir))
+           (const-pool-entries (and *wasm2-enable-const-pool*
+                                    (wasm2-const-pool-entries))))
       (when closed-prologue-ir
         (setf ir (append closed-prologue-ir ir)))
       (when arg-prologue-ir
@@ -3798,19 +4157,25 @@
              (entry-index (wasm2-allocate-entry-index))
              (export-name (format nil "ccl_generic_entry_~d" entry-index))
              (spillable-locals (nreverse *wasm2-spillable-locals*))
+             (const-pool-bytes (and const-pool-entries
+                                    (wasm2-const-pool-bytes const-pool-entries)))
              (module-bytes (wasm2-generic-module-bytes ir export-name
                                                        *wasm2-local-types*
-                                                       spillable-locals)))
+                                                       spillable-locals
+                                                       entry-index)))
         (wasm2-register-compiled-module module-bytes
                                         export-name
                                         entry-index
-                                        1)
-        (setf (afunc-lfun-info afunc)
-              (list* 'wasm-module-bytes module-bytes
-                     'wasm-module-export export-name
-                     'wasm-module-version 1
-                     'wasm-entry-index entry-index
-                     (afunc-lfun-info afunc)))
+                                        1
+                                        const-pool-bytes)
+        (let ((info (list* 'wasm-module-bytes module-bytes
+                           'wasm-module-export export-name
+                           'wasm-module-version 1
+                           'wasm-entry-index entry-index
+                           (afunc-lfun-info afunc))))
+          (when const-pool-bytes
+            (setf info (list* 'wasm-const-pool const-pool-bytes info)))
+          (setf (afunc-lfun-info afunc) info))
         (setf (afunc-argsword afunc) bits)
         (setf (afunc-lfun afunc)
               (wasm2-make-const-function entry-index 0 bits))

@@ -290,7 +290,12 @@ export function decodeCompiledModuleRegistry({ memory, registry, nil }) {
     const entryIndex = fixnumValue(vec[2]);
     const moduleVersion = fixnumValue(vec[3]);
 
-    entries.push({ moduleBytes, exportName, entryIndex, moduleVersion });
+    let constPoolBytes = null;
+    if (vec.length >= 5 && vec[4] !== nilObj) {
+      constPoolBytes = readU8Vector(view, memory, vec[4], SUBTAG_U8_VECTOR);
+    }
+
+    entries.push({ moduleBytes, exportName, entryIndex, moduleVersion, constPoolBytes });
 
     list = cdr;
     guard++;
@@ -300,6 +305,47 @@ export function decodeCompiledModuleRegistry({ memory, registry, nil }) {
   }
 
   return entries;
+}
+
+function alignUp(value, align) {
+  return (value + (align - 1)) & ~(align - 1);
+}
+
+function allocScratch(memory, size) {
+  const pageSize = 65536;
+  const aligned = alignUp(size, 16);
+  const base = memory.buffer.byteLength;
+  const pages = Math.ceil(aligned / pageSize);
+  if (pages > 0) {
+    memory.grow(pages);
+  }
+  return base;
+}
+
+export function installConstPoolBytes({
+  kernel = null,
+  kernelExports = null,
+  memory,
+  entryIndex,
+  constPoolBytes,
+} = {}) {
+  if (!memory) throw new Error("installConstPoolBytes: memory is required");
+
+  const exports = kernelExports ?? kernel?.instance?.exports ?? kernel?.exports ?? kernel;
+  if (!exports) throw new Error("installConstPoolBytes: kernel exports are required");
+
+  const install = exports.wasm_const_pool_install;
+  if (typeof install !== "function") {
+    throw new Error("installConstPoolBytes: missing wasm_const_pool_install export");
+  }
+
+  if (!constPoolBytes || constPoolBytes.length === 0) return 0;
+  const bytes = constPoolBytes instanceof Uint8Array
+    ? constPoolBytes
+    : Uint8Array.from(constPoolBytes);
+  const base = allocScratch(memory, bytes.length);
+  new Uint8Array(memory.buffer, base, bytes.length).set(bytes);
+  return install(entryIndex >>> 0, base >>> 0, bytes.length >>> 0) >>> 0;
 }
 
 export async function installCompiledModulesFromRegistry({
@@ -346,6 +392,14 @@ export async function installCompiledModulesFromRegistry({
 
   let installed = 0;
   for (const entry of entries) {
+    if (entry.constPoolBytes?.length) {
+      installConstPoolBytes({
+        kernelExports,
+        memory,
+        entryIndex: entry.entryIndex,
+        constPoolBytes: entry.constPoolBytes,
+      });
+    }
     const { instance } = await instantiateWasm(entry.moduleBytes, imports);
     const fn = instance?.exports?.[entry.exportName];
     if (typeof fn !== "function") {
@@ -410,6 +464,14 @@ export function installCompiledModulesFromRegistrySync({
 
   let installed = 0;
   for (const entry of entries) {
+    if (entry.constPoolBytes?.length) {
+      installConstPoolBytes({
+        kernelExports,
+        memory,
+        entryIndex: entry.entryIndex,
+        constPoolBytes: entry.constPoolBytes,
+      });
+    }
     const { instance } = instantiateWasmSync(entry.moduleBytes, imports);
     const fn = instance?.exports?.[entry.exportName];
     if (typeof fn !== "function") {

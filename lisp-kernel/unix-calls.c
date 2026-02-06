@@ -115,15 +115,6 @@ lisp_open(char *path, int flags, mode_t mode)
     return -1;
   }
 
-  if ((flags & O_ACCMODE) != O_RDONLY) {
-    errno = EACCES;
-    return -1;
-  }
-  if (flags & (O_CREAT | O_TRUNC | O_APPEND | O_EXCL)) {
-    errno = EACCES;
-    return -1;
-  }
-
   size_t len = 0;
   const char *name = wasm_normalize_named_path(path, &len);
   if (len == 0) {
@@ -131,14 +122,66 @@ lisp_open(char *path, int flags, mode_t mode)
     return -1;
   }
 
+  int accmode = (flags & O_ACCMODE);
+  uint32_t mode_flags = 0;
+  switch (accmode) {
+    case O_RDONLY:
+      mode_flags |= WASM_FILE_MODE_READ;
+      break;
+    case O_WRONLY:
+      mode_flags |= WASM_FILE_MODE_WRITE;
+      break;
+    case O_RDWR:
+      mode_flags |= (WASM_FILE_MODE_READ | WASM_FILE_MODE_WRITE);
+      break;
+    default:
+      errno = EINVAL;
+      return -1;
+  }
+
+  if (flags & O_CREAT) {
+    mode_flags |= WASM_FILE_MODE_CREATE;
+  }
+  if (flags & O_TRUNC) {
+    mode_flags |= WASM_FILE_MODE_TRUNCATE;
+  }
+  if (flags & O_APPEND) {
+    mode_flags |= WASM_FILE_MODE_APPEND;
+  }
+
+  if ((flags & O_TRUNC) && !(mode_flags & WASM_FILE_MODE_WRITE)) {
+    errno = EACCES;
+    return -1;
+  }
+
+  struct file_open_payload {
+    uint32_t mode_flags;
+    uint32_t path_ptr;
+    uint32_t path_len;
+    uint32_t reserved;
+  } p;
+
+  p.mode_flags = mode_flags;
+  p.path_ptr = (uint32_t)(uintptr_t)name;
+  p.path_len = (uint32_t)len;
+  p.reserved = 0;
+
   uint32_t sid = 0;
-  uint64_t size = 0;
-  int32_t r = wasm_kernel_stream_open_named(name, (uint32_t)len, &sid, &size);
+  int32_t r = wasm_kernel_stream_open(KERNEL_STREAM_KIND_FILE, &p, (uint32_t)sizeof(p), &sid);
   if (r < 0) {
+    if (mode_flags == WASM_FILE_MODE_READ && (r == -ENOSYS || r == -ENOENT)) {
+      uint64_t size = 0;
+      int32_t rn = wasm_kernel_stream_open_named(name, (uint32_t)len, &sid, &size);
+      if (rn < 0) {
+        errno = -rn;
+        return -1;
+      }
+      (void)size;
+      return (int)sid;
+    }
     errno = -r;
     return -1;
   }
-  (void)size;
   return (int)sid;
 }
 
@@ -154,11 +197,18 @@ lisp_fchmod(int fd, mode_t mode)
 int64_t
 lisp_lseek(int fd, int64_t offset, int whence)
 {
-  (void)fd;
-  (void)offset;
-  (void)whence;
-  errno = ENOSYS;
-  return -1;
+  if (fd < 0) {
+    errno = EBADF;
+    return -1;
+  }
+
+  uint64_t pos = 0;
+  int32_t r = wasm_kernel_stream_seek((uint32_t)fd, offset, (uint32_t)whence, &pos);
+  if (r < 0) {
+    errno = -r;
+    return -1;
+  }
+  return (int64_t)pos;
 }
 
 int
@@ -180,10 +230,21 @@ lisp_close(int fd)
 int
 lisp_ftruncate(int fd, off_t length)
 {
-  (void)fd;
-  (void)length;
-  errno = ENOSYS;
-  return -1;
+  if (fd < 0) {
+    errno = EBADF;
+    return -1;
+  }
+  if (length < 0) {
+    errno = EINVAL;
+    return -1;
+  }
+
+  int32_t r = wasm_kernel_stream_truncate((uint32_t)fd, (uint64_t)length);
+  if (r < 0) {
+    errno = -r;
+    return -1;
+  }
+  return 0;
 }
 
 int
@@ -201,23 +262,74 @@ lisp_stat(char *path, void *buf)
     return -1;
   }
 
-  uint32_t sid = 0;
-  uint64_t size = 0;
-  int32_t r = wasm_kernel_stream_open_named(name, (uint32_t)len, &sid, &size);
-  if (r < 0) {
-    errno = -r;
-    return -1;
-  }
-  (void)wasm_kernel_stream_close(sid);
-
   struct stat *st = (struct stat *)buf;
   memset(st, 0, sizeof(*st));
-  st->st_mode = (mode_t)(S_IFREG | S_IRUSR | S_IRGRP | S_IROTH);
-  st->st_nlink = 1;
-  st->st_size = (off_t)size;
-  st->st_blksize = 4096;
-  st->st_blocks = (blkcnt_t)((size + 511) / 512);
-  return 0;
+
+  struct path_payload {
+    uint32_t flags;
+    uint32_t path_ptr;
+    uint32_t path_len;
+    uint32_t reserved;
+  } p;
+
+  struct probe_response {
+    uint32_t kind;
+    uint32_t flags;
+    uint64_t size;
+    uint64_t mtime_ms;
+  } resp;
+
+  p.flags = 0;
+  p.path_ptr = (uint32_t)(uintptr_t)name;
+  p.path_len = (uint32_t)len;
+  p.reserved = 0;
+
+  uint32_t n = 0;
+  int32_t r = wasm_kernel_request_copy(KERNEL_OP_FS_PROBE, &p, (uint32_t)sizeof(p),
+                                       &resp, (uint32_t)sizeof(resp), &n);
+  if (r == 0) {
+    if (n != sizeof(resp)) {
+      errno = EINVAL;
+      return -1;
+    }
+    int is_dir = (resp.kind != 0);
+    int is_readonly = (resp.flags & 1u) != 0;
+    mode_t perms = is_readonly
+                     ? (mode_t)(S_IRUSR | S_IRGRP | S_IROTH)
+                     : (mode_t)(S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    if (is_dir) {
+      perms = (mode_t)(perms | S_IXUSR | S_IXGRP | S_IXOTH);
+      st->st_mode = (mode_t)(S_IFDIR | perms);
+    } else {
+      st->st_mode = (mode_t)(S_IFREG | perms);
+    }
+    st->st_nlink = 1;
+    st->st_size = (off_t)resp.size;
+    st->st_blksize = 4096;
+    st->st_blocks = (blkcnt_t)((resp.size + 511) / 512);
+    st->st_mtime = (time_t)(resp.mtime_ms / 1000);
+    return 0;
+  }
+
+  if (r == -ENOSYS || r == -ENOENT) {
+    uint32_t sid = 0;
+    uint64_t size = 0;
+    int32_t rn = wasm_kernel_stream_open_named(name, (uint32_t)len, &sid, &size);
+    if (rn < 0) {
+      errno = -rn;
+      return -1;
+    }
+    (void)wasm_kernel_stream_close(sid);
+    st->st_mode = (mode_t)(S_IFREG | S_IRUSR | S_IRGRP | S_IROTH);
+    st->st_nlink = 1;
+    st->st_size = (off_t)size;
+    st->st_blksize = 4096;
+    st->st_blocks = (blkcnt_t)((size + 511) / 512);
+    return 0;
+  }
+
+  errno = -r;
+  return -1;
 }
 
 int

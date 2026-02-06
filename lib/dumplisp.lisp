@@ -302,13 +302,16 @@
                           (skip-embedded-image prepend-fd)
                           (signal-file-error prepend-fd prepend-path))))
 	 (filename (defaulted-native-namestring path)))
+    #-wasm32-target
     (when (probe-file filename)
       (%delete-file filename))
     (when prepend-fd
       ;; Copy the execute mode bits from the prepended "kernel".
       (let ((prepend-fd-mode (nth-value 1 (%fstat prepend-fd))))
 	(setq mode (logior (logand prepend-fd-mode #o111) mode))))
-    (let* ((image-fd (fd-open filename (logior #$O_WRONLY #$O_CREAT) mode)))
+    (let* ((image-fd (fd-open filename (logior #$O_WRONLY #$O_CREAT
+                                               #+wasm32-target #$O_TRUNC)
+                              mode)))
       (unless (>= image-fd 0) (signal-file-error image-fd filename))
       (when prepend-fd
 	(%prepend-file image-fd prepend-fd prepend-len #+windows-target application-type))
@@ -362,4 +365,3 @@
 	    (%setf-macptr descriptor (make-callback-trampoline i (pfe.proc-info pfe)))
             (when name
               (set name descriptor))))))))
-

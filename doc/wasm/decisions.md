@@ -102,3 +102,30 @@ sentinel keeps bindings GC‑visible, avoids relying on incomplete tstack
 semantics, and keeps unwind/restore logic self‑contained in the provider.  
 **References:** `lisp-kernel/wasm-subprims-provider.c` (progv save/restore),
 `lisp-kernel/arm-spentry.s` (tstack‑based reference).
+
+## ADR-0012 — Constant pool v1 for non-immediate constants (WASM2)
+
+**Status:** Accepted  
+**Decision:** WASM2 compiled modules may carry a per‑module constant pool
+(`constPool`) with v1 entries limited to `symbol`, `string`, `vector`, and
+`function`. The loader materializes the pool before activating the module and
+exposes entries via `const-pool-ref` indices.  
+**Why:** Provides a portable, explicit mechanism for non‑immediate constants
+without embedding raw Lisp object addresses in WASM code.  
+**References:** `doc/wasm/const-pool.md:1`, `compiler/WASM/wasm2.lisp:1668`
+
+## ADR-0013 — WASM FFI uses direct module imports (external-call)
+
+**Status:** Accepted  
+**Decision:** `external-call` on WASM compiles to **direct imports** from the
+`ccl` module (the kernel instance). Import signatures are `i32`-only, with
+arguments unboxed per their representation type and a single `i32` return
+value (boxed into a Lisp fixnum on return).  
+**Why:** Keeps the MVP FFI path simple, avoids a secondary `kernel_request`
+channel, and matches the existing WASM2 external import machinery.  
+**Notes:**  
+- The external name must be a literal string at compile time.  
+- Supported argument/result representations are the WASM FFI subset
+  (`:address`, `:signed/unsigned-{fullword,halfword,byte}`, `:void`).  
+- Up to 7 arguments are supported by the current import type set.  
+**References:** `compiler/WASM/wasm2.lisp:1836`, `compiler/WASM/wasm-ffi.lisp:1`

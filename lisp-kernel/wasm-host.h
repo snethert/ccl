@@ -26,10 +26,32 @@
 #define KERNEL_OP_STREAM_OPEN 0x00000005u
 #define KERNEL_OP_STREAM_CLOSE 0x00000006u
 #define KERNEL_OP_COMPILED_MODULES_REFRESH 0x00000007u
+#define KERNEL_OP_FS_PROBE 0x00000008u
+#define KERNEL_OP_FS_TRUENAME 0x00000009u
+#define KERNEL_OP_FS_DIRECTORY 0x0000000au
+#define KERNEL_OP_FS_FILE_WRITE_DATE 0x0000000bu
+#define KERNEL_OP_FS_RENAME 0x0000000cu
+#define KERNEL_OP_FS_DELETE 0x0000000du
+#define KERNEL_OP_FS_ENSURE_DIRS 0x0000000eu
+#define KERNEL_OP_FS_DELETE_EMPTY_DIR 0x0000000fu
+#define KERNEL_OP_FS_DELETE_TREE 0x00000010u
+#define KERNEL_OP_STREAM_SEEK 0x00000011u
+#define KERNEL_OP_STREAM_TRUNCATE 0x00000012u
+#define KERNEL_OP_UI_POLL 0x00000020u
+#define KERNEL_OP_UI_RENDER 0x00000021u
+#define KERNEL_OP_UI_MEASURE_TEXT 0x00000022u
 
 /* Stream kind registry (KERNEL_OP_STREAM_OPEN.kind). */
 #define KERNEL_STREAM_KIND_PIPE 0u
 #define KERNEL_STREAM_KIND_NAMED_RO 1u
+#define KERNEL_STREAM_KIND_FILE 2u
+
+/* File mode flags (STREAM_OPEN file kind). */
+#define WASM_FILE_MODE_READ 0x1u
+#define WASM_FILE_MODE_WRITE 0x2u
+#define WASM_FILE_MODE_CREATE 0x4u
+#define WASM_FILE_MODE_TRUNCATE 0x8u
+#define WASM_FILE_MODE_APPEND 0x10u
 
 /*
  * Host ABI note (copy-based responses, MVP).
@@ -104,6 +126,8 @@ int32_t wasm_kernel_stream_read(uint32_t sid_or_fd, void *buf, uint32_t cap, uin
 
 int32_t wasm_kernel_stream_open(uint32_t kind, const void *arg, uint32_t arg_len, uint32_t *out_sid);
 int32_t wasm_kernel_stream_close(uint32_t sid);
+int32_t wasm_kernel_stream_seek(uint32_t sid, int64_t offset, uint32_t whence, uint64_t *out_pos);
+int32_t wasm_kernel_stream_truncate(uint32_t sid, uint64_t length);
 int32_t wasm_kernel_compiled_modules_refresh(uint32_t registry, uint32_t nil);
 
 /* Named byte sources (read-only). */
@@ -113,6 +137,33 @@ int32_t wasm_kernel_stream_open_named(const char *name,
                                       uint64_t *out_size);
 
 int32_t wasm_kernel_time_now(uint64_t *out_unix_ms);
+
+/* UI bridge helpers (Stage 2+ integration). */
+struct wasm_ui_text_metrics {
+  double width;
+  double height;
+  double ascent;
+  double descent;
+};
+
+int32_t wasm_kernel_ui_poll(uint32_t max_events,
+                            uint32_t max_bytes,
+                            uint32_t flags,
+                            void *out_buf,
+                            uint32_t out_cap,
+                            uint32_t *out_len,
+                            uint32_t *out_count);
+
+int32_t wasm_kernel_ui_render(const void *payload, uint32_t payload_len);
+
+int32_t wasm_kernel_ui_measure_text(const char *font,
+                                    uint32_t font_len,
+                                    const char *text,
+                                    uint32_t text_len,
+                                    struct wasm_ui_text_metrics *out_metrics);
+
+/* Minimal FFI smoke helper (imported by compiled modules). */
+int32_t wasm_ffi_test_add(int32_t a, int32_t b);
 
 #endif /* WASM32 */
 

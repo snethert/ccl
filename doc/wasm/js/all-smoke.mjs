@@ -8,6 +8,8 @@ const tests = [
   "./kernel-request-smoke.mjs",
   "./compiled-modules-refresh-smoke.mjs",
   "./stream-open-smoke.mjs",
+  "./stream-seek-truncate-smoke.mjs",
+  "./stream-seek-truncate-wasm-smoke.mjs",
   "./pending-stdin-smoke.mjs",
   "./ccl-step-smoke.mjs",
   "./start-lisp-smoke.mjs",
