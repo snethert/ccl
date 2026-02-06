@@ -5,7 +5,10 @@ import {
   addTask,
   COMMAND_PALETTE_FILTER_COMMAND,
   COMMAND_PALETTE_EXECUTE_COMMAND,
+  COMMAND_PALETTE_SELECT_NEXT_COMMAND,
   applyCommandPaletteFilter,
+  applyCommandPaletteSelection,
+  resolveCommandPaletteSelection,
   openCommandPaletteWindow,
   refreshCommandPaletteWindow,
   openKeybindingWindow,
@@ -37,6 +40,7 @@ assert.equal(
   state.widgets[paletteWindow.metadata.widgets.listId].props.itemCommand,
   COMMAND_PALETTE_EXECUTE_COMMAND
 );
+assert.equal(paletteItems[0].selected, true);
 
 state = applyCommandPaletteFilter(state, { registry, windowId: paletteWindow.id, filter: "beta" });
 const filteredItems = state.widgets[paletteWindow.metadata.widgets.listId].props.items;
@@ -44,6 +48,10 @@ assert.equal(filteredItems.length, 1);
 assert.ok(filteredItems[0].label.includes("beta.build"));
 
 state = refreshCommandPaletteWindow(state, paletteWindow.id, { registry, filter: "" });
+state = applyCommandPaletteSelection(state, { registry, windowId: paletteWindow.id, delta: 1 });
+const selected = resolveCommandPaletteSelection(state, { windowId: paletteWindow.id });
+assert.equal(selected.commandId, "beta.build");
+assert.equal(COMMAND_PALETTE_SELECT_NEXT_COMMAND, "ui.command-palette.select-next");
 
 state = openKeybindingWindow(state, { registry, taskId: "task-1" });
 const keybindingWindow = Object.values(state.windows).find((win) => win.metadata?.role === "keybindings");

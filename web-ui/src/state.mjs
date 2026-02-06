@@ -14,6 +14,9 @@ import { normalizeFocusTarget, normalizeFocusHistory, setFocus as setFocusCore }
 const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layout", "reason", "error", "job"];
 export const COMMAND_PALETTE_FILTER_COMMAND = "ui.command-palette.filter";
 export const COMMAND_PALETTE_EXECUTE_COMMAND = "ui.command-palette.execute";
+export const COMMAND_PALETTE_SELECT_NEXT_COMMAND = "ui.command-palette.select-next";
+export const COMMAND_PALETTE_SELECT_PREV_COMMAND = "ui.command-palette.select-prev";
+export const COMMAND_PALETTE_EXECUTE_SELECTION_COMMAND = "ui.command-palette.execute-selected";
 
 function ensureCounters(counters) {
   if (counters) {
@@ -394,6 +397,20 @@ function buildCommandPaletteItems(registry, options = {}) {
   return items;
 }
 
+function clampIndex(index, length) {
+  if (length <= 0) return -1;
+  if (!Number.isFinite(index)) return 0;
+  return Math.max(0, Math.min(length - 1, Math.trunc(index)));
+}
+
+function applySelectionToItems(items, selectedIndex) {
+  if (!Array.isArray(items) || items.length === 0) return items;
+  return items.map((item, index) => ({
+    ...item,
+    selected: index === selectedIndex
+  }));
+}
+
 function buildKeybindingItems(registry) {
   if (!registry) {
     return [{ id: "kb-none", label: "No keybindings registered" }];
@@ -652,18 +669,26 @@ export function openCommandPaletteWindow(state, options = {}) {
   ids.filterId = filterAlloc.id;
 
   const items = buildCommandPaletteItems(options.registry ?? null, { filter: filterValue });
+  const selectedIndex = clampIndex(0, items.length);
+  const selectedItems = applySelectionToItems(items, selectedIndex);
+  const selectedCommandId = items[selectedIndex]?.targetCommandId ?? null;
   let listAlloc = allocateWidgetId(nextState, "command-palette-list");
   nextState = addWidget(listAlloc.state, {
     id: listAlloc.id,
     kind: "list",
     parentId: ids.rootId,
-    props: { items, itemCommand: COMMAND_PALETTE_EXECUTE_COMMAND }
+    props: { items: selectedItems, itemCommand: COMMAND_PALETTE_EXECUTE_COMMAND }
   });
   ids.listId = listAlloc.id;
 
   nextState = updateWindow(nextState, allocWindow.id, (window) => ({
     ...window,
-    metadata: { ...(window.metadata ?? {}), role: "command-palette", widgets: ids }
+    metadata: {
+      ...(window.metadata ?? {}),
+      role: "command-palette",
+      widgets: ids,
+      palette: { selectedIndex, selectedCommandId }
+    }
   }));
 
   return nextState;
@@ -678,12 +703,27 @@ export function refreshCommandPaletteWindow(state, windowId, options = {}) {
   if (!widgets?.listId || !widgets?.filterId) {
     return state;
   }
+  const paletteState = window.metadata?.palette ?? {};
   const currentFilter =
     options.filter ??
     state.widgets?.[widgets.filterId]?.props?.value ??
     "";
   const filterValue = String(currentFilter ?? "");
   const items = buildCommandPaletteItems(options.registry ?? null, { filter: filterValue });
+  const hasSelectionIndex = Number.isFinite(options.selectionIndex);
+  let selectedIndex = hasSelectionIndex ? options.selectionIndex : (paletteState.selectedIndex ?? 0);
+  const preferredCommandId = hasSelectionIndex
+    ? null
+    : (options.selectedCommandId ?? paletteState.selectedCommandId ?? null);
+  if (preferredCommandId) {
+    const matchIndex = items.findIndex((item) => item.targetCommandId === preferredCommandId);
+    if (matchIndex !== -1) {
+      selectedIndex = matchIndex;
+    }
+  }
+  selectedIndex = clampIndex(selectedIndex, items.length);
+  const selectedItems = applySelectionToItems(items, selectedIndex);
+  const selectedCommandId = items[selectedIndex]?.targetCommandId ?? null;
   let nextState = state;
   nextState = updateWidget(nextState, widgets.filterId, (widget) => ({
     ...widget,
@@ -691,7 +731,14 @@ export function refreshCommandPaletteWindow(state, windowId, options = {}) {
   }));
   nextState = updateWidget(nextState, widgets.listId, (widget) => ({
     ...widget,
-    props: { ...(widget.props ?? {}), items }
+    props: { ...(widget.props ?? {}), items: selectedItems }
+  }));
+  nextState = updateWindow(nextState, windowId, (nextWindow) => ({
+    ...nextWindow,
+    metadata: {
+      ...(nextWindow.metadata ?? {}),
+      palette: { selectedIndex, selectedCommandId }
+    }
   }));
   return nextState;
 }
@@ -710,6 +757,50 @@ export function applyCommandPaletteFilter(state, options = {}) {
     registry: options.registry ?? null,
     filter: filterValue
   });
+}
+
+export function applyCommandPaletteSelection(state, options = {}) {
+  const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
+  const windowId =
+    options.windowId ??
+    findWindowByRole(state, "command-palette", taskId)?.id ??
+    null;
+  if (!windowId) {
+    return state;
+  }
+  const window = state.windows?.[windowId];
+  if (!window) return state;
+  const paletteState = window.metadata?.palette ?? {};
+  const delta = Number.isFinite(options.delta) ? options.delta : 0;
+  const selectionIndex = Number.isFinite(options.index)
+    ? options.index
+    : (paletteState.selectedIndex ?? 0) + delta;
+  return refreshCommandPaletteWindow(state, windowId, {
+    registry: options.registry ?? null,
+    filter: options.filter ?? null,
+    selectionIndex,
+    selectedCommandId: options.commandId ?? null
+  });
+}
+
+export function resolveCommandPaletteSelection(state, options = {}) {
+  const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
+  const windowId =
+    options.windowId ??
+    findWindowByRole(state, "command-palette", taskId)?.id ??
+    null;
+  if (!windowId) {
+    return { index: -1, item: null, commandId: null };
+  }
+  const window = state.windows?.[windowId];
+  if (!window) return { index: -1, item: null, commandId: null };
+  const paletteState = window.metadata?.palette ?? {};
+  const widgets = window.metadata?.widgets ?? {};
+  const items = state.widgets?.[widgets.listId]?.props?.items ?? [];
+  const index = clampIndex(paletteState.selectedIndex ?? 0, items.length);
+  const item = items[index] ?? null;
+  const commandId = item?.targetCommandId ?? null;
+  return { index, item, commandId };
 }
 
 export function openKeybindingWindow(state, options = {}) {

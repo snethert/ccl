@@ -6,7 +6,10 @@ import {
   addTask,
   COMMAND_PALETTE_FILTER_COMMAND,
   COMMAND_PALETTE_EXECUTE_COMMAND,
+  COMMAND_PALETTE_SELECT_NEXT_COMMAND,
   applyCommandPaletteFilter,
+  applyCommandPaletteSelection,
+  resolveCommandPaletteSelection,
   openCommandPaletteWindow,
   refreshCommandPaletteWindow,
   openKeybindingWindow
@@ -40,6 +43,8 @@ test("command palette lists commands and applies filter", () => {
   assert.ok(items.some((item) => item.label.includes("beta.build")));
   assert.equal(state.widgets[listId].props.itemCommand, COMMAND_PALETTE_EXECUTE_COMMAND);
   assert.equal(items[0].targetCommandId, "alpha.run");
+  assert.equal(items[0].selected, true);
+  assert.equal(items[1].selected, false);
 
   state = applyCommandPaletteFilter(state, {
     registry,
@@ -51,6 +56,19 @@ test("command palette lists commands and applies filter", () => {
   assert.ok(filtered[0].label.includes("alpha.run"));
 
   state = refreshCommandPaletteWindow(state, paletteWindow.id, { registry, filter: "" });
+
+  state = applyCommandPaletteSelection(state, {
+    registry,
+    windowId: paletteWindow.id,
+    delta: 1
+  });
+  const updatedItems = state.widgets[listId].props.items;
+  assert.equal(updatedItems[0].selected, false);
+  assert.equal(updatedItems[1].selected, true);
+
+  const selection = resolveCommandPaletteSelection(state, { windowId: paletteWindow.id });
+  assert.equal(selection.commandId, "beta.build");
+  assert.equal(COMMAND_PALETTE_SELECT_NEXT_COMMAND, "ui.command-palette.select-next");
 });
 
 test("keybinding viewer lists bindings", () => {

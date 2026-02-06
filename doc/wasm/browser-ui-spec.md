@@ -309,6 +309,8 @@ Lisp code runs only within command execution boundaries and explicit yields.
 ### Command palette and keybinding viewer
 - The palette filter is explicit state (e.g., a text input) and re-renders the command list deterministically.
 - Palette list items SHOULD carry the resolved command id for dispatch (e.g., as a target command id).
+- The palette maintains an explicit selected item; navigation updates selection without mutating command order.
+- Executing the selected item MUST use the target command id.
 - Keybinding viewer entries SHOULD encode scope, scope id (if any), key, and command id in a human-readable label.
 
 ### Focus manager

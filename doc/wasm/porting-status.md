@@ -162,7 +162,11 @@
   `identity-smoke.mjs`, `identity-y-smoke.mjs`,
   `fixnum-add-smoke.mjs`, `fixnum-sub-smoke.mjs`, `fixnum-ops-smoke.mjs`,
   `fixnum-overflow-smoke.mjs`, `compiler-smoke.mjs`, `float-smoke.mjs`,
-  `web-ui-list-smoke.mjs`, `closure-unwind-mv-smoke.mjs`,
+  `web-ui-list-smoke.mjs`, `web-ui-virtual-smoke.mjs`,
+  `web-ui-canvas-smoke.mjs`, `web-ui-webgl-smoke.mjs`,
+  `web-ui-command-ui-smoke.mjs`, `web-ui-persist-smoke.mjs`,
+  `web-ui-layout-focus-smoke.mjs`, `web-ui-inspector-smoke.mjs`,
+  `web-ui-debugger-smoke.mjs`, `closure-unwind-mv-smoke.mjs`,
   `mv-helpers-smoke.mjs`, `mvcall-smoke.mjs`.
 
 ## Major Gaps / Next Blockers

@@ -22,6 +22,9 @@ export {
   refreshDebuggerWindow,
   COMMAND_PALETTE_FILTER_COMMAND,
   COMMAND_PALETTE_EXECUTE_COMMAND,
+  COMMAND_PALETTE_SELECT_NEXT_COMMAND,
+  COMMAND_PALETTE_SELECT_PREV_COMMAND,
+  COMMAND_PALETTE_EXECUTE_SELECTION_COMMAND,
   raiseError,
   acknowledgeError,
   upsertJob,
@@ -30,6 +33,8 @@ export {
   openCommandPaletteWindow,
   refreshCommandPaletteWindow,
   applyCommandPaletteFilter,
+  applyCommandPaletteSelection,
+  resolveCommandPaletteSelection,
   openKeybindingWindow,
   refreshKeybindingWindow
 } from "./state.mjs";

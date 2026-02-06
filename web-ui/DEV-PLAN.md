@@ -313,3 +313,4 @@ Exit criteria:
 - Added command palette and keybinding viewer window builders.
 - Added keybinding resolution trace helper.
 - Added unit tests and a WASM smoke test for command palette and keybinding viewer.
+- Added palette selection state helpers and selected-item execution metadata.
