@@ -302,6 +302,14 @@ Lisp code runs only within command execution boundaries and explicit yields.
 - Commands include ID, docstring, enablement predicate, and execution function.
 - Enablement predicates return (enabled, reason) for inspectability.
 - Keybindings resolve to commands in a deterministic, centralized resolver.
+- The command palette is a task-scoped window that lists commands deterministically and supports filtering.
+- The keybinding viewer is a task-scoped window that lists bindings across scopes with stable formatting.
+- Keybinding resolution exposes a trace: an ordered list of scope checks with scope id, key, match flag, and resolved command.
+
+### Command palette and keybinding viewer
+- The palette filter is explicit state (e.g., a text input) and re-renders the command list deterministically.
+- Palette list items SHOULD carry the resolved command id for dispatch (e.g., as a target command id).
+- Keybinding viewer entries SHOULD encode scope, scope id (if any), key, and command id in a human-readable label.
 
 ### Focus manager
 - Maintain authoritative focus state in Lisp: active task, active window, focused widget.
@@ -340,6 +348,8 @@ Lisp code runs only within command execution boundaries and explicit yields.
 - Provide a deterministic focus test suite that replays action sequences and compares focus history.
 - Provide a layout drift test suite that serializes layout before/after actions.
 - Provide a command routing test suite that verifies scope precedence and disabled reasons.
+- Provide command palette and keybinding viewer tests that validate listing and filtering.
+- Provide keybinding resolution trace tests for deterministic scope evaluation.
 - Provide a rendering diff test suite for output record stability.
 - Provide a Canvas/WebGL hit-test test suite with fixed fixtures.
 - Provide IME and text editing tests: composition, dead keys, mobile virtual keyboard, selection persistence.

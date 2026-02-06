@@ -6,6 +6,7 @@ import {
   registerCommand,
   bindKey,
   resolveKey,
+  resolveKeyWithTrace,
   commandEnabled,
   executeCommand,
   makeContext
@@ -33,6 +34,32 @@ test("command routing uses deterministic precedence", () => {
   });
   const resolved = resolveKey(registry, "K", ctx);
   assert.equal(resolved, "cmd.global");
+});
+
+test("resolveKeyWithTrace exposes scope decisions", () => {
+  const registry = makeRegistry();
+  const ctx = makeContext({ selection: null }, {
+    taskId: "task-1",
+    contextId: "ctx-1",
+    widgetId: "widget-1"
+  });
+  const resolved = resolveKeyWithTrace(registry, "K", ctx);
+  assert.equal(resolved.commandId, "cmd.global");
+  assert.equal(resolved.trace.length, 1);
+  assert.deepEqual(resolved.trace[0], {
+    scope: "global",
+    scopeId: null,
+    key: "K",
+    commandId: "cmd.global",
+    matched: true,
+    reason: null
+  });
+
+  const miss = resolveKeyWithTrace(registry, "Z", ctx);
+  assert.equal(miss.commandId, null);
+  assert.equal(miss.trace.length, registry.precedence.length);
+  assert.equal(miss.trace[0].scope, "global");
+  assert.equal(miss.trace[0].matched, false);
 });
 
 test("enablement reasons are returned and enforce dispatch", () => {

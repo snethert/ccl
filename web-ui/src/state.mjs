@@ -12,6 +12,8 @@ import {
 import { normalizeFocusTarget, normalizeFocusHistory, setFocus as setFocusCore } from "./focus.mjs";
 
 const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layout", "reason", "error", "job"];
+export const COMMAND_PALETTE_FILTER_COMMAND = "ui.command-palette.filter";
+export const COMMAND_PALETTE_EXECUTE_COMMAND = "ui.command-palette.execute";
 
 function ensureCounters(counters) {
   if (counters) {
@@ -365,6 +367,71 @@ function summarizeCommands(state) {
   return items;
 }
 
+function buildCommandPaletteItems(registry, options = {}) {
+  if (!registry) {
+    return [{ id: "cmd-none", label: "No command registry available" }];
+  }
+  const filter = String(options.filter ?? "").trim().toLowerCase();
+  const entries = [...registry.commands.values()].sort((a, b) => a.id.localeCompare(b.id));
+  const items = [];
+  for (const cmd of entries) {
+    const title = cmd.title ?? cmd.id;
+    const doc = cmd.doc ?? "";
+    const haystack = `${cmd.id} ${title} ${doc}`.toLowerCase();
+    if (filter && !haystack.includes(filter)) {
+      continue;
+    }
+    const label = title && title !== cmd.id ? `${cmd.id} — ${title}` : cmd.id;
+    items.push({
+      id: `cmd-${cmd.id}`,
+      label,
+      targetCommandId: cmd.id
+    });
+  }
+  if (items.length === 0) {
+    items.push({ id: "cmd-empty", label: filter ? "No commands matched" : "No commands registered" });
+  }
+  return items;
+}
+
+function buildKeybindingItems(registry) {
+  if (!registry) {
+    return [{ id: "kb-none", label: "No keybindings registered" }];
+  }
+  const items = [];
+  const scopes = Array.isArray(registry.precedence)
+    ? [...registry.precedence]
+    : Object.keys(registry.keymaps ?? {});
+  for (const scope of scopes) {
+    if (scope === "global") {
+      const entries = [...registry.keymaps.global.entries()].sort(([a], [b]) => a.localeCompare(b));
+      for (const [key, commandId] of entries) {
+        items.push({
+          id: `kb-${scope}-${key}`,
+          label: `${scope}: ${key} → ${commandId ?? "unbound"}`
+        });
+      }
+      continue;
+    }
+    const scoped = registry.keymaps[scope];
+    if (!scoped) continue;
+    const scopedEntries = [...scoped.entries()].sort(([a], [b]) => String(a).localeCompare(String(b)));
+    for (const [scopeId, map] of scopedEntries) {
+      const entries = [...(map?.entries?.() ?? [])].sort(([a], [b]) => a.localeCompare(b));
+      for (const [key, commandId] of entries) {
+        items.push({
+          id: `kb-${scope}-${scopeId}-${key}`,
+          label: `${scope}(${scopeId}): ${key} → ${commandId ?? "unbound"}`
+        });
+      }
+    }
+  }
+  if (items.length === 0) {
+    items.push({ id: "kb-empty", label: "No keybindings registered" });
+  }
+  return items;
+}
+
 function summarizeWindows(state) {
   const items = [];
   const entries = Object.values(state.windows ?? {}).sort((a, b) => a.id.localeCompare(b.id));
@@ -523,6 +590,202 @@ export function refreshInspectorWindow(state, windowId) {
     }));
   }
   return nextState;
+}
+
+export function openCommandPaletteWindow(state, options = {}) {
+  const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
+  if (!taskId) {
+    throw new Error("Command palette requires a task");
+  }
+  const existing = findWindowByRole(state, "command-palette", taskId);
+  if (existing) {
+    return refreshCommandPaletteWindow(state, existing.id, options);
+  }
+
+  const allocWindow = allocateId(state.idCounters, "window", "command-palette");
+  let nextState = {
+    ...state,
+    idCounters: allocWindow.counters
+  };
+  nextState = addWindow(nextState, {
+    id: allocWindow.id,
+    taskId,
+    kind: "palette",
+    title: "Command Palette",
+    metadata: { role: "command-palette" }
+  });
+
+  let ids = {};
+  let rootAlloc = allocateWidgetId(nextState, "command-palette-root");
+  nextState = addWidget(rootAlloc.state, {
+    id: rootAlloc.id,
+    kind: "container",
+    windowId: allocWindow.id,
+    props: { className: "ui-command-palette-root" }
+  });
+  ids.rootId = rootAlloc.id;
+
+  let labelAlloc = allocateWidgetId(nextState, "command-palette-label");
+  nextState = addWidget(labelAlloc.state, {
+    id: labelAlloc.id,
+    kind: "label",
+    parentId: ids.rootId,
+    props: { text: "Commands" }
+  });
+  ids.labelId = labelAlloc.id;
+
+  const filterValue = String(options.filter ?? "");
+  let filterAlloc = allocateWidgetId(nextState, "command-palette-filter");
+  const filterCommandId = Object.prototype.hasOwnProperty.call(options, "filterCommandId")
+    ? options.filterCommandId
+    : COMMAND_PALETTE_FILTER_COMMAND;
+  nextState = addWidget(filterAlloc.state, {
+    id: filterAlloc.id,
+    kind: "text-input",
+    parentId: ids.rootId,
+    props: {
+      placeholder: "Filter commands",
+      value: filterValue,
+      command: filterCommandId
+    }
+  });
+  ids.filterId = filterAlloc.id;
+
+  const items = buildCommandPaletteItems(options.registry ?? null, { filter: filterValue });
+  let listAlloc = allocateWidgetId(nextState, "command-palette-list");
+  nextState = addWidget(listAlloc.state, {
+    id: listAlloc.id,
+    kind: "list",
+    parentId: ids.rootId,
+    props: { items, itemCommand: COMMAND_PALETTE_EXECUTE_COMMAND }
+  });
+  ids.listId = listAlloc.id;
+
+  nextState = updateWindow(nextState, allocWindow.id, (window) => ({
+    ...window,
+    metadata: { ...(window.metadata ?? {}), role: "command-palette", widgets: ids }
+  }));
+
+  return nextState;
+}
+
+export function refreshCommandPaletteWindow(state, windowId, options = {}) {
+  const window = state.windows?.[windowId];
+  if (!window || window.metadata?.role !== "command-palette") {
+    throw new Error("Window is not a command palette");
+  }
+  const widgets = window.metadata?.widgets;
+  if (!widgets?.listId || !widgets?.filterId) {
+    return state;
+  }
+  const currentFilter =
+    options.filter ??
+    state.widgets?.[widgets.filterId]?.props?.value ??
+    "";
+  const filterValue = String(currentFilter ?? "");
+  const items = buildCommandPaletteItems(options.registry ?? null, { filter: filterValue });
+  let nextState = state;
+  nextState = updateWidget(nextState, widgets.filterId, (widget) => ({
+    ...widget,
+    props: { ...(widget.props ?? {}), value: filterValue }
+  }));
+  nextState = updateWidget(nextState, widgets.listId, (widget) => ({
+    ...widget,
+    props: { ...(widget.props ?? {}), items }
+  }));
+  return nextState;
+}
+
+export function applyCommandPaletteFilter(state, options = {}) {
+  const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
+  const windowId =
+    options.windowId ??
+    findWindowByRole(state, "command-palette", taskId)?.id ??
+    null;
+  if (!windowId) {
+    return state;
+  }
+  const filterValue = options.filter ?? options.inputValue ?? "";
+  return refreshCommandPaletteWindow(state, windowId, {
+    registry: options.registry ?? null,
+    filter: filterValue
+  });
+}
+
+export function openKeybindingWindow(state, options = {}) {
+  const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
+  if (!taskId) {
+    throw new Error("Keybinding viewer requires a task");
+  }
+  const existing = findWindowByRole(state, "keybindings", taskId);
+  if (existing) {
+    return refreshKeybindingWindow(state, existing.id, options);
+  }
+
+  const allocWindow = allocateId(state.idCounters, "window", "keybindings");
+  let nextState = {
+    ...state,
+    idCounters: allocWindow.counters
+  };
+  nextState = addWindow(nextState, {
+    id: allocWindow.id,
+    taskId,
+    kind: "keybindings",
+    title: "Keybindings",
+    metadata: { role: "keybindings" }
+  });
+
+  let ids = {};
+  let rootAlloc = allocateWidgetId(nextState, "keybindings-root");
+  nextState = addWidget(rootAlloc.state, {
+    id: rootAlloc.id,
+    kind: "container",
+    windowId: allocWindow.id,
+    props: { className: "ui-keybindings-root" }
+  });
+  ids.rootId = rootAlloc.id;
+
+  let labelAlloc = allocateWidgetId(nextState, "keybindings-label");
+  nextState = addWidget(labelAlloc.state, {
+    id: labelAlloc.id,
+    kind: "label",
+    parentId: ids.rootId,
+    props: { text: "Keybindings" }
+  });
+  ids.labelId = labelAlloc.id;
+
+  const items = buildKeybindingItems(options.registry ?? null);
+  let listAlloc = allocateWidgetId(nextState, "keybindings-list");
+  nextState = addWidget(listAlloc.state, {
+    id: listAlloc.id,
+    kind: "list",
+    parentId: ids.rootId,
+    props: { items }
+  });
+  ids.listId = listAlloc.id;
+
+  nextState = updateWindow(nextState, allocWindow.id, (window) => ({
+    ...window,
+    metadata: { ...(window.metadata ?? {}), role: "keybindings", widgets: ids }
+  }));
+
+  return nextState;
+}
+
+export function refreshKeybindingWindow(state, windowId, options = {}) {
+  const window = state.windows?.[windowId];
+  if (!window || window.metadata?.role !== "keybindings") {
+    throw new Error("Window is not a keybinding viewer");
+  }
+  const widgets = window.metadata?.widgets;
+  if (!widgets?.listId) {
+    return state;
+  }
+  const items = buildKeybindingItems(options.registry ?? null);
+  return updateWidget(state, widgets.listId, (widget) => ({
+    ...widget,
+    props: { ...(widget.props ?? {}), items }
+  }));
 }
 
 export function raiseError(state, error, options = {}) {

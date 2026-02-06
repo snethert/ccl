@@ -20,11 +20,18 @@ export {
   refreshInspectorWindow,
   openDebuggerWindow,
   refreshDebuggerWindow,
+  COMMAND_PALETTE_FILTER_COMMAND,
+  COMMAND_PALETTE_EXECUTE_COMMAND,
   raiseError,
   acknowledgeError,
   upsertJob,
   setSelection,
-  setFocus
+  setFocus,
+  openCommandPaletteWindow,
+  refreshCommandPaletteWindow,
+  applyCommandPaletteFilter,
+  openKeybindingWindow,
+  refreshKeybindingWindow
 } from "./state.mjs";
 export {
   createRegistry,
@@ -33,6 +40,7 @@ export {
   getCommand,
   bindKey,
   resolveKey,
+  resolveKeyWithTrace,
   commandEnabled,
   executeCommand
 } from "./commands.mjs";

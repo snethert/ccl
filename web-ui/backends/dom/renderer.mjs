@@ -253,5 +253,6 @@ export function createDomBackend({ document: doc, container } = {}) {
 
 export function createDomRoot(container, options = {}) {
   const backend = createDomBackend({ document: options.document, container });
-  return createRoot(backend, container);
+  const schedule = typeof options.schedule === "function" ? options.schedule : null;
+  return createRoot(backend, container, { schedule });
 }

@@ -98,6 +98,64 @@ export function resolveKey(registry, key, ctx) {
   return null;
 }
 
+export function resolveKeyWithTrace(registry, key, ctx = {}) {
+  const trace = [];
+  for (const scope of registry.precedence) {
+    if (scope === "global") {
+      const cmd = registry.keymaps.global.get(key) ?? null;
+      trace.push({
+        scope,
+        scopeId: null,
+        key,
+        commandId: cmd,
+        matched: Boolean(cmd),
+        reason: cmd ? null : "unbound"
+      });
+      if (cmd) {
+        return { commandId: cmd, trace };
+      }
+      continue;
+    }
+    const scopeId = ctx[`${scope}Id`] ?? null;
+    if (!scopeId) {
+      trace.push({
+        scope,
+        scopeId: null,
+        key,
+        commandId: null,
+        matched: false,
+        reason: "missing-scope-id"
+      });
+      continue;
+    }
+    const scoped = registry.keymaps[scope].get(scopeId);
+    if (!scoped) {
+      trace.push({
+        scope,
+        scopeId,
+        key,
+        commandId: null,
+        matched: false,
+        reason: "no-scope-map"
+      });
+      continue;
+    }
+    const cmd = scoped.get(key) ?? null;
+    trace.push({
+      scope,
+      scopeId,
+      key,
+      commandId: cmd,
+      matched: Boolean(cmd),
+      reason: cmd ? null : "unbound"
+    });
+    if (cmd) {
+      return { commandId: cmd, trace };
+    }
+  }
+  return { commandId: null, trace };
+}
+
 export function getCommand(registry, id) {
   return registry.commands.get(id) || null;
 }

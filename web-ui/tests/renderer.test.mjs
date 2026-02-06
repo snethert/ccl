@@ -257,3 +257,33 @@ test("renderer removes nodes missing from next tree", () => {
     ]
   });
 });
+
+test("renderer batches renders when schedule is provided", () => {
+  const backend = createMockBackend();
+  const container = backend.createElement("root");
+  const scheduled = [];
+  const root = createRoot(backend, container, {
+    schedule: (flush) => {
+      scheduled.push(flush);
+    }
+  });
+
+  const tree1 = createElement("div", { id: "first" }, [createText("One")], "root");
+  const tree2 = createElement("div", { id: "second" }, [createText("Two")], "root");
+
+  root.render(tree1);
+  root.render(tree2);
+
+  assert.equal(container.children.length, 0);
+  assert.equal(scheduled.length, 1);
+
+  scheduled[0]();
+  assert.equal(container.children.length, 1);
+  const snapshot = serialize(container);
+  assert.equal(snapshot.children[0].props.id, "second");
+
+  root.render(tree1);
+  root.flush();
+  const flushed = serialize(container);
+  assert.equal(flushed.children[0].props.id, "first");
+});

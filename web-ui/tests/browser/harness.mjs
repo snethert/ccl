@@ -206,6 +206,94 @@ async function run() {
   }
   const commandListOk = listItemId === "alpha";
 
+  const virtualTarget = document.createElement("div");
+  virtualTarget.id = "virtual-widget-target";
+  root.appendChild(virtualTarget);
+
+  let virtualState = createState();
+  virtualState = addTask(virtualState, { id: "task-virtual", title: "Virtual Task" });
+  virtualState = addWindow(virtualState, { id: "win-virtual", taskId: "task-virtual", kind: "document" });
+  virtualState = addWidget(virtualState, { id: "virtual-root", kind: "container", windowId: "win-virtual" });
+  virtualState = addWidget(virtualState, {
+    id: "virtual-list",
+    kind: "list",
+    parentId: "virtual-root",
+    props: {
+      virtual: true,
+      rowHeight: 20,
+      viewportHeight: 60,
+      scrollTop: 40,
+      overscan: 0,
+      items: Array.from({ length: 10 }, (_, index) => ({ id: `row-${index}`, label: `Row ${index}` }))
+    }
+  });
+  virtualState = addWidget(virtualState, {
+    id: "virtual-tree",
+    kind: "tree",
+    parentId: "virtual-root",
+    props: {
+      virtual: true,
+      rowHeight: 10,
+      viewportHeight: 15,
+      scrollTop: 0,
+      overscan: 0,
+      items: [
+        { id: "parent", label: "Parent", expanded: true, children: [{ id: "child", label: "Child" }] },
+        { id: "sibling", label: "Sibling", expanded: false, children: [{ id: "hidden", label: "Hidden" }] }
+      ]
+    }
+  });
+  virtualState = addWidget(virtualState, {
+    id: "virtual-table",
+    kind: "table",
+    parentId: "virtual-root",
+    props: {
+      virtual: true,
+      rowHeight: 20,
+      viewportHeight: 40,
+      scrollTop: 0,
+      overscan: 0,
+      columns: [
+        { id: "col-a", label: "Column A" },
+        { id: "col-b", label: "Column B" }
+      ],
+      rows: Array.from({ length: 6 }, (_, index) => ({
+        id: `row-${index}`,
+        cells: { "col-a": `A${index}`, "col-b": `B${index}` }
+      }))
+    }
+  });
+
+  const virtualRoot = createDomRoot(virtualTarget, { document });
+  virtualRoot.render(renderWindow(virtualState, "win-virtual", { registry }));
+
+  const virtualList = virtualTarget.querySelector("[data-widget-id='virtual-list']");
+  const virtualListRows = virtualList ? virtualList.querySelectorAll("[data-virtual-index]") : [];
+  const virtualListOk =
+    virtualList &&
+    virtualList.getAttribute("data-virtual-start") === "2" &&
+    virtualList.getAttribute("data-virtual-end") === "5" &&
+    virtualList.getAttribute("data-virtual-total") === "10" &&
+    virtualListRows.length === 3;
+
+  const virtualTree = virtualTarget.querySelector("[data-widget-id='virtual-tree']");
+  const virtualTreeRows = virtualTree ? virtualTree.querySelectorAll("[data-virtual-index]") : [];
+  const virtualTreeOk =
+    virtualTree &&
+    virtualTree.getAttribute("data-virtual-start") === "0" &&
+    virtualTree.getAttribute("data-virtual-end") === "2" &&
+    virtualTree.getAttribute("data-virtual-total") === "3" &&
+    virtualTreeRows.length === 2;
+
+  const virtualTable = virtualTarget.querySelector("[data-widget-id='virtual-table']");
+  const virtualTableRows = virtualTable ? virtualTable.querySelectorAll("[data-virtual-index]") : [];
+  const virtualTableOk =
+    virtualTable &&
+    virtualTable.getAttribute("data-virtual-start") === "0" &&
+    virtualTable.getAttribute("data-virtual-end") === "2" &&
+    virtualTable.getAttribute("data-virtual-total") === "6" &&
+    virtualTableRows.length === 2;
+
   const canvasWidgetTarget = document.createElement("div");
   canvasWidgetTarget.id = "canvas-widget-target";
   root.appendChild(canvasWidgetTarget);
@@ -398,6 +486,9 @@ async function run() {
     commandInvokeOk &&
     commandInputOk &&
     commandListOk &&
+    virtualListOk &&
+    virtualTreeOk &&
+    virtualTableOk &&
     canvasWidgetOk &&
     canvasWidgetCommandOk &&
     webglWidgetOk &&
@@ -424,6 +515,9 @@ async function run() {
     commandInvokeOk,
     commandInputOk,
     commandListOk,
+    virtualListOk,
+    virtualTreeOk,
+    virtualTableOk,
     canvasWidgetOk,
     canvasWidgetCommandOk,
     webglWidgetOk,

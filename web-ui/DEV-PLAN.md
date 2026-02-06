@@ -88,6 +88,17 @@ Exit criteria:
 - 10k row lists remain interactive.
 - Typical diagrams/timelines meet frame budget targets.
 
+### Phase 9: Command Surface and Keybinding UX
+Goals:
+- Command palette with filterable command list.
+- Keybinding viewer with scope-aware listings.
+- Inspectable keybinding resolution trace.
+
+Exit criteria:
+- Palette lists commands deterministically and supports filtering.
+- Keybinding viewer lists bindings across scopes.
+- Key resolution trace is testable and deterministic.
+
 ## Phase 0 Detailed Plan (Test Harness First)
 
 ### Objectives
@@ -289,3 +300,16 @@ Exit criteria:
 - Added best-effort focus/selection persistence with restore validation.
 - Documented non-persistence of presentations and runtime command handlers.
 - Added persistence unit tests, browser harness check, and WASM smoke test.
+
+### Phase 8 Progress
+- Added renderer batching via scheduled root flushes.
+- Added virtualized list/tree/table widgets with stable data attributes and spacer layouts.
+- Extended canvas/webgl widgets to accept dirty-rect hints for fine-grained redraws.
+- Added unit tests for batching, virtualization, and dirty-rect forwarding.
+- Extended browser harness coverage for virtualized widgets.
+- Added virtual widget WASM smoke test and wired it into the smoke runner.
+
+### Phase 9 Progress
+- Added command palette and keybinding viewer window builders.
+- Added keybinding resolution trace helper.
+- Added unit tests and a WASM smoke test for command palette and keybinding viewer.

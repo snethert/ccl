@@ -133,39 +133,74 @@ function reconcileChildren(parentHandle, oldChildren, newChildrenTrees, backend)
   return nextChildren;
 }
 
-export function createRoot(backend, container) {
+export function createRoot(backend, container, options = {}) {
   let rootInstance = null;
+  let pendingTree = null;
+  let pendingSet = false;
+  let scheduled = false;
+  const schedule = typeof options.schedule === "function" ? options.schedule : null;
+
+  function apply(tree) {
+    if (!tree) {
+      if (rootInstance) {
+        backend.removeChild(container, rootInstance.handle);
+        unmount(rootInstance, backend);
+        rootInstance = null;
+      }
+      return;
+    }
+    if (!rootInstance) {
+      const instance = mount(tree, backend);
+      backend.appendChild(container, instance.handle);
+      rootInstance = instance;
+      return;
+    }
+    if (isSameType(rootInstance.tree, tree)) {
+      rootInstance = updateInstance(rootInstance, tree, backend);
+      return;
+    }
+    const next = mount(tree, backend);
+    if (backend.replaceChild) {
+      backend.replaceChild(container, next.handle, rootInstance.handle);
+    } else {
+      backend.removeChild(container, rootInstance.handle);
+      backend.appendChild(container, next.handle);
+    }
+    unmount(rootInstance, backend);
+    rootInstance = next;
+  }
+
+  function flush() {
+    scheduled = false;
+    if (!pendingSet) return;
+    const tree = pendingTree;
+    pendingTree = null;
+    pendingSet = false;
+    apply(tree);
+  }
+
   return {
     render(tree) {
-      if (!tree) {
-        if (rootInstance) {
-          backend.removeChild(container, rootInstance.handle);
-          unmount(rootInstance, backend);
-          rootInstance = null;
-        }
+      if (!schedule) {
+        apply(tree);
         return;
       }
-      if (!rootInstance) {
-        const instance = mount(tree, backend);
-        backend.appendChild(container, instance.handle);
-        rootInstance = instance;
-        return;
+      pendingTree = tree;
+      pendingSet = true;
+      if (!scheduled) {
+        scheduled = true;
+        schedule(flush);
       }
-      if (isSameType(rootInstance.tree, tree)) {
-        rootInstance = updateInstance(rootInstance, tree, backend);
-        return;
-      }
-      const next = mount(tree, backend);
-      if (backend.replaceChild) {
-        backend.replaceChild(container, next.handle, rootInstance.handle);
-      } else {
-        backend.removeChild(container, rootInstance.handle);
-        backend.appendChild(container, next.handle);
-      }
-      unmount(rootInstance, backend);
-      rootInstance = next;
+    },
+    flush() {
+      if (!schedule) return;
+      flush();
     },
     unmount() {
+      if (schedule) {
+        pendingTree = null;
+        scheduled = false;
+      }
       if (!rootInstance) return;
       backend.removeChild(container, rootInstance.handle);
       unmount(rootInstance, backend);
