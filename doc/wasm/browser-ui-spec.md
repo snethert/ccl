@@ -135,6 +135,7 @@ Acceptance checks:
 - Every window MUST belong to exactly one task.
 - Tasks MUST have a stable ID, label, and window list/graph with resumable focus.
 - Task navigation MUST be first class (switch, list, close, archive).
+- Task list UI MUST surface these actions and make task switching deterministic and inspectable.
 - Debugger/inspector windows MUST attach to the task that caused them.
 
 Acceptance checks:

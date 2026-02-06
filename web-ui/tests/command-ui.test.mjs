@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   createState,
   addTask,
+  addWindow,
   COMMAND_PALETTE_FILTER_COMMAND,
   COMMAND_PALETTE_EXECUTE_COMMAND,
   COMMAND_PALETTE_SELECT_NEXT_COMMAND,
@@ -13,6 +14,10 @@ import {
   KEYBINDINGS_OPEN_COMMAND,
   KEYBINDINGS_CLOSE_COMMAND,
   COMMAND_SURFACE_DISMISS_COMMAND,
+  TASK_LIST_COMMAND,
+  TASK_SWITCH_COMMAND,
+  TASK_CLOSE_COMMAND,
+  TASK_ARCHIVE_COMMAND,
   applyCommandPaletteFilter,
   applyCommandPaletteSelection,
   resolveCommandPaletteSelection,
@@ -21,6 +26,7 @@ import {
   openKeybindingWindow,
   refreshKeybindingWindow,
   registerCommandPaletteCommands,
+  registerTaskCommands,
   registerCommandSurfaceCommands,
   bindCommandPaletteDefaults,
   bindCommandSurfaceDefaults
@@ -164,6 +170,44 @@ test("command surface open/close commands toggle windows", () => {
   assert.equal(keybindingsShortcut, KEYBINDINGS_OPEN_COMMAND);
   const dismissShortcut = resolveKey(registry, "Escape", {});
   assert.equal(dismissShortcut, COMMAND_SURFACE_DISMISS_COMMAND);
+});
+
+test("task commands list, switch, archive, and close", () => {
+  const registry = createRegistry();
+  registerTaskCommands(registry);
+
+  let state = createState();
+  state = addTask(state, { id: "task-1", title: "Task One" });
+  state = addTask(state, { id: "task-2", title: "Task Two" });
+  state = addWindow(state, { id: "win-1", taskId: "task-1", title: "Win 1" });
+  state = addWindow(state, { id: "win-2", taskId: "task-2", title: "Win 2" });
+
+  const ctx = makeContext(state, { taskId: "task-1" });
+  const listed = executeCommand(registry, TASK_LIST_COMMAND, ctx);
+  assert.equal(listed.ok, true);
+  state = listed.result;
+  const listWindow = Object.values(state.windows).find((win) => win.metadata?.role === "task-list");
+  assert.ok(listWindow);
+  const listItems = state.widgets[listWindow.metadata.widgets.listId].props.items;
+  assert.ok(listItems.some((item) => item.id === "task-1"));
+  assert.ok(listItems.some((item) => item.id === "task-2"));
+
+  const switched = executeCommand(registry, TASK_SWITCH_COMMAND, { ...ctx, state, itemId: "task-2" });
+  assert.equal(switched.ok, true);
+  state = switched.result;
+  assert.equal(state.workspace.activeTaskId, "task-2");
+  assert.equal(state.focus?.windowId, "win-2");
+
+  const archived = executeCommand(registry, TASK_ARCHIVE_COMMAND, { ...ctx, state, itemId: "task-2" });
+  assert.equal(archived.ok, true);
+  state = archived.result;
+  assert.equal(state.tasks["task-2"].metadata.archived, true);
+  assert.equal(state.workspace.activeTaskId, "task-1");
+
+  const closed = executeCommand(registry, TASK_CLOSE_COMMAND, { ...ctx, state, itemId: "task-1" });
+  assert.equal(closed.ok, true);
+  state = closed.result;
+  assert.equal(state.tasks["task-1"], undefined);
 });
 
 test("keybinding viewer lists bindings", () => {

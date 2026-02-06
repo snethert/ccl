@@ -251,6 +251,7 @@ Exit criteria:
 
 ### Phase 1 Progress
 - Implemented initial state graph utilities and focus helpers.
+- Added task navigation commands and a task list window for switching/archiving tasks.
 
 ### Phase 2 Progress
 - Implemented DOM backend primitives: `measureText`, `hitTest`, `captureEvents`, `invalidate` with browser harness checks.

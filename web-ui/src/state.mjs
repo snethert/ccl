@@ -23,6 +23,10 @@ export const COMMAND_PALETTE_CLOSE_COMMAND = "ui.command-palette.close";
 export const KEYBINDINGS_OPEN_COMMAND = "ui.keybindings.open";
 export const KEYBINDINGS_CLOSE_COMMAND = "ui.keybindings.close";
 export const COMMAND_SURFACE_DISMISS_COMMAND = "ui.command-surface.dismiss";
+export const TASK_LIST_COMMAND = "ui.task.list";
+export const TASK_SWITCH_COMMAND = "ui.task.switch";
+export const TASK_CLOSE_COMMAND = "ui.task.close";
+export const TASK_ARCHIVE_COMMAND = "ui.task.archive";
 
 function ensureCounters(counters) {
   if (counters) {
@@ -152,6 +156,116 @@ export function addTask(state, task) {
     tasks,
     workspace: { ...workspace, taskIds, activeTaskId }
   };
+}
+
+function taskIsArchived(task) {
+  return Boolean(task?.metadata?.archived);
+}
+
+export function setActiveTask(state, taskId, options = {}) {
+  if (!taskId) {
+    return state;
+  }
+  const tasks = state.tasks ?? {};
+  const task = tasks[taskId];
+  if (!task) {
+    return state;
+  }
+  const workspace = state.workspace ?? createWorkspace({ id: "workspace-0" });
+  const taskIds = Array.isArray(workspace.taskIds) ? [...workspace.taskIds] : [];
+  if (!taskIds.includes(taskId) && !taskIsArchived(task)) {
+    taskIds.push(taskId);
+  }
+  let activeWindowId = task.activeWindowId ?? null;
+  let updatedTask = task;
+  if (!activeWindowId && Array.isArray(task.windowIds) && task.windowIds.length > 0) {
+    activeWindowId = task.windowIds[0];
+    updatedTask = { ...task, activeWindowId };
+  }
+  let nextState = {
+    ...state,
+    workspace: { ...workspace, activeTaskId: taskId, taskIds },
+    tasks: updatedTask === task ? tasks : { ...tasks, [taskId]: updatedTask }
+  };
+  if (options.updateFocus !== false) {
+    const target = { taskId, windowId: activeWindowId ?? null, widgetId: null, presentationId: null };
+    nextState = setFocusCore(nextState, target, options.reason ?? "command", options.seq ?? null);
+  }
+  return nextState;
+}
+
+export function archiveTask(state, taskId, options = {}) {
+  if (!taskId) {
+    return state;
+  }
+  const task = state.tasks?.[taskId];
+  if (!task) {
+    return state;
+  }
+  const metadata = { ...(task.metadata ?? {}), archived: true, archivedAt: options.archivedAt ?? null };
+  const tasks = { ...(state.tasks ?? {}), [taskId]: { ...task, metadata } };
+  const workspace = state.workspace ?? createWorkspace({ id: "workspace-0" });
+  const taskIds = Array.isArray(workspace.taskIds)
+    ? workspace.taskIds.filter((id) => id !== taskId)
+    : [];
+  const wasActive = workspace.activeTaskId === taskId;
+  let nextState = {
+    ...state,
+    tasks,
+    workspace: { ...workspace, taskIds, activeTaskId: wasActive ? (taskIds[0] ?? null) : workspace.activeTaskId }
+  };
+  if (wasActive) {
+    if (nextState.workspace.activeTaskId) {
+      nextState = setActiveTask(nextState, nextState.workspace.activeTaskId, { reason: options.reason });
+    } else {
+      nextState = setFocusCore(nextState, null, options.reason ?? "command");
+    }
+  }
+  return nextState;
+}
+
+export function closeTask(state, taskId, options = {}) {
+  if (!taskId) {
+    return state;
+  }
+  const task = state.tasks?.[taskId];
+  if (!task) {
+    return state;
+  }
+  let nextState = state;
+  const windowIds = Array.isArray(task.windowIds) ? [...task.windowIds] : [];
+  for (const windowId of windowIds) {
+    if (nextState.windows?.[windowId]) {
+      nextState = removeWindow(nextState, windowId, { reason: options.reason });
+    }
+  }
+  for (const [windowId, window] of Object.entries(nextState.windows ?? {})) {
+    if (window.taskId === taskId) {
+      nextState = removeWindow(nextState, windowId, { reason: options.reason });
+    }
+  }
+
+  const tasks = { ...(nextState.tasks ?? {}) };
+  delete tasks[taskId];
+  const workspace = nextState.workspace ?? createWorkspace({ id: "workspace-0" });
+  const taskIds = Array.isArray(workspace.taskIds)
+    ? workspace.taskIds.filter((id) => id !== taskId)
+    : [];
+  const wasActive = workspace.activeTaskId === taskId;
+  let activeTaskId = wasActive ? (taskIds[0] ?? null) : workspace.activeTaskId;
+  nextState = {
+    ...nextState,
+    tasks,
+    workspace: { ...workspace, taskIds, activeTaskId }
+  };
+  if (wasActive) {
+    if (activeTaskId) {
+      nextState = setActiveTask(nextState, activeTaskId, { reason: options.reason });
+    } else {
+      nextState = setFocusCore(nextState, null, options.reason ?? "command");
+    }
+  }
+  return nextState;
 }
 
 export function addWindow(state, window) {
@@ -305,6 +419,23 @@ export function removeWindow(state, windowId, options = {}) {
     const nextCauses = { ...nextState.windowCauses };
     delete nextCauses[windowId];
     nextState = { ...nextState, windowCauses: nextCauses };
+  }
+
+  if (nextState.layout?.nodes) {
+    const layout = nextState.layout;
+    let changed = false;
+    const nodes = {};
+    for (const [id, node] of Object.entries(layout.nodes)) {
+      if (node?.kind === "leaf" && node.props?.windowId === windowId) {
+        nodes[id] = { ...node, props: { ...(node.props ?? {}), windowId: null } };
+        changed = true;
+      } else {
+        nodes[id] = node;
+      }
+    }
+    if (changed) {
+      nextState = { ...nextState, layout: { ...layout, nodes } };
+    }
   }
 
   const focus = nextState.focus;
@@ -471,6 +602,35 @@ function summarizeCommands(state) {
   return items;
 }
 
+function summarizeTasks(state) {
+  const items = [];
+  const tasks = state.tasks ?? {};
+  const workspace = state.workspace ?? null;
+  const activeId = workspace?.activeTaskId ?? null;
+  const orderedIds = Array.isArray(workspace?.taskIds) ? [...workspace.taskIds] : [];
+  const extraIds = Object.keys(tasks)
+    .filter((id) => !orderedIds.includes(id))
+    .sort((a, b) => a.localeCompare(b));
+  const taskIds = [...orderedIds, ...extraIds];
+  for (const id of taskIds) {
+    const task = tasks[id];
+    if (!task) continue;
+    const flags = [];
+    if (id === activeId) flags.push("active");
+    if (taskIsArchived(task)) flags.push("archived");
+    const suffix = flags.length > 0 ? ` (${flags.join(", ")})` : "";
+    const title = task.title ?? "Untitled";
+    items.push({
+      id: `task-${id}`,
+      label: `${title} [${id}]${suffix}`
+    });
+  }
+  if (items.length === 0) {
+    items.push({ id: "task-none", label: "No tasks" });
+  }
+  return items;
+}
+
 function buildCommandPaletteItems(registry, options = {}) {
   if (!registry) {
     return [{ id: "cmd-none", label: "No command registry available" }];
@@ -613,6 +773,41 @@ function buildKeybindingTraceItems(registry, options = {}) {
   });
 }
 
+function buildTaskListItems(state, options = {}) {
+  const tasks = state.tasks ?? {};
+  const workspace = state.workspace ?? null;
+  const activeId = workspace?.activeTaskId ?? null;
+  const includeArchived = options.includeArchived ?? false;
+  const orderedIds = Array.isArray(workspace?.taskIds) ? [...workspace.taskIds] : [];
+  const extraIds = Object.keys(tasks)
+    .filter((id) => !orderedIds.includes(id))
+    .sort((a, b) => a.localeCompare(b));
+  const taskIds = [...orderedIds, ...extraIds];
+  const items = [];
+  for (const id of taskIds) {
+    const task = tasks[id];
+    if (!task) continue;
+    if (taskIsArchived(task) && !includeArchived && !orderedIds.includes(id)) {
+      continue;
+    }
+    const flags = [];
+    if (id === activeId) flags.push("active");
+    if (taskIsArchived(task)) flags.push("archived");
+    const suffix = flags.length > 0 ? ` (${flags.join(", ")})` : "";
+    const title = task.title ?? "Untitled";
+    items.push({
+      id,
+      label: `${title} [${id}]${suffix}`,
+      taskId: id,
+      selected: id === activeId
+    });
+  }
+  if (items.length === 0) {
+    items.push({ id: "task-none", label: "No tasks" });
+  }
+  return items;
+}
+
 function summarizeWindows(state) {
   const items = [];
   const entries = Object.values(state.windows ?? {}).sort((a, b) => a.id.localeCompare(b.id));
@@ -673,6 +868,7 @@ function summarizeEventLog(state, limit = 12) {
 
 function buildInspectorSections(state) {
   return {
+    tasks: summarizeTasks(state),
     focus: summarizeFocus(state),
     commands: summarizeCommands(state),
     windows: summarizeWindows(state),
@@ -718,6 +914,7 @@ export function openInspectorWindow(state, options = {}) {
   ids.rootId = rootAlloc.id;
 
   const sections = [
+    ["tasks", "Tasks"],
     ["focus", "Focus"],
     ["commands", "Commands"],
     ["windows", "Windows"],
@@ -771,6 +968,98 @@ export function refreshInspectorWindow(state, windowId) {
     }));
   }
   return nextState;
+}
+
+export function openTaskListWindow(state, options = {}) {
+  const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
+  if (!taskId) {
+    throw new Error("Task list requires a task");
+  }
+  const existing = findWindowByRole(state, "task-list", taskId);
+  if (existing) {
+    return refreshTaskListWindow(state, existing.id, options);
+  }
+
+  const allocWindow = allocateId(state.idCounters, "window", "task-list");
+  let nextState = {
+    ...state,
+    idCounters: allocWindow.counters
+  };
+  nextState = addWindow(nextState, {
+    id: allocWindow.id,
+    taskId,
+    kind: "task-list",
+    title: "Tasks",
+    metadata: { role: "task-list" }
+  });
+
+  const includeArchived = options.includeArchived ?? false;
+  const items = buildTaskListItems(nextState, { includeArchived });
+
+  let ids = {};
+  let rootAlloc = allocateWidgetId(nextState, "task-list-root");
+  nextState = addWidget(rootAlloc.state, {
+    id: rootAlloc.id,
+    kind: "container",
+    windowId: allocWindow.id,
+    props: { className: "ui-task-list-root" }
+  });
+  ids.rootId = rootAlloc.id;
+
+  let labelAlloc = allocateWidgetId(nextState, "task-list-label");
+  nextState = addWidget(labelAlloc.state, {
+    id: labelAlloc.id,
+    kind: "label",
+    parentId: ids.rootId,
+    props: { text: "Tasks" }
+  });
+  ids.labelId = labelAlloc.id;
+
+  let listAlloc = allocateWidgetId(nextState, "task-list");
+  nextState = addWidget(listAlloc.state, {
+    id: listAlloc.id,
+    kind: "list",
+    parentId: ids.rootId,
+    props: { items, itemCommand: TASK_SWITCH_COMMAND }
+  });
+  ids.listId = listAlloc.id;
+
+  nextState = updateWindow(nextState, allocWindow.id, (window) => ({
+    ...window,
+    metadata: {
+      ...(window.metadata ?? {}),
+      role: "task-list",
+      widgets: ids,
+      taskList: { includeArchived }
+    }
+  }));
+
+  return nextState;
+}
+
+export function refreshTaskListWindow(state, windowId, options = {}) {
+  const window = state.windows?.[windowId];
+  if (!window || window.metadata?.role !== "task-list") {
+    throw new Error("Window is not a task list");
+  }
+  const widgets = window.metadata?.widgets;
+  if (!widgets?.listId) {
+    return state;
+  }
+  const includeArchived =
+    options.includeArchived ?? window.metadata?.taskList?.includeArchived ?? false;
+  const items = buildTaskListItems(state, { includeArchived });
+  let nextState = updateWidget(state, widgets.listId, (widget) => ({
+    ...widget,
+    props: { ...(widget.props ?? {}), items }
+  }));
+  return updateWindow(nextState, windowId, (nextWindow) => ({
+    ...nextWindow,
+    metadata: {
+      ...(nextWindow.metadata ?? {}),
+      taskList: { includeArchived }
+    }
+  }));
 }
 
 export function openCommandPaletteWindow(state, options = {}) {
@@ -923,6 +1212,18 @@ export function closeCommandPaletteWindow(state, options = {}) {
   return removeWindow(state, windowId, { reason: options.reason ?? "command" });
 }
 
+function resolveTaskTargetId(state, ctx, options = {}) {
+  return (
+    options.taskId ??
+    ctx?.targetTaskId ??
+    ctx?.item?.taskId ??
+    ctx?.itemId ??
+    ctx?.taskId ??
+    state.workspace?.activeTaskId ??
+    null
+  );
+}
+
 export function applyCommandPaletteFilter(state, options = {}) {
   const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
   const windowId =
@@ -1059,6 +1360,93 @@ export function registerCommandPaletteCommands(registry, options = {}) {
         return { ok: false, reason: "No selection" };
       }
       return executeCommand(registry, selection.commandId, ctx);
+    }
+  });
+
+  return registry;
+}
+
+export function registerTaskCommands(registry, options = {}) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  const listId = options.listCommandId ?? TASK_LIST_COMMAND;
+  const switchId = options.switchCommandId ?? TASK_SWITCH_COMMAND;
+  const closeId = options.closeCommandId ?? TASK_CLOSE_COMMAND;
+  const archiveId = options.archiveCommandId ?? TASK_ARCHIVE_COMMAND;
+
+  const ensure = (id, command) => {
+    if (!registry.commands.has(id)) {
+      registerCommand(registry, { ...command, id });
+    }
+  };
+
+  ensure(listId, {
+    title: "List Tasks",
+    doc: "Open the task list for the current workspace.",
+    exec: (ctx) =>
+      openTaskListWindow(ctx.state, {
+        taskId: ctx.taskId ?? ctx.state.workspace?.activeTaskId ?? null,
+        includeArchived: ctx.includeArchived ?? false
+      })
+  });
+
+  ensure(switchId, {
+    title: "Switch Task",
+    doc: "Switch to the selected task.",
+    enabled: (ctx) => {
+      const target = resolveTaskTargetId(ctx.state, ctx);
+      return target && ctx.state.tasks?.[target]
+        ? { enabled: true, reason: null }
+        : { enabled: false, reason: "No target task" };
+    },
+    exec: (ctx) => {
+      const target = resolveTaskTargetId(ctx.state, ctx);
+      if (!target) {
+        return ctx.state;
+      }
+      return setActiveTask(ctx.state, target, { reason: "command" });
+    }
+  });
+
+  ensure(closeId, {
+    title: "Close Task",
+    doc: "Close the selected task and its windows.",
+    enabled: (ctx) => {
+      const target = resolveTaskTargetId(ctx.state, ctx);
+      return target && ctx.state.tasks?.[target]
+        ? { enabled: true, reason: null }
+        : { enabled: false, reason: "No target task" };
+    },
+    exec: (ctx) => {
+      const target = resolveTaskTargetId(ctx.state, ctx);
+      if (!target) {
+        return ctx.state;
+      }
+      return closeTask(ctx.state, target, { reason: "command" });
+    }
+  });
+
+  ensure(archiveId, {
+    title: "Archive Task",
+    doc: "Archive the selected task.",
+    enabled: (ctx) => {
+      const target = resolveTaskTargetId(ctx.state, ctx);
+      const task = target ? ctx.state.tasks?.[target] : null;
+      if (!task) {
+        return { enabled: false, reason: "No target task" };
+      }
+      if (taskIsArchived(task)) {
+        return { enabled: false, reason: "Task already archived" };
+      }
+      return { enabled: true, reason: null };
+    },
+    exec: (ctx) => {
+      const target = resolveTaskTargetId(ctx.state, ctx);
+      if (!target) {
+        return ctx.state;
+      }
+      return archiveTask(ctx.state, target, { reason: "command" });
     }
   });
 

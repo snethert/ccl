@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   createState,
   addTask,
+  addWindow,
   COMMAND_PALETTE_FILTER_COMMAND,
   COMMAND_PALETTE_EXECUTE_COMMAND,
   COMMAND_PALETTE_SELECT_NEXT_COMMAND,
@@ -12,12 +13,17 @@ import {
   KEYBINDINGS_OPEN_COMMAND,
   KEYBINDINGS_CLOSE_COMMAND,
   COMMAND_SURFACE_DISMISS_COMMAND,
+  TASK_LIST_COMMAND,
+  TASK_SWITCH_COMMAND,
+  TASK_CLOSE_COMMAND,
+  TASK_ARCHIVE_COMMAND,
   applyCommandPaletteFilter,
   applyCommandPaletteSelection,
   resolveCommandPaletteSelection,
   refreshCommandPaletteWindow,
   refreshKeybindingWindow,
   registerCommandPaletteCommands,
+  registerTaskCommands,
   registerCommandSurfaceCommands,
   bindCommandPaletteDefaults,
   bindCommandSurfaceDefaults,
@@ -38,6 +44,7 @@ bindKey(registry, "task", "B", "beta.build", "task-1");
 bindKey(registry, "context", "C", "gamma.test", "ctx-1");
 bindKey(registry, "widget", "W", "delta.pick", "widget-1");
 registerCommandPaletteCommands(registry);
+registerTaskCommands(registry);
 registerCommandSurfaceCommands(registry);
 bindCommandPaletteDefaults(registry, { taskId: "task-1" });
 bindCommandSurfaceDefaults(registry);
@@ -123,6 +130,32 @@ state = refreshKeybindingWindow(state, keybindingWindow.id, {
 const traceItemsGlobal = state.widgets[keybindingWindow.metadata.widgets.traceListId].props.items;
 assert.ok(traceItemsGlobal.some((item) => item.label.includes("global: K → alpha.run (match)")));
 assert.ok(traceItemsGlobal.some((item) => item.label.includes("skipped-after-match")));
+
+state = addTask(state, { id: "task-2", title: "Task Two" });
+state = addWindow(state, { id: "win-2", taskId: "task-2", title: "Win 2" });
+const openedTaskList = executeCommand(registry, TASK_LIST_COMMAND, { state, taskId: "task-1" });
+assert.equal(openedTaskList.ok, true);
+state = openedTaskList.result;
+const taskListWindow = Object.values(state.windows).find((win) => win.metadata?.role === "task-list");
+assert.ok(taskListWindow, "task list window exists");
+
+const switchedTask = executeCommand(registry, TASK_SWITCH_COMMAND, {
+  state,
+  taskId: "task-1",
+  itemId: "task-2"
+});
+assert.equal(switchedTask.ok, true);
+state = switchedTask.result;
+assert.equal(state.workspace.activeTaskId, "task-2");
+
+const archivedTask = executeCommand(registry, TASK_ARCHIVE_COMMAND, {
+  state,
+  taskId: "task-2",
+  itemId: "task-2"
+});
+assert.equal(archivedTask.ok, true);
+state = archivedTask.result;
+assert.equal(state.workspace.activeTaskId, "task-1");
 
 const closedKeybindings = executeCommand(registry, KEYBINDINGS_CLOSE_COMMAND, {
   state,
