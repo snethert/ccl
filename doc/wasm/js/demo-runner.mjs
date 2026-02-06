@@ -21,9 +21,21 @@ const subprimsUrl = new URL("subprims.wasm", import.meta.url);
 const subprimsMapUrl = new URL("../subprims-map.json", import.meta.url);
 
 const REQUIRED_SUBPRIMS = ["_SPmkcatch1v", "_SPfuncall", "_SPnthrow1value"];
+const BOOT_ENTRY_INDEX = 200;
 
 function hasRequiredSubprims(exports) {
   return REQUIRED_SUBPRIMS.every((name) => typeof exports?.[name] === "function");
+}
+
+function installBootEntry(kernel, table) {
+  const bootEntry = kernel?.instance?.exports?.wasm_boot_entry;
+  if (typeof bootEntry !== "function") {
+    throw new Error("kernel missing export wasm_boot_entry");
+  }
+  if (table.length <= BOOT_ENTRY_INDEX) {
+    table.grow(BOOT_ENTRY_INDEX - table.length + 1);
+  }
+  table.set(BOOT_ENTRY_INDEX, bootEntry);
 }
 
 function setSubprimsReady(kernel, ready) {
@@ -100,4 +112,5 @@ setSubprimsReady(kernel, subprimsReady);
 if (typeof kernel.instance.exports.wasm_ccl_start !== "function") {
   throw new Error("kernel missing export wasm_ccl_start (add it in pmcl-kernel.c)");
 }
+installBootEntry(kernel, runtime.subprimsTable);
 kernel.instance.exports.wasm_ccl_start();

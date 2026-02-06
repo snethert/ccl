@@ -24,6 +24,7 @@ function normalizeBytes(bytes) {
 }
 
 const REQUIRED_SUBPRIMS = ["_SPmkcatch1v", "_SPfuncall", "_SPnthrow1value"];
+const BOOT_ENTRY_INDEX = 200;
 
 function hasRequiredSubprims(exports) {
   return REQUIRED_SUBPRIMS.every((name) => typeof exports?.[name] === "function");
@@ -34,6 +35,17 @@ function setSubprimsReady(kernel, ready) {
   if (typeof fn === "function") {
     fn(ready ? 1 : 0);
   }
+}
+
+function installBootEntry(kernel, table) {
+  const bootEntry = kernel?.instance?.exports?.wasm_boot_entry;
+  if (typeof bootEntry !== "function") {
+    throw new Error("kernel missing export wasm_boot_entry");
+  }
+  if (table.length <= BOOT_ENTRY_INDEX) {
+    table.grow(BOOT_ENTRY_INDEX - table.length + 1);
+  }
+  table.set(BOOT_ENTRY_INDEX, bootEntry);
 }
 
 export function createKernel({
@@ -232,6 +244,7 @@ export function createKernel({
       if (typeof kernel.instance.exports.wasm_ccl_start !== "function") {
         throw new Error("runner.start: kernel missing export wasm_ccl_start");
       }
+      installBootEntry(kernel, runtime.subprimsTable);
       return kernel.instance.exports.wasm_ccl_start();
     };
 

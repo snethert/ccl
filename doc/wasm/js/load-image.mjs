@@ -6,6 +6,7 @@
  * Usage:
  *   node doc/wasm/js/load-image.mjs /path/to/ccl.image
  *   node doc/wasm/js/load-image.mjs --run /path/to/ccl.image
+ *   node doc/wasm/js/load-image.mjs --start-lisp /path/to/ccl.image
  */
 
 import fs from "node:fs/promises";
@@ -27,9 +28,14 @@ function fail(msg) {
 
 const args = process.argv.slice(2);
 const runToplevel = args.includes("--run");
+const runStartLisp = args.includes("--start-lisp");
+if (runToplevel && runStartLisp) {
+  console.error("--run and --start-lisp are mutually exclusive");
+  process.exit(2);
+}
 const imagePath = args.find((arg) => !arg.startsWith("--"));
 if (!imagePath) {
-  console.error("Usage: node doc/wasm/js/load-image.mjs [--run] /path/to/ccl.image");
+  console.error("Usage: node doc/wasm/js/load-image.mjs [--run|--start-lisp] /path/to/ccl.image");
   process.exit(2);
 }
 
@@ -62,7 +68,7 @@ const kernel = await instantiateWasm(
 
 let subprims = null;
 let subprimsMap = null;
-if (runToplevel) {
+if (runToplevel || runStartLisp) {
   const subprimsUrl = new URL("subprims.wasm", import.meta.url);
   const subprimsBytes = await fs.readFile(fileURLToPath(subprimsUrl));
   const subprimsMapUrl = new URL("../subprims-map.json", import.meta.url);
@@ -113,44 +119,66 @@ if (blobBase < 0) {
 }
 new Uint8Array(runtime.memory.buffer).set(imageBytes, blobBase);
 
-if (typeof kernel.instance.exports.wasm_ccl_load_image !== "function") {
-  fail("kernel missing export wasm_ccl_load_image");
-}
 if (typeof kernel.instance.exports.wasm_get_lisp_nil !== "function") {
   fail("kernel missing export wasm_get_lisp_nil");
 }
 
-try {
-  const rc = kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
-  const nil = kernel.instance.exports.wasm_get_lisp_nil() >>> 0;
-  console.log(`wasm_ccl_load_image rc=${rc} lisp_nil=0x${nil.toString(16)}`);
-  const { installed, count } = await installCompiledModulesFromRegistry({
-    kernel,
-    memory: runtime.memory,
-    subprimsTable: runtime.subprimsTable,
-    microkernel,
-  });
-  console.log(`compiled modules installed ${installed}/${count}`);
-} catch (e) {
-  console.error(`wasm_ccl_load_image trapped: ${e}`);
-  process.exit(3);
-}
-
-if (runToplevel) {
+const bootIndex = 200;
+function installBootEntry() {
   const bootEntry = kernel.instance.exports.wasm_boot_entry;
-  const runToplevelFn = kernel.instance.exports.wasm_run_toplevel;
   if (typeof bootEntry !== "function") {
     fail("kernel missing export wasm_boot_entry");
   }
-  if (typeof runToplevelFn !== "function") {
-    fail("kernel missing export wasm_run_toplevel");
-  }
-
-  const bootIndex = 200;
   if (runtime.subprimsTable.length <= bootIndex) {
     runtime.subprimsTable.grow(bootIndex - runtime.subprimsTable.length + 1);
   }
   runtime.subprimsTable.set(bootIndex, bootEntry);
+}
+
+if (runStartLisp) {
+  if (typeof kernel.instance.exports.wasm_set_boot_image !== "function") {
+    fail("kernel missing export wasm_set_boot_image");
+  }
+  if (typeof kernel.instance.exports.wasm_ccl_start !== "function") {
+    fail("kernel missing export wasm_ccl_start");
+  }
+  installBootEntry();
+  try {
+    kernel.instance.exports.wasm_set_boot_image(blobBase, imageLen);
+    const rc = kernel.instance.exports.wasm_ccl_start();
+    const nil = kernel.instance.exports.wasm_get_lisp_nil() >>> 0;
+    console.log(`wasm_ccl_start rc=${rc} lisp_nil=0x${nil.toString(16)}`);
+  } catch (e) {
+    console.error(`wasm_ccl_start trapped: ${e}`);
+    process.exit(3);
+  }
+} else {
+  if (typeof kernel.instance.exports.wasm_ccl_load_image !== "function") {
+    fail("kernel missing export wasm_ccl_load_image");
+  }
+  try {
+    const rc = kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
+    const nil = kernel.instance.exports.wasm_get_lisp_nil() >>> 0;
+    console.log(`wasm_ccl_load_image rc=${rc} lisp_nil=0x${nil.toString(16)}`);
+    const { installed, count } = await installCompiledModulesFromRegistry({
+      kernel,
+      memory: runtime.memory,
+      subprimsTable: runtime.subprimsTable,
+      microkernel,
+    });
+    console.log(`compiled modules installed ${installed}/${count}`);
+  } catch (e) {
+    console.error(`wasm_ccl_load_image trapped: ${e}`);
+    process.exit(3);
+  }
+}
+
+if (runToplevel) {
+  const runToplevelFn = kernel.instance.exports.wasm_run_toplevel;
+  if (typeof runToplevelFn !== "function") {
+    fail("kernel missing export wasm_run_toplevel");
+  }
+  installBootEntry();
 
   try {
     const rc = runToplevelFn();
