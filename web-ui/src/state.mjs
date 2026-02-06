@@ -10,6 +10,7 @@ import {
   dockLayoutNode
 } from "./layout.mjs";
 import { normalizeFocusTarget, normalizeFocusHistory, setFocus as setFocusCore } from "./focus.mjs";
+import { registerCommand, executeCommand } from "./commands.mjs";
 
 const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layout", "reason", "error", "job"];
 export const COMMAND_PALETTE_FILTER_COMMAND = "ui.command-palette.filter";
@@ -375,9 +376,16 @@ function buildCommandPaletteItems(registry, options = {}) {
     return [{ id: "cmd-none", label: "No command registry available" }];
   }
   const filter = String(options.filter ?? "").trim().toLowerCase();
+  const excludeIds = new Set(options.excludeIds ?? []);
   const entries = [...registry.commands.values()].sort((a, b) => a.id.localeCompare(b.id));
   const items = [];
   for (const cmd of entries) {
+    if (excludeIds.has(cmd.id)) {
+      continue;
+    }
+    if (cmd.metadata?.paletteHidden) {
+      continue;
+    }
     const title = cmd.title ?? cmd.id;
     const doc = cmd.doc ?? "";
     const haystack = `${cmd.id} ${title} ${doc}`.toLowerCase();
@@ -801,6 +809,88 @@ export function resolveCommandPaletteSelection(state, options = {}) {
   const item = items[index] ?? null;
   const commandId = item?.targetCommandId ?? null;
   return { index, item, commandId };
+}
+
+export function registerCommandPaletteCommands(registry, options = {}) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  const filterId = options.filterCommandId ?? COMMAND_PALETTE_FILTER_COMMAND;
+  const executeId = options.executeCommandId ?? COMMAND_PALETTE_EXECUTE_COMMAND;
+  const nextId = options.selectNextCommandId ?? COMMAND_PALETTE_SELECT_NEXT_COMMAND;
+  const prevId = options.selectPrevCommandId ?? COMMAND_PALETTE_SELECT_PREV_COMMAND;
+  const execSelectedId = options.executeSelectedCommandId ?? COMMAND_PALETTE_EXECUTE_SELECTION_COMMAND;
+
+  const ensure = (id, command) => {
+    if (!registry.commands.has(id)) {
+      registerCommand(registry, { ...command, id });
+    }
+  };
+
+  ensure(filterId, {
+    doc: "Filter command palette entries.",
+    metadata: { paletteHidden: true },
+    exec: (ctx) =>
+      applyCommandPaletteFilter(ctx.state, {
+        registry,
+        windowId: ctx.windowId,
+        taskId: ctx.taskId,
+        inputValue: ctx.inputValue
+      })
+  });
+
+  ensure(nextId, {
+    doc: "Select next command palette entry.",
+    metadata: { paletteHidden: true },
+    exec: (ctx) =>
+      applyCommandPaletteSelection(ctx.state, {
+        registry,
+        windowId: ctx.windowId,
+        taskId: ctx.taskId,
+        delta: 1
+      })
+  });
+
+  ensure(prevId, {
+    doc: "Select previous command palette entry.",
+    metadata: { paletteHidden: true },
+    exec: (ctx) =>
+      applyCommandPaletteSelection(ctx.state, {
+        registry,
+        windowId: ctx.windowId,
+        taskId: ctx.taskId,
+        delta: -1
+      })
+  });
+
+  ensure(executeId, {
+    doc: "Execute the command palette item that was activated.",
+    metadata: { paletteHidden: true },
+    exec: (ctx) => {
+      const target = ctx.item?.targetCommandId ?? null;
+      if (!target) {
+        return { ok: false, reason: "No target command" };
+      }
+      return executeCommand(registry, target, ctx);
+    }
+  });
+
+  ensure(execSelectedId, {
+    doc: "Execute the currently selected command palette entry.",
+    metadata: { paletteHidden: true },
+    exec: (ctx) => {
+      const selection = resolveCommandPaletteSelection(ctx.state, {
+        taskId: ctx.taskId,
+        windowId: ctx.windowId
+      });
+      if (!selection.commandId) {
+        return { ok: false, reason: "No selection" };
+      }
+      return executeCommand(registry, selection.commandId, ctx);
+    }
+  });
+
+  return registry;
 }
 
 export function openKeybindingWindow(state, options = {}) {

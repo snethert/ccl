@@ -311,6 +311,8 @@ Lisp code runs only within command execution boundaries and explicit yields.
 - Palette list items SHOULD carry the resolved command id for dispatch (e.g., as a target command id).
 - The palette maintains an explicit selected item; navigation updates selection without mutating command order.
 - Executing the selected item MUST use the target command id.
+- Palette navigation and execution MUST be exposed as commands (e.g., select-next, select-prev, execute-selected).
+- Palette implementations MAY hide internal commands from the listing.
 - Keybinding viewer entries SHOULD encode scope, scope id (if any), key, and command id in a human-readable label.
 
 ### Focus manager

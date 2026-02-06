@@ -6,14 +6,17 @@ import {
   COMMAND_PALETTE_FILTER_COMMAND,
   COMMAND_PALETTE_EXECUTE_COMMAND,
   COMMAND_PALETTE_SELECT_NEXT_COMMAND,
+  COMMAND_PALETTE_EXECUTE_SELECTION_COMMAND,
   applyCommandPaletteFilter,
   applyCommandPaletteSelection,
   resolveCommandPaletteSelection,
   openCommandPaletteWindow,
   refreshCommandPaletteWindow,
   openKeybindingWindow,
+  registerCommandPaletteCommands,
   createRegistry,
   registerCommand,
+  executeCommand,
   bindKey
 } from "../../../web-ui/src/index.mjs";
 
@@ -22,6 +25,7 @@ registerCommand(registry, { id: "alpha.run", title: "Alpha Run" });
 registerCommand(registry, { id: "beta.build", title: "Beta Build" });
 bindKey(registry, "global", "K", "alpha.run");
 bindKey(registry, "task", "B", "beta.build", "task-1");
+registerCommandPaletteCommands(registry);
 
 let state = createState();
 state = addTask(state, { id: "task-1", title: "Task" });
@@ -52,6 +56,15 @@ state = applyCommandPaletteSelection(state, { registry, windowId: paletteWindow.
 const selected = resolveCommandPaletteSelection(state, { windowId: paletteWindow.id });
 assert.equal(selected.commandId, "beta.build");
 assert.equal(COMMAND_PALETTE_SELECT_NEXT_COMMAND, "ui.command-palette.select-next");
+
+const execSelected = executeCommand(registry, COMMAND_PALETTE_EXECUTE_SELECTION_COMMAND, {
+  state,
+  windowId: paletteWindow.id,
+  taskId: "task-1"
+});
+assert.equal(execSelected.ok, true);
+assert.equal(execSelected.result.ok, true);
+assert.equal(execSelected.result.result, null);
 
 state = openKeybindingWindow(state, { registry, taskId: "task-1" });
 const keybindingWindow = Object.values(state.windows).find((win) => win.metadata?.role === "keybindings");

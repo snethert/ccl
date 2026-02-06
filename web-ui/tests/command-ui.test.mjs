@@ -7,14 +7,17 @@ import {
   COMMAND_PALETTE_FILTER_COMMAND,
   COMMAND_PALETTE_EXECUTE_COMMAND,
   COMMAND_PALETTE_SELECT_NEXT_COMMAND,
+  COMMAND_PALETTE_EXECUTE_SELECTION_COMMAND,
   applyCommandPaletteFilter,
   applyCommandPaletteSelection,
   resolveCommandPaletteSelection,
   openCommandPaletteWindow,
   refreshCommandPaletteWindow,
-  openKeybindingWindow
+  openKeybindingWindow,
+  registerCommandPaletteCommands
 } from "../src/state.mjs";
-import { createRegistry, registerCommand, bindKey } from "../src/commands.mjs";
+import { createRegistry, registerCommand, bindKey, executeCommand } from "../src/commands.mjs";
+import { makeContext } from "../src/context.mjs";
 
 function makeRegistry() {
   const registry = createRegistry();
@@ -69,6 +72,40 @@ test("command palette lists commands and applies filter", () => {
   const selection = resolveCommandPaletteSelection(state, { windowId: paletteWindow.id });
   assert.equal(selection.commandId, "beta.build");
   assert.equal(COMMAND_PALETTE_SELECT_NEXT_COMMAND, "ui.command-palette.select-next");
+});
+
+test("palette command registration wires navigation and execution", () => {
+  const registry = createRegistry();
+  registerCommand(registry, { id: "alpha.run", exec: () => "alpha" });
+  registerCommand(registry, { id: "beta.build", exec: () => "beta" });
+  registerCommandPaletteCommands(registry);
+
+  let state = createState();
+  state = addTask(state, { id: "task-1", title: "Task" });
+  state = openCommandPaletteWindow(state, { registry, taskId: "task-1" });
+  const paletteWindow = Object.values(state.windows).find((win) => win.metadata?.role === "command-palette");
+  assert.ok(paletteWindow);
+  const listId = paletteWindow.metadata.widgets.listId;
+  const listItems = state.widgets[listId].props.items;
+  assert.ok(listItems.some((item) => item.targetCommandId === "alpha.run"));
+  assert.ok(listItems.some((item) => item.targetCommandId === "beta.build"));
+  assert.ok(!listItems.some((item) => item.targetCommandId === COMMAND_PALETTE_EXECUTE_COMMAND));
+
+  const ctx = makeContext(state, { taskId: "task-1", windowId: paletteWindow.id });
+  const next = executeCommand(registry, COMMAND_PALETTE_SELECT_NEXT_COMMAND, ctx);
+  assert.equal(next.ok, true);
+  const nextState = next.result;
+
+  const selection = resolveCommandPaletteSelection(nextState, { windowId: paletteWindow.id });
+  assert.equal(selection.commandId, "beta.build");
+
+  const execSelected = executeCommand(registry, COMMAND_PALETTE_EXECUTE_SELECTION_COMMAND, {
+    ...ctx,
+    state: nextState
+  });
+  assert.equal(execSelected.ok, true);
+  assert.equal(execSelected.result.ok, true);
+  assert.equal(execSelected.result.result, "beta");
 });
 
 test("keybinding viewer lists bindings", () => {
