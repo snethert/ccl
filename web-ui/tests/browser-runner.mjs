@@ -65,7 +65,31 @@ function startStaticServer(rootDir) {
         res.end("Server error");
       }
     });
-    server.on("error", reject);
+    server.on("error", (err) => {
+      const code = err?.code ?? "UNKNOWN";
+      if (code === "EACCES" || code === "EPERM") {
+        reject(
+          new Error(
+            `Headless harness failed to bind the local HTTP server on 127.0.0.1 (${code}). ` +
+              "This environment blocks listening on localhost. " +
+              "Re-run with permissions or allow local network binds. " +
+              `Original error: ${err?.message ?? "unknown"}`
+          )
+        );
+        return;
+      }
+      if (code === "EADDRINUSE") {
+        reject(
+          new Error(
+            "Headless harness failed to bind the local HTTP server because the port is in use. " +
+              "Close the process using the port and try again. " +
+              `Original error: ${err?.message ?? "unknown"}`
+          )
+        );
+        return;
+      }
+      reject(err);
+    });
     server.listen(0, "127.0.0.1", () => {
       const { port } = server.address();
       resolve({

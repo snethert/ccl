@@ -22,6 +22,9 @@ test("headless browser harness runs deterministically", async (t) => {
   assert.equal(result.commandInvokeOk, true);
   assert.equal(result.commandInputOk, true);
   assert.equal(result.commandListOk, true);
+  assert.equal(result.imeCompositionOk, true);
+  assert.equal(result.deadKeyOk, true);
+  assert.equal(result.mobileInputOk, true);
   assert.equal(result.virtualListOk, true);
   assert.equal(result.virtualTreeOk, true);
   assert.equal(result.virtualTableOk, true);

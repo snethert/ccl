@@ -103,6 +103,7 @@ async function run() {
   let listItemId = null;
   let canvasHitCtx = null;
   let webglHitCtx = null;
+  let imeValue = null;
   registerCommand(registry, {
     id: "demo.run",
     exec: () => {
@@ -117,6 +118,12 @@ async function run() {
     id: "demo.input",
     exec: (ctx) => {
       inputValue = ctx.inputValue ?? null;
+    }
+  });
+  registerCommand(registry, {
+    id: "demo.ime",
+    exec: (ctx) => {
+      imeValue = ctx.inputValue ?? null;
     }
   });
   registerCommand(registry, {
@@ -161,6 +168,12 @@ async function run() {
     props: { placeholder: "Type", command: "demo.input" }
   });
   widgetState = addWidget(widgetState, {
+    id: "input-ime",
+    kind: "text-input",
+    parentId: "root-widget",
+    props: { placeholder: "IME", command: "demo.ime" }
+  });
+  widgetState = addWidget(widgetState, {
     id: "list-widget",
     kind: "list",
     parentId: "root-widget",
@@ -179,17 +192,20 @@ async function run() {
   const runButton = widgetRenderTarget.querySelector("[data-widget-id='btn-run']");
   const blockedButton = widgetRenderTarget.querySelector("[data-widget-id='btn-blocked']");
   const input = widgetRenderTarget.querySelector("[data-widget-id='input-text']");
+  const imeInput = widgetRenderTarget.querySelector("[data-widget-id='input-ime']");
   const listItem = widgetRenderTarget.querySelector("[data-item-id='alpha']");
   const commandDomOk =
     runButton &&
     blockedButton &&
     input &&
+    imeInput &&
     listItem &&
     runButton.getAttribute("data-command-id") === "demo.run" &&
     blockedButton.getAttribute("data-command-id") === "demo.blocked" &&
     blockedButton.disabled === true &&
     blockedButton.getAttribute("data-disabled-reason") === "Blocked" &&
     input.getAttribute("data-command-id") === "demo.input" &&
+    imeInput.getAttribute("data-command-id") === "demo.ime" &&
     listItem.getAttribute("data-command-id") === "demo.item";
 
   if (runButton) {
@@ -205,6 +221,92 @@ async function run() {
     listItem.click();
   }
   const commandListOk = listItemId === "alpha";
+
+  const compositionEvents = [];
+  const deadKeyEvents = [];
+  const beforeInputEvents = [];
+
+  function createCompositionEvent(type, data, isComposing = true) {
+    if (typeof CompositionEvent === "function") {
+      return new CompositionEvent(type, { data, bubbles: true });
+    }
+    const event = new Event(type, { bubbles: true });
+    try {
+      Object.defineProperty(event, "data", { value: data });
+      Object.defineProperty(event, "isComposing", { value: isComposing });
+    } catch (err) {
+      // ignore
+    }
+    return event;
+  }
+
+  function createInputEvent(type, options = {}) {
+    if (typeof InputEvent === "function") {
+      return new InputEvent(type, { bubbles: true, ...options });
+    }
+    const event = new Event(type, { bubbles: true });
+    try {
+      Object.assign(event, options);
+    } catch (err) {
+      // ignore
+    }
+    return event;
+  }
+
+  let imeCompositionValue = null;
+  let mobileInputValue = null;
+
+  if (imeInput) {
+    imeInput.addEventListener("compositionstart", (event) => {
+      compositionEvents.push({ type: event.type, data: event.data ?? null });
+    });
+    imeInput.addEventListener("compositionupdate", (event) => {
+      compositionEvents.push({ type: event.type, data: event.data ?? null });
+    });
+    imeInput.addEventListener("compositionend", (event) => {
+      compositionEvents.push({ type: event.type, data: event.data ?? null });
+    });
+    imeInput.addEventListener("keydown", (event) => {
+      deadKeyEvents.push({ type: event.type, key: event.key ?? null });
+    });
+    imeInput.addEventListener("keyup", (event) => {
+      deadKeyEvents.push({ type: event.type, key: event.key ?? null });
+    });
+    imeInput.addEventListener("beforeinput", (event) => {
+      beforeInputEvents.push({ type: event.type, inputType: event.inputType ?? null, data: event.data ?? null });
+    });
+
+    imeInput.dispatchEvent(createCompositionEvent("compositionstart", "I", true));
+    imeInput.dispatchEvent(createCompositionEvent("compositionupdate", "IM", true));
+    imeInput.value = "IM";
+    imeInput.dispatchEvent(createInputEvent("input", { data: "IM", inputType: "insertCompositionText", isComposing: true }));
+    imeInput.dispatchEvent(createCompositionEvent("compositionend", "IME", false));
+    imeInput.value = "IME";
+    imeInput.dispatchEvent(createInputEvent("input", { data: "IME", inputType: "insertCompositionText", isComposing: false }));
+    imeCompositionValue = imeValue;
+
+    const deadKeyDown = new KeyboardEvent("keydown", { key: "Dead", code: "Quote", bubbles: true });
+    const deadKeyUp = new KeyboardEvent("keyup", { key: "Dead", code: "Quote", bubbles: true });
+    imeInput.dispatchEvent(deadKeyDown);
+    imeInput.dispatchEvent(deadKeyUp);
+
+    imeInput.value = "mobile";
+    imeInput.dispatchEvent(createInputEvent("beforeinput", { data: "mobile", inputType: "insertText" }));
+    imeInput.dispatchEvent(createInputEvent("input", { data: "mobile", inputType: "insertText", isComposing: false }));
+    mobileInputValue = imeValue;
+  }
+
+  const imeCompositionOk =
+    compositionEvents.length === 3 &&
+    compositionEvents[0].type === "compositionstart" &&
+    compositionEvents[1].type === "compositionupdate" &&
+    compositionEvents[2].type === "compositionend" &&
+    compositionEvents[2].data === "IME" &&
+    imeCompositionValue === "IME";
+  const deadKeyOk = deadKeyEvents.length === 2 && deadKeyEvents.every((event) => event.key === "Dead");
+  const mobileInputOk =
+    beforeInputEvents.some((event) => event.inputType === "insertText") &&
+    mobileInputValue === "mobile";
 
   const virtualTarget = document.createElement("div");
   virtualTarget.id = "virtual-widget-target";
@@ -487,6 +589,9 @@ async function run() {
     commandInvokeOk &&
     commandInputOk &&
     commandListOk &&
+    imeCompositionOk &&
+    deadKeyOk &&
+    mobileInputOk &&
     virtualListOk &&
     virtualTreeOk &&
     virtualTableOk &&
@@ -516,6 +621,9 @@ async function run() {
     commandInvokeOk,
     commandInputOk,
     commandListOk,
+    imeCompositionOk,
+    deadKeyOk,
+    mobileInputOk,
     virtualListOk,
     virtualTreeOk,
     virtualTableOk,
