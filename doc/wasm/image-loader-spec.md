@@ -51,6 +51,20 @@ Optional host entry paths (current bring‑up):
 If the image references compiled modules, the host should install them from the
 registry before entering `start_lisp` or stepping the toplevel.
 
+## Real Image Policy (Seed)
+
+For “real” WASM images (as opposed to the minimal stub image), the image build
+path must seed the kernel toplevel function explicitly:
+
+- `%toplevel-function%` (NRS index 16) is set to `toplevel-loop` in the image.
+  The kernel copies this into the VSP toplevel slot before entering
+  `start_lisp`.
+- `%wasm-compiled-modules%` (NRS index 33) may contain the compiled‑modules
+  registry. If non‑NIL, the host should install these modules before entering
+  `start_lisp`.
+
+The seed image build script is `scripts/wasm/make-real-image.lisp`.
+
 ## Reference host placement strategy (current)
 
 The Node helper (`doc/wasm/js/load-image.mjs`) uses:

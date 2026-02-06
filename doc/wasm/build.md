@@ -213,6 +213,16 @@ Or to boot via `start_lisp` instead of the explicit toplevel run:
 node doc/wasm/js/load-image.mjs --start-lisp doc/wasm/minimal.image
 ```
 
+## Generate A Real WASM Image (Seed)
+
+Build a real WASM32 heap image with `%toplevel-function%` seeded to
+`toplevel-loop` (so `start_lisp` can enter the real Lisp toplevel once the
+image is loaded). This script must be run under a **WASM32-target** CCL.
+
+```bash
+ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --output doc/wasm/root.image
+```
+
 ## JS Wiring (Sketch-Level)
 
 See:
