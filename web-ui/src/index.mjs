@@ -36,6 +36,7 @@ export {
   applyCommandPaletteSelection,
   resolveCommandPaletteSelection,
   registerCommandPaletteCommands,
+  bindCommandPaletteDefaults,
   openKeybindingWindow,
   refreshKeybindingWindow
 } from "./state.mjs";

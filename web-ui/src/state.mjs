@@ -10,7 +10,7 @@ import {
   dockLayoutNode
 } from "./layout.mjs";
 import { normalizeFocusTarget, normalizeFocusHistory, setFocus as setFocusCore } from "./focus.mjs";
-import { registerCommand, executeCommand } from "./commands.mjs";
+import { registerCommand, executeCommand, bindKey } from "./commands.mjs";
 
 const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layout", "reason", "error", "job"];
 export const COMMAND_PALETTE_FILTER_COMMAND = "ui.command-palette.filter";
@@ -890,6 +890,25 @@ export function registerCommandPaletteCommands(registry, options = {}) {
     }
   });
 
+  return registry;
+}
+
+export function bindCommandPaletteDefaults(registry, options = {}) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  const scope = options.scope ?? "task";
+  const taskId = options.taskId ?? null;
+  const hasScopeId = scope !== "global";
+  if (hasScopeId && !taskId) {
+    throw new Error("Task id required for non-global palette bindings");
+  }
+  const bind = (key, commandId) => {
+    bindKey(registry, scope, key, commandId, hasScopeId ? taskId : null);
+  };
+  bind("ArrowDown", COMMAND_PALETTE_SELECT_NEXT_COMMAND);
+  bind("ArrowUp", COMMAND_PALETTE_SELECT_PREV_COMMAND);
+  bind("Enter", COMMAND_PALETTE_EXECUTE_SELECTION_COMMAND);
   return registry;
 }
 

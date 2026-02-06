@@ -14,9 +14,10 @@ import {
   openCommandPaletteWindow,
   refreshCommandPaletteWindow,
   openKeybindingWindow,
-  registerCommandPaletteCommands
+  registerCommandPaletteCommands,
+  bindCommandPaletteDefaults
 } from "../src/state.mjs";
-import { createRegistry, registerCommand, bindKey, executeCommand } from "../src/commands.mjs";
+import { createRegistry, registerCommand, bindKey, executeCommand, resolveKey } from "../src/commands.mjs";
 import { makeContext } from "../src/context.mjs";
 
 function makeRegistry() {
@@ -79,6 +80,7 @@ test("palette command registration wires navigation and execution", () => {
   registerCommand(registry, { id: "alpha.run", exec: () => "alpha" });
   registerCommand(registry, { id: "beta.build", exec: () => "beta" });
   registerCommandPaletteCommands(registry);
+  bindCommandPaletteDefaults(registry, { taskId: "task-1" });
 
   let state = createState();
   state = addTask(state, { id: "task-1", title: "Task" });
@@ -106,6 +108,9 @@ test("palette command registration wires navigation and execution", () => {
   assert.equal(execSelected.ok, true);
   assert.equal(execSelected.result.ok, true);
   assert.equal(execSelected.result.result, "beta");
+
+  const resolved = resolveKey(registry, "ArrowDown", { taskId: "task-1" });
+  assert.equal(resolved, COMMAND_PALETTE_SELECT_NEXT_COMMAND);
 });
 
 test("keybinding viewer lists bindings", () => {

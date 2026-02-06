@@ -14,10 +14,12 @@ import {
   refreshCommandPaletteWindow,
   openKeybindingWindow,
   registerCommandPaletteCommands,
+  bindCommandPaletteDefaults,
   createRegistry,
   registerCommand,
   executeCommand,
-  bindKey
+  bindKey,
+  resolveKey
 } from "../../../web-ui/src/index.mjs";
 
 const registry = createRegistry();
@@ -26,6 +28,7 @@ registerCommand(registry, { id: "beta.build", title: "Beta Build" });
 bindKey(registry, "global", "K", "alpha.run");
 bindKey(registry, "task", "B", "beta.build", "task-1");
 registerCommandPaletteCommands(registry);
+bindCommandPaletteDefaults(registry, { taskId: "task-1" });
 
 let state = createState();
 state = addTask(state, { id: "task-1", title: "Task" });
@@ -56,6 +59,9 @@ state = applyCommandPaletteSelection(state, { registry, windowId: paletteWindow.
 const selected = resolveCommandPaletteSelection(state, { windowId: paletteWindow.id });
 assert.equal(selected.commandId, "beta.build");
 assert.equal(COMMAND_PALETTE_SELECT_NEXT_COMMAND, "ui.command-palette.select-next");
+
+const bound = resolveKey(registry, "ArrowDown", { taskId: "task-1" });
+assert.equal(bound, COMMAND_PALETTE_SELECT_NEXT_COMMAND);
 
 const execSelected = executeCommand(registry, COMMAND_PALETTE_EXECUTE_SELECTION_COMMAND, {
   state,
