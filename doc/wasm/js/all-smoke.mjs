@@ -2,6 +2,7 @@
  * Run all WASM JS smoke tests in a single Node invocation.
  */
 
+const skipUi = process.argv.includes("--no-ui");
 const tests = [
   "./smoke-test.mjs",
   "./kernel-request-smoke.mjs",
@@ -24,6 +25,7 @@ const tests = [
   "./compiler-smoke.mjs",
   "./float-smoke.mjs",
   "./web-ui-list-smoke.mjs",
+  "./web-ui-canvas-smoke.mjs",
   "./web-ui-layout-focus-smoke.mjs",
   "./web-ui-inspector-smoke.mjs",
   "./web-ui-debugger-smoke.mjs",
@@ -32,7 +34,11 @@ const tests = [
   "./mvcall-smoke.mjs"
 ];
 
-for (const test of tests) {
+const filteredTests = skipUi
+  ? tests.filter((test) => !test.startsWith("./web-ui-"))
+  : tests;
+
+for (const test of filteredTests) {
   await import(new URL(test, import.meta.url));
 }
 

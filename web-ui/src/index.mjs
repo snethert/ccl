@@ -50,3 +50,6 @@ export { createElement, createText, h, normalizeChildren } from "./vdom.mjs";
 export { createRoot } from "./renderer.mjs";
 export { renderWidget, renderWindow } from "./widgets.mjs";
 export { createEventLog, normalizeEventLog, recordEvent as recordEventLog } from "./event-log.mjs";
+export { buildScene, hitTestScene, normalizeSceneNode, flattenScene } from "../backends/canvas/scene.mjs";
+export { createCanvasBackend, createCanvasRoot } from "../backends/canvas/renderer.mjs";
+export { createMeasureCache } from "../backends/canvas/measure.mjs";

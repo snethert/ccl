@@ -145,6 +145,18 @@
                   ]
                 }
               ]
+            },
+            {
+              "kind": "element",
+              "tag": "canvas",
+              "props": {
+                "className": "ui-widget ui-canvas-view",
+                "data-widget-id": "widget-canvas",
+                "data-widget-kind": "canvas-view",
+                "height": 60,
+                "width": 80
+              },
+              "children": []
             }
           ]
         }

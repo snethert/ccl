@@ -263,3 +263,13 @@ Exit criteria:
 - Added context helpers and a module index for consistent imports.
 - Expanded state model to cover workspace, widgets, presentations, and ID counters.
 - Added state graph unit tests for task/window/widget wiring.
+
+### Phase 5 Progress
+- Added canvas scene normalization, draw traversal, and hit-testing helpers.
+- Added canvas backend with text measurement cache, animation-frame invalidation, and dirty-rect redraws with draw culling.
+- Added canvas-view widget with command dispatch via hit testing.
+- Updated DOM backend to handle canvas render hooks.
+- Added unit tests for canvas scene building, hit testing, and measure cache behavior.
+- Extended widget snapshots and command wiring tests for canvas views.
+- Extended browser harness to validate canvas backend hit testing and canvas-view commands.
+- Added web-ui canvas smoke test and wired it into the WASM smoke runner.

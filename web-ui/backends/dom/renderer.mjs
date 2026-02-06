@@ -98,6 +98,13 @@ export function createDomBackend({ document: doc, container } = {}) {
       node.nodeValue = text;
     },
     setProp(node, name, value) {
+      if (name.startsWith("__")) {
+        node[name] = value;
+        if (name === "__canvasRender" && typeof value === "function") {
+          value(node);
+        }
+        return;
+      }
       if (isEventProp(name) && typeof value === "function") {
         setEvent(node, name, value);
         return;
@@ -138,6 +145,14 @@ export function createDomBackend({ document: doc, container } = {}) {
       node.setAttribute(name, String(value));
     },
     removeProp(node, name) {
+      if (name.startsWith("__")) {
+        try {
+          delete node[name];
+        } catch (err) {
+          node[name] = undefined;
+        }
+        return;
+      }
       if (isEventProp(name)) {
         clearEvent(node, name);
         return;

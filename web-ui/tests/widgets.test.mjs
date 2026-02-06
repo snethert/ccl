@@ -120,6 +120,24 @@ test("widget adapter renders a window tree via the renderer", async () => {
     }
   });
 
+  state = addWidget(state, {
+    id: "widget-canvas",
+    kind: "canvas-view",
+    parentId: "widget-root",
+    props: {
+      width: 80,
+      height: 60,
+      scene: [
+        {
+          id: "rect-1",
+          kind: "rect",
+          bounds: { x: 5, y: 5, width: 20, height: 10 },
+          props: { fill: "#ff0000" }
+        }
+      ]
+    }
+  });
+
   const tree = renderWindow(state, "win-1");
   root.render(tree);
 

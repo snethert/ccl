@@ -6,6 +6,7 @@ import { reconcileFocus, resolveFocusTargetFromElement } from "../../src/focus.m
 import { createElement, createText } from "../../src/vdom.mjs";
 import { renderWindow } from "../../src/widgets.mjs";
 import { createDomBackend, createDomRoot } from "../../backends/dom/renderer.mjs";
+import { createCanvasBackend } from "../../backends/canvas/renderer.mjs";
 
 async function loadJson(relPath) {
   const response = await fetch(relPath);
@@ -98,6 +99,7 @@ async function run() {
   let commandCalls = 0;
   let inputValue = null;
   let listItemId = null;
+  let canvasHitCtx = null;
   registerCommand(registry, {
     id: "demo.run",
     exec: () => {
@@ -118,6 +120,12 @@ async function run() {
     id: "demo.item",
     exec: (ctx) => {
       listItemId = ctx.itemId ?? null;
+    }
+  });
+  registerCommand(registry, {
+    id: "demo.canvas",
+    exec: (ctx) => {
+      canvasHitCtx = ctx;
     }
   });
 
@@ -189,6 +197,50 @@ async function run() {
   }
   const commandListOk = listItemId === "alpha";
 
+  const canvasWidgetTarget = document.createElement("div");
+  canvasWidgetTarget.id = "canvas-widget-target";
+  root.appendChild(canvasWidgetTarget);
+
+  let canvasState = createState();
+  canvasState = addTask(canvasState, { id: "task-canvas", title: "Canvas Task" });
+  canvasState = addWindow(canvasState, { id: "win-canvas", taskId: "task-canvas", kind: "document" });
+  canvasState = addWidget(canvasState, { id: "canvas-root", kind: "container", windowId: "win-canvas" });
+  canvasState = addWidget(canvasState, {
+    id: "canvas-widget",
+    kind: "canvas-view",
+    parentId: "canvas-root",
+    props: {
+      command: "demo.canvas",
+      width: 80,
+      height: 60,
+      style: { width: "80px", height: "60px" },
+      scene: [
+        {
+          id: "rect-1",
+          kind: "rect",
+          bounds: { x: 0, y: 0, width: 20, height: 20 },
+          props: { fill: "#00f", commandId: "demo.canvas" }
+        }
+      ]
+    }
+  });
+
+  const canvasWidgetRoot = createDomRoot(canvasWidgetTarget, { document });
+  canvasWidgetRoot.render(renderWindow(canvasState, "win-canvas", { registry }));
+
+  const canvasNode = canvasWidgetTarget.querySelector("[data-widget-id='canvas-widget']");
+  const canvasWidgetOk = Boolean(canvasNode?.__canvasBackend && canvasNode?.__canvasScene);
+  if (canvasNode) {
+    const canvasRect = canvasNode.getBoundingClientRect();
+    const click = new MouseEvent("click", {
+      bubbles: true,
+      clientX: canvasRect.left + 5,
+      clientY: canvasRect.top + 5
+    });
+    canvasNode.dispatchEvent(click);
+  }
+  const canvasWidgetCommandOk = canvasHitCtx?.hitId === "rect-1" && canvasHitCtx?.canvasId === "canvas-widget";
+
   const focusState = reconcileFocus(widgetState, { target: runButton, seq: 1 }, {
     resolveTarget: (element) => resolveFocusTargetFromElement(element, widgetState)
   });
@@ -236,6 +288,17 @@ async function run() {
   const pixel = ctx.getImageData(5, 5, 1, 1).data;
   const canvasOk = pixel[0] === 255 && pixel[1] === 0 && pixel[2] === 0 && pixel[3] === 255;
 
+  const canvasBackend = createCanvasBackend({ canvas, document });
+  canvasBackend.render([
+    { id: "bottom", kind: "rect", bounds: { x: 0, y: 0, width: 8, height: 8 }, props: { fill: "#000" } },
+    { id: "top", kind: "rect", bounds: { x: 0, y: 0, width: 8, height: 8 }, props: { fill: "#111" } }
+  ]);
+  const backendHit = canvasBackend.hitTest({ x: 4, y: 4 });
+  const canvasBackendHitOk = backendHit?.id === "top";
+  const measureFirst = canvasBackend.measureText("Hello", { font: "12px monospace" });
+  const measureSecond = canvasBackend.measureText("Hello", { font: "12px monospace" });
+  const canvasMeasureOk = measureFirst.cacheHit === false && measureSecond.cacheHit === true;
+
   const ok =
     snapshotMatch &&
     domOk &&
@@ -243,12 +306,18 @@ async function run() {
     domReuseOk &&
     commandDomOk &&
     commandInvokeOk &&
+    commandInputOk &&
+    commandListOk &&
+    canvasWidgetOk &&
+    canvasWidgetCommandOk &&
     focusOk &&
     measureOk &&
     hitTestOk &&
     captureEventsOk &&
     invalidateOk &&
-    canvasOk;
+    canvasOk &&
+    canvasBackendHitOk &&
+    canvasMeasureOk;
   const payload = {
     ok,
     snapshotMatch,
@@ -259,12 +328,16 @@ async function run() {
     commandInvokeOk,
     commandInputOk,
     commandListOk,
+    canvasWidgetOk,
+    canvasWidgetCommandOk,
     focusOk,
     measureOk,
     hitTestOk,
     captureEventsOk,
     invalidateOk,
-    canvasOk
+    canvasOk,
+    canvasBackendHitOk,
+    canvasMeasureOk
   };
 
   if (window.__WEB_UI_TEST_DONE__) {

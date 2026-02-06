@@ -170,3 +170,57 @@ test("list item command wiring provides item context", () => {
   assert.equal(lastCtx.itemIndex, 0);
   assert.equal(lastCtx.listId, "widget-list");
 });
+
+test("canvas view command wiring uses hit testing", () => {
+  const registry = createRegistry();
+  let lastCtx = null;
+
+  registerCommand(registry, {
+    id: "demo.canvas",
+    exec: (ctx) => {
+      lastCtx = ctx;
+    }
+  });
+
+  let state = createState();
+  state = addTask(state, { id: "task-1", title: "Task" });
+  state = addWindow(state, { id: "win-1", taskId: "task-1", kind: "document" });
+  state = addWidget(state, { id: "root", kind: "container", windowId: "win-1" });
+  state = addWidget(state, {
+    id: "widget-canvas",
+    kind: "canvas-view",
+    parentId: "root",
+    props: {
+      command: "demo.canvas",
+      width: 100,
+      height: 80,
+      scene: [
+        {
+          id: "rect-1",
+          kind: "rect",
+          bounds: { x: 0, y: 0, width: 20, height: 20 },
+          props: { commandId: "demo.canvas", fill: "#00f" }
+        }
+      ]
+    }
+  });
+
+  const tree = renderWindow(state, "win-1", { registry });
+  const canvas = findByWidgetId(tree, "widget-canvas");
+
+  assert.ok(canvas, "canvas view exists");
+  assert.equal(canvas.tag, "canvas");
+  assert.equal(canvas.props["data-command-id"], "demo.canvas");
+  assert.equal(typeof canvas.props.onClick, "function");
+
+  const target = {
+    __canvasBackend: {},
+    getBoundingClientRect: () => ({ left: 0, top: 0 })
+  };
+  canvas.props.onClick({ currentTarget: target, clientX: 5, clientY: 5, type: "click" });
+
+  assert.ok(lastCtx, "canvas command executed");
+  assert.equal(lastCtx.canvasId, "widget-canvas");
+  assert.equal(lastCtx.hitId, "rect-1");
+  assert.equal(lastCtx.hitKind, "rect");
+});
