@@ -158,6 +158,15 @@ export function resolveFocusTargetFromElement(element, state, options = {}) {
 }
 
 export function reconcileFocus(state, event, options = {}) {
+  const composing =
+    options.isComposing ??
+    options.compositionActive ??
+    options.compositionState?.active ??
+    event?.isComposing ??
+    false;
+  if (options.deferWhileComposing && composing) {
+    return state;
+  }
   const resolver =
     options.resolveTarget ??
     ((element) => resolveFocusTargetFromElement(element, state, options));

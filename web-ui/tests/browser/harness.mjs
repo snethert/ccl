@@ -383,6 +383,7 @@ async function run() {
   const webglWidgetCommandOk = webglHitCtx?.hitId === "rect-1" && webglHitCtx?.webglId === "webgl-widget";
 
   const focusState = reconcileFocus(widgetState, { target: runButton, seq: 1 }, {
+    deferWhileComposing: true,
     resolveTarget: (element) => resolveFocusTargetFromElement(element, widgetState)
   });
   const focusOk = focusState.focus?.widgetId === "btn-run" && focusState.focus?.windowId === "win-1";

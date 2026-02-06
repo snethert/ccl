@@ -50,3 +50,19 @@ test("reconcileFocus updates focus from resolver", () => {
   assert.equal(next.focusHistory.length, 1);
   assert.equal(next.focusHistory[0].reason, FOCUS_REASONS.RECONCILE);
 });
+
+test("reconcileFocus defers while composing", () => {
+  let state = createState();
+  state = addTask(state, { id: "task-1" });
+  state = addWindow(state, { id: "win-1", taskId: "task-1" });
+  state = addWidget(state, { id: "widget-1", kind: "button", windowId: "win-1" });
+
+  const event = { target: { id: "mock" }, isComposing: true, seq: 5 };
+  const next = reconcileFocus(state, event, {
+    deferWhileComposing: true,
+    resolveTarget: () => ({ widgetId: "widget-1" })
+  });
+
+  assert.equal(next.focus, null);
+  assert.equal(next.focusHistory.length, 0);
+});
