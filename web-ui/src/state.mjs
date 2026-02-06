@@ -576,7 +576,24 @@ function buildKeybindingTraceItems(registry, options = {}) {
   }
   const ctx = options.context ?? {};
   const resolved = resolveKeyWithTrace(registry, key, ctx);
-  const trace = Array.isArray(resolved.trace) ? resolved.trace : [];
+  const baseTrace = Array.isArray(resolved.trace) ? resolved.trace : [];
+  const precedence = Array.isArray(registry.precedence) ? registry.precedence : [];
+  const seenScopes = new Set(baseTrace.map((entry) => entry.scope));
+  const trace = [...baseTrace];
+  if (resolved.commandId && baseTrace.length < precedence.length) {
+    for (const scope of precedence) {
+      if (seenScopes.has(scope)) continue;
+      const scopeId = scope === "global" ? null : (ctx?.[`${scope}Id`] ?? null);
+      trace.push({
+        scope,
+        scopeId,
+        key,
+        commandId: null,
+        matched: false,
+        reason: "skipped-after-match"
+      });
+    }
+  }
   if (trace.length === 0) {
     return [{ id: "kb-trace-empty", label: "No trace available" }];
   }

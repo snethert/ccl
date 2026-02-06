@@ -114,6 +114,16 @@ assert.ok(keybindingItems.some((item) => item.label.includes("widget(widget-1): 
 const traceItems = state.widgets[keybindingWindow.metadata.widgets.traceListId].props.items;
 assert.ok(traceItems.some((item) => item.label.includes("widget(widget-1): W → delta.pick")));
 
+state = refreshKeybindingWindow(state, keybindingWindow.id, {
+  registry,
+  traceKey: "K",
+  contextId: "ctx-1",
+  widgetId: "widget-1"
+});
+const traceItemsGlobal = state.widgets[keybindingWindow.metadata.widgets.traceListId].props.items;
+assert.ok(traceItemsGlobal.some((item) => item.label.includes("global: K → alpha.run (match)")));
+assert.ok(traceItemsGlobal.some((item) => item.label.includes("skipped-after-match")));
+
 const closedKeybindings = executeCommand(registry, KEYBINDINGS_CLOSE_COMMAND, {
   state,
   taskId: "task-1"

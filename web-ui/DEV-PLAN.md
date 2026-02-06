@@ -320,3 +320,4 @@ Exit criteria:
 - Added keybinding trace panel and context/widget scope coverage in command UI tests.
 - Added default open/dismiss keybindings for command palette and keybinding viewer.
 - Added command routing tests for configurable context/widget precedence.
+- Added deeper keybinding trace coverage with skipped-after-match entries.

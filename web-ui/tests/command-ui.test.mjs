@@ -19,6 +19,7 @@ import {
   openCommandPaletteWindow,
   refreshCommandPaletteWindow,
   openKeybindingWindow,
+  refreshKeybindingWindow,
   registerCommandPaletteCommands,
   registerCommandSurfaceCommands,
   bindCommandPaletteDefaults,
@@ -191,4 +192,14 @@ test("keybinding viewer lists bindings", () => {
   const traceItems = state.widgets[traceListId].props.items;
   assert.ok(traceItems.some((item) => item.label.includes("widget(widget-1): W → delta.pick")));
   assert.ok(traceItems.some((item) => item.label.includes("context(ctx-1): W →")));
+
+  state = refreshKeybindingWindow(state, viewer.id, {
+    registry,
+    traceKey: "K",
+    contextId: "ctx-1",
+    widgetId: "widget-1"
+  });
+  const traceItemsGlobal = state.widgets[traceListId].props.items;
+  assert.ok(traceItemsGlobal.some((item) => item.label.includes("global: K → alpha.run (match)")));
+  assert.ok(traceItemsGlobal.some((item) => item.label.includes("skipped-after-match")));
 });

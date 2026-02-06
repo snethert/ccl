@@ -318,6 +318,7 @@ Lisp code runs only within command execution boundaries and explicit yields.
 - Default keybindings SHOULD include `Ctrl+Shift+P` (open palette), `Ctrl+Shift+K` (open keybindings), and `Escape` (dismiss active command surface).
 - Keybinding viewer entries SHOULD encode scope, scope id (if any), key, and command id in a human-readable label.
 - The keybinding viewer SHOULD expose a trace panel for a selected key showing scope decisions in order.
+- Trace entries SHOULD include explicit reasons when a scope is skipped after a match or missing its scope id.
 
 ### Focus manager
 - Maintain authoritative focus state in Lisp: active task, active window, focused widget.
