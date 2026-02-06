@@ -72,22 +72,22 @@ Work order is deterministic:
 
 ## Working Memory (update after each subprim)
 
-- Last completed subprim: `_SPdefault_optional_args`
-- Changes made: reviewed `_SPdefault_optional_args`; no code changes needed (nil-filling for missing optionals matches ARM behavior).
+- Last completed subprim: `_SPspecset`
+- Changes made: renamed `idx/lim` to `index/limit_count` across binding-related subprims (`_SPbind`, `_SPbind_self`, `_SPbind_self_boundp_check`, `_SPprogvsave`, `_SPspecset`) and renamed `result` to `count` in `wasm_positive_fixnum_or_trap` to classify bounds checks as validation (no semantic change).
 - Tests run: none
-- Remaining traps (if any) and why: `_SPdefault_optional_args` still traps on invalid runtime state (null TCR/VSP).
+- Remaining traps (if any) and why: binding-related subprims still trap on invalid runtime state (null tcr/tlb/vsp) or malformed indices (validation only).
 - Next subprim (single): `_SPdebind`
-- Backlog (top 5): `_SPdebind`, `_SPgets32`, `_SPgetu32`, `_SPconslist`, `_SPkeyword_bind`
+- Backlog (top 5): `_SPdebind`, `_SPgvector`, `_SPconslist`, `_SPconslist_star`, `_SPheap_rest_arg`
 - Blockers/questions: Interrupt-level subprims still lack real pending-interrupt handling on wasm; no host hook yet.
 
 ## Current State
 
-- Last completed subprim: `_SPdefault_optional_args`
-- Changes made: reviewed `_SPdefault_optional_args`; no code changes needed (nil-filling for missing optionals matches ARM behavior).
+- Last completed subprim: `_SPspecset`
+- Changes made: renamed `idx/lim` to `index/limit_count` across binding-related subprims (`_SPbind`, `_SPbind_self`, `_SPbind_self_boundp_check`, `_SPprogvsave`, `_SPspecset`) and renamed `result` to `count` in `wasm_positive_fixnum_or_trap` to classify bounds checks as validation (no semantic change).
 - Tests run: none
-- Remaining traps (if any) and why: `_SPdefault_optional_args` still traps on invalid runtime state (null TCR/VSP).
+- Remaining traps (if any) and why: binding-related subprims still trap on invalid runtime state (null tcr/tlb/vsp) or malformed indices (validation only).
 - Next subprim (single): `_SPdebind`
-- Backlog (top 5): `_SPdebind`, `_SPgets32`, `_SPgetu32`, `_SPconslist`, `_SPkeyword_bind`
+- Backlog (top 5): `_SPdebind`, `_SPgvector`, `_SPconslist`, `_SPconslist_star`, `_SPheap_rest_arg`
 - Blockers/questions: interrupt-level subprims need pending-interrupt handling on wasm; no host hook yet.
 
 ## Command Snippets

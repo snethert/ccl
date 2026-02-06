@@ -160,6 +160,7 @@ wasm_t_value(void)
 #define WASM_XWRONGTYPE 157
 #define WASM_XARRLIMIT 77
 #define WASM_XDIVZRO 66
+#define WASM_XNOSPREAD 120
 #define WASM_XVUNBND 1
 #define WASM_XSYMNOBIND 178
 #define WASM_XNOCTAG 33
@@ -793,11 +794,11 @@ wasm_symbol_or_trap(LispObj symbol)
 static inline signed_natural
 wasm_positive_fixnum_or_trap(LispObj value)
 {
-  signed_natural result = wasm_unbox_fixnum_or_trap(value);
-  if (result <= 0) {
+  signed_natural count = wasm_unbox_fixnum_or_trap(value);
+  if (count <= 0) {
     wasm_subprims_trap();
   }
-  return result;
+  return count;
 }
 
 static inline int
@@ -1679,7 +1680,7 @@ _SPnthrow1value(void)
   }
 
   tcr->unwinding = 1;
-  wasm_sync_arg_regs_from_vsp(tcr);
+  /* Single-value unwind: arg_z is authoritative per ABI; don't clobber from VSP. */
   wasm_set_reg(tcr, nargs, box_fixnum(1));
 
   while (frame_count-- > 0) {
@@ -1739,7 +1740,12 @@ _SPnthrow1value(void)
     }
 
     if (frame_count == 0) {
-      wasm_set_reg(tcr, vsp, cf->save_vsp);
+      LispObj *saved_vsp = (LispObj *)cf->save_vsp;
+      if (saved_vsp == NULL) {
+        wasm_subprims_trap();
+      }
+      wasm_set_reg(tcr, vsp, (LispObj)saved_vsp);
+      tcr->save_vsp = saved_vsp;
     }
 
     wasm_free_catch_frame(cf);
@@ -2198,16 +2204,16 @@ _SPfitvals(void)
     wasm_subprims_trap();
   }
 
-  signed_natural desired = unbox_fixnum(raw_desired);
-  signed_natural current = unbox_fixnum(raw_nargs);
-  if (desired < 0 || current < 0) {
+  signed_natural desired_count = unbox_fixnum(raw_desired);
+  signed_natural current_count = unbox_fixnum(raw_nargs);
+  if (desired_count < 0 || current_count < 0) {
     wasm_subprims_trap();
   }
 
   LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
 
-  if (desired == 0) {
-    LispObj *new_vsp = vsp_ptr + current;
+  if (desired_count == 0) {
+    LispObj *new_vsp = vsp_ptr + current_count;
     wasm_set_reg(tcr, vsp, (LispObj)new_vsp);
     tcr->save_vsp = new_vsp;
     wasm_set_reg(tcr, nargs, box_fixnum(0));
@@ -2215,31 +2221,31 @@ _SPfitvals(void)
     return;
   }
 
-  if (desired == current) {
+  if (desired_count == current_count) {
     return;
   }
 
-  if (desired < current) {
-    signed_natural diff = current - desired;
+  if (desired_count < current_count) {
+    signed_natural diff = current_count - desired_count;
     LispObj *new_vsp = vsp_ptr + diff;
-    memmove(new_vsp, vsp_ptr, (size_t)desired * sizeof(LispObj));
+    memmove(new_vsp, vsp_ptr, (size_t)desired_count * sizeof(LispObj));
     wasm_set_reg(tcr, vsp, (LispObj)new_vsp);
     tcr->save_vsp = new_vsp;
-    wasm_set_reg(tcr, nargs, box_fixnum(desired));
+    wasm_set_reg(tcr, nargs, box_fixnum(desired_count));
     return;
   }
 
-  signed_natural diff = desired - current;
+  signed_natural diff = desired_count - current_count;
   LispObj *new_vsp = vsp_ptr - diff;
-  memmove(new_vsp, vsp_ptr, (size_t)current * sizeof(LispObj));
-  for (signed_natural i = current; i < desired; i++) {
+  memmove(new_vsp, vsp_ptr, (size_t)current_count * sizeof(LispObj));
+  for (signed_natural i = current_count; i < desired_count; i++) {
     new_vsp[i] = (LispObj)nil_value;
   }
 
   wasm_set_reg(tcr, vsp, (LispObj)new_vsp);
   tcr->save_vsp = new_vsp;
-  wasm_set_reg(tcr, nargs, box_fixnum(desired));
-  if (current == 0) {
+  wasm_set_reg(tcr, nargs, box_fixnum(desired_count));
+  if (current_count == 0) {
     wasm_set_reg(tcr, arg_z, (LispObj)nil_value);
   }
 }
@@ -2632,8 +2638,8 @@ _SPmisc_alloc(void)
     _SPksignalerr();
     return;
   }
-  unsigned tag = subtag & fulltagmask;
-  if (tag != fulltag_nodeheader && tag != fulltag_immheader) {
+  unsigned subtag_tag = subtag & fulltagmask;
+  if (subtag_tag != fulltag_nodeheader && subtag_tag != fulltag_immheader) {
     static const char msg[] = "WASM _SPmisc_alloc: bad subtag\n";
     wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
     wasm_subprims_trap();
@@ -4521,7 +4527,8 @@ _SPgets32(void)
   signed_natural count = 0;
   uint32_t *digits = NULL;
   if (!wasm_bignum_info(value, &count, &digits) || count != 1) {
-    wasm_subprims_trap();
+    wasm_signal_wrong_type(tcr, value, wasm_type_signed_byte(tcr, 32));
+    return;
   }
   wasm_set_reg(tcr, imm0, (LispObj)(int32_t)digits[0]);
 }
@@ -4678,7 +4685,8 @@ _SPgets64(void)
   signed_natural count = 0;
   uint32_t *digits = NULL;
   if (!wasm_bignum_info(value, &count, &digits)) {
-    wasm_subprims_trap();
+    wasm_signal_wrong_type(tcr, value, wasm_type_signed_byte(tcr, 64));
+    return;
   }
 
   if (count == 1) {
@@ -4814,20 +4822,20 @@ _SPspecset(void)
     wasm_subprims_trap();
   }
 
-  signed_natural idx = unbox_fixnum(binding_index);
-  signed_natural lim = unbox_fixnum(limit);
-  if (lim < 0) {
+  signed_natural index = unbox_fixnum(binding_index);
+  signed_natural limit_count = unbox_fixnum(limit);
+  if (limit_count < 0) {
     wasm_subprims_trap();
   }
 
-  if ((unsigned)idx >= (unsigned)lim) {
-    idx = 0;
+  if ((unsigned)index >= (unsigned)limit_count) {
+    index = 0;
   }
 
-  if (idx > 0) {
-    LispObj old_value = tlb[idx];
+  if (index > 0) {
+    LispObj old_value = tlb[index];
     if (old_value != (LispObj)no_thread_local_binding_marker) {
-      tlb[idx] = wasm_reg(tcr, arg_z);
+      tlb[index] = wasm_reg(tcr, arg_z);
       return;
     }
   }
@@ -4875,6 +4883,7 @@ _SPspreadargz(void)
   }
 
   LispObj list = wasm_reg(tcr, arg_z);
+  LispObj orig_list = list;
   LispObj *orig_vsp = wasm_vsp_or_trap(tcr);
   signed_natural orig_count = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, nargs));
   if (orig_count < 0) {
@@ -4888,8 +4897,11 @@ _SPspreadargz(void)
     if (tag_of(list) != tag_list) {
       wasm_set_reg(tcr, vsp, (LispObj)orig_vsp);
       tcr->save_vsp = orig_vsp;
-      wasm_set_reg(tcr, nargs, box_fixnum(orig_count));
-      wasm_subprims_trap();
+      wasm_set_reg(tcr, arg_z, orig_list);
+      wasm_set_reg(tcr, arg_y, box_fixnum(WASM_XNOSPREAD));
+      wasm_set_reg(tcr, nargs, box_fixnum(2));
+      _SPksignalerr();
+      return;
     }
 
     cons *cell = (cons *)ptr_from_lispobj(untag(list));
@@ -4920,21 +4932,21 @@ _SPbind(void)
   lispsymbol *sym = wasm_symbol_or_trap(symbol);
 
   LispObj binding_index = sym->binding_index;
-  signed_natural idx = wasm_unbox_fixnum_or_trap(binding_index);
-  if (idx == 0) {
+  signed_natural index = wasm_unbox_fixnum_or_trap(binding_index);
+  if (index == 0) {
     wasm_set_reg(tcr, arg_z, symbol);
     wasm_set_reg(tcr, arg_y, box_fixnum(WASM_XSYMNOBIND));
     wasm_set_reg(tcr, nargs, box_fixnum(2));
     _SPksignalerr();
     return;
   }
-  if (idx < 0) {
+  if (index < 0) {
     wasm_subprims_trap();
   }
 
   LispObj limit = tcr->tlb_limit;
-  signed_natural lim = wasm_positive_fixnum_or_trap(limit);
-  if ((unsigned)idx >= (unsigned)lim) {
+  signed_natural limit_count = wasm_positive_fixnum_or_trap(limit);
+  if ((unsigned)index >= (unsigned)limit_count) {
     wasm_subprims_trap();
   }
 
@@ -4943,14 +4955,14 @@ _SPbind(void)
     wasm_subprims_trap();
   }
 
-  LispObj old_value = tlb[idx];
+  LispObj old_value = tlb[index];
   LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
   LispObj *new_vsp = vsp_ptr - 3;
   new_vsp[0] = (LispObj)tcr->db_link;
   new_vsp[1] = binding_index;
   new_vsp[2] = old_value;
 
-  tlb[idx] = wasm_reg(tcr, arg_z);
+  tlb[index] = wasm_reg(tcr, arg_z);
   tcr->db_link = (special_binding *)new_vsp;
   tcr->save_vsp = new_vsp;
   wasm_set_reg(tcr, vsp, (LispObj)new_vsp);
@@ -4969,21 +4981,21 @@ _SPbind_self(void)
   lispsymbol *sym = wasm_symbol_or_trap(symbol);
 
   LispObj binding_index = sym->binding_index;
-  signed_natural idx = wasm_unbox_fixnum_or_trap(binding_index);
-  if (idx == 0) {
+  signed_natural index = wasm_unbox_fixnum_or_trap(binding_index);
+  if (index == 0) {
     wasm_set_reg(tcr, arg_z, symbol);
     wasm_set_reg(tcr, arg_y, box_fixnum(WASM_XSYMNOBIND));
     wasm_set_reg(tcr, nargs, box_fixnum(2));
     _SPksignalerr();
     return;
   }
-  if (idx < 0) {
+  if (index < 0) {
     wasm_subprims_trap();
   }
 
   LispObj limit = tcr->tlb_limit;
-  signed_natural lim = wasm_positive_fixnum_or_trap(limit);
-  if ((unsigned)idx >= (unsigned)lim) {
+  signed_natural limit_count = wasm_positive_fixnum_or_trap(limit);
+  if ((unsigned)index >= (unsigned)limit_count) {
     wasm_subprims_trap();
   }
 
@@ -4992,7 +5004,7 @@ _SPbind_self(void)
     wasm_subprims_trap();
   }
 
-  LispObj old_value = tlb[idx];
+  LispObj old_value = tlb[index];
   LispObj value = old_value;
   if (old_value == (LispObj)no_thread_local_binding_marker) {
     value = sym->vcell;
@@ -5004,7 +5016,7 @@ _SPbind_self(void)
   new_vsp[1] = binding_index;
   new_vsp[2] = old_value;
 
-  tlb[idx] = value;
+  tlb[index] = value;
   tcr->db_link = (special_binding *)new_vsp;
   tcr->save_vsp = new_vsp;
   wasm_set_reg(tcr, vsp, (LispObj)new_vsp);
@@ -5038,21 +5050,21 @@ _SPbind_self_boundp_check(void)
   lispsymbol *sym = wasm_symbol_or_trap(symbol);
 
   LispObj binding_index = sym->binding_index;
-  signed_natural idx = wasm_unbox_fixnum_or_trap(binding_index);
-  if (idx == 0) {
+  signed_natural index = wasm_unbox_fixnum_or_trap(binding_index);
+  if (index == 0) {
     wasm_set_reg(tcr, arg_z, symbol);
     wasm_set_reg(tcr, arg_y, box_fixnum(WASM_XSYMNOBIND));
     wasm_set_reg(tcr, nargs, box_fixnum(2));
     _SPksignalerr();
     return;
   }
-  if (idx < 0) {
+  if (index < 0) {
     wasm_subprims_trap();
   }
 
   LispObj limit = tcr->tlb_limit;
-  signed_natural lim = wasm_positive_fixnum_or_trap(limit);
-  if ((unsigned)idx >= (unsigned)lim) {
+  signed_natural limit_count = wasm_positive_fixnum_or_trap(limit);
+  if ((unsigned)index >= (unsigned)limit_count) {
     wasm_subprims_trap();
   }
 
@@ -5061,7 +5073,7 @@ _SPbind_self_boundp_check(void)
     wasm_subprims_trap();
   }
 
-  LispObj old_value = tlb[idx];
+  LispObj old_value = tlb[index];
   LispObj value = old_value;
   if (old_value == (LispObj)no_thread_local_binding_marker) {
     value = sym->vcell;
@@ -5080,7 +5092,7 @@ _SPbind_self_boundp_check(void)
   new_vsp[1] = binding_index;
   new_vsp[2] = old_value;
 
-  tlb[idx] = value;
+  tlb[index] = value;
   tcr->db_link = (special_binding *)new_vsp;
   tcr->save_vsp = new_vsp;
   wasm_set_reg(tcr, vsp, (LispObj)new_vsp);
@@ -5196,9 +5208,9 @@ static void
 wasm_bind_interrupt_level(TCR *tcr, LispObj new_value)
 {
   LispObj limit = tcr->tlb_limit;
-  signed_natural lim = wasm_positive_fixnum_or_trap(limit);
+  signed_natural limit_count = wasm_positive_fixnum_or_trap(limit);
 
-  if ((unsigned)INTERRUPT_LEVEL_BINDING_INDEX >= (unsigned)lim) {
+  if ((unsigned)INTERRUPT_LEVEL_BINDING_INDEX >= (unsigned)limit_count) {
     wasm_subprims_trap();
   }
 
@@ -5292,7 +5304,7 @@ _SPprogvsave(void)
     wasm_subprims_trap();
   }
 
-  signed_natural lim = wasm_positive_fixnum_or_trap(tcr->tlb_limit);
+  signed_natural limit_count = wasm_positive_fixnum_or_trap(tcr->tlb_limit);
 
   LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
   LispObj *old_vsp = vsp_ptr;
@@ -5317,12 +5329,12 @@ _SPprogvsave(void)
 
     lispsymbol *sym = wasm_symbol_or_trap(sym_obj);
     LispObj binding_index = sym->binding_index;
-    signed_natural idx = wasm_positive_fixnum_or_trap(binding_index);
-    if ((unsigned)idx >= (unsigned)lim) {
+    signed_natural index = wasm_positive_fixnum_or_trap(binding_index);
+    if ((unsigned)index >= (unsigned)limit_count) {
       wasm_subprims_trap();
     }
 
-    LispObj old_value = tlb[idx];
+    LispObj old_value = tlb[index];
     LispObj new_value = (LispObj)unbound_marker;
 
     if (val_list != (LispObj)nil_value) {
@@ -5340,7 +5352,7 @@ _SPprogvsave(void)
     vsp_ptr[2] = old_value;
     db = (special_binding *)vsp_ptr;
 
-    tlb[idx] = new_value;
+    tlb[index] = new_value;
   }
 
   tcr->db_link = db;
