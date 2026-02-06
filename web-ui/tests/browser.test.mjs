@@ -24,6 +24,8 @@ test("headless browser harness runs deterministically", async (t) => {
   assert.equal(result.commandListOk, true);
   assert.equal(result.canvasWidgetOk, true);
   assert.equal(result.canvasWidgetCommandOk, true);
+  assert.equal(result.webglWidgetOk, true);
+  assert.equal(result.webglWidgetCommandOk, true);
   assert.equal(result.focusOk, true);
   assert.equal(result.measureOk, true);
   assert.equal(result.hitTestOk, true);
@@ -32,4 +34,7 @@ test("headless browser harness runs deterministically", async (t) => {
   assert.equal(result.canvasOk, true);
   assert.equal(result.canvasBackendHitOk, true);
   assert.equal(result.canvasMeasureOk, true);
+  assert.equal(result.webglOk, true);
+  assert.equal(result.webglBackendHitOk, true);
+  assert.equal(result.webglMeasureOk, true);
 });

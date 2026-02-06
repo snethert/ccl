@@ -138,6 +138,24 @@ test("widget adapter renders a window tree via the renderer", async () => {
     }
   });
 
+  state = addWidget(state, {
+    id: "widget-webgl",
+    kind: "webgl-view",
+    parentId: "widget-root",
+    props: {
+      width: 120,
+      height: 90,
+      scene: [
+        {
+          id: "rect-2",
+          kind: "rect",
+          bounds: { x: 10, y: 10, width: 20, height: 20 },
+          props: { fill: "#00ff00" }
+        }
+      ]
+    }
+  });
+
   const tree = renderWindow(state, "win-1");
   root.render(tree);
 

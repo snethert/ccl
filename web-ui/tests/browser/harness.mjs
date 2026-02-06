@@ -7,6 +7,7 @@ import { createElement, createText } from "../../src/vdom.mjs";
 import { renderWindow } from "../../src/widgets.mjs";
 import { createDomBackend, createDomRoot } from "../../backends/dom/renderer.mjs";
 import { createCanvasBackend } from "../../backends/canvas/renderer.mjs";
+import { createWebGLBackend } from "../../backends/webgl/renderer.mjs";
 
 async function loadJson(relPath) {
   const response = await fetch(relPath);
@@ -100,6 +101,7 @@ async function run() {
   let inputValue = null;
   let listItemId = null;
   let canvasHitCtx = null;
+  let webglHitCtx = null;
   registerCommand(registry, {
     id: "demo.run",
     exec: () => {
@@ -126,6 +128,12 @@ async function run() {
     id: "demo.canvas",
     exec: (ctx) => {
       canvasHitCtx = ctx;
+    }
+  });
+  registerCommand(registry, {
+    id: "demo.webgl",
+    exec: (ctx) => {
+      webglHitCtx = ctx;
     }
   });
 
@@ -241,6 +249,50 @@ async function run() {
   }
   const canvasWidgetCommandOk = canvasHitCtx?.hitId === "rect-1" && canvasHitCtx?.canvasId === "canvas-widget";
 
+  const webglWidgetTarget = document.createElement("div");
+  webglWidgetTarget.id = "webgl-widget-target";
+  root.appendChild(webglWidgetTarget);
+
+  let webglState = createState();
+  webglState = addTask(webglState, { id: "task-webgl", title: "WebGL Task" });
+  webglState = addWindow(webglState, { id: "win-webgl", taskId: "task-webgl", kind: "document" });
+  webglState = addWidget(webglState, { id: "webgl-root", kind: "container", windowId: "win-webgl" });
+  webglState = addWidget(webglState, {
+    id: "webgl-widget",
+    kind: "webgl-view",
+    parentId: "webgl-root",
+    props: {
+      command: "demo.webgl",
+      width: 80,
+      height: 60,
+      style: { width: "80px", height: "60px" },
+      scene: [
+        {
+          id: "rect-1",
+          kind: "rect",
+          bounds: { x: 0, y: 0, width: 20, height: 20 },
+          props: { fill: "#00f", commandId: "demo.webgl" }
+        }
+      ]
+    }
+  });
+
+  const webglWidgetRoot = createDomRoot(webglWidgetTarget, { document });
+  webglWidgetRoot.render(renderWindow(webglState, "win-webgl", { registry }));
+
+  const webglNode = webglWidgetTarget.querySelector("[data-widget-id='webgl-widget']");
+  const webglWidgetOk = Boolean(webglNode?.__webglBackend && webglNode?.__webglScene);
+  if (webglNode) {
+    const webglRect = webglNode.getBoundingClientRect();
+    const click = new MouseEvent("click", {
+      bubbles: true,
+      clientX: webglRect.left + 5,
+      clientY: webglRect.top + 5
+    });
+    webglNode.dispatchEvent(click);
+  }
+  const webglWidgetCommandOk = webglHitCtx?.hitId === "rect-1" && webglHitCtx?.webglId === "webgl-widget";
+
   const focusState = reconcileFocus(widgetState, { target: runButton, seq: 1 }, {
     resolveTarget: (element) => resolveFocusTargetFromElement(element, widgetState)
   });
@@ -299,6 +351,26 @@ async function run() {
   const measureSecond = canvasBackend.measureText("Hello", { font: "12px monospace" });
   const canvasMeasureOk = measureFirst.cacheHit === false && measureSecond.cacheHit === true;
 
+  const webglCanvas = document.createElement("canvas");
+  webglCanvas.width = 10;
+  webglCanvas.height = 10;
+  const webglBackend = createWebGLBackend({ canvas: webglCanvas, document });
+  webglBackend.render([
+    { id: "bottom", kind: "rect", bounds: { x: 0, y: 0, width: 10, height: 10 }, props: { fill: "#000" } },
+    { id: "top", kind: "rect", bounds: { x: 0, y: 0, width: 10, height: 10 }, props: { fill: "#ff0000" } }
+  ]);
+  const gl = webglCanvas.getContext("webgl");
+  const webglPixel = new Uint8Array(4);
+  if (gl) {
+    gl.readPixels(5, 5, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, webglPixel);
+  }
+  const webglOk = webglPixel[0] >= 250 && webglPixel[1] <= 5 && webglPixel[2] <= 5 && webglPixel[3] >= 250;
+  const webglHit = webglBackend.hitTest({ x: 4, y: 4 });
+  const webglBackendHitOk = webglHit?.id === "top";
+  const webglMeasureFirst = webglBackend.measureText("Hello", { font: "12px monospace" });
+  const webglMeasureSecond = webglBackend.measureText("Hello", { font: "12px monospace" });
+  const webglMeasureOk = webglMeasureFirst.cacheHit === false && webglMeasureSecond.cacheHit === true;
+
   const ok =
     snapshotMatch &&
     domOk &&
@@ -310,6 +382,8 @@ async function run() {
     commandListOk &&
     canvasWidgetOk &&
     canvasWidgetCommandOk &&
+    webglWidgetOk &&
+    webglWidgetCommandOk &&
     focusOk &&
     measureOk &&
     hitTestOk &&
@@ -317,7 +391,10 @@ async function run() {
     invalidateOk &&
     canvasOk &&
     canvasBackendHitOk &&
-    canvasMeasureOk;
+    canvasMeasureOk &&
+    webglOk &&
+    webglBackendHitOk &&
+    webglMeasureOk;
   const payload = {
     ok,
     snapshotMatch,
@@ -330,6 +407,8 @@ async function run() {
     commandListOk,
     canvasWidgetOk,
     canvasWidgetCommandOk,
+    webglWidgetOk,
+    webglWidgetCommandOk,
     focusOk,
     measureOk,
     hitTestOk,
@@ -337,7 +416,10 @@ async function run() {
     invalidateOk,
     canvasOk,
     canvasBackendHitOk,
-    canvasMeasureOk
+    canvasMeasureOk,
+    webglOk,
+    webglBackendHitOk,
+    webglMeasureOk
   };
 
   if (window.__WEB_UI_TEST_DONE__) {

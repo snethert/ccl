@@ -103,6 +103,9 @@ export function createDomBackend({ document: doc, container } = {}) {
         if (name === "__canvasRender" && typeof value === "function") {
           value(node);
         }
+        if (name === "__webglRender" && typeof value === "function") {
+          value(node);
+        }
         return;
       }
       if (isEventProp(name) && typeof value === "function") {

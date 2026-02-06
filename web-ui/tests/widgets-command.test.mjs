@@ -224,3 +224,57 @@ test("canvas view command wiring uses hit testing", () => {
   assert.equal(lastCtx.hitId, "rect-1");
   assert.equal(lastCtx.hitKind, "rect");
 });
+
+test("webgl view command wiring uses hit testing", () => {
+  const registry = createRegistry();
+  let lastCtx = null;
+
+  registerCommand(registry, {
+    id: "demo.webgl",
+    exec: (ctx) => {
+      lastCtx = ctx;
+    }
+  });
+
+  let state = createState();
+  state = addTask(state, { id: "task-1", title: "Task" });
+  state = addWindow(state, { id: "win-1", taskId: "task-1", kind: "document" });
+  state = addWidget(state, { id: "root", kind: "container", windowId: "win-1" });
+  state = addWidget(state, {
+    id: "widget-webgl",
+    kind: "webgl-view",
+    parentId: "root",
+    props: {
+      command: "demo.webgl",
+      width: 100,
+      height: 80,
+      scene: [
+        {
+          id: "rect-1",
+          kind: "rect",
+          bounds: { x: 0, y: 0, width: 20, height: 20 },
+          props: { commandId: "demo.webgl", fill: "#00f" }
+        }
+      ]
+    }
+  });
+
+  const tree = renderWindow(state, "win-1", { registry });
+  const canvas = findByWidgetId(tree, "widget-webgl");
+
+  assert.ok(canvas, "webgl view exists");
+  assert.equal(canvas.tag, "canvas");
+  assert.equal(canvas.props["data-command-id"], "demo.webgl");
+  assert.equal(typeof canvas.props.onClick, "function");
+
+  const target = {
+    __webglBackend: {},
+    getBoundingClientRect: () => ({ left: 0, top: 0 })
+  };
+  canvas.props.onClick({ currentTarget: target, clientX: 5, clientY: 5, type: "click" });
+
+  assert.ok(lastCtx, "webgl command executed");
+  assert.equal(lastCtx.webglId, "widget-webgl");
+  assert.equal(lastCtx.hitId, "rect-1");
+  assert.equal(lastCtx.hitKind, "rect");
+});

@@ -273,3 +273,10 @@ Exit criteria:
 - Extended widget snapshots and command wiring tests for canvas views.
 - Extended browser harness to validate canvas backend hit testing and canvas-view commands.
 - Added web-ui canvas smoke test and wired it into the WASM smoke runner.
+
+### Phase 6 Progress
+- Added WebGL backend with minimal rect renderer, dirty-rect scissoring, and hit-testing via shared scene.
+- Added WebGL draw-list builder with deterministic color parsing.
+- Added webgl-view widget with command dispatch via hit testing.
+- Extended browser harness to validate WebGL rendering, hit testing, and widget command dispatch.
+- Added WebGL unit tests and smoke test wired into the WASM smoke runner.

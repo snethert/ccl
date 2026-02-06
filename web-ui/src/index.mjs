@@ -53,3 +53,4 @@ export { createEventLog, normalizeEventLog, recordEvent as recordEventLog } from
 export { buildScene, hitTestScene, normalizeSceneNode, flattenScene } from "../backends/canvas/scene.mjs";
 export { createCanvasBackend, createCanvasRoot } from "../backends/canvas/renderer.mjs";
 export { createMeasureCache } from "../backends/canvas/measure.mjs";
+export { createWebGLBackend, createWebGLRoot } from "../backends/webgl/renderer.mjs";

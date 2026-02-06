@@ -157,6 +157,18 @@
                 "width": 80
               },
               "children": []
+            },
+            {
+              "kind": "element",
+              "tag": "canvas",
+              "props": {
+                "className": "ui-widget ui-webgl-view",
+                "data-widget-id": "widget-webgl",
+                "data-widget-kind": "webgl-view",
+                "height": 90,
+                "width": 120
+              },
+              "children": []
             }
           ]
         }

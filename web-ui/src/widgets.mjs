@@ -3,6 +3,7 @@ import { makeContext } from "./context.mjs";
 import { createElement, createText } from "./vdom.mjs";
 import { buildScene, hitTestScene } from "../backends/canvas/scene.mjs";
 import { createCanvasBackend } from "../backends/canvas/renderer.mjs";
+import { createWebGLBackend } from "../backends/webgl/renderer.mjs";
 
 function mergeClassNames(...values) {
   return values.filter((value) => value && String(value).trim().length > 0).join(" ");
@@ -339,6 +340,74 @@ function renderCanvasView(state, widget, options = {}) {
   return createElement("canvas", canvasProps, [], widget.id);
 }
 
+function renderWebGLView(state, widget, options = {}) {
+  const props = pickProps(widget.props, ["id", "className", "style", "title", "width", "height"]);
+  const mergedClass = mergeClassNames("ui-widget ui-webgl-view", props.className);
+  const base = widgetBaseProps(widget, mergedClass);
+  const width = widget.props?.width ?? widget.model?.width ?? 320;
+  const height = widget.props?.height ?? widget.model?.height ?? 200;
+  const sceneNodes = widget.props?.scene ?? widget.model?.scene ?? [];
+  const scene = buildScene(sceneNodes, { rootId: widget.id });
+  const windowId = resolveWindowId(state, widget, options.windowId ?? null);
+  const taskId = resolveTaskId(state, windowId, options.taskId ?? null);
+  const ctx = buildContext(state, widget, options, windowId, taskId);
+  const registry = options?.registry ?? null;
+  const defaultCommandId = resolveCommandId(widget);
+
+  const onWebGLRender = (node) => {
+    if (!node) return;
+    if (!node.__webglBackend) {
+      node.__webglBackend = createWebGLBackend({ canvas: node, document: node.ownerDocument });
+    }
+    node.__webglScene = scene;
+    node.__webglBackend.render(scene);
+  };
+
+  const onWebGLClick = (event) => {
+    const target = event.currentTarget ?? event.target;
+    const backend = target?.__webglBackend;
+    const activeScene = target?.__webglScene ?? scene;
+    if (!backend || !activeScene) return;
+    const rect = target.getBoundingClientRect();
+    const point = {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top
+    };
+    const hit = hitTestScene(activeScene, point);
+    if (!hit) return;
+    const commandId = hit.props?.commandId ?? defaultCommandId;
+    if (!commandId || !registry) return;
+    const enablement = commandEnabled(registry, commandId, ctx);
+    if (!enablement.enabled) return;
+    const commandCtx = {
+      ...ctx,
+      webglId: widget.id,
+      hitId: hit.id,
+      hitKind: hit.kind,
+      hitProps: hit.props,
+      point
+    };
+    const result = executeCommand(registry, commandId, commandCtx);
+    if (options?.onCommandResult) {
+      options.onCommandResult({ commandId, ctx: commandCtx, result, event });
+    }
+  };
+
+  const canvasProps = {
+    ...props,
+    ...base,
+    width,
+    height,
+    __webglRender: onWebGLRender,
+    onClick: onWebGLClick
+  };
+
+  if (defaultCommandId) {
+    canvasProps["data-command-id"] = defaultCommandId;
+  }
+  return createElement("canvas", canvasProps, [], widget.id);
+}
+
 export function renderWidget(state, widgetId, options = {}) {
   const widget = state.widgets?.[widgetId];
   if (!widget) {
@@ -359,6 +428,8 @@ export function renderWidget(state, widgetId, options = {}) {
       return renderTextInput(state, widget, options);
     case "canvas-view":
       return renderCanvasView(state, widget, options);
+    case "webgl-view":
+      return renderWebGLView(state, widget, options);
     default:
       return renderContainer(state, widget, options);
   }
