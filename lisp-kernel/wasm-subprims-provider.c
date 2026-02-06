@@ -20,7 +20,7 @@ typedef struct wasm_catch_frame {
   LispObj last_lisp_frame;
   LispObj nfp;
   LispObj save_vsp;
-  LispObj padding;
+  LispObj cleanup_entry;
 } wasm_catch_frame;
 
 #define WASM_CATCH_FRAME_ELEMENT_COUNT ((sizeof(wasm_catch_frame) / sizeof(LispObj)) - 1)
@@ -155,6 +155,14 @@ wasm_t_value(void)
 #define WASM_XCALLTOOMANY 167
 #define WASM_XCALLTOOFEW 168
 #define WASM_XCALLNOMATCH 169
+#define WASM_XARROOB 112
+#define WASM_XNDIMS 148
+#define WASM_XWRONGTYPE 157
+#define WASM_XARRLIMIT 77
+#define WASM_XDIVZRO 66
+#define WASM_XVUNBND 1
+#define WASM_XSYMNOBIND 178
+#define WASM_XNOCTAG 33
 
 #define WASM_KEYWORD_FLAG_ALLOW_OTHER_KEYS ((LispObj)1 << fixnum_shift)
 #define WASM_KEYWORD_FLAG_SEEN_ALLOW_OTHER_KEYS ((LispObj)1 << (fixnum_shift + 1))
@@ -168,6 +176,9 @@ wasm_t_value(void)
 #define WASM_DEBIND_MASK_INITOPT (1u << 29)
 #define WASM_DEBIND_MASK_AOK_SEEN (1u << 30)
 #define WASM_DEBIND_MASK_AOK_THIS (1u << 31)
+
+/* Keep in sync with doc/wasm/subprims-map.json. */
+#define WASM_SUBPRIM_PROGVRESTORE_INDEX 114
 
 static LispObj
 wasm_make_simple_base_string(TCR *tcr, const char *bytes)
@@ -334,6 +345,126 @@ wasm_signal_capability_unavailable(TCR *tcr,
   wasm_set_reg(tcr, nargs, box_fixnum(count));
   wasm_sync_arg_regs_from_vsp(tcr);
   wasm_call_lisp_function(tcr, wasm_nrs_symbol_lispobj(&nrs_ERROR));
+}
+
+static LispObj
+wasm_symbol_array(void)
+{
+  static LispObj sym_array = (LispObj)0;
+  return wasm_cached_symbol_named("ARRAY", (LispObj)0, &sym_array);
+}
+
+static LispObj
+wasm_symbol_fixnum(void)
+{
+  static LispObj sym_fixnum = (LispObj)0;
+  return wasm_cached_symbol_named("FIXNUM", (LispObj)0, &sym_fixnum);
+}
+
+static LispObj
+wasm_symbol_character(void)
+{
+  static LispObj sym_character = (LispObj)0;
+  return wasm_cached_symbol_named("CHARACTER", (LispObj)0, &sym_character);
+}
+
+static LispObj
+wasm_symbol_single_float(void)
+{
+  static LispObj sym_single_float = (LispObj)0;
+  return wasm_cached_symbol_named("SINGLE-FLOAT", (LispObj)0, &sym_single_float);
+}
+
+static LispObj
+wasm_symbol_double_float(void)
+{
+  static LispObj sym_double_float = (LispObj)0;
+  return wasm_cached_symbol_named("DOUBLE-FLOAT", (LispObj)0, &sym_double_float);
+}
+
+static LispObj
+wasm_symbol_complex(void)
+{
+  static LispObj sym_complex = (LispObj)0;
+  return wasm_cached_symbol_named("COMPLEX", (LispObj)0, &sym_complex);
+}
+
+static LispObj
+wasm_symbol_unsigned_byte(void)
+{
+  static LispObj sym_unsigned_byte = (LispObj)0;
+  return wasm_cached_symbol_named("UNSIGNED-BYTE", (LispObj)0, &sym_unsigned_byte);
+}
+
+static LispObj
+wasm_symbol_signed_byte(void)
+{
+  static LispObj sym_signed_byte = (LispObj)0;
+  return wasm_cached_symbol_named("SIGNED-BYTE", (LispObj)0, &sym_signed_byte);
+}
+
+static LispObj
+wasm_symbol_bit(void)
+{
+  static LispObj sym_bit = (LispObj)0;
+  return wasm_cached_symbol_named("BIT", (LispObj)0, &sym_bit);
+}
+
+static LispObj
+wasm_list2(TCR *tcr, LispObj first, LispObj second)
+{
+  LispObj tail = wasm_alloc_cons_or_trap(tcr, second, (LispObj)nil_value);
+  return wasm_alloc_cons_or_trap(tcr, first, tail);
+}
+
+static LispObj
+wasm_type_unsigned_byte(TCR *tcr, signed_natural bits)
+{
+  return wasm_list2(tcr, wasm_symbol_unsigned_byte(), box_fixnum(bits));
+}
+
+static LispObj
+wasm_type_signed_byte(TCR *tcr, signed_natural bits)
+{
+  return wasm_list2(tcr, wasm_symbol_signed_byte(), box_fixnum(bits));
+}
+
+static LispObj
+wasm_type_complex(TCR *tcr, LispObj element_type)
+{
+  return wasm_list2(tcr, wasm_symbol_complex(), element_type);
+}
+
+static void
+wasm_signal_errdisp_2(TCR *tcr, LispObj arg0, LispObj arg1, signed_natural errnum)
+{
+  if (tcr == NULL) {
+    wasm_subprims_trap();
+  }
+  /* arg_y is the first errarg, arg_z the second; errnum lives in arg_x. */
+  wasm_set_reg(tcr, arg_y, arg0);
+  wasm_set_reg(tcr, arg_z, arg1);
+  wasm_set_reg(tcr, arg_x, box_fixnum(errnum));
+  wasm_set_reg(tcr, nargs, box_fixnum(3));
+  _SPksignalerr();
+}
+
+static void
+wasm_signal_wrong_type(TCR *tcr, LispObj datum, LispObj expected)
+{
+  wasm_signal_errdisp_2(tcr, datum, expected, WASM_XWRONGTYPE);
+}
+
+static void
+wasm_signal_xndims(TCR *tcr, LispObj array, signed_natural nsubs)
+{
+  wasm_signal_errdisp_2(tcr, array, box_fixnum(nsubs), WASM_XNDIMS);
+}
+
+static void
+wasm_signal_xarroob(TCR *tcr, LispObj index, LispObj array)
+{
+  wasm_signal_errdisp_2(tcr, index, array, WASM_XARROOB);
 }
 
 static inline LispObj
@@ -746,7 +877,8 @@ wasm_unbox_u32_or_trap(LispObj value)
   signed_natural count = 0;
   uint32_t *digits = NULL;
   if (!wasm_bignum_info(value, &count, &digits)) {
-    wasm_subprims_trap();
+    wasm_signal_wrong_type(tcr, value, wasm_type_signed_byte(tcr, 64));
+    return;
   }
 
   if (count == 1) {
@@ -778,9 +910,75 @@ wasm_unbox_s32_or_trap(LispObj value)
   signed_natural count = 0;
   uint32_t *digits = NULL;
   if (!wasm_bignum_info(value, &count, &digits) || count != 1) {
-    wasm_subprims_trap();
+    wasm_signal_wrong_type(tcr, value, wasm_type_signed_byte(tcr, 32));
+    return;
   }
   return (int32_t)digits[0];
+}
+
+static int
+wasm_try_unbox_u32(LispObj value, uint32_t *out)
+{
+  if (tag_of(value) == tag_fixnum) {
+    int32_t sval = (int32_t)unbox_fixnum(value);
+    if (sval < 0) {
+      return 0;
+    }
+    if (out != NULL) {
+      *out = (uint32_t)sval;
+    }
+    return 1;
+  }
+
+  signed_natural count = 0;
+  uint32_t *digits = NULL;
+  if (!wasm_bignum_info(value, &count, &digits)) {
+    return 0;
+  }
+
+  if (count == 1) {
+    uint32_t v = digits[0];
+    if (v & 0x80000000u) {
+      return 0;
+    }
+    if (out != NULL) {
+      *out = v;
+    }
+    return 1;
+  }
+
+  if (count == 2) {
+    if (digits[1] != 0) {
+      return 0;
+    }
+    if (out != NULL) {
+      *out = digits[0];
+    }
+    return 1;
+  }
+
+  return 0;
+}
+
+static int
+wasm_try_unbox_s32(LispObj value, int32_t *out)
+{
+  if (tag_of(value) == tag_fixnum) {
+    if (out != NULL) {
+      *out = (int32_t)unbox_fixnum(value);
+    }
+    return 1;
+  }
+
+  signed_natural count = 0;
+  uint32_t *digits = NULL;
+  if (!wasm_bignum_info(value, &count, &digits) || count != 1) {
+    return 0;
+  }
+  if (out != NULL) {
+    *out = (int32_t)digits[0];
+  }
+  return 1;
 }
 
 #define WASM_ELEMENT_COUNT(type) ((signed_natural)((sizeof(type) / sizeof(LispObj)) - 1))
@@ -980,7 +1178,8 @@ wasm_misc_set_dispatch(TCR *tcr, LispObj obj, signed_natural index, LispObj valu
   switch (subtag) {
     case subtag_fixnum_vector: {
       if (tag_of(value) != tag_fixnum) {
-        wasm_subprims_trap();
+        wasm_signal_wrong_type(tcr, value, wasm_symbol_fixnum());
+        return;
       }
       int32_t *data = (int32_t *)((BytePtr)obj + misc_data_offset);
       data[index] = (int32_t)unbox_fixnum(value);
@@ -988,7 +1187,8 @@ wasm_misc_set_dispatch(TCR *tcr, LispObj obj, signed_natural index, LispObj valu
     }
     case subtag_simple_base_string: {
       if ((value & subtagmask) != subtag_character) {
-        wasm_subprims_trap();
+        wasm_signal_wrong_type(tcr, value, wasm_symbol_character());
+        return;
       }
       uint32_t code = (uint32_t)value >> charcode_shift;
       uint32_t *data = (uint32_t *)((BytePtr)obj + misc_data_offset);
@@ -997,57 +1197,59 @@ wasm_misc_set_dispatch(TCR *tcr, LispObj obj, signed_natural index, LispObj valu
     }
     case subtag_u32_vector: {
       uint32_t *data = (uint32_t *)((BytePtr)obj + misc_data_offset);
-      data[index] = wasm_unbox_u32_or_trap(value);
+      uint32_t uval = 0;
+      if (!wasm_try_unbox_u32(value, &uval)) {
+        wasm_signal_wrong_type(tcr, value, wasm_type_unsigned_byte(tcr, 32));
+        return;
+      }
+      data[index] = uval;
       return;
     }
     case subtag_s32_vector: {
       int32_t *data = (int32_t *)((BytePtr)obj + misc_data_offset);
-      data[index] = wasm_unbox_s32_or_trap(value);
+      int32_t sval = 0;
+      if (!wasm_try_unbox_s32(value, &sval)) {
+        wasm_signal_wrong_type(tcr, value, wasm_type_signed_byte(tcr, 32));
+        return;
+      }
+      data[index] = sval;
       return;
     }
     case subtag_u16_vector: {
-      if (tag_of(value) != tag_fixnum) {
-        wasm_subprims_trap();
-      }
-      signed_natural sval = unbox_fixnum(value);
-      if (sval < 0 || sval > 0xffff) {
-        wasm_subprims_trap();
+      uint32_t uval = 0;
+      if (!wasm_try_unbox_u32(value, &uval) || uval > 0xffffu) {
+        wasm_signal_wrong_type(tcr, value, wasm_type_unsigned_byte(tcr, 16));
+        return;
       }
       uint16_t *data = (uint16_t *)((BytePtr)obj + misc_data_offset);
-      data[index] = (uint16_t)sval;
+      data[index] = (uint16_t)uval;
       return;
     }
     case subtag_s16_vector: {
-      if (tag_of(value) != tag_fixnum) {
-        wasm_subprims_trap();
-      }
-      signed_natural sval = unbox_fixnum(value);
-      if (sval < -32768 || sval > 32767) {
-        wasm_subprims_trap();
+      int32_t sval = 0;
+      if (!wasm_try_unbox_s32(value, &sval) || sval < -32768 || sval > 32767) {
+        wasm_signal_wrong_type(tcr, value, wasm_type_signed_byte(tcr, 16));
+        return;
       }
       int16_t *data = (int16_t *)((BytePtr)obj + misc_data_offset);
       data[index] = (int16_t)sval;
       return;
     }
     case subtag_u8_vector: {
-      if (tag_of(value) != tag_fixnum) {
-        wasm_subprims_trap();
-      }
-      signed_natural sval = unbox_fixnum(value);
-      if (sval < 0 || sval > 0xff) {
-        wasm_subprims_trap();
+      uint32_t uval = 0;
+      if (!wasm_try_unbox_u32(value, &uval) || uval > 0xffu) {
+        wasm_signal_wrong_type(tcr, value, wasm_type_unsigned_byte(tcr, 8));
+        return;
       }
       uint8_t *data = (uint8_t *)((BytePtr)obj + misc_data_offset);
-      data[index] = (uint8_t)sval;
+      data[index] = (uint8_t)uval;
       return;
     }
     case subtag_s8_vector: {
-      if (tag_of(value) != tag_fixnum) {
-        wasm_subprims_trap();
-      }
-      signed_natural sval = unbox_fixnum(value);
-      if (sval < -128 || sval > 127) {
-        wasm_subprims_trap();
+      int32_t sval = 0;
+      if (!wasm_try_unbox_s32(value, &sval) || sval < -128 || sval > 127) {
+        wasm_signal_wrong_type(tcr, value, wasm_type_signed_byte(tcr, 8));
+        return;
       }
       int8_t *data = (int8_t *)((BytePtr)obj + misc_data_offset);
       data[index] = (int8_t)sval;
@@ -1055,7 +1257,8 @@ wasm_misc_set_dispatch(TCR *tcr, LispObj obj, signed_natural index, LispObj valu
     }
     case subtag_single_float_vector: {
       if (fulltag_of(value) != fulltag_misc || header_subtag(header_of(value)) != subtag_single_float) {
-        wasm_subprims_trap();
+        wasm_signal_wrong_type(tcr, value, wasm_symbol_single_float());
+        return;
       }
       single_float *sf = (single_float *)ptr_from_lispobj(untag(value));
       uint32_t bits = (uint32_t)sf->value;
@@ -1067,7 +1270,8 @@ wasm_misc_set_dispatch(TCR *tcr, LispObj obj, signed_natural index, LispObj valu
     }
     case subtag_double_float_vector: {
       if (fulltag_of(value) != fulltag_misc || header_subtag(header_of(value)) != subtag_double_float) {
-        wasm_subprims_trap();
+        wasm_signal_wrong_type(tcr, value, wasm_symbol_double_float());
+        return;
       }
       double_float *df = (double_float *)ptr_from_lispobj(untag(value));
       uint64_t bits = ((uint64_t)(uint32_t)df->value_high << 32) | (uint32_t)df->value_low;
@@ -1079,7 +1283,8 @@ wasm_misc_set_dispatch(TCR *tcr, LispObj obj, signed_natural index, LispObj valu
     }
     case subtag_complex_single_float_vector: {
       if (fulltag_of(value) != fulltag_misc || header_subtag(header_of(value)) != subtag_complex_single_float) {
-        wasm_subprims_trap();
+        wasm_signal_wrong_type(tcr, value, wasm_type_complex(tcr, wasm_symbol_single_float()));
+        return;
       }
       complex_single_float *cf = (complex_single_float *)ptr_from_lispobj(untag(value));
       uint32_t real_bits = (uint32_t)cf->realpart;
@@ -1095,7 +1300,8 @@ wasm_misc_set_dispatch(TCR *tcr, LispObj obj, signed_natural index, LispObj valu
     }
     case subtag_complex_double_float_vector: {
       if (fulltag_of(value) != fulltag_misc || header_subtag(header_of(value)) != subtag_complex_double_float) {
-        wasm_subprims_trap();
+        wasm_signal_wrong_type(tcr, value, wasm_type_complex(tcr, wasm_symbol_double_float()));
+        return;
       }
       complex_double_float *cf = (complex_double_float *)ptr_from_lispobj(untag(value));
       uint64_t real_bits = ((uint64_t)(uint32_t)cf->realpart_high << 32) | (uint32_t)cf->realpart_low;
@@ -1110,17 +1316,15 @@ wasm_misc_set_dispatch(TCR *tcr, LispObj obj, signed_natural index, LispObj valu
       return;
     }
     case subtag_bit_vector: {
-      if (tag_of(value) != tag_fixnum) {
-        wasm_subprims_trap();
-      }
-      signed_natural sval = unbox_fixnum(value);
-      if (sval != 0 && sval != 1) {
-        wasm_subprims_trap();
+      uint32_t bit = 0;
+      if (!wasm_try_unbox_u32(value, &bit) || (bit != 0 && bit != 1)) {
+        wasm_signal_wrong_type(tcr, value, wasm_symbol_bit());
+        return;
       }
       uint32_t *data = (uint32_t *)((BytePtr)obj + misc_data_offset);
       uint32_t word_index = (uint32_t)index >> 5;
       uint32_t mask = 1u << ((uint32_t)index & 31u);
-      if (sval != 0) {
+      if (bit != 0) {
         data[word_index] |= mask;
       } else {
         data[word_index] &= ~mask;
@@ -1133,7 +1337,12 @@ wasm_misc_set_dispatch(TCR *tcr, LispObj obj, signed_natural index, LispObj valu
 
   {
     uint32_t *data = (uint32_t *)((BytePtr)obj + misc_data_offset);
-    data[index] = wasm_unbox_u32_or_trap(value);
+    uint32_t uval = 0;
+    if (!wasm_try_unbox_u32(value, &uval)) {
+      wasm_signal_wrong_type(tcr, value, wasm_type_unsigned_byte(tcr, 32));
+      return;
+    }
+    data[index] = uval;
   }
 }
 
@@ -1396,6 +1605,7 @@ _SPmkcatch1v(void)
   cf->last_lisp_frame = (LispObj)tcr->last_lisp_frame;
   cf->nfp = (LispObj)tcr->nfp;
   cf->save_vsp = wasm_reg(tcr, vsp);
+  cf->cleanup_entry = 0;
 
   tcr->catch_top = ptr_to_lispobj((BytePtr)cf + fulltag_misc);
 }
@@ -1421,6 +1631,7 @@ _SPmkcatchmv(void)
   cf->last_lisp_frame = (LispObj)tcr->last_lisp_frame;
   cf->nfp = (LispObj)tcr->nfp;
   cf->save_vsp = wasm_reg(tcr, vsp);
+  cf->cleanup_entry = 0;
 
   tcr->catch_top = ptr_to_lispobj((BytePtr)cf + fulltag_misc);
 }
@@ -1434,8 +1645,23 @@ _SPmkunwind(void)
     wasm_subprims_trap();
   }
 
+  /* For WASM, callers may provide a cleanup entrypoint (subprim index fixnum)
+   * in imm0. If absent or malformed, we leave it as 0 and trap on unwind.
+   */
+  LispObj cleanup_entry = wasm_reg(tcr, imm0);
+  if (tag_of(cleanup_entry) != tag_fixnum) {
+    cleanup_entry = 0;
+  }
+
   wasm_set_reg(tcr, arg_z, (LispObj)unbound_marker);
   _SPmkcatchmv();
+
+  LispObj catch_top = tcr->catch_top;
+  if (catch_top == 0 || catch_top == (LispObj)nil_value) {
+    wasm_subprims_trap();
+  }
+  wasm_catch_frame *cf = (wasm_catch_frame *)ptr_from_lispobj(untag(catch_top));
+  cf->cleanup_entry = cleanup_entry;
 }
 
 __attribute__((used, visibility("default"), export_name("_SPnthrow1value")))
@@ -1453,6 +1679,7 @@ _SPnthrow1value(void)
   }
 
   tcr->unwinding = 1;
+  wasm_sync_arg_regs_from_vsp(tcr);
   wasm_set_reg(tcr, nargs, box_fixnum(1));
 
   while (frame_count-- > 0) {
@@ -1474,8 +1701,41 @@ _SPnthrow1value(void)
     }
 
     if (cf->catch_tag == (LispObj)unbound_marker) {
-      /* Unwind-protect frames are Tier-1; trap for now. */
-      wasm_subprims_trap();
+      LispObj cleanup = cf->cleanup_entry;
+      if (tag_of(cleanup) != tag_fixnum) {
+        wasm_subprims_trap();
+      }
+
+      signed_natural count = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, nargs));
+      if (count < 0) {
+        wasm_subprims_trap();
+      }
+
+      if (count > 0) {
+        wasm_push_value_set(tcr);
+      }
+
+      LispObj *saved_vsp = (LispObj *)cf->save_vsp;
+      if (saved_vsp == NULL) {
+        wasm_subprims_trap();
+      }
+      tcr->save_vsp = saved_vsp;
+      wasm_set_reg(tcr, vsp, (LispObj)saved_vsp);
+
+      tcr->unwinding = 0;
+      wasm_call_subprim_fixnum(cleanup);
+      if (wasm_pending_throw_p(tcr)) {
+        tcr->save_tsp = NULL;
+        return;
+      }
+      tcr->unwinding = 1;
+
+      if (count > 0) {
+        wasm_recover_value_sets(tcr);
+      }
+
+      wasm_free_catch_frame(cf);
+      continue;
     }
 
     if (frame_count == 0) {
@@ -1524,8 +1784,41 @@ _SPnthrowvalues(void)
     }
 
     if (cf->catch_tag == (LispObj)unbound_marker) {
-      /* Unwind-protect frames are Tier-1; trap for now. */
-      wasm_subprims_trap();
+      LispObj cleanup = cf->cleanup_entry;
+      if (tag_of(cleanup) != tag_fixnum) {
+        wasm_subprims_trap();
+      }
+
+      signed_natural count = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, nargs));
+      if (count < 0) {
+        wasm_subprims_trap();
+      }
+
+      if (count > 0) {
+        wasm_push_value_set(tcr);
+      }
+
+      LispObj *saved_vsp = (LispObj *)cf->save_vsp;
+      if (saved_vsp == NULL) {
+        wasm_subprims_trap();
+      }
+      tcr->save_vsp = saved_vsp;
+      wasm_set_reg(tcr, vsp, (LispObj)saved_vsp);
+
+      tcr->unwinding = 0;
+      wasm_call_subprim_fixnum(cleanup);
+      if (wasm_pending_throw_p(tcr)) {
+        tcr->save_tsp = NULL;
+        return;
+      }
+      tcr->unwinding = 1;
+
+      if (count > 0) {
+        wasm_recover_value_sets(tcr);
+      }
+
+      wasm_free_catch_frame(cf);
+      continue;
     }
 
     if (frame_count == 0) {
@@ -1544,6 +1837,8 @@ _SPnthrowvalues(void)
         *--dest = value;
       }
       wasm_set_reg(tcr, vsp, (LispObj)dest);
+      tcr->save_vsp = dest;
+      wasm_sync_arg_regs_from_vsp(tcr);
     }
 
     wasm_free_catch_frame(cf);
@@ -1636,20 +1931,27 @@ _SPthrow(void)
   }
 
   if (target == NULL) {
-    wasm_subprims_trap();
+    wasm_set_reg(tcr, arg_z, throw_tag);
+    wasm_set_reg(tcr, arg_y, box_fixnum(WASM_XNOCTAG));
+    wasm_set_reg(tcr, nargs, box_fixnum(2));
+    _SPksignalerr();
+    return;
   }
 
   if (target->mvflag == 0) {
     if (count == 0) {
       *--vsp_ptr = (LispObj)nil_value;
       wasm_set_reg(tcr, vsp, (LispObj)vsp_ptr);
+      tcr->save_vsp = vsp_ptr;
     } else {
       vsp_ptr = vsp_ptr + (count - 1);
       wasm_set_reg(tcr, vsp, (LispObj)vsp_ptr);
+      tcr->save_vsp = vsp_ptr;
     }
     wasm_set_reg(tcr, nargs, box_fixnum(1));
   }
 
+  wasm_sync_arg_regs_from_vsp(tcr);
   wasm_set_reg(tcr, imm0, box_fixnum(frame_count + 1));
   _SPnthrowvalues();
 }
@@ -2324,6 +2626,12 @@ _SPmisc_alloc(void)
 
   signed_natural subtag = unbox_fixnum(subtag_val);
   signed_natural count = unbox_fixnum(count_val);
+  if (count < 0 || count > 0xFFFFFF) {
+    wasm_set_reg(tcr, arg_x, box_fixnum(WASM_XARRLIMIT));
+    wasm_set_reg(tcr, nargs, box_fixnum(3));
+    _SPksignalerr();
+    return;
+  }
   unsigned tag = subtag & fulltagmask;
   if (tag != fulltag_nodeheader && tag != fulltag_immheader) {
     static const char msg[] = "WASM _SPmisc_alloc: bad subtag\n";
@@ -3582,24 +3890,76 @@ _SParef2(void)
     wasm_subprims_trap();
   }
 
-  signed_natural i = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, arg_y));
-  signed_natural j = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, arg_z));
-  if (i < 0 || j < 0) {
-    wasm_subprims_trap();
+  LispObj array = wasm_reg(tcr, arg_x);
+  LispObj *data = NULL;
+  if (fulltag_of(array) == fulltag_misc) {
+    LispObj header = header_of(array);
+    unsigned subtag = header_subtag(header);
+    if (subtag == subtag_arrayH) {
+      data = (LispObj *)((BytePtr)array + misc_data_offset);
+      signed_natural rank = wasm_unbox_fixnum_or_trap(data[WASM_ARRAYH_RANK_CELL]);
+      if (rank != 2) {
+        wasm_signal_xndims(tcr, array, 2);
+        return;
+      }
+    } else if (subtag == subtag_vectorH || subtag == subtag_simple_vector || subtag >= min_cl_ivector_subtag) {
+      wasm_signal_xndims(tcr, array, 2);
+      return;
+    } else {
+      wasm_signal_wrong_type(tcr, array, wasm_symbol_array());
+      return;
+    }
+  } else {
+    wasm_signal_wrong_type(tcr, array, wasm_symbol_array());
+    return;
   }
 
-  LispObj array = wasm_reg(tcr, arg_x);
-  LispObj *data = wasm_arrayH_data_or_trap(array, 2);
+  LispObj raw_i = wasm_reg(tcr, arg_y);
+  if (tag_of(raw_i) != tag_fixnum) {
+    wasm_signal_wrong_type(tcr, raw_i, wasm_symbol_fixnum());
+    return;
+  }
+  LispObj raw_j = wasm_reg(tcr, arg_z);
+  if (tag_of(raw_j) != tag_fixnum) {
+    wasm_signal_wrong_type(tcr, raw_j, wasm_symbol_fixnum());
+    return;
+  }
+
+  signed_natural i = unbox_fixnum(raw_i);
+  signed_natural j = unbox_fixnum(raw_j);
+  if (i < 0) {
+    wasm_signal_xarroob(tcr, raw_i, array);
+    return;
+  }
+  if (j < 0) {
+    wasm_signal_xarroob(tcr, raw_j, array);
+    return;
+  }
+
   signed_natural dim0 = wasm_unbox_fixnum_or_trap(data[WASM_ARRAYH_DIM0_CELL]);
   signed_natural dim1 = wasm_unbox_fixnum_or_trap(data[WASM_ARRAYH_DIM0_CELL + 1]);
-  if (dim0 < 0 || dim1 < 0 || i >= dim0 || j >= dim1) {
-    wasm_subprims_trap();
+  if (dim0 < 0) {
+    wasm_signal_xarroob(tcr, raw_i, array);
+    return;
+  }
+  if (dim1 < 0) {
+    wasm_signal_xarroob(tcr, raw_j, array);
+    return;
+  }
+  if (i >= dim0) {
+    wasm_signal_xarroob(tcr, raw_i, array);
+    return;
+  }
+  if (j >= dim1) {
+    wasm_signal_xarroob(tcr, raw_j, array);
+    return;
   }
 
   int64_t idx64 = (int64_t)i * (int64_t)dim1 + (int64_t)j;
   signed_natural index = (signed_natural)idx64;
   if ((int64_t)index != idx64) {
-    wasm_subprims_trap();
+    wasm_signal_xarroob(tcr, raw_i, array);
+    return;
   }
 
   LispObj data_vector = wasm_array_data_vector_or_trap(array, &index);
@@ -3617,27 +3977,96 @@ _SParef3(void)
     wasm_subprims_trap();
   }
 
-  signed_natural i = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, arg_x));
-  signed_natural j = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, arg_y));
-  signed_natural k = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, arg_z));
-  if (i < 0 || j < 0 || k < 0) {
-    wasm_subprims_trap();
+  LispObj array = wasm_reg(tcr, temp0);
+  LispObj *data = NULL;
+  if (fulltag_of(array) == fulltag_misc) {
+    LispObj header = header_of(array);
+    unsigned subtag = header_subtag(header);
+    if (subtag == subtag_arrayH) {
+      data = (LispObj *)((BytePtr)array + misc_data_offset);
+      signed_natural rank = wasm_unbox_fixnum_or_trap(data[WASM_ARRAYH_RANK_CELL]);
+      if (rank != 3) {
+        wasm_signal_xndims(tcr, array, 3);
+        return;
+      }
+    } else if (subtag == subtag_vectorH || subtag == subtag_simple_vector || subtag >= min_cl_ivector_subtag) {
+      wasm_signal_xndims(tcr, array, 3);
+      return;
+    } else {
+      wasm_signal_wrong_type(tcr, array, wasm_symbol_array());
+      return;
+    }
+  } else {
+    wasm_signal_wrong_type(tcr, array, wasm_symbol_array());
+    return;
   }
 
-  LispObj array = wasm_reg(tcr, temp0);
-  LispObj *data = wasm_arrayH_data_or_trap(array, 3);
+  LispObj raw_i = wasm_reg(tcr, arg_x);
+  if (tag_of(raw_i) != tag_fixnum) {
+    wasm_signal_wrong_type(tcr, raw_i, wasm_symbol_fixnum());
+    return;
+  }
+  LispObj raw_j = wasm_reg(tcr, arg_y);
+  if (tag_of(raw_j) != tag_fixnum) {
+    wasm_signal_wrong_type(tcr, raw_j, wasm_symbol_fixnum());
+    return;
+  }
+  LispObj raw_k = wasm_reg(tcr, arg_z);
+  if (tag_of(raw_k) != tag_fixnum) {
+    wasm_signal_wrong_type(tcr, raw_k, wasm_symbol_fixnum());
+    return;
+  }
+
+  signed_natural i = unbox_fixnum(raw_i);
+  signed_natural j = unbox_fixnum(raw_j);
+  signed_natural k = unbox_fixnum(raw_k);
+  if (i < 0) {
+    wasm_signal_xarroob(tcr, raw_i, array);
+    return;
+  }
+  if (j < 0) {
+    wasm_signal_xarroob(tcr, raw_j, array);
+    return;
+  }
+  if (k < 0) {
+    wasm_signal_xarroob(tcr, raw_k, array);
+    return;
+  }
+
   signed_natural dim0 = wasm_unbox_fixnum_or_trap(data[WASM_ARRAYH_DIM0_CELL]);
   signed_natural dim1 = wasm_unbox_fixnum_or_trap(data[WASM_ARRAYH_DIM0_CELL + 1]);
   signed_natural dim2 = wasm_unbox_fixnum_or_trap(data[WASM_ARRAYH_DIM0_CELL + 2]);
-  if (dim0 < 0 || dim1 < 0 || dim2 < 0 || i >= dim0 || j >= dim1 || k >= dim2) {
-    wasm_subprims_trap();
+  if (dim0 < 0) {
+    wasm_signal_xarroob(tcr, raw_i, array);
+    return;
+  }
+  if (dim1 < 0) {
+    wasm_signal_xarroob(tcr, raw_j, array);
+    return;
+  }
+  if (dim2 < 0) {
+    wasm_signal_xarroob(tcr, raw_k, array);
+    return;
+  }
+  if (i >= dim0) {
+    wasm_signal_xarroob(tcr, raw_i, array);
+    return;
+  }
+  if (j >= dim1) {
+    wasm_signal_xarroob(tcr, raw_j, array);
+    return;
+  }
+  if (k >= dim2) {
+    wasm_signal_xarroob(tcr, raw_k, array);
+    return;
   }
 
   int64_t plane = (int64_t)dim1 * (int64_t)dim2;
   int64_t idx64 = (int64_t)i * plane + (int64_t)j * (int64_t)dim2 + (int64_t)k;
   signed_natural index = (signed_natural)idx64;
   if ((int64_t)index != idx64) {
-    wasm_subprims_trap();
+    wasm_signal_xarroob(tcr, raw_i, array);
+    return;
   }
 
   LispObj data_vector = wasm_array_data_vector_or_trap(array, &index);
@@ -3655,24 +4084,76 @@ _SPaset2(void)
     wasm_subprims_trap();
   }
 
-  signed_natural i = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, arg_x));
-  signed_natural j = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, arg_y));
-  if (i < 0 || j < 0) {
-    wasm_subprims_trap();
+  LispObj array = wasm_reg(tcr, temp0);
+  LispObj *data = NULL;
+  if (fulltag_of(array) == fulltag_misc) {
+    LispObj header = header_of(array);
+    unsigned subtag = header_subtag(header);
+    if (subtag == subtag_arrayH) {
+      data = (LispObj *)((BytePtr)array + misc_data_offset);
+      signed_natural rank = wasm_unbox_fixnum_or_trap(data[WASM_ARRAYH_RANK_CELL]);
+      if (rank != 2) {
+        wasm_signal_xndims(tcr, array, 2);
+        return;
+      }
+    } else if (subtag == subtag_vectorH || subtag == subtag_simple_vector || subtag >= min_cl_ivector_subtag) {
+      wasm_signal_xndims(tcr, array, 2);
+      return;
+    } else {
+      wasm_signal_wrong_type(tcr, array, wasm_symbol_array());
+      return;
+    }
+  } else {
+    wasm_signal_wrong_type(tcr, array, wasm_symbol_array());
+    return;
   }
 
-  LispObj array = wasm_reg(tcr, temp0);
-  LispObj *data = wasm_arrayH_data_or_trap(array, 2);
+  LispObj raw_i = wasm_reg(tcr, arg_x);
+  if (tag_of(raw_i) != tag_fixnum) {
+    wasm_signal_wrong_type(tcr, raw_i, wasm_symbol_fixnum());
+    return;
+  }
+  LispObj raw_j = wasm_reg(tcr, arg_y);
+  if (tag_of(raw_j) != tag_fixnum) {
+    wasm_signal_wrong_type(tcr, raw_j, wasm_symbol_fixnum());
+    return;
+  }
+
+  signed_natural i = unbox_fixnum(raw_i);
+  signed_natural j = unbox_fixnum(raw_j);
+  if (i < 0) {
+    wasm_signal_xarroob(tcr, raw_i, array);
+    return;
+  }
+  if (j < 0) {
+    wasm_signal_xarroob(tcr, raw_j, array);
+    return;
+  }
+
   signed_natural dim0 = wasm_unbox_fixnum_or_trap(data[WASM_ARRAYH_DIM0_CELL]);
   signed_natural dim1 = wasm_unbox_fixnum_or_trap(data[WASM_ARRAYH_DIM0_CELL + 1]);
-  if (dim0 < 0 || dim1 < 0 || i >= dim0 || j >= dim1) {
-    wasm_subprims_trap();
+  if (dim0 < 0) {
+    wasm_signal_xarroob(tcr, raw_i, array);
+    return;
+  }
+  if (dim1 < 0) {
+    wasm_signal_xarroob(tcr, raw_j, array);
+    return;
+  }
+  if (i >= dim0) {
+    wasm_signal_xarroob(tcr, raw_i, array);
+    return;
+  }
+  if (j >= dim1) {
+    wasm_signal_xarroob(tcr, raw_j, array);
+    return;
   }
 
   int64_t idx64 = (int64_t)i * (int64_t)dim1 + (int64_t)j;
   signed_natural index = (signed_natural)idx64;
   if ((int64_t)index != idx64) {
-    wasm_subprims_trap();
+    wasm_signal_xarroob(tcr, raw_i, array);
+    return;
   }
 
   LispObj value = wasm_reg(tcr, arg_z);
@@ -3691,27 +4172,96 @@ _SPaset3(void)
     wasm_subprims_trap();
   }
 
-  signed_natural i = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, temp0));
-  signed_natural j = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, arg_x));
-  signed_natural k = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, arg_y));
-  if (i < 0 || j < 0 || k < 0) {
-    wasm_subprims_trap();
+  LispObj array = wasm_reg(tcr, temp1);
+  LispObj *data = NULL;
+  if (fulltag_of(array) == fulltag_misc) {
+    LispObj header = header_of(array);
+    unsigned subtag = header_subtag(header);
+    if (subtag == subtag_arrayH) {
+      data = (LispObj *)((BytePtr)array + misc_data_offset);
+      signed_natural rank = wasm_unbox_fixnum_or_trap(data[WASM_ARRAYH_RANK_CELL]);
+      if (rank != 3) {
+        wasm_signal_xndims(tcr, array, 3);
+        return;
+      }
+    } else if (subtag == subtag_vectorH || subtag == subtag_simple_vector || subtag >= min_cl_ivector_subtag) {
+      wasm_signal_xndims(tcr, array, 3);
+      return;
+    } else {
+      wasm_signal_wrong_type(tcr, array, wasm_symbol_array());
+      return;
+    }
+  } else {
+    wasm_signal_wrong_type(tcr, array, wasm_symbol_array());
+    return;
   }
 
-  LispObj array = wasm_reg(tcr, temp1);
-  LispObj *data = wasm_arrayH_data_or_trap(array, 3);
+  LispObj raw_i = wasm_reg(tcr, temp0);
+  if (tag_of(raw_i) != tag_fixnum) {
+    wasm_signal_wrong_type(tcr, raw_i, wasm_symbol_fixnum());
+    return;
+  }
+  LispObj raw_j = wasm_reg(tcr, arg_x);
+  if (tag_of(raw_j) != tag_fixnum) {
+    wasm_signal_wrong_type(tcr, raw_j, wasm_symbol_fixnum());
+    return;
+  }
+  LispObj raw_k = wasm_reg(tcr, arg_y);
+  if (tag_of(raw_k) != tag_fixnum) {
+    wasm_signal_wrong_type(tcr, raw_k, wasm_symbol_fixnum());
+    return;
+  }
+
+  signed_natural i = unbox_fixnum(raw_i);
+  signed_natural j = unbox_fixnum(raw_j);
+  signed_natural k = unbox_fixnum(raw_k);
+  if (i < 0) {
+    wasm_signal_xarroob(tcr, raw_i, array);
+    return;
+  }
+  if (j < 0) {
+    wasm_signal_xarroob(tcr, raw_j, array);
+    return;
+  }
+  if (k < 0) {
+    wasm_signal_xarroob(tcr, raw_k, array);
+    return;
+  }
+
   signed_natural dim0 = wasm_unbox_fixnum_or_trap(data[WASM_ARRAYH_DIM0_CELL]);
   signed_natural dim1 = wasm_unbox_fixnum_or_trap(data[WASM_ARRAYH_DIM0_CELL + 1]);
   signed_natural dim2 = wasm_unbox_fixnum_or_trap(data[WASM_ARRAYH_DIM0_CELL + 2]);
-  if (dim0 < 0 || dim1 < 0 || dim2 < 0 || i >= dim0 || j >= dim1 || k >= dim2) {
-    wasm_subprims_trap();
+  if (dim0 < 0) {
+    wasm_signal_xarroob(tcr, raw_i, array);
+    return;
+  }
+  if (dim1 < 0) {
+    wasm_signal_xarroob(tcr, raw_j, array);
+    return;
+  }
+  if (dim2 < 0) {
+    wasm_signal_xarroob(tcr, raw_k, array);
+    return;
+  }
+  if (i >= dim0) {
+    wasm_signal_xarroob(tcr, raw_i, array);
+    return;
+  }
+  if (j >= dim1) {
+    wasm_signal_xarroob(tcr, raw_j, array);
+    return;
+  }
+  if (k >= dim2) {
+    wasm_signal_xarroob(tcr, raw_k, array);
+    return;
   }
 
   int64_t plane = (int64_t)dim1 * (int64_t)dim2;
   int64_t idx64 = (int64_t)i * plane + (int64_t)j * (int64_t)dim2 + (int64_t)k;
   signed_natural index = (signed_natural)idx64;
   if ((int64_t)index != idx64) {
-    wasm_subprims_trap();
+    wasm_signal_xarroob(tcr, raw_i, array);
+    return;
   }
 
   LispObj value = wasm_reg(tcr, arg_z);
@@ -3820,14 +4370,14 @@ __attribute__((used, visibility("default"), export_name("_SPunused1")))
 void
 _SPunused1(void)
 {
-  wasm_subprims_trap();
+  /* Intentional no-op used by smoke tests to validate subprim dispatch. */
 }
 
 __attribute__((used, visibility("default"), export_name("_SPunused2")))
 void
 _SPunused2(void)
 {
-  wasm_subprims_trap();
+  /* Intentional no-op used by smoke tests to validate subprim dispatch. */
 }
 
 __attribute__((used, visibility("default"), export_name("_SPpopj")))
@@ -3989,11 +4539,7 @@ _SPgetu32(void)
   uint32_t result = 0;
 
   if (tag_of(value) == tag_fixnum) {
-    int32_t sval = (int32_t)unbox_fixnum(value);
-    if (sval < 0) {
-      wasm_subprims_trap();
-    }
-    result = (uint32_t)sval;
+    result = (uint32_t)unbox_fixnum(value);
     wasm_set_reg(tcr, imm0, (LispObj)result);
     wasm_set_reg(tcr, imm1, (LispObj)0);
     return;
@@ -4002,21 +4548,21 @@ _SPgetu32(void)
   signed_natural count = 0;
   uint32_t *digits = NULL;
   if (!wasm_bignum_info(value, &count, &digits)) {
-    wasm_subprims_trap();
+    wasm_signal_wrong_type(tcr, value, wasm_type_unsigned_byte(tcr, 32));
+    return;
   }
 
   if (count == 1) {
     result = digits[0];
-    if (result & 0x80000000u) {
-      wasm_subprims_trap();
-    }
   } else if (count == 2) {
     result = digits[0];
     if (digits[1] != 0) {
-      wasm_subprims_trap();
+      wasm_signal_wrong_type(tcr, value, wasm_type_unsigned_byte(tcr, 32));
+      return;
     }
   } else {
-    wasm_subprims_trap();
+    wasm_signal_wrong_type(tcr, value, wasm_type_unsigned_byte(tcr, 32));
+    return;
   }
 
   wasm_set_reg(tcr, imm0, (LispObj)result);
@@ -4061,7 +4607,8 @@ _SPgetu64(void)
   if (tag_of(value) == tag_fixnum) {
     int32_t sval = (int32_t)unbox_fixnum(value);
     if (sval < 0) {
-      wasm_subprims_trap();
+      wasm_signal_wrong_type(tcr, value, wasm_type_unsigned_byte(tcr, 64));
+      return;
     }
     wasm_set_reg(tcr, imm0, (LispObj)(uint32_t)sval);
     wasm_set_reg(tcr, imm1, (LispObj)0);
@@ -4071,13 +4618,15 @@ _SPgetu64(void)
   signed_natural count = 0;
   uint32_t *digits = NULL;
   if (!wasm_bignum_info(value, &count, &digits)) {
-    wasm_subprims_trap();
+    wasm_signal_wrong_type(tcr, value, wasm_type_unsigned_byte(tcr, 64));
+    return;
   }
 
   if (count == 1) {
     uint32_t lo = digits[0];
     if (lo & 0x80000000u) {
-      wasm_subprims_trap();
+      wasm_signal_wrong_type(tcr, value, wasm_type_unsigned_byte(tcr, 64));
+      return;
     }
     wasm_set_reg(tcr, imm0, (LispObj)lo);
     wasm_set_reg(tcr, imm1, (LispObj)0);
@@ -4088,7 +4637,8 @@ _SPgetu64(void)
     uint32_t lo = digits[0];
     uint32_t hi = digits[1];
     if (hi & 0x80000000u) {
-      wasm_subprims_trap();
+      wasm_signal_wrong_type(tcr, value, wasm_type_unsigned_byte(tcr, 64));
+      return;
     }
     wasm_set_reg(tcr, imm0, (LispObj)lo);
     wasm_set_reg(tcr, imm1, (LispObj)hi);
@@ -4097,14 +4647,15 @@ _SPgetu64(void)
 
   if (count == 3) {
     if (digits[2] != 0) {
-      wasm_subprims_trap();
+      wasm_signal_wrong_type(tcr, value, wasm_type_unsigned_byte(tcr, 64));
+      return;
     }
     wasm_set_reg(tcr, imm0, (LispObj)digits[0]);
     wasm_set_reg(tcr, imm1, (LispObj)digits[1]);
     return;
   }
 
-  wasm_subprims_trap();
+  wasm_signal_wrong_type(tcr, value, wasm_type_unsigned_byte(tcr, 64));
 }
 
 __attribute__((used, visibility("default"), export_name("_SPgets64")))
@@ -4143,7 +4694,7 @@ _SPgets64(void)
     return;
   }
 
-  wasm_subprims_trap();
+  wasm_signal_wrong_type(tcr, value, wasm_type_signed_byte(tcr, 64));
 }
 
 __attribute__((used, visibility("default"), export_name("_SPspecref")))
@@ -4224,7 +4775,11 @@ _SPspecrefcheck(void)
   }
 
   if (value == (LispObj)unbound_marker) {
-    wasm_subprims_trap();
+    wasm_set_reg(tcr, arg_z, symbol);
+    wasm_set_reg(tcr, arg_y, box_fixnum(WASM_XVUNBND));
+    wasm_set_reg(tcr, nargs, box_fixnum(2));
+    _SPksignalerr();
+    return;
   }
 
   wasm_set_reg(tcr, arg_y, symbol);
@@ -4365,7 +4920,17 @@ _SPbind(void)
   lispsymbol *sym = wasm_symbol_or_trap(symbol);
 
   LispObj binding_index = sym->binding_index;
-  signed_natural idx = wasm_positive_fixnum_or_trap(binding_index);
+  signed_natural idx = wasm_unbox_fixnum_or_trap(binding_index);
+  if (idx == 0) {
+    wasm_set_reg(tcr, arg_z, symbol);
+    wasm_set_reg(tcr, arg_y, box_fixnum(WASM_XSYMNOBIND));
+    wasm_set_reg(tcr, nargs, box_fixnum(2));
+    _SPksignalerr();
+    return;
+  }
+  if (idx < 0) {
+    wasm_subprims_trap();
+  }
 
   LispObj limit = tcr->tlb_limit;
   signed_natural lim = wasm_positive_fixnum_or_trap(limit);
@@ -4404,7 +4969,17 @@ _SPbind_self(void)
   lispsymbol *sym = wasm_symbol_or_trap(symbol);
 
   LispObj binding_index = sym->binding_index;
-  signed_natural idx = wasm_positive_fixnum_or_trap(binding_index);
+  signed_natural idx = wasm_unbox_fixnum_or_trap(binding_index);
+  if (idx == 0) {
+    wasm_set_reg(tcr, arg_z, symbol);
+    wasm_set_reg(tcr, arg_y, box_fixnum(WASM_XSYMNOBIND));
+    wasm_set_reg(tcr, nargs, box_fixnum(2));
+    _SPksignalerr();
+    return;
+  }
+  if (idx < 0) {
+    wasm_subprims_trap();
+  }
 
   LispObj limit = tcr->tlb_limit;
   signed_natural lim = wasm_positive_fixnum_or_trap(limit);
@@ -4463,7 +5038,17 @@ _SPbind_self_boundp_check(void)
   lispsymbol *sym = wasm_symbol_or_trap(symbol);
 
   LispObj binding_index = sym->binding_index;
-  signed_natural idx = wasm_positive_fixnum_or_trap(binding_index);
+  signed_natural idx = wasm_unbox_fixnum_or_trap(binding_index);
+  if (idx == 0) {
+    wasm_set_reg(tcr, arg_z, symbol);
+    wasm_set_reg(tcr, arg_y, box_fixnum(WASM_XSYMNOBIND));
+    wasm_set_reg(tcr, nargs, box_fixnum(2));
+    _SPksignalerr();
+    return;
+  }
+  if (idx < 0) {
+    wasm_subprims_trap();
+  }
 
   LispObj limit = tcr->tlb_limit;
   signed_natural lim = wasm_positive_fixnum_or_trap(limit);
@@ -4482,7 +5067,11 @@ _SPbind_self_boundp_check(void)
     value = sym->vcell;
   }
   if (value == (LispObj)unbound_marker) {
-    wasm_subprims_trap();
+    wasm_set_reg(tcr, arg_z, symbol);
+    wasm_set_reg(tcr, arg_y, box_fixnum(WASM_XVUNBND));
+    wasm_set_reg(tcr, nargs, box_fixnum(2));
+    _SPksignalerr();
+    return;
   }
 
   LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
@@ -4506,7 +5095,18 @@ _SPbind_interrupt_level_0(void)
     wasm_subprims_trap();
   }
 
+  LispObj *tlb = tcr->tlb_pointer;
+  if (tlb == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj old_value = tlb[INTERRUPT_LEVEL_BINDING_INDEX];
+
   wasm_bind_interrupt_level(tcr, box_fixnum(0));
+
+  if (tag_of(old_value) == tag_fixnum && unbox_fixnum(old_value) < 0) {
+    /* Pending interrupt delivery is not yet wired for wasm. */
+    (void)tcr;
+  }
 }
 
 __attribute__((used, visibility("default"), export_name("_SPbind_interrupt_level_m1")))
@@ -4531,6 +5131,10 @@ _SPbind_interrupt_level(void)
   }
 
   LispObj value = wasm_reg(tcr, arg_z);
+  if (value == 0) {
+    _SPbind_interrupt_level_0();
+    return;
+  }
   wasm_bind_interrupt_level(tcr, value);
 }
 
@@ -4549,12 +5153,20 @@ _SPunbind_interrupt_level(void)
     wasm_subprims_trap();
   }
 
+  LispObj old_value = tlb[INTERRUPT_LEVEL_BINDING_INDEX];
   LispObj symidx = (LispObj)binding->sym;
   LispObj value = binding->value;
   binding = binding->link;
 
   tlb[wasm_unbox_fixnum_or_trap(symidx)] = value;
   tcr->db_link = binding;
+
+  if (tag_of(old_value) == tag_fixnum && unbox_fixnum(old_value) < 0) {
+    if (tag_of(value) == tag_fixnum && unbox_fixnum(value) >= 0) {
+      /* Pending interrupt delivery is not yet wired for wasm. */
+      (void)tcr;
+    }
+  }
 }
 
 __attribute__((used, visibility("default"), export_name("_SPunbind")))
@@ -4735,6 +5347,8 @@ _SPprogvsave(void)
   tcr->save_vsp = vsp_ptr;
   wasm_set_reg(tcr, vsp, (LispObj)vsp_ptr);
 
+  /* Install cleanup entrypoint for unwind-protect: _SPprogvrestore. */
+  wasm_set_reg(tcr, imm0, box_fixnum(WASM_SUBPRIM_PROGVRESTORE_INDEX));
   _SPmkunwind();
 }
 
@@ -5299,17 +5913,26 @@ _SPsdiv32(void)
 
   int32_t denom = (int32_t)wasm_reg(tcr, imm1);
   if (denom == 0) {
-    wasm_subprims_trap();
+    int32_t numer = (int32_t)wasm_reg(tcr, imm0);
+    wasm_set_reg(tcr, arg_z, wasm_box_signed_64(tcr, (int64_t)numer));
+    wasm_set_reg(tcr, arg_y, box_fixnum(WASM_XDIVZRO));
+    wasm_set_reg(tcr, nargs, box_fixnum(2));
+    _SPksignalerr();
+    return;
   }
 
-  int64_t numer = (int32_t)wasm_reg(tcr, imm0);
-  int64_t quot = numer / denom;
-  int64_t rem = numer % denom;
-  if (quot > 0x7fffffffLL || quot < (-0x80000000LL)) {
-    wasm_subprims_trap();
+  int32_t numer = (int32_t)wasm_reg(tcr, imm0);
+  int32_t quot = 0;
+  int32_t rem = 0;
+  if (numer == INT32_MIN && denom == -1) {
+    quot = numer;
+    rem = 0;
+  } else {
+    quot = numer / denom;
+    rem = numer % denom;
   }
-  wasm_set_reg(tcr, imm0, (LispObj)(int32_t)quot);
-  wasm_set_reg(tcr, imm1, (LispObj)(int32_t)rem);
+  wasm_set_reg(tcr, imm0, (LispObj)quot);
+  wasm_set_reg(tcr, imm1, (LispObj)rem);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPfix_overflow")))
