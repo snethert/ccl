@@ -222,9 +222,15 @@ async function run() {
   }
   const commandListOk = listItemId === "alpha";
 
-  const compositionEvents = [];
+  const compositionEvents = {
+    baseline: [],
+    cancel: [],
+    multi: [],
+    selection: []
+  };
   const deadKeyEvents = [];
   const beforeInputEvents = [];
+  let compositionMode = "baseline";
 
   function createCompositionEvent(type, data, isComposing = true) {
     if (typeof CompositionEvent === "function") {
@@ -258,13 +264,13 @@ async function run() {
 
   if (imeInput) {
     imeInput.addEventListener("compositionstart", (event) => {
-      compositionEvents.push({ type: event.type, data: event.data ?? null });
+      compositionEvents[compositionMode]?.push({ type: event.type, data: event.data ?? null });
     });
     imeInput.addEventListener("compositionupdate", (event) => {
-      compositionEvents.push({ type: event.type, data: event.data ?? null });
+      compositionEvents[compositionMode]?.push({ type: event.type, data: event.data ?? null });
     });
     imeInput.addEventListener("compositionend", (event) => {
-      compositionEvents.push({ type: event.type, data: event.data ?? null });
+      compositionEvents[compositionMode]?.push({ type: event.type, data: event.data ?? null });
     });
     imeInput.addEventListener("keydown", (event) => {
       deadKeyEvents.push({ type: event.type, key: event.key ?? null });
@@ -276,6 +282,7 @@ async function run() {
       beforeInputEvents.push({ type: event.type, inputType: event.inputType ?? null, data: event.data ?? null });
     });
 
+    compositionMode = "baseline";
     imeInput.dispatchEvent(createCompositionEvent("compositionstart", "I", true));
     imeInput.dispatchEvent(createCompositionEvent("compositionupdate", "IM", true));
     imeInput.value = "IM";
@@ -284,6 +291,39 @@ async function run() {
     imeInput.value = "IME";
     imeInput.dispatchEvent(createInputEvent("input", { data: "IME", inputType: "insertCompositionText", isComposing: false }));
     imeCompositionValue = imeValue;
+
+    const beforeCancelValue = imeValue;
+    compositionMode = "cancel";
+    imeInput.dispatchEvent(createCompositionEvent("compositionstart", "X", true));
+    imeInput.dispatchEvent(createCompositionEvent("compositionupdate", "XY", true));
+    imeInput.dispatchEvent(createCompositionEvent("compositionend", "", false));
+    const afterCancelValue = imeValue;
+
+    compositionMode = "multi";
+    imeInput.dispatchEvent(createCompositionEvent("compositionstart", "A", true));
+    imeInput.dispatchEvent(createCompositionEvent("compositionupdate", "AB", true));
+    imeInput.dispatchEvent(createCompositionEvent("compositionupdate", "ABC", true));
+    imeInput.value = "ABC";
+    imeInput.dispatchEvent(createInputEvent("input", { data: "ABC", inputType: "insertCompositionText", isComposing: false }));
+    imeInput.dispatchEvent(createCompositionEvent("compositionend", "ABC", false));
+    const multiStepValue = imeValue;
+
+    compositionMode = "selection";
+    imeInput.value = "select";
+    if (typeof imeInput.setSelectionRange === "function") {
+      imeInput.setSelectionRange(1, 3);
+    }
+    const selectionBefore = {
+      start: imeInput.selectionStart,
+      end: imeInput.selectionEnd
+    };
+    imeInput.dispatchEvent(createCompositionEvent("compositionstart", "S", true));
+    imeInput.dispatchEvent(createCompositionEvent("compositionupdate", "SE", true));
+    imeInput.dispatchEvent(createInputEvent("input", { data: "SE", inputType: "insertCompositionText", isComposing: true }));
+    const selectionAfter = {
+      start: imeInput.selectionStart,
+      end: imeInput.selectionEnd
+    };
 
     const deadKeyDown = new KeyboardEvent("keydown", { key: "Dead", code: "Quote", bubbles: true });
     const deadKeyUp = new KeyboardEvent("keyup", { key: "Dead", code: "Quote", bubbles: true });
@@ -294,15 +334,39 @@ async function run() {
     imeInput.dispatchEvent(createInputEvent("beforeinput", { data: "mobile", inputType: "insertText" }));
     imeInput.dispatchEvent(createInputEvent("input", { data: "mobile", inputType: "insertText", isComposing: false }));
     mobileInputValue = imeValue;
+
+    const compositionBaseline = compositionEvents.baseline;
+    const compositionCancel = compositionEvents.cancel;
+    const compositionMulti = compositionEvents.multi;
+    const compositionSelection = compositionEvents.selection;
+
+    var imeCompositionOk =
+      compositionBaseline.length === 3 &&
+      compositionBaseline[0].type === "compositionstart" &&
+      compositionBaseline[1].type === "compositionupdate" &&
+      compositionBaseline[2].type === "compositionend" &&
+      compositionBaseline[2].data === "IME" &&
+      imeCompositionValue === "IME";
+    var imeCancelOk =
+      compositionCancel.length >= 3 &&
+      compositionCancel[0].type === "compositionstart" &&
+      compositionCancel[compositionCancel.length - 1].type === "compositionend" &&
+      afterCancelValue === beforeCancelValue;
+    var imeMultiStepOk =
+      compositionMulti.length >= 3 &&
+      compositionMulti[0].type === "compositionstart" &&
+      compositionMulti[compositionMulti.length - 1].type === "compositionend" &&
+      multiStepValue === "ABC";
+    var imeSelectionOk =
+      compositionSelection.length >= 2 &&
+      selectionBefore.start === selectionAfter.start &&
+      selectionBefore.end === selectionAfter.end;
   }
 
-  const imeCompositionOk =
-    compositionEvents.length === 3 &&
-    compositionEvents[0].type === "compositionstart" &&
-    compositionEvents[1].type === "compositionupdate" &&
-    compositionEvents[2].type === "compositionend" &&
-    compositionEvents[2].data === "IME" &&
-    imeCompositionValue === "IME";
+  const imeCompositionOkResolved = imeCompositionOk ?? false;
+  const imeCancelOkResolved = imeCancelOk ?? false;
+  const imeMultiStepOkResolved = imeMultiStepOk ?? false;
+  const imeSelectionOkResolved = imeSelectionOk ?? false;
   const deadKeyOk = deadKeyEvents.length === 2 && deadKeyEvents.every((event) => event.key === "Dead");
   const mobileInputOk =
     beforeInputEvents.some((event) => event.inputType === "insertText") &&
@@ -589,7 +653,10 @@ async function run() {
     commandInvokeOk &&
     commandInputOk &&
     commandListOk &&
-    imeCompositionOk &&
+    imeCompositionOkResolved &&
+    imeCancelOkResolved &&
+    imeMultiStepOkResolved &&
+    imeSelectionOkResolved &&
     deadKeyOk &&
     mobileInputOk &&
     virtualListOk &&
@@ -621,7 +688,10 @@ async function run() {
     commandInvokeOk,
     commandInputOk,
     commandListOk,
-    imeCompositionOk,
+    imeCompositionOk: imeCompositionOkResolved,
+    imeCancelOk: imeCancelOkResolved,
+    imeMultiStepOk: imeMultiStepOkResolved,
+    imeSelectionOk: imeSelectionOkResolved,
     deadKeyOk,
     mobileInputOk,
     virtualListOk,

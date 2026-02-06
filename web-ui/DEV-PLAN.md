@@ -168,7 +168,7 @@ Exit criteria:
 - Implemented deterministic replay harness with validation.
 - Added baseline fixtures and tests for focus, command enablement, layout, and selection.
 - Added headless browser harness (Playwright-backed) for DOM and canvas checks.
-- Added IME/dead-key/mobile keyboard coverage to the headless browser harness.
+- Added IME/dead-key/mobile keyboard coverage to the headless browser harness (composition cancel/multi-step, selection persistence).
 - Added a local web-ui dev dependency for Playwright to enable headless runs.
 - Headless harness skips on launch failure unless `WEB_UI_STRICT_BROWSER_TESTS=1` is set.
 
