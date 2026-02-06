@@ -286,4 +286,6 @@ Exit criteria:
 - Implemented IndexedDB and in-memory persistence stores.
 - Added persistence manager with debounce, flush, and restore flows.
 - Added serialization sanitization to strip non-serializable values.
+- Added best-effort focus/selection persistence with restore validation.
+- Documented non-persistence of presentations and runtime command handlers.
 - Added persistence unit tests, browser harness check, and WASM smoke test.

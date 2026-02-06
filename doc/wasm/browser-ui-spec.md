@@ -195,9 +195,46 @@ Bring-up baseline (Phase 2): button, label, text input, list.
 
 ## Persistence and Versioning
 - Layout state MUST persist per session/workspace and restore exactly.
-- Task state MUST persist open windows, navigation context, and focus target.
+- Task/window/widget structure MUST persist with stable IDs.
+- Focus and selection persistence is best-effort; invalid targets MUST be dropped on restore.
+- Presentations are NOT persisted; they are regenerated from restored state.
 - Persistent data MUST be versioned; schema migrations are supported.
-- Schema migrations MUST be reversible or explicitly marked as destructive.
+- Schema migrations MUST be reversible or explicitly marked as destructive and recorded in a migration log.
+
+### Snapshot Envelope (Normative)
+Each snapshot MUST be a versioned envelope:
+- `schemaVersion` (string or number)
+- `createdAt` (ms since epoch or ISO string)
+- `workspaceId`
+- `metadata` (implementation-defined, JSON-serializable)
+- `state` (see below)
+
+### Persisted State Subset (Normative)
+The persisted `state` MUST include:
+- `workspace`, `tasks`, `windows`, `widgets`
+- `layout`
+- `selection` (best-effort)
+- `focus` (best-effort)
+- `idCounters` (to avoid ID reuse)
+
+The persisted `state` MUST NOT include:
+- command registry or executable handlers
+- DOM references or backend-specific caches
+- presentation trees (recomputed on restore)
+
+### Restore Rules (Normative)
+- Missing referenced IDs (task/window/widget) MUST be dropped and replaced with safe defaults.
+- `rootWidgetId` MUST be repaired if missing by selecting the first widget for the window.
+- If layout is missing or invalid, a minimal layout MUST be synthesized.
+
+### Migration Policy (Normative)
+- Unknown schema versions MUST fail safe (restore minimal empty state, not crash).
+- Forward-only migrations are allowed; destructive migrations MUST be labeled.
+- Implementations SHOULD keep a backup snapshot before applying destructive migrations.
+
+### Persistence Policy (Guidance)
+- A single latest snapshot per workspace is sufficient by default.
+- Writes SHOULD be debounced/coalesced and MUST NOT block the UI thread.
 
 ## Performance and Responsiveness
 ### Budgets
