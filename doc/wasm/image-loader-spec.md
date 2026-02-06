@@ -48,6 +48,9 @@ Optional host entry paths (current bring‑up):
 - **Boot + start_lisp (direct):** `wasm_set_boot_image(ptr, len)` then `wasm_ccl_start()`.
 - **Explicit toplevel:** `wasm_run_toplevel()` (one-shot) or `wasm_ccl_step()` (host‑stepped).
 
+If the image references compiled modules, the host should install them from the
+registry before entering `start_lisp` or stepping the toplevel.
+
 ## Reference host placement strategy (current)
 
 The Node helper (`doc/wasm/js/load-image.mjs`) uses:
