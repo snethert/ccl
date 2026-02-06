@@ -8,6 +8,11 @@
         "reasonId": "reason-1"
       }
     },
+    "capabilities": {
+      "granted": [],
+      "log": [],
+      "safeMode": false
+    },
     "disableReasons": {
       "reason-1": {
         "details": {},
@@ -36,6 +41,12 @@
           "type": "command:disable"
         }
       ]
+    },
+    "ui": {
+      "history": [],
+      "nextTurnId": 1,
+      "queue": [],
+      "turn": null
     },
     "focus": {
       "presentationId": null,

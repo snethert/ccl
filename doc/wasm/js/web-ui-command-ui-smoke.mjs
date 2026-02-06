@@ -22,6 +22,11 @@ import {
   LAYOUT_TABS_COMMAND,
   LAYOUT_DOCK_COMMAND,
   LAYOUT_SET_ACTIVE_TAB_COMMAND,
+  CAPABILITY_REQUEST_COMMAND,
+  CAPABILITY_GRANT_COMMAND,
+  CAPABILITY_REVOKE_COMMAND,
+  SAFE_MODE_ENABLE_COMMAND,
+  SAFE_MODE_DISABLE_COMMAND,
   applyCommandPaletteFilter,
   applyCommandPaletteSelection,
   resolveCommandPaletteSelection,
@@ -30,6 +35,7 @@ import {
   registerCommandPaletteCommands,
   registerTaskCommands,
   registerLayoutCommands,
+  registerCapabilityCommands,
   registerCommandSurfaceCommands,
   bindCommandPaletteDefaults,
   bindCommandSurfaceDefaults,
@@ -38,6 +44,11 @@ import {
   registerPresentationTranslator,
   resolvePresentationCommand,
   executeCommand,
+  enqueueUiSignal,
+  beginUiTurn,
+  advanceUiTurn,
+  yieldUiTurn,
+  endUiTurn,
   bindKey,
   resolveKey
 } from "../../../web-ui/src/index.mjs";
@@ -47,6 +58,7 @@ registerCommand(registry, { id: "alpha.run", title: "Alpha Run" });
 registerCommand(registry, { id: "beta.build", title: "Beta Build" });
 registerCommand(registry, { id: "gamma.test", title: "Gamma Test" });
 registerCommand(registry, { id: "delta.pick", title: "Delta Pick" });
+registerCommand(registry, { id: "dom.escape", title: "DOM Escape", capability: "dom.escape" });
 registerPresentationTranslator(registry, "file", "click", () => "alpha.run");
 bindKey(registry, "global", "K", "alpha.run");
 bindKey(registry, "task", "B", "beta.build", "task-1");
@@ -56,6 +68,7 @@ registerCommandPaletteCommands(registry);
 registerTaskCommands(registry);
 registerLayoutCommands(registry);
 registerCommandSurfaceCommands(registry);
+registerCapabilityCommands(registry);
 bindCommandPaletteDefaults(registry, { taskId: "task-1" });
 bindCommandSurfaceDefaults(registry);
 
@@ -69,6 +82,53 @@ const resolvedPresentation = resolvePresentationCommand(
   {}
 );
 assert.equal(resolvedPresentation.commandId, "alpha.run");
+
+const blockedEscape = executeCommand(registry, "dom.escape", { state });
+assert.equal(blockedEscape.ok, false);
+assert.equal(blockedEscape.reason, "Missing capability: dom.escape");
+
+const requestedEscape = executeCommand(registry, CAPABILITY_REQUEST_COMMAND, { state, capability: "dom.escape" });
+assert.equal(requestedEscape.ok, true);
+state = requestedEscape.result;
+
+const grantedEscape = executeCommand(registry, CAPABILITY_GRANT_COMMAND, { state, capability: "dom.escape" });
+assert.equal(grantedEscape.ok, true);
+state = grantedEscape.result;
+
+const allowedEscape = executeCommand(registry, "dom.escape", { state });
+assert.equal(allowedEscape.ok, true);
+
+const safeModeEnabled = executeCommand(registry, SAFE_MODE_ENABLE_COMMAND, { state });
+assert.equal(safeModeEnabled.ok, true);
+state = safeModeEnabled.result;
+
+const blockedBySafeMode = executeCommand(registry, "dom.escape", { state });
+assert.equal(blockedBySafeMode.ok, false);
+assert.equal(blockedBySafeMode.reason, "Safe mode");
+
+const safeModeDisabled = executeCommand(registry, SAFE_MODE_DISABLE_COMMAND, { state });
+assert.equal(safeModeDisabled.ok, true);
+state = safeModeDisabled.result;
+
+const revokedEscape = executeCommand(registry, CAPABILITY_REVOKE_COMMAND, { state, capability: "dom.escape" });
+assert.equal(revokedEscape.ok, true);
+state = revokedEscape.result;
+
+const blockedAfterRevoke = executeCommand(registry, "dom.escape", { state });
+assert.equal(blockedAfterRevoke.ok, false);
+assert.equal(blockedAfterRevoke.reason, "Missing capability: dom.escape");
+
+state = enqueueUiSignal(state, { type: "input:pointer", payload: { x: 5, y: 10 } });
+state = enqueueUiSignal(state, { type: "input:key", payload: { key: "K" } });
+state = beginUiTurn(state, { commitPolicy: "rAF" });
+assert.equal(state.ui.turn.phase, "signals");
+assert.equal(state.ui.turn.signals.length, 2);
+state = advanceUiTurn(state, "commands");
+assert.equal(state.ui.turn.phase, "commands");
+state = yieldUiTurn(state, "awaiting-input");
+assert.equal(state.ui.turn.phase, "yielded");
+state = endUiTurn(state);
+assert.equal(state.ui.turn, null);
 
 const openedPalette = executeCommand(registry, COMMAND_PALETTE_OPEN_COMMAND, {
   state,

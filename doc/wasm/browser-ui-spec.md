@@ -111,6 +111,7 @@ Acceptance checks:
 
 ### Explicit, inspectable state
 - Inspectable representations MUST exist for tasks, windows, focus history, command enablement, job queues, and recent errors.
+- UI turn state (active phase, queued signals, yield reason) MUST be inspectable.
 - The UI MUST expose busy indicators, disabled reasons, and background job status.
 - A standard command MUST open a System State inspector window.
 - All "why" questions have a first-class object: FocusReason, DisableReason, WindowCause, JobCause.
@@ -259,6 +260,7 @@ The persisted `state` MUST NOT include:
 - Apps MUST interact via toolkit APIs, not raw DOM.
 - Privileged operations MUST require explicit capabilities and policy mediation.
 - Capability mediation is a command, not an API call (so it is logged, inspectable, and restartable).
+- Capability grants/revocations are reflected in inspectable state; safe mode is toggled via commands.
 - A "safe mode" can disable all capability-granted escapes and still bring up REPL/inspector/debugger.
 
 ## Developer Experience
@@ -288,6 +290,8 @@ Define a single UI turn:
 - Commands run to completion or yield, producing state deltas.
 - Renderer commits are scheduled (rAF/microtask policy).
 - Backend updates complete and may enqueue further signals.
+- UI turns are non-reentrant: a new turn cannot start until the active one completes or yields.
+- Yielding records a reason and preserves queued signals for the next turn.
 Lisp code runs only within command execution boundaries and explicit yields.
 
 ### Backend interface (minimal, Stage 2 baseline)

@@ -12,7 +12,10 @@ import {
   executePresentationCommand,
   commandEnabled,
   executeCommand,
-  makeContext
+  makeContext,
+  createState,
+  grantCapability,
+  setSafeMode
 } from "../src/index.mjs";
 
 function makeRegistry() {
@@ -149,4 +152,35 @@ test("namespace policy can enforce namespaced ids", () => {
   const registry = createRegistry({ namespacePolicy: "require-dot" });
   assert.throws(() => registerCommand(registry, { id: "plain" }));
   registerCommand(registry, { id: "ns.command" });
+});
+
+test("commands honor capability gating and safe mode", () => {
+  const registry = createRegistry();
+  registerCommand(registry, { id: "cmd.secure", capability: "dom.escape", exec: () => "ok" });
+
+  let state = createState();
+  let ctx = makeContext(state);
+
+  let enabled = commandEnabled(registry, "cmd.secure", ctx);
+  assert.equal(enabled.enabled, false);
+  assert.equal(enabled.reason, "Missing capability: dom.escape");
+
+  let exec = executeCommand(registry, "cmd.secure", ctx);
+  assert.equal(exec.ok, false);
+  assert.equal(exec.reason, "Missing capability: dom.escape");
+
+  state = grantCapability(state, "dom.escape");
+  ctx = makeContext(state);
+  enabled = commandEnabled(registry, "cmd.secure", ctx);
+  assert.equal(enabled.enabled, true);
+
+  exec = executeCommand(registry, "cmd.secure", ctx);
+  assert.equal(exec.ok, true);
+  assert.equal(exec.result, "ok");
+
+  state = setSafeMode(state, true, { reason: "test" });
+  ctx = makeContext(state);
+  enabled = commandEnabled(registry, "cmd.secure", ctx);
+  assert.equal(enabled.enabled, false);
+  assert.equal(enabled.reason, "Safe mode");
 });

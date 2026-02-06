@@ -271,6 +271,7 @@ Exit criteria:
 - Added event log ring buffer and deterministic recording in replay harness.
 - Added inspector and debugger window shells with coalesced error handling.
 - Added reason object tracking for focus and disablement.
+- Added explicit UI turn model with signal queue, yield handling, and inspector visibility.
 - Added inspector/debugger tests and smoke tests wired into WASM smoke runner.
 - Added presentation translator registry and inspector presentation listing.
 - Implemented command registry, key binding, and deterministic routing.
@@ -278,6 +279,7 @@ Exit criteria:
 - Added context helpers and a module index for consistent imports.
 - Expanded state model to cover workspace, widgets, presentations, and ID counters.
 - Added state graph unit tests for task/window/widget wiring.
+- Added capability gating state with safe mode commands and inspector coverage.
 
 ### Phase 5 Progress
 - Added canvas scene normalization, draw traversal, and hit-testing helpers.

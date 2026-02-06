@@ -2,6 +2,11 @@
   "version": "0",
   "state": {
     "commands": {},
+    "capabilities": {
+      "granted": [],
+      "log": [],
+      "safeMode": false
+    },
     "disableReasons": {},
     "errors": [],
     "eventLog": {
@@ -60,6 +65,12 @@
           "type": "command:execute"
         }
       ]
+    },
+    "ui": {
+      "history": [],
+      "nextTurnId": 1,
+      "queue": [],
+      "turn": null
     },
     "focus": null,
     "focusHistory": [],

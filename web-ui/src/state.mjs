@@ -13,6 +13,8 @@ import { normalizeFocusTarget, normalizeFocusHistory, setFocus as setFocusCore }
 import { registerCommand, executeCommand, bindKey, resolveKeyWithTrace } from "./commands.mjs";
 
 const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layout", "reason", "error", "job"];
+const UI_TURN_PHASES = ["signals", "commands", "render", "backend", "idle"];
+const UI_TURN_HISTORY_LIMIT = 8;
 export const COMMAND_PALETTE_FILTER_COMMAND = "ui.command-palette.filter";
 export const COMMAND_PALETTE_EXECUTE_COMMAND = "ui.command-palette.execute";
 export const COMMAND_PALETTE_SELECT_NEXT_COMMAND = "ui.command-palette.select-next";
@@ -31,6 +33,11 @@ export const LAYOUT_SPLIT_COMMAND = "ui.layout.split";
 export const LAYOUT_TABS_COMMAND = "ui.layout.tabs";
 export const LAYOUT_DOCK_COMMAND = "ui.layout.dock";
 export const LAYOUT_SET_ACTIVE_TAB_COMMAND = "ui.layout.set-active-tab";
+export const CAPABILITY_REQUEST_COMMAND = "ui.capability.request";
+export const CAPABILITY_GRANT_COMMAND = "ui.capability.grant";
+export const CAPABILITY_REVOKE_COMMAND = "ui.capability.revoke";
+export const SAFE_MODE_ENABLE_COMMAND = "ui.safe-mode.enable";
+export const SAFE_MODE_DISABLE_COMMAND = "ui.safe-mode.disable";
 
 function ensureCounters(counters) {
   if (counters) {
@@ -102,6 +109,103 @@ function normalizePresentation(presentation) {
   };
 }
 
+function normalizeUiSignal(signal, index) {
+  if (!signal || typeof signal !== "object") {
+    return { id: `signal-${index + 1}`, type: "signal", payload: {} };
+  }
+  return {
+    id: signal.id ?? `signal-${index + 1}`,
+    type: signal.type ?? "signal",
+    payload: signal.payload ?? {}
+  };
+}
+
+function normalizeUiTurn(turn) {
+  if (!turn || typeof turn !== "object") {
+    return null;
+  }
+  const phase = UI_TURN_PHASES.includes(turn.phase) || turn.phase === "yielded" ? turn.phase : "signals";
+  const signals = Array.isArray(turn.signals) ? turn.signals.map(normalizeUiSignal) : [];
+  return {
+    id: turn.id ?? "turn-0",
+    phase,
+    signals,
+    commitPolicy: turn.commitPolicy ?? "rAF",
+    yielded: Boolean(turn.yielded),
+    yieldReason: turn.yieldReason ?? null
+  };
+}
+
+function normalizeUiState(ui) {
+  if (!ui || typeof ui !== "object") {
+    return {
+      queue: [],
+      turn: null,
+      history: [],
+      nextTurnId: 1
+    };
+  }
+  const queue = Array.isArray(ui.queue) ? ui.queue.map(normalizeUiSignal) : [];
+  const history = Array.isArray(ui.history)
+    ? ui.history.map((entry) => ({
+        id: entry?.id ?? "turn-0",
+        phase: entry?.phase ?? "idle",
+        yielded: Boolean(entry?.yielded),
+        commitPolicy: entry?.commitPolicy ?? "rAF"
+      }))
+    : [];
+  const nextTurnId = Number.isInteger(ui.nextTurnId) && ui.nextTurnId > 0 ? ui.nextTurnId : 1;
+  return {
+    queue,
+    turn: normalizeUiTurn(ui.turn),
+    history,
+    nextTurnId
+  };
+}
+
+function normalizeCapabilityEntry(entry, index) {
+  if (!entry || typeof entry !== "object") {
+    return {
+      id: `capability-${index + 1}`,
+      action: "unknown",
+      capability: null,
+      reason: null,
+      taskId: null,
+      windowId: null,
+      commandId: null
+    };
+  }
+  return {
+    id: entry.id ?? `capability-${index + 1}`,
+    action: entry.action ?? "unknown",
+    capability: entry.capability ?? null,
+    reason: entry.reason ?? null,
+    taskId: entry.taskId ?? null,
+    windowId: entry.windowId ?? null,
+    commandId: entry.commandId ?? null
+  };
+}
+
+function normalizeCapabilities(capabilities) {
+  const granted = Array.isArray(capabilities?.granted)
+    ? [...new Set(capabilities.granted.filter((cap) => typeof cap === "string"))].sort()
+    : [];
+  const log = Array.isArray(capabilities?.log)
+    ? capabilities.log.map((entry, index) => normalizeCapabilityEntry(entry, index))
+    : [];
+  return {
+    safeMode: Boolean(capabilities?.safeMode),
+    granted,
+    log
+  };
+}
+
+function appendCapabilityLog(capabilities, entry) {
+  const log = Array.isArray(capabilities?.log) ? capabilities.log : [];
+  const normalizedEntry = normalizeCapabilityEntry(entry, log.length);
+  return { ...capabilities, log: [...log, normalizedEntry] };
+}
+
 export function createWorkspace({ id, title, taskIds, activeTaskId, metadata } = {}) {
   return {
     id,
@@ -121,6 +225,8 @@ export function createState(options = {}) {
     windows: options.windows ?? {},
     widgets: options.widgets ?? {},
     presentations: options.presentations ?? {},
+    ui: normalizeUiState(options.ui ?? null),
+    capabilities: normalizeCapabilities(options.capabilities ?? null),
     focus: normalizeFocusTarget(options.focus ?? null),
     focusHistory: normalizeFocusHistory(options.focusHistory ?? []),
     selection: normalizeSelection(options.selection ?? null),
@@ -462,6 +568,79 @@ export function addPresentation(state, presentation) {
   return { ...state, idCounters: alloc.counters, presentations };
 }
 
+export function requestCapability(state, capability, options = {}) {
+  if (!capability) return state;
+  const capabilities = normalizeCapabilities(state.capabilities ?? null);
+  const nextCaps = appendCapabilityLog(capabilities, {
+    action: "request",
+    capability,
+    reason: options.reason ?? null,
+    taskId: options.taskId ?? null,
+    windowId: options.windowId ?? null,
+    commandId: options.commandId ?? null
+  });
+  return { ...state, capabilities: nextCaps };
+}
+
+export function grantCapability(state, capability, options = {}) {
+  if (!capability) return state;
+  const capabilities = normalizeCapabilities(state.capabilities ?? null);
+  if (capabilities.granted.includes(capability)) {
+    return state;
+  }
+  const granted = [...capabilities.granted, capability].sort();
+  const nextCaps = appendCapabilityLog({ ...capabilities, granted }, {
+    action: "grant",
+    capability,
+    reason: options.reason ?? null,
+    taskId: options.taskId ?? null,
+    windowId: options.windowId ?? null,
+    commandId: options.commandId ?? null
+  });
+  return { ...state, capabilities: nextCaps };
+}
+
+export function revokeCapability(state, capability, options = {}) {
+  if (!capability) return state;
+  const capabilities = normalizeCapabilities(state.capabilities ?? null);
+  if (!capabilities.granted.includes(capability)) {
+    return state;
+  }
+  const granted = capabilities.granted.filter((entry) => entry !== capability);
+  const nextCaps = appendCapabilityLog({ ...capabilities, granted }, {
+    action: "revoke",
+    capability,
+    reason: options.reason ?? null,
+    taskId: options.taskId ?? null,
+    windowId: options.windowId ?? null,
+    commandId: options.commandId ?? null
+  });
+  return { ...state, capabilities: nextCaps };
+}
+
+export function setSafeMode(state, enabled, options = {}) {
+  const capabilities = normalizeCapabilities(state.capabilities ?? null);
+  const nextEnabled = Boolean(enabled);
+  if (capabilities.safeMode === nextEnabled) {
+    return state;
+  }
+  const nextCaps = appendCapabilityLog({ ...capabilities, safeMode: nextEnabled }, {
+    action: nextEnabled ? "safe-mode-enabled" : "safe-mode-disabled",
+    reason: options.reason ?? null,
+    taskId: options.taskId ?? null,
+    windowId: options.windowId ?? null,
+    commandId: options.commandId ?? null
+  });
+  return { ...state, capabilities: nextCaps };
+}
+
+export function hasCapability(state, capability) {
+  if (!capability) return true;
+  const capabilities = state.capabilities ?? {};
+  if (capabilities.safeMode) return false;
+  return Array.isArray(capabilities.granted) && capabilities.granted.includes(capability);
+}
+
 export function setLayout(state, layout) {
   const normalized = normalizeLayout(layout, state.idCounters);
   return { ...state, layout: normalized.layout, idCounters: normalized.counters };
@@ -473,6 +652,90 @@ export function recordEvent(state, entry) {
   }
   const eventLog = recordEventLog(state.eventLog ?? null, entry);
   return { ...state, eventLog };
+}
+
+export function enqueueUiSignal(state, signal) {
+  const ui = normalizeUiState(state.ui ?? null);
+  const nextQueue = [...ui.queue, normalizeUiSignal(signal, ui.queue.length)];
+  return { ...state, ui: { ...ui, queue: nextQueue } };
+}
+
+export function beginUiTurn(state, options = {}) {
+  const ui = normalizeUiState(state.ui ?? null);
+  if (ui.turn) {
+    throw new Error("UI turn already active");
+  }
+  const turnId = `turn-${ui.nextTurnId}`;
+  const drainSignals = options.drainSignals !== false;
+  const signals = drainSignals ? ui.queue : [];
+  const queue = drainSignals ? [] : ui.queue;
+  const turn = {
+    id: turnId,
+    phase: "signals",
+    signals,
+    commitPolicy: options.commitPolicy ?? "rAF",
+    yielded: false,
+    yieldReason: null
+  };
+  return {
+    ...state,
+    ui: {
+      ...ui,
+      queue,
+      turn,
+      nextTurnId: ui.nextTurnId + 1
+    }
+  };
+}
+
+export function advanceUiTurn(state, phase) {
+  const ui = normalizeUiState(state.ui ?? null);
+  if (!ui.turn) {
+    throw new Error("UI turn not active");
+  }
+  const nextPhase = phase ?? ui.turn.phase;
+  if (!UI_TURN_PHASES.includes(nextPhase) && nextPhase !== "yielded") {
+    throw new Error(`Unknown UI turn phase: ${nextPhase}`);
+  }
+  if (UI_TURN_PHASES.includes(nextPhase) && UI_TURN_PHASES.includes(ui.turn.phase)) {
+    const currentIndex = UI_TURN_PHASES.indexOf(ui.turn.phase);
+    const nextIndex = UI_TURN_PHASES.indexOf(nextPhase);
+    if (nextIndex < currentIndex) {
+      throw new Error("UI turn phase cannot move backwards");
+    }
+  }
+  return { ...state, ui: { ...ui, turn: { ...ui.turn, phase: nextPhase } } };
+}
+
+export function yieldUiTurn(state, reason = null) {
+  let next = advanceUiTurn(state, "yielded");
+  const ui = normalizeUiState(next.ui ?? null);
+  if (!ui.turn) return next;
+  next = {
+    ...next,
+    ui: {
+      ...ui,
+      turn: { ...ui.turn, yielded: true, yieldReason: reason }
+    }
+  };
+  return next;
+}
+
+export function endUiTurn(state) {
+  const ui = normalizeUiState(state.ui ?? null);
+  if (!ui.turn) return state;
+  const historyEntry = {
+    id: ui.turn.id,
+    phase: ui.turn.phase,
+    yielded: ui.turn.yielded,
+    commitPolicy: ui.turn.commitPolicy
+  };
+  const history = [...ui.history, historyEntry];
+  const trimmed =
+    history.length > UI_TURN_HISTORY_LIMIT
+      ? history.slice(history.length - UI_TURN_HISTORY_LIMIT)
+      : history;
+  return { ...state, ui: { ...ui, turn: null, history: trimmed } };
 }
 
 export function setSelection(state, selection) {
@@ -888,11 +1151,62 @@ function summarizeEventLog(state, limit = 12) {
   return items;
 }
 
+function summarizeUiTurn(state) {
+  const ui = normalizeUiState(state.ui ?? null);
+  const items = [];
+  if (!ui.turn) {
+    items.push({ id: "turn-idle", label: "Turn: idle" });
+  } else {
+    items.push({ id: `turn-${ui.turn.id}`, label: `Turn: ${ui.turn.id} (${ui.turn.phase})` });
+    if (ui.turn.yielded) {
+      items.push({
+        id: `turn-${ui.turn.id}-yield`,
+        label: `Yielded: ${ui.turn.yieldReason ?? "unspecified"}`
+      });
+    }
+  }
+  items.push({ id: "turn-queue", label: `Queued signals: ${ui.queue.length}` });
+  if (ui.history.length > 0) {
+    const last = ui.history[ui.history.length - 1];
+    items.push({
+      id: "turn-last",
+      label: `Last turn: ${last.id} (${last.phase})`
+    });
+  }
+  return items;
+}
+
+function summarizeCapabilities(state) {
+  const capabilities = normalizeCapabilities(state.capabilities ?? null);
+  const items = [];
+  items.push({
+    id: "cap-safe-mode",
+    label: `Safe mode: ${capabilities.safeMode ? "enabled" : "disabled"}`
+  });
+  if (capabilities.granted.length === 0) {
+    items.push({ id: "cap-none", label: "No capabilities granted" });
+  } else {
+    for (const cap of capabilities.granted) {
+      items.push({ id: `cap-${cap}`, label: `Granted: ${cap}` });
+    }
+  }
+  if (capabilities.log.length > 0) {
+    for (const entry of capabilities.log) {
+      const action = entry.action ?? "event";
+      const capability = entry.capability ? ` ${entry.capability}` : "";
+      items.push({ id: `cap-log-${entry.id}`, label: `Log: ${action}${capability}` });
+    }
+  }
+  return items;
+}
+
 function buildInspectorSections(state) {
   return {
     tasks: summarizeTasks(state),
     focus: summarizeFocus(state),
     commands: summarizeCommands(state),
+    capabilities: summarizeCapabilities(state),
+    turns: summarizeUiTurn(state),
     presentations: summarizePresentations(state),
     windows: summarizeWindows(state),
     jobs: summarizeJobs(state),
@@ -940,6 +1254,8 @@ export function openInspectorWindow(state, options = {}) {
     ["tasks", "Tasks"],
     ["focus", "Focus"],
     ["commands", "Commands"],
+    ["capabilities", "Capabilities"],
+    ["turns", "UI Turn"],
     ["presentations", "Presentations"],
     ["windows", "Windows"],
     ["jobs", "Jobs"],
@@ -1604,6 +1920,126 @@ export function registerLayoutCommands(registry, options = {}) {
       const region = ctx.region ?? "left";
       return dockLayout(ctx.state, target, region);
     }
+  });
+
+  return registry;
+}
+
+export function registerCapabilityCommands(registry, options = {}) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  const requestId = options.requestCommandId ?? CAPABILITY_REQUEST_COMMAND;
+  const grantId = options.grantCommandId ?? CAPABILITY_GRANT_COMMAND;
+  const revokeId = options.revokeCommandId ?? CAPABILITY_REVOKE_COMMAND;
+  const safeModeEnableId = options.safeModeEnableCommandId ?? SAFE_MODE_ENABLE_COMMAND;
+  const safeModeDisableId = options.safeModeDisableCommandId ?? SAFE_MODE_DISABLE_COMMAND;
+
+  const resolveCapability = (ctx) => ctx.capability ?? ctx.payload?.capability ?? ctx.itemId ?? null;
+
+  const ensure = (id, command) => {
+    if (!registry.commands.has(id)) {
+      registerCommand(registry, { ...command, id });
+    }
+  };
+
+  ensure(requestId, {
+    title: "Request Capability",
+    doc: "Record a capability request for policy mediation.",
+    enabled: (ctx) => {
+      const capability = resolveCapability(ctx);
+      return capability
+        ? { enabled: true, reason: null }
+        : { enabled: false, reason: "No capability specified" };
+    },
+    exec: (ctx) => {
+      const capability = resolveCapability(ctx);
+      if (!capability) return ctx.state;
+      return requestCapability(ctx.state, capability, {
+        reason: ctx.reason ?? ctx.payload?.reason ?? null,
+        taskId: ctx.taskId ?? null,
+        windowId: ctx.windowId ?? null,
+        commandId: requestId
+      });
+    }
+  });
+
+  ensure(grantId, {
+    title: "Grant Capability",
+    doc: "Grant a capability after mediation.",
+    enabled: (ctx) => {
+      const capability = resolveCapability(ctx);
+      if (!capability) {
+        return { enabled: false, reason: "No capability specified" };
+      }
+      const granted = normalizeCapabilities(ctx.state.capabilities ?? null).granted;
+      return granted.includes(capability)
+        ? { enabled: false, reason: "Capability already granted" }
+        : { enabled: true, reason: null };
+    },
+    exec: (ctx) => {
+      const capability = resolveCapability(ctx);
+      if (!capability) return ctx.state;
+      return grantCapability(ctx.state, capability, {
+        reason: ctx.reason ?? ctx.payload?.reason ?? null,
+        taskId: ctx.taskId ?? null,
+        windowId: ctx.windowId ?? null,
+        commandId: grantId
+      });
+    }
+  });
+
+  ensure(revokeId, {
+    title: "Revoke Capability",
+    doc: "Revoke a previously granted capability.",
+    enabled: (ctx) => {
+      const capability = resolveCapability(ctx);
+      if (!capability) {
+        return { enabled: false, reason: "No capability specified" };
+      }
+      const granted = normalizeCapabilities(ctx.state.capabilities ?? null).granted;
+      return granted.includes(capability)
+        ? { enabled: true, reason: null }
+        : { enabled: false, reason: "Capability not granted" };
+    },
+    exec: (ctx) => {
+      const capability = resolveCapability(ctx);
+      if (!capability) return ctx.state;
+      return revokeCapability(ctx.state, capability, {
+        reason: ctx.reason ?? ctx.payload?.reason ?? null,
+        taskId: ctx.taskId ?? null,
+        windowId: ctx.windowId ?? null,
+        commandId: revokeId
+      });
+    }
+  });
+
+  ensure(safeModeEnableId, {
+    title: "Enable Safe Mode",
+    doc: "Disable all capability-granted escapes.",
+    enabled: (ctx) =>
+      ctx.state.capabilities?.safeMode ? { enabled: false, reason: "Safe mode already enabled" } : { enabled: true, reason: null },
+    exec: (ctx) =>
+      setSafeMode(ctx.state, true, {
+        reason: ctx.reason ?? ctx.payload?.reason ?? null,
+        taskId: ctx.taskId ?? null,
+        windowId: ctx.windowId ?? null,
+        commandId: safeModeEnableId
+      })
+  });
+
+  ensure(safeModeDisableId, {
+    title: "Disable Safe Mode",
+    doc: "Re-enable capability-granted escapes.",
+    enabled: (ctx) =>
+      ctx.state.capabilities?.safeMode ? { enabled: true, reason: null } : { enabled: false, reason: "Safe mode already disabled" },
+    exec: (ctx) =>
+      setSafeMode(ctx.state, false, {
+        reason: ctx.reason ?? ctx.payload?.reason ?? null,
+        taskId: ctx.taskId ?? null,
+        windowId: ctx.windowId ?? null,
+        commandId: safeModeDisableId
+      })
   });
 
   return registry;

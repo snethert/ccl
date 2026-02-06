@@ -51,6 +51,7 @@ export function normalizeCommand(command) {
     title: command.title ?? command.id,
     doc: command.doc ?? null,
     scope: command.scope ?? "global",
+    capability: command.capability ?? null,
     enabled: command.enabled ?? null,
     exec: command.exec ?? null,
     metadata: command.metadata ?? {}
@@ -181,10 +182,49 @@ export function normalizeEnablement(result) {
   return { enabled: true, reason: null };
 }
 
+function normalizeCapabilities(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value.filter((entry) => typeof entry === "string" && entry.length > 0);
+  }
+  if (typeof value === "string") {
+    return [value];
+  }
+  return [];
+}
+
+function resolveCapabilityState(ctx) {
+  const capabilities = ctx?.capabilities ?? ctx?.state?.capabilities ?? null;
+  return {
+    safeMode: Boolean(capabilities?.safeMode),
+    granted: Array.isArray(capabilities?.granted) ? capabilities.granted : []
+  };
+}
+
+function checkCapabilities(ctx, required) {
+  const resolved = resolveCapabilityState(ctx);
+  if (resolved.safeMode) {
+    return { enabled: false, reason: "Safe mode" };
+  }
+  for (const capability of required) {
+    if (!resolved.granted.includes(capability)) {
+      return { enabled: false, reason: `Missing capability: ${capability}` };
+    }
+  }
+  return { enabled: true, reason: null };
+}
+
 export function commandEnabled(registry, id, ctx) {
   const cmd = getCommand(registry, id);
   if (!cmd) {
     return { enabled: false, reason: "Unknown command" };
+  }
+  const required = normalizeCapabilities(cmd.capability);
+  if (required.length > 0) {
+    const capabilityCheck = checkCapabilities(ctx, required);
+    if (!capabilityCheck.enabled) {
+      return capabilityCheck;
+    }
   }
   if (!cmd.enabled) {
     return { enabled: true, reason: null };
