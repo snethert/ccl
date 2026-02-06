@@ -319,3 +319,4 @@ Exit criteria:
 - Added open/close commands for command palette and keybinding viewer windows.
 - Added keybinding trace panel and context/widget scope coverage in command UI tests.
 - Added default open/dismiss keybindings for command palette and keybinding viewer.
+- Added command routing tests for configurable context/widget precedence.
