@@ -11,6 +11,7 @@ import {
   COMMAND_PALETTE_CLOSE_COMMAND,
   KEYBINDINGS_OPEN_COMMAND,
   KEYBINDINGS_CLOSE_COMMAND,
+  COMMAND_SURFACE_DISMISS_COMMAND,
   applyCommandPaletteFilter,
   applyCommandPaletteSelection,
   resolveCommandPaletteSelection,
@@ -19,6 +20,7 @@ import {
   registerCommandPaletteCommands,
   registerCommandSurfaceCommands,
   bindCommandPaletteDefaults,
+  bindCommandSurfaceDefaults,
   createRegistry,
   registerCommand,
   executeCommand,
@@ -38,6 +40,7 @@ bindKey(registry, "widget", "W", "delta.pick", "widget-1");
 registerCommandPaletteCommands(registry);
 registerCommandSurfaceCommands(registry);
 bindCommandPaletteDefaults(registry, { taskId: "task-1" });
+bindCommandSurfaceDefaults(registry);
 
 let state = createState();
 state = addTask(state, { id: "task-1", title: "Task" });
@@ -76,6 +79,9 @@ assert.equal(COMMAND_PALETTE_SELECT_NEXT_COMMAND, "ui.command-palette.select-nex
 
 const bound = resolveKey(registry, "ArrowDown", { taskId: "task-1" });
 assert.equal(bound, COMMAND_PALETTE_SELECT_NEXT_COMMAND);
+assert.equal(resolveKey(registry, "Ctrl+Shift+P", {}), COMMAND_PALETTE_OPEN_COMMAND);
+assert.equal(resolveKey(registry, "Ctrl+Shift+K", {}), KEYBINDINGS_OPEN_COMMAND);
+assert.equal(resolveKey(registry, "Escape", {}), COMMAND_SURFACE_DISMISS_COMMAND);
 
 const execSelected = executeCommand(registry, COMMAND_PALETTE_EXECUTE_SELECTION_COMMAND, {
   state,

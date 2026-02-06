@@ -315,6 +315,7 @@ Lisp code runs only within command execution boundaries and explicit yields.
 - Opening/closing the command palette and keybinding viewer MUST be exposed as commands.
 - Palette implementations MAY hide internal commands from the listing.
 - Palette bindings SHOULD map ArrowUp/ArrowDown/Enter to selection and execution commands for the palette scope.
+- Default keybindings SHOULD include `Ctrl+Shift+P` (open palette), `Ctrl+Shift+K` (open keybindings), and `Escape` (dismiss active command surface).
 - Keybinding viewer entries SHOULD encode scope, scope id (if any), key, and command id in a human-readable label.
 - The keybinding viewer SHOULD expose a trace panel for a selected key showing scope decisions in order.
 

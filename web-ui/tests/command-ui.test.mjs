@@ -12,6 +12,7 @@ import {
   COMMAND_PALETTE_CLOSE_COMMAND,
   KEYBINDINGS_OPEN_COMMAND,
   KEYBINDINGS_CLOSE_COMMAND,
+  COMMAND_SURFACE_DISMISS_COMMAND,
   applyCommandPaletteFilter,
   applyCommandPaletteSelection,
   resolveCommandPaletteSelection,
@@ -20,7 +21,8 @@ import {
   openKeybindingWindow,
   registerCommandPaletteCommands,
   registerCommandSurfaceCommands,
-  bindCommandPaletteDefaults
+  bindCommandPaletteDefaults,
+  bindCommandSurfaceDefaults
 } from "../src/state.mjs";
 import { createRegistry, registerCommand, bindKey, executeCommand, resolveKey } from "../src/commands.mjs";
 import { makeContext } from "../src/context.mjs";
@@ -125,6 +127,7 @@ test("palette command registration wires navigation and execution", () => {
 test("command surface open/close commands toggle windows", () => {
   const registry = createRegistry();
   registerCommandSurfaceCommands(registry);
+  bindCommandSurfaceDefaults(registry);
 
   let state = createState();
   state = addTask(state, { id: "task-1", title: "Task" });
@@ -153,6 +156,13 @@ test("command surface open/close commands toggle windows", () => {
   state = closedKeybindings.result;
   viewer = Object.values(state.windows).find((win) => win.metadata?.role === "keybindings");
   assert.equal(viewer, undefined);
+
+  const paletteShortcut = resolveKey(registry, "Ctrl+Shift+P", {});
+  assert.equal(paletteShortcut, COMMAND_PALETTE_OPEN_COMMAND);
+  const keybindingsShortcut = resolveKey(registry, "Ctrl+Shift+K", {});
+  assert.equal(keybindingsShortcut, KEYBINDINGS_OPEN_COMMAND);
+  const dismissShortcut = resolveKey(registry, "Escape", {});
+  assert.equal(dismissShortcut, COMMAND_SURFACE_DISMISS_COMMAND);
 });
 
 test("keybinding viewer lists bindings", () => {

@@ -30,6 +30,7 @@ export {
   COMMAND_PALETTE_CLOSE_COMMAND,
   KEYBINDINGS_OPEN_COMMAND,
   KEYBINDINGS_CLOSE_COMMAND,
+  COMMAND_SURFACE_DISMISS_COMMAND,
   raiseError,
   acknowledgeError,
   upsertJob,
@@ -44,6 +45,7 @@ export {
   registerCommandPaletteCommands,
   registerCommandSurfaceCommands,
   bindCommandPaletteDefaults,
+  bindCommandSurfaceDefaults,
   openKeybindingWindow,
   refreshKeybindingWindow,
   closeKeybindingWindow

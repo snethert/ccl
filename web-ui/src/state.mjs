@@ -22,6 +22,7 @@ export const COMMAND_PALETTE_OPEN_COMMAND = "ui.command-palette.open";
 export const COMMAND_PALETTE_CLOSE_COMMAND = "ui.command-palette.close";
 export const KEYBINDINGS_OPEN_COMMAND = "ui.keybindings.open";
 export const KEYBINDINGS_CLOSE_COMMAND = "ui.keybindings.close";
+export const COMMAND_SURFACE_DISMISS_COMMAND = "ui.command-surface.dismiss";
 
 function ensureCounters(counters) {
   if (counters) {
@@ -1055,6 +1056,7 @@ export function registerCommandSurfaceCommands(registry, options = {}) {
   const paletteCloseId = options.paletteCloseCommandId ?? COMMAND_PALETTE_CLOSE_COMMAND;
   const keybindingsOpenId = options.keybindingsOpenCommandId ?? KEYBINDINGS_OPEN_COMMAND;
   const keybindingsCloseId = options.keybindingsCloseCommandId ?? KEYBINDINGS_CLOSE_COMMAND;
+  const dismissId = options.dismissCommandId ?? COMMAND_SURFACE_DISMISS_COMMAND;
   const filterCommandId = options.filterCommandId ?? COMMAND_PALETTE_FILTER_COMMAND;
 
   const ensure = (id, command) => {
@@ -1109,6 +1111,24 @@ export function registerCommandSurfaceCommands(registry, options = {}) {
       })
   });
 
+  ensure(dismissId, {
+    title: "Dismiss Command Surface",
+    doc: "Close the active command palette or keybinding viewer window.",
+    metadata: { paletteHidden: true },
+    exec: (ctx) => {
+      const taskId = ctx.taskId ?? ctx.state.workspace?.activeTaskId ?? null;
+      const palette = findWindowByRole(ctx.state, "command-palette", taskId);
+      if (palette) {
+        return closeCommandPaletteWindow(ctx.state, { windowId: palette.id, taskId });
+      }
+      const keybindings = findWindowByRole(ctx.state, "keybindings", taskId);
+      if (keybindings) {
+        return closeKeybindingWindow(ctx.state, { windowId: keybindings.id, taskId });
+      }
+      return ctx.state;
+    }
+  });
+
   return registry;
 }
 
@@ -1128,6 +1148,32 @@ export function bindCommandPaletteDefaults(registry, options = {}) {
   bind("ArrowDown", COMMAND_PALETTE_SELECT_NEXT_COMMAND);
   bind("ArrowUp", COMMAND_PALETTE_SELECT_PREV_COMMAND);
   bind("Enter", COMMAND_PALETTE_EXECUTE_SELECTION_COMMAND);
+  return registry;
+}
+
+export function bindCommandSurfaceDefaults(registry, options = {}) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  const scope = options.scope ?? "global";
+  const taskId = options.taskId ?? null;
+  const hasScopeId = scope !== "global";
+  if (hasScopeId && !taskId) {
+    throw new Error("Task id required for non-global surface bindings");
+  }
+  const paletteOpenId = options.paletteOpenCommandId ?? COMMAND_PALETTE_OPEN_COMMAND;
+  const keybindingsOpenId = options.keybindingsOpenCommandId ?? KEYBINDINGS_OPEN_COMMAND;
+  const dismissId = options.dismissCommandId ?? COMMAND_SURFACE_DISMISS_COMMAND;
+  const paletteKey = options.paletteKey ?? "Ctrl+Shift+P";
+  const keybindingsKey = options.keybindingsKey ?? "Ctrl+Shift+K";
+  const dismissKey = options.dismissKey ?? "Escape";
+
+  const bind = (key, commandId) => {
+    bindKey(registry, scope, key, commandId, hasScopeId ? taskId : null);
+  };
+  bind(paletteKey, paletteOpenId);
+  bind(keybindingsKey, keybindingsOpenId);
+  bind(dismissKey, dismissId);
   return registry;
 }
 

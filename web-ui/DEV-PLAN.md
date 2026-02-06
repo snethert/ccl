@@ -318,3 +318,4 @@ Exit criteria:
 - Added default palette keybindings (ArrowUp/ArrowDown/Enter) for task scope.
 - Added open/close commands for command palette and keybinding viewer windows.
 - Added keybinding trace panel and context/widget scope coverage in command UI tests.
+- Added default open/dismiss keybindings for command palette and keybinding viewer.
