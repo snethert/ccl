@@ -1,7 +1,8 @@
 /*
  * Node helper: load a CCL heap image into the WASM32 kernel (no WASI).
  *
- * This exercises the in-memory boot image path and skips `start_lisp` (boot-only).
+ * This exercises the in-memory boot image path. By default it skips `start_lisp`
+ * (boot-only), but `--start-lisp` enters via the post-load entrypoint.
  *
  * Usage:
  *   node doc/wasm/js/load-image.mjs /path/to/ccl.image
@@ -147,6 +148,13 @@ if (runStartLisp) {
     const rc = kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
     const nil = kernel.instance.exports.wasm_get_lisp_nil() >>> 0;
     console.log(`wasm_ccl_load_image rc=${rc} lisp_nil=0x${nil.toString(16)}`);
+    const { installed, count } = await installCompiledModulesFromRegistry({
+      kernel,
+      memory: runtime.memory,
+      subprimsTable: runtime.subprimsTable,
+      microkernel,
+    });
+    console.log(`compiled modules installed ${installed}/${count}`);
   } catch (e) {
     console.error(`wasm_ccl_load_image trapped: ${e}`);
     process.exit(3);
