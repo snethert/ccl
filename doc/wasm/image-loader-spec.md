@@ -15,7 +15,7 @@ image format or module‑level loader semantics.
 
 - Define the image file format (assumed to be CCL‑compatible for now).
 - Provide a full module loader or dynamic linker.
-- Enter the Lisp toplevel loop (currently deferred).
+- Automatically enter the Lisp toplevel loop as part of image load.
 
 ## Current ABI
 
@@ -23,6 +23,7 @@ The kernel exports:
 
 ```
 wasm_ccl_load_image(image_bytes_ptr: u32, image_bytes_len: u32) -> i32
+wasm_ccl_start_lisp() -> i32
 ```
 
 Host responsibilities:
@@ -36,15 +37,15 @@ Kernel behavior (current bring‑up):
 
 - Stores the image pointer/length via `wasm_set_boot_image`.
 - Sets `wasm_boot_only = 1`.
-- Calls `wasm_ccl_start()`, which returns to the host because `start_lisp`
-  is still a stub for WASM.
+- Calls `wasm_ccl_start()`, which returns to the host after loading the image.
 
 Optional host entry paths (current bring‑up):
 
 - **Boot-only:** `wasm_ccl_load_image(ptr, len)` (returns to host).
-- **Boot + start_lisp:** `wasm_set_boot_image(ptr, len)` then `wasm_ccl_start()`.  
-  The host must ensure the function table contains the entrypoint index used
-  by the image (the minimal image uses table index 200 → `wasm_boot_entry`).
+- **Boot + start_lisp (post‑load):** `wasm_ccl_load_image(ptr, len)` then
+  `wasm_ccl_start_lisp()`. The host must ensure the function table contains the
+  entrypoint index used by the image (the minimal image uses table index 200 → `wasm_boot_entry`).
+- **Boot + start_lisp (direct):** `wasm_set_boot_image(ptr, len)` then `wasm_ccl_start()`.
 - **Explicit toplevel:** `wasm_run_toplevel()` (one-shot) or `wasm_ccl_step()` (host‑stepped).
 
 ## Reference host placement strategy (current)

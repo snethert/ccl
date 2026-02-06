@@ -229,6 +229,7 @@ The demo runner:
 - Calls `wasm_set_subprims_ready(1)` when a real subprims provider module is installed.
 - Installs the boot entrypoint (minimal image uses table index 200 → `wasm_boot_entry`).
 - Calls `wasm_ccl_start` to enter the kernel (or `wasm_ccl_step`/`wasm_run_toplevel` for host‑controlled toplevel).
+  For a boot‑only load followed by toplevel entry, use `wasm_ccl_start_lisp`.
 
 ## Subprims Artifacts
 

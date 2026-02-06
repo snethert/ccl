@@ -67,11 +67,13 @@ returns size via response payload.
 
 ## ADR-0008 — start_lisp returns to host until real toplevel wired
 
-**Status:** Accepted (temporary)  
-**Decision:** `start_lisp` returns to the host; stepping interfaces are used
-for bring‑up.  
-**Why:** Real toplevel + loader integration is not yet wired for WASM.  
-**References:** `doc/wasm/build.md:136`, `doc/wasm/yield-resume.md:94`
+**Status:** Superseded  
+**Decision:** `start_lisp` can now be entered after a boot‑only load via
+`wasm_ccl_start_lisp`; stepping interfaces remain the host‑controlled
+baseline.  
+**Why:** The loader path now supports a post‑load `start_lisp` entry without
+reinitializing the kernel.  
+**References:** `doc/wasm/image-loader-spec.md:20`, `doc/wasm/build.md:179`
 
 ## ADR-0009 — Capability signaling via CAPABILITY‑UNAVAILABLE
 

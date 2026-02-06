@@ -5,8 +5,8 @@
  *  1) `call_indirect` subprims dispatch via `wasm_call_subprim_fixnum`
  *  2) manual cstack relocation across `memory.grow`
  *
- * This intentionally avoids calling `wasm_ccl_start`, since `start_lisp` is
- * still a bring-up stub.
+ * This intentionally avoids calling `wasm_ccl_start`; this test focuses on
+ * low-level subprims dispatch and cstack relocation.
  */
 
 import fs from "node:fs/promises";

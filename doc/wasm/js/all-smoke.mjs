@@ -10,6 +10,7 @@ const tests = [
   "./stream-open-smoke.mjs",
   "./pending-stdin-smoke.mjs",
   "./ccl-step-smoke.mjs",
+  "./start-lisp-smoke.mjs",
   "./step-demo.mjs",
   "./funcall-smoke.mjs",
   "./const-funcall-smoke.mjs",

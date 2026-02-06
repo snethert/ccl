@@ -136,21 +136,27 @@ function installBootEntry() {
 }
 
 if (runStartLisp) {
-  if (typeof kernel.instance.exports.wasm_set_boot_image !== "function") {
-    fail("kernel missing export wasm_set_boot_image");
+  if (typeof kernel.instance.exports.wasm_ccl_load_image !== "function") {
+    fail("kernel missing export wasm_ccl_load_image");
   }
-  if (typeof kernel.instance.exports.wasm_ccl_start !== "function") {
-    fail("kernel missing export wasm_ccl_start");
+  if (typeof kernel.instance.exports.wasm_ccl_start_lisp !== "function") {
+    fail("kernel missing export wasm_ccl_start_lisp");
   }
   installBootEntry();
   try {
-    kernel.instance.exports.wasm_set_boot_image(blobBase, imageLen);
-    const rc = kernel.instance.exports.wasm_ccl_start();
+    const rc = kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
     const nil = kernel.instance.exports.wasm_get_lisp_nil() >>> 0;
-    console.log(`wasm_ccl_start rc=${rc} lisp_nil=0x${nil.toString(16)}`);
+    console.log(`wasm_ccl_load_image rc=${rc} lisp_nil=0x${nil.toString(16)}`);
   } catch (e) {
-    console.error(`wasm_ccl_start trapped: ${e}`);
+    console.error(`wasm_ccl_load_image trapped: ${e}`);
     process.exit(3);
+  }
+  try {
+    const rc = kernel.instance.exports.wasm_ccl_start_lisp();
+    console.log(`wasm_ccl_start_lisp rc=${rc}`);
+  } catch (e) {
+    console.error(`wasm_ccl_start_lisp trapped: ${e}`);
+    process.exit(4);
   }
 } else {
   if (typeof kernel.instance.exports.wasm_ccl_load_image !== "function") {

@@ -86,6 +86,7 @@ wasmcl: $(KERNELOBJ)
 	mkdir -p ../../doc/wasm/js
 	$(WASM_LD) --no-entry --import-memory --import-table \
 	  --export=wasm_ccl_start \
+	  --export=wasm_ccl_start_lisp \
 	  --export=wasm_set_current_tcr --export=wasm_get_current_tcr \
 	  --export=wasm_set_cstack_bounds --export=wasm_set_cstack_pointer --export=wasm_get_cstack_pointer \
 	  --export=wasm_memory_grow_and_relocate \

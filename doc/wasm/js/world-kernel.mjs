@@ -195,6 +195,7 @@ export function createKernel({
       status: "ready",
       cstackSize: options.cstackSize ?? cstackSize,
       reserveBytes: options.reserveBytes ?? reserveBytes,
+      imageLoaded: false,
     };
 
     runner.loadImage = (imageIdOrBytes) => {
@@ -228,7 +229,9 @@ export function createKernel({
       if (typeof kernel.instance.exports.wasm_ccl_load_image !== "function") {
         throw new Error("loadImage: kernel missing export wasm_ccl_load_image");
       }
-      return kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
+      const rc = kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
+      runner.imageLoaded = true;
+      return rc;
     };
 
     runner.installCompiledModules = (opts = {}) =>
@@ -246,6 +249,17 @@ export function createKernel({
       }
       installBootEntry(kernel, runtime.subprimsTable);
       return kernel.instance.exports.wasm_ccl_start();
+    };
+
+    runner.startLisp = () => {
+      if (!runner.imageLoaded) {
+        throw new Error("runner.startLisp: no image loaded");
+      }
+      if (typeof kernel.instance.exports.wasm_ccl_start_lisp !== "function") {
+        throw new Error("runner.startLisp: kernel missing export wasm_ccl_start_lisp");
+      }
+      installBootEntry(kernel, runtime.subprimsTable);
+      return kernel.instance.exports.wasm_ccl_start_lisp();
     };
 
     runner.step = (deadlineMs = 0) => {

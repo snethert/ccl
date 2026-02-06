@@ -2898,6 +2898,22 @@ wasm_ccl_start(void)
 #endif
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_ccl_start_lisp")))
+int
+wasm_ccl_start_lisp(void)
+{
+  TCR *wasm_tcr = wasm_get_tcr(false);
+  if (wasm_tcr == NULL) {
+    return -1;
+  }
+
+  natural old_last_lisp_frame = wasm_enter_lisp_frame(
+    wasm_tcr, 0, 0, (LispObj)wasm_tcr->save_vsp);
+  start_lisp(TCR_TO_TSD(wasm_tcr), 0);
+  wasm_exit_lisp_frame(wasm_tcr, old_last_lisp_frame);
+  return 0;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_ccl_load_image")))
 int
 wasm_ccl_load_image(uint32_t image_bytes_ptr, uint32_t image_bytes_len)
