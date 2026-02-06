@@ -88,3 +88,15 @@ an implementation hook in the stream layer (feature‑gated).
 **Why:** WebAssembly 3.0 may change or clarify platform expectations that
 affect the backend and host ABI decisions.  
 **References:** (tracking note; update with concrete spec links as they are adopted)
+
+## ADR-0011 — PROGV uses a VSP sentinel instead of TSP frames (WASM)
+
+**Status:** Accepted (temporary)  
+**Decision:** `_SPprogvsave/_SPprogvrestore` record bindings on the VSP with a
+sentinel binding entry (`sym = unbound_marker`) that stores the previous
+`db_link` and `vsp`.  
+**Why:** The WASM bring‑up does not yet model true TSP frames. Using a VSP
+sentinel keeps bindings GC‑visible, avoids relying on incomplete tstack
+semantics, and keeps unwind/restore logic self‑contained in the provider.  
+**References:** `lisp-kernel/wasm-subprims-provider.c` (progv save/restore),
+`lisp-kernel/arm-spentry.s` (tstack‑based reference).
