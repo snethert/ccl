@@ -12,7 +12,6 @@
 
 #include <errno.h>
 #include <stdint.h>
-#include "platform-wasm32.h"
 
 enum {
   WASM_CCL_STEP_RUNNING = 0,

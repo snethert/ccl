@@ -125,6 +125,91 @@ wasm_toplevel_loop(TCR *tcr)
   }
 }
 
+static LispObj *
+wasm_toplevel_slot(TCR *tcr)
+{
+  if (tcr == NULL || tcr->vs_area == NULL) {
+    return NULL;
+  }
+  BytePtr high = tcr->vs_area->high;
+  if (high == NULL) {
+    return NULL;
+  }
+  return (LispObj *)(high - node_size);
+}
+
+static LispObj *
+wasm_vsp_empty(TCR *tcr)
+{
+  if (tcr == NULL || tcr->vs_area == NULL) {
+    return NULL;
+  }
+  return (LispObj *)tcr->vs_area->high;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_get_tcr_toplevel_function")))
+LispObj
+wasm_get_tcr_toplevel_function(LispObj raw_tcr)
+{
+  TCR *tcr = (TCR *)raw_tcr;
+  if (tcr == NULL) {
+    return lisp_nil;
+  }
+  LispObj *slot = wasm_toplevel_slot(tcr);
+  LispObj *vsp_empty = wasm_vsp_empty(tcr);
+  if (slot == NULL || vsp_empty == NULL) {
+    return lisp_nil;
+  }
+
+  LispObj *vsp_ptr = NULL;
+  if (tcr == wasm_get_current_tcr()) {
+    vsp_ptr = (LispObj *)tcr->wasm_gprs[vsp];
+  } else if (tcr->vs_area != NULL) {
+    vsp_ptr = (LispObj *)tcr->vs_area->active;
+  }
+  if (vsp_ptr == NULL || vsp_ptr == vsp_empty) {
+    return lisp_nil;
+  }
+  return *slot;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_set_tcr_toplevel_function")))
+LispObj
+wasm_set_tcr_toplevel_function(LispObj raw_tcr, LispObj fun)
+{
+  TCR *tcr = (TCR *)raw_tcr;
+  if (tcr == NULL) {
+    return fun;
+  }
+  LispObj *slot = wasm_toplevel_slot(tcr);
+  LispObj *vsp_empty = wasm_vsp_empty(tcr);
+  if (slot == NULL || vsp_empty == NULL) {
+    return fun;
+  }
+
+  *slot = 0;
+
+  LispObj *vsp_ptr = NULL;
+  if (tcr == wasm_get_current_tcr()) {
+    vsp_ptr = (LispObj *)tcr->wasm_gprs[vsp];
+  } else if (tcr->vs_area != NULL) {
+    vsp_ptr = (LispObj *)tcr->vs_area->active;
+  }
+  if (vsp_ptr == NULL) {
+    vsp_ptr = vsp_empty;
+  }
+  if (vsp_ptr == vsp_empty) {
+    tcr->vs_area->active = (BytePtr)slot;
+    tcr->save_vsp = slot;
+    if (tcr == wasm_get_current_tcr()) {
+      tcr->wasm_gprs[vsp] = (LispObj)slot;
+    }
+  }
+
+  *slot = fun;
+  return fun;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_boot_entry")))
 void
 wasm_boot_entry(void)
@@ -1248,6 +1333,13 @@ start_lisp(TCR *tcr, LispObj arg)
     tcr->wasm_pending_throw = 0;
     tcr->wasm_gprs[vsp] = (LispObj)tcr->save_vsp;
     LispObj *vsp_ptr = (LispObj *)tcr->wasm_gprs[vsp];
+    LispObj *vsp_empty = wasm_vsp_empty(tcr);
+    if (vsp_ptr == NULL) {
+      vsp_ptr = vsp_empty;
+      if (vsp_ptr != NULL) {
+        tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+      }
+    }
     if (vsp_ptr == NULL) {
       static const char msg[] =
         "WASM start_lisp: VSP not initialized; returning to host\n";
@@ -1255,11 +1347,29 @@ start_lisp(TCR *tcr, LispObj arg)
       goto done;
     }
     LispObj topfn = nrs_TOPLFUNC.vcell;
+    LispObj *slot = wasm_toplevel_slot(tcr);
     if (topfn != lisp_nil) {
-      *--vsp_ptr = topfn;
-      tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+      if (slot != NULL) {
+        *slot = topfn;
+        if (tcr->vs_area != NULL) {
+          tcr->vs_area->active = (BytePtr)slot;
+        }
+        tcr->save_vsp = slot;
+        vsp_ptr = slot;
+        tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+      } else {
+        *--vsp_ptr = topfn;
+        tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+      }
       nrs_TOPLFUNC.vcell = lisp_nil;
-    } else if (*vsp_ptr == lisp_nil) {
+    } else if (slot != NULL && *slot != lisp_nil) {
+      if (tcr->vs_area != NULL) {
+        tcr->vs_area->active = (BytePtr)slot;
+      }
+      tcr->save_vsp = slot;
+      vsp_ptr = slot;
+      tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+    } else if (vsp_ptr == vsp_empty || *vsp_ptr == lisp_nil) {
       static const char msg[] =
         "WASM start_lisp: toplevel function is NIL; returning to host\n";
       wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
@@ -1299,17 +1409,42 @@ wasm_run_toplevel(void)
   tcr->wasm_pending_throw = 0;
   tcr->wasm_gprs[vsp] = (LispObj)tcr->save_vsp;
   LispObj *vsp_ptr = (LispObj *)tcr->wasm_gprs[vsp];
+  LispObj *vsp_empty = wasm_vsp_empty(tcr);
+  if (vsp_ptr == NULL) {
+    vsp_ptr = vsp_empty;
+    if (vsp_ptr != NULL) {
+      tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+    }
+  }
   if (vsp_ptr == NULL) {
     tcr->valence = TCR_STATE_FOREIGN;
     wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
     return -4;
   }
   LispObj topfn = nrs_TOPLFUNC.vcell;
+  LispObj *slot = wasm_toplevel_slot(tcr);
   if (topfn != lisp_nil) {
-    *--vsp_ptr = topfn;
-    tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+    if (slot != NULL) {
+      *slot = topfn;
+      if (tcr->vs_area != NULL) {
+        tcr->vs_area->active = (BytePtr)slot;
+      }
+      tcr->save_vsp = slot;
+      vsp_ptr = slot;
+      tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+    } else {
+      *--vsp_ptr = topfn;
+      tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+    }
     nrs_TOPLFUNC.vcell = lisp_nil;
-  } else if (*vsp_ptr == lisp_nil) {
+  } else if (slot != NULL && *slot != lisp_nil) {
+    if (tcr->vs_area != NULL) {
+      tcr->vs_area->active = (BytePtr)slot;
+    }
+    tcr->save_vsp = slot;
+    vsp_ptr = slot;
+    tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+  } else if (vsp_ptr == vsp_empty || *vsp_ptr == lisp_nil) {
     tcr->valence = TCR_STATE_FOREIGN;
     wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
     return -3;

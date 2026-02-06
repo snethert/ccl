@@ -119,6 +119,10 @@ assumes `wasm_get_current_tcr()` is the single authoritative access path.
 - Minimal boot images may point `%toplevel-function%` at a stub function object.
 - The stub entrypoint is a **table index**; current bring‑up uses **index 200**.
 - The host should install the kernel export `wasm_boot_entry` at that table slot.
+- The kernel exports `wasm_get_tcr_toplevel_function` and
+  `wasm_set_tcr_toplevel_function` to read/write the per‑TCR toplevel slot
+  (`vs_area->high - node_size`). `start_lisp` and `wasm_run_toplevel` will
+  use the slot when `%toplevel-function%` is NIL.
 - The funcall smoke test uses a second stub entrypoint at **index 201**
   (`wasm_test_entry`) to validate the calling convention.
 - The compiler constant-return stub uses **index 202** (`wasm_const_entry`).

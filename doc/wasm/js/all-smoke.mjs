@@ -12,6 +12,7 @@ const tests = [
   "./ccl-step-smoke.mjs",
   "./start-lisp-smoke.mjs",
   "./start-boot-smoke.mjs",
+  "./toplevel-slot-smoke.mjs",
   "./world-kernel-start-smoke.mjs",
   "./step-demo.mjs",
   "./funcall-smoke.mjs",

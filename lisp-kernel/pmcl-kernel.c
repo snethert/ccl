@@ -2240,8 +2240,16 @@ main
 #endif
 #ifdef WASM32
   if (!wasm_boot_only) {
-    tcr->vs_area->active -= node_size;
-    *(--tcr->save_vsp) = nrs_TOPLFUNC.vcell;
+    LispObj topfn = nrs_TOPLFUNC.vcell;
+    if (tcr->vs_area != NULL && tcr->vs_area->high != NULL) {
+      LispObj *slot = (LispObj *)(tcr->vs_area->high - node_size);
+      *slot = topfn;
+      tcr->vs_area->active = (BytePtr)slot;
+      tcr->save_vsp = slot;
+    } else {
+      tcr->vs_area->active -= node_size;
+      *(--tcr->save_vsp) = topfn;
+    }
     nrs_TOPLFUNC.vcell = lisp_nil;
   }
 #else
