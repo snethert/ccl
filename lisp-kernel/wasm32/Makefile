@@ -99,6 +99,7 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_return_arg_z --export=wasm_return_arg_y \
 	  --export=wasm_return_values2 --export=wasm_return_values3 --export=wasm_return_values4 \
 	  --export=wasm_get_mv --export=wasm_get_mv_indexed --export=wasm_restore_vsp \
+	  --export=wasm_spill_push --export=wasm_spill_pop \
 	  --export=wasm_funcall0 --export=wasm_funcall1 --export=wasm_funcall2 \
 	  --export=wasm_funcall0_mv --export=wasm_funcall1_mv --export=wasm_funcall2_mv \
 	  --export=wasm_get_lisp_nil \

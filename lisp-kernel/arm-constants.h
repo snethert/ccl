@@ -340,6 +340,9 @@ typedef struct tcr {
   void *wasm_cstack_sp;
   struct area *wasm_cstack_area;
   LispObj wasm_gprs[16];
+  LispObj *wasm_spill_base;
+  LispObj *wasm_spill_limit;
+  LispObj *wasm_spill_sp;
   LispObj wasm_pending_throw;
 #endif
   LispObj spare[20];            /* allocate new things here */

@@ -1858,6 +1858,15 @@ new_tcr(natural vstack_size, natural tstack_size)
   tcr->vs_area = a;
   a->owner = tcr;
   tcr->save_vsp = (LispObj *) a->active;  
+#ifdef WASM32
+  tcr->wasm_spill_base = (LispObj *)malloc(WASM_SPILL_STACK_WORDS * sizeof(LispObj));
+  if (tcr->wasm_spill_base) {
+    tcr->wasm_spill_limit = tcr->wasm_spill_base + WASM_SPILL_STACK_WORDS;
+  } else {
+    tcr->wasm_spill_limit = NULL;
+  }
+  tcr->wasm_spill_sp = tcr->wasm_spill_limit;
+#endif
 #if !defined(ARM) && !defined(WASM32)
   a = allocate_tstack_holding_area_lock(tstack_size);
 #endif
@@ -1979,6 +1988,14 @@ shutdown_thread_tcr(void *arg)
     tcr->tlb_limit = 0;
     free(tcr->tlb_pointer);
     tcr->tlb_pointer = NULL;
+#ifdef WASM32
+    if (tcr->wasm_spill_base) {
+      free(tcr->wasm_spill_base);
+      tcr->wasm_spill_base = NULL;
+      tcr->wasm_spill_limit = NULL;
+      tcr->wasm_spill_sp = NULL;
+    }
+#endif
 #ifdef WINDOWS
     if (TCR_AUX(tcr)->osid != 0) {
       CloseHandle((HANDLE)(TCR_AUX(tcr)->osid));

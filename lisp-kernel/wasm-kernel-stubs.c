@@ -881,6 +881,45 @@ wasm_vpop(void)
   return value;
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_spill_push")))
+void
+wasm_spill_push(LispObj value)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return;
+  }
+  LispObj *sp = tcr->wasm_spill_sp;
+  if (sp == NULL || tcr->wasm_spill_base == NULL) {
+    return;
+  }
+  if (sp <= tcr->wasm_spill_base) {
+    __builtin_trap();
+  }
+  *--sp = value;
+  tcr->wasm_spill_sp = sp;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_spill_pop")))
+LispObj
+wasm_spill_pop(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return lisp_nil;
+  }
+  LispObj *sp = tcr->wasm_spill_sp;
+  if (sp == NULL || tcr->wasm_spill_limit == NULL) {
+    return lisp_nil;
+  }
+  if (sp >= tcr->wasm_spill_limit) {
+    __builtin_trap();
+  }
+  LispObj value = *sp++;
+  tcr->wasm_spill_sp = sp;
+  return value;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_pending_throw_p")))
 uint32_t
 wasm_pending_throw_p(void)

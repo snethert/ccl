@@ -48,6 +48,10 @@ struct ExceptionInformation {
   natural pc;
 };
 
+#ifndef WASM_SPILL_STACK_WORDS
+#define WASM_SPILL_STACK_WORDS (1u << 12)
+#endif
+
 /* xp accessors (stubs for wasm32). */
 #define xpGPRvector(x) ((natural *)&((x)->gpr[0]))
 #define xpGPR(x,gprno) (xpGPRvector(x)[gprno])

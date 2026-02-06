@@ -89,6 +89,8 @@ assumes `wasm_get_current_tcr()` is the single authoritative access path.
   - any call into runtime helpers or subprims,
   - any host/kernel boundary (`kernel_request`),
   - any explicit safepoint check or cooperative yield.
+- WASM local spills use a dedicated **spill stack** (not the VSP). The runtime
+  scans this spill stack during GC.
 
 ## Register File (WASM32)
 
@@ -155,6 +157,8 @@ assumes `wasm_get_current_tcr()` is the single authoritative access path.
     primary value).
   - `wasm_vpush` pushes a single LispObj onto the VSP (updates `vsp` + `save_vsp`).
   - `wasm_vpop` pops a single LispObj from the VSP (updates `vsp` + `save_vsp`).
+  - `wasm_spill_push` / `wasm_spill_pop` push/pop LispObj values on the WASM
+    spill stack used by compiler local spilling (distinct from the VSP).
   - `wasm_get_mv` returns the Nth value (0‑based, raw index) from `arg_z`/VSP.
   - `wasm_get_mv_indexed` accepts a **fixnum** index and returns the Nth value.
   - `wasm_restore_vsp` pops extra values when `nargs > 1` and resets VSP.

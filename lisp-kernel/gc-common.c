@@ -682,6 +682,21 @@ mark_tcr_xframes(TCR *tcr)
   xframe_list *xframes;
   ExceptionInformation *xp;
 
+#ifdef WASM32
+  int r;
+
+  for (r = arg_z; r <= Rfn; r++) {
+    mark_root(tcr->wasm_gprs[r]);
+  }
+  if (tcr->wasm_spill_sp && tcr->wasm_spill_limit &&
+      tcr->wasm_spill_sp < tcr->wasm_spill_limit) {
+    LispObj *cursor = tcr->wasm_spill_sp;
+    while (cursor < tcr->wasm_spill_limit) {
+      mark_root(*cursor++);
+    }
+  }
+#endif
+
   xp = TCR_AUX(tcr)->gc_context;
   if (xp) {
 #ifndef X8632

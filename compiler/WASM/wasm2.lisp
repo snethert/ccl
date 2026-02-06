@@ -2000,6 +2000,8 @@
    (list :set-imm0 "wasm_set_imm0" +wasm2-type-i32-void+)
    (list :vpush "wasm_vpush" +wasm2-type-i32-void+)
    (list :vpop "wasm_vpop" +wasm2-type-void-i32+)
+   (list :spill-push "wasm_spill_push" +wasm2-type-i32-void+)
+   (list :spill-pop "wasm_spill_pop" +wasm2-type-void-i32+)
    (list :clear-pending-throw "wasm_clear_pending_throw" +wasm2-type-void-void+)))
 
 (defun wasm2-generic-import-index (key)
@@ -2015,12 +2017,12 @@
     (dolist (idx spill-locals)
       (wasm2-push-u8 body #x20) ; local.get
       (wasm2-emit-uleb body idx)
-      (wasm2-emit-call-index body (wasm2-generic-import-index :vpush)))))
+      (wasm2-emit-call-index body (wasm2-generic-import-index :spill-push)))))
 
 (defun wasm2-emit-restore-locals (body &optional locals)
   (let* ((spill-locals (or locals *wasm2-emit-spillable-locals*)))
     (dolist (idx (reverse spill-locals))
-      (wasm2-emit-call-index body (wasm2-generic-import-index :vpop))
+      (wasm2-emit-call-index body (wasm2-generic-import-index :spill-pop))
       (wasm2-push-u8 body #x21) ; local.set
       (wasm2-emit-uleb body idx))))
 
