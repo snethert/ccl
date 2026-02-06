@@ -6,6 +6,7 @@ WASM-specific commands in one place.
 ## Sandbox-Safe
 
 - `node doc/wasm/js/all-smoke.mjs`
+- `node doc/wasm/js/interrupt-smoke.mjs`
 
 ## External / Host-Only
 

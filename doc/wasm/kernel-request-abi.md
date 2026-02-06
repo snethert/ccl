@@ -50,6 +50,19 @@ All functions below are imported from the WASM module namespace `ccl`.
 - `0`: do not block (equivalent to `kernel_poll`)
 - `>0`: wait up to `deadlineMs` milliseconds
 
+## Interrupt ABI (host-side flags)
+
+Interrupt delivery is **cooperative** in the baseline WASM model. There is no
+`kernel_request` opcode for interrupts in the MVP. Instead:
+
+- The host requests an interrupt by **setting the runner's interrupt_pending flag**
+  in the TCR (or equivalent runtime structure in linear memory).
+- The runner **polls at safepoints** and at explicit stepping boundaries
+  (`wasm_ccl_step`) to deliver the interrupt.
+
+This keeps the ABI stable for the portable baseline. A future extension may
+add an explicit `KERNEL_OP_INTERRUPT` opcode, but it is not required for MVP.
+
 ## Request lifecycle (required)
 
 1. Guest calls `kernel_request(...)` and receives a non-zero `requestId`.
@@ -146,6 +159,9 @@ All opcodes are `u32`.
 - `KERNEL_OP_STREAM_OPEN  = 0x0000_0005`
 - `KERNEL_OP_STREAM_CLOSE = 0x0000_0006`
 - `KERNEL_OP_COMPILED_MODULES_REFRESH = 0x0000_0007`
+- `KERNEL_OP_UI_POLL      = 0x0000_0020`
+- `KERNEL_OP_UI_RENDER    = 0x0000_0021`
+- `KERNEL_OP_UI_MEASURE_TEXT = 0x0000_0022`
 
 Unrecognized opcodes MUST complete with `kernel_result == -ENOSYS`.
 
@@ -352,6 +368,69 @@ Response payload: none (`kernel_response_size = 0`).
 
 - `>= 0`: number of compiled modules installed
 - `< 0`: negative errno (e.g. `-ENOSYS` if unsupported)
+
+### `KERNEL_OP_UI_POLL`
+
+Poll for a batch of UI input events produced by the JS backend/bridge.
+
+Payload (12 bytes):
+
+```
+offset  size  field
+0x00    u32   max_events   (max event count to return)
+0x04    u32   max_bytes    (max response payload size in bytes)
+0x08    u32   flags        (bit0: allow_pending_if_empty)
+```
+
+Response payload: UI Event Batch (see `doc/wasm/ui-bridge-protocol.md`).
+
+`kernel_result`:
+
+- `>= 0`: number of events encoded in the response payload
+- `< 0`: negative errno on failure
+
+If `flags & 0x1` is set and no events are available, the request MAY remain
+`PENDING` (Stage 2 semantics). If pending is not supported, return `0` with an
+empty response.
+
+### `KERNEL_OP_UI_RENDER`
+
+Submit a UI tree/patch for rendering by the JS backend.
+
+Payload: UI Tree Payload bytes (see `doc/wasm/ui-bridge-protocol.md`).
+
+Response payload: none (`kernel_response_size = 0`).
+
+`kernel_result`:
+
+- `0` on success
+- `< 0` negative errno on failure (`-EINVAL` for malformed payload, `-ENOSYS` if UI backend is unavailable)
+
+### `KERNEL_OP_UI_MEASURE_TEXT`
+
+Request text measurement from the JS backend.
+
+Payload (16 bytes):
+
+```
+offset  size  field
+0x00    u32   font_ptr
+0x04    u32   font_len
+0x08    u32   text_ptr
+0x0C    u32   text_len
+```
+
+Response payload (32 bytes):
+
+```
+offset  size  field
+0x00    f64   width
+0x08    f64   height
+0x10    f64   ascent
+0x18    f64   descent
+```
+
+`kernel_result`: `0` on success; negative errno on failure.
 
 ## Validation and robustness requirements (host-side)
 

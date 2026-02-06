@@ -12,6 +12,7 @@
 
 #include <errno.h>
 #include <stdint.h>
+#include "platform-wasm32.h"
 
 enum {
   WASM_CCL_STEP_RUNNING = 0,
@@ -82,6 +83,15 @@ wasm_ccl_step(int32_t deadline_ms)
 
   ccl_blocked_request_id = 0;
   ccl_last_error = 0;
+  {
+    TCR *tcr = wasm_get_current_tcr();
+    if (tcr != NULL && tcr->interrupt_pending > 0) {
+      tcr->interrupt_pending = 0;
+      ccl_last_error = -EINTR;
+      ccl_toplevel_trapped = 1;
+      return WASM_CCL_STEP_TRAPPED;
+    }
+  }
 
   int rc = wasm_run_toplevel();
   if (rc == WASM_TOPLEVEL_EXIT) {

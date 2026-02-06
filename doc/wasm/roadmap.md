@@ -68,3 +68,10 @@ separate from the detailed checklists in `porting-status.md`.
 
 1) Tighten spill/restore discipline around all subprim calls (closure allocation paths still partial).  
 2) Wire a real toplevel image to the loader/runner in the browser.
+
+## Interrupt TODOs (Tracking)
+
+- Wire WASM interrupt delivery path (poll → trap → `raise_thread_interrupt`).
+- Define/implement host `requestInterrupt` hook in the microkernel.
+- Add interrupt smoke test and connect it to the runtime poll path.
+- Clarify safepoint frequency policy and add diagnostics for latency.

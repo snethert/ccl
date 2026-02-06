@@ -88,6 +88,8 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_ccl_start \
 	  --export=wasm_ccl_start_lisp \
 	  --export=wasm_set_current_tcr --export=wasm_get_current_tcr \
+	  --export=wasm_request_interrupt_tcr \
+	  --export=wasm_get_tcr_toplevel_function --export=wasm_set_tcr_toplevel_function \
 	  --export=wasm_set_cstack_bounds --export=wasm_set_cstack_pointer --export=wasm_get_cstack_pointer \
 	  --export=wasm_memory_grow_and_relocate \
 	  --export=wasm_call_subprim_fixnum \

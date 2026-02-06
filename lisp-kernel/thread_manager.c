@@ -43,6 +43,17 @@ wasm_get_current_tcr(void)
 {
   return wasm_current_tcr;
 }
+
+__attribute__((used, visibility("default"), export_name("wasm_request_interrupt_tcr")))
+int32_t
+wasm_request_interrupt_tcr(TCR *tcr)
+{
+  if (tcr == NULL) {
+    return 0;
+  }
+  tcr->interrupt_pending = 1;
+  return 1;
+}
 #endif
 
 

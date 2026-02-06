@@ -31,6 +31,9 @@ export const KERNEL_OP_FS_DELETE = 0x0000000d;
 export const KERNEL_OP_FS_ENSURE_DIRS = 0x0000000e;
 export const KERNEL_OP_FS_DELETE_EMPTY_DIR = 0x0000000f;
 export const KERNEL_OP_FS_DELETE_TREE = 0x00000010;
+export const KERNEL_OP_UI_POLL = 0x00000020;
+export const KERNEL_OP_UI_RENDER = 0x00000021;
+export const KERNEL_OP_UI_MEASURE_TEXT = 0x00000022;
 
 export const KERNEL_STREAM_KIND_PIPE = 0x00000000;
 export const KERNEL_STREAM_KIND_NAMED_RO = 0x00000001;
@@ -128,6 +131,20 @@ function encodeU64LE(value) {
   return new Uint8Array(buf);
 }
 
+function encodeMeasureResponse(metrics) {
+  const buf = new ArrayBuffer(32);
+  const dv = new DataView(buf);
+  const width = Number(metrics?.width ?? 0);
+  const height = Number(metrics?.height ?? 0);
+  const ascent = Number(metrics?.ascent ?? 0);
+  const descent = Number(metrics?.descent ?? 0);
+  dv.setFloat64(0, Number.isFinite(width) ? width : 0, true);
+  dv.setFloat64(8, Number.isFinite(height) ? height : 0, true);
+  dv.setFloat64(16, Number.isFinite(ascent) ? ascent : 0, true);
+  dv.setFloat64(24, Number.isFinite(descent) ? descent : 0, true);
+  return new Uint8Array(buf);
+}
+
 const _textEncoder = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
 
 function encodeUtf8(text) {
@@ -220,13 +237,14 @@ export function createMicrokernel({
   compiledModulesInstaller = null, // ({ registry, nil, memory, microkernel }) => installed count
   compiledModulesAsync = false,
   persistence = null,
+  uiService = null, // { pollEvents, renderTree, measureText, setWake? }
 } = {}) {
   if (!memory) throw new Error("createMicrokernel: memory is required");
 
   const requests = new Map(); // id -> { status, result, response: Uint8Array }
   const pendingStdinReads = []; // request ids waiting on stdin
   let nextRequestId = 1;
-  const supportsPending = asyncStdin || compiledModulesAsync;
+  const supportsPending = asyncStdin || compiledModulesAsync || Boolean(uiService?.supportsPending);
   let api = null;
 
   const persistenceConfig = persistence === true ? {} : persistence;
@@ -236,6 +254,7 @@ export function createMicrokernel({
 
   const logs = [];
   const decoder = typeof TextDecoder !== "undefined" ? new TextDecoder("utf-8") : null;
+  const pendingUiPolls = [];
 
   function decodeUtf8(bytes) {
     if (decoder) return decoder.decode(bytes);
@@ -294,6 +313,23 @@ export function createMicrokernel({
   function feedStdin(bytes) {
     stdinQueue.push({ bytes: normalizeBytes(bytes), off: 0 });
     drainPendingStdinReads();
+  }
+
+  function requestInterrupt(options = {}) {
+    const exports =
+      options?.exports ??
+      options?.kernel?.instance?.exports ??
+      options?.kernel?.exports ??
+      null;
+    const requestFn = exports?.wasm_request_interrupt_tcr;
+    if (typeof requestFn !== "function") {
+      return false;
+    }
+    const tcr = options?.tcr ?? (typeof exports?.wasm_get_current_tcr === "function"
+      ? exports.wasm_get_current_tcr()
+      : null);
+    if (!tcr) return false;
+    return Boolean(requestFn(tcr));
   }
 
   function closeStdin() {
@@ -484,6 +520,31 @@ export function createMicrokernel({
         continue;
       }
       return;
+    }
+  }
+
+  function drainPendingUiPolls() {
+    if (!uiService || typeof uiService.pollEvents !== "function") return;
+    for (;;) {
+      if (pendingUiPolls.length === 0) return;
+      const id = pendingUiPolls[0];
+      const req = requests.get(id);
+      if (!req || req.status !== KERNEL_STATUS_PENDING || req.pending?.kind !== "ui_poll") {
+        pendingUiPolls.shift();
+        continue;
+      }
+      const res = uiService.pollEvents({
+        maxEvents: req.pending.maxEvents,
+        maxBytes: req.pending.maxBytes,
+        allowPending: false,
+      });
+      if (res?.pending) {
+        return;
+      }
+      const payload = res?.payload ? normalizeBytes(res.payload) : new Uint8Array(0);
+      const count = Number.isInteger(res?.count) ? res.count : 0;
+      recordRequestDone(id, count, payload);
+      pendingUiPolls.shift();
     }
   }
 
@@ -945,6 +1006,79 @@ export function createMicrokernel({
         break;
       }
 
+      case KERNEL_OP_UI_POLL: {
+        if (u32(payloadLen) !== 12) {
+          recordRequestError(id, ERRNO.EINVAL);
+          break;
+        }
+        if (!uiService || typeof uiService.pollEvents !== "function") {
+          recordRequestDone(id, -ERRNO.ENOSYS);
+          break;
+        }
+        const maxEvents = readU32LE(memory, u32(payloadPtr) + 0);
+        const maxBytes = readU32LE(memory, u32(payloadPtr) + 4);
+        const flags = readU32LE(memory, u32(payloadPtr) + 8);
+        const res = uiService.pollEvents({
+          maxEvents: u32(maxEvents),
+          maxBytes: u32(maxBytes),
+          allowPending: (u32(flags) & 0x1) !== 0,
+        });
+        if (res?.pending) {
+          recordRequestPending(id, { kind: "ui_poll", maxEvents: u32(maxEvents), maxBytes: u32(maxBytes) });
+          pendingUiPolls.push(id);
+          break;
+        }
+        if (res?.error) {
+          recordRequestDone(id, -Math.abs(res.error | 0));
+          break;
+        }
+        const payload = res?.payload ? normalizeBytes(res.payload) : new Uint8Array(0);
+        if (u32(maxBytes) !== 0 && payload.length > u32(maxBytes)) {
+          recordRequestDone(id, -ERRNO.E2BIG);
+          break;
+        }
+        const count = Number.isInteger(res?.count) ? res.count : 0;
+        recordRequestDone(id, count, payload);
+        break;
+      }
+
+      case KERNEL_OP_UI_RENDER: {
+        if (!uiService || typeof uiService.renderTree !== "function") {
+          recordRequestDone(id, -ERRNO.ENOSYS);
+          break;
+        }
+        const payload = sliceBytes(memory, u32(payloadPtr), u32(payloadLen));
+        const r = uiService.renderTree(normalizeBytes(payload));
+        recordRequestDone(id, i32(r ?? 0));
+        break;
+      }
+
+      case KERNEL_OP_UI_MEASURE_TEXT: {
+        if (u32(payloadLen) !== 16) {
+          recordRequestError(id, ERRNO.EINVAL);
+          break;
+        }
+        if (!uiService || typeof uiService.measureText !== "function") {
+          recordRequestDone(id, -ERRNO.ENOSYS);
+          break;
+        }
+        const fontPtr = readU32LE(memory, u32(payloadPtr) + 0);
+        const fontLen = readU32LE(memory, u32(payloadPtr) + 4);
+        const textPtr = readU32LE(memory, u32(payloadPtr) + 8);
+        const textLen = readU32LE(memory, u32(payloadPtr) + 12);
+        if (!inBounds(memory, fontPtr, fontLen) || !inBounds(memory, textPtr, textLen)) {
+          recordRequestError(id, ERRNO.EINVAL);
+          break;
+        }
+        const fontBytes = sliceBytes(memory, u32(fontPtr), u32(fontLen));
+        const textBytes = sliceBytes(memory, u32(textPtr), u32(textLen));
+        const font = decodeUtf8(fontBytes);
+        const text = decodeUtf8(textBytes);
+        const metrics = uiService.measureText({ font, text });
+        recordRequestDone(id, 0, encodeMeasureResponse(metrics));
+        break;
+      }
+
       default:
         recordRequestDone(id, -ERRNO.ENOSYS);
         break;
@@ -1010,6 +1144,12 @@ export function createMicrokernel({
         pendingStdinReads.splice(idx, 1);
       }
     }
+    if (req?.status === KERNEL_STATUS_PENDING && req.pending?.kind === "ui_poll") {
+      const idx = pendingUiPolls.indexOf(id);
+      if (idx >= 0) {
+        pendingUiPolls.splice(idx, 1);
+      }
+    }
     requests.delete(id);
   }
 
@@ -1025,12 +1165,16 @@ export function createMicrokernel({
   api = {
     imports,
     feedStdin,
+    requestInterrupt,
     closeStdin,
     registerNamedBlob,
     registerNamedBlobs,
     getLogs: () => logs.slice(),
     persistence: persistenceService,
-    _debug: { requests, pendingStdinReads, streams, namedBlobs, persistence: persistenceService },
+    _debug: { requests, pendingStdinReads, pendingUiPolls, streams, namedBlobs, persistence: persistenceService },
   };
+  if (uiService && typeof uiService.setWake === "function") {
+    uiService.setWake(drainPendingUiPolls);
+  }
   return api;
 }

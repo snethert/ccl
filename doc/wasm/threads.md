@@ -88,6 +88,13 @@ Interrupt delivery model:
 - There are no Unix signals in the browser; “interrupts” must be implemented as flags in shared memory + polling at safepoints.
 - “Interrupt this thread” becomes: set flag in that thread’s TCR and (optionally) wake it via `Atomics.notify`.
 
+### Safepoint policy (latency target)
+
+The compiler MUST insert safepoints frequently enough to bound interrupt
+latency. **Target:** interrupts should be observed within **<= 10ms** under
+typical UI-driven workloads. Tight loops that can run for longer MUST include
+explicit safepoints (loop backedge or allocation checks) to meet this bound.
+
 ## Garbage collection coordination (shared heap)
 
 With a shared heap, GC MUST coordinate across runners:

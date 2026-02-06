@@ -57,6 +57,20 @@ The following invariants MUST hold at all times:
 - UI state can be serialized without querying the DOM.
 - Rendering is derived solely from Lisp state; DOM/Canvas/WebGL are outputs.
 
+### UI interrupt mapping (cooperative)
+
+Interrupts are delivered cooperatively and MUST NOT re-enter command execution.
+When an interrupt affects UI state, it is mapped to a UI signal and a yield:
+
+```js
+// Pseudocode: interrupt-aware UI boundary
+state = enqueueUiSignal(state, { type: "ui:interrupt", payload: { reason: "host" } });
+state = yieldUiTurn(state, "interrupt-pending");
+```
+
+IME composition MUST still not be interrupted; focus reconciliation defers
+while composing.
+
 ## Architecture Overview
 
 ## Implementation Mapping (Non-Normative, Repository Status as of 2026-02-06)
@@ -82,6 +96,7 @@ Integration status:
 - Canvas 2D and WebGL are additional backends for high-frequency and custom rendering.
 - Mixed composition is allowed (DOM chrome + Canvas/WebGL views).
 - DOM owns text editing, accessibility, and selection; Canvas/WebGL owns high-frequency visuals.
+- The Lisp<->JS rendering/input boundary is defined by the UI bridge protocol (`doc/wasm/ui-bridge-protocol.md`), transported via `kernel_request` opcodes.
 - Direct DOM access exists only for internal tooling or explicit capability-gated escapes.
 - Any escape hatch MUST be capability-gated and MUST register its effects in inspectable state (DOM escape log).
 - Backend implementations MAY expose native handles for tests or tooling, but those handles MUST map back to stable widget/presentation IDs before command dispatch.
