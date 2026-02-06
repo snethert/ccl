@@ -59,11 +59,20 @@
 - **Named byte sources registry:** ✅  
   `registerNamedBlob(s)` for `NAMED_RO`.
 - **World/runner manager (reference):** ✅  
-  `world-kernel.mjs` (bring‑up helper).
+  `world-kernel.mjs` (bring-up helper).
 - **Async PENDING (stdin):** ✅  
   Optional via `asyncStdin`.
 - **kernel_wait (Stage‑3):** ❌  
   Deferred.
+
+## Web UI (Browser Toolkit)
+
+- **Reference state/command/layout model (JS):** ✅  
+  Implemented in `web-ui/src/`, with deterministic tests in `web-ui/tests/`.
+- **DOM/Canvas/WebGL backends (JS):** ✅  
+  Implemented in `web-ui/backends/`.
+- **Lisp<->JS bridge (WASM runner integration):** ❌  
+  `web-ui/bridge/` is a placeholder; integration work is pending.
 
 ## Lisp runtime (Level‑1)
 

@@ -58,6 +58,25 @@ The following invariants MUST hold at all times:
 - Rendering is derived solely from Lisp state; DOM/Canvas/WebGL are outputs.
 
 ## Architecture Overview
+
+## Implementation Mapping (Non-Normative, Repository Status as of 2026-02-06)
+This spec defines the intended Lisp-authoritative UI toolkit. The repository currently includes a complete JavaScript reference implementation of the same state model, command system, layout/focus rules, persistence, and event log, used for bring-up and testing.
+
+Authoritative state (target):
+- WASM runner (Common Lisp) owns UI state, commands, focus/layout, error handling, and inspectability.
+
+Host and backends (current implementation):
+- JS microkernel mediates capabilities, I/O, and runner lifecycle. See `doc/wasm/js-microkernel-spec.md`, `doc/wasm/js/microkernel.mjs`, and `doc/wasm/js/world-kernel.mjs`.
+- DOM/Canvas/WebGL rendering backends are implemented in JS. See `web-ui/backends/dom/renderer.mjs`, `web-ui/backends/canvas/`, and `web-ui/backends/webgl/`.
+- Diff/patch rendering and the VDOM model are in `web-ui/src/renderer.mjs` and `web-ui/src/vdom.mjs`.
+
+Reference implementation (JS, current repo):
+- State, commands, focus/layout, persistence, and event log live in `web-ui/src/` and are exported from `web-ui/src/index.mjs`.
+- Tests run in Node and headless browser via `web-ui/tests/` and `doc/wasm/js/web-ui-*.mjs`.
+
+Integration status:
+- The Lisp<->JS bridge is not yet implemented (`web-ui/bridge/` contains only `.gitkeep`). The JS `web-ui` package currently serves as the reference model and test harness while the Lisp runtime integration is built.
+
 ### Backend abstraction
 - The toolkit targets an abstract UI backend with DOM as the first implementation.
 - Canvas 2D and WebGL are additional backends for high-frequency and custom rendering.

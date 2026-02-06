@@ -71,6 +71,10 @@ High-level responsibilities you’ve described or implied:
 
 In spirit, the JS microkernel is the “world,” and a runner is a process that lives inside it.
 
+## Browser UI Toolkit (Status Note)
+
+The browser UI toolkit is specified in `doc/wasm/browser-ui-spec.md`. A reference JavaScript implementation of the UI state model, command system, and rendering backends exists in `web-ui/` and is used for deterministic tests. Lisp<->JS integration is not yet wired.
+
 ## Capability model (host feature matrix)
 
 Because browser embeddings differ (sandboxed iframe vs. dedicated worker, `crossOriginIsolated` vs. not, storage policy, networking policy, etc.), the system uses an explicit capability model:
