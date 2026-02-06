@@ -227,4 +227,8 @@ assert(tagbodyTrue === 1, `unexpected tagbody true result: got=${tagbodyTrue} ex
 const tagbodyFalse = kernelExports.wasm_test_entry_funcall1_raw(tagbodyEntry, nilValue) >> 2;
 assert(tagbodyFalse === 2, `unexpected tagbody false result: got=${tagbodyFalse} expected=2`);
 
+const mvcallEntry = entryIndex("WASM-SMOKE-MVCALL");
+const mvcallResult = kernelExports.wasm_test_entry_funcall(mvcallEntry, 0) >> 2;
+assert(mvcallResult === 42, `unexpected mvcall result: got=${mvcallResult} expected=42`);
+
 console.log("PASS: wasm compiler emission smoke test");

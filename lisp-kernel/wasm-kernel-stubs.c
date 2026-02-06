@@ -50,6 +50,12 @@ wasm_subprim_fixnum(uint32_t index)
 static uint32_t wasm_subprims_ready = 0;
 static LispObj wasm_last_compiled_modules = 0;
 
+enum {
+  WASM_TOPLEVEL_EXIT = 0,
+  WASM_TOPLEVEL_PENDING_THROW = 1,
+  WASM_TOPLEVEL_YIELD = 2
+};
+
 static void
 wasm_maybe_refresh_compiled_modules(void)
 {
@@ -94,15 +100,17 @@ wasm_toplevel_loop(TCR *tcr)
     tcr->wasm_gprs[arg_z] = nrs_TOPLCATCH.vcell;
     wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_MKCATCH1V_INDEX));
 
+    tcr->wasm_gprs[arg_z] = lisp_nil;
     tcr->wasm_gprs[nargs] = box_fixnum(0);
     tcr->wasm_gprs[nfn] = topfn;
     tcr->wasm_gprs[Rfn] = topfn;
     wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_FUNCALL_INDEX));
     if (tcr->wasm_pending_throw) {
       wasm_maybe_refresh_compiled_modules();
-      return 1;
+      return WASM_TOPLEVEL_PENDING_THROW;
     }
 
+    LispObj result = tcr->wasm_gprs[arg_z];
     tcr->wasm_gprs[arg_z] = lisp_nil;
     tcr->wasm_gprs[imm0] = box_fixnum(1);
     wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_NTHROW1VALUE_INDEX));
@@ -110,6 +118,10 @@ wasm_toplevel_loop(TCR *tcr)
       tcr->wasm_pending_throw = 0;
     }
     wasm_maybe_refresh_compiled_modules();
+
+    if (result != lisp_nil) {
+      return WASM_TOPLEVEL_YIELD;
+    }
   }
 }
 
@@ -1194,14 +1206,6 @@ start_lisp(TCR *tcr, LispObj arg)
   }
 
   if (tcr != NULL) {
-    LispObj topfn = nrs_TOPLFUNC.vcell;
-    if (topfn == lisp_nil) {
-      static const char msg[] =
-        "WASM start_lisp: toplevel function is NIL; returning to host\n";
-      wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
-      goto done;
-    }
-
     tcr->wasm_pending_throw = 0;
     tcr->wasm_gprs[vsp] = (LispObj)tcr->save_vsp;
     LispObj *vsp_ptr = (LispObj *)tcr->wasm_gprs[vsp];
@@ -1211,8 +1215,17 @@ start_lisp(TCR *tcr, LispObj arg)
       wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
       goto done;
     }
-    *--vsp_ptr = topfn;
-    tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+    LispObj topfn = nrs_TOPLFUNC.vcell;
+    if (topfn != lisp_nil) {
+      *--vsp_ptr = topfn;
+      tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+      nrs_TOPLFUNC.vcell = lisp_nil;
+    } else if (*vsp_ptr == lisp_nil) {
+      static const char msg[] =
+        "WASM start_lisp: toplevel function is NIL; returning to host\n";
+      wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+      goto done;
+    }
 
     (void)wasm_toplevel_loop(tcr);
 
@@ -1242,11 +1255,6 @@ wasm_run_toplevel(void)
     return -2;
   }
 
-  LispObj topfn = nrs_TOPLFUNC.vcell;
-  if (topfn == lisp_nil) {
-    return -3;
-  }
-
   natural old_last_lisp_frame = wasm_enter_lisp_frame(tcr, 0, 0, (LispObj)tcr->save_vsp);
   tcr->valence = TCR_STATE_LISP;
   tcr->wasm_pending_throw = 0;
@@ -1257,8 +1265,16 @@ wasm_run_toplevel(void)
     wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
     return -4;
   }
-  *--vsp_ptr = topfn;
-  tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+  LispObj topfn = nrs_TOPLFUNC.vcell;
+  if (topfn != lisp_nil) {
+    *--vsp_ptr = topfn;
+    tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+    nrs_TOPLFUNC.vcell = lisp_nil;
+  } else if (*vsp_ptr == lisp_nil) {
+    tcr->valence = TCR_STATE_FOREIGN;
+    wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
+    return -3;
+  }
 
   int rc = wasm_toplevel_loop(tcr);
 

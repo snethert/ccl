@@ -578,6 +578,17 @@
   (destructuring-bind (stack-forms reg-forms) arglist
     (append stack-forms (nreverse reg-forms))))
 
+(defun wasm2-arglist-forms-mvcall (arglist)
+  (if (and (consp arglist)
+           (consp (cdr arglist))
+           (null (cddr arglist))
+           (listp (car arglist))
+           (listp (cadr arglist)))
+    (wasm2-arglist-forms arglist)
+    (if (listp arglist)
+      arglist
+      (error "Unexpected WASM mvcall arglist shape: ~s" arglist))))
+
 (defun wasm2-constant-lispobj (form)
   (let* ((val (nx2-constant-form-value (acode-unwrapped-form-value form))))
     (cond ((null val) (values nil nil))
@@ -1021,48 +1032,53 @@
 
 (defwasm2 wasm2-multiple-value-call multiple-value-call (seg vreg xfer fn arglist)
   (declare (ignore vreg))
-  (let* ((args (wasm2-arglist-forms arglist))
+  (let* ((args (wasm2-arglist-forms-mvcall arglist))
          (argc (length args))
          (mvpass (wasm2-mv-p xfer))
-         (fn-temp (wasm2-ensure-temp-local))
-         (tmp (wasm2-ensure-temp-local))
          (funcall-fixnum (wasm2-subprim-fixnum '.SPfuncall))
          (save-fixnum (wasm2-subprim-fixnum '.SPsave-values))
          (add-fixnum (wasm2-subprim-fixnum '.SPadd-values))
          (recover-fixnum (wasm2-subprim-fixnum '.SPrecover-values)))
-    (wasm2-form seg nil nil fn)
-    (wasm2-emit :local.set fn-temp)
     (cond
       ((= argc 0)
-       (wasm2-emit :local.get fn-temp)
-       (wasm2-emit (if mvpass :call0-mv :call0) tmp))
+       (let* ((tmp (wasm2-ensure-temp-local)))
+         (wasm2-form seg nil nil fn)
+         (wasm2-emit (if mvpass :call0-mv :call0) tmp)))
       ((= argc 1)
-       (wasm2-multiple-value-body seg (car args))
-       (wasm2-emit :local.get fn-temp)
-       (wasm2-emit :set-nfn)
-       (wasm2-emit-call-subprim funcall-fixnum)
-       (wasm2-emit :pending-throw-branch)
-       (unless mvpass
-         (wasm2-emit :restore-vsp))
-       (if (wasm2-returning-p xfer)
-         (wasm2-emit :return)
-         (wasm2-emit :arg0)))
+       (let* ((fn-temp (wasm2-ensure-temp-local)))
+         (wasm2-form seg nil nil fn)
+         (wasm2-emit :local.set fn-temp)
+        (wasm2-multiple-value-body seg (car args))
+        (wasm2-emit :local.get fn-temp)
+        (wasm2-emit :set-nfn)
+        ;; Args already live on VSP; spilling would corrupt the call frame.
+        (wasm2-emit-call-subprim-no-spill funcall-fixnum)
+         (wasm2-emit :pending-throw-branch)
+         (unless mvpass
+           (wasm2-emit :restore-vsp))
+         (if (wasm2-returning-p xfer)
+           (wasm2-emit :return)
+           (wasm2-emit :arg0))))
       (t
-       (wasm2-multiple-value-body seg (car args))
-       (wasm2-emit-call-subprim-no-spill save-fixnum)
-       (dolist (form (cdr args))
-         (wasm2-multiple-value-body seg form)
-         (wasm2-emit-call-subprim-no-spill add-fixnum))
-       (wasm2-emit-call-subprim-no-spill recover-fixnum)
-       (wasm2-emit :local.get fn-temp)
-       (wasm2-emit :set-nfn)
-       (wasm2-emit-call-subprim funcall-fixnum)
-       (wasm2-emit :pending-throw-branch)
-       (unless mvpass
-         (wasm2-emit :restore-vsp))
-       (if (wasm2-returning-p xfer)
-         (wasm2-emit :return)
-         (wasm2-emit :arg0)))))
+       (let* ((fn-temp (wasm2-ensure-temp-local)))
+         (wasm2-form seg nil nil fn)
+         (wasm2-emit :local.set fn-temp)
+         (wasm2-multiple-value-body seg (car args))
+         (wasm2-emit-call-subprim-no-spill save-fixnum)
+         (dolist (form (cdr args))
+           (wasm2-multiple-value-body seg form)
+           (wasm2-emit-call-subprim-no-spill add-fixnum))
+        (wasm2-emit-call-subprim-no-spill recover-fixnum)
+        (wasm2-emit :local.get fn-temp)
+        (wasm2-emit :set-nfn)
+        ;; Args already live on VSP; spilling would corrupt the call frame.
+        (wasm2-emit-call-subprim-no-spill funcall-fixnum)
+         (wasm2-emit :pending-throw-branch)
+         (unless mvpass
+           (wasm2-emit :restore-vsp))
+         (if (wasm2-returning-p xfer)
+           (wasm2-emit :return)
+           (wasm2-emit :arg0))))))
   nil)
 
 (defwasm2 wasm2-multiple-value-bind multiple-value-bind (seg vreg xfer vars form body p2decls)
@@ -1632,7 +1648,45 @@
 
 ;; For VSP-sensitive subprims that do not GC: avoid spilling via VSP.
 (defun wasm2-emit-call-subprim-no-spill (fixnum)
-  (wasm2-emit :call-subprim fixnum))
+  (wasm2-emit :call-subprim-no-spill fixnum))
+
+(defun wasm2-validate-spill-discipline (ir &optional (depth 0))
+  (let ((cur depth))
+    (dolist (ins ir)
+      (let* ((op (car ins))
+             (args (cdr ins)))
+        (case op
+          (:spill-locals
+           (incf cur))
+          (:restore-locals
+           (decf cur)
+           (when (< cur 0)
+             (error "WASM2 spill discipline: restore without spill")))
+          (:call-subprim
+           (when (<= cur 0)
+             (error "WASM2 spill discipline: call-subprim without spill")))
+          (:call-subprim-no-spill
+           (when (> cur 0)
+             (error "WASM2 spill discipline: call-subprim-no-spill inside spill region")))
+          (:if
+           (destructuring-bind (then-ir else-ir) args
+             (let* ((then-depth (wasm2-validate-spill-discipline then-ir cur))
+                    (else-depth (wasm2-validate-spill-discipline else-ir cur)))
+               (unless (and (= then-depth cur) (= else-depth cur))
+                 (error "WASM2 spill discipline: unbalanced spill across IF")))))
+          (:block
+           (destructuring-bind (_label block-ir) args
+             (declare (ignore _label))
+             (let* ((block-depth (wasm2-validate-spill-discipline block-ir cur)))
+               (unless (= block-depth cur)
+                 (error "WASM2 spill discipline: unbalanced spill across BLOCK")))))
+          (:loop
+           (destructuring-bind (_label loop-ir) args
+             (declare (ignore _label))
+             (let* ((loop-depth (wasm2-validate-spill-discipline loop-ir cur)))
+               (unless (= loop-depth cur)
+                 (error "WASM2 spill discipline: unbalanced spill across LOOP"))))))))
+    cur))
 
 (defun wasm2-emit-fixnum-add ()
   (wasm2-emit :fixnum-add)
@@ -2164,6 +2218,10 @@
          (wasm2-push-u8 body #x41)
          (wasm2-emit-sleb32 body (logand (car args) #xffffffff))
          (wasm2-emit-call-index body (wasm2-generic-import-index :call-subprim)))
+        (:call-subprim-no-spill
+         (wasm2-push-u8 body #x41)
+         (wasm2-emit-sleb32 body (logand (car args) #xffffffff))
+         (wasm2-emit-call-index body (wasm2-generic-import-index :call-subprim)))
         (:return-values2
          (wasm2-emit-call-index body (wasm2-generic-import-index :return-values2)))
         (:return-values3
@@ -2322,6 +2380,7 @@
               (wasm2-emit-uleb body i)))))
       (let* ((*wasm2-emit-local-count* local-count)
              (*wasm2-emit-spillable-locals* spillable-locals))
+        (wasm2-validate-spill-discipline ir)
         (wasm2-emit-pending-throw-guard body)
         (wasm2-emit-generic-ir body ir))
       (wasm2-push-u8 body #x0b)

@@ -108,8 +108,11 @@ The kernel now exports a minimal stepping interface (see `lisp-kernel/wasm-ccl-s
 - `2` (`STEP_EXITED`): clean shutdown (EOF for the current bring-up loop)
 - `3` (`STEP_TRAPPED`): fatal error (see `wasm_ccl_last_error`)
 
-This is a correctness/portability baseline for Stage 2. The full Lisp runtime will
-eventually use the same boundary to yield when any host capability would block.
+This is a correctness/portability baseline for Stage 2. The full Lisp runtime now
+uses the same boundary: `wasm_ccl_step` drives the Lisp toplevel loop and returns
+`STEP_BLOCKED` when the toplevel yields (via `:wasm-yield`), `STEP_EXITED` when the
+top‑level function exits, and `STEP_TRAPPED` if a non‑local transfer escapes the
+boundary.
 
 ## Lisp-level yield hook (bring-up scaffolding)
 

@@ -7,6 +7,25 @@
 #include "lisp-exceptions.h"
 #include "lisp_globals.h"
 
+/* WASM-only catch frame with dnode-aligned size.
+ * Keeps fulltag_misc tagging intact for catch_top pointers.
+ */
+typedef struct wasm_catch_frame {
+  LispObj header;
+  LispObj link;
+  LispObj mvflag;
+  LispObj catch_tag;
+  LispObj db_link;
+  LispObj xframe;
+  LispObj last_lisp_frame;
+  LispObj nfp;
+  LispObj save_vsp;
+  LispObj padding;
+} wasm_catch_frame;
+
+#define WASM_CATCH_FRAME_ELEMENT_COUNT ((sizeof(wasm_catch_frame) / sizeof(LispObj)) - 1)
+#define WASM_CATCH_FRAME_HEADER make_header(subtag_catch_frame, WASM_CATCH_FRAME_ELEMENT_COUNT)
+
 __attribute__((import_module("ccl"), import_name("wasm_get_current_tcr")))
 TCR *wasm_get_current_tcr(void);
 
@@ -1338,21 +1357,21 @@ wasm_unbind_to(TCR *tcr, special_binding *target)
   tcr->db_link = target;
 }
 
-static inline catch_frame *
+static inline wasm_catch_frame *
 wasm_alloc_catch_frame(void)
 {
   BytePtr stack_ptr = (BytePtr)wasm_get_cstack_pointer();
-  size_t bytes = sizeof(catch_frame);
+  size_t bytes = sizeof(wasm_catch_frame);
   stack_ptr -= bytes;
   wasm_set_cstack_pointer(stack_ptr);
-  return (catch_frame *)stack_ptr;
+  return (wasm_catch_frame *)stack_ptr;
 }
 
 static inline void
-wasm_free_catch_frame(catch_frame *cf)
+wasm_free_catch_frame(wasm_catch_frame *cf)
 {
   BytePtr stack_ptr = (BytePtr)cf;
-  stack_ptr += sizeof(catch_frame);
+  stack_ptr += sizeof(wasm_catch_frame);
   wasm_set_cstack_pointer(stack_ptr);
 }
 
@@ -1365,10 +1384,10 @@ _SPmkcatch1v(void)
     wasm_subprims_trap();
   }
 
-  catch_frame *cf = wasm_alloc_catch_frame();
+  wasm_catch_frame *cf = wasm_alloc_catch_frame();
   memset(cf, 0, sizeof(*cf));
 
-  cf->header = catch_frame_header;
+  cf->header = WASM_CATCH_FRAME_HEADER;
   cf->link = tcr->catch_top;
   cf->mvflag = 0;
   cf->catch_tag = wasm_reg(tcr, arg_z);
@@ -1390,10 +1409,10 @@ _SPmkcatchmv(void)
     wasm_subprims_trap();
   }
 
-  catch_frame *cf = wasm_alloc_catch_frame();
+  wasm_catch_frame *cf = wasm_alloc_catch_frame();
   memset(cf, 0, sizeof(*cf));
 
-  cf->header = catch_frame_header;
+  cf->header = WASM_CATCH_FRAME_HEADER;
   cf->link = tcr->catch_top;
   cf->mvflag = box_fixnum(1);
   cf->catch_tag = wasm_reg(tcr, arg_z);
@@ -1442,7 +1461,7 @@ _SPnthrow1value(void)
       wasm_subprims_trap();
     }
 
-    catch_frame *cf = (catch_frame *)ptr_from_lispobj(untag(catch_top));
+    wasm_catch_frame *cf = (wasm_catch_frame *)ptr_from_lispobj(untag(catch_top));
     special_binding *target_db = (special_binding *)cf->db_link;
 
     tcr->catch_top = cf->link;
@@ -1492,7 +1511,7 @@ _SPnthrowvalues(void)
       wasm_subprims_trap();
     }
 
-    catch_frame *cf = (catch_frame *)ptr_from_lispobj(untag(catch_top));
+    wasm_catch_frame *cf = (wasm_catch_frame *)ptr_from_lispobj(untag(catch_top));
     special_binding *target_db = (special_binding *)cf->db_link;
 
     tcr->catch_top = cf->link;
@@ -1605,9 +1624,9 @@ _SPthrow(void)
 
   LispObj catch_top = tcr->catch_top;
   signed_natural frame_count = 0;
-  catch_frame *target = NULL;
+  wasm_catch_frame *target = NULL;
   while (catch_top != 0 && catch_top != (LispObj)nil_value) {
-    catch_frame *cf = (catch_frame *)ptr_from_lispobj(untag(catch_top));
+    wasm_catch_frame *cf = (wasm_catch_frame *)ptr_from_lispobj(untag(catch_top));
     if (cf->catch_tag == throw_tag) {
       target = cf;
       break;

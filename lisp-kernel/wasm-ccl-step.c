@@ -4,25 +4,11 @@
  * This implements the minimal exported API sketched in:
  *   doc/wasm/yield-resume.md
  *
- * It is intentionally small and does NOT attempt to run the full Lisp runtime
- * yet. Instead, it demonstrates the contract the real runtime will follow:
- *
- *   - issue a kernel_request for a potentially-blocking operation
- *   - return to the host while the request is PENDING (BLOCKED)
- *   - resume later, consume the result, and continue (RUNNING)
- *
- * For now the "program" is a simple stdin->stdout echo loop:
- *   - read bytes from stream 0
- *   - write them to stream 1
- *   - repeat until EOF
- *
- * This keeps the ABI honest while the real scheduler/start_lisp integration is
- * developed.
+ * The step function now drives the Lisp toplevel loop and returns to the host
+ * when the toplevel yields or exits.
  */
 
 #ifdef WASM32
-
-#include "wasm-host.h"
 
 #include <errno.h>
 #include <stdint.h>
@@ -34,21 +20,27 @@ enum {
   WASM_CCL_STEP_TRAPPED = 3,
 };
 
-static uint32_t ccl_request_id = 0;
+enum {
+  WASM_TOPLEVEL_EXIT = 0,
+  WASM_TOPLEVEL_PENDING_THROW = 1,
+  WASM_TOPLEVEL_YIELD = 2
+};
+
 static uint32_t ccl_blocked_request_id = 0;
+static uint32_t ccl_toplevel_done = 0;
+static uint32_t ccl_toplevel_trapped = 0;
 static int32_t ccl_exit_code = 0;
 static int32_t ccl_last_error = 0;
-static uint8_t ccl_buf[1024];
+
+extern int wasm_run_toplevel(void);
 
 __attribute__((used, visibility("default"), export_name("wasm_ccl_init")))
 int32_t
 wasm_ccl_init(void)
 {
-  if (ccl_request_id != 0) {
-    wasm_kernel_request_drop(ccl_request_id);
-  }
-  ccl_request_id = 0;
   ccl_blocked_request_id = 0;
+  ccl_toplevel_done = 0;
+  ccl_toplevel_trapped = 0;
   ccl_exit_code = 0;
   ccl_last_error = 0;
   return 0;
@@ -81,74 +73,34 @@ wasm_ccl_step(int32_t deadline_ms)
 {
   (void)deadline_ms; /* reserved for future deadline-based stepping */
 
-  /* Start a new stdin read request if none is in-flight. */
-  if (ccl_request_id == 0) {
-    struct payload {
-      uint32_t sid_or_fd;
-      uint32_t max_bytes;
-    } p;
-    p.sid_or_fd = 0;
-    p.max_bytes = (uint32_t)sizeof(ccl_buf);
-
-    int32_t r = wasm_kernel_request_begin(KERNEL_OP_STREAM_READ, &p, (uint32_t)sizeof(p), &ccl_request_id);
-    if (r < 0) {
-      ccl_last_error = r;
-      return WASM_CCL_STEP_TRAPPED;
-    }
-  }
-
-  uint32_t st = wasm_kernel_request_status(ccl_request_id);
-  if (st == KERNEL_STATUS_PENDING) {
-    ccl_blocked_request_id = ccl_request_id;
-    return WASM_CCL_STEP_BLOCKED;
-  }
-
-  ccl_blocked_request_id = 0;
-
-  int32_t result = wasm_kernel_request_get_result(ccl_request_id);
-  if (st == KERNEL_STATUS_ERROR) {
-    wasm_kernel_request_drop(ccl_request_id);
-    ccl_request_id = 0;
-    ccl_last_error = (result != 0) ? result : -EINVAL;
+  if (ccl_toplevel_trapped) {
     return WASM_CCL_STEP_TRAPPED;
   }
-
-  if (result < 0) {
-    if (result == -EWOULDBLOCK) {
-      /* Stage-1 style: treat would-block as a yield boundary. */
-      wasm_kernel_request_drop(ccl_request_id);
-      ccl_request_id = 0;
-      return WASM_CCL_STEP_BLOCKED;
-    }
-    wasm_kernel_request_drop(ccl_request_id);
-    ccl_request_id = 0;
-    ccl_last_error = result;
-    return WASM_CCL_STEP_TRAPPED;
-  }
-
-  uint32_t nread = 0;
-  int32_t cr = wasm_kernel_request_copy_response(ccl_request_id, ccl_buf, (uint32_t)sizeof(ccl_buf), &nread);
-  wasm_kernel_request_drop(ccl_request_id);
-  ccl_request_id = 0;
-  if (cr < 0) {
-    ccl_last_error = cr;
-    return WASM_CCL_STEP_TRAPPED;
-  }
-
-  if (result == 0) {
-    /* EOF */
-    ccl_exit_code = 0;
+  if (ccl_toplevel_done) {
     return WASM_CCL_STEP_EXITED;
   }
 
-  if ((uint32_t)result != nread) {
-    ccl_last_error = -EINVAL;
+  ccl_blocked_request_id = 0;
+  ccl_last_error = 0;
+
+  int rc = wasm_run_toplevel();
+  if (rc == WASM_TOPLEVEL_EXIT) {
+    ccl_exit_code = 0;
+    ccl_toplevel_done = 1;
+    return WASM_CCL_STEP_EXITED;
+  }
+  if (rc == WASM_TOPLEVEL_YIELD) {
+    return WASM_CCL_STEP_BLOCKED;
+  }
+  if (rc == WASM_TOPLEVEL_PENDING_THROW) {
+    ccl_last_error = -EFAULT;
+    ccl_toplevel_trapped = 1;
     return WASM_CCL_STEP_TRAPPED;
   }
-
-  /* For bring-up, STREAM_WRITE is synchronous in the reference microkernel. */
-  if (nread != 0) {
-    (void)wasm_kernel_stream_write(1, ccl_buf, nread);
+  if (rc < 0) {
+    ccl_last_error = rc;
+    ccl_toplevel_trapped = 1;
+    return WASM_CCL_STEP_TRAPPED;
   }
 
   return WASM_CCL_STEP_RUNNING;

@@ -2238,9 +2238,17 @@ main
 #if !defined(WINDOWS) && !defined(WASM32)
   lisp_global(INTERRUPT_SIGNAL) = (LispObj) box_fixnum(SIGNAL_FOR_PROCESS_INTERRUPT);
 #endif
+#ifdef WASM32
+  if (!wasm_boot_only) {
+    tcr->vs_area->active -= node_size;
+    *(--tcr->save_vsp) = nrs_TOPLFUNC.vcell;
+    nrs_TOPLFUNC.vcell = lisp_nil;
+  }
+#else
   tcr->vs_area->active -= node_size;
   *(--tcr->save_vsp) = nrs_TOPLFUNC.vcell;
   nrs_TOPLFUNC.vcell = lisp_nil;
+#endif
 #ifdef GC_INTEGRITY_CHECKING
   (nrs_GC_EVENT_STATUS_BITS.vcell |= gc_integrity_check_bit);
 #endif
