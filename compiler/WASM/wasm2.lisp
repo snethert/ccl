@@ -525,6 +525,38 @@
        (wasm2-emit-const value))))
   nil)
 
+(defwasm2 wasm2-%current-tcr %current-tcr (seg vreg xfer)
+  (declare (ignore seg vreg))
+  (wasm2-emit :get-current-tcr)
+  (when (wasm2-returning-p xfer)
+    (wasm2-emit :set-arg-z)
+    (wasm2-emit :set-nargs 1)
+    (wasm2-emit :return))
+  nil)
+
+(when (and (boundp '*next-nx-operators*)
+           (assq '%tcr-toplevel-function *next-nx-operators*))
+  (defwasm2 wasm2-%tcr-toplevel-function %tcr-toplevel-function (seg vreg xfer tcr)
+    (declare (ignore seg vreg))
+    (wasm2-form seg nil nil tcr)
+    (wasm2-emit :get-tcr-toplevel-function)
+    (when (wasm2-returning-p xfer)
+      (wasm2-emit :set-arg-z)
+      (wasm2-emit :set-nargs 1)
+      (wasm2-emit :return))
+    nil)
+
+  (defwasm2 wasm2-%set-tcr-toplevel-function %set-tcr-toplevel-function (seg vreg xfer tcr fun)
+    (declare (ignore seg vreg))
+    (wasm2-form seg nil nil tcr)
+    (wasm2-form seg nil nil fun)
+    (wasm2-emit :set-tcr-toplevel-function)
+    (when (wasm2-returning-p xfer)
+      (wasm2-emit :set-arg-z)
+      (wasm2-emit :set-nargs 1)
+      (wasm2-emit :return))
+    nil))
+
 (defwasm2 wasm2-lexical-reference lexical-reference (seg vreg xfer varnode)
   (declare (ignore seg vreg))
   (when (wasm2-var-closed-p varnode)
@@ -2002,7 +2034,10 @@
    (list :vpop "wasm_vpop" +wasm2-type-void-i32+)
    (list :spill-push "wasm_spill_push" +wasm2-type-i32-void+)
    (list :spill-pop "wasm_spill_pop" +wasm2-type-void-i32+)
-   (list :clear-pending-throw "wasm_clear_pending_throw" +wasm2-type-void-void+)))
+   (list :clear-pending-throw "wasm_clear_pending_throw" +wasm2-type-void-void+)
+   (list :get-current-tcr "wasm_get_current_tcr" +wasm2-type-void-i32+)
+   (list :get-tcr-toplevel-function "wasm_get_tcr_toplevel_function" +wasm2-type-i32-i32-ret+)
+   (list :set-tcr-toplevel-function "wasm_set_tcr_toplevel_function" +wasm2-type-i32-i32+)))
 
 (defun wasm2-generic-import-index (key)
   (or (position key *wasm2-generic-imports* :key #'car :test #'eq)
@@ -2112,6 +2147,12 @@
          (wasm2-emit-call-index body (wasm2-generic-import-index :get-nfn)))
         (:get-nargs
          (wasm2-emit-call-index body (wasm2-generic-import-index :get-nargs)))
+        (:get-current-tcr
+         (wasm2-emit-call-index body (wasm2-generic-import-index :get-current-tcr)))
+        (:get-tcr-toplevel-function
+         (wasm2-emit-call-index body (wasm2-generic-import-index :get-tcr-toplevel-function)))
+        (:set-tcr-toplevel-function
+         (wasm2-emit-call-index body (wasm2-generic-import-index :set-tcr-toplevel-function)))
         (:local.get
          (wasm2-push-u8 body #x20)
          (wasm2-emit-uleb body (car args)))

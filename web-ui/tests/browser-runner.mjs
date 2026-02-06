@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const WEB_UI_ROOT = path.resolve(__dirname, "..");
+const REPO_ROOT = path.resolve(WEB_UI_ROOT, "..");
+const DOC_ROOT = path.join(REPO_ROOT, "doc");
 
 const MIME_TYPES = new Map([
   [".html", "text/html; charset=utf-8"],
@@ -32,12 +34,22 @@ function toSafePath(rootDir, urlPath) {
   return resolved;
 }
 
+function resolvePath(rootDir, urlPath) {
+  const decoded = decodeURIComponent(urlPath);
+  const cleaned = decoded.replace(/\\/g, "/");
+  if (cleaned.startsWith("/doc/")) {
+    const rel = cleaned.replace(/^\/doc\//, "");
+    return toSafePath(DOC_ROOT, rel);
+  }
+  return toSafePath(rootDir, cleaned);
+}
+
 function startStaticServer(rootDir) {
   return new Promise((resolve, reject) => {
     const server = http.createServer(async (req, res) => {
       try {
         const url = new URL(req.url ?? "/", "http://127.0.0.1");
-        const filePath = toSafePath(rootDir, url.pathname);
+        const filePath = resolvePath(rootDir, url.pathname);
         if (!filePath) {
           res.statusCode = 403;
           res.end("Forbidden");
@@ -113,7 +125,17 @@ export async function runHeadless(options = {}) {
   }
 
   const timeoutMs = options.timeoutMs ?? 5000;
-  const { server, baseUrl } = await startStaticServer(WEB_UI_ROOT);
+  let server;
+  let baseUrl;
+  try {
+    ({ server, baseUrl } = await startStaticServer(WEB_UI_ROOT));
+  } catch (err) {
+    const strict = process.env.WEB_UI_STRICT_BROWSER_TESTS === "1";
+    if (strict) {
+      throw err;
+    }
+    return { skipped: true, reason: err?.message ?? "Failed to start local HTTP server" };
+  }
   let browser;
   try {
     browser = await playwright.chromium.launch({ headless: true });

@@ -9,6 +9,309 @@ import { createDomBackend, createDomRoot } from "../../backends/dom/renderer.mjs
 import { createCanvasBackend } from "../../backends/canvas/renderer.mjs";
 import { createWebGLBackend } from "../../backends/webgl/renderer.mjs";
 import { createIndexedDBStore, createPersistenceManager, createSnapshot } from "../../src/index.mjs";
+import {
+  createMicrokernel,
+  KERNEL_OP_UI_POLL,
+  KERNEL_OP_UI_RENDER,
+  KERNEL_OP_UI_MEASURE_TEXT
+} from "../../../doc/wasm/js/microkernel.mjs";
+import { createUiBridge } from "../../bridge/ui-bridge.mjs";
+
+const _bridgeEncoder = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
+const _bridgeDecoder = typeof TextDecoder !== "undefined" ? new TextDecoder("utf-8") : null;
+
+function encodeBridgeUtf8(text) {
+  if (_bridgeEncoder) return _bridgeEncoder.encode(String(text));
+  const s = String(text);
+  const out = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i) & 0xff;
+  return out;
+}
+
+function decodeBridgeUtf8(bytes) {
+  if (_bridgeDecoder) return _bridgeDecoder.decode(bytes);
+  let out = "";
+  for (let i = 0; i < bytes.length; i++) out += String.fromCharCode(bytes[i]);
+  return out;
+}
+
+class UiStringTable {
+  constructor() {
+    this.map = new Map();
+    this.list = [];
+    this.bytes = [];
+  }
+
+  indexOf(value) {
+    if (value === null || value === undefined) return 0xffffffff;
+    const key = String(value);
+    if (this.map.has(key)) return this.map.get(key);
+    const idx = this.list.length;
+    this.list.push(key);
+    this.map.set(key, idx);
+    this.bytes.push(encodeBridgeUtf8(key));
+    return idx;
+  }
+
+  totalSize() {
+    let size = 0;
+    for (const bytes of this.bytes) {
+      size += 4 + bytes.length;
+    }
+    return size;
+  }
+}
+
+function f64ToU32Parts(value) {
+  const buf = new ArrayBuffer(8);
+  const dv = new DataView(buf);
+  dv.setFloat64(0, Number(value ?? 0), true);
+  return { lo: dv.getUint32(0, true), hi: dv.getUint32(4, true) };
+}
+
+function encodeUiTreePayload(nodes, rootIndex = 0) {
+  const table = new UiStringTable();
+  nodes.forEach((node) => {
+    if (!node) return;
+    if (node.kind === "text") {
+      table.indexOf(node.text ?? "");
+      table.indexOf(node.key);
+      return;
+    }
+    table.indexOf(node.tag ?? "div");
+    table.indexOf(node.key);
+    const props = node.props ?? {};
+    for (const [key, value] of Object.entries(props)) {
+      table.indexOf(key);
+      if (typeof value === "string") table.indexOf(value);
+    }
+  });
+
+  const stringCount = table.list.length;
+  const nodeCount = nodes.length;
+  const headerSize = 24;
+  let nodeBytes = 0;
+  for (const node of nodes) {
+    if (!node) continue;
+    nodeBytes += 12;
+    if (node.kind === "text") {
+      nodeBytes += 4;
+    } else {
+      const propCount = Object.keys(node.props ?? {}).length;
+      const childCount = Array.isArray(node.children) ? node.children.length : 0;
+      nodeBytes += 12 + propCount * 16 + childCount * 4;
+    }
+  }
+  const totalSize = headerSize + table.totalSize() + nodeBytes;
+  const buf = new ArrayBuffer(totalSize);
+  const dv = new DataView(buf);
+  const out = new Uint8Array(buf);
+  let off = 0;
+  dv.setUint32(off, 0x55494231, true);
+  dv.setUint32(off + 4, 1, true);
+  dv.setUint32(off + 8, stringCount, true);
+  dv.setUint32(off + 12, nodeCount, true);
+  dv.setUint32(off + 16, rootIndex >>> 0, true);
+  dv.setUint32(off + 20, 0, true);
+  off = headerSize;
+  table.bytes.forEach((b) => {
+    dv.setUint32(off, b.length, true);
+    off += 4;
+    out.set(b, off);
+    off += b.length;
+  });
+
+  nodes.forEach((node) => {
+    const keyIndex = table.indexOf(node?.key);
+    const flags = keyIndex !== 0xffffffff ? 1 : 0;
+    if (node.kind === "text") {
+      dv.setUint32(off, 0, true);
+      dv.setUint32(off + 4, flags, true);
+      dv.setUint32(off + 8, keyIndex, true);
+      off += 12;
+      dv.setUint32(off, table.indexOf(node.text ?? ""), true);
+      off += 4;
+      return;
+    }
+    const tagIndex = table.indexOf(node.tag ?? "div");
+    const props = node.props ?? {};
+    const propEntries = Object.entries(props);
+    const children = Array.isArray(node.children) ? node.children : [];
+    dv.setUint32(off, 1, true);
+    dv.setUint32(off + 4, flags, true);
+    dv.setUint32(off + 8, keyIndex, true);
+    off += 12;
+    dv.setUint32(off, tagIndex, true);
+    dv.setUint32(off + 4, propEntries.length, true);
+    dv.setUint32(off + 8, children.length, true);
+    off += 12;
+    for (const [key, value] of propEntries) {
+      const keyIdx = table.indexOf(key);
+      let valueType = 0;
+      let valueLo = 0;
+      let valueHi = 0;
+      if (value === null || value === undefined) {
+        valueType = 0;
+      } else if (typeof value === "boolean") {
+        valueType = 1;
+        valueLo = value ? 1 : 0;
+      } else if (typeof value === "number") {
+        valueType = 2;
+        const parts = f64ToU32Parts(value);
+        valueLo = parts.lo;
+        valueHi = parts.hi;
+      } else {
+        valueType = 3;
+        valueLo = table.indexOf(String(value));
+      }
+      dv.setUint32(off, keyIdx, true);
+      dv.setUint32(off + 4, valueType, true);
+      dv.setUint32(off + 8, valueLo >>> 0, true);
+      dv.setUint32(off + 12, valueHi >>> 0, true);
+      off += 16;
+    }
+    for (const child of children) {
+      dv.setUint32(off, child >>> 0, true);
+      off += 4;
+    }
+  });
+
+  return new Uint8Array(buf);
+}
+
+function buildUiBridgeTreePayload() {
+  return encodeUiTreePayload([
+    {
+      kind: "element",
+      tag: "div",
+      props: { "data-window-id": "win-1" },
+      children: [1],
+    },
+    {
+      kind: "element",
+      tag: "button",
+      props: { "data-widget-id": "btn-1" },
+      children: [2],
+    },
+    { kind: "text", text: "Click" },
+  ]);
+}
+
+function buildUiBridgeCanvasPayload() {
+  const scene = JSON.stringify([
+    { id: "bottom", kind: "rect", bounds: { x: 0, y: 0, width: 50, height: 50 }, props: { fill: "#000" } },
+    { id: "top", kind: "rect", bounds: { x: 5, y: 5, width: 20, height: 20 }, props: { fill: "#f00" } }
+  ]);
+  return {
+    payload: encodeUiTreePayload([
+      {
+        kind: "element",
+        tag: "div",
+        props: { "data-window-id": "win-canvas" },
+        children: [1],
+      },
+      {
+        kind: "element",
+        tag: "canvas",
+        props: {
+          "data-widget-id": "canvas-1",
+          "data-canvas-scene": scene,
+          style: "width:64px;height:64px;",
+          width: 64,
+          height: 64
+        },
+        children: [],
+      },
+    ]),
+    hitTarget: "canvas-1:top",
+  };
+}
+
+function buildUiBridgeWebglPayload() {
+  const scene = JSON.stringify([
+    { id: "bottom", kind: "rect", bounds: { x: 0, y: 0, width: 50, height: 50 }, props: { fill: "#000" } },
+    { id: "top", kind: "rect", bounds: { x: 6, y: 6, width: 18, height: 18 }, props: { fill: "#00f" } }
+  ]);
+  return {
+    payload: encodeUiTreePayload([
+      {
+        kind: "element",
+        tag: "div",
+        props: { "data-window-id": "win-webgl" },
+        children: [1],
+      },
+      {
+        kind: "element",
+        tag: "canvas",
+        props: {
+          "data-widget-id": "webgl-1",
+          "data-webgl-scene": scene,
+          style: "width:64px;height:64px;",
+          width: 64,
+          height: 64
+        },
+        children: [],
+      },
+    ]),
+    hitTarget: "webgl-1:top",
+  };
+}
+
+function uiEventRecordSize(typeId) {
+  switch (typeId) {
+  case 1: // pointer
+    return 16 + 40;
+  case 2: // key
+    return 16 + 32;
+  case 3: // composition
+    return 16 + 16;
+  case 4: // text
+    return 16 + 16;
+  case 5: // focus
+  case 6: // blur
+    return 16 + 16;
+  case 7: // wheel
+    return 16 + 32;
+  default:
+    return 16 + 16;
+  }
+}
+
+function decodeUiEventBatch(payload) {
+  const dv = new DataView(payload.buffer, payload.byteOffset, payload.byteLength);
+  if (payload.byteLength < 16) {
+    return { count: 0, events: [] };
+  }
+  const magic = dv.getUint32(0, true);
+  const version = dv.getUint32(4, true);
+  if (magic !== 0x55494531 || version !== 1) {
+    return { count: 0, events: [] };
+  }
+  const stringCount = dv.getUint32(8, true);
+  const eventCount = dv.getUint32(12, true);
+  let off = 16;
+  const strings = new Array(stringCount);
+  for (let i = 0; i < stringCount; i++) {
+    const len = dv.getUint32(off, true);
+    off += 4;
+    strings[i] = decodeBridgeUtf8(payload.subarray(off, off + len));
+    off += len;
+  }
+  const events = [];
+  for (let i = 0; i < eventCount; i++) {
+    if (off + 16 > payload.byteLength) break;
+    const type = dv.getUint32(off, true);
+    const flags = dv.getUint32(off + 4, true);
+    const targetIdx = dv.getUint32(off + 8, true);
+    const windowIdx = dv.getUint32(off + 12, true);
+    const targetId = targetIdx === 0xffffffff ? null : strings[targetIdx] ?? null;
+    const windowId = windowIdx === 0xffffffff ? null : strings[windowIdx] ?? null;
+    const size = uiEventRecordSize(type);
+    off += size;
+    events.push({ type, flags, targetId, windowId });
+  }
+  return { count: eventCount, events };
+}
 
 async function loadJson(relPath) {
   const response = await fetch(relPath);
@@ -23,6 +326,22 @@ async function run() {
   const eventLog = await loadJson("../fixtures/basic-events.json");
   const expectedSnapshot = await loadJson("../fixtures/basic-snapshot.json");
   const expectedDomSnapshot = await loadJson("../fixtures/dom-snapshot.json");
+  let uiBundleOk = false;
+  let uiBundleInfo = null;
+  try {
+    const uiBundle = await loadJson("/doc/wasm/wasm-ui-modules.json");
+    const modules = Array.isArray(uiBundle?.modules) ? uiBundle.modules : [];
+    const functions = Array.isArray(uiBundle?.functions) ? uiBundle.functions : [];
+    const functionNames = new Set(functions.map((fn) => fn?.name).filter(Boolean));
+    uiBundleOk =
+      modules.length > 0 &&
+      functionNames.has("WASM-UI-DEMO") &&
+      functionNames.has("WASM-UI-TURN") &&
+      functionNames.has("WASM-UI-POLL");
+    uiBundleInfo = { modules: modules.length, functions: functions.length };
+  } catch (err) {
+    uiBundleInfo = { error: err?.message ?? String(err) };
+  }
 
   const result = replayEvents(initialState, eventLog.events);
   const snapshot = snapshotToString(result.snapshots[0]);
@@ -644,7 +963,178 @@ async function run() {
   await persistStore.clearSnapshot("workspace-0");
   persistManager.close();
 
+  const bridgeTarget = document.createElement("div");
+  bridgeTarget.id = "ui-bridge-target";
+  root.appendChild(bridgeTarget);
+
+  const uiBridge = createUiBridge({ container: bridgeTarget, document });
+  const uiMemory = new WebAssembly.Memory({ initial: 1 });
+  const uiMicrokernel = createMicrokernel({ memory: uiMemory, uiService: uiBridge });
+  const {
+    kernel_request,
+    kernel_poll,
+    kernel_result,
+    kernel_response_size,
+    kernel_copy_response,
+    kernel_drop_request
+  } = uiMicrokernel.imports;
+
+  function writeUiBytes(ptr, bytes) {
+    new Uint8Array(uiMemory.buffer, ptr, bytes.length).set(bytes);
+  }
+
+  function pollUiEvents({ maxEvents = 8, maxBytes = 4096 } = {}) {
+    const pollPtr = 0;
+    const pollView = new DataView(uiMemory.buffer, pollPtr, 12);
+    pollView.setUint32(0, maxEvents, true);
+    pollView.setUint32(4, maxBytes, true);
+    pollView.setUint32(8, 0, true);
+    const pollId = kernel_request(KERNEL_OP_UI_POLL, pollPtr, 12);
+    const status = kernel_poll(pollId);
+    const count = kernel_result(pollId) | 0;
+    const size = kernel_response_size(pollId) >>> 0;
+    let batch = { count: 0, events: [] };
+    let copied = 0;
+    if (size > 0) {
+      const pollOutPtr = 2048;
+      copied = kernel_copy_response(pollId, pollOutPtr, size) >>> 0;
+      const pollBytes = new Uint8Array(uiMemory.buffer, pollOutPtr, size);
+      batch = decodeUiEventBatch(pollBytes);
+    }
+    kernel_drop_request(pollId);
+    return { status, count, size, copied, batch };
+  }
+
+  const uiTreePayload = buildUiBridgeTreePayload();
+  const uiTreePtr = 256;
+  writeUiBytes(uiTreePtr, uiTreePayload);
+  const renderId = kernel_request(KERNEL_OP_UI_RENDER, uiTreePtr, uiTreePayload.length);
+  const renderResult = kernel_result(renderId) | 0;
+  kernel_drop_request(renderId);
+  const uiBridgeRenderOk = renderResult === 0;
+  if (typeof uiBridge.flush === "function") {
+    uiBridge.flush();
+  }
+
+  const uiButton = bridgeTarget.querySelector("[data-widget-id='btn-1']");
+  const uiBridgeDomOk = Boolean(uiButton && uiButton.textContent === "Click");
+
+  let uiBridgeEventOk = false;
+  if (uiButton && typeof PointerEvent === "function") {
+    const rect = uiButton.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    uiButton.dispatchEvent(
+      new PointerEvent("pointerdown", { bubbles: true, clientX: x, clientY: y, button: 0, buttons: 1 })
+    );
+    uiButton.dispatchEvent(
+      new PointerEvent("pointerup", { bubbles: true, clientX: x, clientY: y, button: 0, buttons: 0 })
+    );
+
+    const poll = pollUiEvents();
+    const targetHit = poll.batch.events.some((evt) => evt.type === 1 && evt.targetId === "btn-1");
+    uiBridgeEventOk =
+      poll.status === 1 &&
+      poll.count > 0 &&
+      poll.size > 0 &&
+      poll.copied === poll.size &&
+      targetHit;
+  }
+
+  const fontBytes = encodeBridgeUtf8("12px monospace");
+  const textBytes = encodeBridgeUtf8("Hello");
+  const measPtr = 8192;
+  const fontPtr = measPtr + 16;
+  const textPtr = fontPtr + fontBytes.length + 8;
+  writeUiBytes(fontPtr, fontBytes);
+  writeUiBytes(textPtr, textBytes);
+  const measView = new DataView(uiMemory.buffer, measPtr, 16);
+  measView.setUint32(0, fontPtr, true);
+  measView.setUint32(4, fontBytes.length, true);
+  measView.setUint32(8, textPtr, true);
+  measView.setUint32(12, textBytes.length, true);
+  const measId = kernel_request(KERNEL_OP_UI_MEASURE_TEXT, measPtr, 16);
+  const measResult = kernel_result(measId) | 0;
+  const measSize = kernel_response_size(measId) >>> 0;
+  let uiBridgeMeasureOk = false;
+  if (measSize === 32) {
+    const measOutPtr = textPtr + textBytes.length + 16;
+    kernel_copy_response(measId, measOutPtr, measSize);
+    const measDv = new DataView(uiMemory.buffer, measOutPtr, measSize);
+    const width = measDv.getFloat64(0, true);
+    const height = measDv.getFloat64(8, true);
+    uiBridgeMeasureOk = measResult === 0 && width > 0 && height > 0;
+  }
+  kernel_drop_request(measId);
+
+  const canvasInfo = buildUiBridgeCanvasPayload();
+  const canvasPtr = 16384;
+  writeUiBytes(canvasPtr, canvasInfo.payload);
+  const canvasRenderId = kernel_request(KERNEL_OP_UI_RENDER, canvasPtr, canvasInfo.payload.length);
+  const canvasRenderResult = kernel_result(canvasRenderId) | 0;
+  kernel_drop_request(canvasRenderId);
+  if (typeof uiBridge.flush === "function") {
+    uiBridge.flush();
+  }
+
+  const bridgeCanvasNode = bridgeTarget.querySelector("[data-widget-id='canvas-1']");
+  let uiBridgeCanvasOk = false;
+  if (bridgeCanvasNode && typeof PointerEvent === "function") {
+    const rect = bridgeCanvasNode.getBoundingClientRect();
+    const x = rect.left + 12;
+    const y = rect.top + 12;
+    bridgeCanvasNode.dispatchEvent(
+      new PointerEvent("pointerdown", { bubbles: true, clientX: x, clientY: y, button: 0, buttons: 1 })
+    );
+    bridgeCanvasNode.dispatchEvent(
+      new PointerEvent("pointerup", { bubbles: true, clientX: x, clientY: y, button: 0, buttons: 0 })
+    );
+    const poll = pollUiEvents();
+    const hit = poll.batch.events.some(
+      (evt) => evt.type === 1 && typeof evt.targetId === "string" && evt.targetId.startsWith("canvas-1:")
+    );
+    uiBridgeCanvasOk = canvasRenderResult === 0 && hit;
+  }
+
+  const webglInfo = buildUiBridgeWebglPayload();
+  const webglPtr = canvasPtr + canvasInfo.payload.length + 1024;
+  writeUiBytes(webglPtr, webglInfo.payload);
+  const webglRenderId = kernel_request(KERNEL_OP_UI_RENDER, webglPtr, webglInfo.payload.length);
+  const webglRenderResult = kernel_result(webglRenderId) | 0;
+  kernel_drop_request(webglRenderId);
+  if (typeof uiBridge.flush === "function") {
+    uiBridge.flush();
+  }
+
+  const bridgeWebglNode = bridgeTarget.querySelector("[data-widget-id='webgl-1']");
+  let uiBridgeWebglOk = false;
+  if (bridgeWebglNode && typeof PointerEvent === "function") {
+    const rect = bridgeWebglNode.getBoundingClientRect();
+    const x = rect.left + 14;
+    const y = rect.top + 14;
+    bridgeWebglNode.dispatchEvent(
+      new PointerEvent("pointerdown", { bubbles: true, clientX: x, clientY: y, button: 0, buttons: 1 })
+    );
+    bridgeWebglNode.dispatchEvent(
+      new PointerEvent("pointerup", { bubbles: true, clientX: x, clientY: y, button: 0, buttons: 0 })
+    );
+    const poll = pollUiEvents();
+    const hit = poll.batch.events.some(
+      (evt) => evt.type === 1 && typeof evt.targetId === "string" && evt.targetId.startsWith("webgl-1:")
+    );
+    if (!hit) {
+      const ctx = bridgeWebglNode.getContext ? bridgeWebglNode.getContext("webgl") : null;
+      uiBridgeWebglOk = webglRenderResult === 0 && ctx === null;
+    } else {
+      uiBridgeWebglOk = webglRenderResult === 0 && hit;
+    }
+  }
+
+  const uiBridgeOk =
+    uiBridgeRenderOk && uiBridgeDomOk && uiBridgeEventOk && uiBridgeMeasureOk && uiBridgeCanvasOk && uiBridgeWebglOk;
+
   const ok =
+    uiBundleOk &&
     snapshotMatch &&
     domOk &&
     domSnapshotMatch &&
@@ -677,9 +1167,12 @@ async function run() {
     webglOk &&
     webglBackendHitOk &&
     webglMeasureOk &&
-    persistenceOk;
+    persistenceOk &&
+    uiBridgeOk;
   const payload = {
     ok,
+    uiBundleOk,
+    uiBundleInfo,
     snapshotMatch,
     domOk,
     domSnapshotMatch,
@@ -712,7 +1205,10 @@ async function run() {
     webglOk,
     webglBackendHitOk,
     webglMeasureOk,
-    persistenceOk
+    persistenceOk,
+    uiBridgeOk,
+    uiBridgeCanvasOk,
+    uiBridgeWebglOk
   };
 
   if (window.__WEB_UI_TEST_DONE__) {

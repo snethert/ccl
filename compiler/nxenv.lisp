@@ -135,6 +135,8 @@
      (%fixnum-ref  #.(logior operator-single-valued-mask operator-acode-subforms-mask) t)
      (%fixnum-ref-natural  #.(logior operator-single-valued-mask operator-acode-subforms-mask) natural)
      (%current-tcr  #.operator-single-valued-mask fixnum)
+     (%tcr-toplevel-function  #.(logior operator-single-valued-mask operator-assignment-free-mask operator-acode-subforms-mask operator-side-effect-free-mask) t)
+     (%set-tcr-toplevel-function  #.(logior operator-single-valued-mask operator-acode-subforms-mask) t)
      (%ilognot  #.(logior operator-single-valued-mask operator-assignment-free-mask operator-acode-subforms-mask operator-side-effect-free-mask ) fixnum)
      (multiple-value-prog1  0 :infer)
      (multiple-value-bind  0 :infer)
@@ -577,4 +579,3 @@
 
 
 (provide "NXENV")
-
