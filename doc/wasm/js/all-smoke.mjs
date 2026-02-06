@@ -11,6 +11,7 @@ const tests = [
   "./pending-stdin-smoke.mjs",
   "./ccl-step-smoke.mjs",
   "./start-lisp-smoke.mjs",
+  "./world-kernel-start-smoke.mjs",
   "./step-demo.mjs",
   "./funcall-smoke.mjs",
   "./const-funcall-smoke.mjs",

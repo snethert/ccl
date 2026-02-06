@@ -14,7 +14,7 @@ separate from the detailed checklists in `porting-status.md`.
 - **Subprims provider:** ✅ Tier‑0 semantics + ABI defined and exercised by compiled modules.
 - **Lisp runtime (Level‑1):** ✅ capability errors + yield path + WASM stream classes + virtual FS policy.
 - **Compiler/backend (WASM):** ⚠️ MVP emission for constants, fixnum ops, calls, multi‑value (2–4 + `values` >4 via VSP push), and local control flow (`if`, `block/return-from`, `tagbody/go`) with compiled-module registry install; `catch`/`throw` routed through subprims; cooperative `unwind-protect` cleanup + closure capture now in place with multi‑value preservation.
-- **Image + real toplevel:** ⚠️ minimal boot image loads + stub toplevel hook returns; no real Lisp toplevel.
+- **Image + real toplevel:** ⚠️ minimal boot image loads + post‑load `start_lisp` entry wired; no real Lisp toplevel.
 - **Concurrency model:** ⏸ deferred (single‑threaded baseline first).
 
 ## Roadmap phases
@@ -57,7 +57,7 @@ separate from the detailed checklists in `porting-status.md`.
 **Status:** ⚠️
 **Remaining:**
 - WASM‑compatible image policy (root image + cloning semantics)
-- Real Lisp toplevel image + `start_lisp` wiring once codegen exists
+- Real Lisp toplevel image; current `start_lisp` entry uses a stub toplevel
 
 ### Phase 7 — Concurrency model
 **Goal:** Runner‑based parallelism where available.
@@ -67,4 +67,4 @@ separate from the detailed checklists in `porting-status.md`.
 ## Near‑term focus (next 1–2 phases)
 
 1) Tighten spill/restore discipline around all subprim calls (closure allocation paths still partial).  
-2) Wire `start_lisp` to real toplevel + loader in the browser.
+2) Wire a real toplevel image to the loader/runner in the browser.

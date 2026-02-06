@@ -139,10 +139,11 @@ Independently of the I/O completion strategy, the kernel MAY support multiple ru
 
 ## Open questions
 
-* Yield/resume API for Stage 2: bring‑up exposes both `wasm_ccl_start` (boot +
-  `start_lisp`) and an explicit stepping interface (`wasm_ccl_step`; see
-  `doc/wasm/yield-resume.md:1`). Open question: how should these integrate with
-  the long‑term toplevel and scheduling model?
+* Yield/resume API for Stage 2: bring‑up exposes `wasm_ccl_start` (boot +
+  `start_lisp`), `wasm_ccl_start_lisp` (post‑load entry), and an explicit
+  stepping interface (`wasm_ccl_step`; see `doc/wasm/yield-resume.md:1`).
+  Open question: how should these integrate with the long‑term toplevel and
+  scheduling model?
 * How should capability discovery be represented beyond an initial `CAPS` opcode (static config vs. dynamic query)?
 * What is the lifecycle policy for cached images and modules?
 * What is the stop-the-world / safepoint protocol between runners for GC and interrupts?

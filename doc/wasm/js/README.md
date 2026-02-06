@@ -29,7 +29,7 @@ is extracted from `lisp-kernel/arm-spentry.s` and checked in as:
 * registering images
 * creating worlds and runners
 * loading an image into a runner
-* starting the kernel (`runner.start`), entering Lisp after `loadImage` (`runner.startLisp`), or stepping (`runner.step`)
+* starting the kernel (`runner.start`, which uses `wasm_ccl_start_lisp` if an image was loaded), entering Lisp after `loadImage` (`runner.startLisp`), or stepping (`runner.step`)
 * feeding stdin / closing stdin
 * querying runner objects via `getRunner(runnerId)`
 

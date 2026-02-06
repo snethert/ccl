@@ -46,11 +46,13 @@
 - **Named read‑only stream open/stat:** ✅  
   `lisp_open/lisp_stat` via `NAMED_RO` stream kind.
 - **Real Lisp toplevel entry:** ⚠️  
-  `start_lisp` can run a stub toplevel loop with the minimal boot image; real
-  Lisp REPL still pending.
+  `start_lisp` can run a stub toplevel loop with the minimal boot image; a
+  post‑load entry (`wasm_ccl_start_lisp`) now exists, but the real Lisp REPL
+  image is still pending.
 - **Image boot path:** ⚠️  
   `wasm_ccl_load_image` + minimal image generator load successfully (boot-only);
-  real root image still pending.
+  `wasm_ccl_start_lisp` enters the stub toplevel after load; real root image
+  still pending.
 
 ## JS microkernel / host
 

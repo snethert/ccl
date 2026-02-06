@@ -244,10 +244,16 @@ export function createKernel({
       });
 
     runner.start = () => {
+      installBootEntry(kernel, runtime.subprimsTable);
+      if (runner.imageLoaded) {
+        if (typeof kernel.instance.exports.wasm_ccl_start_lisp !== "function") {
+          throw new Error("runner.start: kernel missing export wasm_ccl_start_lisp");
+        }
+        return kernel.instance.exports.wasm_ccl_start_lisp();
+      }
       if (typeof kernel.instance.exports.wasm_ccl_start !== "function") {
         throw new Error("runner.start: kernel missing export wasm_ccl_start");
       }
-      installBootEntry(kernel, runtime.subprimsTable);
       return kernel.instance.exports.wasm_ccl_start();
     };
 
