@@ -37,4 +37,5 @@ test("headless browser harness runs deterministically", async (t) => {
   assert.equal(result.webglOk, true);
   assert.equal(result.webglBackendHitOk, true);
   assert.equal(result.webglMeasureOk, true);
+  assert.equal(result.persistenceOk, true);
 });

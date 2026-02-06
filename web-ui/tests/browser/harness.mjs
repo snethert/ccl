@@ -8,6 +8,7 @@ import { renderWindow } from "../../src/widgets.mjs";
 import { createDomBackend, createDomRoot } from "../../backends/dom/renderer.mjs";
 import { createCanvasBackend } from "../../backends/canvas/renderer.mjs";
 import { createWebGLBackend } from "../../backends/webgl/renderer.mjs";
+import { createIndexedDBStore, createPersistenceManager, createSnapshot } from "../../src/index.mjs";
 
 async function loadJson(relPath) {
   const response = await fetch(relPath);
@@ -371,6 +372,23 @@ async function run() {
   const webglMeasureSecond = webglBackend.measureText("Hello", { font: "12px monospace" });
   const webglMeasureOk = webglMeasureFirst.cacheHit === false && webglMeasureSecond.cacheHit === true;
 
+  const persistStore = await createIndexedDBStore({ name: "web-ui-test-persistence", version: 1 });
+  const persistManager = createPersistenceManager({
+    store: persistStore,
+    workspaceId: "workspace-0",
+    flushDelay: 0,
+    now: () => 0
+  });
+  persistManager.schedulePersist(widgetState);
+  await persistManager.flushNow();
+  const restoredState = await persistManager.restoreState();
+  const persistedBaseline = createSnapshot(widgetState, { now: () => 0 });
+  const persistedRoundTrip = createSnapshot(restoredState ?? widgetState, { now: () => 0 });
+  const persistenceOk =
+    stableStringify(persistedBaseline.state) === stableStringify(persistedRoundTrip.state);
+  await persistStore.clearSnapshot("workspace-0");
+  persistManager.close();
+
   const ok =
     snapshotMatch &&
     domOk &&
@@ -394,7 +412,8 @@ async function run() {
     canvasMeasureOk &&
     webglOk &&
     webglBackendHitOk &&
-    webglMeasureOk;
+    webglMeasureOk &&
+    persistenceOk;
   const payload = {
     ok,
     snapshotMatch,
@@ -419,7 +438,8 @@ async function run() {
     canvasMeasureOk,
     webglOk,
     webglBackendHitOk,
-    webglMeasureOk
+    webglMeasureOk,
+    persistenceOk
   };
 
   if (window.__WEB_UI_TEST_DONE__) {

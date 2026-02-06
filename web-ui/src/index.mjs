@@ -54,3 +54,16 @@ export { buildScene, hitTestScene, normalizeSceneNode, flattenScene } from "../b
 export { createCanvasBackend, createCanvasRoot } from "../backends/canvas/renderer.mjs";
 export { createMeasureCache } from "../backends/canvas/measure.mjs";
 export { createWebGLBackend, createWebGLRoot } from "../backends/webgl/renderer.mjs";
+export {
+  createPersistenceManager
+} from "./persistence/manager.mjs";
+export {
+  createSnapshot,
+  restoreStateFromSnapshot,
+  sanitizeState
+} from "./persistence/serialize.mjs";
+export {
+  createMemoryStore,
+  createIndexedDBStore
+} from "./persistence/storage.mjs";
+export { SCHEMA_VERSION as PERSISTENCE_SCHEMA_VERSION } from "./persistence/schema.mjs";
