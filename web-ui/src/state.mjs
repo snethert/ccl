@@ -654,10 +654,38 @@ export function recordEvent(state, entry) {
   return { ...state, eventLog };
 }
 
-export function enqueueUiSignal(state, signal) {
+function buildUiEvent(options, type, payload) {
+  if (!options?.recordEvent) return null;
+  if (!Number.isInteger(options.seq)) {
+    throw new Error("UI event requires integer seq when recording");
+  }
+  const entry = {
+    seq: options.seq,
+    type,
+    payload: payload ?? {}
+  };
+  if (Number.isInteger(options.ts)) {
+    entry.ts = options.ts;
+  }
+  if (typeof options.target === "string") {
+    entry.target = options.target;
+  }
+  return entry;
+}
+
+export function enqueueUiSignal(state, signal, options = {}) {
   const ui = normalizeUiState(state.ui ?? null);
-  const nextQueue = [...ui.queue, normalizeUiSignal(signal, ui.queue.length)];
-  return { ...state, ui: { ...ui, queue: nextQueue } };
+  const normalized = normalizeUiSignal(signal, ui.queue.length);
+  const nextQueue = [...ui.queue, normalized];
+  let nextState = { ...state, ui: { ...ui, queue: nextQueue } };
+  const event = buildUiEvent(options, "ui:signal.enqueue", {
+    signal: normalized,
+    queueLength: nextQueue.length
+  });
+  if (event) {
+    nextState = recordEvent(nextState, event);
+  }
+  return nextState;
 }
 
 export function beginUiTurn(state, options = {}) {
@@ -677,7 +705,7 @@ export function beginUiTurn(state, options = {}) {
     yielded: false,
     yieldReason: null
   };
-  return {
+  let nextState = {
     ...state,
     ui: {
       ...ui,
@@ -686,9 +714,19 @@ export function beginUiTurn(state, options = {}) {
       nextTurnId: ui.nextTurnId + 1
     }
   };
+  const event = buildUiEvent(options, "ui:turn.begin", {
+    turnId,
+    commitPolicy: turn.commitPolicy,
+    signalCount: signals.length,
+    drainedSignals: drainSignals
+  });
+  if (event) {
+    nextState = recordEvent(nextState, event);
+  }
+  return nextState;
 }
 
-export function advanceUiTurn(state, phase) {
+export function advanceUiTurn(state, phase, options = {}) {
   const ui = normalizeUiState(state.ui ?? null);
   if (!ui.turn) {
     throw new Error("UI turn not active");
@@ -704,11 +742,19 @@ export function advanceUiTurn(state, phase) {
       throw new Error("UI turn phase cannot move backwards");
     }
   }
-  return { ...state, ui: { ...ui, turn: { ...ui.turn, phase: nextPhase } } };
+  let nextState = { ...state, ui: { ...ui, turn: { ...ui.turn, phase: nextPhase } } };
+  const event = buildUiEvent(options, "ui:turn.phase", {
+    turnId: ui.turn.id,
+    phase: nextPhase
+  });
+  if (event) {
+    nextState = recordEvent(nextState, event);
+  }
+  return nextState;
 }
 
-export function yieldUiTurn(state, reason = null) {
-  let next = advanceUiTurn(state, "yielded");
+export function yieldUiTurn(state, reason = null, options = {}) {
+  let next = advanceUiTurn(state, "yielded", { recordEvent: false });
   const ui = normalizeUiState(next.ui ?? null);
   if (!ui.turn) return next;
   next = {
@@ -718,16 +764,26 @@ export function yieldUiTurn(state, reason = null) {
       turn: { ...ui.turn, yielded: true, yieldReason: reason }
     }
   };
+  const event = buildUiEvent(options, "ui:turn.yield", {
+    turnId: ui.turn.id,
+    reason
+  });
+  if (event) {
+    next = recordEvent(next, event);
+  }
   return next;
 }
 
-export function endUiTurn(state) {
+export function endUiTurn(state, options = {}) {
   const ui = normalizeUiState(state.ui ?? null);
   if (!ui.turn) return state;
+  const turnId = ui.turn.id;
+  const turnPhase = ui.turn.phase;
+  const turnYielded = ui.turn.yielded;
   const historyEntry = {
-    id: ui.turn.id,
-    phase: ui.turn.phase,
-    yielded: ui.turn.yielded,
+    id: turnId,
+    phase: turnPhase,
+    yielded: turnYielded,
     commitPolicy: ui.turn.commitPolicy
   };
   const history = [...ui.history, historyEntry];
@@ -735,7 +791,16 @@ export function endUiTurn(state) {
     history.length > UI_TURN_HISTORY_LIMIT
       ? history.slice(history.length - UI_TURN_HISTORY_LIMIT)
       : history;
-  return { ...state, ui: { ...ui, turn: null, history: trimmed } };
+  let nextState = { ...state, ui: { ...ui, turn: null, history: trimmed } };
+  const event = buildUiEvent(options, "ui:turn.end", {
+    turnId,
+    phase: turnPhase,
+    yielded: turnYielded
+  });
+  if (event) {
+    nextState = recordEvent(nextState, event);
+  }
+  return nextState;
 }
 
 export function setSelection(state, selection) {

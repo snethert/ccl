@@ -269,6 +269,7 @@ Exit criteria:
 
 ### Phase 4 Progress
 - Added event log ring buffer and deterministic recording in replay harness.
+- Added UI turn event logging and replay handlers for deterministic turn traces.
 - Added inspector and debugger window shells with coalesced error handling.
 - Added reason object tracking for focus and disablement.
 - Added explicit UI turn model with signal queue, yield handling, and inspector visibility.

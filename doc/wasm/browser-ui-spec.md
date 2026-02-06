@@ -115,7 +115,7 @@ Acceptance checks:
 - The UI MUST expose busy indicators, disabled reasons, and background job status.
 - A standard command MUST open a System State inspector window.
 - All "why" questions have a first-class object: FocusReason, DisableReason, WindowCause, JobCause.
-- A deterministic event log (ring buffer) records command dispatch, focus transitions, and backend signals for replay.
+- A deterministic event log (ring buffer) records command dispatch, focus transitions, backend signals, and UI turn transitions for replay.
 
 Acceptance checks:
 - Users can answer why something is disabled, what is running, and why a window exists without leaving the environment.

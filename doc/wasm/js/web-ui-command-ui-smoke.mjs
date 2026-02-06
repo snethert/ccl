@@ -118,17 +118,27 @@ const blockedAfterRevoke = executeCommand(registry, "dom.escape", { state });
 assert.equal(blockedAfterRevoke.ok, false);
 assert.equal(blockedAfterRevoke.reason, "Missing capability: dom.escape");
 
-state = enqueueUiSignal(state, { type: "input:pointer", payload: { x: 5, y: 10 } });
-state = enqueueUiSignal(state, { type: "input:key", payload: { key: "K" } });
-state = beginUiTurn(state, { commitPolicy: "rAF" });
+let uiSeq = 1;
+state = enqueueUiSignal(state, { type: "input:pointer", payload: { x: 5, y: 10 } }, { recordEvent: true, seq: uiSeq++ });
+state = enqueueUiSignal(state, { type: "input:key", payload: { key: "K" } }, { recordEvent: true, seq: uiSeq++ });
+state = beginUiTurn(state, { commitPolicy: "rAF", recordEvent: true, seq: uiSeq++ });
 assert.equal(state.ui.turn.phase, "signals");
 assert.equal(state.ui.turn.signals.length, 2);
-state = advanceUiTurn(state, "commands");
+state = advanceUiTurn(state, "commands", { recordEvent: true, seq: uiSeq++ });
 assert.equal(state.ui.turn.phase, "commands");
-state = yieldUiTurn(state, "awaiting-input");
+state = yieldUiTurn(state, "awaiting-input", { recordEvent: true, seq: uiSeq++ });
 assert.equal(state.ui.turn.phase, "yielded");
-state = endUiTurn(state);
+state = endUiTurn(state, { recordEvent: true, seq: uiSeq++ });
 assert.equal(state.ui.turn, null);
+const uiEventTypes = state.eventLog.entries.map((entry) => entry.type);
+assert.deepEqual(uiEventTypes, [
+  "ui:signal.enqueue",
+  "ui:signal.enqueue",
+  "ui:turn.begin",
+  "ui:turn.phase",
+  "ui:turn.yield",
+  "ui:turn.end"
+]);
 
 const openedPalette = executeCommand(registry, COMMAND_PALETTE_OPEN_COMMAND, {
   state,

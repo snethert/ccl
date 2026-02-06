@@ -1,7 +1,17 @@
 import { serializeState } from "./snapshot.mjs";
 import { validateEvents } from "./event-log.mjs";
 import { setFocus } from "../src/focus.mjs";
-import { createState, setLayout, recordEvent, setCommandState } from "../src/state.mjs";
+import {
+  createState,
+  setLayout,
+  recordEvent,
+  setCommandState,
+  enqueueUiSignal,
+  beginUiTurn,
+  advanceUiTurn,
+  yieldUiTurn,
+  endUiTurn
+} from "../src/state.mjs";
 import { executeCommand } from "../src/commands.mjs";
 import { makeContext } from "../src/context.mjs";
 
@@ -47,7 +57,16 @@ export function defaultHandlers(registry = null) {
     },
     "command:enable": (state, payload) => setCommandState(state, payload.id, true, null),
     "command:disable": (state, payload) => setCommandState(state, payload.id, false, payload.reason || ""),
-    "layout:set": (state, payload) => setLayout(state, payload.layout)
+    "layout:set": (state, payload) => setLayout(state, payload.layout),
+    "ui:signal.enqueue": (state, payload) => enqueueUiSignal(state, payload.signal ?? payload),
+    "ui:turn.begin": (state, payload) =>
+      beginUiTurn(state, {
+        commitPolicy: payload.commitPolicy ?? null,
+        drainSignals: payload.drainSignals
+      }),
+    "ui:turn.phase": (state, payload) => advanceUiTurn(state, payload.phase),
+    "ui:turn.yield": (state, payload) => yieldUiTurn(state, payload.reason ?? null),
+    "ui:turn.end": (state) => endUiTurn(state)
   };
 }
 
