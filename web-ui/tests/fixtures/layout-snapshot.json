@@ -7,6 +7,12 @@
       "log": [],
       "safeMode": false
     },
+    "capabilityPolicy": {
+      "defaultDecision": "ask",
+      "rules": []
+    },
+    "capabilityRequestSeq": 1,
+    "capabilityRequests": [],
     "domEscapes": [],
     "disableReasons": {},
     "errors": [],

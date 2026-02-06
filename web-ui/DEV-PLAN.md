@@ -283,6 +283,7 @@ Exit criteria:
 - Added state graph unit tests for task/window/widget wiring.
 - Added capability gating state with safe mode commands and inspector coverage.
 - Added DOM escape command logging with inspector visibility (capability-gated).
+- Added capability mediation request queue, policy evaluation, mediation panel UI, and tests.
 
 ### Phase 5 Progress
 - Added canvas scene normalization, draw traversal, and hit-testing helpers.

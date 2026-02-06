@@ -16,6 +16,8 @@ const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layo
 const UI_TURN_PHASES = ["signals", "commands", "render", "backend", "idle"];
 const UI_TURN_HISTORY_LIMIT = 8;
 const DOM_ESCAPE_HISTORY_LIMIT = 32;
+const CAPABILITY_POLICY_DECISIONS = ["ask", "grant", "deny"];
+const CAPABILITY_REQUEST_STATUSES = ["pending", "granted", "denied"];
 export const COMMAND_PALETTE_FILTER_COMMAND = "ui.command-palette.filter";
 export const COMMAND_PALETTE_EXECUTE_COMMAND = "ui.command-palette.execute";
 export const COMMAND_PALETTE_SELECT_NEXT_COMMAND = "ui.command-palette.select-next";
@@ -37,6 +39,11 @@ export const LAYOUT_SET_ACTIVE_TAB_COMMAND = "ui.layout.set-active-tab";
 export const CAPABILITY_REQUEST_COMMAND = "ui.capability.request";
 export const CAPABILITY_GRANT_COMMAND = "ui.capability.grant";
 export const CAPABILITY_REVOKE_COMMAND = "ui.capability.revoke";
+export const CAPABILITY_OPEN_PANEL_COMMAND = "ui.capability.open-panel";
+export const CAPABILITY_SELECT_COMMAND = "ui.capability.select";
+export const CAPABILITY_APPROVE_COMMAND = "ui.capability.approve";
+export const CAPABILITY_DENY_COMMAND = "ui.capability.deny";
+export const CAPABILITY_AUTO_RUN_COMMAND = "ui.capability.auto-run";
 export const SAFE_MODE_ENABLE_COMMAND = "ui.safe-mode.enable";
 export const SAFE_MODE_DISABLE_COMMAND = "ui.safe-mode.disable";
 export const DOM_ESCAPE_COMMAND = "ui.dom.escape";
@@ -236,6 +243,87 @@ function normalizeCapabilityEntry(entry, index) {
   };
 }
 
+function normalizeCapabilityRequest(entry, index) {
+  if (!entry || typeof entry !== "object") {
+    return {
+      id: `capability-request-${index + 1}`,
+      capability: null,
+      reason: null,
+      status: "pending",
+      decisionReason: null,
+      decidedBy: null,
+      taskId: null,
+      windowId: null,
+      commandId: null
+    };
+  }
+  const status = CAPABILITY_REQUEST_STATUSES.includes(entry.status) ? entry.status : "pending";
+  return {
+    id: entry.id ?? `capability-request-${index + 1}`,
+    capability: entry.capability ?? null,
+    reason: entry.reason ?? null,
+    status,
+    decisionReason: entry.decisionReason ?? null,
+    decidedBy: entry.decidedBy ?? null,
+    taskId: entry.taskId ?? null,
+    windowId: entry.windowId ?? null,
+    commandId: entry.commandId ?? null
+  };
+}
+
+function normalizeCapabilityRequests(requests) {
+  if (!Array.isArray(requests)) return [];
+  return requests.map((entry, index) => normalizeCapabilityRequest(entry, index));
+}
+
+function normalizeCapabilityPolicyRule(rule, index) {
+  if (!rule || typeof rule !== "object") {
+    return {
+      id: `capability-rule-${index + 1}`,
+      capability: null,
+      decision: "ask",
+      reason: null
+    };
+  }
+  const decision = CAPABILITY_POLICY_DECISIONS.includes(rule.decision) ? rule.decision : "ask";
+  const capability = typeof rule.capability === "string" ? rule.capability : null;
+  return {
+    id: rule.id ?? `capability-rule-${index + 1}`,
+    capability,
+    decision,
+    reason: rule.reason ?? null
+  };
+}
+
+function normalizeCapabilityPolicy(policy) {
+  if (!policy || typeof policy !== "object") {
+    return { defaultDecision: "ask", rules: [] };
+  }
+  const defaultDecision = CAPABILITY_POLICY_DECISIONS.includes(policy.defaultDecision)
+    ? policy.defaultDecision
+    : "ask";
+  const rules = Array.isArray(policy.rules) ? policy.rules.map(normalizeCapabilityPolicyRule) : [];
+  return {
+    defaultDecision,
+    rules
+  };
+}
+
+function normalizeCapabilityRequestSeq(seq, requests) {
+  let maxId = 0;
+  for (const request of requests ?? []) {
+    if (typeof request?.id !== "string") continue;
+    const match = request.id.match(/^capability-request-(\d+)$/);
+    if (!match) continue;
+    const value = Number.parseInt(match[1], 10);
+    if (Number.isFinite(value) && value > maxId) {
+      maxId = value;
+    }
+  }
+  const candidate = Number.isInteger(seq) && seq > 0 ? seq : 0;
+  return Math.max(candidate, maxId + 1);
+}
+
 function normalizeCapabilities(capabilities) {
   const granted = Array.isArray(capabilities?.granted)
     ? [...new Set(capabilities.granted.filter((cap) => typeof cap === "string"))].sort()
@@ -256,6 +344,24 @@ function appendCapabilityLog(capabilities, entry) {
   return { ...capabilities, log: [...log, normalizedEntry] };
 }
 
+function allocateCapabilityRequestId(state) {
+  const seq = normalizeCapabilityRequestSeq(
+    state.capabilityRequestSeq ?? null,
+    normalizeCapabilityRequests(state.capabilityRequests ?? null)
+  );
+  return { id: `capability-request-${seq}`, nextSeq: seq + 1 };
+}
+
+function resolveCapabilityPolicyDecision(policy, capability) {
+  const normalizedPolicy = normalizeCapabilityPolicy(policy ?? null);
+  for (const rule of normalizedPolicy.rules) {
+    if (!rule.capability) continue;
+    if (rule.capability !== "*" && rule.capability !== capability) continue;
+    return { decision: rule.decision, reason: rule.reason ?? null };
+  }
+  return { decision: normalizedPolicy.defaultDecision, reason: null };
+}
+
 export function createWorkspace({ id, title, taskIds, activeTaskId, metadata } = {}) {
   return {
     id,
@@ -268,6 +374,9 @@ export function createWorkspace({ id, title, taskIds, activeTaskId, metadata } =
 
 export function createState(options = {}) {
   const idCounters = ensureCounters(options.idCounters);
+  const capabilityRequests = normalizeCapabilityRequests(options.capabilityRequests ?? null);
+  const capabilityPolicy = normalizeCapabilityPolicy(options.capabilityPolicy ?? null);
+  const capabilityRequestSeq = normalizeCapabilityRequestSeq(options.capabilityRequestSeq ?? null, capabilityRequests);
   let state = {
     ...options,
     workspace: options.workspace ?? null,
@@ -278,6 +387,9 @@ export function createState(options = {}) {
     domEscapes: normalizeDomEscapes(options.domEscapes ?? null),
     ui: normalizeUiState(options.ui ?? null),
     capabilities: normalizeCapabilities(options.capabilities ?? null),
+    capabilityRequests,
+    capabilityPolicy,
+    capabilityRequestSeq,
     focus: normalizeFocusTarget(options.focus ?? null),
     focusHistory: normalizeFocusHistory(options.focusHistory ?? []),
     selection: normalizeSelection(options.selection ?? null),
@@ -622,6 +734,22 @@ export function addPresentation(state, presentation) {
 export function requestCapability(state, capability, options = {}) {
   if (!capability) return state;
   const capabilities = normalizeCapabilities(state.capabilities ?? null);
+  const requests = normalizeCapabilityRequests(state.capabilityRequests ?? null);
+  const allocation = allocateCapabilityRequestId(state);
+  const request = normalizeCapabilityRequest(
+    {
+      id: allocation.id,
+      capability,
+      reason: options.reason ?? null,
+      status: "pending",
+      decisionReason: null,
+      decidedBy: null,
+      taskId: options.taskId ?? null,
+      windowId: options.windowId ?? null,
+      commandId: options.commandId ?? null
+    },
+    requests.length
+  );
   const nextCaps = appendCapabilityLog(capabilities, {
     action: "request",
     capability,
@@ -630,7 +758,12 @@ export function requestCapability(state, capability, options = {}) {
     windowId: options.windowId ?? null,
     commandId: options.commandId ?? null
   });
-  return { ...state, capabilities: nextCaps };
+  return {
+    ...state,
+    capabilities: nextCaps,
+    capabilityRequests: [...requests, request],
+    capabilityRequestSeq: allocation.nextSeq
+  };
 }
 
 export function grantCapability(state, capability, options = {}) {
@@ -690,6 +823,86 @@ export function hasCapability(state, capability) {
   const capabilities = state.capabilities ?? {};
   if (capabilities.safeMode) return false;
   return Array.isArray(capabilities.granted) && capabilities.granted.includes(capability);
+}
+
+export function evaluateCapabilityRequest(state, request, policyOverride = null) {
+  if (!request || typeof request !== "object") {
+    return { decision: "ask", reason: "Missing request" };
+  }
+  if (!request.capability) {
+    return { decision: "ask", reason: "Missing capability" };
+  }
+  const capabilities = normalizeCapabilities(state.capabilities ?? null);
+  if (capabilities.safeMode) {
+    return { decision: "deny", reason: "Safe mode" };
+  }
+  if (capabilities.granted.includes(request.capability)) {
+    return { decision: "grant", reason: "Already granted" };
+  }
+  return resolveCapabilityPolicyDecision(policyOverride ?? state.capabilityPolicy ?? null, request.capability ?? null);
+}
+
+export function applyCapabilityDecision(state, requestId, decision, options = {}) {
+  if (!requestId) return state;
+  const requests = normalizeCapabilityRequests(state.capabilityRequests ?? null);
+  const index = requests.findIndex((request) => request.id === requestId);
+  if (index === -1) return state;
+  const normalizedDecision = CAPABILITY_POLICY_DECISIONS.includes(decision) ? decision : "ask";
+  if (normalizedDecision === "ask") return state;
+  const request = requests[index];
+  if (request.status !== "pending" && options.force !== true) {
+    return state;
+  }
+
+  const nextStatus = normalizedDecision === "grant" ? "granted" : "denied";
+  const updatedRequest = {
+    ...request,
+    status: nextStatus,
+    decisionReason: options.reason ?? request.decisionReason ?? null,
+    decidedBy: options.decidedBy ?? request.decidedBy ?? null
+  };
+  const nextRequests = [...requests];
+  nextRequests[index] = updatedRequest;
+
+  let nextState = { ...state, capabilityRequests: nextRequests };
+  if (normalizedDecision === "grant") {
+    nextState = grantCapability(nextState, request.capability, {
+      reason: options.reason ?? null,
+      taskId: request.taskId ?? null,
+      windowId: request.windowId ?? null,
+      commandId: options.commandId ?? null
+    });
+  } else {
+    const capabilities = normalizeCapabilities(nextState.capabilities ?? null);
+    nextState = {
+      ...nextState,
+      capabilities: appendCapabilityLog(capabilities, {
+        action: "deny",
+        capability: request.capability ?? null,
+        reason: options.reason ?? null,
+        taskId: request.taskId ?? null,
+        windowId: request.windowId ?? null,
+        commandId: options.commandId ?? null
+      })
+    };
+  }
+  return nextState;
+}
+
+export function autoRunCapabilityPolicy(state, options = {}) {
+  const requests = normalizeCapabilityRequests(state.capabilityRequests ?? null);
+  let nextState = state;
+  for (const request of requests) {
+    if (request.status !== "pending") continue;
+    const evaluation = evaluateCapabilityRequest(nextState, request, options.policy ?? null);
+    if (evaluation.decision === "ask") continue;
+    nextState = applyCapabilityDecision(nextState, request.id, evaluation.decision, {
+      reason: evaluation.reason ?? null,
+      decidedBy: options.decidedBy ?? "policy",
+      commandId: options.commandId ?? null
+    });
+  }
+  return nextState;
 }
 
 export function setLayout(state, layout) {
@@ -1341,12 +1554,40 @@ function summarizeCapabilities(state) {
   return items;
 }
 
+function summarizeCapabilityRequests(state) {
+  const requests = normalizeCapabilityRequests(state.capabilityRequests ?? null);
+  const counts = {
+    pending: requests.filter((request) => request.status === "pending").length,
+    granted: requests.filter((request) => request.status === "granted").length,
+    denied: requests.filter((request) => request.status === "denied").length
+  };
+  const items = [];
+  if (requests.length === 0) {
+    items.push({ id: "cap-req-none", label: "No capability requests" });
+    return items;
+  }
+  items.push({
+    id: "cap-req-counts",
+    label: `Requests: ${counts.pending} pending, ${counts.granted} granted, ${counts.denied} denied`
+  });
+  for (const request of requests) {
+    const capability = request.capability ?? "unknown";
+    const reason = request.reason ? ` (${request.reason})` : "";
+    items.push({
+      id: `cap-req-${request.id}`,
+      label: `${capability}: ${request.status}${reason}`
+    });
+  }
+  return items;
+}
+
 function buildInspectorSections(state) {
   return {
     tasks: summarizeTasks(state),
     focus: summarizeFocus(state),
     commands: summarizeCommands(state),
     capabilities: summarizeCapabilities(state),
+    capabilityRequests: summarizeCapabilityRequests(state),
     domEscapes: summarizeDomEscapes(state),
     turns: summarizeUiTurn(state),
     presentations: summarizePresentations(state),
@@ -1397,6 +1638,7 @@ export function openInspectorWindow(state, options = {}) {
     ["focus", "Focus"],
     ["commands", "Commands"],
     ["capabilities", "Capabilities"],
+    ["capabilityRequests", "Capability Requests"],
     ["domEscapes", "DOM Escapes"],
     ["turns", "UI Turn"],
     ["presentations", "Presentations"],
@@ -1451,6 +1693,219 @@ export function refreshInspectorWindow(state, windowId) {
     }));
   }
   return nextState;
+}
+
+function buildCapabilityMediationStatus(state) {
+  const capabilities = normalizeCapabilities(state.capabilities ?? null);
+  const policy = normalizeCapabilityPolicy(state.capabilityPolicy ?? null);
+  const safeMode = capabilities.safeMode ? "enabled" : "disabled";
+  return `Safe mode: ${safeMode} · Default policy: ${policy.defaultDecision}`;
+}
+
+function buildCapabilityRequestItems(requests, options = {}) {
+  const pendingOnly = options.pendingOnly !== false;
+  const visible = pendingOnly ? requests.filter((request) => request.status === "pending") : requests;
+  if (visible.length === 0) {
+    return [{ id: "capability-none", label: "No pending capability requests", disabled: true, placeholder: true }];
+  }
+  return visible.map((request) => {
+    const capability = request.capability ?? "unknown";
+    const reason = request.reason ? ` (${request.reason})` : "";
+    return {
+      id: request.id,
+      label: `${capability}${reason}`,
+      requestId: request.id,
+      capability,
+      status: request.status
+    };
+  });
+}
+
+export function openCapabilityMediationWindow(state, options = {}) {
+  const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
+  if (!taskId) {
+    throw new Error("Capability mediation requires a task");
+  }
+  const existing = findWindowByRole(state, "capability-mediation", taskId);
+  if (existing) {
+    return refreshCapabilityMediationWindow(state, existing.id, options);
+  }
+
+  const allocWindow = allocateId(state.idCounters, "window", "capability-mediation");
+  let nextState = {
+    ...state,
+    idCounters: allocWindow.counters
+  };
+  nextState = addWindow(nextState, {
+    id: allocWindow.id,
+    taskId,
+    kind: "capability-mediation",
+    title: "Capability Mediation",
+    metadata: { role: "capability-mediation" }
+  });
+
+  const requests = normalizeCapabilityRequests(nextState.capabilityRequests ?? null);
+  const items = buildCapabilityRequestItems(requests);
+  const selectedIndex = items.findIndex((item) => item.id === options.selectedRequestId);
+  const hasSelectable = items.some((item) => !item.placeholder);
+  let resolvedIndex = selectedIndex;
+  if (!hasSelectable) {
+    resolvedIndex = -1;
+  } else if (resolvedIndex < 0) {
+    resolvedIndex = 0;
+  }
+  const selectedItems = resolvedIndex >= 0 ? applySelectionToItems(items, resolvedIndex) : items;
+  const selectedRequestId = resolvedIndex >= 0 ? selectedItems[resolvedIndex]?.id ?? null : null;
+
+  let ids = {};
+  let rootAlloc = allocateWidgetId(nextState, "capability-mediation-root");
+  nextState = addWidget(rootAlloc.state, {
+    id: rootAlloc.id,
+    kind: "container",
+    windowId: allocWindow.id,
+    props: { className: "ui-capability-mediation-root" }
+  });
+  ids.rootId = rootAlloc.id;
+
+  let labelAlloc = allocateWidgetId(nextState, "capability-mediation-label");
+  nextState = addWidget(labelAlloc.state, {
+    id: labelAlloc.id,
+    kind: "label",
+    parentId: ids.rootId,
+    props: { text: "Capability Requests" }
+  });
+  ids.labelId = labelAlloc.id;
+
+  let statusAlloc = allocateWidgetId(nextState, "capability-mediation-status");
+  nextState = addWidget(statusAlloc.state, {
+    id: statusAlloc.id,
+    kind: "label",
+    parentId: ids.rootId,
+    props: { text: buildCapabilityMediationStatus(nextState) }
+  });
+  ids.statusId = statusAlloc.id;
+
+  let listAlloc = allocateWidgetId(nextState, "capability-mediation-list");
+  nextState = addWidget(listAlloc.state, {
+    id: listAlloc.id,
+    kind: "list",
+    parentId: ids.rootId,
+    props: { items: selectedItems, itemCommand: CAPABILITY_SELECT_COMMAND }
+  });
+  ids.listId = listAlloc.id;
+
+  let approveAlloc = allocateWidgetId(nextState, "capability-mediation-approve");
+  nextState = addWidget(approveAlloc.state, {
+    id: approveAlloc.id,
+    kind: "button",
+    parentId: ids.rootId,
+    props: { text: "Approve", command: CAPABILITY_APPROVE_COMMAND }
+  });
+  ids.approveId = approveAlloc.id;
+
+  let denyAlloc = allocateWidgetId(nextState, "capability-mediation-deny");
+  nextState = addWidget(denyAlloc.state, {
+    id: denyAlloc.id,
+    kind: "button",
+    parentId: ids.rootId,
+    props: { text: "Deny", command: CAPABILITY_DENY_COMMAND }
+  });
+  ids.denyId = denyAlloc.id;
+
+  let autoAlloc = allocateWidgetId(nextState, "capability-mediation-auto");
+  nextState = addWidget(autoAlloc.state, {
+    id: autoAlloc.id,
+    kind: "button",
+    parentId: ids.rootId,
+    props: { text: "Auto-run Policy", command: CAPABILITY_AUTO_RUN_COMMAND }
+  });
+  ids.autoId = autoAlloc.id;
+
+  nextState = updateWindow(nextState, allocWindow.id, (window) => ({
+    ...window,
+    metadata: {
+      ...(window.metadata ?? {}),
+      role: "capability-mediation",
+      widgets: ids,
+      mediation: { selectedRequestId }
+    }
+  }));
+
+  return nextState;
+}
+
+export function refreshCapabilityMediationWindow(state, windowId, options = {}) {
+  const window = state.windows?.[windowId];
+  if (!window || window.metadata?.role !== "capability-mediation") {
+    throw new Error("Window is not a capability mediation panel");
+  }
+  const widgets = window.metadata?.widgets ?? {};
+  if (!widgets.listId || !widgets.statusId) {
+    return state;
+  }
+  const requests = normalizeCapabilityRequests(state.capabilityRequests ?? null);
+  const items = buildCapabilityRequestItems(requests);
+  const selectedId = options.selectedRequestId ?? window.metadata?.mediation?.selectedRequestId ?? null;
+  let selectedIndex = items.findIndex((item) => item.id === selectedId);
+  const hasSelectable = items.some((item) => !item.placeholder);
+  if (!hasSelectable) {
+    selectedIndex = -1;
+  } else if (selectedIndex < 0) {
+    selectedIndex = 0;
+  }
+  const selectedItems = selectedIndex >= 0 ? applySelectionToItems(items, selectedIndex) : items;
+  const nextSelectedId = selectedIndex >= 0 ? selectedItems[selectedIndex]?.id ?? null : null;
+
+  let nextState = updateWidget(state, widgets.statusId, (widget) => ({
+    ...widget,
+    props: { ...(widget.props ?? {}), text: buildCapabilityMediationStatus(state) }
+  }));
+  nextState = updateWidget(nextState, widgets.listId, (widget) => ({
+    ...widget,
+    props: { ...(widget.props ?? {}), items: selectedItems }
+  }));
+  nextState = updateWindow(nextState, windowId, (nextWindow) => ({
+    ...nextWindow,
+    metadata: {
+      ...(nextWindow.metadata ?? {}),
+      mediation: { selectedRequestId: nextSelectedId }
+    }
+  }));
+  return nextState;
+}
+
+export function applyCapabilityRequestSelection(state, options = {}) {
+  const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
+  const windowId =
+    options.windowId ??
+    findWindowByRole(state, "capability-mediation", taskId)?.id ??
+    null;
+  if (!windowId) {
+    return state;
+  }
+  const requestId =
+    options.requestId ??
+    options.itemId ??
+    options.item?.requestId ??
+    options.item?.id ??
+    null;
+  return refreshCapabilityMediationWindow(state, windowId, { selectedRequestId: requestId });
+}
+
+export function resolveCapabilityRequestSelection(state, options = {}) {
+  const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
+  const windowId =
+    options.windowId ??
+    findWindowByRole(state, "capability-mediation", taskId)?.id ??
+    null;
+  if (!windowId) {
+    return { requestId: null, request: null, windowId: null };
+  }
+  const window = state.windows?.[windowId];
+  const selectedId = window?.metadata?.mediation?.selectedRequestId ?? null;
+  const requests = normalizeCapabilityRequests(state.capabilityRequests ?? null);
+  const request = requests.find((entry) => entry.id === selectedId) ?? null;
+  return { requestId: selectedId, request, windowId };
 }
 
 export function openTaskListWindow(state, options = {}) {
@@ -2075,15 +2530,37 @@ export function registerCapabilityCommands(registry, options = {}) {
   const requestId = options.requestCommandId ?? CAPABILITY_REQUEST_COMMAND;
   const grantId = options.grantCommandId ?? CAPABILITY_GRANT_COMMAND;
   const revokeId = options.revokeCommandId ?? CAPABILITY_REVOKE_COMMAND;
+  const openPanelId = options.openPanelCommandId ?? CAPABILITY_OPEN_PANEL_COMMAND;
+  const selectId = options.selectCommandId ?? CAPABILITY_SELECT_COMMAND;
+  const approveId = options.approveCommandId ?? CAPABILITY_APPROVE_COMMAND;
+  const denyId = options.denyCommandId ?? CAPABILITY_DENY_COMMAND;
+  const autoRunId = options.autoRunCommandId ?? CAPABILITY_AUTO_RUN_COMMAND;
   const safeModeEnableId = options.safeModeEnableCommandId ?? SAFE_MODE_ENABLE_COMMAND;
   const safeModeDisableId = options.safeModeDisableCommandId ?? SAFE_MODE_DISABLE_COMMAND;
 
   const resolveCapability = (ctx) => ctx.capability ?? ctx.payload?.capability ?? ctx.itemId ?? null;
+  const resolveRequestId = (ctx) =>
+    ctx.requestId ??
+    ctx.payload?.requestId ??
+    ctx.itemId ??
+    ctx.item?.requestId ??
+    ctx.item?.id ??
+    null;
 
   const ensure = (id, command) => {
     if (!registry.commands.has(id)) {
       registerCommand(registry, { ...command, id });
     }
+  };
+
+  const refreshMediationWindow = (state, ctx) => {
+    const taskId = ctx.taskId ?? state.workspace?.activeTaskId ?? null;
+    const windowId =
+      ctx.windowId ??
+      findWindowByRole(state, "capability-mediation", taskId)?.id ??
+      null;
+    if (!windowId) return state;
+    return refreshCapabilityMediationWindow(state, windowId);
   };
 
   ensure(requestId, {
@@ -2098,12 +2575,13 @@ export function registerCapabilityCommands(registry, options = {}) {
     exec: (ctx) => {
       const capability = resolveCapability(ctx);
       if (!capability) return ctx.state;
-      return requestCapability(ctx.state, capability, {
+      const nextState = requestCapability(ctx.state, capability, {
         reason: ctx.reason ?? ctx.payload?.reason ?? null,
         taskId: ctx.taskId ?? null,
         windowId: ctx.windowId ?? null,
         commandId: requestId
       });
+      return refreshMediationWindow(nextState, ctx);
     }
   });
 
@@ -2157,18 +2635,119 @@ export function registerCapabilityCommands(registry, options = {}) {
     }
   });
 
+  ensure(openPanelId, {
+    title: "Open Capability Mediation",
+    doc: "Open the capability mediation panel.",
+    exec: (ctx) =>
+      openCapabilityMediationWindow(ctx.state, {
+        taskId: ctx.taskId ?? null,
+        selectedRequestId: ctx.payload?.requestId ?? null
+      })
+  });
+
+  ensure(selectId, {
+    doc: "Select a capability request in the mediation panel.",
+    metadata: { paletteHidden: true },
+    exec: (ctx) =>
+      applyCapabilityRequestSelection(ctx.state, {
+        taskId: ctx.taskId ?? null,
+        windowId: ctx.windowId ?? null,
+        requestId: resolveRequestId(ctx),
+        itemId: ctx.itemId ?? null,
+        item: ctx.item ?? null
+      })
+  });
+
+  const resolvePendingRequest = (ctx) => {
+    const directId = resolveRequestId(ctx);
+    if (directId) {
+      const requests = normalizeCapabilityRequests(ctx.state.capabilityRequests ?? null);
+      return requests.find((request) => request.id === directId) ?? null;
+    }
+    const selection = resolveCapabilityRequestSelection(ctx.state, {
+      taskId: ctx.taskId ?? null,
+      windowId: ctx.windowId ?? null
+    });
+    return selection.request;
+  };
+
+  ensure(approveId, {
+    title: "Approve Capability Request",
+    doc: "Approve the selected capability request.",
+    enabled: (ctx) => {
+      const request = resolvePendingRequest(ctx);
+      if (!request) {
+        return { enabled: false, reason: "No capability request selected" };
+      }
+      if (request.status !== "pending") {
+        return { enabled: false, reason: "Request already decided" };
+      }
+      return { enabled: true, reason: null };
+    },
+    exec: (ctx) => {
+      const request = resolvePendingRequest(ctx);
+      if (!request) return ctx.state;
+      let nextState = applyCapabilityDecision(ctx.state, request.id, "grant", {
+        reason: ctx.reason ?? ctx.payload?.reason ?? null,
+        decidedBy: ctx.decidedBy ?? "user",
+        commandId: approveId
+      });
+      return refreshMediationWindow(nextState, ctx);
+    }
+  });
+
+  ensure(denyId, {
+    title: "Deny Capability Request",
+    doc: "Deny the selected capability request.",
+    enabled: (ctx) => {
+      const request = resolvePendingRequest(ctx);
+      if (!request) {
+        return { enabled: false, reason: "No capability request selected" };
+      }
+      if (request.status !== "pending") {
+        return { enabled: false, reason: "Request already decided" };
+      }
+      return { enabled: true, reason: null };
+    },
+    exec: (ctx) => {
+      const request = resolvePendingRequest(ctx);
+      if (!request) return ctx.state;
+      let nextState = applyCapabilityDecision(ctx.state, request.id, "deny", {
+        reason: ctx.reason ?? ctx.payload?.reason ?? null,
+        decidedBy: ctx.decidedBy ?? "user",
+        commandId: denyId
+      });
+      return refreshMediationWindow(nextState, ctx);
+    }
+  });
+
+  ensure(autoRunId, {
+    title: "Auto-run Capability Policy",
+    doc: "Apply the current capability policy to all pending requests.",
+    exec: (ctx) => {
+      let nextState = autoRunCapabilityPolicy(ctx.state, {
+        policy: ctx.payload?.policy ?? null,
+        decidedBy: ctx.decidedBy ?? "policy",
+        commandId: autoRunId
+      });
+      return refreshMediationWindow(nextState, ctx);
+    }
+  });
+
   ensure(safeModeEnableId, {
     title: "Enable Safe Mode",
     doc: "Disable all capability-granted escapes.",
     enabled: (ctx) =>
       ctx.state.capabilities?.safeMode ? { enabled: false, reason: "Safe mode already enabled" } : { enabled: true, reason: null },
-    exec: (ctx) =>
-      setSafeMode(ctx.state, true, {
+    exec: (ctx) => {
+      const nextState = setSafeMode(ctx.state, true, {
         reason: ctx.reason ?? ctx.payload?.reason ?? null,
         taskId: ctx.taskId ?? null,
         windowId: ctx.windowId ?? null,
         commandId: safeModeEnableId
-      })
+      });
+      return refreshMediationWindow(nextState, ctx);
+    }
   });
 
   ensure(safeModeDisableId, {
@@ -2176,13 +2755,15 @@ export function registerCapabilityCommands(registry, options = {}) {
     doc: "Re-enable capability-granted escapes.",
     enabled: (ctx) =>
       ctx.state.capabilities?.safeMode ? { enabled: true, reason: null } : { enabled: false, reason: "Safe mode already disabled" },
-    exec: (ctx) =>
-      setSafeMode(ctx.state, false, {
+    exec: (ctx) => {
+      const nextState = setSafeMode(ctx.state, false, {
         reason: ctx.reason ?? ctx.payload?.reason ?? null,
         taskId: ctx.taskId ?? null,
         windowId: ctx.windowId ?? null,
         commandId: safeModeDisableId
-      })
+      });
+      return refreshMediationWindow(nextState, ctx);
+    }
   });
 
   return registry;

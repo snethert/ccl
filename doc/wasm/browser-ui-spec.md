@@ -260,6 +260,10 @@ The persisted `state` MUST NOT include:
 - Apps MUST interact via toolkit APIs, not raw DOM.
 - Privileged operations MUST require explicit capabilities and policy mediation.
 - Capability mediation is a command, not an API call (so it is logged, inspectable, and restartable).
+- Capability requests MUST create a request record with status (pending/granted/denied) and request metadata (capability, reason, task/window, command).
+- Capability policy MUST be explicit data (default decision + ordered rules) and applied only via commands (e.g., auto-run).
+- The mediation UI MUST be a task-scoped window listing pending requests with approve/deny/auto-run commands and explicit selection state.
+- Safe mode overrides policy evaluation (pending requests are denied while safe mode is enabled).
 - Capability grants/revocations are reflected in inspectable state; safe mode is toggled via commands.
 - DOM escape commands MUST append to a DOM escape log (target + detail) that is visible in the inspector.
 - A "safe mode" can disable all capability-granted escapes and still bring up REPL/inspector/debugger.
@@ -350,7 +354,7 @@ Lisp code runs only within command execution boundaries and explicit yields.
 - UI exposes queue depth, active job count, and per-job progress.
 
 ### System state inspector
-- A built-in inspector lists tasks, windows, focus history, command registry, and job queues.
+- A built-in inspector lists tasks, windows, focus history, command registry, capability grants/requests, and job queues.
 - The inspector is the canonical answer to why controls are disabled or windows exist.
 
 ### Browser integration

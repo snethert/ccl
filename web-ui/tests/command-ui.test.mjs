@@ -23,16 +23,21 @@ import {
   LAYOUT_TABS_COMMAND,
   LAYOUT_DOCK_COMMAND,
   LAYOUT_SET_ACTIVE_TAB_COMMAND,
+  CAPABILITY_REQUEST_COMMAND,
+  CAPABILITY_SELECT_COMMAND,
+  CAPABILITY_APPROVE_COMMAND,
   applyCommandPaletteFilter,
   applyCommandPaletteSelection,
   resolveCommandPaletteSelection,
   openCommandPaletteWindow,
   refreshCommandPaletteWindow,
+  openCapabilityMediationWindow,
   openKeybindingWindow,
   refreshKeybindingWindow,
   registerCommandPaletteCommands,
   registerTaskCommands,
   registerLayoutCommands,
+  registerCapabilityCommands,
   registerCommandSurfaceCommands,
   bindCommandPaletteDefaults,
   bindCommandSurfaceDefaults
@@ -283,6 +288,45 @@ test("layout commands split, tabs, dock, and activate tabs", () => {
   state = docked.result;
   const dockNode = Object.values(state.layout.nodes).find((node) => node.kind === "dock");
   assert.ok(dockNode);
+});
+
+test("capability mediation window lists requests and approves selection", () => {
+  const registry = createRegistry();
+  registerCapabilityCommands(registry);
+
+  let state = createState();
+  state = addTask(state, { id: "task-1", title: "Task" });
+  const ctx = makeContext(state, { taskId: "task-1" });
+
+  let requested = executeCommand(registry, CAPABILITY_REQUEST_COMMAND, { ...ctx, capability: "dom.escape" });
+  assert.equal(requested.ok, true);
+  state = requested.result;
+
+  state = openCapabilityMediationWindow(state, { taskId: "task-1" });
+  const mediation = Object.values(state.windows).find((win) => win.metadata?.role === "capability-mediation");
+  assert.ok(mediation);
+
+  const listId = mediation.metadata.widgets.listId;
+  const items = state.widgets[listId].props.items;
+  assert.ok(items.some((item) => item.label.includes("dom.escape")));
+
+  const selectResult = executeCommand(registry, CAPABILITY_SELECT_COMMAND, {
+    state,
+    taskId: "task-1",
+    windowId: mediation.id,
+    itemId: items[0].id
+  });
+  assert.equal(selectResult.ok, true);
+  state = selectResult.result;
+
+  const approved = executeCommand(registry, CAPABILITY_APPROVE_COMMAND, {
+    state,
+    taskId: "task-1",
+    windowId: mediation.id
+  });
+  assert.equal(approved.ok, true);
+  state = approved.result;
+  assert.ok(state.capabilities.granted.includes("dom.escape"));
 });
 
 test("keybinding viewer lists bindings", () => {

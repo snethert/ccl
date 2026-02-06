@@ -23,8 +23,10 @@ import {
   LAYOUT_DOCK_COMMAND,
   LAYOUT_SET_ACTIVE_TAB_COMMAND,
   CAPABILITY_REQUEST_COMMAND,
-  CAPABILITY_GRANT_COMMAND,
   CAPABILITY_REVOKE_COMMAND,
+  CAPABILITY_OPEN_PANEL_COMMAND,
+  CAPABILITY_SELECT_COMMAND,
+  CAPABILITY_APPROVE_COMMAND,
   SAFE_MODE_ENABLE_COMMAND,
   SAFE_MODE_DISABLE_COMMAND,
   DOM_ESCAPE_COMMAND,
@@ -93,9 +95,31 @@ const requestedEscape = executeCommand(registry, CAPABILITY_REQUEST_COMMAND, { s
 assert.equal(requestedEscape.ok, true);
 state = requestedEscape.result;
 
-const grantedEscape = executeCommand(registry, CAPABILITY_GRANT_COMMAND, { state, capability: "dom.escape" });
-assert.equal(grantedEscape.ok, true);
-state = grantedEscape.result;
+const openedMediation = executeCommand(registry, CAPABILITY_OPEN_PANEL_COMMAND, { state, taskId: "task-1" });
+assert.equal(openedMediation.ok, true);
+state = openedMediation.result;
+const mediationWindow = Object.values(state.windows).find((win) => win.metadata?.role === "capability-mediation");
+assert.ok(mediationWindow, "capability mediation window exists");
+const mediationItems = state.widgets[mediationWindow.metadata.widgets.listId].props.items;
+assert.ok(mediationItems.some((item) => item.label.includes("dom.escape")));
+
+const selectedRequest = executeCommand(registry, CAPABILITY_SELECT_COMMAND, {
+  state,
+  taskId: "task-1",
+  windowId: mediationWindow.id,
+  itemId: mediationItems[0].id
+});
+assert.equal(selectedRequest.ok, true);
+state = selectedRequest.result;
+
+const approvedEscape = executeCommand(registry, CAPABILITY_APPROVE_COMMAND, {
+  state,
+  taskId: "task-1",
+  windowId: mediationWindow.id
+});
+assert.equal(approvedEscape.ok, true);
+state = approvedEscape.result;
+assert.equal(state.capabilityRequests[0].status, "granted");
 
 const allowedEscape = executeCommand(registry, DOM_ESCAPE_COMMAND, {
   state,

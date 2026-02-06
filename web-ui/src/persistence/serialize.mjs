@@ -15,6 +15,9 @@ const DEFAULT_ALLOWLIST = {
   layout: true,
   domEscapes: true,
   capabilities: true,
+  capabilityRequests: true,
+  capabilityPolicy: true,
+  capabilityRequestSeq: true,
   selection: true,
   focus: true,
   presentations: false,
@@ -235,6 +238,9 @@ export function sanitizeState(state, options = {}) {
   if (allowlist.layout) out.layout = sanitizeRecord(state.layout ?? {});
   if (allowlist.domEscapes) out.domEscapes = sanitizeValue(state.domEscapes ?? []) ?? [];
   if (allowlist.capabilities) out.capabilities = sanitizeRecord(state.capabilities ?? {});
+  if (allowlist.capabilityRequests) out.capabilityRequests = sanitizeValue(state.capabilityRequests ?? []) ?? [];
+  if (allowlist.capabilityPolicy) out.capabilityPolicy = sanitizeRecord(state.capabilityPolicy ?? {});
+  if (allowlist.capabilityRequestSeq) out.capabilityRequestSeq = sanitizeValue(state.capabilityRequestSeq ?? null) ?? null;
   if (allowlist.selection) out.selection = sanitizeValue(state.selection ?? null) ?? null;
   if (allowlist.focus) out.focus = sanitizeValue(state.focus ?? null) ?? null;
   if (allowlist.presentations) out.presentations = sanitizeMap(state.presentations ?? {});
