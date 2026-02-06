@@ -184,6 +184,14 @@ and return to JS **without** entering Lisp yet (it skips `start_lisp`).
 ```bash
 node doc/wasm/js/load-image.mjs /path/to/ccl.image
 ```
+To enter Lisp after loading (requires subprims + boot entry):
+```bash
+node doc/wasm/js/load-image.mjs --start-lisp /path/to/ccl.image
+```
+To run the toplevel once (explicit entry, no stepping):
+```bash
+node doc/wasm/js/load-image.mjs --run /path/to/ccl.image
+```
 
 ## Generate A Minimal WASM Image
 
@@ -200,6 +208,10 @@ To exercise the toplevel loop with the minimal image:
 ```bash
 node doc/wasm/js/load-image.mjs --run doc/wasm/minimal.image
 ```
+Or to boot via `start_lisp` instead of the explicit toplevel run:
+```bash
+node doc/wasm/js/load-image.mjs --start-lisp doc/wasm/minimal.image
+```
 
 ## JS Wiring (Sketch-Level)
 
@@ -215,7 +227,8 @@ The demo runner:
 - Installs subprims into the shared table by matching export names.
 - Calls `wasm_set_cstack_bounds` to establish a manual control stack region.
 - Calls `wasm_set_subprims_ready(1)` when a real subprims provider module is installed.
-- Calls `wasm_ccl_start` to enter the kernel.
+- Installs the boot entrypoint (minimal image uses table index 200 → `wasm_boot_entry`).
+- Calls `wasm_ccl_start` to enter the kernel (or `wasm_ccl_step`/`wasm_run_toplevel` for host‑controlled toplevel).
 
 ## Subprims Artifacts
 

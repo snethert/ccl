@@ -39,6 +39,14 @@ Kernel behavior (current bring‑up):
 - Calls `wasm_ccl_start()`, which returns to the host because `start_lisp`
   is still a stub for WASM.
 
+Optional host entry paths (current bring‑up):
+
+- **Boot-only:** `wasm_ccl_load_image(ptr, len)` (returns to host).
+- **Boot + start_lisp:** `wasm_set_boot_image(ptr, len)` then `wasm_ccl_start()`.  
+  The host must ensure the function table contains the entrypoint index used
+  by the image (the minimal image uses table index 200 → `wasm_boot_entry`).
+- **Explicit toplevel:** `wasm_run_toplevel()` (one-shot) or `wasm_ccl_step()` (host‑stepped).
+
 ## Reference host placement strategy (current)
 
 The Node helper (`doc/wasm/js/load-image.mjs`) uses:

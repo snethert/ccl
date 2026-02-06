@@ -22,13 +22,14 @@ is extracted from `lisp-kernel/arm-spentry.s` and checked in as:
 3. Install subprims into the shared table by matching export names from `subprims-map.json`.
 4. If the provider exports the Tier 0 subprims (`_SPmkcatch1v`, `_SPfuncall`, `_SPnthrow1value`), call `wasm_set_subprims_ready(1)`.
 5. Call the exported `wasm_set_cstack_bounds(base, size)` to establish a manual control stack region.
-6. Call the kernel entrypoint `wasm_ccl_start`.
+6. Install the boot entrypoint (the minimal image uses table index 200 → `wasm_boot_entry`), then choose an entry path: `wasm_ccl_start` (boot + `start_lisp`), `wasm_run_toplevel` (one-shot toplevel), or `wasm_ccl_step` (host-stepped toplevel).
 
 `world-kernel.mjs` provides a minimal reference API for:
 
 * registering images
 * creating worlds and runners
 * loading an image into a runner
+* starting the kernel (`runner.start`) or stepping (`runner.step`)
 * feeding stdin / closing stdin
 * querying runner objects via `getRunner(runnerId)`
 
