@@ -1,3 +1,5 @@
+import { allocateId } from "./ids.mjs";
+
 export const FOCUS_REASONS = {
   COMMAND: "command",
   USER: "user",
@@ -76,15 +78,30 @@ function isValidTarget(state, target) {
 
 export function setFocus(state, target, reason = FOCUS_REASONS.COMMAND, seq = null) {
   const normalized = normalizeFocusTarget(target);
+  let nextState = state;
+  let reasonId = null;
+  if (state?.focusReasons) {
+    const alloc = allocateId(state.idCounters ?? {}, "reason", "reason");
+    reasonId = alloc.id;
+    const focusReasons = { ...(state.focusReasons ?? {}) };
+    focusReasons[reasonId] = {
+      id: reasonId,
+      reason,
+      ts: null,
+      details: {}
+    };
+    nextState = { ...state, idCounters: alloc.counters, focusReasons };
+  }
   const entry = {
-    seq: seq ?? state.focusHistory.length + 1,
+    seq: seq ?? nextState.focusHistory.length + 1,
     target: normalized,
-    reason
+    reason,
+    reasonId
   };
   return {
-    ...state,
+    ...nextState,
     focus: normalized,
-    focusHistory: [...state.focusHistory, entry]
+    focusHistory: [...nextState.focusHistory, entry]
   };
 }
 

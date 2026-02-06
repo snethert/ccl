@@ -252,6 +252,12 @@ Exit criteria:
 - Added layout drift tests and updated layout snapshot fixtures.
 - Added focus reconciliation helper and browser harness check.
 - Added layout/focus smoke test and wired into WASM smoke runner.
+
+### Phase 4 Progress
+- Added event log ring buffer and deterministic recording in replay harness.
+- Added inspector and debugger window shells with coalesced error handling.
+- Added reason object tracking for focus and disablement.
+- Added inspector/debugger tests and smoke tests wired into WASM smoke runner.
 - Implemented command registry, key binding, and deterministic routing.
 - Added unit tests for routing precedence and focus history.
 - Added context helpers and a module index for consistent imports.

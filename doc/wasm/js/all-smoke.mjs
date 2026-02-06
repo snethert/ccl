@@ -25,6 +25,8 @@ const tests = [
   "./float-smoke.mjs",
   "./web-ui-list-smoke.mjs",
   "./web-ui-layout-focus-smoke.mjs",
+  "./web-ui-inspector-smoke.mjs",
+  "./web-ui-debugger-smoke.mjs",
   "./closure-unwind-mv-smoke.mjs",
   "./mv-helpers-smoke.mjs",
   "./mvcall-smoke.mjs"

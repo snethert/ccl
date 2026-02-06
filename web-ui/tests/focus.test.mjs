@@ -24,8 +24,10 @@ test("focus history records deterministic sequence", () => {
       widgetId: null,
       presentationId: null
     },
-    reason: FOCUS_REASONS.USER
+    reason: FOCUS_REASONS.USER,
+    reasonId: "reason-0"
   });
+  assert.ok(state.focusReasons["reason-0"]);
 });
 
 test("reconcileFocus updates focus from resolver", () => {

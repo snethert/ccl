@@ -12,6 +12,17 @@ export {
   wrapInTabs,
   setActiveTab,
   dockLayout,
+  recordEvent,
+  setCommandState,
+  updateWidget,
+  updateWindow,
+  openInspectorWindow,
+  refreshInspectorWindow,
+  openDebuggerWindow,
+  refreshDebuggerWindow,
+  raiseError,
+  acknowledgeError,
+  upsertJob,
   setSelection,
   setFocus
 } from "./state.mjs";
@@ -38,3 +49,4 @@ export { normalizeSelection } from "./selection.mjs";
 export { createElement, createText, h, normalizeChildren } from "./vdom.mjs";
 export { createRoot } from "./renderer.mjs";
 export { renderWidget, renderWindow } from "./widgets.mjs";
+export { createEventLog, normalizeEventLog, recordEvent as recordEventLog } from "./event-log.mjs";

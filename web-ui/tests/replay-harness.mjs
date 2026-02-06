@@ -1,7 +1,7 @@
 import { serializeState } from "./snapshot.mjs";
 import { validateEvents } from "./event-log.mjs";
 import { setFocus } from "../src/focus.mjs";
-import { setLayout } from "../src/state.mjs";
+import { createState, setLayout, recordEvent, setCommandState } from "../src/state.mjs";
 import { executeCommand } from "../src/commands.mjs";
 import { makeContext } from "../src/context.mjs";
 
@@ -45,16 +45,8 @@ export function defaultHandlers(registry = null) {
       }
       return state;
     },
-    "command:enable": (state, payload) => {
-      const commands = { ...(state.commands || {}) };
-      commands[payload.id] = { enabled: true, reason: null };
-      return { ...state, commands };
-    },
-    "command:disable": (state, payload) => {
-      const commands = { ...(state.commands || {}) };
-      commands[payload.id] = { enabled: false, reason: payload.reason || "" };
-      return { ...state, commands };
-    },
+    "command:enable": (state, payload) => setCommandState(state, payload.id, true, null),
+    "command:disable": (state, payload) => setCommandState(state, payload.id, false, payload.reason || ""),
     "layout:set": (state, payload) => setLayout(state, payload.layout)
   };
 }
@@ -66,7 +58,7 @@ export function replayEvents(initialState, events, options = {}) {
   const registry = resolved.registry ?? null;
   const handlers = resolved.handlers ?? defaultHandlers(registry);
 
-  let state = deepClone(initialState);
+  let state = createState(deepClone(initialState));
   const snapshots = [];
 
   for (const event of events) {
@@ -74,6 +66,7 @@ export function replayEvents(initialState, events, options = {}) {
       snapshots.push(serializeState(state));
       continue;
     }
+    state = recordEvent(state, event);
     const handler = handlers[event.type];
     if (!handler) {
       throw new Error(`No handler for event type: ${event.type}`);

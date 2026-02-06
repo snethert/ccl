@@ -4,8 +4,38 @@
     "commands": {
       "issue.delete": {
         "enabled": false,
-        "reason": "Nothing selected."
+        "reason": "Nothing selected.",
+        "reasonId": "reason-1"
       }
+    },
+    "disableReasons": {
+      "reason-1": {
+        "details": {},
+        "id": "reason-1",
+        "reason": "Nothing selected.",
+        "ts": null
+      }
+    },
+    "errors": [],
+    "eventLog": {
+      "capacity": 256,
+      "entries": [
+        {
+          "payload": {
+            "target": "w1"
+          },
+          "seq": 1,
+          "type": "focus:set"
+        },
+        {
+          "payload": {
+            "id": "issue.delete",
+            "reason": "Nothing selected."
+          },
+          "seq": 2,
+          "type": "command:disable"
+        }
+      ]
     },
     "focus": {
       "presentationId": null,
@@ -16,6 +46,7 @@
     "focusHistory": [
       {
         "reason": "command",
+        "reasonId": "reason-0",
         "seq": 1,
         "target": {
           "presentationId": null,
@@ -25,14 +56,27 @@
         }
       }
     ],
+    "focusReasons": {
+      "reason-0": {
+        "details": {},
+        "id": "reason-0",
+        "reason": "command",
+        "ts": null
+      }
+    },
     "idCounters": {
+      "error": 0,
+      "job": 0,
       "layout": 0,
       "presentation": 0,
+      "reason": 2,
       "task": 1,
       "widget": 1,
       "window": 1,
       "workspace": 1
     },
+    "jobCauses": {},
+    "jobs": [],
     "layout": null,
     "presentations": {},
     "selection": null,
@@ -68,6 +112,7 @@
         "title": "Main"
       }
     },
+    "windowCauses": {},
     "workspace": {
       "activeTaskId": "t1",
       "id": "workspace-0",

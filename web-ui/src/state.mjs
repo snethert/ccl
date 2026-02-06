@@ -1,4 +1,5 @@
 import { allocateId, initIdCounters } from "./ids.mjs";
+import { normalizeEventLog, recordEvent as recordEventLog } from "./event-log.mjs";
 import { normalizeSelection } from "./selection.mjs";
 import {
   normalizeLayout,
@@ -10,11 +11,17 @@ import {
 } from "./layout.mjs";
 import { normalizeFocusTarget, normalizeFocusHistory, setFocus as setFocusCore } from "./focus.mjs";
 
-const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layout"];
+const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layout", "reason", "error", "job"];
 
 function ensureCounters(counters) {
   if (counters) {
-    return counters;
+    const next = { ...counters };
+    for (const kind of ID_KINDS) {
+      if (!Number.isInteger(next[kind])) {
+        next[kind] = 0;
+      }
+    }
+    return next;
   }
   return initIdCounters(ID_KINDS);
 }
@@ -89,6 +96,7 @@ export function createWorkspace({ id, title, taskIds, activeTaskId, metadata } =
 export function createState(options = {}) {
   const idCounters = ensureCounters(options.idCounters);
   let state = {
+    ...options,
     workspace: options.workspace ?? null,
     tasks: options.tasks ?? {},
     windows: options.windows ?? {},
@@ -99,8 +107,14 @@ export function createState(options = {}) {
     selection: normalizeSelection(options.selection ?? null),
     commands: options.commands ?? {},
     layout: options.layout ?? null,
-    idCounters,
-    ...options
+    focusReasons: options.focusReasons ?? {},
+    disableReasons: options.disableReasons ?? {},
+    windowCauses: options.windowCauses ?? {},
+    jobCauses: options.jobCauses ?? {},
+    eventLog: normalizeEventLog(options.eventLog ?? null),
+    errors: Array.isArray(options.errors) ? [...options.errors] : [],
+    jobs: Array.isArray(options.jobs) ? [...options.jobs] : [],
+    idCounters
   };
   state = ensureWorkspace(state);
   const normalized = normalizeLayout(state.layout, state.idCounters);
@@ -212,6 +226,14 @@ export function setLayout(state, layout) {
   return { ...state, layout: normalized.layout, idCounters: normalized.counters };
 }
 
+export function recordEvent(state, entry) {
+  if (!entry || typeof entry !== "object") {
+    throw new Error("Event entry must be an object");
+  }
+  const eventLog = recordEventLog(state.eventLog ?? null, entry);
+  return { ...state, eventLog };
+}
+
 export function setSelection(state, selection) {
   return { ...state, selection: normalizeSelection(selection) };
 }
@@ -243,4 +265,447 @@ export function setActiveTab(state, tabsId, tabId) {
 export function dockLayout(state, targetId, region) {
   const updated = dockLayoutNode(state.layout, state.idCounters, targetId, region);
   return { ...state, layout: updated.layout, idCounters: updated.counters };
+}
+
+export function setCommandState(state, id, enabled, reason = null) {
+  const commands = { ...(state.commands ?? {}) };
+  let reasonId = commands[id]?.reasonId ?? null;
+  let nextState = state;
+  if (enabled === false && reason) {
+    const alloc = allocateId(state.idCounters, "reason", "reason");
+    reasonId = alloc.id;
+    const disableReasons = { ...(state.disableReasons ?? {}) };
+    disableReasons[reasonId] = {
+      id: reasonId,
+      reason,
+      ts: null,
+      details: {}
+    };
+    nextState = { ...state, idCounters: alloc.counters, disableReasons };
+  }
+  commands[id] = {
+    enabled: Boolean(enabled),
+    reason: reason ?? null,
+    reasonId
+  };
+  return { ...nextState, commands };
+}
+
+export function updateWidget(state, widgetId, patch) {
+  const widget = state.widgets?.[widgetId];
+  if (!widget) {
+    throw new Error(`Unknown widget: ${widgetId}`);
+  }
+  const next = typeof patch === "function" ? patch(widget) : { ...widget, ...patch };
+  return {
+    ...state,
+    widgets: { ...state.widgets, [widgetId]: next }
+  };
+}
+
+export function updateWindow(state, windowId, patch) {
+  const window = state.windows?.[windowId];
+  if (!window) {
+    throw new Error(`Unknown window: ${windowId}`);
+  }
+  const next = typeof patch === "function" ? patch(window) : { ...window, ...patch };
+  return {
+    ...state,
+    windows: { ...state.windows, [windowId]: next }
+  };
+}
+
+function allocateWidgetId(state, prefix = "widget") {
+  const alloc = allocateId(state.idCounters, "widget", prefix);
+  return { id: alloc.id, state: { ...state, idCounters: alloc.counters } };
+}
+
+function findWindowByRole(state, role, taskId) {
+  for (const window of Object.values(state.windows ?? {})) {
+    if (window.metadata?.role !== role) continue;
+    if (taskId && window.taskId !== taskId) continue;
+    return window;
+  }
+  return null;
+}
+
+function summarizeFocus(state) {
+  const items = [];
+  const focus = state.focus;
+  if (!focus) {
+    items.push({ id: "focus-none", label: "Focus: none" });
+    return items;
+  }
+  items.push({
+    id: "focus-target",
+    label: `Focus: task=${focus.taskId ?? "none"} window=${focus.windowId ?? "none"} widget=${
+      focus.widgetId ?? "none"
+    }`
+  });
+  const last = state.focusHistory?.[state.focusHistory.length - 1];
+  if (last?.reason) {
+    items.push({ id: "focus-reason", label: `Reason: ${last.reason}` });
+  }
+  return items;
+}
+
+function summarizeCommands(state) {
+  const items = [];
+  const entries = Object.entries(state.commands ?? {}).sort(([a], [b]) => a.localeCompare(b));
+  for (const [id, info] of entries) {
+    if (info?.enabled === false) {
+      items.push({ id: `cmd-${id}`, label: `${id}: disabled (${info.reason ?? "Disabled"})` });
+    } else {
+      items.push({ id: `cmd-${id}`, label: `${id}: enabled` });
+    }
+  }
+  if (items.length === 0) {
+    items.push({ id: "cmd-none", label: "No command state recorded" });
+  }
+  return items;
+}
+
+function summarizeWindows(state) {
+  const items = [];
+  const entries = Object.values(state.windows ?? {}).sort((a, b) => a.id.localeCompare(b.id));
+  for (const window of entries) {
+    items.push({
+      id: `win-${window.id}`,
+      label: `${window.id} (${window.kind ?? "window"}) task=${window.taskId ?? "none"}`
+    });
+  }
+  if (items.length === 0) {
+    items.push({ id: "win-none", label: "No windows" });
+  }
+  return items;
+}
+
+function summarizeJobs(state) {
+  const items = [];
+  const entries = [...(state.jobs ?? [])].sort((a, b) => (a.id ?? "").localeCompare(b.id ?? ""));
+  for (const job of entries) {
+    items.push({
+      id: `job-${job.id ?? "unknown"}`,
+      label: `${job.title ?? job.id ?? "job"} (${job.status ?? "unknown"})`
+    });
+  }
+  if (items.length === 0) {
+    items.push({ id: "job-none", label: "No jobs" });
+  }
+  return items;
+}
+
+function summarizeErrors(state) {
+  const items = [];
+  const entries = [...(state.errors ?? [])].sort((a, b) => (a.id ?? "").localeCompare(b.id ?? ""));
+  for (const error of entries) {
+    items.push({
+      id: `err-${error.id ?? "unknown"}`,
+      label: `${error.kind ?? "error"}: ${error.message ?? ""} (${error.status ?? "open"})`
+    });
+  }
+  if (items.length === 0) {
+    items.push({ id: "err-none", label: "No errors" });
+  }
+  return items;
+}
+
+function summarizeEventLog(state, limit = 12) {
+  const entries = state.eventLog?.entries ?? [];
+  const sliced = entries.slice(-limit);
+  const items = sliced.map((entry) => ({
+    id: `event-${entry.seq ?? "?"}`,
+    label: `${entry.seq ?? "?"} ${entry.type ?? "event"}`
+  }));
+  if (items.length === 0) {
+    items.push({ id: "event-none", label: "No events recorded" });
+  }
+  return items;
+}
+
+function buildInspectorSections(state) {
+  return {
+    focus: summarizeFocus(state),
+    commands: summarizeCommands(state),
+    windows: summarizeWindows(state),
+    jobs: summarizeJobs(state),
+    errors: summarizeErrors(state),
+    eventLog: summarizeEventLog(state)
+  };
+}
+
+export function openInspectorWindow(state, options = {}) {
+  const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
+  if (!taskId) {
+    throw new Error("Inspector requires a task");
+  }
+  const existing = findWindowByRole(state, "inspector", taskId);
+  if (existing) {
+    return refreshInspectorWindow(state, existing.id);
+  }
+
+  const allocWindow = allocateId(state.idCounters, "window", "inspector");
+  let nextState = {
+    ...state,
+    idCounters: allocWindow.counters
+  };
+  nextState = addWindow(nextState, {
+    id: allocWindow.id,
+    taskId,
+    kind: "inspector",
+    title: "System Inspector",
+    metadata: { role: "inspector" }
+  });
+
+  const sectionItems = buildInspectorSections(nextState);
+
+  let ids = {};
+  let rootAlloc = allocateWidgetId(nextState, "inspector-root");
+  nextState = addWidget(rootAlloc.state, {
+    id: rootAlloc.id,
+    kind: "container",
+    windowId: allocWindow.id,
+    props: { className: "ui-inspector-root" }
+  });
+  ids.rootId = rootAlloc.id;
+
+  const sections = [
+    ["focus", "Focus"],
+    ["commands", "Commands"],
+    ["windows", "Windows"],
+    ["jobs", "Jobs"],
+    ["errors", "Errors"],
+    ["eventLog", "Event Log"]
+  ];
+
+  ids.sections = {};
+  for (const [key, title] of sections) {
+    let labelAlloc = allocateWidgetId(nextState, `inspector-${key}-label`);
+    nextState = addWidget(labelAlloc.state, {
+      id: labelAlloc.id,
+      kind: "label",
+      parentId: ids.rootId,
+      props: { text: title }
+    });
+    let listAlloc = allocateWidgetId(nextState, `inspector-${key}-list`);
+    nextState = addWidget(listAlloc.state, {
+      id: listAlloc.id,
+      kind: "list",
+      parentId: ids.rootId,
+      props: { items: sectionItems[key] ?? [] }
+    });
+    ids.sections[key] = { labelId: labelAlloc.id, listId: listAlloc.id };
+  }
+
+  nextState = updateWindow(nextState, allocWindow.id, (window) => ({
+    ...window,
+    metadata: { ...(window.metadata ?? {}), role: "inspector", widgets: ids }
+  }));
+
+  return nextState;
+}
+
+export function refreshInspectorWindow(state, windowId) {
+  const window = state.windows?.[windowId];
+  if (!window || window.metadata?.role !== "inspector") {
+    throw new Error("Window is not an inspector");
+  }
+  const widgets = window.metadata?.widgets;
+  if (!widgets?.sections) {
+    return state;
+  }
+  const sections = buildInspectorSections(state);
+  let nextState = state;
+  for (const [key, ids] of Object.entries(widgets.sections)) {
+    nextState = updateWidget(nextState, ids.listId, (widget) => ({
+      ...widget,
+      props: { ...(widget.props ?? {}), items: sections[key] ?? [] }
+    }));
+  }
+  return nextState;
+}
+
+export function raiseError(state, error, options = {}) {
+  const taskId = error.taskId ?? state.workspace?.activeTaskId ?? null;
+  if (!taskId) {
+    throw new Error("Error must reference a task");
+  }
+  const coalesceKey = error.coalesceKey ?? `${error.kind ?? "error"}:${error.message ?? ""}`;
+  const errors = [...(state.errors ?? [])];
+  const existingIndex = errors.findIndex(
+    (entry) => entry.taskId === taskId && entry.coalesceKey === coalesceKey && entry.status !== "resolved"
+  );
+
+  let nextState = state;
+  let errorId = null;
+  if (existingIndex !== -1) {
+    const existing = errors[existingIndex];
+    const count = (existing.count ?? 1) + 1;
+    errors[existingIndex] = {
+      ...existing,
+      count,
+      lastTs: error.ts ?? existing.lastTs ?? null,
+      message: error.message ?? existing.message,
+      restarts: error.restarts ?? existing.restarts ?? []
+    };
+    nextState = { ...state, errors };
+    errorId = existing.id;
+  } else {
+    const alloc = allocateId(state.idCounters, "error", "error");
+    errorId = alloc.id;
+    const entry = {
+      id: errorId,
+      taskId,
+      kind: error.kind ?? "error",
+      message: error.message ?? "",
+      restarts: Array.isArray(error.restarts) ? [...error.restarts] : [],
+      coalesceKey,
+      ts: error.ts ?? null,
+      lastTs: error.ts ?? null,
+      status: "open",
+      count: 1
+    };
+    errors.push(entry);
+    nextState = { ...state, idCounters: alloc.counters, errors };
+  }
+
+  if (options.openDebugger) {
+    return openDebuggerWindow(nextState, { taskId, errorId });
+  }
+  return nextState;
+}
+
+export function acknowledgeError(state, errorId) {
+  const errors = [...(state.errors ?? [])];
+  const index = errors.findIndex((entry) => entry.id === errorId);
+  if (index === -1) return state;
+  errors[index] = { ...errors[index], status: "acknowledged" };
+  return { ...state, errors };
+}
+
+export function upsertJob(state, job) {
+  if (!job || !job.id) {
+    throw new Error("Job must include an id");
+  }
+  const jobs = [...(state.jobs ?? [])];
+  const index = jobs.findIndex((entry) => entry.id === job.id);
+  if (index === -1) {
+    jobs.push({ ...job });
+  } else {
+    jobs[index] = { ...jobs[index], ...job };
+  }
+  return { ...state, jobs };
+}
+
+function buildDebuggerContent(state, errorId) {
+  const error = state.errors?.find((entry) => entry.id === errorId) ?? null;
+  const restarts = Array.isArray(error?.restarts) ? error.restarts : [];
+  const summary = error ? `${error.kind ?? "error"}: ${error.message ?? ""}` : "No error selected";
+  const items = restarts.map((restart, index) => ({
+    id: restart.id ?? `restart-${index}`,
+    label: restart.title ?? restart.id ?? `Restart ${index + 1}`
+  }));
+  if (items.length === 0) {
+    items.push({ id: "restart-none", label: "No restarts available" });
+  }
+  return { summary, items };
+}
+
+export function openDebuggerWindow(state, options = {}) {
+  const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
+  if (!taskId) {
+    throw new Error("Debugger requires a task");
+  }
+  const errorId = options.errorId ?? state.errors?.[state.errors.length - 1]?.id ?? null;
+
+  const existing = findWindowByRole(state, "debugger", taskId);
+  if (existing) {
+    return refreshDebuggerWindow(state, existing.id, errorId);
+  }
+
+  const allocWindow = allocateId(state.idCounters, "window", "debugger");
+  let nextState = {
+    ...state,
+    idCounters: allocWindow.counters
+  };
+  nextState = addWindow(nextState, {
+    id: allocWindow.id,
+    taskId,
+    kind: "debugger",
+    title: "Debugger",
+    metadata: { role: "debugger" }
+  });
+
+  let rootAlloc = allocateWidgetId(nextState, "debugger-root");
+  nextState = addWidget(rootAlloc.state, {
+    id: rootAlloc.id,
+    kind: "container",
+    windowId: allocWindow.id,
+    props: { className: "ui-debugger-root" }
+  });
+  const rootId = rootAlloc.id;
+
+  let titleAlloc = allocateWidgetId(nextState, "debugger-title");
+  nextState = addWidget(titleAlloc.state, {
+    id: titleAlloc.id,
+    kind: "label",
+    parentId: rootId,
+    props: { text: "Debugger" }
+  });
+
+  let summaryAlloc = allocateWidgetId(nextState, "debugger-summary");
+  const summary = buildDebuggerContent(nextState, errorId).summary;
+  nextState = addWidget(summaryAlloc.state, {
+    id: summaryAlloc.id,
+    kind: "label",
+    parentId: rootId,
+    props: { text: summary }
+  });
+
+  let listAlloc = allocateWidgetId(nextState, "debugger-restarts");
+  const items = buildDebuggerContent(nextState, errorId).items;
+  nextState = addWidget(listAlloc.state, {
+    id: listAlloc.id,
+    kind: "list",
+    parentId: rootId,
+    props: { items }
+  });
+
+  nextState = updateWindow(nextState, allocWindow.id, (window) => ({
+    ...window,
+    metadata: {
+      ...(window.metadata ?? {}),
+      role: "debugger",
+      widgets: { rootId, summaryId: summaryAlloc.id, restartsId: listAlloc.id },
+      errorId
+    }
+  }));
+
+  return nextState;
+}
+
+export function refreshDebuggerWindow(state, windowId, errorId = null) {
+  const window = state.windows?.[windowId];
+  if (!window || window.metadata?.role !== "debugger") {
+    throw new Error("Window is not a debugger");
+  }
+  const widgets = window.metadata?.widgets ?? {};
+  const activeErrorId = errorId ?? window.metadata?.errorId ?? null;
+  if (!widgets.summaryId || !widgets.restartsId) {
+    return state;
+  }
+  const { summary, items } = buildDebuggerContent(state, activeErrorId);
+  let nextState = updateWidget(state, widgets.summaryId, (widget) => ({
+    ...widget,
+    props: { ...(widget.props ?? {}), text: summary }
+  }));
+  nextState = updateWidget(nextState, widgets.restartsId, (widget) => ({
+    ...widget,
+    props: { ...(widget.props ?? {}), items }
+  }));
+  nextState = updateWindow(nextState, windowId, (win) => ({
+    ...win,
+    metadata: { ...(win.metadata ?? {}), errorId: activeErrorId }
+  }));
+  return nextState;
 }
