@@ -95,6 +95,16 @@
     (semaphore.value s)
     (semaphore-value (require-type s 'semaphore))))
 
+#+wasm32-target
+(defun %wait-on-semaphore-ptr (s seconds milliseconds &optional flag)
+  (declare (ignore s seconds milliseconds))
+  (when flag
+    (if (istruct-typep flag 'semaphore-notification)
+      (setf (semaphore-notification.status flag) t)
+      (report-bad-arg flag 'semaphore-notification)))
+  (values t 0))
+
+#-wasm32-target
 (defun %wait-on-semaphore-ptr (s seconds milliseconds &optional flag)
   (if flag
     (if (istruct-typep flag 'semaphore-notification)
@@ -112,6 +122,13 @@
      (when flag (setf (semaphore-notification.status flag) result))
      (values result status))))
 
+#+wasm32-target
+(defun %process-wait-on-semaphore-ptr (s seconds milliseconds &optional
+                                         (whostate "semaphore wait") flag)
+  (declare (ignore s seconds milliseconds whostate))
+  (%wait-on-semaphore-ptr nil 0 0 flag))
+
+#-wasm32-target
 (defun %process-wait-on-semaphore-ptr (s seconds milliseconds &optional
                                          (whostate "semaphore wait") flag)
   (or (%wait-on-semaphore-ptr s 0 0 flag)
@@ -121,13 +138,25 @@
             (return))))))
 
   
+#+wasm32-target
+(defun wait-on-semaphore (s &optional flag (whostate "semaphore wait"))
+  (declare (ignore s whostate))
+  (%process-wait-on-semaphore-ptr nil 0 0 "semaphore wait" flag)
+  t)
+
+#-wasm32-target
 (defun wait-on-semaphore (s &optional flag (whostate "semaphore wait"))
   "Wait until the given semaphore has a positive count which can be
 atomically decremented."
   (%process-wait-on-semaphore-ptr (semaphore-value s) #xffffff 0 whostate flag)
   t)
 
+#+wasm32-target
+(defun %timed-wait-on-semaphore-ptr (semptr duration notification)
+  (declare (ignore semptr duration notification))
+  t)
 
+#-wasm32-target
 (defun %timed-wait-on-semaphore-ptr (semptr duration notification)
   (or (%wait-on-semaphore-ptr semptr 0 0 notification)
       (with-process-whostate ("Semaphore timed wait")
@@ -150,22 +179,45 @@ atomically decremented."
                       (setq secs remaining-seconds
                             millis (floor remaining-itus (/ internal-time-units-per-second 1000)))))))))))))
 
+#+wasm32-target
+(defun timed-wait-on-semaphore (s duration &optional notification)
+  (declare (ignore s duration notification))
+  t)
+
+#-wasm32-target
 (defun timed-wait-on-semaphore (s duration &optional notification)
   "Wait until the given semaphore has a positive count which can be
 atomically decremented, or until a timeout expires."
   (%timed-wait-on-semaphore-ptr (semaphore-value s) duration notification))
 
+#+wasm32-target
+(defun %signal-semaphore-ptr (p)
+  (declare (ignore p))
+  0)
 
+#-wasm32-target
 (defun %signal-semaphore-ptr (p)
   (ff-call
    (%kernel-import target::kernel-import-signal-semaphore)
    :address p
    :signed-fullword))
 
+#+wasm32-target
+(defun signal-semaphore (s)
+  (declare (ignore s))
+  nil)
+
+#-wasm32-target
 (defun signal-semaphore (s)
   "Atomically increment the count of a given semaphore."
   (%signal-semaphore-ptr (semaphore-value s)))
 
+#+wasm32-target
+(defun %timed-wait-for-signal (signo seconds millis)
+  (declare (ignore signo seconds millis))
+  (values t 0))
+
+#-wasm32-target
 (defun %timed-wait-for-signal (signo seconds millis)
   (let* ((status (ff-call
                   (%kernel-import target::kernel-import-wait-for-signal)
@@ -175,6 +227,12 @@ atomically decremented, or until a timeout expires."
                   :int)))
     (values (eql status 0) status)))
 
+#+wasm32-target
+(defun wait-for-signal (s duration)
+  (declare (ignore s duration))
+  t)
+
+#-wasm32-target
 (defun wait-for-signal (s duration)
   (if duration
     (check-type duration (real 0 #x7fffffff))
@@ -208,6 +266,12 @@ atomically decremented, or until a timeout expires."
                       (setq secs remaining-seconds
                             millis (floor remaining-itus (/ internal-time-units-per-second 1000)))))))))))))
   
+#+wasm32-target
+(defun %os-getcwd (buf noctets)
+  (declare (ignore buf noctets))
+  (- #$ENOSYS))
+
+#-wasm32-target
 (defun %os-getcwd (buf noctets)
   ;; Return N < 0, if error
   ;;        N < noctets: success, string is of length N (octets).
@@ -244,6 +308,9 @@ set to NIL.")
   "Return a suitable pathname for a temporary file.  A different name is returned
 each time this is called in a session.  No file by that name existed when last
 checked, though no guarantee is given that one hasn't been created since."
+  #+wasm32-target
+  (wasm-fs-unavailable "temp-pathname")
+  #-wasm32-target
   (native-to-pathname
      #-windows-target
      #-android-target (get-foreign-namestring (#_tmpnam (%null-ptr)))
@@ -279,6 +346,7 @@ checked, though no guarantee is given that one hasn't been created since."
                               (#_DeleteFileW buffer)
                               (%get-native-utf-16-cstring buffer)))))
 
+#-wasm32-target
 (defun current-directory-name ()
   "Look up the current working directory of the Clozure CL process; unless
 it has been changed, this is the directory Clozure CL was started in."
@@ -310,10 +378,22 @@ it has been changed, this is the directory Clozure CL was started in."
 
 
 
+#+wasm32-target
+(defun %chdir (dirname)
+  (declare (ignore dirname))
+  (wasm-fs-unavailable "chdir"))
+
+#-wasm32-target
 (defun %chdir (dirname)
   (with-filename-cstrs ((dirname dirname))
     (int-errno-call (#+windows-target #__wchdir #-windows-target #_chdir dirname))))
 
+#+wasm32-target
+(defun %mkdir (name mode)
+  (declare (ignore name mode))
+  (wasm-fs-unavailable "mkdir"))
+
+#-wasm32-target
 (defun %mkdir (name mode)
   #+windows-target (declare (ignore mode))
   (let* ((name name)
@@ -323,6 +403,12 @@ it has been changed, this is the directory Clozure CL was started in."
     (with-filename-cstrs ((name name))
       (int-errno-call (#+windows-target #__wmkdir #-windows-target #_mkdir  name #-windows-target mode)))))
 
+#+wasm32-target
+(defun %rmdir (name)
+  (declare (ignore name))
+  (wasm-fs-unavailable "rmdir"))
+
+#-wasm32-target
 (defun %rmdir (name)
   (let* ((last (1- (length name))))
     (when (and (>= last 0)
@@ -332,6 +418,14 @@ it has been changed, this is the directory Clozure CL was started in."
       (int-errno-call (#+windows-target #__wrmdir #-windows-target #_rmdir  name)))))
 
 
+#+wasm32-target
+(defun getenv (key)
+  "Look up the value of the environment variable named by name, in the
+OS environment."
+  (declare (ignore key))
+  nil)
+
+#-wasm32-target
 (defun getenv (key)
   "Look up the value of the environment variable named by name, in the
 OS environment."
@@ -343,6 +437,14 @@ OS environment."
 	(%get-cstring env-ptr))))
   )
 
+#+wasm32-target
+(defun setenv (key value &optional (overwrite t))
+  "Set the value of the environment variable named by name, in the OS
+environment. If there is no such environment variable, create it."
+  (declare (ignore key value overwrite))
+  nil)
+
+#-wasm32-target
 (defun setenv (key value &optional (overwrite t))
   "Set the value of the environment variable named by name, in the OS
 environment. If there is no such environment variable, create it."
@@ -356,6 +458,12 @@ environment. If there is no such environment variable, create it."
     (#__putenv pair))
   )
 
+#+wasm32-target
+(defun unsetenv (key)
+  (declare (ignore key))
+  nil)
+
+#-wasm32-target
 (defun unsetenv (key)
   #-windows-target
   (with-cstrs ((ckey key))
@@ -364,14 +472,24 @@ environment. If there is no such environment variable, create it."
   (with-cstrs ((ckey (concatenate 'string key "=")))
     (#__putenv ckey)))
 
-#-windows-target                        ; Windows "impersonation" crap ?
+#+wasm32-target
+(defun setuid (uid)
+  (declare (ignore uid))
+  (error "setuid is not supported on wasm32."))
+
+#+wasm32-target
+(defun setgid (uid)
+  (declare (ignore uid))
+  (error "setgid is not supported on wasm32."))
+
+#-(or windows-target wasm32-target)                        ; Windows "impersonation" crap ?
 (defun setuid (uid)
   "Attempt to change the current user ID (both real and effective);
 fails unless the Clozure CL process has super-user privileges or the ID
 given is that of the current user."
   (int-errno-call (#_setuid uid)))
 
-#-windows-target
+#-(or windows-target wasm32-target)
 (defun setgid (uid)
   "Attempt to change the current group ID (both real and effective);
 fails unless the Clozure CL process has super-user privileges or the ID
@@ -379,7 +497,12 @@ given is that of a group to which the current user belongs."
   (int-errno-call (#_setgid uid)))
   
 
-#-windows-target
+#+wasm32-target
+(defun %stat-values (result stat)
+  (declare (ignore result stat))
+  (values nil nil nil nil nil nil nil nil nil nil nil))
+
+#-(or windows-target wasm32-target)
 (defun %stat-values (result stat)
   (if (eql 0 (the fixnum result)) 
       (values
@@ -449,6 +572,22 @@ given is that of a group to which the current user belongs."
       (setq namestring (subseq namestring 0 p)))))
 
 
+#+wasm32-target
+(defun %%stat (name stat)
+  (declare (ignore name stat))
+  (values nil nil nil nil nil nil nil nil nil nil nil))
+
+#+wasm32-target
+(defun %%fstat (fd stat)
+  (declare (ignore fd stat))
+  (values nil nil nil nil nil nil nil nil nil nil nil))
+
+#+wasm32-target
+(defun %%lstat (name stat)
+  (declare (ignore name stat))
+  (values nil nil nil nil nil nil nil nil nil nil nil))
+
+#-wasm32-target
 (defun %%stat (name stat)
   (with-filename-cstrs ((cname #+windows-target (windows-strip-trailing-slash name) #-windows-target name))
     (%stat-values
@@ -458,6 +597,7 @@ given is that of a group to which the current user belongs."
                        :int)
      stat)))
 
+#-wasm32-target
 (defun %%fstat (fd stat)
   (%stat-values
    (int-errno-ffcall (%kernel-import target::kernel-import-lisp-fstat)
@@ -466,7 +606,7 @@ given is that of a group to which the current user belongs."
                      :int)
    stat))
 
-#-windows-target
+#-(or windows-target wasm32-target)
 (defun %%lstat (name stat)
   (with-filename-cstrs ((cname name))
     (%stat-values
@@ -481,7 +621,12 @@ given is that of a group to which the current user belongs."
 ;;;          (values nil nil nil nil nil nil nil) otherwise
 ;;; NAME should be a "native namestring", e.g,, have all lisp pathname
 ;;; escaping removed.
-#-windows-target
+#+wasm32-target
+(defun %stat (name &optional link-p)
+  (declare (ignore name link-p))
+  (values nil nil nil nil nil nil nil nil nil nil nil))
+
+#-(or windows-target wasm32-target)
 (defun %stat (name &optional link-p)
   (rlet ((stat :stat))
     (if link-p
@@ -534,7 +679,7 @@ given is that of a group to which the current user belongs."
     :tty
     (%file-kind (nth-value 1 (%fstat fd)) fd)))
 
-#-windows-target
+#-(or windows-target wasm32-target)
 (defun %uts-string (result idx buf)
   (if (>= result 0)
     (%get-cstring (%inc-ptr buf (* #+(and linux-target (not android-target)) #$_UTSNAME_LENGTH
@@ -544,7 +689,12 @@ given is that of a group to which the current user belongs."
                                    idx)))
     "unknown"))
 
-#-windows-target
+#+wasm32-target
+(defun copy-file-attributes (source-path dest-path)
+  (declare (ignore source-path dest-path))
+  (wasm-fs-unavailable "copy-file-attributes"))
+
+#-(or windows-target wasm32-target)
 (defun copy-file-attributes (source-path dest-path)
   "Copy the mode, owner, group and modification time of source-path to dest-path.
    Returns T if succeeded, NIL if some of the attributes couldn't be copied due to
@@ -579,6 +729,11 @@ given is that of a group to which the current user belongs."
   "could at least copy the file times"
   (declare (ignore source-path dest-path)))
 
+#+wasm32-target
+(defun %uname (idx)
+  (declare (ignore idx))
+  "unknown")
+
 
 #+(and linux-target (not android-target))
 (defun %uname (idx)
@@ -605,7 +760,12 @@ given is that of a group to which the current user belongs."
   (%stack-block ((buf (* #$SYS_NMLN 5)))
     (%uts-string (#_uname buf) idx buf)))
 
-#-windows-target
+#+wasm32-target
+(defun fd-dup (fd)
+  (declare (ignore fd))
+  (wasm-fs-unavailable "dup"))
+
+#-(or windows-target wasm32-target)
 (defun fd-dup (fd)
   (int-errno-call (#_dup fd)))
 
@@ -624,12 +784,36 @@ given is that of a group to which the current user belongs."
       (pref handle #>DWORD))))
 
 
+#+wasm32-target
+(defun fd-fsync (fd)
+  (declare (ignore fd))
+  (wasm-fs-unavailable "fsync"))
+
+#-wasm32-target
 (defun fd-fsync (fd)
   #+windows-target (#_FlushFileBuffers (%int-to-ptr fd))
   #-windows-target
   (int-errno-call (#_fsync fd)))
 
-#-windows-target
+#+wasm32-target
+(progn
+  (defun fd-get-flags (fd)
+    (declare (ignore fd))
+    (wasm-fs-unavailable "fcntl"))
+
+  (defun fd-set-flags (fd new)
+    (declare (ignore fd new))
+    (wasm-fs-unavailable "fcntl"))
+
+  (defun fd-set-flag (fd mask)
+    (declare (ignore fd mask))
+    (wasm-fs-unavailable "fcntl"))
+
+  (defun fd-clear-flag (fd mask)
+    (declare (ignore fd mask))
+    (wasm-fs-unavailable "fcntl")))
+
+#-(or windows-target wasm32-target)
 (progn
 (defun fd-get-flags (fd)
   (int-errno-call (#_fcntl fd #$F_GETFL)))
@@ -686,6 +870,7 @@ given is that of a group to which the current user belongs."
 ;;; This doesn't seem to exist on VxWorks.  It's a POSIX
 ;;; function AFAIK, so the source should be somewhere ...
 
+#-wasm32-target
 (defun %realpath (namestring)
   ;; It's not at all right to just return the namestring here.
   (when (zerop (length namestring))
@@ -708,6 +893,7 @@ given is that of a group to which the current user belongs."
 
 ;;; Return fully resolved pathname & file kind, or (values nil nil)
 
+#-wasm32-target
 (defun %probe-file-x (namestring)
   (let* ((realpath (%realpath namestring))
 	 (kind (if realpath (%unix-file-kind realpath))))
@@ -761,7 +947,12 @@ given is that of a group to which the current user belongs."
 
 ); windows signed nonsense.
 
-#-windows-target
+#+wasm32-target
+(defun %%rusage (usage &optional (who #$RUSAGE_SELF))
+  (declare (ignore usage who))
+  (- #$ENOSYS))
+
+#-(or windows-target wasm32-target)
 (defun %%rusage (usage &optional (who #$RUSAGE_SELF))
   (int-errno-call (#_getrusage who usage)))
 
@@ -773,7 +964,12 @@ given is that of a group to which the current user belongs."
     (if date
       (+ date unix-to-universal-time))))
 
-#-windows-target
+#+wasm32-target
+(defun %file-author (namestring)
+  (declare (ignore namestring))
+  nil)
+
+#-(or windows-target wasm32-target)
 (defun %file-author (namestring)
   (let* ((uid (nth-value 5 (%stat namestring))))
     (if uid
@@ -787,7 +983,12 @@ given is that of a group to which the current user belongs."
   (declare (ignore namestring))
   nil)
 
-#-windows-target
+#+wasm32-target
+(defun %utimes (namestring)
+  (declare (ignore namestring))
+  (wasm-fs-unavailable "utimes"))
+
+#-(or windows-target wasm32-target)
 (defun %utimes (namestring)
   (with-filename-cstrs ((cnamestring namestring))
     (let* ((err (#_utimes cnamestring (%null-ptr))))
@@ -822,7 +1023,12 @@ given is that of a group to which the current user belongs."
 
              
 
-#-windows-target
+#+wasm32-target
+(defun get-uid-from-name (name)
+  (declare (ignore name))
+  nil)
+
+#-(or windows-target wasm32-target)
 (defun get-uid-from-name (name)
   (with-cstrs ((name name))
     (let* ((pwent (#_getpwnam name)))
@@ -830,35 +1036,55 @@ given is that of a group to which the current user belongs."
         (pref pwent :passwd.pw_uid)))))
 
 
+#+wasm32-target
+(defun isatty (fd)
+  (declare (ignore fd))
+  nil)
+
+#-wasm32-target
 (defun isatty (fd)
   #+windows-target (declare (ignore fd))
   #+windows-target nil
   #-windows-target
   (= 1 (#_isatty fd)))
 
-#-win64-target
+#+wasm32-target
 (progn
-(defun %open-dir (namestring)
-  (with-filename-cstrs ((name namestring))
-    (let* ((DIR (ff-call (%kernel-import target::kernel-import-lisp-opendir)
-                         :address name
+  (defun %open-dir (namestring)
+    (declare (ignore namestring))
+    (wasm-fs-unavailable "opendir"))
+
+  (defun close-dir (dir)
+    (declare (ignore dir))
+    (wasm-fs-unavailable "closedir"))
+
+  (defun %read-dir (dir)
+    (declare (ignore dir))
+    (wasm-fs-unavailable "readdir")))
+
+#-(or win64-target wasm32-target)
+(progn
+  (defun %open-dir (namestring)
+    (with-filename-cstrs ((name namestring))
+      (let* ((DIR (ff-call (%kernel-import target::kernel-import-lisp-opendir)
+                           :address name
+                           :address)))
+        (unless (%null-ptr-p DIR)
+          DIR))))
+
+  (defun close-dir (dir)
+    (ff-call (%kernel-import target::kernel-import-lisp-closedir)
+             :address dir
+             :int))
+
+  (defun %read-dir (dir)
+    (let* ((res (ff-call (%kernel-import target::kernel-import-lisp-readdir)
+                         :address dir
                          :address)))
-      (unless (%null-ptr-p DIR)
-	DIR))))
-
-(defun close-dir (dir)
-  (ff-call (%kernel-import target::kernel-import-lisp-closedir)
-           :address dir
-           :int))
-
-(defun %read-dir (dir)
-  (let* ((res (ff-call (%kernel-import target::kernel-import-lisp-readdir)
-                       :address dir
-                       :address)))
-    (unless (%null-ptr-p res)
-      (get-foreign-namestring (pref res
-                                    #+windows-target :_wdirent.d_name
-                                    #-windows-target :dirent.d_name)))))
+      (unless (%null-ptr-p res)
+        (get-foreign-namestring (pref res
+                                      #+windows-target :_wdirent.d_name
+                                      #-windows-target :dirent.d_name)))))
 )
 
 #+win64-target
@@ -911,10 +1137,21 @@ given is that of a group to which the current user belongs."
                          
 
 
-#-windows-target
+#+wasm32-target
+(defun tcgetpgrp (fd)
+  (declare (ignore fd))
+  (wasm-fs-unavailable "tcgetpgrp"))
+
+#-(or windows-target wasm32-target)
 (defun tcgetpgrp (fd)
   (#_tcgetpgrp fd))
 
+#+wasm32-target
+(defun getpid ()
+  "Return the ID of the Clozure CL OS process."
+  0)
+
+#-wasm32-target
 (defun getpid ()
   "Return the ID of the Clozure CL OS process."
   #-windows-target
@@ -922,11 +1159,23 @@ given is that of a group to which the current user belongs."
   #+windows-target (#_GetCurrentProcessId))
 
 
+#+wasm32-target
+(defun getuid ()
+  "Return the (real) user ID of the current user."
+  0)
+
+#-wasm32-target
 (defun getuid ()
   "Return the (real) user ID of the current user."
   #+windows-target 0
   #-windows-target (int-errno-call (#_getuid)))
 
+#+wasm32-target
+(defun get-user-home-dir (userid)
+  (declare (ignore userid))
+  nil)
+
+#-wasm32-target
 (defun get-user-home-dir (userid)
   "Look up and return the defined home directory of the user identified
 by uid, as a native namestring. This value comes from the OS user database, not from the $HOME
@@ -973,10 +1222,22 @@ Returns NIL if there is no user with the ID uid."
                 (unless (eql err #$ERANGE)
                   (return nil)))))))))
 
+#+wasm32-target
+(defun %delete-file (name)
+  (declare (ignore name))
+  (wasm-fs-unavailable "delete-file"))
+
+#-wasm32-target
 (defun %delete-file (name)
   (with-filename-cstrs ((n name))
     (int-errno-call (#+windows-target #__wunlink #-windows-target #_unlink n))))
 
+#+wasm32-target
+(defun os-command (string)
+  (declare (ignore string))
+  (error "os-command is not supported on wasm32."))
+
+#-wasm32-target
 (defun os-command (string)
   "Invoke the Posix function system(), which invokes the user's default
 system shell (such as sh or tcsh) as a new process, and has that shell
@@ -988,6 +1249,14 @@ of the shell itself."
   (with-cstrs ((s string))
     (#_system s)))
 
+#+wasm32-target
+(defun %strerror (errno)
+  (declare (fixnum errno))
+  (if (< errno 0)
+    (setq errno (- errno)))
+  (format nil "OS Error ~d" errno))
+
+#-wasm32-target
 (defun %strerror (errno)
   (declare (fixnum errno))
   (if (< errno 0)
@@ -1041,6 +1310,12 @@ of the shell itself."
         q))))
 )
         
+#+wasm32-target
+(defun %probe-shared-library (shlib)
+  (declare (ignore shlib))
+  (error "Shared libraries are not supported on wasm32."))
+
+#-wasm32-target
 (defun %probe-shared-library (shlib)
   #-(or windows-target android-target freebsd-target)
   (with-cstrs ((name (shlib.pathname shlib)))
@@ -1056,6 +1331,12 @@ of the shell itself."
 
 
 ;;; Kind of has something to do with files, and doesn't work in level-0.
+#+wasm32-target
+(defun close-shared-library (lib &key (completely t))
+  (declare (ignore lib completely))
+  (error "Shared libraries are not supported on wasm32."))
+
+#-wasm32-target
 (defun close-shared-library (lib &key (completely t))
   "If completely is T, set the reference count of library to 0. Otherwise,
 decrements it by 1. In either case, if the reference count becomes 0,
@@ -1088,6 +1369,12 @@ any EXTERNAL-ENTRY-POINTs known to be defined by it to become unresolved."
 
 ;;; Foreign (unix) processes.
 
+#+wasm32-target
+(defun call-with-string-vector (function strings encoding)
+  (declare (ignore function strings encoding))
+  (error "call-with-string-vector is not supported on wasm32."))
+
+#-wasm32-target
 (defun call-with-string-vector (function strings encoding)
   (let* ((encoding (if (typep encoding 'character-encoding)
                      encoding
@@ -1117,11 +1404,26 @@ any EXTERNAL-ENTRY-POINTs known to be defined by it to become unresolved."
       (setf (%get-ptr argv argvpos) (%null-ptr))
       (funcall function argv))))
 
+#+wasm32-target
+(defmacro with-string-vector ((var strings &optional encoding) &body body)
+  (declare (ignore var strings encoding body))
+  `(error "with-string-vector is not supported on wasm32."))
+
+#-wasm32-target
 (defmacro with-string-vector ((var strings &optional encoding) &body body)
   `(call-with-string-vector #'(lambda (,var) ,@body) ,strings ,encoding))
 
-(defloadvar *max-os-open-files* #-(or windows-target android-target) (#_getdtablesize) #+windows-target 32 #+android-target (#_sysconf #$_SC_OPEN_MAX))
+(defloadvar *max-os-open-files*
+  #+wasm32-target 32
+  #-(or windows-target android-target wasm32-target) (#_getdtablesize)
+  #+windows-target 32
+  #+android-target (#_sysconf #$_SC_OPEN_MAX))
 
+#+wasm32-target
+(defun pipe ()
+  (wasm-fs-unavailable "pipe"))
+
+#-wasm32-target
 (defun pipe ()
   ;;  (rlet ((filedes (:array :int 2)))
   (%stack-block ((filedes 8))
@@ -1140,7 +1442,7 @@ any EXTERNAL-ENTRY-POINTs known to be defined by it to become unresolved."
         (values (paref filedes (:array :int)  0) (paref filedes (:array :int)  1))
         (%errno-disp errno)))))
 
-#-windows-target
+#-(or windows-target wasm32-target)
 (progn
   (defun %execvp (argv)
     (#_execvp (%get-ptr argv) argv)
@@ -1596,7 +1898,7 @@ created successfully, and signal an error otherwise."
                            (not error-if-exited))
                 (%errno-disp error)))))))
 
-  )                                     ; #-windows-target (progn
+  )                                     ; #-(or windows-target wasm32-target) (progn
 
 #+windows-target
 (progn
@@ -2047,6 +2349,53 @@ space, and prefixed with PREFIX."
   )
                                         ;#+windows-target (progn
 
+#+wasm32-target
+(progn
+  (defstruct external-process
+    pid
+    %status
+    %exit-code
+    pty
+    input
+    output
+    error
+    status-hook
+    plist
+    token
+    core
+    args
+    (signal (make-semaphore))
+    (completed (make-semaphore))
+    watched-fds
+    watched-streams
+    external-format)
+
+  (defun run-program (program args &key
+                              (wait t) pty
+                              input if-input-does-not-exist
+                              output (if-output-exists :error)
+                              (error :output) (if-error-exists :error)
+                              status-hook (element-type 'character)
+                              env
+                              (sharing :private)
+                              (external-format `(:character-encoding ,*terminal-character-encoding-name*))
+                              (silently-ignore-catastrophic-failures nil))
+    (declare (ignore program args wait pty input if-input-does-not-exist output if-output-exists
+                     error if-error-exists status-hook element-type env sharing external-format
+                     silently-ignore-catastrophic-failures))
+    (error "run-program is not supported on wasm32."))
+
+  (defun external-processes ()
+    nil)
+
+  (defun external-process-wait (proc &optional check-stopped)
+    (declare (ignore proc check-stopped))
+    (error "external-process-wait is not supported on wasm32."))
+
+  (defun signal-external-process (proc signal &key (error-if-exited t))
+    (declare (ignore proc signal error-if-exited))
+    nil))
+
 
 (defun external-process-input-stream (proc)
   "Return the lisp stream which is used to write input to a given OS
@@ -2198,6 +2547,11 @@ not, why not; and what its result code was if it completed."
 
 (defloadvar *cpu-count* nil)
 
+#+wasm32-target
+(defun cpu-count ()
+  1)
+
+#-wasm32-target
 (defun cpu-count ()
   (or *cpu-count*
       (setq *cpu-count*
@@ -2258,6 +2612,11 @@ not, why not; and what its result code was if it completed."
 (defun yield ()
   (process-allow-schedule))
 
+#+wasm32-target
+(defun get-page-size ()
+  4096)
+
+#-wasm32-target
 (defun get-page-size ()
   #-windows-target
   (#_sysconf #$_SC_PAGESIZE)
@@ -2308,7 +2667,12 @@ not, why not; and what its result code was if it completed."
       (#_GetSystemInfo info)
       (pref info #>SYSTEM_INFO.dwAllocationGranularity)))
 
-#-windows-target
+#+wasm32-target
+(defun %memory-map-fd (fd len bits-per-element)
+  (declare (ignore fd len bits-per-element))
+  (error "Memory-mapped files are not supported on wasm32."))
+
+#-(or windows-target wasm32-target)
 (defun %memory-map-fd (fd len bits-per-element)
   (let* ((nbytes (+ *host-page-size*
                     (logandc2 (+ len
@@ -2434,6 +2798,12 @@ not, why not; and what its result code was if it completed."
                        
 
 
+#+wasm32-target
+(defun map-file-to-ivector (pathname element-type)
+  (declare (ignore pathname element-type))
+  (wasm-fs-unavailable "map-file-to-ivector"))
+
+#-wasm32-target
 (defun map-file-to-ivector (pathname element-type)
   (let* ((upgraded-type (upgraded-array-element-type element-type))
          (upgraded-ctype (specifier-type upgraded-type)))
@@ -2467,9 +2837,21 @@ not, why not; and what its result code was if it completed."
                                         :adjustable t
                                         :displaced-index-offset nalignment-elements))))))))))
 
+#+wasm32-target
+(defun map-file-to-octet-vector (pathname)
+  (declare (ignore pathname))
+  (wasm-fs-unavailable "map-file-to-octet-vector"))
+
+#-wasm32-target
 (defun map-file-to-octet-vector (pathname)
   (map-file-to-ivector pathname '(unsigned-byte 8)))
 
+#+wasm32-target
+(defun mapped-vector-data-address-and-size (displaced-vector)
+  (declare (ignore displaced-vector))
+  (error "Mapped vectors are not supported on wasm32."))
+
+#-wasm32-target
 (defun mapped-vector-data-address-and-size (displaced-vector)
   (let* ((v (array-displacement displaced-vector))
          (element-type (array-element-type displaced-vector)))
@@ -2490,7 +2872,12 @@ not, why not; and what its result code was if it completed."
                  target::node-size)))))
 
 
-#-windows-target
+#+wasm32-target
+(defun %unmap-file (data-address size-in-octets)
+  (declare (ignore data-address size-in-octets))
+  (error "Mapped vectors are not supported on wasm32."))
+
+#-(or windows-target wasm32-target)
 (defun %unmap-file (data-address size-in-octets)
   (let* ((base-address (%inc-ptr data-address (- *host-page-size*)))
          (fd (pref base-address :int)))
@@ -2513,6 +2900,12 @@ not, why not; and what its result code was if it completed."
 
 ;;; Argument should be something returned by MAP-FILE-TO-IVECTOR;
 ;;; this should be called at most once for any such object.
+#+wasm32-target
+(defun unmap-ivector (displaced-vector)
+  (declare (ignore displaced-vector))
+  (error "Mapped vectors are not supported on wasm32."))
+
+#-wasm32-target
 (defun unmap-ivector (displaced-vector)
   (multiple-value-bind (data-address size-in-octets)
       (mapped-vector-data-address-and-size displaced-vector)
@@ -2527,10 +2920,42 @@ not, why not; and what its result code was if it completed."
       (%unmap-file data-address size-in-octets)
       t)))
 
+#+wasm32-target
+(defun unmap-octet-vector (v)
+  (declare (ignore v))
+  (error "Mapped vectors are not supported on wasm32."))
+
+#-wasm32-target
 (defun unmap-octet-vector (v)
   (unmap-ivector v))
 
-#-windows-target
+#+wasm32-target
+(progn
+  (defun lock-mapped-vector (v)
+    (declare (ignore v))
+    (error "Mapped vectors are not supported on wasm32."))
+
+  (defun unlock-mapped-vector (v)
+    (declare (ignore v))
+    (error "Mapped vectors are not supported on wasm32."))
+
+  (defun bitmap-for-mapped-range (address nbytes)
+    (declare (ignore address nbytes))
+    (error "Mapped vectors are not supported on wasm32."))
+
+  (defun percentage-of-resident-pages (address nbytes)
+    (declare (ignore address nbytes))
+    (error "Mapped vectors are not supported on wasm32."))
+
+  (defun mapped-vector-resident-pages (v)
+    (declare (ignore v))
+    (error "Mapped vectors are not supported on wasm32."))
+
+  (defun mapped-vector-resident-pages-percentage (v)
+    (declare (ignore v))
+    (error "Mapped vectors are not supported on wasm32.")))
+
+#-(or windows-target wasm32-target)
 (progn
 (defun lock-mapped-vector (v)
   (multiple-value-bind (address nbytes)
@@ -2623,4 +3048,3 @@ not, why not; and what its result code was if it completed."
         (declare (fixnum s))
         (when (> s skew) (setq skew s))))))
 )
-
