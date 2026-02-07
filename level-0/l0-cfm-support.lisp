@@ -44,12 +44,12 @@
   ;; some advantage in treating those integers as signed (they might
   ;; be more likely to be fixnums, for instance), so ensure that they
   ;; aren't.
-  #+(or x86-target arm-target)
+  #+(or x86-target arm-target wasm32-target)
   (%setf-macptr addr (%int-to-ptr
                       (if (< entry 0)
                         (logand entry (1- (ash 1 target::nbits-in-word)))
                         entry)))
-  #-(or ppc-target x86-target arm-target) (dbg "Fix entry->addr"))
+  #-(or ppc-target x86-target arm-target wasm32-target) (dbg "Fix entry->addr"))
 
 
 
@@ -590,12 +590,18 @@
 ;;; function addresses on at least a 16-byte boundary, but some
 ;;; linkers don't quite get the concept ...)
 
+#+wasm32-target
+(defun foreign-symbol-entry (name &optional (handle *rtld-use*))
+  (declare (ignore name handle))
+  nil)
+
+#-wasm32-target
 (defun foreign-symbol-entry (name &optional (handle *rtld-use*))
   "Try to resolve the address of the foreign symbol name. If successful,
 return a fixnum representation of that address, else return NIL."
   (with-cstrs ((n name))
     #+ppc-target
-    (with-macptrs (addr)      
+    (with-macptrs (addr)
       (%setf-macptr addr
 		    (ff-call (%kernel-import target::kernel-import-FindSymbol)
 			     :address handle
@@ -785,6 +791,12 @@ return a fixnum representation of that address, else return NIL."
 
 
 
+#+wasm32-target
+(defun foreign-symbol-address (name &optional (map *rtld-use*))
+  (declare (ignore name map))
+  nil)
+
+#-wasm32-target
 (defun foreign-symbol-address (name &optional (map *rtld-use*))
   "Try to resolve the address of the foreign symbol name. If successful,
 return that address encapsulated in a MACPTR, else returns NIL."
@@ -992,5 +1004,3 @@ the operating system."
                              process)))
       (or lib
           (error "Error opening shared library ~a : ~a." name error-string))))
-
-

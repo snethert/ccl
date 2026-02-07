@@ -228,7 +228,7 @@ Build a real WASM32 heap image with `%toplevel-function%` seeded to
 `toplevel-loop` (so `start_lisp` can enter the real Lisp toplevel once the
 image is loaded).
 
-### Option A (Node runner, no native wasm32 CCL required)
+### Option A (Host CCL, recommended)
 
 1. Cross-compile the WASM32 fasls needed by `level-1.lafsl`:
 
@@ -242,17 +242,26 @@ scripts/wasm/compile-wasm-fasls.sh
 scripts/wasm/build-wasm-boot.sh
 ```
 
-3. Run the Node helper to load the boot image, execute the Lisp script, and
-   extract the generated image from the persistence store:
+3. Run the real-image policy script on the host (it injects `:wasm32-target`
+   into `*features*` if missing, so a normal 64-bit host CCL is sufficient):
+
+```bash
+ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --output doc/wasm/root.image
+```
+
+### Option B (Node helper, wasm-only path)
+
+Run the Node helper to load the boot image, execute the Lisp script, and
+extract the generated image from the persistence store:
 
 ```bash
 node doc/wasm/js/make-real-image.mjs --output doc/wasm/root.image
 ```
 
-### Option B (native wasm32 CCL)
+### Option C (native wasm32 CCL, optional)
 
 If you already have a **WASM32-target** CCL, you can run the Lisp script
-directly:
+directly (it will still inject `:wasm32-target` into `*features*` if missing):
 
 ```bash
 ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --output doc/wasm/root.image
@@ -278,7 +287,8 @@ The demo runner:
 
 ## Subprims Artifacts
 
-WASM subprims indices must match the ARM `sptab` order (`lisp-kernel/arm-spentry.s`).
+WASM subprims indices must match the ARM `sptab` order (`lisp-kernel/arm-spentry.s`),
+with WASM-only stub entries appended at the end.
 Artifacts are generated from ARM and checked in:
 
 - `doc/wasm/subprims-map.json`

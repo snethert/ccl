@@ -38,6 +38,7 @@
                   *wasm2-target-fulltag-misc* *wasm2-target-fulltagmask*
                   *wasm2-target-misc-data-offset* *wasm2-target-misc-dfloat-offset*
                   *wasm2-target-unbound-marker* *wasm2-target-slot-unbound-marker*
+                  *wasm2-target-illegal-marker*
                   *wasm2-target-single-float-count* *wasm2-target-double-float-count*
                   *wasm2-ir* *wasm2-locals* *wasm2-local-count*
                   *wasm2-temp-local* *wasm2-label-counter*
@@ -121,6 +122,14 @@
 (defwasm2 wasm2-slot-unbound-marker %slot-unbound-marker (seg vreg xfer)
   (declare (ignore seg vreg))
   (let* ((value *wasm2-target-slot-unbound-marker*))
+    (if (wasm2-returning-p xfer)
+      (wasm2-emit-constant-return value)
+      (wasm2-emit-const value)))
+  nil)
+
+(defwasm2 wasm2-illegal-marker %illegal-marker (seg vreg xfer)
+  (declare (ignore seg vreg))
+  (let* ((value *wasm2-target-illegal-marker*))
     (if (wasm2-returning-p xfer)
       (wasm2-emit-constant-return value)
       (wasm2-emit-const value)))
@@ -825,6 +834,13 @@
                           (list nil (list x y))))
   nil)
 
+(defwasm2 wasm2-%natural+ %natural+ (seg vreg xfer x y)
+  (wasm2-form seg vreg xfer
+              (make-acode (%nx1-operator call)
+                          (make-acode (%nx1-operator immediate) '+)
+                          (list nil (list x y))))
+  nil)
+
 (defwasm2 wasm2-%natural-logand %natural-logand (seg vreg xfer x y)
   (wasm2-form seg vreg xfer
               (make-acode (%nx1-operator call)
@@ -1375,7 +1391,7 @@
 (when (and (boundp '*next-nx-operators*)
            (assq '%tcr-toplevel-function *next-nx-operators*))
   (defwasm2 wasm2-%tcr-toplevel-function %tcr-toplevel-function (seg vreg xfer tcr)
-    (declare (ignore seg vreg))
+    (declare (ignore vreg))
     (wasm2-form seg nil nil tcr)
     (wasm2-emit :get-tcr-toplevel-function)
     (when (wasm2-returning-p xfer)
@@ -1385,7 +1401,7 @@
     nil)
 
   (defwasm2 wasm2-%set-tcr-toplevel-function %set-tcr-toplevel-function (seg vreg xfer tcr fun)
-    (declare (ignore seg vreg))
+    (declare (ignore vreg))
     (wasm2-form seg nil nil tcr)
     (wasm2-form seg nil nil fun)
     (wasm2-emit :set-tcr-toplevel-function)
@@ -2381,20 +2397,113 @@
       (wasm2-emit :return)))
   nil)
 
+(defwasm2 wasm2-%setf-double-float %setf-double-float (seg vreg xfer double-node double-val)
+  (declare (ignore vreg))
+  (let* ((returning (wasm2-returning-p xfer))
+         (val-temp (when returning (wasm2-allocate-temp))))
+    (wasm2-form seg nil nil double-node)
+    (wasm2-emit :const *wasm2-target-fulltag-misc*)
+    (wasm2-emit :i32-sub)
+    (when (minusp *wasm2-target-misc-dfloat-offset*)
+      (wasm2-emit :const (- *wasm2-target-misc-dfloat-offset*))
+      (wasm2-emit :i32-sub))
+    (wasm2-form seg nil nil double-val)
+    (when val-temp
+      (wasm2-emit :local.set val-temp)
+      (wasm2-emit :local.get val-temp))
+    (wasm2-emit-unbox-double)
+    (wasm2-emit :f64-store (if (minusp *wasm2-target-misc-dfloat-offset*) 0 *wasm2-target-misc-dfloat-offset*))
+    (when returning
+      (wasm2-emit :local.get val-temp)
+      (wasm2-emit :set-arg-z)
+      (wasm2-emit :set-nargs 1)
+      (wasm2-emit :return)))
+  nil)
+
+(defwasm2 wasm2-%setf-short-float %setf-short-float (seg vreg xfer single-node single-val)
+  (declare (ignore vreg))
+  (let* ((returning (wasm2-returning-p xfer))
+         (val-temp (when returning (wasm2-allocate-temp))))
+    (wasm2-form seg nil nil single-node)
+    (wasm2-emit :const *wasm2-target-fulltag-misc*)
+    (wasm2-emit :i32-sub)
+    (when (minusp *wasm2-target-misc-data-offset*)
+      (wasm2-emit :const (- *wasm2-target-misc-data-offset*))
+      (wasm2-emit :i32-sub))
+    (wasm2-form seg nil nil single-val)
+    (when val-temp
+      (wasm2-emit :local.set val-temp)
+      (wasm2-emit :local.get val-temp))
+    (wasm2-emit-unbox-single)
+    (wasm2-emit :f32-store (if (minusp *wasm2-target-misc-data-offset*) 0 *wasm2-target-misc-data-offset*))
+    (when returning
+      (wasm2-emit :local.get val-temp)
+      (wasm2-emit :set-arg-z)
+      (wasm2-emit :set-nargs 1)
+      (wasm2-emit :return)))
+  nil)
+
 (defwasm2 wasm2-%macptrptr% %macptrptr% (seg vreg xfer form)
-  (wasm2-form seg vreg xfer form)
+  (declare (ignore vreg))
+  (let* ((misc-ref (wasm2-subprim-fixnum '.SPmisc-ref)))
+    (wasm2-form seg nil nil form)
+    (wasm2-emit :const (wasm2-box-fixnum 1))
+    (wasm2-emit :set-arg1)
+    (wasm2-emit :set-arg0)
+    (wasm2-emit-call-subprim misc-ref)
+    (wasm2-emit :arg0)
+    (when (wasm2-returning-p xfer)
+      (wasm2-emit :set-arg-z)
+      (wasm2-emit :set-nargs 1)
+      (wasm2-emit :return)))
   nil)
 
 (defwasm2 wasm2-%consmacptr% %consmacptr% (seg vreg xfer form)
-  (wasm2-form seg vreg xfer form)
+  (declare (ignore vreg))
+  (let* ((addr-temp (wasm2-allocate-temp))
+         (obj-temp (wasm2-allocate-temp))
+         (misc-alloc (wasm2-subprim-fixnum '.SPmisc-alloc))
+         (misc-set (wasm2-subprim-fixnum '.SPmisc-set)))
+    (wasm2-form seg nil nil form)
+    (wasm2-emit :local.set addr-temp)
+    (wasm2-emit :const (wasm2-box-fixnum arm::macptr.element-count))
+    (wasm2-emit :set-arg1)
+    (wasm2-emit :const (wasm2-box-fixnum arm::subtag-macptr))
+    (wasm2-emit :set-arg0)
+    (wasm2-emit-call-subprim misc-alloc)
+    (wasm2-emit :local.set obj-temp)
+    (wasm2-emit :local.get obj-temp)
+    (wasm2-emit :const (wasm2-box-fixnum 1))
+    (wasm2-emit :set-arg1)
+    (wasm2-emit :local.get addr-temp)
+    (wasm2-emit :set-arg2)
+    (wasm2-emit :set-arg0)
+    (wasm2-emit-call-subprim misc-set)
+    (wasm2-emit :arg0)
+    (when (wasm2-returning-p xfer)
+      (wasm2-emit :set-arg-z)
+      (wasm2-emit :set-nargs 1)
+      (wasm2-emit :return)))
   nil)
 
 (defwasm2 wasm2-%immediate-ptr-to-int %immediate-ptr-to-int (seg vreg xfer form)
-  (wasm2-form seg vreg xfer form)
+  (declare (ignore vreg))
+  (wasm2-form seg nil nil form)
+  (wasm2-emit-box-fixnum)
+  (when (wasm2-returning-p xfer)
+    (wasm2-emit :set-arg-z)
+    (wasm2-emit :set-nargs 1)
+    (wasm2-emit :return))
   nil)
 
 (defwasm2 wasm2-%immediate-int-to-ptr %immediate-int-to-ptr (seg vreg xfer form)
-  (wasm2-form seg vreg xfer form)
+  (declare (ignore vreg))
+  (wasm2-form seg nil nil form)
+  (wasm2-emit-unbox-fixnum)
+  (when (wasm2-returning-p xfer)
+    (wasm2-emit :set-arg-z)
+    (wasm2-emit :set-nargs 1)
+    (wasm2-emit :return))
   nil)
 
 (defwasm2 wasm2-%immediate-inc-ptr %immediate-inc-ptr (seg vreg xfer ptr by)
@@ -2431,25 +2540,54 @@
       (wasm2-emit :return)))
   nil)
 
+(defwasm2 wasm2-immediate-get-ptr immediate-get-ptr (seg vreg xfer ptr offset)
+  (declare (ignore vreg))
+  (wasm2-form seg nil nil ptr)
+  (wasm2-form seg nil nil offset)
+  (wasm2-emit-unbox-fixnum)
+  (wasm2-emit :i32-add)
+  (wasm2-emit :i32-load)
+  (when (wasm2-returning-p xfer)
+    (wasm2-emit :set-arg-z)
+    (wasm2-emit :set-nargs 1)
+    (wasm2-emit :return))
+  nil)
+
 (defwasm2 wasm2-immediate-set-xxx %immediate-set-xxx (seg vreg xfer bits ptr offset val)
   (declare (ignore vreg))
   (let* ((size (logand 15 bits))
+         (store-ptr (zerop size))
+         (store-size (if store-ptr 4 size))
          (returning (wasm2-returning-p xfer))
-         (val-temp (when returning (wasm2-allocate-temp))))
+         (val-temp (when returning (wasm2-allocate-temp)))
+         (addr-temp (when store-ptr (wasm2-allocate-temp)))
+         (raw-temp (when store-ptr (wasm2-allocate-temp))))
     (wasm2-form seg nil nil ptr)
     (wasm2-form seg nil nil offset)
     (wasm2-emit-unbox-fixnum)
     (wasm2-emit :i32-add)
+    (when store-ptr
+      (wasm2-emit :local.set addr-temp))
     (wasm2-form seg nil nil val)
     (when val-temp
       (wasm2-emit :local.set val-temp)
       (wasm2-emit :local.get val-temp))
-    (wasm2-emit-unbox-fixnum)
-    (case size
+    (if store-ptr
+      (let* ((misc-ref (wasm2-subprim-fixnum '.SPmisc-ref)))
+        (wasm2-emit :const (wasm2-box-fixnum 1))
+        (wasm2-emit :set-arg1)
+        (wasm2-emit :set-arg0)
+        (wasm2-emit-call-subprim misc-ref)
+        (wasm2-emit :arg0)
+        (wasm2-emit :local.set raw-temp)
+        (wasm2-emit :local.get addr-temp)
+        (wasm2-emit :local.get raw-temp))
+      (wasm2-emit-unbox-fixnum))
+    (case store-size
       (1 (wasm2-emit :i32-store8))
       (2 (wasm2-emit :i32-store16))
       (4 (wasm2-emit :i32-store))
-      (t (error "WASM2: unsupported immediate-set-xxx size: ~s" size)))
+      (t (error "WASM2: unsupported immediate-set-xxx size: ~s" store-size)))
     (when returning
       (wasm2-emit :local.get val-temp)
       (wasm2-emit :set-arg-z)
@@ -3132,14 +3270,11 @@
            (vsize (+ (length inherited-vars) +wasm2-closure-cells-base+ 2))
            (subtag (wasm2-box-fixnum (nx-lookup-target-uvector-subtag :function)))
            (count (wasm2-box-fixnum vsize))
-           (entry-index (getf (afunc-lfun-info afunc) 'wasm-entry-index))
-           (entry-fixnum (if entry-index
-                           (wasm2-box-fixnum entry-index)
-                           (uvref lfun 0)))
-           (code-fixnum entry-fixnum)
            (misc-alloc (wasm2-subprim-fixnum '.SPmisc-alloc))
            (misc-set (wasm2-subprim-fixnum '.SPmisc-set))
-           (vec-temp (wasm2-allocate-temp)))
+           (vec-temp (wasm2-allocate-temp))
+           (code-temp (wasm2-allocate-temp))
+           (entry-temp (wasm2-allocate-temp)))
       (wasm2-emit :const count)
       (wasm2-emit :set-arg1)
       (wasm2-emit :const subtag)
@@ -3148,10 +3283,18 @@
       (wasm2-emit :arg0)
       (wasm2-emit :local.set vec-temp)
 
+      ;; closure codevector and entrypoint
+      (wasm2-emit-symbol-ref '%closure-code% nil)
+      (wasm2-emit :local.set code-temp)
+      (wasm2-emit :local.get code-temp)
+      (wasm2-emit :const (wasm2-box-fixnum 0))
+      (wasm2-emit :lisp-word-ref)
+      (wasm2-emit :local.set entry-temp)
+
       ;; slot 0: entrypoint
       (wasm2-emit :local.get vec-temp)
       (wasm2-emit :const (wasm2-box-fixnum 0))
-      (wasm2-emit :const entry-fixnum)
+      (wasm2-emit :local.get entry-temp)
       (wasm2-emit :set-arg2)
       (wasm2-emit :set-arg1)
       (wasm2-emit :set-arg0)
@@ -3160,7 +3303,7 @@
       ;; slot 1: codevector
       (wasm2-emit :local.get vec-temp)
       (wasm2-emit :const (wasm2-box-fixnum 1))
-      (wasm2-emit :const code-fixnum)
+      (wasm2-emit :local.get code-temp)
       (wasm2-emit :set-arg2)
       (wasm2-emit :set-arg1)
       (wasm2-emit :set-arg0)
@@ -3169,7 +3312,7 @@
       ;; slot 2: lfun
       (wasm2-emit :local.get vec-temp)
       (wasm2-emit :const (wasm2-box-fixnum 2))
-      (wasm2-emit :const (target-nil-value))
+      (wasm2-emit-const lfun)
       (wasm2-emit :set-arg2)
       (wasm2-emit :set-arg1)
       (wasm2-emit :set-arg0)
@@ -3616,6 +3759,7 @@
 (defvar *wasm2-target-misc-dfloat-offset* 0)
 (defvar *wasm2-target-unbound-marker* 0)
 (defvar *wasm2-target-slot-unbound-marker* 0)
+(defvar *wasm2-target-illegal-marker* 0)
 (defvar *wasm2-target-single-float-count* 1)
 (defvar *wasm2-target-double-float-count* 2)
 (defvar *wasm2-ir* nil)
@@ -3925,12 +4069,17 @@
   (cond ((macptrp value) nil)
         ((eq value (%unbound-marker)) *wasm2-target-unbound-marker*)
         ((eq value (%slot-unbound-marker)) *wasm2-target-slot-unbound-marker*)
+        ((eq value (%illegal-marker)) *wasm2-target-illegal-marker*)
         (t value)))
 
 (defun wasm2-const-pool-function-slot (value)
-  (if (and (integerp value) (not (fixnump value)))
-    nil
-    value))
+  (cond
+    ((and (integerp value) (not (fixnump value)))
+     nil)
+    ((or (typep value 'xcode-vector)
+         (typep value 'code-vector))
+     nil)
+    (t value)))
 
 (defconstant +wasm2-const-pool-version+ 1)
 (defconstant +wasm2-const-pool-tag-symbol+ 1)
@@ -4223,7 +4372,13 @@
      (wasm2-form seg nil nil arg)
      (wasm2-emit-unbox-fixnum))
     (:address
-     (wasm2-form seg nil nil arg))
+     (let* ((misc-ref (wasm2-subprim-fixnum '.SPmisc-ref)))
+       (wasm2-form seg nil nil arg)
+       (wasm2-emit :const (wasm2-box-fixnum 1))
+       (wasm2-emit :set-arg1)
+       (wasm2-emit :set-arg0)
+       (wasm2-emit-call-subprim misc-ref)
+       (wasm2-emit :arg0)))
     (t
      (error "WASM2: unsupported external-call arg type: ~s" spec))))
 
@@ -4242,7 +4397,25 @@
        (wasm2-emit :drop)
        (wasm2-emit-const (target-nil-value)))
       ((eq resultspec :address)
-       (error "WASM2: external-call :address results are not supported"))
+       (let* ((addr-temp (wasm2-allocate-temp))
+              (obj-temp (wasm2-allocate-temp))
+              (misc-alloc (wasm2-subprim-fixnum '.SPmisc-alloc))
+              (misc-set (wasm2-subprim-fixnum '.SPmisc-set)))
+         (wasm2-emit :local.set addr-temp)
+         (wasm2-emit :const (wasm2-box-fixnum arm::macptr.element-count))
+         (wasm2-emit :set-arg1)
+         (wasm2-emit :const (wasm2-box-fixnum arm::subtag-macptr))
+         (wasm2-emit :set-arg0)
+         (wasm2-emit-call-subprim misc-alloc)
+         (wasm2-emit :local.set obj-temp)
+         (wasm2-emit :local.get obj-temp)
+         (wasm2-emit :const (wasm2-box-fixnum 1))
+         (wasm2-emit :set-arg1)
+         (wasm2-emit :local.get addr-temp)
+         (wasm2-emit :set-arg2)
+         (wasm2-emit :set-arg0)
+         (wasm2-emit-call-subprim misc-set)
+         (wasm2-emit :arg0)))
       (t
        (wasm2-emit-box-fixnum)))
     (when (wasm2-returning-p xfer)
@@ -6196,8 +6369,36 @@
 (defun wasm2-box-fixnum (value)
   (ash value *wasm2-target-fixnum-shift*))
 
-(defun wasm2-make-const-function (entry-index const-value &optional (lfun-bits 0))
+(defun wasm2-make-stub-code-vector (entry-index)
+  (let* ((cross-compiling (and (boundp '*host-backend*)
+                               (boundp '*target-backend*)
+                               (not (eq *host-backend* *target-backend*))))
+         (host-arch (and (boundp '*host-backend*)
+                         (backend-target-arch *host-backend*)))
+         (host-subtags (and host-arch
+                            (arch::target-uvector-subtags host-arch)))
+         (xcode-subtag (cdr (assoc :xcode-vector host-subtags)))
+         (code-subtag (cdr (assoc :code-vector host-subtags)))
+         (subtag (if cross-compiling
+                   (or xcode-subtag code-subtag)
+                   (or code-subtag xcode-subtag))))
+    (unless subtag
+      (error "WASM2: missing code-vector subtag for host"))
+    (let ((code-vector (%alloc-misc 1 subtag)))
+      (setf (uvref code-vector 0) (wasm2-box-fixnum entry-index))
+      code-vector)))
+
+(defun wasm2-const-code-vector (entry-index)
+  (if (and (boundp '*host-backend*)
+           (boundp '*target-backend*)
+           (not (eq *host-backend* *target-backend*)))
+    ;; Avoid embedding host xcode-vectors in cross-compiled fasls.
+    (wasm2-box-fixnum entry-index)
+    (wasm2-make-stub-code-vector entry-index)))
+
+(defun wasm2-make-const-function (entry-index const-value name &optional (lfun-bits 0))
   (let* ((entry-fixnum (wasm2-box-fixnum entry-index))
+         (code-vector (wasm2-const-code-vector entry-index))
          ;; Cross-compilation needs xfunctions so fasl dumping won't treat them
          ;; as native code vectors.
          (subtag (if (and (boundp '*host-backend*)
@@ -6205,11 +6406,12 @@
                           (not (eq *host-backend* *target-backend*)))
                    target::subtag-xfunction
                    target::subtag-function))
-         (function (%alloc-misc 4 subtag)))
+         (function (%alloc-misc 5 subtag)))
     (setf (uvref function 0) entry-fixnum
-          (uvref function 1) entry-fixnum
+          (uvref function 1) code-vector
           (uvref function 2) const-value
-          (uvref function 3) lfun-bits)
+          (uvref function 3) name
+          (uvref function 4) lfun-bits)
     function))
 
 (defun wasm2-const-ir-value (ir)
@@ -6302,9 +6504,10 @@
     (let* ((entry-index (wasm2-allocate-entry-index))
            (bits (or (wasm2-const-lfun-bits afunc) 0))
            (keyvec (wasm2-const-lfun-keyvec afunc))
-           (keyvec-slot (if keyvec keyvec 0)))
+           (keyvec-slot (if keyvec keyvec 0))
+           (name (afunc-name afunc)))
       (setf (afunc-lfun afunc)
-            (wasm2-make-const-function entry-index keyvec-slot bits))
+            (wasm2-make-const-function entry-index keyvec-slot name bits))
       (setf (afunc-lfun-info afunc)
             (list* 'wasm-preallocated-entry-index entry-index
                    (afunc-lfun-info afunc)))))
@@ -6315,16 +6518,20 @@
       (wasm2-preallocate-afunc afunc)))
 
 (defun wasm2-set-afunc-lfun (afunc entry-index const-value bits)
-  (let ((existing (afunc-lfun afunc)))
+  (let* ((existing (afunc-lfun afunc))
+         (entry-fixnum (wasm2-box-fixnum entry-index))
+         (code-vector (wasm2-const-code-vector entry-index))
+         (name (afunc-name afunc)))
     (if existing
-      (let ((entry-fixnum (wasm2-box-fixnum entry-index)))
+      (progn
         (setf (uvref existing 0) entry-fixnum
-              (uvref existing 1) entry-fixnum
+              (uvref existing 1) code-vector
               (uvref existing 2) const-value
-              (uvref existing 3) bits)
+              (uvref existing 3) name
+              (uvref existing 4) bits)
         existing)
       (setf (afunc-lfun afunc)
-            (wasm2-make-const-function entry-index const-value bits)))))
+            (wasm2-make-const-function entry-index const-value name bits)))))
 
 (defun wasm2-const-lfun-bits (afunc)
   (let* ((lambda-form (afunc-lambdaform afunc)))
@@ -6365,6 +6572,7 @@
          (*wasm2-target-misc-dfloat-offset* (arch::target-misc-dfloat-offset arch))
          (*wasm2-target-unbound-marker* (arch::target-unbound-marker-value arch))
          (*wasm2-target-slot-unbound-marker* (arch::target-slot-unbound-marker-value arch))
+         (*wasm2-target-illegal-marker* arm::illegal-marker)
          (*wasm2-target-single-float-count* (truncate 4 (arch::target-lisp-node-size arch)))
          ;; Double-floats use an extra pad word on 32-bit targets.
          (*wasm2-target-double-float-count* (1+ (truncate 8 (arch::target-lisp-node-size arch))))

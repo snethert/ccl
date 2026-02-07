@@ -412,7 +412,7 @@
 
 #+ppc-target
 (defvar *gf-proto-code* (uvref *gf-proto* 0))
-#+arm-target
+#+(or arm-target wasm32-target)
 (defvar *gf-proto-code* (uvref *gf-proto* 1))
 
 ;;; The "early" version of %ALLOCATE-GF-INSTANCE.
@@ -425,13 +425,13 @@
 							  *standard-generic-function-class*))))
 		 (dt (make-gf-dispatch-table))
 		 (slots (allocate-typed-vector :slot-vector (1+ len) (%slot-unbound-marker)))
-		 (fn #+(or ppc-target arm-target)
-                     (#+arm-target
+	     (fn #+(or ppc-target arm-target wasm32-target)
+                     (#+(or arm-target wasm32-target)
                       %fix-fn-entrypoint
-                      #-arm-target
+                      #-(or arm-target wasm32-target)
                       progn
                       (gvector :function
-                            #+arm-target 0
+                            #+(or arm-target wasm32-target) 0
 			      *gf-proto-code*
 			      wrapper
 			      slots
@@ -472,18 +472,18 @@
 #+ppc-target
 (defvar *cm-proto-code* (uvref *cm-proto* 0))
 
-#+arm-target
+#+(or arm-target wasm32-target)
 (defvar *cm-proto-code* (uvref *cm-proto* 1))
 
 (defun %cons-combined-method (gf thing dcode)
   ;; set bits and name = gf
-  #+(or ppc-target arm-target)
-  (#+arm-target
+  #+(or ppc-target arm-target wasm32-target)
+  (#+(or arm-target wasm32-target)
    %fix-fn-entrypoint
-   #-arm-target
+   #-(or arm-target wasm32-target)
    progn
-   (gvector :function          
-           #+arm-target 0
+   (gvector :function
+           #+(or arm-target wasm32-target) 0
            *cm-proto-code*
            thing
            dcode
@@ -1975,6 +1975,5 @@
           (if (null next-methods)
             (%rplaca (cdr magic) method))
           (apply-with-method-context magic method-function args))))))
-
 
 

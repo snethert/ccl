@@ -5,7 +5,7 @@ separate from the detailed checklists in `porting-status.md`.
 
 **Status key:** ✅ done · ⚠️ partial · ❌ not started · ⏸ deferred
 
-**Last updated:** 2026‑02‑05
+**Last updated:** 2026‑02‑07
 
 ## Current snapshot (one‑screen summary)
 
@@ -14,7 +14,7 @@ separate from the detailed checklists in `porting-status.md`.
 - **Subprims provider:** ✅ Tier‑0 semantics + ABI defined and exercised by compiled modules.
 - **Lisp runtime (Level‑1):** ✅ capability errors + yield path + WASM stream classes + virtual FS policy.
 - **Compiler/backend (WASM):** ⚠️ MVP emission for constants, fixnum ops, calls, multi‑value (2–4 + `values` >4 via VSP push), and local control flow (`if`, `block/return-from`, `tagbody/go`) with compiled-module registry install; `catch`/`throw` routed through subprims; cooperative `unwind-protect` cleanup + closure capture now in place with multi‑value preservation.
-- **Image + real toplevel:** ⚠️ minimal boot image loads + post‑load `start_lisp` entry wired; no real Lisp toplevel.
+- **Image + real toplevel:** ⚠️ boot image via cross‑xload now works + post‑load `start_lisp` entry wired; no real Lisp toplevel/root image yet.
 - **Concurrency model:** ⏸ deferred (single‑threaded baseline first).
 
 ## Roadmap phases

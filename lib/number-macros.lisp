@@ -35,6 +35,12 @@
 (declare-arch-specific-macro %denominator)
 
 
+#+wasm32-target
+(defmacro %realpart (x)
+  `(locally (declare (notinline realpart))
+     (realpart ,x)))
+
+#-wasm32-target
 (defmacro %realpart (x)
   (let* ((thing (gensym))
          (complex-single-float-tag (nx-lookup-target-uvector-subtag :complex-single-float))
@@ -46,6 +52,12 @@
         (t (ccl::%svref ,thing 0))))))
 
 
+#+wasm32-target
+(defmacro %imagpart (x)
+  `(locally (declare (notinline imagpart))
+     (imagpart ,x)))
+
+#-wasm32-target
 (defmacro %imagpart (x)
   (let* ((thing (gensym))
          (complex-single-float-tag (nx-lookup-target-uvector-subtag :complex-single-float))

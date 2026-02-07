@@ -50,7 +50,8 @@
   post‑load entry (`wasm_ccl_start_lisp`) now exists, but the real Lisp REPL
   image is still pending.
 - **Image boot path:** ⚠️  
-  `wasm_ccl_load_image` + minimal image generator load successfully (boot-only);
+  `wasm_ccl_load_image` works for the minimal image and the cross‑xload boot
+  image (`wasm-boot.image` from `cross-xload-level-0 :wasm32`);
   `wasm_ccl_start_lisp` enters the stub toplevel after load; real root image
   still pending.
 

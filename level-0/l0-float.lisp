@@ -18,6 +18,22 @@
 
 (in-package "CCL")
 
+#+wasm32-target
+(declaim (ftype (function (t t t) t) %%scale-sfloat!)
+         (ftype (function (t &optional t) t) %short-float %short-float-ratio
+                                          %double-float->short-float
+                                          %fixnum-sfloat %bignum-sfloat))
+
+#+wasm32-target
+(eval-when (:compile-toplevel)
+  ;; Give %short-float a wasm32-friendly arglist during compilation without
+  ;; disturbing host behavior.
+  (let ((old (fdefinition '%short-float)))
+    (setf (fdefinition '%short-float)
+          (lambda (number &optional result)
+            (declare (ignore result))
+            (funcall old number)))))
+
 (eval-when (:compile-toplevel :execute)
   (require "NUMBER-MACROS")
   (require :number-case-macro) 

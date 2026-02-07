@@ -357,6 +357,11 @@
 (defparameter *xload-loading-toplevel-location* nil)
 (defparameter *xload-early-class-cells* nil)
 (defparameter *xload-early-istruct-cells* nil)
+(declaim (special *xload-symbols*
+                  *xload-symbol-addresses*
+                  *xload-static-space*
+                  *xload-dynamic-space*
+                  *xload-readonly-space*))
 
 (defparameter *xload-pure-code-p* t)     ; when T, subprims are copied to readonly space
                                         ; and code vectors are allocated there, reference subprims
@@ -643,8 +648,20 @@
         (natural-ref v (the fixnum (+ offset (the fixnum (+ *xload-target-misc-data-offset* (the fixnum (ash i 3))))))))))
     (error "Not a vector: #x~x" addr)))   
 
+(defun xload-ensure-integer (new addr i context)
+  (cond
+    ((integerp new) new)
+    ((and (eq (backend-xload-info-name *xload-target-backend*) :wasm32)
+          *xload-target-use-code-vectors*
+          (typep new '(simple-array (unsigned-byte 32) (*))))
+     (xload-save-code-vector new))
+    (t
+     (error "XLOAD ~A expected integer; got ~s (~s). addr=#x~x i=~d load-file=~s toplevel=~s"
+            context new (type-of new) addr i *xload-loading-file-source-file* *xload-loading-toplevel-location*))))
+
 (defun (setf xload-%svref) (new addr i)
   (declare (fixnum i))
+  (setq new (xload-ensure-integer new addr i "SVREF"))
   (if (= (the fixnum (logand addr *xload-target-fulltagmask*)) *xload-target-fulltag-misc*)
     (target-word-size-case
      (32
@@ -669,6 +686,7 @@
 
 (defun (setf xload-%fullword-ref) (new addr i)
   (declare (fixnum i))
+  (setq new (xload-ensure-integer new addr i "FULLWORD-REF"))
   (if (= (the fixnum (logand addr *xload-target-fulltagmask*))
          *xload-target-fulltag-misc*)
     (multiple-value-bind (v offset) (xload-lookup-address addr)
@@ -1018,31 +1036,56 @@
     (format t ")")))
 
 (defun xload-initial-packages ()
-  (mapcar #'find-package '("CL" "CCL"  "KEYWORD" "TARGET" "OS")))
+  (let* ((packages (mapcar #'find-package '("CL" "CCL" "KEYWORD" "TARGET" "OS")))
+         (arm (eval '(find-package "ARM"))))
+    (when arm
+      (setf packages (append packages (list arm))))
+    (remove nil packages)))
 
 
 (defun xfasload (output-file &rest pathnames)
-  (let* ((*xload-symbols* (make-hash-table :test #'eq))
-         (*xload-symbol-addresses* (make-hash-table :test #'eql))
-         (*xload-spaces* nil)
-         (*xload-early-class-cells* nil)
-         (*xload-early-istruct-cells* *xload-target-nil*)
-         (*xload-readonly-space* (init-xload-space *xload-readonly-space-address* *xload-readonly-space-size* area-readonly))
-         (*xload-dynamic-space* (init-xload-space *xload-dynamic-space-address* *xload-dynamic-space-size* area-dynamic))
-	 (*xload-static-space* (init-xload-space *xload-static-space-address* *xload-static-space-size* area-static))
-         (*xload-managed-static-space* (init-xload-space *xload-managed-static-space-address* *xload-managed-static-space-size* area-managed-static))
-         (*xload-static-cons-space* (init-xload-space *xload-static-cons-space-address* *xload-static-cons-space-size* area-static-cons))
-						 
-         (*xload-package-alist* (xload-clone-packages (xload-initial-packages)))
-         (*xload-cold-load-functions* nil)
-         (*xload-cold-load-documentation* nil)
-         (*xload-loading-file-source-file* nil)
-         (*xload-loading-toplevel-location* nil)
-         (*xload-aliased-package-addresses* nil)
-         (*xload-special-binding-indices*
-          (make-hash-table :test #'eql))
-         (*xload-next-special-binding-index*
-          (length *xload-reserved-special-binding-index-symbols*)))
+  (when (and *xload-target-backend*
+             (eq (backend-xload-info-name *xload-target-backend*) :wasm32))
+    (unless (find-package "ARM")
+      (require "ARM-ARCH" "ccl:compiler;ARM;arm-arch.lisp")))
+  (progv '(*xload-symbols*
+           *xload-symbol-addresses*
+           *xload-spaces*
+           *xload-early-class-cells*
+           *xload-early-istruct-cells*
+           *xload-readonly-space*
+           *xload-dynamic-space*
+           *xload-static-space*
+           *xload-managed-static-space*
+           *xload-static-cons-space*
+           *xload-package-alist*
+           *xload-cold-load-functions*
+           *xload-cold-load-documentation*
+           *xload-loading-file-source-file*
+           *xload-loading-toplevel-location*
+           *xload-aliased-package-addresses*
+           *xload-special-binding-indices*
+           *xload-next-special-binding-index*)
+         (make-list 18)
+    (setq *xload-symbols* (make-hash-table :test #'eq))
+    (setq *xload-symbol-addresses* (make-hash-table :test #'eql))
+    (setq *xload-spaces* nil)
+    (setq *xload-early-class-cells* nil)
+    (setq *xload-early-istruct-cells* *xload-target-nil*)
+    (setq *xload-readonly-space* (init-xload-space *xload-readonly-space-address* *xload-readonly-space-size* area-readonly))
+    (setq *xload-dynamic-space* (init-xload-space *xload-dynamic-space-address* *xload-dynamic-space-size* area-dynamic))
+    (setq *xload-static-space* (init-xload-space *xload-static-space-address* *xload-static-space-size* area-static))
+    (setq *xload-managed-static-space* (init-xload-space *xload-managed-static-space-address* *xload-managed-static-space-size* area-managed-static))
+    (setq *xload-static-cons-space* (init-xload-space *xload-static-cons-space-address* *xload-static-cons-space-size* area-static-cons))
+    (setq *xload-package-alist* (xload-clone-packages (xload-initial-packages)))
+    (setq *xload-cold-load-functions* nil)
+    (setq *xload-cold-load-documentation* nil)
+    (setq *xload-loading-file-source-file* nil)
+    (setq *xload-loading-toplevel-location* nil)
+    (setq *xload-aliased-package-addresses* nil)
+    (setq *xload-special-binding-indices* (make-hash-table :test #'eql))
+    (setq *xload-next-special-binding-index*
+          (length *xload-reserved-special-binding-index-symbols*))
     (funcall (backend-xload-info-static-space-init-function
               *xload-target-backend*))
     ;; Create %unbound-function% and the package objects in dynamic space,
@@ -1062,10 +1105,10 @@
        (:wasm32
         ;; WASM32 uses ARM layout but entrypoints are fixnum table indices.
         (let* ((udf-object (xload-make-gvector :pseudofunction 2)))
-          (setf (xload-%svref udf-object 1)
-                (xload-save-code-vector
-                 (backend-xload-info-udf-code
-                  *xload-target-backend*)))
+          (let* ((udf-code (backend-xload-info-udf-code
+                            *xload-target-backend*)))
+            (setf (xload-%svref udf-object 1)
+                  (xload-save-code-vector udf-code)))
           (locally (declare (ftype (function (t) t) xload-wasm-set-entrypoint))
             (xload-wasm-set-entrypoint udf-object))))
        (otherwise
@@ -1076,20 +1119,27 @@
           (setf (xload-%svref udf-object 0)
                 (xload-save-code-vector
                  (backend-xload-info-udf-code
-                  *xload-target-backend*)))))))
+                  *xload-target-backend*))))))
       (let* ((udf-object (xload-make-gvector :simple-vector 1)))
         (setf (xload-%svref udf-object 0) (backend-xload-info-udf-code
                                            *xload-target-backend*))))
       
     (setq *xload-aliased-package-addresses* (xload-assign-aliased-package-addresses *xload-package-alist*))
-    (dolist (pair (xload-nrs))
-      (let* ((val-p (consp pair))
-	     (val (if val-p (or (cdr pair) *xload-target-nil*)))
-	     (sym (if val-p (car pair) pair)))
-	(xload-copy-symbol sym
-			   :preserve-constantness t
-			   :space *xload-static-space*)
-	(when val-p (xload-set sym val))))
+    (unless *xload-symbols*
+      (setq *xload-symbols* (make-hash-table :test #'eq)))
+    (unless *xload-symbol-addresses*
+      (setq *xload-symbol-addresses* (make-hash-table :test #'eql)))
+    (unless *xload-static-space*
+      (setq *xload-static-space* (find area-static *xload-spaces* :key #'xload-space-code)))
+    (let ((static-space *xload-static-space*))
+      (dolist (pair (xload-nrs))
+        (let* ((val-p (consp pair))
+	       (val (if val-p (or (cdr pair) *xload-target-nil*)))
+	       (sym (if val-p (car pair) pair)))
+	  (xload-copy-symbol sym
+			     :preserve-constantness t
+			     :space static-space)
+	  (when val-p (xload-set sym val)))))
                                         ; This could be a little less ... procedural.
     (xload-set '*package* (xload-package->addr *ccl-package*))
     (xload-set '*keyword-package* (xload-package->addr *keyword-package*))
@@ -1155,7 +1205,10 @@
                  (format t "~&~d: ~s" idx
                          (xload-lookup-symbol-address addr)))
              *xload-special-binding-indices*)
-    (xload-dump-image output-file *xload-image-base-address*)))
+    (unless (fboundp 'write-image-file)
+      (load "ccl:xdump;heap-image.lisp"))
+    (xload-dump-image output-file *xload-image-base-address*))
+  )
 
 (defun xload-dump-image (output-file heap-start)
   (declare (ftype (function (t t list)) write-image-file))
@@ -1171,7 +1224,8 @@
 
 
 
-
+
+
 ;;; The xloader
 
 (xload-copy-faslop $fasl-noop)

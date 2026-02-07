@@ -219,6 +219,7 @@
         (native-to-pathname realpath)
         nil))))
 
+#-wasm32-target
 (defun cwd (path)  
   (multiple-value-bind (realpath kind) (%probe-file-x (defaulted-native-namestring path))
     (if kind
@@ -230,12 +231,14 @@
 	(error "~S is not a directory pathname." path))
       (error "Invalid pathname : ~s." path))))
 
+#-wasm32-target
 (defun create-file (path &key (if-exists :error) (create-directory t))
   (let* ((p (%create-file path :if-exists if-exists
 				      :create-directory create-directory)))
     (and p
          (native-to-pathname p))))
 
+#-wasm32-target
 (defun %create-file (path &key
 			 (if-exists :error)
 			 (create-directory t))
@@ -1261,7 +1264,8 @@ a host-structure or string."
         (source-file file-name)
         (optimization-setting-vars '(*nx-speed* *nx-space* *nx-safety*
                                      *nx-debug* *nx-cspeed*)))
-    (declare (special *load-pathname* *load-truename*))
+    (declare (special *load-pathname* *load-truename*)
+             #+wasm32-target (ignore optimization-setting-vars))
     (flet ((%load-body ()
              (when (typep file-name 'string-input-stream)
                (when verbose
@@ -1405,6 +1409,7 @@ a host-structure or string."
 
 (%fhave '%include #'include)
 
+#-wasm32-target
 (defun delete-file (path)
   "Delete the specified FILE."
   (let* ((namestring (defaulted-native-namestring path))

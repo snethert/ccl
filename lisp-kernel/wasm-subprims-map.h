@@ -1,5 +1,6 @@
 /*
- * Auto-generated from lisp-kernel/arm-spentry.s.
+ * Auto-generated from lisp-kernel/arm-spentry.s, with
+ * WASM-only stub entries appended at the end.
  *
  * Keep this in sync with the ARM sptab order; WASM subprim indices must match.
  */
@@ -7,7 +8,7 @@
 #ifndef __ccl_wasm_subprims_map_h__
 #define __ccl_wasm_subprims_map_h__
 
-#define WASM_SUBPRIMS_COUNT 130
+#define WASM_SUBPRIMS_COUNT 132
 
 #define FOR_EACH_WASM_SUBPRIM(X) \
   X(_SPfix_nfn_entrypoint) \
@@ -139,6 +140,8 @@
   X(_SPeabi_ff_call_simple) \
   X(_SPdebind) \
   X(_SPeabi_callback) \
-  X(_SPeabi_ff_callhf)
+  X(_SPeabi_ff_callhf) \
+  X(_SPwasm_macro_apply_stub) \
+  X(_SPwasm_udf_stub)
 
 #endif

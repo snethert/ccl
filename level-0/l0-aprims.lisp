@@ -28,6 +28,12 @@
   l)
 
 ;;; This has to run very early in the initial thread.
+#+wasm32-target
+(defun %revive-system-locks ()
+  ;; WASM bring-up has no host lock handles to revive.
+  nil)
+
+#-wasm32-target
 (defun %revive-system-locks ()
   (dolist (s (population-data %system-locks%))
     (%revive-macptr s)
@@ -118,6 +124,12 @@
     (set-%gcable-macptrs% v)
     v))
 
+#+wasm32-target
+(defun %make-recursive-lock-ptr ()
+  (record-system-lock
+   (make-gcable-macptr $flags_DisposeRecursiveLock)))
+
+#-wasm32-target
 (defun %make-recursive-lock-ptr ()
   (record-system-lock
    (%setf-macptr
@@ -125,6 +137,12 @@
     (ff-call (%kernel-import target::kernel-import-new-recursive-lock)
              :address))))
 
+#+wasm32-target
+(defun %make-rwlock-ptr ()
+  (record-system-lock
+   (make-gcable-macptr $flags_DisposeRwLock)))
+
+#-wasm32-target
 (defun %make-rwlock-ptr ()
   (record-system-lock
    (%setf-macptr
@@ -191,9 +209,16 @@ synchronization between threads."
     (report-bad-arg rw 'read-write-lock)))
   
 
+#+wasm32-target
+(defun %make-semaphore-ptr (count)
+  (declare (ignore count))
+  (record-system-lock
+   (make-gcable-macptr $flags_DisposeSemaphore)))
+
+#-wasm32-target
 (defun %make-semaphore-ptr (count)
   (let* ((p (ff-call (%kernel-import target::kernel-import-new-semaphore)
-	     :signed-fullword count
+		     :signed-fullword count
              :address)))
     (if (%null-ptr-p p)
       (error "Can't create semaphore.")

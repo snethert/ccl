@@ -6,9 +6,13 @@
 
 ;; WASM32 uses ARM layout but entrypoints are fixnum table indices.
 (defun %fix-fn-entrypoint (func)
-  (let* ((codev (uvref func 1))
-         (entry (uvref codev 0)))
-    (setf (uvref func 0) entry)
+  (let* ((codev (uvref func 1)))
+    (cond
+      ((and (uvectorp codev)
+            (> (uvsize codev) 0))
+       (setf (uvref func 0) (uvref codev 0)))
+      ((fixnump codev)
+       (setf (uvref func 0) codev)))
     func))
 
 ;; Minimal macptr->fixnum for WASM. The macptr address slot stores the raw

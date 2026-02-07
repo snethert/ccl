@@ -197,7 +197,7 @@
 ;;; Note that this is true of symbols and functions and many other
 ;;; things that it wasn't true of on the 68K.
 (defun gvectorp (x)
-  #+(or ppc32-target x8632-target arm-target)
+  #+(or ppc32-target x8632-target arm-target wasm32-target)
   (= (the fixnum (logand (the fixnum (typecode x)) target::fulltagmask)) target::fulltag-nodeheader)
   #+ppc64-target
   (= (the fixnum (logand (the fixnum (typecode x)) ppc64::lowtagmask)) ppc64::lowtag-nodeheader)
@@ -214,7 +214,7 @@
 (setf (type-predicate 'gvector) 'gvectorp)
 
 (defun ivectorp (x)
-  #+(or ppc32-target x8632-target arm-target)
+  #+(or ppc32-target x8632-target arm-target wasm32-target)
   (= (the fixnum (logand (the fixnum (typecode x)) target::fulltagmask))
      target::fulltag-immheader)
   #+ppc64-target
@@ -230,7 +230,7 @@
 (setf (type-predicate 'ivector) 'ivectorp)
 
 (defun miscobjp (x)
-  #+(or ppc32-target x8632-target x8664-target arm-target)
+  #+(or ppc32-target x8632-target x8664-target arm-target wasm32-target)
   (= (the fixnum (lisptag x)) target::tag-misc)
   #+ppc64-target
   (= (the fixnum (fulltag x)) ppc64::fulltag-misc)
@@ -1041,7 +1041,7 @@
 
 (defun symbolp (thing)
   "Return true if OBJECT is a SYMBOL, and NIL otherwise."
-  #+(or ppc32-target x8632-target arm-target)
+  #+(or ppc32-target x8632-target arm-target wasm32-target)
   (if thing
     (= (the fixnum (typecode thing)) target::subtag-symbol)
     t)

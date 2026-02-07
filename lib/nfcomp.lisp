@@ -1599,6 +1599,18 @@ Will differ from *compiling-file* during an INCLUDE")
 
 
 (defun fasl-dump-dispatch (exp)
+  ;; Ensure xcode/code vectors are dumped via the code-vector path even when
+  ;; they are simple 32-bit ivectors on the host.
+  (let* ((host-arch (backend-target-arch *host-backend*))
+         (host-subtags (and host-arch
+                            (arch::target-uvector-subtags host-arch)))
+         (xcode-subtag (cdr (assoc :xcode-vector host-subtags)))
+         (code-subtag (cdr (assoc :code-vector host-subtags))))
+    (when (and (ivectorp exp)
+               (let ((subtag (typecode exp)))
+                 (or (and xcode-subtag (eql subtag xcode-subtag))
+                     (and code-subtag (eql subtag code-subtag)))))
+      (return-from fasl-dump-dispatch (fasl-dump-codevector exp))))
   (etypecase exp
     ((signed-byte 16) (fasl-dump-s16 exp))
     ((signed-byte 32) (fasl-dump-s32 exp))
@@ -1625,6 +1637,8 @@ Will differ from *compiling-file* during an INCLUDE")
      (fasl-dump-16-bit-ivector exp $fasl-u16-vector))
     ((simple-array (signed-byte 16) (*))
      (fasl-dump-16-bit-ivector exp $fasl-s16-vector))
+    (code-vector (fasl-dump-codevector exp))
+    (xcode-vector (fasl-dump-codevector exp))
     ((simple-array (unsigned-byte 32) (*))
      (fasl-dump-32-bit-ivector exp $fasl-u32-vector))
     ((simple-array (signed-byte 32) (*))
@@ -1637,8 +1651,6 @@ Will differ from *compiling-file* during an INCLUDE")
     (package (fasl-dump-package exp))
     (function (fasl-dump-function exp))
     (xfunction (fasl-dump-function exp))
-    (code-vector (fasl-dump-codevector exp))
-    (xcode-vector (fasl-dump-codevector exp))
     (simple-vector (fasl-dump-gvector exp $fasl-t-vector))
     (ratio (fasl-dump-ratio exp))
     (complex (fasl-dump-complex exp))
@@ -2244,4 +2256,3 @@ Will differ from *compiling-file* during an INCLUDE")
   
 
 (provide 'nfcomp)
-

@@ -4307,7 +4307,7 @@
            function
            nil
            (dpb 1 $lfbits-numreq 0))
-  #+arm-target
+  #+(or arm-target wasm32-target)
   (%fix-fn-entrypoint
    (gvector :function
            0
@@ -4392,4 +4392,3 @@
                          (multiple-value-bind (win sure)
                              (ctypep value nowctype)
                            (or (not sure) win))))))))))
-

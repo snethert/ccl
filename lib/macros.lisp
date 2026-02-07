@@ -3831,38 +3831,62 @@ to be at least partially steppable."
 ;;; value when the macro function is expanded than it did when the macro
 ;;; function was defined; this can happen during cross-compilation.)
 (defmacro with-eagain (fd direction &body body)
-  (let* ((res (gensym))
-	 (eagain (symbol-value (read-from-string "#$EAGAIN"))))
-   `(loop
-      (let ((,res (progn ,@body)))
-	(if (eql ,res (- ,eagain))
-          (progn
-            (setq ,res
-                  (,(ecase direction
-                           (:input 'process-input-would-block)
-                           (:output 'process-output-would-block))
-                    ,fd))
-            (unless (eq ,res t) (return ,res)))
-	  (return ,res))))))
+  (if (or (member :wasm32-target *features*)
+          (and (boundp '*target-backend*)
+               (eq (backend-name *target-backend*) :wasm32)))
+    (let* ((res (gensym))
+           (eagain 6))
+      `(loop
+         (let ((,res (progn ,@body)))
+           (if (eql ,res (- ,eagain))
+             (progn
+               (setq ,res
+                     (,(ecase direction
+                          (:input 'process-input-would-block)
+                          (:output 'process-output-would-block))
+                      ,fd))
+               (unless (eq ,res t) (return ,res)))
+             (return ,res)))))
+    (let* ((res (gensym))
+           (eagain (symbol-value (read-from-string "#$EAGAIN"))))
+      `(loop
+         (let ((,res (progn ,@body)))
+           (if (eql ,res (- ,eagain))
+             (progn
+               (setq ,res
+                     (,(ecase direction
+                          (:input 'process-input-would-block)
+                          (:output 'process-output-would-block))
+                      ,fd))
+               (unless (eq ,res t) (return ,res)))
+             (return ,res)))))))
 
 (defmacro ignoring-eintr (&body body)
-  (let* ((res (gensym))
-         (eintr (symbol-value (read-from-string "#$EINTR"))))
-    `(loop
-       (let* ((,res (progn ,@body)))
-         (unless (eql ,res (- ,eintr))
-           (return ,res))))))
+  (if (or (member :wasm32-target *features*)
+          (and (boundp '*target-backend*)
+               (eq (backend-name *target-backend*) :wasm32)))
+    `(progn ,@body)
+    (let* ((res (gensym))
+           (eintr (symbol-value (read-from-string "#$EINTR"))))
+      `(loop
+         (let* ((,res (progn ,@body)))
+           (unless (eql ,res (- ,eintr))
+             (return ,res)))))))
 
 (defmacro ff-call-ignoring-eintr (&body body)
-  (let* ((res (gensym))
-         (eintr (symbol-value (read-from-string "#$EINTR"))))
-    `(loop
-       (let* ((,res (progn ,@body)))
-         (declare (fixnum ,res))
-         (when (< ,res 0)
-           (setq ,res (%get-errno)))
-         (unless (eql ,res (- ,eintr))
-           (return ,res))))))
+  (if (or (member :wasm32-target *features*)
+          (and (boundp '*target-backend*)
+               (eq (backend-name *target-backend*) :wasm32)))
+    `(progn ,@body)
+    (let* ((res (gensym))
+           (eintr (symbol-value (read-from-string "#$EINTR"))))
+      `(loop
+         (let* ((,res (progn ,@body)))
+           (declare (fixnum ,res))
+           (when (< ,res 0)
+             (setq ,res (%get-errno)))
+           (unless (eql ,res (- ,eintr))
+             (return ,res)))))))
 
 (defmacro basic-stream-ioblock (s)
   `(or (basic-stream.state ,s)

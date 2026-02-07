@@ -13,6 +13,21 @@
     (push '(%wasm-ff-call 0 :infer) *next-nx-operators*))
   (unless (assq 'wasm-ff-call *next-nx-operators*)
     (push '(wasm-ff-call 0 :infer) *next-nx-operators*))
+  ;; Ensure older host images still recognize these operators during cross-compile.
+  (unless (assq '%tcr-toplevel-function *next-nx-operators*)
+    (push '(%tcr-toplevel-function
+            #.(logior operator-single-valued-mask
+                      operator-assignment-free-mask
+                      operator-acode-subforms-mask
+                      operator-side-effect-free-mask)
+            t)
+          *next-nx-operators*))
+  (unless (assq '%set-tcr-toplevel-function *next-nx-operators*)
+    (push '(%set-tcr-toplevel-function
+            #.(logior operator-single-valued-mask
+                      operator-acode-subforms-mask)
+            t)
+          *next-nx-operators*))
   (next-nx-defops))
 
 (defparameter *wasm-ffi-supported-repr-types*
@@ -29,6 +44,17 @@
   (cond
     ((stringp entry) entry)
     ((symbolp entry) (symbol-name entry))
+    ((and (consp entry)
+          (eq (car entry) '%kernel-import)
+          (consp (cdr entry)))
+     (let* ((sym (cadr entry)))
+       (when (symbolp sym)
+         (let* ((name (symbol-name sym))
+                (prefix "KERNEL-IMPORT-"))
+           (when (and (>= (length name) (length prefix))
+                      (string= name prefix :end1 (length prefix)))
+             (let* ((suffix (subseq name (length prefix))))
+               (string-downcase (substitute #\_ #\- suffix))))))))
     ((and (consp entry)
           (eq (car entry) '%reference-external-entry-point)
           (consp (cdr entry)))
@@ -111,6 +137,11 @@
                        (intern "GENERATE-CALLBACK-RETURN-VALUE" "WASM"))))
         (install-standard-foreign-types ftd)
         (let ((*target-ftd* ftd))
+          ;; Alias common C size-related types to wasm32-sized integers.
+          (def-foreign-type :size_t :unsigned-fullword)
+          (def-foreign-type :ssize_t :signed-fullword)
+          (def-foreign-type :mode_t :unsigned-fullword)
+          (def-foreign-type :off_t :signed-fullword)
           ;; Minimal struct types needed by l1 runtime utilities.
           (unless (%find-foreign-record :timeval)
             (def-foreign-type :timeval

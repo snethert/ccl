@@ -129,3 +129,29 @@ channel, and matches the existing WASM2 external import machinery.
   (`:address`, `:signed/unsigned-{fullword,halfword,byte}`, `:void`).  
 - Up to 7 arguments are supported by the current import type set.  
 **References:** `compiler/WASM/wasm2.lisp:1836`, `compiler/WASM/wasm-ffi.lisp:1`
+
+## ADR-0014 — WASM fasl bring-up uses wasm32-only OS/FFI stubs
+
+**Status:** Accepted  
+**Decision:** For `#+wasm32-target`, OS/FFI-dependent operations in
+`level-1/linux-files.lisp` are stubbed to signal capability unavailability,
+no-op, or return conservative defaults (e.g. page size `4096`,
+`cpu-count = 1`, `*max-os-open-files* = 32`). All behavior changes are guarded
+with `#+wasm32-target` / `#-wasm32-target` so non‑WASM backends are unchanged.  
+**Why:** The WASM runtime does not provide POSIX filesystem/process/mmap/dlopen
+facilities yet. Stubbing these paths is the minimum to allow `l1-boot-3` and
+WASM fasl compilation to complete while the host ABI matures.  
+**Notes:** Pre‑existing compile warnings were not addressed as part of the
+WASM fasl bring‑up.  
+**References:** `level-1/linux-files.lisp:1`, `doc/wasm/capability-matrix.md:1`
+
+## ADR-0015 — WASM2 complex lowers to a generic call
+
+**Status:** Accepted (temporary)  
+**Decision:** The WASM2 backend handles the `complex` operator by emitting a
+generic `(complex ...)` call via the normal call emitter instead of a dedicated
+opcode.  
+**Why:** WASM2 previously lacked a `complex` opcode; lowering to the generic
+call unblocks compilation (e.g. `coerce-to-complex`) without affecting other
+backends.  
+**References:** `compiler/WASM/wasm2.lisp:1`

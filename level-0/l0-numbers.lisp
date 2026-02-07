@@ -1635,6 +1635,27 @@
          (complex (cos theta) (sin theta)))))
 
 
+#+wasm32-target
+(defun complex (realpart &optional (imagpart 0))
+  "Return a complex number with the specified real and imaginary components."
+  (number-case realpart
+    (short-float
+      (number-case imagpart
+         (short-float (%make-complex realpart imagpart))
+         (double-float (%make-complex (%double-float realpart) imagpart))
+         (rational (%make-complex realpart (%short-float imagpart)))))
+    (double-float
+     (number-case imagpart
+       (double-float (%make-complex realpart imagpart))
+       ((short-float rational) (%make-complex  realpart (%double-float imagpart)))))
+    (rational (number-case imagpart
+                (double-float (%make-complex
+                               (%double-float realpart)
+                               imagpart))
+                (short-float (%make-complex (%short-float realpart) imagpart))
+                (rational (canonical-complex realpart imagpart))))))
+
+#-wasm32-target
 (defun complex (realpart &optional (imagpart 0))
   "Return a complex number with the specified real and imaginary components."
   (number-case realpart
@@ -1655,6 +1676,18 @@
                 (rational (canonical-complex realpart imagpart))))))  
 
 ;; #-PPC IN L1-NUMBERS.LISP
+#+wasm32-target
+(defun realpart (number)
+  "Extract the real part of a number."
+  (let* ((code (typecode number)))
+    (cond ((eql code target::subtag-complex)
+           (%svref number target::complex.realpart-cell))
+          ((or (eql code target::subtag-complex-single-float)
+               (eql code target::subtag-complex-double-float))
+           (error "Complex float realpart not supported on wasm target."))
+          (t number))))
+
+#-wasm32-target
 (defun realpart (number)
   "Extract the real part of a number."
   (number-case number
@@ -1664,6 +1697,19 @@
     (number number)))
 
 ;; #-PPC IN L1-NUMBERS.LISP
+#+wasm32-target
+(defun imagpart (number)
+  "Extract the imaginary part of a number."
+  (let* ((code (typecode number)))
+    (cond ((eql code target::subtag-complex)
+           (%svref number target::complex.imagpart-cell))
+          ((or (eql code target::subtag-complex-single-float)
+               (eql code target::subtag-complex-double-float))
+           (error "Complex float imagpart not supported on wasm target."))
+          ((floatp number) (* 0 number))
+          (t 0))))
+
+#-wasm32-target
 (defun imagpart (number)
   "Extract the imaginary part of a number."
   (number-case number

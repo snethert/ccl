@@ -638,6 +638,33 @@ minimum number of elements to add if it must be extended."
         (incf result (the fixnum (* chunk-size (the fixnum index))))
         (setq chunk-size (* chunk-size dim))))))
 
+#+wasm32-target
+(defun aref (a &lexpr subs)
+  "Return the element of the ARRAY specified by the SUBSCRIPTS."
+  (let* ((n (%lexpr-count subs)))
+    (declare (fixnum n))
+    (if (= n 1)
+      (%aref1 a (%lexpr-ref subs n 0))
+      (let* ((typecode (typecode a)))
+        (declare (fixnum typecode))
+        (if (or (>= (the (unsigned-byte 8) (gvector-typecode-p typecode))
+                    target::subtag-vectorH)
+                (>= (the (unsigned-byte 8) (ivector-typecode-p typecode))
+                    target::min-cl-ivector-subtag))
+          (%err-disp $XNDIMS a n)
+          (if (/= typecode target::subtag-arrayH)
+            (report-bad-arg a 'array)
+            ;;  This typecode is Just Right ...
+            (progn
+              (unless (= (the fixnum (%svref a target::arrayH.rank-cell)) n)
+                (%err-disp $XNDIMS a n))
+              (let* ((rmi (%array-index a subs n)))
+                (declare (fixnum rmi))
+                (multiple-value-bind (data offset) (%array-header-data-and-offset a)
+                  (declare (fixnum offset))
+                  (uvref data (the fixnum (+ offset rmi))))))))))))
+
+#-wasm32-target
 (defun aref (a &lexpr subs)
   "Return the element of the ARRAY specified by the SUBSCRIPTS."
   (let* ((n (%lexpr-count subs)))
@@ -671,6 +698,35 @@ minimum number of elements to add if it must be extended."
 
 
 
+#+wasm32-target
+(defun aset (a &lexpr subs&val)
+  (let* ((count (%lexpr-count subs&val))
+         (nsubs (1- count)))
+    (declare (fixnum nsubs count))
+    (if (eql count 0)
+      (%err-disp $xneinps)
+      (let* ((val (%lexpr-ref subs&val count nsubs)))
+        (if (= nsubs 1)
+          (%aset1 a (%lexpr-ref subs&val count 0) val)
+          (let* ((typecode (typecode a)))
+            (declare (fixnum typecode))
+            (if (or (>= (the (unsigned-byte 8) (gvector-typecode-p typecode))
+                    target::subtag-vectorH)
+                (>= (the (unsigned-byte 8) (ivector-typecode-p typecode))
+                    target::min-cl-ivector-subtag))
+              (%err-disp $XNDIMS a nsubs)
+              (if (/= typecode target::subtag-arrayH)
+                (report-bad-arg a 'array)
+                ;;  This typecode is Just Right ...
+                (progn
+                  (unless (= (the fixnum (%svref a target::arrayH.rank-cell)) nsubs)
+                    (%err-disp $XNDIMS a nsubs))
+                  (let* ((rmi (%array-index a subs&val nsubs)))
+                    (declare (fixnum rmi))
+                    (multiple-value-bind (data offset) (%array-header-data-and-offset a)
+                      (setf (uvref data (the fixnum (+ offset rmi))) val))))))))))))
+
+#-wasm32-target
 (defun aset (a &lexpr subs&val)
   (let* ((count (%lexpr-count subs&val))
          (nsubs (1- count)))

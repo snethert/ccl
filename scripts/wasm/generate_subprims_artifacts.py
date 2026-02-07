@@ -8,7 +8,8 @@ Outputs:
 - lisp-kernel/wasm-subprims-map.h
 - lisp-kernel/wasm-subprims-standin.c
 
-This keeps the WASM backend's table indices aligned with ARM.
+This keeps the WASM backend's table indices aligned with ARM, with
+WASM-only stubs appended at the end.
 """
 
 from __future__ import annotations
@@ -69,7 +70,8 @@ def write_header(repo_root: Path, symbols: list[str]) -> None:
     path = repo_root / "lisp-kernel" / "wasm-subprims-map.h"
     lines: list[str] = []
     lines.append("/*")
-    lines.append(" * Auto-generated from lisp-kernel/arm-spentry.s.")
+    lines.append(" * Auto-generated from lisp-kernel/arm-spentry.s, with")
+    lines.append(" * WASM-only stub entries appended at the end.")
     lines.append(" *")
     lines.append(" * Keep this in sync with the ARM sptab order; WASM subprim indices must match.")
     lines.append(" */")
@@ -90,7 +92,7 @@ def write_header(repo_root: Path, symbols: list[str]) -> None:
 
 
 def write_standins(repo_root: Path, symbols: list[str]) -> None:
-    _ = symbols  # list is implied by FOR_EACH_WASM_SUBPRIM
+    exclude = {"_SPmakes32", "_SPfix_overflow", "_SPunused1", "_SPunused2"}
     path = repo_root / "lisp-kernel" / "wasm-subprims-standin.c"
     lines: list[str] = []
     lines.append("/*")
@@ -98,6 +100,9 @@ def write_standins(repo_root: Path, symbols: list[str]) -> None:
     lines.append(" *")
     lines.append(" * These are placeholders so the JS host can install a complete subprims table.")
     lines.append(" * Real implementations can later override table entries with handwritten WASM.")
+    lines.append(" *")
+    lines.append(" * NOTE: Some subprims are implemented in the kernel or smoke tests and")
+    lines.append(" * are intentionally omitted here to avoid duplicate symbols.")
     lines.append(" */")
     lines.append("")
     lines.append("#ifdef WASM32")
@@ -110,7 +115,11 @@ def write_standins(repo_root: Path, symbols: list[str]) -> None:
     lines.append("#define SUBPRIM_STUB(name) \\")
     lines.append('  DECL_SUBPRIM(name) { Bug(NULL, "WASM subprim not implemented: %s", #name); }')
     lines.append("")
-    lines.append("FOR_EACH_WASM_SUBPRIM(SUBPRIM_STUB)")
+    for sym in symbols:
+        if sym in exclude:
+            lines.append(f"/* {sym} provided elsewhere */")
+            continue
+        lines.append(f"SUBPRIM_STUB({sym})")
     lines.append("")
     lines.append("#undef SUBPRIM_STUB")
     lines.append("#undef DECL_SUBPRIM")
@@ -125,6 +134,11 @@ def main() -> int:
     spentry = repo_root / "lisp-kernel" / "arm-spentry.s"
 
     symbols = extract_symbols(spentry)
+    # WASM-only stubs (not part of the ARM sptab) appended after ARM entries.
+    extras = ["_SPwasm_macro_apply_stub", "_SPwasm_udf_stub"]
+    for sym in extras:
+        if sym not in symbols:
+            symbols.append(sym)
     write_json(repo_root, symbols)
     write_header(repo_root, symbols)
     write_standins(repo_root, symbols)

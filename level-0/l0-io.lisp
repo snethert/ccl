@@ -216,6 +216,7 @@
               (%kernel-import target::kernel-import-lisp-open)
               :address p :int flags :mode_t create-mode :int)))
     (declare (fixnum fd))
+    #-(or wasm32-target wasm-target)
     (when (or (= fd (- #$EMFILE))
               (= fd (- #$ENFILE)))
       (gc)
@@ -244,6 +245,16 @@
                     :mode_t mode
                     :int))
 
+#+(or wasm32-target wasm-target)
+(defun fd-lseek (fd offset whence)
+  (int-errno-ffcall
+   (%kernel-import target::kernel-import-lisp-lseek)
+   :int fd
+   :signed-fullword offset
+   :int whence
+   :signed-fullword))
+
+#-(or wasm32-target wasm-target)
 (defun fd-lseek (fd offset whence)
   (int-errno-ffcall
    (%kernel-import target::kernel-import-lisp-lseek)
@@ -258,7 +269,9 @@
                     :int)) 
 
 (defun fd-tell (fd)
-  (fd-lseek fd 0 #$SEEK_CUR))
+  (fd-lseek fd 0
+            #+(or wasm32-target wasm-target) 1
+            #-(or wasm32-target wasm-target) #$SEEK_CUR))
 
 ;;; Kernels prior to 2.4 don't seem to have a "stat" variant
 ;;; that handles 64-bit file offsets.
@@ -290,11 +303,45 @@
 
 
 ;;; Not really I/O, but ...
+#+(or wasm32-target wasm-target)
+(defun %make-macptr ()
+  (let ((v (%alloc-misc target::macptr.element-count target::subtag-macptr)))
+    (setf (uvref v target::macptr.address-cell) 0)
+    v))
+
+#+(or wasm32-target wasm-target)
 (defun malloc (size)
-  (ff-call 
+  (let* ((addr (ff-call
+                (%kernel-import target::kernel-import-malloc)
+                :unsigned-fullword size
+                :unsigned-fullword))
+         (ptr (%make-macptr)))
+    (%setf-macptr ptr addr)
+    ptr))
+
+#+(or wasm32-target wasm-target)
+(defun free (ptr)
+  (let* ((size (uvsize ptr))
+         (flags (if (= size target::xmacptr.element-count)
+                  (uvref ptr target::xmacptr.flags-cell)
+                  $flags_DisposPtr)))
+    (declare (fixnum size flags))
+    (when (= flags $flags_DisposPtr)
+      (let ((addr (macptr->fixnum ptr)))
+        (when (= size target::xmacptr.element-count)
+          (%setf-macptr ptr (%null-ptr))
+          (setf (uvref ptr target::xmacptr.flags-cell) $flags_Normal))
+        (ff-call
+         (%kernel-import target::kernel-import-free)
+         :unsigned-fullword addr :void)))))
+
+#-(or wasm32-target wasm-target)
+(defun malloc (size)
+  (ff-call
    (%kernel-import target::kernel-import-malloc)
    :unsigned-fullword size :address))
 
+#-(or wasm32-target wasm-target)
 (defun free (ptr)
   (let* ((size (uvsize ptr))
          (flags (if (= size target::xmacptr.element-count)
@@ -306,10 +353,7 @@
         (when (= size target::xmacptr.element-count)
           (%setf-macptr ptr (%null-ptr))
           (setf (uvref ptr target::xmacptr.flags-cell) $flags_Normal))
-        (ff-call 
+        (ff-call
          (%kernel-import target::kernel-import-free)
          :address addr :void)))))
-
-
-
 

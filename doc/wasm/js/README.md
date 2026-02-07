@@ -10,8 +10,9 @@ Key objects (created in JS):
 * A JS microkernel that implements the `ccl.kernel_request` ABI (see `microkernel.mjs`)
 * Optional: a lightweight world/runner manager (`world-kernel.mjs`) that composes the microkernel with runner lifecycle helpers
 
-The subprims table order must match the ARM `sptab` order. The canonical list
-is extracted from `lisp-kernel/arm-spentry.s` and checked in as:
+The subprims table order must match the ARM `sptab` order, with WASM-only
+stub entries appended at the end. The canonical list is extracted from
+`lisp-kernel/arm-spentry.s` and checked in as:
 
 * `doc/wasm/subprims-map.json`
 

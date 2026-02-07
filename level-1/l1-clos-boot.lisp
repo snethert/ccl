@@ -1979,6 +1979,8 @@ to replace that class with ~s" name old-class new-class)
 
   (defstatic *general-vector-class* (find-class 'general-vector))
 
+  (declaim (special *ivector-vector-classes*))
+
   #+ppc32-target
   (defparameter *ivector-vector-classes*
     (vector (find-class 'short-float-vector)
@@ -2441,6 +2443,7 @@ to replace that class with ~s" name old-class new-class)
               class-of-function-function)
         (setf (%svref v target::subtag-vectorH)
               #'(lambda (v)
+                  (declare (special *ivector-vector-classes*))
                   (let* ((subtype (%array-header-subtype v)))
                     (declare (fixnum subtype))
                     (if (eql subtype target::subtag-simple-vector)
@@ -3905,4 +3908,3 @@ to replace that class with ~s" name old-class new-class)
         (dolist (method (%gf-methods f))
           (%add-direct-methods method)))))
   (setq *maintain-class-direct-methods* t))   ; no error, all is well
-

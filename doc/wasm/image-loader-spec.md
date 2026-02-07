@@ -64,12 +64,18 @@ path must seed the kernel toplevel function explicitly:
   `start_lisp`.
 
 The seed image build script is `scripts/wasm/make-real-image.lisp`.
-`doc/wasm/js/make-real-image.mjs` can run it inside the WASM kernel under Node
-to avoid needing a native wasm32 CCL.
+It will inject `:wasm32-target` into `*features*` if needed, so a normal
+64‑bit host CCL (including a native macOS build) is sufficient for the
+current workflow and there is no 32‑bit host requirement. A Node‑hosted
+helper exists (`doc/wasm/js/make-real-image.mjs`) for a wasm‑only path,
+but it is not adopted in the current bring‑up.
+The boot image it consumes is produced via `cross-xload-level-0 :wasm32`
+(wrapper: `scripts/wasm/build-wasm-boot.sh`), which now completes and writes
+`ccl:ccl;wasm-boot.image`.
 
 ## Reference host placement strategy (current)
 
-The Node helper (`doc/wasm/js/load-image.mjs`) uses:
+The JS host loader (`doc/wasm/js/load-image.mjs`) uses:
 
 - A manual cstack at the top of linear memory.
 - The image blob placed just below the cstack (16‑byte aligned).

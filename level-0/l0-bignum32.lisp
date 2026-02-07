@@ -16,6 +16,12 @@
 
 (in-package "CCL")
 
+#+(and 32-bit-target wasm32-target)
+(declaim (ftype (function (t t t t t t t) t) %add-with-carry %subtract-with-borrow)
+         (ftype (function (t t t) t) bignum-ashift-left-digits)
+         (ftype (function (t t t t t t) t) try-bignum-truncate-guess)
+         (ftype (function (t t) t) %digit-0-or-plusp))
+
 
 #+32-bit-target                         ; the whole shebang
 (eval-when (:compile-toplevel :execute)

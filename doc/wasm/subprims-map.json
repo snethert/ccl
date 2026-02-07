@@ -1,5 +1,5 @@
 {
-  "count": 130,
+  "count": 132,
   "source": "lisp-kernel/arm-spentry.s",
   "symbols": [
     "_SPfix_nfn_entrypoint",

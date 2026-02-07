@@ -99,6 +99,18 @@
 (defmacro defwasmarchmacro (name lambda-list &body body)
   `(arch::defarchmacro :wasm32 ,name ,lambda-list ,@body))
 
+(defwasmarchmacro ccl::%make-sfloat ()
+  `(ccl::%alloc-misc arm::single-float.element-count arm::subtag-single-float))
+
+(defwasmarchmacro ccl::%make-dfloat ()
+  `(ccl::%alloc-misc arm::double-float.element-count arm::subtag-double-float))
+
+(defwasmarchmacro ccl::%numerator (x)
+  `(ccl::%svref ,x arm::ratio.numer-cell))
+
+(defwasmarchmacro ccl::%denominator (x)
+  `(ccl::%svref ,x arm::ratio.denom-cell))
+
 (defwasmarchmacro ccl::%get-kernel-global (name)
   `(ccl::%fixnum-ref (ash (+ (- arm::nil-value arm::fulltag-nil)
                              ,(arm::%kernel-global
@@ -157,6 +169,23 @@
 (defwasmarchmacro ccl::codevec-header-p (word)
   `(eql arm::subtag-code-vector
     (logand ,word arm::subtag-mask)))
+
+(defwasmarchmacro ccl::immediate-p-macro (thing)
+  (let* ((tag (gensym)))
+    `(let* ((,tag (ccl::lisptag ,thing)))
+      (declare (fixnum ,tag))
+      (or (= ,tag arm::tag-fixnum)
+       (= ,tag arm::tag-imm)))))
+
+(defwasmarchmacro ccl::hashed-by-identity (thing)
+  (let* ((typecode (gensym)))
+    `(let* ((,typecode (ccl::typecode ,thing)))
+      (declare (fixnum ,typecode))
+      (or
+       (= ,typecode arm::tag-fixnum)
+       (= ,typecode arm::tag-imm)
+       (= ,typecode arm::subtag-symbol)
+       (= ,typecode arm::subtag-instance)))))
 
 ;;; Mirror ARM's function vector layout for immediates.
 (defwasmarchmacro ccl::nth-immediate (f i)

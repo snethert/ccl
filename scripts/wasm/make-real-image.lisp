@@ -14,7 +14,9 @@
 
 (defun ensure-wasm32-target ()
   (unless (wasm32-target-p)
-    (error "This script must run under a WASM32-target CCL (:wasm32-target missing).")))
+    (pushnew :wasm32-target *features*)
+    (format t "~&Note: injecting :wasm32-target into *features* for this image build.~%")
+    (finish-output)))
 
 (defun repo-root-from-script ()
   (let* ((script (or *load-truename*
@@ -72,7 +74,8 @@
 
 (defun usage ()
   (format t "~&Usage: ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --output PATH~%")
-  (format t "Builds a WASM32 heap image with %toplevel-function% seeded to toplevel-loop.~%"))
+  (format t "Builds a WASM32 heap image with %toplevel-function% seeded to toplevel-loop.~%")
+  (format t "If :wasm32-target is missing, this script injects it into *features*.~%"))
 
 (defun main ()
   (let* ((argv (parse-argv ccl:*command-line-argument-list*)))

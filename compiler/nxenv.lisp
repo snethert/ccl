@@ -341,6 +341,7 @@
      (%debug-trap  #.operator-acode-subforms-mask t)
      (%%ineg  #.(logior operator-assignment-free-mask operator-single-valued-mask operator-acode-subforms-mask operator-side-effect-free-mask) fixnum)
      (%setf-short-float  #.(logior operator-single-valued-mask operator-acode-subforms-mask) single-float)
+     (%setf-single-float  #.(logior operator-single-valued-mask operator-acode-subforms-mask) single-float)
      (%short-float+-2   #.(logior operator-single-valued-mask operator-side-effect-free-mask operator-acode-subforms-mask) single-float)
      (%short-float--2   #.(logior operator-single-valued-mask operator-side-effect-free-mask operator-acode-subforms-mask) single-float)
      (%short-float*-2   #.(logior operator-single-valued-mask operator-side-effect-free-mask operator-acode-subforms-mask) single-float)

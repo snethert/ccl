@@ -2171,7 +2171,9 @@
 
 
 (defnx1 nx1-symvector ((%symptr->symvector) (%symvector->symptr)) context (arg)
-  (make-acode (%nx1-default-operator) (nx1-form :value arg)))
+  (if (eq (backend-name *target-backend*) :wasm32)
+    (nx1-form context arg)
+    (make-acode (%nx1-default-operator) (nx1-form :value arg))))
 
 (defnx1 nx1-%ilognot (%ilognot) context (n)
   ;; Bootstrapping nonsense.
