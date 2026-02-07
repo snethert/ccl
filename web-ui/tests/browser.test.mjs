@@ -48,4 +48,7 @@ test("headless browser harness runs deterministically", async (t) => {
   assert.equal(result.webglMeasureOk, true);
   assert.equal(result.persistenceOk, true);
   assert.equal(result.uiBridgeOk, true);
+  if (result.uiBundleOk) {
+    assert.equal(result.wasmUiOk, true, result.wasmUiInfo?.error || "WASM UI smoke failed");
+  }
 });

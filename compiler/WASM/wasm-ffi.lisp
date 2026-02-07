@@ -110,7 +110,40 @@
                        :callback-return-value-function
                        (intern "GENERATE-CALLBACK-RETURN-VALUE" "WASM"))))
         (install-standard-foreign-types ftd)
-        (setf (backend-target-foreign-type-data backend) ftd))))
+        (let ((*target-ftd* ftd))
+          ;; Minimal struct types needed by l1 runtime utilities.
+          (unless (%find-foreign-record :timeval)
+            (def-foreign-type :timeval
+              (:struct :timeval
+               (:tv_sec :signed-long)
+               (:tv_usec :signed-fullword))))
+          (unless (%find-foreign-record :timespec)
+            (def-foreign-type :timespec
+              (:struct :timespec
+               (:tv_sec :signed-long)
+               (:tv_nsec :signed-fullword))))
+          (unless (%find-foreign-record :stat)
+            (def-foreign-type :stat
+              (:struct :stat
+               (:st_mode :unsigned-long)
+               (:st_size :signed-long)
+               (:st_mtime :signed-long)
+               (:st_mtim (:struct :timespec))
+               (:st_mtimespec (:struct :timespec))
+               (:st_ino :unsigned-long)
+               (:st_uid :unsigned-long)
+               (:st_blksize :signed-long)
+               (:st_mtime_nsec :signed-long)
+               (:st_gid :unsigned-long)
+               (:st_dev :unsigned-long)
+               (:st_flags :unsigned-long))))
+          (unless (%find-foreign-record :passwd)
+            (def-foreign-type :passwd
+              (:struct :passwd
+               (:pw_name :address)
+               (:pw_uid :unsigned-long)
+               (:pw_dir :address))))
+        (setf (backend-target-foreign-type-data backend) ftd)))))
 
 (in-package "WASM")
 

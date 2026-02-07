@@ -305,12 +305,18 @@ for compiling files that are not expected to change.")
 (defparameter *autoload-lisp-package* nil)   ; Make 'em suffer
 (defparameter *apropos-case-sensitive-p* nil)
 
-(defloadvar *total-gc-microseconds* (let* ((timeval-size
-                                            #.(%foreign-type-or-record-size
-                                               :timeval :bytes))
-                                           (p (malloc (* 5 timeval-size))))
-                                      (#_memset p 0 (* 5 timeval-size))
-                                      p))
+(defloadvar *total-gc-microseconds*
+  (let* ((timeval-size #+wasm32-target 8
+                       #-wasm32-target
+                       #.(%foreign-type-or-record-size :timeval :bytes))
+         (total-size (* 5 timeval-size))
+         (p (malloc total-size)))
+    #+wasm32-target
+    (dotimes (i total-size)
+      (setf (%get-unsigned-byte p i) 0))
+    #-wasm32-target
+    (#_memset p 0 total-size)
+    p))
 
 
 (defloadvar *total-bytes-freed* (let* ((p (malloc 8)))

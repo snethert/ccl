@@ -64,6 +64,13 @@
   (declare (ignore operation args)))
 
 
+#+wasm32-target
+(defun %usage-exit (banner exit-status other-args)
+  (declare (ignore other-args))
+  (error "Usage exit is not supported on WASM (status ~d): ~a"
+         exit-status banner))
+
+#-wasm32-target
 (defun %usage-exit (banner exit-status other-args)
   (with-cstrs ((banner banner)
 	       (other-args other-args))
@@ -146,7 +153,10 @@
 	(progn
           (with-cstrs ((s (format nil "~&~a~&" (application-version-string a))))
             (fd-write 1 s (%cstrlen s)))
-	  (#_ _exit 0))
+	  #-wasm32-target
+	  (#_ _exit 0)
+	  #+wasm32-target
+	  nil)
         (let* ((encoding (assoc :terminal-encoding opts)))
           (when (cdr encoding)
             (let* ((encoding-name
@@ -165,7 +175,10 @@
 	       (:unknown-option "Unknown option: ~a")
 	       (t "~a"))
 	     opts)
-     #-windows-target #-android-target #$EX_USAGE #+android-target 64 #+windows-target #$EXIT_FAILURE
+     #-windows-target #-android-target #-wasm32-target #$EX_USAGE
+     #+wasm32-target 64
+     #+android-target 64
+     #+windows-target #$EXIT_FAILURE
      (summarize-option-syntax a))))
 	       
 
@@ -266,7 +279,10 @@ Default version returns Clozure CL version info."
   (call-next-method)			; handle help, errors
   (if args
     (%usage-exit (format nil "Unrecognized non-option arguments: ~a" args)
-		 #-windows-target #-android-target #$EX_USAGE #+android-target 64 #+windows-target #$EXIT_FAILURE
+		 #-windows-target #-android-target #-wasm32-target #$EX_USAGE
+		 #+wasm32-target 64
+		 #+android-target 64
+		 #+windows-target #$EXIT_FAILURE
 		 (summarize-option-syntax a))
     (progn
       (setq *load-lisp-init-file* (not (assoc :noinit options))
@@ -319,4 +335,3 @@ Default version returns Clozure CL version info."
 (defmethod application-init-file ((app lisp-development-system))
   ;; This is the init file loaded before cocoa.
   *ccl-init-file*)
-

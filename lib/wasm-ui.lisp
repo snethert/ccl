@@ -425,6 +425,7 @@
     (eql value (- eagain))))
 
 (defun %ui-maybe-yield-on-pending (state result allow-pending)
+  (declare (ignorable state result allow-pending))
   #+wasm32-target
   (when (and allow-pending (numberp result) (%ui-eagain-p result))
     (setf (ui-state-yield-reason state) "ui-poll-pending")
@@ -495,6 +496,164 @@
   (next-task-id 1)
   (next-window-id 1)
   (next-widget-id 1))
+
+(defparameter *ui-snapshot-version* 1)
+(defparameter *ui-persist-path* "/ui/wasm-ui-state.lisp")
+
+(defun %copy-list-safe (value)
+  (if (listp value) (copy-list value) value))
+
+(defun %hash-values (table)
+  (let (out)
+    (maphash (lambda (_k v)
+               (declare (ignore _k))
+               (push v out))
+             table)
+    (nreverse out)))
+
+(defun %ordered-values (order table)
+  (let ((out nil))
+    (dolist (key order)
+      (let ((value (gethash key table)))
+        (when value
+          (push value out))))
+    (nreverse out)))
+
+(defun %snapshot-task (task)
+  (list :id (ui-task-id task)
+        :label (ui-task-label task)
+        :window-ids (%copy-list-safe (ui-task-window-ids task))
+        :active-window-id (ui-task-active-window-id task)))
+
+(defun %snapshot-window (window)
+  (list :id (ui-window-id window)
+        :title (ui-window-title window)
+        :root-widget-id (ui-window-root-widget-id window)
+        :task-id (ui-window-task-id window)))
+
+(defun %snapshot-widget (widget)
+  (list :id (ui-widget-id widget)
+        :kind (ui-widget-kind widget)
+        :props (%copy-list-safe (ui-widget-props widget))
+        :children (%copy-list-safe (ui-widget-children widget))
+        :command-id (ui-widget-command-id widget)
+        :text (ui-widget-text widget)
+        :state (ui-widget-state widget)))
+
+(defun %snapshot-command (command)
+  (list :id (ui-command-id command)
+        :doc (ui-command-doc command)))
+
+(defun ui-state->snapshot (state &key (include-commands t))
+  (let* ((task-order (%copy-list-safe (ui-state-task-order state)))
+         (window-order (%copy-list-safe (ui-state-window-order state)))
+         (widget-order (%copy-list-safe (ui-state-widget-order state)))
+         (command-order (%copy-list-safe (ui-state-command-order state)))
+         (tasks (%ordered-values task-order (ui-state-tasks state)))
+         (windows (%ordered-values window-order (ui-state-windows state)))
+         (widgets (%ordered-values widget-order (ui-state-widgets state)))
+         (commands (and include-commands
+                        (%ordered-values command-order (ui-state-commands state)))))
+    (list :version *ui-snapshot-version*
+          :tasks (mapcar #'%snapshot-task tasks)
+          :task-order task-order
+          :windows (mapcar #'%snapshot-window windows)
+          :window-order window-order
+          :widgets (mapcar #'%snapshot-widget widgets)
+          :widget-order widget-order
+          :commands (and include-commands (mapcar #'%snapshot-command commands))
+          :command-order command-order
+          :focus-widget-id (ui-state-focus-widget-id state)
+          :next-task-id (ui-state-next-task-id state)
+          :next-window-id (ui-state-next-window-id state)
+          :next-widget-id (ui-state-next-widget-id state))))
+
+(defun %restore-next-id (order)
+  (let ((max-id 0))
+    (dolist (id order)
+      (when (and (stringp id) (> (length id) 0))
+        (let ((pos (position #\- id :from-end t)))
+          (when pos
+            (let ((num (ignore-errors (parse-integer id :start (1+ pos) :junk-allowed t))))
+              (when (and num (> num max-id))
+                (setf max-id num)))))))
+    (1+ max-id)))
+
+(defun ui-state-from-snapshot (snapshot &key (command-init nil))
+  (unless (and (listp snapshot) (getf snapshot :version))
+    (error "Invalid UI snapshot"))
+  (let ((state (make-ui-state)))
+    (setf (ui-state-task-order state) (%copy-list-safe (getf snapshot :task-order)))
+    (setf (ui-state-window-order state) (%copy-list-safe (getf snapshot :window-order)))
+    (setf (ui-state-widget-order state) (%copy-list-safe (getf snapshot :widget-order)))
+    (setf (ui-state-command-order state) (%copy-list-safe (getf snapshot :command-order)))
+    (dolist (task (getf snapshot :tasks))
+      (let ((id (getf task :id)))
+        (when id
+          (setf (gethash id (ui-state-tasks state))
+                (make-ui-task :id id
+                              :label (getf task :label)
+                              :window-ids (%copy-list-safe (getf task :window-ids))
+                              :active-window-id (getf task :active-window-id))))))
+    (dolist (window (getf snapshot :windows))
+      (let ((id (getf window :id)))
+        (when id
+          (setf (gethash id (ui-state-windows state))
+                (make-ui-window :id id
+                                :title (getf window :title)
+                                :root-widget-id (getf window :root-widget-id)
+                                :task-id (getf window :task-id))))))
+    (dolist (widget (getf snapshot :widgets))
+      (let ((id (getf widget :id)))
+        (when id
+          (setf (gethash id (ui-state-widgets state))
+                (make-ui-widget :id id
+                                :kind (getf widget :kind)
+                                :props (%copy-list-safe (getf widget :props))
+                                :children (%copy-list-safe (getf widget :children))
+                                :command-id (getf widget :command-id)
+                                :text (getf widget :text)
+                                :state (getf widget :state))))))
+    (dolist (command (getf snapshot :commands))
+      (let ((id (getf command :id)))
+        (when id
+          (setf (gethash id (ui-state-commands state))
+                (make-ui-command :id id :doc (getf command :doc) :enabled-p nil :handler nil)))))
+    (setf (ui-state-focus-widget-id state) (getf snapshot :focus-widget-id))
+    (setf (ui-state-next-task-id state)
+          (or (getf snapshot :next-task-id)
+              (%restore-next-id (ui-state-task-order state))))
+    (setf (ui-state-next-window-id state)
+          (or (getf snapshot :next-window-id)
+              (%restore-next-id (ui-state-window-order state))))
+    (setf (ui-state-next-widget-id state)
+          (or (getf snapshot :next-widget-id)
+              (%restore-next-id (ui-state-widget-order state))))
+    (when (functionp command-init)
+      (funcall command-init state))
+    state))
+
+(defun ui-save-snapshot (state &key (path *ui-persist-path*))
+  (handler-case
+      (let ((snapshot (ui-state->snapshot state)))
+        (with-open-file (out path
+                             :direction :output
+                             :if-exists :supersede
+                             :if-does-not-exist :create)
+          (let ((*print-readably* t)
+                (*print-circle* t)
+                (*print-length* nil)
+                (*print-level* nil))
+            (prin1 snapshot out)))
+        0)
+    (error () -1)))
+
+(defun ui-load-snapshot (&key (path *ui-persist-path*) (command-init nil))
+  (handler-case
+      (with-open-file (in path :direction :input)
+        (let ((*read-eval* nil))
+          (ui-state-from-snapshot (read in nil nil) :command-init command-init)))
+    (error () nil)))
 
 (defun %append-order (order id)
   (nconc order (list id)))
@@ -623,6 +782,12 @@
 (defun %event-target (event)
   (getf event :target-id))
 
+(defun %base-target-id (target-id)
+  (when (and target-id (stringp target-id))
+    (let ((pos (position #\: target-id)))
+      (when pos
+        (subseq target-id 0 pos)))))
+
 (defun %widget-prop (widget key)
   (when widget
     (cdr (assoc key (ui-widget-props widget) :test #'string=))))
@@ -630,6 +795,10 @@
 (defun %resolve-command-id (state event)
   (let* ((target-id (%event-target event))
          (widget (and target-id (ui-get-widget state target-id))))
+    (unless widget
+      (let ((base (%base-target-id target-id)))
+        (when base
+          (setf widget (ui-get-widget state base)))))
     (or (and widget (ui-widget-command-id widget))
         (%widget-prop widget "data-command-id")
         nil)))
@@ -738,6 +907,16 @@
                                      (%widget->node state child))))
                                (or (ui-widget-children widget) nil))))
          (ui-element "div" props (remove nil children))))
+      (:canvas
+       (let ((props2 (if (assoc "data-canvas-scene" props :test #'string=)
+                         props
+                         (%inject-prop props "data-canvas-scene" "[]"))))
+         (ui-element "canvas" props2 nil)))
+      (:webgl
+       (let ((props2 (if (assoc "data-webgl-scene" props :test #'string=)
+                         props
+                         (%inject-prop props "data-webgl-scene" "[]"))))
+         (ui-element "canvas" props2 nil)))
       (t
        (ui-element "div" props (list (ui-text (or (ui-widget-text widget) ""))))))))
 
@@ -800,37 +979,128 @@
     (values state tree)))
 
 (defun ui-demo-state ()
-  (let ((state (make-ui-state)))
+  (let* ((canvas-scene
+           (concatenate
+            'string
+            "[{\"id\":\"bottom\",\"kind\":\"rect\",\"bounds\":{\"x\":0,\"y\":0,\"width\":50,\"height\":50},\"props\":{\"fill\":\"#000\"}},"
+            "{\"id\":\"top\",\"kind\":\"rect\",\"bounds\":{\"x\":5,\"y\":5,\"width\":20,\"height\":20},\"props\":{\"fill\":\"#f00\"}}]"))
+         (webgl-scene
+           (concatenate
+            'string
+            "[{\"id\":\"bottom\",\"kind\":\"rect\",\"bounds\":{\"x\":0,\"y\":0,\"width\":40,\"height\":40},\"props\":{\"fill\":\"#000\"}},"
+            "{\"id\":\"top\",\"kind\":\"rect\",\"bounds\":{\"x\":8,\"y\":8,\"width\":16,\"height\":16},\"props\":{\"fill\":\"#0f0\"}}]"))
+         (state (make-ui-state)))
     (multiple-value-bind (_state task-id)
-        (ui-add-task state :label "Demo")
+        (ui-add-task state :label "Demo" :id "demo-task")
       (declare (ignore _state))
       (multiple-value-bind (_state button-id)
           (ui-add-widget state :button
+                         :id "demo-button"
                          :text "Click"
                          :command-id "demo.click")
         (declare (ignore _state))
         (multiple-value-bind (_state label-id)
             (ui-add-widget state :label
+                           :id "demo-label"
                            :text "Ready")
           (declare (ignore _state))
-          (multiple-value-bind (_state root-id)
-              (ui-add-widget state :container
-                             :children (list button-id label-id))
+          (multiple-value-bind (_state canvas-id)
+              (ui-add-widget state :canvas
+                             :id "demo-canvas"
+                             :command-id "demo.canvas"
+                             :props `(("data-canvas-scene" . ,canvas-scene)))
             (declare (ignore _state))
-            (ui-add-window state task-id
-                           :title "Demo"
-                           :root-widget-id root-id)
-            (ui-register-command
-             state
-             "demo.click"
-             (lambda (st event)
-               (declare (ignore event))
-               (ui-set-widget-text st label-id "Clicked"))
-             :doc "Demo click handler")
-            state))))))
+            (multiple-value-bind (_state webgl-id)
+                (ui-add-widget state :webgl
+                               :id "demo-webgl"
+                               :command-id "demo.webgl"
+                               :props `(("data-webgl-scene" . ,webgl-scene)))
+              (declare (ignore _state))
+              (multiple-value-bind (_state root-id)
+                  (ui-add-widget state :container
+                                 :id "demo-root"
+                                 :children (list button-id label-id canvas-id webgl-id))
+                (declare (ignore _state))
+                (ui-add-window state task-id
+                               :id "demo-window"
+                               :title "Demo"
+                               :root-widget-id root-id)
+                (ui-register-command
+                 state
+                 "demo.click"
+                 (lambda (st event)
+                   (declare (ignore event))
+                   (ui-set-widget-text st label-id "Clicked"))
+                 :doc "Demo click handler")
+                (ui-register-command
+                 state
+                 "demo.canvas"
+                 (lambda (st event)
+                   (let ((target (or (getf event :target-id) "")))
+                     (ui-set-widget-text st label-id (format nil "Canvas ~a" target))))
+                 :doc "Demo canvas handler")
+                (ui-register-command
+                 state
+                 "demo.webgl"
+                 (lambda (st event)
+                   (let ((target (or (getf event :target-id) "")))
+                     (ui-set-widget-text st label-id (format nil "WebGL ~a" target))))
+                 :doc "Demo webgl handler")
+                state))))))))
 
 (defun ui-demo-turn (&optional (state (ui-demo-state)))
   (ui-run-turn state :render t))
+
+(defun ui-demo-label-text (state)
+  (let ((label (ui-get-widget state "demo-label")))
+    (when label
+      (or (ui-widget-text label) ""))))
+
+(defun ui-demo-set-label (state value)
+  (if (ui-get-widget state "demo-label")
+      (ui-set-widget-text state "demo-label" value)
+      state))
+
+(defun ui-demo-label-state (state)
+  (let ((text (ui-demo-label-text state)))
+    (cond
+      ((string= text "Ready") 1)
+      ((string= text "Persisted") 2)
+      ((string= text "Dirty") 3)
+      ((string= text "Clicked") 4)
+      (t 0))))
+
+(defun ui-open-inspector (state &key task-id)
+  (let* ((tid (or task-id (car (ui-state-task-order state))))
+         (state (if tid state (progn (multiple-value-bind (st new-id)
+                                        (ui-add-task state :label "System" :id "system-task")
+                                      (declare (ignore new-id))
+                                      st))))
+         (tid (or tid "system-task")))
+    (multiple-value-bind (state title-id)
+        (ui-add-widget state :label :id "inspector-title" :text "Inspector")
+      (multiple-value-bind (state root-id)
+          (ui-add-widget state :container :id "inspector-root" :children (list title-id))
+        (ui-add-window state tid
+                       :id "inspector-window"
+                       :title "Inspector"
+                       :root-widget-id root-id)))))
+
+(defun ui-open-debugger (state &key task-id (message "Debugger"))
+  (let* ((tid (or task-id (car (ui-state-task-order state))))
+         (state (if tid state (progn (multiple-value-bind (st new-id)
+                                        (ui-add-task state :label "System" :id "system-task")
+                                      (declare (ignore new-id))
+                                      st))))
+         (tid (or tid "system-task")))
+    (multiple-value-bind (state title-id)
+        (ui-add-widget state :label :id "debugger-title" :text message)
+      (multiple-value-bind (state root-id)
+          (ui-add-widget state :container :id "debugger-root" :children (list title-id))
+        (ui-add-window state tid
+                       :id "debugger-window"
+                       :title "Debugger"
+                       :root-widget-id root-id)))))
 
 ;;;; ------------------------------------------------------------
 ;;;; Smoke entrypoint (Phase 5 bring-up)
@@ -855,3 +1125,28 @@
         (if (and poll-result (numberp poll-result))
             poll-result
             0)))))
+
+(defun ccl::wasm-ui-mark-persisted ()
+  (let ((state (%ensure-wasm-ui-demo-state)))
+    (setf *wasm-ui-demo-state* (ui-demo-set-label state "Persisted"))
+    0))
+
+(defun ccl::wasm-ui-mark-dirty ()
+  (let ((state (%ensure-wasm-ui-demo-state)))
+    (setf *wasm-ui-demo-state* (ui-demo-set-label state "Dirty"))
+    0))
+
+(defun ccl::wasm-ui-label-state ()
+  (let ((state (%ensure-wasm-ui-demo-state)))
+    (ui-demo-label-state state)))
+
+(defun ccl::wasm-ui-save ()
+  (let ((state (%ensure-wasm-ui-demo-state)))
+    (ui-save-snapshot state)))
+
+(defun ccl::wasm-ui-restore ()
+  (let ((state (ui-load-snapshot)))
+    (when state
+      (setf *wasm-ui-demo-state* state)
+      (values))
+    (if state 0 -1)))

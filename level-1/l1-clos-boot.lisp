@@ -1670,7 +1670,7 @@ to replace that class with ~s" name old-class new-class)
 
 (defstatic *function-class* (make-built-in-class 'function))
 
-#+arm-target
+#+(or arm-target wasm32-target)
 (make-built-in-class 'pseudofunction)
 
 (defun alias-class (name class)
@@ -2102,7 +2102,7 @@ to replace that class with ~s" name old-class new-class)
               (find-class 'unsigned-doubleword-vector)
               (find-class 'double-float-vector))))
 
-  #+arm-target
+  #+(or arm-target wasm32-target)
   (defparameter *ivector-vector-classes*
     (vector (find-class 'short-float-vector)
             (find-class 'unsigned-long-vector)
@@ -2326,7 +2326,7 @@ to replace that class with ~s" name old-class new-class)
                 (%svref v (+ slice x8664::fulltag-tra-0)) *tagged-return-address-class*
                 (%svref v (+ slice x8664::fulltag-tra-1)) *tagged-return-address-class*
                 (%svref v (+ slice x8664::fulltag-nil)) *null-class*))
-        #+arm-target
+        #+(or arm-target wasm32-target)
         (do* ((slice 0 (+ 8 slice)))
              ((= slice 256))
           (declare (type (unsigned-byte 8) slice))
@@ -2347,13 +2347,13 @@ to replace that class with ~s" name old-class new-class)
           (map-subtag ppc32::subtag-code-vector code-vector)
           #+ppc64-target
           (map-subtag ppc64::subtag-code-vector code-vector)
-          #+arm-target
+          #+(or arm-target wasm32-target)
           (map-subtag arm::subtag-code-vector code-vector)
           #+ppc32-target
           (map-subtag ppc32::subtag-creole-object creole-object)
           (map-subtag target::subtag-xcode-vector xcode-vector)
           (map-subtag target::subtag-xfunction xfunction)
-          #+arm-target
+          #+(or arm-target wasm32-target)
           (map-subtag arm::subtag-pseudofunction pseudofunction)
           (map-subtag target::subtag-single-float-vector simple-short-float-vector)
           #+64-bit-target
@@ -2418,7 +2418,7 @@ to replace that class with ~s" name old-class new-class)
         (setf (%svref v target::subtag-instance)
               #'%class-of-instance)
         (setf (%svref v #+ppc-target target::subtag-symbol
-                      #+arm-target target::subtag-symbol
+                      #+(or arm-target wasm32-target) target::subtag-symbol
 		      #+x8632-target target::subtag-symbol
 		      #+x8664-target target::tag-symbol)
               #-ppc64-target
@@ -2435,7 +2435,7 @@ to replace that class with ~s" name old-class new-class)
         
         (setf (%svref v
                       #+ppc-target target::subtag-function
-                      #+arm-target target::subtag-function
+                      #+(or arm-target wasm32-target) target::subtag-function
                       #+x8632-target target::subtag-function
                       #+x8664-target target::tag-function) 
               class-of-function-function)
@@ -2450,7 +2450,7 @@ to replace that class with ~s" name old-class new-class)
                               #+ppc32-target
                               (ash (the fixnum (- subtype ppc32::min-cl-ivector-subtag))
                                    (- ppc32::ntagbits))
-                              #+arm-target
+                              #+(or arm-target wasm32-target)
                               (ash (the fixnum (- subtype arm::min-cl-ivector-subtag))
                                    (- arm::ntagbits))
                               #+ppc64-target
@@ -2622,7 +2622,7 @@ to replace that class with ~s" name old-class new-class)
    'slot-id-value
    nil				;method-function name
    (dpb 1 $lfbits-numreq (ash 1 $lfbits-method-bit)))
-  #+arm-target
+  #+(or arm-target wasm32-target)
   (%fix-fn-entrypoint
    (gvector :function
            0
@@ -2650,7 +2650,7 @@ to replace that class with ~s" name old-class new-class)
      'set-slot-id-value
      nil
      (dpb 2 $lfbits-numreq (ash 1 $lfbits-method-bit)))
-    #+arm-target
+    #+(or arm-target wasm32-target)
     (%fix-fn-entrypoint
      (gvector :function
              0

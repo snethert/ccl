@@ -128,8 +128,12 @@
         (funcall *quit-interrupt-hook* signum))))
   ;; Exit by resignalling, as per http://www.cons.org/cracauer/sigint.html
   (quit #'(lambda ()
+            #-wasm32-target
             (ff-call (%kernel-import target::kernel-import-lisp-sigexit) :signed signum)
             ;; Shouldn't get here
+            #+wasm32-target
+            (error "force-async-quit is not supported on wasm (signal ~d)" signum)
+            #-wasm32-target
             (#__exit 143))))
 
 (defstatic *running-periodic-tasks* nil)
@@ -264,4 +268,3 @@
 
 
 ; end of L1-events.lisp
-

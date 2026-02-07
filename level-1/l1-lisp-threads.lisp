@@ -29,14 +29,14 @@
 (setf (type-predicate 'lisp-thread) 'lisp-thread-p)
 
 (defloadvar *ticks-per-second*
-    #+windows-target 1000
-    #-windows-target
+    #+(or windows-target wasm32-target) 1000
+    #-(or windows-target wasm32-target)
     (max 1000 (#_sysconf #$_SC_CLK_TCK)))
 
 (defloadvar *ns-per-tick*
     (floor 1000000000 *ticks-per-second*))
 
-#-windows-target
+#-(or windows-target wasm32-target)
 (defun %nanosleep (seconds nanoseconds)
   #+(and darwin-target 64-bit-target)
   (when (> seconds #x3fffffff)          ;over 30 years in seconds
@@ -70,6 +70,15 @@
      (round (pref tv :timeval.tv_usec) (floor 1000000 *ticks-per-second*))))
 
 
+#+wasm32-target
+(defun gettimeofday (ptimeval &optional ptz)
+  (declare (ignore ptz))
+  (when ptimeval
+    (setf (pref ptimeval :timeval.tv_sec) 0
+          (pref ptimeval :timeval.tv_usec) 0))
+  0)
+
+#-wasm32-target
 (defun gettimeofday (ptimeval &optional ptz)
   (int-errno-ffcall (%kernel-import target::kernel-import-lisp-gettimeofday)
                     :address ptimeval
@@ -190,7 +199,7 @@
 (defun init-thread-from-tcr (tcr thread)
   (let* ((cs-area nil)
          (vs-area (%fixnum-ref tcr (- target::tcr.vs-area target::tcr-bias)))
-         #-arm-target
+         #-(or arm-target wasm32-target)
          (ts-area (%fixnum-ref tcr (- target::tcr.ts-area target::tcr-bias))))
     #+(and windows-target x8632-target)
     (let ((aux (%fixnum-ref tcr (- target::tcr.aux target::tcr-bias))))
@@ -199,7 +208,7 @@
     (setq cs-area (%fixnum-ref tcr target::tcr.cs-area))
     (when (or (zerop cs-area)
               (zerop vs-area)
-              #-arm-target
+              #-(or arm-target wasm32-target)
               (zerop ts-area))
       (error "Can't allocate new thread"))
     (setf (lisp-thread.tcr thread) tcr
@@ -208,8 +217,8 @@
           (lisp-thread.vs-size thread)
           (%stack-area-usable-size vs-area)
           (lisp-thread.ts-size thread)
-          #+arm-target 0
-          #-arm-target
+          #+(or arm-target wasm32-target) 0
+          #-(or arm-target wasm32-target)
           (%stack-area-usable-size ts-area)
           (lisp-thread.startup-function thread)
           (thread-make-startup-function thread tcr)))
@@ -294,6 +303,12 @@
     (%fixnum-ref xframe
                  (get-field-offset :xframe-list.this))))
 
+#+wasm32-target
+(defun new-tcr (cs-size vs-size ts-size)
+  (declare (ignore cs-size vs-size ts-size))
+  (error "WASM does not support creating new threads yet."))
+
+#-wasm32-target
 (defun new-tcr (cs-size vs-size ts-size)
   (let* ((tcr (macptr->fixnum
                (ff-call
@@ -338,6 +353,12 @@
 
 
 
+#+wasm32-target
+(defun %tcr-frame-ptr (tcr)
+  (declare (ignore tcr))
+  0)
+
+#-wasm32-target
 (defun %tcr-frame-ptr (tcr)
   (with-macptrs (p)
     (%setf-macptr-to-object p tcr)
@@ -785,7 +806,7 @@
   (%ptr-in-area-p idx (%fixnum-ref tcr (- target::tcr.vs-area
 					  target::tcr-bias))))
 
-#-arm-target
+#-(or arm-target wasm32-target)
 (defun %on-tsp-stack (tcr object)
   (%ptr-in-area-p object (%fixnum-ref tcr (- target::tcr.ts-area
 					     target::tcr-bias))))
@@ -816,7 +837,7 @@
     (when (object-in-range-p object r)
       (return t))))
 
-#-arm-target
+#-(or arm-target wasm32-target)
 (defun on-any-tsp-stack (object)
   (or (%on-tsp-stack (%current-tcr) object)
       (object-in-some-range object *aux-tsp-ranges*)))
@@ -1194,6 +1215,12 @@ no longer being used."
 ;;; "preparation" and "initialization" happen when the foreign
 ;;; thread first tries to call lisp code.  "termination" happens
 ;;; via the pthread thread-local-storage cleanup mechanism.
+#+wasm32-target
+(defun %foreign-thread-control (param)
+  (declare (ignore param))
+  (error "Foreign threads are not supported on WASM."))
+
+#-wasm32-target
 (defcallback %foreign-thread-control (:without-interrupts t :int param :int)
   (declare (fixnum param))
   (cond ((< param 0) (%foreign-thread-prepare))

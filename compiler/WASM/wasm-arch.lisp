@@ -12,6 +12,16 @@
 (require "ARM-ARCH")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
+  ;; Mirror ARM layout constants into the WASM target package so
+  ;; TARGET::subtag-* and related names resolve during cross-compilation.
+  (let ((arm (find-package "ARM"))
+        (wasm (find-package "WASM")))
+    (when (and arm wasm)
+      (do-symbols (sym arm)
+        (when (eq (symbol-package sym) arm)
+          (shadowing-import sym wasm))))))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
   (defparameter *wasm-subprims-shift* 0)
   (defparameter *wasm-subprims-base* 0))
 
@@ -85,5 +95,74 @@
      :fulltagmask (arch::target-fulltagmask arm)
      :fulltag-misc (arch::target-fulltag-misc arm)
      :char-code-limit (arch::target-char-code-limit arm))))
+
+(defmacro defwasmarchmacro (name lambda-list &body body)
+  `(arch::defarchmacro :wasm32 ,name ,lambda-list ,@body))
+
+(defwasmarchmacro ccl::%get-kernel-global (name)
+  `(ccl::%fixnum-ref (ash (+ (- arm::nil-value arm::fulltag-nil)
+                             ,(arm::%kernel-global
+                               (if (ccl::quoted-form-p name)
+                                 (cadr name)
+                                 name)))
+                      (- arm::fixnumshift))))
+
+(defwasmarchmacro ccl::%get-kernel-global-ptr (name dest)
+  `(ccl::%setf-macptr
+    ,dest
+    (ccl::%fixnum-ref-macptr (ash (+ (- arm::nil-value arm::fulltag-nil)
+                                     ,(arm::%kernel-global
+                                       (if (ccl::quoted-form-p name)
+                                         (cadr name)
+                                         name)))
+                              (- arm::fixnumshift)))))
+
+(defwasmarchmacro ccl::%target-kernel-global (name)
+  `(arm::%kernel-global ,name))
+
+(defwasmarchmacro ccl::lfun-vector (fun)
+  fun)
+
+(defwasmarchmacro ccl::lfun-vector-lfun (lfv)
+  lfv)
+
+(defwasmarchmacro ccl::area-code ()
+  area.code)
+
+(defwasmarchmacro ccl::area-succ ()
+  area.succ)
+
+(defwasmarchmacro ccl::symptr->symvector (s)
+  s)
+
+(defwasmarchmacro ccl::symvector->symptr (s)
+  s)
+
+(defwasmarchmacro ccl::function-to-function-vector (f)
+  f)
+
+(defwasmarchmacro ccl::function-vector-to-function (v)
+  v)
+
+(defwasmarchmacro ccl::with-ffcall-results ((buf) &body body)
+  (let* ((size (+ (* 8 4) (* 31 8))))
+    `(%stack-block ((,buf ,size))
+      ,@body)))
+
+;; Mirror ARM helpers used by shared macros.
+(defwasmarchmacro ccl::%get-single-float-from-double-ptr (ptr offset)
+  `(ccl::%double-float->short-float (ccl::%get-double-float ,ptr ,offset)
+    (ccl::%alloc-misc 1 arm::subtag-single-float)))
+
+(defwasmarchmacro ccl::codevec-header-p (word)
+  `(eql arm::subtag-code-vector
+    (logand ,word arm::subtag-mask)))
+
+;;; Mirror ARM's function vector layout for immediates.
+(defwasmarchmacro ccl::nth-immediate (f i)
+  `(ccl::%svref ,f (the fixnum (+ (the fixnum ,i) 1))))
+
+(defwasmarchmacro ccl::set-nth-immediate (f i new)
+  `(setf (ccl::%svref ,f (the fixnum (+ (the fixnum ,i) 1))) ,new))
 
 (provide "WASM-ARCH")

@@ -1112,6 +1112,27 @@ vector
   (declare (ignorable size))
   (%inc-ptr pointer offset))
 
+#+wasm32-target
+(defun %set-composite-pointer-ref (size pointer offset new)
+  (let* ((count (the fixnum size))
+         (dst (%inc-ptr pointer offset))
+         (src new))
+    (declare (fixnum count))
+    (when (and (> count 0) (not (eql dst src)))
+      (let* ((dst-addr (%ptr-to-int dst))
+             (src-addr (%ptr-to-int src)))
+        (if (and (> dst-addr src-addr)
+                 (< dst-addr (the fixnum (+ src-addr count))))
+          (do ((i (1- count) (1- i)))
+              ((< i 0))
+            (setf (%get-unsigned-byte dst i)
+                  (%get-unsigned-byte src i)))
+          (dotimes (i count)
+            (setf (%get-unsigned-byte dst i)
+                  (%get-unsigned-byte src i))))))
+    dst))
+
+#-wasm32-target
 (defun %set-composite-pointer-ref (size pointer offset new)
   (#_memmove (%inc-ptr pointer offset)
              new
@@ -1124,4 +1145,3 @@ vector
 (defsetf pathname-encoding-name set-pathname-encoding-name)
 
 ;end of L1-utils.lisp
-

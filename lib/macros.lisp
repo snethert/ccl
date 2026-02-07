@@ -3210,14 +3210,28 @@ to binary 0."
 		  (ceiling bits 8)
 		  (signal-program-error "Unknown size for foreign type ~S."
 					(unparse-foreign-type ftype))))
+         (target-ftd (and (boundp '*target-ftd*) *target-ftd*))
+         (is-wasm (or (and (boundp '*target-backend*)
+                           *target-backend*
+                           (eq (backend-name *target-backend*) :wasm32))
+                      (and target-ftd
+                           (string= (ftd-interface-package-name target-ftd) "WASM"))))
 	 (p (gensym))
-	 (memset (read-from-string "#_memset")))    
-    `(let* ((,p (,allocator ,bytes)))
-      ,@(when (eq *host-backend* *target-backend*)
-              `((%set-macptr-type ,p ,ordinal-form)))
-      (,memset ,p 0 ,bytes)
-      ,@(%foreign-record-field-forms p ftype record-name initforms)
-      ,p)))
+	 (memset (and (not is-wasm) (read-from-string "#_memset"))))
+    (if is-wasm
+      `(let* ((,p (,allocator ,bytes)))
+         ,@(when (eq *host-backend* *target-backend*)
+                 `((%set-macptr-type ,p ,ordinal-form)))
+         (dotimes (i ,bytes)
+           (setf (%get-unsigned-byte ,p i) 0))
+         ,@(%foreign-record-field-forms p ftype record-name initforms)
+         ,p)
+      `(let* ((,p (,allocator ,bytes)))
+         ,@(when (eq *host-backend* *target-backend*)
+                 `((%set-macptr-type ,p ,ordinal-form)))
+         (,memset ,p 0 ,bytes)
+         ,@(%foreign-record-field-forms p ftype record-name initforms)
+         ,p))))
   
 (defmacro make-record (record-name &rest initforms)
   "Expand into code which allocates and initalizes an instance of the type

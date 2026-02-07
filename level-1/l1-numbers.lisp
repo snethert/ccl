@@ -505,6 +505,8 @@
   ;; x and y are both random-state objects
   (equalp (random.mrg31k3p-state x) (random.mrg31k3p-state y)))
 
+#-wasm32-target
+(progn
 ;;; transcendental stuff.  Should go in level-0;l0-float
 ;;; but shleps don't work in level-0.  Or do they ?
 ; Destructively set z to x^y and return z.
@@ -1012,3 +1014,60 @@
     (%sf-check-exception-1 'atanh n (%ffi-exception-status))
     result))
 )
+
+)
+
+#+wasm32-target
+(progn
+  (macrolet ((def-wasm-math-stub (name args)
+               `(defun ,name ,args
+                  (declare (ignore ,@args))
+                  (error "WASM math support not implemented: ~s" ',name))))
+    (def-wasm-math-stub %double-float-expt! (b e result))
+    (def-wasm-math-stub %single-float-expt! (b e result))
+    (def-wasm-math-stub %single-float-expt (b e))
+    (def-wasm-math-stub %double-float-sin! (n result))
+    (def-wasm-math-stub %single-float-sin! (n result))
+    (def-wasm-math-stub %single-float-sin (n))
+    (def-wasm-math-stub %double-float-cos! (n result))
+    (def-wasm-math-stub %single-float-cos! (n result))
+    (def-wasm-math-stub %single-float-cos (n))
+    (def-wasm-math-stub %double-float-acos! (n result))
+    (def-wasm-math-stub %single-float-acos! (n result))
+    (def-wasm-math-stub %single-float-acos (n))
+    (def-wasm-math-stub %double-float-asin! (n result))
+    (def-wasm-math-stub %single-float-asin! (n result))
+    (def-wasm-math-stub %single-float-asin (n))
+    (def-wasm-math-stub %double-float-cosh! (n result))
+    (def-wasm-math-stub %single-float-cosh! (n result))
+    (def-wasm-math-stub %single-float-cosh (n))
+    (def-wasm-math-stub %double-float-log! (n result))
+    (def-wasm-math-stub %single-float-log! (n result))
+    (def-wasm-math-stub %single-float-log (n))
+    (def-wasm-math-stub %double-float-tan! (n result))
+    (def-wasm-math-stub %single-float-tan! (n result))
+    (def-wasm-math-stub %single-float-tan (n))
+    (def-wasm-math-stub %double-float-atan! (n result))
+    (def-wasm-math-stub %single-float-atan! (n result))
+    (def-wasm-math-stub %single-float-atan (n))
+    (def-wasm-math-stub %double-float-atan2! (x y result))
+    (def-wasm-math-stub %single-float-atan2! (x y result))
+    (def-wasm-math-stub %single-float-atan2 (x y))
+    (def-wasm-math-stub %double-float-exp! (n result))
+    (def-wasm-math-stub %single-float-exp! (n result))
+    (def-wasm-math-stub %single-float-exp (n))
+    (def-wasm-math-stub %double-float-sinh! (n result))
+    (def-wasm-math-stub %single-float-sinh! (n result))
+    (def-wasm-math-stub %single-float-sinh (n))
+    (def-wasm-math-stub %double-float-tanh! (n result))
+    (def-wasm-math-stub %single-float-tanh! (n result))
+    (def-wasm-math-stub %single-float-tanh (n))
+    (def-wasm-math-stub %double-float-asinh! (n result))
+    (def-wasm-math-stub %single-float-asinh! (n result))
+    (def-wasm-math-stub %single-float-asinh (n))
+    (def-wasm-math-stub %double-float-acosh! (n result))
+    (def-wasm-math-stub %single-float-acosh! (n result))
+    (def-wasm-math-stub %single-float-acosh (n))
+    (def-wasm-math-stub %double-float-atanh! (n result))
+    (def-wasm-math-stub %single-float-atanh! (n result))
+    (def-wasm-math-stub %single-float-atanh (n))))

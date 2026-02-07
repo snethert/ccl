@@ -847,8 +847,8 @@ satisfy the optional predicate PREDICATE."
 
 (defun load-os-constant (sym &optional query)
   (let* ((val (do-interface-dirs (d)
-		    (let* ((v (db-lookup-constant (db-constants d) sym)))
-		      (when v (return v))))))
+                 (let* ((v (db-lookup-constant (db-constants d) sym)))
+                   (when v (return v))))))
     (if query
       (not (null val))
       (if val
@@ -1020,12 +1020,37 @@ satisfy the optional predicate PREDICATE."
     (let* ((info (db-lookup-objc-class (db-objc-classes d) name)))
       (when info (return info)))))
 
+(defun wasm-target-ftd-p ()
+  (and *target-ftd*
+       (string= (ftd-interface-package-name *target-ftd*) "WASM")))
+
+(defparameter *wasm-missing-ffi-marker* (list :wasm-missing-ffi))
+
+(defun %wasm-missing-foreign-call (sym &rest args)
+  (declare (ignore args))
+  (if (find-class 'capability-unavailable nil)
+    (error 'capability-unavailable
+           :capability :ffi
+           :operation (if (symbolp sym) (symbol-name sym) sym))
+    (error "WASM foreign function unavailable: ~s" sym)))
+
+(defun %wasm-missing-foreign-call-expander (form env)
+  (declare (ignore env))
+  `(%wasm-missing-foreign-call ',(car form) ,@(cdr form)))
+
 (defun load-external-function (sym query)
   (let* ((def (or (do-interface-dirs (d)
 		    (let* ((f (db-lookup-function (db-functions d) sym)))
 		      (when f (return f))))
                   (unless query
-                    (error "Foreign function not found: ~s" sym)))))
+                    (if (wasm-target-ftd-p)
+                      (progn
+                        (setf (gethash sym (ftd-external-function-definitions
+                                            *target-ftd*))
+                              *wasm-missing-ffi-marker*)
+                        (setf (macro-function sym) #'%wasm-missing-foreign-call-expander)
+                        (return-from load-external-function sym))
+                      (error "Foreign function not found: ~s" sym))))))
     (if query
       (not (null def))
       (progn
@@ -1112,7 +1137,11 @@ satisfy the optional predicate PREDICATE."
           (let* ((def (if (eql arg 0)
                         (gethash sym (ftd-external-function-definitions
                                       *target-ftd*)))))
-            (values (if (and def (eq (macro-function sym) #'%external-call-expander))
+            (values (if (and def (or (eq (macro-function sym) #'%external-call-expander)
+                                     (and (wasm-target-ftd-p)
+                                          (eq def *wasm-missing-ffi-marker*)
+                                          (eq (macro-function sym)
+                                              #'%wasm-missing-foreign-call-expander))))
                       sym
                       (load-external-function sym nil))
                     source)))))))
@@ -1904,5 +1933,3 @@ satisfy the optional predicate PREDICATE."
     (do-interface-dirs (d ftd)
       (let* ((r (%load-foreign-record (db-records d) name ftd already)))
 	(when r (return r))))))
-
-

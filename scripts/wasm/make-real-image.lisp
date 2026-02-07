@@ -36,8 +36,15 @@
       (unless (or (null val) (consp val))
         (error "Expected %wasm-compiled-modules% to be NIL or a list, got ~s" val)))))
 
+(defun ensure-save-application ()
+  (unless (fboundp 'save-application)
+    (ignore-errors (require "DUMPLISP")))
+  (unless (fboundp 'save-application)
+    (error "save-application is unavailable; ensure the DUMPLISP module is loaded.")))
+
 (defun apply-wasm-image-policy ()
   (ensure-wasm-toplevel)
+  (ensure-save-application)
   (validate-compiled-modules)
   t)
 
@@ -74,9 +81,10 @@
       (quit 0))
     (ensure-wasm32-target)
     (apply-wasm-image-policy)
-    (let* ((root (repo-root-from-script))
-           (output (or (cdr (assoc :output argv))
-                       (namestring (merge-pathnames "doc/wasm/root.image" root)))))
+    (let* ((output (cdr (assoc :output argv))))
+      (unless output
+        (let ((root (repo-root-from-script)))
+          (setf output (namestring (merge-pathnames "doc/wasm/root.image" root)))))
       (format t "~&WASM image policy: ~s~%" *wasm-image-policy*)
       (format t "~&Saving WASM image to ~a~%" output)
       (save-application output :toplevel-function #'toplevel-loop)

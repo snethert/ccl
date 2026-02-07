@@ -3416,15 +3416,20 @@
     #-windows-target
     (let* ((nominal (or (nth-value 6 (%fstat fd)) *elements-per-buffer*))
 	   (octets (case (%unix-fd-kind fd)
-		     (:pipe (#_fpathconf fd #$_PC_PIPE_BUF))
-		     (:socket
-		      #+linux-target nominal
-		      #-linux-target
-		      (int-getsockopt fd #$SOL_SOCKET
-				      #+solaris-target #$SO_SNDBUF
-				      #-solaris-target #$SO_SNDLOWAT))
-		     ((:character-special :tty)
-		      (#_fpathconf fd #$_PC_MAX_INPUT))
+	     (:pipe
+	      #+wasm32-target nominal
+	      #+(not wasm32-target) (#_fpathconf fd #$_PC_PIPE_BUF))
+	     (:socket
+	      #+wasm32-target nominal
+	      #-wasm32-target
+	      (#+linux-target nominal
+	       #-linux-target
+	       (int-getsockopt fd #$SOL_SOCKET
+			       #+solaris-target #$SO_SNDBUF
+			       #-solaris-target #$SO_SNDLOWAT)))
+	     ((:character-special :tty)
+	      #+wasm32-target nominal
+	      #+(not wasm32-target) (#_fpathconf fd #$_PC_MAX_INPUT))
 		     (t nominal))))
       (when (<= octets 0) (setq octets nominal))
       (scale-buffer-size octets))))
@@ -5408,6 +5413,9 @@
 
 
 
+#+wasm32-target
+(defloadvar *fd-set-size* 0)
+#-wasm32-target
 (defloadvar *fd-set-size*
     (ff-call (%kernel-import target::kernel-import-fd-setsize-bytes)
              :unsigned-fullword))
@@ -5416,6 +5424,11 @@
   (fd-input-available-p fd 0))
 
 ;;; Read and discard any available unread input.
+#+wasm32-target
+(defun %fd-drain-input (fd)
+  (declare (ignore fd))
+  nil)
+#-wasm32-target
 (defun %fd-drain-input (fd)
   (%stack-block ((buf 1024))
     (do* ((avail (unread-data-available-p fd) (unread-data-available-p fd)))
@@ -5427,23 +5440,43 @@
 	    (return)
 	    (decf avail count)))))))
 
+#+wasm32-target
+(defun fd-zero (fdset)
+  (declare (ignore fdset))
+  nil)
+#-wasm32-target
 (defun fd-zero (fdset)
   (ff-call (%kernel-import target::kernel-import-do-fd-zero)
            :address fdset
            :void))
 
+#+wasm32-target
+(defun fd-set (fd fdset)
+  (declare (ignore fd fdset))
+  nil)
+#-wasm32-target
 (defun fd-set (fd fdset)
   (ff-call (%kernel-import target::kernel-import-do-fd-set)
            :unsigned-fullword fd
            :address fdset
            :void))
 
+#+wasm32-target
+(defun fd-clr (fd fdset)
+  (declare (ignore fd fdset))
+  nil)
+#-wasm32-target
 (defun fd-clr (fd fdset)
   (ff-call (%kernel-import target::kernel-import-do-fd-clr)
            :unsigned-fullword fd
            :address fdset
            :void))
 
+#+wasm32-target
+(defun fd-is-set (fd fdset)
+  (declare (ignore fd fdset))
+  nil)
+#-wasm32-target
 (defun fd-is-set (fd fdset)
   (not (= 0 (the fixnum (ff-call (%kernel-import target::kernel-import-do-fd-is-set)
                                  :unsigned-fullword fd
@@ -5463,10 +5496,13 @@ instead of blocking in-process. Intended for the WASM Stage-2 stepping model.")
   (setf *wasm-last-yield* (list :direction direction :fd fd))
   (throw :wasm-yield *wasm-last-yield*))
 
+#+wasm32-target
 (defun process-input-would-block (fd)
-  #+wasm32-target
   (when *wasm-yield-on-eagain*
     (%wasm-yield :input fd))
+  -1)
+#-wasm32-target
+(defun process-input-would-block (fd)
   #+windows-target (declare (ignore fd))
   #+windows-target t
   #-windows-target
@@ -5474,6 +5510,12 @@ instead of blocking in-process. Intended for the WASM Stage-2 stepping model.")
     (process-input-wait fd)
     (- #$ETIMEDOUT)))
     
+#+wasm32-target
+(defun process-input-wait (fd &optional timeout)
+  "Wait until input is available on a given file-descriptor."
+  (declare (ignore fd timeout))
+  (values nil t nil))
+#-wasm32-target
 (defun process-input-wait (fd &optional timeout)
   "Wait until input is available on a given file-descriptor."
   (rlet ((now :timeval))
@@ -5501,10 +5543,13 @@ instead of blocking in-process. Intended for the WASM Stage-2 stepping model.")
               (return (values nil t nil)))))))))
 
 
+#+wasm32-target
 (defun process-output-would-block (fd)
-  #+wasm32-target
   (when *wasm-yield-on-eagain*
     (%wasm-yield :output fd))
+  -1)
+#-wasm32-target
+(defun process-output-would-block (fd)
   #+windows-target (declare (ignore fd))
   #+windows-target t
   #-windows-target
@@ -5512,6 +5557,12 @@ instead of blocking in-process. Intended for the WASM Stage-2 stepping model.")
     (process-output-wait fd)
     (- #$ETIMEDOUT)))
 
+#+wasm32-target
+(defun process-output-wait (fd &optional timeout)
+  "Wait until output is possible on a given file descriptor."
+  (declare (ignore fd timeout))
+  (values nil t nil))
+#-wasm32-target
 (defun process-output-wait (fd &optional timeout)
   "Wait until output is possible on a given file descriptor."
   (rlet ((now :timeval))
@@ -5540,6 +5591,11 @@ instead of blocking in-process. Intended for the WASM Stage-2 stepping model.")
 
 
 
+#+wasm32-target
+(defun ticks-to-timeval (ticks tv)
+  (declare (ignore ticks tv))
+  nil)
+#-wasm32-target
 (defun ticks-to-timeval (ticks tv)
   (when ticks
     (let* ((total-us (* ticks (/ 1000000 *ticks-per-second*))))
@@ -5547,6 +5603,14 @@ instead of blocking in-process. Intended for the WASM Stage-2 stepping model.")
 	(setf (pref tv :timeval.tv_sec) seconds
 	      (pref tv :timeval.tv_usec) us)))))
 
+#+wasm32-target
+(defun fd-input-available-p (fd &optional milliseconds)
+  "Returns true or false depending on whether input is available.
+   In some cases on windows, it may return a count of the number of unread bytes.
+   This behavior should not be depended upon."
+  (declare (ignore fd milliseconds))
+  (values nil 0))
+#-wasm32-target
 (defun fd-input-available-p (fd &optional milliseconds)
   "Returns true or false depending on whether input is available.
    In some cases on windows, it may return a count of the number of unread bytes.
@@ -5589,6 +5653,11 @@ instead of blocking in-process. Intended for the WASM Stage-2 stepping model.")
       (values (> res 0) res))))
 
 
+#+wasm32-target
+(defun fd-ready-for-output-p (fd &optional milliseconds)
+  (declare (ignore fd milliseconds))
+  (values nil 0))
+#-wasm32-target
 (defun fd-ready-for-output-p (fd &optional milliseconds)
   #+windows-target
   (case (%unix-fd-kind fd)

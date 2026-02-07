@@ -1226,9 +1226,9 @@ async function run() {
       const uiBundle = await loadJson("/doc/wasm/wasm-ui-modules.json");
       const uiModules = Array.isArray(uiBundle?.modules) ? uiBundle.modules : [];
       const uiFunctions = Array.isArray(uiBundle?.functions) ? uiBundle.functions : [];
-      if (!uiModules.length) {
-        throw new Error("wasm-ui-modules.json contains no modules");
-      }
+      const kernelDemoTurn = typeof kernelExports.wasm_ui_demo_turn === "function"
+        ? kernelExports.wasm_ui_demo_turn
+        : null;
 
       const nilValue = typeof kernelExports.wasm_get_lisp_nil === "function"
         ? (kernelExports.wasm_get_lisp_nil() >>> 0)
@@ -1241,49 +1241,146 @@ async function run() {
         extra: { ccl: kernelExports }
       });
 
-      for (const entry of uiModules) {
-        if (entry.constPoolBytes?.length) {
-          const poolResult = installConstPoolBytes({
-            kernelExports,
-            memory: runtime.memory,
-            entryIndex: entry.entryIndex,
-            constPoolBytes: entry.constPoolBytes
-          });
-          if ((poolResult >>> 0) === nilValue) {
-            throw new Error(`const pool install failed for ${entry.exportName}`);
+      if (!kernelDemoTurn) {
+        if (!uiModules.length) {
+          throw new Error("wasm-ui-modules.json contains no modules");
+        }
+        for (const entry of uiModules) {
+          if (entry.constPoolBytes?.length) {
+            const poolResult = installConstPoolBytes({
+              kernelExports,
+              memory: runtime.memory,
+              entryIndex: entry.entryIndex,
+              constPoolBytes: entry.constPoolBytes
+            });
+            if ((poolResult >>> 0) === nilValue) {
+              throw new Error(`const pool install failed for ${entry.exportName}`);
+            }
+            if (typeof kernelExports.wasm_pending_throw_p === "function" &&
+                kernelExports.wasm_pending_throw_p() >>> 0) {
+              throw new Error(`const pool install signaled pending throw for ${entry.exportName}`);
+            }
           }
-          if (typeof kernelExports.wasm_pending_throw_p === "function" &&
-              kernelExports.wasm_pending_throw_p() >>> 0) {
-            throw new Error(`const pool install signaled pending throw for ${entry.exportName}`);
+          const bytes = Uint8Array.from(entry.moduleBytes ?? []);
+          const { instance } = await instantiateWasm(bytes, uiImports);
+          const fn = instance?.exports?.[entry.exportName];
+          if (typeof fn !== "function") {
+            throw new Error(`compiled UI module missing export ${entry.exportName}`);
           }
+          const idx = entry.entryIndex >>> 0;
+          if (runtime.subprimsTable.length <= idx) {
+            runtime.subprimsTable.grow(idx - runtime.subprimsTable.length + 1);
+          }
+          runtime.subprimsTable.set(idx, fn);
         }
-        const bytes = Uint8Array.from(entry.moduleBytes ?? []);
-        const { instance } = await instantiateWasm(bytes, uiImports);
-        const fn = instance?.exports?.[entry.exportName];
-        if (typeof fn !== "function") {
-          throw new Error(`compiled UI module missing export ${entry.exportName}`);
-        }
-        const idx = entry.entryIndex >>> 0;
-        if (runtime.subprimsTable.length <= idx) {
-          runtime.subprimsTable.grow(idx - runtime.subprimsTable.length + 1);
-        }
-        runtime.subprimsTable.set(idx, fn);
       }
 
-      const turnEntry = uiFunctions.find((fn) => fn?.name === "WASM-UI-TURN")?.entryIndex;
-      if (turnEntry == null) {
-        throw new Error("missing WASM-UI-TURN entry");
+      const turnResults = [];
+      let callWasmTurn = null;
+      if (kernelDemoTurn) {
+        callWasmTurn = () => {
+          const res = kernelDemoTurn() | 0;
+          turnResults.push(res);
+          return res;
+        };
+      } else {
+        const turnEntry = uiFunctions.find((fn) => fn?.name === "WASM-UI-TURN")?.entryIndex;
+        if (turnEntry == null) {
+          throw new Error("missing WASM-UI-TURN entry");
+        }
+        if (typeof kernelExports.wasm_test_entry_funcall !== "function") {
+          throw new Error("missing wasm_test_entry_funcall export");
+        }
+        callWasmTurn = () => {
+          const res = kernelExports.wasm_test_entry_funcall(turnEntry >>> 0, 0) >> 2;
+          turnResults.push(res);
+          return res;
+        };
       }
-      if (typeof kernelExports.wasm_test_entry_funcall !== "function") {
-        throw new Error("missing wasm_test_entry_funcall export");
+      const flushWasmUi = () => {
+        if (typeof wasmUiBridge.flush === "function") {
+          wasmUiBridge.flush();
+        }
+      };
+      const labelText = () =>
+        wasmBridgeTarget.querySelector("[data-widget-id='demo-label']")?.textContent ?? "";
+      const clickNode = (node, { offsetX, offsetY } = {}) => {
+        if (!node || typeof PointerEvent !== "function") return false;
+        const rect = node.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return false;
+        const baseX = Number.isFinite(offsetX) ? offsetX : rect.width / 2;
+        const baseY = Number.isFinite(offsetY) ? offsetY : rect.height / 2;
+        const x = rect.left + Math.min(rect.width - 1, Math.max(1, baseX));
+        const y = rect.top + Math.min(rect.height - 1, Math.max(1, baseY));
+        node.dispatchEvent(
+          new PointerEvent("pointerdown", { bubbles: true, clientX: x, clientY: y, button: 0, buttons: 1 })
+        );
+        node.dispatchEvent(
+          new PointerEvent("pointerup", { bubbles: true, clientX: x, clientY: y, button: 0, buttons: 0 })
+        );
+        return true;
+      };
+
+      const initialResult = callWasmTurn();
+      flushWasmUi();
+
+      const wasmButton = wasmBridgeTarget.querySelector("[data-widget-id='demo-button']");
+      const wasmLabel = wasmBridgeTarget.querySelector("[data-widget-id='demo-label']");
+      const wasmCanvas = wasmBridgeTarget.querySelector("canvas[data-canvas-scene]");
+      const wasmWebgl = wasmBridgeTarget.querySelector("canvas[data-webgl-scene]");
+      const initialLabel = wasmLabel?.textContent ?? "";
+      const initialOk =
+        initialResult >= 0 &&
+        Boolean(wasmButton && wasmLabel && initialLabel === "Ready" && wasmCanvas && wasmWebgl);
+
+      let clickOk = false;
+      let canvasOk = false;
+      let webglOk = false;
+      let clickLabel = null;
+      let canvasLabel = null;
+      let webglLabel = null;
+
+      if (clickNode(wasmButton)) {
+        const clickResult = callWasmTurn();
+        flushWasmUi();
+        clickLabel = labelText();
+        clickOk = clickResult >= 0 && clickLabel === "Clicked";
       }
-      const turnResult = kernelExports.wasm_test_entry_funcall(turnEntry >>> 0, 0) >> 2;
-      if (typeof wasmUiBridge.flush === "function") {
-        wasmUiBridge.flush();
+
+      if (clickNode(wasmCanvas, { offsetX: 10, offsetY: 10 })) {
+        const canvasResult = callWasmTurn();
+        flushWasmUi();
+        canvasLabel = labelText();
+        canvasOk =
+          canvasResult >= 0 &&
+          typeof canvasLabel === "string" &&
+          canvasLabel.startsWith("Canvas ") &&
+          canvasLabel.includes(":");
       }
-      const wasmButton = wasmBridgeTarget.querySelector("[data-widget-id='widget-1']");
-      wasmUiOk = turnResult === 0 && Boolean(wasmButton && wasmButton.textContent === "Click");
-      wasmUiInfo = { turnResult };
+
+      if (clickNode(wasmWebgl, { offsetX: 12, offsetY: 12 })) {
+        const webglResult = callWasmTurn();
+        flushWasmUi();
+        webglLabel = labelText();
+        const webglCtx = typeof wasmWebgl?.getContext === "function"
+          ? wasmWebgl.getContext("webgl")
+          : null;
+        const expectsHitId = Boolean(webglCtx);
+        webglOk =
+          webglResult >= 0 &&
+          typeof webglLabel === "string" &&
+          webglLabel.startsWith("WebGL ") &&
+          (expectsHitId ? webglLabel.includes(":") : true);
+      }
+
+      wasmUiOk = initialOk && clickOk && canvasOk && webglOk;
+      wasmUiInfo = {
+        turnResults,
+        initialLabel,
+        clickLabel,
+        canvasLabel,
+        webglLabel
+      };
     } catch (err) {
       wasmUiInfo = { error: err?.message ?? String(err) };
     }

@@ -120,6 +120,7 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_test_entry_funcall1_raw \
 	  --export=wasm_get_compiled_module_registry \
 	  --export=wasm_kernel_ui_poll --export=wasm_kernel_ui_render --export=wasm_kernel_ui_measure_text \
+	  --export=wasm_ui_demo_turn \
 	  --export=wasm_ffi_test_add \
 	  --export=wasm_const_pool_install --export=wasm_const_pool_ref \
 	  --export=wasm_box_signed_64 \

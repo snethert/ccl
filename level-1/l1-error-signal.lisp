@@ -146,7 +146,10 @@
   (unless *interactive-streams-initialized*
     (bug (format nil "Error during early application initialization:~%
 ~a" condition))
-    (#_exit #-windows-target #-android-target #$EX_SOFTWARE #+android-target 70 #+windows-target #$EXIT_FAILURE))
+    #-wasm32-target
+    (#_exit #-windows-target #-android-target #$EX_SOFTWARE #+android-target 70 #+windows-target #$EXIT_FAILURE)
+    #+wasm32-target
+    nil)
   (application-error *application* condition error-pointer)
   (application-error
    *application*

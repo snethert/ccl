@@ -370,6 +370,9 @@ commands but aren't")
                 (if (eq form eof-value)
                   (progn
                     (when (> (incf eof-count) *consecutive-eof-limit*)
+                      #+wasm32-target
+                      (error "readloop-lds exit is not supported on wasm")
+                      #-wasm32-target
                       (#_ _exit 0))
                     (if (and (not *batch-flag*)
                              (not *quit-on-eof*)
@@ -513,6 +516,9 @@ commands but aren't")
     (write-line (lisp-implementation-version) *debug-io*)
     (force-output *debug-io*)
     (quit -1))
+  #+wasm32-target
+  (error "abnormal-application-exit is not supported on wasm")
+  #-wasm32-target
   (#__exit -1))
 
 ;; Make these available to debugger hook
@@ -688,7 +694,7 @@ commands but aren't")
 ;;; Each of these stack ranges defines the entire range of (control/value/temp)
 ;;; addresses; they can be used to addresses of stack-allocated objects
 ;;; for printing.
-#-arm-target
+#-(or arm-target wasm32-target)
 (defun make-tsp-stack-range (tcr bt-info)
   (list (cons (%catch-tsp (bt.top-catch bt-info))
               (%fixnum-ref (%fixnum-ref tcr target::tcr.ts-area)
@@ -799,6 +805,7 @@ commands but aren't")
                                       #+ppc-target *fake-stack-frames*
                                       #+x86-target (%current-frame-ptr)
                                       #+arm-target (or (current-fake-stack-frame) (%current-frame-ptr))
+                                      #+wasm32-target nil
                                       (db-link)
                                       (1+ *break-level*)))
          (*default-integer-command* `(:c 0 ,(1- (length (cdr (bt.restarts context))))))

@@ -80,24 +80,24 @@ function startStaticServer(rootDir) {
     server.on("error", (err) => {
       const code = err?.code ?? "UNKNOWN";
       if (code === "EACCES" || code === "EPERM") {
-        reject(
-          new Error(
-            `Headless harness failed to bind the local HTTP server on 127.0.0.1 (${code}). ` +
-              "This environment blocks listening on localhost. " +
-              "Re-run with permissions or allow local network binds. " +
-              `Original error: ${err?.message ?? "unknown"}`
-          )
+        const e = new Error(
+          `Headless harness failed to bind the local HTTP server on 127.0.0.1 (${code}). ` +
+            "This environment blocks listening on localhost. " +
+            "Re-run with permissions or allow local network binds. " +
+            `Original error: ${err?.message ?? "unknown"}`
         );
+        e.code = code;
+        reject(e);
         return;
       }
       if (code === "EADDRINUSE") {
-        reject(
-          new Error(
-            "Headless harness failed to bind the local HTTP server because the port is in use. " +
-              "Close the process using the port and try again. " +
-              `Original error: ${err?.message ?? "unknown"}`
-          )
+        const e = new Error(
+          "Headless harness failed to bind the local HTTP server because the port is in use. " +
+            "Close the process using the port and try again. " +
+            `Original error: ${err?.message ?? "unknown"}`
         );
+        e.code = code;
+        reject(e);
         return;
       }
       reject(err);
@@ -116,6 +116,63 @@ function closeServer(server) {
   return new Promise((resolve) => server.close(resolve));
 }
 
+async function fulfillFromDisk(route, rootDir) {
+  try {
+    const url = new URL(route.request().url());
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      await route.continue();
+      return;
+    }
+    const filePath = resolvePath(rootDir, url.pathname);
+    if (!filePath) {
+      await route.fulfill({ status: 403, body: "Forbidden" });
+      return;
+    }
+    let stat;
+    try {
+      stat = await fs.stat(filePath);
+    } catch {
+      await route.fulfill({ status: 404, body: "Not found" });
+      return;
+    }
+    if (stat.isDirectory()) {
+      await route.fulfill({ status: 404, body: "Not found" });
+      return;
+    }
+    const data = await fs.readFile(filePath);
+    await route.fulfill({
+      status: 200,
+      body: data,
+      headers: {
+        "Content-Type": contentTypeFor(filePath),
+      },
+    });
+  } catch (err) {
+    await route.fulfill({ status: 500, body: "Server error" });
+  }
+}
+
+async function launchPlaywrightBrowser(playwright) {
+  const attempts = [
+    { name: "chromium", type: playwright.chromium },
+    { name: "webkit", type: playwright.webkit },
+    { name: "firefox", type: playwright.firefox },
+  ];
+  const errors = [];
+  for (const attempt of attempts) {
+    if (!attempt.type) continue;
+    try {
+      const browser = await attempt.type.launch({ headless: true });
+      return { browser, name: attempt.name };
+    } catch (err) {
+      errors.push(`${attempt.name}: ${err?.message ?? err}`);
+    }
+  }
+  const e = new Error(`Playwright launch failed:\n${errors.join("\n")}`);
+  e.details = errors;
+  throw e;
+}
+
 export async function runHeadless(options = {}) {
   let playwright;
   try {
@@ -127,6 +184,7 @@ export async function runHeadless(options = {}) {
   const timeoutMs = options.timeoutMs ?? 5000;
   let server;
   let baseUrl;
+  let useRouteServer = false;
   try {
     ({ server, baseUrl } = await startStaticServer(WEB_UI_ROOT));
   } catch (err) {
@@ -134,21 +192,33 @@ export async function runHeadless(options = {}) {
     if (strict) {
       throw err;
     }
-    return { skipped: true, reason: err?.message ?? "Failed to start local HTTP server" };
+    const code = err?.code ?? "";
+    if (code === "EACCES" || code === "EPERM") {
+      useRouteServer = true;
+      baseUrl = "http://web-ui.local";
+    } else {
+      return { skipped: true, reason: err?.message ?? "Failed to start local HTTP server" };
+    }
   }
   let browser;
+  let browserName = "chromium";
   try {
-    browser = await playwright.chromium.launch({ headless: true });
+    const launched = await launchPlaywrightBrowser(playwright);
+    browser = launched.browser;
+    browserName = launched.name;
   } catch (err) {
     const strict = process.env.WEB_UI_STRICT_BROWSER_TESTS === "1";
     if (strict) {
-      await closeServer(server);
+      if (server) await closeServer(server);
       throw err;
     }
-    await closeServer(server);
-    return { skipped: true, reason: `Playwright launch failed: ${err.message}` };
+    if (server) await closeServer(server);
+    return { skipped: true, reason: err?.message ?? "Playwright launch failed" };
   }
   const page = await browser.newPage();
+  if (useRouteServer) {
+    await page.route("**/*", (route) => fulfillFromDisk(route, WEB_UI_ROOT));
+  }
 
   let resolveResult;
   let rejectResult;
@@ -171,9 +241,10 @@ export async function runHeadless(options = {}) {
 
   try {
     const result = await resultPromise;
+    result.browserName = browserName;
     return result;
   } finally {
     await browser.close();
-    await closeServer(server);
+    if (server) await closeServer(server);
   }
 }

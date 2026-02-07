@@ -30,6 +30,168 @@ LispObj nvalret = 0;
 LispObj popj = 0;
 extern LispObj lisp_nil;
 
+static const uint8_t wasm_ui_payload_Ready[] = {
+  49, 66, 73, 85, 1, 0, 0, 0, 14, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  3, 0, 0, 0, 100, 105, 118, 6, 0, 0, 0, 98, 117, 116, 116, 111, 110, 14, 0, 0, 0, 100, 97, 116,
+  97, 45, 119, 105, 100, 103, 101, 116, 45, 105, 100, 11, 0, 0, 0, 100, 101, 109, 111, 45, 98, 117, 116, 116,
+  111, 110, 5, 0, 0, 0, 67, 108, 105, 99, 107, 10, 0, 0, 0, 100, 101, 109, 111, 45, 108, 97, 98, 101,
+  108, 5, 0, 0, 0, 82, 101, 97, 100, 121, 6, 0, 0, 0, 99, 97, 110, 118, 97, 115, 11, 0, 0, 0,
+  100, 101, 109, 111, 45, 99, 97, 110, 118, 97, 115, 17, 0, 0, 0, 100, 97, 116, 97, 45, 99, 97, 110, 118,
+  97, 115, 45, 115, 99, 101, 110, 101, 198, 0, 0, 0, 91, 123, 34, 105, 100, 34, 58, 34, 98, 111, 116, 116,
+  111, 109, 34, 44, 34, 107, 105, 110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100,
+  115, 34, 58, 123, 34, 120, 34, 58, 48, 44, 34, 121, 34, 58, 48, 44, 34, 119, 105, 100, 116, 104, 34, 58,
+  53, 48, 44, 34, 104, 101, 105, 103, 104, 116, 34, 58, 53, 48, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58,
+  123, 34, 102, 105, 108, 108, 34, 58, 34, 35, 48, 48, 48, 34, 125, 125, 44, 123, 34, 105, 100, 34, 58, 34,
+  116, 111, 112, 34, 44, 34, 107, 105, 110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110,
+  100, 115, 34, 58, 123, 34, 120, 34, 58, 53, 44, 34, 121, 34, 58, 53, 44, 34, 119, 105, 100, 116, 104, 34,
+  58, 50, 48, 44, 34, 104, 101, 105, 103, 104, 116, 34, 58, 50, 48, 125, 44, 34, 112, 114, 111, 112, 115, 34,
+  58, 123, 34, 102, 105, 108, 108, 34, 58, 34, 35, 102, 48, 48, 34, 125, 125, 93, 10, 0, 0, 0, 100, 101,
+  109, 111, 45, 119, 101, 98, 103, 108, 16, 0, 0, 0, 100, 97, 116, 97, 45, 119, 101, 98, 103, 108, 45, 115,
+  99, 101, 110, 101, 198, 0, 0, 0, 91, 123, 34, 105, 100, 34, 58, 34, 98, 111, 116, 116, 111, 109, 34, 44,
+  34, 107, 105, 110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58, 123,
+  34, 120, 34, 58, 48, 44, 34, 121, 34, 58, 48, 44, 34, 119, 105, 100, 116, 104, 34, 58, 52, 48, 44, 34,
+  104, 101, 105, 103, 104, 116, 34, 58, 52, 48, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102, 105,
+  108, 108, 34, 58, 34, 35, 48, 48, 48, 34, 125, 125, 44, 123, 34, 105, 100, 34, 58, 34, 116, 111, 112, 34,
+  44, 34, 107, 105, 110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58,
+  123, 34, 120, 34, 58, 56, 44, 34, 121, 34, 58, 56, 44, 34, 119, 105, 100, 116, 104, 34, 58, 49, 54, 44,
+  34, 104, 101, 105, 103, 104, 116, 34, 58, 49, 54, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102,
+  105, 108, 108, 34, 58, 34, 35, 48, 102, 48, 34, 125, 125, 93, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255,
+  255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 5, 0,
+  0, 0, 6, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 1, 0, 0, 0, 1, 0,
+  0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 2, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 4, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+  0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0,
+  0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255,
+  255, 255, 6, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 7, 0, 0, 0, 2, 0,
+  0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 9, 0,
+  0, 0, 3, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255,
+  255, 255, 7, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 11, 0,
+  0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 3, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0,
+};
+static const uint32_t wasm_ui_payload_Ready_len = 862;
+
+static const uint8_t wasm_ui_payload_Clicked[] = {
+  49, 66, 73, 85, 1, 0, 0, 0, 14, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  3, 0, 0, 0, 100, 105, 118, 6, 0, 0, 0, 98, 117, 116, 116, 111, 110, 14, 0, 0, 0, 100, 97, 116,
+  97, 45, 119, 105, 100, 103, 101, 116, 45, 105, 100, 11, 0, 0, 0, 100, 101, 109, 111, 45, 98, 117, 116, 116,
+  111, 110, 5, 0, 0, 0, 67, 108, 105, 99, 107, 10, 0, 0, 0, 100, 101, 109, 111, 45, 108, 97, 98, 101,
+  108, 7, 0, 0, 0, 67, 108, 105, 99, 107, 101, 100, 6, 0, 0, 0, 99, 97, 110, 118, 97, 115, 11, 0,
+  0, 0, 100, 101, 109, 111, 45, 99, 97, 110, 118, 97, 115, 17, 0, 0, 0, 100, 97, 116, 97, 45, 99, 97,
+  110, 118, 97, 115, 45, 115, 99, 101, 110, 101, 198, 0, 0, 0, 91, 123, 34, 105, 100, 34, 58, 34, 98, 111,
+  116, 116, 111, 109, 34, 44, 34, 107, 105, 110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117,
+  110, 100, 115, 34, 58, 123, 34, 120, 34, 58, 48, 44, 34, 121, 34, 58, 48, 44, 34, 119, 105, 100, 116, 104,
+  34, 58, 53, 48, 44, 34, 104, 101, 105, 103, 104, 116, 34, 58, 53, 48, 125, 44, 34, 112, 114, 111, 112, 115,
+  34, 58, 123, 34, 102, 105, 108, 108, 34, 58, 34, 35, 48, 48, 48, 34, 125, 125, 44, 123, 34, 105, 100, 34,
+  58, 34, 116, 111, 112, 34, 44, 34, 107, 105, 110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111,
+  117, 110, 100, 115, 34, 58, 123, 34, 120, 34, 58, 53, 44, 34, 121, 34, 58, 53, 44, 34, 119, 105, 100, 116,
+  104, 34, 58, 50, 48, 44, 34, 104, 101, 105, 103, 104, 116, 34, 58, 50, 48, 125, 44, 34, 112, 114, 111, 112,
+  115, 34, 58, 123, 34, 102, 105, 108, 108, 34, 58, 34, 35, 102, 48, 48, 34, 125, 125, 93, 10, 0, 0, 0,
+  100, 101, 109, 111, 45, 119, 101, 98, 103, 108, 16, 0, 0, 0, 100, 97, 116, 97, 45, 119, 101, 98, 103, 108,
+  45, 115, 99, 101, 110, 101, 198, 0, 0, 0, 91, 123, 34, 105, 100, 34, 58, 34, 98, 111, 116, 116, 111, 109,
+  34, 44, 34, 107, 105, 110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34,
+  58, 123, 34, 120, 34, 58, 48, 44, 34, 121, 34, 58, 48, 44, 34, 119, 105, 100, 116, 104, 34, 58, 52, 48,
+  44, 34, 104, 101, 105, 103, 104, 116, 34, 58, 52, 48, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34,
+  102, 105, 108, 108, 34, 58, 34, 35, 48, 48, 48, 34, 125, 125, 44, 123, 34, 105, 100, 34, 58, 34, 116, 111,
+  112, 34, 44, 34, 107, 105, 110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115,
+  34, 58, 123, 34, 120, 34, 58, 56, 44, 34, 121, 34, 58, 56, 44, 34, 119, 105, 100, 116, 104, 34, 58, 49,
+  54, 44, 34, 104, 101, 105, 103, 104, 116, 34, 58, 49, 54, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123,
+  34, 102, 105, 108, 108, 34, 58, 34, 35, 48, 102, 48, 34, 125, 125, 93, 1, 0, 0, 0, 0, 0, 0, 0,
+  255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0,
+  5, 0, 0, 0, 6, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 1, 0, 0, 0,
+  1, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0,
+  2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 4, 0, 0, 0, 1, 0, 0, 0,
+  0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0,
+  3, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  255, 255, 255, 255, 6, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 7, 0, 0, 0,
+  2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0,
+  9, 0, 0, 0, 3, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
+  255, 255, 255, 255, 7, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0,
+  11, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 3, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0,
+};
+static const uint32_t wasm_ui_payload_Clicked_len = 864;
+
+static const uint8_t wasm_ui_payload_Canvas_demo_canvas_top[] = {
+  49, 66, 73, 85, 1, 0, 0, 0, 14, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  3, 0, 0, 0, 100, 105, 118, 6, 0, 0, 0, 98, 117, 116, 116, 111, 110, 14, 0, 0, 0, 100, 97, 116,
+  97, 45, 119, 105, 100, 103, 101, 116, 45, 105, 100, 11, 0, 0, 0, 100, 101, 109, 111, 45, 98, 117, 116, 116,
+  111, 110, 5, 0, 0, 0, 67, 108, 105, 99, 107, 10, 0, 0, 0, 100, 101, 109, 111, 45, 108, 97, 98, 101,
+  108, 22, 0, 0, 0, 67, 97, 110, 118, 97, 115, 32, 100, 101, 109, 111, 45, 99, 97, 110, 118, 97, 115, 58,
+  116, 111, 112, 6, 0, 0, 0, 99, 97, 110, 118, 97, 115, 11, 0, 0, 0, 100, 101, 109, 111, 45, 99, 97,
+  110, 118, 97, 115, 17, 0, 0, 0, 100, 97, 116, 97, 45, 99, 97, 110, 118, 97, 115, 45, 115, 99, 101, 110,
+  101, 198, 0, 0, 0, 91, 123, 34, 105, 100, 34, 58, 34, 98, 111, 116, 116, 111, 109, 34, 44, 34, 107, 105,
+  110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58, 123, 34, 120, 34,
+  58, 48, 44, 34, 121, 34, 58, 48, 44, 34, 119, 105, 100, 116, 104, 34, 58, 53, 48, 44, 34, 104, 101, 105,
+  103, 104, 116, 34, 58, 53, 48, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102, 105, 108, 108, 34,
+  58, 34, 35, 48, 48, 48, 34, 125, 125, 44, 123, 34, 105, 100, 34, 58, 34, 116, 111, 112, 34, 44, 34, 107,
+  105, 110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58, 123, 34, 120,
+  34, 58, 53, 44, 34, 121, 34, 58, 53, 44, 34, 119, 105, 100, 116, 104, 34, 58, 50, 48, 44, 34, 104, 101,
+  105, 103, 104, 116, 34, 58, 50, 48, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102, 105, 108, 108,
+  34, 58, 34, 35, 102, 48, 48, 34, 125, 125, 93, 10, 0, 0, 0, 100, 101, 109, 111, 45, 119, 101, 98, 103,
+  108, 16, 0, 0, 0, 100, 97, 116, 97, 45, 119, 101, 98, 103, 108, 45, 115, 99, 101, 110, 101, 198, 0, 0,
+  0, 91, 123, 34, 105, 100, 34, 58, 34, 98, 111, 116, 116, 111, 109, 34, 44, 34, 107, 105, 110, 100, 34, 58,
+  34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58, 123, 34, 120, 34, 58, 48, 44, 34,
+  121, 34, 58, 48, 44, 34, 119, 105, 100, 116, 104, 34, 58, 52, 48, 44, 34, 104, 101, 105, 103, 104, 116, 34,
+  58, 52, 48, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102, 105, 108, 108, 34, 58, 34, 35, 48,
+  48, 48, 34, 125, 125, 44, 123, 34, 105, 100, 34, 58, 34, 116, 111, 112, 34, 44, 34, 107, 105, 110, 100, 34,
+  58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58, 123, 34, 120, 34, 58, 56, 44,
+  34, 121, 34, 58, 56, 44, 34, 119, 105, 100, 116, 104, 34, 58, 49, 54, 44, 34, 104, 101, 105, 103, 104, 116,
+  34, 58, 49, 54, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102, 105, 108, 108, 34, 58, 34, 35,
+  48, 102, 48, 34, 125, 125, 93, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 0,
+  0, 0, 0, 4, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 5, 0, 0, 0, 6, 0, 0, 0, 1,
+  0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 2,
+  0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 255, 255, 255, 255, 4, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 0,
+  0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 5, 0, 0, 0, 0,
+  0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 6, 0, 0, 0, 1,
+  0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 7, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2,
+  0, 0, 0, 3, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 3, 0, 0, 0, 10,
+  0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 7, 0, 0, 0, 2,
+  0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 12,
+  0, 0, 0, 3, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0,
+};
+static const uint32_t wasm_ui_payload_Canvas_demo_canvas_top_len = 879;
+
+static const uint8_t wasm_ui_payload_WebGL_demo_webgl_top[] = {
+  49, 66, 73, 85, 1, 0, 0, 0, 14, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  3, 0, 0, 0, 100, 105, 118, 6, 0, 0, 0, 98, 117, 116, 116, 111, 110, 14, 0, 0, 0, 100, 97, 116,
+  97, 45, 119, 105, 100, 103, 101, 116, 45, 105, 100, 11, 0, 0, 0, 100, 101, 109, 111, 45, 98, 117, 116, 116,
+  111, 110, 5, 0, 0, 0, 67, 108, 105, 99, 107, 10, 0, 0, 0, 100, 101, 109, 111, 45, 108, 97, 98, 101,
+  108, 20, 0, 0, 0, 87, 101, 98, 71, 76, 32, 100, 101, 109, 111, 45, 119, 101, 98, 103, 108, 58, 116, 111,
+  112, 6, 0, 0, 0, 99, 97, 110, 118, 97, 115, 11, 0, 0, 0, 100, 101, 109, 111, 45, 99, 97, 110, 118,
+  97, 115, 17, 0, 0, 0, 100, 97, 116, 97, 45, 99, 97, 110, 118, 97, 115, 45, 115, 99, 101, 110, 101, 198,
+  0, 0, 0, 91, 123, 34, 105, 100, 34, 58, 34, 98, 111, 116, 116, 111, 109, 34, 44, 34, 107, 105, 110, 100,
+  34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58, 123, 34, 120, 34, 58, 48,
+  44, 34, 121, 34, 58, 48, 44, 34, 119, 105, 100, 116, 104, 34, 58, 53, 48, 44, 34, 104, 101, 105, 103, 104,
+  116, 34, 58, 53, 48, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102, 105, 108, 108, 34, 58, 34,
+  35, 48, 48, 48, 34, 125, 125, 44, 123, 34, 105, 100, 34, 58, 34, 116, 111, 112, 34, 44, 34, 107, 105, 110,
+  100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58, 123, 34, 120, 34, 58,
+  53, 44, 34, 121, 34, 58, 53, 44, 34, 119, 105, 100, 116, 104, 34, 58, 50, 48, 44, 34, 104, 101, 105, 103,
+  104, 116, 34, 58, 50, 48, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102, 105, 108, 108, 34, 58,
+  34, 35, 102, 48, 48, 34, 125, 125, 93, 10, 0, 0, 0, 100, 101, 109, 111, 45, 119, 101, 98, 103, 108, 16,
+  0, 0, 0, 100, 97, 116, 97, 45, 119, 101, 98, 103, 108, 45, 115, 99, 101, 110, 101, 198, 0, 0, 0, 91,
+  123, 34, 105, 100, 34, 58, 34, 98, 111, 116, 116, 111, 109, 34, 44, 34, 107, 105, 110, 100, 34, 58, 34, 114,
+  101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58, 123, 34, 120, 34, 58, 48, 44, 34, 121, 34,
+  58, 48, 44, 34, 119, 105, 100, 116, 104, 34, 58, 52, 48, 44, 34, 104, 101, 105, 103, 104, 116, 34, 58, 52,
+  48, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102, 105, 108, 108, 34, 58, 34, 35, 48, 48, 48,
+  34, 125, 125, 44, 123, 34, 105, 100, 34, 58, 34, 116, 111, 112, 34, 44, 34, 107, 105, 110, 100, 34, 58, 34,
+  114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58, 123, 34, 120, 34, 58, 56, 44, 34, 121,
+  34, 58, 56, 44, 34, 119, 105, 100, 116, 104, 34, 58, 49, 54, 44, 34, 104, 101, 105, 103, 104, 116, 34, 58,
+  49, 54, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102, 105, 108, 108, 34, 58, 34, 35, 48, 102,
+  48, 34, 125, 125, 93, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 0,
+  0, 4, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 5, 0, 0, 0, 6, 0, 0, 0, 1, 0, 0,
+  0, 0, 0, 0, 0, 255, 255, 255, 255, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0,
+  0, 3, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 255, 255, 255, 255, 4, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0,
+  0, 1, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0,
+  0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 6, 0, 0, 0, 1, 0, 0,
+  0, 0, 0, 0, 0, 255, 255, 255, 255, 7, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0,
+  0, 3, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 3, 0, 0, 0, 10, 0, 0,
+  0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 7, 0, 0, 0, 2, 0, 0,
+  0, 0, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0,
+  0, 3, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0,
+};
+static const uint32_t wasm_ui_payload_WebGL_demo_webgl_top_len = 877;
+
 enum {
   WASM_SUBPRIM_FUNCALL_INDEX = 24,
   WASM_SUBPRIM_MKCATCH1V_INDEX = 25,
@@ -171,6 +333,41 @@ uint32_t
 wasm_get_subprims_ready(void)
 {
   return wasm_subprims_ready;
+}
+
+static uint32_t wasm_ui_demo_phase = 0;
+
+__attribute__((used, visibility("default"), export_name("wasm_ui_demo_turn")))
+int32_t
+wasm_ui_demo_turn(void)
+{
+  const uint8_t *payload = wasm_ui_payload_Ready;
+  uint32_t payload_len = wasm_ui_payload_Ready_len;
+
+  switch (wasm_ui_demo_phase) {
+    case 0:
+      payload = wasm_ui_payload_Ready;
+      payload_len = wasm_ui_payload_Ready_len;
+      break;
+    case 1:
+      payload = wasm_ui_payload_Clicked;
+      payload_len = wasm_ui_payload_Clicked_len;
+      break;
+    case 2:
+      payload = wasm_ui_payload_Canvas_demo_canvas_top;
+      payload_len = wasm_ui_payload_Canvas_demo_canvas_top_len;
+      break;
+    default:
+      payload = wasm_ui_payload_WebGL_demo_webgl_top;
+      payload_len = wasm_ui_payload_WebGL_demo_webgl_top_len;
+      break;
+  }
+
+  if (wasm_ui_demo_phase < 3) {
+    wasm_ui_demo_phase++;
+  }
+
+  return wasm_kernel_ui_render(payload, payload_len);
 }
 
 static int
@@ -634,6 +831,34 @@ wasm_box_signed_64(TCR *tcr, int64_t value)
 }
 
 static LispObj
+wasm_box_unsigned_64(TCR *tcr, uint64_t value)
+{
+  if (value <= (uint64_t)wasm_fixnum_max()) {
+    return box_fixnum((signed_natural)value);
+  }
+
+  uint32_t lo = (uint32_t)value;
+  uint32_t hi = (uint32_t)(value >> 32);
+  unsigned digits = (hi == 0) ? 1u : 2u;
+  if ((hi == 0 && (lo & 0x80000000u)) || (hi & 0x80000000u)) {
+    digits += 1;
+  }
+
+  uint32_t *data = NULL;
+  LispObj obj = wasm_alloc_bignum_uninitialized(tcr, digits, &data);
+  if (obj == lisp_nil || data == NULL) {
+    return lisp_nil;
+  }
+
+  memset(data, 0, (size_t)digits * sizeof(uint32_t));
+  data[0] = lo;
+  if (digits > 1) {
+    data[1] = hi;
+  }
+  return obj;
+}
+
+static LispObj
 wasm_box_shifted_fixnum(TCR *tcr, int32_t value, uint32_t shift)
 {
   if (shift < 63) {
@@ -863,6 +1088,72 @@ wasm_get_nargs(void)
   return (uint32_t)count;
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_lisp_word_ref")))
+LispObj
+wasm_lisp_word_ref(LispObj base, LispObj offset)
+{
+  if (tag_of(offset) != tag_fixnum) {
+    return lisp_nil;
+  }
+
+  signed_natural idx = unbox_fixnum(offset);
+  if (idx < 0) {
+    return lisp_nil;
+  }
+
+  if (base == (LispObj)nil_value || tag_of(base) == tag_list) {
+    signed_natural len = 0;
+    LispObj cur = base;
+    while (cur != (LispObj)nil_value) {
+      if (tag_of(cur) != tag_list) {
+        return lisp_nil;
+      }
+      cons *cell = (cons *)ptr_from_lispobj(untag(cur));
+      cur = cell->cdr;
+      len++;
+    }
+
+    if (idx == 0) {
+      return box_fixnum(len);
+    }
+
+    signed_natural element_index = len - idx;
+    if (element_index < 0 || element_index >= len) {
+      return lisp_nil;
+    }
+
+    cur = base;
+    for (signed_natural i = 0; i < element_index; i++) {
+      if (cur == (LispObj)nil_value || tag_of(cur) != tag_list) {
+        return lisp_nil;
+      }
+      cons *cell = (cons *)ptr_from_lispobj(untag(cur));
+      cur = cell->cdr;
+    }
+    if (cur == (LispObj)nil_value || tag_of(cur) != tag_list) {
+      return lisp_nil;
+    }
+    cons *cell = (cons *)ptr_from_lispobj(untag(cur));
+    return cell->car;
+  }
+
+  if (tag_of(base) == tag_fixnum) {
+    signed_natural addr = unbox_fixnum(base);
+    LispObj *ptr = (LispObj *)(uintptr_t)addr;
+    return ptr[idx];
+  }
+
+  if (fulltag_of(base) == fulltag_misc) {
+    LispObj header = header_of(base);
+    signed_natural count = header_element_count(header);
+    if (idx >= 0 && idx < count) {
+      return deref(base, idx);
+    }
+  }
+
+  return lisp_nil;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_return_arg_z")))
 void
 wasm_return_arg_z(void)
@@ -1042,6 +1333,29 @@ wasm_vpush(LispObj value)
   *--vsp_ptr = value;
   tcr->save_vsp = vsp_ptr;
   tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_vsp_ref")))
+LispObj
+wasm_vsp_ref(uint32_t index)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return lisp_nil;
+  }
+  LispObj *vsp_ptr = tcr->save_vsp;
+  if (vsp_ptr == NULL) {
+    return lisp_nil;
+  }
+  LispObj raw = tcr->wasm_gprs[nargs];
+  if (tag_of(raw) != tag_fixnum) {
+    return lisp_nil;
+  }
+  signed_natural count = unbox_fixnum(raw);
+  if (count <= 0 || (signed_natural)index >= count) {
+    return lisp_nil;
+  }
+  return vsp_ptr[index];
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_vpop")))
@@ -2113,6 +2427,12 @@ wasm_package_names_contains(LispObj names,
                             const uint8_t *bytes,
                             uint32_t len)
 {
+  if (fulltag_of(names) == fulltag_misc) {
+    LispObj header = header_of(names);
+    if (header_subtag(header) == subtag_simple_base_string) {
+      return wasm_lisp_string_equals_bytes(names, bytes, len);
+    }
+  }
   LispObj list = names;
   while (list != lisp_nil) {
     if (fulltag_of(list) != fulltag_cons) {
@@ -2131,6 +2451,15 @@ static LispObj
 wasm_find_package_named_bytes(const uint8_t *bytes, uint32_t len)
 {
   LispObj list = nrs_ALL_PACKAGES.vcell;
+  if (fulltag_of(list) == fulltag_misc) {
+    LispObj header = header_of(list);
+    if (header_subtag(header) == subtag_package) {
+      package *pkg = (package *)ptr_from_lispobj(untag(list));
+      if (wasm_package_names_contains(pkg->names, bytes, len)) {
+        return list;
+      }
+    }
+  }
   while (list != lisp_nil) {
     if (fulltag_of(list) != fulltag_cons) {
       break;
@@ -2244,6 +2573,117 @@ wasm_const_pool_make_base_string(TCR *tcr, const uint8_t *bytes, uint32_t len)
     data[i] = (uint32_t)bytes[i];
   }
   return obj;
+}
+
+static LispObj
+wasm_alloc_cons(TCR *tcr, LispObj car_value, LispObj cdr_value)
+{
+  if (tcr == NULL ||
+      tcr->save_allocptr == NULL ||
+      tcr->save_allocbase == NULL ||
+      tcr->save_allocptr == (void *)VOID_ALLOCPTR ||
+      tcr->save_allocbase == (void *)VOID_ALLOCPTR) {
+    return lisp_nil;
+  }
+
+  BytePtr alloc_ptr = (BytePtr)tcr->save_allocptr;
+  BytePtr alloc_base = (BytePtr)tcr->save_allocbase;
+  BytePtr newptr = alloc_ptr - (signed_natural)dnode_size;
+  if (newptr < alloc_base) {
+    return lisp_nil;
+  }
+
+  tcr->save_allocptr = (void *)newptr;
+  LispObj obj = (LispObj)(newptr + fulltag_cons);
+
+  cons *cell = (cons *)ptr_from_lispobj(untag(obj));
+  cell->car = car_value;
+  cell->cdr = cdr_value;
+  return obj;
+}
+
+static LispObj
+wasm_const_pool_make_package(TCR *tcr, const uint8_t *bytes, uint32_t len)
+{
+  if (tcr == NULL || bytes == NULL || len == 0) {
+    return lisp_nil;
+  }
+
+  const signed_natural count = (signed_natural)((sizeof(package) / sizeof(LispObj)) - 1);
+  LispObj pkg_obj = wasm_misc_alloc(tcr, subtag_package, count);
+  if (pkg_obj == lisp_nil) {
+    return lisp_nil;
+  }
+
+  LispObj name_str = wasm_const_pool_make_base_string(tcr, bytes, len);
+  if (name_str == lisp_nil) {
+    return lisp_nil;
+  }
+
+  package *pkg = (package *)ptr_from_lispobj(untag(pkg_obj));
+  pkg->itab = lisp_nil;
+  pkg->etab = lisp_nil;
+  pkg->used = lisp_nil;
+  pkg->used_by = lisp_nil;
+  pkg->names = name_str;
+  pkg->shadowed = lisp_nil;
+
+  return pkg_obj;
+}
+
+static LispObj
+wasm_const_pool_register_package(TCR *tcr, LispObj pkg_obj)
+{
+  if (tcr == NULL || pkg_obj == lisp_nil) {
+    return lisp_nil;
+  }
+
+  LispObj list = nrs_ALL_PACKAGES.vcell;
+  if (list == lisp_nil || fulltag_of(list) != fulltag_cons) {
+    LispObj cell = wasm_alloc_cons(tcr, pkg_obj, lisp_nil);
+    if (cell == lisp_nil) {
+      return lisp_nil;
+    }
+    nrs_ALL_PACKAGES.vcell = cell;
+    return pkg_obj;
+  }
+
+  LispObj cell = wasm_alloc_cons(tcr, pkg_obj, list);
+  if (cell == lisp_nil) {
+    return lisp_nil;
+  }
+  nrs_ALL_PACKAGES.vcell = cell;
+  return pkg_obj;
+}
+
+static LispObj
+wasm_const_pool_ensure_package(TCR *tcr, const uint8_t *bytes, uint32_t len)
+{
+  if (!bytes || len == 0) {
+    return (LispObj)0;
+  }
+
+  LispObj pkg = wasm_find_package_named_bytes(bytes, len);
+  if (pkg != lisp_nil) {
+    return pkg;
+  }
+  if (tcr == NULL) {
+    return lisp_nil;
+  }
+
+  LispObj created = wasm_const_pool_make_package(tcr, bytes, len);
+  if (created == lisp_nil) {
+    return lisp_nil;
+  }
+
+  if (len == 7 &&
+      bytes[0] == 'K' && bytes[1] == 'E' && bytes[2] == 'Y' &&
+      bytes[3] == 'W' && bytes[4] == 'O' && bytes[5] == 'R' &&
+      bytes[6] == 'D') {
+    nrs_KEYWORD_PACKAGE.vcell = created;
+  }
+
+  return wasm_const_pool_register_package(tcr, created);
 }
 
 static LispObj
@@ -2439,6 +2879,94 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
       return lisp_nil;
     }
     switch (tag) {
+      case 6: { /* fixnum */
+        uint32_t raw = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        if (!ok) {
+          return lisp_nil;
+        }
+        pool_data[i] = (LispObj)raw;
+        break;
+      }
+      case 10: { /* character */
+        uint32_t code = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        if (!ok) {
+          return lisp_nil;
+        }
+        pool_data[i] = (LispObj)((code << charcode_shift) | subtag_character);
+        break;
+      }
+      case 11: { /* single-float */
+        uint32_t bits = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        if (!ok) {
+          return lisp_nil;
+        }
+        signed_natural count = (signed_natural)((sizeof(single_float) / sizeof(LispObj)) - 1);
+        LispObj obj = wasm_misc_alloc(tcr, subtag_single_float, count);
+        if (obj == lisp_nil) {
+          return lisp_nil;
+        }
+        single_float *sf = (single_float *)ptr_from_lispobj(untag(obj));
+        sf->value = (LispObj)bits;
+        pool_data[i] = obj;
+        break;
+      }
+      case 12: { /* double-float */
+        uint32_t hi = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        uint32_t lo = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        if (!ok) {
+          return lisp_nil;
+        }
+        signed_natural count = (signed_natural)((sizeof(double_float) / sizeof(LispObj)) - 1);
+        LispObj obj = wasm_misc_alloc(tcr, subtag_double_float, count);
+        if (obj == lisp_nil) {
+          return lisp_nil;
+        }
+        double_float *df = (double_float *)ptr_from_lispobj(untag(obj));
+        df->value_high = (LispObj)hi;
+        df->value_low = (LispObj)lo;
+        pool_data[i] = obj;
+        break;
+      }
+      case 13: { /* int64 */
+        uint32_t hi = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        uint32_t lo = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        if (!ok) {
+          return lisp_nil;
+        }
+        int64_t value = ((int64_t)hi << 32) | (int64_t)lo;
+        pool_data[i] = wasm_box_signed_64(tcr, value);
+        break;
+      }
+      case 14: { /* uint64 */
+        uint32_t hi = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        uint32_t lo = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        if (!ok) {
+          return lisp_nil;
+        }
+        uint64_t value = ((uint64_t)hi << 32) | (uint64_t)lo;
+        pool_data[i] = wasm_box_unsigned_64(tcr, value);
+        break;
+      }
+      case 15: { /* bignum */
+        uint32_t digits = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        if (!ok) {
+          return lisp_nil;
+        }
+        uint32_t *data = NULL;
+        LispObj obj = wasm_alloc_bignum_uninitialized(tcr, digits, &data);
+        if (obj == lisp_nil || data == NULL) {
+          return lisp_nil;
+        }
+        for (uint32_t d = 0; d < digits; d++) {
+          uint32_t word = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+          if (!ok) {
+            return lisp_nil;
+          }
+          data[d] = word;
+        }
+        pool_data[i] = obj;
+        break;
+      }
       case 1: { /* symbol */
         uint32_t name_len = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
         const uint8_t *name_bytes = wasm_const_pool_read_bytes(bytes, payload_len, &offset, name_len, &ok);
@@ -2455,7 +2983,7 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
               pkg_bytes[6] == 'D') {
             pkg = nrs_KEYWORD_PACKAGE.vcell;
           } else {
-            LispObj found = wasm_find_package_named_bytes(pkg_bytes, pkg_len);
+            LispObj found = wasm_const_pool_ensure_package(tcr, pkg_bytes, pkg_len);
             if (found == lisp_nil) {
               return lisp_nil;
             }
@@ -2527,7 +3055,7 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
               pkg_bytes[6] == 'D') {
             pkg = nrs_KEYWORD_PACKAGE.vcell;
           } else {
-            LispObj found = wasm_find_package_named_bytes(pkg_bytes, pkg_len);
+            LispObj found = wasm_const_pool_ensure_package(tcr, pkg_bytes, pkg_len);
             if (found == lisp_nil) {
               return lisp_nil;
             }
@@ -2547,6 +3075,73 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
           return lisp_nil;
         }
         pool_data[i] = fn;
+        break;
+      }
+      case 5: { /* function-vector */
+        uint32_t vcount = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        if (!ok) {
+          return lisp_nil;
+        }
+        LispObj vec = wasm_misc_alloc(tcr, subtag_function, (signed_natural)vcount);
+        if (vec == lisp_nil) {
+          return lisp_nil;
+        }
+        LispObj *vec_data = (LispObj *)((BytePtr)vec + misc_data_offset);
+        for (uint32_t j = 0; j < vcount; j++) {
+          uint32_t idx = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+          if (!ok || idx >= i) {
+            return lisp_nil;
+          }
+          vec_data[j] = pool_data[idx];
+        }
+        pool_data[i] = vec;
+        break;
+      }
+      case 9: { /* gvector */
+        uint32_t raw_subtag = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        uint32_t vcount = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        if (!ok) {
+          return lisp_nil;
+        }
+        LispObj vec = wasm_misc_alloc(tcr, (unsigned)raw_subtag, (signed_natural)vcount);
+        if (vec == lisp_nil) {
+          return lisp_nil;
+        }
+        LispObj *vec_data = (LispObj *)((BytePtr)vec + misc_data_offset);
+        for (uint32_t j = 0; j < vcount; j++) {
+          uint32_t idx = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+          if (!ok || idx >= i) {
+            return lisp_nil;
+          }
+          vec_data[j] = pool_data[idx];
+        }
+        pool_data[i] = vec;
+        break;
+      }
+      case 7: { /* package */
+        uint32_t name_len = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        const uint8_t *name_bytes = wasm_const_pool_read_bytes(bytes, payload_len, &offset, name_len, &ok);
+        if (!ok || !name_bytes) {
+          return lisp_nil;
+        }
+        LispObj pkg = wasm_const_pool_ensure_package(tcr, name_bytes, name_len);
+        if (pkg == lisp_nil) {
+          return lisp_nil;
+        }
+        pool_data[i] = pkg;
+        break;
+      }
+      case 8: { /* cons */
+        uint32_t car_idx = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        uint32_t cdr_idx = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        if (!ok || car_idx >= i || cdr_idx >= i) {
+          return lisp_nil;
+        }
+        LispObj cell = wasm_alloc_cons(tcr, pool_data[car_idx], pool_data[cdr_idx]);
+        if (cell == lisp_nil) {
+          return lisp_nil;
+        }
+        pool_data[i] = cell;
         break;
       }
       default:

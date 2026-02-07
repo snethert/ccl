@@ -2,8 +2,8 @@
 
 **Status:** Draft  
 **Goal:** Enable WASM2-compiled modules to reference non-immediate Lisp objects
-(symbols, strings, vectors, and function references in v1) by materializing a
-per-module constant pool at install time.
+(symbols, strings, vectors, function references, and function vectors in v1)
+by materializing a per-module constant pool at install time.
 
 ## Scope
 
@@ -45,8 +45,10 @@ Each entry is an object with `type` and type-specific fields. v1 supports:
 
 - `symbol`
 - `string`
+- `fixnum` (immediate tagged fixnum)
 - `vector` (simple vector of other pool entries)
 - `function` (symbol resolution to `fdefinition`)
+- `function-vector` (literal function object slots)
 Entries are addressable by index (0-based).
 
 ## Indexing Semantics
@@ -99,6 +101,26 @@ Materialization:
 Materialization:
 - Resolve the symbol in the given package and return its `fdefinition`.
 
+### 5) `function-vector`
+
+```json
+{ "type": "function-vector", "elements": [0, 1, 2, 3] }
+```
+
+Materialization:
+- Allocate a function vector of length `elements.length`.
+- Populate slots with the referenced constant pool objects.
+- v1 assumes WASM function vectors are slot‑only (no native code bytes).
+
+### 6) `fixnum`
+
+```json
+{ "type": "fixnum", "value": 1234 }
+```
+
+Materialization:
+- Use the tagged fixnum value directly.
+
 ## Loader Requirements
 
 The runtime loader MUST:
@@ -146,13 +168,17 @@ Each entry begins with a `u32 type` tag:
 - `2` = `string`
 - `3` = `vector`
 - `4` = `function`
+- `5` = `function-vector`
+- `6` = `fixnum`
 
 Entry payloads:
 
 - `symbol`: `u32 name_len`, `name_len` bytes, `u32 pkg_len`, `pkg_len` bytes
 - `string`: `u32 len`, `len` bytes
+- `fixnum`: `u32 value` (tagged fixnum)
 - `vector`: `u32 count`, `count` x `u32` indices (into the pool)
 - `function`: `u32 name_len`, `name_len` bytes, `u32 pkg_len`, `pkg_len` bytes
+- `function-vector`: `u32 count`, `count` x `u32` indices (into the pool)
 
 Strings are UTF‑8 byte sequences; loaders should treat bytes as base‑string
 codes for now.

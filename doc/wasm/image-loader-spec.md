@@ -64,6 +64,8 @@ path must seed the kernel toplevel function explicitly:
   `start_lisp`.
 
 The seed image build script is `scripts/wasm/make-real-image.lisp`.
+`doc/wasm/js/make-real-image.mjs` can run it inside the WASM kernel under Node
+to avoid needing a native wasm32 CCL.
 
 ## Reference host placement strategy (current)
 

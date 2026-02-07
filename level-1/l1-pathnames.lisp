@@ -32,6 +32,9 @@
 
 (defloadvar *heap-image-name* (heap-image-name))
 
+#+wasm32-target
+(defloadvar *command-line-argument-list* nil)
+#-wasm32-target
 (defloadvar *command-line-argument-list*
   (let* ((argv (%null-ptr))
 	 (res ()))
@@ -705,4 +708,3 @@
                                     (cons-pathname '(:absolute "cocoa-ide") nil nil "ccl"))
   "Holds a list of pathnames to search for the file that has same name
    as a module somebody is looking for.")
-

@@ -121,7 +121,12 @@
 
 (defstatic *callback-alloc-lock* (make-lock))
 
-;;; 
+;;;
+#+wasm32-target
+(defun %make-executable-page ()
+  (error "Callbacks are not supported on WASM."))
+
+#-wasm32-target
 (defun %make-executable-page ()
   #-windows-target
   (#_mmap (%null-ptr)
@@ -150,4 +155,3 @@
       (reset-callback-storage))
     (decf *available-bytes-for-callbacks* n)
     (values (%inc-ptr *current-callback-page* *available-bytes-for-callbacks*))))
-

@@ -1262,106 +1262,117 @@ a host-structure or string."
         (optimization-setting-vars '(*nx-speed* *nx-space* *nx-safety*
                                      *nx-debug* *nx-cspeed*)))
     (declare (special *load-pathname* *load-truename*))
-    (progv
-        (if preserve-optimization-settings optimization-setting-vars)
-        (if preserve-optimization-settings (mapcar #'symbol-value optimization-setting-vars))
-    (when (typep file-name 'string-input-stream)
-      (when verbose
-          (format t "~&;Loading from stream ~S..." file-name)
-          (force-output))
-      (let ((*package* *package*)
-            (*readtable* *readtable*))
-        (load-from-stream file-name print))
-      (return-from %load file-name))
-    (when (and (stringp file-name)
-               (eql (length "http://") (string-lessp "http://" file-name)))
-      (when verbose
-        (format t "~&;Loading from URL ~S..." file-name)
-        (force-output))
-      (let* ((vec (if if-does-not-exist
-                    (snarf-url file-name)
-                    (handler-case (snarf-url file-name)
-                      (error () (return-from %load nil)))))
-             (*package* *package*)
-             (*readtable* *readtable*)
-             (*loading-file-source-file* file-name)
-             (*loading-files* (cons file-name (specialv *loading-files*))))
-        (with-input-from-vector (stream vec :external-format external-format)
-          (load-from-stream stream print)))
-      (return-from %load file-name))
-    (unless (streamp file-name)
-      (multiple-value-setq (*load-truename* *load-pathname* source-file)
-        (find-load-file (merge-pathnames file-name)))
-      (when (not *load-truename*)
-        (return-from %load (if if-does-not-exist
-                             (signal-file-error $err-no-file file-name))))
-      (setq file-name *load-truename*))
-    (let* ((*package* *package*)
-           (*readtable* *readtable*)
-           (*loading-files* (cons file-name (specialv *loading-files*)))
-           ;;reset by fasload to logical name stored in the file
-           (*loading-file-source-file* (namestring source-file))
-           (*loading-toplevel-location* nil))
-      (declare (special *loading-files* *loading-file-source-file*))
-      (when verbose
-	(format t "~&;Loading ~S..." *load-pathname*)
-	(force-output))
-      (cond ((fasl-file-p file-name)
-	     (let ((*fasload-print* print)
-		   (restart-setup nil)
-		   (restart-source nil)
-		   (restart-fasl nil))
-	       (declare (special *fasload-print*))
-	       (flet ((restart-test (c)
-			(unless restart-setup
-			  (setq restart-setup t)
-			  (let ((source *loading-file-source-file*)
-				(fasl *load-pathname*))
-			    (when (and (not (typep c 'file-error))
-				       source
-				       fasl
-				       (setq source (probe-file source))
-				       (setq fasl (probe-file fasl))
-				       (not (equalp source fasl)))
-			      (setq restart-fasl (namestring *load-pathname*)
-				    restart-source *loading-file-source-file*))))
-			(not (null restart-fasl)))
-		      (fname (p)
-			#-versioned-file-system
-			(namestring (make-pathname :version :unspecific :defaults p))
-			#+versioned-file-system
-			(namestring p)))
-		 (restart-case (multiple-value-bind (winp err) 
-				   (%fasload (defaulted-native-namestring file-name))
-				 (if (not winp) 
-				   (%err-disp err)))
-		   (load-source 
-		    ()
-		    :test restart-test
-		    :report (lambda (s) 
-			      (format s "Load ~s instead of ~s" 
-				      (fname restart-source) (fname restart-fasl)))
-		    (%load source-file verbose print if-does-not-exist external-format preserve-optimization-settings))
-		   (recompile
-		    ()
-		    :test restart-test
-		    :report (lambda (s)
-			      (let ((*print-circle* NIL))
-				(format s
-					(if (equalp
-					     restart-source
-					     (make-pathname :type (pathname-type *.lisp-pathname*)
-							    :defaults restart-fasl))
-					  "Compile ~s and then load ~s again"
-					  "Compile ~s into ~s then load ~:*~s again")
-					(fname restart-source) (fname restart-fasl))))
-		    (compile-file restart-source :output-file restart-fasl)
-		    (%load restart-fasl verbose print if-does-not-exist external-format preserve-optimization-settings))))))
-	    (t 
-	     (with-open-file (stream file-name
-				     :element-type 'base-char
-				     :external-format (if (eq external-format :default) :inferred external-format))
-	       (load-from-stream stream print)))))))
+    (flet ((%load-body ()
+             (when (typep file-name 'string-input-stream)
+               (when verbose
+                 (format t "~&;Loading from stream ~S..." file-name)
+                 (force-output))
+               (let ((*package* *package*)
+                     (*readtable* *readtable*))
+                 (load-from-stream file-name print))
+               (return-from %load file-name))
+             (when (and (stringp file-name)
+                        (eql (length "http://") (string-lessp "http://" file-name)))
+               (when verbose
+                 (format t "~&;Loading from URL ~S..." file-name)
+                 (force-output))
+               (let* ((vec (if if-does-not-exist
+                             (snarf-url file-name)
+                             (handler-case (snarf-url file-name)
+                               (error () (return-from %load nil)))))
+                      (*package* *package*)
+                      (*readtable* *readtable*)
+                      (*loading-file-source-file* file-name)
+                      (*loading-files* (cons file-name (specialv *loading-files*))))
+                 (with-input-from-vector (stream vec :external-format external-format)
+                   (load-from-stream stream print)))
+               (return-from %load file-name))
+             (unless (streamp file-name)
+               (multiple-value-setq (*load-truename* *load-pathname* source-file)
+                 (find-load-file (merge-pathnames file-name)))
+               (when (not *load-truename*)
+                 (return-from %load (if if-does-not-exist
+                                      (signal-file-error $err-no-file file-name))))
+               (setq file-name *load-truename*))
+             (let* ((*package* *package*)
+                    (*readtable* *readtable*)
+                    (*loading-files* (cons file-name (specialv *loading-files*)))
+                    ;;reset by fasload to logical name stored in the file
+                    (*loading-file-source-file* (namestring source-file))
+                    (*loading-toplevel-location* nil))
+               (declare (special *loading-files* *loading-file-source-file*))
+               (when verbose
+                 (format t "~&;Loading ~S..." *load-pathname*)
+                 (force-output))
+               (cond ((fasl-file-p file-name)
+                      (let ((*fasload-print* print)
+                            (restart-setup nil)
+                            (restart-source nil)
+                            (restart-fasl nil))
+                        (declare (special *fasload-print*))
+                        (flet ((restart-test (c)
+                                 (unless restart-setup
+                                   (setq restart-setup t)
+                                   (let ((source *loading-file-source-file*)
+                                         (fasl *load-pathname*))
+                                     (when (and (not (typep c 'file-error))
+                                                source
+                                                fasl
+                                                (setq source (probe-file source))
+                                                (setq fasl (probe-file fasl))
+                                                (not (equalp source fasl)))
+                                       (setq restart-fasl (namestring *load-pathname*)
+                                             restart-source *loading-file-source-file*))))
+                                 (not (null restart-fasl)))
+                               (fname (p)
+                                 #-versioned-file-system
+                                 (namestring (make-pathname :version :unspecific :defaults p))
+                                 #+versioned-file-system
+                                 (namestring p)))
+                          (restart-case (multiple-value-bind (winp err) 
+                                            (%fasload (defaulted-native-namestring file-name))
+                                          (if (not winp) 
+                                            (%err-disp err)))
+                            (load-source 
+                             ()
+                             :test restart-test
+                             :report (lambda (s) 
+                                       (format s "Load ~s instead of ~s" 
+                                               (fname restart-source) (fname restart-fasl)))
+                             (%load source-file verbose print if-does-not-exist external-format preserve-optimization-settings))
+                            (recompile
+                             ()
+                             :test restart-test
+                             :report (lambda (s)
+                                       (let ((*print-circle* NIL))
+                                         (format s
+                                                 (if (equalp
+                                                      restart-source
+                                                      (make-pathname :type (pathname-type *.lisp-pathname*)
+                                                                     :defaults restart-fasl))
+                                                   "Compile ~s and then load ~s again"
+                                                   "Compile ~s into ~s then load ~:*~s again")
+                                                 (fname restart-source) (fname restart-fasl))))
+                             (compile-file restart-source :output-file restart-fasl)
+                             (%load restart-fasl verbose print if-does-not-exist external-format preserve-optimization-settings))))))
+                     (t 
+                      (with-open-file (stream file-name
+                                              :element-type 'base-char
+                                              :external-format (if (eq external-format :default) :inferred external-format))
+                        (load-from-stream stream print)))))))
+      (if preserve-optimization-settings
+        #+wasm32-target
+        (let ((*nx-speed* *nx-speed*)
+              (*nx-space* *nx-space*)
+              (*nx-safety* *nx-safety*)
+              (*nx-debug* *nx-debug*)
+              (*nx-cspeed* *nx-cspeed*))
+          (%load-body))
+        #-wasm32-target
+        (progv optimization-setting-vars
+            (mapcar #'symbol-value optimization-setting-vars)
+          (%load-body))
+        (%load-body))))
   file-name)
 
 (defun load-from-stream (stream print &aux (eof-val (list ())) val)

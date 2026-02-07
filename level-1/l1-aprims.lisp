@@ -1200,8 +1200,13 @@ are rounded up to a multiple of 64Kbytes."
 (defun %new-gcable-ptr (size &optional clear-p)
   (let ((p (make-gcable-macptr $flags_DisposPtr)))
     (%setf-macptr p (malloc size))
-    (if clear-p
-      (#_memset p 0 size))
+    (when clear-p
+      #-wasm32-target
+      (#_memset p 0 size)
+      #+wasm32-target
+      (progn
+        ;; TODO: provide a WASM memset binding; skip zeroing for now.
+        nil))
     p))
 
 (defun %gcable-ptr-p (p)
@@ -1216,9 +1221,14 @@ are rounded up to a multiple of 64Kbytes."
 ;;; whatever's needed to dispose of it.  That function can be called from
 ;;; the GC, so it shouldn't call back into lisp.
 (defun register-xmacptr-dispose-function (address)
+  #+wasm32-target
+  (declare (ignore address))
+  #-wasm32-target
   (ff-call (%kernel-import target::kernel-import-register-xmacptr-dispose-function)
            :address address
-           :int))
+           :int)
+  #+wasm32-target
+  0)
 
 
 ;;; This alist is automatically (and not too cleverly ...) generated.
@@ -3658,9 +3668,5 @@ are rounded up to a multiple of 64Kbytes."
                (backend-target-foreign-type-data *target-backend*))
   (:nicknames "OS")
   (:use "COMMON-LISP"))
-
-
-
-
 
 

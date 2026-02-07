@@ -25,7 +25,22 @@
        (multiple-value-bind (_events count)
            (ccl.wasm-ui::ui-poll-events :max-events 8 :max-bytes 65536 :allow-pending nil)
          (declare (ignore _events))
-         count)))))
+         count)))
+    (ccl::wasm-ui-mark-persisted
+     (lambda ()
+       (ccl::wasm-ui-mark-persisted)))
+    (ccl::wasm-ui-mark-dirty
+     (lambda ()
+       (ccl::wasm-ui-mark-dirty)))
+    (ccl::wasm-ui-label-state
+     (lambda ()
+       (ccl::wasm-ui-label-state)))
+    (ccl::wasm-ui-save
+     (lambda ()
+       (ccl::wasm-ui-save)))
+    (ccl::wasm-ui-restore
+     (lambda ()
+       (ccl::wasm-ui-restore)))))
 
 (defun parse-argv (argv)
   (let ((out nil)
@@ -105,9 +120,8 @@
                  (dolist (entry entries)
                    (destructuring-bind (name lambda-form) entry
                      (let ((resolved-form
-                            (if (eq name 'ccl::wasm-ui-turn)
-                              (or (function-lambda-form 'ccl::wasm-ui-turn)
-                                  lambda-form)
+                            (if (fboundp name)
+                              (or (function-lambda-form name) lambda-form)
                               lambda-form)))
                        (multiple-value-bind (fn warnings)
                            (compile-named-function resolved-form :name name :target :wasm32)

@@ -113,6 +113,11 @@
    error occurs while preparing to quit.  The error handler should exit"
   (if (or (null exit) (typep exit '(signed-byte 32)))
     (setq exit (let ((exit-status (or exit 0)))
+                 #+wasm32-target
+                 #'(lambda ()
+                     (declare (ignore exit-status))
+                     (error "quit is not supported on wasm"))
+                 #-wasm32-target
                  #'(lambda () (#__exit exit-status))))
     (unless (typep exit 'function)
       (report-bad-arg exit '(or (signed-byte 32) function))))
@@ -862,4 +867,3 @@
 
 
 ;end of L1-readloop.lisp
-

@@ -611,7 +611,8 @@ some point in the near future, and then return to what it was doing."
 
 (defmethod process-yield ((p process))
   #+windows-target (#_Sleep 0)
-  #-windows-target (#_sched_yield))
+  #+wasm32-target nil
+  #-(or windows-target wasm32-target) (#_sched_yield))
 
 
 (defun %process-reset (kill)
@@ -757,4 +758,3 @@ had invoked abort."
 
 (defun call-in-initial-process (f)
   (call-in-process f *initial-process*))
-

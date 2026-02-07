@@ -226,7 +226,33 @@ node doc/wasm/js/load-image.mjs --start-lisp doc/wasm/minimal.image
 
 Build a real WASM32 heap image with `%toplevel-function%` seeded to
 `toplevel-loop` (so `start_lisp` can enter the real Lisp toplevel once the
-image is loaded). This script must be run under a **WASM32-target** CCL.
+image is loaded).
+
+### Option A (Node runner, no native wasm32 CCL required)
+
+1. Cross-compile the WASM32 fasls needed by `level-1.lafsl`:
+
+```bash
+scripts/wasm/compile-wasm-fasls.sh
+```
+
+2. Build the wasm boot image via cross-xload:
+
+```bash
+scripts/wasm/build-wasm-boot.sh
+```
+
+3. Run the Node helper to load the boot image, execute the Lisp script, and
+   extract the generated image from the persistence store:
+
+```bash
+node doc/wasm/js/make-real-image.mjs --output doc/wasm/root.image
+```
+
+### Option B (native wasm32 CCL)
+
+If you already have a **WASM32-target** CCL, you can run the Lisp script
+directly:
 
 ```bash
 ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --output doc/wasm/root.image

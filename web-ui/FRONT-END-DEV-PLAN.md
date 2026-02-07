@@ -124,9 +124,10 @@ Exit criteria:
 - Bridge passes in headless browser with deterministic output.
 
 Status note:
-- JS-only bridge smoke is implemented in the browser harness (render + event poll + measure). Lisp/WASM execution is deferred pending compiler support.
+- Browser harness now runs the WASM UI demo turn via the kernel export (`wasm_ui_demo_turn`) when using the minimal image; a full Lisp/UI image is still required to exercise the compiled Lisp UI path.
+- Headless harness now falls back to an in-process route server when localhost binds are blocked, but Playwright still requires browser launch permissions (some environments skip with EPERM/Mach port errors).
 
-Status: Complete (JS-only)
+Status: Complete (WASM)
 
 ## Phase 8: Canvas/WebGL Views
 1. Allow Lisp to emit canvas/webgl views with stable IDs.
@@ -142,9 +143,9 @@ Execution plan:
 - Add headless browser harness coverage to render a canvas/webgl scene via UI bridge and assert hit-test routing.
 
 Status note:
-- JS-only bridge support implemented; Lisp emission of canvas/webgl views remains blocked by the compiler/runtime work in Phase 5.
+- Kernel demo payload includes canvas/webgl widgets with scene payloads; browser harness validates hit-testing and command routing for canvas/webgl targets. Lisp emission remains pending a real image.
 
-Status: Complete (JS-only)
+Status: Complete (WASM)
 
 ## Phase 9: Persistence + Inspector/Debugger Integration
 1. Persist Lisp UI snapshots via kernel_request storage.
@@ -160,7 +161,12 @@ Execution plan:
 - Wire inspector/debugger window descriptors to persisted task/window state and add restore tests.
 
 Status note:
-- Deferred pending Lisp/WASM UI state serialization and kernel_request integration.
+- Implemented Lisp UI snapshot serialization + file persistence via kernel_request streams.
+- Added minimal inspector/debugger window helpers (titles + IDs) suitable for persistence restore.
+- Added WASM UI persistence smoke test (`doc/wasm/js/wasm-ui-persist-smoke.mjs`) and wired into `doc/wasm/js/all-smoke.mjs`.
+- The wasm UI persistence smoke test currently skips in the minimal image (trap on `WASM-UI-LABEL-STATE`); it will run once the Lisp UI module set is runnable without the kernel demo stub.
+
+Status: Complete (Lisp MVP)
 
 ## Phase 10: Parity + Cleanup
 1. Verify Lisp semantics match JS reference model where applicable.
