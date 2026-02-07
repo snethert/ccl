@@ -811,6 +811,13 @@
                           (list nil (list c))))
   nil)
 
+(defwasm2 wasm2-complex complex (seg vreg xfer r i)
+  (wasm2-form seg vreg xfer
+              (make-acode (%nx1-operator call)
+                          (make-acode (%nx1-operator immediate) 'complex)
+                          (list nil (list i r))))
+  nil)
+
 (defwasm2 wasm2-%natural- %natural- (seg vreg xfer x y)
   (wasm2-form seg vreg xfer
               (make-acode (%nx1-operator call)
