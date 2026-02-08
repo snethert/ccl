@@ -136,6 +136,7 @@ Expose structured inspector views and allow safe edits of places.
 - Runtime inspector endpoint and place edit handlers.
 - UI inspector integration for structured views and edits.
 - Tests for staged edits and audit trail entries.
+- Detailed execution plan in `web-ide/phase-5/m5-inspector-place-edit-plan.md`.
 
 ### Exit Criteria
 - Inspector edits are safe, reversible, and auditable.
@@ -196,6 +197,7 @@ Codify runtime integration stability with automated gates.
 - M2 complete: UI runtime output ingest added; JS microkernel emits `runtime.output` for stdout and stderr; `KERNEL_OP_RUNTIME_EVENT` added for structured runtime payloads; CL emits `runtime.output` envelopes via `kernel_request` with recording entries.
 - M3 complete: `command.invoke` bridge kind and contracts landed; UI runtime command client dispatches runtime-scoped typed commands with request correlation; `command.result` and `command.error` are applied through `web-ui/src/runtime-bridge.mjs`; WASM microkernel command queue and `KERNEL_OP_RUNTIME_COMMAND_POLL` landed; CL readloop pumps runtime commands and emits terminal responses; `web-ui` acceptance tests and `doc/wasm/js/all-smoke.mjs` pass.
 - M4 complete: runtime bridge supports `debugger.snapshot` and refined `debugger.restart`; UI runtime bridge ingests debugger payloads into error/debugger state; debugger restart command is runtime-scoped with `runtime.restart.invoke` transport mapping; CL dispatcher now handles `runtime.restart.invoke` and `runtime.debugger.open` with debugger snapshot emission; acceptance coverage added with `phase-5-runtime-debugger` and `phase-5-runtime-restart-invoke` tests; `cd web-ui && npm test` and `node doc/wasm/js/all-smoke.mjs` pass.
+- M5 planned in detail: inspector snapshot payload variants, runtime place-edit lifecycle, runtime-scoped inspector command routing, and acceptance gates are staged in `web-ide/phase-5/m5-inspector-place-edit-plan.md`.
 
 ## Code Focus Areas
 - `doc/wasm/runtime-bridge.md`

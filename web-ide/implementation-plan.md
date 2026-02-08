@@ -143,6 +143,7 @@ Status: In Progress, M4 complete and M5 next (February 8, 2026).
 Detailed execution plan: `web-ide/phase-5/implementation-plan.md`.
 M3 detail plan: `web-ide/phase-5/m3-typed-command-dispatch-plan.md`.
 M4 detail plan: `web-ide/phase-5/m4-restarts-debugger-plan.md`.
+M5 detail plan: `web-ide/phase-5/m5-inspector-place-edit-plan.md`.
 
 1. Bridge protocol.
 - Output recording payloads with presentation metadata.
