@@ -1,9 +1,13 @@
 import { commandEnabled, executeCommand } from "./commands.mjs";
+import { handleCommandResultEffects } from "./command-effects.mjs";
 import { makeContext } from "./context.mjs";
 import { createElement, createText } from "./vdom.mjs";
+import { buildSelectionActions } from "./selection-actions.mjs";
 import { buildScene, hitTestScene } from "../backends/canvas/scene.mjs";
 import { createCanvasBackend } from "../backends/canvas/renderer.mjs";
 import { createWebGLBackend } from "../backends/webgl/renderer.mjs";
+
+const COMMAND_HISTORY_APPEND_COMMAND = "ui.command-history.append";
 
 function mergeClassNames(...values) {
   return values.filter((value) => value && String(value).trim().length > 0).join(" ");
@@ -175,6 +179,84 @@ function buildContext(state, widget, options, windowId, taskId) {
   });
 }
 
+function isStateLike(value) {
+  return (
+    value &&
+    typeof value === "object" &&
+    Object.prototype.hasOwnProperty.call(value, "workspace") &&
+    Object.prototype.hasOwnProperty.call(value, "tasks") &&
+    Object.prototype.hasOwnProperty.call(value, "windows")
+  );
+}
+
+function resolveResultState(result, fallback = null) {
+  const value = result?.result ?? null;
+  if (isStateLike(value)) return value;
+  if (value && typeof value === "object" && isStateLike(value.state)) return value.state;
+  return fallback;
+}
+
+function withResultState(result, state) {
+  if (!isStateLike(state)) return result;
+  const value = result?.result ?? null;
+  if (isStateLike(value)) {
+    return { ...result, result: state };
+  }
+  if (value && typeof value === "object" && isStateLike(value.state)) {
+    return { ...result, result: { ...value, state } };
+  }
+  return { ...result, result: state };
+}
+
+function withInvocationId(invocation, state) {
+  if (!invocation || typeof invocation !== "object") return invocation;
+  if (typeof invocation.id === "string" && invocation.id.length > 0) return invocation;
+  const nextIndex = Array.isArray(state?.commandHistory) ? state.commandHistory.length + 1 : 1;
+  return {
+    ...invocation,
+    id: `inv-${nextIndex}`
+  };
+}
+
+function maybeAppendCommandHistory(options, commandId, commandCtx, result) {
+  const registry = options?.registry ?? null;
+  if (!registry || !registry.commands?.has(COMMAND_HISTORY_APPEND_COMMAND)) return result;
+  if (commandId === COMMAND_HISTORY_APPEND_COMMAND) return result;
+  if (!result?.ok || !result?.invocation) return result;
+  const state = resolveResultState(result, commandCtx?.state ?? null);
+  if (!isStateLike(state)) return result;
+  const invocation = withInvocationId(result.invocation, state);
+  const historyResult = executeCommand(registry, COMMAND_HISTORY_APPEND_COMMAND, {
+    ...commandCtx,
+    state,
+    invocation
+  });
+  if (!historyResult?.ok) return result;
+  const nextState = resolveResultState(historyResult, state);
+  return withResultState(result, nextState);
+}
+
+function notifyCommandResult(options, payload) {
+  const result = maybeAppendCommandHistory(
+    options,
+    payload.commandId ?? null,
+    payload.ctx ?? null,
+    payload.result ?? null
+  );
+  const nextPayload = { ...payload, result };
+  const handlers = options?.commandEffectHandlers ?? null;
+  if (handlers) {
+    handleCommandResultEffects(nextPayload.result, handlers, {
+      commandId: nextPayload.commandId ?? null,
+      ctx: nextPayload.ctx ?? null,
+      event: nextPayload.event ?? null
+    });
+  }
+  if (options?.onCommandResult) {
+    options.onCommandResult(nextPayload);
+  }
+}
+
 function applyCommandProps(
   props,
   widget,
@@ -208,9 +290,7 @@ function applyCommandProps(
   nextProps[handlerName] = (event) => {
     const commandCtx = buildCtx ? buildCtx(ctx, event) : ctx;
     const result = executeCommand(registry, commandId, commandCtx);
-    if (options?.onCommandResult) {
-      options.onCommandResult({ commandId, ctx: commandCtx, result, event });
-    }
+    notifyCommandResult(options, { commandId, ctx: commandCtx, result, event });
   };
   return { props: nextProps, commandId, enabled: enablement.enabled };
 }
@@ -258,6 +338,78 @@ function normalizeListItems(items) {
       commandId: null
     };
   });
+}
+
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function resolveListSelectionConfig(widget) {
+  const props = widget.props ?? {};
+  const model = widget.model ?? {};
+  const nested = isPlainObject(props.selection)
+    ? props.selection
+    : isPlainObject(model.selection)
+      ? model.selection
+      : {};
+  const commandId = props.selectionCommand ?? nested.command ?? model.selectionCommand ?? null;
+  const mode = props.selectionMode ?? nested.mode ?? model.selectionMode ?? "single";
+  const multiple = mode === "multi" || mode === "multiple";
+  const actionBar = Boolean(props.selectionActionBar ?? nested.actionBar ?? model.selectionActionBar ?? false);
+  const actionCommand = props.selectionActionCommand ?? nested.actionCommand ?? model.selectionActionCommand ?? null;
+  const actionCommands =
+    (isPlainObject(props.selectionActionCommands) ? props.selectionActionCommands : null) ??
+    (isPlainObject(nested.actionCommands) ? nested.actionCommands : null) ??
+    (isPlainObject(model.selectionActionCommands) ? model.selectionActionCommands : null) ??
+    {};
+  return {
+    commandId: commandId ? String(commandId) : null,
+    multiple,
+    actionBar,
+    actionCommand: actionCommand ? String(actionCommand) : null,
+    actionCommands
+  };
+}
+
+function resolveListSelection(state, listId) {
+  const selection = state.selection ?? null;
+  if (!selection || !Array.isArray(selection.targetIds)) return null;
+  const scopedListId = selection.metadata?.listId ?? null;
+  if (scopedListId && scopedListId !== listId) return null;
+  return {
+    ...selection,
+    targetIds: selection.targetIds.map((id) => String(id)),
+    anchorId: selection.anchorId ? String(selection.anchorId) : null
+  };
+}
+
+function resolveListSelectionActionData(state, items, selection) {
+  if (!selection || selection.targetIds.length === 0) {
+    return { selectedItems: [], actions: [] };
+  }
+  const selectedSet = new Set(selection.targetIds);
+  const selectedItems = items.filter((item) => selectedSet.has(item.id));
+  const presentationMap = {};
+  for (const item of selectedItems) {
+    const raw = item.raw;
+    const presentationId = raw?.presentationId ?? null;
+    if (presentationId && state.presentations?.[presentationId]) {
+      presentationMap[item.id] = state.presentations[presentationId];
+      continue;
+    }
+    const presentationType = raw?.presentationType ?? raw?.type ?? null;
+    if (presentationType) {
+      presentationMap[item.id] = { id: item.id, type: presentationType };
+    }
+  }
+  const actions = buildSelectionActions(
+    {
+      id: selection.id ?? selection.targetIds[0] ?? null,
+      targetIds: selection.targetIds
+    },
+    presentationMap
+  );
+  return { selectedItems, actions };
 }
 
 function normalizeTreeItems(items) {
@@ -390,11 +542,49 @@ function renderList(state, widget, options = {}) {
   const windowId = resolveWindowId(state, widget, options.windowId ?? null);
   const taskId = resolveTaskId(state, windowId, options.taskId ?? null);
   const ctx = buildContext(state, widget, options, windowId, taskId);
+  const registry = options?.registry ?? null;
+  const listItemIds = items.map((item) => item.id);
+  const selectionConfig = resolveListSelectionConfig(widget);
+  const selection = resolveListSelection(state, widget.id);
+  const selectedSet = new Set(selection?.targetIds ?? []);
+  const actionData = selectionConfig.actionBar
+    ? resolveListSelectionActionData(state, items, selection)
+    : { selectedItems: [], actions: [] };
+  const selectedItems = actionData.selectedItems;
+  const actions = actionData.actions;
+
+  function resolveSelectionMode(event) {
+    if (!selectionConfig.multiple) {
+      return "replace";
+    }
+    if (event?.shiftKey) {
+      return "range";
+    }
+    if (event?.metaKey || event?.ctrlKey) {
+      return "toggle";
+    }
+    return "replace";
+  }
+
+  function dispatchCommand(commandId, commandCtx, event) {
+    if (!commandId || !registry) return { ok: false, reason: "No command" };
+    const enablement = commandEnabled(registry, commandId, commandCtx);
+    if (!enablement.enabled) {
+      return { ok: false, reason: enablement.reason ?? "Disabled" };
+    }
+    const result = executeCommand(registry, commandId, commandCtx);
+    notifyCommandResult(options, { commandId, ctx: commandCtx, result, event });
+    return result;
+  }
 
   const renderRow = (item, index, kind = "li", extraProps = {}) => {
     const itemId = item.id;
     const itemKey = item.key;
-    const rowClass = mergeClassNames("ui-list-item", item.className, item.selected ? "is-selected" : null);
+    const rowClass = mergeClassNames(
+      "ui-list-item",
+      item.className,
+      item.selected || selectedSet.has(itemId) ? "is-selected" : null
+    );
     const rowProps = {
       className: rowClass,
       "data-list-id": widget.id,
@@ -408,71 +598,165 @@ function renderList(state, widget, options = {}) {
       "data-item-index": index,
       "data-list-id": widget.id
     };
-    if (item.disabled) {
-      buttonProps.disabled = true;
-    }
-    const commandId = item.commandId ?? resolveItemCommandId(item.raw, widget);
-    const command = applyCommandProps(
-      buttonProps,
-      widget,
-      options,
-      ctx,
-      "onClick",
-      (baseCtx, event) => ({
-        ...baseCtx,
-        listId: widget.id,
-        item: item.raw,
-        itemId,
-        itemIndex: index,
-        eventType: event?.type ?? null
-      }),
-      commandId
-    );
+    const itemCommandId = item.commandId ?? resolveItemCommandId(item.raw, widget);
+    const selectionCommandId = selectionConfig.commandId;
+    const selectionCtx = {
+      ...ctx,
+      registry: options?.registry ?? ctx.registry ?? null,
+      listId: widget.id,
+      item: item.raw,
+      itemId,
+      itemIndex: index,
+      listItemIds,
+      multiple: selectionConfig.multiple,
+      selectionMode: "replace"
+    };
 
-    const button = createElement("button", command.props, [createText(item.label)], `${itemKey}-button`);
+    const selectionEnablement =
+      selectionCommandId && registry ? commandEnabled(registry, selectionCommandId, selectionCtx) : { enabled: false, reason: null };
+    const itemEnablement =
+      itemCommandId && registry ? commandEnabled(registry, itemCommandId, selectionCtx) : { enabled: false, reason: null };
+    const hasAnyCommand = Boolean(selectionCommandId || itemCommandId);
+    const canSelect = Boolean(selectionCommandId) && selectionEnablement.enabled;
+    const canActivate = Boolean(itemCommandId) && itemEnablement.enabled;
+    if (itemCommandId) {
+      buttonProps["data-command-id"] = itemCommandId;
+    } else if (selectionCommandId) {
+      buttonProps["data-command-id"] = selectionCommandId;
+    }
+    if (selectionCommandId) {
+      buttonProps["data-selection-command-id"] = selectionCommandId;
+    }
+
+    if (item.disabled || (!registry && hasAnyCommand) || (hasAnyCommand && !canSelect && !canActivate)) {
+      buttonProps.disabled = true;
+      buttonProps["data-disabled-reason"] =
+        itemEnablement.reason ??
+        selectionEnablement.reason ??
+        (registry ? "Disabled" : "No registry");
+    }
+
+    buttonProps.onClick = (event) => {
+      if (!registry) return;
+      const selectionMode = resolveSelectionMode(event);
+      const commandCtx = {
+        ...selectionCtx,
+        selectionMode,
+        eventType: event?.type ?? null
+      };
+      if (selectionCommandId && selectionEnablement.enabled) {
+        dispatchCommand(selectionCommandId, commandCtx, event);
+      }
+      const modifierSelect = selectionMode !== "replace";
+      if (itemCommandId && itemEnablement.enabled && !modifierSelect) {
+        dispatchCommand(itemCommandId, commandCtx, event);
+      }
+    };
+
+    const button = createElement("button", buttonProps, [createText(item.label)], `${itemKey}-button`);
     return createElement(kind, rowProps, [button], itemKey);
   };
 
+  let listNode = null;
   if (!virtualConfig) {
     const children = items.map((item, index) => renderRow(item, index));
-    return createElement("ul", { ...props, ...base }, children, widget.id);
+    listNode = createElement("ul", { ...props, ...base }, children, selectionConfig.actionBar ? `${widget.id}-list` : widget.id);
+  } else {
+    const range = computeVirtualRange(items.length, virtualConfig);
+    const visible = [];
+    for (let index = range.start; index < range.end; index += 1) {
+      const item = items[index];
+      if (!item) continue;
+      const rowStyle = {
+        position: "absolute",
+        top: `${index * virtualConfig.rowHeight}px`,
+        height: `${virtualConfig.rowHeight}px`,
+        left: 0,
+        right: 0
+      };
+      visible.push(renderRow(item, index, "div", { style: rowStyle, "data-virtual-index": index }));
+    }
+    const viewportStyle = mergeStyle(props.style, {
+      position: "relative",
+      overflowY: "auto",
+      height: `${virtualConfig.viewportHeight}px`
+    });
+    const virtualProps = {
+      ...props,
+      ...base,
+      className: mergeClassNames("ui-widget ui-list ui-virtual-list", props.className),
+      style: viewportStyle,
+      "data-virtual-start": range.start,
+      "data-virtual-end": range.end,
+      "data-virtual-total": items.length
+    };
+    const spacer = createElement(
+      "div",
+      { className: "ui-virtual-spacer", style: { position: "relative", height: `${range.totalHeight}px` } },
+      visible,
+      `${widget.id}-spacer`
+    );
+    listNode = createElement("div", virtualProps, [spacer], selectionConfig.actionBar ? `${widget.id}-list` : widget.id);
   }
 
-  const range = computeVirtualRange(items.length, virtualConfig);
-  const visible = [];
-  for (let index = range.start; index < range.end; index += 1) {
-    const item = items[index];
-    if (!item) continue;
-    const rowStyle = {
-      position: "absolute",
-      top: `${index * virtualConfig.rowHeight}px`,
-      height: `${virtualConfig.rowHeight}px`,
-      left: 0,
-      right: 0
-    };
-    visible.push(renderRow(item, index, "div", { style: rowStyle, "data-virtual-index": index }));
+  if (!selectionConfig.actionBar || !selection || actions.length === 0) {
+    return listNode;
   }
-  const viewportStyle = mergeStyle(props.style, {
-    position: "relative",
-    overflowY: "auto",
-    height: `${virtualConfig.viewportHeight}px`
+
+  const selectedRawItems = selectedItems.map((entry) => entry.raw);
+  const firstSelected = selectedItems[0] ?? null;
+  const actionButtons = actions.map((action, index) => {
+    const commandId = selectionConfig.actionCommands?.[action.id] ?? selectionConfig.actionCommand ?? null;
+    const buttonProps = {
+      type: "button",
+      className: "ui-list-action-button",
+      "data-action-id": action.id,
+      "data-list-id": widget.id
+    };
+    if (!commandId) {
+      buttonProps.disabled = true;
+    }
+    const command = commandId
+      ? applyCommandProps(
+          buttonProps,
+          widget,
+          options,
+          ctx,
+          "onClick",
+          (baseCtx, event) => ({
+            ...baseCtx,
+            registry: options?.registry ?? baseCtx.registry ?? null,
+            listId: widget.id,
+            actionId: action.id,
+            action,
+            selectedItemIds: selection.targetIds,
+            selectedItems: selectedRawItems,
+            item: firstSelected?.raw ?? null,
+            itemId: firstSelected?.id ?? null,
+            itemIndex: firstSelected ? listItemIds.indexOf(firstSelected.id) : -1,
+            eventType: event?.type ?? null
+          }),
+          commandId
+        )
+      : { props: buttonProps };
+    return createElement(
+      "button",
+      command.props,
+      [createText(String(action.label ?? action.id))],
+      `${widget.id}-action-${action.id}-${index}`
+    );
   });
-  const virtualProps = {
-    ...props,
-    ...base,
-    className: mergeClassNames("ui-widget ui-list ui-virtual-list", props.className),
-    style: viewportStyle,
-    "data-virtual-start": range.start,
-    "data-virtual-end": range.end,
-    "data-virtual-total": items.length
-  };
-  const spacer = createElement(
+  const actionBar = createElement(
     "div",
-    { className: "ui-virtual-spacer", style: { position: "relative", height: `${range.totalHeight}px` } },
-    visible,
-    `${widget.id}-spacer`
+    {
+      className: "ui-list-actions",
+      "data-list-id": widget.id,
+      "data-selection-size": selection.targetIds.length
+    },
+    actionButtons,
+    `${widget.id}-actions`
   );
-  return createElement("div", virtualProps, [spacer], widget.id);
+  return createElement("div", { className: "ui-list-shell" }, [actionBar, listNode], widget.id);
 }
 
 function renderTree(state, widget, options = {}) {
@@ -784,9 +1068,7 @@ function renderCanvasView(state, widget, options = {}) {
       point
     };
     const result = executeCommand(registry, commandId, commandCtx);
-    if (options?.onCommandResult) {
-      options.onCommandResult({ commandId, ctx: commandCtx, result, event });
-    }
+    notifyCommandResult(options, { commandId, ctx: commandCtx, result, event });
   };
 
   const canvasProps = {
@@ -859,9 +1141,7 @@ function renderWebGLView(state, widget, options = {}) {
       point
     };
     const result = executeCommand(registry, commandId, commandCtx);
-    if (options?.onCommandResult) {
-      options.onCommandResult({ commandId, ctx: commandCtx, result, event });
-    }
+    notifyCommandResult(options, { commandId, ctx: commandCtx, result, event });
   };
 
   const canvasProps = {

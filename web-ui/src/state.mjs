@@ -1,4 +1,15 @@
 import { allocateId, initIdCounters } from "./ids.mjs";
+import {
+  normalizeRecordingStore,
+  appendRecording as appendRecordingCore,
+  appendEntry as appendEntryCore,
+  attachAnchor as attachAnchorCore,
+  setEntryFolded as setEntryFoldedCore,
+  copyAsForm as copyAsFormRecording,
+  copyWithContext as copyWithContextRecording,
+  replayAsInput as replayAsInputRecording,
+  reRunRecording as reRunRecordingInput
+} from "./recordings.mjs";
 import { normalizeEventLog, recordEvent as recordEventLog } from "./event-log.mjs";
 import { normalizeSelection } from "./selection.mjs";
 import {
@@ -10,7 +21,15 @@ import {
   dockLayoutNode
 } from "./layout.mjs";
 import { normalizeFocusTarget, normalizeFocusHistory, setFocus as setFocusCore } from "./focus.mjs";
-import { registerCommand, executeCommand, bindKey, resolveKeyWithTrace } from "./commands.mjs";
+import { registerCommand, executeCommand, executePresentationCommand, bindKey, resolveKeyWithTrace } from "./commands.mjs";
+import { normalizeCommandSpec, normalizeInvocation, validateInvocation } from "./typed-commands.mjs";
+import {
+  normalizePresentationType,
+  applyPresentationDefaults,
+  validatePresentationMetadata
+} from "./presentation-taxonomy.mjs";
+import { normalizeThemeTokens } from "./theme.mjs";
+import { normalizeRestart } from "./conditions.mjs";
 
 const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layout", "reason", "error", "job"];
 const UI_TURN_PHASES = ["signals", "commands", "render", "backend", "idle"];
@@ -28,6 +47,26 @@ export const COMMAND_PALETTE_CLOSE_COMMAND = "ui.command-palette.close";
 export const KEYBINDINGS_OPEN_COMMAND = "ui.keybindings.open";
 export const KEYBINDINGS_CLOSE_COMMAND = "ui.keybindings.close";
 export const COMMAND_SURFACE_DISMISS_COMMAND = "ui.command-surface.dismiss";
+export const RECORDING_APPEND_COMMAND = "repl.recording.append";
+export const RECORDING_ENTRY_APPEND_COMMAND = "repl.recording.entry.append";
+export const RECORDING_ANCHOR_ATTACH_COMMAND = "repl.recording.anchor.attach";
+export const RECORDING_ENTRY_FOLD_COMMAND = "repl.recording.entry.fold";
+export const RECORDING_COPY_AS_FORM_COMMAND = "repl.recording.copy-as-form";
+export const RECORDING_COPY_WITH_CONTEXT_COMMAND = "repl.recording.copy-with-context";
+export const RECORDING_REPLAY_AS_INPUT_COMMAND = "repl.recording.replay-as-input";
+export const RECORDING_RERUN_COMMAND = "repl.recording.rerun";
+export const COMMAND_HISTORY_APPEND_COMMAND = "ui.command-history.append";
+export const COMMAND_HISTORY_OPEN_COMMAND = "ui.command-history.open";
+export const COMMAND_HISTORY_REFRESH_COMMAND = "ui.command-history.refresh";
+export const COMMAND_HISTORY_EXECUTE_COMMAND = "ui.command-history.execute";
+export const PROBLEMS_OPEN_COMMAND = "ui.problems.open";
+export const PROBLEMS_REFRESH_COMMAND = "ui.problems.refresh";
+export const PROBLEMS_ITEM_OPEN_COMMAND = "ui.problems.item.open";
+export const DEBUGGER_RESTART_INVOKE_COMMAND = "ui.debugger.restart.invoke";
+export const LIST_SELECTION_UPDATE_COMMAND = "ui.list.selection.update";
+export const TRANSCRIPT_OPEN_COMMAND = "ui.transcript.open";
+export const TRANSCRIPT_REFRESH_COMMAND = "ui.transcript.refresh";
+export const TRANSCRIPT_ITEM_OPEN_COMMAND = "ui.transcript.item.open";
 export const TASK_LIST_COMMAND = "ui.task.list";
 export const TASK_SWITCH_COMMAND = "ui.task.switch";
 export const TASK_CLOSE_COMMAND = "ui.task.close";
@@ -108,14 +147,80 @@ function normalizeWidget(widget) {
 }
 
 function normalizePresentation(presentation) {
-  return {
+  const base = applyPresentationDefaults({
     id: presentation.id,
-    type: presentation.type ?? "presentation",
+    type: normalizePresentationType(presentation.type ?? presentation.presentationType ?? "value"),
     objectId: presentation.objectId ?? null,
+    entryId: presentation.entryId ?? null,
     widgetId: presentation.widgetId ?? null,
     bounds: presentation.bounds ?? null,
+    label: presentation.label ?? null,
+    actions: Array.isArray(presentation.actions) ? [...presentation.actions] : [],
     metadata: presentation.metadata ?? {}
+  });
+  const validation = validatePresentationMetadata(base);
+  if (validation.ok) {
+    return base;
+  }
+  const fallbackSummary =
+    (typeof base.metadata?.summary === "string" && base.metadata.summary.length > 0
+      ? base.metadata.summary
+      : typeof base.label === "string" && base.label.length > 0
+        ? base.label
+        : `${base.id ?? "presentation"} (${validation.type})`);
+  return {
+    ...base,
+    type: "value",
+    metadata: {
+      ...base.metadata,
+      summary: fallbackSummary,
+      degradedFromType: validation.type,
+      missingMetadata: validation.missing,
+      validation: "degraded"
+    }
   };
+}
+
+function buildPresentationForEntry(state, entry) {
+  if (!entry || typeof entry !== "object") return null;
+  const existing = entry.presentationId ? state.presentations?.[entry.presentationId] ?? null : null;
+  if (existing) return existing;
+  const kind = entry.kind ?? "text";
+  if (kind === "error") {
+    return normalizePresentation({
+      id: entry.presentationId ?? `entry-${entry.id ?? "unknown"}`,
+      type: "condition-section",
+      entryId: entry.id ?? null,
+      label: entry.text ?? "Condition",
+      metadata: {
+        errorId: entry.metadata?.errorId ?? entry.recordingId ?? null,
+        sectionKey: entry.metadata?.sectionKey ?? "summary",
+        text: entry.text ?? ""
+      }
+    });
+  }
+  if (kind === "system") {
+    return normalizePresentation({
+      id: entry.presentationId ?? `entry-${entry.id ?? "unknown"}`,
+      type: "command",
+      entryId: entry.id ?? null,
+      label: entry.text ?? "Command",
+      metadata: {
+        commandId: entry.metadata?.commandId ?? "repl.eval",
+        args: entry.metadata?.args ?? {},
+        title: entry.text ?? "Command"
+      }
+    });
+  }
+  return normalizePresentation({
+    id: entry.presentationId ?? `entry-${entry.id ?? "unknown"}`,
+    type: "value",
+    entryId: entry.id ?? null,
+    label: entry.text ?? null,
+    metadata: {
+      summary: entry.text ?? ""
+    }
+  });
 }
 
 function sanitizeDomEscapeDetail(detail) {
@@ -384,12 +489,15 @@ export function createState(options = {}) {
     windows: options.windows ?? {},
     widgets: options.widgets ?? {},
     presentations: options.presentations ?? {},
+    recordingStore: normalizeRecordingStore(options.recordingStore ?? options.recordings ?? null),
+    commandHistory: Array.isArray(options.commandHistory) ? [...options.commandHistory] : [],
     domEscapes: normalizeDomEscapes(options.domEscapes ?? null),
     ui: normalizeUiState(options.ui ?? null),
     capabilities: normalizeCapabilities(options.capabilities ?? null),
     capabilityRequests,
     capabilityPolicy,
     capabilityRequestSeq,
+    theme: normalizeThemeTokens(options.theme ?? null),
     focus: normalizeFocusTarget(options.focus ?? null),
     focusHistory: normalizeFocusHistory(options.focusHistory ?? []),
     selection: normalizeSelection(options.selection ?? null),
@@ -731,6 +839,34 @@ export function addPresentation(state, presentation) {
   return { ...state, idCounters: alloc.counters, presentations };
 }
 
+export function appendRecording(state, recording) {
+  const recordingStore = appendRecordingCore(state.recordingStore ?? null, recording);
+  return { ...state, recordingStore };
+}
+
+export function appendRecordingEntry(state, entry) {
+  const recordingStore = appendEntryCore(state.recordingStore ?? null, entry);
+  return { ...state, recordingStore };
+}
+
+export function attachRecordingAnchor(state, anchor) {
+  const recordingStore = attachAnchorCore(state.recordingStore ?? null, anchor);
+  return { ...state, recordingStore };
+}
+
+export function setRecordingEntryFolded(state, entryId, folded) {
+  const recordingStore = setEntryFoldedCore(state.recordingStore ?? null, entryId, folded);
+  return { ...state, recordingStore };
+}
+
+export function recordCommandInvocation(state, invocation) {
+  const normalized = normalizeInvocation(invocation);
+  if (!normalized.id) {
+    throw new Error("Invocation id is required");
+  }
+  return { ...state, commandHistory: [...(state.commandHistory ?? []), normalized] };
+}
+
 export function requestCapability(state, capability, options = {}) {
   if (!capability) return state;
   const capabilities = normalizeCapabilities(state.capabilities ?? null);
@@ -910,6 +1046,15 @@ export function setLayout(state, layout) {
   return { ...state, layout: normalized.layout, idCounters: normalized.counters };
 }
 
+export function setTheme(state, theme) {
+  return { ...state, theme: normalizeThemeTokens(theme) };
+}
+
+export function setThemeMode(state, mode) {
+  const current = state.theme ?? null;
+  return { ...state, theme: normalizeThemeTokens({ ...(current ?? {}), mode }) };
+}
+
 export function recordDomEscape(state, entry, options = {}) {
   const escapes = normalizeDomEscapes(state.domEscapes ?? null);
   const normalized = normalizeDomEscape(
@@ -1085,6 +1230,105 @@ export function setSelection(state, selection) {
   return { ...state, selection: normalizeSelection(selection) };
 }
 
+function resolveListItemIds(state, listId, itemIds = null) {
+  if (Array.isArray(itemIds) && itemIds.length > 0) {
+    return itemIds.map((id) => String(id));
+  }
+  const widget = listId ? state.widgets?.[listId] : null;
+  const list = widget?.props?.items ?? widget?.model?.items ?? [];
+  if (!Array.isArray(list)) return [];
+  return list.map((item, index) => {
+    if (item && typeof item === "object" && !Array.isArray(item)) {
+      return String(item.id ?? item.key ?? index);
+    }
+    return String(item ?? index);
+  });
+}
+
+function normalizeListSelectionMode(mode, multiple) {
+  if (mode === "toggle") return multiple ? "toggle" : "replace";
+  if (mode === "range") return multiple ? "range" : "replace";
+  return "replace";
+}
+
+function orderSelectedTargets(selected, listItemIds) {
+  const selectedSet = new Set([...selected].map((id) => String(id)));
+  const ordered = [];
+  for (const id of listItemIds) {
+    if (selectedSet.has(id)) ordered.push(id);
+  }
+  if (ordered.length > 0) return ordered;
+  return [...selectedSet];
+}
+
+export function updateListSelection(state, options = {}) {
+  const listId = options.listId ?? null;
+  const itemId = options.itemId ?? null;
+  if (!listId || !itemId) {
+    return state;
+  }
+
+  const listItemIds = resolveListItemIds(state, listId, options.listItemIds ?? null);
+  const targetId = String(itemId);
+  const multiple = Boolean(options.multiple ?? false);
+  const mode = normalizeListSelectionMode(options.mode ?? "replace", multiple);
+
+  const existing =
+    state.selection?.metadata?.listId === listId && Array.isArray(state.selection?.targetIds)
+      ? state.selection
+      : null;
+  const selected = new Set((existing?.targetIds ?? []).map((id) => String(id)));
+  let anchorId = existing?.anchorId ? String(existing.anchorId) : targetId;
+
+  if (mode === "replace") {
+    selected.clear();
+    selected.add(targetId);
+    anchorId = targetId;
+  } else if (mode === "toggle") {
+    if (selected.has(targetId)) {
+      selected.delete(targetId);
+    } else {
+      selected.add(targetId);
+      anchorId = targetId;
+    }
+  } else if (mode === "range") {
+    const anchorIndex = listItemIds.indexOf(anchorId);
+    const targetIndex = listItemIds.indexOf(targetId);
+    if (anchorIndex === -1 || targetIndex === -1) {
+      selected.clear();
+      selected.add(targetId);
+      anchorId = targetId;
+    } else {
+      selected.clear();
+      const start = Math.min(anchorIndex, targetIndex);
+      const end = Math.max(anchorIndex, targetIndex);
+      for (let index = start; index <= end; index += 1) {
+        const id = listItemIds[index];
+        if (id !== undefined && id !== null) {
+          selected.add(String(id));
+        }
+      }
+    }
+  }
+
+  const targetIds = orderSelectedTargets(selected, listItemIds);
+  if (targetIds.length === 0) {
+    return setSelection(state, null);
+  }
+
+  return setSelection(state, {
+    id: targetIds[0],
+    kind: "list-item",
+    targetIds,
+    anchorId: anchorId ?? targetIds[0],
+    metadata: {
+      ...(existing?.metadata ?? {}),
+      listId,
+      multiple
+    }
+  });
+}
+
 export function setFocus(state, target, reason = "command", seq = null) {
   return setFocusCore(state, target, reason, seq);
 }
@@ -1257,6 +1501,98 @@ function summarizePresentations(state) {
     items.push({ id: "pres-none", label: "No presentations" });
   }
   return items;
+}
+
+function buildTranscriptItems(state, options = {}) {
+  const store = normalizeRecordingStore(state.recordingStore ?? null);
+  const entryOrder = Array.isArray(store.entryOrder) ? [...store.entryOrder] : [];
+  const limit = Number.isFinite(options.limit) ? Math.max(0, options.limit) : 100;
+  const ordered = limit > 0 ? entryOrder.slice(-limit) : entryOrder;
+  const items = [];
+  for (const id of ordered) {
+    const entry = store.entries?.[id];
+    if (!entry) continue;
+    const kind = entry.kind ?? "text";
+    const stream = entry.streamId ?? "stdout";
+    let text = entry.text ?? "";
+    if (text.length > 120) {
+      text = `${text.slice(0, 117)}...`;
+    }
+    const seq = entry.seq ?? "?";
+    const suffix = text ? `: ${text}` : "";
+    const presentation = buildPresentationForEntry(state, entry);
+    const presentationId = entry.presentationId ?? null;
+    const presentationType = presentation?.type ?? "value";
+    items.push({
+      id: `transcript-${id}`,
+      label: `${seq} ${stream} ${kind}${suffix}`,
+      entryId: id,
+      recordingId: entry.recordingId ?? null,
+      kind,
+      streamId: stream,
+      presentationId,
+      anchorId: entry.anchorId ?? null,
+      presentationType,
+      disabled: false
+    });
+  }
+  if (items.length === 0) {
+    items.push({ id: "transcript-none", label: "No transcript entries" });
+  }
+  return items;
+}
+
+function isStateLike(value) {
+  return (
+    value &&
+    typeof value === "object" &&
+    Object.prototype.hasOwnProperty.call(value, "workspace") &&
+    Object.prototype.hasOwnProperty.call(value, "tasks") &&
+    Object.prototype.hasOwnProperty.call(value, "windows")
+  );
+}
+
+function resolveCommandResultState(result, fallback) {
+  if (!result || !result.ok) return fallback;
+  const value = result.result ?? null;
+  if (value && typeof value === "object" && value.state && isStateLike(value.state)) {
+    return value.state;
+  }
+  if (isStateLike(value)) return value;
+  return fallback;
+}
+
+function resolveRecordingEntryIdFromAnchor(store, anchorId) {
+  const byAnchor = store?.byAnchor ?? {};
+  const anchors = store?.anchors ?? {};
+  return byAnchor?.[anchorId]?.entryId ?? anchors?.[anchorId]?.entryId ?? null;
+}
+
+function resolveRecordingTarget(ctx) {
+  const item = ctx.item ?? ctx.payload?.item ?? null;
+  const entryId = ctx.entryId ?? ctx.payload?.entryId ?? item?.entryId ?? null;
+  if (entryId) {
+    return { entryId };
+  }
+  const anchorId = ctx.anchorId ?? ctx.payload?.anchorId ?? item?.anchorId ?? null;
+  if (anchorId) {
+    return { anchorId };
+  }
+  return null;
+}
+
+function resolveRecordingId(ctx) {
+  const item = ctx.item ?? ctx.payload?.item ?? null;
+  const explicit = ctx.recordingId ?? ctx.payload?.recordingId ?? item?.recordingId ?? null;
+  if (explicit) return explicit;
+  const target = resolveRecordingTarget(ctx);
+  if (!target) return null;
+  const store = ctx.state?.recordingStore ?? null;
+  let entryId = target.entryId ?? null;
+  if (!entryId && target.anchorId) {
+    entryId = resolveRecordingEntryIdFromAnchor(store, target.anchorId);
+  }
+  return entryId ? store?.entries?.[entryId]?.recordingId ?? null : null;
 }
 
 function buildCommandPaletteItems(registry, options = {}) {
@@ -1586,10 +1922,12 @@ function buildInspectorSections(state) {
     tasks: summarizeTasks(state),
     focus: summarizeFocus(state),
     commands: summarizeCommands(state),
+    commandHistory: buildCommandHistoryItems(state, { limit: 5 }),
     capabilities: summarizeCapabilities(state),
     capabilityRequests: summarizeCapabilityRequests(state),
     domEscapes: summarizeDomEscapes(state),
     turns: summarizeUiTurn(state),
+    transcript: buildTranscriptItems(state, { limit: 5 }),
     presentations: summarizePresentations(state),
     windows: summarizeWindows(state),
     jobs: summarizeJobs(state),
@@ -1637,10 +1975,12 @@ export function openInspectorWindow(state, options = {}) {
     ["tasks", "Tasks"],
     ["focus", "Focus"],
     ["commands", "Commands"],
+    ["commandHistory", "Command History"],
     ["capabilities", "Capabilities"],
     ["capabilityRequests", "Capability Requests"],
     ["domEscapes", "DOM Escapes"],
     ["turns", "UI Turn"],
+    ["transcript", "Transcript"],
     ["presentations", "Presentations"],
     ["windows", "Windows"],
     ["jobs", "Jobs"],
@@ -1673,6 +2013,296 @@ export function openInspectorWindow(state, options = {}) {
   }));
 
   return nextState;
+}
+
+export function openTranscriptWindow(state, options = {}) {
+  const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
+  if (!taskId) {
+    throw new Error("Transcript requires a task");
+  }
+  const existing = findWindowByRole(state, "transcript", taskId);
+  if (existing) {
+    return refreshTranscriptWindow(state, existing.id, options);
+  }
+
+  const allocWindow = allocateId(state.idCounters, "window", "transcript");
+  let nextState = {
+    ...state,
+    idCounters: allocWindow.counters
+  };
+  nextState = addWindow(nextState, {
+    id: allocWindow.id,
+    taskId,
+    kind: "transcript",
+    title: "Transcript",
+    metadata: { role: "transcript" }
+  });
+
+  const items = buildTranscriptItems(nextState, { limit: options.limit });
+
+  let ids = {};
+  let rootAlloc = allocateWidgetId(nextState, "transcript-root");
+  nextState = addWidget(rootAlloc.state, {
+    id: rootAlloc.id,
+    kind: "container",
+    windowId: allocWindow.id,
+    props: { className: "ui-transcript-root" }
+  });
+  ids.rootId = rootAlloc.id;
+
+  let titleAlloc = allocateWidgetId(nextState, "transcript-title");
+  nextState = addWidget(titleAlloc.state, {
+    id: titleAlloc.id,
+    kind: "label",
+    parentId: ids.rootId,
+    props: { text: "Transcript" }
+  });
+  ids.titleId = titleAlloc.id;
+
+  let listAlloc = allocateWidgetId(nextState, "transcript-list");
+  nextState = addWidget(listAlloc.state, {
+    id: listAlloc.id,
+    kind: "list",
+    parentId: ids.rootId,
+    props: {
+      items,
+      itemCommand: TRANSCRIPT_ITEM_OPEN_COMMAND,
+      selectionCommand: LIST_SELECTION_UPDATE_COMMAND,
+      selectionMode: "multi",
+      selectionActionBar: true,
+      selectionActionCommands: {
+        inspect: TRANSCRIPT_ITEM_OPEN_COMMAND,
+        describe: RECORDING_COPY_WITH_CONTEXT_COMMAND,
+        "do-again": RECORDING_REPLAY_AS_INPUT_COMMAND,
+        "do-again-with-args": RECORDING_RERUN_COMMAND
+      }
+    }
+  });
+  ids.listId = listAlloc.id;
+
+  nextState = updateWindow(nextState, allocWindow.id, (window) => ({
+    ...window,
+    metadata: { ...(window.metadata ?? {}), role: "transcript", widgets: ids }
+  }));
+
+  return nextState;
+}
+
+export function refreshTranscriptWindow(state, windowId, options = {}) {
+  const window = state.windows?.[windowId];
+  if (!window || window.metadata?.role !== "transcript") {
+    throw new Error("Window is not a transcript");
+  }
+  const widgets = window.metadata?.widgets ?? {};
+  if (!widgets.listId) {
+    return state;
+  }
+  const items = buildTranscriptItems(state, { limit: options.limit });
+  return updateWidget(state, widgets.listId, (widget) => ({
+    ...widget,
+    props: { ...(widget.props ?? {}), items }
+  }));
+}
+
+function buildCommandHistoryItems(state, options = {}) {
+  const history = Array.isArray(state.commandHistory) ? [...state.commandHistory] : [];
+  const limit = Number.isFinite(options.limit) ? Math.max(0, options.limit) : 100;
+  const ordered = limit > 0 ? history.slice(-limit) : history;
+  const items = [];
+  for (const invocation of ordered) {
+    const id = invocation.id ?? invocation.commandId ?? `inv-${items.length + 1}`;
+    const commandId = invocation.commandId ?? "unknown";
+    let argsText = "";
+    if (invocation.args && typeof invocation.args === "object") {
+      try {
+        argsText = JSON.stringify(invocation.args);
+      } catch (_err) {
+        argsText = "[args]";
+      }
+    }
+    if (argsText.length > 120) {
+      argsText = `${argsText.slice(0, 117)}...`;
+    }
+    const label = argsText ? `${commandId} ${argsText}` : commandId;
+    items.push({
+      id: `history-${id}`,
+      label,
+      commandId,
+      invocation,
+      disabled: !commandId
+    });
+  }
+  if (items.length === 0) {
+    items.push({ id: "history-none", label: "No command history" });
+  }
+  return items;
+}
+
+export function openCommandHistoryWindow(state, options = {}) {
+  const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
+  if (!taskId) {
+    throw new Error("Command history requires a task");
+  }
+  const existing = findWindowByRole(state, "command-history", taskId);
+  if (existing) {
+    return refreshCommandHistoryWindow(state, existing.id, options);
+  }
+
+  const allocWindow = allocateId(state.idCounters, "window", "command-history");
+  let nextState = {
+    ...state,
+    idCounters: allocWindow.counters
+  };
+  nextState = addWindow(nextState, {
+    id: allocWindow.id,
+    taskId,
+    kind: "history",
+    title: "Command History",
+    metadata: { role: "command-history" }
+  });
+
+  const items = buildCommandHistoryItems(nextState, { limit: options.limit });
+
+  let ids = {};
+  let rootAlloc = allocateWidgetId(nextState, "command-history-root");
+  nextState = addWidget(rootAlloc.state, {
+    id: rootAlloc.id,
+    kind: "container",
+    windowId: allocWindow.id,
+    props: { className: "ui-command-history-root" }
+  });
+  ids.rootId = rootAlloc.id;
+
+  let titleAlloc = allocateWidgetId(nextState, "command-history-title");
+  nextState = addWidget(titleAlloc.state, {
+    id: titleAlloc.id,
+    kind: "label",
+    parentId: ids.rootId,
+    props: { text: "Command History" }
+  });
+  ids.titleId = titleAlloc.id;
+
+  let listAlloc = allocateWidgetId(nextState, "command-history-list");
+  nextState = addWidget(listAlloc.state, {
+    id: listAlloc.id,
+    kind: "list",
+    parentId: ids.rootId,
+    props: { items, itemCommand: COMMAND_HISTORY_EXECUTE_COMMAND }
+  });
+  ids.listId = listAlloc.id;
+
+  nextState = updateWindow(nextState, allocWindow.id, (window) => ({
+    ...window,
+    metadata: { ...(window.metadata ?? {}), role: "command-history", widgets: ids }
+  }));
+
+  return nextState;
+}
+
+export function refreshCommandHistoryWindow(state, windowId, options = {}) {
+  const window = state.windows?.[windowId];
+  if (!window || window.metadata?.role !== "command-history") {
+    throw new Error("Window is not a command history");
+  }
+  const widgets = window.metadata?.widgets ?? {};
+  if (!widgets.listId) {
+    return state;
+  }
+  const items = buildCommandHistoryItems(state, { limit: options.limit });
+  return updateWidget(state, widgets.listId, (widget) => ({
+    ...widget,
+    props: { ...(widget.props ?? {}), items }
+  }));
+}
+
+function buildProblemsItems(state) {
+  const entries = Array.isArray(state.errors) ? [...state.errors] : [];
+  if (entries.length === 0) {
+    return [{ id: "problems-none", label: "No problems" }];
+  }
+  return entries.map((error, index) => ({
+    id: error.id ?? `problem-${index}`,
+    label: `${error.kind ?? "error"}: ${error.message ?? ""}`.trim(),
+    errorId: error.id ?? null,
+    status: error.status ?? null
+  }));
+}
+
+export function openProblemsWindow(state, options = {}) {
+  const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
+  if (!taskId) {
+    throw new Error("Problems window requires a task");
+  }
+  const existing = findWindowByRole(state, "problems", taskId);
+  if (existing) {
+    return refreshProblemsWindow(state, existing.id);
+  }
+
+  const allocWindow = allocateId(state.idCounters, "window", "problems");
+  let nextState = {
+    ...state,
+    idCounters: allocWindow.counters
+  };
+  nextState = addWindow(nextState, {
+    id: allocWindow.id,
+    taskId,
+    kind: "problems",
+    title: "Problems",
+    metadata: { role: "problems" }
+  });
+
+  const items = buildProblemsItems(nextState);
+
+  let ids = {};
+  let rootAlloc = allocateWidgetId(nextState, "problems-root");
+  nextState = addWidget(rootAlloc.state, {
+    id: rootAlloc.id,
+    kind: "container",
+    windowId: allocWindow.id,
+    props: { className: "ui-problems-root" }
+  });
+  ids.rootId = rootAlloc.id;
+
+  let titleAlloc = allocateWidgetId(nextState, "problems-title");
+  nextState = addWidget(titleAlloc.state, {
+    id: titleAlloc.id,
+    kind: "label",
+    parentId: ids.rootId,
+    props: { text: "Problems" }
+  });
+  ids.titleId = titleAlloc.id;
+
+  let listAlloc = allocateWidgetId(nextState, "problems-list");
+  nextState = addWidget(listAlloc.state, {
+    id: listAlloc.id,
+    kind: "list",
+    parentId: ids.rootId,
+    props: { items, itemCommand: PROBLEMS_ITEM_OPEN_COMMAND }
+  });
+  ids.listId = listAlloc.id;
+
+  nextState = updateWindow(nextState, allocWindow.id, (window) => ({
+    ...window,
+    metadata: { ...(window.metadata ?? {}), role: "problems", widgets: ids }
+  }));
+
+  return nextState;
+}
+
+export function refreshProblemsWindow(state, windowId) {
+  const window = state.windows?.[windowId];
+  if (!window || window.metadata?.role !== "problems") {
+    throw new Error("Window is not a problems window");
+  }
+  const widgets = window.metadata?.widgets ?? {};
+  if (!widgets.listId) {
+    return state;
+  }
+  const items = buildProblemsItems(state);
+  return updateWidget(state, widgets.listId, (widget) => ({
+    ...widget,
+    props: { ...(widget.props ?? {}), items }
+  }));
 }
 
 export function refreshInspectorWindow(state, windowId) {
@@ -2523,6 +3153,480 @@ export function registerLayoutCommands(registry, options = {}) {
   return registry;
 }
 
+export function registerListSelectionCommands(registry, options = {}) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  const selectId = options.selectCommandId ?? LIST_SELECTION_UPDATE_COMMAND;
+
+  if (!registry.commands.has(selectId)) {
+    registerCommand(registry, {
+      id: selectId,
+      title: "Update List Selection",
+      doc: "Update list selection with replace, toggle, or range semantics.",
+      enabled: (ctx) => {
+        const listId = ctx.listId ?? ctx.payload?.listId ?? null;
+        const itemId = ctx.itemId ?? ctx.payload?.itemId ?? null;
+        if (!listId) return { enabled: false, reason: "No list id" };
+        if (!itemId) return { enabled: false, reason: "No item id" };
+        return { enabled: true, reason: null };
+      },
+      exec: (ctx) => {
+        const listId = ctx.listId ?? ctx.payload?.listId ?? null;
+        const itemId = ctx.itemId ?? ctx.payload?.itemId ?? null;
+        if (!listId || !itemId) return ctx.state;
+        return updateListSelection(ctx.state, {
+          listId,
+          itemId,
+          mode: ctx.selectionMode ?? ctx.payload?.selectionMode ?? "replace",
+          multiple: Boolean(ctx.multiple ?? ctx.payload?.multiple ?? false),
+          listItemIds: ctx.listItemIds ?? ctx.payload?.listItemIds ?? null
+        });
+      }
+    });
+  }
+
+  return registry;
+}
+
+export function registerRecordingCommands(registry, options = {}) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  const recordingId = options.recordingCommandId ?? RECORDING_APPEND_COMMAND;
+  const entryId = options.entryCommandId ?? RECORDING_ENTRY_APPEND_COMMAND;
+  const anchorId = options.anchorCommandId ?? RECORDING_ANCHOR_ATTACH_COMMAND;
+  const foldId = options.foldCommandId ?? RECORDING_ENTRY_FOLD_COMMAND;
+  const copyAsFormId = options.copyAsFormCommandId ?? RECORDING_COPY_AS_FORM_COMMAND;
+  const copyWithContextId = options.copyWithContextCommandId ?? RECORDING_COPY_WITH_CONTEXT_COMMAND;
+  const replayAsInputId = options.replayAsInputCommandId ?? RECORDING_REPLAY_AS_INPUT_COMMAND;
+  const rerunId = options.rerunCommandId ?? RECORDING_RERUN_COMMAND;
+  const historyId = options.historyCommandId ?? COMMAND_HISTORY_APPEND_COMMAND;
+
+  const ensure = (id, command) => {
+    if (!registry.commands.has(id)) {
+      registerCommand(registry, { ...command, id });
+    }
+  };
+
+  ensure(recordingId, {
+    title: "Append Recording",
+    doc: "Append a recording to the transcript.",
+    enabled: (ctx) => (ctx?.recording || ctx?.payload?.recording ? { enabled: true, reason: null } : { enabled: false, reason: "No recording" }),
+    exec: (ctx) => {
+      const recording = ctx.recording ?? ctx.payload?.recording ?? null;
+      if (!recording) return ctx.state;
+      return appendRecording(ctx.state, recording);
+    }
+  });
+
+  ensure(entryId, {
+    title: "Append Recording Entry",
+    doc: "Append an entry to the transcript.",
+    enabled: (ctx) => (ctx?.entry || ctx?.payload?.entry ? { enabled: true, reason: null } : { enabled: false, reason: "No entry" }),
+    exec: (ctx) => {
+      const entry = ctx.entry ?? ctx.payload?.entry ?? null;
+      if (!entry) return ctx.state;
+      return appendRecordingEntry(ctx.state, entry);
+    }
+  });
+
+  ensure(anchorId, {
+    title: "Attach Recording Anchor",
+    doc: "Attach an anchor to a transcript entry.",
+    enabled: (ctx) => (ctx?.anchor || ctx?.payload?.anchor ? { enabled: true, reason: null } : { enabled: false, reason: "No anchor" }),
+    exec: (ctx) => {
+      const anchor = ctx.anchor ?? ctx.payload?.anchor ?? null;
+      if (!anchor) return ctx.state;
+      return attachRecordingAnchor(ctx.state, anchor);
+    }
+  });
+
+  ensure(foldId, {
+    title: "Fold Recording Entry",
+    doc: "Fold or unfold a transcript entry.",
+    enabled: (ctx) => {
+      const entryIdValue = ctx.entryId ?? ctx.payload?.entryId ?? null;
+      return entryIdValue ? { enabled: true, reason: null } : { enabled: false, reason: "No entry id" };
+    },
+    exec: (ctx) => {
+      const entryIdValue = ctx.entryId ?? ctx.payload?.entryId ?? null;
+      if (!entryIdValue) return ctx.state;
+      const folded = Boolean(ctx.folded ?? ctx.payload?.folded ?? true);
+      return setRecordingEntryFolded(ctx.state, entryIdValue, folded);
+    }
+  });
+
+  ensure(copyAsFormId, {
+    title: "Copy Recording As Form",
+    doc: "Copy a recording entry or anchor as a form payload.",
+    enabled: (ctx) => (resolveRecordingTarget(ctx) ? { enabled: true, reason: null } : { enabled: false, reason: "No entry target" }),
+    exec: (ctx) => {
+      const target = resolveRecordingTarget(ctx);
+      if (!target) return ctx.state;
+      try {
+        const output = copyAsFormRecording(ctx.state.recordingStore ?? null, target);
+        return { state: ctx.state, output };
+      } catch (_err) {
+        return ctx.state;
+      }
+    }
+  });
+
+  ensure(copyWithContextId, {
+    title: "Copy Recording With Context",
+    doc: "Copy a recording entry with provenance context.",
+    enabled: (ctx) => (resolveRecordingTarget(ctx) ? { enabled: true, reason: null } : { enabled: false, reason: "No entry target" }),
+    exec: (ctx) => {
+      const target = resolveRecordingTarget(ctx);
+      if (!target) return ctx.state;
+      try {
+        const output = copyWithContextRecording(ctx.state.recordingStore ?? null, target);
+        return { state: ctx.state, output };
+      } catch (_err) {
+        return ctx.state;
+      }
+    }
+  });
+
+  ensure(replayAsInputId, {
+    title: "Replay Recording As Input",
+    doc: "Materialize a previous recording as runnable input.",
+    enabled: (ctx) => {
+      const id = resolveRecordingId(ctx);
+      return id ? { enabled: true, reason: null } : { enabled: false, reason: "No recording id" };
+    },
+    exec: (ctx) => {
+      const id = resolveRecordingId(ctx);
+      if (!id) return ctx.state;
+      try {
+        const output = replayAsInputRecording(ctx.state.recordingStore ?? null, id);
+        return { state: ctx.state, output };
+      } catch (_err) {
+        return ctx.state;
+      }
+    }
+  });
+
+  ensure(rerunId, {
+    title: "Re-Run Recording",
+    doc: "Build a rerun command payload for a recording.",
+    enabled: (ctx) => {
+      const id = resolveRecordingId(ctx);
+      return id ? { enabled: true, reason: null } : { enabled: false, reason: "No recording id" };
+    },
+    exec: (ctx) => {
+      const id = resolveRecordingId(ctx);
+      if (!id) return ctx.state;
+      try {
+        const output = reRunRecordingInput(ctx.state.recordingStore ?? null, id, {
+          commandId: ctx.runCommandId ?? ctx.payload?.runCommandId ?? null
+        });
+        return { state: ctx.state, output };
+      } catch (_err) {
+        return ctx.state;
+      }
+    }
+  });
+
+  ensure(historyId, {
+    title: "Append Command History",
+    doc: "Record a command invocation in history.",
+    enabled: (ctx) =>
+      ctx?.invocation || ctx?.payload?.invocation ? { enabled: true, reason: null } : { enabled: false, reason: "No invocation" },
+    exec: (ctx) => {
+      const invocation = ctx.invocation ?? ctx.payload?.invocation ?? null;
+      if (!invocation) return ctx.state;
+      return recordCommandInvocation(ctx.state, invocation);
+    }
+  });
+
+  return registry;
+}
+
+export function registerTranscriptCommands(registry, options = {}) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  const openId = options.openCommandId ?? TRANSCRIPT_OPEN_COMMAND;
+  const refreshId = options.refreshCommandId ?? TRANSCRIPT_REFRESH_COMMAND;
+  const itemOpenId = options.itemOpenCommandId ?? TRANSCRIPT_ITEM_OPEN_COMMAND;
+
+  const ensure = (id, command) => {
+    if (!registry.commands.has(id)) {
+      registerCommand(registry, { ...command, id });
+    }
+  };
+
+  ensure(openId, {
+    title: "Open Transcript",
+    doc: "Open the transcript window for the current task.",
+    exec: (ctx) =>
+      openTranscriptWindow(ctx.state, {
+        taskId: ctx.taskId ?? ctx.state.workspace?.activeTaskId ?? null,
+        limit: ctx.limit ?? ctx.payload?.limit ?? null
+      })
+  });
+
+  ensure(refreshId, {
+    title: "Refresh Transcript",
+    doc: "Refresh the transcript window list.",
+    exec: (ctx) => {
+      const taskId = ctx.taskId ?? ctx.state.workspace?.activeTaskId ?? null;
+      const windowId =
+        ctx.windowId ??
+        findWindowByRole(ctx.state, "transcript", taskId)?.id ??
+        null;
+      if (!windowId) return ctx.state;
+      return refreshTranscriptWindow(ctx.state, windowId, {
+        limit: ctx.limit ?? ctx.payload?.limit ?? null
+      });
+    }
+  });
+
+  ensure(itemOpenId, {
+    title: "Open Transcript Item",
+    doc: "Open or inspect the selected transcript entry presentation.",
+    enabled: (ctx) => {
+      const item = ctx.item ?? ctx.payload?.item ?? null;
+      const presentationId = item?.presentationId ?? null;
+      return presentationId ? { enabled: true, reason: null } : { enabled: false, reason: "No presentation" };
+    },
+    exec: (ctx) => {
+      const registryRef = ctx.registry ?? ctx.payload?.registry ?? null;
+      if (!registryRef) return ctx.state;
+      const item = ctx.item ?? ctx.payload?.item ?? null;
+      const entryId = item?.entryId ?? null;
+      let presentationId = item?.presentationId ?? null;
+      if (!presentationId && entryId) {
+        const entry = ctx.state.recordingStore?.entries?.[entryId];
+        presentationId = entry?.presentationId ?? null;
+      }
+      if (!presentationId) return ctx.state;
+      const presentation = ctx.state.presentations?.[presentationId] ?? { id: presentationId, type: "value" };
+      const result = executePresentationCommand(registryRef, presentation, "click", ctx);
+      return resolveCommandResultState(result, ctx.state);
+    }
+  });
+
+  return registry;
+}
+
+export function registerCommandHistoryCommands(registry, options = {}) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  const openId = options.openCommandId ?? COMMAND_HISTORY_OPEN_COMMAND;
+  const refreshId = options.refreshCommandId ?? COMMAND_HISTORY_REFRESH_COMMAND;
+  const executeId = options.executeCommandId ?? COMMAND_HISTORY_EXECUTE_COMMAND;
+
+  const ensure = (id, command) => {
+    if (!registry.commands.has(id)) {
+      registerCommand(registry, { ...command, id });
+    }
+  };
+
+  ensure(openId, {
+    title: "Open Command History",
+    doc: "Open the command history window for the current task.",
+    exec: (ctx) =>
+      openCommandHistoryWindow(ctx.state, {
+        taskId: ctx.taskId ?? ctx.state.workspace?.activeTaskId ?? null,
+        limit: ctx.limit ?? ctx.payload?.limit ?? null
+      })
+  });
+
+  ensure(refreshId, {
+    title: "Refresh Command History",
+    doc: "Refresh the command history list.",
+    exec: (ctx) => {
+      const taskId = ctx.taskId ?? ctx.state.workspace?.activeTaskId ?? null;
+      const windowId =
+        ctx.windowId ??
+        findWindowByRole(ctx.state, "command-history", taskId)?.id ??
+        null;
+      if (!windowId) return ctx.state;
+      return refreshCommandHistoryWindow(ctx.state, windowId, {
+        limit: ctx.limit ?? ctx.payload?.limit ?? null
+      });
+    }
+  });
+
+  ensure(executeId, {
+    title: "Execute History Entry",
+    doc: "Execute the selected command history entry.",
+    enabled: (ctx) => {
+      const invocation = ctx.invocation ?? ctx.payload?.invocation ?? ctx.item?.invocation ?? null;
+      const commandId = invocation?.commandId ?? ctx.commandId ?? null;
+      return commandId ? { enabled: true, reason: null } : { enabled: false, reason: "No command id" };
+    },
+    exec: (ctx) => {
+      const registryRef = ctx.registry ?? ctx.payload?.registry ?? null;
+      if (!registryRef) return ctx.state;
+      const invocation = ctx.invocation ?? ctx.payload?.invocation ?? ctx.item?.invocation ?? null;
+      const commandId = invocation?.commandId ?? ctx.commandId ?? null;
+      if (!commandId) return ctx.state;
+      const argsPayload = invocation?.args ?? {};
+      const execCtx = { ...ctx, payload: argsPayload, invocation };
+      const result = executeCommand(registryRef, commandId, execCtx);
+      return resolveCommandResultState(result, ctx.state);
+    }
+  });
+
+  return registry;
+}
+
+export function registerProblemsCommands(registry, options = {}) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  const openId = options.openCommandId ?? PROBLEMS_OPEN_COMMAND;
+  const refreshId = options.refreshCommandId ?? PROBLEMS_REFRESH_COMMAND;
+  const itemOpenId = options.itemOpenCommandId ?? PROBLEMS_ITEM_OPEN_COMMAND;
+
+  const ensure = (id, command) => {
+    if (!registry.commands.has(id)) {
+      registerCommand(registry, { ...command, id });
+    }
+  };
+
+  ensure(openId, {
+    title: "Open Problems",
+    doc: "Open the Problems window for the current task.",
+    exec: (ctx) =>
+      openProblemsWindow(ctx.state, {
+        taskId: ctx.taskId ?? ctx.state.workspace?.activeTaskId ?? null
+      })
+  });
+
+  ensure(refreshId, {
+    title: "Refresh Problems",
+    doc: "Refresh the Problems list.",
+    exec: (ctx) => {
+      const taskId = ctx.taskId ?? ctx.state.workspace?.activeTaskId ?? null;
+      const windowId =
+        ctx.windowId ??
+        findWindowByRole(ctx.state, "problems", taskId)?.id ??
+        null;
+      if (!windowId) return ctx.state;
+      return refreshProblemsWindow(ctx.state, windowId);
+    }
+  });
+
+  ensure(itemOpenId, {
+    title: "Open Problem",
+    doc: "Open the debugger focused on the selected problem.",
+    enabled: (ctx) => {
+      const item = ctx.item ?? ctx.payload?.item ?? null;
+      const errorId = item?.errorId ?? item?.id ?? ctx.errorId ?? ctx.payload?.errorId ?? null;
+      if (!errorId) {
+        return { enabled: false, reason: "No error selected" };
+      }
+      const error = ctx.state.errors?.find((entry) => entry.id === errorId) ?? null;
+      return error ? { enabled: true, reason: null } : { enabled: false, reason: "Error not found" };
+    },
+    exec: (ctx) => {
+      const item = ctx.item ?? ctx.payload?.item ?? null;
+      const errorId = item?.errorId ?? item?.id ?? ctx.errorId ?? ctx.payload?.errorId ?? null;
+      if (!errorId) return ctx.state;
+      const error = ctx.state.errors?.find((entry) => entry.id === errorId) ?? null;
+      if (!error) return ctx.state;
+      const taskId = error.taskId ?? ctx.taskId ?? ctx.state.workspace?.activeTaskId ?? null;
+      if (!taskId) return ctx.state;
+      return openDebuggerWindow(ctx.state, { taskId, errorId: error.id });
+    }
+  });
+
+  return registry;
+}
+
+export function registerDebuggerCommands(registry, options = {}) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  const restartCommandId = options.restartCommandId ?? DEBUGGER_RESTART_INVOKE_COMMAND;
+  const restartSpec = normalizeCommandSpec({
+    id: restartCommandId,
+    title: "Invoke Restart",
+    doc: "Invoke the selected restart.",
+    scope: "context",
+    args: [
+      { name: "restartId", type: "string", required: true, defaultFrom: ["selection", "presentation"] },
+      { name: "errorId", type: "string", required: true, defaultFrom: ["selection", "presentation"] },
+      { name: "args", type: "map", required: false }
+    ],
+    metadata: { kind: "restart" }
+  });
+
+  const ensure = (id, command) => {
+    if (!registry.commands.has(id)) {
+      registerCommand(registry, { ...command, id });
+    }
+  };
+
+  const resolveRestartContext = (ctx) => {
+    const item = ctx.item ?? ctx.payload?.item ?? null;
+    const restartId = item?.restartId ?? ctx.restartId ?? ctx.payload?.restartId ?? null;
+    const errorId =
+      item?.errorId ??
+      ctx.errorId ??
+      ctx.payload?.errorId ??
+      (ctx.windowId ? ctx.state.windows?.[ctx.windowId]?.metadata?.errorId ?? null : null) ??
+      ctx.state.errors?.[ctx.state.errors.length - 1]?.id ??
+      null;
+    const error = errorId ? ctx.state.errors?.find((entry) => entry.id === errorId) ?? null : null;
+    const restarts = Array.isArray(error?.restarts) ? error.restarts.map(normalizeRestart) : [];
+    const restart = item?.restart ?? restarts.find((entry) => entry.id === restartId) ?? null;
+    const taskId = error?.taskId ?? ctx.taskId ?? ctx.state.workspace?.activeTaskId ?? null;
+    return { restartId, errorId, restart, error, taskId, item };
+  };
+
+  ensure(restartCommandId, {
+    title: restartSpec.title ?? "Invoke Restart",
+    doc: restartSpec.doc ?? "Invoke the selected restart.",
+    scope: restartSpec.scope ?? "context",
+    metadata: { ...(restartSpec.metadata ?? {}), typed: restartSpec },
+    enabled: (ctx) => {
+      const { restartId, errorId, error, restart } = resolveRestartContext(ctx);
+      if (!restartId) return { enabled: false, reason: "No restart selected" };
+      if (!errorId) return { enabled: false, reason: "No error selected" };
+      if (!error) return { enabled: false, reason: "Error not found" };
+      if (!restart) return { enabled: false, reason: "Restart not found" };
+      return { enabled: true, reason: null };
+    },
+    exec: (ctx) => {
+      const { restartId, errorId, error, restart, item } = resolveRestartContext(ctx);
+      if (!restartId || !errorId || !error || !restart) return ctx.state;
+      const args = { restartId, errorId };
+      const restartArgs = ctx.args ?? ctx.payload?.args ?? null;
+      if (restartArgs !== null && restartArgs !== undefined) {
+        args.args = restartArgs;
+      }
+      const defaults = {};
+      if (item?.restartId && ctx.restartId == null && ctx.payload?.restartId == null) {
+        defaults.restartId = { source: "selection" };
+      }
+      if (item?.errorId && ctx.errorId == null && ctx.payload?.errorId == null) {
+        defaults.errorId = { source: "selection" };
+      }
+      const invocation = {
+        id: ctx.invocationId ?? ctx.payload?.invocationId ?? `inv-${(ctx.state.commandHistory ?? []).length}`,
+        commandId: restartCommandId,
+        args,
+        defaults,
+        ts: Number.isInteger(ctx.ts) ? ctx.ts : null,
+        source: ctx.source ?? ctx.payload?.source ?? "debugger",
+        result: null
+      };
+      const validation = validateInvocation(invocation, restartSpec);
+      if (!validation.ok) return ctx.state;
+      return recordCommandInvocation(ctx.state, invocation);
+    }
+  });
+
+  return registry;
+}
+
 export function registerCapabilityCommands(registry, options = {}) {
   if (!registry) {
     throw new Error("Registry is required");
@@ -3161,11 +4265,14 @@ export function upsertJob(state, job) {
 
 function buildDebuggerContent(state, errorId) {
   const error = state.errors?.find((entry) => entry.id === errorId) ?? null;
-  const restarts = Array.isArray(error?.restarts) ? error.restarts : [];
+  const restarts = Array.isArray(error?.restarts) ? error.restarts.map(normalizeRestart) : [];
   const summary = error ? `${error.kind ?? "error"}: ${error.message ?? ""}` : "No error selected";
   const items = restarts.map((restart, index) => ({
     id: restart.id ?? `restart-${index}`,
-    label: restart.title ?? restart.id ?? `Restart ${index + 1}`
+    label: restart.title ?? restart.id ?? `Restart ${index + 1}`,
+    restartId: restart.id ?? null,
+    errorId: error?.id ?? null,
+    restart
   }));
   if (items.length === 0) {
     items.push({ id: "restart-none", label: "No restarts available" });
@@ -3230,7 +4337,16 @@ export function openDebuggerWindow(state, options = {}) {
     id: listAlloc.id,
     kind: "list",
     parentId: rootId,
-    props: { items }
+    props: {
+      items,
+      itemCommand: DEBUGGER_RESTART_INVOKE_COMMAND,
+      selectionCommand: LIST_SELECTION_UPDATE_COMMAND,
+      selectionMode: "multi",
+      selectionActionBar: true,
+      selectionActionCommands: {
+        "invoke-restart": DEBUGGER_RESTART_INVOKE_COMMAND
+      }
+    }
   });
 
   nextState = updateWindow(nextState, allocWindow.id, (window) => ({

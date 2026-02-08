@@ -11,17 +11,30 @@ export {
   closeTask,
   addPresentation,
   setLayout,
+  setTheme,
+  setThemeMode,
   initLayout,
   splitLayout,
   wrapInTabs,
   setActiveTab,
   dockLayout,
   recordEvent,
+  appendRecording,
+  appendRecordingEntry,
+  attachRecordingAnchor,
+  setRecordingEntryFolded,
+  recordCommandInvocation,
   setCommandState,
   updateWidget,
   updateWindow,
   openInspectorWindow,
   refreshInspectorWindow,
+  openTranscriptWindow,
+  refreshTranscriptWindow,
+  openCommandHistoryWindow,
+  refreshCommandHistoryWindow,
+  openProblemsWindow,
+  refreshProblemsWindow,
   openCapabilityMediationWindow,
   refreshCapabilityMediationWindow,
   openDebuggerWindow,
@@ -36,6 +49,26 @@ export {
   KEYBINDINGS_OPEN_COMMAND,
   KEYBINDINGS_CLOSE_COMMAND,
   COMMAND_SURFACE_DISMISS_COMMAND,
+  RECORDING_APPEND_COMMAND,
+  RECORDING_ENTRY_APPEND_COMMAND,
+  RECORDING_ANCHOR_ATTACH_COMMAND,
+  RECORDING_ENTRY_FOLD_COMMAND,
+  RECORDING_COPY_AS_FORM_COMMAND,
+  RECORDING_COPY_WITH_CONTEXT_COMMAND,
+  RECORDING_REPLAY_AS_INPUT_COMMAND,
+  RECORDING_RERUN_COMMAND,
+  COMMAND_HISTORY_APPEND_COMMAND,
+  COMMAND_HISTORY_OPEN_COMMAND,
+  COMMAND_HISTORY_REFRESH_COMMAND,
+  COMMAND_HISTORY_EXECUTE_COMMAND,
+  TRANSCRIPT_OPEN_COMMAND,
+  TRANSCRIPT_REFRESH_COMMAND,
+  TRANSCRIPT_ITEM_OPEN_COMMAND,
+  PROBLEMS_OPEN_COMMAND,
+  PROBLEMS_REFRESH_COMMAND,
+  PROBLEMS_ITEM_OPEN_COMMAND,
+  DEBUGGER_RESTART_INVOKE_COMMAND,
+  LIST_SELECTION_UPDATE_COMMAND,
   TASK_LIST_COMMAND,
   TASK_SWITCH_COMMAND,
   TASK_CLOSE_COMMAND,
@@ -73,6 +106,7 @@ export {
   yieldUiTurn,
   endUiTurn,
   setSelection,
+  updateListSelection,
   setFocus,
   openCommandPaletteWindow,
   refreshCommandPaletteWindow,
@@ -87,6 +121,12 @@ export {
   registerCommandPaletteCommands,
   registerTaskCommands,
   registerLayoutCommands,
+  registerListSelectionCommands,
+  registerRecordingCommands,
+  registerTranscriptCommands,
+  registerCommandHistoryCommands,
+  registerProblemsCommands,
+  registerDebuggerCommands,
   registerCapabilityCommands,
   registerDomEscapeCommands,
   registerCommandSurfaceCommands,
@@ -120,6 +160,51 @@ export {
 } from "./focus.mjs";
 export { normalizeLayout, createLayout } from "./layout.mjs";
 export { normalizeSelection } from "./selection.mjs";
+export { DEFAULT_THEME_TOKENS, normalizeThemeTokens, mergeThemeTokens } from "./theme.mjs";
+export { normalizeRestart, normalizeConditionReport, RESTART_SAFETY_LEVELS } from "./conditions.mjs";
+export { markPresentationStale, revalidatePresentations } from "./world-state.mjs";
+export { DEFAULT_ACTIONS_BY_TYPE, buildSelectionActions } from "./selection-actions.mjs";
+export {
+  extractCommandOutput,
+  formatClipboardText,
+  dispatchCommandOutput,
+  handleCommandResultEffects
+} from "./command-effects.mjs";
+export {
+  OUTPUT_RECORDING_SCHEMA_VERSION,
+  normalizeRecording,
+  normalizeEntry,
+  normalizeAnchor,
+  createRecordingStore,
+  normalizeRecordingStore,
+  appendRecording as appendRecordingToStore,
+  appendEntry as appendEntryToStore,
+  attachAnchor as attachAnchorToStore,
+  setEntryFolded as setEntryFoldedInStore,
+  copyAsForm,
+  copyWithContext,
+  replayAsInput,
+  reRunRecording
+} from "./recordings.mjs";
+export {
+  PRESENTATION_TAXONOMY_VERSION,
+  PRESENTATION_TYPES,
+  PRESENTATION_REQUIRED_METADATA,
+  normalizePresentationType,
+  validatePresentationMetadata,
+  applyPresentationDefaults
+} from "./presentation-taxonomy.mjs";
+export {
+  TYPED_COMMAND_MODEL_VERSION,
+  ARG_TYPES,
+  normalizeArgSpec,
+  normalizeCommandSpec,
+  normalizeInvocation,
+  validateInvocation,
+  resolveArgumentDefaults,
+  materializeInvocation,
+  executeTypedCommand
+} from "./typed-commands.mjs";
 export { createElement, createText, h, normalizeChildren } from "./vdom.mjs";
 export { createRoot } from "./renderer.mjs";
 export { renderWidget, renderWindow } from "./widgets.mjs";

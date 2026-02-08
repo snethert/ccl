@@ -5,6 +5,9 @@ import { createState, addTask, addWindow, addWidget } from "../src/state.mjs";
 import {
   createSnapshot,
   restoreStateFromSnapshot,
+  createRecordingStore,
+  appendRecordingToStore,
+  appendEntryToStore,
   createMemoryStore,
   createPersistenceManager
 } from "../src/index.mjs";
@@ -69,6 +72,22 @@ test("persistence manager round-trips state", async () => {
   assert.equal(stableStringify(before.state), stableStringify(after.state));
 });
 
+test("createSnapshot persists recording store and command history", () => {
+  const store = appendEntryToStore(
+    appendRecordingToStore(createRecordingStore(), { id: "rec-1" }),
+    { id: "ent-1", recordingId: "rec-1" }
+  );
+  const state = createState({
+    recordingStore: store,
+    commandHistory: [{ id: "inv-1", commandId: "cmd-1", args: { value: 1 } }]
+  });
+
+  const snapshot = createSnapshot(state, { now: () => 0 });
+  assert.ok(snapshot.state.recordingStore);
+  assert.equal(snapshot.state.recordingStore.recordingOrder[0], "rec-1");
+  assert.deepEqual(snapshot.state.commandHistory, [{ id: "inv-1", commandId: "cmd-1", args: { value: 1 } }]);
+});
+
 test("restoreStateFromSnapshot migrates legacy snapshots", () => {
   const legacy = {
     workspace: { id: "workspace-0", taskIds: [], activeTaskId: null, title: "Workspace" },
@@ -80,5 +99,26 @@ test("restoreStateFromSnapshot migrates legacy snapshots", () => {
 
   const restored = restoreStateFromSnapshot(legacy);
   assert.ok(restored, "restored legacy snapshot");
-  assert.equal(restored.snapshot.schemaVersion, "1");
+  assert.equal(restored.snapshot.schemaVersion, "3");
+});
+
+test("createSnapshot applies recording store truncation budget with marker", () => {
+  let store = createRecordingStore();
+  store = appendRecordingToStore(store, { id: "rec-1" });
+  store = appendEntryToStore(store, { id: "ent-1", recordingId: "rec-1", text: "1111111111" });
+  store = appendEntryToStore(store, { id: "ent-2", recordingId: "rec-1", text: "2222222222" });
+  store = appendEntryToStore(store, { id: "ent-3", recordingId: "rec-1", text: "3333333333" });
+
+  const state = createState({ recordingStore: store });
+  const snapshot = createSnapshot(state, {
+    now: () => 0,
+    recordingBudget: { maxEntries: 2, maxBytes: 1024 }
+  });
+
+  const persisted = snapshot.state.recordingStore;
+  assert.deepEqual(persisted.entryOrder, ["ent-2", "ent-3"]);
+  assert.equal(persisted.truncation.applied, true);
+  assert.equal(persisted.truncation.droppedEntries, 1);
+  assert.equal(persisted.truncation.retainedEntries, 2);
+  assert.equal(persisted.truncation.maxEntries, 2);
 });

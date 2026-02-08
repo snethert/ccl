@@ -3,6 +3,11 @@ import { validateEvents } from "./event-log.mjs";
 import { setFocus } from "../src/focus.mjs";
 import {
   createState,
+  appendRecording,
+  appendRecordingEntry,
+  attachRecordingAnchor,
+  setRecordingEntryFolded,
+  recordCommandInvocation,
   setLayout,
   recordEvent,
   setCommandState,
@@ -58,6 +63,16 @@ export function defaultHandlers(registry = null) {
     "command:enable": (state, payload) => setCommandState(state, payload.id, true, null),
     "command:disable": (state, payload) => setCommandState(state, payload.id, false, payload.reason || ""),
     "layout:set": (state, payload) => setLayout(state, payload.layout),
+    "recording:append": (state, payload) =>
+      appendRecording(state, payload.recording ?? payload),
+    "recording:entry.append": (state, payload) =>
+      appendRecordingEntry(state, payload.entry ?? payload),
+    "recording:anchor.attach": (state, payload) =>
+      attachRecordingAnchor(state, payload.anchor ?? payload),
+    "recording:entry.fold": (state, payload) =>
+      setRecordingEntryFolded(state, payload.entryId ?? payload.id ?? null, payload.folded ?? true),
+    "command-history:append": (state, payload) =>
+      recordCommandInvocation(state, payload.invocation ?? payload),
     "ui:signal.enqueue": (state, payload) => enqueueUiSignal(state, payload.signal ?? payload),
     "ui:turn.begin": (state, payload) =>
       beginUiTurn(state, {

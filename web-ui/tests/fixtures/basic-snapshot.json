@@ -8,6 +8,7 @@
         "reasonId": "reason-1"
       }
     },
+    "commandHistory": [],
     "capabilities": {
       "granted": [],
       "log": [],
@@ -97,6 +98,15 @@
     "jobs": [],
     "layout": null,
     "presentations": {},
+    "recordingStore": {
+      "anchors": {},
+      "byAnchor": {},
+      "byPresentation": {},
+      "entries": {},
+      "entryOrder": [],
+      "recordings": {},
+      "recordingOrder": []
+    },
     "selection": null,
     "tasks": {
       "t1": {
@@ -107,6 +117,55 @@
         "windowIds": [
           "w1"
         ]
+      }
+    },
+    "theme": {
+      "color": {
+        "accent": "#6fb0ff",
+        "accentMuted": "#355a85",
+        "bg": "#121212",
+        "error": "#f06b6b",
+        "surface": "#1b1b1b",
+        "text": {
+          "primary": "#e8e8e8",
+          "secondary": "#b8b8b8"
+        },
+        "warning": "#f0b35b"
+      },
+      "elevation": {
+        "level1": "0 1px 4px rgba(0,0,0,0.25)",
+        "level2": "0 2px 8px rgba(0,0,0,0.25)",
+        "level3": "0 4px 12px rgba(0,0,0,0.28)",
+        "level4": "0 8px 20px rgba(0,0,0,0.3)"
+      },
+      "font": {
+        "body": "Inter",
+        "mono": "Iosevka",
+        "size": {
+          "lg": 16,
+          "md": 14,
+          "sm": 12,
+          "xl": 20
+        }
+      },
+      "mode": "dark",
+      "motion": {
+        "easing": "ease-out",
+        "fast": 120,
+        "normal": 180,
+        "reduced": false,
+        "slow": 250
+      },
+      "radius": {
+        "md": "8px",
+        "sm": "4px"
+      },
+      "space": {
+        "lg": 16,
+        "md": 12,
+        "sm": 8,
+        "xl": 24,
+        "xs": 4
       }
     },
     "widgets": {

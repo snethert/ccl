@@ -184,3 +184,34 @@ test("commands honor capability gating and safe mode", () => {
   assert.equal(enabled.enabled, false);
   assert.equal(enabled.reason, "Safe mode");
 });
+
+test("typed commands resolve defaults and expose structured invocation", () => {
+  const registry = createRegistry();
+  registerCommand(registry, {
+    id: "cmd.inspect",
+    args: [{ name: "target", type: "selection", required: true, defaultFrom: ["selection"] }],
+    exec: ({ args }) => ({ selected: args.target.id })
+  });
+
+  const ctx = makeContext({ selection: { id: "sel-1", targetIds: ["pres-1"] } }, { source: "palette" });
+  const enabled = commandEnabled(registry, "cmd.inspect", ctx);
+  assert.equal(enabled.enabled, true);
+
+  const result = executeCommand(registry, "cmd.inspect", ctx);
+  assert.equal(result.ok, true);
+  assert.equal(result.result.selected, "sel-1");
+  assert.equal(result.invocation.commandId, "cmd.inspect");
+  assert.equal(result.invocation.defaults.target.source, "selection");
+});
+
+test("typed command enablement fails with missing required args", () => {
+  const registry = createRegistry();
+  registerCommand(registry, {
+    id: "cmd.requires-symbol",
+    args: [{ name: "symbol", type: "symbol", required: true }],
+    exec: ({ args }) => args.symbol
+  });
+  const enabled = commandEnabled(registry, "cmd.requires-symbol", makeContext({ selection: null }));
+  assert.equal(enabled.enabled, false);
+  assert.equal(enabled.reason, "Missing required args: symbol");
+});

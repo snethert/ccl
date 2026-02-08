@@ -16,6 +16,18 @@ It governs visual form, spatial behavior, and perceptual cues, independent of wi
 
 The goal is not trendiness, but **durability**: a UI that looks modern now and defensible years later.
 
+### Relationship to the IDE Doctrine
+This UI Doctrine governs *presentation*. Interaction semantics, tool behavior, and system capabilities are defined in `web-ide/ide-doctrine.md`.
+If a conflict appears:
+- UI Doctrine controls visual form, motion, and spatial presentation.
+- IDE Doctrine controls interaction semantics and tool behavior.
+
+### Backend-Agnostic Application
+This doctrine applies equally to DOM, canvas, and WebGL renderers.
+The system uses a hybrid model where text-heavy surfaces may be DOM-backed for input fidelity.
+DOM usage does not permit OS-native widget styling or browser-default chrome.
+All backends must consume shared theme tokens so the UI reads as one instrument.
+
 ---
 
 ## 1. Foundational Axiom

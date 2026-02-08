@@ -2,7 +2,15 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { createRegistry, registerCommand } from "../src/commands.mjs";
-import { createState, addTask, addWindow, addWidget } from "../src/state.mjs";
+import {
+  createState,
+  addTask,
+  addWindow,
+  addWidget,
+  registerRecordingCommands,
+  registerListSelectionCommands,
+  LIST_SELECTION_UPDATE_COMMAND
+} from "../src/state.mjs";
 import { renderWindow } from "../src/widgets.mjs";
 
 function findByWidgetId(node, id) {
@@ -169,6 +177,211 @@ test("list item command wiring provides item context", () => {
   assert.equal(lastCtx.itemId, "alpha");
   assert.equal(lastCtx.itemIndex, 0);
   assert.equal(lastCtx.listId, "widget-list");
+});
+
+test("widget command wiring dispatches command effect handlers", () => {
+  const registry = createRegistry();
+  let runtimeOutput = null;
+  let clipboardText = null;
+
+  registerCommand(registry, {
+    id: "demo.replay",
+    exec: (ctx) => ({
+      state: ctx.state,
+      output: {
+        kind: "recording.replay",
+        recordingId: "rec-1",
+        input: { kind: "form", text: "(+ 1 2)" },
+        context: { commandId: "repl.eval" }
+      }
+    })
+  });
+
+  registerCommand(registry, {
+    id: "demo.copy",
+    exec: (ctx) => ({
+      state: ctx.state,
+      output: {
+        kind: "form",
+        text: "(copy me)"
+      }
+    })
+  });
+
+  let state = createState();
+  state = addTask(state, { id: "task-1", title: "Task" });
+  state = addWindow(state, { id: "win-1", taskId: "task-1", kind: "document" });
+  state = addWidget(state, { id: "root", kind: "container", windowId: "win-1" });
+  state = addWidget(state, {
+    id: "btn-replay",
+    kind: "button",
+    parentId: "root",
+    props: { label: "Replay", command: "demo.replay" }
+  });
+  state = addWidget(state, {
+    id: "btn-copy",
+    kind: "button",
+    parentId: "root",
+    props: { label: "Copy", command: "demo.copy" }
+  });
+
+  const commandEffectHandlers = {
+    runtimeDispatch: ({ output }) => {
+      runtimeOutput = output;
+    },
+    clipboardWrite: ({ text }) => {
+      clipboardText = text;
+    }
+  };
+
+  const tree = renderWindow(state, "win-1", { registry, commandEffectHandlers });
+  const replayButton = findByWidgetId(tree, "btn-replay");
+  const copyButton = findByWidgetId(tree, "btn-copy");
+  assert.ok(replayButton, "replay button exists");
+  assert.ok(copyButton, "copy button exists");
+
+  replayButton.props.onClick({ type: "click" });
+  copyButton.props.onClick({ type: "click" });
+
+  assert.ok(runtimeOutput, "runtime effect dispatched");
+  assert.equal(runtimeOutput.kind, "recording.replay");
+  assert.equal(runtimeOutput.recordingId, "rec-1");
+  assert.equal(clipboardText, "(copy me)");
+});
+
+test("widget command wiring appends structured invocation history for typed commands", () => {
+  const registry = createRegistry();
+  registerRecordingCommands(registry);
+  let clipboardText = null;
+
+  registerCommand(registry, {
+    id: "demo.typed",
+    args: [{ name: "target", type: "selection", required: true, defaultFrom: ["selection"] }],
+    exec: (ctx) => ({
+      state: ctx.state,
+      output: {
+        kind: "form",
+        text: `(inspect ${ctx.args.target.id})`
+      }
+    })
+  });
+
+  let currentState = createState({
+    selection: {
+      id: "sel-1",
+      kind: "presentation",
+      targetIds: ["pres-1"],
+      anchorId: "pres-1",
+      metadata: {}
+    }
+  });
+  currentState = addTask(currentState, { id: "task-1", title: "Task" });
+  currentState = addWindow(currentState, { id: "win-1", taskId: "task-1", kind: "document" });
+  currentState = addWidget(currentState, { id: "root", kind: "container", windowId: "win-1" });
+  currentState = addWidget(currentState, {
+    id: "btn-typed",
+    kind: "button",
+    parentId: "root",
+    props: { label: "Typed", command: "demo.typed" }
+  });
+
+  const options = {
+    registry,
+    commandEffectHandlers: {
+      clipboardWrite: ({ text }) => {
+        clipboardText = text;
+      }
+    },
+    onCommandResult: ({ result }) => {
+      const value = result?.result ?? null;
+      if (value && value.workspace && value.tasks && value.windows) {
+        currentState = value;
+      } else if (value && value.state && value.state.workspace && value.state.tasks && value.state.windows) {
+        currentState = value.state;
+      }
+    }
+  };
+
+  const tree = renderWindow(currentState, "win-1", options);
+  const typedButton = findByWidgetId(tree, "btn-typed");
+  assert.ok(typedButton, "typed button exists");
+  typedButton.props.onClick({ type: "click" });
+
+  assert.equal(clipboardText, "(inspect sel-1)");
+  assert.equal(currentState.commandHistory.length, 1);
+  assert.equal(currentState.commandHistory[0].commandId, "demo.typed");
+  assert.equal(currentState.commandHistory[0].defaults.target.source, "selection");
+});
+
+test("list selection supports multi-select and action bar hooks", () => {
+  const registry = createRegistry();
+  let itemCalls = 0;
+  let inspectCtx = null;
+
+  registerListSelectionCommands(registry);
+  registerCommand(registry, {
+    id: "demo.item",
+    exec: () => {
+      itemCalls += 1;
+    }
+  });
+  registerCommand(registry, {
+    id: "demo.inspect",
+    exec: (ctx) => {
+      inspectCtx = ctx;
+    }
+  });
+
+  let state = createState();
+  state = addTask(state, { id: "task-1", title: "Task" });
+  state = addWindow(state, { id: "win-1", taskId: "task-1", kind: "document" });
+  state = addWidget(state, { id: "root", kind: "container", windowId: "win-1" });
+  state = addWidget(state, {
+    id: "widget-list",
+    kind: "list",
+    parentId: "root",
+    props: {
+      itemCommand: "demo.item",
+      selectionCommand: LIST_SELECTION_UPDATE_COMMAND,
+      selectionMode: "multi",
+      selectionActionBar: true,
+      selectionActionCommands: { inspect: "demo.inspect" },
+      items: [
+        { id: "alpha", label: "Alpha", presentationType: "value" },
+        { id: "beta", label: "Beta", presentationType: "value" }
+      ]
+    }
+  });
+
+  let currentState = state;
+  const onCommandResult = ({ result }) => {
+    const next = result?.result ?? null;
+    if (next && next.workspace && next.tasks && next.windows) {
+      currentState = next;
+    }
+  };
+
+  let tree = renderWindow(currentState, "win-1", { registry, onCommandResult });
+  const alphaButton = findByDataAttr(tree, "data-item-id", "alpha");
+  assert.ok(alphaButton, "first list item exists");
+  alphaButton.props.onClick({ type: "click" });
+  assert.equal(itemCalls, 1);
+  assert.deepEqual(currentState.selection.targetIds, ["alpha"]);
+
+  tree = renderWindow(currentState, "win-1", { registry, onCommandResult });
+  const betaButton = findByDataAttr(tree, "data-item-id", "beta");
+  assert.ok(betaButton, "second list item exists");
+  betaButton.props.onClick({ type: "click", ctrlKey: true });
+  assert.equal(itemCalls, 1, "modifier selection does not execute item command");
+  assert.deepEqual(currentState.selection.targetIds, ["alpha", "beta"]);
+
+  tree = renderWindow(currentState, "win-1", { registry, onCommandResult });
+  const inspectButton = findByDataAttr(tree, "data-action-id", "inspect");
+  assert.ok(inspectButton, "selection action button exists");
+  inspectButton.props.onClick({ type: "click" });
+  assert.ok(inspectCtx, "selection action command executed");
+  assert.equal(inspectCtx.actionId, "inspect");
+  assert.deepEqual(inspectCtx.selectedItemIds, ["alpha", "beta"]);
 });
 
 test("canvas view command wiring uses hit testing", () => {

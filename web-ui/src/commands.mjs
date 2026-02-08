@@ -1,3 +1,5 @@
+import { normalizeCommandSpec, materializeInvocation, executeTypedCommand } from "./typed-commands.mjs";
+
 const DEFAULT_PRECEDENCE = ["global", "task", "context", "widget"];
 const DEFAULT_NAMESPACE_POLICY = "allow";
 
@@ -46,15 +48,20 @@ export function normalizeCommand(command) {
   if (!command || typeof command !== "object") {
     throw new Error("Command must be an object");
   }
+  const typed = normalizeCommandSpec({
+    ...command,
+    scope: command.scope ?? "global"
+  });
   return {
-    id: command.id,
-    title: command.title ?? command.id,
-    doc: command.doc ?? null,
-    scope: command.scope ?? "global",
-    capability: command.capability ?? null,
-    enabled: command.enabled ?? null,
-    exec: command.exec ?? null,
-    metadata: command.metadata ?? {}
+    id: typed.id,
+    title: command.title ?? typed.title ?? typed.id,
+    doc: command.doc ?? typed.doc ?? null,
+    scope: command.scope ?? typed.scope ?? "global",
+    capability: command.capability ?? typed.capability ?? null,
+    enabled: command.enabled ?? typed.enabled ?? null,
+    exec: command.exec ?? typed.exec ?? null,
+    args: typed.args ?? [],
+    metadata: command.metadata ?? typed.metadata ?? {}
   };
 }
 
@@ -214,6 +221,43 @@ function checkCapabilities(ctx, required) {
   return { enabled: true, reason: null };
 }
 
+function isPlainObject(value) {
+  return Object.prototype.toString.call(value) === "[object Object]";
+}
+
+function isTypedCommand(command) {
+  return Boolean(Array.isArray(command?.args) && command.args.length > 0);
+}
+
+function buildTypedInvocation(command, ctx = {}) {
+  const invocation = isPlainObject(ctx.invocation) ? { ...ctx.invocation } : {};
+  const args = {};
+  const payload = isPlainObject(ctx.payload) ? ctx.payload : {};
+  if (isPlainObject(payload.args)) {
+    Object.assign(args, payload.args);
+  }
+  if (isPlainObject(ctx.args)) {
+    Object.assign(args, ctx.args);
+  }
+  for (const arg of command.args ?? []) {
+    if (!arg?.name || Object.prototype.hasOwnProperty.call(args, arg.name)) continue;
+    if (Object.prototype.hasOwnProperty.call(ctx, arg.name)) {
+      args[arg.name] = ctx[arg.name];
+      continue;
+    }
+    if (Object.prototype.hasOwnProperty.call(payload, arg.name)) {
+      args[arg.name] = payload[arg.name];
+    }
+  }
+  return {
+    ...invocation,
+    commandId: invocation.commandId ?? command.id,
+    args: { ...(invocation.args ?? {}), ...args },
+    source: invocation.source ?? ctx.source ?? null,
+    ts: invocation.ts ?? ctx.ts ?? null
+  };
+}
+
 export function commandEnabled(registry, id, ctx) {
   const cmd = getCommand(registry, id);
   if (!cmd) {
@@ -225,6 +269,25 @@ export function commandEnabled(registry, id, ctx) {
     if (!capabilityCheck.enabled) {
       return capabilityCheck;
     }
+  }
+  if (isTypedCommand(cmd)) {
+    const materialized = materializeInvocation(cmd, buildTypedInvocation(cmd, ctx), ctx);
+    if (materialized.missing.length > 0) {
+      return {
+        enabled: false,
+        reason: `Missing required args: ${materialized.missing.join(", ")}`
+      };
+    }
+    if (!cmd.enabled) {
+      return { enabled: true, reason: null };
+    }
+    return normalizeEnablement(
+      cmd.enabled({
+        ...ctx,
+        invocation: materialized.invocation,
+        args: materialized.invocation.args
+      })
+    );
   }
   if (!cmd.enabled) {
     return { enabled: true, reason: null };
@@ -240,6 +303,22 @@ export function executeCommand(registry, id, ctx) {
   const enablement = commandEnabled(registry, id, ctx);
   if (!enablement.enabled) {
     return { ok: false, reason: enablement.reason || "Disabled" };
+  }
+  if (isTypedCommand(cmd)) {
+    const typed = executeTypedCommand(cmd, buildTypedInvocation(cmd, ctx), ctx);
+    if (!typed.ok) {
+      return {
+        ok: false,
+        reason: typed.reason ?? "Typed command failed",
+        missing: typed.missing ?? [],
+        invocation: typed.invocation ?? null
+      };
+    }
+    return {
+      ok: true,
+      result: typed.result,
+      invocation: typed.invocation ?? null
+    };
   }
   if (!cmd.exec) {
     return { ok: true, result: null };

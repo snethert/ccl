@@ -30,6 +30,14 @@ import {
   SAFE_MODE_ENABLE_COMMAND,
   SAFE_MODE_DISABLE_COMMAND,
   DOM_ESCAPE_COMMAND,
+  RECORDING_APPEND_COMMAND,
+  RECORDING_ENTRY_APPEND_COMMAND,
+  RECORDING_COPY_AS_FORM_COMMAND,
+  RECORDING_REPLAY_AS_INPUT_COMMAND,
+  COMMAND_HISTORY_APPEND_COMMAND,
+  COMMAND_HISTORY_OPEN_COMMAND,
+  TRANSCRIPT_OPEN_COMMAND,
+  PROBLEMS_OPEN_COMMAND,
   applyCommandPaletteFilter,
   applyCommandPaletteSelection,
   resolveCommandPaletteSelection,
@@ -38,6 +46,11 @@ import {
   registerCommandPaletteCommands,
   registerTaskCommands,
   registerLayoutCommands,
+  registerListSelectionCommands,
+  registerRecordingCommands,
+  registerTranscriptCommands,
+  registerCommandHistoryCommands,
+  registerProblemsCommands,
   registerCapabilityCommands,
   registerDomEscapeCommands,
   registerCommandSurfaceCommands,
@@ -56,6 +69,7 @@ import {
   bindKey,
   resolveKey
 } from "../../../web-ui/src/index.mjs";
+import { createCommandEffectBridge } from "../../../web-ui/bridge/index.mjs";
 
 const registry = createRegistry();
 registerCommand(registry, { id: "alpha.run", title: "Alpha Run" });
@@ -70,6 +84,11 @@ bindKey(registry, "widget", "W", "delta.pick", "widget-1");
 registerCommandPaletteCommands(registry);
 registerTaskCommands(registry);
 registerLayoutCommands(registry);
+registerListSelectionCommands(registry);
+registerRecordingCommands(registry);
+registerTranscriptCommands(registry);
+registerCommandHistoryCommands(registry);
+registerProblemsCommands(registry);
 registerCommandSurfaceCommands(registry);
 registerCapabilityCommands(registry);
 registerDomEscapeCommands(registry);
@@ -78,6 +97,58 @@ bindCommandSurfaceDefaults(registry);
 
 let state = createState();
 state = addTask(state, { id: "task-1", title: "Task" });
+const clipboardWrites = [];
+const runtimeDispatches = [];
+const effectBridge = createCommandEffectBridge({
+  writeClipboard: (text) => clipboardWrites.push(text),
+  dispatchRuntime: (output) => runtimeDispatches.push(output)
+});
+
+const recordingResult = executeCommand(registry, RECORDING_APPEND_COMMAND, { state, recording: { id: "rec-1" } });
+assert.equal(recordingResult.ok, true);
+state = recordingResult.result;
+const entryResult = executeCommand(registry, RECORDING_ENTRY_APPEND_COMMAND, {
+  state,
+  entry: { id: "ent-1", recordingId: "rec-1", text: "(+ 1 2)" }
+});
+assert.equal(entryResult.ok, true);
+state = entryResult.result;
+const historyResult = executeCommand(registry, COMMAND_HISTORY_APPEND_COMMAND, {
+  state,
+  invocation: { id: "inv-1", commandId: "alpha.run" }
+});
+assert.equal(historyResult.ok, true);
+state = historyResult.result;
+
+const copyAsForm = executeCommand(registry, RECORDING_COPY_AS_FORM_COMMAND, {
+  state,
+  entryId: "ent-1"
+});
+assert.equal(copyAsForm.ok, true);
+effectBridge.handle(copyAsForm, { commandId: RECORDING_COPY_AS_FORM_COMMAND });
+assert.equal(clipboardWrites.length, 1);
+assert.equal(clipboardWrites[0], "(+ 1 2)");
+
+const replayAsInput = executeCommand(registry, RECORDING_REPLAY_AS_INPUT_COMMAND, {
+  state,
+  recordingId: "rec-1"
+});
+assert.equal(replayAsInput.ok, true);
+effectBridge.handle(replayAsInput, { commandId: RECORDING_REPLAY_AS_INPUT_COMMAND });
+assert.equal(runtimeDispatches.length, 1);
+assert.equal(runtimeDispatches[0].kind, "recording.replay");
+
+const transcriptOpen = executeCommand(registry, TRANSCRIPT_OPEN_COMMAND, { state, taskId: "task-1" });
+assert.equal(transcriptOpen.ok, true);
+state = transcriptOpen.result;
+
+const historyOpen = executeCommand(registry, COMMAND_HISTORY_OPEN_COMMAND, { state, taskId: "task-1" });
+assert.equal(historyOpen.ok, true);
+state = historyOpen.result;
+
+const problemsOpen = executeCommand(registry, PROBLEMS_OPEN_COMMAND, { state, taskId: "task-1" });
+assert.equal(problemsOpen.ok, true);
+state = problemsOpen.result;
 
 const resolvedPresentation = resolvePresentationCommand(
   registry,

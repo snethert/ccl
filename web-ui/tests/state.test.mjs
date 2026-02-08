@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { createState, addTask, addWindow, addWidget } from "../src/state.mjs";
+import { createState, addTask, addWindow, addWidget, addPresentation } from "../src/state.mjs";
 
 function makeStateWithTaskAndWindow() {
   let state = createState();
@@ -36,4 +36,21 @@ test("addWidget wires parent/child and window root", () => {
 
   assert.equal(state.windows["win-1"].rootWidgetId, "widget-root");
   assert.deepEqual(state.widgets["widget-root"].childIds, ["widget-child"]);
+});
+
+test("addPresentation normalizes unknown type to value", () => {
+  let state = createState();
+  state = addPresentation(state, { id: "pres-1", type: "unknown" });
+  assert.equal(state.presentations["pres-1"].type, "value");
+});
+
+test("addPresentation degrades invalid typed presentations to value with diagnostics", () => {
+  let state = createState();
+  state = addPresentation(state, { id: "pres-2", type: "command", metadata: { title: "Run" } });
+  const presentation = state.presentations["pres-2"];
+  assert.equal(presentation.type, "value");
+  assert.equal(presentation.metadata.degradedFromType, "command");
+  assert.ok(Array.isArray(presentation.metadata.missingMetadata));
+  assert.ok(presentation.metadata.missingMetadata.includes("commandId"));
+  assert.equal(typeof presentation.metadata.summary, "string");
 });

@@ -32,8 +32,42 @@ function migrate0To1(snapshot, options = {}) {
   };
 }
 
+function migrate1To2(snapshot, options = {}) {
+  const now = options.now ?? (() => Date.now());
+  const nextLog = Array.isArray(snapshot.migrationLog) ? [...snapshot.migrationLog] : [];
+  nextLog.push({
+    fromVersion: "1",
+    toVersion: "2",
+    timestamp: now(),
+    notes: "Added recording store and command history persistence"
+  });
+  return {
+    ...snapshot,
+    schemaVersion: "2",
+    migrationLog: nextLog
+  };
+}
+
+function migrate2To3(snapshot, options = {}) {
+  const now = options.now ?? (() => Date.now());
+  const nextLog = Array.isArray(snapshot.migrationLog) ? [...snapshot.migrationLog] : [];
+  nextLog.push({
+    fromVersion: "2",
+    toVersion: "3",
+    timestamp: now(),
+    notes: "Added recording snapshot truncation metadata compatibility"
+  });
+  return {
+    ...snapshot,
+    schemaVersion: "3",
+    migrationLog: nextLog
+  };
+}
+
 const MIGRATIONS = {
-  "0": migrate0To1
+  "0": migrate0To1,
+  "1": migrate1To2,
+  "2": migrate2To3
 };
 
 export function applyMigrations(snapshot, options = {}) {

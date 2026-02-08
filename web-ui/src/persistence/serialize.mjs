@@ -6,6 +6,8 @@ import { SCHEMA_VERSION } from "./schema.mjs";
 import { applyMigrations } from "./migrate.mjs";
 
 const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layout", "reason", "error", "job"];
+const DEFAULT_RECORDING_MAX_ENTRIES = 5000;
+const DEFAULT_RECORDING_MAX_BYTES = 20 * 1024 * 1024;
 
 const DEFAULT_ALLOWLIST = {
   workspace: true,
@@ -20,7 +22,10 @@ const DEFAULT_ALLOWLIST = {
   capabilityRequestSeq: true,
   selection: true,
   focus: true,
-  presentations: false,
+  theme: true,
+  presentations: true,
+  recordingStore: true,
+  commandHistory: true,
   idCounters: true
 };
 
@@ -86,6 +91,158 @@ function sanitizeCounters(counters) {
     }
   }
   return out;
+}
+
+function estimateBytes(value) {
+  let json = "";
+  try {
+    json = JSON.stringify(value ?? null);
+  } catch (_err) {
+    json = "null";
+  }
+  if (typeof TextEncoder !== "undefined") {
+    return new TextEncoder().encode(json).length;
+  }
+  return json.length;
+}
+
+function resolveRecordingBudget(options = {}) {
+  if (options.recordingBudget === false) return null;
+  const budget = options.recordingBudget ?? {};
+  const maxEntries = Number.isFinite(budget.maxEntries)
+    ? Math.max(0, Math.trunc(budget.maxEntries))
+    : DEFAULT_RECORDING_MAX_ENTRIES;
+  const maxBytes = Number.isFinite(budget.maxBytes)
+    ? Math.max(1024, Math.trunc(budget.maxBytes))
+    : DEFAULT_RECORDING_MAX_BYTES;
+  return { maxEntries, maxBytes };
+}
+
+function applyRecordingStoreBudget(state, options = {}) {
+  const budget = resolveRecordingBudget(options);
+  if (!budget) return state;
+  const store = state?.recordingStore;
+  if (!store || typeof store !== "object") return state;
+  const entries = store.entries ?? {};
+  const order = Array.isArray(store.entryOrder) ? store.entryOrder.filter((id) => entries[id]) : [];
+  if (order.length === 0) {
+    if (!store.truncation) return state;
+    return { ...state, recordingStore: { ...store, truncation: null } };
+  }
+
+  const retainedEntryOrder = [];
+  let retainedBytes = 0;
+  for (let index = order.length - 1; index >= 0; index -= 1) {
+    const entryId = order[index];
+    const entry = entries[entryId];
+    if (!entry) continue;
+    const entryBytes = estimateBytes(entry);
+    const overCount = retainedEntryOrder.length >= budget.maxEntries;
+    const overBytes = retainedBytes + entryBytes > budget.maxBytes;
+    if (overCount || (overBytes && retainedEntryOrder.length > 0)) {
+      break;
+    }
+    retainedEntryOrder.unshift(entryId);
+    retainedBytes += entryBytes;
+  }
+
+  const droppedEntries = order.length - retainedEntryOrder.length;
+  if (droppedEntries <= 0) {
+    if (!store.truncation) return state;
+    return { ...state, recordingStore: { ...store, truncation: null } };
+  }
+
+  const keepEntries = new Set(retainedEntryOrder);
+  const retainedEntries = {};
+  for (const entryId of retainedEntryOrder) {
+    retainedEntries[entryId] = entries[entryId];
+  }
+
+  const retainedAnchors = {};
+  for (const [anchorId, anchor] of Object.entries(store.anchors ?? {})) {
+    if (anchor?.entryId && keepEntries.has(anchor.entryId)) {
+      retainedAnchors[anchorId] = anchor;
+    }
+  }
+
+  const retainedByAnchor = {};
+  for (const [anchorId, value] of Object.entries(store.byAnchor ?? {})) {
+    if (value?.entryId && keepEntries.has(value.entryId)) {
+      retainedByAnchor[anchorId] = value;
+    }
+  }
+
+  const retainedByPresentation = {};
+  for (const [presentationId, entryId] of Object.entries(store.byPresentation ?? {})) {
+    if (keepEntries.has(entryId)) {
+      retainedByPresentation[presentationId] = entryId;
+    }
+  }
+
+  const keptRecordingIds = new Set();
+  for (const entryId of retainedEntryOrder) {
+    const recordingId = retainedEntries[entryId]?.recordingId ?? null;
+    if (recordingId) keptRecordingIds.add(recordingId);
+  }
+
+  const retainedRecordings = {};
+  const retainedRecordingOrder = [];
+  const recordingOrder = Array.isArray(store.recordingOrder) ? store.recordingOrder : [];
+  for (const recordingId of recordingOrder) {
+    if (!keptRecordingIds.has(recordingId)) continue;
+    const recording = store.recordings?.[recordingId];
+    if (!recording) continue;
+    const entryIds = (Array.isArray(recording.entryIds) ? recording.entryIds : []).filter((entryId) => keepEntries.has(entryId));
+    let seqStart = null;
+    let seqEnd = null;
+    let tsStart = null;
+    let tsEnd = null;
+    for (const entryId of entryIds) {
+      const entry = retainedEntries[entryId];
+      if (!entry) continue;
+      if (Number.isInteger(entry.seq)) {
+        if (seqStart === null || entry.seq < seqStart) seqStart = entry.seq;
+        if (seqEnd === null || entry.seq > seqEnd) seqEnd = entry.seq;
+      }
+      if (Number.isInteger(entry.ts)) {
+        if (tsStart === null || entry.ts < tsStart) tsStart = entry.ts;
+        if (tsEnd === null || entry.ts > tsEnd) tsEnd = entry.ts;
+      }
+    }
+    retainedRecordings[recordingId] = {
+      ...recording,
+      entryIds,
+      seqStart,
+      seqEnd,
+      tsStart,
+      tsEnd
+    };
+    retainedRecordingOrder.push(recordingId);
+  }
+
+  return {
+    ...state,
+    recordingStore: {
+      ...store,
+      recordings: retainedRecordings,
+      entries: retainedEntries,
+      anchors: retainedAnchors,
+      recordingOrder: retainedRecordingOrder,
+      entryOrder: retainedEntryOrder,
+      byAnchor: retainedByAnchor,
+      byPresentation: retainedByPresentation,
+      truncation: {
+        applied: true,
+        droppedEntries,
+        retainedEntries: retainedEntryOrder.length,
+        maxEntries: budget.maxEntries,
+        maxBytes: budget.maxBytes,
+        estimatedRetainedBytes: retainedBytes,
+        firstRetainedEntryId: retainedEntryOrder[0] ?? null,
+        lastRetainedEntryId: retainedEntryOrder[retainedEntryOrder.length - 1] ?? null
+      }
+    }
+  };
 }
 
 function ensureTaskExists(state) {
@@ -243,7 +400,10 @@ export function sanitizeState(state, options = {}) {
   if (allowlist.capabilityRequestSeq) out.capabilityRequestSeq = sanitizeValue(state.capabilityRequestSeq ?? null) ?? null;
   if (allowlist.selection) out.selection = sanitizeValue(state.selection ?? null) ?? null;
   if (allowlist.focus) out.focus = sanitizeValue(state.focus ?? null) ?? null;
+  if (allowlist.theme) out.theme = sanitizeRecord(state.theme ?? {});
   if (allowlist.presentations) out.presentations = sanitizeMap(state.presentations ?? {});
+  if (allowlist.recordingStore) out.recordingStore = sanitizeRecord(state.recordingStore ?? {});
+  if (allowlist.commandHistory) out.commandHistory = sanitizeValue(state.commandHistory ?? []) ?? [];
   if (allowlist.idCounters) out.idCounters = sanitizeCounters(state.idCounters ?? {});
   return out;
 }
@@ -257,7 +417,8 @@ export function createSnapshot(state, options = {}) {
     { schemaVersion: options.schemaVersion ?? SCHEMA_VERSION, allowlist, now }
   );
   const normalizedState = normalized?.state ?? sanitized;
-  const finalState = sanitizeState(normalizedState, { allowlist });
+  const budgetedState = applyRecordingStoreBudget(normalizedState, options);
+  const finalState = sanitizeState(budgetedState, { allowlist });
   return {
     schemaVersion: options.schemaVersion ?? SCHEMA_VERSION,
     createdAt: now(),
