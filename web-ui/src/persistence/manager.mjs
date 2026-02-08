@@ -13,12 +13,17 @@ export function createPersistenceManager(options = {}) {
   const presentationResolver = options.presentationResolver ?? null;
   const now = options.now ?? (() => Date.now());
   const metadata = options.metadata ?? {};
+  const sessionPrefix = options.sessionPrefix ?? "session:";
 
   let enabled = true;
   let timer = null;
   let pendingState = null;
   let lastWrite = null;
   let lastError = null;
+
+  function sessionKey(sessionId) {
+    return `${sessionPrefix}${sessionId}`;
+  }
 
   async function persistState(state) {
     const snapshot = createSnapshot(state, { schemaVersion, allowlist, now, metadata });
@@ -68,6 +73,66 @@ export function createPersistenceManager(options = {}) {
     return restored?.state ?? null;
   }
 
+  async function saveSession(state, options = {}) {
+    if (!state) {
+      throw new Error("State is required to save a session");
+    }
+    const sessionId = options.sessionId ?? state.activeSessionId ?? null;
+    if (!sessionId) {
+      throw new Error("Session id is required to save a session");
+    }
+    const sessionMeta =
+      options.session ??
+      state.sessions?.[sessionId] ??
+      { id: sessionId, name: options.name ?? "Session", createdAt: now() };
+    const snapshot = createSnapshot(state, {
+      schemaVersion,
+      allowlist,
+      now,
+      metadata: { ...metadata, kind: "session" },
+      session: sessionMeta
+    });
+    await store.putSnapshot(sessionKey(sessionId), snapshot);
+    return snapshot;
+  }
+
+  async function restoreSession(sessionId, options = {}) {
+    if (!sessionId) {
+      throw new Error("Session id is required to restore a session");
+    }
+    const snapshot = await store.getSnapshot(sessionKey(sessionId));
+    if (!snapshot) return null;
+    const restored = restoreStateFromSnapshot(snapshot, {
+      schemaVersion,
+      allowlist,
+      now,
+      presentationResolver: options.presentationResolver ?? presentationResolver,
+      markStalePresentations: options.markStalePresentations ?? false
+    });
+    return restored ?? null;
+  }
+
+  async function deleteSession(sessionId) {
+    if (!sessionId) {
+      throw new Error("Session id is required to delete a session");
+    }
+    return store.clearSnapshot(sessionKey(sessionId));
+  }
+
+  async function listSessions() {
+    if (typeof store.listSnapshots !== "function") return [];
+    const keys = await store.listSnapshots();
+    const sessions = [];
+    for (const key of keys) {
+      if (typeof key !== "string" || !key.startsWith(sessionPrefix)) continue;
+      const sessionId = key.slice(sessionPrefix.length);
+      const snapshot = await store.getSnapshot(key);
+      const meta = snapshot?.session ?? snapshot?.metadata?.session ?? null;
+      sessions.push({ id: sessionId, ...(meta ?? {}) });
+    }
+    return sessions;
+  }
+
   function setEnabled(value) {
     enabled = Boolean(value);
     if (!enabled && timer) {
@@ -99,6 +164,10 @@ export function createPersistenceManager(options = {}) {
     schedulePersist,
     flushNow,
     restoreState,
+    saveSession,
+    restoreSession,
+    deleteSession,
+    listSessions,
     setEnabled,
     getStatus,
     close

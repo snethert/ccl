@@ -122,6 +122,7 @@ Exit criteria:
 
 ## Phase 4: World State and Sessions
 Outcome: Persistent workspace state and psychological safety.
+Detailed execution plan: `web-ide/phase-4/implementation-plan.md`.
 
 1. Workspace snapshots.
 - Persist UI layout, transcript, history, watches, and inspector pins.

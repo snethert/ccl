@@ -1,14 +1,6 @@
 {
-  "version": "0",
   "state": {
-    "commands": {
-      "issue.delete": {
-        "enabled": false,
-        "reason": "Nothing selected.",
-        "reasonId": "reason-1"
-      }
-    },
-    "commandHistory": [],
+    "activeSessionId": null,
     "capabilities": {
       "granted": [],
       "log": [],
@@ -20,9 +12,14 @@
     },
     "capabilityRequestSeq": 1,
     "capabilityRequests": [],
-    "domEscapes": [],
-    "editGroups": [],
-    "editSeq": 1,
+    "commandHistory": [],
+    "commands": {
+      "issue.delete": {
+        "enabled": false,
+        "reason": "Nothing selected.",
+        "reasonId": "reason-1"
+      }
+    },
     "disableReasons": {
       "reason-1": {
         "details": {},
@@ -31,6 +28,9 @@
         "ts": null
       }
     },
+    "domEscapes": [],
+    "editGroups": [],
+    "editSeq": 1,
     "errors": [],
     "eventLog": {
       "capacity": 256,
@@ -51,12 +51,6 @@
           "type": "command:disable"
         }
       ]
-    },
-    "ui": {
-      "history": [],
-      "nextTurnId": 1,
-      "queue": [],
-      "turn": null
     },
     "focus": {
       "presentationId": null,
@@ -91,6 +85,7 @@
       "layout": 0,
       "presentation": 0,
       "reason": 2,
+      "session": 0,
       "task": 1,
       "widget": 1,
       "window": 1,
@@ -106,10 +101,12 @@
       "byPresentation": {},
       "entries": {},
       "entryOrder": [],
-      "recordings": {},
-      "recordingOrder": []
+      "recordingOrder": [],
+      "recordings": {}
     },
     "selection": null,
+    "sessionOrder": [],
+    "sessions": {},
     "tasks": {
       "t1": {
         "activeWindowId": "w1",
@@ -196,6 +193,12 @@
         "xxl": 32
       }
     },
+    "ui": {
+      "history": [],
+      "nextTurnId": 1,
+      "queue": [],
+      "turn": null
+    },
     "watchSeq": 1,
     "watches": [],
     "widgets": {
@@ -209,6 +212,7 @@
         "windowId": "w1"
       }
     },
+    "windowCauses": {},
     "windows": {
       "w1": {
         "id": "w1",
@@ -219,7 +223,6 @@
         "title": "Main"
       }
     },
-    "windowCauses": {},
     "workspace": {
       "activeTaskId": "t1",
       "id": "workspace-0",
@@ -229,5 +232,6 @@
       ],
       "title": "Default"
     }
-  }
+  },
+  "version": "0"
 }

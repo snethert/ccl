@@ -1,8 +1,6 @@
 {
-  "version": "0",
   "state": {
-    "commands": {},
-    "commandHistory": [],
+    "activeSessionId": null,
     "capabilities": {
       "granted": [],
       "log": [],
@@ -14,10 +12,12 @@
     },
     "capabilityRequestSeq": 1,
     "capabilityRequests": [],
+    "commandHistory": [],
+    "commands": {},
+    "disableReasons": {},
     "domEscapes": [],
     "editGroups": [],
     "editSeq": 1,
-    "disableReasons": {},
     "errors": [],
     "eventLog": {
       "capacity": 256,
@@ -76,12 +76,6 @@
         }
       ]
     },
-    "ui": {
-      "history": [],
-      "nextTurnId": 1,
-      "queue": [],
-      "turn": null
-    },
     "focus": null,
     "focusHistory": [],
     "focusReasons": {},
@@ -91,6 +85,7 @@
       "layout": 3,
       "presentation": 0,
       "reason": 0,
+      "session": 0,
       "task": 1,
       "widget": 1,
       "window": 1,
@@ -141,8 +136,8 @@
       "byPresentation": {},
       "entries": {},
       "entryOrder": [],
-      "recordings": {},
-      "recordingOrder": []
+      "recordingOrder": [],
+      "recordings": {}
     },
     "selection": {
       "anchorId": "issue-42",
@@ -152,6 +147,19 @@
       "targetIds": [
         "issue-42"
       ]
+    },
+    "sessionOrder": [],
+    "sessions": {},
+    "tasks": {
+      "t1": {
+        "activeWindowId": "w1",
+        "id": "t1",
+        "metadata": {},
+        "title": "Test",
+        "windowIds": [
+          "w1"
+        ]
+      }
     },
     "theme": {
       "color": {
@@ -228,19 +236,14 @@
         "xxl": 32
       }
     },
+    "ui": {
+      "history": [],
+      "nextTurnId": 1,
+      "queue": [],
+      "turn": null
+    },
     "watchSeq": 1,
     "watches": [],
-    "tasks": {
-      "t1": {
-        "activeWindowId": "w1",
-        "id": "t1",
-        "metadata": {},
-        "title": "Test",
-        "windowIds": [
-          "w1"
-        ]
-      }
-    },
     "widgets": {
       "widget-0": {
         "childIds": [],
@@ -252,6 +255,7 @@
         "windowId": "w1"
       }
     },
+    "windowCauses": {},
     "windows": {
       "w1": {
         "id": "w1",
@@ -262,7 +266,6 @@
         "title": "Main"
       }
     },
-    "windowCauses": {},
     "workspace": {
       "activeTaskId": "t1",
       "id": "workspace-0",
@@ -272,5 +275,6 @@
       ],
       "title": "Default"
     }
-  }
+  },
+  "version": "0"
 }

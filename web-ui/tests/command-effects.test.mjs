@@ -59,6 +59,14 @@ test("dispatchCommandOutput routes clipboard and runtime channels", () => {
   assert.equal(restarted.handled, true);
   assert.equal(restarted.channel, "runtime");
   assert.equal(runtime.restartId, "rst-1");
+
+  const sessionSaved = dispatchCommandOutput(
+    { kind: "session.save", sessionId: "session-1" },
+    handlers
+  );
+  assert.equal(sessionSaved.handled, true);
+  assert.equal(sessionSaved.channel, "runtime");
+  assert.equal(runtime.sessionId, "session-1");
 });
 
 test("handleCommandResultEffects returns non-handled for commands without output", () => {

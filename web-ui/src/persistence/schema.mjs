@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = "3";
+export const SCHEMA_VERSION = "4";
 export const DEFAULT_STORE_NAME = "web-ui-persistence";
 export const DEFAULT_STORE_VERSION = 1;
 export const DEFAULT_STORE_BUCKET = "snapshots";

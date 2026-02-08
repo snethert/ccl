@@ -175,6 +175,59 @@ export function createLayout(rootSpec, counters) {
   return normalizeLayout({ root: rootSpec }, counters);
 }
 
+export function repairLayout(layout, windows = {}) {
+  if (!layout || !layout.nodes) return null;
+  const nodes = {};
+  for (const [id, node] of Object.entries(layout.nodes)) {
+    nodes[id] = {
+      id: node.id,
+      kind: node.kind,
+      children: Array.isArray(node.children) ? [...node.children] : [],
+      props: { ...(node.props ?? {}) }
+    };
+  }
+  const validWindows = new Set(Object.keys(windows ?? {}));
+
+  function prune(nodeId) {
+    const node = nodes[nodeId];
+    if (!node) return null;
+    if (node.kind === "leaf") {
+      const windowId = node.props?.windowId ?? null;
+      if (windowId && !validWindows.has(windowId)) {
+        delete nodes[nodeId];
+        return null;
+      }
+      return nodeId;
+    }
+    const nextChildren = [];
+    for (const childId of node.children ?? []) {
+      const kept = prune(childId);
+      if (kept) nextChildren.push(kept);
+    }
+    if (nextChildren.length === 0) {
+      delete nodes[nodeId];
+      return null;
+    }
+    const props = { ...(node.props ?? {}) };
+    if (node.kind === "split") {
+      props.weights = normalizeSplitWeights(nextChildren.length, props.weights, props.ratio);
+      delete props.ratio;
+    }
+    if (node.kind === "tabs") {
+      props.activeId = nextChildren.includes(props.activeId) ? props.activeId : nextChildren[0] ?? null;
+    }
+    nodes[nodeId] = normalizeLayoutNode({ ...node, children: nextChildren, props });
+    return nodeId;
+  }
+
+  let rootId = prune(layout.rootId);
+  if (!rootId) {
+    rootId = Object.keys(nodes)[0] ?? null;
+  }
+  if (!rootId) return null;
+  return { rootId, nodes };
+}
+
 export function splitLayoutNode(layout, counters, targetId, axis = "h", ratio = 0.5, options = {}) {
   const normalized = normalizeLayout(layout, counters);
   if (!normalized.layout) {

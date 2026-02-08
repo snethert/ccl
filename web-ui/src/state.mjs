@@ -38,7 +38,7 @@ import { normalizeThemeTokens } from "./theme.mjs";
 import { normalizeRestart } from "./conditions.mjs";
 import { revalidatePresentations as revalidatePresentationsCore } from "./world-state.mjs";
 
-const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layout", "reason", "error", "job"];
+const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layout", "reason", "error", "job", "session"];
 const UI_TURN_PHASES = ["signals", "commands", "render", "backend", "idle"];
 const UI_TURN_HISTORY_LIMIT = 8;
 const DOM_ESCAPE_HISTORY_LIMIT = 32;
@@ -86,6 +86,13 @@ export const TASK_LIST_COMMAND = "ui.task.list";
 export const TASK_SWITCH_COMMAND = "ui.task.switch";
 export const TASK_CLOSE_COMMAND = "ui.task.close";
 export const TASK_ARCHIVE_COMMAND = "ui.task.archive";
+export const SESSION_LIST_COMMAND = "ui.session.list";
+export const SESSION_REFRESH_COMMAND = "ui.session.refresh";
+export const SESSION_CREATE_COMMAND = "ui.session.create";
+export const SESSION_OPEN_COMMAND = "ui.session.open";
+export const SESSION_SAVE_COMMAND = "ui.session.save";
+export const SESSION_RENAME_COMMAND = "ui.session.rename";
+export const SESSION_DELETE_COMMAND = "ui.session.delete";
 export const LAYOUT_SPLIT_COMMAND = "ui.layout.split";
 export const LAYOUT_TABS_COMMAND = "ui.layout.tabs";
 export const LAYOUT_DOCK_COMMAND = "ui.layout.dock";
@@ -163,6 +170,60 @@ function normalizeWidget(widget) {
     props: widget.props ?? {},
     model: widget.model ?? {}
   };
+}
+
+function normalizeSession(session) {
+  if (!session || typeof session !== "object") return null;
+  return {
+    id: session.id,
+    name: session.name ?? "Session",
+    notes: session.notes ?? "",
+    createdAt: Number.isInteger(session.createdAt) ? session.createdAt : null,
+    lastOpenedAt: Number.isInteger(session.lastOpenedAt) ? session.lastOpenedAt : null,
+    lastSavedAt: Number.isInteger(session.lastSavedAt) ? session.lastSavedAt : null,
+    metadata: session.metadata ?? {}
+  };
+}
+
+function normalizeSessions(sessions) {
+  if (!sessions || typeof sessions !== "object") return {};
+  const out = {};
+  for (const [id, session] of Object.entries(sessions)) {
+    const normalized = normalizeSession({ ...session, id: session.id ?? id });
+    if (normalized && normalized.id) {
+      out[normalized.id] = normalized;
+    }
+  }
+  return out;
+}
+
+function normalizeSessionOrder(sessions, order) {
+  const ids = Object.keys(sessions ?? {});
+  const seen = new Set();
+  const next = [];
+  if (Array.isArray(order)) {
+    for (const id of order) {
+      if (typeof id !== "string") continue;
+      if (!sessions[id] || seen.has(id)) continue;
+      seen.add(id);
+      next.push(id);
+    }
+  }
+  for (const id of ids) {
+    if (seen.has(id)) continue;
+    next.push(id);
+  }
+  return next;
+}
+
+function normalizeActiveSessionId(sessions, activeId, order) {
+  if (activeId && sessions?.[activeId]) return activeId;
+  const ordered = Array.isArray(order) ? order : [];
+  for (const id of ordered) {
+    if (sessions?.[id]) return id;
+  }
+  const first = Object.keys(sessions ?? {})[0];
+  return first ?? null;
 }
 
 function normalizePresentation(presentation) {
@@ -603,6 +664,9 @@ export function createState(options = {}) {
   const capabilityRequests = normalizeCapabilityRequests(options.capabilityRequests ?? null);
   const capabilityPolicy = normalizeCapabilityPolicy(options.capabilityPolicy ?? null);
   const capabilityRequestSeq = normalizeCapabilityRequestSeq(options.capabilityRequestSeq ?? null, capabilityRequests);
+  const sessions = normalizeSessions(options.sessions ?? null);
+  const sessionOrder = normalizeSessionOrder(sessions, options.sessionOrder ?? null);
+  const activeSessionId = normalizeActiveSessionId(sessions, options.activeSessionId ?? null, sessionOrder);
   let state = {
     ...options,
     workspace: options.workspace ?? null,
@@ -622,6 +686,9 @@ export function createState(options = {}) {
     capabilityRequests,
     capabilityPolicy,
     capabilityRequestSeq,
+    sessions,
+    sessionOrder,
+    activeSessionId,
     theme: normalizeThemeTokens(options.theme ?? null),
     focus: normalizeFocusTarget(options.focus ?? null),
     focusHistory: normalizeFocusHistory(options.focusHistory ?? []),
@@ -772,6 +839,95 @@ export function closeTask(state, taskId, options = {}) {
     }
   }
   return nextState;
+}
+
+export function createSession(state, options = {}) {
+  const alloc = allocateId(state.idCounters, "session", "session");
+  const now = Number.isInteger(options.now) ? options.now : null;
+  const name =
+    options.name ??
+    (alloc.id ? `Session ${alloc.id.replace("session-", "")}` : "Session");
+  const session = normalizeSession({
+    id: alloc.id,
+    name,
+    notes: options.notes ?? "",
+    createdAt: now,
+    lastOpenedAt: now,
+    lastSavedAt: null,
+    metadata: options.metadata ?? {}
+  });
+  const sessions = { ...(state.sessions ?? {}), [session.id]: session };
+  const sessionOrder = normalizeSessionOrder(sessions, [...(state.sessionOrder ?? []), session.id]);
+  return {
+    ...state,
+    idCounters: alloc.counters,
+    sessions,
+    sessionOrder,
+    activeSessionId: session.id
+  };
+}
+
+export function renameSession(state, sessionId, name, options = {}) {
+  if (!sessionId) return state;
+  const session = state.sessions?.[sessionId];
+  if (!session) return state;
+  const next = {
+    ...session,
+    name: name ?? session.name,
+    notes: options.notes ?? session.notes
+  };
+  return {
+    ...state,
+    sessions: { ...(state.sessions ?? {}), [sessionId]: next }
+  };
+}
+
+export function openSession(state, sessionId, options = {}) {
+  if (!sessionId) return state;
+  const session = state.sessions?.[sessionId];
+  if (!session) return state;
+  const now = Number.isInteger(options.now) ? options.now : null;
+  const nextSession = {
+    ...session,
+    lastOpenedAt: now ?? session.lastOpenedAt
+  };
+  return {
+    ...state,
+    sessions: { ...(state.sessions ?? {}), [sessionId]: nextSession },
+    activeSessionId: sessionId
+  };
+}
+
+export function saveSession(state, sessionId, options = {}) {
+  if (!sessionId) return state;
+  const session = state.sessions?.[sessionId];
+  if (!session) return state;
+  const now = Number.isInteger(options.now) ? options.now : null;
+  const nextSession = {
+    ...session,
+    lastSavedAt: now ?? session.lastSavedAt
+  };
+  return {
+    ...state,
+    sessions: { ...(state.sessions ?? {}), [sessionId]: nextSession }
+  };
+}
+
+export function deleteSession(state, sessionId) {
+  if (!sessionId || !state.sessions?.[sessionId]) return state;
+  const sessions = { ...(state.sessions ?? {}) };
+  delete sessions[sessionId];
+  const sessionOrder = normalizeSessionOrder(sessions, (state.sessionOrder ?? []).filter((id) => id !== sessionId));
+  const nextActive =
+    state.activeSessionId === sessionId
+      ? normalizeActiveSessionId(sessions, null, sessionOrder)
+      : state.activeSessionId;
+  return {
+    ...state,
+    sessions,
+    sessionOrder,
+    activeSessionId: nextActive
+  };
 }
 
 export function addWindow(state, window) {
@@ -2247,6 +2403,32 @@ function buildTaskListItems(state, options = {}) {
   return items;
 }
 
+function buildSessionItems(state, options = {}) {
+  const sessions = state.sessions ?? {};
+  const order = normalizeSessionOrder(sessions, state.sessionOrder ?? null);
+  const activeId = state.activeSessionId ?? null;
+  const items = [];
+  for (const id of order) {
+    const session = sessions[id];
+    if (!session) continue;
+    const flags = [];
+    if (id === activeId) flags.push("active");
+    const suffix = flags.length > 0 ? ` (${flags.join(", ")})` : "";
+    items.push({
+      id,
+      label: `${session.name ?? "Session"}${suffix}`,
+      sessionId: id,
+      name: session.name ?? "Session",
+      notes: session.notes ?? "",
+      selected: id === activeId
+    });
+  }
+  if (items.length === 0) {
+    items.push({ id: "session-none", label: "No sessions", disabled: true, selectable: false });
+  }
+  return items;
+}
+
 function summarizeWindows(state) {
   const items = [];
   const entries = Object.values(state.windows ?? {}).sort((a, b) => a.id.localeCompare(b.id));
@@ -3157,6 +3339,112 @@ export function resolveCapabilityRequestSelection(state, options = {}) {
   return { requestId: selectedId, request, windowId };
 }
 
+export function openSessionListWindow(state, options = {}) {
+  const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
+  if (!taskId) {
+    throw new Error("Session list requires a task");
+  }
+  const existing = findWindowByRole(state, "session-list", taskId);
+  if (existing) {
+    return refreshSessionListWindow(state, existing.id, options);
+  }
+
+  const allocWindow = allocateId(state.idCounters, "window", "session-list");
+  let nextState = {
+    ...state,
+    idCounters: allocWindow.counters
+  };
+  nextState = addWindow(nextState, {
+    id: allocWindow.id,
+    taskId,
+    kind: "session-list",
+    title: "Sessions",
+    metadata: { role: "session-list" }
+  });
+
+  const items = buildSessionItems(nextState);
+
+  let ids = {};
+  let rootAlloc = allocateWidgetId(nextState, "session-list-root");
+  nextState = addWidget(rootAlloc.state, {
+    id: rootAlloc.id,
+    kind: "container",
+    windowId: allocWindow.id,
+    props: { className: "ui-session-list-root" }
+  });
+  ids.rootId = rootAlloc.id;
+
+  let labelAlloc = allocateWidgetId(nextState, "session-list-label");
+  nextState = addWidget(labelAlloc.state, {
+    id: labelAlloc.id,
+    kind: "label",
+    parentId: ids.rootId,
+    props: { text: "Sessions", className: "ui-window-title ui-session-list-title" }
+  });
+  ids.labelId = labelAlloc.id;
+
+  let listAlloc = allocateWidgetId(nextState, "session-list");
+  nextState = addWidget(listAlloc.state, {
+    id: listAlloc.id,
+    kind: "list",
+    parentId: ids.rootId,
+    props: {
+      items,
+      itemCommand: SESSION_OPEN_COMMAND,
+      selectionCommand: LIST_SELECTION_UPDATE_COMMAND,
+      selectionMode: "single",
+      selectionActionBar: true,
+      selectionActions: [
+        { id: "open", label: "Open" },
+        { id: "save", label: "Save" },
+        { id: "rename", label: "Rename" },
+        { id: "delete", label: "Delete" }
+      ],
+      selectionActionCommands: {
+        open: SESSION_OPEN_COMMAND,
+        save: SESSION_SAVE_COMMAND,
+        rename: SESSION_RENAME_COMMAND,
+        delete: SESSION_DELETE_COMMAND
+      }
+    }
+  });
+  ids.listId = listAlloc.id;
+
+  nextState = updateWindow(nextState, allocWindow.id, (window) => ({
+    ...window,
+    metadata: {
+      ...(window.metadata ?? {}),
+      role: "session-list",
+      widgets: ids
+    }
+  }));
+
+  return nextState;
+}
+
+export function refreshSessionListWindow(state, windowId, options = {}) {
+  const window = state.windows?.[windowId];
+  if (!window || window.metadata?.role !== "session-list") {
+    throw new Error("Window is not a session list");
+  }
+  const widgets = window.metadata?.widgets ?? {};
+  if (!widgets.listId) {
+    return state;
+  }
+  const items = buildSessionItems(state);
+  return updateWidget(state, widgets.listId, (widget) => ({
+    ...widget,
+    props: { ...(widget.props ?? {}), items }
+  }));
+}
+
+function refreshSessionListIfOpen(state, options = {}) {
+  const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
+  const windowId = findWindowByRole(state, "session-list", taskId)?.id ?? null;
+  if (!windowId) return state;
+  return refreshSessionListWindow(state, windowId, options);
+}
+
 export function openTaskListWindow(state, options = {}) {
   const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
   if (!taskId) {
@@ -3443,6 +3731,19 @@ function resolveTaskTargetId(state, ctx, options = {}) {
   );
 }
 
+function resolveSessionTargetId(state, ctx, options = {}) {
+  return (
+    options.sessionId ??
+    ctx?.sessionId ??
+    ctx?.targetSessionId ??
+    ctx?.item?.sessionId ??
+    ctx?.itemId ??
+    ctx?.payload?.sessionId ??
+    state.activeSessionId ??
+    null
+  );
+}
+
 function findLayoutLeafForWindow(layout, windowId) {
   if (!layout?.nodes || !windowId) return null;
   for (const [id, node] of Object.entries(layout.nodes)) {
@@ -3723,6 +4024,153 @@ export function registerTaskCommands(registry, options = {}) {
         return ctx.state;
       }
       return archiveTask(ctx.state, target, { reason: "command" });
+    }
+  });
+
+  return registry;
+}
+
+export function registerSessionCommands(registry, options = {}) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  const listId = options.listCommandId ?? SESSION_LIST_COMMAND;
+  const refreshId = options.refreshCommandId ?? SESSION_REFRESH_COMMAND;
+  const createId = options.createCommandId ?? SESSION_CREATE_COMMAND;
+  const openId = options.openCommandId ?? SESSION_OPEN_COMMAND;
+  const saveId = options.saveCommandId ?? SESSION_SAVE_COMMAND;
+  const renameId = options.renameCommandId ?? SESSION_RENAME_COMMAND;
+  const deleteId = options.deleteCommandId ?? SESSION_DELETE_COMMAND;
+
+  const ensure = (id, command) => {
+    if (!registry.commands.has(id)) {
+      registerCommand(registry, { ...command, id });
+    }
+  };
+
+  ensure(listId, {
+    title: "List Sessions",
+    doc: "Open the session list for the current workspace.",
+    exec: (ctx) =>
+      openSessionListWindow(ctx.state, {
+        taskId: ctx.taskId ?? ctx.state.workspace?.activeTaskId ?? null
+      })
+  });
+
+  ensure(refreshId, {
+    title: "Refresh Sessions",
+    doc: "Refresh the session list window.",
+    exec: (ctx) => {
+      const windowId = ctx.windowId ?? ctx.payload?.windowId ?? null;
+      if (!windowId) return ctx.state;
+      return refreshSessionListWindow(ctx.state, windowId, ctx);
+    }
+  });
+
+  ensure(createId, {
+    title: "Create Session",
+    doc: "Create a new session from the current workspace state.",
+    exec: (ctx) => {
+      const nextState = createSession(ctx.state, {
+        name: ctx.name ?? ctx.payload?.name ?? null,
+        notes: ctx.notes ?? ctx.payload?.notes ?? "",
+        now: ctx.now ?? null
+      });
+      const refreshed = refreshSessionListIfOpen(nextState, { taskId: ctx.taskId ?? null });
+      return {
+        state: refreshed,
+        output: {
+          kind: "session.save",
+          sessionId: refreshed.activeSessionId
+        }
+      };
+    }
+  });
+
+  ensure(openId, {
+    title: "Open Session",
+    doc: "Open the selected session.",
+    enabled: (ctx) => {
+      const sessionId = resolveSessionTargetId(ctx.state, ctx);
+      return sessionId && ctx.state.sessions?.[sessionId]
+        ? { enabled: true, reason: null }
+        : { enabled: false, reason: "No target session" };
+    },
+    exec: (ctx) => {
+      const sessionId = resolveSessionTargetId(ctx.state, ctx);
+      if (!sessionId) return ctx.state;
+      const nextState = openSession(ctx.state, sessionId, { now: ctx.now ?? null });
+      const refreshed = refreshSessionListIfOpen(nextState, { taskId: ctx.taskId ?? null });
+      return {
+        state: refreshed,
+        output: { kind: "session.open", sessionId }
+      };
+    }
+  });
+
+  ensure(saveId, {
+    title: "Save Session",
+    doc: "Persist the selected session snapshot.",
+    enabled: (ctx) => {
+      const sessionId = resolveSessionTargetId(ctx.state, ctx);
+      return sessionId && ctx.state.sessions?.[sessionId]
+        ? { enabled: true, reason: null }
+        : { enabled: false, reason: "No target session" };
+    },
+    exec: (ctx) => {
+      const sessionId = resolveSessionTargetId(ctx.state, ctx);
+      if (!sessionId) return ctx.state;
+      const nextState = saveSession(ctx.state, sessionId, { now: ctx.now ?? null });
+      const refreshed = refreshSessionListIfOpen(nextState, { taskId: ctx.taskId ?? null });
+      return {
+        state: refreshed,
+        output: { kind: "session.save", sessionId }
+      };
+    }
+  });
+
+  ensure(renameId, {
+    title: "Rename Session",
+    doc: "Rename the selected session.",
+    enabled: (ctx) => {
+      const sessionId = resolveSessionTargetId(ctx.state, ctx);
+      return sessionId && ctx.state.sessions?.[sessionId]
+        ? { enabled: true, reason: null }
+        : { enabled: false, reason: "No target session" };
+    },
+    exec: (ctx) => {
+      const sessionId = resolveSessionTargetId(ctx.state, ctx);
+      if (!sessionId) return ctx.state;
+      const name = ctx.name ?? ctx.payload?.name ?? ctx.inputValue ?? null;
+      const nextState = renameSession(ctx.state, sessionId, name, {
+        notes: ctx.notes ?? ctx.payload?.notes ?? undefined
+      });
+      const refreshed = refreshSessionListIfOpen(nextState, { taskId: ctx.taskId ?? null });
+      return {
+        state: refreshed,
+        output: { kind: "session.rename", sessionId, name }
+      };
+    }
+  });
+
+  ensure(deleteId, {
+    title: "Delete Session",
+    doc: "Delete the selected session.",
+    enabled: (ctx) => {
+      const sessionId = resolveSessionTargetId(ctx.state, ctx);
+      return sessionId && ctx.state.sessions?.[sessionId]
+        ? { enabled: true, reason: null }
+        : { enabled: false, reason: "No target session" };
+    },
+    exec: (ctx) => {
+      const sessionId = resolveSessionTargetId(ctx.state, ctx);
+      if (!sessionId) return ctx.state;
+      const nextState = deleteSession(ctx.state, sessionId);
+      const refreshed = refreshSessionListIfOpen(nextState, { taskId: ctx.taskId ?? null });
+      return {
+        state: refreshed,
+        output: { kind: "session.delete", sessionId }
+      };
     }
   });
 

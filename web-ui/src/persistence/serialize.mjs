@@ -1,12 +1,13 @@
 import { createState } from "../state.mjs";
+import { repairLayout } from "../layout.mjs";
 import { normalizeFocusTarget } from "../focus.mjs";
 import { normalizeSelection } from "../selection.mjs";
 import { allocateId, initIdCounters } from "../ids.mjs";
-import { revalidatePresentations } from "../world-state.mjs";
+import { revalidatePresentations, markPresentationStale } from "../world-state.mjs";
 import { SCHEMA_VERSION } from "./schema.mjs";
 import { applyMigrations } from "./migrate.mjs";
 
-const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layout", "reason", "error", "job"];
+const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layout", "reason", "error", "job", "session"];
 const DEFAULT_RECORDING_MAX_ENTRIES = 5000;
 const DEFAULT_RECORDING_MAX_BYTES = 20 * 1024 * 1024;
 
@@ -31,6 +32,9 @@ const DEFAULT_ALLOWLIST = {
   presentations: true,
   recordingStore: true,
   commandHistory: true,
+  sessions: true,
+  sessionOrder: true,
+  activeSessionId: true,
   idCounters: true
 };
 
@@ -373,7 +377,8 @@ function rebuildIdCounters(state) {
     layout: Object.keys(state.layout?.nodes ?? {}),
     reason: Object.keys(state.focusReasons ?? {}),
     error: (state.errors ?? []).map((entry) => entry?.id),
-    job: (state.jobs ?? []).map((entry) => entry?.id)
+    job: (state.jobs ?? []).map((entry) => entry?.id),
+    session: Object.keys(state.sessions ?? {})
   };
   for (const kind of ID_KINDS) {
     const ids = allIds[kind] ?? [];
@@ -411,6 +416,9 @@ export function sanitizeState(state, options = {}) {
   if (allowlist.presentations) out.presentations = sanitizeMap(state.presentations ?? {});
   if (allowlist.recordingStore) out.recordingStore = sanitizeRecord(state.recordingStore ?? {});
   if (allowlist.commandHistory) out.commandHistory = sanitizeValue(state.commandHistory ?? []) ?? [];
+  if (allowlist.sessions) out.sessions = sanitizeMap(state.sessions ?? {});
+  if (allowlist.sessionOrder) out.sessionOrder = sanitizeValue(state.sessionOrder ?? []) ?? [];
+  if (allowlist.activeSessionId) out.activeSessionId = sanitizeValue(state.activeSessionId ?? null) ?? null;
   if (allowlist.idCounters) out.idCounters = sanitizeCounters(state.idCounters ?? {});
   return out;
 }
@@ -431,6 +439,7 @@ export function createSnapshot(state, options = {}) {
     createdAt: now(),
     workspaceId: finalState.workspace?.id ?? state.workspace?.id ?? null,
     metadata: sanitizeValue(options.metadata ?? {}) ?? {},
+    session: sanitizeValue(options.session ?? null) ?? null,
     state: finalState
   };
 }
@@ -459,15 +468,35 @@ export function restoreStateFromSnapshot(snapshot, options = {}) {
     widgets
   };
 
-  const finalState = {
+  const repairedLayout = repairLayout(nextState.layout, normalizedWindows);
+  const layoutState = {
     ...nextState,
-    selection: normalizeSelectionState(nextState.selection),
-    focus: normalizeFocus(nextState),
-    idCounters: rebuildIdCounters(nextState)
+    layout: repairedLayout
+  };
+
+  const finalState = {
+    ...layoutState,
+    selection: normalizeSelectionState(layoutState.selection),
+    focus: normalizeFocus(layoutState),
+    idCounters: rebuildIdCounters(layoutState)
   };
 
   const resolver = options.presentationResolver ?? null;
   if (typeof resolver !== "function") {
+    if (options.markStalePresentations) {
+      const presentations = finalState.presentations ?? {};
+      const next = { ...presentations };
+      const stale = [];
+      for (const [id, presentation] of Object.entries(presentations)) {
+        next[id] = markPresentationStale(presentation, "restore");
+        stale.push(id);
+      }
+      return {
+        state: { ...finalState, presentations: next },
+        snapshot: migrated,
+        stalePresentations: stale
+      };
+    }
     return { state: finalState, snapshot: migrated };
   }
   const revalidated = revalidatePresentations(finalState, resolver);

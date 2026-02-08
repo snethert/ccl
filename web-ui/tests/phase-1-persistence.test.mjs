@@ -12,7 +12,7 @@ import {
 } from "../src/index.mjs";
 
 test("phase-1 persistence schema version is allocated", () => {
-  assert.equal(PERSISTENCE_SCHEMA_VERSION, "3");
+  assert.equal(PERSISTENCE_SCHEMA_VERSION, "4");
 });
 
 test("phase-1 persistence snapshot truncates recording store by budget", () => {
@@ -32,7 +32,7 @@ test("phase-1 persistence snapshot truncates recording store by budget", () => {
   assert.equal(snapshot.state.recordingStore.truncation.droppedEntries, 1);
 });
 
-test("phase-1 persistence migrates v2 snapshot envelope to v3", () => {
+test("phase-1 persistence migrates v2 snapshot envelope to v4", () => {
   const v2Snapshot = {
     schemaVersion: "2",
     createdAt: 0,
@@ -47,7 +47,7 @@ test("phase-1 persistence migrates v2 snapshot envelope to v3", () => {
     }
   };
   const restored = restoreStateFromSnapshot(v2Snapshot);
-  assert.equal(restored.snapshot.schemaVersion, "3");
+  assert.equal(restored.snapshot.schemaVersion, "4");
   assert.ok(Array.isArray(restored.snapshot.migrationLog));
-  assert.equal(restored.snapshot.migrationLog.at(-1).toVersion, "3");
+  assert.equal(restored.snapshot.migrationLog.at(-1).toVersion, "4");
 });

@@ -46,6 +46,14 @@ export function dispatchCommandOutput(output, handlers = {}, meta = {}) {
     return { handled: true, channel: "runtime", reason: null };
   }
 
+  if (output.kind.startsWith("session.")) {
+    if (typeof handlers.runtimeDispatch !== "function") {
+      return { handled: false, channel: "runtime", reason: "No runtime handler" };
+    }
+    handlers.runtimeDispatch({ output, meta });
+    return { handled: true, channel: "runtime", reason: null };
+  }
+
   if (typeof handlers.unhandled === "function") {
     handlers.unhandled({ output, meta });
     return { handled: true, channel: "unhandled", reason: null };
