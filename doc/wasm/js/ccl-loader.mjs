@@ -326,6 +326,109 @@ function allocScratch(memory, size) {
   return base;
 }
 
+export function normalizeBundleEncoding(value, fieldName = "encoding") {
+  if (value == null || value === "" || value === "raw") return null;
+  const normalized = String(value).toLowerCase();
+  if (normalized === "br" || normalized === "brotli") return "br";
+  if (normalized === "gzip" || normalized === "gz") return "gzip";
+  if (normalized === "deflate") return "deflate";
+  if (normalized === "deflate-raw") return "deflate-raw";
+  throw new Error(`unsupported ${fieldName}: ${value}`);
+}
+
+function asU8(bytes) {
+  if (bytes instanceof Uint8Array) return bytes;
+  if (bytes instanceof ArrayBuffer) return new Uint8Array(bytes);
+  if (ArrayBuffer.isView(bytes)) return new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  return Uint8Array.from(bytes ?? []);
+}
+
+async function decompressBytes(bytes, encoding) {
+  const input = asU8(bytes);
+  if (!encoding) return input;
+
+  if (typeof process !== "undefined" && process?.versions?.node) {
+    const zlib = await import("node:zlib");
+    switch (encoding) {
+      case "br":
+        return asU8(zlib.brotliDecompressSync(input));
+      case "gzip":
+        return asU8(zlib.gunzipSync(input));
+      case "deflate":
+        return asU8(zlib.inflateSync(input));
+      case "deflate-raw":
+        return asU8(zlib.inflateRawSync(input));
+      default:
+        throw new Error(`unsupported compression encoding: ${encoding}`);
+    }
+  }
+
+  if (typeof DecompressionStream !== "undefined" && typeof Response !== "undefined") {
+    const format = encoding === "gzip" ? "gzip" : encoding === "deflate" ? "deflate" : null;
+    if (!format) {
+      throw new Error(`encoding ${encoding} requires node:zlib in this environment`);
+    }
+    const stream = new Response(input).body?.pipeThrough(new DecompressionStream(format));
+    if (!stream) throw new Error("decompression stream unavailable");
+    const out = await new Response(stream).arrayBuffer();
+    return new Uint8Array(out);
+  }
+
+  throw new Error(`cannot decode compressed bytes (${encoding}) in this environment`);
+}
+
+export function storedLengthFor(entry, rawField, storedField) {
+  if (Number.isFinite(entry?.[storedField])) return entry[storedField] >>> 0;
+  if (Number.isFinite(entry?.[rawField])) return entry[rawField] >>> 0;
+  return 0;
+}
+
+export async function decodeBundleBytes(bytes, encodingField, expectedLength, kind) {
+  const encoding = normalizeBundleEncoding(encodingField, `${kind} encoding`);
+  const decoded = await decompressBytes(bytes, encoding);
+  if (Number.isFinite(expectedLength)) {
+    const expected = expectedLength >>> 0;
+    if (decoded.length !== expected) {
+      throw new Error(`${kind} length mismatch: expected ${expected}, got ${decoded.length}`);
+    }
+  }
+  return decoded;
+}
+
+export function decodeBundleBytesSync(bytes, encodingField, expectedLength, kind, zlibImpl = null) {
+  const encoding = normalizeBundleEncoding(encodingField, `${kind} encoding`);
+  const input = asU8(bytes);
+  let decoded = input;
+  if (encoding) {
+    if (!zlibImpl) {
+      throw new Error(`cannot decode compressed bytes (${encoding}) without zlib implementation`);
+    }
+    switch (encoding) {
+      case "br":
+        decoded = asU8(zlibImpl.brotliDecompressSync(input));
+        break;
+      case "gzip":
+        decoded = asU8(zlibImpl.gunzipSync(input));
+        break;
+      case "deflate":
+        decoded = asU8(zlibImpl.inflateSync(input));
+        break;
+      case "deflate-raw":
+        decoded = asU8(zlibImpl.inflateRawSync(input));
+        break;
+      default:
+        throw new Error(`unsupported compression encoding: ${encoding}`);
+    }
+  }
+  if (Number.isFinite(expectedLength)) {
+    const expected = expectedLength >>> 0;
+    if (decoded.length !== expected) {
+      throw new Error(`${kind} length mismatch: expected ${expected}, got ${decoded.length}`);
+    }
+  }
+  return decoded;
+}
+
 export function installConstPoolBytes({
   kernel = null,
   kernelExports = null,
@@ -385,29 +488,92 @@ export async function installCompiledModulesFromBundle({
   let installed = 0;
   let failed = 0;
   const readBinary = typeof binaryReader === "function" ? binaryReader : null;
+  const spanKey = (offset, storedLength, encoding, rawLength) =>
+    `${offset >>> 0}:${storedLength >>> 0}:${encoding ?? "raw"}:${Number.isFinite(rawLength) ? (rawLength >>> 0) : 0}`;
+  const bumpRef = (table, key) => {
+    table.set(key, (table.get(key) ?? 0) + 1);
+  };
+  const moduleSpanRefCounts = new Map();
+  const constPoolSpanRefCounts = new Map();
+  for (const entry of modules) {
+    const moduleStoredLength = storedLengthFor(entry, "length", "moduleStoredLength");
+    const moduleEncoding = normalizeBundleEncoding(entry?.moduleEncoding ?? null, "module encoding");
+    if (Number.isFinite(entry?.offset) && moduleStoredLength > 0) {
+      const key = spanKey(entry.offset, moduleStoredLength, moduleEncoding, entry.length);
+      bumpRef(moduleSpanRefCounts, key);
+    }
+
+    const constPoolStoredLength = storedLengthFor(entry, "constPoolLength", "constPoolStoredLength");
+    const constPoolEncoding = normalizeBundleEncoding(entry?.constPoolEncoding ?? null, "const pool encoding");
+    if (Number.isFinite(entry?.constPoolOffset) && constPoolStoredLength > 0) {
+      const key = spanKey(entry.constPoolOffset, constPoolStoredLength, constPoolEncoding, entry.constPoolLength);
+      bumpRef(constPoolSpanRefCounts, key);
+    }
+  }
+
+  const moduleSpanCache = new Map();
+  const constPoolSpanCache = new Map();
   for (const entry of modules) {
     try {
       let moduleBytes = entry.moduleBytes ?? null;
       let constPoolBytes = entry.constPoolBytes ?? null;
-      if (!moduleBytes && binaryBytes && Number.isFinite(entry.offset) && Number.isFinite(entry.length)) {
+      const moduleStoredLength = storedLengthFor(entry, "length", "moduleStoredLength");
+      const moduleEncoding = normalizeBundleEncoding(entry.moduleEncoding ?? null, "module encoding");
+      if (!moduleBytes && binaryBytes && Number.isFinite(entry.offset) && moduleStoredLength > 0) {
         const start = entry.offset >>> 0;
-        const end = start + (entry.length >>> 0);
-        moduleBytes = binaryBytes.subarray(start, end);
-      } else if (!moduleBytes && readBinary && Number.isFinite(entry.offset) && Number.isFinite(entry.length)) {
+        const end = start + moduleStoredLength;
+        const cacheKey = spanKey(start, moduleStoredLength, moduleEncoding, entry.length);
+        const shouldCache = (moduleSpanRefCounts.get(cacheKey) ?? 0) > 1;
+        if (shouldCache && moduleSpanCache.has(cacheKey)) {
+          moduleBytes = moduleSpanCache.get(cacheKey);
+        } else {
+          const rawBytes = binaryBytes.subarray(start, end);
+          moduleBytes = await decodeBundleBytes(rawBytes, moduleEncoding, entry.length, "module");
+          if (shouldCache) moduleSpanCache.set(cacheKey, moduleBytes);
+        }
+      } else if (!moduleBytes && readBinary && Number.isFinite(entry.offset) && moduleStoredLength > 0) {
         const start = entry.offset >>> 0;
-        const length = entry.length >>> 0;
-        moduleBytes = await readBinary(start, length);
+        const cacheKey = spanKey(start, moduleStoredLength, moduleEncoding, entry.length);
+        const shouldCache = (moduleSpanRefCounts.get(cacheKey) ?? 0) > 1;
+        if (shouldCache && moduleSpanCache.has(cacheKey)) {
+          moduleBytes = moduleSpanCache.get(cacheKey);
+        } else {
+          const rawBytes = await readBinary(start, moduleStoredLength);
+          moduleBytes = await decodeBundleBytes(rawBytes, moduleEncoding, entry.length, "module");
+          if (shouldCache) moduleSpanCache.set(cacheKey, moduleBytes);
+        }
+      } else if (moduleBytes && moduleEncoding) {
+        moduleBytes = await decodeBundleBytes(moduleBytes, moduleEncoding, entry.length, "module");
       }
+      const constPoolStoredLength = storedLengthFor(entry, "constPoolLength", "constPoolStoredLength");
+      const constPoolEncoding = normalizeBundleEncoding(entry.constPoolEncoding ?? null, "const pool encoding");
       if (!constPoolBytes && binaryBytes &&
-          Number.isFinite(entry.constPoolOffset) && Number.isFinite(entry.constPoolLength)) {
+          Number.isFinite(entry.constPoolOffset) && constPoolStoredLength > 0) {
         const start = entry.constPoolOffset >>> 0;
-        const end = start + (entry.constPoolLength >>> 0);
-        constPoolBytes = binaryBytes.subarray(start, end);
+        const end = start + constPoolStoredLength;
+        const cacheKey = spanKey(start, constPoolStoredLength, constPoolEncoding, entry.constPoolLength);
+        const shouldCache = (constPoolSpanRefCounts.get(cacheKey) ?? 0) > 1;
+        if (shouldCache && constPoolSpanCache.has(cacheKey)) {
+          constPoolBytes = constPoolSpanCache.get(cacheKey);
+        } else {
+          const rawBytes = binaryBytes.subarray(start, end);
+          constPoolBytes = await decodeBundleBytes(rawBytes, constPoolEncoding, entry.constPoolLength, "const pool");
+          if (shouldCache) constPoolSpanCache.set(cacheKey, constPoolBytes);
+        }
       } else if (!constPoolBytes && readBinary &&
-          Number.isFinite(entry.constPoolOffset) && Number.isFinite(entry.constPoolLength)) {
+          Number.isFinite(entry.constPoolOffset) && constPoolStoredLength > 0) {
         const start = entry.constPoolOffset >>> 0;
-        const length = entry.constPoolLength >>> 0;
-        constPoolBytes = await readBinary(start, length);
+        const cacheKey = spanKey(start, constPoolStoredLength, constPoolEncoding, entry.constPoolLength);
+        const shouldCache = (constPoolSpanRefCounts.get(cacheKey) ?? 0) > 1;
+        if (shouldCache && constPoolSpanCache.has(cacheKey)) {
+          constPoolBytes = constPoolSpanCache.get(cacheKey);
+        } else {
+          const rawBytes = await readBinary(start, constPoolStoredLength);
+          constPoolBytes = await decodeBundleBytes(rawBytes, constPoolEncoding, entry.constPoolLength, "const pool");
+          if (shouldCache) constPoolSpanCache.set(cacheKey, constPoolBytes);
+        }
+      } else if (constPoolBytes && constPoolEncoding) {
+        constPoolBytes = await decodeBundleBytes(constPoolBytes, constPoolEncoding, entry.constPoolLength, "const pool");
       }
 
       if (!moduleBytes || moduleBytes.length === 0) {

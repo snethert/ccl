@@ -16,16 +16,19 @@ import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import * as zlib from "node:zlib";
 
 import { createMicrokernel } from "./microkernel.mjs";
 import {
   createCclImports,
   createSharedCclRuntime,
+  decodeBundleBytesSync,
   instantiateWasm,
   installCompiledModulesFromBundle,
   installConstPoolBytes,
   installCompiledModulesFromRegistry,
   installSubprimsTable,
+  storedLengthFor,
 } from "./ccl-loader.mjs";
 import { FILE_MODE_READ } from "./persist-service.mjs";
 
@@ -240,16 +243,27 @@ let compiledModulesHandle = null;
 let compiledModulesReader = null;
 let compiledModulesFd = null;
 const constPoolEntries = new Map();
+const constPoolSpanRefCounts = new Map();
+const constPoolSpanCache = new Map();
+const constPoolSpanKey = (offset, storedLength, encoding, rawLength) =>
+  `${offset >>> 0}:${storedLength >>> 0}:${encoding ?? "raw"}:${rawLength >>> 0}`;
 const constPoolsInstalled = new Set();
 for (const entry of Array.isArray(compiledModulesBundle?.modules) ? compiledModulesBundle.modules : []) {
   if (!Number.isFinite(entry?.entryIndex)) continue;
   if (!Number.isFinite(entry?.constPoolOffset) || !Number.isFinite(entry?.constPoolLength)) continue;
   const length = entry.constPoolLength >>> 0;
-  if (length === 0) continue;
+  const storedLength = storedLengthFor(entry, "constPoolLength", "constPoolStoredLength");
+  if (length === 0 || storedLength === 0) continue;
+  const encoding = entry.constPoolEncoding ?? null;
+  const key = constPoolSpanKey(entry.constPoolOffset, storedLength, encoding, length);
   constPoolEntries.set(entry.entryIndex >>> 0, {
     offset: entry.constPoolOffset >>> 0,
     length,
+    storedLength,
+    encoding,
+    key,
   });
+  constPoolSpanRefCounts.set(key, (constPoolSpanRefCounts.get(key) ?? 0) + 1);
 }
 if (compiledModulesBundle?.binary) {
   const binPath = path.join(path.dirname(modulesPath), compiledModulesBundle.binary);
@@ -316,26 +330,40 @@ function installConstPoolOnDemand(entryIndexRaw) {
   const info = constPoolEntries.get(entryIndex);
   if (!info) return 0;
 
-  const bytes = Buffer.allocUnsafe(info.length);
-  let total = 0;
-  while (total < info.length) {
-    const bytesRead = fsSync.readSync(
-      compiledModulesFd,
-      bytes,
-      total,
-      info.length - total,
-      info.offset + total,
-    );
-    if (bytesRead === 0) break;
-    total += bytesRead;
+  const shouldCache = (constPoolSpanRefCounts.get(info.key) ?? 0) > 1;
+  let decodedBytes = null;
+  if (shouldCache && constPoolSpanCache.has(info.key)) {
+    decodedBytes = constPoolSpanCache.get(info.key);
+  } else {
+    const bytes = Buffer.allocUnsafe(info.storedLength);
+    let total = 0;
+    while (total < info.storedLength) {
+      const bytesRead = fsSync.readSync(
+        compiledModulesFd,
+        bytes,
+        total,
+        info.storedLength - total,
+        info.offset + total,
+      );
+      if (bytesRead === 0) break;
+      total += bytesRead;
+    }
+    if (total !== info.storedLength) return 0;
+    try {
+      decodedBytes = decodeBundleBytesSync(bytes, info.encoding, info.length, "const pool", zlib);
+    } catch (_e) {
+      return 0;
+    }
+    if (shouldCache) {
+      constPoolSpanCache.set(info.key, decodedBytes);
+    }
   }
-  if (total !== info.length) return 0;
 
   const rc = installConstPoolBytes({
     kernelExports,
     memory: runtime.memory,
     entryIndex,
-    constPoolBytes: bytes,
+    constPoolBytes: decodedBytes,
   });
   if (rc === 0) return 0;
 

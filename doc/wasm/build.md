@@ -247,6 +247,28 @@ scripts/wasm/compile-wasm-fasls.sh --modules-out doc/wasm/wasm-runtime-modules.j
 ```
 This produces `doc/wasm/wasm-runtime-modules.json` plus the sidecar
 `doc/wasm/wasm-runtime-modules.bin` in the same directory.
+The bundle writer deduplicates identical const-pool payloads to keep the
+sidecar size bounded.
+
+If you already have a large legacy bundle, compact it in place without
+recompiling:
+
+```bash
+node scripts/wasm/compact-runtime-modules.mjs --manifest doc/wasm/wasm-runtime-modules.json --in-place
+```
+
+For stronger size reduction, also compress deduplicated const pools (gzip is
+browser-safe):
+
+```bash
+node scripts/wasm/compact-runtime-modules.mjs --manifest doc/wasm/wasm-runtime-modules.json --in-place --compress-const-pools
+```
+
+For max compression in Node-only workflows, use Brotli:
+
+```bash
+node scripts/wasm/compact-runtime-modules.mjs --manifest doc/wasm/wasm-runtime-modules.json --in-place --const-pool-encoding br --brotli-quality 7
+```
 
 2. Build the wasm boot image via cross-xload:
 
