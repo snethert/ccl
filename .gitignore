@@ -58,3 +58,6 @@ lisp-kernel/static-linuxppc/external-functions.h
 .env
 .env.*
 !.env.example
+
+# wasm generated bundle binaries
+/doc/wasm/wasm-runtime-modules.bin
