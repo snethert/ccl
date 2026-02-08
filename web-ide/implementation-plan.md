@@ -183,6 +183,8 @@ Exit criteria:
 
 ## Phase 7: Quality Gates
 Outcome: Reliability at scale.
+Status: Planned (February 8, 2026).
+Detailed execution plan: `web-ide/phase-7/implementation-plan.md`.
 
 1. Performance budgets.
 - Render time targets and transcript size limits.
@@ -205,4 +207,4 @@ Exit criteria:
 - Theme drift: enforce token-only styling across renderers.
 
 ## Immediate Next Step
-Start Phase 7 M1: define and enforce performance budgets for render/update paths and transcript scale targets.
+Execute M1 `QZ1` from `web-ide/phase-7/implementation-plan.md`: define quality budget contracts and land instrumentation hooks before optimization work.

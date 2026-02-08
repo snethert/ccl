@@ -95,12 +95,9 @@
       (let* ((raw (uvref fn 0)))
         (unless (fixnump raw)
           (error "Unexpected function entry: ~s" raw))
-        (let* ((host-shift (arch::target-fixnum-shift
-                            (backend-target-arch *host-backend*)))
-               (target-shift (arch::target-fixnum-shift
-                              (backend-target-arch (find-backend :wasm32))))
-               (host-unboxed (ash raw (- host-shift))))
-          (ash host-unboxed (- target-shift)))))))
+        (let* ((target-shift (arch::target-fixnum-shift
+                              (backend-target-arch (find-backend :wasm32)))))
+          (ash raw (- target-shift)))))))
 
 (defun function-lambda-form (sym)
   (multiple-value-bind (form _closurep _name)

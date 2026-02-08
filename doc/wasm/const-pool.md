@@ -1,4 +1,4 @@
-# WASM2 Constant Pool (v1)
+# WASM2 Constant Pool (v1/v2)
 
 **Status:** Draft  
 **Goal:** Enable WASM2-compiled modules to reference non-immediate Lisp objects
@@ -36,10 +36,12 @@ object MAY be emitted as well.
 
 ## Versioning
 
-- `constPoolBytes` begins with a `u32 version` field, which MUST be `1`.
+- `constPoolBytes` begins with a version field:
+  - v1: little-endian `u32 version` (`1`)
+  - v2: unsigned LEB128 `version` (`2`)
 - Unknown versions MUST fail safely (loader returns error).
 
-## Entry Types (v1)
+## Entry Types (v1/v2)
 
 Each entry is an object with `type` and type-specific fields. v1 supports:
 
@@ -49,6 +51,7 @@ Each entry is an object with `type` and type-specific fields. v1 supports:
 - `vector` (simple vector of other pool entries)
 - `function` (symbol resolution to `fdefinition`)
 - `function-vector` (literal function object slots)
+- `entry-function` (compact function object by WASM entry index)
 Entries are addressable by index (0-based).
 
 ## Indexing Semantics
@@ -121,6 +124,18 @@ Materialization:
 Materialization:
 - Use the tagged fixnum value directly.
 
+### 7) `entry-function`
+
+```json
+{ "type": "entry-function", "entryIndex": 320 }
+```
+
+Materialization:
+- Allocate a minimal function object with the target entry index in both the
+  callable entry slot and fallback entry slot.
+- This avoids serializing full function-vector slot graphs when the compiler
+  already knows the entry index.
+
 ## Loader Requirements
 
 The runtime loader MUST:
@@ -146,15 +161,17 @@ is missing.
 
 ## Future Extensions
 
-Potential v2 entries:
+Potential post-v2 entries:
 - `cons` and `list` literals
 - `pathname`
 - `simple-array` with element type
 - structured records
 
-## Binary Encoding (v1)
+## Binary Encoding
 
-The `constPoolBytes` payload is a little‑endian binary blob:
+### v1 (legacy)
+
+The `constPoolBytes` payload is a little-endian binary blob:
 
 ```
 u32 version  (must be 1)
@@ -170,6 +187,7 @@ Each entry begins with a `u32 type` tag:
 - `4` = `function`
 - `5` = `function-vector`
 - `6` = `fixnum`
+- `16` = `entry-function`
 
 Entry payloads:
 
@@ -179,6 +197,23 @@ Entry payloads:
 - `vector`: `u32 count`, `count` x `u32` indices (into the pool)
 - `function`: `u32 name_len`, `name_len` bytes, `u32 pkg_len`, `pkg_len` bytes
 - `function-vector`: `u32 count`, `count` x `u32` indices (into the pool)
+- `entry-function`: `u32 entry_index` (untagged table index)
 
 Strings are UTF‑8 byte sequences; loaders should treat bytes as base‑string
 codes for now.
+
+### v2 (current)
+
+v2 keeps the same type tags and materialization semantics, but switches most
+structural integer fields to LEB128:
+
+- header: `uleb128 version` (`2`), `uleb128 count`
+- per-entry tag: `uleb128 type`
+- structural counts/indices/subtags/string lengths: `uleb128`
+- `fixnum` payload: `sleb128` tagged fixnum value
+- float/int64/uint64 payload words and bignum digit words remain fixed-width
+  little-endian `u32` values.
+
+This reduces constant-pool size substantially for index-heavy entries
+(`vector`, `gvector`, `function-vector`, `cons`) while preserving loader
+behavior.

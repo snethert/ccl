@@ -4157,7 +4157,7 @@
      nil)
     (t value)))
 
-(defconstant +wasm2-const-pool-version+ 1)
+(defconstant +wasm2-const-pool-version+ 2)
 (defconstant +wasm2-const-pool-tag-symbol+ 1)
 (defconstant +wasm2-const-pool-tag-string+ 2)
 (defconstant +wasm2-const-pool-tag-vector+ 3)
@@ -4173,10 +4173,32 @@
 (defconstant +wasm2-const-pool-tag-int64+ 13)
 (defconstant +wasm2-const-pool-tag-uint64+ 14)
 (defconstant +wasm2-const-pool-tag-bignum+ 15)
+(defconstant +wasm2-const-pool-tag-entry-function+ 16)
 
 (defconstant +wasm2-const-pool-int64-min+ (- (ash 1 63)))
 (defconstant +wasm2-const-pool-int64-max+ (1- (ash 1 63)))
 (defconstant +wasm2-const-pool-uint64-max+ (1- (ash 1 64)))
+
+(defun wasm2-const-pool-unbox-entry-index (raw)
+  (when (and (fixnump raw)
+             (boundp '*wasm2-target-fixnum-shift*)
+             (fixnump *wasm2-target-fixnum-shift*)
+             (>= *wasm2-target-fixnum-shift* 0))
+    (let* ((shift *wasm2-target-fixnum-shift*)
+           (entry (ash raw (- shift))))
+      (when (and (integerp entry)
+                 (>= entry 0)
+                 (<= entry #xffffffff)
+                 (= raw (ash entry shift)))
+        entry))))
+
+(defun wasm2-const-pool-entry-function-index (value)
+  (when (and (uvectorp value)
+             (> (uvsize value) 0))
+    (let* ((slot0 (ignore-errors (uvref value 0)))
+           (entry (and slot0 (wasm2-const-pool-unbox-entry-index slot0))))
+      (when entry
+        entry))))
 
 (defun wasm2-const-pool-bignum-digits (value)
   (let* ((neg (minusp value))
@@ -4217,14 +4239,20 @@
                 :digits (wasm2-const-pool-bignum-digits value))))))
     ((and (uvectorp value)
           (eql (typecode value) target::subtag-xfunction))
-     ;; Cross-compiled functions arrive as xfunctions; treat them like
-     ;; function vectors so the WASM runtime can materialize a function object.
-     (let* ((count (uvsize value))
-            (elements (loop for i below count
-                            collect (wasm2-const-pool-index
-                                     (wasm2-const-pool-function-slot (uvref value i))))))
-       (list :type "function-vector"
-             :elements elements)))
+     ;; Cross-compiled functions always carry an entry index in slot 0.
+     ;; Encode these by entry index to avoid serializing the full slot graph.
+     (let ((entry-index (wasm2-const-pool-entry-function-index value)))
+       (if entry-index
+         (list :type "entry-function"
+               :entry-index entry-index)
+         ;; Some host/runtime xfunction constants do not carry a wasm entry
+         ;; index in slot 0. Preserve prior behavior by serializing slots.
+         (let* ((count (uvsize value))
+                (elements (loop for i below count
+                                collect (wasm2-const-pool-index
+                                         (wasm2-const-pool-function-slot (uvref value i))))))
+           (list :type "function-vector"
+                 :elements elements)))))
     ((symbolp value)
      (list :type "symbol"
            :name (symbol-name value)
@@ -4242,14 +4270,18 @@
      (list :type "vector"
            :elements (map 'list #'wasm2-const-pool-index value)))
     ((typep value 'function-vector)
-     ;; Function vectors in the WASM backend are slot-only (no native code).
-     ;; Encode them as tagged vectors so the runtime can materialize them.
-     (let* ((count (uvsize value))
-            (elements (loop for i below count
-                            collect (wasm2-const-pool-index
-                                     (wasm2-const-pool-function-slot (uvref value i))))))
-       (list :type "function-vector"
-             :elements elements)))
+     ;; Prefer compact entry-index references for WASM function objects.
+     (let ((entry-index (wasm2-const-pool-entry-function-index value)))
+       (if entry-index
+         (list :type "entry-function"
+               :entry-index entry-index)
+         ;; Fallback for non-WASM function vectors.
+         (let* ((count (uvsize value))
+                (elements (loop for i below count
+                                collect (wasm2-const-pool-index
+                                         (wasm2-const-pool-function-slot (uvref value i))))))
+           (list :type "function-vector"
+                 :elements elements)))))
     ((and (gvectorp value) (not (typep value 'function-vector)))
      (let* ((count (uvsize value))
             (subtag (typecode value))
@@ -4269,12 +4301,16 @@
                         (ignore-errors (function-to-function-vector value)))))
            (unless fv
              (error "WASM2: unsupported function constant: ~S" value))
-           (let* ((count (uvsize fv))
-                  (elements (loop for i below count
-                                  collect (wasm2-const-pool-index
-                                           (wasm2-const-pool-function-slot (uvref fv i))))))
-             (list :type "function-vector"
-                   :elements elements))))))
+           (let ((entry-index (wasm2-const-pool-entry-function-index fv)))
+             (if entry-index
+               (list :type "entry-function"
+                     :entry-index entry-index)
+               (let* ((count (uvsize fv))
+                      (elements (loop for i below count
+                                      collect (wasm2-const-pool-index
+                                               (wasm2-const-pool-function-slot (uvref fv i))))))
+                 (list :type "function-vector"
+                       :elements elements))))))))
     (t
      (error "WASM2: unsupported const-pool value: ~S" value))))
 
@@ -4305,10 +4341,37 @@
     (vector-push-extend (ldb (byte 8 24) v) out))
   out)
 
+(defun wasm2-const-pool-emit-uleb32 (out value)
+  (let ((v (logand value #xffffffff)))
+    (loop
+      (let* ((byte (logand v #x7f)))
+        (setf v (ash v -7))
+        (if (zerop v)
+          (progn
+            (vector-push-extend byte out)
+            (return))
+          (vector-push-extend (logior byte #x80) out)))))
+  out)
+
+(defun wasm2-const-pool-emit-sleb32 (out value)
+  (let ((v (logior (logand value #xffffffff)
+                   (if (logbitp 31 value) -4294967296 0))))
+    (loop
+      (let* ((byte (logand v #x7f))
+             (next (ash v -7))
+             (sign-bit-set (not (zerop (logand byte #x40))))
+             (done (or (and (zerop next) (not sign-bit-set))
+                       (and (= next -1) sign-bit-set))))
+        (vector-push-extend (if done byte (logior byte #x80)) out)
+        (when done
+          (return))
+        (setf v next))))
+  out)
+
 (defun wasm2-const-pool-emit-string (out value)
   (let* ((s (string value))
          (len (length s)))
-    (wasm2-const-pool-emit-u32 out len)
+    (wasm2-const-pool-emit-uleb32 out len)
     (dotimes (i len)
       (vector-push-extend (logand (char-code (char s i)) #xff) out)))
   out)
@@ -4316,80 +4379,83 @@
 (defun wasm2-const-pool-emit-maybe-string (out value)
   (if value
     (wasm2-const-pool-emit-string out value)
-    (wasm2-const-pool-emit-u32 out 0)))
+    (wasm2-const-pool-emit-uleb32 out 0)))
 
 (defun wasm2-const-pool-bytes (entries)
   (when entries
     (let ((out (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0)))
-      (wasm2-const-pool-emit-u32 out +wasm2-const-pool-version+)
-      (wasm2-const-pool-emit-u32 out (length entries))
+      (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-version+)
+      (wasm2-const-pool-emit-uleb32 out (length entries))
       (dolist (entry entries)
         (let ((etype (getf entry :type)))
           (cond
             ((string= etype "fixnum")
-             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-fixnum+)
-             (wasm2-const-pool-emit-u32 out (getf entry :value)))
+             (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-fixnum+)
+             (wasm2-const-pool-emit-sleb32 out (getf entry :value)))
             ((string= etype "character")
-             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-character+)
-             (wasm2-const-pool-emit-u32 out (getf entry :code)))
+             (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-character+)
+             (wasm2-const-pool-emit-uleb32 out (getf entry :code)))
             ((string= etype "single-float")
-             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-single-float+)
+             (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-single-float+)
              (wasm2-const-pool-emit-u32 out (getf entry :bits)))
             ((string= etype "double-float")
-             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-double-float+)
+             (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-double-float+)
              (wasm2-const-pool-emit-u32 out (getf entry :hi))
              (wasm2-const-pool-emit-u32 out (getf entry :lo)))
             ((string= etype "int64")
-             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-int64+)
+             (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-int64+)
              (wasm2-const-pool-emit-u32 out (getf entry :hi))
              (wasm2-const-pool-emit-u32 out (getf entry :lo)))
             ((string= etype "uint64")
-             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-uint64+)
+             (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-uint64+)
              (wasm2-const-pool-emit-u32 out (getf entry :hi))
              (wasm2-const-pool-emit-u32 out (getf entry :lo)))
             ((string= etype "bignum")
-             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-bignum+)
+             (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-bignum+)
              (let ((digits (getf entry :digits)))
-               (wasm2-const-pool-emit-u32 out (length digits))
+               (wasm2-const-pool-emit-uleb32 out (length digits))
                (dolist (digit digits)
                  (wasm2-const-pool-emit-u32 out digit))))
             ((string= etype "symbol")
-             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-symbol+)
+             (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-symbol+)
              (wasm2-const-pool-emit-string out (getf entry :name))
              (wasm2-const-pool-emit-maybe-string out (getf entry :package)))
             ((string= etype "string")
-             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-string+)
+             (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-string+)
              (wasm2-const-pool-emit-string out (getf entry :value)))
             ((string= etype "package")
-             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-package+)
+             (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-package+)
              (wasm2-const-pool-emit-string out (getf entry :name)))
             ((string= etype "cons")
-             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-cons+)
-             (wasm2-const-pool-emit-u32 out (getf entry :car))
-             (wasm2-const-pool-emit-u32 out (getf entry :cdr)))
+             (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-cons+)
+             (wasm2-const-pool-emit-uleb32 out (getf entry :car))
+             (wasm2-const-pool-emit-uleb32 out (getf entry :cdr)))
             ((string= etype "vector")
-             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-vector+)
+             (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-vector+)
              (let ((elements (getf entry :elements)))
-               (wasm2-const-pool-emit-u32 out (length elements))
+               (wasm2-const-pool-emit-uleb32 out (length elements))
                (dolist (idx elements)
-                 (wasm2-const-pool-emit-u32 out idx))))
+                 (wasm2-const-pool-emit-uleb32 out idx))))
             ((string= etype "function")
-             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-function+)
+             (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-function+)
              (wasm2-const-pool-emit-string out (getf entry :name))
              (wasm2-const-pool-emit-maybe-string out (getf entry :package)))
             ((string= etype "function-vector")
-             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-function-vector+)
+             (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-function-vector+)
              (let ((elements (getf entry :elements)))
-               (wasm2-const-pool-emit-u32 out (length elements))
+               (wasm2-const-pool-emit-uleb32 out (length elements))
                (dolist (idx elements)
-                 (wasm2-const-pool-emit-u32 out idx))))
+                 (wasm2-const-pool-emit-uleb32 out idx))))
             ((string= etype "gvector")
-             (wasm2-const-pool-emit-u32 out +wasm2-const-pool-tag-gvector+)
-             (wasm2-const-pool-emit-u32 out (getf entry :subtag))
+             (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-gvector+)
+             (wasm2-const-pool-emit-uleb32 out (getf entry :subtag))
              (let ((elements (getf entry :elements)))
-               (wasm2-const-pool-emit-u32 out (length elements))
+               (wasm2-const-pool-emit-uleb32 out (length elements))
                (dolist (idx elements)
-                 (wasm2-const-pool-emit-u32 out idx))))
+                 (wasm2-const-pool-emit-uleb32 out idx))))
+            ((string= etype "entry-function")
+             (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-entry-function+)
+             (wasm2-const-pool-emit-uleb32 out (getf entry :entry-index)))
             (t
              (error "WASM2: unknown const-pool entry type: ~S" etype)))))
       out)))

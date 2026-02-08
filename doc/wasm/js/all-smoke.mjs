@@ -38,6 +38,8 @@ const tests = [
   "./web-ui-command-ui-smoke.mjs",
   "./runtime-command-smoke.mjs",
   "./runtime-debugger-smoke.mjs",
+  "./runtime-inspector-smoke.mjs",
+  "./runtime-jobs-smoke.mjs",
   "./web-ui-persist-smoke.mjs",
   "./web-ui-layout-focus-smoke.mjs",
   "./web-ui-inspector-smoke.mjs",

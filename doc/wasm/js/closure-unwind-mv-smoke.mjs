@@ -7,11 +7,13 @@
  */
 
 import fs from "node:fs/promises";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
   createCclImports,
   createSharedCclRuntime,
+  installCompiledModulesFromBundle,
   installSubprimsTable,
   instantiateWasm,
 } from "./ccl-loader.mjs";
@@ -37,10 +39,24 @@ const imageUrl = new URL("../minimal.image", import.meta.url);
 const bundleUrl = new URL("../wasm-smoke-modules.json", import.meta.url);
 
 let bundle;
+let bundleBinaryBytes;
+let bundleIndexBytes;
 try {
   bundle = JSON.parse((await readFileUrl(bundleUrl)).toString("utf8"));
+  if (bundle?.format !== "ccl-wasm-modules-v2") {
+    fail("wasm-smoke-modules.json must be ccl-wasm-modules-v2");
+  }
+  if (typeof bundle?.binary !== "string" || bundle.binary.length === 0) {
+    fail("wasm-smoke-modules.json missing binary field");
+  }
+  if (typeof bundle?.index !== "string" || bundle.index.length === 0) {
+    fail("wasm-smoke-modules.json missing index field");
+  }
+  const bundleDir = path.dirname(fileURLToPath(bundleUrl));
+  bundleBinaryBytes = await fs.readFile(path.resolve(bundleDir, bundle.binary));
+  bundleIndexBytes = await fs.readFile(path.resolve(bundleDir, bundle.index));
 } catch (err) {
-  fail("missing wasm-smoke-modules.json (run scripts/wasm/compile-smoke-modules.sh)");
+  fail(`missing or invalid wasm-smoke-modules bundle (run scripts/wasm/compile-smoke-modules.sh): ${err?.message ?? err}`);
 }
 
 const runtime = createSharedCclRuntime({
@@ -112,28 +128,20 @@ assert(typeof kernel.instance.exports.wasm_ccl_load_image === "function", "missi
 kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
 
 const kernelExports = kernel.instance.exports;
-const imports = createCclImports({
+const functions = Array.isArray(bundle.functions) ? bundle.functions : [];
+const { installed, count, failed } = await installCompiledModulesFromBundle({
+  bundle,
+  binaryBytes: bundleBinaryBytes,
+  indexBytes: bundleIndexBytes,
+  kernel,
   memory: runtime.memory,
   subprimsTable: runtime.subprimsTable,
   microkernel,
-  extra: { ccl: kernelExports },
+  strict: true,
+  installConstPools: true,
 });
-
-const modules = Array.isArray(bundle.modules) ? bundle.modules : [];
-const functions = Array.isArray(bundle.functions) ? bundle.functions : [];
-assert(modules.length > 0, "wasm-smoke-modules.json contains no modules");
-
-for (const entry of modules) {
-  const bytes = Uint8Array.from(entry.moduleBytes ?? []);
-  const { instance } = await instantiateWasm(bytes, imports);
-  const fn = instance?.exports?.[entry.exportName];
-  assert(typeof fn === "function", `compiled module missing export ${entry.exportName}`);
-  const idx = entry.entryIndex >>> 0;
-  if (runtime.subprimsTable.length <= idx) {
-    runtime.subprimsTable.grow(idx - runtime.subprimsTable.length + 1);
-  }
-  runtime.subprimsTable.set(idx, fn);
-}
+assert(count > 0 && installed > 0, "no compiled modules installed from bundle");
+assert(!failed, `compiled modules failed during install: ${failed}`);
 
 function entryIndex(name) {
   const item = functions.find((fn) => fn.name === name);

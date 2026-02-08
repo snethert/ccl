@@ -58,4 +58,16 @@ if [ ! -f "$SCRIPT" ]; then
   exit 1
 fi
 
-run ccl --no-init --batch -l "$SCRIPT" -- --output "$OUTPUT"
+PACK_SCRIPT="$ROOT_DIR/scripts/wasm/pack-inline-bundle-v2.mjs"
+if [ ! -f "$PACK_SCRIPT" ]; then
+  echo "error: missing $PACK_SCRIPT" >&2
+  exit 1
+fi
+
+INLINE_TMP="${OUTPUT}.inline-v1.tmp.json"
+run ccl --no-init --batch -l "$SCRIPT" -- --output "$INLINE_TMP"
+run node "$PACK_SCRIPT" --manifest "$INLINE_TMP" --out-manifest "$OUTPUT"
+
+if [ "$DRYRUN" -eq 0 ]; then
+  rm -f "$INLINE_TMP"
+fi

@@ -2437,6 +2437,94 @@ wasm_const_pool_read_u32(const uint8_t *bytes,
   return v;
 }
 
+static uint32_t
+wasm_const_pool_read_uleb32(const uint8_t *bytes,
+                            uint32_t len,
+                            uint32_t *offset,
+                            int *ok)
+{
+  if (!ok || !*ok) {
+    return 0;
+  }
+  if (!bytes || !offset) {
+    if (ok) *ok = 0;
+    return 0;
+  }
+
+  uint32_t value = 0;
+  uint32_t shift = 0;
+  for (uint32_t i = 0; i < 5; i++) {
+    if (*offset >= len) {
+      if (ok) *ok = 0;
+      return 0;
+    }
+    uint8_t byte = bytes[*offset];
+    (*offset)++;
+    value |= ((uint32_t)(byte & 0x7fu)) << shift;
+    if ((byte & 0x80u) == 0u) {
+      return value;
+    }
+    shift += 7;
+  }
+
+  if (ok) *ok = 0;
+  return 0;
+}
+
+static int32_t
+wasm_const_pool_read_sleb32(const uint8_t *bytes,
+                            uint32_t len,
+                            uint32_t *offset,
+                            int *ok)
+{
+  if (!ok || !*ok) {
+    return 0;
+  }
+  if (!bytes || !offset) {
+    if (ok) *ok = 0;
+    return 0;
+  }
+
+  int64_t value = 0;
+  uint32_t shift = 0;
+  uint8_t byte = 0;
+  for (uint32_t i = 0; i < 5; i++) {
+    if (*offset >= len) {
+      if (ok) *ok = 0;
+      return 0;
+    }
+    byte = bytes[*offset];
+    (*offset)++;
+    value |= ((int64_t)(byte & 0x7fu)) << shift;
+    shift += 7;
+    if ((byte & 0x80u) == 0u) {
+      if ((shift < 32u) && (byte & 0x40u)) {
+        value |= -((int64_t)1 << shift);
+      }
+      if ((value < INT32_MIN) || (value > INT32_MAX)) {
+        if (ok) *ok = 0;
+        return 0;
+      }
+      return (int32_t)value;
+    }
+  }
+
+  if (ok) *ok = 0;
+  return 0;
+}
+
+static uint32_t
+wasm_const_pool_read_nat(const uint8_t *bytes,
+                         uint32_t len,
+                         uint32_t *offset,
+                         uint32_t version,
+                         int *ok)
+{
+  return (version >= 2u)
+    ? wasm_const_pool_read_uleb32(bytes, len, offset, ok)
+    : wasm_const_pool_read_u32(bytes, len, offset, ok);
+}
+
 static const uint8_t *
 wasm_const_pool_read_bytes(const uint8_t *bytes,
                            uint32_t len,
@@ -3069,7 +3157,7 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
     return lisp_nil;
   }
 
-  if (payload_ptr == 0 || payload_len < 8u) {
+  if (payload_ptr == 0 || payload_len == 0u) {
     return lisp_nil;
   }
 
@@ -3077,9 +3165,20 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
   uint32_t offset = 0;
   int ok = 1;
 
-  uint32_t version = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
-  uint32_t count = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
-  if (!ok || version != 1u) {
+  uint32_t version = 0;
+  uint32_t count = 0;
+  if (payload_len >= 8u &&
+      bytes[0] == 1u &&
+      bytes[1] == 0u &&
+      bytes[2] == 0u &&
+      bytes[3] == 0u) {
+    version = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+    count = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+  } else {
+    version = wasm_const_pool_read_uleb32(bytes, payload_len, &offset, &ok);
+    count = wasm_const_pool_read_uleb32(bytes, payload_len, &offset, &ok);
+  }
+  if (!ok || (version != 1u && version != 2u)) {
     return lisp_nil;
   }
 
@@ -3090,21 +3189,29 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
   LispObj *pool_data = (LispObj *)((BytePtr)pool + misc_data_offset);
 
   for (uint32_t i = 0; i < count; i++) {
-    uint32_t tag = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+    uint32_t tag = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
     if (!ok) {
       return lisp_nil;
     }
     switch (tag) {
       case 6: { /* fixnum */
-        uint32_t raw = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
-        if (!ok) {
-          return lisp_nil;
+        if (version >= 2u) {
+          int32_t sval = wasm_const_pool_read_sleb32(bytes, payload_len, &offset, &ok);
+          if (!ok) {
+            return lisp_nil;
+          }
+          pool_data[i] = (LispObj)(uint32_t)sval;
+        } else {
+          uint32_t raw = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+          if (!ok) {
+            return lisp_nil;
+          }
+          pool_data[i] = (LispObj)raw;
         }
-        pool_data[i] = (LispObj)raw;
         break;
       }
       case 10: { /* character */
-        uint32_t code = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        uint32_t code = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
         if (!ok) {
           return lisp_nil;
         }
@@ -3164,7 +3271,7 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
         break;
       }
       case 15: { /* bignum */
-        uint32_t digits = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        uint32_t digits = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
         if (!ok) {
           return lisp_nil;
         }
@@ -3184,9 +3291,9 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
         break;
       }
       case 1: { /* symbol */
-        uint32_t name_len = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        uint32_t name_len = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
         const uint8_t *name_bytes = wasm_const_pool_read_bytes(bytes, payload_len, &offset, name_len, &ok);
-        uint32_t pkg_len = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        uint32_t pkg_len = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
         const uint8_t *pkg_bytes = wasm_const_pool_read_bytes(bytes, payload_len, &offset, pkg_len, &ok);
         if (!ok || !name_bytes) {
           return lisp_nil;
@@ -3223,7 +3330,7 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
         break;
       }
       case 2: { /* string */
-        uint32_t len = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        uint32_t len = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
         const uint8_t *data = wasm_const_pool_read_bytes(bytes, payload_len, &offset, len, &ok);
         if (!ok || !data) {
           return lisp_nil;
@@ -3236,7 +3343,7 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
         break;
       }
       case 3: { /* vector */
-        uint32_t vcount = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        uint32_t vcount = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
         if (!ok) {
           return lisp_nil;
         }
@@ -3246,7 +3353,7 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
         }
         LispObj *vec_data = (LispObj *)((BytePtr)vec + misc_data_offset);
         for (uint32_t j = 0; j < vcount; j++) {
-          uint32_t idx = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+          uint32_t idx = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
           if (!ok || idx >= i) {
             return lisp_nil;
           }
@@ -3256,9 +3363,9 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
         break;
       }
       case 4: { /* function */
-        uint32_t name_len = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        uint32_t name_len = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
         const uint8_t *name_bytes = wasm_const_pool_read_bytes(bytes, payload_len, &offset, name_len, &ok);
-        uint32_t pkg_len = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        uint32_t pkg_len = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
         const uint8_t *pkg_bytes = wasm_const_pool_read_bytes(bytes, payload_len, &offset, pkg_len, &ok);
         if (!ok || !name_bytes) {
           return lisp_nil;
@@ -3294,7 +3401,7 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
         break;
       }
       case 5: { /* function-vector */
-        uint32_t vcount = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        uint32_t vcount = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
         if (!ok) {
           return lisp_nil;
         }
@@ -3304,7 +3411,7 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
         }
         LispObj *vec_data = (LispObj *)((BytePtr)vec + misc_data_offset);
         for (uint32_t j = 0; j < vcount; j++) {
-          uint32_t idx = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+          uint32_t idx = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
           if (!ok || idx >= i) {
             return lisp_nil;
           }
@@ -3313,9 +3420,25 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
         pool_data[i] = vec;
         break;
       }
+      case 16: { /* entry-function */
+        uint32_t entry_index = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
+        if (!ok) {
+          return lisp_nil;
+        }
+        LispObj vec = wasm_misc_alloc(tcr, subtag_function, (signed_natural)2);
+        if (vec == lisp_nil) {
+          return lisp_nil;
+        }
+        LispObj entry = box_fixnum((signed_natural)entry_index);
+        LispObj *vec_data = (LispObj *)((BytePtr)vec + misc_data_offset);
+        vec_data[0] = entry;
+        vec_data[1] = entry;
+        pool_data[i] = vec;
+        break;
+      }
       case 9: { /* gvector */
-        uint32_t raw_subtag = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
-        uint32_t vcount = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        uint32_t raw_subtag = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
+        uint32_t vcount = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
         if (!ok) {
           return lisp_nil;
         }
@@ -3325,7 +3448,7 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
         }
         LispObj *vec_data = (LispObj *)((BytePtr)vec + misc_data_offset);
         for (uint32_t j = 0; j < vcount; j++) {
-          uint32_t idx = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+          uint32_t idx = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
           if (!ok || idx >= i) {
             return lisp_nil;
           }
@@ -3335,7 +3458,7 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
         break;
       }
       case 7: { /* package */
-        uint32_t name_len = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        uint32_t name_len = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
         const uint8_t *name_bytes = wasm_const_pool_read_bytes(bytes, payload_len, &offset, name_len, &ok);
         if (!ok || !name_bytes) {
           return lisp_nil;
@@ -3348,8 +3471,8 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
         break;
       }
       case 8: { /* cons */
-        uint32_t car_idx = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
-        uint32_t cdr_idx = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+        uint32_t car_idx = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
+        uint32_t cdr_idx = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
         if (!ok || car_idx >= i || cdr_idx >= i) {
           return lisp_nil;
         }

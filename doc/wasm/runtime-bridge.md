@@ -169,7 +169,7 @@ The base kinds used in Phase 5:
 }
 ```
 
-## Example: Inspector Update
+## Example: Inspector Update Snapshot
 ```json
 {
   "version": 1,
@@ -180,8 +180,58 @@ The base kinds used in Phase 5:
   "seq": 4,
   "ts": 1738992002500,
   "payload": {
+    "type": "snapshot",
+    "taskId": "task-1",
     "targetId": "pres-9",
-    "view": { "type": "clos-object", "slots": [{ "name": "x", "value": 3 }] }
+    "targetType": "clos-object",
+    "view": {
+      "type": "clos-object",
+      "summary": "#<FOO 3>",
+      "sections": [
+        {
+          "id": "slots",
+          "title": "Slots",
+          "rows": [
+            {
+              "id": "slot-x",
+              "label": "X",
+              "valueSummary": "3",
+              "presentationId": "pres-slot-x",
+              "place": { "placeId": "pl-slot-x", "description": "Slot X", "editable": true }
+            }
+          ]
+        }
+      ]
+    },
+    "watches": [
+      { "id": "watch-1", "presentationId": "pres-9", "label": "Result", "valueSummary": "3", "pinned": true }
+    ],
+    "stale": false
+  },
+  "error": null
+}
+```
+
+## Example: Inspector Edit Group Update
+```json
+{
+  "version": 1,
+  "kind": "inspector.update",
+  "jobId": "job-19",
+  "streamId": "inspector",
+  "requestId": null,
+  "seq": 5,
+  "ts": 1738992002600,
+  "payload": {
+    "type": "edit-group",
+    "taskId": "task-1",
+    "editGroup": {
+      "id": "edit-12",
+      "label": "Set slot X",
+      "status": "applied",
+      "edits": [{ "placeId": "pl-slot-x", "before": "3", "after": "4" }]
+    },
+    "audit": { "entryText": "Applied edit group edit-12" }
   },
   "error": null
 }
@@ -198,6 +248,9 @@ The base kinds used in Phase 5:
   "seq": 1,
   "ts": 1738992003000,
   "payload": {
+    "id": "job-20",
+    "taskId": "task-1",
+    "kind": "compile",
     "status": "started",
     "label": "Compile project",
     "progress": { "current": 5, "total": 100 }
@@ -215,6 +268,9 @@ The base kinds used in Phase 5:
 - `command.invoke`, `command.result`, and `command.error` must carry `requestId` for correlation.
 - `debugger.snapshot` requires `errorId`; each restart entry requires `id`, `title`, `safety`, and `argSchema` (empty array allowed).
 - `debugger.restart` requires `payload.type` (`set` or `invoked`) and `errorId`.
+- `inspector.update` requires `payload.type` and supports `snapshot`, `watch.sync`, and `edit-group`.
+- `edit-group` status values are `staged`, `applied`, `undone`, or `failed`.
+- `job.update` payload requires `id` and `status`; `progress` is optional.
 
 ## Kernel Integration
 For WASM runners, structured runtime messages are sent via `KERNEL_OP_RUNTIME_EVENT`
