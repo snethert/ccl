@@ -1876,30 +1876,43 @@ void _SPstack_misc_alloc(void);
 void _SPstack_cons_rest_arg(void);
 
 static void
+wasm_signal_funcall_error(TCR *tcr, signed_natural errnum, LispObj name)
+{
+  wasm_set_reg(tcr, arg_y, box_fixnum(errnum));
+  wasm_set_reg(tcr, arg_z, name);
+  wasm_set_reg(tcr, nargs, box_fixnum(2));
+  _SPksignalerr();
+}
+
+static void
 wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
 {
-  if (fn_value == (LispObj)nil_value) {
-    wasm_subprims_trap();
+  LispObj name = fn_value;
+  if (fn_value == (LispObj)nil_value || fulltag_of(fn_value) != fulltag_misc) {
+    wasm_signal_funcall_error(tcr, WASM_XNOTFUN, name);
+    return;
   }
-
-  if (fulltag_of(fn_value) != fulltag_misc) {
-    wasm_subprims_trap();
-  }
-
   LispObj header = header_of(fn_value);
   int subtag = header_subtag(header);
   if (subtag == subtag_symbol) {
     lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(fn_value));
+    name = fn_value;
     fn_value = sym->fcell;
+    if (fn_value == nrs_UDF.vcell) {
+      wasm_signal_funcall_error(tcr, WASM_XFUNBND, name);
+      return;
+    }
     if (fulltag_of(fn_value) != fulltag_misc) {
-      wasm_subprims_trap();
+      wasm_signal_funcall_error(tcr, WASM_XNOTFUN, name);
+      return;
     }
     header = header_of(fn_value);
     subtag = header_subtag(header);
   }
 
   if (subtag != subtag_function && subtag != subtag_pseudofunction) {
-    wasm_subprims_trap();
+    wasm_signal_funcall_error(tcr, WASM_XNOTFUN, name);
+    return;
   }
 
   wasm_set_reg(tcr, nfn, fn_value);
@@ -1907,7 +1920,8 @@ wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
 
   LispObj entry = deref(fn_value, 1);
   if (tag_of(entry) != tag_fixnum) {
-    wasm_subprims_trap();
+    wasm_signal_funcall_error(tcr, WASM_XNOTFUN, name);
+    return;
   }
 
   {

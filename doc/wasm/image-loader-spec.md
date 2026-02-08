@@ -70,9 +70,12 @@ path must seed the kernel toplevel function explicitly:
 The seed image build script is `scripts/wasm/make-real-image.lisp`.
 It will inject `:wasm32-target` into `*features*` if needed, so a normal
 64‑bit host CCL (including a native macOS build) is sufficient for the
-current workflow and there is no 32‑bit host requirement. A Node‑hosted
-helper exists (`doc/wasm/js/make-real-image.mjs`) for a wasm‑only path,
-but it is not adopted in the current bring‑up.
+current workflow and there is no 32‑bit host requirement.
+The Node‑hosted helper (`doc/wasm/js/make-real-image.mjs`) now supports
+the wasm‑only save path by calling `wasm_save_image_direct` and extracting
+the result from persistence storage.
+On non-WASM hosts, the Lisp script preserves direct-host workflow by
+delegating to the Node helper.
 The boot image it consumes is produced via `cross-xload-level-0 :wasm32`
 (wrapper: `scripts/wasm/build-wasm-boot.sh`), which now completes and writes
 `ccl:ccl;wasm-boot.image`.

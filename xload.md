@@ -17,12 +17,13 @@ plan, in dependency order.
 - **No UI work**: do not touch `web-ui/` (beyond existing JS runtime helpers).
 - **Stage‑2 stepping baseline** remains the portable model.
 
-## Current State (Summary, as of 2026-02-07)
+## Current State (Summary, as of 2026-02-08)
 - Kernel builds for wasm32 (freestanding) and runs with the JS microkernel.
 - Minimal image loader works; real image policy script exists
   (`scripts/wasm/make-real-image.lisp`). The script injects `:wasm32-target`
-  into `*features*` if missing, so a normal 64‑bit host CCL is sufficient;
-  the Node helper path exists but is not adopted.
+  into `*features*` if missing, so a normal 64‑bit host CCL is sufficient.
+  On non-WASM hosts the script preserves direct-host workflow by delegating to
+  `doc/wasm/js/make-real-image.mjs`, which produces loadable images.
 - A wasm32 xload backend exists and is wired (`xdump/xwasmfasload.lisp`,
   `lib/systems.lisp`, `lib/compile-ccl.lisp`), and
   `cross-xload-level-0 :wasm32` now completes and writes
@@ -36,8 +37,13 @@ plan, in dependency order.
   bundle (JSON + `.bin` sidecar). The JS loader (`doc/wasm/js/load-image.mjs`)
   and Node helper (`doc/wasm/js/make-real-image.mjs`) accept `--modules PATH`
   and stream the `.bin` to avoid >2 GB reads.
-- WASM file I/O in `unix-calls.c` is **read‑only** (named blobs); `save-application`
-  cannot write images.
+- WASM file I/O in `unix-calls.c` now supports writable file streams
+  (`open/read/write/close/lseek`) via the kernel_request file backend.
+- The wasm save path is available: `wasm_save_image_direct` writes a real
+  image through `save_application()`, and
+  `doc/wasm/js/make-real-image.mjs` extracts it from persistence storage.
+- `doc/wasm/js/load-image.mjs` now accepts the Node-helper image output (no
+  `header not found` failure on the generated image).
 - `xdump/xfasload.lisp` now converts wasm u32 stub code vectors into target
   code vectors during image build, and lazily loads
   `ccl:xdump;heap-image.lisp` if `write-image-file` is not already present
@@ -94,11 +100,11 @@ Examples:
 3. **Level‑0 target sources for WASM:** `level-0/WASM/` with wasm‑specific
    overrides; wasm xload backend points at that directory.
 
-### Deferred (only needed for a wasm‑only save path)
-1. **Save‑application output channel:** keep the host‑CCL path for now;
-   Node helper extraction is optional future work.
-2. **Minimum file operations to support:** likely `open/read/write/close`
-   plus `lseek` and `ftruncate` if we implement wasm‑only `save-application`.
+### Deferred / Follow-up
+1. **Host direct image parity:** host-CCL generated images still need a clean
+   compatibility path if we want that workflow to match wasm helper output.
+2. **Compiled module persistence policy:** decide whether registry data should
+   be embedded in the saved image or remain an external `--modules` bundle.
 
 ## Step 1 — Add a WASM xload backend (foundational)
 **Goal:** produce a wasm boot image via `(cross-xload-level-0 :wasm32)`.
@@ -200,48 +206,45 @@ behave in wasm.
 ## Step 3 — Save‑application output path (real image)
 **Goal:** the wasm32 runtime can write `doc/wasm/root.image` (optional if you
 are generating the image from a host CCL today; required for a wasm‑only path).
-**Status:** Deferred; current bring‑up uses host CCL +
-`scripts/wasm/make-real-image.lisp` (no Node helper).
+**Status:** Implemented for the wasm‑only Node helper path; verified.
 
 ### 3.1 Enable wasm write paths in `unix-calls.c` (WASM only)
-- Extend `lisp_open` to support write flags:
-  - map `O_RDONLY` → `KERNEL_STREAM_KIND_NAMED_RO` (existing)
-  - map write flags (`O_WRONLY`, `O_RDWR`, `O_CREAT`, `O_TRUNC`, `O_APPEND`)
-    to `KERNEL_STREAM_KIND_FILE` with a structured payload for `openFile`.
-- Add `lisp_lseek` and `lisp_ftruncate` implementations:
-  - either implement in microkernel file handles, or return `ENOSYS` only
-    if verified unused by `save-application`.
-- Ensure `lisp_close`, `lisp_read`, `lisp_write` remain routed through
-  kernel_request (already implemented).
+- Implemented:
+  - `lisp_open` maps write-capable modes to `KERNEL_STREAM_KIND_FILE`.
+  - `lisp_lseek` is wired through kernel_request stream seek.
+  - `open/read/write/close` all route through kernel_request stream calls.
+  - `__wasilibc_tell` now uses `lisp_lseek(fd, 0, SEEK_CUR)` for non-boot
+    descriptors, which is required for `save_application()` seek math.
 
 ### 3.2 Enable delete/truncate support used by `save-application`
-- `open-dumplisp-file` uses `%delete-file` and `probe-file`.
-  Provide wasm‑only overrides for `%delete-file` (via `FS_DELETE`)
-  and `%stat`/`%probe-file-x` if needed.
-- If wasm filesystem is virtual, ensure the microkernel supports deletion.
+- Current wasm helper path does not require additional delete/truncate work to
+  produce a valid image. Keep this as follow-up hardening if the Lisp dumplisp
+  path is re-enabled inside wasm.
 
-### 3.3 Host extraction strategy (deferred)
-- Current path: host CCL + `scripts/wasm/make-real-image.lisp` writes
-  `doc/wasm/root.image` directly.
-- If a wasm‑only save path is needed later, choose between:
-  - `persistenceService` + Node helper extraction, or
-  - a Node FS backend for `persistenceService`.
+### 3.3 Host extraction strategy
+- Implemented: `persistenceService` + Node helper extraction.
+- `doc/wasm/js/make-real-image.mjs` writes the persisted image bytes to the
+  host path passed via `--output`.
 
 ### 3.4 Reference Node helper (optional)
 - `doc/wasm/js/make-real-image.mjs`:
   1. Instantiate kernel + microkernel with persistence service.
   2. Load boot image.
-  3. Load and run `scripts/wasm/make-real-image.lisp` inside wasm.
-  4. Read bytes from persistence store and write `doc/wasm/root.image`.
+  3. Install compiled modules from bundle/registry.
+  4. Call `wasm_save_image_direct(path_ptr, path_len, egc_enabled)`.
+  5. Read bytes from persistence store and write `doc/wasm/root.image`.
 
 ### 3.5 Verification
-- Run new helper and confirm `doc/wasm/root.image` created.
-- Test with `node doc/wasm/js/load-image.mjs --start-lisp doc/wasm/root.image`.
+- Run helper and confirm image is created:
+  - `node doc/wasm/js/make-real-image.mjs --modules doc/wasm/wasm-runtime-modules.json --output doc/wasm/root.image`
+- Verify wasm loader accepts the generated image:
+  - `node doc/wasm/js/load-image.mjs doc/wasm/root.image`
 
 ### Step‑3 Deliverables
-- wasm file‑write support in `unix-calls.c`
-- microkernel persistence extraction path
-- real root image produced
+- wasm file-write + seek support in `unix-calls.c` / wasm libc shims
+- `wasm_save_image_direct` export in `lisp-kernel/wasm-kernel-stubs.c`
+- Node helper extraction path in `doc/wasm/js/make-real-image.mjs`
+- real root image produced by wasm and loadable by `load-image.mjs`
 
 ## Testing Strategy
 - Unit: JS smoke tests (no UI) after each step.
@@ -279,7 +282,7 @@ are generating the image from a host CCL today; required for a wasm‑only path)
 - `lisp-kernel/wasm-subprims-provider.c` — stub entrypoints for macro‑apply/UDF.
 - `doc/wasm/js/load-image.mjs` — host loader for boot/root images.
 - `doc/wasm/js/make-real-image.mjs` — optional wasm‑only root image helper.
-- `lisp-kernel/unix-calls.c` — wasm file I/O (read‑only today).
+- `lisp-kernel/unix-calls.c` — wasm file I/O wrappers (`open/read/write/lseek/close`).
 
 ## Remaining Work Plan (Sequential)
 1. Preflight (host + toolchain)
@@ -317,31 +320,29 @@ are generating the image from a host CCL today; required for a wasm‑only path)
      `scripts/wasm/generate_subprims_artifacts.py` if the map changes.
 7. Validate the boot image in the wasm runtime.
    - Command: `node doc/wasm/js/load-image.mjs --start-lisp --modules doc/wasm/wasm-runtime-modules.json BOOT_IMAGE_PATH`.
-   - If it traps, fix the first missing stub/op and repeat.
-8. Generate and validate the real root image (current host path).
-   - Command: run `scripts/wasm/make-real-image.lisp` under host CCL.
-   - Output: `doc/wasm/root.image`, then
-     `node doc/wasm/js/load-image.mjs --start-lisp --modules doc/wasm/wasm-runtime-modules.json doc/wasm/root.image`.
-9. Optional: implement wasm‑only `save-application` output.
-   - Action: add write/lseek/ftruncate in `lisp-kernel/unix-calls.c` and a
-     persistence extraction path, then use `doc/wasm/js/make-real-image.mjs`.
+   - Current result: boot image loads and enters Lisp (no immediate macro‑apply/UDF trap).
+8. Generate and validate the real root image (wasm helper path).
+   - Command:
+     `node doc/wasm/js/make-real-image.mjs --modules doc/wasm/wasm-runtime-modules.json --output doc/wasm/root.image`
+   - Validate:
+     `node doc/wasm/js/load-image.mjs doc/wasm/root.image`
+   - Current result: helper output is wasm-loadable.
+9. Optional hardening follow-ups.
+   - Preserve compatibility for the direct host-CCL image path if needed.
+   - Decide whether to embed compiled module registry in the saved image or
+     keep the external `--modules` bundle contract.
 
 ## Completion Criteria (Exit to Main‑Loop Work)
 - `scripts/wasm/build-wasm-boot.sh` (or `(cross-xload-level-0 :wasm32)`)
   produces a wasm boot image with no errors.
 - `doc/wasm/js/load-image.mjs --start-lisp --modules doc/wasm/wasm-runtime-modules.json BOOT_IMAGE_PATH`
   enters Lisp without immediate macro‑apply/UDF traps.
-- `scripts/wasm/make-real-image.lisp` (injects `:wasm32-target` if missing)
-  produces `doc/wasm/root.image`, and
-  `node doc/wasm/js/load-image.mjs --start-lisp --modules doc/wasm/wasm-runtime-modules.json doc/wasm/root.image` works
-  (wasm‑only save path optional).
+- `node doc/wasm/js/make-real-image.mjs --modules doc/wasm/wasm-runtime-modules.json --output doc/wasm/root.image`
+  produces a loadable root image, and
+  `node doc/wasm/js/load-image.mjs doc/wasm/root.image` succeeds.
 - No non‑WASM behavior changes outside `#+wasm32-target` guards.
 
 ## Current Blocker (Needs Resolution)
-- The WASM2 compiler is still emitting a non‑trivial number of invalid
-  compiled modules (validation errors around `if`/`local.set` stack balance).
-  The JS loader can skip invalid modules, but `start_lisp` still trips the UDF
-  stub loop because required entrypoints are missing. The next fix should
-  focus on stack‑discipline correctness for void control‑flow constructs
-  (`if`/`block`/`loop`) and any callers that leave an extra i32 on the wasm
-  stack.
+- No blocker for the MVP image pipeline. Remaining hardening item:
+  - A raw host `save-application` image (outside the helper/delegated path)
+    is not a drop-in wasm heap image format.

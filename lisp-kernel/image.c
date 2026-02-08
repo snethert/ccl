@@ -34,6 +34,18 @@ wasm_image_log(const char *msg, size_t len)
 {
   wasm_host_log(msg, (unsigned)len);
 }
+
+extern ssize_t lisp_write(int fd, void *buf, size_t count);
+extern int lisp_close(int fd);
+extern int64_t lisp_lseek(int fd, int64_t offset, int whence);
+#endif
+
+#ifdef WASM32
+#define IMAGE_WRITE(fd,buf,len) lisp_write(fd, (void *)(buf), (len))
+#define IMAGE_CLOSE(fd) lisp_close(fd)
+#else
+#define IMAGE_WRITE(fd,buf,len) write(fd, (buf), (len))
+#define IMAGE_CLOSE(fd) close(fd)
 #endif
 
 
@@ -557,13 +569,22 @@ write_file_and_section_headers(int fd,
   *header_pos = seek_to_next_page(fd);
 
   if (LSEEK (fd, *header_pos, SEEK_SET) < 0) {
+#ifdef WASM32
+    wasm_image_log("WASM save-image: header seek failed\n", 35);
+#endif
     return errno;
   }
-  if (write(fd, file_header, sizeof(*file_header)) != sizeof(*file_header)) {
+  if (IMAGE_WRITE(fd, file_header, sizeof(*file_header)) != sizeof(*file_header)) {
+#ifdef WASM32
+    wasm_image_log("WASM save-image: file header write failed\n", 41);
+#endif
     return errno;
   }
-  if (write(fd, section_headers, sizeof(section_headers[0])*nsections)
+  if (IMAGE_WRITE(fd, section_headers, sizeof(section_headers[0])*nsections)
       != (sizeof(section_headers[0])*nsections)) {
+#ifdef WASM32
+    wasm_image_log("WASM save-image: section header write failed\n", 44);
+#endif
     return errno;
   }
   return 0;
@@ -580,7 +601,7 @@ writebuf(int fd, char *bytes, natural n)
     if (this_size > INT_MAX) {
       this_size = INT_MAX;
     }
-    result = write(fd, bytes, this_size);
+    result = IMAGE_WRITE(fd, bytes, this_size);
     if (result < 0) {
       return errno;
     }
@@ -703,6 +724,9 @@ save_application_internal(unsigned fd, Boolean egc_was_enabled)
 #else
   err = write_file_and_section_headers(fd, &fh, sections, NUM_IMAGE_SECTIONS, &header_pos);
   if (err) {
+#ifdef WASM32
+    wasm_image_log("WASM save-image: write headers failed\n", 37);
+#endif
     return err;
   }
 #endif
@@ -717,6 +741,9 @@ save_application_internal(unsigned fd, Boolean egc_was_enabled)
     seek_to_next_page(fd);
     n = sections[i].memory_size;
     if (writebuf(fd, a->low, n)) {
+#ifdef WASM32
+        wasm_image_log("WASM save-image: section write failed\n", 37);
+#endif
 	return errno;
     }
     if (n &&  ((sections[i].code) == AREA_MANAGED_STATIC)) {
@@ -725,6 +752,9 @@ save_application_internal(unsigned fd, Boolean egc_was_enabled)
 
       seek_to_next_page(fd);
       if (writebuf(fd,(char*)managed_static_refbits,nrefbytes)) {
+#ifdef WASM32
+        wasm_image_log("WASM save-image: refbits write failed\n", 37);
+#endif
         return errno;
       }
     }
@@ -738,6 +768,9 @@ save_application_internal(unsigned fd, Boolean egc_was_enabled)
   fh.section_data_offset_low = (unsigned)section_data_delta;
   err =  write_file_and_section_headers(fd, &fh, sections, NUM_IMAGE_SECTIONS, &header_pos);
   if (err) {
+#ifdef WASM32
+    wasm_image_log("WASM save-image: rewrite headers failed\n", 39);
+#endif
     return err;
   }  
 #endif
@@ -747,15 +780,18 @@ save_application_internal(unsigned fd, Boolean egc_was_enabled)
   trailer.sig2 = IMAGE_SIG2;
   eof_pos = LSEEK(fd, 0, SEEK_CUR) + sizeof(trailer);
   trailer.delta = (int) (header_pos-eof_pos);
-  if (write(fd, &trailer, sizeof(trailer)) == sizeof(trailer)) {
+  if (IMAGE_WRITE(fd, &trailer, sizeof(trailer)) == sizeof(trailer)) {
 #ifndef WINDOWS
     fsync(fd);
 #endif
-    close(fd);
+    IMAGE_CLOSE(fd);
     return 0;
   } 
   i = errno;
-  close(fd);
+#ifdef WASM32
+  wasm_image_log("WASM save-image: trailer write failed\n", 38);
+#endif
+  IMAGE_CLOSE(fd);
   return i;
 }
 

@@ -11,6 +11,7 @@
  *   node doc/wasm/js/load-image.mjs --start-lisp --modules bundle.json /path/to/ccl.image
  */
 
+import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,6 +21,7 @@ import {
   createSharedCclRuntime,
   instantiateWasm,
   installCompiledModulesFromBundle,
+  installConstPoolBytes,
   installCompiledModulesFromRegistry,
   installSubprimsTable,
 } from "./ccl-loader.mjs";
@@ -68,11 +70,25 @@ if (!imagePath) {
 let modulesBundle = null;
 let modulesHandle = null;
 let modulesReader = null;
+let modulesFd = null;
+const constPoolEntries = new Map();
+const constPoolsInstalled = new Set();
 if (modulesPath) {
   modulesBundle = JSON.parse(await fs.readFile(modulesPath, "utf-8"));
+  for (const entry of Array.isArray(modulesBundle?.modules) ? modulesBundle.modules : []) {
+    if (!Number.isFinite(entry?.entryIndex)) continue;
+    if (!Number.isFinite(entry?.constPoolOffset) || !Number.isFinite(entry?.constPoolLength)) continue;
+    const length = entry.constPoolLength >>> 0;
+    if (length === 0) continue;
+    constPoolEntries.set(entry.entryIndex >>> 0, {
+      offset: entry.constPoolOffset >>> 0,
+      length,
+    });
+  }
   if (modulesBundle?.binary) {
     const binPath = path.resolve(path.dirname(modulesPath), modulesBundle.binary);
     modulesHandle = await fs.open(binPath, "r");
+    modulesFd = fsSync.openSync(binPath, "r");
     modulesReader = async (offset, length) => {
       const size = length >>> 0;
       if (size === 0) return new Uint8Array(0);
@@ -114,14 +130,50 @@ const microkernel = createMicrokernel({
   writeStderr: () => {},
 });
 
+let kernelExports = null;
+function installConstPoolOnDemand(entryIndexRaw) {
+  if (!kernelExports || modulesFd == null) return 0;
+  const entryIndex = entryIndexRaw >>> 0;
+  if (constPoolsInstalled.has(entryIndex)) return 1;
+
+  const info = constPoolEntries.get(entryIndex);
+  if (!info) return 0;
+
+  const bytes = Buffer.allocUnsafe(info.length);
+  let total = 0;
+  while (total < info.length) {
+    const bytesRead = fsSync.readSync(modulesFd, bytes, total, info.length - total, info.offset + total);
+    if (bytesRead === 0) break;
+    total += bytesRead;
+  }
+  if (total !== info.length) return 0;
+
+  const rc = installConstPoolBytes({
+    kernelExports,
+    memory: runtime.memory,
+    entryIndex,
+    constPoolBytes: bytes,
+  });
+  if (rc === 0) return 0;
+
+  constPoolsInstalled.add(entryIndex);
+  return 1;
+}
+
 const kernel = await instantiateWasm(
   kernelBytes,
   createCclImports({
     memory: runtime.memory,
     subprimsTable: runtime.subprimsTable,
     microkernel,
+    extra: {
+      ccl: {
+        wasm_host_install_const_pool: installConstPoolOnDemand,
+      },
+    },
   }),
 );
+kernelExports = kernel.instance.exports;
 
 let subprims = null;
 let subprimsMap = null;
@@ -137,7 +189,12 @@ if (runToplevel || runStartLisp) {
       memory: runtime.memory,
       subprimsTable: runtime.subprimsTable,
       microkernel,
-      extra: { ccl: kernel.instance.exports },
+      extra: {
+        ccl: {
+          wasm_host_install_const_pool: installConstPoolOnDemand,
+          ...kernel.instance.exports,
+        },
+      },
     }),
   );
 
@@ -147,9 +204,6 @@ if (runToplevel || runStartLisp) {
     providers: [{ exports: kernel.instance.exports }, { exports: subprims.instance.exports }],
   });
 
-  if (typeof kernel.instance.exports.wasm_set_subprims_ready === "function") {
-    kernel.instance.exports.wasm_set_subprims_ready(1);
-  }
 }
 
 const pageSize = 65536;
@@ -213,6 +267,7 @@ if (runStartLisp) {
         subprimsTable: runtime.subprimsTable,
         microkernel,
         strict: false,
+        installConstPools: false,
       });
       console.log(`compiled modules installed from bundle ${installed}/${count} (failed ${failed})`);
     }
@@ -226,6 +281,9 @@ if (runStartLisp) {
   } catch (e) {
     console.error(`wasm_ccl_load_image trapped: ${e}`);
     process.exit(3);
+  }
+  if (typeof kernel.instance.exports.wasm_set_subprims_ready === "function") {
+    kernel.instance.exports.wasm_set_subprims_ready(1);
   }
   try {
     const rc = kernel.instance.exports.wasm_ccl_start_lisp();
@@ -251,6 +309,7 @@ if (runStartLisp) {
         subprimsTable: runtime.subprimsTable,
         microkernel,
         strict: false,
+        installConstPools: false,
       });
       console.log(`compiled modules installed from bundle ${installed}/${count} (failed ${failed})`);
     }
@@ -267,14 +326,13 @@ if (runStartLisp) {
   }
 }
 
-if (modulesHandle) {
-  await modulesHandle.close();
-}
-
 if (runToplevel) {
   const runToplevelFn = kernel.instance.exports.wasm_run_toplevel;
   if (typeof runToplevelFn !== "function") {
     fail("kernel missing export wasm_run_toplevel");
+  }
+  if (typeof kernel.instance.exports.wasm_set_subprims_ready === "function") {
+    kernel.instance.exports.wasm_set_subprims_ready(1);
   }
   installBootEntry();
 
@@ -285,4 +343,11 @@ if (runToplevel) {
     console.error(`wasm_run_toplevel trapped: ${e}`);
     process.exit(4);
   }
+}
+
+if (modulesHandle) {
+  await modulesHandle.close();
+}
+if (modulesFd != null) {
+  fsSync.closeSync(modulesFd);
 }

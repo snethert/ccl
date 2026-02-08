@@ -35,6 +35,7 @@
 #include <sys/syscall.h>
 #include <sys/time.h>
 #include <stdint.h>
+#include <stdio.h>
 #ifndef WASM32
 #include <signal.h>
 #endif
@@ -101,8 +102,28 @@ lisp_write(int fd, void *buf, size_t count)
   int32_t r = wasm_kernel_stream_write((uint32_t)fd, buf, (uint32_t)count);
   if (r < 0) {
     errno = -r;
+#ifdef WASM32
+    char msg[128];
+    int n = snprintf(msg, sizeof(msg),
+                     "WASM lisp_write fail fd=%d count=%lu errno=%d\n",
+                     fd, (unsigned long)count, errno);
+    if (n > 0) {
+      wasm_host_log(msg, (unsigned)n);
+    }
+#endif
     return -1;
   }
+#ifdef WASM32
+  if ((size_t)r != count) {
+    char msg[128];
+    int n = snprintf(msg, sizeof(msg),
+                     "WASM lisp_write short fd=%d wrote=%d want=%lu\n",
+                     fd, r, (unsigned long)count);
+    if (n > 0) {
+      wasm_host_log(msg, (unsigned)n);
+    }
+  }
+#endif
   return (ssize_t)r;
 }
 
@@ -206,6 +227,15 @@ lisp_lseek(int fd, int64_t offset, int whence)
   int32_t r = wasm_kernel_stream_seek((uint32_t)fd, offset, (uint32_t)whence, &pos);
   if (r < 0) {
     errno = -r;
+#ifdef WASM32
+    char msg[160];
+    int n = snprintf(msg, sizeof(msg),
+                     "WASM lisp_lseek fail fd=%d off=%lld whence=%d errno=%d\n",
+                     fd, (long long)offset, whence, errno);
+    if (n > 0) {
+      wasm_host_log(msg, (unsigned)n);
+    }
+#endif
     return -1;
   }
   return (int64_t)pos;

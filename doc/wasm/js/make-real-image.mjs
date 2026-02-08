@@ -12,6 +12,7 @@
  *  - level-1.lafsl + l1-fasls/*.lafsl + bin/*.lafsl (cross-compile)
  */
 
+import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,6 +23,7 @@ import {
   createSharedCclRuntime,
   instantiateWasm,
   installCompiledModulesFromBundle,
+  installConstPoolBytes,
   installCompiledModulesFromRegistry,
   installSubprimsTable,
 } from "./ccl-loader.mjs";
@@ -30,6 +32,13 @@ import { FILE_MODE_READ } from "./persist-service.mjs";
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
   process.exit(1);
+}
+
+const traceEnabled = process.env.CCL_WASM_TRACE === "1";
+function trace(msg) {
+  if (traceEnabled) {
+    console.error(`[make-real-image] ${msg}`);
+  }
 }
 
 function usage() {
@@ -89,8 +98,25 @@ function toPosix(p) {
   return p.split(path.sep).join("/");
 }
 
-function lispString(value) {
-  return `"${String(value).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+function alignUp(value, align) {
+  return (value + (align - 1)) & ~(align - 1);
+}
+
+function allocScratch(memory, size) {
+  const pageSize = 65536;
+  const aligned = alignUp(size, 16);
+  const base = memory.buffer.byteLength;
+  const pages = Math.ceil(aligned / pageSize);
+  if (pages > 0) {
+    memory.grow(pages);
+  }
+  return base;
+}
+
+function copyBytesToScratch(memory, bytes) {
+  const base = allocScratch(memory, bytes.length);
+  new Uint8Array(memory.buffer, base, bytes.length).set(bytes);
+  return base >>> 0;
 }
 
 function addNamedBytes(map, name, bytes) {
@@ -145,6 +171,8 @@ const root = path.resolve(scriptDir, "../../..");
 const defaultBootImage = path.join(root, "wasm-boot.image");
 const defaultOutput = path.join(root, "doc/wasm/root.image");
 const defaultWasmOutput = "doc/wasm/root.image";
+// Policy: keep compiled modules external by default (JSON + .bin sidecar)
+// instead of embedding them in the saved heap image.
 const defaultModules = path.join(root, "doc/wasm/wasm-runtime-modules.json");
 const kernelPath = args.kernel ?? path.join(root, "doc/wasm/js/wasmcl.wasm");
 const subprimsPath = args.subprims ?? path.join(root, "doc/wasm/js/subprims.wasm");
@@ -153,6 +181,8 @@ const bootImagePath = args.bootImage ?? defaultBootImage;
 const outputPath = args.output ?? defaultOutput;
 const wasmOutputPath = args.wasmOutput ?? defaultWasmOutput;
 const modulesPath = args.modules ?? defaultModules;
+
+trace("resolved input paths");
 
 if (!(await fileExists(kernelPath))) {
   fail(`Missing kernel: ${kernelPath}`);
@@ -190,6 +220,7 @@ await addFile(namedBytes, level1Path, "level-1.lafsl");
 await collectFasls(namedBytes, l1Dir, "l1-fasls");
 await collectFasls(namedBytes, binDir, "bin");
 await addFile(namedBytes, path.join(root, "scripts/wasm/make-real-image.lisp"), "scripts/wasm/make-real-image.lisp");
+trace("loaded named bytes");
 
 const requiredBin = ["lists.lafsl", "sequences.lafsl", "hash.lafsl", "defstruct.lafsl", "dll-node.lafsl", "chars.lafsl", "dumplisp.lafsl"];
 for (const name of requiredBin) {
@@ -204,14 +235,29 @@ const subprimsBytes = await fs.readFile(subprimsPath);
 const subprimsMap = JSON.parse(await fs.readFile(subprimsMapPath, "utf-8"));
 const bootBytes = await fs.readFile(bootImagePath);
 const compiledModulesBundle = JSON.parse(await fs.readFile(modulesPath, "utf-8"));
+trace("loaded kernel/subprims/boot/modules assets");
 let compiledModulesHandle = null;
 let compiledModulesReader = null;
+let compiledModulesFd = null;
+const constPoolEntries = new Map();
+const constPoolsInstalled = new Set();
+for (const entry of Array.isArray(compiledModulesBundle?.modules) ? compiledModulesBundle.modules : []) {
+  if (!Number.isFinite(entry?.entryIndex)) continue;
+  if (!Number.isFinite(entry?.constPoolOffset) || !Number.isFinite(entry?.constPoolLength)) continue;
+  const length = entry.constPoolLength >>> 0;
+  if (length === 0) continue;
+  constPoolEntries.set(entry.entryIndex >>> 0, {
+    offset: entry.constPoolOffset >>> 0,
+    length,
+  });
+}
 if (compiledModulesBundle?.binary) {
   const binPath = path.join(path.dirname(modulesPath), compiledModulesBundle.binary);
   if (!(await fileExists(binPath))) {
     fail(`Missing compiled modules binary: ${binPath}`);
   }
   compiledModulesHandle = await fs.open(binPath, "r");
+  compiledModulesFd = fsSync.openSync(binPath, "r");
   compiledModulesReader = async (offset, length) => {
     const size = length >>> 0;
     if (size === 0) return new Uint8Array(0);
@@ -233,12 +279,14 @@ if (compiledModulesBundle?.binary) {
     return buffer;
   };
 }
+trace("compiled modules reader initialized");
 
 const runtime = createSharedCclRuntime({
   memoryInitialPages: 512,
   subprimsTableInitial: 256,
   createMemory: true,
 });
+trace("runtime initialized");
 
 const decoder = new TextDecoder("utf-8");
 const microkernel = createMicrokernel({
@@ -249,6 +297,7 @@ const microkernel = createMicrokernel({
   writeStdout: (bytes) => process.stdout.write(decoder.decode(bytes)),
   writeStderr: (bytes) => process.stderr.write(decoder.decode(bytes)),
 });
+trace("microkernel initialized");
 
 if (!microkernel.persistence) {
   fail("missing persistence service");
@@ -258,14 +307,57 @@ if (!ensure.ok) {
   fail(`persistence ensureDirs failed for ${wasmOutputPath}`);
 }
 
+let kernelExports = null;
+function installConstPoolOnDemand(entryIndexRaw) {
+  if (!kernelExports || compiledModulesFd == null) return 0;
+  const entryIndex = entryIndexRaw >>> 0;
+  if (constPoolsInstalled.has(entryIndex)) return 1;
+
+  const info = constPoolEntries.get(entryIndex);
+  if (!info) return 0;
+
+  const bytes = Buffer.allocUnsafe(info.length);
+  let total = 0;
+  while (total < info.length) {
+    const bytesRead = fsSync.readSync(
+      compiledModulesFd,
+      bytes,
+      total,
+      info.length - total,
+      info.offset + total,
+    );
+    if (bytesRead === 0) break;
+    total += bytesRead;
+  }
+  if (total !== info.length) return 0;
+
+  const rc = installConstPoolBytes({
+    kernelExports,
+    memory: runtime.memory,
+    entryIndex,
+    constPoolBytes: bytes,
+  });
+  if (rc === 0) return 0;
+
+  constPoolsInstalled.add(entryIndex);
+  return 1;
+}
+
 const kernel = await instantiateWasm(
   kernelBytes,
   createCclImports({
     memory: runtime.memory,
     subprimsTable: runtime.subprimsTable,
     microkernel,
+    extra: {
+      ccl: {
+        wasm_host_install_const_pool: installConstPoolOnDemand,
+      },
+    },
   }),
 );
+kernelExports = kernel.instance.exports;
+trace("kernel instantiated");
 
 const subprims = await instantiateWasm(
   subprimsBytes,
@@ -273,19 +365,22 @@ const subprims = await instantiateWasm(
     memory: runtime.memory,
     subprimsTable: runtime.subprimsTable,
     microkernel,
-    extra: { ccl: kernel.instance.exports },
+    extra: {
+      ccl: {
+        wasm_host_install_const_pool: installConstPoolOnDemand,
+        ...kernel.instance.exports,
+      },
+    },
   }),
 );
+trace("subprims instantiated");
 
 installSubprimsTable({
   table: runtime.subprimsTable,
   subprimsMap,
   providers: [{ exports: kernel.instance.exports }, { exports: subprims.instance.exports }],
 });
-
-if (typeof kernel.instance.exports.wasm_set_subprims_ready === "function") {
-  kernel.instance.exports.wasm_set_subprims_ready(1);
-}
+trace("subprims table installed");
 
 const imageLen = bootBytes.byteLength >>> 0;
 const pageSize = 65536;
@@ -316,6 +411,7 @@ if (typeof ex.wasm_ccl_load_image !== "function") {
   fail("kernel missing wasm_ccl_load_image");
 }
 ex.wasm_ccl_load_image(blobBase, imageLen);
+trace("boot image loaded");
 
 const bundleInstall = await installCompiledModulesFromBundle({
   bundle: compiledModulesBundle,
@@ -325,7 +421,9 @@ const bundleInstall = await installCompiledModulesFromBundle({
   subprimsTable: runtime.subprimsTable,
   microkernel,
   strict: false,
+  installConstPools: false,
 });
+trace(`compiled module bundle installed ${bundleInstall.installed}/${bundleInstall.count}`);
 if (bundleInstall.count === 0) {
   fail("compiled modules bundle is empty; refusing to proceed");
 }
@@ -342,88 +440,33 @@ await installCompiledModulesFromRegistry({
   subprimsTable: runtime.subprimsTable,
   microkernel,
 });
+trace("compiled module registry install pass complete");
 
-if (compiledModulesHandle) {
-  await compiledModulesHandle.close();
-}
-
-const bootIndex = 200;
-if (typeof ex.wasm_boot_entry !== "function") {
-  fail("kernel missing wasm_boot_entry");
-}
-if (runtime.subprimsTable.length <= bootIndex) {
-  runtime.subprimsTable.grow(bootIndex - runtime.subprimsTable.length + 1);
-}
-runtime.subprimsTable.set(bootIndex, ex.wasm_boot_entry);
-
-if (typeof ex.wasm_ccl_init !== "function") {
-  fail("kernel missing wasm_ccl_init");
-}
-if (typeof ex.wasm_ccl_step !== "function") {
-  fail("kernel missing wasm_ccl_step");
-}
-if (typeof ex.wasm_ccl_exit_code !== "function") {
-  fail("kernel missing wasm_ccl_exit_code");
-}
-if (typeof ex.wasm_ccl_last_error !== "function") {
-  fail("kernel missing wasm_ccl_last_error");
-}
-if (typeof ex.wasm_ccl_blocked_request_id !== "function") {
-  fail("kernel missing wasm_ccl_blocked_request_id");
+if (typeof kernel.instance.exports.wasm_set_subprims_ready === "function") {
+  kernel.instance.exports.wasm_set_subprims_ready(1);
 }
 
-const initr = ex.wasm_ccl_init() | 0;
-if (initr !== 0) {
-  fail(`wasm_ccl_init failed: ${initr}`);
+if (typeof ex.wasm_save_image_direct !== "function") {
+  fail("kernel missing wasm_save_image_direct");
 }
-
-const script = [
-  `(setq ccl:*command-line-argument-list* '("--" "--output" ${lispString(wasmOutputPath)}))`,
-  `(load ${lispString("scripts/wasm/make-real-image.lisp")})`,
-  "",
-].join("\n");
-
 const encoder = new TextEncoder();
-microkernel.feedStdin(encoder.encode(script));
-microkernel.closeStdin();
-
-const STEP_RUNNING = 0;
-const STEP_BLOCKED = 1;
-const STEP_EXITED = 2;
-const STEP_TRAPPED = 3;
-
-let steps = 0;
-const maxSteps = 200000;
-for (;;) {
-  const st = ex.wasm_ccl_step(0) | 0;
-  if (st === STEP_EXITED) break;
-  if (st === STEP_TRAPPED) {
-    fail(`wasm_ccl_step trapped (error=${ex.wasm_ccl_last_error() | 0})`);
-  }
-  if (st === STEP_BLOCKED) {
-    // Keep stepping; stdin is already fed/closed.
-    const blocked = ex.wasm_ccl_blocked_request_id() >>> 0;
-    if (blocked === 0) {
-      fail("wasm_ccl_step blocked without a request id");
-    }
-  }
-  steps++;
-  if (steps > maxSteps) {
-    fail("wasm_ccl_step did not exit (step limit exceeded)");
-  }
+const imagePathBytes = encoder.encode(wasmOutputPath);
+const imagePathPtr = copyBytesToScratch(runtime.memory, imagePathBytes);
+trace(`invoking wasm_save_image_direct for ${wasmOutputPath}`);
+const saveRc = ex.wasm_save_image_direct(
+  imagePathPtr,
+  imagePathBytes.length >>> 0,
+  0,
+) | 0;
+if (saveRc !== 0) {
+  console.warn(`WARN: wasm_save_image_direct returned ${saveRc}; attempting to read persisted image anyway`);
 }
+trace("wasm_save_image_direct completed");
+const effectiveWasmOutputPath = wasmOutputPath;
 
-const exitCode = ex.wasm_ccl_exit_code() | 0;
-if (exitCode !== 0) {
-  fail(`Lisp exited with code ${exitCode}`);
-}
-if ((ex.wasm_ccl_last_error() | 0) !== 0) {
-  fail(`Lisp exited with error ${ex.wasm_ccl_last_error() | 0}`);
-}
-
-const openRes = microkernel.persistence.openFile(wasmOutputPath, FILE_MODE_READ);
+const openRes = microkernel.persistence.openFile(effectiveWasmOutputPath, FILE_MODE_READ);
 if (!openRes?.ok) {
-  fail(`failed to open ${wasmOutputPath} in persistence store`);
+  fail(`failed to open ${effectiveWasmOutputPath} in persistence store`);
 }
 const handle = openRes.value;
 const chunks = [];
@@ -433,7 +476,14 @@ for (;;) {
   chunks.push(Buffer.from(part));
 }
 handle.close();
-const outputBytes = Buffer.concat(chunks);
-await fs.writeFile(outputPath, outputBytes);
+const persistedBytes = Buffer.concat(chunks);
+await fs.writeFile(outputPath, persistedBytes);
 
-console.log(`Wrote ${outputBytes.length} bytes to ${outputPath}`);
+if (compiledModulesHandle) {
+  await compiledModulesHandle.close();
+}
+if (compiledModulesFd != null) {
+  fsSync.closeSync(compiledModulesFd);
+}
+
+console.log(`Wrote ${persistedBytes.length} bytes to ${outputPath}`);

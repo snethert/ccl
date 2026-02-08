@@ -54,6 +54,9 @@ export function createCclImports({
     // Optional/compat: if your link step imports a named table, wire it here.
     subprims_table: subprimsTable,
   };
+  if (typeof ccl.wasm_host_install_const_pool !== "function") {
+    ccl.wasm_host_install_const_pool = () => 0;
+  }
 
   return { ...extra, env, ccl };
 }
@@ -360,6 +363,7 @@ export async function installCompiledModulesFromBundle({
   extra = {},
   verbose = false,
   strict = true,
+  installConstPools = true,
 } = {}) {
   if (!memory) throw new Error("installCompiledModulesFromBundle: memory is required");
   if (!subprimsTable) throw new Error("installCompiledModulesFromBundle: subprimsTable is required");
@@ -382,79 +386,70 @@ export async function installCompiledModulesFromBundle({
   let failed = 0;
   const readBinary = typeof binaryReader === "function" ? binaryReader : null;
   for (const entry of modules) {
-    let moduleBytes = entry.moduleBytes ?? null;
-    let constPoolBytes = entry.constPoolBytes ?? null;
-    if (!moduleBytes && binaryBytes && Number.isFinite(entry.offset) && Number.isFinite(entry.length)) {
-      const start = entry.offset >>> 0;
-      const end = start + (entry.length >>> 0);
-      moduleBytes = binaryBytes.subarray(start, end);
-    } else if (!moduleBytes && readBinary && Number.isFinite(entry.offset) && Number.isFinite(entry.length)) {
-      const start = entry.offset >>> 0;
-      const length = entry.length >>> 0;
-      moduleBytes = await readBinary(start, length);
-    }
-    if (!constPoolBytes && binaryBytes &&
-        Number.isFinite(entry.constPoolOffset) && Number.isFinite(entry.constPoolLength)) {
-      const start = entry.constPoolOffset >>> 0;
-      const end = start + (entry.constPoolLength >>> 0);
-      constPoolBytes = binaryBytes.subarray(start, end);
-    } else if (!constPoolBytes && readBinary &&
-        Number.isFinite(entry.constPoolOffset) && Number.isFinite(entry.constPoolLength)) {
-      const start = entry.constPoolOffset >>> 0;
-      const length = entry.constPoolLength >>> 0;
-      constPoolBytes = await readBinary(start, length);
-    }
-
-    if (!moduleBytes || moduleBytes.length === 0) {
-      if (verbose) {
-        // eslint-disable-next-line no-console
-        console.warn(`compiled module missing bytes for ${entry.exportName}`);
-      }
-      failed++;
-      continue;
-    }
-
-    if (constPoolBytes?.length) {
-      installConstPoolBytes({
-        kernelExports,
-        memory,
-        entryIndex: entry.entryIndex,
-        constPoolBytes,
-      });
-    }
-
-    const bytes = moduleBytes instanceof Uint8Array ? moduleBytes : Uint8Array.from(moduleBytes);
-    let instance;
     try {
-      ({ instance } = await instantiateWasm(bytes, imports));
+      let moduleBytes = entry.moduleBytes ?? null;
+      let constPoolBytes = entry.constPoolBytes ?? null;
+      if (!moduleBytes && binaryBytes && Number.isFinite(entry.offset) && Number.isFinite(entry.length)) {
+        const start = entry.offset >>> 0;
+        const end = start + (entry.length >>> 0);
+        moduleBytes = binaryBytes.subarray(start, end);
+      } else if (!moduleBytes && readBinary && Number.isFinite(entry.offset) && Number.isFinite(entry.length)) {
+        const start = entry.offset >>> 0;
+        const length = entry.length >>> 0;
+        moduleBytes = await readBinary(start, length);
+      }
+      if (!constPoolBytes && binaryBytes &&
+          Number.isFinite(entry.constPoolOffset) && Number.isFinite(entry.constPoolLength)) {
+        const start = entry.constPoolOffset >>> 0;
+        const end = start + (entry.constPoolLength >>> 0);
+        constPoolBytes = binaryBytes.subarray(start, end);
+      } else if (!constPoolBytes && readBinary &&
+          Number.isFinite(entry.constPoolOffset) && Number.isFinite(entry.constPoolLength)) {
+        const start = entry.constPoolOffset >>> 0;
+        const length = entry.constPoolLength >>> 0;
+        constPoolBytes = await readBinary(start, length);
+      }
+
+      if (!moduleBytes || moduleBytes.length === 0) {
+        throw new Error(`compiled module missing bytes for ${entry.exportName}`);
+      }
+
+      if (installConstPools && constPoolBytes?.length) {
+        installConstPoolBytes({
+          kernelExports,
+          memory,
+          entryIndex: entry.entryIndex,
+          constPoolBytes,
+        });
+      }
+
+      const bytes = moduleBytes instanceof Uint8Array ? moduleBytes : Uint8Array.from(moduleBytes);
+      const { instance } = await instantiateWasm(bytes, imports);
+      const fn = instance?.exports?.[entry.exportName];
+      if (typeof fn !== "function") {
+        throw new Error(`compiled module missing export ${entry.exportName}`);
+      }
+
+      const idx = entry.entryIndex >>> 0;
+      if (subprimsTable.length <= idx) {
+        subprimsTable.grow(idx - subprimsTable.length + 1);
+      }
+      subprimsTable.set(idx, fn);
+      installed++;
     } catch (e) {
       failed++;
       if (verbose) {
         // eslint-disable-next-line no-console
-        console.warn(`compiled module failed to instantiate ${entry.exportName}: ${e}`);
+        console.warn(`compiled module install failed ${entry.exportName}: ${e}`);
       }
-      if (strict) throw e;
-      continue;
-    }
-    const fn = instance?.exports?.[entry.exportName];
-    if (typeof fn !== "function") {
-      if (verbose) {
-        // eslint-disable-next-line no-console
-        console.warn(`compiled module missing export ${entry.exportName}`);
-      }
-      failed++;
       if (strict) {
-        throw new Error(`compiled module missing export ${entry.exportName}`);
+        throw new Error(
+          `compiled module install failed ${entry.exportName} (entry ${entry.entryIndex}): ${e}`,
+          { cause: e },
+        );
       }
       continue;
     }
-
-    const idx = entry.entryIndex >>> 0;
-    if (subprimsTable.length <= idx) {
-      subprimsTable.grow(idx - subprimsTable.length + 1);
-    }
-    subprimsTable.set(idx, fn);
-    installed++;
   }
 
   return { installed, count: modules.length, failed, entries: modules };

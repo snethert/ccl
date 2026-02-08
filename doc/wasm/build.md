@@ -101,7 +101,14 @@ make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi clean
 make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi
 ```
 
-On macOS (after `source scripts/wasm/env.sh`), just run:
+On macOS, if `scripts/wasm/env.sh` is not used, this explicit command works:
+
+```bash
+make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi \
+  CC='/usr/local/opt/llvm@18/bin/clang-18 --sysroot=/usr/local/opt/wasi-libc/share/wasi-sysroot'
+```
+
+On macOS (after `source scripts/wasm/env.sh`), you can also run:
 
 ```bash
 make -C lisp-kernel/wasm32 CC="$CC"
@@ -253,12 +260,17 @@ scripts/wasm/build-wasm-boot.sh
 ```bash
 ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --output doc/wasm/root.image
 ```
+On non-WASM hosts this now preserves the host workflow by delegating to
+`node doc/wasm/js/make-real-image.mjs` under the hood.
 
 4. Validate the real image in the JS loader (uses the compiled-modules bundle):
 
 ```bash
 node doc/wasm/js/load-image.mjs --start-lisp --modules doc/wasm/wasm-runtime-modules.json doc/wasm/root.image
 ```
+Current status: this script path produces loadable wasm images. Note that a raw
+host `save-application` image (without the wasm helper path) is still not a
+drop-in wasm heap image format.
 
 ### Option B (Node helper, wasm-only path)
 
@@ -267,6 +279,11 @@ extract the generated image from the persistence store:
 
 ```bash
 node doc/wasm/js/make-real-image.mjs --modules doc/wasm/wasm-runtime-modules.json --output doc/wasm/root.image
+```
+Current status: working; this path now produces a loadable image. Validate with:
+
+```bash
+node doc/wasm/js/load-image.mjs doc/wasm/root.image
 ```
 
 ### Option C (native wasm32 CCL, optional)
@@ -315,5 +332,7 @@ python3 scripts/wasm/generate_subprims_artifacts.py
 ## Bring-Up Status / Limitations
 
 - Many OS/POSIX interfaces are stubbed out for WASM32 bring-up.
-- `start_lisp` can run a stub toplevel loop when the minimal image + boot entrypoint are installed; the real Lisp toplevel is still pending, so use `wasm_ccl_step` for the Stage‑2 stepping baseline while the full entry/loader path is integrated.
+- Boot image + compiled module bundle can enter `start_lisp` without immediate macro-apply/UDF traps.
+- Real image generation is supported in both host-script and Node-helper
+  workflows; host script delegates to the helper on non-WASM runtimes.
 - The “no-WASI libc” shims are intentionally minimal (bump `malloc`, no real stdio/formatting).

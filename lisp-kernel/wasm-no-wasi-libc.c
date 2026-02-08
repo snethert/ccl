@@ -16,6 +16,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h>
 #ifdef lseek
 #undef lseek
 #endif
@@ -33,6 +34,13 @@ FILE *const stderr = (FILE *)0;
 extern int32_t wasm_memory_grow_and_relocate(uint32_t pages);
 __attribute__((import_module("env"), import_name("wasm_host_log")))
 void wasm_host_log(const char *bytes, unsigned len);
+extern int lisp_open(char *path, int flags, mode_t mode);
+extern int lisp_close(int fd);
+extern ssize_t lisp_read(int fd, void *buf, size_t count);
+extern ssize_t lisp_write(int fd, void *buf, size_t count);
+extern int64_t lisp_lseek(int fd, int64_t offset, int whence);
+extern int lisp_stat(char *path, void *buf);
+extern int lisp_fstat(int fd, void *buf);
 
 static uintptr_t
 align_up_uintptr(uintptr_t p, uintptr_t a)
@@ -49,7 +57,12 @@ static uintptr_t wasm_heap_ptr = 0;
 static const uint8_t *wasm_boot_image_bytes = NULL;
 static size_t wasm_boot_image_len = 0;
 static size_t wasm_boot_image_off = 0;
-static const int wasm_boot_image_fd = 3;
+/*
+ * Synthetic boot-image descriptor used by open/read/lseek shims before we have
+ * a real filesystem. Keep this out of the microkernel SID range (SIDs start at
+ * 3 and increment), or lseek/read calls can target the wrong backing store.
+ */
+static const int wasm_boot_image_fd = 0x3fffffff;
 
 __attribute__((used, visibility("default"), export_name("wasm_set_boot_image")))
 void
@@ -695,14 +708,24 @@ sysconf(int name)
 int
 open(const char *path, int flags, ...)
 {
-  (void)path;
-  (void)flags;
   if (wasm_boot_image_bytes && wasm_str_ends_with(path, ".image")) {
     wasm_boot_image_off = 0;
     return wasm_boot_image_fd;
   }
-  errno = ENOENT;
-  return -1;
+
+  mode_t mode = 0666;
+  if (flags & O_CREAT) {
+    va_list ap;
+    va_start(ap, flags);
+    mode = (mode_t)va_arg(ap, int);
+    va_end(ap);
+  }
+
+  int fd = lisp_open((char *)path, flags, mode);
+  if (fd < 0) {
+    return -1;
+  }
+  return fd;
 }
 
 int
@@ -711,126 +734,157 @@ close(int fd)
   if (fd == wasm_boot_image_fd) {
     return 0;
   }
-  errno = EBADF;
-  return -1;
+  int r = lisp_close(fd);
+  if (r < 0) {
+    char buf[96];
+    int n = snprintf(buf, sizeof(buf), "WASM close fail fd=%d errno=%d\n", fd, errno);
+    if (n > 0) {
+      wasm_host_log(buf, (unsigned)n);
+    }
+  }
+  return r;
 }
 
 ssize_t
 read(int fd, void *buf, size_t count)
 {
-  if ((fd != wasm_boot_image_fd) || (wasm_boot_image_bytes == NULL)) {
-    (void)buf;
-    (void)count;
-    errno = EBADF;
-    return -1;
+  if (fd == wasm_boot_image_fd && wasm_boot_image_bytes != NULL) {
+    if (wasm_boot_image_off >= wasm_boot_image_len) {
+      return 0;
+    }
+    size_t remain = wasm_boot_image_len - wasm_boot_image_off;
+    size_t n = (count < remain) ? count : remain;
+    if (n) {
+      memmove(buf, wasm_boot_image_bytes + wasm_boot_image_off, n);
+      wasm_boot_image_off += n;
+    }
+    return (ssize_t)n;
   }
-  if (wasm_boot_image_off >= wasm_boot_image_len) {
-    return 0;
-  }
-  size_t remain = wasm_boot_image_len - wasm_boot_image_off;
-  size_t n = (count < remain) ? count : remain;
-  if (n) {
-    memmove(buf, wasm_boot_image_bytes + wasm_boot_image_off, n);
-    wasm_boot_image_off += n;
-  }
-  return (ssize_t)n;
+  return lisp_read(fd, buf, count);
 }
 
 ssize_t
 write(int fd, const void *buf, size_t count)
 {
-  (void)fd;
-  (void)buf;
-  (void)count;
-  errno = ENOSYS;
-  return -1;
+  if (fd == wasm_boot_image_fd) {
+    errno = EBADF;
+    return -1;
+  }
+  ssize_t r = lisp_write(fd, (void *)buf, count);
+  if (r < 0) {
+    char msg[96];
+    int n = snprintf(msg, sizeof(msg), "WASM write fail fd=%d errno=%d\n", fd, errno);
+    if (n > 0) {
+      wasm_host_log(msg, (unsigned)n);
+    }
+  } else if ((size_t)r != count) {
+    char msg[128];
+    int n = snprintf(msg, sizeof(msg),
+                     "WASM write short fd=%d wrote=%ld want=%lu\n",
+                     fd,
+                     (long)r,
+                     (unsigned long)count);
+    if (n > 0) {
+      wasm_host_log(msg, (unsigned)n);
+    }
+  }
+  return r;
 }
 
 off_t
 lseek(int fd, off_t offset, int whence)
 {
-  if ((fd != wasm_boot_image_fd) || (wasm_boot_image_bytes == NULL)) {
-    char buf[96];
-    int n = snprintf(buf, sizeof(buf),
-                     "WASM lseek: invalid fd=%d boot=%s\n",
-                     fd, (wasm_boot_image_bytes == NULL) ? "null" : "set");
-    if (n > 0) {
-      wasm_host_log(buf, (unsigned)n);
+  if (fd == wasm_boot_image_fd && wasm_boot_image_bytes != NULL) {
+    int64_t base = 0;
+    switch (whence) {
+    case SEEK_SET:
+      base = 0;
+      break;
+    case SEEK_CUR:
+      base = (int64_t)wasm_boot_image_off;
+      break;
+    case SEEK_END:
+      base = (int64_t)wasm_boot_image_len;
+      break;
+    default:
+      errno = EINVAL;
+      return (off_t)-1;
     }
-    errno = EBADF;
-    return (off_t)-1;
-  }
 
-  int64_t base = 0;
-  switch (whence) {
-  case SEEK_SET:
-    base = 0;
-    break;
-  case SEEK_CUR:
-    base = (int64_t)wasm_boot_image_off;
-    break;
-  case SEEK_END:
-    base = (int64_t)wasm_boot_image_len;
-    break;
-  default:
-    errno = EINVAL;
-    return (off_t)-1;
+    int64_t next = base + (int64_t)offset;
+    if (next < 0) {
+      errno = EINVAL;
+      return (off_t)-1;
+    }
+    if ((uint64_t)next > (uint64_t)wasm_boot_image_len) {
+      next = (int64_t)wasm_boot_image_len;
+    }
+    wasm_boot_image_off = (size_t)next;
+    return (off_t)next;
   }
-
-  int64_t next = base + (int64_t)offset;
-  if (next < 0) {
-    errno = EINVAL;
-    return (off_t)-1;
+  int64_t pos = lisp_lseek(fd, (int64_t)offset, whence);
+  if (pos < 0) {
+    char msg[128];
+    int n = snprintf(msg, sizeof(msg),
+                     "WASM lseek fail fd=%d whence=%d errno=%d\n",
+                     fd, whence, errno);
+    if (n > 0) {
+      wasm_host_log(msg, (unsigned)n);
+    }
   }
-  if ((uint64_t)next > (uint64_t)wasm_boot_image_len) {
-    next = (int64_t)wasm_boot_image_len;
-  }
-  wasm_boot_image_off = (size_t)next;
-  return (off_t)next;
+  return (off_t)pos;
 }
 
 off_t
 __wasilibc_tell(int fd)
 {
-  if ((fd != wasm_boot_image_fd) || (wasm_boot_image_bytes == NULL)) {
-    errno = EBADF;
+  if (fd == wasm_boot_image_fd && wasm_boot_image_bytes != NULL) {
+    return (off_t)wasm_boot_image_off;
+  }
+  int64_t pos = lisp_lseek(fd, 0, SEEK_CUR);
+  if (pos < 0) {
     return (off_t)-1;
   }
-  return (off_t)wasm_boot_image_off;
+  return (off_t)pos;
 }
 
 int
 fstat(int fd, struct stat *st)
 {
-  if ((fd != wasm_boot_image_fd) || (wasm_boot_image_bytes == NULL) || (st == NULL)) {
-    errno = EBADF;
+  if (st == NULL) {
+    errno = EINVAL;
     return -1;
   }
-  memset(st, 0, sizeof(*st));
-  st->st_mode = S_IFREG | 0444;
-  st->st_size = (off_t)wasm_boot_image_len;
-  return 0;
+  if (fd == wasm_boot_image_fd && wasm_boot_image_bytes != NULL) {
+    memset(st, 0, sizeof(*st));
+    st->st_mode = S_IFREG | 0444;
+    st->st_size = (off_t)wasm_boot_image_len;
+    return 0;
+  }
+  return lisp_fstat(fd, st);
 }
 
 int
 stat(const char *path, struct stat *st)
 {
-  if (!wasm_boot_image_bytes || !wasm_str_ends_with(path, ".image") || (st == NULL)) {
-    errno = ENOENT;
+  if (st == NULL) {
+    errno = EINVAL;
     return -1;
   }
-  memset(st, 0, sizeof(*st));
-  st->st_mode = S_IFREG | 0444;
-  st->st_size = (off_t)wasm_boot_image_len;
-  return 0;
+  if (wasm_boot_image_bytes && wasm_str_ends_with(path, ".image")) {
+    memset(st, 0, sizeof(*st));
+    st->st_mode = S_IFREG | 0444;
+    st->st_size = (off_t)wasm_boot_image_len;
+    return 0;
+  }
+  return lisp_stat((char *)path, st);
 }
 
 int
 fsync(int fd)
 {
   (void)fd;
-  errno = ENOSYS;
-  return -1;
+  return 0;
 }
 
 #endif /* WASM32 */

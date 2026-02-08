@@ -186,6 +186,16 @@
                          :verbose t
                          :target target)))))))
 
+(defun compile-wasm-real-image-entry (root)
+  (let* ((source (merge-pathnames "scripts/wasm/make-real-image-entry.lisp" root))
+         (output (merge-pathnames "doc/wasm/make-real-image-entry.lafsl" root)))
+    (unless (probe-file source)
+      (error "Missing helper source: ~a" source))
+    (compile-file source
+                  :output-file output
+                  :verbose t
+                  :target :wasm32)))
+
 (defun reset-wasm-entry-index ()
   (declare (special *wasm2-next-entry-index*))
   (when (boundp '*wasm2-next-entry-index*)
@@ -361,6 +371,7 @@
 
 (defun main ()
   (let* ((argv (parse-argv ccl:*command-line-argument-list*))
+         (root (repo-root-from-script))
          (force (cdr (assoc :force argv)))
          (trace-modules (cdr (assoc :trace-modules argv)))
          (modules-out (cdr (assoc :modules-out argv)))
@@ -387,6 +398,8 @@
         (format t "~&Cross-compiling ~d WASM32 modules...~%" (length *wasm-runtime-modules*))
         (wasm-target-compile-modules *wasm-runtime-modules* :wasm32 force
                                      :trace-modules trace-modules)
+        (format t "~&Cross-compiling wasm real-image helper module...~%")
+        (compile-wasm-real-image-entry root)
         (validate-wasm-compiled-modules)
         (when modules-out
           (let ((modules (sorted-compiled-modules)))
