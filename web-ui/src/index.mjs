@@ -18,8 +18,16 @@ export {
   refreshSessionListWindow,
   addPresentation,
   setLayout,
+  setCustomization,
+  patchCustomization,
   setTheme,
   setThemeMode,
+  setThemePreset,
+  setThemeOverrides,
+  resetThemeOverrides,
+  setPaneKeymapProfile,
+  setBeginnerMode,
+  dismissGuidance,
   initLayout,
   splitLayout,
   wrapInTabs,
@@ -116,10 +124,21 @@ export {
   SAFE_MODE_ENABLE_COMMAND,
   SAFE_MODE_DISABLE_COMMAND,
   DOM_ESCAPE_COMMAND,
+  CUSTOMIZATION_THEME_PRESET_COMMAND,
+  CUSTOMIZATION_THEME_OVERRIDES_COMMAND,
+  CUSTOMIZATION_THEME_OVERRIDES_RESET_COMMAND,
+  CUSTOMIZATION_KEYMAP_PROFILE_COMMAND,
+  CUSTOMIZATION_BEGINNER_MODE_ENABLE_COMMAND,
+  CUSTOMIZATION_BEGINNER_MODE_DISABLE_COMMAND,
+  CUSTOMIZATION_GUIDANCE_DISMISS_COMMAND,
+  CUSTOMIZATION_PROFILE_EXPORT_COMMAND,
+  CUSTOMIZATION_PROFILE_IMPORT_COMMAND,
   raiseError,
   acknowledgeError,
   upsertRuntimeDebuggerSnapshot,
   applyRuntimeDebuggerRestartUpdate,
+  applyRuntimeInspectorUpdate,
+  applyRuntimeJobUpdate,
   upsertJob,
   requestCapability,
   grantCapability,
@@ -161,9 +180,11 @@ export {
   registerDebuggerCommands,
   registerCapabilityCommands,
   registerDomEscapeCommands,
+  registerCustomizationCommands,
   registerCommandSurfaceCommands,
   bindCommandPaletteDefaults,
   bindCommandSurfaceDefaults,
+  applyCustomizationKeymapsToRegistry,
   openKeybindingWindow,
   refreshKeybindingWindow,
   closeKeybindingWindow
@@ -176,6 +197,7 @@ export {
   bindKey,
   resolveKey,
   resolveKeyWithTrace,
+  analyzeKeybindingConflicts,
   registerPresentationTranslator,
   resolvePresentationCommand,
   executePresentationCommand,
@@ -193,9 +215,15 @@ export {
 export { normalizeLayout, createLayout } from "./layout.mjs";
 export { normalizeSelection } from "./selection.mjs";
 export {
+  DEFAULT_THEME_PRESET_ID,
+  THEME_PRESETS,
   DEFAULT_THEME_TOKENS,
   DARK_THEME_TOKENS,
   LIGHT_THEME_TOKENS,
+  sanitizeThemeOverrides,
+  getThemePreset,
+  listThemePresets,
+  resolveThemeTokensFromSelection,
   normalizeThemeTokens,
   mergeThemeTokens,
   resolveFontString,
@@ -246,6 +274,23 @@ export {
   materializeInvocation,
   executeTypedCommand
 } from "./typed-commands.mjs";
+export {
+  CUSTOMIZATION_SCHEMA_VERSION,
+  CUSTOMIZATION_PROFILE_VERSION,
+  CUSTOMIZATION_LAYERS,
+  KEYMAP_SCOPE_KINDS,
+  KEYMAP_PANES,
+  DEFAULT_PANE_PROFILE_ASSIGNMENTS,
+  BUILTIN_KEYMAP_PROFILES,
+  normalizeCustomizationLayer,
+  normalizeCustomizationEnvelope,
+  patchCustomizationLayer,
+  resolveCustomizationTheme,
+  normalizeCustomizationProfile,
+  validateCustomizationProfile,
+  exportCustomizationProfile,
+  importCustomizationProfile
+} from "./customization.mjs";
 export { createRuntimeCommandClient } from "./runtime-command-client.mjs";
 export {
   applyRuntimeMessage,
@@ -253,7 +298,9 @@ export {
   applyRuntimeCommandResult,
   applyRuntimeCommandError,
   applyRuntimeDebuggerSnapshot,
-  applyRuntimeDebuggerRestart
+  applyRuntimeDebuggerRestart,
+  applyRuntimeInspector,
+  applyRuntimeJob
 } from "./runtime-bridge.mjs";
 export { createElement, createText, h, normalizeChildren } from "./vdom.mjs";
 export { createRoot } from "./renderer.mjs";

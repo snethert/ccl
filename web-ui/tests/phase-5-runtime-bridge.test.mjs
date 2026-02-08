@@ -55,6 +55,31 @@ test("createRuntimeMessage accepts debugger.snapshot kind", () => {
   assert.equal(message.payload.errorId, "err-1");
 });
 
+test("createRuntimeMessage accepts inspector.update and job.update kinds", () => {
+  const inspector = createRuntimeMessage(
+    {
+      kind: RUNTIME_MESSAGE_KINDS.inspector,
+      seq: 4,
+      ts: 40,
+      payload: { type: "snapshot", targetId: "pres-1", view: { type: "value" } }
+    },
+    { strictKinds: true }
+  );
+  assert.equal(inspector.kind, RUNTIME_MESSAGE_KINDS.inspector);
+
+  const job = createRuntimeMessage(
+    {
+      kind: RUNTIME_MESSAGE_KINDS.job,
+      jobId: "job-1",
+      seq: 5,
+      ts: 50,
+      payload: { id: "job-1", status: "started" }
+    },
+    { strictKinds: true }
+  );
+  assert.equal(job.kind, RUNTIME_MESSAGE_KINDS.job);
+});
+
 test("encode/decode round trips runtime messages", () => {
   const encoded = encodeRuntimeMessage({
     version: RUNTIME_BRIDGE_VERSION,

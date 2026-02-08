@@ -99,7 +99,7 @@ test("restoreStateFromSnapshot migrates legacy snapshots", () => {
 
   const restored = restoreStateFromSnapshot(legacy);
   assert.ok(restored, "restored legacy snapshot");
-  assert.equal(restored.snapshot.schemaVersion, "4");
+  assert.equal(restored.snapshot.schemaVersion, "5");
 });
 
 test("restoreStateFromSnapshot revalidates presentations when resolver is provided", () => {

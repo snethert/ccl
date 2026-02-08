@@ -14,6 +14,393 @@
     "capabilityRequests": [],
     "commandHistory": [],
     "commands": {},
+    "customization": {
+      "effective": {
+        "beginnerMode": {
+          "confirmAdvanced": true,
+          "enabled": false,
+          "forceVisibleCommandIds": [],
+          "hiddenCommandIds": [],
+          "showExplanations": true
+        },
+        "guidance": {
+          "dismissed": []
+        },
+        "keymaps": {
+          "customBindings": [],
+          "paneProfiles": {
+            "debugger": "debugger-single-key",
+            "editor": "editor-emacs",
+            "repl": "repl-readline"
+          },
+          "profiles": {
+            "debugger-single-key": {
+              "bindings": [
+                {
+                  "commandId": "ui.debugger.frame.next",
+                  "id": "debugger-single-next-frame",
+                  "key": "n",
+                  "pane": "debugger",
+                  "scope": "context",
+                  "scopeId": "pane:debugger",
+                  "source": "preset"
+                },
+                {
+                  "commandId": "ui.debugger.restart.invoke",
+                  "id": "debugger-single-invoke-restart",
+                  "key": "r",
+                  "pane": "debugger",
+                  "scope": "context",
+                  "scopeId": "pane:debugger",
+                  "source": "preset"
+                }
+              ],
+              "description": "Single-key debugger flow with source-first navigation.",
+              "id": "debugger-single-key",
+              "pane": "debugger",
+              "readOnly": true,
+              "title": "Debugger Single Key"
+            },
+            "editor-emacs": {
+              "bindings": [
+                {
+                  "commandId": "runtime.eval.defun",
+                  "id": "editor-emacs-eval-defun",
+                  "key": "Ctrl+Enter",
+                  "pane": "editor",
+                  "scope": "context",
+                  "scopeId": "pane:editor",
+                  "source": "preset"
+                },
+                {
+                  "commandId": "lisp.jump.definition",
+                  "id": "editor-emacs-jump-def",
+                  "key": "Alt+.",
+                  "pane": "editor",
+                  "scope": "context",
+                  "scopeId": "pane:editor",
+                  "source": "preset"
+                }
+              ],
+              "description": "Emacs-oriented editing keys for text/code panes.",
+              "id": "editor-emacs",
+              "pane": "editor",
+              "readOnly": true,
+              "title": "Editor Emacs"
+            },
+            "repl-readline": {
+              "bindings": [
+                {
+                  "commandId": "runtime.repl.submit",
+                  "id": "repl-readline-submit",
+                  "key": "Enter",
+                  "pane": "repl",
+                  "scope": "context",
+                  "scopeId": "pane:repl",
+                  "source": "preset"
+                },
+                {
+                  "commandId": "runtime.repl.history.search",
+                  "id": "repl-readline-reverse-history",
+                  "key": "Ctrl+R",
+                  "pane": "repl",
+                  "scope": "context",
+                  "scopeId": "pane:repl",
+                  "source": "preset"
+                }
+              ],
+              "description": "Readline-like REPL interaction keys.",
+              "id": "repl-readline",
+              "pane": "repl",
+              "readOnly": true,
+              "title": "REPL Readline"
+            }
+          }
+        },
+        "safetyPolicies": {
+          "blockedCapabilities": [],
+          "confirmCommands": [],
+          "requireUnlock": true
+        },
+        "theme": {
+          "mode": "dark",
+          "overrides": {},
+          "presetId": "core-dark",
+          "tokens": {
+            "color": {
+              "accent": "#6fb0ff",
+              "accentMuted": "#355a85",
+              "accentText": "#0c121b",
+              "bg": "#121212",
+              "border": "#2a2a2a",
+              "error": "#f06b6b",
+              "focus": "#a7c8ff",
+              "overlay": "rgba(0,0,0,0.35)",
+              "selection": "#2b4870",
+              "selectionText": "#f2f6ff",
+              "success": "#6ccf8f",
+              "surface": "#1b1b1b",
+              "surfaceRaised": "#232323",
+              "surfaceSunken": "#0f0f0f",
+              "text": {
+                "inverted": "#101010",
+                "muted": "#8a8a8a",
+                "primary": "#e8e8e8",
+                "secondary": "#b8b8b8"
+              },
+              "warning": "#f0b35b"
+            },
+            "elevation": {
+              "level1": "0 1px 4px rgba(0,0,0,0.25)",
+              "level2": "0 2px 8px rgba(0,0,0,0.25)",
+              "level3": "0 4px 12px rgba(0,0,0,0.28)",
+              "level4": "0 8px 20px rgba(0,0,0,0.3)"
+            },
+            "font": {
+              "body": "Inter",
+              "lineHeight": {
+                "normal": 1.4,
+                "relaxed": 1.6,
+                "tight": 1.2
+              },
+              "mono": "Iosevka",
+              "size": {
+                "lg": 16,
+                "md": 14,
+                "sm": 12,
+                "xl": 20,
+                "xs": 11,
+                "xxl": 24
+              },
+              "weight": {
+                "bold": 600,
+                "medium": 500,
+                "regular": 400
+              }
+            },
+            "mode": "dark",
+            "motion": {
+              "easing": "cubic-bezier(0.2, 0, 0.2, 1)",
+              "fast": 120,
+              "normal": 180,
+              "reduced": false,
+              "slow": 250
+            },
+            "radius": {
+              "lg": "12px",
+              "md": "8px",
+              "sm": "4px",
+              "xs": "3px"
+            },
+            "space": {
+              "lg": 16,
+              "md": 12,
+              "sm": 8,
+              "xl": 24,
+              "xs": 4,
+              "xxl": 32
+            }
+          }
+        }
+      },
+      "layers": {
+        "defaults": {
+          "beginnerMode": {
+            "confirmAdvanced": true,
+            "enabled": false,
+            "forceVisibleCommandIds": [],
+            "hiddenCommandIds": [],
+            "showExplanations": true
+          },
+          "guidance": {
+            "dismissed": []
+          },
+          "keymaps": {
+            "customBindings": [],
+            "paneProfiles": {
+              "debugger": "debugger-single-key",
+              "editor": "editor-emacs",
+              "repl": "repl-readline"
+            },
+            "profiles": {
+              "debugger-single-key": {
+                "bindings": [
+                  {
+                    "commandId": "ui.debugger.frame.next",
+                    "id": "debugger-single-next-frame",
+                    "key": "n",
+                    "pane": "debugger",
+                    "scope": "context",
+                    "scopeId": "pane:debugger",
+                    "source": "preset"
+                  },
+                  {
+                    "commandId": "ui.debugger.restart.invoke",
+                    "id": "debugger-single-invoke-restart",
+                    "key": "r",
+                    "pane": "debugger",
+                    "scope": "context",
+                    "scopeId": "pane:debugger",
+                    "source": "preset"
+                  }
+                ],
+                "description": "Single-key debugger flow with source-first navigation.",
+                "id": "debugger-single-key",
+                "pane": "debugger",
+                "readOnly": true,
+                "title": "Debugger Single Key"
+              },
+              "editor-emacs": {
+                "bindings": [
+                  {
+                    "commandId": "runtime.eval.defun",
+                    "id": "editor-emacs-eval-defun",
+                    "key": "Ctrl+Enter",
+                    "pane": "editor",
+                    "scope": "context",
+                    "scopeId": "pane:editor",
+                    "source": "preset"
+                  },
+                  {
+                    "commandId": "lisp.jump.definition",
+                    "id": "editor-emacs-jump-def",
+                    "key": "Alt+.",
+                    "pane": "editor",
+                    "scope": "context",
+                    "scopeId": "pane:editor",
+                    "source": "preset"
+                  }
+                ],
+                "description": "Emacs-oriented editing keys for text/code panes.",
+                "id": "editor-emacs",
+                "pane": "editor",
+                "readOnly": true,
+                "title": "Editor Emacs"
+              },
+              "repl-readline": {
+                "bindings": [
+                  {
+                    "commandId": "runtime.repl.submit",
+                    "id": "repl-readline-submit",
+                    "key": "Enter",
+                    "pane": "repl",
+                    "scope": "context",
+                    "scopeId": "pane:repl",
+                    "source": "preset"
+                  },
+                  {
+                    "commandId": "runtime.repl.history.search",
+                    "id": "repl-readline-reverse-history",
+                    "key": "Ctrl+R",
+                    "pane": "repl",
+                    "scope": "context",
+                    "scopeId": "pane:repl",
+                    "source": "preset"
+                  }
+                ],
+                "description": "Readline-like REPL interaction keys.",
+                "id": "repl-readline",
+                "pane": "repl",
+                "readOnly": true,
+                "title": "REPL Readline"
+              }
+            }
+          },
+          "safetyPolicies": {
+            "blockedCapabilities": [],
+            "confirmCommands": [],
+            "requireUnlock": true
+          },
+          "theme": {
+            "mode": "dark",
+            "overrides": {},
+            "presetId": "core-dark"
+          }
+        },
+        "project": {
+          "beginnerMode": {
+            "confirmAdvanced": null,
+            "enabled": null,
+            "forceVisibleCommandIds": [],
+            "hiddenCommandIds": [],
+            "showExplanations": null
+          },
+          "guidance": {
+            "dismissed": []
+          },
+          "keymaps": {
+            "customBindings": [],
+            "paneProfiles": {},
+            "profiles": {}
+          },
+          "safetyPolicies": {
+            "blockedCapabilities": [],
+            "confirmCommands": [],
+            "requireUnlock": null
+          },
+          "theme": {
+            "mode": null,
+            "overrides": {},
+            "presetId": null
+          }
+        },
+        "session": {
+          "beginnerMode": {
+            "confirmAdvanced": null,
+            "enabled": null,
+            "forceVisibleCommandIds": [],
+            "hiddenCommandIds": [],
+            "showExplanations": null
+          },
+          "guidance": {
+            "dismissed": []
+          },
+          "keymaps": {
+            "customBindings": [],
+            "paneProfiles": {},
+            "profiles": {}
+          },
+          "safetyPolicies": {
+            "blockedCapabilities": [],
+            "confirmCommands": [],
+            "requireUnlock": null
+          },
+          "theme": {
+            "mode": null,
+            "overrides": {},
+            "presetId": null
+          }
+        },
+        "user": {
+          "beginnerMode": {
+            "confirmAdvanced": null,
+            "enabled": null,
+            "forceVisibleCommandIds": [],
+            "hiddenCommandIds": [],
+            "showExplanations": null
+          },
+          "guidance": {
+            "dismissed": []
+          },
+          "keymaps": {
+            "customBindings": [],
+            "paneProfiles": {},
+            "profiles": {}
+          },
+          "safetyPolicies": {
+            "blockedCapabilities": [],
+            "confirmCommands": [],
+            "requireUnlock": null
+          },
+          "theme": {
+            "mode": null,
+            "overrides": {},
+            "presetId": null
+          }
+        }
+      },
+      "schemaVersion": "1"
+    },
     "disableReasons": {},
     "domEscapes": [],
     "editGroups": [],
@@ -138,6 +525,13 @@
       "entryOrder": [],
       "recordingOrder": [],
       "recordings": {}
+    },
+    "runtimeInspector": {
+      "lastUpdatedAt": null,
+      "stale": false,
+      "targetId": null,
+      "targetType": null,
+      "view": null
     },
     "selection": {
       "anchorId": "issue-42",

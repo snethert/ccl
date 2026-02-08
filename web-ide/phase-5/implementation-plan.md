@@ -1,7 +1,7 @@
 # Phase 5 Detailed Plan: Runtime Integration (CL)
 
 ## Document Control
-- Status: In Progress
+- Status: Complete
 - Last Updated: February 8, 2026
 - Parent Plan: `web-ide/implementation-plan.md`
 - Doctrine Sources: `web-ide/ide-doctrine.md`, `web-ui/ui-doctrine.md`, `web-ide/phase-0/*.md`, `web-ide/phase-1/implementation-plan.md`, `web-ide/phase-2/implementation-plan.md`, `web-ide/phase-3/implementation-plan.md`, `web-ide/phase-4/implementation-plan.md`.
@@ -34,9 +34,9 @@ Deliver a live CL runtime integration where evaluations, restarts, inspector dat
 - M2 `RT2`: Completed.
 - M3 `RT3`: Completed.
 - M4 `RT4`: Completed.
-- M5 `RT5`: Planned.
-- M6 `RT6`: Planned.
-- M7 `RT7`: Planned.
+- M5 `RT5`: Completed.
+- M6 `RT6`: Completed.
+- M7 `RT7`: Completed.
 
 ## Phase 5 Success Criteria
 - Live evaluation produces structured recordings with presentation metadata.
@@ -197,7 +197,15 @@ Codify runtime integration stability with automated gates.
 - M2 complete: UI runtime output ingest added; JS microkernel emits `runtime.output` for stdout and stderr; `KERNEL_OP_RUNTIME_EVENT` added for structured runtime payloads; CL emits `runtime.output` envelopes via `kernel_request` with recording entries.
 - M3 complete: `command.invoke` bridge kind and contracts landed; UI runtime command client dispatches runtime-scoped typed commands with request correlation; `command.result` and `command.error` are applied through `web-ui/src/runtime-bridge.mjs`; WASM microkernel command queue and `KERNEL_OP_RUNTIME_COMMAND_POLL` landed; CL readloop pumps runtime commands and emits terminal responses; `web-ui` acceptance tests and `doc/wasm/js/all-smoke.mjs` pass.
 - M4 complete: runtime bridge supports `debugger.snapshot` and refined `debugger.restart`; UI runtime bridge ingests debugger payloads into error/debugger state; debugger restart command is runtime-scoped with `runtime.restart.invoke` transport mapping; CL dispatcher now handles `runtime.restart.invoke` and `runtime.debugger.open` with debugger snapshot emission; acceptance coverage added with `phase-5-runtime-debugger` and `phase-5-runtime-restart-invoke` tests; `cd web-ui && npm test` and `node doc/wasm/js/all-smoke.mjs` pass.
-- M5 planned in detail: inspector snapshot payload variants, runtime place-edit lifecycle, runtime-scoped inspector command routing, and acceptance gates are staged in `web-ide/phase-5/m5-inspector-place-edit-plan.md`.
+- M5 complete: `inspector.update` runtime payload variants (`snapshot`, `watch.sync`, `edit-group`) are wired through runtime bridge and state normalization; inspector commands now dispatch to runtime-scoped command ids (`runtime.watch.*`, `runtime.place.*`); runtime place-edit lifecycle supports `staged`, `applied`, `undone`, and `failed`; acceptance tests added in `web-ui/tests/phase-5-runtime-inspector*.test.mjs` and `web-ui/tests/phase-5-runtime-place-edit.test.mjs`.
+- M6 complete: runtime job lifecycle updates (`queued`, `started`, `progress`, `completed`, `failed`, `cancelled`) are ingested via `job.update` and reflected in state and inspector summaries; runtime job tests added in `web-ui/tests/phase-5-runtime-jobs.test.mjs`; wasm smoke coverage added via `doc/wasm/js/runtime-jobs-smoke.mjs`.
+- M7 complete: Phase 5 acceptance coverage is wired into `web-ui/package.json` `test:sandbox`; end-to-end runtime integration path is verified by `web-ui/tests/phase-5-runtime-integration.test.mjs`; wasm smoke suite includes runtime inspector and jobs coverage.
+
+## Validation Notes
+- `cd web-ui && npm test` passes with Phase 5 suites enabled.
+- `node doc/wasm/js/runtime-inspector-smoke.mjs` passes.
+- `node doc/wasm/js/runtime-jobs-smoke.mjs` passes.
+- `node doc/wasm/js/all-smoke.mjs` is currently blocked by `compiler-smoke` (`unexpected ffi-add result: got=0 expected=42`), which is outside the Phase 5 runtime bridge/inspector/jobs scope.
 
 ## Code Focus Areas
 - `doc/wasm/runtime-bridge.md`

@@ -99,6 +99,40 @@ export const LIGHT_THEME_TOKENS = Object.freeze({
 });
 
 export const DEFAULT_THEME_TOKENS = DARK_THEME_TOKENS;
+export const DEFAULT_THEME_PRESET_ID = "core-dark";
+
+export const THEME_PRESETS = Object.freeze({
+  "core-dark": Object.freeze({
+    id: "core-dark",
+    title: "Core Dark",
+    description: "Default dark palette for instrument-first workspaces.",
+    mode: "dark",
+    overrides: Object.freeze({})
+  }),
+  "core-light": Object.freeze({
+    id: "core-light",
+    title: "Core Light",
+    description: "Default light palette with high text contrast.",
+    mode: "light",
+    overrides: Object.freeze({})
+  }),
+  "slate-dark": Object.freeze({
+    id: "slate-dark",
+    title: "Slate Dark",
+    description: "Muted dark palette optimized for long sessions.",
+    mode: "dark",
+    overrides: Object.freeze({
+      color: {
+        bg: "#0f1318",
+        surface: "#171d24",
+        surfaceRaised: "#1e2630",
+        border: "#293240",
+        accent: "#7bb6ff",
+        selection: "#2f4f78"
+      }
+    })
+  })
+});
 
 function isPlainObject(value) {
   return Object.prototype.toString.call(value) === "[object Object]";
@@ -118,13 +152,62 @@ function mergeDeep(base, override) {
   return out;
 }
 
+function pruneOverrides(value, shape) {
+  if (!isPlainObject(value) || !isPlainObject(shape)) return {};
+  const out = {};
+  for (const [key, next] of Object.entries(value)) {
+    if (!Object.prototype.hasOwnProperty.call(shape, key)) continue;
+    const shapeValue = shape[key];
+    if (isPlainObject(next) && isPlainObject(shapeValue)) {
+      const nested = pruneOverrides(next, shapeValue);
+      if (Object.keys(nested).length > 0) {
+        out[key] = nested;
+      }
+      continue;
+    }
+    const type = typeof next;
+    if (type === "string" || type === "number" || type === "boolean") {
+      out[key] = next;
+    }
+  }
+  return out;
+}
+
+export function sanitizeThemeOverrides(overrides) {
+  return pruneOverrides(overrides ?? {}, DEFAULT_THEME_TOKENS);
+}
+
+export function getThemePreset(presetId) {
+  const id = typeof presetId === "string" && presetId.length > 0 ? presetId : DEFAULT_THEME_PRESET_ID;
+  return THEME_PRESETS[id] ?? THEME_PRESETS[DEFAULT_THEME_PRESET_ID];
+}
+
+export function listThemePresets() {
+  return Object.values(THEME_PRESETS).map((preset) => ({
+    id: preset.id,
+    title: preset.title,
+    description: preset.description,
+    mode: preset.mode
+  }));
+}
+
+export function resolveThemeTokensFromSelection(selection = {}) {
+  const preset = getThemePreset(selection.presetId ?? null);
+  const mode = selection.mode === "light" || selection.mode === "dark" ? selection.mode : preset.mode ?? DEFAULT_THEME_MODE;
+  const base = mode === "light" ? LIGHT_THEME_TOKENS : DARK_THEME_TOKENS;
+  const presetOverrides = sanitizeThemeOverrides(preset.overrides ?? {});
+  const userOverrides = sanitizeThemeOverrides(selection.overrides ?? {});
+  const merged = mergeDeep(mergeDeep(base, presetOverrides), userOverrides);
+  return normalizeThemeTokens({ ...merged, mode });
+}
+
 export function normalizeThemeTokens(tokens) {
   if (!tokens || typeof tokens !== "object") {
     return { ...DEFAULT_THEME_TOKENS };
   }
   const mode = tokens.mode === "light" ? "light" : "dark";
   const base = mode === "light" ? LIGHT_THEME_TOKENS : DARK_THEME_TOKENS;
-  const merged = mergeDeep(base, tokens);
+  const merged = mergeDeep(base, sanitizeThemeOverrides(tokens));
   return { ...merged, mode };
 }
 

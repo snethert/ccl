@@ -139,7 +139,7 @@ Exit criteria:
 
 ## Phase 5: Runtime Integration (CL)
 Outcome: End-to-end CL integration with presentations and restarts.
-Status: In Progress, M4 complete and M5 next (February 8, 2026).
+Status: Complete (February 8, 2026).
 Detailed execution plan: `web-ide/phase-5/implementation-plan.md`.
 M3 detail plan: `web-ide/phase-5/m3-typed-command-dispatch-plan.md`.
 M4 detail plan: `web-ide/phase-5/m4-restarts-debugger-plan.md`.
@@ -165,6 +165,8 @@ Exit criteria:
 
 ## Phase 6: Customization and Beginner Mode
 Outcome: Configurability without fragmentation.
+Status: Complete (February 8, 2026).
+Detailed execution plan: `web-ide/phase-6/implementation-plan.md`.
 
 1. Theming controls.
 - Token overrides and presets.
@@ -203,4 +205,4 @@ Exit criteria:
 - Theme drift: enforce token-only styling across renderers.
 
 ## Immediate Next Step
-Execute M5 `RT5` from `web-ide/phase-5/implementation-plan.md`: land inspector runtime payloads and staged place-edit apply/undo integration.
+Start Phase 7 M1: define and enforce performance budgets for render/update paths and transcript scale targets.

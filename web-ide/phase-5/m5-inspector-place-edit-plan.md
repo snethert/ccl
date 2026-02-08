@@ -1,7 +1,7 @@
 # Phase 5 M5 Plan: Inspector Integration and Place Editing
 
 ## Document Control
-- Status: Planned
+- Status: Complete
 - Last Updated: February 8, 2026
 - Parent Plan: `web-ide/phase-5/implementation-plan.md`
 - Upstream Specs:
@@ -307,4 +307,15 @@ Runtime emits staged/apply/undo lifecycle updates.
 3. Runtime-backed stage/apply/undo place edits work with explicit lifecycle statuses.
 4. Inspector command history remains correlated, replayable, and auditable.
 5. `cd web-ui && npm test` passes.
-6. `node doc/wasm/js/all-smoke.mjs` passes with inspector runtime smoke coverage.
+6. `node doc/wasm/js/runtime-inspector-smoke.mjs` passes.
+
+## Completion Notes
+1. Runtime bridge and state handlers now ingest `inspector.update` variants (`snapshot`, `watch.sync`, `edit-group`) and refresh inspector windows deterministically.
+2. Inspector typed commands route through runtime command ids while preserving stable UI command ids for history and replay.
+3. Runtime place-edit lifecycle now supports `staged`, `applied`, `undone`, and `failed`, with transcript-auditable update payloads.
+4. Acceptance tests landed:
+- `web-ui/tests/phase-5-runtime-inspector.test.mjs`
+- `web-ui/tests/phase-5-runtime-place-edit.test.mjs`
+- `web-ui/tests/phase-5-runtime-inspector-integration.test.mjs`
+- `doc/wasm/js/runtime-inspector-smoke.mjs`
+- `node doc/wasm/js/all-smoke.mjs` currently fails in `compiler-smoke` (`unexpected ffi-add result: got=0 expected=42`), outside M5 scope.

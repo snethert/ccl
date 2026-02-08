@@ -22,6 +22,7 @@ export function createRegistry(options = DEFAULT_PRECEDENCE) {
     version: resolved.version ?? "0",
     commands: new Map(),
     presentationTranslators: new Map(),
+    keymapConflicts: [],
     keymaps: {
       global: new Map(),
       task: new Map(),
@@ -80,6 +81,16 @@ export function bindKey(registry, scope, key, commandId, scopeId = null) {
     throw new Error(`Unknown scope: ${scope}`);
   }
   if (scope === "global") {
+    const prior = registry.keymaps.global.get(key);
+    if (prior && prior !== commandId) {
+      registry.keymapConflicts.push({
+        id: `bind-conflict-global-${key}`,
+        key,
+        winner: { scope: "global", scopeId: null, key, commandId },
+        shadowed: { scope: "global", scopeId: null, key, commandId: prior },
+        reason: "override"
+      });
+    }
     registry.keymaps.global.set(key, commandId);
     return registry;
   }
@@ -90,7 +101,18 @@ export function bindKey(registry, scope, key, commandId, scopeId = null) {
   if (!scoped.has(scopeId)) {
     scoped.set(scopeId, new Map());
   }
-  scoped.get(scopeId).set(key, commandId);
+  const map = scoped.get(scopeId);
+  const prior = map.get(key);
+  if (prior && prior !== commandId) {
+    registry.keymapConflicts.push({
+      id: `bind-conflict-${scope}-${scopeId}-${key}`,
+      key,
+      winner: { scope, scopeId, key, commandId },
+      shadowed: { scope, scopeId, key, commandId: prior },
+      reason: "override"
+    });
+  }
+  map.set(key, commandId);
   return registry;
 }
 
@@ -169,6 +191,75 @@ export function resolveKeyWithTrace(registry, key, ctx = {}) {
   return { commandId: null, trace };
 }
 
+function collectKeybindingEntries(registry) {
+  const entries = [];
+  if (registry?.keymaps?.global instanceof Map) {
+    for (const [key, commandId] of registry.keymaps.global.entries()) {
+      entries.push({ scope: "global", scopeId: null, key, commandId });
+    }
+  }
+  for (const scope of ["task", "context", "widget"]) {
+    const scoped = registry?.keymaps?.[scope];
+    if (!(scoped instanceof Map)) continue;
+    for (const [scopeId, map] of scoped.entries()) {
+      if (!(map instanceof Map)) continue;
+      for (const [key, commandId] of map.entries()) {
+        entries.push({ scope, scopeId, key, commandId });
+      }
+    }
+  }
+  return entries;
+}
+
+export function analyzeKeybindingConflicts(registry, options = {}) {
+  const entries = collectKeybindingEntries(registry);
+  const byKey = new Map();
+  for (const entry of entries) {
+    const bucket = byKey.get(entry.key) ?? [];
+    bucket.push(entry);
+    byKey.set(entry.key, bucket);
+  }
+  const precedence = Array.isArray(registry?.precedence) ? registry.precedence : DEFAULT_PRECEDENCE;
+  const indexOfScope = (scope) => {
+    const index = precedence.indexOf(scope);
+    return index === -1 ? precedence.length : index;
+  };
+  const conflicts = [];
+  for (const [key, bucket] of byKey.entries()) {
+    if (bucket.length < 2) continue;
+    const sorted = [...bucket].sort((a, b) => {
+      const scopeDiff = indexOfScope(a.scope) - indexOfScope(b.scope);
+      if (scopeDiff !== 0) return scopeDiff;
+      const idA = a.scopeId ?? "";
+      const idB = b.scopeId ?? "";
+      if (idA !== idB) return idA.localeCompare(idB);
+      return String(a.commandId ?? "").localeCompare(String(b.commandId ?? ""));
+    });
+    const winner = sorted[0];
+    for (let index = 1; index < sorted.length; index += 1) {
+      const shadowed = sorted[index];
+      const sameScopeId = winner.scope === shadowed.scope && winner.scopeId === shadowed.scopeId;
+      const reason = sameScopeId ? "duplicate-binding" : "shadowed-by-precedence";
+      conflicts.push({
+        id: `key-conflict-${key}-${index}`,
+        key,
+        winner,
+        shadowed,
+        reason
+      });
+    }
+  }
+  if (Array.isArray(registry?.keymapConflicts) && registry.keymapConflicts.length > 0) {
+    for (const conflict of registry.keymapConflicts) {
+      conflicts.push({ ...conflict });
+    }
+  }
+  if (options.key) {
+    return conflicts.filter((entry) => entry.key === options.key);
+  }
+  return conflicts;
+}
+
 export function getCommand(registry, id) {
   return registry.commands.get(id) || null;
 }
@@ -229,6 +320,48 @@ function isTypedCommand(command) {
   return Boolean(Array.isArray(command?.args) && command.args.length > 0);
 }
 
+function resolveBeginnerState(ctx) {
+  const beginner = ctx?.state?.customization?.effective?.beginnerMode ?? null;
+  if (!beginner) {
+    return {
+      enabled: false,
+      showExplanations: true,
+      confirmAdvanced: true,
+      hiddenCommandIds: [],
+      forceVisibleCommandIds: []
+    };
+  }
+  return {
+    enabled: Boolean(beginner.enabled),
+    showExplanations: beginner.showExplanations !== false,
+    confirmAdvanced: beginner.confirmAdvanced !== false,
+    hiddenCommandIds: Array.isArray(beginner.hiddenCommandIds) ? beginner.hiddenCommandIds : [],
+    forceVisibleCommandIds: Array.isArray(beginner.forceVisibleCommandIds) ? beginner.forceVisibleCommandIds : []
+  };
+}
+
+function resolveBeginnerPolicy(command, ctx) {
+  const beginner = resolveBeginnerState(ctx);
+  const metadata = isPlainObject(command?.metadata?.beginner) ? command.metadata.beginner : {};
+  const hiddenIds = new Set(beginner.hiddenCommandIds);
+  const forceVisibleIds = new Set(beginner.forceVisibleCommandIds);
+  let hidden = Boolean(metadata.hidden) || hiddenIds.has(command?.id ?? "");
+  if (forceVisibleIds.has(command?.id ?? "")) {
+    hidden = false;
+  }
+  const advanced = Boolean(metadata.advanced);
+  const requiresConfirmation = Boolean(metadata.confirm) || (beginner.confirmAdvanced && advanced);
+  return {
+    beginnerEnabled: beginner.enabled,
+    hidden,
+    requiresConfirmation,
+    explanation:
+      typeof metadata.explanation === "string" && metadata.explanation.length > 0
+        ? metadata.explanation
+        : null
+  };
+}
+
 function isRuntimeScopedCommand(command) {
   if (!command || typeof command !== "object") return false;
   if (command.metadata?.runtime === true) return true;
@@ -279,6 +412,10 @@ export function commandEnabled(registry, id, ctx) {
   if (!cmd) {
     return { enabled: false, reason: "Unknown command" };
   }
+  const beginner = resolveBeginnerPolicy(cmd, ctx);
+  if (beginner.beginnerEnabled && beginner.hidden) {
+    return { enabled: false, reason: "Hidden in Beginner Mode" };
+  }
   const required = normalizeCapabilities(cmd.capability);
   if (required.length > 0) {
     const capabilityCheck = checkCapabilities(ctx, required);
@@ -315,6 +452,20 @@ export function executeCommand(registry, id, ctx) {
   const cmd = getCommand(registry, id);
   if (!cmd) {
     return { ok: false, reason: "Unknown command" };
+  }
+  const beginner = resolveBeginnerPolicy(cmd, ctx);
+  if (beginner.beginnerEnabled && beginner.hidden) {
+    return { ok: false, reason: "Hidden in Beginner Mode" };
+  }
+  if (beginner.beginnerEnabled && beginner.requiresConfirmation && !ctx?.confirmBeginner) {
+    return {
+      ok: false,
+      reason: "Confirmation required",
+      confirmation: {
+        commandId: id,
+        explanation: beginner.explanation
+      }
+    };
   }
   const enablement = commandEnabled(registry, id, ctx);
   if (!enablement.enabled) {

@@ -85,11 +85,29 @@ function migrate3To4(snapshot, options = {}) {
   };
 }
 
+function migrate4To5(snapshot, options = {}) {
+  const now = options.now ?? (() => Date.now());
+  const nextLog = Array.isArray(snapshot.migrationLog) ? [...snapshot.migrationLog] : [];
+  nextLog.push({
+    fromVersion: "4",
+    toVersion: "5",
+    timestamp: now(),
+    notes: "Added layered customization schema envelope compatibility"
+  });
+  return {
+    ...snapshot,
+    schemaVersion: "5",
+    session: snapshot.session ?? null,
+    migrationLog: nextLog
+  };
+}
+
 const MIGRATIONS = {
   "0": migrate0To1,
   "1": migrate1To2,
   "2": migrate2To3,
-  "3": migrate3To4
+  "3": migrate3To4,
+  "4": migrate4To5
 };
 
 export function applyMigrations(snapshot, options = {}) {

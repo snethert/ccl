@@ -5,7 +5,9 @@ import {
   patchCommandInvocation,
   upsertCommandInvocation,
   upsertRuntimeDebuggerSnapshot,
-  applyRuntimeDebuggerRestartUpdate
+  applyRuntimeDebuggerRestartUpdate,
+  applyRuntimeInspectorUpdate,
+  applyRuntimeJobUpdate
 } from "./state.mjs";
 import { dispatchCommandOutput } from "./command-effects.mjs";
 
@@ -199,6 +201,45 @@ export function applyRuntimeDebuggerRestart(state, message, options = {}) {
   }
 }
 
+export function applyRuntimeInspector(state, message, options = {}) {
+  try {
+    const nextState = applyRuntimeInspectorUpdate(state, message?.payload ?? {}, {
+      ts: Number.isInteger(message?.ts) ? message.ts : null,
+      taskId: options.taskId ?? null
+    });
+    if (typeof options.onInspectorUpdate === "function") {
+      options.onInspectorUpdate({ message, payload: message?.payload ?? null });
+    }
+    return { state: nextState, errors: [] };
+  } catch (err) {
+    const messageText = err?.message ?? String(err);
+    if (typeof options.onError === "function") {
+      options.onError({ kind: "inspector.update", message: messageText, payload: message?.payload ?? null });
+    }
+    return { state, errors: [{ kind: "inspector.update", message: messageText }] };
+  }
+}
+
+export function applyRuntimeJob(state, message, options = {}) {
+  try {
+    const nextState = applyRuntimeJobUpdate(state, message?.payload ?? {}, {
+      ts: Number.isInteger(message?.ts) ? message.ts : null,
+      taskId: options.taskId ?? null,
+      jobId: typeof message?.jobId === "string" ? message.jobId : null
+    });
+    if (typeof options.onJobUpdate === "function") {
+      options.onJobUpdate({ message, payload: message?.payload ?? null });
+    }
+    return { state: nextState, errors: [] };
+  } catch (err) {
+    const messageText = err?.message ?? String(err);
+    if (typeof options.onError === "function") {
+      options.onError({ kind: "job.update", message: messageText, payload: message?.payload ?? null });
+    }
+    return { state, errors: [{ kind: "job.update", message: messageText }] };
+  }
+}
+
 export function applyRuntimeMessage(state, message, options = {}) {
   if (!message || typeof message !== "object") {
     return { state, handled: false, errors: [{ kind: "message", message: "Invalid runtime message" }] };
@@ -221,6 +262,14 @@ export function applyRuntimeMessage(state, message, options = {}) {
   }
   if (message.kind === "debugger.restart") {
     const result = applyRuntimeDebuggerRestart(state, message, options);
+    return { ...result, handled: true };
+  }
+  if (message.kind === "inspector.update") {
+    const result = applyRuntimeInspector(state, message, options);
+    return { ...result, handled: true };
+  }
+  if (message.kind === "job.update") {
+    const result = applyRuntimeJob(state, message, options);
     return { ...result, handled: true };
   }
   if (typeof options.onUnhandled === "function") {

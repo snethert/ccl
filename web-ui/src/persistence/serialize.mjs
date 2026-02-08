@@ -24,11 +24,13 @@ const DEFAULT_ALLOWLIST = {
   capabilityRequestSeq: true,
   selection: true,
   focus: true,
+  runtimeInspector: true,
   watches: true,
   watchSeq: true,
   editGroups: true,
   editSeq: true,
   theme: true,
+  customization: true,
   presentations: true,
   recordingStore: true,
   commandHistory: true,
@@ -410,9 +412,11 @@ export function sanitizeState(state, options = {}) {
   if (allowlist.capabilityRequestSeq) out.capabilityRequestSeq = sanitizeValue(state.capabilityRequestSeq ?? null) ?? null;
   if (allowlist.selection) out.selection = sanitizeValue(state.selection ?? null) ?? null;
   if (allowlist.focus) out.focus = sanitizeValue(state.focus ?? null) ?? null;
+  if (allowlist.runtimeInspector) out.runtimeInspector = sanitizeValue(state.runtimeInspector ?? null) ?? null;
   if (allowlist.watches) out.watches = sanitizeValue(state.watches ?? []) ?? [];
   if (allowlist.watchSeq) out.watchSeq = sanitizeValue(state.watchSeq ?? null) ?? null;
   if (allowlist.theme) out.theme = sanitizeRecord(state.theme ?? {});
+  if (allowlist.customization) out.customization = sanitizeRecord(state.customization ?? {});
   if (allowlist.presentations) out.presentations = sanitizeMap(state.presentations ?? {});
   if (allowlist.recordingStore) out.recordingStore = sanitizeRecord(state.recordingStore ?? {});
   if (allowlist.commandHistory) out.commandHistory = sanitizeValue(state.commandHistory ?? []) ?? [];

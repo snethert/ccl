@@ -35,6 +35,15 @@ import {
   validatePresentationMetadata
 } from "./presentation-taxonomy.mjs";
 import { normalizeThemeTokens } from "./theme.mjs";
+import {
+  KEYMAP_PANES,
+  KEYMAP_SCOPE_KINDS,
+  normalizeCustomizationEnvelope,
+  patchCustomizationLayer,
+  exportCustomizationProfile,
+  importCustomizationProfile,
+  validateCustomizationProfile
+} from "./customization.mjs";
 import { normalizeRestart, normalizeConditionReport } from "./conditions.mjs";
 import { revalidatePresentations as revalidatePresentationsCore } from "./world-state.mjs";
 
@@ -45,7 +54,7 @@ const DOM_ESCAPE_HISTORY_LIMIT = 32;
 const CAPABILITY_POLICY_DECISIONS = ["ask", "grant", "deny"];
 const CAPABILITY_REQUEST_STATUSES = ["pending", "granted", "denied"];
 const PROBLEM_STATUSES = ["new", "active", "resolved", "suppressed"];
-const EDIT_GROUP_STATUSES = ["staged", "applied", "undone"];
+const EDIT_GROUP_STATUSES = ["staged", "applied", "undone", "failed"];
 export const COMMAND_PALETTE_FILTER_COMMAND = "ui.command-palette.filter";
 export const COMMAND_PALETTE_EXECUTE_COMMAND = "ui.command-palette.execute";
 export const COMMAND_PALETTE_SELECT_NEXT_COMMAND = "ui.command-palette.select-next";
@@ -108,6 +117,15 @@ export const CAPABILITY_AUTO_RUN_COMMAND = "ui.capability.auto-run";
 export const SAFE_MODE_ENABLE_COMMAND = "ui.safe-mode.enable";
 export const SAFE_MODE_DISABLE_COMMAND = "ui.safe-mode.disable";
 export const DOM_ESCAPE_COMMAND = "ui.dom.escape";
+export const CUSTOMIZATION_THEME_PRESET_COMMAND = "ui.customization.theme.preset";
+export const CUSTOMIZATION_THEME_OVERRIDES_COMMAND = "ui.customization.theme.overrides";
+export const CUSTOMIZATION_THEME_OVERRIDES_RESET_COMMAND = "ui.customization.theme.overrides.reset";
+export const CUSTOMIZATION_KEYMAP_PROFILE_COMMAND = "ui.customization.keymap.profile";
+export const CUSTOMIZATION_BEGINNER_MODE_ENABLE_COMMAND = "ui.customization.beginner.enable";
+export const CUSTOMIZATION_BEGINNER_MODE_DISABLE_COMMAND = "ui.customization.beginner.disable";
+export const CUSTOMIZATION_GUIDANCE_DISMISS_COMMAND = "ui.customization.guidance.dismiss";
+export const CUSTOMIZATION_PROFILE_EXPORT_COMMAND = "ui.customization.profile.export";
+export const CUSTOMIZATION_PROFILE_IMPORT_COMMAND = "ui.customization.profile.import";
 
 function isPlainObject(value) {
   return Object.prototype.toString.call(value) === "[object Object]";
@@ -615,6 +633,7 @@ function normalizeEditGroup(group, index = 0) {
     createdAt: Number.isInteger(group?.createdAt) ? group.createdAt : null,
     appliedAt: Number.isInteger(group?.appliedAt) ? group.appliedAt : null,
     undoneAt: Number.isInteger(group?.undoneAt) ? group.undoneAt : null,
+    failedAt: Number.isInteger(group?.failedAt) ? group.failedAt : null,
     metadata: isPlainObject(group?.metadata) ? { ...group.metadata } : {}
   };
 }
@@ -635,6 +654,31 @@ function normalizeEditSeq(seq, groups) {
   return Math.max(candidate, maxFromList + 1);
 }
 
+function normalizeRuntimeInspectorState(runtimeInspector) {
+  if (!isPlainObject(runtimeInspector)) {
+    return {
+      targetId: null,
+      targetType: null,
+      stale: false,
+      view: null,
+      lastUpdatedAt: null
+    };
+  }
+  return {
+    targetId:
+      typeof runtimeInspector.targetId === "string" && runtimeInspector.targetId.length > 0
+        ? runtimeInspector.targetId
+        : null,
+    targetType:
+      typeof runtimeInspector.targetType === "string" && runtimeInspector.targetType.length > 0
+        ? runtimeInspector.targetType
+        : null,
+    stale: Boolean(runtimeInspector.stale),
+    view: isPlainObject(runtimeInspector.view) ? { ...runtimeInspector.view } : null,
+    lastUpdatedAt: Number.isInteger(runtimeInspector.lastUpdatedAt) ? runtimeInspector.lastUpdatedAt : null
+  };
+}
+
 function resolveCapabilityPolicyDecision(policy, capability) {
   const normalizedPolicy = normalizeCapabilityPolicy(policy ?? null);
   for (const rule of normalizedPolicy.rules) {
@@ -643,6 +687,39 @@ function resolveCapabilityPolicyDecision(policy, capability) {
     return { decision: rule.decision, reason: rule.reason ?? null };
   }
   return { decision: normalizedPolicy.defaultDecision, reason: null };
+}
+
+function normalizeCustomization(customization) {
+  return normalizeCustomizationEnvelope(customization ?? null);
+}
+
+function resolveThemeFromCustomization(customization, fallbackTheme = null) {
+  const normalized = normalizeCustomization(customization);
+  if (fallbackTheme && typeof fallbackTheme === "object") {
+    return normalizeThemeTokens(fallbackTheme);
+  }
+  return normalizeThemeTokens(normalized.effective?.theme?.tokens ?? null);
+}
+
+function resolveEffectiveBeginnerMode(state) {
+  return state?.customization?.effective?.beginnerMode ?? {
+    enabled: false,
+    showExplanations: true,
+    confirmAdvanced: true,
+    hiddenCommandIds: [],
+    forceVisibleCommandIds: []
+  };
+}
+
+function resolveGuidanceDismissed(state) {
+  return new Set(state?.customization?.effective?.guidance?.dismissed ?? []);
+}
+
+function normalizeCustomizationLayerName(layer) {
+  if (layer === "defaults" || layer === "user" || layer === "project" || layer === "session") {
+    return layer;
+  }
+  return "session";
 }
 
 export function createWorkspace({ id, title, taskIds, activeTaskId, metadata } = {}) {
@@ -667,6 +744,8 @@ export function createState(options = {}) {
   const sessions = normalizeSessions(options.sessions ?? null);
   const sessionOrder = normalizeSessionOrder(sessions, options.sessionOrder ?? null);
   const activeSessionId = normalizeActiveSessionId(sessions, options.activeSessionId ?? null, sessionOrder);
+  const customization = normalizeCustomization(options.customization ?? null);
+  const theme = resolveThemeFromCustomization(customization, options.theme ?? null);
   let state = {
     ...options,
     workspace: options.workspace ?? null,
@@ -676,6 +755,7 @@ export function createState(options = {}) {
     presentations: options.presentations ?? {},
     recordingStore: normalizeRecordingStore(options.recordingStore ?? options.recordings ?? null),
     commandHistory: Array.isArray(options.commandHistory) ? [...options.commandHistory] : [],
+    runtimeInspector: normalizeRuntimeInspectorState(options.runtimeInspector ?? null),
     watches,
     watchSeq,
     editGroups,
@@ -689,7 +769,8 @@ export function createState(options = {}) {
     sessions,
     sessionOrder,
     activeSessionId,
-    theme: normalizeThemeTokens(options.theme ?? null),
+    customization,
+    theme,
     focus: normalizeFocusTarget(options.focus ?? null),
     focusHistory: normalizeFocusHistory(options.focusHistory ?? []),
     selection: normalizeSelection(options.selection ?? null),
@@ -1596,13 +1677,109 @@ export function setLayout(state, layout) {
   return { ...state, layout: normalized.layout, idCounters: normalized.counters };
 }
 
+export function setCustomization(state, customization) {
+  const normalized = normalizeCustomization(customization);
+  return {
+    ...state,
+    customization: normalized,
+    theme: normalizeThemeTokens(normalized.effective?.theme?.tokens ?? null)
+  };
+}
+
+export function patchCustomization(state, layer, patch) {
+  const nextCustomization = patchCustomizationLayer(
+    state.customization ?? null,
+    normalizeCustomizationLayerName(layer),
+    patch ?? {}
+  );
+  return setCustomization(state, nextCustomization);
+}
+
+export function setThemePreset(state, presetId, options = {}) {
+  if (typeof presetId !== "string" || presetId.length === 0) return state;
+  const layer = normalizeCustomizationLayerName(options.layer ?? "session");
+  const patch = {
+    theme: {
+      presetId,
+      mode: options.mode ?? null
+    }
+  };
+  return patchCustomization(state, layer, patch);
+}
+
+export function setThemeOverrides(state, overrides, options = {}) {
+  const layer = normalizeCustomizationLayerName(options.layer ?? "session");
+  return patchCustomization(state, layer, {
+    theme: {
+      overrides: overrides ?? {}
+    }
+  });
+}
+
+export function resetThemeOverrides(state, options = {}) {
+  const layer = normalizeCustomizationLayerName(options.layer ?? "session");
+  return patchCustomization(state, layer, {
+    theme: {
+      overrides: {}
+    }
+  });
+}
+
+export function setPaneKeymapProfile(state, pane, profileId, options = {}) {
+  if (!KEYMAP_PANES.includes(pane)) return state;
+  if (typeof profileId !== "string" || profileId.length === 0) return state;
+  const layer = normalizeCustomizationLayerName(options.layer ?? "session");
+  return patchCustomization(state, layer, {
+    keymaps: {
+      paneProfiles: {
+        [pane]: profileId
+      }
+    }
+  });
+}
+
+export function setBeginnerMode(state, enabled, options = {}) {
+  const layer = normalizeCustomizationLayerName(options.layer ?? "session");
+  return patchCustomization(state, layer, {
+    beginnerMode: {
+      enabled: Boolean(enabled)
+    }
+  });
+}
+
+export function dismissGuidance(state, guidanceId, options = {}) {
+  if (typeof guidanceId !== "string" || guidanceId.length === 0) return state;
+  const layer = normalizeCustomizationLayerName(options.layer ?? "session");
+  const current = state.customization?.layers?.[layer]?.guidance?.dismissed ?? [];
+  return patchCustomization(state, layer, {
+    guidance: {
+      dismissed: [...current, guidanceId]
+    }
+  });
+}
+
 export function setTheme(state, theme) {
-  return { ...state, theme: normalizeThemeTokens(theme) };
+  const normalizedTheme = normalizeThemeTokens(theme);
+  const nextCustomization = patchCustomizationLayer(state.customization ?? null, "session", {
+    theme: {
+      mode: normalizedTheme.mode,
+      overrides: normalizedTheme
+    }
+  });
+  return {
+    ...state,
+    customization: nextCustomization,
+    theme: normalizedTheme
+  };
 }
 
 export function setThemeMode(state, mode) {
-  const current = state.theme ?? null;
-  return { ...state, theme: normalizeThemeTokens({ ...(current ?? {}), mode }) };
+  const nextCustomization = patchCustomizationLayer(state.customization ?? null, "session", {
+    theme: {
+      mode
+    }
+  });
+  return setCustomization(state, nextCustomization);
 }
 
 export function recordDomEscape(state, entry, options = {}) {
@@ -2237,8 +2414,18 @@ function buildCommandPalettePreviewText(state, registry, commandId, options = {}
   if (!command) {
     return `Preview: ${commandId} is unavailable.`;
   }
+  const beginner = resolveEffectiveBeginnerMode(state);
+  const beginnerPolicy = resolveBeginnerCommandPolicy(state, command);
+  const showExplanation =
+    beginner.enabled &&
+    beginner.showExplanations &&
+    beginnerPolicy.explanation &&
+    beginnerPolicy.guidanceId &&
+    !resolveGuidanceDismissed(state).has(beginnerPolicy.guidanceId);
   if (!Array.isArray(command.args) || command.args.length === 0) {
-    return `Preview: ${commandId} has no typed arguments.`;
+    const base = `Preview: ${commandId} has no typed arguments.`;
+    if (!showExplanation) return base;
+    return `${base} ${beginnerPolicy.explanation}`;
   }
   const materialized = materializeInvocation(
     command,
@@ -2262,15 +2449,47 @@ function buildCommandPalettePreviewText(state, registry, commandId, options = {}
   const missing = Array.isArray(materialized.missing) ? materialized.missing : [];
   const status = missing.length > 0 ? `missing: ${missing.join(", ")}` : "ready";
   if (inferred.length === 0) {
-    return `Preview: ${commandId} (${status}; no inferred defaults).`;
+    const base = `Preview: ${commandId} (${status}; no inferred defaults).`;
+    if (!showExplanation) return base;
+    return `${base} ${beginnerPolicy.explanation}`;
   }
-  return `Preview: ${commandId} (${inferred.join(", ")}; ${status}).`;
+  const base = `Preview: ${commandId} (${inferred.join(", ")}; ${status}).`;
+  if (!showExplanation) return base;
+  return `${base} ${beginnerPolicy.explanation}`;
+}
+
+function resolveBeginnerCommandPolicy(state, command) {
+  const beginner = resolveEffectiveBeginnerMode(state);
+  const metadata = isPlainObject(command?.metadata?.beginner) ? command.metadata.beginner : {};
+  const hiddenSet = new Set(beginner.hiddenCommandIds ?? []);
+  const forceVisibleSet = new Set(beginner.forceVisibleCommandIds ?? []);
+  let hidden = Boolean(metadata.hidden) || hiddenSet.has(command?.id ?? "");
+  if (forceVisibleSet.has(command?.id ?? "")) {
+    hidden = false;
+  }
+  const advanced = Boolean(metadata.advanced);
+  const confirm = Boolean(metadata.confirm) || (beginner.confirmAdvanced && advanced);
+  const guidanceId =
+    typeof metadata.guidanceId === "string" && metadata.guidanceId.length > 0
+      ? metadata.guidanceId
+      : command?.id
+        ? `command:${command.id}`
+        : null;
+  const explanation =
+    typeof metadata.explanation === "string" && metadata.explanation.length > 0
+      ? metadata.explanation
+      : null;
+  return { hidden, advanced, confirm, guidanceId, explanation };
 }
 
 function buildCommandPaletteItems(registry, options = {}) {
   if (!registry) {
     return [{ id: "cmd-none", label: "No command registry available" }];
   }
+  const state = options.state ?? null;
+  const beginner = resolveEffectiveBeginnerMode(state);
+  const beginnerEnabled = Boolean(beginner.enabled);
+  const dismissedGuidance = resolveGuidanceDismissed(state);
   const filter = String(options.filter ?? "").trim().toLowerCase();
   const excludeIds = new Set(options.excludeIds ?? []);
   const entries = [...registry.commands.values()].sort((a, b) => a.id.localeCompare(b.id));
@@ -2280,6 +2499,10 @@ function buildCommandPaletteItems(registry, options = {}) {
       continue;
     }
     if (cmd.metadata?.paletteHidden) {
+      continue;
+    }
+    const beginnerPolicy = resolveBeginnerCommandPolicy(state, cmd);
+    if (beginnerEnabled && beginnerPolicy.hidden) {
       continue;
     }
     const title = cmd.title ?? cmd.id;
@@ -2292,7 +2515,17 @@ function buildCommandPaletteItems(registry, options = {}) {
     items.push({
       id: `cmd-${cmd.id}`,
       label,
-      targetCommandId: cmd.id
+      targetCommandId: cmd.id,
+      requiresConfirmation: beginnerEnabled && beginnerPolicy.confirm,
+      explanation:
+        beginnerEnabled &&
+        beginner.showExplanations &&
+        beginnerPolicy.explanation &&
+        beginnerPolicy.guidanceId &&
+        !dismissedGuidance.has(beginnerPolicy.guidanceId)
+          ? beginnerPolicy.explanation
+          : null,
+      guidanceId: beginnerPolicy.guidanceId
     });
   }
   if (items.length === 0) {
@@ -2315,11 +2548,110 @@ function applySelectionToItems(items, selectedIndex) {
   }));
 }
 
-function buildKeybindingItems(registry) {
+function resolveEffectiveKeymaps(state) {
+  const keymaps = state?.customization?.effective?.keymaps ?? {};
+  return {
+    paneProfiles: isPlainObject(keymaps.paneProfiles) ? keymaps.paneProfiles : {},
+    profiles: isPlainObject(keymaps.profiles) ? keymaps.profiles : {},
+    customBindings: Array.isArray(keymaps.customBindings) ? keymaps.customBindings : []
+  };
+}
+
+function buildActiveKeymapBindings(state) {
+  const keymaps = resolveEffectiveKeymaps(state);
+  const items = [];
+  for (const pane of KEYMAP_PANES) {
+    const profileId = keymaps.paneProfiles?.[pane] ?? null;
+    const profile = profileId ? keymaps.profiles?.[profileId] ?? null : null;
+    const bindings = Array.isArray(profile?.bindings) ? profile.bindings : [];
+    for (const binding of bindings) {
+      items.push({
+        ...binding,
+        pane: binding.pane ?? pane,
+        source: `profile:${profileId}`
+      });
+    }
+  }
+  for (const binding of keymaps.customBindings) {
+    items.push({
+      ...binding,
+      source: binding.source ?? "custom"
+    });
+  }
+  return items.filter((binding) => typeof binding.key === "string" && typeof binding.commandId === "string");
+}
+
+function buildKeybindingFingerprint(binding) {
+  return [
+    binding.pane ?? "",
+    binding.scope ?? "",
+    binding.scopeId ?? "",
+    binding.key ?? ""
+  ].join("|");
+}
+
+function analyzeKeymapConflicts(state) {
+  const bindings = buildActiveKeymapBindings(state);
+  const byFingerprint = new Map();
+  const conflicts = [];
+  for (const binding of bindings) {
+    const fingerprint = buildKeybindingFingerprint(binding);
+    const prior = byFingerprint.get(fingerprint) ?? null;
+    if (prior && prior.commandId !== binding.commandId) {
+      conflicts.push({
+        id: `keymap-conflict-${fingerprint}`,
+        pane: binding.pane ?? prior.pane ?? null,
+        key: binding.key,
+        scope: binding.scope ?? prior.scope ?? null,
+        scopeId: binding.scopeId ?? prior.scopeId ?? null,
+        replacedCommandId: prior.commandId,
+        winningCommandId: binding.commandId,
+        replacedSource: prior.source ?? null,
+        winningSource: binding.source ?? null
+      });
+    }
+    byFingerprint.set(fingerprint, binding);
+  }
+  return conflicts;
+}
+
+function buildKeybindingConflictItems(state) {
+  const conflicts = analyzeKeymapConflicts(state);
+  if (conflicts.length === 0) {
+    return [{ id: "kb-conflict-none", label: "No keymap conflicts detected", disabled: true, selectable: false }];
+  }
+  return conflicts.map((conflict, index) => {
+    const scopeLabel = conflict.scopeId ? `${conflict.scope}(${conflict.scopeId})` : conflict.scope;
+    const paneLabel = conflict.pane ? `${conflict.pane}: ` : "";
+    return {
+      id: `${conflict.id}-${index}`,
+      label: `${paneLabel}${scopeLabel} ${conflict.key} -> ${conflict.winningCommandId} (replaces ${conflict.replacedCommandId})`,
+      key: conflict.key,
+      pane: conflict.pane,
+      scope: conflict.scope,
+      scopeId: conflict.scopeId,
+      className: "ui-keybindings-conflict",
+      metadata: conflict
+    };
+  });
+}
+
+function buildKeybindingItems(registry, options = {}) {
+  const state = options.state ?? null;
+  const keymaps = resolveEffectiveKeymaps(state);
   if (!registry) {
     return [{ id: "kb-none", label: "No keybindings registered" }];
   }
   const items = [];
+  for (const pane of KEYMAP_PANES) {
+    const profileId = keymaps.paneProfiles?.[pane] ?? "none";
+    items.push({
+      id: `kb-profile-${pane}`,
+      label: `profile(${pane}): ${profileId}`,
+      className: "ui-keybindings-profile",
+      selectable: false
+    });
+  }
   const scopes = Array.isArray(registry.precedence)
     ? [...registry.precedence]
     : Object.keys(registry.keymaps ?? {});
@@ -2345,6 +2677,17 @@ function buildKeybindingItems(registry) {
           label: `${scope}(${scopeId}): ${key} → ${commandId ?? "unbound"}`
         });
       }
+    }
+  }
+  const activeBindings = buildActiveKeymapBindings(state);
+  if (activeBindings.length > 0) {
+    for (const [index, binding] of activeBindings.entries()) {
+      const scopeLabel = binding.scopeId ? `${binding.scope}(${binding.scopeId})` : binding.scope;
+      items.push({
+        id: `kb-active-${index}`,
+        label: `active(${binding.pane ?? "global"}): ${scopeLabel} ${binding.key} -> ${binding.commandId}`,
+        className: "ui-keybindings-active"
+      });
     }
   }
   if (items.length === 0) {
@@ -2489,9 +2832,15 @@ function summarizeJobs(state) {
   const items = [];
   const entries = [...(state.jobs ?? [])].sort((a, b) => (a.id ?? "").localeCompare(b.id ?? ""));
   for (const job of entries) {
+    const progressCurrent =
+      Number.isFinite(job?.progress?.current) ? Math.max(0, Math.trunc(job.progress.current)) : null;
+    const progressTotal =
+      Number.isFinite(job?.progress?.total) ? Math.max(0, Math.trunc(job.progress.total)) : null;
+    const progressSuffix =
+      progressCurrent !== null && progressTotal !== null ? ` ${progressCurrent}/${progressTotal}` : "";
     items.push({
       id: `job-${job.id ?? "unknown"}`,
-      label: `${job.title ?? job.id ?? "job"} (${job.status ?? "unknown"})`
+      label: `${job.title ?? job.id ?? "job"} (${job.status ?? "unknown"}${progressSuffix})`
     });
   }
   if (items.length === 0) {
@@ -2634,6 +2983,83 @@ function summarizeWatches(state) {
   });
 }
 
+function summarizeRuntimeInspector(state) {
+  const runtimeInspector = normalizeRuntimeInspectorState(state.runtimeInspector ?? null);
+  if (!runtimeInspector.targetId) {
+    return [{ id: "runtime-inspector-none", label: "No runtime inspector snapshot" }];
+  }
+  const items = [];
+  const typeLabel = runtimeInspector.targetType ?? runtimeInspector.view?.type ?? "value";
+  items.push({
+    id: "runtime-inspector-target",
+    label: `Target: ${runtimeInspector.targetId} (${typeLabel})`
+  });
+  if (runtimeInspector.stale) {
+    items.push({
+      id: "runtime-inspector-stale",
+      label: "Snapshot is stale"
+    });
+  }
+  const summary =
+    (typeof runtimeInspector.view?.summary === "string" && runtimeInspector.view.summary.length > 0
+      ? runtimeInspector.view.summary
+      : null) ??
+    (typeof runtimeInspector.view?.title === "string" && runtimeInspector.view.title.length > 0
+      ? runtimeInspector.view.title
+      : null);
+  if (summary) {
+    items.push({
+      id: "runtime-inspector-summary",
+      label: `Summary: ${truncateTranscriptText(summary, 96)}`
+    });
+  }
+  const sections = Array.isArray(runtimeInspector.view?.sections) ? runtimeInspector.view.sections : [];
+  for (const section of sections) {
+    const sectionId =
+      typeof section?.id === "string" && section.id.length > 0
+        ? section.id
+        : `section-${items.length + 1}`;
+    const title =
+      typeof section?.title === "string" && section.title.length > 0
+        ? section.title
+        : sectionId;
+    const rows = Array.isArray(section?.rows) ? section.rows : [];
+    items.push({
+      id: `runtime-inspector-section-${sectionId}`,
+      label: `${title}: ${rows.length} row${rows.length === 1 ? "" : "s"}`
+    });
+    for (let index = 0; index < rows.length; index += 1) {
+      const row = rows[index];
+      const rowId =
+        typeof row?.id === "string" && row.id.length > 0
+          ? row.id
+          : `${sectionId}-row-${index + 1}`;
+      const rowLabel =
+        typeof row?.label === "string" && row.label.length > 0
+          ? row.label
+          : rowId;
+      const valueSummary =
+        typeof row?.valueSummary === "string" && row.valueSummary.length > 0
+          ? truncateTranscriptText(row.valueSummary, 72)
+          : "";
+      const place =
+        row?.place && typeof row.place === "object" && typeof row.place.placeId === "string"
+          ? row.place.placeId
+          : null;
+      const placeSuffix = place ? ` [place:${place}]` : "";
+      const valueSuffix = valueSummary ? ` => ${valueSummary}` : "";
+      items.push({
+        id: `runtime-inspector-row-${sectionId}-${rowId}`,
+        label: `  ${rowLabel}${valueSuffix}${placeSuffix}`
+      });
+    }
+  }
+  if (items.length === 0) {
+    items.push({ id: "runtime-inspector-empty", label: "Runtime inspector snapshot is empty" });
+  }
+  return items;
+}
+
 function summarizeEditGroups(state) {
   const groups = Array.isArray(state.editGroups) ? state.editGroups : [];
   if (groups.length === 0) {
@@ -2660,6 +3086,7 @@ function buildInspectorSections(state) {
     commandHistory: buildCommandHistoryItems(state, { limit: 5 }),
     capabilities: summarizeCapabilities(state),
     capabilityRequests: summarizeCapabilityRequests(state),
+    runtimeInspector: summarizeRuntimeInspector(state),
     watches: summarizeWatches(state),
     stagedEdits: summarizeEditGroups(state),
     domEscapes: summarizeDomEscapes(state),
@@ -2724,6 +3151,7 @@ export function openInspectorWindow(state, options = {}) {
     ["commandHistory", "Command History"],
     ["capabilities", "Capabilities"],
     ["capabilityRequests", "Capability Requests"],
+    ["runtimeInspector", "Runtime Inspector"],
     ["watches", "Pinned Watches"],
     ["stagedEdits", "Staged Edits"],
     ["domEscapes", "DOM Escapes"],
@@ -3014,6 +3442,21 @@ function normalizeProblemSeverity(severity, kind) {
   return "error";
 }
 
+function buildProblemExplanation(error, severity, status) {
+  const reason = typeof error?.reason === "string" && error.reason.length > 0 ? error.reason : null;
+  const summary =
+    typeof error?.report?.summary === "string" && error.report.summary.length > 0
+      ? error.report.summary
+      : null;
+  if (reason) {
+    return `Why: ${reason}`;
+  }
+  if (summary) {
+    return `Why: ${summary}`;
+  }
+  return `Why: this ${severity} is currently ${status}.`;
+}
+
 function compareProblemEntries(a, b) {
   const statusOrder = { new: 0, active: 1, resolved: 2, suppressed: 3 };
   const statusA = normalizeProblemStatus(a?.status, { count: a?.count });
@@ -3038,6 +3481,7 @@ function buildProblemsItems(state) {
     const statusSuffix = status ? ` [${status}]` : "";
     const label = `${severity}: ${error?.message ?? ""}`.trim();
     const classParts = ["ui-problems-item", `is-${severity}`, `is-${status}`];
+    const explanation = buildProblemExplanation(error, severity, status);
     return {
       id: error.id ?? `problem-${index}`,
       label: `${label}${countSuffix}${statusSuffix}`.trim(),
@@ -3048,6 +3492,8 @@ function buildProblemsItems(state) {
       count: Number.isInteger(error?.count) ? error.count : null,
       location: error.location ?? error.report?.location ?? null,
       presentationId: error.presentationId ?? null,
+      explanation,
+      guidanceId: error.id ? `problem:${error.id}` : null,
       className: classParts.join(" ")
     };
   });
@@ -3163,6 +3609,17 @@ export function refreshInspectorWindow(state, windowId, options = {}) {
       ...widget,
       props: { ...(widget.props ?? {}), items: sections[key] ?? [] }
     }));
+  }
+  return nextState;
+}
+
+function refreshInspectorWindowsForTask(state, taskId = null) {
+  let nextState = state;
+  const windows = Object.values(state.windows ?? {}).filter(
+    (window) => window?.metadata?.role === "inspector" && (!taskId || window.taskId === taskId)
+  );
+  for (const window of windows) {
+    nextState = refreshInspectorWindow(nextState, window.id);
   }
   return nextState;
 }
@@ -3637,7 +4094,7 @@ export function openCommandPaletteWindow(state, options = {}) {
   });
   ids.filterId = filterAlloc.id;
 
-  const items = buildCommandPaletteItems(options.registry ?? null, { filter: filterValue });
+  const items = buildCommandPaletteItems(options.registry ?? null, { filter: filterValue, state: nextState });
   const selectedIndex = clampIndex(0, items.length);
   const selectedItems = applySelectionToItems(items, selectedIndex);
   const selectedCommandId = items[selectedIndex]?.targetCommandId ?? null;
@@ -3695,7 +4152,7 @@ export function refreshCommandPaletteWindow(state, windowId, options = {}) {
     state.widgets?.[widgets.filterId]?.props?.value ??
     "";
   const filterValue = String(currentFilter ?? "");
-  const items = buildCommandPaletteItems(options.registry ?? null, { filter: filterValue });
+  const items = buildCommandPaletteItems(options.registry ?? null, { filter: filterValue, state });
   const hasSelectionIndex = Number.isFinite(options.selectionIndex);
   let selectedIndex = hasSelectionIndex ? options.selectionIndex : (paletteState.selectedIndex ?? 0);
   const preferredCommandId = hasSelectionIndex
@@ -4197,6 +4654,7 @@ export function registerSessionCommands(registry, options = {}) {
   ensure(deleteId, {
     title: "Delete Session",
     doc: "Delete the selected session.",
+    metadata: { beginner: { advanced: true, confirm: true, explanation: "Remove a saved workspace snapshot." } },
     enabled: (ctx) => {
       const sessionId = resolveSessionTargetId(ctx.state, ctx);
       return sessionId && ctx.state.sessions?.[sessionId]
@@ -4236,6 +4694,7 @@ export function registerLayoutCommands(registry, options = {}) {
   ensure(splitId, {
     title: "Split Layout",
     doc: "Split the active layout leaf.",
+    metadata: { beginner: { advanced: true, explanation: "Split the current panel into two panes." } },
     enabled: (ctx) => {
       const target = resolveLayoutTargetId(ctx.state, ctx);
       return target ? { enabled: true, reason: null } : { enabled: false, reason: "No layout target" };
@@ -4254,6 +4713,7 @@ export function registerLayoutCommands(registry, options = {}) {
   ensure(tabsId, {
     title: "Wrap In Tabs",
     doc: "Wrap the active layout leaf in a tabs container.",
+    metadata: { beginner: { advanced: true, explanation: "Convert a pane into a tab group." } },
     enabled: (ctx) => {
       const target = resolveLayoutTargetId(ctx.state, ctx);
       return target ? { enabled: true, reason: null } : { enabled: false, reason: "No layout target" };
@@ -4274,6 +4734,7 @@ export function registerLayoutCommands(registry, options = {}) {
   ensure(activeTabId, {
     title: "Activate Tab",
     doc: "Set the active tab in a tabs container.",
+    metadata: { beginner: { advanced: true, explanation: "Switch the active tab in a tab group." } },
     enabled: (ctx) => {
       const tabsIdValue = ctx.tabsId ?? null;
       const tabId = ctx.tabId ?? resolveLayoutTargetId(ctx.state, ctx);
@@ -4300,6 +4761,7 @@ export function registerLayoutCommands(registry, options = {}) {
   ensure(dockId, {
     title: "Dock Layout",
     doc: "Dock the active layout leaf into a region.",
+    metadata: { beginner: { advanced: true, explanation: "Dock a pane into a specific layout region." } },
     enabled: (ctx) => {
       const target = resolveLayoutTargetId(ctx.state, ctx);
       return target ? { enabled: true, reason: null } : { enabled: false, reason: "No layout target" };
@@ -4703,96 +5165,314 @@ export function registerInspectorCommands(registry, options = {}) {
   const applyId = options.applyEditCommandId ?? INSPECTOR_EDIT_APPLY_COMMAND;
   const undoId = options.undoEditCommandId ?? INSPECTOR_EDIT_UNDO_COMMAND;
 
+  const pinSpec = normalizeCommandSpec({
+    id: pinId,
+    title: "Pin Watch",
+    doc: "Pin the selected item as an inspector watch.",
+    scope: "context",
+    args: [
+      { name: "entryId", type: "string", required: false, defaultFrom: ["selection"] },
+      { name: "presentationId", type: "string", required: false, defaultFrom: ["presentation"] },
+      { name: "recordingId", type: "string", required: false },
+      { name: "label", type: "string", required: false },
+      { name: "valueSummary", type: "string", required: false }
+    ],
+    metadata: { kind: "inspector.watch.pin", runtime: true, runtimeCommandId: "runtime.watch.pin" }
+  });
+  const unpinSpec = normalizeCommandSpec({
+    id: unpinId,
+    title: "Unpin Watch",
+    doc: "Remove a watch from inspector pinned watches.",
+    scope: "context",
+    args: [{ name: "watchId", type: "string", required: true, defaultFrom: ["selection"] }],
+    metadata: { kind: "inspector.watch.unpin", runtime: true, runtimeCommandId: "runtime.watch.unpin" }
+  });
+  const stageSpec = normalizeCommandSpec({
+    id: stageId,
+    title: "Stage Edit",
+    doc: "Stage an edit group for inspector place edits.",
+    scope: "context",
+    args: [
+      { name: "placeId", type: "string", required: false, defaultFrom: ["selection", "presentation"] },
+      { name: "before", type: "string", required: false },
+      { name: "after", type: "string", required: false },
+      { name: "label", type: "string", required: false },
+      { name: "edits", type: "list", required: false }
+    ],
+    metadata: { kind: "inspector.edit.stage", runtime: true, runtimeCommandId: "runtime.place.stage" }
+  });
+  const applySpec = normalizeCommandSpec({
+    id: applyId,
+    title: "Apply Staged Edit",
+    doc: "Apply the selected staged edit group.",
+    scope: "context",
+    args: [{ name: "editGroupId", type: "string", required: true, defaultFrom: ["selection"] }],
+    metadata: { kind: "inspector.edit.apply", runtime: true, runtimeCommandId: "runtime.place.apply" }
+  });
+  const undoSpec = normalizeCommandSpec({
+    id: undoId,
+    title: "Undo Staged Edit",
+    doc: "Undo the selected staged edit group.",
+    scope: "context",
+    args: [{ name: "editGroupId", type: "string", required: true, defaultFrom: ["selection"] }],
+    metadata: { kind: "inspector.edit.undo", runtime: true, runtimeCommandId: "runtime.place.undo" }
+  });
+
   const ensure = (id, command) => {
     if (!registry.commands.has(id)) {
       registerCommand(registry, { ...command, id });
     }
   };
 
+  const hasRuntimeClient = (ctx) => Boolean(ctx.runtimeCommandClient?.dispatchTypedCommand);
+  const nextInvocationId = (ctx) =>
+    ctx.invocationId ?? ctx.payload?.invocationId ?? `inv-${(ctx.state.commandHistory ?? []).length + 1}`;
+  const nextInvocationTs = (ctx) => (Number.isInteger(ctx.ts) ? ctx.ts : null);
+  const nextInvocationSource = (ctx, fallback) => ctx.source ?? ctx.payload?.source ?? fallback;
+
+  const resolvePinContext = (ctx) => {
+    const item = ctx.item ?? ctx.payload?.item ?? null;
+    return {
+      item,
+      entryId: ctx.entryId ?? ctx.payload?.entryId ?? item?.entryId ?? null,
+      presentationId: ctx.presentationId ?? ctx.payload?.presentationId ?? item?.presentationId ?? null,
+      recordingId: ctx.recordingId ?? ctx.payload?.recordingId ?? item?.recordingId ?? null,
+      label: ctx.label ?? ctx.payload?.label ?? item?.label ?? null,
+      valueSummary: ctx.valueSummary ?? ctx.payload?.valueSummary ?? item?.valueSummary ?? null
+    };
+  };
+
+  const resolveUnpinContext = (ctx) => {
+    const item = ctx.item ?? ctx.payload?.item ?? null;
+    return {
+      watchId: ctx.watchId ?? ctx.payload?.watchId ?? item?.watchId ?? item?.id ?? null
+    };
+  };
+
+  const resolveStageContext = (ctx) => {
+    const payload = ctx.payload ?? {};
+    const edit = ctx.edit ?? payload.edit ?? null;
+    const edits = ctx.edits ?? payload.edits ?? null;
+    const placeId = ctx.placeId ?? payload.placeId ?? edit?.placeId ?? null;
+    const before = ctx.before ?? payload.before ?? edit?.before ?? null;
+    const after = ctx.after ?? payload.after ?? ctx.value ?? payload.value ?? edit?.after ?? edit?.value ?? null;
+    const label = ctx.label ?? payload.label ?? edit?.label ?? null;
+    return { edit, edits, placeId, before, after, label };
+  };
+
+  const resolveEditGroupContext = (ctx) => {
+    const item = ctx.item ?? ctx.payload?.item ?? null;
+    return {
+      editGroupId: ctx.editGroupId ?? ctx.payload?.editGroupId ?? item?.editGroupId ?? item?.id ?? null
+    };
+  };
+
   ensure(pinId, {
-    title: "Pin Watch",
-    doc: "Pin the selected item as an inspector watch.",
+    title: pinSpec.title ?? "Pin Watch",
+    doc: pinSpec.doc ?? "Pin the selected item as an inspector watch.",
+    scope: pinSpec.scope ?? "context",
+    args: pinSpec.args ?? [],
+    metadata: { ...(pinSpec.metadata ?? {}), typed: pinSpec },
     enabled: (ctx) => {
-      const item = ctx.item ?? ctx.payload?.item ?? null;
-      const hasTarget = Boolean(
-        ctx.entryId ??
-          ctx.presentationId ??
-          item?.entryId ??
-          item?.presentationId ??
-          item?.recordingId
-      );
+      const pinCtx = resolvePinContext(ctx);
+      const hasTarget = Boolean(pinCtx.entryId ?? pinCtx.presentationId ?? pinCtx.recordingId);
       return hasTarget ? { enabled: true, reason: null } : { enabled: false, reason: "No watch target" };
     },
-    exec: (ctx) =>
-      pinWatch(ctx.state, {
-        item: ctx.item ?? ctx.payload?.item ?? null,
-        entryId: ctx.entryId ?? ctx.payload?.entryId ?? null,
-        presentationId: ctx.presentationId ?? ctx.payload?.presentationId ?? null,
-        recordingId: ctx.recordingId ?? ctx.payload?.recordingId ?? null,
-        label: ctx.label ?? ctx.payload?.label ?? null,
-        valueSummary: ctx.valueSummary ?? ctx.payload?.valueSummary ?? null,
+    exec: (ctx) => {
+      const pinCtx = resolvePinContext(ctx);
+      const pending = hasRuntimeClient(ctx);
+      const args = {
+        entryId: pinCtx.entryId,
+        presentationId: pinCtx.presentationId,
+        recordingId: pinCtx.recordingId,
+        label: pinCtx.label,
+        valueSummary: pinCtx.valueSummary
+      };
+      const defaults = {};
+      if (pinCtx.entryId && ctx.entryId == null && ctx.payload?.entryId == null) {
+        defaults.entryId = { source: "selection" };
+      }
+      if (pinCtx.presentationId && ctx.presentationId == null && ctx.payload?.presentationId == null) {
+        defaults.presentationId = { source: "selection" };
+      }
+      const invocation = {
+        id: nextInvocationId(ctx),
+        commandId: pinId,
+        args,
+        defaults,
+        ts: nextInvocationTs(ctx),
+        source: nextInvocationSource(ctx, "inspector"),
+        result: pending ? { status: "pending" } : null
+      };
+      const validation = validateInvocation(invocation, pinSpec);
+      if (!validation.ok) return ctx.state;
+      let nextState = recordCommandInvocation(ctx.state, invocation);
+      if (pending) return { state: nextState };
+      nextState = pinWatch(nextState, {
+        item: pinCtx.item,
+        entryId: pinCtx.entryId,
+        presentationId: pinCtx.presentationId,
+        recordingId: pinCtx.recordingId,
+        label: pinCtx.label,
+        valueSummary: pinCtx.valueSummary,
         ts: ctx.ts ?? null,
         metadata: ctx.metadata ?? ctx.payload?.metadata ?? {}
-      })
+      });
+      return nextState;
+    }
   });
 
   ensure(unpinId, {
-    title: "Unpin Watch",
-    doc: "Remove a watch from inspector pinned watches.",
+    title: unpinSpec.title ?? "Unpin Watch",
+    doc: unpinSpec.doc ?? "Remove a watch from inspector pinned watches.",
+    scope: unpinSpec.scope ?? "context",
+    args: unpinSpec.args ?? [],
+    metadata: { ...(unpinSpec.metadata ?? {}), typed: unpinSpec },
     enabled: (ctx) => {
-      const watchId = ctx.watchId ?? ctx.payload?.watchId ?? ctx.item?.watchId ?? ctx.item?.id ?? null;
+      const watchCtx = resolveUnpinContext(ctx);
+      const watchId = watchCtx.watchId;
       return watchId ? { enabled: true, reason: null } : { enabled: false, reason: "No watch id" };
     },
     exec: (ctx) => {
-      const watchId = ctx.watchId ?? ctx.payload?.watchId ?? ctx.item?.watchId ?? ctx.item?.id ?? null;
-      return unpinWatch(ctx.state, watchId);
+      const watchCtx = resolveUnpinContext(ctx);
+      if (!watchCtx.watchId) return ctx.state;
+      const pending = hasRuntimeClient(ctx);
+      const invocation = {
+        id: nextInvocationId(ctx),
+        commandId: unpinId,
+        args: { watchId: watchCtx.watchId },
+        defaults: {},
+        ts: nextInvocationTs(ctx),
+        source: nextInvocationSource(ctx, "inspector"),
+        result: pending ? { status: "pending" } : null
+      };
+      const validation = validateInvocation(invocation, unpinSpec);
+      if (!validation.ok) return ctx.state;
+      let nextState = recordCommandInvocation(ctx.state, invocation);
+      if (pending) return { state: nextState };
+      nextState = unpinWatch(nextState, watchCtx.watchId);
+      return nextState;
     }
   });
 
   ensure(stageId, {
-    title: "Stage Edit",
-    doc: "Stage an edit group for inspector place edits.",
+    title: stageSpec.title ?? "Stage Edit",
+    doc: stageSpec.doc ?? "Stage an edit group for inspector place edits.",
+    scope: stageSpec.scope ?? "context",
+    args: stageSpec.args ?? [],
+    metadata: { ...(stageSpec.metadata ?? {}), typed: stageSpec },
     enabled: (ctx) => {
-      const edit = ctx.edit ?? ctx.payload?.edit ?? null;
-      const hasInline = Boolean(ctx.placeId ?? ctx.payload?.placeId);
+      const stageCtx = resolveStageContext(ctx);
+      const hasInline = Boolean(stageCtx.placeId);
+      const hasEdits = Array.isArray(stageCtx.edits) && stageCtx.edits.length > 0;
+      const edit = stageCtx.edit ?? (hasEdits ? stageCtx.edits[0] : null);
       return edit || hasInline ? { enabled: true, reason: null } : { enabled: false, reason: "No edit payload" };
     },
-    exec: (ctx) =>
-      stageEdit(ctx.state, {
-        edit: ctx.edit ?? ctx.payload?.edit ?? null,
-        edits: ctx.edits ?? ctx.payload?.edits ?? null,
-        placeId: ctx.placeId ?? ctx.payload?.placeId ?? null,
-        before: ctx.before ?? ctx.payload?.before ?? null,
-        after: ctx.after ?? ctx.payload?.after ?? ctx.value ?? ctx.payload?.value ?? null,
-        label: ctx.label ?? ctx.payload?.label ?? null,
+    exec: (ctx) => {
+      const stageCtx = resolveStageContext(ctx);
+      const hasEdits = Array.isArray(stageCtx.edits) && stageCtx.edits.length > 0;
+      const pending = hasRuntimeClient(ctx);
+      const args = {
+        placeId: stageCtx.placeId,
+        before: stageCtx.before,
+        after: stageCtx.after,
+        label: stageCtx.label,
+        edits: hasEdits ? stageCtx.edits : null
+      };
+      const defaults = {};
+      if (stageCtx.placeId && ctx.placeId == null && ctx.payload?.placeId == null) {
+        defaults.placeId = { source: "selection" };
+      }
+      const invocation = {
+        id: nextInvocationId(ctx),
+        commandId: stageId,
+        args,
+        defaults,
+        ts: nextInvocationTs(ctx),
+        source: nextInvocationSource(ctx, "inspector"),
+        result: pending ? { status: "pending" } : null
+      };
+      const validation = validateInvocation(invocation, stageSpec);
+      if (!validation.ok) return ctx.state;
+      let nextState = recordCommandInvocation(ctx.state, invocation);
+      if (pending) return { state: nextState };
+      nextState = stageEdit(nextState, {
+        edit: stageCtx.edit ?? null,
+        edits: hasEdits ? stageCtx.edits : null,
+        placeId: stageCtx.placeId,
+        before: stageCtx.before,
+        after: stageCtx.after,
+        label: stageCtx.label,
         ts: ctx.ts ?? null,
         metadata: ctx.metadata ?? ctx.payload?.metadata ?? {}
-      })
+      });
+      return nextState;
+    }
   });
 
   ensure(applyId, {
-    title: "Apply Staged Edit",
-    doc: "Apply the selected staged edit group.",
+    title: applySpec.title ?? "Apply Staged Edit",
+    doc: applySpec.doc ?? "Apply the selected staged edit group.",
+    scope: applySpec.scope ?? "context",
+    args: applySpec.args ?? [],
+    metadata: { ...(applySpec.metadata ?? {}), typed: applySpec },
     enabled: (ctx) => {
-      const editGroupId = ctx.editGroupId ?? ctx.payload?.editGroupId ?? ctx.item?.editGroupId ?? ctx.item?.id ?? null;
+      const editCtx = resolveEditGroupContext(ctx);
+      const editGroupId = editCtx.editGroupId;
       return editGroupId ? { enabled: true, reason: null } : { enabled: false, reason: "No edit group id" };
     },
     exec: (ctx) => {
-      const editGroupId = ctx.editGroupId ?? ctx.payload?.editGroupId ?? ctx.item?.editGroupId ?? ctx.item?.id ?? null;
-      return applyEditGroup(ctx.state, editGroupId, { ts: ctx.ts ?? null });
+      const editCtx = resolveEditGroupContext(ctx);
+      if (!editCtx.editGroupId) return ctx.state;
+      const pending = hasRuntimeClient(ctx);
+      const invocation = {
+        id: nextInvocationId(ctx),
+        commandId: applyId,
+        args: { editGroupId: editCtx.editGroupId },
+        defaults: {},
+        ts: nextInvocationTs(ctx),
+        source: nextInvocationSource(ctx, "inspector"),
+        result: pending ? { status: "pending" } : null
+      };
+      const validation = validateInvocation(invocation, applySpec);
+      if (!validation.ok) return ctx.state;
+      let nextState = recordCommandInvocation(ctx.state, invocation);
+      if (pending) return { state: nextState };
+      nextState = applyEditGroup(nextState, editCtx.editGroupId, { ts: ctx.ts ?? null });
+      return nextState;
     }
   });
 
   ensure(undoId, {
-    title: "Undo Staged Edit",
-    doc: "Undo the selected staged edit group.",
+    title: undoSpec.title ?? "Undo Staged Edit",
+    doc: undoSpec.doc ?? "Undo the selected staged edit group.",
+    scope: undoSpec.scope ?? "context",
+    args: undoSpec.args ?? [],
+    metadata: { ...(undoSpec.metadata ?? {}), typed: undoSpec },
     enabled: (ctx) => {
-      const editGroupId = ctx.editGroupId ?? ctx.payload?.editGroupId ?? ctx.item?.editGroupId ?? ctx.item?.id ?? null;
+      const editCtx = resolveEditGroupContext(ctx);
+      const editGroupId = editCtx.editGroupId;
       return editGroupId ? { enabled: true, reason: null } : { enabled: false, reason: "No edit group id" };
     },
     exec: (ctx) => {
-      const editGroupId = ctx.editGroupId ?? ctx.payload?.editGroupId ?? ctx.item?.editGroupId ?? ctx.item?.id ?? null;
-      return undoEditGroup(ctx.state, editGroupId, { ts: ctx.ts ?? null });
+      const editCtx = resolveEditGroupContext(ctx);
+      if (!editCtx.editGroupId) return ctx.state;
+      const pending = hasRuntimeClient(ctx);
+      const invocation = {
+        id: nextInvocationId(ctx),
+        commandId: undoId,
+        args: { editGroupId: editCtx.editGroupId },
+        defaults: {},
+        ts: nextInvocationTs(ctx),
+        source: nextInvocationSource(ctx, "inspector"),
+        result: pending ? { status: "pending" } : null
+      };
+      const validation = validateInvocation(invocation, undoSpec);
+      if (!validation.ok) return ctx.state;
+      let nextState = recordCommandInvocation(ctx.state, invocation);
+      if (pending) return { state: nextState };
+      nextState = undoEditGroup(nextState, editCtx.editGroupId, { ts: ctx.ts ?? null });
+      return nextState;
     }
   });
 
@@ -5013,6 +5693,7 @@ export function registerCapabilityCommands(registry, options = {}) {
   ensure(requestId, {
     title: "Request Capability",
     doc: "Record a capability request for policy mediation.",
+    metadata: { beginner: { advanced: true, hidden: true } },
     enabled: (ctx) => {
       const capability = resolveCapability(ctx);
       return capability
@@ -5035,6 +5716,7 @@ export function registerCapabilityCommands(registry, options = {}) {
   ensure(grantId, {
     title: "Grant Capability",
     doc: "Grant a capability after mediation.",
+    metadata: { beginner: { advanced: true, hidden: true, confirm: true } },
     enabled: (ctx) => {
       const capability = resolveCapability(ctx);
       if (!capability) {
@@ -5060,6 +5742,7 @@ export function registerCapabilityCommands(registry, options = {}) {
   ensure(revokeId, {
     title: "Revoke Capability",
     doc: "Revoke a previously granted capability.",
+    metadata: { beginner: { advanced: true, hidden: true, confirm: true } },
     enabled: (ctx) => {
       const capability = resolveCapability(ctx);
       if (!capability) {
@@ -5085,6 +5768,7 @@ export function registerCapabilityCommands(registry, options = {}) {
   ensure(openPanelId, {
     title: "Open Capability Mediation",
     doc: "Open the capability mediation panel.",
+    metadata: { beginner: { advanced: true, hidden: true } },
     exec: (ctx) =>
       openCapabilityMediationWindow(ctx.state, {
         taskId: ctx.taskId ?? null,
@@ -5094,7 +5778,7 @@ export function registerCapabilityCommands(registry, options = {}) {
 
   ensure(selectId, {
     doc: "Select a capability request in the mediation panel.",
-    metadata: { paletteHidden: true },
+    metadata: { paletteHidden: true, beginner: { hidden: true } },
     exec: (ctx) =>
       applyCapabilityRequestSelection(ctx.state, {
         taskId: ctx.taskId ?? null,
@@ -5121,6 +5805,7 @@ export function registerCapabilityCommands(registry, options = {}) {
   ensure(approveId, {
     title: "Approve Capability Request",
     doc: "Approve the selected capability request.",
+    metadata: { beginner: { advanced: true, hidden: true, confirm: true } },
     enabled: (ctx) => {
       const request = resolvePendingRequest(ctx);
       if (!request) {
@@ -5146,6 +5831,7 @@ export function registerCapabilityCommands(registry, options = {}) {
   ensure(denyId, {
     title: "Deny Capability Request",
     doc: "Deny the selected capability request.",
+    metadata: { beginner: { advanced: true, hidden: true, confirm: true } },
     enabled: (ctx) => {
       const request = resolvePendingRequest(ctx);
       if (!request) {
@@ -5171,6 +5857,7 @@ export function registerCapabilityCommands(registry, options = {}) {
   ensure(autoRunId, {
     title: "Auto-run Capability Policy",
     doc: "Apply the current capability policy to all pending requests.",
+    metadata: { beginner: { advanced: true, hidden: true } },
     exec: (ctx) => {
       let nextState = autoRunCapabilityPolicy(ctx.state, {
         policy: ctx.payload?.policy ?? null,
@@ -5184,6 +5871,7 @@ export function registerCapabilityCommands(registry, options = {}) {
   ensure(safeModeEnableId, {
     title: "Enable Safe Mode",
     doc: "Disable all capability-granted escapes.",
+    metadata: { beginner: { advanced: true, hidden: true } },
     enabled: (ctx) =>
       ctx.state.capabilities?.safeMode ? { enabled: false, reason: "Safe mode already enabled" } : { enabled: true, reason: null },
     exec: (ctx) => {
@@ -5200,6 +5888,7 @@ export function registerCapabilityCommands(registry, options = {}) {
   ensure(safeModeDisableId, {
     title: "Disable Safe Mode",
     doc: "Re-enable capability-granted escapes.",
+    metadata: { beginner: { advanced: true, hidden: true, confirm: true } },
     enabled: (ctx) =>
       ctx.state.capabilities?.safeMode ? { enabled: true, reason: null } : { enabled: false, reason: "Safe mode already disabled" },
     exec: (ctx) => {
@@ -5228,6 +5917,7 @@ export function registerDomEscapeCommands(registry, options = {}) {
       id: escapeId,
       title: "DOM Escape",
       doc: "Execute a capability-gated DOM escape hatch.",
+      metadata: { beginner: { advanced: true, hidden: true, confirm: true } },
       capability,
       exec: (ctx) => {
         const detail = ctx.detail ?? ctx.payload?.detail ?? null;
@@ -5246,6 +5936,176 @@ export function registerDomEscapeCommands(registry, options = {}) {
       }
     });
   }
+
+  return registry;
+}
+
+export function registerCustomizationCommands(registry, options = {}) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  const themePresetId = options.themePresetCommandId ?? CUSTOMIZATION_THEME_PRESET_COMMAND;
+  const themeOverridesId = options.themeOverridesCommandId ?? CUSTOMIZATION_THEME_OVERRIDES_COMMAND;
+  const themeResetId = options.themeResetCommandId ?? CUSTOMIZATION_THEME_OVERRIDES_RESET_COMMAND;
+  const keymapProfileId = options.keymapProfileCommandId ?? CUSTOMIZATION_KEYMAP_PROFILE_COMMAND;
+  const beginnerEnableId = options.beginnerEnableCommandId ?? CUSTOMIZATION_BEGINNER_MODE_ENABLE_COMMAND;
+  const beginnerDisableId = options.beginnerDisableCommandId ?? CUSTOMIZATION_BEGINNER_MODE_DISABLE_COMMAND;
+  const guidanceDismissId = options.guidanceDismissCommandId ?? CUSTOMIZATION_GUIDANCE_DISMISS_COMMAND;
+  const profileExportId = options.profileExportCommandId ?? CUSTOMIZATION_PROFILE_EXPORT_COMMAND;
+  const profileImportId = options.profileImportCommandId ?? CUSTOMIZATION_PROFILE_IMPORT_COMMAND;
+
+  const ensure = (id, command) => {
+    if (!registry.commands.has(id)) {
+      registerCommand(registry, { ...command, id });
+    }
+  };
+
+  ensure(themePresetId, {
+    title: "Set Theme Preset",
+    doc: "Set the active theme preset and optional mode override.",
+    metadata: { beginner: { explanation: "Switch the overall visual theme preset." } },
+    enabled: (ctx) => {
+      const presetId = ctx.presetId ?? ctx.payload?.presetId ?? null;
+      return typeof presetId === "string" && presetId.length > 0
+        ? { enabled: true, reason: null }
+        : { enabled: false, reason: "No preset id" };
+    },
+    exec: (ctx) =>
+      setThemePreset(ctx.state, ctx.presetId ?? ctx.payload?.presetId ?? null, {
+        mode: ctx.mode ?? ctx.payload?.mode ?? null,
+        layer: ctx.layer ?? ctx.payload?.layer ?? "session"
+      })
+  });
+
+  ensure(themeOverridesId, {
+    title: "Set Theme Overrides",
+    doc: "Apply token-level theme overrides to the selected customization layer.",
+    metadata: { beginner: { advanced: true, explanation: "Fine-tune colors, typography, and spacing tokens." } },
+    exec: (ctx) =>
+      setThemeOverrides(ctx.state, ctx.overrides ?? ctx.payload?.overrides ?? {}, {
+        layer: ctx.layer ?? ctx.payload?.layer ?? "session"
+      })
+  });
+
+  ensure(themeResetId, {
+    title: "Reset Theme Overrides",
+    doc: "Clear token-level theme overrides for the selected customization layer.",
+    metadata: { beginner: { advanced: true, explanation: "Remove custom token overrides and return to preset defaults." } },
+    exec: (ctx) =>
+      resetThemeOverrides(ctx.state, {
+        layer: ctx.layer ?? ctx.payload?.layer ?? "session"
+      })
+  });
+
+  ensure(keymapProfileId, {
+    title: "Assign Keymap Profile",
+    doc: "Assign a keymap profile to a pane.",
+    metadata: { beginner: { advanced: true, explanation: "Choose how keys behave in editor, REPL, and debugger panes." } },
+    enabled: (ctx) => {
+      const pane = ctx.pane ?? ctx.payload?.pane ?? null;
+      const profileId = ctx.profileId ?? ctx.payload?.profileId ?? null;
+      if (!KEYMAP_PANES.includes(pane)) return { enabled: false, reason: "No pane specified" };
+      if (typeof profileId !== "string" || profileId.length === 0) return { enabled: false, reason: "No profile id" };
+      return { enabled: true, reason: null };
+    },
+    exec: (ctx) =>
+      setPaneKeymapProfile(
+        ctx.state,
+        ctx.pane ?? ctx.payload?.pane ?? null,
+        ctx.profileId ?? ctx.payload?.profileId ?? null,
+        { layer: ctx.layer ?? ctx.payload?.layer ?? "session" }
+      )
+  });
+
+  ensure(beginnerEnableId, {
+    title: "Enable Beginner Mode",
+    doc: "Reduce advanced command visibility while keeping the same command system.",
+    metadata: { beginner: { explanation: "Hide advanced commands while keeping the same underlying system." } },
+    enabled: (ctx) =>
+      resolveEffectiveBeginnerMode(ctx.state).enabled
+        ? { enabled: false, reason: "Beginner mode already enabled" }
+        : { enabled: true, reason: null },
+    exec: (ctx) => setBeginnerMode(ctx.state, true, { layer: ctx.layer ?? ctx.payload?.layer ?? "session" })
+  });
+
+  ensure(beginnerDisableId, {
+    title: "Disable Beginner Mode",
+    doc: "Expose advanced command surfaces.",
+    metadata: { beginner: { explanation: "Show advanced commands and customization controls." } },
+    enabled: (ctx) =>
+      resolveEffectiveBeginnerMode(ctx.state).enabled
+        ? { enabled: true, reason: null }
+        : { enabled: false, reason: "Beginner mode already disabled" },
+    exec: (ctx) => setBeginnerMode(ctx.state, false, { layer: ctx.layer ?? ctx.payload?.layer ?? "session" })
+  });
+
+  ensure(guidanceDismissId, {
+    title: "Dismiss Guidance",
+    doc: "Dismiss a beginner guidance message for this session.",
+    metadata: { paletteHidden: true, beginner: { hidden: true } },
+    enabled: (ctx) => {
+      const guidanceId = ctx.guidanceId ?? ctx.payload?.guidanceId ?? null;
+      return typeof guidanceId === "string" && guidanceId.length > 0
+        ? { enabled: true, reason: null }
+        : { enabled: false, reason: "No guidance id" };
+    },
+    exec: (ctx) =>
+      dismissGuidance(ctx.state, ctx.guidanceId ?? ctx.payload?.guidanceId ?? null, {
+        layer: ctx.layer ?? ctx.payload?.layer ?? "session"
+      })
+  });
+
+  ensure(profileExportId, {
+    title: "Export Customization Profile",
+    doc: "Export current customization sections as a portable profile payload.",
+    metadata: { beginner: { advanced: true } },
+    exec: (ctx) => ({
+      state: ctx.state,
+      output: {
+        kind: "customization.profile.export",
+        profile: exportCustomizationProfile(ctx.state.customization ?? null, {
+          name: ctx.name ?? ctx.payload?.name ?? null,
+          sourceLayer: ctx.sourceLayer ?? ctx.payload?.sourceLayer ?? "effective",
+          now: ctx.now ?? null
+        })
+      }
+    })
+  });
+
+  ensure(profileImportId, {
+    title: "Import Customization Profile",
+    doc: "Import and apply a customization profile with schema validation.",
+    metadata: { beginner: { advanced: true, confirm: true } },
+    enabled: (ctx) => {
+      const profile = ctx.profile ?? ctx.payload?.profile ?? null;
+      const validation = validateCustomizationProfile(profile);
+      return validation.ok
+        ? { enabled: true, reason: null }
+        : { enabled: false, reason: validation.errors.join("; ") || "Invalid profile" };
+    },
+    exec: (ctx) => {
+      const profile = ctx.profile ?? ctx.payload?.profile ?? null;
+      const imported = importCustomizationProfile(ctx.state.customization ?? null, profile, {
+        layer: ctx.layer ?? ctx.payload?.layer ?? "user"
+      });
+      if (!imported.ok) {
+        return {
+          state: ctx.state,
+          output: {
+            kind: "customization.profile.import.error",
+            errors: imported.errors ?? []
+          }
+        };
+      }
+      return {
+        state: setCustomization(ctx.state, imported.customization),
+        output: {
+          kind: "customization.profile.import",
+          rollback: imported.rollback
+        }
+      };
+    }
+  });
 
   return registry;
 }
@@ -5379,6 +6239,37 @@ export function bindCommandSurfaceDefaults(registry, options = {}) {
   return registry;
 }
 
+export function applyCustomizationKeymapsToRegistry(state, registry, options = {}) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  const paneContextIds = isPlainObject(options.paneContextIds) ? options.paneContextIds : {};
+  const clearExisting = options.clearExisting !== false;
+  if (clearExisting) {
+    for (const pane of KEYMAP_PANES) {
+      const contextId = paneContextIds[pane] ?? `pane:${pane}`;
+      if (registry.keymaps?.context?.has(contextId)) {
+        registry.keymaps.context.delete(contextId);
+      }
+    }
+  }
+
+  const bindings = buildActiveKeymapBindings(state);
+  for (const binding of bindings) {
+    const scope = KEYMAP_SCOPE_KINDS.includes(binding.scope) ? binding.scope : "context";
+    const resolvedScopeId =
+      scope === "global"
+        ? null
+        : binding.scopeId ??
+          (scope === "context" && binding.pane ? paneContextIds[binding.pane] ?? `pane:${binding.pane}` : null);
+    if (scope !== "global" && !resolvedScopeId) {
+      continue;
+    }
+    bindKey(registry, scope, binding.key, binding.commandId, resolvedScopeId);
+  }
+  return registry;
+}
+
 export function openKeybindingWindow(state, options = {}) {
   const taskId = options.taskId ?? state.workspace?.activeTaskId ?? null;
   if (!taskId) {
@@ -5421,7 +6312,7 @@ export function openKeybindingWindow(state, options = {}) {
   });
   ids.labelId = labelAlloc.id;
 
-  const items = buildKeybindingItems(options.registry ?? null);
+  const items = buildKeybindingItems(options.registry ?? null, { state: nextState });
   let listAlloc = allocateWidgetId(nextState, "keybindings-list");
   nextState = addWidget(listAlloc.state, {
     id: listAlloc.id,
@@ -5457,6 +6348,25 @@ export function openKeybindingWindow(state, options = {}) {
   });
   ids.traceListId = traceListAlloc.id;
 
+  const conflictItems = buildKeybindingConflictItems(nextState);
+  let conflictLabelAlloc = allocateWidgetId(nextState, "keybindings-conflict-label");
+  nextState = addWidget(conflictLabelAlloc.state, {
+    id: conflictLabelAlloc.id,
+    kind: "label",
+    parentId: ids.rootId,
+    props: { text: "Keymap Conflicts" }
+  });
+  ids.conflictLabelId = conflictLabelAlloc.id;
+
+  let conflictListAlloc = allocateWidgetId(nextState, "keybindings-conflict-list");
+  nextState = addWidget(conflictListAlloc.state, {
+    id: conflictListAlloc.id,
+    kind: "list",
+    parentId: ids.rootId,
+    props: { items: conflictItems }
+  });
+  ids.conflictListId = conflictListAlloc.id;
+
   nextState = updateWindow(nextState, allocWindow.id, (window) => ({
     ...window,
     metadata: {
@@ -5479,7 +6389,7 @@ export function refreshKeybindingWindow(state, windowId, options = {}) {
   if (!widgets?.listId) {
     return state;
   }
-  const items = buildKeybindingItems(options.registry ?? null);
+  const items = buildKeybindingItems(options.registry ?? null, { state });
   let nextState = updateWidget(state, widgets.listId, (widget) => ({
     ...widget,
     props: { ...(widget.props ?? {}), items }
@@ -5506,6 +6416,13 @@ export function refreshKeybindingWindow(state, windowId, options = {}) {
     nextState = updateWidget(nextState, widgets.traceListId, (widget) => ({
       ...widget,
       props: { ...(widget.props ?? {}), items: traceItems }
+    }));
+  }
+  if (widgets.conflictListId) {
+    const conflictItems = buildKeybindingConflictItems(nextState);
+    nextState = updateWidget(nextState, widgets.conflictListId, (widget) => ({
+      ...widget,
+      props: { ...(widget.props ?? {}), items: conflictItems }
     }));
   }
 
@@ -5634,6 +6551,266 @@ function normalizeRuntimeConditionPayload(payload, errorId, frames) {
       restarts: []
     };
   }
+}
+
+function resolveRuntimeTaskId(state, payload = {}, options = {}) {
+  if (typeof payload?.taskId === "string" && payload.taskId.length > 0) {
+    return payload.taskId;
+  }
+  if (typeof options?.taskId === "string" && options.taskId.length > 0) {
+    return options.taskId;
+  }
+  return state.workspace?.activeTaskId ?? null;
+}
+
+function mergeRuntimeInspectorWatches(state, watches, options = {}) {
+  if (!Array.isArray(watches)) return state;
+  const ts = Number.isInteger(options.ts) ? options.ts : null;
+  const nextWatches = [...(state.watches ?? [])];
+  let changed = false;
+
+  const findWatchIndex = (watch) => {
+    if (!watch) return -1;
+    if (watch.id) {
+      const byId = nextWatches.findIndex((entry) => entry.id === watch.id);
+      if (byId >= 0) return byId;
+    }
+    if (watch.entryId) {
+      const byEntry = nextWatches.findIndex((entry) => entry.entryId && entry.entryId === watch.entryId);
+      if (byEntry >= 0) return byEntry;
+    }
+    if (watch.presentationId) {
+      const byPresentation = nextWatches.findIndex(
+        (entry) => entry.presentationId && entry.presentationId === watch.presentationId
+      );
+      if (byPresentation >= 0) return byPresentation;
+    }
+    return -1;
+  };
+
+  for (let index = 0; index < watches.length; index += 1) {
+    const raw = watches[index];
+    if (!raw || typeof raw !== "object") continue;
+    const normalized = normalizeWatch(
+      {
+        ...raw,
+        updatedAt: Number.isInteger(raw.updatedAt) ? raw.updatedAt : ts
+      },
+      nextWatches.length + index
+    );
+    const existingIndex = findWatchIndex(normalized);
+    const shouldRemove = raw.pinned === false || normalized.pinned === false;
+    if (existingIndex >= 0) {
+      if (shouldRemove) {
+        nextWatches.splice(existingIndex, 1);
+      } else {
+        nextWatches[existingIndex] = normalizeWatch(
+          {
+            ...nextWatches[existingIndex],
+            ...normalized,
+            pinned: true
+          },
+          existingIndex
+        );
+      }
+      changed = true;
+      continue;
+    }
+    if (shouldRemove) continue;
+    nextWatches.push(normalized);
+    changed = true;
+  }
+
+  if (!changed) return state;
+  return {
+    ...state,
+    watches: nextWatches,
+    watchSeq: normalizeWatchSeq(state.watchSeq ?? null, nextWatches)
+  };
+}
+
+function upsertRuntimeInspectorEditGroup(state, editGroup, options = {}) {
+  if (!editGroup || typeof editGroup !== "object") {
+    throw new Error("Runtime inspector edit-group payload requires editGroup object");
+  }
+  const ts = Number.isInteger(options.ts) ? options.ts : null;
+  const groups = Array.isArray(state.editGroups) ? [...state.editGroups] : [];
+  const index = groups.findIndex((entry) => entry.id === editGroup.id);
+  const current = index >= 0 ? groups[index] : null;
+  const status = EDIT_GROUP_STATUSES.includes(editGroup.status) ? editGroup.status : current?.status ?? "staged";
+  const merged = normalizeEditGroup(
+    {
+      ...current,
+      ...editGroup,
+      status,
+      createdAt:
+        Number.isInteger(editGroup.createdAt)
+          ? editGroup.createdAt
+          : current?.createdAt ?? (status === "staged" ? ts : null),
+      appliedAt:
+        Number.isInteger(editGroup.appliedAt)
+          ? editGroup.appliedAt
+          : current?.appliedAt ?? (status === "applied" ? ts : null),
+      undoneAt:
+        Number.isInteger(editGroup.undoneAt)
+          ? editGroup.undoneAt
+          : current?.undoneAt ?? (status === "undone" ? ts : null),
+      failedAt:
+        Number.isInteger(editGroup.failedAt)
+          ? editGroup.failedAt
+          : current?.failedAt ?? (status === "failed" ? ts : null),
+      metadata: {
+        ...(current?.metadata ?? {}),
+        ...(isPlainObject(editGroup.metadata) ? editGroup.metadata : {}),
+        ...(editGroup.error ? { error: editGroup.error } : {})
+      }
+    },
+    index >= 0 ? index : groups.length
+  );
+  if (index >= 0) {
+    groups[index] = merged;
+  } else {
+    groups.push(merged);
+  }
+  return {
+    ...state,
+    editGroups: groups,
+    editSeq: normalizeEditSeq(state.editSeq ?? null, groups)
+  };
+}
+
+export function applyRuntimeInspectorUpdate(state, payload = {}, options = {}) {
+  if (!payload || typeof payload !== "object") {
+    throw new Error("Runtime inspector payload must be an object");
+  }
+  const ts = Number.isInteger(options.ts) ? options.ts : null;
+  const type =
+    typeof payload.type === "string" && payload.type.length > 0
+      ? payload.type
+      : payload.targetId && payload.view
+        ? "snapshot"
+        : null;
+  if (!type) {
+    throw new Error("Runtime inspector payload type is required");
+  }
+
+  const taskId = resolveRuntimeTaskId(state, payload, options);
+  let nextState = state;
+  if (type === "snapshot") {
+    const targetId =
+      (typeof payload.targetId === "string" && payload.targetId.length > 0
+        ? payload.targetId
+        : typeof payload.presentationId === "string" && payload.presentationId.length > 0
+          ? payload.presentationId
+          : null);
+    if (!targetId) {
+      throw new Error("Runtime inspector snapshot requires targetId");
+    }
+    const current = normalizeRuntimeInspectorState(state.runtimeInspector ?? null);
+    nextState = {
+      ...nextState,
+      runtimeInspector: {
+        ...current,
+        targetId,
+        targetType:
+          (typeof payload.targetType === "string" && payload.targetType.length > 0
+            ? payload.targetType
+            : typeof payload.view?.type === "string" && payload.view.type.length > 0
+              ? payload.view.type
+              : current.targetType),
+        stale: Boolean(payload.stale),
+        view: isPlainObject(payload.view) ? { ...payload.view } : current.view,
+        lastUpdatedAt: ts ?? current.lastUpdatedAt
+      }
+    };
+    if (Array.isArray(payload.watches)) {
+      nextState = mergeRuntimeInspectorWatches(nextState, payload.watches, { ts });
+    }
+  } else if (type === "watch.sync") {
+    if (!Array.isArray(payload.watches)) {
+      throw new Error("Runtime inspector watch.sync requires watches array");
+    }
+    nextState = mergeRuntimeInspectorWatches(nextState, payload.watches, { ts });
+    const current = normalizeRuntimeInspectorState(nextState.runtimeInspector ?? null);
+    nextState = {
+      ...nextState,
+      runtimeInspector: {
+        ...current,
+        lastUpdatedAt: ts ?? current.lastUpdatedAt
+      }
+    };
+  } else if (type === "edit-group") {
+    nextState = upsertRuntimeInspectorEditGroup(nextState, payload.editGroup ?? null, { ts });
+    const current = normalizeRuntimeInspectorState(nextState.runtimeInspector ?? null);
+    nextState = {
+      ...nextState,
+      runtimeInspector: {
+        ...current,
+        lastUpdatedAt: ts ?? current.lastUpdatedAt
+      }
+    };
+    if (isPlainObject(payload.audit) && typeof payload.audit.entryText === "string" && payload.audit.entryText.length > 0) {
+      nextState = recordEvent(nextState, {
+        type: "runtime:inspector.audit",
+        ts: ts ?? null,
+        payload: {
+          text: payload.audit.entryText,
+          editGroupId: payload.editGroup?.id ?? null
+        }
+      });
+    }
+  } else {
+    throw new Error(`Unsupported runtime inspector payload type: ${type}`);
+  }
+  return refreshInspectorWindowsForTask(nextState, taskId ?? null);
+}
+
+export function applyRuntimeJobUpdate(state, payload = {}, options = {}) {
+  if (!payload || typeof payload !== "object") {
+    throw new Error("Runtime job payload must be an object");
+  }
+  const ts = Number.isInteger(options.ts) ? options.ts : null;
+  const taskId = resolveRuntimeTaskId(state, payload, options);
+  const jobId =
+    (typeof payload.id === "string" && payload.id.length > 0
+      ? payload.id
+      : typeof payload.jobId === "string" && payload.jobId.length > 0
+        ? payload.jobId
+        : typeof options.jobId === "string" && options.jobId.length > 0
+          ? options.jobId
+          : null);
+  if (!jobId) {
+    throw new Error("Runtime job payload requires id");
+  }
+
+  const job = {
+    id: jobId,
+    taskId,
+    kind: typeof payload.kind === "string" && payload.kind.length > 0 ? payload.kind : null,
+    title:
+      (typeof payload.title === "string" && payload.title.length > 0
+        ? payload.title
+        : typeof payload.label === "string" && payload.label.length > 0
+          ? payload.label
+          : null) ?? `Job ${jobId}`,
+    status:
+      (typeof payload.status === "string" && payload.status.length > 0 ? payload.status : null) ?? "unknown",
+    progress: isPlainObject(payload.progress) ? { ...payload.progress } : null,
+    diagnostics: Array.isArray(payload.diagnostics) ? payload.diagnostics : [],
+    updatedAt: ts ?? (Number.isInteger(payload.updatedAt) ? payload.updatedAt : null)
+  };
+  let nextState = upsertJob(state, job);
+  if (isPlainObject(payload.audit) && typeof payload.audit.entryText === "string" && payload.audit.entryText.length > 0) {
+    nextState = recordEvent(nextState, {
+      type: "runtime:job.audit",
+      ts: ts ?? null,
+      payload: {
+        text: payload.audit.entryText,
+        jobId
+      }
+    });
+  }
+  return refreshInspectorWindowsForTask(nextState, taskId ?? null);
 }
 
 function refreshDebuggerWindowsForTask(state, taskId, errorId = null) {
@@ -5932,6 +7109,12 @@ function buildDebuggerContent(state, errorId) {
     if (restart.recommended) classParts.push("is-recommended");
     if (previewText) classParts.push("has-preview");
     if (Array.isArray(restart.argSchema) && restart.argSchema.length > 0) classParts.push("has-args");
+    const explanation =
+      typeof restart.recommendedReason === "string" && restart.recommendedReason.length > 0
+        ? `Why: ${restart.recommendedReason}`
+        : typeof restart.description === "string" && restart.description.length > 0
+          ? `Why: ${restart.description}`
+          : `Why: ${title} can recover from the current condition.`;
     return {
       id,
       label: `${title}${metaSuffix}${reasonSuffix}${previewSuffix}`,
@@ -5945,6 +7128,8 @@ function buildDebuggerContent(state, errorId) {
       argSchema: Array.isArray(restart.argSchema) ? restart.argSchema : [],
       preview: restart.preview ?? null,
       description: restart.description ?? null,
+      explanation,
+      guidanceId: restart.id ? `restart:${restart.id}` : null,
       className: classParts.join(" ")
     };
   });
