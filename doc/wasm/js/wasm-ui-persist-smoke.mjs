@@ -1,7 +1,8 @@
 /*
  * WASM UI persistence smoke test.
  *
- * Exercises UI snapshot save/restore through kernel_request file storage.
+ * Exercises compiled-Lisp UI snapshot save/restore through kernel_request
+ * file storage.
  */
 
 import fs from "node:fs/promises";
@@ -30,15 +31,11 @@ function readFileUrl(url) {
   return fs.readFile(fileURLToPath(url));
 }
 
-if (!process.argv.includes("--strict")) {
-  console.log("SKIP: wasm ui persistence smoke test (run with --strict to execute runtime path)");
-  process.exit(0);
-}
-
 const kernelUrl = new URL("./wasmcl.wasm", import.meta.url);
 const subprimsUrl = new URL("./subprims.wasm", import.meta.url);
 const subprimsMapUrl = new URL("../subprims-map.json", import.meta.url);
-const imageUrl = new URL("../minimal.image", import.meta.url);
+const rootImageUrl = new URL("../root.image", import.meta.url);
+const minimalImageUrl = new URL("../minimal.image", import.meta.url);
 const bundleUrl = new URL("../wasm-ui-modules.json", import.meta.url);
 
 let bundle;
@@ -106,7 +103,16 @@ const kernelExports = kernel.instance.exports;
 assert(typeof kernelExports.wasm_set_subprims_ready === "function", "missing wasm_set_subprims_ready export");
 kernelExports.wasm_set_subprims_ready(1);
 
-const imageBytes = await readFileUrl(imageUrl);
+let imageBytes;
+let imageSource = "root.image";
+try {
+  imageBytes = await readFileUrl(rootImageUrl);
+} catch (_err) {
+  imageSource = "minimal.image";
+  imageBytes = await readFileUrl(minimalImageUrl);
+}
+console.log(`image source: ${imageSource}`);
+
 const imageLen = imageBytes.byteLength >>> 0;
 const pageSize = 65536;
 const cstackSize = 1 << 20;
@@ -129,6 +135,10 @@ new Uint8Array(runtime.memory.buffer).set(imageBytes, blobBase);
 
 assert(typeof kernelExports.wasm_ccl_load_image === "function", "missing wasm_ccl_load_image export");
 kernelExports.wasm_ccl_load_image(blobBase, imageLen);
+if (typeof kernelExports.wasm_reset_root_image_runtime_state === "function") {
+  const resetRc = kernelExports.wasm_reset_root_image_runtime_state() | 0;
+  assert(resetRc === 0, `wasm_reset_root_image_runtime_state failed: ${resetRc}`);
+}
 
 assert(typeof kernelExports.wasm_get_lisp_nil === "function", "missing wasm_get_lisp_nil export");
 const nilValue = kernelExports.wasm_get_lisp_nil() >>> 0;
@@ -164,8 +174,7 @@ const restoreEntry = entryIndex("WASM-UI-RESTORE");
 try {
   kernelExports.wasm_test_entry_funcall(labelState, 0);
 } catch (err) {
-  console.log(`SKIP: wasm ui persistence smoke test (Lisp UI not runnable: ${err?.message ?? err})`);
-  process.exit(0);
+  fail(`Lisp UI not runnable in persistence smoke: ${err?.message ?? err}`);
 }
 
 const persistedOk = kernelExports.wasm_test_entry_funcall(markPersisted, 0) >> 2;

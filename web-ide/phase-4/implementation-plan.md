@@ -194,7 +194,7 @@ Codify world-state stability as automated gates.
 - Restore flow supports layout repair and stale presentation marking via `web-ui/src/layout.mjs` and `web-ui/src/persistence/serialize.mjs`.
 - Persistence manager now saves, restores, and deletes sessions.
 - Phase 4 tests added and wired into `web-ui/package.json`.
-- World state logic lives in persistence/state modules; no separate `world-state.mjs` yet.
+- World-state helpers now live in `web-ui/src/world-state.mjs` and are integrated by persistence/state modules.
 
 ## Code Focus Areas
 - `web-ui/src/persistence/schema.mjs`

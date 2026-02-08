@@ -86,6 +86,12 @@ if [ ! -f "$SCRIPT" ]; then
   exit 1
 fi
 
+PACK_SCRIPT="$ROOT_DIR/scripts/wasm/pack-inline-bundle-v2.mjs"
+if [ ! -f "$PACK_SCRIPT" ]; then
+  echo "error: missing $PACK_SCRIPT" >&2
+  exit 1
+fi
+
 SCRIPT_ARGS=()
 if [ "$FORCE" -eq 1 ]; then
   SCRIPT_ARGS+=(--force)
@@ -93,8 +99,11 @@ fi
 if [ "$TRACE" -eq 1 ]; then
   SCRIPT_ARGS+=(--trace-modules)
 fi
+
+INLINE_TMP=""
 if [ -n "$MODULES_OUT" ]; then
-  SCRIPT_ARGS+=(--modules-out "$MODULES_OUT")
+  INLINE_TMP="${MODULES_OUT}.inline-v1.tmp.json"
+  SCRIPT_ARGS+=(--modules-out "$INLINE_TMP")
 fi
 if [ -n "$MODULES_DEBUG_OUT" ]; then
   SCRIPT_ARGS+=(--modules-debug-out "$MODULES_DEBUG_OUT")
@@ -104,4 +113,13 @@ if [ "${#SCRIPT_ARGS[@]}" -gt 0 ]; then
   run "$CCL_BIN" --no-init --batch -l "$SCRIPT" -- "${SCRIPT_ARGS[@]}"
 else
   run "$CCL_BIN" --no-init --batch -l "$SCRIPT"
+fi
+
+if [ -n "$MODULES_OUT" ]; then
+  run node "$PACK_SCRIPT" --manifest "$INLINE_TMP" --out-manifest "$MODULES_OUT"
+  if [ "$DRYRUN" -eq 0 ]; then
+    INLINE_TMP_BIN="${INLINE_TMP%.*}.bin"
+    INLINE_TMP_IDX="${INLINE_TMP%.*}.idx"
+    rm -f "$INLINE_TMP" "$INLINE_TMP_BIN" "$INLINE_TMP_IDX"
+  fi
 fi

@@ -9,7 +9,9 @@ that requires native services, browsers, or privileged OS access.
 - Run all sandbox-safe tests: `scripts/tests/run-sandbox-tests.sh`
 - WASM JS smoke tests: `node doc/wasm/js/all-smoke.mjs`
 - Web UI node tests (no browser): `npm --prefix web-ui run test:sandbox`
-- Optional strict WASM/UI persistence smoke: `node doc/wasm/js/wasm-ui-persist-smoke.mjs --strict`
+- WASM/UI persistence smoke: `node doc/wasm/js/wasm-ui-persist-smoke.mjs` (currently failing on root image const-pool install, entry 320)
+- Non-interactive start-lisp smoke: `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs`
+- Strict root non-interactive start-lisp check: `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive` (currently times out)
 - Optional targeted WASM interrupt smoke: `node doc/wasm/js/interrupt-smoke.mjs`
 
 ## External / Host-Only

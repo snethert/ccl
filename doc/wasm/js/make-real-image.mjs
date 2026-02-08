@@ -15,6 +15,7 @@
 import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
+import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import * as zlib from "node:zlib";
 
@@ -51,6 +52,7 @@ function usage() {
   console.log("Options:");
   console.log("  --boot-image PATH   Boot image path (default: wasm-boot.image)");
   console.log("  --output PATH       Host output path (default: doc/wasm/root.image)");
+  console.log("  --manifest-out PATH Root image manifest path (default: <output>.manifest.json)");
   console.log("  --wasm-output PATH  Path inside wasm persistence (default: doc/wasm/root.image)");
   console.log("  --modules PATH      Compiled modules bundle (default: doc/wasm/wasm-runtime-modules.json)");
   console.log("  --kernel PATH       wasmcl.wasm path (default: doc/wasm/js/wasmcl.wasm)");
@@ -73,6 +75,9 @@ function parseArgs(argv) {
         break;
       case "--output":
         out.output = argv[++i];
+        break;
+      case "--manifest-out":
+        out.manifestOut = argv[++i];
         break;
       case "--wasm-output":
         out.wasmOutput = argv[++i];
@@ -100,6 +105,28 @@ function parseArgs(argv) {
 
 function toPosix(p) {
   return p.split(path.sep).join("/");
+}
+
+function sortJson(value) {
+  if (Array.isArray(value)) {
+    return value.map(sortJson);
+  }
+  if (value && typeof value === "object") {
+    const out = {};
+    for (const key of Object.keys(value).sort()) {
+      out[key] = sortJson(value[key]);
+    }
+    return out;
+  }
+  return value;
+}
+
+function canonicalJson(value) {
+  return `${JSON.stringify(sortJson(value))}\n`;
+}
+
+function sha256Hex(bytes) {
+  return crypto.createHash("sha256").update(bytes).digest("hex");
 }
 
 function alignUp(value, align) {
@@ -183,8 +210,18 @@ const subprimsPath = args.subprims ?? path.join(root, "doc/wasm/js/subprims.wasm
 const subprimsMapPath = args.subprimsMap ?? path.join(root, "doc/wasm/subprims-map.json");
 const bootImagePath = args.bootImage ?? defaultBootImage;
 const outputPath = args.output ?? defaultOutput;
+const manifestOutPath = args.manifestOut ?? `${outputPath}.manifest.json`;
 const wasmOutputPath = args.wasmOutput ?? defaultWasmOutput;
 const modulesPath = args.modules ?? defaultModules;
+
+function displayPath(filePath) {
+  const absolute = path.resolve(filePath);
+  const rel = path.relative(root, absolute);
+  if (!rel.startsWith("..") && !path.isAbsolute(rel)) {
+    return toPosix(rel);
+  }
+  return toPosix(absolute);
+}
 
 trace("resolved input paths");
 
@@ -238,7 +275,8 @@ const kernelBytes = await fs.readFile(kernelPath);
 const subprimsBytes = await fs.readFile(subprimsPath);
 const subprimsMap = JSON.parse(await fs.readFile(subprimsMapPath, "utf-8"));
 const bootBytes = await fs.readFile(bootImagePath);
-const compiledModulesBundle = JSON.parse(await fs.readFile(modulesPath, "utf-8"));
+const compiledModulesManifestBytes = await fs.readFile(modulesPath);
+const compiledModulesBundle = JSON.parse(compiledModulesManifestBytes.toString("utf-8"));
 trace("loaded kernel/subprims/boot/modules assets");
 let compiledModulesIndexBytes = null;
 let compiledModulesHandle = null;
@@ -261,6 +299,9 @@ if (typeof compiledModulesBundle?.index === "string" && compiledModulesBundle.in
     fail(`Missing compiled modules index: ${indexPath}`);
   }
   compiledModulesIndexBytes = await fs.readFile(indexPath);
+}
+if (compiledModulesIndexBytes == null) {
+  fail(`Compiled modules bundle is missing index metadata: ${modulesPath}`);
 }
 const resolvedBundle = await resolveBundleEntries({
   bundle: compiledModulesBundle,
@@ -327,6 +368,9 @@ if (compiledModulesBundle?.binary) {
     }
     return buffer;
   };
+}
+if (compiledModulesFd == null) {
+  fail(`Compiled modules bundle is missing binary metadata: ${modulesPath}`);
 }
 trace("compiled modules reader initialized");
 
@@ -581,6 +625,14 @@ trace("compiled module registry install pass complete");
 if (typeof kernel.instance.exports.wasm_set_subprims_ready === "function") {
   kernel.instance.exports.wasm_set_subprims_ready(1);
 }
+if (typeof ex.wasm_reset_root_image_runtime_state !== "function") {
+  fail("kernel missing wasm_reset_root_image_runtime_state");
+}
+const resetRc = ex.wasm_reset_root_image_runtime_state() | 0;
+if (resetRc !== 0) {
+  fail(`wasm_reset_root_image_runtime_state returned ${resetRc}`);
+}
+trace("root image runtime state reset");
 
 if (typeof ex.wasm_save_image_direct !== "function") {
   fail("kernel missing wasm_save_image_direct");
@@ -615,6 +667,68 @@ handle.close();
 const persistedBytes = Buffer.concat(chunks);
 await fs.writeFile(outputPath, persistedBytes);
 
+const compiledModulesBinaryPath = path.join(path.dirname(modulesPath), compiledModulesBundle.binary);
+const compiledModulesBinaryBytes = await fs.readFile(compiledModulesBinaryPath);
+const bootEntryIndex = 200;
+const manifest = {
+  $schema: "./root-image-manifest.schema.json",
+  schemaVersion: 1,
+  generatedAt: new Date().toISOString(),
+  build: {
+    tool: "doc/wasm/js/make-real-image.mjs",
+    nodeVersion: process.version,
+    platform: process.platform,
+    arch: process.arch,
+  },
+  policy: {
+    expectedLoaderMode: "start-lisp",
+    entrypointIndex: bootEntryIndex,
+    compiledModulesRequired: true,
+  },
+  artifacts: {
+    rootImage: {
+      path: displayPath(outputPath),
+      bytes: persistedBytes.length,
+      sha256: sha256Hex(persistedBytes),
+    },
+    runtimeModulesManifest: {
+      path: displayPath(modulesPath),
+      bytes: compiledModulesManifestBytes.length,
+      sha256: sha256Hex(compiledModulesManifestBytes),
+      format: compiledModulesBundle?.format ?? null,
+      moduleCount: Number.isFinite(compiledModulesBundle?.moduleCount)
+        ? (compiledModulesBundle.moduleCount >>> 0)
+        : null,
+      constPoolCount: Number.isFinite(compiledModulesBundle?.constPoolCount)
+        ? (compiledModulesBundle.constPoolCount >>> 0)
+        : null,
+    },
+    runtimeModulesBinary: {
+      path: displayPath(compiledModulesBinaryPath),
+      bytes: compiledModulesBinaryBytes.length,
+      sha256: sha256Hex(compiledModulesBinaryBytes),
+    },
+    runtimeModulesIndex: {
+      path: displayPath(path.join(path.dirname(modulesPath), compiledModulesBundle.index)),
+      bytes: compiledModulesIndexBytes.length,
+      sha256: sha256Hex(compiledModulesIndexBytes),
+    },
+    kernelWasm: {
+      path: displayPath(kernelPath),
+      bytes: kernelBytes.length,
+      sha256: sha256Hex(kernelBytes),
+    },
+    subprimsWasm: {
+      path: displayPath(subprimsPath),
+      bytes: subprimsBytes.length,
+      sha256: sha256Hex(subprimsBytes),
+    },
+  },
+};
+
+await fs.mkdir(path.dirname(manifestOutPath), { recursive: true });
+await fs.writeFile(manifestOutPath, canonicalJson(manifest));
+
 if (compiledModulesHandle) {
   await compiledModulesHandle.close();
 }
@@ -623,3 +737,4 @@ if (compiledModulesFd != null) {
 }
 
 console.log(`Wrote ${persistedBytes.length} bytes to ${outputPath}`);
+console.log(`Wrote manifest to ${manifestOutPath}`);

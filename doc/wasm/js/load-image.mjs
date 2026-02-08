@@ -1,19 +1,20 @@
 /*
  * Node helper: load a CCL heap image into the WASM32 kernel (no WASI).
  *
- * This exercises the in-memory boot image path. By default it skips `start_lisp`
- * (boot-only), but `--start-lisp` enters via the post-load entrypoint.
+ * This exercises the in-memory boot image path.
+ * Default mode is boot-only; `--start-lisp` enters via the post-load entrypoint.
  *
  * Usage:
  *   node doc/wasm/js/load-image.mjs /path/to/ccl.image
- *   node doc/wasm/js/load-image.mjs --run /path/to/ccl.image
- *   node doc/wasm/js/load-image.mjs --start-lisp /path/to/ccl.image
- *   node doc/wasm/js/load-image.mjs --start-lisp --modules bundle.json /path/to/ccl.image
+ *   node doc/wasm/js/load-image.mjs --mode start-lisp --modules bundle.json /path/to/ccl.image
+ *   node doc/wasm/js/load-image.mjs --mode run-toplevel --modules bundle.json /path/to/ccl.image
+ *   node doc/wasm/js/load-image.mjs --manifest doc/wasm/root.image.manifest.json --mode start-lisp
  */
 
 import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
+import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import * as zlib from "node:zlib";
 
@@ -36,46 +37,191 @@ function fail(msg) {
   process.exit(1);
 }
 
-const args = process.argv.slice(2);
-let runToplevel = false;
-let runStartLisp = false;
-let modulesPath = null;
-const rest = [];
-for (let i = 0; i < args.length; i++) {
-  const arg = args[i];
-  if (arg === "--run") {
-    runToplevel = true;
-    continue;
-  }
-  if (arg === "--start-lisp") {
-    runStartLisp = true;
-    continue;
-  }
-  if (arg === "--modules") {
-    modulesPath = args[++i];
-    continue;
-  }
-  if (arg.startsWith("--")) {
-    console.error(`Unknown option: ${arg}`);
-    process.exit(2);
-  }
-  rest.push(arg);
+function usage() {
+  console.error("Usage:");
+  console.error("  node doc/wasm/js/load-image.mjs [options] /path/to/ccl.image");
+  console.error("");
+  console.error("Modes:");
+  console.error("  --mode boot-only|start-lisp|run-toplevel");
+  console.error("  --start-lisp   (alias for --mode start-lisp)");
+  console.error("  --run          (alias for --mode run-toplevel)");
+  console.error("");
+  console.error("Options:");
+  console.error("  --modules PATH             compiled modules manifest");
+  console.error("  --manifest PATH            root image manifest for hash validation");
+  console.error("  --strict-modules           fail on any bundle module install error");
+  console.error("  --allow-partial-modules    allow bundle module install failures");
+  console.error("  --stdin-script PATH        feed file bytes to stdin before start");
+  console.error("  --stdin-text TEXT          feed UTF-8 text to stdin before start");
+  console.error("  --close-stdin              close stdin after preload");
+  console.error("  --expect-rc N              expected return code for start/toplevel entry");
 }
-if (runToplevel && runStartLisp) {
-  console.error("--run and --start-lisp are mutually exclusive");
+
+function parseArgs(argv) {
+  const out = {
+    mode: "boot-only",
+    modulesPath: null,
+    manifestPath: null,
+    strictModules: null,
+    stdinScriptPath: null,
+    stdinText: null,
+    closeStdin: null,
+    expectRc: null,
+    imagePath: null,
+  };
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    switch (arg) {
+      case "--mode": {
+        const value = argv[++i];
+        if (!value || value.startsWith("--")) {
+          fail("--mode requires a value");
+        }
+        out.mode = String(value);
+        break;
+      }
+      case "--run":
+        out.mode = "run-toplevel";
+        break;
+      case "--start-lisp":
+        out.mode = "start-lisp";
+        break;
+      case "--modules": {
+        const value = argv[++i];
+        if (!value || value.startsWith("--")) {
+          fail("--modules requires a path");
+        }
+        out.modulesPath = value;
+        break;
+      }
+      case "--manifest": {
+        const value = argv[++i];
+        if (!value || value.startsWith("--")) {
+          fail("--manifest requires a path");
+        }
+        out.manifestPath = value;
+        break;
+      }
+      case "--strict-modules":
+        out.strictModules = true;
+        break;
+      case "--allow-partial-modules":
+        out.strictModules = false;
+        break;
+      case "--stdin-script": {
+        const value = argv[++i];
+        if (!value || value.startsWith("--")) {
+          fail("--stdin-script requires a path");
+        }
+        out.stdinScriptPath = value;
+        break;
+      }
+      case "--stdin-text": {
+        const value = argv[++i];
+        if (value == null) {
+          fail("--stdin-text requires a value");
+        }
+        out.stdinText = value;
+        break;
+      }
+      case "--close-stdin":
+        out.closeStdin = true;
+        break;
+      case "--expect-rc": {
+        const value = Number.parseInt(String(argv[++i] ?? ""), 10);
+        if (!Number.isInteger(value)) {
+          fail("--expect-rc requires an integer");
+        }
+        out.expectRc = value | 0;
+        break;
+      }
+      case "-h":
+      case "--help":
+        usage();
+        process.exit(0);
+      default:
+        if (arg.startsWith("--")) {
+          fail(`Unknown option: ${arg}`);
+        }
+        if (out.imagePath) {
+          fail(`Unexpected extra argument: ${arg}`);
+        }
+        out.imagePath = arg;
+        break;
+    }
+  }
+  if (!["boot-only", "start-lisp", "run-toplevel"].includes(out.mode)) {
+    fail(`Invalid --mode: ${out.mode}`);
+  }
+  if (out.stdinScriptPath && out.stdinText != null) {
+    fail("--stdin-script and --stdin-text are mutually exclusive");
+  }
+  return out;
+}
+
+function sha256Hex(bytes) {
+  return crypto.createHash("sha256").update(bytes).digest("hex");
+}
+
+const options = parseArgs(process.argv.slice(2));
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(scriptDir, "../../..");
+
+let manifest = null;
+if (options.manifestPath) {
+  const manifestPath = path.resolve(options.manifestPath);
+  manifest = JSON.parse(await fs.readFile(manifestPath, "utf8"));
+}
+
+if (!options.imagePath && manifest?.artifacts?.rootImage?.path) {
+  options.imagePath = path.resolve(repoRoot, manifest.artifacts.rootImage.path);
+}
+if (!options.modulesPath && manifest?.artifacts?.runtimeModulesManifest?.path) {
+  options.modulesPath = path.resolve(repoRoot, manifest.artifacts.runtimeModulesManifest.path);
+}
+if (!options.imagePath) {
+  usage();
   process.exit(2);
 }
-const imagePath = rest[0];
-if (!imagePath) {
-  console.error("Usage: node doc/wasm/js/load-image.mjs [--run|--start-lisp] [--modules bundle.json] /path/to/ccl.image");
-  process.exit(2);
+if (manifest?.policy?.expectedLoaderMode && manifest.policy.expectedLoaderMode !== options.mode) {
+  fail(`Manifest expects loader mode ${manifest.policy.expectedLoaderMode}, got ${options.mode}`);
 }
+const strictModules = options.strictModules ?? (options.mode === "start-lisp");
+const closeStdin = options.closeStdin ?? Boolean(options.stdinScriptPath || options.stdinText != null);
+const runStartLisp = options.mode === "start-lisp";
+const runToplevel = options.mode === "run-toplevel";
+
+function resolveManifestArtifactPath(value) {
+  if (typeof value !== "string" || value.length === 0) return null;
+  if (path.isAbsolute(value)) return value;
+  return path.resolve(repoRoot, value);
+}
+
+function assertManifestHash(label, bytes, manifestPathValue) {
+  if (!manifest) return;
+  if (typeof manifestPathValue !== "string" || manifestPathValue.length === 0) {
+    fail(`Manifest missing ${label} path`);
+  }
+  const expected = String(manifestPathValue);
+  const recorded = manifest?.artifacts?.[label]?.sha256;
+  if (!recorded) {
+    fail(`Manifest missing ${label} sha256`);
+  }
+  const actual = sha256Hex(bytes);
+  if (actual !== recorded) {
+    fail(`${label} hash mismatch for ${expected}: expected ${recorded}, got ${actual}`);
+  }
+}
+
+const imagePath = path.resolve(options.imagePath);
+let modulesPath = options.modulesPath ? path.resolve(options.modulesPath) : null;
 
 let modulesBundle = null;
 let modulesIndexBytes = null;
 let modulesHandle = null;
 let modulesReader = null;
 let modulesFd = null;
+let modulesManifestBytes = null;
 const constPoolEntries = new Map();
 const constPoolById = new Map();
 const constPoolSpanRefCounts = new Map();
@@ -88,10 +234,21 @@ const constPoolSpanKey = (offset, storedLength, encoding, rawLength) =>
   `${offset >>> 0}:${storedLength >>> 0}:${encoding ?? "raw"}:${rawLength >>> 0}`;
 const constPoolsInstalled = new Set();
 if (modulesPath) {
-  modulesBundle = JSON.parse(await fs.readFile(modulesPath, "utf-8"));
+  modulesManifestBytes = await fs.readFile(modulesPath);
+  assertManifestHash(
+    "runtimeModulesManifest",
+    modulesManifestBytes,
+    manifest?.artifacts?.runtimeModulesManifest?.path,
+  );
+  modulesBundle = JSON.parse(modulesManifestBytes.toString("utf-8"));
   if (typeof modulesBundle?.index === "string" && modulesBundle.index.length > 0) {
     const indexPath = path.resolve(path.dirname(modulesPath), modulesBundle.index);
     modulesIndexBytes = await fs.readFile(indexPath);
+    assertManifestHash(
+      "runtimeModulesIndex",
+      modulesIndexBytes,
+      manifest?.artifacts?.runtimeModulesIndex?.path,
+    );
   }
   const resolvedBundle = await resolveBundleEntries({
     bundle: modulesBundle,
@@ -133,6 +290,12 @@ if (modulesPath) {
   }
   if (modulesBundle?.binary) {
     const binPath = path.resolve(path.dirname(modulesPath), modulesBundle.binary);
+    const modulesBinaryBytes = await fs.readFile(binPath);
+    assertManifestHash(
+      "runtimeModulesBinary",
+      modulesBinaryBytes,
+      manifest?.artifacts?.runtimeModulesBinary?.path,
+    );
     modulesHandle = await fs.open(binPath, "r");
     modulesFd = fsSync.openSync(binPath, "r");
     modulesReader = async (offset, length) => {
@@ -160,9 +323,11 @@ if (modulesPath) {
 
 const kernelUrl = new URL("wasmcl.wasm", import.meta.url);
 const kernelBytes = await fs.readFile(fileURLToPath(kernelUrl));
+assertManifestHash("kernelWasm", kernelBytes, manifest?.artifacts?.kernelWasm?.path);
 
 const imageBytes = await fs.readFile(imagePath);
 const imageLen = imageBytes.byteLength >>> 0;
+assertManifestHash("rootImage", imageBytes, manifest?.artifacts?.rootImage?.path);
 
 const runtime = createSharedCclRuntime({
   // Start with 16 MiB and grow if needed.
@@ -175,6 +340,30 @@ const microkernel = createMicrokernel({
   writeStdout: () => {},
   writeStderr: () => {},
 });
+
+const stdinParts = [];
+if (options.stdinScriptPath) {
+  const stdinPath = path.resolve(options.stdinScriptPath);
+  stdinParts.push(await fs.readFile(stdinPath));
+}
+if (options.stdinText != null) {
+  stdinParts.push(new TextEncoder().encode(options.stdinText));
+}
+if (stdinParts.length > 0) {
+  const total = stdinParts.reduce((sum, bytes) => sum + bytes.length, 0);
+  const merged = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of stdinParts) {
+    merged.set(chunk, offset);
+    offset += chunk.length;
+  }
+  microkernel.feedStdin(merged);
+  console.log(`stdin preload bytes=${merged.length}`);
+}
+if (closeStdin) {
+  microkernel.closeStdin();
+  console.log("stdin closed");
+}
 
 let kernelExports = null;
 
@@ -312,6 +501,7 @@ let subprimsMap = null;
 if (runToplevel || runStartLisp) {
   const subprimsUrl = new URL("subprims.wasm", import.meta.url);
   const subprimsBytes = await fs.readFile(fileURLToPath(subprimsUrl));
+  assertManifestHash("subprimsWasm", subprimsBytes, manifest?.artifacts?.subprimsWasm?.path);
   const subprimsMapUrl = new URL("../subprims-map.json", import.meta.url);
   subprimsMap = JSON.parse(await fs.readFile(fileURLToPath(subprimsMapUrl), "utf-8"));
 
@@ -378,6 +568,18 @@ function installBootEntry() {
   runtime.subprimsTable.set(bootIndex, bootEntry);
 }
 
+function resetRootImageRuntimeStateIfAvailable() {
+  const resetFn = kernel.instance.exports.wasm_reset_root_image_runtime_state;
+  if (typeof resetFn !== "function") return;
+  const rc = resetFn() | 0;
+  if (rc !== 0) {
+    fail(`wasm_reset_root_image_runtime_state returned ${rc}`);
+  }
+  console.log(`wasm_reset_root_image_runtime_state rc=${rc}`);
+}
+
+let entryRc = null;
+
 if (runStartLisp) {
   if (typeof kernel.instance.exports.wasm_ccl_load_image !== "function") {
     fail("kernel missing export wasm_ccl_load_image");
@@ -390,6 +592,7 @@ if (runStartLisp) {
     const rc = kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
     const nil = kernel.instance.exports.wasm_get_lisp_nil() >>> 0;
     console.log(`wasm_ccl_load_image rc=${rc} lisp_nil=0x${nil.toString(16)}`);
+    resetRootImageRuntimeStateIfAvailable();
     if (modulesBundle) {
       const { installed, count, failed } = await installCompiledModulesFromBundle({
         bundle: modulesBundle,
@@ -399,7 +602,7 @@ if (runStartLisp) {
         memory: runtime.memory,
         subprimsTable: runtime.subprimsTable,
         microkernel,
-        strict: false,
+        strict: strictModules,
         installConstPools: false,
       });
       console.log(`compiled modules installed from bundle ${installed}/${count} (failed ${failed})`);
@@ -420,6 +623,7 @@ if (runStartLisp) {
   }
   try {
     const rc = kernel.instance.exports.wasm_ccl_start_lisp();
+    entryRc = rc | 0;
     console.log(`wasm_ccl_start_lisp rc=${rc}`);
   } catch (e) {
     console.error(`wasm_ccl_start_lisp trapped: ${e}`);
@@ -433,6 +637,7 @@ if (runStartLisp) {
     const rc = kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
     const nil = kernel.instance.exports.wasm_get_lisp_nil() >>> 0;
     console.log(`wasm_ccl_load_image rc=${rc} lisp_nil=0x${nil.toString(16)}`);
+    resetRootImageRuntimeStateIfAvailable();
     if (modulesBundle) {
       const { installed, count, failed } = await installCompiledModulesFromBundle({
         bundle: modulesBundle,
@@ -442,7 +647,7 @@ if (runStartLisp) {
         memory: runtime.memory,
         subprimsTable: runtime.subprimsTable,
         microkernel,
-        strict: false,
+        strict: strictModules,
         installConstPools: false,
       });
       console.log(`compiled modules installed from bundle ${installed}/${count} (failed ${failed})`);
@@ -472,10 +677,21 @@ if (runToplevel) {
 
   try {
     const rc = runToplevelFn();
+    entryRc = rc | 0;
     console.log(`wasm_run_toplevel rc=${rc}`);
   } catch (e) {
     console.error(`wasm_run_toplevel trapped: ${e}`);
     process.exit(4);
+  }
+}
+
+if (options.expectRc != null) {
+  if (entryRc == null) {
+    fail("--expect-rc requires --mode start-lisp or --mode run-toplevel");
+  }
+  if ((entryRc | 0) !== (options.expectRc | 0)) {
+    console.error(`FAIL: entry rc mismatch: expected ${options.expectRc | 0}, got ${entryRc | 0}`);
+    process.exit(5);
   }
 }
 

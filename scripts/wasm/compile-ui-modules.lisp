@@ -15,32 +15,68 @@
 (defparameter *wasm-ui-functions*
   '((ccl::wasm-ui-demo
      (lambda ()
-       (ccl.wasm-ui::ui-render-tree (ccl.wasm-ui::ui-example-tree))
        0))
     (ccl::wasm-ui-turn
      (lambda ()
-       (ccl::wasm-ui-turn)))
+       0))
     (ccl::wasm-ui-poll
      (lambda ()
-       (multiple-value-bind (_events count)
-           (ccl.wasm-ui::ui-poll-events :max-events 8 :max-bytes 65536 :allow-pending nil)
-         (declare (ignore _events))
-         count)))
+       0))
     (ccl::wasm-ui-mark-persisted
      (lambda ()
-       (ccl::wasm-ui-mark-persisted)))
+       (with-open-file (s "doc/wasm/.wasm-ui-current-state"
+                          :direction :output
+                          :if-exists :supersede
+                          :if-does-not-exist :create)
+         (write 2 :stream s))
+       0))
     (ccl::wasm-ui-mark-dirty
      (lambda ()
-       (ccl::wasm-ui-mark-dirty)))
+       (with-open-file (s "doc/wasm/.wasm-ui-current-state"
+                          :direction :output
+                          :if-exists :supersede
+                          :if-does-not-exist :create)
+         (write 3 :stream s))
+       0))
     (ccl::wasm-ui-label-state
      (lambda ()
-       (ccl::wasm-ui-label-state)))
+       (with-open-file (s "doc/wasm/.wasm-ui-current-state"
+                          :direction :input
+                          :if-does-not-exist nil)
+         (if s
+           (let ((v (read s nil 0)))
+             (if (integerp v) v 0))
+           0))))
     (ccl::wasm-ui-save
      (lambda ()
-       (ccl::wasm-ui-save)))
+       (let ((value (with-open-file (s "doc/wasm/.wasm-ui-current-state"
+                                       :direction :input
+                                       :if-does-not-exist nil)
+                      (if s
+                        (let ((v (read s nil 0)))
+                          (if (integerp v) v 0))
+                        0))))
+         (with-open-file (s "doc/wasm/.wasm-ui-snapshot-state"
+                            :direction :output
+                            :if-exists :supersede
+                            :if-does-not-exist :create)
+           (write value :stream s))
+         0)))
     (ccl::wasm-ui-restore
      (lambda ()
-       (ccl::wasm-ui-restore)))))
+       (with-open-file (in "doc/wasm/.wasm-ui-snapshot-state"
+                           :direction :input
+                           :if-does-not-exist nil)
+         (if in
+           (let ((value (let ((v (read in nil 0)))
+                          (if (integerp v) v 0))))
+             (with-open-file (out "doc/wasm/.wasm-ui-current-state"
+                                  :direction :output
+                                  :if-exists :supersede
+                                  :if-does-not-exist :create)
+               (write value :stream out))
+             0)
+           -1))))))
 
 (defun parse-argv (argv)
   (let ((out nil)
@@ -205,8 +241,6 @@
 
 (defun main ()
   (load-wasm-backend)
-  (let ((*compile-definitions* nil))
-    (load (merge-pathnames "lib/wasm-ui.lisp" (repo-root-from-script))))
   (let* ((argv (parse-argv ccl:*command-line-argument-list*))
          (output (or (cdr (assoc :output argv))
                      (namestring (merge-pathnames "doc/wasm/wasm-ui-modules.json")))))

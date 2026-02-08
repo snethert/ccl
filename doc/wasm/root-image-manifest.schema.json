@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ccl-wasm.local/root-image-manifest.schema.json",
+  "title": "CCL WASM Root Image Manifest",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "generatedAt",
+    "build",
+    "policy",
+    "artifacts"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "build": {
+      "type": "object",
+      "required": [
+        "tool",
+        "nodeVersion",
+        "platform",
+        "arch"
+      ],
+      "properties": {
+        "tool": { "type": "string" },
+        "nodeVersion": { "type": "string" },
+        "platform": { "type": "string" },
+        "arch": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "policy": {
+      "type": "object",
+      "required": [
+        "expectedLoaderMode",
+        "entrypointIndex",
+        "compiledModulesRequired"
+      ],
+      "properties": {
+        "expectedLoaderMode": { "type": "string" },
+        "entrypointIndex": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "compiledModulesRequired": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "artifacts": {
+      "type": "object",
+      "required": [
+        "rootImage",
+        "runtimeModulesManifest",
+        "runtimeModulesBinary",
+        "runtimeModulesIndex",
+        "kernelWasm",
+        "subprimsWasm"
+      ],
+      "properties": {
+        "rootImage": { "$ref": "#/$defs/artifact" },
+        "runtimeModulesManifest": {
+          "allOf": [
+            { "$ref": "#/$defs/artifact" },
+            {
+              "type": "object",
+              "required": [
+                "format"
+              ],
+              "properties": {
+                "format": { "type": "string" },
+                "moduleCount": { "type": [ "integer", "null" ] },
+                "constPoolCount": { "type": [ "integer", "null" ] }
+              }
+            }
+          ]
+        },
+        "runtimeModulesBinary": { "$ref": "#/$defs/artifact" },
+        "runtimeModulesIndex": { "$ref": "#/$defs/artifact" },
+        "kernelWasm": { "$ref": "#/$defs/artifact" },
+        "subprimsWasm": { "$ref": "#/$defs/artifact" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "required": [
+        "path",
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "path": { "type": "string" },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

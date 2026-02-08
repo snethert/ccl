@@ -84,6 +84,66 @@ The JS loader and Node helper accept `--modules PATH` and will load the
 compiled‑modules bundle before `start_lisp`. This is required for real images
 until the compiled‑modules registry is reliably embedded in the image.
 
+## Artifact Contract (Current)
+
+Runtime compiled modules are consumed as a v2 bundle contract:
+
+- manifest: `ccl-wasm-modules-v2` JSON (`.json`)
+- binary sidecar (`.bin`)
+- index sidecar (`.idx`)
+
+`scripts/wasm/compile-wasm-fasls.sh --modules-out ...` now emits this contract
+by compiling inline bundle data and repacking it through
+`scripts/wasm/pack-inline-bundle-v2.mjs`.
+
+Real image generation now writes a root-image manifest by default:
+
+- image: `doc/wasm/root.image`
+- manifest: `doc/wasm/root.image.manifest.json`
+- schema: `doc/wasm/root-image-manifest.schema.json`
+
+The manifest includes SHA-256 checksums for:
+
+- root image
+- runtime modules manifest/binary/index
+- `wasmcl.wasm`
+- `subprims.wasm`
+
+The loader can validate this contract pre-boot via:
+
+`doc/wasm/js/load-image.mjs --manifest ...`
+
+## Loader Modes and Non-Interactive Controls
+
+`doc/wasm/js/load-image.mjs` now supports explicit modes:
+
+- `--mode boot-only`
+- `--mode start-lisp`
+- `--mode run-toplevel`
+
+Compatibility aliases remain:
+
+- `--start-lisp` -> `--mode start-lisp`
+- `--run` -> `--mode run-toplevel`
+
+Policy/validation controls:
+
+- `--manifest PATH` (hash validation before boot)
+- `--strict-modules` / `--allow-partial-modules`
+- `--expect-rc N`
+
+Non-interactive stdin preload:
+
+- `--stdin-script PATH`
+- `--stdin-text TEXT`
+- `--close-stdin`
+
+Current status:
+
+- Minimal-image non-interactive `start_lisp` validation is green.
+- Strict root-image non-interactive `start_lisp` validation still times out
+  (tracked by `start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`).
+
 ## Reference host placement strategy (current)
 
 The JS host loader (`doc/wasm/js/load-image.mjs`) uses:
@@ -106,5 +166,4 @@ cstack or the image.
 
 - What is the canonical image format for WASM (raw CCL heap image vs. WASM‑native)?
 - Do we need image versioning or metadata (endianness, word size, tag layout)?
-- What is the policy for “root image” caching and clone‑from‑image?
 - How does dynamic module loading interact with images?

@@ -117,9 +117,10 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_return_fixnum_logand --export=wasm_return_fixnum_logior \
 	  --export=wasm_return_fixnum_logxor --export=wasm_return_fixnum_lognot \
 	  --export=wasm_return_fixnum_neg \
-	  --export=wasm_test_entry_funcall1_raw --export=wasm_test_entry_funcall0_raw \
-	  --export=wasm_get_compiled_module_registry \
-	  --export=wasm_kernel_ui_poll --export=wasm_kernel_ui_render --export=wasm_kernel_ui_measure_text \
+		  --export=wasm_test_entry_funcall1_raw --export=wasm_test_entry_funcall0_raw \
+		  --export=wasm_get_compiled_module_registry \
+		  --export=wasm_reset_root_image_runtime_state \
+		  --export=wasm_kernel_ui_poll --export=wasm_kernel_ui_render --export=wasm_kernel_ui_measure_text \
 	  --export=wasm_ui_demo_turn \
 	  --export=wasm_ffi_test_add \
 	  --export=wasm_const_pool_install --export=wasm_const_pool_ref \

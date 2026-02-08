@@ -47,13 +47,16 @@
   `lisp_open/lisp_stat` via `NAMED_RO` stream kind.
 - **Real Lisp toplevel entry:** ⚠️  
   `start_lisp` can run a stub toplevel loop with the minimal boot image; a
-  post‑load entry (`wasm_ccl_start_lisp`) now exists, but the real Lisp REPL
-  image is still pending.
+  post‑load entry (`wasm_ccl_start_lisp`) exists and real-image policy
+  artifacts are generated, but strict non-interactive root-image validation
+  still times out.
 - **Image boot path:** ⚠️  
   `wasm_ccl_load_image` works for the minimal image and the cross‑xload boot
-  image (`wasm-boot.image` from `cross-xload-level-0 :wasm32`);
-  `wasm_ccl_start_lisp` enters the stub toplevel after load; real root image
-  still pending.
+  image (`wasm-boot.image` from `cross-xload-level-0 :wasm32`).
+  `doc/wasm/js/load-image.mjs` now supports explicit loader modes
+  (`boot-only|start-lisp|run-toplevel`), manifest hash validation, strict
+  module policy controls, and scripted stdin preload. Strict root-image
+  non-interactive `start_lisp` remains an open blocker.
 
 ## JS microkernel / host
 
@@ -172,8 +175,10 @@
 
 - **WASM smoke tests:** ✅  
   `smoke-test.mjs`, `kernel-request-smoke.mjs`,
+  `runtime-modules-manifest-smoke.mjs`, `root-image-manifest-smoke.mjs`,
   `compiled-modules-refresh-smoke.mjs`, `stream-open-smoke.mjs`,
   `pending-stdin-smoke.mjs`, `ccl-step-smoke.mjs`, `step-demo.mjs`,
+  `start-lisp-noninteractive-smoke.mjs`,
   `funcall-smoke.mjs`, `const-funcall-smoke.mjs`,
   `const-module-smoke.mjs`, `if-smoke.mjs`, `if-arg-smoke.mjs`,
   `identity-smoke.mjs`, `identity-y-smoke.mjs`,
@@ -186,14 +191,17 @@
   `web-ui-debugger-smoke.mjs`, `closure-unwind-mv-smoke.mjs`,
   `mv-helpers-smoke.mjs`, `mvcall-smoke.mjs`.
 - **Known gate status:** ⚠️  
-  `node doc/wasm/js/all-smoke.mjs` is green. `doc/wasm/js/wasm-ui-persist-smoke.mjs`
-  is currently opt-in strict mode (`--strict`) because the full runtime path
-  can block in minimal-image mode.
+  `node doc/wasm/js/all-smoke.mjs` is green (includes non-strict
+  non-interactive start-lisp smoke coverage). Strict root-image
+  non-interactive validation still fails with timeout:
+  `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`.
+  `node doc/wasm/js/wasm-ui-persist-smoke.mjs` now runs runtime path by default
+  and currently fails on root-image const-pool install (`entry 320`).
 
 ## Major Gaps / Next Blockers
 
 - Real root-image policy and default loader wiring for non-interactive `start_lisp`.
-- Compiled-Lisp UI persistence path stabilization (remove strict/optional gating).
+- Compiled-Lisp UI persistence path stabilization (root-image const-pool install failure, entry 320).
 - Capability negotiation protocol beyond `CAPS` bitfield.
 - Persistent storage policy beyond read‑only named streams.
 - Shared‑heap threading protocol (if pursued).

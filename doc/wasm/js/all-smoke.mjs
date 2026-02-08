@@ -7,6 +7,8 @@ const includeWasmUiPersist = process.argv.includes("--with-wasm-ui-persist");
 const tests = [
   "./smoke-test.mjs",
   "./kernel-request-smoke.mjs",
+  "./runtime-modules-manifest-smoke.mjs",
+  "./root-image-manifest-smoke.mjs",
   "./compiled-modules-refresh-smoke.mjs",
   "./stream-open-smoke.mjs",
   "./stream-seek-truncate-smoke.mjs",
@@ -14,6 +16,7 @@ const tests = [
   "./pending-stdin-smoke.mjs",
   "./ccl-step-smoke.mjs",
   "./start-lisp-smoke.mjs",
+  "./start-lisp-noninteractive-smoke.mjs",
   "./start-boot-smoke.mjs",
   "./toplevel-slot-smoke.mjs",
   "./world-kernel-start-smoke.mjs",

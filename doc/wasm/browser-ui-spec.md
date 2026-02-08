@@ -89,7 +89,8 @@ Reference implementation (JS, current repo):
 - Tests run in Node and headless browser via `web-ui/tests/` and `doc/wasm/js/web-ui-*.mjs`.
 
 Integration status:
-- The Lisp<->JS bridge is not yet implemented (`web-ui/bridge/` contains only `.gitkeep`). The JS `web-ui` package currently serves as the reference model and test harness while the Lisp runtime integration is built.
+- The Lisp<->JS bridge is implemented in `web-ui/bridge/` (`codec.mjs`, `runtime.mjs`, `ui-bridge.mjs`, `command-effects.mjs`) and exercised by `web-ui/tests/phase-5-runtime-*.test.mjs`.
+- Current limitation: full compiled-Lisp UI bring-up is still partial; some flows still rely on the kernel demo/minimal-image path while compiler/image integration is completed.
 
 ### Backend abstraction
 - The toolkit targets an abstract UI backend with DOM as the first implementation.
@@ -235,7 +236,7 @@ Bring-up baseline (Phase 2): button, label, text input, list.
 - Layout state MUST persist per session/workspace and restore exactly.
 - Task/window/widget structure MUST persist with stable IDs.
 - Focus and selection persistence is best-effort; invalid targets MUST be dropped on restore.
-- Presentations are NOT persisted; they are regenerated from restored state.
+- Presentation metadata MAY be persisted for deterministic restore and stale-safe rendering; restored presentations MUST be revalidated before runtime-dependent actions.
 - Persistent data MUST be versioned; schema migrations are supported.
 - Schema migrations MUST be reversible or explicitly marked as destructive and recorded in a migration log.
 
@@ -258,7 +259,7 @@ The persisted `state` MUST include:
 The persisted `state` MUST NOT include:
 - command registry or executable handlers
 - DOM references or backend-specific caches
-- presentation trees (recomputed on restore)
+- backend-only presentation caches or DOM-derived presentation trees (recomputed on restore)
 
 ### Restore Rules (Normative)
 - Missing referenced IDs (task/window/widget) MUST be dropped and replaced with safe defaults.

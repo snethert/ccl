@@ -8,7 +8,9 @@ WASM-specific commands in one place.
 - `scripts/tests/run-sandbox-tests.sh`
 - `node doc/wasm/js/all-smoke.mjs`
 - `npm --prefix web-ui run test:sandbox`
-- `node doc/wasm/js/wasm-ui-persist-smoke.mjs --strict` (optional strict smoke)
+- `node doc/wasm/js/wasm-ui-persist-smoke.mjs` (runtime path; currently failing on root image const-pool install, entry 320)
+- `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs`
+- `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive` (blocker repro: timeout)
 
 ## Additional Targeted Smoke (Sandbox-Safe)
 

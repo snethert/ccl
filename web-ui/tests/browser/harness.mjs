@@ -1202,7 +1202,12 @@ async function run() {
         throw new Error("missing image load exports");
       }
 
-      const imageBytes = new Uint8Array(await loadBytes("/doc/wasm/minimal.image"));
+      let imageBytes;
+      try {
+        imageBytes = new Uint8Array(await loadBytes("/doc/wasm/root.image"));
+      } catch (_err) {
+        imageBytes = new Uint8Array(await loadBytes("/doc/wasm/minimal.image"));
+      }
       const imageLen = imageBytes.byteLength >>> 0;
       const pageSize = 65536;
       const cstackSize = 1 << 20;
@@ -1222,6 +1227,12 @@ async function run() {
       }
       new Uint8Array(runtime.memory.buffer).set(imageBytes, blobBase);
       kernelExports.wasm_ccl_load_image(blobBase, imageLen);
+      if (typeof kernelExports.wasm_reset_root_image_runtime_state === "function") {
+        const resetRc = kernelExports.wasm_reset_root_image_runtime_state() | 0;
+        if (resetRc !== 0) {
+          throw new Error(`wasm_reset_root_image_runtime_state failed: ${resetRc}`);
+        }
+      }
 
       const uiBundle = await loadJson("/doc/wasm/wasm-ui-modules.json");
       const uiModules = Array.isArray(uiBundle?.modules) ? uiBundle.modules : [];

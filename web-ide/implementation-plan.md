@@ -3,6 +3,8 @@
 ## Scope
 This plan turns `web-ide/ide-doctrine.md` and `web-ui/ui-doctrine.md` into an implementable, testable system.
 Interaction semantics come from the IDE Doctrine. Visual form and motion come from the UI Doctrine.
+Completion status in this plan is scoped to IDE/UI surfaces and runtime-bridge integration in `web-ui`.
+Canonical CCL->WASM compiler/image/toplevel MVP status remains tracked in `doc/wasm/roadmap.md` and `doc/wasm/porting-status.md`.
 
 ## Assumptions (Locked)
 1. Hybrid rendering is the default.
@@ -201,10 +203,32 @@ Exit criteria:
 - Performance benchmarks hit targets.
 - A11y checklist passes.
 
+## Phase 8: Release Packaging and Operations
+Outcome: Release-ready delivery with deterministic artifacts, operational runbooks, and staged rollout gates.
+Status: Planned (February 8, 2026).
+Detailed execution plan: `web-ide/phase-8/implementation-plan.md`.
+
+1. Release artifacts and version contract.
+- Define the canonical release manifest and compatibility policy.
+
+2. Packaging and compatibility validation.
+- Build reproducible artifacts and lock supported environments.
+
+3. Security, observability, and recovery operations.
+- Harden defaults, standardize diagnostics, and prove rollback/recovery flows.
+
+4. Rollout and signoff.
+- Execute staged promotion gates with objective go/no-go criteria.
+
+Exit criteria:
+- Release packaging pipeline and manifest checks are green.
+- Compatibility, security, and recovery gates pass.
+- Runbooks and rollout gates are approved and executable.
+
 ## Risks and Mitigations
 - Canvas-only editor risk: mitigated by DOM backend for text surfaces.
 - Schema churn: freeze in Phase 0, enforce migration discipline.
 - Theme drift: enforce token-only styling across renderers.
 
 ## Immediate Next Step
-Phase 7 is complete and validated. Next planning step is Phase 8 scope definition with explicit release packaging and operational rollout criteria.
+Execute M1 `RZ1` from `web-ide/phase-8/implementation-plan.md`: finalize release artifact contract and version/compatibility policy before packaging automation.

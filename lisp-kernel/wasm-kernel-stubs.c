@@ -3561,4 +3561,30 @@ wasm_get_compiled_module_registry(void)
   return reg ? reg : lisp_nil;
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_reset_root_image_runtime_state")))
+int32_t
+wasm_reset_root_image_runtime_state(void)
+{
+  extern LispObj lisp_nil;
+
+  nrs_WASM_COMPILED_MODULES.vcell = lisp_nil;
+  nrs_WASM_CONST_POOLS.vcell = lisp_nil;
+  nrs_TOPLFUNC.vcell = lisp_nil;
+
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr != NULL) {
+    LispObj *slot = wasm_toplevel_slot(tcr);
+    if (slot != NULL) {
+      *slot = lisp_nil;
+      if (tcr->vs_area != NULL) {
+        tcr->vs_area->active = (BytePtr)slot;
+      }
+      tcr->save_vsp = slot;
+      tcr->wasm_gprs[vsp] = (LispObj)slot;
+    }
+  }
+
+  return 0;
+}
+
 #endif /* WASM32 */

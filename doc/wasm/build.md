@@ -203,11 +203,11 @@ node doc/wasm/js/load-image.mjs /path/to/ccl.image
 To enter Lisp after loading (requires subprims + boot entry). For real images,
 pass the compiled-modules bundle produced by `compile-wasm-fasls.sh`:
 ```bash
-node doc/wasm/js/load-image.mjs --start-lisp --modules /path/to/wasm-runtime-modules.json /path/to/ccl.image
+node doc/wasm/js/load-image.mjs --mode start-lisp --modules /path/to/wasm-runtime-modules.json /path/to/ccl.image
 ```
 To run the toplevel once (explicit entry, no stepping):
 ```bash
-node doc/wasm/js/load-image.mjs --run --modules /path/to/wasm-runtime-modules.json /path/to/ccl.image
+node doc/wasm/js/load-image.mjs --mode run-toplevel --modules /path/to/wasm-runtime-modules.json /path/to/ccl.image
 ```
 
 ## Generate A Minimal WASM Image
@@ -247,6 +247,8 @@ scripts/wasm/compile-wasm-fasls.sh --modules-out doc/wasm/wasm-runtime-modules.j
 ```
 This produces `doc/wasm/wasm-runtime-modules.json` plus the sidecar
 `doc/wasm/wasm-runtime-modules.bin` in the same directory.
+It also emits `doc/wasm/wasm-runtime-modules.idx`; the manifest format is
+`ccl-wasm-modules-v2`.
 The bundle writer deduplicates identical const-pool payloads to keep the
 sidecar size bounded.
 
@@ -285,10 +287,16 @@ ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --output doc/wasm/
 On non-WASM hosts this now preserves the host workflow by delegating to
 `node doc/wasm/js/make-real-image.mjs` under the hood.
 
+To write an explicit hash manifest alongside the image:
+
+```bash
+ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --output doc/wasm/root.image --manifest-out doc/wasm/root.image.manifest.json
+```
+
 4. Validate the real image in the JS loader (uses the compiled-modules bundle):
 
 ```bash
-node doc/wasm/js/load-image.mjs --start-lisp --modules doc/wasm/wasm-runtime-modules.json doc/wasm/root.image
+node doc/wasm/js/load-image.mjs --mode start-lisp --manifest doc/wasm/root.image.manifest.json --modules doc/wasm/wasm-runtime-modules.json doc/wasm/root.image
 ```
 Current status: this script path produces loadable wasm images. Note that a raw
 host `save-application` image (without the wasm helper path) is still not a
@@ -302,6 +310,8 @@ extract the generated image from the persistence store:
 ```bash
 node doc/wasm/js/make-real-image.mjs --modules doc/wasm/wasm-runtime-modules.json --output doc/wasm/root.image
 ```
+By default this also writes `doc/wasm/root.image.manifest.json` (override with
+`--manifest-out PATH`).
 Current status: working; this path now produces a loadable image. Validate with:
 
 ```bash
@@ -357,4 +367,7 @@ python3 scripts/wasm/generate_subprims_artifacts.py
 - Boot image + compiled module bundle can enter `start_lisp` without immediate macro-apply/UDF traps.
 - Real image generation is supported in both host-script and Node-helper
   workflows; host script delegates to the helper on non-WASM runtimes.
+- Strict non-interactive root-image `start_lisp` validation currently times out.
+  Run `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`
+  to reproduce the current blocker with deterministic timeout behavior.
 - The “no-WASI libc” shims are intentionally minimal (bump `malloc`, no real stdio/formatting).

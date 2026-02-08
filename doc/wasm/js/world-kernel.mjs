@@ -265,6 +265,12 @@ export function createKernel({
         throw new Error("loadImage: kernel missing export wasm_ccl_load_image");
       }
       const rc = kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
+      if (typeof kernel.instance.exports.wasm_reset_root_image_runtime_state === "function") {
+        const resetRc = kernel.instance.exports.wasm_reset_root_image_runtime_state() | 0;
+        if (resetRc !== 0) {
+          throw new Error(`loadImage: wasm_reset_root_image_runtime_state returned ${resetRc}`);
+        }
+      }
       runner.imageLoaded = true;
       runner.compiledModulesInstalled = false;
       return rc;

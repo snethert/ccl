@@ -238,7 +238,7 @@
            do (return (car candidate)))
      sig)))
 
-(defun write-module-bundle (output-path modules)
+(defun write-module-bundle (output-path modules &key functions)
   (let* ((json-path (pathname output-path))
          (bin-path (make-pathname :type "bin" :defaults json-path))
          (bin-name (file-namestring bin-path))
@@ -288,7 +288,17 @@
       (write-char #\{ out)
       (write-string "\"binary\":" out)
       (json-write-string out bin-name)
-      (write-string ",\"functions\":[]" out)
+      (write-string ",\"functions\":[" out)
+      (loop for fn in functions
+            for fn-idx from 0
+            do (when (> fn-idx 0) (write-char #\, out))
+               (write-char #\{ out)
+               (write-string "\"name\":" out)
+               (json-write-string out (getf fn :name))
+               (write-string ",\"entryIndex\":" out)
+               (princ (getf fn :entry-index) out)
+               (write-char #\} out))
+      (write-char #\] out)
       (write-string ",\"modules\":[" out)
       (loop for info in entries
             for idx from 0
@@ -325,6 +335,17 @@
         do (when (> idx 0) (write-char #\, out))
            (json-write-string out item))
   (write-char #\] out))
+
+(defun module-functions-from-debug (entries)
+  (let* ((sorted (sort (copy-list entries)
+                       #'<
+                       :key (lambda (entry) (getf entry :entry-index))))
+         (out nil))
+    (dolist (entry sorted (nreverse out))
+      (let ((name (getf entry :afunc-name))
+            (entry-index (getf entry :entry-index)))
+        (when (and (stringp name) (plusp (length name)) (fixnump entry-index))
+          (push (list :name name :entry-index entry-index) out))))))
 
 (defun write-module-debug (output-path entries)
   (let* ((json-path (pathname output-path))
@@ -435,7 +456,7 @@
             (*compile-definitions* nil))
         (install-wasm-os-constants)
         (setf %wasm-compiled-modules% nil)
-        (when modules-debug-out
+        (when (or modules-out modules-debug-out)
           (setf *wasm2-collect-module-debug* t)
           (wasm2-reset-compiled-modules-debug))
         (reset-wasm-entry-index)
@@ -446,8 +467,9 @@
         (compile-wasm-real-image-entry root)
         (validate-wasm-compiled-modules)
         (when modules-out
-          (let ((modules (sorted-compiled-modules)))
-            (let ((stats (write-module-bundle modules-out modules)))
+          (let* ((modules (sorted-compiled-modules))
+                 (functions (module-functions-from-debug *wasm2-compiled-modules-debug*)))
+            (let ((stats (write-module-bundle modules-out modules :functions functions)))
               (format t "~&Const-pool dedupe: raw=~d unique=~d saved=~d reused=~d~%"
                       (getf stats :raw-const-bytes)
                       (getf stats :unique-const-bytes)
