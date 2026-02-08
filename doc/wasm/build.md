@@ -193,13 +193,14 @@ and return to JS **without** entering Lisp yet (it skips `start_lisp`).
 ```bash
 node doc/wasm/js/load-image.mjs /path/to/ccl.image
 ```
-To enter Lisp after loading (requires subprims + boot entry):
+To enter Lisp after loading (requires subprims + boot entry). For real images,
+pass the compiled-modules bundle produced by `compile-wasm-fasls.sh`:
 ```bash
-node doc/wasm/js/load-image.mjs --start-lisp /path/to/ccl.image
+node doc/wasm/js/load-image.mjs --start-lisp --modules /path/to/wasm-runtime-modules.json /path/to/ccl.image
 ```
 To run the toplevel once (explicit entry, no stepping):
 ```bash
-node doc/wasm/js/load-image.mjs --run /path/to/ccl.image
+node doc/wasm/js/load-image.mjs --run --modules /path/to/wasm-runtime-modules.json /path/to/ccl.image
 ```
 
 ## Generate A Minimal WASM Image
@@ -221,6 +222,7 @@ Or to boot via `start_lisp` instead of the explicit toplevel run:
 ```bash
 node doc/wasm/js/load-image.mjs --start-lisp doc/wasm/minimal.image
 ```
+(`minimal.image` does not require the compiled-modules bundle.)
 
 ## Generate A Real WASM Image (Seed)
 
@@ -230,11 +232,14 @@ image is loaded).
 
 ### Option A (Host CCL, recommended)
 
-1. Cross-compile the WASM32 fasls needed by `level-1.lafsl`:
+1. Cross-compile the WASM32 fasls needed by `level-1.lafsl`, and emit the
+   compiled-modules bundle used by the JS loader:
 
 ```bash
-scripts/wasm/compile-wasm-fasls.sh
+scripts/wasm/compile-wasm-fasls.sh --modules-out doc/wasm/wasm-runtime-modules.json
 ```
+This produces `doc/wasm/wasm-runtime-modules.json` plus the sidecar
+`doc/wasm/wasm-runtime-modules.bin` in the same directory.
 
 2. Build the wasm boot image via cross-xload:
 
@@ -249,13 +254,19 @@ scripts/wasm/build-wasm-boot.sh
 ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --output doc/wasm/root.image
 ```
 
+4. Validate the real image in the JS loader (uses the compiled-modules bundle):
+
+```bash
+node doc/wasm/js/load-image.mjs --start-lisp --modules doc/wasm/wasm-runtime-modules.json doc/wasm/root.image
+```
+
 ### Option B (Node helper, wasm-only path)
 
 Run the Node helper to load the boot image, execute the Lisp script, and
 extract the generated image from the persistence store:
 
 ```bash
-node doc/wasm/js/make-real-image.mjs --output doc/wasm/root.image
+node doc/wasm/js/make-real-image.mjs --modules doc/wasm/wasm-runtime-modules.json --output doc/wasm/root.image
 ```
 
 ### Option C (native wasm32 CCL, optional)

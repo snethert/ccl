@@ -55,6 +55,31 @@
 
 (defvar *wasm-load-os-constant-orig* nil)
 
+(defun json-escape-string (s)
+  (with-output-to-string (out)
+    (loop for ch across s do
+      (case ch
+        (#\" (write-string "\\\"" out))
+        (#\\ (write-string "\\\\" out))
+        (#\Newline (write-string "\\n" out))
+        (#\Return (write-string "\\r" out))
+        (#\Tab (write-string "\\t" out))
+        (t (write-char ch out))))))
+
+(defun json-write-string (out s)
+  (write-char #\" out)
+  (write-string (json-escape-string s) out)
+  (write-char #\" out))
+
+(defun json-write-bytes (out bytes)
+  (write-char #\[ out)
+  (let ((len (length bytes)))
+    (dotimes (i len)
+      (when (> i 0)
+        (write-char #\, out))
+      (princ (aref bytes i) out)))
+  (write-char #\] out))
+
 (defun install-wasm-os-constants ()
   (unless *wasm-load-os-constant-orig*
     (setf *wasm-load-os-constant-orig* (fdefinition 'load-os-constant))
@@ -175,6 +200,127 @@
         (error "Non-fixnum wasm entry index: ~s" entry-index))))
   t)
 
+(defun sorted-compiled-modules ()
+  (sort (copy-list %wasm-compiled-modules%)
+        #'<
+        :key (lambda (entry) (svref entry 2))))
+
+(defun write-module-bundle (output-path modules)
+  (let* ((json-path (pathname output-path))
+         (bin-path (make-pathname :type "bin" :defaults json-path))
+         (bin-name (file-namestring bin-path))
+         (entries nil)
+         (offset 0))
+    (ensure-directories-exist json-path)
+    (with-open-file (bin bin-path
+                         :direction :output
+                         :if-exists :supersede
+                         :if-does-not-exist :create
+                         :element-type '(unsigned-byte 8))
+      (dolist (entry modules)
+        (let* ((module-bytes (svref entry 0))
+               (module-len (length module-bytes))
+               (module-offset offset)
+               (const-bytes (and (> (length entry) 4) (svref entry 4)))
+               (const-len (if const-bytes (length const-bytes) 0))
+               (const-offset (and const-bytes (+ offset module-len))))
+          (when (> module-len 0)
+            (write-sequence module-bytes bin))
+          (when const-bytes
+            (write-sequence const-bytes bin))
+          (incf offset (+ module-len const-len))
+          (push (list entry module-offset module-len const-offset const-len) entries))))
+    (setf entries (nreverse entries))
+    (with-open-file (out json-path
+                         :direction :output
+                         :if-exists :supersede
+                         :if-does-not-exist :create)
+      (write-char #\{ out)
+      (write-string "\"binary\":" out)
+      (json-write-string out bin-name)
+      (write-string ",\"functions\":[]" out)
+      (write-string ",\"modules\":[" out)
+      (loop for info in entries
+            for idx from 0
+            do (when (> idx 0) (write-char #\, out))
+               (destructuring-bind (entry module-offset module-len const-offset const-len) info
+                 (write-char #\{ out)
+                 (write-string "\"exportName\":" out)
+                 (json-write-string out (svref entry 1))
+                 (write-string ",\"entryIndex\":" out)
+                 (princ (svref entry 2) out)
+                 (write-string ",\"moduleVersion\":" out)
+                 (princ (svref entry 3) out)
+                 (write-string ",\"offset\":" out)
+                 (princ module-offset out)
+                 (write-string ",\"length\":" out)
+                 (princ module-len out)
+                 (when const-offset
+                   (write-string ",\"constPoolOffset\":" out)
+                   (princ const-offset out)
+                   (write-string ",\"constPoolLength\":" out)
+                   (princ const-len out))
+                 (write-char #\} out)))
+      (write-string "]}" out)
+      (terpri out))))
+
+(defun json-write-string-list (out items)
+  (write-char #\[ out)
+  (loop for item in items
+        for idx from 0
+        do (when (> idx 0) (write-char #\, out))
+           (json-write-string out item))
+  (write-char #\] out))
+
+(defun write-module-debug (output-path entries)
+  (let* ((json-path (pathname output-path))
+         (sorted (sort (copy-list entries)
+                       #'<
+                       :key (lambda (entry) (getf entry :entry-index)))))
+    (ensure-directories-exist json-path)
+    (with-open-file (out json-path
+                         :direction :output
+                         :if-exists :supersede
+                         :if-does-not-exist :create)
+      (write-char #\[ out)
+      (loop for entry in sorted
+            for idx from 0
+            do (when (> idx 0) (write-char #\, out))
+               (write-char #\{ out)
+               (write-string "\"exportName\":" out)
+               (json-write-string out (or (getf entry :export-name) ""))
+               (write-string ",\"entryIndex\":" out)
+               (princ (or (getf entry :entry-index) 0) out)
+               (write-string ",\"moduleVersion\":" out)
+               (princ (or (getf entry :module-version) 0) out)
+               (let ((name (getf entry :afunc-name)))
+                 (when name
+                   (write-string ",\"afuncName\":" out)
+                   (json-write-string out name)))
+               (let ((ir-len (getf entry :ir-len)))
+                 (when ir-len
+                   (write-string ",\"irLen\":" out)
+                   (princ ir-len out)))
+               (let ((if-count (getf entry :if-count)))
+                 (when if-count
+                   (write-string ",\"ifCount\":" out)
+                   (princ if-count out)))
+               (let ((ifv-count (getf entry :if-void-count)))
+                 (when ifv-count
+                   (write-string ",\"ifVoidCount\":" out)
+                   (princ ifv-count out)))
+              (let ((tail (getf entry :ir-tail)))
+                (when tail
+                  (write-string ",\"irTail\":" out)
+                  (json-write-string-list out tail)))
+              (let ((ir-short (getf entry :ir-short)))
+                (when ir-short
+                  (write-string ",\"irShort\":" out)
+                  (json-write-string-list out ir-short)))
+              (write-char #\} out))
+      (write-char #\] out)
+      (terpri out))))
+
 (defun parse-argv (argv)
   (let ((out nil)
         (args argv)
@@ -190,6 +336,16 @@
            (push (cons :force t) out))
           ((string= arg "--trace-modules")
            (push (cons :trace-modules t) out))
+          ((string= arg "--modules-out")
+           (let ((val (pop args)))
+             (unless val
+               (error "Missing value for --modules-out"))
+             (push (cons :modules-out val) out)))
+          ((string= arg "--modules-debug-out")
+           (let ((val (pop args)))
+             (unless val
+               (error "Missing value for --modules-debug-out"))
+             (push (cons :modules-debug-out val) out)))
           (seen-delimiter
            (error "Unknown argument: ~s" arg))
           (t
@@ -199,12 +355,18 @@
 (defun usage ()
   (format t "~&Usage: ccl --no-init --batch -l scripts/wasm/compile-wasm-fasls.lisp [-- --force]~%")
   (format t "       ccl --no-init --batch -l scripts/wasm/compile-wasm-fasls.lisp [-- --trace-modules]~%")
+  (format t "       ccl --no-init --batch -l scripts/wasm/compile-wasm-fasls.lisp [-- --modules-out PATH]~%")
+  (format t "       ccl --no-init --batch -l scripts/wasm/compile-wasm-fasls.lisp [-- --modules-debug-out PATH]~%")
   (format t "Cross-compiles level-1 + bin fasls for the WASM32 target.~%"))
 
 (defun main ()
   (let* ((argv (parse-argv ccl:*command-line-argument-list*))
          (force (cdr (assoc :force argv)))
-         (trace-modules (cdr (assoc :trace-modules argv))))
+         (trace-modules (cdr (assoc :trace-modules argv)))
+         (modules-out (cdr (assoc :modules-out argv)))
+         (modules-debug-out (cdr (assoc :modules-debug-out argv))))
+    (declare (special *wasm2-collect-module-debug*
+                      *wasm2-compiled-modules-debug*))
     (when (cdr (assoc :help argv))
       (usage)
       (quit 0))
@@ -218,11 +380,21 @@
             (*compile-definitions* nil))
         (install-wasm-os-constants)
         (setf %wasm-compiled-modules% nil)
+        (when modules-debug-out
+          (setf *wasm2-collect-module-debug* t)
+          (wasm2-reset-compiled-modules-debug))
         (reset-wasm-entry-index)
         (format t "~&Cross-compiling ~d WASM32 modules...~%" (length *wasm-runtime-modules*))
         (wasm-target-compile-modules *wasm-runtime-modules* :wasm32 force
                                      :trace-modules trace-modules)
         (validate-wasm-compiled-modules)
+        (when modules-out
+          (let ((modules (sorted-compiled-modules)))
+            (write-module-bundle modules-out modules)
+            (format t "~&Wrote ~d compiled modules to ~a~%" (length modules) modules-out)))
+        (when modules-debug-out
+          (write-module-debug modules-debug-out *wasm2-compiled-modules-debug*)
+          (format t "~&Wrote compiled module debug info to ~a~%" modules-debug-out))
         (format t "~&WASM32 fasl compilation done.~%")
         (finish-output)))))
 

@@ -49,7 +49,11 @@ Optional host entry paths (current bring‑up):
 - **Explicit toplevel:** `wasm_run_toplevel()` (one-shot) or `wasm_ccl_step()` (host‑stepped).
 
 If the image references compiled modules, the host should install them from the
-registry before entering `start_lisp` or stepping the toplevel.
+registry before entering `start_lisp` or stepping the toplevel. The current
+boot images do not always populate the registry; for bring‑up the host uses an
+external compiled‑modules bundle (JSON + `.bin` sidecar) produced by
+`scripts/wasm/compile-wasm-fasls.sh --modules-out …` and loads it via
+`doc/wasm/js/load-image.mjs --modules ...`.
 
 ## Real Image Policy (Seed)
 
@@ -72,6 +76,10 @@ but it is not adopted in the current bring‑up.
 The boot image it consumes is produced via `cross-xload-level-0 :wasm32`
 (wrapper: `scripts/wasm/build-wasm-boot.sh`), which now completes and writes
 `ccl:ccl;wasm-boot.image`.
+
+The JS loader and Node helper accept `--modules PATH` and will load the
+compiled‑modules bundle before `start_lisp`. This is required for real images
+until the compiled‑modules registry is reliably embedded in the image.
 
 ## Reference host placement strategy (current)
 

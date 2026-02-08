@@ -6,6 +6,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DRYRUN=0
 FORCE=0
 TRACE=0
+MODULES_OUT=""
+MODULES_DEBUG_OUT=""
 
 usage() {
   cat <<'EOF'
@@ -14,6 +16,8 @@ Usage: scripts/wasm/compile-wasm-fasls.sh [options]
 Options:
   --force        Recompile even if fasls are up to date
   --trace-modules Print module names as they are processed
+  --modules-out PATH Write compiled module bundle JSON to PATH
+  --modules-debug-out PATH Write compiled module debug JSON to PATH
   --dry-run      Print commands without executing
   -h, --help     Show this help
 EOF
@@ -32,6 +36,22 @@ while [ "${1:-}" != "" ]; do
   case "$1" in
     --force) FORCE=1 ;;
     --trace-modules) TRACE=1 ;;
+    --modules-out)
+      MODULES_OUT="${2:-}"
+      if [ -z "$MODULES_OUT" ]; then
+        echo "error: --modules-out requires a path" >&2
+        exit 1
+      fi
+      shift
+      ;;
+    --modules-debug-out)
+      MODULES_DEBUG_OUT="${2:-}"
+      if [ -z "$MODULES_DEBUG_OUT" ]; then
+        echo "error: --modules-debug-out requires a path" >&2
+        exit 1
+      fi
+      shift
+      ;;
     --dry-run) DRYRUN=1 ;;
     -h|--help) usage; exit 0 ;;
     *)
@@ -72,6 +92,12 @@ if [ "$FORCE" -eq 1 ]; then
 fi
 if [ "$TRACE" -eq 1 ]; then
   SCRIPT_ARGS+=(--trace-modules)
+fi
+if [ -n "$MODULES_OUT" ]; then
+  SCRIPT_ARGS+=(--modules-out "$MODULES_OUT")
+fi
+if [ -n "$MODULES_DEBUG_OUT" ]; then
+  SCRIPT_ARGS+=(--modules-debug-out "$MODULES_DEBUG_OUT")
 fi
 
 if [ "${#SCRIPT_ARGS[@]}" -gt 0 ]; then

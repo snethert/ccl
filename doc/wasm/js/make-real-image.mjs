@@ -21,6 +21,7 @@ import {
   createCclImports,
   createSharedCclRuntime,
   instantiateWasm,
+  installCompiledModulesFromBundle,
   installCompiledModulesFromRegistry,
   installSubprimsTable,
 } from "./ccl-loader.mjs";
@@ -38,6 +39,7 @@ function usage() {
   console.log("  --boot-image PATH   Boot image path (default: wasm-boot.image)");
   console.log("  --output PATH       Host output path (default: doc/wasm/root.image)");
   console.log("  --wasm-output PATH  Path inside wasm persistence (default: doc/wasm/root.image)");
+  console.log("  --modules PATH      Compiled modules bundle (default: doc/wasm/wasm-runtime-modules.json)");
   console.log("  --kernel PATH       wasmcl.wasm path (default: doc/wasm/js/wasmcl.wasm)");
   console.log("  --subprims PATH     subprims.wasm path (default: doc/wasm/js/subprims.wasm)");
   console.log("  --subprims-map PATH subprims-map.json path (default: doc/wasm/subprims-map.json)");
@@ -61,6 +63,9 @@ function parseArgs(argv) {
         break;
       case "--wasm-output":
         out.wasmOutput = argv[++i];
+        break;
+      case "--modules":
+        out.modules = argv[++i];
         break;
       case "--kernel":
         out.kernel = argv[++i];
@@ -140,12 +145,14 @@ const root = path.resolve(scriptDir, "../../..");
 const defaultBootImage = path.join(root, "wasm-boot.image");
 const defaultOutput = path.join(root, "doc/wasm/root.image");
 const defaultWasmOutput = "doc/wasm/root.image";
+const defaultModules = path.join(root, "doc/wasm/wasm-runtime-modules.json");
 const kernelPath = args.kernel ?? path.join(root, "doc/wasm/js/wasmcl.wasm");
 const subprimsPath = args.subprims ?? path.join(root, "doc/wasm/js/subprims.wasm");
 const subprimsMapPath = args.subprimsMap ?? path.join(root, "doc/wasm/subprims-map.json");
 const bootImagePath = args.bootImage ?? defaultBootImage;
 const outputPath = args.output ?? defaultOutput;
 const wasmOutputPath = args.wasmOutput ?? defaultWasmOutput;
+const modulesPath = args.modules ?? defaultModules;
 
 if (!(await fileExists(kernelPath))) {
   fail(`Missing kernel: ${kernelPath}`);
@@ -158,6 +165,9 @@ if (!(await fileExists(subprimsMapPath))) {
 }
 if (!(await fileExists(bootImagePath))) {
   fail(`Missing boot image: ${bootImagePath} (run scripts/wasm/build-wasm-boot.sh)`);
+}
+if (!(await fileExists(modulesPath))) {
+  fail(`Missing compiled modules bundle: ${modulesPath} (run scripts/wasm/compile-wasm-fasls.sh --modules-out ${modulesPath})`);
 }
 
 const level1Path = path.join(root, "level-1.lafsl");
@@ -193,6 +203,36 @@ const kernelBytes = await fs.readFile(kernelPath);
 const subprimsBytes = await fs.readFile(subprimsPath);
 const subprimsMap = JSON.parse(await fs.readFile(subprimsMapPath, "utf-8"));
 const bootBytes = await fs.readFile(bootImagePath);
+const compiledModulesBundle = JSON.parse(await fs.readFile(modulesPath, "utf-8"));
+let compiledModulesHandle = null;
+let compiledModulesReader = null;
+if (compiledModulesBundle?.binary) {
+  const binPath = path.join(path.dirname(modulesPath), compiledModulesBundle.binary);
+  if (!(await fileExists(binPath))) {
+    fail(`Missing compiled modules binary: ${binPath}`);
+  }
+  compiledModulesHandle = await fs.open(binPath, "r");
+  compiledModulesReader = async (offset, length) => {
+    const size = length >>> 0;
+    if (size === 0) return new Uint8Array(0);
+    const buffer = Buffer.allocUnsafe(size);
+    let total = 0;
+    while (total < size) {
+      const { bytesRead } = await compiledModulesHandle.read(
+        buffer,
+        total,
+        size - total,
+        (offset >>> 0) + total,
+      );
+      if (bytesRead === 0) break;
+      total += bytesRead;
+    }
+    if (total !== size) {
+      throw new Error(`short read on compiled modules: expected ${size}, got ${total}`);
+    }
+    return buffer;
+  };
+}
 
 const runtime = createSharedCclRuntime({
   memoryInitialPages: 512,
@@ -277,12 +317,35 @@ if (typeof ex.wasm_ccl_load_image !== "function") {
 }
 ex.wasm_ccl_load_image(blobBase, imageLen);
 
+const bundleInstall = await installCompiledModulesFromBundle({
+  bundle: compiledModulesBundle,
+  binaryReader: compiledModulesReader,
+  kernel: ex,
+  memory: runtime.memory,
+  subprimsTable: runtime.subprimsTable,
+  microkernel,
+  strict: false,
+});
+if (bundleInstall.count === 0) {
+  fail("compiled modules bundle is empty; refusing to proceed");
+}
+if (bundleInstall.installed === 0) {
+  fail("compiled modules bundle did not install any modules");
+}
+if (bundleInstall.failed) {
+  console.log(`compiled modules skipped: ${bundleInstall.failed}`);
+}
+
 await installCompiledModulesFromRegistry({
   kernel: ex,
   memory: runtime.memory,
   subprimsTable: runtime.subprimsTable,
   microkernel,
 });
+
+if (compiledModulesHandle) {
+  await compiledModulesHandle.close();
+}
 
 const bootIndex = 200;
 if (typeof ex.wasm_boot_entry !== "function") {

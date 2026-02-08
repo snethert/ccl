@@ -322,105 +322,93 @@
   nil)
 
 (defwasm2 wasm2-%iasr %iasr (seg vreg xfer form1 form2)
-  (declare (ignore xfer))
-  (if (null vreg)
-    (progn
-      (wasm2-form seg nil nil form1)
-      (wasm2-form seg nil nil form2))
-    (let* ((count (acode-fixnum-form-p form1))
-           (max (1- *wasm2-target-bits-in-word*))
-           (mask (logand #xffffffff
-                         (lognot (1- (ash 1 *wasm2-target-fixnum-shift*)))))
-           (count-temp (wasm2-allocate-temp))
-           (value-temp (wasm2-allocate-temp)))
-      (declare (fixnum max))
-      (if count
-        (let* ((shift (if (> count max) max count)))
-          (wasm2-form seg nil nil form2)
-          (wasm2-emit :local.set value-temp)
-          (wasm2-emit :local.get value-temp)
-          (wasm2-emit :const shift)
-          (wasm2-emit :i32-shr-s)
-          (wasm2-emit :const mask)
-          (wasm2-emit :i32-and))
-        (progn
-          (wasm2-form seg nil nil form1)
-          (wasm2-emit :local.set count-temp)
-          (wasm2-form seg nil nil form2)
-          (wasm2-emit :local.set value-temp)
-          (wasm2-emit :local.get value-temp)
-          (wasm2-emit :local.get count-temp)
-          (wasm2-emit-unbox-fixnum)
-          (wasm2-emit :i32-shr-s)
-          (wasm2-emit :const mask)
-          (wasm2-emit :i32-and)))))
+  (declare (ignore vreg xfer))
+  (let* ((count (acode-fixnum-form-p form1))
+         (max (1- *wasm2-target-bits-in-word*))
+         (mask (logand #xffffffff
+                       (lognot (1- (ash 1 *wasm2-target-fixnum-shift*)))))
+         (count-temp (wasm2-allocate-temp))
+         (value-temp (wasm2-allocate-temp)))
+    (declare (fixnum max))
+    (if count
+      (let* ((shift (if (> count max) max count)))
+        (wasm2-form seg nil nil form2)
+        (wasm2-emit :local.set value-temp)
+        (wasm2-emit :local.get value-temp)
+        (wasm2-emit :const shift)
+        (wasm2-emit :i32-shr-s)
+        (wasm2-emit :const mask)
+        (wasm2-emit :i32-and))
+      (progn
+        (wasm2-form seg nil nil form1)
+        (wasm2-emit :local.set count-temp)
+        (wasm2-form seg nil nil form2)
+        (wasm2-emit :local.set value-temp)
+        (wasm2-emit :local.get value-temp)
+        (wasm2-emit :local.get count-temp)
+        (wasm2-emit-unbox-fixnum)
+        (wasm2-emit :i32-shr-s)
+        (wasm2-emit :const mask)
+        (wasm2-emit :i32-and))))
   nil)
 
 (defwasm2 wasm2-%ilsr %ilsr (seg vreg xfer form1 form2)
-  (declare (ignore xfer))
-  (if (null vreg)
-    (progn
-      (wasm2-form seg nil nil form1)
-      (wasm2-form seg nil nil form2))
-    (let* ((count (acode-fixnum-form-p form1))
-           (max (1- *wasm2-target-bits-in-word*))
-           (mask (logand #xffffffff
-                         (lognot (1- (ash 1 *wasm2-target-fixnum-shift*)))))
-           (count-temp (wasm2-allocate-temp))
-           (value-temp (wasm2-allocate-temp)))
-      (declare (fixnum max))
-      (if count
-        (let* ((shift (if (> count max) max count)))
-          (wasm2-form seg nil nil form2)
-          (wasm2-emit :local.set value-temp)
-          (wasm2-emit :local.get value-temp)
-          (wasm2-emit :const shift)
-          (wasm2-emit :i32-shr-u)
-          (wasm2-emit :const mask)
-          (wasm2-emit :i32-and))
-        (progn
-          (wasm2-form seg nil nil form1)
-          (wasm2-emit :local.set count-temp)
-          (wasm2-form seg nil nil form2)
-          (wasm2-emit :local.set value-temp)
-          (wasm2-emit :local.get value-temp)
-          (wasm2-emit :local.get count-temp)
-          (wasm2-emit-unbox-fixnum)
-          (wasm2-emit :i32-shr-u)
-          (wasm2-emit :const mask)
-          (wasm2-emit :i32-and)))))
+  (declare (ignore vreg xfer))
+  (let* ((count (acode-fixnum-form-p form1))
+         (max (1- *wasm2-target-bits-in-word*))
+         (mask (logand #xffffffff
+                       (lognot (1- (ash 1 *wasm2-target-fixnum-shift*)))))
+         (count-temp (wasm2-allocate-temp))
+         (value-temp (wasm2-allocate-temp)))
+    (declare (fixnum max))
+    (if count
+      (let* ((shift (if (> count max) max count)))
+        (wasm2-form seg nil nil form2)
+        (wasm2-emit :local.set value-temp)
+        (wasm2-emit :local.get value-temp)
+        (wasm2-emit :const shift)
+        (wasm2-emit :i32-shr-u)
+        (wasm2-emit :const mask)
+        (wasm2-emit :i32-and))
+      (progn
+        (wasm2-form seg nil nil form1)
+        (wasm2-emit :local.set count-temp)
+        (wasm2-form seg nil nil form2)
+        (wasm2-emit :local.set value-temp)
+        (wasm2-emit :local.get value-temp)
+        (wasm2-emit :local.get count-temp)
+        (wasm2-emit-unbox-fixnum)
+        (wasm2-emit :i32-shr-u)
+        (wasm2-emit :const mask)
+        (wasm2-emit :i32-and))))
   nil)
 
 (defwasm2 wasm2-%ilsl %ilsl (seg vreg xfer form1 form2)
-  (declare (ignore xfer))
-  (if (null vreg)
-    (progn
-      (wasm2-form seg nil nil form1)
-      (wasm2-form seg nil nil form2))
-    (let* ((count (acode-fixnum-form-p form1))
-           (max (1- *wasm2-target-bits-in-word*))
-           (count-temp (wasm2-allocate-temp))
-           (value-temp (wasm2-allocate-temp)))
-      (declare (fixnum max))
-      (if count
-        (progn
-          (wasm2-form seg nil nil form2)
-          (wasm2-emit :local.set value-temp)
-          (if (> count max)
-            (wasm2-emit :const 0)
-            (progn
-              (wasm2-emit :local.get value-temp)
-              (wasm2-emit :const count)
-              (wasm2-emit :i32-shl))))
-        (progn
-          (wasm2-form seg nil nil form1)
-          (wasm2-emit :local.set count-temp)
-          (wasm2-form seg nil nil form2)
-          (wasm2-emit :local.set value-temp)
-          (wasm2-emit :local.get value-temp)
-          (wasm2-emit :local.get count-temp)
-          (wasm2-emit-unbox-fixnum)
-          (wasm2-emit :i32-shl)))))
+  (declare (ignore vreg xfer))
+  (let* ((count (acode-fixnum-form-p form1))
+         (max (1- *wasm2-target-bits-in-word*))
+         (count-temp (wasm2-allocate-temp))
+         (value-temp (wasm2-allocate-temp)))
+    (declare (fixnum max))
+    (if count
+      (progn
+        (wasm2-form seg nil nil form2)
+        (wasm2-emit :local.set value-temp)
+        (if (> count max)
+          (wasm2-emit :const 0)
+          (progn
+            (wasm2-emit :local.get value-temp)
+            (wasm2-emit :const count)
+            (wasm2-emit :i32-shl))))
+      (progn
+        (wasm2-form seg nil nil form1)
+        (wasm2-emit :local.set count-temp)
+        (wasm2-form seg nil nil form2)
+        (wasm2-emit :local.set value-temp)
+        (wasm2-emit :local.get value-temp)
+        (wasm2-emit :local.get count-temp)
+        (wasm2-emit-unbox-fixnum)
+        (wasm2-emit :i32-shl))))
   nil)
 
 (defwasm2 wasm2-%ilogand2 %ilogand2 (seg vreg xfer x y)
@@ -1819,7 +1807,7 @@
                            (wasm2-form seg nil nil form)
                            (wasm2-emit :local.set result-temp)
                            (wasm2-emit :local.get result-temp)
-                           (wasm2-emit :if (list (list :br end-label)) nil))
+                           (wasm2-emit :if-void (list (list :br end-label)) nil))
                          (wasm2-form seg nil nil (car (last forms)))
                          (wasm2-emit :local.set result-temp)))))
        (wasm2-emit :block end-label body-ir)
@@ -2116,7 +2104,7 @@
                   (wasm2-emit :local.get nargs-temp)
                   (wasm2-emit :const idx)
                   (wasm2-emit :i32-gt-u)
-                  (wasm2-emit :if then-ir else-ir))))
+                  (wasm2-emit :if-void then-ir else-ir))))
       (when keys
         (let* ((flags (if allow-other-keys 1 0))
                (subprim (wasm2-subprim-fixnum '.SPkeyword-bind))
@@ -2146,7 +2134,7 @@
                                           (lambda ()
                                             (emit-assign var (lambda () (wasm2-form seg nil nil init)))))))
                           (wasm2-emit :local.get sup-temp)
-                          (wasm2-emit :if then-ir else-ir))))
+                          (wasm2-emit :if-void then-ir else-ir))))
               (dotimes (_ (* 2 keycount))
                 (wasm2-emit :vpop)
                 (wasm2-emit :drop))))))
@@ -2170,7 +2158,7 @@
             (wasm2-emit :local.get nargs-temp)
             (wasm2-emit :const rest-start)
             (wasm2-emit :i32-gt-u)
-            (wasm2-emit :if then-ir else-ir))
+            (wasm2-emit :if-void then-ir else-ir))
           (wasm2-emit :const 0)
           (wasm2-emit :local.set loop-idx)
           (let* ((inner (wasm2-with-ir
@@ -2178,7 +2166,7 @@
                             (wasm2-emit :local.get loop-idx)
                             (wasm2-emit :local.get rest-count)
                             (wasm2-emit :i32-ge-u)
-                            (wasm2-emit :if (list (list :br exit-label)) nil)
+                            (wasm2-emit :if-void (list (list :br exit-label)) nil)
                             (wasm2-emit :local.get loop-idx)
                             (wasm2-emit :const rest-start)
                             (wasm2-emit :i32-add)
@@ -2400,7 +2388,7 @@
 (defwasm2 wasm2-%setf-double-float %setf-double-float (seg vreg xfer double-node double-val)
   (declare (ignore vreg))
   (let* ((returning (wasm2-returning-p xfer))
-         (val-temp (when returning (wasm2-allocate-temp))))
+         (val-temp (wasm2-allocate-temp)))
     (wasm2-form seg nil nil double-node)
     (wasm2-emit :const *wasm2-target-fulltag-misc*)
     (wasm2-emit :i32-sub)
@@ -2408,22 +2396,23 @@
       (wasm2-emit :const (- *wasm2-target-misc-dfloat-offset*))
       (wasm2-emit :i32-sub))
     (wasm2-form seg nil nil double-val)
-    (when val-temp
-      (wasm2-emit :local.set val-temp)
-      (wasm2-emit :local.get val-temp))
+    (wasm2-emit :local.set val-temp)
+    (wasm2-emit :local.get val-temp)
     (wasm2-emit-unbox-double)
     (wasm2-emit :f64-store (if (minusp *wasm2-target-misc-dfloat-offset*) 0 *wasm2-target-misc-dfloat-offset*))
-    (when returning
-      (wasm2-emit :local.get val-temp)
-      (wasm2-emit :set-arg-z)
-      (wasm2-emit :set-nargs 1)
-      (wasm2-emit :return)))
+    (if returning
+      (progn
+        (wasm2-emit :local.get val-temp)
+        (wasm2-emit :set-arg-z)
+        (wasm2-emit :set-nargs 1)
+        (wasm2-emit :return))
+      (wasm2-emit :local.get val-temp)))
   nil)
 
 (defwasm2 wasm2-%setf-short-float %setf-short-float (seg vreg xfer single-node single-val)
   (declare (ignore vreg))
   (let* ((returning (wasm2-returning-p xfer))
-         (val-temp (when returning (wasm2-allocate-temp))))
+         (val-temp (wasm2-allocate-temp)))
     (wasm2-form seg nil nil single-node)
     (wasm2-emit :const *wasm2-target-fulltag-misc*)
     (wasm2-emit :i32-sub)
@@ -2431,16 +2420,17 @@
       (wasm2-emit :const (- *wasm2-target-misc-data-offset*))
       (wasm2-emit :i32-sub))
     (wasm2-form seg nil nil single-val)
-    (when val-temp
-      (wasm2-emit :local.set val-temp)
-      (wasm2-emit :local.get val-temp))
+    (wasm2-emit :local.set val-temp)
+    (wasm2-emit :local.get val-temp)
     (wasm2-emit-unbox-single)
     (wasm2-emit :f32-store (if (minusp *wasm2-target-misc-data-offset*) 0 *wasm2-target-misc-data-offset*))
-    (when returning
-      (wasm2-emit :local.get val-temp)
-      (wasm2-emit :set-arg-z)
-      (wasm2-emit :set-nargs 1)
-      (wasm2-emit :return)))
+    (if returning
+      (progn
+        (wasm2-emit :local.get val-temp)
+        (wasm2-emit :set-arg-z)
+        (wasm2-emit :set-nargs 1)
+        (wasm2-emit :return))
+      (wasm2-emit :local.get val-temp)))
   nil)
 
 (defwasm2 wasm2-%macptrptr% %macptrptr% (seg vreg xfer form)
@@ -2471,6 +2461,7 @@
     (wasm2-emit :const (wasm2-box-fixnum arm::subtag-macptr))
     (wasm2-emit :set-arg0)
     (wasm2-emit-call-subprim misc-alloc)
+    (wasm2-emit :arg0)
     (wasm2-emit :local.set obj-temp)
     (wasm2-emit :local.get obj-temp)
     (wasm2-emit :const (wasm2-box-fixnum 1))
@@ -2559,7 +2550,7 @@
          (store-ptr (zerop size))
          (store-size (if store-ptr 4 size))
          (returning (wasm2-returning-p xfer))
-         (val-temp (when returning (wasm2-allocate-temp)))
+         (val-temp (wasm2-allocate-temp))
          (addr-temp (when store-ptr (wasm2-allocate-temp)))
          (raw-temp (when store-ptr (wasm2-allocate-temp))))
     (wasm2-form seg nil nil ptr)
@@ -2569,9 +2560,8 @@
     (when store-ptr
       (wasm2-emit :local.set addr-temp))
     (wasm2-form seg nil nil val)
-    (when val-temp
-      (wasm2-emit :local.set val-temp)
-      (wasm2-emit :local.get val-temp))
+    (wasm2-emit :local.set val-temp)
+    (wasm2-emit :local.get val-temp)
     (if store-ptr
       (let* ((misc-ref (wasm2-subprim-fixnum '.SPmisc-ref)))
         (wasm2-emit :const (wasm2-box-fixnum 1))
@@ -2588,11 +2578,13 @@
       (2 (wasm2-emit :i32-store16))
       (4 (wasm2-emit :i32-store))
       (t (error "WASM2: unsupported immediate-set-xxx size: ~s" store-size)))
-    (when returning
-      (wasm2-emit :local.get val-temp)
-      (wasm2-emit :set-arg-z)
-      (wasm2-emit :set-nargs 1)
-      (wasm2-emit :return)))
+    (if returning
+      (progn
+        (wasm2-emit :local.get val-temp)
+        (wasm2-emit :set-arg-z)
+        (wasm2-emit :set-nargs 1)
+        (wasm2-emit :return))
+      (wasm2-emit :local.get val-temp)))
   nil)
 
 (defun wasm2-string-index-8bit-p ()
@@ -2674,7 +2666,7 @@
   (let* ((bytep (wasm2-string-index-8bit-p))
          (shift (arch::target-charcode-shift (backend-target-arch *target-backend*)))
          (returning (wasm2-returning-p xfer))
-         (val-temp (when returning (wasm2-allocate-temp))))
+         (val-temp (wasm2-allocate-temp)))
     (wasm2-form seg nil nil str)
     (wasm2-form seg nil nil idx)
     (when bytep
@@ -2684,19 +2676,20 @@
       (wasm2-emit :const *wasm2-target-misc-data-offset*)
       (wasm2-emit :i32-add))
     (wasm2-form seg nil nil value)
-    (when val-temp
-      (wasm2-emit :local.set val-temp)
-      (wasm2-emit :local.get val-temp))
+    (wasm2-emit :local.set val-temp)
+    (wasm2-emit :local.get val-temp)
     (wasm2-emit :const shift)
     (wasm2-emit :i32-shr-u)
     (if bytep
       (wasm2-emit :i32-store8)
       (wasm2-emit :i32-store))
-    (when returning
-      (wasm2-emit :local.get val-temp)
-      (wasm2-emit :set-arg-z)
-      (wasm2-emit :set-nargs 1)
-      (wasm2-emit :return)))
+    (if returning
+      (progn
+        (wasm2-emit :local.get val-temp)
+        (wasm2-emit :set-arg-z)
+        (wasm2-emit :set-nargs 1)
+        (wasm2-emit :return))
+      (wasm2-emit :local.get val-temp)))
   nil)
 
 (defwasm2 wasm2-%code-char %code-char (seg vreg xfer c)
@@ -2767,7 +2760,7 @@
   (declare (ignore vreg))
   (let* ((bytep (wasm2-string-index-8bit-p))
          (returning (wasm2-returning-p xfer))
-         (val-temp (when returning (wasm2-allocate-temp))))
+         (val-temp (wasm2-allocate-temp)))
     (wasm2-form seg nil nil str)
     (wasm2-form seg nil nil idx)
     (when bytep
@@ -2777,18 +2770,19 @@
       (wasm2-emit :const *wasm2-target-misc-data-offset*)
       (wasm2-emit :i32-add))
     (wasm2-form seg nil nil code)
-    (when val-temp
-      (wasm2-emit :local.set val-temp)
-      (wasm2-emit :local.get val-temp))
+    (wasm2-emit :local.set val-temp)
+    (wasm2-emit :local.get val-temp)
     (wasm2-emit-unbox-fixnum)
     (if bytep
       (wasm2-emit :i32-store8)
       (wasm2-emit :i32-store))
-    (when returning
-      (wasm2-emit :local.get val-temp)
-      (wasm2-emit :set-arg-z)
-      (wasm2-emit :set-nargs 1)
-      (wasm2-emit :return)))
+    (if returning
+      (progn
+        (wasm2-emit :local.get val-temp)
+        (wasm2-emit :set-arg-z)
+        (wasm2-emit :set-nargs 1)
+        (wasm2-emit :return))
+      (wasm2-emit :local.get val-temp)))
   nil)
 
 (defwasm2 wasm2-%symbol->symptr %symbol->symptr (seg vreg xfer sym)
@@ -2933,48 +2927,40 @@
   (wasm2-%svref seg vreg xfer vector index))
 
 (defwasm2 wasm2-vector vector (seg vreg xfer arglist)
-  (declare (ignorable vreg))
+  (declare (ignore vreg))
   (let* ((args (wasm2-arglist-forms-mvcall arglist))
          (argc (1+ (length args)))
          (subprim (wasm2-subprim-fixnum '.SPgvector))
          (subtag (wasm2-box-fixnum (nx-lookup-target-uvector-subtag :simple-vector))))
-    (if (null vreg)
-      (dolist (form args)
-        (wasm2-form seg nil nil form))
-      (progn
-        (wasm2-emit :const subtag)
-        (wasm2-emit :vpush)
-        (dolist (arg args)
-          (wasm2-form seg nil nil arg)
-          (wasm2-emit :vpush))
-        (wasm2-emit :set-nargs argc)
-        (wasm2-emit-call-subprim subprim)
-        (wasm2-emit :arg0)
-        (when (wasm2-returning-p xfer)
-          (wasm2-emit :set-arg-z)
-          (wasm2-emit :set-nargs 1)
-          (wasm2-emit :return)))))
+    (wasm2-emit :const subtag)
+    (wasm2-emit :vpush)
+    (dolist (arg args)
+      (wasm2-form seg nil nil arg)
+      (wasm2-emit :vpush))
+    (wasm2-emit :set-nargs argc)
+    (wasm2-emit-call-subprim subprim)
+    (wasm2-emit :arg0)
+    (when (wasm2-returning-p xfer)
+      (wasm2-emit :set-arg-z)
+      (wasm2-emit :set-nargs 1)
+      (wasm2-emit :return)))
   nil)
 
 (defwasm2 wasm2-%gvector %gvector (seg vreg xfer arglist)
+  (declare (ignore vreg))
   (let* ((args (wasm2-arglist-forms arglist))
          (argc (length args))
          (subprim (wasm2-subprim-fixnum '.SPgvector)))
-    (if (null vreg)
-      (dolist (form args)
-        (wasm2-form seg nil nil form)
-        (wasm2-emit :drop))
-      (progn
-        (dolist (arg args)
-          (wasm2-form seg nil nil arg)
-          (wasm2-emit :vpush))
-        (wasm2-emit :set-nargs argc)
-        (wasm2-emit-call-subprim subprim)
-        (wasm2-emit :arg0)
-        (when (wasm2-returning-p xfer)
-          (wasm2-emit :set-arg-z)
-          (wasm2-emit :set-nargs 1)
-          (wasm2-emit :return)))))
+    (dolist (arg args)
+      (wasm2-form seg nil nil arg)
+      (wasm2-emit :vpush))
+    (wasm2-emit :set-nargs argc)
+    (wasm2-emit-call-subprim subprim)
+    (wasm2-emit :arg0)
+    (when (wasm2-returning-p xfer)
+      (wasm2-emit :set-arg-z)
+      (wasm2-emit :set-nargs 1)
+      (wasm2-emit :return)))
   nil)
 
 (defwasm2 wasm2-%svset %svset (seg vreg xfer vector index value)
@@ -3545,9 +3531,14 @@
                (progn
                  (wasm2-emit opcode)
                  (wasm2-emit :return))
-               (progn
+               (let* ((x-temp (wasm2-allocate-temp))
+                      (y-temp (wasm2-allocate-temp)))
                  (wasm2-form seg nil nil x)
+                 (wasm2-emit :local.set x-temp)
                  (wasm2-form seg nil nil y)
+                 (wasm2-emit :local.set y-temp)
+                 (wasm2-emit :local.get x-temp)
+                 (wasm2-emit :local.get y-temp)
                  (wasm2-emit opcode))))
            (emit-fixnum-unary (opcode x)
              (if (and (wasm2-returning-p xfer)
@@ -3623,9 +3614,18 @@
         (wasm2-emit :local.set fn-temp)
         (wasm2-emit-funcall-subprim seg xfer fn-temp args)
         (return-from wasm2-emit-call nil)))
-    (wasm2-form seg nil nil fn)
-    (dolist (arg args)
-      (wasm2-form seg nil nil arg))
+    (let* ((fn-temp (wasm2-allocate-temp))
+           (arg-temps nil))
+      (wasm2-form seg nil nil fn)
+      (wasm2-emit :local.set fn-temp)
+      (dolist (arg args)
+        (let* ((arg-temp (wasm2-allocate-temp)))
+          (wasm2-form seg nil nil arg)
+          (wasm2-emit :local.set arg-temp)
+          (push arg-temp arg-temps)))
+      (wasm2-emit :local.get fn-temp)
+      (dolist (arg-temp (nreverse arg-temps))
+        (wasm2-emit :local.get arg-temp)))
     (case argc
       (0 (wasm2-emit (if mvpass :call0-mv :call0) tmp))
       (1 (wasm2-emit (if mvpass :call1-mv :call1) tmp))
@@ -3681,9 +3681,18 @@
           (wasm2-emit :local.set fn-temp)
           (wasm2-emit-funcall-subprim seg xfer fn-temp args)
           (return-from wasm2-lexical-function-call nil)))
-      (wasm2-emit-const lfun)
-      (dolist (arg args)
-        (wasm2-form seg nil nil arg))
+      (let* ((fn-temp (wasm2-allocate-temp))
+             (arg-temps nil))
+        (wasm2-emit-const lfun)
+        (wasm2-emit :local.set fn-temp)
+        (dolist (arg args)
+          (let* ((arg-temp (wasm2-allocate-temp)))
+            (wasm2-form seg nil nil arg)
+            (wasm2-emit :local.set arg-temp)
+            (push arg-temp arg-temps)))
+        (wasm2-emit :local.get fn-temp)
+        (dolist (arg-temp (nreverse arg-temps))
+          (wasm2-emit :local.get arg-temp)))
       (case argc
         (0 (wasm2-emit (if mvpass :call0-mv :call0) tmp))
         (1 (wasm2-emit (if mvpass :call1-mv :call1) tmp))
@@ -3725,11 +3734,20 @@
           (wasm2-emit :local.set fn-temp)
           (wasm2-emit-funcall-subprim seg xfer fn-temp args)
           (return-from wasm2-self-call nil)))
-      (if lfun
-        (wasm2-emit-const lfun)
-        (wasm2-emit :get-nfn))
-      (dolist (arg args)
-        (wasm2-form seg nil nil arg))
+      (let* ((fn-temp (wasm2-allocate-temp))
+             (arg-temps nil))
+        (if lfun
+          (wasm2-emit-const lfun)
+          (wasm2-emit :get-nfn))
+        (wasm2-emit :local.set fn-temp)
+        (dolist (arg args)
+          (let* ((arg-temp (wasm2-allocate-temp)))
+            (wasm2-form seg nil nil arg)
+            (wasm2-emit :local.set arg-temp)
+            (push arg-temp arg-temps)))
+        (wasm2-emit :local.get fn-temp)
+        (dolist (arg-temp (nreverse arg-temps))
+          (wasm2-emit :local.get arg-temp)))
       (case argc
         (0 (wasm2-emit (if mvpass :call0-mv :call0) tmp))
         (1 (wasm2-emit (if mvpass :call1-mv :call1) tmp))
@@ -3775,6 +3793,58 @@
 (defvar *wasm2-emit-local-count* 0)
 (defvar *wasm2-emit-spillable-locals* nil)
 (defvar *wasm2-pending-throw-label* nil)
+(defvar *wasm2-collect-module-debug* nil)
+(defvar *wasm2-compiled-modules-debug* nil)
+
+(defun wasm2-reset-compiled-modules-debug ()
+  (setf *wasm2-compiled-modules-debug* nil))
+
+(defun wasm2-ir-walk (ir fn)
+  (dolist (ins ir)
+    (funcall fn ins)
+    (case (car ins)
+      ((:if :if-void)
+       (destructuring-bind (then-ir else-ir) (cdr ins)
+         (wasm2-ir-walk then-ir fn)
+         (wasm2-ir-walk else-ir fn)))
+      (:block
+       (destructuring-bind (_label block-ir) (cdr ins)
+         (declare (ignore _label))
+         (wasm2-ir-walk block-ir fn)))
+      (:loop
+       (destructuring-bind (_label loop-ir) (cdr ins)
+         (declare (ignore _label))
+         (wasm2-ir-walk loop-ir fn))))))
+
+(defun wasm2-ir-count-op (ir op)
+  (let ((count 0))
+    (wasm2-ir-walk ir (lambda (ins)
+                        (when (eq (car ins) op)
+                          (incf count))))
+    count))
+
+(defun wasm2-ir-tail-ops (ir &optional (limit 32))
+  (let* ((ops (mapcar #'car ir))
+         (len (length ops)))
+    (if (<= len limit)
+      ops
+      (nthcdr (- len limit) ops))))
+
+(defun wasm2-make-module-debug-info (export-name entry-index module-version &key afunc ir)
+  (let* ((name (and afunc (afunc-name afunc)))
+         (ir-len (and ir (length ir)))
+         (tail (and ir (wasm2-ir-tail-ops ir 48)))
+         (ir-short (and ir (<= ir-len 64)
+                        (mapcar #'prin1-to-string ir))))
+    (list :export-name export-name
+          :entry-index entry-index
+          :module-version module-version
+          :afunc-name (and name (prin1-to-string name))
+          :ir-len ir-len
+          :if-count (and ir (wasm2-ir-count-op ir :if))
+          :if-void-count (and ir (wasm2-ir-count-op ir :if-void))
+          :ir-tail (and tail (mapcar #'symbol-name tail))
+          :ir-short ir-short)))
 
 (defstruct wasm2-tagbody-context
   tag-map
@@ -3782,7 +3852,7 @@
   state-local)
 
 (defun wasm2-register-compiled-module (module-bytes export-name entry-index module-version
-                                         &optional const-pool-bytes)
+                                         &optional const-pool-bytes debug-info)
   (when module-bytes
     (let* ((entry (if const-pool-bytes
                     (make-array 5 :initial-contents
@@ -3793,7 +3863,13 @@
       (unless (find entry-index %wasm-compiled-modules%
                     :key (lambda (item) (svref item 2))
                     :test #'eql)
-        (setf %wasm-compiled-modules% (cons entry %wasm-compiled-modules%))))))
+        (setf %wasm-compiled-modules% (cons entry %wasm-compiled-modules%)))
+      (when *wasm2-collect-module-debug*
+        (push (or debug-info
+                  (list :export-name export-name
+                        :entry-index entry-index
+                        :module-version module-version))
+              *wasm2-compiled-modules-debug*)))))
 
 (defun wasm2-emit (opcode &rest operands)
   (push (cons opcode operands) *wasm2-ir*)
@@ -4407,6 +4483,7 @@
          (wasm2-emit :const (wasm2-box-fixnum arm::subtag-macptr))
          (wasm2-emit :set-arg0)
          (wasm2-emit-call-subprim misc-alloc)
+         (wasm2-emit :arg0)
          (wasm2-emit :local.set obj-temp)
          (wasm2-emit :local.get obj-temp)
          (wasm2-emit :const (wasm2-box-fixnum 1))
@@ -4657,8 +4734,14 @@
             (setf v rest))))))
   vec)
 
+(defun wasm2-signed32 (value)
+  (let ((v (logand value #xffffffff)))
+    (if (>= v #x80000000)
+      (- v #x100000000)
+      v)))
+
 (defun wasm2-emit-sleb32 (vec value)
-  (let ((v value))
+  (let ((v (wasm2-signed32 value)))
     (loop
       (let* ((byte (logand v #x7f))
              (sign-bit (logand byte #x40))
@@ -4823,7 +4906,7 @@
    (list :set-imm0 "wasm_set_imm0" +wasm2-type-i32-void+)
    (list :vpush "wasm_vpush" +wasm2-type-i32-void+)
    (list :vpop "wasm_vpop" +wasm2-type-void-i32+)
-   (list :vsp-ref "wasm_vsp_ref" +wasm2-type-i32-i32+)
+   (list :vsp-ref "wasm_vsp_ref" +wasm2-type-i32-i32-ret+)
    (list :spill-push "wasm_spill_push" +wasm2-type-i32-void+)
    (list :spill-pop "wasm_spill_pop" +wasm2-type-void-i32+)
    (list :clear-pending-throw "wasm_clear_pending_throw" +wasm2-type-void-void+)
@@ -4895,6 +4978,45 @@
     (wasm2-emit-generic-ir body then-ir (cons if-label label-stack))
     (wasm2-push-u8 body #x05) ; else
     (wasm2-emit-generic-ir body else-ir (cons if-label label-stack))
+    (wasm2-push-u8 body #x0b))) ; end
+
+(defun wasm2-ir-ensure-value (ir)
+  (if (null ir)
+    (list (list :const (target-nil-value)))
+    (let* ((ins (car (last ir)))
+           (op (car ins))
+           (args (cdr ins)))
+      (case op
+        (:if
+         (destructuring-bind (then-ir else-ir) args
+           (let* ((then2 (wasm2-ir-ensure-value then-ir))
+                  (else2 (wasm2-ir-ensure-value else-ir)))
+             (append (butlast ir) (list (list :if then2 else2))))))
+        (:if-void
+         (append ir (list (list :const (target-nil-value)))))
+        (:block
+         (append ir (list (list :const (target-nil-value)))))
+        (:loop
+         (append ir (list (list :const (target-nil-value)))))
+        (t
+         (if (wasm2-ir-produces-value-p ir)
+           ir
+           (append ir (list (list :const (target-nil-value))))))))))
+
+(defun wasm2-ir-voidify (ir)
+  (append (wasm2-ir-ensure-value ir) (list (list :drop))))
+
+(defun wasm2-emit-generic-if-void (body then-ir else-ir label-stack)
+  (let* ((if-label :if)
+         (then-body (wasm2-ir-voidify then-ir))
+         (else-body (wasm2-ir-voidify else-ir)))
+    (wasm2-emit-call-index body (wasm2-generic-import-index :get-lisp-nil))
+    (wasm2-push-u8 body #x47) ; i32.ne
+    (wasm2-push-u8 body #x04) ; if
+    (wasm2-push-u8 body #x40) ; blocktype void
+    (wasm2-emit-generic-ir body then-body (cons if-label label-stack))
+    (wasm2-push-u8 body #x05) ; else
+    (wasm2-emit-generic-ir body else-body (cons if-label label-stack))
     (wasm2-push-u8 body #x0b))) ; end
 
 (defun wasm2-emit-fixnum-op (body op-key)
@@ -5193,6 +5315,9 @@
         (:if
          (destructuring-bind (then-ir else-ir) args
            (wasm2-emit-generic-if body then-ir else-ir label-stack)))
+        (:if-void
+         (destructuring-bind (then-ir else-ir) args
+           (wasm2-emit-generic-if-void body then-ir else-ir label-stack)))
         (:block
          (destructuring-bind (label block-ir) args
            (wasm2-push-u8 body #x02) ; block
@@ -6492,6 +6617,47 @@
 (defun wasm2-ir-ends-with-return-p (ir)
   (and ir (eq (caar (last ir)) :return)))
 
+(defparameter *wasm2-ir-value-ops*
+  '(:const :const-pool-ref :lisp-word-ref :arg0 :arg1 :local.get :local.tee
+    :get-arg-z :get-arg-y :get-nfn :get-nargs
+    :vsp-ref :vsp-ref-dynamic
+    :i32-add :i32-sub :i32-mul :i32-div-s :i32-div-u :i32-rem-s :i32-rem-u
+    :i32-and :i32-or :i32-xor :i32-shl :i32-shr-s :i32-shr-u :i32-rotl :i32-rotr
+    :i32-eq :i32-ne :i32-lt-s :i32-lt-u :i32-gt-s :i32-gt-u :i32-le-s :i32-le-u
+    :i32-ge-s :i32-ge-u :i32-eqz :i32-clz :i32-ctz :i32-popcnt
+    :i32-load :i32-load8-u :i32-load16-u :i32-load8-s :i32-load16-s
+    :f32-const :f64-const :f32-add :f32-sub :f32-mul :f32-div :f32-neg
+    :f64-add :f64-sub :f64-mul :f64-div :f64-neg :f32-convert-i32-s
+    :f64-convert-i32-s :f64-promote-f32 :f32-demote-f64
+    :f32-eq :f32-ne :f32-lt :f32-gt :f32-le :f32-ge
+    :f64-eq :f64-ne :f64-lt :f64-gt :f64-le :f64-ge
+    :select
+    :fixnum-add :fixnum-sub :fixnum-mul :fixnum-ash :fixnum-logand
+    :fixnum-logior :fixnum-logxor :fixnum-lognot :fixnum-neg
+    :call0 :call1 :call2 :call3 :call4 :call5 :call6 :call7 :call8 :call9 :call10
+    :call0-mv :call1-mv :call2-mv :call3-mv :call4-mv :call5-mv :call6-mv
+    :call7-mv :call8-mv :call9-mv :call10-mv
+    :call-external
+    :return-values2 :return-values3 :return-values4
+    :get-mv :get-mv-indexed :vpop :spill-pop :get-current-tcr
+    :get-tcr-toplevel-function :set-tcr-toplevel-function))
+
+(defun wasm2-ir-produces-value-p (ir)
+  (when (null ir)
+    (return-from wasm2-ir-produces-value-p nil))
+  (let* ((ins (car (last ir)))
+         (op (car ins))
+         (args (cdr ins)))
+    (case op
+      (:if
+       (destructuring-bind (then-ir else-ir) args
+         (and (wasm2-ir-produces-value-p then-ir)
+              (wasm2-ir-produces-value-p else-ir))))
+      (:if-void nil)
+      (:block nil)
+      (:loop nil)
+      (t (member op *wasm2-ir-value-ops* :test #'eq)))))
+
 (defun wasm2-allocate-entry-index ()
   (prog1 *wasm2-next-entry-index*
     (incf *wasm2-next-entry-index*)))
@@ -6851,12 +7017,17 @@
              (module-bytes (wasm2-generic-module-bytes ir export-name
                                                        *wasm2-local-types*
                                                        spillable-locals
-                                                       entry-index)))
+                                                       entry-index))
+             (debug-info (and *wasm2-collect-module-debug*
+                              (wasm2-make-module-debug-info export-name entry-index 1
+                                                            :afunc afunc
+                                                            :ir ir))))
         (wasm2-register-compiled-module module-bytes
                                         export-name
                                         entry-index
                                         1
-                                        const-pool-bytes)
+                                        const-pool-bytes
+                                        debug-info)
         (let ((info (list* 'wasm-module-bytes module-bytes
                            'wasm-module-export export-name
                            'wasm-module-version 1

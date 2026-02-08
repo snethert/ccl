@@ -3201,7 +3201,9 @@ __attribute__((used, visibility("default"), export_name("wasm_get_compiled_modul
 LispObj
 wasm_get_compiled_module_registry(void)
 {
-  return nrs_WASM_COMPILED_MODULES.vcell;
+  extern LispObj lisp_nil;
+  LispObj reg = nrs_WASM_COMPILED_MODULES.vcell;
+  return reg ? reg : lisp_nil;
 }
 
 #endif /* WASM32 */

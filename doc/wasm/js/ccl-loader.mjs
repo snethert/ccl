@@ -263,6 +263,7 @@ export function decodeCompiledModuleRegistry({ memory, registry, nil }) {
 
   const nilObj = u32(nil);
   let list = u32(registry);
+  if (list === 0) return [];
   if (list === nilObj) return [];
 
   const view = new DataView(memory.buffer);
@@ -346,6 +347,117 @@ export function installConstPoolBytes({
   const base = allocScratch(memory, bytes.length);
   new Uint8Array(memory.buffer, base, bytes.length).set(bytes);
   return install(entryIndex >>> 0, base >>> 0, bytes.length >>> 0) >>> 0;
+}
+
+export async function installCompiledModulesFromBundle({
+  bundle,
+  binaryBytes = null,
+  binaryReader = null,
+  kernel,
+  memory,
+  subprimsTable,
+  microkernel = null,
+  extra = {},
+  verbose = false,
+  strict = true,
+} = {}) {
+  if (!memory) throw new Error("installCompiledModulesFromBundle: memory is required");
+  if (!subprimsTable) throw new Error("installCompiledModulesFromBundle: subprimsTable is required");
+
+  const kernelExports = kernel?.instance?.exports ?? kernel?.exports ?? kernel;
+  if (!kernelExports) throw new Error("installCompiledModulesFromBundle: kernel exports are required");
+
+  const modules = Array.isArray(bundle?.modules) ? bundle.modules : [];
+  if (modules.length === 0) return { installed: 0, count: 0, entries: [] };
+
+  const extraCcl = { ...(extra.ccl ?? {}), ...kernelExports };
+  const imports = createCclImports({
+    memory,
+    subprimsTable,
+    microkernel,
+    extra: { ...extra, ccl: extraCcl },
+  });
+
+  let installed = 0;
+  let failed = 0;
+  const readBinary = typeof binaryReader === "function" ? binaryReader : null;
+  for (const entry of modules) {
+    let moduleBytes = entry.moduleBytes ?? null;
+    let constPoolBytes = entry.constPoolBytes ?? null;
+    if (!moduleBytes && binaryBytes && Number.isFinite(entry.offset) && Number.isFinite(entry.length)) {
+      const start = entry.offset >>> 0;
+      const end = start + (entry.length >>> 0);
+      moduleBytes = binaryBytes.subarray(start, end);
+    } else if (!moduleBytes && readBinary && Number.isFinite(entry.offset) && Number.isFinite(entry.length)) {
+      const start = entry.offset >>> 0;
+      const length = entry.length >>> 0;
+      moduleBytes = await readBinary(start, length);
+    }
+    if (!constPoolBytes && binaryBytes &&
+        Number.isFinite(entry.constPoolOffset) && Number.isFinite(entry.constPoolLength)) {
+      const start = entry.constPoolOffset >>> 0;
+      const end = start + (entry.constPoolLength >>> 0);
+      constPoolBytes = binaryBytes.subarray(start, end);
+    } else if (!constPoolBytes && readBinary &&
+        Number.isFinite(entry.constPoolOffset) && Number.isFinite(entry.constPoolLength)) {
+      const start = entry.constPoolOffset >>> 0;
+      const length = entry.constPoolLength >>> 0;
+      constPoolBytes = await readBinary(start, length);
+    }
+
+    if (!moduleBytes || moduleBytes.length === 0) {
+      if (verbose) {
+        // eslint-disable-next-line no-console
+        console.warn(`compiled module missing bytes for ${entry.exportName}`);
+      }
+      failed++;
+      continue;
+    }
+
+    if (constPoolBytes?.length) {
+      installConstPoolBytes({
+        kernelExports,
+        memory,
+        entryIndex: entry.entryIndex,
+        constPoolBytes,
+      });
+    }
+
+    const bytes = moduleBytes instanceof Uint8Array ? moduleBytes : Uint8Array.from(moduleBytes);
+    let instance;
+    try {
+      ({ instance } = await instantiateWasm(bytes, imports));
+    } catch (e) {
+      failed++;
+      if (verbose) {
+        // eslint-disable-next-line no-console
+        console.warn(`compiled module failed to instantiate ${entry.exportName}: ${e}`);
+      }
+      if (strict) throw e;
+      continue;
+    }
+    const fn = instance?.exports?.[entry.exportName];
+    if (typeof fn !== "function") {
+      if (verbose) {
+        // eslint-disable-next-line no-console
+        console.warn(`compiled module missing export ${entry.exportName}`);
+      }
+      failed++;
+      if (strict) {
+        throw new Error(`compiled module missing export ${entry.exportName}`);
+      }
+      continue;
+    }
+
+    const idx = entry.entryIndex >>> 0;
+    if (subprimsTable.length <= idx) {
+      subprimsTable.grow(idx - subprimsTable.length + 1);
+    }
+    subprimsTable.set(idx, fn);
+    installed++;
+  }
+
+  return { installed, count: modules.length, failed, entries: modules };
 }
 
 export async function installCompiledModulesFromRegistry({

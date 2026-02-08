@@ -32,6 +32,10 @@ plan, in dependency order.
 - WASM fasl compilation is unblocked by wasm‑only stubs for OS/FFI paths
   (primarily in `level-1/linux-files.lisp`); re‑run
   `scripts/wasm/compile-wasm-fasls.sh` to confirm on the current tree.
+- `scripts/wasm/compile-wasm-fasls.sh --modules-out PATH` emits a compiled‑modules
+  bundle (JSON + `.bin` sidecar). The JS loader (`doc/wasm/js/load-image.mjs`)
+  and Node helper (`doc/wasm/js/make-real-image.mjs`) accept `--modules PATH`
+  and stream the `.bin` to avoid >2 GB reads.
 - WASM file I/O in `unix-calls.c` is **read‑only** (named blobs); `save-application`
   cannot write images.
 - `xdump/xfasload.lisp` now converts wasm u32 stub code vectors into target
@@ -286,8 +290,10 @@ are generating the image from a host CCL today; required for a wasm‑only path)
    - Command: `make -C lisp-kernel/wasm32` and `make -C lisp-kernel/wasm32/subprims`.
    - Outputs: `doc/wasm/js/wasmcl.wasm` and `doc/wasm/js/subprims.wasm`.
 3. Compile wasm fasls (level‑1 + l1‑fasls).
-   - Command: `scripts/wasm/compile-wasm-fasls.sh`.
+   - Command: `scripts/wasm/compile-wasm-fasls.sh --modules-out doc/wasm/wasm-runtime-modules.json`.
    - Outputs: `level-1.lafsl`, `l1-fasls/*.lafsl`, `bin/*.lafsl`.
+   - Also writes `doc/wasm/wasm-runtime-modules.json` plus
+     `doc/wasm/wasm-runtime-modules.bin` in the same directory.
    - If compilation fails:
      - Add missing arch macros to `compiler/WASM/wasm-arch.lisp`
        (mirror `compiler/ARM/arm-arch.lisp`).
@@ -310,12 +316,12 @@ are generating the image from a host CCL today; required for a wasm‑only path)
      `doc/wasm/subprims-map.json`; regenerate via
      `scripts/wasm/generate_subprims_artifacts.py` if the map changes.
 7. Validate the boot image in the wasm runtime.
-   - Command: `node doc/wasm/js/load-image.mjs --start-lisp BOOT_IMAGE_PATH`.
+   - Command: `node doc/wasm/js/load-image.mjs --start-lisp --modules doc/wasm/wasm-runtime-modules.json BOOT_IMAGE_PATH`.
    - If it traps, fix the first missing stub/op and repeat.
 8. Generate and validate the real root image (current host path).
    - Command: run `scripts/wasm/make-real-image.lisp` under host CCL.
    - Output: `doc/wasm/root.image`, then
-     `node doc/wasm/js/load-image.mjs --start-lisp doc/wasm/root.image`.
+     `node doc/wasm/js/load-image.mjs --start-lisp --modules doc/wasm/wasm-runtime-modules.json doc/wasm/root.image`.
 9. Optional: implement wasm‑only `save-application` output.
    - Action: add write/lseek/ftruncate in `lisp-kernel/unix-calls.c` and a
      persistence extraction path, then use `doc/wasm/js/make-real-image.mjs`.
@@ -323,10 +329,19 @@ are generating the image from a host CCL today; required for a wasm‑only path)
 ## Completion Criteria (Exit to Main‑Loop Work)
 - `scripts/wasm/build-wasm-boot.sh` (or `(cross-xload-level-0 :wasm32)`)
   produces a wasm boot image with no errors.
-- `doc/wasm/js/load-image.mjs --start-lisp BOOT_IMAGE_PATH` enters Lisp without
-  immediate macro‑apply/UDF traps.
+- `doc/wasm/js/load-image.mjs --start-lisp --modules doc/wasm/wasm-runtime-modules.json BOOT_IMAGE_PATH`
+  enters Lisp without immediate macro‑apply/UDF traps.
 - `scripts/wasm/make-real-image.lisp` (injects `:wasm32-target` if missing)
   produces `doc/wasm/root.image`, and
-  `node doc/wasm/js/load-image.mjs --start-lisp doc/wasm/root.image` works
+  `node doc/wasm/js/load-image.mjs --start-lisp --modules doc/wasm/wasm-runtime-modules.json doc/wasm/root.image` works
   (wasm‑only save path optional).
 - No non‑WASM behavior changes outside `#+wasm32-target` guards.
+
+## Current Blocker (Needs Resolution)
+- The WASM2 compiler is still emitting a non‑trivial number of invalid
+  compiled modules (validation errors around `if`/`local.set` stack balance).
+  The JS loader can skip invalid modules, but `start_lisp` still trips the UDF
+  stub loop because required entrypoints are missing. The next fix should
+  focus on stack‑discipline correctness for void control‑flow constructs
+  (`if`/`block`/`loop`) and any callers that leave an extra i32 on the wasm
+  stack.

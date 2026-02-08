@@ -8,15 +8,18 @@
  *   node doc/wasm/js/load-image.mjs /path/to/ccl.image
  *   node doc/wasm/js/load-image.mjs --run /path/to/ccl.image
  *   node doc/wasm/js/load-image.mjs --start-lisp /path/to/ccl.image
+ *   node doc/wasm/js/load-image.mjs --start-lisp --modules bundle.json /path/to/ccl.image
  */
 
 import fs from "node:fs/promises";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
   createCclImports,
   createSharedCclRuntime,
   instantiateWasm,
+  installCompiledModulesFromBundle,
   installCompiledModulesFromRegistry,
   installSubprimsTable,
 } from "./ccl-loader.mjs";
@@ -28,16 +31,69 @@ function fail(msg) {
 }
 
 const args = process.argv.slice(2);
-const runToplevel = args.includes("--run");
-const runStartLisp = args.includes("--start-lisp");
+let runToplevel = false;
+let runStartLisp = false;
+let modulesPath = null;
+const rest = [];
+for (let i = 0; i < args.length; i++) {
+  const arg = args[i];
+  if (arg === "--run") {
+    runToplevel = true;
+    continue;
+  }
+  if (arg === "--start-lisp") {
+    runStartLisp = true;
+    continue;
+  }
+  if (arg === "--modules") {
+    modulesPath = args[++i];
+    continue;
+  }
+  if (arg.startsWith("--")) {
+    console.error(`Unknown option: ${arg}`);
+    process.exit(2);
+  }
+  rest.push(arg);
+}
 if (runToplevel && runStartLisp) {
   console.error("--run and --start-lisp are mutually exclusive");
   process.exit(2);
 }
-const imagePath = args.find((arg) => !arg.startsWith("--"));
+const imagePath = rest[0];
 if (!imagePath) {
-  console.error("Usage: node doc/wasm/js/load-image.mjs [--run|--start-lisp] /path/to/ccl.image");
+  console.error("Usage: node doc/wasm/js/load-image.mjs [--run|--start-lisp] [--modules bundle.json] /path/to/ccl.image");
   process.exit(2);
+}
+
+let modulesBundle = null;
+let modulesHandle = null;
+let modulesReader = null;
+if (modulesPath) {
+  modulesBundle = JSON.parse(await fs.readFile(modulesPath, "utf-8"));
+  if (modulesBundle?.binary) {
+    const binPath = path.resolve(path.dirname(modulesPath), modulesBundle.binary);
+    modulesHandle = await fs.open(binPath, "r");
+    modulesReader = async (offset, length) => {
+      const size = length >>> 0;
+      if (size === 0) return new Uint8Array(0);
+      const buffer = Buffer.allocUnsafe(size);
+      let total = 0;
+      while (total < size) {
+        const { bytesRead } = await modulesHandle.read(
+          buffer,
+          total,
+          size - total,
+          (offset >>> 0) + total,
+        );
+        if (bytesRead === 0) break;
+        total += bytesRead;
+      }
+      if (total !== size) {
+        throw new Error(`short read on compiled modules: expected ${size}, got ${total}`);
+      }
+      return buffer;
+    };
+  }
 }
 
 const kernelUrl = new URL("wasmcl.wasm", import.meta.url);
@@ -148,6 +204,18 @@ if (runStartLisp) {
     const rc = kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
     const nil = kernel.instance.exports.wasm_get_lisp_nil() >>> 0;
     console.log(`wasm_ccl_load_image rc=${rc} lisp_nil=0x${nil.toString(16)}`);
+    if (modulesBundle) {
+      const { installed, count, failed } = await installCompiledModulesFromBundle({
+        bundle: modulesBundle,
+        binaryReader: modulesReader,
+        kernel,
+        memory: runtime.memory,
+        subprimsTable: runtime.subprimsTable,
+        microkernel,
+        strict: false,
+      });
+      console.log(`compiled modules installed from bundle ${installed}/${count} (failed ${failed})`);
+    }
     const { installed, count } = await installCompiledModulesFromRegistry({
       kernel,
       memory: runtime.memory,
@@ -174,6 +242,18 @@ if (runStartLisp) {
     const rc = kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
     const nil = kernel.instance.exports.wasm_get_lisp_nil() >>> 0;
     console.log(`wasm_ccl_load_image rc=${rc} lisp_nil=0x${nil.toString(16)}`);
+    if (modulesBundle) {
+      const { installed, count, failed } = await installCompiledModulesFromBundle({
+        bundle: modulesBundle,
+        binaryReader: modulesReader,
+        kernel,
+        memory: runtime.memory,
+        subprimsTable: runtime.subprimsTable,
+        microkernel,
+        strict: false,
+      });
+      console.log(`compiled modules installed from bundle ${installed}/${count} (failed ${failed})`);
+    }
     const { installed, count } = await installCompiledModulesFromRegistry({
       kernel,
       memory: runtime.memory,
@@ -185,6 +265,10 @@ if (runStartLisp) {
     console.error(`wasm_ccl_load_image trapped: ${e}`);
     process.exit(3);
   }
+}
+
+if (modulesHandle) {
+  await modulesHandle.close();
 }
 
 if (runToplevel) {
