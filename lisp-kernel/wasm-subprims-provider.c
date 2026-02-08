@@ -44,6 +44,9 @@ LispObj wasm_misc_alloc(TCR *tcr, unsigned subtag, signed_natural count);
 __attribute__((import_module("ccl"), import_name("wasm_call_subprim_fixnum")))
 void wasm_call_subprim_fixnum(LispObj sp_index_fixnum);
 
+__attribute__((import_module("ccl"), import_name("wasm_alloc_cons_bridge")))
+LispObj wasm_alloc_cons_bridge(LispObj car_value, LispObj cdr_value);
+
 void _SPksignalerr(void);
 
 static LispObj wasm_alloc_cons_or_trap(TCR *tcr, LispObj car_value, LispObj cdr_value);
@@ -505,27 +508,13 @@ wasm_call_builtin(TCR *tcr, signed_natural index, signed_natural nargs_count)
 static LispObj
 wasm_alloc_cons_or_trap(TCR *tcr, LispObj car_value, LispObj cdr_value)
 {
-  if (tcr == NULL ||
-      tcr->save_allocptr == NULL ||
-      tcr->save_allocbase == NULL ||
-      tcr->save_allocptr == (void *)VOID_ALLOCPTR ||
-      tcr->save_allocbase == (void *)VOID_ALLOCPTR) {
+  if (tcr == NULL) {
     wasm_subprims_trap();
   }
-
-  BytePtr alloc_ptr = (BytePtr)tcr->save_allocptr;
-  BytePtr alloc_base = (BytePtr)tcr->save_allocbase;
-  BytePtr newptr = alloc_ptr - (signed_natural)dnode_size;
-  if (newptr < alloc_base) {
+  LispObj obj = wasm_alloc_cons_bridge(car_value, cdr_value);
+  if (obj == (LispObj)nil_value) {
     wasm_subprims_trap();
   }
-
-  tcr->save_allocptr = (void *)newptr;
-  LispObj obj = (LispObj)(newptr + fulltag_cons);
-
-  cons *cell = (cons *)ptr_from_lispobj(untag(obj));
-  cell->car = car_value;
-  cell->cdr = cdr_value;
   return obj;
 }
 
@@ -4374,8 +4363,33 @@ _SPksignalerr(void)
     wasm_subprims_trap();
   }
 
+  /*
+   * If ERRDISP is unavailable (or recursively faults while signaling),
+   * avoid non-terminating self-recursion and surface a pending throw
+   * to the host boundary instead.
+   */
+  static int reentering_errdisp = 0;
+  if (reentering_errdisp) {
+    wasm_set_pending_throw(tcr, box_fixnum(1));
+    return;
+  }
+
   LispObj errdisp = wasm_nrs_symbol_lispobj(&nrs_ERRDISP);
+  if (fulltag_of(errdisp) != fulltag_misc || header_subtag(header_of(errdisp)) != subtag_symbol) {
+    wasm_set_pending_throw(tcr, box_fixnum(1));
+    return;
+  }
+
+  lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(untag(errdisp));
+  LispObj fn = rawsym->fcell;
+  if (fn == nrs_UDF.vcell || fulltag_of(fn) != fulltag_misc) {
+    wasm_set_pending_throw(tcr, box_fixnum(1));
+    return;
+  }
+
+  reentering_errdisp = 1;
   wasm_call_lisp_function(tcr, errdisp);
+  reentering_errdisp = 0;
 }
 
 static LispObj

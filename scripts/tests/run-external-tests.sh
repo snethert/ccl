@@ -17,19 +17,25 @@ WEB_UI_ENABLE_BROWSER_TESTS=1 npm --prefix web-ui run test:browser
 
 echo "== indexeddb browser smoke =="
 PORT="${PORT:-5173}"
-node scripts/wasm/idb-smoke-server.mjs &
-SERVER_PID=$!
-trap 'kill "$SERVER_PID" >/dev/null 2>&1 || true' EXIT
+RUN_IDB_SMOKE_SERVER="${RUN_IDB_SMOKE_SERVER:-0}"
+OPEN_IDB_SMOKE_BROWSER="${OPEN_IDB_SMOKE_BROWSER:-0}"
 
-URL="http://127.0.0.1:${PORT}/doc/wasm/js/idb-smoke.html"
-sleep 0.2
-if command -v open >/dev/null 2>&1; then
-  open "$URL"
-elif command -v xdg-open >/dev/null 2>&1; then
-  xdg-open "$URL"
-else
-  echo "Open: $URL"
+if [[ "${RUN_IDB_SMOKE_SERVER}" != "1" ]]; then
+  echo "skipped (set RUN_IDB_SMOKE_SERVER=1 to start idb smoke server)"
+  exit 0
 fi
 
-echo "idb-smoke: press Ctrl-C to stop the server"
-wait "$SERVER_PID"
+PORT="${PORT}" NODE_BIN="${NODE_BIN}" scripts/wasm/idb-smoke-server-control.sh restart
+URL="$(PORT="${PORT}" scripts/wasm/idb-smoke-server-control.sh url)"
+echo "idb-smoke url: ${URL}"
+echo "stop server with: scripts/wasm/idb-smoke-server-control.sh stop"
+
+if [[ "${OPEN_IDB_SMOKE_BROWSER}" == "1" ]]; then
+  if command -v open >/dev/null 2>&1; then
+    open "${URL}"
+  elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "${URL}"
+  else
+    echo "could not auto-open browser; open manually: ${URL}"
+  fi
+fi

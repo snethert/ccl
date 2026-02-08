@@ -170,8 +170,9 @@ node doc/wasm/js/all-smoke.mjs
 To run a single test, invoke it directly. The authoritative list is in
 `doc/wasm/js/all-smoke.mjs`.
 
-These smoke tests are sandbox-safe. External tests (LMDB and IndexedDB) are
-documented in `doc/testing.md`.
+These smoke tests are sandbox-safe. External LMDB/IndexedDB integration tests
+are documented in `doc/testing.md`; default unattended persistence direction is
+the memory-first snapshot backend (see `doc/wasm/persistence-dev-environment.md`).
 
 **Standing rule:** Every smoke test must be standalone and must be added to
 `doc/wasm/js/all-smoke.mjs`. When a new smoke test is created, run:
@@ -367,7 +368,10 @@ python3 scripts/wasm/generate_subprims_artifacts.py
 - Boot image + compiled module bundle can enter `start_lisp` without immediate macro-apply/UDF traps.
 - Real image generation is supported in both host-script and Node-helper
   workflows; host script delegates to the helper on non-WASM runtimes.
-- Strict non-interactive root-image `start_lisp` validation currently times out.
+- Strict non-interactive root-image `start_lisp` validation is passing.
   Run `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`
-  to reproduce the current blocker with deterministic timeout behavior.
+  as a mandatory release gate.
+- Compiled-Lisp UI persistence execution is still blocked by runtime
+  bootstrap/function-binding stabilization; track active work in
+  `doc/wasm/wasm-ui-persistence-problem-tracker.md`.
 - The “no-WASI libc” shims are intentionally minimal (bump `malloc`, no real stdio/formatting).

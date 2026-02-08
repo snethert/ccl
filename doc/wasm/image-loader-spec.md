@@ -141,8 +141,10 @@ Non-interactive stdin preload:
 Current status:
 
 - Minimal-image non-interactive `start_lisp` validation is green.
-- Strict root-image non-interactive `start_lisp` validation still times out
-  (tracked by `start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`).
+- Strict root-image non-interactive `start_lisp` validation is green
+  (`start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`).
+- Remaining persistence-path work is tracked separately and does not change the
+  loader ABI contract in this document.
 
 ## Reference host placement strategy (current)
 

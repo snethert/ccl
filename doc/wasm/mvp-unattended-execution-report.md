@@ -1,63 +1,71 @@
 # WASM MVP Unattended Execution Report
 
-Status: In Progress (RZ0 pass, 2026-02-08)
-Plan: `doc/wasm/mvp-unattended-execution-plan.md`
+Status: In Progress (RZ0.6 + runtime bootstrap closure)  
+Plan: `doc/wasm/mvp-unattended-execution-plan.md`  
+Last updated: 2026-02-08
 
-## Command Summary
+## Summary
 
-- `git status --short`: PASS (captured baseline dirty worktree)
+- Runtime bundle contract unification (v2), root-image manifesting, and loader
+  refactor landed.
+- Memory-first `memory-snapshot` persistence backend decoupling landed for the
+  default unattended path.
+- Remaining MVP blocker is now runtime bootstrap state for compiled-Lisp
+  persistence entries: key function bindings are still unresolved in current
+  image state, causing entry-call hangs in `wasm-ui-persist-smoke`.
+
+## Key command status
+
 - `npm --prefix web-ui test`: PASS
 - `node doc/wasm/js/all-smoke.mjs`: PASS
-- `node doc/wasm/js/wasm-ui-persist-smoke.mjs`: FAIL (compiled module const-pool install error on root image, entry 320)
-- `node doc/wasm/js/load-image.mjs --start-lisp --modules doc/wasm/wasm-runtime-modules.json doc/wasm/root.image`: FAIL before RZ0.2 (legacy runtime bundle format mismatch)
-- `scripts/wasm/compile-wasm-fasls.sh --modules-out doc/wasm/wasm-runtime-modules.json`: PASS
-- `scripts/wasm/build-wasm-boot.sh`: PASS
-- `node doc/wasm/js/make-real-image.mjs --modules doc/wasm/wasm-runtime-modules.json --output doc/wasm/root.image`: PASS
-- `node doc/wasm/js/runtime-modules-manifest-smoke.mjs`: PASS
-- `node doc/wasm/js/root-image-manifest-smoke.mjs`: PASS
-- `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs`: PASS (strict-root check intentionally skipped by default)
-- `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`: FAIL (timeout after 15000ms)
-- `node doc/wasm/js/all-smoke.mjs`: PASS
-- `npm --prefix web-ui test`: PASS
+- `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`: PASS
+- `node doc/wasm/js/wasm-ui-persist-smoke.mjs`: FAIL/HANG on compiled entry
+  execution after module install; active root-cause details are tracked in
+  `doc/wasm/wasm-ui-persistence-problem-tracker.md`.
 
-## Implemented Changes
+## Implemented foundations (already landed)
 
-- Runtime bundle contract unified to v2 on the default build path:
-  - `scripts/wasm/compile-wasm-fasls.sh` now repacks inline output through `scripts/wasm/pack-inline-bundle-v2.mjs`.
-  - Temp inline sidecars are cleaned after pack.
-- Added runtime artifact validation smoke:
+- Runtime module bundle contract:
+  - `ccl-wasm-modules-v2` manifest + `.bin` + `.idx`
+  - emitted by default from `scripts/wasm/compile-wasm-fasls.sh`
+- Runtime module manifest smoke:
   - `doc/wasm/js/runtime-modules-manifest-smoke.mjs`
-  - wired into `doc/wasm/js/all-smoke.mjs`.
-- Added root-image manifest contract:
+- Root-image manifest contract:
   - `doc/wasm/root-image-manifest.schema.json`
-  - `doc/wasm/js/make-real-image.mjs` now writes `<output>.manifest.json` by default (or `--manifest-out`).
-  - `scripts/wasm/make-real-image.lisp` now forwards `--manifest-out` to the Node helper path.
-- Added root-image manifest validation smoke:
+  - `doc/wasm/root.image.manifest.json` generation in `doc/wasm/js/make-real-image.mjs`
+- Root-image manifest smoke:
   - `doc/wasm/js/root-image-manifest-smoke.mjs`
-  - wired into `doc/wasm/js/all-smoke.mjs`.
-- Refactored `doc/wasm/js/load-image.mjs`:
+- Loader contract refactor:
   - explicit `--mode boot-only|start-lisp|run-toplevel`
-  - compatibility aliases `--start-lisp` / `--run`
-  - manifest hash validation (`--manifest`)
-  - strict/partial module policy controls (`--strict-modules`, `--allow-partial-modules`)
-  - non-interactive stdin preload controls (`--stdin-script`, `--stdin-text`, `--close-stdin`)
-  - entry return code assertions (`--expect-rc`).
-- Added hang-proof start-lisp harness:
+  - `--manifest`, `--strict-modules`, `--allow-partial-modules`
+  - scripted stdin controls and return-code checks
+- Hang-proof non-interactive start-lisp harness:
   - `doc/wasm/js/start-lisp-noninteractive-smoke.mjs`
-  - wired into `doc/wasm/js/all-smoke.mjs` with strict-root check opt-in via `--strict-start-lisp-noninteractive`.
-- Browser harness root-image preference landed:
-  - `web-ui/tests/browser/harness.mjs` now attempts `doc/wasm/root.image` first, then falls back to `doc/wasm/minimal.image`.
-- Docs reconciled to current behavior:
-  - `doc/wasm/image-loader-spec.md`
-  - `doc/wasm/build.md`
-  - `doc/wasm/roadmap.md`
-  - `doc/wasm/porting-status.md`.
 
-## Deferred / Remaining
+## Active blocker (current)
 
-1. Strict root-image non-interactive `start_lisp` still blocks:
-   - `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`
-   - Current result: timeout after 15000ms.
-2. Compiled-Lisp UI persistence runtime path is still unstable on root image:
-   - `node doc/wasm/js/wasm-ui-persist-smoke.mjs`
-   - Current result: `const pool install returned NIL for entry 320` (`ccl_generic_entry_320`).
+Compiled-Lisp persistence entries still depend on runtime bootstrap function
+bindings that are not available in current loaded image state
+(for example, unresolved function constants for symbols like
+`COMMON-LISP::CAR`, `CCL::SET-PACKAGE`, `CCL::%FASLOAD`).
+
+Resolution path (in progress):
+
+1. Complete runtime bootstrap sequencing fix (boot image load/reset/install order
+   + entry execution prerequisites).
+2. Finish root-image initialization path so required function cells are defined
+   before persistence entry probes execute.
+3. Re-run `wasm-ui-persist-smoke` under default `memory-snapshot` backend and
+   close hang class in regression gates.
+
+## Next execution gate
+
+Close runtime bootstrap blocker tracked in
+`doc/wasm/wasm-ui-persistence-problem-tracker.md`, then run:
+
+```bash
+npm --prefix web-ui test
+node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive
+CCL_PERSIST_BACKEND=memory-snapshot CCL_PERSIST_SNAPSHOT_FILE=.tmp/persist-smoke.snapshot.json node doc/wasm/js/wasm-ui-persist-smoke.mjs
+node doc/wasm/js/all-smoke.mjs
+```

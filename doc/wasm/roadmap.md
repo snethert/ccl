@@ -14,7 +14,7 @@ separate from the detailed checklists in `porting-status.md`.
 - **Subprims provider:** ✅ Tier‑0 semantics + ABI defined and exercised by compiled modules.
 - **Lisp runtime (Level‑1):** ✅ capability errors + yield path + WASM stream classes + virtual FS policy.
 - **Compiler/backend (WASM):** ⚠️ MVP emission for constants, fixnum ops, calls, multi‑value (2–4 + `values` >4 via VSP push), and local control flow (`if`, `block/return-from`, `tagbody/go`) with compiled-module registry install; `catch`/`throw` routed through subprims; cooperative `unwind-protect` cleanup + closure capture in place with spill/restore validation gates.
-- **Image + real toplevel:** ⚠️ boot image via cross‑xload works; runtime module bundles now ship as v2 manifest+bin+idx; root image now has a hash manifest contract; strict non-interactive root-image `start_lisp` still times out.
+- **Image + real toplevel:** ⚠️ boot image via cross‑xload works; runtime module bundles now ship as v2 manifest+bin+idx; root image has a hash manifest contract; strict non-interactive root-image `start_lisp` gate is passing; compiled-Lisp persistence remains blocked on runtime bootstrap/function-binding closure.
 - **Concurrency model:** ⏸ deferred (single‑threaded baseline first).
 
 ## Roadmap phases
@@ -50,14 +50,15 @@ separate from the detailed checklists in `porting-status.md`.
 **Goal:** Emit real WASM code compatible with the subprims ABI.
 **Status:** ⚠️
 **Remaining:**
-- Finalize compiled-Lisp UI path parity and strict persistence path (currently optional/strict smoke)
+- Finalize compiled-Lisp UI path parity and stabilize persistence through the
+  memory-first snapshot backend default (host backends integration-only).
 
 ### Phase 6 — Image + real toplevel
 **Goal:** Boot a real Lisp image and enter `toplevel-loop`.
 **Status:** ⚠️
 **Remaining:**
 - WASM‑compatible image policy (root image + cloning semantics)
-- Non-interactive validation path for real root-image + `start_lisp` default loader wiring
+- Promotion of strict root-image validation from targeted gate to normal release gate
 
 ### Phase 7 — Concurrency model
 **Goal:** Runner‑based parallelism where available.
@@ -66,9 +67,9 @@ separate from the detailed checklists in `porting-status.md`.
 
 ## Near‑term focus (next 1–2 phases)
 
-1) Resolve strict non-interactive root-image `start_lisp` timeout (`start-lisp-noninteractive-smoke --strict-start-lisp-noninteractive`).
-2) Stabilize compiled-Lisp UI persistence runtime path (current root-image run fails const-pool install for entry 320).
-3) Remove remaining demo/stub fallback assumptions from browser harness wiring.
+1) Close runtime bootstrap/function-binding gap for compiled-Lisp persistence entries on root/minimal image paths.
+2) Stabilize compiled-Lisp UI persistence runtime path on root image under default `memory-snapshot`.
+3) Keep LMDB/IndexedDB as explicit integration lanes and remove silent fallback assumptions from browser harness wiring.
 
 ## Interrupt TODOs (Tracking)
 

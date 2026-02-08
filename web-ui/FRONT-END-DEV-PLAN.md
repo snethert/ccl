@@ -164,7 +164,9 @@ Status note:
 - Implemented Lisp UI snapshot serialization + file persistence via kernel_request streams.
 - Added minimal inspector/debugger window helpers (titles + IDs) suitable for persistence restore.
 - Added WASM UI persistence smoke test (`doc/wasm/js/wasm-ui-persist-smoke.mjs`) with strict-mode execution (`--strict`) for the full runtime path.
-- The default non-strict path intentionally skips to keep sandbox/default smoke deterministic while minimal-image runtime stabilization continues.
+- Current stabilization work pivots default unattended persistence to a
+  memory-first snapshot backend, with LMDB/IndexedDB retained as explicit
+  integration lanes.
 
 Status: Partial (Lisp MVP scaffolding complete; full compiled-Lisp image path pending)
 

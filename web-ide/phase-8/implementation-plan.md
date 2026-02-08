@@ -43,7 +43,7 @@ Transition the system from engineering-complete to release-ready by defining det
 - Runtime bridge, typed command dispatch, debugger, inspector, sessions, and customization are operational.
 
 ## Progress Snapshot
-- M0 `RZ0`: In Progress (runtime bundle + manifest + loader refactor landed; strict root start-lisp and UI persistence blockers remain).
+- M0 `RZ0`: In Progress (runtime bundle + manifest + loader refactor + memory-snapshot persistence decoupling landed; runtime bootstrap/function-binding blocker remains for compiled-Lisp persistence entries).
 - M1 `RZ1`: Planned.
 - M2 `RZ2`: Planned.
 - M3 `RZ3`: Planned.
@@ -75,13 +75,24 @@ real root-image policy plus default non-interactive loader wiring for `start_lis
 3. `scripts/wasm/compile-wasm-fasls.sh` currently emits a runtime bundle that can remain in legacy inline/offset shape, while loader plumbing (`resolveBundleEntries`) expects v2/index semantics.
 4. `doc/wasm/js/make-real-image.mjs` builds usable `root.image`, but does not emit a policy manifest (hash/provenance contract) for default loader validation.
 5. `doc/wasm/image-loader-spec.md` still has open questions for root-image caching/cloning policy and default loader behavior.
+6. Persistence bring-up still leans on host-only backends (LMDB/IndexedDB server/browser paths), creating permission friction for unattended development.
+
+### Code-Grounded Findings (Third Pass, Runtime Bootstrap)
+1. Kernel const-pool install previously rejected emitted forward `cons` references; this defect is now patched in `lisp-kernel/wasm-kernel-stubs.c`.
+2. `wasm-ui-persist-smoke` now advances past const-pool install for probe bodies that emit forward `cons` constants, but hangs in entry execution when required function bindings are unresolved.
+3. Function constants for key bootstrap symbols (`COMMON-LISP::CAR`, `CCL::SET-PACKAGE`, `CCL::%FASLOAD`) still resolve to `UDF` in current runtime image state.
+4. Runtime bootstrap sequencing remains the top blocker for compiled-Lisp persistence stabilization.
 
 ### RZ0 Deliverables
 - Deterministic runtime bundle contract (`ccl-wasm-modules-v2` + `.bin` + `.idx`) for runtime modules.
 - Root-image manifest contract + generator output tied to image/module hashes.
 - Loader mode contract with explicit non-interactive `start_lisp` validation path.
+- Memory-first persistence backend contract: bootstrap from file, run all ops against in-memory IFB-like KV, flush snapshot file on clean exit only when dirty.
+- Default unattended path does not require host-only persistence backends.
 - Smoke coverage that fails fast on hang, partial module install, or manifest mismatch.
 - Updated docs (`build.md`, `image-loader-spec.md`, `roadmap.md`, `porting-status.md`) with no contradictions.
+- Temporary blocker reasoning log maintained in
+  `doc/wasm/wasm-ui-persistence-problem-tracker.md` until closure.
 
 ### RZ0 Sequential Execution Plan (Unattended)
 #### RZ0.1 Baseline and Failure Envelope
@@ -158,15 +169,34 @@ real root-image policy plus default non-interactive loader wiring for `start_lis
 5. Exit criteria:
    - unattended CI cannot deadlock silently in root-image `start_lisp` validation.
 
-#### RZ0.6 Browser Harness and UI Persistence Promotion
-1. Align browser harness bootstrap:
-   - `web-ui/tests/browser/harness.mjs` prefers `doc/wasm/root.image` + runtime bundle manifest, not minimal-image demo path.
-2. Move strict persistence path toward default:
-   - `doc/wasm/js/wasm-ui-persist-smoke.mjs` runs runtime path by default when root-image artifacts are present; explicit skip reason only for missing artifacts.
-3. Gate fallback behavior:
-   - any minimal/demo fallback requires explicit opt-in flag, not silent default.
-4. Exit criteria:
-   - compiled-Lisp UI persistence path is part of normal unattended validation, not optional-only.
+#### RZ0.6 Persistence Backend Decoupling (Memory-First IFB-Style KV)
+1. Define backend contract and runtime selector:
+   - Add explicit backend mode: `memory-snapshot` (default), `lmdb`, `idb`.
+   - Add canonical selector input for harness/smokes (`--persist-backend` and `CCL_PERSIST_BACKEND`).
+   - Define snapshot path input (`--persist-snapshot-file` and `CCL_PERSIST_SNAPSHOT_FILE`).
+2. Implement `memory-snapshot` store in persistence service:
+   - load snapshot file once at startup into an in-memory KV map (IFB-like key/value model).
+   - execute `probe`, `directory`, `open/read/write/seek/truncate`, rename/delete entirely against in-memory state.
+   - preserve existing chunk/metadata semantics so higher layers are backend-agnostic.
+3. Add dirty-tracking and deterministic flush:
+   - set `dirty=true` on any mutating operation that changes logical state.
+   - on process exit (`beforeExit`/`exit`/signal handlers where supported), if `dirty`, write full snapshot to temp path and atomically rename.
+   - if `dirty=false`, skip write and preserve existing snapshot file timestamp/content.
+4. Crash and recovery policy:
+   - crash/kill before flush keeps prior snapshot (no partial writes).
+   - startup reads latest valid snapshot; malformed snapshot triggers explicit error + optional reset flag.
+5. Harness/smoke default migration:
+   - `doc/wasm/js/wasm-ui-persist-smoke.mjs` defaults to `memory-snapshot`.
+   - `web-ui/tests/browser/harness.mjs` defaults to `memory-snapshot` in unattended mode.
+   - LMDB/IDB remain explicit integration modes only.
+6. Test additions:
+   - load existing snapshot -> state visible before first mutation.
+   - mutate -> dirty set -> flush on exit persists state.
+   - no mutation -> no flush/write.
+   - atomic-write guard: interrupted write does not corrupt previous snapshot.
+7. Exit criteria:
+   - compiled-Lisp UI persistence path runs unattended in sandbox-oriented flow without host-only permission requirements.
+   - LMDB/IDB paths are validated separately as integration lanes.
 
 #### RZ0.7 Documentation Reconciliation
 1. Update normative docs:
@@ -188,16 +218,18 @@ real root-image policy plus default non-interactive loader wiring for `start_lis
    - `scripts/wasm/build-wasm-boot.sh`
    - `node doc/wasm/js/make-real-image.mjs --modules doc/wasm/wasm-runtime-modules.json --output doc/wasm/root.image`
    - `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs`
-   - `node doc/wasm/js/wasm-ui-persist-smoke.mjs`
+   - `CCL_PERSIST_BACKEND=memory-snapshot CCL_PERSIST_SNAPSHOT_FILE=.tmp/persist-smoke.snapshot.json node doc/wasm/js/wasm-ui-persist-smoke.mjs`
    - `node doc/wasm/js/all-smoke.mjs`
    - `npm --prefix web-ui test`
+   - `make -f scripts/wasm/persist-host.mk persist-host-lmdb` (integration lane)
 2. Produce final artifacts:
    - updated runtime bundle triplet (`.json`, `.bin`, `.idx`)
    - `root.image` + manifest
+   - persistence snapshot contract doc + fixture snapshot
    - final blocker closure report in `doc/wasm/mvp-unattended-execution-report.md`
 3. Exit criteria:
    - blocker removed from roadmap near-term list
-   - Phase 8 can proceed to RZ1 without runtime boot ambiguity.
+   - Phase 8 can proceed to RZ1 without runtime boot ambiguity or host-permission persistence coupling.
 
 ## Workstreams
 
@@ -285,6 +317,8 @@ Ship with conservative defaults and predictable permission boundaries.
 3. Add tests for denied capability paths and safe failure behavior.
 4. Validate import/export and runtime payload handling against malformed inputs.
 5. Add release checklist items for security-sensitive toggles.
+6. Enforce memory-first persistence default and keep host backends (`lmdb`, `idb`)
+   opt-in only in integration lanes (`doc/wasm/persistence-dev-environment.md`).
 
 ### Deliverables
 - Security hardening policy doc in `web-ide/phase-8/security-hardening.md`.
@@ -418,12 +452,15 @@ Create an objective promotion model from candidate to stable.
 - `scripts/wasm/make-real-image.lisp`
 - `doc/wasm/js/all-smoke.mjs`
 - `doc/wasm/js/wasm-ui-persist-smoke.mjs`
+- `doc/wasm/js/persist-service.mjs`
+- `doc/wasm/js/microkernel.mjs`
 - `web-ui/package.json`
 - `web-ui/tests/phase-8-*.test.mjs`
 - `web-ui/src/runtime-bridge.mjs`
 - `web-ui/src/persistence/serialize.mjs`
 - `web-ui/src/persistence/migrate.mjs`
 - `web-ui/src/quality-gates.mjs`
+- `doc/wasm/persistence-dev-environment.md`
 - `scripts/wasm/*`
 - `doc/wasm/wasm-runtime-modules.json`
 - `web-ide/phase-8/*.md`
@@ -446,6 +483,8 @@ Create an objective promotion model from candidate to stable.
   - Mitigation: define mandatory event fields and support bundle format early.
 - Risk: rollback paths are documented but unproven.
   - Mitigation: require drill-based verification before stable promotion.
+- Risk: flush-on-exit model can lose last mutations on hard crash.
+  - Mitigation: atomic temp+rename snapshot writes, explicit manual flush hook for long-running sessions, and startup stale-snapshot warning telemetry.
 
 ## Decision Gates (Expected)
 1. Release channel policy:

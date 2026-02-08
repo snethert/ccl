@@ -75,8 +75,10 @@ Run all JS smoke tests:
 node doc/wasm/js/all-smoke.mjs
 ```
 
-These smoke tests are sandbox-safe. External tests (LMDB and IndexedDB) are
-listed in `doc/testing.md`.
+These smoke tests are sandbox-safe. External LMDB/IndexedDB integration tests
+are listed in `doc/testing.md`. Default unattended persistence direction is the
+memory-first snapshot backend documented in
+`doc/wasm/persistence-dev-environment.md`.
 
 ## Automation Script
 

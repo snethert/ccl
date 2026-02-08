@@ -12,71 +12,75 @@
 (declaim (special %wasm-compiled-modules *wasm2-next-entry-index*
                   *wasm2-enable-const-pool*))
 
-(defparameter *wasm-ui-functions*
-  '((ccl::wasm-ui-demo
-     (lambda ()
-       0))
-    (ccl::wasm-ui-turn
-     (lambda ()
-       0))
-    (ccl::wasm-ui-poll
-     (lambda ()
-       0))
-    (ccl::wasm-ui-mark-persisted
-     (lambda ()
-       (with-open-file (s "doc/wasm/.wasm-ui-current-state"
-                          :direction :output
-                          :if-exists :supersede
-                          :if-does-not-exist :create)
-         (write 2 :stream s))
-       0))
-    (ccl::wasm-ui-mark-dirty
-     (lambda ()
-       (with-open-file (s "doc/wasm/.wasm-ui-current-state"
-                          :direction :output
-                          :if-exists :supersede
-                          :if-does-not-exist :create)
-         (write 3 :stream s))
-       0))
-    (ccl::wasm-ui-label-state
-     (lambda ()
-       (with-open-file (s "doc/wasm/.wasm-ui-current-state"
-                          :direction :input
-                          :if-does-not-exist nil)
-         (if s
-           (let ((v (read s nil 0)))
-             (if (integerp v) v 0))
-           0))))
-    (ccl::wasm-ui-save
-     (lambda ()
-       (let ((value (with-open-file (s "doc/wasm/.wasm-ui-current-state"
-                                       :direction :input
-                                       :if-does-not-exist nil)
-                      (if s
-                        (let ((v (read s nil 0)))
-                          (if (integerp v) v 0))
-                        0))))
-         (with-open-file (s "doc/wasm/.wasm-ui-snapshot-state"
-                            :direction :output
-                            :if-exists :supersede
-                            :if-does-not-exist :create)
-           (write value :stream s))
-         0)))
-    (ccl::wasm-ui-restore
-     (lambda ()
-       (with-open-file (in "doc/wasm/.wasm-ui-snapshot-state"
-                           :direction :input
-                           :if-does-not-exist nil)
-         (if in
-           (let ((value (let ((v (read in nil 0)))
-                          (if (integerp v) v 0))))
-             (with-open-file (out "doc/wasm/.wasm-ui-current-state"
-                                  :direction :output
-                                  :if-exists :supersede
-                                  :if-does-not-exist :create)
-               (write value :stream out))
-             0)
-           -1))))))
+(defparameter *wasm-ui-function-specs*
+  '((:name ccl::wasm-ui-demo
+     :form (lambda ()
+             (let ((sym 'ccl::*wasm-ui-persist-label-state*))
+               (unless (and (boundp sym)
+                            (integerp (symbol-value sym))
+                            (<= 1 (symbol-value sym) 4))
+                 (set sym 1)))
+             0))
+    (:name ccl::wasm-ui-turn
+     :form (lambda ()
+             (let ((sym 'ccl::*wasm-ui-persist-label-state*))
+               (unless (and (boundp sym)
+                            (integerp (symbol-value sym))
+                            (<= 1 (symbol-value sym) 4))
+                 (set sym 1)))
+             0))
+    (:name ccl::wasm-ui-poll
+     :form (lambda ()
+             0))
+    (:name ccl::wasm-ui-mark-persisted
+     :form (lambda ()
+             (set 'ccl::*wasm-ui-persist-label-state* 2)
+             0))
+    (:name ccl::wasm-ui-mark-dirty
+     :form (lambda ()
+             (set 'ccl::*wasm-ui-persist-label-state* 3)
+             0))
+    (:name ccl::wasm-ui-label-state
+     :form (lambda ()
+             (let ((sym 'ccl::*wasm-ui-persist-label-state*))
+               (if (and (boundp sym)
+                        (integerp (symbol-value sym))
+                        (<= 1 (symbol-value sym) 4))
+                   (symbol-value sym)
+                   1))))
+    (:name ccl::wasm-ui-save
+     :form (lambda ()
+             (let* ((sym 'ccl::*wasm-ui-persist-label-state*)
+                    (state (if (and (boundp sym)
+                                    (integerp (symbol-value sym))
+                                    (<= 1 (symbol-value sym) 4))
+                               (symbol-value sym)
+                               1)))
+               (handler-case
+                   (with-open-file (out "/ui/wasm-ui-state.lisp"
+                                        :direction :output
+                                        :if-exists :supersede
+                                        :if-does-not-exist :create)
+                     (let ((*print-readably* t)
+                           (*print-circle* nil)
+                           (*print-length* nil)
+                           (*print-level* nil))
+                       (prin1 state out))
+                     0)
+                 (error () -1)))))
+    (:name ccl::wasm-ui-restore
+     :form (lambda ()
+             (handler-case
+                 (with-open-file (in "/ui/wasm-ui-state.lisp" :direction :input)
+                   (let ((*read-eval* nil))
+                     (let ((state (read in nil nil)))
+                       (if (and (integerp state) (<= 1 state 4))
+                           (progn
+                             (set 'ccl::*wasm-ui-persist-label-state* state)
+                             0)
+                           -1))))
+               (error () -1)))))
+  )
 
 (defun parse-argv (argv)
   (let ((out nil)
@@ -136,36 +140,39 @@
           (ash raw (- target-shift)))))))
 
 (defun function-lambda-form (sym)
+  (unless (and sym (symbolp sym) (fboundp sym))
+    (error "Source function is not fbound: ~s" sym))
   (multiple-value-bind (form _closurep _name)
       (function-lambda-expression (symbol-function sym))
     (declare (ignore _closurep _name))
+    (unless form
+      (error "Missing lambda form for source function: ~s" sym))
     form))
 
-(defun compile-ui-functions ()
-  (setf %wasm-compiled-modules% nil)
-  (when (boundp '*wasm2-next-entry-index*)
-    (setf *wasm2-next-entry-index* 320))
+(defun compile-ui-functions (&key (reset-modules t))
+  (when reset-modules
+    (setf %wasm-compiled-modules% nil)
+    (when (boundp '*wasm2-next-entry-index*)
+      (setf *wasm2-next-entry-index* 320)))
   (let* ((backend (find-backend :wasm32))
          (*target-ftd* (or (and backend (backend-target-foreign-type-data backend))
                            *target-ftd*)))
-    (labels ((compile-entries (entries)
-               (let ((results nil))
-                 (dolist (entry entries)
-                   (destructuring-bind (name lambda-form) entry
-                     (let ((resolved-form
-                            (if (fboundp name)
-                              (or (function-lambda-form name) lambda-form)
-                              lambda-form)))
-                       (multiple-value-bind (fn warnings)
-                           (compile-named-function resolved-form :name name :target :wasm32)
-                         (declare (ignore warnings))
-                         (push (list :name (symbol-name name)
-                                     :entry-index (function-entry-index fn))
-                               results)))))
-                 (nreverse results))))
-      (let ((*wasm2-enable-const-pool* t))
-        (declare (special *wasm2-enable-const-pool*))
-        (compile-entries *wasm-ui-functions*)))))
+    (let ((*wasm2-enable-const-pool* t)
+          (results nil))
+      (declare (special *wasm2-enable-const-pool*))
+      (dolist (entry *wasm-ui-function-specs* (nreverse results))
+        (destructuring-bind (&key name source form) entry
+          (unless name
+            (error "WASM UI function spec missing :name: ~s" entry))
+          (let ((lambda-form (or form (and source (function-lambda-form source)))))
+            (unless lambda-form
+              (error "WASM UI function spec missing :form/:source: ~s" entry))
+            (multiple-value-bind (fn warnings)
+                (compile-named-function lambda-form :name name :target :wasm32)
+              (declare (ignore warnings))
+              (push (list :name (symbol-name name)
+                          :entry-index (function-entry-index fn))
+                    results))))))))
 
 (defun repo-root-from-script ()
   (let* ((script (or *load-truename*
@@ -244,7 +251,7 @@
   (let* ((argv (parse-argv ccl:*command-line-argument-list*))
          (output (or (cdr (assoc :output argv))
                      (namestring (merge-pathnames "doc/wasm/wasm-ui-modules.json")))))
-    (let* ((functions (compile-ui-functions))
+    (let* ((functions (compile-ui-functions :reset-modules t))
            (modules (sorted-compiled-modules)))
       (write-module-bundle output functions modules)
       (format t "Wrote ~d modules to ~a~%" (length modules) output)))

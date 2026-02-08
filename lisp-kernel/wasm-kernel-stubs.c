@@ -1641,6 +1641,10 @@ wasm_return_fixnum_lognot(void)
 static LispObj
 wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natural count, int preserve_mv)
 {
+  static const char msg_enter[] = "WASM wasm_funcall_common: enter\n";
+  static const char msg_call[] = "WASM wasm_funcall_common: call subprim\n";
+  static const char msg_exit[] = "WASM wasm_funcall_common: return\n";
+  wasm_host_log(msg_enter, (unsigned)(sizeof(msg_enter) - 1));
   if (tcr == NULL) {
     return lisp_nil;
   }
@@ -1648,13 +1652,17 @@ wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natu
     return lisp_nil;
   }
 
-  LispObj *saved_vsp = tcr->save_vsp;
+  int in_lisp = (tcr->valence == TCR_STATE_LISP);
+  LispObj *saved_vsp = in_lisp ? (LispObj *)tcr->wasm_gprs[vsp] : tcr->save_vsp;
   if (saved_vsp == NULL) {
     return lisp_nil;
   }
 
-  natural old_last_lisp_frame = wasm_enter_lisp_frame(tcr, 0, 0, (LispObj)saved_vsp);
-  tcr->valence = TCR_STATE_LISP;
+  natural old_last_lisp_frame = 0;
+  if (!in_lisp) {
+    old_last_lisp_frame = wasm_enter_lisp_frame(tcr, 0, 0, (LispObj)saved_vsp);
+    tcr->valence = TCR_STATE_LISP;
+  }
   tcr->wasm_pending_throw = 0;
 
   LispObj *vsp_ptr = saved_vsp;
@@ -1667,12 +1675,15 @@ wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natu
   tcr->wasm_gprs[nfn] = fn_value;
   tcr->wasm_gprs[Rfn] = fn_value;
 
+  wasm_host_log(msg_call, (unsigned)(sizeof(msg_call) - 1));
   wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_FUNCALL_INDEX));
 
   LispObj result = tcr->wasm_gprs[arg_z];
   if (tcr->wasm_pending_throw) {
-    tcr->valence = TCR_STATE_FOREIGN;
-    wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
+    if (!in_lisp) {
+      tcr->valence = TCR_STATE_FOREIGN;
+      wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
+    }
     return result;
   }
 
@@ -1680,9 +1691,9 @@ wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natu
   signed_natural value_count = (tag_of(raw_nargs) == tag_fixnum) ? unbox_fixnum(raw_nargs) : 1;
 
   if (preserve_mv && value_count > 1) {
-    LispObj *vsp_ptr = (LispObj *)tcr->wasm_gprs[vsp];
-    if (vsp_ptr != NULL) {
-      tcr->save_vsp = vsp_ptr;
+    LispObj *mv_vsp = (LispObj *)tcr->wasm_gprs[vsp];
+    if (mv_vsp != NULL) {
+      tcr->save_vsp = mv_vsp;
     } else {
       tcr->save_vsp = saved_vsp;
       tcr->wasm_gprs[vsp] = (LispObj)saved_vsp;
@@ -1695,9 +1706,12 @@ wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natu
       tcr->wasm_gprs[nargs] = box_fixnum(1);
     }
   }
-  tcr->valence = TCR_STATE_FOREIGN;
-  wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
+  if (!in_lisp) {
+    tcr->valence = TCR_STATE_FOREIGN;
+    wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
+  }
 
+  wasm_host_log(msg_exit, (unsigned)(sizeof(msg_exit) - 1));
   return result;
 }
 
@@ -2731,11 +2745,11 @@ wasm_const_pool_make_base_string(TCR *tcr, const uint8_t *bytes, uint32_t len)
 static LispObj
 wasm_alloc_cons(TCR *tcr, LispObj car_value, LispObj cdr_value)
 {
-  if (tcr == NULL ||
-      tcr->save_allocptr == NULL ||
-      tcr->save_allocbase == NULL ||
-      tcr->save_allocptr == (void *)VOID_ALLOCPTR ||
-      tcr->save_allocbase == (void *)VOID_ALLOCPTR) {
+  if (tcr == NULL) {
+    return lisp_nil;
+  }
+
+  if (!wasm_reserve_heap_segment(tcr, (size_t)dnode_size)) {
     return lisp_nil;
   }
 
@@ -2753,6 +2767,14 @@ wasm_alloc_cons(TCR *tcr, LispObj car_value, LispObj cdr_value)
   cell->car = car_value;
   cell->cdr = cdr_value;
   return obj;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_alloc_cons_bridge")))
+LispObj
+wasm_alloc_cons_bridge(LispObj car_value, LispObj cdr_value)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  return wasm_alloc_cons(tcr, car_value, cdr_value);
 }
 
 static LispObj
@@ -2954,6 +2976,22 @@ wasm_const_pool_register_package(TCR *tcr, LispObj pkg_obj)
   return pkg_obj;
 }
 
+static void
+wasm_log_const_pool_fallback(const char *prefix,
+                             unsigned prefix_len,
+                             const uint8_t *bytes,
+                             uint32_t len)
+{
+  static const char newline[] = "\n";
+  if (prefix && prefix_len) {
+    wasm_host_log(prefix, prefix_len);
+  }
+  if (bytes && len) {
+    wasm_host_log((const char *)bytes, (unsigned)len);
+  }
+  wasm_host_log(newline, 1);
+}
+
 static LispObj
 wasm_const_pool_ensure_package(TCR *tcr, const uint8_t *bytes, uint32_t len)
 {
@@ -2967,6 +3005,14 @@ wasm_const_pool_ensure_package(TCR *tcr, const uint8_t *bytes, uint32_t len)
   }
   if (tcr == NULL) {
     return lisp_nil;
+  }
+
+  {
+    static const char msg_create_pkg[] = "WASM const-pool: creating package fallback: ";
+    wasm_log_const_pool_fallback(msg_create_pkg,
+                                 (unsigned)(sizeof(msg_create_pkg) - 1),
+                                 bytes,
+                                 len);
   }
 
   LispObj created = wasm_const_pool_make_package(tcr, bytes, len);
@@ -3033,6 +3079,14 @@ wasm_const_pool_make_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name_l
 {
   if (tcr == NULL || !name_bytes || name_len == 0) {
     return (LispObj)0;
+  }
+
+  {
+    static const char msg_make_sym[] = "WASM const-pool: creating symbol fallback: ";
+    wasm_log_const_pool_fallback(msg_make_sym,
+                                 (unsigned)(sizeof(msg_make_sym) - 1),
+                                 name_bytes,
+                                 name_len);
   }
 
   LispObj pname = wasm_const_pool_make_base_string(tcr, name_bytes, name_len);
@@ -3190,6 +3244,18 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
     return lisp_nil;
   }
   LispObj *pool_data = (LispObj *)((BytePtr)pool + misc_data_offset);
+  uint8_t *cons_patch_needed = (count > 0)
+    ? (uint8_t *)__builtin_alloca((size_t)count)
+    : NULL;
+  uint32_t *cons_patch_car_index = (count > 0)
+    ? (uint32_t *)__builtin_alloca(sizeof(uint32_t) * (size_t)count)
+    : NULL;
+  uint32_t *cons_patch_cdr_index = (count > 0)
+    ? (uint32_t *)__builtin_alloca(sizeof(uint32_t) * (size_t)count)
+    : NULL;
+  if (count > 0) {
+    memset(cons_patch_needed, 0, (size_t)count);
+  }
 
   for (uint32_t i = 0; i < count; i++) {
     uint32_t tag = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
@@ -3302,6 +3368,7 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
           return lisp_nil;
         }
         LispObj pkg = (LispObj)0;
+        int pkg_missing = 0;
         if (pkg_len > 0 && pkg_bytes) {
           if (pkg_len == 7 &&
               pkg_bytes[0] == 'K' && pkg_bytes[1] == 'E' && pkg_bytes[2] == 'Y' &&
@@ -3309,15 +3376,26 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
               pkg_bytes[6] == 'D') {
             pkg = nrs_KEYWORD_PACKAGE.vcell;
           } else {
+            LispObj found = wasm_find_package_named_bytes(pkg_bytes, pkg_len);
+            if (found != lisp_nil) {
+              pkg = found;
+            } else {
+              pkg_missing = 1;
+            }
+          }
+        }
+        LispObj sym = wasm_find_symbol_named_bytes(name_bytes, name_len, pkg);
+        if (!sym && pkg_missing) {
+          sym = wasm_find_symbol_named_bytes(name_bytes, name_len, (LispObj)0);
+        }
+        if (!sym) {
+          if (pkg_missing) {
             LispObj found = wasm_const_pool_ensure_package(tcr, pkg_bytes, pkg_len);
             if (found == lisp_nil) {
               return lisp_nil;
             }
             pkg = found;
           }
-        }
-        LispObj sym = wasm_find_symbol_named_bytes(name_bytes, name_len, pkg);
-        if (!sym) {
           sym = wasm_const_pool_intern_symbol(tcr, name_bytes, name_len, pkg);
           if (!sym) {
             sym = wasm_const_pool_find_symbol_in_pools(name_bytes, name_len, pkg);
@@ -3374,6 +3452,7 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
           return lisp_nil;
         }
         LispObj pkg = (LispObj)0;
+        int pkg_missing = 0;
         if (pkg_len > 0 && pkg_bytes) {
           if (pkg_len == 7 &&
               pkg_bytes[0] == 'K' && pkg_bytes[1] == 'E' && pkg_bytes[2] == 'Y' &&
@@ -3381,15 +3460,26 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
               pkg_bytes[6] == 'D') {
             pkg = nrs_KEYWORD_PACKAGE.vcell;
           } else {
+            LispObj found = wasm_find_package_named_bytes(pkg_bytes, pkg_len);
+            if (found != lisp_nil) {
+              pkg = found;
+            } else {
+              pkg_missing = 1;
+            }
+          }
+        }
+        LispObj sym = wasm_find_symbol_named_bytes(name_bytes, name_len, pkg);
+        if (!sym && pkg_missing) {
+          sym = wasm_find_symbol_named_bytes(name_bytes, name_len, (LispObj)0);
+        }
+        if (!sym) {
+          if (pkg_missing) {
             LispObj found = wasm_const_pool_ensure_package(tcr, pkg_bytes, pkg_len);
             if (found == lisp_nil) {
               return lisp_nil;
             }
             pkg = found;
           }
-        }
-        LispObj sym = wasm_find_symbol_named_bytes(name_bytes, name_len, pkg);
-        if (!sym) {
           sym = wasm_const_pool_intern_symbol(tcr, name_bytes, name_len, pkg);
           if (!sym) {
             return lisp_nil;
@@ -3476,18 +3566,42 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
       case 8: { /* cons */
         uint32_t car_idx = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
         uint32_t cdr_idx = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
-        if (!ok || car_idx >= i || cdr_idx >= i) {
+        if (!ok || car_idx >= count || cdr_idx >= count) {
           return lisp_nil;
         }
-        LispObj cell = wasm_alloc_cons(tcr, pool_data[car_idx], pool_data[cdr_idx]);
+        LispObj cell = wasm_alloc_cons(tcr, lisp_nil, lisp_nil);
         if (cell == lisp_nil) {
           return lisp_nil;
+        }
+        if (car_idx < i && cdr_idx < i) {
+          cons *raw = (cons *)ptr_from_lispobj(untag(cell));
+          raw->car = pool_data[car_idx];
+          raw->cdr = pool_data[cdr_idx];
+        } else {
+          cons_patch_needed[i] = 1u;
+          cons_patch_car_index[i] = car_idx;
+          cons_patch_cdr_index[i] = cdr_idx;
         }
         pool_data[i] = cell;
         break;
       }
       default:
         return lisp_nil;
+    }
+  }
+
+  if (count > 0) {
+    for (uint32_t i = 0; i < count; i++) {
+      if (!cons_patch_needed[i]) {
+        continue;
+      }
+      LispObj cell = pool_data[i];
+      if (fulltag_of(cell) != fulltag_cons) {
+        return lisp_nil;
+      }
+      cons *raw = (cons *)ptr_from_lispobj(untag(cell));
+      raw->car = pool_data[cons_patch_car_index[i]];
+      raw->cdr = pool_data[cons_patch_cdr_index[i]];
     }
   }
 
@@ -3559,6 +3673,33 @@ wasm_get_compiled_module_registry(void)
   extern LispObj lisp_nil;
   LispObj reg = nrs_WASM_COMPILED_MODULES.vcell;
   return reg ? reg : lisp_nil;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_debug_all_packages_raw")))
+LispObj
+wasm_debug_all_packages_raw(void)
+{
+  return nrs_ALL_PACKAGES.vcell;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_debug_find_package_common_lisp_raw")))
+LispObj
+wasm_debug_find_package_common_lisp_raw(void)
+{
+  static const uint8_t cl_pkg_name[] = {
+    'C', 'O', 'M', 'M', 'O', 'N', '-', 'L', 'I', 'S', 'P'
+  };
+  return wasm_find_package_named_bytes(cl_pkg_name, (uint32_t)sizeof(cl_pkg_name));
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_debug_find_symbol_identity_raw")))
+LispObj
+wasm_debug_find_symbol_identity_raw(void)
+{
+  static const uint8_t id_name[] = {
+    'I', 'D', 'E', 'N', 'T', 'I', 'T', 'Y'
+  };
+  return wasm_find_symbol_named_bytes(id_name, (uint32_t)sizeof(id_name), (LispObj)0);
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_reset_root_image_runtime_state")))

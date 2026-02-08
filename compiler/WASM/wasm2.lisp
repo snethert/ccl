@@ -4506,6 +4506,8 @@
 (defparameter *wasm2-no-spill-subprim-symbols*
   '(.SPthrow
     .SPmkcatch1v
+    .SPmkcatchmv
+    .SPnthrowvalues
     .SPnthrow1value
     .SPsave-values
     .SPadd-values

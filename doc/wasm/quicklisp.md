@@ -23,7 +23,8 @@ and update itself by default.
 
 **Conditional**
 - `:net/http` when network is allowed
-- `:persist/store` when IndexedDB persistence is enabled
+- `:persist/store` when persisted storage is enabled (memory-snapshot default,
+  with optional IndexedDB/LMDB integration lanes)
 
 **Behavior**
 - If `:net/http` is present, Quicklisp updates and downloads are allowed by
@@ -55,9 +56,14 @@ appropriate `:capability` key and operation name.
 - Backing store is a map: path → `{bytes, mtime, mode, type, size}`.
 - Lost on page reload.
 
-**Phase 2: IndexedDB persistence**
-- Same VFS API; swap the backing store.
+**Phase 2: Memory-snapshot persistence (default)**
+- Same VFS API; load snapshot file into memory at startup.
+- Rewrite snapshot on exit only when dirty.
 - Use a minimal metadata index to implement `DIRECTORY` queries.
+
+**Phase 3: Integration stores (optional)**
+- IndexedDB/LMDB/OPFS backends behind explicit capability/profile selection.
+- Keep behavior/API parity with memory-snapshot backend.
 
 ## Overlay layout
 

@@ -1161,7 +1161,11 @@ async function run() {
         memoryInitialPages: 256,
         subprimsTableInitial: 256
       });
-      const wasmMicrokernel = createMicrokernel({ memory: runtime.memory, uiService: wasmUiBridge });
+      const wasmMicrokernel = createMicrokernel({
+        memory: runtime.memory,
+        uiService: wasmUiBridge,
+        persistence: { backend: "memory-snapshot" }
+      });
 
       const kernelBytes = await loadBytes("/doc/wasm/js/wasmcl.wasm");
       const kernel = await instantiateWasm(

@@ -1,6 +1,7 @@
 /*
  * Persistence service (minimal VFS + chunk store) for the JS microkernel.
- * In-memory backend plus optional IndexedDB or LMDB-backed stores.
+ * In-memory backend plus memory-snapshot default persistence and optional
+ * IndexedDB/LMDB-backed integration stores.
  */
 
 export const DEFAULT_CHUNK_SIZE = 256 * 1024;
@@ -735,6 +736,198 @@ export function createPersistenceService({ errno, now = () => Date.now(), chunkS
 
 export function createInMemoryPersistenceStore(options = {}) {
   return createInMemoryStore(options);
+}
+
+function encodeBase64(bytes) {
+  const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  if (typeof Buffer !== "undefined" && Buffer.from) {
+    return Buffer.from(data).toString("base64");
+  }
+  let binary = "";
+  for (let i = 0; i < data.length; i++) binary += String.fromCharCode(data[i]);
+  if (typeof btoa === "function") return btoa(binary);
+  throw new Error("base64 encoder is not available");
+}
+
+function decodeBase64(text) {
+  if (typeof text !== "string") return new Uint8Array(0);
+  if (typeof Buffer !== "undefined" && Buffer.from) {
+    return new Uint8Array(Buffer.from(text, "base64"));
+  }
+  if (typeof atob === "function") {
+    const binary = atob(text);
+    const out = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i) & 0xff;
+    return out;
+  }
+  throw new Error("base64 decoder is not available");
+}
+
+function snapshotDirname(filePath) {
+  if (typeof filePath !== "string" || filePath.length === 0) return ".";
+  const slash = Math.max(filePath.lastIndexOf("/"), filePath.lastIndexOf("\\"));
+  if (slash < 0) return ".";
+  if (slash === 0) return filePath[0];
+  return filePath.slice(0, slash);
+}
+
+function loadSnapshotStore(store, snapshot) {
+  if (!snapshot || typeof snapshot !== "object") {
+    throw new Error("invalid snapshot payload");
+  }
+  if (snapshot.format !== "ccl-persist-snapshot-v1") {
+    throw new Error(`unsupported snapshot format: ${String(snapshot.format)}`);
+  }
+  if (typeof snapshot.chunkSize === "number" && Number.isFinite(snapshot.chunkSize) && snapshot.chunkSize > 0) {
+    store.chunkSize = snapshot.chunkSize >>> 0;
+  }
+  if (typeof snapshot.nextChunkId === "number" && Number.isFinite(snapshot.nextChunkId) && snapshot.nextChunkId > 0) {
+    store.nextChunkId = snapshot.nextChunkId >>> 0;
+  }
+
+  store.meta.clear();
+  store.chunks.clear();
+
+  const metaEntries = Array.isArray(snapshot.meta) ? snapshot.meta : [];
+  for (const entry of metaEntries) {
+    if (!Array.isArray(entry) || entry.length !== 2) continue;
+    const key = String(entry[0]);
+    const value = entry[1];
+    if (value && typeof value === "object") {
+      store.meta.set(key, value);
+    }
+  }
+
+  const chunkEntries = Array.isArray(snapshot.chunks) ? snapshot.chunks : [];
+  for (const entry of chunkEntries) {
+    if (!Array.isArray(entry) || entry.length !== 2) continue;
+    const chunkId = String(entry[0]);
+    const encoded = entry[1];
+    store.chunks.set(chunkId, decodeBase64(encoded));
+  }
+
+  let maxChunkId = store.nextChunkId;
+  for (const key of store.chunks.keys()) {
+    if (!String(key).startsWith("c")) continue;
+    const num = parseInt(String(key).slice(1), 10);
+    if (Number.isFinite(num)) maxChunkId = Math.max(maxChunkId, num + 1);
+  }
+  store.nextChunkId = maxChunkId;
+}
+
+function createSnapshotPayload(store) {
+  const sortedMeta = Array.from(store.meta.entries())
+    .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+  const sortedChunks = Array.from(store.chunks.entries())
+    .sort((a, b) => String(a[0]).localeCompare(String(b[0])))
+    .map(([key, bytes]) => [String(key), encodeBase64(bytes)]);
+  return {
+    format: "ccl-persist-snapshot-v1",
+    version: 1,
+    chunkSize: store.chunkSize >>> 0,
+    nextChunkId: store.nextChunkId >>> 0,
+    meta: sortedMeta,
+    chunks: sortedChunks,
+  };
+}
+
+export function createMemorySnapshotPersistenceStore({
+  snapshotFile = null,
+  fsModule = null,
+  chunkSize = DEFAULT_CHUNK_SIZE,
+  now = () => Date.now(),
+  autoFlushOnExit = true,
+  resetOnCorrupt = false,
+} = {}) {
+  const store = createInMemoryStore({ chunkSize, now, readonly: false });
+  const hasSnapshotFile = typeof snapshotFile === "string" && snapshotFile.length > 0;
+  const fsApi = fsModule && typeof fsModule.readFileSync === "function" ? fsModule : null;
+  let dirty = false;
+  let closed = false;
+  let listenersInstalled = false;
+
+  if (hasSnapshotFile && fsApi) {
+    try {
+      const raw = fsApi.readFileSync(snapshotFile, "utf8");
+      const parsed = JSON.parse(raw);
+      loadSnapshotStore(store, parsed);
+    } catch (err) {
+      const missingFile = err?.code === "ENOENT";
+      if (!missingFile && !resetOnCorrupt) {
+        throw new Error(`createMemorySnapshotPersistenceStore: failed to read snapshot ${snapshotFile}: ${err?.message ?? err}`);
+      }
+    }
+  }
+
+  function markDirty() {
+    dirty = true;
+  }
+
+  function flushSync() {
+    if (!dirty) return false;
+    if (!hasSnapshotFile || !fsApi) return false;
+    const payload = createSnapshotPayload(store);
+    const out = JSON.stringify(payload, null, 2);
+    const dir = snapshotDirname(snapshotFile);
+    const pid = typeof process !== "undefined" && Number.isFinite(process?.pid) ? process.pid : 0;
+    const tmpPath = `${snapshotFile}.tmp-${pid}-${Date.now()}`;
+    if (typeof fsApi.mkdirSync === "function" && dir && dir !== ".") {
+      fsApi.mkdirSync(dir, { recursive: true });
+    }
+    fsApi.writeFileSync(tmpPath, `${out}\n`, "utf8");
+    fsApi.renameSync(tmpPath, snapshotFile);
+    dirty = false;
+    return true;
+  }
+
+  function flushOnExit() {
+    try {
+      flushSync();
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("persist-service: snapshot flush on exit failed", err?.message ?? err);
+    }
+  }
+
+  function removeExitListeners() {
+    if (!listenersInstalled) return;
+    listenersInstalled = false;
+    if (typeof process !== "undefined" && typeof process.off === "function") {
+      process.off("beforeExit", flushOnExit);
+      process.off("exit", flushOnExit);
+    } else if (typeof process !== "undefined" && typeof process.removeListener === "function") {
+      process.removeListener("beforeExit", flushOnExit);
+      process.removeListener("exit", flushOnExit);
+    }
+  }
+
+  if (autoFlushOnExit && hasSnapshotFile && fsApi &&
+      typeof process !== "undefined" && typeof process.on === "function") {
+    process.on("beforeExit", flushOnExit);
+    process.on("exit", flushOnExit);
+    listenersInstalled = true;
+  }
+
+  store.persist = {
+    putMeta: markDirty,
+    deleteMeta: markDirty,
+    putChunk: markDirty,
+    deleteChunk: markDirty,
+    setManifest: markDirty,
+    includeMetaKeys: true,
+    flush: () => flushSync(),
+    isDirty: () => dirty,
+    close: () => {
+      if (!closed) {
+        flushSync();
+        removeExitListeners();
+        closed = true;
+      }
+      return Promise.resolve();
+    },
+  };
+
+  return store;
 }
 
 function decodeMaybeString(value) {

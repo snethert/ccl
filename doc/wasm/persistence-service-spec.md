@@ -4,11 +4,11 @@ Status: Draft
 
 ## Scope
 
-This document specifies a persistence service for the JS microkernel that replaces
-the current in-memory map of blobs with a durable, chunked storage layer and a
-minimal directory index. The scope is intentionally narrow: provide only the
-metadata and directory behavior required by ASDF and Quicklisp, while remaining
-capability-gated and browser-appropriate.
+This document specifies a persistence service for the JS microkernel that uses a
+memory-first runtime store with snapshot-file bootstrap/flush, plus optional
+host-backed integration stores. The scope is intentionally narrow: provide only
+the metadata and directory behavior required by ASDF and Quicklisp, while
+remaining capability-gated and browser-appropriate.
 
 This spec complements:
 - doc/wasm/capability-matrix.md
@@ -18,8 +18,8 @@ This spec complements:
 
 ## Goals
 
-- Provide a capability-gated persistence service supporting both ephemeral and
-  durable backends.
+- Provide a capability-gated persistence service with a memory-first default
+  backend and optional durable integration backends.
 - Store file data as chunks to avoid large monolithic values and to permit
   efficient range reads.
 - Maintain a minimal metadata index to answer DIRECTORY, PROBE-FILE, and
@@ -37,7 +37,8 @@ This spec complements:
 ## Capability Integration
 
 - :persist/ephemeral enables in-memory storage with identical API behavior.
-- :persist/store enables durable storage (IndexedDB or OPFS-backed).
+- :persist/store enables persisted storage via snapshot-file backend (default)
+  and optional host-backed integrations (IndexedDB/LMDB/OPFS-style).
 - :fs/virtual enables pathname resolution, directory queries, and file metadata.
 
 When a required capability is absent, operations must signal
@@ -45,15 +46,19 @@ CAPABILITY-UNAVAILABLE with :capability and :operation keys.
 
 ## Layering Model
 
-1. Chunked Blob Store
-   - Stores raw byte chunks keyed by an internal chunk id.
-   - Backend can be in-memory (ephemeral) or IndexedDB (durable).
+1. Snapshot Bootstrap/Flush Layer
+   - Loads snapshot bytes into memory at startup.
+   - Flushes full snapshot atomically on exit when dirty.
 
-2. Minimal VFS Metadata Index
+2. Chunked Blob Store
+   - Stores raw byte chunks keyed by an internal chunk id.
+   - Runtime operations execute against in-memory state.
+
+3. Minimal VFS Metadata Index
    - Maps normalized paths to file or directory metadata.
    - References chunk ids for file data.
 
-3. Mount and Overlay Resolution
+4. Mount and Overlay Resolution
    - Read-only mounts for preloaded dist content.
    - Writable overlay for Quicklisp caches and downloads.
    - Resolution order: writable overlay, then read-only mounts.
@@ -327,6 +332,8 @@ STREAM_OPEN returns a stream SID on success or a negative errno on failure.
 - delete_file removes metadata and schedules chunks for GC.
 - If a crash occurs during a staged write, incomplete staging entries must be
   removed on next startup.
+- Snapshot flush must use temp-file + atomic rename semantics so prior snapshot
+  remains valid after interrupted writes.
 
 ## Garbage Collection
 
@@ -341,7 +348,14 @@ STREAM_OPEN returns a stream SID on success or a negative errno on failure.
 - In-memory maps for metadata and chunk data.
 - Same API and error behavior as persistent backend.
 
-### Persistent backend (IndexedDB preferred)
+### Default persisted backend (memory-snapshot)
+
+- Startup: load snapshot file into in-memory metadata/chunk maps.
+- Runtime: all reads/writes operate on in-memory state only.
+- Flush: on clean exit and dirty state, write full snapshot atomically.
+- Clean run with no mutations must not rewrite snapshot file.
+
+### Integration persistent backends (optional)
 
 - Object stores:
   - files: metadata keyed by normalized path
@@ -387,14 +401,16 @@ STREAM_OPEN returns a stream SID on success or a negative errno on failure.
 16. [ ] Add STREAM_OPEN FILE kind and mode flags (READ/WRITE/CREATE/TRUNCATE/APPEND).
 17. [ ] Implement file-backed stream endpoint with position tracking and mode enforcement.
 18. [ ] Add in-memory backend (ephemeral) using maps for metadata and chunks.
-19. [ ] Add persistent backend (IndexedDB or OPFS) with transactional updates.
-20. [ ] Add startup recovery for incomplete staged writes.
-21. [ ] Add chunk GC to delete unreferenced chunks.
-22. [ ] Add JS-side validation harness for create/read/rename/delete and directory ops.
+19. [ ] Add default memory-snapshot persisted backend (file bootstrap + dirty
+    atomic flush on exit).
+20. [ ] Keep IndexedDB/LMDB/OPFS-style stores as optional integration backends.
+21. [ ] Add startup recovery for incomplete staged writes.
+22. [ ] Add chunk GC to delete unreferenced chunks.
+23. [ ] Add JS-side validation harness for create/read/rename/delete and directory ops.
 
 ## Open Questions
 
-- What default chunk_size is optimal for IDB in target browsers?
+- What default chunk_size is optimal across snapshot-file and IDB backends?
 - Should we expose a fast range-read opcode to avoid per-chunk stream overhead?
 - Should a read-only blob mount participate in DIRECTORY results by default?
 - Do we need a per-world namespace or a shared global store keyed by workspace?

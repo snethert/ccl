@@ -109,6 +109,15 @@ if [ -n "$MODULES_DEBUG_OUT" ]; then
   SCRIPT_ARGS+=(--modules-debug-out "$MODULES_DEBUG_OUT")
 fi
 
+# Bundled module outputs require a complete recompilation pass so every module
+# contributes to %wasm-compiled-modules% in this process.
+if [ -n "$MODULES_OUT" ] || [ -n "$MODULES_DEBUG_OUT" ]; then
+  FORCE=1
+fi
+
+if [ "$FORCE" -eq 1 ] && [[ ! " ${SCRIPT_ARGS[*]} " =~ " --force " ]]; then
+  SCRIPT_ARGS+=(--force)
+fi
 if [ "${#SCRIPT_ARGS[@]}" -gt 0 ]; then
   run "$CCL_BIN" --no-init --batch -l "$SCRIPT" -- "${SCRIPT_ARGS[@]}"
 else

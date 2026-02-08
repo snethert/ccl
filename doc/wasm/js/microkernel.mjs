@@ -6,7 +6,7 @@
  * without SharedArrayBuffer/Atomics.
  */
 
-import { createPersistenceService } from "./persist-service.mjs";
+import { createMemorySnapshotPersistenceStore, createPersistenceService } from "./persist-service.mjs";
 
 export const KERNEL_ABI_VERSION = 1;
 
@@ -356,6 +356,7 @@ export function createMicrokernel({
   namedBytes = null,
   // Optional hooks for tests/embedding:
   logSink = null, // (level, text, bytes) => void
+  traceRequests = null, // (event) => void
   now = () => Date.now(),
   compiledModulesInstaller = null, // ({ registry, nil, memory, microkernel }) => installed count
   compiledModulesAsync = false,
@@ -366,12 +367,42 @@ export function createMicrokernel({
   if (!memory) throw new Error("createMicrokernel: memory is required");
 
   const requests = new Map(); // id -> { status, result, response: Uint8Array }
+  const requestOps = new Map(); // id -> opcode
   const pendingStdinReads = []; // request ids waiting on stdin
   let nextRequestId = 1;
   const supportsPending = asyncStdin || compiledModulesAsync || Boolean(uiService?.supportsPending);
   let api = null;
+  const requestTracer = typeof traceRequests === "function" ? traceRequests : null;
 
-  const persistenceConfig = persistence === true ? {} : persistence;
+  function normalizePersistenceConfig(raw) {
+    const cfg = raw === true ? {} : raw;
+    if (!cfg) return null;
+    if (typeof cfg !== "object") return {};
+    const backend = typeof cfg.backend === "string" ? cfg.backend : "";
+    if (!backend || backend === "memory" || backend === "in-memory") return cfg;
+    if (backend === "memory-snapshot") {
+      const {
+        backend: _backend,
+        snapshotFile = null,
+        fsModule = null,
+        autoFlushOnExit = true,
+        resetOnCorrupt = false,
+        ...rest
+      } = cfg;
+      const overlay = createMemorySnapshotPersistenceStore({
+        snapshotFile,
+        fsModule,
+        chunkSize: typeof rest.chunkSize === "number" ? rest.chunkSize : undefined,
+        now,
+        autoFlushOnExit: autoFlushOnExit !== false,
+        resetOnCorrupt: resetOnCorrupt === true,
+      });
+      return { ...rest, overlay };
+    }
+    throw new Error(`createMicrokernel: unsupported persistence backend '${backend}'`);
+  }
+
+  const persistenceConfig = normalizePersistenceConfig(persistence);
   const persistenceService = persistenceConfig
     ? createPersistenceService({ ...persistenceConfig, errno: ERRNO, now })
     : null;
@@ -647,6 +678,18 @@ export function createMicrokernel({
       result: i32(result),
       response: responseBytes ? normalizeBytes(responseBytes) : new Uint8Array(0),
     });
+    if (requestTracer) {
+      try {
+        requestTracer({
+          phase: "done",
+          id: u32(id),
+          op: requestOps.get(u32(id)) ?? null,
+          result: i32(result),
+        });
+      } catch (_err) {
+        // best effort
+      }
+    }
   }
 
   function recordRequestPending(id, pending) {
@@ -656,6 +699,18 @@ export function createMicrokernel({
       response: new Uint8Array(0),
       pending,
     });
+    if (requestTracer) {
+      try {
+        requestTracer({
+          phase: "pending",
+          id: u32(id),
+          op: requestOps.get(u32(id)) ?? null,
+          pending,
+        });
+      } catch (_err) {
+        // best effort
+      }
+    }
   }
 
   function recordRequestError(id, errno) {
@@ -665,6 +720,18 @@ export function createMicrokernel({
       result: i32(-Math.abs(errno | 0)),
       response: new Uint8Array(0),
     });
+    if (requestTracer) {
+      try {
+        requestTracer({
+          phase: "error",
+          id: u32(id),
+          op: requestOps.get(u32(id)) ?? null,
+          errno: i32(Math.abs(errno | 0)),
+        });
+      } catch (_err) {
+        // best effort
+      }
+    }
   }
 
   function drainPendingStdinReads() {
@@ -822,6 +889,19 @@ export function createMicrokernel({
   function kernel_request(opcode, payloadPtr, payloadLen) {
     const id = nextRequestId++;
     const op = u32(opcode);
+    requestOps.set(id, op);
+    if (requestTracer) {
+      try {
+        requestTracer({
+          phase: "request",
+          id: u32(id),
+          op,
+          payloadLen: u32(payloadLen),
+        });
+      } catch (_err) {
+        // best effort
+      }
+    }
 
     // Validate payload pointer range early and turn it into a request failure (no throw).
     if (!inBounds(memory, payloadPtr, payloadLen)) {
@@ -1521,18 +1601,60 @@ export function createMicrokernel({
   }
 
   function kernel_poll(requestId) {
-    const req = requests.get(u32(requestId));
-    return req ? u32(req.status) : KERNEL_STATUS_ERROR;
+    const id = u32(requestId);
+    const req = requests.get(id);
+    const status = req ? u32(req.status) : KERNEL_STATUS_ERROR;
+    if (requestTracer) {
+      try {
+        requestTracer({
+          phase: "poll",
+          id,
+          op: requestOps.get(id) ?? null,
+          status,
+        });
+      } catch (_err) {
+        // best effort
+      }
+    }
+    return status;
   }
 
   function kernel_result(requestId) {
-    const req = requests.get(u32(requestId));
-    return req ? i32(req.result) : i32(-ERRNO.EINVAL);
+    const id = u32(requestId);
+    const req = requests.get(id);
+    const result = req ? i32(req.result) : i32(-ERRNO.EINVAL);
+    if (requestTracer) {
+      try {
+        requestTracer({
+          phase: "result",
+          id,
+          op: requestOps.get(id) ?? null,
+          result,
+        });
+      } catch (_err) {
+        // best effort
+      }
+    }
+    return result;
   }
 
   function kernel_response_size(requestId) {
-    const req = requests.get(u32(requestId));
-    return req ? u32(req.response.length) : 0;
+    const id = u32(requestId);
+    const req = requests.get(id);
+    const size = req ? u32(req.response.length) : 0;
+    if (requestTracer) {
+      try {
+        requestTracer({
+          phase: "response_size",
+          id,
+          op: requestOps.get(id) ?? null,
+          size,
+        });
+      } catch (_err) {
+        // best effort
+      }
+    }
+    return size;
   }
 
   /*
@@ -1552,20 +1674,77 @@ export function createMicrokernel({
    * lifetime/invalidations. Keep the copy-based ABI as the required fallback.
    */
   function kernel_copy_response(requestId, dstPtr, dstLen) {
-    const req = requests.get(u32(requestId));
-    if (!req || !req.response || req.response.length === 0) return 0;
+    const id = u32(requestId);
+    const req = requests.get(id);
+    if (!req || !req.response || req.response.length === 0) {
+      if (requestTracer) {
+        try {
+          requestTracer({
+            phase: "copy_response",
+            id,
+            op: requestOps.get(id) ?? null,
+            copied: 0,
+          });
+        } catch (_err) {
+          // best effort
+        }
+      }
+      return 0;
+    }
 
     const want = Math.min(u32(dstLen), req.response.length);
-    if (want === 0) return 0;
-    if (!inBounds(memory, dstPtr, want)) return 0;
+    if (want === 0) {
+      if (requestTracer) {
+        try {
+          requestTracer({
+            phase: "copy_response",
+            id,
+            op: requestOps.get(id) ?? null,
+            copied: 0,
+          });
+        } catch (_err) {
+          // best effort
+        }
+      }
+      return 0;
+    }
+    if (!inBounds(memory, dstPtr, want)) {
+      if (requestTracer) {
+        try {
+          requestTracer({
+            phase: "copy_response",
+            id,
+            op: requestOps.get(id) ?? null,
+            copied: 0,
+          });
+        } catch (_err) {
+          // best effort
+        }
+      }
+      return 0;
+    }
 
     copyInto(memory, dstPtr, req.response.subarray(0, want));
-    return u32(want);
+    const copied = u32(want);
+    if (requestTracer) {
+      try {
+        requestTracer({
+          phase: "copy_response",
+          id,
+          op: requestOps.get(id) ?? null,
+          copied,
+        });
+      } catch (_err) {
+        // best effort
+      }
+    }
+    return copied;
   }
 
   function kernel_drop_request(requestId) {
     // Idempotent drop (required: guest must drop exactly once; host ignores repeats).
     const id = u32(requestId);
+    const op = requestOps.get(id) ?? null;
     const req = requests.get(id);
     if (req?.status === KERNEL_STATUS_PENDING && req.pending?.kind === "stdin_read") {
       const idx = pendingStdinReads.indexOf(id);
@@ -1586,6 +1765,18 @@ export function createMicrokernel({
       }
     }
     requests.delete(id);
+    requestOps.delete(id);
+    if (requestTracer) {
+      try {
+        requestTracer({
+          phase: "drop",
+          id,
+          op,
+        });
+      } catch (_err) {
+        // best effort
+      }
+    }
   }
 
   const imports = {

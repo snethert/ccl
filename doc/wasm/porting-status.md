@@ -45,18 +45,18 @@
   `lisp_read/lisp_write` routed through `kernel_request`.
 - **Named read‑only stream open/stat:** ✅  
   `lisp_open/lisp_stat` via `NAMED_RO` stream kind.
-- **Real Lisp toplevel entry:** ⚠️  
-  `start_lisp` can run a stub toplevel loop with the minimal boot image; a
-  post‑load entry (`wasm_ccl_start_lisp`) exists and real-image policy
-  artifacts are generated, but strict non-interactive root-image validation
-  still times out.
+- **Real Lisp toplevel entry:** ✅  
+  `start_lisp` runs for both minimal and root-image bring-up paths; strict
+  non-interactive root-image validation now passes via
+  `start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`.
 - **Image boot path:** ⚠️  
   `wasm_ccl_load_image` works for the minimal image and the cross‑xload boot
   image (`wasm-boot.image` from `cross-xload-level-0 :wasm32`).
   `doc/wasm/js/load-image.mjs` now supports explicit loader modes
   (`boot-only|start-lisp|run-toplevel`), manifest hash validation, strict
-  module policy controls, and scripted stdin preload. Strict root-image
-  non-interactive `start_lisp` remains an open blocker.
+  module policy controls, and scripted stdin preload. Remaining work is
+  runtime bootstrap/function-binding closure for compiled-Lisp persistence
+  entries.
 
 ## JS microkernel / host
 
@@ -191,17 +191,18 @@
   `web-ui-debugger-smoke.mjs`, `closure-unwind-mv-smoke.mjs`,
   `mv-helpers-smoke.mjs`, `mvcall-smoke.mjs`.
 - **Known gate status:** ⚠️  
-  `node doc/wasm/js/all-smoke.mjs` is green (includes non-strict
-  non-interactive start-lisp smoke coverage). Strict root-image
-  non-interactive validation still fails with timeout:
+  `node doc/wasm/js/all-smoke.mjs` is green. Strict root-image non-interactive
+  gate is green:
   `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`.
-  `node doc/wasm/js/wasm-ui-persist-smoke.mjs` now runs runtime path by default
-  and currently fails on root-image const-pool install (`entry 320`).
+  Active blocker is compiled-Lisp persistence runtime bootstrap stabilization
+  (function bindings + entry execution path) under the default unattended
+  `memory-snapshot` lane.
 
 ## Major Gaps / Next Blockers
 
-- Real root-image policy and default loader wiring for non-interactive `start_lisp`.
-- Compiled-Lisp UI persistence path stabilization (root-image const-pool install failure, entry 320).
+- Compiled-Lisp UI persistence path stabilization on root image under the
+  memory-first backend, including runtime bootstrap/function-binding closure.
 - Capability negotiation protocol beyond `CAPS` bitfield.
-- Persistent storage policy beyond read‑only named streams.
+- Persistent storage policy promotion from host-coupled modes to
+  unattended-safe defaults.
 - Shared‑heap threading protocol (if pursued).

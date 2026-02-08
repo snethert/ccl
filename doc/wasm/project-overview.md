@@ -75,7 +75,10 @@ In spirit, the JS microkernel is the “world,” and a runner is a process that
 
 The browser UI toolkit is specified in `doc/wasm/browser-ui-spec.md`. A reference JavaScript implementation of the UI state model, command system, and rendering backends exists in `web-ui/` and is used for deterministic tests. Lisp<->JS runtime bridge integration is implemented for runtime output/event flow, typed command dispatch, debugger/restart payloads, inspector/place-edit updates, and job updates.
 
-Current gap: the fully compiled Lisp UI path is still blocked by compiler/image integration issues (notably strict persistence-path stability and pending real root-image/toplevel policy wiring).
+Current gap: the fully compiled Lisp UI persistence path is still blocked by
+runtime bootstrap/function-binding stabilization in the loaded image state.
+Root-image/toplevel non-interactive boot gating is in place, and the default
+unattended persistence backend is already memory-first (`memory-snapshot`).
 
 ## Capability model (host feature matrix)
 

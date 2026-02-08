@@ -5,13 +5,15 @@ import os from "node:os";
 import path from "node:path";
 
 // External-test policy:
-// - Persistence tests are run as host-only with CCL_ENABLE_LMDB_TESTS=1.
+// - Base persistence tests are sandbox-safe.
+// - LMDB backend persistence tests run when CCL_ENABLE_LMDB_TESTS=1.
 // - IndexedDB tests run in the browser via doc/wasm/js/idb-smoke.html.
 // See doc/testing.md for details.
 
 import {
   createPersistenceService,
   createInMemoryPersistenceStore,
+  createMemorySnapshotPersistenceStore,
   createLmdbPersistenceStore,
   FILE_MODE_READ,
   FILE_MODE_WRITE,
@@ -232,6 +234,90 @@ test("read-only mount enforcement", () => {
 
   const rmdir = service.deleteEmptyDirectory(toBytes("/ro"));
   mustErr(rmdir, ERRNO.EACCES, "rmdir read-only mount");
+});
+
+test("memory-snapshot backend reloads persisted content", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ccl-persist-snapshot-"));
+  const snapshotFile = path.join(dir, "persist.snapshot.json");
+
+  try {
+    const store = createMemorySnapshotPersistenceStore({
+      snapshotFile,
+      fsModule: fs,
+      autoFlushOnExit: false,
+      now: () => 7000,
+    });
+    const service = createPersistenceService({ errno: ERRNO, overlay: store });
+    writeFile(service, "/state.txt", "persisted");
+    assert.equal(store.persist?.isDirty?.(), true);
+    const wrote = store.persist?.flush?.();
+    assert.equal(wrote, true);
+    assert.equal(store.persist?.isDirty?.(), false);
+    await store.persist?.close?.();
+
+    const store2 = createMemorySnapshotPersistenceStore({
+      snapshotFile,
+      fsModule: fs,
+      autoFlushOnExit: false,
+    });
+    const service2 = createPersistenceService({ errno: ERRNO, overlay: store2 });
+    const roundTrip = readFileOnce(service2, "/state.txt");
+    assert.equal(toText(roundTrip), "persisted");
+    await store2.persist?.close?.();
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("memory-snapshot backend does not rewrite when clean", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ccl-persist-clean-"));
+  const snapshotFile = path.join(dir, "persist.snapshot.json");
+
+  try {
+    const store = createMemorySnapshotPersistenceStore({
+      snapshotFile,
+      fsModule: fs,
+      autoFlushOnExit: false,
+      now: () => 8000,
+    });
+    const service = createPersistenceService({ errno: ERRNO, overlay: store });
+    writeFile(service, "/clean.txt", "once");
+    const firstWrite = store.persist?.flush?.();
+    assert.equal(firstWrite, true);
+    const mtime1 = fs.statSync(snapshotFile).mtimeMs;
+    const secondWrite = store.persist?.flush?.();
+    assert.equal(secondWrite, false);
+    const mtime2 = fs.statSync(snapshotFile).mtimeMs;
+    assert.equal(mtime2, mtime1);
+    await store.persist?.close?.();
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("memory-snapshot backend resetOnCorrupt option", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ccl-persist-corrupt-"));
+  const snapshotFile = path.join(dir, "persist.snapshot.json");
+
+  try {
+    fs.writeFileSync(snapshotFile, "{not-json", "utf8");
+    assert.throws(
+      () => createMemorySnapshotPersistenceStore({ snapshotFile, fsModule: fs, autoFlushOnExit: false }),
+      /failed to read snapshot/,
+    );
+
+    const store = createMemorySnapshotPersistenceStore({
+      snapshotFile,
+      fsModule: fs,
+      autoFlushOnExit: false,
+      resetOnCorrupt: true,
+    });
+    const service = createPersistenceService({ errno: ERRNO, overlay: store });
+    mustErr(service.probe(toBytes("/missing")), ERRNO.ENOENT, "probe empty store after reset");
+    await store.persist?.close?.();
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 const LMDB_TEST_ENABLED = process.env.CCL_ENABLE_LMDB_TESTS === "1";

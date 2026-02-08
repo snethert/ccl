@@ -1,326 +1,193 @@
 # WASM MVP Unattended Execution Plan
 
-Status: Draft  
+Status: In Progress (RZ0.6 pivot)  
 Owner: Codex execution workflow  
 Last updated: 2026-02-08
 
 ## Purpose
-Provide a strict, sequential, unattended plan to close the remaining WASM MVP gaps:
-1. `compiler-smoke` FFI regression (`ffi-add` returns `0`, expected `42`)
-2. Spill/restore discipline around subprim calls
-3. Real root-image + real toplevel boot path
-4. Compiled Lisp UI path parity (remove partial/demo dependency)
 
-This plan assumes the current baseline where:
+Provide a strict, sequential unattended plan to close the remaining MVP gaps
+after the runtime-bundle/manifest/start-lisp work:
+
+1. Persistence backend decoupling from host-only privileges.
+2. Runtime bootstrap closure for compiled-Lisp persistence entries.
+3. Documentation and status reconciliation against current reality.
+
+This plan is aligned with `web-ide/phase-8/implementation-plan.md` (RZ0.6).
+Active blocker reasoning and experiment log lives in:
+`doc/wasm/wasm-ui-persistence-problem-tracker.md`.
+
+## Current baseline assumptions
+
 - `npm --prefix web-ui test` is green.
-- `node doc/wasm/js/all-smoke.mjs` is red due to `compiler-smoke`.
+- `node doc/wasm/js/all-smoke.mjs` is green.
+- Strict non-interactive root-image start-lisp gate is green:
+  - `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`
+- Persistence backend decoupling is landed; compiled-Lisp runtime bootstrap path
+  remains unstable and is the active blocker.
 
-## Global Execution Rules
-1. Do not run steps out of order.
-2. Do not proceed to the next step until the current step exit criteria pass.
-3. After each step, record:
-- command(s) run
-- pass/fail
-- artifacts touched
-- blocker notes
-4. If a step fails, stop and apply the step's rollback/fallback instructions.
-5. Keep all edits on a dedicated branch for this plan execution.
+## Global execution rules
 
-## Environment Preconditions
-1. Confirm repo root:
-```bash
-pwd
-```
-Exit criteria: working directory is repository root.
+1. Execute stages in order; do not skip gates.
+2. Do not proceed when current stage exit criteria fail.
+3. After each stage, record:
+   - commands run
+   - pass/fail
+   - files touched
+   - blocker notes
+4. If a gate fails, stop and fix before continuing.
 
-2. Confirm toolchain availability:
-```bash
-node --version
-npm --version
-clang --version || true
-wasm-ld --version || true
-```
-Exit criteria: Node and npm available.
+## Stage A: Lock Boot Gate (No Regression)
 
-3. Capture baseline git/worktree:
-```bash
-git status --short
-```
-Exit criteria: status captured in execution log.
+### A1. Baseline capture
+1. `git status --short`
+2. `npm --prefix web-ui test`
+3. `node doc/wasm/js/all-smoke.mjs`
+4. `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`
 
-4. Capture baseline smoke state:
-```bash
-npm --prefix web-ui test
-node doc/wasm/js/all-smoke.mjs
-```
 Exit criteria:
-- `web-ui` tests pass.
-- `all-smoke` fails with the known `compiler-smoke` FFI mismatch.
+- All four commands succeed.
+- Any failure is treated as regression and fixed before Stage B.
 
-## Stage A: Fix `compiler-smoke` FFI Regression (Gate 1)
+## Stage B: Persistence Backend Decoupling (Memory-Snapshot Default)
 
-### A1. Reproduce and isolate
-1. Run only compiler smoke:
-```bash
-node doc/wasm/js/compiler-smoke.mjs
-```
-Exit criteria: deterministic reproduction of `ffi-add` mismatch.
+### B1. Contract and flags
+1. Define canonical backend selector:
+   - CLI: `--persist-backend memory-snapshot|lmdb|idb`
+   - ENV: `CCL_PERSIST_BACKEND`
+2. Define canonical snapshot path selector:
+   - CLI: `--persist-snapshot-file <path>`
+   - ENV: `CCL_PERSIST_SNAPSHOT_FILE`
+3. Default unattended backend: `memory-snapshot`.
 
-2. Locate `ffi-add` definition and call path:
-```bash
-rg -n "ffi-add|external-call|compiler-smoke" doc/wasm/js scripts/wasm compiler/WASM lisp-kernel
-```
-Exit criteria: file list of exact compile path and runtime call path.
+Exit criteria:
+- Selector contract is documented and wired in smoke/harness entrypoints.
 
-### A2. Inspect generated module and ABI binding
-3. Rebuild smoke module bundle:
-```bash
-scripts/wasm/compile-smoke-modules.sh --output doc/wasm/wasm-smoke-modules.json
-```
-Exit criteria: bundle regenerated successfully.
+### B2. Implement memory-snapshot store
+1. Add `memory-snapshot` persistence store in `doc/wasm/js/persist-service.mjs`:
+   - Load snapshot file once at startup into in-memory KV/chunk/metadata maps.
+   - Execute all FS operations in-memory.
+2. Track dirty state:
+   - Set `dirty=true` only for mutating logical changes.
+3. Flush policy:
+   - On clean process exit, if dirty, write full snapshot to temp file then
+     atomic rename over target file.
+   - If not dirty, do not write.
+4. Failure policy:
+   - Corrupt snapshot file fails with explicit error (plus reset option/flag).
 
-4. Inspect manifest entry for failing function:
-```bash
-rg -n "ffi|external|add" doc/wasm/wasm-smoke-modules.json
-```
-Exit criteria: failing module entry located.
+Exit criteria:
+- Runtime operations no longer require live LMDB/IDB access in default lane.
+- Snapshot write path is atomic and deterministic.
 
-5. Validate host import registration path:
-```bash
-rg -n "external-call|ccl\\.|ffi|import" compiler/WASM lisp-kernel doc/wasm/js/microkernel.mjs doc/wasm/js/ccl-loader.mjs
-```
-Exit criteria: clear map from compiler lowering -> wasm import -> host implementation.
+### B3. Wire into microkernel + harness + smokes
+1. Microkernel host path selects backend via canonical flags/env.
+2. `doc/wasm/js/wasm-ui-persist-smoke.mjs` defaults to `memory-snapshot`.
+3. `web-ui/tests/browser/harness.mjs` defaults to `memory-snapshot` for unattended mode.
+4. LMDB/IDB remain explicit integration-only modes.
 
-### A3. Implement fix
-6. Patch compiler lowering and/or host shim so `ffi-add` returns correct boxed/unboxed value.
-Files likely involved:
-- `compiler/WASM/wasm2.lisp`
-- `compiler/WASM/wasm-ffi.lisp`
-- `lisp-kernel/wasm-host.c`
-- `doc/wasm/js/microkernel.mjs`
+Exit criteria:
+- Default unattended persistence flow does not require host privilege toggling.
 
-Exit criteria: code compiles with no new syntax/runtime errors.
+### B4. Tests for memory-snapshot semantics
+1. Add/extend tests covering:
+   - load existing snapshot
+   - dirty write on exit
+   - no-op when clean
+   - recovery from interrupted write (previous snapshot preserved)
+2. Keep LMDB tests behind `CCL_ENABLE_LMDB_TESTS=1`.
+3. Keep IndexedDB smoke as optional host/browser integration lane.
 
-7. Add/extend focused regression tests:
-- Existing:
-  - `doc/wasm/js/compiler-smoke.mjs`
-  - `scripts/wasm/compile-smoke-modules.lisp`
-- Add assertion coverage for:
-  - argument marshalling
-  - return-value boxing
-  - non-happy-path type handling
+Exit criteria:
+- Memory-snapshot backend has deterministic coverage and passes in sandbox lane.
 
-Exit criteria: test coverage explicitly checks the prior failure mode.
+## Stage C: Integration Lanes (Host-Only, Non-Blocking for Default Dev)
 
-### A4. Validate Gate 1
-8. Run targeted checks:
-```bash
-node doc/wasm/js/compiler-smoke.mjs
-node doc/wasm/js/runtime-command-smoke.mjs
-```
-Exit criteria: both pass.
+1. LMDB lane:
+   - `make -f scripts/wasm/persist-host.mk persist-host-lmdb`
+2. IndexedDB/browser lane:
+   - `make -f scripts/wasm/persist-host.mk persist-idb-up`
+   - open URL from `persist-idb-url`
+   - `make -f scripts/wasm/persist-host.mk persist-idb-down`
 
-9. Run full smoke suite:
-```bash
-node doc/wasm/js/all-smoke.mjs
-```
-Exit criteria: passes fully.
+Exit criteria:
+- Integration lanes are documented and isolated from default unattended flow.
 
-10. If step 9 fails for reasons unrelated to FFI:
-- log failure
-- classify as new blocker
-- continue only if failure is outside Stage A scope and non-blocking for Stage B.
+## Stage D: Runtime Bootstrap Closure (Current Top Blocker)
 
-## Stage B: Spill/Restore Discipline Around Subprim Calls (Gate 2)
+### D1. Reproduce and pin failure envelope
+1. Probe compiled entry execution:
+   - `node doc/wasm/js/wasm-ui-persist-smoke.mjs --image minimal --probe-entry WASM-UI-MARK-PERSISTED --verbose`
+2. Record whether failure is:
+   - const-pool install failure, or
+   - entry call hang after install.
+3. Log findings in:
+   - `doc/wasm/wasm-ui-persistence-problem-tracker.md`
 
-### B1. Inventory and rules
-11. Enumerate all WASM subprim call emission sites:
-```bash
-rg -n "subprim|call_subprim|wasm_call_subprim|SP" compiler/WASM
-```
-Exit criteria: call-site inventory captured.
+Exit criteria:
+- Reproduction mode and exact stage of failure are deterministic.
 
-12. Define mandatory spill/restore invariants in one doc section:
-- live GC roots preserved across every subprim call
-- arg registers restored deterministically
-- VSP/TSP discipline consistent before/after call
+### D2. Close const-pool/runtime defects in loader path
+1. Keep kernel const-pool materialization compatible with emitted compiler
+   payload shapes (including forward reference forms).
+2. Validate on direct probes that symbol/cons payload installs are no longer the
+   blocking class.
+3. Rebuild wasm kernel artifacts and re-run persistence probe gate.
 
-Target doc:
-- `doc/wasm/ABI.md`
+Exit criteria:
+- No deterministic const-pool rejection remains for emitted UI module payloads.
 
-Exit criteria: invariants documented with unambiguous MUST rules.
+### D3. Close image bootstrap/function-binding gap
+1. Verify boot/minimal/root image sequencing invariants (load/reset/install/start).
+2. Ensure required function bindings for compiled persistence entries are present
+   before probe execution.
+3. Validate `WASM-UI-*` probes and full persistence smoke under default
+   `memory-snapshot`.
 
-### B2. Implement and enforce
-13. Patch emission paths to enforce invariant at each call site.
-Exit criteria: all inventoried call sites updated or explicitly exempted.
+Exit criteria:
+- `node doc/wasm/js/wasm-ui-persist-smoke.mjs` passes without hang.
 
-14. Add static/assertion checks in codegen where possible.
-Exit criteria: build/test fails if a call path skips required spill/restore sequence.
+## Stage E: Documentation Reconciliation
 
-15. Add runtime smoke coverage for closure/allocation and unwind-heavy paths:
-- extend `doc/wasm/js/closure-unwind-mv-smoke.mjs`
-- extend/add compiled module smoke fixture
+Update docs to match the memory-first decision and current gate state:
 
-Exit criteria: targeted tests include allocation + multi-value + unwind interactions.
-
-### B3. Validate Gate 2
-16. Run targeted tests:
-```bash
-node doc/wasm/js/closure-unwind-mv-smoke.mjs
-node doc/wasm/js/mvcall-smoke.mjs
-node doc/wasm/js/compiler-smoke.mjs
-```
-Exit criteria: all pass.
-
-17. Run full smoke:
-```bash
-node doc/wasm/js/all-smoke.mjs
-```
-Exit criteria: pass.
-
-## Stage C: Real Root Image + Real Toplevel Boot (Gate 3)
-
-### C1. Policy and artifact contract
-18. Finalize root-image policy and cache semantics in:
-- `doc/wasm/image-loader-spec.md`
-- `doc/wasm/roadmap.md`
-
-Must define:
-- root image source of truth
-- clone semantics
-- invalidation/refresh policy
-
-Exit criteria: policy section complete and non-contradictory.
-
-19. Rebuild runtime module bundle and root image artifacts:
-```bash
-scripts/wasm/compile-wasm-fasls.sh --modules-out doc/wasm/wasm-runtime-modules.json
-```
-and image build path currently used by repo.
-
-Exit criteria: runtime modules + image artifacts produced without manual intervention.
-
-### C2. Loader and entrypoint wiring
-20. Wire loader to use real root image (not stub/minimal fallback in normal path).
-Likely files:
-- `doc/wasm/js/ccl-loader.mjs`
-- `doc/wasm/js/load-image.mjs`
-- Lisp/kernel entrypoint glue
-
-Exit criteria: default boot path enters real toplevel-capable image.
-
-21. Add explicit smoke that validates post-load real toplevel behavior:
-- load image
-- enter `wasm_ccl_start_lisp`
-- evaluate a minimal form roundtrip
-
-Exit criteria: smoke is deterministic and added to `all-smoke`.
-
-### C3. Validate Gate 3
-22. Run:
-```bash
-node doc/wasm/js/start-lisp-smoke.mjs
-node doc/wasm/js/load-image.mjs --start-lisp --modules doc/wasm/wasm-runtime-modules.json doc/wasm/root.image
-node doc/wasm/js/all-smoke.mjs
-```
-Exit criteria: all pass.
-
-## Stage D: Compiled Lisp UI Path Parity (Gate 4)
-
-### D1. Remove partial/demo dependency
-23. Identify and remove default kernel-demo fallback for normal UI turn path.
-Likely files:
-- `web-ui/tests/browser/harness.mjs`
-- `doc/wasm/js/web-ui-*.mjs`
-- loader/runtime glue
-
-Exit criteria: compiled Lisp UI path is primary in smoke/harness execution.
-
-24. Make wasm UI persistence smoke non-skip for normal build:
-- `doc/wasm/js/wasm-ui-persist-smoke.mjs`
-
-Exit criteria: no skip due to missing runnable Lisp UI module set in standard configuration.
-
-### D2. Expand parity assertions
-25. Add parity assertions between JS reference model and compiled Lisp path for:
-- typed command dispatch roundtrip
-- debugger restart invoke
-- inspector place edit lifecycle
-- persistence restore determinism
-
-Target tests:
-- `web-ui/tests/phase-5-runtime-integration.test.mjs`
-- `doc/wasm/js/web-ui-command-ui-smoke.mjs`
-- `doc/wasm/js/wasm-ui-persist-smoke.mjs`
-
-Exit criteria: parity checks fail on behavior divergence.
-
-### D3. Validate Gate 4
-26. Run:
-```bash
-npm --prefix web-ui test
-node doc/wasm/js/web-ui-command-ui-smoke.mjs
-node doc/wasm/js/wasm-ui-persist-smoke.mjs
-node doc/wasm/js/all-smoke.mjs
-```
-Exit criteria: all pass.
-
-## Stage E: Documentation and Status Reconciliation (Gate 5)
-
-27. Update status docs to reflect real state:
 - `doc/wasm/roadmap.md`
 - `doc/wasm/porting-status.md`
 - `doc/wasm/project-overview.md`
+- `doc/wasm/persistence-service-spec.md`
+- `doc/wasm/persistence-dev-environment.md`
 - `doc/testing.md`
 - `doc/wasm/testing.md`
 - `web-ui/FRONT-END-DEV-PLAN.md`
 
-Exit criteria: no contradictions between:
-- test reality
-- roadmap
-- phase plans
-- bridge status
+Run contradiction scan:
 
-28. Run contradiction scan:
 ```bash
-rg -n "pending|partial|blocked|pass|fails|not yet implemented|Complete" doc web-ui web-ide
+rg -n "entry 320|const-pool|strict.*timeout|host-only.*default|IndexedDB.*default|LMDB.*required|skip.*persistence" doc web-ui web-ide
 ```
-Exit criteria: flagged lines reviewed; stale claims removed.
 
-## Final Signoff Sequence
-29. Full validation run (strict order):
+Exit criteria:
+- No status/plan doc contradicts current decisions.
+
+## Final signoff sequence
+
 ```bash
 npm --prefix web-ui test
+node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive
+CCL_PERSIST_BACKEND=memory-snapshot CCL_PERSIST_SNAPSHOT_FILE=.tmp/persist-smoke.snapshot.json node doc/wasm/js/wasm-ui-persist-smoke.mjs
 node doc/wasm/js/all-smoke.mjs
+make -f scripts/wasm/persist-host.mk persist-host-lmdb
 ```
-Exit criteria: both pass.
 
-30. Capture final artifact/report bundle:
-- git diff summary
-- commands executed
-- final pass/fail matrix
-- remaining deferred items (if any)
+Exit criteria:
+- Default lane green without host privilege coupling.
+- Host integration lane remains explicit and green.
 
-31. Update `doc/wasm/roadmap.md` near-term focus to next true work after MVP blockers are clear.
-Exit criteria: roadmap no longer lists resolved blockers.
+## Definition of done (MVP runtime track)
 
-## Failure Handling Protocol
-If any gate fails:
-1. Stop progression immediately.
-2. Record failing command and exact stderr.
-3. Classify as:
-- code regression
-- environment/toolchain issue
-- stale/invalid test expectation
-4. Create/append blocker note in `doc/wasm/roadmap.md` and `doc/wasm/porting-status.md`.
-5. Resume only after blocker resolution commit.
-
-## Definition of Done (MVP Runtime Track)
-All conditions must be true:
-1. `npm --prefix web-ui test` passes.
-2. `node doc/wasm/js/all-smoke.mjs` passes.
-3. `compiler-smoke` FFI regression fixed with regression coverage.
-4. Spill/restore discipline documented and enforced by tests/assertions.
-5. Real root-image + real toplevel boot path validated by smoke.
-6. Compiled Lisp UI path (including persistence smoke) runs without demo-only dependency.
-7. Status docs are internally consistent and reflect actual test results.
+All must be true:
+1. Strict non-interactive root-image start-lisp gate passes.
+2. Compiled-Lisp UI persistence path passes with `memory-snapshot` default backend.
+3. Default unattended development/test path does not require host-only persistence privileges.
+4. LMDB/IDB lanes remain available as integration checks.
+5. Status docs and phase plans are internally consistent.

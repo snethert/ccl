@@ -33,7 +33,8 @@ The keywords below are the canonical capability identifiers.
 
 - `:io/stream` — stream plumbing + standard stream endpoints (stdin/stdout/stderr)
 - `:persist/ephemeral` — in-memory key/value persistence (lost on reload)
-- `:persist/store` — key/value persistence (IndexedDB / OPFS / Cache, etc.)
+- `:persist/store` — key/value persistence (memory-snapshot file backend,
+  IndexedDB / LMDB / OPFS / Cache, etc.)
 - `:fs/virtual` — pathname layer over `:persist/store`
 - `:net/http` — fetch-like HTTP client
 - `:net/ws` — websocket client
