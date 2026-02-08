@@ -100,6 +100,7 @@ Exit criteria:
 
 ## Phase 3: UI Doctrine Implementation
 Outcome: Visual system matches `web-ui/ui-doctrine.md`.
+Detailed execution plan: `web-ide/phase-3/implementation-plan.md`.
 
 1. Theme tokens.
 - Color, typography, spacing, elevation, motion tokens.
