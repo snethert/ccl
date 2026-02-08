@@ -1648,14 +1648,12 @@
     (wasm2-form seg nil nil values)
     (wasm2-emit :set-arg0)
     (wasm2-emit-call-subprim-no-spill progvsave)
-    (wasm2-emit :drop)
     (if mvpass
       (progn
         (wasm2-multiple-value-body seg body)
         (wasm2-emit-call-subprim-no-spill save-fixnum)
         (wasm2-emit :drop)
         (wasm2-emit-call-subprim-no-spill progvrestore)
-        (wasm2-emit :drop)
         (wasm2-emit-call-subprim-no-spill recover-fixnum)
         (if (wasm2-returning-p xfer)
           (wasm2-emit :return)
@@ -1664,7 +1662,6 @@
         (wasm2-form seg nil nil body)
         (wasm2-emit :local.set result-temp)
         (wasm2-emit-call-subprim-no-spill progvrestore)
-        (wasm2-emit :drop)
         (wasm2-emit :local.get result-temp)
         (when (wasm2-returning-p xfer)
           (wasm2-emit :set-arg-z)
@@ -1870,6 +1867,9 @@
   (declare (ignore vreg))
   (let* ((subprim (wasm2-subprim-fixnum '.SPconslist)))
     (wasm2-multiple-value-body seg form)
+    ;; conslist consumes values from VSP; discard the primary value that
+    ;; wasm2-multiple-value-body leaves on the wasm operand stack.
+    (wasm2-emit :drop)
     ;; Values already live on VSP; avoid spills that would disturb them.
     (wasm2-emit-call-subprim-no-spill subprim)
     (if (wasm2-returning-p xfer)
