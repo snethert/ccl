@@ -248,6 +248,7 @@ export function resolveFontString(theme, options = {}) {
 
 export function themeToCssVars(theme) {
   const tokens = normalizeThemeTokens(theme ?? null);
+  const reducedMotion = Boolean(tokens.motion?.reduced);
   const vars = {
     "--ui-color-bg": tokens.color?.bg ?? "",
     "--ui-color-surface": tokens.color?.surface ?? "",
@@ -296,10 +297,11 @@ export function themeToCssVars(theme) {
     "--ui-line-height-tight": toScalar(tokens.font?.lineHeight?.tight),
     "--ui-line-height-normal": toScalar(tokens.font?.lineHeight?.normal),
     "--ui-line-height-relaxed": toScalar(tokens.font?.lineHeight?.relaxed),
-    "--ui-motion-fast": toMs(tokens.motion?.fast),
-    "--ui-motion-normal": toMs(tokens.motion?.normal),
-    "--ui-motion-slow": toMs(tokens.motion?.slow),
-    "--ui-motion-easing": tokens.motion?.easing ?? ""
+    "--ui-motion-fast": toMs(reducedMotion ? 0 : tokens.motion?.fast),
+    "--ui-motion-normal": toMs(reducedMotion ? 0 : tokens.motion?.normal),
+    "--ui-motion-slow": toMs(reducedMotion ? 0 : tokens.motion?.slow),
+    "--ui-motion-easing": tokens.motion?.easing ?? "",
+    "--ui-motion-reduced": reducedMotion ? "1" : "0"
   };
   return vars;
 }

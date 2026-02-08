@@ -13,6 +13,44 @@ import { normalizeThemeTokens, resolveFontString } from "../../src/theme.mjs";
 const DEFAULT_FONT = "12px monospace";
 const DEFAULT_TEXT_COLOR = "#000";
 
+function currentTimeMs() {
+  if (typeof performance !== "undefined" && typeof performance.now === "function") {
+    return performance.now();
+  }
+  return Date.now();
+}
+
+function countDirtyHints(options = {}) {
+  let count = 0;
+  if (Array.isArray(options.dirty)) count += options.dirty.length;
+  if (Array.isArray(options.dirtyRects)) count += options.dirtyRects.length;
+  if (Array.isArray(options.dirtyNodes)) count += options.dirtyNodes.length;
+  if (Array.isArray(options.dirtyIds)) count += options.dirtyIds.length;
+  return count;
+}
+
+function countDrawnEntries(drawList, rects = []) {
+  if (!Array.isArray(drawList) || drawList.length === 0) return 0;
+  if (!Array.isArray(rects) || rects.length === 0) return drawList.length;
+  let count = 0;
+  for (const entry of drawList) {
+    let intersects = false;
+    for (const rect of rects) {
+      if (shouldDrawEntry(entry, rect)) {
+        intersects = true;
+        break;
+      }
+    }
+    if (intersects) count += 1;
+  }
+  return count;
+}
+
+function recordRenderMetric(collector, sample) {
+  if (!collector || typeof collector.recordRender !== "function") return;
+  collector.recordRender(sample);
+}
+
 function normalizePoint(point) {
   const x = Number(point?.x ?? 0);
   const y = Number(point?.y ?? 0);
@@ -190,15 +228,19 @@ export function createCanvasBackend({ canvas, document: doc, onMeasureTextCacheM
 
   return {
     render(scene, options = {}) {
+      const startedAt = currentTimeMs();
       if (Object.prototype.hasOwnProperty.call(options, "theme")) {
         applyTheme(options.theme);
       }
       const background = options.background ?? defaultBackground;
+      const dirtyHintCount = countDirtyHints(options);
       if (scene !== undefined) {
         currentScene = Array.isArray(scene) ? buildScene(scene) : scene ?? buildScene([]);
       }
       const activeScene = currentScene ?? buildScene([]);
       const dirtyRects = computeDirtyRects(activeScene, options);
+      const totalNodeCount = buildDrawList(activeScene).length;
+      const collector = options.qualityCollector ?? null;
       if (dirtyRects.length === 0) {
         drawScene(ctx, activeScene, {
           width: canvas.width,
@@ -206,6 +248,17 @@ export function createCanvasBackend({ canvas, document: doc, onMeasureTextCacheM
           background,
           defaultFont,
           defaultTextColor
+        });
+        recordRenderMetric(collector, {
+          surface: "canvas",
+          backend: "canvas",
+          operation: "render",
+          fullRedraw: true,
+          dirtyHintCount,
+          dirtyRectCount: 0,
+          drawnNodeCount: totalNodeCount,
+          totalNodeCount,
+          durationMs: Math.max(0, currentTimeMs() - startedAt)
         });
         return;
       }
@@ -217,6 +270,17 @@ export function createCanvasBackend({ canvas, document: doc, onMeasureTextCacheM
         background,
         defaultFont,
         defaultTextColor
+      });
+      recordRenderMetric(collector, {
+        surface: "canvas",
+        backend: "canvas",
+        operation: "render",
+        fullRedraw: false,
+        dirtyHintCount,
+        dirtyRectCount: dirtyRects.length,
+        drawnNodeCount: countDrawnEntries(drawList, dirtyRects),
+        totalNodeCount,
+        durationMs: Math.max(0, currentTimeMs() - startedAt)
       });
     },
     hitTest(point) {

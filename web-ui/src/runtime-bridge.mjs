@@ -11,6 +11,12 @@ import {
 } from "./state.mjs";
 import { dispatchCommandOutput } from "./command-effects.mjs";
 
+function recordReliability(options, sample) {
+  const collector = options?.qualityCollector ?? null;
+  if (!collector || typeof collector.recordReliability !== "function") return;
+  collector.recordReliability(sample);
+}
+
 function normalizePayloadList(value, fallbackItem) {
   if (Array.isArray(value)) return value;
   if (value) return [value];
@@ -32,6 +38,12 @@ export function applyRuntimeOutput(state, payload = {}, options = {}) {
     } catch (err) {
       const message = err?.message ?? String(err);
       errors.push({ kind: "recording", message, recording });
+      recordReliability(options, {
+        kind: "runtime-fault",
+        handled: true,
+        message,
+        details: { payloadKind: "recording" }
+      });
       if (onError) onError({ kind: "recording", message, recording });
     }
   });
@@ -42,6 +54,12 @@ export function applyRuntimeOutput(state, payload = {}, options = {}) {
     } catch (err) {
       const message = err?.message ?? String(err);
       errors.push({ kind: "entry", message, entry });
+      recordReliability(options, {
+        kind: "runtime-fault",
+        handled: true,
+        message,
+        details: { payloadKind: "entry" }
+      });
       if (onError) onError({ kind: "entry", message, entry });
     }
   });
@@ -52,6 +70,12 @@ export function applyRuntimeOutput(state, payload = {}, options = {}) {
     } catch (err) {
       const message = err?.message ?? String(err);
       errors.push({ kind: "anchor", message, anchor });
+      recordReliability(options, {
+        kind: "runtime-fault",
+        handled: true,
+        message,
+        details: { payloadKind: "anchor" }
+      });
       if (onError) onError({ kind: "anchor", message, anchor });
     }
   });
@@ -242,38 +266,58 @@ export function applyRuntimeJob(state, message, options = {}) {
 
 export function applyRuntimeMessage(state, message, options = {}) {
   if (!message || typeof message !== "object") {
+    recordReliability(options, {
+      kind: "runtime-fault",
+      handled: true,
+      message: "Invalid runtime message",
+      details: { branch: "message-guard" }
+    });
     return { state, handled: false, errors: [{ kind: "message", message: "Invalid runtime message" }] };
   }
-  if (message.kind === "runtime.output") {
-    const result = applyRuntimeOutput(state, message.payload ?? {}, options);
-    return { ...result, handled: true };
+  try {
+    if (message.kind === "runtime.output") {
+      const result = applyRuntimeOutput(state, message.payload ?? {}, options);
+      return { ...result, handled: true };
+    }
+    if (message.kind === "command.result") {
+      const result = applyRuntimeCommandResult(state, message, options);
+      return { ...result, handled: true };
+    }
+    if (message.kind === "command.error") {
+      const result = applyRuntimeCommandError(state, message, options);
+      return { ...result, handled: true };
+    }
+    if (message.kind === "debugger.snapshot") {
+      const result = applyRuntimeDebuggerSnapshot(state, message, options);
+      return { ...result, handled: true };
+    }
+    if (message.kind === "debugger.restart") {
+      const result = applyRuntimeDebuggerRestart(state, message, options);
+      return { ...result, handled: true };
+    }
+    if (message.kind === "inspector.update") {
+      const result = applyRuntimeInspector(state, message, options);
+      return { ...result, handled: true };
+    }
+    if (message.kind === "job.update") {
+      const result = applyRuntimeJob(state, message, options);
+      return { ...result, handled: true };
+    }
+    if (typeof options.onUnhandled === "function") {
+      options.onUnhandled(message);
+    }
+    return { state, handled: false, errors: [] };
+  } catch (err) {
+    const messageText = err?.message ?? String(err);
+    recordReliability(options, {
+      kind: "runtime-fault",
+      handled: true,
+      message: messageText,
+      details: { branch: message.kind ?? "unknown" }
+    });
+    if (typeof options.onError === "function") {
+      options.onError({ kind: "runtime.message", message: messageText, payload: message?.payload ?? null });
+    }
+    return { state, handled: true, errors: [{ kind: "runtime.message", message: messageText }] };
   }
-  if (message.kind === "command.result") {
-    const result = applyRuntimeCommandResult(state, message, options);
-    return { ...result, handled: true };
-  }
-  if (message.kind === "command.error") {
-    const result = applyRuntimeCommandError(state, message, options);
-    return { ...result, handled: true };
-  }
-  if (message.kind === "debugger.snapshot") {
-    const result = applyRuntimeDebuggerSnapshot(state, message, options);
-    return { ...result, handled: true };
-  }
-  if (message.kind === "debugger.restart") {
-    const result = applyRuntimeDebuggerRestart(state, message, options);
-    return { ...result, handled: true };
-  }
-  if (message.kind === "inspector.update") {
-    const result = applyRuntimeInspector(state, message, options);
-    return { ...result, handled: true };
-  }
-  if (message.kind === "job.update") {
-    const result = applyRuntimeJob(state, message, options);
-    return { ...result, handled: true };
-  }
-  if (typeof options.onUnhandled === "function") {
-    options.onUnhandled(message);
-  }
-  return { state, handled: false, errors: [] };
 }

@@ -392,7 +392,8 @@ function normalizeUiTurn(turn) {
     signals,
     commitPolicy: turn.commitPolicy ?? "rAF",
     yielded: Boolean(turn.yielded),
-    yieldReason: turn.yieldReason ?? null
+    yieldReason: turn.yieldReason ?? null,
+    startedAt: Number.isFinite(turn.startedAt) ? Number(turn.startedAt) : null
   };
 }
 
@@ -1823,6 +1824,27 @@ function buildUiEvent(options, type, payload) {
   return entry;
 }
 
+function resolveUiMetricNow(options = {}) {
+  if (Number.isFinite(options.ts)) {
+    return Number(options.ts);
+  }
+  if (typeof options.now === "function") {
+    const value = Number(options.now());
+    if (Number.isFinite(value)) {
+      return value;
+    }
+  }
+  return null;
+}
+
+function recordUiQualityMetric(options = {}, payload = null) {
+  const collector = options?.qualityCollector ?? null;
+  if (!collector || typeof collector.recordUiTurn !== "function" || !payload || typeof payload !== "object") {
+    return;
+  }
+  collector.recordUiTurn(payload);
+}
+
 export function enqueueUiSignal(state, signal, options = {}) {
   const ui = normalizeUiState(state.ui ?? null);
   const normalized = normalizeUiSignal(signal, ui.queue.length);
@@ -1853,7 +1875,8 @@ export function beginUiTurn(state, options = {}) {
     signals,
     commitPolicy: options.commitPolicy ?? "rAF",
     yielded: false,
-    yieldReason: null
+    yieldReason: null,
+    startedAt: resolveUiMetricNow(options)
   };
   let nextState = {
     ...state,
@@ -1873,6 +1896,14 @@ export function beginUiTurn(state, options = {}) {
   if (event) {
     nextState = recordEvent(nextState, event);
   }
+  recordUiQualityMetric(options, {
+    turnId,
+    phase: "signals",
+    commitPolicy: turn.commitPolicy,
+    signalCount: signals.length,
+    yielded: false,
+    ts: turn.startedAt
+  });
   return nextState;
 }
 
@@ -1900,6 +1931,14 @@ export function advanceUiTurn(state, phase, options = {}) {
   if (event) {
     nextState = recordEvent(nextState, event);
   }
+  recordUiQualityMetric(options, {
+    turnId: ui.turn.id,
+    phase: nextPhase,
+    commitPolicy: ui.turn.commitPolicy,
+    signalCount: Array.isArray(ui.turn.signals) ? ui.turn.signals.length : 0,
+    yielded: nextPhase === "yielded" || ui.turn.yielded,
+    ts: resolveUiMetricNow(options)
+  });
   return nextState;
 }
 
@@ -1921,6 +1960,14 @@ export function yieldUiTurn(state, reason = null, options = {}) {
   if (event) {
     next = recordEvent(next, event);
   }
+  recordUiQualityMetric(options, {
+    turnId: ui.turn.id,
+    phase: "yielded",
+    commitPolicy: ui.turn.commitPolicy,
+    signalCount: Array.isArray(ui.turn.signals) ? ui.turn.signals.length : 0,
+    yielded: true,
+    ts: resolveUiMetricNow(options)
+  });
   return next;
 }
 
@@ -1930,6 +1977,11 @@ export function endUiTurn(state, options = {}) {
   const turnId = ui.turn.id;
   const turnPhase = ui.turn.phase;
   const turnYielded = ui.turn.yielded;
+  const endedAt = resolveUiMetricNow(options);
+  const durationMs =
+    Number.isFinite(ui.turn.startedAt) && Number.isFinite(endedAt)
+      ? Math.max(0, Number(endedAt) - Number(ui.turn.startedAt))
+      : null;
   const historyEntry = {
     id: turnId,
     phase: turnPhase,
@@ -1950,6 +2002,15 @@ export function endUiTurn(state, options = {}) {
   if (event) {
     nextState = recordEvent(nextState, event);
   }
+  recordUiQualityMetric(options, {
+    turnId,
+    phase: turnPhase,
+    commitPolicy: ui.turn.commitPolicy,
+    signalCount: Array.isArray(ui.turn.signals) ? ui.turn.signals.length : 0,
+    yielded: turnYielded,
+    durationMs,
+    ts: endedAt
+  });
   return nextState;
 }
 

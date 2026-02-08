@@ -139,24 +139,71 @@ export function createRoot(backend, container, options = {}) {
   let pendingSet = false;
   let scheduled = false;
   const schedule = typeof options.schedule === "function" ? options.schedule : null;
+  const qualityCollector = options.qualityCollector ?? null;
+  const now =
+    typeof options.now === "function"
+      ? options.now
+      : typeof performance !== "undefined" && typeof performance.now === "function"
+        ? () => performance.now()
+        : () => Date.now();
+
+  function recordRenderSample(startedAt, payload = {}) {
+    if (!qualityCollector || typeof qualityCollector.recordRender !== "function") return;
+    const endedAt = Number(now());
+    const durationMs = Number.isFinite(endedAt) && Number.isFinite(startedAt)
+      ? Math.max(0, endedAt - startedAt)
+      : null;
+    qualityCollector.recordRender({
+      surface: "dom",
+      backend: "dom",
+      durationMs,
+      ...payload
+    });
+  }
 
   function apply(tree) {
+    const startedAt = Number(now());
     if (!tree) {
       if (rootInstance) {
         backend.removeChild(container, rootInstance.handle);
         unmount(rootInstance, backend);
         rootInstance = null;
+        recordRenderSample(startedAt, {
+          operation: "unmount",
+          fullRedraw: true,
+          dirtyHintCount: 0,
+          dirtyRectCount: 0
+        });
+        return;
       }
+      recordRenderSample(startedAt, {
+        operation: "noop",
+        fullRedraw: false,
+        dirtyHintCount: 0,
+        dirtyRectCount: 0
+      });
       return;
     }
     if (!rootInstance) {
       const instance = mount(tree, backend);
       backend.appendChild(container, instance.handle);
       rootInstance = instance;
+      recordRenderSample(startedAt, {
+        operation: "mount",
+        fullRedraw: true,
+        dirtyHintCount: 0,
+        dirtyRectCount: 0
+      });
       return;
     }
     if (isSameType(rootInstance.tree, tree)) {
       rootInstance = updateInstance(rootInstance, tree, backend);
+      recordRenderSample(startedAt, {
+        operation: "patch",
+        fullRedraw: false,
+        dirtyHintCount: 0,
+        dirtyRectCount: 0
+      });
       return;
     }
     const next = mount(tree, backend);
@@ -168,6 +215,12 @@ export function createRoot(backend, container, options = {}) {
     }
     unmount(rootInstance, backend);
     rootInstance = next;
+    recordRenderSample(startedAt, {
+      operation: "replace",
+      fullRedraw: true,
+      dirtyHintCount: 0,
+      dirtyRectCount: 0
+    });
   }
 
   function flush() {

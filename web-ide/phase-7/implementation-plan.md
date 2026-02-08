@@ -1,7 +1,7 @@
 # Phase 7 Detailed Plan: Quality Gates and Hardening
 
 ## Document Control
-- Status: Planned
+- Status: Complete
 - Last Updated: February 8, 2026
 - Parent Plan: `web-ide/implementation-plan.md`
 - Doctrine Sources:
@@ -40,13 +40,32 @@ Convert the current feature-complete IDE into a release-grade system with explic
 - Existing tests in `web-ui` are broad and currently green.
 
 ## Progress Snapshot
-- M1 `QZ1`: Planned.
-- M2 `QZ2`: Planned.
-- M3 `QZ3`: Planned.
-- M4 `QZ4`: Planned.
-- M5 `QZ5`: Planned.
-- M6 `QZ6`: Planned.
-- M7 `QZ7`: Planned.
+- M1 `QZ1`: Complete.
+- M2 `QZ2`: Complete.
+- M3 `QZ3`: Complete.
+- M4 `QZ4`: Complete.
+- M5 `QZ5`: Complete.
+- M6 `QZ6`: Complete.
+- M7 `QZ7`: Complete.
+
+## Completion Record
+- Added quality instrumentation subsystem and budget evaluator:
+  - `web-ui/src/quality-gates.mjs`
+  - integrated in `web-ui/src/state.mjs`, `web-ui/src/renderer.mjs`, `web-ui/src/widgets.mjs`, `web-ui/backends/canvas/renderer.mjs`, `web-ui/backends/webgl/renderer.mjs`, and `web-ui/src/runtime-bridge.mjs`.
+- Added and wired acceptance suites:
+  - `web-ui/tests/phase-7-performance-budgets.test.mjs`
+  - `web-ui/tests/phase-7-transcript-scale.test.mjs`
+  - `web-ui/tests/phase-7-keyboard-focus.test.mjs`
+  - `web-ui/tests/phase-7-accessibility.test.mjs`
+  - `web-ui/tests/phase-7-reliability.test.mjs`
+  - `web-ui/tests/phase-7-integration.test.mjs`
+- Added CI-oriented test scripts in `web-ui/package.json`:
+  - `test:phase7`
+  - `test:gate:fast`
+  - `test:gate:full`
+- Validation run:
+  - `cd web-ui && npm run test:phase7` passed.
+  - `cd web-ui && npm test` passed.
 
 ## Success Criteria
 - Quality budgets are explicit, versioned, and test-enforced.
@@ -258,7 +277,7 @@ Turn quality checks into required release gates.
 - `web-ui/tests/browser.test.mjs`
 - `web-ui/tests/phase-7-*.test.mjs`
 
-## Planned Phase 7 Acceptance Suites
+## Phase 7 Acceptance Suites
 - `web-ui/tests/phase-7-performance-budgets.test.mjs`
 - `web-ui/tests/phase-7-transcript-scale.test.mjs`
 - `web-ui/tests/phase-7-keyboard-focus.test.mjs`
@@ -276,19 +295,15 @@ Turn quality checks into required release gates.
 - Risk: stricter gates slow feature delivery.
   - Mitigation: separate fast gate and full gate profiles with clear ownership.
 
-## Decision Gates (Expected)
+## Decision Gates (Resolved)
 1. Budget strictness:
-   - Option A (recommended): fail CI on exceedance for agreed p95/p99 limits.
-   - Option B: warn-only for one milestone, enforce later.
+   - Selected: Option A (fail on exceedance for agreed p95/p99 limits).
 2. Performance gate style:
-   - Option A (recommended): hybrid structural + timing gates.
-   - Option B: timing-only gates.
+   - Selected: Option A (hybrid structural + timing gates).
 3. Accessibility release gate:
-   - Option A (recommended): blocking for core workflows.
-   - Option B: non-blocking warning initially.
+   - Selected: Option A (blocking for core workflows in the sandbox gate).
 4. CI profile split:
-   - Option A (recommended): fast gate on PR, full gate nightly and pre-release.
-   - Option B: full gate on every PR.
+   - Selected: Option A (`test:gate:fast` and `test:gate:full`).
 
 ## Phase 7 Signoff Conditions
 - M1 through M7 complete.

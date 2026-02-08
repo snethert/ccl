@@ -5,6 +5,32 @@ import { normalizeThemeTokens, resolveFontString } from "../../src/theme.mjs";
 
 const DEFAULT_FONT = "12px monospace";
 
+function currentTimeMs() {
+  if (typeof performance !== "undefined" && typeof performance.now === "function") {
+    return performance.now();
+  }
+  return Date.now();
+}
+
+function countDirtyHints(options = {}) {
+  let count = 0;
+  if (Array.isArray(options.dirty)) count += options.dirty.length;
+  if (Array.isArray(options.dirtyRects)) count += options.dirtyRects.length;
+  if (Array.isArray(options.dirtyNodes)) count += options.dirtyNodes.length;
+  if (Array.isArray(options.dirtyIds)) count += options.dirtyIds.length;
+  return count;
+}
+
+function estimateNodeCountFromDraw(draw) {
+  const count = Number.isFinite(draw?.count) ? draw.count : 0;
+  return Math.max(0, Math.ceil(count / 6));
+}
+
+function recordRenderMetric(collector, sample) {
+  if (!collector || typeof collector.recordRender !== "function") return;
+  collector.recordRender(sample);
+}
+
 const VERTEX_SHADER = `
 attribute vec2 a_position;
 attribute vec4 a_color;
@@ -189,16 +215,19 @@ export function createWebGLBackend({ canvas, document: doc, onMeasureTextCacheMi
 
   return {
     render(scene, options = {}) {
+      const startedAt = currentTimeMs();
       if (Object.prototype.hasOwnProperty.call(options, "theme")) {
         applyTheme(options.theme);
       }
       const background = options.background ?? defaultBackground;
       const clearColor = background ? parseWebGLColor(background) : [0, 0, 0, 0];
+      const dirtyHintCount = countDirtyHints(options);
       if (scene !== undefined) {
         currentScene = Array.isArray(scene) ? buildScene(scene) : scene ?? buildScene([]);
       }
       const activeScene = currentScene ?? buildScene([]);
       const dirtyRects = computeDirtyRects(activeScene, options);
+      const collector = options.qualityCollector ?? null;
       const width = canvas.width;
       const height = canvas.height;
 
@@ -208,17 +237,30 @@ export function createWebGLBackend({ canvas, document: doc, onMeasureTextCacheMi
 
       const buffers = { position: positionBuffer, color: colorBuffer };
       const locations = { position: positionLocation, color: colorLocation };
+      const totalDraw = buildWebGLDrawList(activeScene);
+      const totalNodeCount = estimateNodeCountFromDraw(totalDraw);
 
       if (dirtyRects.length === 0) {
         gl.disable(gl.SCISSOR_TEST);
         gl.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
         gl.clear(gl.COLOR_BUFFER_BIT);
-        const draw = buildWebGLDrawList(activeScene);
-        drawList(gl, draw, buffers, locations);
+        drawList(gl, totalDraw, buffers, locations);
+        recordRenderMetric(collector, {
+          surface: "webgl",
+          backend: "webgl",
+          operation: "render",
+          fullRedraw: true,
+          dirtyHintCount,
+          dirtyRectCount: 0,
+          drawnNodeCount: totalNodeCount,
+          totalNodeCount,
+          durationMs: Math.max(0, currentTimeMs() - startedAt)
+        });
         return;
       }
 
       gl.enable(gl.SCISSOR_TEST);
+      let drawnNodeCount = 0;
       for (const rect of dirtyRects) {
         const scissor = toScissorRect(rect, height);
         gl.scissor(scissor.x, scissor.y, scissor.width, scissor.height);
@@ -226,8 +268,20 @@ export function createWebGLBackend({ canvas, document: doc, onMeasureTextCacheMi
         gl.clear(gl.COLOR_BUFFER_BIT);
         const draw = buildWebGLDrawList(activeScene, { clipRect: rect });
         drawList(gl, draw, buffers, locations);
+        drawnNodeCount += estimateNodeCountFromDraw(draw);
       }
       gl.disable(gl.SCISSOR_TEST);
+      recordRenderMetric(collector, {
+        surface: "webgl",
+        backend: "webgl",
+        operation: "render",
+        fullRedraw: false,
+        dirtyHintCount,
+        dirtyRectCount: dirtyRects.length,
+        drawnNodeCount,
+        totalNodeCount,
+        durationMs: Math.max(0, currentTimeMs() - startedAt)
+      });
     },
     hitTest(point) {
       return hitTestScene(currentScene, normalizePoint(point));

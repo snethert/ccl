@@ -233,6 +233,15 @@ export { normalizeRestart, normalizeConditionReport, RESTART_SAFETY_LEVELS } fro
 export { markPresentationStale, revalidatePresentations } from "./world-state.mjs";
 export { DEFAULT_ACTIONS_BY_TYPE, buildSelectionActions } from "./selection-actions.mjs";
 export {
+  QUALITY_GATES_SCHEMA_VERSION,
+  DEFAULT_QUALITY_BUDGETS,
+  resolveQualityBudgets,
+  createQualityMetrics,
+  snapshotQualityMetrics,
+  evaluateQualityBudgets,
+  createQualityCollector
+} from "./quality-gates.mjs";
+export {
   extractCommandOutput,
   formatClipboardText,
   dispatchCommandOutput,

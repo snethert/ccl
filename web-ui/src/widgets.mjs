@@ -93,6 +93,19 @@ function computeVirtualRange(count, config) {
   return { start, end, totalHeight };
 }
 
+function computeExpectedMaxVisible(config) {
+  if (!config || !Number.isFinite(config.rowHeight) || config.rowHeight <= 0) return 0;
+  if (!Number.isFinite(config.viewportHeight) || config.viewportHeight <= 0) return 0;
+  const visibleWindow = Math.ceil(config.viewportHeight / config.rowHeight);
+  return Math.max(0, visibleWindow + config.overscan * 2);
+}
+
+function recordVirtualizationSample(options, sample) {
+  const collector = options?.qualityCollector ?? null;
+  if (!collector || typeof collector.recordVirtualization !== "function") return;
+  collector.recordVirtualization(sample);
+}
+
 function pickProps(props, allowedKeys = []) {
   if (!props) return {};
   const out = {};
@@ -707,6 +720,18 @@ function renderList(state, widget, options = {}) {
     listNode = createElement("ul", { ...props, ...base }, children, selectionConfig.actionBar ? `${widget.id}-list` : widget.id);
   } else {
     const range = computeVirtualRange(items.length, virtualConfig);
+    recordVirtualizationSample(options, {
+      widgetKind: "list",
+      widgetId: widget.id,
+      totalCount: items.length,
+      visibleCount: Math.max(0, range.end - range.start),
+      start: range.start,
+      end: range.end,
+      expectedMaxVisible: computeExpectedMaxVisible(virtualConfig),
+      rowHeight: virtualConfig.rowHeight,
+      viewportHeight: virtualConfig.viewportHeight,
+      overscan: virtualConfig.overscan
+    });
     const visible = [];
     for (let index = range.start; index < range.end; index += 1) {
       const item = items[index];
@@ -867,6 +892,18 @@ function renderTree(state, widget, options = {}) {
   }
 
   const range = computeVirtualRange(flat.length, virtualConfig);
+  recordVirtualizationSample(options, {
+    widgetKind: "tree",
+    widgetId: widget.id,
+    totalCount: flat.length,
+    visibleCount: Math.max(0, range.end - range.start),
+    start: range.start,
+    end: range.end,
+    expectedMaxVisible: computeExpectedMaxVisible(virtualConfig),
+    rowHeight: virtualConfig.rowHeight,
+    viewportHeight: virtualConfig.viewportHeight,
+    overscan: virtualConfig.overscan
+  });
   const visible = [];
   for (let index = range.start; index < range.end; index += 1) {
     const entry = flat[index];
@@ -981,6 +1018,18 @@ function renderTable(state, widget, options = {}) {
   }
 
   const range = computeVirtualRange(rows.length, virtualConfig);
+  recordVirtualizationSample(options, {
+    widgetKind: "table",
+    widgetId: widget.id,
+    totalCount: rows.length,
+    visibleCount: Math.max(0, range.end - range.start),
+    start: range.start,
+    end: range.end,
+    expectedMaxVisible: computeExpectedMaxVisible(virtualConfig),
+    rowHeight: virtualConfig.rowHeight,
+    viewportHeight: virtualConfig.viewportHeight,
+    overscan: virtualConfig.overscan
+  });
   for (let index = range.start; index < range.end; index += 1) {
     const row = rows[index];
     if (!row) continue;
@@ -1073,6 +1122,7 @@ function renderCanvasView(state, widget, options = {}) {
   const registry = options?.registry ?? null;
   const defaultCommandId = resolveCommandId(widget);
   const a11yProps = resolveAccessibilityProps(widget, { label: "Canvas view" });
+  const qualityCollector = options?.qualityCollector ?? null;
 
   const onCanvasRender = (node) => {
     if (!node) return;
@@ -1080,11 +1130,15 @@ function renderCanvasView(state, widget, options = {}) {
       node.__canvasBackend = createCanvasBackend({ canvas: node, document: node.ownerDocument });
     }
     node.__canvasScene = scene;
-    if (dirtyOptions) {
-      node.__canvasBackend.render(scene, dirtyOptions);
-    } else {
-      node.__canvasBackend.render(scene);
+    const renderOptions = dirtyOptions ? { ...dirtyOptions } : {};
+    if (qualityCollector) {
+      renderOptions.qualityCollector = qualityCollector;
     }
+    if (Object.keys(renderOptions).length > 0) {
+      node.__canvasBackend.render(scene, renderOptions);
+      return;
+    }
+    node.__canvasBackend.render(scene);
   };
 
   const onCanvasClick = (event) => {
@@ -1146,6 +1200,7 @@ function renderWebGLView(state, widget, options = {}) {
   const registry = options?.registry ?? null;
   const defaultCommandId = resolveCommandId(widget);
   const a11yProps = resolveAccessibilityProps(widget, { label: "WebGL view" });
+  const qualityCollector = options?.qualityCollector ?? null;
 
   const onWebGLRender = (node) => {
     if (!node) return;
@@ -1153,11 +1208,15 @@ function renderWebGLView(state, widget, options = {}) {
       node.__webglBackend = createWebGLBackend({ canvas: node, document: node.ownerDocument });
     }
     node.__webglScene = scene;
-    if (dirtyOptions) {
-      node.__webglBackend.render(scene, dirtyOptions);
-    } else {
-      node.__webglBackend.render(scene);
+    const renderOptions = dirtyOptions ? { ...dirtyOptions } : {};
+    if (qualityCollector) {
+      renderOptions.qualityCollector = qualityCollector;
     }
+    if (Object.keys(renderOptions).length > 0) {
+      node.__webglBackend.render(scene, renderOptions);
+      return;
+    }
+    node.__webglBackend.render(scene);
   };
 
   const onWebGLClick = (event) => {
