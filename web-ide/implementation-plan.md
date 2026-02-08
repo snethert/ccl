@@ -139,9 +139,10 @@ Exit criteria:
 
 ## Phase 5: Runtime Integration (CL)
 Outcome: End-to-end CL integration with presentations and restarts.
-Status: In Progress, M3 started (February 8, 2026).
+Status: In Progress, M4 complete and M5 next (February 8, 2026).
 Detailed execution plan: `web-ide/phase-5/implementation-plan.md`.
 M3 detail plan: `web-ide/phase-5/m3-typed-command-dispatch-plan.md`.
+M4 detail plan: `web-ide/phase-5/m4-restarts-debugger-plan.md`.
 
 1. Bridge protocol.
 - Output recording payloads with presentation metadata.
@@ -201,4 +202,4 @@ Exit criteria:
 - Theme drift: enforce token-only styling across renderers.
 
 ## Immediate Next Step
-Execute M3-A and M3-B from `web-ide/phase-5/m3-typed-command-dispatch-plan.md`: freeze command invoke/result/error contracts and add UI runtime command client scaffolding.
+Execute M5 `RT5` from `web-ide/phase-5/implementation-plan.md`: land inspector runtime payloads and staged place-edit apply/undo integration.

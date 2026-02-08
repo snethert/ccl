@@ -4,8 +4,10 @@ export const RUNTIME_BRIDGE_VERSION = DEFAULT_VERSION;
 
 export const RUNTIME_MESSAGE_KINDS = Object.freeze({
   output: "runtime.output",
+  commandInvoke: "command.invoke",
   commandResult: "command.result",
   commandError: "command.error",
+  debuggerSnapshot: "debugger.snapshot",
   restart: "debugger.restart",
   inspector: "inspector.update",
   job: "job.update",

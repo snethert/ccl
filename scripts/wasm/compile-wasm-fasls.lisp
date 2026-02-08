@@ -215,12 +215,39 @@
         #'<
         :key (lambda (entry) (svref entry 2))))
 
+(defun u8-vectors-equal-p (a b)
+  (let ((len (length a)))
+    (and (= len (length b))
+         (loop for i fixnum from 0 below len
+               always (= (aref a i) (aref b i))))))
+
+(defun u8-vector-fnv1a32 (bytes)
+  (let ((hash #x811c9dc5))
+    (dotimes (i (length bytes) (logand #xffffffff hash))
+      (setf hash (logand #xffffffff
+                         (* (logxor hash (aref bytes i))
+                            #x01000193))))))
+
+(defun maybe-reuse-const-pool (index-by-signature const-bytes)
+  (let* ((len (length const-bytes))
+         (sig (list len (u8-vector-fnv1a32 const-bytes)))
+         (candidates (gethash sig index-by-signature)))
+    (values
+     (loop for candidate in candidates
+           when (u8-vectors-equal-p const-bytes (cdr candidate))
+           do (return (car candidate)))
+     sig)))
+
 (defun write-module-bundle (output-path modules)
   (let* ((json-path (pathname output-path))
          (bin-path (make-pathname :type "bin" :defaults json-path))
          (bin-name (file-namestring bin-path))
+         (const-pool-index (make-hash-table :test #'equal))
          (entries nil)
-         (offset 0))
+         (offset 0)
+         (raw-const-bytes 0)
+         (unique-const-bytes 0)
+         (reused-const-pools 0))
     (ensure-directories-exist json-path)
     (with-open-file (bin bin-path
                          :direction :output
@@ -233,12 +260,25 @@
                (module-offset offset)
                (const-bytes (and (> (length entry) 4) (svref entry 4)))
                (const-len (if const-bytes (length const-bytes) 0))
-               (const-offset (and const-bytes (+ offset module-len))))
+               (const-offset nil))
           (when (> module-len 0)
             (write-sequence module-bytes bin))
+          (incf offset module-len)
           (when const-bytes
-            (write-sequence const-bytes bin))
-          (incf offset (+ module-len const-len))
+            (incf raw-const-bytes const-len)
+            (multiple-value-bind (existing-offset sig)
+                (maybe-reuse-const-pool const-pool-index const-bytes)
+              (if existing-offset
+                (progn
+                  (setf const-offset existing-offset)
+                  (incf reused-const-pools))
+                (progn
+                  (setf const-offset offset)
+                  (write-sequence const-bytes bin)
+                  (incf offset const-len)
+                  (incf unique-const-bytes const-len)
+                  (push (cons const-offset const-bytes)
+                        (gethash sig const-pool-index))))))
           (push (list entry module-offset module-len const-offset const-len) entries))))
     (setf entries (nreverse entries))
     (with-open-file (out json-path
@@ -272,7 +312,11 @@
                    (princ const-len out))
                  (write-char #\} out)))
       (write-string "]}" out)
-      (terpri out))))
+      (terpri out))
+    (list :raw-const-bytes raw-const-bytes
+          :unique-const-bytes unique-const-bytes
+          :saved-const-bytes (- raw-const-bytes unique-const-bytes)
+          :reused-const-pools reused-const-pools)))
 
 (defun json-write-string-list (out items)
   (write-char #\[ out)
@@ -403,7 +447,12 @@
         (validate-wasm-compiled-modules)
         (when modules-out
           (let ((modules (sorted-compiled-modules)))
-            (write-module-bundle modules-out modules)
+            (let ((stats (write-module-bundle modules-out modules)))
+              (format t "~&Const-pool dedupe: raw=~d unique=~d saved=~d reused=~d~%"
+                      (getf stats :raw-const-bytes)
+                      (getf stats :unique-const-bytes)
+                      (getf stats :saved-const-bytes)
+                      (getf stats :reused-const-pools)))
             (format t "~&Wrote ~d compiled modules to ~a~%" (length modules) modules-out)))
         (when modules-debug-out
           (write-module-debug modules-debug-out *wasm2-compiled-modules-debug*)

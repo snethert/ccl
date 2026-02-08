@@ -35,7 +35,7 @@ import {
   validatePresentationMetadata
 } from "./presentation-taxonomy.mjs";
 import { normalizeThemeTokens } from "./theme.mjs";
-import { normalizeRestart } from "./conditions.mjs";
+import { normalizeRestart, normalizeConditionReport } from "./conditions.mjs";
 import { revalidatePresentations as revalidatePresentationsCore } from "./world-state.mjs";
 
 const ID_KINDS = ["workspace", "task", "window", "widget", "presentation", "layout", "reason", "error", "job", "session"];
@@ -1374,6 +1374,47 @@ export function recordCommandInvocation(state, invocation) {
     id: resolveInvocationId(state, normalized.id)
   };
   return { ...state, commandHistory: [...(state.commandHistory ?? []), nextInvocation] };
+}
+
+export function patchCommandInvocation(state, invocationId, patch = {}) {
+  if (typeof invocationId !== "string" || invocationId.length === 0) {
+    return state;
+  }
+  const history = Array.isArray(state.commandHistory) ? state.commandHistory : [];
+  let changed = false;
+  const nextHistory = history.map((entry) => {
+    if (entry?.id !== invocationId) return entry;
+    changed = true;
+    return {
+      ...entry,
+      ...(patch && typeof patch === "object" ? patch : {}),
+      id: invocationId
+    };
+  });
+  return changed ? { ...state, commandHistory: nextHistory } : state;
+}
+
+export function upsertCommandInvocation(state, invocation) {
+  const normalized = normalizeInvocation(invocation);
+  const id = normalized.id ?? resolveInvocationId(state, null);
+  const history = Array.isArray(state.commandHistory) ? state.commandHistory : [];
+  const index = history.findIndex((entry) => entry?.id === id);
+  if (index < 0) {
+    return {
+      ...state,
+      commandHistory: [...history, { ...normalized, id }]
+    };
+  }
+  const nextHistory = [...history];
+  nextHistory[index] = {
+    ...nextHistory[index],
+    ...normalized,
+    id
+  };
+  return {
+    ...state,
+    commandHistory: nextHistory
+  };
 }
 
 export function requestCapability(state, capability, options = {}) {
@@ -4842,7 +4883,7 @@ export function registerDebuggerCommands(registry, options = {}) {
       { name: "errorId", type: "string", required: true, defaultFrom: ["selection", "presentation"] },
       { name: "args", type: "map", required: false }
     ],
-    metadata: { kind: "restart" }
+    metadata: { kind: "restart", runtime: true, runtimeCommandId: "runtime.restart.invoke" }
   });
 
   const ensure = (id, command) => {
@@ -4872,6 +4913,7 @@ export function registerDebuggerCommands(registry, options = {}) {
     title: restartSpec.title ?? "Invoke Restart",
     doc: restartSpec.doc ?? "Invoke the selected restart.",
     scope: restartSpec.scope ?? "context",
+    args: restartSpec.args ?? [],
     metadata: { ...(restartSpec.metadata ?? {}), typed: restartSpec },
     enabled: (ctx) => {
       const { restartId, errorId, error, restart } = resolveRestartContext(ctx);
@@ -4884,6 +4926,7 @@ export function registerDebuggerCommands(registry, options = {}) {
     exec: (ctx) => {
       const { restartId, errorId, error, restart, item } = resolveRestartContext(ctx);
       if (!restartId || !errorId || !error || !restart) return ctx.state;
+      const hasRuntimeClient = Boolean(ctx.runtimeCommandClient?.dispatchTypedCommand);
       const args = { restartId, errorId };
       const restartArgs = ctx.args ?? ctx.payload?.args ?? null;
       if (restartArgs !== null && restartArgs !== undefined) {
@@ -4903,11 +4946,14 @@ export function registerDebuggerCommands(registry, options = {}) {
         defaults,
         ts: Number.isInteger(ctx.ts) ? ctx.ts : null,
         source: ctx.source ?? ctx.payload?.source ?? "debugger",
-        result: null
+        result: hasRuntimeClient ? { status: "pending" } : null
       };
       const validation = validateInvocation(invocation, restartSpec);
       if (!validation.ok) return ctx.state;
       const nextState = recordCommandInvocation(ctx.state, invocation);
+      if (hasRuntimeClient) {
+        return { state: nextState };
+      }
       return {
         state: nextState,
         output: {
@@ -5488,6 +5534,277 @@ export function closeKeybindingWindow(state, options = {}) {
   return removeWindow(state, windowId, { reason: options.reason ?? "command" });
 }
 
+function normalizeRuntimeDebuggerFrames(frames) {
+  if (!Array.isArray(frames)) return [];
+  return frames.map((frame, index) => {
+    const frameId =
+      typeof frame?.frameId === "string" && frame.frameId.length > 0
+        ? frame.frameId
+        : `frame-${index + 1}`;
+    const fnName =
+      typeof frame?.function === "string" && frame.function.length > 0
+        ? frame.function
+        : typeof frame?.label === "string" && frame.label.length > 0
+          ? frame.label
+          : "anonymous";
+    const label =
+      typeof frame?.label === "string" && frame.label.length > 0
+        ? frame.label
+        : fnName;
+    const location = isPlainObject(frame?.location) ? { ...frame.location } : null;
+    const locals = Array.isArray(frame?.locals)
+      ? frame.locals.map((local, localIndex) => {
+          const bindingId =
+            typeof local?.bindingId === "string" && local.bindingId.length > 0
+              ? local.bindingId
+              : `${frameId}-local-${localIndex + 1}`;
+          const name =
+            typeof local?.name === "string" && local.name.length > 0 ? local.name : `local-${localIndex + 1}`;
+          const valueSummary =
+            typeof local?.valueSummary === "string" && local.valueSummary.length > 0
+              ? local.valueSummary
+              : "";
+          return {
+            bindingId,
+            name,
+            valueSummary,
+            presentationId:
+              typeof local?.presentationId === "string" && local.presentationId.length > 0
+                ? local.presentationId
+                : null,
+            location: isPlainObject(local?.location) ? { ...local.location } : null
+          };
+        })
+      : [];
+    return {
+      frameId,
+      label,
+      function: fnName,
+      location,
+      locals
+    };
+  });
+}
+
+function normalizeRuntimeRestartList(restarts) {
+  if (!Array.isArray(restarts)) return [];
+  const normalized = [];
+  for (const restart of restarts) {
+    if (!restart || typeof restart !== "object") continue;
+    try {
+      normalized.push(normalizeRestart(restart));
+    } catch (_err) {
+      // Ignore malformed restarts; runtime bridge should degrade safely.
+    }
+  }
+  return normalized;
+}
+
+function normalizeRuntimeConditionPayload(payload, errorId, frames) {
+  const condition = isPlainObject(payload?.condition) ? payload.condition : {};
+  const fallbackStack = frames.map((frame) => ({
+    frameId: frame.frameId,
+    function: frame.function ?? frame.label ?? "anonymous",
+    location: frame.location ?? null
+  }));
+  const reportInput = {
+    ...condition,
+    id:
+      (typeof condition.id === "string" && condition.id.length > 0 ? condition.id : null) ??
+      errorId,
+    stack: Array.isArray(condition.stack) ? condition.stack : fallbackStack,
+    sections: Array.isArray(condition.sections) ? condition.sections : []
+  };
+  try {
+    return normalizeConditionReport(reportInput);
+  } catch (_err) {
+    return {
+      id: errorId,
+      kind: "error",
+      message:
+        typeof condition.message === "string" && condition.message.length > 0
+          ? condition.message
+          : typeof payload?.message === "string" && payload.message.length > 0
+            ? payload.message
+            : "",
+      summary:
+        typeof condition.summary === "string" && condition.summary.length > 0 ? condition.summary : "",
+      sections: [],
+      stack: fallbackStack,
+      restarts: []
+    };
+  }
+}
+
+function refreshDebuggerWindowsForTask(state, taskId, errorId = null) {
+  let nextState = state;
+  const windows = Object.values(state.windows ?? {}).filter(
+    (window) => window?.metadata?.role === "debugger" && (!taskId || window.taskId === taskId)
+  );
+  for (const window of windows) {
+    const nextErrorId = errorId ?? window.metadata?.errorId ?? null;
+    nextState = refreshDebuggerWindow(nextState, window.id, nextErrorId);
+  }
+  return nextState;
+}
+
+export function upsertRuntimeDebuggerSnapshot(state, payload = {}, options = {}) {
+  if (!payload || typeof payload !== "object") {
+    throw new Error("Runtime debugger snapshot payload must be an object");
+  }
+  const ts = Number.isInteger(options.ts) ? options.ts : null;
+  const frames = normalizeRuntimeDebuggerFrames(payload.frames);
+  const errorId =
+    (typeof payload.errorId === "string" && payload.errorId.length > 0
+      ? payload.errorId
+      : typeof payload.condition?.id === "string" && payload.condition.id.length > 0
+        ? payload.condition.id
+        : null) ?? `runtime-error-${(state.errors ?? []).length + 1}`;
+  const existing = (state.errors ?? []).find((entry) => entry.id === errorId) ?? null;
+  const taskId =
+    (typeof payload.taskId === "string" && payload.taskId.length > 0
+      ? payload.taskId
+      : typeof options.taskId === "string" && options.taskId.length > 0
+        ? options.taskId
+        : existing?.taskId ??
+          state.workspace?.activeTaskId ??
+          null);
+  if (!taskId) return state;
+
+  const report = normalizeRuntimeConditionPayload(payload, errorId, frames);
+  const restartSource = Array.isArray(payload.restarts) ? payload.restarts : report.restarts;
+  const restarts = normalizeRuntimeRestartList(restartSource);
+  const location =
+    isPlainObject(payload.location) ? payload.location : isPlainObject(report.location) ? report.location : null;
+  const debuggerTarget = {
+    ...(isPlainObject(existing?.debuggerTarget) ? existing.debuggerTarget : {}),
+    ...(typeof payload.selectedFrameId === "string" && payload.selectedFrameId.length > 0
+      ? { selectedFrameId: payload.selectedFrameId }
+      : {})
+  };
+
+  const errors = [...(state.errors ?? [])];
+  const index = errors.findIndex((entry) => entry.id === errorId);
+  if (index !== -1) {
+    const current = errors[index];
+    errors[index] = {
+      ...current,
+      taskId,
+      kind: report.kind ?? current.kind ?? "error",
+      message: report.message || current.message || "",
+      restarts,
+      location,
+      report,
+      stack: frames,
+      coalesceKey: current.coalesceKey ?? `runtime:${errorId}`,
+      lastTs: ts ?? current.lastTs ?? null,
+      status: payload.status ?? current.status ?? "open",
+      debuggerTarget
+    };
+  } else {
+    errors.push({
+      id: errorId,
+      taskId,
+      kind: report.kind ?? "error",
+      message: report.message ?? "",
+      restarts,
+      severity: payload.severity ?? null,
+      location,
+      report,
+      stack: frames,
+      coalesceKey: `runtime:${errorId}`,
+      ts,
+      lastTs: ts,
+      status: payload.status ?? "open",
+      count: 1,
+      presentationId:
+        typeof payload.presentationId === "string" && payload.presentationId.length > 0
+          ? payload.presentationId
+          : null,
+      debuggerTarget
+    });
+  }
+
+  let nextState = { ...state, errors };
+  const openDebugger = options.openDebugger !== false;
+  const existingDebuggerWindow = findWindowByRole(nextState, "debugger", taskId);
+  if (openDebugger && !existingDebuggerWindow) {
+    nextState = openDebuggerWindow(nextState, { taskId, errorId });
+  } else {
+    nextState = refreshDebuggerWindowsForTask(nextState, taskId, errorId);
+  }
+  return nextState;
+}
+
+export function applyRuntimeDebuggerRestartUpdate(state, payload = {}, options = {}) {
+  if (!payload || typeof payload !== "object") {
+    throw new Error("Runtime debugger restart payload must be an object");
+  }
+  const ts = Number.isInteger(options.ts) ? options.ts : null;
+  const type = typeof payload.type === "string" && payload.type.length > 0 ? payload.type : "set";
+  const errorId =
+    typeof payload.errorId === "string" && payload.errorId.length > 0 ? payload.errorId : null;
+  if (!errorId) {
+    return state;
+  }
+
+  const existing = (state.errors ?? []).find((entry) => entry.id === errorId) ?? null;
+  if (!existing) {
+    if (type === "set" && Array.isArray(payload.restarts)) {
+      return upsertRuntimeDebuggerSnapshot(
+        state,
+        {
+          errorId,
+          taskId: payload.taskId ?? options.taskId ?? state.workspace?.activeTaskId ?? null,
+          condition: {
+            id: errorId,
+            kind: "error",
+            message: payload.message ?? "",
+            summary: payload.summary ?? ""
+          },
+          restarts: payload.restarts
+        },
+        { ...options, openDebugger: false, ts }
+      );
+    }
+    return state;
+  }
+
+  const errors = [...(state.errors ?? [])];
+  const index = errors.findIndex((entry) => entry.id === errorId);
+  const current = errors[index];
+  if (index === -1) return state;
+
+  let restarts = current.restarts ?? [];
+  if (type === "set" && Array.isArray(payload.restarts)) {
+    restarts = normalizeRuntimeRestartList(payload.restarts);
+  }
+  if (type === "invoked" && Array.isArray(payload.restarts)) {
+    restarts = normalizeRuntimeRestartList(payload.restarts);
+  }
+
+  const debuggerTarget = {
+    ...(isPlainObject(current.debuggerTarget) ? current.debuggerTarget : {}),
+    ...(typeof payload.restartId === "string" && payload.restartId.length > 0
+      ? { lastInvokedRestartId: payload.restartId }
+      : {}),
+    ...(typeof payload.summary === "string" && payload.summary.length > 0
+      ? { lastRestartSummary: payload.summary }
+      : {}),
+    ...(ts !== null ? { lastRestartTs: ts } : {})
+  };
+
+  errors[index] = {
+    ...current,
+    restarts,
+    lastTs: ts ?? current.lastTs ?? null,
+    debuggerTarget
+  };
+  let nextState = { ...state, errors };
+  nextState = refreshDebuggerWindowsForTask(nextState, current.taskId ?? null, errorId);
+  return nextState;
+}
+
 export function raiseError(state, error, options = {}) {
   const taskId = error.taskId ?? state.workspace?.activeTaskId ?? null;
   if (!taskId) {
@@ -5576,20 +5893,48 @@ export function upsertJob(state, job) {
 function buildDebuggerContent(state, errorId) {
   const error = state.errors?.find((entry) => entry.id === errorId) ?? null;
   const restarts = Array.isArray(error?.restarts) ? error.restarts.map(normalizeRestart) : [];
-  const summary = error ? `${error.kind ?? "error"}: ${error.message ?? ""}` : "No error selected";
+  const reportSummary =
+    typeof error?.report?.summary === "string" && error.report.summary.length > 0
+      ? error.report.summary
+      : null;
+  const lastRestartSummary =
+    typeof error?.debuggerTarget?.lastRestartSummary === "string" && error.debuggerTarget.lastRestartSummary.length > 0
+      ? error.debuggerTarget.lastRestartSummary
+      : null;
+  const summaryParts = [];
+  if (error) {
+    summaryParts.push(`${error.kind ?? "error"}: ${error.message ?? ""}`.trim());
+    if (reportSummary) summaryParts.push(reportSummary);
+    if (lastRestartSummary) summaryParts.push(`last restart: ${lastRestartSummary}`);
+  }
+  const summary = summaryParts.length > 0 ? summaryParts.join(" | ") : "No error selected";
   const items = restarts.map((restart, index) => {
     const id = restart.id ?? `restart-${index}`;
     const title = restart.title ?? restart.id ?? `Restart ${index + 1}`;
     const metaParts = [];
     if (restart.recommended) metaParts.push("recommended");
     if (restart.safety) metaParts.push(restart.safety);
+    if (Array.isArray(restart.argSchema) && restart.argSchema.length > 0) {
+      metaParts.push(`args:${restart.argSchema.length}`);
+    }
     const metaSuffix = metaParts.length > 0 ? ` (${metaParts.join(", ")})` : "";
+    const reasonSuffix =
+      typeof restart.recommendedReason === "string" && restart.recommendedReason.length > 0
+        ? ` - ${restart.recommendedReason}`
+        : "";
+    const previewText =
+      typeof restart.preview?.text === "string" && restart.preview.text.length > 0
+        ? restart.preview.text
+        : null;
+    const previewSuffix = previewText ? ` [preview: ${previewText}]` : "";
     const safety = restart.safety ?? "safe";
     const classParts = ["ui-debugger-restart", `is-${safety}`];
     if (restart.recommended) classParts.push("is-recommended");
+    if (previewText) classParts.push("has-preview");
+    if (Array.isArray(restart.argSchema) && restart.argSchema.length > 0) classParts.push("has-args");
     return {
       id,
-      label: `${title}${metaSuffix}`,
+      label: `${title}${metaSuffix}${reasonSuffix}${previewSuffix}`,
       restartId: restart.id ?? null,
       errorId: error?.id ?? null,
       restart,

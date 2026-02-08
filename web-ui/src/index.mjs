@@ -37,6 +37,8 @@ export {
   applyEditGroup,
   undoEditGroup,
   recordCommandInvocation,
+  patchCommandInvocation,
+  upsertCommandInvocation,
   setCommandState,
   updateWidget,
   updateWindow,
@@ -116,6 +118,8 @@ export {
   DOM_ESCAPE_COMMAND,
   raiseError,
   acknowledgeError,
+  upsertRuntimeDebuggerSnapshot,
+  applyRuntimeDebuggerRestartUpdate,
   upsertJob,
   requestCapability,
   grantCapability,
@@ -242,7 +246,15 @@ export {
   materializeInvocation,
   executeTypedCommand
 } from "./typed-commands.mjs";
-export { applyRuntimeMessage, applyRuntimeOutput } from "./runtime-bridge.mjs";
+export { createRuntimeCommandClient } from "./runtime-command-client.mjs";
+export {
+  applyRuntimeMessage,
+  applyRuntimeOutput,
+  applyRuntimeCommandResult,
+  applyRuntimeCommandError,
+  applyRuntimeDebuggerSnapshot,
+  applyRuntimeDebuggerRestart
+} from "./runtime-bridge.mjs";
 export { createElement, createText, h, normalizeChildren } from "./vdom.mjs";
 export { createRoot } from "./renderer.mjs";
 export { renderWidget, renderWindow } from "./widgets.mjs";

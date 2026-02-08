@@ -28,6 +28,7 @@
 #+wasm32-target
 (defun toplevel-loop ()
   (loop
+    (runtime-bridge-pump-commands)
     (let ((yielded
            (if *wasm-yield-on-eagain*
              (catch :wasm-yield
@@ -468,18 +469,36 @@ commands but aren't")
   (declare (ignore _args))
   nil)
 
+#-wasm32-target
+(defun runtime-bridge-pump-commands (&rest _args)
+  (declare (ignore _args))
+  nil)
+
+#-wasm32-target
+(defun runtime-bridge-emit-debugger-snapshot (&rest _args)
+  (declare (ignore _args))
+  nil)
+
 #+wasm32-target
 (progn
   (defconstant +kernel-op-runtime-event+ #x23)
+  (defconstant +kernel-op-runtime-command-poll+ #x24)
   (defconstant +kernel-status-pending+ 0)
   (defconstant +kernel-status-done+ 1)
   (defconstant +kernel-status-error+ 2)
+  (defconstant +runtime-command-frame-version+ 1)
+  (defconstant +runtime-command-max-bytes+ 65536)
 
   (defvar *runtime-bridge-enabled* t)
   (defvar *runtime-bridge-job-id* nil)
   (defvar *runtime-bridge-stream-id* "repl")
+  (defvar *runtime-command-enabled* t)
+  (defvar *runtime-command-stream-id* "commands")
   (defvar *runtime-bridge-seq* 0)
   (defvar *runtime-bridge-recording-counter* 0)
+  (defvar *runtime-debugger-error-counter* 0)
+  (defvar *runtime-debugger-current-error-id* nil)
+  (defvar *runtime-debugger-current-condition* nil)
 
   (defun runtime-bridge--now-ms ()
     (let ((seconds (- (get-universal-time) unix-to-universal-time)))
@@ -617,6 +636,323 @@ commands but aren't")
                                :unsigned-long request-id
                                :void))))))
 
+  (defun runtime-bridge--emit-message (kind payload &key request-id stream-id error)
+    (let* ((ts (runtime-bridge--now-ms))
+           (seq (incf *runtime-bridge-seq*))
+           (envelope (list (cons "version" 1)
+                           (cons "kind" kind)
+                           (cons "jobId" *runtime-bridge-job-id*)
+                           (cons "streamId" (or stream-id *runtime-command-stream-id*))
+                           (cons "requestId" request-id)
+                           (cons "seq" seq)
+                           (cons "ts" ts)
+                           (cons "payload" payload)
+                           (cons "error" error))))
+      (runtime-bridge--emit-json (runtime-bridge--json-string envelope))))
+
+  (defun runtime-command--u32 (bytes offset)
+    (logior (aref bytes offset)
+            (ash (aref bytes (+ offset 1)) 8)
+            (ash (aref bytes (+ offset 2)) 16)
+            (ash (aref bytes (+ offset 3)) 24)))
+
+  (defun runtime-command--decode-string (bytes start len)
+    (decode-string-from-octets bytes
+                               :start start
+                               :end (+ start len)
+                               :external-format :utf-8))
+
+  (defun runtime-command--decode-frame (bytes)
+    (let* ((n (length bytes)))
+      (when (< n 24)
+        (return-from runtime-command--decode-frame nil))
+      (let* ((version (runtime-command--u32 bytes 0))
+             (invocation-len (runtime-command--u32 bytes 4))
+             (command-len (runtime-command--u32 bytes 8))
+             (args-len (runtime-command--u32 bytes 12))
+             (context-len (runtime-command--u32 bytes 16))
+             (total (+ 24 invocation-len command-len args-len context-len)))
+        (when (or (/= version +runtime-command-frame-version+)
+                  (/= total n))
+          (return-from runtime-command--decode-frame nil))
+        (let* ((offset 24)
+               (invocation-id (runtime-command--decode-string bytes offset invocation-len)))
+          (incf offset invocation-len)
+          (let* ((command-id (runtime-command--decode-string bytes offset command-len)))
+            (incf offset command-len)
+            (let* ((args-form-string (runtime-command--decode-string bytes offset args-len)))
+              (incf offset args-len)
+              (let* ((context-form-string (runtime-command--decode-string bytes offset context-len)))
+                (list :invocation-id invocation-id
+                      :command-id command-id
+                      :args-form-string args-form-string
+                      :context-form-string context-form-string))))))))
+
+  (defun runtime-command--safe-read-form (string)
+    (let ((eof (list :runtime-command-invalid)))
+      (handler-case
+          (multiple-value-bind (value pos) (read-from-string string nil eof)
+            (if (or (eq value eof) (< pos (length string)))
+              nil
+              value))
+        (error () nil))))
+
+  (defun runtime-command--alist-value (alist key &optional default)
+    (if (and (listp alist) (every #'consp alist))
+      (let* ((pair (assoc key alist :test #'string=)))
+        (if pair (cdr pair) default))
+      default))
+
+  (defun runtime-command--render-summary (value)
+    (with-output-to-string (s)
+      (write value :stream s)))
+
+  (defun runtime-command--emit-result (invocation-id command-id result &key diagnostics effects duration-ms)
+    (runtime-bridge--emit-message
+     "command.result"
+     (list (cons "invocationId" invocation-id)
+           (cons "commandId" command-id)
+           (cons "result" result)
+           (cons "effects" effects)
+           (cons "diagnostics" (or diagnostics #()))
+           (cons "durationMs" duration-ms))
+     :request-id invocation-id
+     :stream-id *runtime-command-stream-id*
+     :error nil))
+
+  (defun runtime-command--emit-error (invocation-id command-id phase summary &key retryable diagnostics)
+    (runtime-bridge--emit-message
+     "command.error"
+     (list (cons "invocationId" invocation-id)
+           (cons "commandId" command-id)
+           (cons "phase" phase)
+           (cons "retryable" (if retryable t nil))
+           (cons "condition"
+                 (list (cons "type" "simple-error")
+                       (cons "summary" summary)
+                       (cons "presentationId" nil)))
+           (cons "diagnostics" (or diagnostics #())))
+     :request-id invocation-id
+     :stream-id *runtime-command-stream-id*
+     :error nil))
+
+  (defun runtime-command--eval-form (args context)
+    (declare (ignore context))
+    (let* ((form-string (runtime-command--alist-value args "form" nil)))
+      (unless (and (stringp form-string) (> (length form-string) 0))
+        (error "runtime.eval.form requires args.form string"))
+      (let* ((read (runtime-command--safe-read-form form-string)))
+        (when (null read)
+          (error "runtime.eval.form could not read form"))
+        (let* ((values (toplevel-eval read)))
+          (when values
+            (toplevel-print values))
+          (list (cons "valueSummary"
+                      (if values
+                        (runtime-command--render-summary (car values))
+                        "NIL"))
+                (cons "valuesCount" (length values)))))))
+
+  (defun runtime-command--inspect-presentation (args)
+    (let* ((presentation-id (runtime-command--alist-value args "presentationId" nil)))
+      (list (cons "presentationId" presentation-id)
+            (cons "valueSummary"
+                  (if presentation-id
+                    (format nil "inspect ~a" presentation-id)
+                    "inspect")))))
+
+  (defun runtime-command--restart-id (restart index)
+    (let* ((name (ignore-errors (restart-name restart))))
+      (if name
+        (format nil "rst-~a-~d" (string-downcase (string name)) index)
+        (format nil "rst-~d" index))))
+
+  (defun runtime-command--collect-restarts (&optional condition)
+    (let* ((source (or condition *runtime-debugger-current-condition* *break-condition*))
+           (restarts (ignore-errors (compute-restarts source)))
+           (index 0)
+           (items nil))
+      (dolist (restart restarts (nreverse items))
+        (let* ((id (runtime-command--restart-id restart index))
+               (name (ignore-errors (restart-name restart)))
+               (title (if name
+                        (string-capitalize (string-downcase (string name)))
+                        (format nil "Restart ~d" (1+ index))))
+               (description (ignore-errors (with-output-to-string (s) (princ restart s))))
+               (recommended (and name (string= (string-downcase (string name)) "continue")))
+               (recommended-reason (if recommended "Continue the current operation." nil))
+               (json (list (cons "id" id)
+                           (cons "title" title)
+                           (cons "description" (or description title))
+                           (cons "safety" "safe")
+                           (cons "argSchema" #())
+                           (cons "preview" nil)
+                           (cons "recommended" (if recommended t nil))
+                           (cons "recommendedReason" recommended-reason))))
+          (push (list :id id :restart restart :json json) items))
+        (incf index))))
+
+  (defun runtime-command--condition-summary (&optional condition)
+    (let* ((source (or condition *runtime-debugger-current-condition* *break-condition*)))
+      (if source
+        (format nil "~a" source)
+        "No active debugger condition")))
+
+  (defun runtime-command--build-debugger-snapshot (&key condition error-id task-id)
+    (let* ((source (or condition *runtime-debugger-current-condition* *break-condition*))
+           (resolved-error-id
+            (or error-id
+                *runtime-debugger-current-error-id*
+                (format nil "err-~d" (incf *runtime-debugger-error-counter*))))
+           (summary (runtime-command--condition-summary source))
+           (restart-entries (runtime-command--collect-restarts source))
+           (restart-json (coerce (mapcar (lambda (entry) (getf entry :json)) restart-entries) 'vector))
+           (section (vector (list (cons "id" "sec-what")
+                                  (cons "title" "What happened")
+                                  (cons "text" summary))))
+           (condition-json (list (cons "id" resolved-error-id)
+                                 (cons "kind" "error")
+                                 (cons "message" summary)
+                                 (cons "summary" summary)
+                                 (cons "sections" section))))
+      (list (cons "errorId" resolved-error-id)
+            (cons "taskId" task-id)
+            (cons "condition" condition-json)
+            (cons "frames" #())
+            (cons "restarts" restart-json)
+            (cons "selectedFrameId" nil))))
+
+  (defun runtime-bridge-emit-debugger-snapshot (&key condition error-id task-id request-id)
+    (when *runtime-bridge-enabled*
+      (let* ((payload (runtime-command--build-debugger-snapshot
+                       :condition condition
+                       :error-id error-id
+                       :task-id task-id))
+             (resolved-error-id (cdr (assoc "errorId" payload :test #'string=))))
+        (setf *runtime-debugger-current-error-id* resolved-error-id
+              *runtime-debugger-current-condition* (or condition *runtime-debugger-current-condition* *break-condition*))
+        (runtime-bridge--emit-message
+         "debugger.snapshot"
+         payload
+         :request-id request-id
+         :stream-id "debugger"
+         :error nil)
+        payload)))
+
+  (defun runtime-command--find-restart-entry (restart-id &optional condition)
+    (find restart-id
+          (runtime-command--collect-restarts condition)
+          :test #'string=
+          :key (lambda (entry) (getf entry :id))))
+
+  (defun runtime-command--open-debugger (args context)
+    (declare (ignore args context))
+    (let* ((payload (runtime-bridge-emit-debugger-snapshot
+                     :condition *runtime-debugger-current-condition*
+                     :error-id *runtime-debugger-current-error-id*)))
+      (list (cons "errorId" (cdr (assoc "errorId" payload :test #'string=)))
+            (cons "status" "snapshot-emitted"))))
+
+  (defun runtime-command--invoke-restart (args context)
+    (declare (ignore context))
+    (let* ((restart-id (runtime-command--alist-value args "restartId" nil))
+           (error-id (runtime-command--alist-value args "errorId" nil))
+           (entry (and (stringp restart-id)
+                       (runtime-command--find-restart-entry restart-id *runtime-debugger-current-condition*))))
+      (unless (and (stringp restart-id) (> (length restart-id) 0))
+        (error "runtime.restart.invoke requires args.restartId"))
+      (unless entry
+        (error "Unknown restart id: ~a" restart-id))
+      (let* ((restart-json (getf entry :json))
+             (summary (format nil "Restart ~a requested" restart-id)))
+        (runtime-bridge--emit-message
+         "debugger.restart"
+         (list (cons "type" "invoked")
+               (cons "errorId" (or error-id *runtime-debugger-current-error-id*))
+               (cons "restartId" restart-id)
+               (cons "summary" summary)
+               (cons "restart" restart-json))
+         :request-id nil
+         :stream-id "debugger"
+         :error nil)
+        (list (cons "restartOutcome"
+                    (list (cons "errorId" (or error-id *runtime-debugger-current-error-id*))
+                          (cons "restartId" restart-id)
+                          (cons "status" "requested")
+                          (cons "summary" summary)))))))
+
+  (defun runtime-command--dispatch (frame)
+    (let* ((invocation-id (getf frame :invocation-id))
+           (command-id (getf frame :command-id))
+           (args (runtime-command--safe-read-form (getf frame :args-form-string)))
+           (context (runtime-command--safe-read-form (getf frame :context-form-string)))
+           (start-ms (runtime-bridge--now-ms)))
+      (unless (and (stringp invocation-id) (> (length invocation-id) 0))
+        (return-from runtime-command--dispatch nil))
+      (unless (and (stringp command-id) (> (length command-id) 0))
+        (runtime-command--emit-error invocation-id "unknown" "dispatch" "Missing command id" :retryable nil)
+        (return-from runtime-command--dispatch nil))
+      (handler-case
+          (let* ((result
+                  (cond
+                    ((string= command-id "runtime.eval.form")
+                     (runtime-command--eval-form args context))
+                    ((string= command-id "runtime.recording.rerun")
+                     (runtime-command--eval-form args context))
+                    ((string= command-id "runtime.restart.invoke")
+                     (runtime-command--invoke-restart args context))
+                    ((string= command-id "runtime.debugger.open")
+                     (runtime-command--open-debugger args context))
+                    ((string= command-id "runtime.inspect.presentation")
+                     (runtime-command--inspect-presentation args))
+                    (t
+                     (error "Unknown runtime command: ~a" command-id))))
+                 (duration-ms (- (runtime-bridge--now-ms) start-ms)))
+            (runtime-command--emit-result invocation-id command-id result :duration-ms duration-ms))
+        (error (condition)
+          (runtime-command--emit-error invocation-id
+                                       command-id
+                                       "execute"
+                                       (format nil "~a" condition)
+                                       :retryable t))))
+    t)
+
+  (defun runtime-command--poll-frame (&key (max-bytes +runtime-command-max-bytes+) (allow-pending nil))
+    (let* ((buffer (make-array max-bytes :element-type '(unsigned-byte 8)))
+           (flags (if allow-pending 1 0)))
+      (ccl:rlet ((out-len :unsigned-long))
+        (let* ((r (ccl:with-pointer-to-ivector (ptr buffer)
+                    (ccl:external-call "wasm_kernel_runtime_command_poll"
+                                       :unsigned-long max-bytes
+                                       :unsigned-long flags
+                                       :address ptr
+                                       :unsigned-long max-bytes
+                                       :address out-len
+                                       :signed-long))))
+          (cond
+            ((< r 0) (values nil r))
+            ((= r 0) (values nil 0))
+            (t
+             (let* ((n (ccl:pref out-len :unsigned-long))
+                    (bytes (if (and n (> n 0))
+                             (let ((copy (make-array n :element-type '(unsigned-byte 8))))
+                               (replace copy buffer :end2 n)
+                               copy)
+                             (make-array 0 :element-type '(unsigned-byte 8)))))
+               (values bytes r))))))))
+
+  (defun runtime-bridge-pump-commands (&key (max-commands 4))
+    (when (and *runtime-bridge-enabled* *runtime-command-enabled*)
+      (loop repeat max-commands do
+        (multiple-value-bind (bytes status) (runtime-command--poll-frame)
+          (declare (ignore status))
+          (when (null bytes)
+            (return))
+          (let* ((frame (runtime-command--decode-frame bytes)))
+            (when frame
+              (runtime-command--dispatch frame))))))
+    nil)
+
   (defun runtime-bridge-emit-output (values)
     (when (and *runtime-bridge-enabled* values)
       (ignore-errors
@@ -697,6 +1033,14 @@ commands but aren't")
               (*debugger-hook* nil)
               (*break-loop-type* msg))
           (funcall hook condition hook)))
+      #+wasm32-target
+      (when *runtime-bridge-enabled*
+        (setf *runtime-debugger-current-condition* condition
+              *runtime-debugger-current-error-id* (format nil "err-~d" (incf *runtime-debugger-error-counter*)))
+        (ignore-errors
+          (runtime-bridge-emit-debugger-snapshot
+           :condition condition
+           :error-id *runtime-debugger-current-error-id*)))
       (%break-message msg condition))
     (let* ((s *error-output*))
       (dolist (bogusness bogus-globals)

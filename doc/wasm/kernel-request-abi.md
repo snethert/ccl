@@ -191,6 +191,7 @@ All opcodes are `u32`.
 - `KERNEL_OP_UI_RENDER    = 0x0000_0021`
 - `KERNEL_OP_UI_MEASURE_TEXT = 0x0000_0022`
 - `KERNEL_OP_RUNTIME_EVENT = 0x0000_0023`
+- `KERNEL_OP_RUNTIME_COMMAND_POLL = 0x0000_0024`
 
 Unrecognized opcodes MUST complete with `kernel_result == -ENOSYS`.
 
@@ -531,6 +532,47 @@ Response payload: none (`kernel_response_size = 0`).
 
 - `0` on success
 - `< 0` negative errno on failure (`-EINVAL` for malformed JSON, `-ENOSYS` if runtime bridge is unavailable)
+
+### `KERNEL_OP_RUNTIME_COMMAND_POLL`
+
+Poll for pending runtime `command.invoke` requests destined for the Lisp runtime.
+
+Payload (8 bytes):
+
+```
+offset  size  field
+0x00    u32   max_bytes
+0x04    u32   flags      (bit0: allow_pending_if_empty)
+```
+
+Response payload: Runtime Command Frame bytes.
+
+Frame layout:
+
+```
+offset  size  field
+0x00    u32   frame_version  (currently 1)
+0x04    u32   invocation_id_len
+0x08    u32   command_id_len
+0x0c    u32   args_form_len
+0x10    u32   context_form_len
+0x14    u32   reserved       (0)
+0x18    ...   invocation_id_utf8
+...            command_id_utf8
+...            args_form_utf8
+...            context_form_utf8
+```
+
+`args_form_utf8` and `context_form_utf8` are Lisp-readable forms produced by the host adapter.
+
+`kernel_result`:
+
+- `1` when a command frame is returned
+- `0` when no command is available
+- `< 0` negative errno on failure (`-E2BIG` when `max_bytes` is too small, `-EINVAL` for malformed payload)
+
+If `flags & 0x1` is set and no command is available, the request MAY remain
+`PENDING` (same pending semantics as `KERNEL_OP_UI_POLL`).
 
 ## Validation and robustness requirements (host-side)
 

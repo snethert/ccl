@@ -489,6 +489,28 @@ wasm_kernel_runtime_event(const void *payload, uint32_t payload_len)
   return wasm_kernel_request_copy(KERNEL_OP_RUNTIME_EVENT, payload, payload_len, NULL, 0, NULL);
 }
 
+int32_t
+wasm_kernel_runtime_command_poll(uint32_t max_bytes,
+                                 uint32_t flags,
+                                 void *out_buf,
+                                 uint32_t out_cap,
+                                 uint32_t *out_len)
+{
+  struct payload {
+    uint32_t max_bytes;
+    uint32_t flags;
+  } p;
+
+  p.max_bytes = max_bytes;
+  p.flags = flags;
+  return wasm_kernel_request_copy(KERNEL_OP_RUNTIME_COMMAND_POLL,
+                                  &p,
+                                  (uint32_t)sizeof(p),
+                                  out_buf,
+                                  out_cap,
+                                  out_len);
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_ffi_test_add")))
 int32_t
 wasm_ffi_test_add(int32_t a, int32_t b)

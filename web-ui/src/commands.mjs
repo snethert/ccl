@@ -229,10 +229,18 @@ function isTypedCommand(command) {
   return Boolean(Array.isArray(command?.args) && command.args.length > 0);
 }
 
+function isRuntimeScopedCommand(command) {
+  if (!command || typeof command !== "object") return false;
+  if (command.metadata?.runtime === true) return true;
+  return typeof command.id === "string" && command.id.startsWith("runtime.");
+}
+
 function buildTypedInvocation(command, ctx = {}) {
   const invocation = isPlainObject(ctx.invocation) ? { ...ctx.invocation } : {};
   const args = {};
   const payload = isPlainObject(ctx.payload) ? ctx.payload : {};
+  const item = isPlainObject(ctx.item) ? ctx.item : null;
+  const payloadItem = isPlainObject(payload.item) ? payload.item : null;
   if (isPlainObject(payload.args)) {
     Object.assign(args, payload.args);
   }
@@ -247,6 +255,14 @@ function buildTypedInvocation(command, ctx = {}) {
     }
     if (Object.prototype.hasOwnProperty.call(payload, arg.name)) {
       args[arg.name] = payload[arg.name];
+      continue;
+    }
+    if (item && Object.prototype.hasOwnProperty.call(item, arg.name)) {
+      args[arg.name] = item[arg.name];
+      continue;
+    }
+    if (payloadItem && Object.prototype.hasOwnProperty.call(payloadItem, arg.name)) {
+      args[arg.name] = payloadItem[arg.name];
     }
   }
   return {
@@ -311,6 +327,32 @@ export function executeCommand(registry, id, ctx) {
         ok: false,
         reason: typed.reason ?? "Typed command failed",
         missing: typed.missing ?? [],
+        invocation: typed.invocation ?? null
+      };
+    }
+    if (isRuntimeScopedCommand(cmd) && ctx?.runtimeCommandClient?.dispatchTypedCommand) {
+      const dispatched = ctx.runtimeCommandClient.dispatchTypedCommand(
+        cmd,
+        typed.invocation ?? {},
+        {
+          ...ctx,
+          context: ctx.runtimeContext ?? ctx.context ?? {}
+        }
+      );
+      if (!dispatched?.ok) {
+        return {
+          ok: false,
+          reason: dispatched?.reason ?? "Runtime dispatch failed",
+          invocation: typed.invocation ?? null
+        };
+      }
+      return {
+        ok: true,
+        pending: true,
+        runtimeDispatched: true,
+        requestId: dispatched.requestId ?? null,
+        promise: dispatched.promise ?? null,
+        result: typed.result,
         invocation: typed.invocation ?? null
       };
     }

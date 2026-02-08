@@ -37,6 +37,7 @@ export const KERNEL_OP_UI_POLL = 0x00000020;
 export const KERNEL_OP_UI_RENDER = 0x00000021;
 export const KERNEL_OP_UI_MEASURE_TEXT = 0x00000022;
 export const KERNEL_OP_RUNTIME_EVENT = 0x00000023;
+export const KERNEL_OP_RUNTIME_COMMAND_POLL = 0x00000024;
 
 export const KERNEL_STREAM_KIND_PIPE = 0x00000000;
 export const KERNEL_STREAM_KIND_NAMED_RO = 0x00000001;
@@ -158,6 +159,103 @@ function encodeUtf8(text) {
   return out;
 }
 
+function encodeLispString(text) {
+  const s = String(text);
+  let out = "\"";
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    switch (ch) {
+      case "\\":
+        out += "\\\\";
+        break;
+      case "\"":
+        out += "\\\"";
+        break;
+      case "\n":
+        out += "\\n";
+        break;
+      case "\r":
+        out += "\\r";
+        break;
+      case "\t":
+        out += "\\t";
+        break;
+      default:
+        out += ch;
+        break;
+    }
+  }
+  out += "\"";
+  return out;
+}
+
+function encodeLispForm(value) {
+  if (value === null || value === undefined) return ":null";
+  if (value === true) return ":true";
+  if (value === false) return ":false";
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) return encodeLispString(String(value));
+    return String(value);
+  }
+  if (typeof value === "string") return encodeLispString(value);
+  if (Array.isArray(value)) {
+    return `(${value.map((entry) => encodeLispForm(entry)).join(" ")})`;
+  }
+  if (typeof value === "object") {
+    const pairs = [];
+    for (const [key, nested] of Object.entries(value)) {
+      pairs.push(`(${encodeLispString(key)} . ${encodeLispForm(nested)})`);
+    }
+    return `(${pairs.join(" ")})`;
+  }
+  return encodeLispString(String(value));
+}
+
+function encodeRuntimeCommandFrameFromEnvelope(envelope) {
+  const payload = envelope?.payload ?? {};
+  const invocation = payload?.invocation ?? {};
+  const invocationId = typeof invocation?.id === "string" && invocation.id.length > 0 ? invocation.id : null;
+  const commandId = typeof invocation?.commandId === "string" && invocation.commandId.length > 0 ? invocation.commandId : null;
+  if (!invocationId || !commandId) {
+    return null;
+  }
+  const argsForm = encodeLispForm(invocation?.args ?? {});
+  const contextForm = encodeLispForm(payload?.context ?? {});
+  const invocationIdBytes = encodeUtf8(invocationId);
+  const commandIdBytes = encodeUtf8(commandId);
+  const argsBytes = encodeUtf8(argsForm);
+  const contextBytes = encodeUtf8(contextForm);
+  const headerSize = 24;
+  const totalSize =
+    headerSize +
+    invocationIdBytes.length +
+    commandIdBytes.length +
+    argsBytes.length +
+    contextBytes.length;
+  const buffer = new ArrayBuffer(totalSize);
+  const dv = new DataView(buffer);
+  dv.setUint32(0, 1, true); // frame_version
+  dv.setUint32(4, invocationIdBytes.length, true);
+  dv.setUint32(8, commandIdBytes.length, true);
+  dv.setUint32(12, argsBytes.length, true);
+  dv.setUint32(16, contextBytes.length, true);
+  dv.setUint32(20, 0, true);
+  const out = new Uint8Array(buffer);
+  let offset = headerSize;
+  out.set(invocationIdBytes, offset);
+  offset += invocationIdBytes.length;
+  out.set(commandIdBytes, offset);
+  offset += commandIdBytes.length;
+  out.set(argsBytes, offset);
+  offset += argsBytes.length;
+  out.set(contextBytes, offset);
+  return {
+    frame: out,
+    invocationId,
+    commandId
+  };
+}
+
 function writeU64LE(dv, offset, value) {
   const v = typeof value === "bigint" ? value : BigInt(Math.trunc(value));
   if (typeof dv.setBigUint64 === "function") {
@@ -263,7 +361,7 @@ export function createMicrokernel({
   compiledModulesAsync = false,
   persistence = null,
   uiService = null, // { pollEvents, renderTree, measureText, setWake? }
-  runtimeBridge = null, // { emit, jobId?, streamIds?, strict? }
+  runtimeBridge = null, // { emit, jobId?, streamIds?, strict?, commandQueueLimit? }
 } = {}) {
   if (!memory) throw new Error("createMicrokernel: memory is required");
 
@@ -281,14 +379,19 @@ export function createMicrokernel({
   const logs = [];
   const decoder = typeof TextDecoder !== "undefined" ? new TextDecoder("utf-8") : null;
   const pendingUiPolls = [];
+  const pendingRuntimeCommandPolls = [];
   const runtimeEmit = typeof runtimeBridge?.emit === "function" ? runtimeBridge.emit : null;
   const runtimeJobId = runtimeBridge?.jobId ?? null;
   const runtimeStreamIds = typeof runtimeBridge?.streamIds === "object" && runtimeBridge?.streamIds
     ? runtimeBridge.streamIds
     : { stdout: "stdout", stderr: "stderr" };
+  const runtimeCommandQueueLimit = Number.isInteger(runtimeBridge?.commandQueueLimit)
+    ? Math.max(1, runtimeBridge.commandQueueLimit)
+    : 128;
   const runtimeSeqByStream = new Map();
   let runtimeRecordingSeq = 1;
   let runtimeEntrySeq = 1;
+  const runtimeCommandQueue = [];
 
   function decodeUtf8(bytes) {
     if (decoder) return decoder.decode(bytes);
@@ -626,6 +729,96 @@ export function createMicrokernel({
     }
   }
 
+  function normalizeRuntimeCommandEnvelope(input) {
+    if (!input || typeof input !== "object") return null;
+    if (input.kind === "command.invoke" && input.payload && typeof input.payload === "object") {
+      return input;
+    }
+    if (input.payload && typeof input.payload === "object" && input.payload.invocation) {
+      return {
+        version: Number.isInteger(input.version) ? input.version : 1,
+        kind: "command.invoke",
+        jobId: input.jobId ?? null,
+        streamId: input.streamId ?? "commands",
+        requestId: input.requestId ?? null,
+        seq: Number.isInteger(input.seq) ? input.seq : 0,
+        ts: Number.isFinite(input.ts) ? input.ts : now(),
+        payload: input.payload,
+        error: null
+      };
+    }
+    if (input.invocation && typeof input.invocation === "object") {
+      return {
+        version: 1,
+        kind: "command.invoke",
+        jobId: null,
+        streamId: "commands",
+        requestId: null,
+        seq: 0,
+        ts: now(),
+        payload: {
+          invocation: input.invocation,
+          context: input.context ?? {}
+        },
+        error: null
+      };
+    }
+    return null;
+  }
+
+  function drainPendingRuntimeCommandPolls() {
+    for (;;) {
+      if (pendingRuntimeCommandPolls.length === 0) return;
+      if (runtimeCommandQueue.length === 0) return;
+      const id = pendingRuntimeCommandPolls[0];
+      const req = requests.get(id);
+      if (!req || req.status !== KERNEL_STATUS_PENDING || req.pending?.kind !== "runtime_command_poll") {
+        pendingRuntimeCommandPolls.shift();
+        continue;
+      }
+      const maxBytes = u32(req.pending.maxBytes);
+      const next = runtimeCommandQueue[0];
+      if (!next || !next.frame) {
+        return;
+      }
+      if (next.frame.length > maxBytes) {
+        recordRequestDone(id, -ERRNO.E2BIG);
+        pendingRuntimeCommandPolls.shift();
+        continue;
+      }
+      runtimeCommandQueue.shift();
+      recordRequestDone(id, 1, next.frame);
+      pendingRuntimeCommandPolls.shift();
+    }
+  }
+
+  function enqueueRuntimeCommand(message) {
+    const envelope = normalizeRuntimeCommandEnvelope(message);
+    if (!envelope) {
+      return { ok: false, errno: ERRNO.EINVAL, reason: "Invalid command.invoke message" };
+    }
+    const encoded = encodeRuntimeCommandFrameFromEnvelope(envelope);
+    if (!encoded) {
+      return { ok: false, errno: ERRNO.EINVAL, reason: "command.invoke payload missing invocation id or command id" };
+    }
+    if (runtimeCommandQueue.length >= runtimeCommandQueueLimit) {
+      return { ok: false, errno: ERRNO.EWOULDBLOCK, reason: "Runtime command queue is full" };
+    }
+    runtimeCommandQueue.push({
+      frame: encoded.frame,
+      invocationId: encoded.invocationId,
+      commandId: encoded.commandId,
+      requestId: envelope.requestId ?? null
+    });
+    drainPendingRuntimeCommandPolls();
+    return {
+      ok: true,
+      invocationId: encoded.invocationId,
+      commandId: encoded.commandId,
+      queued: runtimeCommandQueue.length
+    };
+  }
+
   function kernel_request(opcode, payloadPtr, payloadLen) {
     const id = nextRequestId++;
     const op = u32(opcode);
@@ -699,6 +892,37 @@ export function createMicrokernel({
           break;
         }
         recordRequestDone(id, 0);
+        break;
+      }
+
+      case KERNEL_OP_RUNTIME_COMMAND_POLL: {
+        if (u32(payloadLen) !== 8) {
+          recordRequestError(id, ERRNO.EINVAL);
+          break;
+        }
+        const maxBytes = readU32LE(memory, u32(payloadPtr) + 0);
+        const flags = readU32LE(memory, u32(payloadPtr) + 4);
+        if (maxBytes === 0) {
+          recordRequestError(id, ERRNO.EINVAL);
+          break;
+        }
+        const next = runtimeCommandQueue[0];
+        if (!next) {
+          const allowPending = (flags & 0x1) !== 0;
+          if (allowPending && supportsPending) {
+            recordRequestPending(id, { kind: "runtime_command_poll", maxBytes });
+            pendingRuntimeCommandPolls.push(id);
+          } else {
+            recordRequestDone(id, 0);
+          }
+          break;
+        }
+        if (next.frame.length > maxBytes) {
+          recordRequestDone(id, -ERRNO.E2BIG);
+          break;
+        }
+        runtimeCommandQueue.shift();
+        recordRequestDone(id, 1, next.frame);
         break;
       }
 
@@ -1355,6 +1579,12 @@ export function createMicrokernel({
         pendingUiPolls.splice(idx, 1);
       }
     }
+    if (req?.status === KERNEL_STATUS_PENDING && req.pending?.kind === "runtime_command_poll") {
+      const idx = pendingRuntimeCommandPolls.indexOf(id);
+      if (idx >= 0) {
+        pendingRuntimeCommandPolls.splice(idx, 1);
+      }
+    }
     requests.delete(id);
   }
 
@@ -1372,11 +1602,21 @@ export function createMicrokernel({
     feedStdin,
     requestInterrupt,
     closeStdin,
+    enqueueRuntimeCommand,
     registerNamedBlob,
     registerNamedBlobs,
     getLogs: () => logs.slice(),
     persistence: persistenceService,
-    _debug: { requests, pendingStdinReads, pendingUiPolls, streams, namedBlobs, persistence: persistenceService },
+    _debug: {
+      requests,
+      pendingStdinReads,
+      pendingUiPolls,
+      pendingRuntimeCommandPolls,
+      runtimeCommandQueue,
+      streams,
+      namedBlobs,
+      persistence: persistenceService
+    },
   };
   if (uiService && typeof uiService.setWake === "function") {
     uiService.setWake(drainPendingUiPolls);

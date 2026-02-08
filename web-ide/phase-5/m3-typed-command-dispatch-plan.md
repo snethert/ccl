@@ -1,7 +1,7 @@
 # Phase 5 M3 Plan: Typed Command Dispatch and Runtime Dispatcher Wiring
 
 ## Document Control
-- Status: In Progress
+- Status: Complete
 - Last Updated: February 8, 2026
 - Parent Plan: `web-ide/phase-5/implementation-plan.md`
 - Upstream Specs: `web-ide/phase-0/typed-command-model.md`, `doc/wasm/runtime-bridge.md`, `doc/wasm/kernel-request-abi.md`
@@ -122,7 +122,7 @@ Canonical payloads are JSON, but Lisp has no current JSON parser.
 Use a host-side adapter that translates `command.invoke` JSON to a compact binary frame consumed by runtime poll APIs.
 
 ### New Kernel Opcode
-- `KERNEL_OP_RUNTIME_COMMAND_POLL = 0x00000024` (proposed)
+- `KERNEL_OP_RUNTIME_COMMAND_POLL = 0x00000024`
 
 ### Payload
 ```
@@ -225,7 +225,6 @@ All additional command IDs are deferred until M4/M5.
 1. Add opcode constants and wrappers in `lisp-kernel/wasm-host.h` and `lisp-kernel/wasm-host.c`.
 2. Add helper API:
 - `wasm_kernel_runtime_command_poll(...)`
-- `wasm_kernel_runtime_command_decode(...)`
 3. Update ABI docs and opcode registry.
 
 ### Deliverables
@@ -303,3 +302,24 @@ All additional command IDs are deferred until M4/M5.
 2. Runtime-scoped typed commands execute through runtime dispatcher path.
 3. Command results and errors are correlated, persisted, and replayable.
 4. `cd web-ui && npm test` passes.
+
+## Completion Summary
+1. M3-A complete:
+- `doc/wasm/runtime-bridge.md` now includes `command.invoke` and request correlation requirements.
+- `web-ui/tests/phase-5-runtime-bridge.test.mjs` validates `command.invoke` acceptance and strict kind handling.
+2. M3-B and M3-F complete:
+- `web-ui/src/runtime-command-client.mjs` dispatches and tracks runtime-scoped typed invocations.
+- `web-ui/src/commands.mjs` routes `runtime.*` typed commands through the runtime command client.
+- `web-ui/src/runtime-bridge.mjs` applies `command.result` and `command.error` to state and promise correlation.
+- `web-ui/src/state.mjs` supports command invocation upsert/patch for terminal status.
+3. M3-C and M3-D complete:
+- `doc/wasm/js/microkernel.mjs` includes runtime command queueing and `KERNEL_OP_RUNTIME_COMMAND_POLL`.
+- `lisp-kernel/wasm-host.h` and `lisp-kernel/wasm-host.c` export `wasm_kernel_runtime_command_poll(...)`.
+- `doc/wasm/kernel-request-abi.md` and `doc/wasm/kernel-opcode-registry.md` document opcode `0x00000024`.
+4. M3-E complete:
+- `level-1/l1-readloop-lds.lisp` polls runtime command frames at safe points and dispatches core runtime command IDs.
+- Runtime emits terminal `command.result` or `command.error` events via existing event emission path.
+5. M3-G complete:
+- New tests: `web-ui/tests/phase-5-runtime-command-dispatch.test.mjs`, `web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs`.
+- New smoke: `doc/wasm/js/runtime-command-smoke.mjs` included from `doc/wasm/js/all-smoke.mjs`.
+- Validation: `cd web-ui && npm test` and `node doc/wasm/js/all-smoke.mjs` are passing.

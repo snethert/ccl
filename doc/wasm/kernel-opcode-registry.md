@@ -36,6 +36,7 @@ Detailed layouts remain in `doc/wasm/kernel-request-abi.md`.
 | `0x0000_0021` | `KERNEL_OP_UI_RENDER` | Draft | Submit UI render tree/patch |
 | `0x0000_0022` | `KERNEL_OP_UI_MEASURE_TEXT` | Draft | Text measurement |
 | `0x0000_0023` | `KERNEL_OP_RUNTIME_EVENT` | Draft | Runtime bridge JSON payload |
+| `0x0000_0024` | `KERNEL_OP_RUNTIME_COMMAND_POLL` | Draft | Poll runtime command queue |
 
 ## Stream Kinds (STREAM_OPEN)
 

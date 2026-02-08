@@ -22,6 +22,39 @@ test("createRuntimeMessage fills defaults", () => {
   assert.deepEqual(message.payload, { text: "ok" });
 });
 
+test("createRuntimeMessage accepts command.invoke kind", () => {
+  const message = createRuntimeMessage(
+    {
+      kind: RUNTIME_MESSAGE_KINDS.commandInvoke,
+      requestId: "req-1",
+      seq: 1,
+      ts: 10,
+      payload: { invocation: { id: "inv-1", commandId: "runtime.eval.form", args: { form: "(+ 1 2)" } } }
+    },
+    { strictKinds: true }
+  );
+  assert.equal(message.kind, RUNTIME_MESSAGE_KINDS.commandInvoke);
+  assert.equal(message.requestId, "req-1");
+});
+
+test("createRuntimeMessage accepts debugger.snapshot kind", () => {
+  const message = createRuntimeMessage(
+    {
+      kind: RUNTIME_MESSAGE_KINDS.debuggerSnapshot,
+      seq: 3,
+      ts: 30,
+      payload: {
+        errorId: "err-1",
+        condition: { id: "err-1", kind: "error", message: "Boom", summary: "Boom" },
+        restarts: []
+      }
+    },
+    { strictKinds: true }
+  );
+  assert.equal(message.kind, RUNTIME_MESSAGE_KINDS.debuggerSnapshot);
+  assert.equal(message.payload.errorId, "err-1");
+});
+
 test("encode/decode round trips runtime messages", () => {
   const encoded = encodeRuntimeMessage({
     version: RUNTIME_BRIDGE_VERSION,

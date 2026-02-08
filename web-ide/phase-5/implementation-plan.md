@@ -32,8 +32,8 @@ Deliver a live CL runtime integration where evaluations, restarts, inspector dat
 ## Progress Snapshot
 - M1 `RT1`: Completed.
 - M2 `RT2`: Completed.
-- M3 `RT3`: In Progress.
-- M4 `RT4`: Planned.
+- M3 `RT3`: Completed.
+- M4 `RT4`: Completed.
 - M5 `RT5`: Planned.
 - M6 `RT6`: Planned.
 - M7 `RT7`: Planned.
@@ -117,6 +117,7 @@ Surface restarts with rich metadata and safe interaction in the debugger.
 - Runtime restart payload encoder.
 - UI debugger integration for restart metadata and actions.
 - Tests for restart listing and restart command execution.
+- Detailed execution plan in `web-ide/phase-5/m4-restarts-debugger-plan.md`.
 
 ### Exit Criteria
 - Debugger restarts are actionable with metadata and history.
@@ -193,7 +194,8 @@ Codify runtime integration stability with automated gates.
 ## Progress Notes
 - M1 complete: protocol schema documented and runtime bridge codec added with tests.
 - M2 complete: UI runtime output ingest added; JS microkernel emits `runtime.output` for stdout and stderr; `KERNEL_OP_RUNTIME_EVENT` added for structured runtime payloads; CL emits `runtime.output` envelopes via `kernel_request` with recording entries.
-- M3 in progress: detailed dispatch plan added with canonical `command.invoke` payloads, WASM transport adaptation, runtime wiring tracks, and acceptance gates.
+- M3 complete: `command.invoke` bridge kind and contracts landed; UI runtime command client dispatches runtime-scoped typed commands with request correlation; `command.result` and `command.error` are applied through `web-ui/src/runtime-bridge.mjs`; WASM microkernel command queue and `KERNEL_OP_RUNTIME_COMMAND_POLL` landed; CL readloop pumps runtime commands and emits terminal responses; `web-ui` acceptance tests and `doc/wasm/js/all-smoke.mjs` pass.
+- M4 complete: runtime bridge supports `debugger.snapshot` and refined `debugger.restart`; UI runtime bridge ingests debugger payloads into error/debugger state; debugger restart command is runtime-scoped with `runtime.restart.invoke` transport mapping; CL dispatcher now handles `runtime.restart.invoke` and `runtime.debugger.open` with debugger snapshot emission; acceptance coverage added with `phase-5-runtime-debugger` and `phase-5-runtime-restart-invoke` tests; `cd web-ui && npm test` and `node doc/wasm/js/all-smoke.mjs` pass.
 
 ## Code Focus Areas
 - `doc/wasm/runtime-bridge.md`

@@ -170,13 +170,21 @@ function resolveCommandId(widget) {
 }
 
 function buildContext(state, widget, options, windowId, taskId) {
-  return makeContext(state, {
-    taskId,
-    windowId,
-    widgetId: widget.id,
-    contextId: widget.props?.contextId ?? null,
-    selection: state.selection ?? null
-  });
+  const runtimeContext =
+    typeof options?.runtimeContextResolver === "function"
+      ? options.runtimeContextResolver({ state, widget, windowId, taskId })
+      : options?.runtimeContext ?? null;
+  return {
+    ...makeContext(state, {
+      taskId,
+      windowId,
+      widgetId: widget.id,
+      contextId: widget.props?.contextId ?? null,
+      selection: state.selection ?? null
+    }),
+    runtimeCommandClient: options?.runtimeCommandClient ?? null,
+    runtimeContext
+  };
 }
 
 function isStateLike(value) {
