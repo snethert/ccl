@@ -10,6 +10,7 @@ export function createPersistenceManager(options = {}) {
   const schemaVersion = options.schemaVersion ?? SCHEMA_VERSION;
   const flushDelay = Number.isFinite(options.flushDelay) ? options.flushDelay : DEFAULT_FLUSH_DELAY;
   const allowlist = options.allowlist ?? {};
+  const presentationResolver = options.presentationResolver ?? null;
   const now = options.now ?? (() => Date.now());
   const metadata = options.metadata ?? {};
 
@@ -58,7 +59,12 @@ export function createPersistenceManager(options = {}) {
     const id = workspaceId ?? "workspace-0";
     const snapshot = await store.getSnapshot(id);
     if (!snapshot) return null;
-    const restored = restoreStateFromSnapshot(snapshot, { schemaVersion, allowlist, now });
+    const restored = restoreStateFromSnapshot(snapshot, {
+      schemaVersion,
+      allowlist,
+      now,
+      presentationResolver
+    });
     return restored?.state ?? null;
   }
 

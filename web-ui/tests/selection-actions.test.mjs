@@ -13,3 +13,21 @@ test("buildSelectionActions intersects action sets", () => {
   const ids = actions.map((action) => action.id).sort();
   assert.deepEqual(ids, ["describe", "inspect"]);
 });
+
+test("buildSelectionActions applies canonical priority then alphabetic fallback", () => {
+  const selection = { targetIds: ["p1", "p2"] };
+  const presentations = {
+    p1: { id: "p1", type: "alpha" },
+    p2: { id: "p2", type: "beta" }
+  };
+  const actions = buildSelectionActions(selection, presentations, {
+    actionsByType: {
+      alpha: ["zzz", "do-again", "inspect", "custom-b", "custom-a"],
+      beta: ["inspect", "custom-a", "custom-b", "do-again", "zzz"]
+    }
+  });
+  assert.deepEqual(
+    actions.map((action) => action.id),
+    ["inspect", "do-again", "custom-a", "custom-b", "zzz"]
+  );
+});

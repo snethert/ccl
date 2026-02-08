@@ -102,6 +102,28 @@ test("restoreStateFromSnapshot migrates legacy snapshots", () => {
   assert.equal(restored.snapshot.schemaVersion, "3");
 });
 
+test("restoreStateFromSnapshot revalidates presentations when resolver is provided", () => {
+  const state = createState({
+    presentations: {
+      "pres-1": {
+        id: "pres-1",
+        type: "value",
+        metadata: { summary: "stale me" }
+      }
+    }
+  });
+  const snapshot = createSnapshot(state, { now: () => 0 });
+
+  const restored = restoreStateFromSnapshot(snapshot, {
+    presentationResolver: () => ({ ok: false, reason: "not-live" })
+  });
+
+  assert.ok(restored, "restored state exists");
+  assert.equal(restored.state.presentations["pres-1"].metadata.stale, true);
+  assert.equal(restored.state.presentations["pres-1"].metadata.staleReason, "not-live");
+  assert.deepEqual(restored.stalePresentations, ["pres-1"]);
+});
+
 test("createSnapshot applies recording store truncation budget with marker", () => {
   let store = createRecordingStore();
   store = appendRecordingToStore(store, { id: "rec-1" });

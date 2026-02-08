@@ -2,6 +2,7 @@ import { createState } from "../state.mjs";
 import { normalizeFocusTarget } from "../focus.mjs";
 import { normalizeSelection } from "../selection.mjs";
 import { allocateId, initIdCounters } from "../ids.mjs";
+import { revalidatePresentations } from "../world-state.mjs";
 import { SCHEMA_VERSION } from "./schema.mjs";
 import { applyMigrations } from "./migrate.mjs";
 
@@ -459,5 +460,10 @@ export function restoreStateFromSnapshot(snapshot, options = {}) {
     idCounters: rebuildIdCounters(nextState)
   };
 
-  return { state: finalState, snapshot: migrated };
+  const resolver = options.presentationResolver ?? null;
+  if (typeof resolver !== "function") {
+    return { state: finalState, snapshot: migrated };
+  }
+  const revalidated = revalidatePresentations(finalState, resolver);
+  return { state: revalidated.state, snapshot: migrated, stalePresentations: revalidated.stale };
 }

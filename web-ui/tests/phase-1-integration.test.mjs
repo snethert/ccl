@@ -11,6 +11,7 @@ import {
   appendRecordingEntry,
   registerRecordingCommands
 } from "../src/state.mjs";
+import { replayAsInput } from "../src/recordings.mjs";
 import { createSnapshot, restoreStateFromSnapshot } from "../src/persistence/serialize.mjs";
 import { renderWindow } from "../src/widgets.mjs";
 
@@ -115,4 +116,41 @@ test("phase-1 integration preserves typed invocation history and recording state
   assert.equal(restored.state.commandHistory[0].commandId, "demo.inspect");
   assert.deepEqual(restored.state.recordingStore.recordingOrder, ["rec-1"]);
   assert.deepEqual(restored.state.recordingStore.entryOrder, ["ent-1"]);
+});
+
+test("phase-1 integration replay payload remains deterministic across snapshot restore", () => {
+  let state = createState();
+  state = addTask(state, { id: "task-1", title: "Task" });
+  state = appendRecording(state, {
+    id: "rec-1",
+    context: { commandId: "repl.eval", sessionId: "s-1", workspaceId: "workspace-0" },
+    input: { kind: "form", text: "(+ 1 2)", package: "CL-USER" }
+  });
+  state = appendRecordingEntry(state, {
+    id: "ent-1",
+    recordingId: "rec-1",
+    seq: 1,
+    streamId: "stdout",
+    text: "3"
+  });
+  state = appendRecording(state, {
+    id: "rec-2",
+    context: { commandId: "repl.eval", sessionId: "s-1", workspaceId: "workspace-0" },
+    input: { kind: "form", text: "(* 2 3)", package: "CL-USER" }
+  });
+  state = appendRecordingEntry(state, {
+    id: "ent-2",
+    recordingId: "rec-2",
+    seq: 2,
+    streamId: "stdout",
+    text: "6"
+  });
+
+  const before = replayAsInput(state.recordingStore, "rec-2");
+  const snapshot = createSnapshot(state, { now: () => 0 });
+  const restored = restoreStateFromSnapshot(snapshot);
+  const replayId = restored.state.recordingStore.recordingOrder.at(-1);
+  const after = replayAsInput(restored.state.recordingStore, replayId);
+
+  assert.deepEqual(after, before);
 });

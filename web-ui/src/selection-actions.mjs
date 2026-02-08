@@ -12,6 +12,8 @@ export const DEFAULT_ACTIONS_BY_TYPE = Object.freeze({
   location: ["open-source"]
 });
 
+const ACTION_PRIORITY_ORDER = Object.freeze(["inspect", "describe", "open-source", "do-again"]);
+
 const ACTION_LABELS = Object.freeze({
   inspect: "Inspect",
   describe: "Describe",
@@ -42,6 +44,17 @@ function normalizeSelection(selection) {
   return { ...selection, targetIds };
 }
 
+function compareActions(a, b) {
+  const aIndex = ACTION_PRIORITY_ORDER.indexOf(a);
+  const bIndex = ACTION_PRIORITY_ORDER.indexOf(b);
+  const aPinned = aIndex !== -1;
+  const bPinned = bIndex !== -1;
+  if (aPinned && bPinned) return aIndex - bIndex;
+  if (aPinned) return -1;
+  if (bPinned) return 1;
+  return a.localeCompare(b);
+}
+
 export function buildSelectionActions(selection, presentations, options = {}) {
   const normalized = normalizeSelection(selection);
   if (!normalized || normalized.targetIds.length === 0) return [];
@@ -59,7 +72,7 @@ export function buildSelectionActions(selection, presentations, options = {}) {
       common = new Set(actions.filter((action) => common.has(action)));
     }
   }
-  const result = common ? Array.from(common) : [];
+  const result = common ? Array.from(common).sort(compareActions) : [];
   return result.map((id) => ({
     id,
     label: ACTION_LABELS[id] ?? id

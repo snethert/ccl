@@ -1,7 +1,7 @@
 # Phase 1 Detailed Plan: Core State and Persistence
 
 ## Document Control
-- Status: In Progress
+- Status: Complete
 - Last Updated: February 8, 2026
 - Parent Plan: `web-ide/implementation-plan.md`
 - Doctrine Sources:
@@ -35,9 +35,10 @@ Deliver a doctrine-aligned runtime core where output recordings, typed commands,
 ## Progress Snapshot
 - M1 `WS1`: Complete (recording invariants, input-kind normalization, anchor validation, deterministic recording bounds).
 - M2 `WS2`: Complete (presentation metadata degradation policy at ingress and transcript-derived typing tests).
-- M3 `WS3`: In Progress (typed command execution integrated in registry; widget dispatch now appends structured invocations to command history for typed commands).
-- M4 `WS4`: In Progress (schema bumped to `3`, migration `2 -> 3`, snapshot truncation budgets and markers implemented).
-- M6 `WS6`: In Progress (Phase 1 runtime/persistence/integration acceptance tests added and wired into `test:sandbox`).
+- M3 `WS3`: Complete (typed command execution integrated in registry, command history fidelity for typed replay, command palette default preview, and palette-source invocation tracking).
+- M4 `WS4`: Complete (schema `3`, migration `2 -> 3`, snapshot truncation budgets/markers, and restore-time presentation revalidation hooks).
+- M5 `WS5`: Complete (transcript/action effects, typed command history replay, debugger/problems command wiring consistency, and world-state revalidation during restore/refresh paths).
+- M6 `WS6`: Complete (Phase 1 acceptance suites expanded and wired into `test:sandbox`, including deterministic replay-after-restore coverage).
 
 ## Workstreams
 
@@ -195,6 +196,11 @@ Codify Phase 1 acceptance into automated tests that prevent regression.
 - All existing tests pass.
 - Command/replay/persistence deterministic checks pass.
 - Schema and migration documentation updated.
+
+### Phase 1 Signoff
+- Signoff Date: February 8, 2026
+- Test Gate: `cd web-ui && npm test` (pass)
+- Smoke Gate: `node doc/wasm/js/web-ui-command-ui-smoke.mjs` (pass)
 
 ## Risks and Mitigations
 - Risk: schema churn during active implementation.

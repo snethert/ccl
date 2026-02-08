@@ -45,7 +45,7 @@ Exit criteria:
 
 ## Phase 1: Core State and Persistence
 Outcome: The runtime state model supports the doctrine.
-Status: In Progress (started February 8, 2026).
+Status: Complete (February 8, 2026).
 Detailed execution plan: `web-ide/phase-1/implementation-plan.md`.
 
 1. Output recording subsystem.
@@ -192,4 +192,4 @@ Exit criteria:
 - Theme drift: enforce token-only styling across renderers.
 
 ## Immediate Next Step
-Begin Phase 1 implementation using the locked Phase 0 specs, schema versions, and the finalized editor runtime (CodeMirror 6).
+Begin Phase 2 implementation for instrument surfaces, starting with REPL transcript + inspector integration on top of the locked Phase 1 runtime and persistence contracts.

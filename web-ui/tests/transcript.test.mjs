@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   createState,
   addTask,
+  addPresentation,
   appendRecording,
   appendRecordingEntry,
   LIST_SELECTION_UPDATE_COMMAND,
@@ -71,6 +72,34 @@ test("refreshTranscriptWindow updates entries", () => {
 
   const items = state.widgets[window.metadata.widgets.listId].props.items;
   assert.ok(items[0].label.includes("Later"));
+});
+
+test("refreshTranscriptWindow revalidates presentations when resolver is provided", () => {
+  let state = createState();
+  state = addTask(state, { id: "task-1", title: "Task" });
+  state = addPresentation(state, {
+    id: "pres-1",
+    type: "value",
+    metadata: { summary: "42" }
+  });
+  state = appendRecording(state, { id: "rec-1" });
+  state = appendRecordingEntry(state, {
+    id: "ent-1",
+    recordingId: "rec-1",
+    seq: 1,
+    streamId: "stdout",
+    text: "42",
+    presentationId: "pres-1"
+  });
+  state = openTranscriptWindow(state, { taskId: "task-1" });
+  const window = Object.values(state.windows).find((win) => win.metadata?.role === "transcript");
+
+  state = refreshTranscriptWindow(state, window.id, {
+    presentationResolver: () => ({ ok: false, reason: "unbound" })
+  });
+
+  assert.equal(state.presentations["pres-1"].metadata.stale, true);
+  assert.equal(state.presentations["pres-1"].metadata.staleReason, "unbound");
 });
 
 test("transcript derives presentation types from entry kinds when presentation id is absent", () => {

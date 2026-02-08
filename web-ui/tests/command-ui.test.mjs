@@ -142,6 +142,75 @@ test("palette command registration wires navigation and execution", () => {
   assert.equal(resolved, COMMAND_PALETTE_SELECT_NEXT_COMMAND);
 });
 
+test("command palette preview exposes inferred defaults for typed commands", () => {
+  const registry = createRegistry();
+  registerCommand(registry, {
+    id: "typed.inspect",
+    title: "Typed Inspect",
+    args: [{ name: "target", type: "selection", required: true, defaultFrom: ["selection"] }],
+    exec: ({ args }) => args.target.id
+  });
+
+  let state = createState({
+    selection: {
+      id: "sel-1",
+      kind: "presentation",
+      targetIds: ["pres-1"],
+      anchorId: "pres-1",
+      metadata: {}
+    }
+  });
+  state = addTask(state, { id: "task-1", title: "Task" });
+  state = openCommandPaletteWindow(state, { registry, taskId: "task-1", filter: "typed.inspect" });
+
+  const paletteWindow = Object.values(state.windows).find((win) => win.metadata?.role === "command-palette");
+  assert.ok(paletteWindow);
+  const previewId = paletteWindow.metadata.widgets.previewId;
+  assert.ok(previewId, "preview widget exists");
+  const previewText = state.widgets[previewId].props.text;
+  assert.ok(previewText.includes("target <- selection"));
+  assert.ok(previewText.includes("ready"));
+});
+
+test("palette execute command stamps typed invocation source as palette", () => {
+  const registry = createRegistry();
+  registerCommand(registry, {
+    id: "typed.inspect",
+    title: "Typed Inspect",
+    args: [{ name: "target", type: "selection", required: true, defaultFrom: ["selection"] }],
+    exec: ({ args }) => args.target.id
+  });
+  registerCommandPaletteCommands(registry);
+
+  let state = createState({
+    selection: {
+      id: "sel-1",
+      kind: "presentation",
+      targetIds: ["pres-1"],
+      anchorId: "pres-1",
+      metadata: {}
+    }
+  });
+  state = addTask(state, { id: "task-1", title: "Task" });
+  state = openCommandPaletteWindow(state, { registry, taskId: "task-1", filter: "typed.inspect" });
+
+  const paletteWindow = Object.values(state.windows).find((win) => win.metadata?.role === "command-palette");
+  assert.ok(paletteWindow);
+  const listId = paletteWindow.metadata.widgets.listId;
+  const item = state.widgets[listId].props.items[0];
+
+  const result = executeCommand(registry, COMMAND_PALETTE_EXECUTE_COMMAND, {
+    state,
+    taskId: "task-1",
+    windowId: paletteWindow.id,
+    item
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.result.ok, true);
+  assert.equal(result.result.invocation.commandId, "typed.inspect");
+  assert.equal(result.result.invocation.source, "palette");
+});
+
 test("command surface open/close commands toggle windows", () => {
   const registry = createRegistry();
   registerCommandSurfaceCommands(registry);
