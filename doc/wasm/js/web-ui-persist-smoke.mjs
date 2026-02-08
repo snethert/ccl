@@ -10,6 +10,7 @@ import {
   createMemoryStore,
   createPersistenceManager
 } from "../../../web-ui/src/index.mjs";
+import { SCHEMA_VERSION } from "../../../web-ui/src/persistence/schema.mjs";
 import { stableStringify } from "../../../web-ui/tests/snapshot.mjs";
 
 let state = createState();
@@ -31,6 +32,6 @@ assert.equal(stableStringify(before.state), stableStringify(after.state));
 const legacy = { workspace: before.state.workspace, tasks: before.state.tasks, windows: before.state.windows, widgets: before.state.widgets };
 const migrated = restoreStateFromSnapshot(legacy);
 assert.ok(migrated, "legacy snapshot migrated");
-assert.equal(migrated.snapshot.schemaVersion, "1");
+assert.equal(migrated.snapshot.schemaVersion, SCHEMA_VERSION);
 
 console.log("PASS: web-ui persistence smoke test");

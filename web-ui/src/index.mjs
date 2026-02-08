@@ -242,6 +242,7 @@ export {
   materializeInvocation,
   executeTypedCommand
 } from "./typed-commands.mjs";
+export { applyRuntimeMessage, applyRuntimeOutput } from "./runtime-bridge.mjs";
 export { createElement, createText, h, normalizeChildren } from "./vdom.mjs";
 export { createRoot } from "./renderer.mjs";
 export { renderWidget, renderWindow } from "./widgets.mjs";

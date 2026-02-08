@@ -137,6 +137,8 @@ Exit criteria:
 
 ## Phase 5: Runtime Integration (CL)
 Outcome: End-to-end CL integration with presentations and restarts.
+Status: In Progress, M2 complete (February 8, 2026).
+Detailed execution plan: `web-ide/phase-5/implementation-plan.md`.
 
 1. Bridge protocol.
 - Output recording payloads with presentation metadata.
@@ -196,4 +198,4 @@ Exit criteria:
 - Theme drift: enforce token-only styling across renderers.
 
 ## Immediate Next Step
-Start Phase 2 Milestone M1 from `web-ide/phase-2/implementation-plan.md`: transcript instrument closure (recording-first interaction and deterministic action flows).
+Begin Phase 5 Milestone M3 from `web-ide/phase-5/implementation-plan.md`: implement typed command dispatch and structured results.

@@ -5,7 +5,13 @@ WASM-specific commands in one place.
 
 ## Sandbox-Safe
 
+- `scripts/tests/run-sandbox-tests.sh`
 - `node doc/wasm/js/all-smoke.mjs`
+- `npm --prefix web-ui run test:sandbox`
+- `node doc/wasm/js/all-smoke.mjs --with-wasm-ui-persist` (optional heavy smoke)
+
+## Additional Targeted Smoke (Sandbox-Safe)
+
 - `node doc/wasm/js/interrupt-smoke.mjs`
 
 ## External / Host-Only

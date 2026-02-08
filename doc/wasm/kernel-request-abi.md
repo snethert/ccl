@@ -190,6 +190,7 @@ All opcodes are `u32`.
 - `KERNEL_OP_UI_POLL      = 0x0000_0020`
 - `KERNEL_OP_UI_RENDER    = 0x0000_0021`
 - `KERNEL_OP_UI_MEASURE_TEXT = 0x0000_0022`
+- `KERNEL_OP_RUNTIME_EVENT = 0x0000_0023`
 
 Unrecognized opcodes MUST complete with `kernel_result == -ENOSYS`.
 
@@ -517,6 +518,19 @@ offset  size  field
 ```
 
 `kernel_result`: `0` on success; negative errno on failure.
+
+### `KERNEL_OP_RUNTIME_EVENT`
+
+Submit a runtime bridge message for UI integration.
+
+Payload: UTF-8 JSON bytes for a runtime bridge envelope (see `doc/wasm/runtime-bridge.md`).
+
+Response payload: none (`kernel_response_size = 0`).
+
+`kernel_result`:
+
+- `0` on success
+- `< 0` negative errno on failure (`-EINVAL` for malformed JSON, `-ENOSYS` if runtime bridge is unavailable)
 
 ## Validation and robustness requirements (host-side)
 

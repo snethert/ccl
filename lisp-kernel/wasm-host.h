@@ -40,6 +40,7 @@
 #define KERNEL_OP_UI_POLL 0x00000020u
 #define KERNEL_OP_UI_RENDER 0x00000021u
 #define KERNEL_OP_UI_MEASURE_TEXT 0x00000022u
+#define KERNEL_OP_RUNTIME_EVENT 0x00000023u
 
 /* Stream kind registry (KERNEL_OP_STREAM_OPEN.kind). */
 #define KERNEL_STREAM_KIND_PIPE 0u
@@ -161,6 +162,8 @@ int32_t wasm_kernel_ui_measure_text(const char *font,
                                     const char *text,
                                     uint32_t text_len,
                                     struct wasm_ui_text_metrics *out_metrics);
+
+int32_t wasm_kernel_runtime_event(const void *payload, uint32_t payload_len);
 
 /* Minimal FFI smoke helper (imported by compiled modules). */
 int32_t wasm_ffi_test_add(int32_t a, int32_t b);

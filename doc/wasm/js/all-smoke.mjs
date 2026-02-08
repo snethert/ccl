@@ -3,6 +3,7 @@
  */
 
 const skipUi = process.argv.includes("--no-ui");
+const includeWasmUiPersist = process.argv.includes("--with-wasm-ui-persist");
 const tests = [
   "./smoke-test.mjs",
   "./kernel-request-smoke.mjs",
@@ -36,7 +37,6 @@ const tests = [
   "./web-ui-webgl-smoke.mjs",
   "./web-ui-command-ui-smoke.mjs",
   "./web-ui-persist-smoke.mjs",
-  "./wasm-ui-persist-smoke.mjs",
   "./web-ui-layout-focus-smoke.mjs",
   "./web-ui-inspector-smoke.mjs",
   "./web-ui-debugger-smoke.mjs",
@@ -44,6 +44,10 @@ const tests = [
   "./mv-helpers-smoke.mjs",
   "./mvcall-smoke.mjs"
 ];
+
+if (includeWasmUiPersist) {
+  tests.splice(tests.indexOf("./web-ui-layout-focus-smoke.mjs"), 0, "./wasm-ui-persist-smoke.mjs");
+}
 
 const filteredTests = skipUi
   ? tests.filter((test) => !test.startsWith("./web-ui-"))

@@ -483,6 +483,12 @@ wasm_kernel_ui_measure_text(const char *font,
   return 0;
 }
 
+int32_t
+wasm_kernel_runtime_event(const void *payload, uint32_t payload_len)
+{
+  return wasm_kernel_request_copy(KERNEL_OP_RUNTIME_EVENT, payload, payload_len, NULL, 0, NULL);
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_ffi_test_add")))
 int32_t
 wasm_ffi_test_add(int32_t a, int32_t b)

@@ -9,6 +9,8 @@ that requires native services, browsers, or privileged OS access.
 - Run all sandbox-safe tests: `scripts/tests/run-sandbox-tests.sh`
 - WASM JS smoke tests: `node doc/wasm/js/all-smoke.mjs`
 - Web UI node tests (no browser): `npm --prefix web-ui run test:sandbox`
+- Optional heavy WASM/UI persistence smoke: `node doc/wasm/js/all-smoke.mjs --with-wasm-ui-persist`
+- Optional targeted WASM interrupt smoke: `node doc/wasm/js/interrupt-smoke.mjs`
 
 ## External / Host-Only
 

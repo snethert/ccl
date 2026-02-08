@@ -36,6 +36,7 @@ export const KERNEL_OP_STREAM_TRUNCATE = 0x00000012;
 export const KERNEL_OP_UI_POLL = 0x00000020;
 export const KERNEL_OP_UI_RENDER = 0x00000021;
 export const KERNEL_OP_UI_MEASURE_TEXT = 0x00000022;
+export const KERNEL_OP_RUNTIME_EVENT = 0x00000023;
 
 export const KERNEL_STREAM_KIND_PIPE = 0x00000000;
 export const KERNEL_STREAM_KIND_NAMED_RO = 0x00000001;
@@ -262,6 +263,7 @@ export function createMicrokernel({
   compiledModulesAsync = false,
   persistence = null,
   uiService = null, // { pollEvents, renderTree, measureText, setWake? }
+  runtimeBridge = null, // { emit, jobId?, streamIds?, strict? }
 } = {}) {
   if (!memory) throw new Error("createMicrokernel: memory is required");
 
@@ -279,6 +281,14 @@ export function createMicrokernel({
   const logs = [];
   const decoder = typeof TextDecoder !== "undefined" ? new TextDecoder("utf-8") : null;
   const pendingUiPolls = [];
+  const runtimeEmit = typeof runtimeBridge?.emit === "function" ? runtimeBridge.emit : null;
+  const runtimeJobId = runtimeBridge?.jobId ?? null;
+  const runtimeStreamIds = typeof runtimeBridge?.streamIds === "object" && runtimeBridge?.streamIds
+    ? runtimeBridge.streamIds
+    : { stdout: "stdout", stderr: "stderr" };
+  const runtimeSeqByStream = new Map();
+  let runtimeRecordingSeq = 1;
+  let runtimeEntrySeq = 1;
 
   function decodeUtf8(bytes) {
     if (decoder) return decoder.decode(bytes);
@@ -287,6 +297,50 @@ export function createMicrokernel({
       out += String.fromCharCode(bytes[i]);
     }
     return out;
+  }
+
+  function nextRuntimeSeq(streamId) {
+    const current = runtimeSeqByStream.get(streamId) ?? 0;
+    const next = current + 1;
+    runtimeSeqByStream.set(streamId, next);
+    return next;
+  }
+
+  function emitRuntimeOutput(streamId, bytes) {
+    if (!runtimeEmit) return;
+    const text = decodeUtf8(bytes);
+    if (!text) return;
+    const ts = now();
+    const seq = nextRuntimeSeq(streamId);
+    const recordingId = `rec-${runtimeRecordingSeq++}`;
+    const entryId = `ent-${runtimeEntrySeq++}`;
+    const message = {
+      version: 1,
+      kind: "runtime.output",
+      jobId: runtimeJobId,
+      streamId,
+      requestId: null,
+      seq,
+      ts,
+      payload: {
+        recording: { id: recordingId, jobId: runtimeJobId, streamId },
+        entry: {
+          id: entryId,
+          recordingId,
+          kind: "text",
+          streamId,
+          seq,
+          ts,
+          text
+        }
+      },
+      error: null
+    };
+    try {
+      runtimeEmit(message);
+    } catch (_err) {
+      // Best effort only.
+    }
   }
 
   // Per-runner stream table (SID -> endpoint).
@@ -620,6 +674,34 @@ export function createMicrokernel({
         break;
       }
 
+      case KERNEL_OP_RUNTIME_EVENT: {
+        if (u32(payloadLen) === 0) {
+          recordRequestError(id, ERRNO.EINVAL);
+          break;
+        }
+        if (!runtimeEmit) {
+          recordRequestDone(id, -ERRNO.ENOSYS);
+          break;
+        }
+        const bytes = sliceBytes(memory, u32(payloadPtr), u32(payloadLen));
+        const text = decodeUtf8(bytes);
+        let message = null;
+        try {
+          message = JSON.parse(text);
+        } catch (_err) {
+          recordRequestDone(id, -ERRNO.EINVAL);
+          break;
+        }
+        try {
+          runtimeEmit(message);
+        } catch (_err) {
+          recordRequestDone(id, -ERRNO.EINVAL);
+          break;
+        }
+        recordRequestDone(id, 0);
+        break;
+      }
+
       case KERNEL_OP_STREAM_WRITE: {
         if (u32(payloadLen) !== 16) {
           recordRequestError(id, ERRNO.EINVAL);
@@ -640,11 +722,13 @@ export function createMicrokernel({
         const bytes = sliceBytes(memory, dataPtr, dataLen);
         if (sid === 1) {
           writeStdout(bytes);
+          emitRuntimeOutput(runtimeStreamIds.stdout ?? "stdout", bytes);
           recordRequestDone(id, bytes.length);
           break;
         }
         if (sid === 2) {
           writeStderr(bytes);
+          emitRuntimeOutput(runtimeStreamIds.stderr ?? "stderr", bytes);
           recordRequestDone(id, bytes.length);
           break;
         }

@@ -463,6 +463,165 @@ commands but aren't")
         (loop for var in vars as pval on vals
               do (setf (car pval) (symbol-value var)))))))
 
+#-wasm32-target
+(defun runtime-bridge-emit-output (&rest _args)
+  (declare (ignore _args))
+  nil)
+
+#+wasm32-target
+(progn
+  (defconstant +kernel-op-runtime-event+ #x23)
+  (defconstant +kernel-status-pending+ 0)
+  (defconstant +kernel-status-done+ 1)
+  (defconstant +kernel-status-error+ 2)
+
+  (defvar *runtime-bridge-enabled* t)
+  (defvar *runtime-bridge-job-id* nil)
+  (defvar *runtime-bridge-stream-id* "repl")
+  (defvar *runtime-bridge-seq* 0)
+  (defvar *runtime-bridge-recording-counter* 0)
+
+  (defun runtime-bridge--now-ms ()
+    (let ((seconds (- (get-universal-time) unix-to-universal-time)))
+      (* seconds 1000)))
+
+  (defun runtime-bridge--json-escape (string)
+    (with-output-to-string (out)
+      (loop for ch across string do
+        (case ch
+          (#\" (write-string "\\\"" out))
+          (#\\ (write-string "\\\\" out))
+          (#\Backspace (write-string "\\b" out))
+          (#\Page (write-string "\\f" out))
+          (#\Newline (write-string "\\n" out))
+          (#\Return (write-string "\\r" out))
+          (#\Tab (write-string "\\t" out))
+          (t
+           (let ((code (char-code ch)))
+             (if (< code 32)
+               (format out "\\u~4,'0x" code)
+               (write-char ch out))))))))
+
+  (defun runtime-bridge--json-object-p (value)
+    (and (listp value)
+         (every #'consp value)
+         (every (lambda (pair)
+                  (or (stringp (car pair)) (symbolp (car pair))))
+                value)))
+
+  (defun runtime-bridge--json-write (value stream)
+    (cond
+      ((null value) (write-string "null" stream))
+      ((eq value t) (write-string "true" stream))
+      ((stringp value)
+       (write-char #\" stream)
+       (write-string (runtime-bridge--json-escape value) stream)
+       (write-char #\" stream))
+      ((integerp value) (princ value stream))
+      ((floatp value) (princ value stream))
+      ((vectorp value)
+       (write-char #\[ stream)
+       (loop for i from 0 below (length value) do
+         (when (> i 0) (write-string "," stream))
+         (runtime-bridge--json-write (aref value i) stream))
+       (write-char #\] stream))
+      ((runtime-bridge--json-object-p value)
+       (write-char #\{ stream)
+       (loop for (key . val) in value
+             for idx from 0 do
+               (when (> idx 0) (write-string "," stream))
+               (runtime-bridge--json-write (string key) stream)
+               (write-char #\: stream)
+               (runtime-bridge--json-write val stream))
+       (write-char #\} stream))
+      ((listp value)
+       (let ((vec (coerce value 'vector)))
+         (runtime-bridge--json-write vec stream)))
+      (t
+       (runtime-bridge--json-write (format nil "~s" value) stream))))
+
+  (defun runtime-bridge--json-string (value)
+    (with-output-to-string (out)
+      (runtime-bridge--json-write value out)))
+
+  (defun runtime-bridge--encode-output (values)
+    (let* ((recording-id (format nil "rec-~d" (incf *runtime-bridge-recording-counter*)))
+           (job-id *runtime-bridge-job-id*)
+           (stream-id *runtime-bridge-stream-id*)
+           (ts (runtime-bridge--now-ms))
+           (entries nil)
+           (anchors nil)
+           (last-seq nil))
+      (dolist (val values)
+        (let* ((text (with-output-to-string (s) (write val :stream s)))
+               (seq (incf *runtime-bridge-seq*))
+               (entry-id (format nil "ent-~d" seq))
+               (anchor-id (format nil "anc-~d" seq))
+               (entry (list (cons "id" entry-id)
+                            (cons "recordingId" recording-id)
+                            (cons "kind" "text")
+                            (cons "streamId" stream-id)
+                            (cons "seq" seq)
+                            (cons "ts" ts)
+                            (cons "text" text)
+                            (cons "anchorId" anchor-id)))
+               (anchor (list (cons "id" anchor-id)
+                             (cons "entryId" entry-id)
+                             (cons "range" (list (cons "start" 0)
+                                                 (cons "end" (length text))))
+                             (cons "path" #()))))
+          (push entry entries)
+          (push anchor anchors)
+          (setf last-seq seq)))
+      (let* ((recording (list (cons "id" recording-id)
+                              (cons "jobId" job-id)
+                              (cons "status" "ok")
+                              (cons "streamId" stream-id)))
+             (payload (list (cons "recording" recording)
+                            (cons "entries" (coerce (nreverse entries) 'vector))
+                            (cons "anchors" (coerce (nreverse anchors) 'vector))))
+             (envelope (list (cons "version" 1)
+                             (cons "kind" "runtime.output")
+                             (cons "jobId" job-id)
+                             (cons "streamId" stream-id)
+                             (cons "requestId" nil)
+                             (cons "seq" last-seq)
+                             (cons "ts" ts)
+                             (cons "payload" payload)
+                             (cons "error" nil))))
+        (runtime-bridge--json-string envelope))))
+
+  (defun runtime-bridge--emit-json (json)
+    (let* ((bytes (encode-string-to-octets json :external-format :utf-8))
+           (len (length bytes)))
+      (ccl:with-pointer-to-ivector (ptr bytes)
+        (let ((request-id (ccl:external-call "kernel_request"
+                                             :unsigned-long +kernel-op-runtime-event+
+                                             :address ptr
+                                             :unsigned-long len
+                                             :unsigned-long)))
+          (unwind-protect
+               (let ((status (ccl:external-call "kernel_poll"
+                                                :unsigned-long request-id
+                                                :unsigned-long)))
+                 (when (= status +kernel-status-pending+)
+                   (setf status (ccl:external-call "kernel_poll"
+                                                   :unsigned-long request-id
+                                                   :unsigned-long)))
+                 (when (or (= status +kernel-status-done+) (= status +kernel-status-error+))
+                   (ignore-errors
+                     (ccl:external-call "kernel_result"
+                                        :unsigned-long request-id
+                                        :signed-long))))
+            (ccl:external-call "kernel_drop_request"
+                               :unsigned-long request-id
+                               :void))))))
+
+  (defun runtime-bridge-emit-output (values)
+    (when (and *runtime-bridge-enabled* values)
+      (ignore-errors
+        (runtime-bridge--emit-json (runtime-bridge--encode-output values)))))))
+
 
 (defun toplevel-print (values &optional (out *standard-output*))
   (setq /// // // / / values)
@@ -470,7 +629,8 @@ commands but aren't")
     (setq *** ** ** * *  (%car values)))
   (when values
     (fresh-line out)
-    (dolist (val values) (write val :stream out) (terpri out))))
+    (dolist (val values) (write val :stream out) (terpri out))
+    (runtime-bridge-emit-output values)))
 
 (defparameter *listener-prompt-format* "~[?~:;~:*~d >~] ")
 
