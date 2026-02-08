@@ -672,6 +672,31 @@ save_application_internal(unsigned fd, Boolean egc_was_enabled)
   /*
     Coerce macptrs to dead_macptrs.
   */
+
+#ifdef WASM32
+  {
+    char msg[384];
+    int n = snprintf(
+      msg,
+      sizeof(msg),
+      "WASM save-image bounds pre: nil=[0x%lx,0x%lx) ro=[0x%lx,0x%lx) dyn=[0x%lx,0x%lx) mstatic=[0x%lx,0x%lx) scons=[0x%lx,0x%lx) toplfunc=0x%lx allpkgs=0x%lx\n",
+      (unsigned long)nilreg_area->low,
+      (unsigned long)nilreg_area->active,
+      (unsigned long)readonly_area->low,
+      (unsigned long)readonly_area->active,
+      (unsigned long)active_dynamic_area->low,
+      (unsigned long)active_dynamic_area->active,
+      (unsigned long)managed_static_area->low,
+      (unsigned long)managed_static_area->active,
+      (unsigned long)static_cons_area->low,
+      (unsigned long)static_cons_area->high,
+      (unsigned long)nrs_TOPLFUNC.vcell,
+      (unsigned long)nrs_ALL_PACKAGES.vcell);
+    if (n > 0) {
+      wasm_image_log(msg, (size_t)n);
+    }
+  }
+#endif
   
   prepare_to_write_dynamic_space(active_dynamic_area);
   prepare_to_write_dynamic_space(managed_static_area);
@@ -684,6 +709,21 @@ save_application_internal(unsigned fd, Boolean egc_was_enabled)
     active_dynamic_area->low = static_cons_area->high;
     tenured_area->static_dnodes -= area_dnode(static_cons_area->high, static_cons_area->low);
   }
+
+#ifdef WASM32
+  {
+    char msg[192];
+    int n = snprintf(
+      msg,
+      sizeof(msg),
+      "WASM save-image bounds post: dyn=[0x%lx,0x%lx)\n",
+      (unsigned long)active_dynamic_area->low,
+      (unsigned long)active_dynamic_area->active);
+    if (n > 0) {
+      wasm_image_log(msg, (size_t)n);
+    }
+  }
+#endif
 
   areas[0] = nilreg_area; 
   areas[1] = readonly_area;

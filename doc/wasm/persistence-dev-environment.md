@@ -97,8 +97,7 @@ Overrides:
 4. Open `$(make -s -f scripts/wasm/persist-host.mk persist-idb-url)` if running the IDB smoke.
 5. `make -f scripts/wasm/persist-host.mk persist-idb-down`
 
-When memory-snapshot backend wiring is complete, persistence smoke should be run
-as:
+Default persistence smoke lane:
 
 ```bash
 CCL_PERSIST_BACKEND=memory-snapshot CCL_PERSIST_SNAPSHOT_FILE=.tmp/persist-smoke.snapshot.json node doc/wasm/js/wasm-ui-persist-smoke.mjs

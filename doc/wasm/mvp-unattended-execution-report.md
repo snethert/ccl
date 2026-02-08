@@ -10,18 +10,23 @@ Last updated: 2026-02-08
   refactor landed.
 - Memory-first `memory-snapshot` persistence backend decoupling landed for the
   default unattended path.
-- Remaining MVP blocker is now runtime bootstrap state for compiled-Lisp
-  persistence entries: key function bindings are still unresolved in current
-  image state, causing entry-call hangs in `wasm-ui-persist-smoke`.
+- Root-image bootstrap/save-reload closure is now re-established for regenerated
+  artifacts (`root.image` + manifest strict lane).
+- Remaining MVP blocker is now compiled-Lisp UI persistence runtime execution on
+  root lane: preflight entry traps with `RuntimeError: unreachable` in
+  `wasm-ui-persist-smoke` after successful bootstrap/module install.
 
 ## Key command status
 
 - `npm --prefix web-ui test`: PASS
 - `node doc/wasm/js/all-smoke.mjs`: PASS
 - `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`: PASS
-- `node doc/wasm/js/wasm-ui-persist-smoke.mjs`: FAIL/HANG on compiled entry
-  execution after module install; active root-cause details are tracked in
-  `doc/wasm/wasm-ui-persistence-problem-tracker.md`.
+- `node doc/wasm/js/load-image.mjs --mode start-lisp --manifest doc/wasm/root.image.manifest.json --stdin-text "(quit)\n" --close-stdin`: PASS
+- `node doc/wasm/js/wasm-ui-persist-smoke.mjs --verbose --image root`: FAIL
+  at compiled UI preflight (`Lisp UI not runnable ... unreachable`) after
+  contracts + module install succeed.
+- `node doc/wasm/js/wasm-ui-persist-smoke.mjs --verbose --image minimal`: FAIL
+  strict pre-start contract (expected bring-up lane).
 
 ## Implemented foundations (already landed)
 
@@ -44,19 +49,20 @@ Last updated: 2026-02-08
 
 ## Active blocker (current)
 
-Compiled-Lisp persistence entries still depend on runtime bootstrap function
-bindings that are not available in current loaded image state
-(for example, unresolved function constants for symbols like
-`COMMON-LISP::CAR`, `CCL::SET-PACKAGE`, `CCL::%FASLOAD`).
+Compiled-Lisp UI persistence preflight/runtime execution on root lane is still
+failing with `RuntimeError: unreachable` after:
+
+- strict root pre-start/post-start bootstrap contract success
+- runtime bundle install success
+- compiled UI module install success
 
 Resolution path (in progress):
 
-1. Complete runtime bootstrap sequencing fix (boot image load/reset/install order
-   + entry execution prerequisites).
-2. Finish root-image initialization path so required function cells are defined
-   before persistence entry probes execute.
+1. Localize failing preflight callee/entry at runtime trap boundary.
+2. Reconcile emitted UI module function bindings/spec forms with runtime
+   callable expectations in root lane.
 3. Re-run `wasm-ui-persist-smoke` under default `memory-snapshot` backend and
-   close hang class in regression gates.
+   close the trap class in regression gates.
 
 ## Next execution gate
 

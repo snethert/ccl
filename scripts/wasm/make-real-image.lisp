@@ -62,24 +62,24 @@
     (loop while args do
       (let ((arg (pop args)))
         (cond
-          ((string= arg "--")
+          ((string-equal arg "--")
            (setf seen-delimiter t))
-          ((string= arg "--output")
+          ((string-equal arg "--output")
            (let ((val (pop args)))
              (unless val
                (error "Missing value for --output"))
              (push (cons :output val) out)))
-          ((string= arg "--modules")
+          ((string-equal arg "--modules")
            (let ((val (pop args)))
              (unless val
                (error "Missing value for --modules"))
              (push (cons :modules val) out)))
-          ((string= arg "--manifest-out")
+          ((string-equal arg "--manifest-out")
            (let ((val (pop args)))
              (unless val
                (error "Missing value for --manifest-out"))
              (push (cons :manifest-out val) out)))
-          ((or (string= arg "-h") (string= arg "--help"))
+          ((or (string-equal arg "-h") (string-equal arg "--help"))
            (push (cons :help t) out))
           (seen-delimiter
            (error "Unknown argument: ~s" arg))

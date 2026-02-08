@@ -120,8 +120,17 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_test_entry_funcall1_raw --export=wasm_test_entry_funcall0_raw \
 	  --export=wasm_get_compiled_module_registry \
 	  --export=wasm_debug_all_packages_raw \
+	  --export=wasm_debug_cons_car_raw \
+	  --export=wasm_debug_cons_cdr_raw \
+	  --export=wasm_debug_package_names_raw \
 	  --export=wasm_debug_find_package_common_lisp_raw \
 	  --export=wasm_debug_find_symbol_identity_raw \
+	  --export=wasm_debug_find_symbol_toplevel_raw \
+	  --export=wasm_debug_find_symbol_percent_set_toplevel_raw \
+	  --export=wasm_debug_get_nrs_toplfunc_raw \
+	  --export=wasm_debug_function_entry_index \
+	  --export=wasm_debug_misc_subtag \
+	  --export=wasm_debug_copy_symbol_name \
 	  --export=wasm_reset_root_image_runtime_state \
 	  --export=wasm_kernel_ui_poll --export=wasm_kernel_ui_render --export=wasm_kernel_ui_measure_text \
 	  --export=wasm_ui_demo_turn \

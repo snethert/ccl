@@ -206,6 +206,10 @@ pass the compiled-modules bundle produced by `compile-wasm-fasls.sh`:
 ```bash
 node doc/wasm/js/load-image.mjs --mode start-lisp --modules /path/to/wasm-runtime-modules.json /path/to/ccl.image
 ```
+By default `load-image.mjs` enforces a strict bootstrap sanity contract
+(`--bootstrap-contract strict`). For diagnostic runs that should continue past
+contract failures, use `--bootstrap-contract warn`.
+
 To run the toplevel once (explicit entry, no stepping):
 ```bash
 node doc/wasm/js/load-image.mjs --mode run-toplevel --modules /path/to/wasm-runtime-modules.json /path/to/ccl.image
@@ -299,9 +303,12 @@ ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --output doc/wasm/
 ```bash
 node doc/wasm/js/load-image.mjs --mode start-lisp --manifest doc/wasm/root.image.manifest.json --modules doc/wasm/wasm-runtime-modules.json doc/wasm/root.image
 ```
-Current status: this script path produces loadable wasm images. Note that a raw
-host `save-application` image (without the wasm helper path) is still not a
-drop-in wasm heap image format.
+Current status: this path enforces manifest + bootstrap sanity checks by
+default. With regenerated root artifacts, strict root manifest/bootstrap
+validation now passes. `minimal.image` remains strict-contract-incomplete for
+bring-up and should use `--bootstrap-contract warn` only for diagnostics.
+Note that a raw host `save-application` image (without the wasm helper path) is
+still not a drop-in wasm heap image format.
 
 ### Option B (Node helper, wasm-only path)
 
@@ -312,8 +319,12 @@ extract the generated image from the persistence store:
 node doc/wasm/js/make-real-image.mjs --modules doc/wasm/wasm-runtime-modules.json --output doc/wasm/root.image
 ```
 By default this also writes `doc/wasm/root.image.manifest.json` (override with
-`--manifest-out PATH`).
-Current status: working; this path now produces a loadable image. Validate with:
+`--manifest-out PATH`), but manifest output is now gated by bootstrap sanity:
+invalid emitted root-image candidates fail hard and do not refresh the
+manifest.
+Current status: builder path is operational; strict bootstrap closure is still
+in progress for compiled-Lisp UI persistence runtime execution (not loader
+bootstrap). Validate loader contract with:
 
 ```bash
 node doc/wasm/js/load-image.mjs doc/wasm/root.image

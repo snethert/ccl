@@ -84,6 +84,18 @@ wasm_enter_lisp_frame(TCR *tcr, LispObj savefn, pc savelr, LispObj savevsp)
 void
 wasm_exit_lisp_frame(TCR *tcr, natural old_last_lisp_frame)
 {
+  BytePtr sp = (BytePtr)wasm_get_cstack_pointer();
+  lisp_frame *frame = (lisp_frame *)sp;
+
+  /*
+   * Some control-flow paths can unwind past the host-entered frame before
+   * returning to C (e.g. non-local exits). If the frame marker is gone, treat
+   * the frame as already unwound and just restore the previous last_lisp_frame.
+   */
+  if (frame->marker != lisp_frame_marker) {
+    tcr->last_lisp_frame = old_last_lisp_frame;
+    return;
+  }
   wasm_cstack_pop_frame(tcr, old_last_lisp_frame);
 }
 

@@ -16,6 +16,7 @@ import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
+import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import * as zlib from "node:zlib";
 
@@ -32,6 +33,10 @@ import {
   installSubprimsTable,
   storedLengthFor,
 } from "./ccl-loader.mjs";
+import {
+  collectBootstrapState,
+  formatBootstrapState,
+} from "./bootstrap-contract.mjs";
 import { FILE_MODE_READ } from "./persist-service.mjs";
 
 function fail(msg) {
@@ -58,6 +63,7 @@ function usage() {
   console.log("  --kernel PATH       wasmcl.wasm path (default: doc/wasm/js/wasmcl.wasm)");
   console.log("  --subprims PATH     subprims.wasm path (default: doc/wasm/js/subprims.wasm)");
   console.log("  --subprims-map PATH subprims-map.json path (default: doc/wasm/subprims-map.json)");
+  console.log("  --bootstrap-boundary-report PATH  Optional JSON state/diff report");
   console.log("  -h, --help          Show this help");
 }
 
@@ -94,6 +100,9 @@ function parseArgs(argv) {
       case "--subprims-map":
         out.subprimsMap = argv[++i];
         break;
+      case "--bootstrap-boundary-report":
+        out.bootstrapBoundaryReport = argv[++i];
+        break;
       default:
         if (arg.startsWith("--")) {
           fail(`Unknown option: ${arg}`);
@@ -123,6 +132,85 @@ function sortJson(value) {
 
 function canonicalJson(value) {
   return `${JSON.stringify(sortJson(value))}\n`;
+}
+
+const BOOTSTRAP_STATE_PREFIX = "BOOTSTRAP_STATE_JSON ";
+
+function parseBootstrapStateLines(text) {
+  const states = [];
+  for (const line of String(text ?? "").split(/\r?\n/)) {
+    if (!line.startsWith(BOOTSTRAP_STATE_PREFIX)) continue;
+    const payload = line.slice(BOOTSTRAP_STATE_PREFIX.length).trim();
+    if (!payload) continue;
+    try {
+      states.push(JSON.parse(payload));
+    } catch (_err) {
+      // Ignore malformed lines and continue parsing others.
+    }
+  }
+  return states;
+}
+
+function bootstrapDiff(beforeState, afterState) {
+  if (!beforeState || !afterState) return [];
+  const fields = [
+    "nil",
+    "commonLispPackage",
+    "toplevelSymbol",
+    "toplfuncRaw",
+    "toplfuncEntryIndex",
+    "toplfuncSubtag",
+  ];
+  const diffs = [];
+  for (const field of fields) {
+    const before = beforeState[field];
+    const after = afterState[field];
+    if (before !== after) {
+      diffs.push({ field, before, after });
+    }
+  }
+  return diffs;
+}
+
+function runNodeScript(args, { cwd = process.cwd(), timeoutMs = 180000 } = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, args, {
+      cwd,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    let stdout = "";
+    let stderr = "";
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      child.kill("SIGKILL");
+    }, timeoutMs);
+
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk.toString();
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+    child.on("close", (code, signal) => {
+      clearTimeout(timer);
+      if (timedOut) {
+        reject(new Error(`timed out after ${timeoutMs}ms`));
+        return;
+      }
+      resolve({
+        code: code == null ? null : (code | 0),
+        signal: signal ?? null,
+        stdout,
+        stderr,
+      });
+    });
+  });
 }
 
 function sha256Hex(bytes) {
@@ -213,6 +301,9 @@ const outputPath = args.output ?? defaultOutput;
 const manifestOutPath = args.manifestOut ?? `${outputPath}.manifest.json`;
 const wasmOutputPath = args.wasmOutput ?? defaultWasmOutput;
 const modulesPath = args.modules ?? defaultModules;
+const bootstrapBoundaryReportPath = args.bootstrapBoundaryReport
+  ? path.resolve(args.bootstrapBoundaryReport)
+  : null;
 
 function displayPath(filePath) {
   const absolute = path.resolve(filePath);
@@ -221,6 +312,85 @@ function displayPath(filePath) {
     return toPosix(rel);
   }
   return toPosix(absolute);
+}
+
+async function assertBootstrapSanity({
+  label,
+  scriptDirPath,
+  repoRootPath,
+  imagePathToCheck,
+  runtimeModulesPath,
+  mode = "start-lisp",
+}) {
+  const loadImageScriptPath = path.join(scriptDirPath, "load-image.mjs");
+  const result = await runNodeScript(
+    [
+      loadImageScriptPath,
+      "--mode",
+      mode,
+      "--bootstrap-contract",
+      "strict",
+      "--modules",
+      runtimeModulesPath,
+      "--stdin-text",
+      "(quit)\n",
+      "--close-stdin",
+      imagePathToCheck,
+    ],
+    { cwd: repoRootPath },
+  );
+  if (result.code !== 0) {
+    const details = [result.stdout, result.stderr]
+      .filter((part) => part && part.trim().length > 0)
+      .join("\n")
+      .trim();
+    throw new Error(
+      `${label} bootstrap sanity failed (exit=${result.code}${result.signal ? ` signal=${result.signal}` : ""})` +
+      (details ? `\n${details}` : ""),
+    );
+  }
+}
+
+async function collectBootstrapStatesFromImage({
+  label,
+  scriptDirPath,
+  repoRootPath,
+  imagePathToCheck,
+  runtimeModulesPath,
+  mode = "start-lisp",
+}) {
+  const loadImageScriptPath = path.join(scriptDirPath, "load-image.mjs");
+  const childArgs = [
+    loadImageScriptPath,
+    "--mode",
+    mode,
+    "--bootstrap-contract",
+    "off",
+    "--bootstrap-state-json",
+    "--modules",
+    runtimeModulesPath,
+  ];
+  if (mode === "start-lisp") {
+    childArgs.push("--stdin-text", "(quit)\n", "--close-stdin");
+  }
+  childArgs.push(imagePathToCheck);
+
+  const result = await runNodeScript(childArgs, { cwd: repoRootPath });
+  if (result.code !== 0) {
+    const details = [result.stdout, result.stderr]
+      .filter((part) => part && part.trim().length > 0)
+      .join("\n")
+      .trim();
+    throw new Error(
+      `${label} bootstrap state probe failed (exit=${result.code}${result.signal ? ` signal=${result.signal}` : ""})` +
+      (details ? `\n${details}` : ""),
+    );
+  }
+  const states = parseBootstrapStateLines(`${result.stdout}\n${result.stderr}`);
+  if (!states.length) {
+    throw new Error(`${label} bootstrap state probe returned no state lines`);
+  }
+  return states;
 }
 
 trace("resolved input paths");
@@ -634,12 +804,20 @@ if (resetRc !== 0) {
 }
 trace("root image runtime state reset");
 
-if (typeof ex.wasm_save_image_direct !== "function") {
-  fail("kernel missing wasm_save_image_direct");
+let preSaveBootstrapState = null;
+try {
+  preSaveBootstrapState = collectBootstrapState({ kernelExports: ex });
+  console.log(`bootstrap_boundary pre-save ${formatBootstrapState(preSaveBootstrapState)}`);
+} catch (err) {
+  console.warn(`WARN: unable to capture pre-save bootstrap state: ${err?.message ?? err}`);
 }
+
 const encoder = new TextEncoder();
 const imagePathBytes = encoder.encode(wasmOutputPath);
 const imagePathPtr = copyBytesToScratch(runtime.memory, imagePathBytes);
+if (typeof ex.wasm_save_image_direct !== "function") {
+  fail("kernel missing wasm_save_image_direct");
+}
 trace(`invoking wasm_save_image_direct for ${wasmOutputPath}`);
 const saveRc = ex.wasm_save_image_direct(
   imagePathPtr,
@@ -665,7 +843,80 @@ for (;;) {
 }
 handle.close();
 const persistedBytes = Buffer.concat(chunks);
-await fs.writeFile(outputPath, persistedBytes);
+await fs.mkdir(path.dirname(outputPath), { recursive: true });
+const tempOutputPath = `${outputPath}.tmp-${process.pid}-${Date.now()}`;
+await fs.writeFile(tempOutputPath, persistedBytes);
+
+let boundaryReport = null;
+try {
+  const candidateStates = await collectBootstrapStatesFromImage({
+    label: "emitted root.image candidate",
+    scriptDirPath: scriptDir,
+    repoRootPath: root,
+    imagePathToCheck: tempOutputPath,
+    runtimeModulesPath: modulesPath,
+    mode: "start-lisp",
+  });
+  const reloadedPreStart = candidateStates.find((item) => item?.phase === "pre-start") ?? null;
+  const reloadedPostStart = candidateStates.find((item) => item?.phase === "post-start") ?? null;
+  if (reloadedPreStart) {
+    console.log(`bootstrap_boundary reload-pre ${formatBootstrapState(reloadedPreStart)}`);
+  }
+  if (reloadedPostStart) {
+    console.log(`bootstrap_boundary reload-post ${formatBootstrapState(reloadedPostStart)}`);
+  }
+  const preVsReloadDiff = bootstrapDiff(preSaveBootstrapState, reloadedPreStart);
+  if (preVsReloadDiff.length) {
+    for (const item of preVsReloadDiff) {
+      console.log(`bootstrap_boundary diff ${item.field}: ${item.before} -> ${item.after}`);
+    }
+  } else if (preSaveBootstrapState && reloadedPreStart) {
+    console.log("bootstrap_boundary diff: no pre-save vs reload-pre differences");
+  }
+  boundaryReport = {
+    generatedAt: new Date().toISOString(),
+    sourceImage: displayPath(bootImagePath),
+    emittedCandidate: displayPath(tempOutputPath),
+    preSaveState: preSaveBootstrapState,
+    reloadPreStartState: reloadedPreStart,
+    reloadPostStartState: reloadedPostStart,
+    preSaveVsReloadPreDiff: preVsReloadDiff,
+  };
+} catch (err) {
+  console.warn(`WARN: bootstrap boundary probe failed: ${err?.message ?? err}`);
+}
+
+if (bootstrapBoundaryReportPath && boundaryReport) {
+  await fs.mkdir(path.dirname(bootstrapBoundaryReportPath), { recursive: true });
+  await fs.writeFile(bootstrapBoundaryReportPath, canonicalJson(boundaryReport));
+  console.log(`Wrote bootstrap boundary report to ${bootstrapBoundaryReportPath}`);
+}
+
+try {
+  await assertBootstrapSanity({
+    label: "source wasm-boot.image",
+    scriptDirPath: scriptDir,
+    repoRootPath: root,
+    imagePathToCheck: bootImagePath,
+    runtimeModulesPath: modulesPath,
+    mode: "boot-only",
+  });
+  await assertBootstrapSanity({
+    label: "emitted root.image candidate",
+    scriptDirPath: scriptDir,
+    repoRootPath: root,
+    imagePathToCheck: tempOutputPath,
+    runtimeModulesPath: modulesPath,
+  });
+  await fs.rename(tempOutputPath, outputPath);
+} catch (err) {
+  try {
+    await fs.unlink(tempOutputPath);
+  } catch (_cleanupErr) {
+    // Ignore cleanup errors; preserve original failure context.
+  }
+  fail(`bootstrap sanity check failed; manifest not updated: ${err?.message ?? err}`);
+}
 
 const compiledModulesBinaryPath = path.join(path.dirname(modulesPath), compiledModulesBundle.binary);
 const compiledModulesBinaryBytes = await fs.readFile(compiledModulesBinaryPath);

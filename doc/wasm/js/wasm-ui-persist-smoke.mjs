@@ -15,9 +15,14 @@ import {
   createCclImports,
   createSharedCclRuntime,
   installCompiledModulesFromBundle,
+  installCompiledModulesFromRegistry,
   installSubprimsTable,
   instantiateWasm,
 } from "./ccl-loader.mjs";
+import {
+  assertBootstrapContract,
+  formatBootstrapState,
+} from "./bootstrap-contract.mjs";
 import {
   createMicrokernel,
   KERNEL_OP_STREAM_OPEN,
@@ -115,6 +120,7 @@ const subprimsUrl = new URL("./subprims.wasm", import.meta.url);
 const subprimsMapUrl = new URL("../subprims-map.json", import.meta.url);
 const rootImageUrl = new URL("../root.image", import.meta.url);
 const minimalImageUrl = new URL("../minimal.image", import.meta.url);
+const runtimeBundleUrl = new URL("../wasm-runtime-modules.json", import.meta.url);
 const bundleUrl = new URL("../wasm-ui-modules.json", import.meta.url);
 
 const persistBackend = String(
@@ -158,6 +164,29 @@ try {
   bundleIndexBytes = await fs.readFile(path.resolve(bundleDir, bundle.index));
 } catch (err) {
   fail(`missing or invalid wasm-ui-modules bundle (run scripts/wasm/compile-ui-modules.sh): ${err?.message ?? err}`);
+}
+
+let runtimeBundle = null;
+let runtimeBundleBinaryBytes = null;
+let runtimeBundleIndexBytes = null;
+if (!skipStartLisp) {
+  try {
+    runtimeBundle = JSON.parse((await readFileUrl(runtimeBundleUrl)).toString("utf8"));
+    if (runtimeBundle?.format !== "ccl-wasm-modules-v2") {
+      fail("wasm-runtime-modules.json must be ccl-wasm-modules-v2");
+    }
+    if (typeof runtimeBundle?.binary !== "string" || runtimeBundle.binary.length === 0) {
+      fail("wasm-runtime-modules.json missing binary field");
+    }
+    if (typeof runtimeBundle?.index !== "string" || runtimeBundle.index.length === 0) {
+      fail("wasm-runtime-modules.json missing index field");
+    }
+    const runtimeBundleDir = path.dirname(fileURLToPath(runtimeBundleUrl));
+    runtimeBundleBinaryBytes = await fs.readFile(path.resolve(runtimeBundleDir, runtimeBundle.binary));
+    runtimeBundleIndexBytes = await fs.readFile(path.resolve(runtimeBundleDir, runtimeBundle.index));
+  } catch (err) {
+    fail(`missing or invalid runtime modules bundle (run scripts/wasm/compile-wasm-fasls.sh --modules-out doc/wasm/wasm-runtime-modules.json): ${err?.message ?? err}`);
+  }
 }
 
 const runtime = createSharedCclRuntime({
@@ -264,15 +293,64 @@ if (typeof kernelExports.wasm_reset_root_image_runtime_state === "function") {
 }
 
 if (!skipStartLisp) {
+  const bootIndex = 200;
+  assert(typeof kernelExports.wasm_boot_entry === "function", "missing wasm_boot_entry export");
+  if (runtime.subprimsTable.length <= bootIndex) {
+    runtime.subprimsTable.grow(bootIndex - runtime.subprimsTable.length + 1);
+  }
+  runtime.subprimsTable.set(bootIndex, kernelExports.wasm_boot_entry);
+  trace("boot entry installed");
+
+  const runtimeInstall = await installCompiledModulesFromBundle({
+    bundle: runtimeBundle,
+    binaryBytes: runtimeBundleBinaryBytes,
+    indexBytes: runtimeBundleIndexBytes,
+    kernel,
+    memory: runtime.memory,
+    subprimsTable: runtime.subprimsTable,
+    microkernel,
+    strict: true,
+    installConstPools: false,
+  });
+  trace(`runtime modules installed from bundle (installed=${runtimeInstall.installed} count=${runtimeInstall.count} failed=${runtimeInstall.failed ?? 0})`);
+  assert(runtimeInstall.count > 0 && runtimeInstall.installed > 0, "no runtime modules installed from bundle");
+  assert(!(runtimeInstall.failed ?? 0), `runtime modules failed during install: ${runtimeInstall.failed}`);
+
+  const runtimeRegistryInstall = await installCompiledModulesFromRegistry({
+    kernel,
+    memory: runtime.memory,
+    subprimsTable: runtime.subprimsTable,
+    microkernel,
+  });
+  trace(`runtime modules installed from registry (installed=${runtimeRegistryInstall.installed} count=${runtimeRegistryInstall.count})`);
+}
+
+assert(typeof kernelExports.wasm_get_lisp_nil === "function", "missing wasm_get_lisp_nil export");
+kernelExports.wasm_get_lisp_nil();
+
+function enforceBootstrapContract(phase, requireToplfunc) {
+  try {
+    const state = assertBootstrapContract({
+      kernelExports,
+      phase,
+      requireToplfunc,
+    });
+    trace(`bootstrap ${phase} ok ${formatBootstrapState(state)}`);
+  } catch (err) {
+    fail(err?.message ?? String(err));
+  }
+}
+
+if (!skipStartLisp) {
+  enforceBootstrapContract("pre-start", true);
+
   assert(typeof kernelExports.wasm_ccl_start_lisp === "function", "missing wasm_ccl_start_lisp export");
   trace("calling wasm_ccl_start_lisp");
   const startRc = kernelExports.wasm_ccl_start_lisp() | 0;
   assert(startRc === 0, `wasm_ccl_start_lisp failed: ${startRc}`);
   trace("wasm_ccl_start_lisp returned");
+  enforceBootstrapContract("post-start", false);
 }
-
-assert(typeof kernelExports.wasm_get_lisp_nil === "function", "missing wasm_get_lisp_nil export");
-const nilValue = kernelExports.wasm_get_lisp_nil() >>> 0;
 const functions = Array.isArray(bundle.functions) ? bundle.functions : [];
 const { installed, count, failed } = await installCompiledModulesFromBundle({
   bundle,

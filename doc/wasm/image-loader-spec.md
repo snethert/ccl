@@ -83,6 +83,10 @@ The boot image it consumes is produced via `cross-xload-level-0 :wasm32`
 The JS loader and Node helper accept `--modules PATH` and will load the
 compiled‑modules bundle before `start_lisp`. This is required for real images
 until the compiled‑modules registry is reliably embedded in the image.
+`make-real-image.mjs` now performs a bootstrap sanity gate before publishing
+artifacts: source `wasm-boot.image` must pass strict pre-start checks and the
+emitted root-image candidate must pass strict `start_lisp` checks; on failure,
+manifest output is not refreshed.
 
 ## Artifact Contract (Current)
 
@@ -130,6 +134,7 @@ Policy/validation controls:
 
 - `--manifest PATH` (hash validation before boot)
 - `--strict-modules` / `--allow-partial-modules`
+- `--bootstrap-contract strict|warn|off` (default `strict`)
 - `--expect-rc N`
 
 Non-interactive stdin preload:
@@ -140,11 +145,13 @@ Non-interactive stdin preload:
 
 Current status:
 
-- Minimal-image non-interactive `start_lisp` validation is green.
-- Strict root-image non-interactive `start_lisp` validation is green
-  (`start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`).
-- Remaining persistence-path work is tracked separately and does not change the
-  loader ABI contract in this document.
+- Bootstrap contract enforcement is active by default in `load-image.mjs`.
+- `root.image` (with regenerated manifest-matched artifacts) now passes strict
+  pre-start and post-start bootstrap checks.
+- `minimal.image` remains a bring-up lane and fails strict pre-start contract;
+  warn mode remains available for deterministic continuation coverage.
+- Remaining persistence-path work does not change the loader ABI contract in
+  this document.
 
 ## Reference host placement strategy (current)
 

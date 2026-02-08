@@ -86,12 +86,32 @@ const rootManifest = path.resolve(repoRoot, "doc/wasm/root.image.manifest.json")
 const runtimeModulesManifest = path.resolve(repoRoot, "doc/wasm/wasm-runtime-modules.json");
 
 await runNodeCase(
-  "minimal-start-lisp",
+  "minimal-start-lisp-contract-enforced",
   [loadImageScript, "--mode", "start-lisp", "--expect-rc", "0", minimalImage],
+  {
+    timeoutMs,
+    expectCode: 1,
+    expectStderrIncludes: "pre-start bootstrap contract failed",
+  },
+);
+
+await runNodeCase(
+  "minimal-start-lisp-warn",
+  [
+    loadImageScript,
+    "--mode",
+    "start-lisp",
+    "--bootstrap-contract",
+    "warn",
+    "--expect-rc",
+    "0",
+    minimalImage,
+  ],
   {
     timeoutMs,
     expectCode: 0,
     expectStdoutIncludes: "wasm_ccl_start_lisp rc=0",
+    expectStderrIncludes: "WARN: pre-start bootstrap contract failed",
   },
 );
 
@@ -101,7 +121,7 @@ await runNodeCase(
   {
     timeoutMs,
     expectCode: 1,
-    expectStderrIncludes: "rootImage hash mismatch",
+    expectStderrIncludes: "hash mismatch",
   },
 );
 

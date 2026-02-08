@@ -23,8 +23,10 @@ Active blocker reasoning and experiment log lives in:
 - `node doc/wasm/js/all-smoke.mjs` is green.
 - Strict non-interactive root-image start-lisp gate is green:
   - `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`
-- Persistence backend decoupling is landed; compiled-Lisp runtime bootstrap path
-  remains unstable and is the active blocker.
+- Strict manifest+bootstrap root loader lane is green:
+  - `node doc/wasm/js/load-image.mjs --mode start-lisp --manifest doc/wasm/root.image.manifest.json --stdin-text "(quit)\n" --close-stdin`
+- Persistence backend decoupling is landed; active blocker is compiled-Lisp UI
+  preflight/runtime trap on root lane in `wasm-ui-persist-smoke`.
 
 ## Global execution rules
 
@@ -113,14 +115,15 @@ Exit criteria:
 Exit criteria:
 - Integration lanes are documented and isolated from default unattended flow.
 
-## Stage D: Runtime Bootstrap Closure (Current Top Blocker)
+## Stage D: Runtime Entry Closure (Current Top Blocker)
 
 ### D1. Reproduce and pin failure envelope
 1. Probe compiled entry execution:
-   - `node doc/wasm/js/wasm-ui-persist-smoke.mjs --image minimal --probe-entry WASM-UI-MARK-PERSISTED --verbose`
+   - `node doc/wasm/js/wasm-ui-persist-smoke.mjs --image root --probe-entry WASM-UI-LABEL-STATE --verbose`
+   - `node doc/wasm/js/wasm-ui-persist-smoke.mjs --image root --probe-entry WASM-UI-MARK-PERSISTED --verbose`
 2. Record whether failure is:
-   - const-pool install failure, or
-   - entry call hang after install.
+   - entry call trap after install, or
+   - unresolved callable/function binding before entry call.
 3. Log findings in:
    - `doc/wasm/wasm-ui-persistence-problem-tracker.md`
 
@@ -130,22 +133,22 @@ Exit criteria:
 ### D2. Close const-pool/runtime defects in loader path
 1. Keep kernel const-pool materialization compatible with emitted compiler
    payload shapes (including forward reference forms).
-2. Validate on direct probes that symbol/cons payload installs are no longer the
-   blocking class.
+2. Validate on direct probes that symbol/cons/vector/function-vector/gvector
+   forward references are no longer the blocking class.
 3. Rebuild wasm kernel artifacts and re-run persistence probe gate.
 
 Exit criteria:
 - No deterministic const-pool rejection remains for emitted UI module payloads.
 
-### D3. Close image bootstrap/function-binding gap
+### D3. Close runtime entry/function-binding gap
 1. Verify boot/minimal/root image sequencing invariants (load/reset/install/start).
 2. Ensure required function bindings for compiled persistence entries are present
-   before probe execution.
+   and callable before probe execution.
 3. Validate `WASM-UI-*` probes and full persistence smoke under default
    `memory-snapshot`.
 
 Exit criteria:
-- `node doc/wasm/js/wasm-ui-persist-smoke.mjs` passes without hang.
+- `node doc/wasm/js/wasm-ui-persist-smoke.mjs` passes without runtime trap.
 
 ## Stage E: Documentation Reconciliation
 

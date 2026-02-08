@@ -333,13 +333,21 @@ function alignUp(value, align) {
   return (value + (align - 1)) & ~(align - 1);
 }
 
-function allocScratch(memory, size) {
+function allocScratch(memory, size, kernelExports = null) {
   const pageSize = 65536;
   const aligned = alignUp(size, 16);
   const base = memory.buffer.byteLength;
   const pages = Math.ceil(aligned / pageSize);
   if (pages > 0) {
-    memory.grow(pages);
+    const growAndRelocate = kernelExports?.wasm_memory_grow_and_relocate;
+    if (typeof growAndRelocate === "function") {
+      const oldPages = growAndRelocate(pages >>> 0);
+      if (oldPages === -1 || oldPages === 0xffffffff) {
+        throw new Error(`wasm_memory_grow_and_relocate failed for ${pages} pages`);
+      }
+    } else {
+      memory.grow(pages);
+    }
   }
   return base;
 }
@@ -543,7 +551,7 @@ export function installConstPoolBytes({
   const bytes = constPoolBytes instanceof Uint8Array
     ? constPoolBytes
     : Uint8Array.from(constPoolBytes);
-  const base = allocScratch(memory, bytes.length);
+  const base = allocScratch(memory, bytes.length, exports);
   new Uint8Array(memory.buffer, base, bytes.length).set(bytes);
   return install(entryIndex >>> 0, base >>> 0, bytes.length >>> 0) >>> 0;
 }

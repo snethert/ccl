@@ -43,7 +43,7 @@ Transition the system from engineering-complete to release-ready by defining det
 - Runtime bridge, typed command dispatch, debugger, inspector, sessions, and customization are operational.
 
 ## Progress Snapshot
-- M0 `RZ0`: In Progress (runtime bundle + manifest + loader refactor + memory-snapshot persistence decoupling landed; runtime bootstrap/function-binding blocker remains for compiled-Lisp persistence entries).
+- M0 `RZ0`: In Progress (runtime bundle + manifest + loader refactor + memory-snapshot persistence decoupling + bootstrap contract enforcement landed; remaining blocker is compiled-Lisp UI persistence preflight/runtime trap on root lane).
 - M1 `RZ1`: Planned.
 - M2 `RZ2`: Planned.
 - M3 `RZ3`: Planned.
@@ -63,25 +63,33 @@ Transition the system from engineering-complete to release-ready by defining det
 ## Pre-Phase Gate: RZ0 (MVP Blocker Closure)
 ### Goal
 Close the top remaining WASM blocker before Phase 8 release packaging:
-real root-image policy plus default non-interactive loader wiring for `start_lisp`.
+compiled-Lisp UI persistence runtime closure on root lane after strict
+manifest/bootstrap loader validation.
 
 ### Why This Is A Prerequisite
 - `doc/wasm/roadmap.md` and `doc/wasm/porting-status.md` still mark this as open.
 - Packaging and release-gate hardening (RZ1-RZ8) is lower value until runtime boot policy is deterministic.
 
-### Code-Grounded Findings (Second Pass, Baseline)
-1. `doc/wasm/js/load-image.mjs` defaults to boot-only behavior and has no deterministic non-interactive completion contract for `wasm_ccl_start_lisp`.
-2. `doc/wasm/js/load-image.mjs` installs compiled modules with `strict: false`, which can hide partial install failures.
-3. `scripts/wasm/compile-wasm-fasls.sh` currently emits a runtime bundle that can remain in legacy inline/offset shape, while loader plumbing (`resolveBundleEntries`) expects v2/index semantics.
-4. `doc/wasm/js/make-real-image.mjs` builds usable `root.image`, but does not emit a policy manifest (hash/provenance contract) for default loader validation.
-5. `doc/wasm/image-loader-spec.md` still has open questions for root-image caching/cloning policy and default loader behavior.
-6. Persistence bring-up still leans on host-only backends (LMDB/IndexedDB server/browser paths), creating permission friction for unattended development.
+### Code-Grounded Findings (Current)
+1. `doc/wasm/js/load-image.mjs` now supports explicit mode control and deterministic non-interactive inputs (`--mode`, `--stdin-text`, `--close-stdin`, `--expect-rc`) and enforces bootstrap sanity by default (`--bootstrap-contract strict`).
+2. `doc/wasm/js/load-image.mjs` defaults module installs to strict mode in `start-lisp` flows, with explicit opt-out (`--allow-partial-modules`) only for bring-up scenarios.
+3. Runtime modules are emitted/consumed via `ccl-wasm-modules-v2` manifest + `.bin` + `.idx`, and loader resolution uses indexed bundle plumbing.
+4. `doc/wasm/js/make-real-image.mjs` emits manifest output and now hard-fails bootstrap-invalid root-image candidates before manifest publication.
+5. Memory-first persistence (`memory-snapshot`) is now the default unattended lane to avoid host-permission coupling.
+6. `doc/wasm/image-loader-spec.md` still requires final cleanup to remove/close residual open questions and align with implemented defaults.
 
 ### Code-Grounded Findings (Third Pass, Runtime Bootstrap)
-1. Kernel const-pool install previously rejected emitted forward `cons` references; this defect is now patched in `lisp-kernel/wasm-kernel-stubs.c`.
-2. `wasm-ui-persist-smoke` now advances past const-pool install for probe bodies that emit forward `cons` constants, but hangs in entry execution when required function bindings are unresolved.
-3. Function constants for key bootstrap symbols (`COMMON-LISP::CAR`, `CCL::SET-PACKAGE`, `CCL::%FASLOAD`) still resolve to `UDF` in current runtime image state.
-4. Runtime bootstrap sequencing remains the top blocker for compiled-Lisp persistence stabilization.
+1. Kernel const-pool install now handles forward references in `cons`, `vector`,
+   `function-vector`, and `gvector` via first-pass creation + second-pass patching.
+2. Root save/reload closure has been restored for regenerated artifacts; strict
+   manifest and pre-start/post-start bootstrap checks now pass for `root.image`.
+3. `wasm-ui-persist-smoke` root lane now advances past bootstrap and module
+   installs, then fails at compiled UI preflight with
+   `Lisp UI not runnable in persistence smoke: unreachable`.
+4. `minimal.image` remains strict pre-start contract-incomplete and is retained
+   as a bring-up lane.
+5. Top blocker is now compiled UI runtime entry behavior/function binding at the
+   root-lane preflight boundary, not image save-boundary divergence.
 
 ### RZ0 Deliverables
 - Deterministic runtime bundle contract (`ccl-wasm-modules-v2` + `.bin` + `.idx`) for runtime modules.

@@ -14,7 +14,7 @@ separate from the detailed checklists in `porting-status.md`.
 - **Subprims provider:** ✅ Tier‑0 semantics + ABI defined and exercised by compiled modules.
 - **Lisp runtime (Level‑1):** ✅ capability errors + yield path + WASM stream classes + virtual FS policy.
 - **Compiler/backend (WASM):** ⚠️ MVP emission for constants, fixnum ops, calls, multi‑value (2–4 + `values` >4 via VSP push), and local control flow (`if`, `block/return-from`, `tagbody/go`) with compiled-module registry install; `catch`/`throw` routed through subprims; cooperative `unwind-protect` cleanup + closure capture in place with spill/restore validation gates.
-- **Image + real toplevel:** ⚠️ boot image via cross‑xload works; runtime module bundles now ship as v2 manifest+bin+idx; root image has a hash manifest contract; strict non-interactive root-image `start_lisp` gate is passing; compiled-Lisp persistence remains blocked on runtime bootstrap/function-binding closure.
+- **Image + real toplevel:** ⚠️ boot image via cross‑xload works; runtime module bundles ship as v2 manifest+bin+idx; root image has hash-manifest + builder sanity gating; strict root bootstrap contract is now passing. Primary blocker moved to compiled-Lisp UI persistence runtime preflight trap on root lane.
 - **Concurrency model:** ⏸ deferred (single‑threaded baseline first).
 
 ## Roadmap phases
@@ -67,7 +67,7 @@ separate from the detailed checklists in `porting-status.md`.
 
 ## Near‑term focus (next 1–2 phases)
 
-1) Close runtime bootstrap/function-binding gap for compiled-Lisp persistence entries on root/minimal image paths.
+1) Close root-lane compiled UI persistence preflight trap (`unreachable`) after successful bootstrap/module install.
 2) Stabilize compiled-Lisp UI persistence runtime path on root image under default `memory-snapshot`.
 3) Keep LMDB/IndexedDB as explicit integration lanes and remove silent fallback assumptions from browser harness wiring.
 

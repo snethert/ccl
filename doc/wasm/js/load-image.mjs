@@ -31,10 +31,22 @@ import {
   storedLengthFor,
 } from "./ccl-loader.mjs";
 import { createMicrokernel } from "./microkernel.mjs";
+import {
+  collectBootstrapState,
+  validateBootstrapContract,
+  formatBootstrapState,
+} from "./bootstrap-contract.mjs";
 
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
   process.exit(1);
+}
+
+const traceEnabled = process.env.CCL_WASM_TRACE === "1";
+function trace(msg) {
+  if (traceEnabled) {
+    console.error(`[load-image] ${msg}`);
+  }
 }
 
 function usage() {
@@ -55,6 +67,8 @@ function usage() {
   console.error("  --stdin-text TEXT          feed UTF-8 text to stdin before start");
   console.error("  --close-stdin              close stdin after preload");
   console.error("  --expect-rc N              expected return code for start/toplevel entry");
+  console.error("  --bootstrap-contract MODE  strict|warn|off (default: strict)");
+  console.error("  --bootstrap-state-json     emit machine-readable bootstrap states");
 }
 
 function parseArgs(argv) {
@@ -67,6 +81,8 @@ function parseArgs(argv) {
     stdinText: null,
     closeStdin: null,
     expectRc: null,
+    bootstrapContract: "strict",
+    bootstrapStateJson: false,
     imagePath: null,
   };
   for (let i = 0; i < argv.length; i++) {
@@ -135,6 +151,17 @@ function parseArgs(argv) {
         out.expectRc = value | 0;
         break;
       }
+      case "--bootstrap-contract": {
+        const value = String(argv[++i] ?? "");
+        if (!value || value.startsWith("--")) {
+          fail("--bootstrap-contract requires strict|warn|off");
+        }
+        out.bootstrapContract = value.toLowerCase();
+        break;
+      }
+      case "--bootstrap-state-json":
+        out.bootstrapStateJson = true;
+        break;
       case "-h":
       case "--help":
         usage();
@@ -152,6 +179,9 @@ function parseArgs(argv) {
   }
   if (!["boot-only", "start-lisp", "run-toplevel"].includes(out.mode)) {
     fail(`Invalid --mode: ${out.mode}`);
+  }
+  if (!["strict", "warn", "off"].includes(out.bootstrapContract)) {
+    fail(`Invalid --bootstrap-contract: ${out.bootstrapContract}`);
   }
   if (out.stdinScriptPath && out.stdinText != null) {
     fail("--stdin-script and --stdin-text are mutually exclusive");
@@ -460,14 +490,29 @@ function decodeConstPoolForInfo(info) {
 }
 
 function installConstPoolOnDemand(entryIndexRaw) {
-  if (!kernelExports || modulesFd == null) return 0;
+  if (!kernelExports || modulesFd == null) {
+    trace(`const-pool install skipped: entry=${entryIndexRaw >>> 0} kernel/modules unavailable`);
+    return 0;
+  }
   const entryIndex = entryIndexRaw >>> 0;
-  if (constPoolsInstalled.has(entryIndex)) return 1;
+  if (constPoolsInstalled.has(entryIndex)) {
+    trace(`const-pool already installed: entry=${entryIndex}`);
+    return 1;
+  }
 
   const info = constPoolEntries.get(entryIndex);
-  if (!info) return 0;
+  if (!info) {
+    trace(`const-pool missing metadata: entry=${entryIndex}`);
+    return 0;
+  }
+  trace(
+    `const-pool decode: entry=${entryIndex} offset=${info.offset} stored=${info.storedLength} raw=${info.length} encoding=${info.encoding ?? "raw"}`,
+  );
   const decodedBytes = decodeConstPoolForInfo(info);
-  if (!decodedBytes) return 0;
+  if (!decodedBytes) {
+    trace(`const-pool decode failed: entry=${entryIndex}`);
+    return 0;
+  }
 
   const rc = installConstPoolBytes({
     kernelExports,
@@ -475,9 +520,13 @@ function installConstPoolOnDemand(entryIndexRaw) {
     entryIndex,
     constPoolBytes: decodedBytes,
   });
-  if (rc === 0) return 0;
+  if (rc === 0) {
+    trace(`const-pool install failed: entry=${entryIndex}`);
+    return 0;
+  }
 
   constPoolsInstalled.add(entryIndex);
+  trace(`const-pool installed: entry=${entryIndex}`);
   return 1;
 }
 
@@ -578,6 +627,44 @@ function resetRootImageRuntimeStateIfAvailable() {
   console.log(`wasm_reset_root_image_runtime_state rc=${rc}`);
 }
 
+function runBootstrapContract(phase, { requireToplfunc = (phase === "pre-start") } = {}) {
+  let state = null;
+  try {
+    state = collectBootstrapState({ kernelExports: kernel.instance.exports });
+  } catch (err) {
+    const message = err?.message ?? String(err);
+    if (options.bootstrapStateJson) {
+      console.log(`BOOTSTRAP_STATE_JSON ${JSON.stringify({ phase, collectError: message })}`);
+    }
+    if (options.bootstrapContract === "off") {
+      return null;
+    }
+    if (options.bootstrapContract === "warn") {
+      console.warn(`WARN: ${message}`);
+      return null;
+    }
+    fail(message);
+  }
+
+  if (options.bootstrapStateJson && state) {
+    console.log(`BOOTSTRAP_STATE_JSON ${JSON.stringify({ phase, ...state })}`);
+  }
+  if (options.bootstrapContract === "off") return state;
+
+  const failures = validateBootstrapContract(state, { phase, requireToplfunc });
+  if (!failures.length) {
+    console.log(`bootstrap_contract ${phase} ok ${formatBootstrapState(state)}`);
+    return state;
+  }
+
+  const message = `${phase} bootstrap contract failed: ${failures.join("; ")} | ${formatBootstrapState(state)}`;
+  if (options.bootstrapContract === "warn") {
+    console.warn(`WARN: ${message}`);
+    return state;
+  }
+  fail(message);
+}
+
 let entryRc = null;
 
 if (runStartLisp) {
@@ -614,6 +701,7 @@ if (runStartLisp) {
       microkernel,
     });
     console.log(`compiled modules installed ${installed}/${count}`);
+    runBootstrapContract("pre-start", { requireToplfunc: true });
   } catch (e) {
     console.error(`wasm_ccl_load_image trapped: ${e}`);
     process.exit(3);
@@ -625,6 +713,7 @@ if (runStartLisp) {
     const rc = kernel.instance.exports.wasm_ccl_start_lisp();
     entryRc = rc | 0;
     console.log(`wasm_ccl_start_lisp rc=${rc}`);
+    runBootstrapContract("post-start", { requireToplfunc: false });
   } catch (e) {
     console.error(`wasm_ccl_start_lisp trapped: ${e}`);
     process.exit(4);
@@ -659,6 +748,7 @@ if (runStartLisp) {
       microkernel,
     });
     console.log(`compiled modules installed ${installed}/${count}`);
+    runBootstrapContract("pre-start", { requireToplfunc: true });
   } catch (e) {
     console.error(`wasm_ccl_load_image trapped: ${e}`);
     process.exit(3);
