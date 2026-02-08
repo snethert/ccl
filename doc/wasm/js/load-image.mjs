@@ -25,6 +25,7 @@ import {
   installCompiledModulesFromBundle,
   installConstPoolBytes,
   installCompiledModulesFromRegistry,
+  resolveBundleEntries,
   installSubprimsTable,
   storedLengthFor,
 } from "./ccl-loader.mjs";
@@ -71,18 +72,42 @@ if (!imagePath) {
 }
 
 let modulesBundle = null;
+let modulesIndexBytes = null;
 let modulesHandle = null;
 let modulesReader = null;
 let modulesFd = null;
 const constPoolEntries = new Map();
+const constPoolById = new Map();
 const constPoolSpanRefCounts = new Map();
 const constPoolSpanCache = new Map();
+const constPoolByIdCache = new Map();
+const constPoolDecodeInFlight = new Set();
+let constPoolSharedBlobInfo = null;
+let constPoolSharedBlobRaw = null;
 const constPoolSpanKey = (offset, storedLength, encoding, rawLength) =>
   `${offset >>> 0}:${storedLength >>> 0}:${encoding ?? "raw"}:${rawLength >>> 0}`;
 const constPoolsInstalled = new Set();
 if (modulesPath) {
   modulesBundle = JSON.parse(await fs.readFile(modulesPath, "utf-8"));
-  for (const entry of Array.isArray(modulesBundle?.modules) ? modulesBundle.modules : []) {
+  if (typeof modulesBundle?.index === "string" && modulesBundle.index.length > 0) {
+    const indexPath = path.resolve(path.dirname(modulesPath), modulesBundle.index);
+    modulesIndexBytes = await fs.readFile(indexPath);
+  }
+  const resolvedBundle = await resolveBundleEntries({
+    bundle: modulesBundle,
+    indexBytes: modulesIndexBytes,
+  });
+  if (Number.isFinite(modulesBundle?.constPoolBlobOffset) && Number.isFinite(modulesBundle?.constPoolBlobLength)) {
+    constPoolSharedBlobInfo = {
+      offset: modulesBundle.constPoolBlobOffset >>> 0,
+      length: modulesBundle.constPoolBlobLength >>> 0,
+      storedLength: Number.isFinite(modulesBundle?.constPoolBlobStoredLength)
+        ? (modulesBundle.constPoolBlobStoredLength >>> 0)
+        : (modulesBundle.constPoolBlobLength >>> 0),
+      encoding: modulesBundle?.constPoolBlobEncoding ?? null,
+    };
+  }
+  for (const entry of Array.isArray(resolvedBundle?.modules) ? resolvedBundle.modules : []) {
     if (!Number.isFinite(entry?.entryIndex)) continue;
     if (!Number.isFinite(entry?.constPoolOffset) || !Number.isFinite(entry?.constPoolLength)) continue;
     const length = entry.constPoolLength >>> 0;
@@ -90,13 +115,20 @@ if (modulesPath) {
     if (length === 0 || storedLength === 0) continue;
     const encoding = entry.constPoolEncoding ?? null;
     const key = constPoolSpanKey(entry.constPoolOffset, storedLength, encoding, length);
-    constPoolEntries.set(entry.entryIndex >>> 0, {
+    const info = {
       offset: entry.constPoolOffset >>> 0,
       length,
       storedLength,
       encoding,
       key,
-    });
+      id: Number.isFinite(entry?.constPoolId) ? (entry.constPoolId >>> 0) : null,
+      baseId: Number.isFinite(entry?.constPoolDeltaBaseId) ? (entry.constPoolDeltaBaseId >>> 0) : null,
+      deltaOp: entry?.constPoolDeltaOp ?? null,
+    };
+    constPoolEntries.set(entry.entryIndex >>> 0, info);
+    if (info.id != null && !constPoolById.has(info.id)) {
+      constPoolById.set(info.id, info);
+    }
     constPoolSpanRefCounts.set(key, (constPoolSpanRefCounts.get(key) ?? 0) + 1);
   }
   if (modulesBundle?.binary) {
@@ -145,6 +177,99 @@ const microkernel = createMicrokernel({
 });
 
 let kernelExports = null;
+
+function decodeConstPoolForInfo(info) {
+  if (!info) return null;
+  if (info.id != null && constPoolByIdCache.has(info.id)) {
+    return constPoolByIdCache.get(info.id);
+  }
+  if (info.id != null) {
+    if (constPoolDecodeInFlight.has(info.id)) {
+      return null;
+    }
+    constPoolDecodeInFlight.add(info.id);
+  }
+
+  try {
+    const shouldCache = (constPoolSpanRefCounts.get(info.key) ?? 0) > 1;
+    let decodedBytes = null;
+    if (shouldCache && constPoolSpanCache.has(info.key)) {
+      decodedBytes = constPoolSpanCache.get(info.key);
+    } else {
+      if (constPoolSharedBlobInfo) {
+        if (!constPoolSharedBlobRaw) {
+          const sharedStored = Buffer.allocUnsafe(constPoolSharedBlobInfo.storedLength);
+          let total = 0;
+          while (total < constPoolSharedBlobInfo.storedLength) {
+            const bytesRead = fsSync.readSync(
+              modulesFd,
+              sharedStored,
+              total,
+              constPoolSharedBlobInfo.storedLength - total,
+              constPoolSharedBlobInfo.offset + total,
+            );
+            if (bytesRead === 0) break;
+            total += bytesRead;
+          }
+          if (total !== constPoolSharedBlobInfo.storedLength) return null;
+          constPoolSharedBlobRaw = decodeBundleBytesSync(
+            sharedStored,
+            constPoolSharedBlobInfo.encoding,
+            constPoolSharedBlobInfo.length,
+            "const pool shared blob",
+            zlib,
+          );
+        }
+        const start = info.offset >>> 0;
+        const end = start + info.storedLength;
+        if (end > constPoolSharedBlobRaw.length) return null;
+        decodedBytes = decodeBundleBytesSync(
+          constPoolSharedBlobRaw.subarray(start, end),
+          info.encoding,
+          info.length,
+          "const pool",
+          zlib,
+        );
+      } else {
+        const bytes = Buffer.allocUnsafe(info.storedLength);
+        let total = 0;
+        while (total < info.storedLength) {
+          const bytesRead = fsSync.readSync(modulesFd, bytes, total, info.storedLength - total, info.offset + total);
+          if (bytesRead === 0) break;
+          total += bytesRead;
+        }
+        if (total !== info.storedLength) return null;
+        decodedBytes = decodeBundleBytesSync(bytes, info.encoding, info.length, "const pool", zlib);
+      }
+      if (shouldCache) {
+        constPoolSpanCache.set(info.key, decodedBytes);
+      }
+    }
+
+    if (info.baseId != null) {
+      if (info.deltaOp !== "xor") return null;
+      const baseInfo = constPoolById.get(info.baseId);
+      if (!baseInfo) return null;
+      const baseBytes = decodeConstPoolForInfo(baseInfo);
+      if (!baseBytes || baseBytes.length !== decodedBytes.length) return null;
+      const out = Buffer.allocUnsafe(decodedBytes.length);
+      for (let i = 0; i < decodedBytes.length; i++) {
+        out[i] = decodedBytes[i] ^ baseBytes[i];
+      }
+      decodedBytes = out;
+    }
+
+    if (info.id != null) {
+      constPoolByIdCache.set(info.id, decodedBytes);
+    }
+    return decodedBytes;
+  } catch (_e) {
+    return null;
+  } finally {
+    if (info.id != null) constPoolDecodeInFlight.delete(info.id);
+  }
+}
+
 function installConstPoolOnDemand(entryIndexRaw) {
   if (!kernelExports || modulesFd == null) return 0;
   const entryIndex = entryIndexRaw >>> 0;
@@ -152,30 +277,8 @@ function installConstPoolOnDemand(entryIndexRaw) {
 
   const info = constPoolEntries.get(entryIndex);
   if (!info) return 0;
-
-  const shouldCache = (constPoolSpanRefCounts.get(info.key) ?? 0) > 1;
-  let decodedBytes = null;
-  if (shouldCache && constPoolSpanCache.has(info.key)) {
-    decodedBytes = constPoolSpanCache.get(info.key);
-  } else {
-    const bytes = Buffer.allocUnsafe(info.storedLength);
-    let total = 0;
-    while (total < info.storedLength) {
-      const bytesRead = fsSync.readSync(modulesFd, bytes, total, info.storedLength - total, info.offset + total);
-      if (bytesRead === 0) break;
-      total += bytesRead;
-    }
-    if (total !== info.storedLength) return 0;
-
-    try {
-      decodedBytes = decodeBundleBytesSync(bytes, info.encoding, info.length, "const pool", zlib);
-    } catch (_e) {
-      return 0;
-    }
-    if (shouldCache) {
-      constPoolSpanCache.set(info.key, decodedBytes);
-    }
-  }
+  const decodedBytes = decodeConstPoolForInfo(info);
+  if (!decodedBytes) return 0;
 
   const rc = installConstPoolBytes({
     kernelExports,
@@ -291,6 +394,7 @@ if (runStartLisp) {
       const { installed, count, failed } = await installCompiledModulesFromBundle({
         bundle: modulesBundle,
         binaryReader: modulesReader,
+        indexBytes: modulesIndexBytes,
         kernel,
         memory: runtime.memory,
         subprimsTable: runtime.subprimsTable,
@@ -333,6 +437,7 @@ if (runStartLisp) {
       const { installed, count, failed } = await installCompiledModulesFromBundle({
         bundle: modulesBundle,
         binaryReader: modulesReader,
+        indexBytes: modulesIndexBytes,
         kernel,
         memory: runtime.memory,
         subprimsTable: runtime.subprimsTable,
