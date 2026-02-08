@@ -23,6 +23,10 @@ const DEFAULT_ALLOWLIST = {
   capabilityRequestSeq: true,
   selection: true,
   focus: true,
+  watches: true,
+  watchSeq: true,
+  editGroups: true,
+  editSeq: true,
   theme: true,
   presentations: true,
   recordingStore: true,
@@ -401,6 +405,8 @@ export function sanitizeState(state, options = {}) {
   if (allowlist.capabilityRequestSeq) out.capabilityRequestSeq = sanitizeValue(state.capabilityRequestSeq ?? null) ?? null;
   if (allowlist.selection) out.selection = sanitizeValue(state.selection ?? null) ?? null;
   if (allowlist.focus) out.focus = sanitizeValue(state.focus ?? null) ?? null;
+  if (allowlist.watches) out.watches = sanitizeValue(state.watches ?? []) ?? [];
+  if (allowlist.watchSeq) out.watchSeq = sanitizeValue(state.watchSeq ?? null) ?? null;
   if (allowlist.theme) out.theme = sanitizeRecord(state.theme ?? {});
   if (allowlist.presentations) out.presentations = sanitizeMap(state.presentations ?? {});
   if (allowlist.recordingStore) out.recordingStore = sanitizeRecord(state.recordingStore ?? {});

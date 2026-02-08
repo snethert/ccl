@@ -5,6 +5,7 @@ import {
   appendEntry as appendEntryCore,
   attachAnchor as attachAnchorCore,
   setEntryFolded as setEntryFoldedCore,
+  setRecordingCollapsed as setRecordingCollapsedCore,
   copyAsForm as copyAsFormRecording,
   copyWithContext as copyWithContextRecording,
   replayAsInput as replayAsInputRecording,
@@ -43,6 +44,8 @@ const UI_TURN_HISTORY_LIMIT = 8;
 const DOM_ESCAPE_HISTORY_LIMIT = 32;
 const CAPABILITY_POLICY_DECISIONS = ["ask", "grant", "deny"];
 const CAPABILITY_REQUEST_STATUSES = ["pending", "granted", "denied"];
+const PROBLEM_STATUSES = ["new", "active", "resolved", "suppressed"];
+const EDIT_GROUP_STATUSES = ["staged", "applied", "undone"];
 export const COMMAND_PALETTE_FILTER_COMMAND = "ui.command-palette.filter";
 export const COMMAND_PALETTE_EXECUTE_COMMAND = "ui.command-palette.execute";
 export const COMMAND_PALETTE_SELECT_NEXT_COMMAND = "ui.command-palette.select-next";
@@ -57,6 +60,7 @@ export const RECORDING_APPEND_COMMAND = "repl.recording.append";
 export const RECORDING_ENTRY_APPEND_COMMAND = "repl.recording.entry.append";
 export const RECORDING_ANCHOR_ATTACH_COMMAND = "repl.recording.anchor.attach";
 export const RECORDING_ENTRY_FOLD_COMMAND = "repl.recording.entry.fold";
+export const RECORDING_TOGGLE_COMMAND = "repl.recording.toggle";
 export const RECORDING_COPY_AS_FORM_COMMAND = "repl.recording.copy-as-form";
 export const RECORDING_COPY_WITH_CONTEXT_COMMAND = "repl.recording.copy-with-context";
 export const RECORDING_REPLAY_AS_INPUT_COMMAND = "repl.recording.replay-as-input";
@@ -69,6 +73,11 @@ export const PROBLEMS_OPEN_COMMAND = "ui.problems.open";
 export const PROBLEMS_REFRESH_COMMAND = "ui.problems.refresh";
 export const PROBLEMS_ITEM_OPEN_COMMAND = "ui.problems.item.open";
 export const DEBUGGER_RESTART_INVOKE_COMMAND = "ui.debugger.restart.invoke";
+export const INSPECTOR_WATCH_PIN_COMMAND = "ui.inspector.watch.pin";
+export const INSPECTOR_WATCH_UNPIN_COMMAND = "ui.inspector.watch.unpin";
+export const INSPECTOR_EDIT_STAGE_COMMAND = "ui.inspector.edit.stage";
+export const INSPECTOR_EDIT_APPLY_COMMAND = "ui.inspector.edit.apply";
+export const INSPECTOR_EDIT_UNDO_COMMAND = "ui.inspector.edit.undo";
 export const LIST_SELECTION_UPDATE_COMMAND = "ui.list.selection.update";
 export const TRANSCRIPT_OPEN_COMMAND = "ui.transcript.open";
 export const TRANSCRIPT_REFRESH_COMMAND = "ui.transcript.refresh";
@@ -92,6 +101,10 @@ export const CAPABILITY_AUTO_RUN_COMMAND = "ui.capability.auto-run";
 export const SAFE_MODE_ENABLE_COMMAND = "ui.safe-mode.enable";
 export const SAFE_MODE_DISABLE_COMMAND = "ui.safe-mode.disable";
 export const DOM_ESCAPE_COMMAND = "ui.dom.escape";
+
+function isPlainObject(value) {
+  return Object.prototype.toString.call(value) === "[object Object]";
+}
 
 function ensureCounters(counters) {
   if (counters) {
@@ -463,6 +476,104 @@ function allocateCapabilityRequestId(state) {
   return { id: `capability-request-${seq}`, nextSeq: seq + 1 };
 }
 
+function normalizeWatch(watch, index = 0) {
+  const fallbackId = `watch-${index + 1}`;
+  const id = typeof watch?.id === "string" && watch.id.length > 0 ? watch.id : fallbackId;
+  const kind = typeof watch?.kind === "string" && watch.kind.length > 0 ? watch.kind : "entry";
+  return {
+    id,
+    kind,
+    label:
+      (typeof watch?.label === "string" && watch.label.length > 0
+        ? watch.label
+        : watch?.entryId ?? watch?.presentationId ?? watch?.recordingId ?? id),
+    entryId: typeof watch?.entryId === "string" && watch.entryId.length > 0 ? watch.entryId : null,
+    presentationId:
+      typeof watch?.presentationId === "string" && watch.presentationId.length > 0
+        ? watch.presentationId
+        : null,
+    recordingId:
+      typeof watch?.recordingId === "string" && watch.recordingId.length > 0 ? watch.recordingId : null,
+    valueSummary: typeof watch?.valueSummary === "string" ? watch.valueSummary : "",
+    pinned: watch?.pinned !== false,
+    updatedAt: Number.isInteger(watch?.updatedAt) ? watch.updatedAt : null,
+    metadata: isPlainObject(watch?.metadata) ? { ...watch.metadata } : {}
+  };
+}
+
+function normalizeWatches(watches) {
+  if (!Array.isArray(watches)) return [];
+  return watches.map((watch, index) => normalizeWatch(watch, index));
+}
+
+function normalizeWatchSeq(seq, watches) {
+  const maxFromList = normalizeWatches(watches).reduce((max, watch) => {
+    const match = watch.id.match(/^watch-(\d+)$/);
+    if (!match) return max;
+    const value = Number.parseInt(match[1], 10);
+    return Number.isFinite(value) && value > max ? value : max;
+  }, 0);
+  const candidate = Number.isInteger(seq) && seq > 0 ? seq : 0;
+  return Math.max(candidate, maxFromList + 1);
+}
+
+function normalizeEditEntry(edit, index = 0) {
+  const fallbackId = `edit-${index + 1}`;
+  const id = typeof edit?.id === "string" && edit.id.length > 0 ? edit.id : fallbackId;
+  const placeId = typeof edit?.placeId === "string" && edit.placeId.length > 0 ? edit.placeId : null;
+  const label =
+    (typeof edit?.label === "string" && edit.label.length > 0
+      ? edit.label
+      : typeof edit?.description === "string" && edit.description.length > 0
+        ? edit.description
+        : placeId ?? id);
+  return {
+    id,
+    placeId,
+    label,
+    before: edit?.before ?? null,
+    after: edit?.after ?? edit?.value ?? null,
+    metadata: isPlainObject(edit?.metadata) ? { ...edit.metadata } : {}
+  };
+}
+
+function normalizeEditGroup(group, index = 0) {
+  const fallbackId = `edit-group-${index + 1}`;
+  const id = typeof group?.id === "string" && group.id.length > 0 ? group.id : fallbackId;
+  const status = EDIT_GROUP_STATUSES.includes(group?.status) ? group.status : "staged";
+  const edits = Array.isArray(group?.edits) ? group.edits.map((edit, editIndex) => normalizeEditEntry(edit, editIndex)) : [];
+  const label =
+    (typeof group?.label === "string" && group.label.length > 0
+      ? group.label
+      : edits[0]?.label ?? id);
+  return {
+    id,
+    label,
+    status,
+    edits,
+    createdAt: Number.isInteger(group?.createdAt) ? group.createdAt : null,
+    appliedAt: Number.isInteger(group?.appliedAt) ? group.appliedAt : null,
+    undoneAt: Number.isInteger(group?.undoneAt) ? group.undoneAt : null,
+    metadata: isPlainObject(group?.metadata) ? { ...group.metadata } : {}
+  };
+}
+
+function normalizeEditGroups(groups) {
+  if (!Array.isArray(groups)) return [];
+  return groups.map((group, index) => normalizeEditGroup(group, index));
+}
+
+function normalizeEditSeq(seq, groups) {
+  const maxFromList = normalizeEditGroups(groups).reduce((max, group) => {
+    const match = group.id.match(/^edit-group-(\d+)$/);
+    if (!match) return max;
+    const value = Number.parseInt(match[1], 10);
+    return Number.isFinite(value) && value > max ? value : max;
+  }, 0);
+  const candidate = Number.isInteger(seq) && seq > 0 ? seq : 0;
+  return Math.max(candidate, maxFromList + 1);
+}
+
 function resolveCapabilityPolicyDecision(policy, capability) {
   const normalizedPolicy = normalizeCapabilityPolicy(policy ?? null);
   for (const rule of normalizedPolicy.rules) {
@@ -485,6 +596,10 @@ export function createWorkspace({ id, title, taskIds, activeTaskId, metadata } =
 
 export function createState(options = {}) {
   const idCounters = ensureCounters(options.idCounters);
+  const watches = normalizeWatches(options.watches ?? null);
+  const watchSeq = normalizeWatchSeq(options.watchSeq ?? null, watches);
+  const editGroups = normalizeEditGroups(options.editGroups ?? options.stagedEdits ?? null);
+  const editSeq = normalizeEditSeq(options.editSeq ?? null, editGroups);
   const capabilityRequests = normalizeCapabilityRequests(options.capabilityRequests ?? null);
   const capabilityPolicy = normalizeCapabilityPolicy(options.capabilityPolicy ?? null);
   const capabilityRequestSeq = normalizeCapabilityRequestSeq(options.capabilityRequestSeq ?? null, capabilityRequests);
@@ -497,6 +612,10 @@ export function createState(options = {}) {
     presentations: options.presentations ?? {},
     recordingStore: normalizeRecordingStore(options.recordingStore ?? options.recordings ?? null),
     commandHistory: Array.isArray(options.commandHistory) ? [...options.commandHistory] : [],
+    watches,
+    watchSeq,
+    editGroups,
+    editSeq,
     domEscapes: normalizeDomEscapes(options.domEscapes ?? null),
     ui: normalizeUiState(options.ui ?? null),
     capabilities: normalizeCapabilities(options.capabilities ?? null),
@@ -850,9 +969,37 @@ export function appendRecording(state, recording) {
   return { ...state, recordingStore };
 }
 
+function updateWatchesFromEntry(state, entry) {
+  if (!entry || typeof entry !== "object" || !Array.isArray(state.watches) || state.watches.length === 0) {
+    return state;
+  }
+  let changed = false;
+  const nextWatches = state.watches.map((watch) => {
+    const matchByEntry = Boolean(watch.entryId && watch.entryId === entry.id);
+    const matchByPresentation = Boolean(
+      watch.presentationId && entry.presentationId && watch.presentationId === entry.presentationId
+    );
+    if (!matchByEntry && !matchByPresentation) {
+      return watch;
+    }
+    const valueSummary = typeof entry.text === "string" ? entry.text : watch.valueSummary ?? "";
+    changed = true;
+    return {
+      ...watch,
+      entryId: entry.id ?? watch.entryId,
+      recordingId: entry.recordingId ?? watch.recordingId,
+      valueSummary,
+      updatedAt: Number.isInteger(entry.ts) ? entry.ts : watch.updatedAt ?? null
+    };
+  });
+  return changed ? { ...state, watches: nextWatches } : state;
+}
+
 export function appendRecordingEntry(state, entry) {
   const recordingStore = appendEntryCore(state.recordingStore ?? null, entry);
-  return { ...state, recordingStore };
+  const normalizedEntry = recordingStore.entries?.[entry?.id] ?? null;
+  const nextState = { ...state, recordingStore };
+  return updateWatchesFromEntry(nextState, normalizedEntry);
 }
 
 export function attachRecordingAnchor(state, anchor) {
@@ -863,6 +1010,183 @@ export function attachRecordingAnchor(state, anchor) {
 export function setRecordingEntryFolded(state, entryId, folded) {
   const recordingStore = setEntryFoldedCore(state.recordingStore ?? null, entryId, folded);
   return { ...state, recordingStore };
+}
+
+export function setRecordingCollapsed(state, recordingId, collapsed) {
+  const recordingStore = setRecordingCollapsedCore(state.recordingStore ?? null, recordingId, collapsed);
+  return { ...state, recordingStore };
+}
+
+function resolveWatchSource(state, options = {}) {
+  const item = options.item ?? null;
+  const entryId = options.entryId ?? item?.entryId ?? null;
+  const presentationId = options.presentationId ?? item?.presentationId ?? null;
+  const store = state.recordingStore ?? null;
+  const resolvedEntryId =
+    entryId ??
+    (presentationId ? store?.byPresentation?.[presentationId] ?? null : null);
+  const entry = resolvedEntryId ? store?.entries?.[resolvedEntryId] ?? null : null;
+  const recordingId = options.recordingId ?? item?.recordingId ?? entry?.recordingId ?? null;
+  const presentation = presentationId ? state.presentations?.[presentationId] ?? null : null;
+  const label =
+    options.label ??
+    item?.label ??
+    presentation?.label ??
+    (typeof entry?.text === "string" && entry.text.length > 0 ? truncateTranscriptText(entry.text, 72) : null) ??
+    resolvedEntryId ??
+    presentationId ??
+    recordingId ??
+    "watch";
+  const valueSummary =
+    options.valueSummary ??
+    (typeof entry?.text === "string" ? entry.text : null) ??
+    (typeof presentation?.metadata?.summary === "string" ? presentation.metadata.summary : null) ??
+    "";
+  return {
+    entryId: resolvedEntryId,
+    presentationId,
+    recordingId,
+    label,
+    valueSummary
+  };
+}
+
+export function pinWatch(state, options = {}) {
+  const source = resolveWatchSource(state, options);
+  if (!source.entryId && !source.presentationId && !source.recordingId) {
+    return state;
+  }
+  const existing = (state.watches ?? []).find((watch) => {
+    if (source.entryId && watch.entryId && watch.entryId === source.entryId) return true;
+    if (source.presentationId && watch.presentationId && watch.presentationId === source.presentationId) return true;
+    return false;
+  });
+  if (existing) {
+    const nextWatches = (state.watches ?? []).map((watch) =>
+      watch.id === existing.id
+        ? {
+            ...watch,
+            label: source.label ?? watch.label,
+            recordingId: source.recordingId ?? watch.recordingId,
+            valueSummary: source.valueSummary ?? watch.valueSummary
+          }
+        : watch
+    );
+    return { ...state, watches: nextWatches };
+  }
+  const id = typeof options.id === "string" && options.id.length > 0 ? options.id : `watch-${state.watchSeq ?? 1}`;
+  const watch = normalizeWatch(
+    {
+      id,
+      kind: options.kind ?? "entry",
+      label: source.label,
+      entryId: source.entryId,
+      presentationId: source.presentationId,
+      recordingId: source.recordingId,
+      valueSummary: source.valueSummary,
+      pinned: true,
+      updatedAt: Number.isInteger(options.ts) ? options.ts : null,
+      metadata: options.metadata ?? {}
+    },
+    (state.watches ?? []).length
+  );
+  return {
+    ...state,
+    watches: [...(state.watches ?? []), watch],
+    watchSeq: (state.watchSeq ?? 1) + 1
+  };
+}
+
+export function unpinWatch(state, watchId) {
+  if (typeof watchId !== "string" || watchId.length === 0) return state;
+  const existing = Array.isArray(state.watches) ? state.watches : [];
+  if (!existing.some((watch) => watch.id === watchId)) {
+    return state;
+  }
+  return {
+    ...state,
+    watches: existing.filter((watch) => watch.id !== watchId)
+  };
+}
+
+function resolveEditList(options = {}) {
+  if (Array.isArray(options.edits) && options.edits.length > 0) {
+    return options.edits;
+  }
+  if (options.edit && typeof options.edit === "object") {
+    return [options.edit];
+  }
+  if (options.placeId || options.before !== undefined || options.after !== undefined || options.value !== undefined) {
+    return [
+      {
+        placeId: options.placeId ?? null,
+        label: options.label ?? null,
+        before: options.before ?? null,
+        after: options.after ?? options.value ?? null,
+        metadata: options.metadata ?? {}
+      }
+    ];
+  }
+  return [];
+}
+
+export function stageEdit(state, options = {}) {
+  const edits = resolveEditList(options);
+  if (edits.length === 0) return state;
+  const id = typeof options.id === "string" && options.id.length > 0 ? options.id : `edit-group-${state.editSeq ?? 1}`;
+  const label =
+    options.label ??
+    edits[0]?.label ??
+    edits[0]?.placeId ??
+    id;
+  const group = normalizeEditGroup(
+    {
+      id,
+      label,
+      status: "staged",
+      edits,
+      createdAt: Number.isInteger(options.ts) ? options.ts : null,
+      metadata: options.metadata ?? {}
+    },
+    (state.editGroups ?? []).length
+  );
+  return {
+    ...state,
+    editGroups: [...(state.editGroups ?? []), group],
+    editSeq: (state.editSeq ?? 1) + 1
+  };
+}
+
+export function applyEditGroup(state, editGroupId, options = {}) {
+  if (typeof editGroupId !== "string" || editGroupId.length === 0) return state;
+  const groups = Array.isArray(state.editGroups) ? state.editGroups : [];
+  let changed = false;
+  const nextGroups = groups.map((group) => {
+    if (group.id !== editGroupId) return group;
+    changed = true;
+    return {
+      ...group,
+      status: "applied",
+      appliedAt: Number.isInteger(options.ts) ? options.ts : group.appliedAt ?? null
+    };
+  });
+  return changed ? { ...state, editGroups: nextGroups } : state;
+}
+
+export function undoEditGroup(state, editGroupId, options = {}) {
+  if (typeof editGroupId !== "string" || editGroupId.length === 0) return state;
+  const groups = Array.isArray(state.editGroups) ? state.editGroups : [];
+  let changed = false;
+  const nextGroups = groups.map((group) => {
+    if (group.id !== editGroupId) return group;
+    changed = true;
+    return {
+      ...group,
+      status: "undone",
+      undoneAt: Number.isInteger(options.ts) ? options.ts : group.undoneAt ?? null
+    };
+  });
+  return changed ? { ...state, editGroups: nextGroups } : state;
 }
 
 function resolveInvocationId(state, requestedId = null) {
@@ -1299,6 +1623,9 @@ export function updateListSelection(state, options = {}) {
 
   const listItemIds = resolveListItemIds(state, listId, options.listItemIds ?? null);
   const targetId = String(itemId);
+  if (listItemIds.length > 0 && !listItemIds.includes(targetId)) {
+    return state;
+  }
   const multiple = Boolean(options.multiple ?? false);
   const mode = normalizeListSelectionMode(options.mode ?? "replace", multiple);
 
@@ -1532,41 +1859,93 @@ function summarizePresentations(state) {
   return items;
 }
 
+function truncateTranscriptText(text, max = 120) {
+  if (typeof text !== "string") return "";
+  if (text.length <= max) return text;
+  return `${text.slice(0, max - 3)}...`;
+}
+
+function formatRecordingInputSummary(recording) {
+  const inputText = truncateTranscriptText(recording?.input?.text ?? "", 72);
+  if (inputText.length > 0) return inputText;
+  const commandId = recording?.context?.commandId ?? null;
+  if (typeof commandId === "string" && commandId.length > 0) return commandId;
+  return "<no input>";
+}
+
+function buildTranscriptEntryItem(state, store, entryId) {
+  const entry = store.entries?.[entryId];
+  if (!entry) return null;
+  const kind = entry.kind ?? "text";
+  const stream = entry.streamId ?? "stdout";
+  const text = truncateTranscriptText(entry.text ?? "");
+  const seq = entry.seq ?? "?";
+  const isFolded = Boolean(entry.metadata?.folded);
+  const marker = isFolded ? "[+]" : "[-]";
+  const suffix = text ? `: ${text}` : "";
+  const foldedSuffix = isFolded ? " [folded]" : "";
+  const presentation = buildPresentationForEntry(state, entry);
+  const presentationId = entry.presentationId ?? null;
+  const presentationType = presentation?.type ?? "value";
+  return {
+    id: `transcript-${entryId}`,
+    label: `  ${marker} ${seq} ${stream} ${kind}${foldedSuffix}${suffix}`,
+    entryId,
+    recordingId: entry.recordingId ?? null,
+    kind,
+    streamId: stream,
+    presentationId,
+    anchorId: entry.anchorId ?? null,
+    presentationType,
+    folded: isFolded,
+    disabled: false
+  };
+}
+
 function buildTranscriptItems(state, options = {}) {
   const store = normalizeRecordingStore(state.recordingStore ?? null);
   const entryOrder = Array.isArray(store.entryOrder) ? [...store.entryOrder] : [];
   const limit = Number.isFinite(options.limit) ? Math.max(0, options.limit) : 100;
-  const ordered = limit > 0 ? entryOrder.slice(-limit) : entryOrder;
+  const limitedEntryIds = limit > 0 ? entryOrder.slice(-limit) : entryOrder;
+  const limitedEntrySet = new Set(limitedEntryIds);
+  const recordingOrder = Array.isArray(store.recordingOrder) ? [...store.recordingOrder] : [];
   const items = [];
-  for (const id of ordered) {
-    const entry = store.entries?.[id];
-    if (!entry) continue;
-    const kind = entry.kind ?? "text";
-    const stream = entry.streamId ?? "stdout";
-    let text = entry.text ?? "";
-    if (text.length > 120) {
-      text = `${text.slice(0, 117)}...`;
-    }
-    const seq = entry.seq ?? "?";
-    const suffix = text ? `: ${text}` : "";
-    const presentation = buildPresentationForEntry(state, entry);
-    const presentationId = entry.presentationId ?? null;
-    const presentationType = presentation?.type ?? "value";
+
+  for (const recordingId of recordingOrder) {
+    const recording = store.recordings?.[recordingId];
+    if (!recording) continue;
+    const entryIds = (Array.isArray(recording.entryIds) ? recording.entryIds : []).filter(
+      (entryId) => limitedEntrySet.has(entryId) && Boolean(store.entries?.[entryId])
+    );
+    if (entryIds.length === 0) continue;
+
+    const collapsed = Boolean(recording.metadata?.collapsed);
+    const marker = collapsed ? "[+]" : "[-]";
+    const summary = formatRecordingInputSummary(recording);
+    const commandId = recording.context?.commandId ?? "repl.eval";
     items.push({
-      id: `transcript-${id}`,
-      label: `${seq} ${stream} ${kind}${suffix}`,
-      entryId: id,
-      recordingId: entry.recordingId ?? null,
-      kind,
-      streamId: stream,
-      presentationId,
-      anchorId: entry.anchorId ?? null,
-      presentationType,
+      id: `transcript-recording-${recordingId}`,
+      label: `${marker} ${commandId}: ${summary}`,
+      recordingId,
+      kind: "recording",
+      entryCount: entryIds.length,
+      collapsed,
+      selectable: false,
+      command: RECORDING_TOGGLE_COMMAND,
       disabled: false
     });
+    if (collapsed) continue;
+
+    for (const entryId of entryIds) {
+      const entryItem = buildTranscriptEntryItem(state, store, entryId);
+      if (entryItem) {
+        items.push(entryItem);
+      }
+    }
   }
+
   if (items.length === 0) {
-    items.push({ id: "transcript-none", label: "No transcript entries" });
+    items.push({ id: "transcript-none", label: "No transcript entries", disabled: true, selectable: false });
   }
   return items;
 }
@@ -2007,6 +2386,43 @@ function summarizeCapabilityRequests(state) {
   return items;
 }
 
+function summarizeWatches(state) {
+  const watches = Array.isArray(state.watches) ? state.watches : [];
+  if (watches.length === 0) {
+    return [{ id: "watch-none", label: "No pinned watches" }];
+  }
+  return watches.map((watch) => {
+    const summary = truncateTranscriptText(watch.valueSummary ?? "", 72);
+    const suffix = summary.length > 0 ? ` => ${summary}` : "";
+    return {
+      id: watch.id,
+      label: `${watch.label ?? watch.id}${suffix}`,
+      watchId: watch.id,
+      entryId: watch.entryId ?? null,
+      presentationId: watch.presentationId ?? null,
+      recordingId: watch.recordingId ?? null
+    };
+  });
+}
+
+function summarizeEditGroups(state) {
+  const groups = Array.isArray(state.editGroups) ? state.editGroups : [];
+  if (groups.length === 0) {
+    return [{ id: "edit-none", label: "No staged edits" }];
+  }
+  return groups.map((group) => {
+    const count = Array.isArray(group.edits) ? group.edits.length : 0;
+    const countSuffix = count > 0 ? ` (${count})` : "";
+    const statusSuffix = group.status ? ` [${group.status}]` : "";
+    return {
+      id: group.id,
+      label: `${group.label ?? group.id}${countSuffix}${statusSuffix}`,
+      editGroupId: group.id,
+      status: group.status ?? null
+    };
+  });
+}
+
 function buildInspectorSections(state) {
   return {
     tasks: summarizeTasks(state),
@@ -2015,6 +2431,8 @@ function buildInspectorSections(state) {
     commandHistory: buildCommandHistoryItems(state, { limit: 5 }),
     capabilities: summarizeCapabilities(state),
     capabilityRequests: summarizeCapabilityRequests(state),
+    watches: summarizeWatches(state),
+    stagedEdits: summarizeEditGroups(state),
     domEscapes: summarizeDomEscapes(state),
     turns: summarizeUiTurn(state),
     transcript: buildTranscriptItems(state, { limit: 5 }),
@@ -2068,6 +2486,8 @@ export function openInspectorWindow(state, options = {}) {
     ["commandHistory", "Command History"],
     ["capabilities", "Capabilities"],
     ["capabilityRequests", "Capability Requests"],
+    ["watches", "Pinned Watches"],
+    ["stagedEdits", "Staged Edits"],
     ["domEscapes", "DOM Escapes"],
     ["turns", "UI Turn"],
     ["transcript", "Transcript"],
@@ -2088,11 +2508,25 @@ export function openInspectorWindow(state, options = {}) {
       props: { text: title }
     });
     let listAlloc = allocateWidgetId(nextState, `inspector-${key}-list`);
+    const listProps = { items: sectionItems[key] ?? [] };
+    if (key === "stagedEdits") {
+      listProps.selectionCommand = LIST_SELECTION_UPDATE_COMMAND;
+      listProps.selectionMode = "single";
+      listProps.selectionActionBar = true;
+      listProps.selectionActions = [
+        { id: "apply-edit", label: "Apply" },
+        { id: "undo-edit", label: "Undo" }
+      ];
+      listProps.selectionActionCommands = {
+        "apply-edit": INSPECTOR_EDIT_APPLY_COMMAND,
+        "undo-edit": INSPECTOR_EDIT_UNDO_COMMAND
+      };
+    }
     nextState = addWidget(listAlloc.state, {
       id: listAlloc.id,
       kind: "list",
       parentId: ids.rootId,
-      props: { items: sectionItems[key] ?? [] }
+      props: listProps
     });
     ids.sections[key] = { labelId: labelAlloc.id, listId: listAlloc.id };
   }
@@ -2160,11 +2594,17 @@ export function openTranscriptWindow(state, options = {}) {
       selectionCommand: LIST_SELECTION_UPDATE_COMMAND,
       selectionMode: "multi",
       selectionActionBar: true,
+      selectionActions: [
+        { id: "toggle-fold", label: "Toggle Fold" },
+        { id: "pin-watch", label: "Pin Watch" }
+      ],
       selectionActionCommands: {
         inspect: TRANSCRIPT_ITEM_OPEN_COMMAND,
         describe: RECORDING_COPY_WITH_CONTEXT_COMMAND,
         "do-again": RECORDING_REPLAY_AS_INPUT_COMMAND,
-        "do-again-with-args": RECORDING_RERUN_COMMAND
+        "do-again-with-args": RECORDING_RERUN_COMMAND,
+        "toggle-fold": RECORDING_TOGGLE_COMMAND,
+        "pin-watch": INSPECTOR_WATCH_PIN_COMMAND
       }
     }
   });
@@ -2313,17 +2753,60 @@ export function refreshCommandHistoryWindow(state, windowId, options = {}) {
   }));
 }
 
+function normalizeProblemStatus(status, options = {}) {
+  if (PROBLEM_STATUSES.includes(status)) return status;
+  if (status === "resolved") return "resolved";
+  if (status === "suppressed") return "suppressed";
+  if (status === "acknowledged") return "active";
+  if (status === "open" || status === "new" || status === null || status === undefined) {
+    const count = Number.isInteger(options.count) ? options.count : 0;
+    return count <= 1 ? "new" : "active";
+  }
+  return "active";
+}
+
+function normalizeProblemSeverity(severity, kind) {
+  const value = typeof severity === "string" && severity.length > 0 ? severity : kind;
+  if (value === "warning" || value === "warn") return "warning";
+  if (value === "info") return "info";
+  return "error";
+}
+
+function compareProblemEntries(a, b) {
+  const statusOrder = { new: 0, active: 1, resolved: 2, suppressed: 3 };
+  const statusA = normalizeProblemStatus(a?.status, { count: a?.count });
+  const statusB = normalizeProblemStatus(b?.status, { count: b?.count });
+  const orderDiff = (statusOrder[statusA] ?? 9) - (statusOrder[statusB] ?? 9);
+  if (orderDiff !== 0) return orderDiff;
+  const tsA = Number.isInteger(a?.lastTs) ? a.lastTs : Number.isInteger(a?.ts) ? a.ts : 0;
+  const tsB = Number.isInteger(b?.lastTs) ? b.lastTs : Number.isInteger(b?.ts) ? b.ts : 0;
+  if (tsA !== tsB) return tsB - tsA;
+  return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
+}
+
 function buildProblemsItems(state) {
   const entries = Array.isArray(state.errors) ? [...state.errors] : [];
   if (entries.length === 0) {
-    return [{ id: "problems-none", label: "No problems" }];
+    return [{ id: "problems-none", label: "No problems", disabled: true, selectable: false }];
   }
-  return entries.map((error, index) => ({
-    id: error.id ?? `problem-${index}`,
-    label: `${error.kind ?? "error"}: ${error.message ?? ""}`.trim(),
-    errorId: error.id ?? null,
-    status: error.status ?? null
-  }));
+  return entries.sort(compareProblemEntries).map((error, index) => {
+    const severity = normalizeProblemSeverity(error?.severity, error?.kind ?? "error");
+    const status = normalizeProblemStatus(error?.status, { count: error?.count });
+    const countSuffix = Number.isInteger(error?.count) && error.count > 1 ? ` (${error.count})` : "";
+    const statusSuffix = status ? ` [${status}]` : "";
+    const label = `${severity}: ${error?.message ?? ""}`.trim();
+    return {
+      id: error.id ?? `problem-${index}`,
+      label: `${label}${countSuffix}${statusSuffix}`.trim(),
+      errorId: error.id ?? null,
+      taskId: error.taskId ?? null,
+      status,
+      severity,
+      count: Number.isInteger(error?.count) ? error.count : null,
+      location: error.location ?? error.report?.location ?? null,
+      presentationId: error.presentationId ?? null
+    };
+  });
 }
 
 export function openProblemsWindow(state, options = {}) {
@@ -2375,7 +2858,15 @@ export function openProblemsWindow(state, options = {}) {
     id: listAlloc.id,
     kind: "list",
     parentId: ids.rootId,
-    props: { items, itemCommand: PROBLEMS_ITEM_OPEN_COMMAND }
+    props: {
+      items,
+      itemCommand: PROBLEMS_ITEM_OPEN_COMMAND,
+      selectionCommand: LIST_SELECTION_UPDATE_COMMAND,
+      selectionMode: "multi",
+      selectionActionBar: true,
+      selectionActions: [{ id: "open-debugger", label: "Open Debugger" }],
+      selectionActionCommands: { "open-debugger": PROBLEMS_ITEM_OPEN_COMMAND }
+    }
   });
   ids.listId = listAlloc.id;
 
@@ -3357,6 +3848,7 @@ export function registerRecordingCommands(registry, options = {}) {
   const entryId = options.entryCommandId ?? RECORDING_ENTRY_APPEND_COMMAND;
   const anchorId = options.anchorCommandId ?? RECORDING_ANCHOR_ATTACH_COMMAND;
   const foldId = options.foldCommandId ?? RECORDING_ENTRY_FOLD_COMMAND;
+  const toggleId = options.toggleCommandId ?? RECORDING_TOGGLE_COMMAND;
   const copyAsFormId = options.copyAsFormCommandId ?? RECORDING_COPY_AS_FORM_COMMAND;
   const copyWithContextId = options.copyWithContextCommandId ?? RECORDING_COPY_WITH_CONTEXT_COMMAND;
   const replayAsInputId = options.replayAsInputCommandId ?? RECORDING_REPLAY_AS_INPUT_COMMAND;
@@ -3367,6 +3859,21 @@ export function registerRecordingCommands(registry, options = {}) {
     if (!registry.commands.has(id)) {
       registerCommand(registry, { ...command, id });
     }
+  };
+
+  const maybeApplyListSelectionFromCtx = (state, ctx) => {
+    const listId = ctx.listId ?? ctx.payload?.listId ?? null;
+    const itemId = ctx.itemId ?? ctx.payload?.itemId ?? ctx.item?.id ?? null;
+    if (!listId || !itemId || ctx.item?.selectable === false) {
+      return state;
+    }
+    return updateListSelection(state, {
+      listId,
+      itemId,
+      mode: ctx.selectionMode ?? ctx.payload?.selectionMode ?? "replace",
+      multiple: Boolean(ctx.multiple ?? ctx.payload?.multiple ?? false),
+      listItemIds: ctx.listItemIds ?? ctx.payload?.listItemIds ?? null
+    });
   };
 
   ensure(recordingId, {
@@ -3406,14 +3913,41 @@ export function registerRecordingCommands(registry, options = {}) {
     title: "Fold Recording Entry",
     doc: "Fold or unfold a transcript entry.",
     enabled: (ctx) => {
-      const entryIdValue = ctx.entryId ?? ctx.payload?.entryId ?? null;
+      const entryIdValue = ctx.entryId ?? ctx.payload?.entryId ?? ctx.item?.entryId ?? null;
       return entryIdValue ? { enabled: true, reason: null } : { enabled: false, reason: "No entry id" };
     },
     exec: (ctx) => {
-      const entryIdValue = ctx.entryId ?? ctx.payload?.entryId ?? null;
+      const entryIdValue = ctx.entryId ?? ctx.payload?.entryId ?? ctx.item?.entryId ?? null;
       if (!entryIdValue) return ctx.state;
-      const folded = Boolean(ctx.folded ?? ctx.payload?.folded ?? true);
-      return setRecordingEntryFolded(ctx.state, entryIdValue, folded);
+      const existing = Boolean(ctx.state.recordingStore?.entries?.[entryIdValue]?.metadata?.folded);
+      const requested = ctx.folded ?? ctx.payload?.folded ?? null;
+      const folded = requested === null || requested === undefined ? !existing : Boolean(requested);
+      const selectedState = maybeApplyListSelectionFromCtx(ctx.state, ctx);
+      return setRecordingEntryFolded(selectedState, entryIdValue, folded);
+    }
+  });
+
+  ensure(toggleId, {
+    title: "Toggle Recording Visibility",
+    doc: "Toggle run collapse or entry fold state from transcript controls.",
+    enabled: (ctx) => {
+      const entryIdValue = ctx.entryId ?? ctx.payload?.entryId ?? ctx.item?.entryId ?? null;
+      const recordingIdValue = resolveRecordingId(ctx) ?? null;
+      return entryIdValue || recordingIdValue
+        ? { enabled: true, reason: null }
+        : { enabled: false, reason: "No recording target" };
+    },
+    exec: (ctx) => {
+      const selectedState = maybeApplyListSelectionFromCtx(ctx.state, ctx);
+      const entryIdValue = ctx.entryId ?? ctx.payload?.entryId ?? ctx.item?.entryId ?? null;
+      if (entryIdValue) {
+        const existing = Boolean(selectedState.recordingStore?.entries?.[entryIdValue]?.metadata?.folded);
+        return setRecordingEntryFolded(selectedState, entryIdValue, !existing);
+      }
+      const recordingIdValue = resolveRecordingId(ctx) ?? null;
+      if (!recordingIdValue) return selectedState;
+      const existing = Boolean(selectedState.recordingStore?.recordings?.[recordingIdValue]?.metadata?.collapsed);
+      return setRecordingCollapsed(selectedState, recordingIdValue, !existing);
     }
   });
 
@@ -3648,6 +4182,112 @@ export function registerCommandHistoryCommands(registry, options = {}) {
   return registry;
 }
 
+export function registerInspectorCommands(registry, options = {}) {
+  if (!registry) {
+    throw new Error("Registry is required");
+  }
+  const pinId = options.pinWatchCommandId ?? INSPECTOR_WATCH_PIN_COMMAND;
+  const unpinId = options.unpinWatchCommandId ?? INSPECTOR_WATCH_UNPIN_COMMAND;
+  const stageId = options.stageEditCommandId ?? INSPECTOR_EDIT_STAGE_COMMAND;
+  const applyId = options.applyEditCommandId ?? INSPECTOR_EDIT_APPLY_COMMAND;
+  const undoId = options.undoEditCommandId ?? INSPECTOR_EDIT_UNDO_COMMAND;
+
+  const ensure = (id, command) => {
+    if (!registry.commands.has(id)) {
+      registerCommand(registry, { ...command, id });
+    }
+  };
+
+  ensure(pinId, {
+    title: "Pin Watch",
+    doc: "Pin the selected item as an inspector watch.",
+    enabled: (ctx) => {
+      const item = ctx.item ?? ctx.payload?.item ?? null;
+      const hasTarget = Boolean(
+        ctx.entryId ??
+          ctx.presentationId ??
+          item?.entryId ??
+          item?.presentationId ??
+          item?.recordingId
+      );
+      return hasTarget ? { enabled: true, reason: null } : { enabled: false, reason: "No watch target" };
+    },
+    exec: (ctx) =>
+      pinWatch(ctx.state, {
+        item: ctx.item ?? ctx.payload?.item ?? null,
+        entryId: ctx.entryId ?? ctx.payload?.entryId ?? null,
+        presentationId: ctx.presentationId ?? ctx.payload?.presentationId ?? null,
+        recordingId: ctx.recordingId ?? ctx.payload?.recordingId ?? null,
+        label: ctx.label ?? ctx.payload?.label ?? null,
+        valueSummary: ctx.valueSummary ?? ctx.payload?.valueSummary ?? null,
+        ts: ctx.ts ?? null,
+        metadata: ctx.metadata ?? ctx.payload?.metadata ?? {}
+      })
+  });
+
+  ensure(unpinId, {
+    title: "Unpin Watch",
+    doc: "Remove a watch from inspector pinned watches.",
+    enabled: (ctx) => {
+      const watchId = ctx.watchId ?? ctx.payload?.watchId ?? ctx.item?.watchId ?? ctx.item?.id ?? null;
+      return watchId ? { enabled: true, reason: null } : { enabled: false, reason: "No watch id" };
+    },
+    exec: (ctx) => {
+      const watchId = ctx.watchId ?? ctx.payload?.watchId ?? ctx.item?.watchId ?? ctx.item?.id ?? null;
+      return unpinWatch(ctx.state, watchId);
+    }
+  });
+
+  ensure(stageId, {
+    title: "Stage Edit",
+    doc: "Stage an edit group for inspector place edits.",
+    enabled: (ctx) => {
+      const edit = ctx.edit ?? ctx.payload?.edit ?? null;
+      const hasInline = Boolean(ctx.placeId ?? ctx.payload?.placeId);
+      return edit || hasInline ? { enabled: true, reason: null } : { enabled: false, reason: "No edit payload" };
+    },
+    exec: (ctx) =>
+      stageEdit(ctx.state, {
+        edit: ctx.edit ?? ctx.payload?.edit ?? null,
+        edits: ctx.edits ?? ctx.payload?.edits ?? null,
+        placeId: ctx.placeId ?? ctx.payload?.placeId ?? null,
+        before: ctx.before ?? ctx.payload?.before ?? null,
+        after: ctx.after ?? ctx.payload?.after ?? ctx.value ?? ctx.payload?.value ?? null,
+        label: ctx.label ?? ctx.payload?.label ?? null,
+        ts: ctx.ts ?? null,
+        metadata: ctx.metadata ?? ctx.payload?.metadata ?? {}
+      })
+  });
+
+  ensure(applyId, {
+    title: "Apply Staged Edit",
+    doc: "Apply the selected staged edit group.",
+    enabled: (ctx) => {
+      const editGroupId = ctx.editGroupId ?? ctx.payload?.editGroupId ?? ctx.item?.editGroupId ?? ctx.item?.id ?? null;
+      return editGroupId ? { enabled: true, reason: null } : { enabled: false, reason: "No edit group id" };
+    },
+    exec: (ctx) => {
+      const editGroupId = ctx.editGroupId ?? ctx.payload?.editGroupId ?? ctx.item?.editGroupId ?? ctx.item?.id ?? null;
+      return applyEditGroup(ctx.state, editGroupId, { ts: ctx.ts ?? null });
+    }
+  });
+
+  ensure(undoId, {
+    title: "Undo Staged Edit",
+    doc: "Undo the selected staged edit group.",
+    enabled: (ctx) => {
+      const editGroupId = ctx.editGroupId ?? ctx.payload?.editGroupId ?? ctx.item?.editGroupId ?? ctx.item?.id ?? null;
+      return editGroupId ? { enabled: true, reason: null } : { enabled: false, reason: "No edit group id" };
+    },
+    exec: (ctx) => {
+      const editGroupId = ctx.editGroupId ?? ctx.payload?.editGroupId ?? ctx.item?.editGroupId ?? ctx.item?.id ?? null;
+      return undoEditGroup(ctx.state, editGroupId, { ts: ctx.ts ?? null });
+    }
+  });
+
+  return registry;
+}
+
 export function registerProblemsCommands(registry, options = {}) {
   if (!registry) {
     throw new Error("Registry is required");
@@ -3797,7 +4437,17 @@ export function registerDebuggerCommands(registry, options = {}) {
       };
       const validation = validateInvocation(invocation, restartSpec);
       if (!validation.ok) return ctx.state;
-      return recordCommandInvocation(ctx.state, invocation);
+      const nextState = recordCommandInvocation(ctx.state, invocation);
+      return {
+        state: nextState,
+        output: {
+          kind: "restart.invoke",
+          restartId,
+          errorId,
+          args: restartArgs ?? null,
+          restart
+        }
+      };
     }
   });
 
@@ -4389,7 +5039,14 @@ export function raiseError(state, error, options = {}) {
       count,
       lastTs: error.ts ?? existing.lastTs ?? null,
       message: error.message ?? existing.message,
-      restarts: error.restarts ?? existing.restarts ?? []
+      restarts: error.restarts ?? existing.restarts ?? [],
+      severity: error.severity ?? existing.severity ?? null,
+      location: error.location ?? existing.location ?? null,
+      report: error.report ?? existing.report ?? null,
+      stack: error.stack ?? existing.stack ?? null,
+      status: error.status ?? existing.status ?? existing.status,
+      presentationId: error.presentationId ?? existing.presentationId ?? null,
+      debuggerTarget: error.debuggerTarget ?? existing.debuggerTarget ?? null
     };
     nextState = { ...state, errors };
     errorId = existing.id;
@@ -4402,11 +5059,17 @@ export function raiseError(state, error, options = {}) {
       kind: error.kind ?? "error",
       message: error.message ?? "",
       restarts: Array.isArray(error.restarts) ? [...error.restarts] : [],
+      severity: error.severity ?? null,
+      location: error.location ?? null,
+      report: error.report ?? null,
+      stack: error.stack ?? null,
       coalesceKey,
       ts: error.ts ?? null,
       lastTs: error.ts ?? null,
-      status: "open",
-      count: 1
+      status: error.status ?? "open",
+      count: 1,
+      presentationId: error.presentationId ?? null,
+      debuggerTarget: error.debuggerTarget ?? null
     };
     errors.push(entry);
     nextState = { ...state, idCounters: alloc.counters, errors };
@@ -4444,15 +5107,30 @@ function buildDebuggerContent(state, errorId) {
   const error = state.errors?.find((entry) => entry.id === errorId) ?? null;
   const restarts = Array.isArray(error?.restarts) ? error.restarts.map(normalizeRestart) : [];
   const summary = error ? `${error.kind ?? "error"}: ${error.message ?? ""}` : "No error selected";
-  const items = restarts.map((restart, index) => ({
-    id: restart.id ?? `restart-${index}`,
-    label: restart.title ?? restart.id ?? `Restart ${index + 1}`,
-    restartId: restart.id ?? null,
-    errorId: error?.id ?? null,
-    restart
-  }));
+  const items = restarts.map((restart, index) => {
+    const id = restart.id ?? `restart-${index}`;
+    const title = restart.title ?? restart.id ?? `Restart ${index + 1}`;
+    const metaParts = [];
+    if (restart.recommended) metaParts.push("recommended");
+    if (restart.safety) metaParts.push(restart.safety);
+    const metaSuffix = metaParts.length > 0 ? ` (${metaParts.join(", ")})` : "";
+    return {
+      id,
+      label: `${title}${metaSuffix}`,
+      restartId: restart.id ?? null,
+      errorId: error?.id ?? null,
+      restart,
+      presentationType: "restart",
+      recommended: restart.recommended,
+      recommendedReason: restart.recommendedReason ?? null,
+      safety: restart.safety ?? "safe",
+      argSchema: Array.isArray(restart.argSchema) ? restart.argSchema : [],
+      preview: restart.preview ?? null,
+      description: restart.description ?? null
+    };
+  });
   if (items.length === 0) {
-    items.push({ id: "restart-none", label: "No restarts available" });
+    items.push({ id: "restart-none", label: "No restarts available", disabled: true, selectable: false });
   }
   return { summary, items };
 }

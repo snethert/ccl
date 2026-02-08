@@ -323,6 +323,7 @@ function normalizeListItems(items) {
         label: String(label ?? ""),
         className: item.className ?? null,
         disabled: Boolean(item.disabled),
+        selectable: item.selectable !== false,
         selected: Boolean(item.selected),
         commandId: item.command ?? item.commandId ?? null
       };
@@ -334,6 +335,7 @@ function normalizeListItems(items) {
       label: String(item ?? ""),
       className: null,
       disabled: false,
+      selectable: true,
       selected: false,
       commandId: null
     };
@@ -410,6 +412,23 @@ function resolveListSelectionActionData(state, items, selection) {
     presentationMap
   );
   return { selectedItems, actions };
+}
+
+function normalizeSelectionActions(actions) {
+  if (!Array.isArray(actions)) return [];
+  const normalized = [];
+  for (const action of actions) {
+    if (typeof action === "string" && action.length > 0) {
+      normalized.push({ id: action, label: action });
+      continue;
+    }
+    if (!action || typeof action !== "object") continue;
+    const id = typeof action.id === "string" && action.id.length > 0 ? action.id : null;
+    if (!id) continue;
+    const label = typeof action.label === "string" && action.label.length > 0 ? action.label : id;
+    normalized.push({ id, label });
+  }
+  return normalized;
 }
 
 function normalizeTreeItems(items) {
@@ -543,7 +562,7 @@ function renderList(state, widget, options = {}) {
   const taskId = resolveTaskId(state, windowId, options.taskId ?? null);
   const ctx = buildContext(state, widget, options, windowId, taskId);
   const registry = options?.registry ?? null;
-  const listItemIds = items.map((item) => item.id);
+  const listItemIds = items.filter((item) => item.selectable !== false).map((item) => item.id);
   const selectionConfig = resolveListSelectionConfig(widget);
   const selection = resolveListSelection(state, widget.id);
   const selectedSet = new Set(selection?.targetIds ?? []);
@@ -551,7 +570,22 @@ function renderList(state, widget, options = {}) {
     ? resolveListSelectionActionData(state, items, selection)
     : { selectedItems: [], actions: [] };
   const selectedItems = actionData.selectedItems;
-  const actions = actionData.actions;
+  const builtActions = actionData.actions;
+  const customActions = normalizeSelectionActions(
+    widget.props?.selectionActions ?? widget.model?.selectionActions ?? []
+  );
+  const actionMap = new Map();
+  for (const action of builtActions) {
+    if (!actionMap.has(action.id)) {
+      actionMap.set(action.id, action);
+    }
+  }
+  for (const action of customActions) {
+    if (!actionMap.has(action.id)) {
+      actionMap.set(action.id, action);
+    }
+  }
+  const actions = [...actionMap.values()];
 
   function resolveSelectionMode(event) {
     if (!selectionConfig.multiple) {
@@ -613,7 +647,9 @@ function renderList(state, widget, options = {}) {
     };
 
     const selectionEnablement =
-      selectionCommandId && registry ? commandEnabled(registry, selectionCommandId, selectionCtx) : { enabled: false, reason: null };
+      selectionCommandId && registry && item.selectable !== false
+        ? commandEnabled(registry, selectionCommandId, selectionCtx)
+        : { enabled: false, reason: null };
     const itemEnablement =
       itemCommandId && registry ? commandEnabled(registry, itemCommandId, selectionCtx) : { enabled: false, reason: null };
     const hasAnyCommand = Boolean(selectionCommandId || itemCommandId);

@@ -56,7 +56,7 @@ test("debugger restart command records typed invocation", () => {
 
   const result = executeCommand(registry, DEBUGGER_RESTART_INVOKE_COMMAND, { state, item });
   assert.equal(result.ok, true);
-  state = result.result;
+  state = result.result?.state ?? result.result ?? state;
 
   assert.equal(state.commandHistory.length, 1);
   const invocation = state.commandHistory[0];

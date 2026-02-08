@@ -299,6 +299,22 @@ export function setEntryFolded(store, entryId, folded) {
   };
 }
 
+export function setRecordingCollapsed(store, recordingId, collapsed) {
+  const next = normalizeRecordingStore(store ?? null);
+  const recording = next.recordings?.[recordingId];
+  if (!recording) {
+    return next;
+  }
+  const metadata = { ...(recording.metadata ?? {}), collapsed: Boolean(collapsed) };
+  return {
+    ...next,
+    recordings: {
+      ...next.recordings,
+      [recordingId]: { ...recording, metadata }
+    }
+  };
+}
+
 function resolveEntryFromTarget(store, target) {
   const next = store ?? createRecordingStore();
   const entries = next.entries ?? {};

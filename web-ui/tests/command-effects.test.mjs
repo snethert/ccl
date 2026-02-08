@@ -51,6 +51,14 @@ test("dispatchCommandOutput routes clipboard and runtime channels", () => {
   assert.equal(replayed.handled, true);
   assert.equal(replayed.channel, "runtime");
   assert.equal(runtime.recordingId, "rec-1");
+
+  const restarted = dispatchCommandOutput(
+    { kind: "restart.invoke", restartId: "rst-1", errorId: "err-1" },
+    handlers
+  );
+  assert.equal(restarted.handled, true);
+  assert.equal(restarted.channel, "runtime");
+  assert.equal(runtime.restartId, "rst-1");
 });
 
 test("handleCommandResultEffects returns non-handled for commands without output", () => {

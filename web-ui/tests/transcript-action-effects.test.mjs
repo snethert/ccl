@@ -10,7 +10,8 @@ import {
   openTranscriptWindow,
   registerListSelectionCommands,
   registerRecordingCommands,
-  registerTranscriptCommands
+  registerTranscriptCommands,
+  registerInspectorCommands
 } from "../src/state.mjs";
 import { renderWindow } from "../src/widgets.mjs";
 
@@ -44,6 +45,7 @@ test("transcript action bar dispatches runtime and clipboard effects", () => {
   registerListSelectionCommands(registry);
   registerRecordingCommands(registry);
   registerTranscriptCommands(registry);
+  registerInspectorCommands(registry);
 
   let state = createState();
   state = addTask(state, { id: "task-1", title: "Task" });
@@ -116,8 +118,20 @@ test("transcript action bar dispatches runtime and clipboard effects", () => {
   valueRow.props.onClick({ type: "click" });
 
   tree = renderWindow(currentState, transcriptWindow.id, options);
+  const toggleFoldButton = findByDataAttr(tree, "data-action-id", "toggle-fold");
+  assert.ok(toggleFoldButton, "toggle fold action exists");
+  toggleFoldButton.props.onClick({ type: "click" });
+  assert.equal(currentState.recordingStore.entries["ent-value"].metadata.folded, true);
+
+  tree = renderWindow(currentState, transcriptWindow.id, options);
   const describeButton = findByDataAttr(tree, "data-action-id", "describe");
   assert.ok(describeButton, "describe action exists");
+
+  const pinWatchButton = findByDataAttr(tree, "data-action-id", "pin-watch");
+  assert.ok(pinWatchButton, "pin watch action exists");
+  pinWatchButton.props.onClick({ type: "click" });
+  assert.equal(currentState.watches.length, 1);
+  assert.equal(currentState.watches[0].entryId, "ent-value");
 
   describeButton.props.onClick({ type: "click" });
   assert.ok(typeof clipboardText === "string" && clipboardText.includes("(+ 1 2)"));

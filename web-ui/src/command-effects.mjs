@@ -38,7 +38,7 @@ export function dispatchCommandOutput(output, handlers = {}, meta = {}) {
     return { handled: true, channel: "clipboard", reason: null };
   }
 
-  if (output.kind === "recording.replay" || output.kind === "recording.rerun") {
+  if (output.kind === "recording.replay" || output.kind === "recording.rerun" || output.kind === "restart.invoke") {
     if (typeof handlers.runtimeDispatch !== "function") {
       return { handled: false, channel: "runtime", reason: "No runtime handler" };
     }

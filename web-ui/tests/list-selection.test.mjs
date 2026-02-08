@@ -89,3 +89,15 @@ test("registerListSelectionCommands wires ui.list.selection.update", () => {
   state = result.result;
   assert.deepEqual(state.selection.targetIds, ["beta", "delta"]);
 });
+
+test("updateListSelection ignores non-selectable targets outside listItemIds", () => {
+  let state = createListState();
+  state = updateListSelection(state, {
+    listId: "list-1",
+    itemId: "header-row",
+    mode: "replace",
+    multiple: true,
+    listItemIds: ["alpha", "beta", "gamma", "delta"]
+  });
+  assert.equal(state.selection, null);
+});

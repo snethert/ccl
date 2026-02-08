@@ -14,6 +14,10 @@ export function normalizeRestart(restart) {
     throw new Error("Restart must be an object");
   }
   const safety = RESTART_SAFETY_LEVELS.includes(restart.safety) ? restart.safety : "safe";
+  const recommendedReason = normalizeString(
+    restart.recommendedReason ?? restart.recommendationReason ?? restart.recommendation?.reason,
+    null
+  );
   return {
     id: normalizeString(restart.id, null),
     title: normalizeString(restart.title, null),
@@ -21,7 +25,8 @@ export function normalizeRestart(restart) {
     safety,
     argSchema: normalizeArray(restart.argSchema),
     preview: restart.preview ?? null,
-    recommended: Boolean(restart.recommended)
+    recommended: Boolean(restart.recommended),
+    recommendedReason
   };
 }
 

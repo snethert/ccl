@@ -72,6 +72,8 @@ Exit criteria:
 
 ## Phase 2: Instrument Surfaces
 Outcome: Core instruments match the doctrine in behavior.
+Status: Complete (February 8, 2026).
+Detailed execution plan: `web-ide/phase-2/implementation-plan.md`.
 
 1. REPL with output recording.
 - Transcript is a first-class artifact.
@@ -192,4 +194,4 @@ Exit criteria:
 - Theme drift: enforce token-only styling across renderers.
 
 ## Immediate Next Step
-Begin Phase 2 implementation for instrument surfaces, starting with REPL transcript + inspector integration on top of the locked Phase 1 runtime and persistence contracts.
+Start Phase 2 Milestone M1 from `web-ide/phase-2/implementation-plan.md`: transcript instrument closure (recording-first interaction and deterministic action flows).

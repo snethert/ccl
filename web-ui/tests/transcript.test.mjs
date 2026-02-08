@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createRegistry, executeCommand } from "../src/commands.mjs";
 
 import {
   createState,
@@ -8,12 +9,15 @@ import {
   appendRecording,
   appendRecordingEntry,
   LIST_SELECTION_UPDATE_COMMAND,
+  INSPECTOR_WATCH_PIN_COMMAND,
+  RECORDING_TOGGLE_COMMAND,
   RECORDING_COPY_WITH_CONTEXT_COMMAND,
   RECORDING_REPLAY_AS_INPUT_COMMAND,
   RECORDING_RERUN_COMMAND,
   TRANSCRIPT_ITEM_OPEN_COMMAND,
   openTranscriptWindow,
-  refreshTranscriptWindow
+  refreshTranscriptWindow,
+  registerRecordingCommands
 } from "../src/state.mjs";
 
 test("transcript window lists recording entries", () => {
@@ -34,9 +38,13 @@ test("transcript window lists recording entries", () => {
   assert.ok(window, "transcript window exists");
   const listId = window.metadata.widgets.listId;
   const items = state.widgets[listId].props.items;
-  assert.ok(items[0].label.includes("Hello"));
-  assert.equal(items[0].anchorId, null);
-  assert.equal(items[0].presentationType, "value");
+  assert.equal(items[0].kind, "recording");
+  assert.equal(items[0].recordingId, "rec-1");
+  assert.equal(items[0].selectable, false);
+  assert.equal(items[0].command, RECORDING_TOGGLE_COMMAND);
+  assert.ok(items[1].label.includes("Hello"));
+  assert.equal(items[1].anchorId, null);
+  assert.equal(items[1].presentationType, "value");
   assert.equal(state.widgets[listId].props.itemCommand, TRANSCRIPT_ITEM_OPEN_COMMAND);
   assert.equal(state.widgets[listId].props.selectionCommand, LIST_SELECTION_UPDATE_COMMAND);
   assert.equal(state.widgets[listId].props.selectionActionBar, true);
@@ -51,6 +59,20 @@ test("transcript window lists recording entries", () => {
   assert.equal(
     state.widgets[listId].props.selectionActionCommands["do-again-with-args"],
     RECORDING_RERUN_COMMAND
+  );
+  assert.equal(
+    state.widgets[listId].props.selectionActionCommands["toggle-fold"],
+    RECORDING_TOGGLE_COMMAND
+  );
+  assert.ok(
+    state.widgets[listId].props.selectionActions.some((action) => action.id === "toggle-fold")
+  );
+  assert.equal(
+    state.widgets[listId].props.selectionActionCommands["pin-watch"],
+    INSPECTOR_WATCH_PIN_COMMAND
+  );
+  assert.ok(
+    state.widgets[listId].props.selectionActions.some((action) => action.id === "pin-watch")
   );
 });
 
@@ -71,7 +93,73 @@ test("refreshTranscriptWindow updates entries", () => {
   state = refreshTranscriptWindow(state, window.id);
 
   const items = state.widgets[window.metadata.widgets.listId].props.items;
-  assert.ok(items[0].label.includes("Later"));
+  assert.ok(items[1].label.includes("Later"));
+});
+
+test("recording header command toggles collapsed run visibility", () => {
+  const registry = createRegistry();
+  registerRecordingCommands(registry);
+
+  let state = createState();
+  state = addTask(state, { id: "task-1", title: "Task" });
+  state = appendRecording(state, { id: "rec-1", context: { commandId: "repl.eval" }, input: { kind: "form", text: "(+ 1 2)" } });
+  state = appendRecordingEntry(state, {
+    id: "ent-1",
+    recordingId: "rec-1",
+    seq: 1,
+    streamId: "stdout",
+    text: "3"
+  });
+  state = openTranscriptWindow(state, { taskId: "task-1" });
+  const window = Object.values(state.windows).find((win) => win.metadata?.role === "transcript");
+  const listId = window.metadata.widgets.listId;
+
+  const header = state.widgets[listId].props.items[0];
+  assert.equal(header.command, RECORDING_TOGGLE_COMMAND);
+  const toggled = executeCommand(registry, RECORDING_TOGGLE_COMMAND, { state, item: header });
+  assert.equal(toggled.ok, true);
+  state = toggled.result;
+  assert.equal(state.recordingStore.recordings["rec-1"].metadata.collapsed, true);
+
+  state = refreshTranscriptWindow(state, window.id);
+  const items = state.widgets[listId].props.items;
+  assert.equal(items.length, 1);
+  assert.equal(items[0].kind, "recording");
+  assert.ok(items[0].label.startsWith("[+]"));
+});
+
+test("recording toggle command folds and unfolds transcript entries", () => {
+  const registry = createRegistry();
+  registerRecordingCommands(registry);
+
+  let state = createState();
+  state = addTask(state, { id: "task-1", title: "Task" });
+  state = appendRecording(state, { id: "rec-1", context: { commandId: "repl.eval" }, input: { kind: "form", text: "(+ 1 2)" } });
+  state = appendRecordingEntry(state, {
+    id: "ent-1",
+    recordingId: "rec-1",
+    seq: 1,
+    streamId: "stdout",
+    text: "3"
+  });
+  state = openTranscriptWindow(state, { taskId: "task-1" });
+  const window = Object.values(state.windows).find((win) => win.metadata?.role === "transcript");
+  const listId = window.metadata.widgets.listId;
+
+  const entryItem = state.widgets[listId].props.items.find((item) => item.entryId === "ent-1");
+  let toggled = executeCommand(registry, RECORDING_TOGGLE_COMMAND, { state, item: entryItem });
+  assert.equal(toggled.ok, true);
+  state = toggled.result;
+  assert.equal(state.recordingStore.entries["ent-1"].metadata.folded, true);
+
+  state = refreshTranscriptWindow(state, window.id);
+  let refreshedEntry = state.widgets[listId].props.items.find((item) => item.entryId === "ent-1");
+  assert.ok(refreshedEntry.label.includes("[folded]"));
+
+  toggled = executeCommand(registry, RECORDING_TOGGLE_COMMAND, { state, item: refreshedEntry });
+  assert.equal(toggled.ok, true);
+  state = toggled.result;
+  assert.equal(state.recordingStore.entries["ent-1"].metadata.folded, false);
 });
 
 test("refreshTranscriptWindow revalidates presentations when resolver is provided", () => {

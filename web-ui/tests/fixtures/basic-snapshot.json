@@ -21,6 +21,8 @@
     "capabilityRequestSeq": 1,
     "capabilityRequests": [],
     "domEscapes": [],
+    "editGroups": [],
+    "editSeq": 1,
     "disableReasons": {
       "reason-1": {
         "details": {},
@@ -168,6 +170,8 @@
         "xs": 4
       }
     },
+    "watchSeq": 1,
+    "watches": [],
     "widgets": {
       "widget-0": {
         "childIds": [],

@@ -40,7 +40,8 @@ test("transcript open/refresh commands work", () => {
   assert.equal(refreshed.ok, true);
   state = refreshed.result;
   const items = state.widgets[window.metadata.widgets.listId].props.items;
-  assert.ok(items[0].label.includes("Hello"));
+  assert.equal(items[0].kind, "recording");
+  assert.ok(items.some((item) => item.entryId === "ent-1" && item.label.includes("Hello")));
 });
 
 test("transcript item command resolves presentation translator", () => {

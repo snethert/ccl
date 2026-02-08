@@ -36,4 +36,15 @@ test("createCommandEffectBridge dispatches clipboard and runtime effects", () =>
   assert.equal(replayResult.handled, true);
   assert.equal(replayResult.channel, "runtime");
   assert.equal(runtimeOutput.recordingId, "rec-1");
+
+  const restartResult = bridge.handle(
+    {
+      ok: true,
+      result: { output: { kind: "restart.invoke", restartId: "rst-1", errorId: "err-1" } }
+    },
+    { commandId: "ui.debugger.restart.invoke" }
+  );
+  assert.equal(restartResult.handled, true);
+  assert.equal(restartResult.channel, "runtime");
+  assert.equal(runtimeOutput.restartId, "rst-1");
 });

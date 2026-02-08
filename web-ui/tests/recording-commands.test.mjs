@@ -7,6 +7,7 @@ import {
   RECORDING_APPEND_COMMAND,
   RECORDING_ENTRY_APPEND_COMMAND,
   RECORDING_ENTRY_FOLD_COMMAND,
+  RECORDING_TOGGLE_COMMAND,
   RECORDING_COPY_AS_FORM_COMMAND,
   RECORDING_COPY_WITH_CONTEXT_COMMAND,
   RECORDING_REPLAY_AS_INPUT_COMMAND,
@@ -41,6 +42,13 @@ test("recording commands mutate state", () => {
   });
   state = result.result;
   assert.equal(state.recordingStore.entries["ent-1"].metadata.folded, true);
+
+  result = executeCommand(registry, RECORDING_TOGGLE_COMMAND, {
+    state,
+    recordingId: "rec-1"
+  });
+  state = result.result;
+  assert.equal(state.recordingStore.recordings["rec-1"].metadata.collapsed, true);
 });
 
 test("command history append command records invocation", () => {

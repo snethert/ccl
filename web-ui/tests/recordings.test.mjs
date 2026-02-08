@@ -10,6 +10,7 @@ import {
   appendEntry,
   attachAnchor,
   setEntryFolded,
+  setRecordingCollapsed,
   copyAsForm,
   copyWithContext,
   replayAsInput,
@@ -73,6 +74,13 @@ test("setEntryFolded toggles entry metadata", () => {
   store = appendEntry(store, { id: "ent-1", recordingId: "rec-1" });
   const folded = setEntryFolded(store, "ent-1", true);
   assert.equal(folded.entries["ent-1"].metadata.folded, true);
+});
+
+test("setRecordingCollapsed toggles recording metadata", () => {
+  let store = createRecordingStore();
+  store = appendRecording(store, { id: "rec-1" });
+  const collapsed = setRecordingCollapsed(store, "rec-1", true);
+  assert.equal(collapsed.recordings["rec-1"].metadata.collapsed, true);
 });
 
 test("output recording schema version is allocated", () => {

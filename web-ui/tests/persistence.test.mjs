@@ -144,3 +144,26 @@ test("createSnapshot applies recording store truncation budget with marker", () 
   assert.equal(persisted.truncation.retainedEntries, 2);
   assert.equal(persisted.truncation.maxEntries, 2);
 });
+
+test("createSnapshot persists inspector watches", () => {
+  const state = createState({
+    watches: [
+      {
+        id: "watch-1",
+        label: "Result Watch",
+        entryId: "ent-1",
+        recordingId: "rec-1",
+        valueSummary: "3",
+        pinned: true
+      }
+    ],
+    watchSeq: 2
+  });
+
+  const snapshot = createSnapshot(state, { now: () => 0 });
+  const restored = restoreStateFromSnapshot(snapshot);
+  assert.equal(Array.isArray(restored.state.watches), true);
+  assert.equal(restored.state.watches.length, 1);
+  assert.equal(restored.state.watches[0].label, "Result Watch");
+  assert.equal(restored.state.watchSeq, 2);
+});
