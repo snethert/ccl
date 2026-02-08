@@ -74,8 +74,10 @@
   Implemented in `web-ui/src/`, with deterministic tests in `web-ui/tests/`.
 - **DOM/Canvas/WebGL backends (JS):** ✅  
   Implemented in `web-ui/backends/`.
-- **Lisp<->JS bridge (WASM runner integration):** ❌  
-  `web-ui/bridge/` is a placeholder; integration work is pending.
+- **Lisp<->JS bridge (WASM runner integration):** ⚠️  
+  Phase 5 M1/M2 runtime bridge foundation is in place (`web-ui/bridge/runtime.mjs`,
+  `web-ui/src/runtime-bridge.mjs`, `KERNEL_OP_RUNTIME_EVENT`); full command/restart/
+  inspector/job integration is still pending.
 
 ## Lisp runtime (Level‑1)
 

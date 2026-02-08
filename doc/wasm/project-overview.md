@@ -73,7 +73,7 @@ In spirit, the JS microkernel is the “world,” and a runner is a process that
 
 ## Browser UI Toolkit (Status Note)
 
-The browser UI toolkit is specified in `doc/wasm/browser-ui-spec.md`. A reference JavaScript implementation of the UI state model, command system, and rendering backends exists in `web-ui/` and is used for deterministic tests. Lisp<->JS integration is not yet wired.
+The browser UI toolkit is specified in `doc/wasm/browser-ui-spec.md`. A reference JavaScript implementation of the UI state model, command system, and rendering backends exists in `web-ui/` and is used for deterministic tests. Lisp<->JS integration is partially wired for runtime output/event flow via the runtime bridge; typed command dispatch and debugger/inspector/job integration remain pending.
 
 ## Capability model (host feature matrix)
 

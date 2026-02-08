@@ -100,6 +100,7 @@ Exit criteria:
 
 ## Phase 3: UI Doctrine Implementation
 Outcome: Visual system matches `web-ui/ui-doctrine.md`.
+Status: Complete (February 8, 2026).
 Detailed execution plan: `web-ide/phase-3/implementation-plan.md`.
 
 1. Theme tokens.
@@ -122,6 +123,7 @@ Exit criteria:
 
 ## Phase 4: World State and Sessions
 Outcome: Persistent workspace state and psychological safety.
+Status: Complete (February 8, 2026).
 Detailed execution plan: `web-ide/phase-4/implementation-plan.md`.
 
 1. Workspace snapshots.
@@ -137,8 +139,9 @@ Exit criteria:
 
 ## Phase 5: Runtime Integration (CL)
 Outcome: End-to-end CL integration with presentations and restarts.
-Status: In Progress, M2 complete (February 8, 2026).
+Status: In Progress, M3 started (February 8, 2026).
 Detailed execution plan: `web-ide/phase-5/implementation-plan.md`.
+M3 detail plan: `web-ide/phase-5/m3-typed-command-dispatch-plan.md`.
 
 1. Bridge protocol.
 - Output recording payloads with presentation metadata.
@@ -198,4 +201,4 @@ Exit criteria:
 - Theme drift: enforce token-only styling across renderers.
 
 ## Immediate Next Step
-Begin Phase 5 Milestone M3 from `web-ide/phase-5/implementation-plan.md`: implement typed command dispatch and structured results.
+Execute M3-A and M3-B from `web-ide/phase-5/m3-typed-command-dispatch-plan.md`: freeze command invoke/result/error contracts and add UI runtime command client scaffolding.

@@ -32,7 +32,7 @@ Deliver a live CL runtime integration where evaluations, restarts, inspector dat
 ## Progress Snapshot
 - M1 `RT1`: Completed.
 - M2 `RT2`: Completed.
-- M3 `RT3`: Planned.
+- M3 `RT3`: In Progress.
 - M4 `RT4`: Planned.
 - M5 `RT5`: Planned.
 - M6 `RT6`: Planned.
@@ -98,6 +98,7 @@ Route typed commands from UI to runtime and back with structured results.
 - Runtime command dispatcher and registry.
 - UI bridge that dispatches to runtime and normalizes results.
 - Tests for round trip commands and structured history.
+- Detailed execution plan in `web-ide/phase-5/m3-typed-command-dispatch-plan.md`.
 
 ### Exit Criteria
 - Command palette and action bar can invoke runtime actions deterministically.
@@ -192,6 +193,7 @@ Codify runtime integration stability with automated gates.
 ## Progress Notes
 - M1 complete: protocol schema documented and runtime bridge codec added with tests.
 - M2 complete: UI runtime output ingest added; JS microkernel emits `runtime.output` for stdout and stderr; `KERNEL_OP_RUNTIME_EVENT` added for structured runtime payloads; CL emits `runtime.output` envelopes via `kernel_request` with recording entries.
+- M3 in progress: detailed dispatch plan added with canonical `command.invoke` payloads, WASM transport adaptation, runtime wiring tracks, and acceptance gates.
 
 ## Code Focus Areas
 - `doc/wasm/runtime-bridge.md`
