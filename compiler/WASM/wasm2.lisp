@@ -3174,8 +3174,8 @@
         (wasm2-multiple-value-body seg (car args))
         (wasm2-emit :local.get fn-temp)
         (wasm2-emit :set-nfn)
-        ;; Args already live on VSP; spilling would corrupt the call frame.
-        (wasm2-emit-call-subprim-no-spill funcall-fixnum)
+        ;; Preserve live locals/roots across funcall.
+        (wasm2-emit-call-subprim funcall-fixnum)
          (wasm2-emit :pending-throw-branch)
          (unless mvpass
            (wasm2-emit :restore-vsp))
@@ -3194,8 +3194,8 @@
         (wasm2-emit-call-subprim-no-spill recover-fixnum)
         (wasm2-emit :local.get fn-temp)
         (wasm2-emit :set-nfn)
-        ;; Args already live on VSP; spilling would corrupt the call frame.
-        (wasm2-emit-call-subprim-no-spill funcall-fixnum)
+        ;; Preserve live locals/roots across funcall.
+        (wasm2-emit-call-subprim funcall-fixnum)
          (wasm2-emit :pending-throw-branch)
          (unless mvpass
            (wasm2-emit :restore-vsp))
@@ -4503,6 +4503,22 @@
 (defun wasm2-emit-call-subprim-no-spill (fixnum)
   (wasm2-emit :call-subprim-no-spill fixnum))
 
+(defparameter *wasm2-no-spill-subprim-symbols*
+  '(.SPthrow
+    .SPmkcatch1v
+    .SPnthrow1value
+    .SPsave-values
+    .SPadd-values
+    .SPrecover-values
+    .SPprogvsave
+    .SPprogvrestore
+    .SPconslist))
+
+(defun wasm2-no-spill-subprim-fixnum-p (fixnum)
+  (member fixnum
+          (mapcar #'wasm2-subprim-fixnum *wasm2-no-spill-subprim-symbols*)
+          :test #'eql))
+
 (defun wasm2-macptr->fixnum-fn ()
   (or (and (fboundp 'macptr->fixnum)
            (symbol-function 'macptr->fixnum))
@@ -4582,6 +4598,10 @@
            (when (<= cur 0)
              (error "WASM2 spill discipline: call-subprim without spill")))
           (:call-subprim-no-spill
+           (let ((fixnum (car args)))
+             (unless (wasm2-no-spill-subprim-fixnum-p fixnum)
+               (error "WASM2 spill discipline: call-subprim-no-spill not allowlisted: ~s"
+                      fixnum)))
            (when (> cur 1)
              (error "WASM2 spill discipline: call-subprim-no-spill inside nested spill region")))
           (:if
@@ -5571,7 +5591,8 @@
       (let* ((*wasm2-emit-local-count* local-count)
              (*wasm2-emit-spillable-locals* spillable-locals)
              (*wasm2-emit-entry-index* entry-index))
-        (wasm2-validate-spill-discipline ir)
+        (unless (= (wasm2-validate-spill-discipline ir) 0)
+          (error "WASM2 spill discipline: unbalanced spill depth at function end"))
         (wasm2-emit-pending-throw-guard body)
         (wasm2-emit-generic-ir body ir))
       (wasm2-push-u8 body #x0b)

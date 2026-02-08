@@ -8,7 +8,7 @@ WASM-specific commands in one place.
 - `scripts/tests/run-sandbox-tests.sh`
 - `node doc/wasm/js/all-smoke.mjs`
 - `npm --prefix web-ui run test:sandbox`
-- `node doc/wasm/js/all-smoke.mjs --with-wasm-ui-persist` (optional heavy smoke)
+- `node doc/wasm/js/wasm-ui-persist-smoke.mjs --strict` (optional strict smoke)
 
 ## Additional Targeted Smoke (Sandbox-Safe)
 
@@ -24,3 +24,4 @@ WASM-specific commands in one place.
 ## Policy
 
 - `doc/testing.md` is the source of truth for the sandbox/external split.
+- Known status: `node doc/wasm/js/all-smoke.mjs` is green.

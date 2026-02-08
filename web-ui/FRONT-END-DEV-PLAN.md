@@ -92,11 +92,11 @@ Compiler/runtime unblock plan (detailed, sequential):
 18. Remove the UI module stub fallback in `scripts/wasm/compile-ui-modules.lisp` once constant pools compile successfully. (done)
 19. Rebuild `doc/wasm/wasm-ui-modules.json` with real Lisp UI functions and update any loader references if needed. (done)
 20. Add a browser harness assertion that invokes `WASM-UI-TURN` from the compiled bundle and verifies a render round trip. (done)
-21. Update this plan and status notes once the above smoke tests pass. (done)
+21. Update this plan and status notes once the above smoke tests pass. (updated; `compiler-smoke`/`all-smoke` green as of 2026-02-08)
 
 Current status:
 - Repros: `scripts/wasm/repro-compiler-blocks.lisp` shows symbol/string constants still fail unless const-pool is enabled; `external-call` now compiles.
-- Smoke: `scripts/wasm/compile-smoke-modules.lisp` emits modules including constant-pool entries and the FFI smoke entry; `doc/wasm/js/compiler-smoke.mjs` and `doc/wasm/js/all-smoke.mjs` pass.
+- Smoke: `scripts/wasm/compile-smoke-modules.lisp` emits modules including constant-pool entries and the FFI smoke entry; `doc/wasm/js/compiler-smoke.mjs` and `doc/wasm/js/all-smoke.mjs` are green.
 - Constant-pool runtime install/ref + symbol interning + function resolution are implemented in `lisp-kernel/wasm-kernel-stubs.c` and wired through `doc/wasm/js/ccl-loader.mjs`.
 - Added wasm `funcall` support for 3–6 args to unblock UI keyword calls.
 - `scripts/wasm/compile-ui-modules.lisp` now completes and rebuilds `doc/wasm/wasm-ui-modules.json`.
@@ -163,10 +163,10 @@ Execution plan:
 Status note:
 - Implemented Lisp UI snapshot serialization + file persistence via kernel_request streams.
 - Added minimal inspector/debugger window helpers (titles + IDs) suitable for persistence restore.
-- Added WASM UI persistence smoke test (`doc/wasm/js/wasm-ui-persist-smoke.mjs`) and wired into `doc/wasm/js/all-smoke.mjs`.
-- The wasm UI persistence smoke test currently skips in the minimal image (trap on `WASM-UI-LABEL-STATE`); it will run once the Lisp UI module set is runnable without the kernel demo stub.
+- Added WASM UI persistence smoke test (`doc/wasm/js/wasm-ui-persist-smoke.mjs`) with strict-mode execution (`--strict`) for the full runtime path.
+- The default non-strict path intentionally skips to keep sandbox/default smoke deterministic while minimal-image runtime stabilization continues.
 
-Status: Complete (Lisp MVP)
+Status: Partial (Lisp MVP scaffolding complete; full compiled-Lisp image path pending)
 
 ## Phase 10: Parity + Cleanup
 1. Verify Lisp semantics match JS reference model where applicable.

@@ -92,6 +92,24 @@ assumes `wasm_get_current_tcr()` is the single authoritative access path.
 - WASM local spills use a dedicated **spill stack** (not the VSP). The runtime
   scans this spill stack during GC.
 
+### Spill/Restore Invariants (MUST)
+
+- Every `:call-subprim` site emitted by `compiler/WASM/wasm2.lisp` MUST be
+  enclosed by a balanced spill/restore region (`:spill-locals` before,
+  `:restore-locals` after).
+- `:call-subprim-no-spill` MUST be used only for the explicit allowlist of
+  VSP-sensitive subprims (`.SPthrow`, `.SPmkcatch1v`, `.SPnthrow1value`,
+  `.SPsave-values`, `.SPadd-values`, `.SPrecover-values`, `.SPprogvsave`,
+  `.SPprogvrestore`, `.SPconslist`).
+- After every subprim call, argument/result registers MUST be read from the
+  TCR register file (`arg_z`, `arg_y`, `arg_x`, `nargs`) and never from stale
+  cached locals.
+- Any path that materializes multiple values on VSP MUST either:
+  - consume them immediately in the same dynamic region, or
+  - call `wasm_restore_vsp` before continuing with single-value assumptions.
+- Function epilogues MUST end with balanced spill depth (`0`), so no spill
+  frame can leak across control-flow joins or returns.
+
 ## Register File (WASM32)
 
 - WASM32 builds add `tcr->wasm_gprs[16]` as an in-memory register file.

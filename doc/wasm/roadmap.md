@@ -5,7 +5,7 @@ separate from the detailed checklists in `porting-status.md`.
 
 **Status key:** ✅ done · ⚠️ partial · ❌ not started · ⏸ deferred
 
-**Last updated:** 2026‑02‑07
+**Last updated:** 2026‑02‑08
 
 ## Current snapshot (one‑screen summary)
 
@@ -13,8 +13,8 @@ separate from the detailed checklists in `porting-status.md`.
 - **JS microkernel MVP:** ✅ kernel_request MVP + runner scaffolding.
 - **Subprims provider:** ✅ Tier‑0 semantics + ABI defined and exercised by compiled modules.
 - **Lisp runtime (Level‑1):** ✅ capability errors + yield path + WASM stream classes + virtual FS policy.
-- **Compiler/backend (WASM):** ⚠️ MVP emission for constants, fixnum ops, calls, multi‑value (2–4 + `values` >4 via VSP push), and local control flow (`if`, `block/return-from`, `tagbody/go`) with compiled-module registry install; `catch`/`throw` routed through subprims; cooperative `unwind-protect` cleanup + closure capture now in place with multi‑value preservation.
-- **Image + real toplevel:** ⚠️ boot image via cross‑xload now works + post‑load `start_lisp` entry wired; no real Lisp toplevel/root image yet.
+- **Compiler/backend (WASM):** ⚠️ MVP emission for constants, fixnum ops, calls, multi‑value (2–4 + `values` >4 via VSP push), and local control flow (`if`, `block/return-from`, `tagbody/go`) with compiled-module registry install; `catch`/`throw` routed through subprims; cooperative `unwind-protect` cleanup + closure capture in place with spill/restore validation gates.
+- **Image + real toplevel:** ⚠️ boot image via cross‑xload works, runtime module bundles build, and `wasm_ccl_start_lisp` smoke is green; real root-image/toplevel policy for default loader path remains open.
 - **Concurrency model:** ⏸ deferred (single‑threaded baseline first).
 
 ## Roadmap phases
@@ -50,14 +50,14 @@ separate from the detailed checklists in `porting-status.md`.
 **Goal:** Emit real WASM code compatible with the subprims ABI.
 **Status:** ⚠️
 **Remaining:**
-- Spill/restore discipline around all subprim calls (closure allocation paths still partial)
+- Finalize compiled-Lisp UI path parity and strict persistence path (currently optional/strict smoke)
 
 ### Phase 6 — Image + real toplevel
 **Goal:** Boot a real Lisp image and enter `toplevel-loop`.
 **Status:** ⚠️
 **Remaining:**
 - WASM‑compatible image policy (root image + cloning semantics)
-- Real Lisp toplevel image; current `start_lisp` entry uses a stub toplevel
+- Non-interactive validation path for real root-image + `start_lisp` default loader wiring
 
 ### Phase 7 — Concurrency model
 **Goal:** Runner‑based parallelism where available.
@@ -66,8 +66,9 @@ separate from the detailed checklists in `porting-status.md`.
 
 ## Near‑term focus (next 1–2 phases)
 
-1) Tighten spill/restore discipline around all subprim calls (closure allocation paths still partial).  
-2) Wire a real toplevel image to the loader/runner in the browser.
+1) Finalize root-image policy and make default loader path non-interactive for `start_lisp`.
+2) Promote compiled-Lisp UI persistence path from strict/optional smoke to default smoke.
+3) Remove remaining demo/stub fallback assumptions from browser harness wiring.
 
 ## Interrupt TODOs (Tracking)
 

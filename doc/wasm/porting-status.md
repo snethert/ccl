@@ -75,9 +75,11 @@
 - **DOM/Canvas/WebGL backends (JS):** ✅  
   Implemented in `web-ui/backends/`.
 - **Lisp<->JS bridge (WASM runner integration):** ⚠️  
-  Phase 5 M1/M2 runtime bridge foundation is in place (`web-ui/bridge/runtime.mjs`,
-  `web-ui/src/runtime-bridge.mjs`, `KERNEL_OP_RUNTIME_EVENT`); full command/restart/
-  inspector/job integration is still pending.
+  Runtime bridge flow is implemented for `runtime.output`, typed command dispatch,
+  debugger/restart payloads, inspector/place-edit updates, and job lifecycle
+  events (`web-ui/bridge/runtime.mjs`, `web-ui/src/runtime-bridge.mjs`,
+  `KERNEL_OP_RUNTIME_EVENT`, `KERNEL_OP_RUNTIME_COMMAND_POLL`). Full compiled-Lisp
+  UI path remains partial pending compiler/image bring-up blockers.
 
 ## Lisp runtime (Level‑1)
 
@@ -115,7 +117,8 @@
   structured WASM IR. `catch`/`throw` implemented; `unwind-protect`
   now compiles to cooperative cleanup with full multiple-value preservation,
   and closures capture cells for inherited vars. `multiple-value-call` now
-  supports multi-form mvcall.
+  supports multi-form mvcall, with spill/restore validation and allowlisted
+  no-spill subprim checks enforced at codegen time.
 - **WASM codegen state scaffold (compiler):** ✅  
   `compiler/WASM/wasm2.lisp` initializes backend state (register masks,
   target sizes) and emits WASM modules.
@@ -182,11 +185,15 @@
   `web-ui-layout-focus-smoke.mjs`, `web-ui-inspector-smoke.mjs`,
   `web-ui-debugger-smoke.mjs`, `closure-unwind-mv-smoke.mjs`,
   `mv-helpers-smoke.mjs`, `mvcall-smoke.mjs`.
+- **Known gate status:** ⚠️  
+  `node doc/wasm/js/all-smoke.mjs` is green. `doc/wasm/js/wasm-ui-persist-smoke.mjs`
+  is currently opt-in strict mode (`--strict`) because the full runtime path
+  can block in minimal-image mode.
 
 ## Major Gaps / Next Blockers
 
-- Real Lisp toplevel entry (`start_lisp`) and event/step integration.
-- Image format and loader policy (root image, cloning, module loading).
+- Real root-image policy and default loader wiring for non-interactive `start_lisp`.
+- Compiled-Lisp UI persistence path stabilization (remove strict/optional gating).
 - Capability negotiation protocol beyond `CAPS` bitfield.
 - Persistent storage policy beyond read‑only named streams.
 - Shared‑heap threading protocol (if pursued).

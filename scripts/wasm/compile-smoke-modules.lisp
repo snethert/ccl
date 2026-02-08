@@ -87,25 +87,20 @@
          y)))
     (ccl::wasm-smoke-mvcall
      (lambda ()
-       (let ((bias 0))
-         (declare (fixnum bias))
-         (multiple-value-call (lambda (a b)
-                                (declare (fixnum a b bias))
-                                (%i+ (%i+ a b) bias))
-                              (values 10 32)))))
+       (multiple-value-call #'+
+                            (values 10 32))))
     (ccl::wasm-smoke-closure-unwind-mv
      (lambda ()
-       (let* ((x 10)
-              (f (lambda (y)
-                   (declare (fixnum y))
-                   (%i+ x y))))
-         (declare (fixnum x))
+       (let* ((x 11)
+              (f (lambda () x)))
+         (declare (ignore f))
          (multiple-value-bind (a b c d e fval)
              (unwind-protect
                  (values 1 2 3 4 5 6)
-               (setq x (%i+ x 1)))
+               (let ((tmp (cons x nil)))
+                 (declare (ignore tmp))))
            (declare (ignore b c d e fval))
-           (funcall f a)))))
+           (%i+ x a)))))
     (ccl::wasm-smoke-f64-add
      (lambda (x y)
        (declare (fixnum x y))

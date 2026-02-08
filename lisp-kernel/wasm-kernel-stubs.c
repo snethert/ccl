@@ -2185,6 +2185,7 @@ wasm_test_funcall(uint32_t raw_arg)
   LispObj *vsp_ptr = saved_vsp;
   *--vsp_ptr = box_fixnum((signed_natural)raw_arg);
 
+  tcr->save_vsp = vsp_ptr;
   tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
   tcr->wasm_gprs[nargs] = box_fixnum(1);
   tcr->wasm_gprs[nfn] = fn_value;
@@ -2324,6 +2325,7 @@ wasm_test_entry_funcall2(uint32_t entry_index, uint32_t raw_a, uint32_t raw_b)
   *--vsp_ptr = box_fixnum((signed_natural)raw_b);
   *--vsp_ptr = box_fixnum((signed_natural)raw_a);
 
+  tcr->save_vsp = vsp_ptr;
   tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
   tcr->wasm_gprs[nargs] = box_fixnum(2);
   tcr->wasm_gprs[nfn] = fn_value;
@@ -2372,6 +2374,7 @@ wasm_test_entry_funcall1_raw(uint32_t entry_index, LispObj arg)
   LispObj *vsp_ptr = saved_vsp;
   *--vsp_ptr = arg;
 
+  tcr->save_vsp = vsp_ptr;
   tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
   tcr->wasm_gprs[nargs] = box_fixnum(1);
   tcr->wasm_gprs[nfn] = fn_value;

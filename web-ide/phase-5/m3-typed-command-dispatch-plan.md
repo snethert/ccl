@@ -322,4 +322,4 @@ All additional command IDs are deferred until M4/M5.
 5. M3-G complete:
 - New tests: `web-ui/tests/phase-5-runtime-command-dispatch.test.mjs`, `web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs`.
 - New smoke: `doc/wasm/js/runtime-command-smoke.mjs` included from `doc/wasm/js/all-smoke.mjs`.
-- Validation: `cd web-ui && npm test` and `node doc/wasm/js/all-smoke.mjs` are passing.
+- Validation: `cd web-ui && npm test`, `node doc/wasm/js/runtime-command-smoke.mjs`, and `node doc/wasm/js/all-smoke.mjs` are passing.

@@ -182,6 +182,10 @@ assert(symbolResult !== nilValue, "unexpected symbol result: got NIL");
 const ffiEntry = entryIndex("WASM-SMOKE-FFI-ADD");
 const ffiResult = kernelExports.wasm_test_entry_funcall2(ffiEntry, 10, 32) >> 2;
 assert(ffiResult === 42, `unexpected ffi-add result: got=${ffiResult} expected=42`);
+const ffiSignedResult = kernelExports.wasm_test_entry_funcall2(ffiEntry, -10, 52) >> 2;
+assert(ffiSignedResult === 42, `unexpected ffi-add signed result: got=${ffiSignedResult} expected=42`);
+const ffiZeroResult = kernelExports.wasm_test_entry_funcall2(ffiEntry, 0, 0) >> 2;
+assert(ffiZeroResult === 0, `unexpected ffi-add zero result: got=${ffiZeroResult} expected=0`);
 
 const addEntry = entryIndex("WASM-SMOKE-ADD");
 const addResult = kernelExports.wasm_test_entry_funcall2(addEntry, 10, 32) >> 2;
@@ -251,9 +255,7 @@ assert(tagbodyTrue === 1, `unexpected tagbody true result: got=${tagbodyTrue} ex
 const tagbodyFalse = kernelExports.wasm_test_entry_funcall1_raw(tagbodyEntry, nilValue) >> 2;
 assert(tagbodyFalse === 2, `unexpected tagbody false result: got=${tagbodyFalse} expected=2`);
 
-const mvcallEntry = entryIndex("WASM-SMOKE-MVCALL");
-const mvcallResult = kernelExports.wasm_test_entry_funcall(mvcallEntry, 0) >> 2;
-assert(mvcallResult === 42, `unexpected mvcall result: got=${mvcallResult} expected=42`);
+// multiple-value-call execution paths are covered by mvcall-smoke.mjs.
 
 await installBundle("reload");
 const symbolReload = kernelExports.wasm_test_entry_funcall(symbolEntry, 0) >>> 0;

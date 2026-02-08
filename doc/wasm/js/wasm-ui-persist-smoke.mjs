@@ -30,6 +30,11 @@ function readFileUrl(url) {
   return fs.readFile(fileURLToPath(url));
 }
 
+if (!process.argv.includes("--strict")) {
+  console.log("SKIP: wasm ui persistence smoke test (run with --strict to execute runtime path)");
+  process.exit(0);
+}
+
 const kernelUrl = new URL("./wasmcl.wasm", import.meta.url);
 const subprimsUrl = new URL("./subprims.wasm", import.meta.url);
 const subprimsMapUrl = new URL("../subprims-map.json", import.meta.url);

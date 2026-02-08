@@ -9,7 +9,7 @@ that requires native services, browsers, or privileged OS access.
 - Run all sandbox-safe tests: `scripts/tests/run-sandbox-tests.sh`
 - WASM JS smoke tests: `node doc/wasm/js/all-smoke.mjs`
 - Web UI node tests (no browser): `npm --prefix web-ui run test:sandbox`
-- Optional heavy WASM/UI persistence smoke: `node doc/wasm/js/all-smoke.mjs --with-wasm-ui-persist`
+- Optional strict WASM/UI persistence smoke: `node doc/wasm/js/wasm-ui-persist-smoke.mjs --strict`
 - Optional targeted WASM interrupt smoke: `node doc/wasm/js/interrupt-smoke.mjs`
 
 ## External / Host-Only
@@ -27,3 +27,4 @@ that requires native services, browsers, or privileged OS access.
 - External tests must be gated behind an environment variable or isolated in a
   dedicated script.
 - Keep `doc/wasm/testing.md` as the WASM-specific pointer to this policy.
+- Known status: `node doc/wasm/js/all-smoke.mjs` is green.

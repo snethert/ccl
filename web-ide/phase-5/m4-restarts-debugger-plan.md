@@ -281,7 +281,7 @@ Emit targeted restart updates when full snapshot replacement is unnecessary.
 3. UI ingests debugger runtime payloads and renders restart metadata correctly.
 4. Restart invocations are correlated, recorded, and terminally resolved in command history.
 5. `cd web-ui && npm test` passes.
-6. `node doc/wasm/js/all-smoke.mjs` passes with debugger/restart coverage.
+6. `node doc/wasm/js/runtime-debugger-smoke.mjs` passes and `node doc/wasm/js/all-smoke.mjs` passes.
 
 ## Completion Summary
 1. M4-A complete:
@@ -301,4 +301,4 @@ Emit targeted restart updates when full snapshot replacement is unnecessary.
 5. M4-G complete:
 - Added tests: `web-ui/tests/phase-5-runtime-debugger.test.mjs`, `web-ui/tests/phase-5-runtime-restart-invoke.test.mjs`.
 - Added smoke: `doc/wasm/js/runtime-debugger-smoke.mjs` and wired it through `doc/wasm/js/all-smoke.mjs`.
-- Validation passed: `cd web-ui && npm test`, `node doc/wasm/js/all-smoke.mjs`.
+- Validation passed: `cd web-ui && npm test`, `node doc/wasm/js/runtime-debugger-smoke.mjs`, and `node doc/wasm/js/all-smoke.mjs`.

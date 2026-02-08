@@ -318,4 +318,4 @@ Runtime emits staged/apply/undo lifecycle updates.
 - `web-ui/tests/phase-5-runtime-place-edit.test.mjs`
 - `web-ui/tests/phase-5-runtime-inspector-integration.test.mjs`
 - `doc/wasm/js/runtime-inspector-smoke.mjs`
-- `node doc/wasm/js/all-smoke.mjs` currently fails in `compiler-smoke` (`unexpected ffi-add result: got=0 expected=42`), outside M5 scope.
+- `node doc/wasm/js/all-smoke.mjs` passes.
