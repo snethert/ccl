@@ -125,10 +125,21 @@
       "color": {
         "accent": "#6fb0ff",
         "accentMuted": "#355a85",
+        "accentText": "#0c121b",
         "bg": "#121212",
+        "border": "#2a2a2a",
         "error": "#f06b6b",
+        "focus": "#a7c8ff",
+        "overlay": "rgba(0,0,0,0.35)",
+        "selection": "#2b4870",
+        "selectionText": "#f2f6ff",
+        "success": "#6ccf8f",
         "surface": "#1b1b1b",
+        "surfaceRaised": "#232323",
+        "surfaceSunken": "#0f0f0f",
         "text": {
+          "inverted": "#101010",
+          "muted": "#8a8a8a",
           "primary": "#e8e8e8",
           "secondary": "#b8b8b8"
         },
@@ -142,32 +153,47 @@
       },
       "font": {
         "body": "Inter",
+        "lineHeight": {
+          "normal": 1.4,
+          "relaxed": 1.6,
+          "tight": 1.2
+        },
         "mono": "Iosevka",
         "size": {
           "lg": 16,
           "md": 14,
           "sm": 12,
-          "xl": 20
+          "xl": 20,
+          "xs": 11,
+          "xxl": 24
+        },
+        "weight": {
+          "bold": 600,
+          "medium": 500,
+          "regular": 400
         }
       },
       "mode": "dark",
       "motion": {
-        "easing": "ease-out",
+        "easing": "cubic-bezier(0.2, 0, 0.2, 1)",
         "fast": 120,
         "normal": 180,
         "reduced": false,
         "slow": 250
       },
       "radius": {
+        "lg": "12px",
         "md": "8px",
-        "sm": "4px"
+        "sm": "4px",
+        "xs": "3px"
       },
       "space": {
         "lg": 16,
         "md": 12,
         "sm": 8,
         "xl": 24,
-        "xs": 4
+        "xs": 4,
+        "xxl": 32
       }
     },
     "watchSeq": 1,

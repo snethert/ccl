@@ -173,7 +173,15 @@ export {
 } from "./focus.mjs";
 export { normalizeLayout, createLayout } from "./layout.mjs";
 export { normalizeSelection } from "./selection.mjs";
-export { DEFAULT_THEME_TOKENS, normalizeThemeTokens, mergeThemeTokens } from "./theme.mjs";
+export {
+  DEFAULT_THEME_TOKENS,
+  DARK_THEME_TOKENS,
+  LIGHT_THEME_TOKENS,
+  normalizeThemeTokens,
+  mergeThemeTokens,
+  resolveFontString,
+  themeToCssVars
+} from "./theme.mjs";
 export { normalizeRestart, normalizeConditionReport, RESTART_SAFETY_LEVELS } from "./conditions.mjs";
 export { markPresentationStale, revalidatePresentations } from "./world-state.mjs";
 export { DEFAULT_ACTIONS_BY_TYPE, buildSelectionActions } from "./selection-actions.mjs";

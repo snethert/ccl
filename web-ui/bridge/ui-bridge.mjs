@@ -3,6 +3,8 @@ import { createDomBackend } from "../backends/dom/renderer.mjs";
 import { createCanvasBackend } from "../backends/canvas/renderer.mjs";
 import { createWebGLBackend } from "../backends/webgl/renderer.mjs";
 import { decodeTree, encodeEvents, selectEvents, EVENT_TYPES } from "./codec.mjs";
+import { normalizeThemeTokens, resolveFontString, themeToCssVars } from "../src/theme.mjs";
+import { UI_STYLES, UI_STYLE_ID } from "../styles/ui.mjs";
 
 const ERRNO = Object.freeze({
   E2BIG: 1,
@@ -72,16 +74,72 @@ function scheduleRAF(fn) {
   setTimeout(fn, 0);
 }
 
-export function createUiBridge({ container, document } = {}) {
+export function createUiBridge({ container, document, theme, styles } = {}) {
   if (!container) {
     throw new Error("createUiBridge requires a container element");
   }
+  const docRef = document ?? container.ownerDocument ?? null;
+  const styleText = styles === false ? null : typeof styles === "string" ? styles : UI_STYLES;
+  let currentTheme = normalizeThemeTokens(theme ?? null);
   const backend = createDomBackend({ document, container });
   const root = createRoot(backend, container, { schedule: scheduleRAF });
   const eventQueue = [];
   let wake = null;
   const viewRegistry = new Map();
   let syncScheduled = false;
+
+  function ensureStyles() {
+    if (!styleText || !docRef?.getElementById || !docRef?.createElement) return;
+    const existing = docRef.getElementById(UI_STYLE_ID);
+    if (existing) {
+      if (existing.textContent !== styleText) {
+        existing.textContent = styleText;
+      }
+      return;
+    }
+    const styleNode = docRef.createElement("style");
+    styleNode.id = UI_STYLE_ID;
+    styleNode.textContent = styleText;
+    const target = docRef.head || docRef.body || docRef.documentElement || container;
+    if (target?.appendChild) {
+      target.appendChild(styleNode);
+    }
+  }
+
+  function applyTheme(nextTheme = currentTheme) {
+    currentTheme = normalizeThemeTokens(nextTheme ?? null);
+    if (container?.classList) {
+      container.classList.add("ui-root");
+    } else if (container) {
+      container.className = `${container.className ?? ""} ui-root`.trim();
+    }
+    if (container?.setAttribute) {
+      container.setAttribute("data-ui-theme", currentTheme.mode);
+      if (currentTheme.motion?.reduced) {
+        container.setAttribute("data-motion", "reduced");
+      } else {
+        container.removeAttribute("data-motion");
+      }
+    }
+    if (container?.style?.setProperty) {
+      const vars = themeToCssVars(currentTheme);
+      for (const [key, value] of Object.entries(vars)) {
+        if (value === "" || value === null || value === undefined) {
+          container.style.removeProperty(key);
+        } else {
+          container.style.setProperty(key, value);
+        }
+      }
+    }
+    for (const entry of viewRegistry.values()) {
+      if (typeof entry.backend?.setTheme === "function") {
+        entry.backend.setTheme(currentTheme);
+      }
+    }
+  }
+
+  ensureStyles();
+  applyTheme(currentTheme);
 
   function ensureCanvasSize(canvas) {
     if (!canvas) return;
@@ -134,12 +192,21 @@ export function createUiBridge({ container, document } = {}) {
       }
       entry.viewId = viewId ?? entry.viewId;
       if (entry.backend) {
+        if (typeof entry.backend.setTheme === "function") {
+          entry.backend.setTheme(currentTheme);
+        }
         if (entry.sceneText !== sceneText) {
           entry.sceneText = sceneText;
           const scene = parseScenePayload(sceneText);
-          entry.backend.render(scene);
+          entry.backend.render(scene, {
+            theme: currentTheme,
+            background: currentTheme.color?.bg ?? null
+          });
         } else if (entry.backend.render) {
-          entry.backend.render();
+          entry.backend.render(undefined, {
+            theme: currentTheme,
+            background: currentTheme.color?.bg ?? null
+          });
         }
       }
     });
@@ -215,7 +282,8 @@ export function createUiBridge({ container, document } = {}) {
   }
 
   function measureText({ font, text } = {}) {
-    return backend.measureText(text ?? "", { font });
+    const resolvedFont = font ?? resolveFontString(currentTheme, { mono: true });
+    return backend.measureText(text ?? "", { font: resolvedFont });
   }
 
   function setWake(fn) {
@@ -319,7 +387,7 @@ export function createUiBridge({ container, document } = {}) {
 
   const listeners = [];
   const target = container;
-  const doc = document ?? container.ownerDocument;
+  const doc = docRef;
 
   function add(targetNode, type, handler, options) {
     if (!targetNode?.addEventListener) return;
@@ -359,6 +427,10 @@ export function createUiBridge({ container, document } = {}) {
     renderTree,
     measureText,
     setWake,
+    setTheme(nextTheme) {
+      applyTheme(nextTheme);
+      scheduleSync();
+    },
     flush() {
       if (typeof root.flush === "function") {
         root.flush();

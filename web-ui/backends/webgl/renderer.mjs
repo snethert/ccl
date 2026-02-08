@@ -1,6 +1,7 @@
 import { buildScene, hitTestScene, normalizeBounds, coalesceBounds, collectBoundsById } from "../canvas/scene.mjs";
 import { createMeasureCache } from "../canvas/measure.mjs";
-import { buildWebGLDrawList } from "./draw-list.mjs";
+import { buildWebGLDrawList, parseWebGLColor } from "./draw-list.mjs";
+import { normalizeThemeTokens, resolveFontString } from "../../src/theme.mjs";
 
 const DEFAULT_FONT = "12px monospace";
 
@@ -151,13 +152,27 @@ export function createWebGLBackend({ canvas, document: doc, onMeasureTextCacheMi
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
   const measureCtx = createMeasureContext(doc);
+  let defaultFont = DEFAULT_FONT;
+  let defaultBackground = null;
+
+  function applyTheme(theme) {
+    if (!theme) {
+      defaultFont = DEFAULT_FONT;
+      defaultBackground = null;
+      return;
+    }
+    const tokens = normalizeThemeTokens(theme);
+    defaultFont = resolveFontString(tokens, { mono: true });
+    defaultBackground = tokens.color?.bg ?? null;
+  }
+
   const measureCache = createMeasureCache((text, options) => {
     if (!measureCtx) {
       return { width: 0, height: 0, ascent: 0, descent: 0 };
     }
-    measureCtx.font = options.font ?? DEFAULT_FONT;
+    measureCtx.font = options.font ?? defaultFont;
     const metrics = measureCtx.measureText(String(text ?? ""));
-    const fontSizeMatch = String(options.font ?? DEFAULT_FONT).match(/(\d+(?:\.\d+)?)px/);
+    const fontSizeMatch = String(options.font ?? defaultFont).match(/(\d+(?:\.\d+)?)px/);
     const fontSize = fontSizeMatch ? Number.parseFloat(fontSizeMatch[1]) : 12;
     const ascent = metrics.actualBoundingBoxAscent ?? fontSize * 0.8;
     const descent = metrics.actualBoundingBoxDescent ?? fontSize * 0.2;
@@ -174,6 +189,11 @@ export function createWebGLBackend({ canvas, document: doc, onMeasureTextCacheMi
 
   return {
     render(scene, options = {}) {
+      if (Object.prototype.hasOwnProperty.call(options, "theme")) {
+        applyTheme(options.theme);
+      }
+      const background = options.background ?? defaultBackground;
+      const clearColor = background ? parseWebGLColor(background) : [0, 0, 0, 0];
       if (scene !== undefined) {
         currentScene = Array.isArray(scene) ? buildScene(scene) : scene ?? buildScene([]);
       }
@@ -191,7 +211,7 @@ export function createWebGLBackend({ canvas, document: doc, onMeasureTextCacheMi
 
       if (dirtyRects.length === 0) {
         gl.disable(gl.SCISSOR_TEST);
-        gl.clearColor(0, 0, 0, 0);
+        gl.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
         gl.clear(gl.COLOR_BUFFER_BIT);
         const draw = buildWebGLDrawList(activeScene);
         drawList(gl, draw, buffers, locations);
@@ -202,7 +222,7 @@ export function createWebGLBackend({ canvas, document: doc, onMeasureTextCacheMi
       for (const rect of dirtyRects) {
         const scissor = toScissorRect(rect, height);
         gl.scissor(scissor.x, scissor.y, scissor.width, scissor.height);
-        gl.clearColor(0, 0, 0, 0);
+        gl.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
         gl.clear(gl.COLOR_BUFFER_BIT);
         const draw = buildWebGLDrawList(activeScene, { clipRect: rect });
         drawList(gl, draw, buffers, locations);
@@ -213,11 +233,15 @@ export function createWebGLBackend({ canvas, document: doc, onMeasureTextCacheMi
       return hitTestScene(currentScene, normalizePoint(point));
     },
     measureText(text, options = {}) {
-      const result = measureCache.measureText(text, options);
+      const font = options.font ?? defaultFont;
+      const result = measureCache.measureText(text, { ...options, font });
       if (!result.cacheHit && typeof onMeasureTextCacheMiss === "function") {
-        onMeasureTextCacheMiss({ text, font: options.font ?? DEFAULT_FONT });
+        onMeasureTextCacheMiss({ text, font });
       }
       return result;
+    },
+    setTheme(theme) {
+      applyTheme(theme);
     },
     captureEvents(target, handlers = {}, options = {}) {
       if (!target) return () => {};
@@ -274,6 +298,11 @@ export function createWebGLRoot(canvas, options = {}) {
     },
     measureText(text, opts) {
       return backend.measureText(text, opts);
+    },
+    setTheme(theme) {
+      if (typeof backend.setTheme === "function") {
+        backend.setTheme(theme);
+      }
     },
     invalidate(callback) {
       return backend.invalidate(callback);

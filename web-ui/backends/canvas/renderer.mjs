@@ -8,8 +8,10 @@ import {
   flattenScene
 } from "./scene.mjs";
 import { createMeasureCache } from "./measure.mjs";
+import { normalizeThemeTokens, resolveFontString } from "../../src/theme.mjs";
 
 const DEFAULT_FONT = "12px monospace";
+const DEFAULT_TEXT_COLOR = "#000";
 
 function normalizePoint(point) {
   const x = Number(point?.x ?? 0);
@@ -17,10 +19,10 @@ function normalizePoint(point) {
   return { x: Number.isFinite(x) ? x : 0, y: Number.isFinite(y) ? y : 0 };
 }
 
-function drawNode(ctx, node) {
+function drawNode(ctx, node, options = {}) {
   if (node.kind === "group") {
     for (const child of node.children ?? []) {
-      drawNode(ctx, child);
+      drawNode(ctx, child, options);
     }
     return;
   }
@@ -38,8 +40,8 @@ function drawNode(ctx, node) {
   }
   if (node.kind === "text") {
     const { x, y } = node.bounds;
-    ctx.font = node.props?.font ?? DEFAULT_FONT;
-    ctx.fillStyle = node.props?.fill ?? "#000";
+    ctx.font = node.props?.font ?? options.defaultFont ?? DEFAULT_FONT;
+    ctx.fillStyle = node.props?.fill ?? options.defaultTextColor ?? DEFAULT_TEXT_COLOR;
     ctx.fillText(String(node.props?.text ?? ""), x, y);
     return;
   }
@@ -63,8 +65,13 @@ function drawNode(ctx, node) {
 function drawScene(ctx, scene, options = {}) {
   const width = options.width ?? ctx.canvas?.width ?? 0;
   const height = options.height ?? ctx.canvas?.height ?? 0;
-  ctx.clearRect(0, 0, width, height);
-  drawNode(ctx, scene);
+  if (options.background) {
+    ctx.fillStyle = options.background;
+    ctx.fillRect(0, 0, width, height);
+  } else {
+    ctx.clearRect(0, 0, width, height);
+  }
+  drawNode(ctx, scene, options);
 }
 
 function buildDrawList(scene) {
@@ -96,12 +103,17 @@ function drawSceneDirty(ctx, drawList, rects = [], options = {}) {
     ctx.beginPath();
     ctx.rect(rect.x, rect.y, rect.width, rect.height);
     ctx.clip();
-    ctx.clearRect(rect.x, rect.y, rect.width, rect.height);
+    if (options.background) {
+      ctx.fillStyle = options.background;
+      ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+    } else {
+      ctx.clearRect(rect.x, rect.y, rect.width, rect.height);
+    }
     for (const entry of drawList) {
       if (!shouldDrawEntry(entry, rect)) {
         continue;
       }
-      drawNode(ctx, entry.node);
+      drawNode(ctx, entry.node, options);
     }
     ctx.restore();
   }
@@ -141,10 +153,27 @@ export function createCanvasBackend({ canvas, document: doc, onMeasureTextCacheM
   if (!ctx) {
     throw new Error("Canvas 2D context is required");
   }
+  let defaultFont = DEFAULT_FONT;
+  let defaultTextColor = DEFAULT_TEXT_COLOR;
+  let defaultBackground = null;
+
+  function applyTheme(theme) {
+    if (!theme) {
+      defaultFont = DEFAULT_FONT;
+      defaultTextColor = DEFAULT_TEXT_COLOR;
+      defaultBackground = null;
+      return;
+    }
+    const tokens = normalizeThemeTokens(theme);
+    defaultFont = resolveFontString(tokens, { mono: true });
+    defaultTextColor = tokens.color?.text?.primary ?? DEFAULT_TEXT_COLOR;
+    defaultBackground = tokens.color?.bg ?? null;
+  }
+
   const measureCache = createMeasureCache((text, options) => {
-    ctx.font = options.font ?? DEFAULT_FONT;
+    ctx.font = options.font ?? defaultFont;
     const metrics = ctx.measureText(String(text ?? ""));
-    const fontSizeMatch = String(options.font ?? DEFAULT_FONT).match(/(\d+(?:\.\d+)?)px/);
+    const fontSizeMatch = String(options.font ?? defaultFont).match(/(\d+(?:\.\d+)?)px/);
     const fontSize = fontSizeMatch ? Number.parseFloat(fontSizeMatch[1]) : 12;
     const ascent = metrics.actualBoundingBoxAscent ?? fontSize * 0.8;
     const descent = metrics.actualBoundingBoxDescent ?? fontSize * 0.2;
@@ -161,31 +190,48 @@ export function createCanvasBackend({ canvas, document: doc, onMeasureTextCacheM
 
   return {
     render(scene, options = {}) {
+      if (Object.prototype.hasOwnProperty.call(options, "theme")) {
+        applyTheme(options.theme);
+      }
+      const background = options.background ?? defaultBackground;
       if (scene !== undefined) {
         currentScene = Array.isArray(scene) ? buildScene(scene) : scene ?? buildScene([]);
       }
       const activeScene = currentScene ?? buildScene([]);
       const dirtyRects = computeDirtyRects(activeScene, options);
       if (dirtyRects.length === 0) {
-        drawScene(ctx, activeScene, { width: canvas.width, height: canvas.height });
+        drawScene(ctx, activeScene, {
+          width: canvas.width,
+          height: canvas.height,
+          background,
+          defaultFont,
+          defaultTextColor
+        });
         return;
       }
       const drawList = buildDrawList(activeScene);
       drawSceneDirty(ctx, drawList, dirtyRects, {
         width: canvas.width,
         height: canvas.height,
-        scene: activeScene
+        scene: activeScene,
+        background,
+        defaultFont,
+        defaultTextColor
       });
     },
     hitTest(point) {
       return hitTestScene(currentScene, normalizePoint(point));
     },
     measureText(text, options = {}) {
-      const result = measureCache.measureText(text, options);
+      const font = options.font ?? defaultFont;
+      const result = measureCache.measureText(text, { ...options, font });
       if (!result.cacheHit && typeof onMeasureTextCacheMiss === "function") {
-        onMeasureTextCacheMiss({ text, font: options.font ?? DEFAULT_FONT });
+        onMeasureTextCacheMiss({ text, font });
       }
       return result;
+    },
+    setTheme(theme) {
+      applyTheme(theme);
     },
     captureEvents(target, handlers = {}, options = {}) {
       if (!target) return () => {};
@@ -242,6 +288,11 @@ export function createCanvasRoot(canvas, options = {}) {
     },
     measureText(text, opts) {
       return backend.measureText(text, opts);
+    },
+    setTheme(theme) {
+      if (typeof backend.setTheme === "function") {
+        backend.setTheme(theme);
+      }
     },
     invalidate(callback) {
       return backend.invalidate(callback);
