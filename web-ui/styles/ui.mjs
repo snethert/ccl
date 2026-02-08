@@ -51,6 +51,34 @@ export const UI_STYLES = `
   text-transform: none;
 }
 
+.ui-window-title {
+  font-size: var(--ui-font-size-lg);
+  font-weight: var(--ui-font-weight-medium);
+  color: var(--ui-color-text-primary);
+}
+
+.ui-inspector-section-title {
+  margin-top: var(--ui-space-sm);
+  font-size: var(--ui-font-size-sm);
+  color: var(--ui-color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ui-inspector-list .ui-list-button {
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-font-size-sm);
+}
+
+.ui-debugger-summary {
+  font-size: var(--ui-font-size-sm);
+  color: var(--ui-color-text-secondary);
+  padding: var(--ui-space-xs) var(--ui-space-sm);
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-color-surface-sunken);
+}
+
 .ui-button,
 .ui-list-action-button {
   appearance: none;
@@ -134,6 +162,7 @@ export const UI_STYLES = `
   transition: background var(--ui-motion-fast) var(--ui-motion-easing),
     border-color var(--ui-motion-fast) var(--ui-motion-easing);
   cursor: pointer;
+  min-height: 28px;
 }
 
 .ui-list-item.is-selected .ui-list-button {
@@ -142,8 +171,68 @@ export const UI_STYLES = `
   color: var(--ui-color-selection-text);
 }
 
+.ui-transcript-recording .ui-list-button {
+  background: var(--ui-color-surface-raised);
+  border: 1px solid var(--ui-color-border);
+  font-weight: var(--ui-font-weight-medium);
+}
+
+.ui-transcript-recording.is-collapsed .ui-list-button {
+  opacity: 0.85;
+}
+
+.ui-transcript-entry .ui-list-button {
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-font-size-sm);
+}
+
+.ui-transcript-entry.is-folded .ui-list-button {
+  opacity: 0.75;
+}
+
+.ui-transcript-entry.is-stderr .ui-list-button,
+.ui-transcript-entry.is-error .ui-list-button {
+  color: var(--ui-color-error);
+}
+
+.ui-problems-item.is-warning .ui-list-button {
+  color: var(--ui-color-warning);
+}
+
+.ui-problems-item.is-error .ui-list-button {
+  color: var(--ui-color-error);
+}
+
+.ui-problems-item.is-info .ui-list-button {
+  color: var(--ui-color-text-secondary);
+}
+
+.ui-problems-item.is-resolved .ui-list-button,
+.ui-problems-item.is-suppressed .ui-list-button {
+  opacity: 0.6;
+}
+
+.ui-debugger-restart .ui-list-button {
+  border-left: 3px solid var(--ui-color-border);
+  padding-left: calc(var(--ui-space-sm) - 3px);
+}
+
+.ui-debugger-restart.is-safe .ui-list-button {
+  border-left-color: var(--ui-color-success);
+}
+
+.ui-debugger-restart.is-destructive .ui-list-button,
+.ui-debugger-restart.is-irreversible .ui-list-button {
+  border-left-color: var(--ui-color-error);
+}
+
+.ui-debugger-restart.is-recommended .ui-list-button {
+  background: var(--ui-color-surface-raised);
+}
+
 .ui-list-button:hover {
   background: var(--ui-color-surface-raised);
+  border-color: var(--ui-color-border);
 }
 
 .ui-tree-button {

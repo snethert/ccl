@@ -1,0 +1,102 @@
+{
+  "kind": "element",
+  "tag": "root",
+  "props": {},
+  "children": [
+    {
+      "kind": "element",
+      "tag": "section",
+      "props": {
+        "data-window-id": "debugger-0",
+        "data-window-kind": "debugger",
+        "data-task-id": "task-1",
+        "className": "ui-window"
+      },
+      "children": [
+        {
+          "kind": "element",
+          "tag": "div",
+          "props": {
+            "className": "ui-widget ui-container ui-debugger-root",
+            "data-widget-id": "debugger-root-0",
+            "data-widget-kind": "container"
+          },
+          "children": [
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-window-title ui-debugger-title",
+                "data-widget-id": "debugger-title-1",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Debugger"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-debugger-summary",
+                "data-widget-id": "debugger-summary-2",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "error: Boom"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-debugger-restarts",
+                "data-widget-id": "debugger-restarts-3",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item ui-debugger-restart is-safe is-recommended",
+                    "data-list-id": "debugger-restarts-3"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "restart-1",
+                        "data-item-index": 0,
+                        "data-list-id": "debugger-restarts-3",
+                        "data-command-id": "ui.debugger.restart.invoke",
+                        "data-selection-command-id": "ui.list.selection.update",
+                        "disabled": true,
+                        "data-disabled-reason": "No registry"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Retry (recommended, safe)"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

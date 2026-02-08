@@ -1,0 +1,953 @@
+{
+  "kind": "element",
+  "tag": "root",
+  "props": {},
+  "children": [
+    {
+      "kind": "element",
+      "tag": "section",
+      "props": {
+        "data-window-id": "inspector-0",
+        "data-window-kind": "inspector",
+        "data-task-id": "task-1",
+        "className": "ui-window"
+      },
+      "children": [
+        {
+          "kind": "element",
+          "tag": "div",
+          "props": {
+            "className": "ui-widget ui-container ui-inspector-root",
+            "data-widget-id": "inspector-root-0",
+            "data-widget-kind": "container"
+          },
+          "children": [
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-window-title ui-inspector-title",
+                "data-widget-id": "inspector-title-1",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "System Inspector"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-inspector-section-title",
+                "data-widget-id": "inspector-tasks-label-2",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Tasks"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-inspector-list",
+                "data-widget-id": "inspector-tasks-list-3",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "inspector-tasks-list-3"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "task-task-1",
+                        "data-item-index": 0,
+                        "data-list-id": "inspector-tasks-list-3"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Task [task-1] (active)"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-inspector-section-title",
+                "data-widget-id": "inspector-focus-label-4",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Focus"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-inspector-list",
+                "data-widget-id": "inspector-focus-list-5",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "inspector-focus-list-5"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "focus-none",
+                        "data-item-index": 0,
+                        "data-list-id": "inspector-focus-list-5"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Focus: none"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-inspector-section-title",
+                "data-widget-id": "inspector-commands-label-6",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Commands"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-inspector-list",
+                "data-widget-id": "inspector-commands-list-7",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "inspector-commands-list-7"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "cmd-none",
+                        "data-item-index": 0,
+                        "data-list-id": "inspector-commands-list-7"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "No command state recorded"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-inspector-section-title",
+                "data-widget-id": "inspector-commandHistory-label-8",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Command History"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-inspector-list",
+                "data-widget-id": "inspector-commandHistory-list-9",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "inspector-commandHistory-list-9"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "history-none",
+                        "data-item-index": 0,
+                        "data-list-id": "inspector-commandHistory-list-9"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "No command history"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-inspector-section-title",
+                "data-widget-id": "inspector-capabilities-label-10",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Capabilities"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-inspector-list",
+                "data-widget-id": "inspector-capabilities-list-11",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "inspector-capabilities-list-11"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "cap-safe-mode",
+                        "data-item-index": 0,
+                        "data-list-id": "inspector-capabilities-list-11"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Safe mode: disabled"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "inspector-capabilities-list-11"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "cap-none",
+                        "data-item-index": 1,
+                        "data-list-id": "inspector-capabilities-list-11"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "No capabilities granted"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-inspector-section-title",
+                "data-widget-id": "inspector-capabilityRequests-label-12",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Capability Requests"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-inspector-list",
+                "data-widget-id": "inspector-capabilityRequests-list-13",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "inspector-capabilityRequests-list-13"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "cap-req-none",
+                        "data-item-index": 0,
+                        "data-list-id": "inspector-capabilityRequests-list-13"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "No capability requests"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-inspector-section-title",
+                "data-widget-id": "inspector-watches-label-14",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Pinned Watches"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-inspector-list",
+                "data-widget-id": "inspector-watches-list-15",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "inspector-watches-list-15"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "watch-none",
+                        "data-item-index": 0,
+                        "data-list-id": "inspector-watches-list-15"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "No pinned watches"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-inspector-section-title",
+                "data-widget-id": "inspector-stagedEdits-label-16",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Staged Edits"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-inspector-list",
+                "data-widget-id": "inspector-stagedEdits-list-17",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "inspector-stagedEdits-list-17"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "edit-none",
+                        "data-item-index": 0,
+                        "data-list-id": "inspector-stagedEdits-list-17",
+                        "data-command-id": "ui.list.selection.update",
+                        "data-selection-command-id": "ui.list.selection.update",
+                        "disabled": true,
+                        "data-disabled-reason": "No registry"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "No staged edits"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-inspector-section-title",
+                "data-widget-id": "inspector-domEscapes-label-18",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "DOM Escapes"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-inspector-list",
+                "data-widget-id": "inspector-domEscapes-list-19",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "inspector-domEscapes-list-19"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "dom-escape-none",
+                        "data-item-index": 0,
+                        "data-list-id": "inspector-domEscapes-list-19"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "No DOM escapes recorded"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-inspector-section-title",
+                "data-widget-id": "inspector-turns-label-20",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "UI Turn"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-inspector-list",
+                "data-widget-id": "inspector-turns-list-21",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "inspector-turns-list-21"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "turn-idle",
+                        "data-item-index": 0,
+                        "data-list-id": "inspector-turns-list-21"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Turn: idle"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "inspector-turns-list-21"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "turn-queue",
+                        "data-item-index": 1,
+                        "data-list-id": "inspector-turns-list-21"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Queued signals: 0"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-inspector-section-title",
+                "data-widget-id": "inspector-transcript-label-22",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Transcript"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-inspector-list",
+                "data-widget-id": "inspector-transcript-list-23",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "inspector-transcript-list-23"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "transcript-none",
+                        "data-item-index": 0,
+                        "data-list-id": "inspector-transcript-list-23",
+                        "disabled": true,
+                        "data-disabled-reason": "No registry"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "No transcript entries"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-inspector-section-title",
+                "data-widget-id": "inspector-presentations-label-24",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Presentations"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-inspector-list",
+                "data-widget-id": "inspector-presentations-list-25",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "inspector-presentations-list-25"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "pres-none",
+                        "data-item-index": 0,
+                        "data-list-id": "inspector-presentations-list-25"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "No presentations"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-inspector-section-title",
+                "data-widget-id": "inspector-windows-label-26",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Windows"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-inspector-list",
+                "data-widget-id": "inspector-windows-list-27",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "inspector-windows-list-27"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "win-inspector-0",
+                        "data-item-index": 0,
+                        "data-list-id": "inspector-windows-list-27"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "inspector-0 (inspector) task=task-1"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-inspector-section-title",
+                "data-widget-id": "inspector-jobs-label-28",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Jobs"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-inspector-list",
+                "data-widget-id": "inspector-jobs-list-29",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "inspector-jobs-list-29"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "job-none",
+                        "data-item-index": 0,
+                        "data-list-id": "inspector-jobs-list-29"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "No jobs"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-inspector-section-title",
+                "data-widget-id": "inspector-errors-label-30",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Errors"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-inspector-list",
+                "data-widget-id": "inspector-errors-list-31",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "inspector-errors-list-31"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "err-none",
+                        "data-item-index": 0,
+                        "data-list-id": "inspector-errors-list-31"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "No errors"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-inspector-section-title",
+                "data-widget-id": "inspector-eventLog-label-32",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Event Log"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-inspector-list",
+                "data-widget-id": "inspector-eventLog-list-33",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item",
+                    "data-list-id": "inspector-eventLog-list-33"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "event-none",
+                        "data-item-index": 0,
+                        "data-list-id": "inspector-eventLog-list-33"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "No events recorded"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

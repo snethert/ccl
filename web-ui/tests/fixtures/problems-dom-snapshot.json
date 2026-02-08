@@ -1,0 +1,87 @@
+{
+  "kind": "element",
+  "tag": "root",
+  "props": {},
+  "children": [
+    {
+      "kind": "element",
+      "tag": "section",
+      "props": {
+        "data-window-id": "problems-0",
+        "data-window-kind": "problems",
+        "data-task-id": "task-1",
+        "className": "ui-window"
+      },
+      "children": [
+        {
+          "kind": "element",
+          "tag": "div",
+          "props": {
+            "className": "ui-widget ui-container ui-problems-root",
+            "data-widget-id": "problems-root-0",
+            "data-widget-kind": "container"
+          },
+          "children": [
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-window-title ui-problems-title",
+                "data-widget-id": "problems-title-1",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Problems"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-problems-list",
+                "data-widget-id": "problems-list-2",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item ui-problems-item is-error is-new",
+                    "data-list-id": "problems-list-2"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "error-0",
+                        "data-item-index": 0,
+                        "data-list-id": "problems-list-2",
+                        "data-command-id": "ui.problems.item.open",
+                        "data-selection-command-id": "ui.list.selection.update",
+                        "disabled": true,
+                        "data-disabled-reason": "No registry"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "error: Boom [new]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

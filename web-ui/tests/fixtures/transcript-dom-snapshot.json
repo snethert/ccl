@@ -1,0 +1,118 @@
+{
+  "kind": "element",
+  "tag": "root",
+  "props": {},
+  "children": [
+    {
+      "kind": "element",
+      "tag": "section",
+      "props": {
+        "data-window-id": "transcript-0",
+        "data-window-kind": "transcript",
+        "data-task-id": "task-1",
+        "className": "ui-window"
+      },
+      "children": [
+        {
+          "kind": "element",
+          "tag": "div",
+          "props": {
+            "className": "ui-widget ui-container ui-transcript-root",
+            "data-widget-id": "transcript-root-0",
+            "data-widget-kind": "container"
+          },
+          "children": [
+            {
+              "kind": "element",
+              "tag": "span",
+              "props": {
+                "className": "ui-widget ui-label ui-window-title ui-transcript-title",
+                "data-widget-id": "transcript-title-1",
+                "data-widget-kind": "label"
+              },
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Transcript"
+                }
+              ]
+            },
+            {
+              "kind": "element",
+              "tag": "ul",
+              "props": {
+                "className": "ui-widget ui-list ui-transcript-list",
+                "data-widget-id": "transcript-list-2",
+                "data-widget-kind": "list"
+              },
+              "children": [
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item ui-transcript-recording",
+                    "data-list-id": "transcript-list-2"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "transcript-recording-rec-1",
+                        "data-item-index": 0,
+                        "data-list-id": "transcript-list-2",
+                        "data-command-id": "repl.recording.toggle",
+                        "data-selection-command-id": "ui.list.selection.update",
+                        "disabled": true,
+                        "data-disabled-reason": "No registry"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "[-] repl.eval: (+ 1 2)"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "element",
+                  "tag": "li",
+                  "props": {
+                    "className": "ui-list-item ui-transcript-entry is-text is-stdout",
+                    "data-list-id": "transcript-list-2"
+                  },
+                  "children": [
+                    {
+                      "kind": "element",
+                      "tag": "button",
+                      "props": {
+                        "type": "button",
+                        "className": "ui-list-button",
+                        "data-item-id": "transcript-ent-1",
+                        "data-item-index": 1,
+                        "data-list-id": "transcript-list-2",
+                        "data-command-id": "ui.transcript.item.open",
+                        "data-selection-command-id": "ui.list.selection.update",
+                        "disabled": true,
+                        "data-disabled-reason": "No registry"
+                      },
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "  [-] 1 stdout text: 3"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

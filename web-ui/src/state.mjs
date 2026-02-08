@@ -1887,6 +1887,8 @@ function buildTranscriptEntryItem(state, store, entryId) {
   const presentation = buildPresentationForEntry(state, entry);
   const presentationId = entry.presentationId ?? null;
   const presentationType = presentation?.type ?? "value";
+  const classParts = ["ui-transcript-entry", `is-${kind}`, `is-${stream}`];
+  if (isFolded) classParts.push("is-folded");
   return {
     id: `transcript-${entryId}`,
     label: `  ${marker} ${seq} ${stream} ${kind}${foldedSuffix}${suffix}`,
@@ -1898,6 +1900,7 @@ function buildTranscriptEntryItem(state, store, entryId) {
     anchorId: entry.anchorId ?? null,
     presentationType,
     folded: isFolded,
+    className: classParts.join(" "),
     disabled: false
   };
 }
@@ -1923,6 +1926,8 @@ function buildTranscriptItems(state, options = {}) {
     const marker = collapsed ? "[+]" : "[-]";
     const summary = formatRecordingInputSummary(recording);
     const commandId = recording.context?.commandId ?? "repl.eval";
+    const classParts = ["ui-transcript-recording"];
+    if (collapsed) classParts.push("is-collapsed");
     items.push({
       id: `transcript-recording-${recordingId}`,
       label: `${marker} ${commandId}: ${summary}`,
@@ -1931,6 +1936,7 @@ function buildTranscriptItems(state, options = {}) {
       entryCount: entryIds.length,
       collapsed,
       selectable: false,
+      className: classParts.join(" "),
       command: RECORDING_TOGGLE_COMMAND,
       disabled: false
     });
@@ -2479,6 +2485,15 @@ export function openInspectorWindow(state, options = {}) {
   });
   ids.rootId = rootAlloc.id;
 
+  let titleAlloc = allocateWidgetId(nextState, "inspector-title");
+  nextState = addWidget(titleAlloc.state, {
+    id: titleAlloc.id,
+    kind: "label",
+    parentId: ids.rootId,
+    props: { text: "System Inspector", className: "ui-window-title ui-inspector-title" }
+  });
+  ids.titleId = titleAlloc.id;
+
   const sections = [
     ["tasks", "Tasks"],
     ["focus", "Focus"],
@@ -2505,10 +2520,13 @@ export function openInspectorWindow(state, options = {}) {
       id: labelAlloc.id,
       kind: "label",
       parentId: ids.rootId,
-      props: { text: title }
+      props: { text: title, className: "ui-inspector-section-title" }
     });
     let listAlloc = allocateWidgetId(nextState, `inspector-${key}-list`);
-    const listProps = { items: sectionItems[key] ?? [] };
+    const listProps = {
+      items: sectionItems[key] ?? [],
+      className: "ui-inspector-list"
+    };
     if (key === "stagedEdits") {
       listProps.selectionCommand = LIST_SELECTION_UPDATE_COMMAND;
       listProps.selectionMode = "single";
@@ -2579,7 +2597,7 @@ export function openTranscriptWindow(state, options = {}) {
     id: titleAlloc.id,
     kind: "label",
     parentId: ids.rootId,
-    props: { text: "Transcript" }
+    props: { text: "Transcript", className: "ui-window-title ui-transcript-title" }
   });
   ids.titleId = titleAlloc.id;
 
@@ -2589,6 +2607,7 @@ export function openTranscriptWindow(state, options = {}) {
     kind: "list",
     parentId: ids.rootId,
     props: {
+      className: "ui-transcript-list",
       items,
       itemCommand: TRANSCRIPT_ITEM_OPEN_COMMAND,
       selectionCommand: LIST_SELECTION_UPDATE_COMMAND,
@@ -2795,6 +2814,7 @@ function buildProblemsItems(state) {
     const countSuffix = Number.isInteger(error?.count) && error.count > 1 ? ` (${error.count})` : "";
     const statusSuffix = status ? ` [${status}]` : "";
     const label = `${severity}: ${error?.message ?? ""}`.trim();
+    const classParts = ["ui-problems-item", `is-${severity}`, `is-${status}`];
     return {
       id: error.id ?? `problem-${index}`,
       label: `${label}${countSuffix}${statusSuffix}`.trim(),
@@ -2804,7 +2824,8 @@ function buildProblemsItems(state) {
       severity,
       count: Number.isInteger(error?.count) ? error.count : null,
       location: error.location ?? error.report?.location ?? null,
-      presentationId: error.presentationId ?? null
+      presentationId: error.presentationId ?? null,
+      className: classParts.join(" ")
     };
   });
 }
@@ -2849,7 +2870,7 @@ export function openProblemsWindow(state, options = {}) {
     id: titleAlloc.id,
     kind: "label",
     parentId: ids.rootId,
-    props: { text: "Problems" }
+    props: { text: "Problems", className: "ui-window-title ui-problems-title" }
   });
   ids.titleId = titleAlloc.id;
 
@@ -2859,6 +2880,7 @@ export function openProblemsWindow(state, options = {}) {
     kind: "list",
     parentId: ids.rootId,
     props: {
+      className: "ui-problems-list",
       items,
       itemCommand: PROBLEMS_ITEM_OPEN_COMMAND,
       selectionCommand: LIST_SELECTION_UPDATE_COMMAND,
@@ -5114,6 +5136,9 @@ function buildDebuggerContent(state, errorId) {
     if (restart.recommended) metaParts.push("recommended");
     if (restart.safety) metaParts.push(restart.safety);
     const metaSuffix = metaParts.length > 0 ? ` (${metaParts.join(", ")})` : "";
+    const safety = restart.safety ?? "safe";
+    const classParts = ["ui-debugger-restart", `is-${safety}`];
+    if (restart.recommended) classParts.push("is-recommended");
     return {
       id,
       label: `${title}${metaSuffix}`,
@@ -5123,10 +5148,11 @@ function buildDebuggerContent(state, errorId) {
       presentationType: "restart",
       recommended: restart.recommended,
       recommendedReason: restart.recommendedReason ?? null,
-      safety: restart.safety ?? "safe",
+      safety,
       argSchema: Array.isArray(restart.argSchema) ? restart.argSchema : [],
       preview: restart.preview ?? null,
-      description: restart.description ?? null
+      description: restart.description ?? null,
+      className: classParts.join(" ")
     };
   });
   if (items.length === 0) {
@@ -5174,7 +5200,7 @@ export function openDebuggerWindow(state, options = {}) {
     id: titleAlloc.id,
     kind: "label",
     parentId: rootId,
-    props: { text: "Debugger" }
+    props: { text: "Debugger", className: "ui-window-title ui-debugger-title" }
   });
 
   let summaryAlloc = allocateWidgetId(nextState, "debugger-summary");
@@ -5183,7 +5209,7 @@ export function openDebuggerWindow(state, options = {}) {
     id: summaryAlloc.id,
     kind: "label",
     parentId: rootId,
-    props: { text: summary }
+    props: { text: summary, className: "ui-debugger-summary" }
   });
 
   let listAlloc = allocateWidgetId(nextState, "debugger-restarts");
@@ -5193,6 +5219,7 @@ export function openDebuggerWindow(state, options = {}) {
     kind: "list",
     parentId: rootId,
     props: {
+      className: "ui-debugger-restarts",
       items,
       itemCommand: DEBUGGER_RESTART_INVOKE_COMMAND,
       selectionCommand: LIST_SELECTION_UPDATE_COMMAND,

@@ -36,13 +36,13 @@ Deliver a visual system that matches `web-ui/ui-doctrine.md` across DOM and canv
 - Canvas/WebGL renderers do not yet consume theme tokens uniformly.
 
 ## Progress Snapshot
-- M1 `WS1`: Planned.
-- M2 `WS2`: Planned.
-- M3 `WS3`: Planned.
-- M4 `WS4`: Planned.
-- M5 `WS5`: Planned.
-- M6 `WS6`: Planned.
-- M7 `WS7`: Planned.
+- M1 `WS1`: Completed. Theme tokens expanded, CSS variable mapping and UI bridge theme application in place.
+- M2 `WS2`: Completed. Base stylesheet and component skins for lists, tables, action bars, and window shells.
+- M3 `WS3`: Completed. Typography tokens and renderer defaults aligned to mono/body stacks.
+- M4 `WS4`: Completed. Motion tokens and reduced motion handling added to DOM surfaces.
+- M5 `WS5`: Completed. Instrument-specific classes, titles, baseline styling, and DOM snapshots added.
+- M6 `WS6`: Completed. Canvas and WebGL renderers consume theme tokens and background.
+- M7 `WS7`: Completed. Phase 3 acceptance coverage includes doctrine tests, DOM snapshots, and renderer parity tests.
 
 ## Phase 3 Success Criteria
 - Theme tokens are single-source of truth for DOM and canvas/WebGL.
@@ -224,3 +224,7 @@ Encode doctrine compliance as automated gates.
 - `cd web-ui && npm test` passes.
 - Phase 3 acceptance suites pass.
 - Two instruments fully match UI Doctrine in light and dark modes.
+
+## Signoff Notes
+- Status: Complete.
+- Validation: `cd web-ui && npm test` (pass).
