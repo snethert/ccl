@@ -282,6 +282,58 @@ wasm_kernel_request_smoke_file_seek_truncate(void)
   return 0;
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_ui_persist_label_save")))
+int32_t
+wasm_ui_persist_label_save(uint32_t value)
+{
+  static char path[] = "/ui/wasm-ui-state.bin";
+  uint8_t byte = (uint8_t)(value & 0xffu);
+
+  int fd = lisp_open(path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+  if (fd < 0) {
+    return -errno;
+  }
+
+  ssize_t nwritten = lisp_write(fd, &byte, 1);
+  if (nwritten != 1) {
+    int e = (nwritten < 0) ? errno : EIO;
+    (void)lisp_close(fd);
+    return -e;
+  }
+
+  if (lisp_close(fd) < 0) {
+    return -errno;
+  }
+
+  return 0;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_ui_persist_label_load")))
+int32_t
+wasm_ui_persist_label_load(void)
+{
+  static char path[] = "/ui/wasm-ui-state.bin";
+  uint8_t byte = 0;
+
+  int fd = lisp_open(path, O_RDONLY, 0);
+  if (fd < 0) {
+    return -errno;
+  }
+
+  ssize_t nread = lisp_read(fd, &byte, 1);
+  if (nread != 1) {
+    int e = (nread < 0) ? errno : ENOENT;
+    (void)lisp_close(fd);
+    return -e;
+  }
+
+  if (lisp_close(fd) < 0) {
+    return -errno;
+  }
+
+  return (int32_t)byte;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_kernel_request_smoke_compiled_modules_refresh")))
 int32_t
 wasm_kernel_request_smoke_compiled_modules_refresh(void)

@@ -202,6 +202,23 @@ const microkernel = createMicrokernel({
   traceRequests: verbose ? traceRequest : null,
 });
 
+const persistenceDebug = microkernel.persistence?._debug ?? null;
+const persistenceStore = persistenceDebug?.overlayStore ?? null;
+const persistenceOverlay = persistenceStore?.persist ?? null;
+
+function readPersistedUiLabelByte() {
+  if (!persistenceStore || typeof persistenceStore.meta?.get !== "function" || typeof persistenceStore.chunks?.get !== "function") {
+    return null;
+  }
+  const meta = persistenceStore.meta.get("/ui/wasm-ui-state.bin");
+  if (!meta || meta.type !== "file") return null;
+  const chunkIds = Array.isArray(meta.content?.chunk_ids) ? meta.content.chunk_ids : [];
+  if (!chunkIds.length) return null;
+  const bytes = persistenceStore.chunks.get(String(chunkIds[0]));
+  if (!(bytes instanceof Uint8Array) || bytes.length === 0) return null;
+  return bytes[0] & 0xff;
+}
+
 console.log(`persistence backend: ${persistBackend}`);
 if (persistBackend === "memory-snapshot") {
   console.log(`snapshot file: ${persistSnapshotFile}`);
@@ -431,6 +448,8 @@ assert(persistedOk === 0, `mark persisted failed: ${persistedOk}`);
 trace("calling save");
 const saveOk = kernelExports.wasm_test_entry_funcall(saveEntry, 0) >> 2;
 assert(saveOk === 0, `save failed: ${saveOk}`);
+const persistedAfterSave = readPersistedUiLabelByte();
+assert(persistedAfterSave === 2, `expected persisted label byte 2 after save, got ${persistedAfterSave}`);
 
 trace("calling mark-dirty");
 const dirtyOk = kernelExports.wasm_test_entry_funcall(markDirty, 0) >> 2;
@@ -439,6 +458,8 @@ assert(dirtyOk === 0, `mark dirty failed: ${dirtyOk}`);
 trace("calling label-state dirty check");
 const dirtyState = kernelExports.wasm_test_entry_funcall(labelState, 0) >> 2;
 assert(dirtyState === 3, `expected dirty label state 3, got ${dirtyState}`);
+const persistedAfterDirty = readPersistedUiLabelByte();
+assert(persistedAfterDirty === 2, `expected persisted label byte to remain 2 after dirty mark, got ${persistedAfterDirty}`);
 
 trace("calling restore");
 const restoreOk = kernelExports.wasm_test_entry_funcall(restoreEntry, 0) >> 2;
@@ -447,5 +468,26 @@ assert(restoreOk === 0, `restore failed: ${restoreOk}`);
 trace("calling label-state restore check");
 const restoredState = kernelExports.wasm_test_entry_funcall(labelState, 0) >> 2;
 assert(restoredState === 2, `expected persisted label state 2, got ${restoredState}`);
+
+if (persistBackend === "memory-snapshot") {
+  assert(typeof persistenceOverlay?.isDirty === "function", "missing persistence dirty probe for memory-snapshot");
+  assert(typeof persistenceOverlay?.flush === "function", "missing persistence flush for memory-snapshot");
+  assert(persistenceOverlay.isDirty() === true, "expected memory-snapshot store to be dirty after save");
+  const firstFlushWrote = persistenceOverlay.flush();
+  assert(firstFlushWrote === true, "expected first memory-snapshot flush to write dirty state");
+  assert(persistenceOverlay.isDirty() === false, "expected memory-snapshot store to be clean after flush");
+  const mtimeAfterFirstFlush = fsSync.statSync(persistSnapshotFile).mtimeMs;
+  const secondFlushWrote = persistenceOverlay.flush();
+  assert(secondFlushWrote === false, "expected second memory-snapshot flush to skip clean state");
+  const mtimeAfterSecondFlush = fsSync.statSync(persistSnapshotFile).mtimeMs;
+  assert(
+    mtimeAfterSecondFlush === mtimeAfterFirstFlush,
+    "clean memory-snapshot flush unexpectedly rewrote snapshot file",
+  );
+  const snapshot = JSON.parse(fsSync.readFileSync(persistSnapshotFile, "utf8"));
+  const metaEntries = Array.isArray(snapshot?.meta) ? snapshot.meta : [];
+  const uiStateMeta = metaEntries.find((entry) => Array.isArray(entry) && String(entry[0]) === "/ui/wasm-ui-state.bin");
+  assert(uiStateMeta, "snapshot missing /ui/wasm-ui-state.bin metadata entry");
+}
 
 console.log("PASS: wasm ui persistence smoke test");

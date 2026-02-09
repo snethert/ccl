@@ -55,9 +55,10 @@
   `doc/wasm/js/load-image.mjs` now supports explicit loader modes
   (`boot-only|start-lisp|run-toplevel`), manifest hash validation, strict
   module policy controls, scripted stdin preload, and bootstrap contract modes
-  (`strict|warn|off`, default strict). Remaining work is compiled-Lisp UI
-  persistence runtime closure after successful root bootstrap (current root-lane
-  preflight trap in `wasm-ui-persist-smoke`).
+  (`strict|warn|off`, default strict). Root-lane compiled-Lisp UI persistence
+  smoke is now green with save/restore wired through runtime file-backed
+  persistence (`/ui/wasm-ui-state.bin`) and memory-snapshot dirty-flush
+  regression checks; remaining work is core dispatch hardening.
 
 ## JS microkernel / host
 
@@ -201,12 +202,10 @@
 
 ## Major Gaps / Next Blockers
 
-- Persistence semantics completion for the memory-first backend:
-  UI save/restore should be wired to documented memory-snapshot service
-  behavior (in-memory runtime state + dirty flush policy), not only
-  process-local state.
 - Permanent fix for root-lane core symbol/function dispatch instability
   discovered during persistence trap investigation.
+- Continue hardening regression gates for the new UI save/restore persistence
+  path while preserving unattended `memory-snapshot` defaults.
 - Capability negotiation protocol beyond `CAPS` bitfield.
 - Ongoing integration hardening for LMDB/IndexedDB lanes while keeping
   `memory-snapshot` as unattended default.

@@ -35,17 +35,30 @@
     (:name ccl::wasm-ui-label-state
      :form (lambda ()
              ccl::*wasm-ui-persist-label-state*))
-    (:name ccl::wasm-ui-save
+    (:name ccl::wasm-ui-save-wrapper
+     :public-name "WASM-UI-SAVE"
      :form (lambda ()
-             (setq ccl::*wasm-ui-persist-saved-state*
-                   ccl::*wasm-ui-persist-label-state*)
-             0))
-    (:name ccl::wasm-ui-restore
+             (let* ((state (logand ccl::*wasm-ui-persist-label-state* #xff))
+                    (rc (ccl:external-call "wasm_ui_persist_label_save"
+                                           :unsigned-long state
+                                           :signed-long)))
+               (if (< rc 0)
+                 -1
+                 (progn
+                   (setq ccl::*wasm-ui-persist-saved-state* state)
+                   0)))))
+    (:name ccl::wasm-ui-restore-wrapper
+     :public-name "WASM-UI-RESTORE"
      :form (lambda ()
-             (setq ccl::*wasm-ui-persist-label-state*
-                   ccl::*wasm-ui-persist-saved-state*)
-             0)))
-  )
+             (let ((state (ccl:external-call "wasm_ui_persist_label_load"
+                                             :signed-long)))
+               (if (< state 0)
+                 -1
+                 (let ((value (logand state #xff)))
+                   (setq ccl::*wasm-ui-persist-saved-state* value
+                         ccl::*wasm-ui-persist-label-state* value)
+                   0)))))
+  ))
 
 (defun parse-argv (argv)
   (let ((out nil)
@@ -126,7 +139,7 @@
           (results nil))
       (declare (special *wasm2-enable-const-pool*))
       (dolist (entry *wasm-ui-function-specs* (nreverse results))
-        (destructuring-bind (&key name source form) entry
+        (destructuring-bind (&key name source form public-name) entry
           (unless name
             (error "WASM UI function spec missing :name: ~s" entry))
           (let ((lambda-form (or form (and source (function-lambda-form source)))))
@@ -135,7 +148,7 @@
             (multiple-value-bind (fn warnings)
                 (compile-named-function lambda-form :name name :target :wasm32)
               (declare (ignore warnings))
-              (push (list :name (symbol-name name)
+              (push (list :name (or public-name (symbol-name name))
                           :entry-index (function-entry-index fn))
                     results))))))))
 

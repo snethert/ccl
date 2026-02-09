@@ -1,6 +1,6 @@
 # WASM MVP Unattended Execution Report
 
-Status: In Progress (RZ0.6 blocker trap closure + persistence semantics follow-through)  
+Status: In Progress (RZ0.6 persistence semantics closure + dispatch hardening follow-through)  
 Plan: `doc/wasm/mvp-unattended-execution-plan.md`  
 Last updated: 2026-02-09
 
@@ -12,11 +12,15 @@ Last updated: 2026-02-09
   default unattended path.
 - Root-image bootstrap/save-reload closure is now re-established for regenerated
   artifacts (`root.image` + manifest strict lane).
-- Root-lane compiled-Lisp UI persistence preflight/runtime trap is closed by
-  moving UI module entries to a deterministic in-memory state-machine path
-  (no fragile core-symbol call dependencies).
-- Remaining MVP work is to finish persistence semantics integration:
-  wire UI save/restore to documented memory-snapshot service behavior.
+- Root-lane compiled-Lisp UI persistence preflight/runtime trap is closed.
+- UI save/restore is now wired to memory-first persistence semantics via
+  file-backed runtime operations (`/ui/wasm-ui-state.bin`) through dedicated
+  WASM kernel helpers (`wasm_ui_persist_label_save/load`).
+- `wasm-ui-persist-smoke` now regression-checks in-memory authoritative state
+  plus dirty-flush behavior (`dirty=true` on save, flush writes once, clean
+  flush does not rewrite).
+- Remaining MVP work is core symbol/function dispatch hardening and retirement
+  of temporary diagnostics.
 
 ## Key command status
 
@@ -49,16 +53,16 @@ Last updated: 2026-02-09
 
 ## Active blocker (current)
 
-Persistence semantics completion after trap closure:
+Root-lane core symbol/function dispatch hardening after persistence closure:
 
-- root-lane smoke now passes, but current UI save/restore behavior is process-
-  local state-machine persistence.
-- next step is full alignment with memory-snapshot contract (in-memory runtime
-  store + dirty flush policy) for UI persistence actions.
+- persistence semantics are now aligned for UI save/restore in the unattended
+  lane, and root persistence smoke is green.
+- remaining work is to make core symbol call-boundary dispatch deterministic
+  and remove temporary workaround/diagnostic paths.
 
 ## Next execution gate
 
-Close remaining persistence semantics and dispatch hardening items tracked in
+Close remaining dispatch hardening items tracked in
 `doc/wasm/wasm-ui-persistence-problem-tracker.md`, then run:
 
 ```bash

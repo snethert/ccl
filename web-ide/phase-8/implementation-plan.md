@@ -43,7 +43,7 @@ Transition the system from engineering-complete to release-ready by defining det
 - Runtime bridge, typed command dispatch, debugger, inspector, sessions, and customization are operational.
 
 ## Progress Snapshot
-- M0 `RZ0`: In Progress (runtime bundle + manifest + loader refactor + memory-snapshot persistence decoupling + bootstrap contract enforcement landed; root-lane compiled-Lisp UI preflight trap is closed; remaining work is persistence-service semantic integration + core dispatch hardening).
+- M0 `RZ0`: In Progress (runtime bundle + manifest + loader refactor + memory-snapshot persistence decoupling + bootstrap contract enforcement landed; root-lane compiled-Lisp UI preflight trap is closed; UI save/restore persistence semantics are now wired to memory-snapshot contract; remaining work is core dispatch hardening + tracker retirement cleanup).
 - M1 `RZ1`: Planned.
 - M2 `RZ2`: Planned.
 - M3 `RZ3`: Planned.
@@ -88,9 +88,11 @@ closure under strict manifest/bootstrap loader validation.
    core-symbol call dependencies.
 4. `minimal.image` remains strict pre-start contract-incomplete and is retained
    as a bring-up lane.
-5. Top blocker has moved to persistence-service semantic integration
-   (memory-snapshot contract conformance) and permanent core dispatch hardening,
-   not root-lane preflight execution.
+5. UI save/restore is now wired to persistence-service semantics via
+   file-backed runtime ops (`/ui/wasm-ui-state.bin`) plus dirty-flush
+   regression checks in `wasm-ui-persist-smoke`.
+6. Top blocker is now permanent core dispatch hardening, not root-lane
+   preflight execution or persistence semantics.
 
 ### RZ0 Deliverables
 - Deterministic runtime bundle contract (`ccl-wasm-modules-v2` + `.bin` + `.idx`) for runtime modules.

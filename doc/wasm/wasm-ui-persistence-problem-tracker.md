@@ -1,9 +1,9 @@
 # WASM UI Persistence Problem Resolution Tracker (Temporary)
 
-Status: Active  
+Status: Active (preflight trap + persistence semantics closed; dispatch hardening remains)  
 Owner: Runtime/WASM MVP execution track  
 Started: 2026-02-08  
-Last Updated: 2026-02-08 (eighth pass; save-boundary closure verified, blocker re-scoped to UI preflight runtime trap)
+Last Updated: 2026-02-09 (ninth pass; UI save/restore wired to memory-snapshot contract + regression gates tightened)
 
 ## Purpose
 
@@ -30,19 +30,22 @@ Use exactly:
 
 ## Problem Statement
 
-The default unattended lane now uses memory-first snapshot persistence, and
-root-image strict loader/manifest gates are green. The remaining blocker is in
-compiled-Lisp UI persistence execution after `start_lisp`.
+The immediate root-lane compiled-Lisp UI preflight/runtime trap is closed, and
+UI save/restore is now wired to the memory-first snapshot persistence contract
+for the unattended lane.
 
-Current harness invariants show:
+Current state:
 
 - `wasm_ccl_start_lisp` returns normally.
-- `root.image` now passes strict pre-start/post-start bootstrap contracts.
+- `root.image` passes strict pre-start/post-start bootstrap contracts.
+- root-lane `wasm-ui-persist-smoke` now performs file-backed save/restore
+  (`/ui/wasm-ui-state.bin`) through runtime persistence operations and passes.
+- smoke now enforces dirty/flush semantics (dirty on mutation, write once on
+  flush, no rewrite when clean).
 - `minimal.image` still fails strict pre-start contract (expected bring-up lane).
-- In root lane, compiled UI preflight (`WASM-UI-LABEL-STATE`) traps with
-  `RuntimeError: unreachable` after successful module install.
 
-This prevents closure of the remaining MVP runtime blocker.
+Remaining blocker scope in this tracker is core symbol/function dispatch
+hardening and retirement of temporary diagnostics.
 
 ## Non-Negotiable Constraints (Permanent Fix Policy)
 
@@ -52,7 +55,7 @@ This prevents closure of the remaining MVP runtime blocker.
 4. Fix must include regression coverage that fails on reintroduction.
 5. Debug-only instrumentation must remain optional and bounded.
 
-## Current Reproduction
+## Historical Reproduction (Closed)
 
 ### Command
 
@@ -62,6 +65,8 @@ node doc/wasm/js/wasm-ui-persist-smoke.mjs --verbose --image minimal
 ```
 
 ### Observed
+
+Pre-fix state (now closed):
 
 - Harness reaches: kernel/subprims init, image load, runtime bundle install,
   runtime reset, boot entry install.
@@ -214,9 +219,9 @@ Exit criteria:
 - [x] Complete PF-2 differential analysis.
 - [x] Execute Step 1 bootstrap contract enforcement in tooling.
 - [x] Enforce bootstrap sanity gate in root-image build flow.
-- [ ] Land PF-3 permanent root-cause fix (compiled UI preflight/runtime trap closure on root lane).
-- [ ] Complete PF-4 canonical path validation.
-- [ ] Complete PF-5 regression gates and doc reconciliation.
+- [x] Land PF-3 permanent root-cause fix (compiled UI preflight/runtime trap closure on root lane).
+- [x] Complete PF-4 canonical path validation.
+- [x] Complete PF-5 regression gates and doc reconciliation.
 
 ## Decision Log
 
@@ -926,20 +931,46 @@ Current status:
   symbols but are no longer a blocking runtime path for the UI persistence
   smoke closure.
 
+### 2026-02-09 E41
+
+Commands:
+- Added WASM kernel helper exports in `lisp-kernel/wasm-kernel-request-smoke.c`:
+  - `wasm_ui_persist_label_save`
+  - `wasm_ui_persist_label_load`
+- Reworked `scripts/wasm/compile-ui-modules.lisp` save/restore entries to call
+  those helpers through `external-call`, while keeping preflight-safe label
+  state handling.
+- Tightened `doc/wasm/js/wasm-ui-persist-smoke.mjs` regression checks:
+  - verify persisted overlay file entry exists and holds expected saved byte.
+  - verify dirty state toggles, first flush writes, second clean flush skips.
+  - verify snapshot metadata includes `/ui/wasm-ui-state.bin`.
+- Rebuilt kernel/UI artifacts and refreshed root manifest:
+  - `/bin/zsh -lc 'source scripts/wasm/env.sh && make -C lisp-kernel/wasm32 CC="$CC" WASM_LD="$WASM_LD"'`
+  - `scripts/wasm/compile-ui-modules.sh`
+  - `/bin/zsh -lc 'source scripts/wasm/env.sh && node doc/wasm/js/make-real-image.mjs --boot-image wasm-boot.image --modules doc/wasm/wasm-runtime-modules.json --output doc/wasm/root.image --manifest-out doc/wasm/root.image.manifest.json'`
+
+Validation:
+- `node doc/wasm/js/wasm-ui-persist-smoke.mjs --verbose --image root` -> PASS
+- `node doc/wasm/js/wasm-ui-persist-smoke.mjs` -> PASS
+- `node doc/wasm/js/load-image.mjs --mode start-lisp --manifest doc/wasm/root.image.manifest.json --stdin-text "(quit)\n" --close-stdin` -> PASS
+- `node doc/wasm/js/all-smoke.mjs` -> PASS
+- `npm --prefix web-ui test` -> PASS
+
+Interpretation:
+- UI save/restore semantics are now aligned with documented memory-snapshot
+  behavior (in-memory authoritative store + dirty flush contract) without
+  regressing root-lane runtime gates.
+
 ## Proposed Precise Next Steps
 
-1. Wire UI save/restore to the persistence service contract (memory-snapshot
-   backend) instead of process-local special-variable state only:
-   - keep in-memory runtime operations as authoritative.
-   - flush snapshot only on dirty state at controlled lifecycle boundary.
-2. Add explicit regression coverage for the resolved blocker path:
+1. Maintain and extend explicit regression coverage for the resolved blocker path:
    - root lane: `wasm-ui-persist-smoke` preflight + full transition.
    - guard against reintroducing core-symbol function dependencies in UI module specs.
-3. Isolate and permanently fix root-lane core symbol dispatch instability:
+2. Isolate and permanently fix root-lane core symbol dispatch instability:
    - establish deterministic mapping expectations for legacy/core function entry
      indices versus runtime bundle installs.
    - remove/retire temporary debug exports once dispatch invariants are fixed.
-4. Keep hard gates enabled while converging persistence semantics:
+3. Keep hard gates enabled while converging dispatch hardening:
    - strict manifest/bootstrap checks stay on.
    - root-lane persistence smoke remains required for unattended closure.
 
@@ -950,6 +981,6 @@ This temporary tracker is retired only when all are true:
 1. `node doc/wasm/js/wasm-ui-persist-smoke.mjs` passes in default unattended
    mode (currently true).
 2. UI save/restore is fully integrated with documented memory-snapshot backend
-   semantics (not just process-local state).
+   semantics (not just process-local state). (currently true)
 3. Root cause and permanent fix for core-symbol dispatch instability are
    documented and regression-gated.
