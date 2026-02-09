@@ -15,6 +15,18 @@ This is the canonical execution and status document for replacing the current fu
 
 This document is designed for fresh-context recovery. Every ticket must carry current status, notes, and next-step analysis.
 
+## Program Coordination
+
+This runtime plan is one of two coordinated master plans:
+
+- Runtime track: `doc/wasm/runtime-replacement-master-plan.md` (this document)
+- Backend track: `doc/wasm/backend-migration-master-plan.md`
+
+Cross-track dependencies and parallelization constraints are tracked in:
+
+- `doc/wasm/runtime-backend-dependency-matrix.md`
+- `doc/wasm/wasm-program-board.md`
+
 ## Scope
 
 In scope:
@@ -41,6 +53,9 @@ Out of scope:
 - `doc/wasm/kernel-request-abi.md`
 - `doc/wasm/js-microkernel-spec.md`
 - `doc/wasm/persistence-service-spec.md`
+- `doc/wasm/backend-migration-master-plan.md`
+- `doc/wasm/runtime-backend-dependency-matrix.md`
+- `doc/wasm/wasm-program-board.md`
 - `web-ide/phase-8/implementation-plan.md`
 
 ## Status Legend
@@ -87,8 +102,8 @@ When resuming work from scratch:
 
 | Ticket | Status | Priority | Subplan | Last Updated | Notes |
 | --- | --- | --- | --- | --- | --- |
-| RPL-00 | in_progress | P0 | `doc/wasm/tickets/RPL-00-governance-and-baseline-freeze.md` | 2026-02-09 | Master plan created; subplan not yet authored. |
-| RPL-01 | planned | P0 | `doc/wasm/tickets/RPL-01-secure-runtime-gating.md` | 2026-02-09 | Secure-only startup contract and boot validation. |
+| RPL-00 | in_progress | P0 | `doc/wasm/tickets/RPL-00-governance-and-baseline-freeze.md` | 2026-02-09 | First downstream update cycle has started through RPL-01 Step 1 execution. |
+| RPL-01 | in_progress | P0 | `doc/wasm/tickets/RPL-01-secure-runtime-gating.md` | 2026-02-09 | Step 1 contradiction inventory v1 (`C-01`..`C-14`) committed; capability matrix definition is next. |
 | RPL-02 | planned | P0 | `doc/wasm/tickets/RPL-02-worker-topology-and-thread-bootstrap.md` | 2026-02-09 | Define required workers/threads for MVP runtime architecture. |
 | RPL-03 | planned | P0 | `doc/wasm/tickets/RPL-03-shared-memory-ipc-core.md` | 2026-02-09 | SAB/Atomics channels for kernel/runtime hot paths. |
 | RPL-04 | planned | P0 | `doc/wasm/tickets/RPL-04-runtime-ui-bridge-shared-path.md` | 2026-02-09 | Runtime/UI ingress-egress migration off message hot path. |
@@ -105,41 +120,44 @@ When resuming work from scratch:
 - Status: `in_progress`
 - Priority: `P0`
 - Last Updated: `2026-02-09`
-- Subplan: `doc/wasm/tickets/RPL-00-governance-and-baseline-freeze.md` (pending)
+- Subplan: `doc/wasm/tickets/RPL-00-governance-and-baseline-freeze.md`
 - Dependencies: none
 
 Notes:
 
 - This master plan is now the canonical tracker for replacement execution.
 - Baseline architecture and blocker context have been captured from current docs.
-- Ticket subplans are not yet created; template is available.
+- RPL-00 subplan has been authored and now governs sync/update behavior.
+- Runtime track now has explicit parallel coordination points with backend migration track docs.
 
 Next Step Analysis:
 
-- Immediate Next Step: author RPL-00 subplan with explicit acceptance criteria and update cadence.
-- Why this step now: prevents ticket drift before implementation starts.
-- Evidence required to close next step: committed subplan with owner, cadence, and checklist.
+- Immediate Next Step: continue applying the same dual-update governance loop for RPL-01 Step 2 execution.
+- Why this step now: the first downstream update cycle has now been executed and the process needs one more cycle to confirm repeatability.
+- Evidence required to close next step: RPL-01 Step 2 updates land with synchronized master/subplan status and evidence markers.
 
 ---
 
 ### RPL-01 - Secure Runtime Gating
 
-- Status: `planned`
+- Status: `in_progress`
 - Priority: `P0`
 - Last Updated: `2026-02-09`
-- Subplan: `doc/wasm/tickets/RPL-01-secure-runtime-gating.md` (pending)
+- Subplan: `doc/wasm/tickets/RPL-01-secure-runtime-gating.md`
 - Dependencies: RPL-00
 
 Notes:
 
 - Boot contract must be secure-only for MVP (cross-origin isolation and required feature gates).
 - Failure behavior must be explicit; no silent fallback mode.
+- Step 1 contradiction inventory v1 is now recorded with explicit resolution actions (`C-01`..`C-14`).
+- Contradictions are now tracked with per-item status/notes for resumable doc reconciliation.
 
 Next Step Analysis:
 
-- Immediate Next Step: define startup capability matrix and hard-fail diagnostics contract.
-- Why this step now: all downstream shared-memory work depends on deterministic startup guarantees.
-- Evidence required to close next step: signed-off startup gate spec + test matrix.
+- Immediate Next Step: execute Step 2 by drafting a required capability matrix with check IDs and startup assertions mapped from contradiction IDs.
+- Why this step now: contradiction inventory is in place, so startup requirements can be codified as deterministic checks.
+- Evidence required to close next step: matrix committed with pass/fail assertions and contradiction-ID mapping references.
 
 ---
 
@@ -334,3 +352,6 @@ Avoid batching multiple unrelated next actions into one update.
 ## Change Log
 
 - 2026-02-09: Initial master plan created with ticket board, detail blocks, update contract, and resume protocol.
+- 2026-02-09: Scaffolded `RPL-00` and `RPL-01` subplans and synchronized ticket board/detail notes.
+- 2026-02-09: Began RPL-01 execution with Step 1 contradiction inventory v1 and synchronized board/detail status updates.
+- 2026-02-09: Added program-level coordination references for parallel backend migration planning.
