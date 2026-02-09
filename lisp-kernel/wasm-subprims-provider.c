@@ -285,7 +285,12 @@ wasm_find_symbol_named(const char *name, LispObj package)
   area *a = ((area *)ptr_from_lispobj(lisp_global(ALL_AREAS)))->succ;
   while (a->code != AREA_VOID) {
     area_code code = a->code;
-    if ((code == AREA_STATIC) || (code == AREA_DYNAMIC) || (code == AREA_MANAGED_STATIC)) {
+    if ((code == AREA_STATIC) ||
+        (code == AREA_DYNAMIC) ||
+        (code == AREA_MANAGED_STATIC) ||
+        (code == AREA_READONLY) ||
+        (code == AREA_WATCHED) ||
+        (code == AREA_STATIC_CONS)) {
       LispObj sym = wasm_find_symbol_in_range((LispObj *)a->low,
                                               (LispObj *)a->active,
                                               name,

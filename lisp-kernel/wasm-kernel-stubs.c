@@ -2742,6 +2742,96 @@ wasm_symbol_package_matches(lispsymbol *rawsym, LispObj package)
 }
 
 static LispObj
+wasm_package_symbol_vector(LispObj table)
+{
+  if (table == lisp_nil) {
+    return (LispObj)0;
+  }
+  LispObj vec = table;
+  if (fulltag_of(vec) == fulltag_cons) {
+    vec = car(vec);
+  }
+  if (fulltag_of(vec) != fulltag_misc) {
+    return (LispObj)0;
+  }
+  LispObj header = header_of(vec);
+  natural subtag = header_subtag(header);
+  if (subtag != subtag_simple_vector && subtag != subtag_hash_vector) {
+    return (LispObj)0;
+  }
+  return vec;
+}
+
+static LispObj
+wasm_find_symbol_in_vector_bytes(LispObj vec,
+                                 const uint8_t *name,
+                                 uint32_t len)
+{
+  if (vec == (LispObj)0 || !name || len == 0) {
+    return (LispObj)0;
+  }
+  uint32_t count = (uint32_t)header_element_count(header_of(vec));
+  LispObj *data = (LispObj *)((BytePtr)vec + misc_data_offset);
+  for (uint32_t i = 0; i < count; i++) {
+    LispObj sym = data[i];
+    if (fulltag_of(sym) != fulltag_misc || header_subtag(header_of(sym)) != subtag_symbol) {
+      continue;
+    }
+    lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(untag(sym));
+    if (wasm_lisp_string_equals_bytes(rawsym->pname, name, len)) {
+      return sym;
+    }
+  }
+  return (LispObj)0;
+}
+
+static LispObj
+wasm_find_symbol_in_package_tables_bytes(LispObj pkg_obj,
+                                         const uint8_t *name,
+                                         uint32_t len)
+{
+  if (pkg_obj == (LispObj)0 ||
+      fulltag_of(pkg_obj) != fulltag_misc ||
+      header_subtag(header_of(pkg_obj)) != subtag_package) {
+    return (LispObj)0;
+  }
+  package *pkg = (package *)ptr_from_lispobj(untag(pkg_obj));
+  LispObj itab_vec = wasm_package_symbol_vector(pkg->itab);
+  LispObj sym = wasm_find_symbol_in_vector_bytes(itab_vec, name, len);
+  if (sym) {
+    return sym;
+  }
+  LispObj etab_vec = wasm_package_symbol_vector(pkg->etab);
+  return wasm_find_symbol_in_vector_bytes(etab_vec, name, len);
+}
+
+static LispObj
+wasm_find_symbol_in_all_packages_bytes(const uint8_t *name, uint32_t len)
+{
+  LispObj list = nrs_ALL_PACKAGES.vcell;
+  if (fulltag_of(list) == fulltag_misc &&
+      header_subtag(header_of(list)) == subtag_package) {
+    LispObj sym = wasm_find_symbol_in_package_tables_bytes(list, name, len);
+    if (sym) {
+      return sym;
+    }
+  }
+  while (list != lisp_nil) {
+    if (fulltag_of(list) != fulltag_cons) {
+      break;
+    }
+    cons *cell = (cons *)ptr_from_lispobj(untag(list));
+    LispObj pkg_obj = cell->car;
+    LispObj sym = wasm_find_symbol_in_package_tables_bytes(pkg_obj, name, len);
+    if (sym) {
+      return sym;
+    }
+    list = cell->cdr;
+  }
+  return (LispObj)0;
+}
+
+static LispObj
 wasm_find_symbol_in_range_bytes(LispObj *start,
                                 LispObj *end,
                                 const uint8_t *name,
@@ -2788,10 +2878,30 @@ wasm_find_symbol_in_range_bytes(LispObj *start,
 static LispObj
 wasm_find_symbol_named_bytes(const uint8_t *name, uint32_t len, LispObj package)
 {
+  if (!name || len == 0) {
+    return (LispObj)0;
+  }
+  if (package != (LispObj)0) {
+    LispObj sym = wasm_find_symbol_in_package_tables_bytes(package, name, len);
+    if (sym) {
+      return sym;
+    }
+  } else {
+    LispObj sym = wasm_find_symbol_in_all_packages_bytes(name, len);
+    if (sym) {
+      return sym;
+    }
+  }
+
   area *a = ((area *)ptr_from_lispobj(lisp_global(ALL_AREAS)))->succ;
   while (a->code != AREA_VOID) {
     area_code code = a->code;
-    if ((code == AREA_STATIC) || (code == AREA_DYNAMIC) || (code == AREA_MANAGED_STATIC)) {
+    if ((code == AREA_STATIC) ||
+        (code == AREA_DYNAMIC) ||
+        (code == AREA_MANAGED_STATIC) ||
+        (code == AREA_READONLY) ||
+        (code == AREA_WATCHED) ||
+        (code == AREA_STATIC_CONS)) {
       LispObj sym = wasm_find_symbol_in_range_bytes((LispObj *)a->low,
                                                     (LispObj *)a->active,
                                                     name,
@@ -3236,8 +3346,25 @@ wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name
   static LispObj intern_sym = (LispObj)0;
   if (intern_sym == (LispObj)0) {
     static const uint8_t intern_name[] = { 'I', 'N', 'T', 'E', 'R', 'N' };
-    intern_sym = wasm_find_symbol_named_bytes(intern_name, (uint32_t)sizeof(intern_name), (LispObj)0);
+    static const uint8_t cl_pkg_name[] = {
+      'C', 'O', 'M', 'M', 'O', 'N', '-', 'L', 'I', 'S', 'P'
+    };
+    LispObj cl_pkg = wasm_find_package_named_bytes(cl_pkg_name, (uint32_t)sizeof(cl_pkg_name));
+    if (cl_pkg != lisp_nil) {
+      intern_sym = wasm_find_symbol_named_bytes(
+        intern_name,
+        (uint32_t)sizeof(intern_name),
+        cl_pkg);
+    }
+    if (intern_sym == (LispObj)0) {
+      intern_sym = wasm_find_symbol_named_bytes(
+        intern_name,
+        (uint32_t)sizeof(intern_name),
+        (LispObj)0);
+    }
     if (!intern_sym) {
+      static const char msg[] = "WASM const-pool: INTERN symbol unavailable for ";
+      wasm_log_const_pool_fallback(msg, (unsigned)(sizeof(msg) - 1), name_bytes, name_len);
       return (LispObj)0;
     }
   }
@@ -3248,6 +3375,8 @@ wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name
   }
   lispsymbol *intern_rawsym = (lispsymbol *)ptr_from_lispobj(untag(intern_sym));
   if (intern_rawsym->fcell == nrs_UDF.vcell) {
+    static const char msg[] = "WASM const-pool: INTERN fcell UDF for ";
+    wasm_log_const_pool_fallback(msg, (unsigned)(sizeof(msg) - 1), name_bytes, name_len);
     return (LispObj)0;
   }
 
@@ -3264,9 +3393,13 @@ wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name
   LispObj result = wasm_funcall2(intern_sym, name_str, pkg_arg);
   if (tcr->wasm_pending_throw) {
     tcr->wasm_pending_throw = 0;
+    static const char msg[] = "WASM const-pool: INTERN threw for ";
+    wasm_log_const_pool_fallback(msg, (unsigned)(sizeof(msg) - 1), name_bytes, name_len);
     return (LispObj)0;
   }
   if (result == lisp_nil) {
+    static const char msg[] = "WASM const-pool: INTERN returned NIL for ";
+    wasm_log_const_pool_fallback(msg, (unsigned)(sizeof(msg) - 1), name_bytes, name_len);
     return (LispObj)0;
   }
   return result;
@@ -3482,9 +3615,21 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
             }
           }
         }
-        LispObj sym = wasm_find_symbol_named_bytes(name_bytes, name_len, pkg);
-        if (!sym && pkg_missing) {
-          sym = wasm_find_symbol_named_bytes(name_bytes, name_len, (LispObj)0);
+        /*
+         * Prefer INTERN for package-qualified symbols so we resolve the
+         * canonical package entry instead of arbitrary same-name heap symbols.
+         * Keep raw scan as fallback for early bring-up phases where INTERN
+         * may not yet be callable.
+         */
+        LispObj sym = (LispObj)0;
+        if (!pkg_missing && pkg != (LispObj)0) {
+          sym = wasm_const_pool_intern_symbol(tcr, name_bytes, name_len, pkg);
+        }
+        if (!sym) {
+          sym = wasm_find_symbol_named_bytes(name_bytes, name_len, pkg);
+          if (!sym && pkg_missing) {
+            sym = wasm_find_symbol_named_bytes(name_bytes, name_len, (LispObj)0);
+          }
         }
         if (!sym) {
           if (pkg_missing) {
@@ -3568,9 +3713,15 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
             }
           }
         }
-        LispObj sym = wasm_find_symbol_named_bytes(name_bytes, name_len, pkg);
-        if (!sym && pkg_missing) {
-          sym = wasm_find_symbol_named_bytes(name_bytes, name_len, (LispObj)0);
+        LispObj sym = (LispObj)0;
+        if (!pkg_missing && pkg != (LispObj)0) {
+          sym = wasm_const_pool_intern_symbol(tcr, name_bytes, name_len, pkg);
+        }
+        if (!sym) {
+          sym = wasm_find_symbol_named_bytes(name_bytes, name_len, pkg);
+          if (!sym && pkg_missing) {
+            sym = wasm_find_symbol_named_bytes(name_bytes, name_len, (LispObj)0);
+          }
         }
         if (!sym) {
           if (pkg_missing) {
@@ -4026,6 +4177,70 @@ wasm_debug_misc_subtag(LispObj obj)
   return (int32_t)header_subtag(header);
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_debug_header_element_count")))
+int32_t
+wasm_debug_header_element_count(LispObj obj)
+{
+  if ((obj & fulltagmask) != fulltag_misc) {
+    return -1;
+  }
+  return (int32_t)header_element_count(header_of(obj));
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_debug_find_symbol_boundp_pkgtable_raw")))
+LispObj
+wasm_debug_find_symbol_boundp_pkgtable_raw(void)
+{
+  static const uint8_t cl_pkg_name[] = {
+    'C', 'O', 'M', 'M', 'O', 'N', '-', 'L', 'I', 'S', 'P'
+  };
+  static const uint8_t boundp_name[] = {
+    'B', 'O', 'U', 'N', 'D', 'P'
+  };
+  LispObj pkg = wasm_find_package_named_bytes(cl_pkg_name, (uint32_t)sizeof(cl_pkg_name));
+  if (pkg == lisp_nil) {
+    return (LispObj)0;
+  }
+  return wasm_find_symbol_in_package_tables_bytes(pkg, boundp_name, (uint32_t)sizeof(boundp_name));
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_debug_find_symbol_boundp_scan_raw")))
+LispObj
+wasm_debug_find_symbol_boundp_scan_raw(void)
+{
+  static const uint8_t cl_pkg_name[] = {
+    'C', 'O', 'M', 'M', 'O', 'N', '-', 'L', 'I', 'S', 'P'
+  };
+  static const uint8_t boundp_name[] = {
+    'B', 'O', 'U', 'N', 'D', 'P'
+  };
+  LispObj pkg = wasm_find_package_named_bytes(cl_pkg_name, (uint32_t)sizeof(cl_pkg_name));
+  if (pkg == lisp_nil) {
+    pkg = (LispObj)0;
+  }
+  area *a = ((area *)ptr_from_lispobj(lisp_global(ALL_AREAS)))->succ;
+  while (a->code != AREA_VOID) {
+    area_code code = a->code;
+    if ((code == AREA_STATIC) ||
+        (code == AREA_DYNAMIC) ||
+        (code == AREA_MANAGED_STATIC) ||
+        (code == AREA_READONLY) ||
+        (code == AREA_WATCHED) ||
+        (code == AREA_STATIC_CONS)) {
+      LispObj sym = wasm_find_symbol_in_range_bytes((LispObj *)a->low,
+                                                    (LispObj *)a->active,
+                                                    boundp_name,
+                                                    (uint32_t)sizeof(boundp_name),
+                                                    pkg);
+      if (sym) {
+        return sym;
+      }
+    }
+    a = a->succ;
+  }
+  return (LispObj)0;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_debug_copy_symbol_name")))
 uint32_t
 wasm_debug_copy_symbol_name(LispObj sym, uint32_t out_ptr, uint32_t out_len)
@@ -4038,7 +4253,7 @@ wasm_debug_copy_symbol_name(LispObj sym, uint32_t out_ptr, uint32_t out_len)
     return 0;
   }
 
-  lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(sym);
+  lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(untag(sym));
   LispObj pname = rawsym->pname;
   LispObj pname_header = header_of(pname);
   if (header_subtag(pname_header) != subtag_simple_base_string) {

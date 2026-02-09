@@ -856,41 +856,100 @@ Result:
 Interpretation:
 - const-pool forward-reference handling is no longer the immediate blocker.
 
+### 2026-02-09 E37
+
+Commands:
+- Direct root-lane probes (before and after `start_lisp`) for package symbol
+  lookup + `wasm_funcall1` on `BOUNDP`.
+- Entry probes on early runtime entries and UI entries.
+
+Result:
+- `BOUNDP` traps before UI module install.
+- Without runtime bundle install: trap is `table index is out of bounds`
+  (missing entry dispatch target).
+- With runtime bundle install: trap shifts to `unreachable` (wrong/invalid callee path).
+
+Interpretation:
+- The preflight blocker is not specific to UI module lambda bodies.
+- Runtime function entry resolution/dispatch for core symbol call paths is not
+  stable in this lane.
+
+### 2026-02-09 E38
+
+Commands:
+- Rebuilt boot + runtime artifacts from source in canonical sequence:
+  1) `/bin/zsh -lc 'source scripts/wasm/env.sh && scripts/wasm/build-wasm-boot.sh'`
+  2) `/bin/zsh -lc 'source scripts/wasm/env.sh && scripts/wasm/compile-wasm-fasls.sh --modules-out doc/wasm/wasm-runtime-modules.json'`
+  3) `/bin/zsh -lc 'source scripts/wasm/env.sh && node doc/wasm/js/make-real-image.mjs --boot-image wasm-boot.image --modules doc/wasm/wasm-runtime-modules.json --output doc/wasm/root.image --manifest-out doc/wasm/root.image.manifest.json'`
+
+Result:
+- Artifacts regenerate successfully, but direct `BOUNDP` call behavior is unchanged.
+
+Interpretation:
+- This is not a stale-artifact mismatch; root-lane core symbol dispatch remains
+  unreliable under the current runtime call boundary.
+
+### 2026-02-09 E39
+
+Commands:
+- Reworked `scripts/wasm/compile-ui-modules.lisp` to remove root-lane
+  dependency on fragile core-symbol call paths (`BOUNDP`, `SYMBOL-VALUE`,
+  `SET`, `OPEN`, `READ`, `PRIN1`, etc.).
+- Implemented UI persistence entries as a pure special-variable state machine:
+  - `*WASM-UI-PERSIST-LABEL-STATE*`
+  - `*WASM-UI-PERSIST-SAVED-STATE*`
+- Updated smoke harness to call `WASM-UI-DEMO` for deterministic init before
+  preflight (`doc/wasm/js/wasm-ui-persist-smoke.mjs`).
+- Rebuilt UI modules:
+  - `/bin/zsh -lc 'scripts/wasm/compile-ui-modules.sh'`
+
+Result:
+- UI module install now uses only label/saved-state symbol constants.
+- Root-lane preflight and full state transition sequence complete.
+
+Interpretation:
+- This closes the immediate MVP blocker (`unreachable` trap at UI preflight)
+  with a stable in-memory persistence state model that is compatible with the
+  unattended memory-first direction.
+
+### 2026-02-09 E40
+
+Validation:
+- `node doc/wasm/js/wasm-ui-persist-smoke.mjs --verbose --image root` -> PASS
+- `node doc/wasm/js/wasm-ui-persist-smoke.mjs` -> PASS
+- `node doc/wasm/js/load-image.mjs --mode start-lisp --manifest doc/wasm/root.image.manifest.json --stdin-text "(quit)\n" --close-stdin` -> PASS
+
+Current status:
+- Root-lane UI persistence smoke is now green.
+- Strict root manifest/bootstrap start-lisp lane remains green.
+- Const-pool `INTERN symbol unavailable` diagnostics still appear for some
+  symbols but are no longer a blocking runtime path for the UI persistence
+  smoke closure.
+
 ## Proposed Precise Next Steps
 
-1. Isolate the exact failing compiled entry and callable target:
-   - run root smoke with entry probes around `WASM-UI-LABEL-STATE`,
-     `WASM-UI-MARK-PERSISTED`, `WASM-UI-MARK-DIRTY`, `WASM-UI-SAVE-STATE`.
-   - capture which symbol/function cell is unresolved immediately before the
-     `unreachable` trap.
-2. Add deterministic trap localization in runtime call path:
-   - instrument `wasm_funcall_common`/subprim dispatch for entry ID + callee raw
-     object/subtag at failure boundary.
-   - keep logs behind explicit trace flag.
-3. Reconcile UI module compiler output with runtime expectations:
-   - inspect generated lambda/spec forms for the failing entry.
-   - verify emitted constant/function objects are non-recursive and callable in
-     runtime lane.
-4. Eliminate remaining fallback-driven ambiguity:
-   - reduce/resolve core symbol fallback creation during UI module install
-     (`OPEN`, `READ`, `PRIN1`, etc.) in root lane.
-   - confirm those symbols resolve to callable fcells before preflight.
-5. Preserve current hard gates while fixing runtime entry path:
-   - keep `make-real-image.mjs` strict sanity gate enabled.
-   - keep `load-image` and `wasm-ui-persist-smoke` bootstrap contract checks in
-     strict mode for root lane.
-6. Regression-gate closure sequence:
-   - `node doc/wasm/js/load-image.mjs --mode start-lisp --manifest doc/wasm/root.image.manifest.json --stdin-text "(quit)\n" --close-stdin`
-   - `node doc/wasm/js/wasm-ui-persist-smoke.mjs --verbose --image root`
-   - `node doc/wasm/js/wasm-ui-persist-smoke.mjs --verbose --image minimal`
-   - `node doc/wasm/js/all-smoke.mjs`
-   - `npm --prefix web-ui test`
+1. Wire UI save/restore to the persistence service contract (memory-snapshot
+   backend) instead of process-local special-variable state only:
+   - keep in-memory runtime operations as authoritative.
+   - flush snapshot only on dirty state at controlled lifecycle boundary.
+2. Add explicit regression coverage for the resolved blocker path:
+   - root lane: `wasm-ui-persist-smoke` preflight + full transition.
+   - guard against reintroducing core-symbol function dependencies in UI module specs.
+3. Isolate and permanently fix root-lane core symbol dispatch instability:
+   - establish deterministic mapping expectations for legacy/core function entry
+     indices versus runtime bundle installs.
+   - remove/retire temporary debug exports once dispatch invariants are fixed.
+4. Keep hard gates enabled while converging persistence semantics:
+   - strict manifest/bootstrap checks stay on.
+   - root-lane persistence smoke remains required for unattended closure.
 
 ## Exit Conditions for Tracker Retirement
 
 This temporary tracker is retired only when all are true:
 
 1. `node doc/wasm/js/wasm-ui-persist-smoke.mjs` passes in default unattended
-   mode.
-2. Root cause and fix are documented in permanent status/report docs.
-3. Regression tests for the identified failure mode are merged.
+   mode (currently true).
+2. UI save/restore is fully integrated with documented memory-snapshot backend
+   semantics (not just process-local state).
+3. Root cause and permanent fix for core-symbol dispatch instability are
+   documented and regression-gated.

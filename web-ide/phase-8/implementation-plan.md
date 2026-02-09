@@ -2,7 +2,7 @@
 
 ## Document Control
 - Status: Planned
-- Last Updated: February 8, 2026
+- Last Updated: February 9, 2026
 - Parent Plan: `web-ide/implementation-plan.md`
 - Doctrine Sources:
   - `web-ide/ide-doctrine.md`
@@ -43,7 +43,7 @@ Transition the system from engineering-complete to release-ready by defining det
 - Runtime bridge, typed command dispatch, debugger, inspector, sessions, and customization are operational.
 
 ## Progress Snapshot
-- M0 `RZ0`: In Progress (runtime bundle + manifest + loader refactor + memory-snapshot persistence decoupling + bootstrap contract enforcement landed; remaining blocker is compiled-Lisp UI persistence preflight/runtime trap on root lane).
+- M0 `RZ0`: In Progress (runtime bundle + manifest + loader refactor + memory-snapshot persistence decoupling + bootstrap contract enforcement landed; root-lane compiled-Lisp UI preflight trap is closed; remaining work is persistence-service semantic integration + core dispatch hardening).
 - M1 `RZ1`: Planned.
 - M2 `RZ2`: Planned.
 - M3 `RZ3`: Planned.
@@ -62,9 +62,9 @@ Transition the system from engineering-complete to release-ready by defining det
 
 ## Pre-Phase Gate: RZ0 (MVP Blocker Closure)
 ### Goal
-Close the top remaining WASM blocker before Phase 8 release packaging:
-compiled-Lisp UI persistence runtime closure on root lane after strict
-manifest/bootstrap loader validation.
+Finish the remaining MVP blocker closure work before Phase 8 release packaging:
+stabilize persistence semantics after root-lane compiled-Lisp UI runtime
+closure under strict manifest/bootstrap loader validation.
 
 ### Why This Is A Prerequisite
 - `doc/wasm/roadmap.md` and `doc/wasm/porting-status.md` still mark this as open.
@@ -83,13 +83,14 @@ manifest/bootstrap loader validation.
    `function-vector`, and `gvector` via first-pass creation + second-pass patching.
 2. Root save/reload closure has been restored for regenerated artifacts; strict
    manifest and pre-start/post-start bootstrap checks now pass for `root.image`.
-3. `wasm-ui-persist-smoke` root lane now advances past bootstrap and module
-   installs, then fails at compiled UI preflight with
-   `Lisp UI not runnable in persistence smoke: unreachable`.
+3. `wasm-ui-persist-smoke` root lane now passes full compiled UI preflight and
+   transition sequence after UI module simplification away from fragile
+   core-symbol call dependencies.
 4. `minimal.image` remains strict pre-start contract-incomplete and is retained
    as a bring-up lane.
-5. Top blocker is now compiled UI runtime entry behavior/function binding at the
-   root-lane preflight boundary, not image save-boundary divergence.
+5. Top blocker has moved to persistence-service semantic integration
+   (memory-snapshot contract conformance) and permanent core dispatch hardening,
+   not root-lane preflight execution.
 
 ### RZ0 Deliverables
 - Deterministic runtime bundle contract (`ccl-wasm-modules-v2` + `.bin` + `.idx`) for runtime modules.

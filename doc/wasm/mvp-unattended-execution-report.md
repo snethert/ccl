@@ -1,8 +1,8 @@
 # WASM MVP Unattended Execution Report
 
-Status: In Progress (RZ0.6 + runtime bootstrap closure)  
+Status: In Progress (RZ0.6 blocker trap closure + persistence semantics follow-through)  
 Plan: `doc/wasm/mvp-unattended-execution-plan.md`  
-Last updated: 2026-02-08
+Last updated: 2026-02-09
 
 ## Summary
 
@@ -12,9 +12,11 @@ Last updated: 2026-02-08
   default unattended path.
 - Root-image bootstrap/save-reload closure is now re-established for regenerated
   artifacts (`root.image` + manifest strict lane).
-- Remaining MVP blocker is now compiled-Lisp UI persistence runtime execution on
-  root lane: preflight entry traps with `RuntimeError: unreachable` in
-  `wasm-ui-persist-smoke` after successful bootstrap/module install.
+- Root-lane compiled-Lisp UI persistence preflight/runtime trap is closed by
+  moving UI module entries to a deterministic in-memory state-machine path
+  (no fragile core-symbol call dependencies).
+- Remaining MVP work is to finish persistence semantics integration:
+  wire UI save/restore to documented memory-snapshot service behavior.
 
 ## Key command status
 
@@ -22,9 +24,7 @@ Last updated: 2026-02-08
 - `node doc/wasm/js/all-smoke.mjs`: PASS
 - `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`: PASS
 - `node doc/wasm/js/load-image.mjs --mode start-lisp --manifest doc/wasm/root.image.manifest.json --stdin-text "(quit)\n" --close-stdin`: PASS
-- `node doc/wasm/js/wasm-ui-persist-smoke.mjs --verbose --image root`: FAIL
-  at compiled UI preflight (`Lisp UI not runnable ... unreachable`) after
-  contracts + module install succeed.
+- `node doc/wasm/js/wasm-ui-persist-smoke.mjs --verbose --image root`: PASS
 - `node doc/wasm/js/wasm-ui-persist-smoke.mjs --verbose --image minimal`: FAIL
   strict pre-start contract (expected bring-up lane).
 
@@ -49,24 +49,16 @@ Last updated: 2026-02-08
 
 ## Active blocker (current)
 
-Compiled-Lisp UI persistence preflight/runtime execution on root lane is still
-failing with `RuntimeError: unreachable` after:
+Persistence semantics completion after trap closure:
 
-- strict root pre-start/post-start bootstrap contract success
-- runtime bundle install success
-- compiled UI module install success
-
-Resolution path (in progress):
-
-1. Localize failing preflight callee/entry at runtime trap boundary.
-2. Reconcile emitted UI module function bindings/spec forms with runtime
-   callable expectations in root lane.
-3. Re-run `wasm-ui-persist-smoke` under default `memory-snapshot` backend and
-   close the trap class in regression gates.
+- root-lane smoke now passes, but current UI save/restore behavior is process-
+  local state-machine persistence.
+- next step is full alignment with memory-snapshot contract (in-memory runtime
+  store + dirty flush policy) for UI persistence actions.
 
 ## Next execution gate
 
-Close runtime bootstrap blocker tracked in
+Close remaining persistence semantics and dispatch hardening items tracked in
 `doc/wasm/wasm-ui-persistence-problem-tracker.md`, then run:
 
 ```bash

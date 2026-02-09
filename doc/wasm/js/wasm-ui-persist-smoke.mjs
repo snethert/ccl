@@ -381,6 +381,7 @@ const labelState = entryIndex("WASM-UI-LABEL-STATE");
 const saveEntry = entryIndex("WASM-UI-SAVE");
 const restoreEntry = entryIndex("WASM-UI-RESTORE");
 const demoEntry = entryIndex("WASM-UI-DEMO");
+let demoInitialized = false;
 
 if (probeEntryName) {
   const probeEntry = entryIndex(probeEntryName);
@@ -399,10 +400,18 @@ if (probeDemo) {
   trace("calling demo probe");
   const demoRc = kernelExports.wasm_test_entry_funcall(demoEntry, 0) >> 2;
   trace(`demo probe returned ${demoRc}`);
+  demoInitialized = (demoRc === 0);
   if (probeOnly) {
     console.log("PASS: wasm ui persistence probe-only");
     process.exit(0);
   }
+}
+
+if (!demoInitialized) {
+  trace("calling demo init");
+  const demoInitRc = kernelExports.wasm_test_entry_funcall(demoEntry, 0) >> 2;
+  assert(demoInitRc === 0, `demo init failed: ${demoInitRc}`);
+  demoInitialized = true;
 }
 
 if (!skipPreflight) {

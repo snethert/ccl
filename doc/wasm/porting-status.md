@@ -195,15 +195,18 @@
   `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs` is green in default
   mode (contract-enforced fail case + warn-mode continuation case), and strict
   root gate is passing when explicitly requested. `node doc/wasm/js/all-smoke.mjs`
-  is green with current regenerated artifacts. Active blocker is now the
-  compiled-Lisp UI persistence runtime preflight trap on root lane
+  is green with current regenerated artifacts. Root-lane compiled-Lisp UI
+  persistence smoke is now passing
   (`node doc/wasm/js/wasm-ui-persist-smoke.mjs --verbose --image root`).
 
 ## Major Gaps / Next Blockers
 
-- Compiled-Lisp UI persistence path stabilization on root image under the
-  memory-first backend, specifically the root-lane compiled entry runtime trap
-  after successful bootstrap/module install.
+- Persistence semantics completion for the memory-first backend:
+  UI save/restore should be wired to documented memory-snapshot service
+  behavior (in-memory runtime state + dirty flush policy), not only
+  process-local state.
+- Permanent fix for root-lane core symbol/function dispatch instability
+  discovered during persistence trap investigation.
 - Capability negotiation protocol beyond `CAPS` bitfield.
 - Ongoing integration hardening for LMDB/IndexedDB lanes while keeping
   `memory-snapshot` as unattended default.

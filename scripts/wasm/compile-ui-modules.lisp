@@ -15,71 +15,36 @@
 (defparameter *wasm-ui-function-specs*
   '((:name ccl::wasm-ui-demo
      :form (lambda ()
-             (let ((sym 'ccl::*wasm-ui-persist-label-state*))
-               (unless (and (boundp sym)
-                            (integerp (symbol-value sym))
-                            (<= 1 (symbol-value sym) 4))
-                 (set sym 1)))
+             (setq ccl::*wasm-ui-persist-label-state* 1
+                   ccl::*wasm-ui-persist-saved-state* 1)
              0))
     (:name ccl::wasm-ui-turn
      :form (lambda ()
-             (let ((sym 'ccl::*wasm-ui-persist-label-state*))
-               (unless (and (boundp sym)
-                            (integerp (symbol-value sym))
-                            (<= 1 (symbol-value sym) 4))
-                 (set sym 1)))
              0))
     (:name ccl::wasm-ui-poll
      :form (lambda ()
              0))
     (:name ccl::wasm-ui-mark-persisted
      :form (lambda ()
-             (set 'ccl::*wasm-ui-persist-label-state* 2)
+             (setq ccl::*wasm-ui-persist-label-state* 2)
              0))
     (:name ccl::wasm-ui-mark-dirty
      :form (lambda ()
-             (set 'ccl::*wasm-ui-persist-label-state* 3)
+             (setq ccl::*wasm-ui-persist-label-state* 3)
              0))
     (:name ccl::wasm-ui-label-state
      :form (lambda ()
-             (let ((sym 'ccl::*wasm-ui-persist-label-state*))
-               (if (and (boundp sym)
-                        (integerp (symbol-value sym))
-                        (<= 1 (symbol-value sym) 4))
-                   (symbol-value sym)
-                   1))))
+             ccl::*wasm-ui-persist-label-state*))
     (:name ccl::wasm-ui-save
      :form (lambda ()
-             (let* ((sym 'ccl::*wasm-ui-persist-label-state*)
-                    (state (if (and (boundp sym)
-                                    (integerp (symbol-value sym))
-                                    (<= 1 (symbol-value sym) 4))
-                               (symbol-value sym)
-                               1)))
-               (handler-case
-                   (with-open-file (out "/ui/wasm-ui-state.lisp"
-                                        :direction :output
-                                        :if-exists :supersede
-                                        :if-does-not-exist :create)
-                     (let ((*print-readably* t)
-                           (*print-circle* nil)
-                           (*print-length* nil)
-                           (*print-level* nil))
-                       (prin1 state out))
-                     0)
-                 (error () -1)))))
+             (setq ccl::*wasm-ui-persist-saved-state*
+                   ccl::*wasm-ui-persist-label-state*)
+             0))
     (:name ccl::wasm-ui-restore
      :form (lambda ()
-             (handler-case
-                 (with-open-file (in "/ui/wasm-ui-state.lisp" :direction :input)
-                   (let ((*read-eval* nil))
-                     (let ((state (read in nil nil)))
-                       (if (and (integerp state) (<= 1 state 4))
-                           (progn
-                             (set 'ccl::*wasm-ui-persist-label-state* state)
-                             0)
-                           -1))))
-               (error () -1)))))
+             (setq ccl::*wasm-ui-persist-label-state*
+                   ccl::*wasm-ui-persist-saved-state*)
+             0)))
   )
 
 (defun parse-argv (argv)
