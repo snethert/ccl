@@ -59,5 +59,14 @@ lisp-kernel/static-linuxppc/external-functions.h
 .env.*
 !.env.example
 
+# python cache
+__pycache__/
+
 # wasm generated bundle binaries
 /doc/wasm/wasm-runtime-modules.bin
+
+# wasm mirrored spec checkout/artifacts
+/doc/wasm/spec/
+/doc/wasm/spec/core-multipage/
+/doc/wasm/spec/SOURCES.md
+/doc/wasm/spec/core-hypercompact*
