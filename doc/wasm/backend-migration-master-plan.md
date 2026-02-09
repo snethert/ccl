@@ -92,13 +92,13 @@ Hard gates are tracked in `doc/wasm/runtime-backend-dependency-matrix.md`.
 
 | Ticket | Status | Priority | Subplan | Last Updated | Notes |
 | --- | --- | --- | --- | --- | --- |
-| BPL-00 | in_progress | P0 | `doc/wasm/backend-tickets/BPL-00-governance-and-baseline-freeze.md` | 2026-02-09 | Governance loop remains active after BPL-03 Step 2 closure; `X-02` stays cleared and `X-03` is now `done` after RPL-03 Step 3 rerun evidence closure with synchronized matrix/master/board updates. |
+| BPL-00 | in_progress | P0 | `doc/wasm/backend-tickets/BPL-00-governance-and-baseline-freeze.md` | 2026-02-09 | Governance loop remains active with `X-02`/`X-03` cleared and BPL-06 Step 1 now published; synchronized matrix/master/board updates remain mandatory for next checkpoint-fixture work. |
 | BPL-01 | done | P0 | `doc/wasm/backend-tickets/BPL-01-arm-assumption-inventory.md` | 2026-02-09 | Step 1/2/3 closure complete (16 assumptions; remove=6, compat_layer=7, defer=3) with no new non-speculative matrix dependency rows required. |
 | BPL-02 | done | P0 | `doc/wasm/backend-tickets/BPL-02-wasm-native-backend-contract.md` | 2026-02-09 | Step 2 closure complete: `CON-01`..`CON-08` promoted to v1 baseline with explicit `BCL-01`..`BCL-12` coverage evidence. |
 | BPL-03 | done | P0 | `doc/wasm/backend-tickets/BPL-03-frame-and-debug-metadata-model.md` | 2026-02-09 | Step 2 closure complete: `FDC-01`..`FDC-10` validated with full `B3*` class coverage and hardened clause language. |
 | BPL-04 | done | P0 | `doc/wasm/backend-tickets/BPL-04-numeric-and-math-pipeline-modernization.md` | 2026-02-09 | Step 1/2/3 closed: classification, sequencing, and benchmark/profile gates (`BPL04-G01`..`BPL04-G06`) are now published. |
-| BPL-05 | in_progress | P0 | `doc/wasm/backend-tickets/BPL-05-ir-lowering-arm-decoupling.md` | 2026-02-09 | Step 1/2 closed with staged slices (`B5S-*`) and seam contracts (`B5M-*`); Step 3 handoff/gate integration in progress. |
-| BPL-06 | planned | P0 | `doc/wasm/backend-tickets/BPL-06-dual-path-build-and-diff-harness.md` | 2026-02-09 | Dual-path backend mode and differential correctness harness. |
+| BPL-05 | done | P0 | `doc/wasm/backend-tickets/BPL-05-ir-lowering-arm-decoupling.md` | 2026-02-09 | Step 1/2/3 closed with staged slices (`B5S-*`), seam contracts (`B5M-*`), and consumer handoff checklist (`B5H-*`). |
+| BPL-06 | in_progress | P0 | `doc/wasm/backend-tickets/BPL-06-dual-path-build-and-diff-harness.md` | 2026-02-09 | Step 1 contract is now published with frozen checkpoint IDs (`BPL06-CP01`..`BPL06-CP05`) and deterministic parity fields; Step 2 fixture/evidence templates are next. |
 | BPL-07 | planned | P1 | `doc/wasm/backend-tickets/BPL-07-size-and-performance-gates.md` | 2026-02-09 | Backend-specific perf and artifact-size validation gates. |
 | BPL-08 | planned | P0 | `doc/wasm/backend-tickets/BPL-08-runtime-alignment-integration.md` | 2026-02-09 | Align backend call/transport boundaries with runtime replacement architecture; runtime-side hard gate `X-03` is now cleared for downstream integration planning. |
 | BPL-09 | planned | P0 | `doc/wasm/backend-tickets/BPL-09-cutover-and-arm-retirement.md` | 2026-02-09 | Final cutover and ARM-compat path retirement. |
@@ -119,13 +119,13 @@ Notes:
 - Program-level coordination is anchored in `doc/wasm/wasm-program-board.md`.
 - Cross-track dependencies are externalized to `doc/wasm/runtime-backend-dependency-matrix.md`.
 - Governance evidence now includes BPL-03 Step 2 closure evidence (`FDC-*` + `B3*` coverage validation) with synchronized updates across matrix/program-board/master/subplan docs.
-- Governance sync now includes RPL-03 Step 3 rerun evidence (`doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/`) with `status=pass` and closed `X-03`; backend remains focused on BPL-05 Step 3 before BPL-08 integration kickoff.
+- Governance sync now includes RPL-03 Step 3 rerun evidence (`doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/`) with `status=pass` and closed `X-03`; backend has advanced to BPL-06 Step 2 fixture/evidence-template work.
 
 Next Step Analysis:
 
-- Immediate Next Step: execute BPL-05 Step 3 by publishing consumer handoff checklist for BPL-06/BPL-07/BPL-08 over closed slice/seam artifacts.
-- Why this step now: BPL-05 Step 2 seam governance is complete, so remaining blocker is consumer-facing integration contracts.
-- Evidence required to close next step: BPL-05 Step 3 checklist maps `B5S-*`/`B5M-*` artifacts to consumer acceptance criteria and required evidence links.
+- Immediate Next Step: execute BPL-06 Step 2 by publishing first parity fixture set and evidence artifact templates mapped to `BPL06-CP01`..`BPL06-CP05`.
+- Why this step now: BPL-06 Step 1 contract is now frozen, so deterministic checkpoint execution requires concrete fixture/evidence inputs.
+- Evidence required to close next step: BPL-06 Step 2 publishes fixture IDs, fixture source anchors, artifact template fields, and checkpoint coverage matrix for all `BPL06-CP*`.
 
 ---
 
@@ -230,7 +230,7 @@ Next Step Analysis:
 
 ### BPL-05 - IR/Lowering ARM Decoupling
 
-- Status: `in_progress`
+- Status: `done`
 - Priority: `P0`
 - Last Updated: `2026-02-09`
 - Subplan: `doc/wasm/backend-tickets/BPL-05-ir-lowering-arm-decoupling.md`
@@ -243,32 +243,35 @@ Notes:
 - Slice map explicitly consumes BPL-04 sequence/gate outputs (`BPL04-S2-*`, `BPL04-G*`) and defines per-slice rollback seams.
 - Assumption coverage now maps through explicit slice lanes (`ARM-ASSUMP-002`, `ARM-ASSUMP-007`, `ARM-ASSUMP-011`, `ARM-ASSUMP-012`, `ARM-ASSUMP-014`, `ARM-ASSUMP-015`).
 - Step 2 is now closed with seam contract matrix `B5M-01`..`B5M-05`, including toggles, promotion criteria, rollback command paths, and `BPL06-CP*` checkpoints.
+- Step 3 is now closed with consumer handoff checklist `B5H-01`..`B5H-05` across BPL-06/BPL-07/BPL-08 intake gates.
 
 Next Step Analysis:
 
-- Immediate Next Step: define consumer handoff checklist that binds slice/seam artifacts to BPL-06/BPL-07/BPL-08 acceptance gates.
-- Why this step now: slice and seam contracts are complete, so downstream consumers need explicit intake/acceptance contracts.
-- Evidence required to close next step: Step 3 output in BPL-05 lists consumer-specific required artifacts, owners, and acceptance checks.
+- Immediate Next Step: maintain BPL-05 as additive-only baseline and require downstream tickets to reference `B5S-*`/`B5M-*`/`B5H-*` IDs directly.
+- Why this step now: BPL-05 exit criteria are satisfied, so remaining work is governance maintenance and downstream consumption.
+- Evidence required to close next step: downstream subplans cite closed BPL-05 IDs without rewriting established seam/handoff rows.
 
 ---
 
 ### BPL-06 - Dual-Path Build and Differential Harness
 
-- Status: `planned`
+- Status: `in_progress`
 - Priority: `P0`
 - Last Updated: `2026-02-09`
-- Subplan: `doc/wasm/backend-tickets/BPL-06-dual-path-build-and-diff-harness.md` (pending)
+- Subplan: `doc/wasm/backend-tickets/BPL-06-dual-path-build-and-diff-harness.md`
 - Dependencies: BPL-03, BPL-04, BPL-05
 
 Notes:
 
 - Correctness parity is required before default-path cutover.
+- Step 1 contract is now published with frozen checkpoint IDs (`BPL06-CP01`..`BPL06-CP05`) and deterministic parity/evidence field requirements (`exit_code`, `fail_markers`, output hashes, rollback command linkage).
+- Step 1 now explicitly consumes BPL-05 seam linkage (`B5M-01`..`B5M-05`) and handoff constraints (`B5H-*`) without introducing alias IDs.
 
 Next Step Analysis:
 
-- Immediate Next Step: define dual-build mode and deterministic diff harness contract.
-- Why this step now: protects migration from silent semantic drift.
-- Evidence required to close next step: harness design plus first parity fixture set.
+- Immediate Next Step: publish first parity fixture set and evidence artifact templates covering all frozen checkpoints (`BPL06-CP01`..`BPL06-CP05`).
+- Why this step now: contract semantics are now frozen, so execution readiness depends on concrete fixture/trace baselines.
+- Evidence required to close next step: fixture matrix and artifact templates are committed with explicit checkpoint-to-fixture coverage mapping.
 
 ---
 
@@ -378,4 +381,6 @@ Avoid batching multiple unrelated next actions into one update.
 - 2026-02-09: Closed BPL-04 Step 3 by publishing benchmark/profile gate matrix (`BPL04-G01`..`BPL04-G06`) and advanced backend immediate next action to BPL-05 Step 1 staged decoupling.
 - 2026-02-09: Started BPL-05 and closed Step 1 with staged decoupling slice map (`B5S-01`..`B5S-05`); advanced backend immediate next action to BPL-05 Step 2 seam contracts.
 - 2026-02-09: Closed BPL-05 Step 2 by publishing seam contract matrix (`B5M-01`..`B5M-05`) and advanced backend immediate next action to BPL-05 Step 3 handoff/gate integration.
+- 2026-02-09: Closed BPL-05 Step 3 by publishing consumer handoff checklist (`B5H-01`..`B5H-05`) and advanced backend immediate next action to BPL-06 Step 1 harness contract definition.
 - 2026-02-09: Synced backend governance notes with RPL-03 Step 3 rerun evidence (`status=pass`, `x03_clear_ready=true`), closed dependency row `X-03`, and marked BPL-08 runtime-side hard gate as cleared.
+- 2026-02-09: Started BPL-06 and closed Step 1 by publishing dual-build checkpoint contracts (`BPL06-CP01`..`BPL06-CP05`) mapped to seam rows (`B5M-01`..`B5M-05`); advanced backend immediate next action to BPL-06 Step 2 fixture/evidence-template publication.

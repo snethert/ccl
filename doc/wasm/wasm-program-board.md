@@ -45,9 +45,9 @@ This is intentionally not a megaplan. Execution remains in two track-specific ma
 
 ## Immediate Next Step
 
-- Action: continue `Pack A` by executing RPL-04 Step 1 bridge-path scope definition alongside BPL-05 Step 3 consumer handoff/gate integration.
-- Why now: RPL-03 Step 3 rerun evidence closed `X-03`, so runtime work can move to shared bridge-path migration planning while backend finalizes consumer handoff gates.
-- Success evidence: RPL-04 Step 1 publishes frozen migration-scope IDs and BPL-05 Step 3 publishes consumer acceptance checklist over `B5S-*`/`B5M-*` artifacts.
+- Action: continue `Pack A` by executing RPL-04 Step 1 bridge-path scope definition alongside BPL-06 Step 2 parity fixture/evidence-template publication.
+- Why now: BPL-06 Step 1 contract is now frozen, so backend parity execution needs concrete fixture and artifact-field baselines.
+- Success evidence: RPL-04 Step 1 publishes frozen migration-scope IDs and BPL-06 Step 2 publishes fixture IDs/artifact templates across `BPL06-CP01`..`BPL06-CP05`.
 
 ## Change Log
 
@@ -75,3 +75,5 @@ This is intentionally not a megaplan. Execution remains in two track-specific ma
 - 2026-02-09: Pack A backend focus advanced from BPL-05 Step 1 staging to BPL-05 Step 2 seam contracts after publishing staged decoupling slices (`B5S-01`..`B5S-05`).
 - 2026-02-09: Pack A backend focus advanced from BPL-05 Step 2 seam contracts to BPL-05 Step 3 handoff/gate integration after publishing seam matrix (`B5M-01`..`B5M-05`).
 - 2026-02-09: Pack A runtime focus advanced past RPL-03 Step 3 rerun after conformance evidence (`status=pass`, `x03_clear_ready=true`) closed hard-gate row `X-03`; immediate runtime action is now RPL-04 Step 1.
+- 2026-02-09: Pack A backend focus advanced from BPL-05 Step 3 handoff/gate integration to BPL-06 Step 1 harness contract definition after publishing handoff checklist (`B5H-01`..`B5H-05`).
+- 2026-02-09: Pack A backend focus advanced from BPL-06 Step 1 harness contract definition to BPL-06 Step 2 fixture/evidence-template publication after freezing `BPL06-CP01`..`BPL06-CP05`.

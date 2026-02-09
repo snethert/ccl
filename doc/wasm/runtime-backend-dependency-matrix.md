@@ -38,7 +38,7 @@ It is the authoritative source for deciding which tasks can run in parallel and 
 ### Pack A (Immediate)
 
 - Runtime: RPL-04 Step 1 startup scope for shared bridge-path migration, consuming frozen RPL-03 protocol/conformance outputs.
-- Backend: BPL-05 Step 3 consumer handoff/gate integration over closed slice/seam artifacts (`B5S-*`, `B5M-*`).
+- Backend: BPL-06 Step 2 parity fixture + evidence-template publication over frozen checkpoint/seam artifacts (`BPL06-CP*`, `B5M-*`, `B5H-*`).
 - Constraint: keep `SRG-*`, `WTOP-*`, `WSEQ-*`, `WLCS-*`, `WLCT-*`, `WLCR-*`, `B3*`, and `FDC-*` identifiers frozen; no fallback semantics may be reintroduced.
 
 ### Pack B (After contract freeze)
@@ -67,9 +67,9 @@ It is the authoritative source for deciding which tasks can run in parallel and 
 
 ## Immediate Next Step
 
-- Action: continue `Pack A` by executing RPL-04 Step 1 bridge-path scope definition alongside BPL-05 Step 3 consumer handoff/gate integration.
-- Why now: `X-03` is now closed with committed rerun evidence, so the next unblocked cross-track actions are bridge migration scoping and backend consumer handoff contracts.
-- Success evidence: RPL-04 Step 1 publishes frozen migration-scope IDs and BPL-05 Step 3 publishes consumer acceptance checklist over `B5S-*`/`B5M-*` artifacts.
+- Action: continue `Pack A` by executing RPL-04 Step 1 bridge-path scope definition alongside BPL-06 Step 2 parity fixture/evidence-template publication.
+- Why now: BPL-06 Step 1 checkpoint contract is now frozen, so deterministic dual-path execution requires concrete fixture and artifact-field baselines.
+- Success evidence: RPL-04 Step 1 publishes frozen migration-scope IDs and BPL-06 Step 2 publishes fixture IDs/artifact templates with full `BPL06-CP01`..`BPL06-CP05` coverage.
 
 ## Change Log
 
@@ -99,3 +99,5 @@ It is the authoritative source for deciding which tasks can run in parallel and 
 - 2026-02-09: Advanced Pack A backend focus from BPL-05 Step 1 staging to BPL-05 Step 2 seam contracts after publishing staged decoupling slices (`B5S-01`..`B5S-05`).
 - 2026-02-09: Advanced Pack A backend focus from BPL-05 Step 2 seam contracts to BPL-05 Step 3 handoff/gate integration after publishing seam matrix (`B5M-01`..`B5M-05`).
 - 2026-02-09: Closed `X-03` after RPL-03 Step 3 rerun evidence (`doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/`) reported `status=pass`, `x03_clear_ready=true`, and explicit closure of `IPCGAP-01`..`IPCGAP-04`.
+- 2026-02-09: Advanced Pack A backend focus from BPL-05 Step 3 handoff/gate integration to BPL-06 Step 1 harness contract definition after publishing handoff checklist (`B5H-01`..`B5H-05`).
+- 2026-02-09: Advanced Pack A backend focus from BPL-06 Step 1 harness contract definition to BPL-06 Step 2 fixture/evidence-template publication after freezing `BPL06-CP01`..`BPL06-CP05` checkpoint contracts.
