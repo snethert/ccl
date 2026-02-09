@@ -1,0 +1,43 @@
+{
+  "schema_version": "ipc_conformance_summary_v1",
+  "run_id": "rpl03-step3-rerun-2026-02-09T22:53:53.698Z",
+  "protocol_id": "ipc_shared_ring_v1",
+  "protocol_major": 1,
+  "protocol_minor": 0,
+  "conformance_ids": [
+    "IPCV-01",
+    "IPCV-02",
+    "IPCV-03",
+    "IPCV-04",
+    "IPCV-05",
+    "IPCV-06",
+    "IPCV-07",
+    "IPCV-08",
+    "IPCV-09",
+    "IPCV-10",
+    "IPCV-11",
+    "IPCV-12"
+  ],
+  "passed_ids": [
+    "IPCV-01",
+    "IPCV-02",
+    "IPCV-03",
+    "IPCV-04",
+    "IPCV-05",
+    "IPCV-06",
+    "IPCV-07",
+    "IPCV-08",
+    "IPCV-09",
+    "IPCV-10",
+    "IPCV-11",
+    "IPCV-12"
+  ],
+  "failed_ids": [],
+  "first_failure_id": null,
+  "first_failure_code": null,
+  "allow_hotpath_fallback": false,
+  "lane_results_digest": "9b01aa84b30856276d5b5687792a1f15961759a60781c0abad5442811167553d",
+  "status": "pass",
+  "x03_clear_ready": true,
+  "timestamp_utc": "2026-02-09T22:53:53.700Z"
+}

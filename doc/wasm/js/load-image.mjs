@@ -36,6 +36,7 @@ import {
   validateBootstrapContract,
   formatBootstrapState,
 } from "./bootstrap-contract.mjs";
+import { emitSyntheticIpcArtifacts } from "./ipc-conformance.mjs";
 
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
@@ -194,6 +195,21 @@ function sha256Hex(bytes) {
 }
 
 const options = parseArgs(process.argv.slice(2));
+const ipcConformanceId = process.env.CCL_IPC_CONFORMANCE_ID ?? null;
+const ipcLaneId = process.env.CCL_IPC_LANE_ID ?? null;
+const injectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_IPC_TEST_INJECT_FAILURE ?? ""))
+  ? String(process.env.CCL_IPC_TEST_INJECT_FAILURE)
+  : null;
+if (injectedFailureCode) {
+  emitSyntheticIpcArtifacts({
+    defaultLaneClass: "headless_runtime",
+    laneId: ipcLaneId,
+    conformanceId: ipcConformanceId,
+    source: "doc/wasm/js/load-image.mjs",
+    failureCode: injectedFailureCode,
+  });
+  process.exit(1);
+}
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "../../..");
 
@@ -784,6 +800,13 @@ if (options.expectRc != null) {
     process.exit(5);
   }
 }
+
+emitSyntheticIpcArtifacts({
+  defaultLaneClass: "headless_runtime",
+  laneId: ipcLaneId,
+  conformanceId: ipcConformanceId,
+  source: "doc/wasm/js/load-image.mjs",
+});
 
 if (modulesHandle) {
   await modulesHandle.close();

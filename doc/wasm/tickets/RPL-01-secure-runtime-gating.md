@@ -49,15 +49,18 @@ Out of scope:
 - Step 6 handoff checklist and closure-readiness assessment v1 is now published (`HND-01`..`HND-06`, `CRA-01`..`CRA-05`).
 - Cross-track dependency row `X-01` is now cleared via explicit BPL-02 references to `SRG-01`..`SRG-12`.
 - Cross-track dependency row `X-02` is now cleared via RPL-02 Step 3 `X03M-01`..`X03M-05` mappings and BPL-03 `B3*` consumption coverage over frozen worker/lifecycle IDs.
+- RPL-03 Step 1 protocol contract is now published (`IPCP-01`..`IPCP-49`) and actively absorbs IPC contradiction classes (`C-01`, `C-03`, `C-04`, `C-08`).
+- RPL-03 Step 2 conformance contract is now published (`IPCV-01`..`IPCV-12`, `IPCL-01`..`IPCL-05`) and defines deterministic hard-gate evidence requirements for `X-03`.
+- RPL-03 Step 3 rerun evidence is now committed (`doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/`) with terminal `status=pass` and `x03_clear_ready=true`; dependency row `X-03` is now `done`.
 - Existing docs still include portability-first and single-runner-first assumptions in key places.
 - Replacement direction requires secure-only startup posture for shared-memory transport and OPFS/SyncAccessHandle storage.
 - CL thread semantics remain deferred, but runtime worker/thread capability is required at startup.
 
 ## Immediate Next Step
 
-- Action: continue contradiction remediation flow through RPL-03 Step 1 shared-memory IPC contract drafting.
-- Why now: worker/lifecycle mapping consumption is now complete and `X-02` is cleared, so contradiction follow-through shifts to formalizing IPC assumptions.
-- Success evidence: RPL-03 Step 1 output publishes protocol IDs and dependency-row `X-03` notes capture concrete alignment evidence for shared-memory runtime constraints.
+- Action: continue contradiction remediation flow by landing source-doc text updates for `C-01`, `C-03`, `C-04`, and `C-08` against the now-closed RPL-03 baseline.
+- Why now: RPL-03 conformance evidence is now passing and `X-03` is closed, so remaining contradiction follow-through is doc-language reconciliation.
+- Success evidence: contradiction rows for `C-01`/`C-03`/`C-04`/`C-08` reference concrete source-doc updates aligned with frozen `IPCP-*`/`IPCV-*` contract language.
 
 ## Step 1 Output - Contradiction Inventory (v1)
 
@@ -65,14 +68,14 @@ This table is the active contradiction tracker for RPL-01. Every row must keep `
 
 | ID | Source | Contradiction | Required resolution action | Status | Notes |
 | --- | --- | --- | --- | --- | --- |
-| C-01 | `doc/wasm/decisions.md:7` | ADR-0001 makes copy-based `kernel_request` responses the required baseline. | Supersede ADR language so shared-memory IPC is normative for hot paths; keep copy/message path only for bootstrap/control/diagnostics. | open | Primary handoff to RPL-03. |
+| C-01 | `doc/wasm/decisions.md:7` | ADR-0001 makes copy-based `kernel_request` responses the required baseline. | Supersede ADR language so shared-memory IPC is normative for hot paths; keep copy/message path only for bootstrap/control/diagnostics. | in_progress | Step 1/2 protocol and conformance clauses now published in RPL-03; upstream ADR text alignment and committed evidence remain. |
 | C-02 | `doc/wasm/decisions.md:52` | ADR-0006 defines single-runner portable baseline and deferred shared-heap threading. | Replace with secure-only MVP runtime stance: required worker/thread posture for startup, while CL thread semantics may still be deferred. | open | Handshake with RPL-02 and RPL-03. |
-| C-03 | `doc/wasm/kernel-request-abi.md:3` | ABI spec is explicitly copy-based MVP with zero-copy as optional future extension. | Define ABI v2 transport contract where shared-memory channels are primary data-plane/hot-path mechanism. | open | Must remain explicit about control-plane use cases. |
-| C-04 | `doc/wasm/js-microkernel-spec.md:14` | Microkernel goals and requirements retain single-thread compatibility/degrade-to-baseline behavior. | Rewrite execution modes to secure-only MVP with required capabilities and explicit unsupported-startup failure contract. | open | Include no-silent-fallback rule in failure section. |
+| C-03 | `doc/wasm/kernel-request-abi.md:3` | ABI spec is explicitly copy-based MVP with zero-copy as optional future extension. | Define ABI v2 transport contract where shared-memory channels are primary data-plane/hot-path mechanism. | in_progress | Step 1/2 protocol and conformance clauses now published in RPL-03; ABI-v2 text replacement and committed evidence remain. |
+| C-04 | `doc/wasm/js-microkernel-spec.md:14` | Microkernel goals and requirements retain single-thread compatibility/degrade-to-baseline behavior. | Rewrite execution modes to secure-only MVP with required capabilities and explicit unsupported-startup failure contract. | in_progress | No-fallback transport and fail mapping are now explicit in RPL-03 Step 1/2; upstream microkernel text alignment remains. |
 | C-05 | `doc/wasm/project-overview.md:69` | Overview frames a portability ladder with message-passing/sandbox baseline and optional shared memory. | Reframe as secure-environment performance-first MVP; move portability/embeddable discussion to future non-MVP notes only. | open | Keep historical context only if clearly marked legacy. |
 | C-06 | `doc/wasm/threads.md:7` | Threading doc marks shared-heap mode optional and single-runner as baseline target. | Rewrite to required startup threading/worker topology assumptions for MVP runtime architecture. | open | CL-level thread semantics can still remain out-of-scope for MVP. |
 | C-07 | `doc/wasm/yield-resume.md:27` | Yield/resume guidance preserves portable baseline without SAB/Atomics and makes Stage 3 optional. | Re-scope document so secure capability prerequisites are assumed; treat non-secure mode as unsupported in MVP. | open | Keep explicit note if staged internals remain useful. |
-| C-08 | `doc/wasm/interrupts.md:9` | Interrupt model centers portable single-runner baseline and optional shared-memory upgrade. | Align interrupt requirements with secure-only startup and required shared-memory runtime posture. | open | Ensure semantics remain deterministic at safepoints. |
+| C-08 | `doc/wasm/interrupts.md:9` | Interrupt model centers portable single-runner baseline and optional shared-memory upgrade. | Align interrupt requirements with secure-only startup and required shared-memory runtime posture. | in_progress | Deterministic signaling and startup/lifecycle IPC hooks are now defined in RPL-03 Step 1/2; interrupt doc alignment and committed evidence remain. |
 | C-09 | `doc/wasm/ui-bridge-protocol.md:6` | UI bridge protocol assumes transport over copy-based `kernel_request` ABI. | Define shared-memory transport path for UI ingress/egress hot paths; retain message/copy channel only for non-hot/control paths. | open | Primary handoff to RPL-04. |
 | C-10 | `doc/wasm/persistence-service-spec.md:7` | Persistence spec is memory-first snapshot + optional host backends, not Storage V2 object/ref model. | Mark this spec legacy for replacement track and author Storage V2 normative local-core contract. | open | Primary handoff to RPL-05. |
 | C-11 | `doc/wasm/mvp-unattended-execution-plan.md:54` | MVP unattended plan sets `memory-snapshot` as default persistence lane. | Add explicit replacement-track override note and migration path to Storage V2/secure-runtime gating docs. | open | Keep current lane documented as legacy operational baseline until cutover. |
@@ -380,3 +383,6 @@ This section freezes the Step 2-5 contract bundle for downstream consumption and
 - 2026-02-09: Post-Step-6 consumption checkpoint completed by clearing `X-01` through explicit BPL-02 `SRG-01`..`SRG-12` linkage evidence.
 - 2026-02-09: Advanced contradiction-remediation handoff to RPL-02 Step 3 after Step 2 lifecycle/no-fallback contract publication (`WLCS-*`, `WLCT-*`, `WLCR-*`).
 - 2026-02-09: Synced contradiction-remediation handoff past RPL-02 Step 3 by recording `X-02` closure evidence and advancing immediate follow-through to RPL-03 Step 1.
+- 2026-02-09: Synced contradiction-remediation tracker with RPL-03 Step 1+Step 2 publication (`IPCP-*`, `IPCV-*`, `IPCL-*`), advanced `C-01`/`C-03`/`C-04`/`C-08` to `in_progress`, and shifted immediate follow-through to RPL-03 Step 3 evidence execution.
+- 2026-02-09: Synced contradiction-remediation tracker with RPL-03 Step 3 run-v1 evidence (`status=fail`), kept `C-01`/`C-03`/`C-04`/`C-08` as `in_progress`, and shifted immediate follow-through to Step 3 gap-remediation rerun.
+- 2026-02-09: Synced contradiction-remediation tracker with RPL-03 Step 3 rerun evidence (`status=pass`, `x03_clear_ready=true`), kept `C-01`/`C-03`/`C-04`/`C-08` as `in_progress`, and shifted immediate follow-through to upstream doc-text reconciliation.

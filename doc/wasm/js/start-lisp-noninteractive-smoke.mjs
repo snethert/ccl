@@ -8,6 +8,7 @@
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { emitSyntheticIpcArtifacts, extractIpcArtifactLines } from "./ipc-conformance.mjs";
 
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
@@ -68,6 +69,13 @@ function runNodeCase(name, args, { timeoutMs, expectCode, expectStdoutIncludes =
         reject(new Error(`${name}: expected stderr to include "${expectStderrIncludes}"\nstderr:\n${stderr}`));
         return;
       }
+      const artifactLines = [
+        ...extractIpcArtifactLines(stdout),
+        ...extractIpcArtifactLines(stderr),
+      ];
+      for (const line of artifactLines) {
+        console.log(line);
+      }
       resolve({ code, stdout, stderr });
     });
   });
@@ -75,6 +83,22 @@ function runNodeCase(name, args, { timeoutMs, expectCode, expectStdoutIncludes =
 
 const strictRoot = process.argv.includes("--strict-start-lisp-noninteractive");
 const timeoutMs = 15000;
+const ipcConformanceId = process.env.CCL_IPC_CONFORMANCE_ID ?? null;
+const ipcLaneId = process.env.CCL_IPC_LANE_ID ?? null;
+const injectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_IPC_TEST_INJECT_FAILURE ?? ""))
+  ? String(process.env.CCL_IPC_TEST_INJECT_FAILURE)
+  : null;
+
+if (injectedFailureCode) {
+  emitSyntheticIpcArtifacts({
+    defaultLaneClass: "headless_runtime",
+    laneId: ipcLaneId,
+    conformanceId: ipcConformanceId,
+    source: "doc/wasm/js/start-lisp-noninteractive-smoke.mjs",
+    failureCode: injectedFailureCode,
+  });
+  process.exit(1);
+}
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "../../..");
@@ -154,3 +178,10 @@ if (strictRoot) {
 }
 
 console.log("PASS: start-lisp non-interactive smoke test");
+
+emitSyntheticIpcArtifacts({
+  defaultLaneClass: "headless_runtime",
+  laneId: ipcLaneId,
+  conformanceId: ipcConformanceId,
+  source: "doc/wasm/js/start-lisp-noninteractive-smoke.mjs",
+});

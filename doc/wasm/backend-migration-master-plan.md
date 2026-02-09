@@ -92,15 +92,15 @@ Hard gates are tracked in `doc/wasm/runtime-backend-dependency-matrix.md`.
 
 | Ticket | Status | Priority | Subplan | Last Updated | Notes |
 | --- | --- | --- | --- | --- | --- |
-| BPL-00 | in_progress | P0 | `doc/wasm/backend-tickets/BPL-00-governance-and-baseline-freeze.md` | 2026-02-09 | Governance loop remains active after BPL-03 Step 2 closure; `X-02` remains cleared and synchronization stayed in-cycle across matrix/master/subplan docs. |
+| BPL-00 | in_progress | P0 | `doc/wasm/backend-tickets/BPL-00-governance-and-baseline-freeze.md` | 2026-02-09 | Governance loop remains active after BPL-03 Step 2 closure; `X-02` stays cleared and `X-03` is now `done` after RPL-03 Step 3 rerun evidence closure with synchronized matrix/master/board updates. |
 | BPL-01 | done | P0 | `doc/wasm/backend-tickets/BPL-01-arm-assumption-inventory.md` | 2026-02-09 | Step 1/2/3 closure complete (16 assumptions; remove=6, compat_layer=7, defer=3) with no new non-speculative matrix dependency rows required. |
 | BPL-02 | done | P0 | `doc/wasm/backend-tickets/BPL-02-wasm-native-backend-contract.md` | 2026-02-09 | Step 2 closure complete: `CON-01`..`CON-08` promoted to v1 baseline with explicit `BCL-01`..`BCL-12` coverage evidence. |
 | BPL-03 | done | P0 | `doc/wasm/backend-tickets/BPL-03-frame-and-debug-metadata-model.md` | 2026-02-09 | Step 2 closure complete: `FDC-01`..`FDC-10` validated with full `B3*` class coverage and hardened clause language. |
-| BPL-04 | planned | P0 | `doc/wasm/backend-tickets/BPL-04-numeric-and-math-pipeline-modernization.md` | 2026-02-09 | Remove ARM-shaped math overhead and optimize numeric paths. |
-| BPL-05 | planned | P0 | `doc/wasm/backend-tickets/BPL-05-ir-lowering-arm-decoupling.md` | 2026-02-09 | Decouple lowering/codegen from simulated ARM structure. |
+| BPL-04 | done | P0 | `doc/wasm/backend-tickets/BPL-04-numeric-and-math-pipeline-modernization.md` | 2026-02-09 | Step 1/2/3 closed: classification, sequencing, and benchmark/profile gates (`BPL04-G01`..`BPL04-G06`) are now published. |
+| BPL-05 | in_progress | P0 | `doc/wasm/backend-tickets/BPL-05-ir-lowering-arm-decoupling.md` | 2026-02-09 | Step 1/2 closed with staged slices (`B5S-*`) and seam contracts (`B5M-*`); Step 3 handoff/gate integration in progress. |
 | BPL-06 | planned | P0 | `doc/wasm/backend-tickets/BPL-06-dual-path-build-and-diff-harness.md` | 2026-02-09 | Dual-path backend mode and differential correctness harness. |
 | BPL-07 | planned | P1 | `doc/wasm/backend-tickets/BPL-07-size-and-performance-gates.md` | 2026-02-09 | Backend-specific perf and artifact-size validation gates. |
-| BPL-08 | planned | P0 | `doc/wasm/backend-tickets/BPL-08-runtime-alignment-integration.md` | 2026-02-09 | Align backend call/transport boundaries with runtime replacement architecture. |
+| BPL-08 | planned | P0 | `doc/wasm/backend-tickets/BPL-08-runtime-alignment-integration.md` | 2026-02-09 | Align backend call/transport boundaries with runtime replacement architecture; runtime-side hard gate `X-03` is now cleared for downstream integration planning. |
 | BPL-09 | planned | P0 | `doc/wasm/backend-tickets/BPL-09-cutover-and-arm-retirement.md` | 2026-02-09 | Final cutover and ARM-compat path retirement. |
 
 ## Ticket Details
@@ -119,12 +119,13 @@ Notes:
 - Program-level coordination is anchored in `doc/wasm/wasm-program-board.md`.
 - Cross-track dependencies are externalized to `doc/wasm/runtime-backend-dependency-matrix.md`.
 - Governance evidence now includes BPL-03 Step 2 closure evidence (`FDC-*` + `B3*` coverage validation) with synchronized updates across matrix/program-board/master/subplan docs.
+- Governance sync now includes RPL-03 Step 3 rerun evidence (`doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/`) with `status=pass` and closed `X-03`; backend remains focused on BPL-05 Step 3 before BPL-08 integration kickoff.
 
 Next Step Analysis:
 
-- Immediate Next Step: start BPL-04 Step 1 by classifying math op families and mapping each to WASM-native lowering strategy.
-- Why this step now: BPL-03 closure criteria are satisfied, so backend critical-path planning shifts to numeric/mathematical overhead retirement.
-- Evidence required to close next step: BPL-04 publishes an operation-family strategy matrix with explicit lowering posture and first benchmark hooks.
+- Immediate Next Step: execute BPL-05 Step 3 by publishing consumer handoff checklist for BPL-06/BPL-07/BPL-08 over closed slice/seam artifacts.
+- Why this step now: BPL-05 Step 2 seam governance is complete, so remaining blocker is consumer-facing integration contracts.
+- Evidence required to close next step: BPL-05 Step 3 checklist maps `B5S-*`/`B5M-*` artifacts to consumer acceptance criteria and required evidence links.
 
 ---
 
@@ -204,41 +205,50 @@ Next Step Analysis:
 
 ### BPL-04 - Numeric and Math Pipeline Modernization
 
-- Status: `planned`
+- Status: `done`
 - Priority: `P0`
 - Last Updated: `2026-02-09`
-- Subplan: `doc/wasm/backend-tickets/BPL-04-numeric-and-math-pipeline-modernization.md` (pending)
+- Subplan: `doc/wasm/backend-tickets/BPL-04-numeric-and-math-pipeline-modernization.md`
 - Dependencies: BPL-02
 
 Notes:
 
 - Numeric paths are primary overhead targets for ARM-facade removal.
+- Step 1 is now closed with source-anchored family matrix `M4F-01`..`M4F-08` spanning direct-WASM, subprim/provider, and deferred tailcall-adjacent numeric paths.
+- Step 1 output includes posture tags (`native_now`, `compat_layer`, `defer`) and benchmark hooks (`fixnum-add` smoke and aggregate smoke lane).
+- Family rows are now anchored to contract/debug constraints (`CON-03`, `CON-04`, `CON-05`, `CON-06`, `FDC-10`) and assumption IDs (`ARM-ASSUMP-011`, `ARM-ASSUMP-012`).
+- Step 2 is now closed with ordered BPL-05 sequence IDs covering all non-`native_now` families and explicit owner/cutover/evidence definitions.
+- Step 3 is now closed with benchmark/profile gate IDs (`BPL04-G01`..`BPL04-G06`) defining commands, thresholds, and fail conditions per sequenced family.
 
 Next Step Analysis:
 
-- Immediate Next Step: classify math op families and map each to WASM-native lowering strategy.
-- Why this step now: high-performance impact and early architectural validation.
-- Evidence required to close next step: per-family lowering matrix and first benchmark gates.
+- Immediate Next Step: maintain BPL-04 as a stable baseline and apply additive-only gate updates when new family slices are introduced.
+- Why this step now: BPL-04 exit criteria are satisfied, so ongoing work is baseline maintenance rather than discovery/planning.
+- Evidence required to close next step: any new numeric family or sequence row adds incremental `M4F-*`, `BPL04-S2-*`, and `BPL04-G*` IDs without rewriting closed rows.
 
 ---
 
 ### BPL-05 - IR/Lowering ARM Decoupling
 
-- Status: `planned`
+- Status: `in_progress`
 - Priority: `P0`
 - Last Updated: `2026-02-09`
-- Subplan: `doc/wasm/backend-tickets/BPL-05-ir-lowering-arm-decoupling.md` (pending)
+- Subplan: `doc/wasm/backend-tickets/BPL-05-ir-lowering-arm-decoupling.md`
 - Dependencies: BPL-02
 
 Notes:
 
 - Must remove ARM-shaped abstractions from backend lowering and codegen glue.
+- Step 1 is now closed with staged decoupling slice map `B5S-01`..`B5S-05`.
+- Slice map explicitly consumes BPL-04 sequence/gate outputs (`BPL04-S2-*`, `BPL04-G*`) and defines per-slice rollback seams.
+- Assumption coverage now maps through explicit slice lanes (`ARM-ASSUMP-002`, `ARM-ASSUMP-007`, `ARM-ASSUMP-011`, `ARM-ASSUMP-012`, `ARM-ASSUMP-014`, `ARM-ASSUMP-015`).
+- Step 2 is now closed with seam contract matrix `B5M-01`..`B5M-05`, including toggles, promotion criteria, rollback command paths, and `BPL06-CP*` checkpoints.
 
 Next Step Analysis:
 
-- Immediate Next Step: define staged decoupling plan and migration seams for dual-path operation.
-- Why this step now: enables BPL-06 differential testing without destabilizing current functionality.
-- Evidence required to close next step: staged migration map with rollback points.
+- Immediate Next Step: define consumer handoff checklist that binds slice/seam artifacts to BPL-06/BPL-07/BPL-08 acceptance gates.
+- Why this step now: slice and seam contracts are complete, so downstream consumers need explicit intake/acceptance contracts.
+- Evidence required to close next step: Step 3 output in BPL-05 lists consumer-specific required artifacts, owners, and acceptance checks.
 
 ---
 
@@ -293,6 +303,7 @@ Next Step Analysis:
 Notes:
 
 - Backend and runtime shared-memory/call boundaries must align before cutover.
+- Dependency row `X-03` is now `done`: protocol/conformance contracts and Step 3 rerun evidence are committed, so BPL-08 is unblocked from the runtime IPC side.
 
 Next Step Analysis:
 
@@ -359,3 +370,12 @@ Avoid batching multiple unrelated next actions into one update.
 - 2026-02-09: Advanced BPL-03 Step 2 by publishing `FDC-01`..`FDC-10` draft invariants and shifted governance focus to Step 2 traceability closure.
 - 2026-02-09: Closed BPL-03 Step 2 by validating full `B3*` class coverage across `FDC-01`..`FDC-10`, hardened ambiguous clause language, and advanced backend next action to BPL-04 Step 1.
 - 2026-02-09: Re-ran BPL-03 Step 2 closure validation; confirmed unchanged full `B3*` coverage and clarified lane-class/cutover trigger wording in `FDC-01`, `FDC-09`, and `FDC-10`.
+- 2026-02-09: Synced backend governance notes with `X-03` transition to `in_progress` after RPL-03 Step 1 protocol publication (`IPCP-01`..`IPCP-49`); kept BPL-08 explicitly hard-gated pending Step 2 conformance evidence.
+- 2026-02-09: Synced backend governance notes with RPL-03 Step 2 conformance publication (`IPCV-01`..`IPCV-12`, `IPCL-01`..`IPCL-05`) and kept BPL-08 explicitly hard-gated pending Step 3 committed evidence.
+- 2026-02-09: Synced backend governance notes with RPL-03 Step 3 run-v1 evidence (status `fail`) and kept BPL-08 explicitly hard-gated pending rerun closure evidence.
+- 2026-02-09: Started BPL-04 and closed Step 1 with source-anchored operation-family matrix (`M4F-01`..`M4F-08`); advanced backend immediate next action to BPL-04 Step 2 sequencing.
+- 2026-02-09: Closed BPL-04 Step 2 by sequencing non-`native_now` families into ordered BPL-05 slices with explicit cutover triggers/evidence gates; advanced backend immediate next action to BPL-04 Step 3 benchmark alignment.
+- 2026-02-09: Closed BPL-04 Step 3 by publishing benchmark/profile gate matrix (`BPL04-G01`..`BPL04-G06`) and advanced backend immediate next action to BPL-05 Step 1 staged decoupling.
+- 2026-02-09: Started BPL-05 and closed Step 1 with staged decoupling slice map (`B5S-01`..`B5S-05`); advanced backend immediate next action to BPL-05 Step 2 seam contracts.
+- 2026-02-09: Closed BPL-05 Step 2 by publishing seam contract matrix (`B5M-01`..`B5M-05`) and advanced backend immediate next action to BPL-05 Step 3 handoff/gate integration.
+- 2026-02-09: Synced backend governance notes with RPL-03 Step 3 rerun evidence (`status=pass`, `x03_clear_ready=true`), closed dependency row `X-03`, and marked BPL-08 runtime-side hard gate as cleared.

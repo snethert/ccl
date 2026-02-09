@@ -26,7 +26,7 @@ It is the authoritative source for deciding which tasks can run in parallel and 
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | X-01 | RPL-01 secure runtime gating | BPL-02 backend contract | soft_gate | BPL-02 drafting may start before RPL-01 completion. | RPL-01 capability check IDs frozen and referenced by BPL-02. | done | BPL-02 Step 1 linkage matrix references `SRG-01`..`SRG-12` explicitly (`BCL-01`..`BCL-12`), and Step 2 closure validated `CON-01`..`CON-08` coverage across all `BCL-*` rows. |
 | X-02 | RPL-02 worker topology | BPL-03 frame/debug model | soft_gate | BPL-03 can draft debug model before worker model finalization. | RPL-02 worker ownership and lifecycle boundary rules mapped into BPL-03. | done | RPL-02 Step 3 published explicit cross-track mapping classes (`X03M-01`..`X03M-05`) that bind `WTOP-01`..`WTOP-05`, `WSEQ-01`..`WSEQ-06`, `WLCS-01`..`WLCS-06`, `WLCT-01`..`WLCT-11`, and `WLCR-01`..`WLCR-05` to BPL-03 consumption IDs (`B3R-*`, `B3S-*`, `B3L-*`, `B3T-*`, `B3P-*`). BPL-03 Step 1 mapping tables now include deterministic rules plus test-lane assertions per row, satisfying `X-02` clear evidence; BPL-01 Step 3 closure evidence for worker-sensitive assumptions (`ARM-ASSUMP-005`, `ARM-ASSUMP-006`, `ARM-ASSUMP-016`) remains unchanged. |
-| X-03 | RPL-03 shared-memory IPC core | BPL-08 runtime alignment integration | hard_gate | BPL-08 integration cannot start without RPL-03 protocol v1. | RPL-03 wire protocol + conformance tests committed. | open | Required for backend/runtime call-boundary compatibility. |
+| X-03 | RPL-03 shared-memory IPC core | BPL-08 runtime alignment integration | hard_gate | BPL-08 integration cannot start without RPL-03 protocol v1. | RPL-03 wire protocol + conformance tests committed. | done | RPL-03 Step 3 rerun evidence is committed at `doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/` with terminal `ipc_conformance_summary_v1.status=pass` and `x03_clear_ready=true`; blocker gaps `IPCGAP-01`..`IPCGAP-04` are closed. |
 | X-04 | RPL-04 runtime/UI shared path | BPL-06 dual-path diff harness | parallel | Diff harness work can proceed independently of UI transport migration. | Shared fixture format compatibility check at integration checkpoint. | open | No direct design block. |
 | X-05 | RPL-05 storage V2 local core | BPL-04 numeric pipeline | parallel | Numeric backend work should continue while storage changes land. | None before each track’s own gates. | open | Distinct subsystems. |
 | X-06 | RPL-07 module/environment sharing | BPL-07 size/perf gates | soft_gate | BPL-07 benchmarks can start with current packaging. | Final size budget signoff after RPL-07 packaging model freeze. | open | Avoid invalidating size gates due to packaging churn. |
@@ -37,15 +37,15 @@ It is the authoritative source for deciding which tasks can run in parallel and 
 
 ### Pack A (Immediate)
 
-- Runtime: RPL-03 Step 1 shared-memory IPC core contract drafting over frozen RPL-02 topology/lifecycle IDs.
-- Backend: BPL-04 Step 1 operation-family classification over closed BPL-02/BPL-03 baselines (`CON-*`, `FDC-*`, `B3*`).
+- Runtime: RPL-04 Step 1 startup scope for shared bridge-path migration, consuming frozen RPL-03 protocol/conformance outputs.
+- Backend: BPL-05 Step 3 consumer handoff/gate integration over closed slice/seam artifacts (`B5S-*`, `B5M-*`).
 - Constraint: keep `SRG-*`, `WTOP-*`, `WSEQ-*`, `WLCS-*`, `WLCT-*`, `WLCR-*`, `B3*`, and `FDC-*` identifiers frozen; no fallback semantics may be reintroduced.
 
 ### Pack B (After contract freeze)
 
-- Runtime: RPL-03.
+- Runtime: RPL-04.
 - Backend: BPL-03/BPL-04/BPL-05.
-- Constraint: keep `X-02` evidence stable while BPL-03 contract drafting advances; clear `X-03` before BPL-08 start.
+- Constraint: keep `X-02` and closed `X-03` evidence stable while BPL-04/BPL-05 implementation planning advances.
 
 ### Pack C (Validation-heavy)
 
@@ -67,9 +67,9 @@ It is the authoritative source for deciding which tasks can run in parallel and 
 
 ## Immediate Next Step
 
-- Action: continue `Pack A` by executing RPL-03 Step 1 protocol-contract drafting alongside BPL-04 Step 1 operation-family classification.
-- Why now: BPL-03 Step 2 is now closed, so backend critical-path work shifts to numeric/lowering strategy definition while runtime advances `X-03` protocol readiness.
-- Success evidence: RPL-03 Step 1 publishes protocol v1 IDs/tests and BPL-04 Step 1 publishes math-operation family matrix with WASM-native lowering posture.
+- Action: continue `Pack A` by executing RPL-04 Step 1 bridge-path scope definition alongside BPL-05 Step 3 consumer handoff/gate integration.
+- Why now: `X-03` is now closed with committed rerun evidence, so the next unblocked cross-track actions are bridge migration scoping and backend consumer handoff contracts.
+- Success evidence: RPL-04 Step 1 publishes frozen migration-scope IDs and BPL-05 Step 3 publishes consumer acceptance checklist over `B5S-*`/`B5M-*` artifacts.
 
 ## Change Log
 
@@ -90,3 +90,12 @@ It is the authoritative source for deciding which tasks can run in parallel and 
 - 2026-02-09: Cleared `X-02` as `done` after RPL-02 Step 3 published `X03M-01`..`X03M-05` and BPL-03 Step 1 mapped all required runtime ID classes through explicit `B3*` consumption tables.
 - 2026-02-09: Updated Pack A backend focus from BPL-03 Step 2 drafting to Step 2 closure validation after publishing `FDC-01`..`FDC-10` draft invariants.
 - 2026-02-09: Updated Pack A backend focus from BPL-03 Step 2 closure validation to BPL-04 Step 1 classification after BPL-03 Step 2 was marked done.
+- 2026-02-09: Advanced `X-03` to `in_progress` after RPL-03 Step 1 published shared-memory IPC protocol v1 (`IPCP-01`..`IPCP-49`); Pack A runtime focus now shifts to Step 2 conformance evidence (`IPCV-*`) required to clear the hard gate.
+- 2026-02-09: Advanced Pack A backend focus from BPL-04 Step 1 to BPL-04 Step 2 after Step 1 published `M4F-01`..`M4F-08` operation-family classification.
+- 2026-02-09: Published RPL-03 Step 2 conformance contract (`IPCV-01`..`IPCV-12`, `IPCL-01`..`IPCL-05`, `ipc_conformance_summary_v1`) and advanced Pack A runtime focus to Step 3 committed evidence execution for `X-03` closure.
+- 2026-02-09: Executed RPL-03 Step 3 run-v1 (`IPCV-01`..`IPCV-12`) and committed evidence bundle with `status=fail`; Pack A runtime focus now shifts to closing `IPCGAP-01`..`IPCGAP-04` and rerunning conformance for `X-03` closure.
+- 2026-02-09: Advanced Pack A backend focus from BPL-04 Step 2 sequencing to BPL-04 Step 3 benchmark/profile gate alignment after publishing ordered non-`native_now` family sequence gates (`BPL04-S2-*`).
+- 2026-02-09: Advanced Pack A backend focus from BPL-04 Step 3 gate alignment to BPL-05 Step 1 staged decoupling after BPL-04 published `BPL04-G01`..`BPL04-G06`.
+- 2026-02-09: Advanced Pack A backend focus from BPL-05 Step 1 staging to BPL-05 Step 2 seam contracts after publishing staged decoupling slices (`B5S-01`..`B5S-05`).
+- 2026-02-09: Advanced Pack A backend focus from BPL-05 Step 2 seam contracts to BPL-05 Step 3 handoff/gate integration after publishing seam matrix (`B5M-01`..`B5M-05`).
+- 2026-02-09: Closed `X-03` after RPL-03 Step 3 rerun evidence (`doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/`) reported `status=pass`, `x03_clear_ready=true`, and explicit closure of `IPCGAP-01`..`IPCGAP-04`.

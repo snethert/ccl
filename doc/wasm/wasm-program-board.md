@@ -45,9 +45,9 @@ This is intentionally not a megaplan. Execution remains in two track-specific ma
 
 ## Immediate Next Step
 
-- Action: continue `Pack A` by executing RPL-03 Step 1 shared-memory IPC contract drafting alongside BPL-04 Step 1 operation-family classification.
-- Why now: `X-02` remains cleared and BPL-03 Step 2 is now closed, so the shared critical path is `X-03` protocol readiness plus backend numeric-strategy definition.
-- Success evidence: RPL-03 Step 1 publishes protocol v1 IDs/tests and BPL-04 Step 1 publishes math-operation family matrix with WASM-native lowering posture.
+- Action: continue `Pack A` by executing RPL-04 Step 1 bridge-path scope definition alongside BPL-05 Step 3 consumer handoff/gate integration.
+- Why now: RPL-03 Step 3 rerun evidence closed `X-03`, so runtime work can move to shared bridge-path migration planning while backend finalizes consumer handoff gates.
+- Success evidence: RPL-04 Step 1 publishes frozen migration-scope IDs and BPL-05 Step 3 publishes consumer acceptance checklist over `B5S-*`/`B5M-*` artifacts.
 
 ## Change Log
 
@@ -66,3 +66,12 @@ This is intentionally not a megaplan. Execution remains in two track-specific ma
 - 2026-02-09: Pack A immediate action advanced past RPL-02 Step 3 after `X-02` closure evidence (`X03M-*` and `B3*` mappings) and now targets RPL-03 Step 1 + BPL-03 Step 2 execution.
 - 2026-02-09: Pack A backend focus advanced from BPL-03 Step 2 drafting to Step 2 closure validation after publishing `FDC-01`..`FDC-10` draft invariants.
 - 2026-02-09: Pack A backend focus advanced from BPL-03 Step 2 closure validation to BPL-04 Step 1 after BPL-03 Step 2 closure was recorded.
+- 2026-02-09: Pack A runtime focus advanced from RPL-03 Step 1 drafting to Step 2 conformance-definition after protocol v1 (`IPCP-01`..`IPCP-49`) publication and `X-03` transition to `in_progress`.
+- 2026-02-09: Pack A backend focus advanced from BPL-04 Step 1 to BPL-04 Step 2 after publishing `M4F-01`..`M4F-08` operation-family classification.
+- 2026-02-09: Pack A runtime focus advanced from RPL-03 Step 2 conformance-definition to Step 3 committed evidence execution after publishing `IPCV-01`..`IPCV-12` and `IPCL-01`..`IPCL-05`.
+- 2026-02-09: Pack A runtime focus advanced from Step 3 initial execution to Step 3 gap-remediation rerun after run-v1 evidence recorded `status=fail` and blocker gaps `IPCGAP-01`..`IPCGAP-04`.
+- 2026-02-09: Pack A backend focus advanced from BPL-04 Step 2 sequencing to BPL-04 Step 3 benchmark/profile gate alignment after publishing ordered non-`native_now` family sequence gates (`BPL04-S2-*`).
+- 2026-02-09: Pack A backend focus advanced from BPL-04 Step 3 gate alignment to BPL-05 Step 1 staged decoupling after BPL-04 published benchmark/profile gates (`BPL04-G01`..`BPL04-G06`).
+- 2026-02-09: Pack A backend focus advanced from BPL-05 Step 1 staging to BPL-05 Step 2 seam contracts after publishing staged decoupling slices (`B5S-01`..`B5S-05`).
+- 2026-02-09: Pack A backend focus advanced from BPL-05 Step 2 seam contracts to BPL-05 Step 3 handoff/gate integration after publishing seam matrix (`B5M-01`..`B5M-05`).
+- 2026-02-09: Pack A runtime focus advanced past RPL-03 Step 3 rerun after conformance evidence (`status=pass`, `x03_clear_ready=true`) closed hard-gate row `X-03`; immediate runtime action is now RPL-04 Step 1.

@@ -41,6 +41,7 @@ import {
   KERNEL_OP_FS_DELETE_EMPTY_DIR,
   KERNEL_OP_FS_DELETE_TREE,
 } from "./microkernel.mjs";
+import { emitSyntheticIpcArtifacts } from "./ipc-conformance.mjs";
 
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
@@ -73,6 +74,22 @@ const probeOnly = process.argv.includes("--probe-only");
 const probeEntryName = readOption("--probe-entry");
 const probeArg = Number.parseInt(readOption("--probe-arg") ?? "0", 10);
 const imageMode = String(readOption("--image") ?? process.env.CCL_WASM_UI_PERSIST_IMAGE ?? "auto").toLowerCase();
+const ipcConformanceId = process.env.CCL_IPC_CONFORMANCE_ID ?? null;
+const ipcLaneId = process.env.CCL_IPC_LANE_ID ?? null;
+const injectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_IPC_TEST_INJECT_FAILURE ?? ""))
+  ? String(process.env.CCL_IPC_TEST_INJECT_FAILURE)
+  : null;
+
+if (injectedFailureCode) {
+  emitSyntheticIpcArtifacts({
+    defaultLaneClass: "ui_runtime",
+    laneId: ipcLaneId,
+    conformanceId: ipcConformanceId,
+    source: "doc/wasm/js/wasm-ui-persist-smoke.mjs",
+    failureCode: injectedFailureCode,
+  });
+  process.exit(1);
+}
 
 const OP_NAMES = new Map([
   [KERNEL_OP_STREAM_OPEN, "STREAM_OPEN"],
@@ -491,3 +508,10 @@ if (persistBackend === "memory-snapshot") {
 }
 
 console.log("PASS: wasm ui persistence smoke test");
+
+emitSyntheticIpcArtifacts({
+  defaultLaneClass: "ui_runtime",
+  laneId: ipcLaneId,
+  conformanceId: ipcConformanceId,
+  source: "doc/wasm/js/wasm-ui-persist-smoke.mjs",
+});

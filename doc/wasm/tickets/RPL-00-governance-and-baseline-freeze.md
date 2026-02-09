@@ -43,13 +43,13 @@ Out of scope:
 - Master plan is present at `doc/wasm/runtime-replacement-master-plan.md`.
 - Ticket template and folder sync rules are present under `doc/wasm/tickets/`.
 - Baseline runtime status and artifact-size facts are captured in the master plan snapshot.
-- Eleventh downstream execution cycle is now complete through RPL-02 Step 3 cross-track mapping publication with synchronized ticket/master/matrix edits and `X-02` closure.
+- Fifteenth downstream execution cycle is now complete through RPL-03 Step 3 rerun evidence publication with synchronized ticket/master/matrix/board edits and closed `X-03` state.
 
 ## Immediate Next Step
 
-- Action: continue the governance-compliant downstream update loop by executing RPL-03 Step 1 and syncing runtime master + dependency matrix in one change.
-- Why now: `X-02` is cleared, so the next governance-critical dependency checkpoint is protocol progress on `X-03`.
-- Success evidence: RPL-03 Step 1 status/notes and `X-03` evidence requirements are reflected consistently across subplan/master/matrix docs.
+- Action: continue the governance-compliant downstream update loop by syncing RPL-04 Step 1 kickoff across runtime master + dependency matrix + program board in one change.
+- Why now: `X-03` is now closed and RPL-03 is complete, so governance focus shifts to the next unblocked runtime ticket.
+- Success evidence: RPL-04 Step 1 status/notes and cross-track pack updates are reflected consistently across subplan/master/matrix/board docs.
 
 ## Detailed Work Breakdown
 
@@ -84,18 +84,18 @@ Out of scope:
 - Status: done
 - Notes:
   - Ticket dependencies and priorities are defined in the master plan.
-  - Downstream execution has now been repeated through RPL-02 Step 3 with synchronized updates.
+  - Downstream execution has now been repeated through RPL-03 Step 2 with synchronized updates.
 - Next:
-  - No ordering issues were observed through RPL-02 Step 3; reassess only if RPL-03 Step 1 sync uncovers regressions.
+  - No ordering issues were observed through RPL-03 Step 3 rerun closure; reassess only if downstream tickets reopen closed hard-gate evidence.
 
 ### Step 5 - Governance Completion Check
 
-- Status: in_progress
+- Status: done
 - Notes:
-  - Eleven downstream ticket cycles have now been completed using the required sync process.
-  - RPL-02 Step 3 mapping evidence is now synchronized across runtime/backend planning docs and dependency row `X-02` is cleared.
+  - Fifteen downstream ticket cycles have now been completed using the required sync process.
+  - RPL-03 Step 3 rerun evidence is synchronized across runtime/backend planning docs and dependency row `X-03` is correctly tracked as `done`.
 - Next:
-  - Reassess closure after one additional downstream cycle (RPL-03 Step 1) verifies smooth post-`X-02` protocol-handoff execution.
+  - Maintain governance as additive-only sync discipline for subsequent runtime/backend ticket cycles.
 
 ## Test and Validation Plan
 
@@ -129,3 +129,7 @@ Out of scope:
 - 2026-02-09: Eighth and ninth downstream governance cycles completed through RPL-02 Step 1 publication and `X-02` advancement to `in_progress`.
 - 2026-02-09: Tenth downstream governance cycle completed through RPL-02 Step 2 lifecycle/no-fallback contract publication and synchronized master/matrix notes.
 - 2026-02-09: Eleventh downstream governance cycle completed through RPL-02 Step 3 mapping publication and synchronized `X-02` closure across subplan/master/matrix docs.
+- 2026-02-09: Twelfth downstream governance cycle completed through RPL-03 Step 1 protocol publication and synchronized `X-03` advancement to `in_progress`.
+- 2026-02-09: Thirteenth downstream governance cycle completed through RPL-03 Step 2 conformance-contract publication and synchronized runtime/master/matrix/board next-step state.
+- 2026-02-09: Fourteenth downstream governance cycle completed through RPL-03 Step 3 run-v1 evidence publication (failing assertions) and synchronized rerun-focused next-step state across runtime/master/matrix/board docs.
+- 2026-02-09: Fifteenth downstream governance cycle completed through RPL-03 Step 3 rerun evidence publication (`status=pass`, `x03_clear_ready=true`) and synchronized `X-03` closure across runtime/master/matrix/board docs.

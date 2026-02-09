@@ -2,8 +2,28 @@
  * Run all WASM JS smoke tests in a single Node invocation.
  */
 
+import { emitSyntheticIpcArtifacts } from "./ipc-conformance.mjs";
+
 const skipUi = process.argv.includes("--no-ui");
 const includeWasmUiPersist = process.argv.includes("--with-wasm-ui-persist");
+const ipcConformanceId = process.env.CCL_IPC_CONFORMANCE_ID ?? null;
+const ipcLaneId = process.env.CCL_IPC_LANE_ID ?? null;
+const injectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_IPC_TEST_INJECT_FAILURE ?? ""))
+  ? String(process.env.CCL_IPC_TEST_INJECT_FAILURE)
+  : null;
+const defaultLaneClass = skipUi ? "headless_runtime" : "ui_runtime";
+
+if (injectedFailureCode) {
+  emitSyntheticIpcArtifacts({
+    defaultLaneClass,
+    laneId: ipcLaneId,
+    conformanceId: ipcConformanceId,
+    source: "doc/wasm/js/all-smoke.mjs",
+    failureCode: injectedFailureCode,
+  });
+  process.exit(1);
+}
+
 const tests = [
   "./smoke-test.mjs",
   "./kernel-request-smoke.mjs",
@@ -63,5 +83,12 @@ const filteredTests = skipUi
 for (const test of filteredTests) {
   await import(new URL(test, import.meta.url));
 }
+
+emitSyntheticIpcArtifacts({
+  defaultLaneClass,
+  laneId: ipcLaneId,
+  conformanceId: ipcConformanceId,
+  source: "doc/wasm/js/all-smoke.mjs",
+});
 
 console.log("PASS: all wasm smoke tests");

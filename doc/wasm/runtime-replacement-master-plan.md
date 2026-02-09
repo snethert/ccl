@@ -102,10 +102,10 @@ When resuming work from scratch:
 
 | Ticket | Status | Priority | Subplan | Last Updated | Notes |
 | --- | --- | --- | --- | --- | --- |
-| RPL-00 | in_progress | P0 | `doc/wasm/tickets/RPL-00-governance-and-baseline-freeze.md` | 2026-02-09 | Eleventh downstream update cycle completed by publishing RPL-02 Step 3 mapping outputs and synchronizing `X-02` closure evidence across ticket/master/matrix docs. |
-| RPL-01 | in_progress | P0 | `doc/wasm/tickets/RPL-01-secure-runtime-gating.md` | 2026-02-09 | RPL-02 Step 3 mapping is now published and `X-02` is cleared; contradiction follow-through now advances to RPL-03 Step 1 shared-memory IPC contract drafting. |
+| RPL-00 | in_progress | P0 | `doc/wasm/tickets/RPL-00-governance-and-baseline-freeze.md` | 2026-02-09 | Fifteenth downstream update cycle is now complete through RPL-03 Step 3 rerun execution and synchronized runtime/matrix/board status with `X-03` closure. |
+| RPL-01 | in_progress | P0 | `doc/wasm/tickets/RPL-01-secure-runtime-gating.md` | 2026-02-09 | RPL-03 Step 3 rerun evidence is now committed with `status=pass` and `x03_clear_ready=true`; contradiction follow-through remains active for upstream doc-text replacements (`C-01`, `C-03`, `C-04`, `C-08`). |
 | RPL-02 | done | P0 | `doc/wasm/tickets/RPL-02-worker-topology-and-thread-bootstrap.md` | 2026-02-09 | Step 3 mapping output is complete (`X03M-01`..`X03M-05`) with explicit BPL-03 `B3*` consumption coverage; dependency row `X-02` is now `done`. |
-| RPL-03 | planned | P0 | `doc/wasm/tickets/RPL-03-shared-memory-ipc-core.md` | 2026-02-09 | SAB/Atomics channels for kernel/runtime hot paths. |
+| RPL-03 | done | P0 | `doc/wasm/tickets/RPL-03-shared-memory-ipc-core.md` | 2026-02-09 | Step 3 rerun evidence is now committed at `doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/` with `ipc_conformance_summary_v1.status=pass`, `x03_clear_ready=true`, and closure of `IPCGAP-01`..`IPCGAP-04`; dependency row `X-03` is now `done`. |
 | RPL-04 | planned | P0 | `doc/wasm/tickets/RPL-04-runtime-ui-bridge-shared-path.md` | 2026-02-09 | Runtime/UI ingress-egress migration off message hot path. |
 | RPL-05 | planned | P0 | `doc/wasm/tickets/RPL-05-storage-v2-local-core.md` | 2026-02-09 | Local immutable object store + refs/leases baseline. |
 | RPL-06 | planned | P1 | `doc/wasm/tickets/RPL-06-storage-v2-sync-merge.md` | 2026-02-09 | Remote sync, conflict records, merge-candidate/finalization flow. |
@@ -129,13 +129,13 @@ Notes:
 - Baseline architecture and blocker context have been captured from current docs.
 - RPL-00 subplan has been authored and now governs sync/update behavior.
 - Runtime track now has explicit parallel coordination points with backend migration track docs.
-- Eleventh downstream governance cycle is now complete through synchronized RPL-02 Step 3 mapping publication and dependency-row `X-02` closure updates.
+- Fifteenth downstream governance cycle is now complete through synchronized RPL-03 Step 3 rerun publication and dependency-row `X-03` closure.
 
 Next Step Analysis:
 
-- Immediate Next Step: continue the dual-update governance loop by executing RPL-03 Step 1 and synchronizing runtime/master/matrix updates in the same cycle.
-- Why this step now: `X-02` is now cleared, so governance priority shifts to protocol-contract progress on `X-03`.
-- Evidence required to close next step: RPL-03 Step 1 output is published and dependency-row `X-03` notes are updated with concrete protocol evidence.
+- Immediate Next Step: continue the dual-update governance loop by synchronizing RPL-04 Step 1 kickoff state across runtime/master/matrix/board docs in one cycle.
+- Why this step now: hard-gate row `X-03` is now closed with committed rerun evidence, so governance focus shifts to the next unblocked runtime ticket.
+- Evidence required to close next step: RPL-04 Step 1 outputs and cross-track pack notes are synchronized in subplan/master/matrix/board without reopening frozen `RPL-03` IDs.
 
 ---
 
@@ -159,6 +159,9 @@ Notes:
 - Step 6 handoff package v1 is now committed (`HND-01`..`HND-06`, `CRA-01`..`CRA-05`) with explicit closure-readiness results.
 - Cross-track `X-01` gate is now cleared through explicit BPL-02 `SRG-01`..`SRG-12` linkage evidence plus Step 2 contract coverage validation (`CON-01`..`CON-08` -> `BCL-01`..`BCL-12`).
 - Cross-track `X-02` gate is now cleared through explicit RPL-02 Step 3 mappings (`X03M-01`..`X03M-05`) and BPL-03 `B3*` consumption tables.
+- RPL-03 Step 1 protocol contract v1 is now published (`IPCP-01`..`IPCP-49`) and explicitly absorbs IPC contradiction classes (`C-01`, `C-03`, `C-04`, `C-08`) under strict no-fallback semantics.
+- RPL-03 Step 2 conformance contract v1 is now published (`IPCV-01`..`IPCV-12`, `IPCL-01`..`IPCL-05`, `ipc_conformance_summary_v1`) and formalizes deterministic queue-correctness evidence requirements.
+- RPL-03 Step 3 rerun evidence is now committed at `doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/` with terminal `status=pass`, `x03_clear_ready=true`, and closed blocker gaps (`IPCGAP-01`..`IPCGAP-04`).
 - Failure semantics are now explicit: fixed check order, first-failure abort, strict no-fallback enforcement.
 - Integration entrypoints and diagnostics surfacing requirements are now explicit across loader/smoke/browser lanes.
 - Matrix now distinguishes required runtime/thread capabilities from deferred CL thread semantics.
@@ -166,9 +169,9 @@ Notes:
 
 Next Step Analysis:
 
-- Immediate Next Step: continue downstream contradiction remediation via RPL-03 Step 1 shared-memory IPC contract drafting and dependency-evidence alignment.
-- Why this step now: worker topology/lifecycle constraints are now consumed and `X-02` is clear, so contradiction follow-through shifts to IPC protocol formalization.
-- Evidence required to close next step: RPL-03 Step 1 publishes protocol IDs that explicitly align with secure-only/no-fallback assumptions and updates dependency-row `X-03` notes.
+- Immediate Next Step: continue downstream contradiction remediation by landing upstream doc-text replacements for `C-01`, `C-03`, `C-04`, and `C-08` using the now-closed RPL-03 evidence baseline.
+- Why this step now: RPL-03 conformance evidence is now passing and `X-03` is closed, so remaining contradiction work is documentation reconciliation rather than protocol validation.
+- Evidence required to close next step: contradiction rows include source-doc updates that explicitly align hot-path transport and no-fallback posture with frozen `IPCP-*`/`IPCV-*` contracts.
 
 ---
 
@@ -192,30 +195,36 @@ Notes:
 
 Next Step Analysis:
 
-- Immediate Next Step: maintain RPL-02 outputs as frozen baseline while RPL-03 Step 1 protocol work consumes worker-topology and lifecycle constraints.
-- Why this step now: RPL-02 exit criteria are satisfied and `X-02` is cleared, so this ticket shifts to additive-only maintenance.
-- Evidence required to close next step: RPL-03 Step 1 references `WTOP-*`/`WSEQ-*`/`WLCS-*`/`WLCT-*`/`WLCR-*` directly without reopening or renaming frozen IDs.
+- Immediate Next Step: maintain RPL-02 outputs as frozen baseline while RPL-04 Step 1 consumes worker-topology and lifecycle constraints.
+- Why this step now: RPL-02 exit criteria are satisfied and both `X-02`/`X-03` are cleared, so this ticket remains additive-only maintenance.
+- Evidence required to close next step: RPL-04 Step 1 outputs reference `WTOP-*`/`WSEQ-*`/`WLCS-*`/`WLCT-*`/`WLCR-*` directly without reopening or renaming frozen IDs.
 
 ---
 
 ### RPL-03 - Shared-Memory IPC Core
 
-- Status: `planned`
+- Status: `done`
 - Priority: `P0`
 - Last Updated: `2026-02-09`
-- Subplan: `doc/wasm/tickets/RPL-03-shared-memory-ipc-core.md` (pending)
+- Subplan: `doc/wasm/tickets/RPL-03-shared-memory-ipc-core.md`
 - Dependencies: RPL-01, RPL-02
 
 Notes:
 
 - Current copy-based request ABI is incompatible with target hot-path efficiency goals.
 - Required replacement: shared command/response channels with Atomics signaling and explicit backpressure.
+- Step 1 output is now complete with frozen protocol IDs (`IPCP-01`..`IPCP-49`) covering ownership boundaries, ring/mailbox layout, signaling rules, backpressure behavior, and canonical failure codes (`RPL03-E001`..`RPL03-E010`).
+- Required telemetry schemas (`ipc_protocol_ready_v1`, `ipc_channel_event_v1`, `ipc_channel_summary_v1`) are now defined for deterministic test-lane assertions.
+- Protocol clauses explicitly absorb contradiction routing for `C-01`, `C-03`, `C-04`, and `C-08`.
+- Step 2 output is now complete with frozen conformance IDs (`IPCV-01`..`IPCV-12`) and lane registry (`IPCL-01`..`IPCL-05`) plus terminal evidence schema (`ipc_conformance_summary_v1`).
+- Step 3 rerun evidence is now committed (`doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/`) with terminal `status=pass`, `x03_clear_ready=true`, and explicit closure of `IPCGAP-01`..`IPCGAP-04`.
+- Dependency row `X-03` is now `done`, unblocking downstream runtime/backend integration planning.
 
 Next Step Analysis:
 
-- Immediate Next Step: define ring/mailbox wire layout and signaling protocol version 1.
-- Why this step now: all hot-path call migration work needs a stable IPC contract.
-- Evidence required to close next step: protocol doc + conformance tests for queue correctness.
+- Immediate Next Step: maintain frozen `IPCP-*`/`IPCL-*`/`IPCV-*` contracts and hand off the closed IPC baseline to RPL-04 and backend consumers.
+- Why this step now: RPL-03 exit criteria are satisfied; follow-on work should consume, not mutate, the closed conformance baseline.
+- Evidence required to close next step: downstream tickets reference committed rerun evidence bundle and preserve additive-only ID policy.
 
 ---
 
@@ -382,3 +391,7 @@ Avoid batching multiple unrelated next actions into one update.
 - 2026-02-09: Executed RPL-02 Step 2 lifecycle/failure-state contract (`WLCS-*`, `WLCT-*`, `WLCR-*`) with strict no-fallback semantics and advanced runtime next-step analysis to Step 3 cross-track mapping.
 - 2026-02-09: Synced runtime master with BPL-02 Step 2 closure evidence so `X-01` remains clear on both startup-gate linkage and closed contract traceability.
 - 2026-02-09: Executed RPL-02 Step 3 cross-track mapping (`X03M-01`..`X03M-05`), cleared dependency row `X-02`, marked RPL-02 `done`, and advanced governance/contradiction next-step focus to RPL-03 Step 1.
+- 2026-02-09: Executed RPL-03 Step 1 by publishing `doc/wasm/tickets/RPL-03-shared-memory-ipc-core.md` with frozen `IPCP-01`..`IPCP-49` protocol clauses, advanced `RPL-03` to `in_progress`, and shifted governance/contradiction next-step focus to RPL-03 Step 2 conformance evidence.
+- 2026-02-09: Executed RPL-03 Step 2 by publishing frozen conformance IDs (`IPCV-01`..`IPCV-12`, `IPCL-01`..`IPCL-05`) and `ipc_conformance_summary_v1`, then shifted governance/contradiction next-step focus to Step 3 committed evidence execution.
+- 2026-02-09: Executed RPL-03 Step 3 run-v1 by running `IPCV-01`..`IPCV-12` and committing evidence bundle (`doc/wasm/tickets/evidence/rpl-03-step3-2026-02-09/`); recorded failing assertions and blocker gaps `IPCGAP-01`..`IPCGAP-04`.
+- 2026-02-09: Executed RPL-03 Step 3 rerun after remediating `IPCGAP-01`..`IPCGAP-04`; committed evidence bundle (`doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/`) reports `status=pass`, `x03_clear_ready=true`, and closes dependency row `X-03`.
