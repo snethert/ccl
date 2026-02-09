@@ -45,9 +45,9 @@ This is intentionally not a megaplan. Execution remains in two track-specific ma
 
 ## Immediate Next Step
 
-- Action: continue `Pack A` by executing RPL-04 Step 1 bridge-path scope definition alongside BPL-06 Step 2 parity fixture/evidence-template publication.
-- Why now: BPL-06 Step 1 contract is now frozen, so backend parity execution needs concrete fixture and artifact-field baselines.
-- Success evidence: RPL-04 Step 1 publishes frozen migration-scope IDs and BPL-06 Step 2 publishes fixture IDs/artifact templates across `BPL06-CP01`..`BPL06-CP05`.
+- Action: continue `Pack A` by executing RPL-04 Step 1 bridge-path scope definition alongside BPL-06 Step 3 triage/gate-integration definition.
+- Why now: BPL-06 Step 2 fixtures/templates are now published, so the next backend-critical action is deterministic pass/fail escalation and consumer handoff governance.
+- Success evidence: RPL-04 Step 1 publishes frozen migration-scope IDs and BPL-06 Step 3 publishes severity classes plus BPL-07/BPL-08 intake mappings for `BPL06-CP01`..`BPL06-CP05`.
 
 ## Change Log
 
@@ -77,3 +77,4 @@ This is intentionally not a megaplan. Execution remains in two track-specific ma
 - 2026-02-09: Pack A runtime focus advanced past RPL-03 Step 3 rerun after conformance evidence (`status=pass`, `x03_clear_ready=true`) closed hard-gate row `X-03`; immediate runtime action is now RPL-04 Step 1.
 - 2026-02-09: Pack A backend focus advanced from BPL-05 Step 3 handoff/gate integration to BPL-06 Step 1 harness contract definition after publishing handoff checklist (`B5H-01`..`B5H-05`).
 - 2026-02-09: Pack A backend focus advanced from BPL-06 Step 1 harness contract definition to BPL-06 Step 2 fixture/evidence-template publication after freezing `BPL06-CP01`..`BPL06-CP05`.
+- 2026-02-09: Pack A backend focus advanced from BPL-06 Step 2 fixture/evidence-template publication to BPL-06 Step 3 triage/gate-integration definition after publishing fixture matrix (`BPL06-FX01`..`BPL06-FX05`) and template files.

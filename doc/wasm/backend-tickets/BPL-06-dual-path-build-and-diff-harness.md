@@ -47,12 +47,13 @@ Out of scope:
   - `node doc/wasm/js/all-smoke.mjs` (`--no-ui` lane available).
   - `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`.
 - Step 1 contract output is now published below and consumes all seam IDs `B5M-01`..`B5M-05`.
+- Step 2 fixture matrix and artifact templates are now published below with deterministic run preconditions and checkpoint-complete coverage.
 
 ## Immediate Next Step
 
-- Action: execute BPL-06 Step 2 by defining the parity fixture corpus and evidence artifact templates for each checkpoint row.
-- Why now: Step 1 checkpoint contracts are now frozen, so implementation-safe progress depends on fixture/evidence materialization rather than new contract drafting.
-- Success evidence: Step 2 publishes fixture rows and output artifact templates that can run every `BPL06-CP*` checkpoint with deterministic compat/native comparisons.
+- Action: execute BPL-06 Step 3 by defining promotion-blocking triage workflow and downstream evidence handoff rules for BPL-07/BPL-08 consumers.
+- Why now: Step 2 fixtures/templates are now frozen, so the next blocker is deterministic triage/promotion governance over emitted checkpoint evidence.
+- Success evidence: Step 3 publishes severity classes, rollback obligations, and BPL-07/BPL-08 intake contracts keyed to `BPL06-CP01`..`BPL06-CP05`.
 
 ## Step 1 Output - Dual-Build Checkpoint Contract Matrix (v1)
 
@@ -97,6 +98,83 @@ Step 1 closure assertions:
 2. Every checkpoint row has explicit compat/native command templates, deterministic parity assertions, and rollback linkage.
 3. Evidence schema and path contracts are frozen so Step 2 can execute without re-defining checkpoint semantics.
 
+## Step 2 Output - Parity Fixture Matrix and Evidence Templates (v1)
+
+### Deterministic Run Preconditions (all fixtures)
+
+1. Run from repository root: `/Users/buildsomething/Source/ccl`.
+2. Force stable process environment before each leg:
+   - `TZ=UTC`
+   - `LC_ALL=C`
+   - `LANG=C`
+   - `CCL_IPC_TEST_INJECT_FAILURE` unset/empty.
+3. Force lane class deterministically:
+   - `CCL_IPC_LANE_ID=headless_runtime`
+   - `CCL_IPC_CONFORMANCE_ID=<checkpoint_id>`.
+4. Capture per-leg stdout/stderr logs and compute normalized hashes for artifact fields `stdout_sha256` and `stderr_sha256`.
+5. Compare compat/native case artifacts only on frozen parity fields: `exit_code`, `fail_markers`, `stdout_sha256`, `stderr_sha256`.
+
+### Fixture Matrix
+
+| fixture_id | checkpoint_id | seam_id | lane_class | compat leg command | native leg command | comparator template | artifacts emitted | source anchors |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| BPL06-FX01 | `BPL06-CP01` | `B5M-01` | `headless_runtime` | `WASM_LOWERING_PROMOTION_POLICY=hold WASM_LOWERING_NUMERIC_CALLSITE_MODE=compat node doc/wasm/js/all-smoke.mjs --no-ui` | `WASM_LOWERING_PROMOTION_POLICY=hold WASM_LOWERING_NUMERIC_CALLSITE_MODE=native node doc/wasm/js/all-smoke.mjs --no-ui` | `BPL06-CMP-01` | `BPL06-CP01-compat.json`, `BPL06-CP01-native.json`, `BPL06-CP01-diff-summary.json` | `doc/wasm/backend-tickets/BPL-05-ir-lowering-arm-decoupling.md:76`; `doc/wasm/js/all-smoke.mjs:7`; `doc/wasm/js/all-smoke.mjs:79`; `doc/wasm/js/all-smoke.mjs:94` |
+| BPL06-FX02 | `BPL06-CP02` | `B5M-02` | `headless_runtime` | `WASM_LOWERING_PROMOTION_POLICY=hold WASM_ENTRYPOINT_LOOKUP_MODE=slot node doc/wasm/js/all-smoke.mjs --no-ui` | `WASM_LOWERING_PROMOTION_POLICY=hold WASM_ENTRYPOINT_LOOKUP_MODE=manifest node doc/wasm/js/all-smoke.mjs --no-ui` | `BPL06-CMP-01` | `BPL06-CP02-compat.json`, `BPL06-CP02-native.json`, `BPL06-CP02-diff-summary.json` | `doc/wasm/backend-tickets/BPL-05-ir-lowering-arm-decoupling.md:77`; `doc/wasm/js/all-smoke.mjs:30`; `doc/wasm/js/all-smoke.mjs:31`; `doc/wasm/js/all-smoke.mjs:94` |
+| BPL06-FX03 | `BPL06-CP03` | `B5M-03` | `headless_runtime` | `WASM_LOWERING_PROMOTION_POLICY=hold WASM_DIV_HELPER_MODE=compat node doc/wasm/js/all-smoke.mjs --no-ui` | `WASM_LOWERING_PROMOTION_POLICY=hold WASM_DIV_HELPER_MODE=native node doc/wasm/js/all-smoke.mjs --no-ui` | `BPL06-CMP-01` | `BPL06-CP03-compat.json`, `BPL06-CP03-native.json`, `BPL06-CP03-diff-summary.json` | `doc/wasm/backend-tickets/BPL-05-ir-lowering-arm-decoupling.md:78`; `doc/wasm/js/all-smoke.mjs:94` |
+| BPL06-FX04 | `BPL06-CP04` | `B5M-04` | `headless_runtime` | `WASM_LOWERING_PROMOTION_POLICY=hold WASM_TAILCALL_NUMERIC_MODE=wrapper node doc/wasm/js/all-smoke.mjs --no-ui && WASM_LOWERING_PROMOTION_POLICY=hold WASM_TAILCALL_NUMERIC_MODE=wrapper node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive` | `WASM_LOWERING_PROMOTION_POLICY=hold WASM_TAILCALL_NUMERIC_MODE=frame_reuse node doc/wasm/js/all-smoke.mjs --no-ui && WASM_LOWERING_PROMOTION_POLICY=hold WASM_TAILCALL_NUMERIC_MODE=frame_reuse node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive` | `BPL06-CMP-01` | `BPL06-CP04-compat.json`, `BPL06-CP04-native.json`, `BPL06-CP04-diff-summary.json` | `doc/wasm/backend-tickets/BPL-05-ir-lowering-arm-decoupling.md:79`; `doc/wasm/js/start-lisp-noninteractive-smoke.mjs:84`; `doc/wasm/js/start-lisp-noninteractive-smoke.mjs:152`; `doc/wasm/js/start-lisp-noninteractive-smoke.mjs:180` |
+| BPL06-FX05 | `BPL06-CP05` | `B5M-05` | `headless_runtime` | `WASM_LOWERING_PROMOTION_POLICY=hold node doc/wasm/js/all-smoke.mjs --no-ui` | `WASM_LOWERING_PROMOTION_POLICY=advance node doc/wasm/js/all-smoke.mjs --no-ui` | `BPL06-CMP-01` | `BPL06-CP05-compat.json`, `BPL06-CP05-native.json`, `BPL06-CP05-diff-summary.json` | `doc/wasm/backend-tickets/BPL-05-ir-lowering-arm-decoupling.md:80`; `doc/wasm/js/all-smoke.mjs:94` |
+
+### Comparator Template - `BPL06-CMP-01`
+
+Use this command template after generating `compat` and `native` case artifacts:
+
+```bash
+node -e '
+const fs = require("node:fs");
+const compat = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+const native = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+const required = ["exit_code", "fail_markers", "stdout_sha256", "stderr_sha256"];
+const mismatch_fields = required.filter((field) =>
+  JSON.stringify(compat[field]) !== JSON.stringify(native[field])
+);
+const summary = {
+  schema_version: "backend_diff_checkpoint_summary_v1",
+  run_id: compat.run_id,
+  checkpoint_id: compat.checkpoint_id,
+  seam_id: compat.seam_id,
+  fixture_id: compat.fixture_id,
+  lane_class: compat.lane_class,
+  compat_case_path: process.argv[1],
+  native_case_path: process.argv[2],
+  required_equal_fields: required,
+  mismatch_fields,
+  mismatch_count: mismatch_fields.length,
+  result: mismatch_fields.length === 0 ? "pass" : "fail",
+  rollback_required: mismatch_fields.length > 0,
+  rollback_command: compat.rollback_command,
+  gate_refs: compat.gate_refs,
+  generated_at_utc: new Date().toISOString()
+};
+fs.writeFileSync(process.argv[3], JSON.stringify(summary, null, 2) + "\n");
+if (mismatch_fields.length > 0) process.exit(1);
+' \
+"<compat_case.json>" \
+"<native_case.json>" \
+"<diff_summary.json>"
+```
+
+### Published Evidence Template Files
+
+- `doc/wasm/tickets/evidence/bpl-06/templates/backend_diff_case_result_v1.template.json`
+- `doc/wasm/tickets/evidence/bpl-06/templates/backend_diff_checkpoint_summary_v1.template.json`
+- `doc/wasm/tickets/evidence/bpl-06/templates/bpl06-fixture-matrix-v1.tsv`
+
+Step 2 closure assertions:
+
+1. All frozen checkpoints `BPL06-CP01`..`BPL06-CP05` now have deterministic fixture rows (`BPL06-FX01`..`BPL06-FX05`).
+2. Comparator semantics are frozen under `BPL06-CMP-01` with checkpoint-pass/fail determined only by required parity fields.
+3. Machine-fillable evidence templates are now published on disk for both case-level and checkpoint-summary artifacts.
+
 ## Detailed Work Breakdown
 
 ### Step 1 - Dual-Build Contract Freeze
@@ -111,11 +189,12 @@ Step 1 closure assertions:
 
 ### Step 2 - Parity Fixture Set and Artifact Templates
 
-- Status: planned
+- Status: done
 - Notes:
-  - Must define checkpoint fixture inputs, lane-class defaults, and deterministic diff summary templates per `BPL06-CP*`.
+  - Published fixture matrix `BPL06-FX01`..`BPL06-FX05` with deterministic preconditions and full checkpoint coverage.
+  - Published comparator template `BPL06-CMP-01` and artifact templates for `backend_diff_case_result_v1` and `backend_diff_checkpoint_summary_v1`.
 - Next:
-  - Publish fixture matrix and first runnable evidence template set.
+  - Keep fixture and template IDs stable; evolve additively when new checkpoints are introduced.
 
 ### Step 3 - Triage and Consumer Gate Integration
 
@@ -148,3 +227,4 @@ Step 1 closure assertions:
 ## Change Log
 
 - 2026-02-09: Initialized BPL-06 and closed Step 1 with deterministic checkpoint contract matrix (`BPL06-CP01`..`BPL06-CP05`) mapped to seam contracts (`B5M-01`..`B5M-05`) plus evidence artifact schema freeze.
+- 2026-02-09: Closed Step 2 by publishing parity fixture matrix (`BPL06-FX01`..`BPL06-FX05`), comparator template (`BPL06-CMP-01`), and machine-fillable evidence templates for all frozen checkpoints.

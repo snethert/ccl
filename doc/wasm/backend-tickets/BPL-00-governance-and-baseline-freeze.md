@@ -44,12 +44,13 @@ Out of scope:
 - BPL-03 Step 1 mapping output is now published with explicit `B3*` consumption IDs.
 - Dependency row `X-02` is now cleared and synchronized across backend/runtime master plans, matrix, and active ticket subplans.
 - BPL-06 Step 1 checkpoint contract is now published with frozen `BPL06-CP01`..`BPL06-CP05` IDs and synchronized master/matrix/program-board notes.
+- BPL-06 Step 2 fixture matrix/templates are now published (`BPL06-FX01`..`BPL06-FX05`; `backend_diff_case_result_v1`; `backend_diff_checkpoint_summary_v1`) with synchronized master/matrix/program-board notes.
 
 ## Immediate Next Step
 
-- Action: continue governance-compliant execution by advancing BPL-06 Step 2 fixture/evidence-template publication and keeping matrix/master/subplan updates synchronized in-cycle.
-- Why now: BPL-06 Step 1 checkpoint contracts are frozen, so deterministic execution readiness now depends on synchronized fixture/evidence publication.
-- Success evidence: BPL-06 Step 2 status/notes and matrix/master/program-board references remain synchronized while `BPL06-CP*` and `B5M-*` identifiers stay frozen.
+- Action: continue governance-compliant execution by advancing BPL-06 Step 3 triage/gate-integration definition and keeping matrix/master/subplan updates synchronized in-cycle.
+- Why now: BPL-06 Step 2 fixture/template baselines are now published, so execution safety depends on synchronized escalation and consumer-handoff governance.
+- Success evidence: BPL-06 Step 3 status/notes and matrix/master/program-board references remain synchronized while `BPL06-CP*`, `BPL06-FX*`, and `B5M-*` identifiers stay frozen.
 
 ## Detailed Work Breakdown
 
@@ -84,8 +85,9 @@ Out of scope:
   - Multiple downstream backend cycles have been executed with synchronized master/subplan/matrix updates.
   - `X-02` dependency closure was completed in-cycle during BPL-03 Step 1 mapping publication.
   - BPL-06 Step 1 checkpoint-contract publication was synchronized in-cycle across subplan/master/matrix/program-board docs.
+  - BPL-06 Step 2 fixture/template publication was synchronized in-cycle across subplan/master/matrix/program-board docs.
 - Next:
-  - Maintain the same synchronization discipline for BPL-06 Step 2 and subsequent dependency-row updates.
+  - Maintain the same synchronization discipline for BPL-06 Step 3 and subsequent dependency-row updates.
 
 ## Test and Validation Plan
 
@@ -111,3 +113,4 @@ Out of scope:
 - 2026-02-09: Initial BPL-00 subplan created with governance and baseline-freeze workflow.
 - 2026-02-09: Synced governance state after BPL-03 Step 1 mapping publication and `X-02` closure; advanced immediate next action to BPL-03 Step 2 contract drafting.
 - 2026-02-09: Synced governance state after BPL-06 Step 1 checkpoint-contract publication; advanced immediate next action to BPL-06 Step 2 fixture/evidence-template publication.
+- 2026-02-09: Synced governance state after BPL-06 Step 2 fixture/template publication; advanced immediate next action to BPL-06 Step 3 triage/gate-integration definition.

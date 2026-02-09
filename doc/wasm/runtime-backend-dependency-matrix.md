@@ -27,7 +27,7 @@ It is the authoritative source for deciding which tasks can run in parallel and 
 | X-01 | RPL-01 secure runtime gating | BPL-02 backend contract | soft_gate | BPL-02 drafting may start before RPL-01 completion. | RPL-01 capability check IDs frozen and referenced by BPL-02. | done | BPL-02 Step 1 linkage matrix references `SRG-01`..`SRG-12` explicitly (`BCL-01`..`BCL-12`), and Step 2 closure validated `CON-01`..`CON-08` coverage across all `BCL-*` rows. |
 | X-02 | RPL-02 worker topology | BPL-03 frame/debug model | soft_gate | BPL-03 can draft debug model before worker model finalization. | RPL-02 worker ownership and lifecycle boundary rules mapped into BPL-03. | done | RPL-02 Step 3 published explicit cross-track mapping classes (`X03M-01`..`X03M-05`) that bind `WTOP-01`..`WTOP-05`, `WSEQ-01`..`WSEQ-06`, `WLCS-01`..`WLCS-06`, `WLCT-01`..`WLCT-11`, and `WLCR-01`..`WLCR-05` to BPL-03 consumption IDs (`B3R-*`, `B3S-*`, `B3L-*`, `B3T-*`, `B3P-*`). BPL-03 Step 1 mapping tables now include deterministic rules plus test-lane assertions per row, satisfying `X-02` clear evidence; BPL-01 Step 3 closure evidence for worker-sensitive assumptions (`ARM-ASSUMP-005`, `ARM-ASSUMP-006`, `ARM-ASSUMP-016`) remains unchanged. |
 | X-03 | RPL-03 shared-memory IPC core | BPL-08 runtime alignment integration | hard_gate | BPL-08 integration cannot start without RPL-03 protocol v1. | RPL-03 wire protocol + conformance tests committed. | done | RPL-03 Step 3 rerun evidence is committed at `doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/` with terminal `ipc_conformance_summary_v1.status=pass` and `x03_clear_ready=true`; blocker gaps `IPCGAP-01`..`IPCGAP-04` are closed. |
-| X-04 | RPL-04 runtime/UI shared path | BPL-06 dual-path diff harness | parallel | Diff harness work can proceed independently of UI transport migration. | Shared fixture format compatibility check at integration checkpoint. | open | No direct design block. |
+| X-04 | RPL-04 runtime/UI shared path | BPL-06 dual-path diff harness | parallel | Diff harness work can proceed independently of UI transport migration. | Shared fixture format compatibility check at integration checkpoint. | open | BPL-06 Step 2 fixture/template baseline is now published; remaining cross-track work is RPL-04 bridge-path scope alignment with artifact lane compatibility checks. |
 | X-05 | RPL-05 storage V2 local core | BPL-04 numeric pipeline | parallel | Numeric backend work should continue while storage changes land. | None before each track’s own gates. | open | Distinct subsystems. |
 | X-06 | RPL-07 module/environment sharing | BPL-07 size/perf gates | soft_gate | BPL-07 benchmarks can start with current packaging. | Final size budget signoff after RPL-07 packaging model freeze. | open | Avoid invalidating size gates due to packaging churn. |
 | X-07 | RPL-08 artifact-size validation | BPL-07 size/perf gates | soft_gate | Both tracks can maintain independent interim budgets. | Unified budget sheet approved across both tracks. | open | Converges measurement methodology. |
@@ -38,7 +38,7 @@ It is the authoritative source for deciding which tasks can run in parallel and 
 ### Pack A (Immediate)
 
 - Runtime: RPL-04 Step 1 startup scope for shared bridge-path migration, consuming frozen RPL-03 protocol/conformance outputs.
-- Backend: BPL-06 Step 2 parity fixture + evidence-template publication over frozen checkpoint/seam artifacts (`BPL06-CP*`, `B5M-*`, `B5H-*`).
+- Backend: BPL-06 Step 3 triage + gate-integration definition over published fixture/template artifacts (`BPL06-CP*`, `BPL06-FX*`, `BPL06-CMP-01`).
 - Constraint: keep `SRG-*`, `WTOP-*`, `WSEQ-*`, `WLCS-*`, `WLCT-*`, `WLCR-*`, `B3*`, and `FDC-*` identifiers frozen; no fallback semantics may be reintroduced.
 
 ### Pack B (After contract freeze)
@@ -67,9 +67,9 @@ It is the authoritative source for deciding which tasks can run in parallel and 
 
 ## Immediate Next Step
 
-- Action: continue `Pack A` by executing RPL-04 Step 1 bridge-path scope definition alongside BPL-06 Step 2 parity fixture/evidence-template publication.
-- Why now: BPL-06 Step 1 checkpoint contract is now frozen, so deterministic dual-path execution requires concrete fixture and artifact-field baselines.
-- Success evidence: RPL-04 Step 1 publishes frozen migration-scope IDs and BPL-06 Step 2 publishes fixture IDs/artifact templates with full `BPL06-CP01`..`BPL06-CP05` coverage.
+- Action: continue `Pack A` by executing RPL-04 Step 1 bridge-path scope definition alongside BPL-06 Step 3 triage/gate-integration definition.
+- Why now: BPL-06 Step 2 has published deterministic fixture/template baselines, so the next backend blocker is pass/fail escalation and consumer handoff governance.
+- Success evidence: RPL-04 Step 1 publishes frozen migration-scope IDs and BPL-06 Step 3 publishes checkpoint severity classes plus BPL-07/BPL-08 intake mappings for `BPL06-CP01`..`BPL06-CP05`.
 
 ## Change Log
 
@@ -101,3 +101,4 @@ It is the authoritative source for deciding which tasks can run in parallel and 
 - 2026-02-09: Closed `X-03` after RPL-03 Step 3 rerun evidence (`doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/`) reported `status=pass`, `x03_clear_ready=true`, and explicit closure of `IPCGAP-01`..`IPCGAP-04`.
 - 2026-02-09: Advanced Pack A backend focus from BPL-05 Step 3 handoff/gate integration to BPL-06 Step 1 harness contract definition after publishing handoff checklist (`B5H-01`..`B5H-05`).
 - 2026-02-09: Advanced Pack A backend focus from BPL-06 Step 1 harness contract definition to BPL-06 Step 2 fixture/evidence-template publication after freezing `BPL06-CP01`..`BPL06-CP05` checkpoint contracts.
+- 2026-02-09: Advanced Pack A backend focus from BPL-06 Step 2 fixture/evidence-template publication to BPL-06 Step 3 triage/gate-integration definition after publishing fixture matrix (`BPL06-FX01`..`BPL06-FX05`) and template files.
