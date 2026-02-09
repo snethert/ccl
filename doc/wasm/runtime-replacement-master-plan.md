@@ -102,9 +102,9 @@ When resuming work from scratch:
 
 | Ticket | Status | Priority | Subplan | Last Updated | Notes |
 | --- | --- | --- | --- | --- | --- |
-| RPL-00 | in_progress | P0 | `doc/wasm/tickets/RPL-00-governance-and-baseline-freeze.md` | 2026-02-09 | First downstream update cycle has started through RPL-01 Step 1 execution. |
-| RPL-01 | in_progress | P0 | `doc/wasm/tickets/RPL-01-secure-runtime-gating.md` | 2026-02-09 | Step 1 contradiction inventory v1 (`C-01`..`C-14`) committed; capability matrix definition is next. |
-| RPL-02 | planned | P0 | `doc/wasm/tickets/RPL-02-worker-topology-and-thread-bootstrap.md` | 2026-02-09 | Define required workers/threads for MVP runtime architecture. |
+| RPL-00 | in_progress | P0 | `doc/wasm/tickets/RPL-00-governance-and-baseline-freeze.md` | 2026-02-09 | Eleventh downstream update cycle completed by publishing RPL-02 Step 3 mapping outputs and synchronizing `X-02` closure evidence across ticket/master/matrix docs. |
+| RPL-01 | in_progress | P0 | `doc/wasm/tickets/RPL-01-secure-runtime-gating.md` | 2026-02-09 | RPL-02 Step 3 mapping is now published and `X-02` is cleared; contradiction follow-through now advances to RPL-03 Step 1 shared-memory IPC contract drafting. |
+| RPL-02 | done | P0 | `doc/wasm/tickets/RPL-02-worker-topology-and-thread-bootstrap.md` | 2026-02-09 | Step 3 mapping output is complete (`X03M-01`..`X03M-05`) with explicit BPL-03 `B3*` consumption coverage; dependency row `X-02` is now `done`. |
 | RPL-03 | planned | P0 | `doc/wasm/tickets/RPL-03-shared-memory-ipc-core.md` | 2026-02-09 | SAB/Atomics channels for kernel/runtime hot paths. |
 | RPL-04 | planned | P0 | `doc/wasm/tickets/RPL-04-runtime-ui-bridge-shared-path.md` | 2026-02-09 | Runtime/UI ingress-egress migration off message hot path. |
 | RPL-05 | planned | P0 | `doc/wasm/tickets/RPL-05-storage-v2-local-core.md` | 2026-02-09 | Local immutable object store + refs/leases baseline. |
@@ -129,12 +129,13 @@ Notes:
 - Baseline architecture and blocker context have been captured from current docs.
 - RPL-00 subplan has been authored and now governs sync/update behavior.
 - Runtime track now has explicit parallel coordination points with backend migration track docs.
+- Eleventh downstream governance cycle is now complete through synchronized RPL-02 Step 3 mapping publication and dependency-row `X-02` closure updates.
 
 Next Step Analysis:
 
-- Immediate Next Step: continue applying the same dual-update governance loop for RPL-01 Step 2 execution.
-- Why this step now: the first downstream update cycle has now been executed and the process needs one more cycle to confirm repeatability.
-- Evidence required to close next step: RPL-01 Step 2 updates land with synchronized master/subplan status and evidence markers.
+- Immediate Next Step: continue the dual-update governance loop by executing RPL-03 Step 1 and synchronizing runtime/master/matrix updates in the same cycle.
+- Why this step now: `X-02` is now cleared, so governance priority shifts to protocol-contract progress on `X-03`.
+- Evidence required to close next step: RPL-03 Step 1 output is published and dependency-row `X-03` notes are updated with concrete protocol evidence.
 
 ---
 
@@ -151,34 +152,49 @@ Notes:
 - Boot contract must be secure-only for MVP (cross-origin isolation and required feature gates).
 - Failure behavior must be explicit; no silent fallback mode.
 - Step 1 contradiction inventory v1 is now recorded with explicit resolution actions (`C-01`..`C-14`).
-- Contradictions are now tracked with per-item status/notes for resumable doc reconciliation.
+- Step 2 capability/startup gate matrix v1 is now committed with frozen check IDs (`SRG-01`..`SRG-12`) and fail-code mapping.
+- Step 3 diagnostics contract v1 is now committed (`startup_gate_check_result_v1` and `startup_gate_summary_v1`).
+- Step 4 loader/harness integration plan v1 is now committed with concrete integration IDs (`LHI-01`..`LHI-06`).
+- Step 5 validation/regression gate matrix v1 is now committed with frozen validation IDs (`VRG-01`..`VRG-10`).
+- Step 6 handoff package v1 is now committed (`HND-01`..`HND-06`, `CRA-01`..`CRA-05`) with explicit closure-readiness results.
+- Cross-track `X-01` gate is now cleared through explicit BPL-02 `SRG-01`..`SRG-12` linkage evidence plus Step 2 contract coverage validation (`CON-01`..`CON-08` -> `BCL-01`..`BCL-12`).
+- Cross-track `X-02` gate is now cleared through explicit RPL-02 Step 3 mappings (`X03M-01`..`X03M-05`) and BPL-03 `B3*` consumption tables.
+- Failure semantics are now explicit: fixed check order, first-failure abort, strict no-fallback enforcement.
+- Integration entrypoints and diagnostics surfacing requirements are now explicit across loader/smoke/browser lanes.
+- Matrix now distinguishes required runtime/thread capabilities from deferred CL thread semantics.
+- Contradictions remain tracked with per-item status/notes for downstream remediation updates.
 
 Next Step Analysis:
 
-- Immediate Next Step: execute Step 2 by drafting a required capability matrix with check IDs and startup assertions mapped from contradiction IDs.
-- Why this step now: contradiction inventory is in place, so startup requirements can be codified as deterministic checks.
-- Evidence required to close next step: matrix committed with pass/fail assertions and contradiction-ID mapping references.
+- Immediate Next Step: continue downstream contradiction remediation via RPL-03 Step 1 shared-memory IPC contract drafting and dependency-evidence alignment.
+- Why this step now: worker topology/lifecycle constraints are now consumed and `X-02` is clear, so contradiction follow-through shifts to IPC protocol formalization.
+- Evidence required to close next step: RPL-03 Step 1 publishes protocol IDs that explicitly align with secure-only/no-fallback assumptions and updates dependency-row `X-03` notes.
 
 ---
 
 ### RPL-02 - Worker Topology and Thread Bootstrap
 
-- Status: `planned`
+- Status: `done`
 - Priority: `P0`
 - Last Updated: `2026-02-09`
-- Subplan: `doc/wasm/tickets/RPL-02-worker-topology-and-thread-bootstrap.md` (pending)
+- Subplan: `doc/wasm/tickets/RPL-02-worker-topology-and-thread-bootstrap.md`
 - Dependencies: RPL-01
 
 Notes:
 
 - MVP runtime architecture may require worker threads even before CL-level thread semantics.
 - Required worker roles must be explicit (kernel/runtime/storage/UI mediation boundaries).
+- Step 1 topology output v1 now defines role ownership (`WTOP-01`..`WTOP-05`) and startup sequencing (`WSEQ-01`..`WSEQ-06`).
+- Step 2 lifecycle contract v1 now defines deterministic states/transitions and role policies (`WLCS-01`..`WLCS-06`, `WLCT-01`..`WLCT-11`, `WLCR-01`..`WLCR-05`).
+- Step 3 cross-track mapping output is now complete with explicit mapping classes (`X03M-01`..`X03M-05`) and synchronized BPL-03 `B3*` consumption evidence.
+- Machine-actionable topology and lifecycle schemas (`worker_topology_ready_v1`, `worker_lifecycle_event_v1`, `worker_lifecycle_summary_v1`) are now available for harness and cross-track consumers.
+- Dependency row `X-02` is now `done` with explicit mapping coverage for all required RPL-02 ID classes.
 
 Next Step Analysis:
 
-- Immediate Next Step: document worker-role topology and startup sequence.
-- Why this step now: shared-memory channels and storage service boundaries depend on worker ownership.
-- Evidence required to close next step: topology diagram and startup lifecycle contract committed.
+- Immediate Next Step: maintain RPL-02 outputs as frozen baseline while RPL-03 Step 1 protocol work consumes worker-topology and lifecycle constraints.
+- Why this step now: RPL-02 exit criteria are satisfied and `X-02` is cleared, so this ticket shifts to additive-only maintenance.
+- Evidence required to close next step: RPL-03 Step 1 references `WTOP-*`/`WSEQ-*`/`WLCS-*`/`WLCT-*`/`WLCR-*` directly without reopening or renaming frozen IDs.
 
 ---
 
@@ -355,3 +371,14 @@ Avoid batching multiple unrelated next actions into one update.
 - 2026-02-09: Scaffolded `RPL-00` and `RPL-01` subplans and synchronized ticket board/detail notes.
 - 2026-02-09: Began RPL-01 execution with Step 1 contradiction inventory v1 and synchronized board/detail status updates.
 - 2026-02-09: Added program-level coordination references for parallel backend migration planning.
+- 2026-02-09: Synced RPL-01 Step 2 matrix completion (`SRG-01`..`SRG-12`) and advanced RPL-01/RPL-00 next-step analysis to Step 3 governance cycle.
+- 2026-02-09: Synced RPL-01 Step 3 diagnostics contract completion and advanced RPL-01/RPL-00 next-step analysis to Step 4 integration planning.
+- 2026-02-09: Synced RPL-01 Step 4 integration plan completion (`LHI-01`..`LHI-06`) and advanced RPL-01/RPL-00 next-step analysis to Step 5 validation gates.
+- 2026-02-09: Synced RPL-01 Step 5 validation/regression matrix completion (`VRG-01`..`VRG-10`) and advanced RPL-01/RPL-00 next-step analysis to Step 6 handoff packaging.
+- 2026-02-09: Synced RPL-01 Step 6 handoff package completion (`HND-01`..`HND-06`, `CRA-01`..`CRA-05`) and advanced next-step analysis to `X-01` consumption closure.
+- 2026-02-09: Synced post-Step-6 consumption checkpoint by clearing `X-01` (BPL-02 `SRG-01`..`SRG-12` linkage) and advanced runtime next-step analysis to RPL-02 Step 1.
+- 2026-02-09: Executed RPL-02 Step 1 worker-topology definition (`WTOP-01`..`WTOP-05`, `WSEQ-01`..`WSEQ-06`) and advanced runtime next-step analysis to RPL-02 Step 2 lifecycle contract work.
+- 2026-02-09: Synced RPL-02 Step 1 readiness evidence into dependency matrix by advancing `X-02` to `in_progress` and reaffirming RPL-02 Step 2 lifecycle contract as the single immediate runtime action.
+- 2026-02-09: Executed RPL-02 Step 2 lifecycle/failure-state contract (`WLCS-*`, `WLCT-*`, `WLCR-*`) with strict no-fallback semantics and advanced runtime next-step analysis to Step 3 cross-track mapping.
+- 2026-02-09: Synced runtime master with BPL-02 Step 2 closure evidence so `X-01` remains clear on both startup-gate linkage and closed contract traceability.
+- 2026-02-09: Executed RPL-02 Step 3 cross-track mapping (`X03M-01`..`X03M-05`), cleared dependency row `X-02`, marked RPL-02 `done`, and advanced governance/contradiction next-step focus to RPL-03 Step 1.

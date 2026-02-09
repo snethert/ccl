@@ -41,12 +41,14 @@ Out of scope:
 - Backend master plan has been created at `doc/wasm/backend-migration-master-plan.md`.
 - Cross-track dependency matrix has been created at `doc/wasm/runtime-backend-dependency-matrix.md`.
 - Backend ticket directory conventions now exist under `doc/wasm/backend-tickets/`.
+- BPL-03 Step 1 mapping output is now published with explicit `B3*` consumption IDs.
+- Dependency row `X-02` is now cleared and synchronized across backend/runtime master plans, matrix, and active ticket subplans.
 
 ## Immediate Next Step
 
-- Action: execute BPL-01 Step 1 inventory output and sync both backend master plan and dependency matrix in one change.
-- Why now: governance quality is only real after first downstream cycle execution.
-- Success evidence: BPL-01 moves to active execution and matrix rows are updated with any discovered dependency impact.
+- Action: continue governance-compliant execution by advancing BPL-03 Step 2 contract drafting and keeping matrix/master/subplan updates synchronized in-cycle.
+- Why now: `X-02` mapping intake is complete, so governance focus shifts to converting mapping evidence into implementation-facing contract language.
+- Success evidence: BPL-03 Step 2 status/notes and matrix/master references remain synchronized while `B3*` identifiers stay frozen.
 
 ## Detailed Work Breakdown
 
@@ -76,11 +78,12 @@ Out of scope:
 
 ### Step 4 - First Downstream Cycle Validation
 
-- Status: in_progress
+- Status: done
 - Notes:
-  - Awaiting first backend downstream cycle (BPL-01 Step 1 execution).
+  - Multiple downstream backend cycles have been executed with synchronized master/subplan/matrix updates.
+  - `X-02` dependency closure was completed in-cycle during BPL-03 Step 1 mapping publication.
 - Next:
-  - Validate process effectiveness during BPL-01 kickoff and adjust only with documented rationale.
+  - Maintain the same synchronization discipline for BPL-03 Step 2 and subsequent dependency-row updates.
 
 ## Test and Validation Plan
 
@@ -104,3 +107,4 @@ Out of scope:
 ## Change Log
 
 - 2026-02-09: Initial BPL-00 subplan created with governance and baseline-freeze workflow.
+- 2026-02-09: Synced governance state after BPL-03 Step 1 mapping publication and `X-02` closure; advanced immediate next action to BPL-03 Step 2 contract drafting.

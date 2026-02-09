@@ -89,7 +89,7 @@ an implementation hook in the stream layer (feature‑gated).
 **Decision:** Include WASM 3.0 in spec research and compatibility checks.  
 **Why:** WebAssembly 3.0 may change or clarify platform expectations that
 affect the backend and host ABI decisions.  
-**References:** (tracking note; update with concrete spec links as they are adopted)
+**References:** `doc/wasm/spec/README.md:1`, `doc/wasm/spec/core-multipage/index.html:1`
 
 ## ADR-0011 — PROGV uses a VSP sentinel instead of TSP frames (WASM)
 

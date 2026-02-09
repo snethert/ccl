@@ -43,13 +43,13 @@ Out of scope:
 - Master plan is present at `doc/wasm/runtime-replacement-master-plan.md`.
 - Ticket template and folder sync rules are present under `doc/wasm/tickets/`.
 - Baseline runtime status and artifact-size facts are captured in the master plan snapshot.
-- First downstream execution cycle has now started through RPL-01 Step 1 updates with synchronized master/subplan edits.
+- Eleventh downstream execution cycle is now complete through RPL-02 Step 3 cross-track mapping publication with synchronized ticket/master/matrix edits and `X-02` closure.
 
 ## Immediate Next Step
 
-- Action: continue the governance-compliant downstream update loop by executing RPL-01 Step 2 and syncing both docs in one change.
-- Why now: first-cycle validation has occurred; repeatable cadence now needs confirmation on the next ticket step.
-- Success evidence: RPL-01 Step 2 status/notes/evidence are reflected consistently in both subplan and master plan.
+- Action: continue the governance-compliant downstream update loop by executing RPL-03 Step 1 and syncing runtime master + dependency matrix in one change.
+- Why now: `X-02` is cleared, so the next governance-critical dependency checkpoint is protocol progress on `X-03`.
+- Success evidence: RPL-03 Step 1 status/notes and `X-03` evidence requirements are reflected consistently across subplan/master/matrix docs.
 
 ## Detailed Work Breakdown
 
@@ -84,17 +84,18 @@ Out of scope:
 - Status: done
 - Notes:
   - Ticket dependencies and priorities are defined in the master plan.
-  - First downstream ticket execution has been performed via RPL-01 Step 1 with synchronized updates.
+  - Downstream execution has now been repeated through RPL-02 Step 3 with synchronized updates.
 - Next:
-  - Reassess only if RPL-01 Step 2 uncovers ordering problems.
+  - No ordering issues were observed through RPL-02 Step 3; reassess only if RPL-03 Step 1 sync uncovers regressions.
 
 ### Step 5 - Governance Completion Check
 
 - Status: in_progress
 - Notes:
-  - One downstream ticket cycle has now been completed using the required sync process.
+  - Eleven downstream ticket cycles have now been completed using the required sync process.
+  - RPL-02 Step 3 mapping evidence is now synchronized across runtime/backend planning docs and dependency row `X-02` is cleared.
 - Next:
-  - Decide whether to close or keep RPL-00 active after one additional downstream cycle (RPL-01 Step 2).
+  - Reassess closure after one additional downstream cycle (RPL-03 Step 1) verifies smooth post-`X-02` protocol-handoff execution.
 
 ## Test and Validation Plan
 
@@ -119,3 +120,12 @@ Out of scope:
 
 - 2026-02-09: Initial subplan scaffold created and aligned with master-plan governance rules.
 - 2026-02-09: First downstream governance cycle started through RPL-01 Step 1; immediate next action moved to RPL-01 Step 2 sync loop.
+- 2026-02-09: Second downstream governance cycle completed through RPL-01 Step 2; immediate next action moved to RPL-01 Step 3 sync loop.
+- 2026-02-09: Third downstream governance cycle completed through RPL-01 Step 3; immediate next action moved to RPL-01 Step 4 sync loop.
+- 2026-02-09: Fourth downstream governance cycle completed through RPL-01 Step 4; immediate next action moved to RPL-01 Step 5 sync loop.
+- 2026-02-09: Fifth downstream governance cycle completed through RPL-01 Step 5; immediate next action moved to RPL-01 Step 6 sync loop.
+- 2026-02-09: Sixth downstream governance cycle completed through RPL-01 Step 6; immediate next action moved to post-handoff `X-01` closure sync.
+- 2026-02-09: Seventh downstream governance cycle completed through post-handoff `X-01` closure; immediate next action moved to RPL-02 Step 1 sync loop.
+- 2026-02-09: Eighth and ninth downstream governance cycles completed through RPL-02 Step 1 publication and `X-02` advancement to `in_progress`.
+- 2026-02-09: Tenth downstream governance cycle completed through RPL-02 Step 2 lifecycle/no-fallback contract publication and synchronized master/matrix notes.
+- 2026-02-09: Eleventh downstream governance cycle completed through RPL-02 Step 3 mapping publication and synchronized `X-02` closure across subplan/master/matrix docs.
