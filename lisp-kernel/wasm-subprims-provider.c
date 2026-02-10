@@ -47,14 +47,8 @@ void wasm_call_subprim_fixnum(LispObj sp_index_fixnum);
 __attribute__((import_module("ccl"), import_name("wasm_alloc_cons_bridge")))
 LispObj wasm_alloc_cons_bridge(LispObj car_value, LispObj cdr_value);
 
-__attribute__((import_module("ccl"), import_name("wasm_set_gc_root_policy_mode")))
-uint32_t wasm_set_gc_root_policy_mode(uint32_t mode);
-
-__attribute__((import_module("ccl"), import_name("wasm_get_entry_gc_root_policy_mode")))
-uint32_t wasm_get_entry_gc_root_policy_mode(uint32_t entry_index);
-
-__attribute__((import_module("ccl"), import_name("wasm_get_entry_call_abi")))
-uint32_t wasm_get_entry_call_abi(uint32_t entry_index);
+__attribute__((import_module("ccl"), import_name("wasm_prepare_entry_call")))
+uint32_t wasm_prepare_entry_call(uint32_t entry_index);
 
 void _SPksignalerr(void);
 
@@ -2012,9 +2006,7 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
 
   {
     uint32_t entry_index = (uint32_t)unbox_fixnum(entry);
-    uint32_t mode = wasm_get_entry_gc_root_policy_mode(entry_index);
-    uint32_t entry_call_abi = wasm_get_entry_call_abi(entry_index);
-    (void)wasm_set_gc_root_policy_mode(mode);
+    uint32_t entry_call_abi = wasm_prepare_entry_call(entry_index);
     switch (entry_call_abi) {
     case WASM_ENTRY_CALL_ABI_UNARY_I32: {
       LispObj result;

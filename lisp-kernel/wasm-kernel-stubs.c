@@ -473,6 +473,15 @@ wasm_get_entry_call_abi(uint32_t entry_index)
   return wasm_lookup_entry_call_abi_kind(entry_index);
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_prepare_entry_call")))
+uint32_t
+wasm_prepare_entry_call(uint32_t entry_index)
+{
+  uint32_t mode = wasm_lookup_entry_gc_root_policy_mode(entry_index);
+  wasm_publish_gc_root_policy_mode(mode);
+  return wasm_lookup_entry_call_abi_kind(entry_index);
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_clear_entry_call_abi")))
 void
 wasm_clear_entry_call_abi(void)
