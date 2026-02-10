@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-02-10T16:36:15.127Z",
+  "capturedAt": "2026-02-10T16:50:41.328Z",
   "host": {
     "node": "v25.6.0",
     "platform": "darwin",
@@ -17,15 +17,15 @@
       "entryIndex": 204,
       "exportName": "ccl_fixnum_add_entry",
       "latency": {
-        "nsPerOpMedian": 42.995,
-        "nsPerOpMin": 42.055,
-        "nsPerOpMax": 43.051,
+        "nsPerOpMedian": 41.761,
+        "nsPerOpMin": 41.31,
+        "nsPerOpMax": 43.432,
         "roundNsPerOp": [
-          43.048,
-          43.051,
-          42.055,
-          42.995,
-          42.917
+          43.432,
+          41.761,
+          42.108,
+          41.31,
+          41.488
         ]
       },
       "instructionPath": {
@@ -55,19 +55,19 @@
       "entryIndex": 301,
       "exportName": "ccl_generic_entry_301",
       "latency": {
-        "nsPerOpMedian": 45.788,
-        "nsPerOpMin": 45.242,
-        "nsPerOpMax": 48.247,
+        "nsPerOpMedian": 45.477,
+        "nsPerOpMin": 44.804,
+        "nsPerOpMax": 49.576,
         "roundNsPerOp": [
-          48.247,
-          45.242,
-          45.613,
-          46.44,
-          45.788
+          49.576,
+          45.839,
+          44.918,
+          45.477,
+          44.804
         ]
       },
       "instructionPath": {
-        "instructionCount": 78,
+        "instructionCount": 77,
         "callCount": 20,
         "callIndirectCount": 0,
         "ifCount": 3,
@@ -101,9 +101,9 @@
     }
   },
   "deltas": {
-    "latencyNsPerOp": 2.793,
-    "latencyPct": 6.497,
-    "instructionCount": 72,
+    "latencyNsPerOp": 3.716,
+    "latencyPct": 8.898,
+    "instructionCount": 71,
     "callCount": 18,
     "callIndirectCount": 0,
     "ifCount": 2

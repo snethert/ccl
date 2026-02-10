@@ -5223,10 +5223,25 @@
     (wasm2-push-u8 body #x71) ; i32.and
     (wasm2-push-u8 body #x45))) ; i32.eqz
 
+(defun wasm2-emit-fixnum-stack-tag-check (body)
+  (let ((mask (1- (ash 1 *wasm2-target-fixnum-shift*))))
+    (wasm2-emit-i32-const-op body mask)
+    (wasm2-push-u8 body #x71) ; i32.and
+    (wasm2-push-u8 body #x45))) ; i32.eqz
+
 (defun wasm2-emit-fixnum-local-pair-tag-check (body x-local y-local)
   (let ((mask (1- (ash 1 *wasm2-target-fixnum-shift*))))
     ;; ((x | y) & lowtag-mask) == 0  <=> both boxed operands are fixnums.
     (wasm2-emit-local-get-op body x-local)
+    (wasm2-emit-local-get-op body y-local)
+    (wasm2-push-u8 body #x72) ; i32.or
+    (wasm2-emit-i32-const-op body mask)
+    (wasm2-push-u8 body #x71) ; i32.and
+    (wasm2-push-u8 body #x45))) ; i32.eqz
+
+(defun wasm2-emit-fixnum-local-pair-tag-check-from-x-stack (body y-local)
+  (let ((mask (1- (ash 1 *wasm2-target-fixnum-shift*))))
+    ;; x is already on stack from local.tee.
     (wasm2-emit-local-get-op body y-local)
     (wasm2-push-u8 body #x72) ; i32.or
     (wasm2-emit-i32-const-op body mask)
@@ -5396,8 +5411,8 @@
     ;; Preserve operands so both direct and explicit fallback edges can consume
     ;; the original boxed values.
     (wasm2-emit-local-set-op body y-local)
-    (wasm2-emit-local-set-op body x-local)
-    (wasm2-emit-fixnum-local-pair-tag-check body x-local y-local)
+    (wasm2-emit-local-tee-op body x-local)
+    (wasm2-emit-fixnum-local-pair-tag-check-from-x-stack body y-local)
     (wasm2-push-u8 body #x04) ; if
     (wasm2-push-u8 body #x7f) ; blocktype i32
     (case op
@@ -5452,8 +5467,8 @@
          (lognot-mask (lognot (1- (ash 1 *wasm2-target-fixnum-shift*)))))
     ;; Preserve operand so the direct lane and explicit fallback edges share
     ;; the original boxed value.
-    (wasm2-emit-local-set-op body x-local)
-    (wasm2-emit-fixnum-local-tag-check body x-local)
+    (wasm2-emit-local-tee-op body x-local)
+    (wasm2-emit-fixnum-stack-tag-check body)
     (wasm2-push-u8 body #x04) ; if
     (wasm2-push-u8 body #x7f) ; blocktype i32
     (case op
