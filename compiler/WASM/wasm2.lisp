@@ -3469,15 +3469,29 @@
 
 (defun wasm2-uvset (seg vreg xfer vector index value)
   (declare (ignore vreg))
-  (let* ((misc-set (wasm2-subprim-fixnum '.SPmisc-set)))
+  (let* ((vec-temp (wasm2-allocate-temp))
+         (idx-temp (wasm2-allocate-temp))
+         (val-temp (wasm2-allocate-temp))
+         (slot-fixnum (acode-fixnum-form-p index))
+         (slot-fixnum-boxed (and (typep slot-fixnum 'fixnum)
+                                 (wasm2-box-fixnum slot-fixnum))))
     (wasm2-form seg nil nil vector)
-    (wasm2-form seg nil nil index)
-    (wasm2-form seg nil nil value)
-    (wasm2-emit :set-arg2)
-    (wasm2-emit :set-arg1)
-    (wasm2-emit :set-arg0)
-    (wasm2-emit-call-subprim misc-set)
-    (wasm2-emit :arg0)
+    (wasm2-emit :local.set vec-temp)
+    (if slot-fixnum-boxed
+      (multiple-value-bind (proven-slot proven-subtag)
+          (wasm2-proven-uvset-slot-proof vector index)
+        (wasm2-form seg nil nil value)
+        (wasm2-emit :local.set val-temp)
+        (if proven-slot
+          (wasm2-emit-misc-slot-set-with-subtag-guard vec-temp proven-slot val-temp
+                                                       proven-subtag t)
+          (wasm2-emit-misc-set-fallback-local vec-temp slot-fixnum-boxed val-temp t)))
+      (progn
+        (wasm2-form seg nil nil index)
+        (wasm2-emit :local.set idx-temp)
+        (wasm2-form seg nil nil value)
+        (wasm2-emit :local.set val-temp)
+        (wasm2-emit-misc-set-fallback-local vec-temp idx-temp val-temp t t)))
     (when (wasm2-returning-p xfer)
       (wasm2-emit :set-arg-z)
       (wasm2-emit :set-nargs 1)
@@ -4097,6 +4111,20 @@
     (and (typep slot 'fixnum)
          (nx2-constant-index-ok-for-type-keyword slot :simple-vector)
          slot)))
+
+(defun wasm2-proven-uvset-subtag-keyword (vector-form)
+  (cond
+    ((acode-form-typep vector-form 'simple-vector t) :simple-vector)
+    ((acode-form-typep vector-form 'structure-object t) :struct)))
+
+(defun wasm2-proven-uvset-slot-proof (vector-form slot-form)
+  (let* ((slot (acode-fixnum-form-p slot-form)))
+    (when (typep slot 'fixnum)
+      (let* ((keyword (wasm2-proven-uvset-subtag-keyword vector-form))
+             (subtag (and keyword (nx-lookup-target-uvector-subtag keyword))))
+        (when (and subtag
+                   (nx2-constant-index-ok-for-type-keyword slot keyword))
+          (values slot subtag))))))
 
 (defun wasm2-proven-closure-forward-ref-slot-p (slot)
   (and (typep slot 'fixnum)
