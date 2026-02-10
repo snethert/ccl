@@ -1133,24 +1133,8 @@ wasm_alloc_complex_double_float_from_bits(TCR *tcr, uint64_t real_bits, uint64_t
 }
 
 static LispObj
-wasm_misc_ref_dispatch(TCR *tcr, LispObj obj, signed_natural index)
+wasm_misc_ref_imm_dispatch(TCR *tcr, LispObj obj, unsigned subtag, signed_natural index)
 {
-  if (index < 0 || fulltag_of(obj) != fulltag_misc) {
-    wasm_subprims_trap();
-  }
-
-  LispObj header = header_of(obj);
-  unsigned subtag = header_subtag(header);
-  signed_natural count = header_element_count(header);
-  if (index >= count) {
-    wasm_subprims_trap();
-  }
-
-  if ((subtag & fulltagmask) == fulltag_nodeheader) {
-    LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
-    return data[index];
-  }
-
   if ((subtag & fulltagmask) != fulltag_immheader) {
     wasm_subprims_trap();
   }
@@ -1238,8 +1222,8 @@ wasm_misc_ref_dispatch(TCR *tcr, LispObj obj, signed_natural index)
   }
 }
 
-static void
-wasm_misc_set_dispatch(TCR *tcr, LispObj obj, signed_natural index, LispObj value)
+static LispObj
+wasm_misc_ref_dispatch(TCR *tcr, LispObj obj, signed_natural index)
 {
   if (index < 0 || fulltag_of(obj) != fulltag_misc) {
     wasm_subprims_trap();
@@ -1254,10 +1238,15 @@ wasm_misc_set_dispatch(TCR *tcr, LispObj obj, signed_natural index, LispObj valu
 
   if ((subtag & fulltagmask) == fulltag_nodeheader) {
     LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
-    data[index] = value;
-    return;
+    return data[index];
   }
 
+  return wasm_misc_ref_imm_dispatch(tcr, obj, subtag, index);
+}
+
+static void
+wasm_misc_set_imm_dispatch(TCR *tcr, LispObj obj, unsigned subtag, signed_natural index, LispObj value)
+{
   if ((subtag & fulltagmask) != fulltag_immheader) {
     wasm_subprims_trap();
   }
@@ -1431,6 +1420,29 @@ wasm_misc_set_dispatch(TCR *tcr, LispObj obj, signed_natural index, LispObj valu
     }
     data[index] = uval;
   }
+}
+
+static void
+wasm_misc_set_dispatch(TCR *tcr, LispObj obj, signed_natural index, LispObj value)
+{
+  if (index < 0 || fulltag_of(obj) != fulltag_misc) {
+    wasm_subprims_trap();
+  }
+
+  LispObj header = header_of(obj);
+  unsigned subtag = header_subtag(header);
+  signed_natural count = header_element_count(header);
+  if (index >= count) {
+    wasm_subprims_trap();
+  }
+
+  if ((subtag & fulltagmask) == fulltag_nodeheader) {
+    LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
+    data[index] = value;
+    return;
+  }
+
+  wasm_misc_set_imm_dispatch(tcr, obj, subtag, index, value);
 }
 
 static inline LispObj *
@@ -2990,21 +3002,23 @@ _SPmisc_ref(void)
 
   LispObj obj = wasm_reg(tcr, arg_z);
   signed_natural index = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, arg_y));
-  if (fulltag_of(obj) == fulltag_misc) {
-    LispObj header = header_of(obj);
-    unsigned subtag = header_subtag(header);
-    if ((subtag & fulltagmask) == fulltag_nodeheader) {
-      signed_natural count = header_element_count(header);
-      if (index < 0 || index >= count) {
-        wasm_subprims_trap();
-      }
-      LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
-      wasm_set_reg(tcr, arg_z, data[index]);
-      wasm_set_reg(tcr, nargs, box_fixnum(1));
-      return;
-    }
+  if (fulltag_of(obj) != fulltag_misc) {
+    wasm_subprims_trap();
   }
-  LispObj value = wasm_misc_ref_dispatch(tcr, obj, index);
+  LispObj header = header_of(obj);
+  unsigned subtag = header_subtag(header);
+  signed_natural count = header_element_count(header);
+  if (index < 0 || index >= count) {
+    wasm_subprims_trap();
+  }
+
+  LispObj value;
+  if ((subtag & fulltagmask) == fulltag_nodeheader) {
+    LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
+    value = data[index];
+  } else {
+    value = wasm_misc_ref_imm_dispatch(tcr, obj, subtag, index);
+  }
   wasm_set_reg(tcr, arg_z, value);
   wasm_set_reg(tcr, nargs, box_fixnum(1));
 }
@@ -3298,17 +3312,18 @@ _SPsubtag_misc_ref(void)
     wasm_subprims_trap();
   }
   signed_natural index = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, arg_y));
-  if (((unsigned)subtag & fulltagmask) == fulltag_nodeheader) {
-    signed_natural count = header_element_count(header);
-    if (index < 0 || index >= count) {
-      wasm_subprims_trap();
-    }
-    LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
-    wasm_set_reg(tcr, arg_z, data[index]);
-    wasm_set_reg(tcr, nargs, box_fixnum(1));
-    return;
+  signed_natural count = header_element_count(header);
+  if (index < 0 || index >= count) {
+    wasm_subprims_trap();
   }
-  LispObj value = wasm_misc_ref_dispatch(tcr, obj, index);
+
+  LispObj value;
+  if (((unsigned)subtag & fulltagmask) == fulltag_nodeheader) {
+    LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
+    value = data[index];
+  } else {
+    value = wasm_misc_ref_imm_dispatch(tcr, obj, (unsigned)subtag, index);
+  }
   wasm_set_reg(tcr, arg_z, value);
   wasm_set_reg(tcr, nargs, box_fixnum(1));
 }
@@ -3325,22 +3340,22 @@ _SPmisc_set(void)
   LispObj obj = wasm_reg(tcr, arg_z);
   signed_natural index = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, arg_y));
   LispObj value = wasm_reg(tcr, arg_x);
-  if (fulltag_of(obj) == fulltag_misc) {
-    LispObj header = header_of(obj);
-    unsigned subtag = header_subtag(header);
-    if ((subtag & fulltagmask) == fulltag_nodeheader) {
-      signed_natural count = header_element_count(header);
-      if (index < 0 || index >= count) {
-        wasm_subprims_trap();
-      }
-      LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
-      data[index] = value;
-      wasm_set_reg(tcr, arg_z, value);
-      wasm_set_reg(tcr, nargs, box_fixnum(1));
-      return;
-    }
+  if (fulltag_of(obj) != fulltag_misc) {
+    wasm_subprims_trap();
   }
-  wasm_misc_set_dispatch(tcr, obj, index, value);
+  LispObj header = header_of(obj);
+  unsigned subtag = header_subtag(header);
+  signed_natural count = header_element_count(header);
+  if (index < 0 || index >= count) {
+    wasm_subprims_trap();
+  }
+
+  if ((subtag & fulltagmask) == fulltag_nodeheader) {
+    LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
+    data[index] = value;
+  } else {
+    wasm_misc_set_imm_dispatch(tcr, obj, subtag, index, value);
+  }
   wasm_set_reg(tcr, arg_z, value);
   wasm_set_reg(tcr, nargs, box_fixnum(1));
 }
@@ -3369,19 +3384,17 @@ _SPsubtag_misc_set(void)
     wasm_subprims_trap();
   }
   signed_natural index = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, arg_y));
+  signed_natural count = header_element_count(header);
+  if (index < 0 || index >= count) {
+    wasm_subprims_trap();
+  }
   LispObj value = wasm_reg(tcr, arg_x);
   if (((unsigned)subtag & fulltagmask) == fulltag_nodeheader) {
-    signed_natural count = header_element_count(header);
-    if (index < 0 || index >= count) {
-      wasm_subprims_trap();
-    }
     LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
     data[index] = value;
-    wasm_set_reg(tcr, arg_z, value);
-    wasm_set_reg(tcr, nargs, box_fixnum(1));
-    return;
+  } else {
+    wasm_misc_set_imm_dispatch(tcr, obj, (unsigned)subtag, index, value);
   }
-  wasm_misc_set_dispatch(tcr, obj, index, value);
   wasm_set_reg(tcr, arg_z, value);
   wasm_set_reg(tcr, nargs, box_fixnum(1));
 }
@@ -3825,18 +3838,24 @@ _SPbuiltin_aref1(void)
     signed_natural index = unbox_fixnum(index_val);
     LispObj header = header_of(obj);
     unsigned subtag = header_subtag(header);
+    signed_natural count = header_element_count(header);
+    if (index < 0 || index >= count) {
+      wasm_subprims_trap();
+    }
     if (subtag == subtag_simple_vector) {
-      signed_natural count = header_element_count(header);
-      if (index < 0 || index >= count) {
-        wasm_subprims_trap();
-      }
       LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
       wasm_set_reg(tcr, arg_z, data[index]);
       wasm_set_reg(tcr, nargs, box_fixnum(1));
       return;
     }
     if (subtag >= min_cl_ivector_subtag) {
-      LispObj value = wasm_misc_ref_dispatch(tcr, obj, index);
+      LispObj value;
+      if ((subtag & fulltagmask) == fulltag_nodeheader) {
+        LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
+        value = data[index];
+      } else {
+        value = wasm_misc_ref_imm_dispatch(tcr, obj, subtag, index);
+      }
       wasm_set_reg(tcr, arg_z, value);
       wasm_set_reg(tcr, nargs, box_fixnum(1));
       return;
@@ -3862,11 +3881,11 @@ _SPbuiltin_aset1(void)
     signed_natural index = unbox_fixnum(index_val);
     LispObj header = header_of(obj);
     unsigned subtag = header_subtag(header);
+    signed_natural count = header_element_count(header);
+    if (index < 0 || index >= count) {
+      wasm_subprims_trap();
+    }
     if (subtag == subtag_simple_vector) {
-      signed_natural count = header_element_count(header);
-      if (index < 0 || index >= count) {
-        wasm_subprims_trap();
-      }
       LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
       data[index] = value;
       wasm_set_reg(tcr, arg_z, value);
@@ -3874,7 +3893,12 @@ _SPbuiltin_aset1(void)
       return;
     }
     if (subtag >= min_cl_ivector_subtag) {
-      wasm_misc_set_dispatch(tcr, obj, index, value);
+      if ((subtag & fulltagmask) == fulltag_nodeheader) {
+        LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
+        data[index] = value;
+      } else {
+        wasm_misc_set_imm_dispatch(tcr, obj, subtag, index, value);
+      }
       wasm_set_reg(tcr, arg_z, value);
       wasm_set_reg(tcr, nargs, box_fixnum(1));
       return;
