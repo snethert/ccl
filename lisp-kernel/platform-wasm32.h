@@ -136,6 +136,7 @@ void wasm_register_entry_gc_root_policy_mode(uint32_t entry_index, uint32_t mode
 uint32_t wasm_lookup_entry_gc_root_policy_mode(uint32_t entry_index);
 void wasm_clear_entry_gc_root_policy_modes(void);
 uint32_t wasm_gc_forwarding_selftest(void);
+uint32_t wasm_cstack_frame_coherence_selftest(void);
 
 natural wasm_cstack_push_frame(TCR *tcr, LispObj savefn, pc savelr, LispObj savevsp);
 void wasm_cstack_pop_frame(TCR *tcr, natural old_last_lisp_frame);

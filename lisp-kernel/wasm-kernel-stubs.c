@@ -412,6 +412,13 @@ wasm_gc_forwarding_selftest_export(void)
   return wasm_gc_forwarding_selftest();
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_cstack_frame_coherence_selftest")))
+uint32_t
+wasm_cstack_frame_coherence_selftest_export(void)
+{
+  return wasm_cstack_frame_coherence_selftest();
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_save_image_direct")))
 int32_t
 wasm_save_image_direct(uint32_t path_ptr, uint32_t path_len, uint32_t egc_enabled)

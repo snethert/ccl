@@ -57,13 +57,14 @@ Out of scope:
 - WASM dnode forwarding math is now architecture-neutral in `lisp-kernel/wasm-gc.c`: forwarding offsets are computed from direct pagelet mark-word prefix counts, removing ARM-endian halfword selection logic from the hot relocation path.
 - Relocation-focused GC stress coverage is now active via `doc/wasm/js/gc-forwarding-smoke.mjs` (wired into `doc/wasm/js/all-smoke.mjs`) and backed by a deterministic kernel self-test export (`wasm_gc_forwarding_selftest`) that validates mark-word prefix forwarding math across fixed and randomized stress patterns.
 - `B10G-03` safepoint boundary-map contract is now enforced end-to-end: compiler bundle emitters publish `gcRootBoundaryOps` alongside `gcRootPolicyModes`, pack/compact tooling preserves boundary maps, and `doc/wasm/js/compiler-smoke.mjs` now hard-fails on boundary-map-to-mode mismatches while validating runtime per-entry mode registration/invocation semantics.
+- `B10G-04` phase 1 frame-coherence validation is now active: `lisp-kernel/wasm-cstack.c` includes deterministic self-test coverage for nested enter/exit and unwind-style frame-missing exits (`wasm_cstack_frame_coherence_selftest`), exported via `lisp-kernel/wasm-kernel-stubs.c` and wired into smoke via `doc/wasm/js/cstack-frame-coherence-smoke.mjs` + `doc/wasm/js/all-smoke.mjs`.
 - `lib/wasmenv.lisp` preserves ARM-order register compatibility as a transition design.
 
 ## Immediate Next Step
 
-- Action: start `B10G-04` Cstack/lisp-frame coherence hardening by auditing unwind/catch/funcall boundary paths for last-lisp-frame + save-vsp invariants and adding targeted validation coverage.
-- Why now: `B10G-03` now has strict compiler/runtime contract gating in smoke lanes, so next remaining GC correctness risk is frame coherence across non-local exits and GC scans.
-- Success evidence: targeted `B10G-04` checks land with deterministic failure signatures, `scripts/wasm/arm-retirement-audit.sh --strict` stays `total_hits=0`, and `node doc/wasm/js/all-smoke.mjs` remains green.
+- Action: continue `B10G-04` with phase 2 unwind/catch/funcall boundary hardening by adding targeted throw/unwind path checks that assert last-lisp-frame/save-vsp coherence at subprim non-local-exit boundaries.
+- Why now: phase 1 now provides deterministic cstack-frame wrapper checks and smoke gating, so the remaining `B10G-04` risk is coherence across catch-frame restoration and funcall-driven pending-throw exits.
+- Success evidence: subprim-boundary `B10G-04` checks land with deterministic signatures, `scripts/wasm/arm-retirement-audit.sh --strict` stays `total_hits=0`, and `node doc/wasm/js/all-smoke.mjs` remains green.
 
 ## Wave A Progress (B10S-01)
 
@@ -226,6 +227,7 @@ Out of scope:
 
 ## Change Log
 
+- 2026-02-10: Started `B10G-04` phase 1 by adding deterministic cstack/lisp-frame coherence self-test coverage in `lisp-kernel/wasm-cstack.c` (`wasm_cstack_frame_coherence_selftest`), exporting it via `lisp-kernel/wasm-kernel-stubs.c`, and wiring new smoke lane `doc/wasm/js/cstack-frame-coherence-smoke.mjs` into `doc/wasm/js/all-smoke.mjs`; rebuilt kernel via documented `env.sh` flow and revalidated (`scripts/wasm/arm-retirement-audit.sh --strict` => `total_hits=0`, `node doc/wasm/js/all-smoke.mjs` pass after required root-image manifest refresh).
 - 2026-02-10: Completed `B10G-03` safepoint contract enforcement by emitting `gcRootBoundaryOps` through module bundle producers (`scripts/wasm/compile-smoke-modules.lisp`, `scripts/wasm/compile-ui-modules.lisp`, `scripts/wasm/compile-wasm-fasls.lisp`), preserving boundary maps through bundle transforms (`scripts/wasm/pack-inline-bundle-v2.mjs`, `scripts/wasm/compact-runtime-modules.mjs`), extending compiler/runtime validation checks in `doc/wasm/js/compiler-smoke.mjs`, and regenerating smoke bundle metadata (`doc/wasm/wasm-smoke-modules.json`); rebuilt kernel via documented env flow and revalidated (`/bin/zsh -lc 'source scripts/wasm/env.sh && make -C lisp-kernel/wasm32 CC=\"$CC\" WASM_LD=\"$WASM_LD\"'`, `scripts/wasm/arm-retirement-audit.sh --strict` => `total_hits=0`, `node doc/wasm/js/all-smoke.mjs` pass).
 - 2026-02-10: Started `B10G-03` safepoint boundary-map instrumentation by extending wasm2 compiler debug metadata with per-module GC boundary opcode sets (`compiler/WASM/wasm2.lisp`) and emitting `gcRootBoundaryOps` in module-debug JSON (`scripts/wasm/compile-wasm-fasls.lisp`); validation remained green (`scripts/wasm/arm-retirement-audit.sh --strict` => `total_hits=0`, `node doc/wasm/js/all-smoke.mjs` pass after manifest refresh).
 - 2026-02-10: Completed `B10G-02` relocation-focused validation by adding deterministic kernel forwarding arithmetic self-test coverage (`wasm_gc_forwarding_selftest` in `lisp-kernel/wasm-gc.c`, exported via `lisp-kernel/wasm-kernel-stubs.c`) and wiring new smoke lane `doc/wasm/js/gc-forwarding-smoke.mjs` into `doc/wasm/js/all-smoke.mjs`; rebuilt via documented `env.sh` flow and revalidated (`scripts/wasm/arm-retirement-audit.sh --strict` => `total_hits=0`, `node doc/wasm/js/all-smoke.mjs` pass after manifest refresh).
