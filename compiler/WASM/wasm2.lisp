@@ -5142,20 +5142,38 @@
     (wasm2-emit-generic-ir body else-body (cons if-label label-stack))
     (wasm2-push-u8 body #x0b))) ; end
 
-(defun wasm2-emit-fixnum-op (body op-key)
+(defun wasm2-emit-hot-direct-fixnum-binary-op (body op)
+  (declare (ignore body op))
+  ;; B10C-01A-10 fills this direct-lowering lane.
+  nil)
+
+(defun wasm2-emit-hot-direct-fixnum-unary-op (body op)
+  (declare (ignore body op))
+  ;; B10C-01A-11 fills this direct-lowering lane.
+  nil)
+
+(defun wasm2-emit-compat-fallback-fixnum-binary-op (body compat-op-key)
   (wasm2-emit-call-index body (wasm2-generic-import-index :set-arg-y))
   (wasm2-emit-call-index body (wasm2-generic-import-index :set-arg-z))
   (wasm2-emit-spill-locals body)
-  (wasm2-emit-call-index body (wasm2-generic-import-index op-key))
+  (wasm2-emit-call-index body (wasm2-generic-import-index compat-op-key))
   (wasm2-emit-restore-locals body)
   (wasm2-emit-call-index body (wasm2-generic-import-index :get-arg-z)))
 
-(defun wasm2-emit-fixnum-unary-op (body op-key)
+(defun wasm2-emit-compat-fallback-fixnum-unary-op (body compat-op-key)
   (wasm2-emit-call-index body (wasm2-generic-import-index :set-arg-z))
   (wasm2-emit-spill-locals body)
-  (wasm2-emit-call-index body (wasm2-generic-import-index op-key))
+  (wasm2-emit-call-index body (wasm2-generic-import-index compat-op-key))
   (wasm2-emit-restore-locals body)
   (wasm2-emit-call-index body (wasm2-generic-import-index :get-arg-z)))
+
+(defun wasm2-emit-fixnum-binary-op (body op compat-op-key)
+  (or (wasm2-emit-hot-direct-fixnum-binary-op body op)
+      (wasm2-emit-compat-fallback-fixnum-binary-op body compat-op-key)))
+
+(defun wasm2-emit-fixnum-unary-op (body op compat-op-key)
+  (or (wasm2-emit-hot-direct-fixnum-unary-op body op)
+      (wasm2-emit-compat-fallback-fixnum-unary-op body compat-op-key)))
 
 (defun wasm2-emit-call-with-pending (body key tmp &optional label-stack)
   (wasm2-emit-spill-locals body)
@@ -5359,15 +5377,15 @@
         (:f64-ge (wasm2-push-u8 body #x66))
         (:select
          (wasm2-push-u8 body #x1b))
-        (:fixnum-add (wasm2-emit-fixnum-op body :return-fixnum-add))
-        (:fixnum-sub (wasm2-emit-fixnum-op body :return-fixnum-sub))
-        (:fixnum-mul (wasm2-emit-fixnum-op body :return-fixnum-mul))
-        (:fixnum-ash (wasm2-emit-fixnum-op body :return-fixnum-ash))
-        (:fixnum-logand (wasm2-emit-fixnum-op body :return-fixnum-logand))
-        (:fixnum-logior (wasm2-emit-fixnum-op body :return-fixnum-logior))
-        (:fixnum-logxor (wasm2-emit-fixnum-op body :return-fixnum-logxor))
-        (:fixnum-lognot (wasm2-emit-fixnum-unary-op body :return-fixnum-lognot))
-        (:fixnum-neg (wasm2-emit-fixnum-unary-op body :return-fixnum-neg))
+        (:fixnum-add (wasm2-emit-fixnum-binary-op body :fixnum-add :return-fixnum-add))
+        (:fixnum-sub (wasm2-emit-fixnum-binary-op body :fixnum-sub :return-fixnum-sub))
+        (:fixnum-mul (wasm2-emit-fixnum-binary-op body :fixnum-mul :return-fixnum-mul))
+        (:fixnum-ash (wasm2-emit-fixnum-binary-op body :fixnum-ash :return-fixnum-ash))
+        (:fixnum-logand (wasm2-emit-fixnum-binary-op body :fixnum-logand :return-fixnum-logand))
+        (:fixnum-logior (wasm2-emit-fixnum-binary-op body :fixnum-logior :return-fixnum-logior))
+        (:fixnum-logxor (wasm2-emit-fixnum-binary-op body :fixnum-logxor :return-fixnum-logxor))
+        (:fixnum-lognot (wasm2-emit-fixnum-unary-op body :fixnum-lognot :return-fixnum-lognot))
+        (:fixnum-neg (wasm2-emit-fixnum-unary-op body :fixnum-neg :return-fixnum-neg))
         (:call0 (wasm2-emit-call-with-pending body :funcall0 (car args) label-stack))
         (:call1 (wasm2-emit-call-with-pending body :funcall1 (car args) label-stack))
         (:call2 (wasm2-emit-call-with-pending body :funcall2 (car args) label-stack))
