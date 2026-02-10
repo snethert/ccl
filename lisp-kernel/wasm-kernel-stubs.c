@@ -1631,6 +1631,11 @@ wasm_clear_pending_throw(void)
   tcr->wasm_pending_throw = 0;
 }
 
+/*
+ * Compatibility-only fixnum return helpers.
+ * Hot arithmetic lanes should stay in compiler-emitted direct WASM lowering
+ * and branch to these only on explicit fallback edges.
+ */
 __attribute__((used, visibility("default"), export_name("wasm_return_fixnum_add")))
 void
 wasm_return_fixnum_add(void)

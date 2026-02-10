@@ -4989,6 +4989,8 @@
    (list :set-arg-x "wasm_set_arg_x" +wasm2-type-i32-void+)
    (list :set-nargs "wasm_set_nargs" +wasm2-type-i32-void+)
    (list :set-nfn "wasm_set_nfn" +wasm2-type-i32-void+)
+   ;; Compatibility-only helpers: direct fixnum lowering must stay in :fixnum-*
+   ;; hot lanes and branch here only on explicit fallback edges.
    (list :return-fixnum-add "wasm_return_fixnum_add" +wasm2-type-void-void+)
    (list :return-fixnum-sub "wasm_return_fixnum_sub" +wasm2-type-void-void+)
    (list :return-fixnum-mul "wasm_return_fixnum_mul" +wasm2-type-void-void+)
@@ -5431,14 +5433,30 @@
     (wasm2-push-u8 body #x0b)) ; end
   t)
 
+(defparameter *wasm2-fixnum-compat-op-keys*
+  '(:return-fixnum-add
+    :return-fixnum-sub
+    :return-fixnum-mul
+    :return-fixnum-ash
+    :return-fixnum-neg
+    :return-fixnum-logand
+    :return-fixnum-logior
+    :return-fixnum-logxor
+    :return-fixnum-lognot))
+
 (defparameter *wasm2-no-spill-fixnum-compat-op-keys*
   '(:return-fixnum-logand
     :return-fixnum-logior
     :return-fixnum-logxor
     :return-fixnum-lognot))
 
+(defun wasm2-fixnum-compat-op-key-p (compat-op-key)
+  (member compat-op-key *wasm2-fixnum-compat-op-keys* :test #'eq))
+
 (defun wasm2-fixnum-compat-fallback-requires-spill-p (compat-op-key)
   ;; Keep spill envelopes only for compatibility helpers that can allocate/GC.
+  (unless (wasm2-fixnum-compat-op-key-p compat-op-key)
+    (error "WASM2: non-compat fixnum fallback key ~s" compat-op-key))
   (not (member compat-op-key *wasm2-no-spill-fixnum-compat-op-keys* :test #'eq)))
 
 (defun wasm2-emit-compat-fallback-fixnum-call (body compat-op-key)
@@ -6989,51 +7007,6 @@
              (eq (caar (cdddr ir)) :return))
     (values (cadar ir) t)))
 
-(defun wasm2-fixnum-add-ir-p (ir)
-  (and (= (length ir) 2)
-       (eq (caar ir) :fixnum-add)
-       (eq (caar (cdr ir)) :return)))
-
-(defun wasm2-fixnum-sub-ir-p (ir)
-  (and (= (length ir) 2)
-       (eq (caar ir) :fixnum-sub)
-       (eq (caar (cdr ir)) :return)))
-
-(defun wasm2-fixnum-mul-ir-p (ir)
-  (and (= (length ir) 2)
-       (eq (caar ir) :fixnum-mul)
-       (eq (caar (cdr ir)) :return)))
-
-(defun wasm2-fixnum-ash-ir-p (ir)
-  (and (= (length ir) 2)
-       (eq (caar ir) :fixnum-ash)
-       (eq (caar (cdr ir)) :return)))
-
-(defun wasm2-fixnum-logand-ir-p (ir)
-  (and (= (length ir) 2)
-       (eq (caar ir) :fixnum-logand)
-       (eq (caar (cdr ir)) :return)))
-
-(defun wasm2-fixnum-logior-ir-p (ir)
-  (and (= (length ir) 2)
-       (eq (caar ir) :fixnum-logior)
-       (eq (caar (cdr ir)) :return)))
-
-(defun wasm2-fixnum-logxor-ir-p (ir)
-  (and (= (length ir) 2)
-       (eq (caar ir) :fixnum-logxor)
-       (eq (caar (cdr ir)) :return)))
-
-(defun wasm2-fixnum-lognot-ir-p (ir)
-  (and (= (length ir) 2)
-       (eq (caar ir) :fixnum-lognot)
-       (eq (caar (cdr ir)) :return)))
-
-(defun wasm2-fixnum-neg-ir-p (ir)
-  (and (= (length ir) 2)
-       (eq (caar ir) :fixnum-neg)
-       (eq (caar (cdr ir)) :return)))
-
 (defun wasm2-if-arg0-const-ir-p (ir)
   (when (and (= (length ir) 2)
              (eq (caar ir) :if-arg0)
@@ -7255,168 +7228,8 @@
                                     (if keyvec keyvec const-value)
                                     bits))
             (return-from wasm2-compile afunc)))
-        (when (wasm2-fixnum-add-ir-p ir)
-          (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
-            (let* ((module-bytes (wasm2-fixnum-add-module-bytes)))
-              (wasm2-register-compiled-module module-bytes
-                                              +wasm-fixnum-add-export-name+
-                                              +wasm-fixnum-add-entry-index+
-                                              +wasm-fixnum-add-module-version+
-                                              nil
-                                              nil
-                                              +wasm2-gc-root-mode-runtime-bootstrap+)
-              (setf (afunc-lfun-info afunc)
-                    (list* 'wasm-module-bytes module-bytes
-                           'wasm-module-export +wasm-fixnum-add-export-name+
-                           'wasm-module-version +wasm-fixnum-add-module-version+
-                           (afunc-lfun-info afunc))))
-            (setf (afunc-argsword afunc) bits)
-            (wasm2-set-afunc-lfun afunc +wasm-fixnum-add-entry-index+ keyvec-slot bits))
-          (return-from wasm2-compile afunc))
-      (when (wasm2-fixnum-sub-ir-p ir)
-        (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
-          (let* ((module-bytes (wasm2-fixnum-sub-module-bytes)))
-            (wasm2-register-compiled-module module-bytes
-                                            +wasm-fixnum-sub-export-name+
-                                            +wasm-fixnum-sub-entry-index+
-                                            +wasm-fixnum-sub-module-version+
-                                            nil
-                                            nil
-                                            +wasm2-gc-root-mode-runtime-bootstrap+)
-            (setf (afunc-lfun-info afunc)
-                  (list* 'wasm-module-bytes module-bytes
-                         'wasm-module-export +wasm-fixnum-sub-export-name+
-                         'wasm-module-version +wasm-fixnum-sub-module-version+
-                         (afunc-lfun-info afunc))))
-          (setf (afunc-argsword afunc) bits)
-          (wasm2-set-afunc-lfun afunc +wasm-fixnum-sub-entry-index+ keyvec-slot bits))
-        (return-from wasm2-compile afunc))
-      (when (wasm2-fixnum-mul-ir-p ir)
-        (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
-          (let* ((module-bytes (wasm2-fixnum-mul-module-bytes)))
-            (wasm2-register-compiled-module module-bytes
-                                            +wasm-fixnum-mul-export-name+
-                                            +wasm-fixnum-mul-entry-index+
-                                            +wasm-fixnum-mul-module-version+
-                                            nil
-                                            nil
-                                            +wasm2-gc-root-mode-runtime-bootstrap+)
-            (setf (afunc-lfun-info afunc)
-                  (list* 'wasm-module-bytes module-bytes
-                         'wasm-module-export +wasm-fixnum-mul-export-name+
-                         'wasm-module-version +wasm-fixnum-mul-module-version+
-                         (afunc-lfun-info afunc))))
-          (setf (afunc-argsword afunc) bits)
-          (wasm2-set-afunc-lfun afunc +wasm-fixnum-mul-entry-index+ keyvec-slot bits))
-        (return-from wasm2-compile afunc))
-      (when (wasm2-fixnum-ash-ir-p ir)
-        (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
-          (let* ((module-bytes (wasm2-fixnum-ash-module-bytes)))
-            (wasm2-register-compiled-module module-bytes
-                                            +wasm-fixnum-ash-export-name+
-                                            +wasm-fixnum-ash-entry-index+
-                                            +wasm-fixnum-ash-module-version+
-                                            nil
-                                            nil
-                                            +wasm2-gc-root-mode-runtime-bootstrap+)
-            (setf (afunc-lfun-info afunc)
-                  (list* 'wasm-module-bytes module-bytes
-                         'wasm-module-export +wasm-fixnum-ash-export-name+
-                         'wasm-module-version +wasm-fixnum-ash-module-version+
-                         (afunc-lfun-info afunc))))
-          (setf (afunc-argsword afunc) bits)
-          (wasm2-set-afunc-lfun afunc +wasm-fixnum-ash-entry-index+ keyvec-slot bits))
-        (return-from wasm2-compile afunc))
-      (when (wasm2-fixnum-logand-ir-p ir)
-        (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
-          (let* ((module-bytes (wasm2-fixnum-logand-module-bytes)))
-            (wasm2-register-compiled-module module-bytes
-                                            +wasm-fixnum-logand-export-name+
-                                            +wasm-fixnum-logand-entry-index+
-                                            +wasm-fixnum-logand-module-version+
-                                            nil
-                                            nil
-                                            +wasm2-gc-root-mode-runtime-bootstrap+)
-            (setf (afunc-lfun-info afunc)
-                  (list* 'wasm-module-bytes module-bytes
-                         'wasm-module-export +wasm-fixnum-logand-export-name+
-                         'wasm-module-version +wasm-fixnum-logand-module-version+
-                         (afunc-lfun-info afunc))))
-          (setf (afunc-argsword afunc) bits)
-          (wasm2-set-afunc-lfun afunc +wasm-fixnum-logand-entry-index+ keyvec-slot bits))
-        (return-from wasm2-compile afunc))
-      (when (wasm2-fixnum-logior-ir-p ir)
-        (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
-          (let* ((module-bytes (wasm2-fixnum-logior-module-bytes)))
-            (wasm2-register-compiled-module module-bytes
-                                            +wasm-fixnum-logior-export-name+
-                                            +wasm-fixnum-logior-entry-index+
-                                            +wasm-fixnum-logior-module-version+
-                                            nil
-                                            nil
-                                            +wasm2-gc-root-mode-runtime-bootstrap+)
-            (setf (afunc-lfun-info afunc)
-                  (list* 'wasm-module-bytes module-bytes
-                         'wasm-module-export +wasm-fixnum-logior-export-name+
-                         'wasm-module-version +wasm-fixnum-logior-module-version+
-                         (afunc-lfun-info afunc))))
-          (setf (afunc-argsword afunc) bits)
-          (wasm2-set-afunc-lfun afunc +wasm-fixnum-logior-entry-index+ keyvec-slot bits))
-        (return-from wasm2-compile afunc))
-      (when (wasm2-fixnum-logxor-ir-p ir)
-        (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
-          (let* ((module-bytes (wasm2-fixnum-logxor-module-bytes)))
-            (wasm2-register-compiled-module module-bytes
-                                            +wasm-fixnum-logxor-export-name+
-                                            +wasm-fixnum-logxor-entry-index+
-                                            +wasm-fixnum-logxor-module-version+
-                                            nil
-                                            nil
-                                            +wasm2-gc-root-mode-runtime-bootstrap+)
-            (setf (afunc-lfun-info afunc)
-                  (list* 'wasm-module-bytes module-bytes
-                         'wasm-module-export +wasm-fixnum-logxor-export-name+
-                         'wasm-module-version +wasm-fixnum-logxor-module-version+
-                         (afunc-lfun-info afunc))))
-          (setf (afunc-argsword afunc) bits)
-          (wasm2-set-afunc-lfun afunc +wasm-fixnum-logxor-entry-index+ keyvec-slot bits))
-        (return-from wasm2-compile afunc))
-      (when (wasm2-fixnum-lognot-ir-p ir)
-        (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
-          (let* ((module-bytes (wasm2-fixnum-lognot-module-bytes)))
-            (wasm2-register-compiled-module module-bytes
-                                            +wasm-fixnum-lognot-export-name+
-                                            +wasm-fixnum-lognot-entry-index+
-                                            +wasm-fixnum-lognot-module-version+
-                                            nil
-                                            nil
-                                            +wasm2-gc-root-mode-runtime-bootstrap+)
-            (setf (afunc-lfun-info afunc)
-                  (list* 'wasm-module-bytes module-bytes
-                         'wasm-module-export +wasm-fixnum-lognot-export-name+
-                         'wasm-module-version +wasm-fixnum-lognot-module-version+
-                         (afunc-lfun-info afunc))))
-          (setf (afunc-argsword afunc) bits)
-          (wasm2-set-afunc-lfun afunc +wasm-fixnum-lognot-entry-index+ keyvec-slot bits))
-        (return-from wasm2-compile afunc))
-      (when (wasm2-fixnum-neg-ir-p ir)
-        (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
-          (let* ((module-bytes (wasm2-fixnum-neg-module-bytes)))
-            (wasm2-register-compiled-module module-bytes
-                                            +wasm-fixnum-neg-export-name+
-                                            +wasm-fixnum-neg-entry-index+
-                                            +wasm-fixnum-neg-module-version+
-                                            nil
-                                            nil
-                                            +wasm2-gc-root-mode-runtime-bootstrap+)
-            (setf (afunc-lfun-info afunc)
-                  (list* 'wasm-module-bytes module-bytes
-                         'wasm-module-export +wasm-fixnum-neg-export-name+
-                         'wasm-module-version +wasm-fixnum-neg-module-version+
-                         (afunc-lfun-info afunc))))
-          (setf (afunc-argsword afunc) bits)
-          (wasm2-set-afunc-lfun afunc +wasm-fixnum-neg-entry-index+ keyvec-slot bits))
-        (return-from wasm2-compile afunc))
+        ;; Deliberately avoid hard-mapping simple fixnum IR to fixed compatibility
+        ;; entry slots (204..212). Those slots remain bootstrap/compatibility-only.
       (multiple-value-bind (true-val false-val ok) (wasm2-if-arg0-const-ir-p ir)
         (when ok
           (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
