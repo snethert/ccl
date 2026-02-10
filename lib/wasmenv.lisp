@@ -1,9 +1,6 @@
 ;;; -*- Mode:Lisp; Package:CCL; -*-
 ;;;
-;;; Minimal WASM32 environment.
-;;;
-;;; Keep a transition-compatible register layout, but avoid direct
-;;; dependency on ARMENV symbols in this module.
+;;; WASM32 environment.
 
 (in-package "CCL")
 
@@ -11,42 +8,15 @@
 (defconstant $numwasmargregs 3)
 
 ;; Register indexes used by the wasm32 runtime ABI.
-;; These values intentionally mirror the historical ordering so
-;; existing backend assumptions remain stable during migration.
 (defconstant wasm-reg-imm0 0)
 (defconstant wasm-reg-imm1 1)
 (defconstant wasm-reg-imm2 2)
-(defconstant wasm-reg-rcontext 3)
 (defconstant wasm-reg-arg-z 4)
 (defconstant wasm-reg-arg-y 5)
 (defconstant wasm-reg-arg-x 6)
 (defconstant wasm-reg-temp0 7)
 (defconstant wasm-reg-temp1 8)
 (defconstant wasm-reg-temp2 9)
-
-(defconstant wasm-regclass-immediate :immediate)
-(defconstant wasm-regclass-context :context)
-(defconstant wasm-regclass-argument :argument)
-(defconstant wasm-regclass-temporary :temporary)
-
-(defconstant wasm-register-class-map
-  (vector wasm-regclass-immediate
-          wasm-regclass-immediate
-          wasm-regclass-immediate
-          wasm-regclass-context
-          wasm-regclass-argument
-          wasm-regclass-argument
-          wasm-regclass-argument
-          wasm-regclass-temporary
-          wasm-regclass-temporary
-          wasm-regclass-temporary))
-
-(defun wasm-register-class (reg-index)
-  (if (and (typep reg-index 'fixnum)
-           (>= reg-index 0)
-           (< reg-index (length wasm-register-class-map)))
-    (svref wasm-register-class-map reg-index)
-    (error "Unknown WASM register index: ~s" reg-index)))
 
 (defconstant wasm-nonvolatile-registers-mask
   0)

@@ -278,22 +278,8 @@
       (wasm2-emit :fixnum-mul)))
   nil)
 
-(defparameter *wasm2-compat-boundary-subprim-map*
-  '((:builtin-div . .SPbuiltin-div)
-    (:builtin-negate . .SPbuiltin-negate)
-    (:builtin-ash . .SPbuiltin-ash)))
-
-(defparameter *wasm2-compat-boundary-subprim-symbols*
-  (mapcar #'cdr *wasm2-compat-boundary-subprim-map*))
-
-(defun wasm2-compat-boundary-subprim-symbol (compat-key)
-  (let* ((entry (assoc compat-key *wasm2-compat-boundary-subprim-map* :test #'eq)))
-    (if entry
-      (cdr entry)
-      (error "WASM2: unknown compat-boundary subprim key ~s" compat-key))))
-
-(defun wasm2-emit-compat-boundary-subprim-binary-call (seg xfer compat-key x y)
-  (let* ((subprim (wasm2-compat-boundary-subprim-fixnum compat-key)))
+(defun wasm2-emit-builtin-subprim-binary-call (seg xfer subprim-name x y)
+  (let* ((subprim (wasm2-subprim-fixnum subprim-name)))
     (wasm2-form seg nil nil x)
     (wasm2-form seg nil nil y)
     (wasm2-emit :set-arg1)
@@ -304,8 +290,8 @@
       (wasm2-emit :return-constant)
       (wasm2-emit :return))))
 
-(defun wasm2-emit-compat-boundary-subprim-unary-call (seg xfer compat-key x)
-  (let* ((subprim (wasm2-compat-boundary-subprim-fixnum compat-key)))
+(defun wasm2-emit-builtin-subprim-unary-call (seg xfer subprim-name x)
+  (let* ((subprim (wasm2-subprim-fixnum subprim-name)))
     (wasm2-form seg nil nil x)
     (wasm2-emit :set-arg0)
     (wasm2-emit-call-subprim subprim)
@@ -316,12 +302,12 @@
 
 (defwasm2 wasm2-div2 div2 (seg vreg xfer x y)
   (declare (ignore vreg))
-  (wasm2-emit-compat-boundary-subprim-binary-call seg xfer :builtin-div x y)
+  (wasm2-emit-builtin-subprim-binary-call seg xfer '.SPbuiltin-div x y)
   nil)
 
 (defwasm2 wasm2-minus1 minus1 (seg vreg xfer form)
   (declare (ignore vreg))
-  (wasm2-emit-compat-boundary-subprim-unary-call seg xfer :builtin-negate form)
+  (wasm2-emit-builtin-subprim-unary-call seg xfer '.SPbuiltin-negate form)
   nil)
 
 (defwasm2 wasm2-fixnum-ash fixnum-ash (seg vreg xfer x y)
@@ -338,7 +324,7 @@
 
 (defwasm2 wasm2-ash ash (seg vreg xfer x y)
   (declare (ignore vreg))
-  (wasm2-emit-compat-boundary-subprim-binary-call seg xfer :builtin-ash x y)
+  (wasm2-emit-builtin-subprim-binary-call seg xfer '.SPbuiltin-ash x y)
   nil)
 
 (defwasm2 wasm2-%iasr %iasr (seg vreg xfer form1 form2)
@@ -2110,8 +2096,8 @@
            (emit-assign-from-vsp (var idx)
              (emit-assign var (lambda () (wasm2-emit :vsp-ref idx))))
            (req-var-populated-by-arg-prologue-p (var idx)
-             ;; When arg-reg compatibility prologue is active, req arg0/arg1
-             ;; locals are already populated before lambda binding.
+             ;; When arg-register prologue is active, req arg0/arg1 locals
+             ;; are already populated before lambda binding.
              (and (not *wasm2-use-arg-regs*)
                   (not (wasm2-var-closed-p var))
                   (or (and (= idx 0) (wasm2-arg0-var-name-p var))
@@ -3916,14 +3902,8 @@
     (when idx
       (+ +wasm2-closure-cells-base+ idx))))
 
-(defun wasm2-subprim-fixnum (name &optional allow-compat-boundary)
-  (when (and (not allow-compat-boundary)
-             (member name *wasm2-compat-boundary-subprim-symbols* :test #'eq))
-    (error "WASM2: compat-boundary subprim ~s requires explicit boundary key" name))
+(defun wasm2-subprim-fixnum (name)
   (wasm2-box-fixnum (subprim-name->offset name)))
-
-(defun wasm2-compat-boundary-subprim-fixnum (compat-key)
-  (wasm2-subprim-fixnum (wasm2-compat-boundary-subprim-symbol compat-key) t))
 
 (defun wasm2-emit-closed-var-cell (var)
   (let* ((slot (wasm2-closed-var-slot var)))
@@ -5124,8 +5104,8 @@
    (list :set-arg-x "wasm_set_arg_x" +wasm2-type-i32-void+)
    (list :set-nargs "wasm_set_nargs" +wasm2-type-i32-void+)
    (list :set-nfn "wasm_set_nfn" +wasm2-type-i32-void+)
-   ;; Compatibility-only helpers: direct fixnum lowering must stay in :fixnum-*
-   ;; hot lanes and branch here only on explicit fallback edges.
+   ;; Fallback helpers: direct fixnum lowering stays in :fixnum-* hot lanes
+   ;; and branches here only on explicit fallback edges.
    (list :return-fixnum-add "wasm_return_fixnum_add" +wasm2-type-void-void+)
    (list :return-fixnum-sub "wasm_return_fixnum_sub" +wasm2-type-void-void+)
    (list :return-fixnum-mul "wasm_return_fixnum_mul" +wasm2-type-void-void+)
@@ -5421,16 +5401,16 @@
     (wasm2-push-u8 body #x71) ; i32.and
     (wasm2-push-u8 body #x45))) ; i32.eqz
 
-(defun wasm2-emit-hot-direct-fixnum-binary-fallback (body x-local y-local compat-op-key)
+(defun wasm2-emit-hot-direct-fixnum-binary-fallback (body x-local y-local fallback-op-key)
   (wasm2-emit-local-get-op body x-local)
   (wasm2-emit-local-get-op body y-local)
-  (wasm2-emit-compat-fallback-fixnum-binary-op body compat-op-key))
+  (wasm2-emit-fallback-fixnum-binary-op body fallback-op-key))
 
-(defun wasm2-emit-hot-direct-fixnum-unary-fallback (body x-local compat-op-key)
+(defun wasm2-emit-hot-direct-fixnum-unary-fallback (body x-local fallback-op-key)
   (wasm2-emit-local-get-op body x-local)
-  (wasm2-emit-compat-fallback-fixnum-unary-op body compat-op-key))
+  (wasm2-emit-fallback-fixnum-unary-op body fallback-op-key))
 
-(defun wasm2-emit-hot-direct-fixnum-add (body x-local y-local result-local compat-op-key)
+(defun wasm2-emit-hot-direct-fixnum-add (body x-local y-local result-local fallback-op-key)
   (wasm2-emit-local-get-op body x-local)
   (wasm2-emit-local-get-op body y-local)
   (wasm2-push-u8 body #x6a) ; i32.add
@@ -5447,12 +5427,12 @@
   (wasm2-push-u8 body #x48) ; i32.lt_s
   (wasm2-push-u8 body #x04) ; if
   (wasm2-push-u8 body #x7f) ; blocktype i32
-  (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local compat-op-key)
+  (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local fallback-op-key)
   (wasm2-push-u8 body #x05) ; else
   (wasm2-emit-local-get-op body result-local)
   (wasm2-push-u8 body #x0b)) ; end
 
-(defun wasm2-emit-hot-direct-fixnum-sub (body x-local y-local result-local compat-op-key)
+(defun wasm2-emit-hot-direct-fixnum-sub (body x-local y-local result-local fallback-op-key)
   (wasm2-emit-local-get-op body x-local)
   (wasm2-emit-local-get-op body y-local)
   (wasm2-push-u8 body #x6b) ; i32.sub
@@ -5469,12 +5449,12 @@
   (wasm2-push-u8 body #x48) ; i32.lt_s
   (wasm2-push-u8 body #x04) ; if
   (wasm2-push-u8 body #x7f) ; blocktype i32
-  (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local compat-op-key)
+  (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local fallback-op-key)
   (wasm2-push-u8 body #x05) ; else
   (wasm2-emit-local-get-op body result-local)
   (wasm2-push-u8 body #x0b)) ; end
 
-(defun wasm2-emit-hot-direct-fixnum-mul (body x-local y-local product-local compat-op-key)
+(defun wasm2-emit-hot-direct-fixnum-mul (body x-local y-local product-local fallback-op-key)
   (let* ((fixnum-bits (1- (- *wasm2-target-bits-in-word* *wasm2-target-fixnum-shift*)))
          (min-fixnum (ash -1 fixnum-bits))
          (max-fixnum (1- (ash 1 fixnum-bits))))
@@ -5490,7 +5470,7 @@
     (wasm2-push-u8 body #x72) ; i32.or
     (wasm2-push-u8 body #x04) ; if
     (wasm2-push-u8 body #x7f) ; blocktype i32
-    (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local compat-op-key)
+    (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local fallback-op-key)
     (wasm2-push-u8 body #x05) ; else
     (wasm2-emit-local-get-op body product-local)
     (wasm2-emit-i64-const-op body *wasm2-target-fixnum-shift*)
@@ -5499,19 +5479,19 @@
     (wasm2-push-u8 body #x0b))) ; end
 
 (defun wasm2-emit-hot-direct-fixnum-ash-left
-       (body x-local y-local shift-local shifted-local compat-op-key)
+       (body x-local y-local shift-local shifted-local fallback-op-key)
   (let* ((fixnum-bits (1- (- *wasm2-target-bits-in-word* *wasm2-target-fixnum-shift*)))
          (min-fixnum (ash -1 fixnum-bits))
          (max-fixnum (1- (ash 1 fixnum-bits)))
          (max-shift (1- *wasm2-target-bits-in-word*)))
     ;; Keep direct lowering only for bounded shift counts; route out-of-range
-    ;; counts through the explicit compatibility fallback edge.
+    ;; counts through the explicit fallback edge.
     (wasm2-emit-local-get-op body shift-local)
     (wasm2-emit-i32-const-op body max-shift)
     (wasm2-push-u8 body #x4a) ; i32.gt_s
     (wasm2-push-u8 body #x04) ; if
     (wasm2-push-u8 body #x7f) ; blocktype i32
-    (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local compat-op-key)
+    (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local fallback-op-key)
     (wasm2-push-u8 body #x05) ; else
     ;; Explicit overflow edge: if shifted value leaves fixnum bounds, fall back.
     (wasm2-emit-unboxed-fixnum-local-i64 body x-local)
@@ -5526,7 +5506,7 @@
     (wasm2-push-u8 body #x72) ; i32.or
     (wasm2-push-u8 body #x04) ; if
     (wasm2-push-u8 body #x7f) ; blocktype i32
-    (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local compat-op-key)
+    (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local fallback-op-key)
     (wasm2-push-u8 body #x05) ; else
     (wasm2-emit-local-get-op body shifted-local)
     (wasm2-push-u8 body #xa7) ; i32.wrap_i64
@@ -5535,18 +5515,18 @@
     (wasm2-push-u8 body #x0b) ; end
     (wasm2-push-u8 body #x0b))) ; end
 
-(defun wasm2-emit-hot-direct-fixnum-ash-right (body x-local y-local shift-local compat-op-key)
+(defun wasm2-emit-hot-direct-fixnum-ash-right (body x-local y-local shift-local fallback-op-key)
   (let* ((max-shift (1- *wasm2-target-bits-in-word*)))
     (wasm2-emit-i32-const-op body 0)
     (wasm2-emit-local-get-op body shift-local)
     (wasm2-push-u8 body #x6b) ; i32.sub
     (wasm2-emit-local-tee-op body shift-local)
-    ;; Keep right-shift direct lane bounded; let compat handle extreme counts.
+    ;; Keep right-shift direct lane bounded; let fallback handle extreme counts.
     (wasm2-emit-i32-const-op body max-shift)
     (wasm2-push-u8 body #x4a) ; i32.gt_s
     (wasm2-push-u8 body #x04) ; if
     (wasm2-push-u8 body #x7f) ; blocktype i32
-    (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local compat-op-key)
+    (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local fallback-op-key)
     (wasm2-push-u8 body #x05) ; else
     (wasm2-emit-unboxed-fixnum-local-i32 body x-local)
     (wasm2-emit-local-get-op body shift-local)
@@ -5556,7 +5536,7 @@
     (wasm2-push-u8 body #x0b))) ; end
 
 (defun wasm2-emit-hot-direct-fixnum-ash
-       (body x-local y-local shift-local shifted-local compat-op-key)
+       (body x-local y-local shift-local shifted-local fallback-op-key)
   ;; `shift-local` stores unboxed shift count so both sign lanes can reuse it
   ;; without reloading or re-unboxing the original boxed operand.
   (wasm2-emit-unboxed-fixnum-local-i32 body y-local)
@@ -5566,12 +5546,12 @@
   (wasm2-push-u8 body #x04) ; if
   (wasm2-push-u8 body #x7f) ; blocktype i32
   (wasm2-emit-hot-direct-fixnum-ash-left
-   body x-local y-local shift-local shifted-local compat-op-key)
+   body x-local y-local shift-local shifted-local fallback-op-key)
   (wasm2-push-u8 body #x05) ; else
-  (wasm2-emit-hot-direct-fixnum-ash-right body x-local y-local shift-local compat-op-key)
+  (wasm2-emit-hot-direct-fixnum-ash-right body x-local y-local shift-local fallback-op-key)
   (wasm2-push-u8 body #x0b)) ; end
 
-(defun wasm2-emit-hot-direct-fixnum-binary-op (body op compat-op-key)
+(defun wasm2-emit-hot-direct-fixnum-binary-op (body op fallback-op-key)
   (unless (member op '(:fixnum-add :fixnum-sub :fixnum-mul
                        :fixnum-ash :fixnum-logand :fixnum-logior :fixnum-logxor))
     (return-from wasm2-emit-hot-direct-fixnum-binary-op nil))
@@ -5588,13 +5568,13 @@
     (wasm2-push-u8 body #x7f) ; blocktype i32
     (case op
       (:fixnum-add
-       (wasm2-emit-hot-direct-fixnum-add body x-local y-local result-local compat-op-key))
+       (wasm2-emit-hot-direct-fixnum-add body x-local y-local result-local fallback-op-key))
       (:fixnum-sub
-       (wasm2-emit-hot-direct-fixnum-sub body x-local y-local result-local compat-op-key))
+       (wasm2-emit-hot-direct-fixnum-sub body x-local y-local result-local fallback-op-key))
       (:fixnum-mul
-       (wasm2-emit-hot-direct-fixnum-mul body x-local y-local wide-local compat-op-key))
+       (wasm2-emit-hot-direct-fixnum-mul body x-local y-local wide-local fallback-op-key))
       (:fixnum-ash
-       (wasm2-emit-hot-direct-fixnum-ash body x-local y-local result-local wide-local compat-op-key))
+       (wasm2-emit-hot-direct-fixnum-ash body x-local y-local result-local wide-local fallback-op-key))
       (:fixnum-logand
        (wasm2-emit-local-get-op body x-local)
        (wasm2-emit-local-get-op body y-local)
@@ -5608,11 +5588,11 @@
        (wasm2-emit-local-get-op body y-local)
        (wasm2-push-u8 body #x73))) ; i32.xor
     (wasm2-push-u8 body #x05) ; else
-    (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local compat-op-key)
+    (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local fallback-op-key)
     (wasm2-push-u8 body #x0b)) ; end
   t)
 
-(defun wasm2-emit-hot-direct-fixnum-neg (body x-local unboxed-local compat-op-key)
+(defun wasm2-emit-hot-direct-fixnum-neg (body x-local unboxed-local fallback-op-key)
   (let* ((fixnum-bits (1- (- *wasm2-target-bits-in-word* *wasm2-target-fixnum-shift*)))
          (min-fixnum (ash -1 fixnum-bits)))
     (wasm2-emit-unboxed-fixnum-local-i32 body x-local)
@@ -5621,7 +5601,7 @@
     (wasm2-push-u8 body #x46) ; i32.eq
     (wasm2-push-u8 body #x04) ; if
     (wasm2-push-u8 body #x7f) ; blocktype i32
-    (wasm2-emit-hot-direct-fixnum-unary-fallback body x-local compat-op-key)
+    (wasm2-emit-hot-direct-fixnum-unary-fallback body x-local fallback-op-key)
     (wasm2-push-u8 body #x05) ; else
     (wasm2-emit-i32-const-op body 0)
     (wasm2-emit-local-get-op body unboxed-local)
@@ -5630,7 +5610,7 @@
     (wasm2-push-u8 body #x74) ; i32.shl
     (wasm2-push-u8 body #x0b))) ; end
 
-(defun wasm2-emit-hot-direct-fixnum-unary-op (body op compat-op-key)
+(defun wasm2-emit-hot-direct-fixnum-unary-op (body op fallback-op-key)
   (unless (member op '(:fixnum-lognot :fixnum-neg))
     (return-from wasm2-emit-hot-direct-fixnum-unary-op nil))
   (let* ((x-local (wasm2-fixnum-direct-scratch-local 0))
@@ -5648,64 +5628,55 @@
        (wasm2-emit-i32-const-op body lognot-mask)
        (wasm2-push-u8 body #x73)) ; i32.xor
       (:fixnum-neg
-       (wasm2-emit-hot-direct-fixnum-neg body x-local unboxed-local compat-op-key)))
+       (wasm2-emit-hot-direct-fixnum-neg body x-local unboxed-local fallback-op-key)))
     (wasm2-push-u8 body #x05) ; else
-    (wasm2-emit-hot-direct-fixnum-unary-fallback body x-local compat-op-key)
+    (wasm2-emit-hot-direct-fixnum-unary-fallback body x-local fallback-op-key)
     (wasm2-push-u8 body #x0b)) ; end
   t)
 
-(defparameter *wasm2-fixnum-compat-op-keys*
-  '(:return-fixnum-add
-    :return-fixnum-sub
-    :return-fixnum-mul
-    :return-fixnum-ash
-    :return-fixnum-neg
-    :return-fixnum-logand
-    :return-fixnum-logior
-    :return-fixnum-logxor
-    :return-fixnum-lognot))
+(defun wasm2-fixnum-fallback-requires-spill-p (fallback-op-key)
+  ;; Keep spill envelopes only for fallback helpers that can allocate/GC.
+  (case fallback-op-key
+    ((:return-fixnum-logand
+      :return-fixnum-logior
+      :return-fixnum-logxor
+      :return-fixnum-lognot)
+     nil)
+    ((:return-fixnum-add
+      :return-fixnum-sub
+      :return-fixnum-mul
+      :return-fixnum-ash
+      :return-fixnum-neg)
+     t)
+    (t
+     (error "WASM2: unknown fixnum fallback key ~s" fallback-op-key))))
 
-(defparameter *wasm2-no-spill-fixnum-compat-op-keys*
-  '(:return-fixnum-logand
-    :return-fixnum-logior
-    :return-fixnum-logxor
-    :return-fixnum-lognot))
-
-(defun wasm2-fixnum-compat-op-key-p (compat-op-key)
-  (member compat-op-key *wasm2-fixnum-compat-op-keys* :test #'eq))
-
-(defun wasm2-fixnum-compat-fallback-requires-spill-p (compat-op-key)
-  ;; Keep spill envelopes only for compatibility helpers that can allocate/GC.
-  (unless (wasm2-fixnum-compat-op-key-p compat-op-key)
-    (error "WASM2: non-compat fixnum fallback key ~s" compat-op-key))
-  (not (member compat-op-key *wasm2-no-spill-fixnum-compat-op-keys* :test #'eq)))
-
-(defun wasm2-emit-compat-fallback-fixnum-call (body compat-op-key)
-  (if (wasm2-fixnum-compat-fallback-requires-spill-p compat-op-key)
+(defun wasm2-emit-fallback-fixnum-call (body fallback-op-key)
+  (if (wasm2-fixnum-fallback-requires-spill-p fallback-op-key)
     (progn
       (wasm2-emit-spill-locals body)
-      (wasm2-emit-call-index body (wasm2-generic-import-index compat-op-key))
+      (wasm2-emit-call-index body (wasm2-generic-import-index fallback-op-key))
       (wasm2-emit-restore-locals body))
-    (wasm2-emit-call-index body (wasm2-generic-import-index compat-op-key))))
+    (wasm2-emit-call-index body (wasm2-generic-import-index fallback-op-key))))
 
-(defun wasm2-emit-compat-fallback-fixnum-binary-op (body compat-op-key)
+(defun wasm2-emit-fallback-fixnum-binary-op (body fallback-op-key)
   (wasm2-emit-call-index body (wasm2-generic-import-index :set-arg-y))
   (wasm2-emit-call-index body (wasm2-generic-import-index :set-arg-z))
-  (wasm2-emit-compat-fallback-fixnum-call body compat-op-key)
+  (wasm2-emit-fallback-fixnum-call body fallback-op-key)
   (wasm2-emit-call-index body (wasm2-generic-import-index :get-arg-z)))
 
-(defun wasm2-emit-compat-fallback-fixnum-unary-op (body compat-op-key)
+(defun wasm2-emit-fallback-fixnum-unary-op (body fallback-op-key)
   (wasm2-emit-call-index body (wasm2-generic-import-index :set-arg-z))
-  (wasm2-emit-compat-fallback-fixnum-call body compat-op-key)
+  (wasm2-emit-fallback-fixnum-call body fallback-op-key)
   (wasm2-emit-call-index body (wasm2-generic-import-index :get-arg-z)))
 
-(defun wasm2-emit-fixnum-binary-op (body op compat-op-key)
-  (or (wasm2-emit-hot-direct-fixnum-binary-op body op compat-op-key)
-      (wasm2-emit-compat-fallback-fixnum-binary-op body compat-op-key)))
+(defun wasm2-emit-fixnum-binary-op (body op fallback-op-key)
+  (or (wasm2-emit-hot-direct-fixnum-binary-op body op fallback-op-key)
+      (wasm2-emit-fallback-fixnum-binary-op body fallback-op-key)))
 
-(defun wasm2-emit-fixnum-unary-op (body op compat-op-key)
-  (or (wasm2-emit-hot-direct-fixnum-unary-op body op compat-op-key)
-      (wasm2-emit-compat-fallback-fixnum-unary-op body compat-op-key)))
+(defun wasm2-emit-fixnum-unary-op (body op fallback-op-key)
+  (or (wasm2-emit-hot-direct-fixnum-unary-op body op fallback-op-key)
+      (wasm2-emit-fallback-fixnum-unary-op body fallback-op-key)))
 
 (defun wasm2-emit-call-with-pending (body key tmp &optional label-stack)
   (wasm2-emit-spill-locals body)
@@ -6030,13 +6001,13 @@
         (t
          (error "Unhandled WASM2 IR opcode ~s" op))))))
 
-(defconstant +wasm2-entry-call-abi-legacy+ :legacy)
+(defconstant +wasm2-entry-call-abi-generic+ :generic)
 (defconstant +wasm2-entry-call-abi-unary-i32+ :unary-i32)
 (defconstant +wasm2-entry-call-abi-binary-i32+ :binary-i32)
 
 (defun wasm2-entry-call-abi-param-count (entry-call-abi)
   (case entry-call-abi
-    (:legacy 0)
+    (:generic 0)
     (:unary-i32 1)
     (:binary-i32 2)
     (t
@@ -6044,7 +6015,7 @@
 
 (defun wasm2-entry-call-abi-function-type-index (entry-call-abi)
   (case entry-call-abi
-    (:legacy +wasm2-type-void-void+)
+    (:generic +wasm2-type-void-void+)
     (:unary-i32 +wasm2-type-i32-i32-ret+)
     (:binary-i32 +wasm2-type-i32-i32+)
     (t
@@ -6052,7 +6023,7 @@
 
 (defun wasm2-generic-module-bytes (ir export-name local-types
                                    &optional spillable-locals entry-index
-                                   (entry-call-abi +wasm2-entry-call-abi-legacy+))
+                                   (entry-call-abi +wasm2-entry-call-abi-generic+))
   (let* ((out (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
          (types (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
          (imports (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
@@ -7644,8 +7615,8 @@
                                     (if keyvec keyvec const-value)
                                     bits))
             (return-from wasm2-compile afunc)))
-        ;; Deliberately avoid hard-mapping simple fixnum IR to fixed compatibility
-        ;; entry slots (204..212). Those slots remain bootstrap/compatibility-only.
+        ;; Deliberately avoid hard-mapping simple fixnum IR to fixed bootstrap
+        ;; entry slots (204..212). Those slots remain bootstrap-only.
       (multiple-value-bind (true-val false-val ok) (wasm2-if-arg0-const-ir-p specialization-ir)
         (when ok
           (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
@@ -7729,7 +7700,7 @@
         (multiple-value-setq (entry-call-abi typed-entry-op)
           (wasm2-typed-entry-call-abi-plan afunc specialization-ir arg0-local arg1-local))
         (unless entry-call-abi
-          (setf entry-call-abi +wasm2-entry-call-abi-legacy+))
+          (setf entry-call-abi +wasm2-entry-call-abi-generic+))
         (let* ((typed-entry-ir (wasm2-typed-entry-ir entry-call-abi typed-entry-op))
                (raw-spillable-locals (nreverse *wasm2-spillable-locals*))
                (module-ir (or typed-entry-ir ir))
@@ -7772,7 +7743,7 @@
                            (afunc-lfun-info afunc))))
           (when const-pool-bytes
             (setf info (list* 'wasm-const-pool const-pool-bytes info)))
-          (unless (eq entry-call-abi +wasm2-entry-call-abi-legacy+)
+          (unless (eq entry-call-abi +wasm2-entry-call-abi-generic+)
             (setf info (list* 'wasm-entry-call-abi entry-call-abi info)))
           (setf (afunc-lfun-info afunc) info))
         (setf (afunc-argsword afunc) bits)
