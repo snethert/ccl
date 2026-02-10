@@ -66,7 +66,7 @@ Out of scope:
 
 ## Immediate Next Step
 
-- Action: execute `B10C-01A-01` and `B10C-01A-02` to freeze primitive hot-path inventory (`compiler/WASM/wasm-arch.lisp`, `compiler/WASM/wasm2.lisp`, `lisp-kernel/wasm-kernel-stubs.c`) and lock the ordered ARM -> WASM primitive swapout slices below.
+- Action: execute `B10C-01A-01`, `B10C-01A-02`, and `B10C-01A-18` to freeze both hot-math and newly folded high/medium impact primitive lanes, then run the ordered swapout slices below without deferring those lanes.
 - Why now: `B10G-04` phase 1..4 now provide deterministic frame/unwind coherence coverage, so the highest remaining throughput risk is compiler-side math lowering still routing through TCR register-massage imports instead of pure WASM primitive ops.
 - Success evidence: B10C-01 micro-slice order is frozen, primitive hot-lane success criteria are explicit, and each slice has deterministic validation gates before promotion.
 
@@ -197,7 +197,7 @@ Out of scope:
 | B10C-09 | ARM marker audit gate | `scripts/wasm/arm-retirement-audit.sh` | wasm-facing surfaces pass strict ARM-coupling audit. |
 | B10C-10 | Exit gate | all above | Compiler outputs run without ARM-emulation-critical assumptions in primary lanes. |
 
-### B10C-01 Fine-Grained Plan - ARM -> WASM Primitive Swapout (v1)
+### B10C-01 Fine-Grained Plan - ARM -> WASM Primitive Swapout (v2)
 
 #### Primitive-Level Non-Negotiables
 
@@ -205,6 +205,8 @@ Out of scope:
 - Overflow/type slow paths must remain semantically correct and explicit: fallback to compatibility helper/subprim only at the branch point, never as unconditional default.
 - GC/root correctness must remain deterministic: direct primitive lowering must not weaken spill/root publication invariants at call boundaries.
 - ARM-shape compatibility is allowed only as a bounded compatibility lane, not as the default execution model for compiler-emitted primitives.
+- High-frequency object access/update paths must not default through `SPmisc_*`/`SPbuiltin_aref1`/`SPbuiltin_aset1` call trampolines when direct WASM lowering can preserve semantics.
+- Medium-frequency call/control lanes (`SPfuncall`, MV save/recover/add, `SPconslist*`, spread/progv helpers) must be narrowed to explicit semantic boundaries, not unconditional baseline flow.
 
 #### Ordered Slice Breakdown
 
@@ -227,13 +229,23 @@ Out of scope:
 | B10C-01A-15 | P3 subprim boundary tightening | `compiler/WASM/wasm2.lisp`, `lisp-kernel/wasm-subprims-provider.c` | Constrain `.SPbuiltin-div`, `.SPbuiltin-negate`, `.SPbuiltin-ash` callsites to explicit compatibility boundaries pending full direct-lowering replacements. | Division/complex arithmetic fallback remains explicit and auditable. | Callsite counts and smoke evidence show bounded compatibility usage only. |
 | B10C-01A-16 | P4 required rebuild + validation | `lisp-kernel/wasm32/Makefile`, `doc/wasm/js/*` | For each code slice: rebuild kernel using `env.sh` command, then run strict audit + all-smoke; if hash mismatch only, refresh root image manifest and rerun smoke. | Every primitive swapout increment is validated end-to-end before promotion. | Required command sequence exits clean (or documented manifest-refresh rerun success). |
 | B10C-01A-17 | P4 performance evidence checkpoint | `doc/wasm/js/fixnum-add-smoke.mjs`, optional targeted numeric lane | Record before/after latency and instruction-path deltas for fixnum arithmetic kernels. | Performance claim is proven with artifacted numbers, not inferred. | Checkpoint includes metric table and no semantic regression. |
-| B10C-01A-18 | P4 promotion to next compiler slices | `doc/wasm/backend-tickets/BPL-10-wasm-machine-subprims-gc-compiler-implementation.md` | After `A-01`..`A-17` closure, advance next-step focus to `B10C-02` + `B10C-04` follow-on expansion lanes. | B10C-01 closes only when hot primitive swapout and ARM decoupling both hold. | Ticket next-step updated with closure evidence and commit checkpoint. |
+| B10C-01A-18 | P2 high/medium lane inventory freeze | `compiler/WASM/wasm2.lisp`, `lisp-kernel/wasm-subprims-provider.c` | Freeze callsite/cost inventory for `SPmisc-ref`, `SPmisc-set`, `SPmisc-alloc`, `SPsubtag-misc-ref`, `SPsubtag-misc-set`, `SPbuiltin-aref1`, `SPbuiltin-aset1`, `SPfuncall`, `SPsave-values`, `SPadd-values`, `SPrecover-values`, `SPconslist`, `SPconslist-star`, `SPspreadargz`, `SPspread-lexprz`, `SPprogvsave`, `SPprogvrestore`. | No high/medium-impact lane remains untracked or deferred by omission. | Inventory table + baseline callsite counts captured in ticket checkpoint. |
+| B10C-01A-19 | P2 misc read/write direct lowering | `compiler/WASM/wasm2.lisp`, `lisp-kernel/wasm-subprims-provider.c` | Replace hot `SPmisc-ref`/`SPmisc-set` and `SPsubtag-misc-ref`/`SPsubtag-misc-set` emission paths with direct WASM load/store lowering where subtag/bounds/type checks are compiler-provable; keep explicit fallback branch otherwise. | Object/vector access hot lanes avoid unconditional subprim bridge overhead. | `all-smoke`, `compiler-smoke`, and typed/vector regression lanes pass with fallback counts reduced. |
+| B10C-01A-20 | P2 misc allocation direct lowering | `compiler/WASM/wasm2.lisp`, `lisp-kernel/wasm-subprims-provider.c` | Reduce default use of `SPmisc-alloc`/`SPmisc-alloc-init` in compiler-generated allocation scaffolds by routing proven-safe fixed-layout cases through direct/runtime helper fast paths, leaving subprim allocation as explicit fallback. | Allocation paths no longer pay repeated arg-register marshalling by default. | Allocation-heavy smoke lanes pass and subprim callsite counts for allocation decrease measurably. |
+| B10C-01A-21 | P2 builtin aref/aset retirement | `compiler/WASM/wasm2.lisp`, `lisp-kernel/wasm-subprims-provider.c` | Remove default `SPbuiltin-aref1`/`SPbuiltin-aset1` emission from wasm2 in favor of direct index/load/store lowering + explicit fallback for generic/complex sequence cases. | AREF/ASET hot operations no longer detour through builtin subprims when unnecessary. | Regression lanes remain green; fallback use restricted to non-fast-path object classes. |
+| B10C-01A-22 | P2 misc lane spill tightening | `compiler/WASM/wasm2.lisp` | Ensure new direct misc/builtin lanes do not force spill/restore envelopes unless they cross an actual helper/subprim boundary. | Prevent replacing one overhead source with another hidden overhead source. | `wasm2-validate-spill-discipline` remains clean; emitted IR shows spill only on fallback edges. |
+| B10C-01A-23 | P3 funcall hot-call decoupling | `compiler/WASM/wasm2.lisp`, `lisp-kernel/wasm-kernel-stubs.c` | Shrink baseline reliance on `SPfuncall` for compiled-to-compiled known-arity calls by preferring direct `:callN` lowered paths and keeping subprim call only for dynamic/semantic boundary cases. | Known-shape call paths avoid generic subprim trampoline overhead. | Funcall smoke + all-smoke pass; `SPfuncall` callsite counts drop in known-arity lanes. |
+| B10C-01A-24 | P3 MV save/recover/add narrowing | `compiler/WASM/wasm2.lisp`, `lisp-kernel/wasm-subprims-provider.c` | Constrain `SPsave-values`/`SPadd-values`/`SPrecover-values` usage to true multi-value boundary cases; remove unconditional MV helper detours from ordinary return/call flows. | MV compatibility helpers remain correctness tools, not default call plumbing. | MV regression lanes and non-local-exit smokes remain green with reduced helper footprint. |
+| B10C-01A-25 | P3 conslist/spread/progv boundary narrowing | `compiler/WASM/wasm2.lisp`, `lisp-kernel/wasm-subprims-provider.c` | Reduce default `SPconslist*`, `SPspreadargz`, `SPspread-lexprz`, `SPprogvsave`, `SPprogvrestore` usage for common predictable forms by using direct lowering where semantics are statically known; keep explicit fallback for dynamic cases. | Medium-impact control/data marshaling lanes stop paying blanket subprim overhead. | List/spread/progv smoke coverage remains green; fallback counts are bounded and documented. |
+| B10C-01A-26 | P4 high/medium compatibility accounting gate | `compiler/WASM/wasm2.lisp`, `doc/wasm/js/compiler-smoke.mjs` | Add deterministic per-symbol emission/call accounting for the high/medium set and fail promotion if counts regress above frozen baseline without approved rationale. | Prevents stealth reintroduction of expensive compatibility detours. | Gate artifacts include before/after callsite matrix for every high/medium symbol above. |
+| B10C-01A-27 | P4 promotion to next compiler slices | `doc/wasm/backend-tickets/BPL-10-wasm-machine-subprims-gc-compiler-implementation.md` | After `A-01`..`A-26` closure, advance next-step focus to `B10C-02` + `B10C-04` follow-on expansion lanes. | B10C-01 closes only when math, high-impact, and medium-impact primitive swapouts are all bounded by explicit fallback semantics. | Ticket next-step updated with closure evidence and commit checkpoint. |
 
 #### Slice Execution Rules
 
 1. Do not run primitive performance slices out of order; P1 decoupling must land before P2 hot-lane rewrite.
 2. For every primitive refactor slice, capture the changed call-path shape (`direct op`, `compat helper`, or `subprim`) in the checkpoint note.
 3. Treat any reintroduction of unconditional helper/subprim math calls as a regression even if smoke still passes.
+4. Treat `SPmisc_*`, `SPbuiltin_aref1/aset1`, `SPfuncall`, MV helper trio, and `SPconslist*/spread/progv` as non-deferrable in `B10C-01` scope unless a blocker is documented in the ticket.
 
 ## Step 5 Output - Unified Validation and Promotion Gates (v1)
 
@@ -269,6 +281,7 @@ Out of scope:
 
 ## Change Log
 
+- 2026-02-10: Folded all identified high/medium impact primitive lanes into `B10C-01` non-deferrable scope (`B10C-01A-18`..`B10C-01A-27`): `SPmisc_*`, `SPsubtag-misc-*`, `SPbuiltin-aref1/aset1`, `SPfuncall`, MV save/add/recover helpers, and `SPconslist*/spread/progv` now carry explicit source-anchored tasks, guardrails, and promotion gates alongside hot-math swapout.
 - 2026-02-10: Expanded `B10C-01` into an ordered ARM -> WASM primitive swapout micro-slice plan (`B10C-01A-01`..`B10C-01A-18`) with explicit hot-math non-negotiables, file-anchored tasks, fallback-boundary rules, and required validation gates so compiler primitive lowering can move from register-massage imports to true WASM direct ops without semantic drift.
 - 2026-02-10: Completed `B10G-04` phase 4 by extending `wasm_subprim_nonlocal_exit_coherence_selftest` in `lisp-kernel/wasm-kernel-stubs.c` with funcall-driven `_SPnthrowvalues` unwind-cleanup coverage (zero-value and MV payload paths) plus deterministic `save_tsp`/`save_vsp` post-funcall coherence signatures; rebuilt kernel via documented `env.sh` flow, refreshed root-image manifest for `kernelWasm` hash rollover, and revalidated (`scripts/wasm/arm-retirement-audit.sh --strict` => `total_hits=0`, `node doc/wasm/js/all-smoke.mjs` pass).
 - 2026-02-10: Completed `B10G-04` phase 3 by extending `wasm_subprim_nonlocal_exit_coherence_selftest` in `lisp-kernel/wasm-kernel-stubs.c` with deterministic `_SPmkunwind` cleanup-entry + `_SPnthrowvalues` zero-value and multi-value unwind coverage (explicit signature codes for cleanup invocation, MV recovery, and `save_vsp`/`last_lisp_frame`/`catch_top` coherence); rebuilt kernel via documented `env.sh` flow, refreshed root-image manifest for `kernelWasm` hash rollover, and revalidated (`scripts/wasm/arm-retirement-audit.sh --strict` => `total_hits=0`, `node doc/wasm/js/all-smoke.mjs` pass).
