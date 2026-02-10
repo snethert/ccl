@@ -1147,7 +1147,7 @@ wasm_misc_ref_dispatch(TCR *tcr, LispObj obj, signed_natural index)
     }
     case subtag_s32_vector: {
       int32_t *data = (int32_t *)((BytePtr)obj + misc_data_offset);
-      return wasm_box_signed_64(tcr, (int64_t)data[index]);
+      return wasm_box_i64_prefer_fixnum(tcr, (int64_t)data[index]);
     }
     case subtag_u16_vector: {
       uint16_t *data = (uint16_t *)((BytePtr)obj + misc_data_offset);
@@ -4702,7 +4702,7 @@ _SPmakes32(void)
 
   LispObj raw = wasm_reg(tcr, imm0);
   int32_t val = (tag_of(raw) == tag_fixnum) ? (int32_t)unbox_fixnum(raw) : (int32_t)raw;
-  wasm_set_reg(tcr, arg_z, wasm_box_signed_64(tcr, (int64_t)val));
+  wasm_set_reg(tcr, arg_z, wasm_box_i64_prefer_fixnum(tcr, (int64_t)val));
   wasm_set_reg(tcr, nargs, box_fixnum(1));
 }
 
@@ -4799,7 +4799,7 @@ _SPmakes64(void)
   uint32_t hi = (tag_of(raw_hi) == tag_fixnum) ? (uint32_t)unbox_fixnum(raw_hi) : (uint32_t)raw_hi;
   int64_t value = ((int64_t)(int32_t)hi << 32) | (int64_t)lo;
 
-  wasm_set_reg(tcr, arg_z, wasm_box_signed_64(tcr, value));
+  wasm_set_reg(tcr, arg_z, wasm_box_i64_prefer_fixnum(tcr, value));
   wasm_set_reg(tcr, nargs, box_fixnum(1));
 }
 
@@ -6288,7 +6288,7 @@ _SPsdiv32(void)
   int32_t denom = (int32_t)wasm_reg(tcr, imm1);
   if (denom == 0) {
     int32_t numer = (int32_t)wasm_reg(tcr, imm0);
-    wasm_set_reg(tcr, arg_z, wasm_box_signed_64(tcr, (int64_t)numer));
+    wasm_set_reg(tcr, arg_z, wasm_box_i64_prefer_fixnum(tcr, (int64_t)numer));
     wasm_set_reg(tcr, arg_y, box_fixnum(WASM_XDIVZRO));
     wasm_set_reg(tcr, nargs, box_fixnum(2));
     _SPksignalerr();
@@ -6321,7 +6321,7 @@ _SPfix_overflow(void)
   int32_t val = (int32_t)unbox_fixnum(wasm_reg(tcr, arg_z));
   int32_t adjust = (int32_t)(3u << (nbits_in_word - 2));
   val ^= adjust;
-  wasm_set_reg(tcr, arg_z, wasm_box_signed_64(tcr, (int64_t)val));
+  wasm_set_reg(tcr, arg_z, wasm_box_i64_prefer_fixnum(tcr, (int64_t)val));
   wasm_set_reg(tcr, nargs, box_fixnum(1));
 }
 #endif
