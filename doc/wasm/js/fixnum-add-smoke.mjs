@@ -56,6 +56,16 @@ function readPositiveIntOption(args, name, fallback) {
   return n >>> 0;
 }
 
+function readNumberOption(args, name, fallback) {
+  const raw = readOption(args, name);
+  if (raw == null) return fallback;
+  const n = Number.parseFloat(raw);
+  if (!Number.isFinite(n)) {
+    fail(`invalid number for ${name}: ${raw}`);
+  }
+  return n;
+}
+
 function median(values) {
   if (!Array.isArray(values) || values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -715,7 +725,9 @@ if (!perfCheckpoint) {
 const perfIterations = readPositiveIntOption(args, "--perf-iterations", 300000);
 const perfWarmup = readPositiveIntOption(args, "--perf-warmup", 60000);
 const perfRounds = readPositiveIntOption(args, "--perf-rounds", 5);
+const perfSamples = readPositiveIntOption(args, "--perf-samples", 1);
 const perfPathIterations = readPositiveIntOption(args, "--perf-path-iterations", 20000);
+const perfBudgetDeltaNs = readNumberOption(args, "--perf-budget-delta-ns", 0);
 const perfOut = readOption(args, "--perf-out");
 
 let bundle;
@@ -767,16 +779,38 @@ const compatMetrics = collectInstructionMetrics(entry.moduleBytes, entry.exportN
 const directMetrics = collectInstructionMetrics(directModule.moduleBytes, directModule.exportName);
 
 const kernelExports = kernel.instance.exports;
-const compatLatency = benchmarkEntry(kernelExports, entryIndex, {
-  warmup: perfWarmup,
-  iterations: perfIterations,
-  rounds: perfRounds,
-});
-const directLatency = benchmarkEntry(kernelExports, directEntryIndex, {
-  warmup: perfWarmup,
-  iterations: perfIterations,
-  rounds: perfRounds,
-});
+const sampleResults = [];
+for (let sample = 0; sample < perfSamples; sample++) {
+  const compatLatency = benchmarkEntry(kernelExports, entryIndex, {
+    warmup: perfWarmup,
+    iterations: perfIterations,
+    rounds: perfRounds,
+  });
+  const directLatency = benchmarkEntry(kernelExports, directEntryIndex, {
+    warmup: perfWarmup,
+    iterations: perfIterations,
+    rounds: perfRounds,
+  });
+  const latencyDeltaNs = directLatency.nsPerOpMedian - compatLatency.nsPerOpMedian;
+  const latencyDeltaPct = compatLatency.nsPerOpMedian !== 0
+    ? ((latencyDeltaNs / compatLatency.nsPerOpMedian) * 100)
+    : 0;
+  sampleResults.push({
+    sample: sample + 1,
+    beforeCompat: compatLatency,
+    afterDirect: directLatency,
+    deltas: {
+      latencyNsPerOp: latencyDeltaNs,
+      latencyPct: latencyDeltaPct,
+    },
+  });
+}
+
+const compatLatencyMedians = sampleResults.map((sample) => sample.beforeCompat.nsPerOpMedian);
+const directLatencyMedians = sampleResults.map((sample) => sample.afterDirect.nsPerOpMedian);
+const latencyDeltaNsSamples = sampleResults.map((sample) => sample.deltas.latencyNsPerOp);
+const latencyDeltaPctSamples = sampleResults.map((sample) => sample.deltas.latencyPct);
+const withinBudgetSamples = latencyDeltaNsSamples.filter((ns) => ns <= perfBudgetDeltaNs).length;
 
 const compatDynamic = await collectDynamicImportCounts({
   moduleBytes: entry.moduleBytes,
@@ -797,11 +831,6 @@ const directDynamic = await collectDynamicImportCounts({
   iterations: perfPathIterations,
 });
 
-const latencyDeltaNs = directLatency.nsPerOpMedian - compatLatency.nsPerOpMedian;
-const latencyDeltaPct = compatLatency.nsPerOpMedian !== 0
-  ? ((latencyDeltaNs / compatLatency.nsPerOpMedian) * 100)
-  : 0;
-
 const checkpoint = {
   capturedAt: new Date().toISOString(),
   host: {
@@ -813,18 +842,42 @@ const checkpoint = {
     perfIterations,
     perfWarmup,
     perfRounds,
+    perfSamples,
     perfPathIterations,
+    perfBudgetDeltaNs,
   },
+  samples: sampleResults.map((sample) => ({
+    sample: sample.sample,
+    beforeCompat: {
+      nsPerOpMedian: round3(sample.beforeCompat.nsPerOpMedian),
+      nsPerOpMin: round3(sample.beforeCompat.nsPerOpMin),
+      nsPerOpMax: round3(sample.beforeCompat.nsPerOpMax),
+      roundNsPerOp: sample.beforeCompat.roundNsPerOp,
+      checksum: sample.beforeCompat.checksum | 0,
+    },
+    afterDirect: {
+      nsPerOpMedian: round3(sample.afterDirect.nsPerOpMedian),
+      nsPerOpMin: round3(sample.afterDirect.nsPerOpMin),
+      nsPerOpMax: round3(sample.afterDirect.nsPerOpMax),
+      roundNsPerOp: sample.afterDirect.roundNsPerOp,
+      checksum: sample.afterDirect.checksum | 0,
+    },
+    deltas: {
+      latencyNsPerOp: round3(sample.deltas.latencyNsPerOp),
+      latencyPct: round3(sample.deltas.latencyPct),
+    },
+  })),
   lanes: {
     beforeCompat: {
       label: "compat helper lane",
       entryIndex,
       exportName: entry.exportName,
       latency: {
-        nsPerOpMedian: round3(compatLatency.nsPerOpMedian),
-        nsPerOpMin: round3(compatLatency.nsPerOpMin),
-        nsPerOpMax: round3(compatLatency.nsPerOpMax),
-        roundNsPerOp: compatLatency.roundNsPerOp,
+        nsPerOpMedian: round3(median(compatLatencyMedians)),
+        nsPerOpMin: round3(Math.min(...compatLatencyMedians)),
+        nsPerOpMax: round3(Math.max(...compatLatencyMedians)),
+        sampleMediansNsPerOp: compatLatencyMedians.map((v) => round3(v)),
+        sampleRoundNsPerOp: sampleResults.map((sample) => sample.beforeCompat.roundNsPerOp),
       },
       instructionPath: compatMetrics,
       dynamicPath: compatDynamic,
@@ -834,42 +887,74 @@ const checkpoint = {
       entryIndex: directEntryIndex,
       exportName: directModule.exportName,
       latency: {
-        nsPerOpMedian: round3(directLatency.nsPerOpMedian),
-        nsPerOpMin: round3(directLatency.nsPerOpMin),
-        nsPerOpMax: round3(directLatency.nsPerOpMax),
-        roundNsPerOp: directLatency.roundNsPerOp,
+        nsPerOpMedian: round3(median(directLatencyMedians)),
+        nsPerOpMin: round3(Math.min(...directLatencyMedians)),
+        nsPerOpMax: round3(Math.max(...directLatencyMedians)),
+        sampleMediansNsPerOp: directLatencyMedians.map((v) => round3(v)),
+        sampleRoundNsPerOp: sampleResults.map((sample) => sample.afterDirect.roundNsPerOp),
       },
       instructionPath: directMetrics,
       dynamicPath: directDynamic,
     },
   },
   deltas: {
-    latencyNsPerOp: round3(latencyDeltaNs),
-    latencyPct: round3(latencyDeltaPct),
+    latencyNsPerOp: round3(median(latencyDeltaNsSamples)),
+    latencyNsPerOpMin: round3(Math.min(...latencyDeltaNsSamples)),
+    latencyNsPerOpMax: round3(Math.max(...latencyDeltaNsSamples)),
+    latencyPct: round3(median(latencyDeltaPctSamples)),
+    latencyPctMin: round3(Math.min(...latencyDeltaPctSamples)),
+    latencyPctMax: round3(Math.max(...latencyDeltaPctSamples)),
     instructionCount: (directMetrics.instructionCount - compatMetrics.instructionCount) | 0,
     callCount: (directMetrics.callCount - compatMetrics.callCount) | 0,
     callIndirectCount: (directMetrics.callIndirectCount - compatMetrics.callIndirectCount) | 0,
     ifCount: (directMetrics.ifCount - compatMetrics.ifCount) | 0,
   },
+  repeatability: {
+    sampleCount: perfSamples,
+    budget: {
+      maxLatencyDeltaNsPerOp: round3(perfBudgetDeltaNs),
+    },
+    withinBudgetSamples: withinBudgetSamples >>> 0,
+    allSamplesWithinBudget: withinBudgetSamples === perfSamples,
+    latencyDeltaNsPerOpSamples: latencyDeltaNsSamples.map((v) => round3(v)),
+    latencyDeltaPctSamples: latencyDeltaPctSamples.map((v) => round3(v)),
+  },
 };
+
+const compatSummary = checkpoint.lanes.beforeCompat.latency;
+const directSummary = checkpoint.lanes.afterDirect.latency;
+const deltaSummary = checkpoint.deltas;
 
 console.log("CHECKPOINT: B10C-01A-17 fixnum-add performance evidence");
 console.log(
-  `  before/compat entry ${entryIndex}: ${round3(compatLatency.nsPerOpMedian)} ns/op median ` +
-  `(min=${round3(compatLatency.nsPerOpMin)} max=${round3(compatLatency.nsPerOpMax)})`,
+  `  before/compat entry ${entryIndex}: ${compatSummary.nsPerOpMedian} ns/op median ` +
+  `(min=${compatSummary.nsPerOpMin} max=${compatSummary.nsPerOpMax})`,
 );
 console.log(
-  `  after/direct entry ${directEntryIndex}: ${round3(directLatency.nsPerOpMedian)} ns/op median ` +
-  `(min=${round3(directLatency.nsPerOpMin)} max=${round3(directLatency.nsPerOpMax)})`,
+  `  after/direct entry ${directEntryIndex}: ${directSummary.nsPerOpMedian} ns/op median ` +
+  `(min=${directSummary.nsPerOpMin} max=${directSummary.nsPerOpMax})`,
 );
 console.log(
-  `  delta (after-before): ${round3(latencyDeltaNs)} ns/op (${round3(latencyDeltaPct)}%)`,
+  `  delta (after-before): ${deltaSummary.latencyNsPerOp} ns/op (${deltaSummary.latencyPct}%)`,
+);
+console.log(
+  `  repeatability budget<=${round3(perfBudgetDeltaNs)} ns/op: ` +
+  `${checkpoint.repeatability.withinBudgetSamples}/${perfSamples} samples`,
 );
 console.log(
   "  dynamic helper calls/op (before -> after): " +
   `${checkpoint.lanes.beforeCompat.dynamicPath.callsPerOperation.wasm_return_fixnum_add ?? 0} -> ` +
   `${checkpoint.lanes.afterDirect.dynamicPath.callsPerOperation.wasm_return_fixnum_add ?? 0}`,
 );
+if (perfSamples > 1) {
+  for (const sample of checkpoint.samples) {
+    console.log(
+      `    sample#${sample.sample}: compat=${sample.beforeCompat.nsPerOpMedian} ns/op ` +
+      `direct=${sample.afterDirect.nsPerOpMedian} ns/op ` +
+      `delta=${sample.deltas.latencyNsPerOp} ns/op (${sample.deltas.latencyPct}%)`,
+    );
+  }
+}
 
 if (perfOut) {
   const outPath = path.resolve(process.cwd(), perfOut);

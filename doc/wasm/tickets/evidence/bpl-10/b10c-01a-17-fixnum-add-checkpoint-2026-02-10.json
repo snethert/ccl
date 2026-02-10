@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-02-10T17:48:08.685Z",
+  "capturedAt": "2026-02-10T17:56:22.009Z",
   "host": {
     "node": "v25.6.0",
     "platform": "darwin",
@@ -9,23 +9,147 @@
     "perfIterations": 300000,
     "perfWarmup": 60000,
     "perfRounds": 5,
-    "perfPathIterations": 20000
+    "perfSamples": 3,
+    "perfPathIterations": 20000,
+    "perfBudgetDeltaNs": 0
   },
+  "samples": [
+    {
+      "sample": 1,
+      "beforeCompat": {
+        "nsPerOpMedian": 53.948,
+        "nsPerOpMin": 52.572,
+        "nsPerOpMax": 56.362,
+        "roundNsPerOp": [
+          56.362,
+          54.684,
+          52.572,
+          53.237,
+          53.948
+        ],
+        "checksum": -300992
+      },
+      "afterDirect": {
+        "nsPerOpMedian": 49.784,
+        "nsPerOpMin": 47.783,
+        "nsPerOpMax": 51.64,
+        "roundNsPerOp": [
+          49.937,
+          49.784,
+          51.64,
+          49.615,
+          47.783
+        ],
+        "checksum": -300992
+      },
+      "deltas": {
+        "latencyNsPerOp": -4.164,
+        "latencyPct": -7.719
+      }
+    },
+    {
+      "sample": 2,
+      "beforeCompat": {
+        "nsPerOpMedian": 53.68,
+        "nsPerOpMin": 53.346,
+        "nsPerOpMax": 54.515,
+        "roundNsPerOp": [
+          54.104,
+          53.68,
+          53.581,
+          53.346,
+          54.515
+        ],
+        "checksum": -300992
+      },
+      "afterDirect": {
+        "nsPerOpMedian": 49.394,
+        "nsPerOpMin": 49,
+        "nsPerOpMax": 49.554,
+        "roundNsPerOp": [
+          49.216,
+          49.394,
+          49,
+          49.554,
+          49.404
+        ],
+        "checksum": -300992
+      },
+      "deltas": {
+        "latencyNsPerOp": -4.285,
+        "latencyPct": -7.983
+      }
+    },
+    {
+      "sample": 3,
+      "beforeCompat": {
+        "nsPerOpMedian": 53.78,
+        "nsPerOpMin": 52.961,
+        "nsPerOpMax": 54.831,
+        "roundNsPerOp": [
+          54.831,
+          53.526,
+          52.961,
+          53.824,
+          53.78
+        ],
+        "checksum": -300992
+      },
+      "afterDirect": {
+        "nsPerOpMedian": 48.474,
+        "nsPerOpMin": 47.75,
+        "nsPerOpMax": 49.104,
+        "roundNsPerOp": [
+          47.75,
+          48.422,
+          49.104,
+          48.613,
+          48.474
+        ],
+        "checksum": -300992
+      },
+      "deltas": {
+        "latencyNsPerOp": -5.306,
+        "latencyPct": -9.866
+      }
+    }
+  ],
   "lanes": {
     "beforeCompat": {
       "label": "compat helper lane",
       "entryIndex": 204,
       "exportName": "ccl_fixnum_add_entry",
       "latency": {
-        "nsPerOpMedian": 54.077,
-        "nsPerOpMin": 53.723,
-        "nsPerOpMax": 55.408,
-        "roundNsPerOp": [
-          55.408,
-          54.077,
-          54.061,
-          53.723,
-          54.592
+        "nsPerOpMedian": 53.78,
+        "nsPerOpMin": 53.68,
+        "nsPerOpMax": 53.948,
+        "sampleMediansNsPerOp": [
+          53.948,
+          53.68,
+          53.78
+        ],
+        "sampleRoundNsPerOp": [
+          [
+            56.362,
+            54.684,
+            52.572,
+            53.237,
+            53.948
+          ],
+          [
+            54.104,
+            53.68,
+            53.581,
+            53.346,
+            54.515
+          ],
+          [
+            54.831,
+            53.526,
+            52.961,
+            53.824,
+            53.78
+          ]
         ]
       },
       "instructionPath": {
@@ -55,15 +179,36 @@
       "entryIndex": 301,
       "exportName": "ccl_generic_entry_301",
       "latency": {
-        "nsPerOpMedian": 50.41,
-        "nsPerOpMin": 48.683,
-        "nsPerOpMax": 51.214,
-        "roundNsPerOp": [
-          48.683,
-          50.356,
-          50.901,
-          50.41,
-          51.214
+        "nsPerOpMedian": 49.394,
+        "nsPerOpMin": 48.474,
+        "nsPerOpMax": 49.784,
+        "sampleMediansNsPerOp": [
+          49.784,
+          49.394,
+          48.474
+        ],
+        "sampleRoundNsPerOp": [
+          [
+            49.937,
+            49.784,
+            51.64,
+            49.615,
+            47.783
+          ],
+          [
+            49.216,
+            49.394,
+            49,
+            49.554,
+            49.404
+          ],
+          [
+            47.75,
+            48.422,
+            49.104,
+            48.613,
+            48.474
+          ]
         ]
       },
       "instructionPath": {
@@ -86,11 +231,33 @@
     }
   },
   "deltas": {
-    "latencyNsPerOp": -3.667,
-    "latencyPct": -6.782,
+    "latencyNsPerOp": -4.285,
+    "latencyNsPerOpMin": -5.306,
+    "latencyNsPerOpMax": -4.164,
+    "latencyPct": -7.983,
+    "latencyPctMin": -9.866,
+    "latencyPctMax": -7.719,
     "instructionCount": 36,
     "callCount": 6,
     "callIndirectCount": 0,
     "ifCount": 1
+  },
+  "repeatability": {
+    "sampleCount": 3,
+    "budget": {
+      "maxLatencyDeltaNsPerOp": 0
+    },
+    "withinBudgetSamples": 3,
+    "allSamplesWithinBudget": true,
+    "latencyDeltaNsPerOpSamples": [
+      -4.164,
+      -4.285,
+      -5.306
+    ],
+    "latencyDeltaPctSamples": [
+      -7.719,
+      -7.983,
+      -9.866
+    ]
   }
 }
