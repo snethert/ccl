@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-02-10T16:12:45.773Z",
+  "capturedAt": "2026-02-10T16:26:43.557Z",
   "host": {
     "node": "v25.6.0",
     "platform": "darwin",
@@ -17,15 +17,15 @@
       "entryIndex": 204,
       "exportName": "ccl_fixnum_add_entry",
       "latency": {
-        "nsPerOpMedian": 41.824,
-        "nsPerOpMin": 41.573,
-        "nsPerOpMax": 42.056,
+        "nsPerOpMedian": 42.229,
+        "nsPerOpMin": 41.131,
+        "nsPerOpMax": 43.282,
         "roundNsPerOp": [
-          41.755,
-          41.989,
-          41.573,
-          41.824,
-          42.056
+          42.229,
+          42.069,
+          41.131,
+          43.282,
+          42.735
         ]
       },
       "instructionPath": {
@@ -52,67 +52,61 @@
     },
     "afterDirect": {
       "label": "direct lowered lane",
-      "entryIndex": 302,
-      "exportName": "ccl_generic_entry_302",
+      "entryIndex": 301,
+      "exportName": "ccl_generic_entry_301",
       "latency": {
-        "nsPerOpMedian": 55.403,
-        "nsPerOpMin": 54.545,
-        "nsPerOpMax": 58.027,
+        "nsPerOpMedian": 46.297,
+        "nsPerOpMin": 45.872,
+        "nsPerOpMax": 48.46,
         "roundNsPerOp": [
-          58.027,
-          54.545,
-          55.329,
-          55.659,
-          55.403
+          48.46,
+          46.729,
+          45.872,
+          46.297,
+          46.014
         ]
       },
       "instructionPath": {
-        "instructionCount": 98,
-        "callCount": 28,
+        "instructionCount": 80,
+        "callCount": 21,
         "callIndirectCount": 0,
         "ifCount": 3,
-        "localCount": 6,
+        "localCount": 5,
         "importCallSites": {
           "ccl.wasm_get_arg_y": 1,
           "ccl.wasm_get_arg_z": 3,
-          "ccl.wasm_get_nargs": 1,
           "ccl.wasm_pending_throw_p": 1,
           "ccl.wasm_return_fixnum_add": 2,
           "ccl.wasm_set_arg_y": 2,
           "ccl.wasm_set_arg_z": 3,
           "ccl.wasm_set_nargs": 1,
-          "ccl.wasm_spill_pop": 6,
-          "ccl.wasm_spill_push": 6,
-          "ccl.wasm_vsp_ref": 2
+          "ccl.wasm_spill_pop": 4,
+          "ccl.wasm_spill_push": 4
         }
       },
       "dynamicPath": {
         "totalCalls": {
           "wasm_get_arg_y": 20000,
           "wasm_get_arg_z": 20000,
-          "wasm_get_nargs": 20000,
           "wasm_pending_throw_p": 20000,
           "wasm_set_arg_z": 20000,
-          "wasm_set_nargs": 20000,
-          "wasm_vsp_ref": 40000
+          "wasm_set_nargs": 20000
         },
         "callsPerOperation": {
           "wasm_get_arg_y": 1,
           "wasm_get_arg_z": 1,
-          "wasm_get_nargs": 1,
           "wasm_pending_throw_p": 1,
           "wasm_set_arg_z": 1,
-          "wasm_set_nargs": 1,
-          "wasm_vsp_ref": 2
+          "wasm_set_nargs": 1
         }
       }
     }
   },
   "deltas": {
-    "latencyNsPerOp": 13.579,
-    "latencyPct": 32.468,
-    "instructionCount": 92,
-    "callCount": 26,
+    "latencyNsPerOp": 4.067,
+    "latencyPct": 9.631,
+    "instructionCount": 74,
+    "callCount": 19,
     "callIndirectCount": 0,
     "ifCount": 2
   }

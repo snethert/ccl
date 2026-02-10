@@ -2088,10 +2088,12 @@
          (keyvect (and keys (nth 4 keys)))
          (auxvars (and auxen (car auxen)))
          (auxinits (and auxen (cadr auxen)))
-         (nargs-temp (wasm2-allocate-temp)))
+         (nargs-temp (and (or optvars rest-var)
+                          (wasm2-allocate-temp))))
     (declare (ignore keyvect))
-    (wasm2-emit :get-nargs)
-    (wasm2-emit :local.set nargs-temp)
+    (when nargs-temp
+      (wasm2-emit :get-nargs)
+      (wasm2-emit :local.set nargs-temp))
     (labels ((emit-assign (var emitter)
              (when var
                (funcall emitter)
@@ -2103,10 +2105,18 @@
            (emit-assign-from-local (var idx)
              (emit-assign var (lambda () (wasm2-emit :local.get idx))))
            (emit-assign-from-vsp (var idx)
-             (emit-assign var (lambda () (wasm2-emit :vsp-ref idx)))))
+             (emit-assign var (lambda () (wasm2-emit :vsp-ref idx))))
+           (req-var-populated-by-arg-prologue-p (var idx)
+             ;; When arg-reg compatibility prologue is active, req arg0/arg1
+             ;; locals are already populated before lambda binding.
+             (and (not *wasm2-use-arg-regs*)
+                  (not (wasm2-var-closed-p var))
+                  (or (and (= idx 0) (wasm2-arg0-var-name-p var))
+                      (and (= idx 1) (wasm2-arg1-var-name-p var))))))
       (loop for var in req
             for idx from 0
-            do (emit-assign-from-vsp var idx))
+            do (unless (req-var-populated-by-arg-prologue-p var idx)
+                 (emit-assign-from-vsp var idx)))
       (when optvars
         (loop for var in optvars
               for init in optinits
