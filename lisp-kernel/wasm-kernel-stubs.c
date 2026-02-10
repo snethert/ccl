@@ -202,6 +202,9 @@ static const uint32_t wasm_ui_payload_WebGL_demo_webgl_top_len = 877;
 enum {
   WASM_SUBPRIM_FUNCALL_INDEX = 24,
   WASM_SUBPRIM_MKCATCH1V_INDEX = 25,
+  WASM_SUBPRIM_MKUNWIND_INDEX = 27,
+  WASM_SUBPRIM_VALUES_INDEX = 37,
+  WASM_SUBPRIM_NTHROWVALUES_INDEX = 40,
   WASM_SUBPRIM_NTHROW1VALUE_INDEX = 41,
   /* Keep in sync with scripts/wasm/make_minimal_image.py and load-image.mjs. */
   WASM_BOOT_ENTRY_INDEX = 200,
@@ -1897,7 +1900,24 @@ enum {
   WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_SAVEVSP = 25u,
   WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_LAST = 26u,
   WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_CATCH_RESTORE = 27u,
-  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_SP_RESTORE = 28u
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_SP_RESTORE = 28u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_CATCH_INSTALL = 29u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_PENDING_THROW = 30u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_ARGZ = 31u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_VSP = 32u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_SAVEVSP = 33u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_LAST = 34u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_CATCH_RESTORE = 35u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_STACK_BOUNDS = 36u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_CATCH_INSTALL = 37u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_PENDING_THROW = 38u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_NARGS = 39u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_ARGZ = 40u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_VSP = 41u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_SAVEVSP = 42u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_VALUES = 43u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_LAST = 44u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_CATCH_RESTORE = 45u
 };
 
 typedef struct wasm_subprim_nonlocal_exit_selftest_state {
@@ -1971,8 +1991,14 @@ wasm_subprim_nonlocal_exit_coherence_selftest(void)
 {
   TCR *tcr = wasm_get_current_tcr();
   wasm_subprim_nonlocal_exit_selftest_state original;
+  area *vs_area;
   natural direct_old_last_lisp_frame;
   natural direct_host_last_lisp_frame;
+  LispObj *direct_unwind_throw_vsp;
+  LispObj cleanup_invoked_sentinel = box_fixnum(0x3301);
+  LispObj mv0 = box_fixnum(0x3401);
+  LispObj mv1 = box_fixnum(0x3402);
+  LispObj mv2 = box_fixnum(0x3403);
   LispObj fn_obj[3] __attribute__((aligned(8)));
   LispObj entry_fixnum = box_fixnum(WASM_SUBPRIM_NTHROW1VALUE_INDEX);
   LispObj fn_value;
@@ -2039,6 +2065,123 @@ wasm_subprim_nonlocal_exit_coherence_selftest(void)
   if (tcr->catch_top != original.catch_top) {
     wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
     return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_CATCH_RESTORE;
+  }
+
+  /* Phase-3: mkunwind + nthrowvalues cleanup entry must execute and restore
+   * non-local-exit coherence for a zero-value throw.
+   */
+  tcr->wasm_pending_throw = 0;
+  tcr->save_tsp = NULL;
+  tcr->save_vsp = original.save_vsp;
+  tcr->wasm_gprs[vsp] = (LispObj)original.save_vsp;
+  tcr->wasm_gprs[nargs] = box_fixnum(0);
+  tcr->wasm_gprs[arg_z] = cleanup_invoked_sentinel;
+  tcr->wasm_gprs[imm0] = box_fixnum(WASM_SUBPRIM_VALUES_INDEX);
+  wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_MKUNWIND_INDEX));
+  if (tcr->catch_top == original.catch_top) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_CATCH_INSTALL;
+  }
+
+  tcr->wasm_pending_throw = 0;
+  tcr->wasm_gprs[arg_z] = cleanup_invoked_sentinel;
+  tcr->wasm_gprs[nargs] = box_fixnum(0);
+  tcr->wasm_gprs[imm0] = box_fixnum(1);
+  wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_NTHROWVALUES_INDEX));
+  if (!tcr->wasm_pending_throw) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_PENDING_THROW;
+  }
+  if (tcr->wasm_gprs[arg_z] != (LispObj)nil_value) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_ARGZ;
+  }
+  if ((LispObj)tcr->save_vsp != tcr->wasm_gprs[vsp]) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_VSP;
+  }
+  if (tcr->save_vsp != original.save_vsp) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_SAVEVSP;
+  }
+  if (tcr->last_lisp_frame != direct_host_last_lisp_frame) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_LAST;
+  }
+  if (tcr->catch_top != original.catch_top) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_CATCH_RESTORE;
+  }
+
+  /* Phase-3: same path with MV payload verifies push/recover around cleanup. */
+  vs_area = tcr->vs_area;
+  if ((vs_area == NULL) || (vs_area->low == NULL) || (vs_area->high == NULL)) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_STACK_BOUNDS;
+  }
+  direct_unwind_throw_vsp = original.save_vsp - 3;
+  if (((BytePtr)direct_unwind_throw_vsp < vs_area->low) ||
+      ((BytePtr)(direct_unwind_throw_vsp + 3) > vs_area->high)) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_STACK_BOUNDS;
+  }
+  direct_unwind_throw_vsp[0] = mv0;
+  direct_unwind_throw_vsp[1] = mv1;
+  direct_unwind_throw_vsp[2] = mv2;
+
+  tcr->wasm_pending_throw = 0;
+  tcr->save_tsp = NULL;
+  tcr->save_vsp = direct_unwind_throw_vsp;
+  tcr->wasm_gprs[vsp] = (LispObj)direct_unwind_throw_vsp;
+  tcr->wasm_gprs[arg_z] = mv0;
+  tcr->wasm_gprs[arg_y] = mv1;
+  tcr->wasm_gprs[arg_x] = mv2;
+  tcr->wasm_gprs[nargs] = box_fixnum(3);
+  tcr->wasm_gprs[imm0] = box_fixnum(WASM_SUBPRIM_VALUES_INDEX);
+  wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_MKUNWIND_INDEX));
+  if (tcr->catch_top == original.catch_top) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_CATCH_INSTALL;
+  }
+
+  tcr->wasm_pending_throw = 0;
+  tcr->wasm_gprs[arg_z] = mv0;
+  tcr->wasm_gprs[nargs] = box_fixnum(3);
+  tcr->wasm_gprs[imm0] = box_fixnum(1);
+  wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_NTHROWVALUES_INDEX));
+  if (!tcr->wasm_pending_throw) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_PENDING_THROW;
+  }
+  if (tcr->wasm_gprs[nargs] != box_fixnum(3)) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_NARGS;
+  }
+  if (tcr->wasm_gprs[arg_z] != mv0) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_ARGZ;
+  }
+  if ((LispObj)tcr->save_vsp != tcr->wasm_gprs[vsp]) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_VSP;
+  }
+  if ((tcr->save_vsp == NULL) || (tcr->save_tsp != NULL)) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_SAVEVSP;
+  }
+  if ((tcr->save_vsp[0] != mv0) ||
+      (tcr->save_vsp[1] != mv1) ||
+      (tcr->save_vsp[2] != mv2)) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_VALUES;
+  }
+  if (tcr->last_lisp_frame != direct_host_last_lisp_frame) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_LAST;
+  }
+  if (tcr->catch_top != original.catch_top) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_CATCH_RESTORE;
   }
 
   tcr->wasm_pending_throw = 0;
