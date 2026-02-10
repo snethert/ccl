@@ -1456,6 +1456,71 @@ dnode_marked_bytes_before(uint32_t marked_word, uint32_t bit_index)
          one_bits(prefix_bits & 0xffu);
 }
 
+static LispObj
+dnode_marked_bytes_before_reference(uint32_t marked_word, uint32_t bit_index)
+{
+  uint32_t i;
+  uint32_t limit = (bit_index > 32u) ? 32u : bit_index;
+  LispObj bytes = 0;
+
+  for (i = 0; i < limit; i++) {
+    uint32_t mask = (0x80000000u >> i);
+    if ((marked_word & mask) != 0u) {
+      bytes += dnode_size;
+    }
+  }
+  return bytes;
+}
+
+static uint32_t
+wasm_gc_xorshift32(uint32_t *state)
+{
+  uint32_t x = *state;
+  if (x == 0u) {
+    x = 0x9e3779b9u;
+  }
+  x ^= (x << 13);
+  x ^= (x >> 17);
+  x ^= (x << 5);
+  *state = x;
+  return x;
+}
+
+uint32_t
+wasm_gc_forwarding_selftest(void)
+{
+  static const uint32_t fixed_patterns[] = {
+    0x00000000u, 0xffffffffu, 0x80000000u, 0x00000001u,
+    0x55555555u, 0xaaaaaaaau, 0xf0f0f0f0u, 0x0f0f0f0fu,
+    0x7fffffffu, 0xfffffffeu, 0x01234567u, 0x89abcdefu
+  };
+  uint32_t i;
+  uint32_t bit_index;
+  uint32_t random_state = 0x6d2b79f5u;
+
+  for (i = 0; i < (sizeof(fixed_patterns) / sizeof(fixed_patterns[0])); i++) {
+    uint32_t marked_word = fixed_patterns[i];
+    for (bit_index = 0u; bit_index <= 32u; bit_index++) {
+      if (dnode_marked_bytes_before(marked_word, bit_index) !=
+          dnode_marked_bytes_before_reference(marked_word, bit_index)) {
+        return 0u;
+      }
+    }
+  }
+
+  for (i = 0u; i < 4096u; i++) {
+    uint32_t marked_word = wasm_gc_xorshift32(&random_state);
+    for (bit_index = 0u; bit_index <= 32u; bit_index++) {
+      if (dnode_marked_bytes_before(marked_word, bit_index) !=
+          dnode_marked_bytes_before_reference(marked_word, bit_index)) {
+        return 0u;
+      }
+    }
+  }
+
+  return 1u;
+}
+
 LispObj
 dnode_forwarding_address(natural dnode, int tag_n)
 {

@@ -405,6 +405,13 @@ wasm_clear_entry_gc_root_policy_modes_export(void)
   wasm_clear_entry_gc_root_policy_modes();
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_gc_forwarding_selftest")))
+uint32_t
+wasm_gc_forwarding_selftest_export(void)
+{
+  return wasm_gc_forwarding_selftest();
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_save_image_direct")))
 int32_t
 wasm_save_image_direct(uint32_t path_ptr, uint32_t path_len, uint32_t egc_enabled)

@@ -35,6 +35,7 @@ if (injectedFailureCode || forcedBridgeFallback) {
 
 const tests = [
   "./smoke-test.mjs",
+  "./gc-forwarding-smoke.mjs",
   "./kernel-request-smoke.mjs",
   "./runtime-modules-manifest-smoke.mjs",
   "./root-image-manifest-smoke.mjs",
