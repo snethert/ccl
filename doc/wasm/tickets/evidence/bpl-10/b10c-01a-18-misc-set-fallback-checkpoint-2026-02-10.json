@@ -1,0 +1,45 @@
+{
+  "capturedAt": "2026-02-10T19:01:53.466Z",
+  "host": {
+    "node": "v25.6.0",
+    "platform": "darwin",
+    "arch": "x64"
+  },
+  "options": {
+    "iterations": 20000,
+    "maxMiscSetCallsPerOp": 1
+  },
+  "entry": {
+    "name": "WASM-SMOKE-MISC-SET-FALLBACK",
+    "entryIndex": 315,
+    "exportName": "ccl_generic_entry_315"
+  },
+  "subprim": {
+    "symbol": "_SPmisc_set",
+    "index": 93,
+    "fixnum": 372
+  },
+  "dynamicPath": {
+    "checksum": 1550000,
+    "totalSubprimCalls": 40000,
+    "totalSubprimCallsPerOperation": 2,
+    "miscSetCalls": 20000,
+    "miscSetCallsPerOperation": 1,
+    "callsBySubprimFixnum": {
+      "228": 20000,
+      "372": 20000
+    },
+    "callsBySubprimSymbol": {
+      "_SPgvector": 20000,
+      "_SPmisc_set": 20000
+    },
+    "callsPerOperationBySubprimSymbol": {
+      "_SPgvector": 1,
+      "_SPmisc_set": 1
+    }
+  },
+  "bounds": {
+    "withinBound": true,
+    "maxMiscSetCallsPerOp": 1
+  }
+}

@@ -87,6 +87,12 @@
            (setq y 2)
           end)
          y)))
+    (ccl::wasm-smoke-misc-set-fallback
+     (lambda (flag)
+       (declare (fixnum flag))
+       (let* ((vec (vector 10 20))
+              (idx (logand flag 1)))
+         (setf (uvref vec idx) 77))))
     (ccl::wasm-smoke-mvcall
      (lambda ()
        (multiple-value-call #'+
