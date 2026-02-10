@@ -548,6 +548,7 @@ async function collectDynamicImportCounts({
     "wasm_set_arg_z",
     "wasm_set_arg_y",
     "wasm_set_nargs",
+    "wasm_return_constant",
     "wasm_vsp_ref",
     "wasm_spill_push",
     "wasm_spill_pop",

@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-02-10T16:26:43.557Z",
+  "capturedAt": "2026-02-10T16:36:15.127Z",
   "host": {
     "node": "v25.6.0",
     "platform": "darwin",
@@ -17,15 +17,15 @@
       "entryIndex": 204,
       "exportName": "ccl_fixnum_add_entry",
       "latency": {
-        "nsPerOpMedian": 42.229,
-        "nsPerOpMin": 41.131,
-        "nsPerOpMax": 43.282,
+        "nsPerOpMedian": 42.995,
+        "nsPerOpMin": 42.055,
+        "nsPerOpMax": 43.051,
         "roundNsPerOp": [
-          42.229,
-          42.069,
-          41.131,
-          43.282,
-          42.735
+          43.048,
+          43.051,
+          42.055,
+          42.995,
+          42.917
         ]
       },
       "instructionPath": {
@@ -55,20 +55,20 @@
       "entryIndex": 301,
       "exportName": "ccl_generic_entry_301",
       "latency": {
-        "nsPerOpMedian": 46.297,
-        "nsPerOpMin": 45.872,
-        "nsPerOpMax": 48.46,
+        "nsPerOpMedian": 45.788,
+        "nsPerOpMin": 45.242,
+        "nsPerOpMax": 48.247,
         "roundNsPerOp": [
-          48.46,
-          46.729,
-          45.872,
-          46.297,
-          46.014
+          48.247,
+          45.242,
+          45.613,
+          46.44,
+          45.788
         ]
       },
       "instructionPath": {
-        "instructionCount": 80,
-        "callCount": 21,
+        "instructionCount": 78,
+        "callCount": 20,
         "callIndirectCount": 0,
         "ifCount": 3,
         "localCount": 5,
@@ -76,10 +76,10 @@
           "ccl.wasm_get_arg_y": 1,
           "ccl.wasm_get_arg_z": 3,
           "ccl.wasm_pending_throw_p": 1,
+          "ccl.wasm_return_constant": 1,
           "ccl.wasm_return_fixnum_add": 2,
           "ccl.wasm_set_arg_y": 2,
-          "ccl.wasm_set_arg_z": 3,
-          "ccl.wasm_set_nargs": 1,
+          "ccl.wasm_set_arg_z": 2,
           "ccl.wasm_spill_pop": 4,
           "ccl.wasm_spill_push": 4
         }
@@ -89,24 +89,22 @@
           "wasm_get_arg_y": 20000,
           "wasm_get_arg_z": 20000,
           "wasm_pending_throw_p": 20000,
-          "wasm_set_arg_z": 20000,
-          "wasm_set_nargs": 20000
+          "wasm_return_constant": 20000
         },
         "callsPerOperation": {
           "wasm_get_arg_y": 1,
           "wasm_get_arg_z": 1,
           "wasm_pending_throw_p": 1,
-          "wasm_set_arg_z": 1,
-          "wasm_set_nargs": 1
+          "wasm_return_constant": 1
         }
       }
     }
   },
   "deltas": {
-    "latencyNsPerOp": 4.067,
-    "latencyPct": 9.631,
-    "instructionCount": 74,
-    "callCount": 19,
+    "latencyNsPerOp": 2.793,
+    "latencyPct": 6.497,
+    "instructionCount": 72,
+    "callCount": 18,
     "callIndirectCount": 0,
     "ifCount": 2
   }

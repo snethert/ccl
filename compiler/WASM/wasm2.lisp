@@ -4184,8 +4184,7 @@
 
 (defun wasm2-emit-constant-return (value)
   (wasm2-emit-const value)
-  (wasm2-emit :set-arg-z)
-  (wasm2-emit :set-nargs 1)
+  (wasm2-emit :return-constant)
   (wasm2-emit :return)
   nil)
 
@@ -5602,6 +5601,8 @@
          (wasm2-emit-call-index body (wasm2-generic-import-index :set-arg-y)))
         (:set-arg-x
          (wasm2-emit-call-index body (wasm2-generic-import-index :set-arg-x)))
+        (:return-constant
+         (wasm2-emit-call-index body (wasm2-generic-import-index :return-constant)))
         (:set-nargs
          (wasm2-push-u8 body #x41)
          (wasm2-emit-sleb32 body (car args))
@@ -7036,6 +7037,11 @@
     function))
 
 (defun wasm2-const-ir-value (ir)
+  (when (and (= (length ir) 3)
+             (eq (caar ir) :const)
+             (eq (caar (cdr ir)) :return-constant)
+             (eq (caar (cddr ir)) :return))
+    (return-from wasm2-const-ir-value (values (cadar ir) t)))
   (when (and (= (length ir) 4)
              (eq (caar ir) :const)
              (eq (caar (cdr ir)) :set-arg-z)
@@ -7232,8 +7238,7 @@
         (setf ir (append arg-prologue-ir ir)))
       (unless (wasm2-ir-ends-with-return-p ir)
         (setf ir (append ir
-                         (list (cons :set-arg-z nil)
-                               (cons :set-nargs (list 1))
+                         (list (cons :return-constant nil)
                                (cons :return nil)))))
       (setf (afunc-lfun-info afunc)
             (list* 'wasm-ir ir (afunc-lfun-info afunc)))
