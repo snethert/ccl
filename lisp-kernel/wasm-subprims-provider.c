@@ -506,20 +506,36 @@ wasm_bool_to_lisp(int cond)
 }
 
 static LispObj
-wasm_builtin_function(TCR *tcr, signed_natural index)
+wasm_builtin_function(signed_natural index)
 {
   LispObj vec = nrs_BUILTIN_FUNCTIONS.vcell;
-  if (vec == (LispObj)nil_value) {
+  if (vec == (LispObj)nil_value || fulltag_of(vec) != fulltag_misc) {
     wasm_subprims_trap();
   }
-  return wasm_misc_ref_dispatch(tcr, vec, index);
+
+  LispObj header = header_of(vec);
+  unsigned subtag = header_subtag(header);
+  if ((subtag & fulltagmask) != fulltag_nodeheader) {
+    wasm_subprims_trap();
+  }
+
+  signed_natural count = header_element_count(header);
+  if (index < 0 || index >= count) {
+    wasm_subprims_trap();
+  }
+
+  LispObj *data = (LispObj *)((BytePtr)vec + misc_data_offset);
+  return data[index];
 }
 
 static void
 wasm_call_builtin(TCR *tcr, signed_natural index, signed_natural nargs_count)
 {
-  LispObj fn = wasm_builtin_function(tcr, index);
-  wasm_set_reg(tcr, nargs, box_fixnum(nargs_count));
+  LispObj fn = wasm_builtin_function(index);
+  LispObj expected_nargs = box_fixnum(nargs_count);
+  if (wasm_reg(tcr, nargs) != expected_nargs) {
+    wasm_set_reg(tcr, nargs, expected_nargs);
+  }
   wasm_call_lisp_function(tcr, fn);
 }
 
@@ -2047,6 +2063,13 @@ wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
   }
 }
 
+static inline void
+wasm_funcall_nfn(TCR *tcr)
+{
+  wasm_sync_arg_regs_from_vsp(tcr);
+  wasm_call_lisp_function(tcr, wasm_reg(tcr, nfn));
+}
+
 __attribute__((used, visibility("default"), export_name("_SPthrow")))
 void
 _SPthrow(void)
@@ -2099,10 +2122,12 @@ _SPthrow(void)
       wasm_set_reg(tcr, vsp, (LispObj)vsp_ptr);
       tcr->save_vsp = vsp_ptr;
     }
+    wasm_set_reg(tcr, arg_z, vsp_ptr[0]);
     wasm_set_reg(tcr, nargs, box_fixnum(1));
+  } else {
+    wasm_sync_arg_regs_from_vsp(tcr);
   }
 
-  wasm_sync_arg_regs_from_vsp(tcr);
   wasm_set_reg(tcr, imm0, box_fixnum(frame_count + 1));
   _SPnthrowvalues();
 }
@@ -2197,19 +2222,13 @@ _SPfuncall(void)
     wasm_subprims_trap();
   }
 
-  wasm_sync_arg_regs_from_vsp(tcr);
-  LispObj fn_value = wasm_reg(tcr, nfn);
-  wasm_call_lisp_function(tcr, fn_value);
-
-  if (wasm_pending_throw_p(tcr)) {
-    return;
-  }
+  wasm_funcall_nfn(tcr);
 }
 
 /*
  * Tailcall/jump subprims (_SPtfuncallgen, _SPtfuncallslide, _SPjmpsym,
  * _SPtcallsymgen, _SPtcallsymslide, _SPtcallnfngen, _SPtcallnfnslide)
- * are currently implemented as wrappers around _SPfuncall. This is
+ * are currently implemented as wrappers around shared funcall helper. This is
  * correct but not tail-call optimized (no frame reuse). Rebuilt
  * subprims.wasm. Tests: all-smoke.mjs --no-ui.
  */
@@ -2217,14 +2236,22 @@ __attribute__((used, visibility("default"), export_name("_SPtfuncallgen")))
 void
 _SPtfuncallgen(void)
 {
-  _SPfuncall();
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    wasm_subprims_trap();
+  }
+  wasm_funcall_nfn(tcr);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPtfuncallslide")))
 void
 _SPtfuncallslide(void)
 {
-  _SPfuncall();
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    wasm_subprims_trap();
+  }
+  wasm_funcall_nfn(tcr);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPjmpsym")))
@@ -2236,7 +2263,7 @@ _SPjmpsym(void)
     wasm_subprims_trap();
   }
   wasm_set_reg(tcr, nfn, wasm_reg(tcr, fname));
-  _SPfuncall();
+  wasm_funcall_nfn(tcr);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPtcallsymgen")))
@@ -2248,7 +2275,7 @@ _SPtcallsymgen(void)
     wasm_subprims_trap();
   }
   wasm_set_reg(tcr, nfn, wasm_reg(tcr, fname));
-  _SPfuncall();
+  wasm_funcall_nfn(tcr);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPtcallsymslide")))
@@ -2260,21 +2287,29 @@ _SPtcallsymslide(void)
     wasm_subprims_trap();
   }
   wasm_set_reg(tcr, nfn, wasm_reg(tcr, fname));
-  _SPfuncall();
+  wasm_funcall_nfn(tcr);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPtcallnfngen")))
 void
 _SPtcallnfngen(void)
 {
-  _SPfuncall();
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    wasm_subprims_trap();
+  }
+  wasm_funcall_nfn(tcr);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPtcallnfnslide")))
 void
 _SPtcallnfnslide(void)
 {
-  _SPfuncall();
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    wasm_subprims_trap();
+  }
+  wasm_funcall_nfn(tcr);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPmvpass")))
@@ -2286,7 +2321,7 @@ _SPmvpass(void)
     wasm_subprims_trap();
   }
 
-  _SPfuncall();
+  wasm_funcall_nfn(tcr);
 
   if (wasm_pending_throw_p(tcr)) {
     return;
