@@ -68,6 +68,17 @@ function round3(x) {
   return Math.round(x * 1000) / 1000;
 }
 
+const WASM_ENTRY_CALL_ABI_LEGACY = 0;
+const WASM_ENTRY_CALL_ABI_UNARY_I32 = 1;
+const WASM_ENTRY_CALL_ABI_BINARY_I32 = 2;
+
+function inferEntryCallAbiKind(fn) {
+  if (typeof fn !== "function") return WASM_ENTRY_CALL_ABI_LEGACY;
+  if (fn.length === 1) return WASM_ENTRY_CALL_ABI_UNARY_I32;
+  if (fn.length === 2) return WASM_ENTRY_CALL_ABI_BINARY_I32;
+  return WASM_ENTRY_CALL_ABI_LEGACY;
+}
+
 function mapToSortedObject(map) {
   const entries = [...map.entries()].sort((a, b) => {
     if (a[0] < b[0]) return -1;
@@ -582,6 +593,12 @@ async function collectDynamicImportCounts({
     runtime.subprimsTable.grow((tableEntryIndex + 1) - runtime.subprimsTable.length);
   }
   runtime.subprimsTable.set(tableEntryIndex, fn);
+  if (typeof kernelExports.wasm_set_entry_call_abi === "function") {
+    kernelExports.wasm_set_entry_call_abi(
+      tableEntryIndex >>> 0,
+      inferEntryCallAbiKind(fn) >>> 0,
+    );
+  }
   runEntryLoop(kernelExports, tableEntryIndex, iterations);
 
   const perOp = new Map();
