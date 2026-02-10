@@ -10,18 +10,7 @@
 (in-package "WASM")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  ;; Transitional bootstrap: keep legacy constant surface available while
-  ;; wasm-owned constants/mappings are landed.
-  (require (coerce '(#\A #\R #\M #\- #\A #\R #\C #\H) 'string)))
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  ;; Transitional constant/macro surface for shared compiler forms.
-  (let ((arm (find-package "ARM"))
-        (wasm (find-package "WASM")))
-    (when (and arm wasm)
-      (do-symbols (sym arm)
-        (when (eq (symbol-package sym) arm)
-          (shadowing-import sym wasm))))))
+  (require "ARCH"))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defparameter *wasm-subprims-shift* 0)
@@ -181,6 +170,413 @@
            +wasm-subprims-count+
            (length *wasm-subprim-names*)))
   (setf *wasm-subprims* (wasm-build-subprims-table)))
+
+;;; Transitional compatibility surface for shared compiler forms.
+;;; These values are now WASM-owned instead of shadow-imported from ARM.
+(defmacro define-storage-layout (name origin &rest cells)
+  `(progn
+     (ccl::defenum (:start ,origin :step 4)
+       ,@(mapcar #'(lambda (cell) (ccl::form-symbol name "." cell)) cells))
+     (defconstant ,(ccl::form-symbol name ".SIZE") ,(* (length cells) 4))))
+
+(defmacro define-lisp-object (name tagname &rest cells)
+  `(define-storage-layout ,name ,(- (symbol-value tagname)) ,@cells))
+
+(defmacro define-subtag (name tag subtag)
+  `(defconstant ,(ccl::form-symbol "SUBTAG-" name)
+     (logior ,tag (ash ,subtag ntagbits))))
+
+(defmacro define-imm-subtag (name subtag)
+  `(define-subtag ,name fulltag-immheader ,subtag))
+
+(defmacro define-node-subtag (name subtag)
+  `(define-subtag ,name fulltag-nodeheader ,subtag))
+
+(defmacro define-fixedsized-object (name &rest non-header-cells)
+  `(progn
+     (define-lisp-object ,name fulltag-misc header ,@non-header-cells)
+     (ccl::defenum ()
+       ,@(mapcar #'(lambda (cell) (ccl::form-symbol name "." cell "-CELL"))
+                 non-header-cells))
+     (defconstant ,(ccl::form-symbol name ".ELEMENT-COUNT")
+       ,(length non-header-cells))))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defconstant nbits-in-word 32)
+  (defconstant least-significant-bit 31)
+  (defconstant nbits-in-byte 8)
+  (defconstant ntagbits 3)
+  (defconstant nlisptagbits 2)
+  (defconstant nfixnumtagbits 2)
+  (defconstant num-subtag-bits 8)
+  (defconstant fixnumshift nfixnumtagbits)
+  (defconstant fixnum-shift fixnumshift)
+  (defconstant fulltagmask (1- (ash 1 ntagbits)))
+  (defconstant full-tag-mask fulltagmask)
+  (defconstant tagmask (1- (ash 1 nlisptagbits)))
+  (defconstant tag-mask tagmask)
+  (defconstant fixnummask (1- (ash 1 nfixnumtagbits)))
+  (defconstant fixnum-mask fixnummask)
+  (defconstant subtag-mask (1- (ash 1 num-subtag-bits)))
+  (defconstant ncharcodebits 24)
+  (defconstant charcode-shift (- nbits-in-word ncharcodebits))
+  (defconstant word-shift 2)
+  (defconstant word-size-in-bytes 4)
+  (defconstant node-size 4)
+  (defconstant dnode-size 8)
+  (defconstant dnode-align-bits 3)
+  (defconstant dnode-shift dnode-align-bits)
+  (defconstant bitmap-shift 5)
+  (defconstant target-most-negative-fixnum
+    (ash -1 (1- (- nbits-in-word nfixnumtagbits))))
+  (defconstant target-most-positive-fixnum
+    (1- (ash 1 (1- (- nbits-in-word nfixnumtagbits)))))
+  (defconstant fixnumone (ash 1 fixnumshift))
+  (ccl::defenum ()
+    tag-fixnum
+    tag-list
+    tag-misc
+    tag-imm)
+  (ccl::defenum ()
+    fulltag-even-fixnum
+    fulltag-nil
+    fulltag-nodeheader
+    fulltag-imm
+    fulltag-odd-fixnum
+    fulltag-cons
+    fulltag-misc
+    fulltag-immheader)
+  (defconstant misc-header-offset (- fulltag-misc))
+  (defconstant misc-subtag-offset misc-header-offset)
+  (defconstant misc-data-offset (+ misc-header-offset 4))
+  (defconstant misc-dfloat-offset (+ misc-header-offset 8))
+  (defconstant misc-complex-dfloat-offset misc-dfloat-offset)
+  (defconstant canonical-nil-value (+ #x04000000 fulltag-nil))
+  (defconstant nil-value canonical-nil-value)
+  (defconstant t-offset (+ (- dnode-size fulltag-nil) fulltag-misc))
+  (define-imm-subtag bignum 0)
+  (define-node-subtag ratio 1)
+  (define-imm-subtag single-float 1)
+  (define-imm-subtag double-float 2)
+  (define-node-subtag complex 3)
+  (define-imm-subtag bit-vector 31)
+  (define-imm-subtag complex-double-float-vector 30)
+  (define-imm-subtag complex-single-float-vector 29)
+  (define-imm-subtag double-float-vector 28)
+  (define-imm-subtag s16-vector 27)
+  (define-imm-subtag u16-vector 26)
+  (defconstant min-16-bit-ivector-subtag subtag-u16-vector)
+  (defconstant max-16-bit-ivector-subtag subtag-s16-vector)
+  (define-imm-subtag s8-vector 25)
+  (define-imm-subtag u8-vector 24)
+  (defconstant min-8-bit-ivector-subtag subtag-u8-vector)
+  (defconstant max-8-bit-ivector-subtag
+    (logior fulltag-immheader (ash 25 ntagbits)))
+  (define-imm-subtag simple-base-string 23)
+  (define-imm-subtag fixnum-vector 22)
+  (define-imm-subtag s32-vector 21)
+  (define-imm-subtag u32-vector 20)
+  (define-imm-subtag single-float-vector 19)
+  (defconstant max-32-bit-ivector-subtag
+    (logior fulltag-immheader (ash 23 ntagbits)))
+  (defconstant min-cl-ivector-subtag subtag-single-float-vector)
+  (define-node-subtag vectorH 30)
+  (define-node-subtag arrayH 29)
+  (define-node-subtag simple-vector 31)
+  (assert (< subtag-arrayH subtag-vectorH subtag-simple-vector))
+  (define-node-subtag pseudofunction 0)
+  (define-imm-subtag macptr 3)
+  (define-imm-subtag dead-macptr 4)
+  (define-imm-subtag code-vector 5)
+  (define-imm-subtag creole-object 6)
+  (define-imm-subtag xcode-vector 7)
+  (define-imm-subtag complex-single-float 8)
+  (define-imm-subtag complex-double-float 9)
+  (defconstant max-non-array-imm-subtag
+    (logior (ash 19 ntagbits) fulltag-immheader))
+  (define-node-subtag catch-frame 4)
+  (defconstant min-non-numeric-node-subtag subtag-catch-frame)
+  (define-node-subtag function 5)
+  (define-node-subtag basic-stream 6)
+  (define-node-subtag symbol 7)
+  (define-node-subtag lock 8)
+  (define-node-subtag hash-vector 9)
+  (define-node-subtag pool 10)
+  (define-node-subtag weak 11)
+  (define-node-subtag package 12)
+  (define-node-subtag slot-vector 13)
+  (define-node-subtag instance 14)
+  (define-node-subtag struct 15)
+  (define-node-subtag istruct 16)
+  (define-node-subtag value-cell 17)
+  (define-node-subtag xfunction 18)
+  (defconstant max-non-array-node-subtag
+    (logior (ash 18 ntagbits) fulltag-nodeheader))
+  (define-subtag stack-alloc-marker fulltag-imm 1)
+  (define-subtag lisp-frame-marker fulltag-imm 2)
+  (define-subtag character fulltag-imm 9)
+  (define-subtag slot-unbound fulltag-imm 10)
+  (defconstant slot-unbound-marker subtag-slot-unbound)
+  (define-subtag illegal fulltag-imm 11)
+  (defconstant illegal-marker subtag-illegal)
+  (define-subtag go-tag fulltag-imm 12)
+  (define-subtag block-tag fulltag-imm 24)
+  (define-subtag no-thread-local-binding fulltag-imm 30)
+  (define-subtag unbound fulltag-imm 6)
+  (defconstant unbound-marker subtag-unbound)
+  (defconstant undefined unbound-marker)
+  (defconstant lisp-frame-marker subtag-lisp-frame-marker)
+  (defconstant stack-alloc-marker subtag-stack-alloc-marker)
+  (defconstant max-64-bit-constant-index 127)
+  (defconstant max-32-bit-constant-index (ash (+ #xfff misc-data-offset) -2))
+  (defconstant max-16-bit-constant-index (ash (+ #xfff misc-data-offset) -1))
+  (defconstant max-8-bit-constant-index (+ #xfff misc-data-offset))
+  (defconstant max-1-bit-constant-index (ash (+ #xfff misc-data-offset) 5))
+  (define-lisp-object cons fulltag-cons cdr car)
+  (define-fixedsized-object ratio numer denom)
+  (define-fixedsized-object single-float value)
+  (define-fixedsized-object double-float pad val-low val-high)
+  (define-fixedsized-object complex-single-float pad realpart imagpart)
+  (define-fixedsized-object complex-double-float
+    pad realpart-low realpart-high imagpart-low imagpart-high)
+  (defconstant complex-double-float.realpart complex-double-float.realpart-low)
+  (defconstant complex-double-float.imagpart complex-double-float.imagpart-low)
+  (defconstant double-float.value double-float.val-low)
+  (defconstant double-float.value-cell double-float.val-low-cell)
+  (define-fixedsized-object complex realpart imagpart)
+  (define-fixedsized-object macptr address domain type)
+  (define-fixedsized-object catch-frame
+    link mvflag catch-tag db-link xframe last-lisp-frame nfp)
+  (define-fixedsized-object symbol
+    pname vcell fcell package-predicate flags plist binding-index)
+  (define-fixedsized-object function entrypoint codevector)
+  (defconstant nilsym-offset (+ t-offset symbol.size))
+  (define-fixedsized-object vectorH
+    logsize physsize data-vector displacement flags)
+  (define-lisp-object arrayH fulltag-misc
+    header rank physsize data-vector displacement flags)
+  (defconstant arrayH.rank-cell 0)
+  (defconstant arrayH.physsize-cell 1)
+  (defconstant arrayH.data-vector-cell 2)
+  (defconstant arrayH.displacement-cell 3)
+  (defconstant arrayH.flags-cell 4)
+  (defconstant arrayH.dim0-cell 5)
+  (defconstant arrayH.flags-cell-bits-byte (byte 8 0))
+  (defconstant arrayH.flags-cell-subtag-byte (byte 8 8))
+  (define-fixedsized-object value-cell value)
+  (define-storage-layout area 0
+    pred succ low high active softlimit hardlimit code markbits ndnodes
+    older younger h softprot hardprot owner refbits threshold gc-count
+    static-dnodes static-used)
+  (define-storage-layout lisp-frame 0 marker savevsp savefn savelr)
+  (defmacro define-header (name element-count subtag)
+    `(defconstant ,name (logior (ash ,element-count num-subtag-bits) ,subtag)))
+  (define-header single-float-header single-float.element-count subtag-single-float)
+  (define-header double-float-header double-float.element-count subtag-double-float)
+  (define-header complex-single-float-header
+    complex-single-float.element-count
+    subtag-complex-single-float)
+  (define-header complex-double-float-header
+    complex-double-float.element-count
+    subtag-complex-double-float)
+  (define-header one-digit-bignum-header 1 subtag-bignum)
+  (define-header two-digit-bignum-header 2 subtag-bignum)
+  (define-header three-digit-bignum-header 3 subtag-bignum)
+  (define-header symbol-header symbol.element-count subtag-symbol)
+  (define-header value-cell-header value-cell.element-count subtag-value-cell)
+  (define-header macptr-header macptr.element-count subtag-macptr))
+
+(defparameter *wasm-kernel-globals*
+  '(get-tcr
+    tcr-count
+    interrupt-signal
+    kernel-imports
+    objc-2-personality
+    savetoc
+    saver13
+    subprims-base
+    ret1valaddr
+    tcr-key
+    area-lock
+    exception-lock
+    static-conses
+    default-allocation-quantum
+    intflag
+    gc-inhibit-count
+    refbits
+    oldspace-dnode-count
+    float-abi
+    fwdnum
+    gc-count
+    gcable-pointers
+    heap-start
+    heap-end
+    statically-linked
+    stack-size
+    objc-2-begin-catch
+    kernel-path
+    all-areas
+    lexpr-return
+    lexpr-return1v
+    in-gc
+    free-static-conses
+    objc-2-end-catch
+    short-float-zero
+    double-float-one
+    static-cons-area
+    exception-saved-registers
+    oldest-ephemeral
+    tenured-area
+    errno
+    argv
+    host-platform
+    batch-flag
+    unwind-resume
+    weak-gc-method
+    image-name
+    initial-tcr
+    weakvll))
+
+(defparameter *wasm-nil-relative-symbols*
+  '(t
+    nil
+    ccl::%err-disp
+    ccl::cmain
+    eval
+    ccl::apply-evaluated-function
+    error
+    ccl::%defun
+    ccl::%defvar
+    ccl::%defconstant
+    ccl::%macro
+    ccl::%kernel-restart
+    *package*
+    ccl::*total-bytes-freed*
+    :allow-other-keys
+    ccl::%toplevel-catch%
+    ccl::%toplevel-function%
+    ccl::%pascal-functions%
+    ccl::restore-lisp-pointers
+    ccl::*total-gc-microseconds*
+    ccl::%builtin-functions%
+    ccl::%unbound-function%
+    ccl::%init-misc
+    ccl::%macro-code%
+    ccl::%closure-code%
+    ccl::%new-gcable-ptr
+    ccl::*gc-event-status-bits*
+    ccl::*post-gc-hook*
+    ccl::%handlers%
+    ccl::%all-packages%
+    ccl::*keyword-package*
+    ccl::%os-init-function%
+    ccl::%foreign-thread-control))
+
+(defparameter *wasm-nilreg-relative-symbols* *wasm-nil-relative-symbols*)
+
+(defun %kernel-global (sym)
+  (let* ((pos (position sym *wasm-kernel-globals* :test #'string=)))
+    (if pos
+      (- (* (+ 3 pos) 4))
+      (error "Unknown kernel global: ~s." sym))))
+
+(defmacro kernel-global (sym)
+  (let* ((pos (position sym *wasm-kernel-globals* :test #'string=)))
+    (if pos
+      (- (* (+ 3 pos) 4))
+      (error "Unknown kernel global: ~s." sym))))
+
+(ccl::defenum (:prefix "KERNEL-IMPORT-" :start 0 :step 4)
+  fd-setsize-bytes
+  do-fd-set
+  do-fd-clr
+  do-fd-is-set
+  do-fd-zero
+  MakeDataExecutable
+  GetSharedLibrary
+  FindSymbol
+  malloc
+  free
+  wait-for-signal
+  tcr-frame-ptr
+  register-xmacptr-dispose-function
+  open-debug-output
+  get-r-debug
+  restore-soft-stack-limit
+  egc-control
+  lisp-bug
+  NewThread
+  YieldToThread
+  DisposeThread
+  ThreadCurrentStackSpace
+  usage-exit
+  save-fp-context
+  restore-fp-context
+  put-altivec-registers
+  get-altivec-registers
+  new-semaphore
+  wait-on-semaphore
+  signal-semaphore
+  destroy-semaphore
+  new-recursive-lock
+  lock-recursive-lock
+  unlock-recursive-lock
+  destroy-recursive-lock
+  suspend-other-threads
+  resume-other-threads
+  suspend-tcr
+  resume-tcr
+  rwlock-new
+  rwlock-destroy
+  rwlock-rlock
+  rwlock-wlock
+  rwlock-unlock
+  recursive-lock-trylock
+  foreign-name-and-offset
+  lisp-read
+  lisp-write
+  lisp-open
+  lisp-fchmod
+  lisp-lseek
+  lisp-close
+  lisp-ftruncate
+  lisp-stat
+  lisp-fstat
+  lisp-futex
+  lisp-opendir
+  lisp-readdir
+  lisp-closedir
+  lisp-pipe
+  lisp-gettimeofday
+  lisp-sigexit
+  jvm-init
+  lisp-lstat
+  lisp-realpath
+  last-kernel-import)
+
+(defconstant num-kernel-imports (ash kernel-import-last-kernel-import -2))
+
+(defmacro nrs-offset (name)
+  (let* ((pos (position name *wasm-nilreg-relative-symbols* :test #'eq)))
+    (if pos
+      (+ t-offset (* pos symbol.size)))))
+
+(defmacro with-stack-short-floats (specs &body body)
+  (ccl::collect ((binds)
+                 (inits)
+                 (names))
+    (dolist (spec specs)
+      (let ((name (first spec)))
+        (binds `(,name (ccl::%make-sfloat)))
+        (names name)
+        (let ((init (second spec)))
+          (when init
+            (inits `(ccl::%short-float ,init ,name))))))
+    `(let* ,(binds)
+       (declare (dynamic-extent ,@(names))
+                (short-float ,@(names)))
+       ,@(inits)
+       ,@body)))
 
 (defun wasm-fpr-mask (value mode)
   (ecase (ccl::fpr-mode-value-name mode)

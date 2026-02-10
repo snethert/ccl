@@ -92,8 +92,8 @@ Out of scope:
 - Validation evidence is now captured:
   - `B10V-03` smoke gate passed (`node doc/wasm/js/all-smoke.mjs`).
   - `B10V-01` strict audit now passes with `total_hits=0` (`scripts/wasm/arm-retirement-audit.sh --strict`) after compiler/header/doc marker retirement updates.
-- `B10C-01` arch decoupling is in-flight in `compiler/WASM/wasm-arch.lisp`: `*wasm32-target-arch*` is now WASM-owned (no `*arm-target-arch*` field-copy initialization), and `*wasm-subprims*` is now built from a WASM-owned subprim name table aligned to `lisp-kernel/wasm-subprims-map.h` (including WASM-only stub entries).
-- Remaining P1 arch-decoupling gap: transitional ARM bootstrap/symbol-surface bridge is still present in `compiler/WASM/wasm-arch.lisp` (`require "ARM-ARCH"` + ARM `do-symbols` `shadowing-import`) and must be retired before hot-lane promotion.
+- `B10C-01` P1 arch-decoupling closure for `A-04`/`A-05` is now landed in `compiler/WASM/wasm-arch.lisp`: ARM bootstrap import (`require "ARM-ARCH"`) and ARM package symbol mirroring (`do-symbols` + `shadowing-import`) are removed, and shared target constants/macros now come from a WASM-owned compatibility surface.
+- `B10C-01A-08` regression checkpoint is now captured from required validation flow: kernel rebuild via `env.sh`, strict static audit (`scripts/wasm/arm-retirement-audit.sh --strict` => `total_hits=0`), and full smoke (`node doc/wasm/js/all-smoke.mjs` pass).
 - WASM GC root scanning is now centralized behind descriptor-driven XP/TCR/C-stack traversal in `lisp-kernel/wasm-gc.c`: an explicit GC root-descriptor object now controls XP node spans, XP locatives, C-stack safepoint frame publication, and TCR TLB inclusion; XP node/locative iteration, C-stack frame slot publication, and TCR xframe/TLB traversal consume shared helper paths; descriptor IDs use wasm-owned alias constants (`wasm_gpr_arg_z..wasm_gpr_fn`) instead of direct legacy macro names. Descriptor policy publication is now externalized via wasm platform API (`wasm_publish_gc_root_policy`, `wasm_current_gc_root_policy`, `wasm_reset_gc_root_policy`) plus runtime-mode publication APIs (`wasm_publish_gc_root_policy_mode`, `wasm_current_gc_root_policy_mode`) and host-visible boundary exports (`wasm_set_gc_root_policy`, `wasm_get_gc_root_policy`, `wasm_set_gc_root_policy_mode`, `wasm_get_gc_root_policy_mode`).
 - Compiler/module pipeline now carries GC root-policy mode metadata end-to-end: wasm2 compiled-module registration emits per-module mode values, bundle/index tooling preserves `gcRootPolicyModes`, kernel exports provide per-entry mode registration/query/clear, and runtime dispatch paths publish entry mode before compiled entry invocation.
 - WASM dnode forwarding math is now architecture-neutral in `lisp-kernel/wasm-gc.c`: forwarding offsets are computed from direct pagelet mark-word prefix counts, removing ARM-endian halfword selection logic from the hot relocation path.
@@ -109,12 +109,12 @@ Out of scope:
 
 ## Immediate Next Step
 
-- Action: complete remaining P1 arch-decoupling slices before hot-lane rewrites:
-- `1.` finish `B10C-01A-04` + `B10C-01A-05`: remove `ARM-ARCH` bootstrap and ARM package `do-symbols` symbol mirroring from `compiler/WASM/wasm-arch.lisp` by replacing remaining shared constants/macros with explicit WASM-owned definitions.
-- `2.` execute `B10C-01A-08` regression checkpoint (strict static check + compiler load/smoke evidence) and freeze arch-decoupling closure evidence.
-- `3.` continue strict order into hot math swapout (`B10C-01A-09`..`B10C-01A-17`), then high-impact object lanes (`B10C-01A-18`..`B10C-01A-22`), then medium-impact call/control lanes (`B10C-01A-23`..`B10C-01A-25`), then promotion gates (`B10C-01A-26`..`B10C-01A-27`).
-- Why now: `B10C-01A-06`/`B10C-01A-07` are now landed and validated; finishing `A-04`/`A-05` closes the remaining architecture-coupling bridge before performance-lane migration.
-- Success evidence: no ARM bootstrap/symbol mirroring remains in wasm target init path, strict audit/smoke stay green, and hot-lane swapout proceeds from a self-owned WASM target baseline.
+- Action: advance from decoupled arch baseline into hot-math primitive swapout.
+- `1.` start `B10C-01A-09` by splitting primitive emission into explicit `hot direct ops` vs `compat fallback ops` helper boundaries in `compiler/WASM/wasm2.lisp`.
+- `2.` continue strict hot-math order through `B10C-01A-10`..`B10C-01A-17` with per-slice rebuild + strict audit + smoke evidence.
+- `3.` after hot-math closure, proceed to high-impact object lanes (`B10C-01A-18`..`B10C-01A-22`), medium-impact call/control lanes (`B10C-01A-23`..`B10C-01A-25`), and promotion gates (`B10C-01A-26`..`B10C-01A-27`).
+- Why now: `B10C-01A-04`/`A-05` and `B10C-01A-08` are now closed with required validation evidence, so hot-lane migration can proceed from a self-owned WASM target surface.
+- Success evidence: hot math lanes compile to direct lowering by default, compatibility callsites are explicit and bounded, and required validation remains green at each slice.
 
 ## Wave A Progress (B10S-01)
 
@@ -347,6 +347,7 @@ Out of scope:
 
 ## Change Log
 
+- 2026-02-10: Completed `B10C-01A-04` + `B10C-01A-05` in `compiler/WASM/wasm-arch.lisp` by removing ARM bootstrap/symbol mirroring (`require "ARM-ARCH"`, ARM `do-symbols` `shadowing-import`) and replacing that bridge with a WASM-owned transitional constant/layout/kernel-global compatibility surface; executed `B10C-01A-08` regression evidence with required flow (`/bin/zsh -lc 'source scripts/wasm/env.sh && make -C lisp-kernel/wasm32 CC="$CC" WASM_LD="$WASM_LD"'`, `scripts/wasm/arm-retirement-audit.sh --strict` => `total_hits=0`, `node doc/wasm/js/all-smoke.mjs` pass).
 - 2026-02-10: Advanced `B10C-01` arch decoupling by rewriting `compiler/WASM/wasm-arch.lisp` so `*wasm32-target-arch*` no longer reads `*arm-target-arch*` and `*wasm-subprims*` no longer clones `*arm-subprims*`; added a WASM-owned 132-entry subprim table (aligned with `lisp-kernel/wasm-subprims-map.h`, including WASM-only stubs), WASM-owned target uvector/type metadata, and local `wasm-fpr-mask`/`wasm-array-type-name-from-ctype`/`wasm-misc-byte-count` helpers; required validation remained green (`/bin/zsh -lc 'source scripts/wasm/env.sh && make -C lisp-kernel/wasm32 CC=\"$CC\" WASM_LD=\"$WASM_LD\"'`, `scripts/wasm/arm-retirement-audit.sh --strict` => `total_hits=0`, `node doc/wasm/js/all-smoke.mjs` pass).
 - 2026-02-10: Established an explicit architectural redline for BPL-10: WASM backend must not depend on ARM model artifacts as baseline execution model; added authoritative WASM-native subprim contract classes (core semantic-boundary keep set, direct-lowering default set, compatibility quarantine set), strict execution order, redline definition-of-done, and new enforceable validation gates (`B10V-09`..`B10V-12`) for static, emission, performance, and phase-order promotion control.
 - 2026-02-10: Folded all identified high/medium impact primitive lanes into `B10C-01` non-deferrable scope (`B10C-01A-18`..`B10C-01A-27`): `SPmisc_*`, `SPsubtag-misc-*`, `SPbuiltin-aref1/aset1`, `SPfuncall`, MV save/add/recover helpers, and `SPconslist*/spread/progv` now carry explicit source-anchored tasks, guardrails, and promotion gates alongside hot-math swapout.
