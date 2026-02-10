@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-02-10T19:53:59.287Z",
+  "capturedAt": "2026-02-10T19:59:19.160Z",
   "host": {
     "node": "v25.6.0",
     "platform": "darwin",
@@ -18,100 +18,100 @@
     {
       "sample": 1,
       "beforeCompat": {
-        "nsPerOpMedian": 54.379,
-        "nsPerOpMin": 54.254,
-        "nsPerOpMax": 58.609,
+        "nsPerOpMedian": 54.464,
+        "nsPerOpMin": 53.83,
+        "nsPerOpMax": 56.6,
         "roundNsPerOp": [
-          58.609,
-          55.196,
-          54.379,
-          54.254,
-          54.265
+          56.6,
+          53.83,
+          54.645,
+          54.464,
+          54.077
         ],
         "checksum": -300992
       },
       "afterDirect": {
-        "nsPerOpMedian": 49.032,
-        "nsPerOpMin": 48.611,
-        "nsPerOpMax": 49.406,
+        "nsPerOpMedian": 48.432,
+        "nsPerOpMin": 47.807,
+        "nsPerOpMax": 48.622,
         "roundNsPerOp": [
-          48.687,
-          49.406,
-          49.387,
-          48.611,
-          49.032
+          48.323,
+          48.562,
+          48.622,
+          47.807,
+          48.432
         ],
         "checksum": -300992
       },
       "deltas": {
-        "latencyNsPerOp": -5.347,
-        "latencyPct": -9.833
+        "latencyNsPerOp": -6.032,
+        "latencyPct": -11.075
       }
     },
     {
       "sample": 2,
       "beforeCompat": {
-        "nsPerOpMedian": 54.073,
-        "nsPerOpMin": 53.364,
-        "nsPerOpMax": 55.385,
+        "nsPerOpMedian": 52.793,
+        "nsPerOpMin": 52.757,
+        "nsPerOpMax": 53.912,
         "roundNsPerOp": [
-          54.112,
-          54.073,
-          53.924,
-          55.385,
-          53.364
+          53.49,
+          52.793,
+          53.912,
+          52.766,
+          52.757
         ],
         "checksum": -300992
       },
       "afterDirect": {
-        "nsPerOpMedian": 48.783,
-        "nsPerOpMin": 48.193,
-        "nsPerOpMax": 49.071,
+        "nsPerOpMedian": 48.378,
+        "nsPerOpMin": 48.075,
+        "nsPerOpMax": 49.241,
         "roundNsPerOp": [
-          48.783,
-          48.689,
-          48.193,
-          49.071,
-          48.897
+          48.075,
+          48.368,
+          48.509,
+          49.241,
+          48.378
         ],
         "checksum": -300992
       },
       "deltas": {
-        "latencyNsPerOp": -5.291,
-        "latencyPct": -9.784
+        "latencyNsPerOp": -4.415,
+        "latencyPct": -8.364
       }
     },
     {
       "sample": 3,
       "beforeCompat": {
-        "nsPerOpMedian": 54.077,
-        "nsPerOpMin": 53.111,
-        "nsPerOpMax": 54.226,
+        "nsPerOpMedian": 53.325,
+        "nsPerOpMin": 53.257,
+        "nsPerOpMax": 54.092,
         "roundNsPerOp": [
-          54.077,
-          54.184,
-          54.226,
-          53.743,
-          53.111
+          53.257,
+          53.277,
+          53.325,
+          54.092,
+          53.872
         ],
         "checksum": -300992
       },
       "afterDirect": {
-        "nsPerOpMedian": 48.454,
-        "nsPerOpMin": 47.676,
-        "nsPerOpMax": 48.802,
+        "nsPerOpMedian": 48.287,
+        "nsPerOpMin": 47.726,
+        "nsPerOpMax": 48.98,
         "roundNsPerOp": [
-          48.048,
-          48.454,
-          48.548,
-          48.802,
-          47.676
+          48.461,
+          48.287,
+          47.726,
+          48.98,
+          48.22
         ],
         "checksum": -300992
       },
       "deltas": {
-        "latencyNsPerOp": -5.623,
-        "latencyPct": -10.398
+        "latencyNsPerOp": -5.038,
+        "latencyPct": -9.447
       }
     }
   ],
@@ -121,35 +121,35 @@
       "entryIndex": 204,
       "exportName": "ccl_fixnum_add_entry",
       "latency": {
-        "nsPerOpMedian": 54.077,
-        "nsPerOpMin": 54.073,
-        "nsPerOpMax": 54.379,
+        "nsPerOpMedian": 53.325,
+        "nsPerOpMin": 52.793,
+        "nsPerOpMax": 54.464,
         "sampleMediansNsPerOp": [
-          54.379,
-          54.073,
-          54.077
+          54.464,
+          52.793,
+          53.325
         ],
         "sampleRoundNsPerOp": [
           [
-            58.609,
-            55.196,
-            54.379,
-            54.254,
-            54.265
+            56.6,
+            53.83,
+            54.645,
+            54.464,
+            54.077
           ],
           [
-            54.112,
-            54.073,
-            53.924,
-            55.385,
-            53.364
+            53.49,
+            52.793,
+            53.912,
+            52.766,
+            52.757
           ],
           [
-            54.077,
-            54.184,
-            54.226,
-            53.743,
-            53.111
+            53.257,
+            53.277,
+            53.325,
+            54.092,
+            53.872
           ]
         ]
       },
@@ -180,35 +180,35 @@
       "entryIndex": 301,
       "exportName": "ccl_generic_entry_301",
       "latency": {
-        "nsPerOpMedian": 48.783,
-        "nsPerOpMin": 48.454,
-        "nsPerOpMax": 49.032,
+        "nsPerOpMedian": 48.378,
+        "nsPerOpMin": 48.287,
+        "nsPerOpMax": 48.432,
         "sampleMediansNsPerOp": [
-          49.032,
-          48.783,
-          48.454
+          48.432,
+          48.378,
+          48.287
         ],
         "sampleRoundNsPerOp": [
           [
-            48.687,
-            49.406,
-            49.387,
-            48.611,
-            49.032
+            48.323,
+            48.562,
+            48.622,
+            47.807,
+            48.432
           ],
           [
-            48.783,
-            48.689,
-            48.193,
-            49.071,
-            48.897
+            48.075,
+            48.368,
+            48.509,
+            49.241,
+            48.378
           ],
           [
-            48.048,
-            48.454,
-            48.548,
-            48.802,
-            47.676
+            48.461,
+            48.287,
+            47.726,
+            48.98,
+            48.22
           ]
         ]
       },
@@ -232,12 +232,12 @@
     }
   },
   "deltas": {
-    "latencyNsPerOp": -5.347,
-    "latencyNsPerOpMin": -5.623,
-    "latencyNsPerOpMax": -5.291,
-    "latencyPct": -9.833,
-    "latencyPctMin": -10.398,
-    "latencyPctMax": -9.784,
+    "latencyNsPerOp": -5.038,
+    "latencyNsPerOpMin": -6.032,
+    "latencyNsPerOpMax": -4.415,
+    "latencyPct": -9.447,
+    "latencyPctMin": -11.075,
+    "latencyPctMax": -8.364,
     "instructionCount": 36,
     "callCount": 6,
     "callIndirectCount": 0,
@@ -251,14 +251,14 @@
     "withinBudgetSamples": 3,
     "allSamplesWithinBudget": true,
     "latencyDeltaNsPerOpSamples": [
-      -5.347,
-      -5.291,
-      -5.623
+      -6.032,
+      -4.415,
+      -5.038
     ],
     "latencyDeltaPctSamples": [
-      -9.833,
-      -9.784,
-      -10.398
+      -11.075,
+      -8.364,
+      -9.447
     ]
   },
   "bounds": {

@@ -5012,12 +5012,14 @@
       (wasm2-push-u8 out (aref contents i)))))
 
 (defconstant +wasm2-valtype-i32+ #x7f)
+(defconstant +wasm2-valtype-i64+ #x7e)
 (defconstant +wasm2-valtype-f32+ #x7d)
 (defconstant +wasm2-valtype-f64+ #x7c)
 
 (defun wasm2-valtype (type)
   (ecase type
     (:i32 +wasm2-valtype-i32+)
+    (:i64 +wasm2-valtype-i64+)
     (:f32 +wasm2-valtype-f32+)
     (:f64 +wasm2-valtype-f64+)))
 
@@ -5284,7 +5286,11 @@
     (wasm2-emit-generic-ir body else-body (cons if-label label-stack))
     (wasm2-push-u8 body #x0b))) ; end
 
-(defconstant +wasm2-fixnum-direct-scratch-count+ 3)
+(defconstant +wasm2-fixnum-direct-scratch-i32-count+ 3)
+(defconstant +wasm2-fixnum-direct-scratch-i64-count+ 1)
+(defconstant +wasm2-fixnum-direct-scratch-count+
+  (+ +wasm2-fixnum-direct-scratch-i32-count+
+     +wasm2-fixnum-direct-scratch-i64-count+))
 
 ;; Once we're fully on pure direct WASM lanes, we can likely tighten this by:
 ;; Keeping one invariant check at module-emission setup, and
@@ -5295,6 +5301,12 @@
     (unless (and (fixnump base) (>= base 0))
       (error "WASM2: fixnum direct scratch locals unavailable"))
     (+ base offset)))
+
+(defun wasm2-fixnum-direct-scratch-i64-local (offset)
+  (let ((base *wasm2-fixnum-direct-scratch-base*))
+    (unless (and (fixnump base) (>= base 0))
+      (error "WASM2: fixnum direct scratch locals unavailable"))
+    (+ base +wasm2-fixnum-direct-scratch-i32-count+ offset)))
 
 (defun wasm2-emit-local-get-op (body local-index)
   (wasm2-push-u8 body #x20)
@@ -5415,18 +5427,17 @@
   (wasm2-emit-local-get-op body result-local)
   (wasm2-push-u8 body #x0b)) ; end
 
-(defun wasm2-emit-hot-direct-fixnum-mul (body x-local y-local compat-op-key)
+(defun wasm2-emit-hot-direct-fixnum-mul (body x-local y-local product-local compat-op-key)
   (let* ((fixnum-bits (1- (- *wasm2-target-bits-in-word* *wasm2-target-fixnum-shift*)))
          (min-fixnum (ash -1 fixnum-bits))
          (max-fixnum (1- (ash 1 fixnum-bits))))
     (wasm2-emit-unboxed-fixnum-local-i64 body x-local)
     (wasm2-emit-unboxed-fixnum-local-i64 body y-local)
     (wasm2-push-u8 body #x7e) ; i64.mul
+    (wasm2-emit-local-tee-op body product-local)
     (wasm2-emit-i64-const-op body min-fixnum)
     (wasm2-push-u8 body #x53) ; i64.lt_s
-    (wasm2-emit-unboxed-fixnum-local-i64 body x-local)
-    (wasm2-emit-unboxed-fixnum-local-i64 body y-local)
-    (wasm2-push-u8 body #x7e) ; i64.mul
+    (wasm2-emit-local-get-op body product-local)
     (wasm2-emit-i64-const-op body max-fixnum)
     (wasm2-push-u8 body #x55) ; i64.gt_s
     (wasm2-push-u8 body #x72) ; i32.or
@@ -5434,15 +5445,14 @@
     (wasm2-push-u8 body #x7f) ; blocktype i32
     (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local compat-op-key)
     (wasm2-push-u8 body #x05) ; else
-    (wasm2-emit-unboxed-fixnum-local-i64 body x-local)
-    (wasm2-emit-unboxed-fixnum-local-i64 body y-local)
-    (wasm2-push-u8 body #x7e) ; i64.mul
+    (wasm2-emit-local-get-op body product-local)
     (wasm2-emit-i64-const-op body *wasm2-target-fixnum-shift*)
     (wasm2-push-u8 body #x86) ; i64.shl
     (wasm2-push-u8 body #xa7) ; i32.wrap_i64
     (wasm2-push-u8 body #x0b))) ; end
 
-(defun wasm2-emit-hot-direct-fixnum-ash-left (body x-local y-local shift-local compat-op-key)
+(defun wasm2-emit-hot-direct-fixnum-ash-left
+       (body x-local y-local shift-local shifted-local compat-op-key)
   (let* ((fixnum-bits (1- (- *wasm2-target-bits-in-word* *wasm2-target-fixnum-shift*)))
          (min-fixnum (ash -1 fixnum-bits))
          (max-fixnum (1- (ash 1 fixnum-bits)))
@@ -5460,11 +5470,10 @@
     (wasm2-emit-unboxed-fixnum-local-i64 body x-local)
     (wasm2-emit-local-i32-as-i64 body shift-local)
     (wasm2-push-u8 body #x86) ; i64.shl
+    (wasm2-emit-local-tee-op body shifted-local)
     (wasm2-emit-i64-const-op body min-fixnum)
     (wasm2-push-u8 body #x53) ; i64.lt_s
-    (wasm2-emit-unboxed-fixnum-local-i64 body x-local)
-    (wasm2-emit-local-i32-as-i64 body shift-local)
-    (wasm2-push-u8 body #x86) ; i64.shl
+    (wasm2-emit-local-get-op body shifted-local)
     (wasm2-emit-i64-const-op body max-fixnum)
     (wasm2-push-u8 body #x55) ; i64.gt_s
     (wasm2-push-u8 body #x72) ; i32.or
@@ -5472,9 +5481,7 @@
     (wasm2-push-u8 body #x7f) ; blocktype i32
     (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local compat-op-key)
     (wasm2-push-u8 body #x05) ; else
-    (wasm2-emit-unboxed-fixnum-local-i64 body x-local)
-    (wasm2-emit-local-i32-as-i64 body shift-local)
-    (wasm2-push-u8 body #x86) ; i64.shl
+    (wasm2-emit-local-get-op body shifted-local)
     (wasm2-push-u8 body #xa7) ; i32.wrap_i64
     (wasm2-emit-i32-const-op body *wasm2-target-fixnum-shift*)
     (wasm2-push-u8 body #x74) ; i32.shl
@@ -5501,7 +5508,8 @@
     (wasm2-push-u8 body #x74) ; i32.shl
     (wasm2-push-u8 body #x0b))) ; end
 
-(defun wasm2-emit-hot-direct-fixnum-ash (body x-local y-local shift-local compat-op-key)
+(defun wasm2-emit-hot-direct-fixnum-ash
+       (body x-local y-local shift-local shifted-local compat-op-key)
   ;; `shift-local` stores unboxed shift count so both sign lanes can reuse it
   ;; without reloading or re-unboxing the original boxed operand.
   (wasm2-emit-unboxed-fixnum-local-i32 body y-local)
@@ -5510,7 +5518,8 @@
   (wasm2-push-u8 body #x4e) ; i32.ge_s
   (wasm2-push-u8 body #x04) ; if
   (wasm2-push-u8 body #x7f) ; blocktype i32
-  (wasm2-emit-hot-direct-fixnum-ash-left body x-local y-local shift-local compat-op-key)
+  (wasm2-emit-hot-direct-fixnum-ash-left
+   body x-local y-local shift-local shifted-local compat-op-key)
   (wasm2-push-u8 body #x05) ; else
   (wasm2-emit-hot-direct-fixnum-ash-right body x-local y-local shift-local compat-op-key)
   (wasm2-push-u8 body #x0b)) ; end
@@ -5521,7 +5530,8 @@
     (return-from wasm2-emit-hot-direct-fixnum-binary-op nil))
   (let* ((x-local (wasm2-fixnum-direct-scratch-local 0))
          (y-local (wasm2-fixnum-direct-scratch-local 1))
-         (result-local (wasm2-fixnum-direct-scratch-local 2)))
+         (result-local (wasm2-fixnum-direct-scratch-local 2))
+         (wide-local (wasm2-fixnum-direct-scratch-i64-local 0)))
     ;; Preserve operands so both direct and explicit fallback edges can consume
     ;; the original boxed values.
     (wasm2-emit-local-set-op body y-local)
@@ -5535,9 +5545,9 @@
       (:fixnum-sub
        (wasm2-emit-hot-direct-fixnum-sub body x-local y-local result-local compat-op-key))
       (:fixnum-mul
-       (wasm2-emit-hot-direct-fixnum-mul body x-local y-local compat-op-key))
+       (wasm2-emit-hot-direct-fixnum-mul body x-local y-local wide-local compat-op-key))
       (:fixnum-ash
-       (wasm2-emit-hot-direct-fixnum-ash body x-local y-local result-local compat-op-key))
+       (wasm2-emit-hot-direct-fixnum-ash body x-local y-local result-local wide-local compat-op-key))
       (:fixnum-logand
        (wasm2-emit-local-get-op body x-local)
        (wasm2-emit-local-get-op body y-local)
@@ -6012,8 +6022,12 @@
          (local-base-index (+ entry-param-count base-local-count)))
     (dotimes (i base-local-count)
       (setf (aref effective-local-types i) (aref local-types i)))
-    (dotimes (i +wasm2-fixnum-direct-scratch-count+)
+    (dotimes (i +wasm2-fixnum-direct-scratch-i32-count+)
       (setf (aref effective-local-types (+ base-local-count i)) :i32))
+    (dotimes (i +wasm2-fixnum-direct-scratch-i64-count+)
+      (setf (aref effective-local-types
+                  (+ base-local-count +wasm2-fixnum-direct-scratch-i32-count+ i))
+            :i64))
     (wasm2-emit-bytes out '(0 #x61 #x73 #x6d 1 0 0 0))
 
     ;; Types
