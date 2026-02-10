@@ -33,6 +33,32 @@ function readFileUrl(url) {
   return fs.readFile(fileURLToPath(url));
 }
 
+function escapeRegexPattern(text) {
+  return String(text).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function countSymbolOccurrences(sourceText, symbol) {
+  const pattern = new RegExp(`${escapeRegexPattern(symbol)}(?![A-Za-z0-9-])`, "g");
+  const matches = sourceText.match(pattern);
+  return matches ? matches.length : 0;
+}
+
+function assertPhaseOrderEvidence(phaseOrder, completed) {
+  assert(Array.isArray(phaseOrder) && phaseOrder.length > 0, "B10V-12: missing phaseOrder list");
+  assert(Array.isArray(completed) && completed.length > 0, "B10V-12: missing completed phase list");
+  let cursor = 0;
+  for (const phase of completed) {
+    const idx = phaseOrder.indexOf(phase);
+    assert(idx >= 0, `B10V-12: completed phase not in phaseOrder: ${phase}`);
+    assert(idx >= cursor, `B10V-12: out-of-order phase completion: ${phase}`);
+    cursor = idx;
+  }
+  assert(
+    completed.length === phaseOrder.length && completed.every((phase, idx) => phase === phaseOrder[idx]),
+    "B10V-12: phase completion evidence is not fully closed in strict order",
+  );
+}
+
 const kernelUrl = new URL("./wasmcl.wasm", import.meta.url);
 const subprimsUrl = new URL("./subprims.wasm", import.meta.url);
 const subprimsMapUrl = new URL("../subprims-map.json", import.meta.url);
@@ -59,6 +85,78 @@ try {
 } catch (err) {
   fail(`missing or invalid wasm-smoke-modules bundle (run scripts/wasm/compile-smoke-modules.sh): ${err?.message ?? err}`);
 }
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+const wasm2SourcePath = path.resolve(repoRoot, "compiler/WASM/wasm2.lisp");
+const redlineGatePath = path.resolve(
+  repoRoot,
+  "doc/wasm/tickets/evidence/bpl-10/b10c-redline-gates-2026-02-10.json",
+);
+
+let redlineGate;
+try {
+  redlineGate = JSON.parse((await fs.readFile(redlineGatePath)).toString("utf8"));
+} catch (err) {
+  fail(`B10V-10/11/12 missing redline gate artifact ${redlineGatePath}: ${err?.message ?? err}`);
+}
+
+let wasm2SourceText;
+try {
+  wasm2SourceText = (await fs.readFile(wasm2SourcePath)).toString("utf8");
+} catch (err) {
+  fail(`B10V-10 unable to read ${wasm2SourcePath}: ${err?.message ?? err}`);
+}
+
+const emissionCaps = redlineGate?.b10v10?.maxCounts ?? null;
+assert(emissionCaps && typeof emissionCaps === "object", "B10V-10: missing maxCounts baseline map");
+for (const [symbol, maxCountRaw] of Object.entries(emissionCaps)) {
+  const maxCount = Number.parseInt(String(maxCountRaw), 10);
+  assert(Number.isFinite(maxCount) && maxCount >= 0, `B10V-10: invalid max count for ${symbol}`);
+  const observed = countSymbolOccurrences(wasm2SourceText, symbol);
+  assert(
+    observed <= maxCount,
+    `B10V-10 regression for ${symbol}: observed=${observed} baseline=${maxCount}`,
+  );
+}
+
+const perfArtifacts = redlineGate?.b10v11?.artifacts ?? {};
+const fixnumPerfRel = perfArtifacts?.fixnumAdd?.path;
+const miscPerfRel = perfArtifacts?.miscLane?.path;
+assert(typeof fixnumPerfRel === "string" && fixnumPerfRel.length > 0, "B10V-11: missing fixnum evidence path");
+assert(typeof miscPerfRel === "string" && miscPerfRel.length > 0, "B10V-11: missing misc evidence path");
+const fixnumPerfPath = path.resolve(repoRoot, fixnumPerfRel);
+const miscPerfPath = path.resolve(repoRoot, miscPerfRel);
+
+let fixnumPerf;
+let miscPerf;
+try {
+  fixnumPerf = JSON.parse((await fs.readFile(fixnumPerfPath)).toString("utf8"));
+} catch (err) {
+  fail(`B10V-11 unable to read fixnum artifact ${fixnumPerfPath}: ${err?.message ?? err}`);
+}
+try {
+  miscPerf = JSON.parse((await fs.readFile(miscPerfPath)).toString("utf8"));
+} catch (err) {
+  fail(`B10V-11 unable to read misc artifact ${miscPerfPath}: ${err?.message ?? err}`);
+}
+
+assert(
+  fixnumPerf?.repeatability?.allSamplesWithinBudget === true,
+  "B10V-11: fixnum evidence is outside repeatability budget",
+);
+assert(
+  fixnumPerf?.bounds?.withinDirectFixnumAddBound === true,
+  "B10V-11: fixnum helper-call bound failed",
+);
+assert(
+  miscPerf?.bounds?.withinBound === true,
+  "B10V-11: misc lane evidence bound failed",
+);
+
+assertPhaseOrderEvidence(
+  redlineGate?.b10v12?.phaseOrder ?? null,
+  redlineGate?.b10v12?.completed ?? null,
+);
 
 const runtime = createSharedCclRuntime({
   memoryInitialPages: 256,

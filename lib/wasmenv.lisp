@@ -24,6 +24,30 @@
 (defconstant wasm-reg-temp1 8)
 (defconstant wasm-reg-temp2 9)
 
+(defconstant wasm-regclass-immediate :immediate)
+(defconstant wasm-regclass-context :context)
+(defconstant wasm-regclass-argument :argument)
+(defconstant wasm-regclass-temporary :temporary)
+
+(defconstant wasm-register-class-map
+  (vector wasm-regclass-immediate
+          wasm-regclass-immediate
+          wasm-regclass-immediate
+          wasm-regclass-context
+          wasm-regclass-argument
+          wasm-regclass-argument
+          wasm-regclass-argument
+          wasm-regclass-temporary
+          wasm-regclass-temporary
+          wasm-regclass-temporary))
+
+(defun wasm-register-class (reg-index)
+  (if (and (typep reg-index 'fixnum)
+           (>= reg-index 0)
+           (< reg-index (length wasm-register-class-map)))
+    (svref wasm-register-class-map reg-index)
+    (error "Unknown WASM register index: ~s" reg-index)))
+
 (defconstant wasm-nonvolatile-registers-mask
   0)
 
