@@ -60,7 +60,20 @@ void
 wasm_cstack_pop_frame(TCR *tcr, natural old_last_lisp_frame)
 {
   BytePtr sp = (BytePtr)wasm_get_cstack_pointer();
-  lisp_frame *frame = (lisp_frame *)sp;
+  BytePtr base = (BytePtr)tcr->wasm_cstack_base;
+  natural size = tcr->wasm_cstack_size;
+  BytePtr low;
+  lisp_frame *frame;
+
+  if ((base == NULL) || (size == 0)) {
+    Bug(NULL, "WASM cstack bounds not initialized (call wasm_set_cstack_bounds first)");
+  }
+  low = base - size;
+  if ((sp < low) || (sp > base) || ((natural)(base - sp) < sizeof(lisp_frame))) {
+    Bug(NULL, "WASM cstack pop: not at a lisp frame");
+  }
+
+  frame = (lisp_frame *)sp;
 
   if (frame->marker != lisp_frame_marker) {
     Bug(NULL, "WASM cstack pop: not at a lisp frame");
@@ -85,7 +98,24 @@ void
 wasm_exit_lisp_frame(TCR *tcr, natural old_last_lisp_frame)
 {
   BytePtr sp = (BytePtr)wasm_get_cstack_pointer();
-  lisp_frame *frame = (lisp_frame *)sp;
+  BytePtr base = (BytePtr)tcr->wasm_cstack_base;
+  natural size = tcr->wasm_cstack_size;
+  BytePtr low;
+  lisp_frame *frame;
+
+  if ((base == NULL) || (size == 0)) {
+    Bug(NULL, "WASM cstack bounds not initialized (call wasm_set_cstack_bounds first)");
+  }
+  low = base - size;
+  if ((sp < low) || (sp > base)) {
+    Bug(NULL, "WASM cstack pointer out of bounds");
+  }
+  if ((natural)(base - sp) < sizeof(lisp_frame)) {
+    tcr->last_lisp_frame = old_last_lisp_frame;
+    return;
+  }
+
+  frame = (lisp_frame *)sp;
 
   /*
    * Some control-flow paths can unwind past the host-entered frame before

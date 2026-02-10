@@ -310,6 +310,7 @@ wasm_maybe_deliver_interrupt(TCR *tcr)
 static uint32_t wasm_subprims_ready = 0;
 static LispObj wasm_last_compiled_modules = 0;
 LispObj wasm_funcall1(LispObj fn_value, LispObj arg0);
+uint32_t wasm_subprim_nonlocal_exit_coherence_selftest(void);
 static LispObj wasm_find_package_named_bytes(const uint8_t *bytes, uint32_t len);
 static LispObj wasm_find_symbol_named_bytes(const uint8_t *name, uint32_t len, LispObj package);
 
@@ -1835,6 +1836,12 @@ wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natu
 
   LispObj result = tcr->wasm_gprs[arg_z];
   if (tcr->wasm_pending_throw) {
+    LispObj *throw_vsp = (LispObj *)tcr->wasm_gprs[vsp];
+    if (throw_vsp == NULL) {
+      throw_vsp = saved_vsp;
+    }
+    tcr->save_vsp = throw_vsp;
+    tcr->wasm_gprs[vsp] = (LispObj)throw_vsp;
     if (!in_lisp) {
       tcr->valence = TCR_STATE_FOREIGN;
       wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
@@ -1868,6 +1875,234 @@ wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natu
 
   wasm_host_log(msg_exit, (unsigned)(sizeof(msg_exit) - 1));
   return result;
+}
+
+enum {
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_OK = 1u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_NO_TCR = 10u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_SUBPRIMS_NOT_READY = 11u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_NO_SAVEVSP = 12u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_HOST_FRAME = 13u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_CATCH_INSTALL = 14u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_PENDING_THROW = 15u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_VSP = 16u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_SAVEVSP = 17u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_LAST = 18u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_CATCH_RESTORE = 19u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_FRAME_EXIT = 20u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_SP_RESTORE = 21u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_CATCH_INSTALL = 22u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_PENDING_THROW = 23u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_VSP = 24u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_SAVEVSP = 25u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_LAST = 26u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_CATCH_RESTORE = 27u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_SP_RESTORE = 28u
+};
+
+typedef struct wasm_subprim_nonlocal_exit_selftest_state {
+  BytePtr cstack_sp;
+  natural last_lisp_frame;
+  LispObj *save_vsp;
+  LispObj catch_top;
+  xframe_list *xframe;
+  void *nfp;
+  LispObj *save_tsp;
+  int valence;
+  LispObj pending_throw;
+  LispObj reg_vsp;
+  LispObj reg_arg_z;
+  LispObj reg_arg_y;
+  LispObj reg_arg_x;
+  LispObj reg_nargs;
+  LispObj reg_imm0;
+  LispObj reg_nfn;
+  LispObj reg_rfn;
+} wasm_subprim_nonlocal_exit_selftest_state;
+
+static void
+wasm_capture_subprim_nonlocal_exit_selftest_state(TCR *tcr,
+                                                  wasm_subprim_nonlocal_exit_selftest_state *state)
+{
+  state->cstack_sp = (BytePtr)wasm_get_cstack_pointer();
+  state->last_lisp_frame = tcr->last_lisp_frame;
+  state->save_vsp = tcr->save_vsp;
+  state->catch_top = tcr->catch_top;
+  state->xframe = tcr->xframe;
+  state->nfp = tcr->nfp;
+  state->save_tsp = tcr->save_tsp;
+  state->valence = tcr->valence;
+  state->pending_throw = tcr->wasm_pending_throw;
+  state->reg_vsp = tcr->wasm_gprs[vsp];
+  state->reg_arg_z = tcr->wasm_gprs[arg_z];
+  state->reg_arg_y = tcr->wasm_gprs[arg_y];
+  state->reg_arg_x = tcr->wasm_gprs[arg_x];
+  state->reg_nargs = tcr->wasm_gprs[nargs];
+  state->reg_imm0 = tcr->wasm_gprs[imm0];
+  state->reg_nfn = tcr->wasm_gprs[nfn];
+  state->reg_rfn = tcr->wasm_gprs[Rfn];
+}
+
+static void
+wasm_restore_subprim_nonlocal_exit_selftest_state(TCR *tcr,
+                                                  const wasm_subprim_nonlocal_exit_selftest_state *state)
+{
+  wasm_set_cstack_pointer(state->cstack_sp);
+  tcr->last_lisp_frame = state->last_lisp_frame;
+  tcr->save_vsp = state->save_vsp;
+  tcr->catch_top = state->catch_top;
+  tcr->xframe = state->xframe;
+  tcr->nfp = state->nfp;
+  tcr->save_tsp = state->save_tsp;
+  tcr->valence = state->valence;
+  tcr->wasm_pending_throw = state->pending_throw;
+  tcr->wasm_gprs[vsp] = state->reg_vsp;
+  tcr->wasm_gprs[arg_z] = state->reg_arg_z;
+  tcr->wasm_gprs[arg_y] = state->reg_arg_y;
+  tcr->wasm_gprs[arg_x] = state->reg_arg_x;
+  tcr->wasm_gprs[nargs] = state->reg_nargs;
+  tcr->wasm_gprs[imm0] = state->reg_imm0;
+  tcr->wasm_gprs[nfn] = state->reg_nfn;
+  tcr->wasm_gprs[Rfn] = state->reg_rfn;
+}
+
+uint32_t
+wasm_subprim_nonlocal_exit_coherence_selftest(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  wasm_subprim_nonlocal_exit_selftest_state original;
+  natural direct_old_last_lisp_frame;
+  natural direct_host_last_lisp_frame;
+  LispObj fn_obj[3] __attribute__((aligned(8)));
+  LispObj entry_fixnum = box_fixnum(WASM_SUBPRIM_NTHROW1VALUE_INDEX);
+  LispObj fn_value;
+
+  if (tcr == NULL) {
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_NO_TCR;
+  }
+  if (!wasm_subprims_ready) {
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_SUBPRIMS_NOT_READY;
+  }
+  if (tcr->save_vsp == NULL) {
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_NO_SAVEVSP;
+  }
+
+  wasm_capture_subprim_nonlocal_exit_selftest_state(tcr, &original);
+
+  fn_obj[0] = make_header(subtag_function, 2);
+  fn_obj[1] = entry_fixnum;
+  fn_obj[2] = entry_fixnum;
+  fn_value = (LispObj)((BytePtr)fn_obj + fulltag_misc);
+
+  tcr->wasm_pending_throw = 0;
+  tcr->valence = TCR_STATE_FOREIGN;
+  tcr->save_vsp = original.save_vsp;
+  tcr->wasm_gprs[vsp] = (LispObj)original.save_vsp;
+  tcr->catch_top = original.catch_top;
+
+  direct_old_last_lisp_frame = wasm_enter_lisp_frame(tcr, 0, 0, (LispObj)original.save_vsp);
+  direct_host_last_lisp_frame = tcr->last_lisp_frame;
+  if (direct_host_last_lisp_frame == 0) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_HOST_FRAME;
+  }
+  tcr->valence = TCR_STATE_LISP;
+
+  tcr->wasm_gprs[arg_z] = box_fixnum(0x1101);
+  wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_MKCATCH1V_INDEX));
+  if (tcr->catch_top == original.catch_top) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_CATCH_INSTALL;
+  }
+
+  tcr->wasm_pending_throw = 0;
+  tcr->wasm_gprs[arg_z] = box_fixnum(0x1102);
+  tcr->wasm_gprs[nargs] = box_fixnum(1);
+  tcr->wasm_gprs[imm0] = box_fixnum(1);
+  wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_NTHROW1VALUE_INDEX));
+  if (!tcr->wasm_pending_throw) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_PENDING_THROW;
+  }
+  if ((LispObj)tcr->save_vsp != tcr->wasm_gprs[vsp]) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_VSP;
+  }
+  if (tcr->save_vsp != original.save_vsp) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_SAVEVSP;
+  }
+  if (tcr->last_lisp_frame != direct_host_last_lisp_frame) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_LAST;
+  }
+  if (tcr->catch_top != original.catch_top) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_CATCH_RESTORE;
+  }
+
+  tcr->wasm_pending_throw = 0;
+  tcr->valence = TCR_STATE_FOREIGN;
+  wasm_exit_lisp_frame(tcr, direct_old_last_lisp_frame);
+  if (tcr->last_lisp_frame != original.last_lisp_frame) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_FRAME_EXIT;
+  }
+  if ((BytePtr)wasm_get_cstack_pointer() != original.cstack_sp) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_SP_RESTORE;
+  }
+
+  tcr->wasm_pending_throw = 0;
+  tcr->valence = TCR_STATE_FOREIGN;
+  tcr->save_vsp = original.save_vsp;
+  tcr->wasm_gprs[vsp] = (LispObj)original.save_vsp;
+  tcr->catch_top = original.catch_top;
+  tcr->wasm_gprs[arg_z] = box_fixnum(0x2201);
+  wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_MKCATCH1V_INDEX));
+  if (tcr->catch_top == original.catch_top) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_CATCH_INSTALL;
+  }
+
+  tcr->wasm_pending_throw = 0;
+  tcr->wasm_gprs[arg_z] = box_fixnum(0x2202);
+  tcr->wasm_gprs[imm0] = box_fixnum(1);
+  (void)wasm_funcall_common(tcr, fn_value, NULL, 0, 0);
+  if (!tcr->wasm_pending_throw) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_PENDING_THROW;
+  }
+  if ((LispObj)tcr->save_vsp != tcr->wasm_gprs[vsp]) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_VSP;
+  }
+  if (tcr->save_vsp != original.save_vsp) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_SAVEVSP;
+  }
+  if (tcr->last_lisp_frame != original.last_lisp_frame) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_LAST;
+  }
+  if (tcr->catch_top != original.catch_top) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_CATCH_RESTORE;
+  }
+  if ((BytePtr)wasm_get_cstack_pointer() != original.cstack_sp) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_SP_RESTORE;
+  }
+
+  wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+  return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_OK;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_subprim_nonlocal_exit_coherence_selftest")))
+uint32_t
+wasm_subprim_nonlocal_exit_coherence_selftest_export(void)
+{
+  return wasm_subprim_nonlocal_exit_coherence_selftest();
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_funcall0")))
