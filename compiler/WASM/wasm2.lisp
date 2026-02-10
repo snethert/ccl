@@ -5214,6 +5214,16 @@
     (wasm2-push-u8 body #x71) ; i32.and
     (wasm2-push-u8 body #x45))) ; i32.eqz
 
+(defun wasm2-emit-fixnum-local-pair-tag-check (body x-local y-local)
+  (let ((mask (1- (ash 1 *wasm2-target-fixnum-shift*))))
+    ;; ((x | y) & lowtag-mask) == 0  <=> both boxed operands are fixnums.
+    (wasm2-emit-local-get-op body x-local)
+    (wasm2-emit-local-get-op body y-local)
+    (wasm2-push-u8 body #x72) ; i32.or
+    (wasm2-emit-i32-const-op body mask)
+    (wasm2-push-u8 body #x71) ; i32.and
+    (wasm2-push-u8 body #x45))) ; i32.eqz
+
 (defun wasm2-emit-hot-direct-fixnum-binary-fallback (body x-local y-local compat-op-key)
   (wasm2-emit-local-get-op body x-local)
   (wasm2-emit-local-get-op body y-local)
@@ -5227,11 +5237,10 @@
   (wasm2-emit-local-get-op body x-local)
   (wasm2-emit-local-get-op body y-local)
   (wasm2-push-u8 body #x6a) ; i32.add
-  ;; Keep the computed result in a local so overflow checks do not leave an
-  ;; extra live stack value across the result-typed if/else join.
-  (wasm2-emit-local-set-op body result-local)
+  ;; Keep the computed result in a local while consuming one copy for overflow
+  ;; math to avoid an extra local.get in the hot path.
+  (wasm2-emit-local-tee-op body result-local)
   (wasm2-emit-local-get-op body x-local)
-  (wasm2-emit-local-get-op body result-local)
   (wasm2-push-u8 body #x73) ; i32.xor
   (wasm2-emit-local-get-op body y-local)
   (wasm2-emit-local-get-op body result-local)
@@ -5250,14 +5259,13 @@
   (wasm2-emit-local-get-op body x-local)
   (wasm2-emit-local-get-op body y-local)
   (wasm2-push-u8 body #x6b) ; i32.sub
-  ;; Keep the computed result in a local so overflow checks do not leave an
-  ;; extra live stack value across the result-typed if/else join.
-  (wasm2-emit-local-set-op body result-local)
+  ;; Keep the computed result in a local while consuming one copy for overflow
+  ;; math to avoid an extra local.get in the hot path.
+  (wasm2-emit-local-tee-op body result-local)
   (wasm2-emit-local-get-op body x-local)
-  (wasm2-emit-local-get-op body y-local)
   (wasm2-push-u8 body #x73) ; i32.xor
   (wasm2-emit-local-get-op body x-local)
-  (wasm2-emit-local-get-op body result-local)
+  (wasm2-emit-local-get-op body y-local)
   (wasm2-push-u8 body #x73) ; i32.xor
   (wasm2-push-u8 body #x71) ; i32.and
   (wasm2-emit-i32-const-op body 0)
@@ -5380,9 +5388,7 @@
     ;; the original boxed values.
     (wasm2-emit-local-set-op body y-local)
     (wasm2-emit-local-set-op body x-local)
-    (wasm2-emit-fixnum-local-tag-check body x-local)
-    (wasm2-emit-fixnum-local-tag-check body y-local)
-    (wasm2-push-u8 body #x71) ; i32.and
+    (wasm2-emit-fixnum-local-pair-tag-check body x-local y-local)
     (wasm2-push-u8 body #x04) ; if
     (wasm2-push-u8 body #x7f) ; blocktype i32
     (case op
