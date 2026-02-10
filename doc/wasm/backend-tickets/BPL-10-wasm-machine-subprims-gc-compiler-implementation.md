@@ -35,6 +35,45 @@ Out of scope:
 3. L1 GC and kernel GC modernization plan with explicit source touchpoints (`B10G-*`).
 4. Compiler/backend decoupling and optimization plan (`B10C-*`).
 5. Unified validation/cutover matrix (`B10V-*`) tied to existing smoke and audit tooling.
+6. Authoritative WASM-native subprim contract with enforceable keep/default/quarantine boundaries.
+
+## Architectural Redline (Authoritative)
+
+- Hard rule: WASM backend must not depend on ARM model artifacts.
+- Forbidden in WASM target baseline: `*arm-target-arch*`, `*arm-subprims*`, ARM symbol mirroring/import as defining execution model, and ARM-order assumptions as default lowering shape.
+- Compatibility shims are permitted only in explicitly quarantined lanes and are never allowed as default compiler output for hot paths.
+- Gate policy is mandatory: architecture, emission, and performance gates decide promotion; intent or local reasoning does not.
+
+### WASM-Native Subprim Contract (Authoritative)
+
+#### Contract Classes
+
+| class | policy | allowed role |
+| --- | --- | --- |
+| Core semantic-boundary subprims | Keep | Required for semantics that are not profitable/safe to inline as generic default lowering. |
+| Direct-lowering default lanes | Move off subprims | Compiler must emit direct WASM lowering by default; fallback must be explicit and bounded. |
+| Compatibility quarantine lanes | Quarantine only | Transitional helpers remain callable only from explicit fallback edges with accounting gates. |
+
+#### Core Semantic-Boundary Subprims (Keep)
+
+- Non-local exit/unwind: `_SPmkcatch1v`, `_SPmkcatchmv`, `_SPmkunwind`, `_SPthrow`, `_SPnthrow1value`, `_SPnthrowvalues`.
+- Dynamic binding/progv: `_SPbind*`, `_SPunbind*`, `_SPdebind`, `_SPprogvsave`, `_SPprogvrestore`, `_SPkeyword_bind`, `_SPbind_interrupt_level*`, `_SPunbind_interrupt_level`.
+- Dynamic call boundary only: `_SPfuncall`, `_SPcall_closure`, `_SPfix_nfn_entrypoint`.
+- MV boundary only: `_SPsave_values`, `_SPadd_values`, `_SPrecover_values`.
+- Error/FFI boundary: `_SPksignalerr`, `_SPeabi_*`.
+
+#### Direct-Lowering Default Lanes (Move Off Subprims)
+
+- Fixnum math/bit hot operations: `plus/minus/times/ash/log*/neg` family.
+- Object/vector hot operations: `SPmisc_*`, `SPsubtag-misc-*`, `_SPbuiltin_aref1`, `_SPbuiltin_aset1`.
+- Known-arity compiled call paths that can use direct `:callN` lowering without semantic loss.
+- Predictable cons/spread paths where form shape is statically known.
+
+#### Compatibility Quarantine Lanes (Not Default)
+
+- Width/div helper family: `_SPmake*`, `_SPget*`, `_SPudiv*`, `_SPsdiv*`.
+- `wasm_return_fixnum_*` trampoline helper imports.
+- Arg-register marshalling as baseline execution model for hot lanes.
 
 ## Exit Criteria
 
@@ -43,6 +82,8 @@ Out of scope:
   - `scripts/wasm/arm-retirement-audit.sh --strict`
 - GC root/forwarding is no longer hard-coded to ARM register-index spans in WASM paths.
 - Compiler/WASM target description no longer requires direct ARM arch import as the execution model baseline.
+- Compiler hot lanes no longer default to ARM-shaped arg-register marshalling (`set-arg*`/`get-arg*`) for math/object fast paths.
+- Authoritative subprim contract classes (keep/default/quarantine) are enforced by static, emission, and perf gates.
 - Existing smoke lanes and added GC/compiler regression lanes pass with deterministic evidence.
 
 ## Current Baseline (Implementation Reality)
@@ -63,12 +104,18 @@ Out of scope:
 - `B10G-04` phase 4 funcall-driven unwind-cleanup coherence is now active: `lisp-kernel/wasm-kernel-stubs.c` further extends `wasm_subprim_nonlocal_exit_coherence_selftest` with deterministic `_SPnthrowvalues` cleanup-entry coverage through `wasm_funcall_common` (zero-value and MV payload paths), including explicit `save_tsp`/`save_vsp` post-funcall invariants plus `last_lisp_frame`/`catch_top`/cstack restoration signatures.
 - `B10G-04` unwind-to-cstack-base safety is now hardened in `lisp-kernel/wasm-cstack.c`: `wasm_exit_lisp_frame` and `wasm_cstack_pop_frame` now guard frame-marker dereference with explicit cstack bounds/capacity checks before reading `lisp_frame` markers.
 - `lib/wasmenv.lisp` preserves ARM-order register compatibility as a transition design.
+- Architectural posture is now explicitly redlined: ARM model artifacts are forbidden as WASM baseline dependencies and compatibility helpers are constrained to quarantined lanes only.
 
 ## Immediate Next Step
 
-- Action: execute `B10C-01A-01`, `B10C-01A-02`, and `B10C-01A-18` to freeze both hot-math and newly folded high/medium impact primitive lanes, then run the ordered swapout slices below without deferring those lanes.
-- Why now: `B10G-04` phase 1..4 now provide deterministic frame/unwind coherence coverage, so the highest remaining throughput risk is compiler-side math lowering still routing through TCR register-massage imports instead of pure WASM primitive ops.
-- Success evidence: B10C-01 micro-slice order is frozen, primitive hot-lane success criteria are explicit, and each slice has deterministic validation gates before promotion.
+- Action: execute architectural-redline order strictly:
+- `1.` arch decoupling first (`B10C-01A-04`..`B10C-01A-08`, plus `B10C-02` assumptions freeze),
+- `2.` hot math swapout (`B10C-01A-09`..`B10C-01A-17`),
+- `3.` high-impact object lanes (`B10C-01A-18`..`B10C-01A-22`),
+- `4.` medium-impact call/control lanes (`B10C-01A-23`..`B10C-01A-25`),
+- `5.` hard gating/promotion (`B10C-01A-26`..`B10C-01A-27`).
+- Why now: frame/unwind coherence guardrails are in place (`B10G-04`), so deferring ARM-model retirement in compiler hot paths only prolongs structural inefficiency and increases migration risk.
+- Success evidence: compiler output no longer defaults to ARM-shaped hot-lane flow, redline gates are enforcing promotion, and smoke/perf lanes remain green.
 
 ## Wave A Progress (B10S-01)
 
@@ -174,7 +221,7 @@ Out of scope:
 | B10G-06 | Stress/regression suite for GC + subprims | `doc/wasm/js/all-smoke.mjs`, new targeted GC stress smoke lane | Detect root loss, relocation corruption, and unwind corruption early. |
 | B10G-07 | Exit gate | all above | GC modernized paths pass stress lane and no ARM-root-range assumptions remain. |
 
-## Step 4 Output - Compiler/Backend Decoupling Execution (v1)
+## Step 4 Output - Compiler/Backend Decoupling Execution (v2)
 
 ### Step 4 ID Namespace Freeze
 
@@ -197,7 +244,14 @@ Out of scope:
 | B10C-09 | ARM marker audit gate | `scripts/wasm/arm-retirement-audit.sh` | wasm-facing surfaces pass strict ARM-coupling audit. |
 | B10C-10 | Exit gate | all above | Compiler outputs run without ARM-emulation-critical assumptions in primary lanes. |
 
-### B10C-01 Fine-Grained Plan - ARM -> WASM Primitive Swapout (v2)
+### B10C Redline Promotion Rules
+
+1. No promotion if any WASM-target source still depends on ARM baseline artifacts for execution-model definition.
+2. No promotion if emission accounting regresses for redline-tracked symbols without an approved fallback-boundary rationale.
+3. No promotion if fixnum or misc hot-lane performance regresses beyond budget after a slice.
+4. No promotion if phase order is violated (arch -> math -> high-impact object -> medium-impact call/control -> promotion gates).
+
+### B10C-01 Fine-Grained Plan - ARM -> WASM Primitive Swapout (v3)
 
 #### Primitive-Level Non-Negotiables
 
@@ -247,13 +301,20 @@ Out of scope:
 3. Treat any reintroduction of unconditional helper/subprim math calls as a regression even if smoke still passes.
 4. Treat `SPmisc_*`, `SPbuiltin_aref1/aset1`, `SPfuncall`, MV helper trio, and `SPconslist*/spread/progv` as non-deferrable in `B10C-01` scope unless a blocker is documented in the ticket.
 
-## Step 5 Output - Unified Validation and Promotion Gates (v1)
+#### Redline Definition of Done
+
+1. Compiler no longer emits ARM-shaped default paths in hot lanes.
+2. Hot lanes no longer require `set-arg*`/`get-arg*` marshalling as default execution flow.
+3. Compatibility lanes are explicitly quarantined and pass bounded-emission accounting gates.
+4. Strict audit, smoke, emission, and performance gates (`B10V-01`, `B10V-03`, `B10V-09`, `B10V-10`, `B10V-11`, `B10V-12`) all pass at promotion checkpoints.
+
+## Step 5 Output - Unified Validation and Promotion Gates (v2)
 
 ### Step 5 ID Namespace Freeze
 
 | namespace | frozen range | meaning |
 | --- | --- | --- |
-| `B10V-*` | `B10V-01`..`B10V-08` | End-to-end validation and promotion checks for this implementation ticket. |
+| `B10V-*` | `B10V-01`..`B10V-12` | End-to-end validation and promotion checks for this implementation ticket. |
 
 ### Validation Matrix
 
@@ -267,6 +328,10 @@ Out of scope:
 | B10V-06 | Compiler integration regression | `node doc/wasm/js/compiler-smoke.mjs` | Pass with wasm2 output loading and execution. |
 | B10V-07 | GC stress lane | dedicated GC stress artifact for this ticket | No root-loss/forwarding corruption signatures. |
 | B10V-08 | Exit bundle | `doc/wasm/tickets/evidence/bpl-10/<run_id>/...` | Deterministic summary artifact committed. |
+| B10V-09 | Redline static gate | `scripts/wasm/arm-retirement-audit.sh --strict` plus explicit static check for forbidden symbols (`*arm-target-arch*`, `*arm-subprims*`, ARM symbol mirroring in wasm target files) | Zero hits and zero forbidden-symbol findings on wasm-facing sources. |
+| B10V-10 | Redline emission gate | compiler emission accounting artifact from `B10C-01A-26` (per-symbol counts for `SPmisc_*`, `SPbuiltin_aref1/aset1`, `SPfuncall`, MV helpers, `SPconslist*/spread/progv`) | No unapproved regression above frozen baseline; compatibility-only lanes stay bounded. |
+| B10V-11 | Redline perf gate | `node doc/wasm/js/fixnum-add-smoke.mjs` benchmark evidence plus dedicated misc-lane benchmark artifact | Fixnum and misc hot lanes meet or improve budgeted latency/instruction-path thresholds at each promotion checkpoint. |
+| B10V-12 | Redline order gate | checkpoint evidence proving strict phase order (`arch -> math -> high-impact object -> medium-impact call/control -> promotion`) | No out-of-order slice promotion; each phase closure evidence is complete before next phase starts. |
 
 ## Risk Register
 
@@ -278,9 +343,12 @@ Out of scope:
   - Mitigation: keep migration toggles explicit and validate with existing smoke lanes each increment.
 - Risk: optimization attempts exceed current host capability envelope.
   - Mitigation: machine profile includes capability-gated optional features; baseline remains deterministic.
+- Risk: architectural-redline drift reintroduces ARM-shaped defaults through incremental fixes.
+  - Mitigation: enforce `B10V-09`..`B10V-12` as mandatory promotion gates with per-symbol emission accounting.
 
 ## Change Log
 
+- 2026-02-10: Established an explicit architectural redline for BPL-10: WASM backend must not depend on ARM model artifacts as baseline execution model; added authoritative WASM-native subprim contract classes (core semantic-boundary keep set, direct-lowering default set, compatibility quarantine set), strict execution order, redline definition-of-done, and new enforceable validation gates (`B10V-09`..`B10V-12`) for static, emission, performance, and phase-order promotion control.
 - 2026-02-10: Folded all identified high/medium impact primitive lanes into `B10C-01` non-deferrable scope (`B10C-01A-18`..`B10C-01A-27`): `SPmisc_*`, `SPsubtag-misc-*`, `SPbuiltin-aref1/aset1`, `SPfuncall`, MV save/add/recover helpers, and `SPconslist*/spread/progv` now carry explicit source-anchored tasks, guardrails, and promotion gates alongside hot-math swapout.
 - 2026-02-10: Expanded `B10C-01` into an ordered ARM -> WASM primitive swapout micro-slice plan (`B10C-01A-01`..`B10C-01A-18`) with explicit hot-math non-negotiables, file-anchored tasks, fallback-boundary rules, and required validation gates so compiler primitive lowering can move from register-massage imports to true WASM direct ops without semantic drift.
 - 2026-02-10: Completed `B10G-04` phase 4 by extending `wasm_subprim_nonlocal_exit_coherence_selftest` in `lisp-kernel/wasm-kernel-stubs.c` with funcall-driven `_SPnthrowvalues` unwind-cleanup coverage (zero-value and MV payload paths) plus deterministic `save_tsp`/`save_vsp` post-funcall coherence signatures; rebuilt kernel via documented `env.sh` flow, refreshed root-image manifest for `kernelWasm` hash rollover, and revalidated (`scripts/wasm/arm-retirement-audit.sh --strict` => `total_hits=0`, `node doc/wasm/js/all-smoke.mjs` pass).
