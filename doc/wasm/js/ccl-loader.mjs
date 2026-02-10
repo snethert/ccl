@@ -317,7 +317,19 @@ export function decodeCompiledModuleRegistry({ memory, registry, nil }) {
       constPoolBytes = readU8Vector(view, memory, vec[4], SUBTAG_U8_VECTOR);
     }
 
-    entries.push({ moduleBytes, exportName, entryIndex, moduleVersion, constPoolBytes });
+    let gcRootPolicyMode = null;
+    if (vec.length >= 6 && vec[5] !== nilObj) {
+      if (!isFixnum(vec[5])) {
+        throw new Error("compiled module gc root policy mode must be a fixnum");
+      }
+      const mode = fixnumValue(vec[5]);
+      if (mode < 0) {
+        throw new Error(`compiled module gc root policy mode must be non-negative: ${mode}`);
+      }
+      gcRootPolicyMode = mode >>> 0;
+    }
+
+    entries.push({ moduleBytes, exportName, entryIndex, moduleVersion, constPoolBytes, gcRootPolicyMode });
 
     list = cdr;
     guard++;
@@ -327,6 +339,24 @@ export function decodeCompiledModuleRegistry({ memory, registry, nil }) {
   }
 
   return entries;
+}
+
+function normalizeGcRootPolicyMode(value) {
+  if (!Number.isFinite(value) || value < 0) return null;
+  return value >>> 0;
+}
+
+function parseGcRootPolicyModes(rawMap) {
+  const out = new Map();
+  if (!rawMap || typeof rawMap !== "object") return out;
+  for (const [key, value] of Object.entries(rawMap)) {
+    const entryIndex = Number.parseInt(String(key), 10);
+    if (!Number.isFinite(entryIndex) || entryIndex < 0) continue;
+    const mode = normalizeGcRootPolicyMode(value);
+    if (mode == null) continue;
+    out.set(entryIndex >>> 0, mode);
+  }
+  return out;
 }
 
 function alignUp(value, align) {
@@ -579,6 +609,21 @@ export async function installCompiledModulesFromBundle({
 
   const resolved = await resolveBundleEntries({ bundle, indexBytes, indexReader });
   const modules = Array.isArray(resolved?.modules) ? resolved.modules : [];
+  const bundleGcRootModes = parseGcRootPolicyModes(bundle?.gcRootPolicyModes);
+  for (const entry of modules) {
+    const idx = Number.isFinite(entry?.entryIndex) ? (entry.entryIndex >>> 0) : null;
+    if (idx == null) continue;
+    const explicitMode = normalizeGcRootPolicyMode(entry?.gcRootPolicyMode);
+    if (explicitMode != null) {
+      entry.gcRootPolicyMode = explicitMode;
+      bundleGcRootModes.set(idx, explicitMode);
+      continue;
+    }
+    const mappedMode = bundleGcRootModes.get(idx);
+    if (mappedMode != null) {
+      entry.gcRootPolicyMode = mappedMode;
+    }
+  }
   if (modules.length === 0) return { installed: 0, count: 0, entries: [] };
 
   const extraCcl = { ...(extra.ccl ?? {}), ...kernelExports };
@@ -592,6 +637,9 @@ export async function installCompiledModulesFromBundle({
     ? (kernelExports.wasm_get_lisp_nil() >>> 0)
     : null;
   const hasPendingThrowProbe = typeof kernelExports.wasm_pending_throw_p === "function";
+  const setEntryGcRootPolicyMode = typeof kernelExports.wasm_set_entry_gc_root_policy_mode === "function"
+    ? kernelExports.wasm_set_entry_gc_root_policy_mode
+    : null;
 
   let installed = 0;
   let failed = 0;
@@ -859,6 +907,13 @@ export async function installCompiledModulesFromBundle({
         }
       }
 
+      if (setEntryGcRootPolicyMode) {
+        const mode = normalizeGcRootPolicyMode(entry?.gcRootPolicyMode);
+        if (mode != null) {
+          setEntryGcRootPolicyMode(entry.entryIndex >>> 0, mode);
+        }
+      }
+
       const bytes = moduleBytes instanceof Uint8Array ? moduleBytes : Uint8Array.from(moduleBytes);
       const { instance } = await instantiateWasm(bytes, imports);
       const fn = instance?.exports?.[entry.exportName];
@@ -932,6 +987,9 @@ export async function installCompiledModulesFromRegistry({
     microkernel,
     extra: { ...extra, ccl: extraCcl },
   });
+  const setEntryGcRootPolicyMode = typeof kernelExports.wasm_set_entry_gc_root_policy_mode === "function"
+    ? kernelExports.wasm_set_entry_gc_root_policy_mode
+    : null;
 
   let installed = 0;
   for (const entry of entries) {
@@ -942,6 +1000,12 @@ export async function installCompiledModulesFromRegistry({
         entryIndex: entry.entryIndex,
         constPoolBytes: entry.constPoolBytes,
       });
+    }
+    if (setEntryGcRootPolicyMode) {
+      const mode = normalizeGcRootPolicyMode(entry?.gcRootPolicyMode);
+      if (mode != null) {
+        setEntryGcRootPolicyMode(entry.entryIndex >>> 0, mode);
+      }
     }
     const { instance } = await instantiateWasm(entry.moduleBytes, imports);
     const fn = instance?.exports?.[entry.exportName];
@@ -1004,6 +1068,9 @@ export function installCompiledModulesFromRegistrySync({
     microkernel,
     extra: { ...extra, ccl: extraCcl },
   });
+  const setEntryGcRootPolicyMode = typeof kernelExports.wasm_set_entry_gc_root_policy_mode === "function"
+    ? kernelExports.wasm_set_entry_gc_root_policy_mode
+    : null;
 
   let installed = 0;
   for (const entry of entries) {
@@ -1014,6 +1081,12 @@ export function installCompiledModulesFromRegistrySync({
         entryIndex: entry.entryIndex,
         constPoolBytes: entry.constPoolBytes,
       });
+    }
+    if (setEntryGcRootPolicyMode) {
+      const mode = normalizeGcRootPolicyMode(entry?.gcRootPolicyMode);
+      if (mode != null) {
+        setEntryGcRootPolicyMode(entry.entryIndex >>> 0, mode);
+      }
     }
     const { instance } = instantiateWasmSync(entry.moduleBytes, imports);
     const fn = instance?.exports?.[entry.exportName];

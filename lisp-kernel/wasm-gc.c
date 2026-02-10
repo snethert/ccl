@@ -84,6 +84,8 @@ static wasm_gc_root_descriptor wasm_active_gc_root_descriptor = {
 };
 static uint32_t wasm_active_gc_root_policy_mask = WASM_GC_ROOT_POLICY_DEFAULT;
 static uint32_t wasm_active_gc_root_policy_mode = WASM_GC_ROOT_MODE_RUNTIME_DEFAULT;
+static uint32_t *wasm_entry_gc_root_policy_modes = NULL;
+static uint32_t wasm_entry_gc_root_policy_mode_capacity = 0;
 
 static uint32_t
 wasm_gc_root_policy_allowed_mask(void)
@@ -100,6 +102,18 @@ static uint32_t
 wasm_gc_root_policy_sanitize(uint32_t policy_mask)
 {
   return policy_mask & wasm_gc_root_policy_allowed_mask();
+}
+
+static uint32_t
+wasm_gc_root_policy_mode_sanitize(uint32_t mode)
+{
+  switch (mode) {
+  case WASM_GC_ROOT_MODE_RUNTIME_BOOTSTRAP:
+  case WASM_GC_ROOT_MODE_RUNTIME_DEFAULT:
+    return mode;
+  default:
+    return WASM_GC_ROOT_MODE_RUNTIME_DEFAULT;
+  }
 }
 
 static uint32_t
@@ -161,15 +175,7 @@ wasm_publish_gc_root_policy_mode(uint32_t mode)
   uint32_t effective_mode;
   uint32_t effective_mask;
 
-  switch (mode) {
-  case WASM_GC_ROOT_MODE_RUNTIME_BOOTSTRAP:
-  case WASM_GC_ROOT_MODE_RUNTIME_DEFAULT:
-    effective_mode = mode;
-    break;
-  default:
-    effective_mode = WASM_GC_ROOT_MODE_RUNTIME_DEFAULT;
-    break;
-  }
+  effective_mode = wasm_gc_root_policy_mode_sanitize(mode);
 
   effective_mask = wasm_gc_root_policy_sanitize(wasm_gc_root_policy_for_mode(effective_mode));
   wasm_gc_root_policy_to_descriptor(effective_mask, &wasm_active_gc_root_descriptor);
@@ -187,6 +193,78 @@ void
 wasm_reset_gc_root_policy_mode(void)
 {
   wasm_publish_gc_root_policy_mode(WASM_GC_ROOT_MODE_RUNTIME_DEFAULT);
+}
+
+static void
+wasm_entry_gc_root_policy_modes_ensure_capacity(uint32_t min_index)
+{
+  uint32_t new_capacity;
+  uint32_t *grown;
+
+  if (min_index < wasm_entry_gc_root_policy_mode_capacity) {
+    return;
+  }
+
+  new_capacity = wasm_entry_gc_root_policy_mode_capacity ? wasm_entry_gc_root_policy_mode_capacity : 256u;
+  while (new_capacity <= min_index) {
+    if (new_capacity > (UINT32_MAX / 2u)) {
+      new_capacity = min_index + 1u;
+      break;
+    }
+    new_capacity *= 2u;
+  }
+
+  grown = (uint32_t *)malloc((size_t)new_capacity * sizeof(uint32_t));
+  if (grown == NULL) {
+    return;
+  }
+
+  memset(grown, 0, (size_t)new_capacity * sizeof(uint32_t));
+  if ((wasm_entry_gc_root_policy_modes != NULL) &&
+      (wasm_entry_gc_root_policy_mode_capacity > 0u)) {
+    memmove(grown,
+            wasm_entry_gc_root_policy_modes,
+            (size_t)wasm_entry_gc_root_policy_mode_capacity * sizeof(uint32_t));
+    free(wasm_entry_gc_root_policy_modes);
+  }
+
+  wasm_entry_gc_root_policy_modes = grown;
+  wasm_entry_gc_root_policy_mode_capacity = new_capacity;
+}
+
+void
+wasm_register_entry_gc_root_policy_mode(uint32_t entry_index, uint32_t mode)
+{
+  uint32_t effective_mode = wasm_gc_root_policy_mode_sanitize(mode);
+
+  wasm_entry_gc_root_policy_modes_ensure_capacity(entry_index);
+  if (entry_index < wasm_entry_gc_root_policy_mode_capacity) {
+    wasm_entry_gc_root_policy_modes[entry_index] = effective_mode + 1u;
+  }
+}
+
+uint32_t
+wasm_lookup_entry_gc_root_policy_mode(uint32_t entry_index)
+{
+  if ((wasm_entry_gc_root_policy_modes != NULL) &&
+      (entry_index < wasm_entry_gc_root_policy_mode_capacity)) {
+    uint32_t encoded_mode = wasm_entry_gc_root_policy_modes[entry_index];
+    if (encoded_mode != 0u) {
+      return encoded_mode - 1u;
+    }
+  }
+  return WASM_GC_ROOT_MODE_RUNTIME_DEFAULT;
+}
+
+void
+wasm_clear_entry_gc_root_policy_modes(void)
+{
+  if ((wasm_entry_gc_root_policy_modes != NULL) &&
+      (wasm_entry_gc_root_policy_mode_capacity > 0u)) {
+    memset(wasm_entry_gc_root_policy_modes,
+           0,
+           (size_t)wasm_entry_gc_root_policy_mode_capacity * sizeof(uint32_t));
+  }
 }
 
 static const wasm_gc_root_descriptor *

@@ -93,6 +93,18 @@ assert(
   typeof kernel.instance.exports.wasm_get_gc_root_policy_mode === "function",
   "missing wasm_get_gc_root_policy_mode export",
 );
+assert(
+  typeof kernel.instance.exports.wasm_set_entry_gc_root_policy_mode === "function",
+  "missing wasm_set_entry_gc_root_policy_mode export",
+);
+assert(
+  typeof kernel.instance.exports.wasm_get_entry_gc_root_policy_mode === "function",
+  "missing wasm_get_entry_gc_root_policy_mode export",
+);
+assert(
+  typeof kernel.instance.exports.wasm_clear_entry_gc_root_policy_modes === "function",
+  "missing wasm_clear_entry_gc_root_policy_modes export",
+);
 const GC_ROOT_INCLUDE_XP_LOCATIVES = 1 << 0;
 const GC_ROOT_INCLUDE_CSTACK = 1 << 1;
 const GC_ROOT_INCLUDE_CSTACK_SAVEVSP = 1 << 2;
@@ -151,6 +163,27 @@ assert(kernel.instance.exports.wasm_get_subprims_ready() === 1, "subprims ready 
   assert(
     (kernel.instance.exports.wasm_get_gc_root_policy() >>> 0) === initialPolicy,
     "gc root policy restore failed",
+  );
+}
+{
+  const testEntryIndex = 321 >>> 0;
+  assert(
+    (kernel.instance.exports.wasm_get_entry_gc_root_policy_mode(testEntryIndex) >>> 0) === GC_ROOT_MODE_RUNTIME_DEFAULT,
+    "entry gc root policy mode default lookup failed",
+  );
+  assert(
+    (kernel.instance.exports.wasm_set_entry_gc_root_policy_mode(testEntryIndex, GC_ROOT_MODE_RUNTIME_BOOTSTRAP) >>> 0) ===
+      GC_ROOT_MODE_RUNTIME_BOOTSTRAP,
+    "entry gc root policy mode set failed",
+  );
+  assert(
+    (kernel.instance.exports.wasm_get_entry_gc_root_policy_mode(testEntryIndex) >>> 0) === GC_ROOT_MODE_RUNTIME_BOOTSTRAP,
+    "entry gc root policy mode readback failed",
+  );
+  kernel.instance.exports.wasm_clear_entry_gc_root_policy_modes();
+  assert(
+    (kernel.instance.exports.wasm_get_entry_gc_root_policy_mode(testEntryIndex) >>> 0) === GC_ROOT_MODE_RUNTIME_DEFAULT,
+    "entry gc root policy mode clear failed",
   );
 }
 

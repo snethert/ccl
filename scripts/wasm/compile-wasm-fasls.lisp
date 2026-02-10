@@ -205,9 +205,14 @@
   (dolist (entry %wasm-compiled-modules%)
     (unless (and (vectorp entry) (>= (length entry) 4))
       (error "Unexpected wasm compiled module entry: ~s" entry))
-    (let ((entry-index (svref entry 2)))
+    (let ((entry-index (svref entry 2))
+          (gc-mode (and (> (length entry) 5) (svref entry 5))))
       (unless (fixnump entry-index)
-        (error "Non-fixnum wasm entry index: ~s" entry-index))))
+        (error "Non-fixnum wasm entry index: ~s" entry-index))
+      (when (and gc-mode
+                 (or (not (fixnump gc-mode))
+                     (< gc-mode 0)))
+        (error "Unexpected wasm gc-root policy mode: ~s" gc-mode))))
   t)
 
 (defun sorted-compiled-modules ()
@@ -238,6 +243,29 @@
            do (return (car candidate)))
      sig)))
 
+(defun module-gc-root-policy-mode (entry)
+  (let ((mode (and (> (length entry) 5) (svref entry 5))))
+    (when (and mode (fixnump mode) (>= mode 0))
+      mode)))
+
+(defun json-write-gc-root-policy-modes (out entry-info)
+  (let ((rows nil))
+    (dolist (info entry-info)
+      (destructuring-bind (entry _module-offset _module-len _const-offset _const-len gc-mode) info
+        (declare (ignore _module-offset _module-len _const-offset _const-len))
+        (when gc-mode
+          (push (cons (svref entry 2) gc-mode) rows))))
+    (setf rows (nreverse rows))
+    (when rows
+      (write-string ",\"gcRootPolicyModes\":{" out)
+      (loop for row in rows
+            for idx from 0
+            do (when (> idx 0) (write-char #\, out))
+               (json-write-string out (princ-to-string (car row)))
+               (write-char #\: out)
+               (princ (cdr row) out))
+      (write-char #\} out))))
+
 (defun write-module-bundle (output-path modules &key functions)
   (let* ((json-path (pathname output-path))
          (bin-path (make-pathname :type "bin" :defaults json-path))
@@ -260,6 +288,7 @@
                (module-offset offset)
                (const-bytes (and (> (length entry) 4) (svref entry 4)))
                (const-len (if const-bytes (length const-bytes) 0))
+               (gc-mode (module-gc-root-policy-mode entry))
                (const-offset nil))
           (when (> module-len 0)
             (write-sequence module-bytes bin))
@@ -279,7 +308,7 @@
                   (incf unique-const-bytes const-len)
                   (push (cons const-offset const-bytes)
                         (gethash sig const-pool-index))))))
-          (push (list entry module-offset module-len const-offset const-len) entries))))
+          (push (list entry module-offset module-len const-offset const-len gc-mode) entries))))
     (setf entries (nreverse entries))
     (with-open-file (out json-path
                          :direction :output
@@ -303,7 +332,8 @@
       (loop for info in entries
             for idx from 0
             do (when (> idx 0) (write-char #\, out))
-               (destructuring-bind (entry module-offset module-len const-offset const-len) info
+               (destructuring-bind (entry module-offset module-len const-offset const-len _gc-mode) info
+                 (declare (ignore _gc-mode))
                  (write-char #\{ out)
                  (write-string "\"exportName\":" out)
                  (json-write-string out (svref entry 1))
@@ -320,8 +350,14 @@
                    (princ const-offset out)
                    (write-string ",\"constPoolLength\":" out)
                    (princ const-len out))
+                 (let ((gc-mode (module-gc-root-policy-mode entry)))
+                   (when gc-mode
+                     (write-string ",\"gcRootPolicyMode\":" out)
+                     (princ gc-mode out)))
                  (write-char #\} out)))
-      (write-string "]}" out)
+      (write-char #\] out)
+      (json-write-gc-root-policy-modes out entries)
+      (write-char #\} out)
       (terpri out))
     (list :raw-const-bytes raw-const-bytes
           :unique-const-bytes unique-const-bytes
@@ -368,6 +404,10 @@
                (princ (or (getf entry :entry-index) 0) out)
                (write-string ",\"moduleVersion\":" out)
                (princ (or (getf entry :module-version) 0) out)
+               (let ((gc-mode (getf entry :gc-root-policy-mode)))
+                 (when gc-mode
+                   (write-string ",\"gcRootPolicyMode\":" out)
+                   (princ gc-mode out)))
                (let ((name (getf entry :afunc-name)))
                  (when name
                    (write-string ",\"afuncName\":" out)

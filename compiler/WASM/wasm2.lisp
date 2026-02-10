@@ -29,6 +29,17 @@
 (defvar *wasm2-emit-entry-index* nil)
 
 (defconstant +wasm2-closure-cells-base+ 3)
+(defconstant +wasm2-gc-root-mode-runtime-default+ 0)
+(defconstant +wasm2-gc-root-mode-runtime-bootstrap+ 1)
+
+(defparameter *wasm2-gc-root-default-required-ops*
+  '(:call-subprim :call-subprim-no-spill
+    :call0 :call1 :call2 :call3 :call4 :call5 :call6 :call7 :call8 :call9 :call10
+    :call0-mv :call1-mv :call2-mv :call3-mv :call4-mv :call5-mv :call6-mv
+    :call7-mv :call8-mv :call9-mv :call10-mv
+    :call-external
+    :spill-push :spill-pop
+    :vpush :vpop))
 
 (declaim (special *wasm2-skip-next-nx-defops* *nx1-operators*
                   *wasm2-cur-afunc* *wasm2-vstack* *wasm2-cstack*
@@ -3830,7 +3841,21 @@
       ops
       (nthcdr (- len limit) ops))))
 
-(defun wasm2-make-module-debug-info (export-name entry-index module-version &key afunc ir)
+(defun wasm2-ir-requires-runtime-default-mode-p (ir)
+  (let ((required nil))
+    (wasm2-ir-walk ir
+                   (lambda (ins)
+                     (when (member (car ins) *wasm2-gc-root-default-required-ops* :test #'eq)
+                       (setf required t))))
+    required))
+
+(defun wasm2-ir-gc-root-policy-mode (ir)
+  (if (wasm2-ir-requires-runtime-default-mode-p ir)
+    +wasm2-gc-root-mode-runtime-default+
+    +wasm2-gc-root-mode-runtime-bootstrap+))
+
+(defun wasm2-make-module-debug-info (export-name entry-index module-version
+                                                &key afunc ir gc-root-policy-mode)
   (let* ((name (and afunc (afunc-name afunc)))
          (ir-len (and ir (length ir)))
          (tail (and ir (wasm2-ir-tail-ops ir 48)))
@@ -3839,6 +3864,7 @@
     (list :export-name export-name
           :entry-index entry-index
           :module-version module-version
+          :gc-root-policy-mode gc-root-policy-mode
           :afunc-name (and name (prin1-to-string name))
           :ir-len ir-len
           :if-count (and ir (wasm2-ir-count-op ir :if))
@@ -3852,14 +3878,16 @@
   state-local)
 
 (defun wasm2-register-compiled-module (module-bytes export-name entry-index module-version
-                                         &optional const-pool-bytes debug-info)
+                                         &optional const-pool-bytes debug-info
+                                                   (gc-root-policy-mode +wasm2-gc-root-mode-runtime-default+))
   (when module-bytes
-    (let* ((entry (if const-pool-bytes
-                    (make-array 5 :initial-contents
-                                (list module-bytes export-name entry-index module-version
-                                      const-pool-bytes))
-                    (make-array 4 :initial-contents
-                                (list module-bytes export-name entry-index module-version)))))
+    (let* ((entry (make-array 6 :initial-contents
+                              (list module-bytes
+                                    export-name
+                                    entry-index
+                                    module-version
+                                    const-pool-bytes
+                                    gc-root-policy-mode))))
       (unless (find entry-index %wasm-compiled-modules%
                     :key (lambda (item) (svref item 2))
                     :test #'eql)
@@ -3868,7 +3896,8 @@
         (push (or debug-info
                   (list :export-name export-name
                         :entry-index entry-index
-                        :module-version module-version))
+                        :module-version module-version
+                        :gc-root-policy-mode gc-root-policy-mode))
               *wasm2-compiled-modules-debug*)))))
 
 (defun wasm2-emit (opcode &rest operands)
@@ -6887,7 +6916,10 @@
                 (wasm2-register-compiled-module module-bytes
                                                 +wasm-const-export-name+
                                                 +wasm-const-entry-index+
-                                                +wasm-const-module-version+)
+                                                +wasm-const-module-version+
+                                                nil
+                                                nil
+                                                +wasm2-gc-root-mode-runtime-bootstrap+)
                 (setf (afunc-lfun-info afunc)
                       (list* 'wasm-module-bytes module-bytes
                              'wasm-module-export +wasm-const-export-name+
@@ -6905,7 +6937,10 @@
               (wasm2-register-compiled-module module-bytes
                                               +wasm-fixnum-add-export-name+
                                               +wasm-fixnum-add-entry-index+
-                                              +wasm-fixnum-add-module-version+)
+                                              +wasm-fixnum-add-module-version+
+                                              nil
+                                              nil
+                                              +wasm2-gc-root-mode-runtime-bootstrap+)
               (setf (afunc-lfun-info afunc)
                     (list* 'wasm-module-bytes module-bytes
                            'wasm-module-export +wasm-fixnum-add-export-name+
@@ -6920,7 +6955,10 @@
             (wasm2-register-compiled-module module-bytes
                                             +wasm-fixnum-sub-export-name+
                                             +wasm-fixnum-sub-entry-index+
-                                            +wasm-fixnum-sub-module-version+)
+                                            +wasm-fixnum-sub-module-version+
+                                            nil
+                                            nil
+                                            +wasm2-gc-root-mode-runtime-bootstrap+)
             (setf (afunc-lfun-info afunc)
                   (list* 'wasm-module-bytes module-bytes
                          'wasm-module-export +wasm-fixnum-sub-export-name+
@@ -6935,7 +6973,10 @@
             (wasm2-register-compiled-module module-bytes
                                             +wasm-fixnum-mul-export-name+
                                             +wasm-fixnum-mul-entry-index+
-                                            +wasm-fixnum-mul-module-version+)
+                                            +wasm-fixnum-mul-module-version+
+                                            nil
+                                            nil
+                                            +wasm2-gc-root-mode-runtime-bootstrap+)
             (setf (afunc-lfun-info afunc)
                   (list* 'wasm-module-bytes module-bytes
                          'wasm-module-export +wasm-fixnum-mul-export-name+
@@ -6950,7 +6991,10 @@
             (wasm2-register-compiled-module module-bytes
                                             +wasm-fixnum-ash-export-name+
                                             +wasm-fixnum-ash-entry-index+
-                                            +wasm-fixnum-ash-module-version+)
+                                            +wasm-fixnum-ash-module-version+
+                                            nil
+                                            nil
+                                            +wasm2-gc-root-mode-runtime-bootstrap+)
             (setf (afunc-lfun-info afunc)
                   (list* 'wasm-module-bytes module-bytes
                          'wasm-module-export +wasm-fixnum-ash-export-name+
@@ -6965,7 +7009,10 @@
             (wasm2-register-compiled-module module-bytes
                                             +wasm-fixnum-logand-export-name+
                                             +wasm-fixnum-logand-entry-index+
-                                            +wasm-fixnum-logand-module-version+)
+                                            +wasm-fixnum-logand-module-version+
+                                            nil
+                                            nil
+                                            +wasm2-gc-root-mode-runtime-bootstrap+)
             (setf (afunc-lfun-info afunc)
                   (list* 'wasm-module-bytes module-bytes
                          'wasm-module-export +wasm-fixnum-logand-export-name+
@@ -6980,7 +7027,10 @@
             (wasm2-register-compiled-module module-bytes
                                             +wasm-fixnum-logior-export-name+
                                             +wasm-fixnum-logior-entry-index+
-                                            +wasm-fixnum-logior-module-version+)
+                                            +wasm-fixnum-logior-module-version+
+                                            nil
+                                            nil
+                                            +wasm2-gc-root-mode-runtime-bootstrap+)
             (setf (afunc-lfun-info afunc)
                   (list* 'wasm-module-bytes module-bytes
                          'wasm-module-export +wasm-fixnum-logior-export-name+
@@ -6995,7 +7045,10 @@
             (wasm2-register-compiled-module module-bytes
                                             +wasm-fixnum-logxor-export-name+
                                             +wasm-fixnum-logxor-entry-index+
-                                            +wasm-fixnum-logxor-module-version+)
+                                            +wasm-fixnum-logxor-module-version+
+                                            nil
+                                            nil
+                                            +wasm2-gc-root-mode-runtime-bootstrap+)
             (setf (afunc-lfun-info afunc)
                   (list* 'wasm-module-bytes module-bytes
                          'wasm-module-export +wasm-fixnum-logxor-export-name+
@@ -7010,7 +7063,10 @@
             (wasm2-register-compiled-module module-bytes
                                             +wasm-fixnum-lognot-export-name+
                                             +wasm-fixnum-lognot-entry-index+
-                                            +wasm-fixnum-lognot-module-version+)
+                                            +wasm-fixnum-lognot-module-version+
+                                            nil
+                                            nil
+                                            +wasm2-gc-root-mode-runtime-bootstrap+)
             (setf (afunc-lfun-info afunc)
                   (list* 'wasm-module-bytes module-bytes
                          'wasm-module-export +wasm-fixnum-lognot-export-name+
@@ -7025,7 +7081,10 @@
             (wasm2-register-compiled-module module-bytes
                                             +wasm-fixnum-neg-export-name+
                                             +wasm-fixnum-neg-entry-index+
-                                            +wasm-fixnum-neg-module-version+)
+                                            +wasm-fixnum-neg-module-version+
+                                            nil
+                                            nil
+                                            +wasm2-gc-root-mode-runtime-bootstrap+)
             (setf (afunc-lfun-info afunc)
                   (list* 'wasm-module-bytes module-bytes
                          'wasm-module-export +wasm-fixnum-neg-export-name+
@@ -7041,7 +7100,10 @@
               (wasm2-register-compiled-module module-bytes
                                               +wasm-if-export-name+
                                               +wasm-if-entry-index+
-                                              +wasm-if-module-version+)
+                                              +wasm-if-module-version+
+                                              nil
+                                              nil
+                                              +wasm2-gc-root-mode-runtime-bootstrap+)
               (setf (afunc-lfun-info afunc)
                     (list* 'wasm-module-bytes module-bytes
                            'wasm-module-export +wasm-if-export-name+
@@ -7057,7 +7119,10 @@
               (wasm2-register-compiled-module module-bytes
                                               +wasm-if-arg-export-name+
                                               +wasm-if-arg-entry-index+
-                                              +wasm-if-arg-module-version+)
+                                              +wasm-if-arg-module-version+
+                                              nil
+                                              nil
+                                              +wasm2-gc-root-mode-runtime-bootstrap+)
               (setf (afunc-lfun-info afunc)
                     (list* 'wasm-module-bytes module-bytes
                            'wasm-module-export +wasm-if-arg-export-name+
@@ -7072,7 +7137,10 @@
             (wasm2-register-compiled-module module-bytes
                                             +wasm-identity-export-name+
                                             +wasm-identity-entry-index+
-                                            +wasm-identity-module-version+)
+                                            +wasm-identity-module-version+
+                                            nil
+                                            nil
+                                            +wasm2-gc-root-mode-runtime-bootstrap+)
             (setf (afunc-lfun-info afunc)
                   (list* 'wasm-module-bytes module-bytes
                          'wasm-module-export +wasm-identity-export-name+
@@ -7087,7 +7155,10 @@
             (wasm2-register-compiled-module module-bytes
                                             +wasm-identity-y-export-name+
                                             +wasm-identity-y-entry-index+
-                                            +wasm-identity-y-module-version+)
+                                            +wasm-identity-y-module-version+
+                                            nil
+                                            nil
+                                            +wasm2-gc-root-mode-runtime-bootstrap+)
             (setf (afunc-lfun-info afunc)
                   (list* 'wasm-module-bytes module-bytes
                          'wasm-module-export +wasm-identity-y-export-name+
@@ -7110,13 +7181,16 @@
              (debug-info (and *wasm2-collect-module-debug*
                               (wasm2-make-module-debug-info export-name entry-index 1
                                                             :afunc afunc
-                                                            :ir ir))))
+                                                            :ir ir
+                                                            :gc-root-policy-mode
+                                                            (wasm2-ir-gc-root-policy-mode ir)))))
         (wasm2-register-compiled-module module-bytes
                                         export-name
                                         entry-index
                                         1
                                         const-pool-bytes
-                                        debug-info)
+                                        debug-info
+                                        (wasm2-ir-gc-root-policy-mode ir))
         (let ((info (list* 'wasm-module-bytes module-bytes
                            'wasm-module-export export-name
                            'wasm-module-version 1

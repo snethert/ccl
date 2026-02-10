@@ -268,6 +268,8 @@ wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
 
   {
     uint32_t entry_index = (uint32_t)unbox_fixnum(entry);
+    uint32_t mode = wasm_lookup_entry_gc_root_policy_mode(entry_index);
+    wasm_publish_gc_root_policy_mode(mode);
     wasm_call_entry_index(entry_index);
   }
 }
@@ -379,6 +381,28 @@ uint32_t
 wasm_get_gc_root_policy_mode(void)
 {
   return wasm_current_gc_root_policy_mode();
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_set_entry_gc_root_policy_mode")))
+uint32_t
+wasm_set_entry_gc_root_policy_mode(uint32_t entry_index, uint32_t mode)
+{
+  wasm_register_entry_gc_root_policy_mode(entry_index, mode);
+  return wasm_lookup_entry_gc_root_policy_mode(entry_index);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_get_entry_gc_root_policy_mode")))
+uint32_t
+wasm_get_entry_gc_root_policy_mode(uint32_t entry_index)
+{
+  return wasm_lookup_entry_gc_root_policy_mode(entry_index);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_clear_entry_gc_root_policy_modes")))
+void
+wasm_clear_entry_gc_root_policy_modes_export(void)
+{
+  wasm_clear_entry_gc_root_policy_modes();
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_save_image_direct")))
@@ -4317,6 +4341,7 @@ wasm_reset_root_image_runtime_state(void)
   extern LispObj lisp_nil;
 
   wasm_reset_gc_root_policy();
+  wasm_clear_entry_gc_root_policy_modes();
   nrs_WASM_COMPILED_MODULES.vcell = lisp_nil;
   nrs_WASM_CONST_POOLS.vcell = lisp_nil;
 

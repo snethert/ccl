@@ -79,6 +79,18 @@ function asBuffer(bytes, fieldName) {
   throw new Error(`${fieldName} must be a byte array`);
 }
 
+function normalizeGcRootPolicyModes(raw) {
+  const out = new Map();
+  if (!raw || typeof raw !== "object") return out;
+  for (const [key, value] of Object.entries(raw)) {
+    const entryIndex = Number.parseInt(String(key), 10);
+    if (!Number.isFinite(entryIndex) || entryIndex < 0) continue;
+    if (!Number.isFinite(value) || value < 0) continue;
+    out.set(entryIndex >>> 0, value >>> 0);
+  }
+  return out;
+}
+
 function readSpan(fd, offset, length, fieldName) {
   const size = length >>> 0;
   const start = offset >>> 0;
@@ -144,6 +156,7 @@ async function main() {
   const outModules = [];
   const outConstPools = [];
   const constPoolIdBySig = new Map();
+  const gcRootPolicyModes = normalizeGcRootPolicyModes(manifest?.gcRootPolicyModes);
   let offset = 0;
   let inputBinaryFd = null;
 
@@ -196,6 +209,13 @@ async function main() {
       }
       if (moduleBytes.length === 0) {
         throw new Error(`module ${entryIndex} has empty moduleBytes`);
+      }
+
+      const gcMode = Number.isFinite(entry?.gcRootPolicyMode)
+        ? (entry.gcRootPolicyMode >>> 0)
+        : gcRootPolicyModes.get(entryIndex);
+      if (gcMode != null) {
+        gcRootPolicyModes.set(entryIndex, gcMode >>> 0);
       }
 
       const moduleRecord = {
@@ -267,6 +287,13 @@ async function main() {
     constPoolCount: outConstPools.length,
     functions: Array.isArray(manifest?.functions) ? manifest.functions : [],
   };
+  if (gcRootPolicyModes.size > 0) {
+    outManifest.gcRootPolicyModes = Object.fromEntries(
+      [...gcRootPolicyModes.entries()]
+        .sort((a, b) => ((a[0] >>> 0) - (b[0] >>> 0)))
+        .map(([entryIndex, mode]) => [String(entryIndex >>> 0), mode >>> 0]),
+    );
+  }
 
   await writeFileAtomically(output.binaryPath, binaryBytes);
   await writeFileAtomically(output.indexPath, indexBytes);

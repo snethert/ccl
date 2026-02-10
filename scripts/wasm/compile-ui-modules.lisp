@@ -187,6 +187,11 @@
         #'<
         :key (lambda (entry) (svref entry 2))))
 
+(defun module-gc-root-policy-mode (entry)
+  (let ((mode (and (> (length entry) 5) (svref entry 5))))
+    (when (and mode (fixnump mode) (>= mode 0))
+      mode)))
+
 (defun write-module-bundle (output-path functions modules)
   (ensure-directories-exist output-path)
   (with-open-file (out output-path
@@ -220,8 +225,28 @@
              (when (and (> (length entry) 4) (svref entry 4))
                (write-string ",\"constPoolBytes\":" out)
                (json-write-bytes out (svref entry 4)))
+             (let ((gc-mode (module-gc-root-policy-mode entry)))
+               (when gc-mode
+                 (write-string ",\"gcRootPolicyMode\":" out)
+                 (princ gc-mode out)))
              (write-char #\} out))
-    (write-string "]}" out)
+    (write-char #\] out)
+    (let ((rows nil))
+      (dolist (entry modules)
+        (let ((gc-mode (module-gc-root-policy-mode entry)))
+          (when gc-mode
+            (push (cons (svref entry 2) gc-mode) rows))))
+      (setf rows (nreverse rows))
+      (when rows
+        (write-string ",\"gcRootPolicyModes\":{" out)
+        (loop for row in rows
+              for idx from 0
+              do (when (> idx 0) (write-char #\, out))
+                 (json-write-string out (princ-to-string (car row)))
+                 (write-char #\: out)
+                 (princ (cdr row) out))
+        (write-char #\} out)))
+    (write-char #\} out)
     (terpri out)))
 
 (defun main ()

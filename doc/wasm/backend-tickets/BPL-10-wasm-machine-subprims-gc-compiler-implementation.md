@@ -53,13 +53,14 @@ Out of scope:
   - `B10V-01` strict audit now passes with `total_hits=0` (`scripts/wasm/arm-retirement-audit.sh --strict`) after compiler/header/doc marker retirement updates.
 - WASM target arch and macro layer still mirror ARM contracts (`compiler/WASM/wasm-arch.lisp`).
 - WASM GC root scanning is now centralized behind descriptor-driven XP/TCR/C-stack traversal in `lisp-kernel/wasm-gc.c`: an explicit GC root-descriptor object now controls XP node spans, XP locatives, C-stack safepoint frame publication, and TCR TLB inclusion; XP node/locative iteration, C-stack frame slot publication, and TCR xframe/TLB traversal consume shared helper paths; descriptor IDs use wasm-owned alias constants (`wasm_gpr_arg_z..wasm_gpr_fn`) instead of direct legacy macro names. Descriptor policy publication is now externalized via wasm platform API (`wasm_publish_gc_root_policy`, `wasm_current_gc_root_policy`, `wasm_reset_gc_root_policy`) plus runtime-mode publication APIs (`wasm_publish_gc_root_policy_mode`, `wasm_current_gc_root_policy_mode`) and host-visible boundary exports (`wasm_set_gc_root_policy`, `wasm_get_gc_root_policy`, `wasm_set_gc_root_policy_mode`, `wasm_get_gc_root_policy_mode`).
+- Compiler/module pipeline now carries GC root-policy mode metadata end-to-end: wasm2 compiled-module registration emits per-module mode values, bundle/index tooling preserves `gcRootPolicyModes`, kernel exports provide per-entry mode registration/query/clear, and runtime dispatch paths publish entry mode before compiled entry invocation.
 - `lib/wasmenv.lisp` preserves ARM-order register compatibility as a transition design.
 
 ## Immediate Next Step
 
-- Action: continue `B10G-01` by wiring compiler-owned publication semantics (IR/runtime mode metadata) to the root-policy mode API, beyond current runtime boundary hooks.
-- Why now: runtime boundary semantics now drive named modes (`set_subprims_ready` => default/bootstrap) and host/manual mode controls are validated, so remaining risk is compiler ownership of mode selection policy.
-- Success evidence: root publication inputs are defined by descriptor contract rather than ad hoc root-site assumptions, with smoke/audit lanes still green.
+- Action: start `B10G-02` by removing ARM-endian/halfword forwarding assumptions from wasm relocation paths and validating relocation correctness under GC movement stress.
+- Why now: `B10G-01` mode-publication ownership is now runtime+compiler integrated and validated, so the dominant remaining GC-coupling risk is forwarding/relocation arithmetic assumptions.
+- Success evidence: forwarding paths are architecture-neutral in wasm GC code, `B10V-01` remains `total_hits=0`, and smoke/regression lanes remain green with relocation-focused coverage added.
 
 ## Wave A Progress (B10S-01)
 
@@ -222,6 +223,7 @@ Out of scope:
 
 ## Change Log
 
+- 2026-02-10: Completed `B10G-01` compiler-owned root-policy mode publication by extending wasm2 compiled-module payloads with mode metadata (`compiler/WASM/wasm2.lisp`), propagating mode maps through bundle tooling (`scripts/wasm/compile-wasm-fasls.lisp`, `scripts/wasm/compile-smoke-modules.lisp`, `scripts/wasm/compile-ui-modules.lisp`, `scripts/wasm/pack-inline-bundle-v2.mjs`, `scripts/wasm/compact-runtime-modules.mjs`), wiring loader/kernel registration (`doc/wasm/js/ccl-loader.mjs`, `lisp-kernel/wasm-kernel-stubs.c`, `lisp-kernel/wasm-subprims-provider.c`, `lisp-kernel/wasm-gc.c`, `lisp-kernel/platform-wasm32.h`), and extending smoke assertions (`doc/wasm/js/smoke-test.mjs`, `doc/wasm/js/compiler-smoke.mjs`); rebuilt via documented `env.sh` flow and revalidated (`scripts/wasm/arm-retirement-audit.sh --strict` => `total_hits=0`, `node doc/wasm/js/all-smoke.mjs` pass after manifest refresh).
 - 2026-02-10: Externalized `B10G-01` descriptor publication inputs by adding wasm platform API (`WASM_GC_ROOT_*` policy bits plus `wasm_publish_gc_root_policy`, `wasm_current_gc_root_policy`, `wasm_reset_gc_root_policy`) and converting GC walkers in `lisp-kernel/wasm-gc.c` to consume an active descriptor derived from published policy; rebuilt via documented `env.sh` flow and revalidated (`scripts/wasm/arm-retirement-audit.sh --strict` => `total_hits=0`, `node doc/wasm/js/all-smoke.mjs` pass from `ccl` root after manifest refresh).
 - 2026-02-10: Wired first real producer adoption for `B10G-01` policy publication by calling `wasm_reset_gc_root_policy()` from `wasm_reset_root_image_runtime_state` in `lisp-kernel/wasm-kernel-stubs.c`, ensuring root-policy lifecycle reset is driven by a runtime boundary site; rebuilt and revalidated (`B10V-01 total_hits=0`, `B10V-03` pass after manifest refresh).
 - 2026-02-10: Expanded `B10G-01` producer adoption to startup boundaries by calling `wasm_reset_gc_root_policy()` in `wasm_ccl_start` and `wasm_ccl_start_lisp` (`lisp-kernel/pmcl-kernel.c`), ensuring runtime entrypoints republish default root policy before execution; rebuilt and revalidated (`B10V-01 total_hits=0`, `B10V-03` pass after manifest refresh).

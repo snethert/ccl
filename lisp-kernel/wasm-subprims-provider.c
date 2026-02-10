@@ -1940,6 +1940,8 @@ wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
 
   {
     uint32_t entry_index = (uint32_t)unbox_fixnum(entry);
+    uint32_t mode = wasm_lookup_entry_gc_root_policy_mode(entry_index);
+    wasm_publish_gc_root_policy_mode(mode);
     wasm_call_entry_index(entry_index);
   }
 }

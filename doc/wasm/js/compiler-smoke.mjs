@@ -130,8 +130,20 @@ kernel.instance.exports.wasm_ccl_load_image(blobBase, imageLen);
 
 const kernelExports = kernel.instance.exports;
 assert(typeof kernelExports.wasm_get_lisp_nil === "function", "missing wasm_get_lisp_nil export");
+assert(typeof kernelExports.wasm_get_gc_root_policy_mode === "function", "missing wasm_get_gc_root_policy_mode export");
+assert(typeof kernelExports.wasm_get_entry_gc_root_policy_mode === "function", "missing wasm_get_entry_gc_root_policy_mode export");
 const nilValue = kernelExports.wasm_get_lisp_nil() >>> 0;
 const functions = Array.isArray(bundle.functions) ? bundle.functions : [];
+const gcRootPolicyModes = new Map(
+  Object.entries(bundle?.gcRootPolicyModes ?? {})
+    .map(([entry, mode]) => {
+      const idx = Number.parseInt(String(entry), 10);
+      if (!Number.isFinite(idx) || idx < 0) return null;
+      if (!Number.isFinite(mode) || mode < 0) return null;
+      return [idx >>> 0, mode >>> 0];
+    })
+    .filter(Boolean),
+);
 
 async function installBundle(label) {
   const { installed, count, failed } = await installCompiledModulesFromBundle({
@@ -162,6 +174,25 @@ function entryIndex(name) {
   return item.entryIndex >>> 0;
 }
 
+function expectedGcRootPolicyMode(entryIndexValue) {
+  return gcRootPolicyModes.get(entryIndexValue >>> 0) ?? 0;
+}
+
+function assertGcRootPolicyModePublished(entryIndexValue, label) {
+  const entry = entryIndexValue >>> 0;
+  const expected = expectedGcRootPolicyMode(entry);
+  const registered = kernelExports.wasm_get_entry_gc_root_policy_mode(entry) >>> 0;
+  assert(
+    registered === expected,
+    `${label}: unexpected registered gc root policy mode for entry ${entry}: got=${registered} expected=${expected}`,
+  );
+  const active = kernelExports.wasm_get_gc_root_policy_mode() >>> 0;
+  assert(
+    active === expected,
+    `${label}: unexpected active gc root policy mode: got=${active} expected=${expected}`,
+  );
+}
+
 assert(typeof kernelExports.wasm_test_entry_funcall === "function", "missing wasm_test_entry_funcall export");
 assert(typeof kernelExports.wasm_test_entry_funcall2 === "function", "missing wasm_test_entry_funcall2 export");
 assert(typeof kernelExports.wasm_test_entry_funcall1_raw === "function", "missing wasm_test_entry_funcall1_raw export");
@@ -174,6 +205,7 @@ function fixnum(n) {
 const constEntry = entryIndex("WASM-SMOKE-CONST");
 const constResult = kernelExports.wasm_test_entry_funcall(constEntry, 0) >> 2;
 assert(constResult === 23, `unexpected const result: got=${constResult} expected=23`);
+assertGcRootPolicyModePublished(constEntry, "const");
 
 const symbolEntry = entryIndex("WASM-SMOKE-SYMBOL");
 const symbolResult = kernelExports.wasm_test_entry_funcall(symbolEntry, 0) >>> 0;
@@ -182,6 +214,7 @@ assert(symbolResult !== nilValue, "unexpected symbol result: got NIL");
 const ffiEntry = entryIndex("WASM-SMOKE-FFI-ADD");
 const ffiResult = kernelExports.wasm_test_entry_funcall2(ffiEntry, 10, 32) >> 2;
 assert(ffiResult === 42, `unexpected ffi-add result: got=${ffiResult} expected=42`);
+assertGcRootPolicyModePublished(ffiEntry, "ffi-add");
 const ffiSignedResult = kernelExports.wasm_test_entry_funcall2(ffiEntry, -10, 52) >> 2;
 assert(ffiSignedResult === 42, `unexpected ffi-add signed result: got=${ffiSignedResult} expected=42`);
 const ffiZeroResult = kernelExports.wasm_test_entry_funcall2(ffiEntry, 0, 0) >> 2;
@@ -190,6 +223,7 @@ assert(ffiZeroResult === 0, `unexpected ffi-add zero result: got=${ffiZeroResult
 const addEntry = entryIndex("WASM-SMOKE-ADD");
 const addResult = kernelExports.wasm_test_entry_funcall2(addEntry, 10, 32) >> 2;
 assert(addResult === 42, `unexpected add result: got=${addResult} expected=42`);
+assertGcRootPolicyModePublished(addEntry, "add");
 
 const subEntry = entryIndex("WASM-SMOKE-SUB");
 const subResult = kernelExports.wasm_test_entry_funcall2(subEntry, 50, 8) >> 2;
