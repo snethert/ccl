@@ -5185,6 +5185,10 @@
   (wasm2-emit-unboxed-fixnum-local-i32 body local-index)
   (wasm2-push-u8 body #xac)) ; i64.extend_i32_s
 
+(defun wasm2-emit-local-i32-as-i64 (body local-index)
+  (wasm2-emit-local-get-op body local-index)
+  (wasm2-push-u8 body #xac)) ; i64.extend_i32_s
+
 (defun wasm2-emit-fixnum-local-tag-check (body local-index)
   (let ((mask (1- (ash 1 *wasm2-target-fixnum-shift*))))
     (wasm2-emit-local-get-op body local-index)
@@ -5270,9 +5274,82 @@
     (wasm2-push-u8 body #xa7) ; i32.wrap_i64
     (wasm2-push-u8 body #x0b))) ; end
 
+(defun wasm2-emit-hot-direct-fixnum-ash-left (body x-local y-local shift-local compat-op-key)
+  (let* ((fixnum-bits (1- (- *wasm2-target-bits-in-word* *wasm2-target-fixnum-shift*)))
+         (min-fixnum (ash -1 fixnum-bits))
+         (max-fixnum (1- (ash 1 fixnum-bits)))
+         (max-shift (1- *wasm2-target-bits-in-word*)))
+    ;; Keep direct lowering only for bounded shift counts; route out-of-range
+    ;; counts through the explicit compatibility fallback edge.
+    (wasm2-emit-local-get-op body shift-local)
+    (wasm2-emit-i32-const-op body max-shift)
+    (wasm2-push-u8 body #x4a) ; i32.gt_s
+    (wasm2-push-u8 body #x04) ; if
+    (wasm2-push-u8 body #x7f) ; blocktype i32
+    (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local compat-op-key)
+    (wasm2-push-u8 body #x05) ; else
+    ;; Explicit overflow edge: if shifted value leaves fixnum bounds, fall back.
+    (wasm2-emit-unboxed-fixnum-local-i64 body x-local)
+    (wasm2-emit-local-i32-as-i64 body shift-local)
+    (wasm2-push-u8 body #x86) ; i64.shl
+    (wasm2-emit-i64-const-op body min-fixnum)
+    (wasm2-push-u8 body #x53) ; i64.lt_s
+    (wasm2-emit-unboxed-fixnum-local-i64 body x-local)
+    (wasm2-emit-local-i32-as-i64 body shift-local)
+    (wasm2-push-u8 body #x86) ; i64.shl
+    (wasm2-emit-i64-const-op body max-fixnum)
+    (wasm2-push-u8 body #x55) ; i64.gt_s
+    (wasm2-push-u8 body #x72) ; i32.or
+    (wasm2-push-u8 body #x04) ; if
+    (wasm2-push-u8 body #x7f) ; blocktype i32
+    (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local compat-op-key)
+    (wasm2-push-u8 body #x05) ; else
+    (wasm2-emit-unboxed-fixnum-local-i64 body x-local)
+    (wasm2-emit-local-i32-as-i64 body shift-local)
+    (wasm2-push-u8 body #x86) ; i64.shl
+    (wasm2-push-u8 body #xa7) ; i32.wrap_i64
+    (wasm2-emit-i32-const-op body *wasm2-target-fixnum-shift*)
+    (wasm2-push-u8 body #x74) ; i32.shl
+    (wasm2-push-u8 body #x0b) ; end
+    (wasm2-push-u8 body #x0b))) ; end
+
+(defun wasm2-emit-hot-direct-fixnum-ash-right (body x-local y-local shift-local compat-op-key)
+  (let* ((max-shift (1- *wasm2-target-bits-in-word*)))
+    (wasm2-emit-i32-const-op body 0)
+    (wasm2-emit-local-get-op body shift-local)
+    (wasm2-push-u8 body #x6b) ; i32.sub
+    (wasm2-emit-local-tee-op body shift-local)
+    ;; Keep right-shift direct lane bounded; let compat handle extreme counts.
+    (wasm2-emit-i32-const-op body max-shift)
+    (wasm2-push-u8 body #x4a) ; i32.gt_s
+    (wasm2-push-u8 body #x04) ; if
+    (wasm2-push-u8 body #x7f) ; blocktype i32
+    (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local compat-op-key)
+    (wasm2-push-u8 body #x05) ; else
+    (wasm2-emit-unboxed-fixnum-local-i32 body x-local)
+    (wasm2-emit-local-get-op body shift-local)
+    (wasm2-push-u8 body #x75) ; i32.shr_s
+    (wasm2-emit-i32-const-op body *wasm2-target-fixnum-shift*)
+    (wasm2-push-u8 body #x74) ; i32.shl
+    (wasm2-push-u8 body #x0b))) ; end
+
+(defun wasm2-emit-hot-direct-fixnum-ash (body x-local y-local shift-local compat-op-key)
+  ;; `shift-local` stores unboxed shift count so both sign lanes can reuse it
+  ;; without reloading or re-unboxing the original boxed operand.
+  (wasm2-emit-unboxed-fixnum-local-i32 body y-local)
+  (wasm2-emit-local-tee-op body shift-local)
+  (wasm2-emit-i32-const-op body 0)
+  (wasm2-push-u8 body #x4e) ; i32.ge_s
+  (wasm2-push-u8 body #x04) ; if
+  (wasm2-push-u8 body #x7f) ; blocktype i32
+  (wasm2-emit-hot-direct-fixnum-ash-left body x-local y-local shift-local compat-op-key)
+  (wasm2-push-u8 body #x05) ; else
+  (wasm2-emit-hot-direct-fixnum-ash-right body x-local y-local shift-local compat-op-key)
+  (wasm2-push-u8 body #x0b)) ; end
+
 (defun wasm2-emit-hot-direct-fixnum-binary-op (body op compat-op-key)
   (unless (member op '(:fixnum-add :fixnum-sub :fixnum-mul
-                       :fixnum-logand :fixnum-logior :fixnum-logxor))
+                       :fixnum-ash :fixnum-logand :fixnum-logior :fixnum-logxor))
     (return-from wasm2-emit-hot-direct-fixnum-binary-op nil))
   (let* ((x-local (wasm2-fixnum-direct-scratch-local 0))
          (y-local (wasm2-fixnum-direct-scratch-local 1))
@@ -5293,6 +5370,8 @@
        (wasm2-emit-hot-direct-fixnum-sub body x-local y-local result-local compat-op-key))
       (:fixnum-mul
        (wasm2-emit-hot-direct-fixnum-mul body x-local y-local compat-op-key))
+      (:fixnum-ash
+       (wasm2-emit-hot-direct-fixnum-ash body x-local y-local result-local compat-op-key))
       (:fixnum-logand
        (wasm2-emit-local-get-op body x-local)
        (wasm2-emit-local-get-op body y-local)
