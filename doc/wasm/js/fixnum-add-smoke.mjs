@@ -728,7 +728,11 @@ const perfRounds = readPositiveIntOption(args, "--perf-rounds", 5);
 const perfSamples = readPositiveIntOption(args, "--perf-samples", 1);
 const perfPathIterations = readPositiveIntOption(args, "--perf-path-iterations", 20000);
 const perfBudgetDeltaNs = readNumberOption(args, "--perf-budget-delta-ns", 0);
+const perfMaxDirectHelperCallsPerOp = readNumberOption(args, "--perf-max-direct-helper-calls-per-op", 0);
 const perfOut = readOption(args, "--perf-out");
+if (perfMaxDirectHelperCallsPerOp < 0) {
+  fail(`invalid non-negative number for --perf-max-direct-helper-calls-per-op: ${perfMaxDirectHelperCallsPerOp}`);
+}
 
 let bundle;
 let bundleBinaryBytes;
@@ -830,6 +834,18 @@ const directDynamic = await collectDynamicImportCounts({
   kernelExports,
   iterations: perfPathIterations,
 });
+const directHelperCallsPerOpRaw = directDynamic?.callsPerOperation?.wasm_return_fixnum_add ?? 0;
+assert(
+  Number.isFinite(directHelperCallsPerOpRaw),
+  "direct lane wasm_return_fixnum_add calls/op must be finite",
+);
+const directHelperCallsPerOp = round3(Number(directHelperCallsPerOpRaw));
+const withinDirectHelperBound = directHelperCallsPerOp <= (perfMaxDirectHelperCallsPerOp + 1e-9);
+assert(
+  withinDirectHelperBound,
+  `direct lane wasm_return_fixnum_add calls/op exceeded bound: ` +
+  `${directHelperCallsPerOp} > ${round3(perfMaxDirectHelperCallsPerOp)}`,
+);
 
 const checkpoint = {
   capturedAt: new Date().toISOString(),
@@ -845,6 +861,7 @@ const checkpoint = {
     perfSamples,
     perfPathIterations,
     perfBudgetDeltaNs,
+    perfMaxDirectHelperCallsPerOp,
   },
   samples: sampleResults.map((sample) => ({
     sample: sample.sample,
@@ -919,6 +936,11 @@ const checkpoint = {
     latencyDeltaNsPerOpSamples: latencyDeltaNsSamples.map((v) => round3(v)),
     latencyDeltaPctSamples: latencyDeltaPctSamples.map((v) => round3(v)),
   },
+  bounds: {
+    directFixnumAddCallsPerOp: directHelperCallsPerOp,
+    maxDirectFixnumAddCallsPerOp: round3(perfMaxDirectHelperCallsPerOp),
+    withinDirectFixnumAddBound: withinDirectHelperBound,
+  },
 };
 
 const compatSummary = checkpoint.lanes.beforeCompat.latency;
@@ -945,6 +967,10 @@ console.log(
   "  dynamic helper calls/op (before -> after): " +
   `${checkpoint.lanes.beforeCompat.dynamicPath.callsPerOperation.wasm_return_fixnum_add ?? 0} -> ` +
   `${checkpoint.lanes.afterDirect.dynamicPath.callsPerOperation.wasm_return_fixnum_add ?? 0}`,
+);
+console.log(
+  `  direct helper-call bound<=${checkpoint.bounds.maxDirectFixnumAddCallsPerOp} calls/op: ` +
+  `${checkpoint.bounds.directFixnumAddCallsPerOp}`,
 );
 if (perfSamples > 1) {
   for (const sample of checkpoint.samples) {
