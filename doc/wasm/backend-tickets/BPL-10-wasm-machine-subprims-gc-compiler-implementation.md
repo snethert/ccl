@@ -66,9 +66,9 @@ Out of scope:
 
 ## Immediate Next Step
 
-- Action: start `B10C-01` phase 1 by removing `compiler/WASM/wasm-arch.lisp` dependency on direct ARM execution-model imports and publishing a wasm-native arch baseline contract for downstream lowering slices.
-- Why now: `B10G-04` phase 1..4 now provide deterministic frame/unwind coherence coverage; the highest remaining exit-criterion risk is compiler-side ARM baseline coupling.
-- Success evidence: wasm target-arch baseline no longer depends on direct ARM execution-model imports, `scripts/wasm/arm-retirement-audit.sh --strict` remains `total_hits=0`, and `node doc/wasm/js/all-smoke.mjs` remains green.
+- Action: execute `B10C-01A-01` and `B10C-01A-02` to freeze primitive hot-path inventory (`compiler/WASM/wasm-arch.lisp`, `compiler/WASM/wasm2.lisp`, `lisp-kernel/wasm-kernel-stubs.c`) and lock the ordered ARM -> WASM primitive swapout slices below.
+- Why now: `B10G-04` phase 1..4 now provide deterministic frame/unwind coherence coverage, so the highest remaining throughput risk is compiler-side math lowering still routing through TCR register-massage imports instead of pure WASM primitive ops.
+- Success evidence: B10C-01 micro-slice order is frozen, primitive hot-lane success criteria are explicit, and each slice has deterministic validation gates before promotion.
 
 ## Wave A Progress (B10S-01)
 
@@ -197,6 +197,44 @@ Out of scope:
 | B10C-09 | ARM marker audit gate | `scripts/wasm/arm-retirement-audit.sh` | wasm-facing surfaces pass strict ARM-coupling audit. |
 | B10C-10 | Exit gate | all above | Compiler outputs run without ARM-emulation-critical assumptions in primary lanes. |
 
+### B10C-01 Fine-Grained Plan - ARM -> WASM Primitive Swapout (v1)
+
+#### Primitive-Level Non-Negotiables
+
+- Hot math paths must be true WASM primitive lowering: `fixnum add/sub/mul/ash/logand/logior/logxor/lognot/neg` execute without mandatory `set-arg*`/`get-arg*` register-massage calls.
+- Overflow/type slow paths must remain semantically correct and explicit: fallback to compatibility helper/subprim only at the branch point, never as unconditional default.
+- GC/root correctness must remain deterministic: direct primitive lowering must not weaken spill/root publication invariants at call boundaries.
+- ARM-shape compatibility is allowed only as a bounded compatibility lane, not as the default execution model for compiler-emitted primitives.
+
+#### Ordered Slice Breakdown
+
+| task_id | phase | source anchors | concrete implementation task | primitive-level guardrail | required evidence |
+| --- | --- | --- | --- | --- | --- |
+| B10C-01A-01 | P0 inventory freeze | `compiler/WASM/wasm-arch.lisp`, `compiler/WASM/wasm2.lisp`, `lisp-kernel/wasm-kernel-stubs.c` | Enumerate every ARM-coupled baseline import and every hot arithmetic path still routed through `wasm_return_fixnum_*` or `.SPbuiltin-*`. | No hidden primitive path remains untracked before refactor. | Inventory recorded in this ticket and linked to slice IDs below. |
+| B10C-01A-02 | P0 gate freeze | `doc/wasm/js/all-smoke.mjs`, `doc/wasm/js/fixnum-add-smoke.mjs`, `doc/wasm/js/fixnum-overflow-smoke.mjs` | Freeze validation lanes that must run after each primitive swapout slice. | Primitive performance work cannot bypass semantic checks. | Gate list captured in B10V rows and referenced per slice. |
+| B10C-01A-03 | P0 hot-lane metric baseline | `compiler/WASM/wasm2.lisp` | Add temporary compile-time counters/debug extraction for emitted `:fixnum-*` vs `:call-subprim` in arithmetic forms. | Progress is measured by call-path elimination, not only pass/fail smoke. | Baseline and post-slice counts captured in checkpoint note. |
+| B10C-01A-04 | P1 arch bootstrap decoupling | `compiler/WASM/wasm-arch.lisp` | Remove direct `(require \"ARM-ARCH\")` bootstrap dependency from the WASM target file. | WASM target load path is self-owned. | `scripts/wasm/arm-retirement-audit.sh --strict` stays zero and compiler load lane remains green. |
+| B10C-01A-05 | P1 symbol-surface decoupling | `compiler/WASM/wasm-arch.lisp` | Replace ARM package `do-symbols` shadow-import mirroring with explicit WASM-owned symbol exports/constants. | Target constants stop inheriting ARM namespace by default. | No ARM package symbol sweep remains in wasm target init path. |
+| B10C-01A-06 | P1 target-arch contract ownership | `compiler/WASM/wasm-arch.lisp` | Replace `*arm-target-arch*` field-copy initialization with WASM-owned baseline constant definitions (same values where required, new ownership). | Value compatibility is preserved without ARM execution-model coupling. | `*wasm32-target-arch*` no longer reads ARM target struct fields. |
+| B10C-01A-07 | P1 subprim-table decoupling | `compiler/WASM/wasm-arch.lisp`, `doc/wasm/subprims-map.json` | Build `*wasm-subprims*` from wasm symbolic map contract instead of cloning `*arm-subprims*`. | Primitive dispatch identity stays stable while ARM table coupling is removed. | Subprim offset lookups stay deterministic under smoke/compiler lanes. |
+| B10C-01A-08 | P1 regression checkpoint | `compiler/WASM/wasm-arch.lisp`, `scripts/wasm/arm-retirement-audit.sh` | Add strict check that fails if wasm arch reintroduces ARM package/table imports. | Prevent silent rollback to ARM-shaped baseline. | Strict audit remains zero with wasm arch file included in scope. |
+| B10C-01A-09 | P2 primitive ABI split | `compiler/WASM/wasm2.lisp` | Split primitive emission into `hot direct ops` vs `compat fallback ops` categories with explicit dispatch helpers. | Hot lanes become structurally unable to regress to unconditional compat calls. | New helper boundaries covered by compiler-smoke and fixnum lanes. |
+| B10C-01A-10 | P2 binary fixnum direct lowering | `compiler/WASM/wasm2.lisp` | Replace `wasm2-emit-fixnum-op` register-massage/import path with direct WASM sequence for add/sub/mul/logand/logior/logxor plus explicit overflow/type fallback branch. | No unconditional `set-arg-y`/`set-arg-z`/`get-arg-z` on binary hot ops. | Hot-form compile artifacts show direct ops; smoke/overflow lanes pass. |
+| B10C-01A-11 | P2 unary fixnum direct lowering | `compiler/WASM/wasm2.lisp` | Replace `wasm2-emit-fixnum-unary-op` import path with direct WASM sequence for `lognot`/`neg`, with explicit slow-path fallback. | Unary hot math avoids default call/return trampoline overhead. | Unary arithmetic forms compile without default helper call path. |
+| B10C-01A-12 | P2 shift path hardening | `compiler/WASM/wasm2.lisp`, `lisp-kernel/wasm-kernel-stubs.c` | Keep `ash` fast path direct for bounded fixnum shift cases and isolate compat helper use to explicit out-of-range/type fallback. | Shift does not regress to ARM-shaped always-call behavior. | `fixnum-overflow` and aggregate smoke lanes remain green; fallback coverage remains deterministic. |
+| B10C-01A-13 | P2 spill discipline refinement | `compiler/WASM/wasm2.lisp` | Ensure direct primitive lanes do not enter spill/call envelopes unless they actually branch to helper/subprim calls. | No redundant spill/restore around pure local arithmetic. | `wasm2-validate-spill-discipline` remains clean across nested control flow. |
+| B10C-01A-14 | P3 compat-lane narrowing | `lisp-kernel/wasm-kernel-stubs.c`, `compiler/WASM/wasm2.lisp` | Mark `wasm_return_fixnum_*` as compatibility helpers only and remove hot-lane compiler dependence on them. | Runtime helper remains available for slow path but not default math execution. | Compiler hot-lane metrics show near-zero helper reliance for target forms. |
+| B10C-01A-15 | P3 subprim boundary tightening | `compiler/WASM/wasm2.lisp`, `lisp-kernel/wasm-subprims-provider.c` | Constrain `.SPbuiltin-div`, `.SPbuiltin-negate`, `.SPbuiltin-ash` callsites to explicit compatibility boundaries pending full direct-lowering replacements. | Division/complex arithmetic fallback remains explicit and auditable. | Callsite counts and smoke evidence show bounded compatibility usage only. |
+| B10C-01A-16 | P4 required rebuild + validation | `lisp-kernel/wasm32/Makefile`, `doc/wasm/js/*` | For each code slice: rebuild kernel using `env.sh` command, then run strict audit + all-smoke; if hash mismatch only, refresh root image manifest and rerun smoke. | Every primitive swapout increment is validated end-to-end before promotion. | Required command sequence exits clean (or documented manifest-refresh rerun success). |
+| B10C-01A-17 | P4 performance evidence checkpoint | `doc/wasm/js/fixnum-add-smoke.mjs`, optional targeted numeric lane | Record before/after latency and instruction-path deltas for fixnum arithmetic kernels. | Performance claim is proven with artifacted numbers, not inferred. | Checkpoint includes metric table and no semantic regression. |
+| B10C-01A-18 | P4 promotion to next compiler slices | `doc/wasm/backend-tickets/BPL-10-wasm-machine-subprims-gc-compiler-implementation.md` | After `A-01`..`A-17` closure, advance next-step focus to `B10C-02` + `B10C-04` follow-on expansion lanes. | B10C-01 closes only when hot primitive swapout and ARM decoupling both hold. | Ticket next-step updated with closure evidence and commit checkpoint. |
+
+#### Slice Execution Rules
+
+1. Do not run primitive performance slices out of order; P1 decoupling must land before P2 hot-lane rewrite.
+2. For every primitive refactor slice, capture the changed call-path shape (`direct op`, `compat helper`, or `subprim`) in the checkpoint note.
+3. Treat any reintroduction of unconditional helper/subprim math calls as a regression even if smoke still passes.
+
 ## Step 5 Output - Unified Validation and Promotion Gates (v1)
 
 ### Step 5 ID Namespace Freeze
@@ -231,6 +269,7 @@ Out of scope:
 
 ## Change Log
 
+- 2026-02-10: Expanded `B10C-01` into an ordered ARM -> WASM primitive swapout micro-slice plan (`B10C-01A-01`..`B10C-01A-18`) with explicit hot-math non-negotiables, file-anchored tasks, fallback-boundary rules, and required validation gates so compiler primitive lowering can move from register-massage imports to true WASM direct ops without semantic drift.
 - 2026-02-10: Completed `B10G-04` phase 4 by extending `wasm_subprim_nonlocal_exit_coherence_selftest` in `lisp-kernel/wasm-kernel-stubs.c` with funcall-driven `_SPnthrowvalues` unwind-cleanup coverage (zero-value and MV payload paths) plus deterministic `save_tsp`/`save_vsp` post-funcall coherence signatures; rebuilt kernel via documented `env.sh` flow, refreshed root-image manifest for `kernelWasm` hash rollover, and revalidated (`scripts/wasm/arm-retirement-audit.sh --strict` => `total_hits=0`, `node doc/wasm/js/all-smoke.mjs` pass).
 - 2026-02-10: Completed `B10G-04` phase 3 by extending `wasm_subprim_nonlocal_exit_coherence_selftest` in `lisp-kernel/wasm-kernel-stubs.c` with deterministic `_SPmkunwind` cleanup-entry + `_SPnthrowvalues` zero-value and multi-value unwind coverage (explicit signature codes for cleanup invocation, MV recovery, and `save_vsp`/`last_lisp_frame`/`catch_top` coherence); rebuilt kernel via documented `env.sh` flow, refreshed root-image manifest for `kernelWasm` hash rollover, and revalidated (`scripts/wasm/arm-retirement-audit.sh --strict` => `total_hits=0`, `node doc/wasm/js/all-smoke.mjs` pass).
 - 2026-02-10: Completed `B10G-04` phase 2 non-local-exit boundary hardening by adding deterministic kernel selftest coverage for throw/unwind coherence (`wasm_subprim_nonlocal_exit_coherence_selftest` in `lisp-kernel/wasm-kernel-stubs.c`, exported for host smoke), synchronizing `save_vsp` on `wasm_funcall_common` pending-throw returns, adding unwind-to-cstack-base frame-dereference guards in `lisp-kernel/wasm-cstack.c`, and wiring new smoke lane `doc/wasm/js/subprim-nonlocal-exit-coherence-smoke.mjs` into `doc/wasm/js/all-smoke.mjs`; rebuilt via documented `env.sh` flow and revalidated (`scripts/wasm/arm-retirement-audit.sh --strict` => `total_hits=0`, `node doc/wasm/js/all-smoke.mjs` pass after required root-image manifest refresh).
