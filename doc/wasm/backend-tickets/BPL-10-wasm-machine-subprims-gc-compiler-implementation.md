@@ -1,6 +1,6 @@
 # BPL-10 - WASM Machine Implementation (Subprims, L1 GC, Compiler)
 
-Status: in_progress (`B10C-01A-01`..`B10C-01A-16` hardening locked; `B10C-01A-19` parked)  
+Status: in_progress (`B10C-01A-01`..`B10C-01A-16` hardening finalized/locked; `B10C-01A-19` parked)  
 Priority: P0  
 Owner: Compiler/backend migration track  
 Last Updated: 2026-02-10  
@@ -130,12 +130,12 @@ Out of scope:
 
 ## Immediate Next Step
 
-- Action: keep `B10C-01A-19` parked and treat `B10C-01A-01`..`B10C-01A-16` hardening as a non-bypass gate on every checkpoint commit before any new object-lane promotion.
-- `1.` run `scripts/wasm/b10c-01a-mvp-speed-batch.sh` as the blocking checkpoint command; it enforces `A-01`..`A-16` gate invariants, refreshes `A-17` with required options (`--perf-samples 3 --perf-budget-delta-ns 0 --perf-max-direct-helper-calls-per-op 0`), keeps `A-18` baseline active, and runs the required validation sequence in-order.
-- `2.` preserve `A-17` helper elimination and bound on every checkpoint (`wasm_return_fixnum_add` direct-lane calls/op `0`, bound `<=0`) and keep `A-18` fallback bounded (`_SPmisc_set` calls/op `<=1`).
-- `3.` keep `A-19` parked until the same one-shot batch evidence remains stable across the next checkpoint commit.
-- Why now: this preserves strict promotion order (`A-01`..`A-16` gate discipline first, then `A-19+`) while preventing compatibility-lane drift under perf pressure.
-- Success evidence: latest one-shot batch remains green with `A-17` delta `-5.347 ns/op` (`-9.833%`), `wasm_return_fixnum_add` calls/op `1 -> 0`, strict audit `total_hits=0`, and full smoke pass.
+- Action: keep `B10C-01A-19` parked; treat `B10C-01A-01`..`B10C-01A-16` hardening as final and non-bypass.
+- `1.` on checkpoint commits, refresh `A-17` evidence at `doc/wasm/tickets/evidence/bpl-10/b10c-01a-17-fixnum-add-checkpoint-2026-02-10.json` with `--perf-samples 3 --perf-budget-delta-ns 0`; preserve `wasm_return_fixnum_add` direct-lane calls/op `0`.
+- `2.` keep `A-18` baseline artifact active at `doc/wasm/tickets/evidence/bpl-10/b10c-01a-18-misc-set-fallback-checkpoint-2026-02-10.json` with `_SPmisc_set` calls/op bounded (`<=1`).
+- `3.` use the required one-shot validation order as the only promotion gate (`make wasm32`, strict ARM-retirement audit, root-image rebuild, `all-smoke`).
+- Why now: this locks A01..A16 hardening as stable baseline while preserving strict sequencing (`A-19` remains parked until explicitly promoted).
+- Success evidence: final one-shot pass remains green with `A-17` delta `-4.753 ns/op` (`-8.23%`), `wasm_return_fixnum_add` calls/op `1 -> 0`, strict audit `total_hits=0`, and full smoke pass.
 
 ## Wave A Progress (B10S-01)
 
