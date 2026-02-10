@@ -6004,9 +6004,11 @@
     ;; Code
     (let* ((body (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0)))
       (wasm2-emit-local-decls body effective-local-types)
-      (when (> local-count 0)
+      (when (> base-local-count 0)
         (let* ((nil-value (target-nil-value)))
-          (dotimes (i local-count)
+          ;; Direct-fixnum scratch locals are compiler-private and always
+          ;; written before read, so avoid eager nil stores on appended slots.
+          (dotimes (i base-local-count)
             (when (eql (aref effective-local-types i) :i32)
               (wasm2-push-u8 body #x41) ; i32.const
               (wasm2-emit-sleb32 body (logand nil-value #xffffffff))
