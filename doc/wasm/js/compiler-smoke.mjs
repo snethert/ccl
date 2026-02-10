@@ -133,7 +133,23 @@ assert(typeof kernelExports.wasm_get_lisp_nil === "function", "missing wasm_get_
 assert(typeof kernelExports.wasm_get_gc_root_policy_mode === "function", "missing wasm_get_gc_root_policy_mode export");
 assert(typeof kernelExports.wasm_get_entry_gc_root_policy_mode === "function", "missing wasm_get_entry_gc_root_policy_mode export");
 const nilValue = kernelExports.wasm_get_lisp_nil() >>> 0;
+const GC_ROOT_MODE_RUNTIME_DEFAULT = 0;
+const GC_ROOT_MODE_RUNTIME_BOOTSTRAP = 1;
 const functions = Array.isArray(bundle.functions) ? bundle.functions : [];
+
+function normalizeBoundaryOpsList(rawOps) {
+  if (!Array.isArray(rawOps)) return [];
+  const out = [];
+  const seen = new Set();
+  for (const op of rawOps) {
+    if (typeof op !== "string") continue;
+    if (op.length === 0 || seen.has(op)) continue;
+    seen.add(op);
+    out.push(op);
+  }
+  return out;
+}
+
 const gcRootPolicyModes = new Map(
   Object.entries(bundle?.gcRootPolicyModes ?? {})
     .map(([entry, mode]) => {
@@ -141,6 +157,17 @@ const gcRootPolicyModes = new Map(
       if (!Number.isFinite(idx) || idx < 0) return null;
       if (!Number.isFinite(mode) || mode < 0) return null;
       return [idx >>> 0, mode >>> 0];
+    })
+    .filter(Boolean),
+);
+const gcRootBoundaryOps = new Map(
+  Object.entries(bundle?.gcRootBoundaryOps ?? {})
+    .map(([entry, ops]) => {
+      const idx = Number.parseInt(String(entry), 10);
+      if (!Number.isFinite(idx) || idx < 0) return null;
+      if (!Array.isArray(ops)) return null;
+      const normalizedOps = normalizeBoundaryOpsList(ops);
+      return [idx >>> 0, normalizedOps];
     })
     .filter(Boolean),
 );
@@ -175,7 +202,44 @@ function entryIndex(name) {
 }
 
 function expectedGcRootPolicyMode(entryIndexValue) {
-  return gcRootPolicyModes.get(entryIndexValue >>> 0) ?? 0;
+  const entry = entryIndexValue >>> 0;
+  assert(gcRootPolicyModes.has(entry), `missing gc root policy mode for entry ${entry}`);
+  return gcRootPolicyModes.get(entry);
+}
+
+function expectedGcRootPolicyModeFromBoundaryOps(entryIndexValue) {
+  const entry = entryIndexValue >>> 0;
+  const boundaryOps = gcRootBoundaryOps.get(entry) ?? [];
+  return boundaryOps.length > 0 ? GC_ROOT_MODE_RUNTIME_DEFAULT : GC_ROOT_MODE_RUNTIME_BOOTSTRAP;
+}
+
+function assertBoundaryModeContract(entryIndexValue, label) {
+  const entry = entryIndexValue >>> 0;
+  const fromModeMap = expectedGcRootPolicyMode(entry);
+  const fromBoundaryMap = expectedGcRootPolicyModeFromBoundaryOps(entry);
+  assert(
+    fromModeMap === fromBoundaryMap,
+    `${label}: gc root boundary/mode mismatch for entry ${entry}: mode=${fromModeMap} boundaryMode=${fromBoundaryMap}`,
+  );
+}
+
+function assertBundleBoundaryMapContract() {
+  assert(gcRootBoundaryOps.size > 0, "missing gcRootBoundaryOps map in wasm-smoke-modules bundle");
+  for (const fn of functions) {
+    assertBoundaryModeContract(fn.entryIndex >>> 0, "bundle-contract");
+  }
+}
+
+function assertAllRegisteredGcRootModes(label) {
+  for (const fn of functions) {
+    const entry = fn.entryIndex >>> 0;
+    const expected = expectedGcRootPolicyMode(entry);
+    const registered = kernelExports.wasm_get_entry_gc_root_policy_mode(entry) >>> 0;
+    assert(
+      registered === expected,
+      `${label}: unexpected registered gc root policy mode for entry ${entry}: got=${registered} expected=${expected}`,
+    );
+  }
 }
 
 function assertGcRootPolicyModePublished(entryIndexValue, label) {
@@ -187,11 +251,21 @@ function assertGcRootPolicyModePublished(entryIndexValue, label) {
     `${label}: unexpected registered gc root policy mode for entry ${entry}: got=${registered} expected=${expected}`,
   );
   const active = kernelExports.wasm_get_gc_root_policy_mode() >>> 0;
-  assert(
-    active === expected,
-    `${label}: unexpected active gc root policy mode: got=${active} expected=${expected}`,
-  );
+  if (expected === GC_ROOT_MODE_RUNTIME_DEFAULT) {
+    assert(
+      active === GC_ROOT_MODE_RUNTIME_DEFAULT,
+      `${label}: unexpected active gc root policy mode for default entry: got=${active} expected=${GC_ROOT_MODE_RUNTIME_DEFAULT}`,
+    );
+  } else {
+    assert(
+      active === GC_ROOT_MODE_RUNTIME_DEFAULT || active === GC_ROOT_MODE_RUNTIME_BOOTSTRAP,
+      `${label}: unexpected active gc root policy mode domain for bootstrap entry: got=${active}`,
+    );
+  }
 }
+
+assertBundleBoundaryMapContract();
+assertAllRegisteredGcRootModes("initial-install");
 
 assert(typeof kernelExports.wasm_test_entry_funcall === "function", "missing wasm_test_entry_funcall export");
 assert(typeof kernelExports.wasm_test_entry_funcall2 === "function", "missing wasm_test_entry_funcall2 export");
@@ -210,6 +284,7 @@ assertGcRootPolicyModePublished(constEntry, "const");
 const symbolEntry = entryIndex("WASM-SMOKE-SYMBOL");
 const symbolResult = kernelExports.wasm_test_entry_funcall(symbolEntry, 0) >>> 0;
 assert(symbolResult !== nilValue, "unexpected symbol result: got NIL");
+assertGcRootPolicyModePublished(symbolEntry, "symbol");
 
 const ffiEntry = entryIndex("WASM-SMOKE-FFI-ADD");
 const ffiResult = kernelExports.wasm_test_entry_funcall2(ffiEntry, 10, 32) >> 2;
@@ -228,71 +303,87 @@ assertGcRootPolicyModePublished(addEntry, "add");
 const subEntry = entryIndex("WASM-SMOKE-SUB");
 const subResult = kernelExports.wasm_test_entry_funcall2(subEntry, 50, 8) >> 2;
 assert(subResult === 42, `unexpected sub result: got=${subResult} expected=42`);
+assertGcRootPolicyModePublished(subEntry, "sub");
 
 const mulEntry = entryIndex("WASM-SMOKE-MUL");
 const mulResult = kernelExports.wasm_test_entry_funcall2(mulEntry, 6, 7) >> 2;
 assert(mulResult === 42, `unexpected mul result: got=${mulResult} expected=42`);
+assertGcRootPolicyModePublished(mulEntry, "mul");
 
 const ashEntry = entryIndex("WASM-SMOKE-ASH");
 const ashLeft = kernelExports.wasm_test_entry_funcall2(ashEntry, 3, 2) >> 2;
 assert(ashLeft === 12, `unexpected ash left result: got=${ashLeft} expected=12`);
+assertGcRootPolicyModePublished(ashEntry, "ash");
 
 const logandEntry = entryIndex("WASM-SMOKE-LOGAND");
 const logandResult = kernelExports.wasm_test_entry_funcall2(logandEntry, 6, 3) >> 2;
 assert(logandResult === (6 & 3), `unexpected logand result: got=${logandResult} expected=${6 & 3}`);
+assertGcRootPolicyModePublished(logandEntry, "logand");
 
 const logiorEntry = entryIndex("WASM-SMOKE-LOGIOR");
 const logiorResult = kernelExports.wasm_test_entry_funcall2(logiorEntry, 6, 3) >> 2;
 assert(logiorResult === (6 | 3), `unexpected logior result: got=${logiorResult} expected=${6 | 3}`);
+assertGcRootPolicyModePublished(logiorEntry, "logior");
 
 const logxorEntry = entryIndex("WASM-SMOKE-LOGXOR");
 const logxorResult = kernelExports.wasm_test_entry_funcall2(logxorEntry, 6, 3) >> 2;
 assert(logxorResult === (6 ^ 3), `unexpected logxor result: got=${logxorResult} expected=${6 ^ 3}`);
+assertGcRootPolicyModePublished(logxorEntry, "logxor");
 
 const lognotEntry = entryIndex("WASM-SMOKE-LOGNOT");
 const lognotResult = kernelExports.wasm_test_entry_funcall1_raw(lognotEntry, fixnum(5)) >> 2;
 assert(lognotResult === ~5, `unexpected lognot result: got=${lognotResult} expected=${~5}`);
+assertGcRootPolicyModePublished(lognotEntry, "lognot");
 
 const negEntry = entryIndex("WASM-SMOKE-NEG");
 const negResult = kernelExports.wasm_test_entry_funcall1_raw(negEntry, fixnum(7)) >> 2;
 assert(negResult === -7, `unexpected neg result: got=${negResult} expected=-7`);
+assertGcRootPolicyModePublished(negEntry, "neg");
 
 const ifEntry = entryIndex("WASM-SMOKE-IF");
 const ifTrue = kernelExports.wasm_test_entry_funcall1_raw(ifEntry, fixnum(1)) >> 2;
 assert(ifTrue === 11, `unexpected if true result: got=${ifTrue} expected=11`);
 const ifFalse = kernelExports.wasm_test_entry_funcall1_raw(ifEntry, nilValue);
 assert(ifFalse === fixnum(22), `unexpected if false result: got=0x${ifFalse.toString(16)} expected=0x${fixnum(22).toString(16)}`);
+assertGcRootPolicyModePublished(ifEntry, "if");
 
 const ifArgEntry = entryIndex("WASM-SMOKE-IF-ARG");
 const ifArgTrue = kernelExports.wasm_test_entry_funcall1_raw(ifArgEntry, fixnum(9));
 assert(ifArgTrue === fixnum(9), `unexpected if-arg true result: got=0x${ifArgTrue.toString(16)} expected=0x${fixnum(9).toString(16)}`);
 const ifArgFalse = kernelExports.wasm_test_entry_funcall1_raw(ifArgEntry, nilValue);
 assert(ifArgFalse === fixnum(17), `unexpected if-arg false result: got=0x${ifArgFalse.toString(16)} expected=0x${fixnum(17).toString(16)}`);
+assertGcRootPolicyModePublished(ifArgEntry, "if-arg");
 
 const identityEntry = entryIndex("WASM-SMOKE-IDENTITY");
 const identResult = kernelExports.wasm_test_entry_funcall1_raw(identityEntry, fixnum(101));
 assert(identResult === fixnum(101), `unexpected identity result: got=0x${identResult.toString(16)} expected=0x${fixnum(101).toString(16)}`);
+assertGcRootPolicyModePublished(identityEntry, "identity");
 
 const identityYEntry = entryIndex("WASM-SMOKE-IDENTITY-Y");
 const identYResult = kernelExports.wasm_test_entry_funcall2(identityYEntry, 7, 42);
 assert(identYResult === fixnum(42), `unexpected identity-y result: got=0x${identYResult.toString(16)} expected=0x${fixnum(42).toString(16)}`);
+assertGcRootPolicyModePublished(identityYEntry, "identity-y");
 
 const blockEntry = entryIndex("WASM-SMOKE-BLOCK");
 const blockTrue = kernelExports.wasm_test_entry_funcall1_raw(blockEntry, fixnum(1)) >> 2;
 assert(blockTrue === 7, `unexpected block true result: got=${blockTrue} expected=7`);
 const blockFalse = kernelExports.wasm_test_entry_funcall1_raw(blockEntry, nilValue) >> 2;
 assert(blockFalse === 9, `unexpected block false result: got=${blockFalse} expected=9`);
+assertGcRootPolicyModePublished(blockEntry, "block");
 
 const tagbodyEntry = entryIndex("WASM-SMOKE-TAGBODY");
 const tagbodyTrue = kernelExports.wasm_test_entry_funcall1_raw(tagbodyEntry, fixnum(1)) >> 2;
 assert(tagbodyTrue === 1, `unexpected tagbody true result: got=${tagbodyTrue} expected=1`);
 const tagbodyFalse = kernelExports.wasm_test_entry_funcall1_raw(tagbodyEntry, nilValue) >> 2;
 assert(tagbodyFalse === 2, `unexpected tagbody false result: got=${tagbodyFalse} expected=2`);
+assertGcRootPolicyModePublished(tagbodyEntry, "tagbody");
 
 // multiple-value-call execution paths are covered by mvcall-smoke.mjs.
 
 await installBundle("reload");
+assertAllRegisteredGcRootModes("reload-install");
 const symbolReload = kernelExports.wasm_test_entry_funcall(symbolEntry, 0) >>> 0;
 assert(symbolReload === symbolResult, "symbol identity changed across reload");
+assertGcRootPolicyModePublished(symbolEntry, "symbol-reload");
 
 console.log("PASS: wasm compiler emission smoke test");

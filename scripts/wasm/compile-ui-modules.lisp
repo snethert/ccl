@@ -10,7 +10,9 @@
 
 (defvar %wasm-compiled-modules% nil)
 (declaim (special %wasm-compiled-modules *wasm2-next-entry-index*
-                  *wasm2-enable-const-pool*))
+                  *wasm2-enable-const-pool*
+                  *wasm2-collect-module-debug*
+                  *wasm2-compiled-modules-debug*))
 
 (defparameter *wasm-ui-function-specs*
   '((:name ccl::wasm-ui-demo
@@ -105,6 +107,15 @@
       (princ (aref bytes i) out)))
   (write-char #\] out))
 
+(defun json-write-string-list (out items)
+  (write-char #\[ out)
+  (loop for item in items
+        for idx from 0
+        do (when (> idx 0)
+             (write-char #\, out))
+           (json-write-string out item))
+  (write-char #\] out))
+
 (defun function-entry-index (fn)
   (let* ((info (%lfun-info fn))
          (entry (and info (getf info 'wasm-entry-index))))
@@ -130,14 +141,18 @@
 (defun compile-ui-functions (&key (reset-modules t))
   (when reset-modules
     (setf %wasm-compiled-modules% nil)
+    (when (boundp '*wasm2-compiled-modules-debug*)
+      (setf *wasm2-compiled-modules-debug* nil))
     (when (boundp '*wasm2-next-entry-index*)
       (setf *wasm2-next-entry-index* 320)))
   (let* ((backend (find-backend :wasm32))
          (*target-ftd* (or (and backend (backend-target-foreign-type-data backend))
                            *target-ftd*)))
     (let ((*wasm2-enable-const-pool* t)
+          (*wasm2-collect-module-debug* t)
           (results nil))
-      (declare (special *wasm2-enable-const-pool*))
+      (declare (special *wasm2-enable-const-pool*
+                        *wasm2-collect-module-debug*))
       (dolist (entry *wasm-ui-function-specs* (nreverse results))
         (destructuring-bind (&key name source form public-name) entry
           (unless name
@@ -192,7 +207,18 @@
     (when (and mode (fixnump mode) (>= mode 0))
       mode)))
 
-(defun write-module-bundle (output-path functions modules)
+(defun module-gc-root-boundary-op-index (debug-entries)
+  (let ((index (make-hash-table :test #'eql)))
+    (dolist (entry debug-entries index)
+      (let* ((entry-index (getf entry :entry-index))
+             (ops (getf entry :gc-root-boundary-ops)))
+        (when (and (fixnump entry-index)
+                   (listp ops)
+                   (every #'stringp ops))
+          (setf (gethash entry-index index) ops))))))
+
+(defun write-module-bundle (output-path functions modules &key debug-entries)
+  (let ((boundary-index (module-gc-root-boundary-op-index debug-entries)))
   (ensure-directories-exist output-path)
   (with-open-file (out output-path
                        :direction :output
@@ -229,6 +255,10 @@
                (when gc-mode
                  (write-string ",\"gcRootPolicyMode\":" out)
                  (princ gc-mode out)))
+             (let ((gc-boundary-ops (gethash (svref entry 2) boundary-index)))
+               (when gc-boundary-ops
+                 (write-string ",\"gcRootBoundaryOps\":" out)
+                 (json-write-string-list out gc-boundary-ops)))
              (write-char #\} out))
     (write-char #\] out)
     (let ((rows nil))
@@ -246,8 +276,23 @@
                  (write-char #\: out)
                  (princ (cdr row) out))
         (write-char #\} out)))
+    (let ((rows nil))
+      (dolist (entry modules)
+        (let ((gc-boundary-ops (gethash (svref entry 2) boundary-index)))
+          (when gc-boundary-ops
+            (push (cons (svref entry 2) gc-boundary-ops) rows))))
+      (setf rows (nreverse rows))
+      (when rows
+        (write-string ",\"gcRootBoundaryOps\":{" out)
+        (loop for row in rows
+              for idx from 0
+              do (when (> idx 0) (write-char #\, out))
+                 (json-write-string out (princ-to-string (car row)))
+                 (write-char #\: out)
+                 (json-write-string-list out (cdr row)))
+        (write-char #\} out)))
     (write-char #\} out)
-    (terpri out)))
+    (terpri out))))
 
 (defun main ()
   (load-wasm-backend)
@@ -255,8 +300,9 @@
          (output (or (cdr (assoc :output argv))
                      (namestring (merge-pathnames "doc/wasm/wasm-ui-modules.json")))))
     (let* ((functions (compile-ui-functions :reset-modules t))
-           (modules (sorted-compiled-modules)))
-      (write-module-bundle output functions modules)
+           (modules (sorted-compiled-modules))
+           (debug-entries (copy-list *wasm2-compiled-modules-debug*)))
+      (write-module-bundle output functions modules :debug-entries debug-entries)
       (format t "Wrote ~d modules to ~a~%" (length modules) output)))
   (finish-output))
 

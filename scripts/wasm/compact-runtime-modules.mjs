@@ -202,6 +202,32 @@ function normalizeGcRootPolicyModes(raw) {
   return out;
 }
 
+function normalizeGcRootBoundaryOpsList(rawOps) {
+  if (!Array.isArray(rawOps)) return [];
+  const out = [];
+  const seen = new Set();
+  for (const op of rawOps) {
+    if (typeof op !== "string") continue;
+    if (op.length === 0 || seen.has(op)) continue;
+    seen.add(op);
+    out.push(op);
+  }
+  return out;
+}
+
+function normalizeGcRootBoundaryOps(raw) {
+  const out = new Map();
+  if (!raw || typeof raw !== "object") return out;
+  for (const [key, value] of Object.entries(raw)) {
+    const entryIndex = Number.parseInt(String(key), 10);
+    if (!Number.isFinite(entryIndex) || entryIndex < 0) continue;
+    const ops = normalizeGcRootBoundaryOpsList(value);
+    if (ops.length === 0) continue;
+    out.set(entryIndex >>> 0, ops);
+  }
+  return out;
+}
+
 function defaultIndexPathFromBinary(binaryPath) {
   const parsed = path.parse(binaryPath);
   return path.join(parsed.dir, `${parsed.name}.idx`);
@@ -389,6 +415,7 @@ async function main() {
   const manifestDir = path.dirname(manifestPath);
   const manifest = JSON.parse(await fsp.readFile(manifestPath, "utf8"));
   const gcRootPolicyModes = normalizeGcRootPolicyModes(manifest?.gcRootPolicyModes);
+  const gcRootBoundaryOps = normalizeGcRootBoundaryOps(manifest?.gcRootBoundaryOps);
 
   const inputBinaryPath = normalizeBinaryPath(manifestDir, manifest.binary);
   const modules = readSourceModules(manifest, manifestDir, inputBinaryPath);
@@ -748,6 +775,13 @@ async function main() {
       [...gcRootPolicyModes.entries()]
         .sort((a, b) => ((a[0] >>> 0) - (b[0] >>> 0)))
         .map(([entryIndex, mode]) => [String(entryIndex >>> 0), mode >>> 0]),
+    );
+  }
+  if (gcRootBoundaryOps.size > 0) {
+    outManifest.gcRootBoundaryOps = Object.fromEntries(
+      [...gcRootBoundaryOps.entries()]
+        .sort((a, b) => ((a[0] >>> 0) - (b[0] >>> 0)))
+        .map(([entryIndex, ops]) => [String(entryIndex >>> 0), ops]),
     );
   }
 

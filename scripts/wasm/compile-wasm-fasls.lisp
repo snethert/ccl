@@ -248,6 +248,16 @@
     (when (and mode (fixnump mode) (>= mode 0))
       mode)))
 
+(defun module-gc-root-boundary-op-index (debug-entries)
+  (let ((index (make-hash-table :test #'eql)))
+    (dolist (entry debug-entries index)
+      (let* ((entry-index (getf entry :entry-index))
+             (ops (getf entry :gc-root-boundary-ops)))
+        (when (and (fixnump entry-index)
+                   (listp ops)
+                   (every #'stringp ops))
+          (setf (gethash entry-index index) ops))))))
+
 (defun json-write-gc-root-policy-modes (out entry-info)
   (let ((rows nil))
     (dolist (info entry-info)
@@ -266,11 +276,31 @@
                (princ (cdr row) out))
       (write-char #\} out))))
 
-(defun write-module-bundle (output-path modules &key functions)
+(defun json-write-gc-root-boundary-ops (out entry-info boundary-index)
+  (let ((rows nil))
+    (dolist (info entry-info)
+      (destructuring-bind (entry _module-offset _module-len _const-offset _const-len _gc-mode) info
+        (declare (ignore _module-offset _module-len _const-offset _const-len _gc-mode))
+        (let ((ops (gethash (svref entry 2) boundary-index)))
+          (when ops
+            (push (cons (svref entry 2) ops) rows)))))
+    (setf rows (nreverse rows))
+    (when rows
+      (write-string ",\"gcRootBoundaryOps\":{" out)
+      (loop for row in rows
+            for idx from 0
+            do (when (> idx 0) (write-char #\, out))
+               (json-write-string out (princ-to-string (car row)))
+               (write-char #\: out)
+               (json-write-string-list out (cdr row)))
+      (write-char #\} out))))
+
+(defun write-module-bundle (output-path modules &key functions debug-entries)
   (let* ((json-path (pathname output-path))
          (bin-path (make-pathname :type "bin" :defaults json-path))
          (bin-name (file-namestring bin-path))
          (const-pool-index (make-hash-table :test #'equal))
+         (boundary-index (module-gc-root-boundary-op-index debug-entries))
          (entries nil)
          (offset 0)
          (raw-const-bytes 0)
@@ -354,9 +384,14 @@
                    (when gc-mode
                      (write-string ",\"gcRootPolicyMode\":" out)
                      (princ gc-mode out)))
+                 (let ((gc-boundary-ops (gethash (svref entry 2) boundary-index)))
+                   (when gc-boundary-ops
+                     (write-string ",\"gcRootBoundaryOps\":" out)
+                     (json-write-string-list out gc-boundary-ops)))
                  (write-char #\} out)))
       (write-char #\] out)
       (json-write-gc-root-policy-modes out entries)
+      (json-write-gc-root-boundary-ops out entries boundary-index)
       (write-char #\} out)
       (terpri out))
     (list :raw-const-bytes raw-const-bytes
@@ -408,6 +443,10 @@
                  (when gc-mode
                    (write-string ",\"gcRootPolicyMode\":" out)
                    (princ gc-mode out)))
+               (let ((gc-boundary-ops (getf entry :gc-root-boundary-ops)))
+                 (when gc-boundary-ops
+                   (write-string ",\"gcRootBoundaryOps\":" out)
+                   (json-write-string-list out gc-boundary-ops)))
                (let ((name (getf entry :afunc-name)))
                  (when name
                    (write-string ",\"afuncName\":" out)
@@ -509,7 +548,10 @@
         (when modules-out
           (let* ((modules (sorted-compiled-modules))
                  (functions (module-functions-from-debug *wasm2-compiled-modules-debug*)))
-            (let ((stats (write-module-bundle modules-out modules :functions functions)))
+            (let ((stats (write-module-bundle modules-out
+                                              modules
+                                              :functions functions
+                                              :debug-entries *wasm2-compiled-modules-debug*)))
               (format t "~&Const-pool dedupe: raw=~d unique=~d saved=~d reused=~d~%"
                       (getf stats :raw-const-bytes)
                       (getf stats :unique-const-bytes)

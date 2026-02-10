@@ -3841,13 +3841,17 @@
       ops
       (nthcdr (- len limit) ops))))
 
-(defun wasm2-ir-requires-runtime-default-mode-p (ir)
-  (let ((required nil))
+(defun wasm2-ir-gc-root-boundary-ops (ir)
+  (let ((ops nil))
     (wasm2-ir-walk ir
                    (lambda (ins)
-                     (when (member (car ins) *wasm2-gc-root-default-required-ops* :test #'eq)
-                       (setf required t))))
-    required))
+                     (let ((op (car ins)))
+                       (when (member op *wasm2-gc-root-default-required-ops* :test #'eq)
+                         (pushnew op ops :test #'eq)))))
+    (nreverse ops)))
+
+(defun wasm2-ir-requires-runtime-default-mode-p (ir)
+  (not (null (wasm2-ir-gc-root-boundary-ops ir))))
 
 (defun wasm2-ir-gc-root-policy-mode (ir)
   (if (wasm2-ir-requires-runtime-default-mode-p ir)
@@ -3855,7 +3859,7 @@
     +wasm2-gc-root-mode-runtime-bootstrap+))
 
 (defun wasm2-make-module-debug-info (export-name entry-index module-version
-                                                &key afunc ir gc-root-policy-mode)
+                                                &key afunc ir gc-root-policy-mode gc-root-boundary-ops)
   (let* ((name (and afunc (afunc-name afunc)))
          (ir-len (and ir (length ir)))
          (tail (and ir (wasm2-ir-tail-ops ir 48)))
@@ -3865,6 +3869,8 @@
           :entry-index entry-index
           :module-version module-version
           :gc-root-policy-mode gc-root-policy-mode
+          :gc-root-boundary-ops (and gc-root-boundary-ops
+                                     (mapcar #'symbol-name gc-root-boundary-ops))
           :afunc-name (and name (prin1-to-string name))
           :ir-len ir-len
           :if-count (and ir (wasm2-ir-count-op ir :if))
@@ -7172,6 +7178,10 @@
              (entry-index (or prealloc-entry (wasm2-allocate-entry-index)))
              (export-name (format nil "ccl_generic_entry_~d" entry-index))
              (spillable-locals (nreverse *wasm2-spillable-locals*))
+             (gc-root-boundary-ops (wasm2-ir-gc-root-boundary-ops ir))
+             (gc-root-policy-mode (if gc-root-boundary-ops
+                                    +wasm2-gc-root-mode-runtime-default+
+                                    +wasm2-gc-root-mode-runtime-bootstrap+))
              (const-pool-bytes (and const-pool-entries
                                     (wasm2-const-pool-bytes const-pool-entries)))
              (module-bytes (wasm2-generic-module-bytes ir export-name
@@ -7183,14 +7193,16 @@
                                                             :afunc afunc
                                                             :ir ir
                                                             :gc-root-policy-mode
-                                                            (wasm2-ir-gc-root-policy-mode ir)))))
+                                                            gc-root-policy-mode
+                                                            :gc-root-boundary-ops
+                                                            gc-root-boundary-ops))))
         (wasm2-register-compiled-module module-bytes
                                         export-name
                                         entry-index
                                         1
                                         const-pool-bytes
                                         debug-info
-                                        (wasm2-ir-gc-root-policy-mode ir))
+                                        gc-root-policy-mode)
         (let ((info (list* 'wasm-module-bytes module-bytes
                            'wasm-module-export export-name
                            'wasm-module-version 1

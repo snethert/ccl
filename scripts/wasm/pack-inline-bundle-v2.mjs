@@ -91,6 +91,32 @@ function normalizeGcRootPolicyModes(raw) {
   return out;
 }
 
+function normalizeGcRootBoundaryOpsList(rawOps) {
+  if (!Array.isArray(rawOps)) return [];
+  const out = [];
+  const seen = new Set();
+  for (const op of rawOps) {
+    if (typeof op !== "string") continue;
+    if (op.length === 0 || seen.has(op)) continue;
+    seen.add(op);
+    out.push(op);
+  }
+  return out;
+}
+
+function normalizeGcRootBoundaryOps(raw) {
+  const out = new Map();
+  if (!raw || typeof raw !== "object") return out;
+  for (const [key, value] of Object.entries(raw)) {
+    const entryIndex = Number.parseInt(String(key), 10);
+    if (!Number.isFinite(entryIndex) || entryIndex < 0) continue;
+    const ops = normalizeGcRootBoundaryOpsList(value);
+    if (ops.length === 0) continue;
+    out.set(entryIndex >>> 0, ops);
+  }
+  return out;
+}
+
 function readSpan(fd, offset, length, fieldName) {
   const size = length >>> 0;
   const start = offset >>> 0;
@@ -157,6 +183,7 @@ async function main() {
   const outConstPools = [];
   const constPoolIdBySig = new Map();
   const gcRootPolicyModes = normalizeGcRootPolicyModes(manifest?.gcRootPolicyModes);
+  const gcRootBoundaryOps = normalizeGcRootBoundaryOps(manifest?.gcRootBoundaryOps);
   let offset = 0;
   let inputBinaryFd = null;
 
@@ -216,6 +243,10 @@ async function main() {
         : gcRootPolicyModes.get(entryIndex);
       if (gcMode != null) {
         gcRootPolicyModes.set(entryIndex, gcMode >>> 0);
+      }
+      const boundaryOps = normalizeGcRootBoundaryOpsList(entry?.gcRootBoundaryOps);
+      if (boundaryOps.length > 0) {
+        gcRootBoundaryOps.set(entryIndex, boundaryOps);
       }
 
       const moduleRecord = {
@@ -292,6 +323,13 @@ async function main() {
       [...gcRootPolicyModes.entries()]
         .sort((a, b) => ((a[0] >>> 0) - (b[0] >>> 0)))
         .map(([entryIndex, mode]) => [String(entryIndex >>> 0), mode >>> 0]),
+    );
+  }
+  if (gcRootBoundaryOps.size > 0) {
+    outManifest.gcRootBoundaryOps = Object.fromEntries(
+      [...gcRootBoundaryOps.entries()]
+        .sort((a, b) => ((a[0] >>> 0) - (b[0] >>> 0)))
+        .map(([entryIndex, ops]) => [String(entryIndex >>> 0), ops]),
     );
   }
 
