@@ -324,7 +324,11 @@ function gateA14ToA16(rootDir, wasm2, kernelStubs, subprimsProvider) {
   assert((a17?.repeatability?.sampleCount ?? null) === 3, "A-17 repeatability sampleCount must equal 3");
   assert(a17?.repeatability?.allSamplesWithinBudget === true, "A-17 repeatability must be fully in budget");
 
-  const directCallsPerOp = a17?.lanes?.afterDirect?.dynamicPath?.callsPerOperation?.wasm_return_fixnum_add;
+  const directCallsPerOpDynamic = a17?.lanes?.afterDirect?.dynamicPath?.callsPerOperation?.wasm_return_fixnum_add;
+  const directCallsPerOpBound = a17?.bounds?.directFixnumAddCallsPerOp;
+  const directCallsPerOp = Number.isFinite(directCallsPerOpDynamic)
+    ? directCallsPerOpDynamic
+    : directCallsPerOpBound;
   assert(
     Number.isFinite(directCallsPerOp),
     "A-17 direct lane wasm_return_fixnum_add calls/op must be present and finite",

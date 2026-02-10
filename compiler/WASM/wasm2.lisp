@@ -301,8 +301,7 @@
     (wasm2-emit-call-subprim subprim)
     (wasm2-emit :arg0)
     (when (wasm2-returning-p xfer)
-      (wasm2-emit :set-arg-z)
-      (wasm2-emit :set-nargs 1)
+      (wasm2-emit :return-constant)
       (wasm2-emit :return))))
 
 (defun wasm2-emit-compat-boundary-subprim-unary-call (seg xfer compat-key x)
@@ -312,8 +311,7 @@
     (wasm2-emit-call-subprim subprim)
     (wasm2-emit :arg0)
     (when (wasm2-returning-p xfer)
-      (wasm2-emit :set-arg-z)
-      (wasm2-emit :set-nargs 1)
+      (wasm2-emit :return-constant)
       (wasm2-emit :return))))
 
 (defwasm2 wasm2-div2 div2 (seg vreg xfer x y)

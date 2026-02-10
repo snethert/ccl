@@ -1,6 +1,6 @@
 # BPL-10 - WASM Machine Implementation (Subprims, L1 GC, Compiler)
 
-Status: in_progress  
+Status: in_progress (`B10C-01A-01`..`B10C-01A-16` hardening locked; `B10C-01A-19` parked)  
 Priority: P0  
 Owner: Compiler/backend migration track  
 Last Updated: 2026-02-10  
@@ -131,11 +131,11 @@ Out of scope:
 ## Immediate Next Step
 
 - Action: keep `B10C-01A-19` parked and treat `B10C-01A-01`..`B10C-01A-16` hardening as a non-bypass gate on every checkpoint commit before any new object-lane promotion.
-- `1.` run `node scripts/wasm/b10c-01a-hardening-gate.mjs` as a blocking gate: `A-01`..`A-08` ARM-decoupling invariants, `A-02`/`A-03` lane+metric invariants, `A-09`..`A-13` direct-lane/fallback invariants, parked `A-19` misc-lane static baselines, and `A-14`..`A-16` evidence invariants must all pass.
-- `2.` refresh and retain both baseline evidence artifacts on each checkpoint cycle: `A-17` repeatability (`--perf-samples 3 --perf-budget-delta-ns 0`, direct helper-call bound `--perf-max-direct-helper-calls-per-op 0`, `wasm_return_fixnum_add` direct-lane calls/op `0`) and `A-18` misc fallback baseline (`_SPmisc_set` calls/op `<=1`).
-- `3.` keep required validation flow mandatory for this lane: kernel rebuild, strict ARM-retirement audit, root-image manifest refresh, and full smoke.
-- Why now: this keeps promotion sequencing strict (`A-01`..`A-16` gate discipline first, then `A-19+`) and prevents fallback-boundary drift from being reintroduced under optimization pressure.
-- Success evidence: locked hardening-gate pass + refreshed `A-17`/`A-18` artifacts + required validation flow all green in one checkpoint commit.
+- `1.` run `scripts/wasm/b10c-01a-mvp-speed-batch.sh` as the blocking checkpoint command; it enforces `A-01`..`A-16` gate invariants, refreshes `A-17` with required options (`--perf-samples 3 --perf-budget-delta-ns 0 --perf-max-direct-helper-calls-per-op 0`), keeps `A-18` baseline active, and runs the required validation sequence in-order.
+- `2.` preserve `A-17` helper elimination and bound on every checkpoint (`wasm_return_fixnum_add` direct-lane calls/op `0`, bound `<=0`) and keep `A-18` fallback bounded (`_SPmisc_set` calls/op `<=1`).
+- `3.` keep `A-19` parked until the same one-shot batch evidence remains stable across the next checkpoint commit.
+- Why now: this preserves strict promotion order (`A-01`..`A-16` gate discipline first, then `A-19+`) while preventing compatibility-lane drift under perf pressure.
+- Success evidence: latest one-shot batch remains green with `A-17` delta `-5.347 ns/op` (`-9.833%`), `wasm_return_fixnum_add` calls/op `1 -> 0`, strict audit `total_hits=0`, and full smoke pass.
 
 ## Wave A Progress (B10S-01)
 
