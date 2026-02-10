@@ -278,9 +278,22 @@
       (wasm2-emit :fixnum-mul)))
   nil)
 
-(defwasm2 wasm2-div2 div2 (seg vreg xfer x y)
-  (declare (ignore vreg))
-  (let* ((subprim (wasm2-subprim-fixnum '.SPbuiltin-div)))
+(defparameter *wasm2-compat-boundary-subprim-map*
+  '((:builtin-div . .SPbuiltin-div)
+    (:builtin-negate . .SPbuiltin-negate)
+    (:builtin-ash . .SPbuiltin-ash)))
+
+(defparameter *wasm2-compat-boundary-subprim-symbols*
+  (mapcar #'cdr *wasm2-compat-boundary-subprim-map*))
+
+(defun wasm2-compat-boundary-subprim-symbol (compat-key)
+  (let* ((entry (assoc compat-key *wasm2-compat-boundary-subprim-map* :test #'eq)))
+    (if entry
+      (cdr entry)
+      (error "WASM2: unknown compat-boundary subprim key ~s" compat-key))))
+
+(defun wasm2-emit-compat-boundary-subprim-binary-call (seg xfer compat-key x y)
+  (let* ((subprim (wasm2-compat-boundary-subprim-fixnum compat-key)))
     (wasm2-form seg nil nil x)
     (wasm2-form seg nil nil y)
     (wasm2-emit :set-arg1)
@@ -290,20 +303,27 @@
     (when (wasm2-returning-p xfer)
       (wasm2-emit :set-arg-z)
       (wasm2-emit :set-nargs 1)
-      (wasm2-emit :return)))
-  nil)
+      (wasm2-emit :return))))
 
-(defwasm2 wasm2-minus1 minus1 (seg vreg xfer form)
-  (declare (ignore vreg))
-  (let* ((subprim (wasm2-subprim-fixnum '.SPbuiltin-negate)))
-    (wasm2-form seg nil nil form)
+(defun wasm2-emit-compat-boundary-subprim-unary-call (seg xfer compat-key x)
+  (let* ((subprim (wasm2-compat-boundary-subprim-fixnum compat-key)))
+    (wasm2-form seg nil nil x)
     (wasm2-emit :set-arg0)
     (wasm2-emit-call-subprim subprim)
     (wasm2-emit :arg0)
     (when (wasm2-returning-p xfer)
       (wasm2-emit :set-arg-z)
       (wasm2-emit :set-nargs 1)
-      (wasm2-emit :return)))
+      (wasm2-emit :return))))
+
+(defwasm2 wasm2-div2 div2 (seg vreg xfer x y)
+  (declare (ignore vreg))
+  (wasm2-emit-compat-boundary-subprim-binary-call seg xfer :builtin-div x y)
+  nil)
+
+(defwasm2 wasm2-minus1 minus1 (seg vreg xfer form)
+  (declare (ignore vreg))
+  (wasm2-emit-compat-boundary-subprim-unary-call seg xfer :builtin-negate form)
   nil)
 
 (defwasm2 wasm2-fixnum-ash fixnum-ash (seg vreg xfer x y)
@@ -320,17 +340,7 @@
 
 (defwasm2 wasm2-ash ash (seg vreg xfer x y)
   (declare (ignore vreg))
-  (let* ((subprim (wasm2-subprim-fixnum '.SPbuiltin-ash)))
-    (wasm2-form seg nil nil x)
-    (wasm2-form seg nil nil y)
-    (wasm2-emit :set-arg1)
-    (wasm2-emit :set-arg0)
-    (wasm2-emit-call-subprim subprim)
-    (wasm2-emit :arg0)
-    (when (wasm2-returning-p xfer)
-      (wasm2-emit :set-arg-z)
-      (wasm2-emit :set-nargs 1)
-      (wasm2-emit :return)))
+  (wasm2-emit-compat-boundary-subprim-binary-call seg xfer :builtin-ash x y)
   nil)
 
 (defwasm2 wasm2-%iasr %iasr (seg vreg xfer form1 form2)
@@ -3989,8 +3999,14 @@
     (when idx
       (+ +wasm2-closure-cells-base+ idx))))
 
-(defun wasm2-subprim-fixnum (name)
+(defun wasm2-subprim-fixnum (name &optional allow-compat-boundary)
+  (when (and (not allow-compat-boundary)
+             (member name *wasm2-compat-boundary-subprim-symbols* :test #'eq))
+    (error "WASM2: compat-boundary subprim ~s requires explicit boundary key" name))
   (wasm2-box-fixnum (subprim-name->offset name)))
+
+(defun wasm2-compat-boundary-subprim-fixnum (compat-key)
+  (wasm2-subprim-fixnum (wasm2-compat-boundary-subprim-symbol compat-key) t))
 
 (defun wasm2-emit-closed-var-cell (var)
   (let* ((slot (wasm2-closed-var-slot var))

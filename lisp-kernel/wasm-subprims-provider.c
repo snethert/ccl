@@ -514,6 +514,16 @@ wasm_call_builtin(TCR *tcr, signed_natural index, signed_natural nargs_count)
   wasm_call_lisp_function(tcr, fn);
 }
 
+/*
+ * Compatibility-boundary math builtins.
+ * These should be entered only from explicit compiler fallback edges.
+ */
+static void
+wasm_call_compat_math_builtin(TCR *tcr, signed_natural index, signed_natural nargs_count)
+{
+  wasm_call_builtin(tcr, index, nargs_count);
+}
+
 static LispObj
 wasm_alloc_cons_or_trap(TCR *tcr, LispObj car_value, LispObj cdr_value)
 {
@@ -3215,7 +3225,7 @@ _SPbuiltin_div(void)
     wasm_subprims_trap();
   }
 
-  wasm_call_builtin(tcr, WASM_BUILTIN_DIV, 2);
+  wasm_call_compat_math_builtin(tcr, WASM_BUILTIN_DIV, 2);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPbuiltin_eq")))
@@ -3513,7 +3523,7 @@ _SPbuiltin_ash(void)
     }
 
     if (shift > 32) {
-      wasm_call_builtin(tcr, WASM_BUILTIN_ASH, 2);
+      wasm_call_compat_math_builtin(tcr, WASM_BUILTIN_ASH, 2);
       return;
     }
 
@@ -3523,7 +3533,7 @@ _SPbuiltin_ash(void)
     return;
   }
 
-  wasm_call_builtin(tcr, WASM_BUILTIN_ASH, 2);
+  wasm_call_compat_math_builtin(tcr, WASM_BUILTIN_ASH, 2);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPbuiltin_negate")))
@@ -3543,7 +3553,7 @@ _SPbuiltin_negate(void)
     return;
   }
 
-  wasm_call_builtin(tcr, WASM_BUILTIN_NEGATE, 1);
+  wasm_call_compat_math_builtin(tcr, WASM_BUILTIN_NEGATE, 1);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPbuiltin_logxor")))
