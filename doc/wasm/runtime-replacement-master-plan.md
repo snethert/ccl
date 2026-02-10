@@ -102,7 +102,7 @@ When resuming work from scratch:
 
 | Ticket | Status | Priority | Subplan | Last Updated | Notes |
 | --- | --- | --- | --- | --- | --- |
-| RPL-00 | in_progress | P0 | `doc/wasm/tickets/RPL-00-governance-and-baseline-freeze.md` | 2026-02-10 | Thirty-ninth downstream update cycle is now complete through `RPL-06` Step 3 run-v1 closure evidence (`rpl06-20260210-054023Z-50d752af`) while preserving backend Step 3 run-v2 evidence (`bpl09-20260210-040314Z-2084077e`) and unified `X-08` closure review (`x08-closure-20260210-040400Z-2084077e`) as immutable inputs. |
+| RPL-00 | in_progress | P0 | `doc/wasm/tickets/RPL-00-governance-and-baseline-freeze.md` | 2026-02-10 | Fortieth downstream update cycle is now complete as additive-only maintenance over closed `X-08` and `RPL-06` artifacts, preserving runtime/backend closure evidence (`rpl06-20260210-054023Z-50d752af`, `bpl09-20260210-040314Z-2084077e`, `x08-closure-20260210-040400Z-2084077e`) without drift. |
 | RPL-01 | done | P0 | `doc/wasm/tickets/RPL-01-secure-runtime-gating.md` | 2026-02-10 | Contradiction follow-through queue tasks `RPL01-CF-01`..`RPL01-CF-15` are complete (`C-01`..`C-14` closed + closure sync published), `RPL01-IG-01`/`RPL01-IG-02` are complete, and browser-lane startup-gate execution evidence is now captured with deterministic `test:browser` pass output. |
 | RPL-02 | done | P0 | `doc/wasm/tickets/RPL-02-worker-topology-and-thread-bootstrap.md` | 2026-02-09 | Step 3 mapping output is complete (`X03M-01`..`X03M-05`) with explicit BPL-03 `B3*` consumption coverage; dependency row `X-02` is now `done`. |
 | RPL-03 | done | P0 | `doc/wasm/tickets/RPL-03-shared-memory-ipc-core.md` | 2026-02-09 | Step 3 rerun evidence is now committed at `doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/` with `ipc_conformance_summary_v1.status=pass`, `x03_clear_ready=true`, and closure of `IPCGAP-01`..`IPCGAP-04`; dependency row `X-03` is now `done`. |
@@ -129,7 +129,7 @@ Notes:
 - Baseline architecture and blocker context have been captured from current docs.
 - RPL-00 subplan has been authored and now governs sync/update behavior.
 - Runtime track now has explicit parallel coordination points with backend migration track docs.
-- Thirty-ninth downstream governance cycle is now complete through `RPL-06` Step 3 run-v1 closure evidence (`rpl06-20260210-054023Z-50d752af`) while preserving backend Step 3 run-v2 evidence + unified `X-08` closure review publication and backend BPL-08 Step 3 closure packet rows (`BPL08-CR01`..`BPL08-CR06`) as immutable inputs.
+- Fortieth downstream governance cycle is now complete as additive-only maintenance over immutable `X-08` and `RPL-06` artifacts while preserving backend Step 3 run-v2 evidence + unified `X-08` closure review publication and backend BPL-08 Step 3 closure packet rows (`BPL08-CR01`..`BPL08-CR06`) unchanged.
 
 Next Step Analysis:
 
@@ -491,3 +491,4 @@ Avoid batching multiple unrelated next actions into one update.
 - 2026-02-10: Authored `doc/wasm/tickets/RPL-06-storage-v2-sync-merge.md`, published Step 1 sync/merge contract (`R6S-*`, `R6T-*`, `R6A-*`), advanced `RPL-06` to `in_progress`, and shifted immediate runtime action to `RPL-06` Step 2 lane/validation matrix drafting.
 - 2026-02-10: Published `RPL-06` Step 2 lane/validation matrix (`R6L-*`, `R6V-*`) and terminal schema (`storage_v2_sync_step2_summary_v1`), then shifted immediate runtime action to `RPL-06` Step 3 evidence execution.
 - 2026-02-10: Executed `RPL-06` Step 3 run-v1 (`R6V-01`..`R6V-14`), committed closure evidence bundle (`rpl06-20260210-054023Z-50d752af`) with terminal `storage_v2_sync_step2_summary_v1.status=pass`, advanced `RPL-06` to `done`, and synchronized runtime/governance wording to additive-only closed-baseline maintenance.
+- 2026-02-10: Completed fortieth downstream governance maintenance cycle by verifying additive-only no-drift synchronization across runtime/backend/program docs while preserving immutable `X-08`/`RPL-06` artifact references and frozen closure rows.

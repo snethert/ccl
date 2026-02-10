@@ -43,7 +43,7 @@ Out of scope:
 - Master plan is present at `doc/wasm/runtime-replacement-master-plan.md`.
 - Ticket template and folder sync rules are present under `doc/wasm/tickets/`.
 - Baseline runtime status and artifact-size facts are captured in the master plan snapshot.
-- Thirty-ninth downstream execution cycle is now complete through `RPL-06` Step 3 run-v1 closure evidence (`rpl06-20260210-054023Z-50d752af`) while preserving backend Step 3 run-v2 evidence (`bpl09-20260210-040314Z-2084077e`) plus unified `X-08` closure review (`x08-closure-20260210-040400Z-2084077e`) as immutable inputs.
+- Fortieth downstream execution cycle is now complete as additive-only maintenance over immutable `X-08` and `RPL-06` artifacts while preserving backend Step 3 run-v2 evidence (`bpl09-20260210-040314Z-2084077e`) plus unified `X-08` closure review (`x08-closure-20260210-040400Z-2084077e`) and runtime Step 3 run-v1 evidence (`rpl06-20260210-054023Z-50d752af`) without drift.
 
 ## Immediate Next Step
 
@@ -92,7 +92,7 @@ Out of scope:
 
 - Status: done
 - Notes:
-  - Thirty-nine downstream ticket cycles have now been completed using the required sync process.
+  - Forty downstream ticket cycles have now been completed using the required sync process.
   - Unified closure reviews for `X-07` and `X-08` are synchronized across runtime/backend planning docs while dependency rows `X-04`, `X-05`, `X-06`, `X-07`, and `X-08` are `done`.
 - Next:
   - Maintain governance as additive-only sync discipline for subsequent runtime/backend ticket cycles.
@@ -170,3 +170,4 @@ Out of scope:
 - 2026-02-10: Completed `RPL01-IG-02` browser-lane closure and published `RPL-06` Step 1 sync/merge contract (`R6S-*`, `R6T-*`, `R6A-*`); immediate governance action now advances to `RPL-06` Step 2 lane/validation matrix drafting while preserving immutable `X-08` artifacts.
 - 2026-02-10: Published `RPL-06` Step 2 lane/validation matrix (`R6L-*`, `R6V-*`) and terminal schema `storage_v2_sync_step2_summary_v1`; immediate governance action now advances to `RPL-06` Step 3 evidence execution while preserving immutable `X-08` artifacts.
 - 2026-02-10: Thirty-ninth downstream governance cycle completed through `RPL-06` Step 3 run-v1 closure evidence (`rpl06-20260210-054023Z-50d752af`) with synchronized runtime/backend governance wording and immutable `X-08` artifact preservation.
+- 2026-02-10: Fortieth downstream governance cycle completed as additive-only maintenance by validating no drift across immutable `X-08`/`RPL-06` artifacts and synchronized runtime/backend/program governance wording.
