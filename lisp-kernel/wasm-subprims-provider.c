@@ -843,6 +843,33 @@ wasm_fixnum_fit_u32(uint32_t val)
   return val <= max_fixnum;
 }
 
+static inline int64_t
+wasm_fixnum_min_i64(void)
+{
+  return -(1LL << (nbits_in_word - fixnum_shift - 1));
+}
+
+static inline int64_t
+wasm_fixnum_max_i64(void)
+{
+  return (1LL << (nbits_in_word - fixnum_shift - 1)) - 1;
+}
+
+static inline int
+wasm_fixnum_fits_i64(int64_t value)
+{
+  return (value >= wasm_fixnum_min_i64()) && (value <= wasm_fixnum_max_i64());
+}
+
+static inline LispObj
+wasm_box_i64_prefer_fixnum(TCR *tcr, int64_t value)
+{
+  if (wasm_fixnum_fits_i64(value)) {
+    return box_fixnum((signed_natural)value);
+  }
+  return wasm_box_signed_64(tcr, value);
+}
+
 static LispObj
 wasm_alloc_bignum_or_trap(TCR *tcr, signed_natural digits, uint32_t **data_out)
 {
@@ -3230,7 +3257,7 @@ _SPbuiltin_plus(void)
   LispObj b = wasm_reg(tcr, arg_y);
   if (tag_of(a) == tag_fixnum && tag_of(b) == tag_fixnum) {
     int64_t sum = (int64_t)unbox_fixnum(a) + (int64_t)unbox_fixnum(b);
-    wasm_set_reg(tcr, arg_z, wasm_box_signed_64(tcr, sum));
+    wasm_set_reg(tcr, arg_z, wasm_box_i64_prefer_fixnum(tcr, sum));
     wasm_set_reg(tcr, nargs, box_fixnum(1));
     return;
   }
@@ -3251,7 +3278,7 @@ _SPbuiltin_minus(void)
   LispObj b = wasm_reg(tcr, arg_y);
   if (tag_of(a) == tag_fixnum && tag_of(b) == tag_fixnum) {
     int64_t diff = (int64_t)unbox_fixnum(a) - (int64_t)unbox_fixnum(b);
-    wasm_set_reg(tcr, arg_z, wasm_box_signed_64(tcr, diff));
+    wasm_set_reg(tcr, arg_z, wasm_box_i64_prefer_fixnum(tcr, diff));
     wasm_set_reg(tcr, nargs, box_fixnum(1));
     return;
   }
@@ -3272,7 +3299,7 @@ _SPbuiltin_times(void)
   LispObj b = wasm_reg(tcr, arg_y);
   if (tag_of(a) == tag_fixnum && tag_of(b) == tag_fixnum) {
     int64_t prod = (int64_t)unbox_fixnum(a) * (int64_t)unbox_fixnum(b);
-    wasm_set_reg(tcr, arg_z, wasm_box_signed_64(tcr, prod));
+    wasm_set_reg(tcr, arg_z, wasm_box_i64_prefer_fixnum(tcr, prod));
     wasm_set_reg(tcr, nargs, box_fixnum(1));
     return;
   }
@@ -3592,7 +3619,7 @@ _SPbuiltin_ash(void)
     }
 
     int64_t result = (int64_t)sval << shift;
-    wasm_set_reg(tcr, arg_z, wasm_box_signed_64(tcr, result));
+    wasm_set_reg(tcr, arg_z, wasm_box_i64_prefer_fixnum(tcr, result));
     wasm_set_reg(tcr, nargs, box_fixnum(1));
     return;
   }
@@ -3612,7 +3639,7 @@ _SPbuiltin_negate(void)
   LispObj value = wasm_reg(tcr, arg_z);
   if (tag_of(value) == tag_fixnum) {
     int64_t result = -(int64_t)unbox_fixnum(value);
-    wasm_set_reg(tcr, arg_z, wasm_box_signed_64(tcr, result));
+    wasm_set_reg(tcr, arg_z, wasm_box_i64_prefer_fixnum(tcr, result));
     wasm_set_reg(tcr, nargs, box_fixnum(1));
     return;
   }
