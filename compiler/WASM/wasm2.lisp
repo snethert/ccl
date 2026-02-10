@@ -5227,7 +5227,9 @@
   (wasm2-emit-local-get-op body x-local)
   (wasm2-emit-local-get-op body y-local)
   (wasm2-push-u8 body #x6a) ; i32.add
-  (wasm2-emit-local-tee-op body result-local)
+  ;; Keep the computed result in a local so overflow checks do not leave an
+  ;; extra live stack value across the result-typed if/else join.
+  (wasm2-emit-local-set-op body result-local)
   (wasm2-emit-local-get-op body x-local)
   (wasm2-emit-local-get-op body result-local)
   (wasm2-push-u8 body #x73) ; i32.xor
@@ -5248,7 +5250,9 @@
   (wasm2-emit-local-get-op body x-local)
   (wasm2-emit-local-get-op body y-local)
   (wasm2-push-u8 body #x6b) ; i32.sub
-  (wasm2-emit-local-tee-op body result-local)
+  ;; Keep the computed result in a local so overflow checks do not leave an
+  ;; extra live stack value across the result-typed if/else join.
+  (wasm2-emit-local-set-op body result-local)
   (wasm2-emit-local-get-op body x-local)
   (wasm2-emit-local-get-op body y-local)
   (wasm2-push-u8 body #x73) ; i32.xor
