@@ -4056,33 +4056,69 @@
         (wasm2-emit-call-subprim misc-ref)
         (wasm2-emit :arg0)))))
 
-(defun wasm2-emit-closed-var-set (seg var value-form)
-  (let* ((misc-set (wasm2-subprim-fixnum '.SPmisc-set))
-         (val-temp (wasm2-allocate-temp)))
-    (wasm2-form seg nil nil value-form)
-    (wasm2-emit :local.set val-temp)
+(defun wasm2-emit-misc-set-fallback-local (obj-local slot-fixnum value-local &optional return-value-p)
+  (let* ((misc-set (wasm2-subprim-fixnum '.SPmisc-set)))
     (wasm2-with-spilled-locals
       (lambda ()
-        (wasm2-emit-closed-var-cell var)
-        (wasm2-emit :const (wasm2-box-fixnum 0))
-        (wasm2-emit :local.get val-temp)
+        (wasm2-emit :local.get obj-local)
+        (wasm2-emit :const slot-fixnum)
+        (wasm2-emit :local.get value-local)
         (wasm2-emit :set-arg2)
         (wasm2-emit :set-arg1)
         (wasm2-emit :set-arg0)
         (wasm2-emit-call-subprim misc-set)
-        (wasm2-emit :arg0)))))
+        (when return-value-p
+          (wasm2-emit :arg0))))))
+
+(defun wasm2-emit-misc-slot-set-with-subtag-guard (obj-local slot value-local expected-subtag
+                                                    &optional return-value-p)
+  (let* ((slot-fixnum (wasm2-box-fixnum slot)))
+    (wasm2-emit-misc-subtag-test obj-local expected-subtag)
+    (let* ((then-ir (wasm2-with-ir
+                      (lambda ()
+                        (wasm2-emit :local.get obj-local)
+                        (wasm2-emit-misc-node-slot-address slot)
+                        (wasm2-emit :local.get value-local)
+                        (wasm2-emit :i32-store)
+                        (when return-value-p
+                          (wasm2-emit :local.get value-local)))))
+           (else-ir (wasm2-with-ir
+                      (lambda ()
+                        (wasm2-emit-misc-set-fallback-local obj-local slot-fixnum value-local
+                                                             return-value-p)))))
+      (if return-value-p
+        (wasm2-emit :if then-ir else-ir)
+        (wasm2-emit :if-void then-ir else-ir)))))
+
+(defun wasm2-proven-closure-forward-ref-slot-p (slot)
+  (and (typep slot 'fixnum)
+       (>= slot +wasm2-closure-cells-base+)))
+
+(defun wasm2-emit-closed-var-set (seg var value-form)
+  (let* ((val-temp (wasm2-allocate-temp))
+         (cell-temp (wasm2-allocate-temp))
+         (simple-vector-subtag (nx-lookup-target-uvector-subtag :simple-vector)))
+    (wasm2-form seg nil nil value-form)
+    (wasm2-emit :local.set val-temp)
+    (wasm2-emit-closed-var-cell var)
+    (wasm2-emit :local.set cell-temp)
+    (wasm2-emit-misc-slot-set-with-subtag-guard cell-temp 0 val-temp simple-vector-subtag t)))
 
 (defun wasm2-emit-set-closure-forward-ref (closure-var slot ref-var)
-  (let* ((misc-set (wasm2-subprim-fixnum '.SPmisc-set)))
-    (wasm2-with-spilled-locals
-      (lambda ()
-        (wasm2-emit-var-value closure-var)
-        (wasm2-emit :const (wasm2-box-fixnum slot))
-        (wasm2-emit-closed-var-cell ref-var)
-        (wasm2-emit :set-arg2)
-        (wasm2-emit :set-arg1)
-        (wasm2-emit :set-arg0)
-        (wasm2-emit-call-subprim misc-set)))))
+  (let* ((closure-temp (wasm2-allocate-temp))
+         (ref-temp (wasm2-allocate-temp))
+         (slot-fixnum (and (typep slot 'fixnum)
+                           (wasm2-box-fixnum slot)))
+         (function-subtag (nx-lookup-target-uvector-subtag :function)))
+    (unless slot-fixnum
+      (error "WASM2: unsupported non-fixnum closure forward-ref slot ~s" slot))
+    (wasm2-emit-var-value closure-var)
+    (wasm2-emit :local.set closure-temp)
+    (wasm2-emit-closed-var-cell ref-var)
+    (wasm2-emit :local.set ref-temp)
+    (if (wasm2-proven-closure-forward-ref-slot-p slot)
+      (wasm2-emit-misc-slot-set-with-subtag-guard closure-temp slot ref-temp function-subtag)
+      (wasm2-emit-misc-set-fallback-local closure-temp slot-fixnum ref-temp))))
 
 (defun wasm2-emit-make-closed-var-cell (seg value-form)
   (let* ((val-temp (wasm2-allocate-temp))
