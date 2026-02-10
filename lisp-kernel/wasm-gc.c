@@ -1436,11 +1436,31 @@ calculate_relocation()
   return first ? first : current;
 }
 
+static LispObj
+dnode_marked_bytes_before(uint32_t marked_word, uint32_t bit_index)
+{
+  uint32_t prefix_bits;
+
+  if (bit_index == 0u) {
+    return 0;
+  }
+  if (bit_index >= 32u) {
+    prefix_bits = marked_word;
+  } else {
+    prefix_bits = marked_word & (0xffffffffu << (32u - bit_index));
+  }
+
+  return one_bits((prefix_bits >> 24) & 0xffu) +
+         one_bits((prefix_bits >> 16) & 0xffu) +
+         one_bits((prefix_bits >> 8) & 0xffu) +
+         one_bits(prefix_bits & 0xffu);
+}
+
 LispObj
 dnode_forwarding_address(natural dnode, int tag_n)
 {
   natural pagelet, nbits;
-  unsigned short near_bits;
+  uint32_t marked_word;
   LispObj new;
 
   if (GCDebug) {
@@ -1451,36 +1471,10 @@ dnode_forwarding_address(natural dnode, int tag_n)
 
   pagelet = dnode >> 5;
   nbits = dnode & 0x1f;
-  /* On little-endian ARM, we have to flip the low bit of dnode>>4 to
-     get the near_bits from the appropriate half-word. */
-  near_bits = ((unsigned short *)GCdynamic_markbits)[(dnode>>4)^1];
-
-  if (nbits < 16) {
-    new = GCrelocptr[pagelet] + tag_n;;
-    /* Increment "new" by the count of 1 bits which precede the dnode */
-    if (near_bits == 0xffff) {
-      return (new + (nbits << 3));
-    } else {
-      near_bits &= (0xffff0000 >> nbits);
-      if (nbits > 7) {
-        new += one_bits(near_bits & 0xff);
-      }
-      return (new + (one_bits(near_bits >> 8))); 
-    }
-  } else {
-    new = GCrelocptr[pagelet+1] + tag_n;
-    nbits = 32-nbits;
-
-    if (near_bits == 0xffff) {
-      return (new - (nbits << 3));
-    } else {
-      near_bits &= (1<<nbits)-1;
-      if (nbits > 7) {
-        new -= one_bits(near_bits >> 8);
-      }
-      return (new - one_bits(near_bits & 0xff));
-    }
-  }
+  marked_word = (uint32_t)GCdynamic_markbits[pagelet];
+  new = GCrelocptr[pagelet] + tag_n;
+  new += dnode_marked_bytes_before(marked_word, (uint32_t)nbits);
+  return new;
 }
 
 
