@@ -2,9 +2,9 @@
  * WASM32 misc-set fallback smoke/checkpoint.
  *
  * Validates:
- *  1) Targeted smoke entry keeps correct misc-set semantics for dynamic index lanes.
+ *  1) Targeted smoke entry executes the shared `.SPmisc-set` fallback lane.
  *  2) Optional checkpoint mode captures dynamic calls/op for `_SPmisc_set`
- *     through `wasm_call_subprim_fixnum` so direct-lowering progress is measurable.
+ *     through `wasm_call_subprim_fixnum`.
  */
 
 import fs from "node:fs/promises";
@@ -356,7 +356,7 @@ if (!checkpoint) {
 }
 
 const iterations = readPositiveIntOption(args, "--iterations", 20000);
-const maxMiscSetCallsPerOp = readNumberOption(args, "--max-misc-set-calls-per-op", 0);
+const maxMiscSetCallsPerOp = readNumberOption(args, "--max-misc-set-calls-per-op", 1);
 const outPathOpt = readOption(args, "--checkpoint-out");
 
 const miscSetSubprimIndex = subprimsSymbols.indexOf("_SPmisc_set");
@@ -376,6 +376,7 @@ const dynamic = await collectSubprimDynamicCounts({
   subprimsSymbols,
 });
 
+assert(dynamic.miscSetCalls > 0, "misc-set fallback dynamic counter stayed at zero");
 const withinBound = dynamic.miscSetCallsPerOperation <= (maxMiscSetCallsPerOp + 1e-9);
 assert(
   withinBound,
@@ -410,7 +411,7 @@ const report = {
   },
 };
 
-console.log("CHECKPOINT: B10C-01A-19 misc-set fallback dynamic evidence");
+console.log("CHECKPOINT: B10C-01A-18 misc-set fallback dynamic evidence");
 console.log(
   `  entry ${miscSetEntryName} (#${miscSetEntryIndex}) _SPmisc_set calls/op=` +
   `${report.dynamicPath.miscSetCallsPerOperation} (bound<=${round3(maxMiscSetCallsPerOp)})`,
