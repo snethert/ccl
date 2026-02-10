@@ -27,6 +27,7 @@
 (defvar *wasm2-external-imports* nil)
 (defvar *wasm2-external-import-map* nil)
 (defvar *wasm2-emit-entry-index* nil)
+(defvar *wasm2-fixnum-direct-scratch-base* nil)
 
 (defconstant +wasm2-closure-cells-base+ 3)
 (defconstant +wasm2-gc-root-mode-runtime-default+ 0)
@@ -64,7 +65,7 @@
                   *wasm2-enable-const-pool* *wasm2-const-pool* *wasm2-const-pool-map*
                   *wasm2-generic-imports*
                   *wasm2-external-imports* *wasm2-external-import-map*
-                  *wasm2-emit-entry-index*
+                  *wasm2-emit-entry-index* *wasm2-fixnum-direct-scratch-base*
                   %wasm-compiled-modules%))
 (unless (or (and (boundp '*wasm2-skip-next-nx-defops*)
                  *wasm2-skip-next-nx-defops*)
@@ -5142,10 +5143,164 @@
     (wasm2-emit-generic-ir body else-body (cons if-label label-stack))
     (wasm2-push-u8 body #x0b))) ; end
 
-(defun wasm2-emit-hot-direct-fixnum-binary-op (body op)
-  (declare (ignore body op))
-  ;; B10C-01A-10 fills this direct-lowering lane.
-  nil)
+(defconstant +wasm2-fixnum-direct-scratch-count+ 3)
+
+(defun wasm2-fixnum-direct-scratch-local (offset)
+  (let ((base *wasm2-fixnum-direct-scratch-base*))
+    (unless (and (fixnump base) (>= base 0))
+      (error "WASM2: fixnum direct scratch locals unavailable"))
+    (+ base offset)))
+
+(defun wasm2-emit-local-get-op (body local-index)
+  (wasm2-push-u8 body #x20)
+  (wasm2-emit-uleb body local-index))
+
+(defun wasm2-emit-local-set-op (body local-index)
+  (wasm2-push-u8 body #x21)
+  (wasm2-emit-uleb body local-index))
+
+(defun wasm2-emit-local-tee-op (body local-index)
+  (wasm2-push-u8 body #x22)
+  (wasm2-emit-uleb body local-index))
+
+(defun wasm2-emit-i32-const-op (body value)
+  (wasm2-push-u8 body #x41)
+  (wasm2-emit-sleb32 body (logand value #xffffffff)))
+
+(defun wasm2-emit-i64-const-op (body value)
+  ;; All i64 constants used in direct fixnum lowering are 32-bit range.
+  (wasm2-push-u8 body #x42)
+  (wasm2-emit-sleb32 body value))
+
+(defun wasm2-emit-unboxed-fixnum-local-i32 (body local-index)
+  (wasm2-emit-local-get-op body local-index)
+  (wasm2-emit-i32-const-op body *wasm2-target-fixnum-shift*)
+  (wasm2-push-u8 body #x75)) ; i32.shr_s
+
+(defun wasm2-emit-unboxed-fixnum-local-i64 (body local-index)
+  (wasm2-emit-unboxed-fixnum-local-i32 body local-index)
+  (wasm2-push-u8 body #xac)) ; i64.extend_i32_s
+
+(defun wasm2-emit-fixnum-local-tag-check (body local-index)
+  (let ((mask (1- (ash 1 *wasm2-target-fixnum-shift*))))
+    (wasm2-emit-local-get-op body local-index)
+    (wasm2-emit-i32-const-op body mask)
+    (wasm2-push-u8 body #x71) ; i32.and
+    (wasm2-push-u8 body #x45))) ; i32.eqz
+
+(defun wasm2-emit-hot-direct-fixnum-binary-fallback (body x-local y-local compat-op-key)
+  (wasm2-emit-local-get-op body x-local)
+  (wasm2-emit-local-get-op body y-local)
+  (wasm2-emit-compat-fallback-fixnum-binary-op body compat-op-key))
+
+(defun wasm2-emit-hot-direct-fixnum-add (body x-local y-local result-local compat-op-key)
+  (wasm2-emit-local-get-op body x-local)
+  (wasm2-emit-local-get-op body y-local)
+  (wasm2-push-u8 body #x6a) ; i32.add
+  (wasm2-emit-local-tee-op body result-local)
+  (wasm2-emit-local-get-op body x-local)
+  (wasm2-emit-local-get-op body result-local)
+  (wasm2-push-u8 body #x73) ; i32.xor
+  (wasm2-emit-local-get-op body y-local)
+  (wasm2-emit-local-get-op body result-local)
+  (wasm2-push-u8 body #x73) ; i32.xor
+  (wasm2-push-u8 body #x71) ; i32.and
+  (wasm2-emit-i32-const-op body 0)
+  (wasm2-push-u8 body #x48) ; i32.lt_s
+  (wasm2-push-u8 body #x04) ; if
+  (wasm2-push-u8 body #x7f) ; blocktype i32
+  (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local compat-op-key)
+  (wasm2-push-u8 body #x05) ; else
+  (wasm2-emit-local-get-op body result-local)
+  (wasm2-push-u8 body #x0b)) ; end
+
+(defun wasm2-emit-hot-direct-fixnum-sub (body x-local y-local result-local compat-op-key)
+  (wasm2-emit-local-get-op body x-local)
+  (wasm2-emit-local-get-op body y-local)
+  (wasm2-push-u8 body #x6b) ; i32.sub
+  (wasm2-emit-local-tee-op body result-local)
+  (wasm2-emit-local-get-op body x-local)
+  (wasm2-emit-local-get-op body y-local)
+  (wasm2-push-u8 body #x73) ; i32.xor
+  (wasm2-emit-local-get-op body x-local)
+  (wasm2-emit-local-get-op body result-local)
+  (wasm2-push-u8 body #x73) ; i32.xor
+  (wasm2-push-u8 body #x71) ; i32.and
+  (wasm2-emit-i32-const-op body 0)
+  (wasm2-push-u8 body #x48) ; i32.lt_s
+  (wasm2-push-u8 body #x04) ; if
+  (wasm2-push-u8 body #x7f) ; blocktype i32
+  (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local compat-op-key)
+  (wasm2-push-u8 body #x05) ; else
+  (wasm2-emit-local-get-op body result-local)
+  (wasm2-push-u8 body #x0b)) ; end
+
+(defun wasm2-emit-hot-direct-fixnum-mul (body x-local y-local compat-op-key)
+  (let* ((fixnum-bits (1- (- *wasm2-target-bits-in-word* *wasm2-target-fixnum-shift*)))
+         (min-fixnum (ash -1 fixnum-bits))
+         (max-fixnum (1- (ash 1 fixnum-bits))))
+    (wasm2-emit-unboxed-fixnum-local-i64 body x-local)
+    (wasm2-emit-unboxed-fixnum-local-i64 body y-local)
+    (wasm2-push-u8 body #x7e) ; i64.mul
+    (wasm2-emit-i64-const-op body min-fixnum)
+    (wasm2-push-u8 body #x53) ; i64.lt_s
+    (wasm2-emit-unboxed-fixnum-local-i64 body x-local)
+    (wasm2-emit-unboxed-fixnum-local-i64 body y-local)
+    (wasm2-push-u8 body #x7e) ; i64.mul
+    (wasm2-emit-i64-const-op body max-fixnum)
+    (wasm2-push-u8 body #x55) ; i64.gt_s
+    (wasm2-push-u8 body #x72) ; i32.or
+    (wasm2-push-u8 body #x04) ; if
+    (wasm2-push-u8 body #x7f) ; blocktype i32
+    (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local compat-op-key)
+    (wasm2-push-u8 body #x05) ; else
+    (wasm2-emit-unboxed-fixnum-local-i64 body x-local)
+    (wasm2-emit-unboxed-fixnum-local-i64 body y-local)
+    (wasm2-push-u8 body #x7e) ; i64.mul
+    (wasm2-emit-i64-const-op body *wasm2-target-fixnum-shift*)
+    (wasm2-push-u8 body #x86) ; i64.shl
+    (wasm2-push-u8 body #xa7) ; i32.wrap_i64
+    (wasm2-push-u8 body #x0b))) ; end
+
+(defun wasm2-emit-hot-direct-fixnum-binary-op (body op compat-op-key)
+  (unless (member op '(:fixnum-add :fixnum-sub :fixnum-mul
+                       :fixnum-logand :fixnum-logior :fixnum-logxor))
+    (return-from wasm2-emit-hot-direct-fixnum-binary-op nil))
+  (let* ((x-local (wasm2-fixnum-direct-scratch-local 0))
+         (y-local (wasm2-fixnum-direct-scratch-local 1))
+         (result-local (wasm2-fixnum-direct-scratch-local 2)))
+    ;; Preserve operands so both direct and explicit fallback edges can consume
+    ;; the original boxed values.
+    (wasm2-emit-local-set-op body y-local)
+    (wasm2-emit-local-set-op body x-local)
+    (wasm2-emit-fixnum-local-tag-check body x-local)
+    (wasm2-emit-fixnum-local-tag-check body y-local)
+    (wasm2-push-u8 body #x71) ; i32.and
+    (wasm2-push-u8 body #x04) ; if
+    (wasm2-push-u8 body #x7f) ; blocktype i32
+    (case op
+      (:fixnum-add
+       (wasm2-emit-hot-direct-fixnum-add body x-local y-local result-local compat-op-key))
+      (:fixnum-sub
+       (wasm2-emit-hot-direct-fixnum-sub body x-local y-local result-local compat-op-key))
+      (:fixnum-mul
+       (wasm2-emit-hot-direct-fixnum-mul body x-local y-local compat-op-key))
+      (:fixnum-logand
+       (wasm2-emit-local-get-op body x-local)
+       (wasm2-emit-local-get-op body y-local)
+       (wasm2-push-u8 body #x71)) ; i32.and
+      (:fixnum-logior
+       (wasm2-emit-local-get-op body x-local)
+       (wasm2-emit-local-get-op body y-local)
+       (wasm2-push-u8 body #x72)) ; i32.or
+      (:fixnum-logxor
+       (wasm2-emit-local-get-op body x-local)
+       (wasm2-emit-local-get-op body y-local)
+       (wasm2-push-u8 body #x73))) ; i32.xor
+    (wasm2-push-u8 body #x05) ; else
+    (wasm2-emit-hot-direct-fixnum-binary-fallback body x-local y-local compat-op-key)
+    (wasm2-push-u8 body #x0b)) ; end
+  t)
 
 (defun wasm2-emit-hot-direct-fixnum-unary-op (body op)
   (declare (ignore body op))
@@ -5168,7 +5323,7 @@
   (wasm2-emit-call-index body (wasm2-generic-import-index :get-arg-z)))
 
 (defun wasm2-emit-fixnum-binary-op (body op compat-op-key)
-  (or (wasm2-emit-hot-direct-fixnum-binary-op body op)
+  (or (wasm2-emit-hot-direct-fixnum-binary-op body op compat-op-key)
       (wasm2-emit-compat-fallback-fixnum-binary-op body compat-op-key)))
 
 (defun wasm2-emit-fixnum-unary-op (body op compat-op-key)
@@ -5504,7 +5659,13 @@
          (exports (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
          (code (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
          (external-imports (or *wasm2-external-imports* nil))
-         (local-count (length local-types)))
+         (base-local-count (length local-types))
+         (local-count (+ base-local-count +wasm2-fixnum-direct-scratch-count+))
+         (effective-local-types (make-array local-count)))
+    (dotimes (i base-local-count)
+      (setf (aref effective-local-types i) (aref local-types i)))
+    (dotimes (i +wasm2-fixnum-direct-scratch-count+)
+      (setf (aref effective-local-types (+ base-local-count i)) :i32))
     (wasm2-emit-bytes out '(0 #x61 #x73 #x6d 1 0 0 0))
 
     ;; Types
@@ -5634,17 +5795,18 @@
 
     ;; Code
     (let* ((body (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0)))
-      (wasm2-emit-local-decls body local-types)
+      (wasm2-emit-local-decls body effective-local-types)
       (when (> local-count 0)
         (let* ((nil-value (target-nil-value)))
           (dotimes (i local-count)
-            (when (eql (aref local-types i) :i32)
+            (when (eql (aref effective-local-types i) :i32)
               (wasm2-push-u8 body #x41) ; i32.const
               (wasm2-emit-sleb32 body (logand nil-value #xffffffff))
               (wasm2-push-u8 body #x21) ; local.set
               (wasm2-emit-uleb body i)))))
       (let* ((*wasm2-emit-local-count* local-count)
              (*wasm2-emit-spillable-locals* spillable-locals)
+             (*wasm2-fixnum-direct-scratch-base* base-local-count)
              (*wasm2-emit-entry-index* entry-index))
         (unless (= (wasm2-validate-spill-discipline ir) 0)
           (error "WASM2 spill discipline: unbalanced spill depth at function end"))
