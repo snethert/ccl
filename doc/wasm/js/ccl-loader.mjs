@@ -359,6 +359,22 @@ function parseGcRootPolicyModes(rawMap) {
   return out;
 }
 
+const WASM_ENTRY_CALL_ABI_LEGACY = 0;
+const WASM_ENTRY_CALL_ABI_UNARY_I32 = 1;
+const WASM_ENTRY_CALL_ABI_BINARY_I32 = 2;
+
+function inferEntryCallAbiKind(fn) {
+  if (typeof fn !== "function") return WASM_ENTRY_CALL_ABI_LEGACY;
+  if (fn.length === 1) return WASM_ENTRY_CALL_ABI_UNARY_I32;
+  if (fn.length === 2) return WASM_ENTRY_CALL_ABI_BINARY_I32;
+  return WASM_ENTRY_CALL_ABI_LEGACY;
+}
+
+function registerEntryCallAbi(setEntryCallAbi, entryIndex, fn) {
+  if (typeof setEntryCallAbi !== "function") return;
+  setEntryCallAbi(entryIndex >>> 0, inferEntryCallAbiKind(fn) >>> 0);
+}
+
 function alignUp(value, align) {
   return (value + (align - 1)) & ~(align - 1);
 }
@@ -639,6 +655,9 @@ export async function installCompiledModulesFromBundle({
   const hasPendingThrowProbe = typeof kernelExports.wasm_pending_throw_p === "function";
   const setEntryGcRootPolicyMode = typeof kernelExports.wasm_set_entry_gc_root_policy_mode === "function"
     ? kernelExports.wasm_set_entry_gc_root_policy_mode
+    : null;
+  const setEntryCallAbi = typeof kernelExports.wasm_set_entry_call_abi === "function"
+    ? kernelExports.wasm_set_entry_call_abi
     : null;
 
   let installed = 0;
@@ -926,6 +945,7 @@ export async function installCompiledModulesFromBundle({
         subprimsTable.grow(idx - subprimsTable.length + 1);
       }
       subprimsTable.set(idx, fn);
+      registerEntryCallAbi(setEntryCallAbi, idx, fn);
       installed++;
     } catch (e) {
       failed++;
@@ -990,6 +1010,9 @@ export async function installCompiledModulesFromRegistry({
   const setEntryGcRootPolicyMode = typeof kernelExports.wasm_set_entry_gc_root_policy_mode === "function"
     ? kernelExports.wasm_set_entry_gc_root_policy_mode
     : null;
+  const setEntryCallAbi = typeof kernelExports.wasm_set_entry_call_abi === "function"
+    ? kernelExports.wasm_set_entry_call_abi
+    : null;
 
   let installed = 0;
   for (const entry of entries) {
@@ -1021,6 +1044,7 @@ export async function installCompiledModulesFromRegistry({
       subprimsTable.grow(entry.entryIndex - subprimsTable.length + 1);
     }
     subprimsTable.set(entry.entryIndex, fn);
+    registerEntryCallAbi(setEntryCallAbi, entry.entryIndex, fn);
     installed++;
   }
 
@@ -1071,6 +1095,9 @@ export function installCompiledModulesFromRegistrySync({
   const setEntryGcRootPolicyMode = typeof kernelExports.wasm_set_entry_gc_root_policy_mode === "function"
     ? kernelExports.wasm_set_entry_gc_root_policy_mode
     : null;
+  const setEntryCallAbi = typeof kernelExports.wasm_set_entry_call_abi === "function"
+    ? kernelExports.wasm_set_entry_call_abi
+    : null;
 
   let installed = 0;
   for (const entry of entries) {
@@ -1102,6 +1129,7 @@ export function installCompiledModulesFromRegistrySync({
       subprimsTable.grow(entry.entryIndex - subprimsTable.length + 1);
     }
     subprimsTable.set(entry.entryIndex, fn);
+    registerEntryCallAbi(setEntryCallAbi, entry.entryIndex, fn);
     installed++;
   }
 

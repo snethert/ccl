@@ -226,12 +226,26 @@ wasm_nrs_symbol_lispobj(lispsymbol *sym)
   return ptr_to_lispobj((BytePtr)sym + fulltag_misc);
 }
 
-typedef void (*wasm_lisp_fn)(void);
+typedef void (*wasm_lisp_fn_void)(void);
+typedef LispObj (*wasm_lisp_fn_unary_i32)(LispObj);
+typedef LispObj (*wasm_lisp_fn_binary_i32)(LispObj, LispObj);
 
 static inline void
 wasm_call_entry_index(uint32_t index)
 {
-  ((wasm_lisp_fn)(uintptr_t)index)();
+  ((wasm_lisp_fn_void)(uintptr_t)index)();
+}
+
+static inline LispObj
+wasm_call_entry_index_unary_i32(uint32_t index, LispObj arg0)
+{
+  return ((wasm_lisp_fn_unary_i32)(uintptr_t)index)(arg0);
+}
+
+static inline LispObj
+wasm_call_entry_index_binary_i32(uint32_t index, LispObj arg0, LispObj arg1)
+{
+  return ((wasm_lisp_fn_binary_i32)(uintptr_t)index)(arg0, arg1);
 }
 
 static void
@@ -272,8 +286,43 @@ wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
   {
     uint32_t entry_index = (uint32_t)unbox_fixnum(entry);
     uint32_t mode = wasm_lookup_entry_gc_root_policy_mode(entry_index);
+    uint32_t entry_call_abi = wasm_lookup_entry_call_abi_kind(entry_index);
+    LispObj raw_nargs = tcr->wasm_gprs[nargs];
+    signed_natural nargs_count =
+      (tag_of(raw_nargs) == tag_fixnum) ? unbox_fixnum(raw_nargs) : 0;
     wasm_publish_gc_root_policy_mode(mode);
-    wasm_call_entry_index(entry_index);
+    switch (entry_call_abi) {
+    case WASM_ENTRY_CALL_ABI_UNARY_I32: {
+      LispObj result;
+      if (nargs_count != 1) {
+        __builtin_trap();
+      }
+      result = wasm_call_entry_index_unary_i32(entry_index, tcr->wasm_gprs[arg_z]);
+      if (!tcr->wasm_pending_throw) {
+        tcr->wasm_gprs[arg_z] = result;
+        tcr->wasm_gprs[nargs] = box_fixnum(1);
+      }
+      break;
+    }
+    case WASM_ENTRY_CALL_ABI_BINARY_I32: {
+      LispObj result;
+      if (nargs_count != 2) {
+        __builtin_trap();
+      }
+      result = wasm_call_entry_index_binary_i32(entry_index,
+                                                tcr->wasm_gprs[arg_z],
+                                                tcr->wasm_gprs[arg_y]);
+      if (!tcr->wasm_pending_throw) {
+        tcr->wasm_gprs[arg_z] = result;
+        tcr->wasm_gprs[nargs] = box_fixnum(1);
+      }
+      break;
+    }
+    case WASM_ENTRY_CALL_ABI_LEGACY:
+    default:
+      wasm_call_entry_index(entry_index);
+      break;
+    }
   }
 }
 
@@ -407,6 +456,28 @@ void
 wasm_clear_entry_gc_root_policy_modes_export(void)
 {
   wasm_clear_entry_gc_root_policy_modes();
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_set_entry_call_abi")))
+uint32_t
+wasm_set_entry_call_abi(uint32_t entry_index, uint32_t kind)
+{
+  wasm_register_entry_call_abi_kind(entry_index, kind);
+  return wasm_lookup_entry_call_abi_kind(entry_index);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_get_entry_call_abi")))
+uint32_t
+wasm_get_entry_call_abi(uint32_t entry_index)
+{
+  return wasm_lookup_entry_call_abi_kind(entry_index);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_clear_entry_call_abi")))
+void
+wasm_clear_entry_call_abi(void)
+{
+  wasm_clear_entry_call_abi_kinds();
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_gc_forwarding_selftest")))
@@ -4901,6 +4972,7 @@ wasm_reset_root_image_runtime_state(void)
 
   wasm_reset_gc_root_policy();
   wasm_clear_entry_gc_root_policy_modes();
+  wasm_clear_entry_call_abi_kinds();
   nrs_WASM_COMPILED_MODULES.vcell = lisp_nil;
   nrs_WASM_CONST_POOLS.vcell = lisp_nil;
 

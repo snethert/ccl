@@ -126,6 +126,12 @@ enum {
   WASM_GC_ROOT_MODE_HOST_MASK = 2u
 };
 
+enum {
+  WASM_ENTRY_CALL_ABI_LEGACY = 0u,
+  WASM_ENTRY_CALL_ABI_UNARY_I32 = 1u,
+  WASM_ENTRY_CALL_ABI_BINARY_I32 = 2u
+};
+
 void wasm_publish_gc_root_policy(uint32_t policy_mask);
 uint32_t wasm_current_gc_root_policy(void);
 void wasm_reset_gc_root_policy(void);
@@ -135,6 +141,9 @@ void wasm_reset_gc_root_policy_mode(void);
 void wasm_register_entry_gc_root_policy_mode(uint32_t entry_index, uint32_t mode);
 uint32_t wasm_lookup_entry_gc_root_policy_mode(uint32_t entry_index);
 void wasm_clear_entry_gc_root_policy_modes(void);
+void wasm_register_entry_call_abi_kind(uint32_t entry_index, uint32_t kind);
+uint32_t wasm_lookup_entry_call_abi_kind(uint32_t entry_index);
+void wasm_clear_entry_call_abi_kinds(void);
 uint32_t wasm_gc_forwarding_selftest(void);
 uint32_t wasm_cstack_frame_coherence_selftest(void);
 uint32_t wasm_subprim_nonlocal_exit_coherence_selftest(void);

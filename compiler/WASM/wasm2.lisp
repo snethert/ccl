@@ -4000,6 +4000,10 @@
 (defun wasm2-var-closed-p (var)
   (logbitp $vbitclosed (nx-var-bits var)))
 
+(defun wasm2-var-live-p (var)
+  (let ((refs (var-refs var)))
+    (and (integerp refs) (> refs 0))))
+
 (defun wasm2-closed-var-index (var)
   (let* ((vars (afunc-inherited-vars *wasm2-cur-afunc*)))
     (position var vars :test #'eq)))
@@ -4157,7 +4161,8 @@
     (wasm2-with-ir
       (lambda ()
         (dolist (var (afunc-all-vars *wasm2-cur-afunc*))
-          (when (and (not (wasm2-var-closed-p var))
+          (when (and (wasm2-var-live-p var)
+                     (not (wasm2-var-closed-p var))
                      (or (wasm2-arg0-var-name-p var)
                          (wasm2-arg1-var-name-p var)))
             (let* ((idx (wasm2-ensure-local var)))
@@ -5120,6 +5125,59 @@
     (wasm2-push-u8 body #x0f)) ; return
   (wasm2-push-u8 body #x0b)) ; end
 
+(defparameter *wasm2-entry-pending-throw-guard-safe-ops*
+  '(:const :arg0 :arg1 :local.get :local.set :local.tee
+    :get-arg-z :get-arg-y :get-nfn :get-nargs :get-lisp-nil
+    :i32-add :i32-sub :i32-mul :i32-div-s :i32-div-u :i32-rem-s :i32-rem-u
+    :i32-and :i32-or :i32-xor :i32-shl :i32-shr-s :i32-shr-u :i32-rotl :i32-rotr
+    :i32-eq :i32-ne :i32-lt-s :i32-lt-u :i32-gt-s :i32-gt-u :i32-le-s :i32-le-u
+    :i32-ge-s :i32-ge-u :i32-eqz :i32-clz :i32-ctz :i32-popcnt
+    :i32-load :i32-load8-u :i32-load16-u :i32-load8-s :i32-load16-s
+    :f32-const :f64-const :f32-add :f32-sub :f32-mul :f32-div :f32-neg
+    :f64-add :f64-sub :f64-mul :f64-div :f64-neg :f32-convert-i32-s
+    :f64-convert-i32-s :f64-promote-f32 :f32-demote-f64
+    :f32-eq :f32-ne :f32-lt :f32-gt :f32-le :f32-ge
+    :f64-eq :f64-ne :f64-lt :f64-gt :f64-le :f64-ge
+    :select
+    :fixnum-add :fixnum-sub :fixnum-mul :fixnum-ash :fixnum-logand
+    :fixnum-logior :fixnum-logxor :fixnum-lognot :fixnum-neg
+    :set-arg-z :set-arg-y :set-arg-x :set-nargs :set-nfn
+    :return-arg0 :return-arg1
+    :pending-throw-return :pending-throw-branch
+    :return-constant :return
+    :drop :nop :unreachable
+    :br :br-table))
+
+(defun wasm2-ir-requires-entry-pending-throw-guard-p (ir)
+  (labels ((op-requires-guard-p (ins)
+             (let* ((op (car ins))
+                    (args (cdr ins)))
+               (case op
+                 (:if
+                  (destructuring-bind (then-ir else-ir) args
+                    (or (ir-requires-guard-p then-ir)
+                        (ir-requires-guard-p else-ir))))
+                 (:if-void
+                  (destructuring-bind (then-ir else-ir) args
+                    (or (ir-requires-guard-p then-ir)
+                        (ir-requires-guard-p else-ir))))
+                 (:block
+                  (destructuring-bind (_label block-ir) args
+                    (declare (ignore _label))
+                    (ir-requires-guard-p block-ir)))
+                 (:loop
+                  (destructuring-bind (_label loop-ir) args
+                    (declare (ignore _label))
+                    (ir-requires-guard-p loop-ir)))
+                 (t
+                  (not (member op *wasm2-entry-pending-throw-guard-safe-ops*
+                               :test #'eq))))))
+           (ir-requires-guard-p (sub-ir)
+             (dolist (sub-ins sub-ir nil)
+               (when (op-requires-guard-p sub-ins)
+                 (return t)))))
+    (ir-requires-guard-p ir)))
+
 (defun wasm2-emit-generic-if (body then-ir else-ir label-stack)
   (let ((if-label :if))
     (wasm2-emit-call-index body (wasm2-generic-import-index :get-lisp-nil))
@@ -5859,7 +5917,29 @@
         (t
          (error "Unhandled WASM2 IR opcode ~s" op))))))
 
-(defun wasm2-generic-module-bytes (ir export-name local-types &optional spillable-locals entry-index)
+(defconstant +wasm2-entry-call-abi-legacy+ :legacy)
+(defconstant +wasm2-entry-call-abi-unary-i32+ :unary-i32)
+(defconstant +wasm2-entry-call-abi-binary-i32+ :binary-i32)
+
+(defun wasm2-entry-call-abi-param-count (entry-call-abi)
+  (case entry-call-abi
+    (:legacy 0)
+    (:unary-i32 1)
+    (:binary-i32 2)
+    (t
+     (error "WASM2: unknown entry call ABI ~s" entry-call-abi))))
+
+(defun wasm2-entry-call-abi-function-type-index (entry-call-abi)
+  (case entry-call-abi
+    (:legacy +wasm2-type-void-void+)
+    (:unary-i32 +wasm2-type-i32-i32-ret+)
+    (:binary-i32 +wasm2-type-i32-i32+)
+    (t
+     (error "WASM2: unknown entry call ABI ~s" entry-call-abi))))
+
+(defun wasm2-generic-module-bytes (ir export-name local-types
+                                   &optional spillable-locals entry-index
+                                   (entry-call-abi +wasm2-entry-call-abi-legacy+))
   (let* ((out (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
          (types (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
          (imports (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
@@ -5867,9 +5947,13 @@
          (exports (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
          (code (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
          (external-imports (or *wasm2-external-imports* nil))
+         (entry-param-count (wasm2-entry-call-abi-param-count entry-call-abi))
+         (entry-function-type-index (wasm2-entry-call-abi-function-type-index entry-call-abi))
+         (entry-needs-pending-throw-guard (wasm2-ir-requires-entry-pending-throw-guard-p ir))
          (base-local-count (length local-types))
          (local-count (+ base-local-count +wasm2-fixnum-direct-scratch-count+))
-         (effective-local-types (make-array local-count)))
+         (effective-local-types (make-array local-count))
+         (local-base-index (+ entry-param-count base-local-count)))
     (dotimes (i base-local-count)
       (setf (aref effective-local-types i) (aref local-types i)))
     (dotimes (i +wasm2-fixnum-direct-scratch-count+)
@@ -5991,7 +6075,7 @@
 
     ;; Function section
     (wasm2-emit-uleb funcs 1)
-    (wasm2-emit-uleb funcs +wasm2-type-void-void+)
+    (wasm2-emit-uleb funcs entry-function-type-index)
 
     ;; Export
     (let* ((func-index (+ (length *wasm2-generic-imports*)
@@ -6013,14 +6097,15 @@
               (wasm2-push-u8 body #x41) ; i32.const
               (wasm2-emit-sleb32 body (logand nil-value #xffffffff))
               (wasm2-push-u8 body #x21) ; local.set
-              (wasm2-emit-uleb body i)))))
+              (wasm2-emit-uleb body (+ entry-param-count i))))))
       (let* ((*wasm2-emit-local-count* local-count)
              (*wasm2-emit-spillable-locals* spillable-locals)
-             (*wasm2-fixnum-direct-scratch-base* base-local-count)
+             (*wasm2-fixnum-direct-scratch-base* local-base-index)
              (*wasm2-emit-entry-index* entry-index))
         (unless (= (wasm2-validate-spill-discipline ir) 0)
           (error "WASM2 spill discipline: unbalanced spill depth at function end"))
-        (wasm2-emit-pending-throw-guard body)
+        (when entry-needs-pending-throw-guard
+          (wasm2-emit-pending-throw-guard body))
         (wasm2-emit-generic-ir body ir))
       (wasm2-push-u8 body #x0b)
       (wasm2-emit-uleb code 1)
@@ -7088,6 +7173,90 @@
        (eq (caar ir) :return-arg1)
        (eq (caar (cdr ir)) :return)))
 
+(defparameter *wasm2-typed-fixnum-binary-ops*
+  '(:fixnum-add :fixnum-sub :fixnum-mul :fixnum-ash
+    :fixnum-logand :fixnum-logior :fixnum-logxor))
+
+(defparameter *wasm2-typed-fixnum-unary-ops*
+  '(:fixnum-neg :fixnum-lognot))
+
+(defun wasm2-fixnum-binary-returning-op-ir-p (ir)
+  (let ((n (length ir)))
+    (cond
+      ((and (= n 2)
+            (member (caar ir) *wasm2-typed-fixnum-binary-ops* :test #'eq)
+            (eq (car (second ir)) :return))
+       (values (caar ir) t))
+      ((and (= n 5)
+            (eq (caar ir) :arg0)
+            (eq (car (second ir)) :arg1)
+            (member (car (third ir)) *wasm2-typed-fixnum-binary-ops* :test #'eq)
+            (eq (car (fourth ir)) :return-constant)
+            (eq (car (fifth ir)) :return))
+       (values (car (third ir)) t))
+      ((and (= n 6)
+            (eq (caar ir) :arg0)
+            (eq (car (second ir)) :arg1)
+            (member (car (third ir)) *wasm2-typed-fixnum-binary-ops* :test #'eq)
+            (eq (car (fourth ir)) :set-arg-z)
+            (eq (car (fifth ir)) :set-nargs)
+            (eq (car (sixth ir)) :return))
+       (values (car (third ir)) t))
+      (t
+       (values nil nil)))))
+
+(defun wasm2-fixnum-unary-returning-op-ir-p (ir)
+  (let ((n (length ir)))
+    (cond
+      ((and (= n 2)
+            (member (caar ir) *wasm2-typed-fixnum-unary-ops* :test #'eq)
+            (eq (car (second ir)) :return))
+       (values (caar ir) t))
+      ((and (= n 4)
+            (eq (caar ir) :arg0)
+            (member (car (second ir)) *wasm2-typed-fixnum-unary-ops* :test #'eq)
+            (eq (car (third ir)) :return-constant)
+            (eq (car (fourth ir)) :return))
+       (values (car (second ir)) t))
+      ((and (= n 5)
+            (eq (caar ir) :arg0)
+            (member (car (second ir)) *wasm2-typed-fixnum-unary-ops* :test #'eq)
+            (eq (car (third ir)) :set-arg-z)
+            (eq (car (fourth ir)) :set-nargs)
+            (eq (car (fifth ir)) :return))
+       (values (car (second ir)) t))
+      (t
+       (values nil nil)))))
+
+(defun wasm2-typed-entry-call-abi-plan (afunc ir)
+  (let* ((arglist (wasm2-simple-arglist afunc))
+         (arity (length arglist)))
+    (cond
+      ((= arity 2)
+       (multiple-value-bind (op ok) (wasm2-fixnum-binary-returning-op-ir-p ir)
+         (when ok
+           (values +wasm2-entry-call-abi-binary-i32+ op))))
+      ((= arity 1)
+       (multiple-value-bind (op ok) (wasm2-fixnum-unary-returning-op-ir-p ir)
+         (when ok
+           (values +wasm2-entry-call-abi-unary-i32+ op))))
+      (t
+       (values nil nil)))))
+
+(defun wasm2-typed-entry-ir (entry-call-abi op)
+  (case entry-call-abi
+    (:binary-i32
+     (list (list :local.get 0)
+           (list :local.get 1)
+           (list op)
+           (list :return)))
+    (:unary-i32
+     (list (list :local.get 0)
+           (list op)
+           (list :return)))
+    (t
+     nil)))
+
 (defun wasm2-ir-ends-with-return-p (ir)
   (and ir (eq (caar (last ir)) :return)))
 
@@ -7243,12 +7412,19 @@
     (when *wasm2-enable-const-pool*
       (wasm2-reset-const-pool))
     (backend-apply-acode (afunc-acode afunc) nil nil $backend-return)
-    (let* ((ir (nreverse *wasm2-ir*))
+    (let* ((body-ir (nreverse *wasm2-ir*))
+           (specialization-ir body-ir)
            (closed-prologue-ir (wasm2-closed-arg-prologue-ir))
            (arg-prologue-ir (wasm2-arg-prologue-ir))
+           (ir body-ir)
            (const-pool-entries (and *wasm2-enable-const-pool*
                                     (wasm2-const-pool-entries)))
            (prealloc-entry (wasm2-preallocated-entry-index afunc)))
+      (unless (wasm2-ir-ends-with-return-p specialization-ir)
+        (setf specialization-ir
+              (append specialization-ir
+                      (list (cons :return-constant nil)
+                            (cons :return nil)))))
       (when closed-prologue-ir
         (setf ir (append closed-prologue-ir ir)))
       (when arg-prologue-ir
@@ -7260,7 +7436,7 @@
       (setf (afunc-lfun-info afunc)
             (list* 'wasm-ir ir (afunc-lfun-info afunc)))
       (unless prealloc-entry
-        (multiple-value-bind (const-value const-p) (wasm2-const-ir-value ir)
+        (multiple-value-bind (const-value const-p) (wasm2-const-ir-value specialization-ir)
           (when const-p
             (setf (afunc-lfun-info afunc)
                   (list* 'wasm-const-value const-value
@@ -7288,7 +7464,7 @@
             (return-from wasm2-compile afunc)))
         ;; Deliberately avoid hard-mapping simple fixnum IR to fixed compatibility
         ;; entry slots (204..212). Those slots remain bootstrap/compatibility-only.
-      (multiple-value-bind (true-val false-val ok) (wasm2-if-arg0-const-ir-p ir)
+      (multiple-value-bind (true-val false-val ok) (wasm2-if-arg0-const-ir-p specialization-ir)
         (when ok
           (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
             (let* ((module-bytes (wasm2-if-module-bytes true-val false-val)))
@@ -7307,7 +7483,7 @@
             (setf (afunc-argsword afunc) bits)
             (wasm2-set-afunc-lfun afunc +wasm-if-entry-index+ keyvec-slot bits))
           (return-from wasm2-compile afunc)))
-      (multiple-value-bind (else-val ok) (wasm2-if-arg0-else-ir-p ir)
+      (multiple-value-bind (else-val ok) (wasm2-if-arg0-else-ir-p specialization-ir)
         (when ok
           (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
             (let* ((module-bytes (wasm2-if-arg-module-bytes else-val)))
@@ -7326,7 +7502,7 @@
             (setf (afunc-argsword afunc) bits)
             (wasm2-set-afunc-lfun afunc +wasm-if-arg-entry-index+ keyvec-slot bits))
           (return-from wasm2-compile afunc)))
-      (when (wasm2-return-arg0-ir-p ir)
+      (when (wasm2-return-arg0-ir-p specialization-ir)
         (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
           (let* ((module-bytes (wasm2-identity-module-bytes)))
             (wasm2-register-compiled-module module-bytes
@@ -7344,7 +7520,7 @@
           (setf (afunc-argsword afunc) bits)
           (wasm2-set-afunc-lfun afunc +wasm-identity-entry-index+ keyvec-slot bits))
         (return-from wasm2-compile afunc))
-      (when (wasm2-return-arg1-ir-p ir)
+      (when (wasm2-return-arg1-ir-p specialization-ir)
         (let* ((bits (or (wasm2-const-lfun-bits afunc) 0)))
           (let* ((module-bytes (wasm2-identity-y-module-bytes)))
             (wasm2-register-compiled-module module-bytes
@@ -7366,25 +7542,40 @@
       (let* ((bits (or (wasm2-const-lfun-bits afunc) 0))
              (entry-index (or prealloc-entry (wasm2-allocate-entry-index)))
              (export-name (format nil "ccl_generic_entry_~d" entry-index))
-             (spillable-locals (nreverse *wasm2-spillable-locals*))
-             (gc-root-boundary-ops (wasm2-ir-gc-root-boundary-ops ir))
-             (gc-root-policy-mode (if gc-root-boundary-ops
-                                    +wasm2-gc-root-mode-runtime-default+
-                                    +wasm2-gc-root-mode-runtime-bootstrap+))
-             (const-pool-bytes (and const-pool-entries
-                                    (wasm2-const-pool-bytes const-pool-entries)))
-             (module-bytes (wasm2-generic-module-bytes ir export-name
-                                                       *wasm2-local-types*
-                                                       spillable-locals
-                                                       entry-index))
-             (debug-info (and *wasm2-collect-module-debug*
-                              (wasm2-make-module-debug-info export-name entry-index 1
-                                                            :afunc afunc
-                                                            :ir ir
-                                                            :gc-root-policy-mode
-                                                            gc-root-policy-mode
-                                                            :gc-root-boundary-ops
-                                                            gc-root-boundary-ops))))
+             (entry-call-abi nil)
+             (typed-entry-op nil))
+        (multiple-value-setq (entry-call-abi typed-entry-op)
+          (wasm2-typed-entry-call-abi-plan afunc specialization-ir))
+        (unless entry-call-abi
+          (setf entry-call-abi +wasm2-entry-call-abi-legacy+))
+        (let* ((typed-entry-ir (wasm2-typed-entry-ir entry-call-abi typed-entry-op))
+               (raw-spillable-locals (nreverse *wasm2-spillable-locals*))
+               (module-ir (or typed-entry-ir ir))
+               (module-local-types (if typed-entry-ir
+                                     #()
+                                     *wasm2-local-types*))
+               (spillable-locals (if typed-entry-ir
+                                   nil
+                                   raw-spillable-locals))
+               (gc-root-boundary-ops (wasm2-ir-gc-root-boundary-ops module-ir))
+               (gc-root-policy-mode (if gc-root-boundary-ops
+                                      +wasm2-gc-root-mode-runtime-default+
+                                      +wasm2-gc-root-mode-runtime-bootstrap+))
+               (const-pool-bytes (and const-pool-entries
+                                      (wasm2-const-pool-bytes const-pool-entries)))
+               (module-bytes (wasm2-generic-module-bytes module-ir export-name
+                                                         module-local-types
+                                                         spillable-locals
+                                                         entry-index
+                                                         entry-call-abi))
+               (debug-info (and *wasm2-collect-module-debug*
+                                (wasm2-make-module-debug-info export-name entry-index 1
+                                                              :afunc afunc
+                                                              :ir module-ir
+                                                              :gc-root-policy-mode
+                                                              gc-root-policy-mode
+                                                              :gc-root-boundary-ops
+                                                              gc-root-boundary-ops))))
         (wasm2-register-compiled-module module-bytes
                                         export-name
                                         entry-index
@@ -7399,10 +7590,12 @@
                            (afunc-lfun-info afunc))))
           (when const-pool-bytes
             (setf info (list* 'wasm-const-pool const-pool-bytes info)))
+          (unless (eq entry-call-abi +wasm2-entry-call-abi-legacy+)
+            (setf info (list* 'wasm-entry-call-abi entry-call-abi info)))
           (setf (afunc-lfun-info afunc) info))
         (setf (afunc-argsword afunc) bits)
         (wasm2-set-afunc-lfun afunc entry-index keyvec-slot bits)
-        (return-from wasm2-compile afunc))
+        (return-from wasm2-compile afunc)))
   )))
 
 (provide "WASM2")

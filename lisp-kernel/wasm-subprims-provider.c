@@ -47,6 +47,15 @@ void wasm_call_subprim_fixnum(LispObj sp_index_fixnum);
 __attribute__((import_module("ccl"), import_name("wasm_alloc_cons_bridge")))
 LispObj wasm_alloc_cons_bridge(LispObj car_value, LispObj cdr_value);
 
+__attribute__((import_module("ccl"), import_name("wasm_set_gc_root_policy_mode")))
+uint32_t wasm_set_gc_root_policy_mode(uint32_t mode);
+
+__attribute__((import_module("ccl"), import_name("wasm_get_entry_gc_root_policy_mode")))
+uint32_t wasm_get_entry_gc_root_policy_mode(uint32_t entry_index);
+
+__attribute__((import_module("ccl"), import_name("wasm_get_entry_call_abi")))
+uint32_t wasm_get_entry_call_abi(uint32_t entry_index);
+
 void _SPksignalerr(void);
 
 static LispObj wasm_alloc_cons_or_trap(TCR *tcr, LispObj car_value, LispObj cdr_value);
@@ -1888,12 +1897,26 @@ _SPnthrowvalues(void)
   wasm_set_pending_throw(tcr, box_fixnum(1));
 }
 
-typedef void (*wasm_lisp_fn)(void);
+typedef void (*wasm_lisp_fn_void)(void);
+typedef LispObj (*wasm_lisp_fn_unary_i32)(LispObj);
+typedef LispObj (*wasm_lisp_fn_binary_i32)(LispObj, LispObj);
 
 static inline void
 wasm_call_entry_index(uint32_t index)
 {
-  ((wasm_lisp_fn)(uintptr_t)index)();
+  ((wasm_lisp_fn_void)(uintptr_t)index)();
+}
+
+static inline LispObj
+wasm_call_entry_index_unary_i32(uint32_t index, LispObj arg0)
+{
+  return ((wasm_lisp_fn_unary_i32)(uintptr_t)index)(arg0);
+}
+
+static inline LispObj
+wasm_call_entry_index_binary_i32(uint32_t index, LispObj arg0, LispObj arg1)
+{
+  return ((wasm_lisp_fn_binary_i32)(uintptr_t)index)(arg0, arg1);
 }
 
 void _SPstack_misc_alloc(void);
@@ -1950,9 +1973,50 @@ wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
 
   {
     uint32_t entry_index = (uint32_t)unbox_fixnum(entry);
-    uint32_t mode = wasm_lookup_entry_gc_root_policy_mode(entry_index);
-    wasm_publish_gc_root_policy_mode(mode);
-    wasm_call_entry_index(entry_index);
+    uint32_t mode = wasm_get_entry_gc_root_policy_mode(entry_index);
+    uint32_t entry_call_abi = wasm_get_entry_call_abi(entry_index);
+    LispObj raw_nargs = wasm_reg(tcr, nargs);
+    signed_natural nargs_count =
+      (tag_of(raw_nargs) == tag_fixnum) ? unbox_fixnum(raw_nargs) : 0;
+    (void)wasm_set_gc_root_policy_mode(mode);
+    switch (entry_call_abi) {
+    case WASM_ENTRY_CALL_ABI_UNARY_I32: {
+      LispObj result;
+      if (nargs_count != 1) {
+        wasm_signal_funcall_error(tcr,
+                                  (nargs_count < 1) ? WASM_XCALLTOOFEW : WASM_XCALLTOOMANY,
+                                  name);
+        return;
+      }
+      result = wasm_call_entry_index_unary_i32(entry_index, wasm_reg(tcr, arg_z));
+      if (!wasm_pending_throw_p(tcr)) {
+        wasm_set_reg(tcr, arg_z, result);
+        wasm_set_reg(tcr, nargs, box_fixnum(1));
+      }
+      break;
+    }
+    case WASM_ENTRY_CALL_ABI_BINARY_I32: {
+      LispObj result;
+      if (nargs_count != 2) {
+        wasm_signal_funcall_error(tcr,
+                                  (nargs_count < 2) ? WASM_XCALLTOOFEW : WASM_XCALLTOOMANY,
+                                  name);
+        return;
+      }
+      result = wasm_call_entry_index_binary_i32(entry_index,
+                                                wasm_reg(tcr, arg_z),
+                                                wasm_reg(tcr, arg_y));
+      if (!wasm_pending_throw_p(tcr)) {
+        wasm_set_reg(tcr, arg_z, result);
+        wasm_set_reg(tcr, nargs, box_fixnum(1));
+      }
+      break;
+    }
+    case WASM_ENTRY_CALL_ABI_LEGACY:
+    default:
+      wasm_call_entry_index(entry_index);
+      break;
+    }
   }
 }
 

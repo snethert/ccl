@@ -86,6 +86,8 @@ static uint32_t wasm_active_gc_root_policy_mask = WASM_GC_ROOT_POLICY_DEFAULT;
 static uint32_t wasm_active_gc_root_policy_mode = WASM_GC_ROOT_MODE_RUNTIME_DEFAULT;
 static uint32_t *wasm_entry_gc_root_policy_modes = NULL;
 static uint32_t wasm_entry_gc_root_policy_mode_capacity = 0;
+static uint32_t *wasm_entry_call_abi_kinds = NULL;
+static uint32_t wasm_entry_call_abi_kind_capacity = 0;
 
 static uint32_t
 wasm_gc_root_policy_allowed_mask(void)
@@ -113,6 +115,19 @@ wasm_gc_root_policy_mode_sanitize(uint32_t mode)
     return mode;
   default:
     return WASM_GC_ROOT_MODE_RUNTIME_DEFAULT;
+  }
+}
+
+static uint32_t
+wasm_entry_call_abi_kind_sanitize(uint32_t kind)
+{
+  switch (kind) {
+  case WASM_ENTRY_CALL_ABI_LEGACY:
+  case WASM_ENTRY_CALL_ABI_UNARY_I32:
+  case WASM_ENTRY_CALL_ABI_BINARY_I32:
+    return kind;
+  default:
+    return WASM_ENTRY_CALL_ABI_LEGACY;
   }
 }
 
@@ -264,6 +279,78 @@ wasm_clear_entry_gc_root_policy_modes(void)
     memset(wasm_entry_gc_root_policy_modes,
            0,
            (size_t)wasm_entry_gc_root_policy_mode_capacity * sizeof(uint32_t));
+  }
+}
+
+static void
+wasm_entry_call_abi_kinds_ensure_capacity(uint32_t min_index)
+{
+  uint32_t new_capacity;
+  uint32_t *grown;
+
+  if (min_index < wasm_entry_call_abi_kind_capacity) {
+    return;
+  }
+
+  new_capacity = wasm_entry_call_abi_kind_capacity ? wasm_entry_call_abi_kind_capacity : 256u;
+  while (new_capacity <= min_index) {
+    if (new_capacity > (UINT32_MAX / 2u)) {
+      new_capacity = min_index + 1u;
+      break;
+    }
+    new_capacity *= 2u;
+  }
+
+  grown = (uint32_t *)malloc((size_t)new_capacity * sizeof(uint32_t));
+  if (grown == NULL) {
+    return;
+  }
+
+  memset(grown, 0, (size_t)new_capacity * sizeof(uint32_t));
+  if ((wasm_entry_call_abi_kinds != NULL) &&
+      (wasm_entry_call_abi_kind_capacity > 0u)) {
+    memmove(grown,
+            wasm_entry_call_abi_kinds,
+            (size_t)wasm_entry_call_abi_kind_capacity * sizeof(uint32_t));
+    free(wasm_entry_call_abi_kinds);
+  }
+
+  wasm_entry_call_abi_kinds = grown;
+  wasm_entry_call_abi_kind_capacity = new_capacity;
+}
+
+void
+wasm_register_entry_call_abi_kind(uint32_t entry_index, uint32_t kind)
+{
+  uint32_t effective_kind = wasm_entry_call_abi_kind_sanitize(kind);
+
+  wasm_entry_call_abi_kinds_ensure_capacity(entry_index);
+  if (entry_index < wasm_entry_call_abi_kind_capacity) {
+    wasm_entry_call_abi_kinds[entry_index] = effective_kind + 1u;
+  }
+}
+
+uint32_t
+wasm_lookup_entry_call_abi_kind(uint32_t entry_index)
+{
+  if ((wasm_entry_call_abi_kinds != NULL) &&
+      (entry_index < wasm_entry_call_abi_kind_capacity)) {
+    uint32_t encoded_kind = wasm_entry_call_abi_kinds[entry_index];
+    if (encoded_kind != 0u) {
+      return encoded_kind - 1u;
+    }
+  }
+  return WASM_ENTRY_CALL_ABI_LEGACY;
+}
+
+void
+wasm_clear_entry_call_abi_kinds(void)
+{
+  if ((wasm_entry_call_abi_kinds != NULL) &&
+      (wasm_entry_call_abi_kind_capacity > 0u)) {
+    memset(wasm_entry_call_abi_kinds,
+           0,
+           (size_t)wasm_entry_call_abi_kind_capacity * sizeof(uint32_t));
   }
 }
 
