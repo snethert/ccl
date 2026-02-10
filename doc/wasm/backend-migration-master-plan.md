@@ -92,7 +92,7 @@ Hard gates are tracked in `doc/wasm/runtime-backend-dependency-matrix.md`.
 
 | Ticket | Status | Priority | Subplan | Last Updated | Notes |
 | --- | --- | --- | --- | --- | --- |
-| BPL-00 | in_progress | P0 | `doc/wasm/backend-tickets/BPL-00-governance-and-baseline-freeze.md` | 2026-02-10 | Thirty-eighth governance cycle is now complete through backend Step 3 run-v2 evidence (`bpl09-20260210-040314Z-2084077e`) and unified `X-08` closure review (`x08-closure-20260210-040400Z-2084077e`); runtime/backend master/matrix/board/governance docs are synchronized, immutable bundle IDs + frozen `BPL08-CR*` rows remain unchanged, and dependency row `X-08` is now `done`. |
+| BPL-00 | in_progress | P0 | `doc/wasm/backend-tickets/BPL-00-governance-and-baseline-freeze.md` | 2026-02-10 | Thirty-ninth governance cycle is now complete through runtime `RPL-06` Step 3 run-v1 closure evidence (`rpl06-20260210-054023Z-50d752af`) while preserving backend Step 3 run-v2 evidence (`bpl09-20260210-040314Z-2084077e`) and unified `X-08` closure review (`x08-closure-20260210-040400Z-2084077e`) as immutable inputs. |
 | BPL-01 | done | P0 | `doc/wasm/backend-tickets/BPL-01-arm-assumption-inventory.md` | 2026-02-09 | Step 1/2/3 closure complete (16 assumptions; remove=6, compat_layer=7, defer=3) with no new non-speculative matrix dependency rows required. |
 | BPL-02 | done | P0 | `doc/wasm/backend-tickets/BPL-02-wasm-native-backend-contract.md` | 2026-02-09 | Step 2 closure complete: `CON-01`..`CON-08` promoted to v1 baseline with explicit `BCL-01`..`BCL-12` coverage evidence. |
 | BPL-03 | done | P0 | `doc/wasm/backend-tickets/BPL-03-frame-and-debug-metadata-model.md` | 2026-02-09 | Step 2 closure complete: `FDC-01`..`FDC-10` validated with full `B3*` class coverage and hardened clause language. |
@@ -132,12 +132,13 @@ Notes:
 - Governance sync now includes BPL-09 Step 2 publication (`BPL09-L01`..`BPL09-L08`, `BPL09-V01`..`BPL09-V14`, `BPL09-I01`..`BPL09-I06`) aligned to runtime `RPL-09` Step 2 contracts and runtime Step 3 run-v1 evidence (`rpl09-20260210-032127Z-2084077e`).
 - Governance sync now includes BPL-09 Step 3 signoff packet publication (`BPL09-CR01`..`BPL09-CR06`) with explicit runtime run-v2 (`R9GAP-01`) intake linkage and additive-only `X-08` hard-gate carry-forward posture.
 - Governance sync now includes BPL-09 Step 3 run-v2 evidence (`bpl09-20260210-040314Z-2084077e`) and unified `X-08` closure review (`x08-closure-20260210-040400Z-2084077e`) with matrix transition to `X-08=done`.
+- Governance sync now includes runtime `RPL-06 Step 3` run-v1 closure evidence (`rpl06-20260210-054023Z-50d752af`) with terminal `storage_v2_sync_step2_summary_v1.status=pass`.
 
 Next Step Analysis:
 
-- Immediate Next Step: keep closed Pack D artifacts immutable while runtime executes `RPL01-IG-02` startup-gate follow-through (`LHI-04`/`LHI-05`/`LHI-06`) and backend governance remains additive-only.
-- Why this step now: `X-08` is now closed (`done`) with committed runtime/backend cutover evidence, and contradiction follow-through (`RPL01-CF-01`..`RPL01-CF-15`) is complete.
-- Evidence required to close next step: runtime docs record `LHI-04`/`LHI-05`/`LHI-06` integration progress without altering frozen `BPL09-*`, immutable bundle IDs, or closed `X-08` evidence references across synchronized backend docs.
+- Immediate Next Step: keep closed Pack D artifacts immutable while runtime/backend governance remains additive-only across the now-closed `RPL-06` sync/merge baseline.
+- Why this step now: `X-08` is closed (`done`) and runtime `RPL-06` Step 3 closure evidence is now committed.
+- Evidence required to close next step: synchronized docs retain immutable `x08-closure-20260210-040400Z-2084077e` and `bpl09-20260210-040314Z-2084077e` references, preserve frozen `BPL08-CR*`/`BPL09-*` rows, and consume `rpl06-20260210-054023Z-50d752af` without rewrites.
 
 ---
 
@@ -362,9 +363,9 @@ Notes:
 
 Next Step Analysis:
 
-- Immediate Next Step: keep `BPL09-*` rows and committed closure artifacts immutable while runtime executes `RPL01-IG-02` startup-gate follow-through (`LHI-04`/`LHI-05`/`LHI-06`).
-- Why this step now: backend cutover closure criteria are satisfied, `X-08` is `done`, and runtime contradiction closure follow-through is complete through `RPL01-CF-15`.
-- Evidence required to close next step: downstream updates preserve `bpl09-20260210-040314Z-2084077e`, `x08-closure-20260210-040400Z-2084077e`, immutable bundle IDs, and frozen `BPL08-CR*` rows while runtime integration evidence records `LHI-04`/`LHI-05`/`LHI-06` progress.
+- Immediate Next Step: keep `BPL09-*` rows and committed closure artifacts immutable while closed `RPL-06` sync/merge evidence is consumed as downstream baseline.
+- Why this step now: backend cutover closure criteria are satisfied, `X-08` is `done`, and runtime `RPL-06` closure evidence is now committed.
+- Evidence required to close next step: downstream updates preserve `bpl09-20260210-040314Z-2084077e`, `x08-closure-20260210-040400Z-2084077e`, immutable bundle IDs, frozen `BPL08-CR*` rows, and `rpl06-20260210-054023Z-50d752af` over published `R6S-*`/`R6T-*`/`R6A-*` and `R6L-*`/`R6V-*` contracts.
 
 ## Subplan Registry Sync Rules
 
@@ -440,3 +441,6 @@ Avoid batching multiple unrelated next actions into one update.
 - 2026-02-10: Synced backend immediate-next-step wording after contradiction source rewrites completed through `RPL01-CF-14`; active runtime follow-through is now `RPL01-CF-15` contradiction-closure synchronization with immutable `X-08` artifacts preserved.
 - 2026-02-10: Synced backend immediate-next-step wording after contradiction closure sync (`RPL01-CF-15`) completion; active runtime follow-through is now `RPL01-IG-01` startup-gate loader/smoke integration with immutable `X-08` artifacts preserved.
 - 2026-02-10: Synced backend immediate-next-step wording after `RPL01-IG-01` completion; active runtime follow-through is now `RPL01-IG-02` startup-gate coverage expansion (`LHI-04`/`LHI-05`/`LHI-06`) with immutable `X-08` artifacts preserved.
+- 2026-02-10: Synced backend immediate-next-step wording after `RPL01-IG-02` closure and `RPL-06` Step 1 publication; active runtime action is now `RPL-06` Step 2 validation-lane matrix drafting with immutable `X-08` artifacts preserved.
+- 2026-02-10: Synced backend immediate-next-step wording after `RPL-06` Step 2 publication; active runtime action is now `RPL-06` Step 3 evidence execution with immutable `X-08` artifacts preserved.
+- 2026-02-10: Synced backend immediate-next-step wording after runtime `RPL-06` Step 3 run-v1 closure evidence (`rpl06-20260210-054023Z-50d752af`); Pack D artifacts remain immutable and cross-track governance is now additive-only maintenance.

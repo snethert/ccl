@@ -1,0 +1,12 @@
+# validation_id: R6V-13
+# lane_id: R6L-07
+# expected_exit: 2
+# command: env TZ=UTC LC_ALL=C LANG=C CCL_STORAGE_PROFILE=storage-v2-opfs CCL_STORAGE_ALLOW_FALLBACK=0 CCL_STORAGE_V2_SYNC_LANE=R6L-07 CCL_STORAGE_V2_SYNC_CASE=fallback-fail CCL_STORAGE_V2_SYNC_RUN_ID=rpl06-20260210-054023Z-50d752af-r6v-13 CCL_STORAGE_V2_SYNC_FORCE_FALLBACK=1 node doc/wasm/js/storage-v2-sync-conformance.mjs
+# primary_exit_code: 2
+
+STORAGE_V2_SYNC_EVENT {"schema_version":"storage_v2_sync_event_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-13","lane_id":"R6L-07","case_id":"fallback-fail","event_id":"evt-287536a3a0c0","op_type":"fallback-fail","status":"fail","failure_code":"RPL06-E007","timestamp_utc":"2026-02-10T05:40:25.755Z","source":"doc/wasm/js/storage-v2-sync-conformance.mjs"}
+STORAGE_V2_SYNC_CONFLICT_EVENT {"schema_version":"storage_v2_sync_conflict_event_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-13","conflict_id":"conflict-de2f834567bb","namespace":"default","ref_name":"ref-r6l-07","client_state":{"version":5,"target":"obj-local"},"remote_state":{"version":6,"target":"obj-remote"},"status":"pass","failure_code":null,"detected_at_utc":"2026-02-10T05:40:25.755Z"}
+STORAGE_V2_MERGE_CANDIDATE_EVENT {"schema_version":"storage_v2_merge_candidate_event_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-13","candidate_id":"candidate-e95339a06703","conflict_id":"conflict-de2f834567bb","strategy":"three-way-merge-v1","status":"pass","failure_code":null,"candidate_digest":"0989aa9c617f8c5ae78ac7ce1a97c14727b5fa7c402010e35f78630c4e700b26","timestamp_utc":"2026-02-10T05:40:25.755Z"}
+STORAGE_V2_MERGE_FINALIZATION_EVENT {"schema_version":"storage_v2_merge_finalization_event_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-13","candidate_id":"candidate-e95339a06703","final_object_id":"obj-final","final_ref_version":7,"status":"pass","failure_code":null,"finalized_at_utc":"2026-02-10T05:40:25.755Z"}
+STORAGE_V2_SYNC_SUMMARY {"schema_version":"storage_v2_sync_summary_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-13","lane_id":"R6L-07","case_id":"fallback-fail","executed_ops":["fallback-fail"],"first_failure_code":"RPL06-E007","allow_fallback":false,"status":"fail","results_digest":"4b09164e3e45b70aac551bbd4a42866846fd2ed423a0cf5b767a8f6903b7f006","timestamp_utc":"2026-02-10T05:40:25.755Z","source":"doc/wasm/js/storage-v2-sync-conformance.mjs"}
+

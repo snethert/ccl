@@ -59,12 +59,13 @@ Out of scope:
 - Backend `BPL-09 Step 2` deterministic rehearsal packet is now published (`BPL09-L01`..`BPL09-L08`, `BPL09-V01`..`BPL09-V14`, `BPL09-I01`..`BPL09-I06`) while runtime `RPL-09 Step 3` run-v1 evidence is committed (`rpl09-20260210-032127Z-2084077e`) and `R9GAP-01` remains open.
 - Backend `BPL-09 Step 3` signoff packet rows are now published (`BPL09-CR01`..`BPL09-CR06`) with explicit runtime run-v2 (`R9GAP-01`) intake linkage and additive-only `X-08` hard-gate carry-forward posture.
 - Backend `BPL-09 Step 3` run-v2 evidence is now committed (`bpl09-20260210-040314Z-2084077e`) and unified closure review (`x08-closure-20260210-040400Z-2084077e`) now advances dependency row `X-08` from `in_progress` to `done` with immutable bundle IDs and frozen `BPL08-CR*` rows preserved.
+- Runtime `RPL-06 Step 3` run-v1 closure evidence is now committed (`rpl06-20260210-054023Z-50d752af`) with terminal `storage_v2_sync_step2_summary_v1.status=pass` and full `R6V-01`..`R6V-14` coverage.
 
 ## Immediate Next Step
 
-- Action: keep closed `X-08` artifacts immutable while runtime executes `RPL01-IG-02` startup-gate follow-through (`LHI-04`/`LHI-05`/`LHI-06`) and backend governance remains additive-only.
-- Why now: Pack D cutover closure is complete with committed runtime/backend evidence and unified review, and contradiction follow-through (`RPL01-CF-01`..`RPL01-CF-15`) is complete.
-- Success evidence: synchronized docs retain `x08-closure-20260210-040400Z-2084077e`, `bpl09-20260210-040314Z-2084077e`, immutable bundle IDs, and frozen `BPL08-CR*` rows while runtime records `LHI-04`/`LHI-05`/`LHI-06` integration progress without reopening `X-08`.
+- Action: keep closed `X-08` and `RPL-06` artifacts immutable while backend governance remains additive-only.
+- Why now: Pack D cutover closure and runtime sync/merge closure are both complete with committed evidence.
+- Success evidence: synchronized docs retain `x08-closure-20260210-040400Z-2084077e`, `bpl09-20260210-040314Z-2084077e`, immutable bundle IDs, frozen `BPL08-CR*` rows, and `rpl06-20260210-054023Z-50d752af` without reopening `X-08` or `RPL-06`.
 
 ## Detailed Work Breakdown
 
@@ -153,3 +154,6 @@ Out of scope:
 - 2026-02-10: Synced backend governance wording after contradiction source rewrites completed through `RPL01-CF-14`; immediate action is now `RPL01-CF-15` contradiction-closure synchronization while preserving immutable `X-08` artifacts.
 - 2026-02-10: Synced backend governance wording after contradiction closure sync (`RPL01-CF-15`) completion; immediate action is now `RPL01-IG-01` startup-gate loader/smoke integration while preserving immutable `X-08` artifacts.
 - 2026-02-10: Synced backend governance wording after `RPL01-IG-01` completion; immediate action is now `RPL01-IG-02` startup-gate coverage expansion (`LHI-04`/`LHI-05`/`LHI-06`) while preserving immutable `X-08` artifacts.
+- 2026-02-10: Synced backend governance wording after `RPL01-IG-02` closure and `RPL-06` Step 1 publication; immediate action is now `RPL-06` Step 2 sync/merge validation-lane matrix drafting while preserving immutable `X-08` artifacts.
+- 2026-02-10: Synced backend governance wording after `RPL-06` Step 2 publication; immediate action is now `RPL-06` Step 3 sync/merge evidence execution while preserving immutable `X-08` artifacts.
+- 2026-02-10: Synced backend governance wording after runtime `RPL-06` Step 3 run-v1 closure evidence (`rpl06-20260210-054023Z-50d752af`); immediate action is now additive-only Pack D governance maintenance over immutable `X-08` and `RPL-06` artifacts.

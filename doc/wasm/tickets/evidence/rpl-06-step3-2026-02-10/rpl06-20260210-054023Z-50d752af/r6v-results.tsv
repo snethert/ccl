@@ -1,0 +1,15 @@
+validation_id	lane_id	exit_code	expected_failure_code	observed_first_failure_code	sync_artifact_emitted	persistence_backend	result	notes
+R6V-01	R6L-01	0	none	null	yes	storage-v2-opfs	pass	summary digest stable across equivalent rerun
+R6V-02	R6L-01	0	none	null	yes	storage-v2-opfs	pass	assertions met
+R6V-03	R6L-02	0	none	null	yes	storage-v2-opfs	pass	conflict tuple captured without overwrite
+R6V-04	R6L-02	2	RPL06-E004	RPL06-E004	yes	storage-v2-opfs	pass	assertions met
+R6V-05	R6L-03	0	none	null	yes	storage-v2-opfs	pass	deterministic conflict record emitted
+R6V-06	R6L-04	0	none	null	yes	storage-v2-opfs	pass	candidate digest stable across equivalent rerun
+R6V-07	R6L-05	0	none	null	yes	storage-v2-opfs	pass	merge finalization maps to prior conflict and candidate
+R6V-08	R6L-06	2	RPL06-E001	RPL06-E001	yes	storage-v2-opfs	pass	assertions met
+R6V-09	R6L-06	2	RPL06-E003	RPL06-E003	yes	storage-v2-opfs	pass	assertions met
+R6V-10	R6L-06	2	RPL06-E006	RPL06-E006	yes	storage-v2-opfs	pass	assertions met
+R6V-11	R6L-06	2	RPL06-E008	RPL06-E008	yes	storage-v2-opfs	pass	assertions met
+R6V-12	R6L-06	2	RPL06-E009	RPL06-E009	yes	storage-v2-opfs	pass	assertions met
+R6V-13	R6L-07	2	RPL06-E007	RPL06-E007	yes	storage-v2-opfs	pass	assertions met
+R6V-14	R6L-08	0	none	null	yes	storage-v2-opfs	pass	aggregate summary indicates pass with fallback disabled

@@ -1,0 +1,12 @@
+# validation_id: R6V-05
+# lane_id: R6L-03
+# expected_exit: 0
+# command: env TZ=UTC LC_ALL=C LANG=C CCL_STORAGE_PROFILE=storage-v2-opfs CCL_STORAGE_ALLOW_FALLBACK=0 CCL_STORAGE_V2_SYNC_LANE=R6L-03 CCL_STORAGE_V2_SYNC_CASE=conflict-detect CCL_STORAGE_V2_SYNC_RUN_ID=rpl06-20260210-054023Z-50d752af-r6v-05 node doc/wasm/js/storage-v2-sync-conformance.mjs
+# primary_exit_code: 0
+
+STORAGE_V2_SYNC_EVENT {"schema_version":"storage_v2_sync_event_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-05","lane_id":"R6L-03","case_id":"conflict-detect","event_id":"evt-d6b75ea87127","op_type":"conflict-detect","status":"pass","failure_code":null,"timestamp_utc":"2026-02-10T05:40:24.520Z","source":"doc/wasm/js/storage-v2-sync-conformance.mjs"}
+STORAGE_V2_SYNC_CONFLICT_EVENT {"schema_version":"storage_v2_sync_conflict_event_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-05","conflict_id":"conflict-78ad6d8e55cc","namespace":"default","ref_name":"ref-r6l-03","client_state":{"version":5,"target":"obj-local"},"remote_state":{"version":6,"target":"obj-remote"},"status":"pass","failure_code":null,"detected_at_utc":"2026-02-10T05:40:24.520Z"}
+STORAGE_V2_MERGE_CANDIDATE_EVENT {"schema_version":"storage_v2_merge_candidate_event_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-05","candidate_id":"candidate-728a696e977d","conflict_id":"conflict-78ad6d8e55cc","strategy":"three-way-merge-v1","status":"pass","failure_code":null,"candidate_digest":"3688130f5587e30517d651ecfe900626d21f212ac350efab4dd2cafe2570a26c","timestamp_utc":"2026-02-10T05:40:24.520Z"}
+STORAGE_V2_MERGE_FINALIZATION_EVENT {"schema_version":"storage_v2_merge_finalization_event_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-05","candidate_id":"candidate-728a696e977d","final_object_id":"obj-final","final_ref_version":7,"status":"pass","failure_code":null,"finalized_at_utc":"2026-02-10T05:40:24.520Z"}
+STORAGE_V2_SYNC_SUMMARY {"schema_version":"storage_v2_sync_summary_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-05","lane_id":"R6L-03","case_id":"conflict-detect","executed_ops":["conflict-detect"],"first_failure_code":null,"allow_fallback":false,"status":"pass","results_digest":"c46d4e7a5149a690118651f68c0cf82538e4a462f42f5f1ff61a3e6318108451","timestamp_utc":"2026-02-10T05:40:24.520Z","source":"doc/wasm/js/storage-v2-sync-conformance.mjs"}
+

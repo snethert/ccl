@@ -1,0 +1,12 @@
+# validation_id: R6V-14
+# lane_id: R6L-08
+# expected_exit: 0
+# command: env TZ=UTC LC_ALL=C LANG=C CCL_STORAGE_PROFILE=storage-v2-opfs CCL_STORAGE_ALLOW_FALLBACK=0 CCL_STORAGE_V2_SYNC_LANE=R6L-08 CCL_STORAGE_V2_SYNC_CASE=aggregate-summary CCL_STORAGE_V2_SYNC_RUN_ID=rpl06-20260210-054023Z-50d752af-r6v-14 node doc/wasm/js/storage-v2-sync-conformance.mjs
+# primary_exit_code: 0
+
+STORAGE_V2_SYNC_EVENT {"schema_version":"storage_v2_sync_event_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-14","lane_id":"R6L-08","case_id":"aggregate-summary","event_id":"evt-5e9d6837ff11","op_type":"aggregate-summary","status":"pass","failure_code":null,"timestamp_utc":"2026-02-10T05:40:25.889Z","source":"doc/wasm/js/storage-v2-sync-conformance.mjs"}
+STORAGE_V2_SYNC_CONFLICT_EVENT {"schema_version":"storage_v2_sync_conflict_event_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-14","conflict_id":"conflict-38a4058095b1","namespace":"default","ref_name":"ref-r6l-08","client_state":{"version":5,"target":"obj-local"},"remote_state":{"version":6,"target":"obj-remote"},"status":"pass","failure_code":null,"detected_at_utc":"2026-02-10T05:40:25.889Z"}
+STORAGE_V2_MERGE_CANDIDATE_EVENT {"schema_version":"storage_v2_merge_candidate_event_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-14","candidate_id":"candidate-cc2787f4bcf3","conflict_id":"conflict-38a4058095b1","strategy":"three-way-merge-v1","status":"pass","failure_code":null,"candidate_digest":"ae4f604dff60b66b6abf100030936287dae55deb66221f404b26b0e1011fa8d4","timestamp_utc":"2026-02-10T05:40:25.889Z"}
+STORAGE_V2_MERGE_FINALIZATION_EVENT {"schema_version":"storage_v2_merge_finalization_event_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-14","candidate_id":"candidate-cc2787f4bcf3","final_object_id":"obj-final","final_ref_version":7,"status":"pass","failure_code":null,"finalized_at_utc":"2026-02-10T05:40:25.889Z"}
+STORAGE_V2_SYNC_SUMMARY {"schema_version":"storage_v2_sync_summary_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-14","lane_id":"R6L-08","case_id":"aggregate-summary","executed_ops":["aggregate-summary"],"first_failure_code":null,"allow_fallback":false,"status":"pass","results_digest":"636c3d66278d2118797efc8e5ff4f23ab9fb20d37430a22cc8c7b5693cb781c5","timestamp_utc":"2026-02-10T05:40:25.889Z","source":"doc/wasm/js/storage-v2-sync-conformance.mjs"}
+

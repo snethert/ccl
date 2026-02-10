@@ -1,0 +1,12 @@
+# validation_id: R6V-03
+# lane_id: R6L-02
+# expected_exit: 0
+# command: env TZ=UTC LC_ALL=C LANG=C CCL_STORAGE_PROFILE=storage-v2-opfs CCL_STORAGE_ALLOW_FALLBACK=0 CCL_STORAGE_V2_SYNC_LANE=R6L-02 CCL_STORAGE_V2_SYNC_CASE=cas-lease CCL_STORAGE_V2_SYNC_RUN_ID=rpl06-20260210-054023Z-50d752af-r6v-03 node doc/wasm/js/storage-v2-sync-conformance.mjs
+# primary_exit_code: 0
+
+STORAGE_V2_SYNC_EVENT {"schema_version":"storage_v2_sync_event_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-03","lane_id":"R6L-02","case_id":"cas-lease","event_id":"evt-5c9a26f2f618","op_type":"cas-lease","status":"pass","failure_code":null,"timestamp_utc":"2026-02-10T05:40:24.255Z","source":"doc/wasm/js/storage-v2-sync-conformance.mjs"}
+STORAGE_V2_SYNC_CONFLICT_EVENT {"schema_version":"storage_v2_sync_conflict_event_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-03","conflict_id":"conflict-f4a2eab01011","namespace":"default","ref_name":"ref-r6l-02","client_state":{"version":5,"target":"obj-local"},"remote_state":{"version":6,"target":"obj-remote"},"status":"pass","failure_code":null,"detected_at_utc":"2026-02-10T05:40:24.255Z"}
+STORAGE_V2_MERGE_CANDIDATE_EVENT {"schema_version":"storage_v2_merge_candidate_event_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-03","candidate_id":"candidate-f3b18f5377ce","conflict_id":"conflict-f4a2eab01011","strategy":"three-way-merge-v1","status":"pass","failure_code":null,"candidate_digest":"7030d8f11173f8d5e2978a0a79b1f1ac9e37f887c5823e07818eceba593b8b3d","timestamp_utc":"2026-02-10T05:40:24.255Z"}
+STORAGE_V2_MERGE_FINALIZATION_EVENT {"schema_version":"storage_v2_merge_finalization_event_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-03","candidate_id":"candidate-f3b18f5377ce","final_object_id":"obj-final","final_ref_version":7,"status":"pass","failure_code":null,"finalized_at_utc":"2026-02-10T05:40:24.255Z"}
+STORAGE_V2_SYNC_SUMMARY {"schema_version":"storage_v2_sync_summary_v1","run_id":"rpl06-20260210-054023Z-50d752af-r6v-03","lane_id":"R6L-02","case_id":"cas-lease","executed_ops":["cas-lease"],"first_failure_code":null,"allow_fallback":false,"status":"pass","results_digest":"d6aa5f8dd7e7202f107184be82c74289de10e4fa0b133ecde9d51c06563b0939","timestamp_utc":"2026-02-10T05:40:24.255Z","source":"doc/wasm/js/storage-v2-sync-conformance.mjs"}
+

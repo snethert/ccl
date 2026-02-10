@@ -45,9 +45,9 @@ This is intentionally not a megaplan. Execution remains in two track-specific ma
 
 ## Immediate Next Step
 
-- Action: keep closed `X-08` cutover artifacts immutable and execute runtime `RPL01-IG-02` startup-gate follow-through (`LHI-04`/`LHI-05`/`LHI-06`), with additive-only backend governance maintenance.
-- Why now: Pack D closure is complete with unified review artifact `x08-closure-20260210-040400Z-2084077e`, and contradiction follow-through (`RPL01-CF-01`..`RPL01-CF-15`) is complete.
-- Success evidence: master/matrix/governance docs preserve `X-08=done`, immutable bundle IDs, and frozen `BPL08-CR*` rows while runtime queue evidence records `LHI-04`/`LHI-05`/`LHI-06` integration progress.
+- Action: keep closed `X-08` and runtime `RPL-06` artifacts immutable while runtime/backend governance remains additive-only.
+- Why now: Pack D closure is complete with unified review artifact `x08-closure-20260210-040400Z-2084077e`, and runtime `RPL-06` Step 3 run-v1 closure evidence is now committed.
+- Success evidence: master/matrix/governance docs preserve `X-08=done`, `RPL-06=done`, immutable bundle IDs, frozen `BPL08-CR*` rows, and committed run IDs (`bpl09-20260210-040314Z-2084077e`, `rpl06-20260210-054023Z-50d752af`) without drift.
 
 ## Change Log
 
@@ -120,3 +120,4 @@ This is intentionally not a megaplan. Execution remains in two track-specific ma
 - 2026-02-10: Completed contradiction source rewrites through `RPL01-CF-14` (`C-06`..`C-14`) and advanced immediate program action to `RPL01-CF-15` contradiction-closure synchronization while preserving immutable `X-08` closure artifacts.
 - 2026-02-10: Completed contradiction closure sync (`RPL01-CF-15`) and advanced immediate program action to `RPL01-IG-01` startup-gate loader/smoke integration while preserving immutable `X-08` closure artifacts.
 - 2026-02-10: Completed `RPL01-IG-01` startup-gate loader/smoke integration (`LHI-01`/`LHI-02`/`LHI-03`) and advanced immediate program action to `RPL01-IG-02` coverage expansion (`LHI-04`/`LHI-05`/`LHI-06`) while preserving immutable `X-08` closure artifacts.
+- 2026-02-10: Completed runtime `RPL-06` Step 3 run-v1 closure evidence (`rpl06-20260210-054023Z-50d752af`) and advanced immediate program action to additive-only governance maintenance over immutable `X-08` and `RPL-06` artifacts.

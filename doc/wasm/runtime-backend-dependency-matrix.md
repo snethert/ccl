@@ -67,9 +67,9 @@ It is the authoritative source for deciding which tasks can run in parallel and 
 
 ## Immediate Next Step
 
-- Action: keep `X-08` closure artifacts immutable and execute runtime `RPL01-IG-02` startup-gate follow-through (`LHI-04`/`LHI-05`/`LHI-06`) while backend governance remains additive-only.
-- Why now: Pack D hard-gate closure is complete with committed runtime/backend run-v2 evidence and unified decision artifact, and contradiction follow-through (`RPL01-CF-01`..`RPL01-CF-15`) is complete.
-- Success evidence: synchronized docs preserve `x08-closure-20260210-040400Z-2084077e` + `bpl09-20260210-040314Z-2084077e` references with `X-08=done`, no immutable bundle IDs or frozen closure rows drift, and runtime queue evidence records `LHI-04`/`LHI-05`/`LHI-06` integration progress.
+- Action: keep closed `X-08` and runtime `RPL-06` artifacts immutable while runtime/backend governance remains additive-only.
+- Why now: Pack D hard-gate closure is complete with committed runtime/backend run-v2 evidence and unified decision artifact, and runtime `RPL-06` Step 3 run-v1 closure evidence is now committed.
+- Success evidence: synchronized docs preserve `x08-closure-20260210-040400Z-2084077e`, `bpl09-20260210-040314Z-2084077e`, and `rpl06-20260210-054023Z-50d752af` with `X-08=done` and `RPL-06=done`, without immutable bundle ID or frozen closure-row drift.
 
 ## Change Log
 
@@ -143,3 +143,4 @@ It is the authoritative source for deciding which tasks can run in parallel and 
 - 2026-02-10: Synced cross-track action after contradiction source rewrites completed through `RPL01-CF-14`; active follow-through is now `RPL01-CF-15` contradiction-closure synchronization with immutable `X-08` closure artifacts unchanged.
 - 2026-02-10: Synced cross-track action after contradiction closure sync (`RPL01-CF-15`) completion; active follow-through is now `RPL01-IG-01` startup-gate loader/smoke integration with immutable `X-08` closure artifacts unchanged.
 - 2026-02-10: Synced cross-track action after `RPL01-IG-01` completion; active follow-through is now `RPL01-IG-02` startup-gate coverage expansion (`LHI-04`/`LHI-05`/`LHI-06`) with immutable `X-08` closure artifacts unchanged.
+- 2026-02-10: Synced cross-track action after runtime `RPL-06` Step 3 run-v1 closure evidence (`rpl06-20260210-054023Z-50d752af`); immediate action is now additive-only governance maintenance over immutable `X-08` and `RPL-06` artifacts.

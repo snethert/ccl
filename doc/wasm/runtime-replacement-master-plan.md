@@ -102,13 +102,13 @@ When resuming work from scratch:
 
 | Ticket | Status | Priority | Subplan | Last Updated | Notes |
 | --- | --- | --- | --- | --- | --- |
-| RPL-00 | in_progress | P0 | `doc/wasm/tickets/RPL-00-governance-and-baseline-freeze.md` | 2026-02-10 | Thirty-eighth downstream update cycle is now complete through backend Step 3 run-v2 evidence (`bpl09-20260210-040314Z-2084077e`) and unified `X-08` closure review (`x08-closure-20260210-040400Z-2084077e`); runtime/matrix/board/governance are synchronized, backend `BPL-09 Step 3` rows remain published (`BPL09-CR01`..`BPL09-CR06`), and dependency row `X-08` is now `done`. |
+| RPL-00 | in_progress | P0 | `doc/wasm/tickets/RPL-00-governance-and-baseline-freeze.md` | 2026-02-10 | Thirty-ninth downstream update cycle is now complete through `RPL-06` Step 3 run-v1 closure evidence (`rpl06-20260210-054023Z-50d752af`) while preserving backend Step 3 run-v2 evidence (`bpl09-20260210-040314Z-2084077e`) and unified `X-08` closure review (`x08-closure-20260210-040400Z-2084077e`) as immutable inputs. |
 | RPL-01 | done | P0 | `doc/wasm/tickets/RPL-01-secure-runtime-gating.md` | 2026-02-10 | Contradiction follow-through queue tasks `RPL01-CF-01`..`RPL01-CF-15` are complete (`C-01`..`C-14` closed + closure sync published), `RPL01-IG-01`/`RPL01-IG-02` are complete, and browser-lane startup-gate execution evidence is now captured with deterministic `test:browser` pass output. |
 | RPL-02 | done | P0 | `doc/wasm/tickets/RPL-02-worker-topology-and-thread-bootstrap.md` | 2026-02-09 | Step 3 mapping output is complete (`X03M-01`..`X03M-05`) with explicit BPL-03 `B3*` consumption coverage; dependency row `X-02` is now `done`. |
 | RPL-03 | done | P0 | `doc/wasm/tickets/RPL-03-shared-memory-ipc-core.md` | 2026-02-09 | Step 3 rerun evidence is now committed at `doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/` with `ipc_conformance_summary_v1.status=pass`, `x03_clear_ready=true`, and closure of `IPCGAP-01`..`IPCGAP-04`; dependency row `X-03` is now `done`. |
 | RPL-04 | done | P0 | `doc/wasm/tickets/RPL-04-runtime-ui-bridge-shared-path.md` | 2026-02-10 | Step 3 rerun evidence is now committed (`doc/wasm/tickets/evidence/rpl-04-step3-rerun-2026-02-10/`) with full `R4V-01`..`R4V-14` coverage, closed `R4GAP-01`..`R4GAP-04`, and terminal `runtime_ui_bridge_step2_summary_v1.status=pass` (`x04_step2_ready=true`). |
 | RPL-05 | done | P0 | `doc/wasm/tickets/RPL-05-storage-v2-local-core.md` | 2026-02-10 | Step 3 run-v2 closure evidence is now committed (`rpl05-20260210-011240Z-91fdb0be`) with full `R5V-01`..`R5V-14` command execution coverage, `storage_v2_local_step2_summary_v1.status=pass`, `x05_step2_ready=true`, and closed `R5GAP-01`..`R5GAP-05`. |
-| RPL-06 | planned | P1 | `doc/wasm/tickets/RPL-06-storage-v2-sync-merge.md` | 2026-02-09 | Remote sync, conflict records, merge-candidate/finalization flow. |
+| RPL-06 | done | P1 | `doc/wasm/tickets/RPL-06-storage-v2-sync-merge.md` | 2026-02-10 | Step 3 run-v1 closure evidence is now committed (`rpl06-20260210-054023Z-50d752af`) with full `R6V-01`..`R6V-14` execution coverage, terminal `storage_v2_sync_step2_summary_v1.status=pass`, `allow_fallback=false`, and no open Step 3 blocker gaps. |
 | RPL-07 | done | P0 | `doc/wasm/tickets/RPL-07-module-environment-sharing.md` | 2026-02-10 | Step 3 run-v2 closure evidence is now committed (`rpl07-20260210-014654Z-91fdb0be`) with full `R7V-01`..`R7V-14` execution coverage, terminal `module_env_step2_summary_v1.status=pass` (`x06_step2_ready=true`), closed `R7GAP-01`, and immutable `X-06`/`X-07` review packet bundle IDs preserved. |
 | RPL-08 | done | P1 | `doc/wasm/tickets/RPL-08-artifact-size-reduction-and-validation.md` | 2026-02-10 | Step 3 run-v2 evidence (`rpl08-20260210-023524Z-91fdb0be`) now has accepted unified closure review (`x07-closure-20260210-024503Z-91fdb0be`) with `x07_runtime_ready=true`, immutable bundle IDs preserved, `R8GAP-01` closed, and dependency row `X-07` advanced to `done`. |
 | RPL-09 | done | P0 | `doc/wasm/tickets/RPL-09-cutover-and-legacy-removal.md` | 2026-02-10 | Step 3 run-v2 closure evidence (`rpl09-20260210-034952Z-2084077e`) plus backend Step 3 run-v2 evidence (`bpl09-20260210-040314Z-2084077e`) are now consumed by unified closure review (`x08-closure-20260210-040400Z-2084077e`), closing `R9GAP-01` and advancing dependency row `X-08` to `done`. |
@@ -129,13 +129,13 @@ Notes:
 - Baseline architecture and blocker context have been captured from current docs.
 - RPL-00 subplan has been authored and now governs sync/update behavior.
 - Runtime track now has explicit parallel coordination points with backend migration track docs.
-- Thirty-eighth downstream governance cycle is now complete through backend Step 3 run-v2 evidence + unified `X-08` closure review publication while preserving closed `X-07` evidence and backend BPL-08 Step 3 closure packet rows (`BPL08-CR01`..`BPL08-CR06`) as immutable inputs.
+- Thirty-ninth downstream governance cycle is now complete through `RPL-06` Step 3 run-v1 closure evidence (`rpl06-20260210-054023Z-50d752af`) while preserving backend Step 3 run-v2 evidence + unified `X-08` closure review publication and backend BPL-08 Step 3 closure packet rows (`BPL08-CR01`..`BPL08-CR06`) as immutable inputs.
 
 Next Step Analysis:
 
-- Immediate Next Step: keep closed `X-08` and `RPL-01` startup-gate artifacts immutable while starting `RPL-06` Step 1 sync/merge contract drafting.
-- Why this step now: Pack D closure is complete (`X-08=done`) and startup-gate follow-through (`RPL01-IG-01`/`RPL01-IG-02`) is now closed with browser-lane evidence.
-- Evidence required to close next step: `RPL-06` moves from `planned` to active Step 1 contract drafting with frozen references to `SRG-*`, `RPL01-E*`, and immutable `X-08` artifacts preserved.
+- Immediate Next Step: keep closed `X-08`, `RPL-01`, and `RPL-06` artifacts immutable while maintaining additive-only governance synchronization.
+- Why this step now: Pack D closure remains complete (`X-08=done`) and `RPL-06` Step 3 closure evidence is now committed.
+- Evidence required to close next step: synchronized docs preserve immutable bundle IDs and frozen `SRG-*`/`RPL01-E*`/`R6*` namespaces without rewrites while no closed gates are reopened.
 
 ---
 
@@ -174,9 +174,9 @@ Notes:
 
 Next Step Analysis:
 
-- Immediate Next Step: keep `RPL-01` outputs frozen as a closed baseline while `RPL-06` Step 1 starts.
-- Why this step now: secure-startup contradiction closure and integration follow-through are complete; downstream sequencing should consume, not mutate, `RPL-01` contracts.
-- Evidence required to close next step: new runtime work references frozen `SRG-*`, `RPL01-E*`, and `LHI-*` identifiers without rewrites while `RPL-06` contract drafting advances.
+- Immediate Next Step: keep `RPL-01` outputs frozen as a closed baseline while closed `RPL-06` evidence is consumed downstream.
+- Why this step now: secure-startup contradiction closure and integration follow-through are complete, and `RPL-06` closure evidence is now committed.
+- Evidence required to close next step: new runtime work references frozen `SRG-*`, `RPL01-E*`, and `LHI-*` identifiers without rewrites.
 
 ---
 
@@ -290,22 +290,29 @@ Next Step Analysis:
 
 ### RPL-06 - Storage V2 Sync and Merge
 
-- Status: `planned`
+- Status: `done`
 - Priority: `P1`
-- Last Updated: `2026-02-09`
-- Subplan: `doc/wasm/tickets/RPL-06-storage-v2-sync-merge.md` (pending)
+- Last Updated: `2026-02-10`
+- Subplan: `doc/wasm/tickets/RPL-06-storage-v2-sync-merge.md`
 - Dependencies: RPL-05
 
 Notes:
 
 - Team sync requires closure upload/download, ref CAS, deterministic merge-candidate and finalization workflows.
 - Conflict records and merge records are required for deterministic auditability.
+- Step 1 sync/merge contract is now published in the RPL-06 subplan with frozen namespace IDs (`R6S-01`..`R6S-20`, `R6T-01`..`R6T-20`, `R6A-01`..`R6A-10`).
+- Step 1 contract now defines remote API/state records, deterministic conflict/merge semantics, canonical failure mappings (`RPL06-E001`..`RPL06-E010`), no-silent-fallback enforcement, and rollback/replay safety clauses.
+- Step 1 contract consumes frozen upstream IDs from RPL-01/RPL-02/RPL-03/RPL-05 without mutating previously closed namespaces.
+- Step 2 lane/validation matrix is now published with frozen IDs (`R6L-01`..`R6L-08`, `R6V-01`..`R6V-14`) and terminal schema `storage_v2_sync_step2_summary_v1`.
+- Step 2 command templates and validation coverage now explicitly map pass/fail assertions for sync ordering, CAS conflict handling, merge candidate/finalization auditability, no-fallback behavior, and canonical failure-code mappings.
+- Step 3 run-v1 closure evidence is now committed at `doc/wasm/tickets/evidence/rpl-06-step3-2026-02-10/rpl06-20260210-054023Z-50d752af/` with full `R6V-01`..`R6V-14` coverage.
+- Step 3 terminal summary reports `storage_v2_sync_step2_summary_v1.status=pass`, `allow_fallback=false`, and no open Step 3 blocker gaps.
 
 Next Step Analysis:
 
-- Immediate Next Step: define remote API contract and local sync state schema.
-- Why this step now: blocks multi-device correctness and conflict recovery behavior.
-- Evidence required to close next step: remote endpoint contract + sync integration tests.
+- Immediate Next Step: maintain RPL-06 as additive-only closed baseline and consume frozen sync/merge artifacts in downstream sequencing.
+- Why this step now: Step 3 closure evidence is now committed and exit criteria are satisfied.
+- Evidence required to close next step: downstream references preserve frozen `R6S-*`/`R6T-*`/`R6A-*`/`R6L-*`/`R6V-*` namespaces and `rpl06-20260210-054023Z-50d752af` bundle identity without rewrites.
 
 ---
 
@@ -481,3 +488,6 @@ Avoid batching multiple unrelated next actions into one update.
 - 2026-02-10: Completed `RPL01-IG-01` startup-gate loader/smoke integration (`LHI-01`/`LHI-02`/`LHI-03`) with strict + fail-injection validation coverage and advanced immediate runtime action to `RPL01-IG-02` (`LHI-04`/`LHI-05`/`LHI-06`).
 - 2026-02-10: Started `RPL01-IG-02` execution by landing `LHI-05` persistence-lane startup-gate wiring, wiring browser harness bootstrap gating (`LHI-06`), and validating delegated/all-smoke fail-lane behavior; browser execution evidence capture remains pending due Playwright launch limits in current environment.
 - 2026-02-10: Completed `RPL01-IG-02` by fixing browser harness runtime bootstrap to consume packed v2 UI module bundles and validating deterministic browser lane pass output (`npm --prefix web-ui run test:browser` -> `pass=1`, `fail=0`); advanced RPL-01 to `done` and shifted immediate runtime action to `RPL-06` Step 1.
+- 2026-02-10: Authored `doc/wasm/tickets/RPL-06-storage-v2-sync-merge.md`, published Step 1 sync/merge contract (`R6S-*`, `R6T-*`, `R6A-*`), advanced `RPL-06` to `in_progress`, and shifted immediate runtime action to `RPL-06` Step 2 lane/validation matrix drafting.
+- 2026-02-10: Published `RPL-06` Step 2 lane/validation matrix (`R6L-*`, `R6V-*`) and terminal schema (`storage_v2_sync_step2_summary_v1`), then shifted immediate runtime action to `RPL-06` Step 3 evidence execution.
+- 2026-02-10: Executed `RPL-06` Step 3 run-v1 (`R6V-01`..`R6V-14`), committed closure evidence bundle (`rpl06-20260210-054023Z-50d752af`) with terminal `storage_v2_sync_step2_summary_v1.status=pass`, advanced `RPL-06` to `done`, and synchronized runtime/governance wording to additive-only closed-baseline maintenance.
