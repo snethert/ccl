@@ -123,7 +123,7 @@ Hard gates are tracked in `doc/wasm/runtime-backend-dependency-matrix.md`.
 | BPL-07 | done | P1 | `doc/wasm/backend-tickets/BPL-07-size-and-performance-gates.md` | 2026-02-10 | Step 3 criteria packet (`BPL07-CR01`..`BPL07-CR05`) has remediation run-v2 pass evidence (`bpl06-20260210-005408Z-91fdb0be`, `bpl07-20260210-005408Z-91fdb0be`) with backend preconditions satisfied and unified closure review now advancing `X-07` to `done`. |
 | BPL-08 | done | P0 | `doc/wasm/backend-tickets/BPL-08-runtime-alignment-integration.md` | 2026-02-10 | Step 3 closure-readiness packet (`BPL08-CR01`..`BPL08-CR06`) remains immutable and is now consumed by unified closure review (`x07-closure-20260210-024503Z-91fdb0be`) that advances `X-07` to `done`. |
 | BPL-09 | done | P0 | `doc/wasm/backend-tickets/BPL-09-cutover-and-arm-retirement.md` | 2026-02-10 | Step 3 signoff packet rows (`BPL09-CR01`..`BPL09-CR06`) now have committed run-v2 evidence (`bpl09-20260210-040314Z-2084077e`) and unified closure-review acceptance (`x08-closure-20260210-040400Z-2084077e`), preserving immutable bundle IDs/frozen `BPL08-CR*` rows while advancing `X-08` to `done`. |
-| BPL-10 | in_progress | P0 | `doc/wasm/backend-tickets/BPL-10-wasm-machine-subprims-gc-compiler-implementation.md` | 2026-02-10 | Validation gates remain green (`B10V-01` strict audit `total_hits=0`, `B10V-03` smoke pass); `B10G-01` now includes external GC root-policy API, active descriptor coverage across XP/TCR/C-stack safepoint traversal helpers, runtime producer adoption in reset/startup paths, and runtime-mode semantics (`set_subprims_ready` default/bootstrap) plus host-mode controls validated by smoke. |
+| BPL-10 | done | P0 | `doc/wasm/backend-tickets/BPL-10-wasm-machine-subprims-gc-compiler-implementation.md` | 2026-02-10 | Closure checkpoint complete with requested backlog closed (`B10C-01A-19..A-27`, `B10C-02`..`B10C-08`, `B10C-10`) and redline evidence active (`B10V-10`/`B10V-11`/`B10V-12` via `compiler-smoke` + artifact set). Post-closure compatibility/legacy retirement is now tracked as cleanup work under `BPL-00` governance. |
 
 ## Ticket Details
 
@@ -395,7 +395,7 @@ Next Step Analysis:
 
 ### BPL-10 - WASM Machine Implementation (Subprims, L1 GC, Compiler)
 
-- Status: `in_progress`
+- Status: `done`
 - Priority: `P0`
 - Last Updated: `2026-02-10`
 - Subplan: `doc/wasm/backend-tickets/BPL-10-wasm-machine-subprims-gc-compiler-implementation.md`
@@ -403,7 +403,7 @@ Next Step Analysis:
 
 Notes:
 
-- This is the active remaining-backend implementation track.
+- Implementation closure is complete for the requested backlog and validation/evidence gates.
 - Scope includes four execution lanes: WASM machine profile normalization, subprim behavioral-gap closure, L1/kernel GC modernization, and compiler/WASM ARM-decoupling.
 - Baseline blockers are concrete and source-backed:
   - subprim backlog now reports `behavioral gap = 0` (closure reached),
@@ -412,9 +412,9 @@ Notes:
 
 Next Step Analysis:
 
-- Immediate Next Step: execute `B10G-01` in `lisp-kernel/wasm-gc.c` to remove fixed ARM register-span root scanning from WASM GC paths.
-- Why this step now: the validation gates now pass (`B10V-01` strict audit `total_hits=0`; `B10V-03` smoke pass), so the critical path is GC/model decoupling and correctness hardening.
-- Evidence required to close next step: descriptor-driven root publication replaces fixed register-span loops and regression smoke remains pass.
+- Immediate Next Step: run post-closure compatibility/legacy cleanup slices under `BPL-00` governance without reopening `BPL-10` scope unless redline gates regress.
+- Why this step now: `BPL-10` closure evidence is committed; remaining pressure is technical-debt cleanup (`legacy`/`compat` lanes), not implementation backlog.
+- Evidence required to close next step: compatibility-lane counts/paths trend down while required validation and `B10V-10`/`B10V-11`/`B10V-12` enforcement stay green.
 
 ## Subplan Registry Sync Rules
 
@@ -440,6 +440,7 @@ Avoid batching multiple unrelated next actions into one update.
 
 ## Change Log
 
+- 2026-02-10: Marked `BPL-10` done after closure of the remaining requested compiler/backend backlog and redline-gate evidence publication (`B10V-10`/`B10V-11`/`B10V-12`); immediate backend work is now post-closure compatibility/legacy cleanup under `BPL-00` governance.
 - 2026-02-09: Initial backend migration master plan created with ticket board, detail blocks, and update contract.
 - 2026-02-09: Synced BPL-02 planning notes with `X-01` progress after RPL-01 Step 2 froze startup check IDs (`SRG-01`..`SRG-12`).
 - 2026-02-09: Advanced BPL-01 to `in_progress` with Step 1 inventory v1 evidence and shifted BPL-00 governance next action to BPL-01 Step 2 strategy closure.

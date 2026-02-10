@@ -68,9 +68,9 @@ Out of scope:
 
 ## Immediate Next Step
 
-- Action: execute `BPL-10` Step 1/Step 2 publication in backend-local mode and queue shared-doc updates instead of direct fan-out.
-- Why now: governance/cutover artifacts are closed, but core backend implementation gaps still block ARM-retirement benefits.
-- Success evidence: `BPL-10` publishes `B10M-*` and `B10S-*` implementation IDs, backend docs stay synchronized, and shared updates are queued for merge cycles.
+- Action: run post-`BPL-10` cleanup governance for compatibility/legacy retirement slices (backend-local execution, queue shared-doc fan-out).
+- Why now: `BPL-10` implementation backlog is now closed; remaining work is explicit technical-debt reduction without reopening closed scope.
+- Success evidence: cleanup slices land with required validation green and measurable reduction in compatibility-only lanes.
 
 ## Detailed Work Breakdown
 
@@ -131,6 +131,7 @@ Out of scope:
 
 ## Change Log
 
+- 2026-02-10: Updated governance immediate-next-step after `BPL-10` closure: active work is now compatibility/legacy cleanup coordination and validation-gated technical-debt retirement.
 - 2026-02-09: Initial BPL-00 subplan created with governance and baseline-freeze workflow.
 - 2026-02-09: Synced governance state after BPL-03 Step 1 mapping publication and `X-02` closure; advanced immediate next action to BPL-03 Step 2 contract drafting.
 - 2026-02-09: Synced governance state after BPL-06 Step 1 checkpoint-contract publication; advanced immediate next action to BPL-06 Step 2 fixture/evidence-template publication.
