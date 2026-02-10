@@ -233,6 +233,16 @@ function gateA19Active(wasm2) {
     /\(defun\s+wasm2-emit-misc-slot-ref-with-subtag-guard\b/,
     "A-19 guarded direct misc-ref helper",
   );
+  requirePresent(
+    wasm2,
+    /\(defun\s+wasm2-emit-misc-alloc-call\b/,
+    "A-19 shared .SPmisc-alloc fallback helper",
+  );
+  requirePresent(
+    wasm2,
+    /\(defun\s+wasm2-emit-misc-alloc-init-call\b/,
+    "A-19 shared .SPmisc-alloc-init fallback helper",
+  );
 
   const miscSetLookups = countMatches(
     wasm2,
@@ -250,6 +260,24 @@ function gateA19Active(wasm2) {
   assert(
     miscRefLookups === 1,
     `A-19 active baseline requires exactly one shared .SPmisc-ref fallback lookup, found ${miscRefLookups}`,
+  );
+
+  const miscAllocLookups = countMatches(
+    wasm2,
+    /\(wasm2-subprim-fixnum\s+'\.SPmisc-alloc\)/g,
+  );
+  assert(
+    miscAllocLookups === 1,
+    `A-19 active baseline requires exactly one shared .SPmisc-alloc lookup, found ${miscAllocLookups}`,
+  );
+
+  const miscAllocInitLookups = countMatches(
+    wasm2,
+    /\(wasm2-subprim-fixnum\s+'\.SPmisc-alloc-init\)/g,
+  );
+  assert(
+    miscAllocInitLookups === 1,
+    `A-19 active baseline requires exactly one shared .SPmisc-alloc-init lookup, found ${miscAllocInitLookups}`,
   );
 
   const subtagMiscRefLookups = countMatches(
