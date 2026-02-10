@@ -4,6 +4,12 @@ You are building a **Common Lisp system derived from CCL’s architecture** that
 
 The project’s core bet is that **WASM instances are “processes”** (your “webrunners”), and that the JS side is a small, explicit kernel that provides the capabilities the runtime cannot provide itself: spawning, linking, I/O, scheduling, and coordination.
 
+## Program status snapshot (2026-02-10)
+
+* Backend migration (`BPL-*`) is effectively complete for active program execution (`BPL-01`..`BPL-10`, `X-08=done`).
+* Backend docs remain authoritative historical baselines and are frozen by default.
+* Active planning/status updates are runtime/project-side (`RPL-*`, dependency matrix, program board) unless backend scope is explicitly reopened.
+
 ## How to begin a formal spec doc
 
 Start by fixing the scope and contract: name the subsystem, the problem it solves, and the interfaces it must honor. A minimal opening template looks like this:

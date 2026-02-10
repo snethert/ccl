@@ -14,6 +14,13 @@ This document defines cross-track dependencies between:
 
 It is the authoritative source for deciding which tasks can run in parallel and which require explicit synchronization.
 
+## Post-Cutover Posture (2026-02-10)
+
+- Cross-track closure scope is complete (`X-01`..`X-08` are `done`).
+- Backend migration execution scope (`BPL-01`..`BPL-10`) is treated as complete for active program execution.
+- Backend docs remain authoritative historical baselines and should stay frozen unless backend scope is explicitly reopened.
+- Active day-to-day planning updates are runtime/project-side and should continue to reference frozen backend closure evidence rather than reopening backend doc churn.
+
 ## Dependency Types
 
 - `parallel`: both tickets can execute independently; sync only at milestones.
@@ -37,9 +44,9 @@ It is the authoritative source for deciding which tasks can run in parallel and 
 
 ### Pack A (Immediate)
 
-- Runtime: `RPL-08` closure is complete; keep frozen `R8*` contracts and run-v2 artifacts (`rpl08-20260210-023524Z-91fdb0be`) immutable as cutover inputs.
-- Backend: `BPL-08 Step 3` closure packet remains published (`BPL08-CR01`..`BPL08-CR06`) and immutable; consume it as `X-08` cutover input alongside closed `X-07` evidence.
-- Constraint: keep `SRG-*`, `WTOP-*`, `WSEQ-*`, `WLCS-*`, `WLCT-*`, `WLCR-*`, `B3*`, and `FDC-*` identifiers frozen; no fallback semantics may be reintroduced.
+- Runtime: continue runtime-side governance/execution updates and preserve closed runtime artifacts (`RPL-06`, `RPL-09`) as immutable baselines.
+- Backend: hold backend docs in frozen-baseline mode; do not require routine BPL doc updates while runtime-side work continues.
+- Constraint: preserve immutable backend closure evidence (`BPL08-CR*`, `BPL09-CR*`, `bpl09-20260210-040314Z-2084077e`) and keep all dependency rows closed unless explicit reopen criteria are approved.
 
 ### Pack B (After contract freeze)
 
@@ -68,12 +75,13 @@ It is the authoritative source for deciding which tasks can run in parallel and 
 
 ## Immediate Next Step
 
-- Action: keep closed `X-08` and runtime `RPL-06` artifacts immutable while runtime/backend governance remains additive-only.
-- Why now: Pack D hard-gate closure is complete with committed runtime/backend run-v2 evidence and unified decision artifact, and runtime `RPL-06` Step 3 run-v1 closure evidence is now committed.
-- Success evidence: synchronized docs preserve `x08-closure-20260210-040400Z-2084077e`, `bpl09-20260210-040314Z-2084077e`, and `rpl06-20260210-054023Z-50d752af` with `X-08=done` and `RPL-06=done`, without immutable bundle ID or frozen closure-row drift.
+- Action: keep backend closure artifacts/documents frozen and continue active updates on runtime/project docs only unless backend scope is explicitly reopened.
+- Why now: backend closure scope is complete (`BPL-01`..`BPL-10`, `X-08=done`), so remaining active planning movement is runtime-side.
+- Success evidence: synchronized runtime/master/matrix/program docs advance while preserving immutable backend bundle IDs and closed-row posture with no reopened `X-*` dependencies.
 
 ## Change Log
 
+- 2026-02-10: Added post-cutover operating posture that freezes routine backend doc churn after full BPL closure (`BPL-01`..`BPL-10`, `X-08=done`) and shifts active planning cadence to runtime/project docs.
 - 2026-02-09: Initial cross-track dependency matrix created with dependency types and parallel work packs.
 - 2026-02-09: Updated `X-01` to `in_progress` after RPL-01 Step 2 froze startup check IDs (`SRG-01`..`SRG-12`).
 - 2026-02-09: Updated Pack A immediate action to include RPL-01 Step 4 after Step 3 diagnostics contract completion.

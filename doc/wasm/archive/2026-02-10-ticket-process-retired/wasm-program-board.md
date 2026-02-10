@@ -26,15 +26,16 @@ This is intentionally not a megaplan. Execution remains in two track-specific ma
 3. Backend execution should use backend-local doc updates; shared docs are updated in queued merge cycles (`doc/wasm/backend-sync/README.md`).
 4. Every cross-track dependency change must update the dependency matrix in the same merge cycle.
 5. Cutover work cannot start until both tracks satisfy their cutover preconditions.
+6. With backend closure scope complete (`BPL-01`..`BPL-10`, `X-08=done`), backend docs are frozen by default; active planning updates should land in runtime/project docs unless backend scope is explicitly reopened.
 
 ## Parallel Execution Lanes
 
 | Lane | Primary Focus | Source of Truth | Can Run Now | Hard-Gated By |
 | --- | --- | --- | --- | --- |
 | Lane A | Secure runtime gating, worker topology, shared-memory IPC | `doc/wasm/runtime-replacement-master-plan.md` | yes | none |
-| Lane B | WASM-native backend contract, frame/debug model, numeric lowering | `doc/wasm/backend-migration-master-plan.md` | yes | none |
+| Lane B | WASM-native backend contract, frame/debug model, numeric lowering | `doc/wasm/backend-migration-master-plan.md` | frozen (done baseline) | none |
 | Lane C | Differential harnesses and parity checks | both master plans | yes | contract freeze from Lane A + Lane B |
-| Lane D | Cutover and legacy retirement | both master plans | yes (done) | completion of Lane A/B/C gates |
+| Lane D | Cutover and legacy retirement | both master plans | closed (done) | completion of Lane A/B/C gates |
 
 ## Synchronization Gates
 
@@ -46,12 +47,13 @@ This is intentionally not a megaplan. Execution remains in two track-specific ma
 
 ## Immediate Next Step
 
-- Action: keep closed `X-08` and runtime `RPL-06` artifacts immutable while runtime/backend governance remains additive-only.
-- Why now: Pack D closure is complete with unified review artifact `x08-closure-20260210-040400Z-2084077e`, and runtime `RPL-06` Step 3 run-v1 closure evidence is now committed.
-- Success evidence: master/matrix/governance docs preserve `X-08=done`, `RPL-06=done`, immutable bundle IDs, frozen `BPL08-CR*` rows, and committed run IDs (`bpl09-20260210-040314Z-2084077e`, `rpl06-20260210-054023Z-50d752af`) without drift.
+- Action: treat backend migration docs as frozen baselines and continue active status flow in runtime/project docs unless backend scope is explicitly reopened.
+- Why now: backend closure scope is complete (`BPL-01`..`BPL-10`, `X-08=done`) and remaining active follow-through is runtime-side.
+- Success evidence: program board/master/matrix docs continue to advance runtime-side execution while preserving immutable backend closure artifacts and closed dependency rows.
 
 ## Change Log
 
+- 2026-02-10: Added post-closure operating rule that freezes routine backend doc updates after full BPL closure and shifts active program cadence to runtime/project docs.
 - 2026-02-09: Initial program board created with dual-track structure and synchronization gate model.
 - 2026-02-09: Program planning scaffold completed; immediate next action moved to Pack A execution.
 - 2026-02-09: Pack A next action advanced to RPL-01 Step 3 and BPL-02 check-ID linkage after RPL-01 Step 2 completion.

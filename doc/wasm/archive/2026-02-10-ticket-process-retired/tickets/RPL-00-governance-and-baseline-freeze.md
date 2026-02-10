@@ -30,6 +30,8 @@ Out of scope:
 1. Canonical replacement master plan with ticket board and per-ticket detail blocks.
 2. Ticket subplan template and subplan directory conventions.
 3. Governance checklist for update cadence, sync rules, and resume protocol.
+4. Unattended runtime execution playbook with deterministic reopen/sync/evidence rules.
+5. RPL documentation completeness audit with remediations.
 
 ## Exit Criteria
 
@@ -37,6 +39,8 @@ Out of scope:
 - Master plan contains no "subplan not yet authored" note for RPL-00 and RPL-01.
 - Update and resume rules are documented and executable without additional context.
 - At least one downstream ticket update follows the documented sync process.
+- Long-run unattended execution protocol is documented as a single canonical runtime reference.
+- Ticket template requirements enforce deterministic command/evidence details for future tickets.
 
 ## Current Notes
 
@@ -44,12 +48,45 @@ Out of scope:
 - Ticket template and folder sync rules are present under `doc/wasm/tickets/`.
 - Baseline runtime status and artifact-size facts are captured in the master plan snapshot.
 - Fortieth downstream execution cycle is now complete as additive-only maintenance over immutable `X-08` and `RPL-06` artifacts while preserving backend Step 3 run-v2 evidence (`bpl09-20260210-040314Z-2084077e`) plus unified `X-08` closure review (`x08-closure-20260210-040400Z-2084077e`) and runtime Step 3 run-v1 evidence (`rpl06-20260210-054023Z-50d752af`) without drift.
+- Backend migration closure scope is complete (`BPL-01`..`BPL-10`, `X-08=done`), so backend docs are now frozen by default while runtime/project docs carry active updates.
+- Unattended runtime execution playbook is now published at `doc/wasm/rpl-unattended-execution-playbook.md`.
+- RPL documentation completeness audit is now published at `doc/wasm/rpl-doc-completeness-audit-2026-02-10.md`.
 
 ## Immediate Next Step
 
-- Action: keep closed `X-08` and `RPL-06` artifacts immutable with additive-only governance maintenance across runtime/backend docs.
-- Why now: joint cutover closure and sync/merge closure evidence are now complete.
-- Success evidence: synchronized docs keep `X-08=done`, preserve immutable bundle IDs/`BPL08-CR*` rows, and reference `rpl06-20260210-054023Z-50d752af` without reopening closed cutover/startup/sync gates.
+- Action: execute the first post-audit unattended runtime cycle using the playbook and keep backend docs frozen unless backend scope is explicitly reopened.
+- Why now: structural ticket completeness is in place; remaining risk is operational drift during long unattended execution.
+- Success evidence: one runtime governance cycle is published with single-action execution, mode-complete sync state (same-change updates in standard mode or explicit deferred queue coverage in single-document override mode), and explicit evidence mapping under the new protocol.
+
+## Unattended Execution Packet (Required)
+
+- Primary lane: runtime governance synchronization (`RPL-00` + runtime master, optional matrix/program updates).
+- Preconditions:
+  - `doc/wasm/rpl-unattended-execution-playbook.md` is treated as authoritative protocol.
+  - Active runtime state is read from `doc/wasm/runtime-replacement-master-plan.md` ticket board.
+- Deterministic validation commands/IDs:
+  - `rg -n \"rpl-unattended-execution-playbook|rpl-doc-completeness-audit-2026-02-10\" doc/wasm/runtime-replacement-master-plan.md doc/wasm/tickets/RPL-00-governance-and-baseline-freeze.md doc/wasm/tickets/README.md`
+  - `rg -n \"## Unattended Execution Packet \\(Required\\)|## Done-Ticket Reopen Contract\" doc/wasm/tickets/TICKET-SUBPLAN-TEMPLATE.md`
+- Expected evidence output paths:
+  - Doc-diff evidence showing required sync completion for the active mode:
+    - standard mode: same-change update touching `RPL-00` + runtime master (and matrix/program when required);
+    - single-document override mode: one-doc change plus explicit deferred queue items for skipped sync targets.
+- Terminal summary artifact/check:
+  - Runtime governance update includes one single-action next step with explicit success evidence.
+- Blocker/gap handling rule:
+  - Record governance blocker in `Current Notes` and keep `Status=in_progress` until sync set is complete.
+
+## Done-Ticket Reopen Contract
+
+- Reopen trigger(s):
+  - New runtime work requires changes that cannot be represented as additive governance-only maintenance.
+  - Work clearly belongs to the existing ticket scope.
+- Required status transition:
+  - Set ticket `Status` from `done` to `in_progress` with dated reopen note and new step slice.
+- Required sync update set:
+  - `doc/wasm/tickets/<ticket>.md`
+  - `doc/wasm/runtime-replacement-master-plan.md`
+  - `doc/wasm/runtime-backend-dependency-matrix.md` and `doc/wasm/wasm-program-board.md` if dependency semantics change.
 
 ## Detailed Work Breakdown
 
@@ -67,9 +104,9 @@ Out of scope:
 - Status: done
 - Notes:
   - Master plan includes required update contract and resume protocol.
-  - Sync rules explicitly require updating both master and subplan docs together.
+  - Sync rules are now mode-aware: standard mode requires same-change master+subplan updates, while single-document override mode requires explicit deferred queue coverage for skipped required targets.
 - Next:
-  - Apply this process on each ticket update without exception.
+  - Apply mode-aware sync completion process on each ticket update without exception.
 
 ### Step 3 - Subplan Framework Availability
 
@@ -97,27 +134,47 @@ Out of scope:
 - Next:
   - Maintain governance as additive-only sync discipline for subsequent runtime/backend ticket cycles.
 
+### Step 6 - Unattended Execution Hardening
+
+- Status: done
+- Notes:
+  - Published `doc/wasm/rpl-unattended-execution-playbook.md` with deterministic ticket selection, reopen protocol, evidence conventions, blocker handling, and required sync set.
+  - Published `doc/wasm/rpl-doc-completeness-audit-2026-02-10.md` to record structural pass results and operational remediations.
+  - Updated ticket template and ticket README so future runtime tickets stay unattended-operable by default.
+- Next:
+  - Execute governance cycles against the playbook and refine additively if new unattended failure classes appear.
+
 ## Test and Validation Plan
 
 - Documentation integrity:
   - Confirm all referenced subplan paths exist.
   - Confirm RPL-00 and RPL-01 master-plan blocks match subplan status and notes.
 - Process validation:
-  - Perform one downstream update and verify master + subplan were both updated.
+  - Perform one downstream update and verify sync completion for the active mode.
 - Resume validation:
   - Use the resume protocol to identify and execute the next action without extra context.
+- Unattended protocol validation:
+  - Verify `doc/wasm/tickets/TICKET-SUBPLAN-TEMPLATE.md` includes deterministic execution packet fields.
+  - Verify runtime master references `doc/wasm/rpl-unattended-execution-playbook.md` as normative protocol.
 
 ## Risks and Mitigations
 
 - Risk: ticket docs diverge from the master plan.
-  - Mitigation: enforce dual-update rule on every ticket change.
+  - Mitigation: enforce mode-aware sync completion on every ticket change (same-change dual update in standard mode or explicit deferred queue coverage in single-document override mode).
 - Risk: stale "next step" text blocks resumption.
   - Mitigation: require a single concrete next action and evidence marker in every update.
 - Risk: governance overhead slows execution.
   - Mitigation: keep updates concise and focused on status/notes/next evidence.
+- Risk: long unattended runs reopen closed tickets inconsistently.
+  - Mitigation: require explicit done-ticket reopen criteria and mirrored status/evidence updates in master + subplan.
 
 ## Change Log
 
+- 2026-02-10: Aligned RPL-00 governance success/evidence/validation language
+  with playbook single-document override semantics and mode-aware sync
+  completion.
+- 2026-02-10: Published unattended execution hardening artifacts (`rpl-unattended-execution-playbook`, completeness audit) and extended runtime ticket template requirements for long autonomous cycles.
+- 2026-02-10: Added post-closure governance note that backend migration docs are frozen by default after full BPL closure and active status flow continues in runtime/project docs.
 - 2026-02-09: Initial subplan scaffold created and aligned with master-plan governance rules.
 - 2026-02-09: First downstream governance cycle started through RPL-01 Step 1; immediate next action moved to RPL-01 Step 2 sync loop.
 - 2026-02-09: Second downstream governance cycle completed through RPL-01 Step 2; immediate next action moved to RPL-01 Step 3 sync loop.

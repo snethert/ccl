@@ -2,6 +2,8 @@
  * Run all WASM JS smoke tests in a single Node invocation.
  */
 
+import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { emitSyntheticIpcArtifacts } from "./ipc-conformance.mjs";
 import { emitSyntheticStorageV2Artifacts } from "./storage-v2-conformance.mjs";
 
@@ -92,8 +94,40 @@ const filteredTests = skipUi
   ? tests.filter((test) => !test.startsWith("./web-ui-"))
   : tests;
 
+function runSmokeScript(test) {
+  const scriptPath = fileURLToPath(new URL(test, import.meta.url));
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [scriptPath], {
+      cwd: process.cwd(),
+      env: process.env,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    child.stdout.on("data", (chunk) => process.stdout.write(chunk));
+    child.stderr.on("data", (chunk) => process.stderr.write(chunk));
+    child.on("error", (error) => {
+      reject(new Error(`failed to launch ${test}: ${error.message}`));
+    });
+    child.on("close", (code, signal) => {
+      if (code === 0) {
+        resolve();
+        return;
+      }
+      if (signal) {
+        reject(new Error(`${test} terminated by signal ${signal}`));
+        return;
+      }
+      reject(new Error(`${test} exited with code ${code}`));
+    });
+  });
+}
+
 for (const test of filteredTests) {
-  await import(new URL(test, import.meta.url));
+  try {
+    await runSmokeScript(test);
+  } catch (error) {
+    console.error(`FAIL: ${error.message}`);
+    process.exit(1);
+  }
 }
 
 emitSyntheticStorageV2Artifacts({

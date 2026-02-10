@@ -1,0 +1,10 @@
+[VRG-06] COMMAND: CCL_STARTUP_GATE_TEST_FAIL_CHECK=SRG-01 node doc/wasm/js/load-image.mjs --mode start-lisp --manifest doc/wasm/root.image.manifest.json --stdin-text "(quit)\\n" --close-stdin
+[VRG-06] START: 2026-02-10T22:54:20Z
+stdin preload bytes=8
+stdin closed
+wasm_ccl_load_image rc=0 lisp_nil=0x4000001
+wasm_reset_root_image_runtime_state rc=0
+compiled modules installed from bundle 7620/7620 (failed 0)
+compiled modules installed 0/0
+STARTUP_GATE_CHECK {"schema_version":"startup_gate_check_result_v1","run_id":"startup-gate-1770764063914-33058","sequence":1,"check_id":"SRG-01","required":true,"status":"fail","fail_code":"RPL01-E001","message":"[RPL01-E001] SRG-01 failed: cross-origin isolation is required; observed=false.","observed":{"cross_origin_isolated":true,"source":"doc/wasm/js/load-image.mjs"},"pass_criteria":"crossOriginIsolated is true.","contradiction_ids":["C-02","C-04","C-05","C-06","C-07","C-08","C-13"],"remediation":"Enable COOP/COEP and rerun in an isolated top-level context."}
+STARTUP_GATE_SUMMARY {"schema_version":"startup_gate_summary_v1","run_id":"startup-gate-1770764063914-33058","timestamp_utc":"2026-02-10T22:54:23.914Z","replacement_track":"RPL-01","startup_gate_mode":"strict","allow_fallback":false,"check_order":["SRG-01","SRG-02","SRG-03","SRG-04","SRG-05","SRG-06","SRG-07","SRG-08","SRG-09","SRG-10","SRG-11","SRG-12"],"checks_executed":1,"status":"fail","failure_check_id":"SRG-01","failure_code":"RPL01-E001","message":"[RPL01-E001] SRG-01 failed: cross-origin isolation is required; observed=false.","contradiction_ids":["C-02","C-04","C-05","C-06","C-07","C-08","C-13"],"remediation":"Enable COOP/COEP and rerun in an isolated top-level context.","results_digest":"6af10fb9b46d82eb2a710c74d40621f4"}

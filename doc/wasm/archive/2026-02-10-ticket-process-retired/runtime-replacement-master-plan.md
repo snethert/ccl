@@ -28,6 +28,12 @@ Cross-track dependencies and parallelization constraints are tracked in:
 - `doc/wasm/wasm-program-board.md`
 - `doc/wasm/backend-sync/README.md` (backend-local + shared-merge doc workflow)
 
+Backend convergence note (2026-02-10):
+
+- Backend migration closure scope (`BPL-01`..`BPL-10` with `X-08=done`) is now treated as complete for active program execution.
+- Backend docs remain authoritative historical baselines and are frozen for routine execution.
+- Active day-to-day planning updates are runtime/project-side unless backend scope is explicitly reopened.
+
 ## Scope
 
 In scope:
@@ -50,6 +56,8 @@ Out of scope:
 - `doc/wasm/porting-status.md`
 - `doc/wasm/mvp-unattended-execution-plan.md`
 - `doc/wasm/mvp-unattended-execution-report.md`
+- `doc/wasm/rpl-unattended-execution-playbook.md`
+- `doc/wasm/rpl-doc-completeness-audit-2026-02-10.md`
 - `doc/wasm/wasm-ui-persistence-problem-tracker.md`
 - `doc/wasm/kernel-request-abi.md`
 - `doc/wasm/js-microkernel-spec.md`
@@ -78,8 +86,15 @@ On every ticket update:
    - `Notes`,
    - `Next Step Analysis`.
 2. Update the ticket subplan document referenced by `Subplan`.
-3. If subplan content changes but this master plan is not updated in the same change, the ticket is considered out of sync.
-4. Backend ticket execution may run in backend-local doc mode; do not mirror backend ticket churn here until a queued shared-merge cycle is executed.
+3. Synchronization is mode-aware per
+   `doc/wasm/rpl-unattended-execution-playbook.md`:
+   - standard mode: update master + subplan in the same change;
+   - single-document override mode: update one target document and record
+     deferred sync items for every skipped required target.
+4. A ticket is considered out of sync when required updates are neither applied
+   in-cycle nor represented by explicit deferred queue items.
+5. Backend ticket execution may run in backend-local doc mode; do not mirror backend ticket churn here until a queued shared-merge cycle is executed.
+6. With backend closure now complete, keep backend docs frozen by default and record ongoing program movement in runtime/project docs unless backend scope is explicitly reopened.
 
 ## Fresh-Context Resume Protocol
 
@@ -88,7 +103,32 @@ When resuming work from scratch:
 1. Read `Current Baseline Snapshot`.
 2. Find the highest-priority ticket with `Status = in_progress` or `planned` and no unmet hard dependency.
 3. Execute only the `Immediate Next Step` under that ticket.
-4. At stop, update both this master plan and the ticket subplan before ending work.
+4. At stop, satisfy sync for the active mode:
+   - standard mode: update both this master plan and the ticket subplan;
+   - single-document override mode: update one selected document and queue
+     deferred sync items for all skipped required targets.
+
+## Unattended Execution Protocol (Normative)
+
+For long unattended runtime execution, this plan defers to:
+
+- `doc/wasm/rpl-unattended-execution-playbook.md`
+
+Required constraints:
+
+1. Execute exactly one scoped next action per cycle.
+2. Define a single cycle goal using the playbook goal contract.
+3. Keep required sync state complete for the active mode:
+   - standard mode: apply required sync docs in-cycle;
+   - single-document override mode: queue explicit deferred sync items for each
+     skipped required target.
+4. Handle matrix/program updates with the same mode-aware rule:
+   - standard mode: update in-cycle when dependency semantics or lane posture
+     changes;
+   - single-document override mode: queue explicit deferred items when those
+     semantics changed.
+5. Reopen `done` tickets only through explicit reopen criteria and deterministic validation/evidence updates.
+6. Keep backend `BPL-*` docs frozen unless runtime work explicitly requires cross-track reopening.
 
 ## Current Baseline Snapshot (2026-02-09)
 
@@ -104,7 +144,7 @@ When resuming work from scratch:
 
 | Ticket | Status | Priority | Subplan | Last Updated | Notes |
 | --- | --- | --- | --- | --- | --- |
-| RPL-00 | in_progress | P0 | `doc/wasm/tickets/RPL-00-governance-and-baseline-freeze.md` | 2026-02-10 | Fortieth downstream update cycle is now complete as additive-only maintenance over closed `X-08` and `RPL-06` artifacts, preserving runtime/backend closure evidence (`rpl06-20260210-054023Z-50d752af`, `bpl09-20260210-040314Z-2084077e`, `x08-closure-20260210-040400Z-2084077e`) without drift. |
+| RPL-00 | in_progress | P0 | `doc/wasm/tickets/RPL-00-governance-and-baseline-freeze.md` | 2026-02-10 | Fortieth downstream update cycle remains additive-only over closed `X-08`/`RPL-06` artifacts, and unattended execution protocol hardening is now published (`rpl-unattended-execution-playbook`, completeness audit) to support long autonomous runtime cycles without sync drift. |
 | RPL-01 | done | P0 | `doc/wasm/tickets/RPL-01-secure-runtime-gating.md` | 2026-02-10 | Contradiction follow-through queue tasks `RPL01-CF-01`..`RPL01-CF-15` are complete (`C-01`..`C-14` closed + closure sync published), `RPL01-IG-01`/`RPL01-IG-02` are complete, and browser-lane startup-gate execution evidence is now captured with deterministic `test:browser` pass output. |
 | RPL-02 | done | P0 | `doc/wasm/tickets/RPL-02-worker-topology-and-thread-bootstrap.md` | 2026-02-09 | Step 3 mapping output is complete (`X03M-01`..`X03M-05`) with explicit BPL-03 `B3*` consumption coverage; dependency row `X-02` is now `done`. |
 | RPL-03 | done | P0 | `doc/wasm/tickets/RPL-03-shared-memory-ipc-core.md` | 2026-02-09 | Step 3 rerun evidence is now committed at `doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/` with `ipc_conformance_summary_v1.status=pass`, `x03_clear_ready=true`, and closure of `IPCGAP-01`..`IPCGAP-04`; dependency row `X-03` is now `done`. |
@@ -132,12 +172,15 @@ Notes:
 - RPL-00 subplan has been authored and now governs sync/update behavior.
 - Runtime track now has explicit parallel coordination points with backend migration track docs.
 - Fortieth downstream governance cycle is now complete as additive-only maintenance over immutable `X-08` and `RPL-06` artifacts while preserving backend Step 3 run-v2 evidence + unified `X-08` closure review publication and backend BPL-08 Step 3 closure packet rows (`BPL08-CR01`..`BPL08-CR06`) unchanged.
+- Backend migration is now effectively complete for active program execution; backend docs are frozen baselines and do not require routine updates while runtime-side follow-through remains active.
+- Unattended runtime execution protocol is now explicitly codified in `doc/wasm/rpl-unattended-execution-playbook.md` with deterministic selection, reopen, and evidence-sync rules.
+- RPL documentation completeness audit is now published at `doc/wasm/rpl-doc-completeness-audit-2026-02-10.md` and records structural pass + operational-gap remediations.
 
 Next Step Analysis:
 
-- Immediate Next Step: keep closed `X-08`, `RPL-01`, and `RPL-06` artifacts immutable while maintaining additive-only governance synchronization.
-- Why this step now: Pack D closure remains complete (`X-08=done`) and `RPL-06` Step 3 closure evidence is now committed.
-- Evidence required to close next step: synchronized docs preserve immutable bundle IDs and frozen `SRG-*`/`RPL01-E*`/`R6*` namespaces without rewrites while no closed gates are reopened.
+- Immediate Next Step: execute runtime-side unattended cycles using the new playbook and keep governance synchronization additive-only while backend `BPL-*` docs stay frozen unless scope is explicitly reopened.
+- Why this step now: all runtime replacement tickets are closed baselines except governance, so unattended progress now depends on deterministic reopen and sync discipline rather than new baseline authoring.
+- Evidence required to close next step: at least one post-audit unattended runtime cycle updates ticket + master (and matrix/program if needed) with explicit single-action evidence and no frozen-ID drift.
 
 ---
 
@@ -419,7 +462,13 @@ Next Step Analysis:
   - `Immediate Next Step`,
   - `Exit Criteria`,
   - `Change Log`.
-- If a subplan moves paths, update both this board row and the ticket detail block in the same change.
+- Each `planned`/`in_progress` (or reopened) runtime ticket subplan must also include:
+  - `Unattended Execution Packet`,
+  - `Done-Ticket Reopen Contract`.
+- If a subplan moves paths:
+  - standard mode: update board row + ticket detail block in the same change;
+  - single-document override mode: apply one doc change and queue the paired
+    path-sync update as a deferred merge item.
 
 ## Ongoing Next-Step Analysis Rules
 
@@ -433,6 +482,11 @@ Avoid batching multiple unrelated next actions into one update.
 
 ## Change Log
 
+- 2026-02-10: Aligned update/resume/sync rules with playbook single-document
+  override mode so deferred queue items satisfy sync without requiring
+  same-change multi-doc edits in unattended cycles.
+- 2026-02-10: Added normative unattended execution protocol references and linked runtime completeness audit/playbook artifacts to support long autonomous runtime cycles.
+- 2026-02-10: Merged backend closure posture into runtime/project governance: backend scope is now treated as effectively complete (`BPL-01`..`BPL-10`, `X-08=done`) and backend docs are frozen by default unless backend scope is explicitly reopened.
 - 2026-02-09: Initial master plan created with ticket board, detail blocks, update contract, and resume protocol.
 - 2026-02-09: Scaffolded `RPL-00` and `RPL-01` subplans and synchronized ticket board/detail notes.
 - 2026-02-09: Began RPL-01 execution with Step 1 contradiction inventory v1 and synchronized board/detail status updates.

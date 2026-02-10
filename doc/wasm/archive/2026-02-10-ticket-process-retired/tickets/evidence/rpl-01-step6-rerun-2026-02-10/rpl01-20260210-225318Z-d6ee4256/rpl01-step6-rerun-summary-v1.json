@@ -1,0 +1,10 @@
+{
+  "schema_version": "rpl01_step6_rerun_summary_v1",
+  "run_id": "rpl01-20260210-225318Z-d6ee4256",
+  "timestamp_utc": "2026-02-10T22:54:38Z",
+  "ticket": "RPL-01",
+  "validation_total": 10,
+  "validation_pass_count": 6,
+  "validation_fail_count": 4,
+  "status": "fail"
+}

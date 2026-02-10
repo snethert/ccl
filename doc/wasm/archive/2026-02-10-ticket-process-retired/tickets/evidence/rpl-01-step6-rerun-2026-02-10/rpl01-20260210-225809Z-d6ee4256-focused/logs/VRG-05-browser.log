@@ -1,0 +1,15 @@
+[VRG-05-browser] COMMAND: npm --prefix web-ui run test:browser
+[VRG-05-browser] START: 2026-02-10T22:59:09Z
+
+> web-ui@0.1.0 test:browser
+> WEB_UI_ENABLE_BROWSER_TESTS=1 node --test tests/browser.test.mjs
+
+✔ headless browser harness runs deterministically (977.23851ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1214.845152

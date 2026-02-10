@@ -1,0 +1,11 @@
+validation_id	command	exit_code	expect_exit	result	note
+VRG-01	node doc/wasm/js/load-image.mjs --mode start-lisp --manifest doc/wasm/root.image.manifest.json --stdin-text "(quit)\\n" --close-stdin	0	0	pass	ok
+VRG-02	node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive	0	0	fail	missing_code_pattern
+VRG-03	node doc/wasm/js/wasm-ui-persist-smoke.mjs --image root --verbose	0	0	pass	ok
+VRG-04	node doc/wasm/js/all-smoke.mjs	0	0	fail	missing_check_pattern
+VRG-05	npm --prefix web-ui run test:sandbox	0	0	fail	missing_check_pattern
+VRG-06	CCL_STARTUP_GATE_TEST_FAIL_CHECK=SRG-01 node doc/wasm/js/load-image.mjs --mode start-lisp --manifest doc/wasm/root.image.manifest.json --stdin-text "(quit)\\n" --close-stdin	6	nonzero	pass	ok
+VRG-07	CCL_STARTUP_GATE_TEST_FAIL_CHECK=SRG-07 node doc/wasm/js/load-image.mjs --mode start-lisp --manifest doc/wasm/root.image.manifest.json --stdin-text "(quit)\\n" --close-stdin	6	nonzero	pass	ok
+VRG-08	CCL_STARTUP_GATE_TEST_FAIL_CHECK=SRG-11 node doc/wasm/js/load-image.mjs --mode start-lisp --manifest doc/wasm/root.image.manifest.json --stdin-text "(quit)\\n" --close-stdin	6	nonzero	pass	ok
+VRG-09	CCL_STARTUP_GATE_TEST_INVALID_SUMMARY=1 node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive	1	nonzero	pass	ok
+VRG-10	CCL_STARTUP_GATE_TEST_FAIL_CHECK=SRG-01 node doc/wasm/js/all-smoke.mjs	1	nonzero	fail	missing_code_pattern
