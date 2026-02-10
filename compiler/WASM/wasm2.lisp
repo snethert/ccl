@@ -2394,8 +2394,7 @@
   (declare (ignore vreg))
   (let* ((ptr-temp (wasm2-allocate-temp))
          (val-temp (wasm2-allocate-temp))
-         (raw-temp (wasm2-allocate-temp))
-         (misc-ref (wasm2-subprim-fixnum '.SPmisc-ref)))
+         (raw-temp (wasm2-allocate-temp)))
     (wasm2-form seg nil nil ptr)
     (wasm2-emit :local.set ptr-temp)
     (wasm2-form seg nil nil val)
@@ -2404,11 +2403,8 @@
     (let* ((then-ir (wasm2-with-ir
                       (lambda ()
                         (wasm2-emit :local.get val-temp)
-                        (wasm2-emit :const (wasm2-box-fixnum 1))
-                        (wasm2-emit :set-arg1)
-                        (wasm2-emit :set-arg0)
-                        (wasm2-emit-call-subprim misc-ref)
-                        (wasm2-emit :arg0))))
+                        (wasm2-emit-misc-node-slot-address 1)
+                        (wasm2-emit :i32-load))))
            (else-ir (wasm2-with-ir
                       (lambda ()
                         (wasm2-emit :local.get val-temp)
@@ -2486,13 +2482,12 @@
 
 (defwasm2 wasm2-%macptrptr% %macptrptr% (seg vreg xfer form)
   (declare (ignore vreg))
-  (let* ((misc-ref (wasm2-subprim-fixnum '.SPmisc-ref)))
+  (let* ((ptr-temp (wasm2-allocate-temp)))
     (wasm2-form seg nil nil form)
-    (wasm2-emit :const (wasm2-box-fixnum 1))
-    (wasm2-emit :set-arg1)
-    (wasm2-emit :set-arg0)
-    (wasm2-emit-call-subprim misc-ref)
-    (wasm2-emit :arg0)
+    (wasm2-emit :local.set ptr-temp)
+    (wasm2-emit-misc-slot-ref-with-subtag-guard ptr-temp
+                                                 1
+                                                 wasm::subtag-macptr)
     (when (wasm2-returning-p xfer)
       (wasm2-emit :set-arg-z)
       (wasm2-emit :set-nargs 1)
@@ -2610,12 +2605,10 @@
     (wasm2-emit :local.set val-temp)
     (wasm2-emit :local.get val-temp)
     (if store-ptr
-      (let* ((misc-ref (wasm2-subprim-fixnum '.SPmisc-ref)))
-        (wasm2-emit :const (wasm2-box-fixnum 1))
-        (wasm2-emit :set-arg1)
-        (wasm2-emit :set-arg0)
-        (wasm2-emit-call-subprim misc-ref)
-        (wasm2-emit :arg0)
+      (progn
+        (wasm2-emit-misc-slot-ref-with-subtag-guard val-temp
+                                                     1
+                                                     wasm::subtag-macptr)
         (wasm2-emit :local.set raw-temp)
         (wasm2-emit :local.get addr-temp)
         (wasm2-emit :local.get raw-temp))
@@ -3443,13 +3436,23 @@
 
 (defun wasm2-uvref (seg vreg xfer vector index)
   (declare (ignore vreg))
-  (let* ((misc-ref (wasm2-subprim-fixnum '.SPmisc-ref)))
+  (let* ((vec-temp (wasm2-allocate-temp))
+         (idx-temp (wasm2-allocate-temp))
+         (slot-fixnum (acode-fixnum-form-p index))
+         (slot-fixnum-boxed (and (typep slot-fixnum 'fixnum)
+                                 (wasm2-box-fixnum slot-fixnum))))
     (wasm2-form seg nil nil vector)
-    (wasm2-form seg nil nil index)
-    (wasm2-emit :set-arg1)
-    (wasm2-emit :set-arg0)
-    (wasm2-emit-call-subprim misc-ref)
-    (wasm2-emit :arg0)
+    (wasm2-emit :local.set vec-temp)
+    (if slot-fixnum-boxed
+      (multiple-value-bind (proven-slot proven-subtag)
+          (wasm2-proven-uvref-slot-proof vector index)
+        (if proven-slot
+          (wasm2-emit-misc-slot-ref-with-subtag-guard vec-temp proven-slot proven-subtag)
+          (wasm2-emit-misc-ref-fallback-local vec-temp slot-fixnum-boxed)))
+      (progn
+        (wasm2-form seg nil nil index)
+        (wasm2-emit :local.set idx-temp)
+        (wasm2-emit-misc-ref-fallback-local vec-temp idx-temp t)))
     (when (wasm2-returning-p xfer)
       (wasm2-emit :set-arg-z)
       (wasm2-emit :set-nargs 1)
@@ -4032,17 +4035,13 @@
   (wasm2-subprim-fixnum (wasm2-compat-boundary-subprim-symbol compat-key) t))
 
 (defun wasm2-emit-closed-var-cell (var)
-  (let* ((slot (wasm2-closed-var-slot var))
-         (misc-ref (wasm2-subprim-fixnum '.SPmisc-ref)))
+  (let* ((slot (wasm2-closed-var-slot var)))
     (if slot
-      (wasm2-with-spilled-locals
-        (lambda ()
-          (wasm2-emit :get-nfn)
-          (wasm2-emit :const (wasm2-box-fixnum slot))
-          (wasm2-emit :set-arg1)
-          (wasm2-emit :set-arg0)
-          (wasm2-emit-call-subprim misc-ref)
-          (wasm2-emit :arg0)))
+      (let* ((fn-temp (wasm2-allocate-temp))
+             (function-subtag (nx-lookup-target-uvector-subtag :function)))
+        (wasm2-emit :get-nfn)
+        (wasm2-emit :local.set fn-temp)
+        (wasm2-emit-misc-slot-ref-with-subtag-guard fn-temp slot function-subtag))
       (let* ((idx (wasm2-ensure-local (nx-root-var var))))
         (wasm2-emit :local.get idx)))))
 
@@ -4052,15 +4051,37 @@
     (wasm2-emit :local.get (wasm2-ensure-local var))))
 
 (defun wasm2-emit-closed-var-value (var)
+  (let* ((cell-temp (wasm2-allocate-temp))
+         (simple-vector-subtag (nx-lookup-target-uvector-subtag :simple-vector)))
+    (wasm2-emit-closed-var-cell var)
+    (wasm2-emit :local.set cell-temp)
+    (wasm2-emit-misc-slot-ref-with-subtag-guard cell-temp 0 simple-vector-subtag)))
+
+(defun wasm2-emit-misc-ref-fallback-local (obj-local slot &optional slot-is-local-p)
   (let* ((misc-ref (wasm2-subprim-fixnum '.SPmisc-ref)))
     (wasm2-with-spilled-locals
       (lambda ()
-        (wasm2-emit-closed-var-cell var)
-        (wasm2-emit :const (wasm2-box-fixnum 0))
+        (wasm2-emit :local.get obj-local)
+        (if slot-is-local-p
+          (wasm2-emit :local.get slot)
+          (wasm2-emit :const slot))
         (wasm2-emit :set-arg1)
         (wasm2-emit :set-arg0)
         (wasm2-emit-call-subprim misc-ref)
         (wasm2-emit :arg0)))))
+
+(defun wasm2-emit-misc-slot-ref-with-subtag-guard (obj-local slot expected-subtag)
+  (let* ((slot-fixnum (wasm2-box-fixnum slot)))
+    (wasm2-emit-misc-subtag-test obj-local expected-subtag)
+    (let* ((then-ir (wasm2-with-ir
+                      (lambda ()
+                        (wasm2-emit :local.get obj-local)
+                        (wasm2-emit-misc-node-slot-address slot)
+                        (wasm2-emit :i32-load))))
+           (else-ir (wasm2-with-ir
+                      (lambda ()
+                        (wasm2-emit-misc-ref-fallback-local obj-local slot-fixnum)))))
+      (wasm2-emit :if then-ir else-ir))))
 
 (defun wasm2-emit-misc-set-fallback-local (obj-local slot value-local
                                            &optional return-value-p slot-is-local-p)
@@ -4104,6 +4125,20 @@
     (and (typep slot 'fixnum)
          (nx2-constant-index-ok-for-type-keyword slot :simple-vector)
          slot)))
+
+(defun wasm2-proven-uvref-subtag-keyword (vector-form)
+  (cond
+    ((acode-form-typep vector-form 'simple-vector t) :simple-vector)
+    ((acode-form-typep vector-form 'structure-object t) :struct)))
+
+(defun wasm2-proven-uvref-slot-proof (vector-form slot-form)
+  (let* ((slot (acode-fixnum-form-p slot-form)))
+    (when (typep slot 'fixnum)
+      (let* ((keyword (wasm2-proven-uvref-subtag-keyword vector-form))
+             (subtag (and keyword (nx-lookup-target-uvector-subtag keyword))))
+        (when (and subtag
+                   (nx2-constant-index-ok-for-type-keyword slot keyword))
+          (values slot subtag))))))
 
 (defun wasm2-proven-uvset-subtag-keyword (vector-form)
   (cond
@@ -4658,13 +4693,12 @@
      (wasm2-form seg nil nil arg)
      (wasm2-emit-unbox-fixnum))
     (:address
-     (let* ((misc-ref (wasm2-subprim-fixnum '.SPmisc-ref)))
+     (let* ((arg-temp (wasm2-allocate-temp)))
        (wasm2-form seg nil nil arg)
-       (wasm2-emit :const (wasm2-box-fixnum 1))
-       (wasm2-emit :set-arg1)
-       (wasm2-emit :set-arg0)
-       (wasm2-emit-call-subprim misc-ref)
-       (wasm2-emit :arg0)))
+       (wasm2-emit :local.set arg-temp)
+       (wasm2-emit-misc-slot-ref-with-subtag-guard arg-temp
+                                                    1
+                                                    wasm::subtag-macptr)))
     (t
      (error "WASM2: unsupported external-call arg type: ~s" spec))))
 

@@ -222,7 +222,18 @@ function gateA09ToA13(wasm2) {
   );
 }
 
-function gateA19Parked(wasm2) {
+function gateA19Active(wasm2) {
+  requirePresent(
+    wasm2,
+    /\(defun\s+wasm2-emit-misc-ref-fallback-local\b/,
+    "A-19 shared .SPmisc-ref fallback helper",
+  );
+  requirePresent(
+    wasm2,
+    /\(defun\s+wasm2-emit-misc-slot-ref-with-subtag-guard\b/,
+    "A-19 guarded direct misc-ref helper",
+  );
+
   const miscSetLookups = countMatches(
     wasm2,
     /\(wasm2-subprim-fixnum\s+'\.SPmisc-set\)/g,
@@ -237,8 +248,8 @@ function gateA19Parked(wasm2) {
     /\(wasm2-subprim-fixnum\s+'\.SPmisc-ref\)/g,
   );
   assert(
-    miscRefLookups === 7,
-    `A-19 parked baseline requires 7 .SPmisc-ref lookups, found ${miscRefLookups}`,
+    miscRefLookups === 1,
+    `A-19 active baseline requires exactly one shared .SPmisc-ref fallback lookup, found ${miscRefLookups}`,
   );
 
   const subtagMiscRefLookups = countMatches(
@@ -247,7 +258,7 @@ function gateA19Parked(wasm2) {
   );
   assert(
     subtagMiscRefLookups === 1,
-    `A-19 parked baseline requires 1 .SPsubtag-misc-ref lookup, found ${subtagMiscRefLookups}`,
+    `A-19 active baseline requires 1 .SPsubtag-misc-ref lookup, found ${subtagMiscRefLookups}`,
   );
 
   const subtagMiscSetLookups = countMatches(
@@ -256,7 +267,7 @@ function gateA19Parked(wasm2) {
   );
   assert(
     subtagMiscSetLookups === 2,
-    `A-19 parked baseline requires 2 .SPsubtag-misc-set lookups, found ${subtagMiscSetLookups}`,
+    `A-19 active baseline requires 2 .SPsubtag-misc-set lookups, found ${subtagMiscSetLookups}`,
   );
 }
 
@@ -373,14 +384,14 @@ function main() {
   gateA01ToA08(rootDir, wasmArch, wasm2);
   gateA02ToA03(allSmoke, fixnumAddSmoke);
   gateA09ToA13(wasm2);
-  gateA19Parked(wasm2);
+  gateA19Active(wasm2);
   gateA14ToA16(rootDir, wasm2, kernelStubs, subprimsProvider);
 
   console.log("PASS: B10C-01A-01..A-16 hardening gate");
   console.log("  - A-01..A-08 static invariants: clean");
   console.log("  - A-02..A-03 gate/metric lanes: clean");
   console.log("  - A-09..A-13 emission/fallback boundaries: clean");
-  console.log("  - A-19 parked baseline: clean");
+  console.log("  - A-19 active baseline: clean");
   console.log("  - A-14..A-16 evidence discipline: clean");
 }
 
