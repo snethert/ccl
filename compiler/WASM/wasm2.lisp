@@ -5431,19 +5431,33 @@
     (wasm2-push-u8 body #x0b)) ; end
   t)
 
+(defparameter *wasm2-no-spill-fixnum-compat-op-keys*
+  '(:return-fixnum-logand
+    :return-fixnum-logior
+    :return-fixnum-logxor
+    :return-fixnum-lognot))
+
+(defun wasm2-fixnum-compat-fallback-requires-spill-p (compat-op-key)
+  ;; Keep spill envelopes only for compatibility helpers that can allocate/GC.
+  (not (member compat-op-key *wasm2-no-spill-fixnum-compat-op-keys* :test #'eq)))
+
+(defun wasm2-emit-compat-fallback-fixnum-call (body compat-op-key)
+  (if (wasm2-fixnum-compat-fallback-requires-spill-p compat-op-key)
+    (progn
+      (wasm2-emit-spill-locals body)
+      (wasm2-emit-call-index body (wasm2-generic-import-index compat-op-key))
+      (wasm2-emit-restore-locals body))
+    (wasm2-emit-call-index body (wasm2-generic-import-index compat-op-key))))
+
 (defun wasm2-emit-compat-fallback-fixnum-binary-op (body compat-op-key)
   (wasm2-emit-call-index body (wasm2-generic-import-index :set-arg-y))
   (wasm2-emit-call-index body (wasm2-generic-import-index :set-arg-z))
-  (wasm2-emit-spill-locals body)
-  (wasm2-emit-call-index body (wasm2-generic-import-index compat-op-key))
-  (wasm2-emit-restore-locals body)
+  (wasm2-emit-compat-fallback-fixnum-call body compat-op-key)
   (wasm2-emit-call-index body (wasm2-generic-import-index :get-arg-z)))
 
 (defun wasm2-emit-compat-fallback-fixnum-unary-op (body compat-op-key)
   (wasm2-emit-call-index body (wasm2-generic-import-index :set-arg-z))
-  (wasm2-emit-spill-locals body)
-  (wasm2-emit-call-index body (wasm2-generic-import-index compat-op-key))
-  (wasm2-emit-restore-locals body)
+  (wasm2-emit-compat-fallback-fixnum-call body compat-op-key)
   (wasm2-emit-call-index body (wasm2-generic-import-index :get-arg-z)))
 
 (defun wasm2-emit-fixnum-binary-op (body op compat-op-key)
