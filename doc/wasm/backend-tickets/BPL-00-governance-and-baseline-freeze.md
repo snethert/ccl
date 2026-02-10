@@ -11,6 +11,7 @@ Parent Plan: `doc/wasm/backend-migration-master-plan.md`
 In scope:
 
 - Establish backend migration execution rules and doc-sync discipline.
+- Define backend-local-only update workflow plus batched shared-merge workflow.
 - Freeze baseline backend assumptions and known migration pressures.
 - Define cross-track update behavior with runtime replacement docs.
 
@@ -28,6 +29,7 @@ Out of scope:
 1. Backend migration master plan with ticket board and detail blocks.
 2. Backend ticket subplan folder conventions.
 3. Cross-track update linkage to runtime/backend dependency matrix.
+4. Backend/shared doc-sync protocol and merge queue.
 
 ## Exit Criteria
 
@@ -54,6 +56,7 @@ Out of scope:
 - BPL-08 Step 1 integration baseline is now published (`BPL08-IC01`..`BPL08-IC06`) with immutable runtime/backend closure-bundle references.
 - BPL-08 Step 2 deterministic validation packet is now published (`BPL08-IV01`..`BPL08-IV06`) with concrete command/evidence mappings keyed to Step 1 checkpoints.
 - BPL-08 Step 3 integration closure-readiness packet is now published (`BPL08-CR01`..`BPL08-CR06`) keyed to `BPL08-IV*`; unified closure review (`x07-closure-20260210-024503Z-91fdb0be`) now advances `X-07` to `done` with immutable bundle IDs preserved.
+- Backend/shared doc-sync protocol is now published at `doc/wasm/backend-sync/README.md` with queue at `doc/wasm/backend-sync/merge-queue.md`.
 - Runtime `RPL-09 Step 1` cutover/rollback contract is now published (`R9G-*`, `R9R-*`, `R9E-*`), with backend `BPL-09 Step 1` now also published and `X-08` in-progress planning advancing to parallel Step 2 rehearsal packet definition.
 - Backend `BPL-09 Step 1` cutover/rollback contract is now published (`BPL09-G01`..`BPL09-G08`, `BPL09-R01`..`BPL09-R06`, `BPL09-E01`..`BPL09-E06`) with synchronized `X-08` hard-gate in-progress posture.
 - Backend `BPL-09 Step 2` deterministic rehearsal packet is now published (`BPL09-L01`..`BPL09-L08`, `BPL09-V01`..`BPL09-V14`, `BPL09-I01`..`BPL09-I06`) while runtime `RPL-09 Step 3` run-v1 evidence is committed (`rpl09-20260210-032127Z-2084077e`) and `R9GAP-01` remains open.
@@ -61,12 +64,13 @@ Out of scope:
 - Backend `BPL-09 Step 3` run-v2 evidence is now committed (`bpl09-20260210-040314Z-2084077e`) and unified closure review (`x08-closure-20260210-040400Z-2084077e`) now advances dependency row `X-08` from `in_progress` to `done` with immutable bundle IDs and frozen `BPL08-CR*` rows preserved.
 - Runtime `RPL-06 Step 3` run-v1 closure evidence is now committed (`rpl06-20260210-054023Z-50d752af`) with terminal `storage_v2_sync_step2_summary_v1.status=pass` and full `R6V-01`..`R6V-14` coverage.
 - Fortieth governance maintenance cycle is now complete with additive-only synchronization across backend/runtime/program docs and no drift in immutable `X-08`/`RPL-06` artifact references.
+- Remaining backend implementation work is now explicitly activated under `BPL-10` (WASM machine profile, subprims, L1 GC, compiler decoupling).
 
 ## Immediate Next Step
 
-- Action: keep closed `X-08` and `RPL-06` artifacts immutable while backend governance remains additive-only.
-- Why now: Pack D cutover closure and runtime sync/merge closure are both complete with committed evidence.
-- Success evidence: synchronized docs retain `x08-closure-20260210-040400Z-2084077e`, `bpl09-20260210-040314Z-2084077e`, immutable bundle IDs, frozen `BPL08-CR*` rows, and `rpl06-20260210-054023Z-50d752af` without reopening `X-08` or `RPL-06`.
+- Action: execute `BPL-10` Step 1/Step 2 publication in backend-local mode and queue shared-doc updates instead of direct fan-out.
+- Why now: governance/cutover artifacts are closed, but core backend implementation gaps still block ARM-retirement benefits.
+- Success evidence: `BPL-10` publishes `B10M-*` and `B10S-*` implementation IDs, backend docs stay synchronized, and shared updates are queued for merge cycles.
 
 ## Detailed Work Breakdown
 
@@ -82,9 +86,9 @@ Out of scope:
 
 - Status: done
 - Notes:
-  - Update contract and cross-track sync rule are documented.
+  - Backend-local + shared-merge doc-sync protocol is documented at `doc/wasm/backend-sync/README.md`.
 - Next:
-  - Enforce dual-update behavior for all backend ticket updates.
+  - Enforce backend-local updates by default; use queue-driven batched shared merges.
 
 ### Step 3 - Subplan Framework Availability
 
@@ -159,3 +163,4 @@ Out of scope:
 - 2026-02-10: Synced backend governance wording after `RPL-06` Step 2 publication; immediate action is now `RPL-06` Step 3 sync/merge evidence execution while preserving immutable `X-08` artifacts.
 - 2026-02-10: Synced backend governance wording after runtime `RPL-06` Step 3 run-v1 closure evidence (`rpl06-20260210-054023Z-50d752af`); immediate action is now additive-only Pack D governance maintenance over immutable `X-08` and `RPL-06` artifacts.
 - 2026-02-10: Completed fortieth backend-governance maintenance cycle by validating additive-only no-drift sync across backend/runtime/program docs while preserving immutable `x08-closure-20260210-040400Z-2084077e`, `bpl09-20260210-040314Z-2084077e`, and `rpl06-20260210-054023Z-50d752af`.
+- 2026-02-10: Activated post-cutover backend implementation governance under `BPL-10` with immediate action shifted to machine-profile and subprim-wave publication.

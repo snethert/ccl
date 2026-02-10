@@ -355,7 +355,11 @@ wasm_signal_capability_unavailable(TCR *tcr,
     args[count++] = wasm_make_simple_base_string(tcr, details);
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   for (signed_natural i = count - 1; i >= 0; i--) {
     *--vsp_ptr = args[i];
   }
@@ -740,7 +744,11 @@ wasm_vpop_argregs(TCR *tcr)
     return;
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
 
   wasm_set_reg(tcr, arg_z, vsp_ptr[0]);
   vsp_ptr += 1;
@@ -772,7 +780,11 @@ wasm_vpush_argregs(TCR *tcr)
     return;
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
 
   if (count >= 3) {
     *--vsp_ptr = wasm_reg(tcr, arg_x);
@@ -1536,7 +1548,11 @@ wasm_sync_arg_regs_from_vsp(TCR *tcr)
     return;
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
 
   if (count >= 1) {
     wasm_set_reg(tcr, arg_z, vsp_ptr[0]);
@@ -1552,21 +1568,21 @@ wasm_sync_arg_regs_from_vsp(TCR *tcr)
 static void
 wasm_unbind_to(TCR *tcr, special_binding *target)
 {
-  special_binding *binding = tcr->db_link;
-  LispObj *tlb = tcr->tlb_pointer;
+  special_binding *current_binding = tcr->db_link;
+  LispObj *binding_slots = tcr->tlb_pointer;
 
-  if (tlb == NULL) {
+  if (binding_slots == NULL) {
     wasm_subprims_trap();
   }
 
-  while (binding != target) {
-    if (binding == NULL) {
+  while (current_binding != target) {
+    if (current_binding == NULL) {
       wasm_subprims_trap();
     }
-    LispObj symidx = (LispObj)binding->sym;
-    LispObj value = binding->value;
-    binding = binding->link;
-    tlb[unbox_fixnum(symidx)] = value;
+    LispObj symidx = (LispObj)current_binding->sym;
+    LispObj value = current_binding->value;
+    current_binding = current_binding->link;
+    binding_slots[unbox_fixnum(symidx)] = value;
   }
   tcr->db_link = target;
 }
@@ -1661,11 +1677,11 @@ _SPmkunwind(void)
   wasm_set_reg(tcr, arg_z, (LispObj)unbound_marker);
   _SPmkcatchmv();
 
-  LispObj catch_top = tcr->catch_top;
-  if (catch_top == 0 || catch_top == (LispObj)nil_value) {
+  LispObj target_link = tcr->catch_top;
+  if (target_link == 0 || target_link == (LispObj)nil_value) {
     wasm_subprims_trap();
   }
-  wasm_catch_frame *cf = (wasm_catch_frame *)ptr_from_lispobj(untag(catch_top));
+  wasm_catch_frame *cf = (wasm_catch_frame *)ptr_from_lispobj(untag(target_link));
   cf->cleanup_entry = cleanup_entry;
 }
 
@@ -1688,12 +1704,12 @@ _SPnthrow1value(void)
   wasm_set_reg(tcr, nargs, box_fixnum(1));
 
   while (frame_count-- > 0) {
-    LispObj catch_top = tcr->catch_top;
-    if (catch_top == 0 || catch_top == (LispObj)nil_value) {
+    LispObj target_link = tcr->catch_top;
+    if (target_link == 0 || target_link == (LispObj)nil_value) {
       wasm_subprims_trap();
     }
 
-    wasm_catch_frame *cf = (wasm_catch_frame *)ptr_from_lispobj(untag(catch_top));
+    wasm_catch_frame *cf = (wasm_catch_frame *)ptr_from_lispobj(untag(target_link));
     special_binding *target_db = (special_binding *)cf->db_link;
 
     tcr->catch_top = cf->link;
@@ -1720,12 +1736,12 @@ _SPnthrow1value(void)
         wasm_push_value_set(tcr);
       }
 
-      LispObj *saved_vsp = (LispObj *)cf->save_vsp;
-      if (saved_vsp == NULL) {
+      LispObj *saved_stack_ptr = (LispObj *)cf->save_vsp;
+      if (saved_stack_ptr == NULL) {
         wasm_subprims_trap();
       }
-      tcr->save_vsp = saved_vsp;
-      wasm_set_reg(tcr, vsp, (LispObj)saved_vsp);
+      tcr->save_vsp = saved_stack_ptr;
+      wasm_set_reg(tcr, vsp, (LispObj)saved_stack_ptr);
 
       tcr->unwinding = 0;
       wasm_call_subprim_fixnum(cleanup);
@@ -1744,12 +1760,12 @@ _SPnthrow1value(void)
     }
 
     if (frame_count == 0) {
-      LispObj *saved_vsp = (LispObj *)cf->save_vsp;
-      if (saved_vsp == NULL) {
+      LispObj *saved_stack_ptr = (LispObj *)cf->save_vsp;
+      if (saved_stack_ptr == NULL) {
         wasm_subprims_trap();
       }
-      wasm_set_reg(tcr, vsp, (LispObj)saved_vsp);
-      tcr->save_vsp = saved_vsp;
+      wasm_set_reg(tcr, vsp, (LispObj)saved_stack_ptr);
+      tcr->save_vsp = saved_stack_ptr;
     }
 
     wasm_free_catch_frame(cf);
@@ -1776,12 +1792,12 @@ _SPnthrowvalues(void)
   tcr->unwinding = 1;
 
   while (frame_count-- > 0) {
-    LispObj catch_top = tcr->catch_top;
-    if (catch_top == 0 || catch_top == (LispObj)nil_value) {
+    LispObj target_link = tcr->catch_top;
+    if (target_link == 0 || target_link == (LispObj)nil_value) {
       wasm_subprims_trap();
     }
 
-    wasm_catch_frame *cf = (wasm_catch_frame *)ptr_from_lispobj(untag(catch_top));
+    wasm_catch_frame *cf = (wasm_catch_frame *)ptr_from_lispobj(untag(target_link));
     special_binding *target_db = (special_binding *)cf->db_link;
 
     tcr->catch_top = cf->link;
@@ -1808,12 +1824,12 @@ _SPnthrowvalues(void)
         wasm_push_value_set(tcr);
       }
 
-      LispObj *saved_vsp = (LispObj *)cf->save_vsp;
-      if (saved_vsp == NULL) {
+      LispObj *saved_stack_ptr = (LispObj *)cf->save_vsp;
+      if (saved_stack_ptr == NULL) {
         wasm_subprims_trap();
       }
-      tcr->save_vsp = saved_vsp;
-      wasm_set_reg(tcr, vsp, (LispObj)saved_vsp);
+      tcr->save_vsp = saved_stack_ptr;
+      wasm_set_reg(tcr, vsp, (LispObj)saved_stack_ptr);
 
       tcr->unwinding = 0;
       wasm_call_subprim_fixnum(cleanup);
@@ -1836,7 +1852,11 @@ _SPnthrowvalues(void)
       if (count < 0) {
         wasm_subprims_trap();
       }
-      LispObj *src = wasm_vsp_or_trap(tcr);
+      LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+      if (stack_ptr == NULL) {
+        wasm_subprims_trap();
+      }
+      LispObj *src = stack_ptr;
       LispObj *dest = (LispObj *)cf->save_vsp;
       if (dest == NULL) {
         wasm_subprims_trap();
@@ -1938,7 +1958,11 @@ _SPthrow(void)
     wasm_subprims_trap();
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   LispObj throw_tag = vsp_ptr[count];
 
   LispObj catch_top = tcr->catch_top;
@@ -2175,8 +2199,11 @@ _SPmvpass(void)
     return;
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
-  wasm_set_reg(tcr, arg_z, vsp_ptr[0]);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  wasm_set_reg(tcr, arg_z, stack_ptr[0]);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPvalues")))
@@ -2199,8 +2226,11 @@ _SPvalues(void)
     return;
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
-  wasm_set_reg(tcr, arg_z, vsp_ptr[0]);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  wasm_set_reg(tcr, arg_z, stack_ptr[0]);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPfitvals")))
@@ -2228,7 +2258,11 @@ _SPfitvals(void)
     wasm_subprims_trap();
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
 
   if (desired_count == 0) {
     LispObj *new_vsp = vsp_ptr + current_count;
@@ -2287,7 +2321,11 @@ _SPnthvalue(void)
     wasm_subprims_trap();
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   LispObj raw_index = vsp_ptr[count];
   if (tag_of(raw_index) != tag_fixnum) {
     wasm_subprims_trap();
@@ -2339,7 +2377,11 @@ _SPdefault_optional_args(void)
   }
 
   signed_natural missing = limit - nargs_count;
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   for (signed_natural i = 0; i < missing; i++) {
     *--vsp_ptr = (LispObj)nil_value;
   }
@@ -2373,7 +2415,11 @@ _SPopt_supplied_p(void)
     wasm_subprims_trap();
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   LispObj flag = (LispObj)(nil_value + t_offset);
   for (signed_natural i = 0; i < opt_count; i++) {
     if (i >= nargs_count) {
@@ -2406,7 +2452,11 @@ _SPheap_rest_arg(void)
 
   wasm_vpush_argregs(tcr);
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   LispObj list = (LispObj)nil_value;
   for (signed_natural i = 0; i < count; i++) {
     LispObj value = vsp_ptr[0];
@@ -2441,7 +2491,11 @@ _SPreq_heap_rest_arg(void)
 
   wasm_vpush_argregs(tcr);
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   LispObj list = (LispObj)nil_value;
   for (signed_natural i = 0; i < count; i++) {
     LispObj value = vsp_ptr[0];
@@ -2474,7 +2528,11 @@ _SPheap_cons_rest_arg(void)
     wasm_subprims_trap();
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   LispObj list = (LispObj)nil_value;
   for (signed_natural i = 0; i < count; i++) {
     LispObj value = vsp_ptr[0];
@@ -2534,7 +2592,11 @@ _SPstack_cons_rest_arg(void)
     wasm_subprims_trap();
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   LispObj list = (LispObj)nil_value;
   if (count == 0) {
     *--vsp_ptr = list;
@@ -2594,9 +2656,12 @@ _SPmvslide(void)
     wasm_subprims_trap();
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
   signed_natural byte_delta = (signed_natural)(int32_t)wasm_reg(tcr, imm0);
-  BytePtr src_end = (BytePtr)vsp_ptr + (count * node_size);
+  BytePtr src_end = (BytePtr)stack_ptr + (count * node_size);
   BytePtr dst_end = src_end + byte_delta;
 
   for (signed_natural i = 0; i < count; i++) {
@@ -2806,7 +2871,11 @@ _SPgvector(void)
     wasm_subprims_trap();
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   LispObj raw_subtag = vsp_ptr[count - 1];
   signed_natural subtag = wasm_unbox_fixnum_or_trap(raw_subtag);
   if (subtag < 0) {
@@ -2850,7 +2919,11 @@ _SPstkgvector(void)
     wasm_subprims_trap();
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   LispObj raw_subtag = vsp_ptr[count - 1];
   signed_natural subtag = wasm_unbox_fixnum_or_trap(raw_subtag);
   if (((unsigned)subtag & fulltagmask) != fulltag_nodeheader) {
@@ -3656,7 +3729,11 @@ _SPstore_node_conditional(void)
     wasm_subprims_trap();
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   LispObj raw_offset = vsp_ptr[0];
   signed_natural offset = wasm_unbox_fixnum_or_trap(raw_offset);
   vsp_ptr += 1;
@@ -3701,7 +3778,11 @@ _SPconslist(void)
     wasm_subprims_trap();
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   LispObj list = (LispObj)nil_value;
   for (signed_natural i = 0; i < count; i++) {
     LispObj value = vsp_ptr[0];
@@ -3733,7 +3814,11 @@ _SPconslist_star(void)
     wasm_subprims_trap();
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   LispObj list = wasm_reg(tcr, arg_z);
   for (signed_natural i = 0; i < count; i++) {
     LispObj value = vsp_ptr[0];
@@ -3790,7 +3875,11 @@ _SPstkconslist(void)
   }
 
   BytePtr cons_base = (BytePtr)headerp + dnode_size;
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   LispObj list = (LispObj)nil_value;
 
   for (signed_natural i = 0; i < count; i++) {
@@ -3842,7 +3931,11 @@ _SPstkconslist_star(void)
   }
 
   BytePtr cons_base = (BytePtr)headerp + dnode_size;
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
 
   for (signed_natural i = 0; i < count; i++) {
     LispObj value = vsp_ptr[0];
@@ -3878,7 +3971,11 @@ _SPmkstackv(void)
     wasm_subprims_trap();
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   LispObj *headerp = wasm_cstack_alloc_simple_vector(tcr, count);
   LispObj obj = (LispObj)nil_value;
   LispObj *data = NULL;
@@ -4320,7 +4417,11 @@ _SPspread_lexprz(void)
     wasm_subprims_trap();
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   for (signed_natural i = 0; i < count; i++) {
     LispObj value = lexpr[1 + i];
     *--vsp_ptr = value;
@@ -4449,7 +4550,11 @@ _SPreset(void)
     wasm_subprims_trap();
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   *--vsp_ptr = nrs_TOPLCATCH.vcell;
   *--vsp_ptr = box_fixnum(75); /* XSTKOVER */
   wasm_set_reg(tcr, vsp, (LispObj)vsp_ptr);
@@ -4812,8 +4917,8 @@ _SPspecref(void)
     wasm_subprims_trap();
   }
 
-  LispObj *tlb = tcr->tlb_pointer;
-  if (tlb == NULL) {
+  LispObj *binding_slots = tcr->tlb_pointer;
+  if (binding_slots == NULL) {
     wasm_subprims_trap();
   }
 
@@ -4822,7 +4927,7 @@ _SPspecref(void)
     idx = box_fixnum(0);
   }
 
-  LispObj value = tlb[unbox_fixnum(idx)];
+  LispObj value = binding_slots[unbox_fixnum(idx)];
   if (value == (LispObj)no_thread_local_binding_marker) {
     value = sym->vcell;
   }
@@ -4853,8 +4958,8 @@ _SPspecrefcheck(void)
     wasm_subprims_trap();
   }
 
-  LispObj *tlb = tcr->tlb_pointer;
-  if (tlb == NULL) {
+  LispObj *binding_slots = tcr->tlb_pointer;
+  if (binding_slots == NULL) {
     wasm_subprims_trap();
   }
 
@@ -4863,7 +4968,7 @@ _SPspecrefcheck(void)
     idx = box_fixnum(0);
   }
 
-  LispObj value = tlb[unbox_fixnum(idx)];
+  LispObj value = binding_slots[unbox_fixnum(idx)];
   if (value == (LispObj)no_thread_local_binding_marker) {
     value = sym->vcell;
   }
@@ -4903,8 +5008,8 @@ _SPspecset(void)
     wasm_subprims_trap();
   }
 
-  LispObj *tlb = tcr->tlb_pointer;
-  if (tlb == NULL) {
+  LispObj *binding_slots = tcr->tlb_pointer;
+  if (binding_slots == NULL) {
     wasm_subprims_trap();
   }
 
@@ -4919,9 +5024,9 @@ _SPspecset(void)
   }
 
   if (index > 0) {
-    LispObj old_value = tlb[index];
+    LispObj old_value = binding_slots[index];
     if (old_value != (LispObj)no_thread_local_binding_marker) {
-      tlb[index] = wasm_reg(tcr, arg_z);
+      binding_slots[index] = wasm_reg(tcr, arg_z);
       return;
     }
   }
@@ -4970,7 +5075,11 @@ _SPspreadargz(void)
 
   LispObj list = wasm_reg(tcr, arg_z);
   LispObj orig_list = list;
-  LispObj *orig_vsp = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *orig_vsp = stack_ptr;
   signed_natural orig_count = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, nargs));
   if (orig_count < 0) {
     wasm_subprims_trap();
@@ -5036,19 +5145,22 @@ _SPbind(void)
     wasm_subprims_trap();
   }
 
-  LispObj *tlb = tcr->tlb_pointer;
-  if (tlb == NULL) {
+  LispObj *binding_slots = tcr->tlb_pointer;
+  if (binding_slots == NULL) {
     wasm_subprims_trap();
   }
 
-  LispObj old_value = tlb[index];
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
-  LispObj *new_vsp = vsp_ptr - 3;
+  LispObj old_value = binding_slots[index];
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *new_vsp = stack_ptr - 3;
   new_vsp[0] = (LispObj)tcr->db_link;
   new_vsp[1] = binding_index;
   new_vsp[2] = old_value;
 
-  tlb[index] = wasm_reg(tcr, arg_z);
+  binding_slots[index] = wasm_reg(tcr, arg_z);
   tcr->db_link = (special_binding *)new_vsp;
   tcr->save_vsp = new_vsp;
   wasm_set_reg(tcr, vsp, (LispObj)new_vsp);
@@ -5085,24 +5197,27 @@ _SPbind_self(void)
     wasm_subprims_trap();
   }
 
-  LispObj *tlb = tcr->tlb_pointer;
-  if (tlb == NULL) {
+  LispObj *binding_slots = tcr->tlb_pointer;
+  if (binding_slots == NULL) {
     wasm_subprims_trap();
   }
 
-  LispObj old_value = tlb[index];
+  LispObj old_value = binding_slots[index];
   LispObj value = old_value;
   if (old_value == (LispObj)no_thread_local_binding_marker) {
     value = sym->vcell;
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
-  LispObj *new_vsp = vsp_ptr - 3;
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *new_vsp = stack_ptr - 3;
   new_vsp[0] = (LispObj)tcr->db_link;
   new_vsp[1] = binding_index;
   new_vsp[2] = old_value;
 
-  tlb[index] = value;
+  binding_slots[index] = value;
   tcr->db_link = (special_binding *)new_vsp;
   tcr->save_vsp = new_vsp;
   wasm_set_reg(tcr, vsp, (LispObj)new_vsp);
@@ -5154,12 +5269,12 @@ _SPbind_self_boundp_check(void)
     wasm_subprims_trap();
   }
 
-  LispObj *tlb = tcr->tlb_pointer;
-  if (tlb == NULL) {
+  LispObj *binding_slots = tcr->tlb_pointer;
+  if (binding_slots == NULL) {
     wasm_subprims_trap();
   }
 
-  LispObj old_value = tlb[index];
+  LispObj old_value = binding_slots[index];
   LispObj value = old_value;
   if (old_value == (LispObj)no_thread_local_binding_marker) {
     value = sym->vcell;
@@ -5172,13 +5287,16 @@ _SPbind_self_boundp_check(void)
     return;
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
-  LispObj *new_vsp = vsp_ptr - 3;
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *new_vsp = stack_ptr - 3;
   new_vsp[0] = (LispObj)tcr->db_link;
   new_vsp[1] = binding_index;
   new_vsp[2] = old_value;
 
-  tlb[index] = value;
+  binding_slots[index] = value;
   tcr->db_link = (special_binding *)new_vsp;
   tcr->save_vsp = new_vsp;
   wasm_set_reg(tcr, vsp, (LispObj)new_vsp);
@@ -5193,11 +5311,11 @@ _SPbind_interrupt_level_0(void)
     wasm_subprims_trap();
   }
 
-  LispObj *tlb = tcr->tlb_pointer;
-  if (tlb == NULL) {
+  LispObj *binding_slots = tcr->tlb_pointer;
+  if (binding_slots == NULL) {
     wasm_subprims_trap();
   }
-  LispObj old_value = tlb[INTERRUPT_LEVEL_BINDING_INDEX];
+  LispObj old_value = binding_slots[INTERRUPT_LEVEL_BINDING_INDEX];
 
   wasm_bind_interrupt_level(tcr, box_fixnum(0));
 
@@ -5232,11 +5350,11 @@ _SPbind_interrupt_level(void)
     _SPbind_interrupt_level_0();
     return;
   }
-  LispObj *tlb = tcr->tlb_pointer;
-  if (tlb == NULL) {
+  LispObj *binding_slots = tcr->tlb_pointer;
+  if (binding_slots == NULL) {
     wasm_subprims_trap();
   }
-  LispObj old_value = tlb[INTERRUPT_LEVEL_BINDING_INDEX];
+  LispObj old_value = binding_slots[INTERRUPT_LEVEL_BINDING_INDEX];
   wasm_bind_interrupt_level(tcr, value);
   if (tag_of(old_value) == tag_fixnum && unbox_fixnum(old_value) < 0) {
     if (tag_of(value) == tag_fixnum && unbox_fixnum(value) >= 0) {
@@ -5254,19 +5372,19 @@ _SPunbind_interrupt_level(void)
     wasm_subprims_trap();
   }
 
-  special_binding *binding = tcr->db_link;
-  LispObj *tlb = tcr->tlb_pointer;
-  if (binding == NULL || tlb == NULL) {
+  special_binding *current_binding = tcr->db_link;
+  LispObj *binding_slots = tcr->tlb_pointer;
+  if (current_binding == NULL || binding_slots == NULL) {
     wasm_subprims_trap();
   }
 
-  LispObj old_value = tlb[INTERRUPT_LEVEL_BINDING_INDEX];
-  LispObj symidx = (LispObj)binding->sym;
-  LispObj value = binding->value;
-  binding = binding->link;
+  LispObj old_value = binding_slots[INTERRUPT_LEVEL_BINDING_INDEX];
+  LispObj symidx = (LispObj)current_binding->sym;
+  LispObj value = current_binding->value;
+  current_binding = current_binding->link;
 
-  tlb[wasm_unbox_fixnum_or_trap(symidx)] = value;
-  tcr->db_link = binding;
+  binding_slots[wasm_unbox_fixnum_or_trap(symidx)] = value;
+  tcr->db_link = current_binding;
 
   if (tag_of(old_value) == tag_fixnum && unbox_fixnum(old_value) < 0) {
     if (tag_of(value) == tag_fixnum && unbox_fixnum(value) >= 0) {
@@ -5284,18 +5402,18 @@ _SPunbind(void)
     wasm_subprims_trap();
   }
 
-  special_binding *binding = tcr->db_link;
-  LispObj *tlb = tcr->tlb_pointer;
-  if (binding == NULL || tlb == NULL) {
+  special_binding *current_binding = tcr->db_link;
+  LispObj *binding_slots = tcr->tlb_pointer;
+  if (current_binding == NULL || binding_slots == NULL) {
     wasm_subprims_trap();
   }
 
-  LispObj symidx = (LispObj)binding->sym;
-  LispObj value = binding->value;
-  binding = binding->link;
+  LispObj symidx = (LispObj)current_binding->sym;
+  LispObj value = current_binding->value;
+  current_binding = current_binding->link;
 
-  tlb[wasm_unbox_fixnum_or_trap(symidx)] = value;
-  tcr->db_link = binding;
+  binding_slots[wasm_unbox_fixnum_or_trap(symidx)] = value;
+  tcr->db_link = current_binding;
 }
 
 static void
@@ -5308,19 +5426,22 @@ wasm_bind_interrupt_level(TCR *tcr, LispObj new_value)
     wasm_subprims_trap();
   }
 
-  LispObj *tlb = tcr->tlb_pointer;
-  if (tlb == NULL) {
+  LispObj *binding_slots = tcr->tlb_pointer;
+  if (binding_slots == NULL) {
     wasm_subprims_trap();
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
-  LispObj *new_vsp = vsp_ptr - 3;
-  LispObj old_value = tlb[INTERRUPT_LEVEL_BINDING_INDEX];
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *new_vsp = stack_ptr - 3;
+  LispObj old_value = binding_slots[INTERRUPT_LEVEL_BINDING_INDEX];
   new_vsp[0] = (LispObj)tcr->db_link;
   new_vsp[1] = box_fixnum(INTERRUPT_LEVEL_BINDING_INDEX);
   new_vsp[2] = old_value;
 
-  tlb[INTERRUPT_LEVEL_BINDING_INDEX] = new_value;
+  binding_slots[INTERRUPT_LEVEL_BINDING_INDEX] = new_value;
   tcr->db_link = (special_binding *)new_vsp;
   tcr->save_vsp = new_vsp;
   wasm_set_reg(tcr, vsp, (LispObj)new_vsp);
@@ -5367,23 +5488,23 @@ _SPunbind_n(void)
     return;
   }
 
-  special_binding *binding = tcr->db_link;
-  LispObj *tlb = tcr->tlb_pointer;
-  if (binding == NULL || tlb == NULL) {
+  special_binding *current_binding = tcr->db_link;
+  LispObj *binding_slots = tcr->tlb_pointer;
+  if (current_binding == NULL || binding_slots == NULL) {
     wasm_subprims_trap();
   }
 
   while (count-- > 0) {
-    if (binding == NULL) {
+    if (current_binding == NULL) {
       wasm_subprims_trap();
     }
-    LispObj symidx = (LispObj)binding->sym;
-    LispObj value = binding->value;
-    binding = binding->link;
-    tlb[wasm_unbox_fixnum_or_trap(symidx)] = value;
+    LispObj symidx = (LispObj)current_binding->sym;
+    LispObj value = current_binding->value;
+    current_binding = current_binding->link;
+    binding_slots[wasm_unbox_fixnum_or_trap(symidx)] = value;
   }
 
-  tcr->db_link = binding;
+  tcr->db_link = current_binding;
 }
 
 __attribute__((used, visibility("default"), export_name("_SPunbind_to")))
@@ -5417,21 +5538,25 @@ _SPprogvsave(void)
   }
 
   LispObj symbols = wasm_reg(tcr, arg_y);
-  LispObj *tlb = tcr->tlb_pointer;
-  if (tlb == NULL) {
+  LispObj *binding_slots = tcr->tlb_pointer;
+  if (binding_slots == NULL) {
     wasm_subprims_trap();
   }
 
   signed_natural limit_count = wasm_positive_fixnum_or_trap(tcr->tlb_limit);
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
-  LispObj *old_vsp = vsp_ptr;
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
+  LispObj *saved_stack_ptr = vsp_ptr;
   special_binding *old_db = tcr->db_link;
 
   vsp_ptr -= 3;
   vsp_ptr[0] = (LispObj)old_db;
   vsp_ptr[1] = (LispObj)unbound_marker;
-  vsp_ptr[2] = (LispObj)old_vsp;
+  vsp_ptr[2] = (LispObj)saved_stack_ptr;
   special_binding *db = (special_binding *)vsp_ptr;
 
   LispObj sym_list = symbols;
@@ -5452,7 +5577,7 @@ _SPprogvsave(void)
       wasm_subprims_trap();
     }
 
-    LispObj old_value = tlb[index];
+    LispObj old_value = binding_slots[index];
     LispObj new_value = (LispObj)unbound_marker;
 
     if (val_list != (LispObj)nil_value) {
@@ -5470,7 +5595,7 @@ _SPprogvsave(void)
     vsp_ptr[2] = old_value;
     db = (special_binding *)vsp_ptr;
 
-    tlb[index] = new_value;
+    binding_slots[index] = new_value;
   }
 
   tcr->db_link = db;
@@ -5491,29 +5616,29 @@ _SPprogvrestore(void)
     wasm_subprims_trap();
   }
 
-  LispObj *tlb = tcr->tlb_pointer;
-  if (tlb == NULL) {
+  LispObj *binding_slots = tcr->tlb_pointer;
+  if (binding_slots == NULL) {
     wasm_subprims_trap();
   }
 
-  special_binding *binding = tcr->db_link;
-  while (binding != NULL) {
-    LispObj symidx = (LispObj)binding->sym;
+  special_binding *current_binding = tcr->db_link;
+  while (current_binding != NULL) {
+    LispObj symidx = (LispObj)current_binding->sym;
     if (symidx == (LispObj)unbound_marker) {
-      special_binding *old_db = binding->link;
-      LispObj *old_vsp = (LispObj *)binding->value;
-      if (old_vsp == NULL) {
+      special_binding *old_db = current_binding->link;
+      LispObj *saved_stack_ptr = (LispObj *)current_binding->value;
+      if (saved_stack_ptr == NULL) {
         wasm_subprims_trap();
       }
       tcr->db_link = old_db;
-      tcr->save_vsp = old_vsp;
-      wasm_set_reg(tcr, vsp, (LispObj)old_vsp);
+      tcr->save_vsp = saved_stack_ptr;
+      wasm_set_reg(tcr, vsp, (LispObj)saved_stack_ptr);
       return;
     }
 
-    LispObj value = binding->value;
-    binding = binding->link;
-    tlb[wasm_unbox_fixnum_or_trap(symidx)] = value;
+    LispObj value = current_binding->value;
+    current_binding = current_binding->link;
+    binding_slots[wasm_unbox_fixnum_or_trap(symidx)] = value;
   }
 
   wasm_subprims_trap();
@@ -5538,7 +5663,11 @@ _SPcall_closure(void)
     wasm_subprims_trap();
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   int vsp_has_args = 0;
   if (argc > 0) {
     vsp_has_args = (vsp_ptr[0] == wasm_reg(tcr, arg_z));
@@ -5552,7 +5681,11 @@ _SPcall_closure(void)
 
   if (!vsp_has_args && argc <= 3) {
     wasm_vpush_argregs(tcr);
-    vsp_ptr = wasm_vsp_or_trap(tcr);
+    stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+    if (stack_ptr == NULL) {
+      wasm_subprims_trap();
+    }
+    vsp_ptr = stack_ptr;
   }
 
   LispObj header = header_of(closure);
@@ -5654,7 +5787,11 @@ _SPkeyword_bind(void)
     supplied[i] = (LispObj)nil_value;
   }
 
-  LispObj *vsp_ptr = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *vsp_ptr = stack_ptr;
   LispObj *pairs_base = vsp_ptr;
   LispObj *pairs_copy = NULL;
   signed_natural pair_count = key_value_count / 2;
@@ -5746,7 +5883,11 @@ _SPdebind(void)
   }
 
   LispObj arg_reg = wasm_reg(tcr, arg_z);
-  LispObj *orig_vsp = wasm_vsp_or_trap(tcr);
+  LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
+  if (stack_ptr == NULL) {
+    wasm_subprims_trap();
+  }
+  LispObj *orig_vsp = stack_ptr;
   LispObj *vsp_ptr = orig_vsp;
   LispObj orig_list = arg_reg;
 

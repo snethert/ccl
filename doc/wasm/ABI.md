@@ -125,7 +125,7 @@ assumes `wasm_get_current_tcr()` is the single authoritative access path.
 - Entry functions have signature `void ()` and use the **current TCR**
   (`wasm_get_current_tcr`) plus the register file/VSP for arguments/results.
 - `nargs` is a fixnum count. Arguments live on the VSP (stack grows down).
-  `_SPfuncall` mirrors the top 3 VSP arguments into `arg_z/arg_y/arg_x` for
+  `_SPfuncall` mirrors the top 3 VSP arguments into `arg_z`, `arg_y`, and `arg_x` for
   ARM‑compatible calling semantics.
 - Single‑value return uses `arg_z` with `nargs = 1`. Multi‑value returns
   remain Tier‑1 (values on VSP + `nargs` count).

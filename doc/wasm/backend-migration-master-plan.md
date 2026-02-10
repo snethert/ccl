@@ -39,6 +39,8 @@ Out of scope:
 - `doc/wasm/porting-status.md`
 - `doc/wasm/runtime-replacement-master-plan.md`
 - `doc/wasm/runtime-backend-dependency-matrix.md`
+- `doc/wasm/backend-sync/README.md`
+- `doc/wasm/backend-sync/merge-queue.md`
 
 ## Status Legend
 
@@ -49,9 +51,17 @@ Out of scope:
 - `deferred`: intentionally paused and not current execution priority.
 - `cancelled`: explicitly removed from scope.
 
+## Documentation Workflow (Backend-Local Default)
+
+- Backend-local execution updates backend docs only.
+- Shared docs (runtime master, dependency matrix, program board) are updated only in batched merge cycles.
+- Protocol and queue live at:
+  - `doc/wasm/backend-sync/README.md`
+  - `doc/wasm/backend-sync/merge-queue.md`
+
 ## Update Contract (Required)
 
-On every backend ticket update:
+On every backend ticket update (Backend-Local Mode):
 
 1. Update this document:
    - ticket `Status`,
@@ -59,16 +69,27 @@ On every backend ticket update:
    - `Notes`,
    - `Next Step Analysis`.
 2. Update the ticket subplan document referenced by `Subplan`.
-3. If cross-track implications changed, update `doc/wasm/runtime-backend-dependency-matrix.md` in the same change.
+3. If cross-track implications changed, append a `pending` row to `doc/wasm/backend-sync/merge-queue.md`.
+4. Do not update shared docs in backend-local mode:
+   - `doc/wasm/runtime-replacement-master-plan.md`
+   - `doc/wasm/runtime-backend-dependency-matrix.md`
+   - `doc/wasm/wasm-program-board.md`
+
+On shared-merge cycles:
+
+1. Consume pending queue rows from `doc/wasm/backend-sync/merge-queue.md`.
+2. Update shared docs once in one batch change.
+3. Mark consumed queue rows `merged` and record merge commit.
 
 ## Fresh-Context Resume Protocol
 
 When resuming backend work from scratch:
 
 1. Read `Current Baseline Snapshot`.
-2. Read `doc/wasm/runtime-backend-dependency-matrix.md` and filter out hard-blocked tickets.
-3. Execute only the `Immediate Next Step` under the highest-priority unblocked ticket.
-4. At stop, update this plan and the ticket subplan together.
+2. Read `doc/wasm/backend-sync/README.md` and `doc/wasm/backend-sync/merge-queue.md`.
+3. Read `doc/wasm/runtime-backend-dependency-matrix.md` only for current hard gates.
+4. Execute only the `Immediate Next Step` under the highest-priority unblocked ticket.
+5. At stop, update backend docs only; queue shared-sync rows instead of editing shared docs directly.
 
 ## Current Baseline Snapshot (2026-02-09)
 
@@ -102,6 +123,7 @@ Hard gates are tracked in `doc/wasm/runtime-backend-dependency-matrix.md`.
 | BPL-07 | done | P1 | `doc/wasm/backend-tickets/BPL-07-size-and-performance-gates.md` | 2026-02-10 | Step 3 criteria packet (`BPL07-CR01`..`BPL07-CR05`) has remediation run-v2 pass evidence (`bpl06-20260210-005408Z-91fdb0be`, `bpl07-20260210-005408Z-91fdb0be`) with backend preconditions satisfied and unified closure review now advancing `X-07` to `done`. |
 | BPL-08 | done | P0 | `doc/wasm/backend-tickets/BPL-08-runtime-alignment-integration.md` | 2026-02-10 | Step 3 closure-readiness packet (`BPL08-CR01`..`BPL08-CR06`) remains immutable and is now consumed by unified closure review (`x07-closure-20260210-024503Z-91fdb0be`) that advances `X-07` to `done`. |
 | BPL-09 | done | P0 | `doc/wasm/backend-tickets/BPL-09-cutover-and-arm-retirement.md` | 2026-02-10 | Step 3 signoff packet rows (`BPL09-CR01`..`BPL09-CR06`) now have committed run-v2 evidence (`bpl09-20260210-040314Z-2084077e`) and unified closure-review acceptance (`x08-closure-20260210-040400Z-2084077e`), preserving immutable bundle IDs/frozen `BPL08-CR*` rows while advancing `X-08` to `done`. |
+| BPL-10 | in_progress | P0 | `doc/wasm/backend-tickets/BPL-10-wasm-machine-subprims-gc-compiler-implementation.md` | 2026-02-10 | Validation gates remain green (`B10V-01` strict audit `total_hits=0`, `B10V-03` smoke pass); `B10G-01` now includes external GC root-policy API, active descriptor coverage across XP/TCR/C-stack safepoint traversal helpers, runtime producer adoption in reset/startup paths, and runtime-mode semantics (`set_subprims_ready` default/bootstrap) plus host-mode controls validated by smoke. |
 
 ## Ticket Details
 
@@ -134,12 +156,13 @@ Notes:
 - Governance sync now includes BPL-09 Step 3 run-v2 evidence (`bpl09-20260210-040314Z-2084077e`) and unified `X-08` closure review (`x08-closure-20260210-040400Z-2084077e`) with matrix transition to `X-08=done`.
 - Governance sync now includes runtime `RPL-06 Step 3` run-v1 closure evidence (`rpl06-20260210-054023Z-50d752af`) with terminal `storage_v2_sync_step2_summary_v1.status=pass`.
 - Fortieth governance maintenance cycle confirms additive-only no-drift synchronization across backend/runtime/program docs while keeping immutable `X-08` and `RPL-06` artifacts unchanged.
+- Governance now reopens active backend execution under `BPL-10` to convert closed planning artifacts into concrete WASM-native implementation work.
 
 Next Step Analysis:
 
-- Immediate Next Step: keep closed Pack D artifacts immutable while runtime/backend governance remains additive-only across the now-closed `RPL-06` sync/merge baseline.
-- Why this step now: `X-08` is closed (`done`) and runtime `RPL-06` Step 3 closure evidence is now committed.
-- Evidence required to close next step: synchronized docs retain immutable `x08-closure-20260210-040400Z-2084077e` and `bpl09-20260210-040314Z-2084077e` references, preserve frozen `BPL08-CR*`/`BPL09-*` rows, and consume `rpl06-20260210-054023Z-50d752af` without rewrites.
+- Immediate Next Step: continue `BPL-10` by executing the next `B10G-01` increment to bind compiler-owned mode semantics to policy publication (beyond current runtime boundary hooks).
+- Why this step now: runtime boundary and host/manual mode publication are now implemented and smoke-validated while GC walkers consume active descriptor state, so remaining risk is compiler ownership of policy selection.
+- Evidence required to close next step: at least one compiler-driven mode path publishes policy mode via API, with strict audit and smoke still pass after rebuild.
 
 ---
 
@@ -368,6 +391,31 @@ Next Step Analysis:
 - Why this step now: backend cutover closure criteria are satisfied, `X-08` is `done`, and runtime `RPL-06` closure evidence is now committed.
 - Evidence required to close next step: downstream updates preserve `bpl09-20260210-040314Z-2084077e`, `x08-closure-20260210-040400Z-2084077e`, immutable bundle IDs, frozen `BPL08-CR*` rows, and `rpl06-20260210-054023Z-50d752af` over published `R6S-*`/`R6T-*`/`R6A-*` and `R6L-*`/`R6V-*` contracts.
 
+---
+
+### BPL-10 - WASM Machine Implementation (Subprims, L1 GC, Compiler)
+
+- Status: `in_progress`
+- Priority: `P0`
+- Last Updated: `2026-02-10`
+- Subplan: `doc/wasm/backend-tickets/BPL-10-wasm-machine-subprims-gc-compiler-implementation.md`
+- Dependencies: BPL-01, BPL-02, BPL-03, BPL-05, BPL-06
+
+Notes:
+
+- This is the active remaining-backend implementation track.
+- Scope includes four execution lanes: WASM machine profile normalization, subprim behavioral-gap closure, L1/kernel GC modernization, and compiler/WASM ARM-decoupling.
+- Baseline blockers are concrete and source-backed:
+  - subprim backlog now reports `behavioral gap = 0` (closure reached),
+  - wasm GC roots/forwarding still contain ARM-specific assumptions,
+  - wasm compiler arch/env still mirrors ARM contracts.
+
+Next Step Analysis:
+
+- Immediate Next Step: execute `B10G-01` in `lisp-kernel/wasm-gc.c` to remove fixed ARM register-span root scanning from WASM GC paths.
+- Why this step now: the validation gates now pass (`B10V-01` strict audit `total_hits=0`; `B10V-03` smoke pass), so the critical path is GC/model decoupling and correctness hardening.
+- Evidence required to close next step: descriptor-driven root publication replaces fixed register-span loops and regression smoke remains pass.
+
 ## Subplan Registry Sync Rules
 
 - Each ticket subplan must exist at the path listed above.
@@ -446,3 +494,43 @@ Avoid batching multiple unrelated next actions into one update.
 - 2026-02-10: Synced backend immediate-next-step wording after `RPL-06` Step 2 publication; active runtime action is now `RPL-06` Step 3 evidence execution with immutable `X-08` artifacts preserved.
 - 2026-02-10: Synced backend immediate-next-step wording after runtime `RPL-06` Step 3 run-v1 closure evidence (`rpl06-20260210-054023Z-50d752af`); Pack D artifacts remain immutable and cross-track governance is now additive-only maintenance.
 - 2026-02-10: Completed fortieth backend governance maintenance cycle by verifying no drift across immutable `X-08`/`RPL-06` run IDs and frozen closure rows in master/subplan/matrix/program docs; immediate action remains additive-only maintenance.
+- 2026-02-10: Added `BPL-10` and activated remaining backend implementation plan for WASM machine model, subprims completion, L1 GC modernization, and compiler decoupling from ARM-shaped assumptions.
+- 2026-02-10: Executed first `BPL-10` Wave A implementation step (`_SPdebind`), regenerated subprim status (`behavioral gap: 44 -> 43`), and advanced immediate next action to `_SPbind`.
+- 2026-02-10: Executed second `BPL-10` Wave A implementation step (`_SPbind`), regenerated subprim status (`behavioral gap: 43 -> 42`), and advanced immediate next action to `_SPbind_self`.
+- 2026-02-10: Executed third `BPL-10` Wave A implementation step (`_SPbind_self`), regenerated subprim status (`behavioral gap: 42 -> 41`), and advanced immediate next action to `_SPbind_self_boundp_check`.
+- 2026-02-10: Executed fourth `BPL-10` Wave A implementation step (`_SPbind_self_boundp_check`), regenerated subprim status (`behavioral gap: 41 -> 40`), and advanced immediate next action to `_SPunbind`.
+- 2026-02-10: Executed fifth `BPL-10` Wave A implementation step (`_SPunbind`), regenerated subprim status (`behavioral gap: 40 -> 39`), and advanced immediate next action to `_SPunbind_n`.
+- 2026-02-10: Executed sixth `BPL-10` Wave A implementation step (`_SPunbind_n`), regenerated subprim status (`behavioral gap: 39 -> 38`), and advanced immediate next action to `_SPunbind_to`.
+- 2026-02-10: Executed seventh `BPL-10` Wave A implementation step (`_SPunbind_to` via `wasm_unbind_to`), regenerated subprim status (`behavioral gap: 38 -> 37`), and advanced immediate next action to `_SPthrow`.
+- 2026-02-10: Executed eighth `BPL-10` Wave A implementation step by hardening `_SPthrow` with explicit local stack-pointer validation; regenerated subprim status kept aggregate totals unchanged (`behavioral gap=37`, `validation only=86`) and advanced immediate next action to `_SPnthrow1value`.
+- 2026-02-10: Executed ninth `BPL-10` Wave A implementation step by updating `_SPnthrow1value` null-check naming (`target_link`, `saved_stack_ptr`); regenerated subprim status (`behavioral gap: 37 -> 35`, `validation only: 86 -> 88`) and advanced immediate next action to `_SPnthrowvalues`.
+- 2026-02-10: Executed tenth `BPL-10` Wave A implementation step by updating `_SPnthrowvalues` null-check naming (`target_link`, `saved_stack_ptr`) and replacing helper VSP checks with explicit local stack-pointer validation; regenerated subprim status (`behavioral gap: 35 -> 34`, `validation only: 88 -> 89`) and advanced immediate next action to `_SPmkunwind`.
+- 2026-02-10: Executed eleventh `BPL-10` Wave A implementation step by updating `_SPmkunwind` null-check naming (`target_link`); regenerated subprim status (`behavioral gap: 34 -> 33`, `validation only: 89 -> 90`).
+- 2026-02-10: Executed twelfth `BPL-10` Wave A implementation step by updating `_SPmvpass` to use explicit local stack-pointer validation; regenerated subprim status (`behavioral gap: 33 -> 32`, `validation only: 90 -> 91`) and advanced immediate next action to `_SPmvslide`.
+- 2026-02-10: Executed thirteenth `BPL-10` Wave A implementation step by updating `_SPmvslide` to use explicit local stack-pointer validation; regenerated subprim status (`behavioral gap: 32 -> 31`, `validation only: 91 -> 92`).
+- 2026-02-10: Executed fourteenth `BPL-10` Wave A implementation step by updating `_SPvalues` to use explicit local stack-pointer validation; regenerated subprim status (`behavioral gap: 31 -> 30`, `validation only: 92 -> 93`) and advanced immediate next action to `_SPfitvals`.
+- 2026-02-10: Executed fifteenth `BPL-10` Wave A implementation step by updating `_SPfitvals` to use explicit local stack-pointer validation; regenerated subprim status (`behavioral gap: 30 -> 28`, `validation only: 93 -> 95`).
+- 2026-02-10: Executed sixteenth `BPL-10` Wave A implementation step by updating `_SPnthvalue` to use explicit local stack-pointer validation; regenerated subprim status (`behavioral gap: 28 -> 27`, `validation only: 95 -> 96`).
+- 2026-02-10: Executed seventeenth `BPL-10` Wave A implementation step by updating `_SPopt_supplied_p` to use explicit local stack-pointer validation; regenerated subprim status (`behavioral gap: 27 -> 26`, `validation only: 96 -> 97`) and advanced immediate next action to `_SPheap_rest_arg`.
+- 2026-02-10: Executed eighteenth `BPL-10` Wave A implementation step by updating `_SPheap_rest_arg` to use explicit local stack-pointer validation; regenerated subprim status (`behavioral gap: 26 -> 25`, `validation only: 97 -> 98`) and advanced immediate next action to `_SPreq_heap_rest_arg`.
+- 2026-02-10: Executed nineteenth `BPL-10` Wave A implementation step by updating `_SPreq_heap_rest_arg`, `_SPheap_cons_rest_arg`, and `_SPstack_cons_rest_arg` to use explicit local stack-pointer validation; regenerated subprim status (`behavioral gap: 25 -> 22`, `validation only: 98 -> 101`) and advanced immediate next action to `_SPspread_lexprz`.
+- 2026-02-10: Executed twentieth `BPL-10` Wave A implementation step by updating `_SPspreadargz` to use explicit local stack-pointer validation; regenerated subprim status (`behavioral gap: 22 -> 20`, `validation only: 101 -> 103`).
+- 2026-02-10: Executed twenty-first `BPL-10` Wave A implementation step by updating `_SPspread_lexprz` to use explicit local stack-pointer validation; regenerated subprim status (`behavioral gap: 20 -> 18`, `validation only: 103 -> 105`) and advanced immediate next action to `_SPkeyword_bind`.
+- 2026-02-10: Executed twenty-second `BPL-10` Wave A implementation step by updating `_SPkeyword_bind` to use explicit local stack-pointer validation; regenerated subprim status (`behavioral gap: 18 -> 14`, `validation only: 105 -> 109`) and advanced immediate next action to `_SPprogvsave`.
+- 2026-02-10: Executed twenty-third `BPL-10` Wave A implementation step by updating `_SPprogvsave` and `_SPprogvrestore` with explicit local stack-pointer validation and neutral binding-slot naming; regenerated subprim status (`behavioral gap: 14 -> 12`, `validation only: 109 -> 111`) and advanced immediate next action to `_SPcall_closure`.
+- 2026-02-10: Executed twenty-fourth through twenty-seventh `BPL-10` implementation steps by updating `_SPcall_closure`, `_SPreset`, `spec*` lanes, and interrupt-level lanes with explicit local stack-pointer validation and neutral binding-slot naming; regenerated subprim status reached `behavioral gap: 0`, `validation only: 123`, satisfying subprim closure gate `B10S-08` and advancing immediate next action to validation gates `B10V-01`/`B10V-03`.
+- 2026-02-10: Executed `BPL-10` validation gates: `node doc/wasm/js/all-smoke.mjs` passed (`B10V-03`), and `scripts/wasm/arm-retirement-audit.sh --strict` failed with `55` hits (`B10V-01`), concentrating in `compiler/WASM/wasm2.lisp` and `compiler/WASM/wasm-arch.lisp`; immediate action pivots to targeted compiler ARM-marker retirement (`B10C-01`/`B10C-09`).
+- 2026-02-10: Executed targeted compiler/header/doc ARM-marker retirement and re-ran validation gates; strict audit now passes with `total_hits=0` and smoke remains pass, advancing immediate `BPL-10` action to GC/root-model decoupling (`B10G-01`).
+- 2026-02-10: Executed `B10G-01` phase 1 by introducing descriptor-driven XP root iteration in `lisp-kernel/wasm-gc.c` and routing mark/forward/check/purify/impurify paths through the shared iterator; strict audit remains `total_hits=0` and smoke remains pass.
+- 2026-02-10: Executed `B10G-01` phase 2 by adding wasm-owned transitional GPR aliases in `lisp-kernel/platform-wasm32.h` and updating GC root descriptors in `lisp-kernel/wasm-gc.c` to consume those aliases; strict audit remains `total_hits=0` and smoke remains pass.
+- 2026-02-10: Extended `B10G-01` descriptor coverage to XP locative slots (PC/LR) in `lisp-kernel/wasm-gc.c`, so mark/forward/purify/impurify locative handling now uses shared iterator paths; strict audit remains `total_hits=0` and smoke remains pass.
+- 2026-02-10: Extended `B10G-01` with unified TCR/xframe XP traversal (`wasm_for_each_tcr_xp`) and routed `check_tcrs`, `forward_tcr_xframes`, `purify_tcr_xframes`, and `impurify_tcr_xframes` through shared visitor paths; strict audit remains `total_hits=0` and smoke remains pass.
+- 2026-02-10: Extended `B10G-01` with unified TCR TLB bounds handling (`wasm_tcr_tlb_bounds`) and routed TLB consumers (`check_tcrs`, `purify_tcr_tlb`, `impurify_tcr_tlb`) through shared bounds logic; strict audit remains `total_hits=0` and smoke remains pass.
+- 2026-02-10: Revalidated `B10G-01` against rebuilt wasm kernel artifacts using the documented environment flow (`source scripts/wasm/env.sh`; `make -C lisp-kernel/wasm32 CC="$CC" WASM_LD="$WASM_LD"`), then reran smoke from workspace root (`node ccl/doc/wasm/js/all-smoke.mjs`) with pass.
+- 2026-02-10: Extended `B10G-01` with an explicit wasm GC root-descriptor object (XP node spans + locative inclusion + TLB inclusion) and routed traversal helpers through that descriptor contract; rebuilt and revalidated via documented `env.sh` + `make` + workspace-root smoke flow with pass.
+- 2026-02-10: Extended `B10G-01` descriptor coverage to C-stack safepoint frame roots in `lisp-kernel/wasm-gc.c` and routed mark/forward/purify/impurify C-stack frame handling through shared descriptor helpers; rebuilt with documented `env.sh` flow, strict audit remained `total_hits=0`, and smoke remained pass (from `ccl` root after manifest refresh).
+- 2026-02-10: Externalized `B10G-01` descriptor publication inputs by adding wasm platform GC root-policy API (`WASM_GC_ROOT_*` bits + `wasm_publish_gc_root_policy`/`wasm_current_gc_root_policy`/`wasm_reset_gc_root_policy`) and converting GC walkers to consume active descriptor state derived from published policy; rebuilt with documented `env.sh` flow, strict audit remained `total_hits=0`, and smoke remained pass (from `ccl` root after manifest refresh).
+- 2026-02-10: Added first producer adoption for `B10G-01` policy lifecycle by wiring `wasm_reset_root_image_runtime_state` (`lisp-kernel/wasm-kernel-stubs.c`) to `wasm_reset_gc_root_policy()`, so runtime boundary reset now explicitly republishes default root policy; rebuilt with documented `env.sh` flow, strict audit remained `total_hits=0`, and smoke remained pass (from `ccl` root after manifest refresh).
+- 2026-02-10: Expanded `B10G-01` producer lifecycle coverage by wiring startup entrypoints `wasm_ccl_start` and `wasm_ccl_start_lisp` (`lisp-kernel/pmcl-kernel.c`) to `wasm_reset_gc_root_policy()`, so runtime startup also republishes default root policy before execution; rebuilt with documented `env.sh` flow, strict audit remained `total_hits=0`, and smoke remained pass (from `ccl` root after manifest refresh).
+- 2026-02-10: Added host-visible non-default `B10G-01` control path by exporting `wasm_set_gc_root_policy`/`wasm_get_gc_root_policy` and extending `doc/wasm/js/smoke-test.mjs` to toggle and restore policy bits; rebuilt with documented `env.sh` flow, strict audit remained `total_hits=0`, and smoke remained pass (from `ccl` root after manifest refresh).
+- 2026-02-10: Added runtime mode semantics to `B10G-01` by introducing policy-mode APIs (`wasm_publish_gc_root_policy_mode`/`wasm_current_gc_root_policy_mode`) and wiring `wasm_set_subprims_ready` to publish default/bootstrap modes; extended smoke coverage (`doc/wasm/js/smoke-test.mjs`) to validate runtime-mode transitions and host-mode override/restore, then rebuilt with documented `env.sh` flow, strict audit remained `total_hits=0`, and smoke remained pass (from `ccl` root after manifest refresh).

@@ -61,9 +61,10 @@ It is the authoritative source for deciding which tasks can run in parallel and 
 
 ## Update Rules
 
-1. Any change to a dependency row must update both affected master plans in the same change.
-2. `Status` for each row must be one of `open`, `in_progress`, `done`, `cancelled`.
-3. `Required Evidence to Clear` must stay concrete and testable; avoid vague language.
+1. Shared-doc updates for backend-driven changes should run in queued merge cycles (see `doc/wasm/backend-sync/README.md`), not on every backend ticket edit.
+2. Any change to a dependency row must be reflected in both affected master plans in the same merge cycle.
+3. `Status` for each row must be one of `open`, `in_progress`, `done`, `cancelled`.
+4. `Required Evidence to Clear` must stay concrete and testable; avoid vague language.
 
 ## Immediate Next Step
 

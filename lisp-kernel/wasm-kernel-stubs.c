@@ -335,7 +335,13 @@ __attribute__((used, visibility("default"), export_name("wasm_set_subprims_ready
 void
 wasm_set_subprims_ready(uint32_t ready)
 {
-  wasm_subprims_ready = ready ? 1u : 0u;
+  if (ready) {
+    wasm_subprims_ready = 1u;
+    wasm_publish_gc_root_policy_mode(WASM_GC_ROOT_MODE_RUNTIME_DEFAULT);
+  } else {
+    wasm_subprims_ready = 0u;
+    wasm_publish_gc_root_policy_mode(WASM_GC_ROOT_MODE_RUNTIME_BOOTSTRAP);
+  }
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_get_subprims_ready")))
@@ -343,6 +349,36 @@ uint32_t
 wasm_get_subprims_ready(void)
 {
   return wasm_subprims_ready;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_set_gc_root_policy")))
+uint32_t
+wasm_set_gc_root_policy(uint32_t policy_mask)
+{
+  wasm_publish_gc_root_policy(policy_mask);
+  return wasm_current_gc_root_policy();
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_get_gc_root_policy")))
+uint32_t
+wasm_get_gc_root_policy(void)
+{
+  return wasm_current_gc_root_policy();
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_set_gc_root_policy_mode")))
+uint32_t
+wasm_set_gc_root_policy_mode(uint32_t mode)
+{
+  wasm_publish_gc_root_policy_mode(mode);
+  return wasm_current_gc_root_policy_mode();
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_get_gc_root_policy_mode")))
+uint32_t
+wasm_get_gc_root_policy_mode(void)
+{
+  return wasm_current_gc_root_policy_mode();
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_save_image_direct")))
@@ -4280,6 +4316,7 @@ wasm_reset_root_image_runtime_state(void)
 {
   extern LispObj lisp_nil;
 
+  wasm_reset_gc_root_policy();
   nrs_WASM_COMPILED_MODULES.vcell = lisp_nil;
   nrs_WASM_CONST_POOLS.vcell = lisp_nil;
 

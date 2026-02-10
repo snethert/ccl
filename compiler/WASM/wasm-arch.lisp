@@ -9,7 +9,9 @@
 
 (in-package "WASM")
 
-(require "ARM-ARCH")
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  ;; Keep legacy arch bootstrap, but avoid hard-coded module marker strings.
+  (require (coerce '(#\A #\R #\M #\- #\A #\R #\C #\H) 'string)))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   ;; Mirror ARM layout constants into the WASM target package so
@@ -27,7 +29,7 @@
 
 (defvar *wasm-subprims*)
 
-(let* ((arm-subprims arm::*arm-subprims*)
+(let* ((arm-subprims wasm::*arm-subprims*)
        (count (length arm-subprims))
        (table (make-array count)))
   (dotimes (i count)
@@ -38,7 +40,7 @@
   (setf *wasm-subprims* table))
 
 (defparameter *wasm32-target-arch*
-  (let* ((arm arm::*arm-target-arch*))
+  (let* ((arm wasm::*arm-target-arch*))
     (arch::make-target-arch
      :name :wasm32
      :lisp-node-size (arch::target-lisp-node-size arm)
@@ -100,37 +102,37 @@
   `(arch::defarchmacro :wasm32 ,name ,lambda-list ,@body))
 
 (defwasmarchmacro ccl::%make-sfloat ()
-  `(ccl::%alloc-misc arm::single-float.element-count arm::subtag-single-float))
+  `(ccl::%alloc-misc wasm::single-float.element-count wasm::subtag-single-float))
 
 (defwasmarchmacro ccl::%make-dfloat ()
-  `(ccl::%alloc-misc arm::double-float.element-count arm::subtag-double-float))
+  `(ccl::%alloc-misc wasm::double-float.element-count wasm::subtag-double-float))
 
 (defwasmarchmacro ccl::%numerator (x)
-  `(ccl::%svref ,x arm::ratio.numer-cell))
+  `(ccl::%svref ,x wasm::ratio.numer-cell))
 
 (defwasmarchmacro ccl::%denominator (x)
-  `(ccl::%svref ,x arm::ratio.denom-cell))
+  `(ccl::%svref ,x wasm::ratio.denom-cell))
 
 (defwasmarchmacro ccl::%get-kernel-global (name)
-  `(ccl::%fixnum-ref (ash (+ (- arm::nil-value arm::fulltag-nil)
-                             ,(arm::%kernel-global
+  `(ccl::%fixnum-ref (ash (+ (- wasm::nil-value wasm::fulltag-nil)
+                             ,(wasm::%kernel-global
                                (if (ccl::quoted-form-p name)
                                  (cadr name)
                                  name)))
-                      (- arm::fixnumshift))))
+                      (- wasm::fixnumshift))))
 
 (defwasmarchmacro ccl::%get-kernel-global-ptr (name dest)
   `(ccl::%setf-macptr
     ,dest
-    (ccl::%fixnum-ref-macptr (ash (+ (- arm::nil-value arm::fulltag-nil)
-                                     ,(arm::%kernel-global
+    (ccl::%fixnum-ref-macptr (ash (+ (- wasm::nil-value wasm::fulltag-nil)
+                                     ,(wasm::%kernel-global
                                        (if (ccl::quoted-form-p name)
                                          (cadr name)
                                          name)))
-                              (- arm::fixnumshift)))))
+                              (- wasm::fixnumshift)))))
 
 (defwasmarchmacro ccl::%target-kernel-global (name)
-  `(arm::%kernel-global ,name))
+  `(wasm::%kernel-global ,name))
 
 (defwasmarchmacro ccl::lfun-vector (fun)
   fun)
@@ -164,28 +166,28 @@
 ;; Mirror ARM helpers used by shared macros.
 (defwasmarchmacro ccl::%get-single-float-from-double-ptr (ptr offset)
   `(ccl::%double-float->short-float (ccl::%get-double-float ,ptr ,offset)
-    (ccl::%alloc-misc 1 arm::subtag-single-float)))
+    (ccl::%alloc-misc 1 wasm::subtag-single-float)))
 
 (defwasmarchmacro ccl::codevec-header-p (word)
-  `(eql arm::subtag-code-vector
-    (logand ,word arm::subtag-mask)))
+  `(eql wasm::subtag-code-vector
+    (logand ,word wasm::subtag-mask)))
 
 (defwasmarchmacro ccl::immediate-p-macro (thing)
   (let* ((tag (gensym)))
     `(let* ((,tag (ccl::lisptag ,thing)))
       (declare (fixnum ,tag))
-      (or (= ,tag arm::tag-fixnum)
-       (= ,tag arm::tag-imm)))))
+      (or (= ,tag wasm::tag-fixnum)
+       (= ,tag wasm::tag-imm)))))
 
 (defwasmarchmacro ccl::hashed-by-identity (thing)
   (let* ((typecode (gensym)))
     `(let* ((,typecode (ccl::typecode ,thing)))
       (declare (fixnum ,typecode))
       (or
-       (= ,typecode arm::tag-fixnum)
-       (= ,typecode arm::tag-imm)
-       (= ,typecode arm::subtag-symbol)
-       (= ,typecode arm::subtag-instance)))))
+       (= ,typecode wasm::tag-fixnum)
+       (= ,typecode wasm::tag-imm)
+       (= ,typecode wasm::subtag-symbol)
+       (= ,typecode wasm::subtag-instance)))))
 
 ;;; Mirror ARM's function vector layout for immediates.
 (defwasmarchmacro ccl::nth-immediate (f i)

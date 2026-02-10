@@ -77,10 +77,82 @@ assert(
   typeof kernel.instance.exports.wasm_set_subprims_ready === "function",
   "missing wasm_set_subprims_ready export",
 );
+assert(
+  typeof kernel.instance.exports.wasm_set_gc_root_policy === "function",
+  "missing wasm_set_gc_root_policy export",
+);
+assert(
+  typeof kernel.instance.exports.wasm_get_gc_root_policy === "function",
+  "missing wasm_get_gc_root_policy export",
+);
+assert(
+  typeof kernel.instance.exports.wasm_set_gc_root_policy_mode === "function",
+  "missing wasm_set_gc_root_policy_mode export",
+);
+assert(
+  typeof kernel.instance.exports.wasm_get_gc_root_policy_mode === "function",
+  "missing wasm_get_gc_root_policy_mode export",
+);
+const GC_ROOT_INCLUDE_XP_LOCATIVES = 1 << 0;
+const GC_ROOT_INCLUDE_CSTACK = 1 << 1;
+const GC_ROOT_INCLUDE_CSTACK_SAVEVSP = 1 << 2;
+const GC_ROOT_INCLUDE_TCR_GC_CONTEXT = 1 << 3;
+const GC_ROOT_INCLUDE_TCR_XFRAMES = 1 << 4;
+const GC_ROOT_INCLUDE_TCR_TLB = 1 << 5;
+const GC_ROOT_MODE_RUNTIME_DEFAULT = 0;
+const GC_ROOT_MODE_RUNTIME_BOOTSTRAP = 1;
+const GC_ROOT_MODE_HOST_MASK = 2;
+const GC_ROOT_POLICY_DEFAULT =
+  GC_ROOT_INCLUDE_XP_LOCATIVES |
+  GC_ROOT_INCLUDE_CSTACK |
+  GC_ROOT_INCLUDE_CSTACK_SAVEVSP |
+  GC_ROOT_INCLUDE_TCR_GC_CONTEXT |
+  GC_ROOT_INCLUDE_TCR_XFRAMES |
+  GC_ROOT_INCLUDE_TCR_TLB;
+const GC_ROOT_POLICY_BOOTSTRAP = GC_ROOT_POLICY_DEFAULT & ~GC_ROOT_INCLUDE_CSTACK_SAVEVSP;
+
 kernel.instance.exports.wasm_set_subprims_ready(1);
 assert(kernel.instance.exports.wasm_get_subprims_ready() === 1, "subprims ready flag set failed");
+assert(
+  (kernel.instance.exports.wasm_get_gc_root_policy_mode() >>> 0) === GC_ROOT_MODE_RUNTIME_DEFAULT,
+  "gc root policy mode did not switch to runtime default",
+);
+assert(
+  (kernel.instance.exports.wasm_get_gc_root_policy() >>> 0) === GC_ROOT_POLICY_DEFAULT,
+  "gc root policy did not switch to runtime default mask",
+);
 kernel.instance.exports.wasm_set_subprims_ready(0);
 assert(kernel.instance.exports.wasm_get_subprims_ready() === 0, "subprims ready flag clear failed");
+assert(
+  (kernel.instance.exports.wasm_get_gc_root_policy_mode() >>> 0) === GC_ROOT_MODE_RUNTIME_BOOTSTRAP,
+  "gc root policy mode did not switch to runtime bootstrap",
+);
+assert(
+  (kernel.instance.exports.wasm_get_gc_root_policy() >>> 0) === GC_ROOT_POLICY_BOOTSTRAP,
+  "gc root policy did not switch to runtime bootstrap mask",
+);
+kernel.instance.exports.wasm_set_subprims_ready(1);
+assert(kernel.instance.exports.wasm_get_subprims_ready() === 1, "subprims ready flag restore failed");
+{
+  const initialPolicy = kernel.instance.exports.wasm_get_gc_root_policy() >>> 0;
+  const nonDefaultPolicy = (initialPolicy ^ GC_ROOT_INCLUDE_XP_LOCATIVES) >>> 0;
+  const publishedPolicy = kernel.instance.exports.wasm_set_gc_root_policy(nonDefaultPolicy) >>> 0;
+  assert(publishedPolicy === nonDefaultPolicy, "gc root policy publish failed");
+  assert((kernel.instance.exports.wasm_get_gc_root_policy() >>> 0) === nonDefaultPolicy, "gc root policy readback failed");
+  assert(
+    (kernel.instance.exports.wasm_get_gc_root_policy_mode() >>> 0) === GC_ROOT_MODE_HOST_MASK,
+    "gc root policy mode did not switch to host mask",
+  );
+  kernel.instance.exports.wasm_set_gc_root_policy_mode(GC_ROOT_MODE_RUNTIME_DEFAULT);
+  assert(
+    (kernel.instance.exports.wasm_get_gc_root_policy_mode() >>> 0) === GC_ROOT_MODE_RUNTIME_DEFAULT,
+    "gc root policy mode restore failed",
+  );
+  assert(
+    (kernel.instance.exports.wasm_get_gc_root_policy() >>> 0) === initialPolicy,
+    "gc root policy restore failed",
+  );
+}
 
 const subprimsMap = JSON.parse((await readFileUrl(subprimsMapUrl)).toString("utf8"));
 

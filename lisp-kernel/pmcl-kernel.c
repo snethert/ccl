@@ -2899,6 +2899,8 @@ wasm_ccl_start(void)
   static char arg0[] = "wasmcl";
   static char *argv[] = {arg0, NULL};
 
+  wasm_reset_gc_root_policy();
+
 #ifdef CCLSHARED
   return cclmain(1, argv);
 #else
@@ -2914,6 +2916,8 @@ wasm_ccl_start_lisp(void)
   if (wasm_tcr == NULL) {
     return -1;
   }
+
+  wasm_reset_gc_root_policy();
 
   natural old_last_lisp_frame = wasm_enter_lisp_frame(
     wasm_tcr, 0, 0, (LispObj)wasm_tcr->save_vsp);

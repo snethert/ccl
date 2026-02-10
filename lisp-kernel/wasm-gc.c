@@ -26,6 +26,385 @@
 #include <string.h>
 #include <sys/time.h>
 
+void mark_root(LispObj n);
+void mark_pc_root(LispObj pc);
+Boolean update_noderef(LispObj *p);
+void update_locref(LispObj *p);
+void check_node(LispObj n);
+void check_range(LispObj *start, LispObj *end, Boolean header_allowed);
+void check_xp(ExceptionInformation *xp);
+void forward_xp(ExceptionInformation *xp);
+void purify_xp(ExceptionInformation *xp, BytePtr low, BytePtr high, area *to);
+void impurify_xp(ExceptionInformation *xp, LispObj low, LispObj high, int delta);
+void copy_ivector_reference(LispObj *ref, BytePtr low, BytePtr high, area *dest);
+void purify_locref(LispObj *locaddr, BytePtr low, BytePtr high, area *to);
+void impurify_noderef(LispObj *p, LispObj low, LispObj high, int delta);
+void impurify_locref(LispObj *p, LispObj low, LispObj high, int delta);
+
+typedef struct {
+  int first_gpr;
+  int last_gpr;
+} wasm_root_register_span;
+
+typedef struct {
+  const wasm_root_register_span *xp_node_spans;
+  size_t xp_node_span_count;
+  Boolean include_xp_locatives;
+  Boolean include_cstack_roots;
+  Boolean include_cstack_savevsp_roots;
+  Boolean include_tcr_gc_context;
+  Boolean include_tcr_xframes;
+  Boolean include_tcr_tlb_roots;
+} wasm_gc_root_descriptor;
+
+static const wasm_root_register_span wasm_default_xp_root_spans[] = {
+  { wasm_gpr_arg_z, wasm_gpr_fn }
+};
+
+static const wasm_gc_root_descriptor wasm_default_gc_root_descriptor = {
+  wasm_default_xp_root_spans,
+  sizeof(wasm_default_xp_root_spans) / sizeof(wasm_default_xp_root_spans[0]),
+  true,
+  true,
+  true,
+  true,
+  true,
+  true
+};
+
+static wasm_gc_root_descriptor wasm_active_gc_root_descriptor = {
+  wasm_default_xp_root_spans,
+  sizeof(wasm_default_xp_root_spans) / sizeof(wasm_default_xp_root_spans[0]),
+  true,
+  true,
+  true,
+  true,
+  true,
+  true
+};
+static uint32_t wasm_active_gc_root_policy_mask = WASM_GC_ROOT_POLICY_DEFAULT;
+static uint32_t wasm_active_gc_root_policy_mode = WASM_GC_ROOT_MODE_RUNTIME_DEFAULT;
+
+static uint32_t
+wasm_gc_root_policy_allowed_mask(void)
+{
+  return WASM_GC_ROOT_INCLUDE_XP_LOCATIVES |
+         WASM_GC_ROOT_INCLUDE_CSTACK |
+         WASM_GC_ROOT_INCLUDE_CSTACK_SAVEVSP |
+         WASM_GC_ROOT_INCLUDE_TCR_GC_CONTEXT |
+         WASM_GC_ROOT_INCLUDE_TCR_XFRAMES |
+         WASM_GC_ROOT_INCLUDE_TCR_TLB;
+}
+
+static uint32_t
+wasm_gc_root_policy_sanitize(uint32_t policy_mask)
+{
+  return policy_mask & wasm_gc_root_policy_allowed_mask();
+}
+
+static uint32_t
+wasm_gc_root_policy_for_mode(uint32_t mode)
+{
+  switch (mode) {
+  case WASM_GC_ROOT_MODE_RUNTIME_BOOTSTRAP:
+    return WASM_GC_ROOT_POLICY_BOOTSTRAP;
+  case WASM_GC_ROOT_MODE_RUNTIME_DEFAULT:
+    return WASM_GC_ROOT_POLICY_DEFAULT;
+  default:
+    return WASM_GC_ROOT_POLICY_DEFAULT;
+  }
+}
+
+static void
+wasm_gc_root_policy_to_descriptor(uint32_t policy_mask,
+                                  wasm_gc_root_descriptor *descriptor_out)
+{
+  *descriptor_out = wasm_default_gc_root_descriptor;
+  descriptor_out->include_xp_locatives =
+    (policy_mask & WASM_GC_ROOT_INCLUDE_XP_LOCATIVES) != 0;
+  descriptor_out->include_cstack_roots =
+    (policy_mask & WASM_GC_ROOT_INCLUDE_CSTACK) != 0;
+  descriptor_out->include_cstack_savevsp_roots =
+    (policy_mask & WASM_GC_ROOT_INCLUDE_CSTACK_SAVEVSP) != 0;
+  descriptor_out->include_tcr_gc_context =
+    (policy_mask & WASM_GC_ROOT_INCLUDE_TCR_GC_CONTEXT) != 0;
+  descriptor_out->include_tcr_xframes =
+    (policy_mask & WASM_GC_ROOT_INCLUDE_TCR_XFRAMES) != 0;
+  descriptor_out->include_tcr_tlb_roots =
+    (policy_mask & WASM_GC_ROOT_INCLUDE_TCR_TLB) != 0;
+}
+
+void
+wasm_publish_gc_root_policy(uint32_t policy_mask)
+{
+  uint32_t effective_mask = wasm_gc_root_policy_sanitize(policy_mask);
+  wasm_gc_root_policy_to_descriptor(effective_mask, &wasm_active_gc_root_descriptor);
+  wasm_active_gc_root_policy_mask = effective_mask;
+  wasm_active_gc_root_policy_mode = WASM_GC_ROOT_MODE_HOST_MASK;
+}
+
+uint32_t
+wasm_current_gc_root_policy(void)
+{
+  return wasm_active_gc_root_policy_mask;
+}
+
+void
+wasm_reset_gc_root_policy(void)
+{
+  wasm_reset_gc_root_policy_mode();
+}
+
+void
+wasm_publish_gc_root_policy_mode(uint32_t mode)
+{
+  uint32_t effective_mode;
+  uint32_t effective_mask;
+
+  switch (mode) {
+  case WASM_GC_ROOT_MODE_RUNTIME_BOOTSTRAP:
+  case WASM_GC_ROOT_MODE_RUNTIME_DEFAULT:
+    effective_mode = mode;
+    break;
+  default:
+    effective_mode = WASM_GC_ROOT_MODE_RUNTIME_DEFAULT;
+    break;
+  }
+
+  effective_mask = wasm_gc_root_policy_sanitize(wasm_gc_root_policy_for_mode(effective_mode));
+  wasm_gc_root_policy_to_descriptor(effective_mask, &wasm_active_gc_root_descriptor);
+  wasm_active_gc_root_policy_mask = effective_mask;
+  wasm_active_gc_root_policy_mode = effective_mode;
+}
+
+uint32_t
+wasm_current_gc_root_policy_mode(void)
+{
+  return wasm_active_gc_root_policy_mode;
+}
+
+void
+wasm_reset_gc_root_policy_mode(void)
+{
+  wasm_publish_gc_root_policy_mode(WASM_GC_ROOT_MODE_RUNTIME_DEFAULT);
+}
+
+static const wasm_gc_root_descriptor *
+wasm_gc_root_descriptor_current(void)
+{
+  return &wasm_active_gc_root_descriptor;
+}
+
+typedef void (*wasm_xp_root_slot_visitor)(LispObj *slot, void *ctx);
+
+static void
+wasm_for_each_xp_root_slot(ExceptionInformation *xp,
+                           wasm_xp_root_slot_visitor visitor,
+                           void *ctx)
+{
+  const wasm_gc_root_descriptor *descriptor = wasm_gc_root_descriptor_current();
+  natural *regs = (natural *)xpGPRvector(xp);
+  size_t span_idx;
+
+  for (span_idx = 0; span_idx < descriptor->xp_node_span_count; span_idx++) {
+    const wasm_root_register_span *span = &descriptor->xp_node_spans[span_idx];
+    int r;
+
+    for (r = span->first_gpr; r <= span->last_gpr; r++) {
+      visitor((LispObj *)&(regs[r]), ctx);
+    }
+  }
+}
+
+static void
+wasm_for_each_cstack_frame_slot(lisp_frame *frame,
+                                Boolean include_savevsp,
+                                wasm_xp_root_slot_visitor node_visitor,
+                                wasm_xp_root_slot_visitor locative_visitor,
+                                void *ctx)
+{
+  const wasm_gc_root_descriptor *descriptor = wasm_gc_root_descriptor_current();
+  if (!descriptor->include_cstack_roots) {
+    return;
+  }
+  if (include_savevsp && descriptor->include_cstack_savevsp_roots) {
+    node_visitor(&(frame->savevsp), ctx);
+  }
+  node_visitor(&(frame->savefn), ctx);
+  locative_visitor(&(frame->savelr), ctx);
+}
+
+static void
+wasm_for_each_xp_locative_slot(ExceptionInformation *xp,
+                               wasm_xp_root_slot_visitor visitor,
+                               void *ctx)
+{
+  const wasm_gc_root_descriptor *descriptor = wasm_gc_root_descriptor_current();
+  if (!descriptor->include_xp_locatives) {
+    return;
+  }
+  visitor((LispObj *)&(xpPC(xp)), ctx);
+  visitor((LispObj *)&(xpLR(xp)), ctx);
+}
+
+typedef void (*wasm_xp_visitor)(ExceptionInformation *xp, void *ctx);
+
+static void
+wasm_for_each_tcr_xp(TCR *tcr,
+                     wasm_xp_visitor visitor,
+                     void *ctx,
+                     Boolean reject_duplicate_gc_context)
+{
+  const wasm_gc_root_descriptor *descriptor = wasm_gc_root_descriptor_current();
+  ExceptionInformation *gc_xp = tcr->gc_context;
+  xframe_list *xframes;
+
+  if (descriptor->include_tcr_gc_context && gc_xp) {
+    visitor(gc_xp, ctx);
+  }
+
+  if (!descriptor->include_tcr_xframes) {
+    return;
+  }
+
+  for (xframes = tcr->xframe; xframes; xframes = xframes->prev) {
+    if (reject_duplicate_gc_context && xframes->curr == gc_xp) {
+      Bug(NULL, "forward xframe twice ???");
+      continue;
+    }
+    visitor(xframes->curr, ctx);
+  }
+}
+
+static Boolean
+wasm_tcr_tlb_bounds(TCR *tcr, LispObj **start_out, LispObj **end_out)
+{
+  const wasm_gc_root_descriptor *descriptor = wasm_gc_root_descriptor_current();
+  if (!descriptor->include_tcr_tlb_roots) {
+    return false;
+  }
+  LispObj *start = tcr->tlb_pointer;
+  if (start == NULL) {
+    return false;
+  }
+
+  *start_out = start;
+  *end_out = start + (tcr->tlb_limit >> fixnumshift);
+  return true;
+}
+
+static void
+wasm_mark_root_slot(LispObj *slot, void *ctx)
+{
+  (void)ctx;
+  mark_root(*slot);
+}
+
+static void
+wasm_update_noderef_slot(LispObj *slot, void *ctx)
+{
+  (void)ctx;
+  update_noderef(slot);
+}
+
+static void
+wasm_mark_pc_root_slot(LispObj *slot, void *ctx)
+{
+  (void)ctx;
+  mark_pc_root(*slot);
+}
+
+static void
+wasm_update_locref_slot(LispObj *slot, void *ctx)
+{
+  (void)ctx;
+  update_locref(slot);
+}
+
+static void
+wasm_check_root_slot(LispObj *slot, void *ctx)
+{
+  (void)ctx;
+  check_node(*slot);
+}
+
+static void
+wasm_visit_check_xp(ExceptionInformation *xp, void *ctx)
+{
+  (void)ctx;
+  check_xp(xp);
+}
+
+typedef struct {
+  BytePtr low;
+  BytePtr high;
+  area *to;
+} wasm_purify_ctx;
+
+static void
+wasm_purify_root_slot(LispObj *slot, void *ctx)
+{
+  wasm_purify_ctx *purify_ctx = (wasm_purify_ctx *)ctx;
+  copy_ivector_reference(slot, purify_ctx->low, purify_ctx->high, purify_ctx->to);
+}
+
+static void
+wasm_purify_locative_slot(LispObj *slot, void *ctx)
+{
+  wasm_purify_ctx *purify_ctx = (wasm_purify_ctx *)ctx;
+  purify_locref(slot, purify_ctx->low, purify_ctx->high, purify_ctx->to);
+}
+
+typedef struct {
+  LispObj low;
+  LispObj high;
+  int delta;
+} wasm_impurify_ctx;
+
+static void
+wasm_impurify_root_slot(LispObj *slot, void *ctx)
+{
+  wasm_impurify_ctx *impurify_ctx = (wasm_impurify_ctx *)ctx;
+  impurify_noderef(slot, impurify_ctx->low, impurify_ctx->high, impurify_ctx->delta);
+}
+
+static void
+wasm_impurify_locative_slot(LispObj *slot, void *ctx)
+{
+  wasm_impurify_ctx *impurify_ctx = (wasm_impurify_ctx *)ctx;
+  impurify_locref(slot, impurify_ctx->low, impurify_ctx->high, impurify_ctx->delta);
+}
+
+static void
+wasm_visit_forward_xp(ExceptionInformation *xp, void *ctx)
+{
+  (void)ctx;
+  forward_xp(xp);
+}
+
+static void
+wasm_visit_purify_xp(ExceptionInformation *xp, void *ctx)
+{
+  wasm_purify_ctx *purify_ctx = (wasm_purify_ctx *)ctx;
+  purify_xp(xp, purify_ctx->low, purify_ctx->high, purify_ctx->to);
+}
+
+static void
+wasm_visit_impurify_xp(ExceptionInformation *xp, void *ctx)
+{
+  wasm_impurify_ctx *impurify_ctx = (wasm_impurify_ctx *)ctx;
+  impurify_xp(xp, impurify_ctx->low, impurify_ctx->high, impurify_ctx->delta);
+}
+
+static void
+wasm_check_tlb_range(TCR *tcr)
+{
+  LispObj *tlb_start, *tlb_end;
+  if (wasm_tcr_tlb_bounds(tcr, &tlb_start, &tlb_end)) {
+    check_range(tlb_start, tlb_end, false);
+  }
+}
+
 /* Heap sanity checking. */
 
 void
@@ -147,13 +526,7 @@ check_range(LispObj *start, LispObj *end, Boolean header_allowed)
 void
 check_xp(ExceptionInformation *xp)
 {
-  natural *regs = (natural *) xpGPRvector(xp);
-  LispObj lr_value;
-  int r;
-
-  for (r = arg_z; r <= Rfn; r++) {
-    check_node((regs[r]));
-  }
+  wasm_for_each_xp_root_slot(xp, wasm_check_root_slot, NULL);
 }
 
 
@@ -161,27 +534,11 @@ check_xp(ExceptionInformation *xp)
 void
 check_tcrs(TCR *first)
 {
-  xframe_list *xframes;
-  ExceptionInformation *xp;
-  
   TCR *tcr = first;
-  LispObj *tlb_start,*tlb_end;
 
   do {
-    xp = tcr->gc_context;
-    if (xp) {
-      check_xp(xp);
-    }
-    for (xframes = (xframe_list *) tcr->xframe; 
-         xframes; 
-         xframes = xframes->prev) {
-      check_xp(xframes->curr);
-    }
-    tlb_start = tcr->tlb_pointer;
-    if (tlb_start) {
-      tlb_end = tlb_start + ((tcr->tlb_limit)>>fixnumshift);
-      check_range(tlb_start,tlb_end,false);
-    }
+    wasm_for_each_tcr_xp(tcr, wasm_visit_check_xp, NULL, false);
+    wasm_check_tlb_range(tcr);
     tcr = tcr->next;
   } while (tcr != first);
 }
@@ -904,10 +1261,11 @@ mark_cstack_area(area *a)
 
     if (header == lisp_frame_marker) {
       frame = (lisp_frame *)current;
-      
-      mark_root(frame->savevsp); /* likely a fixnum */
-      mark_root(frame->savefn);
-      mark_pc_root(frame->savelr);
+      wasm_for_each_cstack_frame_slot(frame,
+                                      true,
+                                      wasm_mark_root_slot,
+                                      wasm_mark_pc_root_slot,
+                                      NULL);
       current += sizeof(lisp_frame)/sizeof(LispObj);
     } else if ((header == stack_alloc_marker) || (header == 0)) {
       current += 2;
@@ -940,10 +1298,8 @@ mark_cstack_area(area *a)
 void
 mark_xp(ExceptionInformation *xp)
 {
-  natural *regs = (natural *) xpGPRvector(xp);
-  int r;
-  /* registers between arg_z and Rfn should be tagged and marked as
-     roots.  the PC, and LR should be treated as "pc_locatives".
+  /* WASM-published node roots and locative roots are defined by the
+     active root descriptor and consumed here.
 
      In general, marking a locative is more expensive than marking
      a node is, since it may be neccessary to back up and find the
@@ -952,13 +1308,8 @@ mark_xp(ExceptionInformation *xp)
      stacks, nilreg-relative globals, etc.
      */
 
-  for (r = arg_z; r <= Rfn; r++) {
-    mark_root((regs[r]));
-  }
-
-
-  mark_pc_root(ptr_to_lispobj(xpPC(xp)));
-  mark_pc_root(ptr_to_lispobj(xpLR(xp)));
+  wasm_for_each_xp_root_slot(xp, wasm_mark_root_slot, NULL);
+  wasm_for_each_xp_locative_slot(xp, wasm_mark_pc_root_slot, NULL);
   
 }
 
@@ -1192,9 +1543,11 @@ forward_cstack_area(area *a)
 
     if (header == lisp_frame_marker) {
       frame = (lisp_frame *)current;
-
-      update_noderef(&(frame->savefn));
-      update_locref(&(frame->savelr));
+      wasm_for_each_cstack_frame_slot(frame,
+                                      false,
+                                      wasm_update_noderef_slot,
+                                      wasm_update_locref_slot,
+                                      NULL);
       current += sizeof(lisp_frame)/sizeof(LispObj);
     } else if ((header == stack_alloc_marker) || (header == 0)) {
       current += 2;
@@ -1231,21 +1584,12 @@ forward_cstack_area(area *a)
 void
 forward_xp(ExceptionInformation *xp)
 {
-  natural *regs = (natural *) xpGPRvector(xp);
-
-  int r;
-
-  /* registers between arg_z and Rfn should be tagged and forwarded as roots.
-     the PC and LR should be treated as "locatives".
+  /* WASM-published node roots and locative roots are defined by the
+     active root descriptor and consumed here.
      */
 
-  for (r = arg_z; r <= Rfn;  r++) {
-    update_noderef((LispObj*) (&(regs[r])));
-  }
-
-
-  update_locref((LispObj*) (&(xpPC(xp))));
-  update_locref((LispObj*) (&(xpLR(xp))));
+  wasm_for_each_xp_root_slot(xp, wasm_update_noderef_slot, NULL);
+  wasm_for_each_xp_locative_slot(xp, wasm_update_locref_slot, NULL);
 
 }
 
@@ -1281,19 +1625,7 @@ flush_code_vectors_in_range(LispObj *start,LispObj *end)
 void
 forward_tcr_xframes(TCR *tcr)
 {
-  xframe_list *xframes;
-  ExceptionInformation *xp;
-
-  xp = tcr->gc_context;
-  if (xp) {
-    forward_xp(xp);
-  }
-  for (xframes = tcr->xframe; xframes; xframes = xframes->prev) {
-    if (xframes->curr == xp) {
-      Bug(NULL, "forward xframe twice ???");
-    }
-    forward_xp(xframes->curr);
-  }
+  wasm_for_each_tcr_xp(tcr, wasm_visit_forward_xp, NULL, true);
 }
 
 
@@ -1677,17 +2009,22 @@ purify_cstack_area(area *a, BytePtr low, BytePtr high, area *to)
     , *limit = (LispObj*)(a->high), header;
   lisp_frame *frame;
   unsigned subtag;
+  wasm_purify_ctx purify_ctx;
 
+  purify_ctx.low = low;
+  purify_ctx.high = high;
+  purify_ctx.to = to;
 
   while(current < limit) {
     header = *current;
 
     if (header == lisp_frame_marker) {
       frame = (lisp_frame *)current;
-      
-      copy_ivector_reference(&(frame->savevsp), low, high, to); /* likely a fixnum */
-      copy_ivector_reference(&(frame->savefn), low, high, to);
-      purify_locref(&(frame->savelr), low, high, to);
+      wasm_for_each_cstack_frame_slot(frame,
+                                      true,
+                                      wasm_purify_root_slot,
+                                      wasm_purify_locative_slot,
+                                      &purify_ctx);
       current += sizeof(lisp_frame)/sizeof(LispObj);
     } else if ((header & fixnummask) == 0) {
       current = (LispObj *)header;
@@ -1722,45 +2059,36 @@ purify_cstack_area(area *a, BytePtr low, BytePtr high, area *to)
 void
 purify_xp(ExceptionInformation *xp, BytePtr low, BytePtr high, area *to)
 {
-  unsigned long *regs = (unsigned long *) xpGPRvector(xp);
-
-  int r;
+  wasm_purify_ctx purify_ctx;
 
   /* Node registers should be treated as roots.
      The PC and LR should be treated as "locatives".
    */
 
-  for (r = arg_z; r <= Rfn; r++) {
-    copy_ivector_reference((LispObj*) (&(regs[r])), low, high, to);
-  };
-
-  purify_locref((LispObj*) (&(xpPC(xp))), low, high, to);
-  purify_locref((LispObj*) (&(xpLR(xp))), low, high, to);
+  purify_ctx.low = low;
+  purify_ctx.high = high;
+  purify_ctx.to = to;
+  wasm_for_each_xp_root_slot(xp, wasm_purify_root_slot, &purify_ctx);
+  wasm_for_each_xp_locative_slot(xp, wasm_purify_locative_slot, &purify_ctx);
 }
 
 void
 purify_tcr_tlb(TCR *tcr, BytePtr low, BytePtr high, area *to)
 {
-  natural n = tcr->tlb_limit;
-  LispObj *start = tcr->tlb_pointer, *end = (LispObj *) ((BytePtr)start+n);
-
-  purify_range(start, end, low, high, to);
+  LispObj *start, *end;
+  if (wasm_tcr_tlb_bounds(tcr, &start, &end)) {
+    purify_range(start, end, low, high, to);
+  }
 }
 
 void
 purify_tcr_xframes(TCR *tcr, BytePtr low, BytePtr high, area *to)
 {
-  xframe_list *xframes;
-  ExceptionInformation *xp;
-  
-  xp = tcr->gc_context;
-  if (xp) {
-    purify_xp(xp, low, high, to);
-  }
-
-  for (xframes = tcr->xframe; xframes; xframes = xframes->prev) {
-    purify_xp(xframes->curr, low, high, to);
-  }
+  wasm_purify_ctx purify_ctx;
+  purify_ctx.low = low;
+  purify_ctx.high = high;
+  purify_ctx.to = to;
+  wasm_for_each_tcr_xp(tcr, wasm_visit_purify_xp, &purify_ctx, false);
 }
 
 void
@@ -1896,16 +2224,22 @@ impurify_cstack_area(area *a, LispObj low, LispObj high, int delta)
     , *limit = (LispObj*)(a->high), header;
   lisp_frame *frame;
   unsigned subtag;
+  wasm_impurify_ctx impurify_ctx;
+
+  impurify_ctx.low = low;
+  impurify_ctx.high = high;
+  impurify_ctx.delta = delta;
 
   while(current < limit) {
     header = *current;
 
     if (header == lisp_frame_marker) {
       frame = (lisp_frame *)current;
-      
-      impurify_noderef(&(frame->savevsp), low, high,delta); /* likely a fixnum */
-      impurify_noderef(&(frame->savefn), low, high, delta);
-      impurify_locref(&(frame->savelr), low, high, delta);
+      wasm_for_each_cstack_frame_slot(frame,
+                                      true,
+                                      wasm_impurify_root_slot,
+                                      wasm_impurify_locative_slot,
+                                      &impurify_ctx);
       current += sizeof(lisp_frame)/sizeof(LispObj);
     } else if ((header == stack_alloc_marker) || (header == 0)) {
       current += 2;
@@ -1941,20 +2275,17 @@ impurify_cstack_area(area *a, LispObj low, LispObj high, int delta)
 void
 impurify_xp(ExceptionInformation *xp, LispObj low, LispObj high, int delta)
 {
-  natural *regs = (natural *) xpGPRvector(xp);
-  int r;
+  wasm_impurify_ctx impurify_ctx;
 
   /* node registers should be treated as roots.
      The PC and LR should be treated as "locatives".
    */
 
-  for (r = arg_z; r <= Rfn; r++) {
-    impurify_noderef((LispObj*) (&(regs[r])), low, high, delta);
-  };
-
-
-  impurify_locref((LispObj*) (&(xpPC(xp))), low, high, delta);
-  impurify_locref((LispObj*) (&(xpLR(xp))), low, high, delta);
+  impurify_ctx.low = low;
+  impurify_ctx.high = high;
+  impurify_ctx.delta = delta;
+  wasm_for_each_xp_root_slot(xp, wasm_impurify_root_slot, &impurify_ctx);
+  wasm_for_each_xp_locative_slot(xp, wasm_impurify_locative_slot, &impurify_ctx);
 
 }
 
@@ -2000,26 +2331,20 @@ impurify_range(LispObj *start, LispObj *end, LispObj low, LispObj high, int delt
 void
 impurify_tcr_tlb(TCR *tcr,  LispObj low, LispObj high, int delta)
 {
-  unsigned n = tcr->tlb_limit;
-  LispObj *start = tcr->tlb_pointer, *end = (LispObj *) ((BytePtr)start+n);
-  
-  impurify_range(start, end, low, high, delta);
+  LispObj *start, *end;
+  if (wasm_tcr_tlb_bounds(tcr, &start, &end)) {
+    impurify_range(start, end, low, high, delta);
+  }
 }
 
 void
 impurify_tcr_xframes(TCR *tcr, LispObj low, LispObj high, int delta)
 {
-  xframe_list *xframes;
-  ExceptionInformation *xp;
-  
-  xp = tcr->gc_context;
-  if (xp) {
-    impurify_xp(xp, low, high, delta);
-  }
-
-  for (xframes = tcr->xframe; xframes; xframes = xframes->prev) {
-    impurify_xp(xframes->curr, low, high, delta);
-  }
+  wasm_impurify_ctx impurify_ctx;
+  impurify_ctx.low = low;
+  impurify_ctx.high = high;
+  impurify_ctx.delta = delta;
+  wasm_for_each_tcr_xp(tcr, wasm_visit_impurify_xp, &impurify_ctx, false);
 }
 
 void

@@ -31,13 +31,23 @@
 
 typedef uint8_t opcode, *pc;
 
-/* arm-constants.h references ExceptionInformation via pointers (TCR fields).
- * Forward-declare it before including arm-constants.h, then provide the
+/* Legacy constants header references ExceptionInformation via pointers (TCR fields).
+ * Forward-declare it before including the bridge header, then provide the
  * wasm32 definition below.
  */
 typedef struct ExceptionInformation ExceptionInformation;
 
-#include "arm-constants.h"
+#include "wasm-constants-bridge.h"
+
+/* Transitional wasm32 GPR aliases. These decouple wasm GC/runtime code from
+ * direct use of legacy register-name macros while preserving current indices.
+ */
+enum {
+  wasm_gpr_arg_z = arg_z,
+  wasm_gpr_arg_y = arg_y,
+  wasm_gpr_arg_x = arg_x,
+  wasm_gpr_fn = Rfn
+};
 
 /* Placeholder for wasm32 bring-up; no OS ucontext or trap frame yet.
  * When completed, this will reflect a real wasm trap/interrupt context
@@ -89,6 +99,39 @@ void *wasm_get_cstack_pointer(void);
 void wasm_relocate_cstack(void *new_base);
 int32_t wasm_memory_grow_and_relocate(uint32_t pages);
 int wasm_grow_cstack(natural min_bytes);
+
+enum {
+  WASM_GC_ROOT_INCLUDE_XP_LOCATIVES = (1u << 0),
+  WASM_GC_ROOT_INCLUDE_CSTACK = (1u << 1),
+  WASM_GC_ROOT_INCLUDE_CSTACK_SAVEVSP = (1u << 2),
+  WASM_GC_ROOT_INCLUDE_TCR_GC_CONTEXT = (1u << 3),
+  WASM_GC_ROOT_INCLUDE_TCR_XFRAMES = (1u << 4),
+  WASM_GC_ROOT_INCLUDE_TCR_TLB = (1u << 5)
+};
+
+#define WASM_GC_ROOT_POLICY_DEFAULT \
+  (WASM_GC_ROOT_INCLUDE_XP_LOCATIVES | \
+   WASM_GC_ROOT_INCLUDE_CSTACK | \
+   WASM_GC_ROOT_INCLUDE_CSTACK_SAVEVSP | \
+   WASM_GC_ROOT_INCLUDE_TCR_GC_CONTEXT | \
+   WASM_GC_ROOT_INCLUDE_TCR_XFRAMES | \
+   WASM_GC_ROOT_INCLUDE_TCR_TLB)
+
+#define WASM_GC_ROOT_POLICY_BOOTSTRAP \
+  (WASM_GC_ROOT_POLICY_DEFAULT & ~WASM_GC_ROOT_INCLUDE_CSTACK_SAVEVSP)
+
+enum {
+  WASM_GC_ROOT_MODE_RUNTIME_DEFAULT = 0u,
+  WASM_GC_ROOT_MODE_RUNTIME_BOOTSTRAP = 1u,
+  WASM_GC_ROOT_MODE_HOST_MASK = 2u
+};
+
+void wasm_publish_gc_root_policy(uint32_t policy_mask);
+uint32_t wasm_current_gc_root_policy(void);
+void wasm_reset_gc_root_policy(void);
+void wasm_publish_gc_root_policy_mode(uint32_t mode);
+uint32_t wasm_current_gc_root_policy_mode(void);
+void wasm_reset_gc_root_policy_mode(void);
 
 natural wasm_cstack_push_frame(TCR *tcr, LispObj savefn, pc savelr, LispObj savevsp);
 void wasm_cstack_pop_frame(TCR *tcr, natural old_last_lisp_frame);

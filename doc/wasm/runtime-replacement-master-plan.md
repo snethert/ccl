@@ -26,6 +26,7 @@ Cross-track dependencies and parallelization constraints are tracked in:
 
 - `doc/wasm/runtime-backend-dependency-matrix.md`
 - `doc/wasm/wasm-program-board.md`
+- `doc/wasm/backend-sync/README.md` (backend-local + shared-merge doc workflow)
 
 ## Scope
 
@@ -78,6 +79,7 @@ On every ticket update:
    - `Next Step Analysis`.
 2. Update the ticket subplan document referenced by `Subplan`.
 3. If subplan content changes but this master plan is not updated in the same change, the ticket is considered out of sync.
+4. Backend ticket execution may run in backend-local doc mode; do not mirror backend ticket churn here until a queued shared-merge cycle is executed.
 
 ## Fresh-Context Resume Protocol
 

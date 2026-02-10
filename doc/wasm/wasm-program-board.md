@@ -23,8 +23,9 @@ This is intentionally not a megaplan. Execution remains in two track-specific ma
 
 1. Keep runtime and backend tickets independently executable unless a matrix row marks a hard gate.
 2. Do not block one track on speculative work from the other track.
-3. Every cross-track dependency change must update the dependency matrix in the same change.
-4. Cutover work cannot start until both tracks satisfy their cutover preconditions.
+3. Backend execution should use backend-local doc updates; shared docs are updated in queued merge cycles (`doc/wasm/backend-sync/README.md`).
+4. Every cross-track dependency change must update the dependency matrix in the same merge cycle.
+5. Cutover work cannot start until both tracks satisfy their cutover preconditions.
 
 ## Parallel Execution Lanes
 
