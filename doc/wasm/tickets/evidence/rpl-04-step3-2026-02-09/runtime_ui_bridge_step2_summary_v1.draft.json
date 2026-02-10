@@ -1,0 +1,41 @@
+{
+  "schema_version": "runtime_ui_bridge_step2_summary_v1",
+  "run_id": "rpl04-step3-2026-02-09T23:45:00Z",
+  "executed_validation_ids": [
+    "R4V-01",
+    "R4V-04",
+    "R4V-06",
+    "R4V-07",
+    "R4V-08",
+    "R4V-09",
+    "R4V-10",
+    "R4V-11"
+  ],
+  "passed_validation_ids": [
+    "R4V-01",
+    "R4V-04",
+    "R4V-06"
+  ],
+  "failed_validation_ids": [
+    "R4V-07",
+    "R4V-08",
+    "R4V-09",
+    "R4V-10",
+    "R4V-11"
+  ],
+  "first_failure_validation_id": "R4V-07",
+  "first_failure_code": "RPL03-E008",
+  "compatibility_results": [
+    {"compatibility_id": "R4I-01", "status": "pending"},
+    {"compatibility_id": "R4I-02", "status": "pending"},
+    {"compatibility_id": "R4I-03", "status": "pending"},
+    {"compatibility_id": "R4I-04", "status": "pending"},
+    {"compatibility_id": "R4I-05", "status": "pending"},
+    {"compatibility_id": "R4I-06", "status": "pending"}
+  ],
+  "allow_hotpath_fallback": false,
+  "x04_step2_ready": false,
+  "results_digest": "pending",
+  "status": "fail",
+  "notes": "Draft summary generated from partial Step 3 execution; bridge-specific wrapper controls and bridge-specific schemas are not yet emitted."
+}

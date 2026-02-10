@@ -1,0 +1,15 @@
+# validation_id: R8V-02
+# lane_id: R8L-02
+# run_id: rpl08-20260210-022252Z-91fdb0be
+# expected_exit: 0
+# expected_failure: none
+# command: node -e 'const fs=require("node:fs"); const vals=[fs.statSync("doc/wasm/wasm-runtime-modules.bin").size,fs.statSync("doc/wasm/wasm-runtime-modules.json").size,fs.statSync("doc/wasm/js/wasmcl.wasm").size,fs.statSync("doc/wasm/js/subprims.wasm").size]; const s=vals.reduce((a,b)=>a+b,0); console.log("R8B-05\t"+s);'
+# exit_code: 0
+
+## STDOUT
+R8B-05	437586594
+
+## STDERR
+(empty)
+
+R8_VALIDATION_RESULT {"schema_version":"r8_validation_result_v1","run_id":"rpl08-20260210-022252Z-91fdb0be","validation_id":"R8V-02","lane_id":"R8L-02","expected_failure":"none","observed_failure":"none","expected_exit":0,"exit_code":0,"validation_assertion_pass":true,"notes":"assertions met","timestamp_utc":"2026-02-10T02:22:52.480Z"}

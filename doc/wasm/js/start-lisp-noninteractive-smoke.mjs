@@ -9,6 +9,7 @@ import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { emitSyntheticIpcArtifacts, extractIpcArtifactLines } from "./ipc-conformance.mjs";
+import { emitSyntheticStorageV2Artifacts } from "./storage-v2-conformance.mjs";
 
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
@@ -85,17 +86,25 @@ const strictRoot = process.argv.includes("--strict-start-lisp-noninteractive");
 const timeoutMs = 15000;
 const ipcConformanceId = process.env.CCL_IPC_CONFORMANCE_ID ?? null;
 const ipcLaneId = process.env.CCL_IPC_LANE_ID ?? null;
-const injectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_IPC_TEST_INJECT_FAILURE ?? ""))
+const bridgeInjectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_UI_BRIDGE_TEST_INJECT_FAILURE ?? ""))
+  ? String(process.env.CCL_UI_BRIDGE_TEST_INJECT_FAILURE)
+  : null;
+const ipcInjectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_IPC_TEST_INJECT_FAILURE ?? ""))
   ? String(process.env.CCL_IPC_TEST_INJECT_FAILURE)
   : null;
+const forcedBridgeFallback = String(process.env.CCL_UI_BRIDGE_TEST_FORCE_FALLBACK ?? "") === "1";
+const injectedFailureCode = bridgeInjectedFailureCode ?? ipcInjectedFailureCode;
 
-if (injectedFailureCode) {
+if (injectedFailureCode || forcedBridgeFallback) {
   emitSyntheticIpcArtifacts({
     defaultLaneClass: "headless_runtime",
     laneId: ipcLaneId,
     conformanceId: ipcConformanceId,
     source: "doc/wasm/js/start-lisp-noninteractive-smoke.mjs",
-    failureCode: injectedFailureCode,
+    failureCode: injectedFailureCode ?? "RPL03-E008",
+    failureMessage: forcedBridgeFallback
+      ? "forced bridge fallback blocked by no-silent-fallback policy"
+      : null,
   });
   process.exit(1);
 }
@@ -176,6 +185,10 @@ if (strictRoot) {
 } else {
   console.log("SKIP: strict root start_lisp non-interactive check (pass --strict-start-lisp-noninteractive)");
 }
+
+emitSyntheticStorageV2Artifacts({
+  source: "doc/wasm/js/start-lisp-noninteractive-smoke.mjs",
+});
 
 console.log("PASS: start-lisp non-interactive smoke test");
 

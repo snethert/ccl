@@ -1,0 +1,15 @@
+validation_id	lane_id	exit_code	expected_failure_code	observed_first_failure_code	storage_artifact_emitted	persistence_backend	result	notes
+R5V-01	R5L-01	0	none	null	no	memory-snapshot	fail	pass-lane preconditions unmet
+R5V-02	R5L-01	0	none	null	no	memory-snapshot	fail	pass-lane preconditions unmet
+R5V-03	R5L-02	0	none	null	no	memory-snapshot	fail	pass-lane preconditions unmet
+R5V-04	R5L-04	0	none	null	no	unknown	fail	pass-lane preconditions unmet
+R5V-05	R5L-01	0	none	null	no	memory-snapshot	fail	pass-lane preconditions unmet
+R5V-06	R5L-03	0	none	null	no	memory-snapshot	fail	pass-lane preconditions unmet
+R5V-07	R5L-06	0	RPL05-E001	null	no	memory-snapshot	fail	expected fail mapping not observed
+R5V-08	R5L-06	0	RPL05-E003	null	no	memory-snapshot	fail	expected fail mapping not observed
+R5V-09	R5L-06	0	RPL05-E004	null	no	memory-snapshot	fail	expected fail mapping not observed
+R5V-10	R5L-06	0	RPL05-E006	null	no	memory-snapshot	fail	expected fail mapping not observed
+R5V-11	R5L-07	0	RPL05-E007	null	no	memory-snapshot	fail	expected fail mapping not observed
+R5V-12	R5L-06	0	RPL05-E008	null	no	memory-snapshot	fail	expected fail mapping not observed
+R5V-13	R5L-06	0	RPL05-E009	null	no	memory-snapshot	fail	expected fail mapping not observed
+R5V-14	R5L-06	0	RPL05-E010	null	no	memory-snapshot	fail	expected fail mapping not observed

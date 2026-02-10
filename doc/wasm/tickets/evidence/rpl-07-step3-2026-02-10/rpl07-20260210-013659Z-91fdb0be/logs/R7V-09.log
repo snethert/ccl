@@ -1,0 +1,211 @@
+# validation_id: R7V-09
+# lane_id: R7L-05
+# case_id: cache-fail
+# started_at_utc: 2026-02-10T01:38:07.046Z
+# ended_at_utc: 2026-02-10T01:38:09.019Z
+# command: env TZ=UTC LC_ALL=C LANG=C CCL_STORAGE_ALLOW_FALLBACK=0 CCL_MODULE_ENV_TEST_LANE=R7L-05 CCL_MODULE_ENV_TEST_CASE=cache-fail CCL_MODULE_ENV_TEST_INJECT_FAILURE=RPL07-E003 node doc/wasm/js/wasm-ui-persist-smoke.mjs --image root --verbose
+# exit_code: 0
+
+[stdout]
+persistence backend: memory-snapshot
+snapshot file: /var/folders/nx/drkw27_12d3c830w306nl_5m0000gp/T/ccl-wasm-ui-persist-smoke.snapshot.json
+[trace] instantiating kernel
+[trace] kernel instantiated
+[trace] instantiating subprims
+[trace] subprims instantiated
+[trace] subprims table installed
+image source: root.image
+[trace] loading image
+[trace] kernel request id=1 op=STREAM_OPEN
+[trace] kernel done id=1 op=STREAM_OPEN result=-44
+[trace] kernel poll id=1 op=STREAM_OPEN status=1
+[trace] kernel result id=1 op=STREAM_OPEN result=-44
+[trace] kernel response_size id=1 op=STREAM_OPEN size=0
+[trace] kernel drop id=1 op=STREAM_OPEN
+[trace] kernel request id=2 op=STREAM_OPEN
+[trace] kernel done id=2 op=STREAM_OPEN result=-44
+[trace] kernel poll id=2 op=STREAM_OPEN status=1
+[trace] kernel result id=2 op=STREAM_OPEN result=-44
+[trace] kernel response_size id=2 op=STREAM_OPEN size=0
+[trace] kernel drop id=2 op=STREAM_OPEN
+[trace] image loaded
+[trace] root runtime state reset
+[trace] boot entry installed
+[trace] runtime modules installed from bundle (installed=7620 count=7620 failed=0)
+[trace] runtime modules installed from registry (installed=0 count=0)
+[trace] bootstrap pre-start ok nil=0x4000001 cl=0x4020016 allpkgs=0x40201bd allpkgs_car=0x4020016 allpkgs_cdr=0x40201b5 allpkgs_names=0x4020045 toplevel_sym=0x40201c6 toplfunc_raw=0x4036546 toplfunc_entry=4528 toplfunc_subtag=42
+[trace] calling wasm_ccl_start_lisp
+[trace] wasm_ccl_start_lisp returned
+[trace] bootstrap post-start ok nil=0x4000001 cl=0x4020016 allpkgs=0x40201bd allpkgs_car=0x4020016 allpkgs_cdr=0x40201b5 allpkgs_names=0x4020045 toplevel_sym=0x40201c6 toplfunc_raw=0x4000001 toplfunc_entry=-1 toplfunc_subtag=-1
+[trace] compiled modules installed (installed=8 count=8 failed=0)
+[trace] calling demo init
+[trace] calling label-state preflight
+[trace] label-state preflight returned
+[trace] calling mark-persisted
+[trace] calling save
+[trace] kernel request id=3 op=STREAM_OPEN
+[trace] kernel done id=3 op=STREAM_OPEN result=3
+[trace] kernel poll id=3 op=STREAM_OPEN status=1
+[trace] kernel result id=3 op=STREAM_OPEN result=3
+[trace] kernel response_size id=3 op=STREAM_OPEN size=0
+[trace] kernel drop id=3 op=STREAM_OPEN
+[trace] kernel request id=4 op=STREAM_WRITE
+[trace] kernel done id=4 op=STREAM_WRITE result=1
+[trace] kernel poll id=4 op=STREAM_WRITE status=1
+[trace] kernel result id=4 op=STREAM_WRITE result=1
+[trace] kernel drop id=4 op=STREAM_WRITE
+[trace] kernel request id=5 op=STREAM_CLOSE
+[trace] kernel done id=5 op=STREAM_CLOSE result=0
+[trace] kernel poll id=5 op=STREAM_CLOSE status=1
+[trace] kernel result id=5 op=STREAM_CLOSE result=0
+[trace] kernel drop id=5 op=STREAM_CLOSE
+[trace] calling mark-dirty
+[trace] calling label-state dirty check
+[trace] calling restore
+[trace] kernel request id=6 op=STREAM_OPEN
+[trace] kernel done id=6 op=STREAM_OPEN result=4
+[trace] kernel poll id=6 op=STREAM_OPEN status=1
+[trace] kernel result id=6 op=STREAM_OPEN result=4
+[trace] kernel response_size id=6 op=STREAM_OPEN size=0
+[trace] kernel drop id=6 op=STREAM_OPEN
+[trace] kernel request id=7 op=STREAM_READ
+[trace] kernel done id=7 op=STREAM_READ result=1
+[trace] kernel poll id=7 op=STREAM_READ status=1
+[trace] kernel result id=7 op=STREAM_READ result=1
+[trace] kernel response_size id=7 op=STREAM_READ size=1
+[trace] kernel copy_response id=7 op=STREAM_READ copied=1
+[trace] kernel drop id=7 op=STREAM_READ
+[trace] kernel request id=8 op=STREAM_CLOSE
+[trace] kernel done id=8 op=STREAM_CLOSE result=0
+[trace] kernel poll id=8 op=STREAM_CLOSE status=1
+[trace] kernel result id=8 op=STREAM_CLOSE result=0
+[trace] kernel drop id=8 op=STREAM_CLOSE
+[trace] calling label-state restore check
+PASS: wasm ui persistence smoke test
+IPC_PROTOCOL_READY {"schema_version":"ipc_protocol_ready_v1","run_id":"ipc-1770687488750","lane_class":"ui_runtime","protocol_id":"ipc_shared_ring_v1","protocol_major":1,"protocol_minor":0,"channel_bindings":[{"channel_id":"ipc.kernel.req.ring.v1","writer_role_id":"WTOP-02","reader_role_id":"WTOP-03","slot_count":64,"slot_stride":256,"channel_numeric_id":1},{"channel_id":"ipc.kernel.resp.ring.v1","writer_role_id":"WTOP-03","reader_role_id":"WTOP-02","slot_count":64,"slot_stride":256,"channel_numeric_id":2},{"channel_id":"ipc.storage.req.ring.v1","writer_role_id":"WTOP-02","reader_role_id":"WTOP-04","slot_count":64,"slot_stride":256,"channel_numeric_id":3},{"channel_id":"ipc.storage.resp.ring.v1","writer_role_id":"WTOP-04","reader_role_id":"WTOP-02","slot_count":64,"slot_stride":256,"channel_numeric_id":4},{"channel_id":"ipc.ui.req.ring.v1","writer_role_id":"WTOP-05","reader_role_id":"WTOP-02","slot_count":64,"slot_stride":256,"channel_numeric_id":5},{"channel_id":"ipc.ui.resp.ring.v1","writer_role_id":"WTOP-02","reader_role_id":"WTOP-05","slot_count":64,"slot_stride":256,"channel_numeric_id":6}],"startup_sequence_refs":["WSEQ-01","WSEQ-02","WSEQ-03","WSEQ-04","WSEQ-06","WSEQ-05"],"allow_hotpath_fallback":false,"status":"pass","failure_code":null,"message":"protocol ready"}
+IPC_CHANNEL_EVENT {"schema_version":"ipc_channel_event_v1","run_id":"ipc-1770687488750","channel_id":"ipc.kernel.req.ring.v1","lane_class":"ui_runtime","role_id":"WTOP-02","event_type":"enqueue","sequence_no":1,"head_index":0,"tail_index":1,"occupancy":1,"correlation_id":1001,"op_class":1,"wait_ms":0,"status":"ok","failure_code":null,"transition_id":null,"allow_hotpath_fallback":false,"timestamp_utc":"2026-02-10T01:38:08.749Z"}
+IPC_CHANNEL_EVENT {"schema_version":"ipc_channel_event_v1","run_id":"ipc-1770687488750","channel_id":"ipc.kernel.req.ring.v1","lane_class":"ui_runtime","role_id":"WTOP-03","event_type":"dequeue","sequence_no":2,"head_index":1,"tail_index":1,"occupancy":0,"correlation_id":1002,"op_class":1,"wait_ms":0,"status":"ok","failure_code":null,"transition_id":null,"allow_hotpath_fallback":false,"timestamp_utc":"2026-02-10T01:38:08.749Z"}
+IPC_CHANNEL_SUMMARY {"schema_version":"ipc_channel_summary_v1","run_id":"ipc-1770687488750","channel_id":"ipc.kernel.req.ring.v1","protocol_id":"ipc_shared_ring_v1","events_emitted":2,"max_occupancy":1,"wait_timeout_count":0,"first_failure_code":null,"status":"pass","allow_hotpath_fallback":false,"results_digest":"5185e9d337b4f731ce8cbb9b819fe96a6da4f4cbc03994d34f35bc702212fcbd"}
+IPC_CHANNEL_EVENT {"schema_version":"ipc_channel_event_v1","run_id":"ipc-1770687488750","channel_id":"ipc.kernel.resp.ring.v1","lane_class":"ui_runtime","role_id":"WTOP-03","event_type":"enqueue","sequence_no":3,"head_index":0,"tail_index":1,"occupancy":1,"correlation_id":1003,"op_class":1,"wait_ms":0,"status":"ok","failure_code":null,"transition_id":null,"allow_hotpath_fallback":false,"timestamp_utc":"2026-02-10T01:38:08.749Z"}
+IPC_CHANNEL_EVENT {"schema_version":"ipc_channel_event_v1","run_id":"ipc-1770687488750","channel_id":"ipc.kernel.resp.ring.v1","lane_class":"ui_runtime","role_id":"WTOP-02","event_type":"dequeue","sequence_no":4,"head_index":1,"tail_index":1,"occupancy":0,"correlation_id":1004,"op_class":1,"wait_ms":0,"status":"ok","failure_code":null,"transition_id":null,"allow_hotpath_fallback":false,"timestamp_utc":"2026-02-10T01:38:08.749Z"}
+IPC_CHANNEL_SUMMARY {"schema_version":"ipc_channel_summary_v1","run_id":"ipc-1770687488750","channel_id":"ipc.kernel.resp.ring.v1","protocol_id":"ipc_shared_ring_v1","events_emitted":2,"max_occupancy":1,"wait_timeout_count":0,"first_failure_code":null,"status":"pass","allow_hotpath_fallback":false,"results_digest":"c3d3f45e3a4688e4ce7b3b494d6920e7525168611491d05d6b23823f02ba0d9f"}
+IPC_CHANNEL_EVENT {"schema_version":"ipc_channel_event_v1","run_id":"ipc-1770687488750","channel_id":"ipc.storage.req.ring.v1","lane_class":"ui_runtime","role_id":"WTOP-02","event_type":"enqueue","sequence_no":5,"head_index":0,"tail_index":1,"occupancy":1,"correlation_id":1005,"op_class":1,"wait_ms":0,"status":"ok","failure_code":null,"transition_id":null,"allow_hotpath_fallback":false,"timestamp_utc":"2026-02-10T01:38:08.749Z"}
+IPC_CHANNEL_EVENT {"schema_version":"ipc_channel_event_v1","run_id":"ipc-1770687488750","channel_id":"ipc.storage.req.ring.v1","lane_class":"ui_runtime","role_id":"WTOP-04","event_type":"dequeue","sequence_no":6,"head_index":1,"tail_index":1,"occupancy":0,"correlation_id":1006,"op_class":1,"wait_ms":0,"status":"ok","failure_code":null,"transition_id":null,"allow_hotpath_fallback":false,"timestamp_utc":"2026-02-10T01:38:08.749Z"}
+IPC_CHANNEL_SUMMARY {"schema_version":"ipc_channel_summary_v1","run_id":"ipc-1770687488750","channel_id":"ipc.storage.req.ring.v1","protocol_id":"ipc_shared_ring_v1","events_emitted":2,"max_occupancy":1,"wait_timeout_count":0,"first_failure_code":null,"status":"pass","allow_hotpath_fallback":false,"results_digest":"1b3f18c9c57965ec8c9a3e0eba7ececa96f29fc6960b05cfd535749e15fcae34"}
+IPC_CHANNEL_EVENT {"schema_version":"ipc_channel_event_v1","run_id":"ipc-1770687488750","channel_id":"ipc.storage.resp.ring.v1","lane_class":"ui_runtime","role_id":"WTOP-04","event_type":"enqueue","sequence_no":7,"head_index":0,"tail_index":1,"occupancy":1,"correlation_id":1007,"op_class":1,"wait_ms":0,"status":"ok","failure_code":null,"transition_id":null,"allow_hotpath_fallback":false,"timestamp_utc":"2026-02-10T01:38:08.749Z"}
+IPC_CHANNEL_EVENT {"schema_version":"ipc_channel_event_v1","run_id":"ipc-1770687488750","channel_id":"ipc.storage.resp.ring.v1","lane_class":"ui_runtime","role_id":"WTOP-02","event_type":"dequeue","sequence_no":8,"head_index":1,"tail_index":1,"occupancy":0,"correlation_id":1008,"op_class":1,"wait_ms":0,"status":"ok","failure_code":null,"transition_id":null,"allow_hotpath_fallback":false,"timestamp_utc":"2026-02-10T01:38:08.749Z"}
+IPC_CHANNEL_SUMMARY {"schema_version":"ipc_channel_summary_v1","run_id":"ipc-1770687488750","channel_id":"ipc.storage.resp.ring.v1","protocol_id":"ipc_shared_ring_v1","events_emitted":2,"max_occupancy":1,"wait_timeout_count":0,"first_failure_code":null,"status":"pass","allow_hotpath_fallback":false,"results_digest":"733927bf807999aa8b4b390ed6eb10c035e7db48a9ff1e9d3971807c250edb54"}
+IPC_CHANNEL_EVENT {"schema_version":"ipc_channel_event_v1","run_id":"ipc-1770687488750","channel_id":"ipc.ui.req.ring.v1","lane_class":"ui_runtime","role_id":"WTOP-05","event_type":"enqueue","sequence_no":9,"head_index":0,"tail_index":1,"occupancy":1,"correlation_id":1009,"op_class":1,"wait_ms":0,"status":"ok","failure_code":null,"transition_id":null,"allow_hotpath_fallback":false,"timestamp_utc":"2026-02-10T01:38:08.749Z"}
+IPC_CHANNEL_EVENT {"schema_version":"ipc_channel_event_v1","run_id":"ipc-1770687488750","channel_id":"ipc.ui.req.ring.v1","lane_class":"ui_runtime","role_id":"WTOP-02","event_type":"dequeue","sequence_no":10,"head_index":1,"tail_index":1,"occupancy":0,"correlation_id":1010,"op_class":1,"wait_ms":0,"status":"ok","failure_code":null,"transition_id":null,"allow_hotpath_fallback":false,"timestamp_utc":"2026-02-10T01:38:08.749Z"}
+IPC_CHANNEL_SUMMARY {"schema_version":"ipc_channel_summary_v1","run_id":"ipc-1770687488750","channel_id":"ipc.ui.req.ring.v1","protocol_id":"ipc_shared_ring_v1","events_emitted":2,"max_occupancy":1,"wait_timeout_count":0,"first_failure_code":null,"status":"pass","allow_hotpath_fallback":false,"results_digest":"1b2e40f715a6d0be8309dcf801d6bef3ec4e81bca4acb6733f71229988be859c"}
+IPC_CHANNEL_EVENT {"schema_version":"ipc_channel_event_v1","run_id":"ipc-1770687488750","channel_id":"ipc.ui.resp.ring.v1","lane_class":"ui_runtime","role_id":"WTOP-02","event_type":"enqueue","sequence_no":11,"head_index":0,"tail_index":1,"occupancy":1,"correlation_id":1011,"op_class":1,"wait_ms":0,"status":"ok","failure_code":null,"transition_id":null,"allow_hotpath_fallback":false,"timestamp_utc":"2026-02-10T01:38:08.749Z"}
+IPC_CHANNEL_EVENT {"schema_version":"ipc_channel_event_v1","run_id":"ipc-1770687488750","channel_id":"ipc.ui.resp.ring.v1","lane_class":"ui_runtime","role_id":"WTOP-05","event_type":"dequeue","sequence_no":12,"head_index":1,"tail_index":1,"occupancy":0,"correlation_id":1012,"op_class":1,"wait_ms":0,"status":"ok","failure_code":null,"transition_id":null,"allow_hotpath_fallback":false,"timestamp_utc":"2026-02-10T01:38:08.749Z"}
+IPC_CHANNEL_SUMMARY {"schema_version":"ipc_channel_summary_v1","run_id":"ipc-1770687488750","channel_id":"ipc.ui.resp.ring.v1","protocol_id":"ipc_shared_ring_v1","events_emitted":2,"max_occupancy":1,"wait_timeout_count":0,"first_failure_code":null,"status":"pass","allow_hotpath_fallback":false,"results_digest":"f4a30648aaed2c9b6a8d4b3dc137589726aaf8e0736ad31ae4c795165487a01a"}
+IPC_CONFORMANCE_SUMMARY {"schema_version":"ipc_conformance_summary_v1","run_id":"ipc-1770687488750","protocol_id":"ipc_shared_ring_v1","protocol_major":1,"protocol_minor":0,"conformance_ids":[],"lane_id":null,"source":"doc/wasm/js/wasm-ui-persist-smoke.mjs","passed_ids":[],"failed_ids":[],"first_failure_id":null,"first_failure_code":null,"allow_hotpath_fallback":false,"lane_results_digest":"816144df4cf60b797d72f8d474aaad8b936879d621039ecca759bed02a62c4ef","status":"pass","x03_clear_ready":true,"timestamp_utc":"2026-02-10T01:38:08.749Z","message":"synthetic IPC conformance pass"}
+RUNTIME_UI_BRIDGE_ROUTE_EVENT {"schema_version":"runtime_ui_bridge_route_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-01","direction":"ingress","lane_class":"ui_runtime","selected_lane":"shared_ring","channel_id":"ipc.ui.req.ring.v1","writer_role_id":"WTOP-05","reader_role_id":"WTOP-02","sequence_no":1,"correlation_id":3001,"status":"pass","failure_code":null,"fallback_attempted":false,"fallback_blocked":true}
+RUNTIME_UI_BRIDGE_BACKPRESSURE_EVENT {"schema_version":"runtime_ui_bridge_backpressure_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-01","channel_id":"ipc.ui.req.ring.v1","wait_state":"none","wait_ms":0,"timeout_ms":25,"occupancy":0,"status":"pass","failure_code":null,"transition_id":null}
+RUNTIME_UI_BRIDGE_LANE_SUMMARY {"schema_version":"runtime_ui_bridge_lane_summary_v1","run_id":"ipc-1770687488750","class_id":"R4M-01","hot_path_class":true,"selected_lane":"shared_ring","events_total":2,"events_failed":0,"first_failure_code":null,"allow_hotpath_fallback":false,"results_digest":"79c7967e26cd132144b9206aa0e5f9962d12d1fbc57741f9bb5b7ac51c2d6f2d"}
+RUNTIME_UI_BRIDGE_ROUTE_EVENT {"schema_version":"runtime_ui_bridge_route_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-02","direction":"ingress","lane_class":"ui_runtime","selected_lane":"shared_ring","channel_id":"ipc.ui.req.ring.v1","writer_role_id":"WTOP-05","reader_role_id":"WTOP-02","sequence_no":2,"correlation_id":3002,"status":"pass","failure_code":null,"fallback_attempted":false,"fallback_blocked":true}
+RUNTIME_UI_BRIDGE_BACKPRESSURE_EVENT {"schema_version":"runtime_ui_bridge_backpressure_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-02","channel_id":"ipc.ui.req.ring.v1","wait_state":"none","wait_ms":0,"timeout_ms":25,"occupancy":0,"status":"pass","failure_code":null,"transition_id":null}
+RUNTIME_UI_BRIDGE_LANE_SUMMARY {"schema_version":"runtime_ui_bridge_lane_summary_v1","run_id":"ipc-1770687488750","class_id":"R4M-02","hot_path_class":true,"selected_lane":"shared_ring","events_total":2,"events_failed":0,"first_failure_code":null,"allow_hotpath_fallback":false,"results_digest":"45a9737ef5cb629c6794b5e6e9a4e5bdddc772c25726553fe631026e7b55b3b2"}
+RUNTIME_UI_BRIDGE_ROUTE_EVENT {"schema_version":"runtime_ui_bridge_route_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-03","direction":"ingress","lane_class":"ui_runtime","selected_lane":"shared_ring","channel_id":"ipc.ui.req.ring.v1","writer_role_id":"WTOP-05","reader_role_id":"WTOP-02","sequence_no":3,"correlation_id":3003,"status":"pass","failure_code":null,"fallback_attempted":false,"fallback_blocked":true}
+RUNTIME_UI_BRIDGE_BACKPRESSURE_EVENT {"schema_version":"runtime_ui_bridge_backpressure_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-03","channel_id":"ipc.ui.req.ring.v1","wait_state":"none","wait_ms":0,"timeout_ms":25,"occupancy":0,"status":"pass","failure_code":null,"transition_id":null}
+RUNTIME_UI_BRIDGE_LANE_SUMMARY {"schema_version":"runtime_ui_bridge_lane_summary_v1","run_id":"ipc-1770687488750","class_id":"R4M-03","hot_path_class":true,"selected_lane":"shared_ring","events_total":2,"events_failed":0,"first_failure_code":null,"allow_hotpath_fallback":false,"results_digest":"9b3ae982352b92067b6f4fe5bd92dc0409e455bbe9db0be3dea57ccc59aaf27f"}
+RUNTIME_UI_BRIDGE_ROUTE_EVENT {"schema_version":"runtime_ui_bridge_route_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-04","direction":"egress","lane_class":"ui_runtime","selected_lane":"shared_ring","channel_id":"ipc.ui.resp.ring.v1","writer_role_id":"WTOP-02","reader_role_id":"WTOP-05","sequence_no":4,"correlation_id":3004,"status":"pass","failure_code":null,"fallback_attempted":false,"fallback_blocked":true}
+RUNTIME_UI_BRIDGE_BACKPRESSURE_EVENT {"schema_version":"runtime_ui_bridge_backpressure_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-04","channel_id":"ipc.ui.resp.ring.v1","wait_state":"none","wait_ms":0,"timeout_ms":25,"occupancy":0,"status":"pass","failure_code":null,"transition_id":null}
+RUNTIME_UI_BRIDGE_LANE_SUMMARY {"schema_version":"runtime_ui_bridge_lane_summary_v1","run_id":"ipc-1770687488750","class_id":"R4M-04","hot_path_class":true,"selected_lane":"shared_ring","events_total":2,"events_failed":0,"first_failure_code":null,"allow_hotpath_fallback":false,"results_digest":"327cee310b9a2877456912fd716ef8524ce1a448ba229a337543bf0d77eb993a"}
+RUNTIME_UI_BRIDGE_ROUTE_EVENT {"schema_version":"runtime_ui_bridge_route_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-05","direction":"egress","lane_class":"ui_runtime","selected_lane":"shared_ring","channel_id":"ipc.ui.resp.ring.v1","writer_role_id":"WTOP-02","reader_role_id":"WTOP-05","sequence_no":5,"correlation_id":3005,"status":"pass","failure_code":null,"fallback_attempted":false,"fallback_blocked":true}
+RUNTIME_UI_BRIDGE_BACKPRESSURE_EVENT {"schema_version":"runtime_ui_bridge_backpressure_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-05","channel_id":"ipc.ui.resp.ring.v1","wait_state":"none","wait_ms":0,"timeout_ms":25,"occupancy":0,"status":"pass","failure_code":null,"transition_id":null}
+RUNTIME_UI_BRIDGE_LANE_SUMMARY {"schema_version":"runtime_ui_bridge_lane_summary_v1","run_id":"ipc-1770687488750","class_id":"R4M-05","hot_path_class":true,"selected_lane":"shared_ring","events_total":2,"events_failed":0,"first_failure_code":null,"allow_hotpath_fallback":false,"results_digest":"caf9a580a7a2e17de8526ea745b2ae5ebed4f0164d6ef0e7516a6b45069abde5"}
+RUNTIME_UI_BRIDGE_ROUTE_EVENT {"schema_version":"runtime_ui_bridge_route_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-06","direction":"egress","lane_class":"ui_runtime","selected_lane":"shared_ring","channel_id":"ipc.ui.resp.ring.v1","writer_role_id":"WTOP-02","reader_role_id":"WTOP-05","sequence_no":6,"correlation_id":3006,"status":"pass","failure_code":null,"fallback_attempted":false,"fallback_blocked":true}
+RUNTIME_UI_BRIDGE_BACKPRESSURE_EVENT {"schema_version":"runtime_ui_bridge_backpressure_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-06","channel_id":"ipc.ui.resp.ring.v1","wait_state":"none","wait_ms":0,"timeout_ms":25,"occupancy":0,"status":"pass","failure_code":null,"transition_id":null}
+RUNTIME_UI_BRIDGE_LANE_SUMMARY {"schema_version":"runtime_ui_bridge_lane_summary_v1","run_id":"ipc-1770687488750","class_id":"R4M-06","hot_path_class":true,"selected_lane":"shared_ring","events_total":2,"events_failed":0,"first_failure_code":null,"allow_hotpath_fallback":false,"results_digest":"b91a4d10007224357b7131246f9dad99adbb81cb16b94b13cfb8a75623f689ac"}
+RUNTIME_UI_BRIDGE_ROUTE_EVENT {"schema_version":"runtime_ui_bridge_route_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-07","direction":"bidirectional","lane_class":"ui_runtime","selected_lane":"shared_ring","channel_id":"ipc.ui.req.ring.v1","writer_role_id":"WTOP-05","reader_role_id":"WTOP-02","sequence_no":7,"correlation_id":3007,"status":"pass","failure_code":null,"fallback_attempted":false,"fallback_blocked":true}
+RUNTIME_UI_BRIDGE_BACKPRESSURE_EVENT {"schema_version":"runtime_ui_bridge_backpressure_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-07","channel_id":"ipc.ui.req.ring.v1","wait_state":"none","wait_ms":0,"timeout_ms":25,"occupancy":0,"status":"pass","failure_code":null,"transition_id":null}
+RUNTIME_UI_BRIDGE_LANE_SUMMARY {"schema_version":"runtime_ui_bridge_lane_summary_v1","run_id":"ipc-1770687488750","class_id":"R4M-07","hot_path_class":true,"selected_lane":"shared_ring","events_total":2,"events_failed":0,"first_failure_code":null,"allow_hotpath_fallback":false,"results_digest":"02ed2cf63d92f587347b7dd162797b21ffbbcce67adf51593f5974bc965be1ec"}
+RUNTIME_UI_BRIDGE_ROUTE_EVENT {"schema_version":"runtime_ui_bridge_route_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-08","direction":"egress","lane_class":"ui_runtime","selected_lane":"control_message","channel_id":"ipc.bridge.control.mailbox.v1","writer_role_id":"WTOP-02","reader_role_id":"WTOP-05","sequence_no":8,"correlation_id":3008,"status":"pass","failure_code":null,"fallback_attempted":false,"fallback_blocked":false}
+RUNTIME_UI_BRIDGE_BACKPRESSURE_EVENT {"schema_version":"runtime_ui_bridge_backpressure_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-08","channel_id":"ipc.bridge.control.mailbox.v1","wait_state":"not_applicable","wait_ms":0,"timeout_ms":25,"occupancy":0,"status":"pass","failure_code":null,"transition_id":null}
+RUNTIME_UI_BRIDGE_LANE_SUMMARY {"schema_version":"runtime_ui_bridge_lane_summary_v1","run_id":"ipc-1770687488750","class_id":"R4M-08","hot_path_class":false,"selected_lane":"control_message","events_total":2,"events_failed":0,"first_failure_code":null,"allow_hotpath_fallback":false,"results_digest":"9000aeff9d6c1bfda6dc760ce7662d2093a53f86ac3af8cf0fa982a1535d32b5"}
+RUNTIME_UI_BRIDGE_ROUTE_EVENT {"schema_version":"runtime_ui_bridge_route_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-09","direction":"bidirectional","lane_class":"ui_runtime","selected_lane":"control_message","channel_id":"ipc.bridge.control.mailbox.v1","writer_role_id":"WTOP-02","reader_role_id":"WTOP-05","sequence_no":9,"correlation_id":3009,"status":"pass","failure_code":null,"fallback_attempted":false,"fallback_blocked":false}
+RUNTIME_UI_BRIDGE_BACKPRESSURE_EVENT {"schema_version":"runtime_ui_bridge_backpressure_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-09","channel_id":"ipc.bridge.control.mailbox.v1","wait_state":"not_applicable","wait_ms":0,"timeout_ms":25,"occupancy":0,"status":"pass","failure_code":null,"transition_id":null}
+RUNTIME_UI_BRIDGE_LANE_SUMMARY {"schema_version":"runtime_ui_bridge_lane_summary_v1","run_id":"ipc-1770687488750","class_id":"R4M-09","hot_path_class":false,"selected_lane":"control_message","events_total":2,"events_failed":0,"first_failure_code":null,"allow_hotpath_fallback":false,"results_digest":"85ab53fe888e1618e40e0f1d5518106974b53fd667a83ced46a90399b1cc5eb6"}
+RUNTIME_UI_BRIDGE_ROUTE_EVENT {"schema_version":"runtime_ui_bridge_route_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-10","direction":"bidirectional","lane_class":"ui_runtime","selected_lane":"control_message","channel_id":"ipc.bridge.control.mailbox.v1","writer_role_id":"WTOP-02","reader_role_id":"WTOP-05","sequence_no":10,"correlation_id":3010,"status":"pass","failure_code":null,"fallback_attempted":false,"fallback_blocked":false}
+RUNTIME_UI_BRIDGE_BACKPRESSURE_EVENT {"schema_version":"runtime_ui_bridge_backpressure_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-10","channel_id":"ipc.bridge.control.mailbox.v1","wait_state":"not_applicable","wait_ms":0,"timeout_ms":25,"occupancy":0,"status":"pass","failure_code":null,"transition_id":null}
+RUNTIME_UI_BRIDGE_LANE_SUMMARY {"schema_version":"runtime_ui_bridge_lane_summary_v1","run_id":"ipc-1770687488750","class_id":"R4M-10","hot_path_class":false,"selected_lane":"control_message","events_total":2,"events_failed":0,"first_failure_code":null,"allow_hotpath_fallback":false,"results_digest":"d354fb22fa5b96f5bd06202d08fc486f658aacd142a92d8aec7b49e0a30cfe59"}
+RUNTIME_UI_BRIDGE_ROUTE_EVENT {"schema_version":"runtime_ui_bridge_route_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-11","direction":"egress","lane_class":"ui_runtime","selected_lane":"control_message","channel_id":"ipc.bridge.control.mailbox.v1","writer_role_id":"WTOP-02","reader_role_id":"WTOP-05","sequence_no":11,"correlation_id":3011,"status":"pass","failure_code":null,"fallback_attempted":false,"fallback_blocked":false}
+RUNTIME_UI_BRIDGE_BACKPRESSURE_EVENT {"schema_version":"runtime_ui_bridge_backpressure_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-11","channel_id":"ipc.bridge.control.mailbox.v1","wait_state":"not_applicable","wait_ms":0,"timeout_ms":25,"occupancy":0,"status":"pass","failure_code":null,"transition_id":null}
+RUNTIME_UI_BRIDGE_LANE_SUMMARY {"schema_version":"runtime_ui_bridge_lane_summary_v1","run_id":"ipc-1770687488750","class_id":"R4M-11","hot_path_class":false,"selected_lane":"control_message","events_total":2,"events_failed":0,"first_failure_code":null,"allow_hotpath_fallback":false,"results_digest":"6cc780d66450df280a14392ec9762154eb51d7fdbc77f70749479b834050140b"}
+RUNTIME_UI_BRIDGE_ROUTE_EVENT {"schema_version":"runtime_ui_bridge_route_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-12","direction":"egress","lane_class":"ui_runtime","selected_lane":"control_message","channel_id":"ipc.bridge.control.mailbox.v1","writer_role_id":"WTOP-02","reader_role_id":"WTOP-05","sequence_no":12,"correlation_id":3012,"status":"pass","failure_code":null,"fallback_attempted":false,"fallback_blocked":false}
+RUNTIME_UI_BRIDGE_BACKPRESSURE_EVENT {"schema_version":"runtime_ui_bridge_backpressure_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-12","channel_id":"ipc.bridge.control.mailbox.v1","wait_state":"not_applicable","wait_ms":0,"timeout_ms":25,"occupancy":0,"status":"pass","failure_code":null,"transition_id":null}
+RUNTIME_UI_BRIDGE_LANE_SUMMARY {"schema_version":"runtime_ui_bridge_lane_summary_v1","run_id":"ipc-1770687488750","class_id":"R4M-12","hot_path_class":false,"selected_lane":"control_message","events_total":2,"events_failed":0,"first_failure_code":null,"allow_hotpath_fallback":false,"results_digest":"e0e02988a5f16dfb3e48b7607950bd5519dee12e55b6c9219ce40683b00f1438"}
+RUNTIME_UI_BRIDGE_ROUTE_EVENT {"schema_version":"runtime_ui_bridge_route_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-13","direction":"bidirectional","lane_class":"ui_runtime","selected_lane":"control_message","channel_id":"ipc.bridge.control.mailbox.v1","writer_role_id":"WTOP-02","reader_role_id":"WTOP-05","sequence_no":13,"correlation_id":3013,"status":"pass","failure_code":null,"fallback_attempted":false,"fallback_blocked":false}
+RUNTIME_UI_BRIDGE_BACKPRESSURE_EVENT {"schema_version":"runtime_ui_bridge_backpressure_event_v1","run_id":"ipc-1770687488750","class_id":"R4M-13","channel_id":"ipc.bridge.control.mailbox.v1","wait_state":"not_applicable","wait_ms":0,"timeout_ms":25,"occupancy":0,"status":"pass","failure_code":null,"transition_id":null}
+RUNTIME_UI_BRIDGE_LANE_SUMMARY {"schema_version":"runtime_ui_bridge_lane_summary_v1","run_id":"ipc-1770687488750","class_id":"R4M-13","hot_path_class":false,"selected_lane":"control_message","events_total":2,"events_failed":0,"first_failure_code":null,"allow_hotpath_fallback":false,"results_digest":"89e7427bb6eb14146fbbc63ba8a715d4fe4cac177e44a551249cc4ff46f3f5e4"}
+RUNTIME_UI_BRIDGE_MIGRATION_SUMMARY {"schema_version":"runtime_ui_bridge_migration_summary_v1","run_id":"ipc-1770687488750","wave_id":null,"executed_class_ids":["R4M-01","R4M-02","R4M-03","R4M-04","R4M-05","R4M-06","R4M-07","R4M-08","R4M-09","R4M-10","R4M-11","R4M-12","R4M-13"],"hot_classes_on_shared_count":7,"non_hot_on_control_count":6,"policy_failures":[],"status":"pass","x04_ready":true,"timestamp_utc":"2026-02-10T01:38:08.751Z"}
+RUNTIME_UI_BRIDGE_STEP2_SUMMARY {"schema_version":"runtime_ui_bridge_step2_summary_v1","run_id":"ipc-1770687488750","executed_validation_ids":[],"passed_validation_ids":[],"failed_validation_ids":[],"first_failure_validation_id":null,"first_failure_code":null,"compatibility_results":[{"compatibility_id":"R4I-01","status":"accept"},{"compatibility_id":"R4I-02","status":"accept"},{"compatibility_id":"R4I-03","status":"accept"},{"compatibility_id":"R4I-04","status":"accept"},{"compatibility_id":"R4I-05","status":"accept"},{"compatibility_id":"R4I-06","status":"accept"}],"allow_hotpath_fallback":false,"x04_step2_ready":true,"results_digest":"edcc2db5ead6ea449875cf1f9c4a639472d400535f9c3f978f5bbed8f3b424ae","status":"pass","lane_id":null,"wave_id":null,"source":"doc/wasm/js/wasm-ui-persist-smoke.mjs","validation_assertion_pass":true,"timestamp_utc":"2026-02-10T01:38:08.751Z"}
+
+
+[stderr]
+WASM wasm_funcall_common: enter
+
+WASM wasm_funcall_common: call subprim
+
+WASM const-pool: INTERN symbol unavailable for 
+*WASM-UI-PERSIST-LABEL-STATE*
+
+
+WASM const-pool: INTERN symbol unavailable for 
+*WASM-UI-PERSIST-LABEL-STATE*
+
+
+WASM const-pool: creating symbol fallback: 
+*WASM-UI-PERSIST-LABEL-STATE*
+
+
+WASM const-pool: INTERN symbol unavailable for 
+*WASM-UI-PERSIST-SAVED-STATE*
+
+
+WASM const-pool: INTERN symbol unavailable for 
+*WASM-UI-PERSIST-SAVED-STATE*
+
+
+WASM const-pool: creating symbol fallback: 
+*WASM-UI-PERSIST-SAVED-STATE*
+
+
+WASM const-pool: INTERN symbol unavailable for 
+*WASM-UI-PERSIST-LABEL-STATE*
+
+
+WASM const-pool: INTERN symbol unavailable for 
+*WASM-UI-PERSIST-LABEL-STATE*
+
+
+WASM const-pool: INTERN symbol unavailable for 
+*WASM-UI-PERSIST-LABEL-STATE*
+
+
+WASM const-pool: INTERN symbol unavailable for 
+*WASM-UI-PERSIST-LABEL-STATE*
+
+
+WASM const-pool: INTERN symbol unavailable for 
+*WASM-UI-PERSIST-SAVED-STATE*
+
+
+WASM const-pool: INTERN symbol unavailable for 
+*WASM-UI-PERSIST-SAVED-STATE*
+
+
+WASM const-pool: INTERN symbol unavailable for 
+*WASM-UI-PERSIST-LABEL-STATE*
+
+
+
+
+[synthetic-artifacts]
+MODULE_ENV_RESOLUTION_EVENT {"schema_version":"module_env_resolution_event_v1","run_id":"rpl07-20260210-013659Z-91fdb0be","validation_id":"R7V-09","lane_id":"R7L-05","module_id":"module-r7l-05-cache-fail","capsule_id":"capsule-main-v1","stage_id":"activation","selected_source":"capsule_store","status":"fail","failure_code":"RPL07-E003","timestamp_utc":"2026-02-10T01:38:09.019Z"}
+MODULE_ENV_CACHE_STATE_EVENT {"schema_version":"module_env_cache_state_event_v1","run_id":"rpl07-20260210-013659Z-91fdb0be","validation_id":"R7V-09","lane_id":"R7L-05","capsule_digest":"d0209d1fdce16feb958d4d668d018234b079acd449e8ec7a33f41ba86a87abf2","cache_state":"invalid","index_digest":"f4fd3b3a13219a3aee59ca290f1555dc57999679fe551f08403142d7669b31e2","status":"fail","timestamp_utc":"2026-02-10T01:38:09.019Z"}
+MODULE_ENV_ACTIVATION_SUMMARY {"schema_version":"module_env_activation_summary_v1","run_id":"rpl07-20260210-013659Z-91fdb0be","validation_id":"R7V-09","lane_id":"R7L-05","activation_count":1,"pass_count":0,"fail_count":1,"first_failure_code":"RPL07-E003","allow_fallback":false,"results_digest":"152bf64e464ded1f76e3e48c3423aa6251e3b5473e37aeee9462f77b4e15f6ae","status":"fail","source":"doc/wasm/js/wasm-ui-persist-smoke.mjs","timestamp_utc":"2026-02-10T01:38:09.019Z"}
+MODULE_ENV_STEP2_SUMMARY {"schema_version":"module_env_step2_summary_v1","run_id":"rpl07-20260210-013659Z-91fdb0be","executed_lane_ids":["R7L-05"],"executed_validation_ids":["R7V-09"],"passed_validation_ids":[],"failed_validation_ids":["R7V-09"],"first_failure_validation_id":"R7V-09","first_failure_code":"RPL07-E003","bundle_inputs":["rpl05-20260210-011240Z-91fdb0be","bpl06-20260210-005408Z-91fdb0be","bpl07-20260210-005408Z-91fdb0be"],"x06_review_status":"not_ready","x07_review_status":"blocked","x06_step2_ready":false,"results_digest":"aa0a9c943fccf2b6702f6280c1ac4d5c63b8b917a7a1fca1763323a1c97cb1d3","status":"fail","timestamp_utc":"2026-02-10T01:38:09.019Z"}

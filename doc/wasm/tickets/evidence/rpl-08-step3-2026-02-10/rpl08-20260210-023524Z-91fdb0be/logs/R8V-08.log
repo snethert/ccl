@@ -1,0 +1,12 @@
+# R8V-08 (R8L-06)
+expected_exit=2
+exit_code=2
+expected_failure=RPL08-E002
+observed_failure=RPL08-E002
+command=env TZ=UTC LC_ALL=C LANG=C CCL_RUNTIME_BUDGET_SOURCE=legacy_snapshot CCL_STORAGE_ALLOW_FALLBACK=0 CCL_ARTIFACT_BUDGET_TEST_LANE=R8L-06 CCL_ARTIFACT_BUDGET_TEST_CASE=fallback-source CCL_ARTIFACT_BUDGET_TEST_FORCE_FALLBACK=1 node -e 'if(process.env.CCL_RUNTIME_BUDGET_SOURCE!=="canonical_artifact") { console.error("RPL08-E002"); process.exit(2); }'
+
+## stdout
+
+
+## stderr
+RPL08-E002

@@ -1,0 +1,27 @@
+{
+  "schema_version": "backend_diff_checkpoint_summary_v1",
+  "run_id": "bpl06-20260210-005408Z-91fdb0be",
+  "checkpoint_id": "BPL06-CP03",
+  "seam_id": "B5M-03",
+  "fixture_id": "BPL06-FX03",
+  "lane_class": "headless_runtime",
+  "compat_case_path": "doc/wasm/tickets/evidence/bpl-06/bpl06-20260210-005408Z-91fdb0be/BPL06-CP03-compat.json",
+  "native_case_path": "doc/wasm/tickets/evidence/bpl-06/bpl06-20260210-005408Z-91fdb0be/BPL06-CP03-native.json",
+  "required_equal_fields": [
+    "exit_code",
+    "fail_markers",
+    "stdout_sha256",
+    "stderr_sha256"
+  ],
+  "mismatch_fields": [],
+  "mismatch_count": 0,
+  "result": "pass",
+  "rollback_required": false,
+  "rollback_command": "WASM_DIV_HELPER_MODE=compat",
+  "gate_refs": [
+    "BPL04-G04",
+    "CON-06",
+    "CON-03"
+  ],
+  "generated_at_utc": "2026-02-10T00:55:10.197Z"
+}

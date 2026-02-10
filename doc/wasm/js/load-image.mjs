@@ -197,16 +197,24 @@ function sha256Hex(bytes) {
 const options = parseArgs(process.argv.slice(2));
 const ipcConformanceId = process.env.CCL_IPC_CONFORMANCE_ID ?? null;
 const ipcLaneId = process.env.CCL_IPC_LANE_ID ?? null;
-const injectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_IPC_TEST_INJECT_FAILURE ?? ""))
+const bridgeInjectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_UI_BRIDGE_TEST_INJECT_FAILURE ?? ""))
+  ? String(process.env.CCL_UI_BRIDGE_TEST_INJECT_FAILURE)
+  : null;
+const ipcInjectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_IPC_TEST_INJECT_FAILURE ?? ""))
   ? String(process.env.CCL_IPC_TEST_INJECT_FAILURE)
   : null;
-if (injectedFailureCode) {
+const forcedBridgeFallback = String(process.env.CCL_UI_BRIDGE_TEST_FORCE_FALLBACK ?? "") === "1";
+const injectedFailureCode = bridgeInjectedFailureCode ?? ipcInjectedFailureCode;
+if (injectedFailureCode || forcedBridgeFallback) {
   emitSyntheticIpcArtifacts({
     defaultLaneClass: "headless_runtime",
     laneId: ipcLaneId,
     conformanceId: ipcConformanceId,
     source: "doc/wasm/js/load-image.mjs",
-    failureCode: injectedFailureCode,
+    failureCode: injectedFailureCode ?? "RPL03-E008",
+    failureMessage: forcedBridgeFallback
+      ? "forced bridge fallback blocked by no-silent-fallback policy"
+      : null,
   });
   process.exit(1);
 }

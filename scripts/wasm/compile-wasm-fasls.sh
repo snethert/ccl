@@ -8,6 +8,8 @@ FORCE=0
 TRACE=0
 MODULES_OUT=""
 MODULES_DEBUG_OUT=""
+COMPACT_RUNTIME_MODULES=0
+STRIP_RUNTIME_FUNCTIONS=1
 
 usage() {
   cat <<'EOF'
@@ -18,6 +20,8 @@ Options:
   --trace-modules Print module names as they are processed
   --modules-out PATH Write compiled module bundle JSON to PATH
   --modules-debug-out PATH Write compiled module debug JSON to PATH
+  --compact-runtime-modules Compact runtime module bundle after packing
+  --no-strip-runtime-functions Keep functions[] in compacted runtime manifest
   --dry-run      Print commands without executing
   -h, --help     Show this help
 EOF
@@ -52,6 +56,8 @@ while [ "${1:-}" != "" ]; do
       fi
       shift
       ;;
+    --compact-runtime-modules) COMPACT_RUNTIME_MODULES=1 ;;
+    --no-strip-runtime-functions) STRIP_RUNTIME_FUNCTIONS=0 ;;
     --dry-run) DRYRUN=1 ;;
     -h|--help) usage; exit 0 ;;
     *)
@@ -92,6 +98,12 @@ if [ ! -f "$PACK_SCRIPT" ]; then
   exit 1
 fi
 
+COMPACT_SCRIPT="$ROOT_DIR/scripts/wasm/compact-runtime-modules.mjs"
+if [ "$COMPACT_RUNTIME_MODULES" -eq 1 ] && [ ! -f "$COMPACT_SCRIPT" ]; then
+  echo "error: missing $COMPACT_SCRIPT" >&2
+  exit 1
+fi
+
 SCRIPT_ARGS=()
 if [ "$FORCE" -eq 1 ]; then
   SCRIPT_ARGS+=(--force)
@@ -126,6 +138,19 @@ fi
 
 if [ -n "$MODULES_OUT" ]; then
   run node "$PACK_SCRIPT" --manifest "$INLINE_TMP" --out-manifest "$MODULES_OUT"
+  if [ "$COMPACT_RUNTIME_MODULES" -eq 1 ]; then
+    COMPACT_ARGS=(
+      --manifest "$MODULES_OUT"
+      --in-place
+      --const-pool-shared-blob
+      --const-pool-shared-blob-encoding br
+      --brotli-quality 7
+    )
+    if [ "$STRIP_RUNTIME_FUNCTIONS" -eq 1 ]; then
+      COMPACT_ARGS+=(--strip-functions)
+    fi
+    run node "$COMPACT_SCRIPT" "${COMPACT_ARGS[@]}"
+  fi
   if [ "$DRYRUN" -eq 0 ]; then
     INLINE_TMP_BIN="${INLINE_TMP%.*}.bin"
     INLINE_TMP_IDX="${INLINE_TMP%.*}.idx"

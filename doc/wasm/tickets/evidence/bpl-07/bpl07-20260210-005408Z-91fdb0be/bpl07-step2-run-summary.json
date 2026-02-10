@@ -1,0 +1,51 @@
+{
+  "schema_version": "bpl07_step2_run_summary_v1",
+  "run_id": "bpl07-20260210-005408Z-91fdb0be",
+  "row_count": 5,
+  "pass_count": 5,
+  "fail_count": 0,
+  "overall_result": "pass",
+  "row_results": [
+    {
+      "budget_row_id": "BPL07-BM01",
+      "checkpoint_id": "BPL06-CP01",
+      "overall_result": "pass",
+      "fail_reasons": [],
+      "perf_delta_pct": -2.1917808219178103,
+      "size_delta_bytes": 0
+    },
+    {
+      "budget_row_id": "BPL07-BM02",
+      "checkpoint_id": "BPL06-CP02",
+      "overall_result": "pass",
+      "fail_reasons": [],
+      "perf_delta_pct": 0.8403361344537886,
+      "size_delta_bytes": 0
+    },
+    {
+      "budget_row_id": "BPL07-BM03",
+      "checkpoint_id": "BPL06-CP03",
+      "overall_result": "pass",
+      "fail_reasons": [],
+      "perf_delta_pct": -0.2762430939226583,
+      "size_delta_bytes": 0
+    },
+    {
+      "budget_row_id": "BPL07-BM04",
+      "checkpoint_id": "BPL06-CP04",
+      "overall_result": "pass",
+      "fail_reasons": [],
+      "perf_delta_pct": 0,
+      "size_delta_bytes": 0
+    },
+    {
+      "budget_row_id": "BPL07-BM05",
+      "checkpoint_id": "BPL06-CP05",
+      "overall_result": "pass",
+      "fail_reasons": [],
+      "perf_delta_pct": -0.5602240896358549,
+      "size_delta_bytes": 0
+    }
+  ],
+  "generated_at_utc": "2026-02-10T00:55:10.207Z"
+}

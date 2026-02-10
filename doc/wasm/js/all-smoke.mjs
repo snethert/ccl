@@ -3,23 +3,32 @@
  */
 
 import { emitSyntheticIpcArtifacts } from "./ipc-conformance.mjs";
+import { emitSyntheticStorageV2Artifacts } from "./storage-v2-conformance.mjs";
 
 const skipUi = process.argv.includes("--no-ui");
 const includeWasmUiPersist = process.argv.includes("--with-wasm-ui-persist");
 const ipcConformanceId = process.env.CCL_IPC_CONFORMANCE_ID ?? null;
 const ipcLaneId = process.env.CCL_IPC_LANE_ID ?? null;
-const injectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_IPC_TEST_INJECT_FAILURE ?? ""))
+const bridgeInjectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_UI_BRIDGE_TEST_INJECT_FAILURE ?? ""))
+  ? String(process.env.CCL_UI_BRIDGE_TEST_INJECT_FAILURE)
+  : null;
+const ipcInjectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_IPC_TEST_INJECT_FAILURE ?? ""))
   ? String(process.env.CCL_IPC_TEST_INJECT_FAILURE)
   : null;
+const forcedBridgeFallback = String(process.env.CCL_UI_BRIDGE_TEST_FORCE_FALLBACK ?? "") === "1";
+const injectedFailureCode = bridgeInjectedFailureCode ?? ipcInjectedFailureCode;
 const defaultLaneClass = skipUi ? "headless_runtime" : "ui_runtime";
 
-if (injectedFailureCode) {
+if (injectedFailureCode || forcedBridgeFallback) {
   emitSyntheticIpcArtifacts({
     defaultLaneClass,
     laneId: ipcLaneId,
     conformanceId: ipcConformanceId,
     source: "doc/wasm/js/all-smoke.mjs",
-    failureCode: injectedFailureCode,
+    failureCode: injectedFailureCode ?? "RPL03-E008",
+    failureMessage: forcedBridgeFallback
+      ? "forced bridge fallback blocked by no-silent-fallback policy"
+      : null,
   });
   process.exit(1);
 }
@@ -83,6 +92,10 @@ const filteredTests = skipUi
 for (const test of filteredTests) {
   await import(new URL(test, import.meta.url));
 }
+
+emitSyntheticStorageV2Artifacts({
+  source: "doc/wasm/js/all-smoke.mjs",
+});
 
 emitSyntheticIpcArtifacts({
   defaultLaneClass,

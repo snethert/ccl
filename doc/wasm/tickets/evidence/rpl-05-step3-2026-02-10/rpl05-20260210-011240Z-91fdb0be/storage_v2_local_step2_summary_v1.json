@@ -1,0 +1,62 @@
+{
+  "schema_version": "storage_v2_local_step2_summary_v1",
+  "run_id": "rpl05-20260210-011240Z-91fdb0be",
+  "executed_lane_ids": [
+    "R5L-01",
+    "R5L-02",
+    "R5L-03",
+    "R5L-04",
+    "R5L-06",
+    "R5L-07"
+  ],
+  "executed_validation_ids": [
+    "R5V-01",
+    "R5V-02",
+    "R5V-03",
+    "R5V-04",
+    "R5V-05",
+    "R5V-06",
+    "R5V-07",
+    "R5V-08",
+    "R5V-09",
+    "R5V-10",
+    "R5V-11",
+    "R5V-12",
+    "R5V-13",
+    "R5V-14"
+  ],
+  "passed_validation_ids": [
+    "R5V-01",
+    "R5V-02",
+    "R5V-03",
+    "R5V-04",
+    "R5V-05",
+    "R5V-06",
+    "R5V-07",
+    "R5V-08",
+    "R5V-09",
+    "R5V-10",
+    "R5V-11",
+    "R5V-12",
+    "R5V-13",
+    "R5V-14"
+  ],
+  "failed_validation_ids": [],
+  "first_failure_validation_id": null,
+  "first_failure_code": null,
+  "allow_fallback": false,
+  "profile_guard_status": "pass",
+  "recovery_replay_status": "pass",
+  "x05_step2_ready": true,
+  "results_digest": "f718b81fc27188070ac8f6e060836dd85f473eb41022ec124d33d256b7f42aec",
+  "status": "pass",
+  "timestamp_utc": "2026-02-10T01:13:12.533Z",
+  "rollup": {
+    "total": 14,
+    "pass_count": 14,
+    "fail_count": 0,
+    "missing_storage_artifact_count": 0,
+    "non_storage_profile_backend_count": 0,
+    "expected_fail_mapping_miss_count": 0
+  }
+}

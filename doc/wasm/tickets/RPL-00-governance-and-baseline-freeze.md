@@ -3,7 +3,7 @@
 Status: in_progress  
 Priority: P0  
 Owner: Runtime/WASM replacement track  
-Last Updated: 2026-02-09  
+Last Updated: 2026-02-10  
 Parent Plan: `doc/wasm/runtime-replacement-master-plan.md`
 
 ## Scope
@@ -43,13 +43,13 @@ Out of scope:
 - Master plan is present at `doc/wasm/runtime-replacement-master-plan.md`.
 - Ticket template and folder sync rules are present under `doc/wasm/tickets/`.
 - Baseline runtime status and artifact-size facts are captured in the master plan snapshot.
-- Fifteenth downstream execution cycle is now complete through RPL-03 Step 3 rerun evidence publication with synchronized ticket/master/matrix/board edits and closed `X-03` state.
+- Thirty-second downstream execution cycle is now complete through RPL-08 Step 3 run-v2 evidence publication (`rpl08-20260210-023524Z-91fdb0be`) with synchronized ticket/master/matrix/board/governance edits, preserved immutable `X-07` review packet bundle IDs, unchanged backend `BPL08-CR*` carry-forward rows, and closed runtime blocker `R8GAP-01`.
 
 ## Immediate Next Step
 
-- Action: continue the governance-compliant downstream update loop by syncing RPL-04 Step 1 kickoff across runtime master + dependency matrix + program board in one change.
-- Why now: `X-03` is now closed and RPL-03 is complete, so governance focus shifts to the next unblocked runtime ticket.
-- Success evidence: RPL-04 Step 1 status/notes and cross-track pack updates are reflected consistently across subplan/master/matrix/board docs.
+- Action: continue the governance-compliant downstream update loop by syncing unified `X-07` closure review over committed runtime run-v2 evidence while preserving immutable closure-bundle carry-forward (`rpl05-20260210-011240Z-91fdb0be`, `bpl06-20260210-005408Z-91fdb0be`, `bpl07-20260210-005408Z-91fdb0be`) across review notes.
+- Why now: RPL-08 Step 3 run-v2 evidence is committed with `x07_runtime_ready=true` and `R8GAP-01` closed; remaining work is cross-track closure disposition.
+- Success evidence: synchronized runtime/master/matrix/board/governance docs carry run-v2 evidence (`rpl08-20260210-023524Z-91fdb0be`), preserve immutable bundle IDs and backend `BPL08-CR*` rows, and publish explicit `X-07` closure-review disposition without reopening gaps.
 
 ## Detailed Work Breakdown
 
@@ -84,16 +84,16 @@ Out of scope:
 - Status: done
 - Notes:
   - Ticket dependencies and priorities are defined in the master plan.
-  - Downstream execution has now been repeated through RPL-03 Step 2 with synchronized updates.
+  - Downstream execution has now been repeated through RPL-08 Step 3 run-v2 evidence publication with synchronized updates, closed runtime blocker `R8GAP-01`, and immutable closure-bundle carry-forward into committed `X-07` review packets.
 - Next:
-  - No ordering issues were observed through RPL-03 Step 3 rerun closure; reassess only if downstream tickets reopen closed hard-gate evidence.
+  - Runtime ordering remains stable; maintain `X-06=done` and carry `X-07` forward while unified closure review consumes committed Step 3 run-v2 evidence.
 
 ### Step 5 - Governance Completion Check
 
 - Status: done
 - Notes:
-  - Fifteen downstream ticket cycles have now been completed using the required sync process.
-  - RPL-03 Step 3 rerun evidence is synchronized across runtime/backend planning docs and dependency row `X-03` is correctly tracked as `done`.
+  - Thirty-two downstream ticket cycles have now been completed using the required sync process.
+  - RPL-08 Step 3 run-v2 evidence publication and immutable closure-bundle carry-forward are synchronized across runtime/backend planning docs while dependency rows `X-04`, `X-05`, and `X-06` are `done`, `R8GAP-01` is closed, and `X-07` remains in-progress pending unified closure review.
 - Next:
   - Maintain governance as additive-only sync discipline for subsequent runtime/backend ticket cycles.
 
@@ -133,3 +133,21 @@ Out of scope:
 - 2026-02-09: Thirteenth downstream governance cycle completed through RPL-03 Step 2 conformance-contract publication and synchronized runtime/master/matrix/board next-step state.
 - 2026-02-09: Fourteenth downstream governance cycle completed through RPL-03 Step 3 run-v1 evidence publication (failing assertions) and synchronized rerun-focused next-step state across runtime/master/matrix/board docs.
 - 2026-02-09: Fifteenth downstream governance cycle completed through RPL-03 Step 3 rerun evidence publication (`status=pass`, `x03_clear_ready=true`) and synchronized `X-03` closure across runtime/master/matrix/board docs.
+- 2026-02-09: Sixteenth downstream governance cycle completed through RPL-04 Step 1 scope-contract publication (`R4M-*`, `R4C-*`, `R4T-*`) with synchronized runtime/master/matrix/board status and `X-04` advancement to `in_progress`.
+- 2026-02-09: Seventeenth downstream governance cycle completed through RPL-04 Step 2 execution/gating publication (`R4L-*`, `R4V-*`, `R4I-*`) with synchronized runtime/master/matrix/board status and active `X-04` compatibility gating.
+- 2026-02-09: Eighteenth downstream governance cycle completed through RPL-04 Step 3 run-v1 evidence publication (`rpl-04-step3-2026-02-09`) with synchronized runtime/master/matrix/board status and blocker gaps `R4GAP-01`..`R4GAP-04`.
+- 2026-02-09: Nineteenth downstream governance cycle completed through Pack A cross-plan wording sync to `RPL-04 Step 3` + `BPL-07 Step 1` while preserving frozen `BPL06-*` intake anchors and active `X-04` blocker tracking.
+- 2026-02-10: Twentieth downstream governance cycle completed through RPL-04 Step 3 rerun closure evidence publication (`rpl-04-step3-rerun-2026-02-10`) with synchronized runtime/master/matrix/board status and `X-04` transition to `done`.
+- 2026-02-10: Twenty-first downstream governance cycle completed through RPL-05 Step 1 publication (`R5S-*`, `R5T-*`, `R5A-*`) with synchronized runtime/master/matrix/board status and Pack A backend wording held on BPL-07 Step 1 over frozen `BPL06-*` intake artifacts.
+- 2026-02-10: Twenty-second downstream governance cycle completed through RPL-05 Step 2 publication (`R5L-*`, `R5V-*`) with synchronized runtime/master/matrix/board status and Pack A backend wording held on BPL-07 Step 1 over frozen `BPL06-*` intake artifacts.
+- 2026-02-10: Resynced governance wording after backend BPL-07 Step 3 publication (`BPL07-CR01`..`BPL07-CR05`) by moving Pack A backend language to closure-remediation execution (`CR01`..`CR03`) over frozen `BPL06-*` intake artifacts.
+- 2026-02-10: Twenty-third downstream governance cycle completed through RPL-05 Step 3 run-v1 evidence publication (`rpl05-20260210-004335Z-91fdb0be`) with synchronized runtime/master/matrix/board/governance status and explicit `R5GAP-01`..`R5GAP-05` blocker tracking.
+- 2026-02-10: Twenty-fourth downstream governance cycle completed through RPL-05 Step 3 run-v2 closure evidence publication (`rpl05-20260210-011240Z-91fdb0be`) with synchronized runtime/master/matrix/board/governance status, closed `R5GAP-01`..`R5GAP-05`, and `X-05` transition to `done`.
+- 2026-02-10: Twenty-fifth downstream governance cycle completed through RPL-07 Step 1 publication (`R7S-*`, `R7R-*`, `R7T-*`) with synchronized runtime/master/matrix/board/governance status, immutable closure-bundle carry-forward, and `X-06` transition to `in_progress`.
+- 2026-02-10: Twenty-sixth downstream governance cycle completed through RPL-07 Step 2 publication (`R7L-*`, `R7V-*`, `R7I-*`) with synchronized runtime/master/matrix/board/governance status, immutable closure-bundle carry-forward, and Pack A runtime next action moved to `RPL-07 Step 3`.
+- 2026-02-10: Twenty-seventh downstream governance cycle completed through RPL-07 Step 3 run-v1 evidence publication (`rpl07-20260210-013659Z-91fdb0be`) with synchronized runtime/master/matrix/board/governance status, immutable `X-06`/`X-07` review packet bundle IDs preserved, and blocker `R7GAP-01` opened for Step 3 run-v2 closure.
+- 2026-02-10: Twenty-eighth downstream governance cycle completed through RPL-07 Step 3 run-v2 closure evidence publication (`rpl07-20260210-014654Z-91fdb0be`) with synchronized runtime/master/matrix/board/governance status, `R7GAP-01` closure, `X-06` transition to `done`, and immutable `X-06`/`X-07` review packet bundle IDs preserved.
+- 2026-02-10: Twenty-ninth downstream governance cycle completed through RPL-08 Step 1 contract publication (`R8B-*`, `R8M-*`, `R8T-*`, `R8R-*`) with synchronized runtime/master/matrix/board/governance status, `X-07` transition to `in_progress`, immutable bundle IDs preserved, and backend `BPL08-CR*` carry-forward rows unchanged.
+- 2026-02-10: Thirtieth downstream governance cycle completed through RPL-08 Step 2 contract publication (`R8L-*`, `R8V-*`, `R8I-*`) with synchronized runtime/master/matrix/board/governance status, `X-07` remaining `in_progress`, immutable bundle IDs preserved, and backend `BPL08-CR*` carry-forward rows unchanged.
+- 2026-02-10: Thirty-first downstream governance cycle completed through RPL-08 Step 3 run-v1 evidence publication (`rpl08-20260210-022252Z-91fdb0be`) with synchronized runtime/master/matrix/board/governance status, terminal `artifact_budget_step2_summary_v1.status=pass`, open blocker `R8GAP-01`, immutable bundle IDs preserved, and backend `BPL08-CR*` carry-forward rows unchanged.
+- 2026-02-10: Thirty-second downstream governance cycle completed through RPL-08 Step 3 run-v2 evidence publication (`rpl08-20260210-023524Z-91fdb0be`) with synchronized runtime/master/matrix/board/governance status, terminal `artifact_budget_step2_summary_v1.status=pass`, closed blocker `R8GAP-01`, immutable bundle IDs preserved, and backend `BPL08-CR*` carry-forward rows unchanged.

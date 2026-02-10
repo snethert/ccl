@@ -1,0 +1,41 @@
+CMD: CCL_IPC_TEST_INJECT_FAILURE=RPL03-E002 CCL_IPC_TEST_INJECT_CHANNEL=ipc.kernel.req.ring.v1 node doc/wasm/js/load-image.mjs --mode start-lisp --manifest doc/wasm/root.image.manifest.json --stdin-text "(quit)\n" --close-stdin
+--- output ---
+stdin preload bytes=8
+stdin closed
+wasm_ccl_load_image rc=0 lisp_nil=0x4000001
+wasm_reset_root_image_runtime_state rc=0
+compiled modules installed from bundle 7620/7620 (failed 0)
+compiled modules installed 0/0
+bootstrap_contract pre-start ok nil=0x4000001 cl=0x4020016 allpkgs=0x40201bd allpkgs_car=0x4020016 allpkgs_cdr=0x40201b5 allpkgs_names=0x4020045 toplevel_sym=0x40201c6 toplfunc_raw=0x4036546 toplfunc_entry=4528 toplfunc_subtag=42
+WASM const-pool: INTERN symbol unavailable for 
+FIND-CLASS-CELL
+
+
+WASM const-pool: INTERN symbol unavailable for 
+FUNDAMENTAL-STREAM
+
+
+WASM const-pool: INTERN symbol unavailable for 
+FUNDAMENTAL-STREAM
+
+
+WASM const-pool: creating symbol fallback: 
+FUNDAMENTAL-STREAM
+
+
+WASM wasm_funcall_common: enter
+
+WASM wasm_funcall_common: call subprim
+
+WASM const-pool: INTERN symbol unavailable for 
+REQUIRE-STRUCTURE-TYPE
+
+
+WASM misc_alloc: bad subtag
+
+WASM wasm_funcall_common: enter
+
+WASM wasm_funcall_common: call subprim
+
+wasm_ccl_start_lisp rc=0
+bootstrap_contract post-start ok nil=0x4000001 cl=0x4020016 allpkgs=0x40201bd allpkgs_car=0x4020016 allpkgs_cdr=0x40201b5 allpkgs_names=0x4020045 toplevel_sym=0x40201c6 toplfunc_raw=0x4000001 toplfunc_entry=-1 toplfunc_subtag=-1

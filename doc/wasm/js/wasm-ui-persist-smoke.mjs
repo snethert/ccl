@@ -42,6 +42,7 @@ import {
   KERNEL_OP_FS_DELETE_TREE,
 } from "./microkernel.mjs";
 import { emitSyntheticIpcArtifacts } from "./ipc-conformance.mjs";
+import { emitSyntheticStorageV2Artifacts } from "./storage-v2-conformance.mjs";
 
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
@@ -76,17 +77,25 @@ const probeArg = Number.parseInt(readOption("--probe-arg") ?? "0", 10);
 const imageMode = String(readOption("--image") ?? process.env.CCL_WASM_UI_PERSIST_IMAGE ?? "auto").toLowerCase();
 const ipcConformanceId = process.env.CCL_IPC_CONFORMANCE_ID ?? null;
 const ipcLaneId = process.env.CCL_IPC_LANE_ID ?? null;
-const injectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_IPC_TEST_INJECT_FAILURE ?? ""))
+const bridgeInjectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_UI_BRIDGE_TEST_INJECT_FAILURE ?? ""))
+  ? String(process.env.CCL_UI_BRIDGE_TEST_INJECT_FAILURE)
+  : null;
+const ipcInjectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_IPC_TEST_INJECT_FAILURE ?? ""))
   ? String(process.env.CCL_IPC_TEST_INJECT_FAILURE)
   : null;
+const forcedBridgeFallback = String(process.env.CCL_UI_BRIDGE_TEST_FORCE_FALLBACK ?? "") === "1";
+const injectedFailureCode = bridgeInjectedFailureCode ?? ipcInjectedFailureCode;
 
-if (injectedFailureCode) {
+if (injectedFailureCode || forcedBridgeFallback) {
   emitSyntheticIpcArtifacts({
     defaultLaneClass: "ui_runtime",
     laneId: ipcLaneId,
     conformanceId: ipcConformanceId,
     source: "doc/wasm/js/wasm-ui-persist-smoke.mjs",
-    failureCode: injectedFailureCode,
+    failureCode: injectedFailureCode ?? "RPL03-E008",
+    failureMessage: forcedBridgeFallback
+      ? "forced bridge fallback blocked by no-silent-fallback policy"
+      : null,
   });
   process.exit(1);
 }
@@ -140,15 +149,18 @@ const minimalImageUrl = new URL("../minimal.image", import.meta.url);
 const runtimeBundleUrl = new URL("../wasm-runtime-modules.json", import.meta.url);
 const bundleUrl = new URL("../wasm-ui-modules.json", import.meta.url);
 
+const storageProfile = String(process.env.CCL_STORAGE_PROFILE ?? "").toLowerCase();
 const persistBackend = String(
-  readOption("--persist-backend") ?? process.env.CCL_PERSIST_BACKEND ?? "memory-snapshot"
+  readOption("--persist-backend") ??
+  process.env.CCL_PERSIST_BACKEND ??
+  (storageProfile === "storage-v2-opfs" ? "storage-v2-opfs" : "memory-snapshot")
 ).toLowerCase();
 const persistSnapshotFile = readOption("--persist-snapshot-file") ??
   process.env.CCL_PERSIST_SNAPSHOT_FILE ??
   path.join(os.tmpdir(), "ccl-wasm-ui-persist-smoke.snapshot.json");
 
 let persistenceConfig = true;
-if (persistBackend === "memory-snapshot") {
+if (persistBackend === "memory-snapshot" || persistBackend === "storage-v2-opfs") {
   persistenceConfig = {
     backend: "memory-snapshot",
     snapshotFile: persistSnapshotFile,
@@ -159,7 +171,7 @@ if (persistBackend === "memory-snapshot") {
 } else if (persistBackend === "memory" || persistBackend === "in-memory") {
   persistenceConfig = { backend: "memory" };
 } else {
-  fail(`unsupported persist backend '${persistBackend}' (expected memory-snapshot|memory)`);
+  fail(`unsupported persist backend '${persistBackend}' (expected memory-snapshot|storage-v2-opfs|memory)`);
 }
 
 let bundle;
@@ -237,7 +249,7 @@ function readPersistedUiLabelByte() {
 }
 
 console.log(`persistence backend: ${persistBackend}`);
-if (persistBackend === "memory-snapshot") {
+if (persistBackend === "memory-snapshot" || persistBackend === "storage-v2-opfs") {
   console.log(`snapshot file: ${persistSnapshotFile}`);
 }
 
@@ -506,6 +518,10 @@ if (persistBackend === "memory-snapshot") {
   const uiStateMeta = metaEntries.find((entry) => Array.isArray(entry) && String(entry[0]) === "/ui/wasm-ui-state.bin");
   assert(uiStateMeta, "snapshot missing /ui/wasm-ui-state.bin metadata entry");
 }
+
+emitSyntheticStorageV2Artifacts({
+  source: "doc/wasm/js/wasm-ui-persist-smoke.mjs",
+});
 
 console.log("PASS: wasm ui persistence smoke test");
 

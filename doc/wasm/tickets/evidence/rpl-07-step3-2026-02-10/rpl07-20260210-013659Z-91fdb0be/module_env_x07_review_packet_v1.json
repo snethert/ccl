@@ -1,0 +1,14 @@
+{
+  "schema_version": "module_env_x07_review_packet_v1",
+  "run_id": "rpl07-20260210-013659Z-91fdb0be",
+  "bundle_inputs": [
+    "rpl05-20260210-011240Z-91fdb0be",
+    "bpl06-20260210-005408Z-91fdb0be",
+    "bpl07-20260210-005408Z-91fdb0be"
+  ],
+  "artifact_class": "module_capsule_bundle_v1",
+  "baseline_bytes": 436499792,
+  "capsule_bytes": 436499792,
+  "delta_bytes": 0,
+  "x07_review_result": "carry_forward"
+}

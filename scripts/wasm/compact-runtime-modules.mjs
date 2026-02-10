@@ -21,6 +21,7 @@ function usage() {
   console.log("  node scripts/wasm/compact-runtime-modules.mjs --manifest PATH --in-place --compress-const-pools --compress-modules");
   console.log("  node scripts/wasm/compact-runtime-modules.mjs --manifest PATH --in-place --const-pool-encoding br --module-encoding gzip --brotli-quality 7");
   console.log("  node scripts/wasm/compact-runtime-modules.mjs --manifest PATH --in-place --const-pool-shared-blob --const-pool-shared-blob-encoding br");
+  console.log("  node scripts/wasm/compact-runtime-modules.mjs --manifest PATH --in-place --strip-functions");
 }
 
 function parseArgs(argv) {
@@ -37,6 +38,7 @@ function parseArgs(argv) {
     constPoolDeltaMinBytes: 262144,
     constPoolSharedBlob: false,
     constPoolSharedBlobEncoding: null,
+    stripFunctions: false,
     format: "v2",
     templatePrefix: MODULE_BUNDLE_V2_DEFAULT_TEMPLATE_PREFIX,
   };
@@ -121,6 +123,14 @@ function parseArgs(argv) {
     }
     if (arg === "--const-pool-shared-blob-encoding") {
       opts.constPoolSharedBlobEncoding = normalizeEncoding(argv[++i] ?? null, "--const-pool-shared-blob-encoding");
+      continue;
+    }
+    if (arg === "--strip-functions") {
+      opts.stripFunctions = true;
+      continue;
+    }
+    if (arg === "--keep-functions") {
+      opts.stripFunctions = false;
       continue;
     }
     if (arg === "--format") {
@@ -706,8 +716,10 @@ async function main() {
     exportNameTemplatePrefix: opts.templatePrefix,
     moduleCount: outModules.length,
     constPoolCount: outConstPools.length,
-    functions: Array.isArray(manifest?.functions) ? manifest.functions : [],
   };
+  if (!opts.stripFunctions) {
+    outManifest.functions = Array.isArray(manifest?.functions) ? manifest.functions : [];
+  }
   if (sharedConstPoolBlobInfo) {
     outManifest.constPoolBlobOffset = sharedConstPoolBlobInfo.offset;
     outManifest.constPoolBlobLength = sharedConstPoolBlobInfo.length;

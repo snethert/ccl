@@ -1,0 +1,68 @@
+{
+  "schema_version": "module_env_step2_summary_v1",
+  "run_id": "rpl07-20260210-013659Z-91fdb0be",
+  "executed_lane_ids": [
+    "R7L-01",
+    "R7L-02",
+    "R7L-03",
+    "R7L-04",
+    "R7L-06",
+    "R7L-05",
+    "R7L-07",
+    "R7L-08"
+  ],
+  "executed_validation_ids": [
+    "R7V-01",
+    "R7V-02",
+    "R7V-03",
+    "R7V-04",
+    "R7V-05",
+    "R7V-06",
+    "R7V-07",
+    "R7V-08",
+    "R7V-09",
+    "R7V-10",
+    "R7V-11",
+    "R7V-12",
+    "R7V-13",
+    "R7V-14"
+  ],
+  "passed_validation_ids": [
+    "R7V-01",
+    "R7V-02",
+    "R7V-03",
+    "R7V-04",
+    "R7V-05",
+    "R7V-07",
+    "R7V-08",
+    "R7V-09",
+    "R7V-10",
+    "R7V-11",
+    "R7V-12",
+    "R7V-13",
+    "R7V-14"
+  ],
+  "failed_validation_ids": [
+    "R7V-06"
+  ],
+  "first_failure_validation_id": "R7V-06",
+  "first_failure_code": null,
+  "bundle_inputs": [
+    "rpl05-20260210-011240Z-91fdb0be",
+    "bpl06-20260210-005408Z-91fdb0be",
+    "bpl07-20260210-005408Z-91fdb0be"
+  ],
+  "x06_review_status": "blocked",
+  "x07_review_status": "blocked",
+  "x06_step2_ready": false,
+  "results_digest": "ae83f65656f239297f10c366c7c54f3c100195e751d8788ff24f229b626b72e0",
+  "status": "fail",
+  "timestamp_utc": "2026-02-10T01:38:21.911Z",
+  "rollup": {
+    "total": 14,
+    "pass_count": 13,
+    "fail_count": 1,
+    "expected_fail_mapping_miss_count": 0,
+    "bundle_immutability_miss_count": 0
+  }
+}

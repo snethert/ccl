@@ -1,0 +1,79 @@
+{
+  "schema_version": "artifact_budget_step2_summary_v1",
+  "run_id": "rpl08-20260210-023524Z-91fdb0be",
+  "executed_lane_ids": [
+    "R8L-01",
+    "R8L-02",
+    "R8L-03",
+    "R8L-04",
+    "R8L-07",
+    "R8L-05",
+    "R8L-06",
+    "R8L-08"
+  ],
+  "executed_validation_ids": [
+    "R8V-01",
+    "R8V-02",
+    "R8V-03",
+    "R8V-04",
+    "R8V-05",
+    "R8V-06",
+    "R8V-07",
+    "R8V-08",
+    "R8V-09",
+    "R8V-10",
+    "R8V-11",
+    "R8V-12",
+    "R8V-13",
+    "R8V-14"
+  ],
+  "passed_validation_ids": [
+    "R8V-01",
+    "R8V-02",
+    "R8V-03",
+    "R8V-04",
+    "R8V-05",
+    "R8V-06",
+    "R8V-07",
+    "R8V-08",
+    "R8V-09",
+    "R8V-10",
+    "R8V-11",
+    "R8V-12",
+    "R8V-13",
+    "R8V-14"
+  ],
+  "failed_validation_ids": [],
+  "first_failure_validation_id": null,
+  "first_failure_code": null,
+  "executed_budget_ids": [
+    "R8B-01",
+    "R8B-02",
+    "R8B-03",
+    "R8B-04",
+    "R8B-05",
+    "R8B-06",
+    "R8B-07",
+    "R8B-08"
+  ],
+  "failed_budget_ids": [],
+  "first_failure_budget_id": null,
+  "bundle_inputs": [
+    "rpl05-20260210-011240Z-91fdb0be",
+    "bpl06-20260210-005408Z-91fdb0be",
+    "bpl07-20260210-005408Z-91fdb0be"
+  ],
+  "guardrail_pass_count": 8,
+  "target_pass_count": 8,
+  "x07_runtime_ready": true,
+  "results_digest": "f5fe71c2c58ed8845fc47d3b3f9a27526b3b40762a497d1b8985e845c700841f",
+  "status": "pass",
+  "timestamp_utc": "2026-02-10T02:35:33.298Z",
+  "rollup": {
+    "total": 14,
+    "pass_count": 14,
+    "fail_count": 0,
+    "expected_fail_mapping_miss_count": 0,
+    "bundle_immutability_miss_count": 0
+  }
+}

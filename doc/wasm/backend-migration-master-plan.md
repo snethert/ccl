@@ -2,7 +2,7 @@
 
 Status: Active  
 Owner: Compiler/backend migration track  
-Last Updated: 2026-02-09  
+Last Updated: 2026-02-10  
 Program Board: `doc/wasm/wasm-program-board.md`
 
 ## Purpose
@@ -92,15 +92,15 @@ Hard gates are tracked in `doc/wasm/runtime-backend-dependency-matrix.md`.
 
 | Ticket | Status | Priority | Subplan | Last Updated | Notes |
 | --- | --- | --- | --- | --- | --- |
-| BPL-00 | in_progress | P0 | `doc/wasm/backend-tickets/BPL-00-governance-and-baseline-freeze.md` | 2026-02-09 | Governance loop remains active with `X-02`/`X-03` cleared and BPL-06 Step 2 now published; synchronized matrix/master/board updates remain mandatory for next checkpoint-triage work. |
+| BPL-00 | in_progress | P0 | `doc/wasm/backend-tickets/BPL-00-governance-and-baseline-freeze.md` | 2026-02-10 | Governance loop remains active with `X-02`/`X-03`/`X-04`/`X-06` cleared, BPL-07 remediation run-v2 pass evidence committed, and BPL-08 Step 3 closure-readiness packet now published; synchronized matrix/master/board updates remain mandatory while `X-07` awaits runtime-side budget signoff. |
 | BPL-01 | done | P0 | `doc/wasm/backend-tickets/BPL-01-arm-assumption-inventory.md` | 2026-02-09 | Step 1/2/3 closure complete (16 assumptions; remove=6, compat_layer=7, defer=3) with no new non-speculative matrix dependency rows required. |
 | BPL-02 | done | P0 | `doc/wasm/backend-tickets/BPL-02-wasm-native-backend-contract.md` | 2026-02-09 | Step 2 closure complete: `CON-01`..`CON-08` promoted to v1 baseline with explicit `BCL-01`..`BCL-12` coverage evidence. |
 | BPL-03 | done | P0 | `doc/wasm/backend-tickets/BPL-03-frame-and-debug-metadata-model.md` | 2026-02-09 | Step 2 closure complete: `FDC-01`..`FDC-10` validated with full `B3*` class coverage and hardened clause language. |
 | BPL-04 | done | P0 | `doc/wasm/backend-tickets/BPL-04-numeric-and-math-pipeline-modernization.md` | 2026-02-09 | Step 1/2/3 closed: classification, sequencing, and benchmark/profile gates (`BPL04-G01`..`BPL04-G06`) are now published. |
 | BPL-05 | done | P0 | `doc/wasm/backend-tickets/BPL-05-ir-lowering-arm-decoupling.md` | 2026-02-09 | Step 1/2/3 closed with staged slices (`B5S-*`), seam contracts (`B5M-*`), and consumer handoff checklist (`B5H-*`). |
-| BPL-06 | in_progress | P0 | `doc/wasm/backend-tickets/BPL-06-dual-path-build-and-diff-harness.md` | 2026-02-09 | Step 1/2 are now published with frozen checkpoints (`BPL06-CP01`..`BPL06-CP05`), fixture matrix (`BPL06-FX01`..`BPL06-FX05`), and artifact templates; Step 3 triage/gate integration is next. |
-| BPL-07 | planned | P1 | `doc/wasm/backend-tickets/BPL-07-size-and-performance-gates.md` | 2026-02-09 | Backend-specific perf and artifact-size validation gates. |
-| BPL-08 | planned | P0 | `doc/wasm/backend-tickets/BPL-08-runtime-alignment-integration.md` | 2026-02-09 | Align backend call/transport boundaries with runtime replacement architecture; runtime-side hard gate `X-03` is now cleared for downstream integration planning. |
+| BPL-06 | done | P0 | `doc/wasm/backend-tickets/BPL-06-dual-path-build-and-diff-harness.md` | 2026-02-09 | Step 1/2/3 are now closed with frozen checkpoints (`BPL06-CP*`), fixture matrix (`BPL06-FX*`), severity/rollback/intake contracts (`BPL06-SEV-*`, `BPL06-RB-*`, `BPL06-INT-*`). |
+| BPL-07 | in_progress | P1 | `doc/wasm/backend-tickets/BPL-07-size-and-performance-gates.md` | 2026-02-10 | Step 3 criteria packet (`BPL07-CR01`..`BPL07-CR05`) now has remediation run-v2 pass evidence (`bpl06-20260210-005408Z-91fdb0be`, `bpl07-20260210-005408Z-91fdb0be`) with `CR01`..`CR03` satisfied and backend preconditions for `CR04`/`CR05` met; `X-06`/`X-07` remain open pending runtime-side signoff evidence. |
+| BPL-08 | in_progress | P0 | `doc/wasm/backend-tickets/BPL-08-runtime-alignment-integration.md` | 2026-02-10 | Step 3 closure-readiness packet is now published (`BPL08-CR01`..`BPL08-CR06`) keyed to `BPL08-IV01`..`BPL08-IV06`, preserving immutable bundle IDs and explicit `X-07=open` carry-forward posture. |
 | BPL-09 | planned | P0 | `doc/wasm/backend-tickets/BPL-09-cutover-and-arm-retirement.md` | 2026-02-09 | Final cutover and ARM-compat path retirement. |
 
 ## Ticket Details
@@ -109,7 +109,7 @@ Hard gates are tracked in `doc/wasm/runtime-backend-dependency-matrix.md`.
 
 - Status: `in_progress`
 - Priority: `P0`
-- Last Updated: `2026-02-09`
+- Last Updated: `2026-02-10`
 - Subplan: `doc/wasm/backend-tickets/BPL-00-governance-and-baseline-freeze.md`
 - Dependencies: none
 
@@ -119,13 +119,21 @@ Notes:
 - Program-level coordination is anchored in `doc/wasm/wasm-program-board.md`.
 - Cross-track dependencies are externalized to `doc/wasm/runtime-backend-dependency-matrix.md`.
 - Governance evidence now includes BPL-03 Step 2 closure evidence (`FDC-*` + `B3*` coverage validation) with synchronized updates across matrix/program-board/master/subplan docs.
-- Governance sync now includes RPL-03 Step 3 rerun evidence (`doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/`) with `status=pass` and closed `X-03`; backend has advanced to BPL-06 Step 3 triage/gate-integration work.
+- Governance sync now includes RPL-03 Step 3 rerun evidence (`doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/`) with `status=pass` and closed `X-03`; backend advanced to BPL-07 after BPL-06 closure.
+- Governance sync now includes RPL-04 Step 3 rerun evidence (`doc/wasm/tickets/evidence/rpl-04-step3-rerun-2026-02-10/`) with `status=pass`, `x04_step2_ready=true`, and dependency row `X-04` cleared to `done`.
+- Governance sync now includes BPL-07 Step 1 baseline publication (`BPL07-BM01`..`BPL07-BM05`) with one-to-one checkpoint coverage over `BPL06-CP01`..`BPL06-CP05`.
+- Governance sync now includes BPL-07 Step 2 run-v1 evidence publication (`doc/wasm/tickets/evidence/bpl-07/bpl07-20260210-002604Z-91fdb0be/`) with deterministic row summaries and explicit fail-reason capture.
+- Governance sync now includes BPL-07 Step 3 closure-readiness publication (`BPL07-CR01`..`BPL07-CR05`) with deterministic blocker criteria for missing BPL-06 intake artifacts and `BPL07-BM05` perf overrun.
+- Governance sync now includes BPL-07 remediation run-v2 evidence (`bpl06-20260210-005408Z-91fdb0be`, `bpl07-20260210-005408Z-91fdb0be`) proving `CR01`..`CR03=pass` and backend readiness for `CR04`/`CR05`.
+- Governance sync now includes BPL-08 Step 1 publication (`BPL08-IC01`..`BPL08-IC06`) keyed to frozen runtime/backend evidence bundles.
+- Governance sync now includes BPL-08 Step 2 publication (`BPL08-IV01`..`BPL08-IV06`) with deterministic integration validation commands and immutable carry-forward bundle IDs.
+- Governance sync now includes BPL-08 Step 3 publication (`BPL08-CR01`..`BPL08-CR06`) keyed to `BPL08-IV*` validation rows with explicit `X-07=open` carry-forward posture.
 
 Next Step Analysis:
 
-- Immediate Next Step: execute BPL-06 Step 3 by defining promotion-blocking triage workflow and downstream BPL-07/BPL-08 gate-integration contracts over published checkpoint artifacts.
-- Why this step now: BPL-06 Step 2 fixtures/templates are now frozen, so rollout safety depends on deterministic triage and consumer handoff rules.
-- Evidence required to close next step: BPL-06 Step 3 publishes severity classes, rollback obligations, and consumer-intake mappings keyed to `BPL06-CP01`..`BPL06-CP05`.
+- Immediate Next Step: continue `Pack A` by carrying the published BPL-08 Step 3 closure packet as immutable backend signoff input while runtime executes `RPL-08 Step 1` unified budget-contract work.
+- Why this step now: backend closure-readiness publication is complete and the remaining blocker is runtime-owned unified budget approval for `X-07`.
+- Evidence required to close next step: synchronized matrix/board/runtime/backend/BPL-00/BPL-07/BPL-08 wording preserves `BPL08-CR*` rows, immutable bundle IDs, and explicit `X-07=open` carry-forward posture.
 
 ---
 
@@ -255,7 +263,7 @@ Next Step Analysis:
 
 ### BPL-06 - Dual-Path Build and Differential Harness
 
-- Status: `in_progress`
+- Status: `done`
 - Priority: `P0`
 - Last Updated: `2026-02-09`
 - Subplan: `doc/wasm/backend-tickets/BPL-06-dual-path-build-and-diff-harness.md`
@@ -267,53 +275,66 @@ Notes:
 - Step 1 contract is now published with frozen checkpoint IDs (`BPL06-CP01`..`BPL06-CP05`) and deterministic parity/evidence field requirements (`exit_code`, `fail_markers`, output hashes, rollback command linkage).
 - Step 1 now explicitly consumes BPL-05 seam linkage (`B5M-01`..`B5M-05`) and handoff constraints (`B5H-*`) without introducing alias IDs.
 - Step 2 is now published with fixture matrix `BPL06-FX01`..`BPL06-FX05`, comparator template `BPL06-CMP-01`, and machine-fillable artifact templates under `doc/wasm/tickets/evidence/bpl-06/templates/`.
+- Step 3 is now published with severity classes `BPL06-SEV-01`..`BPL06-SEV-04`, rollback obligations `BPL06-RB-01`..`BPL06-RB-05`, and BPL-07/BPL-08 intake mappings `BPL06-INT-01`..`BPL06-INT-05`.
 
 Next Step Analysis:
 
-- Immediate Next Step: define promotion-blocking triage workflow and downstream BPL-07/BPL-08 gate-integration contracts for all frozen checkpoints (`BPL06-CP01`..`BPL06-CP05`).
-- Why this step now: deterministic fixtures and artifact templates are now in place, so unresolved work is governance over pass/fail escalation and consumer handoff.
-- Evidence required to close next step: triage policy rows and consumer handoff mappings are committed with explicit checkpoint ownership and rollback obligations.
+- Immediate Next Step: maintain BPL-06 as additive-only baseline and require downstream tickets to consume frozen Step 1/2/3 IDs directly.
+- Why this step now: BPL-06 exit criteria are satisfied, so remaining work is governance maintenance and downstream intake.
+- Evidence required to close next step: BPL-07/BPL-08 subplans reference `BPL06-CP*`, `BPL06-FX*`, `BPL06-SEV-*`, `BPL06-RB-*`, and `BPL06-INT-*` without alias IDs.
 
 ---
 
 ### BPL-07 - Size and Performance Gates
 
-- Status: `planned`
+- Status: `in_progress`
 - Priority: `P1`
-- Last Updated: `2026-02-09`
-- Subplan: `doc/wasm/backend-tickets/BPL-07-size-and-performance-gates.md` (pending)
+- Last Updated: `2026-02-10`
+- Subplan: `doc/wasm/backend-tickets/BPL-07-size-and-performance-gates.md`
 - Dependencies: BPL-06
 
 Notes:
 
 - Migration must prove net positive impact on runtime cost and artifact shape.
+- Step 1 budget and measurement baseline v1 is now published with stable row IDs `BPL07-BM01`..`BPL07-BM05`.
+- Step 1 rows consume frozen BPL-06 intake contracts (`BPL06-INT-01`..`BPL06-INT-05`) and preserve rollback/severity linkage (`BPL06-SEV-*`, `BPL06-RB-*`) per checkpoint.
+- Deterministic command mapping now exists for all frozen checkpoints (`BPL06-CP01`..`BPL06-CP05`) with explicit evidence paths under `doc/wasm/tickets/evidence/bpl-07/<run_id>/`.
+- Step 2 run-v1 evidence is now published at `doc/wasm/tickets/evidence/bpl-07/bpl07-20260210-002604Z-91fdb0be/` with full row coverage and deterministic summaries.
+- Step 2 remediation run-v2 evidence is now published at `doc/wasm/tickets/evidence/bpl-07/bpl07-20260210-005408Z-91fdb0be/`, keyed to intake run `bpl06-20260210-005408Z-91fdb0be`.
+- `CR01`..`CR03` are now pass; `BPL07-BM05` perf delta is `-0.560224%` (budget max `+1.0%`) with `size_delta_bytes=0`.
+- `X-06` is now `done` from runtime `RPL-07 Step 3 run-v2` closure evidence; `X-07` remains open pending RPL-08 unified budget signoff.
+- Step 3 closure-readiness criteria remain `BPL07-CR01`..`BPL07-CR05`; backend preconditions are satisfied and closure input is now carried forward into BPL-08 integration planning.
 
 Next Step Analysis:
 
-- Immediate Next Step: define backend performance budget sheet and measurement commands.
-- Why this step now: objective gating is required before integration/cutover decisions.
-- Evidence required to close next step: budgets committed and command outputs reproducible.
+- Immediate Next Step: hand off BPL-07 frozen pass-bundle inputs into BPL-08 Step 3 closure-readiness packet publication while runtime executes `RPL-08 Step 1` budget-contract drafting.
+- Why this step now: BPL-07 backend-precondition work and BPL-08 Step 2 packetization are complete, so remaining integration movement is closure-readiness publication plus runtime budget-contract completion for `X-07`.
+- Evidence required to close next step: BPL-08 Step 3 publishes deterministic closure rows keyed to `BPL08-IV*`, consuming immutable bundle IDs while synchronized cross-plan notes preserve `X-07=open` pending unified signoff.
 
 ---
 
 ### BPL-08 - Runtime Alignment Integration
 
-- Status: `planned`
+- Status: `in_progress`
 - Priority: `P0`
-- Last Updated: `2026-02-09`
-- Subplan: `doc/wasm/backend-tickets/BPL-08-runtime-alignment-integration.md` (pending)
+- Last Updated: `2026-02-10`
+- Subplan: `doc/wasm/backend-tickets/BPL-08-runtime-alignment-integration.md`
 - Dependencies: BPL-06, RPL-03, RPL-07
 
 Notes:
 
 - Backend and runtime shared-memory/call boundaries must align before cutover.
 - Dependency row `X-03` is now `done`: protocol/conformance contracts and Step 3 rerun evidence are committed, so BPL-08 is unblocked from the runtime IPC side.
+- BPL-08 Step 1 is now published with integration checkpoint/assertion IDs `BPL08-IC01`..`BPL08-IC06`.
+- Step 1 rows are bound to immutable runtime/backend closure bundles (`rpl05-20260210-011240Z-91fdb0be`, `bpl06-20260210-005408Z-91fdb0be`, `bpl07-20260210-005408Z-91fdb0be`) and preserve frozen `BPL06-*`/`BPL07-*` contracts.
+- Step 2 deterministic validation packet is now published with `BPL08-IV01`..`BPL08-IV06` command/evidence mappings for all Step 1 checkpoints.
+- Step 3 closure-readiness packet is now published with `BPL08-CR01`..`BPL08-CR06` keyed one-to-one to `BPL08-IV01`..`BPL08-IV06`.
 
 Next Step Analysis:
 
-- Immediate Next Step: define integration checkpoints and ABI compatibility assertions.
-- Why this step now: avoids late-stage integration surprises between tracks.
-- Evidence required to close next step: alignment matrix with passing checkpoints.
+- Immediate Next Step: preserve published Step 3 closure packet as immutable carry-forward input while runtime `RPL-08` budget approval remains open.
+- Why this step now: BPL-08 step outputs are complete and downstream movement depends on runtime-side unified budget signoff for `X-07`.
+- Evidence required to close next step: BPL-08 references remain additive-only, preserving `BPL08-CR*` rows, immutable run IDs, and explicit `X-07=open` posture until matrix row `X-07` can close.
 
 ---
 
@@ -386,3 +407,14 @@ Avoid batching multiple unrelated next actions into one update.
 - 2026-02-09: Synced backend governance notes with RPL-03 Step 3 rerun evidence (`status=pass`, `x03_clear_ready=true`), closed dependency row `X-03`, and marked BPL-08 runtime-side hard gate as cleared.
 - 2026-02-09: Started BPL-06 and closed Step 1 by publishing dual-build checkpoint contracts (`BPL06-CP01`..`BPL06-CP05`) mapped to seam rows (`B5M-01`..`B5M-05`); advanced backend immediate next action to BPL-06 Step 2 fixture/evidence-template publication.
 - 2026-02-09: Closed BPL-06 Step 2 by publishing deterministic fixture matrix (`BPL06-FX01`..`BPL06-FX05`) and evidence templates (`backend_diff_case_result_v1`, `backend_diff_checkpoint_summary_v1`); advanced backend immediate next action to BPL-06 Step 3 triage/gate-integration definition.
+- 2026-02-09: Closed BPL-06 Step 3 by publishing severity classes (`BPL06-SEV-*`), rollback obligations (`BPL06-RB-*`), and BPL-07/BPL-08 intake mappings (`BPL06-INT-*`); advanced backend immediate next action to BPL-07 Step 1 budget/measurement setup.
+- 2026-02-10: Synced backend governance notes with RPL-04 Step 3 rerun closure evidence (`rpl-04-step3-rerun-2026-02-10`), cleared dependency row `X-04`, and retained backend immediate next action on BPL-07 Step 1 budget/measurement setup.
+- 2026-02-10: Started BPL-07 and closed Step 1 by publishing budget/measurement baseline rows (`BPL07-BM01`..`BPL07-BM05`) mapped one-to-one to frozen `BPL06-CP01`..`BPL06-CP05`; immediate backend next action advanced to BPL-07 Step 2 run-v1 evidence execution.
+- 2026-02-10: Resynced Pack A execution posture to runtime `RPL-05 Step 1` completion + backend continuation on `BPL-07 Step 1` over frozen `BPL06-*` intake artifacts; backend next action remains Step 1 baseline hardening/consumption.
+- 2026-02-10: Executed BPL-07 Step 2 run-v1 measurement packet (`bpl07-20260210-002604Z-91fdb0be`) with full `BPL07-BM01`..`BPL07-BM05` evidence publication; next backend action advanced to BPL-07 Step 3 soft-gate readiness definition due missing BPL-06 intake artifacts and `BPL07-BM05` perf overrun.
+- 2026-02-10: Closed BPL-07 Step 3 by publishing closure-readiness criteria (`BPL07-CR01`..`BPL07-CR05`) for `X-06`/`X-07`; next backend action is now one remediation execution packet to clear missing intake artifacts and the `BPL07-BM05` perf overrun.
+- 2026-02-10: Executed BPL-07 remediation run-v2 (`bpl07-step3-remediation-run-v2`) with intake bundle `bpl06-20260210-005408Z-91fdb0be` and rerun packet `bpl07-20260210-005408Z-91fdb0be`; `CR01`..`CR03` now pass and backend closure readiness for `CR04`/`CR05` is synchronized.
+- 2026-02-10: Resynced immediate-next-step wording across backend/master/matrix/board/governance docs to Pack A runtime run-v2 execution while preserving backend run-v2 pass bundle as `X-06`/`X-07` closure-review input.
+- 2026-02-10: Started BPL-08 and closed Step 1 by publishing integration checkpoint/assertion baseline (`BPL08-IC01`..`BPL08-IC06`) over frozen runtime/backend closure bundles; advanced backend next action to BPL-08 Step 2 deterministic validation packet definition.
+- 2026-02-10: Closed BPL-08 Step 2 by publishing deterministic integration validation packet rows (`BPL08-IV01`..`BPL08-IV06`) and advanced backend next action to BPL-08 Step 3 closure-readiness packet publication while preserving `X-07=open`.
+- 2026-02-10: Closed BPL-08 Step 3 by publishing integration closure-readiness rows (`BPL08-CR01`..`BPL08-CR06`) keyed to `BPL08-IV01`..`BPL08-IV06`, preserving immutable bundle IDs and explicit `X-07=open` carry-forward posture.

@@ -2,7 +2,7 @@
 
 Status: Active  
 Owner: Runtime/WASM replacement track  
-Last Updated: 2026-02-09  
+Last Updated: 2026-02-10  
 
 ## Purpose
 
@@ -102,15 +102,15 @@ When resuming work from scratch:
 
 | Ticket | Status | Priority | Subplan | Last Updated | Notes |
 | --- | --- | --- | --- | --- | --- |
-| RPL-00 | in_progress | P0 | `doc/wasm/tickets/RPL-00-governance-and-baseline-freeze.md` | 2026-02-09 | Fifteenth downstream update cycle is now complete through RPL-03 Step 3 rerun execution and synchronized runtime/matrix/board status with `X-03` closure. |
+| RPL-00 | in_progress | P0 | `doc/wasm/tickets/RPL-00-governance-and-baseline-freeze.md` | 2026-02-10 | Thirty-second downstream update cycle is now complete through RPL-08 Step 3 run-v2 evidence publication with synchronized runtime/matrix/board/governance updates, immutable `X-07` review packet bundle IDs preserved, backend `BPL08-CR*` carry-forward rows unchanged, and `R8GAP-01` closed. |
 | RPL-01 | in_progress | P0 | `doc/wasm/tickets/RPL-01-secure-runtime-gating.md` | 2026-02-09 | RPL-03 Step 3 rerun evidence is now committed with `status=pass` and `x03_clear_ready=true`; contradiction follow-through remains active for upstream doc-text replacements (`C-01`, `C-03`, `C-04`, `C-08`). |
 | RPL-02 | done | P0 | `doc/wasm/tickets/RPL-02-worker-topology-and-thread-bootstrap.md` | 2026-02-09 | Step 3 mapping output is complete (`X03M-01`..`X03M-05`) with explicit BPL-03 `B3*` consumption coverage; dependency row `X-02` is now `done`. |
 | RPL-03 | done | P0 | `doc/wasm/tickets/RPL-03-shared-memory-ipc-core.md` | 2026-02-09 | Step 3 rerun evidence is now committed at `doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/` with `ipc_conformance_summary_v1.status=pass`, `x03_clear_ready=true`, and closure of `IPCGAP-01`..`IPCGAP-04`; dependency row `X-03` is now `done`. |
-| RPL-04 | planned | P0 | `doc/wasm/tickets/RPL-04-runtime-ui-bridge-shared-path.md` | 2026-02-09 | Runtime/UI ingress-egress migration off message hot path. |
-| RPL-05 | planned | P0 | `doc/wasm/tickets/RPL-05-storage-v2-local-core.md` | 2026-02-09 | Local immutable object store + refs/leases baseline. |
+| RPL-04 | done | P0 | `doc/wasm/tickets/RPL-04-runtime-ui-bridge-shared-path.md` | 2026-02-10 | Step 3 rerun evidence is now committed (`doc/wasm/tickets/evidence/rpl-04-step3-rerun-2026-02-10/`) with full `R4V-01`..`R4V-14` coverage, closed `R4GAP-01`..`R4GAP-04`, and terminal `runtime_ui_bridge_step2_summary_v1.status=pass` (`x04_step2_ready=true`). |
+| RPL-05 | done | P0 | `doc/wasm/tickets/RPL-05-storage-v2-local-core.md` | 2026-02-10 | Step 3 run-v2 closure evidence is now committed (`rpl05-20260210-011240Z-91fdb0be`) with full `R5V-01`..`R5V-14` command execution coverage, `storage_v2_local_step2_summary_v1.status=pass`, `x05_step2_ready=true`, and closed `R5GAP-01`..`R5GAP-05`. |
 | RPL-06 | planned | P1 | `doc/wasm/tickets/RPL-06-storage-v2-sync-merge.md` | 2026-02-09 | Remote sync, conflict records, merge-candidate/finalization flow. |
-| RPL-07 | planned | P0 | `doc/wasm/tickets/RPL-07-module-environment-sharing.md` | 2026-02-09 | Module payload/environment sharing and loader changes. |
-| RPL-08 | planned | P1 | `doc/wasm/tickets/RPL-08-artifact-size-reduction-and-validation.md` | 2026-02-09 | Size and perf validation gates tied to replacement architecture. |
+| RPL-07 | done | P0 | `doc/wasm/tickets/RPL-07-module-environment-sharing.md` | 2026-02-10 | Step 3 run-v2 closure evidence is now committed (`rpl07-20260210-014654Z-91fdb0be`) with full `R7V-01`..`R7V-14` execution coverage, terminal `module_env_step2_summary_v1.status=pass` (`x06_step2_ready=true`), closed `R7GAP-01`, and immutable `X-06`/`X-07` review packet bundle IDs preserved. |
+| RPL-08 | in_progress | P1 | `doc/wasm/tickets/RPL-08-artifact-size-reduction-and-validation.md` | 2026-02-10 | Step 3 run-v2 evidence is now committed (`rpl08-20260210-023524Z-91fdb0be`) with full `R8V-01`..`R8V-14` assertion coverage, terminal `artifact_budget_step2_summary_v1.status=pass`, `x07_runtime_ready=true`, immutable carry-forward bundle IDs preserved, and closed blocker `R8GAP-01`. |
 | RPL-09 | planned | P0 | `doc/wasm/tickets/RPL-09-cutover-and-legacy-removal.md` | 2026-02-09 | Feature-flagged cutover, legacy path retirement, docs reconciliation. |
 
 ## Ticket Details
@@ -119,7 +119,7 @@ When resuming work from scratch:
 
 - Status: `in_progress`
 - Priority: `P0`
-- Last Updated: `2026-02-09`
+- Last Updated: `2026-02-10`
 - Subplan: `doc/wasm/tickets/RPL-00-governance-and-baseline-freeze.md`
 - Dependencies: none
 
@@ -129,13 +129,13 @@ Notes:
 - Baseline architecture and blocker context have been captured from current docs.
 - RPL-00 subplan has been authored and now governs sync/update behavior.
 - Runtime track now has explicit parallel coordination points with backend migration track docs.
-- Fifteenth downstream governance cycle is now complete through synchronized RPL-03 Step 3 rerun publication and dependency-row `X-03` closure.
+- Thirty-second downstream governance cycle is now complete through synchronized RPL-08 Step 3 run-v2 evidence publication while preserving backend BPL-08 Step 3 closure packet rows (`BPL08-CR01`..`BPL08-CR06`) as immutable `X-07` carry-forward inputs.
 
 Next Step Analysis:
 
-- Immediate Next Step: continue the dual-update governance loop by synchronizing RPL-04 Step 1 kickoff state across runtime/master/matrix/board docs in one cycle.
-- Why this step now: hard-gate row `X-03` is now closed with committed rerun evidence, so governance focus shifts to the next unblocked runtime ticket.
-- Evidence required to close next step: RPL-04 Step 1 outputs and cross-track pack notes are synchronized in subplan/master/matrix/board without reopening frozen `RPL-03` IDs.
+- Immediate Next Step: continue the dual-update governance loop by executing unified `X-07` closure review over committed runtime run-v2 evidence and backend `BPL-08 Step 3` closure rows.
+- Why this step now: runtime Step 3 run-v2 is committed with `x07_runtime_ready=true` and closed `R8GAP-01`; remaining work is closure-review acceptance rather than additional runtime remediation.
+- Evidence required to close next step: same-cycle runtime/backend docs carry run-v2 bundle `rpl08-20260210-023524Z-91fdb0be`, preserve immutable bundle IDs and backend `BPL08-CR*` rows unchanged, and publish explicit `X-07` closure-review disposition.
 
 ---
 
@@ -162,6 +162,8 @@ Notes:
 - RPL-03 Step 1 protocol contract v1 is now published (`IPCP-01`..`IPCP-49`) and explicitly absorbs IPC contradiction classes (`C-01`, `C-03`, `C-04`, `C-08`) under strict no-fallback semantics.
 - RPL-03 Step 2 conformance contract v1 is now published (`IPCV-01`..`IPCV-12`, `IPCL-01`..`IPCL-05`, `ipc_conformance_summary_v1`) and formalizes deterministic queue-correctness evidence requirements.
 - RPL-03 Step 3 rerun evidence is now committed at `doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/` with terminal `status=pass`, `x03_clear_ready=true`, and closed blocker gaps (`IPCGAP-01`..`IPCGAP-04`).
+- RPL-04 Step 1 scope contract now consumes frozen IPC baseline IDs for runtime/UI bridge class routing (`R4M-*`, `R4C-*`, `R4T-*`) without changing contradiction follow-through status for `C-01`, `C-03`, `C-04`, and `C-08`.
+- RPL-04 Step 2 execution/gating contract now consumes the same contradiction-linked IPC baseline through frozen lane/validation IDs (`R4L-*`, `R4V-*`) without changing contradiction follow-through status for `C-01`, `C-03`, `C-04`, and `C-08`.
 - Failure semantics are now explicit: fixed check order, first-failure abort, strict no-fallback enforcement.
 - Integration entrypoints and diagnostics surfacing requirements are now explicit across loader/smoke/browser lanes.
 - Matrix now distinguishes required runtime/thread capabilities from deferred CL thread semantics.
@@ -230,43 +232,56 @@ Next Step Analysis:
 
 ### RPL-04 - Runtime/UI Bridge Shared Path
 
-- Status: `planned`
+- Status: `done`
 - Priority: `P0`
-- Last Updated: `2026-02-09`
-- Subplan: `doc/wasm/tickets/RPL-04-runtime-ui-bridge-shared-path.md` (pending)
+- Last Updated: `2026-02-10`
+- Subplan: `doc/wasm/tickets/RPL-04-runtime-ui-bridge-shared-path.md`
 - Dependencies: RPL-03
 
 Notes:
 
 - Existing runtime command/event payload flow remains JSON/message-oriented in key paths.
-- Must move UI ingress and runtime effect/state egress off hot-path message transport.
+- Step 1 output is now complete with frozen runtime/UI bridge ID namespaces (`R4M-01`..`R4M-26`, `R4C-01`..`R4C-28`, `R4T-01`..`R4T-10`).
+- Step 1 now includes deterministic runtime/UI class inventory, migration-wave sequencing, channel-to-`IPCP-*` mappings, backpressure/failure semantics, telemetry schemas, and rollback/remediation clauses.
+- Step 2 output is now complete with frozen execution lane IDs (`R4L-01`..`R4L-06`), validation IDs (`R4V-01`..`R4V-14`), compatibility IDs (`R4I-01`..`R4I-06`), and terminal summary schema (`runtime_ui_bridge_step2_summary_v1`).
+- Step 3 rerun evidence is now committed at `doc/wasm/tickets/evidence/rpl-04-step3-rerun-2026-02-10/` with full `R4V-01`..`R4V-14` coverage and native bridge-schema emission.
+- Blocking gaps `R4GAP-01`..`R4GAP-04` are now closed and aggregate terminal summary reports `runtime_ui_bridge_step2_summary_v1.status=pass`, `x04_step2_ready=true`.
+- Dependency row `X-04` is now clear to `done` while backend track carries published BPL-07 closure criteria (`BPL07-CR01`..`BPL07-CR05`) plus committed remediation pass artifacts (`bpl06-20260210-005408Z-91fdb0be`, `bpl07-20260210-005408Z-91fdb0be`) into `X-06`/`X-07` closure review.
+- Hot-path classes are now explicitly no-fallback and mapped to shared channels under `IPCP-02`, `IPCP-29`, and `IPCP-47`.
 
 Next Step Analysis:
 
-- Immediate Next Step: define which runtime and UI message classes migrate first to shared channels.
-- Why this step now: enables incremental replacement without breaking full bridge behavior.
-- Evidence required to close next step: migration matrix and first migrated path passing existing bridge tests.
+- Immediate Next Step: maintain RPL-04 as additive-only closed baseline and consume frozen bridge IDs from downstream runtime/backend tickets.
+- Why this step now: RPL-04 exit criteria are satisfied and `X-04` is closed; follow-on execution should consume committed bridge artifacts rather than mutate baseline scope.
+- Evidence required to close next step: downstream references to `rpl-04-step3-rerun-2026-02-10` preserve frozen ID namespaces (`R4M-*`, `R4C-*`, `R4T-*`, `R4L-*`, `R4V-*`, `R4I-*`) without rewrites.
 
 ---
 
 ### RPL-05 - Storage V2 Local Core
 
-- Status: `planned`
+- Status: `done`
 - Priority: `P0`
-- Last Updated: `2026-02-09`
-- Subplan: `doc/wasm/tickets/RPL-05-storage-v2-local-core.md` (pending)
+- Last Updated: `2026-02-10`
+- Subplan: `doc/wasm/tickets/RPL-05-storage-v2-local-core.md`
 - Dependencies: RPL-01, RPL-02
 
 Notes:
 
 - Current persistence service is VFS/chunk-store oriented and not aligned with new FormGraph/object/ref/lease model.
-- Must establish local immutable objects + mutable ref/lease CAS semantics with crash-safety invariants.
+- Step 1 output is now complete with frozen local-core ID namespaces (`R5S-01`..`R5S-32`, `R5T-01`..`R5T-30`, `R5A-01`..`R5A-12`).
+- Step 1 now defines deterministic local record schemas, key/version rules, transaction boundaries, canonical failure codes (`RPL05-E001`..`RPL05-E010`), telemetry schemas, and rollback/remediation clauses.
+- Step 2 output is now complete with frozen lane and validation namespaces (`R5L-01`..`R5L-08`, `R5V-01`..`R5V-14`) plus terminal summary schema `storage_v2_local_step2_summary_v1`.
+- Step 2 binds deterministic command templates to Step 1 assertions (`R5A-07`..`R5A-12`) and canonical `RPL05-E*` first-failure mapping requirements.
+- Step 3 run-v1 evidence is now retained as historical baseline at `doc/wasm/tickets/evidence/rpl-05-step3-2026-02-10/rpl05-20260210-004335Z-91fdb0be/` with explicit blocker registration (`R5GAP-01`..`R5GAP-05`).
+- Step 3 run-v2 closure evidence is now committed at `doc/wasm/tickets/evidence/rpl-05-step3-2026-02-10/rpl05-20260210-011240Z-91fdb0be/` with `storage_v2_local_step2_summary_v1.status=pass`, `x05_step2_ready=true`, and closed `R5GAP-01`..`R5GAP-05`.
+- Secure-only replacement-lane profile guard and no-silent-fallback semantics are explicit (`R5S-10`, `R5T-13`..`R5T-20`) and consume frozen startup/lifecycle constraints.
+- Pack A backend-parallel wording for this cycle now tracks BPL-07 closure-review carry-forward using committed remediation pass artifacts over frozen `BPL06-*` intake contracts.
 
 Next Step Analysis:
 
-- Immediate Next Step: define canonical local object schemas and metadata transaction boundaries.
-- Why this step now: local correctness must exist before sync/merge protocol.
-- Evidence required to close next step: schema spec + local persistence conformance tests.
+- Immediate Next Step: maintain RPL-05 outputs as additive-only closed baseline and consume frozen storage IDs/evidence in downstream runtime sequencing.
+- Why this step now: RPL-05 exit criteria are satisfied and `X-05` is now clear to `done`.
+- Evidence required to close next step: downstream runtime docs reference `rpl05-20260210-011240Z-91fdb0be` and preserve frozen `R5S-*`/`R5T-*`/`R5A-*`/`R5L-*`/`R5V-*` namespaces without rewrites.
 
 ---
 
@@ -293,43 +308,62 @@ Next Step Analysis:
 
 ### RPL-07 - Module Environment Sharing
 
-- Status: `planned`
+- Status: `done`
 - Priority: `P0`
-- Last Updated: `2026-02-09`
-- Subplan: `doc/wasm/tickets/RPL-07-module-environment-sharing.md` (pending)
+- Last Updated: `2026-02-10`
+- Subplan: `doc/wasm/tickets/RPL-07-module-environment-sharing.md`
 - Dependencies: RPL-03
 
 Notes:
 
 - Runtime modules currently carry high payload cost and environment duplication pressure.
-- Goal: environment sharing/discovery so modules do not each require full environment embedding.
+- Step 1 output is now complete with frozen module-environment capsule/resolution/review namespaces (`R7S-01`..`R7S-26`, `R7R-01`..`R7R-28`, `R7T-01`..`R7T-12`).
+- Step 1 now defines deterministic capsule schema inventory, loader resolution order, no-silent-fallback semantics, canonical failure codes (`RPL07-E001`..`RPL07-E009`), and rollback/remediation clauses.
+- Step 2 output is now complete with frozen execution lane IDs (`R7L-01`..`R7L-08`), validation IDs (`R7V-01`..`R7V-14`), review mapping IDs (`R7I-01`..`R7I-06`), and terminal summary schema (`module_env_step2_summary_v1`).
+- Step 2 binds immutable closure-bundle IDs into all review packet and summary assertions for `X-06`/`X-07`.
+- Step 1 explicitly carries committed closure bundles (`rpl05-20260210-011240Z-91fdb0be`, `bpl06-20260210-005408Z-91fdb0be`, `bpl07-20260210-005408Z-91fdb0be`) into `X-06`/`X-07` review packet requirements.
+- Step 3 run-v1 evidence is retained at `doc/wasm/tickets/evidence/rpl-07-step3-2026-02-10/rpl07-20260210-013659Z-91fdb0be/` with full `R7V-01`..`R7V-14` command execution coverage.
+- Step 3 run-v2 closure evidence is now committed at `doc/wasm/tickets/evidence/rpl-07-step3-2026-02-10/rpl07-20260210-014654Z-91fdb0be/` with full `R7V-01`..`R7V-14` command execution coverage and committed review packet artifacts (`module_env_x06_review_packet_v1.json`, `module_env_x07_review_packet_v1.json`) preserving immutable bundle IDs.
+- Terminal run-v2 summary reports `module_env_step2_summary_v1.status=pass`, `x06_step2_ready=true`, and closure of `R7GAP-01` via `R7V-06` deterministic digest parity versus `R7V-02`.
+- Secure-only replacement-lane profile guard and no-fallback policy are explicit; runtime thread capability remains required now and CL-thread semantics remain deferred.
+- Dependency row `X-06` is now clear to `done`; `X-07` remains `in_progress` in carry-forward posture pending unified closure review over committed RPL-08 Step 3 run-v2 evidence.
 
 Next Step Analysis:
 
-- Immediate Next Step: define shared environment capsule format and loader resolution contract.
-- Why this step now: key lever for artifact size reduction and startup efficiency.
-- Evidence required to close next step: prototype bundle spec and loader install proof.
+- Immediate Next Step: maintain RPL-07 outputs as additive-only closed baseline and keep frozen review artifacts available as immutable inputs for unified `X-07` closure review.
+- Why this step now: Step 3 closure evidence is committed and all RPL-07 exit criteria are satisfied.
+- Evidence required to close next step: downstream `RPL-08` planning docs consume frozen `R7*` IDs and immutable closure bundle inputs without mutation while preserving published Step 1/Step 2 namespaces.
 
 ---
 
 ### RPL-08 - Artifact Size Reduction and Validation
 
-- Status: `planned`
+- Status: `in_progress`
 - Priority: `P1`
-- Last Updated: `2026-02-09`
-- Subplan: `doc/wasm/tickets/RPL-08-artifact-size-reduction-and-validation.md` (pending)
+- Last Updated: `2026-02-10`
+- Subplan: `doc/wasm/tickets/RPL-08-artifact-size-reduction-and-validation.md`
 - Dependencies: RPL-07
 
 Notes:
 
 - Current runtime module binary size is a material deployment risk.
 - Size reduction must be paired with deterministic validation so functional coverage does not regress.
+- Step 1 budget/measurement contract is now published with frozen deterministic namespaces (`R8B-*`, `R8M-*`, `R8T-*`, `R8R-*`).
+- Step 2 lane/validation/review contract is now published with frozen deterministic IDs (`R8L-*`, `R8V-*`, `R8I-*`) and terminal summary requirements (`artifact_budget_step2_summary_v1`).
+- Step 3 run-v1 evidence remains committed at `doc/wasm/tickets/evidence/rpl-08-step3-2026-02-10/rpl08-20260210-022252Z-91fdb0be/` with full `R8V-01`..`R8V-14` assertion coverage.
+- Step 3 run-v2 evidence is now committed at `doc/wasm/tickets/evidence/rpl-08-step3-2026-02-10/rpl08-20260210-023524Z-91fdb0be/` with full `R8V-01`..`R8V-14` assertion coverage.
+- Run-v2 terminal summary reports `artifact_budget_step2_summary_v1.status=pass`, `x07_runtime_ready=true`, `guardrail_pass_count=8`, and `target_pass_count=8`.
+- Blocker `R8GAP-01` is closed after runtime module bundle compaction + manifest payload reduction; `X-07` remains `in_progress` in explicit carry-forward review posture pending unified closure acceptance.
+- Step 1 freezes baseline artifact anchors (`doc/wasm/wasm-runtime-modules.bin`, `doc/wasm/wasm-runtime-modules.json`, `doc/wasm/js/wasmcl.wasm`, `doc/wasm/js/subprims.wasm`) with explicit guardrail/target thresholds and deterministic formulas.
+- Step 1 carries immutable closure-bundle IDs (`rpl05-20260210-011240Z-91fdb0be`, `bpl06-20260210-005408Z-91fdb0be`, `bpl07-20260210-005408Z-91fdb0be`) into all `X-07` mapping and telemetry assertions.
+- Step 1 explicitly preserves backend `BPL08-CR01`..`BPL08-CR06` rows as immutable carry-forward inputs while runtime evidence remains pending.
+- Secure-only no-silent-fallback semantics are explicit for measurement-source selection; runtime thread capability remains required now and CL-thread semantics remain deferred.
 
 Next Step Analysis:
 
-- Immediate Next Step: define target budgets and measurement commands for each artifact class.
-- Why this step now: replacement changes need objective impact tracking.
-- Evidence required to close next step: budget sheet + automated regression checks.
+- Immediate Next Step: carry committed Step 3 run-v2 evidence into unified `X-07` closure review while preserving immutable bundle IDs and backend closure-row carry-forward.
+- Why this step now: runtime-owned budget remediation is complete and validated; next action is cross-track closure decisioning.
+- Evidence required to close next step: synchronized runtime/backend planning docs reference run-v2 (`rpl08-20260210-023524Z-91fdb0be`), preserve immutable bundle IDs and `BPL08-CR*` references unchanged, and publish closure-review packet disposition for `X-07`.
 
 ---
 
@@ -395,3 +429,23 @@ Avoid batching multiple unrelated next actions into one update.
 - 2026-02-09: Executed RPL-03 Step 2 by publishing frozen conformance IDs (`IPCV-01`..`IPCV-12`, `IPCL-01`..`IPCL-05`) and `ipc_conformance_summary_v1`, then shifted governance/contradiction next-step focus to Step 3 committed evidence execution.
 - 2026-02-09: Executed RPL-03 Step 3 run-v1 by running `IPCV-01`..`IPCV-12` and committing evidence bundle (`doc/wasm/tickets/evidence/rpl-03-step3-2026-02-09/`); recorded failing assertions and blocker gaps `IPCGAP-01`..`IPCGAP-04`.
 - 2026-02-09: Executed RPL-03 Step 3 rerun after remediating `IPCGAP-01`..`IPCGAP-04`; committed evidence bundle (`doc/wasm/tickets/evidence/rpl-03-step3-rerun-2026-02-09/`) reports `status=pass`, `x03_clear_ready=true`, and closes dependency row `X-03`.
+- 2026-02-09: Executed RPL-04 Step 1 by publishing `doc/wasm/tickets/RPL-04-runtime-ui-bridge-shared-path.md` with frozen bridge-scope IDs (`R4M-*`, `R4C-*`, `R4T-*`), advanced `RPL-04` to `in_progress`, and synchronized governance/next-step state to RPL-04 Step 2 plus Pack A alignment with BPL-06 Step 3.
+- 2026-02-09: Executed RPL-04 Step 2 by publishing lane registry (`R4L-*`), validation matrix (`R4V-*`), compatibility mapping (`R4I-*`), and terminal summary schema (`runtime_ui_bridge_step2_summary_v1`), then advanced governance/next-step state to Step 3 evidence execution plus Pack A alignment with BPL-06 Step 3.
+- 2026-02-09: Executed RPL-04 Step 3 run-v1 and committed evidence bundle (`doc/wasm/tickets/evidence/rpl-04-step3-2026-02-09/`); recorded blocker gaps `R4GAP-01`..`R4GAP-04` and advanced governance/next-step state to Step 3 gap-remediation rerun plus Pack A alignment with BPL-06 Step 3.
+- 2026-02-09: Resynced Pack A wording to backend-governance state by aligning runtime docs to `RPL-04 Step 3` + `BPL-07 Step 1` while preserving `X-04` blocker tracking and frozen `BPL06-*` intake anchors.
+- 2026-02-10: Executed RPL-04 Step 3 rerun (`R4V-01`..`R4V-14`), committed closure evidence bundle (`doc/wasm/tickets/evidence/rpl-04-step3-rerun-2026-02-10/`), closed `R4GAP-01`..`R4GAP-04`, and synchronized runtime planning docs with `X-04` closure and post-RPL-04 handoff state.
+- 2026-02-10: Resynced Pack A governance wording after backend BPL-07 Step 1 publication (`BPL07-BM01`..`BPL07-BM05`) by preserving backend Step 1 baseline wording over frozen `BPL06-*` intake artifacts.
+- 2026-02-10: Executed RPL-05 Step 1 by publishing `doc/wasm/tickets/RPL-05-storage-v2-local-core.md` with frozen local-core contract IDs (`R5S-*`, `R5T-*`, `R5A-*`) and synchronized Pack A wording to `RPL-05 Step 2` + backend `BPL-07 Step 1` continuation over frozen `BPL06-*` intake artifacts.
+- 2026-02-10: Executed RPL-05 Step 2 by publishing frozen conformance lane/validation IDs (`R5L-01`..`R5L-08`, `R5V-01`..`R5V-14`) and `storage_v2_local_step2_summary_v1`, then synchronized Pack A wording to `RPL-05 Step 3` + backend `BPL-07 Step 1` continuation over frozen `BPL06-*` intake artifacts.
+- 2026-02-10: Resynced Pack A governance wording after backend BPL-07 Step 3 publication (`BPL07-CR01`..`BPL07-CR05`) by moving backend-parallel focus to closure-remediation execution (`CR01`..`CR03`) over frozen `BPL06-*` intake artifacts.
+- 2026-02-10: Executed RPL-05 Step 3 run-v1 (`R5V-01`..`R5V-14`), committed evidence bundle (`rpl05-20260210-004335Z-91fdb0be`), and synchronized runtime planning docs to active blocker remediation for `R5GAP-01`..`R5GAP-05`.
+- 2026-02-10: Resynced Pack A governance wording after backend BPL-07 remediation run-v2 pass (`bpl06-20260210-005408Z-91fdb0be`, `bpl07-20260210-005408Z-91fdb0be`) by shifting backend-parallel state from execution to closure-review carry-forward while runtime run-v2 remains the active delivery action.
+- 2026-02-10: Executed RPL-05 Step 3 run-v2 (`R5V-01`..`R5V-14`), committed closure evidence bundle (`rpl05-20260210-011240Z-91fdb0be`), closed `R5GAP-01`..`R5GAP-05`, advanced `RPL-05` to `done`, and synchronized runtime planning docs with `X-05` closure.
+- 2026-02-10: Executed RPL-07 Step 1 by publishing `doc/wasm/tickets/RPL-07-module-environment-sharing.md` with frozen capsule/resolution/review IDs (`R7S-*`, `R7R-*`, `R7T-*`), advanced `RPL-07` to `in_progress`, carried immutable closure bundles into `X-06`/`X-07` review notes, and synchronized runtime planning docs to `RPL-07 Step 2`.
+- 2026-02-10: Executed RPL-07 Step 2 by publishing frozen lane/validation/review contracts (`R7L-*`, `R7V-*`, `R7I-*`) and terminal schema `module_env_step2_summary_v1`, preserving immutable closure-bundle IDs in `X-06`/`X-07` review notes and synchronizing runtime planning docs to `RPL-07 Step 3`.
+- 2026-02-10: Executed RPL-07 Step 3 run-v1 (`R7V-01`..`R7V-14`), committed evidence bundle (`rpl07-20260210-013659Z-91fdb0be`) with immutable `X-06`/`X-07` review packet bundle IDs, and synchronized runtime planning docs to Step 3 run-v2 closure for open blocker `R7GAP-01`.
+- 2026-02-10: Executed RPL-07 Step 3 run-v2 (`R7V-01`..`R7V-14`), committed closure evidence bundle (`rpl07-20260210-014654Z-91fdb0be`) with terminal `module_env_step2_summary_v1.status=pass`, closed `R7GAP-01`, advanced `RPL-07` to `done`, and synchronized runtime planning docs to `RPL-08 Step 1` intake.
+- 2026-02-10: Executed RPL-08 Step 1 by publishing `doc/wasm/tickets/RPL-08-artifact-size-reduction-and-validation.md` with frozen budget/measurement/telemetry/remediation namespaces (`R8B-*`, `R8M-*`, `R8T-*`, `R8R-*`), advanced `RPL-08` to `in_progress`, and synchronized runtime planning docs to `RPL-08 Step 2` while preserving immutable `X-07` bundle IDs and backend `BPL08-CR*` carry-forward rows unchanged.
+- 2026-02-10: Executed RPL-08 Step 2 by publishing frozen lane/validation/review contracts (`R8L-*`, `R8V-*`, `R8I-*`) and terminal summary requirements (`artifact_budget_step2_summary_v1`), then synchronized runtime planning docs to `RPL-08 Step 3` run-v1 evidence execution while preserving immutable `X-07` bundle IDs and backend `BPL08-CR*` carry-forward rows unchanged.
+- 2026-02-10: Executed RPL-08 Step 3 run-v1 (`R8V-01`..`R8V-14`), committed evidence bundle (`rpl08-20260210-022252Z-91fdb0be`) with terminal `artifact_budget_step2_summary_v1.status=pass`, opened `R8GAP-01` for closure-target overrun remediation (`R8B-01`, `R8B-02`, `R8B-05`), and synchronized runtime planning docs to Step 3 run-v2 targeted closure while preserving immutable `X-07` bundle IDs and backend `BPL08-CR*` carry-forward rows unchanged.
+- 2026-02-10: Executed RPL-08 Step 3 run-v2 (`R8V-01`..`R8V-14`), committed evidence bundle (`rpl08-20260210-023524Z-91fdb0be`) with terminal `artifact_budget_step2_summary_v1.status=pass`, closed `R8GAP-01`, recorded `x07_runtime_ready=true`, and synchronized runtime planning docs to unified `X-07` closure review while preserving immutable `X-07` bundle IDs and backend `BPL08-CR*` carry-forward rows unchanged.

@@ -1,0 +1,15 @@
+# validation_id: R8V-06
+# lane_id: R8L-07
+# run_id: rpl08-20260210-022252Z-91fdb0be
+# expected_exit: 0
+# expected_failure: none
+# command: node -e 'const fs=require("node:fs"); const p="doc/wasm/tickets/evidence/rpl-07-step3-2026-02-10/rpl07-20260210-014654Z-91fdb0be/module_env_x07_review_packet_v1.json"; const j=JSON.parse(fs.readFileSync(p,"utf8")); if(j.x07_review_result!=="carry_forward") process.exit(1); console.log("carry_forward");'
+# exit_code: 0
+
+## STDOUT
+carry_forward
+
+## STDERR
+(empty)
+
+R8_VALIDATION_RESULT {"schema_version":"r8_validation_result_v1","run_id":"rpl08-20260210-022252Z-91fdb0be","validation_id":"R8V-06","lane_id":"R8L-07","expected_failure":"none","observed_failure":"none","expected_exit":0,"exit_code":0,"validation_assertion_pass":true,"notes":"assertions met","timestamp_utc":"2026-02-10T02:23:00.767Z"}
