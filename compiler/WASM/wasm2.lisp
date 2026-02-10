@@ -2397,8 +2397,7 @@
   (let* ((ptr-temp (wasm2-allocate-temp))
          (val-temp (wasm2-allocate-temp))
          (raw-temp (wasm2-allocate-temp))
-         (misc-ref (wasm2-subprim-fixnum '.SPmisc-ref))
-         (misc-set (wasm2-subprim-fixnum '.SPmisc-set)))
+         (misc-ref (wasm2-subprim-fixnum '.SPmisc-ref)))
     (wasm2-form seg nil nil ptr)
     (wasm2-emit :local.set ptr-temp)
     (wasm2-form seg nil nil val)
@@ -2428,14 +2427,10 @@
                         (wasm2-emit :local.get raw-temp))))
            (else-ir (wasm2-with-ir
                       (lambda ()
-                        (wasm2-emit :local.get ptr-temp)
-                        (wasm2-emit :const (wasm2-box-fixnum 1))
-                        (wasm2-emit :local.get raw-temp)
-                        (wasm2-emit :set-arg2)
-                        (wasm2-emit :set-arg1)
-                        (wasm2-emit :set-arg0)
-                        (wasm2-emit-call-subprim misc-set)
-                        (wasm2-emit :arg0)))))
+                        (wasm2-emit-misc-set-fallback-local ptr-temp
+                                                             (wasm2-box-fixnum 1)
+                                                             raw-temp
+                                                             t)))))
       (wasm2-emit :if then-ir else-ir))
     (when (wasm2-returning-p xfer)
       (wasm2-emit :set-arg-z)
