@@ -3,6 +3,16 @@
 **Status:** Living document  
 **Purpose:** Track what is implemented, partially complete, or missing.
 
+## Track Split (Normative)
+
+- Legacy compatibility lane: current unattended defaults and memory-snapshot
+  persistence behavior remain documented for ongoing compatibility workflows.
+- Replacement lane target architecture: secure-only startup gates,
+  shared-memory-first runtime/UI transport, required worker topology, and
+  Storage V2 local-core persistence profile.
+- References in this file to memory-snapshot defaults are legacy-lane status
+  notes, not replacement-lane target posture.
+
 ## Kernel (C, WASM backend)
 
 - **Build (freestanding, no WASI runtime):** ✅  
@@ -57,8 +67,9 @@
   module policy controls, scripted stdin preload, and bootstrap contract modes
   (`strict|warn|off`, default strict). Root-lane compiled-Lisp UI persistence
   smoke is now green with save/restore wired through runtime file-backed
-  persistence (`/ui/wasm-ui-state.bin`) and memory-snapshot dirty-flush
-  regression checks; remaining work is core dispatch hardening.
+  persistence (`/ui/wasm-ui-state.bin`) and legacy-lane memory-snapshot
+  dirty-flush regression checks; remaining work is core dispatch hardening plus
+  replacement-lane convergence.
 
 ## JS microkernel / host
 
@@ -205,8 +216,10 @@
 - Permanent fix for root-lane core symbol/function dispatch instability
   discovered during persistence trap investigation.
 - Continue hardening regression gates for the new UI save/restore persistence
-  path while preserving unattended `memory-snapshot` defaults.
+  path while preserving legacy unattended `memory-snapshot` defaults and
+  keeping replacement-lane Storage V2 requirements explicit.
 - Capability negotiation protocol beyond `CAPS` bitfield.
 - Ongoing integration hardening for LMDB/IndexedDB lanes while keeping
-  `memory-snapshot` as unattended default.
-- Shared‑heap threading protocol (if pursued).
+  `memory-snapshot` as legacy unattended default.
+- Replacement-lane worker/shared-memory startup and transport contracts remain
+  the architecture target (secure-only, no-fallback).

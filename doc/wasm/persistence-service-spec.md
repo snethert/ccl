@@ -1,25 +1,37 @@
 # Persistence Service Specification (WASM Microkernel)
 
-Status: Draft
+Status: Legacy (memory-snapshot lane; superseded for replacement track)
 
 ## Scope
 
 This document specifies a persistence service for the JS microkernel that uses a
 memory-first runtime store with snapshot-file bootstrap/flush, plus optional
-host-backed integration stores. The scope is intentionally narrow: provide only
-the metadata and directory behavior required by ASDF and Quicklisp, while
-remaining capability-gated and browser-appropriate.
+host-backed integration stores. This scope is now legacy-lane only: it remains
+documented for historical/current compatibility paths and is not the normative
+replacement-track persistence contract.
 
 This spec complements:
 - doc/wasm/capability-matrix.md
 - doc/wasm/kernel-request-abi.md
 - doc/wasm/streams-spec.md
 - doc/wasm/quicklisp.md
+- doc/wasm/tickets/RPL-05-storage-v2-local-core.md
+
+## Replacement-Track Supersession (Normative)
+
+- Replacement-lane persistence uses Storage V2 local-core contracts, not the
+  memory-snapshot model in this document.
+- Normative replacement-track persistence requirements are defined by:
+  - `doc/wasm/tickets/RPL-05-storage-v2-local-core.md`
+  - `doc/wasm/tickets/RPL-01-secure-runtime-gating.md` (`SRG-06`, `SRG-07`,
+    `SRG-10`, `SRG-11`)
+- New replacement-track behavior must not treat snapshot-memory default posture
+  as compliant fallback. This document is retained as a legacy reference only.
 
 ## Goals
 
 - Provide a capability-gated persistence service with a memory-first default
-  backend and optional durable integration backends.
+  backend and optional durable integration backends for legacy lanes.
 - Store file data as chunks to avoid large monolithic values and to permit
   efficient range reads.
 - Maintain a minimal metadata index to answer DIRECTORY, PROBE-FILE, and

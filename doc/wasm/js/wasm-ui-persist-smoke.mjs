@@ -19,6 +19,7 @@ import {
   installSubprimsTable,
   instantiateWasm,
 } from "./ccl-loader.mjs";
+import { runStartupGate } from "./startup-gate.mjs";
 import {
   assertBootstrapContract,
   formatBootstrapState,
@@ -387,7 +388,20 @@ function enforceBootstrapContract(phase, requireToplfunc) {
   }
 }
 
+function runStartupGateOrFail() {
+  const result = runStartupGate({ source: "doc/wasm/js/wasm-ui-persist-smoke.mjs" });
+  if (result.status === "pass") return;
+  if (result.status === "fail") {
+    const summary = result.summary ?? {};
+    fail(
+      `startup gate failed before persistence smoke bootstrap (${summary.failure_check_id ?? "unknown"} / ${summary.failure_code ?? "unknown"})`,
+    );
+  }
+  fail("[RPL01-E011] startup-gate diagnostics payload is malformed");
+}
+
 if (!skipStartLisp) {
+  runStartupGateOrFail();
   enforceBootstrapContract("pre-start", true);
 
   assert(typeof kernelExports.wasm_ccl_start_lisp === "function", "missing wasm_ccl_start_lisp export");

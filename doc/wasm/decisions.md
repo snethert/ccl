@@ -4,14 +4,17 @@
 **Purpose:** Record decisions that constrain implementation, with a short
 reason and links to the canonical spec(s).
 
-## ADR-0001 — Copy-based kernel_request responses (baseline)
+## ADR-0001 — Shared-memory hot-path transport baseline (replacement track)
 
-**Status:** Accepted  
-**Decision:** The kernel_request ABI uses copy-based response buffers as the
-required baseline; zero-copy variants are optional future extensions.  
-**Why:** Keeps the ABI simple and portable across environments without
-SharedArrayBuffer/Atomics.  
-**References:** `doc/wasm/kernel-request-abi.md:60`, `doc/wasm/js-microkernel-spec.md:72`
+**Status:** Accepted (replacement-track supersession)  
+**Decision:** In replacement-track runtime lanes, hot-path request/response
+transport must use shared-memory channels (`shared_ring_v1`) as the normative
+baseline. Copy/message `kernel_request` buffers are restricted to bootstrap,
+control, diagnostics, and explicitly labeled legacy lanes.  
+**Why:** The replacement MVP is secure-only with required worker/thread
+capability and strict no-silent-fallback startup behavior, so hot-path
+transport must align with shared-memory IPC contracts.  
+**References:** `doc/wasm/tickets/RPL-03-shared-memory-ipc-core.md:76`, `doc/wasm/tickets/RPL-01-secure-runtime-gating.md:99`, `doc/wasm/js-microkernel-spec.md:1`
 
 ## ADR-0002 — Keep CCL KERNEL_IMPORTS table (WASM keeps Lisp-side contract)
 
@@ -49,13 +52,17 @@ than stack‑suspension toolchains; Stage‑3 `kernel_wait` is deferred.
 **Why:** Portable and simple; avoids asyncify/stack‑switch complexity.  
 **References:** `doc/wasm/yield-resume.md:1`
 
-## ADR-0006 — Single‑runner baseline, shared‑heap threads deferred
+## ADR-0006 — Secure-only runtime worker baseline; CL thread semantics deferred
 
-**Status:** Accepted  
-**Decision:** Single‑runner is the portable baseline; shared‑heap threads are
-optional and require a separate protocol and runtime changes.  
-**Why:** Works in sandboxed iframes and avoids SAB/Atomics dependency.  
-**References:** `doc/wasm/project-overview.md:100`, `doc/wasm/threads.md:1`
+**Status:** Accepted (replacement-track supersession)  
+**Decision:** In replacement-track runtime lanes, worker/thread capability is
+required at startup with shared-memory coordination support; single-runner
+portable fallback is not a valid replacement-lane baseline. CL thread semantics
+remain explicitly deferred while runtime worker/thread capability is mandatory.  
+**Why:** Aligns runtime startup posture with strict capability gates and
+no-silent-fallback behavior while preserving explicit scope boundaries for CL
+thread semantics.  
+**References:** `doc/wasm/tickets/RPL-01-secure-runtime-gating.md:92`, `doc/wasm/tickets/RPL-02-worker-topology-and-thread-bootstrap.md:65`
 
 ## ADR-0007 — Named read‑only streams (NAMED_RO) as initial file surface
 

@@ -18,11 +18,16 @@ import {
 import {
   createCclImports,
   createSharedCclRuntime,
+  installCompiledModulesFromBundle,
   installConstPoolBytes,
   installSubprimsTable,
   instantiateWasm
 } from "../../../doc/wasm/js/ccl-loader.mjs";
+import { runStartupGate } from "../../../doc/wasm/js/startup-gate.mjs";
 import { createUiBridge } from "../../bridge/ui-bridge.mjs";
+
+const WASM_DOC_ROOT = "/doc/wasm";
+const WASM_UI_BUNDLE_PATH = `${WASM_DOC_ROOT}/wasm-ui-modules.json`;
 
 const _bridgeEncoder = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
 const _bridgeDecoder = typeof TextDecoder !== "undefined" ? new TextDecoder("utf-8") : null;
@@ -264,6 +269,19 @@ function buildUiBridgeWebglPayload() {
   };
 }
 
+function enforceBrowserStartupGate() {
+  const result = runStartupGate({ source: "web-ui/tests/browser/harness.mjs" });
+  if (result.status === "pass") {
+    return;
+  }
+  if (result.status === "fail" && result.summary) {
+    throw new Error(
+      `startup gate failed before browser runtime bootstrap: ${JSON.stringify(result.summary)}`,
+    );
+  }
+  throw new Error("[RPL01-E011] startup-gate diagnostics payload is malformed");
+}
+
 function uiEventRecordSize(typeId) {
   switch (typeId) {
   case 1: // pointer
@@ -336,6 +354,15 @@ async function loadBytes(relPath) {
   return response.arrayBuffer();
 }
 
+function resolveWasmDocPath(pathOrName, fallbackName = null) {
+  const selected = typeof pathOrName === "string" && pathOrName.trim().length > 0
+    ? pathOrName.trim()
+    : fallbackName;
+  if (!selected) return null;
+  if (selected.startsWith("/")) return selected;
+  return `${WASM_DOC_ROOT}/${selected.replace(/^[./]+/, "")}`;
+}
+
 async function run() {
   const initialState = await loadJson("../fixtures/basic-state.json");
   const eventLog = await loadJson("../fixtures/basic-events.json");
@@ -344,16 +371,23 @@ async function run() {
   let uiBundleOk = false;
   let uiBundleInfo = null;
   try {
-    const uiBundle = await loadJson("/doc/wasm/wasm-ui-modules.json");
+    const uiBundle = await loadJson(WASM_UI_BUNDLE_PATH);
     const modules = Array.isArray(uiBundle?.modules) ? uiBundle.modules : [];
+    const moduleCount = modules.length > 0
+      ? modules.length
+      : (Number.isFinite(uiBundle?.moduleCount) ? (uiBundle.moduleCount >>> 0) : 0);
     const functions = Array.isArray(uiBundle?.functions) ? uiBundle.functions : [];
     const functionNames = new Set(functions.map((fn) => fn?.name).filter(Boolean));
     uiBundleOk =
-      modules.length > 0 &&
+      moduleCount > 0 &&
       functionNames.has("WASM-UI-DEMO") &&
       functionNames.has("WASM-UI-TURN") &&
       functionNames.has("WASM-UI-POLL");
-    uiBundleInfo = { modules: modules.length, functions: functions.length };
+    uiBundleInfo = {
+      format: typeof uiBundle?.format === "string" ? uiBundle.format : "legacy",
+      modules: moduleCount,
+      functions: functions.length
+    };
   } catch (err) {
     uiBundleInfo = { error: err?.message ?? String(err) };
   }
@@ -1152,6 +1186,8 @@ async function run() {
   let wasmUiInfo = null;
   if (uiBundleOk) {
     try {
+      enforceBrowserStartupGate();
+
       const wasmBridgeTarget = document.createElement("div");
       wasmBridgeTarget.id = "wasm-ui-target";
       root.appendChild(wasmBridgeTarget);
@@ -1238,7 +1274,7 @@ async function run() {
         }
       }
 
-      const uiBundle = await loadJson("/doc/wasm/wasm-ui-modules.json");
+      const uiBundle = await loadJson(WASM_UI_BUNDLE_PATH);
       const uiModules = Array.isArray(uiBundle?.modules) ? uiBundle.modules : [];
       const uiFunctions = Array.isArray(uiBundle?.functions) ? uiBundle.functions : [];
       const kernelDemoTurn = typeof kernelExports.wasm_ui_demo_turn === "function"
@@ -1257,36 +1293,60 @@ async function run() {
       });
 
       if (!kernelDemoTurn) {
-        if (!uiModules.length) {
-          throw new Error("wasm-ui-modules.json contains no modules");
-        }
-        for (const entry of uiModules) {
-          if (entry.constPoolBytes?.length) {
-            const poolResult = installConstPoolBytes({
-              kernelExports,
-              memory: runtime.memory,
-              entryIndex: entry.entryIndex,
-              constPoolBytes: entry.constPoolBytes
-            });
-            if ((poolResult >>> 0) === nilValue) {
-              throw new Error(`const pool install failed for ${entry.exportName}`);
+        if (uiModules.length > 0) {
+          for (const entry of uiModules) {
+            if (entry.constPoolBytes?.length) {
+              const poolResult = installConstPoolBytes({
+                kernelExports,
+                memory: runtime.memory,
+                entryIndex: entry.entryIndex,
+                constPoolBytes: entry.constPoolBytes
+              });
+              if ((poolResult >>> 0) === nilValue) {
+                throw new Error(`const pool install failed for ${entry.exportName}`);
+              }
+              if (typeof kernelExports.wasm_pending_throw_p === "function" &&
+                  kernelExports.wasm_pending_throw_p() >>> 0) {
+                throw new Error(`const pool install signaled pending throw for ${entry.exportName}`);
+              }
             }
-            if (typeof kernelExports.wasm_pending_throw_p === "function" &&
-                kernelExports.wasm_pending_throw_p() >>> 0) {
-              throw new Error(`const pool install signaled pending throw for ${entry.exportName}`);
+            const bytes = Uint8Array.from(entry.moduleBytes ?? []);
+            const { instance } = await instantiateWasm(bytes, uiImports);
+            const fn = instance?.exports?.[entry.exportName];
+            if (typeof fn !== "function") {
+              throw new Error(`compiled UI module missing export ${entry.exportName}`);
             }
+            const idx = entry.entryIndex >>> 0;
+            if (runtime.subprimsTable.length <= idx) {
+              runtime.subprimsTable.grow(idx - runtime.subprimsTable.length + 1);
+            }
+            runtime.subprimsTable.set(idx, fn);
           }
-          const bytes = Uint8Array.from(entry.moduleBytes ?? []);
-          const { instance } = await instantiateWasm(bytes, uiImports);
-          const fn = instance?.exports?.[entry.exportName];
-          if (typeof fn !== "function") {
-            throw new Error(`compiled UI module missing export ${entry.exportName}`);
+        } else {
+          const binaryPath = resolveWasmDocPath(uiBundle?.binary, "wasm-ui-modules.bin");
+          const indexPath = resolveWasmDocPath(uiBundle?.index, "wasm-ui-modules.idx");
+          if (!binaryPath || !indexPath) {
+            throw new Error("wasm-ui bundle is missing binary/index assets");
           }
-          const idx = entry.entryIndex >>> 0;
-          if (runtime.subprimsTable.length <= idx) {
-            runtime.subprimsTable.grow(idx - runtime.subprimsTable.length + 1);
+          const [binaryBytes, indexBytes] = await Promise.all([
+            loadBytes(binaryPath).then((buf) => new Uint8Array(buf)),
+            loadBytes(indexPath).then((buf) => new Uint8Array(buf))
+          ]);
+          const installResult = await installCompiledModulesFromBundle({
+            bundle: uiBundle,
+            binaryBytes,
+            indexBytes,
+            kernel,
+            memory: runtime.memory,
+            subprimsTable: runtime.subprimsTable,
+            microkernel: wasmMicrokernel,
+            extra: { ccl: kernelExports },
+            strict: true,
+            installConstPools: true
+          });
+          if ((installResult?.installed ?? 0) <= 0) {
+            throw new Error("wasm-ui-modules bundle contains no installable modules");
           }
-          runtime.subprimsTable.set(idx, fn);
         }
       }
 

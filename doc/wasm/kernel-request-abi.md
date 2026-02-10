@@ -1,6 +1,6 @@
 # Kernel Request ABI (WASM Imports)
 
-**Status:** Draft (MVP, copy-based responses)
+**Status:** Draft (replacement-track shared-memory-first hot paths)
 
 ## Scope
 
@@ -11,7 +11,8 @@ It specifies:
 
 - the required WASM imports and their semantics,
 - request lifecycle and error conventions,
-- the MVP response transfer mechanism (copy-based),
+- replacement-track shared-memory transport requirements for hot-path classes,
+- compatibility copy-response behavior for bootstrap/control/diagnostics lanes,
 - an initial opcode registry and payload/response layouts.
 
 It does **not** define the internal Lisp/kernel interfaces (e.g. CCL
@@ -40,7 +41,7 @@ All functions below are imported from the WASM module namespace `ccl`.
 - `kernel_copy_response(requestId: u32, dstPtr: u32, dstLen: u32) -> copied: u32`
 - `kernel_drop_request(requestId: u32) -> void`
 
-### Optional import (Stage 3 optimization)
+### Optional import (compatibility optimization)
 
 - `kernel_wait(requestId: u32, deadlineMs: i32) -> status: u32`
 
@@ -49,6 +50,19 @@ All functions below are imported from the WASM module namespace `ccl`.
 - `-1`: wait indefinitely
 - `0`: do not block (equivalent to `kernel_poll`)
 - `>0`: wait up to `deadlineMs` milliseconds
+
+### Replacement-track transport contract (normative)
+
+For replacement-track runtime lanes:
+
+- Hot-path runtime/kernel/storage/UI classes MUST use shared-memory channel
+  transport contracts (`shared_ring_v1`) defined by
+  `doc/wasm/tickets/RPL-03-shared-memory-ipc-core.md`.
+- Copy/message request/response paths are compatibility-only and MUST be
+  limited to bootstrap, control, diagnostics, and explicitly labeled legacy
+  lanes.
+- Routing a required hot-path class through copy/message transport is a
+  contract violation and MUST fail startup-gate validation (`SRG-08`).
 
 ### External-call imports (WASM FFI, MVP)
 
@@ -69,7 +83,8 @@ errors in the WASM backend.
 
 ## Interrupt ABI (host-side flags)
 
-Interrupt delivery is **cooperative** in the baseline WASM model. There is no
+Interrupt delivery is **cooperative** in the secure replacement runtime model.
+There is no
 `kernel_request` opcode for interrupts in the MVP. Instead:
 
 - The host requests an interrupt by **setting the runner's interrupt_pending flag**
@@ -77,8 +92,9 @@ Interrupt delivery is **cooperative** in the baseline WASM model. There is no
 - The runner **polls at safepoints** and at explicit stepping boundaries
   (`wasm_ccl_step`) to deliver the interrupt.
 
-This keeps the ABI stable for the portable baseline. A future extension may
-add an explicit `KERNEL_OP_INTERRUPT` opcode, but it is not required for MVP.
+This keeps interrupt delivery deterministic at safepoints without introducing
+fallback transport semantics. A future extension may add an explicit
+`KERNEL_OP_INTERRUPT` opcode, but it is not required for MVP.
 
 ## Request lifecycle (required)
 
@@ -130,10 +146,12 @@ For the current bring-up builds that compile with `--target=wasm32-wasi`,
 implementations SHOULD use the values from the toolchain's `errno.h`
 (wasi-libc / WASI errno numbers), not host-platform (Linux/macOS) errno values.
 
-## Response payload (copy-based, MVP)
+## Response payload (copy path for compatibility lanes)
 
 The microkernel may associate an optional response byte buffer with each
-request. The guest obtains it by:
+request. For replacement-track lanes, this copy path is compatibility-only for
+bootstrap/control/diagnostics operations; hot-path classes MUST use shared
+channel transport. The guest obtains copy-path responses by:
 
 1. Calling `kernel_response_size(requestId)` to get the exact size.
 2. Allocating a buffer of that size in linear memory.
@@ -148,17 +166,16 @@ Requirements:
 - If an opcode defines a response payload and returns a non-negative byte
   count, the response size MUST be consistent with that return value (see per-opcode rules).
 
-### Zero-copy responses (TODO)
+### Shared-channel and direct-write response evolution (TODO)
 
-The MVP response path is copy-based: the microkernel retains each response
-payload in host memory and copies it into the runner's linear memory on demand
-via `kernel_copy_response`. This keeps the ABI simple and portable.
+Replacement-track hot paths are shared-channel-first and do not rely on
+`kernel_copy_response` as their normative response mechanism.
 
 TODO(zero-copy): Provide optional ABI extensions that avoid this copy by writing
 responses directly into guest linear memory (caller-provided output buffers or a
 shared arena/ring buffer). Any zero-copy form MUST define explicit lifetime and
-invalidation rules and MUST remain optional; the copy-based path remains the
-required baseline for correctness and broad compatibility.
+invalidation rules. Copy-path behavior remains required only for compatibility
+lanes (bootstrap/control/diagnostics and explicit legacy paths).
 
 **Implementation note:** JS and C implementations SHOULD include explicit
 `TODO(zero-copy)` comments near the copy boundary to keep this planned

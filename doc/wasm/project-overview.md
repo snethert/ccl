@@ -35,7 +35,7 @@ Finally, record decisions and tradeoffs:
 * **Dynamic loading** is essential: you want to **add new functions to a running environment** in WASM (not “spin up compilers,” not “rebuild the world”).
 * **Safepoints are assumed** in generated code (same category of “given” as type checks): for interrupts, cancellation, and any future concurrency coordination.
 * **Strings start as ASCII-only** with an explicit plan not to paint yourself into a corner for later UTF-8 support.
-* Threads/concurrency are an execution-model decision, not a language requirement: you are willing to begin **single-threaded** (particularly for sandboxed iframe compatibility), and later add true parallelism where the platform permits it.
+* Replacement-lane threading/concurrency is a runtime contract: secure-only startup requires worker/thread capability and shared-memory coordination for hot paths, while CL thread semantics remain explicitly deferred.
 * **Quicklisp compatibility is a post‑MVP goal**: design the capability‑gated VFS so Quicklisp/ASDF can be enabled later, but keep it out of the current MVP scope.
 
 ## Big architecture: two halves
@@ -66,8 +66,8 @@ High-level responsibilities you’ve described or implied:
 
 * **Coordination and messaging**
 
-  * in the single-threaded/sandbox case: message passing and async callbacks are the only viable universal primitive
-  * in the full-featured case: support higher-performance coordination (Atomics / shared memory) when available, but not as an assumption everywhere
+  * shared-memory channels are the normative transport for runtime hot paths
+  * message/copy paths remain for bootstrap/control/diagnostics and explicitly labeled legacy lanes
 
 In spirit, the JS microkernel is the “world,” and a runner is a process that lives inside it.
 
@@ -109,17 +109,17 @@ The important separation is that the Lisp runtime is a language system, while �
 
 ## Execution model and concurrency roadmap
 
-### Baseline mode: single-threaded Lisp (portable everywhere)
+### Replacement MVP mode: secure shared-memory runtime (required)
 
-You explicitly converged on this as a sensible first milestone:
+The replacement lane assumes secure runtime capabilities at startup:
 
-* Works in **sandboxed iframes** that cannot rely on shared memory, Atomics, or WASM pthreads.
-* Lets you port “all at once” in the sense of language/runtime, while deferring concurrency semantics.
-* Still needs an **async boundary** for I/O: “blocking” must become “request + yield/resume” at the Lisp/kernel interface (even single-threaded), or the runtime freezes.
+* Worker/thread runtime capability is required for runtime execution.
+* Shared-memory coordination (SAB + Atomics) is required for hot-path transport and signaling.
+* Startup is strict no-fallback: if required capabilities are unavailable, the runtime fails explicitly instead of degrading to a portable mode.
 
-### Full mode: true concurrency via runners
+### Legacy compatibility note (non-MVP)
 
-Your earlier mental model was “threads are runners,” i.e., parallelism comes from multiple WASM instances.
+Single-threaded/sandbox-compatible bring-up remains historical context for legacy lanes, but it is not the replacement MVP execution target.
 
 In that model:
 
@@ -162,7 +162,7 @@ The project is “to CCL” in the sense that you are using CCL’s worldview—
 
 * there is no OS syscall surface you control
 * the loader and I/O are host-mediated
-* concurrency and shared memory are environment-dependent (worker vs sandbox iframe)
+* replacement-lane concurrency and shared memory are required at startup, while legacy environments are explicitly non-MVP
 * “target triples” are less important than “execution world + ABI constraints”
 
 You even used the existing CCL backend directory conventions as a reality check for naming, which is exactly how CCL wants you to think: the backend name encodes a concrete ABI world, not an abstract marketing label.
@@ -176,8 +176,8 @@ A **CCL-structured Common Lisp** that runs as a **WASM process**, hosted by a **
 * explicit I/O boundary (host capabilities instead of syscalls)
 * mandatory safepoints in generated code
 * an ASCII-first string plan that keeps a door open to UTF-8
-* a portability ladder:
+* a secure-only replacement MVP posture:
 
-  * single-threaded mode for hostile embed environments (sandboxed iframes)
-  * true concurrency via multi-runner execution where the platform allows it
+  * required worker/shared-memory runtime capability for active replacement lanes
+  * legacy single-threaded sandbox compatibility documented as non-MVP context
 * per-runner heaps and explicit inter-runner communication rather than a shared Lisp heap fantasy

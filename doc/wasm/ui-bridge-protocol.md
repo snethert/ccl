@@ -1,9 +1,13 @@
 # UI Bridge Protocol (WASM UI <-> JS Backend)
 
-**Status:** Draft (v1)  
+**Status:** Draft (replacement-track shared-memory-first profile)  
 **Scope:** Wire formats and message semantics for the UI bridge between the WASM/Lisp runner (authoritative UI state) and the JS rendering/input backends.
 
-This protocol is **binary, deterministic, and versioned**. It is designed to be transported over the existing `kernel_request` ABI (copy-based responses).
+This protocol is **binary, deterministic, and versioned**. The payload formats
+below are transport-neutral, but replacement-track UI hot-path classes are
+normatively routed through shared-memory channels (`shared_ring_v1`). Copy/
+message `kernel_request` transport remains compatibility-only for control,
+diagnostics, bootstrap, and explicitly labeled legacy lanes.
 
 ## Conventions
 
@@ -17,6 +21,29 @@ This protocol is **binary, deterministic, and versioned**. It is designed to be 
 - Each top-level payload begins with a **magic** and **version**.
 - Unknown versions MUST fail safely (return `-EINVAL`).
 - Reserved fields MUST be written as 0 and ignored on read.
+
+## Replacement-track transport contract (normative)
+
+Routing policy for replacement lanes consumes frozen class/channel contracts in
+`doc/wasm/tickets/RPL-04-runtime-ui-bridge-shared-path.md`.
+
+- Hot-path classes (`R4M-01`..`R4M-07`) MUST route to shared channels only.
+- Message/copy transport for hot-path classes is forbidden in replacement lanes.
+- Non-hot classes (`R4M-08`..`R4M-13`) may remain control/message lane traffic
+  when explicitly tagged as non-hot.
+- Any hot-path fallback attempt is a policy failure and must be surfaced with
+  deterministic failure semantics (for example `RPL03-E008`) and no downgrade.
+
+### Required channel posture for payloads in this document
+
+| payload / operation family | bridge class IDs | required channel posture |
+| --- | --- | --- |
+| UI Event Batch ingress (`KERNEL_OP_UI_POLL`) | `R4M-01`, `R4M-02` | `ipc.ui.req.ring.v1` shared channel in `ui_runtime`; message lane forbidden for production hot path. |
+| UI Tree render egress (`KERNEL_OP_UI_RENDER`) | `R4M-06` | `ipc.ui.resp.ring.v1` shared channel in replacement lanes. |
+| UI measure request/response (`KERNEL_OP_UI_MEASURE_TEXT`) | `R4M-07` | Shared request/response ring pair (`ipc.ui.req.ring.v1` + `ipc.ui.resp.ring.v1`) with bounded wait and correlation requirements. |
+
+Runtime bridge command/result stream classes (`R4M-03`..`R4M-05`) are covered by
+the same shared-lane posture and are specified in runtime bridge contracts.
 
 ## Payload Types
 
@@ -269,6 +296,7 @@ offset  size  field
 
 # Integration Notes
 
-- The UI event batch is returned by `KERNEL_OP_UI_POLL` (see `doc/wasm/kernel-request-abi.md`).
-- The VDOM tree payload is passed to `KERNEL_OP_UI_RENDER`.
-- Text measurement uses `KERNEL_OP_UI_MEASURE_TEXT` and is backend-defined (DOM/Canvas/WebGL).
+- The UI event batch is returned by `KERNEL_OP_UI_POLL` (see `doc/wasm/kernel-request-abi.md`) and is a required shared-channel hot path in replacement lanes.
+- The VDOM tree payload is passed to `KERNEL_OP_UI_RENDER` and is a required shared-channel render hot path in replacement lanes.
+- Text measurement uses `KERNEL_OP_UI_MEASURE_TEXT` and is a required shared request/response hot path in replacement lanes.
+- Copy/message transport for these hot-path classes is compatibility-only for non-replacement legacy lanes and must not be auto-selected in replacement startup.

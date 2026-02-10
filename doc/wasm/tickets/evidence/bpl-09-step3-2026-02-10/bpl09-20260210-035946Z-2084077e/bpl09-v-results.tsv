@@ -1,0 +1,6 @@
+id	lane_id	exit_code	expected_failure	observed_failure	backend_cutover_gate_event_v1	backend_cutover_rollback_event_v1	backend_cutover_x08_review_packet_v1	summary_status	validation_assertion_pass	notes
+BPL09-V01	BPL09-L01	0	none	none	yes	no	no	pass	true	assertions met
+BPL09-V02	BPL09-L01	0	none	none	yes	no	no	pass	true	assertions met
+BPL09-V03	BPL09-L01	0	none	none	yes	no	no	pass	true	assertions met
+BPL09-V04	BPL09-L02	0	none	none	yes	no	no	pass	true	assertions met
+BPL09-V05	BPL09-L02	0	none	none	yes	no	no	pass	true	assertions met

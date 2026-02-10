@@ -33,7 +33,9 @@ Transition the system from engineering-complete to release-ready by defining det
 ### Out of Scope
 - New major product capabilities outside doctrine commitments.
 - Multi-user collaboration/cloud sync systems.
-- Runtime architecture rewrite.
+- Runtime architecture rewrite implementation itself (owned by runtime-track plans),
+  while release gating in this phase still depends on runtime replacement
+  milestone closure artifacts.
 - Long-term analytics platform beyond immediate operational telemetry.
 
 ## Baseline
@@ -42,8 +44,21 @@ Transition the system from engineering-complete to release-ready by defining det
 - `web-ui` test suites are currently green.
 - Runtime bridge, typed command dispatch, debugger, inspector, sessions, and customization are operational.
 
+## Runtime Replacement Dependencies (Normative)
+
+Phase 8 release packaging/execution must consume (not redefine) runtime-track
+replacement milestones:
+
+- Secure runtime gating posture from `doc/wasm/tickets/RPL-01-secure-runtime-gating.md`.
+- Runtime/UI shared-path closure from `doc/wasm/tickets/RPL-04-runtime-ui-bridge-shared-path.md`.
+- Storage V2 local-core closure from `doc/wasm/tickets/RPL-05-storage-v2-local-core.md`.
+- Runtime/backend cutover closure artifacts from `doc/wasm/tickets/RPL-09-cutover-and-legacy-removal.md` and `doc/wasm/backend-tickets/BPL-09-cutover-and-arm-retirement.md`.
+
+This phase must not treat legacy memory-snapshot defaults as the replacement
+target architecture for release-signoff decisions.
+
 ## Progress Snapshot
-- M0 `RZ0`: In Progress (runtime bundle + manifest + loader refactor + memory-snapshot persistence decoupling + bootstrap contract enforcement landed; root-lane compiled-Lisp UI preflight trap is closed; UI save/restore persistence semantics are now wired to memory-snapshot contract; remaining work is core dispatch hardening + tracker retirement cleanup).
+- M0 `RZ0`: In Progress (runtime bundle + manifest + loader refactor + legacy-lane memory-snapshot persistence decoupling + bootstrap contract enforcement landed; root-lane compiled-Lisp UI preflight trap is closed; UI save/restore persistence semantics are now wired to legacy memory-snapshot contract; remaining work is core dispatch hardening + tracker retirement cleanup while replacement-track dependencies remain authoritative for release architecture posture).
 - M1 `RZ1`: Planned.
 - M2 `RZ2`: Planned.
 - M3 `RZ3`: Planned.
@@ -65,6 +80,9 @@ Transition the system from engineering-complete to release-ready by defining det
 Finish the remaining MVP blocker closure work before Phase 8 release packaging:
 stabilize persistence semantics after root-lane compiled-Lisp UI runtime
 closure under strict manifest/bootstrap loader validation.
+
+RZ0 is a legacy-lane stabilization gate. It does not supersede runtime
+replacement-track architecture requirements.
 
 ### Why This Is A Prerequisite
 - `doc/wasm/roadmap.md` and `doc/wasm/porting-status.md` still mark this as open.

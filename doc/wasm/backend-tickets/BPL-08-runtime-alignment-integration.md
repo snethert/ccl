@@ -1,6 +1,6 @@
 # BPL-08 - Runtime Alignment Integration
 
-Status: in_progress  
+Status: done  
 Priority: P0  
 Owner: Compiler/backend migration track  
 Last Updated: 2026-02-10  
@@ -43,16 +43,16 @@ Out of scope:
 
 - `X-03` is already closed, so BPL-08 can proceed without runtime IPC hard-gate blockers.
 - `X-06` is now `done`, so module/environment integration evidence is available for backend consumption.
-- `X-07` remains `open` pending unified runtime/backend budget approval under RPL-08; BPL-08 must carry this as an external soft-gate input.
+- Unified closure review is now committed at `doc/wasm/tickets/evidence/x07-closure-review-2026-02-10/x07-closure-20260210-024503Z-91fdb0be/x07_unified_closure_review_v1.json`; dependency row `X-07` is now `done`.
 - BPL-07 pass-bundle artifacts are frozen and must be consumed as immutable integration inputs.
 - Step 2 deterministic validation packet is now published below as `BPL08-IV01`..`BPL08-IV06`.
 - Step 3 integration closure-readiness packet is now published below as `BPL08-CR01`..`BPL08-CR06`.
 
 ## Immediate Next Step
 
-- Action: continue `Pack A` by carrying the published BPL-08 Step 3 closure packet as immutable backend signoff input while runtime executes `RPL-08 Step 1` unified budget-contract work for `X-07`.
-- Why now: backend-owned BPL-08 closure packetization is complete and `X-07` remains runtime-owned/open until unified budget approval is committed.
-- Success evidence: matrix/master/board/BPL-00/BPL-07/BPL-08 docs preserve `BPL08-CR*` rows with immutable bundle IDs and explicit `X-07=open` carry-forward posture.
+- Action: keep BPL-08 closure packet outputs immutable and hand them off into `BPL-09`/`X-08` cutover planning.
+- Why now: BPL-08 outputs are complete and unified closure review has already advanced `X-07` to `done`.
+- Success evidence: downstream cutover docs reference `BPL08-CR*` rows and immutable bundle IDs unchanged while publishing synchronized `X-08` activation posture.
 
 ## Step 1 Output - Integration Checkpoint and Assertion Baseline (v1)
 
@@ -145,9 +145,9 @@ Out of scope:
 - Notes:
   - Published closure-readiness packet rows `BPL08-CR01`..`BPL08-CR06`, keyed one-to-one to `BPL08-IV01`..`BPL08-IV06`.
   - Preserved immutable carry-forward bundle IDs (`rpl05-20260210-011240Z-91fdb0be`, `bpl06-20260210-005408Z-91fdb0be`, `bpl07-20260210-005408Z-91fdb0be`) across all closure checks.
-  - Encoded explicit `X-07=open` carry-forward posture in `BPL08-CR05` until unified runtime/backend budget approval lands under RPL-08.
+  - Unified closure review (`x07-closure-20260210-024503Z-91fdb0be`) now consumes the packet unchanged and advances `X-07` to `done`.
 - Next:
-  - Carry Step 3 closure packet forward as immutable input while runtime-side RPL-08 budget signoff remains open.
+  - Carry Step 3 closure packet forward as immutable closed baseline input while `BPL-09` planning starts.
 
 ## Test and Validation Plan
 
@@ -162,8 +162,8 @@ Out of scope:
 
 - Risk: BPL-08 integration planning diverges from frozen runtime/backend evidence bundles.
   - Mitigation: require immutable bundle IDs in every Step 1 row and Step 2 command mapping.
-- Risk: runtime-side `X-07` budget signoff assumptions leak into backend-owned closure claims.
-  - Mitigation: keep `X-07` explicitly open and model it as external soft-gate input until RPL-08 evidence is committed.
+- Risk: downstream cutover drafts mutate frozen `BPL08-*` evidence linkages.
+  - Mitigation: keep `BPL08-IC*`/`BPL08-IV*`/`BPL08-CR*` rows immutable and only add new `BPL-09` IDs.
 - Risk: rollback posture ambiguity during integration validation.
   - Mitigation: reference frozen `BPL06-RB-*` rows directly in each applicable checkpoint.
 
@@ -172,3 +172,4 @@ Out of scope:
 - 2026-02-10: Initialized BPL-08 and published Step 1 integration checkpoint/assertion baseline (`BPL08-IC01`..`BPL08-IC06`) over frozen runtime/backend evidence bundles.
 - 2026-02-10: Published Step 2 deterministic validation packet (`BPL08-IV01`..`BPL08-IV06`) with runnable command templates, immutable bundle IDs, and explicit `X-07` carry-forward posture.
 - 2026-02-10: Published Step 3 integration closure-readiness packet (`BPL08-CR01`..`BPL08-CR06`) keyed to `BPL08-IV01`..`BPL08-IV06`, preserving immutable bundle IDs and explicit `X-07=open` carry-forward posture.
+- 2026-02-10: Unified closure review (`x07-closure-20260210-024503Z-91fdb0be`) consumed Step 3 packet rows unchanged and advanced dependency row `X-07` to `done`.

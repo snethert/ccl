@@ -1,156 +1,195 @@
-# Threading (Shared-Heap) Concerns and Requirements
+# Threading and Runtime Worker Model (Replacement Track)
 
-**Status:** Draft
+**Status:** Draft (replacement-track baseline)
 
 ## Scope
 
-This document records the constraints and requirements for the **optional shared-heap, multi-runner execution mode**.
+This document defines required startup threading and worker-topology
+assumptions for the replacement-track MVP runtime architecture.
 
-The baseline bring-up target remains **single-runner** (no shared memory/Atomics required). This document exists so that if/when shared-heap threading is pursued, the constraints are explicit up front rather than discovered by failure.
+Replacement-track startup is secure-only and shared-memory-first. Runtime
+worker/thread capability is required at startup; single-runner portability mode
+is not a valid replacement-lane baseline.
 
-It covers:
+This document covers:
 
-- What “threads” mean in this project (runners + shared heap)
-- Platform prerequisites (SharedArrayBuffer, Atomics, worker restrictions)
+- Runtime worker topology and startup requirements
+- Platform prerequisites (`SharedArrayBuffer`, Atomics, WASM shared memory)
 - Required runtime/compiler mechanisms (TCRs, safepoints, GC coordination, synchronization)
-- Consequences for I/O, dynamic loading, and failure handling
+- Runtime-vs-CL thread semantics boundary
 
-It does **not** define the full GC algorithm, the full object layout, or the full kernel/runner message schema.
+This document does not define the full GC algorithm, full object layout, or
+the complete kernel/runner message schema.
 
 ## Definitions
 
-- **World:** One Lisp runtime instance: **one shared heap** (shared linear memory) + shared global runtime state.
-- **Runner:** One WASM instance (typically inside a Web Worker) that executes **one Lisp thread** in a world.
-- **TCR:** Per-thread runtime record (CCL terminology) holding registers/roots/stacks/flags needed to run and to stop safely.
-- **Safepoint:** A compiler-inserted point where a runner can be safely interrupted/handshaken for GC, interrupts, or cancellation.
+- **World:** One Lisp runtime instance with one shared heap (shared linear memory) and shared runtime state.
+- **Runtime runner:** One WASM instance inside a runtime worker that executes one Lisp execution lane in a world.
+- **Worker topology (required):** Startup roles that must be ready before runtime entry: runtime worker(s), kernel I/O worker, storage worker.
+- **TCR:** Per-thread runtime record holding registers/roots/stacks/flags needed to run and to stop safely.
+- **Safepoint:** A compiler-inserted point where a runtime runner can be safely interrupted/handshaken for GC, interrupts, or cancellation.
 
-## Model (What “shared heap threads” means)
+## Replacement-track startup contract (normative)
 
-- All Lisp threads in a world share the same heap, so Lisp objects are naturally visible across threads.
-- A runner is “a thread” only in the sense of *concurrent execution*; each runner has distinct per-thread state (TCR, stacks, bindings).
-- Host capabilities (I/O, timers, UI) remain mediated by the JS microkernel; shared heap does not imply shared host objects.
+1. Startup must satisfy secure runtime capability gates for threading:
+   - worker Atomics wait/notify usability (`SRG-03`)
+   - WASM shared memory/thread capability (`SRG-04`)
+   - required worker topology READY handshake (`SRG-05`)
+2. Startup must enforce runtime thread capability now, while CL thread
+   semantics remain explicitly deferred (`SRG-12`).
+3. No fallback startup lane may replace missing threading prerequisites with a
+   single-runner replacement mode; required-check failure is terminal.
 
-## Platform prerequisites / constraints
+## Execution model (shared heap runtime workers)
+
+- All runtime runners in a world share the same heap, so Lisp objects are
+  naturally visible across runtime lanes.
+- Each runner has distinct per-thread state (TCR, stacks, bindings).
+- Host capabilities (I/O, timers, UI) remain mediated by the JS microkernel;
+  shared heap does not imply shared host objects or direct host-pointer sharing.
+
+## Platform prerequisites
 
 ### Shared memory and Atomics
 
-True parallel threads require:
+Replacement-track runtime threads require:
 
-- `SharedArrayBuffer`-backed `WebAssembly.Memory` (`shared: true`, and a fixed `maximum`).
-- WebAssembly threads features (atomic instructions) enabled in the toolchain and runtime.
-- In browsers: a `crossOriginIsolated` environment (COOP/COEP) to enable `SharedArrayBuffer`.
+- `SharedArrayBuffer`-backed `WebAssembly.Memory` (`shared: true`) with fixed `maximum`.
+- WebAssembly threads support (atomic instructions) in toolchain and runtime.
+- Browser startup in `crossOriginIsolated` context so `SharedArrayBuffer` is available.
 
-If shared memory/Atomics are unavailable, the system MUST run in a single-runner mode and MUST fail thread creation explicitly.
+If these capabilities are missing, replacement startup must fail explicitly. It
+must not continue in degraded single-runner replacement mode.
 
 ### Blocking and `Atomics.wait`
 
-- Browsers generally forbid `Atomics.wait` on the main thread; blocking waits must occur in workers.
-- If a runner blocks waiting for I/O completion, it should do so via an atomic wait on shared memory (or via cooperative yield/resume in single-runner mode).
+- Main-thread blocking waits are disallowed; blocking waits must occur in workers.
+- A runner waiting on kernel completion should park via shared-memory wait/notify
+  coordination in worker context.
 
-## Shared state placement (avoid “per-instance globals” bugs)
+## Required worker topology
+
+Startup must initialize and receive deterministic READY handshakes for:
+
+- runtime execution worker role(s),
+- kernel I/O worker role,
+- storage worker role.
+
+Runtime entry is blocked until all required roles are ready, and startup fails
+if any role is missing or not ready before timeout.
+
+## Shared state placement
 
 Because each runner is a separate WASM instance:
 
-- Any runtime state that is logically shared across threads MUST live in shared linear memory (the shared heap).
-- Per-instance WASM globals are only safe for per-thread/TLS-like state (e.g., “current TCR pointer” for that runner).
-- Compiled code MUST NOT assume that mutable WASM globals are shared across runners.
+- State that is logically shared across runtime lanes must reside in shared linear memory.
+- Per-instance WASM globals are valid only for per-runner TLS-like state (for example, current TCR pointer).
+- Compiled code must not treat mutable WASM globals as cross-runner shared state.
 
-Practical consequence: “the heap” is necessary but not sufficient; the runtime must be structured so that shared invariants are memory-backed.
+The shared heap is necessary but not sufficient; shared invariants must be
+represented in memory-backed runtime structures.
 
-## Per-thread state requirements (TCR, stacks, bindings)
+## Per-thread runtime state requirements
 
-Each runner/thread MUST have:
+Each runtime runner must have:
 
-- A TCR stored in shared memory (so other threads/GC can locate it).
-- A binding stack / special binding state (dynamic variables are thread-local in Common Lisp).
-- A control stack (“cstack”) region and any value/call stacks (CCL VSP/CSP analogs).
-- Thread-local flags: interrupt pending, safepoint state, stop-the-world handshake state, etc.
+- a TCR in shared memory (discoverable by GC and control paths),
+- binding/special-variable stack state,
+- control stack region and value/call stacks,
+- thread-local flags (interrupt pending, safepoint state, stop-the-world handshake state).
 
-The ABI needs a reliable “current TCR” lookup. The current bring-up model exposes:
+Current ABI hooks:
 
 - `wasm_set_current_tcr(TCR*)`
 - `wasm_get_current_tcr() -> TCR*`
 
-Host responsibility: the microkernel MUST set the runner’s current TCR before entering Lisp code in that runner.
+Host responsibility: the microkernel sets a runner's current TCR before
+entering Lisp code in that runner.
 
-## Safepoints and interrupts
+## Safepoints and interrupt delivery
 
-Safepoints are the mechanism that makes shared-heap threading implementable:
+Safepoints are mandatory for bounded coordination:
 
-- The compiler MUST insert safepoints frequently enough to provide bounded interrupt latency and to allow GC handshakes.
-- At a safepoint, a runner MUST be in a state where:
-  - its roots are discoverable (via TCR-held registers/stack pointers),
-  - it can observe stop-the-world/interrupt flags,
-  - it can park (block) without holding internal runtime locks indefinitely.
+- Compiler must insert safepoints frequently enough for bounded interrupt
+  latency and GC handshakes.
+- At a safepoint, a runner must expose roots, observe stop/interrupt flags, and
+  be able to park without holding runtime locks indefinitely.
 
 Interrupt delivery model:
 
-- There are no Unix signals in the browser; “interrupts” must be implemented as flags in shared memory + polling at safepoints.
-- “Interrupt this thread” becomes: set flag in that thread’s TCR and (optionally) wake it via `Atomics.notify`.
+- No Unix signals in browser contexts; interrupts are shared-memory flags plus
+  safepoint polling.
+- "Interrupt thread X" means setting interrupt state in X's TCR and optionally
+  waking it with `Atomics.notify`.
 
-### Safepoint policy (latency target)
+### Latency target
 
-The compiler MUST insert safepoints frequently enough to bound interrupt
-latency. **Target:** interrupts should be observed within **<= 10ms** under
-typical UI-driven workloads. Tight loops that can run for longer MUST include
-explicit safepoints (loop backedge or allocation checks) to meet this bound.
+Interrupts should be observed within <= 10ms for typical UI-driven workloads.
+Loops that may run longer must include explicit safepoints (loop backedge or
+allocation checks).
 
-## Garbage collection coordination (shared heap)
+## GC coordination on shared heap
 
-With a shared heap, GC MUST coordinate across runners:
+Shared-heap GC must coordinate across all runtime runners:
 
-- The world MUST maintain a registry of all thread TCRs (in shared memory).
-- A stop-the-world GC MUST:
-  1. request a world stop (shared flag),
-  2. cause all runners to reach a safepoint and acknowledge “stopped,”
-  3. scan roots from all TCRs/stacks,
-  4. perform collection/compaction as needed,
-  5. resume runners.
+1. request world stop via shared state,
+2. require runners to reach safepoints and acknowledge stopped state,
+3. scan roots from all TCRs/stacks,
+4. collect/compact as needed,
+5. resume runners.
 
-Key concern: roots in WASM locals/registers are not externally visible. The compiler/runtime MUST ensure that any live Lisp pointers are representable in memory at safepoints (e.g., spilled to known stack locations and/or recorded in the TCR).
+Because WASM locals/register roots are not externally visible, compiler/runtime
+must guarantee that live Lisp pointers are represented in discoverable memory at
+safepoints.
 
-## Synchronization primitives and memory ordering
+## Synchronization and memory ordering
 
-To preserve runtime invariants under parallel execution:
+Runtime invariants under parallel execution require:
 
-- The runtime MUST provide low-level synchronization primitives (mutex, condition variable/event) implemented on shared memory with Atomics.
-- Internal runtime structures (allocator/ALLOCPTR, symbol/value cells, hash tables, package state, etc.) MUST be protected by locks or made lock-free with well-defined atomic protocols.
-- Publication of newly allocated objects visible to other threads MUST use appropriate ordering (store-release / load-acquire patterns).
+- shared-memory synchronization primitives (mutex/event/condition-style),
+- lock or lock-free atomic protocols for shared runtime structures,
+- ordered publication for cross-thread object visibility (release/acquire patterns).
 
-Common Lisp does not require data-race-free behavior for unsynchronized shared mutation; the implementation may treat racy code as undefined behavior. However, the runtime itself MUST be data-race-free for its own shared structures.
+Unsynchronized user-level shared mutation may remain undefined behavior, but the
+runtime's own shared structures must be data-race-free.
 
-## Dynamic loading, redefinition, and “code identity”
+## Dynamic loading and shared code identity
 
-Shared heap implies shared definitions:
+Shared-heap runtime implies shared definitions:
 
-- Loading/redefining functions affects the world and MUST be synchronized (a world lock or stop-the-world phase).
-- If callable code is represented via table indices or other indirections, updating that indirection MUST be done atomically and made visible to all runners.
-- If each runner has its own function table, dynamic loading MUST update all runners’ tables consistently (or the design MUST use a single shared indirection that all runners consult).
+- loading/redefinition is world-scoped and must be synchronized,
+- callable-code indirections must be updated atomically and published to all runners,
+- if function tables are per-runner, updates must be applied consistently to all
+  runners (or replaced by shared indirection).
 
-This area is a primary threading concern because it couples:
+## I/O and microkernel boundary
 
-- global mutability (function cells, fdefinition, generic function caches),
-- visibility/publication semantics, and
-- per-runner instantiation details (tables/instances are not automatically shared).
+- All host I/O remains microkernel-mediated.
+- Runner-to-kernel request paths must be thread-safe (queues, request IDs,
+  completion signaling).
+- Waiting runners use worker-compatible shared-memory coordination; replacement
+  startup does not define a single-runner fallback runtime lane.
 
-## I/O and the JS microkernel boundary
+## Runtime-vs-CL thread semantics boundary
 
-Even with shared heap threads:
+- Required now: runtime worker/thread capability and shared-memory coordination
+  needed to run the replacement architecture.
+- Deferred: full Common Lisp thread semantics contract (API-level behavior,
+  scheduling semantics, and user-visible threading guarantees).
 
-- Host capabilities are not shared “by pointer”; all I/O remains mediated by the microkernel.
-- Runner→kernel requests MUST be thread-safe (kernel request queues, IDs, completion signaling).
-- A runner waiting for a kernel response may block via an atomic wait on shared memory (worker-only), or yield cooperatively in single-runner mode.
+This boundary must stay explicit in runtime policy and startup diagnostics.
 
-## Failure modes and lifecycle concerns
+## Failure and lifecycle concerns
 
-- If a runner terminates unexpectedly, the world MUST handle orphaned TCRs/locks (at minimum: mark the thread dead and avoid waiting for its safepoints forever).
-- Stop-the-world protocols MUST have timeouts/escape hatches to avoid deadlock if a runner is wedged.
-- The microkernel SHOULD provide observability for runner lifecycle and “world stop” events.
+- If a runner exits unexpectedly, the world must mark it dead and avoid
+  indefinite waits on safepoints/locks.
+- Stop-the-world protocols need timeout/escape behavior to avoid deadlock.
+- Microkernel observability should include runner lifecycle and world-stop events.
 
-## Open questions (to answer before “real threads”)
+## Open questions
 
-- What is the precise safepoint handshake protocol and state machine (per-thread + world)?
-- What GC strategy is assumed initially (stop-the-world copying/mark-sweep/mark-compact), and what barriers are needed?
-- What is the canonical representation of “callable code” in the shared heap (table index, module+export id, etc.)?
-- Are function tables shared across runners, or replicated per runner with synchronized updates?
-- What are the minimum locks needed to make the runtime itself data-race-free on day one?
+- Precise safepoint handshake protocol/state machine (per-runner + world).
+- Initial GC strategy and required barriers.
+- Canonical shared representation of callable code.
+- Whether function tables remain per-runner or move to shared indirection.
+- Minimum locking profile needed for runtime data-race freedom on day one.

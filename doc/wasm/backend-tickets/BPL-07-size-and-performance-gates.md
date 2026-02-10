@@ -1,6 +1,6 @@
 # BPL-07 - Size and Performance Gates
 
-Status: in_progress  
+Status: done  
 Priority: P1  
 Owner: Compiler/backend migration track  
 Last Updated: 2026-02-10  
@@ -25,7 +25,7 @@ Out of scope:
 - BPL-06 closed checkpoints/fixtures/intake contracts: `BPL06-CP01`..`BPL06-CP05`, `BPL06-FX01`..`BPL06-FX05`, `BPL06-INT-01`..`BPL06-INT-05`.
 - BPL-06 severity and rollback contracts: `BPL06-SEV-01`..`BPL06-SEV-04`, `BPL06-RB-01`..`BPL06-RB-05`.
 - BPL-04 gate anchors and BPL-05 handoff requirements (`BPL04-G*`, `B5H-03`, `B5H-05`).
-- Dependency rows `X-06` and `X-07` remain open soft gates for final signoff.
+- Dependency rows `X-06` and `X-07` are now closed (`done`) and retained as immutable signoff baselines for `X-08`.
 
 ## Deliverables
 
@@ -49,13 +49,13 @@ Out of scope:
 - Step 2 remediation run-v2 evidence is now published at `doc/wasm/tickets/evidence/bpl-07/bpl07-20260210-005408Z-91fdb0be/`, keyed to committed intake bundle `doc/wasm/tickets/evidence/bpl-06/bpl06-20260210-005408Z-91fdb0be/`.
 - Run-v2 measured all command legs with `exit_code=0`; aggregate summary is `row_count=5`, `pass_count=5`, `fail_count=0`, `overall_result=pass`.
 - `BPL07-BM05` now passes the perf budget (`-0.560224%` vs max `+1.0%`) with size delta `0` bytes and `intake_pass=true`.
-- Step 3 closure-readiness criteria v1 now evaluate as `CR01=pass`, `CR02=pass`, `CR03=pass`; `CR04`/`CR05` backend preconditions are satisfied and remain open only for runtime-side soft-gate evidence.
+- Step 3 closure-readiness criteria v1 now evaluate as `CR01=pass`, `CR02=pass`, `CR03=pass`; backend preconditions for `CR04`/`CR05` are satisfied and unified closure review (`x07-closure-20260210-024503Z-91fdb0be`) advances `X-07` to `done`.
 
 ## Immediate Next Step
 
-- Action: carry BPL-07 remediation run-v2 pass bundle into published BPL-08 Step 3 closure rows as immutable backend signoff input while runtime executes `RPL-08 Step 1`.
-- Why now: backend closure packetization is complete and only runtime-owned unified budget approval remains for `X-07`.
-- Success evidence: synchronized matrix/master/board/BPL-00/BPL-07/BPL-08 wording preserves immutable run IDs and explicit `X-07=open` carry-forward posture without reopening backend checkpoints.
+- Action: keep BPL-07 pass-bundle artifacts immutable and consume them in `BPL-09` cutover gate drafting.
+- Why now: BPL-07/BPL-08 closure work is complete and `X-07` is now `done`.
+- Success evidence: downstream cutover docs reference `bpl06-20260210-005408Z-91fdb0be`, `bpl07-20260210-005408Z-91fdb0be`, and `BPL07-CR*` rows without rewriting frozen IDs.
 
 ## Step 1 Output - Budget and Measurement Baseline (v1)
 
@@ -201,9 +201,9 @@ Step 2 remediation closure assertions:
   - Published closure-readiness criteria packet (`BPL07-CR01`..`BPL07-CR05`) keyed to run-v1 evidence and frozen BPL-06 intake/rollback contracts.
   - Missing intake-artifact blockers are formalized under `CR01`/`CR02`; `BPL07-BM05` perf-overrun disposition is formalized under `CR03`.
   - Remediation run-v2 now satisfies `CR01`..`CR03` using concrete run IDs `bpl06-20260210-005408Z-91fdb0be` and `bpl07-20260210-005408Z-91fdb0be`.
-  - `X-06`/`X-07` soft-gate readiness mapping remains explicit (`CR04`, `CR05`); backend preconditions are now satisfied and runtime-side closure evidence remains open.
+  - `X-06`/`X-07` soft-gate readiness mapping remains explicit (`CR04`, `CR05`); unified closure review now confirms both rows as `done` with backend pass bundles unchanged.
 - Next:
-  - Request matrix-level closure review for `CR04`/`CR05` using run-v2 backend pass evidence while waiting runtime-side `RPL-07`/`RPL-08` signoff artifacts.
+  - Keep `CR04`/`CR05` artifacts immutable and consume them in `BPL-09`/`X-08` planning.
 
 ## Test and Validation Plan
 
@@ -223,7 +223,7 @@ Step 2 remediation closure assertions:
 - Risk: size/perf regressions are masked by non-deterministic environment variation.
   - Mitigation: enforce fixed locale/time/lane env and explicit per-leg timing/size snapshots.
 - Risk: soft-gate closure is attempted before runtime packaging methodology is stable.
-  - Mitigation: keep `X-06`/`X-07` open until Step 3 unified signoff evidence is published.
+  - Mitigation: keep `X-06`/`X-07` closure artifacts immutable and require additive-only updates for `X-08` cutover planning.
 
 ## Change Log
 
@@ -235,3 +235,4 @@ Step 2 remediation closure assertions:
 - 2026-02-10: Resynced immediate-next-step wording across BPL-07/backend-master/matrix/board/BPL-00 to Pack A runtime run-v2 execution while preserving backend run-v2 pass bundle as `X-06`/`X-07` closure-review input.
 - 2026-02-10: Resynced immediate-next-step wording to BPL-08 Step 3 closure-readiness publication after Step 2 deterministic validation packet (`BPL08-IV01`..`BPL08-IV06`) was committed.
 - 2026-02-10: Resynced immediate-next-step wording after BPL-08 Step 3 publication (`BPL08-CR01`..`BPL08-CR06`) to preserve backend pass bundle carry-forward while `X-07` remains open for runtime unified budget signoff.
+- 2026-02-10: Unified closure review (`x07-closure-20260210-024503Z-91fdb0be`) consumed BPL-07 pass bundles unchanged and advanced `X-07` to `done`.

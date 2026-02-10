@@ -17,6 +17,24 @@ This plan is aligned with `web-ide/phase-8/implementation-plan.md` (RZ0.6).
 Active blocker reasoning and experiment log lives in:
 `doc/wasm/wasm-ui-persistence-problem-tracker.md`.
 
+## Replacement-Track Override (Normative)
+
+This plan is a legacy unattended-lane execution plan. It hardens the
+memory-snapshot default lane and host-integration lanes for ongoing
+compatibility work.
+
+Replacement-track runtime architecture and release-target persistence posture are
+governed by:
+
+- `doc/wasm/runtime-replacement-master-plan.md`
+- `doc/wasm/tickets/RPL-01-secure-runtime-gating.md`
+- `doc/wasm/tickets/RPL-05-storage-v2-local-core.md`
+
+Replacement-lane execution must satisfy secure startup gates and Storage V2
+profile requirements (`SRG-06`, `SRG-07`, `SRG-10`, `SRG-11`). This document
+must not be interpreted as making `memory-snapshot` the replacement target
+architecture.
+
 ## Current baseline assumptions
 
 - `npm --prefix web-ui test` is green.
@@ -51,7 +69,7 @@ Exit criteria:
 - All four commands succeed.
 - Any failure is treated as regression and fixed before Stage B.
 
-## Stage B: Persistence Backend Decoupling (Memory-Snapshot Default)
+## Stage B: Persistence Backend Decoupling (Memory-Snapshot Legacy Default)
 
 ### B1. Contract and flags
 1. Define canonical backend selector:
@@ -60,7 +78,7 @@ Exit criteria:
 2. Define canonical snapshot path selector:
    - CLI: `--persist-snapshot-file <path>`
    - ENV: `CCL_PERSIST_SNAPSHOT_FILE`
-3. Default unattended backend: `memory-snapshot`.
+3. Default unattended backend for this legacy lane: `memory-snapshot`.
 
 Exit criteria:
 - Selector contract is documented and wired in smoke/harness entrypoints.
@@ -152,7 +170,8 @@ Exit criteria:
 
 ## Stage E: Documentation Reconciliation
 
-Update docs to match the memory-first decision and current gate state:
+Update docs to keep lane split explicit (legacy unattended lane vs replacement
+lane) and match current gate state:
 
 - `doc/wasm/roadmap.md`
 - `doc/wasm/porting-status.md`
@@ -194,3 +213,7 @@ All must be true:
 3. Default unattended development/test path does not require host-only persistence privileges.
 4. LMDB/IDB lanes remain available as integration checks.
 5. Status docs and phase plans are internally consistent.
+
+Replacement-lane note: secure runtime replacement promotion still requires
+`storage-v2-opfs` posture and strict startup-gate compliance per `RPL-01` and
+`RPL-05`; this legacy-lane checklist does not supersede those requirements.

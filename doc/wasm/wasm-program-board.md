@@ -33,7 +33,7 @@ This is intentionally not a megaplan. Execution remains in two track-specific ma
 | Lane A | Secure runtime gating, worker topology, shared-memory IPC | `doc/wasm/runtime-replacement-master-plan.md` | yes | none |
 | Lane B | WASM-native backend contract, frame/debug model, numeric lowering | `doc/wasm/backend-migration-master-plan.md` | yes | none |
 | Lane C | Differential harnesses and parity checks | both master plans | yes | contract freeze from Lane A + Lane B |
-| Lane D | Cutover and legacy retirement | both master plans | no | completion of Lane A/B/C gates |
+| Lane D | Cutover and legacy retirement | both master plans | yes (done) | completion of Lane A/B/C gates |
 
 ## Synchronization Gates
 
@@ -45,9 +45,9 @@ This is intentionally not a megaplan. Execution remains in two track-specific ma
 
 ## Immediate Next Step
 
-- Action: continue `Pack A` by executing unified `X-07` closure review over committed runtime run-v2 artifacts (`rpl08-20260210-023524Z-91fdb0be`) while carrying immutable backend `BPL-08 Step 3` closure rows as `X-07` review input (`rpl05-20260210-011240Z-91fdb0be`, `bpl06-20260210-005408Z-91fdb0be`, `bpl07-20260210-005408Z-91fdb0be`).
-- Why now: runtime Step 3 run-v2 evidence is now committed with full lane pass coverage, `R8GAP-01` closed, and `x07_runtime_ready=true`; remaining work is cross-track closure review, not further runtime remediation.
-- Success evidence: synchronized runtime/backend planning docs preserve immutable bundle IDs and backend `BPL08-CR*` rows, carry committed run-v2 artifacts, and publish explicit `X-07` closure-review disposition while keeping secure/no-fallback posture unchanged.
+- Action: keep closed `X-08` cutover artifacts immutable and execute runtime `RPL01-IG-02` startup-gate follow-through (`LHI-04`/`LHI-05`/`LHI-06`), with additive-only backend governance maintenance.
+- Why now: Pack D closure is complete with unified review artifact `x08-closure-20260210-040400Z-2084077e`, and contradiction follow-through (`RPL01-CF-01`..`RPL01-CF-15`) is complete.
+- Success evidence: master/matrix/governance docs preserve `X-08=done`, immutable bundle IDs, and frozen `BPL08-CR*` rows while runtime queue evidence records `LHI-04`/`LHI-05`/`LHI-06` integration progress.
 
 ## Change Log
 
@@ -104,3 +104,19 @@ This is intentionally not a megaplan. Execution remains in two track-specific ma
 - 2026-02-10: Executed RPL-08 Step 2 by publishing runtime lane/validation/review contract IDs (`R8L-*`, `R8V-*`, `R8I-*`), advanced Pack A immediate runtime action to `RPL-08 Step 3` run-v1 evidence execution, and preserved immutable `X-07` bundle IDs plus backend `BPL08-CR*` carry-forward rows unchanged.
 - 2026-02-10: Executed RPL-08 Step 3 run-v1 (`R8V-01`..`R8V-14`) and committed evidence bundle (`rpl08-20260210-022252Z-91fdb0be`) with terminal `artifact_budget_step2_summary_v1.status=pass`; opened blocker `R8GAP-01` for closure-target overruns (`R8B-01`, `R8B-02`, `R8B-05`) and shifted Pack A immediate runtime action to Step 3 run-v2 targeted closure.
 - 2026-02-10: Executed RPL-08 Step 3 run-v2 (`R8V-01`..`R8V-14`) and committed evidence bundle (`rpl08-20260210-023524Z-91fdb0be`) with terminal `artifact_budget_step2_summary_v1.status=pass`; closed blocker `R8GAP-01`, recorded `x07_runtime_ready=true`, and shifted Pack A immediate runtime action to unified `X-07` closure review while preserving immutable bundle IDs and backend `BPL08-CR*` carry-forward rows unchanged.
+- 2026-02-10: Completed unified `X-07` closure review (`x07-closure-20260210-024503Z-91fdb0be`), advanced matrix row `X-07` to `done`, and shifted immediate program action from Pack A closure-review posture to Pack D cutover planning (`RPL-09` + `BPL-09` Step 1).
+- 2026-02-10: Executed runtime `RPL-09 Step 1` by publishing cutover/rollback contract rows (`R9G-*`, `R9R-*`, `R9E-*`), advanced Pack D runtime action to `RPL-09 Step 2`, and kept backend-parallel action on `BPL-09 Step 1` under active `X-08`.
+- 2026-02-10: Executed backend `BPL-09 Step 1` by publishing cutover/rollback contract rows (`BPL09-G*`, `BPL09-R*`, `BPL09-E*`), kept `X-08` active/in-progress, and advanced Pack D immediate action to runtime/backend parallel `Step 2` rehearsal packet definition.
+- 2026-02-10: Executed runtime `RPL-09 Step 2` by publishing deterministic rehearsal packet rows (`R9L-*`, `R9V-*`, `R9I-*`), kept `X-08` active/in-progress, and advanced Pack D immediate action to runtime `RPL-09 Step 3` run-v1 evidence execution while backend continues `BPL-09 Step 2`.
+- 2026-02-10: Executed runtime `RPL-09 Step 3` run-v1 (`R9V-01`..`R9V-14`) and committed evidence bundle (`rpl09-20260210-032127Z-2084077e`) with runtime terminal summary pass; opened blocker `R9GAP-01` while backend `BPL-09 Step 2` remains pending and advanced Pack D immediate action to backend Step 2 publication plus runtime run-v2 targeted closure.
+- 2026-02-10: Executed backend `BPL-09 Step 2` by publishing deterministic rehearsal packet rows (`BPL09-L*`, `BPL09-V*`, `BPL09-I*`), kept `X-08` active/in-progress, and advanced Pack D immediate action to backend Step 3 signoff packet publication plus runtime run-v2 targeted closure of `R9GAP-01`.
+- 2026-02-10: Executed backend `BPL-09 Step 3` by publishing signoff packet rows (`BPL09-CR01`..`BPL09-CR06`), kept `X-08` active/in-progress, and advanced Pack D immediate action to runtime run-v2 targeted closure of `R9GAP-01` plus joint `X-08` review execution.
+- 2026-02-10: Executed runtime `RPL-09 Step 3` run-v2 (`R9V-01`..`R9V-14`) and committed closure evidence bundle (`rpl09-20260210-034952Z-2084077e`) with terminal `x08_backend_step2_status=published`; closed `R9GAP-01`, committed `x08_joint_intake_review_v1.status=pass`, and advanced Pack D immediate action to final joint `X-08` closure-review dossier assembly.
+- 2026-02-10: Committed backend Step 3 run-v2 evidence (`bpl09-20260210-040314Z-2084077e`) and unified `X-08` closure review (`x08-closure-20260210-040400Z-2084077e`), advanced dependency row `X-08` to `done`, and shifted immediate program action from Pack D closure packaging to runtime `RPL-01` contradiction follow-through with additive-only backend governance maintenance.
+- 2026-02-10: Decomposed runtime contradiction follow-through into ordered `RPL01-CF-*` tasks and advanced immediate program action to `RPL01-CF-01` (`C-01`) while preserving immutable `X-08` closure artifacts.
+- 2026-02-10: Completed contradiction queue block `RPL01-CF-01`..`RPL01-CF-04` and advanced immediate program action to `RPL01-CF-05` (`C-02`) while preserving immutable `X-08` closure artifacts.
+- 2026-02-10: Completed `RPL01-CF-05` (`C-02`) and advanced immediate program action to `RPL01-CF-06` (`C-05`) while preserving immutable `X-08` closure artifacts.
+- 2026-02-10: Completed `RPL01-CF-06` (`C-05`) and advanced immediate program action to `RPL01-CF-07` (`C-06`) while preserving immutable `X-08` closure artifacts.
+- 2026-02-10: Completed contradiction source rewrites through `RPL01-CF-14` (`C-06`..`C-14`) and advanced immediate program action to `RPL01-CF-15` contradiction-closure synchronization while preserving immutable `X-08` closure artifacts.
+- 2026-02-10: Completed contradiction closure sync (`RPL01-CF-15`) and advanced immediate program action to `RPL01-IG-01` startup-gate loader/smoke integration while preserving immutable `X-08` closure artifacts.
+- 2026-02-10: Completed `RPL01-IG-01` startup-gate loader/smoke integration (`LHI-01`/`LHI-02`/`LHI-03`) and advanced immediate program action to `RPL01-IG-02` coverage expansion (`LHI-04`/`LHI-05`/`LHI-06`) while preserving immutable `X-08` closure artifacts.

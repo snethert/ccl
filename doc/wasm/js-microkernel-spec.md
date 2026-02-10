@@ -1,6 +1,6 @@
 ## JS microkernel specification
 
-**Status:** Draft
+**Status:** Draft (replacement-track secure-only posture)
 
 ## Scope
 
@@ -11,7 +11,8 @@ This specification defines the responsibilities, interfaces, and behavioral guar
 * Provide a minimal, explicit host API for WASM runners that avoids implicit OS assumptions.
 * Support fast spawning via clone-from-image semantics.
 * Mediate all external capabilities (I/O, timers, UI, storage) through explicit requests.
-* Provide a single-threaded compatibility mode and a scalable multi-runner concurrency mode.
+* Enforce a secure-only replacement startup profile with explicit hard-fail on missing required capabilities.
+* Support shared-memory worker topology for runtime, kernel I/O, storage, and UI bridge hot paths.
 
 ## Non-goals
 
@@ -22,7 +23,7 @@ This specification defines the responsibilities, interfaces, and behavioral guar
 ## Definitions
 
 * **World:** A logical Lisp runtime environment (heap + global runtime state). A world may be hosted by a single runner or by multiple runners, depending on the embedding and capabilities.
-* **Runner:** A WASM instance (optionally inside a Web Worker) that executes Lisp code. In the baseline mode, a runner is self-contained and does not rely on shared memory/Atomics.
+* **Runner:** A WASM instance (hosted in a Worker for replacement lanes) that executes Lisp code with required shared-memory/Atomics capability and deterministic role ownership.
 * **Kernel:** The JS microkernel process managing worlds/runners and host capabilities (I/O, timers, module loading, etc.).
 * **Image:** A serialized or preinitialized runtime snapshot used to spawn worlds cheaply.
 * **Request:** A structured message from a runner to the kernel for external services.
@@ -63,7 +64,7 @@ Runners call a narrow host surface, implemented as WASM imports, to request capa
 
 **Import module name:** `ccl`
 
-**Required imports (copy-based response ABI):**
+**Required imports (ABI compatibility surface):**
 
 * `kernel_request(opcode, payloadPtr, payloadLen) -> requestId`
 * `kernel_poll(requestId) -> status`
@@ -72,7 +73,7 @@ Runners call a narrow host surface, implemented as WASM imports, to request capa
 * `kernel_copy_response(requestId, dstPtr, dstLen) -> uint32`
 * `kernel_drop_request(requestId) -> void`
 
-**Optional import (Stage 3 optimization only):**
+**Optional import (compatibility optimization only):**
 
 * `kernel_wait(requestId, deadlineMs) -> status`
 
@@ -87,11 +88,20 @@ The payload format and opcode registry are defined in `doc/wasm/kernel-request-a
   * `kernel_response_size`/`kernel_copy_response` for any response payload bytes.
 * The guest MUST call `kernel_drop_request(requestId)` exactly once to release host-side resources associated with the request ID (even on error paths).
 
-### Zero-copy responses (TODO)
+### Shared-channel and direct-write response evolution (TODO)
 
-The MVP response path is copy-based: the microkernel retains each response payload in host memory and copies it into the runner's linear memory on demand via `kernel_copy_response`. This keeps the ABI simple and portable.
+Replacement-track hot-path transport is shared-channel-first. Copy-response handling is compatibility-only for bootstrap/control/diagnostics lanes.
 
-TODO(zero-copy): Provide optional ABI extensions that avoid this copy by writing responses directly into guest linear memory (caller-provided output buffers or a shared arena/ring buffer). Any zero-copy form MUST define explicit lifetime and invalidation rules and MUST remain optional; the copy-based path remains the required baseline for correctness and broad compatibility.
+TODO(zero-copy): Provide optional ABI extensions that avoid copy-path responses by writing directly into guest linear memory (caller-provided output buffers or a shared arena/ring buffer). Any direct-write form MUST define explicit lifetime and invalidation rules; compatibility copy-path behavior remains limited to non-hot lanes.
+
+### Replacement-track startup contract (normative)
+
+For replacement-track runtime lanes:
+
+* Startup MUST satisfy the secure runtime gate contract (`SRG-01`..`SRG-12`).
+* Required capabilities (cross-origin isolation, `SharedArrayBuffer`, Atomics/worker wait, worker topology, shared-memory transport policy) are mandatory, not optional.
+* Any required capability failure MUST terminate startup with explicit diagnostics and MUST NOT silently degrade to a portable fallback lane.
+* Hot-path runtime/kernel/storage/UI traffic MUST use shared-memory channel mappings defined by `IPCP-*` contracts.
 
 ## Functional requirements
 
@@ -99,9 +109,9 @@ TODO(zero-copy): Provide optional ABI extensions that avoid this copy by writing
 * The kernel MUST support spawn-from-image cloning semantics for worlds.
 * The kernel MUST deliver responses to runner requests in a deterministic format.
 * The kernel MUST provide a capability boundary: all external I/O MUST be mediated by the kernel.
-* The kernel MUST support at least a single-runner embedding mode.
-* The kernel SHOULD support multi-runner concurrency where platform features allow it (shared linear memory + Atomics).
-* If shared memory is unavailable, the kernel MUST refuse (or explicitly fail) attempts to attach additional runners to a world.
+* The kernel MUST enforce replacement-track worker topology and role ownership for startup.
+* The kernel MUST require shared-memory/Atomics capability for replacement-track runtime execution.
+* If required replacement capabilities are unavailable, startup MUST hard-fail with explicit diagnostics; no degraded fallback runtime is launched.
 
 ## Operational requirements
 
@@ -113,7 +123,7 @@ TODO(zero-copy): Provide optional ABI extensions that avoid this copy by writing
 
 * If a runner crashes or terminates unexpectedly, the kernel MUST surface a termination event and release associated resources.
 * If a request cannot be fulfilled, the kernel MUST return a structured error response to the runner.
-* If a capability is unavailable in the current embedding (e.g., no shared memory), the kernel MUST report capability absence rather than silently degrade.
+* If a required replacement capability is unavailable, the kernel MUST emit explicit failure diagnostics and abort startup rather than silently degrade.
 
 ## Security and capability constraints
 
@@ -123,13 +133,14 @@ TODO(zero-copy): Provide optional ABI extensions that avoid this copy by writing
 
 ## Concurrency model
 
-The microkernel is expected to support the following staged execution modes:
+Replacement-track execution uses a secure-only worker model:
 
-* **Stage 1 (sync host, dev/Node):** requests complete synchronously. `kernel_poll` typically returns DONE immediately. This is used to bring up the ABI and early kernel functionality quickly.
-* **Stage 2 (async portable baseline):** requests may remain PENDING; the runner MUST NOT block the host event loop. The system requires an explicit yield/resume mechanism at safe boundaries (details outside this spec).
-* **Stage 3 (optional optimization):** in Worker + SharedArrayBuffer environments, `kernel_wait` may block the runner efficiently (Atomics wait/notify) without blocking the main thread. This mode MUST NOT be assumed in sandboxed iframes or non-isolated pages.
+* Runtime lanes execute in workers with required `SharedArrayBuffer` and Atomics capabilities.
+* Hot-path transport is shared-memory-first; copy/message lanes are control/diagnostics compatibility paths only.
+* `kernel_wait` may be used when supported, but startup capability checks remain strict and no-fallback.
+* If required capabilities are missing, startup fails explicitly and deterministically.
 
-Independently of the I/O completion strategy, the kernel MAY support multiple runners per world when the embedding allows it (e.g., shared memory + Atomics), but must degrade gracefully to the baseline mode when it does not.
+Legacy single-runner portable bring-up behavior may exist in historical lanes, but it is not the normative replacement-track contract.
 
 ## Image and module management
 

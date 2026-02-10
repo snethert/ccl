@@ -1,13 +1,13 @@
 # Interrupts and Interrupt Handling (WASM)
 
-**Status:** Draft
+**Status:** Draft (replacement-track secure-only posture)
 
 ## Scope
 This document defines the interrupt model for the WASM-based CCL runtime, the
 microkernel boundary, and the browser UI toolkit integration. It covers:
 
-- the **cooperative interrupt** model used in single-runner (portable) mode,
-- the **stop-the-world** interrupt model used in shared-heap multi-runner mode,
+- the **cooperative safepoint interrupt** model used in secure replacement runtime lanes,
+- the **stop-the-world** interrupt coordination model used in shared-heap worker topologies,
 - the **UI turn / yield** integration requirements,
 - host ABI considerations and capability gating,
 - constraints and invariants that keep interrupts deterministic and safe.
@@ -30,7 +30,7 @@ requirements.
 
 ## Design Goals
 
-- **Portable baseline:** Interrupts must work without SharedArrayBuffer or Atomics.
+- **Secure-only startup alignment:** Interrupt assumptions must match required startup capabilities (`SharedArrayBuffer`, Atomics, worker topology).
 - **Deterministic delivery:** Interrupts are delivered only at explicit, safe boundaries.
 - **Bounded latency:** Interrupts must be observed within bounded time via frequent safepoints.
 - **No reentrancy surprises:** Commands run to completion or yield; interrupts do not
@@ -46,11 +46,13 @@ requirements.
   Workers with SharedArrayBuffer and Atomics.
 - Without stack switching/asyncify, **interrupts cannot suspend arbitrary call stacks**;
   they must be observed at explicit boundaries.
+- If required secure capabilities are unavailable, startup must fail explicitly;
+  no fallback execution mode is allowed for replacement lanes.
 
-## Baseline Model: Single-Runner, Cooperative Interrupts
+## Primary Model: Secure Runtime Worker, Cooperative Interrupts
 
 ### Summary
-In the portable baseline, interrupts are implemented as **flags** that are
+In replacement-track runtime lanes, interrupts are implemented as **flags** that are
 polled at **safepoints** and at the **explicit stepping boundary**
 (`wasm_ccl_step`). The host can request an interrupt, but delivery is
 cooperative and bounded by safepoint frequency and step cadence.
@@ -128,11 +130,11 @@ synchronous blocking on the UI thread. Interrupts must respect this model.
 - Keep interrupt delivery **outside** of command execution; if an interrupt
   arrives mid-turn, it should be recorded and applied at the next safe boundary.
 
-## Multi-Runner Model (Shared Heap, Optional)
+## Shared-Heap Coordination Model
 
-When SharedArrayBuffer + Atomics are available, interrupts can be coordinated
-across multiple runners sharing one heap. This requires a stop-the-world
-handshake in shared memory.
+Replacement-track runtime lanes assume SharedArrayBuffer + Atomics capability.
+Interrupts across workers sharing one heap use a stop-the-world handshake in
+shared memory.
 
 ### World State (Shared)
 
@@ -161,7 +163,7 @@ handshake in shared memory.
 
 ### Compatibility Requirements
 
-- Interrupt semantics must match the single-runner model from the Lisp
+- Interrupt semantics must match the secure runtime cooperative model from the Lisp
   perspective (interrupts observed at safepoints, not asynchronously).
 - Compiled code must ensure **roots are discoverable at safepoints**.
 
@@ -169,15 +171,15 @@ handshake in shared memory.
 
 ### Capability Gating
 
-- Interrupt support in multi-runner mode requires SharedArrayBuffer + Atomics.
+- Interrupt support in replacement runtime lanes requires SharedArrayBuffer + Atomics.
 - The microkernel must signal capability availability via `KERNEL_OP_CAPS`.
 
 ### ABI / Microkernel
 
-- The baseline model can use an **out-of-band host flag** or a minimal
+- The secure runtime model can use an **out-of-band host flag** or a minimal
   microkernel API to request an interrupt.
-- In Stage 3 (workers + Atomics), interrupt requests may include
-  `Atomics.notify` to wake blocked runners.
+- Interrupt requests may include `Atomics.notify` to wake blocked workers where
+  supported by the runtime scheduler.
 
 ## Safepoint Requirements
 

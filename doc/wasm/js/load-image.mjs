@@ -37,6 +37,7 @@ import {
   formatBootstrapState,
 } from "./bootstrap-contract.mjs";
 import { emitSyntheticIpcArtifacts } from "./ipc-conformance.mjs";
+import { runStartupGate } from "./startup-gate.mjs";
 
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
@@ -689,6 +690,15 @@ function runBootstrapContract(phase, { requireToplfunc = (phase === "pre-start")
   fail(message);
 }
 
+function runStartupGateOrFail() {
+  const result = runStartupGate({ source: "doc/wasm/js/load-image.mjs" });
+  if (result.status === "pass") return;
+  if (result.status === "invalid_summary") {
+    console.error("FAIL: [RPL01-E011] startup-gate diagnostics payload is malformed");
+  }
+  process.exit(6);
+}
+
 let entryRc = null;
 
 if (runStartLisp) {
@@ -725,6 +735,7 @@ if (runStartLisp) {
       microkernel,
     });
     console.log(`compiled modules installed ${installed}/${count}`);
+    runStartupGateOrFail();
     runBootstrapContract("pre-start", { requireToplfunc: true });
   } catch (e) {
     console.error(`wasm_ccl_load_image trapped: ${e}`);
@@ -772,6 +783,9 @@ if (runStartLisp) {
       microkernel,
     });
     console.log(`compiled modules installed ${installed}/${count}`);
+    if (runToplevel) {
+      runStartupGateOrFail();
+    }
     runBootstrapContract("pre-start", { requireToplfunc: true });
   } catch (e) {
     console.error(`wasm_ccl_load_image trapped: ${e}`);

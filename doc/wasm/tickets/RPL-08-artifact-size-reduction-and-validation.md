@@ -1,6 +1,6 @@
 # RPL-08 - Artifact Size Reduction and Validation
 
-Status: in_progress  
+Status: done  
 Priority: P1  
 Owner: Runtime/WASM replacement track  
 Last Updated: 2026-02-10  
@@ -52,7 +52,7 @@ Out of scope:
 - Step 3 run-v1 evidence is committed at `doc/wasm/tickets/evidence/rpl-08-step3-2026-02-10/rpl08-20260210-022252Z-91fdb0be/` with full `R8V-01`..`R8V-14` command execution coverage and terminal `artifact_budget_step2_summary_v1.status=pass`.
 - Step 3 run-v2 evidence is now committed at `doc/wasm/tickets/evidence/rpl-08-step3-2026-02-10/rpl08-20260210-023524Z-91fdb0be/` with full `R8V-01`..`R8V-14` assertion pass coverage, `guardrail_pass_count=8`, `target_pass_count=8`, `x07_runtime_ready=true`, and closed blocker `R8GAP-01`.
 - Runtime artifact remediation is now implemented in-code via `scripts/wasm/compact-runtime-modules.mjs` + `scripts/wasm/compile-wasm-fasls.sh` compaction wiring (no doc-only closure path).
-- `X-07` remains in-progress and explicit carry-forward posture pending unified runtime/backend closure review acceptance.
+- Unified closure review is now committed at `doc/wasm/tickets/evidence/x07-closure-review-2026-02-10/x07-closure-20260210-024503Z-91fdb0be/x07_unified_closure_review_v1.json`; dependency row `X-07` is now `done`.
 - Immutable closure-bundle IDs are mandatory carry-forward inputs for all `X-07` review notes:
   - `rpl05-20260210-011240Z-91fdb0be`
   - `bpl06-20260210-005408Z-91fdb0be`
@@ -62,9 +62,9 @@ Out of scope:
 
 ## Immediate Next Step
 
-- Action: execute unified `X-07` closure review over committed runtime run-v2 budget evidence and immutable backend `BPL08-CR*` carry-forward rows.
-- Why now: runtime Step 3 run-v2 has closed `R8GAP-01` and reports `x07_runtime_ready=true`; remaining work is cross-track closure acceptance, not additional runtime remediation.
-- Success evidence: same-cycle runtime/backend planning docs record the committed run-v2 bundle (`rpl08-20260210-023524Z-91fdb0be`), preserve immutable bundle IDs, and advance `X-07` closure review packet language without reopening runtime gaps.
+- Action: keep RPL-08 artifacts immutable and hand off closed budget evidence into `RPL-09`/`X-08` cutover planning.
+- Why now: runtime Step 3 run-v2 evidence and unified closure review are both committed, so RPL-08 exit criteria are fully satisfied.
+- Success evidence: downstream cutover docs reference `rpl08-20260210-023524Z-91fdb0be` and `x07-closure-20260210-024503Z-91fdb0be` unchanged, with `X-07` remaining `done`.
 
 ## Step 1 Output - Runtime Artifact Budget and Measurement Contract (v1)
 
@@ -352,9 +352,10 @@ All commands execute from repo root `/Users/buildsomething/Source/ccl` with requ
   - Run-v1 emitted required artifacts (`artifact_budget_step2_summary_v1.json`, `artifact_budget_x07_review_packet_v1.json`, `artifact_budget_doc_sync_record_v1.json`, `r8v-results.tsv`, `run-status.tsv`, per-validation logs).
   - Step 3 run-v2 is committed at `doc/wasm/tickets/evidence/rpl-08-step3-2026-02-10/rpl08-20260210-023524Z-91fdb0be/` with full `R8V-01`..`R8V-14` assertion coverage, terminal `artifact_budget_step2_summary_v1.status=pass`, and immutable bundle IDs preserved.
   - Run-v2 closes blocker `R8GAP-01`; closure-target rows (`R8B-01`, `R8B-02`, `R8B-05`) now pass with measured bytes `101249073`, `334`, and `102059033`, and `x07_runtime_ready=true`.
+  - Unified closure review is now committed at `doc/wasm/tickets/evidence/x07-closure-review-2026-02-10/x07-closure-20260210-024503Z-91fdb0be/x07_unified_closure_review_v1.json`, advancing dependency row `X-07` to `done`.
   - Runtime remediation is code-backed: module bundle compaction + manifest payload reduction + strict startup/hash validation rerun.
 - Next:
-  - Carry committed Step 3 run-v2 evidence into unified `X-07` closure review and maintain immutable carry-forward inputs.
+  - Keep Step 3 evidence immutable and consume it as closed baseline input for `RPL-09`/`X-08` planning.
 
 ## Test and Validation Plan
 
@@ -380,3 +381,4 @@ All commands execute from repo root `/Users/buildsomething/Source/ccl` with requ
 - 2026-02-10: Published Step 2 lane/validation/review contract (`R8L-01`..`R8L-08`, `R8V-01`..`R8V-14`, `R8I-01`..`R8I-06`) with deterministic run controls, terminal summary schema bindings, and immutable backend `BPL08-CR*` carry-forward references.
 - 2026-02-10: Executed Step 3 run-v1 (`R8V-01`..`R8V-14`) and committed evidence bundle (`rpl08-20260210-022252Z-91fdb0be`) with terminal `artifact_budget_step2_summary_v1.status=pass`, immutable bundle IDs preserved, `x07_review_result=carry_forward`, and open blocker `R8GAP-01` for closure-target overruns (`R8B-01`, `R8B-02`, `R8B-05`).
 - 2026-02-10: Executed Step 3 run-v2 (`R8V-01`..`R8V-14`) and committed evidence bundle (`rpl08-20260210-023524Z-91fdb0be`) with terminal `artifact_budget_step2_summary_v1.status=pass`, immutable bundle IDs preserved, `x07_runtime_ready=true`, and closed blocker `R8GAP-01` after code-backed runtime artifact remediation.
+- 2026-02-10: Completed unified `X-07` closure review (`x07-closure-20260210-024503Z-91fdb0be`) and advanced dependency row `X-07` to `done` while preserving immutable bundle IDs and backend `BPL08-CR*` rows unchanged.
