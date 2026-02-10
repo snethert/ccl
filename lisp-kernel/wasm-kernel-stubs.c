@@ -1917,7 +1917,27 @@ enum {
   WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_SAVEVSP = 42u,
   WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_VALUES = 43u,
   WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_LAST = 44u,
-  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_CATCH_RESTORE = 45u
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_CATCH_RESTORE = 45u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_CATCH_INSTALL = 46u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_PENDING_THROW = 47u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_ARGZ = 48u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_VSP = 49u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_SAVEVSP = 50u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_SAVETSP = 51u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_LAST = 52u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_CATCH_RESTORE = 53u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_SP_RESTORE = 54u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_STACK_BOUNDS = 55u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_CATCH_INSTALL = 56u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_PENDING_THROW = 57u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_NARGS = 58u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_ARGZ = 59u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_VSP = 60u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_SAVETSP = 61u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_SAVEVSP_VALUES = 62u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_LAST = 63u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_CATCH_RESTORE = 64u,
+  WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_SP_RESTORE = 65u
 };
 
 typedef struct wasm_subprim_nonlocal_exit_selftest_state {
@@ -1999,9 +2019,16 @@ wasm_subprim_nonlocal_exit_coherence_selftest(void)
   LispObj mv0 = box_fixnum(0x3401);
   LispObj mv1 = box_fixnum(0x3402);
   LispObj mv2 = box_fixnum(0x3403);
-  LispObj fn_obj[3] __attribute__((aligned(8)));
-  LispObj entry_fixnum = box_fixnum(WASM_SUBPRIM_NTHROW1VALUE_INDEX);
-  LispObj fn_value;
+  LispObj funcall_mv0 = box_fixnum(0x4401);
+  LispObj funcall_mv1 = box_fixnum(0x4402);
+  LispObj funcall_mv2 = box_fixnum(0x4403);
+  LispObj nthrow1_fn_obj[3] __attribute__((aligned(8)));
+  LispObj nthrowvalues_fn_obj[3] __attribute__((aligned(8)));
+  LispObj nthrow1_entry_fixnum = box_fixnum(WASM_SUBPRIM_NTHROW1VALUE_INDEX);
+  LispObj nthrowvalues_entry_fixnum = box_fixnum(WASM_SUBPRIM_NTHROWVALUES_INDEX);
+  LispObj nthrow1_fn_value;
+  LispObj nthrowvalues_fn_value;
+  LispObj funcall_mv_args[3];
 
   if (tcr == NULL) {
     return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_NO_TCR;
@@ -2015,10 +2042,15 @@ wasm_subprim_nonlocal_exit_coherence_selftest(void)
 
   wasm_capture_subprim_nonlocal_exit_selftest_state(tcr, &original);
 
-  fn_obj[0] = make_header(subtag_function, 2);
-  fn_obj[1] = entry_fixnum;
-  fn_obj[2] = entry_fixnum;
-  fn_value = (LispObj)((BytePtr)fn_obj + fulltag_misc);
+  nthrow1_fn_obj[0] = make_header(subtag_function, 2);
+  nthrow1_fn_obj[1] = nthrow1_entry_fixnum;
+  nthrow1_fn_obj[2] = nthrow1_entry_fixnum;
+  nthrow1_fn_value = (LispObj)((BytePtr)nthrow1_fn_obj + fulltag_misc);
+
+  nthrowvalues_fn_obj[0] = make_header(subtag_function, 2);
+  nthrowvalues_fn_obj[1] = nthrowvalues_entry_fixnum;
+  nthrowvalues_fn_obj[2] = nthrowvalues_entry_fixnum;
+  nthrowvalues_fn_value = (LispObj)((BytePtr)nthrowvalues_fn_obj + fulltag_misc);
 
   tcr->wasm_pending_throw = 0;
   tcr->valence = TCR_STATE_FOREIGN;
@@ -2211,7 +2243,7 @@ wasm_subprim_nonlocal_exit_coherence_selftest(void)
   tcr->wasm_pending_throw = 0;
   tcr->wasm_gprs[arg_z] = box_fixnum(0x2202);
   tcr->wasm_gprs[imm0] = box_fixnum(1);
-  (void)wasm_funcall_common(tcr, fn_value, NULL, 0, 0);
+  (void)wasm_funcall_common(tcr, nthrow1_fn_value, NULL, 0, 0);
   if (!tcr->wasm_pending_throw) {
     wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
     return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_PENDING_THROW;
@@ -2235,6 +2267,136 @@ wasm_subprim_nonlocal_exit_coherence_selftest(void)
   if ((BytePtr)wasm_get_cstack_pointer() != original.cstack_sp) {
     wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
     return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_SP_RESTORE;
+  }
+
+  /*
+   * Phase-4: same unwind-cleanup boundaries must hold when _SPnthrowvalues
+   * is entered through wasm_funcall_common.
+   */
+  tcr->wasm_pending_throw = 0;
+  tcr->save_tsp = NULL;
+  tcr->valence = TCR_STATE_FOREIGN;
+  tcr->save_vsp = original.save_vsp;
+  tcr->wasm_gprs[vsp] = (LispObj)original.save_vsp;
+  tcr->catch_top = original.catch_top;
+  tcr->wasm_gprs[nargs] = box_fixnum(0);
+  tcr->wasm_gprs[arg_z] = cleanup_invoked_sentinel;
+  tcr->wasm_gprs[imm0] = box_fixnum(WASM_SUBPRIM_VALUES_INDEX);
+  wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_MKUNWIND_INDEX));
+  if (tcr->catch_top == original.catch_top) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_CATCH_INSTALL;
+  }
+
+  tcr->wasm_pending_throw = 0;
+  tcr->wasm_gprs[arg_z] = cleanup_invoked_sentinel;
+  tcr->wasm_gprs[imm0] = box_fixnum(1);
+  (void)wasm_funcall_common(tcr, nthrowvalues_fn_value, NULL, 0, 0);
+  if (!tcr->wasm_pending_throw) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_PENDING_THROW;
+  }
+  if (tcr->wasm_gprs[arg_z] != (LispObj)nil_value) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_ARGZ;
+  }
+  if ((LispObj)tcr->save_vsp != tcr->wasm_gprs[vsp]) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_VSP;
+  }
+  if (tcr->save_vsp != original.save_vsp) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_SAVEVSP;
+  }
+  if (tcr->save_tsp != NULL) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_SAVETSP;
+  }
+  if (tcr->last_lisp_frame != original.last_lisp_frame) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_LAST;
+  }
+  if (tcr->catch_top != original.catch_top) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_CATCH_RESTORE;
+  }
+  if ((BytePtr)wasm_get_cstack_pointer() != original.cstack_sp) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_SP_RESTORE;
+  }
+
+  vs_area = tcr->vs_area;
+  if ((vs_area == NULL) ||
+      (vs_area->low == NULL) ||
+      (vs_area->high == NULL) ||
+      ((BytePtr)(original.save_vsp - 3) < vs_area->low) ||
+      ((BytePtr)original.save_vsp > vs_area->high)) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_STACK_BOUNDS;
+  }
+
+  tcr->wasm_pending_throw = 0;
+  tcr->save_tsp = NULL;
+  tcr->valence = TCR_STATE_FOREIGN;
+  tcr->save_vsp = original.save_vsp;
+  tcr->wasm_gprs[vsp] = (LispObj)original.save_vsp;
+  tcr->catch_top = original.catch_top;
+  tcr->wasm_gprs[arg_z] = funcall_mv0;
+  tcr->wasm_gprs[arg_y] = funcall_mv1;
+  tcr->wasm_gprs[arg_x] = funcall_mv2;
+  tcr->wasm_gprs[nargs] = box_fixnum(3);
+  tcr->wasm_gprs[imm0] = box_fixnum(WASM_SUBPRIM_VALUES_INDEX);
+  wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_MKUNWIND_INDEX));
+  if (tcr->catch_top == original.catch_top) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_CATCH_INSTALL;
+  }
+
+  funcall_mv_args[0] = funcall_mv0;
+  funcall_mv_args[1] = funcall_mv1;
+  funcall_mv_args[2] = funcall_mv2;
+  tcr->wasm_pending_throw = 0;
+  tcr->wasm_gprs[arg_z] = funcall_mv0;
+  tcr->wasm_gprs[imm0] = box_fixnum(1);
+  (void)wasm_funcall_common(tcr, nthrowvalues_fn_value, funcall_mv_args, 3, 0);
+  if (!tcr->wasm_pending_throw) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_PENDING_THROW;
+  }
+  if (tcr->wasm_gprs[nargs] != box_fixnum(3)) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_NARGS;
+  }
+  if (tcr->wasm_gprs[arg_z] != funcall_mv0) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_ARGZ;
+  }
+  if ((LispObj)tcr->save_vsp != tcr->wasm_gprs[vsp]) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_VSP;
+  }
+  if (tcr->save_tsp != NULL) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_SAVETSP;
+  }
+  if ((tcr->save_vsp == NULL) ||
+      (tcr->save_vsp[0] != funcall_mv0) ||
+      (tcr->save_vsp[1] != funcall_mv1) ||
+      (tcr->save_vsp[2] != funcall_mv2)) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_SAVEVSP_VALUES;
+  }
+  if (tcr->last_lisp_frame != original.last_lisp_frame) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_LAST;
+  }
+  if (tcr->catch_top != original.catch_top) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_CATCH_RESTORE;
+  }
+  if ((BytePtr)wasm_get_cstack_pointer() != original.cstack_sp) {
+    wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
+    return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_SP_RESTORE;
   }
 
   wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
