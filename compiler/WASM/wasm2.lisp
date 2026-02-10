@@ -3469,7 +3469,10 @@
          (val-temp (wasm2-allocate-temp))
          (slot-fixnum (acode-fixnum-form-p index))
          (slot-fixnum-boxed (and (typep slot-fixnum 'fixnum)
-                                 (wasm2-box-fixnum slot-fixnum))))
+                                 (wasm2-box-fixnum slot-fixnum)))
+         (dynamic-subtag-keyword (wasm2-proven-uvset-subtag-keyword vector))
+         (dynamic-subtag (and dynamic-subtag-keyword
+                              (nx-lookup-target-uvector-subtag dynamic-subtag-keyword))))
     (wasm2-form seg nil nil vector)
     (wasm2-emit :local.set vec-temp)
     (if slot-fixnum-boxed
@@ -3486,7 +3489,10 @@
         (wasm2-emit :local.set idx-temp)
         (wasm2-form seg nil nil value)
         (wasm2-emit :local.set val-temp)
-        (wasm2-emit-misc-set-fallback-local vec-temp idx-temp val-temp t t)))
+        (if dynamic-subtag
+          (wasm2-emit-misc-dynamic-slot-set-with-subtag-guard vec-temp idx-temp val-temp
+                                                               dynamic-subtag t)
+          (wasm2-emit-misc-set-fallback-local vec-temp idx-temp val-temp t t))))
     (when (wasm2-returning-p xfer)
       (wasm2-emit :set-arg-z)
       (wasm2-emit :set-nargs 1)
@@ -4100,6 +4106,67 @@
       (if return-value-p
         (wasm2-emit :if then-ir else-ir)
         (wasm2-emit :if-void then-ir else-ir)))))
+
+(defun wasm2-emit-misc-fixnum-index-in-range-test (obj-local slot-local)
+  (let* ((fixnum-mask (1- (ash 1 *wasm2-target-fixnum-shift*)))
+         (header-count-mask (logand #xffffffff (lognot wasm::subtag-mask)))
+         (header-count-shift (- wasm::num-subtag-bits wasm::fixnum-shift)))
+    (if (plusp fixnum-mask)
+      (progn
+        (wasm2-emit :local.get slot-local)
+        (wasm2-emit :const fixnum-mask)
+        (wasm2-emit :i32-and)
+        (wasm2-emit :i32-eqz))
+      (wasm2-emit :const 1))
+    (wasm2-emit :local.get slot-local)
+    (wasm2-emit :const 0)
+    (wasm2-emit :i32-ge-s)
+    (wasm2-emit :i32-and)
+    (wasm2-emit :local.get slot-local)
+    (unless (zerop *wasm2-target-fixnum-shift*)
+      (wasm2-emit :const *wasm2-target-fixnum-shift*)
+      (wasm2-emit :i32-shr-u))
+    (wasm2-emit :local.get obj-local)
+    (unless (zerop wasm::misc-header-offset)
+      (wasm2-emit :const wasm::misc-header-offset)
+      (wasm2-emit :i32-add))
+    (wasm2-emit :i32-load)
+    (wasm2-emit :const header-count-mask)
+    (wasm2-emit :i32-and)
+    (unless (zerop header-count-shift)
+      (wasm2-emit :const header-count-shift)
+      (wasm2-emit :i32-shr-u))
+    (wasm2-emit :i32-lt-u)
+    (wasm2-emit :i32-and)))
+
+(defun wasm2-emit-misc-dynamic-slot-set-with-subtag-guard (obj-local slot-local value-local expected-subtag
+                                                            &optional return-value-p)
+  (wasm2-emit-misc-subtag-test obj-local expected-subtag)
+  (wasm2-emit-misc-fixnum-index-in-range-test obj-local slot-local)
+  (wasm2-emit :i32-and)
+  (let* ((then-ir (wasm2-with-ir
+                    (lambda ()
+                      (wasm2-emit :local.get obj-local)
+                      (wasm2-emit-misc-node-slot-address 0)
+                      (wasm2-emit :local.get slot-local)
+                      (unless (zerop *wasm2-target-fixnum-shift*)
+                        (wasm2-emit :const *wasm2-target-fixnum-shift*)
+                        (wasm2-emit :i32-shr-u))
+                      (unless (zerop *wasm2-target-node-shift*)
+                        (wasm2-emit :const *wasm2-target-node-shift*)
+                        (wasm2-emit :i32-shl))
+                      (wasm2-emit :i32-add)
+                      (wasm2-emit :local.get value-local)
+                      (wasm2-emit :i32-store)
+                      (when return-value-p
+                        (wasm2-emit :local.get value-local)))))
+         (else-ir (wasm2-with-ir
+                    (lambda ()
+                      (wasm2-emit-misc-set-fallback-local obj-local slot-local value-local
+                                                           return-value-p t)))))
+    (if return-value-p
+      (wasm2-emit :if then-ir else-ir)
+      (wasm2-emit :if-void then-ir else-ir))))
 
 (defun wasm2-proven-svset-slot-p (slot-form)
   (let* ((slot (acode-fixnum-form-p slot-form)))
