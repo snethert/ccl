@@ -96,6 +96,7 @@ Out of scope:
 - `B10C-01A-08` regression checkpoint is now captured from required validation flow: kernel rebuild via `env.sh`, strict static audit (`scripts/wasm/arm-retirement-audit.sh --strict` => `total_hits=0`), and full smoke (`node doc/wasm/js/all-smoke.mjs` pass).
 - `B10C-01A-09` primitive ABI split is now landed in `compiler/WASM/wasm2.lisp`: fixnum primitive emission is separated into explicit `hot direct ops` helpers and `compat fallback ops` helpers, with dispatch boundaries now encoded per fixnum op so upcoming direct lowering slices can replace compat lanes without callsite shape churn.
 - `B10C-01A-10` binary fixnum direct lowering is now landed in `compiler/WASM/wasm2.lisp`: `:fixnum-add/:fixnum-sub/:fixnum-mul/:fixnum-logand/:fixnum-logior/:fixnum-logxor` now default to direct WASM lowering in the hot lane, with explicit compatibility fallback edges only for type/overflow failures (and `:fixnum-ash` still routed through compat until `B10C-01A-12`).
+- `B10C-01A-11` unary fixnum direct lowering is now landed in `compiler/WASM/wasm2.lisp`: `:fixnum-lognot/:fixnum-neg` now default to direct WASM lowering in the hot lane, with explicit compatibility fallback edges only for type failures (`lognot`) and type/overflow failures (`neg`).
 - WASM GC root scanning is now centralized behind descriptor-driven XP/TCR/C-stack traversal in `lisp-kernel/wasm-gc.c`: an explicit GC root-descriptor object now controls XP node spans, XP locatives, C-stack safepoint frame publication, and TCR TLB inclusion; XP node/locative iteration, C-stack frame slot publication, and TCR xframe/TLB traversal consume shared helper paths; descriptor IDs use wasm-owned alias constants (`wasm_gpr_arg_z..wasm_gpr_fn`) instead of direct legacy macro names. Descriptor policy publication is now externalized via wasm platform API (`wasm_publish_gc_root_policy`, `wasm_current_gc_root_policy`, `wasm_reset_gc_root_policy`) plus runtime-mode publication APIs (`wasm_publish_gc_root_policy_mode`, `wasm_current_gc_root_policy_mode`) and host-visible boundary exports (`wasm_set_gc_root_policy`, `wasm_get_gc_root_policy`, `wasm_set_gc_root_policy_mode`, `wasm_get_gc_root_policy_mode`).
 - Compiler/module pipeline now carries GC root-policy mode metadata end-to-end: wasm2 compiled-module registration emits per-module mode values, bundle/index tooling preserves `gcRootPolicyModes`, kernel exports provide per-entry mode registration/query/clear, and runtime dispatch paths publish entry mode before compiled entry invocation.
 - WASM dnode forwarding math is now architecture-neutral in `lisp-kernel/wasm-gc.c`: forwarding offsets are computed from direct pagelet mark-word prefix counts, removing ARM-endian halfword selection logic from the hot relocation path.
@@ -111,11 +112,11 @@ Out of scope:
 
 ## Immediate Next Step
 
-- Action: advance from binary hot-lane direct lowering into unary hot-lane swapout.
-- `1.` start `B10C-01A-11` by replacing unary fixnum compat fallback default emission with direct WASM lowering in `compiler/WASM/wasm2.lisp`, keeping explicit overflow/type compatibility fallback edges only.
-- `2.` continue strict hot-math order through `B10C-01A-12`..`B10C-01A-17` with per-slice rebuild + strict audit + smoke evidence.
+- Action: advance from unary hot-lane direct lowering into shift-path hardening.
+- `1.` start `B10C-01A-12` by replacing `:fixnum-ash` compat-default emission with direct WASM lowering for bounded fixnum shifts in `compiler/WASM/wasm2.lisp`, keeping explicit out-of-range/type compatibility fallback edges only.
+- `2.` continue strict hot-math order through `B10C-01A-13`..`B10C-01A-17` with per-slice rebuild + strict audit + smoke evidence.
 - `3.` after hot-math closure, proceed to high-impact object lanes (`B10C-01A-18`..`B10C-01A-22`), medium-impact call/control lanes (`B10C-01A-23`..`B10C-01A-25`), and promotion gates (`B10C-01A-26`..`B10C-01A-27`).
-- Why now: `B10C-01A-04`/`A-05`, `B10C-01A-08`, `B10C-01A-09`, and `B10C-01A-10` are now closed with required validation evidence, so hot-lane migration can continue from binary direct lowering into unary/shift closure.
+- Why now: `B10C-01A-04`/`A-05`, `B10C-01A-08`, `B10C-01A-09`, `B10C-01A-10`, and `B10C-01A-11` are now closed with required validation evidence, so hot-lane migration can continue from unary direct lowering into shift closure.
 - Success evidence: hot math lanes compile to direct lowering by default, compatibility callsites are explicit and bounded, and required validation remains green at each slice.
 
 ## Wave A Progress (B10S-01)

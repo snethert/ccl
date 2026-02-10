@@ -5145,6 +5145,10 @@
 
 (defconstant +wasm2-fixnum-direct-scratch-count+ 3)
 
+;; Once we're fully on pure direct WASM lanes, we can likely tighten this by:
+;; Keeping one invariant check at module-emission setup, and
+;; Making the accessor a simple (+ base offset) in hot compiler paths
+;; (or inlining offsets).
 (defun wasm2-fixnum-direct-scratch-local (offset)
   (let ((base *wasm2-fixnum-direct-scratch-base*))
     (unless (and (fixnump base) (>= base 0))
@@ -5192,6 +5196,10 @@
   (wasm2-emit-local-get-op body x-local)
   (wasm2-emit-local-get-op body y-local)
   (wasm2-emit-compat-fallback-fixnum-binary-op body compat-op-key))
+
+(defun wasm2-emit-hot-direct-fixnum-unary-fallback (body x-local compat-op-key)
+  (wasm2-emit-local-get-op body x-local)
+  (wasm2-emit-compat-fallback-fixnum-unary-op body compat-op-key))
 
 (defun wasm2-emit-hot-direct-fixnum-add (body x-local y-local result-local compat-op-key)
   (wasm2-emit-local-get-op body x-local)
@@ -5302,10 +5310,47 @@
     (wasm2-push-u8 body #x0b)) ; end
   t)
 
-(defun wasm2-emit-hot-direct-fixnum-unary-op (body op)
-  (declare (ignore body op))
-  ;; B10C-01A-11 fills this direct-lowering lane.
-  nil)
+(defun wasm2-emit-hot-direct-fixnum-neg (body x-local unboxed-local compat-op-key)
+  (let* ((fixnum-bits (1- (- *wasm2-target-bits-in-word* *wasm2-target-fixnum-shift*)))
+         (min-fixnum (ash -1 fixnum-bits)))
+    (wasm2-emit-unboxed-fixnum-local-i32 body x-local)
+    (wasm2-emit-local-tee-op body unboxed-local)
+    (wasm2-emit-i32-const-op body min-fixnum)
+    (wasm2-push-u8 body #x46) ; i32.eq
+    (wasm2-push-u8 body #x04) ; if
+    (wasm2-push-u8 body #x7f) ; blocktype i32
+    (wasm2-emit-hot-direct-fixnum-unary-fallback body x-local compat-op-key)
+    (wasm2-push-u8 body #x05) ; else
+    (wasm2-emit-i32-const-op body 0)
+    (wasm2-emit-local-get-op body unboxed-local)
+    (wasm2-push-u8 body #x6b) ; i32.sub
+    (wasm2-emit-i32-const-op body *wasm2-target-fixnum-shift*)
+    (wasm2-push-u8 body #x74) ; i32.shl
+    (wasm2-push-u8 body #x0b))) ; end
+
+(defun wasm2-emit-hot-direct-fixnum-unary-op (body op compat-op-key)
+  (unless (member op '(:fixnum-lognot :fixnum-neg))
+    (return-from wasm2-emit-hot-direct-fixnum-unary-op nil))
+  (let* ((x-local (wasm2-fixnum-direct-scratch-local 0))
+         (unboxed-local (wasm2-fixnum-direct-scratch-local 2))
+         (lognot-mask (lognot (1- (ash 1 *wasm2-target-fixnum-shift*)))))
+    ;; Preserve operand so the direct lane and explicit fallback edges share
+    ;; the original boxed value.
+    (wasm2-emit-local-set-op body x-local)
+    (wasm2-emit-fixnum-local-tag-check body x-local)
+    (wasm2-push-u8 body #x04) ; if
+    (wasm2-push-u8 body #x7f) ; blocktype i32
+    (case op
+      (:fixnum-lognot
+       (wasm2-emit-local-get-op body x-local)
+       (wasm2-emit-i32-const-op body lognot-mask)
+       (wasm2-push-u8 body #x73)) ; i32.xor
+      (:fixnum-neg
+       (wasm2-emit-hot-direct-fixnum-neg body x-local unboxed-local compat-op-key)))
+    (wasm2-push-u8 body #x05) ; else
+    (wasm2-emit-hot-direct-fixnum-unary-fallback body x-local compat-op-key)
+    (wasm2-push-u8 body #x0b)) ; end
+  t)
 
 (defun wasm2-emit-compat-fallback-fixnum-binary-op (body compat-op-key)
   (wasm2-emit-call-index body (wasm2-generic-import-index :set-arg-y))
@@ -5327,7 +5372,7 @@
       (wasm2-emit-compat-fallback-fixnum-binary-op body compat-op-key)))
 
 (defun wasm2-emit-fixnum-unary-op (body op compat-op-key)
-  (or (wasm2-emit-hot-direct-fixnum-unary-op body op)
+  (or (wasm2-emit-hot-direct-fixnum-unary-op body op compat-op-key)
       (wasm2-emit-compat-fallback-fixnum-unary-op body compat-op-key)))
 
 (defun wasm2-emit-call-with-pending (body key tmp &optional label-stack)
