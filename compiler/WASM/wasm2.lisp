@@ -3022,23 +3022,22 @@
   (let* ((vec-temp (wasm2-allocate-temp))
          (idx-temp (wasm2-allocate-temp))
          (val-temp (wasm2-allocate-temp))
-         (misc-set (wasm2-subprim-fixnum '.SPmisc-set)))
+         (proven-slot (wasm2-proven-svset-slot-p index))
+         (simple-vector-subtag (nx-lookup-target-uvector-subtag :simple-vector)))
     (wasm2-form seg nil nil vector)
     (wasm2-emit :local.set vec-temp)
-    (wasm2-form seg nil nil index)
-    (wasm2-emit :local.set idx-temp)
-    (wasm2-form seg nil nil value)
-    (wasm2-emit :local.set val-temp)
-    (wasm2-with-spilled-locals
-      (lambda ()
-        (wasm2-emit :local.get vec-temp)
-        (wasm2-emit :local.get idx-temp)
-        (wasm2-emit :local.get val-temp)
-        (wasm2-emit :set-arg2)
-        (wasm2-emit :set-arg1)
-        (wasm2-emit :set-arg0)
-        (wasm2-emit-call-subprim misc-set)
-        (wasm2-emit :arg0))))
+    (if proven-slot
+      (progn
+        (wasm2-form seg nil nil value)
+        (wasm2-emit :local.set val-temp)
+        (wasm2-emit-misc-slot-set-with-subtag-guard vec-temp proven-slot val-temp
+                                                     simple-vector-subtag t))
+      (progn
+        (wasm2-form seg nil nil index)
+        (wasm2-emit :local.set idx-temp)
+        (wasm2-form seg nil nil value)
+        (wasm2-emit :local.set val-temp)
+        (wasm2-emit-misc-set-fallback-local vec-temp idx-temp val-temp t t))))
   (when (wasm2-returning-p xfer)
     (wasm2-emit :set-arg-z)
     (wasm2-emit :set-nargs 1)
@@ -4056,12 +4055,15 @@
         (wasm2-emit-call-subprim misc-ref)
         (wasm2-emit :arg0)))))
 
-(defun wasm2-emit-misc-set-fallback-local (obj-local slot-fixnum value-local &optional return-value-p)
+(defun wasm2-emit-misc-set-fallback-local (obj-local slot value-local
+                                           &optional return-value-p slot-is-local-p)
   (let* ((misc-set (wasm2-subprim-fixnum '.SPmisc-set)))
     (wasm2-with-spilled-locals
       (lambda ()
         (wasm2-emit :local.get obj-local)
-        (wasm2-emit :const slot-fixnum)
+        (if slot-is-local-p
+          (wasm2-emit :local.get slot)
+          (wasm2-emit :const slot))
         (wasm2-emit :local.get value-local)
         (wasm2-emit :set-arg2)
         (wasm2-emit :set-arg1)
@@ -4089,6 +4091,12 @@
       (if return-value-p
         (wasm2-emit :if then-ir else-ir)
         (wasm2-emit :if-void then-ir else-ir)))))
+
+(defun wasm2-proven-svset-slot-p (slot-form)
+  (let* ((slot (acode-fixnum-form-p slot-form)))
+    (and (typep slot 'fixnum)
+         (nx2-constant-index-ok-for-type-keyword slot :simple-vector)
+         slot)))
 
 (defun wasm2-proven-closure-forward-ref-slot-p (slot)
   (and (typep slot 'fixnum)
