@@ -525,6 +525,30 @@ wasm_boot_trace_obj_brief(const char *label, LispObj value)
 }
 
 static void
+wasm_boot_trace_vsp_snapshot(const char *phase, TCR *tcr)
+{
+  if (tcr == NULL) {
+    return;
+  }
+  LispObj *vsp_ptr = (LispObj *)tcr->wasm_gprs[vsp];
+  if (vsp_ptr == NULL || !wasm_ptr_in_linear_memory(vsp_ptr, sizeof(LispObj) * 4u)) {
+    wasm_boot_trace_log(
+      "WASM boot trace: vsp-snapshot phase=%s vsp=0x%08x state=invalid\n",
+      phase ? phase : "?",
+      (unsigned)(uint32_t)tcr->wasm_gprs[vsp]);
+    return;
+  }
+  wasm_boot_trace_log(
+    "WASM boot trace: vsp-snapshot phase=%s vsp=0x%08x [0]=0x%08x [1]=0x%08x [2]=0x%08x [3]=0x%08x\n",
+    phase ? phase : "?",
+    (unsigned)(uint32_t)tcr->wasm_gprs[vsp],
+    (unsigned)(uint32_t)vsp_ptr[0],
+    (unsigned)(uint32_t)vsp_ptr[1],
+    (unsigned)(uint32_t)vsp_ptr[2],
+    (unsigned)(uint32_t)vsp_ptr[3]);
+}
+
+static void
 wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
 {
   LispObj original_fn_value = fn_value;
@@ -1553,6 +1577,29 @@ __attribute__((used, visibility("default"), export_name("wasm_misc_alloc")))
 LispObj
 wasm_misc_alloc(TCR *tcr, unsigned subtag, signed_natural count)
 {
+  int32_t nfn_entry = -1;
+  int32_t rfn_entry = -1;
+  if (tcr != NULL) {
+    nfn_entry = wasm_toplevel_trace_entry_index(tcr->wasm_gprs[nfn], NULL, NULL);
+    rfn_entry = wasm_toplevel_trace_entry_index(tcr->wasm_gprs[Rfn], NULL, NULL);
+    if (nfn_entry == 5453 || nfn_entry == 5558 || nfn_entry == 5559 || nfn_entry == 5560 ||
+        rfn_entry == 5453 || rfn_entry == 5558 || rfn_entry == 5559 || rfn_entry == 5560) {
+      wasm_boot_trace_log(
+        "WASM boot trace: misc-alloc phase=enter subtag=0x%08x count=%d subtag_tag=0x%08x nfn=0x%08x nfn_entry=%d rfn=0x%08x rfn_entry=%d nargs=0x%08x arg_z=0x%08x arg_y=0x%08x arg_x=0x%08x vsp=0x%08x\n",
+        (unsigned)subtag,
+        (int)count,
+        (unsigned)(subtag & fulltagmask),
+        (unsigned)(uint32_t)tcr->wasm_gprs[nfn],
+        (int)nfn_entry,
+        (unsigned)(uint32_t)tcr->wasm_gprs[Rfn],
+        (int)rfn_entry,
+        (unsigned)(uint32_t)tcr->wasm_gprs[nargs],
+        (unsigned)(uint32_t)tcr->wasm_gprs[arg_z],
+        (unsigned)(uint32_t)tcr->wasm_gprs[arg_y],
+        (unsigned)(uint32_t)tcr->wasm_gprs[arg_x],
+        (unsigned)(uint32_t)tcr->wasm_gprs[vsp]);
+    }
+  }
   if (tcr == NULL) {
     static const char msg[] = "WASM misc_alloc: null TCR\n";
     wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
@@ -1567,6 +1614,23 @@ wasm_misc_alloc(TCR *tcr, unsigned subtag, signed_natural count)
     return wasm_alloc_ivector_uninitialized(tcr, subtag, count);
   }
 
+  if (nfn_entry == 5453 || nfn_entry == 5558 || nfn_entry == 5559 || nfn_entry == 5560 ||
+      rfn_entry == 5453 || rfn_entry == 5558 || rfn_entry == 5559 || rfn_entry == 5560) {
+    wasm_boot_trace_log(
+      "WASM boot trace: misc-alloc phase=bad-subtag subtag=0x%08x count=%d subtag_tag=0x%08x nfn=0x%08x nfn_entry=%d rfn=0x%08x rfn_entry=%d nargs=0x%08x arg_z=0x%08x arg_y=0x%08x arg_x=0x%08x vsp=0x%08x\n",
+      (unsigned)subtag,
+      (int)count,
+      (unsigned)tag,
+      (unsigned)(uint32_t)tcr->wasm_gprs[nfn],
+      (int)nfn_entry,
+      (unsigned)(uint32_t)tcr->wasm_gprs[Rfn],
+      (int)rfn_entry,
+      (unsigned)(uint32_t)tcr->wasm_gprs[nargs],
+      (unsigned)(uint32_t)tcr->wasm_gprs[arg_z],
+      (unsigned)(uint32_t)tcr->wasm_gprs[arg_y],
+      (unsigned)(uint32_t)tcr->wasm_gprs[arg_x],
+      (unsigned)(uint32_t)tcr->wasm_gprs[vsp]);
+  }
   static const char msg[] = "WASM misc_alloc: bad subtag\n";
   wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
   return lisp_nil;
@@ -2424,9 +2488,34 @@ wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natu
       (unsigned)tcr->wasm_pending_throw,
       (unsigned)(uint32_t)tcr->wasm_gprs[nargs]);
     if (callee_entry < 0) {
+      int fn_is_fixnum = (tag_of(fn_value) == tag_fixnum);
+      int arg0_is_fixnum = (tag_of(arg0) == tag_fixnum);
+      int arg1_is_fixnum = (tag_of(arg1) == tag_fixnum);
       wasm_boot_trace_obj_brief("funcall-common fn", fn_value);
       wasm_boot_trace_obj_brief("funcall-common arg0", arg0);
       wasm_boot_trace_obj_brief("funcall-common arg1", arg1);
+      wasm_boot_trace_obj_brief("funcall-common reg-nfn", tcr->wasm_gprs[nfn]);
+      wasm_boot_trace_obj_brief("funcall-common reg-rfn", tcr->wasm_gprs[Rfn]);
+      wasm_boot_trace_obj_brief("funcall-common reg-fname", tcr->wasm_gprs[fname]);
+      wasm_boot_trace_log(
+        "WASM boot trace: funcall-common noncallable caller_entry=%d callee_entry=%d fn=0x%08x fn_fixnum=%d fn_unboxed=%d arg0=0x%08x arg0_fixnum=%d arg0_unboxed=%d arg1=0x%08x arg1_fixnum=%d arg1_unboxed=%d arg_x=0x%08x imm0=0x%08x imm1=0x%08x vsp=0x%08x save_vsp=0x%08x\n",
+        (int)caller_entry,
+        (int)callee_entry,
+        (unsigned)(uint32_t)fn_value,
+        fn_is_fixnum ? 1 : 0,
+        fn_is_fixnum ? (int)unbox_fixnum(fn_value) : 0,
+        (unsigned)(uint32_t)arg0,
+        arg0_is_fixnum ? 1 : 0,
+        arg0_is_fixnum ? (int)unbox_fixnum(arg0) : 0,
+        (unsigned)(uint32_t)arg1,
+        arg1_is_fixnum ? 1 : 0,
+        arg1_is_fixnum ? (int)unbox_fixnum(arg1) : 0,
+        (unsigned)(uint32_t)tcr->wasm_gprs[arg_x],
+        (unsigned)(uint32_t)tcr->wasm_gprs[imm0],
+        (unsigned)(uint32_t)tcr->wasm_gprs[imm1],
+        (unsigned)(uint32_t)tcr->wasm_gprs[vsp],
+        (unsigned)(uint32_t)(LispObj)tcr->save_vsp);
+      wasm_boot_trace_vsp_snapshot("funcall-common-noncallable", tcr);
     }
   }
 

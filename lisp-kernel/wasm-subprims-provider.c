@@ -1963,12 +1963,25 @@ wasm_runtime_trace_entry(uint32_t entry_index)
 {
   switch (entry_index) {
     case 5453u: /* TOPLEVEL-LOOP */
+    case 5558u: /* RUNTIME-COMMAND--POLL-FRAME (older bundle index) */
     case 5559u: /* RUNTIME-COMMAND--POLL-FRAME */
     case 5560u: /* RUNTIME-BRIDGE-PUMP-COMMANDS */
+    case 5561u:
+    case 5562u:
+    case 5563u:
       return 1;
     default:
       return 0;
   }
+}
+
+static int
+wasm_runtime_trace_entry_signed(int32_t entry_index)
+{
+  if (entry_index < 0) {
+    return 0;
+  }
+  return wasm_runtime_trace_entry((uint32_t)entry_index);
 }
 
 static unsigned
@@ -2122,6 +2135,157 @@ wasm_runtime_trace_ffi(const char *phase, const char *operation, TCR *tcr)
   wasm_host_log(line, pos);
 }
 
+static void
+wasm_runtime_trace_funcall_error(const char *phase,
+                                 TCR *tcr,
+                                 signed_natural errnum,
+                                 LispObj name,
+                                 LispObj fn_candidate)
+{
+  if (tcr == NULL) {
+    return;
+  }
+  int32_t nfn_entry = wasm_runtime_trace_callable_entry(wasm_reg(tcr, nfn));
+  int32_t rfn_entry = wasm_runtime_trace_callable_entry(wasm_reg(tcr, Rfn));
+  int32_t fn_entry = wasm_runtime_trace_callable_entry(fn_candidate);
+  int32_t name_entry = wasm_runtime_trace_callable_entry(name);
+  if (!wasm_runtime_trace_entry_signed(nfn_entry) &&
+      !wasm_runtime_trace_entry_signed(rfn_entry) &&
+      !wasm_runtime_trace_entry_signed(fn_entry) &&
+      !wasm_runtime_trace_entry_signed(name_entry)) {
+    return;
+  }
+
+  int name_is_fixnum = (tag_of(name) == tag_fixnum);
+  int fn_is_fixnum = (tag_of(fn_candidate) == tag_fixnum);
+
+  char line[640];
+  unsigned pos = 0u;
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, "WASM runtime trace funcall-error ONE-LINE: ");
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, (phase != NULL) ? phase : "?");
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " err=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)errnum);
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " pending_throw=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)tcr->wasm_pending_throw);
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " nfn=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, nfn));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " nfn_entry=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)nfn_entry);
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " rfn=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, Rfn));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " rfn_entry=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)rfn_entry);
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " name=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)name);
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " name_tag=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)tag_of(name));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " name_fulltag=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)(name & fulltagmask));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " name_entry=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)name_entry);
+  if (name_is_fixnum) {
+    pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " name_fixnum=");
+    pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)unbox_fixnum(name));
+  }
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " fn_candidate=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)fn_candidate);
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " fn_entry=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)fn_entry);
+  if (fn_is_fixnum) {
+    pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " fn_fixnum=");
+    pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)unbox_fixnum(fn_candidate));
+  }
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " nargs=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, nargs));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " arg_z=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, arg_z));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " arg_y=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, arg_y));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " arg_x=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, arg_x));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " imm0=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, imm0));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " imm1=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, imm1));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " fname=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, fname));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " vsp=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, vsp));
+  if (pos < sizeof(line)) {
+    line[pos++] = '\n';
+  }
+  wasm_host_log(line, pos);
+}
+
+static void
+wasm_runtime_trace_misc_alloc(const char *phase,
+                              TCR *tcr,
+                              LispObj subtag_val,
+                              LispObj count_val)
+{
+  if (tcr == NULL) {
+    return;
+  }
+  int32_t nfn_entry = wasm_runtime_trace_callable_entry(wasm_reg(tcr, nfn));
+  int32_t rfn_entry = wasm_runtime_trace_callable_entry(wasm_reg(tcr, Rfn));
+  if (!wasm_runtime_trace_entry_signed(nfn_entry) &&
+      !wasm_runtime_trace_entry_signed(rfn_entry)) {
+    return;
+  }
+
+  int subtag_is_fixnum = (tag_of(subtag_val) == tag_fixnum);
+  int count_is_fixnum = (tag_of(count_val) == tag_fixnum);
+
+  char line[640];
+  unsigned pos = 0u;
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, "WASM runtime trace misc-alloc ONE-LINE: ");
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, (phase != NULL) ? phase : "?");
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " pending_throw=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)tcr->wasm_pending_throw);
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " nfn=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, nfn));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " nfn_entry=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)nfn_entry);
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " rfn=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, Rfn));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " rfn_entry=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)rfn_entry);
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " subtag=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)subtag_val);
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " subtag_tag=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)tag_of(subtag_val));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " subtag_fixnum=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)subtag_is_fixnum);
+  if (subtag_is_fixnum) {
+    pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " subtag_unboxed=");
+    pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)unbox_fixnum(subtag_val));
+  }
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " count=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)count_val);
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " count_tag=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)tag_of(count_val));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " count_fixnum=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)count_is_fixnum);
+  if (count_is_fixnum) {
+    pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " count_unboxed=");
+    pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)unbox_fixnum(count_val));
+  }
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " arg_z=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, arg_z));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " arg_y=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, arg_y));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " arg_x=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, arg_x));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " nargs=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, nargs));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " vsp=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, vsp));
+  if (pos < sizeof(line)) {
+    line[pos++] = '\n';
+  }
+  wasm_host_log(line, pos);
+}
+
 static inline void
 wasm_call_entry_index(uint32_t index)
 {
@@ -2146,6 +2310,7 @@ void _SPstack_cons_rest_arg(void);
 static void
 wasm_signal_funcall_error(TCR *tcr, signed_natural errnum, LispObj name)
 {
+  wasm_runtime_trace_funcall_error("signal", tcr, errnum, name, wasm_reg(tcr, nfn));
   wasm_set_reg(tcr, arg_y, box_fixnum(errnum));
   wasm_set_reg(tcr, arg_z, name);
   wasm_set_nargs_count(tcr, 2);
@@ -2164,6 +2329,7 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
 
   LispObj entry = deref(fn_value, 1);
   if (tag_of(entry) != tag_fixnum) {
+    wasm_runtime_trace_funcall_error("entry-not-fixnum", tcr, WASM_XNOTFUN, name, fn_value);
     wasm_signal_funcall_error(tcr, WASM_XNOTFUN, name);
     return;
   }
@@ -2242,10 +2408,12 @@ wasm_call_function_or_symbol(TCR *tcr, LispObj fn_value)
 {
   LispObj name = fn_value;
   if (fn_value == nrs_UDF.vcell) {
+    wasm_runtime_trace_funcall_error("reject-udf", tcr, WASM_XFUNBND, name, fn_value);
     wasm_signal_funcall_error(tcr, WASM_XFUNBND, name);
     return;
   }
   if (fn_value == (LispObj)nil_value || fulltag_of(fn_value) != fulltag_misc) {
+    wasm_runtime_trace_funcall_error("reject-non-misc", tcr, WASM_XNOTFUN, name, fn_value);
     wasm_signal_funcall_error(tcr, WASM_XNOTFUN, name);
     return;
   }
@@ -2255,10 +2423,12 @@ wasm_call_function_or_symbol(TCR *tcr, LispObj fn_value)
     lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(fn_value));
     fn_value = sym->fcell;
     if (fn_value == nrs_UDF.vcell) {
+      wasm_runtime_trace_funcall_error("reject-symbol-fcell-udf", tcr, WASM_XFUNBND, name, fn_value);
       wasm_signal_funcall_error(tcr, WASM_XFUNBND, name);
       return;
     }
     if (fulltag_of(fn_value) != fulltag_misc) {
+      wasm_runtime_trace_funcall_error("reject-symbol-fcell-non-misc", tcr, WASM_XNOTFUN, name, fn_value);
       wasm_signal_funcall_error(tcr, WASM_XNOTFUN, name);
       return;
     }
@@ -2266,6 +2436,7 @@ wasm_call_function_or_symbol(TCR *tcr, LispObj fn_value)
     subtag = header_subtag(header);
   }
   if (!wasm_function_like_subtag(subtag)) {
+    wasm_runtime_trace_funcall_error("reject-bad-subtag", tcr, WASM_XNOTFUN, name, fn_value);
     wasm_signal_funcall_error(tcr, WASM_XNOTFUN, name);
     return;
   }
@@ -3070,12 +3241,14 @@ _SPmisc_alloc(void)
 
   LispObj subtag_val = wasm_reg(tcr, arg_z);
   if (tag_of(subtag_val) != tag_fixnum) {
+    wasm_runtime_trace_misc_alloc("subtag-not-fixnum", tcr, subtag_val, wasm_reg(tcr, arg_y));
     static const char msg[] = "WASM _SPmisc_alloc: subtag not fixnum\n";
     wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
     wasm_subprims_trap();
   }
   LispObj count_val = wasm_reg(tcr, arg_y);
   if (tag_of(count_val) != tag_fixnum) {
+    wasm_runtime_trace_misc_alloc("count-not-fixnum", tcr, subtag_val, count_val);
     static const char msg[] = "WASM _SPmisc_alloc: count not fixnum\n";
     wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
     wasm_subprims_trap();
@@ -3091,6 +3264,7 @@ _SPmisc_alloc(void)
   }
   unsigned subtag_tag = subtag & fulltagmask;
   if (subtag_tag != fulltag_nodeheader && subtag_tag != fulltag_immheader) {
+    wasm_runtime_trace_misc_alloc("bad-subtag", tcr, subtag_val, count_val);
     static const char msg[] = "WASM _SPmisc_alloc: bad subtag\n";
     wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
     wasm_subprims_trap();
@@ -3098,6 +3272,7 @@ _SPmisc_alloc(void)
 
   LispObj obj = wasm_misc_alloc(tcr, (unsigned)subtag, count);
   if (obj == (LispObj)nil_value) {
+    wasm_runtime_trace_misc_alloc("kernel-alloc-failed", tcr, subtag_val, count_val);
     static const char msg[] = "WASM _SPmisc_alloc: kernel alloc failed\n";
     wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
     wasm_subprims_trap();
