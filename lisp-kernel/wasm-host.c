@@ -12,7 +12,274 @@
 #include "wasm-host.h"
 
 #include <errno.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
+
+typedef struct {
+  uint32_t request_id;
+  uint32_t opcode;
+} wasm_kernel_trace_request;
+
+#define WASM_KERNEL_TRACE_REQUEST_MAX 128u
+#define WASM_KERNEL_TRACE_DUMP_MAX 128u
+
+static wasm_kernel_trace_request wasm_kernel_trace_requests[WASM_KERNEL_TRACE_REQUEST_MAX];
+static uint32_t wasm_kernel_trace_request_count = 0u;
+static uint32_t wasm_kernel_trace_next_slot = 0u;
+
+static const char *
+wasm_kernel_trace_opcode_name(uint32_t opcode)
+{
+  switch (opcode) {
+    case KERNEL_OP_CAPS: return "KERNEL_OP_CAPS";
+    case KERNEL_OP_LOG: return "KERNEL_OP_LOG";
+    case KERNEL_OP_STREAM_WRITE: return "KERNEL_OP_STREAM_WRITE";
+    case KERNEL_OP_STREAM_READ: return "KERNEL_OP_STREAM_READ";
+    case KERNEL_OP_TIME_NOW: return "KERNEL_OP_TIME_NOW";
+    case KERNEL_OP_STREAM_OPEN: return "KERNEL_OP_STREAM_OPEN";
+    case KERNEL_OP_STREAM_CLOSE: return "KERNEL_OP_STREAM_CLOSE";
+    case KERNEL_OP_COMPILED_MODULES_REFRESH: return "KERNEL_OP_COMPILED_MODULES_REFRESH";
+    case KERNEL_OP_FS_PROBE: return "KERNEL_OP_FS_PROBE";
+    case KERNEL_OP_FS_TRUENAME: return "KERNEL_OP_FS_TRUENAME";
+    case KERNEL_OP_FS_DIRECTORY: return "KERNEL_OP_FS_DIRECTORY";
+    case KERNEL_OP_FS_FILE_WRITE_DATE: return "KERNEL_OP_FS_FILE_WRITE_DATE";
+    case KERNEL_OP_FS_RENAME: return "KERNEL_OP_FS_RENAME";
+    case KERNEL_OP_FS_DELETE: return "KERNEL_OP_FS_DELETE";
+    case KERNEL_OP_FS_ENSURE_DIRS: return "KERNEL_OP_FS_ENSURE_DIRS";
+    case KERNEL_OP_FS_DELETE_EMPTY_DIR: return "KERNEL_OP_FS_DELETE_EMPTY_DIR";
+    case KERNEL_OP_FS_DELETE_TREE: return "KERNEL_OP_FS_DELETE_TREE";
+    case KERNEL_OP_STREAM_SEEK: return "KERNEL_OP_STREAM_SEEK";
+    case KERNEL_OP_STREAM_TRUNCATE: return "KERNEL_OP_STREAM_TRUNCATE";
+    case KERNEL_OP_UI_POLL: return "KERNEL_OP_UI_POLL";
+    case KERNEL_OP_UI_RENDER: return "KERNEL_OP_UI_RENDER";
+    case KERNEL_OP_UI_MEASURE_TEXT: return "KERNEL_OP_UI_MEASURE_TEXT";
+    case KERNEL_OP_RUNTIME_EVENT: return "KERNEL_OP_RUNTIME_EVENT";
+    case KERNEL_OP_RUNTIME_COMMAND_POLL: return "KERNEL_OP_RUNTIME_COMMAND_POLL";
+    default: return "KERNEL_OP_UNKNOWN";
+  }
+}
+
+static void
+wasm_kernel_trace_log(const char *fmt, ...)
+{
+  char line[256];
+  va_list args;
+  va_start(args, fmt);
+  int n = vsnprintf(line, sizeof(line), fmt, args);
+  va_end(args);
+  if (n <= 0) {
+    return;
+  }
+  unsigned out_len = (unsigned)((n < (int)sizeof(line)) ? n : (int)(sizeof(line) - 1));
+  wasm_host_log(line, out_len);
+}
+
+static void
+wasm_kernel_trace_dump_bytes(const char *phase,
+                             uint32_t opcode,
+                             uint32_t request_id,
+                             const void *buf,
+                             uint32_t len)
+{
+  const uint8_t *p = (const uint8_t *)buf;
+  uint32_t shown = len;
+  if (shown > WASM_KERNEL_TRACE_DUMP_MAX) {
+    shown = WASM_KERNEL_TRACE_DUMP_MAX;
+  }
+  if (shown == 0u || p == NULL) {
+    wasm_kernel_trace_log(
+      "WASM kernel trace: %s op=0x%08x(%s) req=%u payload=<empty>\n",
+      phase ? phase : "?",
+      (unsigned)opcode,
+      wasm_kernel_trace_opcode_name(opcode),
+      (unsigned)request_id);
+    return;
+  }
+
+  for (uint32_t off = 0; off < shown; off += 16u) {
+    char hexbuf[16u * 3u + 1u];
+    uint32_t line_count = shown - off;
+    if (line_count > 16u) {
+      line_count = 16u;
+    }
+    uint32_t out = 0u;
+    for (uint32_t i = 0; i < line_count; i++) {
+      static const char hexdigits[] = "0123456789abcdef";
+      uint8_t b = p[off + i];
+      hexbuf[out++] = hexdigits[(b >> 4) & 0x0f];
+      hexbuf[out++] = hexdigits[b & 0x0f];
+      if (i + 1u < line_count) {
+        hexbuf[out++] = ' ';
+      }
+    }
+    hexbuf[out] = '\0';
+    wasm_kernel_trace_log(
+      "WASM kernel trace: %s op=0x%08x(%s) req=%u bytes[%u..%u]=%s\n",
+      phase ? phase : "?",
+      (unsigned)opcode,
+      wasm_kernel_trace_opcode_name(opcode),
+      (unsigned)request_id,
+      (unsigned)off,
+      (unsigned)(off + line_count),
+      hexbuf);
+  }
+  if (shown < len) {
+    wasm_kernel_trace_log(
+      "WASM kernel trace: %s op=0x%08x(%s) req=%u payload_truncated shown=%u total=%u\n",
+      phase ? phase : "?",
+      (unsigned)opcode,
+      wasm_kernel_trace_opcode_name(opcode),
+      (unsigned)request_id,
+      (unsigned)shown,
+      (unsigned)len);
+  }
+}
+
+static void
+wasm_kernel_trace_record(uint32_t request_id, uint32_t opcode)
+{
+  if (request_id == 0u) {
+    return;
+  }
+  uint32_t idx;
+  if (wasm_kernel_trace_request_count < WASM_KERNEL_TRACE_REQUEST_MAX) {
+    idx = wasm_kernel_trace_request_count++;
+  } else {
+    idx = wasm_kernel_trace_next_slot;
+    wasm_kernel_trace_next_slot++;
+    if (wasm_kernel_trace_next_slot >= WASM_KERNEL_TRACE_REQUEST_MAX) {
+      wasm_kernel_trace_next_slot = 0u;
+    }
+  }
+  wasm_kernel_trace_requests[idx].request_id = request_id;
+  wasm_kernel_trace_requests[idx].opcode = opcode;
+}
+
+static int
+wasm_kernel_trace_lookup(uint32_t request_id, uint32_t *out_opcode)
+{
+  if (request_id == 0u) {
+    return 0;
+  }
+  for (uint32_t i = 0; i < wasm_kernel_trace_request_count; i++) {
+    if (wasm_kernel_trace_requests[i].request_id == request_id) {
+      if (out_opcode) {
+        *out_opcode = wasm_kernel_trace_requests[i].opcode;
+      }
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static void
+wasm_kernel_trace_forget(uint32_t request_id)
+{
+  if (request_id == 0u) {
+    return;
+  }
+  for (uint32_t i = 0; i < wasm_kernel_trace_request_count; i++) {
+    if (wasm_kernel_trace_requests[i].request_id == request_id) {
+      wasm_kernel_trace_requests[i].request_id = 0u;
+      wasm_kernel_trace_requests[i].opcode = 0u;
+      return;
+    }
+  }
+}
+
+uint32_t
+kernel_request(uint32_t opcode, const void *payloadPtr, uint32_t payloadLen)
+{
+  uint32_t request_id = wasm_host_import_kernel_request(opcode, payloadPtr, payloadLen);
+  wasm_kernel_trace_record(request_id, opcode);
+  wasm_kernel_trace_log(
+    "WASM kernel trace: request op=0x%08x(%s) req=%u payload_ptr=0x%08x payload_len=%u\n",
+    (unsigned)opcode,
+    wasm_kernel_trace_opcode_name(opcode),
+    (unsigned)request_id,
+    (unsigned)(uint32_t)(uintptr_t)payloadPtr,
+    (unsigned)payloadLen);
+  wasm_kernel_trace_dump_bytes("request-payload", opcode, request_id, payloadPtr, payloadLen);
+  return request_id;
+}
+
+uint32_t
+kernel_poll(uint32_t requestId)
+{
+  uint32_t status = wasm_host_import_kernel_poll(requestId);
+  uint32_t opcode = 0u;
+  (void)wasm_kernel_trace_lookup(requestId, &opcode);
+  wasm_kernel_trace_log(
+    "WASM kernel trace: poll op=0x%08x(%s) req=%u status=%u\n",
+    (unsigned)opcode,
+    wasm_kernel_trace_opcode_name(opcode),
+    (unsigned)requestId,
+    (unsigned)status);
+  return status;
+}
+
+int32_t
+kernel_result(uint32_t requestId)
+{
+  int32_t result = wasm_host_import_kernel_result(requestId);
+  uint32_t opcode = 0u;
+  (void)wasm_kernel_trace_lookup(requestId, &opcode);
+  wasm_kernel_trace_log(
+    "WASM kernel trace: result op=0x%08x(%s) req=%u result=%d\n",
+    (unsigned)opcode,
+    wasm_kernel_trace_opcode_name(opcode),
+    (unsigned)requestId,
+    (int)result);
+  return result;
+}
+
+uint32_t
+kernel_response_size(uint32_t requestId)
+{
+  uint32_t size = wasm_host_import_kernel_response_size(requestId);
+  uint32_t opcode = 0u;
+  (void)wasm_kernel_trace_lookup(requestId, &opcode);
+  wasm_kernel_trace_log(
+    "WASM kernel trace: response_size op=0x%08x(%s) req=%u size=%u\n",
+    (unsigned)opcode,
+    wasm_kernel_trace_opcode_name(opcode),
+    (unsigned)requestId,
+    (unsigned)size);
+  return size;
+}
+
+uint32_t
+kernel_copy_response(uint32_t requestId, void *dstPtr, uint32_t dstLen)
+{
+  uint32_t copied = wasm_host_import_kernel_copy_response(requestId, dstPtr, dstLen);
+  uint32_t opcode = 0u;
+  (void)wasm_kernel_trace_lookup(requestId, &opcode);
+  wasm_kernel_trace_log(
+    "WASM kernel trace: copy_response op=0x%08x(%s) req=%u copied=%u dst_ptr=0x%08x dst_len=%u\n",
+    (unsigned)opcode,
+    wasm_kernel_trace_opcode_name(opcode),
+    (unsigned)requestId,
+    (unsigned)copied,
+    (unsigned)(uint32_t)(uintptr_t)dstPtr,
+    (unsigned)dstLen);
+  wasm_kernel_trace_dump_bytes("response-payload", opcode, requestId, dstPtr, copied);
+  return copied;
+}
+
+void
+kernel_drop_request(uint32_t requestId)
+{
+  uint32_t opcode = 0u;
+  (void)wasm_kernel_trace_lookup(requestId, &opcode);
+  wasm_kernel_trace_log(
+    "WASM kernel trace: drop op=0x%08x(%s) req=%u\n",
+    (unsigned)opcode,
+    wasm_kernel_trace_opcode_name(opcode),
+    (unsigned)requestId);
+  wasm_kernel_trace_forget(requestId);
+  wasm_host_import_kernel_drop_request(requestId);
+}
 
 int32_t
 wasm_kernel_request_begin(uint32_t opcode,

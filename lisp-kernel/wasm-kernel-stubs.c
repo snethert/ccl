@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdint.h>
+#include <stdarg.h>
 #include <sys/types.h>
 #include <limits.h>
 #include <string.h>
@@ -219,9 +220,7 @@ enum {
   /* Constant-return entrypoint for compiler IR bring-up. */
   WASM_CONST_ENTRY_INDEX = 202,
   /* Fallback direct LOAD entry used by wasm_run_script_with_output bootstrap. */
-  WASM_LOAD_ENTRY_INDEX = 4532,
-  /* Fallback direct INTERN entry used during early const-pool bring-up. */
-  WASM_INTERN_ENTRY_INDEX = 562
+  WASM_LOAD_ENTRY_INDEX = 4532
 };
 
 #define WASM_NAMED_ENTRY_MAX 8192u
@@ -254,6 +253,30 @@ typedef void (*wasm_lisp_fn_void)(void);
 typedef LispObj (*wasm_lisp_fn_unary_i32)(LispObj);
 typedef LispObj (*wasm_lisp_fn_binary_i32)(LispObj, LispObj);
 
+static uint32_t wasm_toplevel_trace_run_seq = 0u;
+static uint32_t wasm_runtime_5560_trace_budget = 768u;
+
+static int
+wasm_ptr_in_linear_memory(const void *ptr, size_t span)
+{
+  if (ptr == NULL) {
+    return 0;
+  }
+#if defined(__wasm__) || defined(__wasi__)
+  uintptr_t base = (uintptr_t)ptr;
+  uintptr_t limit = (uintptr_t)__builtin_wasm_memory_size(0) * 65536u;
+  if (base == 0u || base >= limit) {
+    return 0;
+  }
+  if (span > (size_t)(limit - base)) {
+    return 0;
+  }
+#else
+  (void)span;
+#endif
+  return 1;
+}
+
 static inline void
 wasm_call_entry_index(uint32_t index)
 {
@@ -272,14 +295,250 @@ wasm_call_entry_index_binary_i32(uint32_t index, LispObj arg0, LispObj arg1)
   return ((wasm_lisp_fn_binary_i32)(uintptr_t)index)(arg0, arg1);
 }
 
+static int32_t
+wasm_toplevel_trace_entry_index(LispObj maybe_fn, int *out_subtag, LispObj *out_fcell)
+{
+  if (out_subtag) {
+    *out_subtag = -1;
+  }
+  if (out_fcell) {
+    *out_fcell = lisp_nil;
+  }
+
+  if ((maybe_fn & fulltagmask) != fulltag_misc) {
+    return -1;
+  }
+
+  LispObj header = header_of(maybe_fn);
+  int subtag = header_subtag(header);
+  if (out_subtag) {
+    *out_subtag = subtag;
+  }
+
+  if (subtag == subtag_symbol) {
+    lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(maybe_fn));
+    LispObj fcell = sym->fcell;
+    if (out_fcell) {
+      *out_fcell = fcell;
+    }
+    if (fcell == nrs_UDF.vcell) {
+      return -4;
+    }
+    if ((fcell & fulltagmask) != fulltag_misc) {
+      return -2;
+    }
+    header = header_of(fcell);
+    subtag = header_subtag(header);
+    if (subtag != subtag_function && subtag != subtag_pseudofunction) {
+      return -3;
+    }
+    LispObj entry = deref(fcell, 1);
+    if ((entry & fixnummask) != tag_fixnum) {
+      return -5;
+    }
+    return (int32_t)unbox_fixnum(entry);
+  }
+
+  if (subtag != subtag_function && subtag != subtag_pseudofunction) {
+    return -3;
+  }
+  LispObj entry = deref(maybe_fn, 1);
+  if ((entry & fixnummask) != tag_fixnum) {
+    return -5;
+  }
+  return (int32_t)unbox_fixnum(entry);
+}
+
+static void
+wasm_log_toplevel_trace(const char *phase,
+                        uint32_t run_seq,
+                        uint32_t iter,
+                        TCR *tcr,
+                        LispObj topfn)
+{
+  char line[256];
+  int subtag = -1;
+  LispObj fcell = lisp_nil;
+  int32_t entry = wasm_toplevel_trace_entry_index(topfn, &subtag, &fcell);
+  int n = snprintf(
+    line,
+    sizeof(line),
+    "WASM toplevel trace: run=%u iter=%u phase=%s topfn=0x%08x subtag=%d entry=%d fcell=0x%08x pending_throw=%u vsp=0x%08x\n",
+    (unsigned)run_seq,
+    (unsigned)iter,
+    phase ? phase : "?",
+    (unsigned)(uint32_t)topfn,
+    subtag,
+    (int)entry,
+    (unsigned)(uint32_t)fcell,
+    (unsigned)(tcr ? tcr->wasm_pending_throw : 0),
+    (unsigned)(uint32_t)(tcr ? tcr->wasm_gprs[vsp] : 0));
+  if (n > 0) {
+    wasm_host_log(line, (unsigned)((n < (int)sizeof(line)) ? n : (int)(sizeof(line) - 1)));
+  }
+}
+
+static void
+wasm_log_toplevel_run_status(const char *phase,
+                             uint32_t run_seq,
+                             int rc,
+                             TCR *tcr)
+{
+  char line[192];
+  int n = snprintf(
+    line,
+    sizeof(line),
+    "WASM toplevel run: run=%u phase=%s rc=%d pending_throw=%u save_vsp=0x%08x\n",
+    (unsigned)run_seq,
+    phase ? phase : "?",
+    rc,
+    (unsigned)(tcr ? tcr->wasm_pending_throw : 0),
+    (unsigned)(uint32_t)(tcr ? (LispObj)tcr->save_vsp : 0));
+  if (n > 0) {
+    wasm_host_log(line, (unsigned)((n < (int)sizeof(line)) ? n : (int)(sizeof(line) - 1)));
+  }
+}
+
+static void
+wasm_boot_trace_log(const char *fmt, ...)
+{
+  char line[384];
+  va_list args;
+  va_start(args, fmt);
+  int n = vsnprintf(line, sizeof(line), fmt, args);
+  va_end(args);
+  if (n > 0) {
+    wasm_host_log(line, (unsigned)((n < (int)sizeof(line)) ? n : (int)(sizeof(line) - 1)));
+  }
+}
+
+static void
+wasm_boot_trace_fn(const char *phase, LispObj fn_value)
+{
+  int subtag = -1;
+  LispObj fcell = lisp_nil;
+  int32_t entry = wasm_toplevel_trace_entry_index(fn_value, &subtag, &fcell);
+  wasm_boot_trace_log(
+    "WASM boot trace: phase=%s fn=0x%08x subtag=%d entry=%d fcell=0x%08x\n",
+    phase ? phase : "?",
+    (unsigned)(uint32_t)fn_value,
+    subtag,
+    (int)entry,
+    (unsigned)(uint32_t)fcell);
+}
+
+static void
+wasm_boot_trace_tcr(const char *phase, TCR *tcr)
+{
+  if (tcr == NULL) {
+    wasm_boot_trace_log("WASM boot trace: phase=%s tcr=<null>\n", phase ? phase : "?");
+    return;
+  }
+  if (!wasm_ptr_in_linear_memory(tcr, sizeof(*tcr))) {
+    wasm_boot_trace_log(
+      "WASM boot trace: phase=%s tcr=0x%08x invalid-pointer\n",
+      phase ? phase : "?",
+      (unsigned)(uint32_t)(LispObj)tcr);
+    return;
+  }
+  int32_t nfn_entry = wasm_toplevel_trace_entry_index(tcr->wasm_gprs[nfn], NULL, NULL);
+  int32_t rfn_entry = wasm_toplevel_trace_entry_index(tcr->wasm_gprs[Rfn], NULL, NULL);
+  wasm_boot_trace_log(
+    "WASM boot trace: phase=%s tcr=0x%08x valence=%u pending_throw=%u interrupt_pending=%d save_vsp=0x%08x vsp=0x%08x nargs=0x%08x nfn=0x%08x(nfn_entry=%d) rfn=0x%08x(rfn_entry=%d) arg_z=0x%08x arg_y=0x%08x\n",
+    phase ? phase : "?",
+    (unsigned)(uint32_t)(LispObj)tcr,
+    (unsigned)tcr->valence,
+    (unsigned)tcr->wasm_pending_throw,
+    (int)tcr->interrupt_pending,
+    (unsigned)(uint32_t)(LispObj)tcr->save_vsp,
+    (unsigned)(uint32_t)tcr->wasm_gprs[vsp],
+    (unsigned)(uint32_t)tcr->wasm_gprs[nargs],
+    (unsigned)(uint32_t)tcr->wasm_gprs[nfn],
+    (int)nfn_entry,
+    (unsigned)(uint32_t)tcr->wasm_gprs[Rfn],
+    (int)rfn_entry,
+    (unsigned)(uint32_t)tcr->wasm_gprs[arg_z],
+    (unsigned)(uint32_t)tcr->wasm_gprs[arg_y]);
+}
+
+static void
+wasm_runtime_trace_5560(TCR *tcr,
+                        const char *phase,
+                        LispObj a,
+                        LispObj b,
+                        LispObj c)
+{
+  if (tcr == NULL || wasm_runtime_5560_trace_budget == 0u) {
+    return;
+  }
+  if (!wasm_ptr_in_linear_memory(tcr, sizeof(*tcr))) {
+    return;
+  }
+  int32_t nfn_entry = wasm_toplevel_trace_entry_index(tcr->wasm_gprs[nfn], NULL, NULL);
+  int32_t rfn_entry = wasm_toplevel_trace_entry_index(tcr->wasm_gprs[Rfn], NULL, NULL);
+  if (nfn_entry != 5560 && rfn_entry != 5560 && nfn_entry != 5559 && rfn_entry != 5559) {
+    return;
+  }
+  wasm_runtime_5560_trace_budget--;
+  wasm_boot_trace_log(
+    "WASM boot trace: runtime-5560 phase=%s budget=%u nfn_entry=%d rfn_entry=%d pending_throw=%u nargs=0x%08x arg_z=0x%08x arg_y=0x%08x a=0x%08x b=0x%08x c=0x%08x\n",
+    phase ? phase : "?",
+    (unsigned)wasm_runtime_5560_trace_budget,
+    (int)nfn_entry,
+    (int)rfn_entry,
+    (unsigned)tcr->wasm_pending_throw,
+    (unsigned)(uint32_t)tcr->wasm_gprs[nargs],
+    (unsigned)(uint32_t)tcr->wasm_gprs[arg_z],
+    (unsigned)(uint32_t)tcr->wasm_gprs[arg_y],
+    (unsigned)(uint32_t)a,
+    (unsigned)(uint32_t)b,
+    (unsigned)(uint32_t)c);
+}
+
+static void
+wasm_boot_trace_obj_brief(const char *label, LispObj value)
+{
+  uint32_t raw = (uint32_t)value;
+  uint32_t tag = (uint32_t)tag_of(value);
+  uint32_t fulltag = (uint32_t)(value & fulltagmask);
+  int32_t entry = -1;
+  int subtag = -1;
+  LispObj fcell = 0;
+  signed_natural fixnum_value = 0;
+  int is_fixnum = (tag_of(value) == tag_fixnum);
+  if (is_fixnum) {
+    fixnum_value = unbox_fixnum(value);
+  } else if (fulltag == fulltag_misc) {
+    entry = wasm_toplevel_trace_entry_index(value, &subtag, &fcell);
+  }
+  wasm_boot_trace_log(
+    "WASM boot trace: obj-brief %s raw=0x%08x tag=0x%08x fulltag=0x%08x fixnum=%d fixnum_value=%d subtag=%d entry=%d fcell=0x%08x\n",
+    label ? label : "?",
+    raw,
+    tag,
+    fulltag,
+    is_fixnum ? 1 : 0,
+    (int)fixnum_value,
+    subtag,
+    (int)entry,
+    (unsigned)(uint32_t)fcell);
+}
+
 static void
 wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
 {
+  LispObj original_fn_value = fn_value;
+  wasm_boot_trace_tcr("call-lisp-function-enter", tcr);
+  wasm_boot_trace_fn("call-lisp-function-input", fn_value);
+
   if (fn_value == (LispObj)nil_value) {
+    wasm_boot_trace_log("WASM boot trace: call-lisp-function trap reason=nil-function\n");
     __builtin_trap();
   }
 
   if (fulltag_of(fn_value) != fulltag_misc) {
+    wasm_boot_trace_log("WASM boot trace: call-lisp-function trap reason=non-misc-function fn=0x%08x\n",
+                        (unsigned)(uint32_t)fn_value);
     __builtin_trap();
   }
 
@@ -287,8 +546,16 @@ wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
   int subtag = header_subtag(header);
   if (subtag == subtag_symbol) {
     lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(fn_value));
+    wasm_boot_trace_log(
+      "WASM boot trace: call-lisp-function symbol fn=0x%08x fcell=0x%08x vcell=0x%08x\n",
+      (unsigned)(uint32_t)original_fn_value,
+      (unsigned)(uint32_t)sym->fcell,
+      (unsigned)(uint32_t)sym->vcell);
     fn_value = sym->fcell;
     if (fulltag_of(fn_value) != fulltag_misc) {
+      wasm_boot_trace_log(
+        "WASM boot trace: call-lisp-function trap reason=symbol-fcell-non-misc fcell=0x%08x\n",
+        (unsigned)(uint32_t)fn_value);
       __builtin_trap();
     }
     header = header_of(fn_value);
@@ -296,6 +563,10 @@ wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
   }
 
   if (subtag != subtag_function && subtag != subtag_pseudofunction) {
+    wasm_boot_trace_log(
+      "WASM boot trace: call-lisp-function trap reason=bad-subtag subtag=%d fn=0x%08x\n",
+      subtag,
+      (unsigned)(uint32_t)fn_value);
     __builtin_trap();
   }
 
@@ -304,6 +575,10 @@ wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
 
   LispObj entry = deref(fn_value, 1);
   if (tag_of(entry) != tag_fixnum) {
+    wasm_boot_trace_log(
+      "WASM boot trace: call-lisp-function trap reason=entry-not-fixnum entry=0x%08x fn=0x%08x\n",
+      (unsigned)(uint32_t)entry,
+      (unsigned)(uint32_t)fn_value);
     __builtin_trap();
   }
 
@@ -314,11 +589,25 @@ wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
     LispObj raw_nargs = tcr->wasm_gprs[nargs];
     signed_natural nargs_count =
       (tag_of(raw_nargs) == tag_fixnum) ? unbox_fixnum(raw_nargs) : 0;
+    wasm_boot_trace_log(
+      "WASM boot trace: call-lisp-function dispatch original_fn=0x%08x resolved_fn=0x%08x entry=%u abi=%u mode=%u nargs=%d arg_z=0x%08x arg_y=0x%08x\n",
+      (unsigned)(uint32_t)original_fn_value,
+      (unsigned)(uint32_t)fn_value,
+      (unsigned)entry_index,
+      (unsigned)entry_call_abi,
+      (unsigned)mode,
+      (int)nargs_count,
+      (unsigned)(uint32_t)tcr->wasm_gprs[arg_z],
+      (unsigned)(uint32_t)tcr->wasm_gprs[arg_y]);
     wasm_publish_gc_root_policy_mode(mode);
     switch (entry_call_abi) {
     case WASM_ENTRY_CALL_ABI_UNARY_I32: {
       LispObj result;
       if (nargs_count != 1) {
+        wasm_boot_trace_log(
+          "WASM boot trace: call-lisp-function trap reason=unary-abi-bad-nargs nargs=%d entry=%u\n",
+          (int)nargs_count,
+          (unsigned)entry_index);
         __builtin_trap();
       }
       result = wasm_call_entry_index_unary_i32(entry_index, tcr->wasm_gprs[arg_z]);
@@ -326,11 +615,20 @@ wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
         tcr->wasm_gprs[arg_z] = result;
         tcr->wasm_gprs[nargs] = box_fixnum(1);
       }
+      wasm_boot_trace_log(
+        "WASM boot trace: call-lisp-function unary-return entry=%u result=0x%08x pending_throw=%u\n",
+        (unsigned)entry_index,
+        (unsigned)(uint32_t)result,
+        (unsigned)tcr->wasm_pending_throw);
       break;
     }
     case WASM_ENTRY_CALL_ABI_BINARY_I32: {
       LispObj result;
       if (nargs_count != 2) {
+        wasm_boot_trace_log(
+          "WASM boot trace: call-lisp-function trap reason=binary-abi-bad-nargs nargs=%d entry=%u\n",
+          (int)nargs_count,
+          (unsigned)entry_index);
         __builtin_trap();
       }
       result = wasm_call_entry_index_binary_i32(entry_index,
@@ -340,14 +638,26 @@ wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
         tcr->wasm_gprs[arg_z] = result;
         tcr->wasm_gprs[nargs] = box_fixnum(1);
       }
+      wasm_boot_trace_log(
+        "WASM boot trace: call-lisp-function binary-return entry=%u result=0x%08x pending_throw=%u\n",
+        (unsigned)entry_index,
+        (unsigned)(uint32_t)result,
+        (unsigned)tcr->wasm_pending_throw);
       break;
     }
     case WASM_ENTRY_CALL_ABI_LEGACY:
     default:
       wasm_call_entry_index(entry_index);
+      wasm_boot_trace_log(
+        "WASM boot trace: call-lisp-function legacy-return entry=%u pending_throw=%u arg_z=0x%08x nargs=0x%08x\n",
+        (unsigned)entry_index,
+        (unsigned)tcr->wasm_pending_throw,
+        (unsigned)(uint32_t)tcr->wasm_gprs[arg_z],
+        (unsigned)(uint32_t)tcr->wasm_gprs[nargs]);
       break;
     }
   }
+  wasm_boot_trace_tcr("call-lisp-function-exit", tcr);
 }
 
 static int
@@ -389,6 +699,7 @@ LispObj wasm_funcall1(LispObj fn_value, LispObj arg0);
 uint32_t wasm_subprim_nonlocal_exit_coherence_selftest(void);
 static LispObj wasm_find_package_named_bytes(const uint8_t *bytes, uint32_t len);
 static LispObj wasm_find_symbol_named_bytes(const uint8_t *name, uint32_t len, LispObj package);
+static LispObj wasm_find_symbol_named_bytes_scan(const uint8_t *name, uint32_t len, LispObj package);
 
 enum {
   WASM_TOPLEVEL_EXIT = 0,
@@ -403,18 +714,79 @@ wasm_maybe_refresh_compiled_modules(void)
   if (registry == wasm_last_compiled_modules) {
     return;
   }
+  wasm_boot_trace_log(
+    "WASM boot trace: compiled-modules-refresh registry=0x%08x last=0x%08x\n",
+    (unsigned)(uint32_t)registry,
+    (unsigned)(uint32_t)wasm_last_compiled_modules);
   wasm_last_compiled_modules = registry;
   if (registry == lisp_nil) {
+    wasm_boot_trace_log("WASM boot trace: compiled-modules-refresh skipped registry=nil\n");
     return;
   }
-  (void)wasm_kernel_compiled_modules_refresh((uint32_t)registry, (uint32_t)lisp_nil);
+  int32_t r = wasm_kernel_compiled_modules_refresh((uint32_t)registry, (uint32_t)lisp_nil);
+  wasm_boot_trace_log(
+    "WASM boot trace: compiled-modules-refresh result=%d registry=0x%08x\n",
+    (int)r,
+    (unsigned)(uint32_t)registry);
+}
+
+static void
+wasm_boot_trace_runtime_command_chain_once(void)
+{
+  static int logged = 0;
+  if (logged) {
+    return;
+  }
+  logged = 1;
+
+  static const uint8_t ccl_pkg_name[] = { 'C', 'C', 'L' };
+  static const uint8_t names[][32] = {
+    { 'R','U','N','T','I','M','E','-','B','R','I','D','G','E','-','P','U','M','P','-','C','O','M','M','A','N','D','S' },
+    { 'R','U','N','T','I','M','E','-','C','O','M','M','A','N','D','-','-','P','O','L','L','-','F','R','A','M','E' },
+    { 'R','U','N','T','I','M','E','-','C','O','M','M','A','N','D','-','-','D','E','C','O','D','E','-','F','R','A','M','E' },
+    { 'R','U','N','T','I','M','E','-','C','O','M','M','A','N','D','-','-','D','I','S','P','A','T','C','H' },
+  };
+  static const uint32_t lens[] = { 28u, 27u, 29u, 25u };
+
+  LispObj pkg = wasm_find_package_named_bytes(ccl_pkg_name, (uint32_t)sizeof(ccl_pkg_name));
+  if (pkg == lisp_nil) {
+    pkg = (LispObj)0;
+  }
+
+  wasm_boot_trace_log(
+    "WASM boot trace: runtime-command-chain package CCL=0x%08x\n",
+    (unsigned)(uint32_t)pkg);
+
+  for (uint32_t i = 0; i < (uint32_t)(sizeof(lens) / sizeof(lens[0])); i++) {
+    LispObj sym = wasm_find_symbol_named_bytes(names[i], lens[i], pkg);
+    if (sym == (LispObj)0) {
+      sym = wasm_find_symbol_named_bytes_scan(names[i], lens[i], pkg);
+    }
+    int subtag = -1;
+    LispObj fcell = lisp_nil;
+    int32_t sym_entry = wasm_toplevel_trace_entry_index(sym, &subtag, &fcell);
+    int32_t fcell_entry = wasm_toplevel_trace_entry_index(fcell, NULL, NULL);
+    wasm_boot_trace_log(
+      "WASM boot trace: runtime-command-chain symbol[%u] sym=0x%08x sym_subtag=%d sym_entry=%d fcell=0x%08x fcell_entry=%d\n",
+      (unsigned)i,
+      (unsigned)(uint32_t)sym,
+      subtag,
+      (int)sym_entry,
+      (unsigned)(uint32_t)fcell,
+      (int)fcell_entry);
+  }
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_set_subprims_ready")))
 void
 wasm_set_subprims_ready(uint32_t ready)
 {
+  wasm_boot_trace_log(
+    "WASM boot trace: set-subprims-ready ready=%u old=%u\n",
+    (unsigned)ready,
+    (unsigned)wasm_subprims_ready);
   if (ready) {
+    wasm_runtime_5560_trace_budget = 768u;
     wasm_subprims_ready = 1u;
     wasm_publish_gc_root_policy_mode(WASM_GC_ROOT_MODE_RUNTIME_DEFAULT);
   } else {
@@ -669,48 +1041,96 @@ wasm_ui_demo_turn(void)
 }
 
 static int
-wasm_toplevel_loop(TCR *tcr)
+wasm_toplevel_loop(TCR *tcr, uint32_t run_seq)
 {
+  uint32_t iter = 0u;
+  wasm_boot_trace_tcr("toplevel-loop-enter", tcr);
+  wasm_boot_trace_runtime_command_chain_once();
   for (;;) {
+    iter++;
     LispObj *vsp_ptr = (LispObj *)tcr->wasm_gprs[vsp];
     if (vsp_ptr == NULL) {
+      wasm_log_toplevel_trace("null-vsp", run_seq, iter, tcr, lisp_nil);
       return -1;
     }
     if (wasm_maybe_deliver_interrupt(tcr)) {
+      wasm_log_toplevel_trace("interrupt-pending-throw", run_seq, iter, tcr, lisp_nil);
       return WASM_TOPLEVEL_PENDING_THROW;
     }
     vsp_ptr = (LispObj *)tcr->wasm_gprs[vsp];
     if (vsp_ptr == NULL) {
+      wasm_log_toplevel_trace("null-vsp-post-interrupt", run_seq, iter, tcr, lisp_nil);
       return -1;
     }
     LispObj topfn = *vsp_ptr;
+    wasm_log_toplevel_trace("dispatch", run_seq, iter, tcr, topfn);
+    wasm_boot_trace_fn("toplevel-dispatch-topfn", topfn);
+    wasm_boot_trace_tcr("toplevel-dispatch-state", tcr);
     if (topfn == lisp_nil) {
+      wasm_log_toplevel_trace("topfn-nil", run_seq, iter, tcr, topfn);
+      wasm_boot_trace_tcr("toplevel-loop-exit-topfn-nil", tcr);
       return 0;
     }
 
+    wasm_boot_trace_log(
+      "WASM boot trace: toplevel-subprim begin run=%u iter=%u subprim=MKCATCH1V arg_z=0x%08x\n",
+      (unsigned)run_seq,
+      (unsigned)iter,
+      (unsigned)(uint32_t)tcr->wasm_gprs[arg_z]);
     tcr->wasm_gprs[arg_z] = nrs_TOPLCATCH.vcell;
     wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_MKCATCH1V_INDEX));
+    wasm_boot_trace_tcr("toplevel-after-mkcatch1v", tcr);
 
     tcr->wasm_gprs[arg_z] = lisp_nil;
     tcr->wasm_gprs[nargs] = box_fixnum(0);
     tcr->wasm_gprs[nfn] = topfn;
     tcr->wasm_gprs[Rfn] = topfn;
+    wasm_boot_trace_log(
+      "WASM boot trace: toplevel-subprim begin run=%u iter=%u subprim=FUNCALL fn=0x%08x\n",
+      (unsigned)run_seq,
+      (unsigned)iter,
+      (unsigned)(uint32_t)topfn);
     wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_FUNCALL_INDEX));
+    wasm_boot_trace_tcr("toplevel-after-funcall", tcr);
     if (tcr->wasm_pending_throw) {
+      wasm_log_toplevel_trace("funcall-pending-throw", run_seq, iter, tcr, topfn);
+      wasm_boot_trace_log(
+        "WASM boot trace: toplevel funcall pending throw run=%u iter=%u topfn=0x%08x\n",
+        (unsigned)run_seq,
+        (unsigned)iter,
+        (unsigned)(uint32_t)topfn);
       wasm_maybe_refresh_compiled_modules();
+      wasm_boot_trace_tcr("toplevel-loop-exit-pending-throw", tcr);
       return WASM_TOPLEVEL_PENDING_THROW;
     }
 
     LispObj result = tcr->wasm_gprs[arg_z];
+    wasm_boot_trace_log(
+      "WASM boot trace: toplevel-funcall-result run=%u iter=%u result=0x%08x\n",
+      (unsigned)run_seq,
+      (unsigned)iter,
+      (unsigned)(uint32_t)result);
     tcr->wasm_gprs[arg_z] = lisp_nil;
     tcr->wasm_gprs[imm0] = box_fixnum(1);
+    wasm_boot_trace_log(
+      "WASM boot trace: toplevel-subprim begin run=%u iter=%u subprim=NTHROW1VALUE\n",
+      (unsigned)run_seq,
+      (unsigned)iter);
     wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_NTHROW1VALUE_INDEX));
+    wasm_boot_trace_tcr("toplevel-after-nthrow1value", tcr);
     if (tcr->wasm_pending_throw) {
+      wasm_log_toplevel_trace("nthrow-clearing-pending", run_seq, iter, tcr, topfn);
       tcr->wasm_pending_throw = 0;
+      wasm_boot_trace_log(
+        "WASM boot trace: toplevel cleared pending throw after nthrow run=%u iter=%u\n",
+        (unsigned)run_seq,
+        (unsigned)iter);
     }
     wasm_maybe_refresh_compiled_modules();
 
     if (result != lisp_nil) {
+      wasm_log_toplevel_trace("yield", run_seq, iter, tcr, topfn);
+      wasm_boot_trace_tcr("toplevel-loop-exit-yield", tcr);
       return WASM_TOPLEVEL_YIELD;
     }
   }
@@ -769,6 +1189,10 @@ LispObj
 wasm_set_tcr_toplevel_function(LispObj raw_tcr, LispObj fun)
 {
   TCR *tcr = (TCR *)raw_tcr;
+  wasm_boot_trace_log(
+    "WASM boot trace: set-tcr-toplevel-function enter tcr=0x%08x fun=0x%08x\n",
+    (unsigned)(uint32_t)raw_tcr,
+    (unsigned)(uint32_t)fun);
   if (tcr == NULL) {
     return fun;
   }
@@ -798,6 +1222,12 @@ wasm_set_tcr_toplevel_function(LispObj raw_tcr, LispObj fun)
   }
 
   *slot = fun;
+  wasm_boot_trace_log(
+    "WASM boot trace: set-tcr-toplevel-function exit slot=0x%08x slot_val=0x%08x vsp=0x%08x save_vsp=0x%08x\n",
+    (unsigned)(uint32_t)(LispObj)slot,
+    (unsigned)(uint32_t)*slot,
+    (unsigned)(uint32_t)(LispObj)(tcr->wasm_gprs[vsp]),
+    (unsigned)(uint32_t)(LispObj)tcr->save_vsp);
   return fun;
 }
 
@@ -805,16 +1235,22 @@ __attribute__((used, visibility("default"), export_name("wasm_set_toplfunc_entry
 int32_t
 wasm_set_toplfunc_entry(uint32_t entry_index)
 {
+  wasm_boot_trace_log(
+    "WASM boot trace: set-toplfunc-entry enter entry=%u\n",
+    (unsigned)entry_index);
   TCR *tcr = wasm_get_current_tcr();
   if (tcr == NULL) {
+    wasm_boot_trace_log("WASM boot trace: set-toplfunc-entry fail reason=no-current-tcr\n");
     return -1;
   }
   if (!wasm_subprims_ready) {
+    wasm_boot_trace_log("WASM boot trace: set-toplfunc-entry fail reason=subprims-not-ready\n");
     return -2;
   }
 
   LispObj fn = wasm_misc_alloc(tcr, subtag_function, (signed_natural)2);
   if (fn == lisp_nil) {
+    wasm_boot_trace_log("WASM boot trace: set-toplfunc-entry fail reason=alloc-failed\n");
     return -3;
   }
   LispObj entry = box_fixnum((signed_natural)entry_index);
@@ -824,6 +1260,8 @@ wasm_set_toplfunc_entry(uint32_t entry_index)
 
   nrs_TOPLFUNC.vcell = fn;
   (void)wasm_set_tcr_toplevel_function((LispObj)tcr, fn);
+  wasm_boot_trace_fn("set-toplfunc-entry-created", fn);
+  wasm_boot_trace_tcr("set-toplfunc-entry-exit", tcr);
   return 0;
 }
 
@@ -833,14 +1271,17 @@ wasm_boot_entry(void)
 {
   TCR *tcr = wasm_get_current_tcr();
   if (tcr == NULL) {
+    wasm_boot_trace_log("WASM boot trace: boot-entry skip reason=no-current-tcr\n");
     return;
   }
+  wasm_boot_trace_tcr("boot-entry-enter", tcr);
   LispObj *vsp_ptr = (LispObj *)tcr->wasm_gprs[vsp];
   if (vsp_ptr != NULL) {
     *vsp_ptr = lisp_nil;
   }
   tcr->wasm_gprs[arg_z] = lisp_nil;
   tcr->wasm_gprs[nargs] = box_fixnum(1);
+  wasm_boot_trace_tcr("boot-entry-exit", tcr);
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_test_entry")))
@@ -1301,7 +1742,9 @@ wasm_get_arg_z(void)
   if (tcr == NULL) {
     return lisp_nil;
   }
-  return tcr->wasm_gprs[arg_z];
+  LispObj value = tcr->wasm_gprs[arg_z];
+  wasm_runtime_trace_5560(tcr, "get_arg_z", value, 0, 0);
+  return value;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_get_arg_y")))
@@ -1323,6 +1766,7 @@ wasm_set_arg_z(LispObj value)
   if (tcr == NULL) {
     return;
   }
+  wasm_runtime_trace_5560(tcr, "set_arg_z", value, tcr->wasm_gprs[arg_z], 0);
   tcr->wasm_gprs[arg_z] = value;
 }
 
@@ -1334,6 +1778,7 @@ wasm_set_arg_y(LispObj value)
   if (tcr == NULL) {
     return;
   }
+  wasm_runtime_trace_5560(tcr, "set_arg_y", value, tcr->wasm_gprs[arg_y], 0);
   tcr->wasm_gprs[arg_y] = value;
 }
 
@@ -1356,6 +1801,7 @@ wasm_set_nargs(uint32_t count)
   if (tcr == NULL) {
     return;
   }
+  wasm_runtime_trace_5560(tcr, "set_nargs", (LispObj)(uintptr_t)count, tcr->wasm_gprs[nargs], 0);
   tcr->wasm_gprs[nargs] = box_fixnum((signed_natural)count);
 }
 
@@ -1367,6 +1813,7 @@ wasm_set_nfn(LispObj value)
   if (tcr == NULL) {
     return;
   }
+  wasm_runtime_trace_5560(tcr, "set_nfn", value, tcr->wasm_gprs[nfn], tcr->wasm_gprs[nargs]);
   tcr->wasm_gprs[nfn] = value;
   tcr->wasm_gprs[Rfn] = value;
 }
@@ -1747,7 +2194,9 @@ wasm_pending_throw_p(void)
   if (tcr == NULL) {
     return 0;
   }
-  return tcr->wasm_pending_throw ? 1 : 0;
+  uint32_t pending = tcr->wasm_pending_throw ? 1u : 0u;
+  wasm_runtime_trace_5560(tcr, "pending_throw_p", (LispObj)pending, 0, 0);
+  return pending;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_clear_pending_throw")))
@@ -1789,11 +2238,16 @@ wasm_return_fixnum_sub(void)
   if (tcr == NULL) {
     return;
   }
-  int64_t a = (int64_t)unbox_fixnum(tcr->wasm_gprs[arg_z]);
-  int64_t b = (int64_t)unbox_fixnum(tcr->wasm_gprs[arg_y]);
+  LispObj raw_a = tcr->wasm_gprs[arg_z];
+  LispObj raw_b = tcr->wasm_gprs[arg_y];
+  wasm_runtime_trace_5560(tcr, "fixnum_sub-enter", raw_a, raw_b, 0);
+  int64_t a = (int64_t)unbox_fixnum(raw_a);
+  int64_t b = (int64_t)unbox_fixnum(raw_b);
   int64_t diff = a - b;
-  tcr->wasm_gprs[arg_z] = wasm_box_signed_64(tcr, diff);
+  LispObj boxed = wasm_box_signed_64(tcr, diff);
+  tcr->wasm_gprs[arg_z] = boxed;
   tcr->wasm_gprs[nargs] = box_fixnum(1);
+  wasm_runtime_trace_5560(tcr, "fixnum_sub-exit", raw_a, raw_b, boxed);
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_return_fixnum_mul")))
@@ -1942,6 +2396,40 @@ wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natu
     return lisp_nil;
   }
 
+  LispObj caller_fn = tcr->wasm_gprs[nfn];
+  int32_t caller_entry = wasm_toplevel_trace_entry_index(caller_fn, NULL, NULL);
+  int32_t callee_entry = wasm_toplevel_trace_entry_index(fn_value, NULL, NULL);
+  int trace_runtime_path =
+    (caller_entry == 5453) ||
+    (caller_entry == 5558) ||
+    (caller_entry == 5559) ||
+    (caller_entry == 5560) ||
+    (callee_entry == 5453) ||
+    (callee_entry == 5558) ||
+    (callee_entry == 5559) ||
+    (callee_entry == 5560);
+  if (trace_runtime_path) {
+    LispObj arg0 = (count > 0 && args != NULL) ? args[0] : lisp_nil;
+    LispObj arg1 = (count > 1 && args != NULL) ? args[1] : lisp_nil;
+    wasm_boot_trace_log(
+      "WASM boot trace: funcall-common enter caller_entry=%d callee_entry=%d count=%d preserve_mv=%d caller_fn=0x%08x fn=0x%08x arg0=0x%08x arg1=0x%08x pending_throw=%u nargs=0x%08x\n",
+      (int)caller_entry,
+      (int)callee_entry,
+      (int)count,
+      preserve_mv ? 1 : 0,
+      (unsigned)(uint32_t)caller_fn,
+      (unsigned)(uint32_t)fn_value,
+      (unsigned)(uint32_t)arg0,
+      (unsigned)(uint32_t)arg1,
+      (unsigned)tcr->wasm_pending_throw,
+      (unsigned)(uint32_t)tcr->wasm_gprs[nargs]);
+    if (callee_entry < 0) {
+      wasm_boot_trace_obj_brief("funcall-common fn", fn_value);
+      wasm_boot_trace_obj_brief("funcall-common arg0", arg0);
+      wasm_boot_trace_obj_brief("funcall-common arg1", arg1);
+    }
+  }
+
   int in_lisp = (tcr->valence == TCR_STATE_LISP);
   LispObj *saved_vsp = in_lisp ? (LispObj *)tcr->wasm_gprs[vsp] : tcr->save_vsp;
   if (saved_vsp == NULL) {
@@ -1969,6 +2457,16 @@ wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natu
 
   LispObj result = tcr->wasm_gprs[arg_z];
   if (tcr->wasm_pending_throw) {
+    if (trace_runtime_path) {
+      wasm_boot_trace_log(
+        "WASM boot trace: funcall-common throw caller_entry=%d callee_entry=%d result=0x%08x pending_throw=%u vsp=0x%08x nargs=0x%08x\n",
+        (int)caller_entry,
+        (int)callee_entry,
+        (unsigned)(uint32_t)result,
+        (unsigned)tcr->wasm_pending_throw,
+        (unsigned)(uint32_t)tcr->wasm_gprs[vsp],
+        (unsigned)(uint32_t)tcr->wasm_gprs[nargs]);
+    }
     LispObj *throw_vsp = (LispObj *)tcr->wasm_gprs[vsp];
     if (throw_vsp == NULL) {
       throw_vsp = saved_vsp;
@@ -2004,6 +2502,19 @@ wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natu
   if (!in_lisp) {
     tcr->valence = TCR_STATE_FOREIGN;
     wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
+  }
+  if (trace_runtime_path) {
+    wasm_boot_trace_log(
+      "WASM boot trace: funcall-common exit caller_entry=%d callee_entry=%d result=0x%08x value_count=%d preserve_mv=%d pending_throw=%u vsp=0x%08x save_vsp=0x%08x nargs=0x%08x\n",
+      (int)caller_entry,
+      (int)callee_entry,
+      (unsigned)(uint32_t)result,
+      (int)value_count,
+      preserve_mv ? 1 : 0,
+      (unsigned)tcr->wasm_pending_throw,
+      (unsigned)(uint32_t)tcr->wasm_gprs[vsp],
+      (unsigned)(uint32_t)(LispObj)tcr->save_vsp,
+      (unsigned)(uint32_t)tcr->wasm_gprs[nargs]);
   }
   return result;
 }
@@ -2553,7 +3064,10 @@ wasm_funcall1(LispObj fn_value, LispObj arg0)
   TCR *tcr = wasm_get_current_tcr();
   LispObj args[1];
   args[0] = arg0;
-  return wasm_funcall_common(tcr, fn_value, args, 1, 0);
+  wasm_runtime_trace_5560(tcr, "funcall1-enter", fn_value, arg0, 0);
+  LispObj result = wasm_funcall_common(tcr, fn_value, args, 1, 0);
+  wasm_runtime_trace_5560(tcr, "funcall1-exit", fn_value, arg0, result);
+  return result;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_funcall2")))
@@ -2717,7 +3231,10 @@ wasm_funcall2_mv(LispObj fn_value, LispObj arg0, LispObj arg1)
   LispObj args[2];
   args[0] = arg0;
   args[1] = arg1;
-  return wasm_funcall_common(tcr, fn_value, args, 2, 1);
+  wasm_runtime_trace_5560(tcr, "funcall2_mv-enter", fn_value, arg0, arg1);
+  LispObj result = wasm_funcall_common(tcr, fn_value, args, 2, 1);
+  wasm_runtime_trace_5560(tcr, "funcall2_mv-exit", fn_value, arg0, result);
+  return result;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_funcall7_mv")))
@@ -2847,6 +3364,12 @@ wasm_funcall6_mv(LispObj fn_value, LispObj arg0, LispObj arg1, LispObj arg2, Lis
 LispObj
 start_lisp(TCR *tcr, LispObj arg)
 {
+  wasm_boot_trace_log(
+    "WASM boot trace: start_lisp enter tcr=0x%08x arg=0x%08x subprims_ready=%u\n",
+    (unsigned)(uint32_t)(LispObj)tcr,
+    (unsigned)(uint32_t)arg,
+    (unsigned)wasm_subprims_ready);
+  wasm_boot_trace_tcr("start_lisp-enter", tcr);
   (void)arg;
   if (tcr != NULL) {
     tcr->valence = TCR_STATE_LISP;
@@ -2860,6 +3383,9 @@ start_lisp(TCR *tcr, LispObj arg)
   }
 
   if (tcr != NULL) {
+    uint32_t run_seq = 0u;
+    LispObj start_topfn = lisp_nil;
+    int start_rc = 0;
     tcr->wasm_pending_throw = 0;
     tcr->wasm_gprs[vsp] = (LispObj)tcr->save_vsp;
     LispObj *vsp_ptr = (LispObj *)tcr->wasm_gprs[vsp];
@@ -2874,10 +3400,18 @@ start_lisp(TCR *tcr, LispObj arg)
       static const char msg[] =
         "WASM start_lisp: VSP not initialized; returning to host\n";
       wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+      wasm_boot_trace_tcr("start_lisp-exit-null-vsp", tcr);
       goto done;
     }
     LispObj topfn = nrs_TOPLFUNC.vcell;
     LispObj *slot = wasm_toplevel_slot(tcr);
+    wasm_boot_trace_log(
+      "WASM boot trace: start_lisp seed topfn=0x%08x slot=0x%08x slot_val=0x%08x vsp_ptr=0x%08x vsp_empty=0x%08x\n",
+      (unsigned)(uint32_t)topfn,
+      (unsigned)(uint32_t)(LispObj)slot,
+      (unsigned)(uint32_t)((slot != NULL) ? *slot : lisp_nil),
+      (unsigned)(uint32_t)(LispObj)vsp_ptr,
+      (unsigned)(uint32_t)(LispObj)vsp_empty);
     if (topfn != lisp_nil) {
       if (slot != NULL) {
         *slot = topfn;
@@ -2903,21 +3437,28 @@ start_lisp(TCR *tcr, LispObj arg)
       static const char msg[] =
         "WASM start_lisp: toplevel function is NIL; returning to host\n";
       wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+      wasm_boot_trace_tcr("start_lisp-exit-toplevel-nil", tcr);
       goto done;
     }
 
-    (void)wasm_toplevel_loop(tcr);
+    run_seq = ++wasm_toplevel_trace_run_seq;
+    start_topfn = (slot != NULL) ? *slot : topfn;
+    wasm_log_toplevel_trace("start_lisp-enter", run_seq, 0u, tcr, start_topfn);
+    start_rc = wasm_toplevel_loop(tcr, run_seq);
+    wasm_log_toplevel_run_status("start_lisp-exit", run_seq, start_rc, tcr);
 
     tcr->save_vsp = (LispObj *)tcr->wasm_gprs[vsp];
     if (tcr->wasm_pending_throw) {
       tcr->wasm_pending_throw = 0;
     }
+    wasm_boot_trace_tcr("start_lisp-after-run", tcr);
   }
 
 done:
   if (tcr != NULL) {
     tcr->valence = TCR_STATE_FOREIGN;
   }
+  wasm_boot_trace_tcr("start_lisp-exit", tcr);
 
   return lisp_nil;
 }
@@ -2927,10 +3468,20 @@ int
 wasm_run_toplevel(void)
 {
   TCR *tcr = wasm_get_current_tcr();
+  uint32_t run_seq = 0u;
+  LispObj run_topfn = lisp_nil;
+  int rc = 0;
+  wasm_boot_trace_log(
+    "WASM boot trace: wasm_run_toplevel enter tcr=0x%08x subprims_ready=%u\n",
+    (unsigned)(uint32_t)(LispObj)tcr,
+    (unsigned)wasm_subprims_ready);
+  wasm_boot_trace_tcr("run_toplevel-enter", tcr);
   if (tcr == NULL) {
+    wasm_boot_trace_log("WASM boot trace: wasm_run_toplevel exit rc=-1 reason=no-current-tcr\n");
     return -1;
   }
   if (!wasm_subprims_ready) {
+    wasm_boot_trace_log("WASM boot trace: wasm_run_toplevel exit rc=-2 reason=subprims-not-ready\n");
     return -2;
   }
 
@@ -2949,10 +3500,19 @@ wasm_run_toplevel(void)
   if (vsp_ptr == NULL) {
     tcr->valence = TCR_STATE_FOREIGN;
     wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
+    wasm_boot_trace_tcr("run_toplevel-exit-null-vsp", tcr);
+    wasm_boot_trace_log("WASM boot trace: wasm_run_toplevel exit rc=-4 reason=null-vsp\n");
     return -4;
   }
   LispObj topfn = nrs_TOPLFUNC.vcell;
   LispObj *slot = wasm_toplevel_slot(tcr);
+  wasm_boot_trace_log(
+    "WASM boot trace: run_toplevel seed topfn=0x%08x slot=0x%08x slot_val=0x%08x vsp_ptr=0x%08x vsp_empty=0x%08x\n",
+    (unsigned)(uint32_t)topfn,
+    (unsigned)(uint32_t)(LispObj)slot,
+    (unsigned)(uint32_t)((slot != NULL) ? *slot : lisp_nil),
+    (unsigned)(uint32_t)(LispObj)vsp_ptr,
+    (unsigned)(uint32_t)(LispObj)vsp_empty);
   if (topfn != lisp_nil) {
     if (slot != NULL) {
       *slot = topfn;
@@ -2977,10 +3537,16 @@ wasm_run_toplevel(void)
   } else if (vsp_ptr == vsp_empty || *vsp_ptr == lisp_nil) {
     tcr->valence = TCR_STATE_FOREIGN;
     wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
+    wasm_boot_trace_tcr("run_toplevel-exit-toplevel-nil", tcr);
+    wasm_boot_trace_log("WASM boot trace: wasm_run_toplevel exit rc=-3 reason=toplevel-nil\n");
     return -3;
   }
 
-  int rc = wasm_toplevel_loop(tcr);
+  run_seq = ++wasm_toplevel_trace_run_seq;
+  run_topfn = (slot != NULL) ? *slot : topfn;
+  wasm_log_toplevel_trace("run-enter", run_seq, 0u, tcr, run_topfn);
+  rc = wasm_toplevel_loop(tcr, run_seq);
+  wasm_log_toplevel_run_status("run-exit", run_seq, rc, tcr);
 
   tcr->save_vsp = (LispObj *)tcr->wasm_gprs[vsp];
   if (tcr->wasm_pending_throw) {
@@ -2988,6 +3554,8 @@ wasm_run_toplevel(void)
   }
   tcr->valence = TCR_STATE_FOREIGN;
   wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
+  wasm_boot_trace_tcr("run_toplevel-exit", tcr);
+  wasm_boot_trace_log("WASM boot trace: wasm_run_toplevel exit rc=%d\n", rc);
   return rc;
 }
 
@@ -4356,11 +4924,47 @@ wasm_const_pool_make_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name_l
 }
 
 static LispObj
+wasm_const_pool_make_entry_function(TCR *tcr, uint32_t entry_index);
+
+static LispObj
+wasm_const_pool_lookup_existing_symbol(const uint8_t *name_bytes,
+                                       uint32_t name_len,
+                                       LispObj pkg)
+{
+  LispObj sym = wasm_find_symbol_named_bytes(name_bytes, name_len, pkg);
+  if (!sym) {
+    sym = wasm_find_symbol_named_bytes_scan(name_bytes, name_len, pkg);
+  }
+  if (!sym) {
+    sym = wasm_const_pool_find_symbol_in_pools(name_bytes, name_len, pkg);
+  }
+  if (!sym && pkg != (LispObj)0) {
+    sym = wasm_find_symbol_named_bytes(name_bytes, name_len, (LispObj)0);
+    if (!sym) {
+      sym = wasm_find_symbol_named_bytes_scan(name_bytes, name_len, (LispObj)0);
+    }
+    if (!sym) {
+      sym = wasm_const_pool_find_symbol_in_pools(name_bytes, name_len, (LispObj)0);
+    }
+  }
+  return sym;
+}
+
+static LispObj
 wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg)
 {
   if (tcr == NULL || name_bytes == NULL || name_len == 0) {
     return (LispObj)0;
   }
+  wasm_boot_trace_log(
+    "WASM boot trace: const-pool-intern enter name_len=%u pkg=0x%08x\n",
+    (unsigned)name_len,
+    (unsigned)(uint32_t)pkg);
+  wasm_log_const_pool_fallback(
+    "WASM boot trace: const-pool-intern name=",
+    (unsigned)(sizeof("WASM boot trace: const-pool-intern name=") - 1),
+    name_bytes,
+    name_len);
 
   static LispObj intern_sym = (LispObj)0;
   if (intern_sym == (LispObj)0) {
@@ -4406,19 +5010,29 @@ wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name
   }
   if (intern_fn == (LispObj)0) {
     /*
-     * Bootstrap hardening: when COMMON-LISP:INTERN is present but still UDF,
-     * call the known entry-function index directly.
+     * Bootstrap safety: avoid recursively calling INTERN entry code while
+     * const-pool installation is in-flight. Prefer existing symbols and
+     * fallback symbol creation in this state.
      */
-    LispObj intern_entry_fn_obj[3] __attribute__((aligned(8)));
-    LispObj intern_entry = box_fixnum((signed_natural)WASM_INTERN_ENTRY_INDEX);
-    intern_entry_fn_obj[0] = make_header(subtag_function, 2);
-    intern_entry_fn_obj[1] = intern_entry;
-    intern_entry_fn_obj[2] = intern_entry;
-    intern_fn = (LispObj)((BytePtr)intern_entry_fn_obj + fulltag_misc);
+    LispObj existing = wasm_const_pool_lookup_existing_symbol(name_bytes, name_len, pkg);
+    wasm_boot_trace_log(
+      "WASM boot trace: const-pool-intern dispatch intern_sym=0x%08x intern_fn=0x%08x direct_entry=0 existing=0x%08x\n",
+      (unsigned)(uint32_t)intern_sym,
+      (unsigned)(uint32_t)intern_fn,
+      (unsigned)(uint32_t)existing);
+    if (existing != (LispObj)0) {
+      return existing;
+    }
+    return wasm_const_pool_make_symbol(tcr, name_bytes, name_len, pkg);
   }
+  wasm_boot_trace_log(
+    "WASM boot trace: const-pool-intern dispatch intern_sym=0x%08x intern_fn=0x%08x direct_entry=0\n",
+    (unsigned)(uint32_t)intern_sym,
+    (unsigned)(uint32_t)intern_fn);
 
   LispObj name_str = wasm_const_pool_make_base_string(tcr, name_bytes, name_len);
   if (name_str == lisp_nil) {
+    wasm_boot_trace_log("WASM boot trace: const-pool-intern fail reason=alloc-name-string\n");
     return (LispObj)0;
   }
 
@@ -4428,16 +5042,29 @@ wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name
   }
 
   LispObj result = wasm_funcall2(intern_fn, name_str, pkg_arg);
+  wasm_boot_trace_log(
+    "WASM boot trace: const-pool-intern return result=0x%08x pending_throw=%u pkg_arg=0x%08x\n",
+    (unsigned)(uint32_t)result,
+    (unsigned)tcr->wasm_pending_throw,
+    (unsigned)(uint32_t)pkg_arg);
   if (tcr->wasm_pending_throw) {
     tcr->wasm_pending_throw = 0;
     static const char msg[] = "WASM const-pool: INTERN threw for ";
     wasm_log_const_pool_fallback(msg, (unsigned)(sizeof(msg) - 1), name_bytes, name_len);
-    return (LispObj)0;
+    LispObj existing = wasm_const_pool_lookup_existing_symbol(name_bytes, name_len, pkg);
+    if (existing != (LispObj)0) {
+      return existing;
+    }
+    return wasm_const_pool_make_symbol(tcr, name_bytes, name_len, pkg);
   }
   if (result == lisp_nil) {
     static const char msg[] = "WASM const-pool: INTERN returned NIL for ";
     wasm_log_const_pool_fallback(msg, (unsigned)(sizeof(msg) - 1), name_bytes, name_len);
-    return (LispObj)0;
+    LispObj existing = wasm_const_pool_lookup_existing_symbol(name_bytes, name_len, pkg);
+    if (existing != (LispObj)0) {
+      return existing;
+    }
+    return wasm_const_pool_make_symbol(tcr, name_bytes, name_len, pkg);
   }
   return result;
 }
@@ -4579,6 +5206,11 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
   if (payload_ptr == 0 || payload_len == 0u) {
     return lisp_nil;
   }
+  wasm_boot_trace_log(
+    "WASM boot trace: const-pool-install enter entry=%u payload_ptr=0x%08x payload_len=%u\n",
+    (unsigned)entry_index,
+    (unsigned)payload_ptr,
+    (unsigned)payload_len);
 
   const uint8_t *bytes = (const uint8_t *)(uintptr_t)payload_ptr;
   uint32_t offset = 0;
@@ -4604,8 +5236,18 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
     count = wasm_const_pool_read_uleb32(bytes, payload_len, &offset, &ok);
   }
   if (!ok || (version != 1u && version != 2u)) {
+    wasm_boot_trace_log(
+      "WASM boot trace: const-pool-install fail entry=%u reason=bad-version version=%u ok=%d\n",
+      (unsigned)entry_index,
+      (unsigned)version,
+      ok);
     return lisp_nil;
   }
+  wasm_boot_trace_log(
+    "WASM boot trace: const-pool-install header entry=%u version=%u count=%u\n",
+    (unsigned)entry_index,
+    (unsigned)version,
+    (unsigned)count);
 
   LispObj pool = wasm_misc_alloc(tcr, subtag_simple_vector, (signed_natural)count);
   if (pool == lisp_nil) {
@@ -4622,8 +5264,19 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
     wasm_const_pool_debug_tag = tag;
     wasm_const_pool_debug_offset = offset;
     if (!ok) {
+      wasm_boot_trace_log(
+        "WASM boot trace: const-pool-install fail entry=%u phase=build index=%u reason=tag-read-failed offset=%u\n",
+        (unsigned)entry_index,
+        (unsigned)i,
+        (unsigned)offset);
       return lisp_nil;
     }
+    wasm_boot_trace_log(
+      "WASM boot trace: const-pool-install step entry=%u phase=build index=%u tag=%u offset=%u\n",
+      (unsigned)entry_index,
+      (unsigned)i,
+      (unsigned)tag,
+      (unsigned)offset);
     switch (tag) {
       case 6: { /* fixnum */
         if (version >= 2u) {
@@ -4956,11 +5609,16 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
         break;
       }
       case 16: { /* entry-function */
-        uint32_t entry_index = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
+        uint32_t target_entry = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
         if (!ok) {
           return lisp_nil;
         }
-        LispObj vec = wasm_const_pool_make_entry_function(tcr, entry_index);
+        wasm_boot_trace_log(
+          "WASM boot trace: const-pool-install entry-function phase=build pool_entry=%u const_index=%u target_entry=%u\n",
+          (unsigned)entry_index,
+          (unsigned)i,
+          (unsigned)target_entry);
+        LispObj vec = wasm_const_pool_make_entry_function(tcr, target_entry);
         if (vec == lisp_nil) {
           return lisp_nil;
         }
@@ -5050,6 +5708,12 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
     patch_count = wasm_const_pool_read_uleb32(bytes, payload_len, &patch_offset, &patch_ok);
   }
   if (!patch_ok || patch_version != version || patch_count != count) {
+    wasm_boot_trace_log(
+      "WASM boot trace: const-pool-install fail entry=%u reason=patch-header-mismatch patch_ok=%d patch_version=%u patch_count=%u\n",
+      (unsigned)entry_index,
+      patch_ok,
+      (unsigned)patch_version,
+      (unsigned)patch_count);
     return lisp_nil;
   }
   for (uint32_t i = 0; i < count; i++) {
@@ -5061,8 +5725,19 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
     wasm_const_pool_debug_tag = tag;
     wasm_const_pool_debug_offset = patch_offset;
     if (!patch_ok) {
+      wasm_boot_trace_log(
+        "WASM boot trace: const-pool-install fail entry=%u phase=patch index=%u reason=tag-read-failed offset=%u\n",
+        (unsigned)entry_index,
+        (unsigned)i,
+        (unsigned)patch_offset);
       return lisp_nil;
     }
+    wasm_boot_trace_log(
+      "WASM boot trace: const-pool-install step entry=%u phase=patch index=%u tag=%u offset=%u\n",
+      (unsigned)entry_index,
+      (unsigned)i,
+      (unsigned)tag,
+      (unsigned)patch_offset);
     switch (tag) {
       case 6: { /* fixnum */
         if (patch_version >= 2u) {
@@ -5125,7 +5800,14 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
         break;
       }
       case 16: /* entry-function */
-        (void)wasm_const_pool_read_nat(bytes, payload_len, &patch_offset, patch_version, &patch_ok);
+        {
+          uint32_t target_entry =
+            wasm_const_pool_read_nat(bytes, payload_len, &patch_offset, patch_version, &patch_ok);
+          wasm_boot_trace_log(
+            "WASM boot trace: const-pool-install entry-function phase=patch const_index=%u target_entry=%u\n",
+            (unsigned)i,
+            (unsigned)target_entry);
+        }
         break;
       case 9: { /* gvector */
         (void)wasm_const_pool_read_nat(bytes, payload_len, &patch_offset, patch_version, &patch_ok); /* raw_subtag */
@@ -5177,11 +5859,19 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
 
   LispObj table = wasm_const_pool_table_ensure(tcr, entry_index);
   if (table == lisp_nil) {
+    wasm_boot_trace_log(
+      "WASM boot trace: const-pool-install fail entry=%u reason=table-ensure-failed\n",
+      (unsigned)entry_index);
     return lisp_nil;
   }
   LispObj *table_data = (LispObj *)((BytePtr)table + misc_data_offset);
   table_data[entry_index] = pool;
   wasm_const_pool_debug_phase = 0u;
+  wasm_boot_trace_log(
+    "WASM boot trace: const-pool-install success entry=%u pool=0x%08x count=%u\n",
+    (unsigned)entry_index,
+    (unsigned)(uint32_t)pool,
+    (unsigned)count);
   return pool;
 }
 
@@ -5225,23 +5915,50 @@ LispObj
 wasm_const_pool_ref(uint32_t entry_index, uint32_t const_index)
 {
   int requested = 0;
+  TCR *tcr = wasm_get_current_tcr();
+  wasm_runtime_trace_5560(
+    tcr,
+    "const_pool_ref-enter",
+    (LispObj)(uintptr_t)entry_index,
+    (LispObj)(uintptr_t)const_index,
+    0);
+  wasm_boot_trace_log(
+    "WASM boot trace: const-pool-ref enter entry=%u const_index=%u\n",
+    (unsigned)entry_index,
+    (unsigned)const_index);
   for (;;) {
     LispObj table = nrs_WASM_CONST_POOLS.vcell;
     if (table == lisp_nil ||
         fulltag_of(table) != fulltag_misc ||
         header_subtag(header_of(table)) != subtag_simple_vector) {
       if (!requested && (wasm_host_install_const_pool(entry_index) > 0)) {
+        wasm_boot_trace_log(
+          "WASM boot trace: const-pool-ref requested host install entry=%u reason=table-missing\n",
+          (unsigned)entry_index);
         requested = 1;
         continue;
       }
+      wasm_boot_trace_log(
+        "WASM boot trace: const-pool-ref miss entry=%u reason=table-invalid requested=%u\n",
+        (unsigned)entry_index,
+        (unsigned)requested);
       return lisp_nil;
     }
     uint32_t count = (uint32_t)header_element_count(header_of(table));
     if (entry_index >= count) {
       if (!requested && (wasm_host_install_const_pool(entry_index) > 0)) {
+        wasm_boot_trace_log(
+          "WASM boot trace: const-pool-ref requested host install entry=%u reason=entry-out-of-range count=%u\n",
+          (unsigned)entry_index,
+          (unsigned)count);
         requested = 1;
         continue;
       }
+      wasm_boot_trace_log(
+        "WASM boot trace: const-pool-ref miss entry=%u reason=entry-out-of-range count=%u requested=%u\n",
+        (unsigned)entry_index,
+        (unsigned)count,
+        (unsigned)requested);
       return lisp_nil;
     }
     LispObj *table_data = (LispObj *)((BytePtr)table + misc_data_offset);
@@ -5250,17 +5967,43 @@ wasm_const_pool_ref(uint32_t entry_index, uint32_t const_index)
         fulltag_of(pool) != fulltag_misc ||
         header_subtag(header_of(pool)) != subtag_simple_vector) {
       if (!requested && (wasm_host_install_const_pool(entry_index) > 0)) {
+        wasm_boot_trace_log(
+          "WASM boot trace: const-pool-ref requested host install entry=%u reason=pool-missing\n",
+          (unsigned)entry_index);
         requested = 1;
         continue;
       }
+      wasm_boot_trace_log(
+        "WASM boot trace: const-pool-ref miss entry=%u reason=pool-invalid requested=%u\n",
+        (unsigned)entry_index,
+        (unsigned)requested);
       return lisp_nil;
     }
     uint32_t pool_count = (uint32_t)header_element_count(header_of(pool));
     if (const_index >= pool_count) {
+      wasm_boot_trace_log(
+        "WASM boot trace: const-pool-ref miss entry=%u reason=const-out-of-range const_index=%u pool_count=%u\n",
+        (unsigned)entry_index,
+        (unsigned)const_index,
+        (unsigned)pool_count);
       return lisp_nil;
     }
     LispObj *pool_data = (LispObj *)((BytePtr)pool + misc_data_offset);
-    return pool_data[const_index];
+    LispObj value = pool_data[const_index];
+    int32_t value_entry = wasm_toplevel_trace_entry_index(value, NULL, NULL);
+    wasm_boot_trace_log(
+      "WASM boot trace: const-pool-ref hit entry=%u const_index=%u value=0x%08x value_entry=%d\n",
+      (unsigned)entry_index,
+      (unsigned)const_index,
+      (unsigned)(uint32_t)value,
+      (int)value_entry);
+    wasm_runtime_trace_5560(
+      tcr,
+      "const_pool_ref-hit",
+      (LispObj)(uintptr_t)entry_index,
+      (LispObj)(uintptr_t)const_index,
+      value);
+    return value;
   }
 }
 
@@ -5269,6 +6012,8 @@ LispObj
 wasm_get_lisp_nil(void)
 {
   extern LispObj lisp_nil;
+  TCR *tcr = wasm_get_current_tcr();
+  wasm_runtime_trace_5560(tcr, "get_lisp_nil", lisp_nil, 0, 0);
   return lisp_nil;
 }
 
@@ -5612,6 +6357,7 @@ int32_t
 wasm_reset_root_image_runtime_state(void)
 {
   extern LispObj lisp_nil;
+  wasm_boot_trace_log("WASM boot trace: reset-root-runtime-state enter\n");
 
   wasm_reset_gc_root_policy();
   wasm_clear_entry_gc_root_policy_modes();
@@ -5621,6 +6367,7 @@ wasm_reset_root_image_runtime_state(void)
 
   TCR *tcr = wasm_get_current_tcr();
   if (tcr != NULL) {
+    wasm_boot_trace_tcr("reset-root-runtime-state-before-tcr", tcr);
     LispObj *slot = wasm_toplevel_slot(tcr);
     if (slot != NULL) {
       /*
@@ -5635,8 +6382,10 @@ wasm_reset_root_image_runtime_state(void)
       tcr->save_vsp = slot;
       tcr->wasm_gprs[vsp] = (LispObj)slot;
     }
+    wasm_boot_trace_tcr("reset-root-runtime-state-after-tcr", tcr);
   }
 
+  wasm_boot_trace_log("WASM boot trace: reset-root-runtime-state exit\n");
   return 0;
 }
 

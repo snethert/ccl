@@ -60,6 +60,86 @@ export function createCclImports({
     // Optional/compat: if your link step imports a named table, wire it here.
     subprims_table: subprimsTable,
   };
+  const KERNEL_STATUS_PENDING = 0;
+  const KERNEL_STATUS_ERROR = 2;
+  const ERRNO_E2BIG = -7;
+  const ERRNO_EWOULDBLOCK = -11;
+  const ERRNO_EINVAL = -22;
+  const ERRNO_ENOSYS = -52;
+  const KERNEL_OP_RUNTIME_EVENT = 0x00000023;
+  const KERNEL_OP_RUNTIME_COMMAND_POLL = 0x00000024;
+  const hasKernelRequestAbi = (
+    typeof ccl.kernel_request === "function" &&
+    typeof ccl.kernel_poll === "function" &&
+    typeof ccl.kernel_result === "function" &&
+    typeof ccl.kernel_response_size === "function" &&
+    typeof ccl.kernel_copy_response === "function" &&
+    typeof ccl.kernel_drop_request === "function"
+  );
+  const setOutLen = (outLenPtr, value) => {
+    if (!memory || !outLenPtr) return;
+    const view = new DataView(memory.buffer);
+    view.setUint32(outLenPtr >>> 0, value >>> 0, true);
+  };
+  const kernelRequestCopy = (
+    opcode,
+    payloadPtr,
+    payloadLen,
+    outBufPtr,
+    outCap,
+    outLenPtr,
+  ) => {
+    setOutLen(outLenPtr, 0);
+    if (!hasKernelRequestAbi) {
+      return ERRNO_ENOSYS;
+    }
+
+    const requestId = ccl.kernel_request(
+      opcode >>> 0,
+      payloadPtr >>> 0,
+      payloadLen >>> 0,
+    ) >>> 0;
+    if (requestId === 0) {
+      return ERRNO_EINVAL;
+    }
+
+    const status = ccl.kernel_poll(requestId) >>> 0;
+    if (status === KERNEL_STATUS_PENDING) {
+      ccl.kernel_drop_request(requestId);
+      return ERRNO_EWOULDBLOCK;
+    }
+
+    const result = ccl.kernel_result(requestId) | 0;
+    if (status === KERNEL_STATUS_ERROR) {
+      ccl.kernel_drop_request(requestId);
+      return result || ERRNO_EINVAL;
+    }
+
+    if ((outBufPtr >>> 0) !== 0 && (outCap >>> 0) !== 0) {
+      const need = ccl.kernel_response_size(requestId) >>> 0;
+      if (need > (outCap >>> 0)) {
+        ccl.kernel_drop_request(requestId);
+        return ERRNO_E2BIG;
+      }
+      if (need !== 0) {
+        const copied = ccl.kernel_copy_response(
+          requestId,
+          outBufPtr >>> 0,
+          outCap >>> 0,
+        ) >>> 0;
+        if (copied !== need) {
+          ccl.kernel_drop_request(requestId);
+          return ERRNO_EINVAL;
+        }
+        setOutLen(outLenPtr, copied);
+      }
+    } else if (outLenPtr) {
+      setOutLen(outLenPtr, ccl.kernel_response_size(requestId) >>> 0);
+    }
+
+    ccl.kernel_drop_request(requestId);
+    return result;
+  };
   if (typeof ccl.wasm_host_install_const_pool !== "function") {
     ccl.wasm_host_install_const_pool = () => 0;
   }
@@ -67,15 +147,37 @@ export function createCclImports({
     ccl.wasm_host_resolve_function_designator_entry = () => -1;
   }
   if (typeof ccl.wasm_kernel_runtime_event !== "function") {
-    ccl.wasm_kernel_runtime_event = () => -52; // -ENOSYS
+    ccl.wasm_kernel_runtime_event = (payloadPtr, payloadLen) => (
+      kernelRequestCopy(
+        KERNEL_OP_RUNTIME_EVENT,
+        payloadPtr >>> 0,
+        payloadLen >>> 0,
+        0,
+        0,
+        0,
+      )
+    );
   }
   if (typeof ccl.wasm_kernel_runtime_command_poll !== "function") {
-    ccl.wasm_kernel_runtime_command_poll = (_maxBytes, _flags, _outBuf, _outCap, outLenPtr) => {
-      if (memory && outLenPtr) {
-        const view = new DataView(memory.buffer);
-        view.setUint32(outLenPtr >>> 0, 0, true);
+    ccl.wasm_kernel_runtime_command_poll = (maxBytes, flags, outBuf, outCap, outLenPtr) => {
+      const outBufPtr = outBuf >>> 0;
+      const outCapacity = outCap >>> 0;
+      const outLen = outLenPtr >>> 0;
+      setOutLen(outLen, 0);
+      if (!memory || outBufPtr === 0 || outCapacity < 8) {
+        return ERRNO_EINVAL;
       }
-      return -52; // -ENOSYS
+      const view = new DataView(memory.buffer);
+      view.setUint32(outBufPtr, maxBytes >>> 0, true);
+      view.setUint32(outBufPtr + 4, flags >>> 0, true);
+      return kernelRequestCopy(
+        KERNEL_OP_RUNTIME_COMMAND_POLL,
+        outBufPtr,
+        8,
+        outBufPtr,
+        outCapacity,
+        outLen,
+      );
     };
   }
 

@@ -75,21 +75,33 @@
 
 /* Import module name is "ccl" (see doc/wasm/kernel-request-abi.md). */
 __attribute__((import_module("ccl"), import_name("kernel_request")))
-uint32_t kernel_request(uint32_t opcode, const void *payloadPtr, uint32_t payloadLen);
+uint32_t wasm_host_import_kernel_request(uint32_t opcode,
+                                         const void *payloadPtr,
+                                         uint32_t payloadLen);
 
 __attribute__((import_module("ccl"), import_name("kernel_poll")))
-uint32_t kernel_poll(uint32_t requestId);
+uint32_t wasm_host_import_kernel_poll(uint32_t requestId);
 
 __attribute__((import_module("ccl"), import_name("kernel_result")))
-int32_t kernel_result(uint32_t requestId);
+int32_t wasm_host_import_kernel_result(uint32_t requestId);
 
 __attribute__((import_module("ccl"), import_name("kernel_response_size")))
-uint32_t kernel_response_size(uint32_t requestId);
+uint32_t wasm_host_import_kernel_response_size(uint32_t requestId);
 
 __attribute__((import_module("ccl"), import_name("kernel_copy_response")))
-uint32_t kernel_copy_response(uint32_t requestId, void *dstPtr, uint32_t dstLen);
+uint32_t wasm_host_import_kernel_copy_response(uint32_t requestId,
+                                               void *dstPtr,
+                                               uint32_t dstLen);
 
 __attribute__((import_module("ccl"), import_name("kernel_drop_request")))
+void wasm_host_import_kernel_drop_request(uint32_t requestId);
+
+/* C-visible wrappers around kernel_request imports. */
+uint32_t kernel_request(uint32_t opcode, const void *payloadPtr, uint32_t payloadLen);
+uint32_t kernel_poll(uint32_t requestId);
+int32_t kernel_result(uint32_t requestId);
+uint32_t kernel_response_size(uint32_t requestId);
+uint32_t kernel_copy_response(uint32_t requestId, void *dstPtr, uint32_t dstLen);
 void kernel_drop_request(uint32_t requestId);
 
 /* Stage-2 building blocks: manual request lifecycle. */

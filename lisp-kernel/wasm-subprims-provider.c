@@ -1958,6 +1958,170 @@ typedef void (*wasm_lisp_fn_void)(void);
 typedef LispObj (*wasm_lisp_fn_unary_i32)(LispObj);
 typedef LispObj (*wasm_lisp_fn_binary_i32)(LispObj, LispObj);
 
+static int
+wasm_runtime_trace_entry(uint32_t entry_index)
+{
+  switch (entry_index) {
+    case 5453u: /* TOPLEVEL-LOOP */
+    case 5559u: /* RUNTIME-COMMAND--POLL-FRAME */
+    case 5560u: /* RUNTIME-BRIDGE-PUMP-COMMANDS */
+      return 1;
+    default:
+      return 0;
+  }
+}
+
+static unsigned
+wasm_runtime_trace_append_cstr(char *buf,
+                               unsigned cap,
+                               unsigned pos,
+                               const char *text)
+{
+  if (buf == NULL || cap == 0u || text == NULL) {
+    return pos;
+  }
+  while (*text != '\0' && pos < cap) {
+    buf[pos++] = *text++;
+  }
+  return pos;
+}
+
+static unsigned
+wasm_runtime_trace_append_hex32(char *buf,
+                                unsigned cap,
+                                unsigned pos,
+                                uint32_t value)
+{
+  static const char hexdigits[] = "0123456789abcdef";
+  if (buf == NULL || cap == 0u) {
+    return pos;
+  }
+  if (pos + 10u > cap) {
+    return pos;
+  }
+  buf[pos++] = '0';
+  buf[pos++] = 'x';
+  for (unsigned i = 0; i < 8u; i++) {
+    unsigned shift = (7u - i) * 4u;
+    buf[pos++] = hexdigits[(value >> shift) & 0x0fu];
+  }
+  return pos;
+}
+
+static void
+wasm_runtime_trace_call(const char *phase,
+                        uint32_t entry_index,
+                        uint32_t entry_call_abi,
+                        TCR *tcr,
+                        LispObj fn_value,
+                        LispObj name)
+{
+  if (tcr == NULL) {
+    return;
+  }
+  char line[320];
+  unsigned pos = 0u;
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, "WASM runtime trace ONE-LINE: ");
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, (phase != NULL) ? phase : "?");
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " entry=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, entry_index);
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " abi=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, entry_call_abi);
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " fn=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)fn_value);
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " name=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)name);
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " pending_throw=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)tcr->wasm_pending_throw);
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " nargs=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, nargs));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " arg_z=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, arg_z));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " arg_y=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, arg_y));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " nfn=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, nfn));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " rfn=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, Rfn));
+  if (pos < sizeof(line)) {
+    line[pos++] = '\n';
+  }
+  wasm_host_log(line, pos);
+}
+
+static int32_t
+wasm_runtime_trace_callable_entry(LispObj callable)
+{
+  if (callable == (LispObj)nil_value || callable == nrs_UDF.vcell) {
+    return -1;
+  }
+  if (fulltag_of(callable) != fulltag_misc) {
+    return -1;
+  }
+  if (header_subtag(header_of(callable)) == subtag_symbol) {
+    lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(callable));
+    callable = sym->fcell;
+    if (callable == (LispObj)nil_value || callable == nrs_UDF.vcell || fulltag_of(callable) != fulltag_misc) {
+      return -1;
+    }
+  }
+  LispObj entry = deref(callable, 1);
+  if (tag_of(entry) != tag_fixnum) {
+    return -1;
+  }
+  return (int32_t)unbox_fixnum(entry);
+}
+
+static void
+wasm_runtime_trace_ffi(const char *phase, const char *operation, TCR *tcr)
+{
+  if (tcr == NULL) {
+    return;
+  }
+  char line[512];
+  unsigned pos = 0u;
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, "WASM runtime trace ffi ONE-LINE: ");
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, (phase != NULL) ? phase : "?");
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " op=");
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, (operation != NULL) ? operation : "?");
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " pending_throw=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)tcr->wasm_pending_throw);
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " nargs=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, nargs));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " nfn_entry=");
+  pos = wasm_runtime_trace_append_hex32(
+    line,
+    sizeof(line),
+    pos,
+    (uint32_t)wasm_runtime_trace_callable_entry(wasm_reg(tcr, nfn)));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " rfn_entry=");
+  pos = wasm_runtime_trace_append_hex32(
+    line,
+    sizeof(line),
+    pos,
+    (uint32_t)wasm_runtime_trace_callable_entry(wasm_reg(tcr, Rfn)));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " arg_z=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, arg_z));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " arg_y=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, arg_y));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " arg_x=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, arg_x));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " imm0=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, imm0));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " imm1=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, imm1));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " nfn=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, nfn));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " rfn=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, Rfn));
+  pos = wasm_runtime_trace_append_cstr(line, sizeof(line), pos, " vsp=");
+  pos = wasm_runtime_trace_append_hex32(line, sizeof(line), pos, (uint32_t)wasm_reg(tcr, vsp));
+  if (pos < sizeof(line)) {
+    line[pos++] = '\n';
+  }
+  wasm_host_log(line, pos);
+}
+
 static inline void
 wasm_call_entry_index(uint32_t index)
 {
@@ -2007,6 +2171,10 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
   {
     uint32_t entry_index = (uint32_t)unbox_fixnum(entry);
     uint32_t entry_call_abi = wasm_prepare_entry_call(entry_index);
+    int trace_entry = wasm_runtime_trace_entry(entry_index);
+    if (trace_entry) {
+      wasm_runtime_trace_call("call-enter", entry_index, entry_call_abi, tcr, fn_value, name);
+    }
     switch (entry_call_abi) {
     case WASM_ENTRY_CALL_ABI_UNARY_I32: {
       LispObj result;
@@ -2023,6 +2191,9 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
       if (!wasm_pending_throw_p(tcr)) {
         wasm_set_reg(tcr, arg_z, result);
         wasm_set_nargs_count(tcr, 1);
+      }
+      if (trace_entry) {
+        wasm_runtime_trace_call("call-exit", entry_index, entry_call_abi, tcr, fn_value, name);
       }
       break;
     }
@@ -2044,11 +2215,17 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
         wasm_set_reg(tcr, arg_z, result);
         wasm_set_nargs_count(tcr, 1);
       }
+      if (trace_entry) {
+        wasm_runtime_trace_call("call-exit", entry_index, entry_call_abi, tcr, fn_value, name);
+      }
       break;
     }
     case WASM_ENTRY_CALL_ABI_LEGACY:
     default:
       wasm_call_entry_index(entry_index);
+      if (trace_entry) {
+        wasm_runtime_trace_call("call-exit", entry_index, entry_call_abi, tcr, fn_value, name);
+      }
       break;
     }
   }
@@ -6405,7 +6582,9 @@ _SPeabi_ff_call_simple(void)
   if (tcr == NULL) {
     wasm_subprims_trap();
   }
+  wasm_runtime_trace_ffi("enter", "CALL-SIMPLE", tcr);
   wasm_signal_capability_unavailable(tcr, ":foreign/ffi", "CALL-SIMPLE", NULL);
+  wasm_runtime_trace_ffi("exit", "CALL-SIMPLE", tcr);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPeabi_ff_callhf")))
@@ -6416,7 +6595,9 @@ _SPeabi_ff_callhf(void)
   if (tcr == NULL) {
     wasm_subprims_trap();
   }
+  wasm_runtime_trace_ffi("enter", "CALL-HF", tcr);
   wasm_signal_capability_unavailable(tcr, ":foreign/ffi", "CALL-HF", NULL);
+  wasm_runtime_trace_ffi("exit", "CALL-HF", tcr);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPeabi_callback")))
