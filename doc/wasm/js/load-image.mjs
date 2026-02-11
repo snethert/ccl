@@ -34,6 +34,7 @@ import { createMicrokernel } from "./microkernel.mjs";
 import {
   collectBootstrapState,
   STARTUP_FUNCTION_DESIGNATOR_POLICY_V1,
+  STARTUP_SYMBOL_TO_ENTRY_FUNCTION_DESIGNATORS_PRE_TOPLEVEL_V1,
   validateBootstrapContract,
   formatBootstrapState,
 } from "./bootstrap-contract.mjs";
@@ -331,9 +332,9 @@ let startupRequiredPreToplevelDesignators = normalizeDesignatorNameSet(
 let startupDeferredPreToplevelDesignators = normalizeDesignatorNameSet(
   startupFunctionDesignatorPolicy["pre-toplevel"]?.deferredAllowed ?? [],
 );
-const startupSymbolToEntryPreToplevelDesignators = normalizeDesignatorNameSet([
-  "RUNTIME-BRIDGE-PUMP-COMMANDS",
-]);
+const startupSymbolToEntryPreToplevelDesignators = normalizeDesignatorNameSet(
+  STARTUP_SYMBOL_TO_ENTRY_FUNCTION_DESIGNATORS_PRE_TOPLEVEL_V1,
+);
 const startupRequiredOverride = String(process.env.CCL_STARTUP_REQUIRED_FUNCTIONS ?? "").trim();
 if (startupRequiredOverride.length > 0) {
   startupRequiredPreToplevelDesignators = normalizeDesignatorNameSet(

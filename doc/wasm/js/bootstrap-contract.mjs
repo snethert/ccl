@@ -201,6 +201,33 @@ export const STARTUP_FUNCTION_DESIGNATOR_POLICY_V1 = Object.freeze({
   }),
 });
 
+/*
+ * Bootstrap-critical symbols that must be rewritten from symbolic designators
+ * to callable entry functions before first toplevel execution.
+ */
+export const STARTUP_SYMBOL_TO_ENTRY_FUNCTION_DESIGNATORS_PRE_TOPLEVEL_V1 = Object.freeze([
+  "INTERN",
+  "TOPLEVEL",
+  "RUN-READ-LOOP",
+  "RUNTIME-BRIDGE-PUMP-COMMANDS",
+  "RUNTIME-COMMAND--POLL-FRAME",
+  "RUNTIME-COMMAND--DECODE-FRAME",
+  "RUNTIME-COMMAND--DISPATCH",
+  "READ-LOOP",
+  "RUNTIME-COMMAND--SAFE-READ-FORM",
+  "RUNTIME-COMMAND--EVAL-FORM",
+  "RUNTIME-COMMAND--EMIT-RESULT",
+  "RUNTIME-COMMAND--EMIT-ERROR",
+  "RUNTIME-BRIDGE--NOW-MS",
+  "RUNTIME-BRIDGE--EMIT-MESSAGE",
+  "RUNTIME-COMMAND--ALIST-VALUE",
+  "RUNTIME-COMMAND--RENDER-SUMMARY",
+  "RUNTIME-COMMAND--U32",
+  "RUNTIME-COMMAND--DECODE-STRING",
+  "TOPLEVEL-EVAL",
+  "TOPLEVEL-PRINT",
+]);
+
 export function collectBootstrapState({ kernelExports } = {}) {
   if (!kernelExports) {
     throw new Error("bootstrap contract requires kernel exports");

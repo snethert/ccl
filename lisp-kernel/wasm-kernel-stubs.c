@@ -219,7 +219,9 @@ enum {
   /* Constant-return entrypoint for compiler IR bring-up. */
   WASM_CONST_ENTRY_INDEX = 202,
   /* Fallback direct LOAD entry used by wasm_run_script_with_output bootstrap. */
-  WASM_LOAD_ENTRY_INDEX = 4532
+  WASM_LOAD_ENTRY_INDEX = 4532,
+  /* Fallback direct INTERN entry used during early const-pool bring-up. */
+  WASM_INTERN_ENTRY_INDEX = 562
 };
 
 #define WASM_NAMED_ENTRY_MAX 8192u
@@ -4403,9 +4405,16 @@ wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name
     }
   }
   if (intern_fn == (LispObj)0) {
-    static const char msg[] = "WASM const-pool: INTERN symbol unavailable for ";
-    wasm_log_const_pool_fallback(msg, (unsigned)(sizeof(msg) - 1), name_bytes, name_len);
-    return (LispObj)0;
+    /*
+     * Bootstrap hardening: when COMMON-LISP:INTERN is present but still UDF,
+     * call the known entry-function index directly.
+     */
+    LispObj intern_entry_fn_obj[3] __attribute__((aligned(8)));
+    LispObj intern_entry = box_fixnum((signed_natural)WASM_INTERN_ENTRY_INDEX);
+    intern_entry_fn_obj[0] = make_header(subtag_function, 2);
+    intern_entry_fn_obj[1] = intern_entry;
+    intern_entry_fn_obj[2] = intern_entry;
+    intern_fn = (LispObj)((BytePtr)intern_entry_fn_obj + fulltag_misc);
   }
 
   LispObj name_str = wasm_const_pool_make_base_string(tcr, name_bytes, name_len);

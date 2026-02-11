@@ -37,6 +37,7 @@ import {
   collectBootstrapState,
   formatBootstrapState,
   STARTUP_FUNCTION_DESIGNATOR_POLICY_V1,
+  STARTUP_SYMBOL_TO_ENTRY_FUNCTION_DESIGNATORS_PRE_TOPLEVEL_V1,
 } from "./bootstrap-contract.mjs";
 import {
   BOOTSTRAP_RESOLVER_PHASE_BOOTSTRAP,
@@ -488,9 +489,9 @@ const startupRequiredPreToplevelDesignators = normalizeDesignatorNameSet(
 const startupDeferredPreToplevelDesignators = normalizeDesignatorNameSet(
   STARTUP_FUNCTION_DESIGNATOR_POLICY_V1?.phases?.["pre-toplevel"]?.deferredAllowed ?? [],
 );
-const startupSymbolToEntryPreToplevelDesignators = normalizeDesignatorNameSet([
-  "RUNTIME-BRIDGE-PUMP-COMMANDS",
-]);
+const startupSymbolToEntryPreToplevelDesignators = normalizeDesignatorNameSet(
+  STARTUP_SYMBOL_TO_ENTRY_FUNCTION_DESIGNATORS_PRE_TOPLEVEL_V1,
+);
 const resolverRegistration = registerResolverFunctionsFromBundle(
   bootstrapFunctionResolver,
   compiledModulesBundle,

@@ -9,6 +9,10 @@ import { emitSyntheticStorageV2Artifacts } from "./storage-v2-conformance.mjs";
 
 const skipUi = process.argv.includes("--no-ui");
 const includeWasmUiPersist = process.argv.includes("--with-wasm-ui-persist");
+const ciValue = String(process.env.CI ?? "").trim().toLowerCase();
+const includeRuntimeCommandSab = String(process.env.CCL_INCLUDE_RUNTIME_COMMAND_SAB_SMOKE ?? "") === "1"
+  || ciValue === "1"
+  || ciValue === "true";
 const ipcConformanceId = process.env.CCL_IPC_CONFORMANCE_ID ?? null;
 const ipcLaneId = process.env.CCL_IPC_LANE_ID ?? null;
 const bridgeInjectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_UI_BRIDGE_TEST_INJECT_FAILURE ?? ""))
@@ -86,6 +90,15 @@ const tests = [
   "./mv-helpers-smoke.mjs",
   "./mvcall-smoke.mjs"
 ];
+
+if (includeRuntimeCommandSab) {
+  const runtimeCommandSmokeIndex = tests.indexOf("./runtime-command-smoke.mjs");
+  if (runtimeCommandSmokeIndex >= 0) {
+    tests.splice(runtimeCommandSmokeIndex + 1, 0, "./runtime-command-sab-smoke.mjs");
+  } else {
+    tests.push("./runtime-command-sab-smoke.mjs");
+  }
+}
 
 if (includeWasmUiPersist) {
   tests.splice(tests.indexOf("./web-ui-layout-focus-smoke.mjs"), 0, "./wasm-ui-persist-smoke.mjs");

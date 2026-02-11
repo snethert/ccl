@@ -39,7 +39,10 @@ import {
   rewriteConstPoolFunctionDesignators,
   STARTUP_SYMBOL_PACKAGE_OVERRIDES_CANONICAL_V1
 } from "./bootstrap-function-resolver.mjs";
-import { STARTUP_FUNCTION_DESIGNATOR_POLICY_V1 } from "./bootstrap-contract.mjs";
+import {
+  STARTUP_FUNCTION_DESIGNATOR_POLICY_V1,
+  STARTUP_SYMBOL_TO_ENTRY_FUNCTION_DESIGNATORS_PRE_TOPLEVEL_V1
+} from "./bootstrap-contract.mjs";
 
 const BOOT_ENTRY_INDEX = 200;
 const CSTACK_SIZE = 1 << 20;
@@ -89,24 +92,9 @@ const startupRequiredPreToplevelDesignators = normalizeDesignatorNameSet(
 const startupDeferredPreToplevelDesignators = normalizeDesignatorNameSet(
   STARTUP_FUNCTION_DESIGNATOR_POLICY_V1?.phases?.["pre-toplevel"]?.deferredAllowed ?? []
 );
-const startupSymbolToEntryPreToplevelDesignators = normalizeDesignatorNameSet([
-  "RUNTIME-BRIDGE-PUMP-COMMANDS",
-  "RUNTIME-COMMAND--POLL-FRAME",
-  "RUNTIME-COMMAND--DECODE-FRAME",
-  "RUNTIME-COMMAND--DISPATCH",
-  "RUNTIME-COMMAND--SAFE-READ-FORM",
-  "RUNTIME-COMMAND--EVAL-FORM",
-  "RUNTIME-COMMAND--EMIT-RESULT",
-  "RUNTIME-COMMAND--EMIT-ERROR",
-  "RUNTIME-BRIDGE--NOW-MS",
-  "RUNTIME-BRIDGE--EMIT-MESSAGE",
-  "RUNTIME-COMMAND--ALIST-VALUE",
-  "RUNTIME-COMMAND--RENDER-SUMMARY",
-  "RUNTIME-COMMAND--U32",
-  "RUNTIME-COMMAND--DECODE-STRING",
-  "TOPLEVEL-EVAL",
-  "TOPLEVEL-PRINT"
-]);
+const startupSymbolToEntryPreToplevelDesignators = normalizeDesignatorNameSet(
+  STARTUP_SYMBOL_TO_ENTRY_FUNCTION_DESIGNATORS_PRE_TOPLEVEL_V1
+);
 const bootstrapFunctionResolver = createBootstrapFunctionResolver({
   phase: BOOTSTRAP_RESOLVER_PHASE_BOOTSTRAP
 });

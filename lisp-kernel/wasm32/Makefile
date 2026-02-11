@@ -22,7 +22,7 @@ RM = /bin/rm
 WASM_TARGET ?= wasm32-unknown-unknown
 WASM_ALLOW_MEMORY_GROWTH ?= 1
 WASM_LD ?= wasm-ld-18
-CC = clang
+CC ?= clang
 # Set to wasm32-wasi if targeting WASI.
 CDEFINES = -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=$(WASM_ALLOW_MEMORY_GROWTH) -D_REENTRANT -DVC_REVISION=$(VC_REVISION)
 CDEBUG = -g

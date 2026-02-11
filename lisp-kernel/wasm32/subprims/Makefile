@@ -4,7 +4,7 @@ VPATH = ../../
 RM = /bin/rm
 WASM_TARGET ?= wasm32-unknown-unknown
 WASM_LD ?= wasm-ld-18
-CC = clang
+CC ?= clang
 CDEFINES = -DWASM32 -D_REENTRANT -DVC_REVISION=$(VC_REVISION)
 CDEBUG = -g
 COPT = -O2

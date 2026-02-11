@@ -19,32 +19,22 @@
 (in-package "CCL")
 
 
-(defvar *read-loop-function* 'read-loop)
-
 (defun run-read-loop (&rest args)
   (declare (dynamic-extent args))
-  (apply *read-loop-function* args))
+  (apply #'read-loop args))
 
 #+wasm32-target
 (defun toplevel-loop ()
   (loop
     (runtime-bridge-pump-commands)
     (let ((yielded
-           (if *wasm-yield-on-eagain*
-             (catch :wasm-yield
-               (progn
-                 (if (eq (catch :toplevel
-                           (run-read-loop :break-level 0)) $xstkover)
-                   (format t "~&;[Stacks reset due to overflow.]")
-                   (when (eq *current-process* *initial-process*)
-                     (toplevel)))
-                 nil))
+           (catch :wasm-yield
              (progn
                (if (eq (catch :toplevel
-                         (run-read-loop :break-level 0)) $xstkover)
+                         (read-loop :break-level 0))
+                       $xstkover)
                  (format t "~&;[Stacks reset due to overflow.]")
-                 (when (eq *current-process* *initial-process*)
-                   (toplevel)))
+                 (toplevel))
                nil))))
       (when yielded
         (return yielded)))))
@@ -489,10 +479,8 @@ commands but aren't")
   (defconstant +runtime-command-frame-version+ 1)
   (defconstant +runtime-command-max-bytes+ 65536)
 
-  (defvar *runtime-bridge-enabled* t)
   (defvar *runtime-bridge-job-id* nil)
   (defvar *runtime-bridge-stream-id* "repl")
-  (defvar *runtime-command-enabled* t)
   (defvar *runtime-command-stream-id* "commands")
   (defvar *runtime-bridge-seq* 0)
   (defvar *runtime-bridge-recording-counter* 0)
@@ -1196,21 +1184,20 @@ commands but aren't")
             (cons "selectedFrameId" nil))))
 
   (defun runtime-bridge-emit-debugger-snapshot (&key condition error-id task-id request-id)
-    (when *runtime-bridge-enabled*
-      (let* ((payload (runtime-command--build-debugger-snapshot
-                       :condition condition
-                       :error-id error-id
-                       :task-id task-id))
-             (resolved-error-id (cdr (assoc "errorId" payload :test #'string=))))
-        (setf *runtime-debugger-current-error-id* resolved-error-id
-              *runtime-debugger-current-condition* (or condition *runtime-debugger-current-condition* *break-condition*))
-        (runtime-bridge--emit-message
-         "debugger.snapshot"
-         payload
-         request-id
-         "debugger"
-         nil)
-        payload)))
+    (let* ((payload (runtime-command--build-debugger-snapshot
+                     :condition condition
+                     :error-id error-id
+                     :task-id task-id))
+           (resolved-error-id (cdr (assoc "errorId" payload :test #'string=))))
+      (setf *runtime-debugger-current-error-id* resolved-error-id
+            *runtime-debugger-current-condition* (or condition *runtime-debugger-current-condition* *break-condition*))
+      (runtime-bridge--emit-message
+       "debugger.snapshot"
+       payload
+       request-id
+       "debugger"
+       nil)
+      payload))
 
   (defun runtime-command--find-restart-entry (restart-id &optional condition)
     (find restart-id
@@ -1329,19 +1316,18 @@ commands but aren't")
                (values bytes r))))))))
 
   (defun runtime-bridge-pump-commands (&optional (max-commands 4))
-    (when (and *runtime-bridge-enabled* *runtime-command-enabled*)
-      (loop repeat max-commands do
-        (multiple-value-bind (bytes status) (runtime-command--poll-frame)
-          (declare (ignore status))
-          (when (null bytes)
-            (return))
-          (let* ((frame (runtime-command--decode-frame bytes)))
-            (when frame
-              (runtime-command--dispatch frame))))))
+    (loop repeat max-commands do
+      (multiple-value-bind (bytes status) (runtime-command--poll-frame)
+        (declare (ignore status))
+        (when (null bytes)
+          (return))
+        (let* ((frame (runtime-command--decode-frame bytes)))
+          (when frame
+            (runtime-command--dispatch frame)))))
     nil)
 
   (defun runtime-bridge-emit-output (values)
-    (when (and *runtime-bridge-enabled* values)
+    (when values
       (ignore-errors
         (runtime-bridge--emit-json (runtime-bridge--encode-output values))))))
 
@@ -1421,13 +1407,13 @@ commands but aren't")
               (*break-loop-type* msg))
           (funcall hook condition hook)))
       #+wasm32-target
-      (when *runtime-bridge-enabled*
-        (setf *runtime-debugger-current-condition* condition
-              *runtime-debugger-current-error-id* (format nil "err-~d" (incf *runtime-debugger-error-counter*)))
-        (ignore-errors
-          (runtime-bridge-emit-debugger-snapshot
-           :condition condition
-           :error-id *runtime-debugger-current-error-id*)))
+      (setf *runtime-debugger-current-condition* condition
+            *runtime-debugger-current-error-id* (format nil "err-~d" (incf *runtime-debugger-error-counter*)))
+      #+wasm32-target
+      (ignore-errors
+        (runtime-bridge-emit-debugger-snapshot
+         :condition condition
+         :error-id *runtime-debugger-current-error-id*))
       (%break-message msg condition))
     (let* ((s *error-output*))
       (dolist (bogusness bogus-globals)

@@ -81,37 +81,31 @@ On macOS/Homebrew, headers live under:
 
 ## Build The Kernel
 
-**IMPORTANT (macOS/Homebrew):** You MUST run the toolchain setup script **before**
-invoking `make`, otherwise the build will fail (commonly with
-`fatal error: 'errno.h' file not found`).
+**IMPORTANT (macOS/Homebrew):** source the toolchain env first.
 
 ```bash
 source scripts/wasm/env.sh
-make -C lisp-kernel/wasm32 CC="$CC"
+make -C lisp-kernel/wasm32 clean
+make -C lisp-kernel/wasm32
 ```
 
 Build output is currently produced by `lisp-kernel/wasm32/Makefile` into:
 
 - `doc/wasm/js/wasmcl.wasm`
 
+Explicit override form (works on old/new makefiles):
+
+```bash
+source scripts/wasm/env.sh
+make -C lisp-kernel/wasm32 clean
+make -C lisp-kernel/wasm32 CC="$CC" WASM_LD="$WASM_LD"
+```
+
 Build command (Linux / `--target=wasm32-wasi` toolchains):
 
 ```bash
 make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi clean
 make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi
-```
-
-On macOS, if `scripts/wasm/env.sh` is not used, this explicit command works:
-
-```bash
-make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi \
-  CC='/usr/local/opt/llvm@18/bin/clang-18 --sysroot=/usr/local/opt/wasi-libc/share/wasi-sysroot'
-```
-
-On macOS (after `source scripts/wasm/env.sh`), you can also run:
-
-```bash
-make -C lisp-kernel/wasm32 CC="$CC"
 ```
 
 ## Build The Subprims Provider (Scaffold)
@@ -124,9 +118,20 @@ make -C lisp-kernel/wasm32/subprims WASM_TARGET=wasm32-wasi clean
 make -C lisp-kernel/wasm32/subprims WASM_TARGET=wasm32-wasi
 ```
 
-On macOS (after `source scripts/wasm/env.sh`), just run:
+`WASM_TARGET=wasm32-wasi` assumes a toolchain/sysroot setup that provides WASI
+headers. Without that setup, it can fail with missing libc headers.
+
+On macOS (after `source scripts/wasm/env.sh`):
 
 ```bash
+make -C lisp-kernel/wasm32/subprims clean
+make -C lisp-kernel/wasm32/subprims
+```
+
+Explicit override form:
+
+```bash
+make -C lisp-kernel/wasm32/subprims clean
 make -C lisp-kernel/wasm32/subprims CC="$CC"
 ```
 
@@ -134,12 +139,18 @@ The JS host should only call `wasm_set_subprims_ready(1)` when the provider
 exports the required Tier 0 subprims (`_SPmkcatch1v`, `_SPfuncall`,
 `_SPnthrow1value`).
 
-## Verify “No WASI Runtime”
+## Verify No WASI Runtime Imports
 
 Confirm there are **no** `wasi_snapshot_preview1` imports:
 
 ```bash
 wasm-objdump -x doc/wasm/js/wasmcl.wasm | rg 'wasi_snapshot_preview1' || true
+```
+
+Optional check for the subprims provider:
+
+```bash
+wasm-objdump -x doc/wasm/js/subprims.wasm | rg 'wasi_snapshot_preview1' || true
 ```
 
 Expected imports (current model):
