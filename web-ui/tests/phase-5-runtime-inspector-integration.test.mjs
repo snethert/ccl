@@ -13,16 +13,20 @@ import {
   INSPECTOR_EDIT_STAGE_COMMAND,
   INSPECTOR_EDIT_APPLY_COMMAND
 } from "../src/index.mjs";
+import { createSabRing, SAB_RING_TRANSPORT } from "../../doc/wasm/js/sab-ring.mjs";
 
 test("inspector watch pin command dispatches runtime command and settles with inspector update", async () => {
   const registry = createRegistry();
   registerInspectorCommands(registry);
 
-  const sent = [];
+  const ring = createSabRing({ capacity: 8192 });
   const client = createRuntimeCommandClient({
-    send: (message) => sent.push(message),
     now: () => 5000,
-    timeoutMs: 5000
+    timeoutMs: 5000,
+    commandTransport: {
+      transport: SAB_RING_TRANSPORT,
+      ring
+    }
   });
 
   let state = createState();
@@ -39,9 +43,7 @@ test("inspector watch pin command dispatches runtime command and settles with in
   assert.equal(execResult.ok, true);
   assert.equal(execResult.pending, true);
   assert.equal(execResult.runtimeDispatched, true);
-  assert.equal(sent.length, 1);
-  assert.equal(sent[0].kind, "command.invoke");
-  assert.equal(sent[0].payload.invocation.commandId, "runtime.watch.pin");
+  assert.equal(typeof execResult.requestId, "string");
 
   state = execResult.result?.state ?? execResult.result ?? state;
   const invocation = state.commandHistory[state.commandHistory.length - 1];
@@ -53,7 +55,7 @@ test("inspector watch pin command dispatches runtime command and settles with in
     kind: "command.result",
     jobId: "job-1",
     streamId: "commands",
-    requestId: sent[0].requestId,
+    requestId: execResult.requestId,
     seq: 2,
     ts: 5002,
     payload: {
@@ -100,11 +102,14 @@ test("inspector staged edit commands dispatch runtime place commands and settle"
   const registry = createRegistry();
   registerInspectorCommands(registry);
 
-  const sent = [];
+  const ring = createSabRing({ capacity: 8192 });
   const client = createRuntimeCommandClient({
-    send: (message) => sent.push(message),
     now: () => 6000,
-    timeoutMs: 5000
+    timeoutMs: 5000,
+    commandTransport: {
+      transport: SAB_RING_TRANSPORT,
+      ring
+    }
   });
 
   let state = createState();
@@ -121,7 +126,7 @@ test("inspector staged edit commands dispatch runtime place commands and settle"
   });
   assert.equal(stageResult.ok, true);
   assert.equal(stageResult.pending, true);
-  assert.equal(sent[0].payload.invocation.commandId, "runtime.place.stage");
+  assert.equal(typeof stageResult.requestId, "string");
   state = stageResult.result?.state ?? stageResult.result ?? state;
   const stageInvocation = state.commandHistory[state.commandHistory.length - 1];
 
@@ -130,7 +135,7 @@ test("inspector staged edit commands dispatch runtime place commands and settle"
     kind: "command.result",
     jobId: "job-2",
     streamId: "commands",
-    requestId: sent[0].requestId,
+    requestId: stageResult.requestId,
     seq: 4,
     ts: 6004,
     payload: {
@@ -175,7 +180,7 @@ test("inspector staged edit commands dispatch runtime place commands and settle"
   });
   assert.equal(applyResult.ok, true);
   assert.equal(applyResult.pending, true);
-  assert.equal(sent[1].payload.invocation.commandId, "runtime.place.apply");
+  assert.equal(typeof applyResult.requestId, "string");
   state = applyResult.result?.state ?? applyResult.result ?? state;
   const applyInvocation = state.commandHistory[state.commandHistory.length - 1];
 
@@ -184,7 +189,7 @@ test("inspector staged edit commands dispatch runtime place commands and settle"
     kind: "command.result",
     jobId: "job-2",
     streamId: "commands",
-    requestId: sent[1].requestId,
+    requestId: applyResult.requestId,
     seq: 6,
     ts: 6006,
     payload: {

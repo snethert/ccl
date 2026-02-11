@@ -63,6 +63,9 @@ export function createCclImports({
   if (typeof ccl.wasm_host_install_const_pool !== "function") {
     ccl.wasm_host_install_const_pool = () => 0;
   }
+  if (typeof ccl.wasm_host_resolve_function_designator_entry !== "function") {
+    ccl.wasm_host_resolve_function_designator_entry = () => -1;
+  }
   if (typeof ccl.wasm_kernel_runtime_event !== "function") {
     ccl.wasm_kernel_runtime_event = () => -52; // -ENOSYS
   }

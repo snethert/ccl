@@ -59,7 +59,7 @@ struct ExceptionInformation {
 };
 
 #ifndef WASM_SPILL_STACK_WORDS
-#define WASM_SPILL_STACK_WORDS (1u << 12)
+#define WASM_SPILL_STACK_WORDS (1u << 15)
 #endif
 
 /* xp accessors (stubs for wasm32). */

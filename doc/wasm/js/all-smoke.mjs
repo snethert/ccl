@@ -51,6 +51,7 @@ const tests = [
   "./ccl-step-smoke.mjs",
   "./start-lisp-smoke.mjs",
   "./start-lisp-noninteractive-smoke.mjs",
+  "./startup-function-gate-smoke.mjs",
   "./start-boot-smoke.mjs",
   "./toplevel-slot-smoke.mjs",
   "./world-kernel-start-smoke.mjs",

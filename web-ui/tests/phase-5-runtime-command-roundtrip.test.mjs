@@ -5,6 +5,8 @@ import {
   createMicrokernel,
   KERNEL_OP_RUNTIME_COMMAND_POLL
 } from "../../doc/wasm/js/microkernel.mjs";
+import { createSabRing, SAB_RING_TRANSPORT } from "../../doc/wasm/js/sab-ring.mjs";
+import { createRuntimeCommandClient } from "../src/index.mjs";
 
 function decodeUtf8(bytes) {
   return new TextDecoder().decode(bytes);
@@ -29,30 +31,36 @@ function decodeFrame(bytes) {
 }
 
 test("microkernel runtime command poll returns encoded command frame", () => {
+  const ring = createSabRing({ capacity: 8192 });
   const memory = new WebAssembly.Memory({ initial: 1 });
-  const microkernel = createMicrokernel({ memory, asyncStdin: true });
-  const enqueue = microkernel.enqueueRuntimeCommand({
-    version: 1,
-    kind: "command.invoke",
-    jobId: "job-1",
-    streamId: "commands",
-    requestId: "req-inv-1",
-    seq: 1,
-    ts: 1000,
-    payload: {
-      invocation: {
-        id: "inv-1",
-        commandId: "runtime.eval.form",
-        args: { form: "(+ 1 2)" },
-        defaults: {},
-        source: "palette",
-        ts: 999
-      },
-      context: { package: "CL-USER" }
-    },
-    error: null
+  const microkernel = createMicrokernel({
+    memory,
+    asyncStdin: true,
+    runtimeBridge: {
+      commandTransport: {
+        transport: SAB_RING_TRANSPORT,
+        sharedBuffer: ring.sharedBuffer
+      }
+    }
   });
-  assert.equal(enqueue.ok, true);
+  const client = createRuntimeCommandClient({
+    timeoutMs: 0,
+    commandTransport: {
+      transport: SAB_RING_TRANSPORT,
+      ring
+    }
+  });
+  const dispatched = client.dispatchTypedCommand(
+    {
+      id: "runtime.eval.form",
+      title: "Eval Form",
+      args: [{ name: "form", type: "string", required: true }]
+    },
+    { id: "inv-1", args: { form: "(+ 1 2)" }, source: "palette" },
+    { context: { package: "CL-USER" }, jobId: "job-1" }
+  );
+  assert.equal(dispatched.ok, true);
+  assert.equal(dispatched.transport, SAB_RING_TRANSPORT);
 
   const payloadPtr = 0;
   const payloadView = new DataView(memory.buffer, payloadPtr, 8);
@@ -77,9 +85,38 @@ test("microkernel runtime command poll returns encoded command frame", () => {
   assert.ok(frame.contextForm.includes("\"package\""));
   assert.ok(frame.contextForm.includes("CL-USER"));
   microkernel.imports.kernel_drop_request(reqId);
+
+  void dispatched.promise.catch(() => {});
+  client.cancelAll("phase-5-runtime-command-roundtrip test completed");
 });
 
-test("runtime command poll returns zero when queue is empty", () => {
+test("runtime command poll returns zero when sab ring is empty", () => {
+  const ring = createSabRing({ capacity: 4096 });
+  const memory = new WebAssembly.Memory({ initial: 1 });
+  const microkernel = createMicrokernel({
+    memory,
+    runtimeBridge: {
+      commandTransport: {
+        transport: SAB_RING_TRANSPORT,
+        sharedBuffer: ring.sharedBuffer
+      }
+    }
+  });
+
+  const payloadPtr = 0;
+  const payloadView = new DataView(memory.buffer, payloadPtr, 8);
+  payloadView.setUint32(0, 4096, true);
+  payloadView.setUint32(4, 0, true);
+
+  const reqId = microkernel.imports.kernel_request(KERNEL_OP_RUNTIME_COMMAND_POLL, payloadPtr, 8);
+  assert.equal(microkernel.imports.kernel_poll(reqId), 1);
+  const size = microkernel.imports.kernel_response_size(reqId);
+  assert.equal(size, 0);
+  assert.equal(microkernel.imports.kernel_result(reqId), 0);
+  microkernel.imports.kernel_drop_request(reqId);
+});
+
+test("runtime command poll returns ENOSYS when sab transport is not configured", () => {
   const memory = new WebAssembly.Memory({ initial: 1 });
   const microkernel = createMicrokernel({ memory });
 
@@ -90,7 +127,7 @@ test("runtime command poll returns zero when queue is empty", () => {
 
   const reqId = microkernel.imports.kernel_request(KERNEL_OP_RUNTIME_COMMAND_POLL, payloadPtr, 8);
   assert.equal(microkernel.imports.kernel_poll(reqId), 1);
-  assert.equal(microkernel.imports.kernel_result(reqId), 0);
+  assert.equal(microkernel.imports.kernel_result(reqId), -52);
   assert.equal(microkernel.imports.kernel_response_size(reqId), 0);
   microkernel.imports.kernel_drop_request(reqId);
 });

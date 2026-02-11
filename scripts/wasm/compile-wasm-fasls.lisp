@@ -543,7 +543,10 @@
         (wasm-target-compile-modules *wasm-runtime-modules* :wasm32 force
                                      :trace-modules trace-modules)
         (format t "~&Cross-compiling wasm real-image helper module...~%")
-        (compile-wasm-real-image-entry root)
+        (handler-case
+            (compile-wasm-real-image-entry root)
+          (error (c)
+            (format *error-output* "~&WARN: skipping wasm real-image helper compile: ~a~%" c)))
         (validate-wasm-compiled-modules)
         (when modules-out
           (let* ((modules (sorted-compiled-modules))

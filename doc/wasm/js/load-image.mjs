@@ -33,11 +33,20 @@ import {
 import { createMicrokernel } from "./microkernel.mjs";
 import {
   collectBootstrapState,
+  STARTUP_FUNCTION_DESIGNATOR_POLICY_V1,
   validateBootstrapContract,
   formatBootstrapState,
 } from "./bootstrap-contract.mjs";
 import { emitSyntheticIpcArtifacts } from "./ipc-conformance.mjs";
 import { runStartupGate } from "./startup-gate.mjs";
+import {
+  BOOTSTRAP_RESOLVER_PHASE_BOOTSTRAP,
+  BOOTSTRAP_RESOLVER_PHASE_CANONICAL_LISP,
+  createBootstrapFunctionResolver,
+  registerResolverFunctionsFromBundle,
+  STARTUP_SYMBOL_PACKAGE_OVERRIDES_CANONICAL_V1,
+  rewriteConstPoolFunctionDesignators,
+} from "./bootstrap-function-resolver.mjs";
 
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
@@ -48,6 +57,30 @@ const traceEnabled = process.env.CCL_WASM_TRACE === "1";
 function trace(msg) {
   if (traceEnabled) {
     console.error(`[load-image] ${msg}`);
+  }
+}
+
+function normalizeDesignatorNameSet(values) {
+  const out = new Set();
+  for (const value of Array.isArray(values) ? values : []) {
+    if (typeof value !== "string") continue;
+    const normalized = value.trim().toUpperCase();
+    if (!normalized) continue;
+    out.add(normalized);
+  }
+  return out;
+}
+
+function bindingStateForGateFailure(reason) {
+  switch (reason) {
+    case "ambiguous":
+      return "ambiguous-function-designator";
+    case "phase-disabled":
+      return "resolver-phase-disabled";
+    case "missing-name":
+      return "invalid-function-designator";
+    default:
+      return "unresolved-required-function-designator";
   }
 }
 
@@ -288,6 +321,60 @@ let constPoolSharedBlobRaw = null;
 const constPoolSpanKey = (offset, storedLength, encoding, rawLength) =>
   `${offset >>> 0}:${storedLength >>> 0}:${encoding ?? "raw"}:${rawLength >>> 0}`;
 const constPoolsInstalled = new Set();
+const bootstrapFunctionResolver = createBootstrapFunctionResolver({
+  phase: BOOTSTRAP_RESOLVER_PHASE_BOOTSTRAP,
+});
+const startupFunctionDesignatorPolicy = STARTUP_FUNCTION_DESIGNATOR_POLICY_V1?.phases ?? {};
+let startupRequiredPreToplevelDesignators = normalizeDesignatorNameSet(
+  startupFunctionDesignatorPolicy["pre-toplevel"]?.requiredResolveOrFail ?? [],
+);
+let startupDeferredPreToplevelDesignators = normalizeDesignatorNameSet(
+  startupFunctionDesignatorPolicy["pre-toplevel"]?.deferredAllowed ?? [],
+);
+const startupSymbolToEntryPreToplevelDesignators = normalizeDesignatorNameSet([
+  "RUNTIME-BRIDGE-PUMP-COMMANDS",
+]);
+const startupRequiredOverride = String(process.env.CCL_STARTUP_REQUIRED_FUNCTIONS ?? "").trim();
+if (startupRequiredOverride.length > 0) {
+  startupRequiredPreToplevelDesignators = normalizeDesignatorNameSet(
+    startupRequiredOverride.split(",").map((item) => item.trim()).filter(Boolean),
+  );
+  trace(
+    `startup required designators override active: ${Array.from(startupRequiredPreToplevelDesignators).join(",")}`,
+  );
+}
+const startupDeferredOverride = String(process.env.CCL_STARTUP_DEFERRED_FUNCTIONS ?? "").trim();
+if (startupDeferredOverride.length > 0) {
+  startupDeferredPreToplevelDesignators = normalizeDesignatorNameSet(
+    startupDeferredOverride.split(",").map((item) => item.trim()).filter(Boolean),
+  );
+  trace(
+    `startup deferred designators override active: ${Array.from(startupDeferredPreToplevelDesignators).join(",")}`,
+  );
+}
+const startupRequiredPostStartDesignators = normalizeDesignatorNameSet(
+  startupFunctionDesignatorPolicy["post-start"]?.requiredResolveOrFail ?? [],
+);
+const startupDeferredPostStartDesignators = normalizeDesignatorNameSet(
+  startupFunctionDesignatorPolicy["post-start"]?.deferredAllowed ?? [],
+);
+let constPoolPolicyPhase = "pre-toplevel";
+function requiredDesignatorSetForPhase() {
+  return constPoolPolicyPhase === "pre-toplevel"
+    ? startupRequiredPreToplevelDesignators
+    : startupRequiredPostStartDesignators;
+}
+function deferredDesignatorSetForPhase() {
+  return constPoolPolicyPhase === "pre-toplevel"
+    ? startupDeferredPreToplevelDesignators
+    : startupDeferredPostStartDesignators;
+}
+
+function symbolToEntryDesignatorSetForPhase() {
+  return constPoolPolicyPhase === "pre-toplevel"
+    ? startupSymbolToEntryPreToplevelDesignators
+    : null;
+}
 if (modulesPath) {
   modulesManifestBytes = await fs.readFile(modulesPath);
   assertManifestHash(
@@ -296,6 +383,14 @@ if (modulesPath) {
     manifest?.artifacts?.runtimeModulesManifest?.path,
   );
   modulesBundle = JSON.parse(modulesManifestBytes.toString("utf-8"));
+  const registration = registerResolverFunctionsFromBundle(
+    bootstrapFunctionResolver,
+    modulesBundle,
+    { source: "runtime-modules-manifest.functions" },
+  );
+  trace(
+    `bootstrap resolver registered: +${registration.registered} names (ignored=${registration.ignored}, unique=${registration.uniqueNames}, ambiguous=${registration.ambiguous})`,
+  );
   if (typeof modulesBundle?.index === "string" && modulesBundle.index.length > 0) {
     const indexPath = path.resolve(path.dirname(modulesPath), modulesBundle.index);
     modulesIndexBytes = await fs.readFile(indexPath);
@@ -538,12 +633,89 @@ function installConstPoolOnDemand(entryIndexRaw) {
     trace(`const-pool decode failed: entry=${entryIndex}`);
     return 0;
   }
+  let payloadBytes = decodedBytes;
+  let rewrite = null;
+  try {
+    rewrite = rewriteConstPoolFunctionDesignators(decodedBytes, {
+      resolver: bootstrapFunctionResolver,
+      entryIndex,
+      requiredResolveOrFailNames: requiredDesignatorSetForPhase(),
+      deferredAllowedNames: deferredDesignatorSetForPhase(),
+      symbolToEntryFunctionNames: symbolToEntryDesignatorSetForPhase(),
+      symbolPackageOverrides: STARTUP_SYMBOL_PACKAGE_OVERRIDES_CANONICAL_V1,
+    });
+    payloadBytes = rewrite.bytes;
+    if (rewrite.changed) {
+      trace(
+        `const-pool resolver rewrote entry=${entryIndex} changed=${rewrite.changedCount}/${rewrite.scannedFunctionEntries} unresolved=${rewrite.unresolvedCount}`,
+      );
+    }
+  } catch (err) {
+    trace(`const-pool resolver rewrite failed: entry=${entryIndex} err=${err?.message ?? String(err)}`);
+  }
+  if ((rewrite?.deferredUnresolvedCount ?? 0) > 0) {
+    const deferredDiagnostics = Array.isArray(rewrite?.deferredUnresolved) ? rewrite.deferredUnresolved : [];
+    for (const item of deferredDiagnostics) {
+      console.log(
+        `STARTUP_CONSTPOOL_FUNCTION_GATE ${JSON.stringify({
+          schema_version: "startup_constpool_function_gate_v1",
+          phase: constPoolPolicyPhase,
+          status: "deferred",
+          mode: options.bootstrapContract,
+          entry_index: entryIndex >>> 0,
+          const_index: Number.isFinite(item?.constIndex) ? (item.constIndex >>> 0) : null,
+          symbol_name: item?.name ?? null,
+          package_name: item?.packageName ?? null,
+          policy_class: item?.policyClass ?? "deferred-allowed",
+          binding_state: item?.bindingState ?? "deferred-symbolic-function-designator",
+          reason: item?.reason ?? "missing",
+        })}`,
+      );
+    }
+  }
+  if ((rewrite?.noncriticalUnresolvedCount ?? 0) > 0) {
+    trace(
+      `const-pool unresolved noncritical entry=${entryIndex} count=${rewrite.noncriticalUnresolvedCount}`,
+    );
+  }
+  if ((rewrite?.requiredUnresolvedCount ?? 0) > 0) {
+    const diagnostics = Array.isArray(rewrite?.requiredUnresolved) ? rewrite.requiredUnresolved : [];
+    for (const item of diagnostics) {
+      console.error(
+        `STARTUP_CONSTPOOL_FUNCTION_GATE ${JSON.stringify({
+          schema_version: "startup_constpool_function_gate_v1",
+          phase: constPoolPolicyPhase,
+          status: "fail",
+          mode: options.bootstrapContract,
+          entry_index: entryIndex >>> 0,
+          const_index: Number.isFinite(item?.constIndex) ? (item.constIndex >>> 0) : null,
+          symbol_name: item?.name ?? null,
+          package_name: item?.packageName ?? null,
+          policy_class: item?.policyClass ?? "required-resolve-or-fail",
+          binding_state: item?.bindingState ?? "unresolved-required-function-designator",
+          reason: item?.reason ?? "missing",
+        })}`,
+      );
+    }
+
+    const sampleNames = diagnostics
+      .map((item) => String(item?.name ?? "").trim())
+      .filter((name) => name.length > 0)
+      .slice(0, 8);
+    const summary = `${constPoolPolicyPhase} function-designator gate failed: entry=${entryIndex} unresolved_required=${rewrite.requiredUnresolvedCount} sample=[${sampleNames.join(", ")}]`;
+    if (options.bootstrapContract === "strict") {
+      throw new Error(summary);
+    }
+    if (options.bootstrapContract === "warn") {
+      console.warn(`WARN: ${summary}`);
+    }
+  }
 
   const rc = installConstPoolBytes({
     kernelExports,
     memory: runtime.memory,
     entryIndex,
-    constPoolBytes: decodedBytes,
+    constPoolBytes: payloadBytes,
   });
   if (rc === 0) {
     trace(`const-pool install failed: entry=${entryIndex}`);
@@ -555,6 +727,29 @@ function installConstPoolOnDemand(entryIndexRaw) {
   return 1;
 }
 
+const hostDesignatorDecoder = new TextDecoder("utf-8");
+function decodeHostDesignatorString(rawPtr, rawLen) {
+  const ptr = rawPtr >>> 0;
+  const len = rawLen >>> 0;
+  if (ptr === 0 || len === 0) return "";
+  try {
+    return hostDesignatorDecoder.decode(new Uint8Array(runtime.memory.buffer, ptr, len));
+  } catch {
+    return "";
+  }
+}
+
+function resolveFunctionDesignatorEntryFromHost(namePtr, nameLen, packagePtr, packageLen) {
+  const name = decodeHostDesignatorString(namePtr, nameLen);
+  if (!name) return -1;
+  const packageName = decodeHostDesignatorString(packagePtr, packageLen);
+  const resolution = bootstrapFunctionResolver.resolveFunctionDesignator({ name, packageName });
+  if (!resolution?.ok) return -1;
+  const entryIndex = resolution.entryIndex >>> 0;
+  trace(`host function designator resolved: ${packageName ? `${packageName}:` : ""}${name} -> ${entryIndex}`);
+  return entryIndex | 0;
+}
+
 const kernel = await instantiateWasm(
   kernelBytes,
   createCclImports({
@@ -564,6 +759,7 @@ const kernel = await instantiateWasm(
     extra: {
       ccl: {
         wasm_host_install_const_pool: installConstPoolOnDemand,
+        wasm_host_resolve_function_designator_entry: resolveFunctionDesignatorEntryFromHost,
       },
     },
   }),
@@ -588,6 +784,7 @@ if (runToplevel || runStartLisp) {
       extra: {
         ccl: {
           wasm_host_install_const_pool: installConstPoolOnDemand,
+          wasm_host_resolve_function_designator_entry: resolveFunctionDesignatorEntryFromHost,
           ...kernel.instance.exports,
         },
       },
@@ -690,6 +887,58 @@ function runBootstrapContract(phase, { requireToplfunc = (phase === "pre-start")
   fail(message);
 }
 
+function runPreToplevelFunctionDesignatorGate() {
+  const requiredNames = Array.from(startupRequiredPreToplevelDesignators.values());
+  if (requiredNames.length === 0) {
+    return { failures: [], checks: [] };
+  }
+
+  const checks = [];
+  const failures = [];
+  for (const symbolName of requiredNames) {
+    const resolution = bootstrapFunctionResolver.resolveFunctionDesignator({ name: symbolName });
+    const ok = Boolean(resolution?.ok);
+    const reason = ok ? null : (resolution?.reason ?? "missing");
+    const record = {
+      schema_version: "startup_function_designator_gate_v1",
+      phase: "pre-toplevel",
+      status: ok ? "pass" : "fail",
+      mode: options.bootstrapContract,
+      symbol_name: symbolName,
+      entry_index: ok ? (resolution.entryIndex >>> 0) : null,
+      resolved_entry_index: ok ? (resolution.entryIndex >>> 0) : null,
+      source: ok ? (resolution.source ?? null) : null,
+      binding_state: ok ? "resolved-entry-function" : bindingStateForGateFailure(reason),
+      reason,
+    };
+    checks.push(record);
+    if (ok) {
+      console.log(`STARTUP_FUNCTION_DESIGNATOR_GATE ${JSON.stringify(record)}`);
+      continue;
+    }
+    failures.push(record);
+    console.error(`STARTUP_FUNCTION_DESIGNATOR_GATE ${JSON.stringify(record)}`);
+  }
+  return { failures, checks };
+}
+
+function runPreToplevelFunctionDesignatorGateOrFail() {
+  const { failures } = runPreToplevelFunctionDesignatorGate();
+  if (failures.length === 0) return;
+
+  const sample = failures
+    .map((item) => `${item.symbol_name}:${item.reason}`)
+    .slice(0, 8)
+    .join(", ");
+  const message = `pre-toplevel function designator gate failed: count=${failures.length} sample=[${sample}]`;
+  if (options.bootstrapContract === "strict") {
+    fail(message);
+  }
+  if (options.bootstrapContract === "warn") {
+    console.warn(`WARN: ${message}`);
+  }
+}
+
 function runStartupGateOrFail() {
   const result = runStartupGate({ source: "doc/wasm/js/load-image.mjs" });
   if (result.status === "pass") return;
@@ -736,6 +985,7 @@ if (runStartLisp) {
     });
     console.log(`compiled modules installed ${installed}/${count}`);
     runStartupGateOrFail();
+    runPreToplevelFunctionDesignatorGateOrFail();
     runBootstrapContract("pre-start", { requireToplfunc: true });
   } catch (e) {
     console.error(`wasm_ccl_load_image trapped: ${e}`);
@@ -749,6 +999,9 @@ if (runStartLisp) {
     entryRc = rc | 0;
     console.log(`wasm_ccl_start_lisp rc=${rc}`);
     runBootstrapContract("post-start", { requireToplfunc: false });
+    constPoolPolicyPhase = "post-start";
+    const phase = bootstrapFunctionResolver.setPhase(BOOTSTRAP_RESOLVER_PHASE_CANONICAL_LISP);
+    trace(`bootstrap resolver phase=${phase}`);
   } catch (e) {
     console.error(`wasm_ccl_start_lisp trapped: ${e}`);
     process.exit(4);
@@ -785,6 +1038,7 @@ if (runStartLisp) {
     console.log(`compiled modules installed ${installed}/${count}`);
     if (runToplevel) {
       runStartupGateOrFail();
+      runPreToplevelFunctionDesignatorGateOrFail();
     }
     runBootstrapContract("pre-start", { requireToplfunc: true });
   } catch (e) {

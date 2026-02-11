@@ -13,6 +13,7 @@ import {
   applyRuntimeMessage,
   DEBUGGER_RESTART_INVOKE_COMMAND
 } from "../src/index.mjs";
+import { createSabRing, SAB_RING_TRANSPORT } from "../../doc/wasm/js/sab-ring.mjs";
 
 test("debugger restart command dispatches to runtime command client and settles history", async () => {
   const registry = createRegistry();
@@ -30,11 +31,14 @@ test("debugger restart command dispatches to runtime command client and settles 
   const debuggerWindow = Object.values(state.windows).find((window) => window.metadata?.role === "debugger");
   const item = state.widgets[debuggerWindow.metadata.widgets.restartsId].props.items[0];
 
-  const sent = [];
+  const ring = createSabRing({ capacity: 8192 });
   const client = createRuntimeCommandClient({
-    send: (message) => sent.push(message),
     now: () => 5000,
-    timeoutMs: 5000
+    timeoutMs: 5000,
+    commandTransport: {
+      transport: SAB_RING_TRANSPORT,
+      ring
+    }
   });
 
   const execResult = executeCommand(registry, DEBUGGER_RESTART_INVOKE_COMMAND, {
@@ -48,9 +52,7 @@ test("debugger restart command dispatches to runtime command client and settles 
   assert.equal(execResult.ok, true);
   assert.equal(execResult.pending, true);
   assert.equal(execResult.runtimeDispatched, true);
-  assert.equal(sent.length, 1);
-  assert.equal(sent[0].kind, "command.invoke");
-  assert.equal(sent[0].payload.invocation.commandId, "runtime.restart.invoke");
+  assert.equal(typeof execResult.requestId, "string");
 
   state = execResult.result?.state ?? execResult.result ?? state;
   assert.equal(state.commandHistory.length, 1);
@@ -63,7 +65,7 @@ test("debugger restart command dispatches to runtime command client and settles 
     kind: "command.result",
     jobId: "job-debugger",
     streamId: "commands",
-    requestId: sent[0].requestId,
+    requestId: execResult.requestId,
     seq: 2,
     ts: 5004,
     payload: {

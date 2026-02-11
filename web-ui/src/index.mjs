@@ -311,6 +311,7 @@ export {
   applyRuntimeInspector,
   applyRuntimeJob
 } from "./runtime-bridge.mjs";
+export { drainRuntimeSabMessages } from "./runtime-sab-transport.mjs";
 export { createElement, createText, h, normalizeChildren } from "./vdom.mjs";
 export { createRoot } from "./renderer.mjs";
 export { renderWidget, renderWindow } from "./widgets.mjs";

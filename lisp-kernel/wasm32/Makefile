@@ -124,13 +124,20 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_debug_cons_cdr_raw \
 	  --export=wasm_debug_package_names_raw \
 	  --export=wasm_debug_find_package_common_lisp_raw \
-	  --export=wasm_debug_find_symbol_identity_raw \
-	  --export=wasm_debug_find_symbol_toplevel_raw \
-	  --export=wasm_debug_find_symbol_percent_set_toplevel_raw \
-	  --export=wasm_debug_get_nrs_toplfunc_raw \
+		  --export=wasm_debug_find_symbol_identity_raw \
+		  --export=wasm_debug_find_symbol_toplevel_raw \
+		  --export=wasm_debug_find_symbol_percent_set_toplevel_raw \
+		  --export=wasm_debug_find_symbol_require_structure_type_raw \
+		  --export=wasm_debug_symbol_fcell_raw \
+		  --export=wasm_debug_get_nrs_toplfunc_raw \
 	  --export=wasm_debug_function_entry_index \
 	  --export=wasm_debug_misc_subtag \
 	  --export=wasm_debug_copy_symbol_name \
+	  --export=wasm_debug_const_pool_entry \
+	  --export=wasm_debug_const_pool_phase \
+	  --export=wasm_debug_const_pool_index \
+	  --export=wasm_debug_const_pool_tag \
+	  --export=wasm_debug_const_pool_offset \
 	  --export=wasm_reset_root_image_runtime_state \
 	  --export=wasm_set_entry_call_abi --export=wasm_get_entry_call_abi --export=wasm_clear_entry_call_abi \
 	  --export=wasm_kernel_ui_poll --export=wasm_kernel_ui_render --export=wasm_kernel_ui_measure_text \

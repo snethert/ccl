@@ -7,6 +7,7 @@
  */
 
 import { createMemorySnapshotPersistenceStore, createPersistenceService } from "./persist-service.mjs";
+import { attachSabRing, SAB_RING_TRANSPORT } from "./sab-ring.mjs";
 
 export const KERNEL_ABI_VERSION = 1;
 
@@ -159,103 +160,6 @@ function encodeUtf8(text) {
   return out;
 }
 
-function encodeLispString(text) {
-  const s = String(text);
-  let out = "\"";
-  for (let i = 0; i < s.length; i++) {
-    const ch = s[i];
-    switch (ch) {
-      case "\\":
-        out += "\\\\";
-        break;
-      case "\"":
-        out += "\\\"";
-        break;
-      case "\n":
-        out += "\\n";
-        break;
-      case "\r":
-        out += "\\r";
-        break;
-      case "\t":
-        out += "\\t";
-        break;
-      default:
-        out += ch;
-        break;
-    }
-  }
-  out += "\"";
-  return out;
-}
-
-function encodeLispForm(value) {
-  if (value === null || value === undefined) return ":null";
-  if (value === true) return ":true";
-  if (value === false) return ":false";
-  if (typeof value === "number") {
-    if (!Number.isFinite(value)) return encodeLispString(String(value));
-    return String(value);
-  }
-  if (typeof value === "string") return encodeLispString(value);
-  if (Array.isArray(value)) {
-    return `(${value.map((entry) => encodeLispForm(entry)).join(" ")})`;
-  }
-  if (typeof value === "object") {
-    const pairs = [];
-    for (const [key, nested] of Object.entries(value)) {
-      pairs.push(`(${encodeLispString(key)} . ${encodeLispForm(nested)})`);
-    }
-    return `(${pairs.join(" ")})`;
-  }
-  return encodeLispString(String(value));
-}
-
-function encodeRuntimeCommandFrameFromEnvelope(envelope) {
-  const payload = envelope?.payload ?? {};
-  const invocation = payload?.invocation ?? {};
-  const invocationId = typeof invocation?.id === "string" && invocation.id.length > 0 ? invocation.id : null;
-  const commandId = typeof invocation?.commandId === "string" && invocation.commandId.length > 0 ? invocation.commandId : null;
-  if (!invocationId || !commandId) {
-    return null;
-  }
-  const argsForm = encodeLispForm(invocation?.args ?? {});
-  const contextForm = encodeLispForm(payload?.context ?? {});
-  const invocationIdBytes = encodeUtf8(invocationId);
-  const commandIdBytes = encodeUtf8(commandId);
-  const argsBytes = encodeUtf8(argsForm);
-  const contextBytes = encodeUtf8(contextForm);
-  const headerSize = 24;
-  const totalSize =
-    headerSize +
-    invocationIdBytes.length +
-    commandIdBytes.length +
-    argsBytes.length +
-    contextBytes.length;
-  const buffer = new ArrayBuffer(totalSize);
-  const dv = new DataView(buffer);
-  dv.setUint32(0, 1, true); // frame_version
-  dv.setUint32(4, invocationIdBytes.length, true);
-  dv.setUint32(8, commandIdBytes.length, true);
-  dv.setUint32(12, argsBytes.length, true);
-  dv.setUint32(16, contextBytes.length, true);
-  dv.setUint32(20, 0, true);
-  const out = new Uint8Array(buffer);
-  let offset = headerSize;
-  out.set(invocationIdBytes, offset);
-  offset += invocationIdBytes.length;
-  out.set(commandIdBytes, offset);
-  offset += commandIdBytes.length;
-  out.set(argsBytes, offset);
-  offset += argsBytes.length;
-  out.set(contextBytes, offset);
-  return {
-    frame: out,
-    invocationId,
-    commandId
-  };
-}
-
 function writeU64LE(dv, offset, value) {
   const v = typeof value === "bigint" ? value : BigInt(Math.trunc(value));
   if (typeof dv.setBigUint64 === "function") {
@@ -362,7 +266,7 @@ export function createMicrokernel({
   compiledModulesAsync = false,
   persistence = null,
   uiService = null, // { pollEvents, renderTree, measureText, setWake? }
-  runtimeBridge = null, // { emit, jobId?, streamIds?, strict?, commandQueueLimit? }
+  runtimeBridge = null, // { emit, jobId?, streamIds?, strict?, commandTransport?, eventTransport? }
 } = {}) {
   if (!memory) throw new Error("createMicrokernel: memory is required");
 
@@ -416,13 +320,120 @@ export function createMicrokernel({
   const runtimeStreamIds = typeof runtimeBridge?.streamIds === "object" && runtimeBridge?.streamIds
     ? runtimeBridge.streamIds
     : { stdout: "stdout", stderr: "stderr" };
-  const runtimeCommandQueueLimit = Number.isInteger(runtimeBridge?.commandQueueLimit)
-    ? Math.max(1, runtimeBridge.commandQueueLimit)
-    : 128;
   const runtimeSeqByStream = new Map();
   let runtimeRecordingSeq = 1;
   let runtimeEntrySeq = 1;
-  const runtimeCommandQueue = [];
+  const runtimeCommandDebug = { transport: "disabled", fallbackAllowed: false };
+  const runtimeEventDebug = { transport: "emit_callback_v1", fallbackAllowed: true, dropped: 0 };
+
+  function resolveSabReaderTransport(rawTransport, label) {
+    if (!rawTransport) return null;
+    const transportId = typeof rawTransport.transport === "string" ? rawTransport.transport : null;
+    if (transportId !== SAB_RING_TRANSPORT) {
+      throw new Error(`createMicrokernel: unsupported ${label} '${String(transportId)}'`);
+    }
+    if (
+      typeof rawTransport.peekFrameLength === "function" &&
+      typeof rawTransport.dequeueFrame === "function"
+    ) {
+      return {
+        transport: SAB_RING_TRANSPORT,
+        reader: rawTransport
+      };
+    }
+    if (
+      rawTransport.reader &&
+      typeof rawTransport.reader.peekFrameLength === "function" &&
+      typeof rawTransport.reader.dequeueFrame === "function"
+    ) {
+      return {
+        transport: SAB_RING_TRANSPORT,
+        reader: rawTransport.reader
+      };
+    }
+    if (
+      rawTransport.ring &&
+      typeof rawTransport.ring.peekFrameLength === "function" &&
+      typeof rawTransport.ring.dequeueFrame === "function"
+    ) {
+      return {
+        transport: SAB_RING_TRANSPORT,
+        reader: rawTransport.ring
+      };
+    }
+    if (typeof SharedArrayBuffer !== "undefined" && rawTransport.sharedBuffer instanceof SharedArrayBuffer) {
+      return {
+        transport: SAB_RING_TRANSPORT,
+        reader: attachSabRing(rawTransport.sharedBuffer)
+      };
+    }
+    throw new Error(
+      `createMicrokernel: ${label} sab_ring_v1 requires sharedBuffer or reader/ring with dequeueFrame + peekFrameLength`
+    );
+  }
+
+  function resolveSabWriterTransport(rawTransport, label) {
+    if (!rawTransport) return null;
+    const transportId = typeof rawTransport.transport === "string" ? rawTransport.transport : null;
+    if (transportId !== SAB_RING_TRANSPORT) {
+      throw new Error(`createMicrokernel: unsupported ${label} '${String(transportId)}'`);
+    }
+    if (typeof rawTransport.enqueueFrame === "function") {
+      return {
+        transport: SAB_RING_TRANSPORT,
+        writer: rawTransport
+      };
+    }
+    if (rawTransport.writer && typeof rawTransport.writer.enqueueFrame === "function") {
+      return {
+        transport: SAB_RING_TRANSPORT,
+        writer: rawTransport.writer
+      };
+    }
+    if (rawTransport.ring && typeof rawTransport.ring.enqueueFrame === "function") {
+      return {
+        transport: SAB_RING_TRANSPORT,
+        writer: rawTransport.ring
+      };
+    }
+    if (typeof SharedArrayBuffer !== "undefined" && rawTransport.sharedBuffer instanceof SharedArrayBuffer) {
+      return {
+        transport: SAB_RING_TRANSPORT,
+        writer: attachSabRing(rawTransport.sharedBuffer)
+      };
+    }
+    throw new Error(
+      `createMicrokernel: ${label} sab_ring_v1 requires sharedBuffer or writer/ring with enqueueFrame`
+    );
+  }
+
+  const runtimeCommandTransport = resolveSabReaderTransport(
+    runtimeBridge?.commandTransport ?? null,
+    "runtimeBridge.commandTransport"
+  );
+  if (runtimeCommandTransport) runtimeCommandDebug.transport = runtimeCommandTransport.transport;
+  const runtimeEventTransport = resolveSabWriterTransport(
+    runtimeBridge?.eventTransport ?? null,
+    "runtimeBridge.eventTransport"
+  );
+  if (runtimeEventTransport) {
+    runtimeEventDebug.transport = runtimeEventTransport.transport;
+    runtimeEventDebug.fallbackAllowed = false;
+  }
+
+  function peekRuntimeCommandFrame() {
+    if (!runtimeCommandTransport) return null;
+    const frameBytes = runtimeCommandTransport.reader.peekFrameLength();
+    if (!Number.isInteger(frameBytes) || frameBytes < 0) return null;
+    return { frameBytes };
+  }
+
+  function dequeueRuntimeCommandFrame() {
+    if (!runtimeCommandTransport) return null;
+    const dequeued = runtimeCommandTransport.reader.dequeueFrame();
+    if (!dequeued?.ok) return null;
+    return dequeued.frame;
+  }
 
   function decodeUtf8(bytes) {
     if (decoder) return decoder.decode(bytes);
@@ -440,8 +451,32 @@ export function createMicrokernel({
     return next;
   }
 
+  function tryEmitRuntimeMessage(message) {
+    if (runtimeEventTransport) {
+      const bytes = encodeUtf8(JSON.stringify(message));
+      const res = runtimeEventTransport.writer.enqueueFrame(bytes);
+      if (res && res.ok === false) {
+        runtimeEventDebug.dropped += 1;
+        return {
+          ok: false,
+          errno: ERRNO.EWOULDBLOCK,
+          reason: res.reason ?? "runtime event sab enqueue failed"
+        };
+      }
+      return { ok: true };
+    }
+    if (!runtimeEmit) {
+      return { ok: false, errno: ERRNO.ENOSYS, reason: "runtime emit unavailable" };
+    }
+    try {
+      runtimeEmit(message);
+      return { ok: true };
+    } catch (_err) {
+      return { ok: false, errno: ERRNO.EINVAL, reason: "runtime emit failed" };
+    }
+  }
+
   function emitRuntimeOutput(streamId, bytes) {
-    if (!runtimeEmit) return;
     const text = decodeUtf8(bytes);
     if (!text) return;
     const ts = now();
@@ -470,10 +505,9 @@ export function createMicrokernel({
       },
       error: null
     };
-    try {
-      runtimeEmit(message);
-    } catch (_err) {
-      // Best effort only.
+    const emitted = tryEmitRuntimeMessage(message);
+    if (!emitted.ok) {
+      // Best effort only for stream write side effects.
     }
   }
 
@@ -796,47 +830,9 @@ export function createMicrokernel({
     }
   }
 
-  function normalizeRuntimeCommandEnvelope(input) {
-    if (!input || typeof input !== "object") return null;
-    if (input.kind === "command.invoke" && input.payload && typeof input.payload === "object") {
-      return input;
-    }
-    if (input.payload && typeof input.payload === "object" && input.payload.invocation) {
-      return {
-        version: Number.isInteger(input.version) ? input.version : 1,
-        kind: "command.invoke",
-        jobId: input.jobId ?? null,
-        streamId: input.streamId ?? "commands",
-        requestId: input.requestId ?? null,
-        seq: Number.isInteger(input.seq) ? input.seq : 0,
-        ts: Number.isFinite(input.ts) ? input.ts : now(),
-        payload: input.payload,
-        error: null
-      };
-    }
-    if (input.invocation && typeof input.invocation === "object") {
-      return {
-        version: 1,
-        kind: "command.invoke",
-        jobId: null,
-        streamId: "commands",
-        requestId: null,
-        seq: 0,
-        ts: now(),
-        payload: {
-          invocation: input.invocation,
-          context: input.context ?? {}
-        },
-        error: null
-      };
-    }
-    return null;
-  }
-
   function drainPendingRuntimeCommandPolls() {
     for (;;) {
       if (pendingRuntimeCommandPolls.length === 0) return;
-      if (runtimeCommandQueue.length === 0) return;
       const id = pendingRuntimeCommandPolls[0];
       const req = requests.get(id);
       if (!req || req.status !== KERNEL_STATUS_PENDING || req.pending?.kind !== "runtime_command_poll") {
@@ -844,46 +840,20 @@ export function createMicrokernel({
         continue;
       }
       const maxBytes = u32(req.pending.maxBytes);
-      const next = runtimeCommandQueue[0];
-      if (!next || !next.frame) {
+      const next = peekRuntimeCommandFrame();
+      if (!next) {
         return;
       }
-      if (next.frame.length > maxBytes) {
+      if (next.frameBytes > maxBytes) {
         recordRequestDone(id, -ERRNO.E2BIG);
         pendingRuntimeCommandPolls.shift();
         continue;
       }
-      runtimeCommandQueue.shift();
-      recordRequestDone(id, 1, next.frame);
+      const frame = dequeueRuntimeCommandFrame();
+      if (!frame) return;
+      recordRequestDone(id, 1, frame);
       pendingRuntimeCommandPolls.shift();
     }
-  }
-
-  function enqueueRuntimeCommand(message) {
-    const envelope = normalizeRuntimeCommandEnvelope(message);
-    if (!envelope) {
-      return { ok: false, errno: ERRNO.EINVAL, reason: "Invalid command.invoke message" };
-    }
-    const encoded = encodeRuntimeCommandFrameFromEnvelope(envelope);
-    if (!encoded) {
-      return { ok: false, errno: ERRNO.EINVAL, reason: "command.invoke payload missing invocation id or command id" };
-    }
-    if (runtimeCommandQueue.length >= runtimeCommandQueueLimit) {
-      return { ok: false, errno: ERRNO.EWOULDBLOCK, reason: "Runtime command queue is full" };
-    }
-    runtimeCommandQueue.push({
-      frame: encoded.frame,
-      invocationId: encoded.invocationId,
-      commandId: encoded.commandId,
-      requestId: envelope.requestId ?? null
-    });
-    drainPendingRuntimeCommandPolls();
-    return {
-      ok: true,
-      invocationId: encoded.invocationId,
-      commandId: encoded.commandId,
-      queued: runtimeCommandQueue.length
-    };
   }
 
   function kernel_request(opcode, payloadPtr, payloadLen) {
@@ -952,7 +922,7 @@ export function createMicrokernel({
           recordRequestError(id, ERRNO.EINVAL);
           break;
         }
-        if (!runtimeEmit) {
+        if (!runtimeEventTransport && !runtimeEmit) {
           recordRequestDone(id, -ERRNO.ENOSYS);
           break;
         }
@@ -965,13 +935,8 @@ export function createMicrokernel({
           recordRequestDone(id, -ERRNO.EINVAL);
           break;
         }
-        try {
-          runtimeEmit(message);
-        } catch (_err) {
-          recordRequestDone(id, -ERRNO.EINVAL);
-          break;
-        }
-        recordRequestDone(id, 0);
+        const emitted = tryEmitRuntimeMessage(message);
+        recordRequestDone(id, emitted.ok ? 0 : -Math.abs(emitted.errno | 0));
         break;
       }
 
@@ -986,7 +951,11 @@ export function createMicrokernel({
           recordRequestError(id, ERRNO.EINVAL);
           break;
         }
-        const next = runtimeCommandQueue[0];
+        if (!runtimeCommandTransport) {
+          recordRequestDone(id, -ERRNO.ENOSYS);
+          break;
+        }
+        const next = peekRuntimeCommandFrame();
         if (!next) {
           const allowPending = (flags & 0x1) !== 0;
           if (allowPending && supportsPending) {
@@ -997,12 +966,22 @@ export function createMicrokernel({
           }
           break;
         }
-        if (next.frame.length > maxBytes) {
+        if (next.frameBytes > maxBytes) {
           recordRequestDone(id, -ERRNO.E2BIG);
           break;
         }
-        runtimeCommandQueue.shift();
-        recordRequestDone(id, 1, next.frame);
+        const frame = dequeueRuntimeCommandFrame();
+        if (!frame) {
+          const allowPending = (flags & 0x1) !== 0;
+          if (allowPending && supportsPending) {
+            recordRequestPending(id, { kind: "runtime_command_poll", maxBytes });
+            pendingRuntimeCommandPolls.push(id);
+          } else {
+            recordRequestDone(id, 0);
+          }
+          break;
+        }
+        recordRequestDone(id, 1, frame);
         break;
       }
 
@@ -1602,6 +1581,10 @@ export function createMicrokernel({
 
   function kernel_poll(requestId) {
     const id = u32(requestId);
+    const reqBefore = requests.get(id);
+    if (reqBefore?.status === KERNEL_STATUS_PENDING && reqBefore.pending?.kind === "runtime_command_poll") {
+      drainPendingRuntimeCommandPolls();
+    }
     const req = requests.get(id);
     const status = req ? u32(req.status) : KERNEL_STATUS_ERROR;
     if (requestTracer) {
@@ -1793,7 +1776,6 @@ export function createMicrokernel({
     feedStdin,
     requestInterrupt,
     closeStdin,
-    enqueueRuntimeCommand,
     registerNamedBlob,
     registerNamedBlobs,
     getLogs: () => logs.slice(),
@@ -1803,7 +1785,8 @@ export function createMicrokernel({
       pendingStdinReads,
       pendingUiPolls,
       pendingRuntimeCommandPolls,
-      runtimeCommandQueue,
+      runtimeCommand: runtimeCommandDebug,
+      runtimeEvent: runtimeEventDebug,
       streams,
       namedBlobs,
       persistence: persistenceService

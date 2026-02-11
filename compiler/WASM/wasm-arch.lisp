@@ -861,4 +861,11 @@
 (defwasmarchmacro ccl::set-nth-immediate (f i new)
   `(setf (ccl::%svref ,f (the fixnum (+ (the fixnum ,i) 1))) ,new))
 
+;; Cross compilation resolves fasl headers from the active target package.
+;; WASM must publish these symbols just like other architecture packages.
+(defconstant fasl-version #x66)
+(defconstant fasl-max-version #x66)
+(defconstant fasl-min-version #x66)
+(defparameter *image-abi-version* 1045)
+
 (provide "WASM-ARCH")

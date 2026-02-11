@@ -2064,6 +2064,10 @@ static void
 wasm_call_function_or_symbol(TCR *tcr, LispObj fn_value)
 {
   LispObj name = fn_value;
+  if (fn_value == nrs_UDF.vcell) {
+    wasm_signal_funcall_error(tcr, WASM_XFUNBND, name);
+    return;
+  }
   if (fn_value == (LispObj)nil_value || fulltag_of(fn_value) != fulltag_misc) {
     wasm_signal_funcall_error(tcr, WASM_XNOTFUN, name);
     return;

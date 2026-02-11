@@ -36,7 +36,15 @@ import {
 import {
   collectBootstrapState,
   formatBootstrapState,
+  STARTUP_FUNCTION_DESIGNATOR_POLICY_V1,
 } from "./bootstrap-contract.mjs";
+import {
+  BOOTSTRAP_RESOLVER_PHASE_BOOTSTRAP,
+  createBootstrapFunctionResolver,
+  registerResolverFunctionsFromBundle,
+  STARTUP_SYMBOL_PACKAGE_OVERRIDES_CANONICAL_V1,
+  rewriteConstPoolFunctionDesignators,
+} from "./bootstrap-function-resolver.mjs";
 import { FILE_MODE_READ } from "./persist-service.mjs";
 
 function fail(msg) {
@@ -48,6 +56,30 @@ const traceEnabled = process.env.CCL_WASM_TRACE === "1";
 function trace(msg) {
   if (traceEnabled) {
     console.error(`[make-real-image] ${msg}`);
+  }
+}
+
+function normalizeDesignatorNameSet(values) {
+  const out = new Set();
+  for (const value of Array.isArray(values) ? values : []) {
+    if (typeof value !== "string") continue;
+    const normalized = value.trim().toUpperCase();
+    if (!normalized) continue;
+    out.add(normalized);
+  }
+  return out;
+}
+
+function bindingStateForGateFailure(reason) {
+  switch (reason) {
+    case "ambiguous":
+      return "ambiguous-function-designator";
+    case "phase-disabled":
+      return "resolver-phase-disabled";
+    case "missing-name":
+      return "invalid-function-designator";
+    default:
+      return "unresolved-required-function-designator";
   }
 }
 
@@ -447,6 +479,64 @@ const subprimsMap = JSON.parse(await fs.readFile(subprimsMapPath, "utf-8"));
 const bootBytes = await fs.readFile(bootImagePath);
 const compiledModulesManifestBytes = await fs.readFile(modulesPath);
 const compiledModulesBundle = JSON.parse(compiledModulesManifestBytes.toString("utf-8"));
+const bootstrapFunctionResolver = createBootstrapFunctionResolver({
+  phase: BOOTSTRAP_RESOLVER_PHASE_BOOTSTRAP,
+});
+const startupRequiredPreToplevelDesignators = normalizeDesignatorNameSet(
+  STARTUP_FUNCTION_DESIGNATOR_POLICY_V1?.phases?.["pre-toplevel"]?.requiredResolveOrFail ?? [],
+);
+const startupDeferredPreToplevelDesignators = normalizeDesignatorNameSet(
+  STARTUP_FUNCTION_DESIGNATOR_POLICY_V1?.phases?.["pre-toplevel"]?.deferredAllowed ?? [],
+);
+const startupSymbolToEntryPreToplevelDesignators = normalizeDesignatorNameSet([
+  "RUNTIME-BRIDGE-PUMP-COMMANDS",
+]);
+const resolverRegistration = registerResolverFunctionsFromBundle(
+  bootstrapFunctionResolver,
+  compiledModulesBundle,
+  { source: "runtime-modules-manifest.functions" },
+);
+trace(
+  `bootstrap resolver registered: +${resolverRegistration.registered} names (ignored=${resolverRegistration.ignored}, unique=${resolverRegistration.uniqueNames}, ambiguous=${resolverRegistration.ambiguous})`,
+);
+
+function runPreToplevelFunctionDesignatorGateOrFail() {
+  const requiredNames = Array.from(startupRequiredPreToplevelDesignators.values());
+  if (requiredNames.length === 0) return;
+
+  const failures = [];
+  for (const symbolName of requiredNames) {
+    const resolution = bootstrapFunctionResolver.resolveFunctionDesignator({ name: symbolName });
+    const ok = Boolean(resolution?.ok);
+    const reason = ok ? null : (resolution?.reason ?? "missing");
+    const record = {
+      schema_version: "startup_function_designator_gate_v1",
+      phase: "pre-toplevel",
+      status: ok ? "pass" : "fail",
+      mode: "strict",
+      symbol_name: symbolName,
+      entry_index: ok ? (resolution.entryIndex >>> 0) : null,
+      resolved_entry_index: ok ? (resolution.entryIndex >>> 0) : null,
+      source: ok ? (resolution.source ?? null) : null,
+      binding_state: ok ? "resolved-entry-function" : bindingStateForGateFailure(reason),
+      reason,
+    };
+    if (ok) {
+      console.log(`STARTUP_FUNCTION_DESIGNATOR_GATE ${JSON.stringify(record)}`);
+      continue;
+    }
+    failures.push(record);
+    console.error(`STARTUP_FUNCTION_DESIGNATOR_GATE ${JSON.stringify(record)}`);
+  }
+
+  if (failures.length > 0) {
+    const sample = failures
+      .map((item) => `${item.symbol_name}:${item.reason}`)
+      .slice(0, 8)
+      .join(", ");
+    fail(`pre-toplevel function designator gate failed: count=${failures.length} sample=[${sample}]`);
+  }
+}
 trace("loaded kernel/subprims/boot/modules assets");
 let compiledModulesIndexBytes = null;
 let compiledModulesHandle = null;
@@ -679,17 +769,97 @@ function installConstPoolOnDemand(entryIndexRaw) {
   if (!info) return 0;
   const decodedBytes = decodeConstPoolForInfo(info);
   if (!decodedBytes) return 0;
+  let payloadBytes = decodedBytes;
+  let rewrite = null;
+  try {
+    rewrite = rewriteConstPoolFunctionDesignators(decodedBytes, {
+      resolver: bootstrapFunctionResolver,
+      entryIndex,
+      requiredResolveOrFailNames: startupRequiredPreToplevelDesignators,
+      deferredAllowedNames: startupDeferredPreToplevelDesignators,
+      symbolToEntryFunctionNames: startupSymbolToEntryPreToplevelDesignators,
+      symbolPackageOverrides: STARTUP_SYMBOL_PACKAGE_OVERRIDES_CANONICAL_V1,
+    });
+    payloadBytes = rewrite.bytes;
+  } catch (_err) {
+    payloadBytes = decodedBytes;
+  }
+  if ((rewrite?.deferredUnresolvedCount ?? 0) > 0) {
+    const diagnostics = Array.isArray(rewrite?.deferredUnresolved) ? rewrite.deferredUnresolved : [];
+    for (const item of diagnostics) {
+      console.log(
+        `STARTUP_CONSTPOOL_FUNCTION_GATE ${JSON.stringify({
+          schema_version: "startup_constpool_function_gate_v1",
+          phase: "pre-toplevel",
+          status: "deferred",
+          mode: "strict",
+          entry_index: entryIndex >>> 0,
+          const_index: Number.isFinite(item?.constIndex) ? (item.constIndex >>> 0) : null,
+          symbol_name: item?.name ?? null,
+          package_name: item?.packageName ?? null,
+          policy_class: item?.policyClass ?? "deferred-allowed",
+          binding_state: item?.bindingState ?? "deferred-symbolic-function-designator",
+          reason: item?.reason ?? "missing",
+        })}`,
+      );
+    }
+  }
+  if ((rewrite?.requiredUnresolvedCount ?? 0) > 0) {
+    const diagnostics = Array.isArray(rewrite?.requiredUnresolved) ? rewrite.requiredUnresolved : [];
+    for (const item of diagnostics) {
+      console.error(
+        `STARTUP_CONSTPOOL_FUNCTION_GATE ${JSON.stringify({
+          schema_version: "startup_constpool_function_gate_v1",
+          phase: "pre-toplevel",
+          status: "fail",
+          mode: "strict",
+          entry_index: entryIndex >>> 0,
+          const_index: Number.isFinite(item?.constIndex) ? (item.constIndex >>> 0) : null,
+          symbol_name: item?.name ?? null,
+          package_name: item?.packageName ?? null,
+          policy_class: item?.policyClass ?? "required-resolve-or-fail",
+          binding_state: item?.bindingState ?? "unresolved-required-function-designator",
+          reason: item?.reason ?? "missing",
+        })}`,
+      );
+    }
+    fail(
+      `startup const-pool function gate failed for entry ${entryIndex}: unresolved required designators=` +
+      diagnostics.map((item) => String(item?.name ?? "").trim()).filter(Boolean).join(","),
+    );
+  }
 
   const rc = installConstPoolBytes({
     kernelExports,
     memory: runtime.memory,
     entryIndex,
-    constPoolBytes: decodedBytes,
+    constPoolBytes: payloadBytes,
   });
   if (rc === 0) return 0;
 
   constPoolsInstalled.add(entryIndex);
   return 1;
+}
+
+const hostDesignatorDecoder = new TextDecoder("utf-8");
+function decodeHostDesignatorString(rawPtr, rawLen) {
+  const ptr = rawPtr >>> 0;
+  const len = rawLen >>> 0;
+  if (ptr === 0 || len === 0) return "";
+  try {
+    return hostDesignatorDecoder.decode(new Uint8Array(runtime.memory.buffer, ptr, len));
+  } catch {
+    return "";
+  }
+}
+
+function resolveFunctionDesignatorEntryFromHost(namePtr, nameLen, packagePtr, packageLen) {
+  const name = decodeHostDesignatorString(namePtr, nameLen);
+  if (!name) return -1;
+  const packageName = decodeHostDesignatorString(packagePtr, packageLen);
+  const resolution = bootstrapFunctionResolver.resolveFunctionDesignator({ name, packageName });
+  if (!resolution?.ok) return -1;
+  return (resolution.entryIndex >>> 0) | 0;
 }
 
 const kernel = await instantiateWasm(
@@ -701,6 +871,7 @@ const kernel = await instantiateWasm(
     extra: {
       ccl: {
         wasm_host_install_const_pool: installConstPoolOnDemand,
+        wasm_host_resolve_function_designator_entry: resolveFunctionDesignatorEntryFromHost,
       },
     },
   }),
@@ -717,6 +888,7 @@ const subprims = await instantiateWasm(
     extra: {
       ccl: {
         wasm_host_install_const_pool: installConstPoolOnDemand,
+        wasm_host_resolve_function_designator_entry: resolveFunctionDesignatorEntryFromHost,
         ...kernel.instance.exports,
       },
     },
@@ -791,9 +963,32 @@ await installCompiledModulesFromRegistry({
   microkernel,
 });
 trace("compiled module registry install pass complete");
+runPreToplevelFunctionDesignatorGateOrFail();
 
 if (typeof kernel.instance.exports.wasm_set_subprims_ready === "function") {
   kernel.instance.exports.wasm_set_subprims_ready(1);
+}
+const encoder = new TextEncoder();
+const requiredFasls = [
+  "level-1.lafsl",
+  "bin/lists.lafsl",
+  "bin/sequences.lafsl",
+  "bin/hash.lafsl",
+  "bin/defstruct.lafsl",
+  "bin/dll-node.lafsl",
+  "bin/chars.lafsl",
+  "bin/dumplisp.lafsl",
+];
+if (typeof ex.wasm_fasload_path !== "function") {
+  fail("kernel missing wasm_fasload_path");
+}
+for (const faslPath of requiredFasls) {
+  const faslBytes = encoder.encode(faslPath);
+  const faslPtr = copyBytesToScratch(runtime.memory, faslBytes);
+  const faslRc = ex.wasm_fasload_path(faslPtr, faslBytes.length >>> 0) | 0;
+  if (faslRc !== 0) {
+    fail(`wasm_fasload_path(${faslPath}) returned ${faslRc}`);
+  }
 }
 if (typeof ex.wasm_reset_root_image_runtime_state !== "function") {
   fail("kernel missing wasm_reset_root_image_runtime_state");
@@ -804,6 +999,20 @@ if (resetRc !== 0) {
 }
 trace("root image runtime state reset");
 
+const toplevelEntryIndex = Array.isArray(compiledModulesBundle?.functions)
+  ? (compiledModulesBundle.functions.find((entry) => entry?.name === "TOPLEVEL-LOOP")?.entryIndex ?? null)
+  : null;
+if (!Number.isFinite(toplevelEntryIndex)) {
+  fail("compiled modules bundle missing TOPLEVEL-LOOP entry index");
+}
+if (typeof ex.wasm_set_toplfunc_entry !== "function") {
+  fail("kernel missing wasm_set_toplfunc_entry");
+}
+const setToplfuncRc = ex.wasm_set_toplfunc_entry(toplevelEntryIndex >>> 0) | 0;
+if (setToplfuncRc !== 0) {
+  fail(`wasm_set_toplfunc_entry(${toplevelEntryIndex}) returned ${setToplfuncRc}`);
+}
+
 let preSaveBootstrapState = null;
 try {
   preSaveBootstrapState = collectBootstrapState({ kernelExports: ex });
@@ -812,7 +1021,6 @@ try {
   console.warn(`WARN: unable to capture pre-save bootstrap state: ${err?.message ?? err}`);
 }
 
-const encoder = new TextEncoder();
 const imagePathBytes = encoder.encode(wasmOutputPath);
 const imagePathPtr = copyBytesToScratch(runtime.memory, imagePathBytes);
 if (typeof ex.wasm_save_image_direct !== "function") {

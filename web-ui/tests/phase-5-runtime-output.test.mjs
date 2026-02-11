@@ -4,13 +4,15 @@ import assert from "node:assert/strict";
 import {
   createState,
   applyRuntimeOutput,
-  applyRuntimeMessage
+  applyRuntimeMessage,
+  drainRuntimeSabMessages
 } from "../src/index.mjs";
 import {
   createMicrokernel,
   KERNEL_OP_STREAM_WRITE,
   KERNEL_OP_RUNTIME_EVENT
 } from "../../doc/wasm/js/microkernel.mjs";
+import { createSabRing, SAB_RING_TRANSPORT } from "../../doc/wasm/js/sab-ring.mjs";
 
 function encodeUtf8(text) {
   return new TextEncoder().encode(String(text));
@@ -109,4 +111,89 @@ test("microkernel accepts KERNEL_OP_RUNTIME_EVENT payloads", () => {
   assert.equal(result, 0);
   assert.equal(messages.length, 1);
   assert.deepEqual(messages[0], payload);
+});
+
+test("microkernel emits runtime.output over sab_ring_v1 event transport", () => {
+  const memory = new WebAssembly.Memory({ initial: 1 });
+  const egressRing = createSabRing({ capacity: 8192 });
+  let fallbackEmitCount = 0;
+  const microkernel = createMicrokernel({
+    memory,
+    runtimeBridge: {
+      jobId: "job-sab",
+      emit: () => {
+        fallbackEmitCount += 1;
+      },
+      eventTransport: {
+        transport: SAB_RING_TRANSPORT,
+        sharedBuffer: egressRing.sharedBuffer
+      }
+    }
+  });
+
+  const payloadPtr = 0;
+  const bytes = encodeUtf8("sab out\n");
+  const dataPtr = 64;
+  writeBytes(memory, dataPtr, bytes);
+  const dv = new DataView(memory.buffer, payloadPtr, 16);
+  dv.setUint32(0, 1, true);
+  dv.setUint32(4, 0, true);
+  dv.setUint32(8, dataPtr, true);
+  dv.setUint32(12, bytes.length, true);
+
+  const id = microkernel.imports.kernel_request(KERNEL_OP_STREAM_WRITE, payloadPtr, 16);
+  microkernel.imports.kernel_poll(id);
+  microkernel.imports.kernel_drop_request(id);
+  assert.equal(fallbackEmitCount, 0, "emit callback fallback not used");
+
+  const drained = drainRuntimeSabMessages({ transport: SAB_RING_TRANSPORT, ring: egressRing });
+  assert.equal(drained.errors.length, 0);
+  assert.equal(drained.count, 1);
+  assert.equal(drained.messages[0].kind, "runtime.output");
+  assert.equal(drained.messages[0].payload.entry.text, "sab out\n");
+});
+
+test("microkernel routes KERNEL_OP_RUNTIME_EVENT payloads to sab_ring_v1 event transport", () => {
+  const memory = new WebAssembly.Memory({ initial: 1 });
+  const egressRing = createSabRing({ capacity: 8192 });
+  let fallbackEmitCount = 0;
+  const microkernel = createMicrokernel({
+    memory,
+    runtimeBridge: {
+      emit: () => {
+        fallbackEmitCount += 1;
+      },
+      eventTransport: {
+        transport: SAB_RING_TRANSPORT,
+        sharedBuffer: egressRing.sharedBuffer
+      }
+    }
+  });
+
+  const payload = {
+    version: 1,
+    kind: "command.result",
+    jobId: "job-sab",
+    streamId: "commands",
+    requestId: "req-1",
+    seq: 1,
+    ts: 10,
+    payload: { invocationId: "inv-1", commandId: "runtime.eval.form", result: { ok: true } },
+    error: null
+  };
+  const payloadPtr = 128;
+  const bytes = encodeUtf8(JSON.stringify(payload));
+  writeBytes(memory, payloadPtr, bytes);
+
+  const id = microkernel.imports.kernel_request(KERNEL_OP_RUNTIME_EVENT, payloadPtr, bytes.length);
+  microkernel.imports.kernel_poll(id);
+  const result = microkernel.imports.kernel_result(id);
+  microkernel.imports.kernel_drop_request(id);
+
+  assert.equal(result, 0);
+  assert.equal(fallbackEmitCount, 0, "emit callback fallback not used");
+  const drained = drainRuntimeSabMessages({ transport: SAB_RING_TRANSPORT, ring: egressRing });
+  assert.equal(drained.count, 1);
+  assert.equal(drained.messages[0].kind, "command.result");
+  assert.equal(drained.messages[0].requestId, "req-1");
 });
