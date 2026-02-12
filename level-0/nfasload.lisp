@@ -867,6 +867,11 @@
 
 (defparameter *%fasload-verbose* t)
 
+(defmacro %wasm-note-fasload-step (n &optional detail)
+  `(when *%fasload-verbose*
+     (format t "~&WASM_FASLOAD_STEP ~D~@[ ~S~]~%" ,n ,detail)
+     (finish-output)))
+
 ;;; the default fasl file opener sets up the fasl state and checks the header
 (defun %simple-fasl-open (string s)
   (let* ((ok nil)
@@ -952,9 +957,10 @@
 (%fhave 'target-fasl-max-version #'bootstrapping-fasl-max-version)
 
 (defun %fasload (string &optional (table *fasl-dispatch-table*))
-  ;;(dbg string) 
+  ;;(dbg string)
+  (%wasm-note-fasload-step 100 string)
   (when (and *%fasload-verbose*
-	     (not *load-verbose*))
+             (not *load-verbose*))
     (%string-to-stderr ";Loading ") (pdbg string))
   (let* ((s (%istruct
              'faslstate
@@ -976,6 +982,7 @@
     (setf (faslstate.faslfname s) string)
     (setf (faslstate.fasldispatch s) table)
     (setf (faslstate.faslversion s) 0)
+    (%wasm-note-fasload-step 110)
     (%stack-block ((buffer (+ target::node-size $fasl-buf-len)))
       (setf (faslstate.iobuffer s) buffer)
       (%fasl-init-buffer s)
@@ -983,34 +990,44 @@
         (declare (dynamic-extent parse-string))
         (setf (faslstate.oldfaslstr s) nil
               (faslstate.faslstr s) parse-string)
-	(unwind-protect
-             (when (%fasl-open string s)
-               (let* ((nblocks (%fasl-read-word s)))
-                 (declare (fixnum nblocks))
-                 (unless (= nblocks 0)
-                   (let* ((pos (%fasl-get-file-pos s)))
-                     (dotimes (i nblocks)
-                       (%fasl-set-file-pos s pos)
-                       (%fasl-set-file-pos s (%fasl-read-long s))
-                       (incf pos 8)
-                       (let* ((version (%fasl-read-word s)))
-                         (declare (fixnum version))
-                         (if (or (> version (target-fasl-max-version))
-                                 (< version (target-fasl-min-version)))
-                           (%err-disp (if (>= version #xff00) $xfaslvers $xnotfasl))
-                           (progn
-                             (setf (faslstate.faslversion s) version)
-                             (%fasl-read-word s) 
-                             (%fasl-read-word s) ; Ignore kernel version stuff
-                             (setf (faslstate.faslevec s) nil
-                                   (faslstate.faslecnt s) 0)
-                             (do* ((op (%fasl-read-byte s) (%fasl-read-byte s)))
-                                  ((= op $faslend))
-                               (declare (fixnum op))
-                               (%fasl-dispatch s op))))))))))
-	  (%fasl-close s))
-	(let* ((err (faslstate.faslerr s)))
-	  (if err
+        (unwind-protect
+            (progn
+              (%wasm-note-fasload-step 120 string)
+              (when (%fasl-open string s)
+                (%wasm-note-fasload-step 130)
+                (let* ((nblocks (%fasl-read-word s)))
+                  (declare (fixnum nblocks))
+                  (%wasm-note-fasload-step 140 nblocks)
+                  (unless (= nblocks 0)
+                    (let* ((pos (%fasl-get-file-pos s)))
+                      (dotimes (i nblocks)
+                        (%wasm-note-fasload-step 150 i)
+                        (%fasl-set-file-pos s pos)
+                        (%fasl-set-file-pos s (%fasl-read-long s))
+                        (incf pos 8)
+                        (let* ((version (%fasl-read-word s)))
+                          (declare (fixnum version))
+                          (%wasm-note-fasload-step 160 version)
+                          (if (or (> version (target-fasl-max-version))
+                                  (< version (target-fasl-min-version)))
+                            (%err-disp (if (>= version #xff00) $xfaslvers $xnotfasl))
+                            (progn
+                              (setf (faslstate.faslversion s) version)
+                              (%fasl-read-word s)
+                              (%fasl-read-word s) ; Ignore kernel version stuff
+                              (setf (faslstate.faslevec s) nil
+                                    (faslstate.faslecnt s) 0)
+                              (%wasm-note-fasload-step 170 i)
+                              (do* ((op (%fasl-read-byte s) (%fasl-read-byte s)))
+                                   ((= op $faslend))
+                                (declare (fixnum op))
+                                (%fasl-dispatch s op))
+                              (%wasm-note-fasload-step 180 i))))))))))
+          (%wasm-note-fasload-step 190)
+          (%fasl-close s))
+        (let* ((err (faslstate.faslerr s)))
+          (%wasm-note-fasload-step 200 err)
+          (if err
             (progn
               (when *%fasload-verbose*
                 (let* ((herald ";!!Error loading ")
@@ -1209,6 +1226,16 @@
 ;;; if the %fasload call fails, the lisp should exit (instead of
 ;;; repeating the process endlessly ...
 
+(defvar *wasm-startup-step* 0
+  "Temporary startup-step telemetry for wasm boot diagnosis.
+Can be removed before shipping once %FASLOAD startup is stable.")
+
+(defmacro %wasm-note-startup-step (n)
+  `(progn
+     (setq *wasm-startup-step* ,n)
+     (format t "~&WASM_STARTUP_STEP ~D~%" ,n)
+     (finish-output)
+     ,n))
 
 (defvar %toplevel-function%
   #'(lambda ()
@@ -1216,20 +1243,28 @@
                         *xload-cold-load-documentation*
                         *xload-startup-file*
                         *early-class-cells*))
+      (%wasm-note-startup-step 10)
       (%set-tcr-toplevel-function (%current-tcr) nil) ; should get reset by l1-boot.
+      (%wasm-note-startup-step 20)
       (setq %system-locks% (%cons-population nil))
+      (%wasm-note-startup-step 30)
       ;; Need to make %ALL-PACKAGES-LOCK% early, so that we can casually
       ;; do SET-PACKAGE in cold load functions.
       (setq %all-packages-lock% (make-read-write-lock))
+      (%wasm-note-startup-step 40)
       (dolist (f (prog1 *xload-cold-load-functions* (setq *xload-cold-load-functions* nil)))
         (funcall f))
+      (%wasm-note-startup-step 50)
       (dolist (pair (prog1 *early-class-cells* (setq *early-class-cells* nil)))
         (setf (gethash (car pair) %find-classes%) (cdr pair)))
+      (%wasm-note-startup-step 60)
       (dolist (p %all-packages%)
         (%resize-htab (pkg.itab p))
         (%resize-htab (pkg.etab p)))
+      (%wasm-note-startup-step 70)
       (dolist (f (prog1 *xload-cold-load-documentation* (setq *xload-cold-load-documentation* nil)))
         (apply 'set-documentation f))
+      (%wasm-note-startup-step 80)
       ;; Can't bind any specials until this happens
       (let* ((max 0))
         (%map-areas #'(lambda (symvec)
@@ -1242,4 +1277,5 @@
                             (when (> idx max)
                               (setq max idx))))))
         (%set-binding-index max))
+      (%wasm-note-startup-step 90)
       (%fasload *xload-startup-file*)))

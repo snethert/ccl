@@ -5,6 +5,7 @@ IFS=$'\n\t'
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DEFAULT_MANIFEST_REL="doc/wasm/root.image.manifest.json"
 DEFAULT_RUN_ROOT_REL="doc/wasm/repro"
+SESSION_HANDOFF_PATH="$ROOT_DIR/doc/wasm/session-handoff.json"
 
 RUN_RUNTIME_DIAGNOSTICS=1
 ALLOW_DIRTY_TREE=1
@@ -220,6 +221,14 @@ PIPELINE_STATUS="running"
 FAILED_STEP=""
 FAILED_EXIT_CODE=0
 MANIFEST_GATE_STATUS="not-run"
+
+snapshot_session_handoff() {
+  if [ -x "$ROOT_DIR/scripts/wasm/snapshot-session.sh" ]; then
+    "$ROOT_DIR/scripts/wasm/snapshot-session.sh" --out "$SESSION_HANDOFF_PATH" >/dev/null 2>&1 || true
+  fi
+}
+
+trap snapshot_session_handoff EXIT
 
 record_command_result() {
   local name="$1"

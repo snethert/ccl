@@ -1006,6 +1006,331 @@ if (typeof ex.wasm_ccl_load_image !== "function") {
 ex.wasm_ccl_load_image(blobBase, imageLen);
 trace("boot image loaded");
 
+const debugReadSymbolState = (label, symbolReader) => {
+  if (!traceEnabled || typeof symbolReader !== "function" || typeof ex.wasm_debug_symbol_vcell_raw !== "function") {
+    return;
+  }
+  try {
+    const sym = symbolReader() >>> 0;
+    const vcell = ex.wasm_debug_symbol_vcell_raw(sym >>> 0) >>> 0;
+    const fcell = typeof ex.wasm_debug_symbol_fcell_raw === "function"
+      ? (ex.wasm_debug_symbol_fcell_raw(sym >>> 0) >>> 0)
+      : 0;
+    let symName = null;
+    if (typeof ex.wasm_debug_copy_symbol_name === "function") {
+      const len = ex.wasm_debug_copy_symbol_name(sym >>> 0, 0, 0) >>> 0;
+      if (len > 0) {
+        const ptr = allocScratch(runtime.memory, len);
+        const copied = ex.wasm_debug_copy_symbol_name(sym >>> 0, ptr >>> 0, len) >>> 0;
+        if (copied > 0) {
+          symName = decoder.decode(new Uint8Array(runtime.memory.buffer, ptr >>> 0, Math.min(len, copied)));
+        }
+      }
+    }
+    trace(
+      `debug-symbol-state label=${label}` +
+      ` sym=0x${sym.toString(16)}` +
+      ` vcell=0x${vcell.toString(16)}` +
+      ` fcell=0x${fcell.toString(16)}` +
+      (symName ? ` name=${JSON.stringify(symName)}` : ""),
+    );
+  } catch (err) {
+    trace(`debug-symbol-state label=${label} error=${err?.message ?? err}`);
+  }
+};
+
+const debugReadNamedCclSymbolState = (label, symbolName) => {
+  if (!traceEnabled ||
+      typeof ex.wasm_debug_find_symbol_ccl_raw !== "function" ||
+      typeof ex.wasm_debug_symbol_vcell_raw !== "function") {
+    return;
+  }
+  try {
+    const nameBytes = new TextEncoder().encode(symbolName);
+    const namePtr = allocScratch(runtime.memory, nameBytes.length);
+    new Uint8Array(runtime.memory.buffer, namePtr >>> 0, nameBytes.length).set(nameBytes);
+    const sym = ex.wasm_debug_find_symbol_ccl_raw(namePtr >>> 0, nameBytes.length >>> 0) >>> 0;
+    const vcell = ex.wasm_debug_symbol_vcell_raw(sym >>> 0) >>> 0;
+    const fcell = typeof ex.wasm_debug_symbol_fcell_raw === "function"
+      ? (ex.wasm_debug_symbol_fcell_raw(sym >>> 0) >>> 0)
+      : 0;
+    const vcellEntry = typeof ex.wasm_debug_function_entry_index === "function"
+      ? (ex.wasm_debug_function_entry_index(vcell >>> 0) | 0)
+      : null;
+    const fcellEntry = typeof ex.wasm_debug_function_entry_index === "function"
+      ? (ex.wasm_debug_function_entry_index(fcell >>> 0) | 0)
+      : null;
+    trace(
+      `debug-symbol-state label=${label}` +
+      ` sym=0x${sym.toString(16)}` +
+      ` vcell=0x${vcell.toString(16)}` +
+      ` fcell=0x${fcell.toString(16)}` +
+      (vcellEntry == null ? "" : ` vcell_entry=${vcellEntry}`) +
+      (fcellEntry == null ? "" : ` fcell_entry=${fcellEntry}`) +
+      ` name=${JSON.stringify(symbolName)}`,
+    );
+  } catch (err) {
+    trace(`debug-symbol-state label=${label} name=${JSON.stringify(symbolName)} error=${err?.message ?? err}`);
+  }
+};
+
+const debugReadNamedAnySymbolState = (label, symbolName) => {
+  if (!traceEnabled ||
+      typeof ex.wasm_debug_find_symbol_any_raw !== "function" ||
+      typeof ex.wasm_debug_symbol_vcell_raw !== "function") {
+    return;
+  }
+  try {
+    const nameBytes = new TextEncoder().encode(symbolName);
+    const namePtr = allocScratch(runtime.memory, nameBytes.length);
+    new Uint8Array(runtime.memory.buffer, namePtr >>> 0, nameBytes.length).set(nameBytes);
+    const sym = ex.wasm_debug_find_symbol_any_raw(namePtr >>> 0, nameBytes.length >>> 0) >>> 0;
+    const vcell = ex.wasm_debug_symbol_vcell_raw(sym >>> 0) >>> 0;
+    const fcell = typeof ex.wasm_debug_symbol_fcell_raw === "function"
+      ? (ex.wasm_debug_symbol_fcell_raw(sym >>> 0) >>> 0)
+      : 0;
+    trace(
+      `debug-symbol-state label=${label}` +
+      ` sym=0x${sym.toString(16)}` +
+      ` vcell=0x${vcell.toString(16)}` +
+      ` fcell=0x${fcell.toString(16)}` +
+      ` name=${JSON.stringify(symbolName)}`,
+    );
+  } catch (err) {
+    trace(`debug-symbol-state label=${label} name=${JSON.stringify(symbolName)} error=${err?.message ?? err}`);
+  }
+};
+
+const debugReadNamedCclListState = (label, symbolName) => {
+  if (!traceEnabled ||
+      typeof ex.wasm_debug_find_symbol_ccl_raw !== "function" ||
+      typeof ex.wasm_debug_symbol_vcell_raw !== "function" ||
+      typeof ex.wasm_debug_list_length_bounded !== "function") {
+    return;
+  }
+  try {
+    const nameBytes = new TextEncoder().encode(symbolName);
+    const namePtr = allocScratch(runtime.memory, nameBytes.length);
+    new Uint8Array(runtime.memory.buffer, namePtr >>> 0, nameBytes.length).set(nameBytes);
+    const sym = ex.wasm_debug_find_symbol_ccl_raw(namePtr >>> 0, nameBytes.length >>> 0) >>> 0;
+    const vcell = ex.wasm_debug_symbol_vcell_raw(sym >>> 0) >>> 0;
+    const listLen = ex.wasm_debug_list_length_bounded(vcell >>> 0, 65536) | 0;
+    trace(
+      `debug-list-state label=${label}` +
+      ` sym=0x${sym.toString(16)}` +
+      ` vcell=0x${vcell.toString(16)}` +
+      ` list_len=${listLen}` +
+      ` name=${JSON.stringify(symbolName)}`,
+    );
+  } catch (err) {
+    trace(`debug-list-state label=${label} name=${JSON.stringify(symbolName)} error=${err?.message ?? err}`);
+  }
+};
+
+const debugDumpNamedCclFunctionListEntries = (label, symbolName, maxItems = 12) => {
+  if (!traceEnabled ||
+      typeof ex.wasm_debug_find_symbol_ccl_raw !== "function" ||
+      typeof ex.wasm_debug_symbol_vcell_raw !== "function" ||
+      typeof ex.wasm_debug_cons_car_raw !== "function" ||
+      typeof ex.wasm_debug_cons_cdr_raw !== "function" ||
+      typeof ex.wasm_debug_list_length_bounded !== "function" ||
+      typeof ex.wasm_debug_function_entry_index !== "function") {
+    return;
+  }
+  try {
+    const lispNil = typeof ex.wasm_get_lisp_nil === "function"
+      ? (ex.wasm_get_lisp_nil() >>> 0)
+      : 0x4000001;
+    const nameBytes = new TextEncoder().encode(symbolName);
+    const namePtr = allocScratch(runtime.memory, nameBytes.length);
+    new Uint8Array(runtime.memory.buffer, namePtr >>> 0, nameBytes.length).set(nameBytes);
+    const sym = ex.wasm_debug_find_symbol_ccl_raw(namePtr >>> 0, nameBytes.length >>> 0) >>> 0;
+    let cursor = ex.wasm_debug_symbol_vcell_raw(sym >>> 0) >>> 0;
+    const listLen = ex.wasm_debug_list_length_bounded(cursor >>> 0, 65536) | 0;
+    const rows = [];
+    for (let i = 0; i < maxItems; i++) {
+      const car = ex.wasm_debug_cons_car_raw(cursor >>> 0) >>> 0;
+      const cdr = ex.wasm_debug_cons_cdr_raw(cursor >>> 0) >>> 0;
+      if (car === lispNil && cdr === lispNil) break;
+      const entry = ex.wasm_debug_function_entry_index(car >>> 0) | 0;
+      let ownerName = null;
+      if (typeof ex.wasm_debug_find_symbol_by_fcell_raw === "function" &&
+          typeof ex.wasm_debug_copy_symbol_name === "function") {
+        const ownerSym = ex.wasm_debug_find_symbol_by_fcell_raw(car >>> 0) >>> 0;
+        if (ownerSym !== 0 && ownerSym !== lispNil) {
+          const nameLen = ex.wasm_debug_copy_symbol_name(ownerSym >>> 0, 0, 0) >>> 0;
+          if (nameLen > 0) {
+            const namePtr = allocScratch(runtime.memory, nameLen);
+            const copied = ex.wasm_debug_copy_symbol_name(ownerSym >>> 0, namePtr >>> 0, nameLen) >>> 0;
+            if (copied > 0) {
+              ownerName = decoder.decode(new Uint8Array(runtime.memory.buffer, namePtr >>> 0, Math.min(nameLen, copied)));
+            }
+          }
+        }
+      }
+      rows.push(`${i}:${entry}:${`0x${car.toString(16)}`}${ownerName ? `:${ownerName}` : ""}`);
+      cursor = cdr >>> 0;
+      if (cursor === lispNil) break;
+    }
+    trace(
+      `debug-list-entries label=${label}` +
+      ` name=${JSON.stringify(symbolName)}` +
+      ` list_len=${listLen}` +
+      ` entries=[${rows.join(",")}]`,
+    );
+  } catch (err) {
+    trace(`debug-list-entries label=${label} name=${JSON.stringify(symbolName)} error=${err?.message ?? err}`);
+  }
+};
+
+const debugReadFasloadBoundarySymbols = (label) => {
+  debugReadSymbolState(`${label}.fasl-api`, ex.wasm_debug_find_symbol_fasl_api_raw);
+  debugReadSymbolState(`${label}.fasl-dispatch-table`, ex.wasm_debug_find_symbol_fasl_dispatch_table_raw);
+  debugReadNamedCclSymbolState(`${label}.pct-fasload-verbose`, "*%FASLOAD-VERBOSE*");
+  debugReadNamedCclSymbolState(`${label}.pct-fasload`, "*FASLOAD*");
+  debugReadNamedCclSymbolState(`${label}.fn-fasload`, "%FASLOAD");
+  debugReadNamedCclSymbolState(`${label}.fn-fasl-open`, "%FASL-OPEN");
+  debugReadNamedCclSymbolState(`${label}.fn-simple-fasl-open`, "%SIMPLE-FASL-OPEN");
+  debugReadNamedCclSymbolState(`${label}.fn-cons-population`, "%CONS-POPULATION");
+  debugReadNamedCclSymbolState(`${label}.fn-make-read-write-lock`, "MAKE-READ-WRITE-LOCK");
+  debugReadNamedCclSymbolState(`${label}.fn-map-areas`, "%MAP-AREAS");
+  debugReadNamedCclSymbolState(`${label}.fn-set-binding-index`, "%SET-BINDING-INDEX");
+  debugReadNamedCclSymbolState(`${label}.fn-current-tcr`, "%CURRENT-TCR");
+  debugReadNamedCclSymbolState(`${label}.fn-set-tcr-toplevel-function`, "%SET-TCR-TOPLEVEL-FUNCTION");
+  debugReadNamedCclSymbolState(`${label}.pct-toplevel-function`, "%TOPLEVEL-FUNCTION%");
+  debugReadNamedCclSymbolState(`${label}.sym-toplevel`, "TOPLEVEL");
+  debugReadNamedAnySymbolState(`${label}.sym-stream-pathname`, "STREAM-PATHNAME");
+  debugReadNamedCclSymbolState(`${label}.sym-percent-std-device-component`, "%STD-DEVICE-COMPONENT");
+  debugReadNamedCclSymbolState(`${label}.wasm-startup-step`, "*WASM-STARTUP-STEP*");
+  debugReadNamedCclSymbolState(`${label}.xload-startup-file`, "*XLOAD-STARTUP-FILE*");
+  debugReadNamedCclListState(`${label}.xload-cold-load-functions`, "*XLOAD-COLD-LOAD-FUNCTIONS*");
+  debugReadNamedCclListState(`${label}.xload-cold-load-documentation`, "*XLOAD-COLD-LOAD-DOCUMENTATION*");
+  debugDumpNamedCclFunctionListEntries(`${label}.xload-cold-load-functions`, "*XLOAD-COLD-LOAD-FUNCTIONS*");
+};
+
+const debugReadToplfuncState = (label) => {
+  if (!traceEnabled || typeof ex.wasm_debug_get_nrs_toplfunc_raw !== "function") {
+    return;
+  }
+  try {
+    const obj = ex.wasm_debug_get_nrs_toplfunc_raw() >>> 0;
+    const entry = typeof ex.wasm_debug_function_entry_index === "function"
+      ? (ex.wasm_debug_function_entry_index(obj >>> 0) | 0)
+      : null;
+    let ownerName = null;
+    if (typeof ex.wasm_debug_find_symbol_by_fcell_raw === "function" &&
+        typeof ex.wasm_debug_copy_symbol_name === "function") {
+      const ownerSym = ex.wasm_debug_find_symbol_by_fcell_raw(obj >>> 0) >>> 0;
+      if (ownerSym !== 0 && ownerSym !== 0x4000001) {
+        const len = ex.wasm_debug_copy_symbol_name(ownerSym >>> 0, 0, 0) >>> 0;
+        if (len > 0) {
+          const ptr = allocScratch(runtime.memory, len);
+          const copied = ex.wasm_debug_copy_symbol_name(ownerSym >>> 0, ptr >>> 0, len) >>> 0;
+          if (copied > 0) {
+            ownerName = decoder.decode(new Uint8Array(runtime.memory.buffer, ptr >>> 0, Math.min(len, copied)));
+          }
+        }
+      }
+    }
+    trace(
+      `debug-toplfunc label=${label}` +
+      ` obj=0x${obj.toString(16)}` +
+      (entry == null ? "" : ` entry=${entry}`) +
+      (ownerName ? ` owner_symbol=${JSON.stringify(ownerName)}` : ""),
+    );
+  } catch (err) {
+    trace(`debug-toplfunc label=${label} error=${err?.message ?? err}`);
+  }
+};
+
+const debugReadLastToplevelThrow = (label) => {
+  if (!traceEnabled || typeof ex.wasm_debug_get_last_toplevel_throw !== "function") {
+    return;
+  }
+  try {
+    const thrown = ex.wasm_debug_get_last_toplevel_throw() >>> 0;
+    const argZ = typeof ex.wasm_debug_get_last_toplevel_arg_z === "function"
+      ? (ex.wasm_debug_get_last_toplevel_arg_z() >>> 0)
+      : 0;
+    const argY = typeof ex.wasm_debug_get_last_toplevel_arg_y === "function"
+      ? (ex.wasm_debug_get_last_toplevel_arg_y() >>> 0)
+      : 0;
+    const nfn = typeof ex.wasm_debug_get_last_toplevel_nfn === "function"
+      ? (ex.wasm_debug_get_last_toplevel_nfn() >>> 0)
+      : 0;
+    const nargs = typeof ex.wasm_debug_get_last_toplevel_nargs === "function"
+      ? (ex.wasm_debug_get_last_toplevel_nargs() >>> 0)
+      : 0;
+    const topfn = typeof ex.wasm_debug_get_last_toplevel_topfn === "function"
+      ? (ex.wasm_debug_get_last_toplevel_topfn() >>> 0)
+      : 0;
+    const topfnEntry = typeof ex.wasm_debug_function_entry_index === "function"
+      ? (ex.wasm_debug_function_entry_index(topfn >>> 0) | 0)
+      : null;
+    const resolveOwnerName = (obj) => {
+      if (typeof ex.wasm_debug_find_symbol_by_fcell_raw !== "function" ||
+          typeof ex.wasm_debug_copy_symbol_name !== "function") {
+        return null;
+      }
+      const ownerSym = ex.wasm_debug_find_symbol_by_fcell_raw(obj >>> 0) >>> 0;
+      if (ownerSym === 0 || ownerSym === 0x4000001) return null;
+      const len = ex.wasm_debug_copy_symbol_name(ownerSym >>> 0, 0, 0) >>> 0;
+      if (len === 0) return null;
+      const ptr = allocScratch(runtime.memory, len);
+      const copied = ex.wasm_debug_copy_symbol_name(ownerSym >>> 0, ptr >>> 0, len) >>> 0;
+      if (copied === 0) return null;
+      return decoder.decode(new Uint8Array(runtime.memory.buffer, ptr >>> 0, Math.min(len, copied)));
+    };
+    const topfnOwner = resolveOwnerName(topfn >>> 0);
+    const nfnOwner = resolveOwnerName(nfn >>> 0);
+    trace(
+      `debug-last-toplevel-throw label=${label}` +
+      ` throw=${thrown}` +
+      ` topfn=0x${topfn.toString(16)}` +
+      (topfnEntry == null ? "" : ` topfn_entry=${topfnEntry}`) +
+      (topfnOwner ? ` topfn_owner=${JSON.stringify(topfnOwner)}` : "") +
+      ` arg_z=0x${argZ.toString(16)}` +
+      ` arg_y=0x${argY.toString(16)}` +
+      ` nfn=0x${nfn.toString(16)}` +
+      (nfnOwner ? ` nfn_owner=${JSON.stringify(nfnOwner)}` : "") +
+      ` nargs=0x${nargs.toString(16)}`,
+    );
+  } catch (err) {
+    trace(`debug-last-toplevel-throw label=${label} error=${err?.message ?? err}`);
+  }
+};
+
+debugReadFasloadBoundarySymbols("post-boot");
+debugReadToplfuncState("post-boot");
+
+if (process.env.CCL_WASM_DIAG_START_LISP_BEFORE_MODULE_INSTALL === "1") {
+  if (typeof ex.wasm_ccl_start_lisp !== "function") {
+    fail("kernel missing wasm_ccl_start_lisp for CCL_WASM_DIAG_START_LISP_BEFORE_MODULE_INSTALL");
+  }
+  if (typeof ex.wasm_set_subprims_ready === "function") {
+    ex.wasm_set_subprims_ready(1);
+  }
+  const pendingBefore = typeof ex.wasm_pending_throw_p === "function"
+    ? (ex.wasm_pending_throw_p() >>> 0)
+    : null;
+  const rc = ex.wasm_ccl_start_lisp() >>> 0;
+  const pendingAfter = typeof ex.wasm_pending_throw_p === "function"
+    ? (ex.wasm_pending_throw_p() >>> 0)
+    : null;
+  const pendingRaw = typeof ex.wasm_pending_throw_raw === "function"
+    ? (ex.wasm_pending_throw_raw() >>> 0)
+    : null;
+  trace(
+    `diag start_lisp_before_module_install rc=0x${rc.toString(16)}` +
+    (pendingBefore == null ? "" : ` pending_before=${pendingBefore}`) +
+    (pendingAfter == null ? "" : ` pending_after=${pendingAfter}`) +
+    (pendingRaw == null ? "" : ` pending_raw=0x${pendingRaw.toString(16)}`),
+  );
+  debugReadToplfuncState("post-start-lisp-before-module-install");
+  debugReadLastToplevelThrow("post-start-lisp-before-module-install");
+  debugReadFasloadBoundarySymbols("post-start-lisp-before-module-install");
+}
+
 const bundleInstall = await installCompiledModulesFromBundle({
   bundle: compiledModulesBundle,
   binaryReader: compiledModulesReader,
@@ -1018,6 +1343,8 @@ const bundleInstall = await installCompiledModulesFromBundle({
   installConstPools: false,
 });
 trace(`compiled module bundle installed ${bundleInstall.installed}/${bundleInstall.count}`);
+debugReadFasloadBoundarySymbols("post-bundle");
+debugReadToplfuncState("post-bundle");
 if (bundleInstall.count === 0) {
   fail("compiled modules bundle is empty; refusing to proceed");
 }
@@ -1035,10 +1362,108 @@ await installCompiledModulesFromRegistry({
   microkernel,
 });
 trace("compiled module registry install pass complete");
+debugReadFasloadBoundarySymbols("post-registry");
+debugReadToplfuncState("post-registry");
 runPreToplevelFunctionDesignatorGateOrFail();
 
 if (typeof kernel.instance.exports.wasm_set_subprims_ready === "function") {
   kernel.instance.exports.wasm_set_subprims_ready(1);
+}
+const diagRunToplevelEarly = process.env.CCL_WASM_DIAG_RUN_TOPLEVEL_EARLY === "1";
+const diagRunToplevelEarlyOnly = process.env.CCL_WASM_DIAG_RUN_TOPLEVEL_EARLY_ONLY === "1";
+if (diagRunToplevelEarly) {
+  if (typeof ex.wasm_run_toplevel !== "function") {
+    fail("kernel missing wasm_run_toplevel for CCL_WASM_DIAG_RUN_TOPLEVEL_EARLY");
+  }
+  const pendingBefore = typeof ex.wasm_pending_throw_p === "function"
+    ? (ex.wasm_pending_throw_p() >>> 0)
+    : null;
+  debugReadToplfuncState("pre-early-toplevel");
+  trace(`diag early_toplevel pre pending=${pendingBefore == null ? "n/a" : pendingBefore}`);
+  const rc = ex.wasm_run_toplevel() | 0;
+  const pendingAfter = typeof ex.wasm_pending_throw_p === "function"
+    ? (ex.wasm_pending_throw_p() >>> 0)
+    : null;
+  const pendingRaw = typeof ex.wasm_pending_throw_raw === "function"
+    ? (ex.wasm_pending_throw_raw() >>> 0)
+    : null;
+  trace(
+    `diag early_toplevel post rc=${rc}` +
+    (pendingAfter == null ? "" : ` pending=${pendingAfter}`) +
+    (pendingRaw == null ? "" : ` pending_raw=0x${pendingRaw.toString(16)}`),
+  );
+  debugReadToplfuncState("post-early-toplevel");
+  debugReadLastToplevelThrow("post-early-toplevel");
+  debugReadFasloadBoundarySymbols("post-early-toplevel");
+  if (diagRunToplevelEarlyOnly) {
+    trace("diag early_toplevel complete; exiting early (CCL_WASM_DIAG_RUN_TOPLEVEL_EARLY_ONLY=1)");
+    process.exit(0);
+  }
+}
+const diagPreFasloadToplfuncEntryRaw = process.env.CCL_WASM_DIAG_PRE_FASLOAD_TOPLFUNC_ENTRY;
+if (diagPreFasloadToplfuncEntryRaw != null && diagPreFasloadToplfuncEntryRaw !== "") {
+  if (typeof ex.wasm_set_toplfunc_entry !== "function") {
+    fail("kernel missing wasm_set_toplfunc_entry for CCL_WASM_DIAG_PRE_FASLOAD_TOPLFUNC_ENTRY");
+  }
+  const parsed = Number(diagPreFasloadToplfuncEntryRaw);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    fail(`invalid CCL_WASM_DIAG_PRE_FASLOAD_TOPLFUNC_ENTRY=${JSON.stringify(diagPreFasloadToplfuncEntryRaw)}`);
+  }
+  const setRc = ex.wasm_set_toplfunc_entry(parsed >>> 0) | 0;
+  trace(`diag pre_fasload_set_toplfunc entry=${parsed} rc=${setRc}`);
+  if (setRc !== 0) {
+    fail(`wasm_set_toplfunc_entry(${parsed}) failed during pre-fasload diag: rc=${setRc}`);
+  }
+  debugReadToplfuncState("post-pre-fasload-set-toplfunc");
+  debugReadFasloadBoundarySymbols("post-pre-fasload-set-toplfunc");
+
+  if (process.env.CCL_WASM_DIAG_RUN_TOPLEVEL_AFTER_PRESET === "1") {
+    if (typeof ex.wasm_run_toplevel !== "function") {
+      fail("kernel missing wasm_run_toplevel for CCL_WASM_DIAG_RUN_TOPLEVEL_AFTER_PRESET");
+    }
+    const prePending = typeof ex.wasm_pending_throw_p === "function"
+      ? (ex.wasm_pending_throw_p() >>> 0)
+      : null;
+    const runRc = ex.wasm_run_toplevel() | 0;
+    const postPending = typeof ex.wasm_pending_throw_p === "function"
+      ? (ex.wasm_pending_throw_p() >>> 0)
+      : null;
+    const postPendingRaw = typeof ex.wasm_pending_throw_raw === "function"
+      ? (ex.wasm_pending_throw_raw() >>> 0)
+      : null;
+    trace(
+      `diag pre_fasload_toplevel_run rc=${runRc}` +
+      (prePending == null ? "" : ` pre_pending=${prePending}`) +
+      (postPending == null ? "" : ` post_pending=${postPending}`) +
+      (postPendingRaw == null ? "" : ` post_pending_raw=0x${postPendingRaw.toString(16)}`),
+    );
+    debugReadToplfuncState("post-pre-fasload-toplevel-run");
+    debugReadFasloadBoundarySymbols("post-pre-fasload-toplevel-run");
+  }
+}
+if (process.env.CCL_WASM_DIAG_START_LISP_ONCE === "1") {
+  if (typeof ex.wasm_ccl_start_lisp !== "function") {
+    fail("kernel missing wasm_ccl_start_lisp for CCL_WASM_DIAG_START_LISP_ONCE");
+  }
+  const pendingBefore = typeof ex.wasm_pending_throw_p === "function"
+    ? (ex.wasm_pending_throw_p() >>> 0)
+    : null;
+  const rc = ex.wasm_ccl_start_lisp() >>> 0;
+  const pendingAfter = typeof ex.wasm_pending_throw_p === "function"
+    ? (ex.wasm_pending_throw_p() >>> 0)
+    : null;
+  const pendingRaw = typeof ex.wasm_pending_throw_raw === "function"
+    ? (ex.wasm_pending_throw_raw() >>> 0)
+    : null;
+  trace(
+    `diag start_lisp_once rc=0x${rc.toString(16)}` +
+    (pendingBefore == null ? "" : ` pending_before=${pendingBefore}`) +
+    (pendingAfter == null ? "" : ` pending_after=${pendingAfter}`) +
+    (pendingRaw == null ? "" : ` pending_raw=0x${pendingRaw.toString(16)}`),
+  );
+  debugReadToplfuncState("post-start-lisp-once");
+  debugReadLastToplevelThrow("post-start-lisp-once");
+  debugReadFasloadBoundarySymbols("post-start-lisp-once");
 }
 const encoder = new TextEncoder();
 const requiredFasls = [

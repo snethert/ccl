@@ -34,6 +34,10 @@
     (unless sym
       (error "Missing CCL:%TOPLEVEL-FUNCTION% symbol; cannot seed image toplevel."))
     (set sym #'toplevel-loop)
+    ;; Keep TCR slot aligned so wasm toplevel write telemetry sees the same seed.
+    (let ((tcr (%current-tcr)))
+      (when tcr
+        (%set-tcr-toplevel-function tcr (symbol-value sym))))
     sym))
 
 (defun validate-compiled-modules ()

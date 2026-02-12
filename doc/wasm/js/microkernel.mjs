@@ -89,6 +89,9 @@ const WASM_STARTUP_DIAG_ABORT_REASON_NAMES = Object.freeze({
 const WASM_FASLOAD_TRACE_MAGIC_V1 = 0x31534657;
 const WASM_FASLOAD_TRACE_VERSION_V1 = 1;
 const WASM_FASLOAD_TRACE_V1_SIZE = 56;
+const WASM_FASLOAD_TRACE_MAGIC_V2 = 0x32534657;
+const WASM_FASLOAD_TRACE_VERSION_V2 = 2;
+const WASM_FASLOAD_TRACE_V2_SIZE = 84;
 const WASM_FASLOAD_TRACE_STEP_NAMES = Object.freeze({
   1: "enter",
   2: "arg.invalid",
@@ -108,6 +111,27 @@ const WASM_FASLOAD_TRACE_STEP_NAMES = Object.freeze({
   16: "call.post",
   17: "throw.detected",
   18: "success",
+  19: "fasl_api.state",
+  20: "foreign.call.enter",
+  21: "foreign.call.return",
+});
+const WASM_TOPLFUNC_TRACE_MAGIC_V1 = 0x31544657;
+const WASM_TOPLFUNC_TRACE_VERSION_V1 = 1;
+const WASM_TOPLFUNC_TRACE_V1_SIZE = 48;
+const WASM_TOPLFUNC_TRACE_WRITER_NAMES = Object.freeze({
+  1: "wasm_set_tcr_toplevel_function",
+  2: "wasm_set_toplfunc_entry",
+  3: "start_lisp",
+  4: "wasm_run_toplevel",
+  5: "wasm_reset_root_image_runtime_state",
+});
+const WASM_TOPLFUNC_TRACE_PHASE_NAMES = Object.freeze({
+  1: "write",
+  2: "clear",
+});
+const WASM_TOPLFUNC_TRACE_TARGET_NAMES = Object.freeze({
+  1: "tcr_slot",
+  2: "nrs_toplfunc",
 });
 
 function u32(x) {
@@ -687,11 +711,20 @@ export function createMicrokernel({
 
   function decodeWasmFasloadTrace(bytes) {
     if (!(bytes instanceof Uint8Array)) return null;
-    if (bytes.byteLength !== WASM_FASLOAD_TRACE_V1_SIZE) return null;
+    if (bytes.byteLength !== WASM_FASLOAD_TRACE_V1_SIZE &&
+        bytes.byteLength !== WASM_FASLOAD_TRACE_V2_SIZE) {
+      return null;
+    }
     const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     const magic = dv.getUint32(0, true);
     const version = dv.getUint32(4, true);
-    if (magic !== WASM_FASLOAD_TRACE_MAGIC_V1 || version !== WASM_FASLOAD_TRACE_VERSION_V1) {
+    const isV1 = bytes.byteLength === WASM_FASLOAD_TRACE_V1_SIZE &&
+      magic === WASM_FASLOAD_TRACE_MAGIC_V1 &&
+      version === WASM_FASLOAD_TRACE_VERSION_V1;
+    const isV2 = bytes.byteLength === WASM_FASLOAD_TRACE_V2_SIZE &&
+      magic === WASM_FASLOAD_TRACE_MAGIC_V2 &&
+      version === WASM_FASLOAD_TRACE_VERSION_V2;
+    if (!isV1 && !isV2) {
       return null;
     }
 
@@ -721,12 +754,99 @@ export function createMicrokernel({
     const callableObj = readU32();
     const callableTag = readU32();
     const callableSubtag = readU32();
+    const argZ = isV2 ? readU32() : null;
+    const argY = isV2 ? readU32() : null;
+    const nfn = isV2 ? readU32() : null;
+    const nargs = isV2 ? readU32() : null;
+    const vsp = isV2 ? readU32() : null;
+    const csp = isV2 ? readU32() : null;
+    const tsp = isV2 ? readU32() : null;
     const stepName = WASM_FASLOAD_TRACE_STEP_NAMES[stepCode] ?? `step.${stepCode}`;
+    const streamId = runtimeStreamIds?.diagnostics ?? "diagnostics";
+
+    const payload = {
+      magic: messageMagic,
+      version: messageVersion,
+      stepCode,
+      stepName,
+      rc,
+      line,
+      throwState,
+      pathLen,
+      pathPrefix,
+      symbolObj,
+      symbolTag,
+      symbolSubtag,
+      callableObj,
+      callableTag,
+      callableSubtag,
+    };
+    if (isV2) {
+      payload.argZ = argZ;
+      payload.argY = argY;
+      payload.nfn = nfn;
+      payload.nargs = nargs;
+      payload.vsp = vsp;
+      payload.csp = csp;
+      payload.tsp = tsp;
+    }
+
+    return {
+      version: 1,
+      kind: isV2 ? "wasm.fasload.trace.v2" : "wasm.fasload.trace.v1",
+      jobId: runtimeJobId,
+      streamId,
+      requestId: null,
+      seq: nextRuntimeSeq(streamId),
+      ts: now(),
+      payload,
+      error: null,
+    };
+  }
+
+  function decodeWasmToplfuncTrace(bytes) {
+    if (!(bytes instanceof Uint8Array)) return null;
+    if (bytes.byteLength !== WASM_TOPLFUNC_TRACE_V1_SIZE) return null;
+
+    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const magic = dv.getUint32(0, true);
+    const version = dv.getUint32(4, true);
+    if (magic !== WASM_TOPLFUNC_TRACE_MAGIC_V1 || version !== WASM_TOPLFUNC_TRACE_VERSION_V1) {
+      return null;
+    }
+
+    let off = 0;
+    const readU32 = () => {
+      const value = dv.getUint32(off, true);
+      off += 4;
+      return value;
+    };
+    const readI32 = () => {
+      const value = dv.getInt32(off, true);
+      off += 4;
+      return value;
+    };
+
+    const messageMagic = readU32();
+    const messageVersion = readU32();
+    const writerCode = readU32();
+    const phaseCode = readU32();
+    const targetCode = readU32();
+    const line = readU32();
+    const rawValue = readU32();
+    const entryIndex = readI32();
+    const pendingThrow = readU32();
+    const tcrPtr = readU32();
+    const nrsToplfuncRaw = readU32();
+    const tcrSlotRaw = readU32();
+    const writerName = WASM_TOPLFUNC_TRACE_WRITER_NAMES[writerCode] ?? `writer.${writerCode}`;
+    const phaseName = WASM_TOPLFUNC_TRACE_PHASE_NAMES[phaseCode] ?? `phase.${phaseCode}`;
+    const targetName = WASM_TOPLFUNC_TRACE_TARGET_NAMES[targetCode] ?? `target.${targetCode}`;
     const streamId = runtimeStreamIds?.diagnostics ?? "diagnostics";
 
     return {
       version: 1,
-      kind: "wasm.fasload.trace.v1",
+      kind: "wasm.toplfunc.write.v1",
       jobId: runtimeJobId,
       streamId,
       requestId: null,
@@ -735,19 +855,19 @@ export function createMicrokernel({
       payload: {
         magic: messageMagic,
         version: messageVersion,
-        stepCode,
-        stepName,
-        rc,
+        writerCode,
+        writerName,
+        phaseCode,
+        phaseName,
+        targetCode,
+        targetName,
         line,
-        throwState,
-        pathLen,
-        pathPrefix,
-        symbolObj,
-        symbolTag,
-        symbolSubtag,
-        callableObj,
-        callableTag,
-        callableSubtag,
+        rawValue,
+        entryIndex,
+        pendingThrow,
+        tcrPtr,
+        nrsToplfuncRaw,
+        tcrSlotRaw,
       },
       error: null,
     };
@@ -758,6 +878,8 @@ export function createMicrokernel({
     if (startupDiag) return startupDiag;
     const fasloadTrace = decodeWasmFasloadTrace(bytes);
     if (fasloadTrace) return fasloadTrace;
+    const toplfuncTrace = decodeWasmToplfuncTrace(bytes);
+    if (toplfuncTrace) return toplfuncTrace;
     const text = decodeUtf8(bytes);
     return JSON.parse(text);
   }

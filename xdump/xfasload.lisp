@@ -35,6 +35,8 @@
 ;;; I'm not sure that there's a better way to do this.
 
 (defparameter *xload-show-cold-load-functions* nil "Set to T when debugging")
+(defvar *xload-show-toplevel-state* nil
+  "When true, emit bootstrap toplevel/cold-load state transitions during xload.")
 (defparameter *xload-special-binding-indices* nil)
 (defparameter *xload-reserved-special-binding-index-symbols*
   '(*interrupt-level*))
@@ -362,6 +364,21 @@
                   *xload-static-space*
                   *xload-dynamic-space*
                   *xload-readonly-space*))
+
+(defun xload-trace-toplevel-state (phase &key path)
+  (when *xload-show-toplevel-state*
+    (let* ((symaddr (xload-lookup-symbol '%toplevel-function%))
+           (raw (and symaddr (xload-symbol-value symaddr)))
+           (cold-count (length *xload-cold-load-functions*))
+           (doc-count (length *xload-cold-load-documentation*)))
+      (format t "~&[xload-topl] phase=~a~@[ path=~s~] sym=~s raw=~s cold-load-count=~d cold-doc-count=~d~%"
+              phase
+              path
+              symaddr
+              raw
+              cold-count
+              doc-count)
+      (finish-output))))
 
 (defparameter *xload-pure-code-p* t)     ; when T, subprims are copied to readonly space
                                         ; and code vectors are allocated there, reference subprims
@@ -938,6 +955,7 @@
       (unless *load-truename*
         (return (signal-file-error $err-no-file path)))
       (setq path *load-truename*)
+      (xload-trace-toplevel-state :before-file :path path)
       (let* ((*readtable* *readtable*)
              (*package* *ccl-package*)   ; maybe just *package*
              (*loading-files* (cons path *loading-files*))
@@ -948,7 +966,8 @@
 	  (format t "~&;Loading ~S..." *load-pathname*)
 	  (force-output))
         (multiple-value-bind (winp err) (%fasload (native-translated-namestring path) *xload-fasl-dispatch-table*)
-          (if (not winp) (%err-disp err)))))))
+          (if (not winp) (%err-disp err))))
+      (xload-trace-toplevel-state :after-file :path path))))
   
 
 
@@ -1167,16 +1186,21 @@
         (setf (xload-%svref v i) (xload-copy-symbol (svref %builtin-functions% i))))
       (xload-set '%builtin-functions% v))
     (xload-copy-symbol '*xload-startup-file*)
+    (xload-trace-toplevel-state :before-xload-fasload)
     (xload-fasload pathnames)
+    (xload-trace-toplevel-state :after-xload-fasload)
     (xload-set '*xload-startup-file*
                (xload-save-string *xload-startup-file*))
+    (xload-trace-toplevel-state :after-startup-file-set)
     (let* ((toplevel (xload-symbol-value (xload-lookup-symbol '%toplevel-function%))))      
       (when (or (= toplevel *xload-target-unbound-marker*)
                 (= toplevel *xload-target-nil*))
 	(warn "~S not set in loading ~S ." '%toplevel-function pathnames)))
+    (xload-trace-toplevel-state :after-toplevel-check)
     (setf (xload-symbol-value (xload-copy-symbol '*xload-cold-load-functions*))
           (xload-save-list (setq *xload-cold-load-functions*
                                  (nreverse *xload-cold-load-functions*))))
+    (xload-trace-toplevel-state :after-cold-load-save)
     (setf (xload-symbol-value (xload-copy-symbol '*early-class-cells*))
           (xload-save-list (mapcar #'xload-save-list *xload-early-class-cells*)))
     (setf (xload-symbol-value (xload-copy-symbol '*istruct-cells*))
@@ -1197,6 +1221,7 @@
     (setf (xload-symbol-value (xload-copy-symbol '*xload-cold-load-documentation*))
           (xload-save-list (setq *xload-cold-load-documentation*
                                  (nreverse *xload-cold-load-documentation*))))
+    (xload-trace-toplevel-state :after-cold-load-doc-save)
     (dolist (s *xload-reserved-special-binding-index-symbols*)
       (xload-ensure-binding-index (xload-copy-symbol s)))
     (xload-finalize-packages)

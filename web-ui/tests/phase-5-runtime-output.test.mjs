@@ -26,6 +26,12 @@ const WASM_STARTUP_DIAG_MAGIC_V1 = 0x31534457;
 const WASM_STARTUP_DIAG_V1_SIZE = 132;
 const WASM_STARTUP_DIAG_MAGIC_V2 = 0x32534457;
 const WASM_STARTUP_DIAG_V2_SIZE = 196;
+const WASM_FASLOAD_TRACE_MAGIC_V1 = 0x31534657;
+const WASM_FASLOAD_TRACE_V1_SIZE = 56;
+const WASM_FASLOAD_TRACE_MAGIC_V2 = 0x32534657;
+const WASM_FASLOAD_TRACE_V2_SIZE = 84;
+const WASM_TOPLFUNC_TRACE_MAGIC_V1 = 0x31544657;
+const WASM_TOPLFUNC_TRACE_V1_SIZE = 48;
 
 function encodeStartupDiagV1(overrides = {}) {
   const defaults = {
@@ -225,6 +231,151 @@ function encodeStartupDiagV2(overrides = {}) {
   return new Uint8Array(buf);
 }
 
+function encodeFasloadTraceV1(overrides = {}) {
+  const defaults = {
+    stepCode: 16,
+    rc: 0,
+    line: 4902,
+    throwState: 4,
+    pathLen: 13,
+    pathPrefix: 0x656c6576,
+    symbolObj: 0x01020304,
+    symbolTag: 6,
+    symbolSubtag: 58,
+    callableObj: 0x05060708,
+    callableTag: 6,
+    callableSubtag: 42,
+    ...overrides
+  };
+  const buf = new ArrayBuffer(WASM_FASLOAD_TRACE_V1_SIZE);
+  const dv = new DataView(buf);
+  let off = 0;
+  const setU32 = (value) => {
+    dv.setUint32(off, Number(value) >>> 0, true);
+    off += 4;
+  };
+  const setI32 = (value) => {
+    dv.setInt32(off, Number(value) | 0, true);
+    off += 4;
+  };
+
+  setU32(WASM_FASLOAD_TRACE_MAGIC_V1);
+  setU32(1);
+  setU32(defaults.stepCode);
+  setI32(defaults.rc);
+  setU32(defaults.line);
+  setU32(defaults.throwState);
+  setU32(defaults.pathLen);
+  setU32(defaults.pathPrefix);
+  setU32(defaults.symbolObj);
+  setU32(defaults.symbolTag);
+  setU32(defaults.symbolSubtag);
+  setU32(defaults.callableObj);
+  setU32(defaults.callableTag);
+  setU32(defaults.callableSubtag);
+  return new Uint8Array(buf);
+}
+
+function encodeFasloadTraceV2(overrides = {}) {
+  const defaults = {
+    stepCode: 17,
+    rc: -7,
+    line: 4912,
+    throwState: 4,
+    pathLen: 25,
+    pathPrefix: 0x6d697373,
+    symbolObj: 0x11111111,
+    symbolTag: 6,
+    symbolSubtag: 58,
+    callableObj: 0x22222222,
+    callableTag: 6,
+    callableSubtag: 42,
+    argZ: 0x4000001,
+    argY: 0x34,
+    nfn: 0x4000001,
+    nargs: 0x2,
+    vsp: 0x100100,
+    csp: 0x200200,
+    tsp: 0x300300,
+    ...overrides
+  };
+  const buf = new ArrayBuffer(WASM_FASLOAD_TRACE_V2_SIZE);
+  const dv = new DataView(buf);
+  let off = 0;
+  const setU32 = (value) => {
+    dv.setUint32(off, Number(value) >>> 0, true);
+    off += 4;
+  };
+  const setI32 = (value) => {
+    dv.setInt32(off, Number(value) | 0, true);
+    off += 4;
+  };
+
+  setU32(WASM_FASLOAD_TRACE_MAGIC_V2);
+  setU32(2);
+  setU32(defaults.stepCode);
+  setI32(defaults.rc);
+  setU32(defaults.line);
+  setU32(defaults.throwState);
+  setU32(defaults.pathLen);
+  setU32(defaults.pathPrefix);
+  setU32(defaults.symbolObj);
+  setU32(defaults.symbolTag);
+  setU32(defaults.symbolSubtag);
+  setU32(defaults.callableObj);
+  setU32(defaults.callableTag);
+  setU32(defaults.callableSubtag);
+  setU32(defaults.argZ);
+  setU32(defaults.argY);
+  setU32(defaults.nfn);
+  setU32(defaults.nargs);
+  setU32(defaults.vsp);
+  setU32(defaults.csp);
+  setU32(defaults.tsp);
+  return new Uint8Array(buf);
+}
+
+function encodeToplfuncTraceV1(overrides = {}) {
+  const defaults = {
+    writerCode: 3,
+    phaseCode: 2,
+    targetCode: 2,
+    line: 3410,
+    rawValue: 0x4000001,
+    entryIndex: -1,
+    pendingThrow: 0,
+    tcrPtr: 0x01020304,
+    nrsToplfuncRaw: 0x4000001,
+    tcrSlotRaw: 0x05060708,
+    ...overrides
+  };
+  const buf = new ArrayBuffer(WASM_TOPLFUNC_TRACE_V1_SIZE);
+  const dv = new DataView(buf);
+  let off = 0;
+  const setU32 = (value) => {
+    dv.setUint32(off, Number(value) >>> 0, true);
+    off += 4;
+  };
+  const setI32 = (value) => {
+    dv.setInt32(off, Number(value) | 0, true);
+    off += 4;
+  };
+
+  setU32(WASM_TOPLFUNC_TRACE_MAGIC_V1);
+  setU32(1);
+  setU32(defaults.writerCode);
+  setU32(defaults.phaseCode);
+  setU32(defaults.targetCode);
+  setU32(defaults.line);
+  setU32(defaults.rawValue);
+  setI32(defaults.entryIndex);
+  setU32(defaults.pendingThrow);
+  setU32(defaults.tcrPtr);
+  setU32(defaults.nrsToplfuncRaw);
+  setU32(defaults.tcrSlotRaw);
+  return new Uint8Array(buf);
+}
+
 test("applyRuntimeOutput ingests recording payloads", () => {
   const state = createState();
   const payload = {
@@ -398,6 +549,135 @@ test("microkernel decodes binary startup diagnostics runtime events v2", () => {
   assert.equal(messages[0].payload.firstFailNamePrefix, 0x44414f4c >>> 0);
   assert.equal(messages[0].payload.abortOnFirstFailure, 1);
   assert.equal(messages[0].payload.nameBytesMatchInput, 1);
+});
+
+test("microkernel decodes binary fasload trace runtime events v1", () => {
+  const memory = new WebAssembly.Memory({ initial: 1 });
+  const messages = [];
+  const microkernel = createMicrokernel({
+    memory,
+    now: () => 901,
+    runtimeBridge: {
+      jobId: "job-fasload-v1",
+      emit: (msg) => messages.push(msg)
+    }
+  });
+
+  const payloadPtr = 384;
+  const bytes = encodeFasloadTraceV1({
+    stepCode: 16,
+    rc: 0,
+    line: 4902
+  });
+  writeBytes(memory, payloadPtr, bytes);
+
+  const id = microkernel.imports.kernel_request(KERNEL_OP_RUNTIME_EVENT, payloadPtr, bytes.length);
+  microkernel.imports.kernel_poll(id);
+  const result = microkernel.imports.kernel_result(id);
+  microkernel.imports.kernel_drop_request(id);
+
+  assert.equal(result, 0);
+  assert.equal(messages.length, 1);
+  assert.equal(messages[0].kind, "wasm.fasload.trace.v1");
+  assert.equal(messages[0].jobId, "job-fasload-v1");
+  assert.equal(messages[0].ts, 901);
+  assert.equal(messages[0].payload.magic, WASM_FASLOAD_TRACE_MAGIC_V1);
+  assert.equal(messages[0].payload.version, 1);
+  assert.equal(messages[0].payload.stepCode, 16);
+  assert.equal(messages[0].payload.stepName, "call.post");
+  assert.equal(messages[0].payload.line, 4902);
+  assert.equal(messages[0].payload.throwState, 4);
+});
+
+test("microkernel decodes binary fasload trace runtime events v2", () => {
+  const memory = new WebAssembly.Memory({ initial: 1 });
+  const messages = [];
+  const microkernel = createMicrokernel({
+    memory,
+    now: () => 902,
+    runtimeBridge: {
+      jobId: "job-fasload-v2",
+      emit: (msg) => messages.push(msg)
+    }
+  });
+
+  const payloadPtr = 448;
+  const bytes = encodeFasloadTraceV2({
+    stepCode: 17,
+    rc: -7,
+    line: 4912
+  });
+  writeBytes(memory, payloadPtr, bytes);
+
+  const id = microkernel.imports.kernel_request(KERNEL_OP_RUNTIME_EVENT, payloadPtr, bytes.length);
+  microkernel.imports.kernel_poll(id);
+  const result = microkernel.imports.kernel_result(id);
+  microkernel.imports.kernel_drop_request(id);
+
+  assert.equal(result, 0);
+  assert.equal(messages.length, 1);
+  assert.equal(messages[0].kind, "wasm.fasload.trace.v2");
+  assert.equal(messages[0].jobId, "job-fasload-v2");
+  assert.equal(messages[0].ts, 902);
+  assert.equal(messages[0].payload.magic, WASM_FASLOAD_TRACE_MAGIC_V2);
+  assert.equal(messages[0].payload.version, 2);
+  assert.equal(messages[0].payload.stepCode, 17);
+  assert.equal(messages[0].payload.stepName, "throw.detected");
+  assert.equal(messages[0].payload.rc, -7);
+  assert.equal(messages[0].payload.argZ, 0x4000001);
+  assert.equal(messages[0].payload.argY, 0x34);
+  assert.equal(messages[0].payload.nfn, 0x4000001);
+  assert.equal(messages[0].payload.nargs, 0x2);
+  assert.equal(messages[0].payload.vsp, 0x100100);
+  assert.equal(messages[0].payload.csp, 0x200200);
+  assert.equal(messages[0].payload.tsp, 0x300300);
+});
+
+test("microkernel decodes binary toplfunc write runtime events v1", () => {
+  const memory = new WebAssembly.Memory({ initial: 1 });
+  const messages = [];
+  const microkernel = createMicrokernel({
+    memory,
+    now: () => 903,
+    runtimeBridge: {
+      jobId: "job-toplfunc-v1",
+      emit: (msg) => messages.push(msg)
+    }
+  });
+
+  const payloadPtr = 512;
+  const bytes = encodeToplfuncTraceV1({
+    writerCode: 4,
+    phaseCode: 1,
+    targetCode: 1,
+    line: 3492,
+    rawValue: 0x0a0b0c0d,
+    entryIndex: 4488,
+    pendingThrow: 1
+  });
+  writeBytes(memory, payloadPtr, bytes);
+
+  const id = microkernel.imports.kernel_request(KERNEL_OP_RUNTIME_EVENT, payloadPtr, bytes.length);
+  microkernel.imports.kernel_poll(id);
+  const result = microkernel.imports.kernel_result(id);
+  microkernel.imports.kernel_drop_request(id);
+
+  assert.equal(result, 0);
+  assert.equal(messages.length, 1);
+  assert.equal(messages[0].kind, "wasm.toplfunc.write.v1");
+  assert.equal(messages[0].jobId, "job-toplfunc-v1");
+  assert.equal(messages[0].ts, 903);
+  assert.equal(messages[0].payload.magic, WASM_TOPLFUNC_TRACE_MAGIC_V1);
+  assert.equal(messages[0].payload.version, 1);
+  assert.equal(messages[0].payload.writerCode, 4);
+  assert.equal(messages[0].payload.writerName, "wasm_run_toplevel");
+  assert.equal(messages[0].payload.phaseCode, 1);
+  assert.equal(messages[0].payload.phaseName, "write");
+  assert.equal(messages[0].payload.targetCode, 1);
+  assert.equal(messages[0].payload.targetName, "tcr_slot");
+  assert.equal(messages[0].payload.line, 3492);
+  assert.equal(messages[0].payload.entryIndex, 4488);
+  assert.equal(messages[0].payload.pendingThrow, 1);
 });
 
 test("microkernel emits runtime.output over sab_ring_v1 event transport", () => {
