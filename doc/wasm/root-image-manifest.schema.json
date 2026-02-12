@@ -35,7 +35,11 @@
         "tool": { "type": "string" },
         "nodeVersion": { "type": "string" },
         "platform": { "type": "string" },
-        "arch": { "type": "string" }
+        "arch": { "type": "string" },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": true
+        }
       },
       "additionalProperties": false
     },

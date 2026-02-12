@@ -91,6 +91,7 @@ function usage() {
   console.log("  --boot-image PATH   Boot image path (default: wasm-boot.image)");
   console.log("  --output PATH       Host output path (default: doc/wasm/root.image)");
   console.log("  --manifest-out PATH Root image manifest path (default: <output>.manifest.json)");
+  console.log("  --build-provenance PATH Optional JSON object merged into manifest build.provenance");
   console.log("  --wasm-output PATH  Path inside wasm persistence (default: doc/wasm/root.image)");
   console.log("  --modules PATH      Compiled modules bundle (default: doc/wasm/wasm-runtime-modules.json)");
   console.log("  --kernel PATH       wasmcl.wasm path (default: doc/wasm/js/wasmcl.wasm)");
@@ -117,6 +118,9 @@ function parseArgs(argv) {
         break;
       case "--manifest-out":
         out.manifestOut = argv[++i];
+        break;
+      case "--build-provenance":
+        out.buildProvenance = argv[++i];
         break;
       case "--wasm-output":
         out.wasmOutput = argv[++i];
@@ -165,6 +169,20 @@ function sortJson(value) {
 
 function canonicalJson(value) {
   return `${JSON.stringify(sortJson(value))}\n`;
+}
+
+async function loadBuildProvenance(provenancePath) {
+  if (!provenancePath) return null;
+  let parsed = null;
+  try {
+    parsed = JSON.parse(await fs.readFile(provenancePath, "utf8"));
+  } catch (err) {
+    fail(`Unable to read --build-provenance JSON at ${provenancePath}: ${err?.message ?? err}`);
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    fail(`--build-provenance must contain a JSON object: ${provenancePath}`);
+  }
+  return parsed;
 }
 
 const BOOTSTRAP_STATE_PREFIX = "BOOTSTRAP_STATE_JSON ";
@@ -334,9 +352,13 @@ const outputPath = args.output ?? defaultOutput;
 const manifestOutPath = args.manifestOut ?? `${outputPath}.manifest.json`;
 const wasmOutputPath = args.wasmOutput ?? defaultWasmOutput;
 const modulesPath = args.modules ?? defaultModules;
+const buildProvenancePath = args.buildProvenance
+  ? path.resolve(args.buildProvenance)
+  : null;
 const bootstrapBoundaryReportPath = args.bootstrapBoundaryReport
   ? path.resolve(args.bootstrapBoundaryReport)
   : null;
+const buildProvenance = await loadBuildProvenance(buildProvenancePath);
 
 function displayPath(filePath) {
   const absolute = path.resolve(filePath);
@@ -1139,6 +1161,7 @@ const manifest = {
     nodeVersion: process.version,
     platform: process.platform,
     arch: process.arch,
+    ...(buildProvenance ? { provenance: buildProvenance } : {}),
   },
   policy: {
     expectedLoaderMode: "start-lisp",
