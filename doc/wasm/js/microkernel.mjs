@@ -84,6 +84,31 @@ const WASM_STARTUP_DIAG_ABORT_REASON_NAMES = Object.freeze({
   3: "intern.result.bad_tag",
   4: "invariant.fail"
 });
+// Temporary %FASLOAD final-mile telemetry decode path.
+// Can be removed right before shipping once startup is stable.
+const WASM_FASLOAD_TRACE_MAGIC_V1 = 0x31534657;
+const WASM_FASLOAD_TRACE_VERSION_V1 = 1;
+const WASM_FASLOAD_TRACE_V1_SIZE = 56;
+const WASM_FASLOAD_TRACE_STEP_NAMES = Object.freeze({
+  1: "enter",
+  2: "arg.invalid",
+  3: "tcr.missing",
+  4: "subprims.not_ready",
+  5: "package.resolve",
+  6: "package.missing",
+  7: "symbol.lookup",
+  8: "symbol.intern_attempt",
+  9: "symbol.invalid",
+  10: "symbol.ready",
+  11: "callable.udf",
+  12: "callable.invalid",
+  13: "path_string.build",
+  14: "path_string.failed",
+  15: "call.pre",
+  16: "call.post",
+  17: "throw.detected",
+  18: "success",
+});
 
 function u32(x) {
   return x >>> 0;
@@ -660,9 +685,79 @@ export function createMicrokernel({
     };
   }
 
+  function decodeWasmFasloadTrace(bytes) {
+    if (!(bytes instanceof Uint8Array)) return null;
+    if (bytes.byteLength !== WASM_FASLOAD_TRACE_V1_SIZE) return null;
+    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const magic = dv.getUint32(0, true);
+    const version = dv.getUint32(4, true);
+    if (magic !== WASM_FASLOAD_TRACE_MAGIC_V1 || version !== WASM_FASLOAD_TRACE_VERSION_V1) {
+      return null;
+    }
+
+    let off = 0;
+    const readU32 = () => {
+      const value = dv.getUint32(off, true);
+      off += 4;
+      return value;
+    };
+    const readI32 = () => {
+      const value = dv.getInt32(off, true);
+      off += 4;
+      return value;
+    };
+
+    const messageMagic = readU32();
+    const messageVersion = readU32();
+    const stepCode = readU32();
+    const rc = readI32();
+    const line = readU32();
+    const throwState = readU32();
+    const pathLen = readU32();
+    const pathPrefix = readU32();
+    const symbolObj = readU32();
+    const symbolTag = readU32();
+    const symbolSubtag = readU32();
+    const callableObj = readU32();
+    const callableTag = readU32();
+    const callableSubtag = readU32();
+    const stepName = WASM_FASLOAD_TRACE_STEP_NAMES[stepCode] ?? `step.${stepCode}`;
+    const streamId = runtimeStreamIds?.diagnostics ?? "diagnostics";
+
+    return {
+      version: 1,
+      kind: "wasm.fasload.trace.v1",
+      jobId: runtimeJobId,
+      streamId,
+      requestId: null,
+      seq: nextRuntimeSeq(streamId),
+      ts: now(),
+      payload: {
+        magic: messageMagic,
+        version: messageVersion,
+        stepCode,
+        stepName,
+        rc,
+        line,
+        throwState,
+        pathLen,
+        pathPrefix,
+        symbolObj,
+        symbolTag,
+        symbolSubtag,
+        callableObj,
+        callableTag,
+        callableSubtag,
+      },
+      error: null,
+    };
+  }
+
   function decodeRuntimeEventPayload(bytes) {
     const startupDiag = decodeWasmStartupDiag(bytes);
     if (startupDiag) return startupDiag;
+    const fasloadTrace = decodeWasmFasloadTrace(bytes);
+    if (fasloadTrace) return fasloadTrace;
     const text = decodeUtf8(bytes);
     return JSON.parse(text);
   }

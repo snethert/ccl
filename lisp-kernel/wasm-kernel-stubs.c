@@ -25,10 +25,24 @@
 #define WASM_STARTUP_DIAG 0
 #endif
 
+#ifndef WASM_FASLOAD_TRACE
+/*
+ * Temporary final-mile telemetry for %FASLOAD startup failures.
+ * Keep disabled in normal builds; can be deleted before shipping.
+ */
+#define WASM_FASLOAD_TRACE 0
+#endif
+
 #if WASM_STARTUP_DIAG
 #define WASM_STARTUP_DIAG_ENABLED 1
 #else
 #define WASM_STARTUP_DIAG_ENABLED 0
+#endif
+
+#if WASM_FASLOAD_TRACE
+#define WASM_FASLOAD_TRACE_ENABLED 1
+#else
+#define WASM_FASLOAD_TRACE_ENABLED 0
 #endif
 
 enum wasm_startup_diag_event_v1 {
@@ -44,6 +58,38 @@ enum {
   WASM_STARTUP_DIAG_VERSION_V1 = 1u,
   WASM_STARTUP_DIAG_MAGIC_V2 = 0x32534457u, /* "WSD2" */
   WASM_STARTUP_DIAG_VERSION_V2 = 2u
+};
+
+enum {
+  WASM_FASLOAD_TRACE_MAGIC_V1 = 0x31534657u, /* "WFS1" */
+  WASM_FASLOAD_TRACE_VERSION_V1 = 1u
+};
+
+enum wasm_fasload_trace_step_v1 {
+  WASM_FASLOAD_STEP_ENTER = 1,
+  WASM_FASLOAD_STEP_ARG_INVALID = 2,
+  WASM_FASLOAD_STEP_TCR_MISSING = 3,
+  WASM_FASLOAD_STEP_SUBPRIMS_NOT_READY = 4,
+  WASM_FASLOAD_STEP_PACKAGE_RESOLVE = 5,
+  WASM_FASLOAD_STEP_PACKAGE_MISSING = 6,
+  WASM_FASLOAD_STEP_SYMBOL_LOOKUP = 7,
+  WASM_FASLOAD_STEP_SYMBOL_INTERN_ATTEMPT = 8,
+  WASM_FASLOAD_STEP_SYMBOL_INVALID = 9,
+  WASM_FASLOAD_STEP_SYMBOL_READY = 10,
+  WASM_FASLOAD_STEP_CALLABLE_UDF = 11,
+  WASM_FASLOAD_STEP_CALLABLE_INVALID = 12,
+  WASM_FASLOAD_STEP_PATH_STRING_BUILD = 13,
+  WASM_FASLOAD_STEP_PATH_STRING_FAILED = 14,
+  WASM_FASLOAD_STEP_CALL_PRE = 15,
+  WASM_FASLOAD_STEP_CALL_POST = 16,
+  WASM_FASLOAD_STEP_THROW_DETECTED = 17,
+  WASM_FASLOAD_STEP_SUCCESS = 18
+};
+
+enum wasm_probe_foreign_call_mode {
+  WASM_PROBE_FOREIGN_CALL_FASLOAD = 0,
+  WASM_PROBE_FOREIGN_CALL_IDENTITY = 1,
+  WASM_PROBE_FOREIGN_CALL_ERROR = 2
 };
 
 enum wasm_startup_diag_abort_reason_v2 {
@@ -168,6 +214,23 @@ typedef struct wasm_startup_diag_v2 {
   uint32_t abort_on_first_failure;
 } wasm_startup_diag_v2;
 
+typedef struct wasm_fasload_trace_v1 {
+  uint32_t magic;
+  uint32_t version;
+  uint32_t step_code;
+  int32_t rc;
+  uint32_t line;
+  uint32_t throw_state;
+  uint32_t path_len;
+  uint32_t path_prefix;
+  uint32_t symbol_obj;
+  uint32_t symbol_tag;
+  uint32_t symbol_subtag;
+  uint32_t callable_obj;
+  uint32_t callable_tag;
+  uint32_t callable_subtag;
+} wasm_fasload_trace_v1;
+
 static void
 wasm_emit_startup_diag_v2(const wasm_startup_diag_v2 *diag)
 {
@@ -177,6 +240,74 @@ wasm_emit_startup_diag_v2(const wasm_startup_diag_v2 *diag)
   }
 #else
   (void)diag;
+#endif
+}
+
+static uint32_t
+wasm_fasload_trace_path_prefix(const uint8_t *path_bytes, uint32_t path_len)
+{
+  if (path_bytes == NULL || path_len == 0u) {
+    return 0u;
+  }
+  uint32_t prefix = 0u;
+  uint32_t take = (path_len < 4u) ? path_len : 4u;
+  for (uint32_t i = 0u; i < take; i++) {
+    prefix |= ((uint32_t)path_bytes[i]) << (i * 8u);
+  }
+  return prefix;
+}
+
+static uint32_t
+wasm_fasload_trace_obj_tag(LispObj obj)
+{
+  return (uint32_t)fulltag_of(obj);
+}
+
+static uint32_t
+wasm_fasload_trace_obj_subtag(LispObj obj)
+{
+  if (fulltag_of(obj) != fulltag_misc) {
+    return 0xffffffffu;
+  }
+  return (uint32_t)header_subtag(header_of(obj));
+}
+
+static void
+wasm_emit_fasload_trace_v1(uint32_t step_code,
+                           int32_t rc,
+                           uint32_t line,
+                           TCR *tcr,
+                           const uint8_t *path_bytes,
+                           uint32_t path_len,
+                           LispObj symbol_obj,
+                           LispObj callable_obj)
+{
+#if WASM_FASLOAD_TRACE_ENABLED
+  wasm_fasload_trace_v1 trace;
+  trace.magic = WASM_FASLOAD_TRACE_MAGIC_V1;
+  trace.version = WASM_FASLOAD_TRACE_VERSION_V1;
+  trace.step_code = step_code;
+  trace.rc = rc;
+  trace.line = line;
+  trace.throw_state = (tcr != NULL) ? (uint32_t)tcr->wasm_pending_throw : 0u;
+  trace.path_len = path_len;
+  trace.path_prefix = wasm_fasload_trace_path_prefix(path_bytes, path_len);
+  trace.symbol_obj = (uint32_t)symbol_obj;
+  trace.symbol_tag = wasm_fasload_trace_obj_tag(symbol_obj);
+  trace.symbol_subtag = wasm_fasload_trace_obj_subtag(symbol_obj);
+  trace.callable_obj = (uint32_t)callable_obj;
+  trace.callable_tag = wasm_fasload_trace_obj_tag(callable_obj);
+  trace.callable_subtag = wasm_fasload_trace_obj_subtag(callable_obj);
+  (void)wasm_kernel_runtime_event(&trace, (uint32_t)sizeof(trace));
+#else
+  (void)step_code;
+  (void)rc;
+  (void)line;
+  (void)tcr;
+  (void)path_bytes;
+  (void)path_len;
+  (void)symbol_obj;
+  (void)callable_obj;
 #endif
 }
 
@@ -4292,29 +4423,105 @@ wasm_fasload_path(uint32_t path_ptr, uint32_t path_len)
     '%', 'F', 'A', 'S', 'L', 'O', 'A', 'D'
   };
   static const uint8_t ccl_pkg_name[] = { 'C', 'C', 'L' };
+  const uint8_t *path_bytes = (const uint8_t *)(uintptr_t)path_ptr;
+  LispObj fasload_sym = (LispObj)0;
+  LispObj fasload_fn = (LispObj)0;
+
+  wasm_emit_fasload_trace_v1(
+    WASM_FASLOAD_STEP_ENTER,
+    0,
+    __LINE__,
+    NULL,
+    path_bytes,
+    path_len,
+    (LispObj)0,
+    (LispObj)0);
 
   if (path_ptr == 0 || path_len == 0) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_ARG_INVALID,
+      -1,
+      __LINE__,
+      NULL,
+      path_bytes,
+      path_len,
+      (LispObj)0,
+      (LispObj)0);
     return -1;
   }
 
   TCR *tcr = wasm_get_current_tcr();
   if (tcr == NULL) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_TCR_MISSING,
+      -2,
+      __LINE__,
+      NULL,
+      path_bytes,
+      path_len,
+      (LispObj)0,
+      (LispObj)0);
     return -2;
   }
   if (!wasm_subprims_ready) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_SUBPRIMS_NOT_READY,
+      -3,
+      __LINE__,
+      tcr,
+      path_bytes,
+      path_len,
+      (LispObj)0,
+      (LispObj)0);
     return -3;
   }
 
+  wasm_emit_fasload_trace_v1(
+    WASM_FASLOAD_STEP_PACKAGE_RESOLVE,
+    0,
+    __LINE__,
+    tcr,
+    path_bytes,
+    path_len,
+    (LispObj)0,
+    (LispObj)0);
   LispObj ccl_pkg = wasm_find_package_named_bytes(ccl_pkg_name, (uint32_t)sizeof(ccl_pkg_name));
   if (ccl_pkg == lisp_nil) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_PACKAGE_MISSING,
+      -4,
+      __LINE__,
+      tcr,
+      path_bytes,
+      path_len,
+      (LispObj)0,
+      (LispObj)0);
     return -4;
   }
 
-  LispObj fasload_sym = wasm_find_symbol_named_bytes(
+  wasm_emit_fasload_trace_v1(
+    WASM_FASLOAD_STEP_SYMBOL_LOOKUP,
+    0,
+    __LINE__,
+    tcr,
+    path_bytes,
+    path_len,
+    (LispObj)0,
+    (LispObj)0);
+  fasload_sym = wasm_find_symbol_named_bytes(
     fasload_name,
     (uint32_t)sizeof(fasload_name),
     ccl_pkg);
   if (fasload_sym == (LispObj)0) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_SYMBOL_INTERN_ATTEMPT,
+      0,
+      __LINE__,
+      tcr,
+      path_bytes,
+      path_len,
+      (LispObj)0,
+      (LispObj)0);
     fasload_sym = wasm_const_pool_intern_symbol(
       tcr,
       fasload_name,
@@ -4322,36 +4529,403 @@ wasm_fasload_path(uint32_t path_ptr, uint32_t path_len)
       ccl_pkg);
   }
   if (tcr->wasm_pending_throw) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_THROW_DETECTED,
+      -7,
+      __LINE__,
+      tcr,
+      path_bytes,
+      path_len,
+      fasload_sym,
+      (LispObj)0);
     return -7;
   }
   if (fasload_sym == (LispObj)0 ||
       fulltag_of(fasload_sym) != fulltag_misc ||
       header_subtag(header_of(fasload_sym)) != subtag_symbol) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_SYMBOL_INVALID,
+      -4,
+      __LINE__,
+      tcr,
+      path_bytes,
+      path_len,
+      fasload_sym,
+      (LispObj)0);
     return -4;
   }
+  wasm_emit_fasload_trace_v1(
+    WASM_FASLOAD_STEP_SYMBOL_READY,
+    0,
+    __LINE__,
+    tcr,
+    path_bytes,
+    path_len,
+    fasload_sym,
+    (LispObj)0);
 
   lispsymbol *fasload_rawsym = (lispsymbol *)ptr_from_lispobj(untag(fasload_sym));
-  LispObj fasload_fn = fasload_rawsym->fcell;
+  fasload_fn = fasload_rawsym->fcell;
   if (fasload_fn == nrs_UDF.vcell) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_CALLABLE_UDF,
+      -5,
+      __LINE__,
+      tcr,
+      path_bytes,
+      path_len,
+      fasload_sym,
+      fasload_fn);
     return -5;
   }
   if (fulltag_of(fasload_fn) != fulltag_misc ||
       header_subtag(header_of(fasload_fn)) != subtag_function) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_CALLABLE_INVALID,
+      -8,
+      __LINE__,
+      tcr,
+      path_bytes,
+      path_len,
+      fasload_sym,
+      fasload_fn);
     return -8;
   }
 
+  wasm_emit_fasload_trace_v1(
+    WASM_FASLOAD_STEP_PATH_STRING_BUILD,
+    0,
+    __LINE__,
+    tcr,
+    path_bytes,
+    path_len,
+    fasload_sym,
+    fasload_fn);
   LispObj path = wasm_const_pool_make_base_string(
     tcr,
     (const uint8_t *)(uintptr_t)path_ptr,
     path_len);
   if (path == lisp_nil) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_PATH_STRING_FAILED,
+      -6,
+      __LINE__,
+      tcr,
+      path_bytes,
+      path_len,
+      fasload_sym,
+      fasload_fn);
     return -6;
   }
 
+  wasm_emit_fasload_trace_v1(
+    WASM_FASLOAD_STEP_CALL_PRE,
+    0,
+    __LINE__,
+    tcr,
+    path_bytes,
+    path_len,
+    fasload_sym,
+    fasload_fn);
   (void)wasm_foreign_funcall1(tcr, fasload_fn, path);
+  wasm_emit_fasload_trace_v1(
+    WASM_FASLOAD_STEP_CALL_POST,
+    0,
+    __LINE__,
+    tcr,
+    path_bytes,
+    path_len,
+    fasload_sym,
+    fasload_fn);
   if (tcr->wasm_pending_throw) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_THROW_DETECTED,
+      -7,
+      __LINE__,
+      tcr,
+      path_bytes,
+      path_len,
+      fasload_sym,
+      fasload_fn);
     return -7;
   }
+  wasm_emit_fasload_trace_v1(
+    WASM_FASLOAD_STEP_SUCCESS,
+    0,
+    __LINE__,
+    tcr,
+    path_bytes,
+    path_len,
+    fasload_sym,
+    fasload_fn);
+  return 0;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_probe_foreign_call1")))
+int32_t
+wasm_probe_foreign_call1(uint32_t mode, uint32_t arg_ptr, uint32_t arg_len)
+{
+  static const uint8_t fasload_name[] = {
+    '%', 'F', 'A', 'S', 'L', 'O', 'A', 'D'
+  };
+  static const uint8_t identity_name[] = {
+    'I', 'D', 'E', 'N', 'T', 'I', 'T', 'Y'
+  };
+  static const uint8_t error_name[] = {
+    'E', 'R', 'R', 'O', 'R'
+  };
+  static const uint8_t ccl_pkg_name[] = { 'C', 'C', 'L' };
+  static const uint8_t cl_pkg_name[] = {
+    'C', 'O', 'M', 'M', 'O', 'N', '-', 'L', 'I', 'S', 'P'
+  };
+
+  const uint8_t *arg_bytes = (const uint8_t *)(uintptr_t)arg_ptr;
+  const uint8_t *pkg_name = NULL;
+  uint32_t pkg_name_len = 0;
+  const uint8_t *symbol_name = NULL;
+  uint32_t symbol_name_len = 0;
+  LispObj callable_sym = (LispObj)0;
+  LispObj callable_fn = (LispObj)0;
+
+  switch (mode) {
+  case WASM_PROBE_FOREIGN_CALL_FASLOAD:
+    pkg_name = ccl_pkg_name;
+    pkg_name_len = (uint32_t)sizeof(ccl_pkg_name);
+    symbol_name = fasload_name;
+    symbol_name_len = (uint32_t)sizeof(fasload_name);
+    break;
+  case WASM_PROBE_FOREIGN_CALL_IDENTITY:
+    pkg_name = cl_pkg_name;
+    pkg_name_len = (uint32_t)sizeof(cl_pkg_name);
+    symbol_name = identity_name;
+    symbol_name_len = (uint32_t)sizeof(identity_name);
+    break;
+  case WASM_PROBE_FOREIGN_CALL_ERROR:
+    pkg_name = cl_pkg_name;
+    pkg_name_len = (uint32_t)sizeof(cl_pkg_name);
+    symbol_name = error_name;
+    symbol_name_len = (uint32_t)sizeof(error_name);
+    break;
+  default:
+    return -9;
+  }
+
+  wasm_emit_fasload_trace_v1(
+    WASM_FASLOAD_STEP_ENTER,
+    (int32_t)mode,
+    __LINE__,
+    NULL,
+    arg_bytes,
+    arg_len,
+    (LispObj)0,
+    (LispObj)0);
+
+  if (arg_ptr == 0 || arg_len == 0) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_ARG_INVALID,
+      -1,
+      __LINE__,
+      NULL,
+      arg_bytes,
+      arg_len,
+      (LispObj)0,
+      (LispObj)0);
+    return -1;
+  }
+
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_TCR_MISSING,
+      -2,
+      __LINE__,
+      NULL,
+      arg_bytes,
+      arg_len,
+      (LispObj)0,
+      (LispObj)0);
+    return -2;
+  }
+  if (!wasm_subprims_ready) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_SUBPRIMS_NOT_READY,
+      -3,
+      __LINE__,
+      tcr,
+      arg_bytes,
+      arg_len,
+      (LispObj)0,
+      (LispObj)0);
+    return -3;
+  }
+
+  wasm_emit_fasload_trace_v1(
+    WASM_FASLOAD_STEP_PACKAGE_RESOLVE,
+    0,
+    __LINE__,
+    tcr,
+    arg_bytes,
+    arg_len,
+    (LispObj)0,
+    (LispObj)0);
+  LispObj pkg = wasm_find_package_named_bytes(pkg_name, pkg_name_len);
+  if (pkg == lisp_nil) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_PACKAGE_MISSING,
+      -4,
+      __LINE__,
+      tcr,
+      arg_bytes,
+      arg_len,
+      (LispObj)0,
+      (LispObj)0);
+    return -4;
+  }
+
+  wasm_emit_fasload_trace_v1(
+    WASM_FASLOAD_STEP_SYMBOL_LOOKUP,
+    0,
+    __LINE__,
+    tcr,
+    arg_bytes,
+    arg_len,
+    (LispObj)0,
+    (LispObj)0);
+  callable_sym = wasm_find_symbol_named_bytes(symbol_name, symbol_name_len, pkg);
+  if (callable_sym == (LispObj)0) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_SYMBOL_INTERN_ATTEMPT,
+      0,
+      __LINE__,
+      tcr,
+      arg_bytes,
+      arg_len,
+      (LispObj)0,
+      (LispObj)0);
+    callable_sym = wasm_const_pool_intern_symbol(
+      tcr,
+      symbol_name,
+      symbol_name_len,
+      pkg);
+  }
+  if (tcr->wasm_pending_throw) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_THROW_DETECTED,
+      -7,
+      __LINE__,
+      tcr,
+      arg_bytes,
+      arg_len,
+      callable_sym,
+      (LispObj)0);
+    return -7;
+  }
+  if (callable_sym == (LispObj)0 ||
+      fulltag_of(callable_sym) != fulltag_misc ||
+      header_subtag(header_of(callable_sym)) != subtag_symbol) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_SYMBOL_INVALID,
+      -4,
+      __LINE__,
+      tcr,
+      arg_bytes,
+      arg_len,
+      callable_sym,
+      (LispObj)0);
+    return -4;
+  }
+
+  lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(untag(callable_sym));
+  callable_fn = rawsym->fcell;
+  if (callable_fn == nrs_UDF.vcell) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_CALLABLE_UDF,
+      -5,
+      __LINE__,
+      tcr,
+      arg_bytes,
+      arg_len,
+      callable_sym,
+      callable_fn);
+    return -5;
+  }
+  if (fulltag_of(callable_fn) != fulltag_misc ||
+      header_subtag(header_of(callable_fn)) != subtag_function) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_CALLABLE_INVALID,
+      -8,
+      __LINE__,
+      tcr,
+      arg_bytes,
+      arg_len,
+      callable_sym,
+      callable_fn);
+    return -8;
+  }
+
+  wasm_emit_fasload_trace_v1(
+    WASM_FASLOAD_STEP_PATH_STRING_BUILD,
+    0,
+    __LINE__,
+    tcr,
+    arg_bytes,
+    arg_len,
+    callable_sym,
+    callable_fn);
+  LispObj arg = wasm_const_pool_make_base_string(tcr, arg_bytes, arg_len);
+  if (arg == lisp_nil) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_PATH_STRING_FAILED,
+      -6,
+      __LINE__,
+      tcr,
+      arg_bytes,
+      arg_len,
+      callable_sym,
+      callable_fn);
+    return -6;
+  }
+
+  wasm_emit_fasload_trace_v1(
+    WASM_FASLOAD_STEP_CALL_PRE,
+    (int32_t)mode,
+    __LINE__,
+    tcr,
+    arg_bytes,
+    arg_len,
+    callable_sym,
+    callable_fn);
+  (void)wasm_foreign_funcall1(tcr, callable_fn, arg);
+  wasm_emit_fasload_trace_v1(
+    WASM_FASLOAD_STEP_CALL_POST,
+    (int32_t)mode,
+    __LINE__,
+    tcr,
+    arg_bytes,
+    arg_len,
+    callable_sym,
+    callable_fn);
+  if (tcr->wasm_pending_throw) {
+    wasm_emit_fasload_trace_v1(
+      WASM_FASLOAD_STEP_THROW_DETECTED,
+      -7,
+      __LINE__,
+      tcr,
+      arg_bytes,
+      arg_len,
+      callable_sym,
+      callable_fn);
+    return -7;
+  }
+  wasm_emit_fasload_trace_v1(
+    WASM_FASLOAD_STEP_SUCCESS,
+    (int32_t)mode,
+    __LINE__,
+    tcr,
+    arg_bytes,
+    arg_len,
+    callable_sym,
+    callable_fn);
   return 0;
 }
 

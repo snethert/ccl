@@ -1106,6 +1106,60 @@ const kernelDebugSymbolName = typeof ex.wasm_debug_copy_symbol_name === "functio
     }
   }
   : null;
+const runBoundaryProbes = process.env.CCL_WASM_RUN_BOUNDARY_PROBES === "1";
+const boundaryProbeOnly = process.env.CCL_WASM_BOUNDARY_PROBE_ONLY === "1";
+const boundaryProbeStrict = process.env.CCL_WASM_BOUNDARY_PROBES_STRICT === "1";
+if (runBoundaryProbes) {
+  if (typeof ex.wasm_probe_foreign_call1 !== "function") {
+    fail("kernel missing wasm_probe_foreign_call1 for boundary probes");
+  }
+  const runBoundaryProbe = (name, mode, arg) => {
+    if (typeof ex.wasm_clear_pending_throw === "function") {
+      ex.wasm_clear_pending_throw();
+    }
+    const bytes = encoder.encode(arg);
+    const ptr = copyBytesToScratch(runtime.memory, bytes);
+    const rc = ex.wasm_probe_foreign_call1(mode >>> 0, ptr, bytes.length >>> 0) | 0;
+    const pending = pendingThrowProbe ? pendingThrowProbe() : null;
+    const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
+    const pendingName = pendingRaw != null && kernelDebugSymbolName ? kernelDebugSymbolName(pendingRaw) : null;
+    console.log(
+      `boundary_probe name=${name} mode=${mode} rc=${rc}` +
+      (pending == null ? "" : ` pending=${pending}`) +
+      (pendingRaw == null ? "" : ` pending_raw=0x${pendingRaw.toString(16)}`) +
+      (pendingName ? ` pending_symbol=${JSON.stringify(pendingName)}` : ""),
+    );
+    return { rc, pending };
+  };
+
+  const identityProbe = runBoundaryProbe("identity", 1, "wasm-boundary-identity");
+  if (boundaryProbeStrict && (identityProbe.rc !== 0 || identityProbe.pending !== 0)) {
+    fail(`boundary identity probe expected rc=0 pending=0, got rc=${identityProbe.rc} pending=${identityProbe.pending}`);
+  } else if (identityProbe.rc !== 0 || identityProbe.pending !== 0) {
+    console.warn(`WARN: boundary identity probe non-clean (set CCL_WASM_BOUNDARY_PROBES_STRICT=1 to enforce) rc=${identityProbe.rc} pending=${identityProbe.pending}`);
+  }
+
+  const errorProbe = runBoundaryProbe("error", 2, "wasm-boundary-error");
+  if (boundaryProbeStrict && (errorProbe.rc !== -7 || errorProbe.pending !== 1)) {
+    fail(`boundary error probe expected rc=-7 pending=1, got rc=${errorProbe.rc} pending=${errorProbe.pending}`);
+  } else if (errorProbe.rc !== -7 || errorProbe.pending !== 1) {
+    console.warn(`WARN: boundary error probe shape changed (set CCL_WASM_BOUNDARY_PROBES_STRICT=1 to enforce) rc=${errorProbe.rc} pending=${errorProbe.pending}`);
+  }
+
+  if (typeof ex.wasm_clear_pending_throw === "function") {
+    ex.wasm_clear_pending_throw();
+  }
+  runBoundaryProbe("fasload.target", 0, "level-1.lafsl");
+  runBoundaryProbe("fasload.missing", 0, "__missing__/missing.lafsl");
+
+  if (typeof ex.wasm_clear_pending_throw === "function") {
+    ex.wasm_clear_pending_throw();
+  }
+  if (boundaryProbeOnly) {
+    trace("boundary probes complete; exiting early (CCL_WASM_BOUNDARY_PROBE_ONLY=1)");
+    process.exit(0);
+  }
+}
 const skipRequiredFasloads = process.env.CCL_WASM_SKIP_REQUIRED_FASLOADS === "1";
 if (skipRequiredFasloads && traceEnabled) {
   trace("skipping required fasload sequence (CCL_WASM_SKIP_REQUIRED_FASLOADS=1)");
