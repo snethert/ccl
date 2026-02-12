@@ -25,8 +25,19 @@
 
 #+wasm32-target
 (defun toplevel-loop ()
-  (runtime-bridge-pump-commands)
-  t)
+  (loop
+    (runtime-bridge-pump-commands)
+    (let ((yielded
+           (catch :wasm-yield
+             (progn
+               (if (eq (catch :toplevel
+                         (read-loop :break-level 0))
+                       $xstkover)
+                 (format t "~&;[Stacks reset due to overflow.]")
+                 (toplevel))
+               nil))))
+      (when yielded
+        (return yielded)))))
 
 #-wasm32-target
 (defun toplevel-loop ()
@@ -645,10 +656,8 @@ commands but aren't")
                                :end (+ start len)
                                :external-format :utf-8))
 
-  (defun runtime-command--decode-frame (bytes &optional frame-len)
-    (let* ((n (if frame-len
-                (min frame-len (length bytes))
-                (length bytes))))
+  (defun runtime-command--decode-frame (bytes)
+    (let* ((n (length bytes)))
       (when (< n 24)
         (return-from runtime-command--decode-frame nil))
       (let* ((version (runtime-command--u32 bytes 0))
@@ -1282,61 +1291,40 @@ commands but aren't")
                                        t))))
     t)
 
-  (let ((poll-buffer-capacity +runtime-command-max-bytes+)
-        (poll-buffer (make-array +runtime-command-max-bytes+ :element-type '(unsigned-byte 8)))
-        (poll-length-bytes (make-array 4 :element-type '(unsigned-byte 8))))
-    (defun runtime-command--poll-frame (max-bytes allow-pending)
-      (let* ((flags (if allow-pending 1 0))
-             (capacity poll-buffer-capacity)
-             (effective-max (if (> max-bytes capacity) capacity max-bytes)))
-        (when (<= effective-max 0)
-          (return-from runtime-command--poll-frame (values nil -22 0)))
-        (setf (aref poll-length-bytes 0) 0
-              (aref poll-length-bytes 1) 0
-              (aref poll-length-bytes 2) 0
-              (aref poll-length-bytes 3) 0)
-        (ccl:with-pointer-to-ivector (buffer-ptr poll-buffer)
-          (ccl:with-pointer-to-ivector (out-len-ptr poll-length-bytes)
-            (let* ((status (ccl:external-call "wasm_kernel_runtime_command_poll"
-                                              :unsigned-long effective-max
-                                              :unsigned-long flags
-                                              :address buffer-ptr
-                                              :unsigned-long capacity
-                                              :address out-len-ptr
-                                              :signed-long)))
-              (cond
-                ((= status -11)
-                 (values nil -11 0))
-                ((< status 0)
-                 (values nil status 0))
-                (t
-                 (let ((need (logior (aref poll-length-bytes 0)
-                                     (ash (aref poll-length-bytes 1) 8)
-                                     (ash (aref poll-length-bytes 2) 16)
-                                     (ash (aref poll-length-bytes 3) 24))))
-                   (cond
-                     ((= need 0)
-                      (values nil status 0))
-                     ((or (> need effective-max) (> need capacity))
-                      (values nil -7 0))
-                     (t
-                      (values poll-buffer status need))))))))))))
+  (defun runtime-command--poll-frame (&optional (max-bytes +runtime-command-max-bytes+) (allow-pending nil))
+    (let* ((buffer (make-array max-bytes :element-type '(unsigned-byte 8)))
+           (flags (if allow-pending 1 0)))
+      (ccl:rlet ((out-len :unsigned-long))
+        (let* ((r (ccl:with-pointer-to-ivector (ptr buffer)
+                    (ccl:external-call "wasm_kernel_runtime_command_poll"
+                                       :unsigned-long max-bytes
+                                       :unsigned-long flags
+                                       :address ptr
+                                       :unsigned-long max-bytes
+                                       :address out-len
+                                       :signed-long))))
+          (cond
+            ((< r 0) (values nil r))
+            ((= r 0) (values nil 0))
+            (t
+             (let* ((n (ccl:pref out-len :unsigned-long))
+                    (bytes (if (and n (> n 0))
+                             (let ((copy (make-array n :element-type '(unsigned-byte 8))))
+                               (replace copy buffer :end2 n)
+                               copy)
+                             (make-array 0 :element-type '(unsigned-byte 8)))))
+               (values bytes r))))))))
 
-  (defun runtime-bridge-pump-commands ()
-    (flet ((pump-once ()
-             (multiple-value-bind (bytes status count)
-                 (runtime-command--poll-frame +runtime-command-max-bytes+ nil)
-               (declare (ignore status))
-               (when (and bytes (> count 0))
-                 (let ((frame (runtime-command--decode-frame bytes count)))
-                   (when frame
-                     (runtime-command--dispatch frame))))
-               (and bytes (> count 0)))))
-      (when (pump-once)
-        (when (pump-once)
-          (when (pump-once)
-            (pump-once)))))
-    t)
+  (defun runtime-bridge-pump-commands (&optional (max-commands 4))
+    (loop repeat max-commands do
+      (multiple-value-bind (bytes status) (runtime-command--poll-frame)
+        (declare (ignore status))
+        (when (null bytes)
+          (return))
+        (let* ((frame (runtime-command--decode-frame bytes)))
+          (when frame
+            (runtime-command--dispatch frame)))))
+    nil)
 
   (defun runtime-bridge-emit-output (values)
     (when values

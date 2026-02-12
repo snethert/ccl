@@ -21,9 +21,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "lisp-exceptions.h"
-#ifdef WASM32
-#include "wasm-host.h"
-#endif
 #include <stdio.h>
 #include <stdlib.h>
 #if !defined(WINDOWS) && !defined(WASM32)
@@ -2556,43 +2553,6 @@ jvm_init(jvm_initfunc f,void*arg0,void*arg1,void*arg2)
 void *
 xFindSymbol(void* handle, char *name)
 {
-#ifdef WASM32
-  (void)handle;
-  if (name == NULL) {
-    return NULL;
-  }
-
-  const char *lookup = name;
-  if (*lookup == '_') {
-    lookup++;
-  }
-
-#define WASM_SYMBOL(sym) do {                                                     \
-    if (strcmp(lookup, #sym) == 0) {                                              \
-      static const char hit_prefix[] = "WASM boot trace: xFindSymbol hit name="; \
-      wasm_host_log(hit_prefix, (unsigned)(sizeof(hit_prefix) - 1));              \
-      wasm_host_log(lookup, (unsigned)strlen(lookup));                            \
-      wasm_host_log("\n", 1);                                                     \
-      return (void *)sym;                                                         \
-    }                                                                              \
-  } while (0)
-  WASM_SYMBOL(kernel_request);
-  WASM_SYMBOL(kernel_poll);
-  WASM_SYMBOL(kernel_result);
-  WASM_SYMBOL(kernel_response_size);
-  WASM_SYMBOL(kernel_copy_response);
-  WASM_SYMBOL(kernel_drop_request);
-  WASM_SYMBOL(wasm_kernel_runtime_event);
-  WASM_SYMBOL(wasm_kernel_runtime_command_poll);
-#undef WASM_SYMBOL
-  {
-    static const char miss_prefix[] = "WASM boot trace: xFindSymbol miss name=";
-    wasm_host_log(miss_prefix, (unsigned)(sizeof(miss_prefix) - 1));
-    wasm_host_log(lookup, (unsigned)strlen(lookup));
-    wasm_host_log("\n", 1);
-  }
-  return NULL;
-#endif
 #if defined(LINUX) || defined(FREEBSD) || defined(SOLARIS)
 #ifdef ANDROID
   if (handle == NULL) {

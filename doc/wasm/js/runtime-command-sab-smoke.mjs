@@ -86,55 +86,21 @@ function bindingStateForGateFailure(reason) {
       return "unresolved-required-function-designator";
   }
 }
-const sabRequiredPreToplevelDesignators = normalizeDesignatorNameSet([
-  "RUNTIME-COMMAND--POLL-FRAME",
-  "RUNTIME-COMMAND--DECODE-FRAME",
-  "RUNTIME-COMMAND--DISPATCH",
-  "%NEW-GCABLE-PTR",
-  "MAKE-UARRAY-1",
-]);
-const policyRequiredPreToplevelDesignators = normalizeDesignatorNameSet(
+const startupRequiredPreToplevelDesignators = normalizeDesignatorNameSet(
   STARTUP_FUNCTION_DESIGNATOR_POLICY_V1?.phases?.["pre-toplevel"]?.requiredResolveOrFail ?? []
 );
-const startupRequiredPreToplevelDesignators = normalizeDesignatorNameSet([
-  ...Array.from(policyRequiredPreToplevelDesignators.values()),
-  ...Array.from(sabRequiredPreToplevelDesignators.values())
-]);
 const startupDeferredPreToplevelDesignators = normalizeDesignatorNameSet(
-  (STARTUP_FUNCTION_DESIGNATOR_POLICY_V1?.phases?.["pre-toplevel"]?.deferredAllowed ?? [])
-    .filter((name) => !startupRequiredPreToplevelDesignators.has(String(name ?? "").trim().toUpperCase()))
+  STARTUP_FUNCTION_DESIGNATOR_POLICY_V1?.phases?.["pre-toplevel"]?.deferredAllowed ?? []
 );
-const startupSymbolToEntryPreToplevelDesignators = normalizeDesignatorNameSet([
-  ...STARTUP_SYMBOL_TO_ENTRY_FUNCTION_DESIGNATORS_PRE_TOPLEVEL_V1,
-  ...Array.from(startupRequiredPreToplevelDesignators.values())
-]);
-const startupConstPoolPreloadDesignators = normalizeDesignatorNameSet([
-  ...Array.from(startupRequiredPreToplevelDesignators.values()),
-]);
-const startupConstPoolPreloadNameHints = [
-  "PUMP-ONCE RUNTIME-BRIDGE-PUMP-COMMANDS"
-];
+const startupSymbolToEntryPreToplevelDesignators = normalizeDesignatorNameSet(
+  STARTUP_SYMBOL_TO_ENTRY_FUNCTION_DESIGNATORS_PRE_TOPLEVEL_V1
+);
 const bootstrapFunctionResolver = createBootstrapFunctionResolver({
   phase: BOOTSTRAP_RESOLVER_PHASE_BOOTSTRAP
 });
 registerResolverFunctionsFromBundle(bootstrapFunctionResolver, runtimeModulesBundle, {
   source: "runtime-modules-manifest.functions"
 });
-
-function resolveRequiredDesignatorEntryOrThrow(symbolName, reasonLabel = "required") {
-  const resolution = bootstrapFunctionResolver.resolveFunctionDesignator({ name: symbolName });
-  if (resolution?.ok && Number.isFinite(resolution.entryIndex)) {
-    return resolution.entryIndex >>> 0;
-  }
-  const reason = resolution?.reason ?? "missing";
-  throw new Error(
-    `pre-toplevel ${reasonLabel} designator unresolved: ${symbolName} (${reason})`
-  );
-}
-const startupConstPoolPreloadEntries = new Set(
-  Array.from(startupConstPoolPreloadDesignators.values())
-    .map((symbolName) => resolveRequiredDesignatorEntryOrThrow(symbolName, "const-pool-preload"))
-);
 
 function runPreToplevelFunctionDesignatorGateOrThrow() {
   const requiredNames = Array.from(startupRequiredPreToplevelDesignators.values());
@@ -607,20 +573,6 @@ try {
   });
   runPreToplevelFunctionDesignatorGateOrThrow();
 
-  const preloadConstPoolEntries = new Set(startupConstPoolPreloadEntries);
-  if (Array.isArray(runtimeModulesBundle?.functions)) {
-    for (const item of runtimeModulesBundle.functions) {
-      if (!Number.isFinite(item?.entryIndex) || typeof item?.name !== "string") continue;
-      if (startupConstPoolPreloadNameHints.some((hint) => item.name.includes(hint))) {
-        preloadConstPoolEntries.add(item.entryIndex >>> 0);
-      }
-    }
-  }
-  for (const entryIndex of preloadConstPoolEntries) {
-    if (!constPoolEntries.has(entryIndex)) continue;
-    assert.equal(installConstPoolOnDemand(entryIndex), 1, `preinstall const pool entry ${entryIndex}`);
-  }
-
   if (typeof ex.wasm_set_subprims_ready === "function") {
     ex.wasm_set_subprims_ready(1);
   }
@@ -748,63 +700,53 @@ try {
         : null
     };
     let probe3664 = null;
-    let probe3664Error = null;
     if (
       typeof ex.wasm_const_pool_ref === "function" &&
       typeof ex.wasm_debug_misc_subtag === "function" &&
       typeof ex.wasm_debug_function_entry_index === "function"
     ) {
-      try {
-        const fn = ex.wasm_const_pool_ref(3664, 0) >>> 0;
-        const token = ex.wasm_const_pool_ref(3664, 1) >>> 0;
-        let fnName = null;
-        let tokenName = null;
-        if (typeof ex.wasm_debug_copy_symbol_name === "function") {
-          const ptr = 16384;
-          const cap = 256;
-          if ((ex.wasm_debug_misc_subtag(fn) | 0) === 58) {
-            const n = ex.wasm_debug_copy_symbol_name(fn, ptr, cap) >>> 0;
-            fnName = new TextDecoder().decode(new Uint8Array(runtime.memory.buffer, ptr, Math.min(n, cap)));
-          }
-          if ((ex.wasm_debug_misc_subtag(token) | 0) === 58) {
-            const n = ex.wasm_debug_copy_symbol_name(token, ptr, cap) >>> 0;
-            tokenName = new TextDecoder().decode(new Uint8Array(runtime.memory.buffer, ptr, Math.min(n, cap)));
-          }
+      const fn = ex.wasm_const_pool_ref(3664, 0) >>> 0;
+      const token = ex.wasm_const_pool_ref(3664, 1) >>> 0;
+      let fnName = null;
+      let tokenName = null;
+      if (typeof ex.wasm_debug_copy_symbol_name === "function") {
+        const ptr = 16384;
+        const cap = 256;
+        if ((ex.wasm_debug_misc_subtag(fn) | 0) === 58) {
+          const n = ex.wasm_debug_copy_symbol_name(fn, ptr, cap) >>> 0;
+          fnName = new TextDecoder().decode(new Uint8Array(runtime.memory.buffer, ptr, Math.min(n, cap)));
         }
-        probe3664 = {
-          fn,
-          fnSubtag: ex.wasm_debug_misc_subtag(fn) | 0,
-          fnEntry: ex.wasm_debug_function_entry_index(fn) | 0,
-          fnName,
-          token,
-          tokenSubtag: ex.wasm_debug_misc_subtag(token) | 0,
-          tokenName
-        };
-      } catch (error) {
-        probe3664Error = error?.message ?? String(error);
+        if ((ex.wasm_debug_misc_subtag(token) | 0) === 58) {
+          const n = ex.wasm_debug_copy_symbol_name(token, ptr, cap) >>> 0;
+          tokenName = new TextDecoder().decode(new Uint8Array(runtime.memory.buffer, ptr, Math.min(n, cap)));
+        }
       }
+      probe3664 = {
+        fn,
+        fnSubtag: ex.wasm_debug_misc_subtag(fn) | 0,
+        fnEntry: ex.wasm_debug_function_entry_index(fn) | 0,
+        fnName,
+        token,
+        tokenSubtag: ex.wasm_debug_misc_subtag(token) | 0,
+        tokenName
+      };
     }
     let requireStructureTypeProbe = null;
-    let requireStructureTypeProbeError = null;
     if (
       typeof ex.wasm_debug_find_symbol_require_structure_type_raw === "function" &&
       typeof ex.wasm_debug_symbol_fcell_raw === "function" &&
       typeof ex.wasm_debug_misc_subtag === "function" &&
       typeof ex.wasm_debug_function_entry_index === "function"
     ) {
-      try {
-        const sym = ex.wasm_debug_find_symbol_require_structure_type_raw() >>> 0;
-        const fcell = ex.wasm_debug_symbol_fcell_raw(sym) >>> 0;
-        requireStructureTypeProbe = {
-          sym,
-          symSubtag: ex.wasm_debug_misc_subtag(sym) | 0,
-          fcell,
-          fcellSubtag: ex.wasm_debug_misc_subtag(fcell) | 0,
-          fcellEntry: ex.wasm_debug_function_entry_index(fcell) | 0
-        };
-      } catch (error) {
-        requireStructureTypeProbeError = error?.message ?? String(error);
-      }
+      const sym = ex.wasm_debug_find_symbol_require_structure_type_raw() >>> 0;
+      const fcell = ex.wasm_debug_symbol_fcell_raw(sym) >>> 0;
+      requireStructureTypeProbe = {
+        sym,
+        symSubtag: ex.wasm_debug_misc_subtag(sym) | 0,
+        fcell,
+        fcellSubtag: ex.wasm_debug_misc_subtag(fcell) | 0,
+        fcellEntry: ex.wasm_debug_function_entry_index(fcell) | 0
+      };
     }
     throw new Error(
       [
@@ -819,12 +761,10 @@ try {
         `const_pool_debug entry=${debugConstPool.entry} phase=${debugConstPool.phase} index=${debugConstPool.index} tag=${debugConstPool.tag} offset=${debugConstPool.offset}`,
         probe3664
           ? `probe3664 fn=0x${probe3664.fn.toString(16)} fnSubtag=${probe3664.fnSubtag} fnEntry=${probe3664.fnEntry} fnName=${probe3664.fnName ?? "<none>"} token=0x${probe3664.token.toString(16)} tokenSubtag=${probe3664.tokenSubtag} tokenName=${probe3664.tokenName ?? "<none>"}`
-          : (probe3664Error ? `probe3664 <error: ${probe3664Error}>` : "probe3664 <unavailable>"),
+          : "probe3664 <unavailable>",
         requireStructureTypeProbe
           ? `probeRequireStructureType sym=0x${requireStructureTypeProbe.sym.toString(16)} symSubtag=${requireStructureTypeProbe.symSubtag} fcell=0x${requireStructureTypeProbe.fcell.toString(16)} fcellSubtag=${requireStructureTypeProbe.fcellSubtag} fcellEntry=${requireStructureTypeProbe.fcellEntry}`
-          : (requireStructureTypeProbeError
-            ? `probeRequireStructureType <error: ${requireStructureTypeProbeError}>`
-            : "probeRequireStructureType <unavailable>"),
+          : "probeRequireStructureType <unavailable>",
         trapStack ? `trap_stack: ${trapStack.replace(/\\s+/g, " ").trim()}` : "trap_stack: <none>"
       ].join(" ")
     );
