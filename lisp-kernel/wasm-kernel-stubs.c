@@ -41,7 +41,17 @@ enum wasm_startup_diag_event_v1 {
 
 enum {
   WASM_STARTUP_DIAG_MAGIC_V1 = 0x31534457u, /* "WSD1" */
-  WASM_STARTUP_DIAG_VERSION_V1 = 1u
+  WASM_STARTUP_DIAG_VERSION_V1 = 1u,
+  WASM_STARTUP_DIAG_MAGIC_V2 = 0x32534457u, /* "WSD2" */
+  WASM_STARTUP_DIAG_VERSION_V2 = 2u
+};
+
+enum wasm_startup_diag_abort_reason_v2 {
+  WASM_DIAG_ABORT_NONE = 0,
+  WASM_DIAG_ABORT_INTERN_SYMBOL_UNAVAILABLE = 1,
+  WASM_DIAG_ABORT_INTERN_CALL_THROW = 2,
+  WASM_DIAG_ABORT_INTERN_RESULT_BAD_TAG = 3,
+  WASM_DIAG_ABORT_INVARIANT_FAIL = 4
 };
 
 typedef struct wasm_startup_diag_v1 {
@@ -87,11 +97,83 @@ typedef struct wasm_startup_diag_v1 {
 } wasm_startup_diag_v1;
 
 static void
-wasm_emit_startup_diag(const wasm_startup_diag_v1 *diag)
+wasm_emit_startup_diag_bytes(const void *diag, uint32_t diag_size)
+{
+#if WASM_STARTUP_DIAG_ENABLED
+  if (diag != NULL && diag_size > 0u) {
+    (void)wasm_kernel_runtime_event(diag, diag_size);
+  }
+#else
+  (void)diag;
+  (void)diag_size;
+#endif
+}
+
+typedef struct wasm_startup_diag_v2 {
+  uint32_t magic;
+  uint32_t version;
+  uint32_t event_code;
+  int32_t rc;
+  uint32_t line;
+
+  uint32_t tcr_ptr;
+  uint32_t throw_before;
+  uint32_t throw_after;
+  uint32_t pending_condition_before;
+
+  uint32_t intern_sym_obj;
+  uint32_t intern_sym_tag;
+  uint32_t intern_sym_subtag;
+  uint32_t intern_fcell_obj;
+  uint32_t intern_fcell_tag;
+  uint32_t intern_fcell_subtag;
+
+  uint32_t pkg_obj;
+  uint32_t pkg_tag;
+  uint32_t pkg_subtag;
+  uint32_t pkg_in_scannable_area;
+
+  uint32_t name_obj;
+  uint32_t name_tag;
+  uint32_t name_subtag;
+  uint32_t name_len_input;
+  uint32_t name_len_obj;
+
+  uint32_t result_obj;
+  uint32_t result_tag;
+  uint32_t result_subtag;
+
+  uint32_t csp_before;
+  uint32_t vsp_before;
+  uint32_t tsp_before;
+  uint32_t csp_after;
+  uint32_t vsp_after;
+  uint32_t tsp_after;
+
+  uint32_t callable_obj;
+  uint32_t callable_tag;
+  uint32_t callable_subtag;
+  uint32_t callable_valid;
+  uint32_t intern_fcell_resolved;
+  uint32_t intern_fcell_is_udf;
+  uint32_t pkg_valid;
+  uint32_t name_is_base_string;
+  uint32_t name_len_matches_input;
+  uint32_t name_bytes_match_input;
+  uint32_t pending_condition_snapshot_before_clear;
+  uint32_t abort_reason_code;
+  uint32_t first_fail_name_len;
+  uint32_t first_fail_name_hash;
+  uint32_t first_fail_name_prefix;
+  uint32_t abort_on_first_failure;
+} wasm_startup_diag_v2;
+
+static void
+wasm_emit_startup_diag_v2(const wasm_startup_diag_v2 *diag)
 {
 #if WASM_STARTUP_DIAG_ENABLED
   if (diag != NULL) {
-    (void)wasm_kernel_runtime_event(diag, (uint32_t)sizeof(*diag));
+    wasm_emit_startup_diag_bytes(diag, (uint32_t)sizeof(*diag));
   }
 #else
   (void)diag;
@@ -3486,6 +3568,11 @@ wasm_lispobj_in_scannable_area(LispObj obj)
   return 0;
 }
 
+static int
+wasm_lisp_string_equals_bytes(LispObj str,
+                              const uint8_t *bytes,
+                              uint32_t len);
+
 #if WASM_STARTUP_DIAG_ENABLED
 static uint32_t
 wasm_diag_obj_tag(LispObj obj)
@@ -3538,19 +3625,34 @@ wasm_diag_symbol_fcell(LispObj obj)
   return (sym == NULL) ? (LispObj)0 : sym->fcell;
 }
 
+static uint32_t
+wasm_diag_obj_is_symbol(LispObj obj)
+{
+  if (fulltag_of(obj) != fulltag_misc) {
+    return 0u;
+  }
+  if (!wasm_lispobj_in_scannable_area(obj)) {
+    return 0u;
+  }
+  return (header_subtag(header_of(obj)) == subtag_symbol) ? 1u : 0u;
+}
+
 static void
-wasm_fill_startup_diag_v1(wasm_startup_diag_v1 *diag,
+wasm_fill_startup_diag_v2(wasm_startup_diag_v2 *diag,
                           uint32_t event_code,
                           int32_t rc,
                           uint32_t line,
+                          uint32_t abort_reason_code,
                           TCR *tcr,
                           LispObj intern_sym,
                           LispObj pkg,
                           LispObj name_obj,
+                          const uint8_t *name_bytes,
                           uint32_t name_len_input,
                           LispObj result,
                           uint32_t throw_before,
                           uint32_t throw_after,
+                          uint32_t pending_condition_snapshot_before_clear,
                           uint32_t csp_before,
                           uint32_t vsp_before,
                           uint32_t tsp_before,
@@ -3563,8 +3665,8 @@ wasm_fill_startup_diag_v1(wasm_startup_diag_v1 *diag,
   }
 
   memset(diag, 0, sizeof(*diag));
-  diag->magic = WASM_STARTUP_DIAG_MAGIC_V1;
-  diag->version = WASM_STARTUP_DIAG_VERSION_V1;
+  diag->magic = WASM_STARTUP_DIAG_MAGIC_V2;
+  diag->version = WASM_STARTUP_DIAG_VERSION_V2;
   diag->event_code = event_code;
   diag->rc = rc;
   diag->line = line;
@@ -3581,16 +3683,18 @@ wasm_fill_startup_diag_v1(wasm_startup_diag_v1 *diag,
   diag->intern_fcell_tag = wasm_diag_obj_tag(intern_fcell);
   diag->intern_fcell_subtag = wasm_diag_obj_subtag(intern_fcell);
 
+  uint32_t pkg_in_scannable_area = wasm_lispobj_in_scannable_area(pkg) ? 1u : 0u;
   diag->pkg_obj = (uint32_t)pkg;
   diag->pkg_tag = wasm_diag_obj_tag(pkg);
   diag->pkg_subtag = wasm_diag_obj_subtag(pkg);
-  diag->pkg_in_scannable_area = wasm_lispobj_in_scannable_area(pkg) ? 1u : 0u;
+  diag->pkg_in_scannable_area = pkg_in_scannable_area;
 
+  uint32_t name_len_obj = wasm_diag_string_len(name_obj);
   diag->name_obj = (uint32_t)name_obj;
   diag->name_tag = wasm_diag_obj_tag(name_obj);
   diag->name_subtag = wasm_diag_obj_subtag(name_obj);
   diag->name_len_input = name_len_input;
-  diag->name_len_obj = wasm_diag_string_len(name_obj);
+  diag->name_len_obj = name_len_obj;
 
   diag->result_obj = (uint32_t)result;
   diag->result_tag = wasm_diag_obj_tag(result);
@@ -3602,6 +3706,50 @@ wasm_fill_startup_diag_v1(wasm_startup_diag_v1 *diag,
   diag->csp_after = csp_after;
   diag->vsp_after = vsp_after;
   diag->tsp_after = tsp_after;
+
+  diag->callable_obj = diag->intern_sym_obj;
+  diag->callable_tag = diag->intern_sym_tag;
+  diag->callable_subtag = diag->intern_sym_subtag;
+  diag->callable_valid = wasm_diag_obj_is_symbol(intern_sym);
+  diag->intern_fcell_resolved =
+    (intern_fcell != (LispObj)0 && intern_fcell != nrs_UDF.vcell) ? 1u : 0u;
+  diag->intern_fcell_is_udf = (intern_fcell == nrs_UDF.vcell) ? 1u : 0u;
+  diag->pkg_valid =
+    (pkg_in_scannable_area &&
+     fulltag_of(pkg) == fulltag_misc &&
+     header_subtag(header_of(pkg)) == subtag_package) ? 1u : 0u;
+  diag->name_is_base_string =
+    (name_len_obj != 0xffffffffu) ? 1u : 0u;
+  diag->name_len_matches_input =
+    (name_len_obj != 0xffffffffu && name_len_obj == name_len_input) ? 1u : 0u;
+  diag->name_bytes_match_input =
+    (diag->name_is_base_string && name_bytes != NULL)
+      ? (wasm_lisp_string_equals_bytes(name_obj, name_bytes, name_len_input) ? 1u : 0u)
+      : 0u;
+  diag->pending_condition_snapshot_before_clear = pending_condition_snapshot_before_clear;
+  diag->abort_reason_code = abort_reason_code;
+  diag->first_fail_name_len = name_len_input;
+  diag->abort_on_first_failure = (abort_reason_code == WASM_DIAG_ABORT_NONE) ? 0u : 1u;
+
+  uint32_t hash = 2166136261u; /* FNV-1a */
+  if (name_bytes != NULL) {
+    for (uint32_t i = 0; i < name_len_input; i++) {
+      hash ^= (uint32_t)name_bytes[i];
+      hash *= 16777619u;
+    }
+  } else {
+    hash = 0u;
+  }
+  diag->first_fail_name_hash = hash;
+
+  uint32_t prefix = 0u;
+  if (name_bytes != NULL) {
+    uint32_t prefix_len = (name_len_input < 4u) ? name_len_input : 4u;
+    for (uint32_t i = 0; i < prefix_len; i++) {
+      prefix |= ((uint32_t)name_bytes[i]) << (i * 8u);
+    }
+  }
+  diag->first_fail_name_prefix = prefix;
 }
 #endif
 
@@ -4221,18 +4369,21 @@ wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name
     uint32_t vsp_snapshot = (uint32_t)tcr->wasm_gprs[vsp];
     uint32_t tsp_snapshot = (uint32_t)tcr->wasm_gprs[tsp];
     uint32_t throw_snapshot = (uint32_t)tcr->wasm_pending_throw;
-    wasm_startup_diag_v1 diag;
-    wasm_fill_startup_diag_v1(
+    wasm_startup_diag_v2 diag;
+    wasm_fill_startup_diag_v2(
       &diag,
       WASM_DIAG_INTERN_SYMBOL_UNAVAILABLE,
       -1,
       __LINE__,
+      WASM_DIAG_ABORT_INTERN_SYMBOL_UNAVAILABLE,
       tcr,
       intern_sym,
       pkg,
       (LispObj)0,
+      name_bytes,
       name_len,
       (LispObj)0,
+      throw_snapshot,
       throw_snapshot,
       throw_snapshot,
       csp_snapshot,
@@ -4241,7 +4392,7 @@ wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name
       csp_snapshot,
       vsp_snapshot,
       tsp_snapshot);
-    wasm_emit_startup_diag(&diag);
+    wasm_emit_startup_diag_v2(&diag);
 #endif
     return (LispObj)0;
   }
@@ -4261,18 +4412,21 @@ wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name
   uint32_t vsp_before = (uint32_t)tcr->wasm_gprs[vsp];
   uint32_t tsp_before = (uint32_t)tcr->wasm_gprs[tsp];
   uint32_t throw_before = (uint32_t)tcr->wasm_pending_throw;
-  wasm_startup_diag_v1 call_pre_diag;
-  wasm_fill_startup_diag_v1(
+  wasm_startup_diag_v2 call_pre_diag;
+  wasm_fill_startup_diag_v2(
     &call_pre_diag,
     WASM_DIAG_INTERN_CALL_PRE,
     0,
     __LINE__,
+    WASM_DIAG_ABORT_NONE,
     tcr,
     intern_sym,
     pkg_arg,
     name_str,
+    name_bytes,
     name_len,
     (LispObj)0,
+    throw_before,
     throw_before,
     throw_before,
     csp_before,
@@ -4281,7 +4435,7 @@ wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name
     csp_before,
     vsp_before,
     tsp_before);
-  wasm_emit_startup_diag(&call_pre_diag);
+  wasm_emit_startup_diag_v2(&call_pre_diag);
 #endif
 
   LispObj result = wasm_funcall2(intern_sym, name_str, pkg_arg);
@@ -4295,19 +4449,22 @@ wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name
 
   if (tcr->wasm_pending_throw) {
 #if WASM_STARTUP_DIAG_ENABLED
-    wasm_startup_diag_v1 throw_diag;
-    wasm_fill_startup_diag_v1(
+    wasm_startup_diag_v2 throw_diag;
+    wasm_fill_startup_diag_v2(
       &throw_diag,
       WASM_DIAG_INTERN_CALL_THROW,
       -2,
       __LINE__,
+      WASM_DIAG_ABORT_INTERN_CALL_THROW,
       tcr,
       intern_sym,
       pkg_arg,
       name_str,
+      name_bytes,
       name_len,
       result,
       throw_before,
+      throw_after,
       throw_after,
       csp_before,
       vsp_before,
@@ -4315,7 +4472,7 @@ wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name
       csp_after,
       vsp_after,
       tsp_after);
-    wasm_emit_startup_diag(&throw_diag);
+    wasm_emit_startup_diag_v2(&throw_diag);
 #endif
     return (LispObj)0;
   }
@@ -4324,19 +4481,22 @@ wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name
       !wasm_lispobj_in_scannable_area(result) ||
       header_subtag(header_of(result)) != subtag_symbol) {
 #if WASM_STARTUP_DIAG_ENABLED
-    wasm_startup_diag_v1 bad_tag_diag;
-    wasm_fill_startup_diag_v1(
+    wasm_startup_diag_v2 bad_tag_diag;
+    wasm_fill_startup_diag_v2(
       &bad_tag_diag,
       WASM_DIAG_INTERN_RESULT_BAD_TAG,
       -3,
       __LINE__,
+      WASM_DIAG_ABORT_INTERN_RESULT_BAD_TAG,
       tcr,
       intern_sym,
       pkg_arg,
       name_str,
+      name_bytes,
       name_len,
       result,
       throw_before,
+      throw_after,
       throw_after,
       csp_before,
       vsp_before,
@@ -4344,7 +4504,7 @@ wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name
       csp_after,
       vsp_after,
       tsp_after);
-    wasm_emit_startup_diag(&bad_tag_diag);
+    wasm_emit_startup_diag_v2(&bad_tag_diag);
 #endif
     return (LispObj)0;
   }

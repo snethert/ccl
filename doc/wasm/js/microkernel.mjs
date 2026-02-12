@@ -67,12 +67,22 @@ export const ERRNO = Object.freeze({
 const WASM_STARTUP_DIAG_MAGIC_V1 = 0x31534457;
 const WASM_STARTUP_DIAG_VERSION_V1 = 1;
 const WASM_STARTUP_DIAG_V1_SIZE = 132;
+const WASM_STARTUP_DIAG_MAGIC_V2 = 0x32534457;
+const WASM_STARTUP_DIAG_VERSION_V2 = 2;
+const WASM_STARTUP_DIAG_V2_SIZE = 196;
 const WASM_STARTUP_DIAG_EVENT_NAMES = Object.freeze({
   1: "intern.symbol.unavailable",
   2: "intern.call.pre",
   3: "intern.call.throw",
   4: "intern.result.bad_tag",
   5: "invariant.fail",
+});
+const WASM_STARTUP_DIAG_ABORT_REASON_NAMES = Object.freeze({
+  0: "none",
+  1: "intern.symbol.unavailable",
+  2: "intern.call.throw",
+  3: "intern.result.bad_tag",
+  4: "invariant.fail"
 });
 
 function u32(x) {
@@ -457,10 +467,16 @@ export function createMicrokernel({
 
   function decodeWasmStartupDiag(bytes) {
     if (!(bytes instanceof Uint8Array)) return null;
-    if (bytes.byteLength !== WASM_STARTUP_DIAG_V1_SIZE) return null;
+    if (bytes.byteLength < 8) return null;
     const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-    if (dv.getUint32(0, true) !== WASM_STARTUP_DIAG_MAGIC_V1) return null;
-    if (dv.getUint32(4, true) !== WASM_STARTUP_DIAG_VERSION_V1) return null;
+    const magic = dv.getUint32(0, true);
+    const version = dv.getUint32(4, true);
+
+    const isV1 = magic === WASM_STARTUP_DIAG_MAGIC_V1 && version === WASM_STARTUP_DIAG_VERSION_V1;
+    const isV2 = magic === WASM_STARTUP_DIAG_MAGIC_V2 && version === WASM_STARTUP_DIAG_VERSION_V2;
+    if (!isV1 && !isV2) return null;
+    if (isV1 && bytes.byteLength !== WASM_STARTUP_DIAG_V1_SIZE) return null;
+    if (isV2 && bytes.byteLength !== WASM_STARTUP_DIAG_V2_SIZE) return null;
 
     let off = 0;
     const readU32 = () => {
@@ -474,8 +490,8 @@ export function createMicrokernel({
       return value;
     };
 
-    const magic = readU32();
-    const version = readU32();
+    const messageMagic = readU32();
+    const messageVersion = readU32();
     const eventCode = readU32();
     const rc = readI32();
     const line = readU32();
@@ -511,17 +527,85 @@ export function createMicrokernel({
     const eventName = WASM_STARTUP_DIAG_EVENT_NAMES[eventCode] ?? `event.${eventCode}`;
     const streamId = runtimeStreamIds?.diagnostics ?? "diagnostics";
 
+    if (isV1) {
+      return {
+        version: 1,
+        kind: "wasm.startup.diag.v1",
+        jobId: runtimeJobId,
+        streamId,
+        requestId: null,
+        seq: nextRuntimeSeq(streamId),
+        ts: now(),
+        payload: {
+          magic: messageMagic,
+          version: messageVersion,
+          eventCode,
+          eventName,
+          rc,
+          line,
+          tcrPtr,
+          throwBefore,
+          throwAfter,
+          pendingConditionBefore,
+          internSymObj,
+          internSymTag,
+          internSymSubtag,
+          internFcellObj,
+          internFcellTag,
+          internFcellSubtag,
+          pkgObj,
+          pkgTag,
+          pkgSubtag,
+          pkgInScannableArea,
+          nameObj,
+          nameTag,
+          nameSubtag,
+          nameLenInput,
+          nameLenObj,
+          resultObj,
+          resultTag,
+          resultSubtag,
+          cspBefore,
+          vspBefore,
+          tspBefore,
+          cspAfter,
+          vspAfter,
+          tspAfter
+        },
+        error: null
+      };
+    }
+
+    const callableObj = readU32();
+    const callableTag = readU32();
+    const callableSubtag = readU32();
+    const callableValid = readU32();
+    const internFcellResolved = readU32();
+    const internFcellIsUdf = readU32();
+    const pkgValid = readU32();
+    const nameIsBaseString = readU32();
+    const nameLenMatchesInput = readU32();
+    const nameBytesMatchInput = readU32();
+    const pendingConditionSnapshotBeforeClear = readU32();
+    const abortReasonCode = readU32();
+    const firstFailNameLen = readU32();
+    const firstFailNameHash = readU32();
+    const firstFailNamePrefix = readU32();
+    const abortOnFirstFailure = readU32();
+    const abortReasonName =
+      WASM_STARTUP_DIAG_ABORT_REASON_NAMES[abortReasonCode] ?? `abort.${abortReasonCode}`;
+
     return {
       version: 1,
-      kind: "wasm.startup.diag.v1",
+      kind: "wasm.startup.diag.v2",
       jobId: runtimeJobId,
       streamId,
       requestId: null,
       seq: nextRuntimeSeq(streamId),
       ts: now(),
       payload: {
-        magic,
-        version,
+        magic: messageMagic,
+        version: messageVersion,
         eventCode,
         eventName,
         rc,
@@ -553,7 +637,24 @@ export function createMicrokernel({
         tspBefore,
         cspAfter,
         vspAfter,
-        tspAfter
+        tspAfter,
+        callableObj,
+        callableTag,
+        callableSubtag,
+        callableValid,
+        internFcellResolved,
+        internFcellIsUdf,
+        pkgValid,
+        nameIsBaseString,
+        nameLenMatchesInput,
+        nameBytesMatchInput,
+        pendingConditionSnapshotBeforeClear,
+        abortReasonCode,
+        abortReasonName,
+        firstFailNameLen,
+        firstFailNameHash,
+        firstFailNamePrefix,
+        abortOnFirstFailure
       },
       error: null
     };
