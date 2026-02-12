@@ -64,6 +64,17 @@ export const ERRNO = Object.freeze({
   EXDEV: 75,
 });
 
+const WASM_STARTUP_DIAG_MAGIC_V1 = 0x31534457;
+const WASM_STARTUP_DIAG_VERSION_V1 = 1;
+const WASM_STARTUP_DIAG_V1_SIZE = 132;
+const WASM_STARTUP_DIAG_EVENT_NAMES = Object.freeze({
+  1: "intern.symbol.unavailable",
+  2: "intern.call.pre",
+  3: "intern.call.throw",
+  4: "intern.result.bad_tag",
+  5: "invariant.fail",
+});
+
 function u32(x) {
   return x >>> 0;
 }
@@ -442,6 +453,117 @@ export function createMicrokernel({
       out += String.fromCharCode(bytes[i]);
     }
     return out;
+  }
+
+  function decodeWasmStartupDiag(bytes) {
+    if (!(bytes instanceof Uint8Array)) return null;
+    if (bytes.byteLength !== WASM_STARTUP_DIAG_V1_SIZE) return null;
+    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    if (dv.getUint32(0, true) !== WASM_STARTUP_DIAG_MAGIC_V1) return null;
+    if (dv.getUint32(4, true) !== WASM_STARTUP_DIAG_VERSION_V1) return null;
+
+    let off = 0;
+    const readU32 = () => {
+      const value = dv.getUint32(off, true);
+      off += 4;
+      return value;
+    };
+    const readI32 = () => {
+      const value = dv.getInt32(off, true);
+      off += 4;
+      return value;
+    };
+
+    const magic = readU32();
+    const version = readU32();
+    const eventCode = readU32();
+    const rc = readI32();
+    const line = readU32();
+    const tcrPtr = readU32();
+    const throwBefore = readU32();
+    const throwAfter = readU32();
+    const pendingConditionBefore = readU32();
+    const internSymObj = readU32();
+    const internSymTag = readU32();
+    const internSymSubtag = readU32();
+    const internFcellObj = readU32();
+    const internFcellTag = readU32();
+    const internFcellSubtag = readU32();
+    const pkgObj = readU32();
+    const pkgTag = readU32();
+    const pkgSubtag = readU32();
+    const pkgInScannableArea = readU32();
+    const nameObj = readU32();
+    const nameTag = readU32();
+    const nameSubtag = readU32();
+    const nameLenInput = readU32();
+    const nameLenObj = readU32();
+    const resultObj = readU32();
+    const resultTag = readU32();
+    const resultSubtag = readU32();
+    const cspBefore = readU32();
+    const vspBefore = readU32();
+    const tspBefore = readU32();
+    const cspAfter = readU32();
+    const vspAfter = readU32();
+    const tspAfter = readU32();
+
+    const eventName = WASM_STARTUP_DIAG_EVENT_NAMES[eventCode] ?? `event.${eventCode}`;
+    const streamId = runtimeStreamIds?.diagnostics ?? "diagnostics";
+
+    return {
+      version: 1,
+      kind: "wasm.startup.diag.v1",
+      jobId: runtimeJobId,
+      streamId,
+      requestId: null,
+      seq: nextRuntimeSeq(streamId),
+      ts: now(),
+      payload: {
+        magic,
+        version,
+        eventCode,
+        eventName,
+        rc,
+        line,
+        tcrPtr,
+        throwBefore,
+        throwAfter,
+        pendingConditionBefore,
+        internSymObj,
+        internSymTag,
+        internSymSubtag,
+        internFcellObj,
+        internFcellTag,
+        internFcellSubtag,
+        pkgObj,
+        pkgTag,
+        pkgSubtag,
+        pkgInScannableArea,
+        nameObj,
+        nameTag,
+        nameSubtag,
+        nameLenInput,
+        nameLenObj,
+        resultObj,
+        resultTag,
+        resultSubtag,
+        cspBefore,
+        vspBefore,
+        tspBefore,
+        cspAfter,
+        vspAfter,
+        tspAfter
+      },
+      error: null
+    };
+  }
+
+  function decodeRuntimeEventPayload(bytes) {
+    const startupDiag = decodeWasmStartupDiag(bytes);
+    if (startupDiag) return startupDiag;
+    const text = decodeUtf8(bytes);
+    return JSON.parse(text);
   }
 
   function nextRuntimeSeq(streamId) {
@@ -927,11 +1049,14 @@ export function createMicrokernel({
           break;
         }
         const bytes = sliceBytes(memory, u32(payloadPtr), u32(payloadLen));
-        const text = decodeUtf8(bytes);
         let message = null;
         try {
-          message = JSON.parse(text);
+          message = decodeRuntimeEventPayload(bytes);
         } catch (_err) {
+          recordRequestDone(id, -ERRNO.EINVAL);
+          break;
+        }
+        if (!message || typeof message !== "object") {
           recordRequestDone(id, -ERRNO.EINVAL);
           break;
         }

@@ -22,6 +22,92 @@ function writeBytes(mem, ptr, bytes) {
   new Uint8Array(mem.buffer, ptr, bytes.length).set(bytes);
 }
 
+const WASM_STARTUP_DIAG_MAGIC_V1 = 0x31534457;
+const WASM_STARTUP_DIAG_V1_SIZE = 132;
+
+function encodeStartupDiagV1(overrides = {}) {
+  const defaults = {
+    eventCode: 3,
+    rc: -2,
+    line: 4301,
+    tcrPtr: 0x1000,
+    throwBefore: 0,
+    throwAfter: 0x2000,
+    pendingConditionBefore: 0,
+    internSymObj: 0x3000,
+    internSymTag: 5,
+    internSymSubtag: 1,
+    internFcellObj: 0x4000,
+    internFcellTag: 5,
+    internFcellSubtag: 9,
+    pkgObj: 0x5000,
+    pkgTag: 5,
+    pkgSubtag: 6,
+    pkgInScannableArea: 1,
+    nameObj: 0x6000,
+    nameTag: 5,
+    nameSubtag: 31,
+    nameLenInput: 6,
+    nameLenObj: 6,
+    resultObj: 0,
+    resultTag: 0,
+    resultSubtag: 0xffffffff,
+    cspBefore: 0x7000,
+    vspBefore: 0x7100,
+    tspBefore: 0x7200,
+    cspAfter: 0x7000,
+    vspAfter: 0x70f0,
+    tspAfter: 0x7200,
+    ...overrides
+  };
+  const buf = new ArrayBuffer(WASM_STARTUP_DIAG_V1_SIZE);
+  const dv = new DataView(buf);
+  let off = 0;
+  const setU32 = (value) => {
+    dv.setUint32(off, Number(value) >>> 0, true);
+    off += 4;
+  };
+  const setI32 = (value) => {
+    dv.setInt32(off, Number(value) | 0, true);
+    off += 4;
+  };
+
+  setU32(WASM_STARTUP_DIAG_MAGIC_V1);
+  setU32(1);
+  setU32(defaults.eventCode);
+  setI32(defaults.rc);
+  setU32(defaults.line);
+  setU32(defaults.tcrPtr);
+  setU32(defaults.throwBefore);
+  setU32(defaults.throwAfter);
+  setU32(defaults.pendingConditionBefore);
+  setU32(defaults.internSymObj);
+  setU32(defaults.internSymTag);
+  setU32(defaults.internSymSubtag);
+  setU32(defaults.internFcellObj);
+  setU32(defaults.internFcellTag);
+  setU32(defaults.internFcellSubtag);
+  setU32(defaults.pkgObj);
+  setU32(defaults.pkgTag);
+  setU32(defaults.pkgSubtag);
+  setU32(defaults.pkgInScannableArea);
+  setU32(defaults.nameObj);
+  setU32(defaults.nameTag);
+  setU32(defaults.nameSubtag);
+  setU32(defaults.nameLenInput);
+  setU32(defaults.nameLenObj);
+  setU32(defaults.resultObj);
+  setU32(defaults.resultTag);
+  setU32(defaults.resultSubtag);
+  setU32(defaults.cspBefore);
+  setU32(defaults.vspBefore);
+  setU32(defaults.tspBefore);
+  setU32(defaults.cspAfter);
+  setU32(defaults.vspAfter);
+  setU32(defaults.tspAfter);
+  return new Uint8Array(buf);
+}
+
 test("applyRuntimeOutput ingests recording payloads", () => {
   const state = createState();
   const payload = {
@@ -111,6 +197,43 @@ test("microkernel accepts KERNEL_OP_RUNTIME_EVENT payloads", () => {
   assert.equal(result, 0);
   assert.equal(messages.length, 1);
   assert.deepEqual(messages[0], payload);
+});
+
+test("microkernel decodes binary startup diagnostics runtime events", () => {
+  const memory = new WebAssembly.Memory({ initial: 1 });
+  const messages = [];
+  const microkernel = createMicrokernel({
+    memory,
+    now: () => 456,
+    runtimeBridge: {
+      jobId: "job-3",
+      emit: (msg) => messages.push(msg)
+    }
+  });
+
+  const payloadPtr = 256;
+  const bytes = encodeStartupDiagV1({
+    eventCode: 3,
+    throwAfter: 0xdeadbeef,
+    nameLenInput: 7
+  });
+  writeBytes(memory, payloadPtr, bytes);
+
+  const id = microkernel.imports.kernel_request(KERNEL_OP_RUNTIME_EVENT, payloadPtr, bytes.length);
+  microkernel.imports.kernel_poll(id);
+  const result = microkernel.imports.kernel_result(id);
+  microkernel.imports.kernel_drop_request(id);
+
+  assert.equal(result, 0);
+  assert.equal(messages.length, 1);
+  assert.equal(messages[0].kind, "wasm.startup.diag.v1");
+  assert.equal(messages[0].jobId, "job-3");
+  assert.equal(messages[0].ts, 456);
+  assert.equal(messages[0].payload.magic, WASM_STARTUP_DIAG_MAGIC_V1);
+  assert.equal(messages[0].payload.eventCode, 3);
+  assert.equal(messages[0].payload.eventName, "intern.call.throw");
+  assert.equal(messages[0].payload.throwAfter, 0xdeadbeef >>> 0);
+  assert.equal(messages[0].payload.nameLenInput, 7);
 });
 
 test("microkernel emits runtime.output over sab_ring_v1 event transport", () => {
