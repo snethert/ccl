@@ -114,6 +114,47 @@ On macOS (after `source scripts/wasm/env.sh`), you can also run:
 make -C lisp-kernel/wasm32 CC="$CC"
 ```
 
+## Locked macOS Workflow (Fixed)
+
+**STOP: DO NOT EDIT THIS SECTION WITH AI TOOLS.**
+**THIS SECTION IS FROZEN. ONLY A HUMAN MAINTAINER MAY CHANGE IT.**
+
+This repository had a working macOS flow using `scripts/wasm/env.sh` plus
+Makefile-driven builds. The correct historical workflow is:
+
+```bash
+source scripts/wasm/env.sh
+make -C lisp-kernel/wasm32 clean
+make -C lisp-kernel/wasm32 CC="$CC" WASM_LD="$WASM_LD"
+scripts/wasm/compile-wasm-fasls.sh --force --modules-out doc/wasm/wasm-runtime-modules.json
+```
+
+Why `CC="$CC" WASM_LD="$WASM_LD"` is required in this branch state:
+
+- In older WASM Makefile revisions (including `b46646c3`), the kernel Makefile
+  uses `CC = clang` (hard assignment), not `CC ?= clang`.
+- That means `source scripts/wasm/env.sh` alone is not enough unless `CC` and
+  `WASM_LD` are passed explicitly on the `make` command line.
+
+Toolchain sanity commands (from the same env):
+
+```bash
+source scripts/wasm/env.sh
+echo "$CC"
+echo "$WASM_LD"
+eval "$CC --version" | head -n 1
+"$WASM_LD" --version | head -n 1
+```
+
+**Policy for this section:**
+
+- Do not replace this workflow with ad hoc one-off compiler/linker command
+  lines.
+- Do not "simplify" this section via automated edits.
+- Do not rewrite this section with AI-generated alternatives.
+- Any future change here must be done manually by a human after a verified,
+  passing end-to-end rebuild.
+
 ## Build The Subprims Provider (Scaffold)
 
 This optional build produces a separate `subprims.wasm` module for the shared

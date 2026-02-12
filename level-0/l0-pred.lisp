@@ -1011,10 +1011,7 @@
            (dolist (x (%svref arg 0))
              (declare (optimize (speed 3) (safety 0)))
              (when (eq x token) (return arg))))
-    (%kernel-restart $xwrongtype arg
-                     ;; Keep this check low-level to avoid optimizer rewrites
-                     ;; that can recurse through REQUIRE-STRUCTURE-TYPE itself.
-                     (if (istruct-typep token 'class-cell) (class-cell-name token) token))))
+    (%kernel-restart $xwrongtype arg (if (typep token 'class-cell) (class-cell-name token) token))))
 
 (defun istruct-typep (thing type)
   (if (= (the fixnum (typecode thing)) target::subtag-istruct)
