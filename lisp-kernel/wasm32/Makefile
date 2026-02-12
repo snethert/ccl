@@ -112,6 +112,7 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_funcall7_mv --export=wasm_funcall8_mv --export=wasm_funcall9_mv --export=wasm_funcall10_mv \
 	  --export=wasm_get_lisp_nil \
 	  --export=wasm_pending_throw_p \
+	  --export=wasm_pending_throw_raw \
 	  --export=wasm_return_fixnum_add --export=wasm_return_fixnum_sub \
 	  --export=wasm_return_fixnum_mul --export=wasm_return_fixnum_ash \
 	  --export=wasm_return_fixnum_logand --export=wasm_return_fixnum_logior \

@@ -1446,6 +1446,20 @@ export function createMicrokernel({
           const nameBytes = sliceBytes(memory, argPtr, argLen);
           const name = decodeUtf8(nameBytes);
           const blob = namedBlobs.get(name);
+          if (requestTracer) {
+            try {
+              requestTracer({
+                phase: "stream_open_named",
+                id: u32(id),
+                op: requestOps.get(u32(id)) ?? null,
+                name,
+                found: Boolean(blob),
+                size: blob ? u32(blob.length) : 0,
+              });
+            } catch (_err) {
+              // best effort
+            }
+          }
           if (!blob) {
             recordRequestDone(id, -ERRNO.ENOENT);
             break;
@@ -1477,7 +1491,22 @@ export function createMicrokernel({
             recordRequestError(id, ERRNO.EINVAL);
             break;
           }
-          const res = persistenceService.openFile(sliceBytes(memory, pathPtr, pathLen), u32(modeFlags));
+          const pathBytes = sliceBytes(memory, pathPtr, pathLen);
+          const pathName = decodeUtf8(pathBytes);
+          if (requestTracer) {
+            try {
+              requestTracer({
+                phase: "stream_open_file",
+                id: u32(id),
+                op: requestOps.get(u32(id)) ?? null,
+                path: pathName,
+                modeFlags: u32(modeFlags),
+              });
+            } catch (_err) {
+              // best effort
+            }
+          }
+          const res = persistenceService.openFile(pathBytes, u32(modeFlags));
           if (!res.ok) {
             recordRequestDone(id, -res.errno);
             break;

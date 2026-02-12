@@ -196,6 +196,7 @@ extern int lisp_open(char *path, int flags, mode_t mode);
 extern int lisp_close(int fd);
 extern OSErr save_application(int fd, Boolean egc_was_enabled);
 LispObj wasm_misc_alloc(TCR *tcr, unsigned subtag, signed_natural count);
+static LispObj wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg);
 
 static const uint8_t wasm_ui_payload_Ready[] = {
   49, 66, 73, 85, 1, 0, 0, 0, 14, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1898,6 +1899,17 @@ wasm_pending_throw_p(void)
     return 0;
   }
   return tcr->wasm_pending_throw ? 1 : 0;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_pending_throw_raw")))
+LispObj
+wasm_pending_throw_raw(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return lisp_nil;
+  }
+  return tcr->wasm_pending_throw;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_clear_pending_throw")))
@@ -4323,6 +4335,10 @@ wasm_fasload_path(uint32_t path_ptr, uint32_t path_len)
   if (fasload_fn == nrs_UDF.vcell) {
     return -5;
   }
+  if (fulltag_of(fasload_fn) != fulltag_misc ||
+      header_subtag(header_of(fasload_fn)) != subtag_function) {
+    return -8;
+  }
 
   LispObj path = wasm_const_pool_make_base_string(
     tcr,
@@ -4332,7 +4348,7 @@ wasm_fasload_path(uint32_t path_ptr, uint32_t path_len)
     return -6;
   }
 
-  (void)wasm_foreign_funcall1(tcr, fasload_sym, path);
+  (void)wasm_foreign_funcall1(tcr, fasload_fn, path);
   if (tcr->wasm_pending_throw) {
     return -7;
   }

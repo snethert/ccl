@@ -20,7 +20,7 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import * as zlib from "node:zlib";
 
-import { createMicrokernel } from "./microkernel.mjs";
+import { KERNEL_OP_STREAM_OPEN, createMicrokernel } from "./microkernel.mjs";
 import {
   createCclImports,
   createSharedCclRuntime,
@@ -486,6 +486,27 @@ await addFile(namedBytes, level1Path, "level-1.lafsl");
 await collectFasls(namedBytes, l1Dir, "l1-fasls");
 await collectFasls(namedBytes, binDir, "bin");
 await addFile(namedBytes, path.join(root, "scripts/wasm/make-real-image.lisp"), "scripts/wasm/make-real-image.lisp");
+if (traceEnabled) {
+  const fasloadDiagSource = [
+    '(in-package "CCL")',
+    '(format t "~&FASLOAD-DIAG begin~%")',
+    '(multiple-value-bind (value condition)',
+    '    (ignore-errors (%fasload "level-1.lafsl"))',
+    '  (format t "~&FASLOAD-DIAG value=~S~%" value)',
+    '  (if condition',
+    '      (progn',
+    '        (format t "~&FASLOAD-DIAG condition-type=~S~%" (type-of condition))',
+    '        (format t "~&FASLOAD-DIAG condition=~A~%" condition))',
+    '      (format t "~&FASLOAD-DIAG condition=nil~%")))',
+    '(format t "~&FASLOAD-DIAG end~%")',
+    "",
+  ].join("\n");
+  addNamedBytes(
+    namedBytes,
+    "scripts/wasm/fasload-diag.lisp",
+    new TextEncoder().encode(fasloadDiagSource),
+  );
+}
 trace("loaded named bytes");
 
 const requiredBin = ["lists.lafsl", "sequences.lafsl", "hash.lafsl", "defstruct.lafsl", "dll-node.lafsl", "chars.lafsl", "dumplisp.lafsl"];
@@ -670,6 +691,34 @@ const microkernel = createMicrokernel({
   asyncStdin: true,
   persistence: true,
   namedBytes,
+  runtimeBridge: traceEnabled ? {
+    emit: (message) => {
+      try {
+        trace(`runtime-event ${JSON.stringify(message)}`);
+      } catch {
+        trace("runtime-event [unserializable]");
+      }
+      return true;
+    },
+  } : null,
+  traceRequests: traceEnabled ? (event) => {
+    if (!event || typeof event !== "object") return;
+    if (event.phase === "stream_open_named") {
+      trace(`stream-open named name=${JSON.stringify(event.name)} found=${event.found ? "yes" : "no"}`);
+      return;
+    }
+    if (event.phase === "stream_open_file") {
+      trace(`stream-open file path=${JSON.stringify(event.path)} mode=${event.modeFlags >>> 0}`);
+      return;
+    }
+    if (event.phase === "done" && event.op === KERNEL_OP_STREAM_OPEN && (event.result | 0) < 0) {
+      trace(`stream-open result=${event.result | 0}`);
+      return;
+    }
+    if (event.phase === "done" && (event.result | 0) < 0) {
+      trace(`kernel-request op=${event.op ?? "?"} result=${event.result | 0}`);
+    }
+  } : null,
   writeStdout: (bytes) => process.stdout.write(decoder.decode(bytes)),
   writeStderr: (bytes) => process.stderr.write(decoder.decode(bytes)),
 });
@@ -993,23 +1042,144 @@ if (typeof kernel.instance.exports.wasm_set_subprims_ready === "function") {
 }
 const encoder = new TextEncoder();
 const requiredFasls = [
-  "level-1.lafsl",
+  "l1-fasls/l1-cl-package.lafsl",
+  "l1-fasls/l1-utils.lafsl",
+  "l1-fasls/l1-init.lafsl",
+  "l1-fasls/l1-symhash.lafsl",
+  "l1-fasls/l1-numbers.lafsl",
+  "l1-fasls/l1-aprims.lafsl",
+  "l1-fasls/l1-callbacks.lafsl",
+  "l1-fasls/l1-sort.lafsl",
   "bin/lists.lafsl",
   "bin/sequences.lafsl",
+  "l1-fasls/l1-dcode.lafsl",
+  "l1-fasls/l1-clos-boot.lafsl",
   "bin/hash.lafsl",
+  "l1-fasls/l1-clos.lafsl",
   "bin/defstruct.lafsl",
   "bin/dll-node.lafsl",
+  "l1-fasls/l1-unicode.lafsl",
+  "l1-fasls/l1-streams.lafsl",
+  "l1-fasls/linux-files.lafsl",
   "bin/chars.lafsl",
+  "l1-fasls/l1-files.lafsl",
+  "l1-fasls/l1-typesys.lafsl",
+  "l1-fasls/sysutils.lafsl",
+  "l1-fasls/l1-lisp-threads.lafsl",
+  "l1-fasls/l1-application.lafsl",
+  "l1-fasls/l1-processes.lafsl",
+  "l1-fasls/l1-io.lafsl",
+  "l1-fasls/l1-reader.lafsl",
+  "l1-fasls/l1-readloop.lafsl",
+  "l1-fasls/l1-readloop-lds.lafsl",
+  "l1-fasls/l1-error-system.lafsl",
+  "l1-fasls/l1-events.lafsl",
+  "l1-fasls/l1-format.lafsl",
+  "l1-fasls/l1-sysio.lafsl",
+  "l1-fasls/l1-pathnames.lafsl",
+  "l1-fasls/l1-boot-lds.lafsl",
+  "l1-fasls/l1-boot-1.lafsl",
+  "l1-fasls/l1-boot-2.lafsl",
+  "l1-fasls/l1-boot-3.lafsl",
   "bin/dumplisp.lafsl",
 ];
 if (typeof ex.wasm_fasload_path !== "function") {
   fail("kernel missing wasm_fasload_path");
 }
-for (const faslPath of requiredFasls) {
+const pendingThrowProbe = typeof ex.wasm_pending_throw_p === "function"
+  ? () => (ex.wasm_pending_throw_p() >>> 0)
+  : null;
+const pendingThrowRawProbe = typeof ex.wasm_pending_throw_raw === "function"
+  ? () => (ex.wasm_pending_throw_raw() >>> 0)
+  : null;
+const kernelDebugSymbolName = typeof ex.wasm_debug_copy_symbol_name === "function"
+  ? (obj) => {
+    const len = ex.wasm_debug_copy_symbol_name(obj >>> 0, 0, 0) >>> 0;
+    if (len === 0) return null;
+    const ptr = allocScratch(runtime.memory, len);
+    const copied = ex.wasm_debug_copy_symbol_name(obj >>> 0, ptr >>> 0, len) >>> 0;
+    if (copied === 0) return null;
+    try {
+      return decoder.decode(new Uint8Array(runtime.memory.buffer, ptr >>> 0, Math.min(len, copied)));
+    } catch {
+      return null;
+    }
+  }
+  : null;
+const skipRequiredFasloads = process.env.CCL_WASM_SKIP_REQUIRED_FASLOADS === "1";
+if (skipRequiredFasloads && traceEnabled) {
+  trace("skipping required fasload sequence (CCL_WASM_SKIP_REQUIRED_FASLOADS=1)");
+}
+for (const faslPath of skipRequiredFasloads ? [] : requiredFasls) {
+  if (traceEnabled && pendingThrowProbe) {
+    trace(`fasload pre path=${faslPath} pending=${pendingThrowProbe()}`);
+  }
   const faslBytes = encoder.encode(faslPath);
   const faslPtr = copyBytesToScratch(runtime.memory, faslBytes);
   const faslRc = ex.wasm_fasload_path(faslPtr, faslBytes.length >>> 0) | 0;
+  if (traceEnabled && pendingThrowProbe) {
+    const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
+    const pendingName = pendingRaw != null && kernelDebugSymbolName ? kernelDebugSymbolName(pendingRaw) : null;
+    trace(
+      `fasload post path=${faslPath} rc=${faslRc} pending=${pendingThrowProbe()}` +
+      (pendingRaw == null ? "" : ` pending_raw=0x${pendingRaw.toString(16)}`) +
+      (pendingName ? ` pending_symbol=${JSON.stringify(pendingName)}` : ""),
+    );
+  }
   if (faslRc !== 0) {
+    if (traceEnabled) {
+      const nargsRaw = typeof ex.wasm_get_nargs === "function" ? (ex.wasm_get_nargs() >>> 0) : null;
+      const nargsCount = (nargsRaw != null && (nargsRaw & 0x7) === 0)
+        ? (nargsRaw >> 3)
+        : null;
+      trace(`fasload failure nargs_raw=${nargsRaw == null ? "n/a" : `0x${nargsRaw.toString(16)}`} count=${nargsCount == null ? "n/a" : nargsCount}`);
+      if (typeof ex.wasm_vsp_ref === "function" && Number.isFinite(nargsCount) && nargsCount > 0) {
+        const dumpCount = Math.min(nargsCount, 8);
+        for (let i = 0; i < dumpCount; i++) {
+          const value = ex.wasm_vsp_ref(i >>> 0) >>> 0;
+          const subtag = typeof ex.wasm_debug_misc_subtag === "function"
+            ? (ex.wasm_debug_misc_subtag(value >>> 0) | 0)
+            : null;
+          const symbolName = kernelDebugSymbolName ? kernelDebugSymbolName(value >>> 0) : null;
+          trace(
+            `fasload failure vsp[${i}]=0x${value.toString(16)} subtag=${subtag == null ? "n/a" : subtag}` +
+            (symbolName ? ` symbol=${JSON.stringify(symbolName)}` : ""),
+          );
+        }
+      }
+      const registerReaders = [
+        ["arg_z", ex.wasm_get_arg_z],
+        ["arg_y", ex.wasm_get_arg_y],
+        ["nfn", ex.wasm_get_nfn],
+        ["nargs", ex.wasm_get_nargs],
+      ];
+      for (const [name, reader] of registerReaders) {
+        if (typeof reader !== "function") continue;
+        const value = reader() >>> 0;
+        const subtag = typeof ex.wasm_debug_misc_subtag === "function"
+          ? (ex.wasm_debug_misc_subtag(value >>> 0) | 0)
+          : null;
+        const symbolName = kernelDebugSymbolName ? kernelDebugSymbolName(value >>> 0) : null;
+        trace(
+          `fasload failure reg ${name}=0x${value.toString(16)} subtag=${subtag == null ? "n/a" : subtag}` +
+          (symbolName ? ` symbol=${JSON.stringify(symbolName)}` : ""),
+        );
+      }
+      if (typeof ex.wasm_get_lisp_nil === "function") {
+        const nilValue = ex.wasm_get_lisp_nil() >>> 0;
+        trace(`fasload failure lisp_nil=0x${nilValue.toString(16)}`);
+      }
+      if (typeof ex.wasm_run_script_with_output === "function") {
+        if (typeof ex.wasm_clear_pending_throw === "function") {
+          ex.wasm_clear_pending_throw();
+        }
+        const diagPath = "scripts/wasm/fasload-diag.lisp";
+        const diagPathBytes = encoder.encode(diagPath);
+        const diagPathPtr = copyBytesToScratch(runtime.memory, diagPathBytes);
+        const diagRc = ex.wasm_run_script_with_output(diagPathPtr, diagPathBytes.length >>> 0, 0, 0) | 0;
+        trace(`fasload diag script rc=${diagRc}`);
+      }
+    }
     fail(`wasm_fasload_path(${faslPath}) returned ${faslRc}`);
   }
 }
