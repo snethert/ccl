@@ -81,25 +81,18 @@ On macOS/Homebrew, headers live under:
 
 ## Build The Kernel
 
-**IMPORTANT (macOS/Homebrew):** source the toolchain env first.
+**IMPORTANT (macOS/Homebrew):** You MUST run the toolchain setup script **before**
+invoking `make`, otherwise the build will fail (commonly with
+`fatal error: 'errno.h' file not found`).
 
 ```bash
 source scripts/wasm/env.sh
-make -C lisp-kernel/wasm32 clean
-make -C lisp-kernel/wasm32
+make -C lisp-kernel/wasm32 CC="$CC"
 ```
 
 Build output is currently produced by `lisp-kernel/wasm32/Makefile` into:
 
 - `doc/wasm/js/wasmcl.wasm`
-
-Explicit override form (works on old/new makefiles):
-
-```bash
-source scripts/wasm/env.sh
-make -C lisp-kernel/wasm32 clean
-make -C lisp-kernel/wasm32 CC="$CC" WASM_LD="$WASM_LD"
-```
 
 Build command (Linux / `--target=wasm32-wasi` toolchains):
 
@@ -107,6 +100,60 @@ Build command (Linux / `--target=wasm32-wasi` toolchains):
 make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi clean
 make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi
 ```
+
+On macOS, if `scripts/wasm/env.sh` is not used, this explicit command works:
+
+```bash
+make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi \
+  CC='/usr/local/opt/llvm@18/bin/clang-18 --sysroot=/usr/local/opt/wasi-libc/share/wasi-sysroot'
+```
+
+On macOS (after `source scripts/wasm/env.sh`), you can also run:
+
+```bash
+make -C lisp-kernel/wasm32 CC="$CC"
+```
+
+## Locked macOS Workflow (Fixed)
+
+**STOP: DO NOT EDIT THIS SECTION WITH AI TOOLS.**
+**THIS SECTION IS FROZEN. ONLY A HUMAN MAINTAINER MAY CHANGE IT.**
+
+This repository had a working macOS flow using `scripts/wasm/env.sh` plus
+Makefile-driven builds. The correct historical workflow is:
+
+```bash
+source scripts/wasm/env.sh
+make -C lisp-kernel/wasm32 clean
+make -C lisp-kernel/wasm32 CC="$CC" WASM_LD="$WASM_LD"
+scripts/wasm/compile-wasm-fasls.sh --force --modules-out doc/wasm/wasm-runtime-modules.json
+```
+
+Why `CC="$CC" WASM_LD="$WASM_LD"` is required in this branch state:
+
+- In older WASM Makefile revisions (including `b46646c3`), the kernel Makefile
+  uses `CC = clang` (hard assignment), not `CC ?= clang`.
+- That means `source scripts/wasm/env.sh` alone is not enough unless `CC` and
+  `WASM_LD` are passed explicitly on the `make` command line.
+
+Toolchain sanity commands (from the same env):
+
+```bash
+source scripts/wasm/env.sh
+echo "$CC"
+echo "$WASM_LD"
+eval "$CC --version" | head -n 1
+"$WASM_LD" --version | head -n 1
+```
+
+**Policy for this section:**
+
+- Do not replace this workflow with ad hoc one-off compiler/linker command
+  lines.
+- Do not "simplify" this section via automated edits.
+- Do not rewrite this section with AI-generated alternatives.
+- Any future change here must be done manually by a human after a verified,
+  passing end-to-end rebuild.
 
 ## Build The Subprims Provider (Scaffold)
 
@@ -118,20 +165,9 @@ make -C lisp-kernel/wasm32/subprims WASM_TARGET=wasm32-wasi clean
 make -C lisp-kernel/wasm32/subprims WASM_TARGET=wasm32-wasi
 ```
 
-`WASM_TARGET=wasm32-wasi` assumes a toolchain/sysroot setup that provides WASI
-headers. Without that setup, it can fail with missing libc headers.
-
-On macOS (after `source scripts/wasm/env.sh`):
+On macOS (after `source scripts/wasm/env.sh`), just run:
 
 ```bash
-make -C lisp-kernel/wasm32/subprims clean
-make -C lisp-kernel/wasm32/subprims
-```
-
-Explicit override form:
-
-```bash
-make -C lisp-kernel/wasm32/subprims clean
 make -C lisp-kernel/wasm32/subprims CC="$CC"
 ```
 
@@ -139,18 +175,12 @@ The JS host should only call `wasm_set_subprims_ready(1)` when the provider
 exports the required Tier 0 subprims (`_SPmkcatch1v`, `_SPfuncall`,
 `_SPnthrow1value`).
 
-## Verify No WASI Runtime Imports
+## Verify “No WASI Runtime”
 
 Confirm there are **no** `wasi_snapshot_preview1` imports:
 
 ```bash
 wasm-objdump -x doc/wasm/js/wasmcl.wasm | rg 'wasi_snapshot_preview1' || true
-```
-
-Optional check for the subprims provider:
-
-```bash
-wasm-objdump -x doc/wasm/js/subprims.wasm | rg 'wasi_snapshot_preview1' || true
 ```
 
 Expected imports (current model):

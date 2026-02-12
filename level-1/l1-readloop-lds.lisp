@@ -19,9 +19,11 @@
 (in-package "CCL")
 
 
+(defvar *read-loop-function* 'read-loop)
+
 (defun run-read-loop (&rest args)
   (declare (dynamic-extent args))
-  (apply #'read-loop args))
+  (apply *read-loop-function* args))
 
 #+wasm32-target
 (defun toplevel-loop ()
@@ -630,7 +632,7 @@ commands but aren't")
                                :unsigned-long request-id
                                :void))))))
 
-  (defun runtime-bridge--emit-message (kind payload &optional request-id stream-id error)
+  (defun runtime-bridge--emit-message (kind payload &key request-id stream-id error)
     (let* ((ts (runtime-bridge--now-ms))
            (seq (incf *runtime-bridge-seq*))
            (envelope (list (cons "version" 1)
@@ -701,7 +703,7 @@ commands but aren't")
     (with-output-to-string (s)
       (write value :stream s)))
 
-  (defun runtime-command--emit-result (invocation-id command-id result &optional diagnostics effects duration-ms)
+  (defun runtime-command--emit-result (invocation-id command-id result &key diagnostics effects duration-ms)
     (runtime-bridge--emit-message
      "command.result"
      (list (cons "invocationId" invocation-id)
@@ -710,11 +712,11 @@ commands but aren't")
            (cons "effects" effects)
            (cons "diagnostics" (or diagnostics #()))
            (cons "durationMs" duration-ms))
-     invocation-id
-     *runtime-command-stream-id*
-     nil))
+     :request-id invocation-id
+     :stream-id *runtime-command-stream-id*
+     :error nil))
 
-  (defun runtime-command--emit-error (invocation-id command-id phase summary &optional retryable diagnostics)
+  (defun runtime-command--emit-error (invocation-id command-id phase summary &key retryable diagnostics)
     (runtime-bridge--emit-message
      "command.error"
      (list (cons "invocationId" invocation-id)
@@ -726,9 +728,9 @@ commands but aren't")
                        (cons "summary" summary)
                        (cons "presentationId" nil)))
            (cons "diagnostics" (or diagnostics #())))
-     invocation-id
-     *runtime-command-stream-id*
-     nil))
+     :request-id invocation-id
+     :stream-id *runtime-command-stream-id*
+     :error nil))
 
   (defun runtime-command--eval-form (args context)
     (declare (ignore context))
@@ -762,21 +764,21 @@ commands but aren't")
   (defun runtime-command--watch-vector ()
     (coerce *runtime-watch-store* 'vector))
 
-  (defun runtime-command--emit-inspector-update (payload &optional request-id)
+  (defun runtime-command--emit-inspector-update (payload &key request-id)
     (runtime-bridge--emit-message
      "inspector.update"
      payload
-     request-id
-     "inspector"
-     nil))
+     :request-id request-id
+     :stream-id "inspector"
+     :error nil))
 
-  (defun runtime-command--emit-job-update (payload &optional request-id)
+  (defun runtime-command--emit-job-update (payload &key request-id)
     (runtime-bridge--emit-message
      "job.update"
      payload
-     request-id
-     "jobs"
-     nil))
+     :request-id request-id
+     :stream-id "jobs"
+     :error nil))
 
   (defun runtime-command--upsert-watch (watch)
     (let* ((watch-id (runtime-command--watch-id watch))
@@ -868,7 +870,7 @@ commands but aren't")
              (cons "editGroup" edit-group)
              (cons "audit" (list (cons "entryText" audit-text)))
              (cons "error" error))
-       request-id)
+       :request-id request-id)
       (list (cons "editGroupId" edit-group-id)
             (cons "status" status)
             (cons "label" label))))
@@ -903,7 +905,7 @@ commands but aren't")
         (runtime-command--emit-inspector-update
          (list (cons "type" "watch.sync")
                (cons "watches" (runtime-command--watch-vector)))
-         nil)
+         :request-id nil)
         (list (cons "watchId" watch-id)
               (cons "status" "pinned")))))
 
@@ -917,7 +919,7 @@ commands but aren't")
       (runtime-command--emit-inspector-update
        (list (cons "type" "watch.sync")
              (cons "watches" (runtime-command--watch-vector)))
-       nil)
+       :request-id nil)
       (list (cons "watchId" watch-id)
             (cons "status" "unpinned"))))
 
@@ -948,7 +950,7 @@ commands but aren't")
                           (cons "watches" (runtime-command--watch-vector))
                           (cons "stale" nil))))
       (setf *runtime-inspector-current-target-id* target-id)
-      (runtime-command--emit-inspector-update payload nil)
+      (runtime-command--emit-inspector-update payload :request-id nil)
       (list (cons "presentationId" target-id)
             (cons "valueSummary" summary)
             (cons "status" "snapshot-emitted"))))
@@ -1066,25 +1068,25 @@ commands but aren't")
        (append job-base
                (list (cons "status" "queued")
                      (cons "progress" (list (cons "current" 0) (cons "total" total)))))
-       nil)
+       :request-id nil)
       (runtime-command--emit-job-update
        (append job-base
                (list (cons "status" "started")
                      (cons "progress" (list (cons "current" 0) (cons "total" total)))))
-       nil)
+       :request-id nil)
       (runtime-command--emit-job-update
        (append job-base
                (list (cons "status" "progress")
                      (cons "progress" (list (cons "current" (max 1 (floor total 2)))
                                             (cons "total" total)))))
-       nil)
+       :request-id nil)
       (let* ((completed (append job-base
                                 (list (cons "status" "completed")
                                       (cons "progress" (list (cons "current" total)
                                                              (cons "total" total)))
                                       (cons "updatedAt" now)))))
         (runtime-command--job-upsert completed)
-        (runtime-command--emit-job-update completed nil))
+        (runtime-command--emit-job-update completed :request-id nil))
       (list (cons "jobId" job-id)
             (cons "status" "completed"))))
 
@@ -1118,7 +1120,7 @@ commands but aren't")
                                  (vector (list (cons "code" "cancelled")
                                                (cons "message" "Job cancelled")))))))
         (runtime-command--job-upsert failed)
-        (runtime-command--emit-job-update failed nil))
+        (runtime-command--emit-job-update failed :request-id nil))
       (list (cons "jobId" job-id)
             (cons "status" "failed"))))
 
@@ -1194,9 +1196,9 @@ commands but aren't")
       (runtime-bridge--emit-message
        "debugger.snapshot"
        payload
-       request-id
-       "debugger"
-       nil)
+       :request-id request-id
+       :stream-id "debugger"
+       :error nil)
       payload))
 
   (defun runtime-command--find-restart-entry (restart-id &optional condition)
@@ -1232,9 +1234,9 @@ commands but aren't")
                (cons "restartId" restart-id)
                (cons "summary" summary)
                (cons "restart" restart-json))
-         nil
-         "debugger"
-         nil)
+         :request-id nil
+         :stream-id "debugger"
+         :error nil)
         (list (cons "restartOutcome"
                     (list (cons "errorId" (or error-id *runtime-debugger-current-error-id*))
                           (cons "restartId" restart-id)
@@ -1250,7 +1252,7 @@ commands but aren't")
       (unless (and (stringp invocation-id) (> (length invocation-id) 0))
         (return-from runtime-command--dispatch nil))
       (unless (and (stringp command-id) (> (length command-id) 0))
-        (runtime-command--emit-error invocation-id "unknown" "dispatch" "Missing command id" nil)
+        (runtime-command--emit-error invocation-id "unknown" "dispatch" "Missing command id" :retryable nil)
         (return-from runtime-command--dispatch nil))
       (handler-case
           (let* ((result
@@ -1282,16 +1284,16 @@ commands but aren't")
                     (t
                      (error "Unknown runtime command: ~a" command-id))))
                  (duration-ms (- (runtime-bridge--now-ms) start-ms)))
-            (runtime-command--emit-result invocation-id command-id result nil nil duration-ms))
+            (runtime-command--emit-result invocation-id command-id result :duration-ms duration-ms))
         (error (condition)
           (runtime-command--emit-error invocation-id
                                        command-id
                                        "execute"
                                        (format nil "~a" condition)
-                                       t))))
+                                       :retryable t))))
     t)
 
-  (defun runtime-command--poll-frame (&optional (max-bytes +runtime-command-max-bytes+) (allow-pending nil))
+  (defun runtime-command--poll-frame (&key (max-bytes +runtime-command-max-bytes+) (allow-pending nil))
     (let* ((buffer (make-array max-bytes :element-type '(unsigned-byte 8)))
            (flags (if allow-pending 1 0)))
       (ccl:rlet ((out-len :unsigned-long))
@@ -1315,7 +1317,7 @@ commands but aren't")
                              (make-array 0 :element-type '(unsigned-byte 8)))))
                (values bytes r))))))))
 
-  (defun runtime-bridge-pump-commands (&optional (max-commands 4))
+  (defun runtime-bridge-pump-commands (&key (max-commands 4))
     (loop repeat max-commands do
       (multiple-value-bind (bytes status) (runtime-command--poll-frame)
         (declare (ignore status))
