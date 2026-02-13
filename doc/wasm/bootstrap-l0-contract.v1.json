@@ -69,6 +69,10 @@
       "symbolName": "%STRUCTURE-REFS%"
     },
     {
+      "initializer": {
+        "fixnumValue": 64,
+        "kind": "literal-fixnum"
+      },
       "packageName": "CCL",
       "requireNonNil": true,
       "symbolName": "*VECTOR-OUTPUT-STREAM-DEFAULT-INITIAL-ALLOCATION*"

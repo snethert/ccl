@@ -408,6 +408,160 @@ function classifyFunctionBindingInitializer(symbolSpec, functionIndex) {
   };
 }
 
+function normalizeContractSpecialInitializerKind(value) {
+  const kind = normalizeToken(value).toLowerCase();
+  switch (kind) {
+    case "literal-fixnum":
+    case "literal-nil":
+    case "literal-symbol":
+    case "literal-keyword":
+      return kind;
+    default:
+      return "";
+  }
+}
+
+function classifyContractSpecialVariableInitializer(initializerSpec) {
+  if (!initializerSpec || typeof initializerSpec !== "object" || Array.isArray(initializerSpec)) {
+    return {
+      availability: "unsupported",
+      initializer: {
+        kind: "unsupported",
+        reason: "invalid-contract-initializer-object",
+      },
+    };
+  }
+  const kind = normalizeContractSpecialInitializerKind(initializerSpec.kind);
+  if (!kind) {
+    return {
+      availability: "unsupported",
+      initializer: {
+        kind: "unsupported",
+        reason: "invalid-contract-initializer-kind",
+      },
+    };
+  }
+
+  if (kind === "literal-fixnum") {
+    const rawValue =
+      initializerSpec.fixnum_value ??
+      initializerSpec.fixnumValue ??
+      initializerSpec.value ??
+      null;
+    let value = Number(rawValue);
+    if (typeof rawValue === "string" && /^[+-]?\d+$/u.test(rawValue.trim())) {
+      value = Number.parseInt(rawValue, 10);
+    }
+    if (!Number.isSafeInteger(value)) {
+      return {
+        availability: "unsupported",
+        initializer: {
+          kind: "unsupported",
+          reason: "invalid-contract-fixnum",
+          fixnum_value: rawValue,
+        },
+      };
+    }
+    if (value < FIXNUM_MIN || value > FIXNUM_MAX) {
+      return {
+        availability: "unsupported",
+        initializer: {
+          kind: "unsupported",
+          reason: "contract-fixnum-range",
+          fixnum_value: value,
+        },
+      };
+    }
+    return {
+      availability: "literal",
+      initializer: {
+        kind: "literal-fixnum",
+        fixnum_value: value | 0,
+      },
+    };
+  }
+
+  if (kind === "literal-nil") {
+    return {
+      availability: "literal",
+      initializer: {
+        kind: "literal-nil",
+      },
+    };
+  }
+
+  if (kind === "literal-symbol") {
+    const literalPackageName = canonicalizePackageName(
+      initializerSpec.literal_package_name ??
+      initializerSpec.literalPackageName ??
+      initializerSpec.package_name ??
+      initializerSpec.packageName ??
+      initializerSpec.package ??
+      "",
+    );
+    const literalSymbolName = normalizeSymbolName(
+      initializerSpec.literal_symbol_name ??
+      initializerSpec.literalSymbolName ??
+      initializerSpec.symbol_name ??
+      initializerSpec.symbolName ??
+      initializerSpec.name ??
+      "",
+    );
+    if (!literalPackageName || !literalSymbolName) {
+      return {
+        availability: "unsupported",
+        initializer: {
+          kind: "unsupported",
+          reason: "invalid-contract-literal-symbol",
+        },
+      };
+    }
+    return {
+      availability: "literal",
+      initializer: {
+        kind: "literal-symbol",
+        literal_package_name: literalPackageName,
+        literal_symbol_name: literalSymbolName,
+      },
+    };
+  }
+
+  const literalKeywordName = normalizeSymbolName(
+    initializerSpec.literal_keyword_name ??
+    initializerSpec.literalKeywordName ??
+    initializerSpec.keyword_name ??
+    initializerSpec.keywordName ??
+    initializerSpec.symbol_name ??
+    initializerSpec.symbolName ??
+    initializerSpec.name ??
+    "",
+  );
+  if (!literalKeywordName) {
+    return {
+      availability: "unsupported",
+      initializer: {
+        kind: "unsupported",
+        reason: "invalid-contract-literal-keyword",
+      },
+    };
+  }
+  return {
+    availability: "literal",
+    initializer: {
+      kind: "literal-keyword",
+      literal_keyword_name: literalKeywordName,
+    },
+  };
+}
+
+function makeEntryBindingKey(targetCell, symbolKey) {
+  const normalizedTargetCell = normalizeToken(targetCell).toLowerCase() === "fcell"
+    ? "fcell"
+    : "vcell";
+  if (!symbolKey) return "";
+  return `${normalizedTargetCell}:${symbolKey}`;
+}
+
 function normalizeEntryTargetCell(entry) {
   const explicit = normalizeToken(entry?.target_cell).toLowerCase();
   if (explicit === "vcell" || explicit === "fcell") return explicit;
@@ -832,6 +986,11 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     required_ref_count: 0,
     required_callable_count: 0,
     required_special_count: 0,
+    required_special_initializer_literal_count: 0,
+    required_special_initializer_deferred_count: 0,
+    required_special_initializer_unsupported_count: 0,
+    required_special_entries_emitted: 0,
+    required_special_entries_upgraded: 0,
     seed_ref_count: 0,
     seed_symbol_ref_count: 0,
     seed_callable_count: 0,
@@ -911,15 +1070,59 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
   const requiredSpecialVariables = Array.isArray(contract?.requiredSpecialVariables)
     ? contract.requiredSpecialVariables
     : [];
-  const requiredSpecialSymbolKeys = new Set();
+  const requiredSpecialBySymbolKey = new Map();
   for (const item of requiredSpecialVariables) {
-    const symbolKey = makeSymbolKey(item?.packageName ?? "", item?.symbolName ?? "");
+    const packageName = canonicalizePackageName(item?.packageName ?? item?.package_name ?? "");
+    const symbolName = normalizeSymbolName(item?.symbolName ?? item?.symbol_name ?? "");
+    const symbolKey = makeSymbolKey(packageName, symbolName);
     if (!symbolKey) continue;
-    requiredSpecialSymbolKeys.add(symbolKey);
+    const hasInitializer = (
+      item &&
+      typeof item === "object" &&
+      !Array.isArray(item) &&
+      Object.prototype.hasOwnProperty.call(item, "initializer")
+    );
+    const normalized = {
+      package_name: packageName,
+      symbol_name: symbolName,
+      symbol_key: symbolKey,
+      require_non_nil: Boolean(item?.requireNonNil ?? item?.require_non_nil),
+      source: normalizeToken(item?.source ?? "") || "contract-required-special",
+      has_initializer: hasInitializer,
+      contract_initializer: hasInitializer
+        ? classifyContractSpecialVariableInitializer(item?.initializer)
+        : null,
+    };
+    const existing = requiredSpecialBySymbolKey.get(symbolKey);
+    if (!existing) {
+      requiredSpecialBySymbolKey.set(symbolKey, normalized);
+      continue;
+    }
+    requiredSpecialBySymbolKey.set(symbolKey, {
+      ...existing,
+      require_non_nil: existing.require_non_nil || normalized.require_non_nil,
+      has_initializer: existing.has_initializer || normalized.has_initializer,
+      contract_initializer: existing.has_initializer
+        ? existing.contract_initializer
+        : normalized.contract_initializer,
+    });
   }
+  const requiredSpecialSymbolKeys = new Set(requiredSpecialBySymbolKey.keys());
   stats.required_special_count = requiredSpecialSymbolKeys.size >>> 0;
+  for (const requiredSpecial of requiredSpecialBySymbolKey.values()) {
+    const availability = requiredSpecial?.has_initializer
+      ? String(requiredSpecial?.contract_initializer?.availability ?? "unsupported")
+      : "deferred";
+    if (availability === "literal") stats.required_special_initializer_literal_count++;
+    else if (availability === "unsupported") stats.required_special_initializer_unsupported_count++;
+    else stats.required_special_initializer_deferred_count++;
+  }
 
-  if (requiredRefs.length === 0 && requiredCallables.length === 0) {
+  if (
+    requiredRefs.length === 0 &&
+    requiredCallables.length === 0 &&
+    requiredSpecialSymbolKeys.size === 0
+  ) {
     return { changed: false, mapArtifact, stats };
   }
 
@@ -1108,7 +1311,7 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     }
   }
 
-  const enableBulkCallableSeeds = process.env.CCL_WASM_STARTUP_BINDING_MAP_EMIT_ALL_FUNCTIONS !== "0";
+  const enableBulkCallableSeeds = process.env.CCL_WASM_STARTUP_BINDING_MAP_EMIT_ALL_FUNCTIONS === "1";
   if (enableBulkCallableSeeds) {
     stats.seed_callable_bulk_enabled = true;
     const sortedSymbolKeys = Array.from(functionIndex.bySymbolKey.keys()).sort();
@@ -1404,13 +1607,20 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
   stats.symbol_anchor_alias_total = symbolAnchorAliasTotal >>> 0;
 
   const entryIndexBySymbolKey = new Map();
+  const entryIndexByTargetAndSymbolKey = new Map();
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
     const packageName = canonicalizePackageName(entry?.package_name ?? "");
     const symbolName = normalizeSymbolName(entry?.symbol_name ?? "");
     const symbolKey = makeSymbolKey(packageName, symbolName);
-    if (!symbolKey || entryIndexBySymbolKey.has(symbolKey)) continue;
-    entryIndexBySymbolKey.set(symbolKey, i);
+    if (!symbolKey) continue;
+    if (!entryIndexBySymbolKey.has(symbolKey)) {
+      entryIndexBySymbolKey.set(symbolKey, i);
+    }
+    const bindingKey = makeEntryBindingKey(normalizeEntryTargetCell(entry), symbolKey);
+    if (bindingKey && !entryIndexByTargetAndSymbolKey.has(bindingKey)) {
+      entryIndexByTargetAndSymbolKey.set(bindingKey, i);
+    }
   }
 
   for (const [symbolKey, candidateDefinition] of symbolAnchorBySymbolKey.entries()) {
@@ -1470,10 +1680,86 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     stats.symbol_anchor_alias_entries_updated++;
   }
 
+  const requiredSpecialSpecs = Array.from(requiredSpecialBySymbolKey.values())
+    .sort((a, b) => a.symbol_key.localeCompare(b.symbol_key));
+  for (const requiredSpecial of requiredSpecialSpecs) {
+    const symbolKey = requiredSpecial.symbol_key;
+    const bindingKey = makeEntryBindingKey("vcell", symbolKey);
+    const existingIndex = entryIndexByTargetAndSymbolKey.get(bindingKey);
+    const existing = existingIndex == null ? null : entries[existingIndex];
+    let availability = "deferred";
+    let initializer = {
+      kind: "deferred",
+      reason: "no-contract-initializer",
+    };
+    if (requiredSpecial.has_initializer) {
+      availability = String(requiredSpecial?.contract_initializer?.availability ?? "unsupported");
+      initializer = (
+        requiredSpecial?.contract_initializer &&
+        typeof requiredSpecial.contract_initializer === "object"
+      )
+        ? requiredSpecial.contract_initializer.initializer
+        : {
+          kind: "unsupported",
+          reason: "invalid-contract-initializer",
+        };
+    } else if (
+      existing?.initializer &&
+      typeof existing.initializer === "object" &&
+      !Array.isArray(existing.initializer)
+    ) {
+      const existingAvailability = String(existing?.availability ?? "deferred").toLowerCase();
+      availability = (
+        existingAvailability === "literal" ||
+        existingAvailability === "entry-backed" ||
+        existingAvailability === "unsupported"
+      )
+        ? existingAvailability
+        : "deferred";
+      initializer = existing.initializer;
+    }
+
+    const existingDefinition = (
+      existing?.definition &&
+      typeof existing.definition === "object" &&
+      !Array.isArray(existing.definition)
+    )
+      ? existing.definition
+      : {};
+    const nextEntry = {
+      ...(existing ?? {}),
+      binding_class: "special-variable",
+      target_cell: "vcell",
+      package_name: requiredSpecial.package_name,
+      symbol_name: requiredSpecial.symbol_name,
+      symbol_key: symbolKey,
+      source: requiredSpecial.source,
+      require_non_nil: requiredSpecial.require_non_nil,
+      definition: {
+        ...existingDefinition,
+        required_class: STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_SPECIAL,
+        contract_special: true,
+      },
+      availability,
+      initializer,
+    };
+    if (existingIndex == null) {
+      const nextIndex = entries.length;
+      entries.push(nextEntry);
+      entryIndexBySymbolKey.set(symbolKey, nextIndex);
+      entryIndexByTargetAndSymbolKey.set(bindingKey, nextIndex);
+      stats.required_special_entries_emitted++;
+      continue;
+    }
+    entries[existingIndex] = nextEntry;
+    stats.required_special_entries_upgraded++;
+  }
+
   let requiredSpecialAnchorsPresent = 0;
   let requiredSpecialAnchorsMissing = 0;
   for (const symbolKey of requiredSpecialSymbolKeys.values()) {
-    const entryIndex = entryIndexBySymbolKey.get(symbolKey);
+    const entryIndex = entryIndexByTargetAndSymbolKey.get(makeEntryBindingKey("vcell", symbolKey))
+      ?? entryIndexBySymbolKey.get(symbolKey);
     const entry = entryIndex == null ? null : entries[entryIndex];
     if (hasConstPoolDefinition(entry?.definition)) requiredSpecialAnchorsPresent++;
     else requiredSpecialAnchorsMissing++;
@@ -1506,6 +1792,15 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
   const coverage = mapArtifact?.coverage && typeof mapArtifact.coverage === "object"
     ? { ...mapArtifact.coverage }
     : {};
+  coverage.required_special_variable_bindings = {
+    schema_version: "startup_binding_map_required_special_variable_bindings_v1",
+    required_special_count: stats.required_special_count >>> 0,
+    initializer_literal_count: stats.required_special_initializer_literal_count >>> 0,
+    initializer_deferred_count: stats.required_special_initializer_deferred_count >>> 0,
+    initializer_unsupported_count: stats.required_special_initializer_unsupported_count >>> 0,
+    emitted_entries: stats.required_special_entries_emitted >>> 0,
+    upgraded_entries: stats.required_special_entries_upgraded >>> 0,
+  };
   coverage.contract_required_const_pool_function_bindings = stats;
   const nextArtifact = {
     ...(mapArtifact ?? {}),
@@ -1525,6 +1820,8 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     changed: (
       stats.emitted_entries +
       stats.upgraded_existing_entries +
+      stats.required_special_entries_emitted +
+      stats.required_special_entries_upgraded +
       stats.symbol_anchor_entry_upgrades +
       stats.symbol_anchor_alias_entries_updated
     ) > 0,

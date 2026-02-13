@@ -61,6 +61,10 @@ const REQUIRED_SPECIALS = Object.freeze([
     packageName: "CCL",
     symbolName: "*VECTOR-OUTPUT-STREAM-DEFAULT-INITIAL-ALLOCATION*",
     requireNonNil: true,
+    initializer: Object.freeze({
+      kind: "literal-fixnum",
+      fixnumValue: 64,
+    }),
   }),
   Object.freeze({
     packageName: "CCL",

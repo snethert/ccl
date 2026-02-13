@@ -1205,6 +1205,30 @@ function buildStartupBindingMapConstPoolBindingIndex(mapArtifact) {
   }
 }
 
+const STARTUP_BINDING_MAP_PREINSTALL_MAX_ENTRIES_DEFAULT = 1500;
+function startupBindingMapPreinstallLimit() {
+  const raw = String(
+    process.env.CCL_WASM_STARTUP_BINDING_MAP_PREINSTALL_MAX_ENTRIES ?? "",
+  ).trim();
+  if (!raw) {
+    return {
+      value: STARTUP_BINDING_MAP_PREINSTALL_MAX_ENTRIES_DEFAULT,
+      source: "default",
+    };
+  }
+  const parsed = Number(raw);
+  if (Number.isInteger(parsed) && parsed > 0) {
+    return {
+      value: parsed >>> 0,
+      source: "env",
+    };
+  }
+  return {
+    value: STARTUP_BINDING_MAP_PREINSTALL_MAX_ENTRIES_DEFAULT,
+    source: "default-invalid-env",
+  };
+}
+
 function planStartupBindingMapPreinstallConstPools({
   contract = BOOTSTRAP_L0_CONTRACT_V1,
   mapArtifact = null,
@@ -1240,6 +1264,7 @@ function planStartupBindingMapPreinstallConstPools({
       missingContractRootEntries.push(entryIndex);
     }
   }
+  const preinstallLimit = startupBindingMapPreinstallLimit();
 
   let status = "ok";
   let reason = null;
@@ -1249,6 +1274,9 @@ function planStartupBindingMapPreinstallConstPools({
   } else if (artifactShadowEntryIndices.length === 0) {
     status = "fail";
     reason = "startup-shadow-table-empty-preinstall-entries";
+  } else if (artifactShadowEntryIndices.length > preinstallLimit.value) {
+    status = "fail";
+    reason = "startup-shadow-table-preinstall-too-large";
   } else if (missingContractRootEntries.length > 0) {
     status = "fail";
     reason = "startup-shadow-table-missing-contract-root-entries";
@@ -1278,6 +1306,12 @@ function planStartupBindingMapPreinstallConstPools({
       startup_shadow_table_entry_backed_binding_count: Number.isInteger(mapArtifact?.startup_shadow_table?.entry_backed_binding_count)
         ? (mapArtifact.startup_shadow_table.entry_backed_binding_count >>> 0)
         : null,
+      startup_shadow_table_preinstall_max_entries: preinstallLimit.value >>> 0,
+      startup_shadow_table_preinstall_max_entries_source: preinstallLimit.source,
+      startup_shadow_table_preinstall_entries_over_limit:
+        artifactShadowEntryIndices.length > preinstallLimit.value
+          ? ((artifactShadowEntryIndices.length - preinstallLimit.value) >>> 0)
+          : 0,
       total_const_pool_entries: orderedEntryIndices.length >>> 0,
     },
   };
