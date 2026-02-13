@@ -47,6 +47,11 @@ import {
   STARTUP_SYMBOL_PACKAGE_OVERRIDES_CANONICAL_V1,
   rewriteConstPoolFunctionDesignators,
 } from "./bootstrap-function-resolver.mjs";
+import {
+  buildStartupBindingMapArtifact,
+  normalizeStartupBindingMapArtifact,
+  summarizeStartupBindingMapArtifact,
+} from "./startup-binding-map.mjs";
 import { FILE_MODE_READ } from "./persist-service.mjs";
 
 function fail(msg) {
@@ -541,6 +546,33 @@ const subprimsMap = JSON.parse(await fs.readFile(subprimsMapPath, "utf-8"));
 const bootBytes = await fs.readFile(bootImagePath);
 const compiledModulesManifestBytes = await fs.readFile(modulesPath);
 const compiledModulesBundle = JSON.parse(compiledModulesManifestBytes.toString("utf-8"));
+const embeddedStartupBindingMap = normalizeStartupBindingMapArtifact(
+  compiledModulesBundle?.startupBindingMap ?? null,
+);
+const startupBindingMapArtifact = embeddedStartupBindingMap ?? await buildStartupBindingMapArtifact({
+  repoRoot: root,
+  contract: BOOTSTRAP_L0_CONTRACT_V1,
+  functions: Array.isArray(compiledModulesBundle?.functions) ? compiledModulesBundle.functions : [],
+});
+const startupBindingMapSource = embeddedStartupBindingMap
+  ? "runtime-modules-manifest.startupBindingMap"
+  : "generated-from-level1-initial-bindings+runtime-functions";
+const startupBindingMapCounts = summarizeStartupBindingMapArtifact(startupBindingMapArtifact);
+console.log(`STARTUP_BINDING_MAP_BUILD ${JSON.stringify({
+  schema_version: "startup_binding_map_build_v1",
+  status: "ok",
+  phase: "pre-fasload",
+  source: startupBindingMapSource,
+  map_schema_version: startupBindingMapArtifact?.schema_version ?? null,
+  contract_id: BOOTSTRAP_L0_CONTRACT_V1?.id ?? null,
+  counts: {
+    total_entries: startupBindingMapCounts.total_entries,
+    literal_entries: startupBindingMapCounts.literal_entries,
+    deferred_entries: startupBindingMapCounts.deferred_entries,
+    unsupported_entries: startupBindingMapCounts.unsupported_entries,
+    entry_backed_entries: startupBindingMapCounts.entry_backed_entries,
+  },
+})}`);
 const bootstrapFunctionResolver = createBootstrapFunctionResolver({
   phase: BOOTSTRAP_RESOLVER_PHASE_BOOTSTRAP,
 });
@@ -1755,6 +1787,299 @@ function l0ProbeStatusName(status) {
   return L0_PROBE_STATUS_NAMES.get(status >>> 0) ?? `status-${status >>> 0}`;
 }
 
+function applyStartupBindingMapOrFail({
+  mapArtifact,
+  mapSource,
+  contract = BOOTSTRAP_L0_CONTRACT_V1,
+} = {}) {
+  const entries = Array.isArray(mapArtifact?.entries) ? mapArtifact.entries : [];
+  const counts = summarizeStartupBindingMapArtifact(mapArtifact);
+  const failures = [];
+  const requiredConstPools = Array.isArray(contract?.requiredConstPools)
+    ? contract.requiredConstPools
+    : [];
+
+  const requiredExports = [
+    "wasm_get_lisp_nil",
+    "wasm_probe_symbol",
+    "wasm_probe_symbol_vcell",
+    "wasm_probe_last_status",
+  ];
+  for (const name of requiredExports) {
+    if (typeof ex[name] !== "function") {
+      fail(`kernel missing ${name} for startup binding map application`);
+    }
+  }
+
+  const nil = ex.wasm_get_lisp_nil() >>> 0;
+  const probeStatus = () => (ex.wasm_probe_last_status() >>> 0);
+  const utf8 = new TextEncoder();
+  const scratchUtf8 = (text) => {
+    const bytes = utf8.encode(String(text ?? ""));
+    if (bytes.length === 0) return { ptr: 0, len: 0 };
+    const ptr = copyBytesToScratch(runtime.memory, bytes);
+    return { ptr, len: bytes.length >>> 0 };
+  };
+  const toHex = (value) => `0x${(value >>> 0).toString(16)}`;
+  const isNilLike = (value) => {
+    const raw = value >>> 0;
+    return raw === 0 || raw === nil;
+  };
+
+  let eligibleEntries = 0;
+  let appliedCount = 0;
+  let skippedAlreadyBound = 0;
+  let requiredUninitialized = 0;
+  let constPoolPrimeFailures = 0;
+
+  if (requiredConstPools.length > 0) {
+    if (typeof ex.wasm_const_pool_ref !== "function") {
+      fail("kernel missing wasm_const_pool_ref for startup binding map const-pool priming");
+    }
+    for (const item of requiredConstPools) {
+      const entryIndex = item?.entryIndex >>> 0;
+      const refs = Array.isArray(item?.requiredRefs) ? item.requiredRefs : [];
+      for (const rawRef of refs) {
+        const constIndex = rawRef >>> 0;
+        const raw = ex.wasm_const_pool_ref(entryIndex, constIndex) >>> 0;
+        if (!isNilLike(raw)) continue;
+        constPoolPrimeFailures++;
+        failures.push({
+          reason: "const-pool-prime-failed",
+          entry_index: entryIndex,
+          const_index: constIndex,
+          source: item?.source ?? null,
+          ref_raw: toHex(raw),
+        });
+      }
+    }
+  }
+
+  for (const entry of entries) {
+    const packageName = String(entry?.package_name ?? "").trim();
+    const symbolName = String(entry?.symbol_name ?? "").trim();
+    const requireNonNil = Boolean(entry?.require_non_nil);
+    const availability = String(entry?.availability ?? "deferred");
+    const initializer = entry?.initializer ?? {};
+    const initializerKind = String(initializer?.kind ?? "");
+
+    const eligible = availability === "literal" || availability === "entry-backed";
+    if (!eligible) {
+      if (requireNonNil) {
+        requiredUninitialized++;
+        failures.push({
+          package_name: packageName || null,
+          symbol_name: symbolName || null,
+          reason: "required-non-nil-initializer-unavailable",
+          availability,
+          initializer_kind: initializerKind || null,
+          initializer_reason: initializer?.reason ?? null,
+        });
+      }
+      continue;
+    }
+    eligibleEntries++;
+
+    const nameMem = scratchUtf8(symbolName);
+    const pkgMem = scratchUtf8(packageName);
+    const symbolRaw = ex.wasm_probe_symbol(
+      nameMem.ptr >>> 0,
+      nameMem.len >>> 0,
+      pkgMem.ptr >>> 0,
+      pkgMem.len >>> 0,
+    ) >>> 0;
+    const symbolStatus = probeStatus();
+    if (symbolStatus !== L0_PROBE_STATUS.OK || symbolRaw === 0 || symbolRaw === nil) {
+      failures.push({
+        package_name: packageName || null,
+        symbol_name: symbolName || null,
+        reason: "symbol-unresolved",
+        probe_status: symbolStatus,
+        probe_status_name: l0ProbeStatusName(symbolStatus),
+        symbol_raw: toHex(symbolRaw),
+      });
+      continue;
+    }
+
+    const beforeVcell = ex.wasm_probe_symbol_vcell(symbolRaw >>> 0) >>> 0;
+    const beforeVcellStatus = probeStatus();
+    if (beforeVcellStatus !== L0_PROBE_STATUS.OK) {
+      failures.push({
+        package_name: packageName || null,
+        symbol_name: symbolName || null,
+        reason: "vcell-probe-failed-before-apply",
+        probe_status: beforeVcellStatus,
+        probe_status_name: l0ProbeStatusName(beforeVcellStatus),
+        symbol_raw: toHex(symbolRaw),
+      });
+      continue;
+    }
+    if (!isNilLike(beforeVcell)) {
+      skippedAlreadyBound++;
+      continue;
+    }
+
+    let missingExport = null;
+    switch (initializerKind) {
+      case "literal-fixnum":
+        missingExport = typeof ex.wasm_set_symbol_vcell_fixnum !== "function"
+          ? "wasm_set_symbol_vcell_fixnum"
+          : null;
+        break;
+      case "literal-nil":
+        missingExport = typeof ex.wasm_set_symbol_vcell_nil !== "function"
+          ? "wasm_set_symbol_vcell_nil"
+          : null;
+        break;
+      case "entry-function":
+        missingExport = typeof ex.wasm_set_symbol_vcell_entry_function !== "function"
+          ? "wasm_set_symbol_vcell_entry_function"
+          : null;
+        break;
+      default:
+        missingExport = null;
+        break;
+    }
+    if (missingExport) {
+      failures.push({
+        package_name: packageName || null,
+        symbol_name: symbolName || null,
+        reason: "missing-kernel-export",
+        export_name: missingExport,
+        initializer_kind: initializerKind || null,
+      });
+      continue;
+    }
+
+    switch (initializerKind) {
+      case "literal-fixnum": {
+        const value = Number(initializer?.fixnum_value);
+        if (!Number.isInteger(value)) {
+          failures.push({
+            package_name: packageName || null,
+            symbol_name: symbolName || null,
+            reason: "initializer-invalid-fixnum",
+            initializer_kind: initializerKind,
+            initializer_value: initializer?.fixnum_value ?? null,
+          });
+          continue;
+        }
+        ex.wasm_set_symbol_vcell_fixnum(
+          nameMem.ptr >>> 0,
+          nameMem.len >>> 0,
+          pkgMem.ptr >>> 0,
+          pkgMem.len >>> 0,
+          value | 0,
+        );
+        break;
+      }
+      case "literal-nil":
+        ex.wasm_set_symbol_vcell_nil(
+          nameMem.ptr >>> 0,
+          nameMem.len >>> 0,
+          pkgMem.ptr >>> 0,
+          pkgMem.len >>> 0,
+        );
+        break;
+      case "entry-function": {
+        const entryIndex = Number(initializer?.entry_index);
+        if (!Number.isInteger(entryIndex) || entryIndex < 0) {
+          failures.push({
+            package_name: packageName || null,
+            symbol_name: symbolName || null,
+            reason: "initializer-invalid-entry-index",
+            initializer_kind: initializerKind,
+            initializer_value: initializer?.entry_index ?? null,
+          });
+          continue;
+        }
+        ex.wasm_set_symbol_vcell_entry_function(
+          nameMem.ptr >>> 0,
+          nameMem.len >>> 0,
+          pkgMem.ptr >>> 0,
+          pkgMem.len >>> 0,
+          entryIndex >>> 0,
+        );
+        break;
+      }
+      default:
+        failures.push({
+          package_name: packageName || null,
+          symbol_name: symbolName || null,
+          reason: "initializer-kind-unsupported-at-apply",
+          initializer_kind: initializerKind || null,
+        });
+        continue;
+    }
+
+    const applyStatus = probeStatus();
+    if (applyStatus !== L0_PROBE_STATUS.OK) {
+      failures.push({
+        package_name: packageName || null,
+        symbol_name: symbolName || null,
+        reason: "apply-status-not-ok",
+        probe_status: applyStatus,
+        probe_status_name: l0ProbeStatusName(applyStatus),
+        initializer_kind: initializerKind || null,
+      });
+      continue;
+    }
+
+    const afterVcell = ex.wasm_probe_symbol_vcell(symbolRaw >>> 0) >>> 0;
+    const afterVcellStatus = probeStatus();
+    if (afterVcellStatus !== L0_PROBE_STATUS.OK) {
+      failures.push({
+        package_name: packageName || null,
+        symbol_name: symbolName || null,
+        reason: "vcell-probe-failed-after-apply",
+        probe_status: afterVcellStatus,
+        probe_status_name: l0ProbeStatusName(afterVcellStatus),
+        symbol_raw: toHex(symbolRaw),
+      });
+      continue;
+    }
+    if (requireNonNil && isNilLike(afterVcell)) {
+      failures.push({
+        package_name: packageName || null,
+        symbol_name: symbolName || null,
+        reason: "vcell-still-nil-after-apply",
+        initializer_kind: initializerKind || null,
+        vcell_raw: toHex(afterVcell),
+      });
+      continue;
+    }
+    appliedCount++;
+  }
+
+  const applySummary = {
+    schema_version: "startup_binding_map_apply_v1",
+    status: failures.length > 0 ? "fail" : "pass",
+    phase: "pre-fasload",
+    source: mapSource ?? null,
+    map_schema_version: mapArtifact?.schema_version ?? null,
+    contract_id: contract?.id ?? null,
+    counts: {
+      total_entries: counts.total_entries,
+      literal_entries: counts.literal_entries,
+      entry_backed_entries: counts.entry_backed_entries,
+      deferred_entries: counts.deferred_entries,
+      unsupported_entries: counts.unsupported_entries,
+      eligible_entries: eligibleEntries,
+      const_pool_prime_failures: constPoolPrimeFailures,
+      required_non_nil_unavailable: requiredUninitialized,
+      applied_count: appliedCount,
+      skipped_already_bound: skippedAlreadyBound,
+      failed_count: failures.length,
+    },
+    first_failure: failures.length > 0 ? failures[0] : null,
+  };
+  if (failures.length > 0) {
+    console.error(`STARTUP_BINDING_MAP_APPLY ${JSON.stringify(applySummary)}`);
+    fail(`pre-fasload startup binding map apply failed: ${failures.length} requirement(s)`);
+  }
+  console.log(`STARTUP_BINDING_MAP_APPLY ${JSON.stringify(applySummary)}`);
+}
+
 function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
   const requiredExports = [
     "wasm_get_lisp_nil",
@@ -2093,6 +2418,11 @@ const kernelDebugSymbolName = typeof ex.wasm_debug_copy_symbol_name === "functio
   }
   : null;
 
+applyStartupBindingMapOrFail({
+  mapArtifact: startupBindingMapArtifact,
+  mapSource: startupBindingMapSource,
+  contract: BOOTSTRAP_L0_CONTRACT_V1,
+});
 assertL0BootstrapContractOrFail(BOOTSTRAP_L0_CONTRACT_V1);
 setBootPhaseOrFail(WASM_BOOT_PHASE.L0_READY, { reason: "pre-fasload-contract-pass" });
 

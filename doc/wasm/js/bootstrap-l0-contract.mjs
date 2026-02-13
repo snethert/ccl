@@ -69,6 +69,12 @@ const REQUIRED_SPECIALS = Object.freeze([
   }),
 ]);
 
+/*
+ * Required special-variable symbols also seed startupBindingMap generation
+ * (literal/entry-backed/deferred/unsupported initializer availability),
+ * which is applied before this contract gate in make-real-image.mjs.
+ */
+
 export const BOOTSTRAP_L0_CONTRACT_V1 = Object.freeze({
   id: "bootstrap-l0-contract-v1",
   phase: "pre-fasload",

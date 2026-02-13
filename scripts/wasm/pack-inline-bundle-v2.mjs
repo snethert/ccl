@@ -4,6 +4,7 @@ import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
+import { fileURLToPath } from "node:url";
 
 import {
   encodeModuleBundleIndexV2,
@@ -11,6 +12,10 @@ import {
   MODULE_BUNDLE_V2_FORMAT,
   MODULE_BUNDLE_V2_VERSION,
 } from "../../doc/wasm/js/module-bundle-v2.mjs";
+import {
+  buildStartupBindingMapArtifact,
+  summarizeStartupBindingMapArtifact,
+} from "../../doc/wasm/js/startup-binding-map.mjs";
 
 function usage() {
   console.log("Usage:");
@@ -168,6 +173,7 @@ async function writeFileAtomically(filePath, bytes) {
 
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
+  const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
   const inputManifestPath = path.resolve(opts.manifest);
   const inputManifestDir = path.dirname(inputManifestPath);
   const manifest = JSON.parse(await fsp.readFile(inputManifestPath, "utf8"));
@@ -318,6 +324,11 @@ async function main() {
     constPoolCount: outConstPools.length,
     functions: Array.isArray(manifest?.functions) ? manifest.functions : [],
   };
+  const startupBindingMap = await buildStartupBindingMapArtifact({
+    repoRoot,
+    functions: outManifest.functions,
+  });
+  outManifest.startupBindingMap = startupBindingMap;
   if (gcRootPolicyModes.size > 0) {
     outManifest.gcRootPolicyModes = Object.fromEntries(
       [...gcRootPolicyModes.entries()]
@@ -337,8 +348,17 @@ async function main() {
   await writeFileAtomically(output.indexPath, indexBytes);
   await writeFileAtomically(output.manifestPath, `${JSON.stringify(outManifest)}\n`);
 
+  const startupCounts = summarizeStartupBindingMapArtifact(startupBindingMap);
   console.log(`modules: ${outModules.length}`);
   console.log(`const pools: ${outConstPools.length}`);
+  console.log(
+    "startup binding map:" +
+    ` total=${startupCounts.total_entries}` +
+    ` literal=${startupCounts.literal_entries}` +
+    ` entry-backed=${startupCounts.entry_backed_entries}` +
+    ` deferred=${startupCounts.deferred_entries}` +
+    ` unsupported=${startupCounts.unsupported_entries}`,
+  );
   console.log(`binary bytes: ${binaryBytes.length}`);
   console.log(`index bytes: ${indexBytes.length}`);
   console.log(`manifest: ${output.manifestPath}`);

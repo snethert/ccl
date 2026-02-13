@@ -760,6 +760,9 @@ async function main() {
   if (!opts.stripFunctions) {
     outManifest.functions = Array.isArray(manifest?.functions) ? manifest.functions : [];
   }
+  if (manifest?.startupBindingMap && typeof manifest.startupBindingMap === "object") {
+    outManifest.startupBindingMap = manifest.startupBindingMap;
+  }
   if (sharedConstPoolBlobInfo) {
     outManifest.constPoolBlobOffset = sharedConstPoolBlobInfo.offset;
     outManifest.constPoolBlobLength = sharedConstPoolBlobInfo.length;
