@@ -297,6 +297,11 @@ It also emits `doc/wasm/wasm-runtime-modules.idx`; the manifest format is
 `ccl-wasm-modules-v2`.
 The bundle writer deduplicates identical const-pool payloads to keep the
 sidecar size bounded.
+This compile stage also refreshes startup symbol pipeline artifacts:
+`doc/wasm/bootstrap-l0-contract.v1.json` and
+`doc/wasm/startup-symbol-scope.source_scope_v1.json`.
+The scanner runs after contract sidecar generation and before downstream image
+builder handoff.
 
 If you already have a large legacy bundle, compact it in place without
 recompiling:

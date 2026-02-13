@@ -958,6 +958,12 @@ This section is mandatory execution behavior for this plan. It exists to stop
    a decision entry to the related spec docs before code changes continue.
 6. Every microstep must leave concrete evidence: artifact path, log line, grep
    output, or test result.
+7. A passed microstep ID is immutable for the active run. Remediation discovered
+   later must be recorded as substeps on the current microstep ID; do not reopen
+   earlier passed IDs.
+8. For pipeline wiring cards (`M-021`..`M-025`), grep-only presence checks are
+   non-authoritative; pass requires semantic evidence of argument wiring and
+   execution order.
 
 ### 18.2 Fixed Artifact Paths For Execution
 
@@ -1075,6 +1081,14 @@ If `G-03` fails:
 - `M-021` Wire scanner invocation into
   `ccl/scripts/wasm/compile-wasm-fasls.sh` after module compile and before image
   build.
+  - `M-021.1` declare scanner script and deterministic scope artifact path in
+    `compile-wasm-fasls.sh`.
+  - `M-021.2` require scanner invocation flags:
+    `--repo-root`, `--out`, `--feature-profile`, `--contract-json`.
+  - `M-021.3` require scanner invocation ordering:
+    module compile -> contract sidecar generation -> scanner -> bundle/image
+    handoff.
+  - `M-021.4` require fail-fast guard when scanner script is missing.
 - `M-022` Add CLI forwarding in `ccl/scripts/wasm/make-real-image.lisp` for:
   `--startup-symbol-scope`, `--startup-symbol-resolution-out`,
   `--startup-symbol-contract`.
@@ -1632,7 +1646,7 @@ rg -n 'package transitions|reader conditionals|escaped symbols|unsupported reade
 - Files: `$SCOPE_LOG`, `$SCOPE_JSON`
 - Command:
 ```bash
-test -s "$SCOPE_JSON" && rg -n 'STARTUP_SYMBOL_SCOPE_BUILD' "$SCOPE_LOG" && ! rg -n 'FAIL|error|reader-parse-error-fatal' "$SCOPE_LOG"
+test -s "$SCOPE_JSON" && rg -n 'STARTUP_SYMBOL_SCOPE_BUILD' "$SCOPE_LOG" && ! rg -n 'STARTUP_SYMBOL_SCOPE_BUILD_FAIL|reader-parse-error-fatal' "$SCOPE_LOG"
 ```
 - Expected evidence line:
 - scanner command exits successfully and artifact exists with diagnostics.
@@ -1648,12 +1662,21 @@ test -f ccl/doc/wasm/bootstrap-l0-contract.v1.json && node -e 'const fs=require(
 
 #### M-021
 - Files: `ccl/scripts/wasm/compile-wasm-fasls.sh`
-- Command:
+- Command set (all required):
 ```bash
-rg -n 'collect-startup-symbol-scope.lisp|bootstrap-l0-contract.v1.json|startup-symbol-scope' ccl/scripts/wasm/compile-wasm-fasls.sh
+node -e 'const fs=require("fs");const s=fs.readFileSync("ccl/scripts/wasm/compile-wasm-fasls.sh","utf8");const req=["STARTUP_SYMBOL_SCOPE_SCRIPT=\"$ROOT_DIR/scripts/wasm/collect-startup-symbol-scope.lisp\"","STARTUP_SYMBOL_SCOPE_OUT=\"$ROOT_DIR/doc/wasm/startup-symbol-scope.source_scope_v1.json\"","--repo-root \"$ROOT_DIR\"","--out \"$STARTUP_SYMBOL_SCOPE_OUT\"","--feature-profile wasm32-target-v1","--contract-json \"$CONTRACT_SIDECAR_OUT\""];const miss=req.filter(x=>!s.includes(x));if(miss.length){console.error("m021_missing_tokens",miss.join(","));process.exit(1);}console.log("m021_required_tokens_ok",req.length);'
+```
+```bash
+awk '/run "\$CCL_BIN" --no-init --batch -l "\$SCRIPT"/{compile=NR}/run node "\$CONTRACT_SIDECAR_SCRIPT"/{sidecar=NR}/run "\$CCL_BIN" --no-init --batch -l "\$STARTUP_SYMBOL_SCOPE_SCRIPT"/{scanner=NR}/run node "\$PACK_SCRIPT"/{pack=NR} END{ok=(compile&&sidecar&&scanner&&pack&&compile<sidecar&&sidecar<scanner&&scanner<pack); if(!ok){printf("m021_order_fail compile=%s sidecar=%s scanner=%s pack=%s\n",compile,sidecar,scanner,pack); exit 1} printf("m021_order_ok compile=%s sidecar=%s scanner=%s pack=%s\n",compile,sidecar,scanner,pack)}' ccl/scripts/wasm/compile-wasm-fasls.sh
+```
+```bash
+rg -n 'if \[ ! -f "\$STARTUP_SYMBOL_SCOPE_SCRIPT" \]|error: missing \$STARTUP_SYMBOL_SCOPE_SCRIPT' ccl/scripts/wasm/compile-wasm-fasls.sh
 ```
 - Expected evidence line:
-- compile pipeline invokes scanner before image build step.
+- `m021_required_tokens_ok 6` is printed.
+- `m021_order_ok ...` is printed with `compile < sidecar < scanner < pack`.
+- scanner missing-file guard exists and exits with `error: missing $STARTUP_SYMBOL_SCOPE_SCRIPT`.
+- compile pipeline scanner wiring is semantically verified, not grep-only.
 
 #### M-022
 - Files: `ccl/scripts/wasm/make-real-image.lisp`

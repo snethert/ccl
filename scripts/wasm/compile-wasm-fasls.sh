@@ -104,6 +104,20 @@ if [ "$COMPACT_RUNTIME_MODULES" -eq 1 ] && [ ! -f "$COMPACT_SCRIPT" ]; then
   exit 1
 fi
 
+CONTRACT_SIDECAR_SCRIPT="$ROOT_DIR/scripts/wasm/generate-bootstrap-l0-contract-sidecar.mjs"
+if [ ! -f "$CONTRACT_SIDECAR_SCRIPT" ]; then
+  echo "error: missing $CONTRACT_SIDECAR_SCRIPT" >&2
+  exit 1
+fi
+CONTRACT_SIDECAR_OUT="$ROOT_DIR/doc/wasm/bootstrap-l0-contract.v1.json"
+
+STARTUP_SYMBOL_SCOPE_SCRIPT="$ROOT_DIR/scripts/wasm/collect-startup-symbol-scope.lisp"
+if [ ! -f "$STARTUP_SYMBOL_SCOPE_SCRIPT" ]; then
+  echo "error: missing $STARTUP_SYMBOL_SCOPE_SCRIPT" >&2
+  exit 1
+fi
+STARTUP_SYMBOL_SCOPE_OUT="$ROOT_DIR/doc/wasm/startup-symbol-scope.source_scope_v1.json"
+
 SCRIPT_ARGS=()
 if [ "$FORCE" -eq 1 ]; then
   SCRIPT_ARGS+=(--force)
@@ -135,6 +149,13 @@ if [ "${#SCRIPT_ARGS[@]}" -gt 0 ]; then
 else
   run "$CCL_BIN" --no-init --batch -l "$SCRIPT"
 fi
+
+run node "$CONTRACT_SIDECAR_SCRIPT" --out "$CONTRACT_SIDECAR_OUT"
+run "$CCL_BIN" --no-init --batch -l "$STARTUP_SYMBOL_SCOPE_SCRIPT" -- \
+  --repo-root "$ROOT_DIR" \
+  --out "$STARTUP_SYMBOL_SCOPE_OUT" \
+  --feature-profile wasm32-target-v1 \
+  --contract-json "$CONTRACT_SIDECAR_OUT"
 
 if [ -n "$MODULES_OUT" ]; then
   run node "$PACK_SCRIPT" --manifest "$INLINE_TMP" --out-manifest "$MODULES_OUT"

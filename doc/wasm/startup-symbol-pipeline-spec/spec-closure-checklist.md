@@ -43,6 +43,7 @@ Implementation note:
 ## D. Pipeline Contracts
 
 - [x] Compile pipeline step insertion locked.
+- [x] `M-021` semantic wiring checks locked (required flags + ordering + fail-fast guard; not grep-only).
 - [x] Repro pipeline step insertion locked.
 - [x] make-real-image CLI propagation locked.
 - [x] make-real-image.lisp forwarding contract locked.
@@ -103,6 +104,7 @@ Implementation note:
 - [ ] `G-02` schema lock gate passed.
 - [ ] `G-03` scanner implementation gate passed.
 - [ ] `G-04` compile/repro integration gate passed.
+- [ ] `M-021.1`..`M-021.4` semantic substeps passed.
 - [ ] `G-05` resolver gate passed.
 - [ ] `G-06` map synthesis gate passed.
 - [ ] `G-07` initializer expansion gate passed.

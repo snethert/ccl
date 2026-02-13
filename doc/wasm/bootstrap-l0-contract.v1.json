@@ -1,0 +1,114 @@
+{
+  "id": "bootstrap-l0-contract-v1",
+  "phase": "pre-fasload",
+  "requiredCallables": [
+    {
+      "packageName": "CCL",
+      "symbolName": "%FASLOAD"
+    },
+    {
+      "packageName": "CCL",
+      "symbolName": "%FASL-OPEN"
+    },
+    {
+      "packageName": "CCL",
+      "symbolName": "%SIMPLE-FASL-OPEN"
+    }
+  ],
+  "requiredConstPools": [
+    {
+      "entryIndex": 4360,
+      "requiredRefs": [
+        0,
+        1,
+        2,
+        5,
+        6,
+        7
+      ],
+      "source": "fasload-simple-open"
+    },
+    {
+      "entryIndex": 4372,
+      "requiredRefs": [
+        0,
+        1,
+        2,
+        5,
+        6,
+        7
+      ],
+      "source": "fasload-open"
+    },
+    {
+      "entryIndex": 4412,
+      "requiredRefs": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "source": "fasload-dispatch"
+    }
+  ],
+  "requiredPackages": [
+    {
+      "packageName": "COMMON-LISP"
+    },
+    {
+      "packageName": "CCL"
+    },
+    {
+      "packageName": "KEYWORD"
+    }
+  ],
+  "requiredSpecialVariables": [
+    {
+      "packageName": "CCL",
+      "requireNonNil": false,
+      "symbolName": "%STRUCTURE-REFS%"
+    },
+    {
+      "packageName": "CCL",
+      "requireNonNil": true,
+      "symbolName": "*VECTOR-OUTPUT-STREAM-DEFAULT-INITIAL-ALLOCATION*"
+    },
+    {
+      "packageName": "CCL",
+      "requireNonNil": false,
+      "symbolName": "*FASL-API*"
+    }
+  ],
+  "requiredSymbols": [
+    {
+      "packageName": "CCL",
+      "source": "fasload-core",
+      "symbolName": "%FASLOAD"
+    },
+    {
+      "packageName": "CCL",
+      "source": "fasload-core",
+      "symbolName": "%FASL-OPEN"
+    },
+    {
+      "packageName": "CCL",
+      "source": "fasload-core",
+      "symbolName": "%SIMPLE-FASL-OPEN"
+    },
+    {
+      "packageName": "KEYWORD",
+      "source": "entry-4412",
+      "symbolName": "DEFAULT"
+    },
+    {
+      "packageName": "CCL",
+      "source": "entry-4412",
+      "symbolName": "*VECTOR-OUTPUT-STREAM-DEFAULT-INITIAL-ALLOCATION*"
+    },
+    {
+      "packageName": "CCL",
+      "source": "entry-4360/4372",
+      "symbolName": "%STRUCTURE-REFS%"
+    }
+  ]
+}

@@ -152,10 +152,12 @@ Status legend:
   - pipeline generates `bootstrap-l0-contract.v1.json` sidecar before scanner.
 - Implementation: `pending`
 - Required microsteps:
-  - `M-013`, `M-020`, `M-021`, `M-025`.
+  - `M-013`, `M-020`, `M-021` (`M-021.1`..`M-021.4`), `M-025`.
 - Closure evidence:
-  - scanner invocation includes `--contract-json`,
-  - scanner fails with `missing-contract-json` if sidecar absent.
+  - scanner invocation includes `--contract-json` and required scanner flags,
+  - compile script ordering proves
+    `compile -> contract sidecar -> scanner -> bundle/image handoff`,
+  - scanner missing-script guard fails fast with explicit missing-path error.
 
 ## C-011 Root Manifest Extensibility Contradiction
 
