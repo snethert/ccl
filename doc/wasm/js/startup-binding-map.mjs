@@ -7,6 +7,7 @@ import { BOOTSTRAP_L0_CONTRACT_V1 } from "./bootstrap-l0-contract.mjs";
 export const STARTUP_BINDING_MAP_SCHEMA_V1 = "startup_binding_map_v1";
 const STARTUP_BINDING_MAP_GENERATOR_V1 = "startup_binding_map_generator_v1";
 const STARTUP_BINDING_MAP_COVERAGE_SCHEMA_V1 = "startup_binding_map_coverage_v1";
+const UTF8_DECODER = new TextDecoder("utf-8");
 
 const FIXNUM_MIN = -0x20000000; // -536870912
 const FIXNUM_MAX = 0x1fffffff; // 536870911
@@ -605,9 +606,12 @@ function normalizeCoverageObject(coverage) {
   if (!coverage || typeof coverage !== "object" || Array.isArray(coverage)) return null;
   return {
     schema_version: STARTUP_BINDING_MAP_COVERAGE_SCHEMA_V1,
+    required_special_variable_bindings: coverage.required_special_variable_bindings ?? null,
     level0_source_scan: coverage.level0_source_scan ?? null,
     level0_function_bindings: coverage.level0_function_bindings ?? null,
     runtime_function_metadata: coverage.runtime_function_metadata ?? null,
+    contract_required_const_pool_function_bindings:
+      coverage.contract_required_const_pool_function_bindings ?? null,
   };
 }
 
@@ -644,6 +648,565 @@ export function normalizeStartupBindingMapArtifact(artifact) {
   };
 }
 
+function readConstPoolU32LE(bytes, state, fieldName) {
+  if ((state.offset + 4) > bytes.length) {
+    throw new Error(`const-pool truncated while reading ${fieldName}`);
+  }
+  const o = state.offset;
+  const value = (
+    bytes[o] |
+    (bytes[o + 1] << 8) |
+    (bytes[o + 2] << 16) |
+    (bytes[o + 3] << 24)
+  ) >>> 0;
+  state.offset += 4;
+  return value;
+}
+
+function readConstPoolUleb32(bytes, state, fieldName) {
+  let value = 0;
+  let shift = 0;
+  for (let i = 0; i < 5; i++) {
+    if (state.offset >= bytes.length) {
+      throw new Error(`const-pool truncated while reading ${fieldName}`);
+    }
+    const byte = bytes[state.offset++];
+    value |= (byte & 0x7f) << shift;
+    if ((byte & 0x80) === 0) {
+      return value >>> 0;
+    }
+    shift += 7;
+  }
+  throw new Error(`const-pool malformed uleb32 in ${fieldName}`);
+}
+
+function readConstPoolSleb32Raw(bytes, state, fieldName) {
+  for (let i = 0; i < 5; i++) {
+    if (state.offset >= bytes.length) {
+      throw new Error(`const-pool truncated while reading ${fieldName}`);
+    }
+    const byte = bytes[state.offset++];
+    if ((byte & 0x80) === 0) {
+      return;
+    }
+  }
+  throw new Error(`const-pool malformed sleb32 in ${fieldName}`);
+}
+
+function readConstPoolNat(bytes, state, version, fieldName) {
+  if (version >= 2) return readConstPoolUleb32(bytes, state, fieldName);
+  return readConstPoolU32LE(bytes, state, fieldName);
+}
+
+function readConstPoolSpan(bytes, state, len, fieldName) {
+  const n = len >>> 0;
+  if ((state.offset + n) > bytes.length) {
+    throw new Error(`const-pool truncated while reading ${fieldName}`);
+  }
+  const start = state.offset;
+  state.offset += n;
+  return bytes.subarray(start, start + n);
+}
+
+function parseConstPoolSymbolRefsFromBytes(bytesLike, entryIndex = 0) {
+  const refs = [];
+  const bytes = bytesLike instanceof Uint8Array
+    ? bytesLike
+    : (bytesLike == null ? null : Uint8Array.from(bytesLike));
+  if (!(bytes instanceof Uint8Array) || bytes.length < 2) {
+    return {
+      refs,
+      byConstIndex: new Map(),
+      error: null,
+      count: 0,
+      version: null,
+    };
+  }
+
+  const state = { offset: 0 };
+  let version = 0;
+  let count = 0;
+  try {
+    if (
+      bytes.length >= 8 &&
+      bytes[0] === 1 &&
+      bytes[1] === 0 &&
+      bytes[2] === 0 &&
+      bytes[3] === 0
+    ) {
+      version = readConstPoolU32LE(bytes, state, `entry=${entryIndex} version`);
+      count = readConstPoolU32LE(bytes, state, `entry=${entryIndex} count`);
+    } else {
+      version = readConstPoolUleb32(bytes, state, `entry=${entryIndex} version`);
+      count = readConstPoolUleb32(bytes, state, `entry=${entryIndex} count`);
+    }
+    if (version !== 1 && version !== 2) {
+      throw new Error(`unsupported const-pool version ${version}`);
+    }
+    for (let i = 0; i < count; i++) {
+      const tag = readConstPoolNat(bytes, state, version, `entry=${entryIndex} const=${i} tag`);
+      switch (tag) {
+        case 6:
+          if (version >= 2) readConstPoolSleb32Raw(bytes, state, `entry=${entryIndex} const=${i} fixnum`);
+          else readConstPoolU32LE(bytes, state, `entry=${entryIndex} const=${i} fixnum`);
+          break;
+        case 10:
+          readConstPoolNat(bytes, state, version, `entry=${entryIndex} const=${i} character`);
+          break;
+        case 11:
+          readConstPoolU32LE(bytes, state, `entry=${entryIndex} const=${i} single-float`);
+          break;
+        case 12:
+        case 13:
+        case 14:
+          readConstPoolU32LE(bytes, state, `entry=${entryIndex} const=${i} hi`);
+          readConstPoolU32LE(bytes, state, `entry=${entryIndex} const=${i} lo`);
+          break;
+        case 15: {
+          const digits = readConstPoolNat(bytes, state, version, `entry=${entryIndex} const=${i} bignum digits`);
+          for (let j = 0; j < digits; j++) {
+            readConstPoolU32LE(bytes, state, `entry=${entryIndex} const=${i} bignum digit=${j}`);
+          }
+          break;
+        }
+        case 1:
+        case 4: {
+          const nameLen = readConstPoolNat(bytes, state, version, `entry=${entryIndex} const=${i} name len`);
+          const nameBytes = readConstPoolSpan(bytes, state, nameLen, `entry=${entryIndex} const=${i} name bytes`);
+          const pkgLen = readConstPoolNat(bytes, state, version, `entry=${entryIndex} const=${i} pkg len`);
+          const pkgBytes = readConstPoolSpan(bytes, state, pkgLen, `entry=${entryIndex} const=${i} pkg bytes`);
+          let symbolName = "";
+          let packageName = "";
+          try {
+            symbolName = normalizeSymbolName(UTF8_DECODER.decode(nameBytes));
+          } catch {
+            symbolName = "";
+          }
+          try {
+            packageName = canonicalizePackageName(
+              pkgLen > 0 ? UTF8_DECODER.decode(pkgBytes) : "",
+            );
+          } catch {
+            packageName = "";
+          }
+          refs.push({
+            entry_index: entryIndex >>> 0,
+            const_index: i >>> 0,
+            tag: tag >>> 0,
+            symbol_name: symbolName,
+            package_name: packageName,
+          });
+          break;
+        }
+        case 2: {
+          const len = readConstPoolNat(bytes, state, version, `entry=${entryIndex} const=${i} string len`);
+          readConstPoolSpan(bytes, state, len, `entry=${entryIndex} const=${i} string bytes`);
+          break;
+        }
+        case 3:
+        case 5: {
+          const n = readConstPoolNat(bytes, state, version, `entry=${entryIndex} const=${i} vector count`);
+          for (let j = 0; j < n; j++) {
+            readConstPoolNat(bytes, state, version, `entry=${entryIndex} const=${i} vector index=${j}`);
+          }
+          break;
+        }
+        case 16:
+          readConstPoolNat(bytes, state, version, `entry=${entryIndex} const=${i} entry-function`);
+          break;
+        case 9: {
+          readConstPoolNat(bytes, state, version, `entry=${entryIndex} const=${i} gvector subtag`);
+          const n = readConstPoolNat(bytes, state, version, `entry=${entryIndex} const=${i} gvector count`);
+          for (let j = 0; j < n; j++) {
+            readConstPoolNat(bytes, state, version, `entry=${entryIndex} const=${i} gvector index=${j}`);
+          }
+          break;
+        }
+        case 7: {
+          const len = readConstPoolNat(bytes, state, version, `entry=${entryIndex} const=${i} package len`);
+          readConstPoolSpan(bytes, state, len, `entry=${entryIndex} const=${i} package bytes`);
+          break;
+        }
+        case 8:
+          readConstPoolNat(bytes, state, version, `entry=${entryIndex} const=${i} cons car`);
+          readConstPoolNat(bytes, state, version, `entry=${entryIndex} const=${i} cons cdr`);
+          break;
+        default:
+          throw new Error(`unsupported const-pool tag ${tag} at entry=${entryIndex} const=${i}`);
+      }
+    }
+  } catch (err) {
+    return {
+      refs: [],
+      byConstIndex: new Map(),
+      error: err?.message ?? String(err),
+      count: count >>> 0,
+      version: version >>> 0,
+    };
+  }
+
+  const byConstIndex = new Map();
+  for (const ref of refs) {
+    byConstIndex.set(ref.const_index >>> 0, ref);
+  }
+  return {
+    refs,
+    byConstIndex,
+    error: null,
+    count: count >>> 0,
+    version: version >>> 0,
+  };
+}
+
+function resolveFunctionFromMetadata(functionIndex, { packageName, symbolName }) {
+  const resolved = resolveFunctionEntry({ packageName, symbolName }, functionIndex);
+  if (resolved.status === "resolved") {
+    return {
+      ok: true,
+      entryIndex: resolved.entry_index >>> 0,
+      reason: null,
+      key: resolved.match_key ?? null,
+      source: "runtime-modules-metadata",
+    };
+  }
+  if (resolved.status === "ambiguous") {
+    return {
+      ok: false,
+      entryIndex: null,
+      reason: "ambiguous",
+      key: resolved.match_key ?? null,
+      source: "runtime-modules-metadata",
+      alternatives: Array.isArray(resolved.alternatives) ? resolved.alternatives.slice() : [],
+    };
+  }
+  return {
+    ok: false,
+    entryIndex: null,
+    reason: resolved.reason ?? "missing",
+    key: resolved.match_key ?? null,
+    source: "runtime-modules-metadata",
+  };
+}
+
+export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
+  mapArtifact,
+  contract = BOOTSTRAP_L0_CONTRACT_V1,
+  functions = [],
+  resolveFunctionDesignator = null,
+  getConstPoolBytesForEntry = null,
+} = {}) {
+  const stats = {
+    schema_version: "startup_binding_map_contract_const_pool_function_build_v1",
+    status: "ok",
+    enabled: false,
+    required_pool_count: 0,
+    required_ref_count: 0,
+    seed_ref_count: 0,
+    seed_symbol_ref_count: 0,
+    symbol_refs_examined: 0,
+    symbol_refs_non_symbol: 0,
+    symbol_refs_named: 0,
+    resolver_resolved: 0,
+    resolver_unresolved: 0,
+    resolver_ambiguous: 0,
+    resolver_symbol_name_fallback_skipped: 0,
+    resolver_keyword_package_skipped: 0,
+    const_pool_entries_requested: 0,
+    const_pool_entries_available: 0,
+    const_pool_entries_missing: 0,
+    const_pool_decode_failures: 0,
+    const_pool_decode_error_sample: null,
+    transitive_const_pool_entries_scanned: 0,
+    transitive_const_pool_refs_queued: 0,
+    emitted_entries: 0,
+    upgraded_existing_entries: 0,
+    skipped_existing_entry_backed: 0,
+    skipped_duplicate_refs: 0,
+    missing_const_pool_provider: false,
+  };
+
+  const requiredConstPools = Array.isArray(contract?.requiredConstPools)
+    ? contract.requiredConstPools
+    : [];
+  stats.required_pool_count = requiredConstPools.length >>> 0;
+
+  const requiredRefs = [];
+  const seenRequiredRefKeys = new Set();
+  for (const pool of requiredConstPools) {
+    const entryIndex = Number(pool?.entryIndex);
+    if (!Number.isInteger(entryIndex) || entryIndex < 0) continue;
+    for (const rawRef of Array.isArray(pool?.requiredRefs) ? pool.requiredRefs : []) {
+      const constIndex = Number(rawRef);
+      if (!Number.isInteger(constIndex) || constIndex < 0) continue;
+      const key = `${entryIndex >>> 0}:${constIndex >>> 0}`;
+      if (seenRequiredRefKeys.has(key)) continue;
+      seenRequiredRefKeys.add(key);
+      requiredRefs.push({
+        entry_index: entryIndex >>> 0,
+        const_index: constIndex >>> 0,
+      });
+    }
+  }
+  stats.required_ref_count = requiredRefs.length >>> 0;
+  if (requiredRefs.length === 0) {
+    return { changed: false, mapArtifact, stats };
+  }
+
+  if (typeof getConstPoolBytesForEntry !== "function") {
+    stats.status = "degraded";
+    stats.missing_const_pool_provider = true;
+    return { changed: false, mapArtifact, stats };
+  }
+
+  stats.enabled = true;
+  stats.seed_ref_count = requiredRefs.length >>> 0;
+
+  const functionIndex = buildFunctionIndex(functions);
+  const resolver = typeof resolveFunctionDesignator === "function"
+    ? ({ packageName, symbolName }) => {
+      const resolved = resolveFunctionDesignator({
+        name: normalizeSymbolName(symbolName),
+        packageName: canonicalizePackageName(packageName),
+      });
+      if (resolved?.ok) {
+        return {
+          ok: true,
+          entryIndex: resolved.entryIndex >>> 0,
+          reason: null,
+          key: resolved.key ?? null,
+          source: resolved.source ?? null,
+        };
+      }
+      return {
+        ok: false,
+        entryIndex: null,
+        reason: resolved?.reason ?? "missing",
+        key: resolved?.key ?? null,
+        source: resolved?.source ?? null,
+        alternatives: Array.isArray(resolved?.alternatives) ? resolved.alternatives.slice() : [],
+      };
+    }
+    : (spec) => resolveFunctionFromMetadata(functionIndex, spec);
+
+  const entries = Array.isArray(mapArtifact?.entries) ? mapArtifact.entries.map((entry) => ({ ...entry })) : [];
+  const functionEntryIndexBySymbolKey = new Map();
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+    const targetCell = normalizeEntryTargetCell(entry);
+    if (targetCell !== "fcell") continue;
+    const packageName = canonicalizePackageName(entry?.package_name ?? "");
+    const symbolName = normalizeSymbolName(entry?.symbol_name ?? "");
+    const symbolKey = makeSymbolKey(packageName, symbolName);
+    if (!symbolKey) continue;
+    functionEntryIndexBySymbolKey.set(symbolKey, i);
+  }
+
+  const parsedConstPoolByEntry = new Map();
+  const loadConstPoolRefs = (entryIndexRaw) => {
+    const entryIndex = entryIndexRaw >>> 0;
+    if (parsedConstPoolByEntry.has(entryIndex)) {
+      return parsedConstPoolByEntry.get(entryIndex);
+    }
+    stats.const_pool_entries_requested++;
+    let bytes = null;
+    try {
+      bytes = getConstPoolBytesForEntry(entryIndex);
+    } catch (_err) {
+      bytes = null;
+    }
+    const byteView = bytes instanceof Uint8Array
+      ? bytes
+      : (bytes == null ? null : Uint8Array.from(bytes));
+    if (!(byteView instanceof Uint8Array) || byteView.length === 0) {
+      stats.const_pool_entries_missing++;
+      const empty = {
+        refs: [],
+        byConstIndex: new Map(),
+        available: false,
+      };
+      parsedConstPoolByEntry.set(entryIndex, empty);
+      return empty;
+    }
+    stats.const_pool_entries_available++;
+    const parsed = parseConstPoolSymbolRefsFromBytes(byteView, entryIndex);
+    if (parsed.error) {
+      stats.const_pool_decode_failures++;
+      if (stats.const_pool_decode_error_sample == null) {
+        stats.const_pool_decode_error_sample = parsed.error;
+      }
+      const failed = {
+        refs: [],
+        byConstIndex: new Map(),
+        available: true,
+      };
+      parsedConstPoolByEntry.set(entryIndex, failed);
+      return failed;
+    }
+    const loaded = {
+      refs: parsed.refs,
+      byConstIndex: parsed.byConstIndex,
+      available: true,
+    };
+    parsedConstPoolByEntry.set(entryIndex, loaded);
+    return loaded;
+  };
+
+  const pendingRefs = [];
+  const seenRefKeys = new Set();
+  const enqueueRef = (ref, depth = 0) => {
+    const key = `${ref.entry_index >>> 0}:${ref.const_index >>> 0}`;
+    if (seenRefKeys.has(key)) {
+      stats.skipped_duplicate_refs++;
+      return;
+    }
+    seenRefKeys.add(key);
+    pendingRefs.push({
+      entry_index: ref.entry_index >>> 0,
+      const_index: ref.const_index >>> 0,
+      package_name: canonicalizePackageName(ref.package_name ?? ""),
+      symbol_name: normalizeSymbolName(ref.symbol_name ?? ""),
+      tag: Number.isFinite(ref.tag) ? (ref.tag >>> 0) : null,
+      depth: Math.max(0, depth | 0),
+    });
+  };
+
+  for (const required of requiredRefs) {
+    const poolRefs = loadConstPoolRefs(required.entry_index);
+    const parsedRef = poolRefs.byConstIndex.get(required.const_index >>> 0);
+    if (!parsedRef) {
+      stats.symbol_refs_non_symbol++;
+      continue;
+    }
+    enqueueRef(parsedRef, 0);
+    stats.seed_symbol_ref_count++;
+  }
+
+  const scannedResolvedEntries = new Set();
+  let cursor = 0;
+  while (cursor < pendingRefs.length) {
+    const ref = pendingRefs[cursor++];
+    stats.symbol_refs_examined++;
+    const symbolName = normalizeSymbolName(ref.symbol_name);
+    if (!symbolName) {
+      stats.symbol_refs_non_symbol++;
+      continue;
+    }
+    stats.symbol_refs_named++;
+    const packageName = canonicalizePackageName(ref.package_name);
+    if (packageName === "KEYWORD") {
+      stats.resolver_keyword_package_skipped++;
+      continue;
+    }
+    const resolution = resolver({ packageName, symbolName });
+    if (!resolution?.ok) {
+      if (resolution?.reason === "ambiguous") stats.resolver_ambiguous++;
+      else stats.resolver_unresolved++;
+      continue;
+    }
+    if (packageName && resolution?.key !== "symbol-key") {
+      stats.resolver_symbol_name_fallback_skipped++;
+      continue;
+    }
+    stats.resolver_resolved++;
+    const resolvedEntryIndex = resolution.entryIndex >>> 0;
+
+    const canonicalPackage = packageName || "CCL";
+    const symbolKey = makeSymbolKey(canonicalPackage, symbolName);
+    if (!symbolKey) continue;
+
+    const existingIndex = functionEntryIndexBySymbolKey.get(symbolKey);
+    if (existingIndex != null) {
+      const existing = entries[existingIndex];
+      const existingAvailability = String(existing?.availability ?? "").toLowerCase();
+      const existingInitializerKind = String(existing?.initializer?.kind ?? "").toLowerCase();
+      const existingEntryIndex = Number(existing?.initializer?.entry_index);
+      if (
+        existingAvailability === "entry-backed" &&
+        existingInitializerKind === "entry-function" &&
+        Number.isInteger(existingEntryIndex) &&
+        (existingEntryIndex >>> 0) === resolvedEntryIndex
+      ) {
+        stats.skipped_existing_entry_backed++;
+      } else {
+        entries[existingIndex] = {
+          ...existing,
+          binding_class: "function",
+          target_cell: "fcell",
+          package_name: canonicalPackage,
+          symbol_name: symbolName,
+          symbol_key: symbolKey,
+          source: "contract-required-const-pool-ref",
+          require_non_nil: false,
+          availability: "entry-backed",
+          initializer: {
+            kind: "entry-function",
+            function_name: symbolName,
+            entry_index: resolvedEntryIndex,
+            match_key: resolution?.key ?? null,
+            source: resolution?.source ?? null,
+          },
+        };
+        stats.upgraded_existing_entries++;
+      }
+    } else {
+      const entry = {
+        binding_class: "function",
+        target_cell: "fcell",
+        package_name: canonicalPackage,
+        symbol_name: symbolName,
+        symbol_key: symbolKey,
+        source: "contract-required-const-pool-ref",
+        require_non_nil: false,
+        definition: {
+          entry_index: ref.entry_index >>> 0,
+          const_index: ref.const_index >>> 0,
+          const_tag: ref.tag,
+        },
+        availability: "entry-backed",
+        initializer: {
+          kind: "entry-function",
+          function_name: symbolName,
+          entry_index: resolvedEntryIndex,
+          match_key: resolution?.key ?? null,
+          source: resolution?.source ?? null,
+        },
+      };
+      functionEntryIndexBySymbolKey.set(symbolKey, entries.length);
+      entries.push(entry);
+      stats.emitted_entries++;
+    }
+
+    if (scannedResolvedEntries.has(resolvedEntryIndex)) continue;
+    scannedResolvedEntries.add(resolvedEntryIndex);
+    const transitive = loadConstPoolRefs(resolvedEntryIndex);
+    if (!transitive.available) continue;
+    stats.transitive_const_pool_entries_scanned++;
+    stats.transitive_const_pool_refs_queued += transitive.refs.length >>> 0;
+    for (const item of transitive.refs) {
+      enqueueRef(item, (ref.depth | 0) + 1);
+    }
+  }
+
+  const coverage = mapArtifact?.coverage && typeof mapArtifact.coverage === "object"
+    ? { ...mapArtifact.coverage }
+    : {};
+  coverage.contract_required_const_pool_function_bindings = stats;
+  const nextArtifact = {
+    ...(mapArtifact ?? {}),
+    schema_version: mapArtifact?.schema_version ?? STARTUP_BINDING_MAP_SCHEMA_V1,
+    generator: mapArtifact?.generator ?? STARTUP_BINDING_MAP_GENERATOR_V1,
+    contract_id: mapArtifact?.contract_id ?? (typeof contract?.id === "string" ? contract.id : null),
+    coverage,
+    entries,
+    counts: summarizeEntries(entries),
+  };
+  return {
+    changed: (stats.emitted_entries + stats.upgraded_existing_entries) > 0,
+    mapArtifact: nextArtifact,
+    stats,
+  };
+}
+
 export async function buildStartupBindingMapArtifact({
   repoRoot,
   contract = BOOTSTRAP_L0_CONTRACT_V1,
@@ -667,6 +1230,22 @@ export async function buildStartupBindingMapArtifact({
     deferred: 0,
     unsupported: 0,
   };
+  const requiredSpecialBindingStats = {
+    required_contract_items: requiredSpecialVariables.length >>> 0,
+    emitted_entries: 0,
+    skipped_invalid_contract_items: 0,
+    definition_found: 0,
+    definition_missing: 0,
+    availability: {
+      literal: 0,
+      entry_backed: 0,
+      deferred: 0,
+      unsupported: 0,
+    },
+    require_non_nil: 0,
+    require_non_nil_with_initializer: 0,
+    require_non_nil_without_initializer: 0,
+  };
   const runtimeBindingStats = {
     emitted_entries: 0,
     entry_backed: 0,
@@ -676,12 +1255,18 @@ export async function buildStartupBindingMapArtifact({
     skipped_duplicate_symbol_keys: 0,
   };
 
+  // Contract-required specials/constants are emitted as explicit vcell bindings.
   for (const item of requiredSpecialVariables) {
     const packageName = canonicalizePackageName(item?.packageName ?? "");
     const symbolName = normalizeSymbolName(item?.symbolName ?? "");
-    if (!packageName || !symbolName) continue;
+    if (!packageName || !symbolName) {
+      requiredSpecialBindingStats.skipped_invalid_contract_items++;
+      continue;
+    }
     const symbolKey = makeSymbolKey(packageName, symbolName);
     const definition = specialDefinitions.get(symbolKey) ?? null;
+    if (definition) requiredSpecialBindingStats.definition_found++;
+    else requiredSpecialBindingStats.definition_missing++;
 
     let availability = "deferred";
     let initializer = {
@@ -698,6 +1283,26 @@ export async function buildStartupBindingMapArtifact({
         reason: "no-initform",
       };
     }
+    switch (availability) {
+      case "literal":
+      case "entry-backed":
+      case "unsupported":
+        requiredSpecialBindingStats.availability[availability]++;
+        break;
+      case "deferred":
+      default:
+        requiredSpecialBindingStats.availability.deferred++;
+        break;
+    }
+    const requireNonNil = Boolean(item?.requireNonNil);
+    if (requireNonNil) {
+      requiredSpecialBindingStats.require_non_nil++;
+      if (availability === "literal" || availability === "entry-backed") {
+        requiredSpecialBindingStats.require_non_nil_with_initializer++;
+      } else {
+        requiredSpecialBindingStats.require_non_nil_without_initializer++;
+      }
+    }
 
     const entry = {
       binding_class: "special-variable",
@@ -706,7 +1311,7 @@ export async function buildStartupBindingMapArtifact({
       symbol_name: symbolName,
       symbol_key: symbolKey,
       source: typeof item?.source === "string" ? item.source : null,
-      require_non_nil: Boolean(item?.requireNonNil),
+      require_non_nil: requireNonNil,
       definition: definition ? {
         form_kind: definition.form_kind,
         file: definition.file,
@@ -718,6 +1323,7 @@ export async function buildStartupBindingMapArtifact({
     };
     entries.push(entry);
     entryBySymbolKey.set(symbolKey, entry);
+    requiredSpecialBindingStats.emitted_entries++;
   }
 
   for (const definition of level0Scan.definitions.values()) {
@@ -768,6 +1374,7 @@ export async function buildStartupBindingMapArtifact({
 
   const coverage = {
     schema_version: STARTUP_BINDING_MAP_COVERAGE_SCHEMA_V1,
+    required_special_variable_bindings: requiredSpecialBindingStats,
     level0_source_scan: level0Scan.stats,
     level0_function_bindings: level0BindingStats,
     runtime_function_metadata: {

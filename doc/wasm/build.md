@@ -420,15 +420,23 @@ Startup architecture plan (updated):
 
 - Target model: artifact-first startup. JS host consumes startup metadata and
   applies it; JS does not perform broad runtime dependency discovery.
+- Contract ownership:
+  - `doc/wasm/js/bootstrap-l0-contract.mjs` declares required startup
+    const-pool/package/symbol/callable/special requirements.
+- Artifact ownership:
+  - `doc/wasm/js/startup-binding-map.mjs` is the sole producer of startup
+    bindings and emits explicit `target_cell: "vcell"` entries for
+    `requiredSpecialVariables`, plus level-0 function `target_cell: "fcell"`
+    bindings.
+- Runtime ownership:
+  - `doc/wasm/js/make-real-image.mjs` applies the artifact entries directly in
+    one pre-fasload pass.
+  - Required const-pool refs are verified by `L0_BOOTSTRAP_CONTRACT` gate
+    checks only; map apply does not perform const-pool-wide symbol discovery.
 - Required artifact coverage for pre-fasload:
   - required vcell initializations (`requiredSpecialVariables`);
   - Level-0 function bindings (full source scan);
   - first-required-fasload callable closure needed at boundary.
-- Transitional rule until full artifact closure is emitted:
-  - any runtime derivation must be seed-scoped to required boundary roots,
-    machine-bounded, and must fail explicitly on budget exhaustion.
-  - no per-symbol or per-function patches.
-  - strict gate/phase semantics remain unchanged.
 
 Machine-readable diagnostics:
 

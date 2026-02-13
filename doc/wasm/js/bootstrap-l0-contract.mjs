@@ -70,14 +70,11 @@ const REQUIRED_SPECIALS = Object.freeze([
 ]);
 
 /*
- * Plan update (artifact-first startup):
- * - startupBindingMap generation uses this contract's required special-variable
- *   set for vcell initialization and emits fcell bindings from a
- *   comprehensive level-0 function scan.
- * - The target architecture is that make-real-image applies a complete
- *   precomputed startup map and performs no broad runtime const-pool discovery.
- * - Transitional runtime derivation (if present) must remain seed-scoped,
- *   machine-bounded, and never replace strict gate/phase semantics.
+ * Responsibility split (artifact-first startup):
+ * - This contract declares startup requirements.
+ * - startup-binding-map.mjs emits the concrete pre-fasload bindings artifact.
+ * - make-real-image.mjs applies that artifact, while L0 contract gating stays
+ *   strict and independently verifies required const-pool/package/symbol state.
  */
 
 export const BOOTSTRAP_L0_CONTRACT_V1 = Object.freeze({
