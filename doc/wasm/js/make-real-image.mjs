@@ -80,11 +80,71 @@ const STARTUP_SYMBOL_RESOLUTION_COUNTER_FIELDS = Object.freeze([
   "required_unresolved",
   "optional_unresolved",
 ]);
+const STARTUP_SYMBOL_REQUIRED_CLASS = Object.freeze({
+  REQUIRED_CALLABLE: "required-callable",
+  REQUIRED_SPECIAL: "required-special",
+  OPTIONAL: "optional",
+  NONE: "none",
+});
+const STARTUP_SYMBOL_REQUIRED_CLASS_MAPPING_TABLE = Object.freeze([
+  ["contract-required-callable", STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_CALLABLE],
+  ["contract-required-special", STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_SPECIAL],
+  ["bindable-symbol", STARTUP_SYMBOL_REQUIRED_CLASS.OPTIONAL],
+  ["non-bindable-symbol", STARTUP_SYMBOL_REQUIRED_CLASS.NONE],
+]);
+
+function startupSymbolBindingKey(packageName, symbolName) {
+  const packageToken = String(packageName ?? "").trim().toUpperCase();
+  const symbolToken = String(symbolName ?? "").trim().toUpperCase();
+  if (!packageToken || !symbolToken) return null;
+  return `${packageToken}::${symbolToken}`;
+}
+
+function startupSymbolRequiredClass({
+  symbolRecord,
+  packageName,
+  symbolName,
+  requiredCallableKeys,
+  requiredSpecialKeys,
+}) {
+  const symbolKey = startupSymbolBindingKey(packageName, symbolName);
+  const bindable = Boolean(symbolRecord?.bindable);
+  for (const [rule, requiredClass] of STARTUP_SYMBOL_REQUIRED_CLASS_MAPPING_TABLE) {
+    if (rule === "contract-required-callable" && symbolKey && requiredCallableKeys.has(symbolKey)) {
+      return requiredClass;
+    }
+    if (rule === "contract-required-special" && symbolKey && requiredSpecialKeys.has(symbolKey)) {
+      return requiredClass;
+    }
+    if (rule === "bindable-symbol" && bindable) {
+      return requiredClass;
+    }
+    if (rule === "non-bindable-symbol") {
+      return requiredClass;
+    }
+  }
+  return STARTUP_SYMBOL_REQUIRED_CLASS.NONE;
+}
 
 function createStartupSymbolResolutionCounters() {
   return Object.fromEntries(
     STARTUP_SYMBOL_RESOLUTION_COUNTER_FIELDS.map((field) => [field, 0]),
   );
+}
+
+function incrementStartupSymbolResolutionUnresolvedCounters(counters, requiredClass) {
+  if (!counters || typeof counters !== "object") return;
+  switch (requiredClass) {
+    case STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_CALLABLE:
+    case STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_SPECIAL:
+      counters.required_unresolved++;
+      break;
+    case STARTUP_SYMBOL_REQUIRED_CLASS.OPTIONAL:
+      counters.optional_unresolved++;
+      break;
+    default:
+      break;
+  }
 }
 
 function fail(msg) {
@@ -189,6 +249,8 @@ function usage() {
   console.log("  --subprims PATH     subprims.wasm path (default: doc/wasm/js/subprims.wasm)");
   console.log("  --subprims-map PATH subprims-map.json path (default: doc/wasm/subprims-map.json)");
   console.log("  --startup-symbol-scope PATH  Startup symbol scope JSON artifact override");
+  console.log("  --startup-symbol-resolution-out PATH  Optional startup symbol resolution artifact output");
+  console.log("  --startup-symbol-contract PATH  Optional startup symbol contract JSON artifact override");
   console.log("  --bootstrap-boundary-report PATH  Optional JSON state/diff report");
   console.log("  -h, --help          Show this help");
 }
@@ -231,6 +293,12 @@ function parseArgs(argv) {
         break;
       case "--startup-symbol-scope":
         out.startupSymbolScope = argv[++i];
+        break;
+      case "--startup-symbol-resolution-out":
+        out.startupSymbolResolutionOut = argv[++i];
+        break;
+      case "--startup-symbol-contract":
+        out.startupSymbolContract = argv[++i];
         break;
       case "--bootstrap-boundary-report":
         out.bootstrapBoundaryReport = argv[++i];
@@ -482,6 +550,9 @@ const buildProvenancePath = args.buildProvenance
   : null;
 const startupSymbolScopePath = args.startupSymbolScope
   ? path.resolve(args.startupSymbolScope)
+  : null;
+const startupSymbolResolutionOutPath = args.startupSymbolResolutionOut
+  ? path.resolve(args.startupSymbolResolutionOut)
   : null;
 const bootstrapBoundaryReportPath = args.bootstrapBoundaryReport
   ? path.resolve(args.bootstrapBoundaryReport)
@@ -1225,7 +1296,7 @@ function applyStartupBindingMapDeferredBindingsForConstPoolEntry(entryIndexRaw, 
     typeof ex.wasm_probe_symbol_fcell === "function" &&
     typeof ex.wasm_probe_last_status === "function" &&
     typeof ex.wasm_debug_function_entry_index === "function" &&
-    typeof ex.wasm_set_raw_symbol_fcell_entry_function === "function"
+    typeof ex.wasm_set_raw_symbol_cell_initializer === "function"
   );
   if (!hasRequiredExports) return;
 
@@ -1270,7 +1341,17 @@ function applyStartupBindingMapDeferredBindingsForConstPoolEntry(entryIndexRaw, 
       }
     }
 
-    ex.wasm_set_raw_symbol_fcell_entry_function(rawSymbol >>> 0, binding.resolved_entry_index >>> 0);
+    ex.wasm_set_raw_symbol_cell_initializer(
+      rawSymbol >>> 0,
+      WASM_SYMBOL_TARGET_CELL.FCELL,
+      WASM_SYMBOL_CELL_INITIALIZER_KIND.ENTRY_FUNCTION,
+      0,
+      binding.resolved_entry_index >>> 0,
+      0,
+      0,
+      0,
+      0,
+    );
     if (probeStatus() !== OK_STATUS) {
       applyFailed++;
       continue;
@@ -2260,8 +2341,271 @@ const L0_PROBE_STATUS_NAMES = new Map([
   [L0_PROBE_STATUS.PACKAGE_NOT_PACKAGE, "package-not-package"],
 ]);
 
+const WASM_SYMBOL_TARGET_CELL = Object.freeze({
+  VCELL: 1,
+  FCELL: 2,
+});
+
+const WASM_SYMBOL_CELL_INITIALIZER_KIND = Object.freeze({
+  LITERAL_FIXNUM: 1,
+  LITERAL_NIL: 2,
+  ENTRY_FUNCTION: 3,
+  LITERAL_SYMBOL: 4,
+  LITERAL_KEYWORD: 5,
+});
+
 function l0ProbeStatusName(status) {
   return L0_PROBE_STATUS_NAMES.get(status >>> 0) ?? `status-${status >>> 0}`;
+}
+
+function startupSymbolResolutionReasonForProbeStatus(status) {
+  switch (status >>> 0) {
+    case L0_PROBE_STATUS.PACKAGE_MISSING:
+      return "package-missing";
+    case L0_PROBE_STATUS.SYMBOL_MISSING:
+      return "symbol-missing";
+    case L0_PROBE_STATUS.ARG_INVALID:
+      return "arg-invalid";
+    case L0_PROBE_STATUS.SYMBOL_NOT_SYMBOL:
+      return "symbol-not-symbol";
+    case L0_PROBE_STATUS.SYMBOL_INVALID:
+      return "symbol-invalid";
+    case L0_PROBE_STATUS.PACKAGE_NOT_PACKAGE:
+      return "package-not-package";
+    default:
+      return "probe-status-not-ok";
+  }
+}
+
+function buildStartupSymbolResolutionArtifact({
+  scopeArtifact,
+  resolverSource,
+  contract = BOOTSTRAP_L0_CONTRACT_V1,
+} = {}) {
+  const startedAtMs = Date.now();
+  const counters = createStartupSymbolResolutionCounters();
+  const records = [];
+  const symbols = Array.isArray(scopeArtifact?.symbols) ? scopeArtifact.symbols : [];
+  const symbolResolverSource = "hybrid";
+  const scopeHash = (
+    scopeArtifact &&
+    typeof scopeArtifact === "object" &&
+    !Array.isArray(scopeArtifact)
+  )
+    ? startupSymbolScopeIdentityHash(scopeArtifact)
+    : null;
+  const hasResolverExports = (
+    typeof ex.wasm_get_lisp_nil === "function" &&
+    typeof ex.wasm_probe_symbol === "function" &&
+    typeof ex.wasm_probe_symbol_fcell === "function" &&
+    typeof ex.wasm_probe_symbol_vcell === "function" &&
+    typeof ex.wasm_probe_last_status === "function" &&
+    typeof ex.wasm_debug_function_entry_index === "function"
+  );
+  const requiredCallableKeys = new Set(
+    (Array.isArray(contract?.requiredCallables) ? contract.requiredCallables : [])
+      .map((entry) => startupSymbolBindingKey(entry?.packageName, entry?.symbolName))
+      .filter((key) => typeof key === "string" && key.length > 0),
+  );
+  const requiredSpecialKeys = new Set(
+    (Array.isArray(contract?.requiredSpecialVariables) ? contract.requiredSpecialVariables : [])
+      .map((entry) => startupSymbolBindingKey(entry?.packageName, entry?.symbolName))
+      .filter((key) => typeof key === "string" && key.length > 0),
+  );
+
+  if (!hasResolverExports) {
+    return {
+      artifact: {
+        schema_version: STARTUP_SYMBOL_RESOLUTION_SCHEMA_V1,
+        generator_version: "startup_symbol_resolution_generator_v1",
+        resolver_source: resolverSource ?? null,
+        inputs_hash: scopeHash,
+        symbols: records,
+        counts: counters,
+        duration_ms: (Date.now() - startedAtMs) | 0,
+      },
+      summary: {
+        schema_version: STARTUP_SYMBOL_RESOLUTION_SCHEMA_V1,
+        status: "skip",
+        reason: "resolver-exports-missing",
+        resolver_source: resolverSource ?? null,
+        inputs_hash: scopeHash,
+        counts: counters,
+        duration_ms: (Date.now() - startedAtMs) | 0,
+      },
+    };
+  }
+
+  const nil = ex.wasm_get_lisp_nil() >>> 0;
+  const probeStatus = () => (ex.wasm_probe_last_status() >>> 0);
+  const utf8 = new TextEncoder();
+  const scratchUtf8 = (text) => {
+    const bytes = utf8.encode(String(text ?? ""));
+    if (bytes.length === 0) return { ptr: 0, len: 0 };
+    const ptr = copyBytesToScratch(runtime.memory, bytes);
+    return { ptr, len: bytes.length >>> 0 };
+  };
+  const toHex = (value) => `0x${(value >>> 0).toString(16)}`;
+
+  for (const symbolRecord of symbols) {
+    counters.total++;
+    const packageName = String(symbolRecord?.package_name ?? "").trim();
+    const symbolName = String(symbolRecord?.symbol_name ?? "").trim();
+    const symbolKey = String(symbolRecord?.key ?? "").trim() || (
+      packageName && symbolName
+        ? `${packageName.toUpperCase()}::${symbolName.toUpperCase()}`
+        : null
+    );
+    const requiredClass = startupSymbolRequiredClass({
+      symbolRecord,
+      packageName,
+      symbolName,
+      requiredCallableKeys,
+      requiredSpecialKeys,
+    });
+
+    if (!packageName || !symbolName) {
+      counters.invalid_input++;
+      records.push({
+        key: symbolKey,
+        package_name: packageName || null,
+        symbol_name: symbolName || null,
+        status: STARTUP_SYMBOL_RESOLUTION_STATUS.INVALID_INPUT,
+        resolver_source: symbolResolverSource,
+        required_class: requiredClass,
+        reason: packageName ? "empty-symbol-name" : "empty-package-name",
+        symbol_raw: null,
+        probe_status: null,
+        probe_status_name: null,
+        fcell_raw: null,
+        fentry: null,
+        vcell_raw: null,
+        vcell_bound: false,
+      });
+      continue;
+    }
+
+    const symbolNameMem = scratchUtf8(symbolName);
+    const packageNameMem = scratchUtf8(packageName);
+    const symbolRaw = ex.wasm_probe_symbol(
+      symbolNameMem.ptr >>> 0,
+      symbolNameMem.len >>> 0,
+      packageNameMem.ptr >>> 0,
+      packageNameMem.len >>> 0,
+    ) >>> 0;
+    const symbolStatus = probeStatus();
+
+    if (symbolStatus !== L0_PROBE_STATUS.OK) {
+      const unresolvedProbe = (
+        symbolStatus === L0_PROBE_STATUS.PACKAGE_MISSING ||
+        symbolStatus === L0_PROBE_STATUS.SYMBOL_MISSING
+      );
+      const status = unresolvedProbe
+        ? STARTUP_SYMBOL_RESOLUTION_STATUS.UNRESOLVED
+        : STARTUP_SYMBOL_RESOLUTION_STATUS.PROBE_ERROR;
+      if (unresolvedProbe) {
+        counters.unresolved++;
+        incrementStartupSymbolResolutionUnresolvedCounters(counters, requiredClass);
+      }
+      else counters.probe_error++;
+      records.push({
+        key: symbolKey,
+        package_name: packageName,
+        symbol_name: symbolName,
+        status,
+        resolver_source: symbolResolverSource,
+        required_class: requiredClass,
+        reason: startupSymbolResolutionReasonForProbeStatus(symbolStatus),
+        symbol_raw: toHex(symbolRaw),
+        probe_status: symbolStatus,
+        probe_status_name: l0ProbeStatusName(symbolStatus),
+        fcell_raw: null,
+        fentry: null,
+        vcell_raw: null,
+        vcell_bound: false,
+      });
+      continue;
+    }
+
+    if (symbolRaw === 0 || symbolRaw === nil) {
+      counters.unresolved++;
+      incrementStartupSymbolResolutionUnresolvedCounters(counters, requiredClass);
+      records.push({
+        key: symbolKey,
+        package_name: packageName,
+        symbol_name: symbolName,
+        status: STARTUP_SYMBOL_RESOLUTION_STATUS.UNRESOLVED,
+        resolver_source: symbolResolverSource,
+        required_class: requiredClass,
+        reason: "symbol-missing",
+        symbol_raw: toHex(symbolRaw),
+        probe_status: symbolStatus,
+        probe_status_name: l0ProbeStatusName(symbolStatus),
+        fcell_raw: null,
+        fentry: null,
+        vcell_raw: null,
+        vcell_bound: false,
+      });
+      continue;
+    }
+
+    const fcellRaw = ex.wasm_probe_symbol_fcell(symbolRaw >>> 0) >>> 0;
+    const fcellStatus = probeStatus();
+    const fentry = fcellStatus === L0_PROBE_STATUS.OK
+      ? (ex.wasm_debug_function_entry_index(fcellRaw >>> 0) | 0)
+      : -1;
+    const vcellRaw = ex.wasm_probe_symbol_vcell(symbolRaw >>> 0) >>> 0;
+    const vcellStatus = probeStatus();
+    const vcellBound = (
+      vcellStatus === L0_PROBE_STATUS.OK &&
+      vcellRaw !== 0 &&
+      vcellRaw !== nil
+    );
+    counters.resolved++;
+    if (fentry >= 0) {
+      counters.function_capable++;
+    }
+    if (vcellBound) {
+      counters.vcell_bound++;
+    }
+    records.push({
+      key: symbolKey,
+      package_name: packageName,
+      symbol_name: symbolName,
+      status: STARTUP_SYMBOL_RESOLUTION_STATUS.RESOLVED,
+      resolver_source: symbolResolverSource,
+      required_class: requiredClass,
+      reason: null,
+      symbol_raw: toHex(symbolRaw),
+      probe_status: symbolStatus,
+      probe_status_name: l0ProbeStatusName(symbolStatus),
+      fcell_raw: fcellStatus === L0_PROBE_STATUS.OK ? toHex(fcellRaw) : null,
+      fentry: fentry >= 0 ? (fentry >>> 0) : null,
+      vcell_raw: vcellStatus === L0_PROBE_STATUS.OK ? toHex(vcellRaw) : null,
+      vcell_bound: vcellBound,
+    });
+  }
+
+  const artifact = {
+    schema_version: STARTUP_SYMBOL_RESOLUTION_SCHEMA_V1,
+    generator_version: "startup_symbol_resolution_generator_v1",
+    resolver_source: resolverSource ?? null,
+    inputs_hash: scopeHash,
+    symbols: records,
+    counts: counters,
+    duration_ms: (Date.now() - startedAtMs) | 0,
+  };
+  return {
+    artifact,
+    summary: {
+      schema_version: artifact.schema_version,
+      status: "ok",
+      resolver_source: artifact.resolver_source,
+      inputs_hash: artifact.inputs_hash,
+      counts: artifact.counts,
+      duration_ms: artifact.duration_ms,
+    },
+  };
 }
 
 function buildStartupBindingMapBuildSummary({
@@ -2413,6 +2757,7 @@ function applyStartupBindingMapOrFail({
   };
   // Artifact-owned startup: apply map entries directly; required const-pool refs are gate-only.
   const appliedSymbolBindingKeys = new Set();
+  // exact package+name probe only; no symbol-name-only fallback.
   const probeSymbolByName = (nameMem, pkgMem) => {
     const raw = ex.wasm_probe_symbol(
       nameMem.ptr >>> 0,
@@ -2433,6 +2778,20 @@ function applyStartupBindingMapOrFail({
     const availability = String(entry?.availability ?? "deferred");
     const initializer = entry?.initializer ?? {};
     const initializerKind = String(initializer?.kind ?? "");
+    const initializerReason = String(initializer?.reason ?? "").trim().toLowerCase();
+    const requiredClass = String(
+      entry?.definition?.required_class ?? entry?.required_class ?? "",
+    ).trim().toLowerCase();
+    const resolutionStatus = String(
+      entry?.definition?.resolution_status ?? entry?.resolution_status ?? "",
+    ).trim().toLowerCase();
+    const requiredUnresolvedDeferred = initializerReason === "required-symbol-unresolved" || (
+      (
+        requiredClass === STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_CALLABLE ||
+        requiredClass === STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_SPECIAL
+      ) &&
+      resolutionStatus === STARTUP_SYMBOL_RESOLUTION_STATUS.UNRESOLVED
+    );
     const bindingKey = makeSymbolBindingKey(targetCell, packageName, symbolName);
     if (bindingKey && appliedSymbolBindingKeys.has(bindingKey)) {
       continue;
@@ -2440,6 +2799,24 @@ function applyStartupBindingMapOrFail({
 
     const eligible = availability === "literal" || availability === "entry-backed";
     if (!eligible) {
+      // required unresolved is fatal pre-gate; optional unresolved remains deferred with reason.
+      if (requiredUnresolvedDeferred) {
+        requiredUninitialized++;
+        targetCounts[targetCell].required_non_nil_unavailable++;
+        failures.push({
+          package_name: packageName || null,
+          symbol_name: symbolName || null,
+          target_cell: targetCell,
+          binding_class: bindingClass,
+          reason: "required-symbol-unresolved",
+          availability,
+          initializer_kind: initializerKind || null,
+          initializer_reason: initializer?.reason ?? null,
+          required_class: requiredClass || null,
+          resolution_status: resolutionStatus || null,
+        });
+        continue;
+      }
       if (requireNonNil) {
         requiredUninitialized++;
         targetCounts[targetCell].required_non_nil_unavailable++;
@@ -2459,13 +2836,13 @@ function applyStartupBindingMapOrFail({
     eligibleEntries++;
     targetCounts[targetCell].eligible_entries++;
 
-    if (!symbolName) {
+    if (!packageName || !symbolName) {
       failures.push({
         package_name: packageName || null,
-        symbol_name: null,
+        symbol_name: symbolName || null,
         target_cell: targetCell,
         binding_class: bindingClass,
-        reason: "entry-missing-symbol-name",
+        reason: packageName ? "entry-missing-symbol-name" : "entry-missing-package-name",
       });
       continue;
     }
@@ -2585,36 +2962,36 @@ function applyStartupBindingMapOrFail({
       continue;
     }
 
+    const initializerTargetCell = targetCell === "fcell"
+      ? WASM_SYMBOL_TARGET_CELL.FCELL
+      : WASM_SYMBOL_TARGET_CELL.VCELL;
+
     let missingExport = null;
     switch (initializerKind) {
       case "literal-fixnum":
-        if (targetCell !== "vcell") {
-          missingExport = "initializer-target-mismatch";
-        } else {
-          missingExport = typeof ex.wasm_set_symbol_vcell_fixnum !== "function"
-            ? "wasm_set_symbol_vcell_fixnum"
-            : null;
-        }
-        break;
       case "literal-nil":
         if (targetCell !== "vcell") {
           missingExport = "initializer-target-mismatch";
         } else {
-          missingExport = typeof ex.wasm_set_symbol_vcell_nil !== "function"
-            ? "wasm_set_symbol_vcell_nil"
+          missingExport = typeof ex.wasm_set_symbol_cell_initializer !== "function"
+            ? "wasm_set_symbol_cell_initializer"
+            : null;
+        }
+        break;
+      case "literal-symbol":
+      case "literal-keyword":
+        if (targetCell !== "vcell") {
+          missingExport = "initializer-target-mismatch";
+        } else {
+          missingExport = typeof ex.wasm_set_symbol_cell_initializer !== "function"
+            ? "wasm_set_symbol_cell_initializer"
             : null;
         }
         break;
       case "entry-function":
-        if (targetCell === "fcell") {
-          missingExport = typeof ex.wasm_set_symbol_fcell_entry_function !== "function"
-            ? "wasm_set_symbol_fcell_entry_function"
-            : null;
-        } else {
-          missingExport = typeof ex.wasm_set_symbol_vcell_entry_function !== "function"
-            ? "wasm_set_symbol_vcell_entry_function"
-            : null;
-        }
+        missingExport = typeof ex.wasm_set_symbol_cell_initializer !== "function"
+          ? "wasm_set_symbol_cell_initializer"
+          : null;
         break;
       default:
         missingExport = null;
@@ -2649,23 +3026,124 @@ function applyStartupBindingMapOrFail({
           });
           continue;
         }
-        ex.wasm_set_symbol_vcell_fixnum(
+        ex.wasm_set_symbol_cell_initializer(
           nameMem.ptr >>> 0,
           nameMem.len >>> 0,
           pkgMem.ptr >>> 0,
           pkgMem.len >>> 0,
+          initializerTargetCell >>> 0,
+          WASM_SYMBOL_CELL_INITIALIZER_KIND.LITERAL_FIXNUM,
           value | 0,
+          0,
+          0,
+          0,
+          0,
+          0,
         );
         break;
       }
       case "literal-nil":
-        ex.wasm_set_symbol_vcell_nil(
+        ex.wasm_set_symbol_cell_initializer(
           nameMem.ptr >>> 0,
           nameMem.len >>> 0,
           pkgMem.ptr >>> 0,
           pkgMem.len >>> 0,
+          initializerTargetCell >>> 0,
+          WASM_SYMBOL_CELL_INITIALIZER_KIND.LITERAL_NIL,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
         );
         break;
+      case "literal-symbol": {
+        const literalPackageName = String(
+          initializer?.literal_package_name ??
+          initializer?.value_package_name ??
+          initializer?.package_name ??
+          initializer?.package ??
+          "",
+        ).trim();
+        const literalSymbolName = String(
+          initializer?.literal_symbol_name ??
+          initializer?.value_symbol_name ??
+          initializer?.symbol_name ??
+          initializer?.name ??
+          "",
+        ).trim();
+        if (!literalPackageName || !literalSymbolName) {
+          failures.push({
+            package_name: packageName || null,
+            symbol_name: symbolName || null,
+            target_cell: targetCell,
+            binding_class: bindingClass,
+            reason: "initializer-invalid-literal-symbol",
+            initializer_kind: initializerKind,
+            initializer_package_name: literalPackageName || null,
+            initializer_symbol_name: literalSymbolName || null,
+          });
+          continue;
+        }
+        const literalNameMem = scratchUtf8(literalSymbolName);
+        const literalPkgMem = scratchUtf8(literalPackageName);
+        ex.wasm_set_symbol_cell_initializer(
+          nameMem.ptr >>> 0,
+          nameMem.len >>> 0,
+          pkgMem.ptr >>> 0,
+          pkgMem.len >>> 0,
+          initializerTargetCell >>> 0,
+          WASM_SYMBOL_CELL_INITIALIZER_KIND.LITERAL_SYMBOL,
+          0,
+          0,
+          literalNameMem.ptr >>> 0,
+          literalNameMem.len >>> 0,
+          literalPkgMem.ptr >>> 0,
+          literalPkgMem.len >>> 0,
+        );
+        break;
+      }
+      case "literal-keyword": {
+        const literalKeywordName = String(
+          initializer?.literal_keyword_name ??
+          initializer?.keyword_name ??
+          initializer?.value_keyword_name ??
+          initializer?.value_symbol_name ??
+          initializer?.symbol_name ??
+          initializer?.name ??
+          "",
+        ).trim();
+        if (!literalKeywordName) {
+          failures.push({
+            package_name: packageName || null,
+            symbol_name: symbolName || null,
+            target_cell: targetCell,
+            binding_class: bindingClass,
+            reason: "initializer-invalid-literal-keyword",
+            initializer_kind: initializerKind,
+            initializer_symbol_name: literalKeywordName || null,
+          });
+          continue;
+        }
+        const literalKeywordMem = scratchUtf8(literalKeywordName);
+        const literalKeywordPkgMem = scratchUtf8("KEYWORD");
+        ex.wasm_set_symbol_cell_initializer(
+          nameMem.ptr >>> 0,
+          nameMem.len >>> 0,
+          pkgMem.ptr >>> 0,
+          pkgMem.len >>> 0,
+          initializerTargetCell >>> 0,
+          WASM_SYMBOL_CELL_INITIALIZER_KIND.LITERAL_KEYWORD,
+          0,
+          0,
+          literalKeywordMem.ptr >>> 0,
+          literalKeywordMem.len >>> 0,
+          literalKeywordPkgMem.ptr >>> 0,
+          literalKeywordPkgMem.len >>> 0,
+        );
+        break;
+      }
       case "entry-function": {
         const entryIndex = Number(initializer?.entry_index);
         if (!Number.isInteger(entryIndex) || entryIndex < 0) {
@@ -2680,23 +3158,20 @@ function applyStartupBindingMapOrFail({
           });
           continue;
         }
-        if (targetCell === "fcell") {
-          ex.wasm_set_symbol_fcell_entry_function(
-            nameMem.ptr >>> 0,
-            nameMem.len >>> 0,
-            pkgMem.ptr >>> 0,
-            pkgMem.len >>> 0,
-            entryIndex >>> 0,
-          );
-        } else {
-          ex.wasm_set_symbol_vcell_entry_function(
-            nameMem.ptr >>> 0,
-            nameMem.len >>> 0,
-            pkgMem.ptr >>> 0,
-            pkgMem.len >>> 0,
-            entryIndex >>> 0,
-          );
-        }
+        ex.wasm_set_symbol_cell_initializer(
+          nameMem.ptr >>> 0,
+          nameMem.len >>> 0,
+          pkgMem.ptr >>> 0,
+          pkgMem.len >>> 0,
+          initializerTargetCell >>> 0,
+          WASM_SYMBOL_CELL_INITIALIZER_KIND.ENTRY_FUNCTION,
+          0,
+          entryIndex >>> 0,
+          0,
+          0,
+          0,
+          0,
+        );
         break;
       }
       default:
@@ -2898,7 +3373,19 @@ function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
   const readDebug = (name) => (typeof ex[name] === "function" ? (ex[name]() >>> 0) : null);
 
   const probePackage = (packageName) => {
-    const pkgMem = scratchUtf8(packageName);
+    const normalizedPackageName = String(packageName ?? "").trim();
+    if (!normalizedPackageName) {
+      const status = L0_PROBE_STATUS.PACKAGE_MISSING;
+      return {
+        raw: 0,
+        status,
+        statusName: l0ProbeStatusName(status),
+        subtag: miscSubtag(0),
+        isNil: true,
+        packageName: normalizedPackageName,
+      };
+    }
+    const pkgMem = scratchUtf8(normalizedPackageName);
     const raw = ex.wasm_probe_package(pkgMem.ptr >>> 0, pkgMem.len >>> 0) >>> 0;
     const status = probeStatus();
     return {
@@ -2907,13 +3394,29 @@ function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
       statusName: l0ProbeStatusName(status),
       subtag: miscSubtag(raw),
       isNil: raw === nil,
-      packageName,
+      packageName: normalizedPackageName,
     };
   };
 
   const probeSymbol = ({ packageName, symbolName }) => {
-    const nameMem = scratchUtf8(symbolName);
-    const pkgMem = scratchUtf8(packageName);
+    const normalizedPackageName = String(packageName ?? "").trim();
+    const normalizedSymbolName = String(symbolName ?? "").trim();
+    if (!normalizedPackageName || !normalizedSymbolName) {
+      const status = !normalizedPackageName
+        ? L0_PROBE_STATUS.PACKAGE_MISSING
+        : L0_PROBE_STATUS.SYMBOL_MISSING;
+      return {
+        raw: 0,
+        status,
+        statusName: l0ProbeStatusName(status),
+        subtag: miscSubtag(0),
+        isNil: true,
+        packageName: normalizedPackageName,
+        symbolName: normalizedSymbolName,
+      };
+    }
+    const nameMem = scratchUtf8(normalizedSymbolName);
+    const pkgMem = scratchUtf8(normalizedPackageName);
     const raw = ex.wasm_probe_symbol(
       nameMem.ptr >>> 0,
       nameMem.len >>> 0,
@@ -2927,8 +3430,8 @@ function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
       statusName: l0ProbeStatusName(status),
       subtag: miscSubtag(raw),
       isNil: raw === nil,
-      packageName,
-      symbolName,
+      packageName: normalizedPackageName,
+      symbolName: normalizedSymbolName,
     };
   };
 
@@ -3185,6 +3688,29 @@ const kernelDebugSymbolName = typeof ex.wasm_debug_copy_symbol_name === "functio
   }
   : null;
 
+// Resolver stage: consume startup scope after runtime exports are available
+// and before startup binding map synthesis/build.
+const startupSymbolResolutionBuild = buildStartupSymbolResolutionArtifact({
+  scopeArtifact: embeddedStartupBindingMapRaw,
+  resolverSource: startupBindingMapSource,
+});
+console.log(`STARTUP_SYMBOL_RESOLUTION_BUILD ${JSON.stringify(startupSymbolResolutionBuild.summary)}`);
+if (startupSymbolResolutionOutPath) {
+  try {
+    await fs.mkdir(path.dirname(startupSymbolResolutionOutPath), { recursive: true });
+    await fs.writeFile(
+      startupSymbolResolutionOutPath,
+      `${JSON.stringify(startupSymbolResolutionBuild.artifact)}\n`,
+      "utf8",
+    );
+  } catch (err) {
+    fail(
+      `Unable to write --startup-symbol-resolution-out JSON at ${startupSymbolResolutionOutPath}: ${err?.message ?? err}`,
+    );
+  }
+}
+
+// Build startup binding map only after resolver completion.
 const startupBindingMapFunctionAugmentation =
   augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     mapArtifact: startupBindingMapArtifact,

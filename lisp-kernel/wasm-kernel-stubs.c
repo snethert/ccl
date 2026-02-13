@@ -6751,171 +6751,188 @@ wasm_probe_symbol_vcell(LispObj raw_sym)
   return raw->vcell;
 }
 
-__attribute__((used, visibility("default"), export_name("wasm_set_symbol_vcell_fixnum")))
-LispObj
-wasm_set_symbol_vcell_fixnum(uint32_t name_ptr,
-                             uint32_t name_len,
-                             uint32_t pkg_ptr,
-                             uint32_t pkg_len,
-                             int32_t fixnum_value)
+enum wasm_symbol_vcell_initializer_kind {
+  WASM_SYMBOL_VCELL_INITIALIZER_KIND_FIXNUM = 1u,
+  WASM_SYMBOL_VCELL_INITIALIZER_KIND_NIL = 2u,
+  WASM_SYMBOL_VCELL_INITIALIZER_KIND_ENTRY_FUNCTION = 3u,
+  WASM_SYMBOL_VCELL_INITIALIZER_KIND_LITERAL_SYMBOL = 4u,
+  WASM_SYMBOL_VCELL_INITIALIZER_KIND_LITERAL_KEYWORD = 5u,
+};
+
+enum wasm_symbol_target_cell {
+  WASM_SYMBOL_TARGET_CELL_VCELL = 1u,
+  WASM_SYMBOL_TARGET_CELL_FCELL = 2u,
+};
+
+static LispObj
+wasm_resolve_symbol_vcell_initializer_value(uint32_t initializer_kind,
+                                            int32_t fixnum_value,
+                                            uint32_t entry_index,
+                                            uint32_t value_name_ptr,
+                                            uint32_t value_name_len,
+                                            uint32_t value_pkg_ptr,
+                                            uint32_t value_pkg_len)
 {
-  LispObj sym = wasm_probe_symbol(name_ptr, name_len, pkg_ptr, pkg_len);
-  if (wasm_probe_last_status_code != WASM_PROBE_STATUS_OK || !wasm_probe_symbol_p(sym)) {
-    return lisp_nil;
+  static const uint8_t keyword_pkg_name[] = {
+    'K', 'E', 'Y', 'W', 'O', 'R', 'D'
+  };
+
+  switch (initializer_kind) {
+    case WASM_SYMBOL_VCELL_INITIALIZER_KIND_FIXNUM:
+      wasm_probe_set_status(WASM_PROBE_STATUS_OK);
+      return box_fixnum((signed_natural)fixnum_value);
+    case WASM_SYMBOL_VCELL_INITIALIZER_KIND_NIL:
+      wasm_probe_set_status(WASM_PROBE_STATUS_OK);
+      return lisp_nil;
+    case WASM_SYMBOL_VCELL_INITIALIZER_KIND_ENTRY_FUNCTION: {
+      TCR *tcr = wasm_get_current_tcr();
+      if (tcr == NULL) {
+        wasm_probe_set_status(WASM_PROBE_STATUS_ARG_INVALID);
+        return lisp_nil;
+      }
+      LispObj fn = wasm_const_pool_make_entry_function(tcr, entry_index);
+      if (fn == lisp_nil) {
+        wasm_probe_set_status(WASM_PROBE_STATUS_SYMBOL_INVALID);
+        return lisp_nil;
+      }
+      wasm_probe_set_status(WASM_PROBE_STATUS_OK);
+      return fn;
+    }
+    case WASM_SYMBOL_VCELL_INITIALIZER_KIND_LITERAL_SYMBOL: {
+      LispObj sym = wasm_probe_symbol(
+        value_name_ptr,
+        value_name_len,
+        value_pkg_ptr,
+        value_pkg_len
+      );
+      if (wasm_probe_last_status_code != WASM_PROBE_STATUS_OK || !wasm_probe_symbol_p(sym)) {
+        return lisp_nil;
+      }
+      wasm_probe_set_status(WASM_PROBE_STATUS_OK);
+      return sym;
+    }
+    case WASM_SYMBOL_VCELL_INITIALIZER_KIND_LITERAL_KEYWORD: {
+      LispObj sym = wasm_probe_symbol(
+        value_name_ptr,
+        value_name_len,
+        (uint32_t)(uintptr_t)keyword_pkg_name,
+        (uint32_t)sizeof(keyword_pkg_name)
+      );
+      if (wasm_probe_last_status_code != WASM_PROBE_STATUS_OK || !wasm_probe_symbol_p(sym)) {
+        return lisp_nil;
+      }
+      wasm_probe_set_status(WASM_PROBE_STATUS_OK);
+      return sym;
+    }
+    default:
+      wasm_probe_set_status(WASM_PROBE_STATUS_ARG_INVALID);
+      return lisp_nil;
   }
-  lispsymbol *raw = (lispsymbol *)ptr_from_lispobj(untag(sym));
-  raw->vcell = box_fixnum((signed_natural)fixnum_value);
-  wasm_probe_set_status(WASM_PROBE_STATUS_OK);
-  return raw->vcell;
 }
 
-__attribute__((used, visibility("default"), export_name("wasm_set_symbol_vcell_nil")))
-LispObj
-wasm_set_symbol_vcell_nil(uint32_t name_ptr,
-                          uint32_t name_len,
-                          uint32_t pkg_ptr,
-                          uint32_t pkg_len)
-{
-  LispObj sym = wasm_probe_symbol(name_ptr, name_len, pkg_ptr, pkg_len);
-  if (wasm_probe_last_status_code != WASM_PROBE_STATUS_OK || !wasm_probe_symbol_p(sym)) {
-    return lisp_nil;
-  }
-  lispsymbol *raw = (lispsymbol *)ptr_from_lispobj(untag(sym));
-  raw->vcell = lisp_nil;
-  wasm_probe_set_status(WASM_PROBE_STATUS_OK);
-  return raw->vcell;
-}
-
-__attribute__((used, visibility("default"), export_name("wasm_set_symbol_vcell_entry_function")))
-LispObj
-wasm_set_symbol_vcell_entry_function(uint32_t name_ptr,
-                                     uint32_t name_len,
-                                     uint32_t pkg_ptr,
-                                     uint32_t pkg_len,
-                                     uint32_t entry_index)
-{
-  LispObj sym = wasm_probe_symbol(name_ptr, name_len, pkg_ptr, pkg_len);
-  if (wasm_probe_last_status_code != WASM_PROBE_STATUS_OK || !wasm_probe_symbol_p(sym)) {
-    return lisp_nil;
-  }
-  TCR *tcr = wasm_get_current_tcr();
-  if (tcr == NULL) {
-    wasm_probe_set_status(WASM_PROBE_STATUS_ARG_INVALID);
-    return lisp_nil;
-  }
-  LispObj fn = wasm_const_pool_make_entry_function(tcr, entry_index);
-  if (fn == lisp_nil) {
-    wasm_probe_set_status(WASM_PROBE_STATUS_SYMBOL_INVALID);
-    return lisp_nil;
-  }
-  lispsymbol *raw = (lispsymbol *)ptr_from_lispobj(untag(sym));
-  raw->vcell = fn;
-  wasm_probe_set_status(WASM_PROBE_STATUS_OK);
-  return raw->vcell;
-}
-
-__attribute__((used, visibility("default"), export_name("wasm_set_symbol_fcell_entry_function")))
-LispObj
-wasm_set_symbol_fcell_entry_function(uint32_t name_ptr,
-                                     uint32_t name_len,
-                                     uint32_t pkg_ptr,
-                                     uint32_t pkg_len,
-                                     uint32_t entry_index)
-{
-  LispObj sym = wasm_probe_symbol(name_ptr, name_len, pkg_ptr, pkg_len);
-  if (wasm_probe_last_status_code != WASM_PROBE_STATUS_OK || !wasm_probe_symbol_p(sym)) {
-    return lisp_nil;
-  }
-  TCR *tcr = wasm_get_current_tcr();
-  if (tcr == NULL) {
-    wasm_probe_set_status(WASM_PROBE_STATUS_ARG_INVALID);
-    return lisp_nil;
-  }
-  LispObj fn = wasm_const_pool_make_entry_function(tcr, entry_index);
-  if (fn == lisp_nil) {
-    wasm_probe_set_status(WASM_PROBE_STATUS_SYMBOL_INVALID);
-    return lisp_nil;
-  }
-  lispsymbol *raw = (lispsymbol *)ptr_from_lispobj(untag(sym));
-  raw->fcell = fn;
-  wasm_probe_set_status(WASM_PROBE_STATUS_OK);
-  return raw->fcell;
-}
-
-__attribute__((used, visibility("default"), export_name("wasm_set_raw_symbol_vcell_fixnum")))
-LispObj
-wasm_set_raw_symbol_vcell_fixnum(LispObj raw_sym, int32_t fixnum_value)
+static LispObj
+wasm_set_raw_symbol_cell_initializer_internal(LispObj raw_sym,
+                                              uint32_t target_cell,
+                                              uint32_t initializer_kind,
+                                              int32_t fixnum_value,
+                                              uint32_t entry_index,
+                                              uint32_t value_name_ptr,
+                                              uint32_t value_name_len,
+                                              uint32_t value_pkg_ptr,
+                                              uint32_t value_pkg_len)
 {
   if (!wasm_probe_symbol_p(raw_sym)) {
     wasm_probe_set_status(WASM_PROBE_STATUS_SYMBOL_INVALID);
     return lisp_nil;
   }
-  lispsymbol *raw = (lispsymbol *)ptr_from_lispobj(untag(raw_sym));
-  raw->vcell = box_fixnum((signed_natural)fixnum_value);
-  wasm_probe_set_status(WASM_PROBE_STATUS_OK);
-  return raw->vcell;
-}
-
-__attribute__((used, visibility("default"), export_name("wasm_set_raw_symbol_vcell_nil")))
-LispObj
-wasm_set_raw_symbol_vcell_nil(LispObj raw_sym)
-{
-  if (!wasm_probe_symbol_p(raw_sym)) {
-    wasm_probe_set_status(WASM_PROBE_STATUS_SYMBOL_INVALID);
-    return lisp_nil;
-  }
-  lispsymbol *raw = (lispsymbol *)ptr_from_lispobj(untag(raw_sym));
-  raw->vcell = lisp_nil;
-  wasm_probe_set_status(WASM_PROBE_STATUS_OK);
-  return raw->vcell;
-}
-
-__attribute__((used, visibility("default"), export_name("wasm_set_raw_symbol_vcell_entry_function")))
-LispObj
-wasm_set_raw_symbol_vcell_entry_function(LispObj raw_sym, uint32_t entry_index)
-{
-  if (!wasm_probe_symbol_p(raw_sym)) {
-    wasm_probe_set_status(WASM_PROBE_STATUS_SYMBOL_INVALID);
-    return lisp_nil;
-  }
-  TCR *tcr = wasm_get_current_tcr();
-  if (tcr == NULL) {
+  if (target_cell == WASM_SYMBOL_TARGET_CELL_FCELL &&
+      initializer_kind != WASM_SYMBOL_VCELL_INITIALIZER_KIND_ENTRY_FUNCTION) {
     wasm_probe_set_status(WASM_PROBE_STATUS_ARG_INVALID);
     return lisp_nil;
   }
-  LispObj fn = wasm_const_pool_make_entry_function(tcr, entry_index);
-  if (fn == lisp_nil) {
-    wasm_probe_set_status(WASM_PROBE_STATUS_SYMBOL_INVALID);
+  LispObj value = wasm_resolve_symbol_vcell_initializer_value(
+    initializer_kind,
+    fixnum_value,
+    entry_index,
+    value_name_ptr,
+    value_name_len,
+    value_pkg_ptr,
+    value_pkg_len
+  );
+  if (wasm_probe_last_status_code != WASM_PROBE_STATUS_OK) {
     return lisp_nil;
   }
   lispsymbol *raw = (lispsymbol *)ptr_from_lispobj(untag(raw_sym));
-  raw->vcell = fn;
-  wasm_probe_set_status(WASM_PROBE_STATUS_OK);
-  return raw->vcell;
+  switch (target_cell) {
+    case WASM_SYMBOL_TARGET_CELL_VCELL:
+      raw->vcell = value;
+      wasm_probe_set_status(WASM_PROBE_STATUS_OK);
+      return raw->vcell;
+    case WASM_SYMBOL_TARGET_CELL_FCELL:
+      raw->fcell = value;
+      wasm_probe_set_status(WASM_PROBE_STATUS_OK);
+      return raw->fcell;
+    default:
+      wasm_probe_set_status(WASM_PROBE_STATUS_ARG_INVALID);
+      return lisp_nil;
+  }
 }
 
-__attribute__((used, visibility("default"), export_name("wasm_set_raw_symbol_fcell_entry_function")))
+__attribute__((used, visibility("default"), export_name("wasm_set_raw_symbol_cell_initializer")))
 LispObj
-wasm_set_raw_symbol_fcell_entry_function(LispObj raw_sym, uint32_t entry_index)
+wasm_set_raw_symbol_cell_initializer(LispObj raw_sym,
+                                     uint32_t target_cell,
+                                     uint32_t initializer_kind,
+                                     int32_t fixnum_value,
+                                     uint32_t entry_index,
+                                     uint32_t value_name_ptr,
+                                     uint32_t value_name_len,
+                                     uint32_t value_pkg_ptr,
+                                     uint32_t value_pkg_len)
 {
-  if (!wasm_probe_symbol_p(raw_sym)) {
-    wasm_probe_set_status(WASM_PROBE_STATUS_SYMBOL_INVALID);
+  return wasm_set_raw_symbol_cell_initializer_internal(
+    raw_sym,
+    target_cell,
+    initializer_kind,
+    fixnum_value,
+    entry_index,
+    value_name_ptr,
+    value_name_len,
+    value_pkg_ptr,
+    value_pkg_len
+  );
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_set_symbol_cell_initializer")))
+LispObj
+wasm_set_symbol_cell_initializer(uint32_t name_ptr,
+                                 uint32_t name_len,
+                                 uint32_t pkg_ptr,
+                                 uint32_t pkg_len,
+                                 uint32_t target_cell,
+                                 uint32_t initializer_kind,
+                                 int32_t fixnum_value,
+                                 uint32_t entry_index,
+                                 uint32_t value_name_ptr,
+                                 uint32_t value_name_len,
+                                 uint32_t value_pkg_ptr,
+                                 uint32_t value_pkg_len)
+{
+  LispObj sym = wasm_probe_symbol(name_ptr, name_len, pkg_ptr, pkg_len);
+  if (wasm_probe_last_status_code != WASM_PROBE_STATUS_OK || !wasm_probe_symbol_p(sym)) {
     return lisp_nil;
   }
-  TCR *tcr = wasm_get_current_tcr();
-  if (tcr == NULL) {
-    wasm_probe_set_status(WASM_PROBE_STATUS_ARG_INVALID);
-    return lisp_nil;
-  }
-  LispObj fn = wasm_const_pool_make_entry_function(tcr, entry_index);
-  if (fn == lisp_nil) {
-    wasm_probe_set_status(WASM_PROBE_STATUS_SYMBOL_INVALID);
-    return lisp_nil;
-  }
-  lispsymbol *raw = (lispsymbol *)ptr_from_lispobj(untag(raw_sym));
-  raw->fcell = fn;
-  wasm_probe_set_status(WASM_PROBE_STATUS_OK);
-  return raw->fcell;
+  return wasm_set_raw_symbol_cell_initializer_internal(
+    sym,
+    target_cell,
+    initializer_kind,
+    fixnum_value,
+    entry_index,
+    value_name_ptr,
+    value_name_len,
+    value_pkg_ptr,
+    value_pkg_len
+  );
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_debug_all_packages_raw")))

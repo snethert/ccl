@@ -1,30 +1,40 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-02-13T19:12:59.416Z",
+  "generated_at": "2026-02-13T21:56:31.284Z",
   "repo": {
     "root": "/Users/buildsomething/Source/ccl",
-    "head_sha": "01426a01793baeedbd7a07b0ae19f996de9f4c5e",
-    "head_short": "01426a01",
+    "head_sha": "5503ec070a3df64188bec4470609bed51aaa6e50",
+    "head_short": "5503ec07",
     "branch": "wasm-port",
     "dirty": true,
     "dirty_files": [
-      " M scripts/wasm/repro-startup-pipeline.sh",
-      "?? doc/wasm/repro/startup-pipeline-20260213T190647Z-01426a01/",
-      "?? doc/wasm/startup-symbol-scope.source_scope_v1.json",
-      "?? doc/wasm/wasm-runtime-modules.json.inline-v1.tmp.bin",
-      "?? doc/wasm/wasm-runtime-modules.json.inline-v1.tmp.json"
+      " M doc/wasm/js/make-real-image.mjs",
+      " M doc/wasm/js/startup-binding-map.mjs",
+      " M doc/wasm/js/wasmcl.wasm",
+      " M doc/wasm/session-handoff.json",
+      " M doc/wasm/startup-symbol-scope.source_scope_v1.json",
+      " M doc/wasm/wasm-runtime-modules.json",
+      " D doc/wasm/wasm-runtime-modules.json.inline-v1.tmp.bin",
+      " D doc/wasm/wasm-runtime-modules.json.inline-v1.tmp.json",
+      " M lisp-kernel/wasm-kernel-stubs.c",
+      " M scripts/wasm/pack-inline-bundle-v2.mjs",
+      "?? doc/wasm/js/tests/",
+      "?? doc/wasm/repro/startup-pipeline-20260213T211145Z-5503ec07/",
+      "?? doc/wasm/repro/startup-pipeline-20260213T213432Z-5503ec07/",
+      "?? doc/wasm/repro/startup-pipeline-20260213T214133Z-5503ec07/",
+      "?? doc/wasm/repro/startup-pipeline-20260213T214845Z-5503ec07/"
     ]
   },
   "current_blocker": "No known blocker captured yet",
-  "failing_command": null,
+  "failing_command": "709:Error: wasm_memory_grow_and_relocate failed for 19 pages",
   "failure_signature": [
-    "125:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"TOPLEVEL\",\"entry_index\":4772,\"resolved_entry_index\":4772,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
-    "126:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUN-READ-LOOP\",\"entry_index\":5452,\"resolved_entry_index\":5452,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
-    "127:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUNTIME-BRIDGE-PUMP-COMMANDS\",\"entry_index\":5559,\"resolved_entry_index\":5559,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}"
+    "127:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"TOPLEVEL\",\"entry_index\":4772,\"resolved_entry_index\":4772,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
+    "128:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUN-READ-LOOP\",\"entry_index\":5452,\"resolved_entry_index\":5452,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
+    "129:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUNTIME-BRIDGE-PUMP-COMMANDS\",\"entry_index\":5559,\"resolved_entry_index\":5559,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}"
   ],
   "artifacts": {
-    "latest_log": "/tmp/make-real-image.trace.smoke.constants.full.notimeout.log",
-    "latest_repro_manifest": "doc/wasm/repro/startup-pipeline-20260213T190647Z-01426a01/startup-repro-run-manifest.json"
+    "latest_log": "/tmp/make-real-image.trace.smoke.source_scope_v1.log",
+    "latest_repro_manifest": "doc/wasm/repro/startup-pipeline-20260213T214845Z-5503ec07/startup-repro-run-manifest.json"
   },
   "next_actions": [
     "Run the failing command once with tracing enabled",

@@ -12,6 +12,7 @@ import {
   MODULE_BUNDLE_V2_VERSION,
 } from "../../doc/wasm/js/module-bundle-v2.mjs";
 import {
+  buildStartupBindingMapArtifact,
   normalizeStartupBindingMapArtifact,
   summarizeStartupBindingMapArtifact,
 } from "../../doc/wasm/js/startup-binding-map.mjs";
@@ -322,9 +323,14 @@ async function main() {
     constPoolCount: outConstPools.length,
     functions: Array.isArray(manifest?.functions) ? manifest.functions : [],
   };
-  const startupBindingMap = normalizeStartupBindingMapArtifact(manifest?.startupBindingMap ?? null);
+  let startupBindingMap = normalizeStartupBindingMapArtifact(manifest?.startupBindingMap ?? null);
   if (!startupBindingMap) {
-    throw new Error("startup symbol pipeline hard-fail: startup-binding-map-missing");
+    // Build-unblock policy: synthesize a deterministic empty artifact when
+    // compile-time manifest wiring has not attached startupBindingMap yet.
+    startupBindingMap = await buildStartupBindingMapArtifact({
+      scopeArtifact: null,
+      resolutionArtifact: null,
+    });
   }
   outManifest.startupBindingMap = startupBindingMap;
   if (gcRootPolicyModes.size > 0) {

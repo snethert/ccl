@@ -1,0 +1,89 @@
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../pmcl-kernel.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o pmcl-kernel.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../gc-common.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o gc-common.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../wasm-gc.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o wasm-gc.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../wasm-cstack.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o wasm-cstack.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../wasm-exceptions.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o wasm-exceptions.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../wasm-host.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o wasm-host.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../wasm-time.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o wasm-time.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../wasm-kernel-imports.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o wasm-kernel-imports.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../wasm-kernel-request-smoke.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o wasm-kernel-request-smoke.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../wasm-step-demo.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o wasm-step-demo.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../wasm-ccl-step.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o wasm-ccl-step.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../wasm-subprims.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o wasm-subprims.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../wasm-subprims-standin.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o wasm-subprims-standin.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../wasm-subprims-smoke.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o wasm-subprims-smoke.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../wasm-no-wasi-libc.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o wasm-no-wasi-libc.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../wasm-kernel-stubs.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o wasm-kernel-stubs.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../bits.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o bits.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../image.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o image.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../thread_manager.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o thread_manager.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../lisp-debug.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o lisp-debug.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../memory.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o memory.o
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../platform-wasm32.h -c ../unix-calls.c -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=1 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o unix-calls.o
+mkdir -p ../../doc/wasm/js
+/usr/local/opt/lld/bin/wasm-ld --no-entry --import-memory --import-table \
+	  --export=wasm_ccl_start \
+	  --export=wasm_ccl_start_lisp \
+	  --export=wasm_set_current_tcr --export=wasm_get_current_tcr \
+	  --export=wasm_request_interrupt_tcr \
+	  --export=wasm_get_interrupt_pending_tcr \
+	  --export=wasm_get_tcr_toplevel_function --export=wasm_set_tcr_toplevel_function \
+	  --export=wasm_set_cstack_bounds --export=wasm_set_cstack_pointer --export=wasm_get_cstack_pointer \
+	  --export=wasm_memory_grow_and_relocate \
+	  --export=wasm_call_subprim_fixnum \
+	  --export=wasm_boot_entry --export=wasm_run_toplevel \
+	  --export=wasm_test_entry --export=wasm_test_funcall --export=wasm_test_const_funcall \
+	  --export=wasm_test_entry_funcall --export=wasm_test_entry_funcall2 \
+	  --export=wasm_const_entry --export=wasm_set_const_value --export=wasm_return_constant \
+	  --export=wasm_get_arg_z --export=wasm_get_arg_y \
+	  --export=wasm_set_arg_z --export=wasm_set_arg_y --export=wasm_set_nargs --export=wasm_get_nfn \
+	  --export=wasm_return_arg_z --export=wasm_return_arg_y \
+	  --export=wasm_return_values2 --export=wasm_return_values3 --export=wasm_return_values4 \
+	  --export=wasm_get_mv --export=wasm_get_mv_indexed --export=wasm_restore_vsp \
+	  --export=wasm_spill_push --export=wasm_spill_pop \
+	  --export=wasm_funcall0 --export=wasm_funcall1 --export=wasm_funcall2 \
+	  --export=wasm_funcall3 --export=wasm_funcall4 --export=wasm_funcall5 --export=wasm_funcall6 \
+	  --export=wasm_funcall7 --export=wasm_funcall8 --export=wasm_funcall9 --export=wasm_funcall10 \
+	  --export=wasm_funcall0_mv --export=wasm_funcall1_mv --export=wasm_funcall2_mv \
+	  --export=wasm_funcall3_mv --export=wasm_funcall4_mv --export=wasm_funcall5_mv --export=wasm_funcall6_mv \
+	  --export=wasm_funcall7_mv --export=wasm_funcall8_mv --export=wasm_funcall9_mv --export=wasm_funcall10_mv \
+	  --export=wasm_get_lisp_nil \
+	  --export=wasm_pending_throw_p \
+	  --export=wasm_pending_throw_raw \
+	  --export=wasm_return_fixnum_add --export=wasm_return_fixnum_sub \
+	  --export=wasm_return_fixnum_mul --export=wasm_return_fixnum_ash \
+	  --export=wasm_return_fixnum_logand --export=wasm_return_fixnum_logior \
+	  --export=wasm_return_fixnum_logxor --export=wasm_return_fixnum_lognot \
+	  --export=wasm_return_fixnum_neg \
+	  --export=wasm_test_entry_funcall1_raw --export=wasm_test_entry_funcall0_raw \
+	  --export=wasm_get_compiled_module_registry \
+	  --export=wasm_debug_all_packages_raw \
+	  --export=wasm_debug_cons_car_raw \
+	  --export=wasm_debug_cons_cdr_raw \
+	  --export=wasm_debug_package_names_raw \
+	  --export=wasm_debug_find_package_common_lisp_raw \
+		  --export=wasm_debug_find_symbol_identity_raw \
+		  --export=wasm_debug_find_symbol_toplevel_raw \
+		  --export=wasm_debug_find_symbol_percent_set_toplevel_raw \
+		  --export=wasm_debug_find_symbol_require_structure_type_raw \
+		  --export=wasm_debug_symbol_fcell_raw \
+		  --export=wasm_debug_get_nrs_toplfunc_raw \
+	  --export=wasm_debug_function_entry_index \
+	  --export=wasm_debug_misc_subtag \
+	  --export=wasm_debug_copy_symbol_name \
+	  --export=wasm_debug_const_pool_entry \
+	  --export=wasm_debug_const_pool_phase \
+	  --export=wasm_debug_const_pool_index \
+	  --export=wasm_debug_const_pool_tag \
+	  --export=wasm_debug_const_pool_offset \
+	  --export=wasm_reset_root_image_runtime_state \
+	  --export=wasm_set_entry_call_abi --export=wasm_get_entry_call_abi --export=wasm_clear_entry_call_abi \
+	  --export=wasm_kernel_ui_poll --export=wasm_kernel_ui_render --export=wasm_kernel_ui_measure_text \
+	  --export=wasm_ui_demo_turn \
+	  --export=wasm_ffi_test_add \
+	  --export=wasm_const_pool_install --export=wasm_const_pool_ref \
+	  --export=wasm_save_image_direct \
+	  --export=wasm_box_signed_64 \
+	  --export=wasm_alloc_cons_bridge \
+	  --export=_SPfix_overflow --export=_SPmakes32 \
+	  -o ../../doc/wasm/js/wasmcl.wasm pmcl-kernel.o gc-common.o wasm-gc.o wasm-cstack.o wasm-exceptions.o wasm-host.o wasm-time.o wasm-kernel-imports.o wasm-kernel-request-smoke.o wasm-step-demo.o wasm-ccl-step.o wasm-subprims.o wasm-subprims-standin.o wasm-subprims-smoke.o wasm-no-wasi-libc.o wasm-kernel-stubs.o bits.o image.o thread_manager.o lisp-debug.o memory.o unix-calls.o

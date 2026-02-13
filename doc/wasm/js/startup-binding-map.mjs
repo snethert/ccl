@@ -1,12 +1,9 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
 import { BOOTSTRAP_L0_CONTRACT_V1 } from "./bootstrap-l0-contract.mjs";
 
 export const STARTUP_BINDING_MAP_SCHEMA_V1 = "startup_binding_map_v1";
 const STARTUP_BINDING_MAP_GENERATOR_V1 = "startup_binding_map_generator_v1";
 const STARTUP_BINDING_MAP_COVERAGE_SCHEMA_V1 = "startup_binding_map_coverage_v1";
+const STARTUP_SHADOW_TABLE_SCHEMA_V1 = "startup_shadow_table_v1";
 const UTF8_DECODER = new TextDecoder("utf-8");
 const STARTUP_BINDING_MAP_INPUT_CONTRACT_V1 = Object.freeze({
   // Active pipeline contract: scope artifact + resolution artifact are source of truth.
@@ -16,13 +13,21 @@ const STARTUP_BINDING_MAP_INPUT_CONTRACT_V1 = Object.freeze({
   resolution_input: "resolution artifact",
   source_scan_policy: "no JS source scan",
 });
+const STARTUP_SYMBOL_REQUIRED_CLASS = Object.freeze({
+  REQUIRED_CALLABLE: "required-callable",
+  REQUIRED_SPECIAL: "required-special",
+  OPTIONAL: "optional",
+  NONE: "none",
+});
+const STARTUP_SYMBOL_RESOLUTION_STATUS = Object.freeze({
+  RESOLVED: "resolved",
+  UNRESOLVED: "unresolved",
+  PROBE_ERROR: "probe-error",
+  INVALID_INPUT: "invalid-input",
+});
 
 const FIXNUM_MIN = -0x20000000; // -536870912
 const FIXNUM_MAX = 0x1fffffff; // 536870911
-
-const SPECIAL_BINDING_FORM_PATTERN = /\((defparameter|defvar|def-standard-initial-binding)\s+([^\s()]+)(?:\s+(\([^()\s]+\)|'[^()\s]+|[^()\s]+))?/giu;
-const LEVEL0_FUNCTION_FORM_PATTERN = /\((defun|defmacro|define-compiler-macro|defsetf|define-setf-expander)\s+([^\s()]+|\([^()]+\))/giu;
-const IN_PACKAGE_PATTERN = /\(in-package\s+("[^"]+"|[^\s()]+)\s*\)/giu;
 
 const LEVEL0_DEFAULT_PACKAGE = "CCL";
 const PACKAGE_ALIASES = Object.freeze({
@@ -32,10 +37,6 @@ const PACKAGE_ALIASES = Object.freeze({
   "COMMON-LISP-USER": "COMMON-LISP-USER",
   KEYWORD: "KEYWORD",
 });
-
-function toPosixPath(value) {
-  return String(value ?? "").split(path.sep).join(path.posix.sep);
-}
 
 function normalizeToken(value) {
   if (typeof value !== "string") return "";
@@ -79,52 +80,6 @@ function parseSymbolKey(symbolKey) {
     package_name: packageName,
     symbol_name: symbolName,
   };
-}
-
-function countLinesBefore(text, index) {
-  const head = text.slice(0, Math.max(0, index | 0));
-  let lines = 1;
-  for (let i = 0; i < head.length; i++) {
-    if (head.charCodeAt(i) === 10) lines++;
-  }
-  return lines;
-}
-
-async function collectLispFiles(dir, { recursive = true } = {}) {
-  const out = [];
-  let entries = [];
-  try {
-    entries = await fs.readdir(dir, { withFileTypes: true });
-  } catch {
-    return out;
-  }
-  entries.sort((a, b) => a.name.localeCompare(b.name));
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      if (recursive) {
-        out.push(...await collectLispFiles(fullPath, { recursive }));
-      }
-      continue;
-    }
-    if (entry.isFile() && entry.name.toLowerCase().endsWith(".lisp")) {
-      out.push(fullPath);
-    }
-  }
-  return out;
-}
-
-function parseInPackageToken(token, fallbackPackage = LEVEL0_DEFAULT_PACKAGE) {
-  let value = normalizeToken(token);
-  if (!value) return canonicalizePackageName(fallbackPackage);
-  if (value.startsWith("'")) value = value.slice(1);
-  if (value.startsWith('"') && value.endsWith('"') && value.length >= 2) {
-    value = value.slice(1, -1);
-  }
-  if (value.startsWith(":")) value = value.slice(1);
-  const canonical = canonicalizePackageName(value);
-  if (!canonical) return canonicalizePackageName(fallbackPackage);
-  return canonical;
 }
 
 function parseFunctionDesignatorToken(token, fallbackPackage = LEVEL0_DEFAULT_PACKAGE) {
@@ -187,121 +142,6 @@ function addFunctionRecord(map, key, entryIndex) {
   if (existing.entry_index !== idx) {
     existing.ambiguous = true;
   }
-}
-
-async function scanSpecialBindingDefinitions(repoRoot) {
-  const level1Dir = path.join(repoRoot, "level-1");
-  const files = await collectLispFiles(level1Dir, { recursive: true });
-  const definitions = new Map();
-
-  for (const filePath of files) {
-    let text = "";
-    try {
-      text = await fs.readFile(filePath, "utf8");
-    } catch {
-      continue;
-    }
-    SPECIAL_BINDING_FORM_PATTERN.lastIndex = 0;
-    let match = null;
-    while ((match = SPECIAL_BINDING_FORM_PATTERN.exec(text)) !== null) {
-      const formKind = normalizeToken(match[1]).toLowerCase();
-      const symbolToken = normalizeToken(match[2]);
-      const initToken = normalizeToken(match[3] ?? "");
-      const symbolName = normalizeSymbolName(symbolToken);
-      if (!symbolName) continue;
-      const key = makeSymbolKey("CCL", symbolName);
-      if (!key) continue;
-      definitions.set(key, {
-        form_kind: formKind,
-        symbol_token: symbolToken,
-        init_token: initToken || null,
-        file: toPosixPath(path.relative(repoRoot, filePath)),
-        line: countLinesBefore(text, match.index),
-      });
-    }
-  }
-
-  return definitions;
-}
-
-function collectInPackageEvents(text, fallbackPackage = LEVEL0_DEFAULT_PACKAGE) {
-  const out = [];
-  IN_PACKAGE_PATTERN.lastIndex = 0;
-  let match = null;
-  while ((match = IN_PACKAGE_PATTERN.exec(text)) !== null) {
-    out.push({
-      index: match.index >>> 0,
-      package_name: parseInPackageToken(match[1], fallbackPackage),
-    });
-  }
-  out.sort((a, b) => (a.index >>> 0) - (b.index >>> 0));
-  return out;
-}
-
-async function scanLevel0FunctionDesignators(repoRoot) {
-  const level0Dir = path.join(repoRoot, "level-0");
-  const files = await collectLispFiles(level0Dir, { recursive: false });
-  const definitions = new Map();
-  const stats = {
-    files_scanned: 0,
-    forms_scanned: 0,
-    symbol_designators: 0,
-    non_symbol_designators: 0,
-    duplicate_symbol_designators: 0,
-    unique_symbol_designators: 0,
-  };
-
-  for (const filePath of files) {
-    let text = "";
-    try {
-      text = await fs.readFile(filePath, "utf8");
-    } catch {
-      continue;
-    }
-    stats.files_scanned++;
-
-    const packageEvents = collectInPackageEvents(text, LEVEL0_DEFAULT_PACKAGE);
-    let currentPackage = LEVEL0_DEFAULT_PACKAGE;
-    let packageCursor = 0;
-    LEVEL0_FUNCTION_FORM_PATTERN.lastIndex = 0;
-    let match = null;
-    while ((match = LEVEL0_FUNCTION_FORM_PATTERN.exec(text)) !== null) {
-      stats.forms_scanned++;
-      while (packageCursor < packageEvents.length && packageEvents[packageCursor].index <= match.index) {
-        currentPackage = packageEvents[packageCursor].package_name || currentPackage;
-        packageCursor++;
-      }
-
-      const formKind = normalizeToken(match[1]).toLowerCase();
-      const token = normalizeToken(match[2]);
-      const parsed = parseFunctionDesignatorToken(token, currentPackage);
-      if (!parsed || !parsed.symbol_key) {
-        stats.non_symbol_designators++;
-        continue;
-      }
-      stats.symbol_designators++;
-
-      const existing = definitions.get(parsed.symbol_key);
-      if (!existing) {
-        definitions.set(parsed.symbol_key, {
-          form_kind: formKind,
-          file: toPosixPath(path.relative(repoRoot, filePath)),
-          line: countLinesBefore(text, match.index),
-          designator_token: token,
-          package_name: parsed.package_name,
-          symbol_name: parsed.symbol_name,
-          symbol_key: parsed.symbol_key,
-          duplicates: 0,
-        });
-      } else {
-        existing.duplicates = (existing.duplicates >>> 0) + 1;
-        stats.duplicate_symbol_designators++;
-      }
-    }
-  }
-
-  stats.unique_symbol_designators = definitions.size;
-  return { definitions, stats };
 }
 
 function buildFunctionIndex(functionEntries) {
@@ -627,6 +467,7 @@ function normalizeCoverageObject(coverage) {
   if (!coverage || typeof coverage !== "object" || Array.isArray(coverage)) return null;
   return {
     schema_version: STARTUP_BINDING_MAP_COVERAGE_SCHEMA_V1,
+    artifact_inputs: coverage.artifact_inputs ?? null,
     required_special_variable_bindings: coverage.required_special_variable_bindings ?? null,
     level0_source_scan: coverage.level0_source_scan ?? null,
     level0_function_bindings: coverage.level0_function_bindings ?? null,
@@ -654,7 +495,7 @@ function normalizeStartupShadowTable(shadowTable) {
   return {
     schema_version: typeof shadowTable.schema_version === "string"
       ? shadowTable.schema_version
-      : "startup_shadow_table_v1",
+      : STARTUP_SHADOW_TABLE_SCHEMA_V1,
     phase: typeof shadowTable.phase === "string" ? shadowTable.phase : "pre-fasload",
     contract_id: typeof shadowTable.contract_id === "string" ? shadowTable.contract_id : null,
     preinstall_const_pool_entries: normalizedPreinstallEntries,
@@ -693,7 +534,7 @@ function buildStartupShadowTable({
   }
 
   return normalizeStartupShadowTable({
-    schema_version: "startup_shadow_table_v1",
+    schema_version: STARTUP_SHADOW_TABLE_SCHEMA_V1,
     phase: "pre-fasload",
     contract_id: typeof contract?.id === "string" ? contract.id : null,
     preinstall_const_pool_entries: Array.from(preinstallConstPoolEntries.values()).sort((a, b) => a - b),
@@ -1668,7 +1509,7 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
   coverage.contract_required_const_pool_function_bindings = stats;
   const nextArtifact = {
     ...(mapArtifact ?? {}),
-    schema_version: mapArtifact?.schema_version ?? STARTUP_BINDING_MAP_SCHEMA_V1,
+    schema_version: STARTUP_BINDING_MAP_SCHEMA_V1,
     generator: mapArtifact?.generator ?? STARTUP_BINDING_MAP_GENERATOR_V1,
     contract_id: mapArtifact?.contract_id ?? (typeof contract?.id === "string" ? contract.id : null),
     coverage,
@@ -1692,184 +1533,560 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
   };
 }
 
-export async function buildStartupBindingMapArtifact({
-  repoRoot,
-  contract = BOOTSTRAP_L0_CONTRACT_V1,
-  functions = [],
-} = {}) {
-  // Keep contract text colocated with the builder entrypoint for quick audits/grep checks.
-  // The active startup path consumes artifact-only inputs from make-real-image.mjs.
-  // This module still retains source-scan helpers for non-active/offline map generation.
-  void STARTUP_BINDING_MAP_INPUT_CONTRACT_V1;
-  const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-  const rootDir = path.resolve(repoRoot ?? path.resolve(scriptDir, "../../.."));
-  const requiredSpecialVariables = Array.isArray(contract?.requiredSpecialVariables)
-    ? contract.requiredSpecialVariables
-    : [];
-  const functionIndex = buildFunctionIndex(functions);
-  const specialDefinitions = await scanSpecialBindingDefinitions(rootDir);
-  const level0Scan = await scanLevel0FunctionDesignators(rootDir);
+const ARTIFACT_FUNCTION_ROLE_HINTS = Object.freeze(new Set([
+  "required-callable",
+  "contract-required-callable",
+  "callable",
+  "function",
+  "defun",
+  "defmacro",
+  "define-compiler-macro",
+  "defsetf",
+  "define-setf-expander",
+]));
+const ARTIFACT_SPECIAL_ROLE_HINTS = Object.freeze(new Set([
+  "required-special",
+  "contract-required-special",
+  "special",
+  "special-variable",
+  "defparameter",
+  "defvar",
+  "def-standard-initial-binding",
+]));
 
-  const entries = [];
-  const entryBySymbolKey = new Map();
-  const level0BindingStats = {
-    discovered_symbols: level0Scan.stats.unique_symbol_designators >>> 0,
-    emitted_entries: 0,
-    entry_backed: 0,
-    deferred: 0,
-    unsupported: 0,
-  };
-  const requiredSpecialBindingStats = {
-    required_contract_items: requiredSpecialVariables.length >>> 0,
-    emitted_entries: 0,
-    skipped_invalid_contract_items: 0,
-    definition_found: 0,
-    definition_missing: 0,
-    availability: {
-      literal: 0,
-      entry_backed: 0,
-      deferred: 0,
-      unsupported: 0,
-    },
-    require_non_nil: 0,
-    require_non_nil_with_initializer: 0,
-    require_non_nil_without_initializer: 0,
-  };
-  const runtimeBindingStats = {
-    emitted_entries: 0,
-    entry_backed: 0,
-    deferred: 0,
-    unsupported: 0,
-    skipped_non_symbol_designators: 0,
-    skipped_duplicate_symbol_keys: 0,
-  };
+function normalizeRequiredClass(
+  value,
+  fallback = STARTUP_SYMBOL_REQUIRED_CLASS.NONE,
+) {
+  const normalized = normalizeToken(value).toLowerCase();
+  switch (normalized) {
+    case STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_CALLABLE:
+    case STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_SPECIAL:
+    case STARTUP_SYMBOL_REQUIRED_CLASS.OPTIONAL:
+    case STARTUP_SYMBOL_REQUIRED_CLASS.NONE:
+      return normalized;
+    default:
+      return fallback;
+  }
+}
 
-  // Contract-required specials/constants are emitted as explicit vcell bindings.
-  for (const item of requiredSpecialVariables) {
-    const packageName = canonicalizePackageName(item?.packageName ?? "");
-    const symbolName = normalizeSymbolName(item?.symbolName ?? "");
-    if (!packageName || !symbolName) {
-      requiredSpecialBindingStats.skipped_invalid_contract_items++;
+function normalizeResolutionStatus(
+  value,
+  fallback = STARTUP_SYMBOL_RESOLUTION_STATUS.UNRESOLVED,
+) {
+  const normalized = normalizeToken(value).toLowerCase();
+  switch (normalized) {
+    case STARTUP_SYMBOL_RESOLUTION_STATUS.RESOLVED:
+    case STARTUP_SYMBOL_RESOLUTION_STATUS.UNRESOLVED:
+    case STARTUP_SYMBOL_RESOLUTION_STATUS.PROBE_ERROR:
+    case STARTUP_SYMBOL_RESOLUTION_STATUS.INVALID_INPUT:
+      return normalized;
+    default:
+      return fallback;
+  }
+}
+
+function mergeSortedUniqueTokens(leftValues, rightValues) {
+  const values = new Set();
+  for (const value of Array.isArray(leftValues) ? leftValues : []) {
+    const token = normalizeToken(value);
+    if (!token) continue;
+    values.add(token);
+  }
+  for (const value of Array.isArray(rightValues) ? rightValues : []) {
+    const token = normalizeToken(value);
+    if (!token) continue;
+    values.add(token);
+  }
+  return Array.from(values.values()).sort((a, b) => a.localeCompare(b));
+}
+
+function normalizeScopeSymbolRecord(symbolRecord) {
+  if (!symbolRecord || typeof symbolRecord !== "object" || Array.isArray(symbolRecord)) return null;
+  const parsed = parseSymbolKey(symbolRecord.key ?? "");
+  const packageName = canonicalizePackageName(symbolRecord.package_name ?? parsed?.package_name ?? "");
+  const symbolName = normalizeSymbolName(symbolRecord.symbol_name ?? parsed?.symbol_name ?? "");
+  const symbolKey = makeSymbolKey(packageName, symbolName);
+  if (!symbolKey) return null;
+  const roles = mergeSortedUniqueTokens(symbolRecord.roles ?? [], []);
+  const provenanceCount = Array.isArray(symbolRecord.provenance)
+    ? (symbolRecord.provenance.length >>> 0)
+    : 0;
+  return {
+    key: symbolKey,
+    package_name: packageName,
+    symbol_name: symbolName,
+    bindable: Boolean(symbolRecord.bindable),
+    roles,
+    provenance_count: provenanceCount,
+  };
+}
+
+function normalizeResolutionSymbolRecord(symbolRecord) {
+  if (!symbolRecord || typeof symbolRecord !== "object" || Array.isArray(symbolRecord)) return null;
+  const parsed = parseSymbolKey(symbolRecord.key ?? "");
+  const packageName = canonicalizePackageName(symbolRecord.package_name ?? parsed?.package_name ?? "");
+  const symbolName = normalizeSymbolName(symbolRecord.symbol_name ?? parsed?.symbol_name ?? "");
+  const symbolKey = makeSymbolKey(packageName, symbolName);
+  if (!symbolKey) return null;
+  const fentry = Number(symbolRecord.fentry);
+  return {
+    key: symbolKey,
+    package_name: packageName,
+    symbol_name: symbolName,
+    status: normalizeResolutionStatus(symbolRecord.status),
+    required_class: normalizeRequiredClass(symbolRecord.required_class),
+    reason: typeof symbolRecord.reason === "string" ? symbolRecord.reason : null,
+    resolver_source: typeof symbolRecord.resolver_source === "string"
+      ? symbolRecord.resolver_source
+      : null,
+    fentry: Number.isInteger(fentry) && fentry >= 0 ? (fentry >>> 0) : null,
+    vcell_bound: Boolean(symbolRecord.vcell_bound),
+  };
+}
+
+function collectScopeSymbolsByKey(scopeArtifact) {
+  const byKey = new Map();
+  const stats = {
+    input_symbols: 0,
+    invalid_symbols: 0,
+    duplicate_symbols: 0,
+  };
+  const symbols = Array.isArray(scopeArtifact?.symbols) ? scopeArtifact.symbols : [];
+  stats.input_symbols = symbols.length >>> 0;
+  for (const symbolRecord of symbols) {
+    const normalized = normalizeScopeSymbolRecord(symbolRecord);
+    if (!normalized) {
+      stats.invalid_symbols++;
       continue;
     }
-    const symbolKey = makeSymbolKey(packageName, symbolName);
-    const definition = specialDefinitions.get(symbolKey) ?? null;
-    if (definition) requiredSpecialBindingStats.definition_found++;
-    else requiredSpecialBindingStats.definition_missing++;
+    const existing = byKey.get(normalized.key);
+    if (!existing) {
+      byKey.set(normalized.key, normalized);
+      continue;
+    }
+    stats.duplicate_symbols++;
+    byKey.set(normalized.key, {
+      ...existing,
+      bindable: existing.bindable || normalized.bindable,
+      roles: mergeSortedUniqueTokens(existing.roles, normalized.roles),
+      provenance_count: Math.max(existing.provenance_count >>> 0, normalized.provenance_count >>> 0),
+    });
+  }
+  return { byKey, stats };
+}
 
-    let availability = "deferred";
-    let initializer = {
-      kind: "deferred",
-      reason: "definition-not-found",
-    };
-    if (definition?.init_token) {
-      const classified = classifyInitializerToken(definition.init_token, functionIndex);
-      availability = classified.availability;
-      initializer = classified.initializer;
-    } else if (definition && !definition.init_token) {
-      initializer = {
-        kind: "deferred",
-        reason: "no-initform",
+function resolutionStatusRank(status) {
+  switch (normalizeResolutionStatus(status)) {
+    case STARTUP_SYMBOL_RESOLUTION_STATUS.RESOLVED:
+      return 4;
+    case STARTUP_SYMBOL_RESOLUTION_STATUS.UNRESOLVED:
+      return 3;
+    case STARTUP_SYMBOL_RESOLUTION_STATUS.PROBE_ERROR:
+      return 2;
+    case STARTUP_SYMBOL_RESOLUTION_STATUS.INVALID_INPUT:
+    default:
+      return 1;
+  }
+}
+
+function shouldPreferResolutionRecord(existing, candidate) {
+  if (!existing) return true;
+  const existingRank = resolutionStatusRank(existing.status);
+  const candidateRank = resolutionStatusRank(candidate.status);
+  if (candidateRank > existingRank) return true;
+  if (candidateRank < existingRank) return false;
+  const existingRequiredClass = normalizeRequiredClass(existing.required_class);
+  const candidateRequiredClass = normalizeRequiredClass(candidate.required_class);
+  if (
+    existingRequiredClass === STARTUP_SYMBOL_REQUIRED_CLASS.NONE &&
+    candidateRequiredClass !== STARTUP_SYMBOL_REQUIRED_CLASS.NONE
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function collectResolutionSymbolsByKey(resolutionArtifact) {
+  const byKey = new Map();
+  const stats = {
+    input_symbols: 0,
+    invalid_symbols: 0,
+    duplicate_symbols: 0,
+  };
+  const symbols = Array.isArray(resolutionArtifact?.symbols) ? resolutionArtifact.symbols : [];
+  stats.input_symbols = symbols.length >>> 0;
+  for (const symbolRecord of symbols) {
+    const normalized = normalizeResolutionSymbolRecord(symbolRecord);
+    if (!normalized) {
+      stats.invalid_symbols++;
+      continue;
+    }
+    const existing = byKey.get(normalized.key) ?? null;
+    if (existing) {
+      stats.duplicate_symbols++;
+    }
+    if (shouldPreferResolutionRecord(existing, normalized)) {
+      byKey.set(normalized.key, normalized);
+    }
+  }
+  return { byKey, stats };
+}
+
+function includeSymbolFromArtifacts({
+  scopeRecord,
+  requiredClass,
+}) {
+  if (requiredClass !== STARTUP_SYMBOL_REQUIRED_CLASS.NONE) return true;
+  return Boolean(scopeRecord?.bindable);
+}
+
+function deriveRequiredClassFromArtifacts({
+  scopeRecord,
+  resolutionRecord,
+}) {
+  if (resolutionRecord) {
+    return normalizeRequiredClass(resolutionRecord.required_class);
+  }
+  if (scopeRecord?.bindable) return STARTUP_SYMBOL_REQUIRED_CLASS.OPTIONAL;
+  return STARTUP_SYMBOL_REQUIRED_CLASS.NONE;
+}
+
+const ARTIFACT_ENTRY_ROLE_CLASS = Object.freeze({
+  CALLABLE: "callable",
+  SPECIAL: "special",
+  UNKNOWN: "unknown",
+});
+
+const ARTIFACT_ENTRY_FUNCTION_STATUS_ROWS = Object.freeze({
+  [STARTUP_SYMBOL_RESOLUTION_STATUS.RESOLVED]: Object.freeze({
+    target_cell: "fcell",
+    binding_class: "function",
+    availability: "entry-backed",
+    initializer_kind: "entry-function",
+  }),
+  [STARTUP_SYMBOL_RESOLUTION_STATUS.UNRESOLVED]: Object.freeze({
+    target_cell: "fcell",
+    binding_class: "function",
+    availability: "deferred",
+    initializer_kind: "deferred",
+  }),
+  [STARTUP_SYMBOL_RESOLUTION_STATUS.PROBE_ERROR]: Object.freeze({
+    target_cell: "fcell",
+    binding_class: "function",
+    availability: "deferred",
+    initializer_kind: "deferred",
+  }),
+  [STARTUP_SYMBOL_RESOLUTION_STATUS.INVALID_INPUT]: Object.freeze({
+    target_cell: "fcell",
+    binding_class: "function",
+    availability: "unsupported",
+    initializer_kind: "unsupported",
+  }),
+});
+
+const ARTIFACT_ENTRY_SPECIAL_STATUS_ROWS = Object.freeze({
+  [STARTUP_SYMBOL_RESOLUTION_STATUS.RESOLVED]: Object.freeze({
+    target_cell: "vcell",
+    binding_class: "special-variable",
+    availability: "deferred",
+    initializer_kind: "deferred",
+  }),
+  [STARTUP_SYMBOL_RESOLUTION_STATUS.UNRESOLVED]: Object.freeze({
+    target_cell: "vcell",
+    binding_class: "special-variable",
+    availability: "deferred",
+    initializer_kind: "deferred",
+  }),
+  [STARTUP_SYMBOL_RESOLUTION_STATUS.PROBE_ERROR]: Object.freeze({
+    target_cell: "vcell",
+    binding_class: "special-variable",
+    availability: "deferred",
+    initializer_kind: "deferred",
+  }),
+  [STARTUP_SYMBOL_RESOLUTION_STATUS.INVALID_INPUT]: Object.freeze({
+    target_cell: "vcell",
+    binding_class: "special-variable",
+    availability: "unsupported",
+    initializer_kind: "unsupported",
+  }),
+});
+
+const ARTIFACT_ENTRY_OPTIONAL_ROLE_ROWS = Object.freeze({
+  [ARTIFACT_ENTRY_ROLE_CLASS.CALLABLE]: ARTIFACT_ENTRY_FUNCTION_STATUS_ROWS,
+  [ARTIFACT_ENTRY_ROLE_CLASS.SPECIAL]: ARTIFACT_ENTRY_SPECIAL_STATUS_ROWS,
+  [ARTIFACT_ENTRY_ROLE_CLASS.UNKNOWN]: ARTIFACT_ENTRY_SPECIAL_STATUS_ROWS,
+});
+
+const ARTIFACT_ENTRY_SYNTHESIS_MATRIX = Object.freeze({
+  [STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_CALLABLE]: ARTIFACT_ENTRY_FUNCTION_STATUS_ROWS,
+  [STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_SPECIAL]: ARTIFACT_ENTRY_SPECIAL_STATUS_ROWS,
+  [STARTUP_SYMBOL_REQUIRED_CLASS.OPTIONAL]: ARTIFACT_ENTRY_OPTIONAL_ROLE_ROWS,
+  [STARTUP_SYMBOL_REQUIRED_CLASS.NONE]: ARTIFACT_ENTRY_OPTIONAL_ROLE_ROWS,
+});
+
+function deriveArtifactRoleClass({
+  scopeRecord,
+  resolutionRecord,
+}) {
+  let hasCallableRole = false;
+  let hasSpecialRole = false;
+  const roleSet = new Set(
+    (Array.isArray(scopeRecord?.roles) ? scopeRecord.roles : [])
+      .map((role) => normalizeToken(role).toLowerCase())
+      .filter((role) => role.length > 0),
+  );
+  for (const role of roleSet.values()) {
+    if (ARTIFACT_FUNCTION_ROLE_HINTS.has(role)) hasCallableRole = true;
+    if (ARTIFACT_SPECIAL_ROLE_HINTS.has(role)) hasSpecialRole = true;
+    if (hasCallableRole && hasSpecialRole) break;
+  }
+  // Callable wins in mixed-role records so function-capable symbols keep fcell mapping.
+  if (hasCallableRole) return ARTIFACT_ENTRY_ROLE_CLASS.CALLABLE;
+  if (hasSpecialRole) return ARTIFACT_ENTRY_ROLE_CLASS.SPECIAL;
+  const status = normalizeResolutionStatus(resolutionRecord?.status);
+  if (status === STARTUP_SYMBOL_RESOLUTION_STATUS.RESOLVED) {
+    if (Number.isInteger(resolutionRecord?.fentry) && resolutionRecord.fentry >= 0) {
+      return ARTIFACT_ENTRY_ROLE_CLASS.CALLABLE;
+    }
+    if (resolutionRecord?.vcell_bound === true) {
+      return ARTIFACT_ENTRY_ROLE_CLASS.SPECIAL;
+    }
+  }
+  return ARTIFACT_ENTRY_ROLE_CLASS.UNKNOWN;
+}
+
+function unresolvedReasonForRequiredClass(requiredClass) {
+  const normalized = normalizeRequiredClass(requiredClass);
+  if (
+    normalized === STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_CALLABLE ||
+    normalized === STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_SPECIAL
+  ) {
+    return "required-symbol-unresolved";
+  }
+  return "optional-symbol-unresolved";
+}
+
+function lookupArtifactEntrySynthesisRow({
+  roleClass,
+  requiredClass,
+  status,
+}) {
+  const normalizedRequiredClass = normalizeRequiredClass(requiredClass);
+  const normalizedStatus = normalizeResolutionStatus(
+    status,
+    STARTUP_SYMBOL_RESOLUTION_STATUS.UNRESOLVED,
+  );
+  const requiredClassRows = ARTIFACT_ENTRY_SYNTHESIS_MATRIX[normalizedRequiredClass]
+    ?? ARTIFACT_ENTRY_SYNTHESIS_MATRIX[STARTUP_SYMBOL_REQUIRED_CLASS.NONE];
+  if (
+    normalizedRequiredClass === STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_CALLABLE ||
+    normalizedRequiredClass === STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_SPECIAL
+  ) {
+    return requiredClassRows[normalizedStatus]
+      ?? requiredClassRows[STARTUP_SYMBOL_RESOLUTION_STATUS.UNRESOLVED];
+  }
+  const roleRows = requiredClassRows[roleClass] ?? requiredClassRows[ARTIFACT_ENTRY_ROLE_CLASS.UNKNOWN];
+  return roleRows[normalizedStatus] ?? roleRows[STARTUP_SYMBOL_RESOLUTION_STATUS.UNRESOLVED];
+}
+
+function synthesizeArtifactEntryFromMatrix({
+  symbolName,
+  scopeRecord,
+  requiredClass,
+  resolutionRecord,
+}) {
+  const status = normalizeResolutionStatus(
+    resolutionRecord?.status,
+    STARTUP_SYMBOL_RESOLUTION_STATUS.UNRESOLVED,
+  );
+  const roleClass = deriveArtifactRoleClass({
+    scopeRecord,
+    resolutionRecord,
+  });
+  const matrixRow = lookupArtifactEntrySynthesisRow({
+    roleClass,
+    requiredClass,
+    status,
+  });
+  if (matrixRow.initializer_kind === "entry-function") {
+    if (
+      Number.isInteger(resolutionRecord?.fentry) &&
+      (resolutionRecord.fentry >>> 0) >= 0
+    ) {
+      return {
+        binding_class: matrixRow.binding_class,
+        target_cell: matrixRow.target_cell,
+        availability: matrixRow.availability,
+        initializer: {
+          kind: "entry-function",
+          function_name: symbolName,
+          entry_index: resolutionRecord.fentry >>> 0,
+        },
       };
     }
-    switch (availability) {
-      case "literal":
-      case "entry-backed":
-      case "unsupported":
-        requiredSpecialBindingStats.availability[availability]++;
-        break;
-      case "deferred":
-      default:
-        requiredSpecialBindingStats.availability.deferred++;
-        break;
-    }
-    const requireNonNil = Boolean(item?.requireNonNil);
-    if (requireNonNil) {
-      requiredSpecialBindingStats.require_non_nil++;
-      if (availability === "literal" || availability === "entry-backed") {
-        requiredSpecialBindingStats.require_non_nil_with_initializer++;
-      } else {
-        requiredSpecialBindingStats.require_non_nil_without_initializer++;
-      }
+    return {
+      binding_class: matrixRow.binding_class,
+      target_cell: matrixRow.target_cell,
+      availability: "deferred",
+      initializer: {
+        kind: "deferred",
+        reason: "resolved-without-entry-backing",
+      },
+    };
+  }
+  if (matrixRow.initializer_kind === "unsupported") {
+    return {
+      binding_class: matrixRow.binding_class,
+      target_cell: matrixRow.target_cell,
+      availability: matrixRow.availability,
+      initializer: {
+        kind: "unsupported",
+        reason: "invalid-input",
+      },
+    };
+  }
+  let deferredReason = "optional-symbol-unresolved";
+  if (status === STARTUP_SYMBOL_RESOLUTION_STATUS.PROBE_ERROR) {
+    deferredReason = "probe-error";
+  } else if (status === STARTUP_SYMBOL_RESOLUTION_STATUS.RESOLVED) {
+    deferredReason = "resolved-without-entry-backing";
+  } else if (status === STARTUP_SYMBOL_RESOLUTION_STATUS.UNRESOLVED) {
+    deferredReason = unresolvedReasonForRequiredClass(requiredClass);
+  }
+  if (matrixRow.initializer_kind === "deferred") {
+    return {
+      binding_class: matrixRow.binding_class,
+      target_cell: matrixRow.target_cell,
+      availability: matrixRow.availability,
+      initializer: {
+        kind: "deferred",
+        reason: deferredReason,
+      },
+    };
+  }
+  return {
+    binding_class: matrixRow.binding_class,
+    target_cell: matrixRow.target_cell,
+    availability: "unsupported",
+    initializer: {
+      kind: "unsupported",
+      reason: "entry-synthesis-matrix-invalid",
+    },
+  };
+}
+
+export async function buildStartupBindingMapArtifact({
+  repoRoot = null,
+  contract = BOOTSTRAP_L0_CONTRACT_V1,
+  functions = [],
+  scopeArtifact = null,
+  resolutionArtifact = null,
+} = {}) {
+  // Keep contract text colocated with the builder entrypoint for quick audits/grep checks.
+  // Active inclusion source-of-truth: scope artifact + resolution artifact input only.
+  // Active path policy: artifact-only, no JS source scan.
+  void repoRoot;
+  void functions;
+  void STARTUP_BINDING_MAP_INPUT_CONTRACT_V1;
+
+  const scopeSymbols = collectScopeSymbolsByKey(scopeArtifact);
+  const resolutionSymbols = collectResolutionSymbolsByKey(resolutionArtifact);
+  const symbolKeys = Array.from(new Set([
+    ...scopeSymbols.byKey.keys(),
+    ...resolutionSymbols.byKey.keys(),
+  ])).sort((a, b) => a.localeCompare(b));
+
+  const artifactStats = {
+    scope_symbols_input: scopeSymbols.stats.input_symbols >>> 0,
+    scope_symbols_invalid: scopeSymbols.stats.invalid_symbols >>> 0,
+    scope_symbols_duplicate: scopeSymbols.stats.duplicate_symbols >>> 0,
+    resolution_symbols_input: resolutionSymbols.stats.input_symbols >>> 0,
+    resolution_symbols_invalid: resolutionSymbols.stats.invalid_symbols >>> 0,
+    resolution_symbols_duplicate: resolutionSymbols.stats.duplicate_symbols >>> 0,
+    keys_considered: symbolKeys.length >>> 0,
+    keys_included: 0,
+    skipped_unbindable_none: 0,
+    missing_scope_records: 0,
+    missing_resolution_records: 0,
+  };
+
+  const entries = [];
+  for (const symbolKey of symbolKeys) {
+    const scopeRecord = scopeSymbols.byKey.get(symbolKey) ?? null;
+    const resolutionRecord = resolutionSymbols.byKey.get(symbolKey) ?? null;
+    if (!scopeRecord) artifactStats.missing_scope_records++;
+    if (!resolutionRecord) artifactStats.missing_resolution_records++;
+
+    const requiredClass = deriveRequiredClassFromArtifacts({
+      scopeRecord,
+      resolutionRecord,
+    });
+    if (!includeSymbolFromArtifacts({ scopeRecord, requiredClass })) {
+      artifactStats.skipped_unbindable_none++;
+      continue;
     }
 
-    const entry = {
-      binding_class: "special-variable",
-      target_cell: "vcell",
+    const parsedKey = parseSymbolKey(symbolKey);
+    const packageName = canonicalizePackageName(
+      scopeRecord?.package_name ??
+      resolutionRecord?.package_name ??
+      parsedKey?.package_name ??
+      "",
+    );
+    const symbolName = normalizeSymbolName(
+      scopeRecord?.symbol_name ??
+      resolutionRecord?.symbol_name ??
+      parsedKey?.symbol_name ??
+      "",
+    );
+    if (!packageName || !symbolName) continue;
+
+    const synthesized = synthesizeArtifactEntryFromMatrix({
+      symbolName,
+      scopeRecord,
+      resolutionRecord,
+      requiredClass,
+    });
+    entries.push({
+      binding_class: synthesized.binding_class,
+      target_cell: synthesized.target_cell,
       package_name: packageName,
       symbol_name: symbolName,
       symbol_key: symbolKey,
-      source: typeof item?.source === "string" ? item.source : null,
-      require_non_nil: requireNonNil,
-      definition: definition ? {
-        form_kind: definition.form_kind,
-        file: definition.file,
-        line: definition.line >>> 0,
-        init_token: definition.init_token,
-      } : null,
-      availability,
-      initializer,
-    };
-    entries.push(entry);
-    entryBySymbolKey.set(symbolKey, entry);
-    requiredSpecialBindingStats.emitted_entries++;
-  }
-
-  for (const definition of level0Scan.definitions.values()) {
-    const symbolKey = definition.symbol_key;
-    if (!symbolKey || entryBySymbolKey.has(symbolKey)) {
-      continue;
-    }
-
-    const classified = classifyFunctionBindingInitializer({
-      packageName: definition.package_name,
-      symbolName: definition.symbol_name,
-    }, functionIndex);
-    switch (classified.availability) {
-      case "entry-backed":
-        level0BindingStats.entry_backed++;
-        break;
-      case "unsupported":
-        level0BindingStats.unsupported++;
-        break;
-      case "deferred":
-      default:
-        level0BindingStats.deferred++;
-        break;
-    }
-    level0BindingStats.emitted_entries++;
-
-    const entry = {
-      binding_class: "function",
-      target_cell: "fcell",
-      package_name: definition.package_name,
-      symbol_name: definition.symbol_name,
-      symbol_key: symbolKey,
-      source: "level-0-source-scan",
+      source: "scope artifact + resolution artifact",
       require_non_nil: false,
       definition: {
-        form_kind: definition.form_kind,
-        file: definition.file,
-        line: definition.line >>> 0,
-        designator_token: definition.designator_token,
-        duplicates: definition.duplicates >>> 0,
+        source_of_truth: "scope artifact + resolution artifact",
+        roles: Array.isArray(scopeRecord?.roles) ? scopeRecord.roles.slice() : [],
+        bindable: scopeRecord?.bindable ?? null,
+        scope_provenance_count: scopeRecord?.provenance_count ?? 0,
+        required_class: requiredClass,
+        resolution_status: normalizeResolutionStatus(resolutionRecord?.status),
+        resolution_reason: resolutionRecord?.reason ?? null,
+        resolver_source: resolutionRecord?.resolver_source ?? null,
       },
-      availability: classified.availability,
-      initializer: classified.initializer,
-    };
-    entries.push(entry);
-    entryBySymbolKey.set(symbolKey, entry);
+      availability: synthesized.availability,
+      initializer: synthesized.initializer,
+    });
+    artifactStats.keys_included++;
   }
 
   const coverage = {
     schema_version: STARTUP_BINDING_MAP_COVERAGE_SCHEMA_V1,
-    required_special_variable_bindings: requiredSpecialBindingStats,
-    level0_source_scan: level0Scan.stats,
-    level0_function_bindings: level0BindingStats,
-    runtime_function_metadata: {
-      ...functionIndex.stats,
-      ...runtimeBindingStats,
+    artifact_inputs: {
+      schema_version: "startup_binding_map_artifact_inputs_v1",
+      mode: STARTUP_BINDING_MAP_INPUT_CONTRACT_V1.mode,
+      source_of_truth: "scope artifact + resolution artifact",
+      scope_input: STARTUP_BINDING_MAP_INPUT_CONTRACT_V1.scope_input,
+      resolution_input: STARTUP_BINDING_MAP_INPUT_CONTRACT_V1.resolution_input,
+      source_scan_policy: STARTUP_BINDING_MAP_INPUT_CONTRACT_V1.source_scan_policy,
+      ...artifactStats,
     },
+    required_special_variable_bindings: null,
+    level0_source_scan: null,
+    level0_function_bindings: null,
+    runtime_function_metadata: null,
   };
 
   return {
