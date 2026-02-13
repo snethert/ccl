@@ -1014,13 +1014,37 @@ If `G-01` fails:
 - `M-008` Define `startup_symbol_resolution_v1` schema constants and counters.
 - `M-009` Implement canonical JSON ordering rules and identity-hash exclusion of
   `generated_at_utc`.
-- `M-010` Lock required field lists in docs and add explicit failure reasons for
-  missing/invalid schema.
+- `M-010` Lock required field lists in docs and add explicit schema validation
+  reasons for missing/invalid artifacts and fields:
+  `startup-symbol-scope-missing`,
+  `startup-symbol-scope-missing-required-field`,
+  `startup-symbol-scope-invalid-schema`,
+  `startup-symbol-resolution-missing-required-field`,
+  `startup-symbol-resolution-invalid-schema`.
 - `M-011` Gate `G-02`: validate schema checker rejects one synthetic invalid
   artifact and accepts one valid fixture.
 
 If `G-02` fails:
 - Run Playbook `PB-02` (schema mismatch reconciliation) before continuing.
+
+#### Step 02R: Track A Remediation Addendum (Additive, No Reorder)
+
+This addendum is strictly additive. It does not reorder, renumber, or replace
+existing `M-001`..`M-067` cards. Use these remediation cards to close Track A
+verification holes while preserving current execution order and completion
+history.
+
+- `M-008R1` Define and verify prerequisite that
+  `ccl/doc/wasm/js/make-real-image.mjs` must parse `--startup-symbol-scope`
+  before any `G-02` command using that flag is executed.
+- `M-008R2` Add a corrected `G-02` verification command that proves both:
+  invalid fixture rejection and valid fixture acceptance (no
+  `startup-symbol-scope-invalid-schema` on valid fixture).
+- `M-008R3` Add explicit precondition text: `M-006` and `M-009` are valid in
+  Step 02 only when `ccl/scripts/wasm/collect-startup-symbol-scope.lisp` exists
+  in repository baseline; if missing, create file per `M-012` first, then
+  continue without renumbering/reordering Track A cards. `M-012` remains in
+  Step 03 unchanged.
 
 ### 19.2 Track B: Scanner + Pipeline Insertion (Steps 03-04)
 
@@ -1294,8 +1318,14 @@ a blocker proves the decision impossible to implement.
 4. `D4` Manifest policy: migration may read legacy embedded map, but no JS
    source scan generation.
 5. `D5` Resolver authority: staged hybrid (metadata then kernel verification).
-6. `D6` Scope/resolution schema fields: as locked in
-   `startup-symbol-pipeline-spec/spec-closure-v1.md`.
+6. `D6` Scope/resolution schema fields and required fields: locked exactly as
+   specified in `startup-symbol-pipeline-spec/spec-closure-v1.md`, with
+   explicit schema failure reasons:
+   `startup-symbol-scope-missing`,
+   `startup-symbol-scope-missing-required-field`,
+   `startup-symbol-scope-invalid-schema`,
+   `startup-symbol-resolution-missing-required-field`,
+   `startup-symbol-resolution-invalid-schema`.
 7. `D7` Shadow table ownership: map builder continues producing
    `startup_shadow_table_v1` in migration cut.
 8. `D8` Unresolved policy: required unresolved is fatal; optional unresolved is
@@ -1451,18 +1481,58 @@ rg -n 'generated_at_utc|identity hash|canonical|sorted|lexicographic' ccl/script
 rg -n 'startup_symbol_scope_v1|startup_symbol_resolution_v1|required fields|invalid-schema' ccl/doc/wasm/startup-symbol-pipeline-spec/spec-closure-v1.md ccl/doc/wasm/startup-symbol-pipeline-implementation-plan.md
 ```
 - Expected evidence line:
-- required field lists and schema failure reasons are locked in docs.
+- required field lists are locked and explicit missing/invalid schema reasons
+  are defined in docs.
 
 #### M-011 (G-02)
 - Files: `/tmp/invalid.scope.json`, `/tmp/valid.scope.json` (fixtures)
 - Command:
 ```bash
-node -e 'const fs=require("fs");fs.writeFileSync("/tmp/invalid.scope.json",JSON.stringify({schema_version:"broken"}));'
+node -e 'const fs=require("fs");fs.writeFileSync("/tmp/invalid.scope.json",JSON.stringify({schema_version:"broken"}));fs.writeFileSync("/tmp/valid.scope.json",JSON.stringify({schema_version:"startup_symbol_scope_v1",generator_version:"fixture-v1"}));'
 node ccl/doc/wasm/js/make-real-image.mjs --startup-symbol-scope /tmp/invalid.scope.json > /tmp/mri.invalid-scope.log 2>&1 || true
+node ccl/doc/wasm/js/make-real-image.mjs --startup-symbol-scope /tmp/valid.scope.json > /tmp/mri.valid-scope.log 2>&1 || true
 rg -n 'startup-symbol-scope-invalid-schema' /tmp/mri.invalid-scope.log
+! rg -n 'startup-symbol-scope-invalid-schema' /tmp/mri.valid-scope.log
 ```
 - Expected evidence line:
-- `startup-symbol-scope-invalid-schema` appears exactly once for invalid fixture.
+- invalid fixture emits `startup-symbol-scope-invalid-schema` and valid fixture
+  does not emit that reason.
+
+### 22.1.A Track A Remediation Addendum Cards (`M-008R1`..`M-008R3`)
+
+#### M-008R1
+- Files: `ccl/doc/wasm/startup-symbol-pipeline-implementation-plan.md`
+- Command:
+```bash
+rg -n 'M-008R1|--startup-symbol-scope|must parse|G-02' ccl/doc/wasm/startup-symbol-pipeline-implementation-plan.md
+```
+- Expected evidence line:
+- remediation text explicitly states parser prerequisite for
+  `--startup-symbol-scope` before `G-02` execution.
+
+#### M-008R2
+- Files: `/tmp/invalid.scope.json`, `/tmp/valid.scope.json` (fixtures)
+- Command:
+```bash
+node -e 'const fs=require("fs");fs.writeFileSync("/tmp/invalid.scope.json",JSON.stringify({schema_version:"broken"}));fs.writeFileSync("/tmp/valid.scope.json",JSON.stringify({schema_version:"startup_symbol_scope_v1",generator_version:"fixture-v1"}));'
+node ccl/doc/wasm/js/make-real-image.mjs --startup-symbol-scope /tmp/invalid.scope.json > /tmp/mri.invalid-scope.log 2>&1 || true
+node ccl/doc/wasm/js/make-real-image.mjs --startup-symbol-scope /tmp/valid.scope.json > /tmp/mri.valid-scope.log 2>&1 || true
+rg -n 'startup-symbol-scope-invalid-schema' /tmp/mri.invalid-scope.log
+! rg -n 'startup-symbol-scope-invalid-schema' /tmp/mri.valid-scope.log
+```
+- Expected evidence line:
+- invalid fixture emits `startup-symbol-scope-invalid-schema` and valid fixture
+  does not emit that reason.
+
+#### M-008R3
+- Files: `ccl/doc/wasm/startup-symbol-pipeline-implementation-plan.md`
+- Command:
+```bash
+rg -n 'M-008R3|M-006|M-009|M-012|repository baseline|if missing, create file per M-012 first' ccl/doc/wasm/startup-symbol-pipeline-implementation-plan.md
+```
+- Expected evidence line:
+- precondition text explicitly resolves `M-006`/`M-009` scanner file existence
+  dependency without changing Track A ordering.
 
 ### 22.2 Track B Cards (`M-012`..`M-025`)
 
@@ -1510,6 +1580,35 @@ node -e 'const fs=require("fs");const j=JSON.parse(fs.readFileSync(process.argv[
 ```
 - Expected evidence line:
 - `bad_keys 0`
+
+##### M-016R1 (Blocker Remediation: Session Variables)
+- Objective:
+- establish required session variables so `M-016` can address a real artifact path.
+- Actions:
+- apply Section `22.0 Session Setup` values for `CCL_REPO`, `SCOPE_JSON`, and `SCOPE_LOG`.
+- verify variables are non-empty in the active shell session.
+- Expected evidence line:
+- session has concrete values for `CCL_REPO`, `SCOPE_JSON`, and `SCOPE_LOG`.
+
+##### M-016R2 (Blocker Remediation: Scope Artifact Materialization)
+- Objective:
+- ensure `$SCOPE_JSON` exists and is populated before `M-016` validation.
+- Actions:
+- run the scanner build flow using existing plan defaults (`repo-root ccl`, feature profile `wasm32-target-v1`, contract sidecar `ccl/doc/wasm/bootstrap-l0-contract.v1.json`).
+- write artifact to `$SCOPE_JSON` and scanner diagnostics to `$SCOPE_LOG`.
+- confirm scope artifact file exists and is non-empty.
+- Expected evidence line:
+- scope artifact exists at `$SCOPE_JSON` and scanner diagnostics are present in `$SCOPE_LOG`.
+
+##### M-016R3 (Blocker Remediation: Resume Gate Path)
+- Objective:
+- re-enter normal execution cards without changing `M-016`/`M-017` definitions.
+- Actions:
+- execute `M-016` unchanged against the now-materialized `$SCOPE_JSON`.
+- on success (`bad_keys 0`), execute `M-017` unchanged against `$SCOPE_LOG`.
+- if `M-016` fails, stop and remediate canonicalization in `collect-startup-symbol-scope.lisp` before retry.
+- Expected evidence line:
+- `M-016` reports `bad_keys 0` and `M-017` reports one `STARTUP_SYMBOL_SCOPE_BUILD {...}` line.
 
 #### M-017
 - Files: `$SCOPE_LOG`

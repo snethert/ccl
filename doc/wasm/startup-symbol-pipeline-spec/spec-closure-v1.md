@@ -34,6 +34,10 @@ Normative language uses MUST/SHOULD/MAY.
 
 ## 3. Schema Definitions
 
+These required fields are locked for `startup_symbol_scope_v1` and
+`startup_symbol_resolution_v1`. Any add/remove/rename/type change requires a
+schema version bump and synchronized producer/consumer updates.
+
 ### 3.1 `startup_symbol_scope_v1`
 
 Required top-level fields:
@@ -119,7 +123,23 @@ Required top-level fields:
 8. `required_unresolved` integer >= 0.
 9. `optional_unresolved` integer >= 0.
 
-### 3.3 Deterministic Canonicalization
+### 3.3 Schema Validation Failure Reasons (Locked)
+
+1. Missing required scope artifact file MUST fail with
+   `startup-symbol-scope-missing`.
+2. Missing required field in `startup_symbol_scope_v1` (top-level or nested)
+   MUST fail with `startup-symbol-scope-missing-required-field`.
+3. Invalid `startup_symbol_scope_v1` schema (including wrong
+   `schema_version`, wrong type, or invalid enum/value constraint) MUST fail
+   with `startup-symbol-scope-invalid-schema`.
+4. Missing required field in `startup_symbol_resolution_v1` (top-level or
+   nested) MUST fail with
+   `startup-symbol-resolution-missing-required-field`.
+5. Invalid `startup_symbol_resolution_v1` schema (including wrong
+   `schema_version`, wrong type, or invalid enum/value constraint) MUST fail
+   with `startup-symbol-resolution-invalid-schema`.
+
+### 3.4 Deterministic Canonicalization
 
 1. JSON encoding MUST be UTF-8, no BOM, newline-terminated.
 2. Object keys MUST be emitted in lexicographic order.
@@ -218,11 +238,13 @@ Rules:
 1. `--startup-symbol-scope-out PATH`.
 2. `--startup-symbol-contract-out PATH`.
 
-### 10.2 Missing Artifact Behavior
+### 10.2 Missing Artifact And Scope Schema Behavior
 
 1. Missing required scope artifact MUST fail fast with
    `startup-symbol-scope-missing`.
-2. Invalid scope schema MUST fail fast with
+2. Missing required scope schema field MUST fail fast with
+   `startup-symbol-scope-missing-required-field`.
+3. Invalid scope schema MUST fail fast with
    `startup-symbol-scope-invalid-schema`.
 
 ## 11. Diagnostics Contract
@@ -267,6 +289,13 @@ If scanner runs outside make-real-image:
 - no memory failure signatures.
 
 ## 15. Failure Reason Catalog (Minimum Required)
+
+Schema validation reasons:
+1. `startup-symbol-scope-missing`.
+2. `startup-symbol-scope-missing-required-field`.
+3. `startup-symbol-scope-invalid-schema`.
+4. `startup-symbol-resolution-missing-required-field`.
+5. `startup-symbol-resolution-invalid-schema`.
 
 Scope stage reasons:
 1. `unknown-feature-profile`.

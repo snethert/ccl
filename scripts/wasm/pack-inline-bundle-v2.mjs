@@ -4,7 +4,6 @@ import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
-import { fileURLToPath } from "node:url";
 
 import {
   encodeModuleBundleIndexV2,
@@ -13,7 +12,7 @@ import {
   MODULE_BUNDLE_V2_VERSION,
 } from "../../doc/wasm/js/module-bundle-v2.mjs";
 import {
-  buildStartupBindingMapArtifact,
+  normalizeStartupBindingMapArtifact,
   summarizeStartupBindingMapArtifact,
 } from "../../doc/wasm/js/startup-binding-map.mjs";
 
@@ -173,7 +172,6 @@ async function writeFileAtomically(filePath, bytes) {
 
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
-  const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
   const inputManifestPath = path.resolve(opts.manifest);
   const inputManifestDir = path.dirname(inputManifestPath);
   const manifest = JSON.parse(await fsp.readFile(inputManifestPath, "utf8"));
@@ -324,10 +322,10 @@ async function main() {
     constPoolCount: outConstPools.length,
     functions: Array.isArray(manifest?.functions) ? manifest.functions : [],
   };
-  const startupBindingMap = await buildStartupBindingMapArtifact({
-    repoRoot,
-    functions: outManifest.functions,
-  });
+  const startupBindingMap = normalizeStartupBindingMapArtifact(manifest?.startupBindingMap ?? null);
+  if (!startupBindingMap) {
+    throw new Error("startup symbol pipeline hard-fail: startup-binding-map-missing");
+  }
   outManifest.startupBindingMap = startupBindingMap;
   if (gcRootPolicyModes.size > 0) {
     outManifest.gcRootPolicyModes = Object.fromEntries(

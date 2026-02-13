@@ -48,14 +48,44 @@ import {
   rewriteConstPoolFunctionDesignators,
 } from "./bootstrap-function-resolver.mjs";
 import {
-  STARTUP_BINDING_MAP_SCHEMA_V1,
-  buildStartupBindingMapArtifact,
   normalizeStartupBindingMapArtifact,
   summarizeStartupBindingMapArtifact,
   augmentStartupBindingMapArtifactWithContractConstPoolFunctions as
     augmentStartupBindingMapArtifactWithContractConstPoolFunctionsFromBuilder,
 } from "./startup-binding-map.mjs";
 import { FILE_MODE_READ } from "./persist-service.mjs";
+
+const STARTUP_SYMBOL_SCOPE_SCHEMA_V1 = "startup_symbol_scope_v1";
+const STARTUP_SYMBOL_SCOPE_FIELD_SCHEMA_VERSION = "schema_version";
+const STARTUP_SYMBOL_SCOPE_FIELD_GENERATOR_VERSION = "generator_version";
+const STARTUP_SYMBOL_SCOPE_FIELD_INPUTS = "inputs";
+const STARTUP_SYMBOL_SCOPE_FIELD_GENERATED_AT_UTC = "generated_at_utc";
+const STARTUP_SYMBOL_RESOLUTION_SCHEMA_V1 = "startup_symbol_resolution_v1";
+const STARTUP_SYMBOL_RESOLUTION_FIELD_SCHEMA_VERSION = "schema_version";
+const STARTUP_SYMBOL_RESOLUTION_FIELD_GENERATOR_VERSION = "generator_version";
+const STARTUP_SYMBOL_RESOLUTION_STATUS = Object.freeze({
+  RESOLVED: "resolved",
+  UNRESOLVED: "unresolved",
+  PROBE_ERROR: "probe-error",
+  INVALID_INPUT: "invalid-input",
+});
+const STARTUP_SYMBOL_RESOLUTION_COUNTER_FIELDS = Object.freeze([
+  "total",
+  "resolved",
+  "unresolved",
+  "probe_error",
+  "invalid_input",
+  "function_capable",
+  "vcell_bound",
+  "required_unresolved",
+  "optional_unresolved",
+]);
+
+function createStartupSymbolResolutionCounters() {
+  return Object.fromEntries(
+    STARTUP_SYMBOL_RESOLUTION_COUNTER_FIELDS.map((field) => [field, 0]),
+  );
+}
 
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
@@ -110,6 +140,41 @@ function bindingStateForGateFailure(reason) {
   }
 }
 
+function validateStartupSymbolScopeArtifact(scopeArtifactRaw) {
+  if (
+    !scopeArtifactRaw ||
+    typeof scopeArtifactRaw !== "object" ||
+    Array.isArray(scopeArtifactRaw)
+  ) {
+    return {
+      ok: false,
+      reason: "invalid-object",
+      schemaVersion: null,
+    };
+  }
+  const schemaVersion = scopeArtifactRaw[STARTUP_SYMBOL_SCOPE_FIELD_SCHEMA_VERSION];
+  if (schemaVersion !== STARTUP_SYMBOL_SCOPE_SCHEMA_V1) {
+    return {
+      ok: false,
+      reason: "invalid-schema",
+      schemaVersion: typeof schemaVersion === "string" ? schemaVersion : null,
+    };
+  }
+  const generatorVersion = scopeArtifactRaw[STARTUP_SYMBOL_SCOPE_FIELD_GENERATOR_VERSION];
+  if (typeof generatorVersion !== "string" || generatorVersion.trim() === "") {
+    return {
+      ok: false,
+      reason: "missing-generator-version",
+      schemaVersion,
+    };
+  }
+  return {
+    ok: true,
+    reason: null,
+    schemaVersion,
+  };
+}
+
 function usage() {
   console.log("Usage: node doc/wasm/js/make-real-image.mjs [options]");
   console.log("");
@@ -123,6 +188,7 @@ function usage() {
   console.log("  --kernel PATH       wasmcl.wasm path (default: doc/wasm/js/wasmcl.wasm)");
   console.log("  --subprims PATH     subprims.wasm path (default: doc/wasm/js/subprims.wasm)");
   console.log("  --subprims-map PATH subprims-map.json path (default: doc/wasm/subprims-map.json)");
+  console.log("  --startup-symbol-scope PATH  Startup symbol scope JSON artifact override");
   console.log("  --bootstrap-boundary-report PATH  Optional JSON state/diff report");
   console.log("  -h, --help          Show this help");
 }
@@ -163,6 +229,9 @@ function parseArgs(argv) {
       case "--subprims-map":
         out.subprimsMap = argv[++i];
         break;
+      case "--startup-symbol-scope":
+        out.startupSymbolScope = argv[++i];
+        break;
       case "--bootstrap-boundary-report":
         out.bootstrapBoundaryReport = argv[++i];
         break;
@@ -195,6 +264,36 @@ function sortJson(value) {
 
 function canonicalJson(value) {
   return `${JSON.stringify(sortJson(value))}\n`;
+}
+
+function canonicalizeStartupSymbolScopeForIdentityHash(scopeArtifactRaw) {
+  if (
+    !scopeArtifactRaw ||
+    typeof scopeArtifactRaw !== "object" ||
+    Array.isArray(scopeArtifactRaw)
+  ) {
+    return scopeArtifactRaw;
+  }
+
+  const canonicalScope = { ...scopeArtifactRaw };
+  const inputsRaw = scopeArtifactRaw[STARTUP_SYMBOL_SCOPE_FIELD_INPUTS];
+  if (inputsRaw && typeof inputsRaw === "object" && !Array.isArray(inputsRaw)) {
+    const canonicalInputs = { ...inputsRaw };
+    delete canonicalInputs[STARTUP_SYMBOL_SCOPE_FIELD_GENERATED_AT_UTC];
+    canonicalScope[STARTUP_SYMBOL_SCOPE_FIELD_INPUTS] = canonicalInputs;
+  }
+
+  // Identity hash canonical JSON uses lexicographic object-key ordering.
+  // Arrays with semantic order constraints are emitted sorted by producers.
+  return sortJson(canonicalScope);
+}
+
+function startupSymbolScopeIdentityHash(scopeArtifactRaw) {
+  const canonicalBytes = Buffer.from(
+    canonicalJson(canonicalizeStartupSymbolScopeForIdentityHash(scopeArtifactRaw)),
+    "utf8",
+  );
+  return sha256Hex(canonicalBytes);
 }
 
 async function loadBuildProvenance(provenancePath) {
@@ -381,6 +480,9 @@ const modulesPath = args.modules ?? defaultModules;
 const buildProvenancePath = args.buildProvenance
   ? path.resolve(args.buildProvenance)
   : null;
+const startupSymbolScopePath = args.startupSymbolScope
+  ? path.resolve(args.startupSymbolScope)
+  : null;
 const bootstrapBoundaryReportPath = args.bootstrapBoundaryReport
   ? path.resolve(args.bootstrapBoundaryReport)
   : null;
@@ -549,6 +651,18 @@ const subprimsMap = JSON.parse(await fs.readFile(subprimsMapPath, "utf-8"));
 const bootBytes = await fs.readFile(bootImagePath);
 const compiledModulesManifestBytes = await fs.readFile(modulesPath);
 const compiledModulesBundle = JSON.parse(compiledModulesManifestBytes.toString("utf-8"));
+let startupSymbolScopeOverrideRaw = null;
+const hasStartupSymbolScopeOverride = typeof startupSymbolScopePath === "string" &&
+  startupSymbolScopePath.length > 0;
+if (hasStartupSymbolScopeOverride) {
+  try {
+    startupSymbolScopeOverrideRaw = JSON.parse(await fs.readFile(startupSymbolScopePath, "utf-8"));
+  } catch (err) {
+    fail(
+      `Unable to read --startup-symbol-scope JSON at ${startupSymbolScopePath}: ${err?.message ?? err}`,
+    );
+  }
+}
 const startupSymbolPipelineRecord = Object.freeze({
   schema_version: "startup_symbol_pipeline_v1",
   mode: "source_scope_v1",
@@ -567,7 +681,19 @@ function startupSymbolPipelineHardFail(reason, details = {}) {
   console.error(`STARTUP_SYMBOL_PIPELINE_ASSERT ${JSON.stringify(record)}`);
   fail(`startup symbol pipeline hard-fail: ${reason}`);
 }
-const embeddedStartupBindingMapRaw = compiledModulesBundle?.startupBindingMap ?? null;
+const embeddedStartupBindingMapRaw = hasStartupSymbolScopeOverride
+  ? startupSymbolScopeOverrideRaw
+  : (compiledModulesBundle?.startupBindingMap ?? null);
+if (
+  traceEnabled &&
+  embeddedStartupBindingMapRaw &&
+  typeof embeddedStartupBindingMapRaw === "object" &&
+  !Array.isArray(embeddedStartupBindingMapRaw)
+) {
+  trace(
+    `startup symbol scope identity hash=${startupSymbolScopeIdentityHash(embeddedStartupBindingMapRaw)} (generated_at_utc excluded)`,
+  );
+}
 const embeddedStartupBindingMap = normalizeStartupBindingMapArtifact(
   embeddedStartupBindingMapRaw,
 );
@@ -580,29 +706,20 @@ if (
       fallback_rejected: "buildStartupBindingMapArtifact",
     });
   }
-  const embeddedSchemaVersion = (
-    embeddedStartupBindingMapRaw &&
-    typeof embeddedStartupBindingMapRaw === "object" &&
-    !Array.isArray(embeddedStartupBindingMapRaw)
-  )
-    ? embeddedStartupBindingMapRaw.schema_version
-    : null;
-  if (embeddedSchemaVersion !== STARTUP_BINDING_MAP_SCHEMA_V1) {
+  const scopeValidation = validateStartupSymbolScopeArtifact(embeddedStartupBindingMapRaw);
+  if (!scopeValidation.ok) {
     startupSymbolPipelineHardFail("startup-symbol-scope-invalid-schema", {
-      expected_schema_version: STARTUP_BINDING_MAP_SCHEMA_V1,
-      actual_schema_version: embeddedSchemaVersion,
+      expected_schema_version: STARTUP_SYMBOL_SCOPE_SCHEMA_V1,
+      actual_schema_version: scopeValidation.schemaVersion,
+      validation_reason: scopeValidation.reason,
       fallback_rejected: "buildStartupBindingMapArtifact",
     });
   }
 }
-let startupBindingMapArtifact = embeddedStartupBindingMap ?? await buildStartupBindingMapArtifact({
-  repoRoot: root,
-  contract: BOOTSTRAP_L0_CONTRACT_V1,
-  functions: Array.isArray(compiledModulesBundle?.functions) ? compiledModulesBundle.functions : [],
-});
-let startupBindingMapSource = embeddedStartupBindingMap
-  ? "runtime-modules-manifest.startupBindingMap"
-  : "generated-from-level0+level1+runtime-functions";
+let startupBindingMapArtifact = embeddedStartupBindingMap;
+let startupBindingMapSource = hasStartupSymbolScopeOverride
+  ? `--startup-symbol-scope:${displayPath(startupSymbolScopePath)}`
+  : "runtime-modules-manifest.startupBindingMap";
 let startupBindingMapBuildSummary = null;
 const bootstrapFunctionResolver = createBootstrapFunctionResolver({
   phase: BOOTSTRAP_RESOLVER_PHASE_BOOTSTRAP,
