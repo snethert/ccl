@@ -428,13 +428,28 @@ Startup architecture plan (updated):
     bindings and emits explicit `target_cell: "vcell"` entries for
     `requiredSpecialVariables`, plus level-0 function `target_cell: "fcell"`
     bindings.
+  - By default it now seeds function binding emission from all unambiguous
+    runtime metadata symbol keys (plus contract roots), so internal/runtime and
+    L0-callable exposure is produced in one deterministic build-time pass; set
+    `CCL_WASM_STARTUP_BINDING_MAP_EMIT_ALL_FUNCTIONS=0` to return to
+    contract-seeded-only callable emission.
+  - It also emits `startup_shadow_table` (`schema_version:
+    "startup_shadow_table_v1"`): precomputed pre-fasload startup ownership for
+    JS/Lisp bootstrap, including the deterministic
+    `preinstall_const_pool_entries` set.
   - For required-fasload readiness, it also computes a one-shot contract-scoped
     callable closure (`requiredConstPools` refs + `requiredCallables` roots +
     static transitive const-pool callable refs) and emits explicit
-    artifact-owned fcell bindings with const-pool definitions.
+    artifact-owned fcell bindings with const-pool definitions and closure
+    const-pool entry ownership (`closure_const_pool_entry_indices`).
 - Runtime ownership:
   - `doc/wasm/js/make-real-image.mjs` applies the artifact entries directly in
     one pre-fasload pass.
+  - Before apply, it deterministically preinstalls contract roots plus the
+    artifact-owned startup shadow-table const-pool entry set in one shot (no
+    runtime depth horizon and no iterative symbol-by-symbol discovery).
+  - Preinstall is strict: startup fails fast if `startup_shadow_table` is
+    missing, empty, or missing required contract root const-pool entries.
   - Symbol resolution remains strict package/name at apply and gate time.
     For artifact entries that include an explicit const-pool definition
     (`definition.entry_index` + `definition.const_index`), apply may first touch

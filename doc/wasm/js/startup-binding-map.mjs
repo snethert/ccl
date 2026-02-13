@@ -60,6 +60,19 @@ function makeSymbolKey(packageName, symbolName) {
   return `${pkg}::${sym}`;
 }
 
+function parseSymbolKey(symbolKey) {
+  const raw = normalizeToken(symbolKey);
+  const separatorIndex = raw.indexOf("::");
+  if (separatorIndex <= 0) return null;
+  const packageName = canonicalizePackageName(raw.slice(0, separatorIndex));
+  const symbolName = normalizeSymbolName(raw.slice(separatorIndex + 2));
+  if (!packageName || !symbolName) return null;
+  return {
+    package_name: packageName,
+    symbol_name: symbolName,
+  };
+}
+
 function countLinesBefore(text, index) {
   const head = text.slice(0, Math.max(0, index | 0));
   let lines = 1;
@@ -615,6 +628,72 @@ function normalizeCoverageObject(coverage) {
   };
 }
 
+function normalizeStartupShadowTable(shadowTable) {
+  if (!shadowTable || typeof shadowTable !== "object" || Array.isArray(shadowTable)) return null;
+  const normalizedPreinstallEntries = [];
+  const seenPreinstallEntries = new Set();
+  for (const value of Array.isArray(shadowTable.preinstall_const_pool_entries)
+    ? shadowTable.preinstall_const_pool_entries
+    : []) {
+    const entryIndex = Number(value);
+    if (!Number.isInteger(entryIndex) || entryIndex < 0) continue;
+    const normalized = entryIndex >>> 0;
+    if (seenPreinstallEntries.has(normalized)) continue;
+    seenPreinstallEntries.add(normalized);
+    normalizedPreinstallEntries.push(normalized);
+  }
+  normalizedPreinstallEntries.sort((a, b) => a - b);
+  return {
+    schema_version: typeof shadowTable.schema_version === "string"
+      ? shadowTable.schema_version
+      : "startup_shadow_table_v1",
+    phase: typeof shadowTable.phase === "string" ? shadowTable.phase : "pre-fasload",
+    contract_id: typeof shadowTable.contract_id === "string" ? shadowTable.contract_id : null,
+    preinstall_const_pool_entries: normalizedPreinstallEntries,
+    preinstall_const_pool_entry_count: normalizedPreinstallEntries.length >>> 0,
+    binding_entry_count: Number.isInteger(shadowTable.binding_entry_count)
+      ? (shadowTable.binding_entry_count >>> 0)
+      : 0,
+    entry_backed_binding_count: Number.isInteger(shadowTable.entry_backed_binding_count)
+      ? (shadowTable.entry_backed_binding_count >>> 0)
+      : 0,
+  };
+}
+
+function buildStartupShadowTable({
+  contract = BOOTSTRAP_L0_CONTRACT_V1,
+  entries = [],
+  closureConstPoolEntryIndices = [],
+} = {}) {
+  const preinstallConstPoolEntries = new Set();
+  for (const pool of Array.isArray(contract?.requiredConstPools) ? contract.requiredConstPools : []) {
+    const entryIndex = Number(pool?.entryIndex);
+    if (!Number.isInteger(entryIndex) || entryIndex < 0) continue;
+    preinstallConstPoolEntries.add(entryIndex >>> 0);
+  }
+  for (const value of Array.isArray(closureConstPoolEntryIndices) ? closureConstPoolEntryIndices : []) {
+    const entryIndex = Number(value);
+    if (!Number.isInteger(entryIndex) || entryIndex < 0) continue;
+    preinstallConstPoolEntries.add(entryIndex >>> 0);
+  }
+
+  let entryBackedBindingCount = 0;
+  for (const entry of Array.isArray(entries) ? entries : []) {
+    if (String(entry?.availability ?? "").toLowerCase() === "entry-backed") {
+      entryBackedBindingCount++;
+    }
+  }
+
+  return normalizeStartupShadowTable({
+    schema_version: "startup_shadow_table_v1",
+    phase: "pre-fasload",
+    contract_id: typeof contract?.id === "string" ? contract.id : null,
+    preinstall_const_pool_entries: Array.from(preinstallConstPoolEntries.values()).sort((a, b) => a - b),
+    binding_entry_count: Array.isArray(entries) ? (entries.length >>> 0) : 0,
+    entry_backed_binding_count: entryBackedBindingCount >>> 0,
+  });
+}
+
 export function summarizeStartupBindingMapArtifact(artifact) {
   return summarizeEntries(Array.isArray(artifact?.entries) ? artifact.entries : []);
 }
@@ -643,6 +722,7 @@ export function normalizeStartupBindingMapArtifact(artifact) {
     generator: STARTUP_BINDING_MAP_GENERATOR_V1,
     contract_id: typeof artifact.contract_id === "string" ? artifact.contract_id : null,
     coverage: normalizeCoverageObject(artifact.coverage),
+    startup_shadow_table: normalizeStartupShadowTable(artifact.startup_shadow_table),
     entries,
     counts: summarizeEntries(entries),
   };
@@ -896,7 +976,7 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
   getConstPoolBytesForEntry = null,
 } = {}) {
   const stats = {
-    schema_version: "startup_binding_map_contract_const_pool_function_build_v3",
+    schema_version: "startup_binding_map_contract_const_pool_function_build_v4",
     status: "ok",
     enabled: false,
     required_pool_count: 0,
@@ -906,6 +986,10 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     seed_ref_count: 0,
     seed_symbol_ref_count: 0,
     seed_callable_count: 0,
+    seed_callable_bulk_enabled: false,
+    seed_callable_bulk_count: 0,
+    seed_callable_bulk_ambiguous_skipped: 0,
+    seed_callable_bulk_invalid_symbol_key: 0,
     seed_refs_non_symbol: 0,
     symbol_refs_examined: 0,
     symbol_refs_non_symbol: 0,
@@ -933,10 +1017,15 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     symbol_anchor_candidates: 0,
     symbol_anchor_candidates_required_special: 0,
     symbol_anchor_candidates_non_special: 0,
+    symbol_anchor_alias_total: 0,
+    symbol_anchor_alias_entries_updated: 0,
     symbol_anchor_entry_upgrades: 0,
     symbol_anchor_existing_preserved: 0,
     required_special_anchors_present: 0,
     required_special_anchors_missing: 0,
+    closure_callable_symbols: 0,
+    closure_const_pool_entry_count: 0,
+    closure_const_pool_entry_indices: [],
     skipped_existing_entry_backed: 0,
     skipped_duplicate_refs: 0,
     missing_const_pool_provider: false,
@@ -1122,7 +1211,10 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     });
     return true;
   };
-  const enqueueCallableSeed = ({ package_name, symbol_name } = {}) => {
+  const enqueueCallableSeed = (
+    { package_name, symbol_name } = {},
+    { source = "contract-required-callable" } = {},
+  ) => {
     const packageName = canonicalizePackageName(package_name);
     const symbolName = normalizeSymbolName(symbol_name);
     if (!symbolName) return false;
@@ -1139,7 +1231,7 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
       symbol_name: symbolName,
       tag: null,
       depth: 0,
-      source: "contract-required-callable",
+      source,
     });
     return true;
   };
@@ -1162,8 +1254,29 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     if (enqueueCallableSeed({
       package_name: item?.packageName ?? "",
       symbol_name: item?.symbolName ?? "",
-    })) {
+    }, { source: "contract-required-callable" })) {
       stats.seed_callable_count++;
+    }
+  }
+
+  const enableBulkCallableSeeds = process.env.CCL_WASM_STARTUP_BINDING_MAP_EMIT_ALL_FUNCTIONS !== "0";
+  if (enableBulkCallableSeeds) {
+    stats.seed_callable_bulk_enabled = true;
+    const sortedSymbolKeys = Array.from(functionIndex.bySymbolKey.keys()).sort();
+    for (const symbolKey of sortedSymbolKeys) {
+      const record = functionIndex.bySymbolKey.get(symbolKey) ?? null;
+      if (record?.ambiguous) {
+        stats.seed_callable_bulk_ambiguous_skipped++;
+        continue;
+      }
+      const parsed = parseSymbolKey(symbolKey);
+      if (!parsed) {
+        stats.seed_callable_bulk_invalid_symbol_key++;
+        continue;
+      }
+      if (enqueueCallableSeed(parsed, { source: "runtime-function-metadata-bulk" })) {
+        stats.seed_callable_bulk_count++;
+      }
     }
   }
 
@@ -1196,25 +1309,76 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     if (candidateEntryIndex > existingEntryIndex) return false;
     return (candidateDefinition.const_index >>> 0) < (existingDefinition.const_index >>> 0);
   };
+  const canonicalizeDefinition = (candidateDefinition) => ({
+    entry_index: candidateDefinition.entry_index >>> 0,
+    const_index: candidateDefinition.const_index >>> 0,
+    const_tag: Number.isFinite(candidateDefinition.const_tag)
+      ? (candidateDefinition.const_tag >>> 0)
+      : null,
+    const_pool_depth: Number.isFinite(candidateDefinition.const_pool_depth)
+      ? (candidateDefinition.const_pool_depth >>> 0)
+      : 0,
+    const_pool_source: typeof candidateDefinition.const_pool_source === "string"
+      ? candidateDefinition.const_pool_source
+      : "contract-required-const-pool-ref",
+  });
+  const definitionAliasComparator = (a, b) => {
+    const aDepth = definitionDepth(a);
+    const bDepth = definitionDepth(b);
+    if (aDepth < bDepth) return -1;
+    if (aDepth > bDepth) return 1;
+    const aEntry = a.entry_index >>> 0;
+    const bEntry = b.entry_index >>> 0;
+    if (aEntry < bEntry) return -1;
+    if (aEntry > bEntry) return 1;
+    return (a.const_index >>> 0) - (b.const_index >>> 0);
+  };
+  const normalizeDefinitionAliasList = (aliases) => {
+    const byKey = new Map();
+    for (const alias of Array.isArray(aliases) ? aliases : []) {
+      if (!hasConstPoolDefinition(alias)) continue;
+      const canonical = canonicalizeDefinition(alias);
+      const key = `${canonical.entry_index}:${canonical.const_index}`;
+      const existing = byKey.get(key);
+      if (!existing || shouldPreferDefinition(existing, canonical)) {
+        byKey.set(key, canonical);
+      }
+    }
+    return Array.from(byKey.values()).sort(definitionAliasComparator);
+  };
+  const sameDefinitionAliasLists = (a, b) => {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      const left = a[i];
+      const right = b[i];
+      if ((left.entry_index >>> 0) !== (right.entry_index >>> 0)) return false;
+      if ((left.const_index >>> 0) !== (right.const_index >>> 0)) return false;
+      if ((left.const_pool_depth ?? null) !== (right.const_pool_depth ?? null)) return false;
+      if ((left.const_tag ?? null) !== (right.const_tag ?? null)) return false;
+      if ((left.const_pool_source ?? null) !== (right.const_pool_source ?? null)) return false;
+    }
+    return true;
+  };
   const symbolAnchorBySymbolKey = new Map();
+  const symbolAnchorAliasesBySymbolKey = new Map();
+  const closureCallableSymbolKeys = new Set();
   const recordSymbolAnchor = (symbolKey, candidateDefinition) => {
     if (!symbolKey || !hasConstPoolDefinition(candidateDefinition)) return;
     const existing = symbolAnchorBySymbolKey.get(symbolKey) ?? null;
     if (!existing || shouldPreferDefinition(existing, candidateDefinition)) {
-      symbolAnchorBySymbolKey.set(symbolKey, {
-        entry_index: candidateDefinition.entry_index >>> 0,
-        const_index: candidateDefinition.const_index >>> 0,
-        const_tag: Number.isFinite(candidateDefinition.const_tag)
-          ? (candidateDefinition.const_tag >>> 0)
-          : null,
-        const_pool_depth: Number.isFinite(candidateDefinition.const_pool_depth)
-          ? (candidateDefinition.const_pool_depth >>> 0)
-          : 0,
-        const_pool_source: typeof candidateDefinition.const_pool_source === "string"
-          ? candidateDefinition.const_pool_source
-          : "contract-required-const-pool-ref",
-      });
+      symbolAnchorBySymbolKey.set(symbolKey, canonicalizeDefinition(candidateDefinition));
     }
+  };
+  const recordSymbolAnchorAlias = (symbolKey, candidateDefinition) => {
+    if (!symbolKey || !hasConstPoolDefinition(candidateDefinition)) return;
+    const aliasByKey = symbolAnchorAliasesBySymbolKey.get(symbolKey) ?? new Map();
+    const canonical = canonicalizeDefinition(candidateDefinition);
+    const aliasKey = `${canonical.entry_index}:${canonical.const_index}`;
+    const existing = aliasByKey.get(aliasKey) ?? null;
+    if (!existing || shouldPreferDefinition(existing, canonical)) {
+      aliasByKey.set(aliasKey, canonical);
+    }
+    symbolAnchorAliasesBySymbolKey.set(symbolKey, aliasByKey);
   };
 
   const scannedResolvedEntries = new Set();
@@ -1249,6 +1413,7 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     const refSymbolKey = makeSymbolKey(packageForSymbolKey, symbolName);
     if (refSymbolKey && refDefinition) {
       recordSymbolAnchor(refSymbolKey, refDefinition);
+      recordSymbolAnchorAlias(refSymbolKey, refDefinition);
     }
     const isRequiredCallableSeed = ref.source === "contract-required-callable";
     if (!isRequiredCallableSeed && !hasCallableMetadata({ packageName, symbolName })) {
@@ -1272,6 +1437,7 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     const resolvedPackageName = packageForSymbolKey;
     const symbolKey = makeSymbolKey(resolvedPackageName, symbolName);
     if (!symbolKey) continue;
+    closureCallableSymbolKeys.add(symbolKey);
     const definition = refDefinition ? {
       ...refDefinition,
     } : null;
@@ -1382,6 +1548,11 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
   stats.symbol_anchor_candidates_required_special = requiredSpecialAnchorCandidates >>> 0;
   stats.symbol_anchor_candidates_non_special =
     Math.max(0, (symbolAnchorBySymbolKey.size - requiredSpecialAnchorCandidates) | 0) >>> 0;
+  let symbolAnchorAliasTotal = 0;
+  for (const aliasByKey of symbolAnchorAliasesBySymbolKey.values()) {
+    symbolAnchorAliasTotal += aliasByKey.size >>> 0;
+  }
+  stats.symbol_anchor_alias_total = symbolAnchorAliasTotal >>> 0;
 
   const entryIndexBySymbolKey = new Map();
   for (let i = 0; i < entries.length; i++) {
@@ -1430,6 +1601,26 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     stats.symbol_anchor_entry_upgrades++;
   }
 
+  for (const [symbolKey, aliasByKey] of symbolAnchorAliasesBySymbolKey.entries()) {
+    const existingIndex = entryIndexBySymbolKey.get(symbolKey);
+    if (existingIndex == null) continue;
+    const entry = entries[existingIndex];
+    const existingAliases = normalizeDefinitionAliasList(entry?.definition_aliases ?? []);
+    const mergedAliases = normalizeDefinitionAliasList([
+      ...(entry?.definition ? [entry.definition] : []),
+      ...existingAliases,
+      ...aliasByKey.values(),
+    ]);
+    if (mergedAliases.length === 0 || sameDefinitionAliasLists(existingAliases, mergedAliases)) {
+      continue;
+    }
+    entries[existingIndex] = {
+      ...entry,
+      definition_aliases: mergedAliases,
+    };
+    stats.symbol_anchor_alias_entries_updated++;
+  }
+
   let requiredSpecialAnchorsPresent = 0;
   let requiredSpecialAnchorsMissing = 0;
   for (const symbolKey of requiredSpecialSymbolKeys.values()) {
@@ -1440,6 +1631,28 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
   }
   stats.required_special_anchors_present = requiredSpecialAnchorsPresent >>> 0;
   stats.required_special_anchors_missing = requiredSpecialAnchorsMissing >>> 0;
+  const closureConstPoolEntryIndices = [];
+  const seenClosureConstPoolEntryIndices = new Set();
+  const collectClosureDefinitionEntryIndex = (definition) => {
+    if (!hasConstPoolDefinition(definition)) return;
+    const entryIndex = definition.entry_index >>> 0;
+    if (seenClosureConstPoolEntryIndices.has(entryIndex)) return;
+    seenClosureConstPoolEntryIndices.add(entryIndex);
+    closureConstPoolEntryIndices.push(entryIndex);
+  };
+  for (const symbolKey of closureCallableSymbolKeys.values()) {
+    const entryIndex = functionEntryIndexBySymbolKey.get(symbolKey);
+    if (entryIndex == null) continue;
+    const entry = entries[entryIndex];
+    collectClosureDefinitionEntryIndex(entry?.definition ?? null);
+    for (const alias of Array.isArray(entry?.definition_aliases) ? entry.definition_aliases : []) {
+      collectClosureDefinitionEntryIndex(alias);
+    }
+  }
+  closureConstPoolEntryIndices.sort((a, b) => a - b);
+  stats.closure_callable_symbols = closureCallableSymbolKeys.size >>> 0;
+  stats.closure_const_pool_entry_count = closureConstPoolEntryIndices.length >>> 0;
+  stats.closure_const_pool_entry_indices = closureConstPoolEntryIndices;
 
   const coverage = mapArtifact?.coverage && typeof mapArtifact.coverage === "object"
     ? { ...mapArtifact.coverage }
@@ -1451,11 +1664,21 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     generator: mapArtifact?.generator ?? STARTUP_BINDING_MAP_GENERATOR_V1,
     contract_id: mapArtifact?.contract_id ?? (typeof contract?.id === "string" ? contract.id : null),
     coverage,
+    startup_shadow_table: buildStartupShadowTable({
+      contract,
+      entries,
+      closureConstPoolEntryIndices,
+    }),
     entries,
     counts: summarizeEntries(entries),
   };
   return {
-    changed: (stats.emitted_entries + stats.upgraded_existing_entries + stats.symbol_anchor_entry_upgrades) > 0,
+    changed: (
+      stats.emitted_entries +
+      stats.upgraded_existing_entries +
+      stats.symbol_anchor_entry_upgrades +
+      stats.symbol_anchor_alias_entries_updated
+    ) > 0,
     mapArtifact: nextArtifact,
     stats,
   };
@@ -1642,6 +1865,11 @@ export async function buildStartupBindingMapArtifact({
     generator: STARTUP_BINDING_MAP_GENERATOR_V1,
     contract_id: typeof contract?.id === "string" ? contract.id : null,
     coverage,
+    startup_shadow_table: buildStartupShadowTable({
+      contract,
+      entries,
+      closureConstPoolEntryIndices: [],
+    }),
     entries,
     counts: summarizeEntries(entries),
   };

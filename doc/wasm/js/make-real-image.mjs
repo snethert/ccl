@@ -912,6 +912,38 @@ function decodeConstPoolForInfo(info) {
   }
 }
 
+function normalizeConstPoolDefinitionAnchor(definition) {
+  const definitionEntryIndex = Number(definition?.entry_index);
+  const definitionConstIndex = Number(definition?.const_index);
+  if (!Number.isInteger(definitionEntryIndex) || definitionEntryIndex < 0) return null;
+  if (!Number.isInteger(definitionConstIndex) || definitionConstIndex < 0) return null;
+  return {
+    definition_entry_index: definitionEntryIndex >>> 0,
+    definition_const_index: definitionConstIndex >>> 0,
+    const_pool_depth: Number.isInteger(definition?.const_pool_depth)
+      ? (definition.const_pool_depth >>> 0)
+      : null,
+  };
+}
+
+function collectConstPoolDefinitionAnchors(entry) {
+  const anchors = [];
+  const seen = new Set();
+  const pushAnchor = (definition) => {
+    const normalized = normalizeConstPoolDefinitionAnchor(definition);
+    if (!normalized) return;
+    const key = `${normalized.definition_entry_index}:${normalized.definition_const_index}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    anchors.push(normalized);
+  };
+  pushAnchor(entry?.definition);
+  for (const alias of Array.isArray(entry?.definition_aliases) ? entry.definition_aliases : []) {
+    pushAnchor(alias);
+  }
+  return anchors;
+}
+
 function buildStartupBindingMapConstPoolBindingIndex(mapArtifact) {
   startupBindingMapConstPoolBindings.clear();
   startupBindingMapDeferredApplied.clear();
@@ -920,26 +952,103 @@ function buildStartupBindingMapConstPoolBindingIndex(mapArtifact) {
     if (String(entry?.availability ?? "").toLowerCase() !== "entry-backed") continue;
     if (String(entry?.initializer?.kind ?? "").toLowerCase() !== "entry-function") continue;
     const resolvedEntryIndex = Number(entry?.initializer?.entry_index);
-    const definitionEntryIndex = Number(entry?.definition?.entry_index);
-    const definitionConstIndex = Number(entry?.definition?.const_index);
     if (!Number.isInteger(resolvedEntryIndex) || resolvedEntryIndex < 0) continue;
-    if (!Number.isInteger(definitionEntryIndex) || definitionEntryIndex < 0) continue;
-    if (!Number.isInteger(definitionConstIndex) || definitionConstIndex < 0) continue;
-    const key = definitionEntryIndex >>> 0;
-    const bucket = startupBindingMapConstPoolBindings.get(key) ?? [];
-    bucket.push({
-      definition_entry_index: definitionEntryIndex >>> 0,
-      definition_const_index: definitionConstIndex >>> 0,
-      resolved_entry_index: resolvedEntryIndex >>> 0,
-      symbol_key: typeof entry?.symbol_key === "string" ? entry.symbol_key : null,
-      symbol_name: typeof entry?.symbol_name === "string" ? entry.symbol_name : null,
-      package_name: typeof entry?.package_name === "string" ? entry.package_name : null,
-      const_pool_depth: Number.isInteger(entry?.definition?.const_pool_depth)
-        ? (entry.definition.const_pool_depth >>> 0)
-        : null,
-    });
-    startupBindingMapConstPoolBindings.set(key, bucket);
+    const anchors = collectConstPoolDefinitionAnchors(entry);
+    for (const anchor of anchors) {
+      const key = anchor.definition_entry_index >>> 0;
+      const bucket = startupBindingMapConstPoolBindings.get(key) ?? [];
+      bucket.push({
+        definition_entry_index: anchor.definition_entry_index >>> 0,
+        definition_const_index: anchor.definition_const_index >>> 0,
+        resolved_entry_index: resolvedEntryIndex >>> 0,
+        symbol_key: typeof entry?.symbol_key === "string" ? entry.symbol_key : null,
+        symbol_name: typeof entry?.symbol_name === "string" ? entry.symbol_name : null,
+        package_name: typeof entry?.package_name === "string" ? entry.package_name : null,
+        const_pool_depth: Number.isInteger(anchor.const_pool_depth)
+          ? (anchor.const_pool_depth >>> 0)
+          : null,
+      });
+      startupBindingMapConstPoolBindings.set(key, bucket);
+    }
   }
+}
+
+function planStartupBindingMapPreinstallConstPools({
+  contract = BOOTSTRAP_L0_CONTRACT_V1,
+  mapArtifact = null,
+} = {}) {
+  const contractRootEntryIndices = [];
+  const contractRootSet = new Set();
+  for (const requiredPool of Array.isArray(contract?.requiredConstPools) ? contract.requiredConstPools : []) {
+    const entryIndex = Number(requiredPool?.entryIndex);
+    if (!Number.isInteger(entryIndex) || entryIndex < 0) continue;
+    const normalizedEntryIndex = entryIndex >>> 0;
+    if (contractRootSet.has(normalizedEntryIndex)) continue;
+    contractRootSet.add(normalizedEntryIndex);
+    contractRootEntryIndices.push(normalizedEntryIndex);
+  }
+  contractRootEntryIndices.sort((a, b) => a - b);
+
+  const artifactShadowEntryIndices = [];
+  const artifactShadowEntrySet = new Set();
+  const rawArtifactShadowEntryIndices = mapArtifact?.startup_shadow_table?.preinstall_const_pool_entries;
+  for (const value of Array.isArray(rawArtifactShadowEntryIndices) ? rawArtifactShadowEntryIndices : []) {
+    const entryIndex = Number(value);
+    if (!Number.isInteger(entryIndex) || entryIndex < 0) continue;
+    const normalizedEntryIndex = entryIndex >>> 0;
+    if (artifactShadowEntrySet.has(normalizedEntryIndex)) continue;
+    artifactShadowEntrySet.add(normalizedEntryIndex);
+    artifactShadowEntryIndices.push(normalizedEntryIndex);
+  }
+  artifactShadowEntryIndices.sort((a, b) => a - b);
+
+  const missingContractRootEntries = [];
+  for (const entryIndex of contractRootEntryIndices) {
+    if (!artifactShadowEntrySet.has(entryIndex)) {
+      missingContractRootEntries.push(entryIndex);
+    }
+  }
+
+  let status = "ok";
+  let reason = null;
+  if (!(mapArtifact?.startup_shadow_table && typeof mapArtifact.startup_shadow_table === "object")) {
+    status = "fail";
+    reason = "startup-shadow-table-missing";
+  } else if (artifactShadowEntryIndices.length === 0) {
+    status = "fail";
+    reason = "startup-shadow-table-empty-preinstall-entries";
+  } else if (missingContractRootEntries.length > 0) {
+    status = "fail";
+    reason = "startup-shadow-table-missing-contract-root-entries";
+  }
+
+  const orderedEntryIndices = artifactShadowEntryIndices;
+  return {
+    entryIndices: orderedEntryIndices,
+    summary: {
+      schema_version: "startup_binding_map_preinstall_plan_v3",
+      status,
+      phase: "pre-fasload",
+      contract_id: contract?.id ?? null,
+      source: "artifact-startup-shadow-table",
+      reason,
+      contract_required_const_pool_entries: contractRootEntryIndices.length >>> 0,
+      contract_required_const_pool_entry_indices: contractRootEntryIndices,
+      missing_contract_root_entries: missingContractRootEntries,
+      closure_const_pool_binding_buckets: startupBindingMapConstPoolBindings.size >>> 0,
+      startup_shadow_table_entries: artifactShadowEntryIndices.length >>> 0,
+      startup_shadow_table_entry_count: Number.isInteger(mapArtifact?.startup_shadow_table?.preinstall_const_pool_entry_count)
+        ? (mapArtifact.startup_shadow_table.preinstall_const_pool_entry_count >>> 0)
+        : null,
+      startup_shadow_table_binding_entry_count: Number.isInteger(mapArtifact?.startup_shadow_table?.binding_entry_count)
+        ? (mapArtifact.startup_shadow_table.binding_entry_count >>> 0)
+        : null,
+      startup_shadow_table_entry_backed_binding_count: Number.isInteger(mapArtifact?.startup_shadow_table?.entry_backed_binding_count)
+        ? (mapArtifact.startup_shadow_table.entry_backed_binding_count >>> 0)
+        : null,
+      total_const_pool_entries: orderedEntryIndices.length >>> 0,
+    },
+  };
 }
 
 function applyStartupBindingMapDeferredBindingsForConstPoolEntry(entryIndexRaw, { reason = "const-pool-install" } = {}) {
@@ -2021,6 +2130,7 @@ function buildStartupBindingMapBuildSummary({
       function_entries: counts.function_entries ?? null,
     },
     constants: constantCoverage,
+    startup_shadow_table: mapArtifact?.startup_shadow_table ?? null,
     coverage: mapArtifact?.coverage ?? null,
   };
 }
@@ -2933,18 +3043,41 @@ startupBindingMapBuildSummary = buildStartupBindingMapBuildSummary({
 });
 console.log(`STARTUP_BINDING_MAP_BUILD ${JSON.stringify(startupBindingMapBuildSummary)}`);
 buildStartupBindingMapConstPoolBindingIndex(startupBindingMapArtifact);
-for (const requiredPool of Array.isArray(BOOTSTRAP_L0_CONTRACT_V1?.requiredConstPools)
-  ? BOOTSTRAP_L0_CONTRACT_V1.requiredConstPools
-  : []) {
-  const entryIndex = Number(requiredPool?.entryIndex);
-  if (!Number.isInteger(entryIndex) || entryIndex < 0) continue;
-  installConstPoolOnDemand(entryIndex >>> 0);
+const startupBindingMapPreinstallPlan = planStartupBindingMapPreinstallConstPools({
+  contract: BOOTSTRAP_L0_CONTRACT_V1,
+  mapArtifact: startupBindingMapArtifact,
+});
+let startupBindingMapPreinstallInstalled = 0;
+let startupBindingMapPreinstallMissing = 0;
+if (startupBindingMapPreinstallPlan.summary?.status !== "ok") {
+  const startupBindingMapPreinstallSummary = {
+    ...startupBindingMapPreinstallPlan.summary,
+    requested_count: startupBindingMapPreinstallPlan.entryIndices.length >>> 0,
+    installed_count: startupBindingMapPreinstallInstalled >>> 0,
+    missing_count: startupBindingMapPreinstallMissing >>> 0,
+  };
+  console.error(`STARTUP_BINDING_MAP_PREINSTALL ${JSON.stringify(startupBindingMapPreinstallSummary)}`);
+  fail(`pre-fasload startup binding map preinstall failed: ${startupBindingMapPreinstallPlan.summary?.reason ?? "invalid-plan"}`);
 }
-for (const installedEntryIndex of constPoolsInstalled.values()) {
+for (const entryIndex of startupBindingMapPreinstallPlan.entryIndices) {
+  if (installConstPoolOnDemand(entryIndex >>> 0) === 1) {
+    startupBindingMapPreinstallInstalled++;
+  } else {
+    startupBindingMapPreinstallMissing++;
+  }
+}
+for (const installedEntryIndex of Array.from(constPoolsInstalled.values()).sort((a, b) => a - b)) {
   applyStartupBindingMapDeferredBindingsForConstPoolEntry(installedEntryIndex, {
     reason: "startup-map-index-backfill",
   });
 }
+const startupBindingMapPreinstallSummary = {
+  ...startupBindingMapPreinstallPlan.summary,
+  requested_count: startupBindingMapPreinstallPlan.entryIndices.length >>> 0,
+  installed_count: startupBindingMapPreinstallInstalled >>> 0,
+  missing_count: startupBindingMapPreinstallMissing >>> 0,
+};
+console.log(`STARTUP_BINDING_MAP_PREINSTALL ${JSON.stringify(startupBindingMapPreinstallSummary)}`);
 
 const startupBindingMapApplySummary = applyStartupBindingMapOrFail({
   mapArtifact: startupBindingMapArtifact,
