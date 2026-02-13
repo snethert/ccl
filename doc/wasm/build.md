@@ -405,12 +405,7 @@ Startup binding map artifact:
   `target_cell: "vcell"` for required special-variable initial values and
   `target_cell: "fcell"` for function bindings.
 - Function-side coverage always includes the full `level-0/*.lisp`
-  function-designator scan in the artifact. During pre-fasload apply,
-  `make-real-image.mjs` augments the same unified map with
-  required-const-pool symbol mirrors (vcell/fcell), then performs a bounded
-  secondary const-pool symbol scan seeded from discovered entry-backed
-  callables and emits additional callable bindings for unresolved symbols via
-  runtime function metadata.
+  function-designator scan in the artifact.
 - Each entry is explicit and machine-readable:
   `availability: literal|entry-backed|deferred|unsupported` with
   `initializer.kind` and reason fields.
@@ -420,6 +415,20 @@ Startup binding map artifact:
 - Unified map application runs in one pass before
   `assertL0BootstrapContractOrFail(...)` and keeps strict L0 gate semantics and
   phase transitions unchanged.
+
+Startup architecture plan (updated):
+
+- Target model: artifact-first startup. JS host consumes startup metadata and
+  applies it; JS does not perform broad runtime dependency discovery.
+- Required artifact coverage for pre-fasload:
+  - required vcell initializations (`requiredSpecialVariables`);
+  - Level-0 function bindings (full source scan);
+  - first-required-fasload callable closure needed at boundary.
+- Transitional rule until full artifact closure is emitted:
+  - any runtime derivation must be seed-scoped to required boundary roots,
+    machine-bounded, and must fail explicitly on budget exhaustion.
+  - no per-symbol or per-function patches.
+  - strict gate/phase semantics remain unchanged.
 
 Machine-readable diagnostics:
 
@@ -436,8 +445,7 @@ Recommended validation command:
 
 ```bash
 CCL_WASM_TRACE=1 CCL_WASM_DIAG_PRE_FASLOAD_TOPLFUNC_ENTRY=4488 \
-  perl -e 'alarm shift @ARGV; exec @ARGV' 20 \
-  node doc/wasm/js/make-real-image.mjs > /tmp/make-real-image.trace.top4488.requiredfasl.timebox.log 2>&1 || true
+  node doc/wasm/js/make-real-image.mjs > /tmp/make-real-image.trace.top4488.full.notimeout.log 2>&1 || true
 ```
 
 Expected failure signatures:

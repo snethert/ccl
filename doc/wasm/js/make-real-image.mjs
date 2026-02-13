@@ -2016,6 +2016,9 @@ function applyStartupBindingMapOrFail({
     entry_ref_scans_attempted: 0,
     entry_ref_scans_performed: 0,
     entry_ref_scans_skipped_large: 0,
+    entry_symbol_refs_parsed: 0,
+    entry_symbol_ref_parse_failures: 0,
+    entry_symbol_ref_fallback_full_scans: 0,
     mirrored_bindings_emitted: 0,
     mirrored_bindings_skipped_duplicate: 0,
     mirrored_bindings_skipped_initializer_unavailable: 0,
@@ -2059,6 +2062,55 @@ function applyStartupBindingMapOrFail({
       return null;
     };
 
+    const readU32FromState = (bytes, state) => {
+      if ((state.offset + 4) > bytes.length) return null;
+      const value = readU32LE(bytes, state.offset);
+      state.offset += 4;
+      return value >>> 0;
+    };
+
+    const readUleb32FromState = (bytes, state) => {
+      let value = 0;
+      let shift = 0;
+      for (let i = 0; i < 5; i++) {
+        if (state.offset >= bytes.length) return null;
+        const byte = bytes[state.offset++];
+        value |= (byte & 0x7f) << shift;
+        if ((byte & 0x80) === 0) {
+          return value >>> 0;
+        }
+        shift += 7;
+      }
+      return null;
+    };
+
+    const readSleb32RawFromState = (bytes, state) => {
+      let value = 0;
+      let shift = 0;
+      for (let i = 0; i < 5; i++) {
+        if (state.offset >= bytes.length) return null;
+        const byte = bytes[state.offset++];
+        value |= (byte & 0x7f) << shift;
+        shift += 7;
+        if ((byte & 0x80) === 0) {
+          return value >>> 0;
+        }
+      }
+      return null;
+    };
+
+    const readNatFromState = (bytes, state, version) => {
+      if (version >= 2) return readUleb32FromState(bytes, state);
+      return readU32FromState(bytes, state);
+    };
+
+    const skipBytesFromState = (bytes, state, count) => {
+      const size = count >>> 0;
+      if ((state.offset + size) > bytes.length) return false;
+      state.offset += size;
+      return true;
+    };
+
     const readConstPoolCount = (bytesLike) => {
       const bytes = bytesLike instanceof Uint8Array
         ? bytesLike
@@ -2083,6 +2135,105 @@ function applyStartupBindingMapOrFail({
       return count >>> 0;
     };
 
+    const parseConstPoolSymbolRefIndices = (bytesLike) => {
+      const bytes = bytesLike instanceof Uint8Array
+        ? bytesLike
+        : Uint8Array.from(bytesLike ?? []);
+      if (bytes.length < 2) return null;
+
+      let version = 0;
+      let count = 0;
+      const state = { offset: 0 };
+      if (
+        bytes.length >= 8 &&
+        bytes[0] === 1 &&
+        bytes[1] === 0 &&
+        bytes[2] === 0 &&
+        bytes[3] === 0
+      ) {
+        version = readU32FromState(bytes, state);
+        count = readU32FromState(bytes, state);
+      } else {
+        version = readUleb32FromState(bytes, state);
+        count = readUleb32FromState(bytes, state);
+      }
+      if (!Number.isInteger(version) || !Number.isInteger(count)) return null;
+      if ((version !== 1 && version !== 2) || count < 0) return null;
+
+      const symbolRefIndices = [];
+      for (let i = 0; i < count; i++) {
+        const tag = readNatFromState(bytes, state, version);
+        if (!Number.isInteger(tag)) return null;
+        switch (tag) {
+          case 6:
+            if (version >= 2) {
+              if (readSleb32RawFromState(bytes, state) == null) return null;
+            } else if (readU32FromState(bytes, state) == null) {
+              return null;
+            }
+            break;
+          case 10:
+          case 16:
+            if (readNatFromState(bytes, state, version) == null) return null;
+            break;
+          case 11:
+            if (readU32FromState(bytes, state) == null) return null;
+            break;
+          case 12:
+          case 13:
+          case 14:
+            if (readU32FromState(bytes, state) == null) return null;
+            if (readU32FromState(bytes, state) == null) return null;
+            break;
+          case 15: {
+            const digits = readNatFromState(bytes, state, version);
+            if (!Number.isInteger(digits)) return null;
+            for (let d = 0; d < digits; d++) {
+              if (readU32FromState(bytes, state) == null) return null;
+            }
+            break;
+          }
+          case 1:
+          case 4:
+          case 7: {
+            const nameLen = readNatFromState(bytes, state, version);
+            if (!Number.isInteger(nameLen) || !skipBytesFromState(bytes, state, nameLen)) return null;
+            if (tag === 1) {
+              symbolRefIndices.push(i >>> 0);
+            }
+            if (tag !== 7) {
+              const pkgLen = readNatFromState(bytes, state, version);
+              if (!Number.isInteger(pkgLen) || !skipBytesFromState(bytes, state, pkgLen)) return null;
+            }
+            break;
+          }
+          case 2: {
+            const len = readNatFromState(bytes, state, version);
+            if (!Number.isInteger(len) || !skipBytesFromState(bytes, state, len)) return null;
+            break;
+          }
+          case 3:
+          case 5:
+          case 9: {
+            if (tag === 9 && readNatFromState(bytes, state, version) == null) return null;
+            const vcount = readNatFromState(bytes, state, version);
+            if (!Number.isInteger(vcount)) return null;
+            for (let j = 0; j < vcount; j++) {
+              if (readNatFromState(bytes, state, version) == null) return null;
+            }
+            break;
+          }
+          case 8:
+            if (readNatFromState(bytes, state, version) == null) return null;
+            if (readNatFromState(bytes, state, version) == null) return null;
+            break;
+          default:
+            return null;
+        }
+      }
+      return symbolRefIndices;
+    };
+
     const primeConstPoolLocator = (entryIndexRaw, constIndexRaw, requiredItem = null) => {
       const entryIndex = entryIndexRaw >>> 0;
       const constIndex = constIndexRaw >>> 0;
@@ -2105,23 +2256,48 @@ function applyStartupBindingMapOrFail({
     };
 
     const MAX_CONST_POOL_REFS_PER_ENTRY = 16384;
+    const MAX_CONST_POOL_SYMBOL_REFS_PER_ENTRY = 4096;
     const primeAllConstPoolRefsForEntry = (entryIndexRaw) => {
       const entryIndex = entryIndexRaw >>> 0;
       constPoolDerivedStats.entry_ref_scans_attempted++;
       const info = constPoolEntries.get(entryIndex);
       if (!info) return false;
       const decodedBytes = decodeConstPoolForInfo(info);
-      const count = readConstPoolCount(decodedBytes);
-      if (!Number.isInteger(count) || count < 0) return false;
-      if (count > MAX_CONST_POOL_REFS_PER_ENTRY) {
-        constPoolDerivedStats.entry_ref_scans_skipped_large++;
-        return false;
+      const symbolRefIndices = parseConstPoolSymbolRefIndices(decodedBytes);
+      let scanAllRefs = false;
+      let fallbackCount = null;
+      if (Array.isArray(symbolRefIndices)) {
+        constPoolDerivedStats.entry_symbol_refs_parsed += symbolRefIndices.length >>> 0;
+      } else {
+        constPoolDerivedStats.entry_symbol_ref_parse_failures++;
+        const count = readConstPoolCount(decodedBytes);
+        if (!Number.isInteger(count) || count < 0) return false;
+        if (count > MAX_CONST_POOL_REFS_PER_ENTRY) {
+          constPoolDerivedStats.entry_ref_scans_skipped_large++;
+          return false;
+        }
+        scanAllRefs = true;
+        fallbackCount = count >>> 0;
+        constPoolDerivedStats.entry_symbol_ref_fallback_full_scans++;
       }
       constPoolDerivedStats.entry_ref_scans_performed++;
 
       let added = false;
-      for (let constIndex = 0; constIndex < count; constIndex++) {
-        if (primeConstPoolLocator(entryIndex, constIndex)) {
+      if (scanAllRefs) {
+        for (let constIndex = 0; constIndex < fallbackCount; constIndex++) {
+          if (primeConstPoolLocator(entryIndex, constIndex)) {
+            added = true;
+          }
+        }
+        return added;
+      }
+
+      if (symbolRefIndices.length > MAX_CONST_POOL_SYMBOL_REFS_PER_ENTRY) {
+        constPoolDerivedStats.entry_ref_scans_skipped_large++;
+        return false;
+      }
+      for (const constIndex of symbolRefIndices) {
+        if (primeConstPoolLocator(entryIndex, constIndex >>> 0)) {
           added = true;
         }
       }
@@ -2247,11 +2423,18 @@ function applyStartupBindingMapOrFail({
       return addedEntries;
     };
 
-    for (const [locator, raw] of constPoolSymbolRawByLocator.entries()) {
-      if (processedConstPoolLocators.has(locator)) continue;
-      processedConstPoolLocators.add(locator);
-      processConstPoolSymbolRef(locator, raw);
-    }
+    const drainUnprocessedConstPoolLocators = () => {
+      let drained = 0;
+      for (const [locator, raw] of constPoolSymbolRawByLocator.entries()) {
+        if (processedConstPoolLocators.has(locator)) continue;
+        processedConstPoolLocators.add(locator);
+        processConstPoolSymbolRef(locator, raw);
+        drained++;
+      }
+      return drained >>> 0;
+    };
+
+    drainUnprocessedConstPoolLocators();
 
     const scannedSecondaryEntries = new Set();
     let secondaryFrontier = new Set(secondaryConstPoolEntries);
@@ -2268,11 +2451,7 @@ function applyStartupBindingMapOrFail({
         primeAllConstPoolRefsForEntry(normalizedEntry);
       }
 
-      for (const [locator, raw] of constPoolSymbolRawByLocator.entries()) {
-        if (processedConstPoolLocators.has(locator)) continue;
-        processedConstPoolLocators.add(locator);
-        processConstPoolSymbolRef(locator, raw);
-      }
+      drainUnprocessedConstPoolLocators();
 
       for (const entryIndex of secondaryConstPoolEntries.values()) {
         const normalizedEntry = entryIndex >>> 0;
@@ -2281,21 +2460,7 @@ function applyStartupBindingMapOrFail({
         secondaryFrontier.add(normalizedEntry);
       }
     }
-
-    // Comprehensive pass: prime every remaining const-pool entry once so
-    // startup bindings are derived in one collective pre-fasload sweep.
-    for (const entryIndex of constPoolEntries.keys()) {
-      const normalizedEntry = entryIndex >>> 0;
-      if (requiredConstPoolEntrySet.has(normalizedEntry)) continue;
-      if (scannedSecondaryEntries.has(normalizedEntry)) continue;
-      scannedSecondaryEntries.add(normalizedEntry);
-      primeAllConstPoolRefsForEntry(normalizedEntry);
-    }
-    for (const [locator, raw] of constPoolSymbolRawByLocator.entries()) {
-      if (processedConstPoolLocators.has(locator)) continue;
-      processedConstPoolLocators.add(locator);
-      processConstPoolSymbolRef(locator, raw);
-    }
+    drainUnprocessedConstPoolLocators();
   }
 
   const effectiveCounts = summarizeStartupBindingMapArtifact({ entries: effectiveEntries });

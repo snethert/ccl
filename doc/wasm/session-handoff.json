@@ -1,38 +1,33 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-02-13T02:44:48.647Z",
+  "generated_at": "2026-02-13T03:48:20.728Z",
   "repo": {
     "root": "/Users/buildsomething/Source/ccl",
-    "head_sha": "7a43ff93fbc0082f0059cdf73f01699a71d85e49",
-    "head_short": "7a43ff93",
+    "head_sha": "2c8fac2b911768f91b778bb9ed7f9596e6cf8987",
+    "head_short": "2c8fac2b",
     "branch": "wasm-port",
     "dirty": true,
     "dirty_files": [
       " M doc/wasm/build.md",
       " M doc/wasm/js/bootstrap-l0-contract.mjs",
       " M doc/wasm/js/make-real-image.mjs",
-      " M doc/wasm/js/subprims.wasm",
-      " M doc/wasm/js/wasmcl.wasm",
-      " M lisp-kernel/wasm-kernel-stubs.c",
-      " M lisp-kernel/wasm-subprims-provider.c"
+      " M doc/wasm/session-handoff.json"
     ]
   },
-  "current_blocker": "Headless root-image build blocked by %FASLOAD throw boundary (call.post -> pending_raw=0x4)",
-  "failing_command": "141:FAIL: wasm_fasload_path(l1-fasls/l1-cl-package.lafsl) returned -7",
+  "current_blocker": "No known blocker captured yet",
+  "failing_command": null,
   "failure_signature": [
-    "117:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"TOPLEVEL\",\"entry_index\":4772,\"resolved_entry_index\":4772,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
-    "118:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUN-READ-LOOP\",\"entry_index\":5452,\"resolved_entry_index\":5452,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
-    "119:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUNTIME-BRIDGE-PUMP-COMMANDS\",\"entry_index\":5559,\"resolved_entry_index\":5559,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
-    "128:[make-real-image] fasload post path=l1-fasls/l1-cl-package.lafsl rc=-7 pending=1 pending_raw=0x4",
-    "141:FAIL: wasm_fasload_path(l1-fasls/l1-cl-package.lafsl) returned -7"
+    "126:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"TOPLEVEL\",\"entry_index\":4772,\"resolved_entry_index\":4772,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
+    "127:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUN-READ-LOOP\",\"entry_index\":5452,\"resolved_entry_index\":5452,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
+    "128:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUNTIME-BRIDGE-PUMP-COMMANDS\",\"entry_index\":5559,\"resolved_entry_index\":5559,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}"
   ],
   "artifacts": {
-    "latest_log": "/tmp/make-real-image.trace.smoke.full.notimeout.log",
+    "latest_log": "/tmp/make-real-image.trace.smoke.scantrace2.log",
     "latest_repro_manifest": "doc/wasm/repro/startup-pipeline-20260212T180205Z-7d3db4b3/startup-repro-run-manifest.json"
   },
   "next_actions": [
-    "Run CCL_WASM_TRACE=1 CCL_WASM_RUN_BOUNDARY_PROBES=1 node doc/wasm/js/make-real-image.mjs",
-    "Inspect wasm.fasload.trace.v2 call.post and throw.detected records in latest log",
-    "Confirm *FASL-API* and %FASLOAD symbol states before first required fasload"
+    "Run the failing command once with tracing enabled",
+    "Capture and inspect the latest log signature lines",
+    "Update this snapshot immediately after each diagnostic run"
   ]
 }

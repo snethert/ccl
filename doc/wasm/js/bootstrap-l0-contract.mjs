@@ -70,14 +70,14 @@ const REQUIRED_SPECIALS = Object.freeze([
 ]);
 
 /*
- * startupBindingMap generation uses this contract's required special-variable
- * set for vcell initialization and emits fcell bindings from a
- * comprehensive level-0 function scan. make-real-image then augments that
- * unified map with required-const-pool symbol mirrors (vcell/fcell), performs
- * a bounded secondary const-pool symbol scan from discovered entry-backed
- * callables, and resolves additional function bindings via runtime metadata
- * when no startup-map fcell initializer exists, then applies once before this
- * strict gate.
+ * Plan update (artifact-first startup):
+ * - startupBindingMap generation uses this contract's required special-variable
+ *   set for vcell initialization and emits fcell bindings from a
+ *   comprehensive level-0 function scan.
+ * - The target architecture is that make-real-image applies a complete
+ *   precomputed startup map and performs no broad runtime const-pool discovery.
+ * - Transitional runtime derivation (if present) must remain seed-scoped,
+ *   machine-bounded, and never replace strict gate/phase semantics.
  */
 
 export const BOOTSTRAP_L0_CONTRACT_V1 = Object.freeze({
