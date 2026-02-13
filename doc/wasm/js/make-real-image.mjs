@@ -39,6 +39,7 @@ import {
   STARTUP_FUNCTION_DESIGNATOR_POLICY_V1,
   STARTUP_SYMBOL_TO_ENTRY_FUNCTION_DESIGNATORS_PRE_TOPLEVEL_V1,
 } from "./bootstrap-contract.mjs";
+import { BOOTSTRAP_L0_CONTRACT_V1 } from "./bootstrap-l0-contract.mjs";
 import {
   BOOTSTRAP_RESOLVER_PHASE_BOOTSTRAP,
   createBootstrapFunctionResolver,
@@ -58,6 +59,23 @@ function trace(msg) {
   if (traceEnabled) {
     console.error(`[make-real-image] ${msg}`);
   }
+}
+
+const WASM_BOOT_PHASE = Object.freeze({
+  EARLY: 0,
+  L0_READY: 1,
+  RUNTIME: 2,
+});
+
+const WASM_BOOT_PHASE_NAMES = new Map([
+  [WASM_BOOT_PHASE.EARLY, "EARLY"],
+  [WASM_BOOT_PHASE.L0_READY, "L0_READY"],
+  [WASM_BOOT_PHASE.RUNTIME, "RUNTIME"],
+]);
+
+function formatBootPhase(phase) {
+  const code = phase >>> 0;
+  return `${code}:${WASM_BOOT_PHASE_NAMES.get(code) ?? "UNKNOWN"}`;
 }
 
 function normalizeDesignatorNameSet(values) {
@@ -597,6 +615,47 @@ let constPoolSharedBlobRaw = null;
 const constPoolSpanKey = (offset, storedLength, encoding, rawLength) =>
   `${offset >>> 0}:${storedLength >>> 0}:${encoding ?? "raw"}:${rawLength >>> 0}`;
 const constPoolsInstalled = new Set();
+const CONST_POOL_DIAG_ENTRY = 4412;
+const constPoolProbeInFlight = new Set();
+const CONST_POOL_ERROR_NAMES = new Map([
+  [0, "none"],
+  [1, "symbol-read"],
+  [2, "symbol-package-missing"],
+  [3, "symbol-intern"],
+  [4, "symbol-bad-tag"],
+  [5, "symbol-intern-unavailable"],
+  [6, "symbol-intern-throw"],
+  [7, "symbol-intern-non-symbol"],
+  [8, "function-udf"],
+  [9, "function-bad-tag"],
+  [10, "symbol-missing"],
+]);
+
+function hexSample(bytesLike, maxBytes = 64) {
+  if (!bytesLike || bytesLike.length === 0) return "";
+  const bytes = bytesLike instanceof Uint8Array ? bytesLike : Uint8Array.from(bytesLike);
+  const limit = Math.min(Math.max(maxBytes | 0, 0), bytes.length);
+  if (limit <= 0) return "";
+  return Array.from(bytes.subarray(0, limit), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function readConstPoolRawSample(info, maxBytes = 64) {
+  const sampleLen = Math.min(Math.max(maxBytes | 0, 0), info?.storedLength >>> 0);
+  if (!Number.isFinite(sampleLen) || sampleLen <= 0) return new Uint8Array(0);
+  if (constPoolSharedBlobInfo && constPoolSharedBlobRaw) {
+    const start = (info.offset >>> 0) - (constPoolSharedBlobInfo.offset >>> 0);
+    const end = start + sampleLen;
+    if (start >= 0 && end <= constPoolSharedBlobRaw.length) {
+      return constPoolSharedBlobRaw.subarray(start, end);
+    }
+  }
+  if (compiledModulesFd == null) return new Uint8Array(0);
+  const out = Buffer.allocUnsafe(sampleLen);
+  const read = fsSync.readSync(compiledModulesFd, out, 0, sampleLen, info.offset >>> 0);
+  if (read <= 0) return new Uint8Array(0);
+  return out.subarray(0, read);
+}
+
 if (typeof compiledModulesBundle?.index === "string" && compiledModulesBundle.index.length > 0) {
   const indexPath = path.join(path.dirname(modulesPath), compiledModulesBundle.index);
   if (!(await fileExists(indexPath))) {
@@ -841,76 +900,157 @@ function installConstPoolOnDemand(entryIndexRaw) {
   if (!info) return 0;
   const decodedBytes = decodeConstPoolForInfo(info);
   if (!decodedBytes) return 0;
+  const shouldProbe = traceEnabled &&
+    entryIndex === CONST_POOL_DIAG_ENTRY &&
+    !constPoolProbeInFlight.has(entryIndex);
+  if (shouldProbe) {
+    constPoolProbeInFlight.add(entryIndex);
+    const rawSample = readConstPoolRawSample(info, 64);
+    const bootPhase = typeof kernelExports.wasm_boot_get_phase === "function"
+      ? (kernelExports.wasm_boot_get_phase() >>> 0)
+      : null;
+    trace(
+      `diag-const-pool entry=${entryIndex} boot_phase=${bootPhase == null ? "n/a" : formatBootPhase(bootPhase)}`,
+    );
+    trace(
+      `diag-const-pool entry=${entryIndex}` +
+      ` offset=${info.offset >>> 0}` +
+      ` length=${info.length >>> 0}` +
+      ` storedLength=${info.storedLength >>> 0}` +
+      ` encoding=${info.encoding ?? "raw"}` +
+      ` constPoolId=${info.id == null ? "null" : (info.id >>> 0)}` +
+      ` baseId=${info.baseId == null ? "null" : (info.baseId >>> 0)}` +
+      ` deltaOp=${info.deltaOp ?? "null"}` +
+      ` raw64=${hexSample(rawSample, 64)}` +
+      ` decoded64=${hexSample(decodedBytes, 64)}`,
+    );
+  }
   let payloadBytes = decodedBytes;
   let rewrite = null;
   try {
-    rewrite = rewriteConstPoolFunctionDesignators(decodedBytes, {
-      resolver: bootstrapFunctionResolver,
+    try {
+      rewrite = rewriteConstPoolFunctionDesignators(decodedBytes, {
+        resolver: bootstrapFunctionResolver,
+        entryIndex,
+        requiredResolveOrFailNames: startupRequiredPreToplevelDesignators,
+        deferredAllowedNames: startupDeferredPreToplevelDesignators,
+        symbolToEntryFunctionNames: startupSymbolToEntryPreToplevelDesignators,
+        symbolPackageOverrides: STARTUP_SYMBOL_PACKAGE_OVERRIDES_CANONICAL_V1,
+      });
+      payloadBytes = rewrite.bytes;
+    } catch (_err) {
+      payloadBytes = decodedBytes;
+    }
+    if ((rewrite?.deferredUnresolvedCount ?? 0) > 0) {
+      const diagnostics = Array.isArray(rewrite?.deferredUnresolved) ? rewrite.deferredUnresolved : [];
+      for (const item of diagnostics) {
+        console.log(
+          `STARTUP_CONSTPOOL_FUNCTION_GATE ${JSON.stringify({
+            schema_version: "startup_constpool_function_gate_v1",
+            phase: "pre-toplevel",
+            status: "deferred",
+            mode: "strict",
+            entry_index: entryIndex >>> 0,
+            const_index: Number.isFinite(item?.constIndex) ? (item.constIndex >>> 0) : null,
+            symbol_name: item?.name ?? null,
+            package_name: item?.packageName ?? null,
+            policy_class: item?.policyClass ?? "deferred-allowed",
+            binding_state: item?.bindingState ?? "deferred-symbolic-function-designator",
+            reason: item?.reason ?? "missing",
+          })}`,
+        );
+      }
+    }
+    if ((rewrite?.requiredUnresolvedCount ?? 0) > 0) {
+      const diagnostics = Array.isArray(rewrite?.requiredUnresolved) ? rewrite.requiredUnresolved : [];
+      for (const item of diagnostics) {
+        console.error(
+          `STARTUP_CONSTPOOL_FUNCTION_GATE ${JSON.stringify({
+            schema_version: "startup_constpool_function_gate_v1",
+            phase: "pre-toplevel",
+            status: "fail",
+            mode: "strict",
+            entry_index: entryIndex >>> 0,
+            const_index: Number.isFinite(item?.constIndex) ? (item.constIndex >>> 0) : null,
+            symbol_name: item?.name ?? null,
+            package_name: item?.packageName ?? null,
+            policy_class: item?.policyClass ?? "required-resolve-or-fail",
+            binding_state: item?.bindingState ?? "unresolved-required-function-designator",
+            reason: item?.reason ?? "missing",
+          })}`,
+        );
+      }
+      fail(
+        `startup const-pool function gate failed for entry ${entryIndex}: unresolved required designators=` +
+        diagnostics.map((item) => String(item?.name ?? "").trim()).filter(Boolean).join(","),
+      );
+    }
+
+    if (shouldProbe && payloadBytes !== decodedBytes) {
+      trace(`diag-const-pool entry=${entryIndex} rewritten64=${hexSample(payloadBytes, 64)}`);
+    }
+    const rc = installConstPoolBytes({
+      kernelExports,
+      memory: runtime.memory,
       entryIndex,
-      requiredResolveOrFailNames: startupRequiredPreToplevelDesignators,
-      deferredAllowedNames: startupDeferredPreToplevelDesignators,
-      symbolToEntryFunctionNames: startupSymbolToEntryPreToplevelDesignators,
-      symbolPackageOverrides: STARTUP_SYMBOL_PACKAGE_OVERRIDES_CANONICAL_V1,
+      constPoolBytes: payloadBytes,
     });
-    payloadBytes = rewrite.bytes;
-  } catch (_err) {
-    payloadBytes = decodedBytes;
-  }
-  if ((rewrite?.deferredUnresolvedCount ?? 0) > 0) {
-    const diagnostics = Array.isArray(rewrite?.deferredUnresolved) ? rewrite.deferredUnresolved : [];
-    for (const item of diagnostics) {
-      console.log(
-        `STARTUP_CONSTPOOL_FUNCTION_GATE ${JSON.stringify({
-          schema_version: "startup_constpool_function_gate_v1",
-          phase: "pre-toplevel",
-          status: "deferred",
-          mode: "strict",
-          entry_index: entryIndex >>> 0,
-          const_index: Number.isFinite(item?.constIndex) ? (item.constIndex >>> 0) : null,
-          symbol_name: item?.name ?? null,
-          package_name: item?.packageName ?? null,
-          policy_class: item?.policyClass ?? "deferred-allowed",
-          binding_state: item?.bindingState ?? "deferred-symbolic-function-designator",
-          reason: item?.reason ?? "missing",
-        })}`,
+    const nilValue = typeof kernelExports.wasm_get_lisp_nil === "function"
+      ? (kernelExports.wasm_get_lisp_nil() >>> 0)
+      : null;
+    const installOk = rc !== 0 && (nilValue == null || rc !== nilValue);
+    if (shouldProbe) {
+      const readDebug = (fnName) => (typeof kernelExports[fnName] === "function"
+        ? (kernelExports[fnName]() >>> 0)
+        : null);
+      const debugError = readDebug("wasm_debug_const_pool_error");
+      const debugNameLen = readDebug("wasm_debug_const_pool_symbol_name_len");
+      const debugPkgLen = readDebug("wasm_debug_const_pool_symbol_pkg_len");
+      const debugPhase = readDebug("wasm_debug_const_pool_phase");
+      const debugIndex = readDebug("wasm_debug_const_pool_index");
+      const debugTag = readDebug("wasm_debug_const_pool_tag");
+      const debugOffset = readDebug("wasm_debug_const_pool_offset");
+      const pendingThrow = readDebug("wasm_pending_throw_raw");
+      const bootPhase = typeof kernelExports.wasm_boot_get_phase === "function"
+        ? (kernelExports.wasm_boot_get_phase() >>> 0)
+        : null;
+      const pendingThrowSubtag = pendingThrow != null && typeof kernelExports.wasm_debug_misc_subtag === "function"
+        ? (kernelExports.wasm_debug_misc_subtag(pendingThrow >>> 0) | 0)
+        : null;
+      trace(
+        `diag-const-pool entry=${entryIndex}` +
+        ` install_rc=0x${rc.toString(16)}` +
+        ` lisp_nil=${nilValue == null ? "n/a" : `0x${nilValue.toString(16)}`}` +
+        ` debug_error=${debugError == null ? "n/a" : `${debugError}:${CONST_POOL_ERROR_NAMES.get(debugError) ?? "unknown"}`}` +
+        ` debug_name_len=${debugNameLen == null ? "n/a" : debugNameLen}` +
+        ` debug_pkg_len=${debugPkgLen == null ? "n/a" : debugPkgLen}` +
+        ` debug_phase=${debugPhase == null ? "n/a" : debugPhase}` +
+        ` debug_index=${debugIndex == null ? "n/a" : debugIndex}` +
+        ` debug_tag=${debugTag == null ? "n/a" : debugTag}` +
+        ` debug_offset=${debugOffset == null ? "n/a" : debugOffset}` +
+        ` boot_phase=${bootPhase == null ? "n/a" : formatBootPhase(bootPhase)}` +
+        ` pending_throw=${pendingThrow == null ? "n/a" : `0x${pendingThrow.toString(16)}`}` +
+        ` pending_throw_subtag=${pendingThrowSubtag == null ? "n/a" : pendingThrowSubtag}` +
+        ` install_ok=${installOk ? 1 : 0}`,
       );
+      if (typeof kernelExports.wasm_const_pool_ref === "function") {
+        const rows = [];
+        for (let i = 0; i < 16; i++) {
+          const obj = kernelExports.wasm_const_pool_ref(entryIndex >>> 0, i >>> 0) >>> 0;
+          rows.push(`${i}:0x${obj.toString(16)}`);
+        }
+        trace(`diag-const-pool entry=${entryIndex} refs=${rows.join(" | ")}`);
+      }
+    }
+    if (!installOk) return 0;
+
+    constPoolsInstalled.add(entryIndex);
+    return 1;
+  } finally {
+    if (shouldProbe) {
+      constPoolProbeInFlight.delete(entryIndex);
     }
   }
-  if ((rewrite?.requiredUnresolvedCount ?? 0) > 0) {
-    const diagnostics = Array.isArray(rewrite?.requiredUnresolved) ? rewrite.requiredUnresolved : [];
-    for (const item of diagnostics) {
-      console.error(
-        `STARTUP_CONSTPOOL_FUNCTION_GATE ${JSON.stringify({
-          schema_version: "startup_constpool_function_gate_v1",
-          phase: "pre-toplevel",
-          status: "fail",
-          mode: "strict",
-          entry_index: entryIndex >>> 0,
-          const_index: Number.isFinite(item?.constIndex) ? (item.constIndex >>> 0) : null,
-          symbol_name: item?.name ?? null,
-          package_name: item?.packageName ?? null,
-          policy_class: item?.policyClass ?? "required-resolve-or-fail",
-          binding_state: item?.bindingState ?? "unresolved-required-function-designator",
-          reason: item?.reason ?? "missing",
-        })}`,
-      );
-    }
-    fail(
-      `startup const-pool function gate failed for entry ${entryIndex}: unresolved required designators=` +
-      diagnostics.map((item) => String(item?.name ?? "").trim()).filter(Boolean).join(","),
-    );
-  }
-
-  const rc = installConstPoolBytes({
-    kernelExports,
-    memory: runtime.memory,
-    entryIndex,
-    constPoolBytes: payloadBytes,
-  });
-  if (rc === 0) return 0;
-
-  constPoolsInstalled.add(entryIndex);
-  return 1;
 }
 
 const hostDesignatorDecoder = new TextDecoder("utf-8");
@@ -967,6 +1107,7 @@ const subprims = await instantiateWasm(
   }),
 );
 trace("subprims instantiated");
+const subex = subprims.instance.exports;
 
 installSubprimsTable({
   table: runtime.subprimsTable,
@@ -988,6 +1129,122 @@ if (needBytes > haveBytes) {
 }
 
 const ex = kernel.instance.exports;
+
+function setBootPhaseOrFail(phase, { reason } = {}) {
+  if (typeof ex.wasm_boot_set_phase !== "function" || typeof ex.wasm_boot_get_phase !== "function") {
+    fail("kernel missing wasm_boot_set_phase/wasm_boot_get_phase exports");
+  }
+  ex.wasm_boot_set_phase(phase >>> 0);
+  const observed = ex.wasm_boot_get_phase() >>> 0;
+  if ((observed >>> 0) !== (phase >>> 0)) {
+    fail(`wasm_boot_set_phase(${phase >>> 0}) did not stick (observed=${observed >>> 0})`);
+  }
+  trace(
+    `boot-phase set phase=${formatBootPhase(observed)}` +
+    (reason ? ` reason=${reason}` : ""),
+  );
+}
+
+setBootPhaseOrFail(WASM_BOOT_PHASE.EARLY, { reason: "kernel-startup" });
+
+const SPECREF_FAILURE_STAGE_NAMES = new Map([
+  [0, "none"],
+  [1, "tcr-null"],
+  [2, "symbol-fulltag"],
+  [3, "symbol-subtag"],
+  [4, "binding-index-tag"],
+  [5, "tlb-limit-tag"],
+  [6, "tlb-pointer-null"],
+]);
+const debugReadSpecrefFailure = (label) => {
+  if (!traceEnabled || typeof subex.wasm_debug_specref_failure_stage !== "function") {
+    return;
+  }
+  try {
+    const stage = subex.wasm_debug_specref_failure_stage() >>> 0;
+    const stageName = SPECREF_FAILURE_STAGE_NAMES.get(stage) ?? "unknown";
+    const read = (name) => (typeof subex[name] === "function" ? (subex[name]() >>> 0) : 0);
+    trace(
+      `debug-specref-failure label=${label}` +
+      ` stage=${stage}:${stageName}` +
+      ` tcr=0x${read("wasm_debug_specref_failure_tcr_raw").toString(16)}` +
+      ` symbol=0x${read("wasm_debug_specref_failure_symbol_raw").toString(16)}` +
+      ` symbol_fulltag=${read("wasm_debug_specref_failure_symbol_fulltag")}` +
+      ` symbol_header=0x${read("wasm_debug_specref_failure_symbol_header").toString(16)}` +
+      ` symbol_subtag=${read("wasm_debug_specref_failure_symbol_subtag")}` +
+      ` binding_index=0x${read("wasm_debug_specref_failure_binding_index_raw").toString(16)}` +
+      ` binding_index_tag=${read("wasm_debug_specref_failure_binding_index_tag")}` +
+      ` limit=0x${read("wasm_debug_specref_failure_limit_raw").toString(16)}` +
+      ` limit_tag=${read("wasm_debug_specref_failure_limit_tag")}` +
+      ` tlb_pointer=0x${read("wasm_debug_specref_failure_tlb_pointer_raw").toString(16)}`,
+    );
+
+    const readKernel = (fnName) => (typeof ex[fnName] === "function" ? (ex[fnName]() >>> 0) : 0);
+    const argZ = readKernel("wasm_get_arg_z");
+    const argY = readKernel("wasm_get_arg_y");
+    const nfn = readKernel("wasm_get_nfn");
+    const nargs = readKernel("wasm_get_nargs");
+    const nfnEntry = typeof ex.wasm_debug_function_entry_index === "function"
+      ? (ex.wasm_debug_function_entry_index(nfn >>> 0) | 0)
+      : -1;
+    const symbolName = (obj) => {
+      if (typeof ex.wasm_debug_copy_symbol_name !== "function") return null;
+      const len = ex.wasm_debug_copy_symbol_name(obj >>> 0, 0, 0) >>> 0;
+      if (len === 0) return null;
+      const ptr = allocScratch(runtime.memory, len);
+      const copied = ex.wasm_debug_copy_symbol_name(obj >>> 0, ptr >>> 0, len) >>> 0;
+      if (copied === 0) return null;
+      try {
+        return decoder.decode(new Uint8Array(runtime.memory.buffer, ptr >>> 0, Math.min(len, copied)));
+      } catch {
+        return null;
+      }
+    };
+    const ownerName = (fnObj) => {
+      if (typeof ex.wasm_debug_find_symbol_by_fcell_raw !== "function") return null;
+      const owner = ex.wasm_debug_find_symbol_by_fcell_raw(fnObj >>> 0) >>> 0;
+      if (owner === 0 || owner === 0x4000001) return null;
+      return symbolName(owner >>> 0);
+    };
+    const objSubtag = (obj) => (typeof ex.wasm_debug_misc_subtag === "function"
+      ? (ex.wasm_debug_misc_subtag(obj >>> 0) | 0)
+      : -1);
+    trace(
+      `debug-specref-context label=${label}` +
+      ` arg_z=0x${argZ.toString(16)} arg_z_subtag=${objSubtag(argZ)}` +
+      ` arg_y=0x${argY.toString(16)} arg_y_subtag=${objSubtag(argY)}` +
+      ` nfn=0x${nfn.toString(16)} nfn_subtag=${objSubtag(nfn)} nfn_entry=${nfnEntry}` +
+      ` nargs_raw=0x${nargs.toString(16)}` +
+      (symbolName(argZ) ? ` arg_z_symbol=${JSON.stringify(symbolName(argZ))}` : "") +
+      (symbolName(argY) ? ` arg_y_symbol=${JSON.stringify(symbolName(argY))}` : "") +
+      (ownerName(nfn) ? ` nfn_owner=${JSON.stringify(ownerName(nfn))}` : ""),
+    );
+
+    if (typeof ex.wasm_debug_const_pool_entry === "function") {
+      const constEntry = ex.wasm_debug_const_pool_entry() >>> 0;
+      trace(
+        `debug-specref-const-pool label=${label}` +
+        ` entry=${constEntry}` +
+        ` phase=${(typeof ex.wasm_debug_const_pool_phase === "function" ? (ex.wasm_debug_const_pool_phase() >>> 0) : 0)}` +
+        ` index=${(typeof ex.wasm_debug_const_pool_index === "function" ? (ex.wasm_debug_const_pool_index() >>> 0) : 0)}` +
+        ` tag=${(typeof ex.wasm_debug_const_pool_tag === "function" ? (ex.wasm_debug_const_pool_tag() >>> 0) : 0)}` +
+        ` offset=${(typeof ex.wasm_debug_const_pool_offset === "function" ? (ex.wasm_debug_const_pool_offset() >>> 0) : 0)}`,
+      );
+      if (typeof ex.wasm_const_pool_ref === "function") {
+        const rows = [];
+        for (let i = 0; i < 6; i++) {
+          const obj = ex.wasm_const_pool_ref(constEntry >>> 0, i >>> 0) >>> 0;
+          const subtag = objSubtag(obj);
+          const name = symbolName(obj) ?? ownerName(obj);
+          rows.push(`${i}:0x${obj.toString(16)}:subtag=${subtag}${name ? `:${name}` : ""}`);
+        }
+        trace(`debug-specref-const-pool-sample label=${label} ${rows.join(" | ")}`);
+      }
+    }
+  } catch (err) {
+    trace(`debug-specref-failure label=${label} error=${err?.message ?? err}`);
+  }
+};
 if (typeof ex.wasm_set_cstack_bounds !== "function") {
   fail("kernel missing wasm_set_cstack_bounds");
 }
@@ -1201,6 +1458,12 @@ const debugReadFasloadBoundarySymbols = (label) => {
   debugReadNamedCclSymbolState(`${label}.sym-toplevel`, "TOPLEVEL");
   debugReadNamedAnySymbolState(`${label}.sym-stream-pathname`, "STREAM-PATHNAME");
   debugReadNamedCclSymbolState(`${label}.sym-percent-std-device-component`, "%STD-DEVICE-COMPONENT");
+  debugReadNamedAnySymbolState(`${label}.sym-keyword-package`, "*KEYWORD-PACKAGE*");
+  debugReadNamedAnySymbolState(`${label}.sym-default`, "DEFAULT");
+  debugReadNamedAnySymbolState(`${label}.sym-keyword`, "KEYWORD");
+  debugReadSymbolState(`${label}.sym-intern-pkgtable`, ex.wasm_debug_find_symbol_intern_pkgtable_raw);
+  debugReadSymbolState(`${label}.sym-intern-scan`, ex.wasm_debug_find_symbol_intern_scan_raw);
+  debugReadNamedAnySymbolState(`${label}.sym-intern-any`, "INTERN");
   debugReadNamedCclSymbolState(`${label}.wasm-startup-step`, "*WASM-STARTUP-STEP*");
   debugReadNamedCclSymbolState(`${label}.xload-startup-file`, "*XLOAD-STARTUP-FILE*");
   debugReadNamedCclListState(`${label}.xload-cold-load-functions`, "*XLOAD-COLD-LOAD-FUNCTIONS*");
@@ -1464,8 +1727,306 @@ if (process.env.CCL_WASM_DIAG_START_LISP_ONCE === "1") {
   debugReadToplfuncState("post-start-lisp-once");
   debugReadLastToplevelThrow("post-start-lisp-once");
   debugReadFasloadBoundarySymbols("post-start-lisp-once");
+  debugReadSpecrefFailure("post-start-lisp-once");
 }
 const encoder = new TextEncoder();
+
+const L0_PROBE_STATUS = Object.freeze({
+  OK: 0,
+  ARG_INVALID: 1,
+  PACKAGE_MISSING: 2,
+  SYMBOL_MISSING: 3,
+  SYMBOL_NOT_SYMBOL: 4,
+  SYMBOL_INVALID: 5,
+  PACKAGE_NOT_PACKAGE: 6,
+});
+
+const L0_PROBE_STATUS_NAMES = new Map([
+  [L0_PROBE_STATUS.OK, "ok"],
+  [L0_PROBE_STATUS.ARG_INVALID, "arg-invalid"],
+  [L0_PROBE_STATUS.PACKAGE_MISSING, "package-missing"],
+  [L0_PROBE_STATUS.SYMBOL_MISSING, "symbol-missing"],
+  [L0_PROBE_STATUS.SYMBOL_NOT_SYMBOL, "symbol-not-symbol"],
+  [L0_PROBE_STATUS.SYMBOL_INVALID, "symbol-invalid"],
+  [L0_PROBE_STATUS.PACKAGE_NOT_PACKAGE, "package-not-package"],
+]);
+
+function l0ProbeStatusName(status) {
+  return L0_PROBE_STATUS_NAMES.get(status >>> 0) ?? `status-${status >>> 0}`;
+}
+
+function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
+  const requiredExports = [
+    "wasm_get_lisp_nil",
+    "wasm_probe_package",
+    "wasm_probe_symbol",
+    "wasm_probe_symbol_fcell",
+    "wasm_probe_symbol_vcell",
+    "wasm_probe_last_status",
+    "wasm_debug_function_entry_index",
+  ];
+  for (const name of requiredExports) {
+    if (typeof ex[name] !== "function") {
+      fail(`kernel missing ${name} for pre-fasload L0 contract gate`);
+    }
+  }
+
+  const nil = ex.wasm_get_lisp_nil() >>> 0;
+  const miscSubtag = typeof ex.wasm_debug_misc_subtag === "function"
+    ? (value) => (ex.wasm_debug_misc_subtag(value >>> 0) | 0)
+    : () => null;
+  const utf8 = new TextEncoder();
+  const scratchUtf8 = (text) => {
+    const bytes = utf8.encode(String(text ?? ""));
+    if (bytes.length === 0) return { ptr: 0, len: 0 };
+    const ptr = copyBytesToScratch(runtime.memory, bytes);
+    return { ptr, len: bytes.length >>> 0 };
+  };
+  const probeStatus = () => (ex.wasm_probe_last_status() >>> 0);
+  const readDebug = (name) => (typeof ex[name] === "function" ? (ex[name]() >>> 0) : null);
+
+  const probePackage = (packageName) => {
+    const pkgMem = scratchUtf8(packageName);
+    const raw = ex.wasm_probe_package(pkgMem.ptr >>> 0, pkgMem.len >>> 0) >>> 0;
+    const status = probeStatus();
+    return {
+      raw,
+      status,
+      statusName: l0ProbeStatusName(status),
+      subtag: miscSubtag(raw),
+      isNil: raw === nil,
+      packageName,
+    };
+  };
+
+  const probeSymbol = ({ packageName, symbolName }) => {
+    const nameMem = scratchUtf8(symbolName);
+    const pkgMem = scratchUtf8(packageName);
+    const raw = ex.wasm_probe_symbol(
+      nameMem.ptr >>> 0,
+      nameMem.len >>> 0,
+      pkgMem.ptr >>> 0,
+      pkgMem.len >>> 0,
+    ) >>> 0;
+    const status = probeStatus();
+    return {
+      raw,
+      status,
+      statusName: l0ProbeStatusName(status),
+      subtag: miscSubtag(raw),
+      isNil: raw === nil,
+      packageName,
+      symbolName,
+    };
+  };
+
+  const probeSymbolWithFallback = (item) => {
+    const preferred = probeSymbol(item);
+    const allowAnyPackage = Boolean(item?.allowAnyPackage);
+    if (!allowAnyPackage) return preferred;
+    const unresolved = preferred.status !== L0_PROBE_STATUS.OK || preferred.raw === 0 || preferred.isNil;
+    if (!unresolved) return preferred;
+    const fallback = probeSymbol({
+      packageName: "",
+      symbolName: item?.symbolName ?? "",
+    });
+    const resolved = fallback.status === L0_PROBE_STATUS.OK && fallback.raw !== 0 && !fallback.isNil;
+    if (!resolved) return preferred;
+    return {
+      ...fallback,
+      requestedPackageName: item?.packageName ?? "",
+      fallbackAnyPackage: true,
+    };
+  };
+
+  const failures = [];
+  const recordFailure = (kind, details) => {
+    failures.push({
+      schema_version: "bootstrap_l0_gate_v1",
+      contract_id: contract?.id ?? "bootstrap-l0-contract-unknown",
+      status: "fail",
+      check_kind: kind,
+      ...details,
+    });
+  };
+
+  const requiredConstPools = Array.isArray(contract?.requiredConstPools)
+    ? contract.requiredConstPools
+    : [];
+  if (requiredConstPools.length > 0 && typeof ex.wasm_const_pool_ref !== "function") {
+    fail("kernel missing wasm_const_pool_ref for pre-fasload L0 const-pool gate");
+  }
+
+  for (const item of requiredConstPools) {
+    const entryIndex = item?.entryIndex >>> 0;
+    const refs = Array.isArray(item?.requiredRefs) ? item.requiredRefs : [];
+    for (const rawRef of refs) {
+      const constIndex = rawRef >>> 0;
+      const raw = ex.wasm_const_pool_ref(entryIndex, constIndex) >>> 0;
+      if (raw !== 0 && raw !== nil) continue;
+      const debugError = readDebug("wasm_debug_const_pool_error");
+      const debugNameLen = readDebug("wasm_debug_const_pool_symbol_name_len");
+      const debugPkgLen = readDebug("wasm_debug_const_pool_symbol_pkg_len");
+      const debugPhase = readDebug("wasm_debug_const_pool_phase");
+      const debugOffset = readDebug("wasm_debug_const_pool_offset");
+      const debugIndex = readDebug("wasm_debug_const_pool_index");
+      const debugTag = readDebug("wasm_debug_const_pool_tag");
+      const bootPhase = typeof ex.wasm_boot_get_phase === "function"
+        ? (ex.wasm_boot_get_phase() >>> 0)
+        : null;
+      recordFailure("const-pool", {
+        entry_index: entryIndex,
+        const_index: constIndex,
+        source: item?.source ?? null,
+        reason: "const-pool-ref-nil",
+        ref_raw: `0x${raw.toString(16)}`,
+        lisp_nil: `0x${nil.toString(16)}`,
+        boot_phase: bootPhase == null ? null : formatBootPhase(bootPhase),
+        debug_error: debugError,
+        debug_error_name: debugError == null ? null : (CONST_POOL_ERROR_NAMES.get(debugError) ?? "unknown"),
+        debug_name_len: debugNameLen,
+        debug_pkg_len: debugPkgLen,
+        debug_phase: debugPhase,
+        debug_index: debugIndex,
+        debug_tag: debugTag,
+        debug_offset: debugOffset,
+      });
+    }
+  }
+
+  for (const item of Array.isArray(contract?.requiredPackages) ? contract.requiredPackages : []) {
+    const packageName = item?.packageName ?? "";
+    const anchorSymbol = item?.anchorSymbol ?? "";
+    if (anchorSymbol) {
+      const probe = probeSymbolWithFallback({
+        packageName,
+        symbolName: anchorSymbol,
+        allowAnyPackage: Boolean(item?.allowAnyPackage),
+      });
+      if (probe.status === L0_PROBE_STATUS.PACKAGE_MISSING || probe.raw === 0 || probe.isNil) {
+        recordFailure("package", {
+          package_name: packageName || null,
+          anchor_symbol: anchorSymbol || null,
+          reason: probe.status === L0_PROBE_STATUS.PACKAGE_MISSING ? "package-missing" : "anchor-symbol-unresolved",
+          probe_status: probe.status,
+          probe_status_name: probe.statusName,
+          probe_raw: `0x${probe.raw.toString(16)}`,
+        });
+      }
+      continue;
+    }
+
+    const probe = probePackage(packageName);
+    if (probe.status !== L0_PROBE_STATUS.OK || probe.raw === 0 || probe.isNil) {
+      recordFailure("package", {
+        package_name: packageName || null,
+        reason: probe.status === L0_PROBE_STATUS.PACKAGE_MISSING ? "package-missing" : "package-invalid",
+        probe_status: probe.status,
+        probe_status_name: probe.statusName,
+        probe_raw: `0x${probe.raw.toString(16)}`,
+      });
+    }
+  }
+
+  for (const item of Array.isArray(contract?.requiredSymbols) ? contract.requiredSymbols : []) {
+    const probe = probeSymbolWithFallback(item);
+    if (probe.status !== L0_PROBE_STATUS.OK || probe.raw === 0 || probe.isNil) {
+      recordFailure("symbol", {
+        package_name: item?.packageName ?? null,
+        symbol_name: item?.symbolName ?? null,
+        source: item?.source ?? null,
+        reason: "symbol-unresolved",
+        probe_status: probe.status,
+        probe_status_name: probe.statusName,
+        probe_raw: `0x${probe.raw.toString(16)}`,
+      });
+    }
+  }
+
+  for (const item of Array.isArray(contract?.requiredCallables) ? contract.requiredCallables : []) {
+    const symProbe = probeSymbolWithFallback(item);
+    if (symProbe.status !== L0_PROBE_STATUS.OK || symProbe.raw === 0 || symProbe.isNil) {
+      recordFailure("callable", {
+        package_name: item?.packageName ?? null,
+        symbol_name: item?.symbolName ?? null,
+        reason: "callable-symbol-unresolved",
+        probe_status: symProbe.status,
+        probe_status_name: symProbe.statusName,
+        symbol_raw: `0x${symProbe.raw.toString(16)}`,
+      });
+      continue;
+    }
+
+    const fcellRaw = ex.wasm_probe_symbol_fcell(symProbe.raw >>> 0) >>> 0;
+    const fcellStatus = probeStatus();
+    const entryIndex = ex.wasm_debug_function_entry_index(fcellRaw >>> 0) | 0;
+    if (fcellStatus !== L0_PROBE_STATUS.OK || entryIndex < 0) {
+      recordFailure("callable", {
+        package_name: item?.packageName ?? null,
+        symbol_name: item?.symbolName ?? null,
+        reason: fcellStatus !== L0_PROBE_STATUS.OK ? "fcell-probe-failed" : "fcell-not-callable",
+        probe_status: fcellStatus,
+        probe_status_name: l0ProbeStatusName(fcellStatus),
+        symbol_raw: `0x${symProbe.raw.toString(16)}`,
+        fcell_raw: `0x${fcellRaw.toString(16)}`,
+        fcell_entry_index: entryIndex,
+      });
+    }
+  }
+
+  for (const item of Array.isArray(contract?.requiredSpecialVariables) ? contract.requiredSpecialVariables : []) {
+    const symProbe = probeSymbolWithFallback(item);
+    if (symProbe.status !== L0_PROBE_STATUS.OK || symProbe.raw === 0 || symProbe.isNil) {
+      recordFailure("special", {
+        package_name: item?.packageName ?? null,
+        symbol_name: item?.symbolName ?? null,
+        reason: "special-symbol-unresolved",
+        probe_status: symProbe.status,
+        probe_status_name: symProbe.statusName,
+        symbol_raw: `0x${symProbe.raw.toString(16)}`,
+      });
+      continue;
+    }
+
+    const vcellRaw = ex.wasm_probe_symbol_vcell(symProbe.raw >>> 0) >>> 0;
+    const vcellStatus = probeStatus();
+    const nonNilRequired = Boolean(item?.requireNonNil);
+    const isNil = vcellRaw === 0 || vcellRaw === nil;
+    if (vcellStatus !== L0_PROBE_STATUS.OK || (nonNilRequired && isNil)) {
+      recordFailure("special", {
+        package_name: item?.packageName ?? null,
+        symbol_name: item?.symbolName ?? null,
+        reason: vcellStatus !== L0_PROBE_STATUS.OK ? "vcell-probe-failed" : "vcell-nil",
+        probe_status: vcellStatus,
+        probe_status_name: l0ProbeStatusName(vcellStatus),
+        symbol_raw: `0x${symProbe.raw.toString(16)}`,
+        vcell_raw: `0x${vcellRaw.toString(16)}`,
+        vcell_subtag: miscSubtag(vcellRaw),
+      });
+    }
+  }
+
+  if (failures.length > 0) {
+    for (const failure of failures) {
+      console.error(`L0_BOOTSTRAP_CONTRACT ${JSON.stringify(failure)}`);
+    }
+    fail(`pre-fasload L0 bootstrap contract failed: ${failures.length} requirement(s)`);
+  }
+
+  console.log(`L0_BOOTSTRAP_CONTRACT ${JSON.stringify({
+    schema_version: "bootstrap_l0_gate_v1",
+    contract_id: contract?.id ?? "bootstrap-l0-contract-unknown",
+    status: "pass",
+    counts: {
+      packages: Array.isArray(contract?.requiredPackages) ? contract.requiredPackages.length : 0,
+      const_pools: Array.isArray(contract?.requiredConstPools) ? contract.requiredConstPools.length : 0,
+      symbols: Array.isArray(contract?.requiredSymbols) ? contract.requiredSymbols.length : 0,
+      callables: Array.isArray(contract?.requiredCallables) ? contract.requiredCallables.length : 0,
+      special_variables: Array.isArray(contract?.requiredSpecialVariables) ? contract.requiredSpecialVariables.length : 0,
+    },
+  })}`);
+}
+
 const requiredFasls = [
   "l1-fasls/l1-cl-package.lafsl",
   "l1-fasls/l1-utils.lafsl",
@@ -1531,6 +2092,10 @@ const kernelDebugSymbolName = typeof ex.wasm_debug_copy_symbol_name === "functio
     }
   }
   : null;
+
+assertL0BootstrapContractOrFail(BOOTSTRAP_L0_CONTRACT_V1);
+setBootPhaseOrFail(WASM_BOOT_PHASE.L0_READY, { reason: "pre-fasload-contract-pass" });
+
 const runBoundaryProbes = process.env.CCL_WASM_RUN_BOUNDARY_PROBES === "1";
 const boundaryProbeOnly = process.env.CCL_WASM_BOUNDARY_PROBE_ONLY === "1";
 const boundaryProbeStrict = process.env.CCL_WASM_BOUNDARY_PROBES_STRICT === "1";
@@ -1593,9 +2158,18 @@ for (const faslPath of skipRequiredFasloads ? [] : requiredFasls) {
   if (traceEnabled && pendingThrowProbe) {
     trace(`fasload pre path=${faslPath} pending=${pendingThrowProbe()}`);
   }
+  if (typeof subex.wasm_debug_reset_specref_failure === "function") {
+    subex.wasm_debug_reset_specref_failure();
+  }
   const faslBytes = encoder.encode(faslPath);
   const faslPtr = copyBytesToScratch(runtime.memory, faslBytes);
-  const faslRc = ex.wasm_fasload_path(faslPtr, faslBytes.length >>> 0) | 0;
+  let faslRc = 0;
+  try {
+    faslRc = ex.wasm_fasload_path(faslPtr, faslBytes.length >>> 0) | 0;
+  } catch (err) {
+    debugReadSpecrefFailure(`fasload trap path=${faslPath}`);
+    throw err;
+  }
   if (traceEnabled && pendingThrowProbe) {
     const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
     const pendingName = pendingRaw != null && kernelDebugSymbolName ? kernelDebugSymbolName(pendingRaw) : null;
@@ -1606,6 +2180,7 @@ for (const faslPath of skipRequiredFasloads ? [] : requiredFasls) {
     );
   }
   if (faslRc !== 0) {
+    debugReadSpecrefFailure(`fasload rc=${faslRc} path=${faslPath}`);
     if (traceEnabled) {
       const nargsRaw = typeof ex.wasm_get_nargs === "function" ? (ex.wasm_get_nargs() >>> 0) : null;
       const nargsCount = (nargsRaw != null && (nargsRaw & 0x7) === 0)
@@ -1661,6 +2236,9 @@ for (const faslPath of skipRequiredFasloads ? [] : requiredFasls) {
     }
     fail(`wasm_fasload_path(${faslPath}) returned ${faslRc}`);
   }
+}
+if (!skipRequiredFasloads && requiredFasls.length > 0) {
+  setBootPhaseOrFail(WASM_BOOT_PHASE.RUNTIME, { reason: "post-required-fasload-boundary" });
 }
 if (typeof ex.wasm_reset_root_image_runtime_state !== "function") {
   fail("kernel missing wasm_reset_root_image_runtime_state");

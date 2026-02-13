@@ -1,48 +1,36 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-02-12T21:57:33.777Z",
+  "generated_at": "2026-02-12T22:12:13.386Z",
   "repo": {
     "root": "/Users/buildsomething/Source/ccl",
-    "head_sha": "cc54e279c54874202e3bfcb78d8f59902f409b3e",
-    "head_short": "cc54e279",
+    "head_sha": "74112bebcdb163bbccaacbde6195a5766805fd4d",
+    "head_short": "74112beb",
     "branch": "wasm-port",
     "dirty": true,
     "dirty_files": [
       " M doc/wasm/js/make-real-image.mjs",
-      " M doc/wasm/js/microkernel.mjs",
-      " M doc/wasm/js/wasmcl.wasm",
+      " M doc/wasm/js/subprims.wasm",
       " M doc/wasm/root.image",
       " M doc/wasm/root.image.manifest.json",
-      " M level-0/nfasload.lisp",
-      " M lisp-kernel/wasm-kernel-stubs.c",
-      " M scripts/wasm/make-real-image.lisp",
-      " M scripts/wasm/repro-startup-pipeline.sh",
-      " M web-ui/tests/phase-5-runtime-output.test.mjs",
-      " M xdump/xfasload.lisp",
-      "?? AGENTS.md",
-      "?? doc/wasm/root.image.tmp-38704-1770931076653",
-      "?? doc/wasm/root.image.tmp-38806-1770931102707",
-      "?? doc/wasm/root.image.tmp-38815-1770931102760",
-      "?? doc/wasm/root.image.tmp-38857-1770931103087",
-      "?? doc/wasm/session-handoff.json",
-      "?? scripts/wasm/restore-session.sh",
-      "?? scripts/wasm/snapshot-session.sh"
+      " M doc/wasm/session-handoff.json",
+      " M lisp-kernel/wasm-subprims-provider.c"
     ]
   },
-  "current_blocker": "No known blocker captured yet",
-  "failing_command": null,
+  "current_blocker": "Headless root-image build blocked by %FASLOAD throw boundary (call.post -> pending_raw=0x4)",
+  "failing_command": "131:RuntimeError: unreachable",
   "failure_signature": [
     "87:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"TOPLEVEL\",\"entry_index\":4772,\"resolved_entry_index\":4772,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
     "88:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUN-READ-LOOP\",\"entry_index\":5452,\"resolved_entry_index\":5452,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
-    "89:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUNTIME-BRIDGE-PUMP-COMMANDS\",\"entry_index\":5559,\"resolved_entry_index\":5559,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}"
+    "89:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUNTIME-BRIDGE-PUMP-COMMANDS\",\"entry_index\":5559,\"resolved_entry_index\":5559,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
+    "140:    at wasmcl.wasm.wasm_fasload_path (wasm://wasm/wasmcl.wasm-002526c2:wasm-function[384]:0xfb2c)"
   ],
   "artifacts": {
-    "latest_log": "/tmp/make-real-image.trace.top4484.timebox.log",
+    "latest_log": "/tmp/make-real-image.trace.top4488.requiredfasl.timebox.log",
     "latest_repro_manifest": "doc/wasm/repro/startup-pipeline-20260212T180205Z-7d3db4b3/startup-repro-run-manifest.json"
   },
   "next_actions": [
-    "Run the failing command once with tracing enabled",
-    "Capture and inspect the latest log signature lines",
-    "Update this snapshot immediately after each diagnostic run"
+    "Run CCL_WASM_TRACE=1 CCL_WASM_RUN_BOUNDARY_PROBES=1 node doc/wasm/js/make-real-image.mjs",
+    "Inspect wasm.fasload.trace.v2 call.post and throw.detected records in latest log",
+    "Confirm *FASL-API* and %FASLOAD symbol states before first required fasload"
   ]
 }

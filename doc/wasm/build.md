@@ -371,6 +371,48 @@ bootstrap). Validate loader contract with:
 node doc/wasm/js/load-image.mjs doc/wasm/root.image
 ```
 
+### Bootstrap Phases And L0 Contract
+
+The real-image builder now uses an explicit startup phase machine exported by
+the kernel (`lisp-kernel/wasm-kernel-stubs.c`):
+
+- `WASM_BOOT_EARLY` (0): initial startup, const-pool install uses startup intern path.
+- `WASM_BOOT_L0_READY` (1): only set after the strict pre-fasload L0 contract passes.
+- `WASM_BOOT_RUNTIME` (2): set after the required fasload boundary, runtime intern path only.
+
+Host phase transitions live in `doc/wasm/js/make-real-image.mjs`:
+
+- `EARLY` is set immediately after kernel export wiring.
+- `assertL0BootstrapContractOrFail(...)` runs before first required `%FASLOAD`.
+- On pass: logs `L0_BOOTSTRAP_CONTRACT ... "status":"pass"` then sets `L0_READY`.
+- After required fasloads complete: sets `RUNTIME`.
+
+The L0 source-of-truth artifact is `doc/wasm/js/bootstrap-l0-contract.mjs`.
+Update it when startup-critical requirements change:
+
+- `requiredPackages`
+- `requiredConstPools`
+- `requiredSymbols`
+- `requiredCallables`
+- `requiredSpecialVariables`
+
+Recommended validation command:
+
+```bash
+CCL_WASM_TRACE=1 CCL_WASM_DIAG_PRE_FASLOAD_TOPLFUNC_ENTRY=4488 \
+  perl -e 'alarm shift @ARGV; exec @ARGV' 20 \
+  node doc/wasm/js/make-real-image.mjs > /tmp/make-real-image.trace.top4488.requiredfasl.timebox.log 2>&1 || true
+```
+
+Expected failure signatures:
+
+- Gate failure (pre-fasload): one JSON line per failed requirement:
+  `L0_BOOTSTRAP_CONTRACT {"status":"fail",...}`
+- Summary abort:
+  `FAIL: pre-fasload L0 bootstrap contract failed: <N> requirement(s)`
+- Const-pool entry diagnostics (entry `4412`) include active `boot_phase` and
+  branch-specific debug error code to localize symbol/package/intern failures.
+
 ### Option C (native wasm32 CCL, optional)
 
 If you already have a **WASM32-target** CCL, you can run the Lisp script

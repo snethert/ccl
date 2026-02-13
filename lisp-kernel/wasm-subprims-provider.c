@@ -5174,29 +5174,128 @@ _SPgets64(void)
   wasm_signal_wrong_type(tcr, value, wasm_type_signed_byte(tcr, 64));
 }
 
+enum {
+  WASM_DEBUG_SPECREF_STAGE_NONE = 0,
+  WASM_DEBUG_SPECREF_STAGE_TCR_NULL = 1,
+  WASM_DEBUG_SPECREF_STAGE_SYMBOL_FULLTAG = 2,
+  WASM_DEBUG_SPECREF_STAGE_SYMBOL_SUBTAG = 3,
+  WASM_DEBUG_SPECREF_STAGE_BINDING_INDEX_TAG = 4,
+  WASM_DEBUG_SPECREF_STAGE_TLB_LIMIT_TAG = 5,
+  WASM_DEBUG_SPECREF_STAGE_TLB_POINTER_NULL = 6,
+};
+
+static volatile uint32_t wasm_debug_specref_stage = WASM_DEBUG_SPECREF_STAGE_NONE;
+static volatile uint32_t wasm_debug_specref_tcr_raw = 0;
+static volatile uint32_t wasm_debug_specref_symbol_raw = 0;
+static volatile uint32_t wasm_debug_specref_symbol_fulltag = 0;
+static volatile uint32_t wasm_debug_specref_symbol_header = 0;
+static volatile uint32_t wasm_debug_specref_symbol_subtag = 0;
+static volatile uint32_t wasm_debug_specref_binding_index_raw = 0;
+static volatile uint32_t wasm_debug_specref_binding_index_tag = 0;
+static volatile uint32_t wasm_debug_specref_limit_raw = 0;
+static volatile uint32_t wasm_debug_specref_limit_tag = 0;
+static volatile uint32_t wasm_debug_specref_tlb_pointer_raw = 0;
+
+static void
+wasm_debug_reset_specref_failure_state(void)
+{
+  wasm_debug_specref_stage = WASM_DEBUG_SPECREF_STAGE_NONE;
+  wasm_debug_specref_tcr_raw = 0;
+  wasm_debug_specref_symbol_raw = 0;
+  wasm_debug_specref_symbol_fulltag = 0;
+  wasm_debug_specref_symbol_header = 0;
+  wasm_debug_specref_symbol_subtag = 0;
+  wasm_debug_specref_binding_index_raw = 0;
+  wasm_debug_specref_binding_index_tag = 0;
+  wasm_debug_specref_limit_raw = 0;
+  wasm_debug_specref_limit_tag = 0;
+  wasm_debug_specref_tlb_pointer_raw = 0;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_debug_reset_specref_failure")))
+void
+wasm_debug_reset_specref_failure(void)
+{
+  wasm_debug_reset_specref_failure_state();
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_stage")))
+uint32_t wasm_debug_specref_failure_stage(void) { return wasm_debug_specref_stage; }
+__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_tcr_raw")))
+uint32_t wasm_debug_specref_failure_tcr_raw(void) { return wasm_debug_specref_tcr_raw; }
+__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_symbol_raw")))
+uint32_t wasm_debug_specref_failure_symbol_raw(void) { return wasm_debug_specref_symbol_raw; }
+__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_symbol_fulltag")))
+uint32_t wasm_debug_specref_failure_symbol_fulltag(void) { return wasm_debug_specref_symbol_fulltag; }
+__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_symbol_header")))
+uint32_t wasm_debug_specref_failure_symbol_header(void) { return wasm_debug_specref_symbol_header; }
+__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_symbol_subtag")))
+uint32_t wasm_debug_specref_failure_symbol_subtag(void) { return wasm_debug_specref_symbol_subtag; }
+__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_binding_index_raw")))
+uint32_t wasm_debug_specref_failure_binding_index_raw(void) { return wasm_debug_specref_binding_index_raw; }
+__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_binding_index_tag")))
+uint32_t wasm_debug_specref_failure_binding_index_tag(void) { return wasm_debug_specref_binding_index_tag; }
+__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_limit_raw")))
+uint32_t wasm_debug_specref_failure_limit_raw(void) { return wasm_debug_specref_limit_raw; }
+__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_limit_tag")))
+uint32_t wasm_debug_specref_failure_limit_tag(void) { return wasm_debug_specref_limit_tag; }
+__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_tlb_pointer_raw")))
+uint32_t wasm_debug_specref_failure_tlb_pointer_raw(void) { return wasm_debug_specref_tlb_pointer_raw; }
+
 __attribute__((used, visibility("default"), export_name("_SPspecref")))
 void
 _SPspecref(void)
 {
+  wasm_debug_reset_specref_failure_state();
+
   TCR *tcr = wasm_get_current_tcr();
   if (tcr == NULL) {
+    wasm_debug_specref_stage = WASM_DEBUG_SPECREF_STAGE_TCR_NULL;
+    wasm_subprims_trap();
+  }
+  wasm_debug_specref_tcr_raw = (uint32_t)(uintptr_t)tcr;
+
+  LispObj symbol = wasm_reg(tcr, arg_z);
+  wasm_debug_specref_symbol_raw = (uint32_t)symbol;
+  unsigned symbol_fulltag = fulltag_of(symbol);
+  wasm_debug_specref_symbol_fulltag = symbol_fulltag;
+  if (symbol_fulltag != fulltag_misc) {
+    wasm_debug_specref_stage = WASM_DEBUG_SPECREF_STAGE_SYMBOL_FULLTAG;
     wasm_subprims_trap();
   }
 
-  LispObj symbol = wasm_reg(tcr, arg_z);
-  lispsymbol *sym = wasm_symbol_or_trap(symbol);
+  LispObj symbol_header = header_of(symbol);
+  wasm_debug_specref_symbol_header = (uint32_t)symbol_header;
+  unsigned symbol_subtag = header_subtag(symbol_header);
+  wasm_debug_specref_symbol_subtag = symbol_subtag;
+  if (symbol_subtag != subtag_symbol) {
+    wasm_debug_specref_stage = WASM_DEBUG_SPECREF_STAGE_SYMBOL_SUBTAG;
+    wasm_subprims_trap();
+  }
+
+  lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(symbol));
   LispObj binding_index = sym->binding_index;
-  if (tag_of(binding_index) != tag_fixnum) {
+  wasm_debug_specref_binding_index_raw = (uint32_t)binding_index;
+  unsigned binding_index_tag = tag_of(binding_index);
+  wasm_debug_specref_binding_index_tag = binding_index_tag;
+  if (binding_index_tag != tag_fixnum) {
+    wasm_debug_specref_stage = WASM_DEBUG_SPECREF_STAGE_BINDING_INDEX_TAG;
     wasm_subprims_trap();
   }
 
   LispObj limit = tcr->tlb_limit;
-  if (tag_of(limit) != tag_fixnum) {
+  wasm_debug_specref_limit_raw = (uint32_t)limit;
+  unsigned limit_tag = tag_of(limit);
+  wasm_debug_specref_limit_tag = limit_tag;
+  if (limit_tag != tag_fixnum) {
+    wasm_debug_specref_stage = WASM_DEBUG_SPECREF_STAGE_TLB_LIMIT_TAG;
     wasm_subprims_trap();
   }
 
   LispObj *binding_slots = tcr->tlb_pointer;
+  wasm_debug_specref_tlb_pointer_raw = (uint32_t)(uintptr_t)binding_slots;
   if (binding_slots == NULL) {
+    wasm_debug_specref_stage = WASM_DEBUG_SPECREF_STAGE_TLB_POINTER_NULL;
     wasm_subprims_trap();
   }
 
