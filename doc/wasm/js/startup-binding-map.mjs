@@ -896,16 +896,21 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
   getConstPoolBytesForEntry = null,
 } = {}) {
   const stats = {
-    schema_version: "startup_binding_map_contract_const_pool_function_build_v1",
+    schema_version: "startup_binding_map_contract_const_pool_function_build_v2",
     status: "ok",
     enabled: false,
     required_pool_count: 0,
     required_ref_count: 0,
+    required_callable_count: 0,
     seed_ref_count: 0,
     seed_symbol_ref_count: 0,
+    seed_callable_count: 0,
+    seed_refs_non_symbol: 0,
     symbol_refs_examined: 0,
     symbol_refs_non_symbol: 0,
     symbol_refs_named: 0,
+    symbol_refs_filtered_non_callable: 0,
+    symbol_refs_filtered_keyword: 0,
     resolver_resolved: 0,
     resolver_unresolved: 0,
     resolver_ambiguous: 0,
@@ -918,6 +923,10 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     const_pool_decode_error_sample: null,
     transitive_const_pool_entries_scanned: 0,
     transitive_const_pool_refs_queued: 0,
+    transitive_callable_refs_queued: 0,
+    transitive_const_pool_refs_non_symbol: 0,
+    transitive_const_pool_refs_filtered_keyword: 0,
+    transitive_const_pool_refs_filtered_non_callable: 0,
     emitted_entries: 0,
     upgraded_existing_entries: 0,
     skipped_existing_entry_backed: 0,
@@ -948,20 +957,38 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     }
   }
   stats.required_ref_count = requiredRefs.length >>> 0;
-  if (requiredRefs.length === 0) {
+
+  const requiredCallables = Array.isArray(contract?.requiredCallables)
+    ? contract.requiredCallables
+    : [];
+  stats.required_callable_count = requiredCallables.length >>> 0;
+
+  if (requiredRefs.length === 0 && requiredCallables.length === 0) {
     return { changed: false, mapArtifact, stats };
   }
 
-  if (typeof getConstPoolBytesForEntry !== "function") {
+  const canLoadConstPools = typeof getConstPoolBytesForEntry === "function";
+  if (!canLoadConstPools && requiredRefs.length > 0) {
     stats.status = "degraded";
     stats.missing_const_pool_provider = true;
-    return { changed: false, mapArtifact, stats };
   }
 
   stats.enabled = true;
   stats.seed_ref_count = requiredRefs.length >>> 0;
 
   const functionIndex = buildFunctionIndex(functions);
+  const hasCallableMetadata = ({ packageName, symbolName }) => {
+    const normalizedSymbol = normalizeSymbolName(symbolName);
+    if (!normalizedSymbol) return false;
+    const normalizedPackage = canonicalizePackageName(packageName);
+    if (normalizedPackage) {
+      const symbolKey = makeSymbolKey(normalizedPackage, normalizedSymbol);
+      if (!symbolKey) return false;
+      return functionIndex.bySymbolKey.has(symbolKey);
+    }
+    return functionIndex.byName.has(normalizedSymbol);
+  };
+
   const resolver = typeof resolveFunctionDesignator === "function"
     ? ({ packageName, symbolName }) => {
       const resolved = resolveFunctionDesignator({
@@ -1053,33 +1080,110 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
 
   const pendingRefs = [];
   const seenRefKeys = new Set();
-  const enqueueRef = (ref, depth = 0) => {
-    const key = `${ref.entry_index >>> 0}:${ref.const_index >>> 0}`;
+  const seenSyntheticSymbolKeys = new Set();
+  const enqueueRef = (ref, depth = 0, { source = "contract-required-const-pool-ref" } = {}) => {
+    const entryIndex = Number(ref?.entry_index);
+    const constIndex = Number(ref?.const_index);
+    if (!Number.isInteger(entryIndex) || entryIndex < 0 || !Number.isInteger(constIndex) || constIndex < 0) {
+      return false;
+    }
+    const key = `${entryIndex >>> 0}:${constIndex >>> 0}`;
     if (seenRefKeys.has(key)) {
       stats.skipped_duplicate_refs++;
-      return;
+      return false;
     }
     seenRefKeys.add(key);
     pendingRefs.push({
-      entry_index: ref.entry_index >>> 0,
-      const_index: ref.const_index >>> 0,
+      entry_index: entryIndex >>> 0,
+      const_index: constIndex >>> 0,
       package_name: canonicalizePackageName(ref.package_name ?? ""),
       symbol_name: normalizeSymbolName(ref.symbol_name ?? ""),
       tag: Number.isFinite(ref.tag) ? (ref.tag >>> 0) : null,
       depth: Math.max(0, depth | 0),
+      source,
     });
+    return true;
+  };
+  const enqueueCallableSeed = ({ package_name, symbol_name } = {}) => {
+    const packageName = canonicalizePackageName(package_name);
+    const symbolName = normalizeSymbolName(symbol_name);
+    if (!symbolName) return false;
+    const key = `${packageName}::${symbolName}`;
+    if (seenSyntheticSymbolKeys.has(key)) {
+      stats.skipped_duplicate_refs++;
+      return false;
+    }
+    seenSyntheticSymbolKeys.add(key);
+    pendingRefs.push({
+      entry_index: null,
+      const_index: null,
+      package_name: packageName,
+      symbol_name: symbolName,
+      tag: null,
+      depth: 0,
+      source: "contract-required-callable",
+    });
+    return true;
   };
 
-  for (const required of requiredRefs) {
-    const poolRefs = loadConstPoolRefs(required.entry_index);
-    const parsedRef = poolRefs.byConstIndex.get(required.const_index >>> 0);
-    if (!parsedRef) {
-      stats.symbol_refs_non_symbol++;
-      continue;
+  if (canLoadConstPools) {
+    for (const required of requiredRefs) {
+      const poolRefs = loadConstPoolRefs(required.entry_index);
+      const parsedRef = poolRefs.byConstIndex.get(required.const_index >>> 0);
+      if (!parsedRef) {
+        stats.seed_refs_non_symbol++;
+        continue;
+      }
+      if (enqueueRef(parsedRef, 0, { source: "contract-required-const-pool-ref" })) {
+        stats.seed_symbol_ref_count++;
+      }
     }
-    enqueueRef(parsedRef, 0);
-    stats.seed_symbol_ref_count++;
   }
+
+  for (const item of requiredCallables) {
+    if (enqueueCallableSeed({
+      package_name: item?.packageName ?? "",
+      symbol_name: item?.symbolName ?? "",
+    })) {
+      stats.seed_callable_count++;
+    }
+  }
+
+  const definitionDepth = (definition) => {
+    if (!definition || typeof definition !== "object") return Number.MAX_SAFE_INTEGER;
+    const depth = Number(definition.const_pool_depth);
+    if (!Number.isInteger(depth) || depth < 0) return Number.MAX_SAFE_INTEGER;
+    return depth >>> 0;
+  };
+  const shouldPreferDefinition = (existingDefinition, candidateDefinition) => {
+    const candidateValid = (
+      candidateDefinition &&
+      typeof candidateDefinition === "object" &&
+      Number.isInteger(candidateDefinition.entry_index) &&
+      candidateDefinition.entry_index >= 0 &&
+      Number.isInteger(candidateDefinition.const_index) &&
+      candidateDefinition.const_index >= 0
+    );
+    if (!candidateValid) return false;
+    const existingValid = (
+      existingDefinition &&
+      typeof existingDefinition === "object" &&
+      Number.isInteger(existingDefinition.entry_index) &&
+      existingDefinition.entry_index >= 0 &&
+      Number.isInteger(existingDefinition.const_index) &&
+      existingDefinition.const_index >= 0
+    );
+    if (!existingValid) return true;
+    const existingDepth = definitionDepth(existingDefinition);
+    const candidateDepth = definitionDepth(candidateDefinition);
+    if (candidateDepth < existingDepth) return true;
+    if (candidateDepth > existingDepth) return false;
+    const existingEntryIndex = existingDefinition.entry_index >>> 0;
+    const candidateEntryIndex = candidateDefinition.entry_index >>> 0;
+    if (candidateEntryIndex < existingEntryIndex) return true;
+    if (candidateEntryIndex > existingEntryIndex) return false;
+    return (candidateDefinition.const_index >>> 0) < (existingDefinition.const_index >>> 0);
+  };
 
   const scannedResolvedEntries = new Set();
   let cursor = 0;
@@ -1095,8 +1199,15 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     const packageName = canonicalizePackageName(ref.package_name);
     if (packageName === "KEYWORD") {
       stats.resolver_keyword_package_skipped++;
+      stats.symbol_refs_filtered_keyword++;
       continue;
     }
+    const isRequiredCallableSeed = ref.source === "contract-required-callable";
+    if (!isRequiredCallableSeed && !hasCallableMetadata({ packageName, symbolName })) {
+      stats.symbol_refs_filtered_non_callable++;
+      continue;
+    }
+
     const resolution = resolver({ packageName, symbolName });
     if (!resolution?.ok) {
       if (resolution?.reason === "ambiguous") stats.resolver_ambiguous++;
@@ -1113,6 +1224,22 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     const canonicalPackage = packageName || "CCL";
     const symbolKey = makeSymbolKey(canonicalPackage, symbolName);
     if (!symbolKey) continue;
+    const definition = (
+      Number.isInteger(ref.entry_index) &&
+      ref.entry_index >= 0 &&
+      Number.isInteger(ref.const_index) &&
+      ref.const_index >= 0
+    )
+      ? {
+        entry_index: ref.entry_index >>> 0,
+        const_index: ref.const_index >>> 0,
+        const_tag: ref.tag,
+        const_pool_depth: Math.max(0, ref.depth | 0),
+      }
+      : null;
+    const source = typeof ref.source === "string" && ref.source.length > 0
+      ? ref.source
+      : (definition ? "contract-required-const-pool-ref" : "contract-required-callable");
 
     const existingIndex = functionEntryIndexBySymbolKey.get(symbolKey);
     if (existingIndex != null) {
@@ -1120,11 +1247,14 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
       const existingAvailability = String(existing?.availability ?? "").toLowerCase();
       const existingInitializerKind = String(existing?.initializer?.kind ?? "").toLowerCase();
       const existingEntryIndex = Number(existing?.initializer?.entry_index);
+      const replaceDefinition = shouldPreferDefinition(existing?.definition ?? null, definition);
+      const definitionSatisfied = !replaceDefinition;
       if (
         existingAvailability === "entry-backed" &&
         existingInitializerKind === "entry-function" &&
         Number.isInteger(existingEntryIndex) &&
-        (existingEntryIndex >>> 0) === resolvedEntryIndex
+        (existingEntryIndex >>> 0) === resolvedEntryIndex &&
+        definitionSatisfied
       ) {
         stats.skipped_existing_entry_backed++;
       } else {
@@ -1135,8 +1265,9 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
           package_name: canonicalPackage,
           symbol_name: symbolName,
           symbol_key: symbolKey,
-          source: "contract-required-const-pool-ref",
+          source,
           require_non_nil: false,
+          definition: replaceDefinition ? definition : (existing?.definition ?? null),
           availability: "entry-backed",
           initializer: {
             kind: "entry-function",
@@ -1155,13 +1286,9 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
         package_name: canonicalPackage,
         symbol_name: symbolName,
         symbol_key: symbolKey,
-        source: "contract-required-const-pool-ref",
+        source,
         require_non_nil: false,
-        definition: {
-          entry_index: ref.entry_index >>> 0,
-          const_index: ref.const_index >>> 0,
-          const_tag: ref.tag,
-        },
+        definition,
         availability: "entry-backed",
         initializer: {
           kind: "entry-function",
@@ -1176,14 +1303,34 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
       stats.emitted_entries++;
     }
 
-    if (scannedResolvedEntries.has(resolvedEntryIndex)) continue;
+    if (!canLoadConstPools || scannedResolvedEntries.has(resolvedEntryIndex)) continue;
     scannedResolvedEntries.add(resolvedEntryIndex);
     const transitive = loadConstPoolRefs(resolvedEntryIndex);
     if (!transitive.available) continue;
     stats.transitive_const_pool_entries_scanned++;
     stats.transitive_const_pool_refs_queued += transitive.refs.length >>> 0;
     for (const item of transitive.refs) {
-      enqueueRef(item, (ref.depth | 0) + 1);
+      const transitiveSymbolName = normalizeSymbolName(item?.symbol_name ?? "");
+      const transitivePackageName = canonicalizePackageName(item?.package_name ?? "");
+      if (!transitiveSymbolName) {
+        stats.transitive_const_pool_refs_non_symbol++;
+        continue;
+      }
+      if (transitivePackageName === "KEYWORD") {
+        stats.transitive_const_pool_refs_filtered_keyword++;
+        continue;
+      }
+      if (!hasCallableMetadata({ packageName: transitivePackageName, symbolName: transitiveSymbolName })) {
+        stats.transitive_const_pool_refs_filtered_non_callable++;
+        continue;
+      }
+      if (enqueueRef({
+        ...item,
+        package_name: transitivePackageName,
+        symbol_name: transitiveSymbolName,
+      }, (ref.depth | 0) + 1, { source: "contract-required-const-pool-ref" })) {
+        stats.transitive_callable_refs_queued++;
+      }
     }
   }
 

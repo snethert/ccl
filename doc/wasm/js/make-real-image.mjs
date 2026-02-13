@@ -634,6 +634,8 @@ let constPoolSharedBlobRaw = null;
 const constPoolSpanKey = (offset, storedLength, encoding, rawLength) =>
   `${offset >>> 0}:${storedLength >>> 0}:${encoding ?? "raw"}:${rawLength >>> 0}`;
 const constPoolsInstalled = new Set();
+const startupBindingMapConstPoolBindings = new Map();
+const startupBindingMapDeferredApplied = new Set();
 const CONST_POOL_DIAG_ENTRY = 4412;
 const constPoolProbeInFlight = new Set();
 const CONST_POOL_ERROR_NAMES = new Map([
@@ -910,6 +912,131 @@ function decodeConstPoolForInfo(info) {
   }
 }
 
+function buildStartupBindingMapConstPoolBindingIndex(mapArtifact) {
+  startupBindingMapConstPoolBindings.clear();
+  startupBindingMapDeferredApplied.clear();
+  for (const entry of Array.isArray(mapArtifact?.entries) ? mapArtifact.entries : []) {
+    if (String(entry?.target_cell ?? "").toLowerCase() !== "fcell") continue;
+    if (String(entry?.availability ?? "").toLowerCase() !== "entry-backed") continue;
+    if (String(entry?.initializer?.kind ?? "").toLowerCase() !== "entry-function") continue;
+    const resolvedEntryIndex = Number(entry?.initializer?.entry_index);
+    const definitionEntryIndex = Number(entry?.definition?.entry_index);
+    const definitionConstIndex = Number(entry?.definition?.const_index);
+    if (!Number.isInteger(resolvedEntryIndex) || resolvedEntryIndex < 0) continue;
+    if (!Number.isInteger(definitionEntryIndex) || definitionEntryIndex < 0) continue;
+    if (!Number.isInteger(definitionConstIndex) || definitionConstIndex < 0) continue;
+    const key = definitionEntryIndex >>> 0;
+    const bucket = startupBindingMapConstPoolBindings.get(key) ?? [];
+    bucket.push({
+      definition_entry_index: definitionEntryIndex >>> 0,
+      definition_const_index: definitionConstIndex >>> 0,
+      resolved_entry_index: resolvedEntryIndex >>> 0,
+      symbol_key: typeof entry?.symbol_key === "string" ? entry.symbol_key : null,
+      symbol_name: typeof entry?.symbol_name === "string" ? entry.symbol_name : null,
+      package_name: typeof entry?.package_name === "string" ? entry.package_name : null,
+      const_pool_depth: Number.isInteger(entry?.definition?.const_pool_depth)
+        ? (entry.definition.const_pool_depth >>> 0)
+        : null,
+    });
+    startupBindingMapConstPoolBindings.set(key, bucket);
+  }
+}
+
+function applyStartupBindingMapDeferredBindingsForConstPoolEntry(entryIndexRaw, { reason = "const-pool-install" } = {}) {
+  if (!kernelExports) return;
+  const entryIndex = entryIndexRaw >>> 0;
+  const bindings = startupBindingMapConstPoolBindings.get(entryIndex);
+  if (!Array.isArray(bindings) || bindings.length === 0) return;
+
+  const ex = kernelExports;
+  const hasRequiredExports = (
+    typeof ex.wasm_const_pool_ref === "function" &&
+    typeof ex.wasm_probe_symbol_vcell === "function" &&
+    typeof ex.wasm_probe_symbol_fcell === "function" &&
+    typeof ex.wasm_probe_last_status === "function" &&
+    typeof ex.wasm_debug_function_entry_index === "function" &&
+    typeof ex.wasm_set_raw_symbol_fcell_entry_function === "function"
+  );
+  if (!hasRequiredExports) return;
+
+  const OK_STATUS = 0;
+  const nil = typeof ex.wasm_get_lisp_nil === "function"
+    ? (ex.wasm_get_lisp_nil() >>> 0)
+    : 0x4000001;
+  const probeStatus = () => (ex.wasm_probe_last_status() >>> 0);
+  let applied = 0;
+  let skippedAlreadyBound = 0;
+  let skippedNilRef = 0;
+  let skippedNonSymbol = 0;
+  let applyFailed = 0;
+
+  for (const binding of bindings) {
+    const applyKey = `${entryIndex}:${binding.definition_const_index >>> 0}:${binding.resolved_entry_index >>> 0}`;
+    if (startupBindingMapDeferredApplied.has(applyKey)) {
+      skippedAlreadyBound++;
+      continue;
+    }
+
+    const rawSymbol = ex.wasm_const_pool_ref(entryIndex, binding.definition_const_index >>> 0) >>> 0;
+    if (rawSymbol === 0 || rawSymbol === nil) {
+      skippedNilRef++;
+      continue;
+    }
+
+    ex.wasm_probe_symbol_vcell(rawSymbol >>> 0);
+    if (probeStatus() !== OK_STATUS) {
+      skippedNonSymbol++;
+      continue;
+    }
+
+    const beforeFcell = ex.wasm_probe_symbol_fcell(rawSymbol >>> 0) >>> 0;
+    const beforeFcellStatus = probeStatus();
+    if (beforeFcellStatus === OK_STATUS) {
+      const beforeEntry = ex.wasm_debug_function_entry_index(beforeFcell >>> 0) | 0;
+      if (beforeEntry >= 0) {
+        startupBindingMapDeferredApplied.add(applyKey);
+        skippedAlreadyBound++;
+        continue;
+      }
+    }
+
+    ex.wasm_set_raw_symbol_fcell_entry_function(rawSymbol >>> 0, binding.resolved_entry_index >>> 0);
+    if (probeStatus() !== OK_STATUS) {
+      applyFailed++;
+      continue;
+    }
+
+    const afterFcell = ex.wasm_probe_symbol_fcell(rawSymbol >>> 0) >>> 0;
+    if (probeStatus() !== OK_STATUS) {
+      applyFailed++;
+      continue;
+    }
+    const afterEntry = ex.wasm_debug_function_entry_index(afterFcell >>> 0) | 0;
+    if (afterEntry < 0) {
+      applyFailed++;
+      continue;
+    }
+
+    startupBindingMapDeferredApplied.add(applyKey);
+    applied++;
+  }
+
+  if (applied > 0 || applyFailed > 0) {
+    console.log(`STARTUP_BINDING_MAP_APPLY_DEFERRED ${JSON.stringify({
+      schema_version: "startup_binding_map_apply_deferred_v1",
+      status: applyFailed > 0 ? "partial" : "ok",
+      reason,
+      const_pool_entry_index: entryIndex >>> 0,
+      candidate_bindings: bindings.length >>> 0,
+      applied_count: applied >>> 0,
+      skipped_already_bound: skippedAlreadyBound >>> 0,
+      skipped_nil_ref: skippedNilRef >>> 0,
+      skipped_non_symbol: skippedNonSymbol >>> 0,
+      apply_failed: applyFailed >>> 0,
+    })}`);
+  }
+}
+
 function installConstPoolOnDemand(entryIndexRaw) {
   if (!kernelExports || compiledModulesFd == null) return 0;
   const entryIndex = entryIndexRaw >>> 0;
@@ -1064,6 +1191,7 @@ function installConstPoolOnDemand(entryIndexRaw) {
     if (!installOk) return 0;
 
     constPoolsInstalled.add(entryIndex);
+    applyStartupBindingMapDeferredBindingsForConstPoolEntry(entryIndex, { reason: "const-pool-install" });
     return 1;
   } finally {
     if (shouldProbe) {
@@ -1966,8 +2094,6 @@ function applyStartupBindingMapOrFail({
   let skippedAlreadyBound = 0;
   let requiredUninitialized = 0;
   let skippedSymbolUnresolved = 0;
-  let packageAgnosticProbeAttempts = 0;
-  let packageAgnosticProbeResolved = 0;
   const targetCounts = {
     vcell: {
       eligible_entries: 0,
@@ -1986,172 +2112,15 @@ function applyStartupBindingMapOrFail({
   };
   // Artifact-owned startup: apply map entries directly; required const-pool refs are gate-only.
   const appliedSymbolBindingKeys = new Set();
-  const probeSymbolByNameWithFallback = (
-    nameMem,
-    pkgMem,
-    packageName,
-    { countPackageAgnosticStats = false } = {},
-  ) => {
-    let raw = ex.wasm_probe_symbol(
+  const probeSymbolByName = (nameMem, pkgMem) => {
+    const raw = ex.wasm_probe_symbol(
       nameMem.ptr >>> 0,
       nameMem.len >>> 0,
       pkgMem.ptr >>> 0,
       pkgMem.len >>> 0,
     ) >>> 0;
-    let status = probeStatus();
-    if ((status !== L0_PROBE_STATUS.OK || raw === 0 || raw === nil) &&
-        packageName.length > 0 &&
-        status === L0_PROBE_STATUS.SYMBOL_MISSING) {
-      if (countPackageAgnosticStats) {
-        packageAgnosticProbeAttempts++;
-      }
-      const fallbackRaw = ex.wasm_probe_symbol(
-        nameMem.ptr >>> 0,
-        nameMem.len >>> 0,
-        0,
-        0,
-      ) >>> 0;
-      const fallbackStatus = probeStatus();
-      if (fallbackStatus === L0_PROBE_STATUS.OK && fallbackRaw !== 0 && fallbackRaw !== nil) {
-        raw = fallbackRaw >>> 0;
-        status = fallbackStatus;
-        if (countPackageAgnosticStats) {
-          packageAgnosticProbeResolved++;
-        }
-      }
-    }
+    const status = probeStatus();
     return { raw, status };
-  };
-
-  const makeContractSymbolKey = (packageName, symbolName) => (
-    `${String(packageName ?? "").trim().toUpperCase()}::${String(symbolName ?? "").trim().toUpperCase()}`
-  );
-  const contractRequiredSpecialKeys = new Set(
-    Array.isArray(contract?.requiredSpecialVariables)
-      ? contract.requiredSpecialVariables
-        .map((item) => makeContractSymbolKey(item?.packageName, item?.symbolName))
-        .filter((key) => key !== "::")
-      : [],
-  );
-  const requiredConstPools = Array.isArray(contract?.requiredConstPools)
-    ? contract.requiredConstPools
-    : [];
-  const requiredConstPoolRefs = [];
-  const requiredConstPoolRefKeys = new Set();
-  for (const pool of requiredConstPools) {
-    const entryIndex = Number(pool?.entryIndex);
-    if (!Number.isInteger(entryIndex) || entryIndex < 0) continue;
-    for (const rawRef of Array.isArray(pool?.requiredRefs) ? pool.requiredRefs : []) {
-      const constIndex = Number(rawRef);
-      if (!Number.isInteger(constIndex) || constIndex < 0) continue;
-      const refKey = `${entryIndex}:${constIndex}`;
-      if (requiredConstPoolRefKeys.has(refKey)) continue;
-      requiredConstPoolRefKeys.add(refKey);
-      requiredConstPoolRefs.push({
-        entry_index: entryIndex >>> 0,
-        const_index: constIndex >>> 0,
-      });
-    }
-  }
-
-  const contractConstPoolFallbackMissingExports = [];
-  if (requiredConstPoolRefs.length > 0 && typeof ex.wasm_const_pool_ref !== "function") {
-    contractConstPoolFallbackMissingExports.push("wasm_const_pool_ref");
-  }
-  if (requiredConstPoolRefs.length > 0 && typeof ex.wasm_debug_copy_symbol_name !== "function") {
-    contractConstPoolFallbackMissingExports.push("wasm_debug_copy_symbol_name");
-  }
-  const contractConstPoolFallbackEnabled =
-    requiredConstPoolRefs.length > 0 &&
-    contractConstPoolFallbackMissingExports.length === 0;
-  const contractConstPoolFallbackStats = {
-    enabled: contractConstPoolFallbackEnabled,
-    required_pool_count: requiredConstPools.length >>> 0,
-    required_ref_count: requiredConstPoolRefs.length >>> 0,
-    missing_exports: contractConstPoolFallbackMissingExports,
-    indexed_symbol_refs: 0,
-    indexed_named_symbols: 0,
-    duplicate_named_symbols: 0,
-    skipped_nil_refs: 0,
-    skipped_non_symbol_refs: 0,
-    fallback_attempts: 0,
-    fallback_resolved: 0,
-    raw_apply_attempts: 0,
-    raw_apply_resolved: 0,
-  };
-  let contractConstPoolSymbolIndexReady = false;
-  const contractConstPoolSymbolsByName = new Map();
-  const decodeSymbolNameUpper = (rawSym) => {
-    if (typeof ex.wasm_debug_copy_symbol_name !== "function") return null;
-    const len = ex.wasm_debug_copy_symbol_name(rawSym >>> 0, 0, 0) >>> 0;
-    if (len === 0) return null;
-    const ptr = allocScratch(runtime.memory, len);
-    const copied = ex.wasm_debug_copy_symbol_name(rawSym >>> 0, ptr >>> 0, len) >>> 0;
-    if (copied === 0) return null;
-    try {
-      const text = decoder.decode(
-        new Uint8Array(runtime.memory.buffer, ptr >>> 0, Math.min(len, copied)),
-      );
-      return text.trim().toUpperCase();
-    } catch {
-      return null;
-    }
-  };
-  const ensureContractConstPoolSymbolIndex = () => {
-    if (contractConstPoolSymbolIndexReady) return;
-    contractConstPoolSymbolIndexReady = true;
-    if (!contractConstPoolFallbackEnabled) return;
-    // Contract-scoped fallback only: probe required const-pool refs declared by the L0 contract.
-    for (const ref of requiredConstPoolRefs) {
-      const raw = ex.wasm_const_pool_ref(ref.entry_index >>> 0, ref.const_index >>> 0) >>> 0;
-      if (raw === 0 || raw === nil) {
-        contractConstPoolFallbackStats.skipped_nil_refs++;
-        continue;
-      }
-      ex.wasm_probe_symbol_vcell(raw >>> 0);
-      const rawStatus = probeStatus();
-      if (rawStatus !== L0_PROBE_STATUS.OK) {
-        contractConstPoolFallbackStats.skipped_non_symbol_refs++;
-        continue;
-      }
-      contractConstPoolFallbackStats.indexed_symbol_refs++;
-      const nameUpper = decodeSymbolNameUpper(raw >>> 0);
-      if (!nameUpper) {
-        continue;
-      }
-      const bucket = contractConstPoolSymbolsByName.get(nameUpper) ?? [];
-      if (bucket.length > 0) {
-        contractConstPoolFallbackStats.duplicate_named_symbols++;
-      }
-      if (!bucket.includes(raw >>> 0)) {
-        bucket.push(raw >>> 0);
-      }
-      contractConstPoolSymbolsByName.set(nameUpper, bucket);
-      contractConstPoolFallbackStats.indexed_named_symbols++;
-    }
-  };
-  const resolveContractConstPoolSymbolRaw = ({ packageName, symbolName }) => {
-    const contractSymbolKey = makeContractSymbolKey(packageName, symbolName);
-    if (!contractRequiredSpecialKeys.has(contractSymbolKey)) {
-      return 0;
-    }
-    contractConstPoolFallbackStats.fallback_attempts++;
-    ensureContractConstPoolSymbolIndex();
-    if (!contractConstPoolFallbackEnabled) {
-      return 0;
-    }
-    const nameUpper = String(symbolName ?? "").trim().toUpperCase();
-    if (nameUpper.length === 0) return 0;
-    const candidates = contractConstPoolSymbolsByName.get(nameUpper);
-    if (!Array.isArray(candidates) || candidates.length !== 1) {
-      return 0;
-    }
-    const resolved = candidates[0] >>> 0;
-    if (resolved === 0 || resolved === nil) {
-      return 0;
-    }
-    contractConstPoolFallbackStats.fallback_resolved++;
-    return resolved;
   };
 
   for (const entry of entries) {
@@ -2202,24 +2171,11 @@ function applyStartupBindingMapOrFail({
 
     const nameMem = scratchUtf8(symbolName);
     const pkgMem = scratchUtf8(packageName);
-    const symbolProbe = probeSymbolByNameWithFallback(nameMem, pkgMem, packageName, {
-      countPackageAgnosticStats: true,
-    });
+    const symbolProbe = probeSymbolByName(nameMem, pkgMem);
     let symbolRaw = symbolProbe.raw >>> 0;
     let symbolStatus = symbolProbe.status >>> 0;
     let symbolResolved = symbolStatus === L0_PROBE_STATUS.OK && symbolRaw !== 0 && symbolRaw !== nil;
-    const unresolvedSymbolApplyAllowed = requireNonNil && targetCell === "vcell";
-    let symbolResolvedFromContractConstPool = false;
-    if (!symbolResolved && unresolvedSymbolApplyAllowed) {
-      const rawFromContract = resolveContractConstPoolSymbolRaw({ packageName, symbolName });
-      if (rawFromContract !== 0 && rawFromContract !== nil) {
-        symbolRaw = rawFromContract >>> 0;
-        symbolStatus = L0_PROBE_STATUS.OK;
-        symbolResolved = true;
-        symbolResolvedFromContractConstPool = true;
-      }
-    }
-    if (!symbolResolved && !unresolvedSymbolApplyAllowed) {
+    if (!symbolResolved) {
       skippedSymbolUnresolved++;
       targetCounts[targetCell].skipped_symbol_unresolved++;
       if (requireNonNil) {
@@ -2275,16 +2231,11 @@ function applyStartupBindingMapOrFail({
       continue;
     }
 
-    const useRawSymbolSetter = symbolResolvedFromContractConstPool && symbolResolved;
     let missingExport = null;
     switch (initializerKind) {
       case "literal-fixnum":
         if (targetCell !== "vcell") {
           missingExport = "initializer-target-mismatch";
-        } else if (useRawSymbolSetter) {
-          missingExport = typeof ex.wasm_set_raw_symbol_vcell_fixnum !== "function"
-            ? "wasm_set_raw_symbol_vcell_fixnum"
-            : null;
         } else {
           missingExport = typeof ex.wasm_set_symbol_vcell_fixnum !== "function"
             ? "wasm_set_symbol_vcell_fixnum"
@@ -2294,10 +2245,6 @@ function applyStartupBindingMapOrFail({
       case "literal-nil":
         if (targetCell !== "vcell") {
           missingExport = "initializer-target-mismatch";
-        } else if (useRawSymbolSetter) {
-          missingExport = typeof ex.wasm_set_raw_symbol_vcell_nil !== "function"
-            ? "wasm_set_raw_symbol_vcell_nil"
-            : null;
         } else {
           missingExport = typeof ex.wasm_set_symbol_vcell_nil !== "function"
             ? "wasm_set_symbol_vcell_nil"
@@ -2306,20 +2253,12 @@ function applyStartupBindingMapOrFail({
         break;
       case "entry-function":
         if (targetCell === "fcell") {
-          missingExport = typeof (useRawSymbolSetter
-            ? ex.wasm_set_raw_symbol_fcell_entry_function
-            : ex.wasm_set_symbol_fcell_entry_function) !== "function"
-            ? (useRawSymbolSetter
-              ? "wasm_set_raw_symbol_fcell_entry_function"
-              : "wasm_set_symbol_fcell_entry_function")
+          missingExport = typeof ex.wasm_set_symbol_fcell_entry_function !== "function"
+            ? "wasm_set_symbol_fcell_entry_function"
             : null;
         } else {
-          missingExport = typeof (useRawSymbolSetter
-            ? ex.wasm_set_raw_symbol_vcell_entry_function
-            : ex.wasm_set_symbol_vcell_entry_function) !== "function"
-            ? (useRawSymbolSetter
-              ? "wasm_set_raw_symbol_vcell_entry_function"
-              : "wasm_set_symbol_vcell_entry_function")
+          missingExport = typeof ex.wasm_set_symbol_vcell_entry_function !== "function"
+            ? "wasm_set_symbol_vcell_entry_function"
             : null;
         }
         break;
@@ -2356,32 +2295,22 @@ function applyStartupBindingMapOrFail({
           });
           continue;
         }
-        if (useRawSymbolSetter) {
-          contractConstPoolFallbackStats.raw_apply_attempts++;
-          ex.wasm_set_raw_symbol_vcell_fixnum(symbolRaw >>> 0, value | 0);
-        } else {
-          ex.wasm_set_symbol_vcell_fixnum(
-            nameMem.ptr >>> 0,
-            nameMem.len >>> 0,
-            pkgMem.ptr >>> 0,
-            pkgMem.len >>> 0,
-            value | 0,
-          );
-        }
+        ex.wasm_set_symbol_vcell_fixnum(
+          nameMem.ptr >>> 0,
+          nameMem.len >>> 0,
+          pkgMem.ptr >>> 0,
+          pkgMem.len >>> 0,
+          value | 0,
+        );
         break;
       }
       case "literal-nil":
-        if (useRawSymbolSetter) {
-          contractConstPoolFallbackStats.raw_apply_attempts++;
-          ex.wasm_set_raw_symbol_vcell_nil(symbolRaw >>> 0);
-        } else {
-          ex.wasm_set_symbol_vcell_nil(
-            nameMem.ptr >>> 0,
-            nameMem.len >>> 0,
-            pkgMem.ptr >>> 0,
-            pkgMem.len >>> 0,
-          );
-        }
+        ex.wasm_set_symbol_vcell_nil(
+          nameMem.ptr >>> 0,
+          nameMem.len >>> 0,
+          pkgMem.ptr >>> 0,
+          pkgMem.len >>> 0,
+        );
         break;
       case "entry-function": {
         const entryIndex = Number(initializer?.entry_index);
@@ -2398,37 +2327,21 @@ function applyStartupBindingMapOrFail({
           continue;
         }
         if (targetCell === "fcell") {
-          if (useRawSymbolSetter) {
-            contractConstPoolFallbackStats.raw_apply_attempts++;
-            ex.wasm_set_raw_symbol_fcell_entry_function(
-              symbolRaw >>> 0,
-              entryIndex >>> 0,
-            );
-          } else {
-            ex.wasm_set_symbol_fcell_entry_function(
-              nameMem.ptr >>> 0,
-              nameMem.len >>> 0,
-              pkgMem.ptr >>> 0,
-              pkgMem.len >>> 0,
-              entryIndex >>> 0,
-            );
-          }
+          ex.wasm_set_symbol_fcell_entry_function(
+            nameMem.ptr >>> 0,
+            nameMem.len >>> 0,
+            pkgMem.ptr >>> 0,
+            pkgMem.len >>> 0,
+            entryIndex >>> 0,
+          );
         } else {
-          if (useRawSymbolSetter) {
-            contractConstPoolFallbackStats.raw_apply_attempts++;
-            ex.wasm_set_raw_symbol_vcell_entry_function(
-              symbolRaw >>> 0,
-              entryIndex >>> 0,
-            );
-          } else {
-            ex.wasm_set_symbol_vcell_entry_function(
-              nameMem.ptr >>> 0,
-              nameMem.len >>> 0,
-              pkgMem.ptr >>> 0,
-              pkgMem.len >>> 0,
-              entryIndex >>> 0,
-            );
-          }
+          ex.wasm_set_symbol_vcell_entry_function(
+            nameMem.ptr >>> 0,
+            nameMem.len >>> 0,
+            pkgMem.ptr >>> 0,
+            pkgMem.len >>> 0,
+            entryIndex >>> 0,
+          );
         }
         break;
       }
@@ -2464,21 +2377,9 @@ function applyStartupBindingMapOrFail({
         probe_status: applyStatus,
         probe_status_name: l0ProbeStatusName(applyStatus),
         initializer_kind: initializerKind || null,
-        apply_method: useRawSymbolSetter ? "raw-symbol" : "name-symbol",
+        apply_method: "name-symbol",
       });
       continue;
-    }
-    if (useRawSymbolSetter) {
-      contractConstPoolFallbackStats.raw_apply_resolved++;
-    }
-
-    if (!symbolResolved) {
-      const reprobe = probeSymbolByNameWithFallback(nameMem, pkgMem, packageName, {
-        countPackageAgnosticStats: false,
-      });
-      symbolRaw = reprobe.raw >>> 0;
-      symbolStatus = reprobe.status >>> 0;
-      symbolResolved = symbolStatus === L0_PROBE_STATUS.OK && symbolRaw !== 0 && symbolRaw !== nil;
     }
 
     if (!symbolResolved) {
@@ -2590,11 +2491,6 @@ function applyStartupBindingMapOrFail({
       applied_count: appliedCount,
       skipped_already_bound: skippedAlreadyBound,
       skipped_symbol_unresolved: skippedSymbolUnresolved,
-      package_agnostic_probe: {
-        attempts: packageAgnosticProbeAttempts,
-        resolved: packageAgnosticProbeResolved,
-      },
-      contract_const_pool_fallback: contractConstPoolFallbackStats,
       artifact_owned_constants: true,
       failed_count: failures.length,
       target_counts: targetCounts,
@@ -2674,25 +2570,6 @@ function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
     };
   };
 
-  const probeSymbolWithFallback = (item) => {
-    const preferred = probeSymbol(item);
-    const allowAnyPackage = Boolean(item?.allowAnyPackage);
-    if (!allowAnyPackage) return preferred;
-    const unresolved = preferred.status !== L0_PROBE_STATUS.OK || preferred.raw === 0 || preferred.isNil;
-    if (!unresolved) return preferred;
-    const fallback = probeSymbol({
-      packageName: "",
-      symbolName: item?.symbolName ?? "",
-    });
-    const resolved = fallback.status === L0_PROBE_STATUS.OK && fallback.raw !== 0 && !fallback.isNil;
-    if (!resolved) return preferred;
-    return {
-      ...fallback,
-      requestedPackageName: item?.packageName ?? "",
-      fallbackAnyPackage: true,
-    };
-  };
-
   const failures = [];
   const recordFailure = (kind, details) => {
     failures.push({
@@ -2752,10 +2629,9 @@ function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
     const packageName = item?.packageName ?? "";
     const anchorSymbol = item?.anchorSymbol ?? "";
     if (anchorSymbol) {
-      const probe = probeSymbolWithFallback({
+      const probe = probeSymbol({
         packageName,
         symbolName: anchorSymbol,
-        allowAnyPackage: Boolean(item?.allowAnyPackage),
       });
       if (probe.status === L0_PROBE_STATUS.PACKAGE_MISSING || probe.raw === 0 || probe.isNil) {
         recordFailure("package", {
@@ -2783,7 +2659,7 @@ function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
   }
 
   for (const item of Array.isArray(contract?.requiredSymbols) ? contract.requiredSymbols : []) {
-    const probe = probeSymbolWithFallback(item);
+    const probe = probeSymbol(item);
     if (probe.status !== L0_PROBE_STATUS.OK || probe.raw === 0 || probe.isNil) {
       recordFailure("symbol", {
         package_name: item?.packageName ?? null,
@@ -2798,7 +2674,7 @@ function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
   }
 
   for (const item of Array.isArray(contract?.requiredCallables) ? contract.requiredCallables : []) {
-    const symProbe = probeSymbolWithFallback(item);
+    const symProbe = probeSymbol(item);
     if (symProbe.status !== L0_PROBE_STATUS.OK || symProbe.raw === 0 || symProbe.isNil) {
       recordFailure("callable", {
         package_name: item?.packageName ?? null,
@@ -2829,7 +2705,7 @@ function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
   }
 
   for (const item of Array.isArray(contract?.requiredSpecialVariables) ? contract.requiredSpecialVariables : []) {
-    const symProbe = probeSymbolWithFallback(item);
+    const symProbe = probeSymbol(item);
     if (symProbe.status !== L0_PROBE_STATUS.OK || symProbe.raw === 0 || symProbe.isNil) {
       recordFailure("special", {
         package_name: item?.packageName ?? null,
@@ -2965,6 +2841,12 @@ startupBindingMapBuildSummary = buildStartupBindingMapBuildSummary({
   contract: BOOTSTRAP_L0_CONTRACT_V1,
 });
 console.log(`STARTUP_BINDING_MAP_BUILD ${JSON.stringify(startupBindingMapBuildSummary)}`);
+buildStartupBindingMapConstPoolBindingIndex(startupBindingMapArtifact);
+for (const installedEntryIndex of constPoolsInstalled.values()) {
+  applyStartupBindingMapDeferredBindingsForConstPoolEntry(installedEntryIndex, {
+    reason: "startup-map-index-backfill",
+  });
+}
 
 const startupBindingMapApplySummary = applyStartupBindingMapOrFail({
   mapArtifact: startupBindingMapArtifact,

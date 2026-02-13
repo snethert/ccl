@@ -428,9 +428,16 @@ Startup architecture plan (updated):
     bindings and emits explicit `target_cell: "vcell"` entries for
     `requiredSpecialVariables`, plus level-0 function `target_cell: "fcell"`
     bindings.
+  - For required-fasload readiness, it also computes a one-shot contract-scoped
+    callable closure (`requiredConstPools` refs + `requiredCallables` roots +
+    static transitive const-pool callable refs) and emits explicit
+    artifact-owned fcell bindings with const-pool definitions.
 - Runtime ownership:
   - `doc/wasm/js/make-real-image.mjs` applies the artifact entries directly in
     one pre-fasload pass.
+  - When a symbol is unresolved by package/name during apply, runtime may use
+    the artifact-provided const-pool definition for that binding to resolve the
+    raw symbol object; no broad runtime symbol discovery is performed.
   - Required const-pool refs are verified by `L0_BOOTSTRAP_CONTRACT` gate
     checks only; map apply does not perform const-pool-wide symbol discovery.
 - Required artifact coverage for pre-fasload:
