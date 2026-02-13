@@ -1,18 +1,13 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-02-13T03:48:20.728Z",
+  "generated_at": "2026-02-13T03:48:48.089Z",
   "repo": {
     "root": "/Users/buildsomething/Source/ccl",
-    "head_sha": "2c8fac2b911768f91b778bb9ed7f9596e6cf8987",
-    "head_short": "2c8fac2b",
+    "head_sha": "3145fd40ed1dc99af095895271d2d70f133f46ed",
+    "head_short": "3145fd40",
     "branch": "wasm-port",
-    "dirty": true,
-    "dirty_files": [
-      " M doc/wasm/build.md",
-      " M doc/wasm/js/bootstrap-l0-contract.mjs",
-      " M doc/wasm/js/make-real-image.mjs",
-      " M doc/wasm/session-handoff.json"
-    ]
+    "dirty": false,
+    "dirty_files": []
   },
   "current_blocker": "No known blocker captured yet",
   "failing_command": null,
