@@ -404,9 +404,11 @@ Startup binding map artifact:
 - The artifact is a single unified pre-fasload map with two target classes:
   `target_cell: "vcell"` for required special-variable initial values and
   `target_cell: "fcell"` for function bindings.
-- Function-side coverage is generated from a comprehensive `level-0/*.lisp`
-  function-designator scan and resolved via runtime function metadata; map
-  build diagnostics include machine-readable level-0 scan coverage.
+- Function-side coverage always includes the full `level-0/*.lisp`
+  function-designator scan in the artifact. During pre-fasload apply,
+  `make-real-image.mjs` augments the same unified map with additional
+  callable bindings discovered from required const-pool symbol refs and
+  resolved through runtime function metadata.
 - Each entry is explicit and machine-readable:
   `availability: literal|entry-backed|deferred|unsupported` with
   `initializer.kind` and reason fields.

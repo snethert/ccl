@@ -1861,6 +1861,7 @@ function applyStartupBindingMapOrFail({
     "wasm_probe_symbol_vcell",
     "wasm_probe_last_status",
     "wasm_debug_function_entry_index",
+    "wasm_set_raw_symbol_fcell_entry_function",
   ];
   for (const name of requiredExports) {
     if (typeof ex[name] !== "function") {
@@ -1870,6 +1871,7 @@ function applyStartupBindingMapOrFail({
 
   const nil = ex.wasm_get_lisp_nil() >>> 0;
   const probeStatus = () => (ex.wasm_probe_last_status() >>> 0);
+  const hasCopySymbolName = typeof ex.wasm_debug_copy_symbol_name === "function";
   const utf8 = new TextEncoder();
   const scratchUtf8 = (text) => {
     const bytes = utf8.encode(String(text ?? ""));
@@ -1886,6 +1888,24 @@ function applyStartupBindingMapOrFail({
     const token = String(value ?? "").trim().toLowerCase();
     return token === "fcell" ? "fcell" : "vcell";
   };
+  const readSymbolName = (rawObj) => {
+    if (!hasCopySymbolName || isNilLike(rawObj)) return null;
+    const len = ex.wasm_debug_copy_symbol_name(rawObj >>> 0, 0, 0) >>> 0;
+    if (len === 0) return null;
+    const ptr = allocScratch(runtime.memory, len);
+    const copied = ex.wasm_debug_copy_symbol_name(rawObj >>> 0, ptr >>> 0, len) >>> 0;
+    if (copied === 0) return null;
+    try {
+      return decoder.decode(
+        new Uint8Array(runtime.memory.buffer, ptr >>> 0, Math.min(len, copied)),
+      );
+    } catch {
+      return null;
+    }
+  };
+  const makeSymbolBindingKey = (targetCell, packageName, symbolName) => (
+    `${normalizeTargetCell(targetCell)}:${String(packageName ?? "").trim().toUpperCase()}::${String(symbolName ?? "").trim().toUpperCase()}`
+  );
 
   let eligibleEntries = 0;
   let appliedCount = 0;
@@ -1893,6 +1913,8 @@ function applyStartupBindingMapOrFail({
   let requiredUninitialized = 0;
   let constPoolPrimeFailures = 0;
   let skippedSymbolUnresolved = 0;
+  let packageAgnosticProbeAttempts = 0;
+  let packageAgnosticProbeResolved = 0;
   const targetCounts = {
     vcell: {
       eligible_entries: 0,
@@ -1909,6 +1931,22 @@ function applyStartupBindingMapOrFail({
       required_non_nil_unavailable: 0,
     },
   };
+  const effectiveEntries = entries.slice();
+  const effectiveEntryKeys = new Set(
+    effectiveEntries.map((entry) => makeSymbolBindingKey(
+      entry?.target_cell,
+      entry?.package_name,
+      entry?.symbol_name,
+    )),
+  );
+  const constPoolSymbolRawByLocator = new Map();
+  const constPoolDerivedStats = {
+    primed_refs: 0,
+    symbol_refs: 0,
+    function_bindings_emitted: 0,
+    function_bindings_skipped_unresolved: 0,
+    function_bindings_skipped_duplicate: 0,
+  };
 
   if (requiredConstPools.length > 0) {
     if (typeof ex.wasm_const_pool_ref !== "function") {
@@ -1920,6 +1958,8 @@ function applyStartupBindingMapOrFail({
       for (const rawRef of refs) {
         const constIndex = rawRef >>> 0;
         const raw = ex.wasm_const_pool_ref(entryIndex, constIndex) >>> 0;
+        constPoolDerivedStats.primed_refs++;
+        constPoolSymbolRawByLocator.set(`${entryIndex}:${constIndex}`, raw >>> 0);
         if (!isNilLike(raw)) continue;
         constPoolPrimeFailures++;
         failures.push({
@@ -1931,9 +1971,67 @@ function applyStartupBindingMapOrFail({
         });
       }
     }
+
+    const resolveDesignator = (name) => {
+      if (!bootstrapFunctionResolver || typeof bootstrapFunctionResolver.resolveFunctionDesignator !== "function") {
+        return null;
+      }
+      try {
+        return bootstrapFunctionResolver.resolveFunctionDesignator({ name });
+      } catch {
+        return null;
+      }
+    };
+
+    for (const [locator, raw] of constPoolSymbolRawByLocator.entries()) {
+      if (isNilLike(raw)) continue;
+      const symbolName = readSymbolName(raw >>> 0);
+      if (!symbolName) continue;
+      constPoolDerivedStats.symbol_refs++;
+
+      const resolution = resolveDesignator(symbolName);
+      if (!resolution?.ok || !Number.isFinite(resolution?.entryIndex) || resolution.entryIndex < 0) {
+        constPoolDerivedStats.function_bindings_skipped_unresolved++;
+        continue;
+      }
+
+      const key = makeSymbolBindingKey("fcell", "", symbolName);
+      if (effectiveEntryKeys.has(key)) {
+        constPoolDerivedStats.function_bindings_skipped_duplicate++;
+        continue;
+      }
+      effectiveEntryKeys.add(key);
+      const split = locator.split(":");
+      const locatorEntry = Number.parseInt(split[0] ?? "", 10);
+      const locatorIndex = Number.parseInt(split[1] ?? "", 10);
+      effectiveEntries.push({
+        binding_class: "function",
+        target_cell: "fcell",
+        package_name: "",
+        symbol_name: symbolName,
+        symbol_key: "",
+        source: "required-const-pool-symbol-scan",
+        require_non_nil: false,
+        availability: "entry-backed",
+        initializer: {
+          kind: "entry-function",
+          function_name: symbolName,
+          entry_index: resolution.entryIndex >>> 0,
+          match_key: resolution.source ?? null,
+        },
+        locator: {
+          kind: "required-const-pool-ref",
+          entry_index: Number.isFinite(locatorEntry) ? (locatorEntry >>> 0) : null,
+          const_index: Number.isFinite(locatorIndex) ? (locatorIndex >>> 0) : null,
+        },
+      });
+      constPoolDerivedStats.function_bindings_emitted++;
+    }
   }
 
-  for (const entry of entries) {
+  const effectiveCounts = summarizeStartupBindingMapArtifact({ entries: effectiveEntries });
+
+  for (const entry of effectiveEntries) {
     const packageName = String(entry?.package_name ?? "").trim();
     const symbolName = String(entry?.symbol_name ?? "").trim();
     const targetCell = normalizeTargetCell(entry?.target_cell ?? null);
@@ -1942,6 +2040,13 @@ function applyStartupBindingMapOrFail({
     const availability = String(entry?.availability ?? "deferred");
     const initializer = entry?.initializer ?? {};
     const initializerKind = String(initializer?.kind ?? "");
+    const locator = entry?.locator ?? null;
+    const locatorKind = String(locator?.kind ?? "");
+    const locatorEntryIndex = Number.isFinite(locator?.entry_index) ? (locator.entry_index >>> 0) : null;
+    const locatorConstIndex = Number.isFinite(locator?.const_index) ? (locator.const_index >>> 0) : null;
+    const locatorKey = (locatorEntryIndex != null && locatorConstIndex != null)
+      ? `${locatorEntryIndex}:${locatorConstIndex}`
+      : null;
 
     const eligible = availability === "literal" || availability === "entry-backed";
     if (!eligible) {
@@ -1966,13 +2071,37 @@ function applyStartupBindingMapOrFail({
 
     const nameMem = scratchUtf8(symbolName);
     const pkgMem = scratchUtf8(packageName);
-    const symbolRaw = ex.wasm_probe_symbol(
-      nameMem.ptr >>> 0,
-      nameMem.len >>> 0,
-      pkgMem.ptr >>> 0,
-      pkgMem.len >>> 0,
-    ) >>> 0;
-    const symbolStatus = probeStatus();
+    let symbolRaw = 0;
+    let symbolStatus = L0_PROBE_STATUS.SYMBOL_MISSING;
+    if (locatorKind === "required-const-pool-ref" && locatorKey) {
+      symbolRaw = (constPoolSymbolRawByLocator.get(locatorKey) ?? 0) >>> 0;
+      symbolStatus = isNilLike(symbolRaw) ? L0_PROBE_STATUS.SYMBOL_MISSING : L0_PROBE_STATUS.OK;
+    } else {
+      symbolRaw = ex.wasm_probe_symbol(
+        nameMem.ptr >>> 0,
+        nameMem.len >>> 0,
+        pkgMem.ptr >>> 0,
+        pkgMem.len >>> 0,
+      ) >>> 0;
+      symbolStatus = probeStatus();
+      if ((symbolStatus !== L0_PROBE_STATUS.OK || symbolRaw === 0 || symbolRaw === nil) &&
+          packageName.length > 0 &&
+          symbolStatus === L0_PROBE_STATUS.SYMBOL_MISSING) {
+        packageAgnosticProbeAttempts++;
+        const fallbackRaw = ex.wasm_probe_symbol(
+          nameMem.ptr >>> 0,
+          nameMem.len >>> 0,
+          0,
+          0,
+        ) >>> 0;
+        const fallbackStatus = probeStatus();
+        if (fallbackStatus === L0_PROBE_STATUS.OK && fallbackRaw !== 0 && fallbackRaw !== nil) {
+          symbolRaw = fallbackRaw >>> 0;
+          symbolStatus = fallbackStatus;
+          packageAgnosticProbeResolved++;
+        }
+      }
+    }
     if (symbolStatus !== L0_PROBE_STATUS.OK || symbolRaw === 0 || symbolRaw === nil) {
       skippedSymbolUnresolved++;
       targetCounts[targetCell].skipped_symbol_unresolved++;
@@ -2048,9 +2177,15 @@ function applyStartupBindingMapOrFail({
         break;
       case "entry-function":
         if (targetCell === "fcell") {
-          missingExport = typeof ex.wasm_set_symbol_fcell_entry_function !== "function"
-            ? "wasm_set_symbol_fcell_entry_function"
-            : null;
+          if (locatorKind === "required-const-pool-ref") {
+            missingExport = typeof ex.wasm_set_raw_symbol_fcell_entry_function !== "function"
+              ? "wasm_set_raw_symbol_fcell_entry_function"
+              : null;
+          } else {
+            missingExport = typeof ex.wasm_set_symbol_fcell_entry_function !== "function"
+              ? "wasm_set_symbol_fcell_entry_function"
+              : null;
+          }
         } else {
           missingExport = typeof ex.wasm_set_symbol_vcell_entry_function !== "function"
             ? "wasm_set_symbol_vcell_entry_function"
@@ -2121,13 +2256,20 @@ function applyStartupBindingMapOrFail({
           continue;
         }
         if (targetCell === "fcell") {
-          ex.wasm_set_symbol_fcell_entry_function(
-            nameMem.ptr >>> 0,
-            nameMem.len >>> 0,
-            pkgMem.ptr >>> 0,
-            pkgMem.len >>> 0,
-            entryIndex >>> 0,
-          );
+          if (locatorKind === "required-const-pool-ref") {
+            ex.wasm_set_raw_symbol_fcell_entry_function(
+              symbolRaw >>> 0,
+              entryIndex >>> 0,
+            );
+          } else {
+            ex.wasm_set_symbol_fcell_entry_function(
+              nameMem.ptr >>> 0,
+              nameMem.len >>> 0,
+              pkgMem.ptr >>> 0,
+              pkgMem.len >>> 0,
+              entryIndex >>> 0,
+            );
+          }
         } else {
           ex.wasm_set_symbol_vcell_entry_function(
             nameMem.ptr >>> 0,
@@ -2247,12 +2389,21 @@ function applyStartupBindingMapOrFail({
       fcell_entries: counts.fcell_entries ?? null,
       special_variable_entries: counts.special_variable_entries ?? null,
       function_entries: counts.function_entries ?? null,
+      effective_total_entries: effectiveCounts.total_entries,
+      effective_entry_backed_entries: effectiveCounts.entry_backed_entries,
+      effective_vcell_entries: effectiveCounts.vcell_entries ?? null,
+      effective_fcell_entries: effectiveCounts.fcell_entries ?? null,
       eligible_entries: eligibleEntries,
       const_pool_prime_failures: constPoolPrimeFailures,
+      const_pool_derived_function_bindings: constPoolDerivedStats,
       required_non_nil_unavailable: requiredUninitialized,
       applied_count: appliedCount,
       skipped_already_bound: skippedAlreadyBound,
       skipped_symbol_unresolved: skippedSymbolUnresolved,
+      package_agnostic_probe: {
+        attempts: packageAgnosticProbeAttempts,
+        resolved: packageAgnosticProbeResolved,
+      },
       failed_count: failures.length,
       target_counts: targetCounts,
     },

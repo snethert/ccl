@@ -1,31 +1,30 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-02-12T22:12:13.386Z",
+  "generated_at": "2026-02-13T02:17:33.129Z",
   "repo": {
     "root": "/Users/buildsomething/Source/ccl",
-    "head_sha": "74112bebcdb163bbccaacbde6195a5766805fd4d",
-    "head_short": "74112beb",
+    "head_sha": "9b14277932e7469611f2519f35291ff44857f20e",
+    "head_short": "9b142779",
     "branch": "wasm-port",
     "dirty": true,
     "dirty_files": [
+      " M doc/wasm/build.md",
+      " M doc/wasm/js/bootstrap-l0-contract.mjs",
       " M doc/wasm/js/make-real-image.mjs",
-      " M doc/wasm/js/subprims.wasm",
-      " M doc/wasm/root.image",
-      " M doc/wasm/root.image.manifest.json",
-      " M doc/wasm/session-handoff.json",
-      " M lisp-kernel/wasm-subprims-provider.c"
+      " M doc/wasm/js/wasmcl.wasm",
+      " M lisp-kernel/wasm-kernel-stubs.c"
     ]
   },
   "current_blocker": "Headless root-image build blocked by %FASLOAD throw boundary (call.post -> pending_raw=0x4)",
-  "failing_command": "131:RuntimeError: unreachable",
+  "failing_command": "135:FAIL: wasm_fasload_path(l1-fasls/l1-cl-package.lafsl) trapped: unreachable",
   "failure_signature": [
-    "87:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"TOPLEVEL\",\"entry_index\":4772,\"resolved_entry_index\":4772,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
-    "88:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUN-READ-LOOP\",\"entry_index\":5452,\"resolved_entry_index\":5452,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
-    "89:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUNTIME-BRIDGE-PUMP-COMMANDS\",\"entry_index\":5559,\"resolved_entry_index\":5559,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
-    "140:    at wasmcl.wasm.wasm_fasload_path (wasm://wasm/wasmcl.wasm-002526c2:wasm-function[384]:0xfb2c)"
+    "117:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"TOPLEVEL\",\"entry_index\":4772,\"resolved_entry_index\":4772,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
+    "118:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUN-READ-LOOP\",\"entry_index\":5452,\"resolved_entry_index\":5452,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
+    "119:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUNTIME-BRIDGE-PUMP-COMMANDS\",\"entry_index\":5559,\"resolved_entry_index\":5559,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
+    "135:FAIL: wasm_fasload_path(l1-fasls/l1-cl-package.lafsl) trapped: unreachable"
   ],
   "artifacts": {
-    "latest_log": "/tmp/make-real-image.trace.top4488.requiredfasl.timebox.log",
+    "latest_log": "/tmp/make-real-image.trace.smoke.full.notimeout.log",
     "latest_repro_manifest": "doc/wasm/repro/startup-pipeline-20260212T180205Z-7d3db4b3/startup-repro-run-manifest.json"
   },
   "next_actions": [
