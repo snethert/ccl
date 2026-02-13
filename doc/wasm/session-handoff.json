@@ -1,27 +1,30 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-02-13T02:17:33.129Z",
+  "generated_at": "2026-02-13T02:44:48.647Z",
   "repo": {
     "root": "/Users/buildsomething/Source/ccl",
-    "head_sha": "9b14277932e7469611f2519f35291ff44857f20e",
-    "head_short": "9b142779",
+    "head_sha": "7a43ff93fbc0082f0059cdf73f01699a71d85e49",
+    "head_short": "7a43ff93",
     "branch": "wasm-port",
     "dirty": true,
     "dirty_files": [
       " M doc/wasm/build.md",
       " M doc/wasm/js/bootstrap-l0-contract.mjs",
       " M doc/wasm/js/make-real-image.mjs",
+      " M doc/wasm/js/subprims.wasm",
       " M doc/wasm/js/wasmcl.wasm",
-      " M lisp-kernel/wasm-kernel-stubs.c"
+      " M lisp-kernel/wasm-kernel-stubs.c",
+      " M lisp-kernel/wasm-subprims-provider.c"
     ]
   },
   "current_blocker": "Headless root-image build blocked by %FASLOAD throw boundary (call.post -> pending_raw=0x4)",
-  "failing_command": "135:FAIL: wasm_fasload_path(l1-fasls/l1-cl-package.lafsl) trapped: unreachable",
+  "failing_command": "141:FAIL: wasm_fasload_path(l1-fasls/l1-cl-package.lafsl) returned -7",
   "failure_signature": [
     "117:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"TOPLEVEL\",\"entry_index\":4772,\"resolved_entry_index\":4772,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
     "118:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUN-READ-LOOP\",\"entry_index\":5452,\"resolved_entry_index\":5452,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
     "119:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUNTIME-BRIDGE-PUMP-COMMANDS\",\"entry_index\":5559,\"resolved_entry_index\":5559,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
-    "135:FAIL: wasm_fasload_path(l1-fasls/l1-cl-package.lafsl) trapped: unreachable"
+    "128:[make-real-image] fasload post path=l1-fasls/l1-cl-package.lafsl rc=-7 pending=1 pending_raw=0x4",
+    "141:FAIL: wasm_fasload_path(l1-fasls/l1-cl-package.lafsl) returned -7"
   ],
   "artifacts": {
     "latest_log": "/tmp/make-real-image.trace.smoke.full.notimeout.log",

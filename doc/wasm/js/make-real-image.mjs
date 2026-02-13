@@ -1196,20 +1196,24 @@ const SPECREF_FAILURE_STAGE_NAMES = new Map([
 ]);
 const debugReadSpecrefFailure = (label) => {
   if (!traceEnabled || typeof subex.wasm_debug_specref_failure_stage !== "function") {
-    return;
+    return null;
   }
   try {
     const stage = subex.wasm_debug_specref_failure_stage() >>> 0;
     const stageName = SPECREF_FAILURE_STAGE_NAMES.get(stage) ?? "unknown";
     const read = (name) => (typeof subex[name] === "function" ? (subex[name]() >>> 0) : 0);
+    const symbolRaw = read("wasm_debug_specref_failure_symbol_raw");
+    const symbolFulltag = read("wasm_debug_specref_failure_symbol_fulltag");
+    const symbolHeader = read("wasm_debug_specref_failure_symbol_header");
+    const symbolSubtag = read("wasm_debug_specref_failure_symbol_subtag");
     trace(
       `debug-specref-failure label=${label}` +
       ` stage=${stage}:${stageName}` +
       ` tcr=0x${read("wasm_debug_specref_failure_tcr_raw").toString(16)}` +
-      ` symbol=0x${read("wasm_debug_specref_failure_symbol_raw").toString(16)}` +
-      ` symbol_fulltag=${read("wasm_debug_specref_failure_symbol_fulltag")}` +
-      ` symbol_header=0x${read("wasm_debug_specref_failure_symbol_header").toString(16)}` +
-      ` symbol_subtag=${read("wasm_debug_specref_failure_symbol_subtag")}` +
+      ` symbol=0x${symbolRaw.toString(16)}` +
+      ` symbol_fulltag=${symbolFulltag}` +
+      ` symbol_header=0x${symbolHeader.toString(16)}` +
+      ` symbol_subtag=${symbolSubtag}` +
       ` binding_index=0x${read("wasm_debug_specref_failure_binding_index_raw").toString(16)}` +
       ` binding_index_tag=${read("wasm_debug_specref_failure_binding_index_tag")}` +
       ` limit=0x${read("wasm_debug_specref_failure_limit_raw").toString(16)}` +
@@ -1247,15 +1251,18 @@ const debugReadSpecrefFailure = (label) => {
     const objSubtag = (obj) => (typeof ex.wasm_debug_misc_subtag === "function"
       ? (ex.wasm_debug_misc_subtag(obj >>> 0) | 0)
       : -1);
+    const argZSymbol = symbolName(argZ) ?? null;
+    const argYSymbol = symbolName(argY) ?? null;
+    const nfnOwner = ownerName(nfn) ?? null;
     trace(
       `debug-specref-context label=${label}` +
       ` arg_z=0x${argZ.toString(16)} arg_z_subtag=${objSubtag(argZ)}` +
       ` arg_y=0x${argY.toString(16)} arg_y_subtag=${objSubtag(argY)}` +
       ` nfn=0x${nfn.toString(16)} nfn_subtag=${objSubtag(nfn)} nfn_entry=${nfnEntry}` +
       ` nargs_raw=0x${nargs.toString(16)}` +
-      (symbolName(argZ) ? ` arg_z_symbol=${JSON.stringify(symbolName(argZ))}` : "") +
-      (symbolName(argY) ? ` arg_y_symbol=${JSON.stringify(symbolName(argY))}` : "") +
-      (ownerName(nfn) ? ` nfn_owner=${JSON.stringify(ownerName(nfn))}` : ""),
+      (argZSymbol ? ` arg_z_symbol=${JSON.stringify(argZSymbol)}` : "") +
+      (argYSymbol ? ` arg_y_symbol=${JSON.stringify(argYSymbol)}` : "") +
+      (nfnOwner ? ` nfn_owner=${JSON.stringify(nfnOwner)}` : ""),
     );
 
     if (typeof ex.wasm_debug_const_pool_entry === "function") {
@@ -1279,8 +1286,25 @@ const debugReadSpecrefFailure = (label) => {
         trace(`debug-specref-const-pool-sample label=${label} ${rows.join(" | ")}`);
       }
     }
+    return {
+      label,
+      stage,
+      stage_name: stageName,
+      symbol_raw: symbolRaw >>> 0,
+      symbol_fulltag: symbolFulltag >>> 0,
+      symbol_subtag: symbolSubtag >>> 0,
+      arg_z: argZ >>> 0,
+      arg_y: argY >>> 0,
+      nfn: nfn >>> 0,
+      nfn_entry: nfnEntry,
+      nargs_raw: nargs >>> 0,
+      arg_z_symbol: argZSymbol,
+      arg_y_symbol: argYSymbol,
+      nfn_owner: nfnOwner,
+    };
   } catch (err) {
     trace(`debug-specref-failure label=${label} error=${err?.message ?? err}`);
+    return null;
   }
 };
 if (typeof ex.wasm_set_cstack_bounds !== "function") {
@@ -1355,6 +1379,20 @@ const debugReadNamedCclSymbolState = (label, symbolName) => {
     const fcellEntry = typeof ex.wasm_debug_function_entry_index === "function"
       ? (ex.wasm_debug_function_entry_index(fcell >>> 0) | 0)
       : null;
+    const vcellCallAbi = (
+      Number.isInteger(vcellEntry) &&
+      vcellEntry >= 0 &&
+      typeof ex.wasm_get_entry_call_abi === "function"
+    )
+      ? (ex.wasm_get_entry_call_abi(vcellEntry >>> 0) >>> 0)
+      : null;
+    const fcellCallAbi = (
+      Number.isInteger(fcellEntry) &&
+      fcellEntry >= 0 &&
+      typeof ex.wasm_get_entry_call_abi === "function"
+    )
+      ? (ex.wasm_get_entry_call_abi(fcellEntry >>> 0) >>> 0)
+      : null;
     let fcellOwner = null;
     if (typeof ex.wasm_debug_find_symbol_by_fcell_raw === "function" &&
         typeof ex.wasm_debug_copy_symbol_name === "function" &&
@@ -1380,6 +1418,8 @@ const debugReadNamedCclSymbolState = (label, symbolName) => {
       ` fcell=0x${fcell.toString(16)}` +
       (vcellEntry == null ? "" : ` vcell_entry=${vcellEntry}`) +
       (fcellEntry == null ? "" : ` fcell_entry=${fcellEntry}`) +
+      (vcellCallAbi == null ? "" : ` vcell_call_abi=${vcellCallAbi}`) +
+      (fcellCallAbi == null ? "" : ` fcell_call_abi=${fcellCallAbi}`) +
       (fcellOwner ? ` fcell_owner=${JSON.stringify(fcellOwner)}` : "") +
       ` name=${JSON.stringify(symbolName)}`,
     );
@@ -1514,6 +1554,9 @@ const debugReadFasloadBoundarySymbols = (label) => {
   debugReadNamedCclSymbolState(`${label}.fn-make-vector-output-stream`, "MAKE-VECTOR-OUTPUT-STREAM");
   debugReadNamedCclSymbolState(`${label}.fn-percent-make-vector-output-stream`, "%MAKE-VECTOR-OUTPUT-STREAM");
   debugReadNamedCclSymbolState(`${label}.fn-make-uarray-1`, "MAKE-UARRAY-1");
+  debugReadNamedCclSymbolState(`${label}.fn-make-array`, "MAKE-ARRAY");
+  debugReadNamedCclSymbolState(`${label}.fn-class-has-forward-referenced-superclass-p`, "CLASS-HAS-A-FORWARD-REFERENCED-SUPERCLASS-P");
+  debugReadNamedAnySymbolState(`${label}.sym-class-has-forward-referenced-superclass-p`, "CLASS-HAS-A-FORWARD-REFERENCED-SUPERCLASS-P");
   debugReadNamedCclSymbolState(`${label}.pct-toplevel-function`, "%TOPLEVEL-FUNCTION%");
   debugReadNamedCclSymbolState(`${label}.sym-toplevel`, "TOPLEVEL");
   debugReadNamedAnySymbolState(`${label}.sym-stream-pathname`, "STREAM-PATHNAME");
@@ -1861,6 +1904,9 @@ function applyStartupBindingMapOrFail({
     "wasm_probe_symbol_vcell",
     "wasm_probe_last_status",
     "wasm_debug_function_entry_index",
+    "wasm_set_raw_symbol_vcell_fixnum",
+    "wasm_set_raw_symbol_vcell_nil",
+    "wasm_set_raw_symbol_vcell_entry_function",
     "wasm_set_raw_symbol_fcell_entry_function",
   ];
   for (const name of requiredExports) {
@@ -1890,10 +1936,24 @@ function applyStartupBindingMapOrFail({
   };
   const readSymbolName = (rawObj) => {
     if (!hasCopySymbolName || isNilLike(rawObj)) return null;
-    const len = ex.wasm_debug_copy_symbol_name(rawObj >>> 0, 0, 0) >>> 0;
+    if (typeof ex.wasm_debug_misc_subtag === "function") {
+      const subtag = ex.wasm_debug_misc_subtag(rawObj >>> 0) | 0;
+      if (subtag !== 58) return null; // subtag_symbol
+    }
+    let len = 0;
+    try {
+      len = ex.wasm_debug_copy_symbol_name(rawObj >>> 0, 0, 0) >>> 0;
+    } catch {
+      return null;
+    }
     if (len === 0) return null;
     const ptr = allocScratch(runtime.memory, len);
-    const copied = ex.wasm_debug_copy_symbol_name(rawObj >>> 0, ptr >>> 0, len) >>> 0;
+    let copied = 0;
+    try {
+      copied = ex.wasm_debug_copy_symbol_name(rawObj >>> 0, ptr >>> 0, len) >>> 0;
+    } catch {
+      return null;
+    }
     if (copied === 0) return null;
     try {
       return decoder.decode(
@@ -1939,10 +1999,26 @@ function applyStartupBindingMapOrFail({
       entry?.symbol_name,
     )),
   );
+  const entryCandidatesBySymbolName = new Map();
+  for (const entry of entries) {
+    const symbolNameKey = String(entry?.symbol_name ?? "").trim().toUpperCase();
+    if (!symbolNameKey) continue;
+    if (!entryCandidatesBySymbolName.has(symbolNameKey)) {
+      entryCandidatesBySymbolName.set(symbolNameKey, []);
+    }
+    entryCandidatesBySymbolName.get(symbolNameKey).push(entry);
+  }
   const constPoolSymbolRawByLocator = new Map();
+  const constPoolDerivedEntryKeys = new Set();
   const constPoolDerivedStats = {
     primed_refs: 0,
     symbol_refs: 0,
+    entry_ref_scans_attempted: 0,
+    entry_ref_scans_performed: 0,
+    entry_ref_scans_skipped_large: 0,
+    mirrored_bindings_emitted: 0,
+    mirrored_bindings_skipped_duplicate: 0,
+    mirrored_bindings_skipped_initializer_unavailable: 0,
     function_bindings_emitted: 0,
     function_bindings_skipped_unresolved: 0,
     function_bindings_skipped_duplicate: 0,
@@ -1952,23 +2028,111 @@ function applyStartupBindingMapOrFail({
     if (typeof ex.wasm_const_pool_ref !== "function") {
       fail("kernel missing wasm_const_pool_ref for startup binding map const-pool priming");
     }
-    for (const item of requiredConstPools) {
-      const entryIndex = item?.entryIndex >>> 0;
-      const refs = Array.isArray(item?.requiredRefs) ? item.requiredRefs : [];
-      for (const rawRef of refs) {
-        const constIndex = rawRef >>> 0;
-        const raw = ex.wasm_const_pool_ref(entryIndex, constIndex) >>> 0;
-        constPoolDerivedStats.primed_refs++;
-        constPoolSymbolRawByLocator.set(`${entryIndex}:${constIndex}`, raw >>> 0);
-        if (!isNilLike(raw)) continue;
+    const processedConstPoolLocators = new Set();
+    const secondaryConstPoolEntries = new Set();
+    const requiredConstPoolEntrySet = new Set(
+      requiredConstPools
+        .map((item) => Number(item?.entryIndex))
+        .filter((value) => Number.isInteger(value) && value >= 0)
+        .map((value) => value >>> 0),
+    );
+
+    const readU32LE = (bytes, offset) => (
+      (bytes[offset] |
+      (bytes[offset + 1] << 8) |
+      (bytes[offset + 2] << 16) |
+      (bytes[offset + 3] << 24)) >>> 0
+    );
+
+    const readUleb32 = (bytes, state) => {
+      let value = 0;
+      let shift = 0;
+      for (let i = 0; i < 5; i++) {
+        if (state.offset >= bytes.length) return null;
+        const byte = bytes[state.offset++];
+        value |= (byte & 0x7f) << shift;
+        if ((byte & 0x80) === 0) {
+          return value >>> 0;
+        }
+        shift += 7;
+      }
+      return null;
+    };
+
+    const readConstPoolCount = (bytesLike) => {
+      const bytes = bytesLike instanceof Uint8Array
+        ? bytesLike
+        : Uint8Array.from(bytesLike ?? []);
+      if (bytes.length < 2) return null;
+      if (
+        bytes.length >= 8 &&
+        bytes[0] === 1 &&
+        bytes[1] === 0 &&
+        bytes[2] === 0 &&
+        bytes[3] === 0
+      ) {
+        const version = readU32LE(bytes, 0);
+        const count = readU32LE(bytes, 4);
+        if (version !== 1) return null;
+        return count >>> 0;
+      }
+      const state = { offset: 0 };
+      const version = readUleb32(bytes, state);
+      const count = readUleb32(bytes, state);
+      if ((version !== 1 && version !== 2) || count == null) return null;
+      return count >>> 0;
+    };
+
+    const primeConstPoolLocator = (entryIndexRaw, constIndexRaw, requiredItem = null) => {
+      const entryIndex = entryIndexRaw >>> 0;
+      const constIndex = constIndexRaw >>> 0;
+      const locator = `${entryIndex}:${constIndex}`;
+      if (constPoolSymbolRawByLocator.has(locator)) return false;
+      const raw = ex.wasm_const_pool_ref(entryIndex, constIndex) >>> 0;
+      constPoolDerivedStats.primed_refs++;
+      constPoolSymbolRawByLocator.set(locator, raw >>> 0);
+      if (requiredItem && isNilLike(raw)) {
         constPoolPrimeFailures++;
         failures.push({
           reason: "const-pool-prime-failed",
           entry_index: entryIndex,
           const_index: constIndex,
-          source: item?.source ?? null,
+          source: requiredItem?.source ?? null,
           ref_raw: toHex(raw),
         });
+      }
+      return true;
+    };
+
+    const MAX_CONST_POOL_REFS_PER_ENTRY = 16384;
+    const primeAllConstPoolRefsForEntry = (entryIndexRaw) => {
+      const entryIndex = entryIndexRaw >>> 0;
+      constPoolDerivedStats.entry_ref_scans_attempted++;
+      const info = constPoolEntries.get(entryIndex);
+      if (!info) return false;
+      const decodedBytes = decodeConstPoolForInfo(info);
+      const count = readConstPoolCount(decodedBytes);
+      if (!Number.isInteger(count) || count < 0) return false;
+      if (count > MAX_CONST_POOL_REFS_PER_ENTRY) {
+        constPoolDerivedStats.entry_ref_scans_skipped_large++;
+        return false;
+      }
+      constPoolDerivedStats.entry_ref_scans_performed++;
+
+      let added = false;
+      for (let constIndex = 0; constIndex < count; constIndex++) {
+        if (primeConstPoolLocator(entryIndex, constIndex)) {
+          added = true;
+        }
+      }
+      return added;
+    };
+
+    for (const item of requiredConstPools) {
+      const entryIndex = item?.entryIndex >>> 0;
+      const refs = Array.isArray(item?.requiredRefs) ? item.requiredRefs : [];
+      for (const rawRef of refs) {
+        primeConstPoolLocator(entryIndex, rawRef, item);
       }
     }
 
@@ -1983,27 +2147,79 @@ function applyStartupBindingMapOrFail({
       }
     };
 
-    for (const [locator, raw] of constPoolSymbolRawByLocator.entries()) {
-      if (isNilLike(raw)) continue;
+    const recordSecondaryEntryIndex = (entryIndexRaw) => {
+      const entryIndex = Number(entryIndexRaw);
+      if (!Number.isInteger(entryIndex) || entryIndex < 0) return;
+      secondaryConstPoolEntries.add(entryIndex >>> 0);
+    };
+
+    const processConstPoolSymbolRef = (locator, raw) => {
+      if (isNilLike(raw)) return false;
       const symbolName = readSymbolName(raw >>> 0);
-      if (!symbolName) continue;
+      if (!symbolName) return false;
       constPoolDerivedStats.symbol_refs++;
+
+      const symbolNameKey = symbolName.trim().toUpperCase();
+      const split = locator.split(":");
+      const locatorEntry = Number.parseInt(split[0] ?? "", 10);
+      const locatorIndex = Number.parseInt(split[1] ?? "", 10);
+      const locatorEntryIndex = Number.isFinite(locatorEntry) ? (locatorEntry >>> 0) : null;
+      const locatorConstIndex = Number.isFinite(locatorIndex) ? (locatorIndex >>> 0) : null;
+      const locatorTag = `${locatorEntryIndex == null ? "?" : locatorEntryIndex}:${locatorConstIndex == null ? "?" : locatorConstIndex}`;
+
+      let addedEntries = false;
+      let mirroredFunctionBinding = false;
+      const sourceCandidates = entryCandidatesBySymbolName.get(symbolNameKey) ?? [];
+      for (const sourceEntry of sourceCandidates) {
+        const sourceAvailability = String(sourceEntry?.availability ?? "deferred");
+        if (sourceAvailability !== "literal" && sourceAvailability !== "entry-backed") {
+          constPoolDerivedStats.mirrored_bindings_skipped_initializer_unavailable++;
+          continue;
+        }
+        const sourceTargetCell = normalizeTargetCell(sourceEntry?.target_cell ?? null);
+        const derivedKey = `${locatorTag}:${sourceTargetCell}:${symbolNameKey}`;
+        if (constPoolDerivedEntryKeys.has(derivedKey)) {
+          constPoolDerivedStats.mirrored_bindings_skipped_duplicate++;
+          continue;
+        }
+        constPoolDerivedEntryKeys.add(derivedKey);
+        effectiveEntries.push({
+          ...sourceEntry,
+          source: "required-const-pool-symbol-scan+startup-binding-map",
+          locator: {
+            kind: "required-const-pool-ref",
+            entry_index: locatorEntryIndex,
+            const_index: locatorConstIndex,
+          },
+        });
+        constPoolDerivedStats.mirrored_bindings_emitted++;
+        addedEntries = true;
+        if (sourceTargetCell === "fcell") {
+          mirroredFunctionBinding = true;
+          const sourceEntryIndex = Number(sourceEntry?.initializer?.entry_index);
+          recordSecondaryEntryIndex(sourceEntryIndex);
+        }
+      }
+      if (mirroredFunctionBinding) return addedEntries;
 
       const resolution = resolveDesignator(symbolName);
       if (!resolution?.ok || !Number.isFinite(resolution?.entryIndex) || resolution.entryIndex < 0) {
         constPoolDerivedStats.function_bindings_skipped_unresolved++;
-        continue;
+        return addedEntries;
       }
 
+      const functionDerivedKey = `${locatorTag}:fcell:${symbolNameKey}`;
+      if (constPoolDerivedEntryKeys.has(functionDerivedKey)) {
+        constPoolDerivedStats.function_bindings_skipped_duplicate++;
+        return addedEntries;
+      }
+      constPoolDerivedEntryKeys.add(functionDerivedKey);
       const key = makeSymbolBindingKey("fcell", "", symbolName);
       if (effectiveEntryKeys.has(key)) {
         constPoolDerivedStats.function_bindings_skipped_duplicate++;
-        continue;
+        return addedEntries;
       }
       effectiveEntryKeys.add(key);
-      const split = locator.split(":");
-      const locatorEntry = Number.parseInt(split[0] ?? "", 10);
-      const locatorIndex = Number.parseInt(split[1] ?? "", 10);
       effectiveEntries.push({
         binding_class: "function",
         target_cell: "fcell",
@@ -2021,11 +2237,64 @@ function applyStartupBindingMapOrFail({
         },
         locator: {
           kind: "required-const-pool-ref",
-          entry_index: Number.isFinite(locatorEntry) ? (locatorEntry >>> 0) : null,
-          const_index: Number.isFinite(locatorIndex) ? (locatorIndex >>> 0) : null,
+          entry_index: locatorEntryIndex,
+          const_index: locatorConstIndex,
         },
       });
       constPoolDerivedStats.function_bindings_emitted++;
+      addedEntries = true;
+      recordSecondaryEntryIndex(resolution.entryIndex);
+      return addedEntries;
+    };
+
+    for (const [locator, raw] of constPoolSymbolRawByLocator.entries()) {
+      if (processedConstPoolLocators.has(locator)) continue;
+      processedConstPoolLocators.add(locator);
+      processConstPoolSymbolRef(locator, raw);
+    }
+
+    const scannedSecondaryEntries = new Set();
+    let secondaryFrontier = new Set(secondaryConstPoolEntries);
+
+    while (secondaryFrontier.size > 0) {
+      const frontierEntries = Array.from(secondaryFrontier.values());
+      secondaryFrontier = new Set();
+
+      for (const entryIndex of frontierEntries) {
+        const normalizedEntry = entryIndex >>> 0;
+        if (requiredConstPoolEntrySet.has(normalizedEntry)) continue;
+        if (scannedSecondaryEntries.has(normalizedEntry)) continue;
+        scannedSecondaryEntries.add(normalizedEntry);
+        primeAllConstPoolRefsForEntry(normalizedEntry);
+      }
+
+      for (const [locator, raw] of constPoolSymbolRawByLocator.entries()) {
+        if (processedConstPoolLocators.has(locator)) continue;
+        processedConstPoolLocators.add(locator);
+        processConstPoolSymbolRef(locator, raw);
+      }
+
+      for (const entryIndex of secondaryConstPoolEntries.values()) {
+        const normalizedEntry = entryIndex >>> 0;
+        if (requiredConstPoolEntrySet.has(normalizedEntry)) continue;
+        if (scannedSecondaryEntries.has(normalizedEntry)) continue;
+        secondaryFrontier.add(normalizedEntry);
+      }
+    }
+
+    // Comprehensive pass: prime every remaining const-pool entry once so
+    // startup bindings are derived in one collective pre-fasload sweep.
+    for (const entryIndex of constPoolEntries.keys()) {
+      const normalizedEntry = entryIndex >>> 0;
+      if (requiredConstPoolEntrySet.has(normalizedEntry)) continue;
+      if (scannedSecondaryEntries.has(normalizedEntry)) continue;
+      scannedSecondaryEntries.add(normalizedEntry);
+      primeAllConstPoolRefsForEntry(normalizedEntry);
+    }
+    for (const [locator, raw] of constPoolSymbolRawByLocator.entries()) {
+      if (processedConstPoolLocators.has(locator)) continue;
+      processedConstPoolLocators.add(locator);
+      processConstPoolSymbolRef(locator, raw);
     }
   }
 
@@ -2161,18 +2430,30 @@ function applyStartupBindingMapOrFail({
         if (targetCell !== "vcell") {
           missingExport = "initializer-target-mismatch";
         } else {
-          missingExport = typeof ex.wasm_set_symbol_vcell_fixnum !== "function"
-            ? "wasm_set_symbol_vcell_fixnum"
-            : null;
+          if (locatorKind === "required-const-pool-ref") {
+            missingExport = typeof ex.wasm_set_raw_symbol_vcell_fixnum !== "function"
+              ? "wasm_set_raw_symbol_vcell_fixnum"
+              : null;
+          } else {
+            missingExport = typeof ex.wasm_set_symbol_vcell_fixnum !== "function"
+              ? "wasm_set_symbol_vcell_fixnum"
+              : null;
+          }
         }
         break;
       case "literal-nil":
         if (targetCell !== "vcell") {
           missingExport = "initializer-target-mismatch";
         } else {
-          missingExport = typeof ex.wasm_set_symbol_vcell_nil !== "function"
-            ? "wasm_set_symbol_vcell_nil"
-            : null;
+          if (locatorKind === "required-const-pool-ref") {
+            missingExport = typeof ex.wasm_set_raw_symbol_vcell_nil !== "function"
+              ? "wasm_set_raw_symbol_vcell_nil"
+              : null;
+          } else {
+            missingExport = typeof ex.wasm_set_symbol_vcell_nil !== "function"
+              ? "wasm_set_symbol_vcell_nil"
+              : null;
+          }
         }
         break;
       case "entry-function":
@@ -2187,9 +2468,15 @@ function applyStartupBindingMapOrFail({
               : null;
           }
         } else {
-          missingExport = typeof ex.wasm_set_symbol_vcell_entry_function !== "function"
-            ? "wasm_set_symbol_vcell_entry_function"
-            : null;
+          if (locatorKind === "required-const-pool-ref") {
+            missingExport = typeof ex.wasm_set_raw_symbol_vcell_entry_function !== "function"
+              ? "wasm_set_raw_symbol_vcell_entry_function"
+              : null;
+          } else {
+            missingExport = typeof ex.wasm_set_symbol_vcell_entry_function !== "function"
+              ? "wasm_set_symbol_vcell_entry_function"
+              : null;
+          }
         }
         break;
       default:
@@ -2224,22 +2511,33 @@ function applyStartupBindingMapOrFail({
           });
           continue;
         }
-        ex.wasm_set_symbol_vcell_fixnum(
-          nameMem.ptr >>> 0,
-          nameMem.len >>> 0,
-          pkgMem.ptr >>> 0,
-          pkgMem.len >>> 0,
-          value | 0,
-        );
+        if (locatorKind === "required-const-pool-ref") {
+          ex.wasm_set_raw_symbol_vcell_fixnum(
+            symbolRaw >>> 0,
+            value | 0,
+          );
+        } else {
+          ex.wasm_set_symbol_vcell_fixnum(
+            nameMem.ptr >>> 0,
+            nameMem.len >>> 0,
+            pkgMem.ptr >>> 0,
+            pkgMem.len >>> 0,
+            value | 0,
+          );
+        }
         break;
       }
       case "literal-nil":
-        ex.wasm_set_symbol_vcell_nil(
-          nameMem.ptr >>> 0,
-          nameMem.len >>> 0,
-          pkgMem.ptr >>> 0,
-          pkgMem.len >>> 0,
-        );
+        if (locatorKind === "required-const-pool-ref") {
+          ex.wasm_set_raw_symbol_vcell_nil(symbolRaw >>> 0);
+        } else {
+          ex.wasm_set_symbol_vcell_nil(
+            nameMem.ptr >>> 0,
+            nameMem.len >>> 0,
+            pkgMem.ptr >>> 0,
+            pkgMem.len >>> 0,
+          );
+        }
         break;
       case "entry-function": {
         const entryIndex = Number(initializer?.entry_index);
@@ -2271,13 +2569,20 @@ function applyStartupBindingMapOrFail({
             );
           }
         } else {
-          ex.wasm_set_symbol_vcell_entry_function(
-            nameMem.ptr >>> 0,
-            nameMem.len >>> 0,
-            pkgMem.ptr >>> 0,
-            pkgMem.len >>> 0,
-            entryIndex >>> 0,
-          );
+          if (locatorKind === "required-const-pool-ref") {
+            ex.wasm_set_raw_symbol_vcell_entry_function(
+              symbolRaw >>> 0,
+              entryIndex >>> 0,
+            );
+          } else {
+            ex.wasm_set_symbol_vcell_entry_function(
+              nameMem.ptr >>> 0,
+              nameMem.len >>> 0,
+              pkgMem.ptr >>> 0,
+              pkgMem.len >>> 0,
+              entryIndex >>> 0,
+            );
+          }
         }
         break;
       }
@@ -2821,6 +3126,20 @@ const skipRequiredFasloads = process.env.CCL_WASM_SKIP_REQUIRED_FASLOADS === "1"
 if (skipRequiredFasloads && traceEnabled) {
   trace("skipping required fasload sequence (CCL_WASM_SKIP_REQUIRED_FASLOADS=1)");
 }
+const classifyBoundaryUnresolvedFunction = (specrefDiag) => {
+  if (!specrefDiag || typeof specrefDiag !== "object") return null;
+  const symbolName = typeof specrefDiag.arg_z_symbol === "string"
+    ? specrefDiag.arg_z_symbol.trim()
+    : "";
+  if (!symbolName) return null;
+  if (Number.isInteger(specrefDiag.nfn_entry) && specrefDiag.nfn_entry >= 0) return null;
+  return {
+    symbol_name: symbolName,
+    nfn_entry: Number.isInteger(specrefDiag.nfn_entry) ? specrefDiag.nfn_entry : null,
+    nfn_owner: typeof specrefDiag.nfn_owner === "string" ? specrefDiag.nfn_owner : null,
+    nargs_raw: Number.isInteger(specrefDiag.nargs_raw) ? (specrefDiag.nargs_raw >>> 0) : null,
+  };
+};
 const requiredFasloadQueue = skipRequiredFasloads ? [] : requiredFasls;
 for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
   const faslPath = requiredFasloadQueue[faslIndex];
@@ -2836,7 +3155,11 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
   try {
     faslRc = ex.wasm_fasload_path(faslPtr, faslBytes.length >>> 0) | 0;
   } catch (err) {
-    debugReadSpecrefFailure(`fasload trap path=${faslPath}`);
+    const specrefDiag = debugReadSpecrefFailure(`fasload trap path=${faslPath}`);
+    const unresolvedFunction = classifyBoundaryUnresolvedFunction(specrefDiag);
+    const boundaryReason = unresolvedFunction
+      ? "required-fasload-unresolved-function-symbol-after-unified-startup-binding-map-apply"
+      : "required-fasload-trap-after-unified-startup-binding-map-apply";
     const pending = pendingThrowProbe ? pendingThrowProbe() : null;
     const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
     const pendingSymbol = pendingRaw != null && kernelDebugSymbolName ? kernelDebugSymbolName(pendingRaw) : null;
@@ -2855,7 +3178,8 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
       pending_throw_raw: pendingRaw == null ? null : `0x${pendingRaw.toString(16)}`,
       pending_symbol: pendingSymbol ?? null,
       boot_phase: bootPhaseRaw == null ? null : formatBootPhase(bootPhaseRaw),
-      reason: "required-fasload-trap-after-unified-startup-binding-map-apply",
+      reason: boundaryReason,
+      unresolved_function_symbol: unresolvedFunction,
       trap_message: err?.message ?? String(err),
       startup_binding_map: {
         source: startupBindingMapSource,
@@ -2875,7 +3199,11 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
     );
   }
   if (faslRc !== 0) {
-    debugReadSpecrefFailure(`fasload rc=${faslRc} path=${faslPath}`);
+    const specrefDiag = debugReadSpecrefFailure(`fasload rc=${faslRc} path=${faslPath}`);
+    const unresolvedFunction = classifyBoundaryUnresolvedFunction(specrefDiag);
+    const boundaryReason = unresolvedFunction
+      ? "required-fasload-unresolved-function-symbol-after-unified-startup-binding-map-apply"
+      : "required-fasload-failed-after-unified-startup-binding-map-apply";
     const pending = pendingThrowProbe ? pendingThrowProbe() : null;
     const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
     const pendingSymbol = pendingRaw != null && kernelDebugSymbolName ? kernelDebugSymbolName(pendingRaw) : null;
@@ -2894,7 +3222,8 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
       pending_throw_raw: pendingRaw == null ? null : `0x${pendingRaw.toString(16)}`,
       pending_symbol: pendingSymbol ?? null,
       boot_phase: bootPhaseRaw == null ? null : formatBootPhase(bootPhaseRaw),
-      reason: "required-fasload-failed-after-unified-startup-binding-map-apply",
+      reason: boundaryReason,
+      unresolved_function_symbol: unresolvedFunction,
       startup_binding_map: {
         source: startupBindingMapSource,
         build: startupBindingMapBuildSummary,

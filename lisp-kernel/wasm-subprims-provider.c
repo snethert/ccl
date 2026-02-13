@@ -2880,6 +2880,63 @@ _SPmvpasssym(void)
   wasm_set_reg(tcr, arg_z, stack_ptr[0]);
 }
 
+static unsigned
+wasm_normalize_misc_subtag(uint32_t raw_subtag)
+{
+  unsigned subtag = (unsigned)raw_subtag;
+  unsigned tag = subtag & fulltagmask;
+  if (tag == fulltag_nodeheader || tag == fulltag_immheader) {
+    return subtag;
+  }
+
+  /*
+   * Accept x86-64 raw header-tag encodings (ntagbits=4, nodeheader tags 5/6)
+   * from cross-target compiled module paths.
+   */
+  {
+    unsigned x64_tag = subtag & 0x0fu;
+    unsigned x64_sub = subtag >> 4;
+    if (x64_tag == 5u) {
+      switch (x64_sub) {
+        case 1u: return subtag_symbol;
+        case 2u: return subtag_catch_frame;
+        case 3u: return subtag_hash_vector;
+        case 4u: return subtag_pool;
+        case 5u: return subtag_weak;
+        case 6u: return subtag_package;
+        case 7u: return subtag_slot_vector;
+        case 8u: return subtag_basic_stream;
+        case 9u: return subtag_function;
+        case 10u: return subtag_arrayH;
+        default: break;
+      }
+    } else if (x64_tag == 6u) {
+      switch (x64_sub) {
+        case 1u: return subtag_ratio;
+        case 2u: return subtag_complex;
+        case 3u: return subtag_struct;
+        case 4u: return subtag_istruct;
+        case 5u: return subtag_value_cell;
+        case 6u: return subtag_xfunction;
+        case 7u: return subtag_lock;
+        case 8u: return subtag_instance;
+        case 10u: return subtag_vectorH;
+        case 11u: return subtag_simple_vector;
+        default: break;
+      }
+    }
+  }
+
+  /*
+   * Accept legacy subtype codes (0..31) and canonicalize as node subtags.
+   */
+  if (raw_subtag <= 31u) {
+    return (unsigned)NODE_SUBTAG(raw_subtag);
+  }
+
+  return subtag;
+}
+
 __attribute__((used, visibility("default"), export_name("_SPmisc_alloc")))
 void
 _SPmisc_alloc(void)
@@ -2904,8 +2961,14 @@ _SPmisc_alloc(void)
     wasm_subprims_trap();
   }
 
-  signed_natural subtag = unbox_fixnum(subtag_val);
+  signed_natural subtag_raw = unbox_fixnum(subtag_val);
   signed_natural count = unbox_fixnum(count_val);
+  if (subtag_raw < 0) {
+    static const char msg[] = "WASM _SPmisc_alloc: subtag negative\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    wasm_subprims_trap();
+  }
+  unsigned subtag = wasm_normalize_misc_subtag((uint32_t)subtag_raw);
   if (count < 0 || count > 0xFFFFFF) {
     wasm_set_reg(tcr, arg_x, box_fixnum(WASM_XARRLIMIT));
     wasm_set_nargs_count(tcr, 3);
@@ -2919,7 +2982,7 @@ _SPmisc_alloc(void)
     wasm_subprims_trap();
   }
 
-  LispObj obj = wasm_misc_alloc(tcr, (unsigned)subtag, count);
+  LispObj obj = wasm_misc_alloc(tcr, subtag, count);
   if (obj == (LispObj)nil_value) {
     static const char msg[] = "WASM _SPmisc_alloc: kernel alloc failed\n";
     wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
@@ -3028,12 +3091,13 @@ _SPstack_misc_alloc(void)
   }
 
   LispObj raw_subtag = wasm_reg(tcr, arg_z);
-  signed_natural subtag = wasm_unbox_fixnum_or_trap(raw_subtag);
-  if (subtag < 0) {
+  signed_natural subtag_raw = wasm_unbox_fixnum_or_trap(raw_subtag);
+  if (subtag_raw < 0) {
     wasm_subprims_trap();
   }
+  unsigned subtag = wasm_normalize_misc_subtag((uint32_t)subtag_raw);
 
-  unsigned tag = (unsigned)subtag & fulltagmask;
+  unsigned tag = subtag & fulltagmask;
   size_t bytes = 0;
   if (tag == fulltag_nodeheader) {
     size_t words = 1u + (size_t)count;
@@ -3042,14 +3106,14 @@ _SPstack_misc_alloc(void)
     }
     bytes = words * node_size;
   } else if (tag == fulltag_immheader) {
-    if (!wasm_ivector_total_bytes((unsigned)subtag, count, &bytes)) {
+    if (!wasm_ivector_total_bytes(subtag, count, &bytes)) {
       wasm_subprims_trap();
     }
   } else {
     wasm_subprims_trap();
   }
 
-  LispObj header = make_header((unsigned)subtag, count);
+  LispObj header = make_header(subtag, count);
   LispObj obj = wasm_cstack_alloc_object(tcr, header, bytes);
   if (obj == (LispObj)nil_value) {
     _SPmisc_alloc();
@@ -3084,13 +3148,14 @@ _SPgvector(void)
   }
   LispObj *vsp_ptr = stack_ptr;
   LispObj raw_subtag = vsp_ptr[count - 1];
-  signed_natural subtag = wasm_unbox_fixnum_or_trap(raw_subtag);
-  if (subtag < 0) {
+  signed_natural subtag_raw = wasm_unbox_fixnum_or_trap(raw_subtag);
+  if (subtag_raw < 0) {
     wasm_subprims_trap();
   }
+  unsigned subtag = wasm_normalize_misc_subtag((uint32_t)subtag_raw);
 
   signed_natural element_count = count - 1;
-  LispObj obj = wasm_misc_alloc(tcr, (unsigned)subtag, element_count);
+  LispObj obj = wasm_misc_alloc(tcr, subtag, element_count);
   if (obj == (LispObj)nil_value) {
     wasm_subprims_trap();
   }
@@ -3132,8 +3197,12 @@ _SPstkgvector(void)
   }
   LispObj *vsp_ptr = stack_ptr;
   LispObj raw_subtag = vsp_ptr[count - 1];
-  signed_natural subtag = wasm_unbox_fixnum_or_trap(raw_subtag);
-  if (((unsigned)subtag & fulltagmask) != fulltag_nodeheader) {
+  signed_natural subtag_raw = wasm_unbox_fixnum_or_trap(raw_subtag);
+  if (subtag_raw < 0) {
+    wasm_subprims_trap();
+  }
+  unsigned subtag = wasm_normalize_misc_subtag((uint32_t)subtag_raw);
+  if ((subtag & fulltagmask) != fulltag_nodeheader) {
     wasm_subprims_trap();
   }
 
@@ -3147,12 +3216,12 @@ _SPstkgvector(void)
   }
   size_t bytes = words * node_size;
 
-  LispObj header = make_header((unsigned)subtag, element_count);
+  LispObj header = make_header(subtag, element_count);
   obj = wasm_cstack_alloc_object(tcr, header, bytes);
   if (obj != (LispObj)nil_value) {
     data = (LispObj *)((BytePtr)obj + misc_data_offset);
   } else {
-    obj = wasm_misc_alloc(tcr, (unsigned)subtag, element_count);
+    obj = wasm_misc_alloc(tcr, subtag, element_count);
     if (obj == (LispObj)nil_value) {
       wasm_subprims_trap();
     }

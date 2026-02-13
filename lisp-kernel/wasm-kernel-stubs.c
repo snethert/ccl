@@ -6842,6 +6842,58 @@ wasm_set_symbol_fcell_entry_function(uint32_t name_ptr,
   return raw->fcell;
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_set_raw_symbol_vcell_fixnum")))
+LispObj
+wasm_set_raw_symbol_vcell_fixnum(LispObj raw_sym, int32_t fixnum_value)
+{
+  if (!wasm_probe_symbol_p(raw_sym)) {
+    wasm_probe_set_status(WASM_PROBE_STATUS_SYMBOL_INVALID);
+    return lisp_nil;
+  }
+  lispsymbol *raw = (lispsymbol *)ptr_from_lispobj(untag(raw_sym));
+  raw->vcell = box_fixnum((signed_natural)fixnum_value);
+  wasm_probe_set_status(WASM_PROBE_STATUS_OK);
+  return raw->vcell;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_set_raw_symbol_vcell_nil")))
+LispObj
+wasm_set_raw_symbol_vcell_nil(LispObj raw_sym)
+{
+  if (!wasm_probe_symbol_p(raw_sym)) {
+    wasm_probe_set_status(WASM_PROBE_STATUS_SYMBOL_INVALID);
+    return lisp_nil;
+  }
+  lispsymbol *raw = (lispsymbol *)ptr_from_lispobj(untag(raw_sym));
+  raw->vcell = lisp_nil;
+  wasm_probe_set_status(WASM_PROBE_STATUS_OK);
+  return raw->vcell;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_set_raw_symbol_vcell_entry_function")))
+LispObj
+wasm_set_raw_symbol_vcell_entry_function(LispObj raw_sym, uint32_t entry_index)
+{
+  if (!wasm_probe_symbol_p(raw_sym)) {
+    wasm_probe_set_status(WASM_PROBE_STATUS_SYMBOL_INVALID);
+    return lisp_nil;
+  }
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    wasm_probe_set_status(WASM_PROBE_STATUS_ARG_INVALID);
+    return lisp_nil;
+  }
+  LispObj fn = wasm_const_pool_make_entry_function(tcr, entry_index);
+  if (fn == lisp_nil) {
+    wasm_probe_set_status(WASM_PROBE_STATUS_SYMBOL_INVALID);
+    return lisp_nil;
+  }
+  lispsymbol *raw = (lispsymbol *)ptr_from_lispobj(untag(raw_sym));
+  raw->vcell = fn;
+  wasm_probe_set_status(WASM_PROBE_STATUS_OK);
+  return raw->vcell;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_set_raw_symbol_fcell_entry_function")))
 LispObj
 wasm_set_raw_symbol_fcell_entry_function(LispObj raw_sym, uint32_t entry_index)

@@ -406,9 +406,11 @@ Startup binding map artifact:
   `target_cell: "fcell"` for function bindings.
 - Function-side coverage always includes the full `level-0/*.lisp`
   function-designator scan in the artifact. During pre-fasload apply,
-  `make-real-image.mjs` augments the same unified map with additional
-  callable bindings discovered from required const-pool symbol refs and
-  resolved through runtime function metadata.
+  `make-real-image.mjs` augments the same unified map with
+  required-const-pool symbol mirrors (vcell/fcell), then performs a bounded
+  secondary const-pool symbol scan seeded from discovered entry-backed
+  callables and emits additional callable bindings for unresolved symbols via
+  runtime function metadata.
 - Each entry is explicit and machine-readable:
   `availability: literal|entry-backed|deferred|unsupported` with
   `initializer.kind` and reason fields.
