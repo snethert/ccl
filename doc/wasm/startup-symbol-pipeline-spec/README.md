@@ -44,23 +44,30 @@ Current code reality (as of this addendum):
 10. Literal symbol initializer support: runtime export contract for
     `literal-symbol` / `literal-keyword` is not specified.
 
-## Decision Register (Blocking)
+## Decision Register (Locked For Execution)
 
-- `D1` Contract source format for scanner input (`.mjs` parse vs generated JSON).
-- `D2` Canonical feature set per `feature_profile`.
-- `D3` Scope artifact canonical path(s) in compile and repro runs.
-- `D4` Whether runtime modules manifest carries `startupSymbolScope` and/or
-  `startupBindingMap` during migration.
-- `D5` Resolver algorithm and status taxonomy source of truth.
-- `D6` Required fields for `startup_symbol_scope_v1` and
-  `startup_symbol_resolution_v1` with strict types.
-- `D7` Ownership and schema of `startup_shadow_table` in the new flow.
-- `D8` Policy for unresolved optional callables and unresolved required
-  specials.
-- `D9` Kernel export contract for symbol/keyword literal apply.
-- `D10` Preinstall budget formula constants.
-- `D11` Repro run-manifest schema bump details.
-- `D12` Migration window and exact list of legacy flags/functions to remove.
+The decision register is now fixed and must not be reopened during normal
+implementation flow. Authoritative mapping:
+
+- `D1` Contract source format -> `spec-closure-v1.md` Section `4`.
+- `D2` Feature profile mapping -> `spec-closure-v1.md` Section `5`.
+- `D3` Scope artifact canonical paths -> `spec-closure-v1.md` Section `2.2`.
+- `D4` Migration manifest/embedding policy -> `spec-closure-v1.md` Section `14`.
+- `D5` Resolver authority model -> `spec-closure-v1.md` Section `7`.
+- `D6` Scope/resolution strict schemas -> `spec-closure-v1.md` Section `3`.
+- `D7` Shadow table ownership/schema -> `spec-closure-v1.md` Section `8`.
+- `D8` Required/optional unresolved policy -> `spec-closure-v1.md` Section `8`.
+- `D9` Symbol/keyword initializer contract -> `spec-closure-v1.md` Section `9`.
+- `D10` Preinstall budget constants -> `spec-closure-v1.md` Section `15`.
+- `D11` Repro manifest coverage -> `spec-closure-v1.md` Section `12`.
+- `D12` Migration horizon/removal policy -> `spec-closure-v1.md` Section `14`.
+
+Execution linkage:
+- Microsteps and gates: `startup-symbol-pipeline-implementation-plan.md`
+  Section `19`.
+- Copy/paste commands per microstep:
+  `startup-symbol-pipeline-implementation-plan.md` Section `22`.
+- Contradiction closure status: `contradiction-ledger.md`.
 
 ## Document Map
 
@@ -77,6 +84,8 @@ Each step section includes:
 - recommended default decisions to unblock coding.
 
 Closure workflow:
-1. Resolve all items in `contradiction-ledger.md`.
-2. Treat `spec-closure-v1.md` as normative implementation contract.
-3. Use `spec-closure-checklist.md` as completion gate before coding handoff.
+1. Treat `spec-closure-v1.md` as normative implementation contract.
+2. Execute the microstep ledger (`M-*`, `G-*`) in implementation plan
+   Section `19`.
+3. Mark contradiction implementations closed in `contradiction-ledger.md`.
+4. Use `spec-closure-checklist.md` gate list as handoff control surface.

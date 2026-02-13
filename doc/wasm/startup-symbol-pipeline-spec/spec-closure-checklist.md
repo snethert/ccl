@@ -5,7 +5,16 @@ uninterrupted implementation.
 
 Status legend:
 - `[ ]` missing
-- `[x]` fully specified in spec (implementation may still be pending)
+- `[x]` fully specified in spec
+
+Implementation note:
+- This checklist is spec-completeness first.
+- Implementation closure is tracked separately in:
+  - `doc/wasm/startup-symbol-pipeline-spec/contradiction-ledger.md` (C-001..C-012)
+  - `doc/wasm/startup-symbol-pipeline-implementation-plan.md` Section `19` gates
+    (`G-01`..`G-12`)
+  - `doc/wasm/startup-symbol-pipeline-implementation-plan.md` Section `22`
+    execution cards (`M-001`..`M-067`)
 
 ## A. Artifact Contracts
 
@@ -63,15 +72,43 @@ Status legend:
 
 ## H. Contradiction Closure
 
-- [ ] C-001 closed.
-- [ ] C-002 closed.
-- [ ] C-003 closed.
-- [ ] C-004 closed.
-- [ ] C-005 closed.
-- [ ] C-006 closed.
-- [ ] C-007 closed.
-- [ ] C-008 closed.
-- [ ] C-009 closed.
-- [ ] C-010 closed.
-- [ ] C-011 closed.
-- [ ] C-012 closed.
+- [x] C-001 decision locked.
+- [x] C-002 decision locked.
+- [x] C-003 decision locked.
+- [x] C-004 decision locked.
+- [x] C-005 decision locked.
+- [x] C-006 decision locked.
+- [x] C-007 decision locked.
+- [x] C-008 decision locked.
+- [x] C-009 decision locked.
+- [x] C-010 decision locked.
+- [x] C-011 decision locked.
+- [x] C-012 decision locked.
+- [ ] C-001 implementation closed.
+- [ ] C-002 implementation closed.
+- [ ] C-003 implementation closed.
+- [ ] C-004 implementation closed.
+- [ ] C-005 implementation closed.
+- [ ] C-006 implementation closed.
+- [ ] C-007 implementation closed.
+- [ ] C-008 implementation closed.
+- [ ] C-009 implementation closed.
+- [ ] C-010 implementation closed.
+- [ ] C-011 implementation closed.
+- [ ] C-012 implementation closed.
+
+## I. Gate Closure (Execution Control)
+
+- [ ] `G-01` parser path isolation gate passed.
+- [ ] `G-02` schema lock gate passed.
+- [ ] `G-03` scanner implementation gate passed.
+- [ ] `G-04` compile/repro integration gate passed.
+- [ ] `G-05` resolver gate passed.
+- [ ] `G-06` map synthesis gate passed.
+- [ ] `G-07` initializer expansion gate passed.
+- [ ] `G-08` preinstall budget gate passed.
+- [ ] `G-09` focused lane validation gate passed.
+- [ ] `G-10` repro validation gate passed.
+- [ ] `G-11` legacy path removal gate passed.
+- [ ] `G-12` evidence bundle gate passed.
+- [ ] `G-13` startup stub-dependency gate passed.

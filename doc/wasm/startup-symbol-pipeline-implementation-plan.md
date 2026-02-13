@@ -45,6 +45,9 @@ All must be true:
    - no `WASM misc_alloc: reserve failed`
    - no `wasm_memory_grow_and_relocate failed`
 8. Legacy bulk seed path is either deleted or provably inert and uncallable in production mode.
+9. No required startup binding fails due to missing or stubbed startup ABI:
+   - no required entry with reason `missing-kernel-export`
+   - no required entry with reason `initializer-kind-unsupported-at-apply`
 
 ## 0.3 Why This Must Be A Series Of Tasks
 
@@ -886,8 +889,8 @@ The reviewer must be able to confirm each item from logs + code:
 
 ## 15. Execution Sequence (Practical Task Order)
 
-1. Switch parser implementation language to Common Lisp scanner first, preserving JSON schema + diagnostics contracts.
-2. Implement/verify schemas and constants.
+1. Freeze parser implementation language and decision register (no JS scanner semantics path).
+2. Lock schemas/constants and deterministic serialization contracts.
 3. Implement/verify Common Lisp scanner + tests.
 4. Integrate scanner into compile/repro pipeline artifact generation flow.
 5. Implement resolver + tests (resolution build line).
@@ -933,3 +936,1128 @@ Execution policy:
 - these subdocuments are normative extensions of this plan for ambiguity resolution
 - no task deletion is permitted when applying these addenda
 - unresolved blocking decisions from the addendum decision register must be closed before claiming end-to-end completion
+
+---
+
+## 18. Zero-Surprise Execution Protocol (Operator Rules)
+
+This section is mandatory execution behavior for this plan. It exists to stop
+"20% progress then major redirect" failure mode.
+
+### 18.1 Non-Negotiable Rules
+
+1. Do not start a phase unless all gate inputs from the prior phase exist and
+   are validated.
+2. Every phase ends with one explicit gate command set and one pass/fail
+   decision line in work notes.
+3. If a gate fails, execute the mapped blocker playbook in this document;
+   do not re-scope the architecture.
+4. No unplanned "quick workaround" is allowed if it introduces a second parser
+   semantics path.
+5. Any new ambiguity discovered during implementation must be resolved by adding
+   a decision entry to the related spec docs before code changes continue.
+6. Every microstep must leave concrete evidence: artifact path, log line, grep
+   output, or test result.
+
+### 18.2 Fixed Artifact Paths For Execution
+
+Use these defaults unless a lane-specific override is explicitly documented:
+- Scope artifact: `ccl/doc/wasm/startup-symbol-scope.source_scope_v1.json`
+- Contract sidecar: `ccl/doc/wasm/bootstrap-l0-contract.v1.json`
+- Focused lane scope temp:
+  `/tmp/startup-symbol-scope.source_scope_v1.json`
+- Focused lane scanner log:
+  `/tmp/collect-startup-symbol-scope.source_scope_v1.log`
+- Focused lane image logs:
+  - `/tmp/make-real-image.trace.top4488.source_scope_v1.log`
+  - `/tmp/make-real-image.trace.smoke.source_scope_v1.log`
+
+### 18.3 Gate Output Record Format
+
+After each gate, write one machine-parseable line in work notes:
+
+```text
+PLAN_GATE {"gate":"G-<id>","status":"pass|fail","evidence":["<path-or-command>"],"next":"<next-step-id|playbook-id>"}
+```
+
+---
+
+## 19. Atomic Microstep Ledger (Authoritative)
+
+Each microstep below is atomic: one change or one verification action. Execute
+in order. Do not skip gate rows.
+
+### 19.1 Track A: Freeze And Schema Lock (Steps 01-02)
+
+#### Step 01: Language/Architecture Freeze
+
+- `M-001` Add `STARTUP_SYMBOL_PIPELINE` mode emission in
+  `ccl/doc/wasm/js/make-real-image.mjs` with
+  `mode:"source_scope_v1"` and `legacy_enabled:false`.
+- `M-002` Add hard assertion path that rejects JS source-scan fallback in
+  active mode.
+- `M-003` Add/update comments in
+  `ccl/doc/wasm/js/startup-binding-map.mjs` declaring artifact-only inputs.
+- `M-004` Add grep-based single-path check command to docs:
+  `rg -n 'buildStartupBindingMapArtifact\\|startup symbol scope|single-path check' ccl/doc/wasm/startup-symbol-pipeline-implementation-plan.md`.
+- `M-005` Gate `G-01`: run grep and confirm no active JS source parser path in
+  startup execution path.
+
+If `G-01` fails:
+- Run Playbook `PB-01` (legacy parser isolation) before continuing.
+
+#### Step 02: Schema + Determinism Lock
+
+- `M-006` Define `startup_symbol_scope_v1` producer constants in scanner file.
+- `M-007` Define matching consumer validators in
+  `ccl/doc/wasm/js/make-real-image.mjs`.
+- `M-008` Define `startup_symbol_resolution_v1` schema constants and counters.
+- `M-009` Implement canonical JSON ordering rules and identity-hash exclusion of
+  `generated_at_utc`.
+- `M-010` Lock required field lists in docs and add explicit failure reasons for
+  missing/invalid schema.
+- `M-011` Gate `G-02`: validate schema checker rejects one synthetic invalid
+  artifact and accepts one valid fixture.
+
+If `G-02` fails:
+- Run Playbook `PB-02` (schema mismatch reconciliation) before continuing.
+
+### 19.2 Track B: Scanner + Pipeline Insertion (Steps 03-04)
+
+#### Step 03: Implement Common Lisp Scanner
+
+- `M-012` Create `ccl/scripts/wasm/collect-startup-symbol-scope.lisp`.
+- `M-013` Implement CLI parse: `--repo-root`, `--out`,
+  `--feature-profile`, `--contract-json`.
+- `M-014` Enforce read safety (`*read-eval*` nil), deterministic file order, and
+  recoverable parse-failure recording.
+- `M-015` Implement role extraction (`defined-function`, `defined-special`,
+  `call-head`, `function-designator`, `symbol-atom`, `contract-required`).
+- `M-016` Implement canonicalization rules to emit `PACKAGE::SYMBOL` keys.
+- `M-017` Implement `STARTUP_SYMBOL_SCOPE_BUILD` emission with counts and
+  exclusion reasons.
+- `M-018` Add fixture tests for package transitions, reader conditionals,
+  escaped symbols, unsupported reader dispatch.
+- `M-019` Gate `G-03`: scanner command exits zero, emits one scope artifact, and
+  fixture tests pass.
+
+If `G-03` fails:
+- Run Playbook `PB-03` (scanner read/feature profile failures).
+
+#### Step 04: Integrate Scanner Into Compile/Repro
+
+- `M-020` Add contract sidecar generation step that writes
+  `ccl/doc/wasm/bootstrap-l0-contract.v1.json`.
+- `M-021` Wire scanner invocation into
+  `ccl/scripts/wasm/compile-wasm-fasls.sh` after module compile and before image
+  build.
+- `M-022` Add CLI forwarding in `ccl/scripts/wasm/make-real-image.lisp` for:
+  `--startup-symbol-scope`, `--startup-symbol-resolution-out`,
+  `--startup-symbol-contract`.
+- `M-023` Add equivalent wiring to
+  `ccl/scripts/wasm/repro-startup-pipeline.sh` with fail-fast behavior.
+- `M-024` Record scope artifact path/hash in repro run manifest.
+- `M-025` Gate `G-04`: repro dry-run shows scanner step before make-root-image
+  and manifest includes scope artifact hash entry.
+
+If `G-04` fails:
+- Run Playbook `PB-04` (pipeline ordering and CLI propagation).
+
+### 19.3 Track C: Resolver/Map/Apply/Preinstall (Steps 05-08)
+
+#### Step 05: Resolver + Resolution Artifact
+
+- `M-026` Add resolver stage in `make-real-image.mjs` after runtime exports are
+  available and before map synthesis.
+- `M-027` Implement exact package+symbol probe only; remove name-only fallback.
+- `M-028` Implement required-class mapping table:
+  `required-callable|required-special|optional|none`.
+- `M-029` Emit `startup_symbol_resolution_v1` with deterministic counts/status.
+- `M-030` Emit `STARTUP_SYMBOL_RESOLUTION_BUILD` log line.
+- `M-031` Add unit tests for status taxonomy and required/optional unresolved
+  counts.
+- `M-032` Gate `G-05`: test suite and one smoke run show resolution artifact +
+  log line present.
+
+If `G-05` fails:
+- Run Playbook `PB-05` (resolver authority consistency).
+
+#### Step 06: Binding Map Refactor To Artifact Inputs
+
+- `M-033` Refactor `startup-binding-map.mjs` to consume only scope + resolution
+  artifacts for inclusion decisions.
+- `M-034` Remove JS source scan helpers from active execution path (retain only
+  non-executable migration shims if required).
+- `M-035` Implement deterministic entry synthesis matrix:
+  `(role, required_class, status) -> target_cell/binding_class/availability`.
+- `M-036` Preserve `startup_binding_map_v1` and `startup_shadow_table_v1`
+  shapes for migration cut.
+- `M-037` Enforce unresolved policy: required unresolved fails pre-gate; optional
+  unresolved becomes deferred with reason.
+- `M-038` Gate `G-06`: map generation executes without scanning Lisp and emits
+  expected entry/deferred counts.
+
+If `G-06` fails:
+- Run Playbook `PB-06` (map synthesis divergence).
+
+#### Step 07: Apply Initializer Expansion
+
+- `M-039` Add initializer kinds `literal-symbol` and `literal-keyword`.
+- `M-040` Add runtime export checks for symbol/keyword literal initializers.
+- `M-041` Enforce required vs optional behavior when export missing:
+  fail required, defer optional.
+- `M-042` Add apply-time exact package+symbol resolution tests.
+- `M-043` Gate `G-07`: apply tests pass for all initializer kinds and failure
+  reasons are explicit.
+
+If `G-07` fails:
+- Run Playbook `PB-07` (initializer ABI mismatch).
+
+#### Step 08: Preinstall Budget And Memory Guards
+
+- `M-044` Add deterministic budget formula fields in preinstall diagnostics.
+- `M-045` Enforce `preinstall-budget-exceeded` fail path with overrun metadata.
+- `M-046` Confirm required contract roots are never pruned by budget logic.
+- `M-047` Add memory signature assertion grep to validation scripts.
+- `M-048` Gate `G-08`: preinstall log includes budget object and no false prune
+  of required roots.
+
+If `G-08` fails:
+- Run Playbook `PB-08` (budget calibration without architecture change).
+
+### 19.4 Track D: Validation, Cleanup, And Evidence (Steps 09-12)
+
+#### Step 09: Focused Lane Validation
+
+- `M-049` Build scope artifact with scanner command from Section `10.1.0`.
+- `M-050` Run top4488 lane command from Section `10.1.A`.
+- `M-051` Run smoke lane command from Section `10.1.B`.
+- `M-052` Run evidence extraction command from Section `10.1.C`.
+- `M-053` Gate `G-09`: both lanes show pass for
+  `STARTUP_BINDING_MAP_APPLY` and `L0_BOOTSTRAP_CONTRACT`.
+
+If `G-09` fails:
+- Run Playbook `PB-09` (lane-specific failure triage) and rerun Step 09 only.
+
+#### Step 10: Repro Pipeline Validation
+
+- `M-054` Run `scripts/wasm/repro-startup-pipeline.sh`.
+- `M-055` Verify scanner step exists before make-root-image in step logs.
+- `M-056` Verify run manifest includes scope artifact path/size/sha256.
+- `M-057` Verify resolution artifact recorded when configured.
+- `M-058` Gate `G-10`: repro completes with startup artifacts and required
+  diagnostics.
+
+If `G-10` fails:
+- Run Playbook `PB-10` (repro graph and manifest closure).
+
+#### Step 11: Legacy Path Removal
+
+- `M-059` Remove `CCL_WASM_STARTUP_BINDING_MAP_EMIT_ALL_FUNCTIONS`.
+- `M-060` Remove runtime fallback map-generation branches in make-real-image.
+- `M-061` Remove pack-time JS source-scan startup map generation.
+- `M-062` Add final grep assertions for removed symbols/flags.
+- `M-063` Gate `G-11`: grep assertions confirm single active source-scope path.
+
+If `G-11` fails:
+- Run Playbook `PB-11` (legacy path purge completion).
+
+#### Step 12: Documentation + Evidence Bundle Finalization
+
+- `M-064` Update `ccl/doc/wasm/build.md` startup pipeline sections to describe
+  artifact-first architecture.
+- `M-065` Update spec docs/checklists with closure status and evidence pointers.
+- `M-066` Produce evidence bundle manifest with commands, hashes, and key log
+  excerpts.
+- `M-067` Gate `G-12`: reviewer can reproduce pass/fail assertions from bundle
+  alone.
+
+If `G-12` fails:
+- Run Playbook `PB-12` (evidence bundle completion), not architecture changes.
+
+---
+
+## 20. Blocker Playbooks (Do Not Re-Scope Architecture)
+
+### PB-01 Legacy Parser Isolation
+
+- Goal: ensure any remaining JS scanner code is inert and non-default.
+- Actions:
+  - add explicit mode guards (`source_scope_v1` only),
+  - fail fast if artifact missing instead of fallback generation,
+  - document temporary compatibility horizon with expiry criteria.
+
+### PB-02 Schema Mismatch Reconciliation
+
+- Goal: keep producer/consumer schema in lockstep.
+- Actions:
+  - generate one canonical fixture from scanner,
+  - run consumer validator against fixture,
+  - patch one side only after diffing expected keys/types,
+  - rerun `G-02`.
+
+### PB-03 Scanner Read/Feature Failures
+
+- Goal: recover without reducing reader correctness guarantees.
+- Actions:
+  - verify `--feature-profile` mapping table,
+  - classify parse errors with reason codes,
+  - keep scanner running across recoverable file errors,
+  - rerun scanner fixtures.
+
+### PB-04 Pipeline Ordering/CLI Propagation
+
+- Goal: guarantee scanner artifact precedes image build in every lane.
+- Actions:
+  - trace args in `compile-wasm-fasls.sh` and `make-real-image.lisp`,
+  - assert repro step ordering explicitly,
+  - fail pipeline if scope artifact path is absent.
+
+### PB-05 Resolver Authority Consistency
+
+- Goal: keep one status taxonomy across metadata and kernel probe stages.
+- Actions:
+  - centralize status/reason enums,
+  - ensure required-class assignment occurs before map build,
+  - rerun resolver unit tests and smoke lane.
+
+### PB-06 Map Synthesis Divergence
+
+- Goal: prevent map entry drift or accidental re-scan dependency.
+- Actions:
+  - diff map outputs before/after refactor on same scope artifact,
+  - inspect deferred/required failure partitions,
+  - ensure shadow table recompute happens once after augmentation.
+
+### PB-07 Initializer ABI Mismatch
+
+- Goal: avoid hidden runtime failures for symbol/keyword initializers.
+- Actions:
+  - verify required kernel export surface,
+  - ensure required entries fail explicitly when missing export,
+  - ensure optional entries defer with reason.
+
+### PB-08 Budget Calibration
+
+- Goal: tune preinstall bounds without reintroducing closure explosion.
+- Actions:
+  - compute observed required roots + anchors,
+  - adjust fixed margin only,
+  - rerun top4488 and smoke memory assertions.
+
+### PB-09 Focused Lane Failure Triage
+
+- Goal: isolate lane-specific failure quickly.
+- Actions:
+  - inspect first failing required symbol and reason,
+  - confirm scope artifact contains the symbol and role,
+  - confirm resolver classification for the symbol,
+  - patch smallest upstream phase and rerun Step 09 only.
+
+### PB-10 Repro Graph/Manifest Closure
+
+- Goal: ensure deterministic repro evidence for startup artifacts.
+- Actions:
+  - verify scanner step writes artifact to canonical path,
+  - verify manifest schema accepts startup artifact entries,
+  - rerun repro pipeline with clean run id.
+
+### PB-11 Legacy Path Purge Completion
+
+- Goal: remove hidden re-entry points for old semantics.
+- Actions:
+  - run grep assertions across runtime, pack, compact, and docs,
+  - remove stale flags/exports,
+  - rerun focused validations.
+
+### PB-12 Evidence Bundle Completion
+
+- Goal: make handoff reviewer-independent.
+- Actions:
+  - include command history, artifact hashes, key diagnostics, and gate lines,
+  - include unresolved count summary and memory assertion summary,
+  - include final single-path grep results.
+
+---
+
+## 21. Decision Lock Map (D1-D12 -> Fixed Outcome)
+
+These decisions are now fixed for execution and must not be re-litigated unless
+a blocker proves the decision impossible to implement.
+
+1. `D1` Contract source: generated JSON sidecar
+   `bootstrap-l0-contract.v1.json`.
+2. `D2` Feature profile semantics: explicit scanner-owned mapping table;
+   unknown profile fails.
+3. `D3` Scope artifact paths: fixed compile/repro canonical paths in Section
+   `18.2`.
+4. `D4` Manifest policy: migration may read legacy embedded map, but no JS
+   source scan generation.
+5. `D5` Resolver authority: staged hybrid (metadata then kernel verification).
+6. `D6` Scope/resolution schema fields: as locked in
+   `startup-symbol-pipeline-spec/spec-closure-v1.md`.
+7. `D7` Shadow table ownership: map builder continues producing
+   `startup_shadow_table_v1` in migration cut.
+8. `D8` Unresolved policy: required unresolved is fatal; optional unresolved is
+   deferred with explicit reason.
+9. `D9` Symbol/keyword initializer ABI: required export checks, explicit failure
+   reasons.
+10. `D10` Preinstall budget constants: deterministic formula with logged inputs.
+11. `D11` Repro manifest coverage: include startup scope/resolution hashes.
+12. `D12` Migration horizon: compatibility path expires after two consecutive
+    passing repro runs and single-path grep pass.
+
+---
+
+## 21.1 Stub-Dependency Hardening Addendum (Startup Path)
+
+This addendum is required to guarantee startup does not silently rely on
+earlier-development stubs.
+
+### 21.1.A Required Policy
+
+1. Required startup bindings must never pass with implicit fallback when a
+   kernel export is missing.
+2. Required startup bindings must never remain on initializer kinds that are
+   unsupported at apply-time.
+3. Startup lane validation must include explicit grep assertions for:
+   - `missing-kernel-export`
+   - `initializer-kind-unsupported-at-apply`
+   - trap signatures in startup lane logs.
+
+### 21.1.B Additional Microsteps
+
+- `M-068` Add startup ABI assertion for required initializer kinds and required
+  target cells.
+- `M-069` Integrate `scripts/wasm/check-startup-semantics.sh` into validation
+  flow for startup-path policy checks.
+- `M-070` Add focused startup-lane grep assertions that fail on:
+  - `missing-kernel-export` for required bindings,
+  - `initializer-kind-unsupported-at-apply` for required bindings,
+  - startup-time trap signatures from stubbed paths.
+- `M-071` Gate `G-13`: startup lanes and repro lane prove no required binding
+  depends on missing/stubbed startup ABI.
+
+---
+
+## 22. Copy/Paste Execution Cards (Per Microstep)
+
+This section expands every microstep (`M-001`..`M-067`) into:
+- target file(s),
+- exact verification command,
+- expected evidence line.
+
+### 22.0 Session Setup (run once)
+
+```bash
+cd /Users/buildsomething/Source
+export CCL_REPO=/Users/buildsomething/Source/ccl
+export SCOPE_JSON=/tmp/startup-symbol-scope.source_scope_v1.json
+export SCOPE_LOG=/tmp/collect-startup-symbol-scope.source_scope_v1.log
+export MRI_TOP=/tmp/make-real-image.trace.top4488.source_scope_v1.log
+export MRI_SMOKE=/tmp/make-real-image.trace.smoke.source_scope_v1.log
+```
+
+Expected evidence line:
+- shell exits `0` and env vars resolve with `echo "$CCL_REPO" "$SCOPE_JSON"`.
+
+### 22.1 Track A Cards (`M-001`..`M-011`)
+
+#### M-001
+- Files: `ccl/doc/wasm/js/make-real-image.mjs`
+- Command:
+```bash
+rg -n 'STARTUP_SYMBOL_PIPELINE|source_scope_v1|legacy_enabled' ccl/doc/wasm/js/make-real-image.mjs
+```
+- Expected evidence line:
+- `STARTUP_SYMBOL_PIPELINE {"schema_version":"startup_symbol_pipeline_v1","mode":"source_scope_v1","legacy_enabled":false...}`
+
+#### M-002
+- Files: `ccl/doc/wasm/js/make-real-image.mjs`
+- Command:
+```bash
+rg -n 'startup-symbol-scope-missing|startup-symbol-scope-invalid-schema|hard-fail' ccl/doc/wasm/js/make-real-image.mjs
+```
+- Expected evidence line:
+- failure reason includes `startup-symbol-scope-missing` when scope artifact is absent.
+
+#### M-003
+- Files: `ccl/doc/wasm/js/startup-binding-map.mjs`
+- Command:
+```bash
+rg -n 'scope artifact|resolution artifact|artifact-only|no JS source scan' ccl/doc/wasm/js/startup-binding-map.mjs
+```
+- Expected evidence line:
+- active path text explicitly states scope+resolution artifacts are the source of truth.
+
+#### M-004
+- Files: `ccl/doc/wasm/startup-symbol-pipeline-implementation-plan.md`
+- Command:
+```bash
+rg -n 'buildStartupBindingMapArtifact\\|startup symbol scope|single-path check' ccl/doc/wasm/startup-symbol-pipeline-implementation-plan.md
+```
+- Expected evidence line:
+- grep assertion command for single-path verification is present in plan text.
+
+#### M-005 (G-01)
+- Files: `ccl/doc/wasm/js/make-real-image.mjs`, `ccl/scripts/wasm/pack-inline-bundle-v2.mjs`
+- Command:
+```bash
+rg -n 'buildStartupBindingMapArtifact\(' ccl/doc/wasm/js/make-real-image.mjs ccl/scripts/wasm/pack-inline-bundle-v2.mjs || true
+```
+- Expected evidence line:
+- no active runtime/pack-time fallback path remains (no executable call sites).
+
+#### M-006
+- Files: `ccl/scripts/wasm/collect-startup-symbol-scope.lisp`
+- Command:
+```bash
+rg -n 'startup_symbol_scope_v1|schema_version|generator_version' ccl/scripts/wasm/collect-startup-symbol-scope.lisp
+```
+- Expected evidence line:
+- scope producer emits schema version `startup_symbol_scope_v1`.
+
+#### M-007
+- Files: `ccl/doc/wasm/js/make-real-image.mjs`
+- Command:
+```bash
+rg -n 'startup_symbol_scope_v1|startup-symbol-scope-invalid-schema|validate.*scope' ccl/doc/wasm/js/make-real-image.mjs
+```
+- Expected evidence line:
+- consumer-side validator rejects invalid scope schema with explicit reason.
+
+#### M-008
+- Files: `ccl/doc/wasm/js/make-real-image.mjs`
+- Command:
+```bash
+rg -n 'startup_symbol_resolution_v1|required_unresolved|optional_unresolved|probe-error|invalid-input' ccl/doc/wasm/js/make-real-image.mjs
+```
+- Expected evidence line:
+- resolution artifact schema and deterministic counters are defined.
+
+#### M-009
+- Files: `ccl/scripts/wasm/collect-startup-symbol-scope.lisp`, `ccl/doc/wasm/js/make-real-image.mjs`
+- Command:
+```bash
+rg -n 'generated_at_utc|identity hash|canonical|sorted|lexicographic' ccl/scripts/wasm/collect-startup-symbol-scope.lisp ccl/doc/wasm/js/make-real-image.mjs
+```
+- Expected evidence line:
+- identity hash excludes `generated_at_utc` and deterministic ordering rules are explicit.
+
+#### M-010
+- Files: `ccl/doc/wasm/startup-symbol-pipeline-spec/spec-closure-v1.md`, `ccl/doc/wasm/startup-symbol-pipeline-implementation-plan.md`
+- Command:
+```bash
+rg -n 'startup_symbol_scope_v1|startup_symbol_resolution_v1|required fields|invalid-schema' ccl/doc/wasm/startup-symbol-pipeline-spec/spec-closure-v1.md ccl/doc/wasm/startup-symbol-pipeline-implementation-plan.md
+```
+- Expected evidence line:
+- required field lists and schema failure reasons are locked in docs.
+
+#### M-011 (G-02)
+- Files: `/tmp/invalid.scope.json`, `/tmp/valid.scope.json` (fixtures)
+- Command:
+```bash
+node -e 'const fs=require("fs");fs.writeFileSync("/tmp/invalid.scope.json",JSON.stringify({schema_version:"broken"}));'
+node ccl/doc/wasm/js/make-real-image.mjs --startup-symbol-scope /tmp/invalid.scope.json > /tmp/mri.invalid-scope.log 2>&1 || true
+rg -n 'startup-symbol-scope-invalid-schema' /tmp/mri.invalid-scope.log
+```
+- Expected evidence line:
+- `startup-symbol-scope-invalid-schema` appears exactly once for invalid fixture.
+
+### 22.2 Track B Cards (`M-012`..`M-025`)
+
+#### M-012
+- Files: `ccl/scripts/wasm/collect-startup-symbol-scope.lisp`
+- Command:
+```bash
+test -f ccl/scripts/wasm/collect-startup-symbol-scope.lisp && echo 'scanner-file-present'
+```
+- Expected evidence line:
+- `scanner-file-present`
+
+#### M-013
+- Files: `ccl/scripts/wasm/collect-startup-symbol-scope.lisp`
+- Command:
+```bash
+rg -n -- '--repo-root|--out|--feature-profile|--contract-json' ccl/scripts/wasm/collect-startup-symbol-scope.lisp
+```
+- Expected evidence line:
+- all four CLI flags are recognized in scanner CLI parser.
+
+#### M-014
+- Files: `ccl/scripts/wasm/collect-startup-symbol-scope.lisp`
+- Command:
+```bash
+rg -n '\\*read-eval\\*|sort|deterministic|unsupported-reader-dispatch|reader-parse-error' ccl/scripts/wasm/collect-startup-symbol-scope.lisp
+```
+- Expected evidence line:
+- scanner binds `*read-eval*` to `nil` and records read failures by reason.
+
+#### M-015
+- Files: `ccl/scripts/wasm/collect-startup-symbol-scope.lisp`, `$SCOPE_JSON`
+- Command:
+```bash
+rg -n 'defined-function|defined-special|call-head|function-designator|symbol-atom|contract-required' ccl/scripts/wasm/collect-startup-symbol-scope.lisp
+```
+- Expected evidence line:
+- role extraction includes all six role classes.
+
+#### M-016
+- Files: `$SCOPE_JSON`
+- Command:
+```bash
+node -e 'const fs=require("fs");const j=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));const bad=j.symbols.filter(s=>!/^[A-Z0-9+*<>=!?._:-]+::[A-Z0-9+*<>=!?._:-]+$/.test(s.key));console.log("bad_keys",bad.length);process.exit(bad.length?1:0);' "$SCOPE_JSON"
+```
+- Expected evidence line:
+- `bad_keys 0`
+
+#### M-017
+- Files: `$SCOPE_LOG`
+- Command:
+```bash
+rg -n 'STARTUP_SYMBOL_SCOPE_BUILD' "$SCOPE_LOG"
+```
+- Expected evidence line:
+- one `STARTUP_SYMBOL_SCOPE_BUILD {...}` summary line with counts/reasons.
+
+#### M-018
+- Files: `ccl/scripts/wasm/tests/startup-symbol-scope-fixtures/` (or equivalent)
+- Command:
+```bash
+rg -n 'package transitions|reader conditionals|escaped symbols|unsupported reader dispatch' ccl/doc/wasm/startup-symbol-pipeline-implementation-plan.md ccl/doc/wasm/startup-symbol-pipeline-spec/spec-closure-v1.md
+```
+- Expected evidence line:
+- fixture classes are explicitly listed and covered by scanner tests.
+
+#### M-019 (G-03)
+- Files: `$SCOPE_LOG`, `$SCOPE_JSON`
+- Command:
+```bash
+test -s "$SCOPE_JSON" && rg -n 'STARTUP_SYMBOL_SCOPE_BUILD' "$SCOPE_LOG" && ! rg -n 'FAIL|error|reader-parse-error-fatal' "$SCOPE_LOG"
+```
+- Expected evidence line:
+- scanner command exits successfully and artifact exists with diagnostics.
+
+#### M-020
+- Files: `ccl/doc/wasm/bootstrap-l0-contract.v1.json`
+- Command:
+```bash
+test -f ccl/doc/wasm/bootstrap-l0-contract.v1.json && node -e 'const fs=require("fs");const j=JSON.parse(fs.readFileSync("ccl/doc/wasm/bootstrap-l0-contract.v1.json","utf8"));console.log("keys",Object.keys(j).sort().join(","));'
+```
+- Expected evidence line:
+- contract sidecar exists and includes required callable/special/const-pool keys.
+
+#### M-021
+- Files: `ccl/scripts/wasm/compile-wasm-fasls.sh`
+- Command:
+```bash
+rg -n 'collect-startup-symbol-scope.lisp|bootstrap-l0-contract.v1.json|startup-symbol-scope' ccl/scripts/wasm/compile-wasm-fasls.sh
+```
+- Expected evidence line:
+- compile pipeline invokes scanner before image build step.
+
+#### M-022
+- Files: `ccl/scripts/wasm/make-real-image.lisp`
+- Command:
+```bash
+rg -n 'startup-symbol-scope|startup-symbol-resolution-out|startup-symbol-contract' ccl/scripts/wasm/make-real-image.lisp
+```
+- Expected evidence line:
+- Lisp wrapper forwards all new startup symbol flags.
+
+#### M-023
+- Files: `ccl/scripts/wasm/repro-startup-pipeline.sh`
+- Command:
+```bash
+rg -n 'collect-startup-symbol-scope|startup-symbol-scope|fail fast|set -e' ccl/scripts/wasm/repro-startup-pipeline.sh
+```
+- Expected evidence line:
+- repro script contains scanner step and fail-fast behavior.
+
+#### M-024
+- Files: repro run manifest
+- Command:
+```bash
+RUN_DIR=$(ls -td ccl/doc/wasm/repro/startup-pipeline-* 2>/dev/null | head -n1); test -n "$RUN_DIR" && rg -n 'startup-symbol-scope|sha256|bytes' "$RUN_DIR/startup-repro-run-manifest.json"
+```
+- Expected evidence line:
+- manifest records startup scope artifact path, bytes, and sha256.
+
+#### M-025 (G-04)
+- Files: `ccl/scripts/wasm/repro-startup-pipeline.sh`
+- Command:
+```bash
+nl -ba ccl/scripts/wasm/repro-startup-pipeline.sh | rg -n 'collect-startup-symbol-scope|make-root-image'
+```
+- Expected evidence line:
+- scanner step line number is lower than `make-root-image` line number.
+
+### 22.3 Track C Cards (`M-026`..`M-048`)
+
+#### M-026
+- Files: `ccl/doc/wasm/js/make-real-image.mjs`
+- Command:
+```bash
+nl -ba ccl/doc/wasm/js/make-real-image.mjs | rg -n 'STARTUP_SYMBOL_RESOLUTION_BUILD|resolution|build.*binding map|startup binding map'
+```
+- Expected evidence line:
+- resolver stage appears before map synthesis in execution order.
+
+#### M-027
+- Files: `ccl/doc/wasm/js/make-real-image.mjs`
+- Command:
+```bash
+rg -n 'package_name|symbol_name|exact package\\+name|no symbol-name-only fallback' ccl/doc/wasm/js/make-real-image.mjs
+```
+- Expected evidence line:
+- resolver probes exact package+symbol only.
+
+#### M-028
+- Files: `ccl/doc/wasm/js/make-real-image.mjs`
+- Command:
+```bash
+rg -n 'required-callable|required-special|optional|none' ccl/doc/wasm/js/make-real-image.mjs
+```
+- Expected evidence line:
+- required-class mapping table includes all four classes.
+
+#### M-029
+- Files: `ccl/doc/wasm/js/make-real-image.mjs`
+- Command:
+```bash
+rg -n 'startup_symbol_resolution_v1|resolver_source|counts|required_unresolved|optional_unresolved' ccl/doc/wasm/js/make-real-image.mjs
+```
+- Expected evidence line:
+- resolution artifact serializer emits full schema fields and counters.
+
+#### M-030
+- Files: `ccl/doc/wasm/js/make-real-image.mjs`
+- Command:
+```bash
+rg -n 'STARTUP_SYMBOL_RESOLUTION_BUILD' ccl/doc/wasm/js/make-real-image.mjs
+```
+- Expected evidence line:
+- one resolution diagnostic line is emitted per run.
+
+#### M-031
+- Files: `ccl/doc/wasm/js/tests/` (new resolver tests)
+- Command:
+```bash
+rg -n 'required_unresolved|optional_unresolved|probe-error|invalid-input' ccl/doc/wasm/js/tests || true
+```
+- Expected evidence line:
+- resolver tests assert status taxonomy and required/optional splits.
+
+#### M-032 (G-05)
+- Files: resolver tests + smoke log
+- Command:
+```bash
+node --test ccl/doc/wasm/js/tests/*.test.mjs > /tmp/startup-symbol-tests.log 2>&1 || true
+rg -n 'STARTUP_SYMBOL_RESOLUTION_BUILD' "$MRI_SMOKE" /tmp/startup-symbol-tests.log
+```
+- Expected evidence line:
+- tests pass and smoke lane contains `STARTUP_SYMBOL_RESOLUTION_BUILD`.
+
+#### M-033
+- Files: `ccl/doc/wasm/js/startup-binding-map.mjs`
+- Command:
+```bash
+rg -n 'scope artifact|resolution artifact|source-of-truth|input' ccl/doc/wasm/js/startup-binding-map.mjs
+```
+- Expected evidence line:
+- inclusion logic is driven by scope+resolution artifacts.
+
+#### M-034
+- Files: `ccl/doc/wasm/js/startup-binding-map.mjs`
+- Command:
+```bash
+rg -n 'readFileSync\\(|level-0|level-1|regex|lisp parser|source scan' ccl/doc/wasm/js/startup-binding-map.mjs || true
+```
+- Expected evidence line:
+- no active source-scan helper remains in execution path.
+
+#### M-035
+- Files: `ccl/doc/wasm/js/startup-binding-map.mjs`
+- Command:
+```bash
+rg -n 'entry-backed|deferred|required-special|required-callable|initializer\\.kind|target_cell|binding_class' ccl/doc/wasm/js/startup-binding-map.mjs
+```
+- Expected evidence line:
+- deterministic entry synthesis matrix fields are explicit.
+
+#### M-036
+- Files: `ccl/doc/wasm/js/startup-binding-map.mjs`
+- Command:
+```bash
+rg -n 'startup_binding_map_v1|startup_shadow_table_v1|preinstall_const_pool_entries|entry_backed_binding_count' ccl/doc/wasm/js/startup-binding-map.mjs
+```
+- Expected evidence line:
+- migration cut preserves map/shadow schema versions and key fields.
+
+#### M-037
+- Files: `ccl/doc/wasm/js/startup-binding-map.mjs`, `ccl/doc/wasm/js/make-real-image.mjs`
+- Command:
+```bash
+rg -n 'required-symbol-unresolved|required unresolved|deferred with reason|optional unresolved' ccl/doc/wasm/js/startup-binding-map.mjs ccl/doc/wasm/js/make-real-image.mjs
+```
+- Expected evidence line:
+- required unresolved is fatal; optional unresolved is deferred with reason.
+
+#### M-038 (G-06)
+- Files: `$MRI_SMOKE`
+- Command:
+```bash
+rg -n 'STARTUP_BINDING_MAP_BUILD|STARTUP_BINDING_MAP_APPLY|status\":\"pass\"|source scope' "$MRI_SMOKE"
+```
+- Expected evidence line:
+- map builds/applies without JS source scanning and reports deterministic counts.
+
+#### M-039
+- Files: `ccl/doc/wasm/js/make-real-image.mjs`
+- Command:
+```bash
+rg -n 'literal-symbol|literal-keyword|literal-fixnum|literal-nil|entry-function' ccl/doc/wasm/js/make-real-image.mjs
+```
+- Expected evidence line:
+- apply path supports all five initializer kinds.
+
+#### M-040
+- Files: `ccl/doc/wasm/js/make-real-image.mjs`
+- Command:
+```bash
+rg -n 'missing-kernel-export|initializer-kind-not-supported|symbol literal|keyword literal' ccl/doc/wasm/js/make-real-image.mjs
+```
+- Expected evidence line:
+- symbol/keyword initializers are guarded by explicit export checks.
+
+#### M-041
+- Files: `ccl/doc/wasm/js/make-real-image.mjs`
+- Command:
+```bash
+rg -n 'required.*missing-kernel-export|optional.*initializer-kind-not-supported|defer' ccl/doc/wasm/js/make-real-image.mjs
+```
+- Expected evidence line:
+- required entries fail; optional entries defer when initializer ABI is unavailable.
+
+#### M-042
+- Files: `ccl/doc/wasm/js/tests/` (apply tests)
+- Command:
+```bash
+rg -n 'literal-symbol|literal-keyword|exact package\\+name|apply-time' ccl/doc/wasm/js/tests || true
+```
+- Expected evidence line:
+- apply tests cover exact package+symbol behavior for new initializer kinds.
+
+#### M-043 (G-07)
+- Files: apply tests
+- Command:
+```bash
+node --test ccl/doc/wasm/js/tests/*.test.mjs > /tmp/startup-apply-tests.log 2>&1 || true
+rg -n 'pass|ok|missing-kernel-export|initializer-kind-not-supported' /tmp/startup-apply-tests.log
+```
+- Expected evidence line:
+- apply test suite passes and failure reasons are explicit when exercised.
+
+#### M-044
+- Files: `ccl/doc/wasm/js/make-real-image.mjs`
+- Command:
+```bash
+rg -n 'budget\\.max_preinstall|budget\\.required_roots|budget\\.required_anchors|budget\\.fixed_margin|budget\\.over_by' ccl/doc/wasm/js/make-real-image.mjs
+```
+- Expected evidence line:
+- preinstall diagnostics include full budget telemetry object.
+
+#### M-045
+- Files: `ccl/doc/wasm/js/make-real-image.mjs`
+- Command:
+```bash
+rg -n 'preinstall-budget-exceeded' ccl/doc/wasm/js/make-real-image.mjs
+```
+- Expected evidence line:
+- explicit fail reason `preinstall-budget-exceeded` exists.
+
+#### M-046
+- Files: `$MRI_SMOKE`, `$MRI_TOP`
+- Command:
+```bash
+rg -n 'startup-shadow-table-missing-contract-root-entries|required_roots|required_anchors' "$MRI_SMOKE" "$MRI_TOP" || true
+```
+- Expected evidence line:
+- no contract-root pruning failure appears in lane logs.
+
+#### M-047
+- Files: validation scripts/docs
+- Command:
+```bash
+rg -n 'WASM misc_alloc: reserve failed|wasm_memory_grow_and_relocate failed' ccl/doc/wasm/startup-symbol-pipeline-implementation-plan.md ccl/scripts/wasm
+```
+- Expected evidence line:
+- memory-failure signature checks are present in validation path.
+
+#### M-048 (G-08)
+- Files: `$MRI_SMOKE`, `$MRI_TOP`
+- Command:
+```bash
+rg -n 'STARTUP_BINDING_MAP_PREINSTALL|budget|preinstall-budget-exceeded|startup-shadow-table-missing-contract-root-entries' "$MRI_SMOKE" "$MRI_TOP"
+```
+- Expected evidence line:
+- preinstall budget object appears and required roots remain intact.
+
+### 22.4 Track D Cards (`M-049`..`M-067`)
+
+#### M-049
+- Files: scanner output/log
+- Command:
+```bash
+ccl --no-init --batch \
+  -l ccl/scripts/wasm/collect-startup-symbol-scope.lisp \
+  -- \
+  --repo-root ccl \
+  --out "$SCOPE_JSON" \
+  --feature-profile wasm32-target-v1 \
+  > "$SCOPE_LOG" 2>&1
+```
+- Expected evidence line:
+- `$SCOPE_LOG` contains `STARTUP_SYMBOL_SCOPE_BUILD`.
+
+#### M-050
+- Files: `$MRI_TOP`
+- Command:
+```bash
+CCL_WASM_TRACE=1 \
+CCL_WASM_DIAG_PRE_FASLOAD_TOPLFUNC_ENTRY=4488 \
+node ccl/doc/wasm/js/make-real-image.mjs \
+  --startup-symbol-scope "$SCOPE_JSON" \
+  > "$MRI_TOP" 2>&1 || true
+```
+- Expected evidence line:
+- top4488 log contains `STARTUP_SYMBOL_PIPELINE`.
+
+#### M-051
+- Files: `$MRI_SMOKE`
+- Command:
+```bash
+CCL_WASM_TRACE=1 \
+node ccl/doc/wasm/js/make-real-image.mjs \
+  --startup-symbol-scope "$SCOPE_JSON" \
+  > "$MRI_SMOKE" 2>&1 || true
+```
+- Expected evidence line:
+- smoke log contains `STARTUP_SYMBOL_PIPELINE`.
+
+#### M-052
+- Files: `$SCOPE_LOG`, `$MRI_TOP`, `$MRI_SMOKE`
+- Command:
+```bash
+echo "=== $SCOPE_LOG"
+rg -n 'STARTUP_SYMBOL_SCOPE_BUILD|FAIL|error|reason' "$SCOPE_LOG"
+for f in "$MRI_TOP" "$MRI_SMOKE"; do
+  echo "=== $f"
+  rg -n 'STARTUP_SYMBOL_PIPELINE|STARTUP_SYMBOL_SCOPE_BUILD|STARTUP_SYMBOL_RESOLUTION_BUILD|STARTUP_BINDING_MAP_BUILD|STARTUP_BINDING_MAP_PREINSTALL|STARTUP_BINDING_MAP_APPLY|L0_BOOTSTRAP_CONTRACT|REQUIRED_FASLOAD_BOUNDARY|WASM misc_alloc|wasm_memory_grow_and_relocate failed' "$f"
+done
+```
+- Expected evidence line:
+- both lane logs include all required startup diagnostics.
+
+#### M-053 (G-09)
+- Files: `$MRI_TOP`, `$MRI_SMOKE`
+- Command:
+```bash
+for f in "$MRI_TOP" "$MRI_SMOKE"; do
+  rg -n 'STARTUP_BINDING_MAP_APPLY.*"status":"pass"' "$f"
+  rg -n 'L0_BOOTSTRAP_CONTRACT.*"status":"pass"' "$f"
+done
+```
+- Expected evidence line:
+- both logs show `STARTUP_BINDING_MAP_APPLY.status == pass` and `L0_BOOTSTRAP_CONTRACT.status == pass`.
+
+#### M-054
+- Files: repro run directory
+- Command:
+```bash
+cd ccl && scripts/wasm/repro-startup-pipeline.sh
+```
+- Expected evidence line:
+- new run directory created at `ccl/doc/wasm/repro/startup-pipeline-<timestamp>-<sha>/`.
+
+#### M-055
+- Files: latest repro `commands.ndjson` or step logs
+- Command:
+```bash
+RUN_DIR=$(ls -td /Users/buildsomething/Source/ccl/doc/wasm/repro/startup-pipeline-* | head -n1)
+rg -n 'collect-startup-symbol-scope|make-root-image' "$RUN_DIR/commands.ndjson"
+```
+- Expected evidence line:
+- `collect-startup-symbol-scope` appears before `make-root-image`.
+
+#### M-056
+- Files: latest repro manifest
+- Command:
+```bash
+RUN_DIR=$(ls -td /Users/buildsomething/Source/ccl/doc/wasm/repro/startup-pipeline-* | head -n1)
+rg -n 'startup-symbol-scope|sha256|bytes|path' "$RUN_DIR/startup-repro-run-manifest.json"
+```
+- Expected evidence line:
+- manifest has startup scope artifact entry with path/bytes/sha256.
+
+#### M-057
+- Files: latest repro manifest
+- Command:
+```bash
+RUN_DIR=$(ls -td /Users/buildsomething/Source/ccl/doc/wasm/repro/startup-pipeline-* | head -n1)
+rg -n 'startup-symbol-resolution|sha256|bytes|path' "$RUN_DIR/startup-repro-run-manifest.json" || true
+```
+- Expected evidence line:
+- when resolution artifact emission is enabled, manifest includes its hash entry.
+
+#### M-058 (G-10)
+- Files: repro logs + manifest
+- Command:
+```bash
+RUN_DIR=$(ls -td /Users/buildsomething/Source/ccl/doc/wasm/repro/startup-pipeline-* | head -n1)
+rg -n 'STARTUP_SYMBOL_PIPELINE|STARTUP_SYMBOL_SCOPE_BUILD|STARTUP_SYMBOL_RESOLUTION_BUILD|STARTUP_BINDING_MAP_APPLY|L0_BOOTSTRAP_CONTRACT' "$RUN_DIR"/logs/* || true
+rg -n 'startup-symbol-scope|sha256' "$RUN_DIR/startup-repro-run-manifest.json"
+```
+- Expected evidence line:
+- repro run includes required startup diagnostics and startup artifact hashes.
+
+#### M-059
+- Files: repository-wide
+- Command:
+```bash
+rg -n 'CCL_WASM_STARTUP_BINDING_MAP_EMIT_ALL_FUNCTIONS' ccl || true
+```
+- Expected evidence line:
+- no remaining references to removed legacy env flag.
+
+#### M-060
+- Files: `ccl/doc/wasm/js/make-real-image.mjs`
+- Command:
+```bash
+node ccl/doc/wasm/js/make-real-image.mjs > /tmp/mri.no-scope.log 2>&1 || true
+rg -n 'startup-symbol-scope-missing' /tmp/mri.no-scope.log
+```
+- Expected evidence line:
+- missing scope artifact fails fast instead of runtime fallback generation.
+
+#### M-061
+- Files: `ccl/scripts/wasm/pack-inline-bundle-v2.mjs`
+- Command:
+```bash
+rg -n 'buildStartupBindingMapArtifact\\(|scan.*lisp|startup map.*from source' ccl/scripts/wasm/pack-inline-bundle-v2.mjs || true
+```
+- Expected evidence line:
+- pack script has no active source-scan startup-map generation path.
+
+#### M-062
+- Files: repository-wide final grep set
+- Command:
+```bash
+rg -n 'buildStartupBindingMapArtifact\\(|CCL_WASM_STARTUP_BINDING_MAP_EMIT_ALL_FUNCTIONS|symbol-name-only fallback|startup map fallback' ccl/doc/wasm/js ccl/scripts/wasm || true
+```
+- Expected evidence line:
+- grep assertions show no active legacy startup semantics path.
+
+#### M-063 (G-11)
+- Files: focused lane logs + grep outputs
+- Command:
+```bash
+for f in "$MRI_TOP" "$MRI_SMOKE"; do
+  rg -n 'STARTUP_SYMBOL_PIPELINE.*source_scope_v1' "$f"
+done
+rg -n 'buildStartupBindingMapArtifact\\(' ccl/doc/wasm/js/make-real-image.mjs ccl/scripts/wasm/pack-inline-bundle-v2.mjs || true
+```
+- Expected evidence line:
+- one active source-scope path remains and legacy re-entry points are absent.
+
+#### M-064
+- Files: `ccl/doc/wasm/build.md`
+- Command:
+```bash
+rg -n 'Common Lisp scanner|artifact-first|startup_symbol_scope_v1|STARTUP_SYMBOL_PIPELINE|no JS source scan' ccl/doc/wasm/build.md
+```
+- Expected evidence line:
+- build docs describe scanner-owned artifact-first architecture.
+
+#### M-065
+- Files: spec docs
+- Command:
+```bash
+rg -n 'implementation closed|G-01|G-12|Decision Register \\(Locked For Execution\\)' ccl/doc/wasm/startup-symbol-pipeline-spec/*.md
+```
+- Expected evidence line:
+- spec docs/checklists are updated with closure and gate tracking surfaces.
+
+#### M-066
+- Files: evidence bundle manifest under repro run dir
+- Command:
+```bash
+RUN_DIR=$(ls -td /Users/buildsomething/Source/ccl/doc/wasm/repro/startup-pipeline-* | head -n1)
+test -f "$RUN_DIR/evidence-manifest.json" && rg -n 'commands|artifacts|diagnostics|assertions|sha256' "$RUN_DIR/evidence-manifest.json"
+```
+- Expected evidence line:
+- evidence manifest includes commands, artifact hashes, diagnostics, assertions.
+
+#### M-067 (G-12)
+- Files: evidence bundle + logs
+- Command:
+```bash
+RUN_DIR=$(ls -td /Users/buildsomething/Source/ccl/doc/wasm/repro/startup-pipeline-* | head -n1)
+rg -n 'G-01|G-02|G-03|G-04|G-05|G-06|G-07|G-08|G-09|G-10|G-11|G-12' "$RUN_DIR"/evidence-manifest.json "$RUN_DIR"/logs/* 2>/dev/null || true
+```
+- Expected evidence line:
+- reviewer can confirm all gate outcomes from bundle alone.
+
+### 22.5 Gate Log Template (required after each gate)
+
+Use this exact line after each gate run:
+
+```text
+PLAN_GATE {"gate":"G-<id>","status":"pass|fail","evidence":["<path-or-command>"],"next":"<next-step-id|playbook-id>"}
+```
+
+### 22.6 Stub-Dependency Cards (`M-068`..`M-071`)
+
+#### M-068
+- Files: `ccl/doc/wasm/js/make-real-image.mjs`
+- Command:
+```bash
+rg -n 'missing-kernel-export|initializer-kind-unsupported-at-apply|required-symbol-unresolved' ccl/doc/wasm/js/make-real-image.mjs
+```
+- Expected evidence line:
+- apply path has explicit required-binding failure reasons; no implicit fallback for missing ABI.
+
+#### M-069
+- Files: `ccl/scripts/wasm/check-startup-semantics.sh`
+- Command:
+```bash
+test -x ccl/scripts/wasm/check-startup-semantics.sh && ccl/scripts/wasm/check-startup-semantics.sh
+```
+- Expected evidence line:
+- script exits `0` and reports no forbidden startup bypass pattern regressions.
+
+#### M-070
+- Files: `$MRI_TOP`, `$MRI_SMOKE`
+- Command:
+```bash
+for f in "$MRI_TOP" "$MRI_SMOKE"; do
+  echo "=== $f"
+  rg -n 'missing-kernel-export|initializer-kind-unsupported-at-apply|required-symbol-unresolved' "$f" || true
+  ! rg -n 'trap from unimplemented subprim|wasm_subprims_trap|unimplemented subprim' "$f"
+done
+```
+- Expected evidence line:
+- no startup-lane trap signature from stubbed path; no required-binding ABI failure.
+
+#### M-071 (G-13)
+- Files: latest repro logs + focused lane logs
+- Command:
+```bash
+RUN_DIR=$(ls -td /Users/buildsomething/Source/ccl/doc/wasm/repro/startup-pipeline-* | head -n1)
+for f in "$MRI_TOP" "$MRI_SMOKE"; do
+  ! rg -n 'missing-kernel-export|initializer-kind-unsupported-at-apply' "$f"
+done
+rg -n 'missing-kernel-export|initializer-kind-unsupported-at-apply' "$RUN_DIR"/logs/* || true
+```
+- Expected evidence line:
+- required startup bindings are free of missing/stubbed ABI failures across focused and repro lanes.

@@ -1,154 +1,200 @@
-# Contradiction Ledger (Round 2 Introspection)
+# Contradiction Ledger (Execution Closure Track)
 
-This ledger captures explicit contradictions between plan statements, current
-code behavior, and existing documentation.
+This ledger maps each known contradiction to:
+- one authoritative decision,
+- exact implementation microsteps/gates from
+  `doc/wasm/startup-symbol-pipeline-implementation-plan.md`,
+- objective closure evidence commands.
+
+Status legend:
+- `Decision`: `locked|open`
+- `Implementation`: `pending|in-progress|closed`
 
 ## C-001 Plan Ordering Contradiction
 
-- Source A: `doc/wasm/startup-symbol-pipeline-implementation-plan.md:52`
-  states `Schema before scanner`.
-- Source B: `doc/wasm/startup-symbol-pipeline-implementation-plan.md:886`
-  states parser-language switch is step 1, before schema implementation.
-
-Impact:
-- Execution order is ambiguous and can produce rework if scanner output fields
-  are implemented before schema lock.
-
-Spec closure required:
-- Distinguish `language freeze` from `scanner implementation`.
-- Keep scanner implementation after schema lock, even if language decision is
-  made first.
+- Contradiction:
+  - plan says schema lock before scanner implementation,
+  - sequence wording previously implied scanner-first implementation.
+- Decision: `locked`
+  - language freeze first, schema lock second, scanner implementation third.
+- Implementation: `pending`
+- Required microsteps:
+  - `M-001` to `M-011`, then `M-012` onward.
+- Closure evidence:
+  - verify sequence in plan Section `15` and Track A in Section `19`,
+  - verify gate history contains `G-01` pass before `G-02`, and `G-02` pass
+    before `G-03`.
 
 ## C-002 Architecture Contradiction (Compromise vs Build Docs)
 
-- Compromise says Common Lisp scanner is sole parser path and Node is consumer.
-- `doc/wasm/build.md:427` says
-  `doc/wasm/js/startup-binding-map.mjs` is sole producer of startup bindings.
+- Contradiction:
+  - compromise says Common Lisp scanner owns scope production,
+  - older docs state JS map builder is sole producer.
+- Decision: `locked`
+  - scanner produces scope artifact; Node consumes artifacts.
+- Implementation: `pending`
+- Required microsteps:
+  - `M-064`, `M-065`, `M-067`.
+- Closure evidence:
+  - `rg -n "sole producer of startup bindings" doc/wasm/build.md`
+    returns no active contradictory claim,
+  - build docs include artifact-first scanner ownership statement.
 
-Impact:
-- Team can implement opposite architectures while both appear documented.
+## C-003 Runtime Behavior Contradiction (Consumer-Only vs Fallback Generation)
 
-Spec closure required:
-- Replace JS-producer statements with scanner-producer ownership.
-
-## C-003 Runtime Behavior Contradiction (Node Consumer-Only vs Fallback Generation)
-
-- Compromise requires `make-real-image.mjs` consumer/resolver/apply-only.
-- `doc/wasm/js/make-real-image.mjs:554` still generates startup binding map via
-  `buildStartupBindingMapArtifact(...)` if embedded map missing.
-
-Impact:
-- Runtime still contains source-derived generation path.
-
-Spec closure required:
-- Runtime must hard-fail on missing prebuilt scope/map artifacts.
+- Contradiction:
+  - runtime should consume artifacts only,
+  - runtime currently can generate fallback map if embedded artifact missing.
+- Decision: `locked`
+  - active mode hard-fails on missing required startup symbol scope artifact.
+- Implementation: `pending`
+- Required microsteps:
+  - `M-002`, `M-022`, `M-026`, `M-033`, `M-060`.
+- Closure evidence:
+  - `rg -n "startup-symbol-scope-missing|buildStartupBindingMapArtifact" doc/wasm/js/make-real-image.mjs`,
+  - focused lane run fails with explicit missing-artifact reason when scope
+    argument is omitted.
 
 ## C-004 Packaging Contradiction (No JS Parser Path vs Pack-Time JS Production)
 
-- Compromise disallows second JS parser semantics path.
-- `scripts/wasm/pack-inline-bundle-v2.mjs:327` builds startup map via
-  `buildStartupBindingMapArtifact` from JS.
-
-Impact:
-- Even if runtime is fixed, packaging still emits JS-derived semantics.
-
-Spec closure required:
-- Pack stage must copy/attach prebuilt artifacts only; no source scan in pack.
+- Contradiction:
+  - no second parser semantics path is allowed,
+  - pack step currently builds startup map via JS source-based path.
+- Decision: `locked`
+  - pack stage may attach/copy prebuilt artifacts only.
+- Implementation: `pending`
+- Required microsteps:
+  - `M-033`, `M-034`, `M-061`, `M-063`.
+- Closure evidence:
+  - `rg -n "buildStartupBindingMapArtifact|scan.*lisp" scripts/wasm/pack-inline-bundle-v2.mjs`
+    shows no active JS source-scan path.
 
 ## C-005 Compaction Pass Contradiction (Legacy Field Preservation)
 
-- `scripts/wasm/compact-runtime-modules.mjs:763` blindly preserves
-  `startupBindingMap` if present.
+- Contradiction:
+  - compaction currently preserves legacy startup map fields blindly.
+- Decision: `locked`
+  - migration policy explicitly controls preserve/reject behavior and prevents
+    semantic reintroduction.
+- Implementation: `pending`
+- Required microsteps:
+  - `M-036`, `M-061`, `M-063`.
+- Closure evidence:
+  - compacted manifest behavior is documented and tested under one active
+    semantics path,
+  - grep assertions confirm no path rehydrates JS-scanned semantics.
 
-Impact:
-- Old JS-produced map persists through compacted manifests, reintroducing dual
-  semantics across build products.
+## C-006 CLI Contract Contradiction (Planned Flags vs Actual Parsers)
 
-Spec closure required:
-- Explicit migration rule for preserving/rejecting legacy embedded maps.
-
-## C-006 CLI Contract Contradiction (Planned Flag vs Actual Parser)
-
-- Plan validation commands use `--startup-symbol-scope`.
-- `doc/wasm/js/make-real-image.mjs:129` parseArgs has no such option.
-- `scripts/wasm/make-real-image.lisp:62` also has no forwarding support.
-
-Impact:
-- Validation commands in plan are non-executable today.
-
-Spec closure required:
-- Add and document new CLI options end-to-end.
+- Contradiction:
+  - plan commands require `--startup-symbol-scope`,
+  - current wrappers/parsers do not fully support forwarding.
+- Decision: `locked`
+  - add and wire `--startup-symbol-scope`,
+    `--startup-symbol-resolution-out`, `--startup-symbol-contract`.
+- Implementation: `pending`
+- Required microsteps:
+  - `M-022`, `M-023`, `M-049` to `M-052`.
+- Closure evidence:
+  - `node doc/wasm/js/make-real-image.mjs --help` shows options,
+  - wrapper invocation forwards all three options end-to-end.
 
 ## C-007 Repro Flow Contradiction (Scanner-First vs Step Graph)
 
-- Plan requires scanner artifact generation before image build.
-- `scripts/wasm/repro-startup-pipeline.sh:476-488` runs compile -> build boot ->
-  make image without scanner step.
-
-Impact:
-- Repro path can never satisfy compromise policy.
-
-Spec closure required:
-- Insert scanner step and artifact hash capture before `make-root-image`.
+- Contradiction:
+  - repro path must generate scope artifact before make-root-image,
+  - current graph does not enforce this.
+- Decision: `locked`
+  - add scanner step before make-root-image and fail fast on scanner error.
+- Implementation: `pending`
+- Required microsteps:
+  - `M-023`, `M-024`, `M-054`, `M-055`, `M-056`.
+- Closure evidence:
+  - repro step logs show scanner step ordering,
+  - repro manifest contains scope artifact hash fields.
 
 ## C-008 Diagnostic Expectations Contradiction
 
-- Plan expects `STARTUP_SYMBOL_SCOPE_BUILD` evidence in make-real-image logs
-  (`...implementation-plan.md:704`).
-- Compromise caveat says scanner is not run in make-real-image.
-
-Impact:
-- Either log grep command is wrong, or make-real-image must echo scope metadata.
-
-Spec closure required:
-- Clarify whether make-real-image emits a relay summary for prebuilt scope
-  artifact (recommended: yes, relay-only, no scan).
+- Contradiction:
+  - scanner runs outside make-real-image,
+  - yet make-real-image logs are expected to include scope evidence line.
+- Decision: `locked`
+  - make-real-image emits relay summary line
+    `STARTUP_SYMBOL_SCOPE_BUILD` with artifact metadata/hash only.
+- Implementation: `pending`
+- Required microsteps:
+  - `M-001`, `M-017`, `M-030`, `M-052`.
+- Closure evidence:
+  - focused lane logs include:
+    - `STARTUP_SYMBOL_PIPELINE`,
+    - `STARTUP_SYMBOL_SCOPE_BUILD` relay,
+    - `STARTUP_SYMBOL_RESOLUTION_BUILD`.
 
 ## C-009 Dual-Semantics Policy Contradiction
 
-- Plan states no dual parser path in final design.
-- Plan also allows temporary compatibility branch and temporary legacy override
-  env without strict semantic boundaries.
-
-Impact:
-- Teams may keep alternate parser semantics under temporary flags indefinitely.
-
-Spec closure required:
-- Compatibility path may switch artifact source only, never parser algorithm.
-- Add removal deadline criteria.
+- Contradiction:
+  - temporary compatibility can become indefinite if not bounded.
+- Decision: `locked`
+  - compatibility may switch artifact source only and expires by explicit
+    criteria.
+- Implementation: `pending`
+- Required microsteps:
+  - `M-003`, `M-037`, `M-059`, `M-062`, `M-063`.
+- Closure evidence:
+  - docs include expiry criterion,
+  - grep assertions confirm one active semantics path after cleanup.
 
 ## C-010 Contract Ownership Contradiction
 
-- Scanner step references consuming bootstrap contract in JS file path
-  (`bootstrap-l0-contract.mjs`) directly.
-- Scanner is Common Lisp and requires deterministic parse-friendly input.
-
-Impact:
-- Cross-language parsing becomes undefined or brittle.
-
-Spec closure required:
-- Introduce canonical generated contract JSON consumed by scanner.
+- Contradiction:
+  - scanner in Lisp cannot robustly parse JS contract source as canonical input.
+- Decision: `locked`
+  - pipeline generates `bootstrap-l0-contract.v1.json` sidecar before scanner.
+- Implementation: `pending`
+- Required microsteps:
+  - `M-013`, `M-020`, `M-021`, `M-025`.
+- Closure evidence:
+  - scanner invocation includes `--contract-json`,
+  - scanner fails with `missing-contract-json` if sidecar absent.
 
 ## C-011 Root Manifest Extensibility Contradiction
 
-- Need to record new startup scope/resolution artifacts for auditability.
-- `doc/wasm/root-image-manifest.schema.json` has
-  `artifacts.additionalProperties: false`.
-
-Impact:
-- Cannot add startup artifacts to root manifest without schema update.
-
-Spec closure required:
-- Decide whether startup artifacts belong in root manifest, repro manifest, or
-  both; update schema and smoke checks consistently.
+- Contradiction:
+  - root manifest schema currently restrictive; startup artifacts need audit
+    recording.
+- Decision: `locked`
+  - startup scope/resolution artifacts are required in repro manifest; root
+    manifest remains unchanged in migration cut unless schema bump is explicit.
+- Implementation: `pending`
+- Required microsteps:
+  - `M-024`, `M-056`, `M-057`, `M-058`.
+- Closure evidence:
+  - repro manifest entries include path/bytes/sha256 for startup artifacts.
 
 ## C-012 Resolver Authority Contradiction
 
-- Current resolver pathways split between metadata resolver and kernel probe.
-- Plan defines new resolution artifact but not canonical authority model.
+- Contradiction:
+  - current logic split across metadata and probe paths without canonical model.
+- Decision: `locked`
+  - staged hybrid resolver is the single authority model.
+- Implementation: `pending`
+- Required microsteps:
+  - `M-026` to `M-032`, `M-053`.
+- Closure evidence:
+  - resolution artifact records status taxonomy and `resolver_source`,
+  - focused lane logs and tests align with the same taxonomy.
 
-Impact:
-- Different engineers can produce incompatible status results.
+## Closure Board
 
-Spec closure required:
-- Define staged resolver model and precedence rules.
+- [ ] C-001 implementation closed
+- [ ] C-002 implementation closed
+- [ ] C-003 implementation closed
+- [ ] C-004 implementation closed
+- [ ] C-005 implementation closed
+- [ ] C-006 implementation closed
+- [ ] C-007 implementation closed
+- [ ] C-008 implementation closed
+- [ ] C-009 implementation closed
+- [ ] C-010 implementation closed
+- [ ] C-011 implementation closed
+- [ ] C-012 implementation closed

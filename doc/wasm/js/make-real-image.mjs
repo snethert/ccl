@@ -48,6 +48,7 @@ import {
   rewriteConstPoolFunctionDesignators,
 } from "./bootstrap-function-resolver.mjs";
 import {
+  STARTUP_BINDING_MAP_SCHEMA_V1,
   buildStartupBindingMapArtifact,
   normalizeStartupBindingMapArtifact,
   summarizeStartupBindingMapArtifact,
@@ -548,9 +549,52 @@ const subprimsMap = JSON.parse(await fs.readFile(subprimsMapPath, "utf-8"));
 const bootBytes = await fs.readFile(bootImagePath);
 const compiledModulesManifestBytes = await fs.readFile(modulesPath);
 const compiledModulesBundle = JSON.parse(compiledModulesManifestBytes.toString("utf-8"));
+const startupSymbolPipelineRecord = Object.freeze({
+  schema_version: "startup_symbol_pipeline_v1",
+  mode: "source_scope_v1",
+  legacy_enabled: false,
+});
+console.log(`STARTUP_SYMBOL_PIPELINE ${JSON.stringify(startupSymbolPipelineRecord)}`);
+function startupSymbolPipelineHardFail(reason, details = {}) {
+  const record = {
+    schema_version: "startup_symbol_pipeline_assert_v1",
+    mode: startupSymbolPipelineRecord.mode,
+    status: "fail",
+    policy: "hard-fail",
+    reason,
+    ...details,
+  };
+  console.error(`STARTUP_SYMBOL_PIPELINE_ASSERT ${JSON.stringify(record)}`);
+  fail(`startup symbol pipeline hard-fail: ${reason}`);
+}
+const embeddedStartupBindingMapRaw = compiledModulesBundle?.startupBindingMap ?? null;
 const embeddedStartupBindingMap = normalizeStartupBindingMapArtifact(
-  compiledModulesBundle?.startupBindingMap ?? null,
+  embeddedStartupBindingMapRaw,
 );
+if (
+  startupSymbolPipelineRecord.mode === "source_scope_v1" &&
+  startupSymbolPipelineRecord.legacy_enabled === false
+) {
+  if (embeddedStartupBindingMapRaw == null) {
+    startupSymbolPipelineHardFail("startup-symbol-scope-missing", {
+      fallback_rejected: "buildStartupBindingMapArtifact",
+    });
+  }
+  const embeddedSchemaVersion = (
+    embeddedStartupBindingMapRaw &&
+    typeof embeddedStartupBindingMapRaw === "object" &&
+    !Array.isArray(embeddedStartupBindingMapRaw)
+  )
+    ? embeddedStartupBindingMapRaw.schema_version
+    : null;
+  if (embeddedSchemaVersion !== STARTUP_BINDING_MAP_SCHEMA_V1) {
+    startupSymbolPipelineHardFail("startup-symbol-scope-invalid-schema", {
+      expected_schema_version: STARTUP_BINDING_MAP_SCHEMA_V1,
+      actual_schema_version: embeddedSchemaVersion,
+      fallback_rejected: "buildStartupBindingMapArtifact",
+    });
+  }
+}
 let startupBindingMapArtifact = embeddedStartupBindingMap ?? await buildStartupBindingMapArtifact({
   repoRoot: root,
   contract: BOOTSTRAP_L0_CONTRACT_V1,

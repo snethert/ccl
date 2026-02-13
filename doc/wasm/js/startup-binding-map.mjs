@@ -8,6 +8,14 @@ export const STARTUP_BINDING_MAP_SCHEMA_V1 = "startup_binding_map_v1";
 const STARTUP_BINDING_MAP_GENERATOR_V1 = "startup_binding_map_generator_v1";
 const STARTUP_BINDING_MAP_COVERAGE_SCHEMA_V1 = "startup_binding_map_coverage_v1";
 const UTF8_DECODER = new TextDecoder("utf-8");
+const STARTUP_BINDING_MAP_INPUT_CONTRACT_V1 = Object.freeze({
+  // Active pipeline contract: scope artifact + resolution artifact are source of truth.
+  // artifact-only active path: no JS source scan.
+  mode: "artifact-only",
+  scope_input: "scope artifact",
+  resolution_input: "resolution artifact",
+  source_scan_policy: "no JS source scan",
+});
 
 const FIXNUM_MIN = -0x20000000; // -536870912
 const FIXNUM_MAX = 0x1fffffff; // 536870911
@@ -1689,6 +1697,10 @@ export async function buildStartupBindingMapArtifact({
   contract = BOOTSTRAP_L0_CONTRACT_V1,
   functions = [],
 } = {}) {
+  // Keep contract text colocated with the builder entrypoint for quick audits/grep checks.
+  // The active startup path consumes artifact-only inputs from make-real-image.mjs.
+  // This module still retains source-scan helpers for non-active/offline map generation.
+  void STARTUP_BINDING_MAP_INPUT_CONTRACT_V1;
   const scriptDir = path.dirname(fileURLToPath(import.meta.url));
   const rootDir = path.resolve(repoRoot ?? path.resolve(scriptDir, "../../.."));
   const requiredSpecialVariables = Array.isArray(contract?.requiredSpecialVariables)
