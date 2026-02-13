@@ -1,24 +1,30 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-02-13T03:49:47.062Z",
+  "generated_at": "2026-02-13T19:12:59.416Z",
   "repo": {
     "root": "/Users/buildsomething/Source/ccl",
-    "head_sha": "8192bb58e3cd540c3d8ed89677064e264a54c0cb",
-    "head_short": "8192bb58",
+    "head_sha": "01426a01793baeedbd7a07b0ae19f996de9f4c5e",
+    "head_short": "01426a01",
     "branch": "wasm-port",
-    "dirty": false,
-    "dirty_files": []
+    "dirty": true,
+    "dirty_files": [
+      " M scripts/wasm/repro-startup-pipeline.sh",
+      "?? doc/wasm/repro/startup-pipeline-20260213T190647Z-01426a01/",
+      "?? doc/wasm/startup-symbol-scope.source_scope_v1.json",
+      "?? doc/wasm/wasm-runtime-modules.json.inline-v1.tmp.bin",
+      "?? doc/wasm/wasm-runtime-modules.json.inline-v1.tmp.json"
+    ]
   },
   "current_blocker": "No known blocker captured yet",
   "failing_command": null,
   "failure_signature": [
-    "126:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"TOPLEVEL\",\"entry_index\":4772,\"resolved_entry_index\":4772,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
-    "127:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUN-READ-LOOP\",\"entry_index\":5452,\"resolved_entry_index\":5452,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
-    "128:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUNTIME-BRIDGE-PUMP-COMMANDS\",\"entry_index\":5559,\"resolved_entry_index\":5559,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}"
+    "125:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"TOPLEVEL\",\"entry_index\":4772,\"resolved_entry_index\":4772,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
+    "126:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUN-READ-LOOP\",\"entry_index\":5452,\"resolved_entry_index\":5452,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
+    "127:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUNTIME-BRIDGE-PUMP-COMMANDS\",\"entry_index\":5559,\"resolved_entry_index\":5559,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}"
   ],
   "artifacts": {
-    "latest_log": "/tmp/make-real-image.trace.smoke.scantrace2.log",
-    "latest_repro_manifest": "doc/wasm/repro/startup-pipeline-20260212T180205Z-7d3db4b3/startup-repro-run-manifest.json"
+    "latest_log": "/tmp/make-real-image.trace.smoke.constants.full.notimeout.log",
+    "latest_repro_manifest": "doc/wasm/repro/startup-pipeline-20260213T190647Z-01426a01/startup-repro-run-manifest.json"
   },
   "next_actions": [
     "Run the failing command once with tracing enabled",

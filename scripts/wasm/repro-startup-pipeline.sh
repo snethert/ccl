@@ -119,6 +119,20 @@ else
 fi
 export CCL_BIN="$RESOLVED_CCL_BIN"
 
+CONTRACT_SIDECAR_SCRIPT="$ROOT_DIR/scripts/wasm/generate-bootstrap-l0-contract-sidecar.mjs"
+if [ ! -f "$CONTRACT_SIDECAR_SCRIPT" ]; then
+  echo "error: missing $CONTRACT_SIDECAR_SCRIPT" >&2
+  exit 1
+fi
+CONTRACT_SIDECAR_OUT="$ROOT_DIR/doc/wasm/bootstrap-l0-contract.v1.json"
+
+STARTUP_SYMBOL_SCOPE_SCRIPT="$ROOT_DIR/scripts/wasm/collect-startup-symbol-scope.lisp"
+if [ ! -f "$STARTUP_SYMBOL_SCOPE_SCRIPT" ]; then
+  echo "error: missing $STARTUP_SYMBOL_SCOPE_SCRIPT" >&2
+  exit 1
+fi
+STARTUP_SYMBOL_SCOPE_OUT="$ROOT_DIR/doc/wasm/startup-symbol-scope.source_scope_v1.json"
+
 git_dirty_status() {
   if [ -n "$(git -C "$ROOT_DIR" status --porcelain)" ]; then
     printf '1\n'
@@ -153,6 +167,7 @@ RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-$GIT_SHORT_SHA"
 RUN_DIR="$ROOT_DIR/$DEFAULT_RUN_ROOT_REL/startup-pipeline-$RUN_ID"
 LOG_DIR="$RUN_DIR/logs"
 mkdir -p "$LOG_DIR"
+STARTUP_SYMBOL_RESOLUTION_OUT="$RUN_DIR/startup-symbol-resolution.source_scope_v1.json"
 
 if [ -z "$RUN_MANIFEST_PATH" ]; then
   RUN_MANIFEST_PATH="$RUN_DIR/startup-repro-run-manifest.json"
@@ -214,7 +229,7 @@ RUNTIME_DIAG_COUNT=0
 if [ "$RUN_RUNTIME_DIAGNOSTICS" -eq 1 ]; then
   RUNTIME_DIAG_COUNT=3
 fi
-TOTAL_STEPS=$((8 + RUNTIME_DIAG_COUNT))
+TOTAL_STEPS=$((10 + RUNTIME_DIAG_COUNT))
 STEP_INDEX=0
 PIPELINE_STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 PIPELINE_STATUS="running"
@@ -300,7 +315,7 @@ write_run_manifest() {
   local failure_code="${4:-0}"
   local git_dirty_after
   git_dirty_after="$(git_dirty_status)"
-  node - "$RUN_MANIFEST_PATH" "$COMMAND_LOG_NDJSON" "$ROOT_DIR" "$RUN_ID" "$PIPELINE_STARTED_AT" "$finished_at" "$final_status" "$failure_step" "$failure_code" "$MANIFEST_GATE_STATUS" "$RUN_RUNTIME_DIAGNOSTICS" "$PIPELINE_PROVENANCE_PATH" "$MANIFEST_PATH" "$GIT_SHA" "$GIT_SHORT_SHA" "$GIT_BRANCH" "$GIT_DIRTY_BEFORE" "$git_dirty_after" "$NODE_BIN" "$NODE_VERSION" "$CC_COMMAND" "$CLANG_VERSION" "$WASM_LD_COMMAND" "$WASM_LD_VERSION" "$CCL_BIN" "$CCL_VERSION" <<'NODE'
+  node - "$RUN_MANIFEST_PATH" "$COMMAND_LOG_NDJSON" "$ROOT_DIR" "$RUN_ID" "$PIPELINE_STARTED_AT" "$finished_at" "$final_status" "$failure_step" "$failure_code" "$MANIFEST_GATE_STATUS" "$RUN_RUNTIME_DIAGNOSTICS" "$PIPELINE_PROVENANCE_PATH" "$MANIFEST_PATH" "$STARTUP_SYMBOL_SCOPE_OUT" "$GIT_SHA" "$GIT_SHORT_SHA" "$GIT_BRANCH" "$GIT_DIRTY_BEFORE" "$git_dirty_after" "$NODE_BIN" "$NODE_VERSION" "$CC_COMMAND" "$CLANG_VERSION" "$WASM_LD_COMMAND" "$WASM_LD_VERSION" "$CCL_BIN" "$CCL_VERSION" <<'NODE'
 const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
@@ -319,6 +334,7 @@ const [
   runtimeDiagnosticsRaw,
   provenancePath,
   rootManifestPath,
+  startupSymbolScopePath,
   gitSha,
   gitShort,
   gitBranch,
@@ -360,6 +376,7 @@ const artifactPaths = [
   "wasm-boot.image",
   "doc/wasm/root.image",
   rel(rootManifestPath),
+  rel(startupSymbolScopePath),
 ];
 
 const uniqueArtifactPaths = Array.from(new Set(artifactPaths));
@@ -485,7 +502,19 @@ if ! run_step "build-wasm-boot" scripts/wasm/build-wasm-boot.sh --force; then
   write_run_manifest "$PIPELINE_STATUS" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$FAILED_STEP" "$FAILED_EXIT_CODE"
   exit "$FAILED_EXIT_CODE"
 fi
-if ! run_step "make-root-image" node doc/wasm/js/make-real-image.mjs --output doc/wasm/root.image --manifest-out "$(to_repo_path "$MANIFEST_PATH")" --modules doc/wasm/wasm-runtime-modules.json --build-provenance "$(to_repo_path "$PIPELINE_PROVENANCE_PATH")"; then
+if ! run_step "generate-bootstrap-l0-contract-sidecar" node scripts/wasm/generate-bootstrap-l0-contract-sidecar.mjs --out "$(to_repo_path "$CONTRACT_SIDECAR_OUT")"; then
+  PIPELINE_STATUS="fail"
+  MANIFEST_GATE_STATUS="not-run"
+  write_run_manifest "$PIPELINE_STATUS" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$FAILED_STEP" "$FAILED_EXIT_CODE"
+  exit "$FAILED_EXIT_CODE"
+fi
+if ! run_step "collect-startup-symbol-scope" "$CCL_BIN" --no-init --batch -l "$STARTUP_SYMBOL_SCOPE_SCRIPT" -- --repo-root "$(to_repo_path "$ROOT_DIR")" --out "$(to_repo_path "$STARTUP_SYMBOL_SCOPE_OUT")" --feature-profile wasm32-target-v1 --contract-json "$(to_repo_path "$CONTRACT_SIDECAR_OUT")"; then
+  PIPELINE_STATUS="fail"
+  MANIFEST_GATE_STATUS="not-run"
+  write_run_manifest "$PIPELINE_STATUS" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$FAILED_STEP" "$FAILED_EXIT_CODE"
+  exit "$FAILED_EXIT_CODE"
+fi
+if ! run_step "make-root-image" node doc/wasm/js/make-real-image.mjs --output doc/wasm/root.image --manifest-out "$(to_repo_path "$MANIFEST_PATH")" --modules doc/wasm/wasm-runtime-modules.json --build-provenance "$(to_repo_path "$PIPELINE_PROVENANCE_PATH")" --startup-symbol-scope "$(to_repo_path "$STARTUP_SYMBOL_SCOPE_OUT")" --startup-symbol-resolution-out "$(to_repo_path "$STARTUP_SYMBOL_RESOLUTION_OUT")" --startup-symbol-contract "$(to_repo_path "$CONTRACT_SIDECAR_OUT")"; then
   PIPELINE_STATUS="fail"
   MANIFEST_GATE_STATUS="not-run"
   write_run_manifest "$PIPELINE_STATUS" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$FAILED_STEP" "$FAILED_EXIT_CODE"

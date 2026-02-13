@@ -620,6 +620,16 @@ I will require validation logs contain none of:
 - `WASM misc_alloc: reserve failed`
 - `wasm_memory_grow_and_relocate failed`
 
+### 8.4 Startup Temp Table Lifecycle
+
+#### 8.4.A Task
+I will enforce startup temp/shadow table cleanup timing so required fasload resolution is not regressed.
+
+Rule:
+- startup temp/shadow tables used by const-pool install + deferred startup binding apply remain live through required fasload boundary.
+- cleanup is allowed only after `REQUIRED_FASLOAD_BOUNDARY` first-required pass is crossed and no additional required fasloads will run in that process.
+- cleanup before boundary is forbidden because it can reintroduce unresolved deferred startup bindings.
+
 ---
 
 ## 9. Phase 9: Caching And Invalidation
