@@ -401,16 +401,21 @@ Startup binding map artifact:
 - Runtime bundle manifests may carry `startupBindingMap`
   (`schema_version: "startup_binding_map_v1"`), generated during
   `scripts/wasm/pack-inline-bundle-v2.mjs`.
-- The artifact is built from bootstrap contract requirements plus available
-  level-1 initial-binding metadata and runtime function entry metadata.
+- The artifact is a single unified pre-fasload map with two target classes:
+  `target_cell: "vcell"` for required special-variable initial values and
+  `target_cell: "fcell"` for function bindings.
+- Function-side coverage is generated from a comprehensive `level-0/*.lisp`
+  function-designator scan and resolved via runtime function metadata; map
+  build diagnostics include machine-readable level-0 scan coverage.
 - Each entry is explicit and machine-readable:
   `availability: literal|entry-backed|deferred|unsupported` with
   `initializer.kind` and reason fields.
 - `make-real-image.mjs` resolves this artifact before the pre-fasload gate:
   uses bundled `startupBindingMap` when present, otherwise regenerates it from
   the same metadata path (no Lisp `LOAD`/script execution in `WASM_BOOT_EARLY`).
-- Map application runs before `assertL0BootstrapContractOrFail(...)` and keeps
-  strict L0 gate semantics unchanged.
+- Unified map application runs in one pass before
+  `assertL0BootstrapContractOrFail(...)` and keeps strict L0 gate semantics and
+  phase transitions unchanged.
 
 Machine-readable diagnostics:
 
@@ -420,6 +425,8 @@ Machine-readable diagnostics:
   `STARTUP_BINDING_MAP_APPLY {"schema_version":"startup_binding_map_apply_v1",...}`
 - L0 gate diagnostics remain unchanged:
   `L0_BOOTSTRAP_CONTRACT {"status":"pass"|"fail",...}`
+- Required `%FASLOAD` boundary diagnostic:
+  `REQUIRED_FASLOAD_BOUNDARY {"schema_version":"required_fasload_boundary_v1",...}`
 
 Recommended validation command:
 

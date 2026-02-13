@@ -226,8 +226,6 @@ export const STARTUP_SYMBOL_TO_ENTRY_FUNCTION_DESIGNATORS_PRE_TOPLEVEL_V1 = Obje
   "RUNTIME-COMMAND--DECODE-STRING",
   "TOPLEVEL-EVAL",
   "TOPLEVEL-PRINT",
-  "%MAKE-VECTOR-OUTPUT-STREAM",
-  "MAKE-UARRAY-1",
 ]);
 
 export function collectBootstrapState({ kernelExports } = {}) {

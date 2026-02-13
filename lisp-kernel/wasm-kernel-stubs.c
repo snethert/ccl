@@ -6814,6 +6814,34 @@ wasm_set_symbol_vcell_entry_function(uint32_t name_ptr,
   return raw->vcell;
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_set_symbol_fcell_entry_function")))
+LispObj
+wasm_set_symbol_fcell_entry_function(uint32_t name_ptr,
+                                     uint32_t name_len,
+                                     uint32_t pkg_ptr,
+                                     uint32_t pkg_len,
+                                     uint32_t entry_index)
+{
+  LispObj sym = wasm_probe_symbol(name_ptr, name_len, pkg_ptr, pkg_len);
+  if (wasm_probe_last_status_code != WASM_PROBE_STATUS_OK || !wasm_probe_symbol_p(sym)) {
+    return lisp_nil;
+  }
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    wasm_probe_set_status(WASM_PROBE_STATUS_ARG_INVALID);
+    return lisp_nil;
+  }
+  LispObj fn = wasm_const_pool_make_entry_function(tcr, entry_index);
+  if (fn == lisp_nil) {
+    wasm_probe_set_status(WASM_PROBE_STATUS_SYMBOL_INVALID);
+    return lisp_nil;
+  }
+  lispsymbol *raw = (lispsymbol *)ptr_from_lispobj(untag(sym));
+  raw->fcell = fn;
+  wasm_probe_set_status(WASM_PROBE_STATUS_OK);
+  return raw->fcell;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_debug_all_packages_raw")))
 LispObj
 wasm_debug_all_packages_raw(void)

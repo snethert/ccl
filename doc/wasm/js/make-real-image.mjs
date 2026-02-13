@@ -556,9 +556,9 @@ const startupBindingMapArtifact = embeddedStartupBindingMap ?? await buildStartu
 });
 const startupBindingMapSource = embeddedStartupBindingMap
   ? "runtime-modules-manifest.startupBindingMap"
-  : "generated-from-level1-initial-bindings+runtime-functions";
+  : "generated-from-level0+level1+runtime-functions";
 const startupBindingMapCounts = summarizeStartupBindingMapArtifact(startupBindingMapArtifact);
-console.log(`STARTUP_BINDING_MAP_BUILD ${JSON.stringify({
+const startupBindingMapBuildSummary = {
   schema_version: "startup_binding_map_build_v1",
   status: "ok",
   phase: "pre-fasload",
@@ -571,8 +571,14 @@ console.log(`STARTUP_BINDING_MAP_BUILD ${JSON.stringify({
     deferred_entries: startupBindingMapCounts.deferred_entries,
     unsupported_entries: startupBindingMapCounts.unsupported_entries,
     entry_backed_entries: startupBindingMapCounts.entry_backed_entries,
+    vcell_entries: startupBindingMapCounts.vcell_entries ?? null,
+    fcell_entries: startupBindingMapCounts.fcell_entries ?? null,
+    special_variable_entries: startupBindingMapCounts.special_variable_entries ?? null,
+    function_entries: startupBindingMapCounts.function_entries ?? null,
   },
-})}`);
+  coverage: startupBindingMapArtifact?.coverage ?? null,
+};
+console.log(`STARTUP_BINDING_MAP_BUILD ${JSON.stringify(startupBindingMapBuildSummary)}`);
 const bootstrapFunctionResolver = createBootstrapFunctionResolver({
   phase: BOOTSTRAP_RESOLVER_PHASE_BOOTSTRAP,
 });
@@ -1349,6 +1355,24 @@ const debugReadNamedCclSymbolState = (label, symbolName) => {
     const fcellEntry = typeof ex.wasm_debug_function_entry_index === "function"
       ? (ex.wasm_debug_function_entry_index(fcell >>> 0) | 0)
       : null;
+    let fcellOwner = null;
+    if (typeof ex.wasm_debug_find_symbol_by_fcell_raw === "function" &&
+        typeof ex.wasm_debug_copy_symbol_name === "function" &&
+        fcell !== 0) {
+      const owner = ex.wasm_debug_find_symbol_by_fcell_raw(fcell >>> 0) >>> 0;
+      if (owner !== 0) {
+        const ownerLen = ex.wasm_debug_copy_symbol_name(owner >>> 0, 0, 0) >>> 0;
+        if (ownerLen > 0) {
+          const ownerPtr = allocScratch(runtime.memory, ownerLen);
+          const ownerCopied = ex.wasm_debug_copy_symbol_name(owner >>> 0, ownerPtr >>> 0, ownerLen) >>> 0;
+          if (ownerCopied > 0) {
+            fcellOwner = decoder.decode(
+              new Uint8Array(runtime.memory.buffer, ownerPtr >>> 0, Math.min(ownerLen, ownerCopied)),
+            );
+          }
+        }
+      }
+    }
     trace(
       `debug-symbol-state label=${label}` +
       ` sym=0x${sym.toString(16)}` +
@@ -1356,6 +1380,7 @@ const debugReadNamedCclSymbolState = (label, symbolName) => {
       ` fcell=0x${fcell.toString(16)}` +
       (vcellEntry == null ? "" : ` vcell_entry=${vcellEntry}`) +
       (fcellEntry == null ? "" : ` fcell_entry=${fcellEntry}`) +
+      (fcellOwner ? ` fcell_owner=${JSON.stringify(fcellOwner)}` : "") +
       ` name=${JSON.stringify(symbolName)}`,
     );
   } catch (err) {
@@ -1486,6 +1511,9 @@ const debugReadFasloadBoundarySymbols = (label) => {
   debugReadNamedCclSymbolState(`${label}.fn-set-binding-index`, "%SET-BINDING-INDEX");
   debugReadNamedCclSymbolState(`${label}.fn-current-tcr`, "%CURRENT-TCR");
   debugReadNamedCclSymbolState(`${label}.fn-set-tcr-toplevel-function`, "%SET-TCR-TOPLEVEL-FUNCTION");
+  debugReadNamedCclSymbolState(`${label}.fn-make-vector-output-stream`, "MAKE-VECTOR-OUTPUT-STREAM");
+  debugReadNamedCclSymbolState(`${label}.fn-percent-make-vector-output-stream`, "%MAKE-VECTOR-OUTPUT-STREAM");
+  debugReadNamedCclSymbolState(`${label}.fn-make-uarray-1`, "MAKE-UARRAY-1");
   debugReadNamedCclSymbolState(`${label}.pct-toplevel-function`, "%TOPLEVEL-FUNCTION%");
   debugReadNamedCclSymbolState(`${label}.sym-toplevel`, "TOPLEVEL");
   debugReadNamedAnySymbolState(`${label}.sym-stream-pathname`, "STREAM-PATHNAME");
@@ -1598,6 +1626,23 @@ const debugReadLastToplevelThrow = (label) => {
 debugReadFasloadBoundarySymbols("post-boot");
 debugReadToplfuncState("post-boot");
 
+const bootCompiledModuleRegistryNil = typeof ex.wasm_get_lisp_nil === "function"
+  ? (ex.wasm_get_lisp_nil() >>> 0)
+  : 0;
+const bootCompiledModuleRegistry = typeof ex.wasm_get_compiled_module_registry === "function"
+  ? (ex.wasm_get_compiled_module_registry() >>> 0)
+  : 0;
+const hasBootCompiledModuleRegistrySnapshot =
+  bootCompiledModuleRegistry !== 0 &&
+  bootCompiledModuleRegistry !== bootCompiledModuleRegistryNil;
+if (traceEnabled) {
+  trace(
+    `boot-registry snapshot raw=0x${bootCompiledModuleRegistry.toString(16)}` +
+    ` nil=0x${bootCompiledModuleRegistryNil.toString(16)}` +
+    ` has_snapshot=${hasBootCompiledModuleRegistrySnapshot ? 1 : 0}`,
+  );
+}
+
 if (process.env.CCL_WASM_DIAG_START_LISP_BEFORE_MODULE_INSTALL === "1") {
   if (typeof ex.wasm_ccl_start_lisp !== "function") {
     fail("kernel missing wasm_ccl_start_lisp for CCL_WASM_DIAG_START_LISP_BEFORE_MODULE_INSTALL");
@@ -1650,13 +1695,23 @@ if (bundleInstall.failed) {
   console.log(`compiled modules skipped: ${bundleInstall.failed}`);
 }
 
-await installCompiledModulesFromRegistry({
+const registryInstall = await installCompiledModulesFromRegistry({
   kernel: ex,
   memory: runtime.memory,
   subprimsTable: runtime.subprimsTable,
   microkernel,
+  ...(hasBootCompiledModuleRegistrySnapshot
+    ? {
+      registry: bootCompiledModuleRegistry,
+      nil: bootCompiledModuleRegistryNil,
+    }
+    : {}),
 });
-trace("compiled module registry install pass complete");
+trace(
+  `compiled module registry install pass complete` +
+  ` source=${hasBootCompiledModuleRegistrySnapshot ? "boot-snapshot" : "current-registry"}` +
+  ` installed=${registryInstall.installed}/${registryInstall.count}`,
+);
 debugReadFasloadBoundarySymbols("post-registry");
 debugReadToplfuncState("post-registry");
 runPreToplevelFunctionDesignatorGateOrFail();
@@ -1802,8 +1857,10 @@ function applyStartupBindingMapOrFail({
   const requiredExports = [
     "wasm_get_lisp_nil",
     "wasm_probe_symbol",
+    "wasm_probe_symbol_fcell",
     "wasm_probe_symbol_vcell",
     "wasm_probe_last_status",
+    "wasm_debug_function_entry_index",
   ];
   for (const name of requiredExports) {
     if (typeof ex[name] !== "function") {
@@ -1825,12 +1882,33 @@ function applyStartupBindingMapOrFail({
     const raw = value >>> 0;
     return raw === 0 || raw === nil;
   };
+  const normalizeTargetCell = (value) => {
+    const token = String(value ?? "").trim().toLowerCase();
+    return token === "fcell" ? "fcell" : "vcell";
+  };
 
   let eligibleEntries = 0;
   let appliedCount = 0;
   let skippedAlreadyBound = 0;
   let requiredUninitialized = 0;
   let constPoolPrimeFailures = 0;
+  let skippedSymbolUnresolved = 0;
+  const targetCounts = {
+    vcell: {
+      eligible_entries: 0,
+      applied_count: 0,
+      skipped_already_bound: 0,
+      skipped_symbol_unresolved: 0,
+      required_non_nil_unavailable: 0,
+    },
+    fcell: {
+      eligible_entries: 0,
+      applied_count: 0,
+      skipped_already_bound: 0,
+      skipped_symbol_unresolved: 0,
+      required_non_nil_unavailable: 0,
+    },
+  };
 
   if (requiredConstPools.length > 0) {
     if (typeof ex.wasm_const_pool_ref !== "function") {
@@ -1858,6 +1936,8 @@ function applyStartupBindingMapOrFail({
   for (const entry of entries) {
     const packageName = String(entry?.package_name ?? "").trim();
     const symbolName = String(entry?.symbol_name ?? "").trim();
+    const targetCell = normalizeTargetCell(entry?.target_cell ?? null);
+    const bindingClass = String(entry?.binding_class ?? "").trim().toLowerCase() || null;
     const requireNonNil = Boolean(entry?.require_non_nil);
     const availability = String(entry?.availability ?? "deferred");
     const initializer = entry?.initializer ?? {};
@@ -1867,9 +1947,12 @@ function applyStartupBindingMapOrFail({
     if (!eligible) {
       if (requireNonNil) {
         requiredUninitialized++;
+        targetCounts[targetCell].required_non_nil_unavailable++;
         failures.push({
           package_name: packageName || null,
           symbol_name: symbolName || null,
+          target_cell: targetCell,
+          binding_class: bindingClass,
           reason: "required-non-nil-initializer-unavailable",
           availability,
           initializer_kind: initializerKind || null,
@@ -1879,6 +1962,7 @@ function applyStartupBindingMapOrFail({
       continue;
     }
     eligibleEntries++;
+    targetCounts[targetCell].eligible_entries++;
 
     const nameMem = scratchUtf8(symbolName);
     const pkgMem = scratchUtf8(packageName);
@@ -1890,51 +1974,88 @@ function applyStartupBindingMapOrFail({
     ) >>> 0;
     const symbolStatus = probeStatus();
     if (symbolStatus !== L0_PROBE_STATUS.OK || symbolRaw === 0 || symbolRaw === nil) {
-      failures.push({
-        package_name: packageName || null,
-        symbol_name: symbolName || null,
-        reason: "symbol-unresolved",
-        probe_status: symbolStatus,
-        probe_status_name: l0ProbeStatusName(symbolStatus),
-        symbol_raw: toHex(symbolRaw),
-      });
+      skippedSymbolUnresolved++;
+      targetCounts[targetCell].skipped_symbol_unresolved++;
+      if (requireNonNil) {
+        failures.push({
+          package_name: packageName || null,
+          symbol_name: symbolName || null,
+          target_cell: targetCell,
+          binding_class: bindingClass,
+          reason: "required-symbol-unresolved",
+          probe_status: symbolStatus,
+          probe_status_name: l0ProbeStatusName(symbolStatus),
+          symbol_raw: toHex(symbolRaw),
+        });
+      }
       continue;
     }
 
-    const beforeVcell = ex.wasm_probe_symbol_vcell(symbolRaw >>> 0) >>> 0;
-    const beforeVcellStatus = probeStatus();
-    if (beforeVcellStatus !== L0_PROBE_STATUS.OK) {
+    let beforeCell = 0;
+    let beforeCellStatus = L0_PROBE_STATUS.OK;
+    if (targetCell === "fcell") {
+      beforeCell = ex.wasm_probe_symbol_fcell(symbolRaw >>> 0) >>> 0;
+      beforeCellStatus = probeStatus();
+    } else {
+      beforeCell = ex.wasm_probe_symbol_vcell(symbolRaw >>> 0) >>> 0;
+      beforeCellStatus = probeStatus();
+    }
+    if (beforeCellStatus !== L0_PROBE_STATUS.OK) {
       failures.push({
         package_name: packageName || null,
         symbol_name: symbolName || null,
-        reason: "vcell-probe-failed-before-apply",
-        probe_status: beforeVcellStatus,
-        probe_status_name: l0ProbeStatusName(beforeVcellStatus),
+        target_cell: targetCell,
+        binding_class: bindingClass,
+        reason: "target-cell-probe-failed-before-apply",
+        probe_status: beforeCellStatus,
+        probe_status_name: l0ProbeStatusName(beforeCellStatus),
         symbol_raw: toHex(symbolRaw),
       });
       continue;
     }
-    if (!isNilLike(beforeVcell)) {
+    if (targetCell === "fcell") {
+      const beforeEntry = ex.wasm_debug_function_entry_index(beforeCell >>> 0) | 0;
+      if (beforeEntry >= 0) {
+        skippedAlreadyBound++;
+        targetCounts[targetCell].skipped_already_bound++;
+        continue;
+      }
+    } else if (!isNilLike(beforeCell)) {
       skippedAlreadyBound++;
+      targetCounts[targetCell].skipped_already_bound++;
       continue;
     }
 
     let missingExport = null;
     switch (initializerKind) {
       case "literal-fixnum":
-        missingExport = typeof ex.wasm_set_symbol_vcell_fixnum !== "function"
-          ? "wasm_set_symbol_vcell_fixnum"
-          : null;
+        if (targetCell !== "vcell") {
+          missingExport = "initializer-target-mismatch";
+        } else {
+          missingExport = typeof ex.wasm_set_symbol_vcell_fixnum !== "function"
+            ? "wasm_set_symbol_vcell_fixnum"
+            : null;
+        }
         break;
       case "literal-nil":
-        missingExport = typeof ex.wasm_set_symbol_vcell_nil !== "function"
-          ? "wasm_set_symbol_vcell_nil"
-          : null;
+        if (targetCell !== "vcell") {
+          missingExport = "initializer-target-mismatch";
+        } else {
+          missingExport = typeof ex.wasm_set_symbol_vcell_nil !== "function"
+            ? "wasm_set_symbol_vcell_nil"
+            : null;
+        }
         break;
       case "entry-function":
-        missingExport = typeof ex.wasm_set_symbol_vcell_entry_function !== "function"
-          ? "wasm_set_symbol_vcell_entry_function"
-          : null;
+        if (targetCell === "fcell") {
+          missingExport = typeof ex.wasm_set_symbol_fcell_entry_function !== "function"
+            ? "wasm_set_symbol_fcell_entry_function"
+            : null;
+        } else {
+          missingExport = typeof ex.wasm_set_symbol_vcell_entry_function !== "function"
+            ? "wasm_set_symbol_vcell_entry_function"
+            : null;
+        }
         break;
       default:
         missingExport = null;
@@ -1944,6 +2065,8 @@ function applyStartupBindingMapOrFail({
       failures.push({
         package_name: packageName || null,
         symbol_name: symbolName || null,
+        target_cell: targetCell,
+        binding_class: bindingClass,
         reason: "missing-kernel-export",
         export_name: missingExport,
         initializer_kind: initializerKind || null,
@@ -1958,6 +2081,8 @@ function applyStartupBindingMapOrFail({
           failures.push({
             package_name: packageName || null,
             symbol_name: symbolName || null,
+            target_cell: targetCell,
+            binding_class: bindingClass,
             reason: "initializer-invalid-fixnum",
             initializer_kind: initializerKind,
             initializer_value: initializer?.fixnum_value ?? null,
@@ -1987,25 +2112,39 @@ function applyStartupBindingMapOrFail({
           failures.push({
             package_name: packageName || null,
             symbol_name: symbolName || null,
+            target_cell: targetCell,
+            binding_class: bindingClass,
             reason: "initializer-invalid-entry-index",
             initializer_kind: initializerKind,
             initializer_value: initializer?.entry_index ?? null,
           });
           continue;
         }
-        ex.wasm_set_symbol_vcell_entry_function(
-          nameMem.ptr >>> 0,
-          nameMem.len >>> 0,
-          pkgMem.ptr >>> 0,
-          pkgMem.len >>> 0,
-          entryIndex >>> 0,
-        );
+        if (targetCell === "fcell") {
+          ex.wasm_set_symbol_fcell_entry_function(
+            nameMem.ptr >>> 0,
+            nameMem.len >>> 0,
+            pkgMem.ptr >>> 0,
+            pkgMem.len >>> 0,
+            entryIndex >>> 0,
+          );
+        } else {
+          ex.wasm_set_symbol_vcell_entry_function(
+            nameMem.ptr >>> 0,
+            nameMem.len >>> 0,
+            pkgMem.ptr >>> 0,
+            pkgMem.len >>> 0,
+            entryIndex >>> 0,
+          );
+        }
         break;
       }
       default:
         failures.push({
           package_name: packageName || null,
           symbol_name: symbolName || null,
+          target_cell: targetCell,
+          binding_class: bindingClass,
           reason: "initializer-kind-unsupported-at-apply",
           initializer_kind: initializerKind || null,
         });
@@ -2017,6 +2156,8 @@ function applyStartupBindingMapOrFail({
       failures.push({
         package_name: packageName || null,
         symbol_name: symbolName || null,
+        target_cell: targetCell,
+        binding_class: bindingClass,
         reason: "apply-status-not-ok",
         probe_status: applyStatus,
         probe_status_name: l0ProbeStatusName(applyStatus),
@@ -2025,30 +2166,67 @@ function applyStartupBindingMapOrFail({
       continue;
     }
 
-    const afterVcell = ex.wasm_probe_symbol_vcell(symbolRaw >>> 0) >>> 0;
-    const afterVcellStatus = probeStatus();
-    if (afterVcellStatus !== L0_PROBE_STATUS.OK) {
-      failures.push({
-        package_name: packageName || null,
-        symbol_name: symbolName || null,
-        reason: "vcell-probe-failed-after-apply",
-        probe_status: afterVcellStatus,
-        probe_status_name: l0ProbeStatusName(afterVcellStatus),
-        symbol_raw: toHex(symbolRaw),
-      });
-      continue;
-    }
-    if (requireNonNil && isNilLike(afterVcell)) {
-      failures.push({
-        package_name: packageName || null,
-        symbol_name: symbolName || null,
-        reason: "vcell-still-nil-after-apply",
-        initializer_kind: initializerKind || null,
-        vcell_raw: toHex(afterVcell),
-      });
-      continue;
+    if (targetCell === "fcell") {
+      const afterFcell = ex.wasm_probe_symbol_fcell(symbolRaw >>> 0) >>> 0;
+      const afterFcellStatus = probeStatus();
+      if (afterFcellStatus !== L0_PROBE_STATUS.OK) {
+        failures.push({
+          package_name: packageName || null,
+          symbol_name: symbolName || null,
+          target_cell: targetCell,
+          binding_class: bindingClass,
+          reason: "fcell-probe-failed-after-apply",
+          probe_status: afterFcellStatus,
+          probe_status_name: l0ProbeStatusName(afterFcellStatus),
+          symbol_raw: toHex(symbolRaw),
+        });
+        continue;
+      }
+      const afterEntry = ex.wasm_debug_function_entry_index(afterFcell >>> 0) | 0;
+      if (afterEntry < 0) {
+        failures.push({
+          package_name: packageName || null,
+          symbol_name: symbolName || null,
+          target_cell: targetCell,
+          binding_class: bindingClass,
+          reason: "fcell-still-non-callable-after-apply",
+          initializer_kind: initializerKind || null,
+          fcell_raw: toHex(afterFcell),
+          fcell_entry_index: afterEntry,
+        });
+        continue;
+      }
+    } else {
+      const afterVcell = ex.wasm_probe_symbol_vcell(symbolRaw >>> 0) >>> 0;
+      const afterVcellStatus = probeStatus();
+      if (afterVcellStatus !== L0_PROBE_STATUS.OK) {
+        failures.push({
+          package_name: packageName || null,
+          symbol_name: symbolName || null,
+          target_cell: targetCell,
+          binding_class: bindingClass,
+          reason: "vcell-probe-failed-after-apply",
+          probe_status: afterVcellStatus,
+          probe_status_name: l0ProbeStatusName(afterVcellStatus),
+          symbol_raw: toHex(symbolRaw),
+        });
+        continue;
+      }
+      if (requireNonNil && isNilLike(afterVcell)) {
+        failures.push({
+          package_name: packageName || null,
+          symbol_name: symbolName || null,
+          target_cell: targetCell,
+          binding_class: bindingClass,
+          reason: "vcell-still-nil-after-apply",
+          initializer_kind: initializerKind || null,
+          vcell_raw: toHex(afterVcell),
+        });
+        continue;
+      }
     }
     appliedCount++;
+    targetCounts[targetCell].applied_count++;
   }
 
   const applySummary = {
@@ -2058,18 +2236,25 @@ function applyStartupBindingMapOrFail({
     source: mapSource ?? null,
     map_schema_version: mapArtifact?.schema_version ?? null,
     contract_id: contract?.id ?? null,
+    coverage: mapArtifact?.coverage ?? null,
     counts: {
       total_entries: counts.total_entries,
       literal_entries: counts.literal_entries,
       entry_backed_entries: counts.entry_backed_entries,
       deferred_entries: counts.deferred_entries,
       unsupported_entries: counts.unsupported_entries,
+      vcell_entries: counts.vcell_entries ?? null,
+      fcell_entries: counts.fcell_entries ?? null,
+      special_variable_entries: counts.special_variable_entries ?? null,
+      function_entries: counts.function_entries ?? null,
       eligible_entries: eligibleEntries,
       const_pool_prime_failures: constPoolPrimeFailures,
       required_non_nil_unavailable: requiredUninitialized,
       applied_count: appliedCount,
       skipped_already_bound: skippedAlreadyBound,
+      skipped_symbol_unresolved: skippedSymbolUnresolved,
       failed_count: failures.length,
+      target_counts: targetCounts,
     },
     first_failure: failures.length > 0 ? failures[0] : null,
   };
@@ -2078,6 +2263,7 @@ function applyStartupBindingMapOrFail({
     fail(`pre-fasload startup binding map apply failed: ${failures.length} requirement(s)`);
   }
   console.log(`STARTUP_BINDING_MAP_APPLY ${JSON.stringify(applySummary)}`);
+  return applySummary;
 }
 
 function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
@@ -2418,7 +2604,7 @@ const kernelDebugSymbolName = typeof ex.wasm_debug_copy_symbol_name === "functio
   }
   : null;
 
-applyStartupBindingMapOrFail({
+const startupBindingMapApplySummary = applyStartupBindingMapOrFail({
   mapArtifact: startupBindingMapArtifact,
   mapSource: startupBindingMapSource,
   contract: BOOTSTRAP_L0_CONTRACT_V1,
@@ -2484,7 +2670,9 @@ const skipRequiredFasloads = process.env.CCL_WASM_SKIP_REQUIRED_FASLOADS === "1"
 if (skipRequiredFasloads && traceEnabled) {
   trace("skipping required fasload sequence (CCL_WASM_SKIP_REQUIRED_FASLOADS=1)");
 }
-for (const faslPath of skipRequiredFasloads ? [] : requiredFasls) {
+const requiredFasloadQueue = skipRequiredFasloads ? [] : requiredFasls;
+for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
+  const faslPath = requiredFasloadQueue[faslIndex];
   if (traceEnabled && pendingThrowProbe) {
     trace(`fasload pre path=${faslPath} pending=${pendingThrowProbe()}`);
   }
@@ -2498,7 +2686,33 @@ for (const faslPath of skipRequiredFasloads ? [] : requiredFasls) {
     faslRc = ex.wasm_fasload_path(faslPtr, faslBytes.length >>> 0) | 0;
   } catch (err) {
     debugReadSpecrefFailure(`fasload trap path=${faslPath}`);
-    throw err;
+    const pending = pendingThrowProbe ? pendingThrowProbe() : null;
+    const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
+    const pendingSymbol = pendingRaw != null && kernelDebugSymbolName ? kernelDebugSymbolName(pendingRaw) : null;
+    const bootPhaseRaw = typeof ex.wasm_boot_get_phase === "function"
+      ? (ex.wasm_boot_get_phase() >>> 0)
+      : null;
+    console.error(`REQUIRED_FASLOAD_BOUNDARY ${JSON.stringify({
+      schema_version: "required_fasload_boundary_v1",
+      status: "fail",
+      phase: "pre-runtime-required-fasload",
+      fasl_index: faslIndex >>> 0,
+      first_required_fasload: faslIndex === 0,
+      path: faslPath,
+      rc: null,
+      pending_throw: pending,
+      pending_throw_raw: pendingRaw == null ? null : `0x${pendingRaw.toString(16)}`,
+      pending_symbol: pendingSymbol ?? null,
+      boot_phase: bootPhaseRaw == null ? null : formatBootPhase(bootPhaseRaw),
+      reason: "required-fasload-trap-after-unified-startup-binding-map-apply",
+      trap_message: err?.message ?? String(err),
+      startup_binding_map: {
+        source: startupBindingMapSource,
+        build: startupBindingMapBuildSummary,
+        apply: startupBindingMapApplySummary,
+      },
+    })}`);
+    fail(`wasm_fasload_path(${faslPath}) trapped: ${err?.message ?? err}`);
   }
   if (traceEnabled && pendingThrowProbe) {
     const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
@@ -2511,6 +2725,31 @@ for (const faslPath of skipRequiredFasloads ? [] : requiredFasls) {
   }
   if (faslRc !== 0) {
     debugReadSpecrefFailure(`fasload rc=${faslRc} path=${faslPath}`);
+    const pending = pendingThrowProbe ? pendingThrowProbe() : null;
+    const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
+    const pendingSymbol = pendingRaw != null && kernelDebugSymbolName ? kernelDebugSymbolName(pendingRaw) : null;
+    const bootPhaseRaw = typeof ex.wasm_boot_get_phase === "function"
+      ? (ex.wasm_boot_get_phase() >>> 0)
+      : null;
+    console.error(`REQUIRED_FASLOAD_BOUNDARY ${JSON.stringify({
+      schema_version: "required_fasload_boundary_v1",
+      status: "fail",
+      phase: "pre-runtime-required-fasload",
+      fasl_index: faslIndex >>> 0,
+      first_required_fasload: faslIndex === 0,
+      path: faslPath,
+      rc: faslRc,
+      pending_throw: pending,
+      pending_throw_raw: pendingRaw == null ? null : `0x${pendingRaw.toString(16)}`,
+      pending_symbol: pendingSymbol ?? null,
+      boot_phase: bootPhaseRaw == null ? null : formatBootPhase(bootPhaseRaw),
+      reason: "required-fasload-failed-after-unified-startup-binding-map-apply",
+      startup_binding_map: {
+        source: startupBindingMapSource,
+        build: startupBindingMapBuildSummary,
+        apply: startupBindingMapApplySummary,
+      },
+    })}`);
     if (traceEnabled) {
       const nargsRaw = typeof ex.wasm_get_nargs === "function" ? (ex.wasm_get_nargs() >>> 0) : null;
       const nargsCount = (nargsRaw != null && (nargsRaw & 0x7) === 0)
@@ -2565,6 +2804,27 @@ for (const faslPath of skipRequiredFasloads ? [] : requiredFasls) {
       }
     }
     fail(`wasm_fasload_path(${faslPath}) returned ${faslRc}`);
+  }
+  if (faslIndex === 0) {
+    const bootPhaseRaw = typeof ex.wasm_boot_get_phase === "function"
+      ? (ex.wasm_boot_get_phase() >>> 0)
+      : null;
+    console.log(`REQUIRED_FASLOAD_BOUNDARY ${JSON.stringify({
+      schema_version: "required_fasload_boundary_v1",
+      status: "pass",
+      phase: "pre-runtime-required-fasload",
+      fasl_index: 0,
+      first_required_fasload: true,
+      path: faslPath,
+      rc: faslRc,
+      boot_phase: bootPhaseRaw == null ? null : formatBootPhase(bootPhaseRaw),
+      reason: "first-required-fasload-crossed",
+      startup_binding_map: {
+        source: startupBindingMapSource,
+        build: startupBindingMapBuildSummary,
+        apply: startupBindingMapApplySummary,
+      },
+    })}`);
   }
 }
 if (!skipRequiredFasloads && requiredFasls.length > 0) {
