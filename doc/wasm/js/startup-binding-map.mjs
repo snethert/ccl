@@ -896,12 +896,13 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
   getConstPoolBytesForEntry = null,
 } = {}) {
   const stats = {
-    schema_version: "startup_binding_map_contract_const_pool_function_build_v2",
+    schema_version: "startup_binding_map_contract_const_pool_function_build_v3",
     status: "ok",
     enabled: false,
     required_pool_count: 0,
     required_ref_count: 0,
     required_callable_count: 0,
+    required_special_count: 0,
     seed_ref_count: 0,
     seed_symbol_ref_count: 0,
     seed_callable_count: 0,
@@ -929,6 +930,13 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     transitive_const_pool_refs_filtered_non_callable: 0,
     emitted_entries: 0,
     upgraded_existing_entries: 0,
+    symbol_anchor_candidates: 0,
+    symbol_anchor_candidates_required_special: 0,
+    symbol_anchor_candidates_non_special: 0,
+    symbol_anchor_entry_upgrades: 0,
+    symbol_anchor_existing_preserved: 0,
+    required_special_anchors_present: 0,
+    required_special_anchors_missing: 0,
     skipped_existing_entry_backed: 0,
     skipped_duplicate_refs: 0,
     missing_const_pool_provider: false,
@@ -962,6 +970,16 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     ? contract.requiredCallables
     : [];
   stats.required_callable_count = requiredCallables.length >>> 0;
+  const requiredSpecialVariables = Array.isArray(contract?.requiredSpecialVariables)
+    ? contract.requiredSpecialVariables
+    : [];
+  const requiredSpecialSymbolKeys = new Set();
+  for (const item of requiredSpecialVariables) {
+    const symbolKey = makeSymbolKey(item?.packageName ?? "", item?.symbolName ?? "");
+    if (!symbolKey) continue;
+    requiredSpecialSymbolKeys.add(symbolKey);
+  }
+  stats.required_special_count = requiredSpecialSymbolKeys.size >>> 0;
 
   if (requiredRefs.length === 0 && requiredCallables.length === 0) {
     return { changed: false, mapArtifact, stats };
@@ -1155,24 +1173,18 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     if (!Number.isInteger(depth) || depth < 0) return Number.MAX_SAFE_INTEGER;
     return depth >>> 0;
   };
+  const hasConstPoolDefinition = (definition) => (
+    definition &&
+    typeof definition === "object" &&
+    Number.isInteger(definition.entry_index) &&
+    definition.entry_index >= 0 &&
+    Number.isInteger(definition.const_index) &&
+    definition.const_index >= 0
+  );
   const shouldPreferDefinition = (existingDefinition, candidateDefinition) => {
-    const candidateValid = (
-      candidateDefinition &&
-      typeof candidateDefinition === "object" &&
-      Number.isInteger(candidateDefinition.entry_index) &&
-      candidateDefinition.entry_index >= 0 &&
-      Number.isInteger(candidateDefinition.const_index) &&
-      candidateDefinition.const_index >= 0
-    );
+    const candidateValid = hasConstPoolDefinition(candidateDefinition);
     if (!candidateValid) return false;
-    const existingValid = (
-      existingDefinition &&
-      typeof existingDefinition === "object" &&
-      Number.isInteger(existingDefinition.entry_index) &&
-      existingDefinition.entry_index >= 0 &&
-      Number.isInteger(existingDefinition.const_index) &&
-      existingDefinition.const_index >= 0
-    );
+    const existingValid = hasConstPoolDefinition(existingDefinition);
     if (!existingValid) return true;
     const existingDepth = definitionDepth(existingDefinition);
     const candidateDepth = definitionDepth(candidateDefinition);
@@ -1183,6 +1195,26 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     if (candidateEntryIndex < existingEntryIndex) return true;
     if (candidateEntryIndex > existingEntryIndex) return false;
     return (candidateDefinition.const_index >>> 0) < (existingDefinition.const_index >>> 0);
+  };
+  const symbolAnchorBySymbolKey = new Map();
+  const recordSymbolAnchor = (symbolKey, candidateDefinition) => {
+    if (!symbolKey || !hasConstPoolDefinition(candidateDefinition)) return;
+    const existing = symbolAnchorBySymbolKey.get(symbolKey) ?? null;
+    if (!existing || shouldPreferDefinition(existing, candidateDefinition)) {
+      symbolAnchorBySymbolKey.set(symbolKey, {
+        entry_index: candidateDefinition.entry_index >>> 0,
+        const_index: candidateDefinition.const_index >>> 0,
+        const_tag: Number.isFinite(candidateDefinition.const_tag)
+          ? (candidateDefinition.const_tag >>> 0)
+          : null,
+        const_pool_depth: Number.isFinite(candidateDefinition.const_pool_depth)
+          ? (candidateDefinition.const_pool_depth >>> 0)
+          : 0,
+        const_pool_source: typeof candidateDefinition.const_pool_source === "string"
+          ? candidateDefinition.const_pool_source
+          : "contract-required-const-pool-ref",
+      });
+    }
   };
 
   const scannedResolvedEntries = new Set();
@@ -1197,10 +1229,26 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     }
     stats.symbol_refs_named++;
     const packageName = canonicalizePackageName(ref.package_name);
+    const refDefinition = hasConstPoolDefinition(ref)
+      ? {
+        entry_index: ref.entry_index >>> 0,
+        const_index: ref.const_index >>> 0,
+        const_tag: ref.tag,
+        const_pool_depth: Math.max(0, ref.depth | 0),
+        const_pool_source: typeof ref.source === "string" && ref.source.length > 0
+          ? ref.source
+          : "contract-required-const-pool-ref",
+      }
+      : null;
     if (packageName === "KEYWORD") {
       stats.resolver_keyword_package_skipped++;
       stats.symbol_refs_filtered_keyword++;
       continue;
+    }
+    const packageForSymbolKey = packageName || "CCL";
+    const refSymbolKey = makeSymbolKey(packageForSymbolKey, symbolName);
+    if (refSymbolKey && refDefinition) {
+      recordSymbolAnchor(refSymbolKey, refDefinition);
     }
     const isRequiredCallableSeed = ref.source === "contract-required-callable";
     if (!isRequiredCallableSeed && !hasCallableMetadata({ packageName, symbolName })) {
@@ -1221,22 +1269,12 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     stats.resolver_resolved++;
     const resolvedEntryIndex = resolution.entryIndex >>> 0;
 
-    const canonicalPackage = packageName || "CCL";
-    const symbolKey = makeSymbolKey(canonicalPackage, symbolName);
+    const resolvedPackageName = packageForSymbolKey;
+    const symbolKey = makeSymbolKey(resolvedPackageName, symbolName);
     if (!symbolKey) continue;
-    const definition = (
-      Number.isInteger(ref.entry_index) &&
-      ref.entry_index >= 0 &&
-      Number.isInteger(ref.const_index) &&
-      ref.const_index >= 0
-    )
-      ? {
-        entry_index: ref.entry_index >>> 0,
-        const_index: ref.const_index >>> 0,
-        const_tag: ref.tag,
-        const_pool_depth: Math.max(0, ref.depth | 0),
-      }
-      : null;
+    const definition = refDefinition ? {
+      ...refDefinition,
+    } : null;
     const source = typeof ref.source === "string" && ref.source.length > 0
       ? ref.source
       : (definition ? "contract-required-const-pool-ref" : "contract-required-callable");
@@ -1262,7 +1300,7 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
           ...existing,
           binding_class: "function",
           target_cell: "fcell",
-          package_name: canonicalPackage,
+          package_name: resolvedPackageName,
           symbol_name: symbolName,
           symbol_key: symbolKey,
           source,
@@ -1283,7 +1321,7 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
       const entry = {
         binding_class: "function",
         target_cell: "fcell",
-        package_name: canonicalPackage,
+        package_name: resolvedPackageName,
         symbol_name: symbolName,
         symbol_key: symbolKey,
         source,
@@ -1334,6 +1372,75 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     }
   }
 
+  stats.symbol_anchor_candidates = symbolAnchorBySymbolKey.size >>> 0;
+  let requiredSpecialAnchorCandidates = 0;
+  for (const symbolKey of symbolAnchorBySymbolKey.keys()) {
+    if (requiredSpecialSymbolKeys.has(symbolKey)) {
+      requiredSpecialAnchorCandidates++;
+    }
+  }
+  stats.symbol_anchor_candidates_required_special = requiredSpecialAnchorCandidates >>> 0;
+  stats.symbol_anchor_candidates_non_special =
+    Math.max(0, (symbolAnchorBySymbolKey.size - requiredSpecialAnchorCandidates) | 0) >>> 0;
+
+  const entryIndexBySymbolKey = new Map();
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+    const packageName = canonicalizePackageName(entry?.package_name ?? "");
+    const symbolName = normalizeSymbolName(entry?.symbol_name ?? "");
+    const symbolKey = makeSymbolKey(packageName, symbolName);
+    if (!symbolKey || entryIndexBySymbolKey.has(symbolKey)) continue;
+    entryIndexBySymbolKey.set(symbolKey, i);
+  }
+
+  for (const [symbolKey, candidateDefinition] of symbolAnchorBySymbolKey.entries()) {
+    const existingIndex = entryIndexBySymbolKey.get(symbolKey);
+    if (existingIndex == null) continue;
+    const entry = entries[existingIndex];
+    const existingDefinition = (
+      entry?.definition &&
+      typeof entry.definition === "object" &&
+      !Array.isArray(entry.definition)
+    )
+      ? entry.definition
+      : null;
+    const replaceDefinition = shouldPreferDefinition(existingDefinition, candidateDefinition);
+    if (!replaceDefinition && hasConstPoolDefinition(existingDefinition)) {
+      stats.symbol_anchor_existing_preserved++;
+      continue;
+    }
+    const mergedDefinition = {
+      ...(existingDefinition ?? {}),
+      entry_index: candidateDefinition.entry_index >>> 0,
+      const_index: candidateDefinition.const_index >>> 0,
+      const_tag: Number.isFinite(candidateDefinition.const_tag)
+        ? (candidateDefinition.const_tag >>> 0)
+        : null,
+      const_pool_depth: Number.isFinite(candidateDefinition.const_pool_depth)
+        ? (candidateDefinition.const_pool_depth >>> 0)
+        : 0,
+      const_pool_source: typeof candidateDefinition.const_pool_source === "string"
+        ? candidateDefinition.const_pool_source
+        : "contract-required-const-pool-ref",
+    };
+    entries[existingIndex] = {
+      ...entry,
+      definition: mergedDefinition,
+    };
+    stats.symbol_anchor_entry_upgrades++;
+  }
+
+  let requiredSpecialAnchorsPresent = 0;
+  let requiredSpecialAnchorsMissing = 0;
+  for (const symbolKey of requiredSpecialSymbolKeys.values()) {
+    const entryIndex = entryIndexBySymbolKey.get(symbolKey);
+    const entry = entryIndex == null ? null : entries[entryIndex];
+    if (hasConstPoolDefinition(entry?.definition)) requiredSpecialAnchorsPresent++;
+    else requiredSpecialAnchorsMissing++;
+  }
+  stats.required_special_anchors_present = requiredSpecialAnchorsPresent >>> 0;
+  stats.required_special_anchors_missing = requiredSpecialAnchorsMissing >>> 0;
+
   const coverage = mapArtifact?.coverage && typeof mapArtifact.coverage === "object"
     ? { ...mapArtifact.coverage }
     : {};
@@ -1348,7 +1455,7 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     counts: summarizeEntries(entries),
   };
   return {
-    changed: (stats.emitted_entries + stats.upgraded_existing_entries) > 0,
+    changed: (stats.emitted_entries + stats.upgraded_existing_entries + stats.symbol_anchor_entry_upgrades) > 0,
     mapArtifact: nextArtifact,
     stats,
   };

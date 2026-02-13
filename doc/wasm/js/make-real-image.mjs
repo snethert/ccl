@@ -2088,12 +2088,42 @@ function applyStartupBindingMapOrFail({
   const makeSymbolBindingKey = (targetCell, packageName, symbolName) => (
     `${normalizeTargetCell(targetCell)}:${String(packageName ?? "").trim().toUpperCase()}::${String(symbolName ?? "").trim().toUpperCase()}`
   );
+  const readConstPoolAnchor = (entry) => {
+    const definition = (
+      entry?.definition &&
+      typeof entry.definition === "object" &&
+      !Array.isArray(entry.definition)
+    )
+      ? entry.definition
+      : null;
+    const entryIndex = Number(definition?.entry_index);
+    const constIndex = Number(definition?.const_index);
+    if (!Number.isInteger(entryIndex) || entryIndex < 0) return null;
+    if (!Number.isInteger(constIndex) || constIndex < 0) return null;
+    return {
+      entry_index: entryIndex >>> 0,
+      const_index: constIndex >>> 0,
+      const_tag: Number.isFinite(definition?.const_tag) ? (definition.const_tag >>> 0) : null,
+      const_pool_depth: Number.isFinite(definition?.const_pool_depth)
+        ? (definition.const_pool_depth >>> 0)
+        : null,
+      const_pool_source: typeof definition?.const_pool_source === "string"
+        ? definition.const_pool_source
+        : null,
+    };
+  };
 
   let eligibleEntries = 0;
   let appliedCount = 0;
   let skippedAlreadyBound = 0;
   let requiredUninitialized = 0;
   let skippedSymbolUnresolved = 0;
+  let symbolAnchorCandidates = 0;
+  let symbolAnchorAttempts = 0;
+  let symbolAnchorResolved = 0;
+  let symbolAnchorUnresolved = 0;
+  let symbolAnchorExportMissing = 0;
+  let symbolAnchorConstPoolRefMissing = 0;
   const targetCounts = {
     vcell: {
       eligible_entries: 0,
@@ -2175,6 +2205,44 @@ function applyStartupBindingMapOrFail({
     let symbolRaw = symbolProbe.raw >>> 0;
     let symbolStatus = symbolProbe.status >>> 0;
     let symbolResolved = symbolStatus === L0_PROBE_STATUS.OK && symbolRaw !== 0 && symbolRaw !== nil;
+    const symbolAnchor = readConstPoolAnchor(entry);
+    let symbolAnchorRaw = null;
+    let symbolAnchorStatus = null;
+    let symbolAnchorAttempted = false;
+    if (symbolAnchor) {
+      symbolAnchorCandidates++;
+    }
+    if (!symbolResolved && symbolAnchor) {
+      if (typeof ex.wasm_const_pool_ref !== "function") {
+        symbolAnchorExportMissing++;
+      } else if (!constPoolsInstalled.has(symbolAnchor.entry_index >>> 0)) {
+        symbolAnchorConstPoolRefMissing++;
+      } else {
+        symbolAnchorAttempted = true;
+        symbolAnchorAttempts++;
+        const anchoredRaw = ex.wasm_const_pool_ref(
+          symbolAnchor.entry_index >>> 0,
+          symbolAnchor.const_index >>> 0,
+        ) >>> 0;
+        const anchoredStatus = probeStatus();
+        symbolAnchorRaw = anchoredRaw >>> 0;
+        symbolAnchorStatus = anchoredStatus >>> 0;
+        if (
+          symbolAnchorStatus !== L0_PROBE_STATUS.OK ||
+          symbolAnchorRaw === 0 ||
+          symbolAnchorRaw === nil
+        ) {
+          symbolAnchorConstPoolRefMissing++;
+        } else {
+          const reprobe = probeSymbolByName(nameMem, pkgMem);
+          symbolRaw = reprobe.raw >>> 0;
+          symbolStatus = reprobe.status >>> 0;
+          symbolResolved = symbolStatus === L0_PROBE_STATUS.OK && symbolRaw !== 0 && symbolRaw !== nil;
+          if (symbolResolved) symbolAnchorResolved++;
+          else symbolAnchorUnresolved++;
+        }
+      }
+    }
     if (!symbolResolved) {
       skippedSymbolUnresolved++;
       targetCounts[targetCell].skipped_symbol_unresolved++;
@@ -2188,6 +2256,21 @@ function applyStartupBindingMapOrFail({
           probe_status: symbolStatus,
           probe_status_name: l0ProbeStatusName(symbolStatus),
           symbol_raw: toHex(symbolRaw),
+          symbol_anchor: symbolAnchor ? {
+            entry_index: symbolAnchor.entry_index >>> 0,
+            const_index: symbolAnchor.const_index >>> 0,
+            const_tag: symbolAnchor.const_tag,
+            const_pool_depth: symbolAnchor.const_pool_depth,
+            const_pool_source: symbolAnchor.const_pool_source,
+            const_pool_entry_installed: constPoolsInstalled.has(symbolAnchor.entry_index >>> 0),
+            attempted: symbolAnchorAttempted,
+            anchor_ref_raw: symbolAnchorRaw == null ? null : toHex(symbolAnchorRaw),
+            anchor_probe_status: symbolAnchorStatus,
+            anchor_probe_status_name: symbolAnchorStatus == null
+              ? null
+              : l0ProbeStatusName(symbolAnchorStatus),
+            export_missing: typeof ex.wasm_const_pool_ref !== "function",
+          } : null,
         });
       }
       continue;
@@ -2275,7 +2358,7 @@ function applyStartupBindingMapOrFail({
         reason: "missing-kernel-export",
         export_name: missingExport,
         initializer_kind: initializerKind || null,
-        apply_method: useRawSymbolSetter ? "raw-symbol" : "name-symbol",
+        apply_method: "name-symbol",
       });
       continue;
     }
@@ -2492,6 +2575,14 @@ function applyStartupBindingMapOrFail({
       skipped_already_bound: skippedAlreadyBound,
       skipped_symbol_unresolved: skippedSymbolUnresolved,
       artifact_owned_constants: true,
+      symbol_anchor: {
+        candidate_entries: symbolAnchorCandidates,
+        attempted: symbolAnchorAttempts,
+        resolved_by_anchor: symbolAnchorResolved,
+        unresolved_after_anchor: symbolAnchorUnresolved,
+        export_missing: symbolAnchorExportMissing,
+        const_pool_ref_missing: symbolAnchorConstPoolRefMissing,
+      },
       failed_count: failures.length,
       target_counts: targetCounts,
     },
@@ -2842,6 +2933,13 @@ startupBindingMapBuildSummary = buildStartupBindingMapBuildSummary({
 });
 console.log(`STARTUP_BINDING_MAP_BUILD ${JSON.stringify(startupBindingMapBuildSummary)}`);
 buildStartupBindingMapConstPoolBindingIndex(startupBindingMapArtifact);
+for (const requiredPool of Array.isArray(BOOTSTRAP_L0_CONTRACT_V1?.requiredConstPools)
+  ? BOOTSTRAP_L0_CONTRACT_V1.requiredConstPools
+  : []) {
+  const entryIndex = Number(requiredPool?.entryIndex);
+  if (!Number.isInteger(entryIndex) || entryIndex < 0) continue;
+  installConstPoolOnDemand(entryIndex >>> 0);
+}
 for (const installedEntryIndex of constPoolsInstalled.values()) {
   applyStartupBindingMapDeferredBindingsForConstPoolEntry(installedEntryIndex, {
     reason: "startup-map-index-backfill",

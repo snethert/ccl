@@ -435,11 +435,17 @@ Startup architecture plan (updated):
 - Runtime ownership:
   - `doc/wasm/js/make-real-image.mjs` applies the artifact entries directly in
     one pre-fasload pass.
-  - When a symbol is unresolved by package/name during apply, runtime may use
-    the artifact-provided const-pool definition for that binding to resolve the
-    raw symbol object; no broad runtime symbol discovery is performed.
-  - Required const-pool refs are verified by `L0_BOOTSTRAP_CONTRACT` gate
-    checks only; map apply does not perform const-pool-wide symbol discovery.
+  - Symbol resolution remains strict package/name at apply and gate time.
+    For artifact entries that include an explicit const-pool definition
+    (`definition.entry_index` + `definition.const_index`), apply may first touch
+    that single const-pool ref to materialize the symbol, then immediately
+    re-probe exact package/name; no package-agnostic probing and no broad
+    const-pool discovery sweeps are used.
+  - Required bindings still fail fast when unresolved at apply time
+    (`reason:"required-symbol-unresolved"`), before `L0_BOOTSTRAP_CONTRACT`.
+  - Required const-pool refs are still gate-verified by
+    `L0_BOOTSTRAP_CONTRACT`; startup map apply does not do indiscriminate
+    const-pool scans.
 - Required artifact coverage for pre-fasload:
   - required vcell initializations (`requiredSpecialVariables`);
   - Level-0 function bindings (full source scan);
