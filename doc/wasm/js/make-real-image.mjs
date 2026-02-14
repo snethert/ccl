@@ -95,6 +95,7 @@ function usage() {
   console.log("  --kernel PATH       wasmcl.wasm path (default: doc/wasm/js/wasmcl.wasm)");
   console.log("  --subprims PATH     subprims.wasm path (default: doc/wasm/js/subprims.wasm)");
   console.log("  --subprims-map PATH subprims-map.json path (default: doc/wasm/subprims-map.json)");
+  console.log("  --startup-resolution-mode MODE  diagnostic|publish (default: diagnostic)");
   console.log("  --bootstrap-boundary-report PATH  Optional JSON state/diff report");
   console.log("  -h, --help          Show this help");
 }
@@ -132,6 +133,9 @@ function parseArgs(argv) {
       case "--subprims-map":
         out.subprimsMap = argv[++i];
         break;
+      case "--startup-resolution-mode":
+        out.startupResolutionMode = argv[++i];
+        break;
       case "--bootstrap-boundary-report":
         out.bootstrapBoundaryReport = argv[++i];
         break;
@@ -146,6 +150,13 @@ function parseArgs(argv) {
 
 function toPosix(p) {
   return p.split(path.sep).join("/");
+}
+
+function normalizeStartupResolutionMode(value) {
+  const mode = String(value ?? "").trim().toLowerCase();
+  if (mode === "publish" || mode === "strict") return "publish";
+  if (mode === "diagnostic" || mode === "") return "diagnostic";
+  fail(`Invalid --startup-resolution-mode: ${value}`);
 }
 
 function sortJson(value) {
@@ -316,6 +327,15 @@ if (args.help) {
   usage();
   process.exit(0);
 }
+const startupResolutionMode = normalizeStartupResolutionMode(
+  args.startupResolutionMode ?? process.env.CCL_WASM_STARTUP_RESOLUTION_MODE,
+);
+const publishResolutionMode = startupResolutionMode === "publish";
+console.log(`STARTUP_RESOLUTION_POLICY ${JSON.stringify({
+  schema_version: "startup_resolution_policy_v1",
+  mode: startupResolutionMode,
+  publish_mode: publishResolutionMode,
+})}`);
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(scriptDir, "../../..");
@@ -507,19 +527,25 @@ function runPreToplevelFunctionDesignatorGateOrFail() {
   const failures = [];
   for (const symbolName of requiredNames) {
     const resolution = bootstrapFunctionResolver.resolveFunctionDesignator({ name: symbolName });
-    const ok = Boolean(resolution?.ok);
+    const resolvedKey = String(resolution?.key ?? "");
+    const packageQualifiedResolution = resolvedKey.includes("::") || (
+      resolvedKey.includes(":") && !resolvedKey.startsWith(":")
+    );
+    const ok = Boolean(resolution?.ok) && (!publishResolutionMode || packageQualifiedResolution);
     const reason = ok ? null : (resolution?.reason ?? "missing");
     const record = {
       schema_version: "startup_function_designator_gate_v1",
       phase: "pre-toplevel",
       status: ok ? "pass" : "fail",
-      mode: "strict",
+      mode: publishResolutionMode ? "publish" : "diagnostic",
       symbol_name: symbolName,
       entry_index: ok ? (resolution.entryIndex >>> 0) : null,
       resolved_entry_index: ok ? (resolution.entryIndex >>> 0) : null,
       source: ok ? (resolution.source ?? null) : null,
       binding_state: ok ? "resolved-entry-function" : bindingStateForGateFailure(reason),
-      reason,
+      reason: !ok && publishResolutionMode && Boolean(resolution?.ok)
+        ? "package-unqualified-resolution"
+        : reason,
     };
     if (ok) {
       console.log(`STARTUP_FUNCTION_DESIGNATOR_GATE ${JSON.stringify(record)}`);
@@ -792,7 +818,7 @@ function installConstPoolOnDemand(entryIndexRaw) {
           schema_version: "startup_constpool_function_gate_v1",
           phase: "pre-toplevel",
           status: "deferred",
-          mode: "strict",
+          mode: startupResolutionMode,
           entry_index: entryIndex >>> 0,
           const_index: Number.isFinite(item?.constIndex) ? (item.constIndex >>> 0) : null,
           symbol_name: item?.name ?? null,
@@ -801,6 +827,11 @@ function installConstPoolOnDemand(entryIndexRaw) {
           binding_state: item?.bindingState ?? "deferred-symbolic-function-designator",
           reason: item?.reason ?? "missing",
         })}`,
+      );
+    }
+    if (publishResolutionMode) {
+      fail(
+        `startup const-pool function gate failed for entry ${entryIndex}: deferred designators are forbidden in publish mode`,
       );
     }
   }
@@ -812,7 +843,7 @@ function installConstPoolOnDemand(entryIndexRaw) {
           schema_version: "startup_constpool_function_gate_v1",
           phase: "pre-toplevel",
           status: "fail",
-          mode: "strict",
+          mode: startupResolutionMode,
           entry_index: entryIndex >>> 0,
           const_index: Number.isFinite(item?.constIndex) ? (item.constIndex >>> 0) : null,
           symbol_name: item?.name ?? null,
@@ -857,6 +888,17 @@ function resolveFunctionDesignatorEntryFromHost(namePtr, nameLen, packagePtr, pa
   const name = decodeHostDesignatorString(namePtr, nameLen);
   if (!name) return -1;
   const packageName = decodeHostDesignatorString(packagePtr, packageLen);
+  const packageToken = String(packageName ?? "").trim().toUpperCase();
+  if (publishResolutionMode && (!packageToken || packageToken === "COMMON-LISP")) {
+    console.error(`STARTUP_HOST_RESOLVER_REJECT ${JSON.stringify({
+      schema_version: "startup_host_resolver_reject_v1",
+      mode: startupResolutionMode,
+      symbol_name: String(name),
+      package_name: packageName || null,
+      reason: !packageToken ? "missing-package" : "forbidden-common-lisp-package",
+    })}`);
+    return -1;
+  }
   const resolution = bootstrapFunctionResolver.resolveFunctionDesignator({ name, packageName });
   if (!resolution?.ok) return -1;
   return (resolution.entryIndex >>> 0) | 0;
@@ -1143,6 +1185,7 @@ const manifest = {
     expectedLoaderMode: "start-lisp",
     entrypointIndex: bootEntryIndex,
     compiledModulesRequired: true,
+    startupResolutionMode,
   },
   artifacts: {
     rootImage: {
