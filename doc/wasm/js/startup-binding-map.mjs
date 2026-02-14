@@ -1493,6 +1493,12 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     const definition = refDefinition ? {
       ...refDefinition,
     } : null;
+    const requiredCallableDefinition = isRequiredCallableSeed
+      ? {
+        ...(definition && typeof definition === "object" ? definition : {}),
+        required_class: STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_CALLABLE,
+      }
+      : definition;
     const source = typeof ref.source === "string" && ref.source.length > 0
       ? ref.source
       : (definition ? "contract-required-const-pool-ref" : "contract-required-callable");
@@ -1503,7 +1509,7 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
       const existingAvailability = String(existing?.availability ?? "").toLowerCase();
       const existingInitializerKind = String(existing?.initializer?.kind ?? "").toLowerCase();
       const existingEntryIndex = Number(existing?.initializer?.entry_index);
-      const replaceDefinition = shouldPreferDefinition(existing?.definition ?? null, definition);
+      const replaceDefinition = shouldPreferDefinition(existing?.definition ?? null, requiredCallableDefinition);
       const definitionSatisfied = !replaceDefinition;
       if (
         existingAvailability === "entry-backed" &&
@@ -1512,8 +1518,46 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
         (existingEntryIndex >>> 0) === resolvedEntryIndex &&
         definitionSatisfied
       ) {
-        stats.skipped_existing_entry_backed++;
+        if (isRequiredCallableSeed) {
+          const existingDefinition = (
+            existing?.definition &&
+            typeof existing.definition === "object" &&
+            !Array.isArray(existing.definition)
+          )
+            ? existing.definition
+            : {};
+          if (existingDefinition.required_class !== STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_CALLABLE) {
+            entries[existingIndex] = {
+              ...existing,
+              definition: {
+                ...existingDefinition,
+                required_class: STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_CALLABLE,
+              },
+            };
+            stats.upgraded_existing_entries++;
+          } else {
+            stats.skipped_existing_entry_backed++;
+          }
+        } else {
+          stats.skipped_existing_entry_backed++;
+        }
       } else {
+        const existingDefinition = (
+          existing?.definition &&
+          typeof existing.definition === "object" &&
+          !Array.isArray(existing.definition)
+        )
+          ? existing.definition
+          : null;
+        const nextDefinition = replaceDefinition
+          ? requiredCallableDefinition
+          : existingDefinition;
+        const mergedDefinition = isRequiredCallableSeed
+          ? {
+            ...(nextDefinition && typeof nextDefinition === "object" ? nextDefinition : {}),
+            required_class: STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_CALLABLE,
+          }
+          : nextDefinition;
         entries[existingIndex] = {
           ...existing,
           binding_class: "function",
@@ -1523,7 +1567,7 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
           symbol_key: symbolKey,
           source,
           require_non_nil: false,
-          definition: replaceDefinition ? definition : (existing?.definition ?? null),
+          definition: mergedDefinition,
           availability: "entry-backed",
           initializer: {
             kind: "entry-function",
@@ -1544,7 +1588,7 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
         symbol_key: symbolKey,
         source,
         require_non_nil: false,
-        definition,
+        definition: requiredCallableDefinition,
         availability: "entry-backed",
         initializer: {
           kind: "entry-function",

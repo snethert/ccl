@@ -2718,10 +2718,129 @@ function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
   contract = BOOTSTRAP_L0_CONTRACT_V1,
   resolver = null,
 } = {}) {
-  void resolver;
+  const probeRuntimeCallableEntry = (packageName, symbolName) => {
+    const ex = kernelExports;
+    if (!ex) {
+      return {
+        ok: false,
+        reason: "runtime-unavailable",
+      };
+    }
+    if (
+      typeof ex.wasm_probe_symbol !== "function" ||
+      typeof ex.wasm_probe_symbol_fcell !== "function" ||
+      typeof ex.wasm_probe_last_status !== "function" ||
+      typeof ex.wasm_debug_function_entry_index !== "function"
+    ) {
+      return {
+        ok: false,
+        reason: "runtime-probe-exports-missing",
+      };
+    }
+    const nil = typeof ex.wasm_get_lisp_nil === "function"
+      ? (ex.wasm_get_lisp_nil() >>> 0)
+      : 0;
+    const probeStatus = () => (ex.wasm_probe_last_status() >>> 0);
+    const nameBytes = encoder.encode(String(symbolName ?? ""));
+    const pkgBytes = encoder.encode(String(packageName ?? ""));
+    const namePtr = nameBytes.length > 0 ? copyBytesToScratch(runtime.memory, nameBytes) : 0;
+    const pkgPtr = pkgBytes.length > 0 ? copyBytesToScratch(runtime.memory, pkgBytes) : 0;
+    const sym = ex.wasm_probe_symbol(
+      namePtr >>> 0,
+      nameBytes.length >>> 0,
+      pkgPtr >>> 0,
+      pkgBytes.length >>> 0,
+    ) >>> 0;
+    const symbolStatus = probeStatus();
+    if (symbolStatus !== 0 || sym === 0 || sym === nil) {
+      return {
+        ok: false,
+        reason: "runtime-symbol-unresolved",
+        symbol_status: symbolStatus,
+      };
+    }
+    const fcell = ex.wasm_probe_symbol_fcell(sym >>> 0) >>> 0;
+    const fcellStatus = probeStatus();
+    if (fcellStatus !== 0 || fcell === 0 || fcell === nil) {
+      return {
+        ok: false,
+        reason: "runtime-fcell-unresolved",
+        symbol_status: symbolStatus,
+        fcell_status: fcellStatus,
+      };
+    }
+    const entryIndex = ex.wasm_debug_function_entry_index(fcell >>> 0) | 0;
+    if (entryIndex < 0) {
+      return {
+        ok: false,
+        reason: "runtime-fcell-non-function",
+        symbol_status: symbolStatus,
+        fcell_status: fcellStatus,
+      };
+    }
+    return {
+      ok: true,
+      entry_index: entryIndex >>> 0,
+      source: "runtime-fcell-probe",
+    };
+  };
+  const resolveFunctionDesignator = ({ packageName, symbolName, name } = {}) => {
+    const resolvedSymbolName = String(symbolName ?? name ?? "").trim();
+    let resolverResult = null;
+    if (resolver && typeof resolver.resolveFunctionDesignator === "function") {
+      resolverResult = resolver.resolveFunctionDesignator({
+        name: resolvedSymbolName,
+        packageName,
+      });
+    } else if (typeof resolver === "function") {
+      resolverResult = resolver({
+        name: resolvedSymbolName,
+        symbolName: resolvedSymbolName,
+        packageName,
+      });
+    }
+    if (resolverResult?.ok) {
+      return {
+        ok: true,
+        entryIndex: resolverResult.entryIndex >>> 0,
+        source: resolverResult.source ?? null,
+        key: resolverResult.key ?? null,
+      };
+    }
+    if (resolverResult?.reason === "ambiguous") {
+      return {
+        ok: false,
+        reason: "ambiguous",
+        source: resolverResult.source ?? null,
+        key: resolverResult.key ?? null,
+        alternatives: Array.isArray(resolverResult.alternatives)
+          ? resolverResult.alternatives.slice()
+          : [],
+      };
+    }
+    const runtimeFallback = probeRuntimeCallableEntry(packageName, resolvedSymbolName);
+    if (runtimeFallback.ok) {
+      return {
+        ok: true,
+        entryIndex: runtimeFallback.entry_index >>> 0,
+        source: runtimeFallback.source ?? null,
+        key: "symbol-key",
+      };
+    }
+    return {
+      ok: false,
+      reason: resolverResult?.reason ?? runtimeFallback.reason ?? "missing",
+      source: resolverResult?.source ?? null,
+      key: resolverResult?.key ?? null,
+      alternatives: Array.isArray(resolverResult?.alternatives)
+        ? resolverResult.alternatives.slice()
+        : [],
+    };
+  };
   return augmentStartupBindingMapArtifactWithContractConstPoolFunctionsFromBuilder({
     mapArtifact,
     contract,
+    resolveFunctionDesignator,
     functions: Array.isArray(compiledModulesBundle?.functions) ? compiledModulesBundle.functions : [],
     getConstPoolBytesForEntry: (entryIndexRaw) => {
       const entryIndex = entryIndexRaw >>> 0;
@@ -2769,6 +2888,117 @@ function applyStartupBindingMapOrFail({
     const raw = value >>> 0;
     return raw === 0 || raw === nil;
   };
+  const resolveRequiredCallableEntryFromBootstrapResolver = (packageName, symbolName) => {
+    const runtimeProbeFallback = () => {
+      const requiredProbeExports = (
+        typeof ex.wasm_probe_symbol === "function" &&
+        typeof ex.wasm_probe_symbol_fcell === "function" &&
+        typeof ex.wasm_probe_last_status === "function" &&
+        typeof ex.wasm_debug_function_entry_index === "function"
+      );
+      if (!requiredProbeExports) {
+        return {
+          ok: false,
+          reason: "runtime-probe-exports-missing",
+          source: null,
+          key: null,
+        };
+      }
+      const nameBytes = utf8.encode(String(symbolName ?? ""));
+      const pkgBytes = utf8.encode(String(packageName ?? ""));
+      const namePtr = nameBytes.length > 0 ? copyBytesToScratch(runtime.memory, nameBytes) : 0;
+      const pkgPtr = pkgBytes.length > 0 ? copyBytesToScratch(runtime.memory, pkgBytes) : 0;
+      const symbolRaw = ex.wasm_probe_symbol(
+        namePtr >>> 0,
+        nameBytes.length >>> 0,
+        pkgPtr >>> 0,
+        pkgBytes.length >>> 0,
+      ) >>> 0;
+      const symbolStatus = probeStatus();
+      if (symbolStatus !== L0_PROBE_STATUS.OK || symbolRaw === 0 || symbolRaw === nil) {
+        return {
+          ok: false,
+          reason: "runtime-symbol-unresolved",
+          source: null,
+          key: null,
+          symbol_status: symbolStatus,
+        };
+      }
+      const fcellRaw = ex.wasm_probe_symbol_fcell(symbolRaw >>> 0) >>> 0;
+      const fcellStatus = probeStatus();
+      if (fcellStatus !== L0_PROBE_STATUS.OK || fcellRaw === 0 || fcellRaw === nil) {
+        return {
+          ok: false,
+          reason: "runtime-fcell-unresolved",
+          source: null,
+          key: null,
+          symbol_status: symbolStatus,
+          fcell_status: fcellStatus,
+        };
+      }
+      const entryIndex = ex.wasm_debug_function_entry_index(fcellRaw >>> 0) | 0;
+      if (entryIndex < 0) {
+        return {
+          ok: false,
+          reason: "runtime-fcell-non-function",
+          source: null,
+          key: null,
+          symbol_status: symbolStatus,
+          fcell_status: fcellStatus,
+        };
+      }
+      return {
+        ok: true,
+        entry_index: entryIndex >>> 0,
+        source: "runtime-fcell-probe",
+        key: "runtime-symbol-fcell",
+      };
+    };
+
+    if (!bootstrapFunctionResolver || typeof bootstrapFunctionResolver.resolveFunctionDesignator !== "function") {
+      const fallback = runtimeProbeFallback();
+      if (fallback.ok) return fallback;
+      return {
+        ok: false,
+        reason: "resolver-unavailable",
+        source: null,
+        key: null,
+        fallback_reason: fallback.reason ?? null,
+      };
+    }
+    const resolution = bootstrapFunctionResolver.resolveFunctionDesignator({
+      name: symbolName,
+      packageName,
+    });
+    if (resolution?.ok) {
+      return {
+        ok: true,
+        entry_index: resolution.entryIndex >>> 0,
+        source: resolution.source ?? null,
+        key: resolution.key ?? null,
+      };
+    }
+    if ((resolution?.reason ?? "") === "ambiguous") {
+      return {
+        ok: false,
+        reason: "ambiguous",
+        source: resolution?.source ?? null,
+        key: resolution?.key ?? null,
+        alternatives: Array.isArray(resolution?.alternatives)
+          ? resolution.alternatives.slice()
+          : [],
+      };
+    }
+    const fallback = runtimeProbeFallback();
+    if (fallback.ok) return fallback;
+    return {
+      ok: false,
+      reason: resolution?.reason ?? "missing",
+      source: resolution?.source ?? null,
+      key: resolution?.key ?? null,
+      fallback_reason: fallback.reason ?? null,
+    };
+  };
   const normalizeTargetCell = (value) => {
     const token = String(value ?? "").trim().toLowerCase();
     return token === "fcell" ? "fcell" : "vcell";
@@ -2800,6 +3030,66 @@ function applyStartupBindingMapOrFail({
         : null,
     };
   };
+  const requiredCallableKeys = new Set(
+    (Array.isArray(contract?.requiredCallables) ? contract.requiredCallables : [])
+      .map((item) => `${String(item?.packageName ?? "").trim().toUpperCase()}::${String(item?.symbolName ?? "").trim().toUpperCase()}`)
+      .filter((key) => key !== "::"),
+  );
+  const requiredCallableCoverage = new Map();
+  for (const symbolKey of requiredCallableKeys.values()) {
+    requiredCallableCoverage.set(symbolKey, {
+      entry_count: 0,
+      required_class_entry_count: 0,
+      sample: null,
+    });
+  }
+  for (const entry of entries) {
+    if (normalizeTargetCell(entry?.target_cell ?? null) !== "fcell") continue;
+    const packageName = String(entry?.package_name ?? "").trim().toUpperCase();
+    const symbolName = String(entry?.symbol_name ?? "").trim().toUpperCase();
+    if (!packageName || !symbolName) continue;
+    const symbolKey = `${packageName}::${symbolName}`;
+    if (!requiredCallableCoverage.has(symbolKey)) continue;
+    const coverage = requiredCallableCoverage.get(symbolKey);
+    const requiredClass = String(
+      entry?.definition?.required_class ?? entry?.required_class ?? "",
+    ).trim().toLowerCase();
+    coverage.entry_count++;
+    if (requiredClass === STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_CALLABLE) {
+      coverage.required_class_entry_count++;
+    }
+    if (coverage.sample == null) {
+      coverage.sample = {
+        availability: String(entry?.availability ?? "deferred"),
+        initializer_kind: String(entry?.initializer?.kind ?? ""),
+        initializer_entry_index: Number.isInteger(entry?.initializer?.entry_index)
+          ? (entry.initializer.entry_index >>> 0)
+          : null,
+        required_class: requiredClass || null,
+      };
+    }
+  }
+  for (const [symbolKey, coverage] of requiredCallableCoverage.entries()) {
+    if (coverage.entry_count === 0) {
+      failures.push({
+        symbol_key: symbolKey,
+        target_cell: "fcell",
+        reason: "required-callable-binding-missing-from-map",
+        required_policy: "required-callable-contract-missing",
+      });
+      continue;
+    }
+    if (coverage.required_class_entry_count === 0) {
+      failures.push({
+        symbol_key: symbolKey,
+        target_cell: "fcell",
+        reason: "required-callable-binding-class-mismatch",
+        required_policy: "required-callable-contract-demoted",
+        entry_count: coverage.entry_count,
+        sample: coverage.sample,
+      });
+    }
+  }
 
   let eligibleEntries = 0;
   let appliedCount = 0;
@@ -3035,6 +3325,43 @@ function applyStartupBindingMapOrFail({
       const desiredEntry = initializerKind === "entry-function" && Number.isInteger(initializer?.entry_index)
         ? (initializer.entry_index >>> 0)
         : null;
+      if (requiredClass === STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_CALLABLE) {
+        const resolverEntry = resolveRequiredCallableEntryFromBootstrapResolver(packageName, symbolName);
+        if (!resolverEntry.ok) {
+          failures.push({
+            package_name: packageName || null,
+            symbol_name: symbolName || null,
+            target_cell: targetCell,
+            binding_class: bindingClass,
+            reason: "required-callable-unverified-by-bootstrap-resolver",
+            initializer_kind: initializerKind || null,
+            initializer_entry_index: desiredEntry,
+            resolver_reason: resolverEntry.reason ?? null,
+            resolver_source: resolverEntry.source ?? null,
+            resolver_key: resolverEntry.key ?? null,
+            fcell_raw: toHex(beforeCell),
+            fcell_entry_index: beforeEntry,
+          });
+          continue;
+        }
+        if (desiredEntry == null || (desiredEntry >>> 0) !== (resolverEntry.entry_index >>> 0)) {
+          failures.push({
+            package_name: packageName || null,
+            symbol_name: symbolName || null,
+            target_cell: targetCell,
+            binding_class: bindingClass,
+            reason: "required-callable-entry-mismatch-with-bootstrap-resolver",
+            initializer_kind: initializerKind || null,
+            initializer_entry_index: desiredEntry,
+            resolver_entry_index: resolverEntry.entry_index >>> 0,
+            resolver_source: resolverEntry.source ?? null,
+            resolver_key: resolverEntry.key ?? null,
+            fcell_raw: toHex(beforeCell),
+            fcell_entry_index: beforeEntry,
+          });
+          continue;
+        }
+      }
       if (beforeEntry >= 0 && desiredEntry != null && (beforeEntry >>> 0) === desiredEntry) {
         skippedAlreadyBound++;
         targetCounts[targetCell].skipped_already_bound++;
@@ -3828,6 +4155,122 @@ if (startupSymbolResolutionOutPath) {
   }
 }
 
+if (process.env.CCL_WASM_DIAG_REQUIRED_CALLABLE_RESOLVER === "1") {
+  const requiredCallableRows = [];
+  const nil = typeof ex.wasm_get_lisp_nil === "function"
+    ? (ex.wasm_get_lisp_nil() >>> 0)
+    : 0;
+  const canProbeRuntimeEntry = (
+    typeof ex.wasm_probe_symbol === "function" &&
+    typeof ex.wasm_probe_symbol_fcell === "function" &&
+    typeof ex.wasm_probe_last_status === "function" &&
+    typeof ex.wasm_debug_function_entry_index === "function"
+  );
+  const probeStatus = () => (typeof ex.wasm_probe_last_status === "function"
+    ? (ex.wasm_probe_last_status() >>> 0)
+    : -1);
+  const probeRuntimeCallableEntry = (packageName, symbolName) => {
+    if (!canProbeRuntimeEntry) {
+      return {
+        ok: false,
+        reason: "probe-exports-missing",
+      };
+    }
+    const nameBytes = encoder.encode(String(symbolName ?? ""));
+    const pkgBytes = encoder.encode(String(packageName ?? ""));
+    const namePtr = nameBytes.length > 0 ? copyBytesToScratch(runtime.memory, nameBytes) : 0;
+    const pkgPtr = pkgBytes.length > 0 ? copyBytesToScratch(runtime.memory, pkgBytes) : 0;
+    const sym = ex.wasm_probe_symbol(
+      namePtr >>> 0,
+      nameBytes.length >>> 0,
+      pkgPtr >>> 0,
+      pkgBytes.length >>> 0,
+    ) >>> 0;
+    const symbolStatus = probeStatus();
+    if (symbolStatus !== 0 || sym === 0 || sym === nil) {
+      return {
+        ok: false,
+        reason: "symbol-unresolved",
+        symbol_status: symbolStatus,
+      };
+    }
+    const fcell = ex.wasm_probe_symbol_fcell(sym >>> 0) >>> 0;
+    const fcellStatus = probeStatus();
+    if (fcellStatus !== 0 || fcell === 0 || fcell === nil) {
+      return {
+        ok: false,
+        reason: "fcell-unresolved",
+        symbol_status: symbolStatus,
+        fcell_status: fcellStatus,
+      };
+    }
+    const entryIndex = ex.wasm_debug_function_entry_index(fcell >>> 0) | 0;
+    if (entryIndex < 0) {
+      return {
+        ok: false,
+        reason: "fcell-non-function",
+        symbol_status: symbolStatus,
+        fcell_status: fcellStatus,
+      };
+    }
+    return {
+      ok: true,
+      entry_index: entryIndex >>> 0,
+      symbol_status: symbolStatus,
+      fcell_status: fcellStatus,
+    };
+  };
+
+  for (const item of Array.isArray(BOOTSTRAP_L0_CONTRACT_V1?.requiredCallables)
+    ? BOOTSTRAP_L0_CONTRACT_V1.requiredCallables
+    : []) {
+    const packageName = String(item?.packageName ?? "").trim();
+    const symbolName = String(item?.symbolName ?? "").trim();
+    const withPackage = bootstrapFunctionResolver.resolveFunctionDesignator({
+      name: symbolName,
+      packageName,
+    });
+    const nameOnly = bootstrapFunctionResolver.resolveFunctionDesignator({
+      name: symbolName,
+    });
+    const runtimeProbe = probeRuntimeCallableEntry(packageName, symbolName);
+    requiredCallableRows.push({
+      symbol_key: `${packageName.toUpperCase()}::${symbolName.toUpperCase()}`,
+      with_package: withPackage?.ok
+        ? {
+          ok: true,
+          entry_index: withPackage.entryIndex >>> 0,
+          source: withPackage.source ?? null,
+          key: withPackage.key ?? null,
+        }
+        : {
+          ok: false,
+          reason: withPackage?.reason ?? "missing",
+          source: withPackage?.source ?? null,
+          key: withPackage?.key ?? null,
+        },
+      name_only: nameOnly?.ok
+        ? {
+          ok: true,
+          entry_index: nameOnly.entryIndex >>> 0,
+          source: nameOnly.source ?? null,
+          key: nameOnly.key ?? null,
+        }
+        : {
+          ok: false,
+          reason: nameOnly?.reason ?? "missing",
+          source: nameOnly?.source ?? null,
+          key: nameOnly?.key ?? null,
+        },
+      runtime_probe: runtimeProbe,
+    });
+  }
+  console.log(`STARTUP_REQUIRED_CALLABLE_RESOLVER ${JSON.stringify({
+    schema_version: "startup_required_callable_resolver_diag_v1",
+    rows: requiredCallableRows,
+  })}`);
+}
+
 // Build startup binding map only after resolver completion.
 const startupBindingMapFunctionAugmentation =
   augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
@@ -3847,6 +4290,42 @@ startupBindingMapBuildSummary = buildStartupBindingMapBuildSummary({
   contract: BOOTSTRAP_L0_CONTRACT_V1,
 });
 console.log(`STARTUP_BINDING_MAP_BUILD ${JSON.stringify(startupBindingMapBuildSummary)}`);
+if (process.env.CCL_WASM_DIAG_REQUIRED_CALLABLE_BINDINGS === "1") {
+  const requiredCallableKeys = new Set(
+    (Array.isArray(BOOTSTRAP_L0_CONTRACT_V1?.requiredCallables) ? BOOTSTRAP_L0_CONTRACT_V1.requiredCallables : [])
+      .map((item) => `${String(item?.packageName ?? "").trim().toUpperCase()}::${String(item?.symbolName ?? "").trim().toUpperCase()}`)
+      .filter((key) => key !== "::"),
+  );
+  const requiredCallableRows = [];
+  for (const entry of Array.isArray(startupBindingMapArtifact?.entries) ? startupBindingMapArtifact.entries : []) {
+    const packageName = String(entry?.package_name ?? "").trim().toUpperCase();
+    const symbolName = String(entry?.symbol_name ?? "").trim().toUpperCase();
+    if (!packageName || !symbolName) continue;
+    const symbolKey = `${packageName}::${symbolName}`;
+    if (!requiredCallableKeys.has(symbolKey)) continue;
+    requiredCallableRows.push({
+      symbol_key: symbolKey,
+      target_cell: String(entry?.target_cell ?? "").trim().toLowerCase() || null,
+      binding_class: String(entry?.binding_class ?? "").trim().toLowerCase() || null,
+      availability: String(entry?.availability ?? "").trim().toLowerCase() || null,
+      required_class: String(entry?.definition?.required_class ?? entry?.required_class ?? "").trim().toLowerCase() || null,
+      initializer_kind: String(entry?.initializer?.kind ?? "").trim().toLowerCase() || null,
+      initializer_entry_index: Number.isInteger(entry?.initializer?.entry_index)
+        ? (entry.initializer.entry_index >>> 0)
+        : null,
+      source: typeof entry?.source === "string" ? entry.source : null,
+    });
+  }
+  const presentRequiredKeys = new Set(requiredCallableRows.map((row) => row.symbol_key));
+  const missingRequiredKeys = Array.from(requiredCallableKeys.values()).filter((key) => !presentRequiredKeys.has(key));
+  console.log(`STARTUP_REQUIRED_CALLABLE_BINDINGS ${JSON.stringify({
+    schema_version: "startup_required_callable_bindings_diag_v1",
+    source: startupBindingMapSource,
+    total_rows: requiredCallableRows.length >>> 0,
+    rows: requiredCallableRows,
+    missing_required_callable_keys: missingRequiredKeys,
+  })}`);
+}
 buildStartupBindingMapConstPoolBindingIndex(startupBindingMapArtifact);
 const startupBindingMapPreinstallPlan = planStartupBindingMapPreinstallConstPools({
   contract: BOOTSTRAP_L0_CONTRACT_V1,

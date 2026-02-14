@@ -20,13 +20,21 @@ Current condensed state/history snapshot (2026-02-14):
 - `%FASLOAD`, `%FASL-OPEN`, `%SIMPLE-FASL-OPEN` were observed prebound to entries `4412`, `4372`, `4360` in runtime probes.
 - Focused smoke/top4488 lanes now consistently reach `STARTUP_BINDING_MAP_APPLY {"status":"pass"}` and `L0_BOOTSTRAP_CONTRACT {"status":"pass"}` before required fasload.
 - Post-bundle mode-0 probe behavior differs by const-pool availability: missing const-pool can trap in `_SPspecref`; full startup flow can stall after `foreign.call.enter` (currently observed in both focused lanes at first required fasload, before any `REQUIRED_FASLOAD_BOUNDARY` line).
-- `make-real-image.mjs` wrapper path currently discards resolver argument in local helper (`void resolver`) and relies on metadata-driven augmentation path.
+- `make-real-image.mjs` wrapper path now forwards resolver callbacks into startup-binding-map augmentation; active unresolved axis is resolver authority mismatch (bootstrap resolver `missing` for required fasload callables while runtime probe resolves them).
+- Likely JS diagnosis paths are established: `ccl/doc/wasm/js/make-real-image.mjs`, `ccl/doc/wasm/js/ccl-loader.mjs`, and startup diagnostics files; treat these as the active trace path for `%FASLOAD` selection and handoff to `wasm_fasload_path`.
+- Fasload call path in `make-real-image.mjs` is confirmed; active narrowing focus is `%FASLOAD` binding/selection immediately before `wasm_fasload_path`, with specific attention on entry-index mapping and host resolve path.
+- Early-boundary symbol probes are already instrumented in `make-real-image.mjs`; probe placement relative to the failing path is a known diagnostic axis for capturing `%FASLOAD` binding immediately before first required fasload.
+- Resolver behavior is confirmed: `%FASLOAD` should resolve through `bootstrapFunctionResolver` via function metadata or explicit const-pool metadata rewrite; if misbinding persists, primary suspicion remains startup binding-map application ambiguity/fallback behavior.
 
 Do-not-rediscover anchors (authoritative):
 - `boundary_probe name=identity mode=1 rc=-5` and `boundary_probe name=error mode=2 rc=-5` are known and already recorded; do not report them as new findings unless the touched kernel/probe source changes.
 - Focused lanes stalling after `foreign.call.enter` before any `REQUIRED_FASLOAD_BOUNDARY` line is known and already recorded.
 - Eventual `arg_z`/`z_reg` nil-ish or UDF-like callable state while stalled in this lane is an expected downstream symptom, not a new root cause by itself.
 - `%FASLOAD` lane mis-target/misbind suspicion is already recorded; do not re-open metadata-only re-audits unless runtime module metadata or binding-apply code changed.
+- Known JS diagnosis paths are `ccl/doc/wasm/js/make-real-image.mjs`, `ccl/doc/wasm/js/ccl-loader.mjs`, and startup diagnostics files; treat these as active `%FASLOAD` selection/handoff trace paths.
+- Fasload call path in `ccl/doc/wasm/js/make-real-image.mjs` is confirmed; active narrowing axis is `%FASLOAD` binding/selection immediately before `wasm_fasload_path`, including entry-index mapping and host resolve path.
+- Early-boundary symbol probes already instrumented in `ccl/doc/wasm/js/make-real-image.mjs` are authoritative context; placement relative to first required fasload is a known diagnostic axis for capturing `%FASLOAD` binding.
+- Resolver behavior is established: `%FASLOAD` should resolve via `bootstrapFunctionResolver` (function metadata or explicit const-pool metadata rewrite); if misbinding persists, binding-map apply/mapping behavior is the primary suspicion.
 - Progress may only be claimed when both focused lanes cross `REQUIRED_FASLOAD_BOUNDARY` or emit a deterministic boundary failure reason (no hang).
 
 Continuity checkpoints:
@@ -60,6 +68,51 @@ Milestone delta (2026-02-14, anti-repeat context lock):
 - Changed: added explicit `Do-not-rediscover anchors` in Section `0.0` to lock known fasload stall/probe facts and symptom interpretation.
 - Proven: future continuity reconstruction can treat `rc=-5`, `foreign.call.enter` stall, and eventual `arg_z`/`z_reg` nil/UDF symptom as pre-known context rather than rediscovery work.
 - Remains: implement the first concrete fix that converts current first-required fasload behavior from hang to deterministic `REQUIRED_FASLOAD_BOUNDARY` outcome in both focused lanes.
+
+Milestone delta (2026-02-14, required-callable resolver verification guard):
+- Changed: patched `ccl/doc/wasm/js/make-real-image.mjs` in `applyStartupBindingMapOrFail` to require bootstrap-resolver verification for `required-callable` fcell bindings before skip/reuse/apply; added deterministic failures for unresolved or mismatched required callable entry targets.
+- Proven: current focused no-trace build logs still show `required_callable_count: 3` with `resolver_unresolved: 3` under `STARTUP_BINDING_MAP_BUILD.coverage.contract_required_const_pool_function_bindings`, matching `%FASLOAD`, `%FASL-OPEN`, `%SIMPLE-FASL-OPEN` unresolved-in-metadata state.
+- Remains: rerun focused smoke/top4488 lanes to confirm this converts the previous post-`foreign.call.enter` hang into deterministic pre-fasload map-apply failure reasons (until callable entry authority is restored).
+
+Milestone delta (2026-02-14, focused lane deterministic pre-fasload failure established):
+- Changed: added pre-apply contract classification checks in `ccl/doc/wasm/js/make-real-image.mjs` so required callable symbols must be present in the startup map with required callable binding class, otherwise map apply fails deterministically.
+- Proven: bounded focused lanes now fail deterministically before required fasload in both smoke and top4488:
+  - `/tmp/make-real-image.notrace.smoke.source_scope_v1.guard2.skipfasl.log`
+  - `/tmp/make-real-image.notrace.top4488.source_scope_v1.guard2.skipfasl.log`
+  both emit `STARTUP_BINDING_MAP_APPLY {"status":"fail", ... "failed_count":3, "first_failure":{"symbol_key":"CCL::%FASLOAD","reason":"required-callable-binding-missing-from-map"}}` followed by `FAIL: pre-fasload startup binding map apply failed: 3 requirement(s)`.
+- Proven: this replaces the previous ambiguous hang signature in focused diagnosis runs with a concrete pre-fasload boundary-class failure reason.
+- Remains: determine why `%FASLOAD`, `%FASL-OPEN`, `%SIMPLE-FASL-OPEN` are absent/demoted in synthesized startup binding map entries despite contract-required callable coverage, then restore authoritative callable entry targeting.
+
+Milestone delta (2026-02-14, resolver handoff restoration for required callables):
+- Changed: patched `ccl/doc/wasm/js/make-real-image.mjs` wrapper `augmentStartupBindingMapArtifactWithContractConstPoolFunctions` to forward resolver callbacks into builder augmentation (`resolveFunctionDesignator`) instead of discarding resolver (`void resolver`).
+- Proven: by code path inspection, contract-required callable emission is no longer forced into metadata-only fallback when runtime module metadata lacks `%FASLOAD` family entries.
+- Remains: rerun focused bounded lane diagnostics to confirm `STARTUP_REQUIRED_CALLABLE_BINDINGS` now includes `%FASLOAD`, `%FASL-OPEN`, `%SIMPLE-FASL-OPEN` rows and that pre-fasload apply failure reason shifts accordingly.
+
+Milestone delta (2026-02-14, resolver-vs-runtime callable authority matrix):
+- Changed: added env-gated diagnostic `CCL_WASM_DIAG_REQUIRED_CALLABLE_RESOLVER=1` in `ccl/doc/wasm/js/make-real-image.mjs` to emit `STARTUP_REQUIRED_CALLABLE_RESOLVER` rows comparing bootstrap resolver (`with_package`/`name_only`) vs runtime symbol-fcell probe for each required callable.
+- Proven: bounded smoke lane log `/tmp/make-real-image.notrace.smoke.source_scope_v1.guard5.diag.log` shows bootstrap resolver `missing` for all three required callables while runtime probe resolves entries `{%FASLOAD:4412,%FASL-OPEN:4372,%SIMPLE-FASL-OPEN:4360}`.
+- Remains: convert this resolver/runtime mismatch into deterministic map synthesis that preserves required-callable metadata class and reaches pre-fasload apply pass in focused lanes.
+
+Milestone delta (2026-02-14, required-callable rows restored + apply pass in focused bounded lanes):
+- Changed: patched `ccl/doc/wasm/js/make-real-image.mjs` resolver callback adapter to accept builder payload shape (`{name,packageName}`), added runtime-fcell fallback for resolver `missing`, and patched `ccl/doc/wasm/js/startup-binding-map.mjs` to stamp `definition.required_class:"required-callable"` for `contract-required-callable` entries.
+- Proven: bounded focused smoke and top4488 lanes now emit required callable rows and pass pre-fasload map apply:
+  - `/tmp/make-real-image.notrace.smoke.source_scope_v1.guard9.diag.log`
+  - `/tmp/make-real-image.notrace.top4488.source_scope_v1.guard9.diag.log`
+  both show:
+  - `STARTUP_REQUIRED_CALLABLE_BINDINGS ... "total_rows":3 ... "missing_required_callable_keys":[]`
+  - `STARTUP_BINDING_MAP_APPLY {"status":"pass", ... "failed_count":0}`
+- Proven: augmentation coverage now reports `resolver_resolved:3`, `emitted_entries:3`, `fcell_entries:3`, replacing prior zero-row required-callable map state.
+- Remains: rerun without `CCL_WASM_SKIP_REQUIRED_FASLOADS=1` and confirm actual `REQUIRED_FASLOAD_BOUNDARY` behavior; bounded skip-fasload runs currently stop later at bootstrap sanity (`FAIL: bootstrap sanity check failed; ... exit=4`) and do not exercise first required fasload boundary.
+
+Milestone delta (2026-02-14, option-1 no-skip focused lanes):
+- Changed: ran both focused lanes without `CCL_WASM_SKIP_REQUIRED_FASLOADS`, preserving required-callable diagnostics:
+  - `/tmp/make-real-image.notrace.smoke.source_scope_v1.guard10.noskip.log`
+  - `/tmp/make-real-image.notrace.top4488.source_scope_v1.guard10.noskip.log`
+- Proven: both lanes now cross into first required fasload and emit deterministic boundary failure (no hang):
+  - `REQUIRED_FASLOAD_BOUNDARY {"status":"fail","fasl_index":0,"first_required_fasload":true,"path":"l1-fasls/l1-cl-package.lafsl","rc":-7,"reason":"required-fasload-failed-after-unified-startup-binding-map-apply","unresolved_function_symbol":null,...}`
+  - terminal failure: `FAIL: wasm_fasload_path(l1-fasls/l1-cl-package.lafsl) returned -7`
+- Proven: pre-fasload gates remain healthy in both no-skip runs (`STARTUP_BINDING_MAP_APPLY {"status":"pass"}` with required callable rows restored).
+- Remains: isolate `rc=-7` failure cause inside first required fasload path (`l1-cl-package.lafsl`) now that startup binding-map omission/misbinding is no longer the active boundary reason.
 
 ### 0.0.A Fast Re-Entry Prompt (Use At Start Of New Conversations)
 
