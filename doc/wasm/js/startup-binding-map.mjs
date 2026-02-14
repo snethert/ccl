@@ -1142,8 +1142,9 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     const normalizedPackage = canonicalizePackageName(packageName);
     if (normalizedPackage) {
       const symbolKey = makeSymbolKey(normalizedPackage, normalizedSymbol);
-      if (!symbolKey) return false;
-      return functionIndex.bySymbolKey.has(symbolKey);
+      if (symbolKey && functionIndex.bySymbolKey.has(symbolKey)) {
+        return true;
+      }
     }
     return functionIndex.byName.has(normalizedSymbol);
   };

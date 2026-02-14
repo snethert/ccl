@@ -2724,6 +2724,82 @@ function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
   contract = BOOTSTRAP_L0_CONTRACT_V1,
   resolver = null,
 } = {}) {
+  const resolveFunctionDesignatorFromRuntimeProbe = ({ packageName, symbolName } = {}) => {
+    if (
+      !ex ||
+      typeof ex.wasm_get_lisp_nil !== "function" ||
+      typeof ex.wasm_probe_symbol !== "function" ||
+      typeof ex.wasm_probe_symbol_fcell !== "function" ||
+      typeof ex.wasm_probe_last_status !== "function" ||
+      typeof ex.wasm_debug_function_entry_index !== "function"
+    ) {
+      return {
+        ok: false,
+        reason: "runtime-probe-exports-missing",
+        source: null,
+        key: null,
+      };
+    }
+    const normalizedSymbolName = String(symbolName ?? "").trim();
+    if (normalizedSymbolName.length === 0) {
+      return {
+        ok: false,
+        reason: "runtime-symbol-name-missing",
+        source: null,
+        key: null,
+      };
+    }
+    const nil = ex.wasm_get_lisp_nil() >>> 0;
+    const utf8 = new TextEncoder();
+    const symbolBytes = utf8.encode(normalizedSymbolName);
+    const packageBytes = utf8.encode(String(packageName ?? ""));
+    const symbolPtr = symbolBytes.length > 0
+      ? copyBytesToScratch(runtime.memory, symbolBytes)
+      : 0;
+    const packagePtr = packageBytes.length > 0
+      ? copyBytesToScratch(runtime.memory, packageBytes)
+      : 0;
+    const symbolRaw = ex.wasm_probe_symbol(
+      symbolPtr >>> 0,
+      symbolBytes.length >>> 0,
+      packagePtr >>> 0,
+      packageBytes.length >>> 0,
+    ) >>> 0;
+    const symbolStatus = ex.wasm_probe_last_status() >>> 0;
+    if (symbolStatus !== L0_PROBE_STATUS.OK || symbolRaw === 0 || symbolRaw === nil) {
+      return {
+        ok: false,
+        reason: "runtime-symbol-unresolved",
+        source: null,
+        key: null,
+      };
+    }
+    const fcellRaw = ex.wasm_probe_symbol_fcell(symbolRaw >>> 0) >>> 0;
+    const fcellStatus = ex.wasm_probe_last_status() >>> 0;
+    if (fcellStatus !== L0_PROBE_STATUS.OK || fcellRaw === 0 || fcellRaw === nil) {
+      return {
+        ok: false,
+        reason: "runtime-fcell-unresolved",
+        source: null,
+        key: null,
+      };
+    }
+    const entryIndex = ex.wasm_debug_function_entry_index(fcellRaw >>> 0) | 0;
+    if (entryIndex < 0) {
+      return {
+        ok: false,
+        reason: "runtime-fcell-non-function",
+        source: null,
+        key: null,
+      };
+    }
+    return {
+      ok: true,
+      entryIndex: entryIndex >>> 0,
+      source: "runtime-fcell-probe",
+      key: "symbol-key",
+    };
+  };
   const resolveFunctionDesignator = ({ packageName, symbolName, name } = {}) => {
     const resolvedSymbolName = String(symbolName ?? name ?? "").trim();
     let resolverResult = null;
@@ -2748,11 +2824,23 @@ function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
       };
     }
     if (resolverResult?.ok) {
+      const normalizedPackage = String(packageName ?? "").trim().toUpperCase();
+      const normalizedResolverKey = String(resolverResult.key ?? "").trim().toUpperCase();
+      const normalizedSymbol = String(resolvedSymbolName ?? "").trim().toUpperCase();
+      const metadataNameOnlyResolution = (
+        normalizedPackage.length > 0 &&
+        normalizedSymbol.length > 0 &&
+        normalizedResolverKey === normalizedSymbol &&
+        typeof resolverResult.source === "string" &&
+        resolverResult.source.startsWith("metadata")
+      );
       return {
         ok: true,
         entryIndex: resolverResult.entryIndex >>> 0,
         source: resolverResult.source ?? null,
-        key: resolverResult.key ?? null,
+        key: metadataNameOnlyResolution
+          ? "symbol-key"
+          : (resolverResult.key ?? null),
       };
     }
     if (resolverResult?.reason === "ambiguous") {
@@ -2766,11 +2854,18 @@ function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
           : [],
       };
     }
+    const runtimeProbe = resolveFunctionDesignatorFromRuntimeProbe({
+      packageName,
+      symbolName: resolvedSymbolName,
+    });
+    if (runtimeProbe.ok) {
+      return runtimeProbe;
+    }
     return {
       ok: false,
-      reason: resolverResult?.reason ?? "missing",
-      source: resolverResult?.source ?? null,
-      key: resolverResult?.key ?? null,
+      reason: resolverResult?.reason ?? runtimeProbe.reason ?? "missing",
+      source: resolverResult?.source ?? runtimeProbe.source ?? null,
+      key: resolverResult?.key ?? runtimeProbe.key ?? null,
       alternatives: Array.isArray(resolverResult?.alternatives)
         ? resolverResult.alternatives.slice()
         : [],
