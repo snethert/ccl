@@ -13,6 +13,26 @@
     {
       "packageName": "CCL",
       "symbolName": "%SIMPLE-FASL-OPEN"
+    },
+    {
+      "packageName": "CCL",
+      "symbolName": "%MAKE-VECTOR-OUTPUT-STREAM"
+    },
+    {
+      "packageName": "CCL",
+      "symbolName": "MAKE-UARRAY-1"
+    },
+    {
+      "packageName": "CCL",
+      "symbolName": "%MAKE-DISPLACED-ARRAY"
+    },
+    {
+      "packageName": "CCL",
+      "symbolName": "%SET-SIMPLE-ARRAY-P"
+    },
+    {
+      "packageName": "CCL",
+      "symbolName": "INIT-UVECTOR-CONTENTS"
     }
   ],
   "requiredConstPools": [

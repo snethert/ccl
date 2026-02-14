@@ -46,53 +46,73 @@
     t))
 
 
+(defun %wasm-startup-truth-note-event-if-available (event-type &rest payload)
+  (declare (dynamic-extent payload))
+  (when (fboundp '%wasm-startup-truth-note-event)
+    (ignore-errors
+      (apply #'%wasm-startup-truth-note-event event-type payload))))
+
 
 
 (defun export (sym-or-syms &optional (package *package*))
   "Exports SYMBOLS from PACKAGE, checking that no name conflicts result."
   (setq package (pkg-arg package))
   (if (atom sym-or-syms)
-    (let* ((temp (cons sym-or-syms nil)))
-      (declare (dynamic-extent temp))
-      (export temp package))
-    (progn
-      (dolist (sym sym-or-syms)
-        (unless (symbolp sym) (return (setq sym-or-syms  (mapcar #'(lambda (s) (require-type s 'symbol)) sym-or-syms)))))
-      ;; First, see if any packages used by the package being
-      ;; "exported from" already contain a distinct non-shadowing
-      ;; symbol that conflicts with one of those that we're trying to
-      ;; export.
-      (let* ((conflicts (check-export-conflicts sym-or-syms package)))
-        (if conflicts
-          (progn 
-            (resolve-export-conflicts conflicts package)
-            (export sym-or-syms package))
-          (let* ((missing nil) (need-import nil))
-            (dolist (s sym-or-syms) 
-              (multiple-value-bind (foundsym foundp) (%findsym (symbol-name s) package)
-                (if (not (and foundp (eq s foundsym)))
-                  (push s missing)
-                  (if (eq foundp :inherited)
-                    (push s need-import)))))
-            (when missing
-              (cerror "Import missing symbols before exporting them from ~S."
-                      'export-requires-import
-                      :package  package
-                      :to-be-imported missing)
-              (import missing package))
-            (if need-import (import need-import package))
-            ; Can't lose now: symbols are all directly present in package.
-            ; Ensure that they're all external; do so with interrupts disabled
-            (without-interrupts
-             (let* ((etab (pkg.etab package))
-                    (ivec (car (pkg.itab package))))
-               (dolist (s sym-or-syms t)
-                 (multiple-value-bind (foundsym foundp internal-offset)
-                                      (%findsym (symbol-name s) package)
-                   (when (eq foundp :internal)
-                     (setf (%svref ivec internal-offset) (package-deleted-marker))
-                     (let* ((pname (symbol-name foundsym)))
-                       (%htab-add-symbol foundsym etab (nth-value 2 (%get-htab-symbol pname (length pname) etab)))))))))))))))
+      (let* ((temp (cons sym-or-syms nil)))
+        (declare (dynamic-extent temp))
+        (export temp package))
+      (progn
+        (dolist (sym sym-or-syms)
+          (unless (symbolp sym)
+            (return
+              (setq sym-or-syms
+                    (mapcar #'(lambda (s) (require-type s 'symbol)) sym-or-syms)))))
+        ;; First, see if any packages used by the package being
+        ;; "exported from" already contain a distinct non-shadowing
+        ;; symbol that conflicts with one of those that we're trying to
+        ;; export.
+        (let* ((conflicts (check-export-conflicts sym-or-syms package)))
+          (if conflicts
+              (progn
+                (resolve-export-conflicts conflicts package)
+                (export sym-or-syms package))
+              (let* ((missing nil)
+                     (need-import nil))
+                (dolist (s sym-or-syms)
+                  (multiple-value-bind (foundsym foundp) (%findsym (symbol-name s) package)
+                    (if (not (and foundp (eq s foundsym)))
+                        (push s missing)
+                        (when (eq foundp :inherited)
+                          (push s need-import)))))
+                (when missing
+                  (cerror "Import missing symbols before exporting them from ~S."
+                          'export-requires-import
+                          :package package
+                          :to-be-imported missing)
+                  (import missing package))
+                (when need-import
+                  (import need-import package))
+                ;; Can't lose now: symbols are all directly present in package.
+                ;; Ensure that they're all external; do so with interrupts disabled
+                (without-interrupts
+                  (let* ((etab (pkg.etab package))
+                         (ivec (car (pkg.itab package))))
+                    (dolist (s sym-or-syms)
+                      (multiple-value-bind (foundsym foundp internal-offset)
+                                           (%findsym (symbol-name s) package)
+                        (when (eq foundp :internal)
+                          (setf (%svref ivec internal-offset) (package-deleted-marker))
+                          (let* ((pname (symbol-name foundsym)))
+                            (%htab-add-symbol
+                             foundsym
+                             etab
+                             (nth-value 2 (%get-htab-symbol pname (length pname) etab)))))))))
+                (%wasm-startup-truth-note-event-if-available
+                 "package-export"
+                 :phase "package-api"
+                 :package package
+                 :symbols sym-or-syms)
+                t))))))
 
 (defun check-export-conflicts (symbols package)
   (let* ((conflicts nil))
@@ -199,11 +219,18 @@ value of the variable CCL:*MAKE-PACKAGE-USE-DEFAULTS*."
                        nil)))
     (let* ((ref (register-package-ref pkg-name)))
       (setf (package-ref.pkg ref) pkg))
-    (use-package use pkg)
-    (%add-nicknames nicknames pkg)
-    (with-package-list-write-lock
-        (push pkg %all-packages%))
-    pkg))
+	    (use-package use pkg)
+	    (%add-nicknames nicknames pkg)
+	    (with-package-list-write-lock
+	        (push pkg %all-packages%))
+	    (%wasm-startup-truth-note-event-if-available
+	     "package-create"
+	     :phase "package-api"
+	     :package pkg
+	     :name pkg-name
+	     :use use
+	     :nicknames nicknames)
+	    pkg))
 
 (defun new-package-name (name &optional package)
   (do* ((prompt "Enter package name to use instead of ~S ."))
@@ -357,36 +384,48 @@ value of the variable CCL:*MAKE-PACKAGE-USE-DEFAULTS*."
       ;; Now remove the symbol from package; if package was its home
       ;; package, set its package to NIL.  If we get here, the "table"
       ;; and "index" values returned above are still valid.
-      (%svset (car table) index (package-deleted-marker))
-      (when (eq (symbol-package symbol) package)
-        (%set-symbol-package symbol nil))
-      t)))
+	      (%svset (car table) index (package-deleted-marker))
+	      (when (eq (symbol-package symbol) package)
+	        (%set-symbol-package symbol nil))
+	      (%wasm-startup-truth-note-event-if-available
+	       "unintern"
+	       :phase "package-api"
+	       :package package
+	       :symbol symbol)
+	      t)))
 
 (defun import-1 (package sym)
   (multiple-value-bind (conflicting-sym type internal-offset external-offset) (%findsym (symbol-name sym) package)
     (if (and type (neq conflicting-sym sym))
-      (let* ((external-p (eq type :inherited))
-             (condition (make-condition 'import-conflict-error 
-                                        :package package
-                                        :imported-sym sym
-                                        :conflicting-sym conflicting-sym
-                                        :conflict-external external-p)))
-        (restart-case (error condition)
-          (continue ()
-                    :report (lambda (s) (format s "Ignore attempt to import ~S to ~S." sym package)))
-          (resolve-conflict ()
-                            :report (lambda (s)
-                                      (let* ((package-name (package-name package)))
-                                        (if external-p 
-                                          (format s "~A ~s in package ~s ." 'shadowing-import sym package-name)
-                                          (format s "~A ~s from package ~s ." 'unintern conflicting-sym package-name))))
-                            (if external-p 
-                              (shadowing-import-1 package sym)
-                              (progn
-                                (unintern conflicting-sym package)
-                                (import-1 package sym))))))
-      (unless (or (eq type :external) (eq type :internal))
-        (%insert-symbol sym package internal-offset external-offset)))))
+        (let* ((external-p (eq type :inherited))
+               (condition (make-condition 'import-conflict-error
+                                          :package package
+                                          :imported-sym sym
+                                          :conflicting-sym conflicting-sym
+                                          :conflict-external external-p)))
+          (restart-case (error condition)
+            (continue ()
+                      :report (lambda (s) (format s "Ignore attempt to import ~S to ~S." sym package)))
+            (resolve-conflict ()
+                              :report (lambda (s)
+                                        (let* ((package-name (package-name package)))
+                                          (if external-p
+                                              (format s "~A ~s in package ~s ." 'shadowing-import sym package-name)
+                                              (format s "~A ~s from package ~s ." 'unintern conflicting-sym package-name))))
+                              (if external-p
+                                  (shadowing-import-1 package sym)
+                                  (progn
+                                    (unintern conflicting-sym package)
+                                    (import-1 package sym))))))
+        (unless (or (eq type :external) (eq type :internal))
+          (%insert-symbol sym package internal-offset external-offset)))
+    (%wasm-startup-truth-note-event-if-available
+     "package-import"
+     :phase "package-api"
+     :package package
+     :symbol sym
+     :existing-type type)
+    nil))
 
 
 (defun import (sym-or-syms &optional package)
@@ -404,11 +443,16 @@ value of the variable CCL:*MAKE-PACKAGE-USE-DEFAULTS*."
   (let* ((pname (ensure-simple-string (string sym)))
          (len (length pname)))
     (without-interrupts
-     (multiple-value-bind (symbol where internal-idx external-idx) (%find-symbol pname len package)
-       (if (or (eq where :internal) (eq where :external))
-         (pushnew symbol (pkg.shadowed package))
-         (push (%add-symbol pname package internal-idx external-idx) (pkg.shadowed package)))))
-    nil))
+	   (multiple-value-bind (symbol where internal-idx external-idx) (%find-symbol pname len package)
+	     (if (or (eq where :internal) (eq where :external))
+	       (pushnew symbol (pkg.shadowed package))
+	       (push (%add-symbol pname package internal-idx external-idx) (pkg.shadowed package)))))
+	  (%wasm-startup-truth-note-event-if-available
+	   "package-shadow"
+	   :phase "package-api"
+	   :package package
+	   :symbol sym)
+	    nil))
 
 (defun shadow (sym-or-symbols-or-string-or-strings &optional package)
   "Make an internal symbol in PACKAGE with the same name as each of
@@ -562,7 +606,12 @@ value of the variable CCL:*MAKE-PACKAGE-USE-DEFAULTS*."
         (%kernel-restart $xusec package-to-use using-package used-using-conflicts))))
   (unless (memq using-package (pkg.used-by package-to-use))   ;  Not already used in break loop/restart, etc.
     (push using-package (pkg.used-by package-to-use))
-    (push package-to-use (pkg.used using-package))))
+    (push package-to-use (pkg.used using-package)))
+  (%wasm-startup-truth-note-event-if-available
+   "package-use"
+   :phase "package-api"
+   :using-package using-package
+   :used-package package-to-use))
 
 (defun use-package (packages-to-use &optional package)
   "Add all the PACKAGES-TO-USE to the use list for PACKAGE so that

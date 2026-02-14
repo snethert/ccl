@@ -164,10 +164,12 @@ function trace(msg) {
     console.error(`[make-real-image] ${msg}`);
   }
 }
+const startupTruthCollectEnvEnabled = process.env.CCL_WASM_STARTUP_TRUTH_COLLECT === "1";
 const diagPreinstallAttemptsEnabled = process.env.CCL_WASM_DIAG_PREINSTALL_ATTEMPTS === "1";
 const diagPreinstallContinueOnThrowEnabled = process.env.CCL_WASM_DIAG_PREINSTALL_CONTINUE_ON_THROW === "1";
 const diagApplyFailureDetailsEnabled = process.env.CCL_WASM_DIAG_APPLY_FAILURE_DETAILS === "1";
-const diagApplyContinueOnFailEnabled = process.env.CCL_WASM_DIAG_APPLY_CONTINUE_ON_FAIL === "1";
+const diagApplyContinueOnFailEnabled = process.env.CCL_WASM_DIAG_APPLY_CONTINUE_ON_FAIL === "1" ||
+  startupTruthCollectEnvEnabled;
 function logPreinstallAttemptDiag({
   phase,
   entryIndex,
@@ -616,6 +618,12 @@ const root = path.resolve(scriptDir, "../../..");
 const defaultBootImage = path.join(root, "wasm-boot.image");
 const defaultOutput = path.join(root, "doc/wasm/root.image");
 const defaultWasmOutput = "doc/wasm/root.image";
+const startupTruthCollectEnabled = startupTruthCollectEnvEnabled;
+const defaultStartupTruthOutPath = path.join(root, "doc/wasm/startup_truth_v1.jsonl");
+const startupTruthHostOutPath = startupTruthCollectEnabled
+  ? path.resolve(process.env.CCL_WASM_STARTUP_TRUTH_OUT ?? defaultStartupTruthOutPath)
+  : null;
+const startupTruthPersistencePath = "doc/wasm/startup_truth_v1.jsonl";
 // Policy: keep compiled modules external by default (JSON + .bin sidecar)
 // instead of embedding them in the saved heap image.
 const defaultModules = path.join(root, "doc/wasm/wasm-runtime-modules.json");
@@ -1149,6 +1157,12 @@ if (!microkernel.persistence) {
 const ensure = microkernel.persistence.ensureDirs(wasmOutputPath);
 if (!ensure.ok) {
   fail(`persistence ensureDirs failed for ${wasmOutputPath}`);
+}
+if (startupTruthCollectEnabled) {
+  const startupTruthEnsure = microkernel.persistence.ensureDirs(startupTruthPersistencePath);
+  if (!startupTruthEnsure.ok) {
+    fail(`persistence ensureDirs failed for ${startupTruthPersistencePath}`);
+  }
 }
 
 let kernelExports = null;
@@ -4531,7 +4545,15 @@ function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
     for (const failure of failures) {
       console.error(`L0_BOOTSTRAP_CONTRACT ${JSON.stringify(failure)}`);
     }
-    fail(`pre-fasload L0 bootstrap contract failed: ${failures.length} requirement(s)`);
+    if (!startupTruthCollectEnabled) {
+      fail(`pre-fasload L0 bootstrap contract failed: ${failures.length} requirement(s)`);
+    }
+    console.error(`L0_BOOTSTRAP_CONTRACT_CONTINUE ${JSON.stringify({
+      schema_version: "bootstrap_l0_gate_continue_v1",
+      reason: "startup-truth-collect-enabled",
+      failed_count: failures.length,
+    })}`);
+    return;
   }
 
   console.log(`L0_BOOTSTRAP_CONTRACT ${JSON.stringify({
@@ -5384,6 +5406,71 @@ const tryRecoverBoundaryConstPoolEntry = (specrefDiag) => {
   }
   return status === 1;
 };
+let startupTruthCloseAndExtractCompleted = false;
+const configureStartupTruthCollectOrFail = (enabled) => {
+  if (typeof ex.wasm_configure_startup_truth_collect !== "function") {
+    fail("kernel missing wasm_configure_startup_truth_collect");
+  }
+  if (typeof ex.wasm_clear_pending_throw === "function") {
+    ex.wasm_clear_pending_throw();
+  }
+  const scratch = sharedProbeUtf8Scratch;
+  scratch.reset();
+  const pathMem = scratch.allocUtf8(startupTruthPersistencePath, encoder);
+  const rc = ex.wasm_configure_startup_truth_collect(
+    enabled ? 1 : 0,
+    pathMem.ptr >>> 0,
+    pathMem.len >>> 0,
+  ) | 0;
+  if (rc !== 0) {
+    fail(`wasm_configure_startup_truth_collect returned ${rc}`);
+  }
+};
+const extractPersistenceFileToHostOrFail = async (persistPath, hostPath) => {
+  const openRes = microkernel.persistence.openFile(persistPath, FILE_MODE_READ);
+  if (!openRes?.ok) {
+    fail(`failed to open ${persistPath} in persistence store`);
+  }
+  const handle = openRes.value;
+  const chunks = [];
+  for (;;) {
+    const part = handle.read(1 << 20);
+    if (!part || part.length === 0) break;
+    chunks.push(Buffer.from(part));
+  }
+  handle.close();
+  const persistedBytes = Buffer.concat(chunks);
+  await fs.mkdir(path.dirname(hostPath), { recursive: true });
+  await fs.writeFile(hostPath, persistedBytes);
+  return persistedBytes.length;
+};
+const closeAndExtractStartupTruthOrFail = async (reason) => {
+  if (!startupTruthCollectEnabled || startupTruthCloseAndExtractCompleted) {
+    return;
+  }
+  if (typeof ex.wasm_startup_truth_close_sink === "function") {
+    const closeRc = ex.wasm_startup_truth_close_sink() | 0;
+    if (closeRc !== 0) {
+      fail(`wasm_startup_truth_close_sink returned ${closeRc}`);
+    }
+  }
+  const bytes = await extractPersistenceFileToHostOrFail(
+    startupTruthPersistencePath,
+    startupTruthHostOutPath,
+  );
+  startupTruthCloseAndExtractCompleted = true;
+  console.log(`STARTUP_TRUTH_COLLECT ${JSON.stringify({
+    schema_version: "startup_truth_collect_v1",
+    status: "ok",
+    reason,
+    wasm_path: startupTruthPersistencePath,
+    host_path: displayPath(startupTruthHostOutPath),
+    bytes,
+  })}`);
+};
+if (startupTruthCollectEnabled) {
+  configureStartupTruthCollectOrFail(true);
+}
 const requiredFasloadQueue = skipRequiredFasloads ? [] : requiredFasls;
 for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
   const faslPath = requiredFasloadQueue[faslIndex];
@@ -5464,6 +5551,7 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
       faslIndex = Math.max(-1, (faslIndex | 0) - 1);
       continue;
     }
+    await closeAndExtractStartupTruthOrFail("required-fasload-trap-fail");
     fail(`wasm_fasload_path(${faslPath}) trapped: ${err?.message ?? err}`);
   }
   if (traceEnabled && pendingThrowProbe) {
@@ -5578,6 +5666,7 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
         trace(`fasload diag script rc=${diagRc}`);
       }
     }
+    await closeAndExtractStartupTruthOrFail("required-fasload-rc-fail");
     fail(`wasm_fasload_path(${faslPath}) returned ${faslRc}`);
   }
   if (faslIndex === 0) {
@@ -5602,6 +5691,7 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
     })}`);
   }
 }
+await closeAndExtractStartupTruthOrFail("required-fasload-loop-complete");
 if (!skipRequiredFasloads && requiredFasls.length > 0) {
   setBootPhaseOrFail(WASM_BOOT_PHASE.RUNTIME, { reason: "post-required-fasload-boundary" });
 }

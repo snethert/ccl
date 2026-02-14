@@ -866,10 +866,21 @@ wasm_maybe_deliver_interrupt(TCR *tcr)
 static uint32_t wasm_subprims_ready = 0;
 static LispObj wasm_last_compiled_modules = 0;
 static volatile uint32_t wasm_boot_phase_state = WASM_BOOT_EARLY;
+static uint32_t wasm_startup_truth_collect_enabled = 0u;
 LispObj wasm_funcall1(LispObj fn_value, LispObj arg0);
 uint32_t wasm_subprim_nonlocal_exit_coherence_selftest(void);
 static LispObj wasm_find_package_named_bytes(const uint8_t *bytes, uint32_t len);
 static LispObj wasm_find_symbol_named_bytes(const uint8_t *name, uint32_t len, LispObj package);
+static int wasm_symbol_object_p(LispObj value);
+static LispObj wasm_startup_truth_symbol_in_ccl(TCR *tcr,
+                                                 const uint8_t *symbol_name,
+                                                 uint32_t symbol_len,
+                                                 int intern_if_missing);
+static int32_t wasm_startup_truth_set_symbol_vcell(TCR *tcr,
+                                                   const uint8_t *symbol_name,
+                                                   uint32_t symbol_len,
+                                                   LispObj value,
+                                                   int intern_if_missing);
 
 static uint32_t
 wasm_boot_phase_normalize(uint32_t phase)
@@ -4771,6 +4782,143 @@ wasm_run_script_with_output(uint32_t script_ptr, uint32_t script_len, uint32_t o
   return 0;
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_configure_startup_truth_collect")))
+int32_t
+wasm_configure_startup_truth_collect(uint32_t enabled, uint32_t path_ptr, uint32_t path_len)
+{
+  static const uint8_t enabled_name[] = {
+    '*', 'W', 'A', 'S', 'M', '-', 'S', 'T', 'A', 'R', 'T', 'U', 'P', '-',
+    'T', 'R', 'U', 'T', 'H', '-', 'E', 'N', 'A', 'B', 'L', 'E', 'D', '*'
+  };
+  static const uint8_t path_name[] = {
+    '*', 'W', 'A', 'S', 'M', '-', 'S', 'T', 'A', 'R', 'T', 'U', 'P', '-',
+    'T', 'R', 'U', 'T', 'H', '-', 'P', 'A', 'T', 'H', '*'
+  };
+  static const uint8_t sink_name[] = {
+    '*', 'W', 'A', 'S', 'M', '-', 'S', 'T', 'A', 'R', 'T', 'U', 'P', '-',
+    'T', 'R', 'U', 'T', 'H', '-', 'S', 'I', 'N', 'K', '*'
+  };
+  static const uint8_t seq_name[] = {
+    '*', 'W', 'A', 'S', 'M', '-', 'S', 'T', 'A', 'R', 'T', 'U', 'P', '-',
+    'T', 'R', 'U', 'T', 'H', '-', 'S', 'E', 'Q', '*'
+  };
+  static const uint8_t session_emitted_name[] = {
+    '*', 'W', 'A', 'S', 'M', '-', 'S', 'T', 'A', 'R', 'T', 'U', 'P', '-',
+    'T', 'R', 'U', 'T', 'H', '-', 'S', 'E', 'S', 'S', 'I', 'O', 'N', '-',
+    'S', 'T', 'A', 'R', 'T', '-', 'E', 'M', 'I', 'T', 'T', 'E', 'D', '*'
+  };
+  static const uint8_t default_path[] = {
+    'd', 'o', 'c', '/', 'w', 'a', 's', 'm', '/', 's', 't', 'a', 'r', 't',
+    'u', 'p', '_', 't', 'r', 'u', 't', 'h', '_', 'v', '1', '.', 'j', 's',
+    'o', 'n', 'l'
+  };
+
+  const uint32_t collect_enabled = enabled ? 1u : 0u;
+  const uint8_t *path_bytes = (const uint8_t *)(uintptr_t)path_ptr;
+  uint32_t path_len_use = path_len;
+  if (path_bytes == NULL || path_len_use == 0u) {
+    path_bytes = default_path;
+    path_len_use = (uint32_t)sizeof(default_path);
+  }
+
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    wasm_startup_truth_collect_enabled = collect_enabled;
+    return -1;
+  }
+
+  LispObj path_obj = wasm_const_pool_make_base_string(tcr, path_bytes, path_len_use);
+  if (path_obj == lisp_nil) {
+    wasm_startup_truth_collect_enabled = collect_enabled;
+    return -2;
+  }
+
+  uint32_t old_collect_state = wasm_startup_truth_collect_enabled;
+  wasm_startup_truth_collect_enabled = 0u;
+
+  LispObj enabled_obj = collect_enabled ? box_fixnum(1) : lisp_nil;
+  if (wasm_startup_truth_set_symbol_vcell(
+        tcr,
+        enabled_name,
+        (uint32_t)sizeof(enabled_name),
+        enabled_obj,
+        1) != 0) {
+    wasm_startup_truth_collect_enabled = old_collect_state;
+    return -3;
+  }
+  if (wasm_startup_truth_set_symbol_vcell(
+        tcr,
+        path_name,
+        (uint32_t)sizeof(path_name),
+        path_obj,
+        1) != 0) {
+    wasm_startup_truth_collect_enabled = old_collect_state;
+    return -4;
+  }
+  if (wasm_startup_truth_set_symbol_vcell(
+        tcr,
+        sink_name,
+        (uint32_t)sizeof(sink_name),
+        lisp_nil,
+        1) != 0) {
+    wasm_startup_truth_collect_enabled = old_collect_state;
+    return -5;
+  }
+  if (wasm_startup_truth_set_symbol_vcell(
+        tcr,
+        seq_name,
+        (uint32_t)sizeof(seq_name),
+        box_fixnum(0),
+        1) != 0) {
+    wasm_startup_truth_collect_enabled = old_collect_state;
+    return -6;
+  }
+  if (wasm_startup_truth_set_symbol_vcell(
+        tcr,
+        session_emitted_name,
+        (uint32_t)sizeof(session_emitted_name),
+        lisp_nil,
+        1) != 0) {
+    wasm_startup_truth_collect_enabled = old_collect_state;
+    return -7;
+  }
+
+  wasm_startup_truth_collect_enabled = collect_enabled;
+  return 0;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_startup_truth_close_sink")))
+int32_t
+wasm_startup_truth_close_sink(void)
+{
+  static const uint8_t close_name[] = {
+    'W', 'A', 'S', 'M', '-', 'S', 'T', 'A', 'R', 'T', 'U', 'P', '-', 'T',
+    'R', 'U', 'T', 'H', '-', 'C', 'L', 'O', 'S', 'E', '-', 'S', 'I', 'N',
+    'K'
+  };
+
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return -1;
+  }
+
+  LispObj close_sym = wasm_startup_truth_symbol_in_ccl(
+    NULL,
+    close_name,
+    (uint32_t)sizeof(close_name),
+    0);
+  if (!wasm_symbol_object_p(close_sym)) {
+    return 0;
+  }
+
+  (void)wasm_funcall0(close_sym);
+  if (tcr->wasm_pending_throw) {
+    tcr->wasm_pending_throw = 0;
+    return -2;
+  }
+  return 0;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_fasload_path")))
 int32_t
 wasm_fasload_path(uint32_t path_ptr, uint32_t path_len)
@@ -5534,10 +5682,149 @@ wasm_cached_intern_symbol(void)
 }
 
 static LispObj
+wasm_startup_truth_symbol_in_ccl(TCR *tcr,
+                                 const uint8_t *symbol_name,
+                                 uint32_t symbol_len,
+                                 int intern_if_missing)
+{
+  static const uint8_t ccl_pkg_name[] = { 'C', 'C', 'L' };
+  if (symbol_name == NULL || symbol_len == 0u) {
+    return (LispObj)0;
+  }
+
+  LispObj ccl_pkg = wasm_find_package_named_bytes(ccl_pkg_name, (uint32_t)sizeof(ccl_pkg_name));
+  if (ccl_pkg == lisp_nil) {
+    return (LispObj)0;
+  }
+
+  LispObj symbol = wasm_find_symbol_named_bytes(symbol_name, symbol_len, ccl_pkg);
+  if (symbol == (LispObj)0) {
+    symbol = wasm_find_symbol_named_bytes_scan(symbol_name, symbol_len, ccl_pkg);
+  }
+  if (symbol == (LispObj)0 && intern_if_missing && tcr != NULL) {
+    symbol = wasm_const_pool_intern_symbol(tcr, symbol_name, symbol_len, ccl_pkg);
+  }
+  if (tcr != NULL && tcr->wasm_pending_throw) {
+    tcr->wasm_pending_throw = 0;
+    return (LispObj)0;
+  }
+  if (!wasm_symbol_object_p(symbol)) {
+    return (LispObj)0;
+  }
+  return symbol;
+}
+
+static int32_t
+wasm_startup_truth_set_symbol_vcell(TCR *tcr,
+                                    const uint8_t *symbol_name,
+                                    uint32_t symbol_len,
+                                    LispObj value,
+                                    int intern_if_missing)
+{
+  LispObj symbol = wasm_startup_truth_symbol_in_ccl(
+    tcr,
+    symbol_name,
+    symbol_len,
+    intern_if_missing);
+  if (!wasm_symbol_object_p(symbol)) {
+    return -1;
+  }
+  lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(untag(symbol));
+  rawsym->vcell = value;
+  return 0;
+}
+
+static LispObj
+wasm_cached_startup_truth_intern_event_symbol(void)
+{
+  static LispObj intern_event_sym = (LispObj)0;
+  static const uint8_t ccl_pkg_name[] = { 'C', 'C', 'L' };
+  static const uint8_t intern_event_name[] = {
+    '%', 'W', 'A', 'S', 'M', '-', 'S', 'T', 'A', 'R', 'T', 'U', 'P', '-',
+    'T', 'R', 'U', 'T', 'H', '-', 'I', 'N', 'T', 'E', 'R', 'N', '-', 'E',
+    'V', 'E', 'N', 'T'
+  };
+
+  if (wasm_symbol_object_p(intern_event_sym)) {
+    return intern_event_sym;
+  }
+
+  LispObj ccl_pkg = wasm_find_package_named_bytes(ccl_pkg_name, (uint32_t)sizeof(ccl_pkg_name));
+  if (ccl_pkg == lisp_nil) {
+    intern_event_sym = (LispObj)0;
+    return (LispObj)0;
+  }
+
+  intern_event_sym = wasm_find_symbol_named_bytes(
+    intern_event_name,
+    (uint32_t)sizeof(intern_event_name),
+    ccl_pkg);
+  if (intern_event_sym == (LispObj)0) {
+    intern_event_sym = wasm_find_symbol_named_bytes_scan(
+      intern_event_name,
+      (uint32_t)sizeof(intern_event_name),
+      ccl_pkg);
+  }
+  if (!wasm_symbol_object_p(intern_event_sym)) {
+    intern_event_sym = (LispObj)0;
+  }
+  return intern_event_sym;
+}
+
+static void
+wasm_emit_startup_truth_intern_event(TCR *tcr,
+                                     LispObj resolved_symbol,
+                                     LispObj pkg,
+                                     const uint8_t *name_bytes,
+                                     uint32_t name_len,
+                                     uint32_t intern_status,
+                                     uint32_t phase_code)
+{
+  if (!wasm_startup_truth_collect_enabled) {
+    return;
+  }
+  if (tcr == NULL || name_bytes == NULL || name_len == 0u) {
+    return;
+  }
+
+  LispObj intern_event_sym = wasm_cached_startup_truth_intern_event_symbol();
+  if (!wasm_symbol_object_p(intern_event_sym)) {
+    return;
+  }
+
+  LispObj intern_name = wasm_const_pool_make_base_string(tcr, name_bytes, name_len);
+  if (intern_name == lisp_nil) {
+    return;
+  }
+
+  LispObj resolved = wasm_symbol_object_p(resolved_symbol) ? resolved_symbol : lisp_nil;
+  LispObj pkg_obj = (pkg == (LispObj)0) ? lisp_nil : pkg;
+  (void)wasm_funcall5(
+    intern_event_sym,
+    resolved,
+    pkg_obj,
+    intern_name,
+    box_fixnum((signed_natural)intern_status),
+    box_fixnum((signed_natural)phase_code));
+  if (tcr->wasm_pending_throw) {
+    tcr->wasm_pending_throw = 0;
+  }
+}
+
+static LispObj
 wasm_intern_startup(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg)
 {
+  const uint32_t phase_code = wasm_boot_phase_normalize(wasm_boot_phase_state);
   if (tcr == NULL || name_bytes == NULL || name_len == 0) {
     wasm_set_last_intern_status(WASM_INTERN_STATUS_ARG_INVALID);
+    wasm_emit_startup_truth_intern_event(
+      tcr,
+      (LispObj)0,
+      pkg,
+      name_bytes,
+      name_len,
+      WASM_INTERN_STATUS_ARG_INVALID,
+      phase_code);
     return (LispObj)0;
   }
 
@@ -5549,11 +5836,27 @@ wasm_intern_startup(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, Lisp
     LispObj existing = wasm_find_symbol_named_bytes(name_bytes, name_len, pkg_arg);
     if (wasm_symbol_object_p(existing)) {
       wasm_set_last_intern_status(WASM_INTERN_STATUS_EXISTING_SYMBOL);
+      wasm_emit_startup_truth_intern_event(
+        tcr,
+        existing,
+        pkg_arg,
+        name_bytes,
+        name_len,
+        WASM_INTERN_STATUS_EXISTING_SYMBOL,
+        phase_code);
       return existing;
     }
     existing = wasm_find_symbol_named_bytes_scan(name_bytes, name_len, pkg_arg);
     if (wasm_symbol_object_p(existing)) {
       wasm_set_last_intern_status(WASM_INTERN_STATUS_EXISTING_SYMBOL);
+      wasm_emit_startup_truth_intern_event(
+        tcr,
+        existing,
+        pkg_arg,
+        name_bytes,
+        name_len,
+        WASM_INTERN_STATUS_EXISTING_SYMBOL,
+        phase_code);
       return existing;
     }
   }
@@ -5563,6 +5866,14 @@ wasm_intern_startup(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, Lisp
     LispObj synthesized = wasm_intern_startup_synthesize_symbol(tcr, name_bytes, name_len, pkg_arg);
     if (wasm_symbol_object_p(synthesized)) {
       wasm_set_last_intern_status(WASM_INTERN_STATUS_SYMBOL_SYNTHESIZED);
+      wasm_emit_startup_truth_intern_event(
+        tcr,
+        synthesized,
+        pkg_arg,
+        name_bytes,
+        name_len,
+        WASM_INTERN_STATUS_SYMBOL_SYNTHESIZED,
+        phase_code);
       return synthesized;
     }
 #if WASM_STARTUP_DIAG_ENABLED
@@ -5596,12 +5907,28 @@ wasm_intern_startup(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, Lisp
     wasm_emit_startup_diag_v2(&diag);
 #endif
     wasm_set_last_intern_status(WASM_INTERN_STATUS_INTERN_UNAVAILABLE);
+    wasm_emit_startup_truth_intern_event(
+      tcr,
+      (LispObj)0,
+      pkg_arg,
+      name_bytes,
+      name_len,
+      WASM_INTERN_STATUS_INTERN_UNAVAILABLE,
+      phase_code);
     return (LispObj)0;
   }
 
   LispObj name_str = wasm_const_pool_make_base_string(tcr, name_bytes, name_len);
   if (name_str == lisp_nil) {
     wasm_set_last_intern_status(WASM_INTERN_STATUS_NAME_ALLOC_FAILED);
+    wasm_emit_startup_truth_intern_event(
+      tcr,
+      (LispObj)0,
+      pkg_arg,
+      name_bytes,
+      name_len,
+      WASM_INTERN_STATUS_NAME_ALLOC_FAILED,
+      phase_code);
     return (LispObj)0;
   }
 
@@ -5673,6 +6000,14 @@ wasm_intern_startup(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, Lisp
     wasm_emit_startup_diag_v2(&throw_diag);
 #endif
     wasm_set_last_intern_status(WASM_INTERN_STATUS_THROW);
+    wasm_emit_startup_truth_intern_event(
+      tcr,
+      (LispObj)0,
+      pkg_arg,
+      name_bytes,
+      name_len,
+      WASM_INTERN_STATUS_THROW,
+      phase_code);
     return (LispObj)0;
   }
 
@@ -5706,18 +6041,43 @@ wasm_intern_startup(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, Lisp
     wasm_emit_startup_diag_v2(&bad_tag_diag);
 #endif
     wasm_set_last_intern_status(WASM_INTERN_STATUS_RESULT_NON_SYMBOL);
+    wasm_emit_startup_truth_intern_event(
+      tcr,
+      (LispObj)0,
+      pkg_arg,
+      name_bytes,
+      name_len,
+      WASM_INTERN_STATUS_RESULT_NON_SYMBOL,
+      phase_code);
     return (LispObj)0;
   }
 
   wasm_set_last_intern_status(WASM_INTERN_STATUS_OK);
+  wasm_emit_startup_truth_intern_event(
+    tcr,
+    result,
+    pkg_arg,
+    name_bytes,
+    name_len,
+    WASM_INTERN_STATUS_OK,
+    phase_code);
   return result;
 }
 
 static LispObj
 wasm_intern_runtime(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg)
 {
+  const uint32_t phase_code = WASM_BOOT_RUNTIME;
   if (tcr == NULL || name_bytes == NULL || name_len == 0) {
     wasm_set_last_intern_status(WASM_INTERN_STATUS_ARG_INVALID);
+    wasm_emit_startup_truth_intern_event(
+      tcr,
+      (LispObj)0,
+      pkg,
+      name_bytes,
+      name_len,
+      WASM_INTERN_STATUS_ARG_INVALID,
+      phase_code);
     return (LispObj)0;
   }
 
@@ -5733,10 +6093,26 @@ wasm_intern_runtime(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, Lisp
       fulltag_of(existing) == fulltag_misc &&
       header_subtag(header_of(existing)) == subtag_symbol) {
     wasm_set_last_intern_status(WASM_INTERN_STATUS_EXISTING_SYMBOL);
+    wasm_emit_startup_truth_intern_event(
+      tcr,
+      existing,
+      pkg_arg,
+      name_bytes,
+      name_len,
+      WASM_INTERN_STATUS_EXISTING_SYMBOL,
+      phase_code);
     return existing;
   }
 
   wasm_set_last_intern_status(WASM_INTERN_STATUS_SYMBOL_MISSING);
+  wasm_emit_startup_truth_intern_event(
+    tcr,
+    (LispObj)0,
+    pkg_arg,
+    name_bytes,
+    name_len,
+    WASM_INTERN_STATUS_SYMBOL_MISSING,
+    phase_code);
   return (LispObj)0;
 }
 

@@ -175,6 +175,7 @@ RUN_DIR="$ROOT_DIR/$DEFAULT_RUN_ROOT_REL/startup-pipeline-$RUN_ID"
 LOG_DIR="$RUN_DIR/logs"
 mkdir -p "$LOG_DIR"
 STARTUP_SYMBOL_RESOLUTION_OUT="$RUN_DIR/startup-symbol-resolution.source_scope_v1.json"
+STARTUP_TRUTH_OUT="$RUN_DIR/startup_truth_v1.jsonl"
 
 if [ -z "$RUN_MANIFEST_PATH" ]; then
   RUN_MANIFEST_PATH="$RUN_DIR/startup-repro-run-manifest.json"
@@ -333,7 +334,7 @@ write_run_manifest() {
   local failure_code="${4:-0}"
   local git_dirty_after
   git_dirty_after="$(git_dirty_status)"
-  node - "$RUN_MANIFEST_PATH" "$COMMAND_LOG_NDJSON" "$ROOT_DIR" "$RUN_ID" "$PIPELINE_STARTED_AT" "$finished_at" "$final_status" "$failure_step" "$failure_code" "$MANIFEST_GATE_STATUS" "$RUN_RUNTIME_DIAGNOSTICS" "$PIPELINE_PROVENANCE_PATH" "$MANIFEST_PATH" "$STARTUP_SYMBOL_SCOPE_OUT" "$STARTUP_SYMBOL_RESOLUTION_OUT" "$GIT_SHA" "$GIT_SHORT_SHA" "$GIT_BRANCH" "$GIT_DIRTY_BEFORE" "$git_dirty_after" "$NODE_BIN" "$NODE_VERSION" "$CC_COMMAND" "$CLANG_VERSION" "$WASM_LD_COMMAND" "$WASM_LD_VERSION" "$CCL_BIN" "$CCL_VERSION" <<'NODE'
+  node - "$RUN_MANIFEST_PATH" "$COMMAND_LOG_NDJSON" "$ROOT_DIR" "$RUN_ID" "$PIPELINE_STARTED_AT" "$finished_at" "$final_status" "$failure_step" "$failure_code" "$MANIFEST_GATE_STATUS" "$RUN_RUNTIME_DIAGNOSTICS" "$PIPELINE_PROVENANCE_PATH" "$MANIFEST_PATH" "$STARTUP_SYMBOL_SCOPE_OUT" "$STARTUP_SYMBOL_RESOLUTION_OUT" "$STARTUP_TRUTH_OUT" "$GIT_SHA" "$GIT_SHORT_SHA" "$GIT_BRANCH" "$GIT_DIRTY_BEFORE" "$git_dirty_after" "$NODE_BIN" "$NODE_VERSION" "$CC_COMMAND" "$CLANG_VERSION" "$WASM_LD_COMMAND" "$WASM_LD_VERSION" "$CCL_BIN" "$CCL_VERSION" <<'NODE'
 const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
@@ -354,6 +355,7 @@ const [
   rootManifestPath,
   startupSymbolScopePath,
   startupSymbolResolutionPath,
+  startupTruthPath,
   gitSha,
   gitShort,
   gitBranch,
@@ -397,6 +399,7 @@ const artifactPaths = [
   rel(rootManifestPath),
   rel(startupSymbolScopePath),
   rel(startupSymbolResolutionPath),
+  rel(startupTruthPath),
 ];
 
 const uniqueArtifactPaths = Array.from(new Set(artifactPaths));
@@ -540,7 +543,7 @@ if ! run_step "check-startup-semantics" scripts/wasm/check-startup-semantics.sh;
   write_run_manifest "$PIPELINE_STATUS" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$FAILED_STEP" "$FAILED_EXIT_CODE"
   exit "$FAILED_EXIT_CODE"
 fi
-if ! run_step "make-root-image" node doc/wasm/js/make-real-image.mjs --output doc/wasm/root.image --manifest-out "$(to_repo_path "$MANIFEST_PATH")" --modules doc/wasm/wasm-runtime-modules.json --build-provenance "$(to_repo_path "$PIPELINE_PROVENANCE_PATH")" --startup-symbol-scope "$(to_repo_path "$STARTUP_SYMBOL_SCOPE_OUT")" --startup-symbol-resolution-out "$(to_repo_path "$STARTUP_SYMBOL_RESOLUTION_OUT")" --startup-symbol-contract "$(to_repo_path "$CONTRACT_SIDECAR_OUT")"; then
+if ! run_step "make-root-image" env CCL_WASM_STARTUP_TRUTH_COLLECT=1 CCL_WASM_STARTUP_TRUTH_OUT="$(to_repo_path "$STARTUP_TRUTH_OUT")" node doc/wasm/js/make-real-image.mjs --output doc/wasm/root.image --manifest-out "$(to_repo_path "$MANIFEST_PATH")" --modules doc/wasm/wasm-runtime-modules.json --build-provenance "$(to_repo_path "$PIPELINE_PROVENANCE_PATH")" --startup-symbol-scope "$(to_repo_path "$STARTUP_SYMBOL_SCOPE_OUT")" --startup-symbol-resolution-out "$(to_repo_path "$STARTUP_SYMBOL_RESOLUTION_OUT")" --startup-symbol-contract "$(to_repo_path "$CONTRACT_SIDECAR_OUT")"; then
   PIPELINE_STATUS="fail"
   MANIFEST_GATE_STATUS="not-run"
   write_run_manifest "$PIPELINE_STATUS" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$FAILED_STEP" "$FAILED_EXIT_CODE"
