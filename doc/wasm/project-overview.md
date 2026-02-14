@@ -4,38 +4,7 @@ You are building a **Common Lisp system derived from CCL’s architecture** that
 
 The project’s core bet is that **WASM instances are “processes”** (your “webrunners”), and that the JS side is a small, explicit kernel that provides the capabilities the runtime cannot provide itself: spawning, linking, I/O, scheduling, and coordination.
 
-## Program status snapshot (2026-02-10)
-
-* Backend migration (`BPL-*`) is effectively complete for active program execution (`BPL-01`..`BPL-10`, `X-08=done`).
-* Backend docs remain authoritative historical baselines and are frozen by default.
-* Active planning/status updates are runtime/project-side (`RPL-*`, dependency matrix, program board) unless backend scope is explicitly reopened.
-
-## How to begin a formal spec doc
-
-Start by fixing the scope and contract: name the subsystem, the problem it solves, and the interfaces it must honor. A minimal opening template looks like this:
-
-* **Title:** <Subsystem> Specification
-* **Status:** Draft / Proposed / Accepted
-* **Scope:** One paragraph describing what this spec covers and explicitly excludes.
-* **Goals:** Bullet list of concrete outcomes (what correctness or UX means here).
-* **Non-goals:** Explicit constraints or out-of-scope items.
-* **Definitions:** Short glossary of terms used in the spec.
-* **Context:** One paragraph tying this spec to surrounding subsystems (e.g., JS microkernel, runners, loader).
-
-Then enumerate the core behaviors as requirements:
-
-* **Functional requirements:** “The system MUST …”
-* **Operational requirements:** “The system SHOULD …”
-* **Failure modes:** “If X fails, the system MUST …”
-* **Security/capabilities:** “The system MUST NOT …”
-
-Finally, record decisions and tradeoffs:
-
-* **Design decisions:** What was chosen and why.
-* **Alternatives considered:** What was rejected and why.
-* **Open questions:** Remaining unknowns that block implementation.
-
-## Design goals and constraints you’ve stated
+## Design goals and constraints
 
 * **Keep the root Lisp minimal** so it can be **cloned** cheaply (spawn-from-image is the intended mechanism).
 * **Dynamic loading** is essential: you want to **add new functions to a running environment** in WASM (not “spin up compilers,” not “rebuild the world”).
