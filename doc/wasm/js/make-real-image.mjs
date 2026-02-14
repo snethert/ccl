@@ -166,6 +166,8 @@ function trace(msg) {
 }
 const diagPreinstallAttemptsEnabled = process.env.CCL_WASM_DIAG_PREINSTALL_ATTEMPTS === "1";
 const diagPreinstallContinueOnThrowEnabled = process.env.CCL_WASM_DIAG_PREINSTALL_CONTINUE_ON_THROW === "1";
+const diagApplyFailureDetailsEnabled = process.env.CCL_WASM_DIAG_APPLY_FAILURE_DETAILS === "1";
+const diagApplyContinueOnFailEnabled = process.env.CCL_WASM_DIAG_APPLY_CONTINUE_ON_FAIL === "1";
 function logPreinstallAttemptDiag({
   phase,
   entryIndex,
@@ -516,6 +518,50 @@ function copyBytesToScratch(memory, bytes) {
   const base = allocScratch(memory, bytes.length);
   new Uint8Array(memory.buffer, base, bytes.length).set(bytes);
   return base >>> 0;
+}
+
+function createUtf8ScratchArena(memory, { initialCapacity = 4096 } = {}) {
+  const baseCapacity = alignUp(Math.max(Math.trunc(initialCapacity), 16), 16);
+  let ptr = 0;
+  let capacity = 0;
+  let offset = 0;
+
+  const ensureCapacity = (neededTotalBytes) => {
+    const required = alignUp(Math.max(Math.trunc(neededTotalBytes), 1), 16);
+    if (ptr !== 0 && required <= capacity) return;
+    let nextCapacity = capacity > 0 ? capacity : baseCapacity;
+    while (nextCapacity < required) {
+      nextCapacity <<= 1;
+    }
+    ptr = allocScratch(memory, nextCapacity);
+    capacity = nextCapacity;
+    offset = 0;
+  };
+
+  const allocBytes = (bytes) => {
+    if (!(bytes instanceof Uint8Array) || bytes.length === 0) {
+      return { ptr: 0, len: 0 };
+    }
+    const needed = alignUp(bytes.length, 16);
+    ensureCapacity(offset + needed);
+    const outPtr = (ptr + offset) >>> 0;
+    new Uint8Array(memory.buffer, outPtr, bytes.length).set(bytes);
+    offset += needed;
+    return { ptr: outPtr, len: bytes.length >>> 0 };
+  };
+
+  return {
+    reset() {
+      offset = 0;
+    },
+    allocUtf8(text, utf8) {
+      if (!utf8 || typeof utf8.encode !== "function") {
+        throw new Error("utf8 scratch arena requires a TextEncoder-compatible instance");
+      }
+      const bytes = utf8.encode(String(text ?? ""));
+      return allocBytes(bytes);
+    },
+  };
 }
 
 function addNamedBytes(map, name, bytes) {
@@ -1031,6 +1077,7 @@ const runtime = createSharedCclRuntime({
   subprimsTableInitial: 256,
   createMemory: true,
 });
+const sharedProbeUtf8Scratch = createUtf8ScratchArena(runtime.memory, { initialCapacity: 4096 });
 trace("runtime initialized");
 
 const decoder = new TextDecoder("utf-8");
@@ -2625,11 +2672,12 @@ function buildStartupSymbolResolutionArtifact({
   const nil = ex.wasm_get_lisp_nil() >>> 0;
   const probeStatus = () => (ex.wasm_probe_last_status() >>> 0);
   const utf8 = new TextEncoder();
+  const symbolProbeScratch = sharedProbeUtf8Scratch;
+  const resetSymbolProbeScratch = () => {
+    symbolProbeScratch.reset();
+  };
   const scratchUtf8 = (text) => {
-    const bytes = utf8.encode(String(text ?? ""));
-    if (bytes.length === 0) return { ptr: 0, len: 0 };
-    const ptr = copyBytesToScratch(runtime.memory, bytes);
-    return { ptr, len: bytes.length >>> 0 };
+    return symbolProbeScratch.allocUtf8(text, utf8);
   };
   const toHex = (value) => `0x${(value >>> 0).toString(16)}`;
 
@@ -2671,6 +2719,7 @@ function buildStartupSymbolResolutionArtifact({
       continue;
     }
 
+    resetSymbolProbeScratch();
     const symbolNameMem = scratchUtf8(symbolName);
     const packageNameMem = scratchUtf8(packageName);
     const symbolRaw = ex.wasm_probe_symbol(
@@ -3018,11 +3067,9 @@ function applyStartupBindingMapOrFail({
   const nil = ex.wasm_get_lisp_nil() >>> 0;
   const probeStatus = () => (ex.wasm_probe_last_status() >>> 0);
   const utf8 = new TextEncoder();
+  const symbolProbeScratch = sharedProbeUtf8Scratch;
   const scratchUtf8 = (text) => {
-    const bytes = utf8.encode(String(text ?? ""));
-    if (bytes.length === 0) return { ptr: 0, len: 0 };
-    const ptr = copyBytesToScratch(runtime.memory, bytes);
-    return { ptr, len: bytes.length >>> 0 };
+    return symbolProbeScratch.allocUtf8(text, utf8);
   };
   const toHex = (value) => `0x${(value >>> 0).toString(16)}`;
   const isNilLike = (value) => {
@@ -3045,15 +3092,14 @@ function applyStartupBindingMapOrFail({
           key: null,
         };
       }
-      const nameBytes = utf8.encode(String(symbolName ?? ""));
-      const pkgBytes = utf8.encode(String(packageName ?? ""));
-      const namePtr = nameBytes.length > 0 ? copyBytesToScratch(runtime.memory, nameBytes) : 0;
-      const pkgPtr = pkgBytes.length > 0 ? copyBytesToScratch(runtime.memory, pkgBytes) : 0;
+      symbolProbeScratch.reset();
+      const nameMem = scratchUtf8(symbolName);
+      const pkgMem = scratchUtf8(packageName);
       const symbolRaw = ex.wasm_probe_symbol(
-        namePtr >>> 0,
-        nameBytes.length >>> 0,
-        pkgPtr >>> 0,
-        pkgBytes.length >>> 0,
+        nameMem.ptr >>> 0,
+        nameMem.len >>> 0,
+        pkgMem.ptr >>> 0,
+        pkgMem.len >>> 0,
       ) >>> 0;
       const symbolStatus = probeStatus();
       if (symbolStatus !== L0_PROBE_STATUS.OK || symbolRaw === 0 || symbolRaw === nil) {
@@ -3418,6 +3464,7 @@ function applyStartupBindingMapOrFail({
       continue;
     }
 
+    symbolProbeScratch.reset();
     const nameMem = scratchUtf8(symbolName);
     const pkgMem = scratchUtf8(packageName);
     const symbolProbe = probeSymbolByName(nameMem, pkgMem);
@@ -3727,6 +3774,7 @@ function applyStartupBindingMapOrFail({
           });
           continue;
         }
+        symbolProbeScratch.reset();
         const literalNameMem = scratchUtf8(literalSymbolName);
         const literalPkgMem = scratchUtf8(literalPackageName);
         ex.wasm_set_symbol_cell_initializer(
@@ -3767,6 +3815,7 @@ function applyStartupBindingMapOrFail({
           });
           continue;
         }
+        symbolProbeScratch.reset();
         const literalKeywordMem = scratchUtf8(literalKeywordName);
         const literalKeywordPkgMem = scratchUtf8("KEYWORD");
         ex.wasm_set_symbol_cell_initializer(
@@ -3936,6 +3985,51 @@ function applyStartupBindingMapOrFail({
     }
   }
 
+  let applyFailureDiag = null;
+  if (diagApplyFailureDetailsEnabled && failures.length > 0) {
+    const reasonCounts = Object.create(null);
+    const probeStatusCounts = Object.create(null);
+    for (const failure of failures) {
+      const reason = typeof failure?.reason === "string" && failure.reason.length > 0
+        ? failure.reason
+        : "unknown";
+      reasonCounts[reason] = (reasonCounts[reason] ?? 0) + 1;
+      const probeStatusName = typeof failure?.probe_status_name === "string"
+        && failure.probe_status_name.length > 0
+        ? failure.probe_status_name
+        : null;
+      if (probeStatusName) {
+        probeStatusCounts[probeStatusName] = (probeStatusCounts[probeStatusName] ?? 0) + 1;
+      }
+    }
+    applyFailureDiag = {
+      schema_version: "startup_binding_map_apply_failure_diag_v1",
+      failure_count: failures.length,
+      reason_counts: reasonCounts,
+      probe_status_name_counts: probeStatusCounts,
+      failure_sample: failures.slice(0, 32).map((failure) => ({
+        package_name: typeof failure?.package_name === "string" && failure.package_name.length > 0
+          ? failure.package_name
+          : null,
+        symbol_name: typeof failure?.symbol_name === "string" && failure.symbol_name.length > 0
+          ? failure.symbol_name
+          : null,
+        target_cell: typeof failure?.target_cell === "string" && failure.target_cell.length > 0
+          ? failure.target_cell
+          : null,
+        reason: typeof failure?.reason === "string" && failure.reason.length > 0
+          ? failure.reason
+          : null,
+        probe_status_name: typeof failure?.probe_status_name === "string" && failure.probe_status_name.length > 0
+          ? failure.probe_status_name
+          : null,
+        initializer_kind: typeof failure?.initializer_kind === "string" && failure.initializer_kind.length > 0
+          ? failure.initializer_kind
+          : null,
+      })),
+    };
+  }
+
   const applySummary = {
     schema_version: "startup_binding_map_apply_v1",
     status: failures.length > 0 ? "fail" : "pass",
@@ -3980,8 +4074,18 @@ function applyStartupBindingMapOrFail({
       : null,
   };
   if (failures.length > 0) {
+    if (applyFailureDiag) {
+      console.error(`STARTUP_BINDING_MAP_APPLY_FAILURE_DIAG ${JSON.stringify(applyFailureDiag)}`);
+    }
     console.error(`STARTUP_BINDING_MAP_APPLY ${JSON.stringify(applySummary)}`);
-    fail(`pre-fasload startup binding map apply failed: ${failures.length} requirement(s)`);
+    if (!diagApplyContinueOnFailEnabled) {
+      fail(`pre-fasload startup binding map apply failed: ${failures.length} requirement(s)`);
+    }
+    console.error(`STARTUP_BINDING_MAP_APPLY_CONTINUE ${JSON.stringify({
+      schema_version: "startup_binding_map_apply_continue_v1",
+      reason: "diag-continue-on-fail",
+      failed_count: failures.length,
+    })}`);
   }
   console.log(`STARTUP_BINDING_MAP_APPLY ${JSON.stringify(applySummary)}`);
   return applySummary;
@@ -4008,11 +4112,9 @@ function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
     ? (value) => (ex.wasm_debug_misc_subtag(value >>> 0) | 0)
     : () => null;
   const utf8 = new TextEncoder();
+  const contractProbeScratch = sharedProbeUtf8Scratch;
   const scratchUtf8 = (text) => {
-    const bytes = utf8.encode(String(text ?? ""));
-    if (bytes.length === 0) return { ptr: 0, len: 0 };
-    const ptr = copyBytesToScratch(runtime.memory, bytes);
-    return { ptr, len: bytes.length >>> 0 };
+    return contractProbeScratch.allocUtf8(String(text ?? ""), utf8);
   };
   const probeStatus = () => (ex.wasm_probe_last_status() >>> 0);
   const readDebug = (name) => (typeof ex[name] === "function" ? (ex[name]() >>> 0) : null);
@@ -4030,6 +4132,7 @@ function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
         packageName: normalizedPackageName,
       };
     }
+    contractProbeScratch.reset();
     const pkgMem = scratchUtf8(normalizedPackageName);
     const raw = ex.wasm_probe_package(pkgMem.ptr >>> 0, pkgMem.len >>> 0) >>> 0;
     const status = probeStatus();
@@ -4060,6 +4163,7 @@ function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
         symbolName: normalizedSymbolName,
       };
     }
+    contractProbeScratch.reset();
     const nameMem = scratchUtf8(normalizedSymbolName);
     const pkgMem = scratchUtf8(normalizedPackageName);
     const raw = ex.wasm_probe_symbol(
@@ -4578,13 +4682,18 @@ if (runBoundaryProbes) {
   if (typeof ex.wasm_probe_foreign_call1 !== "function") {
     fail("kernel missing wasm_probe_foreign_call1 for boundary probes");
   }
+  const boundaryProbeScratch = sharedProbeUtf8Scratch;
   const runBoundaryProbe = (name, mode, arg) => {
+    boundaryProbeScratch.reset();
     if (typeof ex.wasm_clear_pending_throw === "function") {
       ex.wasm_clear_pending_throw();
     }
-    const bytes = encoder.encode(arg);
-    const ptr = copyBytesToScratch(runtime.memory, bytes);
-    const rc = ex.wasm_probe_foreign_call1(mode >>> 0, ptr, bytes.length >>> 0) | 0;
+    const argMem = boundaryProbeScratch.allocUtf8(String(arg ?? ""), encoder);
+    const rc = ex.wasm_probe_foreign_call1(
+      mode >>> 0,
+      argMem.ptr >>> 0,
+      argMem.len >>> 0,
+    ) | 0;
     const pending = pendingThrowProbe ? pendingThrowProbe() : null;
     const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
     const pendingName = pendingRaw != null && kernelDebugSymbolName ? kernelDebugSymbolName(pendingRaw) : null;
