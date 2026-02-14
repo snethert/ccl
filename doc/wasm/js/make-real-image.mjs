@@ -4768,15 +4768,15 @@ const probeRequiredCallableSymbolState = (packageName, symbolName) => {
   const nil = typeof ex.wasm_get_lisp_nil === "function"
     ? (ex.wasm_get_lisp_nil() >>> 0)
     : 0;
-  const nameBytes = encoder.encode(symbolName);
-  const pkgBytes = encoder.encode(packageName);
-  const namePtr = nameBytes.length > 0 ? copyBytesToScratch(runtime.memory, nameBytes) : 0;
-  const pkgPtr = pkgBytes.length > 0 ? copyBytesToScratch(runtime.memory, pkgBytes) : 0;
+  const boundaryDiagScratch = sharedProbeUtf8Scratch;
+  boundaryDiagScratch.reset();
+  const nameMem = boundaryDiagScratch.allocUtf8(String(symbolName ?? ""), encoder);
+  const pkgMem = boundaryDiagScratch.allocUtf8(String(packageName ?? ""), encoder);
   const symbolRaw = ex.wasm_probe_symbol(
-    namePtr >>> 0,
-    nameBytes.length >>> 0,
-    pkgPtr >>> 0,
-    pkgBytes.length >>> 0,
+    nameMem.ptr >>> 0,
+    nameMem.len >>> 0,
+    pkgMem.ptr >>> 0,
+    pkgMem.len >>> 0,
   ) >>> 0;
   const symbolStatus = ex.wasm_probe_last_status() >>> 0;
   if (symbolStatus !== L0_PROBE_STATUS.OK || symbolRaw === 0 || symbolRaw === nil) {
@@ -4856,11 +4856,12 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
   if (typeof subex.wasm_debug_reset_specref_failure === "function") {
     subex.wasm_debug_reset_specref_failure();
   }
-  const faslBytes = encoder.encode(faslPath);
-  const faslPtr = copyBytesToScratch(runtime.memory, faslBytes);
+  const fasloadPathScratch = sharedProbeUtf8Scratch;
+  fasloadPathScratch.reset();
+  const faslMem = fasloadPathScratch.allocUtf8(String(faslPath ?? ""), encoder);
   let faslRc = 0;
   try {
-    faslRc = ex.wasm_fasload_path(faslPtr, faslBytes.length >>> 0) | 0;
+    faslRc = ex.wasm_fasload_path(faslMem.ptr >>> 0, faslMem.len >>> 0) | 0;
   } catch (err) {
     if (faslIndex === 0) {
       console.error(`REQUIRED_FASLOAD_BOUNDARY_DIAG_AFTER ${JSON.stringify(captureRequiredFasloadBoundaryState({
@@ -5001,9 +5002,10 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
           ex.wasm_clear_pending_throw();
         }
         const diagPath = "scripts/wasm/fasload-diag.lisp";
-        const diagPathBytes = encoder.encode(diagPath);
-        const diagPathPtr = copyBytesToScratch(runtime.memory, diagPathBytes);
-        const diagRc = ex.wasm_run_script_with_output(diagPathPtr, diagPathBytes.length >>> 0, 0, 0) | 0;
+        const diagPathScratch = sharedProbeUtf8Scratch;
+        diagPathScratch.reset();
+        const diagPathMem = diagPathScratch.allocUtf8(String(diagPath ?? ""), encoder);
+        const diagRc = ex.wasm_run_script_with_output(diagPathMem.ptr >>> 0, diagPathMem.len >>> 0, 0, 0) | 0;
         trace(`fasload diag script rc=${diagRc}`);
       }
     }
