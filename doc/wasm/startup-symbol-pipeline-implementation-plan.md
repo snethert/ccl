@@ -24,6 +24,11 @@ Continuity checkpoints:
 - When adding/changing tasks, update this ledger first with what changed and why.
 - Treat this ledger as authoritative process memory for the remainder of implementation.
 
+Milestone delta (2026-02-14):
+- Changed: added Section `0.0.A Fast Re-Entry Prompt` and explicit blocker priority text declaring fasload boundary as the controlling gate.
+- Proven: new-conversation handoff prompt now front-loads workflow rules, blocker priority, and ledger-first reconstruction steps.
+- Remains: isolate and fix the first failing `REQUIRED_FASLOAD_BOUNDARY` reason in focused lanes, then re-run gate checks.
+
 ### 0.0.A Fast Re-Entry Prompt (Use At Start Of New Conversations)
 
 Copy/paste prompt for compressed-history handoffs:
