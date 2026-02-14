@@ -608,17 +608,37 @@
     (dolist (reason (hash-table-keys-sorted counts) (nreverse out))
       (push (cons reason (gethash reason counts 0)) out))))
 
+(defun json-object-field (value field)
+  (cond
+    ((and (consp value) (eq (car value) :object))
+     (cdr (assoc field (cdr value) :test #'string=)))
+    ((and (listp value)
+          (or (null value)
+              (consp (car value))))
+     (cdr (assoc field value :test #'string=)))
+    (t
+     nil)))
+
+(defun json-array-items (value)
+  (cond
+    ((and (consp value) (eq (car value) :array))
+     (cdr value))
+    ((listp value)
+     value)
+    (t
+     nil)))
+
 (defun summarize-role-counts (symbols)
   (let ((counts (make-hash-table :test 'equal)))
     (dolist (symbol symbols)
-      (dolist (role (cdr (assoc "roles" symbol :test #'string=)))
+      (dolist (role (json-array-items (json-object-field symbol "roles")))
         (incf (gethash role counts 0))))
     counts))
 
 (defun summarize-package-counts (symbols)
   (let ((counts (make-hash-table :test 'equal)))
     (dolist (symbol symbols)
-      (let ((package-name (cdr (assoc "package_name" symbol :test #'string=))))
+      (let ((package-name (json-object-field symbol "package_name")))
         (incf (gethash package-name counts 0))))
     counts))
 
@@ -635,12 +655,13 @@
              (package-name (or (symbol-key->package-name key) ""))
              (symbol-name (or (symbol-key->symbol-name key) ""))
              (bindable (if (bindable-roles-p roles) :true :false)))
-        (push (list (cons "key" key)
-                    (cons "package_name" package-name)
-                    (cons "symbol_name" symbol-name)
-                    (cons "roles" roles)
-                    (cons "bindable" bindable)
-                    (cons "provenance" (list)))
+        (push (make-json-object
+               (cons "key" key)
+               (cons "package_name" package-name)
+               (cons "symbol_name" symbol-name)
+               (cons "roles" (cons :array roles))
+               (cons "bindable" bindable)
+               (cons "provenance" (cons :array nil)))
               records)))))
 
 (defun maybe-contract-required-entries (contract-pathname)
@@ -658,7 +679,7 @@
          (package-counts (summarize-package-counts symbols))
          (bindable-total
            (loop for symbol in symbols
-                 count (eq (cdr (assoc "bindable" symbol :test #'string=)) :true)))
+                 count (eq (json-object-field symbol "bindable") :true)))
          (failure-counts (read-failure-counts-alist failure-state))
          (generated-at (universal-time->rfc3339-utc (get-universal-time)))
          (feature-set (feature-set-for-profile feature-profile)))

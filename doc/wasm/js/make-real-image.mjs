@@ -1385,7 +1385,10 @@ function applyStartupBindingMapDeferredBindingsForConstPoolEntry(entryIndexRaw, 
     const beforeFcellStatus = probeStatus();
     if (beforeFcellStatus === OK_STATUS) {
       const beforeEntry = ex.wasm_debug_function_entry_index(beforeFcell >>> 0) | 0;
-      if (beforeEntry >= 0) {
+      const desiredEntry = Number.isInteger(binding?.resolved_entry_index)
+        ? (binding.resolved_entry_index >>> 0)
+        : null;
+      if (beforeEntry >= 0 && desiredEntry != null && (beforeEntry >>> 0) === desiredEntry) {
         startupBindingMapDeferredApplied.add(applyKey);
         skippedAlreadyBound++;
         continue;
@@ -3029,7 +3032,10 @@ function applyStartupBindingMapOrFail({
     }
     if (symbolResolved && targetCell === "fcell") {
       const beforeEntry = ex.wasm_debug_function_entry_index(beforeCell >>> 0) | 0;
-      if (beforeEntry >= 0) {
+      const desiredEntry = initializerKind === "entry-function" && Number.isInteger(initializer?.entry_index)
+        ? (initializer.entry_index >>> 0)
+        : null;
+      if (beforeEntry >= 0 && desiredEntry != null && (beforeEntry >>> 0) === desiredEntry) {
         skippedAlreadyBound++;
         targetCounts[targetCell].skipped_already_bound++;
         continue;

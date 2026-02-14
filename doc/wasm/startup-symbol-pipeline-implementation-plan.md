@@ -13,11 +13,13 @@ Update protocol:
 
 Current condensed state/history snapshot (2026-02-14):
 - Primary blocker is still fasload stability: treat `REQUIRED_FASLOAD_BOUNDARY` pass in both focused lanes as the controlling gate for progress claims.
-- Startup scope artifact currently has zero symbols: `ccl/doc/wasm/startup-symbol-scope.source_scope_v1.json` (`symbols: []`).
+- Scanner serialization bug was fixed in `ccl/scripts/wasm/collect-startup-symbol-scope.lisp` (2026-02-14): `symbols[]` now emits JSON objects/arrays (not Lisp-printed strings).
+- Latest scanner output `/tmp/startup-symbol-scope.source_scope_v1.json` contains `6022` symbols with structured records; runtime resolution no longer reports `invalid_input` inflation (`invalid_input: 0`).
 - L0 contract currently hard-anchors const-pool entries `4360`, `4372`, `4412` in `ccl/doc/wasm/js/bootstrap-l0-contract.mjs`.
 - Runtime manifest maps entry `4412` to `MAKE-VECTOR-OUTPUT-STREAM` (not `%FASLOAD`) and `4411` to `%MAKE-VECTOR-OUTPUT-STREAM`.
 - `%FASLOAD`, `%FASL-OPEN`, `%SIMPLE-FASL-OPEN` were observed prebound to entries `4412`, `4372`, `4360` in runtime probes.
-- Post-bundle mode-0 probe behavior differs by const-pool availability: missing const-pool can trap in `_SPspecref`; full startup flow can stall after `foreign.call.enter`.
+- Focused smoke/top4488 lanes now consistently reach `STARTUP_BINDING_MAP_APPLY {"status":"pass"}` and `L0_BOOTSTRAP_CONTRACT {"status":"pass"}` before required fasload.
+- Post-bundle mode-0 probe behavior differs by const-pool availability: missing const-pool can trap in `_SPspecref`; full startup flow can stall after `foreign.call.enter` (currently observed in both focused lanes at first required fasload, before any `REQUIRED_FASLOAD_BOUNDARY` line).
 - `make-real-image.mjs` wrapper path currently discards resolver argument in local helper (`void resolver`) and relies on metadata-driven augmentation path.
 
 Continuity checkpoints:
@@ -28,6 +30,24 @@ Milestone delta (2026-02-14):
 - Changed: added Section `0.0.A Fast Re-Entry Prompt` and explicit blocker priority text declaring fasload boundary as the controlling gate.
 - Proven: new-conversation handoff prompt now front-loads workflow rules, blocker priority, and ledger-first reconstruction steps.
 - Remains: isolate and fix the first failing `REQUIRED_FASLOAD_BOUNDARY` reason in focused lanes, then re-run gate checks.
+
+Milestone delta (2026-02-14, scanner-fix + focused-lane rerun):
+- Changed: fixed scanner JSON emission in `ccl/scripts/wasm/collect-startup-symbol-scope.lisp` so `symbols` records are structured objects (roles/provenance arrays), and updated scanner count helpers to read wrapped JSON values.
+- Proven: focused smoke/top4488 reruns with the fixed scope artifact reach `STARTUP_SYMBOL_RESOLUTION_BUILD`, `STARTUP_BINDING_MAP_APPLY` pass, and `L0_BOOTSTRAP_CONTRACT` pass in both lanes; resolution summary now shows `invalid_input: 0`.
+- Remains: first required fasload still stalls after `foreign.call.enter` in both focused lanes, so `REQUIRED_FASLOAD_BOUNDARY` is still not crossed; next diagnostic is the no-trace control lane to isolate trace-induced vs fasload-core stall.
+
+Milestone delta (2026-02-14, no-trace + boundary-probe control):
+- Changed: ran both focused lanes without `CCL_WASM_TRACE` and ran a dedicated `CCL_WASM_RUN_BOUNDARY_PROBES=1 CCL_WASM_BOUNDARY_PROBE_ONLY=1` smoke control.
+- Proven: stall is not trace-only. No-trace lanes still do not cross `REQUIRED_FASLOAD_BOUNDARY`; they reach pre-fasload map/contract gates and then stop before boundary output.
+- Proven: boundary-probe control reports `boundary_probe name=identity mode=1 rc=-5` and `boundary_probe name=error mode=2 rc=-5` (unexpected vs expected `0` / `-7`), then hangs before emitting `fasload.target` probe result (mode `0`).
+- Remains: isolate and fix the foreign-call precheck failure (`rc=-5`) as first concrete blocker before first required fasload boundary crossing can occur.
+
+Milestone delta (2026-02-14, focused lanes + entry identity verification):
+- Changed: patched `ccl/doc/wasm/js/make-real-image.mjs` to only skip fcell rebinding when existing entry already matches desired entry index (both direct apply path and deferred const-pool apply path).
+- Proven: focused smoke/top4488 no-trace reruns still reach `STARTUP_BINDING_MAP_APPLY` pass and `L0_BOOTSTRAP_CONTRACT` pass, then continue into first required fasload with no `REQUIRED_FASLOAD_BOUNDARY` line (CPU remains active at 100% in both lanes until manually stopped).
+- Proven: `ccl/doc/wasm/wasm-runtime-modules.json` does not contain `%FASLOAD`, `%FASL-OPEN`, or `%SIMPLE-FASL-OPEN` function metadata entries; entries `4411`/`4412` are `%MAKE-VECTOR-OUTPUT-STREAM`/`MAKE-VECTOR-OUTPUT-STREAM`.
+- Proven: this confirms resolver/map metadata cannot currently provide authoritative entry-function targets for required fasload callables from runtime-modules metadata alone.
+- Remains: establish authoritative pre-fasload callable targeting for `%FASLOAD` lane (or add a deterministic misbinding rejection that emits a concrete boundary failure reason instead of hanging), then re-run both focused lanes to the `REQUIRED_FASLOAD_BOUNDARY` gate.
 
 ### 0.0.A Fast Re-Entry Prompt (Use At Start Of New Conversations)
 
