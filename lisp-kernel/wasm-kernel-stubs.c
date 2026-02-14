@@ -5797,6 +5797,14 @@ wasm_emit_startup_truth_intern_event(TCR *tcr,
   if (!wasm_symbol_object_p(intern_event_sym)) {
     goto done;
   }
+  lispsymbol *intern_event_raw = (lispsymbol *)ptr_from_lispobj(untag(intern_event_sym));
+  LispObj intern_event_fn = intern_event_raw->fcell;
+  if (intern_event_fn == nrs_UDF.vcell ||
+      fulltag_of(intern_event_fn) != fulltag_misc ||
+      (header_subtag(header_of(intern_event_fn)) != subtag_function &&
+       header_subtag(header_of(intern_event_fn)) != subtag_pseudofunction)) {
+    goto done;
+  }
 
   LispObj intern_name = wasm_const_pool_make_base_string(tcr, name_bytes, name_len);
   if (intern_name == lisp_nil) {

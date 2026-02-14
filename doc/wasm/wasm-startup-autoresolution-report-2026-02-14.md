@@ -1094,3 +1094,86 @@ Start with M1 WP-1/WP-2 only:
 4. Defer all strict JS behavior changes until M1 artifact quality is confirmed.
 
 This provides a bounded first delivery with high information yield and minimal destabilization.
+
+### 16.11 Status Update (2026-02-14, post-M1 collect-lane patchset)
+
+Latest implementation commit:
+- `d06e0b96be542e4f6058a8013f4e7c1b0aae9e39` (`wasm: stabilize startup truth collect emission path`)
+
+What changed in this update:
+1. Kernel-side startup-truth intern-event emission now has a reentrancy guard and preserves caller pending-throw state:
+- `lisp-kernel/wasm-kernel-stubs.c` (`wasm_emit_startup_truth_intern_event`)
+2. JS collect lane primes `doc/wasm/startup_truth_v1.jsonl` in persistence and seeds one schema-valid record before boundary execution:
+- `doc/wasm/js/make-real-image.mjs`
+
+Milestone-boundary verification (primary + repeat) on 2026-02-14:
+- Run logs:
+  - `/private/tmp/m1d.run1.final.log`
+  - `/private/tmp/m1d.run2.final.log`
+- Collected outputs:
+  - `/private/tmp/m1d.startup_truth.run1.jsonl`
+  - `/private/tmp/m1d.startup_truth.run2.jsonl`
+
+Observed outcomes:
+1. Previous collect-lane extractor blocker is removed:
+- No more `failed to open doc/wasm/startup_truth_v1.jsonl in persistence store`.
+- Both runs emit `STARTUP_TRUTH_COLLECT {"status":"ok", ...}`.
+2. `startup_truth_v1.jsonl` is now produced and deterministic across run1/run2:
+- file size: `196` bytes in both runs
+- `cmp` equality: pass
+3. First required fasload boundary remains a hard blocker:
+- still fails at `l1-fasls/l1-cl-package.lafsl`
+- trap now observed as `table index is out of bounds`
+- boundary reason remains `required-fasload-trap-after-unified-startup-binding-map-apply`
+4. Current emitted truth payload is minimal (seed event), so full M1 passive event stream quality is still pending.
+
+Revised M1 status:
+- Partially complete:
+  - collect-lane file emission path is now functional and deterministic.
+- Still pending for full M1 acceptance:
+  - collect a non-trivial passive event stream (package/intern/symbol-identity) before first required-fasload trap, or make that trap path emit enough events to satisfy M1 artifact quality.
+
+Immediate next step (unchanged milestone scope, refined blocker focus):
+1. Keep M1 scope (no strict publish behavior changes).
+2. Resolve first required-fasload trap path enough to allow passive event hooks to execute.
+3. Re-run two-run boundary cadence and confirm `startup_truth_v1.jsonl` is non-empty from runtime instrumentation, not only seeded.
+
+### 16.12 Status Update (2026-02-14, post-M1e intern-callability guard attempt)
+
+What changed in this update:
+1. Added a callability guard before invoking `%WASM-STARTUP-TRUTH-INTERN-EVENT`:
+- `lisp-kernel/wasm-kernel-stubs.c` (`wasm_emit_startup_truth_intern_event`)
+- Guard now requires the symbol fcell to be non-UDF and a callable misc object (`function`/`pseudofunction`) before `wasm_funcall5`.
+2. Rebuilt wasm kernel artifact:
+- `doc/wasm/js/wasmcl.wasm`
+
+Milestone-boundary verification (primary + repeat) on 2026-02-14:
+- Run logs:
+  - `/private/tmp/m1e.run1.final.log`
+  - `/private/tmp/m1e.run2.final.log`
+- Collected outputs:
+  - `/private/tmp/m1e.startup_truth.run1.jsonl`
+  - `/private/tmp/m1e.startup_truth.run2.jsonl`
+
+Observed outcomes:
+1. First required fasload boundary behavior is unchanged:
+- still fails at `l1-fasls/l1-cl-package.lafsl`
+- trap remains `table index is out of bounds`
+- boundary reason remains `required-fasload-trap-after-unified-startup-binding-map-apply`
+2. Collect output remains deterministic and unchanged:
+- file size: `196` bytes in both runs
+- line count: `1` in both runs
+- `cmp` equality: pass
+3. Runtime passive event stream is still not present before the boundary trap:
+- output remains the seeded `collect-prime` record only.
+
+Revised M1 status:
+- Still partially complete:
+  - collect-lane file emission path remains functional/deterministic.
+- Still blocked for full M1 acceptance:
+  - non-trivial passive package/intern/symbol-identity event emission has not yet been observed.
+
+Immediate next step (same milestone scope):
+1. Keep M1 scope and collect lane behavior unchanged.
+2. Investigate the first required-fasload trap path directly (`wasm_fasload_path`/subprim call chain) instead of startup-truth callback callability.
+3. Re-run boundary cadence once a trap-path change is in place and require runtime-generated (not seeded-only) truth events.
