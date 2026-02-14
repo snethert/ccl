@@ -1,0 +1,217 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+FORCE=1
+BUILD_ROOT_IMAGE=1
+ROOT_IMAGE_ALLOW_FAIL=1
+TRUTH_COLLECT=0
+
+ROOT_IMAGE_OUT="$ROOT_DIR/doc/wasm/root.image"
+ROOT_IMAGE_MANIFEST_OUT="$ROOT_DIR/doc/wasm/root.image.manifest.json"
+ROOT_IMAGE_RESOLUTION_OUT="$ROOT_DIR/doc/wasm/startup-symbol-resolution.source_scope_v1.json"
+MODULES_OUT="$ROOT_DIR/doc/wasm/wasm-runtime-modules.json"
+CONTRACT_OUT="$ROOT_DIR/doc/wasm/bootstrap-l0-contract.v1.json"
+SCOPE_OUT="$ROOT_DIR/doc/wasm/startup-symbol-scope.source_scope_v1.json"
+STARTUP_TRUTH_OUT="${CCL_WASM_STARTUP_TRUTH_OUT:-$ROOT_DIR/doc/wasm/startup_truth_v1.jsonl}"
+
+usage() {
+  cat <<'EOF'
+Usage: scripts/wasm/rebuild-everything.sh [options]
+
+Rebuild canonical WASM artifacts in dependency order so outputs stay in sync.
+
+Default steps:
+  1) lisp-kernel/wasm32 -> doc/wasm/js/wasmcl.wasm
+  2) wasm-boot.image rebuild
+  3) WASM fasls/modules + contract + startup symbol scope
+  4) root.image rebuild (allowed to fail by default)
+
+Options:
+  --no-force                Do incremental builds where supported
+  --no-root-image           Skip root.image rebuild
+  --strict-root-image       Treat root.image failure as fatal
+  --collect-truth           Set CCL_WASM_STARTUP_TRUTH_COLLECT=1 for root.image step
+  --truth-out PATH          CCL_WASM_STARTUP_TRUTH_OUT for root.image step
+  --root-image PATH         root.image output path
+  --manifest-out PATH       root.image manifest output path
+  --resolution-out PATH     startup symbol resolution output path
+  --modules-out PATH        runtime modules manifest output path
+  -h, --help                Show this help
+EOF
+}
+
+resolve_path() {
+  local value="$1"
+  if [[ "$value" = /* ]]; then
+    printf '%s\n' "$value"
+  else
+    printf '%s\n' "$ROOT_DIR/$value"
+  fi
+}
+
+log() {
+  printf '[rebuild-everything] %s\n' "$*"
+}
+
+run() {
+  log "RUN: $*"
+  "$@"
+}
+
+while [ "${1:-}" != "" ]; do
+  case "$1" in
+    --no-force)
+      FORCE=0
+      ;;
+    --no-root-image)
+      BUILD_ROOT_IMAGE=0
+      ;;
+    --strict-root-image)
+      ROOT_IMAGE_ALLOW_FAIL=0
+      ;;
+    --collect-truth)
+      TRUTH_COLLECT=1
+      ;;
+    --truth-out)
+      if [ -z "${2:-}" ]; then
+        echo "error: --truth-out requires a path" >&2
+        exit 1
+      fi
+      STARTUP_TRUTH_OUT="$(resolve_path "$2")"
+      shift
+      ;;
+    --root-image)
+      if [ -z "${2:-}" ]; then
+        echo "error: --root-image requires a path" >&2
+        exit 1
+      fi
+      ROOT_IMAGE_OUT="$(resolve_path "$2")"
+      shift
+      ;;
+    --manifest-out)
+      if [ -z "${2:-}" ]; then
+        echo "error: --manifest-out requires a path" >&2
+        exit 1
+      fi
+      ROOT_IMAGE_MANIFEST_OUT="$(resolve_path "$2")"
+      shift
+      ;;
+    --resolution-out)
+      if [ -z "${2:-}" ]; then
+        echo "error: --resolution-out requires a path" >&2
+        exit 1
+      fi
+      ROOT_IMAGE_RESOLUTION_OUT="$(resolve_path "$2")"
+      shift
+      ;;
+    --modules-out)
+      if [ -z "${2:-}" ]; then
+        echo "error: --modules-out requires a path" >&2
+        exit 1
+      fi
+      MODULES_OUT="$(resolve_path "$2")"
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "error: unknown option: $1" >&2
+      usage
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "error: node is required" >&2
+  exit 1
+fi
+if ! command -v make >/dev/null 2>&1; then
+  echo "error: make is required" >&2
+  exit 1
+fi
+if ! command -v git >/dev/null 2>&1; then
+  echo "error: git is required" >&2
+  exit 1
+fi
+
+if [ -f "$ROOT_DIR/scripts/wasm/env.sh" ]; then
+  # shellcheck source=/dev/null
+  . "$ROOT_DIR/scripts/wasm/env.sh" >/dev/null 2>&1 || true
+fi
+
+MAKE_ARGS=()
+if [ -n "${CC:-}" ]; then
+  MAKE_ARGS+=("CC=$CC")
+fi
+if [ -n "${WASM_LD:-}" ]; then
+  MAKE_ARGS+=("WASM_LD=$WASM_LD")
+fi
+
+COMPILE_ARGS=()
+if [ "$FORCE" -eq 1 ]; then
+  COMPILE_ARGS+=(--force)
+fi
+COMPILE_ARGS+=(--modules-out "$MODULES_OUT")
+
+BOOT_ARGS=()
+if [ "$FORCE" -eq 1 ]; then
+  BOOT_ARGS+=(--force)
+fi
+
+log "repo=$ROOT_DIR"
+log "branch=$(git -C "$ROOT_DIR" symbolic-ref --short -q HEAD || echo detached) head=$(git -C "$ROOT_DIR" rev-parse --short HEAD)"
+log "force=$FORCE build_root_image=$BUILD_ROOT_IMAGE root_image_allow_fail=$ROOT_IMAGE_ALLOW_FAIL truth_collect=$TRUTH_COLLECT"
+
+run make -C "$ROOT_DIR/lisp-kernel/wasm32" "${MAKE_ARGS[@]}" all
+run "$ROOT_DIR/scripts/wasm/build-wasm-boot.sh" "${BOOT_ARGS[@]}"
+run "$ROOT_DIR/scripts/wasm/compile-wasm-fasls.sh" "${COMPILE_ARGS[@]}"
+
+if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
+  ROOT_CMD=(
+    node "$ROOT_DIR/doc/wasm/js/make-real-image.mjs"
+    --output "$ROOT_IMAGE_OUT"
+    --manifest-out "$ROOT_IMAGE_MANIFEST_OUT"
+    --modules "$MODULES_OUT"
+    --startup-symbol-scope "$SCOPE_OUT"
+    --startup-symbol-resolution-out "$ROOT_IMAGE_RESOLUTION_OUT"
+    --startup-symbol-contract "$CONTRACT_OUT"
+  )
+  if [ "$TRUTH_COLLECT" -eq 1 ]; then
+    if [ "$ROOT_IMAGE_ALLOW_FAIL" -eq 1 ]; then
+      log "RUN (root image, collect-truth, non-fatal): CCL_WASM_STARTUP_TRUTH_COLLECT=1 CCL_WASM_STARTUP_TRUTH_OUT=$STARTUP_TRUTH_OUT ${ROOT_CMD[*]}"
+      CCL_WASM_STARTUP_TRUTH_COLLECT=1 CCL_WASM_STARTUP_TRUTH_OUT="$STARTUP_TRUTH_OUT" "${ROOT_CMD[@]}" || \
+        log "WARN: root.image rebuild failed (allowed); inspect logs/output paths"
+    else
+      run env CCL_WASM_STARTUP_TRUTH_COLLECT=1 CCL_WASM_STARTUP_TRUTH_OUT="$STARTUP_TRUTH_OUT" "${ROOT_CMD[@]}"
+    fi
+  else
+    if [ "$ROOT_IMAGE_ALLOW_FAIL" -eq 1 ]; then
+      log "RUN (root image, non-fatal): ${ROOT_CMD[*]}"
+      "${ROOT_CMD[@]}" || log "WARN: root.image rebuild failed (allowed); inspect logs/output paths"
+    else
+      run "${ROOT_CMD[@]}"
+    fi
+  fi
+fi
+
+log "sync rebuild complete. key outputs:"
+log "  doc/wasm/js/wasmcl.wasm"
+log "  wasm-boot.image"
+log "  ${MODULES_OUT#$ROOT_DIR/}"
+log "  ${CONTRACT_OUT#$ROOT_DIR/}"
+log "  ${SCOPE_OUT#$ROOT_DIR/}"
+if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
+  log "  ${ROOT_IMAGE_OUT#$ROOT_DIR/}"
+  log "  ${ROOT_IMAGE_MANIFEST_OUT#$ROOT_DIR/}"
+  log "  ${ROOT_IMAGE_RESOLUTION_OUT#$ROOT_DIR/}"
+fi
+
+log "git status (short):"
+git -C "$ROOT_DIR" status --short

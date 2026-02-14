@@ -142,6 +142,28 @@ The project is “to CCL” in the sense that you are using CCL’s worldview—
 
 You even used the existing CCL backend directory conventions as a reality check for naming, which is exactly how CCL wants you to think: the backend name encodes a concrete ABI world, not an abstract marketing label.
 
+## Canonical rebuild command
+
+To avoid out-of-sync artifacts, use one orchestrator command as the default:
+
+```bash
+scripts/wasm/rebuild-everything.sh
+```
+
+Script path: `scripts/wasm/rebuild-everything.sh`
+
+This runs the full dependency-ordered rebuild:
+
+1. `lisp-kernel/wasm32` (`doc/wasm/js/wasmcl.wasm`)
+2. `wasm-boot.image`
+3. runtime fasls/modules (`doc/wasm/wasm-runtime-modules.json` and `.idx`)
+4. versioned startup artifacts:
+   `doc/wasm/bootstrap-l0-contract.v1.json` and
+   `doc/wasm/startup-symbol-scope.source_scope_v1.json`
+5. `root.image` + manifest/resolution outputs (default enabled; non-fatal unless `--strict-root-image`)
+
+Yes: this includes the versioned-artifact refresh path (the contract sidecar + startup symbol scope generation), so those files are regenerated in the same run instead of by separate ad hoc commands.
+
 ## Summary of what you are building
 
 A **CCL-structured Common Lisp** that runs as a **WASM process**, hosted by a **JS microkernel**, with:

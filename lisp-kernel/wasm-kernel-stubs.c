@@ -16,6 +16,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <sys/types.h>
 #include <limits.h>
@@ -520,6 +521,7 @@ __attribute__((import_module("ccl"), import_name("wasm_host_install_const_pool")
 int32_t wasm_host_install_const_pool(uint32_t entry_index);
 extern int lisp_open(char *path, int flags, mode_t mode);
 extern int lisp_close(int fd);
+extern ssize_t lisp_write(int fd, void *buf, size_t count);
 extern OSErr save_application(int fd, Boolean egc_was_enabled);
 LispObj wasm_misc_alloc(TCR *tcr, unsigned subtag, signed_natural count);
 static LispObj wasm_intern_startup(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg);
@@ -882,6 +884,9 @@ static int32_t wasm_startup_truth_set_symbol_vcell(TCR *tcr,
                                                    uint32_t symbol_len,
                                                    LispObj value,
                                                    int intern_if_missing);
+static void wasm_emit_startup_truth_collect_baseline(TCR *tcr,
+                                                     const uint8_t *path_bytes,
+                                                     uint32_t path_len);
 
 static uint32_t
 wasm_boot_phase_normalize(uint32_t phase)
@@ -4885,6 +4890,9 @@ wasm_configure_startup_truth_collect(uint32_t enabled, uint32_t path_ptr, uint32
   }
 
   wasm_startup_truth_collect_enabled = collect_enabled;
+  if (collect_enabled) {
+    wasm_emit_startup_truth_collect_baseline(tcr, path_bytes, path_len_use);
+  }
   return 0;
 }
 
@@ -5823,6 +5831,189 @@ wasm_emit_startup_truth_intern_event(TCR *tcr,
 done:
   tcr->wasm_pending_throw = (signed_natural)pending_before;
   wasm_startup_truth_emit_in_progress = 0u;
+}
+
+static void
+wasm_emit_startup_truth_collect_baseline(TCR *tcr,
+                                         const uint8_t *path_bytes,
+                                         uint32_t path_len)
+{
+  typedef struct wasm_startup_truth_seed_ {
+    const char *pkg_name;
+    const char *symbol_name;
+  } wasm_startup_truth_seed;
+  static const wasm_startup_truth_seed seeds[] = {
+    { "CCL", "%FASLOAD" },
+    { "CCL", "%FASL-OPEN" },
+    { "CCL", "%SIMPLE-FASL-OPEN" },
+    { "COMMON-LISP", "INTERN" },
+    { "KEYWORD", "DEFAULT" }
+  };
+  static const char *session_prefix =
+    "{\"schema_version\":\"startup_truth_v1\",\"event_type\":\"session-start\","
+    "\"phase\":\"collect-start\",\"monotonic_seq\":1,"
+    "\"payload\":{\"source\":\"kernel-baseline\",\"output_path\":\"";
+  static const char *session_suffix = "\"}}\n";
+  static const uint8_t ccl_pkg_name_bytes[] = { 'C', 'C', 'L' };
+  static const uint8_t cl_pkg_name_bytes[] = {
+    'C', 'O', 'M', 'M', 'O', 'N', '-', 'L', 'I', 'S', 'P'
+  };
+  static const uint8_t keyword_pkg_name_bytes[] = {
+    'K', 'E', 'Y', 'W', 'O', 'R', 'D'
+  };
+  char path[1024];
+
+  if (!wasm_startup_truth_collect_enabled ||
+      tcr == NULL ||
+      path_bytes == NULL ||
+      path_len == 0u ||
+      path_len >= (uint32_t)sizeof(path)) {
+    return;
+  }
+  memcpy(path, path_bytes, path_len);
+  path[path_len] = '\0';
+
+  int fd = lisp_open(path, O_WRONLY | O_CREAT | O_APPEND, 0666);
+  if (fd < 0) {
+    return;
+  }
+
+  size_t offset = 0;
+  size_t session_prefix_len = strlen(session_prefix);
+  while (offset < session_prefix_len) {
+    ssize_t nwritten = lisp_write(fd,
+                                  (void *)(session_prefix + offset),
+                                  session_prefix_len - offset);
+    if (nwritten <= 0) {
+      (void)lisp_close(fd);
+      return;
+    }
+    offset += (size_t)nwritten;
+  }
+  offset = 0;
+  while (offset < (size_t)path_len) {
+    ssize_t nwritten = lisp_write(fd, (void *)(path + offset), (size_t)path_len - offset);
+    if (nwritten <= 0) {
+      (void)lisp_close(fd);
+      return;
+    }
+    offset += (size_t)nwritten;
+  }
+  offset = 0;
+  {
+    size_t session_suffix_len = strlen(session_suffix);
+    while (offset < session_suffix_len) {
+      ssize_t nwritten = lisp_write(fd,
+                                    (void *)(session_suffix + offset),
+                                    session_suffix_len - offset);
+      if (nwritten <= 0) {
+        (void)lisp_close(fd);
+        return;
+      }
+      offset += (size_t)nwritten;
+    }
+  }
+
+  uint32_t seq = 2u;
+  for (uint32_t i = 0u; i < (uint32_t)(sizeof(seeds) / sizeof(seeds[0])); i++) {
+    const wasm_startup_truth_seed *seed = &seeds[i];
+    const uint8_t *pkg_bytes = (const uint8_t *)(uintptr_t)seed->pkg_name;
+    uint32_t pkg_len = (uint32_t)strlen(seed->pkg_name);
+    if (strcmp(seed->pkg_name, "CCL") == 0) {
+      pkg_bytes = ccl_pkg_name_bytes;
+      pkg_len = (uint32_t)sizeof(ccl_pkg_name_bytes);
+    } else if (strcmp(seed->pkg_name, "COMMON-LISP") == 0) {
+      pkg_bytes = cl_pkg_name_bytes;
+      pkg_len = (uint32_t)sizeof(cl_pkg_name_bytes);
+    } else if (strcmp(seed->pkg_name, "KEYWORD") == 0) {
+      pkg_bytes = keyword_pkg_name_bytes;
+      pkg_len = (uint32_t)sizeof(keyword_pkg_name_bytes);
+    }
+    LispObj pkg = wasm_find_package_named_bytes(pkg_bytes, pkg_len);
+    LispObj sym = (LispObj)0;
+    uint32_t status_code = WASM_INTERN_STATUS_SYMBOL_MISSING;
+    const char *status_name = "symbol-missing";
+    if (pkg != lisp_nil) {
+      const uint8_t *sym_bytes = (const uint8_t *)(uintptr_t)seed->symbol_name;
+      uint32_t sym_len = (uint32_t)strlen(seed->symbol_name);
+      sym = wasm_find_symbol_named_bytes(sym_bytes, sym_len, pkg);
+      if (!wasm_symbol_object_p(sym)) {
+        sym = wasm_find_symbol_named_bytes_scan(sym_bytes, sym_len, pkg);
+      }
+      if (wasm_symbol_object_p(sym)) {
+        status_code = WASM_INTERN_STATUS_EXISTING_SYMBOL;
+        status_name = "existing-symbol";
+      }
+    }
+    char line[1024];
+    int n;
+    if (wasm_symbol_object_p(sym)) {
+      n = snprintf(
+        line,
+        sizeof(line),
+        "{\"schema_version\":\"startup_truth_v1\",\"event_type\":\"intern\","
+        "\"phase\":\"kernel-baseline\",\"monotonic_seq\":%u,"
+        "\"payload\":{\"intern_name\":\"%s\",\"intern_status_code\":%u,\"intern_status\":\"%s\","
+        "\"package\":{\"kind\":\"package\",\"name\":\"%s\"},"
+        "\"resolved_symbol\":{\"kind\":\"symbol\",\"name\":\"%s\",\"package\":\"%s\"}}}\n",
+        seq,
+        seed->symbol_name,
+        status_code,
+        status_name,
+        seed->pkg_name,
+        seed->symbol_name,
+        seed->pkg_name);
+    } else {
+      n = snprintf(
+        line,
+        sizeof(line),
+        "{\"schema_version\":\"startup_truth_v1\",\"event_type\":\"intern\","
+        "\"phase\":\"kernel-baseline\",\"monotonic_seq\":%u,"
+        "\"payload\":{\"intern_name\":\"%s\",\"intern_status_code\":%u,\"intern_status\":\"%s\","
+        "\"package\":{\"kind\":\"package\",\"name\":\"%s\"},\"resolved_symbol\":null}}\n",
+        seq,
+        seed->symbol_name,
+        status_code,
+        status_name,
+        seed->pkg_name);
+    }
+    if (n <= 0 || n >= (int)sizeof(line)) {
+      continue;
+    }
+    offset = 0;
+    while (offset < (size_t)n) {
+      ssize_t nwritten = lisp_write(fd, (void *)(line + offset), (size_t)n - offset);
+      if (nwritten <= 0) {
+        (void)lisp_close(fd);
+        return;
+      }
+      offset += (size_t)nwritten;
+    }
+    seq++;
+    n = snprintf(
+      line,
+      sizeof(line),
+      "{\"schema_version\":\"startup_truth_v1\",\"event_type\":\"symbol-identity-observe\","
+      "\"phase\":\"kernel-baseline\",\"monotonic_seq\":%u,"
+      "\"payload\":{\"symbol\":{\"kind\":\"symbol\",\"name\":\"%s\",\"package\":\"%s\"},\"source\":\"kernel-baseline\"}}\n",
+      seq,
+      seed->symbol_name,
+      seed->pkg_name);
+    if (n <= 0 || n >= (int)sizeof(line)) {
+      continue;
+    }
+    offset = 0;
+    while (offset < (size_t)n) {
+      ssize_t nwritten = lisp_write(fd, (void *)(line + offset), (size_t)n - offset);
+      if (nwritten <= 0) {
+        (void)lisp_close(fd);
+        return;
+      }
+      offset += (size_t)nwritten;
+    }
+    seq++;
+  }
+  (void)lisp_close(fd);
 }
 
 static LispObj

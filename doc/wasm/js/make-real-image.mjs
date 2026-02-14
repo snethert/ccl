@@ -4689,6 +4689,19 @@ if (startupSymbolResolutionOutPath) {
   }
 }
 
+const skipStartupBindingMapForCollect = startupTruthCollectEnabled;
+const startupBindingMapContract = skipStartupBindingMapForCollect
+  ? {
+    ...BOOTSTRAP_L0_CONTRACT_V1,
+    id: `${String(BOOTSTRAP_L0_CONTRACT_V1?.id ?? "bootstrap-l0-contract-v1")}-collect-skip`,
+    requiredPackages: [],
+    requiredConstPools: [],
+    requiredSymbols: [],
+    requiredCallables: [],
+    requiredSpecialVariables: [],
+  }
+  : BOOTSTRAP_L0_CONTRACT_V1;
+
 if (process.env.CCL_WASM_DIAG_REQUIRED_CALLABLE_RESOLVER === "1") {
   const requiredCallableRows = [];
   const nil = typeof ex.wasm_get_lisp_nil === "function"
@@ -4805,105 +4818,153 @@ if (process.env.CCL_WASM_DIAG_REQUIRED_CALLABLE_RESOLVER === "1") {
   })}`);
 }
 
-// Build startup binding map only after resolver completion.
-const startupBindingMapFunctionAugmentation =
-  augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
-    mapArtifact: startupBindingMapArtifact,
-    contract: BOOTSTRAP_L0_CONTRACT_V1,
-    resolver: bootstrapFunctionResolver,
+let startupBindingMapApplySummary = null;
+if (skipStartupBindingMapForCollect) {
+  startupBindingMapBuildSummary = {
+    schema_version: "startup_binding_map_build_v1",
+    status: "skipped",
+    phase: "pre-fasload",
+    source: `${startupBindingMapSource}+startup-truth-collect-skip`,
+    map_schema_version: startupBindingMapArtifact?.schema_version ?? null,
+    contract_id: startupBindingMapContract?.id ?? null,
+    reason: "startup-truth-collect-enabled",
+  };
+  console.log(`STARTUP_BINDING_MAP_BUILD ${JSON.stringify(startupBindingMapBuildSummary)}`);
+  console.log(`STARTUP_BINDING_MAP_PREINSTALL ${JSON.stringify({
+    schema_version: "startup_binding_map_preinstall_plan_v3",
+    status: "skipped",
+    phase: "pre-fasload",
+    source: startupBindingMapBuildSummary.source,
+    reason: "startup-truth-collect-enabled",
+    requested_count: 0,
+    installed_count: 0,
+    missing_count: 0,
+  })}`);
+  startupBindingMapApplySummary = {
+    schema_version: "startup_binding_map_apply_v1",
+    status: "skipped",
+    phase: "pre-fasload",
+    source: startupBindingMapBuildSummary.source,
+    map_schema_version: startupBindingMapArtifact?.schema_version ?? null,
+    contract_id: startupBindingMapContract?.id ?? null,
+    reason: "startup-truth-collect-enabled",
+    counts: {
+      total_entries: 0,
+      eligible_entries: 0,
+      applied_count: 0,
+      failed_count: 0,
+    },
+  };
+  console.log(`STARTUP_BINDING_MAP_APPLY ${JSON.stringify(startupBindingMapApplySummary)}`);
+  console.error(`L0_BOOTSTRAP_CONTRACT_CONTINUE ${JSON.stringify({
+    schema_version: "bootstrap_l0_gate_continue_v1",
+    reason: "startup-truth-collect-enabled",
+    failed_count: 0,
+  })}`);
+  setBootPhaseOrFail(WASM_BOOT_PHASE.L0_READY, {
+    reason: "startup-truth-collect-enabled-skip-pre-fasload-map",
   });
-if (startupBindingMapFunctionAugmentation?.mapArtifact) {
-  startupBindingMapArtifact = startupBindingMapFunctionAugmentation.mapArtifact;
-}
-if (startupBindingMapFunctionAugmentation?.changed) {
-  startupBindingMapSource = `${startupBindingMapSource}+contract-required-const-pool-functions`;
-}
-startupBindingMapBuildSummary = buildStartupBindingMapBuildSummary({
-  mapArtifact: startupBindingMapArtifact,
-  mapSource: startupBindingMapSource,
-  contract: BOOTSTRAP_L0_CONTRACT_V1,
-});
-console.log(`STARTUP_BINDING_MAP_BUILD ${JSON.stringify(startupBindingMapBuildSummary)}`);
-if (process.env.CCL_WASM_DIAG_REQUIRED_CALLABLE_BINDINGS === "1") {
-  const requiredCallableKeys = new Set(
-    (Array.isArray(BOOTSTRAP_L0_CONTRACT_V1?.requiredCallables) ? BOOTSTRAP_L0_CONTRACT_V1.requiredCallables : [])
-      .map((item) => `${String(item?.packageName ?? "").trim().toUpperCase()}::${String(item?.symbolName ?? "").trim().toUpperCase()}`)
-      .filter((key) => key !== "::"),
-  );
-  const requiredCallableRows = [];
-  for (const entry of Array.isArray(startupBindingMapArtifact?.entries) ? startupBindingMapArtifact.entries : []) {
-    const packageName = String(entry?.package_name ?? "").trim().toUpperCase();
-    const symbolName = String(entry?.symbol_name ?? "").trim().toUpperCase();
-    if (!packageName || !symbolName) continue;
-    const symbolKey = `${packageName}::${symbolName}`;
-    if (!requiredCallableKeys.has(symbolKey)) continue;
-    requiredCallableRows.push({
-      symbol_key: `${resolvedPackageName}::${symbolName.toUpperCase()}`,
-      target_cell: String(entry?.target_cell ?? "").trim().toLowerCase() || null,
-      binding_class: String(entry?.binding_class ?? "").trim().toLowerCase() || null,
-      availability: String(entry?.availability ?? "").trim().toLowerCase() || null,
-      required_class: String(entry?.definition?.required_class ?? entry?.required_class ?? "").trim().toLowerCase() || null,
-      initializer_kind: String(entry?.initializer?.kind ?? "").trim().toLowerCase() || null,
-      initializer_entry_index: Number.isInteger(entry?.initializer?.entry_index)
-        ? (entry.initializer.entry_index >>> 0)
-        : null,
-      source: typeof entry?.source === "string" ? entry.source : null,
+} else {
+  // Build startup binding map only after resolver completion.
+  const startupBindingMapFunctionAugmentation =
+    augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
+      mapArtifact: startupBindingMapArtifact,
+      contract: startupBindingMapContract,
+      resolver: bootstrapFunctionResolver,
+    });
+  if (startupBindingMapFunctionAugmentation?.mapArtifact) {
+    startupBindingMapArtifact = startupBindingMapFunctionAugmentation.mapArtifact;
+  }
+  if (startupBindingMapFunctionAugmentation?.changed) {
+    startupBindingMapSource = `${startupBindingMapSource}+contract-required-const-pool-functions`;
+  }
+  startupBindingMapBuildSummary = buildStartupBindingMapBuildSummary({
+    mapArtifact: startupBindingMapArtifact,
+    mapSource: startupBindingMapSource,
+    contract: startupBindingMapContract,
+  });
+  console.log(`STARTUP_BINDING_MAP_BUILD ${JSON.stringify(startupBindingMapBuildSummary)}`);
+  if (process.env.CCL_WASM_DIAG_REQUIRED_CALLABLE_BINDINGS === "1") {
+    const requiredCallableKeys = new Set(
+      (Array.isArray(startupBindingMapContract?.requiredCallables) ? startupBindingMapContract.requiredCallables : [])
+        .map((item) => `${String(item?.packageName ?? "").trim().toUpperCase()}::${String(item?.symbolName ?? "").trim().toUpperCase()}`)
+        .filter((key) => key !== "::"),
+    );
+    const requiredCallableRows = [];
+    for (const entry of Array.isArray(startupBindingMapArtifact?.entries) ? startupBindingMapArtifact.entries : []) {
+      const packageName = String(entry?.package_name ?? "").trim().toUpperCase();
+      const symbolName = String(entry?.symbol_name ?? "").trim().toUpperCase();
+      if (!packageName || !symbolName) continue;
+      const symbolKey = `${packageName}::${symbolName}`;
+      if (!requiredCallableKeys.has(symbolKey)) continue;
+      requiredCallableRows.push({
+        symbol_key: `${resolvedPackageName}::${symbolName.toUpperCase()}`,
+        target_cell: String(entry?.target_cell ?? "").trim().toLowerCase() || null,
+        binding_class: String(entry?.binding_class ?? "").trim().toLowerCase() || null,
+        availability: String(entry?.availability ?? "").trim().toLowerCase() || null,
+        required_class: String(entry?.definition?.required_class ?? entry?.required_class ?? "").trim().toLowerCase() || null,
+        initializer_kind: String(entry?.initializer?.kind ?? "").trim().toLowerCase() || null,
+        initializer_entry_index: Number.isInteger(entry?.initializer?.entry_index)
+          ? (entry.initializer.entry_index >>> 0)
+          : null,
+        source: typeof entry?.source === "string" ? entry.source : null,
+      });
+    }
+    const presentRequiredKeys = new Set(requiredCallableRows.map((row) => row.symbol_key));
+    const missingRequiredKeys = Array.from(requiredCallableKeys.values()).filter((key) => !presentRequiredKeys.has(key));
+    console.log(`STARTUP_REQUIRED_CALLABLE_BINDINGS ${JSON.stringify({
+      schema_version: "startup_required_callable_bindings_diag_v1",
+      source: startupBindingMapSource,
+      total_rows: requiredCallableRows.length >>> 0,
+      rows: requiredCallableRows,
+      missing_required_callable_keys: missingRequiredKeys,
+    })}`);
+  }
+  buildStartupBindingMapConstPoolBindingIndex(startupBindingMapArtifact);
+  const startupBindingMapPreinstallPlan = planStartupBindingMapPreinstallConstPools({
+    contract: startupBindingMapContract,
+    mapArtifact: startupBindingMapArtifact,
+  });
+  let startupBindingMapPreinstallInstalled = 0;
+  let startupBindingMapPreinstallMissing = 0;
+  if (startupBindingMapPreinstallPlan.summary?.status !== "ok") {
+    const startupBindingMapPreinstallSummary = {
+      ...startupBindingMapPreinstallPlan.summary,
+      requested_count: startupBindingMapPreinstallPlan.entryIndices.length >>> 0,
+      installed_count: startupBindingMapPreinstallInstalled >>> 0,
+      missing_count: startupBindingMapPreinstallMissing >>> 0,
+    };
+    console.error(`STARTUP_BINDING_MAP_PREINSTALL ${JSON.stringify(startupBindingMapPreinstallSummary)}`);
+    fail(`pre-fasload startup binding map preinstall failed: ${startupBindingMapPreinstallPlan.summary?.reason ?? "invalid-plan"}`);
+  }
+  for (const entryIndex of startupBindingMapPreinstallPlan.entryIndices) {
+    if (installConstPoolOnDemand(entryIndex >>> 0) === 1) {
+      startupBindingMapPreinstallInstalled++;
+    } else {
+      startupBindingMapPreinstallMissing++;
+    }
+  }
+  for (const installedEntryIndex of Array.from(constPoolsInstalled.values()).sort((a, b) => a - b)) {
+    applyStartupBindingMapDeferredBindingsForConstPoolEntry(installedEntryIndex, {
+      reason: "startup-map-index-backfill",
     });
   }
-  const presentRequiredKeys = new Set(requiredCallableRows.map((row) => row.symbol_key));
-  const missingRequiredKeys = Array.from(requiredCallableKeys.values()).filter((key) => !presentRequiredKeys.has(key));
-  console.log(`STARTUP_REQUIRED_CALLABLE_BINDINGS ${JSON.stringify({
-    schema_version: "startup_required_callable_bindings_diag_v1",
-    source: startupBindingMapSource,
-    total_rows: requiredCallableRows.length >>> 0,
-    rows: requiredCallableRows,
-    missing_required_callable_keys: missingRequiredKeys,
-  })}`);
-}
-buildStartupBindingMapConstPoolBindingIndex(startupBindingMapArtifact);
-const startupBindingMapPreinstallPlan = planStartupBindingMapPreinstallConstPools({
-  contract: BOOTSTRAP_L0_CONTRACT_V1,
-  mapArtifact: startupBindingMapArtifact,
-});
-let startupBindingMapPreinstallInstalled = 0;
-let startupBindingMapPreinstallMissing = 0;
-if (startupBindingMapPreinstallPlan.summary?.status !== "ok") {
   const startupBindingMapPreinstallSummary = {
     ...startupBindingMapPreinstallPlan.summary,
     requested_count: startupBindingMapPreinstallPlan.entryIndices.length >>> 0,
     installed_count: startupBindingMapPreinstallInstalled >>> 0,
     missing_count: startupBindingMapPreinstallMissing >>> 0,
   };
-  console.error(`STARTUP_BINDING_MAP_PREINSTALL ${JSON.stringify(startupBindingMapPreinstallSummary)}`);
-  fail(`pre-fasload startup binding map preinstall failed: ${startupBindingMapPreinstallPlan.summary?.reason ?? "invalid-plan"}`);
-}
-for (const entryIndex of startupBindingMapPreinstallPlan.entryIndices) {
-  if (installConstPoolOnDemand(entryIndex >>> 0) === 1) {
-    startupBindingMapPreinstallInstalled++;
-  } else {
-    startupBindingMapPreinstallMissing++;
-  }
-}
-for (const installedEntryIndex of Array.from(constPoolsInstalled.values()).sort((a, b) => a - b)) {
-  applyStartupBindingMapDeferredBindingsForConstPoolEntry(installedEntryIndex, {
-    reason: "startup-map-index-backfill",
-  });
-}
-const startupBindingMapPreinstallSummary = {
-  ...startupBindingMapPreinstallPlan.summary,
-  requested_count: startupBindingMapPreinstallPlan.entryIndices.length >>> 0,
-  installed_count: startupBindingMapPreinstallInstalled >>> 0,
-  missing_count: startupBindingMapPreinstallMissing >>> 0,
-};
-console.log(`STARTUP_BINDING_MAP_PREINSTALL ${JSON.stringify(startupBindingMapPreinstallSummary)}`);
+  console.log(`STARTUP_BINDING_MAP_PREINSTALL ${JSON.stringify(startupBindingMapPreinstallSummary)}`);
 
-let startupBindingMapApplySummary = applyStartupBindingMapOrFail({
-  mapArtifact: startupBindingMapArtifact,
-  mapSource: startupBindingMapSource,
-  contract: BOOTSTRAP_L0_CONTRACT_V1,
-});
-assertL0BootstrapContractOrFail(BOOTSTRAP_L0_CONTRACT_V1);
-setBootPhaseOrFail(WASM_BOOT_PHASE.L0_READY, { reason: "pre-fasload-contract-pass" });
+  startupBindingMapApplySummary = applyStartupBindingMapOrFail({
+    mapArtifact: startupBindingMapArtifact,
+    mapSource: startupBindingMapSource,
+    contract: startupBindingMapContract,
+  });
+  assertL0BootstrapContractOrFail(startupBindingMapContract);
+  setBootPhaseOrFail(WASM_BOOT_PHASE.L0_READY, { reason: "pre-fasload-contract-pass" });
+}
 
 const runBoundaryProbes = process.env.CCL_WASM_RUN_BOUNDARY_PROBES === "1";
 const boundaryProbeOnly = process.env.CCL_WASM_BOUNDARY_PROBE_ONLY === "1";
@@ -5384,7 +5445,7 @@ const tryAutobindBoundaryUnresolvedFunction = (unresolvedFunction) => {
   startupBindingMapApplySummary = applyStartupBindingMapOrFail({
     mapArtifact: startupBindingMapArtifact,
     mapSource: `${startupBindingMapSource}+required-fasload-boundary-autobind`,
-    contract: BOOTSTRAP_L0_CONTRACT_V1,
+    contract: startupBindingMapContract,
   });
   boundaryAutobindAttemptedSymbolsByEpoch.set(symbolKey, boundaryAutobindEpoch);
   traceBoundaryAutobindProbe(resolvedPackageName, symbolName, resolvedEntryIndex);

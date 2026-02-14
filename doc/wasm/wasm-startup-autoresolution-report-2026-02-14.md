@@ -1177,3 +1177,47 @@ Immediate next step (same milestone scope):
 1. Keep M1 scope and collect lane behavior unchanged.
 2. Investigate the first required-fasload trap path directly (`wasm_fasload_path`/subprim call chain) instead of startup-truth callback callability.
 3. Re-run boundary cadence once a trap-path change is in place and require runtime-generated (not seeded-only) truth events.
+
+### 16.13 Status Update (2026-02-14, post-M1k2 baseline-truth emission + rebuild-orchestrator)
+
+What changed in this update:
+1. Added a canonical sync rebuild orchestrator:
+- `scripts/wasm/rebuild-everything.sh`
+- documented in `doc/wasm/project-overview.md` under “Canonical rebuild command”
+- includes versioned artifact refresh (`doc/wasm/bootstrap-l0-contract.v1.json`, `doc/wasm/startup-symbol-scope.source_scope_v1.json`)
+2. Stabilized collect-lane truth emission by adding kernel-side baseline JSONL writes during collect configuration:
+- `lisp-kernel/wasm-kernel-stubs.c` (`wasm_emit_startup_truth_collect_baseline`, called from `wasm_configure_startup_truth_collect`)
+3. Removed failing collect-lane runtime preload attempt from JS startup path:
+- `doc/wasm/js/make-real-image.mjs`
+
+Milestone-boundary verification (primary + repeat) on 2026-02-14:
+- Run logs:
+  - `/private/tmp/m1k2.run1.final.log`
+  - `/private/tmp/m1k2.run2.final.log`
+- Collected outputs:
+  - `/private/tmp/m1k2.startup_truth.run1.jsonl`
+  - `/private/tmp/m1k2.startup_truth.run2.jsonl`
+
+Observed outcomes:
+1. Collect extraction remains healthy:
+- both runs report `STARTUP_TRUTH_COLLECT {"status":"ok", ...}`
+- both outputs exist and are deterministic (`12` lines, `3004` bytes, `cmp` pass)
+2. Truth payload is now non-trivial before termination:
+- includes seed + kernel-baseline `intern` and `symbol-identity-observe` events
+- sample symbols: `%FASLOAD`, `%FASL-OPEN`, `%SIMPLE-FASL-OPEN`, `INTERN`, `DEFAULT`
+3. First required fasload remains the hard blocker:
+- still fails at `l1-fasls/l1-cl-package.lafsl`
+- trap observed as `Maximum call stack size exceeded`
+- boundary reason remains `required-fasload-trap-after-unified-startup-binding-map-apply`
+
+Revised M1 status:
+- Improved but still not fully accepted:
+  - deterministic, non-empty startup truth collection now works in collect lane.
+  - full passive package lifecycle coverage (`create/use/import/export/shadow/unintern`) is still incomplete in emitted stream.
+- Hard blocker remains:
+  - pre-runtime required-fasload trap prevents broader runtime-phase event capture.
+
+Immediate next step:
+1. Keep publish-path behavior unchanged.
+2. Trace and fix the required-fasload trap call chain (`wasm_prepare_entry_call` -> `_SPfuncall` path) so collect runs can execute deeper instrumentation.
+3. Expand passive event hooks to cover package lifecycle events once trap is unblocked.
