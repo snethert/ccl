@@ -53,7 +53,12 @@ import {
   augmentStartupBindingMapArtifactWithContractConstPoolFunctions as
     augmentStartupBindingMapArtifactWithContractConstPoolFunctionsFromBuilder,
 } from "./startup-binding-map.mjs";
-import { FILE_MODE_READ } from "./persist-service.mjs";
+import {
+  FILE_MODE_CREATE,
+  FILE_MODE_READ,
+  FILE_MODE_TRUNCATE,
+  FILE_MODE_WRITE,
+} from "./persist-service.mjs";
 
 const STARTUP_SYMBOL_SCOPE_SCHEMA_V1 = "startup_symbol_scope_v1";
 const STARTUP_SYMBOL_SCOPE_FIELD_SCHEMA_VERSION = "schema_version";
@@ -1163,6 +1168,32 @@ if (startupTruthCollectEnabled) {
   if (!startupTruthEnsure.ok) {
     fail(`persistence ensureDirs failed for ${startupTruthPersistencePath}`);
   }
+  const startupTruthPrime = microkernel.persistence.openFile(
+    startupTruthPersistencePath,
+    FILE_MODE_WRITE | FILE_MODE_CREATE | FILE_MODE_TRUNCATE,
+  );
+  if (!startupTruthPrime?.ok) {
+    fail(`failed to prime ${startupTruthPersistencePath} in persistence store`);
+  }
+  const startupTruthPrimeRecord = {
+    schema_version: "startup_truth_v1",
+    event_type: "collect-prime",
+    phase: "collect-prime",
+    monotonic_seq: 0,
+    payload: {
+      source: "make-real-image",
+      output_path: startupTruthPersistencePath,
+    },
+  };
+  const startupTruthPrimeBytes = Buffer.from(
+    `${JSON.stringify(startupTruthPrimeRecord)}\n`,
+    "utf8",
+  );
+  const startupTruthPrimeWritten = startupTruthPrime.value.write(startupTruthPrimeBytes);
+  if ((startupTruthPrimeWritten | 0) !== startupTruthPrimeBytes.length) {
+    fail(`failed to seed ${startupTruthPersistencePath} priming record`);
+  }
+  startupTruthPrime.value.close();
 }
 
 let kernelExports = null;

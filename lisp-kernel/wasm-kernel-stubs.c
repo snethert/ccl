@@ -867,6 +867,7 @@ static uint32_t wasm_subprims_ready = 0;
 static LispObj wasm_last_compiled_modules = 0;
 static volatile uint32_t wasm_boot_phase_state = WASM_BOOT_EARLY;
 static uint32_t wasm_startup_truth_collect_enabled = 0u;
+static uint32_t wasm_startup_truth_emit_in_progress = 0u;
 LispObj wasm_funcall1(LispObj fn_value, LispObj arg0);
 uint32_t wasm_subprim_nonlocal_exit_coherence_selftest(void);
 static LispObj wasm_find_package_named_bytes(const uint8_t *bytes, uint32_t len);
@@ -5786,15 +5787,20 @@ wasm_emit_startup_truth_intern_event(TCR *tcr,
   if (tcr == NULL || name_bytes == NULL || name_len == 0u) {
     return;
   }
+  if (wasm_startup_truth_emit_in_progress) {
+    return;
+  }
 
+  uint32_t pending_before = (uint32_t)tcr->wasm_pending_throw;
+  wasm_startup_truth_emit_in_progress = 1u;
   LispObj intern_event_sym = wasm_cached_startup_truth_intern_event_symbol();
   if (!wasm_symbol_object_p(intern_event_sym)) {
-    return;
+    goto done;
   }
 
   LispObj intern_name = wasm_const_pool_make_base_string(tcr, name_bytes, name_len);
   if (intern_name == lisp_nil) {
-    return;
+    goto done;
   }
 
   LispObj resolved = wasm_symbol_object_p(resolved_symbol) ? resolved_symbol : lisp_nil;
@@ -5806,9 +5812,9 @@ wasm_emit_startup_truth_intern_event(TCR *tcr,
     intern_name,
     box_fixnum((signed_natural)intern_status),
     box_fixnum((signed_natural)phase_code));
-  if (tcr->wasm_pending_throw) {
-    tcr->wasm_pending_throw = 0;
-  }
+done:
+  tcr->wasm_pending_throw = (signed_natural)pending_before;
+  wasm_startup_truth_emit_in_progress = 0u;
 }
 
 static LispObj
