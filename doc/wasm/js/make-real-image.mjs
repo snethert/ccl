@@ -4441,9 +4441,104 @@ const classifyBoundaryUnresolvedFunction = (specrefDiag) => {
     nargs_raw: Number.isInteger(specrefDiag.nargs_raw) ? (specrefDiag.nargs_raw >>> 0) : null,
   };
 };
+const probeRequiredCallableSymbolState = (packageName, symbolName) => {
+  if (
+    typeof ex.wasm_probe_symbol !== "function" ||
+    typeof ex.wasm_probe_symbol_fcell !== "function" ||
+    typeof ex.wasm_probe_last_status !== "function" ||
+    typeof ex.wasm_debug_function_entry_index !== "function"
+  ) {
+    return {
+      package_name: packageName,
+      symbol_name: symbolName,
+      status: "probe-exports-missing",
+    };
+  }
+  const nil = typeof ex.wasm_get_lisp_nil === "function"
+    ? (ex.wasm_get_lisp_nil() >>> 0)
+    : 0;
+  const nameBytes = encoder.encode(symbolName);
+  const pkgBytes = encoder.encode(packageName);
+  const namePtr = nameBytes.length > 0 ? copyBytesToScratch(runtime.memory, nameBytes) : 0;
+  const pkgPtr = pkgBytes.length > 0 ? copyBytesToScratch(runtime.memory, pkgBytes) : 0;
+  const symbolRaw = ex.wasm_probe_symbol(
+    namePtr >>> 0,
+    nameBytes.length >>> 0,
+    pkgPtr >>> 0,
+    pkgBytes.length >>> 0,
+  ) >>> 0;
+  const symbolStatus = ex.wasm_probe_last_status() >>> 0;
+  if (symbolStatus !== L0_PROBE_STATUS.OK || symbolRaw === 0 || symbolRaw === nil) {
+    return {
+      package_name: packageName,
+      symbol_name: symbolName,
+      status: "symbol-unresolved",
+      symbol_status: symbolStatus,
+      symbol_status_name: l0ProbeStatusName(symbolStatus),
+      symbol_raw: `0x${symbolRaw.toString(16)}`,
+    };
+  }
+  const fcellRaw = ex.wasm_probe_symbol_fcell(symbolRaw >>> 0) >>> 0;
+  const fcellStatus = ex.wasm_probe_last_status() >>> 0;
+  const entryIndex = fcellStatus === L0_PROBE_STATUS.OK
+    ? (ex.wasm_debug_function_entry_index(fcellRaw >>> 0) | 0)
+    : -1;
+  return {
+    package_name: packageName,
+    symbol_name: symbolName,
+    status: "ok",
+    symbol_status: symbolStatus,
+    symbol_status_name: l0ProbeStatusName(symbolStatus),
+    symbol_raw: `0x${symbolRaw.toString(16)}`,
+    fcell_status: fcellStatus,
+    fcell_status_name: l0ProbeStatusName(fcellStatus),
+    fcell_raw: `0x${fcellRaw.toString(16)}`,
+    fcell_entry_index: entryIndex >= 0 ? (entryIndex >>> 0) : null,
+  };
+};
+const captureRequiredFasloadBoundaryState = ({
+  stage,
+  faslIndex,
+  faslPath,
+  rc = null,
+  trapMessage = null,
+} = {}) => {
+  const pending = pendingThrowProbe ? pendingThrowProbe() : null;
+  const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
+  const pendingSymbol = pendingRaw != null && kernelDebugSymbolName ? kernelDebugSymbolName(pendingRaw) : null;
+  const bootPhaseRaw = typeof ex.wasm_boot_get_phase === "function"
+    ? (ex.wasm_boot_get_phase() >>> 0)
+    : null;
+  return {
+    schema_version: "required_fasload_boundary_diag_v1",
+    stage: String(stage ?? ""),
+    phase: "pre-runtime-required-fasload",
+    fasl_index: Number.isInteger(faslIndex) ? (faslIndex >>> 0) : null,
+    first_required_fasload: faslIndex === 0,
+    path: typeof faslPath === "string" ? faslPath : null,
+    rc: Number.isInteger(rc) ? rc : null,
+    pending_throw: pending,
+    pending_throw_raw: pendingRaw == null ? null : `0x${pendingRaw.toString(16)}`,
+    pending_symbol: pendingSymbol ?? null,
+    boot_phase: bootPhaseRaw == null ? null : formatBootPhase(bootPhaseRaw),
+    required_callable_probes: [
+      probeRequiredCallableSymbolState("CCL", "%FASLOAD"),
+      probeRequiredCallableSymbolState("CCL", "%FASL-OPEN"),
+      probeRequiredCallableSymbolState("CCL", "%SIMPLE-FASL-OPEN"),
+    ],
+    trap_message: trapMessage,
+  };
+};
 const requiredFasloadQueue = skipRequiredFasloads ? [] : requiredFasls;
 for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
   const faslPath = requiredFasloadQueue[faslIndex];
+  if (faslIndex === 0) {
+    console.error(`REQUIRED_FASLOAD_BOUNDARY_DIAG_BEFORE ${JSON.stringify(captureRequiredFasloadBoundaryState({
+      stage: "before-call",
+      faslIndex,
+      faslPath,
+    }))}`);
+  }
   if (traceEnabled && pendingThrowProbe) {
     trace(`fasload pre path=${faslPath} pending=${pendingThrowProbe()}`);
   }
@@ -4456,6 +4551,15 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
   try {
     faslRc = ex.wasm_fasload_path(faslPtr, faslBytes.length >>> 0) | 0;
   } catch (err) {
+    if (faslIndex === 0) {
+      console.error(`REQUIRED_FASLOAD_BOUNDARY_DIAG_AFTER ${JSON.stringify(captureRequiredFasloadBoundaryState({
+        stage: "after-trap",
+        faslIndex,
+        faslPath,
+        rc: null,
+        trapMessage: err?.message ?? String(err),
+      }))}`);
+    }
     const specrefDiag = debugReadSpecrefFailure(`fasload trap path=${faslPath}`);
     const unresolvedFunction = classifyBoundaryUnresolvedFunction(specrefDiag);
     const boundaryReason = unresolvedFunction
@@ -4498,6 +4602,14 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
       (pendingRaw == null ? "" : ` pending_raw=0x${pendingRaw.toString(16)}`) +
       (pendingName ? ` pending_symbol=${JSON.stringify(pendingName)}` : ""),
     );
+  }
+  if (faslIndex === 0) {
+    console.error(`REQUIRED_FASLOAD_BOUNDARY_DIAG_AFTER ${JSON.stringify(captureRequiredFasloadBoundaryState({
+      stage: faslRc === 0 ? "after-rc-ok" : "after-rc-fail",
+      faslIndex,
+      faslPath,
+      rc: faslRc,
+    }))}`);
   }
   if (faslRc !== 0) {
     const specrefDiag = debugReadSpecrefFailure(`fasload rc=${faslRc} path=${faslPath}`);

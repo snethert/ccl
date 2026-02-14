@@ -158,6 +158,51 @@ run "$CCL_BIN" --no-init --batch -l "$STARTUP_SYMBOL_SCOPE_SCRIPT" -- \
   --contract-json "$CONTRACT_SIDECAR_OUT"
 
 if [ -n "$MODULES_OUT" ]; then
+  if [ "$DRYRUN" -eq 1 ]; then
+    printf '+ node --input-type=module <attach-startup-binding-map-inline> %q %q %q\n' \
+      "$ROOT_DIR" "$INLINE_TMP" "$STARTUP_SYMBOL_SCOPE_OUT"
+  else
+    node --input-type=module - "$ROOT_DIR" "$INLINE_TMP" "$STARTUP_SYMBOL_SCOPE_OUT" <<'NODE'
+import fs from "node:fs/promises";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+
+const [rootDir, inlineManifestPath, scopePath] = process.argv.slice(2);
+const startupBindingMapModule = await import(
+  pathToFileURL(path.join(rootDir, "doc/wasm/js/startup-binding-map.mjs")).href,
+);
+const {
+  buildStartupBindingMapArtifact,
+  summarizeStartupBindingMapArtifact,
+} = startupBindingMapModule;
+
+const [inlineManifestRaw, scopeRaw] = await Promise.all([
+  fs.readFile(inlineManifestPath, "utf8"),
+  fs.readFile(scopePath, "utf8"),
+]);
+const inlineManifest = JSON.parse(inlineManifestRaw);
+const scopeArtifact = JSON.parse(scopeRaw);
+
+const startupBindingMap = await buildStartupBindingMapArtifact({
+  repoRoot: rootDir,
+  functions: Array.isArray(inlineManifest?.functions) ? inlineManifest.functions : [],
+  scopeArtifact,
+  resolutionArtifact: null,
+});
+inlineManifest.startupBindingMap = startupBindingMap;
+await fs.writeFile(inlineManifestPath, `${JSON.stringify(inlineManifest)}\n`, "utf8");
+
+const counts = summarizeStartupBindingMapArtifact(startupBindingMap);
+console.log(
+  "startup binding map attached to inline manifest:" +
+  ` total=${counts.total_entries}` +
+  ` literal=${counts.literal_entries}` +
+  ` entry-backed=${counts.entry_backed_entries}` +
+  ` deferred=${counts.deferred_entries}` +
+  ` unsupported=${counts.unsupported_entries}`,
+);
+NODE
+  fi
   run node "$PACK_SCRIPT" --manifest "$INLINE_TMP" --out-manifest "$MODULES_OUT"
   if [ "$COMPACT_RUNTIME_MODULES" -eq 1 ]; then
     COMPACT_ARGS=(

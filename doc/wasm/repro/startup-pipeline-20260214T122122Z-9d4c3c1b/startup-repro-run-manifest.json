@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-02-14T12:27:28.309Z",
+  "source": "scripts/wasm/repro-startup-pipeline.sh",
+  "runId": "20260214T122122Z-9d4c3c1b",
+  "status": "fail",
+  "startedAt": "2026-02-14T12:21:22Z",
+  "finishedAt": "2026-02-14T12:27:27Z",
+  "failure": {
+    "step": "compile-runtime-modules",
+    "exitCode": 1
+  },
+  "gates": {
+    "manifestSmoke": "not-run",
+    "runtimeDiagnosticsRequested": false
+  },
+  "git": {
+    "head": "9d4c3c1b06039a6d95a90ff7f4d1d561073863e0",
+    "short": "9d4c3c1b",
+    "branch": "wasm-port",
+    "dirtyBefore": true,
+    "dirtyAfter": true
+  },
+  "tools": {
+    "node": {
+      "command": "/usr/local/bin/node",
+      "version": "v25.6.0"
+    },
+    "clang": {
+      "command": "/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi",
+      "version": "Homebrew clang version 21.1.8"
+    },
+    "wasmLd": {
+      "command": "/usr/local/opt/lld/bin/wasm-ld",
+      "version": "Homebrew LLD 21.1.8"
+    },
+    "ccl": {
+      "command": "/Users/buildsomething/Source/ccl/dx86cl64",
+      "version": "Clozure Common Lisp Version 1.13  DarwinX8664"
+    }
+  },
+  "environment": {
+    "TZ": "UTC",
+    "LC_ALL": "C",
+    "LANG": "C"
+  },
+  "files": {
+    "commandLog": "doc/wasm/repro/startup-pipeline-20260214T122122Z-9d4c3c1b/commands.ndjson",
+    "provenance": {
+      "path": "doc/wasm/repro/startup-pipeline-20260214T122122Z-9d4c3c1b/build-provenance.json",
+      "bytes": 958,
+      "sha256": "9c58e49bb5ae83bb2a1a5eab5ef3225e93f83b063fe5a2122abada7d0e3a2534"
+    }
+  },
+  "commands": [
+    {
+      "name": "kernel-clean",
+      "command": "make -C lisp-kernel/wasm32 CC=/usr/local/opt/llvm/bin/clang\\ -D__wasi__\\ -isystem\\ /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi WASM_LD=/usr/local/opt/lld/bin/wasm-ld clean",
+      "status": "pass",
+      "exitCode": 0,
+      "startedAt": "2026-02-14T12:21:22Z",
+      "finishedAt": "2026-02-14T12:21:23Z",
+      "durationSeconds": 1,
+      "logPath": "doc/wasm/repro/startup-pipeline-20260214T122122Z-9d4c3c1b/logs/01-kernel-clean.log"
+    },
+    {
+      "name": "kernel-build",
+      "command": "make -C lisp-kernel/wasm32 CC=/usr/local/opt/llvm/bin/clang\\ -D__wasi__\\ -isystem\\ /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi WASM_LD=/usr/local/opt/lld/bin/wasm-ld",
+      "status": "pass",
+      "exitCode": 0,
+      "startedAt": "2026-02-14T12:21:23Z",
+      "finishedAt": "2026-02-14T12:21:30Z",
+      "durationSeconds": 7,
+      "logPath": "doc/wasm/repro/startup-pipeline-20260214T122122Z-9d4c3c1b/logs/02-kernel-build.log"
+    },
+    {
+      "name": "subprims-clean",
+      "command": "make -C lisp-kernel/wasm32/subprims CC=/usr/local/opt/llvm/bin/clang\\ -D__wasi__\\ -isystem\\ /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi WASM_LD=/usr/local/opt/lld/bin/wasm-ld clean",
+      "status": "pass",
+      "exitCode": 0,
+      "startedAt": "2026-02-14T12:21:30Z",
+      "finishedAt": "2026-02-14T12:21:31Z",
+      "durationSeconds": 1,
+      "logPath": "doc/wasm/repro/startup-pipeline-20260214T122122Z-9d4c3c1b/logs/03-subprims-clean.log"
+    },
+    {
+      "name": "subprims-build",
+      "command": "make -C lisp-kernel/wasm32/subprims CC=/usr/local/opt/llvm/bin/clang\\ -D__wasi__\\ -isystem\\ /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi WASM_LD=/usr/local/opt/lld/bin/wasm-ld",
+      "status": "pass",
+      "exitCode": 0,
+      "startedAt": "2026-02-14T12:21:31Z",
+      "finishedAt": "2026-02-14T12:21:32Z",
+      "durationSeconds": 1,
+      "logPath": "doc/wasm/repro/startup-pipeline-20260214T122122Z-9d4c3c1b/logs/04-subprims-build.log"
+    },
+    {
+      "name": "compile-runtime-modules",
+      "command": "scripts/wasm/compile-wasm-fasls.sh --force --modules-out doc/wasm/wasm-runtime-modules.json",
+      "status": "fail",
+      "exitCode": 1,
+      "startedAt": "2026-02-14T12:21:32Z",
+      "finishedAt": "2026-02-14T12:27:26Z",
+      "durationSeconds": 354,
+      "logPath": "doc/wasm/repro/startup-pipeline-20260214T122122Z-9d4c3c1b/logs/05-compile-runtime-modules.log"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "doc/wasm/js/wasmcl.wasm",
+      "exists": true,
+      "bytes": 606441,
+      "sha256": "e989e01e3f474c9e32068ab3d1f80d6895ac5ba4d4c2a4d338416632855ce4a4"
+    },
+    {
+      "path": "doc/wasm/js/subprims.wasm",
+      "exists": true,
+      "bytes": 328416,
+      "sha256": "691fcddee010cd8e1f1b95d51ff8a90bcbb8d408144882e444a3ca21ae85b017"
+    },
+    {
+      "path": "doc/wasm/wasm-runtime-modules.json",
+      "exists": true,
+      "bytes": 604551,
+      "sha256": "7536b821feb902e1dd46d7b4e05525088ac7a72efd7b21a1654dbfff712cc1c2"
+    },
+    {
+      "path": "doc/wasm/wasm-runtime-modules.bin",
+      "exists": true,
+      "bytes": 441168687,
+      "sha256": "0c422fc7de957dd0a0b4dc1ca6f8062ac7db7b8d6487e2f81067d61c529f56f3"
+    },
+    {
+      "path": "doc/wasm/wasm-runtime-modules.idx",
+      "exists": true,
+      "bytes": 125152,
+      "sha256": "c9cc8b31d64b1ce846d6a7fb0a6c6851df76a242b0d64d50d0717cda5583a27c"
+    },
+    {
+      "path": "wasm-boot.image",
+      "exists": true,
+      "bytes": 385040,
+      "sha256": "0d1261730c9da91ecc8894213758e5f0c3e9f45eb09cf41c83f2a63fd897e0bf"
+    },
+    {
+      "path": "doc/wasm/root.image",
+      "exists": true,
+      "bytes": 475152,
+      "sha256": "6ea4ac48dfb1e5828cd9344f68326a6f0cb5f1ded48d241bb175351121924250"
+    },
+    {
+      "path": "doc/wasm/root.image.manifest.json",
+      "exists": true,
+      "bytes": 1297,
+      "sha256": "7c9c6d04fd3e1100de00928604abfcba9a67a4b24c5b5ce26c98c9a043293d00"
+    },
+    {
+      "path": "doc/wasm/startup-symbol-scope.source_scope_v1.json",
+      "exists": true,
+      "bytes": 912436,
+      "sha256": "8c7a2be049a7598f6aeb953c4c6409136816723e08ebbfaaf85673c16383b311"
+    },
+    {
+      "path": "doc/wasm/repro/startup-pipeline-20260214T122122Z-9d4c3c1b/startup-symbol-resolution.source_scope_v1.json",
+      "exists": false,
+      "bytes": null,
+      "sha256": null
+    }
+  ]
+}

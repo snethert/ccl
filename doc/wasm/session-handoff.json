@@ -1,17 +1,21 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-02-14T11:28:29.771Z",
+  "generated_at": "2026-02-14T12:46:20.481Z",
   "repo": {
     "root": "/Users/buildsomething/Source/ccl",
-    "head_sha": "8e7f7bec7fc09f8b52de73bfc454e4a307d412c2",
-    "head_short": "8e7f7bec",
+    "head_sha": "9d4c3c1b06039a6d95a90ff7f4d1d561073863e0",
+    "head_short": "9d4c3c1b",
     "branch": "wasm-port",
     "dirty": true,
     "dirty_files": [
-      " M doc/wasm/js/wasmcl.wasm",
+      " M doc/wasm/js/make-real-image.mjs",
+      " M doc/wasm/session-handoff.json",
       " M doc/wasm/startup-symbol-scope.source_scope_v1.json",
       " M doc/wasm/wasm-runtime-modules.idx",
-      "?? doc/wasm/repro/startup-pipeline-20260214T112054Z-8e7f7bec/"
+      " M doc/wasm/wasm-runtime-modules.json",
+      " M scripts/wasm/compile-wasm-fasls.sh",
+      "?? doc/wasm/repro/startup-pipeline-20260214T122122Z-9d4c3c1b/",
+      "?? doc/wasm/repro/startup-pipeline-20260214T123844Z-9d4c3c1b/"
     ]
   },
   "current_blocker": "Headless root-image build blocked by %FASLOAD throw boundary (call.post -> pending_raw=0x4)",
@@ -29,7 +33,7 @@
   ],
   "artifacts": {
     "latest_log": "/tmp/make-real-image.trace.smoke.source_scope_v1.log",
-    "latest_repro_manifest": "doc/wasm/repro/startup-pipeline-20260214T112054Z-8e7f7bec/startup-repro-run-manifest.json"
+    "latest_repro_manifest": "doc/wasm/repro/startup-pipeline-20260214T123844Z-9d4c3c1b/startup-repro-run-manifest.json"
   },
   "next_actions": [
     "Run CCL_WASM_TRACE=1 CCL_WASM_RUN_BOUNDARY_PROBES=1 node doc/wasm/js/make-real-image.mjs",

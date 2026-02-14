@@ -1,0 +1,219 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-02-14T12:46:20.046Z",
+  "source": "scripts/wasm/repro-startup-pipeline.sh",
+  "runId": "20260214T123844Z-9d4c3c1b",
+  "status": "fail",
+  "startedAt": "2026-02-14T12:38:44Z",
+  "finishedAt": "2026-02-14T12:46:18Z",
+  "failure": {
+    "step": "make-root-image",
+    "exitCode": 1
+  },
+  "gates": {
+    "manifestSmoke": "not-run",
+    "runtimeDiagnosticsRequested": false
+  },
+  "git": {
+    "head": "9d4c3c1b06039a6d95a90ff7f4d1d561073863e0",
+    "short": "9d4c3c1b",
+    "branch": "wasm-port",
+    "dirtyBefore": true,
+    "dirtyAfter": true
+  },
+  "tools": {
+    "node": {
+      "command": "/usr/local/bin/node",
+      "version": "v25.6.0"
+    },
+    "clang": {
+      "command": "/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi",
+      "version": "Homebrew clang version 21.1.8"
+    },
+    "wasmLd": {
+      "command": "/usr/local/opt/lld/bin/wasm-ld",
+      "version": "Homebrew LLD 21.1.8"
+    },
+    "ccl": {
+      "command": "/Users/buildsomething/Source/ccl/dx86cl64",
+      "version": "Clozure Common Lisp Version 1.13  DarwinX8664"
+    }
+  },
+  "environment": {
+    "TZ": "UTC",
+    "LC_ALL": "C",
+    "LANG": "C"
+  },
+  "files": {
+    "commandLog": "doc/wasm/repro/startup-pipeline-20260214T123844Z-9d4c3c1b/commands.ndjson",
+    "provenance": {
+      "path": "doc/wasm/repro/startup-pipeline-20260214T123844Z-9d4c3c1b/build-provenance.json",
+      "bytes": 958,
+      "sha256": "7ad79100a5fbd7366f8c28cb4a9f7b5e98d05a3d816d27cafd227356dd7a6417"
+    }
+  },
+  "commands": [
+    {
+      "name": "kernel-clean",
+      "command": "make -C lisp-kernel/wasm32 CC=/usr/local/opt/llvm/bin/clang\\ -D__wasi__\\ -isystem\\ /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi WASM_LD=/usr/local/opt/lld/bin/wasm-ld clean",
+      "status": "pass",
+      "exitCode": 0,
+      "startedAt": "2026-02-14T12:38:44Z",
+      "finishedAt": "2026-02-14T12:38:45Z",
+      "durationSeconds": 1,
+      "logPath": "doc/wasm/repro/startup-pipeline-20260214T123844Z-9d4c3c1b/logs/01-kernel-clean.log"
+    },
+    {
+      "name": "kernel-build",
+      "command": "make -C lisp-kernel/wasm32 CC=/usr/local/opt/llvm/bin/clang\\ -D__wasi__\\ -isystem\\ /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi WASM_LD=/usr/local/opt/lld/bin/wasm-ld",
+      "status": "pass",
+      "exitCode": 0,
+      "startedAt": "2026-02-14T12:38:45Z",
+      "finishedAt": "2026-02-14T12:38:52Z",
+      "durationSeconds": 7,
+      "logPath": "doc/wasm/repro/startup-pipeline-20260214T123844Z-9d4c3c1b/logs/02-kernel-build.log"
+    },
+    {
+      "name": "subprims-clean",
+      "command": "make -C lisp-kernel/wasm32/subprims CC=/usr/local/opt/llvm/bin/clang\\ -D__wasi__\\ -isystem\\ /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi WASM_LD=/usr/local/opt/lld/bin/wasm-ld clean",
+      "status": "pass",
+      "exitCode": 0,
+      "startedAt": "2026-02-14T12:38:52Z",
+      "finishedAt": "2026-02-14T12:38:52Z",
+      "durationSeconds": 0,
+      "logPath": "doc/wasm/repro/startup-pipeline-20260214T123844Z-9d4c3c1b/logs/03-subprims-clean.log"
+    },
+    {
+      "name": "subprims-build",
+      "command": "make -C lisp-kernel/wasm32/subprims CC=/usr/local/opt/llvm/bin/clang\\ -D__wasi__\\ -isystem\\ /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi WASM_LD=/usr/local/opt/lld/bin/wasm-ld",
+      "status": "pass",
+      "exitCode": 0,
+      "startedAt": "2026-02-14T12:38:53Z",
+      "finishedAt": "2026-02-14T12:38:54Z",
+      "durationSeconds": 1,
+      "logPath": "doc/wasm/repro/startup-pipeline-20260214T123844Z-9d4c3c1b/logs/04-subprims-build.log"
+    },
+    {
+      "name": "compile-runtime-modules",
+      "command": "scripts/wasm/compile-wasm-fasls.sh --force --modules-out doc/wasm/wasm-runtime-modules.json",
+      "status": "pass",
+      "exitCode": 0,
+      "startedAt": "2026-02-14T12:38:54Z",
+      "finishedAt": "2026-02-14T12:44:52Z",
+      "durationSeconds": 358,
+      "logPath": "doc/wasm/repro/startup-pipeline-20260214T123844Z-9d4c3c1b/logs/05-compile-runtime-modules.log"
+    },
+    {
+      "name": "build-wasm-boot",
+      "command": "scripts/wasm/build-wasm-boot.sh --force",
+      "status": "pass",
+      "exitCode": 0,
+      "startedAt": "2026-02-14T12:44:52Z",
+      "finishedAt": "2026-02-14T12:45:10Z",
+      "durationSeconds": 18,
+      "logPath": "doc/wasm/repro/startup-pipeline-20260214T123844Z-9d4c3c1b/logs/06-build-wasm-boot.log"
+    },
+    {
+      "name": "generate-bootstrap-l0-contract-sidecar",
+      "command": "node scripts/wasm/generate-bootstrap-l0-contract-sidecar.mjs --out doc/wasm/bootstrap-l0-contract.v1.json",
+      "status": "pass",
+      "exitCode": 0,
+      "startedAt": "2026-02-14T12:45:10Z",
+      "finishedAt": "2026-02-14T12:45:10Z",
+      "durationSeconds": 0,
+      "logPath": "doc/wasm/repro/startup-pipeline-20260214T123844Z-9d4c3c1b/logs/07-generate-bootstrap-l0-contract-sidecar.log"
+    },
+    {
+      "name": "collect-startup-symbol-scope",
+      "command": "/Users/buildsomething/Source/ccl/dx86cl64 --no-init --batch -l /Users/buildsomething/Source/ccl/scripts/wasm/collect-startup-symbol-scope.lisp -- --repo-root /Users/buildsomething/Source/ccl --out doc/wasm/startup-symbol-scope.source_scope_v1.json --feature-profile wasm32-target-v1 --contract-json doc/wasm/bootstrap-l0-contract.v1.json",
+      "status": "pass",
+      "exitCode": 0,
+      "startedAt": "2026-02-14T12:45:11Z",
+      "finishedAt": "2026-02-14T12:45:11Z",
+      "durationSeconds": 0,
+      "logPath": "doc/wasm/repro/startup-pipeline-20260214T123844Z-9d4c3c1b/logs/08-collect-startup-symbol-scope.log"
+    },
+    {
+      "name": "check-startup-semantics",
+      "command": "scripts/wasm/check-startup-semantics.sh",
+      "status": "pass",
+      "exitCode": 0,
+      "startedAt": "2026-02-14T12:45:11Z",
+      "finishedAt": "2026-02-14T12:45:12Z",
+      "durationSeconds": 1,
+      "logPath": "doc/wasm/repro/startup-pipeline-20260214T123844Z-9d4c3c1b/logs/09-check-startup-semantics.log"
+    },
+    {
+      "name": "make-root-image",
+      "command": "node doc/wasm/js/make-real-image.mjs --output doc/wasm/root.image --manifest-out doc/wasm/root.image.manifest.json --modules doc/wasm/wasm-runtime-modules.json --build-provenance doc/wasm/repro/startup-pipeline-20260214T123844Z-9d4c3c1b/build-provenance.json --startup-symbol-scope doc/wasm/startup-symbol-scope.source_scope_v1.json --startup-symbol-resolution-out doc/wasm/repro/startup-pipeline-20260214T123844Z-9d4c3c1b/startup-symbol-resolution.source_scope_v1.json --startup-symbol-contract doc/wasm/bootstrap-l0-contract.v1.json",
+      "status": "fail",
+      "exitCode": 1,
+      "startedAt": "2026-02-14T12:45:12Z",
+      "finishedAt": "2026-02-14T12:46:18Z",
+      "durationSeconds": 66,
+      "logPath": "doc/wasm/repro/startup-pipeline-20260214T123844Z-9d4c3c1b/logs/10-make-root-image.log"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "doc/wasm/js/wasmcl.wasm",
+      "exists": true,
+      "bytes": 606441,
+      "sha256": "e989e01e3f474c9e32068ab3d1f80d6895ac5ba4d4c2a4d338416632855ce4a4"
+    },
+    {
+      "path": "doc/wasm/js/subprims.wasm",
+      "exists": true,
+      "bytes": 328416,
+      "sha256": "691fcddee010cd8e1f1b95d51ff8a90bcbb8d408144882e444a3ca21ae85b017"
+    },
+    {
+      "path": "doc/wasm/wasm-runtime-modules.json",
+      "exists": true,
+      "bytes": 1549910,
+      "sha256": "606f7f75c4699f2451b97d66bc368c576d5f25bea5dd726b040ff37f0557815a"
+    },
+    {
+      "path": "doc/wasm/wasm-runtime-modules.bin",
+      "exists": true,
+      "bytes": 441167347,
+      "sha256": "e1766555d1dde0b90a9a8c3e55a605c7d9724e02eafdc9f5dab4d796e5f30712"
+    },
+    {
+      "path": "doc/wasm/wasm-runtime-modules.idx",
+      "exists": true,
+      "bytes": 125152,
+      "sha256": "14dacca6f940b3387fd540da786ef3c021351141397e0e882eead762cdfed616"
+    },
+    {
+      "path": "wasm-boot.image",
+      "exists": true,
+      "bytes": 385040,
+      "sha256": "82627ced35ea6d64031e6c129d169f476eb60ff8509f68571137aaafb63f15ec"
+    },
+    {
+      "path": "doc/wasm/root.image",
+      "exists": true,
+      "bytes": 475152,
+      "sha256": "6ea4ac48dfb1e5828cd9344f68326a6f0cb5f1ded48d241bb175351121924250"
+    },
+    {
+      "path": "doc/wasm/root.image.manifest.json",
+      "exists": true,
+      "bytes": 1297,
+      "sha256": "7c9c6d04fd3e1100de00928604abfcba9a67a4b24c5b5ce26c98c9a043293d00"
+    },
+    {
+      "path": "doc/wasm/startup-symbol-scope.source_scope_v1.json",
+      "exists": true,
+      "bytes": 912436,
+      "sha256": "71c1db66f825ddd87b379ed1d288e54e9be93de919520962ea021a6bd74d46f6"
+    },
+    {
+      "path": "doc/wasm/repro/startup-pipeline-20260214T123844Z-9d4c3c1b/startup-symbol-resolution.source_scope_v1.json",
+      "exists": true,
+      "bytes": 2000216,
+      "sha256": "3da9cba754ac61dd2df4cbffc0d8ab1ce940502156797b1239613ca74048fa54"
+    }
+  ]
+}
