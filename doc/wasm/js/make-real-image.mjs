@@ -950,7 +950,31 @@ const constPoolSpanKey = (offset, storedLength, encoding, rawLength) =>
 const constPoolsInstalled = new Set();
 const startupBindingMapConstPoolBindings = new Map();
 const startupBindingMapDeferredApplied = new Set();
-const CONST_POOL_DIAG_ENTRY = 4412;
+const DEFAULT_CONST_POOL_DIAG_ENTRIES = Object.freeze([4412]);
+function parseConstPoolDiagEntries(rawValue) {
+  const parsed = new Set();
+  const text = String(rawValue ?? "").trim();
+  if (!text) {
+    for (const value of DEFAULT_CONST_POOL_DIAG_ENTRIES) {
+      parsed.add(value >>> 0);
+    }
+    return parsed;
+  }
+  for (const part of text.split(",")) {
+    const value = Number(part.trim());
+    if (!Number.isInteger(value) || value < 0) continue;
+    parsed.add(value >>> 0);
+  }
+  if (parsed.size === 0) {
+    for (const value of DEFAULT_CONST_POOL_DIAG_ENTRIES) {
+      parsed.add(value >>> 0);
+    }
+  }
+  return parsed;
+}
+const CONST_POOL_DIAG_ENTRIES = parseConstPoolDiagEntries(
+  process.env.CCL_WASM_CONST_POOL_DIAG_ENTRY,
+);
 const constPoolProbeInFlight = new Set();
 const CONST_POOL_ERROR_NAMES = new Map([
   [0, "none"],
@@ -1567,7 +1591,7 @@ function installConstPoolOnDemand(entryIndexRaw) {
     return 0;
   }
   const shouldProbe = traceEnabled &&
-    entryIndex === CONST_POOL_DIAG_ENTRY &&
+    CONST_POOL_DIAG_ENTRIES.has(entryIndex) &&
     !constPoolProbeInFlight.has(entryIndex);
   if (shouldProbe) {
     constPoolProbeInFlight.add(entryIndex);
@@ -1821,6 +1845,28 @@ const subprims = await instantiateWasm(
 trace("subprims instantiated");
 const subex = subprims.instance.exports;
 
+const parseUintEnv = (raw) => {
+  if (typeof raw !== "string") return null;
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  if (!/^\d+$/.test(trimmed)) {
+    fail(`invalid unsigned integer value: ${JSON.stringify(raw)}`);
+  }
+  const parsed = Number.parseInt(trimmed, 10);
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 0xffffffff) {
+    fail(`out-of-range unsigned integer value: ${JSON.stringify(raw)}`);
+  }
+  return parsed >>> 0;
+};
+const funcallGuardLimit = parseUintEnv(process.env.CCL_WASM_DEBUG_FUNCALL_GUARD_LIMIT);
+if (funcallGuardLimit != null) {
+  if (typeof subex.wasm_debug_set_funcall_guard_limit !== "function") {
+    fail("kernel missing wasm_debug_set_funcall_guard_limit");
+  }
+  subex.wasm_debug_set_funcall_guard_limit(funcallGuardLimit >>> 0);
+  trace(`debug-funcall-guard configured limit=${funcallGuardLimit >>> 0}`);
+}
+
 installSubprimsTable({
   table: runtime.subprimsTable,
   subprimsMap,
@@ -1867,6 +1913,17 @@ const SPECREF_FAILURE_STAGE_NAMES = new Map([
   [4, "binding-index-tag"],
   [5, "tlb-limit-tag"],
   [6, "tlb-pointer-null"],
+]);
+const KEYWORD_BIND_STAGE_NAMES = new Map([
+  [0, "none"],
+  [1, "tcr-null"],
+  [2, "raw-tag"],
+  [3, "negative-count"],
+  [4, "fn-not-misc"],
+  [5, "keyvec-not-misc"],
+  [6, "keyvec-length-range"],
+  [7, "stack-null"],
+  [255, "done"],
 ]);
 const debugReadSpecrefFailure = (label) => {
   if (!traceEnabled || typeof subex.wasm_debug_specref_failure_stage !== "function") {
@@ -1939,6 +1996,64 @@ const debugReadSpecrefFailure = (label) => {
       (nfnOwner ? ` nfn_owner=${JSON.stringify(nfnOwner)}` : ""),
     );
 
+    const readKeywordBind = (name) => (typeof subex[name] === "function" ? (subex[name]() | 0) : 0);
+    const keywordBindStage = readKeywordBind("wasm_debug_keyword_bind_stage");
+    const keywordBindStageName = KEYWORD_BIND_STAGE_NAMES.get(keywordBindStage) ?? "unknown";
+    if (keywordBindStage !== 0) {
+      const keywordBindRawNargs = readKeywordBind("wasm_debug_keyword_bind_raw_nargs") >>> 0;
+      const keywordBindRawPrev = readKeywordBind("wasm_debug_keyword_bind_raw_prev") >>> 0;
+      const keywordBindFlags = readKeywordBind("wasm_debug_keyword_bind_keyword_flags") >>> 0;
+      const keywordBindNargsCount = readKeywordBind("wasm_debug_keyword_bind_nargs_count");
+      const keywordBindPrevCount = readKeywordBind("wasm_debug_keyword_bind_prev_count");
+      const keywordBindKeyValueCount = readKeywordBind("wasm_debug_keyword_bind_key_value_count");
+      const keywordBindFn = readKeywordBind("wasm_debug_keyword_bind_fn_raw") >>> 0;
+      const keywordBindFnFulltag = readKeywordBind("wasm_debug_keyword_bind_fn_fulltag") >>> 0;
+      const keywordBindKeyvec = readKeywordBind("wasm_debug_keyword_bind_keyvec_raw") >>> 0;
+      const keywordBindKeyvecFulltag = readKeywordBind("wasm_debug_keyword_bind_keyvec_fulltag") >>> 0;
+      const keywordBindKeyvecHeader = readKeywordBind("wasm_debug_keyword_bind_keyvec_header") >>> 0;
+      const keywordBindKeyvecLen = readKeywordBind("wasm_debug_keyword_bind_keyvec_len");
+      const keywordBindVspRaw = readKeywordBind("wasm_debug_keyword_bind_vsp_raw") >>> 0;
+      trace(
+        `debug-keyword-bind label=${label}` +
+        ` stage=${keywordBindStage}:${keywordBindStageName}` +
+        ` raw_nargs=0x${keywordBindRawNargs.toString(16)}` +
+        ` raw_prev=0x${keywordBindRawPrev.toString(16)}` +
+        ` flags=0x${keywordBindFlags.toString(16)}` +
+        ` nargs_count=${keywordBindNargsCount}` +
+        ` prev_count=${keywordBindPrevCount}` +
+        ` key_value_count=${keywordBindKeyValueCount}` +
+        ` fn=0x${keywordBindFn.toString(16)} fn_fulltag=${keywordBindFnFulltag}` +
+        ` keyvec=0x${keywordBindKeyvec.toString(16)} keyvec_fulltag=${keywordBindKeyvecFulltag}` +
+        ` keyvec_header=0x${keywordBindKeyvecHeader.toString(16)} keyvec_len=${keywordBindKeyvecLen}` +
+        ` vsp=0x${keywordBindVspRaw.toString(16)}`,
+      );
+    }
+
+    const readFuncallGuard = (name) => (typeof subex[name] === "function" ? (subex[name]() >>> 0) : 0);
+    const funcallGuardLimit = readFuncallGuard("wasm_debug_funcall_guard_limit");
+    const funcallGuardCounter = readFuncallGuard("wasm_debug_funcall_guard_counter");
+    const funcallGuardTriggered = readFuncallGuard("wasm_debug_funcall_guard_triggered");
+    const funcallGuardLastEntryIndex = readFuncallGuard("wasm_debug_funcall_guard_last_entry_index");
+    const funcallGuardLastNfnRaw = readFuncallGuard("wasm_debug_funcall_guard_last_nfn_raw");
+    const funcallGuardLastNameRaw = readFuncallGuard("wasm_debug_funcall_guard_last_name_raw");
+    const funcallGuardLastArgZRaw = readFuncallGuard("wasm_debug_funcall_guard_last_arg_z_raw");
+    const funcallGuardLastArgYRaw = readFuncallGuard("wasm_debug_funcall_guard_last_arg_y_raw");
+    const funcallGuardLastNargsRaw = readFuncallGuard("wasm_debug_funcall_guard_last_nargs_raw");
+    if (funcallGuardLimit !== 0 || funcallGuardCounter !== 0 || funcallGuardTriggered !== 0) {
+      trace(
+        `debug-funcall-guard label=${label}` +
+        ` limit=${funcallGuardLimit}` +
+        ` counter=${funcallGuardCounter}` +
+        ` triggered=${funcallGuardTriggered}` +
+        ` last_entry_index=0x${funcallGuardLastEntryIndex.toString(16)}` +
+        ` last_nfn=0x${funcallGuardLastNfnRaw.toString(16)}` +
+        ` last_name=0x${funcallGuardLastNameRaw.toString(16)}` +
+        ` last_arg_z=0x${funcallGuardLastArgZRaw.toString(16)}` +
+        ` last_arg_y=0x${funcallGuardLastArgYRaw.toString(16)}` +
+        ` last_nargs=0x${funcallGuardLastNargsRaw.toString(16)}`,
+      );
+    }
+
     let constPoolEntry = null;
     let constPoolPhase = null;
     let constPoolIndex = null;
@@ -1974,11 +2089,22 @@ const debugReadSpecrefFailure = (label) => {
         for (let i = 0; i < 6; i++) {
           const obj = ex.wasm_const_pool_ref(constEntry >>> 0, i >>> 0) >>> 0;
           const subtag = objSubtag(obj);
+          let entryIndex = null;
+          if (typeof ex.wasm_debug_function_entry_index === "function") {
+            const maybeEntry = ex.wasm_debug_function_entry_index(obj >>> 0) | 0;
+            if (maybeEntry >= 0) {
+              entryIndex = maybeEntry >>> 0;
+            }
+          }
           const name = symbolName(obj) ?? ownerName(obj);
           if (name && !sampleSymbols.includes(name)) {
             sampleSymbols.push(name);
           }
-          rows.push(`${i}:0x${obj.toString(16)}:subtag=${subtag}${name ? `:${name}` : ""}`);
+          rows.push(
+            `${i}:0x${obj.toString(16)}:subtag=${subtag}` +
+            (entryIndex == null ? "" : `:entry=${entryIndex}`) +
+            (name ? `:${name}` : ""),
+          );
         }
         constPoolSampleSymbols = sampleSymbols;
         trace(`debug-specref-const-pool-sample label=${label} ${rows.join(" | ")}`);
@@ -1999,6 +2125,17 @@ const debugReadSpecrefFailure = (label) => {
       arg_z_symbol: argZSymbol,
       arg_y_symbol: argYSymbol,
       nfn_owner: nfnOwner,
+      keyword_bind_stage: keywordBindStage,
+      keyword_bind_stage_name: keywordBindStageName,
+      funcall_guard_limit: funcallGuardLimit,
+      funcall_guard_counter: funcallGuardCounter,
+      funcall_guard_triggered: funcallGuardTriggered,
+      funcall_guard_last_entry_index: funcallGuardLastEntryIndex,
+      funcall_guard_last_nfn_raw: funcallGuardLastNfnRaw,
+      funcall_guard_last_name_raw: funcallGuardLastNameRaw,
+      funcall_guard_last_arg_z_raw: funcallGuardLastArgZRaw,
+      funcall_guard_last_arg_y_raw: funcallGuardLastArgYRaw,
+      funcall_guard_last_nargs_raw: funcallGuardLastNargsRaw,
       const_pool_entry: constPoolEntry,
       const_pool_phase: constPoolPhase,
       const_pool_index: constPoolIndex,
@@ -4881,15 +5018,129 @@ const captureRequiredFasloadBoundaryState = ({
   };
 };
 const boundaryAutobindEnabled = process.env.CCL_WASM_BOUNDARY_AUTOBIND !== "0";
-const boundaryAutobindAttemptedSymbols = new Set();
+const boundaryAutobindMethodFallbackEnabled = process.env.CCL_WASM_BOUNDARY_AUTOBIND_METHOD_FALLBACK === "1";
+const parseBoundaryAutobindSymbolSet = (rawValue, fallbackSymbols = []) => {
+  const out = new Set();
+  const values = [];
+  if (typeof rawValue === "string" && rawValue.trim()) {
+    values.push(...rawValue.split(","));
+  } else {
+    values.push(...fallbackSymbols);
+  }
+  for (const value of values) {
+    const key = String(value ?? "").trim().toUpperCase();
+    if (key) out.add(key);
+  }
+  return out;
+};
+const boundaryAutobindMethodFallbackDenylist = parseBoundaryAutobindSymbolSet(
+  process.env.CCL_WASM_BOUNDARY_AUTOBIND_METHOD_FALLBACK_DENYLIST,
+  ["STREAM-UNREAD-CHAR"],
+);
+const boundaryAutobindMethodFallbackAllowlist = parseBoundaryAutobindSymbolSet(
+  process.env.CCL_WASM_BOUNDARY_AUTOBIND_METHOD_FALLBACK_ALLOWLIST,
+  [],
+);
+const parseBoundaryAutobindEntryOverrides = (raw) => {
+  const out = new Map();
+  const text = String(raw ?? "").trim();
+  if (!text) return out;
+  const parts = text.split(/[,\s]+/).map((part) => part.trim()).filter(Boolean);
+  for (const part of parts) {
+    const eq = part.indexOf("=");
+    if (eq <= 0 || eq >= (part.length - 1)) continue;
+    const key = part.slice(0, eq).trim().toUpperCase();
+    if (!key) continue;
+    const valueText = part.slice(eq + 1).trim();
+    if (!valueText) continue;
+    const valueNum = Number.parseInt(valueText, 10);
+    if (!Number.isInteger(valueNum) || valueNum < 0) continue;
+    out.set(key, valueNum >>> 0);
+  }
+  return out;
+};
+const boundaryAutobindEntryOverrides = parseBoundaryAutobindEntryOverrides(
+  process.env.CCL_WASM_BOUNDARY_AUTOBIND_ENTRY_OVERRIDES,
+);
+const boundaryAutobindMethodFallbackAllowed = (symbolNameUpper) => {
+  if (!boundaryAutobindMethodFallbackEnabled) return false;
+  if (boundaryAutobindMethodFallbackDenylist.has(symbolNameUpper)) return false;
+  if (boundaryAutobindMethodFallbackAllowlist.size > 0 && !boundaryAutobindMethodFallbackAllowlist.has(symbolNameUpper)) {
+    return false;
+  }
+  return true;
+};
+const boundaryAutobindSampleSymbolsEnabled = process.env.CCL_WASM_BOUNDARY_AUTOBIND_SAMPLE_SYMBOLS !== "0";
+const boundaryAutobindAttemptedSymbolsByEpoch = new Map();
+let boundaryAutobindEpoch = 0;
 const boundaryConstPoolRecoveryAttemptedEntries = new Set();
+const traceBoundaryAutobindProbe = (packageName, symbolName, expectedEntryIndex = null) => {
+  if (
+    !traceEnabled ||
+    typeof ex?.wasm_probe_symbol !== "function" ||
+    typeof ex?.wasm_probe_symbol_fcell !== "function" ||
+    typeof ex?.wasm_probe_last_status !== "function"
+  ) {
+    return;
+  }
+  const scratch = sharedProbeUtf8Scratch;
+  scratch.reset();
+  const nameMem = scratch.allocUtf8(String(symbolName ?? ""), encoder);
+  const pkgMem = scratch.allocUtf8(String(packageName ?? ""), encoder);
+  const symbolRaw = ex.wasm_probe_symbol(
+    nameMem.ptr >>> 0,
+    nameMem.len >>> 0,
+    pkgMem.ptr >>> 0,
+    pkgMem.len >>> 0,
+  ) >>> 0;
+  const symbolStatus = ex.wasm_probe_last_status() >>> 0;
+  let fcellRaw = 0;
+  let fcellStatus = null;
+  let fcellEntry = null;
+  let fcellCallAbi = null;
+  let fcellHeaderLen = null;
+  if (symbolStatus === L0_PROBE_STATUS.OK && symbolRaw !== 0) {
+    fcellRaw = ex.wasm_probe_symbol_fcell(symbolRaw >>> 0) >>> 0;
+    fcellStatus = ex.wasm_probe_last_status() >>> 0;
+    if (typeof ex.wasm_debug_header_element_count === "function") {
+      fcellHeaderLen = ex.wasm_debug_header_element_count(fcellRaw >>> 0) | 0;
+    }
+    if (
+      fcellStatus === L0_PROBE_STATUS.OK &&
+      typeof ex.wasm_debug_function_entry_index === "function"
+    ) {
+      const entry = ex.wasm_debug_function_entry_index(fcellRaw >>> 0) | 0;
+      fcellEntry = entry >= 0 ? (entry >>> 0) : null;
+      if (
+        fcellEntry != null &&
+        typeof ex.wasm_get_entry_call_abi === "function"
+      ) {
+        fcellCallAbi = ex.wasm_get_entry_call_abi(fcellEntry >>> 0) >>> 0;
+      }
+    }
+  }
+  trace(
+    `boundary-autobind probe symbol=${String(symbolName ?? "").toUpperCase()}` +
+    ` package=${String(packageName ?? "").toUpperCase()}` +
+    ` expected_entry=${Number.isInteger(expectedEntryIndex) ? (expectedEntryIndex >>> 0) : "n/a"}` +
+    ` symbol_status=${l0ProbeStatusName(symbolStatus)}` +
+    ` symbol_raw=0x${symbolRaw.toString(16)}` +
+    ` fcell_status=${fcellStatus == null ? "n/a" : l0ProbeStatusName(fcellStatus)}` +
+    ` fcell_raw=0x${fcellRaw.toString(16)}` +
+    ` fcell_entry=${fcellEntry == null ? "n/a" : fcellEntry}` +
+    (fcellHeaderLen == null ? "" : ` fcell_header_len=${fcellHeaderLen}`) +
+    (fcellCallAbi == null ? "" : ` fcell_call_abi=${fcellCallAbi}`),
+  );
+};
 const tryAutobindBoundaryUnresolvedFunction = (unresolvedFunction) => {
   if (!boundaryAutobindEnabled) return false;
   const symbolName = String(unresolvedFunction?.symbol_name ?? "").trim();
   if (!symbolName) return false;
-  const symbolKey = `CCL::${symbolName.toUpperCase()}`;
-  if (boundaryAutobindAttemptedSymbols.has(symbolKey)) return false;
-  boundaryAutobindAttemptedSymbols.add(symbolKey);
+  const symbolNameUpper = symbolName.toUpperCase();
+  const symbolKey = `CCL::${symbolNameUpper}`;
+  if ((boundaryAutobindAttemptedSymbolsByEpoch.get(symbolKey) ?? -1) === boundaryAutobindEpoch) {
+    return false;
+  }
   let detectedPackageName = "";
   if (
     typeof ex?.wasm_get_lisp_nil === "function" &&
@@ -4939,8 +5190,47 @@ const tryAutobindBoundaryUnresolvedFunction = (unresolvedFunction) => {
     : null;
   let resolvedKey = resolution?.key ?? null;
   let resolvedSource = resolution?.source ?? null;
-  if (resolvedEntryIndex == null) {
-    const methodPrefix = `(${symbolName.toUpperCase()} `;
+  const overrideKey = (
+    detectedPackageName
+      ? `${detectedPackageName.toUpperCase()}::${symbolNameUpper}`
+      : null
+  );
+  let overriddenEntryIndex = null;
+  if (overrideKey && boundaryAutobindEntryOverrides.has(overrideKey)) {
+    overriddenEntryIndex = boundaryAutobindEntryOverrides.get(overrideKey) ?? null;
+  } else if (boundaryAutobindEntryOverrides.has(symbolNameUpper)) {
+    overriddenEntryIndex = boundaryAutobindEntryOverrides.get(symbolNameUpper) ?? null;
+  }
+  if (Number.isInteger(overriddenEntryIndex) && overriddenEntryIndex >= 0) {
+    resolvedEntryIndex = overriddenEntryIndex >>> 0;
+    resolvedKey = overrideKey ?? symbolNameUpper;
+    resolvedSource = "boundary-autobind-entry-override";
+    if (traceEnabled) {
+      trace(
+        `boundary-autobind override symbol=${symbolNameUpper}` +
+        ` entry=${resolvedEntryIndex}` +
+        ` key=${resolvedKey}`,
+      );
+    }
+  }
+  const methodFallbackAllowed = boundaryAutobindMethodFallbackAllowed(symbolNameUpper);
+  if (
+    resolvedEntryIndex == null &&
+    boundaryAutobindMethodFallbackEnabled &&
+    !methodFallbackAllowed &&
+    traceEnabled
+  ) {
+    if (boundaryAutobindMethodFallbackDenylist.has(symbolNameUpper)) {
+      trace(`boundary-autobind method-fallback skipped symbol=${symbolNameUpper} reason=denylist`);
+    } else if (
+      boundaryAutobindMethodFallbackAllowlist.size > 0 &&
+      !boundaryAutobindMethodFallbackAllowlist.has(symbolNameUpper)
+    ) {
+      trace(`boundary-autobind method-fallback skipped symbol=${symbolNameUpper} reason=allowlist-miss`);
+    }
+  }
+  if (resolvedEntryIndex == null && methodFallbackAllowed) {
+    const methodPrefix = `(${symbolNameUpper} `;
     const methodEntry = (Array.isArray(compiledModulesBundle?.functions) ? compiledModulesBundle.functions : [])
       .find((fn) => {
         const entryIndex = Number(fn?.entryIndex);
@@ -4955,6 +5245,10 @@ const tryAutobindBoundaryUnresolvedFunction = (unresolvedFunction) => {
     }
   }
   if (resolvedEntryIndex == null) {
+    boundaryAutobindAttemptedSymbolsByEpoch.set(symbolKey, boundaryAutobindEpoch);
+    if (traceEnabled) {
+      trace(`boundary-autobind unresolved symbol=${symbolNameUpper}`);
+    }
     return false;
   }
   let resolvedPackageName = "CCL";
@@ -4964,6 +5258,13 @@ const tryAutobindBoundaryUnresolvedFunction = (unresolvedFunction) => {
     if (pkg) resolvedPackageName = pkg;
   } else if (detectedPackageName) {
     resolvedPackageName = detectedPackageName.toUpperCase();
+  }
+  if (traceEnabled) {
+    trace(
+      `boundary-autobind symbol=${symbolName.toUpperCase()} package=${resolvedPackageName}` +
+      ` entry=${resolvedEntryIndex}` +
+      ` source=${resolvedSource ?? "unknown"}`,
+    );
   }
   const entries = Array.isArray(startupBindingMapArtifact?.entries) ? startupBindingMapArtifact.entries : [];
   let replaced = false;
@@ -5032,12 +5333,17 @@ const tryAutobindBoundaryUnresolvedFunction = (unresolvedFunction) => {
     mapSource: `${startupBindingMapSource}+required-fasload-boundary-autobind`,
     contract: BOOTSTRAP_L0_CONTRACT_V1,
   });
+  boundaryAutobindAttemptedSymbolsByEpoch.set(symbolKey, boundaryAutobindEpoch);
+  traceBoundaryAutobindProbe(resolvedPackageName, symbolName, resolvedEntryIndex);
   return true;
 };
 const tryAutobindBoundaryCandidates = (unresolvedFunction, specrefDiag) => {
   const attemptedSymbols = [];
   if (tryAutobindBoundaryUnresolvedFunction(unresolvedFunction)) {
     attemptedSymbols.push(String(unresolvedFunction?.symbol_name ?? "").trim().toUpperCase());
+  }
+  if (!boundaryAutobindSampleSymbolsEnabled) {
+    return attemptedSymbols.length > 0;
   }
   const sampleSymbols = Array.isArray(specrefDiag?.const_pool_sample_symbols)
     ? specrefDiag.const_pool_sample_symbols
@@ -5055,11 +5361,27 @@ const tryAutobindBoundaryCandidates = (unresolvedFunction, specrefDiag) => {
 };
 const tryRecoverBoundaryConstPoolEntry = (specrefDiag) => {
   const constPoolEntry = Number(specrefDiag?.const_pool_entry);
-  if (!Number.isInteger(constPoolEntry) || constPoolEntry < 0) return false;
+  if (!Number.isInteger(constPoolEntry) || constPoolEntry < 0) {
+    if (traceEnabled) {
+      trace(`boundary-const-pool-recovery skipped entry=${String(specrefDiag?.const_pool_entry ?? "n/a")}`);
+    }
+    return false;
+  }
   const entryIndex = constPoolEntry >>> 0;
-  if (boundaryConstPoolRecoveryAttemptedEntries.has(entryIndex)) return false;
+  if (boundaryConstPoolRecoveryAttemptedEntries.has(entryIndex)) {
+    if (traceEnabled) {
+      trace(`boundary-const-pool-recovery skipped-already-attempted entry=${entryIndex}`);
+    }
+    return false;
+  }
   boundaryConstPoolRecoveryAttemptedEntries.add(entryIndex);
   const status = installConstPoolOnDemand(entryIndex);
+  if (traceEnabled) {
+    trace(`boundary-const-pool-recovery entry=${entryIndex} status=${status}`);
+  }
+  if (status === 1) {
+    boundaryAutobindEpoch = (boundaryAutobindEpoch + 1) >>> 0;
+  }
   return status === 1;
 };
 const requiredFasloadQueue = skipRequiredFasloads ? [] : requiredFasls;
@@ -5085,6 +5407,12 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
   try {
     faslRc = ex.wasm_fasload_path(faslMem.ptr >>> 0, faslMem.len >>> 0) | 0;
   } catch (err) {
+    const trapStack = typeof err?.stack === "string"
+      ? err.stack.split("\n").slice(0, 12).join(" | ")
+      : null;
+    if (traceEnabled && trapStack) {
+      trace(`fasload trap stack=${JSON.stringify(trapStack)}`);
+    }
     if (faslIndex === 0) {
       console.error(`REQUIRED_FASLOAD_BOUNDARY_DIAG_AFTER ${JSON.stringify(captureRequiredFasloadBoundaryState({
         stage: "after-trap",
@@ -5120,16 +5448,16 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
       reason: boundaryReason,
       unresolved_function_symbol: unresolvedFunction,
       trap_message: err?.message ?? String(err),
+      trap_stack: trapStack,
       startup_binding_map: {
         source: startupBindingMapSource,
         build: startupBindingMapBuildSummary,
         apply: startupBindingMapApplySummary,
       },
     })}`);
-    if (
-      tryAutobindBoundaryCandidates(unresolvedFunction, specrefDiag) ||
-      tryRecoverBoundaryConstPoolEntry(specrefDiag)
-    ) {
+    const autobindApplied = tryAutobindBoundaryCandidates(unresolvedFunction, specrefDiag);
+    const constPoolRecovered = tryRecoverBoundaryConstPoolEntry(specrefDiag);
+    if (autobindApplied || constPoolRecovered) {
       if (typeof ex.wasm_clear_pending_throw === "function") {
         ex.wasm_clear_pending_throw();
       }
@@ -5187,10 +5515,9 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
         apply: startupBindingMapApplySummary,
       },
     })}`);
-    if (
-      tryAutobindBoundaryCandidates(unresolvedFunction, specrefDiag) ||
-      tryRecoverBoundaryConstPoolEntry(specrefDiag)
-    ) {
+    const autobindApplied = tryAutobindBoundaryCandidates(unresolvedFunction, specrefDiag);
+    const constPoolRecovered = tryRecoverBoundaryConstPoolEntry(specrefDiag);
+    if (autobindApplied || constPoolRecovered) {
       if (typeof ex.wasm_clear_pending_throw === "function") {
         ex.wasm_clear_pending_throw();
       }

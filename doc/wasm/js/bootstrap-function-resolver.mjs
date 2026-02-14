@@ -22,6 +22,18 @@ const STARTUP_SYMBOL_PACKAGE_OVERRIDES_V1 = Object.freeze({
   }),
 });
 
+const STARTUP_PRE_FASLOAD_PACKAGE_FALLBACKS_TO_CCL_V1 = new Set([
+  "INSPECTOR",
+  "SWINK",
+  "ANSI-LOOP",
+  "ARCH",
+  "X86",
+]);
+const STARTUP_ENABLE_PRE_FASLOAD_PACKAGE_FALLBACK =
+  process.env.CCL_WASM_PRE_FASLOAD_PACKAGE_FALLBACK !== "0";
+const STARTUP_ENABLE_UNRESOLVED_FUNCTION_DESIGNATOR_COERCION =
+  process.env.CCL_WASM_UNRESOLVED_FUNCTION_DESIGNATOR_COERCION !== "0";
+
 function asU8(bytes) {
   if (bytes instanceof Uint8Array) return bytes;
   if (bytes instanceof ArrayBuffer) return new Uint8Array(bytes);
@@ -100,6 +112,16 @@ function resolveSymbolPackageOverride(name, packageName, overrideMap) {
   if (!target) return null;
   if (uppercaseKey(target) === current) return null;
   return target;
+}
+
+function resolvePreFasloadSymbolPackageFallback(packageName) {
+  if (!STARTUP_ENABLE_PRE_FASLOAD_PACKAGE_FALLBACK) return null;
+  const packageKey = uppercaseKey(normalizePackageName(packageName));
+  if (!packageKey) return null;
+  if (STARTUP_PRE_FASLOAD_PACKAGE_FALLBACKS_TO_CCL_V1.has(packageKey)) {
+    return "CCL";
+  }
+  return null;
 }
 
 function classifyFunctionDesignatorPolicy(name, requiredNameSet, deferredNameSet) {
@@ -648,6 +670,32 @@ export function rewriteConstPoolFunctionDesignators(
       scannedFunctionEntries++;
       const name = functionInfo?.name ?? "";
       const packageName = functionInfo?.packageName ?? "";
+      const normalizedName = uppercaseKey(normalizeFunctionName(name));
+      const normalizedPackageName = uppercaseKey(normalizePackageName(packageName));
+      if (
+        normalizedName === "NIL" &&
+        (normalizedPackageName === "COMMON-LISP" || normalizedPackageName === "CL" || normalizedPackageName === "")
+      ) {
+        replacement = encodeSymbolPayload(version, "NIL", "COMMON-LISP");
+        changedCount++;
+        if (rewrites.length < maxDiagnostics) {
+          rewrites.push({
+            constIndex: i >>> 0,
+            name,
+            packageName,
+            resolvedEntryIndex: null,
+            source: "literal-nil-function-designator-coercion",
+            policyClass: POLICY_NONCRITICAL,
+            bindingState: "coerced-nil-symbol-designator",
+          });
+        }
+        entries[i] = {
+          start,
+          end,
+          replacement,
+        };
+        continue;
+      }
       const policyClass = classifyFunctionDesignatorPolicy(name, requiredNameSet, deferredNameSet);
       const isRequired = policyClass === POLICY_REQUIRED_RESOLVE_OR_FAIL;
       const isDeferred = policyClass === POLICY_DEFERRED_ALLOWED;
@@ -699,6 +747,35 @@ export function rewriteConstPoolFunctionDesignators(
           }
         }
       } else {
+        if (!isRequired && STARTUP_ENABLE_UNRESOLVED_FUNCTION_DESIGNATOR_COERCION) {
+          const fallbackPackageName = resolvePreFasloadSymbolPackageFallback(packageName);
+          const coercedPackageName = (
+            normalizedPackageName === "COMMON-LISP" || normalizedPackageName === "CL"
+          )
+            ? "COMMON-LISP"
+            : (fallbackPackageName ?? packageName);
+          replacement = encodeSymbolPayload(version, name, coercedPackageName);
+          changedCount++;
+          if (rewrites.length < maxDiagnostics) {
+            rewrites.push({
+              constIndex: i >>> 0,
+              name,
+              packageName,
+              resolvedEntryIndex: null,
+              source: "unresolved-function-designator-coercion",
+              policyClass,
+              bindingState: "coerced-symbol-designator",
+              coercedPackageName,
+              reason: resolution?.reason ?? "missing",
+            });
+          }
+          entries[i] = {
+            start,
+            end,
+            replacement,
+          };
+          continue;
+        }
         unresolvedCount++;
         const bindingState = unresolvedBindingStateForPolicy(policyClass);
         if (unresolved.length < maxDiagnostics) {
@@ -754,7 +831,8 @@ export function rewriteConstPoolFunctionDesignators(
       const packageName = functionInfo?.packageName ?? "";
       const packageNameKey = uppercaseKey(normalizePackageName(packageName));
       const overriddenPackageName = resolveSymbolPackageOverride(name, packageName, symbolPackageOverrideMap);
-      const effectivePackageName = overriddenPackageName ?? packageName;
+      const fallbackPackageName = resolvePreFasloadSymbolPackageFallback(packageName);
+      const effectivePackageName = overriddenPackageName ?? fallbackPackageName ?? packageName;
       const symbolNameKey = uppercaseKey(normalizeFunctionName(name));
       const rewriteSymbolToEntry = Boolean(
         symbolToEntryFunctionNameSet?.has(symbolNameKey) &&
@@ -786,7 +864,7 @@ export function rewriteConstPoolFunctionDesignators(
       }
 
       if (!replacement && overriddenPackageName && packageNameKey !== "KEYWORD") {
-        replacement = encodeSymbolPayload(version, name, overriddenPackageName);
+        replacement = encodeSymbolPayload(version, name, effectivePackageName);
         changedCount++;
         symbolPackageRewriteCount++;
         if (symbolPackageRewrites.length < maxDiagnostics) {
@@ -794,7 +872,24 @@ export function rewriteConstPoolFunctionDesignators(
             constIndex: i >>> 0,
             name,
             fromPackageName: packageName,
-            toPackageName: overriddenPackageName,
+            toPackageName: effectivePackageName,
+            source: "symbol-package-override",
+            bindingState: "canonicalized-symbol-package",
+          });
+        }
+      }
+
+      if (!replacement && fallbackPackageName && packageNameKey !== "KEYWORD") {
+        replacement = encodeSymbolPayload(version, name, effectivePackageName);
+        changedCount++;
+        symbolPackageRewriteCount++;
+        if (symbolPackageRewrites.length < maxDiagnostics) {
+          symbolPackageRewrites.push({
+            constIndex: i >>> 0,
+            name,
+            fromPackageName: packageName,
+            toPackageName: effectivePackageName,
+            source: "pre-fasload-package-fallback",
             bindingState: "canonicalized-symbol-package",
           });
         }

@@ -5808,7 +5808,11 @@ wasm_const_pool_make_entry_function(TCR *tcr, uint32_t entry_index)
     return lisp_nil;
   }
 
-  LispObj vec = wasm_misc_alloc(tcr, subtag_function, (signed_natural)2);
+  /*
+   * Keyword dispatch reads function slot 3 as the key vector (header is slot 0).
+   * Ensure synthesized entry functions have that slot and default it to NIL.
+   */
+  LispObj vec = wasm_misc_alloc(tcr, subtag_function, (signed_natural)3);
   if (vec == lisp_nil) {
     return lisp_nil;
   }
@@ -5816,6 +5820,7 @@ wasm_const_pool_make_entry_function(TCR *tcr, uint32_t entry_index)
   LispObj *vec_data = (LispObj *)((BytePtr)vec + misc_data_offset);
   vec_data[0] = entry;
   vec_data[1] = entry;
+  vec_data[2] = lisp_nil;
   return vec;
 }
 
