@@ -1605,6 +1605,10 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
       stats.emitted_entries++;
     }
 
+    // Troubleshooting note: keep full recursive closure enabled by default.
+    // A depth cap can be reintroduced later as a targeted diagnostic toggle
+    // when isolating memory/closure interactions, but it is intentionally not
+    // active in normal pipeline behavior.
     if (!canLoadConstPools || scannedResolvedEntries.has(resolvedEntryIndex)) continue;
     scannedResolvedEntries.add(resolvedEntryIndex);
     const transitive = loadConstPoolRefs(resolvedEntryIndex);

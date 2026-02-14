@@ -4397,6 +4397,12 @@ wasm_find_symbol_in_range_bytes(LispObj *start,
                                 uint32_t len,
                                 LispObj package)
 {
+  /*
+   * Caveat: this helper is intentionally byte-oriented bootstrap lookup.
+   * NAME is treated as ASCII/UTF-8 bytes and compared against the low byte
+   * of each SIMPLE-BASE-STRING code unit. This is safe for current startup
+   * symbols, but it is not full Unicode symbol-name matching.
+   */
   LispObj header;
   LispObj tag;
   while (start < end) {

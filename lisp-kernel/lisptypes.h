@@ -30,6 +30,11 @@ typedef int32_t signed_natural;
 #endif
 
 typedef int32_t lisp_char_code;
+/* Semantic character/codepoint values must remain fixed-width and must not
+ * use size_t. Keep size_t for capacities/lengths/indices only.
+ */
+typedef char ccl_lisp_char_code_must_be_32_bits[(sizeof(lisp_char_code) == 4) ? 1 : -1];
+typedef char ccl_lisp_char_code_must_be_signed[(((lisp_char_code)-1) < 0) ? 1 : -1];
 
 typedef int OSStatus, OSErr;
 #define noErr ((OSErr) 0)

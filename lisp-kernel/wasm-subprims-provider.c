@@ -1139,8 +1139,8 @@ wasm_misc_ref_imm_dispatch(TCR *tcr, LispObj obj, unsigned subtag, signed_natura
       return box_fixnum((signed_natural)data[index]);
     }
     case subtag_simple_base_string: {
-      uint32_t *data = (uint32_t *)((BytePtr)obj + misc_data_offset);
-      uint32_t code = data[index];
+      lisp_char_code *data = (lisp_char_code *)((BytePtr)obj + misc_data_offset);
+      lisp_char_code code = data[index];
       return (LispObj)((code << charcode_shift) | subtag_character);
     }
     case subtag_u32_vector: {
@@ -1260,8 +1260,8 @@ wasm_misc_set_imm_dispatch(TCR *tcr, LispObj obj, unsigned subtag, signed_natura
         wasm_signal_wrong_type(tcr, value, wasm_symbol_character());
         return;
       }
-      uint32_t code = (uint32_t)value >> charcode_shift;
-      uint32_t *data = (uint32_t *)((BytePtr)obj + misc_data_offset);
+      lisp_char_code code = (lisp_char_code)((uint32_t)value >> charcode_shift);
+      lisp_char_code *data = (lisp_char_code *)((BytePtr)obj + misc_data_offset);
       data[index] = code;
       return;
     }

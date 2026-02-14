@@ -164,6 +164,36 @@ function trace(msg) {
     console.error(`[make-real-image] ${msg}`);
   }
 }
+const diagPreinstallAttemptsEnabled = process.env.CCL_WASM_DIAG_PREINSTALL_ATTEMPTS === "1";
+const diagPreinstallContinueOnThrowEnabled = process.env.CCL_WASM_DIAG_PREINSTALL_CONTINUE_ON_THROW === "1";
+function logPreinstallAttemptDiag({
+  phase,
+  entryIndex,
+  status = null,
+  reason = null,
+  installRc = null,
+  installOk = null,
+  info = null,
+  errorMessage = null,
+}) {
+  if (!diagPreinstallAttemptsEnabled) return;
+  const payload = {
+    schema_version: "startup_binding_map_preinstall_attempt_v1",
+    phase: typeof phase === "string" && phase.length > 0 ? phase : "unknown",
+    entry_index: Number.isInteger(entryIndex) ? (entryIndex >>> 0) : null,
+    status: typeof status === "string" && status.length > 0 ? status : null,
+    reason: typeof reason === "string" && reason.length > 0 ? reason : null,
+    install_rc: Number.isInteger(installRc) ? (installRc >>> 0) : null,
+    install_ok: typeof installOk === "boolean" ? installOk : null,
+    const_pool_id: Number.isInteger(info?.id) ? (info.id >>> 0) : null,
+    const_pool_offset: Number.isInteger(info?.offset) ? (info.offset >>> 0) : null,
+    const_pool_length: Number.isInteger(info?.length) ? (info.length >>> 0) : null,
+    const_pool_stored_length: Number.isInteger(info?.storedLength) ? (info.storedLength >>> 0) : null,
+    const_pool_encoding: typeof info?.encoding === "string" && info.encoding.length > 0 ? info.encoding : "raw",
+    error_message: typeof errorMessage === "string" && errorMessage.length > 0 ? errorMessage : null,
+  };
+  console.error(`STARTUP_BINDING_MAP_PREINSTALL_ATTEMPT ${JSON.stringify(payload)}`);
+}
 
 const WASM_BOOT_PHASE = Object.freeze({
   EARLY: 0,
@@ -997,7 +1027,7 @@ if (compiledModulesFd == null) {
 trace("compiled modules reader initialized");
 
 const runtime = createSharedCclRuntime({
-  memoryInitialPages: 512,
+  memoryInitialPages: 256,
   subprimsTableInitial: 256,
   createMemory: true,
 });
@@ -1451,12 +1481,44 @@ function applyStartupBindingMapDeferredBindingsForConstPoolEntry(entryIndexRaw, 
 function installConstPoolOnDemand(entryIndexRaw) {
   if (!kernelExports || compiledModulesFd == null) return 0;
   const entryIndex = entryIndexRaw >>> 0;
-  if (constPoolsInstalled.has(entryIndex)) return 1;
+  if (constPoolsInstalled.has(entryIndex)) {
+    logPreinstallAttemptDiag({
+      phase: "host-install-const-pool",
+      entryIndex,
+      status: "already-installed",
+      reason: "const-pool-already-installed",
+    });
+    return 1;
+  }
 
   const info = constPoolEntries.get(entryIndex);
-  if (!info) return 0;
+  if (!info) {
+    logPreinstallAttemptDiag({
+      phase: "host-install-const-pool",
+      entryIndex,
+      status: "missing",
+      reason: "const-pool-entry-missing",
+    });
+    return 0;
+  }
+  logPreinstallAttemptDiag({
+    phase: "host-install-const-pool",
+    entryIndex,
+    status: "begin",
+    reason: "attempt-install",
+    info,
+  });
   const decodedBytes = decodeConstPoolForInfo(info);
-  if (!decodedBytes) return 0;
+  if (!decodedBytes) {
+    logPreinstallAttemptDiag({
+      phase: "host-install-const-pool",
+      entryIndex,
+      status: "missing",
+      reason: "const-pool-decode-missing",
+      info,
+    });
+    return 0;
+  }
   const shouldProbe = traceEnabled &&
     entryIndex === CONST_POOL_DIAG_ENTRY &&
     !constPoolProbeInFlight.has(entryIndex);
@@ -1599,11 +1661,56 @@ function installConstPoolOnDemand(entryIndexRaw) {
         trace(`diag-const-pool entry=${entryIndex} refs=${rows.join(" | ")}`);
       }
     }
-    if (!installOk) return 0;
+    if (!installOk) {
+      logPreinstallAttemptDiag({
+        phase: "host-install-const-pool",
+        entryIndex,
+        status: "result",
+        reason: "const-pool-install-returned-nil-or-zero",
+        installRc: rc >>> 0,
+        installOk,
+        info,
+      });
+      return 0;
+    }
 
     constPoolsInstalled.add(entryIndex);
+    logPreinstallAttemptDiag({
+      phase: "host-install-const-pool",
+      entryIndex,
+      status: "result",
+      reason: "const-pool-install-succeeded",
+      installRc: rc >>> 0,
+      installOk,
+      info,
+    });
     applyStartupBindingMapDeferredBindingsForConstPoolEntry(entryIndex, { reason: "const-pool-install" });
     return 1;
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : String(error ?? "");
+    logPreinstallAttemptDiag({
+      phase: "host-install-const-pool",
+      entryIndex,
+      status: "throw",
+      reason: "const-pool-install-threw",
+      info,
+      errorMessage,
+    });
+    if (diagPreinstallContinueOnThrowEnabled) {
+      logPreinstallAttemptDiag({
+        phase: "host-install-const-pool",
+        entryIndex,
+        status: "result",
+        reason: "const-pool-install-threw-continued-by-env",
+        installOk: false,
+        info,
+        errorMessage,
+      });
+      return 0;
+    }
+    throw error;
   } finally {
     if (shouldProbe) {
       constPoolProbeInFlight.delete(entryIndex);

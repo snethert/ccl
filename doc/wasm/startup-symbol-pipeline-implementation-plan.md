@@ -145,6 +145,11 @@ Milestone delta (2026-02-14, decision lock: table V1 `rc=-7`, move primary to V2
 - Proven: V1 baseline required for future parity checks is concretely frozen in guard10 no-skip logs (smoke/top4488) with matching first-required-fasload `rc=-7` signature.
 - Remains: advance V2 implementation until it reaches equivalent first-required-fasload boundary semantics; continue debugging on V2 lane first.
 
+Milestone delta (2026-02-14, troubleshooting note on recursion depth):
+- Changed: documented that transitive const-pool recursion depth limiting is retained as a future troubleshooting option only.
+- Proven: current default diagnostic posture keeps full recursive closure enabled; no depth cap is active in the normal pipeline path.
+- Remains: only revisit depth limiting as an explicit, temporary diagnostic toggle if future evidence shows it is required to isolate memory/closure interactions.
+
 ### 0.0.A Fast Re-Entry Prompt (Use At Start Of New Conversations)
 
 Copy/paste prompt for compressed-history handoffs:
