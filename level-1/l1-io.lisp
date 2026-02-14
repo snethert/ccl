@@ -18,6 +18,9 @@
 
 (in-package "CCL")
 
+#+wasm32-target
+(declaim (special target::xmacptr.element-count))
+
 (setf (fdefinition '%new-ptr) (fdefinition '%new-gcable-ptr))
 
 

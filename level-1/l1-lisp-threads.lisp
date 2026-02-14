@@ -18,6 +18,21 @@
 
 (in-package "CCL")
 
+#+wasm32-target
+(declaim (special target::tcr.vs-area
+                  target::tcr-bias
+                  target::tcr.cs-area
+                  target::tcr.xframe
+                  target::tcr.flags
+                  target::tcr.interrupt-pending
+                  target::tcr.reset-completion
+                  target::tcr.osid
+                  target::tcr.native-thread-id
+                  target::tcr.suspend-count
+                  target::tcr.log2-allocation-quantum
+                  target::tcr.db-link
+                  target::tcr.catch-top))
+
 (defvar *bind-io-control-vars-per-process* nil
   "If true, bind I/O control variables per process")
 

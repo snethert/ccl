@@ -23,6 +23,9 @@
 (in-package "CCL")
 
 
+#+wasm32-target
+(declaim (special target::lock.kind-cell))
+
 (defstatic *clos-optimizations-active* nil)
 
 (defun disable-clos-optimizations (operation operand)

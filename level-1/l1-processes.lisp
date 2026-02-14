@@ -19,6 +19,13 @@
 
 (cl:in-package "CCL")
 
+#+wasm32-target
+(declaim (special target::tcr.activate
+                  target::tcr.log2-allocation-quantum
+                  target::lock._value-cell
+                  target::lock.name-cell
+                  target::lock.kind-cell))
+
 
 (let* ((all-processes ())
        (shutdown-processes ())

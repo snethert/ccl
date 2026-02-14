@@ -19,6 +19,10 @@
 
 (in-package "CCL")
 
+#+wasm32-target
+(declaim (special target::xmacptr.flags-cell
+                  target::xmacptr.element-count))
+
 
 (let* ((standard-initial-bindings ())
        (standard-initial-bindings-lock (make-read-write-lock)))
@@ -3668,5 +3672,4 @@ are rounded up to a multiple of 64Kbytes."
                (backend-target-foreign-type-data *target-backend*))
   (:nicknames "OS")
   (:use "COMMON-LISP"))
-
 
