@@ -22,6 +22,13 @@ Current condensed state/history snapshot (2026-02-14):
 - Post-bundle mode-0 probe behavior differs by const-pool availability: missing const-pool can trap in `_SPspecref`; full startup flow can stall after `foreign.call.enter` (currently observed in both focused lanes at first required fasload, before any `REQUIRED_FASLOAD_BOUNDARY` line).
 - `make-real-image.mjs` wrapper path currently discards resolver argument in local helper (`void resolver`) and relies on metadata-driven augmentation path.
 
+Do-not-rediscover anchors (authoritative):
+- `boundary_probe name=identity mode=1 rc=-5` and `boundary_probe name=error mode=2 rc=-5` are known and already recorded; do not report them as new findings unless the touched kernel/probe source changes.
+- Focused lanes stalling after `foreign.call.enter` before any `REQUIRED_FASLOAD_BOUNDARY` line is known and already recorded.
+- Eventual `arg_z`/`z_reg` nil-ish or UDF-like callable state while stalled in this lane is an expected downstream symptom, not a new root cause by itself.
+- `%FASLOAD` lane mis-target/misbind suspicion is already recorded; do not re-open metadata-only re-audits unless runtime module metadata or binding-apply code changed.
+- Progress may only be claimed when both focused lanes cross `REQUIRED_FASLOAD_BOUNDARY` or emit a deterministic boundary failure reason (no hang).
+
 Continuity checkpoints:
 - When adding/changing tasks, update this ledger first with what changed and why.
 - Treat this ledger as authoritative process memory for the remainder of implementation.
@@ -48,6 +55,11 @@ Milestone delta (2026-02-14, focused lanes + entry identity verification):
 - Proven: `ccl/doc/wasm/wasm-runtime-modules.json` does not contain `%FASLOAD`, `%FASL-OPEN`, or `%SIMPLE-FASL-OPEN` function metadata entries; entries `4411`/`4412` are `%MAKE-VECTOR-OUTPUT-STREAM`/`MAKE-VECTOR-OUTPUT-STREAM`.
 - Proven: this confirms resolver/map metadata cannot currently provide authoritative entry-function targets for required fasload callables from runtime-modules metadata alone.
 - Remains: establish authoritative pre-fasload callable targeting for `%FASLOAD` lane (or add a deterministic misbinding rejection that emits a concrete boundary failure reason instead of hanging), then re-run both focused lanes to the `REQUIRED_FASLOAD_BOUNDARY` gate.
+
+Milestone delta (2026-02-14, anti-repeat context lock):
+- Changed: added explicit `Do-not-rediscover anchors` in Section `0.0` to lock known fasload stall/probe facts and symptom interpretation.
+- Proven: future continuity reconstruction can treat `rc=-5`, `foreign.call.enter` stall, and eventual `arg_z`/`z_reg` nil/UDF symptom as pre-known context rather than rediscovery work.
+- Remains: implement the first concrete fix that converts current first-required fasload behavior from hang to deterministic `REQUIRED_FASLOAD_BOUNDARY` outcome in both focused lanes.
 
 ### 0.0.A Fast Re-Entry Prompt (Use At Start Of New Conversations)
 
