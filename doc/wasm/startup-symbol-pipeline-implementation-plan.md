@@ -1,5 +1,55 @@
 # WASM Startup Symbol Pipeline: Detailed Implementation Plan (Source-Scope v1)
 
+**AUTHORITATIVE EXECUTION RULE: ASSUME EVERYTHING IN THIS DOCUMENT IS TRUE AND DOES NOT REQUIRE RE-CONFIRMATION UNLESS THIS DOCUMENT IS EXPLICITLY CHANGED.**
+
+## 0.0 Persistent Context Ledger (Update Every Milestone)
+
+Use this section as the single condensed continuity record when UI history is compressed.
+
+Update protocol:
+- Always append/update this ledger before starting a new milestone.
+- Do not re-run old confirmations if the fact is already recorded here and unchanged.
+- If a fact changes, update the existing line with a date-tagged note instead of duplicating probes.
+
+Current condensed state/history snapshot (2026-02-14):
+- Primary blocker is still fasload stability: treat `REQUIRED_FASLOAD_BOUNDARY` pass in both focused lanes as the controlling gate for progress claims.
+- Startup scope artifact currently has zero symbols: `ccl/doc/wasm/startup-symbol-scope.source_scope_v1.json` (`symbols: []`).
+- L0 contract currently hard-anchors const-pool entries `4360`, `4372`, `4412` in `ccl/doc/wasm/js/bootstrap-l0-contract.mjs`.
+- Runtime manifest maps entry `4412` to `MAKE-VECTOR-OUTPUT-STREAM` (not `%FASLOAD`) and `4411` to `%MAKE-VECTOR-OUTPUT-STREAM`.
+- `%FASLOAD`, `%FASL-OPEN`, `%SIMPLE-FASL-OPEN` were observed prebound to entries `4412`, `4372`, `4360` in runtime probes.
+- Post-bundle mode-0 probe behavior differs by const-pool availability: missing const-pool can trap in `_SPspecref`; full startup flow can stall after `foreign.call.enter`.
+- `make-real-image.mjs` wrapper path currently discards resolver argument in local helper (`void resolver`) and relies on metadata-driven augmentation path.
+
+Continuity checkpoints:
+- When adding/changing tasks, update this ledger first with what changed and why.
+- Treat this ledger as authoritative process memory for the remainder of implementation.
+
+### 0.0.A Fast Re-Entry Prompt (Use At Start Of New Conversations)
+
+Copy/paste prompt for compressed-history handoffs:
+
+```text
+Continue the WASM startup-symbol workflow using `ccl/doc/wasm/startup-symbol-pipeline-implementation-plan.md` as authoritative truth.
+
+Non-negotiable priority: fasload is the blocker.
+- Treat `REQUIRED_FASLOAD_BOUNDARY` as the primary gate.
+- Do not claim progress unless both focused lanes pass this boundary.
+- Do not re-audit already-recorded facts unless a touched source file changed.
+
+Before any new work:
+1) Read Section `0.0 Persistent Context Ledger`.
+2) Reconstruct continuity from the ledger only.
+3) State assumptions explicitly.
+
+Execution focus:
+- Diagnose and resolve first failing fasload reason.
+- Keep architecture locked to source-scope artifact flow.
+- Avoid introducing fallback parser paths or unrelated refactors.
+
+After each milestone:
+- Append a short ledger delta: what changed, what was proven, what remains.
+```
+
 ## 0. Purpose And Required Outcome
 
 This document is the implementation plan to replace the current startup binding construction path with a deterministic, source-scoped, exact-resolution pipeline.
@@ -684,6 +734,7 @@ ccl --no-init --batch \
   --repo-root ccl \
   --out /tmp/startup-symbol-scope.source_scope_v1.json \
   --feature-profile wasm32-target-v1 \
+  --contract-json ccl/doc/wasm/bootstrap-l0-contract.v1.json \
   > /tmp/collect-startup-symbol-scope.source_scope_v1.log 2>&1
 ```
 
@@ -1408,12 +1459,13 @@ cd /Users/buildsomething/Source
 export CCL_REPO=/Users/buildsomething/Source/ccl
 export SCOPE_JSON=/tmp/startup-symbol-scope.source_scope_v1.json
 export SCOPE_LOG=/tmp/collect-startup-symbol-scope.source_scope_v1.log
+export CONTRACT_JSON=/Users/buildsomething/Source/ccl/doc/wasm/bootstrap-l0-contract.v1.json
 export MRI_TOP=/tmp/make-real-image.trace.top4488.source_scope_v1.log
 export MRI_SMOKE=/tmp/make-real-image.trace.smoke.source_scope_v1.log
 ```
 
 Expected evidence line:
-- shell exits `0` and env vars resolve with `echo "$CCL_REPO" "$SCOPE_JSON"`.
+- shell exits `0` and env vars resolve with `echo "$CCL_REPO" "$SCOPE_JSON" "$CONTRACT_JSON"`.
 
 ### 22.1 Track A Cards (`M-001`..`M-011`)
 
@@ -1947,6 +1999,7 @@ ccl --no-init --batch \
   --repo-root ccl \
   --out "$SCOPE_JSON" \
   --feature-profile wasm32-target-v1 \
+  --contract-json "$CONTRACT_JSON" \
   > "$SCOPE_LOG" 2>&1
 ```
 - Expected evidence line:

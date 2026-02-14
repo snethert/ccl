@@ -291,6 +291,15 @@
   (and (symbolp head)
        (string-equal (symbol-name head) "FUNCTION")))
 
+(defun startup-symbol-proper-list-p (value)
+  "Return T only when VALUE is a proper (NIL-terminated) list."
+  (loop
+    for tail = value then (cdr tail) do
+      (cond
+        ((null tail) (return t))
+        ((consp tail) nil)
+        (t (return nil)))))
+
 (defun extract-symbol-roles-from-form (form state)
   "Walk FORM and record symbol roles into STATE."
   (labels ((walk (node context)
@@ -309,39 +318,44 @@
                    (startup-symbol-role-state-add-symbol
                     state node +startup-symbol-role-symbol-atom+))))
                ((consp node)
-                (let* ((head (car node))
-                       (function-definition-p
-                         (startup-symbol-head-matches-p
-                          head
-                          +startup-symbol-function-definition-heads+))
-                       (special-definition-p
-                         (startup-symbol-head-matches-p
-                          head
-                          +startup-symbol-special-definition-heads+))
-                       (function-designator-form-p
-                         (startup-symbol-function-form-p head))
-                       (definition-target
-                         (startup-symbol-definition-target-symbol (cadr node))))
-                  (when function-definition-p
-                    (startup-symbol-role-state-add-symbol
-                     state definition-target +startup-symbol-role-defined-function+))
-                  (when special-definition-p
-                    (startup-symbol-role-state-add-symbol
-                     state definition-target +startup-symbol-role-defined-special+))
-                  (when function-designator-form-p
-                    (startup-symbol-role-state-add-symbol
-                     state definition-target +startup-symbol-role-function-designator+))
-                  (walk head :call-head)
-                  (loop for arg in (cdr node)
-                        for index from 1 do
-                          (cond
-                            ((and function-designator-form-p (= index 1))
-                             (walk arg :function-designator))
-                            ((and (or function-definition-p special-definition-p)
-                                  (= index 1))
-                             (walk arg :definition-target))
-                            (t
-                             (walk arg nil))))))
+                (if (startup-symbol-proper-list-p node)
+                  (let* ((head (car node))
+                         (function-definition-p
+                           (startup-symbol-head-matches-p
+                            head
+                            +startup-symbol-function-definition-heads+))
+                         (special-definition-p
+                           (startup-symbol-head-matches-p
+                            head
+                            +startup-symbol-special-definition-heads+))
+                         (function-designator-form-p
+                           (startup-symbol-function-form-p head))
+                         (definition-target
+                           (startup-symbol-definition-target-symbol (cadr node))))
+                    (when function-definition-p
+                      (startup-symbol-role-state-add-symbol
+                       state definition-target +startup-symbol-role-defined-function+))
+                    (when special-definition-p
+                      (startup-symbol-role-state-add-symbol
+                       state definition-target +startup-symbol-role-defined-special+))
+                    (when function-designator-form-p
+                      (startup-symbol-role-state-add-symbol
+                       state definition-target +startup-symbol-role-function-designator+))
+                    (walk head :call-head)
+                    (loop for arg in (cdr node)
+                          for index from 1 do
+                            (cond
+                              ((and function-designator-form-p (= index 1))
+                               (walk arg :function-designator))
+                              ((and (or function-definition-p special-definition-p)
+                                    (= index 1))
+                               (walk arg :definition-target))
+                              (t
+                               (walk arg nil)))))
+                  ;; Dotted pairs appear in quoted constants; traverse safely.
+                  (progn
+                    (walk (car node) nil)
+                    (walk (cdr node) nil))))
                ((vectorp node)
                 (loop for element across node do
                   (walk element nil)))
@@ -434,7 +448,7 @@
 
 (defun usage ()
   (format t "~&Usage: ccl --no-init --batch -l scripts/wasm/collect-startup-symbol-scope.lisp -- --repo-root PATH --out PATH --feature-profile PROFILE --contract-json PATH~%")
-  (format t "Required scanner flags: --repo-root, --out, --feature-profile, --contract-json.~%")
+  (format t "Required scanner flags: --repo-root, --out, --feature-profile. --contract-json defaults to doc/wasm/bootstrap-l0-contract.v1.json under --repo-root when present.~%")
   (format t "Fixture test mode: --run-fixture-tests --fixtures-dir PATH~%"))
 
 (defconstant +startup-symbol-scope-build-schema-version+
@@ -635,11 +649,16 @@
   nil)
 
 (defun build-scope-artifact (repo-root-path feature-profile l0-files l1-files forms-by-file failure-state contract-pathname)
-  (declare (ignore forms-by-file))
-  (let* ((symbols nil)
-         (role-counts (make-hash-table :test 'equal))
-         (package-counts (make-hash-table :test 'equal))
-         (bindable-total 0)
+  (let* ((contract-required-entries (maybe-contract-required-entries contract-pathname))
+         (role-alist (extract-startup-symbol-roles
+                      (flatten-forms forms-by-file)
+                      :contract-required-entries contract-required-entries))
+         (symbols (build-symbol-records role-alist))
+         (role-counts (summarize-role-counts symbols))
+         (package-counts (summarize-package-counts symbols))
+         (bindable-total
+           (loop for symbol in symbols
+                 count (eq (cdr (assoc "bindable" symbol :test #'string=)) :true)))
          (failure-counts (read-failure-counts-alist failure-state))
          (generated-at (universal-time->rfc3339-utc (get-universal-time)))
          (feature-set (feature-set-for-profile feature-profile)))
@@ -661,7 +680,7 @@
             (cons "scanner_script_hash" (maybe-string-sha256 *load-truename*))
             (cons "host_ccl_version" (lisp-implementation-version))))
      (cons "symbols"
-           (make-json-array))
+           (cons :array symbols))
      (cons "counts"
            (make-json-object
             (cons "symbols_total" (length symbols))
@@ -710,6 +729,17 @@
     (unless (and (stringp value) (> (length value) 0))
       (error "Missing required argument ~a" key))
     value))
+
+(defun resolve-contract-json-arg (argv repo-root-path)
+  "Resolve contract sidecar path from argv or repo-root default."
+  (let ((explicit (cdr (assoc :contract-json argv))))
+    (if (and (stringp explicit) (> (length explicit) 0))
+      explicit
+      (let ((default (merge-pathnames "doc/wasm/bootstrap-l0-contract.v1.json"
+                                      repo-root-path)))
+        (if (probe-file default)
+          (namestring default)
+          (error "Missing required argument CONTRACT-JSON"))))))
 
 (defun scanner-fixture-test-assert (condition format-control &rest format-arguments)
   (unless condition
@@ -813,8 +843,8 @@
         (let* ((repo-root (require-arg argv :repo-root))
                (out-path (require-arg argv :out))
                (feature-profile (require-arg argv :feature-profile))
-               (contract-json (require-arg argv :contract-json))
                (repo-root-path (repo-root-pathname repo-root))
+               (contract-json (resolve-contract-json-arg argv repo-root-path))
                (feature-set (feature-set-for-profile feature-profile)))
           (multiple-value-bind (all-files l0-files l1-files)
               (collect-scan-paths repo-root-path)

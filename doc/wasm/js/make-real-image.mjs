@@ -1265,6 +1265,25 @@ function planStartupBindingMapPreinstallConstPools({
     }
   }
   const preinstallLimit = startupBindingMapPreinstallLimit();
+  const budget = {
+    max_preinstall: preinstallLimit.value >>> 0,
+    required_roots: contractRootEntryIndices.length >>> 0,
+    required_anchors: 0,
+    fixed_margin: 0,
+    over_by: 0,
+  };
+  for (const entryIndex of artifactShadowEntryIndices) {
+    if (!contractRootSet.has(entryIndex)) {
+      budget.required_anchors = (budget.required_anchors + 1) >>> 0;
+    }
+  }
+  const budgetFormulaBase = (budget.required_roots + budget.required_anchors) >>> 0;
+  budget.fixed_margin = budget.max_preinstall > budgetFormulaBase
+    ? ((budget.max_preinstall - budgetFormulaBase) >>> 0)
+    : 0;
+  budget.over_by = artifactShadowEntryIndices.length > budget.max_preinstall
+    ? ((artifactShadowEntryIndices.length - budget.max_preinstall) >>> 0)
+    : 0;
 
   let status = "ok";
   let reason = null;
@@ -1274,12 +1293,12 @@ function planStartupBindingMapPreinstallConstPools({
   } else if (artifactShadowEntryIndices.length === 0) {
     status = "fail";
     reason = "startup-shadow-table-empty-preinstall-entries";
-  } else if (artifactShadowEntryIndices.length > preinstallLimit.value) {
-    status = "fail";
-    reason = "startup-shadow-table-preinstall-too-large";
   } else if (missingContractRootEntries.length > 0) {
     status = "fail";
     reason = "startup-shadow-table-missing-contract-root-entries";
+  } else if (budget.over_by > 0) {
+    status = "fail";
+    reason = "preinstall-budget-exceeded";
   }
 
   const orderedEntryIndices = artifactShadowEntryIndices;
@@ -1292,6 +1311,7 @@ function planStartupBindingMapPreinstallConstPools({
       contract_id: contract?.id ?? null,
       source: "artifact-startup-shadow-table",
       reason,
+      budget,
       contract_required_const_pool_entries: contractRootEntryIndices.length >>> 0,
       contract_required_const_pool_entry_indices: contractRootEntryIndices,
       missing_contract_root_entries: missingContractRootEntries,
@@ -1306,12 +1326,9 @@ function planStartupBindingMapPreinstallConstPools({
       startup_shadow_table_entry_backed_binding_count: Number.isInteger(mapArtifact?.startup_shadow_table?.entry_backed_binding_count)
         ? (mapArtifact.startup_shadow_table.entry_backed_binding_count >>> 0)
         : null,
-      startup_shadow_table_preinstall_max_entries: preinstallLimit.value >>> 0,
+      startup_shadow_table_preinstall_max_entries: budget.max_preinstall,
       startup_shadow_table_preinstall_max_entries_source: preinstallLimit.source,
-      startup_shadow_table_preinstall_entries_over_limit:
-        artifactShadowEntryIndices.length > preinstallLimit.value
-          ? ((artifactShadowEntryIndices.length - preinstallLimit.value) >>> 0)
-          : 0,
+      startup_shadow_table_preinstall_entries_over_limit: budget.over_by,
       total_const_pool_entries: orderedEntryIndices.length >>> 0,
     },
   };
@@ -2388,6 +2405,25 @@ const WASM_SYMBOL_CELL_INITIALIZER_KIND = Object.freeze({
   LITERAL_KEYWORD: 5,
 });
 
+const LITERAL_SYMBOL_KEYWORD_RUNTIME_GUARDS = Object.freeze({
+  "literal-symbol": Object.freeze({
+    initializer_label: "symbol literal",
+    optional_defer_reason: "initializer-kind-not-supported",
+    required_exports: Object.freeze([
+      "wasm_set_symbol_cell_initializer",
+      "wasm_probe_symbol",
+    ]),
+  }),
+  "literal-keyword": Object.freeze({
+    initializer_label: "keyword literal",
+    optional_defer_reason: "initializer-kind-not-supported",
+    required_exports: Object.freeze([
+      "wasm_set_symbol_cell_initializer",
+      "wasm_probe_symbol",
+    ]),
+  }),
+});
+
 function l0ProbeStatusName(status) {
   return L0_PROBE_STATUS_NAMES.get(status >>> 0) ?? `status-${status >>> 0}`;
 }
@@ -2773,6 +2809,8 @@ function applyStartupBindingMapOrFail({
   let symbolAnchorUnresolved = 0;
   let symbolAnchorExportMissing = 0;
   let symbolAnchorConstPoolRefMissing = 0;
+  let optionalDeferredMissingExport = 0;
+  const optionalDeferredEntries = [];
   const targetCounts = {
     vcell: {
       eligible_entries: 0,
@@ -2780,6 +2818,7 @@ function applyStartupBindingMapOrFail({
       skipped_already_bound: 0,
       skipped_symbol_unresolved: 0,
       required_non_nil_unavailable: 0,
+      optional_deferred_missing_export: 0,
     },
     fcell: {
       eligible_entries: 0,
@@ -2787,6 +2826,7 @@ function applyStartupBindingMapOrFail({
       skipped_already_bound: 0,
       skipped_symbol_unresolved: 0,
       required_non_nil_unavailable: 0,
+      optional_deferred_missing_export: 0,
     },
   };
   // Artifact-owned startup: apply map entries directly; required const-pool refs are gate-only.
@@ -2816,6 +2856,10 @@ function applyStartupBindingMapOrFail({
     const requiredClass = String(
       entry?.definition?.required_class ?? entry?.required_class ?? "",
     ).trim().toLowerCase();
+    const requiredBinding = requireNonNil || (
+      requiredClass === STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_CALLABLE ||
+      requiredClass === STARTUP_SYMBOL_REQUIRED_CLASS.REQUIRED_SPECIAL
+    );
     const resolutionStatus = String(
       entry?.definition?.resolution_status ?? entry?.resolution_status ?? "",
     ).trim().toLowerCase();
@@ -3001,6 +3045,7 @@ function applyStartupBindingMapOrFail({
       : WASM_SYMBOL_TARGET_CELL.VCELL;
 
     let missingExport = null;
+    let initializerRuntimeGuard = null;
     switch (initializerKind) {
       case "literal-fixnum":
       case "literal-nil":
@@ -3013,15 +3058,22 @@ function applyStartupBindingMapOrFail({
         }
         break;
       case "literal-symbol":
-      case "literal-keyword":
+      case "literal-keyword": {
+        initializerRuntimeGuard = LITERAL_SYMBOL_KEYWORD_RUNTIME_GUARDS[initializerKind] ?? null;
         if (targetCell !== "vcell") {
           missingExport = "initializer-target-mismatch";
+        } else if (!initializerRuntimeGuard) {
+          missingExport = "initializer-kind-not-supported";
         } else {
-          missingExport = typeof ex.wasm_set_symbol_cell_initializer !== "function"
-            ? "wasm_set_symbol_cell_initializer"
-            : null;
+          for (const exportName of initializerRuntimeGuard.required_exports) {
+            if (typeof ex[exportName] !== "function") {
+              missingExport = exportName;
+              break;
+            }
+          }
         }
         break;
+      }
       case "entry-function":
         missingExport = typeof ex.wasm_set_symbol_cell_initializer !== "function"
           ? "wasm_set_symbol_cell_initializer"
@@ -3032,14 +3084,36 @@ function applyStartupBindingMapOrFail({
         break;
     }
     if (missingExport) {
+      const optionalDeferReason = initializerRuntimeGuard?.optional_defer_reason
+        ?? "initializer-kind-not-supported";
+      if (!requiredBinding) {
+        optionalDeferredMissingExport++;
+        targetCounts[targetCell].optional_deferred_missing_export++;
+        optionalDeferredEntries.push({
+          package_name: packageName || null,
+          symbol_name: symbolName || null,
+          target_cell: targetCell,
+          binding_class: bindingClass,
+          reason: optionalDeferReason,
+          optional_policy: "optional-initializer-kind-not-supported-defer",
+          export_name: missingExport,
+          initializer_kind: initializerKind || null,
+          initializer_label: initializerRuntimeGuard?.initializer_label ?? null,
+          apply_method: "name-symbol",
+        });
+        continue;
+      }
       failures.push({
         package_name: packageName || null,
         symbol_name: symbolName || null,
         target_cell: targetCell,
         binding_class: bindingClass,
         reason: "missing-kernel-export",
+        required_policy: "required-missing-kernel-export",
         export_name: missingExport,
         initializer_kind: initializerKind || null,
+        initializer_label: initializerRuntimeGuard?.initializer_label ?? null,
+        optional_defer_reason: optionalDeferReason,
         apply_method: "name-symbol",
       });
       continue;
@@ -3354,6 +3428,7 @@ function applyStartupBindingMapOrFail({
       applied_count: appliedCount,
       skipped_already_bound: skippedAlreadyBound,
       skipped_symbol_unresolved: skippedSymbolUnresolved,
+      optional_deferred_missing_export: optionalDeferredMissingExport,
       artifact_owned_constants: true,
       symbol_anchor: {
         candidate_entries: symbolAnchorCandidates,
@@ -3367,6 +3442,9 @@ function applyStartupBindingMapOrFail({
       target_counts: targetCounts,
     },
     first_failure: failures.length > 0 ? failures[0] : null,
+    first_optional_deferred_missing_export: optionalDeferredEntries.length > 0
+      ? optionalDeferredEntries[0]
+      : null,
   };
   if (failures.length > 0) {
     console.error(`STARTUP_BINDING_MAP_APPLY ${JSON.stringify(applySummary)}`);

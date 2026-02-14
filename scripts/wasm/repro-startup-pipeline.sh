@@ -11,6 +11,7 @@ RUN_RUNTIME_DIAGNOSTICS=1
 ALLOW_DIRTY_TREE=1
 MANIFEST_PATH="$ROOT_DIR/$DEFAULT_MANIFEST_REL"
 RUN_MANIFEST_PATH=""
+MEMORY_FAILURE_SIGNATURE_PATTERN='WASM misc_alloc: reserve failed|wasm_memory_grow_and_relocate failed'
 
 usage() {
   cat <<'EOF'
@@ -308,6 +309,17 @@ run_step() {
   return 0
 }
 
+assert_no_memory_failure_signatures() {
+  local matches=""
+  matches="$(rg -n "$MEMORY_FAILURE_SIGNATURE_PATTERN" "$LOG_DIR" || true)"
+  if [ -n "$matches" ]; then
+    echo "error: detected memory failure signature in startup validation logs" >&2
+    echo "$matches" >&2
+    return 1
+  fi
+  return 0
+}
+
 write_run_manifest() {
   local final_status="$1"
   local finished_at="$2"
@@ -544,6 +556,14 @@ if [ "$RUN_RUNTIME_DIAGNOSTICS" -eq 1 ]; then
     write_run_manifest "$PIPELINE_STATUS" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$FAILED_STEP" "$FAILED_EXIT_CODE"
     exit "$FAILED_EXIT_CODE"
   fi
+fi
+
+if ! assert_no_memory_failure_signatures; then
+  PIPELINE_STATUS="fail"
+  FAILED_STEP="memory-signature-assert"
+  FAILED_EXIT_CODE=1
+  write_run_manifest "$PIPELINE_STATUS" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$FAILED_STEP" "$FAILED_EXIT_CODE"
+  exit "$FAILED_EXIT_CODE"
 fi
 
 PIPELINE_STATUS="pass"
