@@ -12,7 +12,7 @@ Update protocol:
 - If a fact changes, update the existing line with a date-tagged note instead of duplicating probes.
 
 Current condensed state/history snapshot (2026-02-14):
-- Primary blocker is still fasload stability: treat `REQUIRED_FASLOAD_BOUNDARY` pass in both focused lanes as the controlling gate for progress claims.
+- Active development lane is V2 advancement. V1 `REQUIRED_FASLOAD_BOUNDARY rc=-7` work is currently tabled per Section `0.0.B` and retained as baseline evidence only.
 - Scanner serialization bug was fixed in `ccl/scripts/wasm/collect-startup-symbol-scope.lisp` (2026-02-14): `symbols[]` now emits JSON objects/arrays (not Lisp-printed strings).
 - Latest scanner output `/tmp/startup-symbol-scope.source_scope_v1.json` contains `6022` symbols with structured records; runtime resolution no longer reports `invalid_input` inflation (`invalid_input: 0`).
 - L0 contract currently hard-anchors const-pool entries `4360`, `4372`, `4412` in `ccl/doc/wasm/js/bootstrap-l0-contract.mjs`.
@@ -26,6 +26,32 @@ Current condensed state/history snapshot (2026-02-14):
 - Early-boundary symbol probes are already instrumented in `make-real-image.mjs`; probe placement relative to the failing path is a known diagnostic axis for capturing `%FASLOAD` binding immediately before first required fasload.
 - Resolver behavior is confirmed: `%FASLOAD` should resolve through `bootstrapFunctionResolver` via function metadata or explicit const-pool metadata rewrite; if misbinding persists, primary suspicion remains startup binding-map application ambiguity/fallback behavior.
 
+### 0.0.B Decision Record: Table V1 `rc=-7` Work, Advance V2 (2026-02-14)
+
+Decision ID: `DR-2026-02-14-V2-PRIMARY`
+
+Concrete decision:
+- Table further V1-first diagnosis inside this Section `0.0` lane, including direct iteration on the first-required-fasload `rc=-7` failure path.
+- Advance V2 development as the primary execution substrate.
+- Treat this document's V1 lane as a frozen baseline/control record unless explicit reopen conditions are met.
+
+Frozen baseline evidence for the tabled V1 lane:
+- `/tmp/make-real-image.notrace.smoke.source_scope_v1.guard10.noskip.log`
+- `/tmp/make-real-image.notrace.top4488.source_scope_v1.guard10.noskip.log`
+- Both logs record:
+- `STARTUP_BINDING_MAP_APPLY {"status":"pass", ...}`
+- `REQUIRED_FASLOAD_BOUNDARY {"status":"fail","fasl_index":0,"path":"l1-fasls/l1-cl-package.lafsl","rc":-7,"reason":"required-fasload-failed-after-unified-startup-binding-map-apply","unresolved_function_symbol":null,...}`
+
+Allowed V1 actions while tabled:
+- Single-shot control repro for parity checks against V2.
+- Evidence extraction from existing V1 logs/artifacts.
+- No new V1-only architecture/refactor work without explicit reopen.
+
+Reopen conditions for V1 `rc=-7` lane:
+- User explicitly requests reopening V1 `rc=-7` diagnosis.
+- V2 reaches same boundary and requires a focused V1 control comparison to disambiguate substrate-specific behavior.
+- V2 parity cannot be established without one targeted V1 probe.
+
 Do-not-rediscover anchors (authoritative):
 - `boundary_probe name=identity mode=1 rc=-5` and `boundary_probe name=error mode=2 rc=-5` are known and already recorded; do not report them as new findings unless the touched kernel/probe source changes.
 - Focused lanes stalling after `foreign.call.enter` before any `REQUIRED_FASLOAD_BOUNDARY` line is known and already recorded.
@@ -35,7 +61,7 @@ Do-not-rediscover anchors (authoritative):
 - Fasload call path in `ccl/doc/wasm/js/make-real-image.mjs` is confirmed; active narrowing axis is `%FASLOAD` binding/selection immediately before `wasm_fasload_path`, including entry-index mapping and host resolve path.
 - Early-boundary symbol probes already instrumented in `ccl/doc/wasm/js/make-real-image.mjs` are authoritative context; placement relative to first required fasload is a known diagnostic axis for capturing `%FASLOAD` binding.
 - Resolver behavior is established: `%FASLOAD` should resolve via `bootstrapFunctionResolver` (function metadata or explicit const-pool metadata rewrite); if misbinding persists, binding-map apply/mapping behavior is the primary suspicion.
-- Progress may only be claimed when both focused lanes cross `REQUIRED_FASLOAD_BOUNDARY` or emit a deterministic boundary failure reason (no hang).
+- For the tabled V1 lane only, progress may be claimed when both focused lanes cross `REQUIRED_FASLOAD_BOUNDARY` or emit deterministic boundary failure reasons (no hang). Primary delivery progress is now tracked in V2 per Section `0.0.B`.
 
 Continuity checkpoints:
 - When adding/changing tasks, update this ledger first with what changed and why.
@@ -113,6 +139,11 @@ Milestone delta (2026-02-14, option-1 no-skip focused lanes):
   - terminal failure: `FAIL: wasm_fasload_path(l1-fasls/l1-cl-package.lafsl) returned -7`
 - Proven: pre-fasload gates remain healthy in both no-skip runs (`STARTUP_BINDING_MAP_APPLY {"status":"pass"}` with required callable rows restored).
 - Remains: isolate `rc=-7` failure cause inside first required fasload path (`l1-cl-package.lafsl`) now that startup binding-map omission/misbinding is no longer the active boundary reason.
+
+Milestone delta (2026-02-14, decision lock: table V1 `rc=-7`, move primary to V2):
+- Changed: added Section `0.0.B` with decision `DR-2026-02-14-V2-PRIMARY` to table V1-first `rc=-7` diagnosis and designate V2 as primary substrate.
+- Proven: V1 baseline required for future parity checks is concretely frozen in guard10 no-skip logs (smoke/top4488) with matching first-required-fasload `rc=-7` signature.
+- Remains: advance V2 implementation until it reaches equivalent first-required-fasload boundary semantics; continue debugging on V2 lane first.
 
 ### 0.0.A Fast Re-Entry Prompt (Use At Start Of New Conversations)
 
