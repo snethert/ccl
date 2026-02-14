@@ -152,6 +152,9 @@ Milestone delta (2026-02-14, troubleshooting note on recursion depth):
 
 ### 0.0.A Fast Re-Entry Prompt (Use At Start Of New Conversations)
 
+Canonical reusable template:
+- `doc/wasm/startup-symbol-next-session-prompt-template.md`
+
 Copy/paste prompt for compressed-history handoffs:
 
 ```text
@@ -171,6 +174,30 @@ Execution focus:
 - Diagnose and resolve first failing fasload reason.
 - Keep architecture locked to source-scope artifact flow.
 - Avoid introducing fallback parser paths or unrelated refactors.
+
+Execution continuity contract (strict):
+- Continue executing sequential steps until blocked by a concrete dependency or an explicit user decision.
+- If at least one executable next step exists, execute it immediately.
+- `objective_complete` is not a valid stop reason by itself; only stop when blocked or explicitly paused by user.
+- Do not end with "minimum required work complete" while executable steps remain.
+- In every terminal response, include a copy-paste `NEXT_SESSION_PROMPT` block inline (not only as a file path).
+- In every terminal response, include:
+  - `TERMINATION_CHECKLIST` with keys:
+    - `termination_reason` (`blocked_dependency` or `user_decision`)
+    - `next_executable_step_exists` (`yes`/`no`)
+    - `if_yes_why_not_executed` (concrete blocker only)
+    - `attempted_mitigations` (at least two attempts if blocked)
+    - `next_step_id` (updated)
+    - `next_session_prompt_emitted` (`yes` required)
+    - `if_no_why` (only for blocked cases)
+  - If blocked, include `BLOCKED_REPORT_FORMAT` exactly:
+    - `blocker_type`
+    - `failing_command`
+    - `exact_error_output`
+    - `dependency_needed`
+    - `mitigation_attempt_1`
+    - `mitigation_attempt_2`
+    - `why_no_further_local_step_is_executable`
 
 After each milestone:
 - Append a short ledger delta: what changed, what was proven, what remains.
@@ -2374,3 +2401,37 @@ rg -n 'missing-kernel-export|initializer-kind-unsupported-at-apply' "$RUN_DIR"/l
 ```
 - Expected evidence line:
 - required startup bindings are free of missing/stubbed ABI failures across focused and repro lanes.
+
+### 22.7 Resume Closure Recompute Verification (`M-072`..`M-074`)
+
+#### M-072
+- Files: `ccl/scripts/wasm/recompute-resume-closure-matrix.sh`
+- Command:
+```bash
+test -x ccl/scripts/wasm/recompute-resume-closure-matrix.sh || chmod +x ccl/scripts/wasm/recompute-resume-closure-matrix.sh
+```
+- Expected evidence line:
+- checked-in recompute verifier is executable and available for unattended runs.
+
+#### M-073
+- Files: `/private/tmp/step93.doccheck.*`
+- Command:
+```bash
+ccl/scripts/wasm/recompute-resume-closure-matrix.sh --output-prefix /private/tmp/step93.doccheck
+wc -c /private/tmp/step93.doccheck.diff.signatures.txt /private/tmp/step93.doccheck.diff.trace-map.txt /private/tmp/step93.doccheck.diff.matrix.txt /private/tmp/step93.doccheck.diff.violations.txt /private/tmp/step93.doccheck.diff.profile-counts.txt /private/tmp/step93.doccheck.diff.trace-profiles.txt
+```
+- Expected evidence line:
+- verifier exits `0` and all positive-parity diff files are `0` bytes.
+
+#### M-074
+- Files: `/private/tmp/step93.doccheck.negative.*`
+- Command:
+```bash
+set +e
+ccl/scripts/wasm/recompute-resume-closure-matrix.sh --output-prefix /private/tmp/step93.doccheck.negative --log /private/tmp/make-real-image.resume.applycontinue.reqfasload9.trace.log
+echo "negative_exit=$?"
+set -e
+wc -c /private/tmp/step93.doccheck.negative.diff.signatures.txt /private/tmp/step93.doccheck.negative.diff.trace-map.txt /private/tmp/step93.doccheck.negative.diff.matrix.txt /private/tmp/step93.doccheck.negative.diff.violations.txt /private/tmp/step93.doccheck.negative.diff.profile-counts.txt /private/tmp/step93.doccheck.negative.diff.trace-profiles.txt
+```
+- Expected evidence line:
+- verifier exits non-zero and negative diff output is non-empty on at least one artifact.

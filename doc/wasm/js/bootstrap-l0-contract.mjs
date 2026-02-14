@@ -49,6 +49,11 @@ const REQUIRED_CALLABLES = Object.freeze([
   Object.freeze({ packageName: "CCL", symbolName: "%FASLOAD" }),
   Object.freeze({ packageName: "CCL", symbolName: "%FASL-OPEN" }),
   Object.freeze({ packageName: "CCL", symbolName: "%SIMPLE-FASL-OPEN" }),
+  Object.freeze({ packageName: "CCL", symbolName: "%MAKE-VECTOR-OUTPUT-STREAM" }),
+  Object.freeze({ packageName: "CCL", symbolName: "MAKE-UARRAY-1" }),
+  Object.freeze({ packageName: "CCL", symbolName: "%MAKE-DISPLACED-ARRAY" }),
+  Object.freeze({ packageName: "CCL", symbolName: "%SET-SIMPLE-ARRAY-P" }),
+  Object.freeze({ packageName: "CCL", symbolName: "INIT-UVECTOR-CONTENTS" }),
 ]);
 
 const REQUIRED_SPECIALS = Object.freeze([

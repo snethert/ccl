@@ -1150,10 +1150,11 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
   };
 
   const resolver = typeof resolveFunctionDesignator === "function"
-    ? ({ packageName, symbolName }) => {
+    ? ({ packageName, symbolName, source = null }) => {
       const resolved = resolveFunctionDesignator({
         name: normalizeSymbolName(symbolName),
         packageName: canonicalizePackageName(packageName),
+        source,
       });
       if (resolved?.ok) {
         return {
@@ -1475,7 +1476,7 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
       continue;
     }
 
-    const resolution = resolver({ packageName, symbolName });
+    const resolution = resolver({ packageName, symbolName, source: ref.source ?? null });
     if (!resolution?.ok) {
       if (resolution?.reason === "ambiguous") stats.resolver_ambiguous++;
       else stats.resolver_unresolved++;

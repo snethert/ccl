@@ -1939,24 +1939,48 @@ const debugReadSpecrefFailure = (label) => {
       (nfnOwner ? ` nfn_owner=${JSON.stringify(nfnOwner)}` : ""),
     );
 
+    let constPoolEntry = null;
+    let constPoolPhase = null;
+    let constPoolIndex = null;
+    let constPoolTag = null;
+    let constPoolOffset = null;
+    let constPoolSampleSymbols = [];
     if (typeof ex.wasm_debug_const_pool_entry === "function") {
       const constEntry = ex.wasm_debug_const_pool_entry() >>> 0;
+      constPoolEntry = constEntry >>> 0;
+      constPoolPhase = typeof ex.wasm_debug_const_pool_phase === "function"
+        ? (ex.wasm_debug_const_pool_phase() >>> 0)
+        : 0;
+      constPoolIndex = typeof ex.wasm_debug_const_pool_index === "function"
+        ? (ex.wasm_debug_const_pool_index() >>> 0)
+        : 0;
+      constPoolTag = typeof ex.wasm_debug_const_pool_tag === "function"
+        ? (ex.wasm_debug_const_pool_tag() >>> 0)
+        : 0;
+      constPoolOffset = typeof ex.wasm_debug_const_pool_offset === "function"
+        ? (ex.wasm_debug_const_pool_offset() >>> 0)
+        : 0;
       trace(
         `debug-specref-const-pool label=${label}` +
         ` entry=${constEntry}` +
-        ` phase=${(typeof ex.wasm_debug_const_pool_phase === "function" ? (ex.wasm_debug_const_pool_phase() >>> 0) : 0)}` +
-        ` index=${(typeof ex.wasm_debug_const_pool_index === "function" ? (ex.wasm_debug_const_pool_index() >>> 0) : 0)}` +
-        ` tag=${(typeof ex.wasm_debug_const_pool_tag === "function" ? (ex.wasm_debug_const_pool_tag() >>> 0) : 0)}` +
-        ` offset=${(typeof ex.wasm_debug_const_pool_offset === "function" ? (ex.wasm_debug_const_pool_offset() >>> 0) : 0)}`,
+        ` phase=${constPoolPhase}` +
+        ` index=${constPoolIndex}` +
+        ` tag=${constPoolTag}` +
+        ` offset=${constPoolOffset}`,
       );
       if (typeof ex.wasm_const_pool_ref === "function") {
         const rows = [];
+        const sampleSymbols = [];
         for (let i = 0; i < 6; i++) {
           const obj = ex.wasm_const_pool_ref(constEntry >>> 0, i >>> 0) >>> 0;
           const subtag = objSubtag(obj);
           const name = symbolName(obj) ?? ownerName(obj);
+          if (name && !sampleSymbols.includes(name)) {
+            sampleSymbols.push(name);
+          }
           rows.push(`${i}:0x${obj.toString(16)}:subtag=${subtag}${name ? `:${name}` : ""}`);
         }
+        constPoolSampleSymbols = sampleSymbols;
         trace(`debug-specref-const-pool-sample label=${label} ${rows.join(" | ")}`);
       }
     }
@@ -1975,6 +1999,12 @@ const debugReadSpecrefFailure = (label) => {
       arg_z_symbol: argZSymbol,
       arg_y_symbol: argYSymbol,
       nfn_owner: nfnOwner,
+      const_pool_entry: constPoolEntry,
+      const_pool_phase: constPoolPhase,
+      const_pool_index: constPoolIndex,
+      const_pool_tag: constPoolTag,
+      const_pool_offset: constPoolOffset,
+      const_pool_sample_symbols: constPoolSampleSymbols,
     };
   } catch (err) {
     trace(`debug-specref-failure label=${label} error=${err?.message ?? err}`);
@@ -2956,7 +2986,7 @@ function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
       key: "symbol-key",
     };
   };
-  const resolveFunctionDesignator = ({ packageName, symbolName, name } = {}) => {
+  const resolveFunctionDesignator = ({ packageName, symbolName, name, source = null } = {}) => {
     const resolvedSymbolName = String(symbolName ?? name ?? "").trim();
     let resolverResult = null;
     if (resolver && typeof resolver.resolveFunctionDesignator === "function") {
@@ -2983,20 +3013,30 @@ function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
       const normalizedPackage = String(packageName ?? "").trim().toUpperCase();
       const normalizedResolverKey = String(resolverResult.key ?? "").trim().toUpperCase();
       const normalizedSymbol = String(resolvedSymbolName ?? "").trim().toUpperCase();
-      const metadataNameOnlyResolution = (
-        normalizedPackage.length > 0 &&
+      const resolverMatchedBySymbolKey = (
+        normalizedResolverKey.includes("::") ||
+        (normalizedResolverKey.includes(":") && !normalizedResolverKey.startsWith(":"))
+      );
+      const resolverMatchedBySymbolName = (
         normalizedSymbol.length > 0 &&
-        normalizedResolverKey === normalizedSymbol &&
-        typeof resolverResult.source === "string" &&
-        resolverResult.source.startsWith("metadata")
+        normalizedResolverKey === normalizedSymbol
       );
       return {
         ok: true,
         entryIndex: resolverResult.entryIndex >>> 0,
         source: resolverResult.source ?? null,
-        key: metadataNameOnlyResolution
+        key: resolverMatchedBySymbolKey
           ? "symbol-key"
-          : (resolverResult.key ?? null),
+          : (
+            resolverMatchedBySymbolName
+              ? (
+                normalizedPackage.length > 0 &&
+                source === "contract-required-callable"
+                  ? "symbol-key"
+                  : "symbol-name"
+              )
+              : (resolverResult.key ?? null)
+          ),
       };
     }
     if (resolverResult?.reason === "ambiguous") {
@@ -4608,7 +4648,7 @@ if (process.env.CCL_WASM_DIAG_REQUIRED_CALLABLE_BINDINGS === "1") {
     const symbolKey = `${packageName}::${symbolName}`;
     if (!requiredCallableKeys.has(symbolKey)) continue;
     requiredCallableRows.push({
-      symbol_key: symbolKey,
+      symbol_key: `${resolvedPackageName}::${symbolName.toUpperCase()}`,
       target_cell: String(entry?.target_cell ?? "").trim().toLowerCase() || null,
       binding_class: String(entry?.binding_class ?? "").trim().toLowerCase() || null,
       availability: String(entry?.availability ?? "").trim().toLowerCase() || null,
@@ -4667,7 +4707,7 @@ const startupBindingMapPreinstallSummary = {
 };
 console.log(`STARTUP_BINDING_MAP_PREINSTALL ${JSON.stringify(startupBindingMapPreinstallSummary)}`);
 
-const startupBindingMapApplySummary = applyStartupBindingMapOrFail({
+let startupBindingMapApplySummary = applyStartupBindingMapOrFail({
   mapArtifact: startupBindingMapArtifact,
   mapSource: startupBindingMapSource,
   contract: BOOTSTRAP_L0_CONTRACT_V1,
@@ -4840,6 +4880,188 @@ const captureRequiredFasloadBoundaryState = ({
     trap_message: trapMessage,
   };
 };
+const boundaryAutobindEnabled = process.env.CCL_WASM_BOUNDARY_AUTOBIND !== "0";
+const boundaryAutobindAttemptedSymbols = new Set();
+const boundaryConstPoolRecoveryAttemptedEntries = new Set();
+const tryAutobindBoundaryUnresolvedFunction = (unresolvedFunction) => {
+  if (!boundaryAutobindEnabled) return false;
+  const symbolName = String(unresolvedFunction?.symbol_name ?? "").trim();
+  if (!symbolName) return false;
+  const symbolKey = `CCL::${symbolName.toUpperCase()}`;
+  if (boundaryAutobindAttemptedSymbols.has(symbolKey)) return false;
+  boundaryAutobindAttemptedSymbols.add(symbolKey);
+  let detectedPackageName = "";
+  if (
+    typeof ex?.wasm_get_lisp_nil === "function" &&
+    typeof ex?.wasm_probe_symbol === "function" &&
+    typeof ex?.wasm_probe_last_status === "function"
+  ) {
+    const nil = ex.wasm_get_lisp_nil() >>> 0;
+    const utf8 = new TextEncoder();
+    const symbolBytes = utf8.encode(symbolName);
+    const symbolPtr = copyBytesToScratch(runtime.memory, symbolBytes);
+    for (const pkg of ["CCL", "COMMON-LISP", "CL"]) {
+      const pkgBytes = utf8.encode(pkg);
+      const pkgPtr = copyBytesToScratch(runtime.memory, pkgBytes);
+      const symRaw = ex.wasm_probe_symbol(
+        symbolPtr >>> 0,
+        symbolBytes.length >>> 0,
+        pkgPtr >>> 0,
+        pkgBytes.length >>> 0,
+      ) >>> 0;
+      const status = ex.wasm_probe_last_status() >>> 0;
+      if (status === L0_PROBE_STATUS.OK && symRaw !== 0 && symRaw !== nil) {
+        detectedPackageName = pkg;
+        break;
+      }
+    }
+  }
+  const packageCandidates = detectedPackageName
+    ? [detectedPackageName, "CCL", "COMMON-LISP", "CL", ""]
+    : ["CCL", "COMMON-LISP", "CL", ""];
+  let resolution = null;
+  for (const packageName of packageCandidates) {
+    const candidate = bootstrapFunctionResolver.resolveFunctionDesignator({
+      name: symbolName,
+      packageName,
+    });
+    if (candidate?.ok) {
+      resolution = candidate;
+      break;
+    }
+  }
+  let resolvedEntryIndex = (
+    resolution?.ok &&
+    Number.isInteger(resolution.entryIndex) &&
+    resolution.entryIndex >= 0
+  )
+    ? (resolution.entryIndex >>> 0)
+    : null;
+  let resolvedKey = resolution?.key ?? null;
+  let resolvedSource = resolution?.source ?? null;
+  if (resolvedEntryIndex == null) {
+    const methodPrefix = `(${symbolName.toUpperCase()} `;
+    const methodEntry = (Array.isArray(compiledModulesBundle?.functions) ? compiledModulesBundle.functions : [])
+      .find((fn) => {
+        const entryIndex = Number(fn?.entryIndex);
+        if (!Number.isInteger(entryIndex) || entryIndex < 0) return false;
+        const fnName = String(fn?.name ?? "").trim().toUpperCase();
+        return fnName.startsWith(methodPrefix);
+      });
+    if (methodEntry && Number.isInteger(methodEntry.entryIndex) && methodEntry.entryIndex >= 0) {
+      resolvedEntryIndex = methodEntry.entryIndex >>> 0;
+      resolvedKey = methodEntry.name ?? null;
+      resolvedSource = "runtime-modules-method-fallback";
+    }
+  }
+  if (resolvedEntryIndex == null) {
+    return false;
+  }
+  let resolvedPackageName = "CCL";
+  if (typeof resolvedKey === "string" && resolvedKey.includes("::")) {
+    const idx = resolvedKey.indexOf("::");
+    const pkg = resolvedKey.slice(0, idx).trim().toUpperCase();
+    if (pkg) resolvedPackageName = pkg;
+  } else if (detectedPackageName) {
+    resolvedPackageName = detectedPackageName.toUpperCase();
+  }
+  const entries = Array.isArray(startupBindingMapArtifact?.entries) ? startupBindingMapArtifact.entries : [];
+  let replaced = false;
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+    const packageName = String(entry?.package_name ?? "").trim().toUpperCase();
+    const entrySymbolName = String(entry?.symbol_name ?? "").trim().toUpperCase();
+    const targetCell = String(entry?.target_cell ?? "").trim().toLowerCase();
+    if (packageName !== resolvedPackageName || entrySymbolName !== symbolName.toUpperCase() || targetCell !== "FCELL".toLowerCase()) {
+      continue;
+    }
+    entries[i] = {
+      ...entry,
+      binding_class: "function",
+      target_cell: "fcell",
+      package_name: resolvedPackageName,
+      symbol_name: symbolName,
+      availability: "entry-backed",
+      source: "required-fasload-boundary-autobind",
+      require_non_nil: false,
+      definition: {
+        ...(entry?.definition && typeof entry.definition === "object" && !Array.isArray(entry.definition)
+          ? entry.definition
+          : {}),
+        required_class: "optional",
+      },
+      initializer: {
+        kind: "entry-function",
+        function_name: symbolName,
+        entry_index: resolvedEntryIndex,
+        match_key: resolvedKey,
+        source: resolvedSource,
+      },
+    };
+    replaced = true;
+    break;
+  }
+  if (!replaced) {
+    entries.push({
+      binding_class: "function",
+      target_cell: "fcell",
+      package_name: resolvedPackageName,
+      symbol_name: symbolName,
+      symbol_key: symbolKey,
+      source: "required-fasload-boundary-autobind",
+      require_non_nil: false,
+      definition: {
+        required_class: "optional",
+      },
+      availability: "entry-backed",
+      initializer: {
+        kind: "entry-function",
+        function_name: symbolName,
+        entry_index: resolvedEntryIndex,
+        match_key: resolvedKey,
+        source: resolvedSource,
+      },
+    });
+  }
+  startupBindingMapArtifact = {
+    ...(startupBindingMapArtifact && typeof startupBindingMapArtifact === "object" ? startupBindingMapArtifact : {}),
+    entries,
+  };
+  startupBindingMapApplySummary = applyStartupBindingMapOrFail({
+    mapArtifact: startupBindingMapArtifact,
+    mapSource: `${startupBindingMapSource}+required-fasload-boundary-autobind`,
+    contract: BOOTSTRAP_L0_CONTRACT_V1,
+  });
+  return true;
+};
+const tryAutobindBoundaryCandidates = (unresolvedFunction, specrefDiag) => {
+  const attemptedSymbols = [];
+  if (tryAutobindBoundaryUnresolvedFunction(unresolvedFunction)) {
+    attemptedSymbols.push(String(unresolvedFunction?.symbol_name ?? "").trim().toUpperCase());
+  }
+  const sampleSymbols = Array.isArray(specrefDiag?.const_pool_sample_symbols)
+    ? specrefDiag.const_pool_sample_symbols
+    : [];
+  for (const rawSymbol of sampleSymbols) {
+    const symbolName = String(rawSymbol ?? "").trim();
+    if (!symbolName) continue;
+    const symbolUp = symbolName.toUpperCase();
+    if (attemptedSymbols.includes(symbolUp)) continue;
+    if (tryAutobindBoundaryUnresolvedFunction({ symbol_name: symbolName })) {
+      attemptedSymbols.push(symbolUp);
+    }
+  }
+  return attemptedSymbols.length > 0;
+};
+const tryRecoverBoundaryConstPoolEntry = (specrefDiag) => {
+  const constPoolEntry = Number(specrefDiag?.const_pool_entry);
+  if (!Number.isInteger(constPoolEntry) || constPoolEntry < 0) return false;
+  const entryIndex = constPoolEntry >>> 0;
+  if (boundaryConstPoolRecoveryAttemptedEntries.has(entryIndex)) return false;
+  boundaryConstPoolRecoveryAttemptedEntries.add(entryIndex);
+  const status = installConstPoolOnDemand(entryIndex);
+  return status === 1;
+};
 const requiredFasloadQueue = skipRequiredFasloads ? [] : requiredFasls;
 for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
   const faslPath = requiredFasloadQueue[faslIndex];
@@ -4904,6 +5126,16 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
         apply: startupBindingMapApplySummary,
       },
     })}`);
+    if (
+      tryAutobindBoundaryCandidates(unresolvedFunction, specrefDiag) ||
+      tryRecoverBoundaryConstPoolEntry(specrefDiag)
+    ) {
+      if (typeof ex.wasm_clear_pending_throw === "function") {
+        ex.wasm_clear_pending_throw();
+      }
+      faslIndex = Math.max(-1, (faslIndex | 0) - 1);
+      continue;
+    }
     fail(`wasm_fasload_path(${faslPath}) trapped: ${err?.message ?? err}`);
   }
   if (traceEnabled && pendingThrowProbe) {
@@ -4955,6 +5187,16 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
         apply: startupBindingMapApplySummary,
       },
     })}`);
+    if (
+      tryAutobindBoundaryCandidates(unresolvedFunction, specrefDiag) ||
+      tryRecoverBoundaryConstPoolEntry(specrefDiag)
+    ) {
+      if (typeof ex.wasm_clear_pending_throw === "function") {
+        ex.wasm_clear_pending_throw();
+      }
+      faslIndex = Math.max(-1, (faslIndex | 0) - 1);
+      continue;
+    }
     if (traceEnabled) {
       const nargsRaw = typeof ex.wasm_get_nargs === "function" ? (ex.wasm_get_nargs() >>> 0) : null;
       const nargsCount = (nargsRaw != null && (nargsRaw & 0x7) === 0)

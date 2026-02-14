@@ -121,3 +121,26 @@ Implementation note:
 - [x] `G-11` legacy path removal gate passed.
 - [ ] `G-12` evidence bundle gate passed.
 - [ ] `G-13` startup stub-dependency gate passed.
+
+## J. Handoff Prompt Contract
+
+- [x] Canonical template path is locked: `doc/wasm/startup-symbol-next-session-prompt-template.md`.
+- [x] Stop reasons restricted to `blocked_dependency` or explicit `user_decision` only.
+- [x] `objective_complete` is explicitly forbidden as a standalone stop reason.
+- [x] Every terminal response must include inline copy-paste `NEXT_SESSION_PROMPT`.
+- [x] `TERMINATION_CHECKLIST` schema and required keys are locked.
+- [x] `BLOCKED_REPORT_FORMAT` schema is locked for all blocked stops.
+
+## K. Resume Closure Recompute Verification
+
+- [x] Checked-in verifier exists: `scripts/wasm/recompute-resume-closure-matrix.sh`.
+- [x] Positive parity command is locked:
+  - `scripts/wasm/recompute-resume-closure-matrix.sh --output-prefix /private/tmp/step93.doccheck`
+- [x] Positive expected outcome is locked:
+  - exit code `0`
+  - all `/private/tmp/step93.doccheck.diff.*` files are zero bytes
+- [x] Negative mismatch command is locked:
+  - `scripts/wasm/recompute-resume-closure-matrix.sh --output-prefix /private/tmp/step93.doccheck.negative --log /private/tmp/make-real-image.resume.applycontinue.reqfasload9.trace.log`
+- [x] Negative expected outcome is locked:
+  - exit code is non-zero
+  - at least one `/private/tmp/step93.doccheck.negative.diff.*` file is non-zero

@@ -1,0 +1,21 @@
+name: WASM Resume Closure Recompute
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  recompute-closure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Run resume closure recompute verifier
+        run: |
+          chmod +x scripts/wasm/recompute-resume-closure-matrix.sh
+          chmod +x scripts/wasm/run-recompute-resume-closure-ci.sh
+          scripts/wasm/run-recompute-resume-closure-ci.sh \
+            doc/wasm/repro/fixtures/resume-trace-logs \
+            /tmp/wasm-resume-fixtures \
+            /tmp/wasm-resume-closure
