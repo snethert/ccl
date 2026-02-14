@@ -188,6 +188,19 @@ Status legend:
 
 ## Closure Board
 
+Execution status snapshot (2026-02-14):
+- `G-01` remains part of recorded gate history requirements for closure ordering.
+- `G-11` passed (legacy path removal gate) from `M-063` verification:
+  - focused-lane logs include `STARTUP_SYMBOL_PIPELINE ... "mode":"source_scope_v1"`,
+  - active call-site grep for `buildStartupBindingMapArtifact\(` in
+    `make-real-image.mjs` and `pack-inline-bundle-v2.mjs` returns no matches.
+- `G-12` remains pending until evidence-bundle closure (`M-067`).
+- Related closure-evidence microsteps:
+  - `M-060`: runtime missing-scope hard-fail assertion.
+  - `M-061`: pack-time JS startup-map fallback generation removed.
+  - `M-062`: final legacy symbol/flag grep assertions.
+  - `M-063`: gate `G-11` pass evidence capture.
+
 - [ ] C-001 implementation closed
 - [ ] C-002 implementation closed
 - [ ] C-003 implementation closed

@@ -1,44 +1,39 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-02-13T21:56:31.284Z",
+  "generated_at": "2026-02-14T11:28:29.771Z",
   "repo": {
     "root": "/Users/buildsomething/Source/ccl",
-    "head_sha": "5503ec070a3df64188bec4470609bed51aaa6e50",
-    "head_short": "5503ec07",
+    "head_sha": "8e7f7bec7fc09f8b52de73bfc454e4a307d412c2",
+    "head_short": "8e7f7bec",
     "branch": "wasm-port",
     "dirty": true,
     "dirty_files": [
-      " M doc/wasm/js/make-real-image.mjs",
-      " M doc/wasm/js/startup-binding-map.mjs",
       " M doc/wasm/js/wasmcl.wasm",
-      " M doc/wasm/session-handoff.json",
       " M doc/wasm/startup-symbol-scope.source_scope_v1.json",
-      " M doc/wasm/wasm-runtime-modules.json",
-      " D doc/wasm/wasm-runtime-modules.json.inline-v1.tmp.bin",
-      " D doc/wasm/wasm-runtime-modules.json.inline-v1.tmp.json",
-      " M lisp-kernel/wasm-kernel-stubs.c",
-      " M scripts/wasm/pack-inline-bundle-v2.mjs",
-      "?? doc/wasm/js/tests/",
-      "?? doc/wasm/repro/startup-pipeline-20260213T211145Z-5503ec07/",
-      "?? doc/wasm/repro/startup-pipeline-20260213T213432Z-5503ec07/",
-      "?? doc/wasm/repro/startup-pipeline-20260213T214133Z-5503ec07/",
-      "?? doc/wasm/repro/startup-pipeline-20260213T214845Z-5503ec07/"
+      " M doc/wasm/wasm-runtime-modules.idx",
+      "?? doc/wasm/repro/startup-pipeline-20260214T112054Z-8e7f7bec/"
     ]
   },
-  "current_blocker": "No known blocker captured yet",
-  "failing_command": "709:Error: wasm_memory_grow_and_relocate failed for 19 pages",
+  "current_blocker": "Headless root-image build blocked by %FASLOAD throw boundary (call.post -> pending_raw=0x4)",
+  "failing_command": "170:FAIL: wasm_fasload_path(l1-fasls/l1-cl-package.lafsl) returned -7",
   "failure_signature": [
     "127:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"TOPLEVEL\",\"entry_index\":4772,\"resolved_entry_index\":4772,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
     "128:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUN-READ-LOOP\",\"entry_index\":5452,\"resolved_entry_index\":5452,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
-    "129:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUNTIME-BRIDGE-PUMP-COMMANDS\",\"entry_index\":5559,\"resolved_entry_index\":5559,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}"
+    "129:STARTUP_FUNCTION_DESIGNATOR_GATE {\"schema_version\":\"startup_function_designator_gate_v1\",\"phase\":\"pre-toplevel\",\"status\":\"pass\",\"mode\":\"strict\",\"symbol_name\":\"RUNTIME-BRIDGE-PUMP-COMMANDS\",\"entry_index\":5559,\"resolved_entry_index\":5559,\"source\":\"metadata\",\"binding_state\":\"resolved-entry-function\",\"reason\":null}",
+    "151:[make-real-image] runtime-event {\"version\":1,\"kind\":\"wasm.fasload.trace.v1\",\"jobId\":null,\"streamId\":\"diagnostics\",\"requestId\":null,\"seq\":11,\"ts\":1771067581481,\"payload\":{\"magic\":827541079,\"version\":1,\"stepCode\":16,\"stepName\":\"call.post\",\"rc\":0,\"line\":5039,\"throwState\":4,\"pathLen\":28,\"pathPrefix\":1714237804,\"symbolObj\":67330550,\"symbolTag\":6,\"symbolSubtag\":58,\"callableObj\":67330526,\"callableTag\":6,\"callableSubtag\":42},\"error\":null}",
+    "152:[make-real-image] runtime-event {\"version\":1,\"kind\":\"wasm.fasload.trace.v2\",\"jobId\":null,\"streamId\":\"diagnostics\",\"requestId\":null,\"seq\":12,\"ts\":1771067581481,\"payload\":{\"magic\":844318295,\"version\":2,\"stepCode\":16,\"stepName\":\"call.post\",\"rc\":0,\"line\":5048,\"throwState\":4,\"pathLen\":28,\"pathPrefix\":1714237804,\"symbolObj\":67330550,\"symbolTag\":6,\"symbolSubtag\":58,\"callableObj\":67330526,\"callableTag\":6,\"callableSubtag\":42,\"argZ\":67531134,\"argY\":24,\"nfn\":67531134,\"nargs\":8,\"vsp\":1241088,\"csp\":0,\"tsp\":0},\"error\":null}",
+    "153:[make-real-image] runtime-event {\"version\":1,\"kind\":\"wasm.fasload.trace.v1\",\"jobId\":null,\"streamId\":\"diagnostics\",\"requestId\":null,\"seq\":13,\"ts\":1771067581481,\"payload\":{\"magic\":827541079,\"version\":1,\"stepCode\":17,\"stepName\":\"throw.detected\",\"rc\":-7,\"line\":5058,\"throwState\":4,\"pathLen\":28,\"pathPrefix\":1714237804,\"symbolObj\":67330550,\"symbolTag\":6,\"symbolSubtag\":58,\"callableObj\":67330526,\"callableTag\":6,\"callableSubtag\":42},\"error\":null}",
+    "154:[make-real-image] runtime-event {\"version\":1,\"kind\":\"wasm.fasload.trace.v2\",\"jobId\":null,\"streamId\":\"diagnostics\",\"requestId\":null,\"seq\":14,\"ts\":1771067581481,\"payload\":{\"magic\":844318295,\"version\":2,\"stepCode\":17,\"stepName\":\"throw.detected\",\"rc\":-7,\"line\":5067,\"throwState\":4,\"pathLen\":28,\"pathPrefix\":1714237804,\"symbolObj\":67330550,\"symbolTag\":6,\"symbolSubtag\":58,\"callableObj\":67330526,\"callableTag\":6,\"callableSubtag\":42,\"argZ\":67531134,\"argY\":24,\"nfn\":67531134,\"nargs\":8,\"vsp\":1241088,\"csp\":0,\"tsp\":0},\"error\":null}",
+    "155:[make-real-image] fasload post path=l1-fasls/l1-cl-package.lafsl rc=-7 pending=1 pending_raw=0x4",
+    "170:FAIL: wasm_fasload_path(l1-fasls/l1-cl-package.lafsl) returned -7"
   ],
   "artifacts": {
     "latest_log": "/tmp/make-real-image.trace.smoke.source_scope_v1.log",
-    "latest_repro_manifest": "doc/wasm/repro/startup-pipeline-20260213T214845Z-5503ec07/startup-repro-run-manifest.json"
+    "latest_repro_manifest": "doc/wasm/repro/startup-pipeline-20260214T112054Z-8e7f7bec/startup-repro-run-manifest.json"
   },
   "next_actions": [
-    "Run the failing command once with tracing enabled",
-    "Capture and inspect the latest log signature lines",
-    "Update this snapshot immediately after each diagnostic run"
+    "Run CCL_WASM_TRACE=1 CCL_WASM_RUN_BOUNDARY_PROBES=1 node doc/wasm/js/make-real-image.mjs",
+    "Inspect wasm.fasload.trace.v2 call.post and throw.detected records in latest log",
+    "Confirm *FASL-API* and %FASLOAD symbol states before first required fasload"
   ]
 }

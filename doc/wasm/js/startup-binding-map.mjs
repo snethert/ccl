@@ -1311,7 +1311,8 @@ export function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
     }
   }
 
-  const enableBulkCallableSeeds = process.env.CCL_WASM_STARTUP_BINDING_MAP_EMIT_ALL_FUNCTIONS === "1";
+  // Legacy env toggle was removed in M-059.
+  const enableBulkCallableSeeds = false;
   if (enableBulkCallableSeeds) {
     stats.seed_callable_bulk_enabled = true;
     const sortedSymbolKeys = Array.from(functionIndex.bySymbolKey.keys()).sort();

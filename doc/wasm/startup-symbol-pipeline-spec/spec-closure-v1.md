@@ -281,7 +281,7 @@ If scanner runs outside make-real-image:
 1. Compatibility window MAY accept embedded legacy `startupBindingMap` for read
    only.
 2. No code path MAY generate startup map by scanning Lisp in JS.
-3. `CCL_WASM_STARTUP_BINDING_MAP_EMIT_ALL_FUNCTIONS` MUST be removed by cleanup
+3. Legacy emit-all-functions environment toggles MUST be removed by cleanup
    completion.
 4. Compatibility branch expiry criterion:
 - two consecutive passing repro runs (smoke and top4488),

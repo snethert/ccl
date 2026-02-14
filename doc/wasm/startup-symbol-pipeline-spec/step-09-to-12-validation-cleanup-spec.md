@@ -84,7 +84,7 @@ without ambiguity.
 ### Recommended Defaults To Unblock
 
 - Define and execute a removal checklist including:
-  - `CCL_WASM_STARTUP_BINDING_MAP_EMIT_ALL_FUNCTIONS`,
+  - legacy emit-all-functions environment toggles,
   - JS source scanner functions in `startup-binding-map.mjs`,
   - map generation fallback in `make-real-image.mjs`,
   - stale build.md architecture sections describing JS scanner ownership.

@@ -937,7 +937,7 @@ Expected generated artifacts:
 
 #### 11.1.A Task
 I will remove legacy env knobs and dead branches after parity:
-- `CCL_WASM_STARTUP_BINDING_MAP_EMIT_ALL_FUNCTIONS`
+- legacy emit-all-functions env toggle
 - bulk closure emission counters and related dead diagnostics
 - symbol-name fallback logic in resolver path
 
@@ -1373,7 +1373,7 @@ If `G-10` fails:
 
 #### Step 11: Legacy Path Removal
 
-- `M-059` Remove `CCL_WASM_STARTUP_BINDING_MAP_EMIT_ALL_FUNCTIONS`.
+- `M-059` Remove legacy emit-all-functions env toggle usage.
 - `M-060` Remove runtime fallback map-generation branches in make-real-image.
 - `M-061` Remove pack-time JS source-scan startup map generation.
 - `M-062` Add final grep assertions for removed symbols/flags.
@@ -2231,10 +2231,10 @@ rg -n 'startup-symbol-scope|sha256' "$RUN_DIR/startup-repro-run-manifest.json"
 - Files: repository-wide
 - Command:
 ```bash
-rg -n 'CCL_WASM_STARTUP_BINDING_MAP_EMIT_ALL_FUNCTIONS' ccl || true
+rg -n 'emit-all-functions|startup binding map.*env toggle' ccl/doc/wasm/js ccl/scripts/wasm || true
 ```
 - Expected evidence line:
-- no remaining references to removed legacy env flag.
+- no remaining executable references to removed legacy env toggle.
 
 #### M-060
 - Files: `ccl/doc/wasm/js/make-real-image.mjs`
@@ -2259,10 +2259,12 @@ rg -n 'buildStartupBindingMapArtifact\\(|scan.*lisp|startup map.*from source' cc
 - Files: repository-wide final grep set
 - Command:
 ```bash
-rg -n 'buildStartupBindingMapArtifact\\(|CCL_WASM_STARTUP_BINDING_MAP_EMIT_ALL_FUNCTIONS|symbol-name-only fallback|startup map fallback' ccl/doc/wasm/js ccl/scripts/wasm || true
+rg -n 'buildStartupBindingMapArtifact\(' ccl/doc/wasm/js/make-real-image.mjs ccl/scripts/wasm/pack-inline-bundle-v2.mjs || true
+rg -n 'emit-all-functions|startup binding map.*env toggle' ccl/doc/wasm/js ccl/scripts/wasm || true
+rg -n 'scan.*lisp|startup map.*from source' ccl/scripts/wasm/pack-inline-bundle-v2.mjs || true
 ```
 - Expected evidence line:
-- grep assertions show no active legacy startup semantics path.
+- all final grep assertions return no matches in active JS/script paths.
 
 #### M-063 (G-11)
 - Files: focused lane logs + grep outputs
@@ -2271,7 +2273,7 @@ rg -n 'buildStartupBindingMapArtifact\\(|CCL_WASM_STARTUP_BINDING_MAP_EMIT_ALL_F
 for f in "$MRI_TOP" "$MRI_SMOKE"; do
   rg -n 'STARTUP_SYMBOL_PIPELINE.*source_scope_v1' "$f"
 done
-rg -n 'buildStartupBindingMapArtifact\\(' ccl/doc/wasm/js/make-real-image.mjs ccl/scripts/wasm/pack-inline-bundle-v2.mjs || true
+rg -n 'buildStartupBindingMapArtifact\(' ccl/doc/wasm/js/make-real-image.mjs ccl/scripts/wasm/pack-inline-bundle-v2.mjs || true
 ```
 - Expected evidence line:
 - one active source-scope path remains and legacy re-entry points are absent.

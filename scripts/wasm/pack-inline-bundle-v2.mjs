@@ -12,7 +12,6 @@ import {
   MODULE_BUNDLE_V2_VERSION,
 } from "../../doc/wasm/js/module-bundle-v2.mjs";
 import {
-  buildStartupBindingMapArtifact,
   normalizeStartupBindingMapArtifact,
   summarizeStartupBindingMapArtifact,
 } from "../../doc/wasm/js/startup-binding-map.mjs";
@@ -325,12 +324,7 @@ async function main() {
   };
   let startupBindingMap = normalizeStartupBindingMapArtifact(manifest?.startupBindingMap ?? null);
   if (!startupBindingMap) {
-    // Build-unblock policy: synthesize a deterministic empty artifact when
-    // compile-time manifest wiring has not attached startupBindingMap yet.
-    startupBindingMap = await buildStartupBindingMapArtifact({
-      scopeArtifact: null,
-      resolutionArtifact: null,
-    });
+    throw new Error("Manifest missing startupBindingMap artifact; source-scope startup map is required at pack time");
   }
   outManifest.startupBindingMap = startupBindingMap;
   if (gcRootPolicyModes.size > 0) {

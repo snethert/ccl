@@ -15,6 +15,13 @@ Implementation note:
     (`G-01`..`G-12`)
   - `doc/wasm/startup-symbol-pipeline-implementation-plan.md` Section `22`
     execution cards (`M-001`..`M-067`)
+- Execution status snapshot (2026-02-14):
+  - `G-11` passed via `M-063` (legacy-path grep gate).
+  - `G-12` remains pending until `M-067`.
+  - Evidence pointers:
+    - `doc/wasm/startup-symbol-pipeline-implementation-plan.md` Section `22` cards
+      `M-061`, `M-062`, `M-063`, `M-064`.
+    - `doc/wasm/startup-symbol-pipeline-spec/contradiction-ledger.md` closure evidence bullets.
 
 ## A. Artifact Contracts
 
@@ -111,6 +118,6 @@ Implementation note:
 - [ ] `G-08` preinstall budget gate passed.
 - [ ] `G-09` focused lane validation gate passed.
 - [ ] `G-10` repro validation gate passed.
-- [ ] `G-11` legacy path removal gate passed.
+- [x] `G-11` legacy path removal gate passed.
 - [ ] `G-12` evidence bundle gate passed.
 - [ ] `G-13` startup stub-dependency gate passed.

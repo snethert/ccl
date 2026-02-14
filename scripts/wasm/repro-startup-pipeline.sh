@@ -134,6 +134,12 @@ if [ ! -f "$STARTUP_SYMBOL_SCOPE_SCRIPT" ]; then
 fi
 STARTUP_SYMBOL_SCOPE_OUT="$ROOT_DIR/doc/wasm/startup-symbol-scope.source_scope_v1.json"
 
+STARTUP_SEMANTICS_CHECK_SCRIPT="$ROOT_DIR/scripts/wasm/check-startup-semantics.sh"
+if [ ! -x "$STARTUP_SEMANTICS_CHECK_SCRIPT" ]; then
+  echo "error: missing executable $STARTUP_SEMANTICS_CHECK_SCRIPT" >&2
+  exit 1
+fi
+
 git_dirty_status() {
   if [ -n "$(git -C "$ROOT_DIR" status --porcelain)" ]; then
     printf '1\n'
@@ -230,7 +236,7 @@ RUNTIME_DIAG_COUNT=0
 if [ "$RUN_RUNTIME_DIAGNOSTICS" -eq 1 ]; then
   RUNTIME_DIAG_COUNT=3
 fi
-TOTAL_STEPS=$((10 + RUNTIME_DIAG_COUNT))
+TOTAL_STEPS=$((11 + RUNTIME_DIAG_COUNT))
 STEP_INDEX=0
 PIPELINE_STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 PIPELINE_STATUS="running"
@@ -327,7 +333,7 @@ write_run_manifest() {
   local failure_code="${4:-0}"
   local git_dirty_after
   git_dirty_after="$(git_dirty_status)"
-  node - "$RUN_MANIFEST_PATH" "$COMMAND_LOG_NDJSON" "$ROOT_DIR" "$RUN_ID" "$PIPELINE_STARTED_AT" "$finished_at" "$final_status" "$failure_step" "$failure_code" "$MANIFEST_GATE_STATUS" "$RUN_RUNTIME_DIAGNOSTICS" "$PIPELINE_PROVENANCE_PATH" "$MANIFEST_PATH" "$STARTUP_SYMBOL_SCOPE_OUT" "$GIT_SHA" "$GIT_SHORT_SHA" "$GIT_BRANCH" "$GIT_DIRTY_BEFORE" "$git_dirty_after" "$NODE_BIN" "$NODE_VERSION" "$CC_COMMAND" "$CLANG_VERSION" "$WASM_LD_COMMAND" "$WASM_LD_VERSION" "$CCL_BIN" "$CCL_VERSION" <<'NODE'
+  node - "$RUN_MANIFEST_PATH" "$COMMAND_LOG_NDJSON" "$ROOT_DIR" "$RUN_ID" "$PIPELINE_STARTED_AT" "$finished_at" "$final_status" "$failure_step" "$failure_code" "$MANIFEST_GATE_STATUS" "$RUN_RUNTIME_DIAGNOSTICS" "$PIPELINE_PROVENANCE_PATH" "$MANIFEST_PATH" "$STARTUP_SYMBOL_SCOPE_OUT" "$STARTUP_SYMBOL_RESOLUTION_OUT" "$GIT_SHA" "$GIT_SHORT_SHA" "$GIT_BRANCH" "$GIT_DIRTY_BEFORE" "$git_dirty_after" "$NODE_BIN" "$NODE_VERSION" "$CC_COMMAND" "$CLANG_VERSION" "$WASM_LD_COMMAND" "$WASM_LD_VERSION" "$CCL_BIN" "$CCL_VERSION" <<'NODE'
 const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
@@ -347,6 +353,7 @@ const [
   provenancePath,
   rootManifestPath,
   startupSymbolScopePath,
+  startupSymbolResolutionPath,
   gitSha,
   gitShort,
   gitBranch,
@@ -389,6 +396,7 @@ const artifactPaths = [
   "doc/wasm/root.image",
   rel(rootManifestPath),
   rel(startupSymbolScopePath),
+  rel(startupSymbolResolutionPath),
 ];
 
 const uniqueArtifactPaths = Array.from(new Set(artifactPaths));
@@ -521,6 +529,12 @@ if ! run_step "generate-bootstrap-l0-contract-sidecar" node scripts/wasm/generat
   exit "$FAILED_EXIT_CODE"
 fi
 if ! run_step "collect-startup-symbol-scope" "$CCL_BIN" --no-init --batch -l "$STARTUP_SYMBOL_SCOPE_SCRIPT" -- --repo-root "$(to_repo_path "$ROOT_DIR")" --out "$(to_repo_path "$STARTUP_SYMBOL_SCOPE_OUT")" --feature-profile wasm32-target-v1 --contract-json "$(to_repo_path "$CONTRACT_SIDECAR_OUT")"; then
+  PIPELINE_STATUS="fail"
+  MANIFEST_GATE_STATUS="not-run"
+  write_run_manifest "$PIPELINE_STATUS" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$FAILED_STEP" "$FAILED_EXIT_CODE"
+  exit "$FAILED_EXIT_CODE"
+fi
+if ! run_step "check-startup-semantics" scripts/wasm/check-startup-semantics.sh; then
   PIPELINE_STATUS="fail"
   MANIFEST_GATE_STATUS="not-run"
   write_run_manifest "$PIPELINE_STATUS" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$FAILED_STEP" "$FAILED_EXIT_CODE"

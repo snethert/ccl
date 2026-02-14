@@ -300,8 +300,9 @@ sidecar size bounded.
 This compile stage also refreshes startup symbol pipeline artifacts:
 `doc/wasm/bootstrap-l0-contract.v1.json` and
 `doc/wasm/startup-symbol-scope.source_scope_v1.json`.
-The scanner runs after contract sidecar generation and before downstream image
-builder handoff.
+The Common Lisp scanner is the sole producer of the
+`startup_symbol_scope_v1` artifact. It runs after contract sidecar generation
+and before downstream image builder handoff.
 
 If you already have a large legacy bundle, compact it in place without
 recompiling:
@@ -403,20 +404,23 @@ Update it when startup-critical requirements change:
 
 Startup binding map artifact:
 
-- Runtime bundle manifests may carry `startupBindingMap`
-  (`schema_version: "startup_binding_map_v1"`), generated during
-  `scripts/wasm/pack-inline-bundle-v2.mjs`.
+- Runtime bundle manifests carry `startupBindingMap`
+  (`schema_version: "startup_binding_map_v1"`), and
+  `scripts/wasm/pack-inline-bundle-v2.mjs` now requires this artifact to
+  already be present (no pack-time fallback generation).
 - The artifact is a single unified pre-fasload map with two target classes:
   `target_cell: "vcell"` for required special-variable initial values and
   `target_cell: "fcell"` for function bindings.
-- Function-side coverage always includes the full `level-0/*.lisp`
-  function-designator scan in the artifact.
+- Function-side coverage comes from the Common Lisp scanner-owned
+  `startup_symbol_scope_v1` input and its downstream artifact transforms.
 - Each entry is explicit and machine-readable:
   `availability: literal|entry-backed|deferred|unsupported` with
   `initializer.kind` and reason fields.
-- `make-real-image.mjs` resolves this artifact before the pre-fasload gate:
-  uses bundled `startupBindingMap` when present, otherwise regenerates it from
-  the same metadata path (no Lisp `LOAD`/script execution in `WASM_BOOT_EARLY`).
+- `make-real-image.mjs` runs the startup pipeline in source-scope mode and logs
+  `STARTUP_SYMBOL_PIPELINE`; it hard-fails on missing/invalid scope input
+  instead of runtime fallback generation.
+- no JS source scan: JS host stages consume prebuilt startup artifacts and do
+  not parse Lisp source during pack or runtime image construction.
 - Unified map application runs in one pass before
   `assertL0BootstrapContractOrFail(...)` and keeps strict L0 gate semantics and
   phase transitions unchanged.
@@ -433,11 +437,8 @@ Startup architecture plan (updated):
     bindings and emits explicit `target_cell: "vcell"` entries for
     `requiredSpecialVariables`, plus level-0 function `target_cell: "fcell"`
     bindings.
-  - By default it now seeds function binding emission from all unambiguous
-    runtime metadata symbol keys (plus contract roots), so internal/runtime and
-    L0-callable exposure is produced in one deterministic build-time pass; set
-    `CCL_WASM_STARTUP_BINDING_MAP_EMIT_ALL_FUNCTIONS=0` to return to
-    contract-seeded-only callable emission.
+  - Callable emission is contract-seeded-only in a deterministic build-time
+    pass; the legacy emit-all-functions environment toggle has been removed.
   - It also emits `startup_shadow_table` (`schema_version:
     "startup_shadow_table_v1"`): precomputed pre-fasload startup ownership for
     JS/Lisp bootstrap, including the deterministic
@@ -468,7 +469,7 @@ Startup architecture plan (updated):
     const-pool scans.
 - Required artifact coverage for pre-fasload:
   - required vcell initializations (`requiredSpecialVariables`);
-  - Level-0 function bindings (full source scan);
+  - Level-0 function bindings (from Common Lisp scanner artifacts; no JS source scan);
   - first-required-fasload callable closure needed at boundary.
 
 Machine-readable diagnostics:

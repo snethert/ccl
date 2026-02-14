@@ -69,6 +69,18 @@ Execution linkage:
   `startup-symbol-pipeline-implementation-plan.md` Section `22`.
 - Contradiction closure status: `contradiction-ledger.md`.
 
+## Closure Status Snapshot (2026-02-14)
+
+- Decision Register (Locked For Execution) remains authoritative and unchanged.
+- Gate status pointer:
+  - `G-01` through `G-11` are tracked in
+    `spec-closure-checklist.md` Section `I`.
+  - `G-11` is marked passed; `G-12` is still pending evidence-bundle closure.
+- Evidence pointers:
+  - `startup-symbol-pipeline-implementation-plan.md` Section `22` cards
+    `M-061`..`M-065`.
+  - `contradiction-ledger.md` Closure Board execution snapshot.
+
 ## Document Map
 
 - `step-01-to-04-foundation-spec.md`

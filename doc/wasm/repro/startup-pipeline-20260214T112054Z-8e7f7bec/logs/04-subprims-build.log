@@ -1,0 +1,4 @@
+/usr/local/opt/llvm/bin/clang -D__wasi__ -isystem /usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi --target=wasm32-unknown-unknown -include ../../platform-wasm32.h -c ../../wasm-subprims-provider.c -DWASM32 -D_REENTRANT -DVC_REVISION="unknown" -g -O2 -Wno-format -o wasm-subprims-provider.o
+mkdir -p ../../../doc/wasm/js
+/usr/local/opt/lld/bin/wasm-ld --no-entry --import-memory --import-table \
+	  -o ../../../doc/wasm/js/subprims.wasm wasm-subprims-provider.o
