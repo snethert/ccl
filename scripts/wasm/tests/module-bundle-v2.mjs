@@ -1,0 +1,1 @@
+../lib/module-bundle-v2.mjs
