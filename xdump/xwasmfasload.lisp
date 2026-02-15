@@ -23,7 +23,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (require "XFASLOAD" "ccl:xdump;xfasload"))
 
-;; Keep in sync with doc/wasm/subprims-map.json.
+;; Keep in sync with build/wasm32/subprims-map.json.
 (defconstant +wasm-macro-apply-entry-index+ 130)
 (defconstant +wasm-udf-entry-index+ 131)
 ;; _SPcall_closure index in the subprims table.

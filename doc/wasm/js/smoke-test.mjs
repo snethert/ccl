@@ -34,7 +34,7 @@ function readFileUrl(url) {
 }
 
 const kernelUrl = new URL("./wasmcl.wasm", import.meta.url);
-const subprimsMapUrl = new URL("../subprims-map.json", import.meta.url);
+const subprimsMapUrl = new URL("../../../build/wasm32/subprims-map.json", import.meta.url);
 
 const runtime = createSharedCclRuntime({
   // The module only requires 2 pages, but use something roomy for smoke tests.

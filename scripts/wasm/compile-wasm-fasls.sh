@@ -109,14 +109,17 @@ if [ ! -f "$CONTRACT_SIDECAR_SCRIPT" ]; then
   echo "error: missing $CONTRACT_SIDECAR_SCRIPT" >&2
   exit 1
 fi
-CONTRACT_SIDECAR_OUT="$ROOT_DIR/doc/wasm/bootstrap-l0-contract.v1.json"
+# Use build/wasm32/modules/ for generated artifacts
+MODULES_DIR="${CCL_WASM_MODULES_DIR:-$ROOT_DIR/build/wasm32/modules}"
+mkdir -p "$MODULES_DIR"
+CONTRACT_SIDECAR_OUT="$MODULES_DIR/bootstrap-l0-contract.v1.json"
 
 STARTUP_SYMBOL_SCOPE_SCRIPT="$ROOT_DIR/scripts/wasm/collect-startup-symbol-scope.lisp"
 if [ ! -f "$STARTUP_SYMBOL_SCOPE_SCRIPT" ]; then
   echo "error: missing $STARTUP_SYMBOL_SCOPE_SCRIPT" >&2
   exit 1
 fi
-STARTUP_SYMBOL_SCOPE_OUT="$ROOT_DIR/doc/wasm/startup-symbol-scope.source_scope_v1.json"
+STARTUP_SYMBOL_SCOPE_OUT="$MODULES_DIR/startup-symbol-scope.source_scope_v1.json"
 
 SCRIPT_ARGS=()
 if [ "$FORCE" -eq 1 ]; then

@@ -348,7 +348,7 @@ uint32_t wasm_debug_funcall_guard_last_nargs_raw_export(void) { return wasm_debu
 #define WASM_DEBIND_MASK_AOK_SEEN (1u << 30)
 #define WASM_DEBIND_MASK_AOK_THIS (1u << 31)
 
-/* Keep in sync with doc/wasm/subprims-map.json. */
+/* Keep in sync with build/wasm32/subprims-map.json. */
 #define WASM_SUBPRIM_PROGVRESTORE_INDEX 114
 
 static LispObj

@@ -175,7 +175,7 @@ behave in wasm.
 
 ### 2.2 Kernel/provider additions (WASM only)
 - Stub entrypoints are implemented in `lisp-kernel/wasm-subprims-provider.c`.
-- `doc/wasm/subprims-map.json` includes `_SPwasm_macro_apply_stub` and
+- `build/wasm32/subprims-map.json` includes `_SPwasm_macro_apply_stub` and
   `_SPwasm_udf_stub` (generated via `scripts/wasm/generate_subprims_artifacts.py`).
 - Keep the entry indices in `xdump/xwasmfasload.lisp` in sync with the map.
 
@@ -198,7 +198,7 @@ behave in wasm.
 
 ### Step‑2 Deliverables
 - wasm stub entrypoints in `lisp-kernel/wasm-subprims-provider.c`
-- `doc/wasm/subprims-map.json` updated with stub entries
+- `build/wasm32/subprims-map.json` updated with stub entries
 - xload backend wired to those stubs
 - wasm compiler lfun layout matches xfasload expectations (`compiler/WASM/wasm2.lisp`)
 - a wasm boot image that can load level‑1 in wasm
@@ -277,7 +277,7 @@ are generating the image from a host CCL today; required for a wasm‑only path)
 - `scripts/wasm/compile-wasm-fasls.sh` — cross‑compile wasm fasls.
 - `scripts/wasm/build-wasm-boot.{lisp,sh}` — build `wasm-boot.image`.
 - `scripts/wasm/make-real-image.lisp` — real image policy; injects `:wasm32-target`.
-- `doc/wasm/subprims-map.json` — subprims table map (stub entries).
+- `build/wasm32/subprims-map.json` — subprims table map (stub entries).
 - `scripts/wasm/generate_subprims_artifacts.py` — regenerates subprims map/headers.
 - `lisp-kernel/wasm-subprims-provider.c` — stub entrypoints for macro‑apply/UDF.
 - `doc/wasm/js/load-image.mjs` — host loader for boot/root images.
@@ -316,7 +316,7 @@ are generating the image from a host CCL today; required for a wasm‑only path)
    - Output: repo root `wasm-boot.image` (logical `ccl:ccl;wasm-boot.image`).
 6. Verify subprims stub indices are in sync.
    - Keep `xdump/xwasmfasload.lisp` constants aligned with
-     `doc/wasm/subprims-map.json`; regenerate via
+     `build/wasm32/subprims-map.json`; regenerate via
      `scripts/wasm/generate_subprims_artifacts.py` if the map changes.
 7. Validate the boot image in the wasm runtime.
    - Command: `node doc/wasm/js/load-image.mjs --start-lisp --modules doc/wasm/wasm-runtime-modules.json BOOT_IMAGE_PATH`.

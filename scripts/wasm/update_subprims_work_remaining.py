@@ -3,7 +3,7 @@ import json
 import re
 from pathlib import Path
 
-MAP_PATH = Path("doc/wasm/subprims-map.json")
+MAP_PATH = Path("build/wasm32/subprims-map.json")
 PROVIDER_PATH = Path("lisp-kernel/wasm-subprims-provider.c")
 KERNEL_STUB_PATH = Path("lisp-kernel/wasm-kernel-stubs.c")
 PLAN_PATH = Path("doc/wasm/subprims-provider-plan.md")
@@ -366,7 +366,7 @@ def main():
     out.append("")
     out.append("Auto-generated status map for WASM subprims based on:")
     out.append("")
-    out.append("- `doc/wasm/subprims-map.json` (canonical symbol list)")
+    out.append("- `build/wasm32/subprims-map.json` (canonical symbol list)")
     out.append("- `lisp-kernel/wasm-subprims-provider.c` (provider implementations)")
     out.append("- `lisp-kernel/wasm-kernel-stubs.c` (kernel-implemented subprims)")
     out.append("")

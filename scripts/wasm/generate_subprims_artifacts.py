@@ -4,7 +4,7 @@
 Source of truth: lisp-kernel/arm-spentry.s (C(sptab) local_label(start..end)).
 
 Outputs:
-- doc/wasm/subprims-map.json
+- build/wasm32/subprims-map.json
 - lisp-kernel/wasm-subprims-map.h
 - lisp-kernel/wasm-subprims-standin.c
 
@@ -61,7 +61,7 @@ def write_json(repo_root: Path, symbols: list[str]) -> None:
         "count": len(symbols),
         "symbols": symbols,
     }
-    path = repo_root / "doc" / "wasm" / "subprims-map.json"
+    path = repo_root / "build" / "wasm32" / "subprims-map.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 

@@ -14,7 +14,7 @@ The subprims table order must match the ARM `sptab` order, with WASM-only
 stub entries appended at the end. The canonical list is extracted from
 `lisp-kernel/arm-spentry.s` and checked in as:
 
-* `doc/wasm/subprims-map.json`
+* `build/wasm32/subprims-map.json`
 
 `demo-runner.mjs` shows one possible convention:
 

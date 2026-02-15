@@ -1215,7 +1215,7 @@ async function run() {
       const kernelExports = kernel.instance.exports;
 
       const subprimsBytes = await loadBytes("/doc/wasm/js/subprims.wasm");
-      const subprimsMap = await loadJson("/doc/wasm/subprims-map.json");
+      const subprimsMap = await loadJson("/build/wasm32/subprims-map.json");
       const subprims = await instantiateWasm(
         subprimsBytes,
         createCclImports({

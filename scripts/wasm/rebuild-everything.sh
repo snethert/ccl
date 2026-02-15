@@ -4,18 +4,29 @@ IFS=$'\n\t'
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
+# Source environment setup to get build directories
+if [ -f "$ROOT_DIR/scripts/wasm/env.sh" ]; then
+  # shellcheck source=/dev/null
+  . "$ROOT_DIR/scripts/wasm/env.sh" >/dev/null 2>&1 || true
+fi
+
 FORCE=1
 BUILD_ROOT_IMAGE=1
 ROOT_IMAGE_ALLOW_FAIL=1
 TRUTH_COLLECT=0
 
-ROOT_IMAGE_OUT="$ROOT_DIR/doc/wasm/root.image"
-ROOT_IMAGE_MANIFEST_OUT="$ROOT_DIR/doc/wasm/root.image.manifest.json"
-ROOT_IMAGE_RESOLUTION_OUT="$ROOT_DIR/doc/wasm/startup-symbol-resolution.source_scope_v1.json"
-MODULES_OUT="$ROOT_DIR/doc/wasm/wasm-runtime-modules.json"
-CONTRACT_OUT="$ROOT_DIR/doc/wasm/bootstrap-l0-contract.v1.json"
-SCOPE_OUT="$ROOT_DIR/doc/wasm/startup-symbol-scope.source_scope_v1.json"
-STARTUP_TRUTH_OUT="${CCL_WASM_STARTUP_TRUTH_OUT:-$ROOT_DIR/doc/wasm/startup_truth_v1.jsonl}"
+# Use environment variables for build paths with fallbacks
+BUILD_DIR="${CCL_WASM_BUILD_DIR:-$ROOT_DIR/build/wasm32}"
+IMAGES_DIR="${CCL_WASM_IMAGES_DIR:-$BUILD_DIR/images}"
+MODULES_DIR="${CCL_WASM_MODULES_DIR:-$BUILD_DIR/modules}"
+
+ROOT_IMAGE_OUT="${ROOT_IMAGE_OUT:-$IMAGES_DIR/root.image}"
+ROOT_IMAGE_MANIFEST_OUT="${ROOT_IMAGE_MANIFEST_OUT:-$IMAGES_DIR/root.image.manifest.json}"
+ROOT_IMAGE_RESOLUTION_OUT="${ROOT_IMAGE_RESOLUTION_OUT:-$MODULES_DIR/startup-symbol-resolution.source_scope_v1.json}"
+MODULES_OUT="${MODULES_OUT:-$MODULES_DIR/wasm-runtime-modules.json}"
+CONTRACT_OUT="${CONTRACT_OUT:-$MODULES_DIR/bootstrap-l0-contract.v1.json}"
+SCOPE_OUT="${SCOPE_OUT:-$MODULES_DIR/startup-symbol-scope.source_scope_v1.json}"
+STARTUP_TRUTH_OUT="${CCL_WASM_STARTUP_TRUTH_OUT:-$MODULES_DIR/startup_truth_v1.jsonl}"
 
 usage() {
   cat <<'EOF'
@@ -24,10 +35,15 @@ Usage: scripts/wasm/rebuild-everything.sh [options]
 Rebuild canonical WASM artifacts in dependency order so outputs stay in sync.
 
 Default steps:
-  1) lisp-kernel/wasm32 -> doc/wasm/js/wasmcl.wasm
+  1) lisp-kernel/wasm32 -> build/wasm32/kernel/wasmcl.wasm
   2) wasm-boot.image rebuild
   3) WASM fasls/modules + contract + startup symbol scope
   4) root.image rebuild (allowed to fail by default)
+
+Environment variables:
+  CCL_WASM_BUILD_DIR        Build output directory (default: build/wasm32)
+  CCL_WASM_IMAGES_DIR       Image files directory (default: $BUILD_DIR/images)
+  CCL_WASM_MODULES_DIR      Module files directory (default: $BUILD_DIR/modules)
 
 Options:
   --no-force                Do incremental builds where supported
@@ -141,10 +157,8 @@ if ! command -v git >/dev/null 2>&1; then
   exit 1
 fi
 
-if [ -f "$ROOT_DIR/scripts/wasm/env.sh" ]; then
-  # shellcheck source=/dev/null
-  . "$ROOT_DIR/scripts/wasm/env.sh" >/dev/null 2>&1 || true
-fi
+# Create build directories
+mkdir -p "$BUILD_DIR" "$IMAGES_DIR" "$MODULES_DIR"
 
 MAKE_ARGS=()
 if [ -n "${CC:-}" ]; then
@@ -202,7 +216,7 @@ if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
 fi
 
 log "sync rebuild complete. key outputs:"
-log "  doc/wasm/js/wasmcl.wasm"
+log "  ${CCL_WASM_KERNEL_DIR:-$BUILD_DIR/kernel}/wasmcl.wasm"
 log "  wasm-boot.image"
 log "  ${MODULES_OUT#$ROOT_DIR/}"
 log "  ${CONTRACT_OUT#$ROOT_DIR/}"
@@ -212,6 +226,9 @@ if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
   log "  ${ROOT_IMAGE_MANIFEST_OUT#$ROOT_DIR/}"
   log "  ${ROOT_IMAGE_RESOLUTION_OUT#$ROOT_DIR/}"
 fi
+
+log ""
+log "Build artifacts location: ${BUILD_DIR#$ROOT_DIR/}"
 
 log "git status (short):"
 git -C "$ROOT_DIR" status --short

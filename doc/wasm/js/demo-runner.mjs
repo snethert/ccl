@@ -18,7 +18,7 @@ import { createMicrokernel } from "./microkernel.mjs";
 // Update these URLs to point at your built artifacts.
 const kernelUrl = new URL("wasmcl.wasm", import.meta.url);
 const subprimsUrl = new URL("subprims.wasm", import.meta.url);
-const subprimsMapUrl = new URL("../subprims-map.json", import.meta.url);
+const subprimsMapUrl = new URL("../../../build/wasm32/subprims-map.json", import.meta.url);
 
 const REQUIRED_SUBPRIMS = ["_SPmkcatch1v", "_SPfuncall", "_SPnthrow1value"];
 const BOOT_ENTRY_INDEX = 200;

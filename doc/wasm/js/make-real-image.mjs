@@ -286,14 +286,14 @@ function usage() {
   console.log("");
   console.log("Options:");
   console.log("  --boot-image PATH   Boot image path (default: wasm-boot.image)");
-  console.log("  --output PATH       Host output path (default: doc/wasm/root.image)");
+  console.log("  --output PATH       Host output path (default: build/wasm32/images/root.image)");
   console.log("  --manifest-out PATH Root image manifest path (default: <output>.manifest.json)");
   console.log("  --build-provenance PATH Optional JSON object merged into manifest build.provenance");
-  console.log("  --wasm-output PATH  Path inside wasm persistence (default: doc/wasm/root.image)");
-  console.log("  --modules PATH      Compiled modules bundle (default: doc/wasm/wasm-runtime-modules.json)");
-  console.log("  --kernel PATH       wasmcl.wasm path (default: doc/wasm/js/wasmcl.wasm)");
-  console.log("  --subprims PATH     subprims.wasm path (default: doc/wasm/js/subprims.wasm)");
-  console.log("  --subprims-map PATH subprims-map.json path (default: doc/wasm/subprims-map.json)");
+  console.log("  --wasm-output PATH  Path inside wasm persistence (default: build/wasm32/images/root.image)");
+  console.log("  --modules PATH      Compiled modules bundle (default: build/wasm32/modules/wasm-runtime-modules.json)");
+  console.log("  --kernel PATH       wasmcl.wasm path (default: build/wasm32/kernel/wasmcl.wasm)");
+  console.log("  --subprims PATH     subprims.wasm path (default: build/wasm32/subprims/subprims.wasm)");
+  console.log("  --subprims-map PATH subprims-map.json path (default: build/wasm32/subprims-map.json)");
   console.log("  --startup-symbol-scope PATH  Startup symbol scope JSON artifact override");
   console.log("  --startup-symbol-resolution-out PATH  Optional startup symbol resolution artifact output");
   console.log("  --startup-symbol-contract PATH  Optional startup symbol contract JSON artifact override");
@@ -621,21 +621,29 @@ if (args.help) {
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(scriptDir, "../../..");
+
+// Use environment variables for build directories (default: build/wasm32/)
+const buildDir = process.env.CCL_WASM_BUILD_DIR ?? path.join(root, "build/wasm32");
+const imagesDir = process.env.CCL_WASM_IMAGES_DIR ?? path.join(buildDir, "images");
+const modulesDir = process.env.CCL_WASM_MODULES_DIR ?? path.join(buildDir, "modules");
+const kernelDir = process.env.CCL_WASM_KERNEL_DIR ?? path.join(buildDir, "kernel");
+const subprimsDir = process.env.CCL_WASM_SUBPRIMS_DIR ?? path.join(buildDir, "subprims");
+
 const defaultBootImage = path.join(root, "wasm-boot.image");
-const defaultOutput = path.join(root, "doc/wasm/root.image");
-const defaultWasmOutput = "doc/wasm/root.image";
+const defaultOutput = path.join(imagesDir, "root.image");
+const defaultWasmOutput = "build/wasm32/images/root.image";
 const startupTruthCollectEnabled = startupTruthCollectEnvEnabled;
-const defaultStartupTruthOutPath = path.join(root, "doc/wasm/startup_truth_v1.jsonl");
+const defaultStartupTruthOutPath = path.join(modulesDir, "startup_truth_v1.jsonl");
 const startupTruthHostOutPath = startupTruthCollectEnabled
   ? path.resolve(process.env.CCL_WASM_STARTUP_TRUTH_OUT ?? defaultStartupTruthOutPath)
   : null;
-const startupTruthPersistencePath = "doc/wasm/startup_truth_v1.jsonl";
+const startupTruthPersistencePath = "build/wasm32/modules/startup_truth_v1.jsonl";
 // Policy: keep compiled modules external by default (JSON + .bin sidecar)
 // instead of embedding them in the saved heap image.
-const defaultModules = path.join(root, "doc/wasm/wasm-runtime-modules.json");
-const kernelPath = args.kernel ?? path.join(root, "doc/wasm/js/wasmcl.wasm");
-const subprimsPath = args.subprims ?? path.join(root, "doc/wasm/js/subprims.wasm");
-const subprimsMapPath = args.subprimsMap ?? path.join(root, "doc/wasm/subprims-map.json");
+const defaultModules = path.join(modulesDir, "wasm-runtime-modules.json");
+const kernelPath = args.kernel ?? path.join(kernelDir, "wasmcl.wasm");
+const subprimsPath = args.subprims ?? path.join(subprimsDir, "subprims.wasm");
+const subprimsMapPath = args.subprimsMap ?? path.join(buildDir, "subprims-map.json");
 const bootImagePath = args.bootImage ?? defaultBootImage;
 const outputPath = args.output ?? defaultOutput;
 const manifestOutPath = args.manifestOut ?? `${outputPath}.manifest.json`;

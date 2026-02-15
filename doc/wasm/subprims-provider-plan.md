@@ -104,7 +104,7 @@ Proposed approach:
 
 **Table wiring:**
 - JS installs provider exports into the shared table using
-  `doc/wasm/subprims-map.json`.
+  `build/wasm32/subprims-map.json`.
 - After installing a real provider, host sets `wasm_set_subprims_ready(1)`.
 
 ## Implementation notes per subprim (guidance)

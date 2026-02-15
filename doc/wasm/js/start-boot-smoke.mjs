@@ -38,7 +38,7 @@ const imageLen = imageBytes.byteLength >>> 0;
 
 const subprimsUrl = new URL("./subprims.wasm", import.meta.url);
 const subprimsBytes = await readFileUrl(subprimsUrl);
-const subprimsMapUrl = new URL("../subprims-map.json", import.meta.url);
+const subprimsMapUrl = new URL("../../../build/wasm32/subprims-map.json", import.meta.url);
 const subprimsMap = JSON.parse(await fs.readFile(fileURLToPath(subprimsMapUrl), "utf-8"));
 
 const runtime = createSharedCclRuntime({

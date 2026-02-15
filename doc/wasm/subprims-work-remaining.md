@@ -2,7 +2,7 @@
 
 Auto-generated status map for WASM subprims based on:
 
-- `doc/wasm/subprims-map.json` (canonical symbol list)
+- `build/wasm32/subprims-map.json` (canonical symbol list)
 - `lisp-kernel/wasm-subprims-provider.c` (provider implementations)
 - `lisp-kernel/wasm-kernel-stubs.c` (kernel-implemented subprims)
 

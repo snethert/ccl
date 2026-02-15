@@ -61,7 +61,7 @@ function assertPhaseOrderEvidence(phaseOrder, completed) {
 
 const kernelUrl = new URL("./wasmcl.wasm", import.meta.url);
 const subprimsUrl = new URL("./subprims.wasm", import.meta.url);
-const subprimsMapUrl = new URL("../subprims-map.json", import.meta.url);
+const subprimsMapUrl = new URL("../../../build/wasm32/subprims-map.json", import.meta.url);
 const imageUrl = new URL("../minimal.image", import.meta.url);
 const bundleUrl = new URL("../wasm-smoke-modules.json", import.meta.url);
 

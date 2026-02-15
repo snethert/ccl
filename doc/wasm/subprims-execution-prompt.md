@@ -12,7 +12,7 @@ Implement missing or incomplete WASM subprims in `lisp-kernel/wasm-subprims-prov
 - Generator: `scripts/wasm/update_subprims_work_remaining.py`
 - Provider source: `lisp-kernel/wasm-subprims-provider.c`
 - Kernel stubs: `lisp-kernel/wasm-kernel-stubs.c`
-- Subprims list: `doc/wasm/subprims-map.json`
+- Subprims list: `build/wasm32/subprims-map.json`
 - Tier guidance: `doc/wasm/subprims-provider-plan.md`
 - Semantics reference: `lisp-kernel/arm-spentry.s`, `lisp-kernel/x86-subprims64.s`
 

@@ -13,77 +13,92 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# ============================================================================
+# CCL WASM32 Kernel Build
+# ============================================================================
+
+# Repository root (two levels up from lisp-kernel/wasm32/)
+REPO_ROOT := $(shell cd ../.. && pwd)
+
+# Include build configuration
+-include config.mk
+
+# ============================================================================
+# Toolchain Setup
+# ============================================================================
+
+# Use environment variables with fallbacks from config.mk
+CC := $(CCL_WASM_CC)
+WASM_LD := $(CCL_WASM_LD)
+WASM_TARGET := $(CCL_WASM_TARGET)
+
+# Build directories
+BUILD_DIR := $(CCL_WASM_BUILD_DIR)
+KERNEL_DIR := $(CCL_WASM_KERNEL_DIR)
+
+# Output file
+KERNEL_WASM := $(KERNEL_DIR)/wasmcl.wasm
+
+# ============================================================================
+# Compiler and Linker Flags
+# ============================================================================
+
 VC_REVISION := "$(shell git describe --dirty 2>/dev/null || echo unknown)"
 
 VPATH = ../
-# VPATH = ../
 RM = /bin/rm
-# compile with clang for wasm32
-WASM_TARGET ?= wasm32-unknown-unknown
-WASM_ALLOW_MEMORY_GROWTH ?= 1
-WASM_LD ?= wasm-ld-18
-CC ?= clang
-# Set to wasm32-wasi if targeting WASI.
+
+WASM_ALLOW_MEMORY_GROWTH := $(CCL_WASM_ALLOW_MEMORY_GROWTH)
+
 CDEFINES = -DWASM32 -DWASM_ALLOW_MEMORY_GROWTH=$(WASM_ALLOW_MEMORY_GROWTH) -D_REENTRANT -DVC_REVISION=$(VC_REVISION)
-CDEBUG = -g
-COPT = -O2
-# Once in a while, -Wformat says something useful.  The odds are against that,
-# however.
+CDEBUG = $(CCL_WASM_DEBUG)
+COPT = $(CCL_WASM_OPT)
 WFORMAT = -Wno-format
 PLATFORM_H = platform-wasm32.h
 
-.DEFAULT_GOAL := all
+# User-provided additional flags
+CFLAGS_EXTRA := $(CCL_WASM_CFLAGS)
+LDFLAGS_EXTRA := $(CCL_WASM_LDFLAGS)
 
-.c.o:
-	$(CC) --target=$(WASM_TARGET) -include ../$(PLATFORM_H) -c $< $(CDEFINES) $(CDEBUG) $(COPT) $(WFORMAT) -o $@
+# ============================================================================
+# Source Files
+# ============================================================================
 
-COBJ  = pmcl-kernel.o gc-common.o wasm-gc.o wasm-cstack.o wasm-exceptions.o wasm-host.o wasm-time.o wasm-kernel-imports.o wasm-kernel-request-smoke.o wasm-step-demo.o wasm-ccl-step.o wasm-subprims.o wasm-subprims-standin.o \
-		wasm-subprims-smoke.o wasm-no-wasi-libc.o wasm-kernel-stubs.o \
-		bits.o image.o thread_manager.o lisp-debug.o memory.o unix-calls.o
+COBJ = pmcl-kernel.o gc-common.o wasm-gc.o wasm-cstack.o wasm-exceptions.o \
+       wasm-host.o wasm-time.o wasm-kernel-imports.o wasm-kernel-request-smoke.o \
+       wasm-step-demo.o wasm-ccl-step.o wasm-subprims.o wasm-subprims-standin.o \
+       wasm-subprims-smoke.o wasm-no-wasi-libc.o wasm-kernel-stubs.o \
+       bits.o image.o thread_manager.o lisp-debug.o memory.o unix-calls.o
 
 DEBUGOBJ =
-KERNELOBJ= $(COBJ)
+KERNELOBJ = $(COBJ)
 
 CHEADERS = area.h bits.h arm-constants.h lisp-errors.h gc.h lisp.h \
-	lisp-exceptions.h lisp_globals.h macros.h memprotect.h image.h \
-	threads.h constants.h wasm-host.h $(PLATFORM_H)
+           lisp-exceptions.h lisp_globals.h macros.h memprotect.h image.h \
+           threads.h constants.h wasm-host.h $(PLATFORM_H)
 
-# Subprims linked into the kernel ?
-# Yes:
+# ============================================================================
+# Build Rules
+# ============================================================================
 
-# KSPOBJ = $(SPOBJ)
-# all:	../../armcl
+.DEFAULT_GOAL := all
 
+# Compilation rule
+.c.o:
+	$(CC) --target=$(WASM_TARGET) -include ../$(PLATFORM_H) -c $< \
+	  $(CDEFINES) $(CDEBUG) $(COPT) $(WFORMAT) $(CFLAGS_EXTRA) -o $@
 
-# No:
-
-# KSPOBJ=
-# all:	../../armcl ../../subprims.so
-
-# OSLIBS = -ldl -lm -lpthread -lrt
-
-
-# ../../armcl:	$(KSPOBJ) $(KERNELOBJ) $(DEBUGOBJ)
-# 	$(CC)  $(CDEBUG)  -Wl,--export-dynamic $(HASH_STYLE) -o $@  $(KSPOBJ) $(KERNELOBJ) $(DEBUGOBJ) -Wl,--no-as-needed $(OSLIBS)
-
-
-# $(SPOBJ): $(SPINC)
-# $(ASMOBJ): $(SPINC)
+# Dependencies
 $(COBJ): $(CHEADERS)
 
-
-cclean:
-	$(RM) -f $(KERNELOBJ) $(DEBUGOBJ) ../../doc/wasm/js/wasmcl.wasm
-
-clean:	cclean
-	$(RM) -f $(SPOBJ)
-
-.PHONY: all wasmcl
+# Build targets
+.PHONY: all wasmcl clean cclean
 
 all: wasmcl
 
 wasmcl: $(KERNELOBJ)
-	mkdir -p ../../doc/wasm/js
+	@echo "Building WASM kernel..."
+	@mkdir -p $(KERNEL_DIR)
 	$(WASM_LD) --no-entry --import-memory --import-table \
 	  --export=wasm_ccl_start \
 	  --export=wasm_ccl_start_lisp \
@@ -125,12 +140,12 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_debug_cons_cdr_raw \
 	  --export=wasm_debug_package_names_raw \
 	  --export=wasm_debug_find_package_common_lisp_raw \
-		  --export=wasm_debug_find_symbol_identity_raw \
-		  --export=wasm_debug_find_symbol_toplevel_raw \
-		  --export=wasm_debug_find_symbol_percent_set_toplevel_raw \
-		  --export=wasm_debug_find_symbol_require_structure_type_raw \
-		  --export=wasm_debug_symbol_fcell_raw \
-		  --export=wasm_debug_get_nrs_toplfunc_raw \
+	  --export=wasm_debug_find_symbol_identity_raw \
+	  --export=wasm_debug_find_symbol_toplevel_raw \
+	  --export=wasm_debug_find_symbol_percent_set_toplevel_raw \
+	  --export=wasm_debug_find_symbol_require_structure_type_raw \
+	  --export=wasm_debug_symbol_fcell_raw \
+	  --export=wasm_debug_get_nrs_toplfunc_raw \
 	  --export=wasm_debug_function_entry_index \
 	  --export=wasm_debug_misc_subtag \
 	  --export=wasm_debug_copy_symbol_name \
@@ -151,7 +166,40 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_box_signed_64 \
 	  --export=wasm_alloc_cons_bridge \
 	  --export=_SPfix_overflow --export=_SPmakes32 \
-	  -o ../../doc/wasm/js/wasmcl.wasm $(KERNELOBJ)
+	  $(LDFLAGS_EXTRA) \
+	  -o $(KERNEL_WASM) $(KERNELOBJ)
+	@echo "Kernel built: $(KERNEL_WASM)"
 
-# strip:	../../armcl
-# 	strip -g ../../armcl
+# Clean targets
+cclean:
+	$(RM) -f $(KERNELOBJ) $(DEBUGOBJ) $(KERNEL_WASM)
+
+clean: cclean
+
+# ============================================================================
+# Help
+# ============================================================================
+
+.PHONY: help
+help:
+	@echo "CCL WASM32 Kernel Build"
+	@echo ""
+	@echo "Targets:"
+	@echo "  all (default)  - Build the WASM kernel"
+	@echo "  clean          - Remove build artifacts"
+	@echo "  help           - Show this help"
+	@echo ""
+	@echo "Configuration (via environment variables):"
+	@echo "  CCL_WASM_CC               - C compiler (current: $(CC))"
+	@echo "  CCL_WASM_LD               - WASM linker (current: $(WASM_LD))"
+	@echo "  CCL_WASM_TARGET           - Target triple (current: $(WASM_TARGET))"
+	@echo "  CCL_WASM_BUILD_DIR        - Build directory (current: $(BUILD_DIR))"
+	@echo "  CCL_WASM_CFLAGS           - Additional compiler flags"
+	@echo "  CCL_WASM_LDFLAGS          - Additional linker flags"
+	@echo "  CCL_WASM_OPT              - Optimization level (current: $(COPT))"
+	@echo "  CCL_WASM_DEBUG            - Debug flags (current: $(CDEBUG))"
+	@echo ""
+	@echo "Output:"
+	@echo "  $(KERNEL_WASM)"
+	@echo ""
+	@echo "See config.mk for defaults and doc/wasm/build.md for documentation."

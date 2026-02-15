@@ -3,7 +3,10 @@ set -euo pipefail
 IFS=$'\n\t'
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-OUTPUT="$ROOT_DIR/doc/wasm/wasm-smoke-modules.json"
+# Use build/wasm32/modules/ for generated artifacts
+MODULES_DIR="${CCL_WASM_MODULES_DIR:-$ROOT_DIR/build/wasm32/modules}"
+mkdir -p "$MODULES_DIR"
+OUTPUT="$MODULES_DIR/wasm-smoke-modules.json"
 DRYRUN=0
 
 usage() {
@@ -11,7 +14,7 @@ usage() {
 Usage: scripts/wasm/compile-smoke-modules.sh [options]
 
 Options:
-  --output PATH   Write bundle to PATH (default: doc/wasm/wasm-smoke-modules.json)
+  --output PATH   Write bundle to PATH (default: build/wasm32/modules/wasm-smoke-modules.json)
   --dry-run       Print commands without executing
   -h, --help      Show this help
 EOF

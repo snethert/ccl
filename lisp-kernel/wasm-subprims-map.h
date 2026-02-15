@@ -2,7 +2,7 @@
  * Auto-generated from lisp-kernel/arm-spentry.s, with
  * WASM-only stub entries appended at the end.
  *
- * Keep this in sync with the canonical subprim table order; WASM subprim indices must match.
+ * Keep this in sync with the ARM sptab order; WASM subprim indices must match.
  */
 
 #ifndef __ccl_wasm_subprims_map_h__

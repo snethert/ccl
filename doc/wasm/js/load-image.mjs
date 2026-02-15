@@ -773,7 +773,7 @@ if (runToplevel || runStartLisp) {
   const subprimsUrl = new URL("subprims.wasm", import.meta.url);
   const subprimsBytes = await fs.readFile(fileURLToPath(subprimsUrl));
   assertManifestHash("subprimsWasm", subprimsBytes, manifest?.artifacts?.subprimsWasm?.path);
-  const subprimsMapUrl = new URL("../subprims-map.json", import.meta.url);
+  const subprimsMapUrl = new URL("../../../build/wasm32/subprims-map.json", import.meta.url);
   subprimsMap = JSON.parse(await fs.readFile(fileURLToPath(subprimsMapUrl), "utf-8"));
 
   subprims = await instantiateWasm(

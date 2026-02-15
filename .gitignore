@@ -70,3 +70,6 @@ __pycache__/
 /doc/wasm/spec/core-multipage/
 /doc/wasm/spec/SOURCES.md
 /doc/wasm/spec/core-hypercompact*
+
+# wasm build artifacts (now in build/ directory)
+/build/

@@ -144,7 +144,7 @@ function trace(msg) {
 
 const kernelUrl = new URL("./wasmcl.wasm", import.meta.url);
 const subprimsUrl = new URL("./subprims.wasm", import.meta.url);
-const subprimsMapUrl = new URL("../subprims-map.json", import.meta.url);
+const subprimsMapUrl = new URL("../../../build/wasm32/subprims-map.json", import.meta.url);
 const rootImageUrl = new URL("../root.image", import.meta.url);
 const minimalImageUrl = new URL("../minimal.image", import.meta.url);
 const runtimeBundleUrl = new URL("../wasm-runtime-modules.json", import.meta.url);

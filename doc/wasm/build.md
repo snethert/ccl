@@ -1,557 +1,404 @@
-# WASM Build Notes (No WASI Runtime)
+# Building CCL WASM
 
-This describes the current “bring-up” build of the CCL WASM32 kernel on Linux
-(Mint/Ubuntu-style packaging), with a **strict no-WASI runtime** constraint:
-the resulting `wasmcl.wasm` must **not** import `wasi_snapshot_preview1.*`.
+**Last Updated:** 2026-02-15
 
-## Summary (Current Decisions)
+This guide covers how to build the CCL WASM port from source.
 
-- Compile with a wasm32 target and WASI headers.
-  - Linux: `--target=wasm32-wasi`.
-  - macOS: Homebrew `clang` with `-D__wasi__` and `-isystem .../include/wasm32-wasi` (see `scripts/wasm/env.sh`).
-- Link **freestanding** with `wasm-ld` and **do not** link against `wasi-libc`.
-- Provide a minimal C “libc shim” inside the kernel (`lisp-kernel/wasm-no-wasi-libc.c`).
-- The host (JS microkernel) provides `env.memory` (imported linear memory).
-- The host (JS microkernel) provides `env.__indirect_function_table` (imported function table for `call_indirect`).
-- The host (JS microkernel) provides the **kernel_request ABI** imports under module `ccl`
-  (`kernel_request`, `kernel_poll`, `kernel_result`, `kernel_response_size`, `kernel_copy_response`, `kernel_drop_request`).
-- The host must call `wasm_set_cstack_bounds(base, size)` before starting Lisp.
-- The host may also call `wasm_set_cstack_pointer(sp)` to set/restore the cstack SP.
+---
 
-## Prerequisites (Mint/Ubuntu)
+## Quick Start
 
-These packages are expected:
-
-- `clang-18`
-- `lld-18` (provides `wasm-ld-18`)
-- `wasi-libc` (headers only, for compilation)
-- Optional: `wabt` (for `wasm-objdump`, `wasm2wat`)
-- Optional: `binaryen` (for `wasm-opt`)
-
-Tool locations you should have:
+**Most users:** Just run these commands to build everything:
 
 ```bash
-clang --version
-wasm-ld-18 --version
-wasm-objdump --version
+cd /path/to/ccl
+source scripts/wasm/env.sh
+scripts/wasm/rebuild-everything.sh
 ```
 
-## Prerequisites (macOS + Homebrew)
+That's it! The script will:
+- Auto-detect your toolchain
+- Build the WASM kernel
+- Compile runtime modules
+- Create necessary images
 
-Install a wasm-capable toolchain. Apple clang can parse wasm targets but
-cannot emit wasm objects; you need Homebrew LLVM + LLD:
+**Build artifacts** will be in `build/wasm32/`:
+```
+build/wasm32/
+├── kernel/wasmcl.wasm       # WASM kernel binary
+├── images/*.image           # Heap images
+└── modules/*.json           # Compiled modules
+```
+
+---
+
+## Prerequisites
+
+### macOS (Homebrew)
 
 ```bash
 brew install llvm lld wasi-libc
 ```
 
-Use the helper to export the correct toolchain variables:
+That's all you need. The `env.sh` script auto-detects Homebrew installations.
+
+### Linux (Ubuntu/Debian/Mint)
+
+```bash
+sudo apt install clang-18 lld-18 wasi-libc
+```
+
+Or use your distribution's package manager equivalent.
+
+### Verification
+
+Check your toolchain:
 
 ```bash
 source scripts/wasm/env.sh
 ```
 
-This sets:
+You should see output like:
 
-- `CC` to Homebrew `clang` with WASI headers and `-D__wasi__`
-- `WASM_LD` to Homebrew `wasm-ld`
-
-## Toolchain Sanity Check
-
-After `source scripts/wasm/env.sh`, verify the toolchain:
-
-```bash
-$CC --version
-$WASM_LD --version
+```
+CCL WASM Environment Configured
+================================
+Platform:      macos
+Compiler:      /usr/local/opt/llvm/bin/clang
+Linker:        /usr/local/opt/lld/bin/wasm-ld
+Target:        wasm32-unknown-unknown
+Build Dir:     /Users/you/ccl/build/wasm32
+...
 ```
 
-## Note About `wasi-libc` Layout
+---
 
-On Mint/Ubuntu, `wasi-libc` does **not** ship a `wasi-sysroot/` directory (that
-layout comes from `wasi-sdk`). The headers live under:
+## Building
 
-- `/usr/include/wasm32-wasi`
+### Full Build (Recommended)
 
-That’s why `dpkg -L wasi-libc | rg 'wasi-sysroot$'` returns nothing.
-
-On macOS/Homebrew, headers live under:
-
-- `/usr/local/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi`
-- or `/opt/homebrew/opt/wasi-libc/share/wasi-sysroot/include/wasm32-wasi`
-
-## Build The Kernel
-
-**IMPORTANT (macOS/Homebrew):** You MUST run the toolchain setup script **before**
-invoking `make`, otherwise the build will fail (commonly with
-`fatal error: 'errno.h' file not found`).
+Rebuild everything from scratch:
 
 ```bash
 source scripts/wasm/env.sh
-make -C lisp-kernel/wasm32 CC="$CC"
+scripts/wasm/rebuild-everything.sh
 ```
 
-Build output is currently produced by `lisp-kernel/wasm32/Makefile` into:
+### Incremental Build
 
-- `doc/wasm/js/wasmcl.wasm`
-
-Build command (Linux / `--target=wasm32-wasi` toolchains):
-
-```bash
-make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi clean
-make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi
-```
-
-On macOS, if `scripts/wasm/env.sh` is not used, this explicit command works:
-
-```bash
-make -C lisp-kernel/wasm32 WASM_TARGET=wasm32-wasi \
-  CC='/usr/local/opt/llvm@18/bin/clang-18 --sysroot=/usr/local/opt/wasi-libc/share/wasi-sysroot'
-```
-
-On macOS (after `source scripts/wasm/env.sh`), you can also run:
-
-```bash
-make -C lisp-kernel/wasm32 CC="$CC"
-```
-
-## Locked macOS Workflow (Fixed)
-
-**STOP: DO NOT EDIT THIS SECTION WITH AI TOOLS.**
-**THIS SECTION IS FROZEN. ONLY A HUMAN MAINTAINER MAY CHANGE IT.**
-
-This repository had a working macOS flow using `scripts/wasm/env.sh` plus
-Makefile-driven builds. The correct historical workflow is:
+Build only what changed:
 
 ```bash
 source scripts/wasm/env.sh
-make -C lisp-kernel/wasm32 clean
-make -C lisp-kernel/wasm32 CC="$CC" WASM_LD="$WASM_LD"
-scripts/wasm/compile-wasm-fasls.sh --force --modules-out doc/wasm/wasm-runtime-modules.json
+scripts/wasm/rebuild-everything.sh --no-force
 ```
 
-Why `CC="$CC" WASM_LD="$WASM_LD"` is required in this branch state:
+### Build Individual Components
 
-- In older WASM Makefile revisions (including `b46646c3`), the kernel Makefile
-  uses `CC = clang` (hard assignment), not `CC ?= clang`.
-- That means `source scripts/wasm/env.sh` alone is not enough unless `CC` and
-  `WASM_LD` are passed explicitly on the `make` command line.
-
-Toolchain sanity commands (from the same env):
-
+**Kernel only:**
 ```bash
 source scripts/wasm/env.sh
-echo "$CC"
-echo "$WASM_LD"
-eval "$CC --version" | head -n 1
-"$WASM_LD" --version | head -n 1
+make -C lisp-kernel/wasm32
 ```
 
-**Policy for this section:**
-
-- Do not replace this workflow with ad hoc one-off compiler/linker command
-  lines.
-- Do not "simplify" this section via automated edits.
-- Do not rewrite this section with AI-generated alternatives.
-- Any future change here must be done manually by a human after a verified,
-  passing end-to-end rebuild.
-
-## Build The Subprims Provider (Scaffold)
-
-This optional build produces a separate `subprims.wasm` module for the shared
-subprims table:
-
-```bash
-make -C lisp-kernel/wasm32/subprims WASM_TARGET=wasm32-wasi clean
-make -C lisp-kernel/wasm32/subprims WASM_TARGET=wasm32-wasi
-```
-
-On macOS (after `source scripts/wasm/env.sh`), just run:
-
-```bash
-make -C lisp-kernel/wasm32/subprims CC="$CC"
-```
-
-The JS host should only call `wasm_set_subprims_ready(1)` when the provider
-exports the required Tier 0 subprims (`_SPmkcatch1v`, `_SPfuncall`,
-`_SPnthrow1value`).
-
-## Verify “No WASI Runtime”
-
-Confirm there are **no** `wasi_snapshot_preview1` imports:
-
-```bash
-wasm-objdump -x doc/wasm/js/wasmcl.wasm | rg 'wasi_snapshot_preview1' || true
-```
-
-Expected imports (current model):
-
-- `env.memory`
-- `env.__indirect_function_table`
-- `ccl.kernel_request`
-- `ccl.kernel_poll`
-- `ccl.kernel_result`
-- `ccl.kernel_response_size`
-- `ccl.kernel_copy_response`
-- `ccl.kernel_drop_request`
-
-## Run The Node Smoke Test
-
-This validates:
-
-- `call_indirect` subprims dispatch via `wasm_call_subprim_fixnum`
-- manual cstack relocation across `memory.grow`
-- kernel_request ABI wiring via `kernel-request-smoke.mjs`
-
-After building `doc/wasm/js/wasmcl.wasm`, run all smoke tests:
-
-```bash
-node doc/wasm/js/all-smoke.mjs
-```
-
-To run a single test, invoke it directly. The authoritative list is in
-`doc/wasm/js/all-smoke.mjs`.
-
-These smoke tests are sandbox-safe. External LMDB/IndexedDB integration tests
-are documented in `doc/testing.md`; default unattended persistence direction is
-the memory-first snapshot backend (see `doc/wasm/persistence-dev-environment.md`).
-
-**Standing rule:** Every smoke test must be standalone and must be added to
-`doc/wasm/js/all-smoke.mjs`. When a new smoke test is created, run:
-
-```bash
-node doc/wasm/js/all-smoke.mjs
-node doc/wasm/js/<new-test>.mjs
-```
-
-## Compile WASM Smoke Modules
-
-Generate the compiler-emitted module bundle used by `compiler-smoke.mjs`:
-
-```bash
-scripts/wasm/compile-smoke-modules.sh --output doc/wasm/wasm-smoke-modules.json
-```
-
-`scripts/wasm/{macos,linux}-setup.sh --smoke` will run this automatically when
-`ccl` is available on the host.
-
-## Load A Heap Image (Boot-Only)
-
-The kernel can also load an OpenMCL heap image from a host-provided byte blob
-and return to JS **without** entering Lisp yet (it skips `start_lisp`).
-
-```bash
-node doc/wasm/js/load-image.mjs /path/to/ccl.image
-```
-To enter Lisp after loading (requires subprims + boot entry). For real images,
-pass the compiled-modules bundle produced by `compile-wasm-fasls.sh`:
-```bash
-node doc/wasm/js/load-image.mjs --mode start-lisp --modules /path/to/wasm-runtime-modules.json /path/to/ccl.image
-```
-By default `load-image.mjs` enforces a strict bootstrap sanity contract
-(`--bootstrap-contract strict`). For diagnostic runs that should continue past
-contract failures, use `--bootstrap-contract warn`.
-
-To run the toplevel once (explicit entry, no stepping):
-```bash
-node doc/wasm/js/load-image.mjs --mode run-toplevel --modules /path/to/wasm-runtime-modules.json /path/to/ccl.image
-```
-
-## Generate A Minimal WASM Image
-
-Build a tiny bring-up image with a stub toplevel function entrypoint:
-
-```bash
-python3 scripts/wasm/make_minimal_image.py --output doc/wasm/minimal.image
-```
-
-The default entrypoint table index is `200` (see `doc/wasm/ABI.md`).
-
-To exercise the toplevel loop with the minimal image:
-
-```bash
-node doc/wasm/js/load-image.mjs --run doc/wasm/minimal.image
-```
-Or to boot via `start_lisp` instead of the explicit toplevel run:
-```bash
-node doc/wasm/js/load-image.mjs --start-lisp doc/wasm/minimal.image
-```
-(`minimal.image` does not require the compiled-modules bundle.)
-
-## Generate A Real WASM Image (Seed)
-
-Build a real WASM32 heap image with `%toplevel-function%` seeded to
-`toplevel-loop` (so `start_lisp` can enter the real Lisp toplevel once the
-image is loaded).
-
-### Option A (Host CCL, recommended)
-
-1. Cross-compile the WASM32 fasls needed by `level-1.lafsl`, and emit the
-   compiled-modules bundle used by the JS loader:
-
-```bash
-scripts/wasm/compile-wasm-fasls.sh --modules-out doc/wasm/wasm-runtime-modules.json
-```
-This produces `doc/wasm/wasm-runtime-modules.json` plus the sidecar
-`doc/wasm/wasm-runtime-modules.bin` in the same directory.
-It also emits `doc/wasm/wasm-runtime-modules.idx`; the manifest format is
-`ccl-wasm-modules-v2`.
-The bundle writer deduplicates identical const-pool payloads to keep the
-sidecar size bounded.
-This compile stage also refreshes startup symbol pipeline artifacts:
-`doc/wasm/bootstrap-l0-contract.v1.json` and
-`doc/wasm/startup-symbol-scope.source_scope_v1.json`.
-The Common Lisp scanner is the sole producer of the
-`startup_symbol_scope_v1` artifact. It runs after contract sidecar generation
-and before downstream image builder handoff.
-
-If you already have a large legacy bundle, compact it in place without
-recompiling:
-
-```bash
-node scripts/wasm/compact-runtime-modules.mjs --manifest doc/wasm/wasm-runtime-modules.json --in-place
-```
-
-For stronger size reduction, also compress deduplicated const pools (gzip is
-browser-safe):
-
-```bash
-node scripts/wasm/compact-runtime-modules.mjs --manifest doc/wasm/wasm-runtime-modules.json --in-place --compress-const-pools
-```
-
-For max compression in Node-only workflows, use Brotli:
-
-```bash
-node scripts/wasm/compact-runtime-modules.mjs --manifest doc/wasm/wasm-runtime-modules.json --in-place --const-pool-encoding br --brotli-quality 7
-```
-
-2. Build the wasm boot image via cross-xload:
-
+**Boot image only:**
 ```bash
 scripts/wasm/build-wasm-boot.sh
 ```
 
-3. Run the real-image policy script on the host (it injects `:wasm32-target`
-   into `*features*` if missing, so a normal 64-bit host CCL is sufficient):
-
+**Runtime modules only:**
 ```bash
-ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --output doc/wasm/root.image
-```
-On non-WASM hosts this now preserves the host workflow by delegating to
-`node doc/wasm/js/make-real-image.mjs` under the hood.
-
-To write an explicit hash manifest alongside the image:
-
-```bash
-ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --output doc/wasm/root.image --manifest-out doc/wasm/root.image.manifest.json
+scripts/wasm/compile-wasm-fasls.sh
 ```
 
-4. Validate the real image in the JS loader (uses the compiled-modules bundle):
+---
+
+## Environment Variables
+
+All build paths can be customized via environment variables. Set them **before** sourcing `env.sh`:
+
+### Toolchain
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `CCL_WASM_CC` | C compiler | `clang` (auto-detected) |
+| `CCL_WASM_LD` | WASM linker | `wasm-ld` (auto-detected) |
+| `CCL_WASM_TARGET` | Target triple | `wasm32-unknown-unknown` |
+| `CCL_WASM_SYSROOT` | WASI sysroot path | (auto-detected) |
+
+### Build Directories
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `CCL_WASM_BUILD_DIR` | Root build directory | `build/wasm32` |
+| `CCL_WASM_KERNEL_DIR` | Kernel output | `$BUILD_DIR/kernel` |
+| `CCL_WASM_IMAGES_DIR` | Image files | `$BUILD_DIR/images` |
+| `CCL_WASM_MODULES_DIR` | Module files | `$BUILD_DIR/modules` |
+| `CCL_WASM_SUBPRIMS_DIR` | Subprims module | `$BUILD_DIR/subprims` |
+
+### Compiler Flags
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `CCL_WASM_OPT` | Optimization level | `-O2` |
+| `CCL_WASM_DEBUG` | Debug symbols | `-g` |
+| `CCL_WASM_CFLAGS` | Additional compiler flags | (empty) |
+| `CCL_WASM_LDFLAGS` | Additional linker flags | (empty) |
+
+### Example: Custom Build Directory
 
 ```bash
-node doc/wasm/js/load-image.mjs --mode start-lisp --manifest doc/wasm/root.image.manifest.json --modules doc/wasm/wasm-runtime-modules.json doc/wasm/root.image
+export CCL_WASM_BUILD_DIR=/tmp/my-build
+source scripts/wasm/env.sh
+scripts/wasm/rebuild-everything.sh
 ```
-Current status: this path enforces manifest + bootstrap sanity checks by
-default. With regenerated root artifacts, strict root manifest/bootstrap
-validation now passes. `minimal.image` remains strict-contract-incomplete for
-bring-up and should use `--bootstrap-contract warn` only for diagnostics.
-Note that a raw host `save-application` image (without the wasm helper path) is
-still not a drop-in wasm heap image format.
 
-### Option B (Node helper, wasm-only path)
-
-Run the Node helper to load the boot image, execute the Lisp script, and
-extract the generated image from the persistence store:
+### Example: Debug Build
 
 ```bash
-node doc/wasm/js/make-real-image.mjs --modules doc/wasm/wasm-runtime-modules.json --output doc/wasm/root.image
+export CCL_WASM_OPT=-O0
+export CCL_WASM_DEBUG=-g3
+source scripts/wasm/env.sh
+make -C lisp-kernel/wasm32
 ```
-By default this also writes `doc/wasm/root.image.manifest.json` (override with
-`--manifest-out PATH`), but manifest output is now gated by bootstrap sanity:
-invalid emitted root-image candidates fail hard and do not refresh the
-manifest.
-Current status: builder path is operational; strict bootstrap closure is still
-in progress for compiled-Lisp UI persistence runtime execution (not loader
-bootstrap). Validate loader contract with:
+
+### Example: Custom Toolchain
 
 ```bash
-node doc/wasm/js/load-image.mjs doc/wasm/root.image
+export CCL_WASM_CC=/usr/local/bin/clang-19
+export CCL_WASM_LD=/usr/local/bin/wasm-ld
+export CCL_WASM_SYSROOT=/opt/wasi-sdk/share/wasi-sysroot
+source scripts/wasm/env.sh
+scripts/wasm/rebuild-everything.sh
 ```
 
-### Bootstrap Phases And L0 Contract
+---
 
-The real-image builder now uses an explicit startup phase machine exported by
-the kernel (`lisp-kernel/wasm-kernel-stubs.c`):
+## Testing
 
-- `WASM_BOOT_EARLY` (0): initial startup, const-pool install uses startup intern path.
-- `WASM_BOOT_L0_READY` (1): only set after the strict pre-fasload L0 contract passes.
-- `WASM_BOOT_RUNTIME` (2): set after the required fasload boundary, runtime intern path only.
-
-Host phase transitions live in `doc/wasm/js/make-real-image.mjs`:
-
-- `EARLY` is set immediately after kernel export wiring.
-- `assertL0BootstrapContractOrFail(...)` runs before first required `%FASLOAD`.
-- On pass: logs `L0_BOOTSTRAP_CONTRACT ... "status":"pass"` then sets `L0_READY`.
-- After required fasloads complete: sets `RUNTIME`.
-
-The L0 source-of-truth artifact is `doc/wasm/js/bootstrap-l0-contract.mjs`.
-Update it when startup-critical requirements change:
-
-- `requiredPackages`
-- `requiredConstPools`
-- `requiredSymbols`
-- `requiredCallables`
-- `requiredSpecialVariables`
-
-Startup binding map artifact:
-
-- Runtime bundle manifests carry `startupBindingMap`
-  (`schema_version: "startup_binding_map_v1"`), and
-  `scripts/wasm/pack-inline-bundle-v2.mjs` now requires this artifact to
-  already be present (no pack-time fallback generation).
-- The artifact is a single unified pre-fasload map with two target classes:
-  `target_cell: "vcell"` for required special-variable initial values and
-  `target_cell: "fcell"` for function bindings.
-- Function-side coverage comes from the Common Lisp scanner-owned
-  `startup_symbol_scope_v1` input and its downstream artifact transforms.
-- Each entry is explicit and machine-readable:
-  `availability: literal|entry-backed|deferred|unsupported` with
-  `initializer.kind` and reason fields.
-- `make-real-image.mjs` runs the startup pipeline in source-scope mode and logs
-  `STARTUP_SYMBOL_PIPELINE`; it hard-fails on missing/invalid scope input
-  instead of runtime fallback generation.
-- no JS source scan: JS host stages consume prebuilt startup artifacts and do
-  not parse Lisp source during pack or runtime image construction.
-- Unified map application runs in one pass before
-  `assertL0BootstrapContractOrFail(...)` and keeps strict L0 gate semantics and
-  phase transitions unchanged.
-
-Startup architecture plan (updated):
-
-- Target model: artifact-first startup. JS host consumes startup metadata and
-  applies it; JS does not perform broad runtime dependency discovery.
-- Contract ownership:
-  - `doc/wasm/js/bootstrap-l0-contract.mjs` declares required startup
-    const-pool/package/symbol/callable/special requirements.
-- Artifact ownership:
-  - `doc/wasm/js/startup-binding-map.mjs` is the sole producer of startup
-    bindings and emits explicit `target_cell: "vcell"` entries for
-    `requiredSpecialVariables`, plus level-0 function `target_cell: "fcell"`
-    bindings.
-  - Callable emission is contract-seeded-only in a deterministic build-time
-    pass; the legacy emit-all-functions environment toggle has been removed.
-  - It also emits `startup_shadow_table` (`schema_version:
-    "startup_shadow_table_v1"`): precomputed pre-fasload startup ownership for
-    JS/Lisp bootstrap, including the deterministic
-    `preinstall_const_pool_entries` set.
-  - For required-fasload readiness, it also computes a one-shot contract-scoped
-    callable closure (`requiredConstPools` refs + `requiredCallables` roots +
-    static transitive const-pool callable refs) and emits explicit
-    artifact-owned fcell bindings with const-pool definitions and closure
-    const-pool entry ownership (`closure_const_pool_entry_indices`).
-- Runtime ownership:
-  - `doc/wasm/js/make-real-image.mjs` applies the artifact entries directly in
-    one pre-fasload pass.
-  - Before apply, it deterministically preinstalls contract roots plus the
-    artifact-owned startup shadow-table const-pool entry set in one shot (no
-    runtime depth horizon and no iterative symbol-by-symbol discovery).
-  - Preinstall is strict: startup fails fast if `startup_shadow_table` is
-    missing, empty, or missing required contract root const-pool entries.
-  - Symbol resolution remains strict package/name at apply and gate time.
-    For artifact entries that include an explicit const-pool definition
-    (`definition.entry_index` + `definition.const_index`), apply may first touch
-    that single const-pool ref to materialize the symbol, then immediately
-    re-probe exact package/name; no package-agnostic probing and no broad
-    const-pool discovery sweeps are used.
-  - Required bindings still fail fast when unresolved at apply time
-    (`reason:"required-symbol-unresolved"`), before `L0_BOOTSTRAP_CONTRACT`.
-  - Required const-pool refs are still gate-verified by
-    `L0_BOOTSTRAP_CONTRACT`; startup map apply does not do indiscriminate
-    const-pool scans.
-- Required artifact coverage for pre-fasload:
-  - required vcell initializations (`requiredSpecialVariables`);
-  - Level-0 function bindings (from Common Lisp scanner artifacts; no JS source scan);
-  - first-required-fasload callable closure needed at boundary.
-
-Machine-readable diagnostics:
-
-- Map build summary:
-  `STARTUP_BINDING_MAP_BUILD {"schema_version":"startup_binding_map_build_v1",...}`
-- Map apply summary:
-  `STARTUP_BINDING_MAP_APPLY {"schema_version":"startup_binding_map_apply_v1",...}`
-- L0 gate diagnostics remain unchanged:
-  `L0_BOOTSTRAP_CONTRACT {"status":"pass"|"fail",...}`
-- Required `%FASLOAD` boundary diagnostic:
-  `REQUIRED_FASLOAD_BOUNDARY {"schema_version":"required_fasload_boundary_v1",...}`
-
-Recommended validation command:
+After building, run the smoke tests to verify everything works:
 
 ```bash
-CCL_WASM_TRACE=1 CCL_WASM_DIAG_PRE_FASLOAD_TOPLFUNC_ENTRY=4488 \
-  node doc/wasm/js/make-real-image.mjs > /tmp/make-real-image.trace.top4488.full.notimeout.log 2>&1 || true
+# All smoke tests
+node doc/wasm/js/all-smoke.mjs
+
+# Individual tests
+node doc/wasm/js/kernel-request-smoke.mjs
+node doc/wasm/js/compiler-smoke.mjs
 ```
 
-Expected failure signatures:
+**Note:** Test suite is limited. See [README.md](README.md) for current test status.
 
-- Gate failure (pre-fasload): one JSON line per failed requirement:
-  `L0_BOOTSTRAP_CONTRACT {"status":"fail",...}`
-- Summary abort:
-  `FAIL: pre-fasload L0 bootstrap contract failed: <N> requirement(s)`
-- Const-pool entry diagnostics (entry `4412`) include active `boot_phase` and
-  branch-specific debug error code to localize symbol/package/intern failures.
+---
 
-### Option C (native wasm32 CCL, optional)
+## Cleaning
 
-If you already have a **WASM32-target** CCL, you can run the Lisp script
-directly (it will still inject `:wasm32-target` into `*features*` if missing):
+Remove all build artifacts:
 
 ```bash
-ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --output doc/wasm/root.image
+make -C lisp-kernel/wasm32 clean
+rm -rf build/wasm32
 ```
 
-## JS Wiring (Sketch-Level)
+---
 
-See:
+## Troubleshooting
 
-- `doc/wasm/js/README.md`
-- `doc/wasm/js/ccl-loader.mjs`
-- `doc/wasm/js/demo-runner.mjs`
+### "Missing Homebrew dependencies" (macOS)
 
-The demo runner:
+**Problem:** `env.sh` says it can't find llvm/lld/wasi-libc
 
-- Instantiates the kernel with a shared `WebAssembly.Memory` and `WebAssembly.Table`.
-- Installs subprims into the shared table by matching export names.
-- Calls `wasm_set_cstack_bounds` to establish a manual control stack region.
-- Calls `wasm_set_subprims_ready(1)` when a real subprims provider module is installed.
-- Installs the boot entrypoint (minimal image uses table index 200 → `wasm_boot_entry`).
-- Calls `wasm_ccl_start` to enter the kernel (or `wasm_ccl_step`/`wasm_run_toplevel` for host‑controlled toplevel).
-  For a boot‑only load followed by toplevel entry, use `wasm_ccl_start_lisp`.
+**Solution:**
+```bash
+brew install llvm lld wasi-libc
+```
 
-## Subprims Artifacts
+### "Could not auto-detect WASM toolchain" (Linux)
 
-WASM subprims indices must match the ARM `sptab` order (`lisp-kernel/arm-spentry.s`),
-with WASM-only stub entries appended at the end.
-Artifacts are generated from ARM and checked in:
+**Problem:** `env.sh` can't find clang or wasm-ld
 
-- `doc/wasm/subprims-map.json`
-- `lisp-kernel/wasm-subprims-map.h`
-- `lisp-kernel/wasm-subprims-standin.c`
+**Solution:** Install via package manager:
+```bash
+# Ubuntu/Debian
+sudo apt install clang-18 lld-18 wasi-libc
 
-Regenerate:
+# Fedora
+sudo dnf install clang lld wasi-libc
+
+# Arch
+sudo pacman -S clang lld wasi-libc
+```
+
+### "fatal error: 'errno.h' file not found"
+
+**Problem:** Compiler can't find WASI headers
+
+**Solution 1 (Recommended):** Let `env.sh` auto-detect:
+```bash
+source scripts/wasm/env.sh
+make -C lisp-kernel/wasm32
+```
+
+**Solution 2:** Set sysroot manually:
+```bash
+export CCL_WASM_SYSROOT=/path/to/wasi-sysroot
+source scripts/wasm/env.sh
+make -C lisp-kernel/wasm32
+```
+
+**On macOS:** Ensure you're using Homebrew clang, not Apple clang:
+```bash
+# Wrong (Apple clang, won't work)
+which clang
+# /usr/bin/clang
+
+# Right (Homebrew clang, works)
+/usr/local/opt/llvm/bin/clang --version
+```
+
+**On Linux:** Headers should be in `/usr/include/wasm32-wasi` or `/usr/share/wasi-sysroot/include`.
+
+### Build fails with "No rule to make target"
+
+**Problem:** Make can't find source files
+
+**Solution:** Ensure you're in the repository root and running make from there:
+```bash
+cd /path/to/ccl
+make -C lisp-kernel/wasm32
+```
+
+### "wasm-ld: error: unknown argument"
+
+**Problem:** Linker doesn't support required flags
+
+**Solution:** Update to a newer version of lld:
+```bash
+# macOS
+brew upgrade lld
+
+# Linux
+# Use lld-18 or newer
+```
+
+Minimum versions:
+- clang: 15+ (18+ recommended)
+- lld: 15+ (18+ recommended)
+
+### Build artifacts end up in wrong location
+
+**Problem:** Files in `doc/wasm/js/` instead of `build/wasm32/`
+
+**Cause:** Old build system used `doc/` for artifacts
+
+**Solution:** Set environment variables explicitly:
+```bash
+export CCL_WASM_BUILD_DIR=$(pwd)/build/wasm32
+source scripts/wasm/env.sh
+scripts/wasm/rebuild-everything.sh
+```
+
+### "Permission denied" when running scripts
+
+**Problem:** Scripts not executable
+
+**Solution:**
+```bash
+chmod +x scripts/wasm/*.sh
+```
+
+---
+
+## Advanced Configuration
+
+### Using a Different Target
+
+The default target is `wasm32-unknown-unknown` (freestanding WASM). To use WASI:
 
 ```bash
-python3 scripts/wasm/generate_subprims_artifacts.py
+export CCL_WASM_TARGET=wasm32-wasi
+source scripts/wasm/env.sh
+make -C lisp-kernel/wasm32
 ```
 
-## Bring-Up Status / Limitations
+**Note:** CCL WASM is designed to work **without** a WASI runtime. The kernel compiles with WASI headers for development convenience but links freestanding. See [decisions.md](decisions.md) ADR-0005.
 
-- Many OS/POSIX interfaces are stubbed out for WASM32 bring-up.
-- Boot image + compiled module bundle can enter `start_lisp` without immediate macro-apply/UDF traps.
-- Real image generation is supported in both host-script and Node-helper
-  workflows; host script delegates to the helper on non-WASM runtimes.
-- Strict non-interactive root-image `start_lisp` validation is passing.
-  Run `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`
-  as a mandatory release gate.
-- Compiled-Lisp UI persistence execution is still blocked by runtime
-  bootstrap/function-binding stabilization; track active work in
-  `doc/wasm/wasm-ui-persistence-problem-tracker.md`.
-- The “no-WASI libc” shims are intentionally minimal (bump `malloc`, no real stdio/formatting).
+### Custom Compiler Flags
+
+Add warnings or extra checks:
+
+```bash
+export CCL_WASM_CFLAGS="-Wall -Wextra -Werror"
+source scripts/wasm/env.sh
+make -C lisp-kernel/wasm32
+```
+
+### Makefile Help
+
+The Makefile includes built-in help:
+
+```bash
+make -C lisp-kernel/wasm32 help
+```
+
+---
+
+## Build System Architecture
+
+### Directory Structure
+
+```
+ccl/
+├── build/                  # Build artifacts (gitignored)
+│   └── wasm32/
+│       ├── kernel/         # wasmcl.wasm
+│       ├── images/         # *.image files
+│       ├── modules/        # *.json, *.bin, *.idx
+│       └── subprims/       # subprims.wasm
+├── lisp-kernel/wasm32/     # C kernel source
+│   ├── Makefile            # Kernel build
+│   └── config.mk           # Default configuration
+├── scripts/wasm/           # Build scripts
+│   ├── env.sh              # Environment setup
+│   └── rebuild-everything.sh  # Full rebuild orchestrator
+└── doc/wasm/               # Documentation only (no artifacts)
+```
+
+### How It Works
+
+1. **env.sh** detects your platform and toolchain, exports environment variables
+2. **Makefile** reads variables from `config.mk`, builds kernel to `build/wasm32/kernel/`
+3. **rebuild-everything.sh** orchestrates full dependency-ordered rebuild
+4. All artifacts go to **build/** directory (gitignored)
+
+### Legacy Note
+
+**Old behavior (before 2026-02-15):** Build artifacts were placed in `doc/wasm/js/`
+
+**New behavior:** All artifacts go to `build/wasm32/`
+
+If you have old artifacts, clean them:
+```bash
+rm -f doc/wasm/js/wasmcl.wasm doc/wasm/js/subprims.wasm
+rm -f doc/wasm/*.image doc/wasm/*.json doc/wasm/*.bin doc/wasm/*.idx
+```
+
+---
+
+## See Also
+
+- **[README.md](README.md)** - Current implementation status
+- **[roadmap.md](roadmap.md)** - Development roadmap
+- **[decisions.md](decisions.md)** - Architectural decisions
+- **[macos-setup.md](macos-setup.md)** - macOS-specific setup details (if needed)
+- **[linux-setup.md](linux-setup.md)** - Linux-specific setup details (if needed)
+
+---
+
+## Getting Help
+
+- **Build problems:** Check this troubleshooting section first
+- **Missing features:** See [README.md](README.md) for current status
+- **Questions:** Check [project-overview.md](project-overview.md) for architecture
+
+**Note:** This is experimental software under active development. Some features are broken or incomplete. See [README.md](README.md) for what actually works vs what's documented.
