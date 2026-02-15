@@ -988,14 +988,14 @@ export async function installCompiledModulesFromRegistry({
   if (registry == null) {
     const getRegistry = kernelExports.wasm_get_compiled_module_registry;
     if (typeof getRegistry !== "function") {
-      throw new Error("installCompiledModulesFromRegistry: missing wasm_get_compiled_module_registry export");
+      return { installed: 0, count: 0, entries: [], skipped: "no registry export" };
     }
     registry = getRegistry() >>> 0;
   }
   if (nil == null) {
     const getNil = kernelExports.wasm_get_lisp_nil;
     if (typeof getNil !== "function") {
-      throw new Error("installCompiledModulesFromRegistry: missing wasm_get_lisp_nil export");
+      return { installed: 0, count: 0, entries: [], skipped: "no nil export" };
     }
     nil = getNil() >>> 0;
   }

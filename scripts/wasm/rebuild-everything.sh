@@ -21,10 +21,7 @@ MODULES_DIR="${CCL_WASM_MODULES_DIR:-$BUILD_DIR/modules}"
 
 ROOT_IMAGE_OUT="${ROOT_IMAGE_OUT:-$IMAGES_DIR/root.image}"
 ROOT_IMAGE_MANIFEST_OUT="${ROOT_IMAGE_MANIFEST_OUT:-$IMAGES_DIR/root.image.manifest.json}"
-ROOT_IMAGE_RESOLUTION_OUT="${ROOT_IMAGE_RESOLUTION_OUT:-$MODULES_DIR/startup-symbol-resolution.source_scope_v1.json}"
 MODULES_OUT="${MODULES_OUT:-$MODULES_DIR/wasm-runtime-modules.json}"
-CONTRACT_OUT="${CONTRACT_OUT:-$MODULES_DIR/bootstrap-l0-contract.v1.json}"
-SCOPE_OUT="${SCOPE_OUT:-$MODULES_DIR/startup-symbol-scope.source_scope_v1.json}"
 
 usage() {
   cat <<'EOF'
@@ -35,7 +32,7 @@ Rebuild canonical WASM artifacts in dependency order so outputs stay in sync.
 Default steps:
   1) lisp-kernel/wasm32 -> build/wasm32/kernel/wasmcl.wasm
   2) wasm-boot.image rebuild
-  3) WASM fasls/modules + contract + startup symbol scope
+  3) WASM fasls/modules
   4) root.image rebuild (allowed to fail by default)
 
 Environment variables:
@@ -49,7 +46,6 @@ Options:
   --strict-root-image       Treat root.image failure as fatal
   --root-image PATH         root.image output path
   --manifest-out PATH       root.image manifest output path
-  --resolution-out PATH     startup symbol resolution output path
   --modules-out PATH        runtime modules manifest output path
   -h, --help                Show this help
 EOF
@@ -98,14 +94,6 @@ while [ "${1:-}" != "" ]; do
         exit 1
       fi
       ROOT_IMAGE_MANIFEST_OUT="$(resolve_path "$2")"
-      shift
-      ;;
-    --resolution-out)
-      if [ -z "${2:-}" ]; then
-        echo "error: --resolution-out requires a path" >&2
-        exit 1
-      fi
-      ROOT_IMAGE_RESOLUTION_OUT="$(resolve_path "$2")"
       shift
       ;;
     --modules-out)
@@ -174,13 +162,10 @@ run "$ROOT_DIR/scripts/wasm/compile-wasm-fasls.sh" "${COMPILE_ARGS[@]}"
 
 if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
   ROOT_CMD=(
-    node "$ROOT_DIR/doc/wasm/js/make-real-image.mjs"
+    node "$ROOT_DIR/scripts/wasm/lib/make-real-image.mjs"
     --output "$ROOT_IMAGE_OUT"
     --manifest-out "$ROOT_IMAGE_MANIFEST_OUT"
     --modules "$MODULES_OUT"
-    --startup-symbol-scope "$SCOPE_OUT"
-    --startup-symbol-resolution-out "$ROOT_IMAGE_RESOLUTION_OUT"
-    --startup-symbol-contract "$CONTRACT_OUT"
   )
   if [ "$ROOT_IMAGE_ALLOW_FAIL" -eq 1 ]; then
     log "RUN (root image, non-fatal): ${ROOT_CMD[*]}"
@@ -194,12 +179,9 @@ log "sync rebuild complete. key outputs:"
 log "  ${CCL_WASM_KERNEL_DIR:-$BUILD_DIR/kernel}/wasmcl.wasm"
 log "  wasm-boot.image"
 log "  ${MODULES_OUT#$ROOT_DIR/}"
-log "  ${CONTRACT_OUT#$ROOT_DIR/}"
-log "  ${SCOPE_OUT#$ROOT_DIR/}"
 if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
   log "  ${ROOT_IMAGE_OUT#$ROOT_DIR/}"
   log "  ${ROOT_IMAGE_MANIFEST_OUT#$ROOT_DIR/}"
-  log "  ${ROOT_IMAGE_RESOLUTION_OUT#$ROOT_DIR/}"
 fi
 
 log ""

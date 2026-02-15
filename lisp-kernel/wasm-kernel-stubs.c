@@ -295,6 +295,20 @@ wasm_get_subprims_ready(void)
   return wasm_subprims_ready;
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_get_lisp_nil")))
+LispObj
+wasm_get_lisp_nil(void)
+{
+  return lisp_nil;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_get_compiled_module_registry")))
+LispObj
+wasm_get_compiled_module_registry(void)
+{
+  return nrs_WASM_COMPILED_MODULES.vcell;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_boot_set_phase")))
 void
 wasm_boot_set_phase(uint32_t phase)
@@ -2796,6 +2810,54 @@ done:
   }
 
   return lisp_nil;
+}
+
+/* Call RESTORE-LISP-POINTERS after loading a boot image.
+   This rehashes package tables and runs fixup hooks so that
+   symbol lookup (INTERN, FIND-SYMBOL) works correctly.
+   Every native CCL platform does this after image load;
+   the WASM port was missing this step.
+   Returns 0 on success, negative on error. */
+__attribute__((used, visibility("default"), export_name("wasm_restore_lisp_pointers")))
+int
+wasm_restore_lisp_pointers(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return -1;
+  }
+  if (!wasm_subprims_ready) {
+    return -2;
+  }
+
+  natural old_last_lisp_frame = wasm_enter_lisp_frame(
+    tcr, 0, 0, (LispObj)tcr->save_vsp);
+  tcr->valence = TCR_STATE_LISP;
+  tcr->wasm_pending_throw = 0;
+  tcr->wasm_gprs[vsp] = (LispObj)tcr->save_vsp;
+
+  LispObj restore_fn = nrs_RESTORE_LISP_POINTERS.vcell;
+  if (restore_fn == lisp_nil ||
+      fulltag_of(restore_fn) != fulltag_misc ||
+      header_subtag(header_of(restore_fn)) != subtag_function) {
+    tcr->valence = TCR_STATE_FOREIGN;
+    wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
+    return -3;
+  }
+
+  tcr->wasm_gprs[nargs] = box_fixnum(0);
+  tcr->wasm_gprs[nfn] = restore_fn;
+  wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_FUNCALL_INDEX));
+
+  int result = 0;
+  if (tcr->wasm_pending_throw) {
+    tcr->wasm_pending_throw = 0;
+    result = -4;
+  }
+
+  tcr->valence = TCR_STATE_FOREIGN;
+  wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
+  return result;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_run_toplevel")))

@@ -105,6 +105,39 @@ These must be fixed before any new features. Everything else is blocked.
 
 ---
 
+### Sweep JS/Lisp/Shell for Dead Debug References ✅ **COMPLETED 2026-02-15**
+
+**Problem:** After removing ~2400 lines of C kernel debug instrumentation, JS scripts, Lisp files, and shell scripts still referenced the deleted exports.
+
+**Solution implemented:**
+- ✅ Rewrote `bootstrap-contract.mjs` (440 → 165 lines) - removed probe infrastructure
+- ✅ Cleaned `make-real-image.mjs` (~770 lines removed) - 9 diagnostic functions, 21 call sites, typeof-guarded dead blocks, readDebug blocks, compound conditions
+- ✅ Cleaned `microkernel.mjs` (~217 lines removed) - 8 WASM_STARTUP_DIAG constants, decodeWasmStartupDiag function
+- ✅ Cleaned `runtime-command-sab-smoke.mjs` (~57 lines removed) - debug probe blocks
+- ✅ Cleaned `harness.mjs` - dead kernelDemoTurn reference
+- ✅ Cleaned `phase-5-runtime-output.test.mjs` (~284 lines removed) - diag constants, encode helpers, test cases
+- ✅ Cleaned `apply-time-exact-package-symbol.test.mjs` - debug mock removed
+
+**Startup truth feature fully retired:**
+- ✅ Removed `startup-truth-runtime.lisp` (~310 lines) and `startup-truth-close.lisp` (~10 lines)
+- ✅ Removed ~290 lines from `l1-cl-package.lisp` (7 defvars, ~270 lines of function definitions, 9-line call site)
+- ✅ Removed `%wasm-startup-truth-note-event-if-available` function + 6 call sites from `l1-symhash.lisp`
+- ✅ Removed startup truth env var/constants/functions from `make-real-image.mjs` (~115 lines)
+- ✅ Removed `--collect-truth`/`--truth-out` flags from `rebuild-everything.sh`
+- ✅ Removed startup truth from `repro-startup-pipeline.sh` (env vars, manifest writer, artifact list)
+- ✅ Removed stale `wasm_ui_demo_turn` doc reference from `FRONT-END-DEV-PLAN.md`
+
+**Total removed:** ~2100+ lines across JS/Lisp/shell files
+
+**Acceptance criteria:**
+- [x] Zero `wasm_debug_*` references in code files
+- [x] Zero `startup_truth` / `wasm-startup-truth` references in code files
+- [x] All JS files pass syntax check
+- [x] Kernel rebuilds cleanly
+- [x] All 3 smoke tests pass
+
+---
+
 ### Fix minimal.image Bootstrap Failures ❌
 
 **Problem:** `minimal.image` fails strict pre-start bootstrap contract
@@ -188,8 +221,9 @@ These are the next tasks for MVP-1, but don't start until regressions are fixed.
 
 **What to remove:**
 - [ ] Obsolete image loading mechanisms
-- [ ] Superseded bootstrap code
-- [x] Unused diagnostic scaffolding (removed in instrumentation + audit passes)
+- [x] Superseded bootstrap code (startup binding map infrastructure removed)
+- [x] Unused diagnostic scaffolding (removed in instrumentation + audit + JS/Lisp/shell sweep passes)
+- [x] Startup truth feature (fully retired across C/JS/Lisp/shell)
 - [ ] Confusing "replacement lane" terminology
 
 **Impact:** Easier debugging, clearer code paths
@@ -216,9 +250,10 @@ These are explicitly NOT being worked on until MVP-1 ships.
 
 ## 📊 Current Status
 
-**Completed:** FASL loading fix, instrumentation removal, residual cruft audit
-**Ready:** minimal.image and root.image fixes (cleanup prerequisites met)
-**MVP-1 completion:** 30% (FASL loading fixed, kernel cleaned up)
+**Completed:** FASL loading fix, instrumentation removal (~2400 lines C), residual cruft audit, JS/Lisp/shell dead code sweep (~2100 lines), startup truth feature retired, B1 build artifacts resolved, startup binding map removed (~2500+ lines), RESTORE-LISP-POINTERS kernel export added
+**Blocked on:** B2 — compiled module installation skipping 99.97% of modules (7555/7557 skipped)
+**Build pipeline:** Fully functional (kernel → boot image → runtime modules → image build attempt)
+**MVP-1 completion:** 40% (build pipeline works, root.image build reaches FASL loading but fails due to B2)
 
 ---
 
@@ -254,16 +289,54 @@ These are explicitly NOT being worked on until MVP-1 ships.
 
 _Sub-problems discovered during main track work. Decide: fix now, workaround, or defer._
 
-### B1. Missing Build Artifacts for Full Test Coverage
+### B1. Missing Build Artifacts for Full Test Coverage ✅ **RESOLVED 2026-02-15**
 
 **Discovered:** 2026-02-15 during FASL loading fix testing
-**Impact:** Cannot fully validate FASL loading fix end-to-end
-**Missing:**
-- `build/wasm32/modules/wasm-smoke-modules.json` (needs `scripts/wasm/compile-smoke-modules.sh`)
-- `build/wasm32/subprims/subprims.wasm` (build fails with missing string.h)
-- `build/wasm32/images/minimal.image` (not built yet)
+**Resolved:** 2026-02-15
 
-**Decision:** Defer - Basic smoke tests passing is sufficient validation for FASL loading fix. Full FASL test requires working build pipeline.
+**Fixes applied:**
+- ✅ `subprims.wasm` — Fixed Makefile to use env.sh toolchain (config.mk include, correct output path)
+- ✅ `wasm-smoke-modules.json` — Fixed stale `doc/wasm/js/` import paths, made `startupBindingMap` optional
+- ✅ `wasm-runtime-modules.json` — 7557 modules compiled (437MB binary)
+- ✅ Fixed 5 stale `doc/wasm/js/` paths in build pipeline scripts
+- ✅ Added 20 missing kernel exports to Makefile (16 existing functions + 4 new)
+- ✅ Implemented `wasm_get_lisp_nil`, `wasm_get_compiled_module_registry` kernel accessors
+- ✅ Implemented symbol probe API (later removed — was only needed by startup binding map)
+- ✅ Made `installCompiledModulesFromRegistry` graceful when kernel lacks registry exports
+
+**Files modified:**
+- `lisp-kernel/wasm32/subprims/Makefile` — Rewritten to use config.mk
+- `lisp-kernel/wasm32/Makefile` — Added 20 exports
+- `lisp-kernel/wasm-kernel-stubs.c` — Added 6 new exported functions
+- `scripts/wasm/pack-inline-bundle-v2.mjs` — Fixed imports, made startupBindingMap optional
+- `scripts/wasm/compile-wasm-fasls.sh` — Fixed stale path
+- `scripts/wasm/rebuild-everything.sh` — Fixed stale path
+- `scripts/wasm/generate-bootstrap-l0-contract-sidecar.mjs` — Fixed stale path
+- `scripts/wasm/compact-runtime-modules.mjs` — Fixed stale import
+- `scripts/wasm/make-real-image.lisp` — Fixed stale path
+- `scripts/wasm/lib/ccl-loader.mjs` — Graceful registry install
+
+---
+
+### B2. Compiled Module Installation Skipping 99.97% of Modules
+
+**Discovered:** 2026-02-15 during root.image build attempt
+**Impact:** root.image build fails because required callable functions aren't installed
+**Status:** ❌ Uninvestigated
+
+**Symptoms:**
+- `make-real-image.mjs` reports "compiled modules skipped: 7555" (of 7557 total)
+- Only 2 modules install successfully
+- Startup binding map can't bind 4 required callables: `%FASLOAD`, `%FASL-OPEN`, `%SIMPLE-FASL-OPEN`, `%SET-SIMPLE-ARRAY-P`
+- Symbol resolution works (589/6023 resolved) but function bindings are missing
+
+**Error:** FASL loading traps with "table index is out of bounds" because function entries aren't populated
+
+**Likely cause:** Module installer is rejecting most modules — need to investigate why (entry index mismatch? table size? format issue?)
+
+**Note:** Startup binding map infrastructure was removed (2026-02-15). The binding map was a 2,500+ line workaround for missing RESTORE-LISP-POINTERS — not a real fix. Now RESTORE-LISP-POINTERS is called properly (deferred when function not yet defined in boot image, called after fasls loaded). B2 is the real remaining blocker.
+
+**Decision:** Next critical-path task. This is what actually blocks FASL loading end-to-end.
 
 ---
 
@@ -292,3 +365,40 @@ _Sub-problems discovered during main track work. Decide: fix now, workaround, or
 - Audit pass 2: PASS (zero matches for all instrumentation patterns)
 - Kernel rebuilds cleanly, all smoke tests pass
 - Combined with earlier instrumentation removal: ~2400+ lines of cruft removed from kernel
+
+**2026-02-15 (late evening):** JS/Lisp/shell dead code sweep + startup truth retirement
+- Swept all JS/MJS files for references to removed wasm_debug_*, wasm_emit_*, wasm_startup_truth_*, etc.
+- Removed ~2100 lines across 7 JS files, 2 Lisp files (deleted), 2 Lisp files (edited), 2 shell scripts, 1 doc
+- Fully retired startup truth feature: env var path (shell → JS → C → Lisp) completely eliminated
+- Deleted `scripts/wasm/startup-truth-runtime.lisp` and `scripts/wasm/startup-truth-close.lisp`
+- Removed startup truth defvars/functions from `l1-cl-package.lisp` (~290 lines) and call sites from `l1-symhash.lisp`
+- All smoke tests pass, all JS syntax checks pass, zero remaining references in code files
+
+**2026-02-16:** Compiled kernel functionality inventory
+- 132 subprims: 84 substantial, 42 thin wrappers, 6 stubs/no-ops
+- Key finding: most "not implemented" features (hash tables, CLOS, format, reader) are in Lisp level-1 files, not kernel
+- The FASL loading regression is the single gate blocking nearly everything
+- See MEMORY.md or session notes for full inventory
+
+**2026-02-15 (session 3):** Removed startup binding map infrastructure, added RESTORE-LISP-POINTERS
+- Investigated: startup binding map does NOT exist on any native CCL platform (x86, ARM, PPC)
+- Root cause: it was a 2,500+ line workaround for missing RESTORE-LISP-POINTERS call
+- Added `wasm_restore_lisp_pointers()` kernel export (standalone, callable from JS)
+- Removed symbol probe API from kernel (4 functions, only needed by binding map)
+- Stripped ~2,500 lines from make-real-image.mjs (4818 → 2300 lines)
+- Deleted 6 source files: startup-binding-map.mjs, bootstrap-l0-contract.mjs, collect-startup-symbol-scope.lisp, generate-bootstrap-l0-contract-sidecar.mjs, repro-startup-pipeline.sh, run-startup-symbol-scope-fixtures.sh
+- Cleaned build pipeline: compile-wasm-fasls.sh, rebuild-everything.sh, make-real-image.lisp, pack-inline-bundle-v2.mjs
+- Kernel builds cleanly, root image build reaches FASL loading (blocked by B2)
+- RESTORE-LISP-POINTERS correctly deferred when function not defined (boot image), called post-fasload
+
+**2026-02-15 (session 2):** Resolved B1 — build artifacts and pipeline fixes
+- Fixed subprims.wasm build: Makefile wasn't using env.sh toolchain → updated to use config.mk
+- Fixed wasm-smoke-modules.json build: stale `doc/wasm/js/` imports → updated to `scripts/wasm/lib/`
+- Made `startupBindingMap` optional in packer (not consumed at runtime, only copy-through)
+- Built wasm-runtime-modules.json: 7557 modules, 5450 const pools, 437MB binary
+- Fixed 5 stale `doc/wasm/js/` paths across build pipeline (pack, compile-fasls, rebuild, contract, compact)
+- Added `wasm_get_lisp_nil` and `wasm_get_compiled_module_registry` kernel accessors
+- Implemented symbol probe API (4 functions) for startup binding map resolution
+- Added 16 existing-but-unexported kernel functions to Makefile
+- root.image build now reaches startup binding map phase but fails: 7555/7557 compiled modules skipped
+- New blocker B2: module installer rejecting almost all modules → 4 required callables missing

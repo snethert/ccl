@@ -104,23 +104,6 @@ if [ "$COMPACT_RUNTIME_MODULES" -eq 1 ] && [ ! -f "$COMPACT_SCRIPT" ]; then
   exit 1
 fi
 
-CONTRACT_SIDECAR_SCRIPT="$ROOT_DIR/scripts/wasm/generate-bootstrap-l0-contract-sidecar.mjs"
-if [ ! -f "$CONTRACT_SIDECAR_SCRIPT" ]; then
-  echo "error: missing $CONTRACT_SIDECAR_SCRIPT" >&2
-  exit 1
-fi
-# Use build/wasm32/modules/ for generated artifacts
-MODULES_DIR="${CCL_WASM_MODULES_DIR:-$ROOT_DIR/build/wasm32/modules}"
-mkdir -p "$MODULES_DIR"
-CONTRACT_SIDECAR_OUT="$MODULES_DIR/bootstrap-l0-contract.v1.json"
-
-STARTUP_SYMBOL_SCOPE_SCRIPT="$ROOT_DIR/scripts/wasm/collect-startup-symbol-scope.lisp"
-if [ ! -f "$STARTUP_SYMBOL_SCOPE_SCRIPT" ]; then
-  echo "error: missing $STARTUP_SYMBOL_SCOPE_SCRIPT" >&2
-  exit 1
-fi
-STARTUP_SYMBOL_SCOPE_OUT="$MODULES_DIR/startup-symbol-scope.source_scope_v1.json"
-
 SCRIPT_ARGS=()
 if [ "$FORCE" -eq 1 ]; then
   SCRIPT_ARGS+=(--force)
@@ -153,59 +136,7 @@ else
   run "$CCL_BIN" --no-init --batch -l "$SCRIPT"
 fi
 
-run node "$CONTRACT_SIDECAR_SCRIPT" --out "$CONTRACT_SIDECAR_OUT"
-run "$CCL_BIN" --no-init --batch -l "$STARTUP_SYMBOL_SCOPE_SCRIPT" -- \
-  --repo-root "$ROOT_DIR" \
-  --out "$STARTUP_SYMBOL_SCOPE_OUT" \
-  --feature-profile wasm32-target-v1 \
-  --contract-json "$CONTRACT_SIDECAR_OUT"
-
 if [ -n "$MODULES_OUT" ]; then
-  if [ "$DRYRUN" -eq 1 ]; then
-    printf '+ node --input-type=module <attach-startup-binding-map-inline> %q %q %q\n' \
-      "$ROOT_DIR" "$INLINE_TMP" "$STARTUP_SYMBOL_SCOPE_OUT"
-  else
-    node --input-type=module - "$ROOT_DIR" "$INLINE_TMP" "$STARTUP_SYMBOL_SCOPE_OUT" <<'NODE'
-import fs from "node:fs/promises";
-import path from "node:path";
-import { pathToFileURL } from "node:url";
-
-const [rootDir, inlineManifestPath, scopePath] = process.argv.slice(2);
-const startupBindingMapModule = await import(
-  pathToFileURL(path.join(rootDir, "doc/wasm/js/startup-binding-map.mjs")).href,
-);
-const {
-  buildStartupBindingMapArtifact,
-  summarizeStartupBindingMapArtifact,
-} = startupBindingMapModule;
-
-const [inlineManifestRaw, scopeRaw] = await Promise.all([
-  fs.readFile(inlineManifestPath, "utf8"),
-  fs.readFile(scopePath, "utf8"),
-]);
-const inlineManifest = JSON.parse(inlineManifestRaw);
-const scopeArtifact = JSON.parse(scopeRaw);
-
-const startupBindingMap = await buildStartupBindingMapArtifact({
-  repoRoot: rootDir,
-  functions: Array.isArray(inlineManifest?.functions) ? inlineManifest.functions : [],
-  scopeArtifact,
-  resolutionArtifact: null,
-});
-inlineManifest.startupBindingMap = startupBindingMap;
-await fs.writeFile(inlineManifestPath, `${JSON.stringify(inlineManifest)}\n`, "utf8");
-
-const counts = summarizeStartupBindingMapArtifact(startupBindingMap);
-console.log(
-  "startup binding map attached to inline manifest:" +
-  ` total=${counts.total_entries}` +
-  ` literal=${counts.literal_entries}` +
-  ` entry-backed=${counts.entry_backed_entries}` +
-  ` deferred=${counts.deferred_entries}` +
-  ` unsupported=${counts.unsupported_entries}`,
-);
-NODE
-  fi
   run node "$PACK_SCRIPT" --manifest "$INLINE_TMP" --out-manifest "$MODULES_OUT"
   if [ "$COMPACT_RUNTIME_MODULES" -eq 1 ]; then
     COMPACT_ARGS=(

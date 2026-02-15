@@ -12,7 +12,7 @@ import {
   MODULE_BUNDLE_V2_DEFAULT_TEMPLATE_PREFIX,
   MODULE_BUNDLE_V2_FORMAT,
   MODULE_BUNDLE_V2_VERSION,
-} from "../../doc/wasm/js/module-bundle-v2.mjs";
+} from "./lib/module-bundle-v2.mjs";
 
 function usage() {
   console.log("Usage:");

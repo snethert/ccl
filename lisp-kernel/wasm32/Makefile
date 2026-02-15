@@ -140,6 +140,19 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_save_image_direct \
 	  --export=wasm_box_signed_64 \
 	  --export=wasm_alloc_cons_bridge \
+	  --export=wasm_get_lisp_nil --export=wasm_get_compiled_module_registry \
+	  --export=wasm_boot_get_phase --export=wasm_boot_set_phase \
+	  --export=wasm_ccl_load_image --export=wasm_ccl_step --export=wasm_restore_lisp_pointers \
+	  --export=wasm_clear_pending_throw \
+	  --export=wasm_const_pool_install \
+	  --export=wasm_fasload_path \
+	  --export=wasm_get_nargs \
+	  --export=wasm_kernel_runtime_command_poll --export=wasm_kernel_runtime_event \
+	  --export=wasm_probe_foreign_call1 \
+	  --export=wasm_run_script_with_output \
+	  --export=wasm_set_entry_gc_root_policy_mode --export=wasm_set_subprims_ready \
+	  --export=wasm_set_toplfunc_entry \
+	  --export=wasm_vsp_ref \
 	  --export=_SPfix_overflow --export=_SPmakes32 \
 	  $(LDFLAGS_EXTRA) \
 	  -o $(KERNEL_WASM) $(KERNELOBJ)

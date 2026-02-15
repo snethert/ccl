@@ -83,21 +83,6 @@
              (unless val
                (error "Missing value for --manifest-out"))
              (push (cons :manifest-out val) out)))
-          ((string-equal arg "--startup-symbol-scope")
-           (let ((val (pop args)))
-             (unless val
-               (error "Missing value for --startup-symbol-scope"))
-             (push (cons :startup-symbol-scope val) out)))
-          ((string-equal arg "--startup-symbol-resolution-out")
-           (let ((val (pop args)))
-             (unless val
-               (error "Missing value for --startup-symbol-resolution-out"))
-             (push (cons :startup-symbol-resolution-out val) out)))
-          ((string-equal arg "--startup-symbol-contract")
-           (let ((val (pop args)))
-             (unless val
-               (error "Missing value for --startup-symbol-contract"))
-             (push (cons :startup-symbol-contract val) out)))
           ((or (string-equal arg "-h") (string-equal arg "--help"))
            (push (cons :help t) out))
           (seen-delimiter
@@ -110,9 +95,6 @@
   (format t "~&Usage: ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --output PATH~%")
   (format t "       ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --modules PATH --output PATH~%")
   (format t "       ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --manifest-out PATH --output PATH~%")
-  (format t "       ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --startup-symbol-scope PATH --output PATH~%")
-  (format t "       ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --startup-symbol-resolution-out PATH --output PATH~%")
-  (format t "       ccl --no-init --batch -l scripts/wasm/make-real-image.lisp -- --startup-symbol-contract PATH --output PATH~%")
   (format t "Builds a WASM32 heap image with %toplevel-function% seeded to toplevel-loop.~%")
   (format t "On non-WASM hosts, this delegates to node doc/wasm/js/make-real-image.mjs.~%")
   (format t "If :wasm32-target is missing, this script injects it into *features*.~%"))
@@ -128,9 +110,9 @@
             (write-char ch out))))
       (write-char #\' out))))
 
-(defun run-host-node-helper (output &key modules manifest-out startup-symbol-scope startup-symbol-resolution-out startup-symbol-contract)
+(defun run-host-node-helper (output &key modules manifest-out)
   (let* ((root (repo-root-from-script))
-         (node-script (merge-pathnames "doc/wasm/js/make-real-image.mjs" root))
+         (node-script (merge-pathnames "scripts/wasm/lib/make-real-image.mjs" root))
          (modules (or modules (namestring (merge-pathnames "doc/wasm/wasm-runtime-modules.json" root))))
          (command (with-output-to-string (out)
                     (format out "node ~a --modules ~a --output ~a"
@@ -138,13 +120,7 @@
                             (shell-quote modules)
                             (shell-quote output))
                     (when manifest-out
-                      (format out " --manifest-out ~a" (shell-quote manifest-out)))
-                    (when startup-symbol-scope
-                      (format out " --startup-symbol-scope ~a" (shell-quote startup-symbol-scope)))
-                    (when startup-symbol-resolution-out
-                      (format out " --startup-symbol-resolution-out ~a" (shell-quote startup-symbol-resolution-out)))
-                    (when startup-symbol-contract
-                      (format out " --startup-symbol-contract ~a" (shell-quote startup-symbol-contract)))))
+                      (format out " --manifest-out ~a" (shell-quote manifest-out)))))
          (process (run-program "/bin/sh"
                                (list "-lc" command)
                                :output *standard-output*
@@ -163,9 +139,6 @@
     (let* ((output (cdr (assoc :output argv)))
            (modules (cdr (assoc :modules argv)))
            (manifest-out (cdr (assoc :manifest-out argv)))
-           (startup-symbol-scope (cdr (assoc :startup-symbol-scope argv)))
-           (startup-symbol-resolution-out (cdr (assoc :startup-symbol-resolution-out argv)))
-           (startup-symbol-contract (cdr (assoc :startup-symbol-contract argv)))
            (wasm-runtime (running-in-wasm-runtime-p)))
       (unless output
         (let ((root (repo-root-from-script)))
@@ -179,21 +152,12 @@
         (progn
           (when manifest-out
             (format t "~&Note: --manifest-out is ignored when saving directly in wasm runtime.~%"))
-          (when startup-symbol-scope
-            (format t "~&Note: --startup-symbol-scope is ignored when saving directly in wasm runtime.~%"))
-          (when startup-symbol-resolution-out
-            (format t "~&Note: --startup-symbol-resolution-out is ignored when saving directly in wasm runtime.~%"))
-          (when startup-symbol-contract
-            (format t "~&Note: --startup-symbol-contract is ignored when saving directly in wasm runtime.~%"))
           (save-application output :toplevel-function #'toplevel-loop))
         (progn
           (format t "~&Host runtime detected; delegating image generation to Node helper.~%")
           (run-host-node-helper output
                                 :modules modules
-                                :manifest-out manifest-out
-                                :startup-symbol-scope startup-symbol-scope
-                                :startup-symbol-resolution-out startup-symbol-resolution-out
-                                :startup-symbol-contract startup-symbol-contract)))
+                                :manifest-out manifest-out)))
       (finish-output))))
 
 (main)
