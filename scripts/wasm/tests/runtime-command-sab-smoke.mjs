@@ -683,71 +683,14 @@ try {
 
   if (!commandResultMessage) {
     const debugConstPool = {
-      entry: typeof ex.wasm_debug_const_pool_entry === "function"
-        ? (ex.wasm_debug_const_pool_entry() >>> 0)
-        : null,
-      phase: typeof ex.wasm_debug_const_pool_phase === "function"
-        ? (ex.wasm_debug_const_pool_phase() >>> 0)
-        : null,
-      index: typeof ex.wasm_debug_const_pool_index === "function"
-        ? (ex.wasm_debug_const_pool_index() >>> 0)
-        : null,
-      tag: typeof ex.wasm_debug_const_pool_tag === "function"
-        ? (ex.wasm_debug_const_pool_tag() >>> 0)
-        : null,
-      offset: typeof ex.wasm_debug_const_pool_offset === "function"
-        ? (ex.wasm_debug_const_pool_offset() >>> 0)
-        : null
+      entry: null,
+      phase: null,
+      index: null,
+      tag: null,
+      offset: null
     };
     let probe3664 = null;
-    if (
-      typeof ex.wasm_const_pool_ref === "function" &&
-      typeof ex.wasm_debug_misc_subtag === "function" &&
-      typeof ex.wasm_debug_function_entry_index === "function"
-    ) {
-      const fn = ex.wasm_const_pool_ref(3664, 0) >>> 0;
-      const token = ex.wasm_const_pool_ref(3664, 1) >>> 0;
-      let fnName = null;
-      let tokenName = null;
-      if (typeof ex.wasm_debug_copy_symbol_name === "function") {
-        const ptr = 16384;
-        const cap = 256;
-        if ((ex.wasm_debug_misc_subtag(fn) | 0) === 58) {
-          const n = ex.wasm_debug_copy_symbol_name(fn, ptr, cap) >>> 0;
-          fnName = new TextDecoder().decode(new Uint8Array(runtime.memory.buffer, ptr, Math.min(n, cap)));
-        }
-        if ((ex.wasm_debug_misc_subtag(token) | 0) === 58) {
-          const n = ex.wasm_debug_copy_symbol_name(token, ptr, cap) >>> 0;
-          tokenName = new TextDecoder().decode(new Uint8Array(runtime.memory.buffer, ptr, Math.min(n, cap)));
-        }
-      }
-      probe3664 = {
-        fn,
-        fnSubtag: ex.wasm_debug_misc_subtag(fn) | 0,
-        fnEntry: ex.wasm_debug_function_entry_index(fn) | 0,
-        fnName,
-        token,
-        tokenSubtag: ex.wasm_debug_misc_subtag(token) | 0,
-        tokenName
-      };
-    }
     let requireStructureTypeProbe = null;
-    if (
-      typeof ex.wasm_debug_find_symbol_require_structure_type_raw === "function" &&
-      typeof ex.wasm_debug_symbol_fcell_raw === "function" &&
-      typeof ex.wasm_debug_misc_subtag === "function" &&
-      typeof ex.wasm_debug_function_entry_index === "function"
-    ) {
-      const sym = ex.wasm_debug_find_symbol_require_structure_type_raw() >>> 0;
-      const fcell = ex.wasm_debug_symbol_fcell_raw(sym) >>> 0;
-      requireStructureTypeProbe = {
-        sym,
-        symSubtag: ex.wasm_debug_misc_subtag(sym) | 0,
-        fcell,
-        fcellSubtag: ex.wasm_debug_misc_subtag(fcell) | 0,
-        fcellEntry: ex.wasm_debug_function_entry_index(fcell) | 0
-      };
-    }
     throw new Error(
       [
         "No compiled-Lisp command.result observed over SAB egress.",

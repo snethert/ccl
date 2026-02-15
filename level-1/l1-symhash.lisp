@@ -46,11 +46,6 @@
     t))
 
 
-(defun %wasm-startup-truth-note-event-if-available (event-type &rest payload)
-  (declare (dynamic-extent payload))
-  (when (fboundp '%wasm-startup-truth-note-event)
-    (ignore-errors
-      (apply #'%wasm-startup-truth-note-event event-type payload))))
 
 
 
@@ -107,11 +102,6 @@
                              foundsym
                              etab
                              (nth-value 2 (%get-htab-symbol pname (length pname) etab)))))))))
-                (%wasm-startup-truth-note-event-if-available
-                 "package-export"
-                 :phase "package-api"
-                 :package package
-                 :symbols sym-or-syms)
                 t))))))
 
 (defun check-export-conflicts (symbols package)
@@ -223,13 +213,6 @@ value of the variable CCL:*MAKE-PACKAGE-USE-DEFAULTS*."
 	    (%add-nicknames nicknames pkg)
 	    (with-package-list-write-lock
 	        (push pkg %all-packages%))
-	    (%wasm-startup-truth-note-event-if-available
-	     "package-create"
-	     :phase "package-api"
-	     :package pkg
-	     :name pkg-name
-	     :use use
-	     :nicknames nicknames)
 	    pkg))
 
 (defun new-package-name (name &optional package)
@@ -387,11 +370,6 @@ value of the variable CCL:*MAKE-PACKAGE-USE-DEFAULTS*."
 	      (%svset (car table) index (package-deleted-marker))
 	      (when (eq (symbol-package symbol) package)
 	        (%set-symbol-package symbol nil))
-	      (%wasm-startup-truth-note-event-if-available
-	       "unintern"
-	       :phase "package-api"
-	       :package package
-	       :symbol symbol)
 	      t)))
 
 (defun import-1 (package sym)
@@ -419,12 +397,6 @@ value of the variable CCL:*MAKE-PACKAGE-USE-DEFAULTS*."
                                     (import-1 package sym))))))
         (unless (or (eq type :external) (eq type :internal))
           (%insert-symbol sym package internal-offset external-offset)))
-    (%wasm-startup-truth-note-event-if-available
-     "package-import"
-     :phase "package-api"
-     :package package
-     :symbol sym
-     :existing-type type)
     nil))
 
 
@@ -447,11 +419,6 @@ value of the variable CCL:*MAKE-PACKAGE-USE-DEFAULTS*."
 	     (if (or (eq where :internal) (eq where :external))
 	       (pushnew symbol (pkg.shadowed package))
 	       (push (%add-symbol pname package internal-idx external-idx) (pkg.shadowed package)))))
-	  (%wasm-startup-truth-note-event-if-available
-	   "package-shadow"
-	   :phase "package-api"
-	   :package package
-	   :symbol sym)
 	    nil))
 
 (defun shadow (sym-or-symbols-or-string-or-strings &optional package)
@@ -607,11 +574,7 @@ value of the variable CCL:*MAKE-PACKAGE-USE-DEFAULTS*."
   (unless (memq using-package (pkg.used-by package-to-use))   ;  Not already used in break loop/restart, etc.
     (push using-package (pkg.used-by package-to-use))
     (push package-to-use (pkg.used using-package)))
-  (%wasm-startup-truth-note-event-if-available
-   "package-use"
-   :phase "package-api"
-   :using-package using-package
-   :used-package package-to-use))
+  )
 
 (defun use-package (packages-to-use &optional package)
   "Add all the PACKAGES-TO-USE to the use list for PACKAGE so that

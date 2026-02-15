@@ -1277,9 +1277,7 @@ async function run() {
       const uiBundle = await loadJson(WASM_UI_BUNDLE_PATH);
       const uiModules = Array.isArray(uiBundle?.modules) ? uiBundle.modules : [];
       const uiFunctions = Array.isArray(uiBundle?.functions) ? uiBundle.functions : [];
-      const kernelDemoTurn = typeof kernelExports.wasm_ui_demo_turn === "function"
-        ? kernelExports.wasm_ui_demo_turn
-        : null;
+      const kernelDemoTurn = null;
 
       const nilValue = typeof kernelExports.wasm_get_lisp_nil === "function"
         ? (kernelExports.wasm_get_lisp_nil() >>> 0)

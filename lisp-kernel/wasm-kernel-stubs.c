@@ -3297,11 +3297,6 @@ wasm_lispobj_in_scannable_area(LispObj obj)
 static int
 wasm_lisp_string_equals_bytes(LispObj str,
                               const uint8_t *bytes,
-                              uint32_t len);
-
-static int
-wasm_lisp_string_equals_bytes(LispObj str,
-                              const uint8_t *bytes,
                               uint32_t len)
 {
   if (!bytes) {
@@ -3566,36 +3561,6 @@ wasm_find_symbol_named_bytes(const uint8_t *name, uint32_t len, LispObj package)
 }
 
 static LispObj
-wasm_find_symbol_by_cell_in_range(LispObj *start,
-                                  LispObj *end,
-                                  LispObj target,
-                                  int use_fcell)
-{
-  LispObj header;
-  LispObj tag;
-  while (start < end) {
-    header = *start;
-    tag = fulltag_of(header);
-    if (header_subtag(header) == subtag_symbol) {
-      LispObj sym = ptr_to_lispobj(start) + fulltag_misc;
-      lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(sym);
-      LispObj cell = use_fcell ? rawsym->fcell : rawsym->vcell;
-      if (cell == target) {
-        return sym;
-      }
-    }
-    if (nodeheader_tag_p(tag)) {
-      start += (~1 & (2 + header_element_count(header)));
-    } else if (immheader_tag_p(tag)) {
-      start = (LispObj *)skip_over_ivector((natural)start, header);
-    } else {
-      start += 2;
-    }
-  }
-  return (LispObj)0;
-}
-
-static LispObj
 wasm_find_symbol_named_bytes_scan(const uint8_t *name, uint32_t len, LispObj package)
 {
   if (!name || len == 0) {
@@ -3682,9 +3647,6 @@ wasm_alloc_cons_bridge(LispObj car_value, LispObj cdr_value)
   TCR *tcr = wasm_get_current_tcr();
   return wasm_alloc_cons(tcr, car_value, cdr_value);
 }
-
-static LispObj
-wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg);
 
 static LispObj
 wasm_foreign_funcall1(TCR *tcr, LispObj callable, LispObj arg)
@@ -4047,27 +4009,6 @@ wasm_probe_foreign_call1(uint32_t mode, uint32_t arg_ptr, uint32_t arg_len)
   return 0;
 }
 
-enum wasm_intern_status_code {
-  WASM_INTERN_STATUS_NONE = 0u,
-  WASM_INTERN_STATUS_OK = 1u,
-  WASM_INTERN_STATUS_ARG_INVALID = 2u,
-  WASM_INTERN_STATUS_INTERN_UNAVAILABLE = 3u,
-  WASM_INTERN_STATUS_NAME_ALLOC_FAILED = 4u,
-  WASM_INTERN_STATUS_THROW = 5u,
-  WASM_INTERN_STATUS_RESULT_NON_SYMBOL = 6u,
-  WASM_INTERN_STATUS_EXISTING_SYMBOL = 7u,
-  WASM_INTERN_STATUS_SYMBOL_MISSING = 8u,
-  WASM_INTERN_STATUS_SYMBOL_SYNTHESIZED = 9u
-};
-
-static volatile uint32_t wasm_last_intern_status = WASM_INTERN_STATUS_NONE;
-
-static void
-wasm_set_last_intern_status(uint32_t status)
-{
-  wasm_last_intern_status = status;
-}
-
 static int
 wasm_symbol_object_p(LispObj value)
 {
@@ -4186,7 +4127,6 @@ static LispObj
 wasm_intern_startup(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg)
 {
   if (tcr == NULL || name_bytes == NULL || name_len == 0) {
-    wasm_set_last_intern_status(WASM_INTERN_STATUS_ARG_INVALID);
     return (LispObj)0;
   }
 
@@ -4197,12 +4137,10 @@ wasm_intern_startup(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, Lisp
   if (pkg_arg != (LispObj)0) {
     LispObj existing = wasm_find_symbol_named_bytes(name_bytes, name_len, pkg_arg);
     if (wasm_symbol_object_p(existing)) {
-      wasm_set_last_intern_status(WASM_INTERN_STATUS_EXISTING_SYMBOL);
       return existing;
     }
     existing = wasm_find_symbol_named_bytes_scan(name_bytes, name_len, pkg_arg);
     if (wasm_symbol_object_p(existing)) {
-      wasm_set_last_intern_status(WASM_INTERN_STATUS_EXISTING_SYMBOL);
       return existing;
     }
   }
@@ -4211,34 +4149,28 @@ wasm_intern_startup(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, Lisp
   if (intern_sym == (LispObj)0) {
     LispObj synthesized = wasm_intern_startup_synthesize_symbol(tcr, name_bytes, name_len, pkg_arg);
     if (wasm_symbol_object_p(synthesized)) {
-      wasm_set_last_intern_status(WASM_INTERN_STATUS_SYMBOL_SYNTHESIZED);
       return synthesized;
     }
-    wasm_set_last_intern_status(WASM_INTERN_STATUS_INTERN_UNAVAILABLE);
     return (LispObj)0;
   }
 
   LispObj name_str = wasm_const_pool_make_base_string(tcr, name_bytes, name_len);
   if (name_str == lisp_nil) {
-    wasm_set_last_intern_status(WASM_INTERN_STATUS_NAME_ALLOC_FAILED);
     return (LispObj)0;
   }
 
   LispObj result = wasm_funcall2(intern_sym, name_str, pkg_arg);
 
   if (tcr->wasm_pending_throw) {
-    wasm_set_last_intern_status(WASM_INTERN_STATUS_THROW);
     return (LispObj)0;
   }
 
   if (fulltag_of(result) != fulltag_misc ||
       !wasm_lispobj_in_scannable_area(result) ||
       header_subtag(header_of(result)) != subtag_symbol) {
-    wasm_set_last_intern_status(WASM_INTERN_STATUS_RESULT_NON_SYMBOL);
     return (LispObj)0;
   }
 
-  wasm_set_last_intern_status(WASM_INTERN_STATUS_OK);
   return result;
 }
 
@@ -4246,7 +4178,6 @@ static LispObj
 wasm_intern_runtime(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg)
 {
   if (tcr == NULL || name_bytes == NULL || name_len == 0) {
-    wasm_set_last_intern_status(WASM_INTERN_STATUS_ARG_INVALID);
     return (LispObj)0;
   }
 
@@ -4261,11 +4192,9 @@ wasm_intern_runtime(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, Lisp
   if (existing != (LispObj)0 &&
       fulltag_of(existing) == fulltag_misc &&
       header_subtag(header_of(existing)) == subtag_symbol) {
-    wasm_set_last_intern_status(WASM_INTERN_STATUS_EXISTING_SYMBOL);
     return existing;
   }
 
-  wasm_set_last_intern_status(WASM_INTERN_STATUS_SYMBOL_MISSING);
   return (LispObj)0;
 }
 
@@ -4580,7 +4509,6 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
             }
           }
         }
-        wasm_set_last_intern_status(WASM_INTERN_STATUS_NONE);
         LispObj sym = wasm_const_pool_intern_symbol(tcr, name_bytes, name_len, pkg);
         if (tcr->wasm_pending_throw || sym == (LispObj)0) {
           return lisp_nil;
@@ -4658,7 +4586,6 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
             }
           }
         }
-        wasm_set_last_intern_status(WASM_INTERN_STATUS_NONE);
         LispObj sym = wasm_const_pool_intern_symbol(tcr, name_bytes, name_len, pkg);
         if (tcr->wasm_pending_throw || sym == (LispObj)0) {
           return lisp_nil;

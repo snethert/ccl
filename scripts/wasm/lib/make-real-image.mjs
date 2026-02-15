@@ -169,13 +169,10 @@ function trace(msg) {
     console.error(`[make-real-image] ${msg}`);
   }
 }
-const startupTruthCollectEnvEnabled = process.env.CCL_WASM_STARTUP_TRUTH_COLLECT === "1";
 const diagPreinstallAttemptsEnabled = process.env.CCL_WASM_DIAG_PREINSTALL_ATTEMPTS === "1";
 const diagPreinstallContinueOnThrowEnabled = process.env.CCL_WASM_DIAG_PREINSTALL_CONTINUE_ON_THROW === "1";
 const diagApplyFailureDetailsEnabled = process.env.CCL_WASM_DIAG_APPLY_FAILURE_DETAILS === "1";
-const diagApplyContinueOnFailEnabled = process.env.CCL_WASM_DIAG_APPLY_CONTINUE_ON_FAIL === "1" ||
-  startupTruthCollectEnvEnabled;
-let l0BootstrapContractFailureCount = 0;
+const diagApplyContinueOnFailEnabled = process.env.CCL_WASM_DIAG_APPLY_CONTINUE_ON_FAIL === "1";
 function logPreinstallAttemptDiag({
   phase,
   entryIndex,
@@ -632,12 +629,6 @@ const subprimsDir = process.env.CCL_WASM_SUBPRIMS_DIR ?? path.join(buildDir, "su
 const defaultBootImage = path.join(root, "wasm-boot.image");
 const defaultOutput = path.join(imagesDir, "root.image");
 const defaultWasmOutput = "build/wasm32/images/root.image";
-const startupTruthCollectEnabled = startupTruthCollectEnvEnabled;
-const defaultStartupTruthOutPath = path.join(modulesDir, "startup_truth_v1.jsonl");
-const startupTruthHostOutPath = startupTruthCollectEnabled
-  ? path.resolve(process.env.CCL_WASM_STARTUP_TRUTH_OUT ?? defaultStartupTruthOutPath)
-  : null;
-const startupTruthPersistencePath = "build/wasm32/modules/startup_truth_v1.jsonl";
 // Policy: keep compiled modules external by default (JSON + .bin sidecar)
 // instead of embedding them in the saved heap image.
 const defaultModules = path.join(modulesDir, "wasm-runtime-modules.json");
@@ -1172,39 +1163,6 @@ const ensure = microkernel.persistence.ensureDirs(wasmOutputPath);
 if (!ensure.ok) {
   fail(`persistence ensureDirs failed for ${wasmOutputPath}`);
 }
-if (startupTruthCollectEnabled) {
-  const startupTruthEnsure = microkernel.persistence.ensureDirs(startupTruthPersistencePath);
-  if (!startupTruthEnsure.ok) {
-    fail(`persistence ensureDirs failed for ${startupTruthPersistencePath}`);
-  }
-  const startupTruthPrime = microkernel.persistence.openFile(
-    startupTruthPersistencePath,
-    FILE_MODE_WRITE | FILE_MODE_CREATE | FILE_MODE_TRUNCATE,
-  );
-  if (!startupTruthPrime?.ok) {
-    fail(`failed to prime ${startupTruthPersistencePath} in persistence store`);
-  }
-  const startupTruthPrimeRecord = {
-    schema_version: "startup_truth_v1",
-    event_type: "collect-prime",
-    phase: "collect-prime",
-    monotonic_seq: 0,
-    payload: {
-      source: "make-real-image",
-      output_path: startupTruthPersistencePath,
-    },
-  };
-  const startupTruthPrimeBytes = Buffer.from(
-    `${JSON.stringify(startupTruthPrimeRecord)}\n`,
-    "utf8",
-  );
-  const startupTruthPrimeWritten = startupTruthPrime.value.write(startupTruthPrimeBytes);
-  if ((startupTruthPrimeWritten | 0) !== startupTruthPrimeBytes.length) {
-    fail(`failed to seed ${startupTruthPersistencePath} priming record`);
-  }
-  startupTruthPrime.value.close();
-}
-
 let kernelExports = null;
 
 function decodeConstPoolForInfo(info) {
@@ -1507,7 +1465,6 @@ function applyStartupBindingMapDeferredBindingsForConstPoolEntry(entryIndexRaw, 
     typeof ex.wasm_probe_symbol_vcell === "function" &&
     typeof ex.wasm_probe_symbol_fcell === "function" &&
     typeof ex.wasm_probe_last_status === "function" &&
-    typeof ex.wasm_debug_function_entry_index === "function" &&
     typeof ex.wasm_set_raw_symbol_cell_initializer === "function"
   );
   if (!hasRequiredExports) return;
@@ -1545,7 +1502,7 @@ function applyStartupBindingMapDeferredBindingsForConstPoolEntry(entryIndexRaw, 
     const beforeFcell = ex.wasm_probe_symbol_fcell(rawSymbol >>> 0) >>> 0;
     const beforeFcellStatus = probeStatus();
     if (beforeFcellStatus === OK_STATUS) {
-      const beforeEntry = ex.wasm_debug_function_entry_index(beforeFcell >>> 0) | 0;
+      const beforeEntry = -1;
       const desiredEntry = Number.isInteger(binding?.resolved_entry_index)
         ? (binding.resolved_entry_index >>> 0)
         : null;
@@ -1577,7 +1534,7 @@ function applyStartupBindingMapDeferredBindingsForConstPoolEntry(entryIndexRaw, 
       applyFailed++;
       continue;
     }
-    const afterEntry = ex.wasm_debug_function_entry_index(afterFcell >>> 0) | 0;
+    const afterEntry = -1;
     if (afterEntry < 0) {
       applyFailed++;
       continue;
@@ -1743,49 +1700,6 @@ function installConstPoolOnDemand(entryIndexRaw) {
       ? (kernelExports.wasm_get_lisp_nil() >>> 0)
       : null;
     const installOk = rc !== 0 && (nilValue == null || rc !== nilValue);
-    if (shouldProbe) {
-      const readDebug = (fnName) => (typeof kernelExports[fnName] === "function"
-        ? (kernelExports[fnName]() >>> 0)
-        : null);
-      const debugError = readDebug("wasm_debug_const_pool_error");
-      const debugNameLen = readDebug("wasm_debug_const_pool_symbol_name_len");
-      const debugPkgLen = readDebug("wasm_debug_const_pool_symbol_pkg_len");
-      const debugPhase = readDebug("wasm_debug_const_pool_phase");
-      const debugIndex = readDebug("wasm_debug_const_pool_index");
-      const debugTag = readDebug("wasm_debug_const_pool_tag");
-      const debugOffset = readDebug("wasm_debug_const_pool_offset");
-      const pendingThrow = readDebug("wasm_pending_throw_raw");
-      const bootPhase = typeof kernelExports.wasm_boot_get_phase === "function"
-        ? (kernelExports.wasm_boot_get_phase() >>> 0)
-        : null;
-      const pendingThrowSubtag = pendingThrow != null && typeof kernelExports.wasm_debug_misc_subtag === "function"
-        ? (kernelExports.wasm_debug_misc_subtag(pendingThrow >>> 0) | 0)
-        : null;
-      trace(
-        `diag-const-pool entry=${entryIndex}` +
-        ` install_rc=0x${rc.toString(16)}` +
-        ` lisp_nil=${nilValue == null ? "n/a" : `0x${nilValue.toString(16)}`}` +
-        ` debug_error=${debugError == null ? "n/a" : `${debugError}:${CONST_POOL_ERROR_NAMES.get(debugError) ?? "unknown"}`}` +
-        ` debug_name_len=${debugNameLen == null ? "n/a" : debugNameLen}` +
-        ` debug_pkg_len=${debugPkgLen == null ? "n/a" : debugPkgLen}` +
-        ` debug_phase=${debugPhase == null ? "n/a" : debugPhase}` +
-        ` debug_index=${debugIndex == null ? "n/a" : debugIndex}` +
-        ` debug_tag=${debugTag == null ? "n/a" : debugTag}` +
-        ` debug_offset=${debugOffset == null ? "n/a" : debugOffset}` +
-        ` boot_phase=${bootPhase == null ? "n/a" : formatBootPhase(bootPhase)}` +
-        ` pending_throw=${pendingThrow == null ? "n/a" : `0x${pendingThrow.toString(16)}`}` +
-        ` pending_throw_subtag=${pendingThrowSubtag == null ? "n/a" : pendingThrowSubtag}` +
-        ` install_ok=${installOk ? 1 : 0}`,
-      );
-      if (typeof kernelExports.wasm_const_pool_ref === "function") {
-        const rows = [];
-        for (let i = 0; i < 16; i++) {
-          const obj = kernelExports.wasm_const_pool_ref(entryIndex >>> 0, i >>> 0) >>> 0;
-          rows.push(`${i}:0x${obj.toString(16)}`);
-        }
-        trace(`diag-const-pool entry=${entryIndex} refs=${rows.join(" | ")}`);
-      }
-    }
     if (!installOk) {
       logPreinstallAttemptDiag({
         phase: "host-install-const-pool",
@@ -1899,28 +1813,6 @@ const subprims = await instantiateWasm(
 trace("subprims instantiated");
 const subex = subprims.instance.exports;
 
-const parseUintEnv = (raw) => {
-  if (typeof raw !== "string") return null;
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-  if (!/^\d+$/.test(trimmed)) {
-    fail(`invalid unsigned integer value: ${JSON.stringify(raw)}`);
-  }
-  const parsed = Number.parseInt(trimmed, 10);
-  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 0xffffffff) {
-    fail(`out-of-range unsigned integer value: ${JSON.stringify(raw)}`);
-  }
-  return parsed >>> 0;
-};
-const funcallGuardLimit = parseUintEnv(process.env.CCL_WASM_DEBUG_FUNCALL_GUARD_LIMIT);
-if (funcallGuardLimit != null) {
-  if (typeof subex.wasm_debug_set_funcall_guard_limit !== "function") {
-    fail("kernel missing wasm_debug_set_funcall_guard_limit");
-  }
-  subex.wasm_debug_set_funcall_guard_limit(funcallGuardLimit >>> 0);
-  trace(`debug-funcall-guard configured limit=${funcallGuardLimit >>> 0}`);
-}
-
 installSubprimsTable({
   table: runtime.subprimsTable,
   subprimsMap,
@@ -1979,229 +1871,6 @@ const KEYWORD_BIND_STAGE_NAMES = new Map([
   [7, "stack-null"],
   [255, "done"],
 ]);
-const debugReadSpecrefFailure = (label) => {
-  if (!traceEnabled || typeof subex.wasm_debug_specref_failure_stage !== "function") {
-    return null;
-  }
-  try {
-    const stage = subex.wasm_debug_specref_failure_stage() >>> 0;
-    const stageName = SPECREF_FAILURE_STAGE_NAMES.get(stage) ?? "unknown";
-    const read = (name) => (typeof subex[name] === "function" ? (subex[name]() >>> 0) : 0);
-    const symbolRaw = read("wasm_debug_specref_failure_symbol_raw");
-    const symbolFulltag = read("wasm_debug_specref_failure_symbol_fulltag");
-    const symbolHeader = read("wasm_debug_specref_failure_symbol_header");
-    const symbolSubtag = read("wasm_debug_specref_failure_symbol_subtag");
-    trace(
-      `debug-specref-failure label=${label}` +
-      ` stage=${stage}:${stageName}` +
-      ` tcr=0x${read("wasm_debug_specref_failure_tcr_raw").toString(16)}` +
-      ` symbol=0x${symbolRaw.toString(16)}` +
-      ` symbol_fulltag=${symbolFulltag}` +
-      ` symbol_header=0x${symbolHeader.toString(16)}` +
-      ` symbol_subtag=${symbolSubtag}` +
-      ` binding_index=0x${read("wasm_debug_specref_failure_binding_index_raw").toString(16)}` +
-      ` binding_index_tag=${read("wasm_debug_specref_failure_binding_index_tag")}` +
-      ` limit=0x${read("wasm_debug_specref_failure_limit_raw").toString(16)}` +
-      ` limit_tag=${read("wasm_debug_specref_failure_limit_tag")}` +
-      ` tlb_pointer=0x${read("wasm_debug_specref_failure_tlb_pointer_raw").toString(16)}`,
-    );
-
-    const readKernel = (fnName) => (typeof ex[fnName] === "function" ? (ex[fnName]() >>> 0) : 0);
-    const argZ = readKernel("wasm_get_arg_z");
-    const argY = readKernel("wasm_get_arg_y");
-    const nfn = readKernel("wasm_get_nfn");
-    const nargs = readKernel("wasm_get_nargs");
-    const nfnEntry = typeof ex.wasm_debug_function_entry_index === "function"
-      ? (ex.wasm_debug_function_entry_index(nfn >>> 0) | 0)
-      : -1;
-    const symbolName = (obj) => {
-      if (typeof ex.wasm_debug_copy_symbol_name !== "function") return null;
-      const len = ex.wasm_debug_copy_symbol_name(obj >>> 0, 0, 0) >>> 0;
-      if (len === 0) return null;
-      const ptr = allocScratch(runtime.memory, len);
-      const copied = ex.wasm_debug_copy_symbol_name(obj >>> 0, ptr >>> 0, len) >>> 0;
-      if (copied === 0) return null;
-      try {
-        return decoder.decode(new Uint8Array(runtime.memory.buffer, ptr >>> 0, Math.min(len, copied)));
-      } catch {
-        return null;
-      }
-    };
-    const ownerName = (fnObj) => {
-      if (typeof ex.wasm_debug_find_symbol_by_fcell_raw !== "function") return null;
-      const owner = ex.wasm_debug_find_symbol_by_fcell_raw(fnObj >>> 0) >>> 0;
-      if (owner === 0 || owner === 0x4000001) return null;
-      return symbolName(owner >>> 0);
-    };
-    const objSubtag = (obj) => (typeof ex.wasm_debug_misc_subtag === "function"
-      ? (ex.wasm_debug_misc_subtag(obj >>> 0) | 0)
-      : -1);
-    const argZSymbol = symbolName(argZ) ?? null;
-    const argYSymbol = symbolName(argY) ?? null;
-    const nfnOwner = ownerName(nfn) ?? null;
-    trace(
-      `debug-specref-context label=${label}` +
-      ` arg_z=0x${argZ.toString(16)} arg_z_subtag=${objSubtag(argZ)}` +
-      ` arg_y=0x${argY.toString(16)} arg_y_subtag=${objSubtag(argY)}` +
-      ` nfn=0x${nfn.toString(16)} nfn_subtag=${objSubtag(nfn)} nfn_entry=${nfnEntry}` +
-      ` nargs_raw=0x${nargs.toString(16)}` +
-      (argZSymbol ? ` arg_z_symbol=${JSON.stringify(argZSymbol)}` : "") +
-      (argYSymbol ? ` arg_y_symbol=${JSON.stringify(argYSymbol)}` : "") +
-      (nfnOwner ? ` nfn_owner=${JSON.stringify(nfnOwner)}` : ""),
-    );
-
-    const readKeywordBind = (name) => (typeof subex[name] === "function" ? (subex[name]() | 0) : 0);
-    const keywordBindStage = readKeywordBind("wasm_debug_keyword_bind_stage");
-    const keywordBindStageName = KEYWORD_BIND_STAGE_NAMES.get(keywordBindStage) ?? "unknown";
-    if (keywordBindStage !== 0) {
-      const keywordBindRawNargs = readKeywordBind("wasm_debug_keyword_bind_raw_nargs") >>> 0;
-      const keywordBindRawPrev = readKeywordBind("wasm_debug_keyword_bind_raw_prev") >>> 0;
-      const keywordBindFlags = readKeywordBind("wasm_debug_keyword_bind_keyword_flags") >>> 0;
-      const keywordBindNargsCount = readKeywordBind("wasm_debug_keyword_bind_nargs_count");
-      const keywordBindPrevCount = readKeywordBind("wasm_debug_keyword_bind_prev_count");
-      const keywordBindKeyValueCount = readKeywordBind("wasm_debug_keyword_bind_key_value_count");
-      const keywordBindFn = readKeywordBind("wasm_debug_keyword_bind_fn_raw") >>> 0;
-      const keywordBindFnFulltag = readKeywordBind("wasm_debug_keyword_bind_fn_fulltag") >>> 0;
-      const keywordBindKeyvec = readKeywordBind("wasm_debug_keyword_bind_keyvec_raw") >>> 0;
-      const keywordBindKeyvecFulltag = readKeywordBind("wasm_debug_keyword_bind_keyvec_fulltag") >>> 0;
-      const keywordBindKeyvecHeader = readKeywordBind("wasm_debug_keyword_bind_keyvec_header") >>> 0;
-      const keywordBindKeyvecLen = readKeywordBind("wasm_debug_keyword_bind_keyvec_len");
-      const keywordBindVspRaw = readKeywordBind("wasm_debug_keyword_bind_vsp_raw") >>> 0;
-      trace(
-        `debug-keyword-bind label=${label}` +
-        ` stage=${keywordBindStage}:${keywordBindStageName}` +
-        ` raw_nargs=0x${keywordBindRawNargs.toString(16)}` +
-        ` raw_prev=0x${keywordBindRawPrev.toString(16)}` +
-        ` flags=0x${keywordBindFlags.toString(16)}` +
-        ` nargs_count=${keywordBindNargsCount}` +
-        ` prev_count=${keywordBindPrevCount}` +
-        ` key_value_count=${keywordBindKeyValueCount}` +
-        ` fn=0x${keywordBindFn.toString(16)} fn_fulltag=${keywordBindFnFulltag}` +
-        ` keyvec=0x${keywordBindKeyvec.toString(16)} keyvec_fulltag=${keywordBindKeyvecFulltag}` +
-        ` keyvec_header=0x${keywordBindKeyvecHeader.toString(16)} keyvec_len=${keywordBindKeyvecLen}` +
-        ` vsp=0x${keywordBindVspRaw.toString(16)}`,
-      );
-    }
-
-    const readFuncallGuard = (name) => (typeof subex[name] === "function" ? (subex[name]() >>> 0) : 0);
-    const funcallGuardLimit = readFuncallGuard("wasm_debug_funcall_guard_limit");
-    const funcallGuardCounter = readFuncallGuard("wasm_debug_funcall_guard_counter");
-    const funcallGuardTriggered = readFuncallGuard("wasm_debug_funcall_guard_triggered");
-    const funcallGuardLastEntryIndex = readFuncallGuard("wasm_debug_funcall_guard_last_entry_index");
-    const funcallGuardLastNfnRaw = readFuncallGuard("wasm_debug_funcall_guard_last_nfn_raw");
-    const funcallGuardLastNameRaw = readFuncallGuard("wasm_debug_funcall_guard_last_name_raw");
-    const funcallGuardLastArgZRaw = readFuncallGuard("wasm_debug_funcall_guard_last_arg_z_raw");
-    const funcallGuardLastArgYRaw = readFuncallGuard("wasm_debug_funcall_guard_last_arg_y_raw");
-    const funcallGuardLastNargsRaw = readFuncallGuard("wasm_debug_funcall_guard_last_nargs_raw");
-    if (funcallGuardLimit !== 0 || funcallGuardCounter !== 0 || funcallGuardTriggered !== 0) {
-      trace(
-        `debug-funcall-guard label=${label}` +
-        ` limit=${funcallGuardLimit}` +
-        ` counter=${funcallGuardCounter}` +
-        ` triggered=${funcallGuardTriggered}` +
-        ` last_entry_index=0x${funcallGuardLastEntryIndex.toString(16)}` +
-        ` last_nfn=0x${funcallGuardLastNfnRaw.toString(16)}` +
-        ` last_name=0x${funcallGuardLastNameRaw.toString(16)}` +
-        ` last_arg_z=0x${funcallGuardLastArgZRaw.toString(16)}` +
-        ` last_arg_y=0x${funcallGuardLastArgYRaw.toString(16)}` +
-        ` last_nargs=0x${funcallGuardLastNargsRaw.toString(16)}`,
-      );
-    }
-
-    let constPoolEntry = null;
-    let constPoolPhase = null;
-    let constPoolIndex = null;
-    let constPoolTag = null;
-    let constPoolOffset = null;
-    let constPoolSampleSymbols = [];
-    if (typeof ex.wasm_debug_const_pool_entry === "function") {
-      const constEntry = ex.wasm_debug_const_pool_entry() >>> 0;
-      constPoolEntry = constEntry >>> 0;
-      constPoolPhase = typeof ex.wasm_debug_const_pool_phase === "function"
-        ? (ex.wasm_debug_const_pool_phase() >>> 0)
-        : 0;
-      constPoolIndex = typeof ex.wasm_debug_const_pool_index === "function"
-        ? (ex.wasm_debug_const_pool_index() >>> 0)
-        : 0;
-      constPoolTag = typeof ex.wasm_debug_const_pool_tag === "function"
-        ? (ex.wasm_debug_const_pool_tag() >>> 0)
-        : 0;
-      constPoolOffset = typeof ex.wasm_debug_const_pool_offset === "function"
-        ? (ex.wasm_debug_const_pool_offset() >>> 0)
-        : 0;
-      trace(
-        `debug-specref-const-pool label=${label}` +
-        ` entry=${constEntry}` +
-        ` phase=${constPoolPhase}` +
-        ` index=${constPoolIndex}` +
-        ` tag=${constPoolTag}` +
-        ` offset=${constPoolOffset}`,
-      );
-      if (typeof ex.wasm_const_pool_ref === "function") {
-        const rows = [];
-        const sampleSymbols = [];
-        for (let i = 0; i < 6; i++) {
-          const obj = ex.wasm_const_pool_ref(constEntry >>> 0, i >>> 0) >>> 0;
-          const subtag = objSubtag(obj);
-          let entryIndex = null;
-          if (typeof ex.wasm_debug_function_entry_index === "function") {
-            const maybeEntry = ex.wasm_debug_function_entry_index(obj >>> 0) | 0;
-            if (maybeEntry >= 0) {
-              entryIndex = maybeEntry >>> 0;
-            }
-          }
-          const name = symbolName(obj) ?? ownerName(obj);
-          if (name && !sampleSymbols.includes(name)) {
-            sampleSymbols.push(name);
-          }
-          rows.push(
-            `${i}:0x${obj.toString(16)}:subtag=${subtag}` +
-            (entryIndex == null ? "" : `:entry=${entryIndex}`) +
-            (name ? `:${name}` : ""),
-          );
-        }
-        constPoolSampleSymbols = sampleSymbols;
-        trace(`debug-specref-const-pool-sample label=${label} ${rows.join(" | ")}`);
-      }
-    }
-    return {
-      label,
-      stage,
-      stage_name: stageName,
-      symbol_raw: symbolRaw >>> 0,
-      symbol_fulltag: symbolFulltag >>> 0,
-      symbol_subtag: symbolSubtag >>> 0,
-      arg_z: argZ >>> 0,
-      arg_y: argY >>> 0,
-      nfn: nfn >>> 0,
-      nfn_entry: nfnEntry,
-      nargs_raw: nargs >>> 0,
-      arg_z_symbol: argZSymbol,
-      arg_y_symbol: argYSymbol,
-      nfn_owner: nfnOwner,
-      keyword_bind_stage: keywordBindStage,
-      keyword_bind_stage_name: keywordBindStageName,
-      funcall_guard_limit: funcallGuardLimit,
-      funcall_guard_counter: funcallGuardCounter,
-      funcall_guard_triggered: funcallGuardTriggered,
-      funcall_guard_last_entry_index: funcallGuardLastEntryIndex,
-      funcall_guard_last_nfn_raw: funcallGuardLastNfnRaw,
-      funcall_guard_last_name_raw: funcallGuardLastNameRaw,
-      funcall_guard_last_arg_z_raw: funcallGuardLastArgZRaw,
-      funcall_guard_last_arg_y_raw: funcallGuardLastArgYRaw,
-      funcall_guard_last_nargs_raw: funcallGuardLastNargsRaw,
-      const_pool_entry: constPoolEntry,
-      const_pool_phase: constPoolPhase,
-      const_pool_index: constPoolIndex,
-      const_pool_tag: constPoolTag,
-      const_pool_offset: constPoolOffset,
-      const_pool_sample_symbols: constPoolSampleSymbols,
-    };
-  } catch (err) {
-    trace(`debug-specref-failure label=${label} error=${err?.message ?? err}`);
-    return null;
-  }
-};
 if (typeof ex.wasm_set_cstack_bounds !== "function") {
   fail("kernel missing wasm_set_cstack_bounds");
 }
@@ -2219,350 +1888,6 @@ if (typeof ex.wasm_ccl_load_image !== "function") {
 }
 ex.wasm_ccl_load_image(blobBase, imageLen);
 trace("boot image loaded");
-
-const debugReadSymbolState = (label, symbolReader) => {
-  if (!traceEnabled || typeof symbolReader !== "function" || typeof ex.wasm_debug_symbol_vcell_raw !== "function") {
-    return;
-  }
-  try {
-    const sym = symbolReader() >>> 0;
-    const vcell = ex.wasm_debug_symbol_vcell_raw(sym >>> 0) >>> 0;
-    const fcell = typeof ex.wasm_debug_symbol_fcell_raw === "function"
-      ? (ex.wasm_debug_symbol_fcell_raw(sym >>> 0) >>> 0)
-      : 0;
-    let symName = null;
-    if (typeof ex.wasm_debug_copy_symbol_name === "function") {
-      const len = ex.wasm_debug_copy_symbol_name(sym >>> 0, 0, 0) >>> 0;
-      if (len > 0) {
-        const ptr = allocScratch(runtime.memory, len);
-        const copied = ex.wasm_debug_copy_symbol_name(sym >>> 0, ptr >>> 0, len) >>> 0;
-        if (copied > 0) {
-          symName = decoder.decode(new Uint8Array(runtime.memory.buffer, ptr >>> 0, Math.min(len, copied)));
-        }
-      }
-    }
-    trace(
-      `debug-symbol-state label=${label}` +
-      ` sym=0x${sym.toString(16)}` +
-      ` vcell=0x${vcell.toString(16)}` +
-      ` fcell=0x${fcell.toString(16)}` +
-      (symName ? ` name=${JSON.stringify(symName)}` : ""),
-    );
-  } catch (err) {
-    trace(`debug-symbol-state label=${label} error=${err?.message ?? err}`);
-  }
-};
-
-const debugReadNamedCclSymbolState = (label, symbolName) => {
-  if (!traceEnabled ||
-      typeof ex.wasm_debug_find_symbol_ccl_raw !== "function" ||
-      typeof ex.wasm_debug_symbol_vcell_raw !== "function") {
-    return;
-  }
-  try {
-    const nameBytes = new TextEncoder().encode(symbolName);
-    const namePtr = allocScratch(runtime.memory, nameBytes.length);
-    new Uint8Array(runtime.memory.buffer, namePtr >>> 0, nameBytes.length).set(nameBytes);
-    const sym = ex.wasm_debug_find_symbol_ccl_raw(namePtr >>> 0, nameBytes.length >>> 0) >>> 0;
-    const vcell = ex.wasm_debug_symbol_vcell_raw(sym >>> 0) >>> 0;
-    const fcell = typeof ex.wasm_debug_symbol_fcell_raw === "function"
-      ? (ex.wasm_debug_symbol_fcell_raw(sym >>> 0) >>> 0)
-      : 0;
-    const vcellEntry = typeof ex.wasm_debug_function_entry_index === "function"
-      ? (ex.wasm_debug_function_entry_index(vcell >>> 0) | 0)
-      : null;
-    const fcellEntry = typeof ex.wasm_debug_function_entry_index === "function"
-      ? (ex.wasm_debug_function_entry_index(fcell >>> 0) | 0)
-      : null;
-    const vcellCallAbi = (
-      Number.isInteger(vcellEntry) &&
-      vcellEntry >= 0 &&
-      typeof ex.wasm_get_entry_call_abi === "function"
-    )
-      ? (ex.wasm_get_entry_call_abi(vcellEntry >>> 0) >>> 0)
-      : null;
-    const fcellCallAbi = (
-      Number.isInteger(fcellEntry) &&
-      fcellEntry >= 0 &&
-      typeof ex.wasm_get_entry_call_abi === "function"
-    )
-      ? (ex.wasm_get_entry_call_abi(fcellEntry >>> 0) >>> 0)
-      : null;
-    let fcellOwner = null;
-    if (typeof ex.wasm_debug_find_symbol_by_fcell_raw === "function" &&
-        typeof ex.wasm_debug_copy_symbol_name === "function" &&
-        fcell !== 0) {
-      const owner = ex.wasm_debug_find_symbol_by_fcell_raw(fcell >>> 0) >>> 0;
-      if (owner !== 0) {
-        const ownerLen = ex.wasm_debug_copy_symbol_name(owner >>> 0, 0, 0) >>> 0;
-        if (ownerLen > 0) {
-          const ownerPtr = allocScratch(runtime.memory, ownerLen);
-          const ownerCopied = ex.wasm_debug_copy_symbol_name(owner >>> 0, ownerPtr >>> 0, ownerLen) >>> 0;
-          if (ownerCopied > 0) {
-            fcellOwner = decoder.decode(
-              new Uint8Array(runtime.memory.buffer, ownerPtr >>> 0, Math.min(ownerLen, ownerCopied)),
-            );
-          }
-        }
-      }
-    }
-    trace(
-      `debug-symbol-state label=${label}` +
-      ` sym=0x${sym.toString(16)}` +
-      ` vcell=0x${vcell.toString(16)}` +
-      ` fcell=0x${fcell.toString(16)}` +
-      (vcellEntry == null ? "" : ` vcell_entry=${vcellEntry}`) +
-      (fcellEntry == null ? "" : ` fcell_entry=${fcellEntry}`) +
-      (vcellCallAbi == null ? "" : ` vcell_call_abi=${vcellCallAbi}`) +
-      (fcellCallAbi == null ? "" : ` fcell_call_abi=${fcellCallAbi}`) +
-      (fcellOwner ? ` fcell_owner=${JSON.stringify(fcellOwner)}` : "") +
-      ` name=${JSON.stringify(symbolName)}`,
-    );
-  } catch (err) {
-    trace(`debug-symbol-state label=${label} name=${JSON.stringify(symbolName)} error=${err?.message ?? err}`);
-  }
-};
-
-const debugReadNamedAnySymbolState = (label, symbolName) => {
-  if (!traceEnabled ||
-      typeof ex.wasm_debug_find_symbol_any_raw !== "function" ||
-      typeof ex.wasm_debug_symbol_vcell_raw !== "function") {
-    return;
-  }
-  try {
-    const nameBytes = new TextEncoder().encode(symbolName);
-    const namePtr = allocScratch(runtime.memory, nameBytes.length);
-    new Uint8Array(runtime.memory.buffer, namePtr >>> 0, nameBytes.length).set(nameBytes);
-    const sym = ex.wasm_debug_find_symbol_any_raw(namePtr >>> 0, nameBytes.length >>> 0) >>> 0;
-    const vcell = ex.wasm_debug_symbol_vcell_raw(sym >>> 0) >>> 0;
-    const fcell = typeof ex.wasm_debug_symbol_fcell_raw === "function"
-      ? (ex.wasm_debug_symbol_fcell_raw(sym >>> 0) >>> 0)
-      : 0;
-    trace(
-      `debug-symbol-state label=${label}` +
-      ` sym=0x${sym.toString(16)}` +
-      ` vcell=0x${vcell.toString(16)}` +
-      ` fcell=0x${fcell.toString(16)}` +
-      ` name=${JSON.stringify(symbolName)}`,
-    );
-  } catch (err) {
-    trace(`debug-symbol-state label=${label} name=${JSON.stringify(symbolName)} error=${err?.message ?? err}`);
-  }
-};
-
-const debugReadNamedCclListState = (label, symbolName) => {
-  if (!traceEnabled ||
-      typeof ex.wasm_debug_find_symbol_ccl_raw !== "function" ||
-      typeof ex.wasm_debug_symbol_vcell_raw !== "function" ||
-      typeof ex.wasm_debug_list_length_bounded !== "function") {
-    return;
-  }
-  try {
-    const nameBytes = new TextEncoder().encode(symbolName);
-    const namePtr = allocScratch(runtime.memory, nameBytes.length);
-    new Uint8Array(runtime.memory.buffer, namePtr >>> 0, nameBytes.length).set(nameBytes);
-    const sym = ex.wasm_debug_find_symbol_ccl_raw(namePtr >>> 0, nameBytes.length >>> 0) >>> 0;
-    const vcell = ex.wasm_debug_symbol_vcell_raw(sym >>> 0) >>> 0;
-    const listLen = ex.wasm_debug_list_length_bounded(vcell >>> 0, 65536) | 0;
-    trace(
-      `debug-list-state label=${label}` +
-      ` sym=0x${sym.toString(16)}` +
-      ` vcell=0x${vcell.toString(16)}` +
-      ` list_len=${listLen}` +
-      ` name=${JSON.stringify(symbolName)}`,
-    );
-  } catch (err) {
-    trace(`debug-list-state label=${label} name=${JSON.stringify(symbolName)} error=${err?.message ?? err}`);
-  }
-};
-
-const debugDumpNamedCclFunctionListEntries = (label, symbolName, maxItems = 12) => {
-  if (!traceEnabled ||
-      typeof ex.wasm_debug_find_symbol_ccl_raw !== "function" ||
-      typeof ex.wasm_debug_symbol_vcell_raw !== "function" ||
-      typeof ex.wasm_debug_cons_car_raw !== "function" ||
-      typeof ex.wasm_debug_cons_cdr_raw !== "function" ||
-      typeof ex.wasm_debug_list_length_bounded !== "function" ||
-      typeof ex.wasm_debug_function_entry_index !== "function") {
-    return;
-  }
-  try {
-    const lispNil = typeof ex.wasm_get_lisp_nil === "function"
-      ? (ex.wasm_get_lisp_nil() >>> 0)
-      : 0x4000001;
-    const nameBytes = new TextEncoder().encode(symbolName);
-    const namePtr = allocScratch(runtime.memory, nameBytes.length);
-    new Uint8Array(runtime.memory.buffer, namePtr >>> 0, nameBytes.length).set(nameBytes);
-    const sym = ex.wasm_debug_find_symbol_ccl_raw(namePtr >>> 0, nameBytes.length >>> 0) >>> 0;
-    let cursor = ex.wasm_debug_symbol_vcell_raw(sym >>> 0) >>> 0;
-    const listLen = ex.wasm_debug_list_length_bounded(cursor >>> 0, 65536) | 0;
-    const rows = [];
-    for (let i = 0; i < maxItems; i++) {
-      const car = ex.wasm_debug_cons_car_raw(cursor >>> 0) >>> 0;
-      const cdr = ex.wasm_debug_cons_cdr_raw(cursor >>> 0) >>> 0;
-      if (car === lispNil && cdr === lispNil) break;
-      const entry = ex.wasm_debug_function_entry_index(car >>> 0) | 0;
-      let ownerName = null;
-      if (typeof ex.wasm_debug_find_symbol_by_fcell_raw === "function" &&
-          typeof ex.wasm_debug_copy_symbol_name === "function") {
-        const ownerSym = ex.wasm_debug_find_symbol_by_fcell_raw(car >>> 0) >>> 0;
-        if (ownerSym !== 0 && ownerSym !== lispNil) {
-          const nameLen = ex.wasm_debug_copy_symbol_name(ownerSym >>> 0, 0, 0) >>> 0;
-          if (nameLen > 0) {
-            const namePtr = allocScratch(runtime.memory, nameLen);
-            const copied = ex.wasm_debug_copy_symbol_name(ownerSym >>> 0, namePtr >>> 0, nameLen) >>> 0;
-            if (copied > 0) {
-              ownerName = decoder.decode(new Uint8Array(runtime.memory.buffer, namePtr >>> 0, Math.min(nameLen, copied)));
-            }
-          }
-        }
-      }
-      rows.push(`${i}:${entry}:${`0x${car.toString(16)}`}${ownerName ? `:${ownerName}` : ""}`);
-      cursor = cdr >>> 0;
-      if (cursor === lispNil) break;
-    }
-    trace(
-      `debug-list-entries label=${label}` +
-      ` name=${JSON.stringify(symbolName)}` +
-      ` list_len=${listLen}` +
-      ` entries=[${rows.join(",")}]`,
-    );
-  } catch (err) {
-    trace(`debug-list-entries label=${label} name=${JSON.stringify(symbolName)} error=${err?.message ?? err}`);
-  }
-};
-
-const debugReadFasloadBoundarySymbols = (label) => {
-  debugReadSymbolState(`${label}.fasl-api`, ex.wasm_debug_find_symbol_fasl_api_raw);
-  debugReadSymbolState(`${label}.fasl-dispatch-table`, ex.wasm_debug_find_symbol_fasl_dispatch_table_raw);
-  debugReadNamedCclSymbolState(`${label}.pct-fasload-verbose`, "*%FASLOAD-VERBOSE*");
-  debugReadNamedCclSymbolState(`${label}.pct-fasload`, "*FASLOAD*");
-  debugReadNamedCclSymbolState(`${label}.fn-fasload`, "%FASLOAD");
-  debugReadNamedCclSymbolState(`${label}.fn-fasl-open`, "%FASL-OPEN");
-  debugReadNamedCclSymbolState(`${label}.fn-simple-fasl-open`, "%SIMPLE-FASL-OPEN");
-  debugReadNamedCclSymbolState(`${label}.fn-cons-population`, "%CONS-POPULATION");
-  debugReadNamedCclSymbolState(`${label}.fn-make-read-write-lock`, "MAKE-READ-WRITE-LOCK");
-  debugReadNamedCclSymbolState(`${label}.fn-map-areas`, "%MAP-AREAS");
-  debugReadNamedCclSymbolState(`${label}.fn-set-binding-index`, "%SET-BINDING-INDEX");
-  debugReadNamedCclSymbolState(`${label}.fn-current-tcr`, "%CURRENT-TCR");
-  debugReadNamedCclSymbolState(`${label}.fn-set-tcr-toplevel-function`, "%SET-TCR-TOPLEVEL-FUNCTION");
-  debugReadNamedCclSymbolState(`${label}.fn-make-vector-output-stream`, "MAKE-VECTOR-OUTPUT-STREAM");
-  debugReadNamedCclSymbolState(`${label}.fn-percent-make-vector-output-stream`, "%MAKE-VECTOR-OUTPUT-STREAM");
-  debugReadNamedCclSymbolState(`${label}.fn-make-uarray-1`, "MAKE-UARRAY-1");
-  debugReadNamedCclSymbolState(`${label}.fn-make-array`, "MAKE-ARRAY");
-  debugReadNamedCclSymbolState(`${label}.fn-class-has-forward-referenced-superclass-p`, "CLASS-HAS-A-FORWARD-REFERENCED-SUPERCLASS-P");
-  debugReadNamedAnySymbolState(`${label}.sym-class-has-forward-referenced-superclass-p`, "CLASS-HAS-A-FORWARD-REFERENCED-SUPERCLASS-P");
-  debugReadNamedCclSymbolState(`${label}.pct-toplevel-function`, "%TOPLEVEL-FUNCTION%");
-  debugReadNamedCclSymbolState(`${label}.sym-toplevel`, "TOPLEVEL");
-  debugReadNamedAnySymbolState(`${label}.sym-stream-pathname`, "STREAM-PATHNAME");
-  debugReadNamedCclSymbolState(`${label}.sym-percent-std-device-component`, "%STD-DEVICE-COMPONENT");
-  debugReadNamedAnySymbolState(`${label}.sym-keyword-package`, "*KEYWORD-PACKAGE*");
-  debugReadNamedAnySymbolState(`${label}.sym-default`, "DEFAULT");
-  debugReadNamedAnySymbolState(`${label}.sym-keyword`, "KEYWORD");
-  debugReadSymbolState(`${label}.sym-intern-pkgtable`, ex.wasm_debug_find_symbol_intern_pkgtable_raw);
-  debugReadSymbolState(`${label}.sym-intern-scan`, ex.wasm_debug_find_symbol_intern_scan_raw);
-  debugReadNamedAnySymbolState(`${label}.sym-intern-any`, "INTERN");
-  debugReadNamedCclSymbolState(`${label}.wasm-startup-step`, "*WASM-STARTUP-STEP*");
-  debugReadNamedCclSymbolState(`${label}.xload-startup-file`, "*XLOAD-STARTUP-FILE*");
-  debugReadNamedCclListState(`${label}.xload-cold-load-functions`, "*XLOAD-COLD-LOAD-FUNCTIONS*");
-  debugReadNamedCclListState(`${label}.xload-cold-load-documentation`, "*XLOAD-COLD-LOAD-DOCUMENTATION*");
-  debugDumpNamedCclFunctionListEntries(`${label}.xload-cold-load-functions`, "*XLOAD-COLD-LOAD-FUNCTIONS*");
-};
-
-const debugReadToplfuncState = (label) => {
-  if (!traceEnabled || typeof ex.wasm_debug_get_nrs_toplfunc_raw !== "function") {
-    return;
-  }
-  try {
-    const obj = ex.wasm_debug_get_nrs_toplfunc_raw() >>> 0;
-    const entry = typeof ex.wasm_debug_function_entry_index === "function"
-      ? (ex.wasm_debug_function_entry_index(obj >>> 0) | 0)
-      : null;
-    let ownerName = null;
-    if (typeof ex.wasm_debug_find_symbol_by_fcell_raw === "function" &&
-        typeof ex.wasm_debug_copy_symbol_name === "function") {
-      const ownerSym = ex.wasm_debug_find_symbol_by_fcell_raw(obj >>> 0) >>> 0;
-      if (ownerSym !== 0 && ownerSym !== 0x4000001) {
-        const len = ex.wasm_debug_copy_symbol_name(ownerSym >>> 0, 0, 0) >>> 0;
-        if (len > 0) {
-          const ptr = allocScratch(runtime.memory, len);
-          const copied = ex.wasm_debug_copy_symbol_name(ownerSym >>> 0, ptr >>> 0, len) >>> 0;
-          if (copied > 0) {
-            ownerName = decoder.decode(new Uint8Array(runtime.memory.buffer, ptr >>> 0, Math.min(len, copied)));
-          }
-        }
-      }
-    }
-    trace(
-      `debug-toplfunc label=${label}` +
-      ` obj=0x${obj.toString(16)}` +
-      (entry == null ? "" : ` entry=${entry}`) +
-      (ownerName ? ` owner_symbol=${JSON.stringify(ownerName)}` : ""),
-    );
-  } catch (err) {
-    trace(`debug-toplfunc label=${label} error=${err?.message ?? err}`);
-  }
-};
-
-const debugReadLastToplevelThrow = (label) => {
-  if (!traceEnabled || typeof ex.wasm_debug_get_last_toplevel_throw !== "function") {
-    return;
-  }
-  try {
-    const thrown = ex.wasm_debug_get_last_toplevel_throw() >>> 0;
-    const argZ = typeof ex.wasm_debug_get_last_toplevel_arg_z === "function"
-      ? (ex.wasm_debug_get_last_toplevel_arg_z() >>> 0)
-      : 0;
-    const argY = typeof ex.wasm_debug_get_last_toplevel_arg_y === "function"
-      ? (ex.wasm_debug_get_last_toplevel_arg_y() >>> 0)
-      : 0;
-    const nfn = typeof ex.wasm_debug_get_last_toplevel_nfn === "function"
-      ? (ex.wasm_debug_get_last_toplevel_nfn() >>> 0)
-      : 0;
-    const nargs = typeof ex.wasm_debug_get_last_toplevel_nargs === "function"
-      ? (ex.wasm_debug_get_last_toplevel_nargs() >>> 0)
-      : 0;
-    const topfn = typeof ex.wasm_debug_get_last_toplevel_topfn === "function"
-      ? (ex.wasm_debug_get_last_toplevel_topfn() >>> 0)
-      : 0;
-    const topfnEntry = typeof ex.wasm_debug_function_entry_index === "function"
-      ? (ex.wasm_debug_function_entry_index(topfn >>> 0) | 0)
-      : null;
-    const resolveOwnerName = (obj) => {
-      if (typeof ex.wasm_debug_find_symbol_by_fcell_raw !== "function" ||
-          typeof ex.wasm_debug_copy_symbol_name !== "function") {
-        return null;
-      }
-      const ownerSym = ex.wasm_debug_find_symbol_by_fcell_raw(obj >>> 0) >>> 0;
-      if (ownerSym === 0 || ownerSym === 0x4000001) return null;
-      const len = ex.wasm_debug_copy_symbol_name(ownerSym >>> 0, 0, 0) >>> 0;
-      if (len === 0) return null;
-      const ptr = allocScratch(runtime.memory, len);
-      const copied = ex.wasm_debug_copy_symbol_name(ownerSym >>> 0, ptr >>> 0, len) >>> 0;
-      if (copied === 0) return null;
-      return decoder.decode(new Uint8Array(runtime.memory.buffer, ptr >>> 0, Math.min(len, copied)));
-    };
-    const topfnOwner = resolveOwnerName(topfn >>> 0);
-    const nfnOwner = resolveOwnerName(nfn >>> 0);
-    trace(
-      `debug-last-toplevel-throw label=${label}` +
-      ` throw=${thrown}` +
-      ` topfn=0x${topfn.toString(16)}` +
-      (topfnEntry == null ? "" : ` topfn_entry=${topfnEntry}`) +
-      (topfnOwner ? ` topfn_owner=${JSON.stringify(topfnOwner)}` : "") +
-      ` arg_z=0x${argZ.toString(16)}` +
-      ` arg_y=0x${argY.toString(16)}` +
-      ` nfn=0x${nfn.toString(16)}` +
-      (nfnOwner ? ` nfn_owner=${JSON.stringify(nfnOwner)}` : "") +
-      ` nargs=0x${nargs.toString(16)}`,
-    );
-  } catch (err) {
-    trace(`debug-last-toplevel-throw label=${label} error=${err?.message ?? err}`);
-  }
-};
-
-debugReadFasloadBoundarySymbols("post-boot");
-debugReadToplfuncState("post-boot");
 
 const bootCompiledModuleRegistryNil = typeof ex.wasm_get_lisp_nil === "function"
   ? (ex.wasm_get_lisp_nil() >>> 0)
@@ -2604,9 +1929,6 @@ if (process.env.CCL_WASM_DIAG_START_LISP_BEFORE_MODULE_INSTALL === "1") {
     (pendingAfter == null ? "" : ` pending_after=${pendingAfter}`) +
     (pendingRaw == null ? "" : ` pending_raw=0x${pendingRaw.toString(16)}`),
   );
-  debugReadToplfuncState("post-start-lisp-before-module-install");
-  debugReadLastToplevelThrow("post-start-lisp-before-module-install");
-  debugReadFasloadBoundarySymbols("post-start-lisp-before-module-install");
 }
 
 const bundleInstall = await installCompiledModulesFromBundle({
@@ -2621,8 +1943,6 @@ const bundleInstall = await installCompiledModulesFromBundle({
   installConstPools: false,
 });
 trace(`compiled module bundle installed ${bundleInstall.installed}/${bundleInstall.count}`);
-debugReadFasloadBoundarySymbols("post-bundle");
-debugReadToplfuncState("post-bundle");
 if (bundleInstall.count === 0) {
   fail("compiled modules bundle is empty; refusing to proceed");
 }
@@ -2650,8 +1970,6 @@ trace(
   ` source=${hasBootCompiledModuleRegistrySnapshot ? "boot-snapshot" : "current-registry"}` +
   ` installed=${registryInstall.installed}/${registryInstall.count}`,
 );
-debugReadFasloadBoundarySymbols("post-registry");
-debugReadToplfuncState("post-registry");
 runPreToplevelFunctionDesignatorGateOrFail();
 
 if (typeof kernel.instance.exports.wasm_set_subprims_ready === "function") {
@@ -2666,7 +1984,6 @@ if (diagRunToplevelEarly) {
   const pendingBefore = typeof ex.wasm_pending_throw_p === "function"
     ? (ex.wasm_pending_throw_p() >>> 0)
     : null;
-  debugReadToplfuncState("pre-early-toplevel");
   trace(`diag early_toplevel pre pending=${pendingBefore == null ? "n/a" : pendingBefore}`);
   const rc = ex.wasm_run_toplevel() | 0;
   const pendingAfter = typeof ex.wasm_pending_throw_p === "function"
@@ -2680,9 +1997,6 @@ if (diagRunToplevelEarly) {
     (pendingAfter == null ? "" : ` pending=${pendingAfter}`) +
     (pendingRaw == null ? "" : ` pending_raw=0x${pendingRaw.toString(16)}`),
   );
-  debugReadToplfuncState("post-early-toplevel");
-  debugReadLastToplevelThrow("post-early-toplevel");
-  debugReadFasloadBoundarySymbols("post-early-toplevel");
   if (diagRunToplevelEarlyOnly) {
     trace("diag early_toplevel complete; exiting early (CCL_WASM_DIAG_RUN_TOPLEVEL_EARLY_ONLY=1)");
     process.exit(0);
@@ -2702,8 +2016,6 @@ if (diagPreFasloadToplfuncEntryRaw != null && diagPreFasloadToplfuncEntryRaw !==
   if (setRc !== 0) {
     fail(`wasm_set_toplfunc_entry(${parsed}) failed during pre-fasload diag: rc=${setRc}`);
   }
-  debugReadToplfuncState("post-pre-fasload-set-toplfunc");
-  debugReadFasloadBoundarySymbols("post-pre-fasload-set-toplfunc");
 
   if (process.env.CCL_WASM_DIAG_RUN_TOPLEVEL_AFTER_PRESET === "1") {
     if (typeof ex.wasm_run_toplevel !== "function") {
@@ -2725,8 +2037,6 @@ if (diagPreFasloadToplfuncEntryRaw != null && diagPreFasloadToplfuncEntryRaw !==
       (postPending == null ? "" : ` post_pending=${postPending}`) +
       (postPendingRaw == null ? "" : ` post_pending_raw=0x${postPendingRaw.toString(16)}`),
     );
-    debugReadToplfuncState("post-pre-fasload-toplevel-run");
-    debugReadFasloadBoundarySymbols("post-pre-fasload-toplevel-run");
   }
 }
 if (process.env.CCL_WASM_DIAG_START_LISP_ONCE === "1") {
@@ -2749,10 +2059,6 @@ if (process.env.CCL_WASM_DIAG_START_LISP_ONCE === "1") {
     (pendingAfter == null ? "" : ` pending_after=${pendingAfter}`) +
     (pendingRaw == null ? "" : ` pending_raw=0x${pendingRaw.toString(16)}`),
   );
-  debugReadToplfuncState("post-start-lisp-once");
-  debugReadLastToplevelThrow("post-start-lisp-once");
-  debugReadFasloadBoundarySymbols("post-start-lisp-once");
-  debugReadSpecrefFailure("post-start-lisp-once");
 }
 const encoder = new TextEncoder();
 
@@ -2853,8 +2159,7 @@ function buildStartupSymbolResolutionArtifact({
     typeof ex.wasm_probe_symbol === "function" &&
     typeof ex.wasm_probe_symbol_fcell === "function" &&
     typeof ex.wasm_probe_symbol_vcell === "function" &&
-    typeof ex.wasm_probe_last_status === "function" &&
-    typeof ex.wasm_debug_function_entry_index === "function"
+    typeof ex.wasm_probe_last_status === "function"
   );
   const requiredCallableKeys = new Set(
     (Array.isArray(contract?.requiredCallables) ? contract.requiredCallables : [])
@@ -3007,9 +2312,7 @@ function buildStartupSymbolResolutionArtifact({
 
     const fcellRaw = ex.wasm_probe_symbol_fcell(symbolRaw >>> 0) >>> 0;
     const fcellStatus = probeStatus();
-    const fentry = fcellStatus === L0_PROBE_STATUS.OK
-      ? (ex.wasm_debug_function_entry_index(fcellRaw >>> 0) | 0)
-      : -1;
+    const fentry = -1;
     const vcellRaw = ex.wasm_probe_symbol_vcell(symbolRaw >>> 0) >>> 0;
     const vcellStatus = probeStatus();
     const vcellBound = (
@@ -3107,8 +2410,7 @@ function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
       typeof ex.wasm_get_lisp_nil !== "function" ||
       typeof ex.wasm_probe_symbol !== "function" ||
       typeof ex.wasm_probe_symbol_fcell !== "function" ||
-      typeof ex.wasm_probe_last_status !== "function" ||
-      typeof ex.wasm_debug_function_entry_index !== "function"
+      typeof ex.wasm_probe_last_status !== "function"
     ) {
       return {
         ok: false,
@@ -3161,7 +2463,7 @@ function augmentStartupBindingMapArtifactWithContractConstPoolFunctions({
         key: null,
       };
     }
-    const entryIndex = ex.wasm_debug_function_entry_index(fcellRaw >>> 0) | 0;
+    const entryIndex = -1;
     if (entryIndex < 0) {
       return {
         ok: false,
@@ -3287,7 +2589,6 @@ function applyStartupBindingMapOrFail({
     "wasm_probe_symbol_fcell",
     "wasm_probe_symbol_vcell",
     "wasm_probe_last_status",
-    "wasm_debug_function_entry_index",
   ];
   for (const name of requiredExports) {
     if (typeof ex[name] !== "function") {
@@ -3312,8 +2613,7 @@ function applyStartupBindingMapOrFail({
       const requiredProbeExports = (
         typeof ex.wasm_probe_symbol === "function" &&
         typeof ex.wasm_probe_symbol_fcell === "function" &&
-        typeof ex.wasm_probe_last_status === "function" &&
-        typeof ex.wasm_debug_function_entry_index === "function"
+        typeof ex.wasm_probe_last_status === "function"
       );
       if (!requiredProbeExports) {
         return {
@@ -3354,7 +2654,7 @@ function applyStartupBindingMapOrFail({
           fcell_status: fcellStatus,
         };
       }
-      const entryIndex = ex.wasm_debug_function_entry_index(fcellRaw >>> 0) | 0;
+      const entryIndex = -1;
       if (entryIndex < 0) {
         return {
           ok: false,
@@ -3799,7 +3099,7 @@ function applyStartupBindingMapOrFail({
       continue;
     }
     if (symbolResolved && targetCell === "fcell") {
-      const beforeEntry = ex.wasm_debug_function_entry_index(beforeCell >>> 0) | 0;
+      const beforeEntry = -1;
       const desiredEntry = initializerKind === "entry-function" && Number.isInteger(initializer?.entry_index)
         ? (initializer.entry_index >>> 0)
         : null;
@@ -4166,7 +3466,7 @@ function applyStartupBindingMapOrFail({
         });
         continue;
       }
-      const afterEntry = ex.wasm_debug_function_entry_index(afterFcell >>> 0) | 0;
+      const afterEntry = -1;
       if (afterEntry < 0) {
         failures.push({
           package_name: packageName || null,
@@ -4330,7 +3630,6 @@ function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
     "wasm_probe_symbol_fcell",
     "wasm_probe_symbol_vcell",
     "wasm_probe_last_status",
-    "wasm_debug_function_entry_index",
   ];
   for (const name of requiredExports) {
     if (typeof ex[name] !== "function") {
@@ -4339,9 +3638,7 @@ function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
   }
 
   const nil = ex.wasm_get_lisp_nil() >>> 0;
-  const miscSubtag = typeof ex.wasm_debug_misc_subtag === "function"
-    ? (value) => (ex.wasm_debug_misc_subtag(value >>> 0) | 0)
-    : () => null;
+  const miscSubtag = () => null;
   const utf8 = new TextEncoder();
   const contractProbeScratch = sharedProbeUtf8Scratch;
   const scratchUtf8 = (text) => {
@@ -4440,13 +3737,6 @@ function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
       const constIndex = rawRef >>> 0;
       const raw = ex.wasm_const_pool_ref(entryIndex, constIndex) >>> 0;
       if (raw !== 0 && raw !== nil) continue;
-      const debugError = readDebug("wasm_debug_const_pool_error");
-      const debugNameLen = readDebug("wasm_debug_const_pool_symbol_name_len");
-      const debugPkgLen = readDebug("wasm_debug_const_pool_symbol_pkg_len");
-      const debugPhase = readDebug("wasm_debug_const_pool_phase");
-      const debugOffset = readDebug("wasm_debug_const_pool_offset");
-      const debugIndex = readDebug("wasm_debug_const_pool_index");
-      const debugTag = readDebug("wasm_debug_const_pool_tag");
       const bootPhase = typeof ex.wasm_boot_get_phase === "function"
         ? (ex.wasm_boot_get_phase() >>> 0)
         : null;
@@ -4458,14 +3748,6 @@ function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
         ref_raw: `0x${raw.toString(16)}`,
         lisp_nil: `0x${nil.toString(16)}`,
         boot_phase: bootPhase == null ? null : formatBootPhase(bootPhase),
-        debug_error: debugError,
-        debug_error_name: debugError == null ? null : (CONST_POOL_ERROR_NAMES.get(debugError) ?? "unknown"),
-        debug_name_len: debugNameLen,
-        debug_pkg_len: debugPkgLen,
-        debug_phase: debugPhase,
-        debug_index: debugIndex,
-        debug_tag: debugTag,
-        debug_offset: debugOffset,
       });
     }
   }
@@ -4534,7 +3816,7 @@ function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
 
     const fcellRaw = ex.wasm_probe_symbol_fcell(symProbe.raw >>> 0) >>> 0;
     const fcellStatus = probeStatus();
-    const entryIndex = ex.wasm_debug_function_entry_index(fcellRaw >>> 0) | 0;
+    const entryIndex = -1;
     if (fcellStatus !== L0_PROBE_STATUS.OK || entryIndex < 0) {
       recordFailure("callable", {
         package_name: item?.packageName ?? null,
@@ -4582,21 +3864,11 @@ function assertL0BootstrapContractOrFail(contract = BOOTSTRAP_L0_CONTRACT_V1) {
   }
 
   if (failures.length > 0) {
-    l0BootstrapContractFailureCount = failures.length;
     for (const failure of failures) {
       console.error(`L0_BOOTSTRAP_CONTRACT ${JSON.stringify(failure)}`);
     }
-    if (!startupTruthCollectEnabled) {
-      fail(`pre-fasload L0 bootstrap contract failed: ${failures.length} requirement(s)`);
-    }
-    console.error(`L0_BOOTSTRAP_CONTRACT_CONTINUE ${JSON.stringify({
-      schema_version: "bootstrap_l0_gate_continue_v1",
-      reason: "startup-truth-collect-enabled",
-      failed_count: failures.length,
-    })}`);
-    return;
+    fail(`pre-fasload L0 bootstrap contract failed: ${failures.length} requirement(s)`);
   }
-  l0BootstrapContractFailureCount = 0;
 
   console.log(`L0_BOOTSTRAP_CONTRACT ${JSON.stringify({
     schema_version: "bootstrap_l0_gate_v1",
@@ -4663,20 +3935,6 @@ const pendingThrowProbe = typeof ex.wasm_pending_throw_p === "function"
 const pendingThrowRawProbe = typeof ex.wasm_pending_throw_raw === "function"
   ? () => (ex.wasm_pending_throw_raw() >>> 0)
   : null;
-const kernelDebugSymbolName = typeof ex.wasm_debug_copy_symbol_name === "function"
-  ? (obj) => {
-    const len = ex.wasm_debug_copy_symbol_name(obj >>> 0, 0, 0) >>> 0;
-    if (len === 0) return null;
-    const ptr = allocScratch(runtime.memory, len);
-    const copied = ex.wasm_debug_copy_symbol_name(obj >>> 0, ptr >>> 0, len) >>> 0;
-    if (copied === 0) return null;
-    try {
-      return decoder.decode(new Uint8Array(runtime.memory.buffer, ptr >>> 0, Math.min(len, copied)));
-    } catch {
-      return null;
-    }
-  }
-  : null;
 
 // Resolver stage: consume startup scope after runtime exports are available
 // and before startup binding map synthesis/build.
@@ -4710,8 +3968,7 @@ if (process.env.CCL_WASM_DIAG_REQUIRED_CALLABLE_RESOLVER === "1") {
   const canProbeRuntimeEntry = (
     typeof ex.wasm_probe_symbol === "function" &&
     typeof ex.wasm_probe_symbol_fcell === "function" &&
-    typeof ex.wasm_probe_last_status === "function" &&
-    typeof ex.wasm_debug_function_entry_index === "function"
+    typeof ex.wasm_probe_last_status === "function"
   );
   const probeStatus = () => (typeof ex.wasm_probe_last_status === "function"
     ? (ex.wasm_probe_last_status() >>> 0)
@@ -4751,7 +4008,7 @@ if (process.env.CCL_WASM_DIAG_REQUIRED_CALLABLE_RESOLVER === "1") {
         fcell_status: fcellStatus,
       };
     }
-    const entryIndex = ex.wasm_debug_function_entry_index(fcell >>> 0) | 0;
+    const entryIndex = -1;
     if (entryIndex < 0) {
       return {
         ok: false,
@@ -4940,7 +4197,7 @@ if (runBoundaryProbes) {
     ) | 0;
     const pending = pendingThrowProbe ? pendingThrowProbe() : null;
     const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
-    const pendingName = pendingRaw != null && kernelDebugSymbolName ? kernelDebugSymbolName(pendingRaw) : null;
+    const pendingName = pendingRaw != null && null;
     console.log(
       `boundary_probe name=${name} mode=${mode} rc=${rc}` +
       (pending == null ? "" : ` pending=${pending}`) +
@@ -5000,8 +4257,7 @@ const probeRequiredCallableSymbolState = (packageName, symbolName) => {
   if (
     typeof ex.wasm_probe_symbol !== "function" ||
     typeof ex.wasm_probe_symbol_fcell !== "function" ||
-    typeof ex.wasm_probe_last_status !== "function" ||
-    typeof ex.wasm_debug_function_entry_index !== "function"
+    typeof ex.wasm_probe_last_status !== "function"
   ) {
     return {
       package_name: packageName,
@@ -5035,9 +4291,7 @@ const probeRequiredCallableSymbolState = (packageName, symbolName) => {
   }
   const fcellRaw = ex.wasm_probe_symbol_fcell(symbolRaw >>> 0) >>> 0;
   const fcellStatus = ex.wasm_probe_last_status() >>> 0;
-  const entryIndex = fcellStatus === L0_PROBE_STATUS.OK
-    ? (ex.wasm_debug_function_entry_index(fcellRaw >>> 0) | 0)
-    : -1;
+  const entryIndex = -1;
   return {
     package_name: packageName,
     symbol_name: symbolName,
@@ -5060,7 +4314,7 @@ const captureRequiredFasloadBoundaryState = ({
 } = {}) => {
   const pending = pendingThrowProbe ? pendingThrowProbe() : null;
   const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
-  const pendingSymbol = pendingRaw != null && kernelDebugSymbolName ? kernelDebugSymbolName(pendingRaw) : null;
+  const pendingSymbol = pendingRaw != null && null;
   const bootPhaseRaw = typeof ex.wasm_boot_get_phase === "function"
     ? (ex.wasm_boot_get_phase() >>> 0)
     : null;
@@ -5169,22 +4423,6 @@ const traceBoundaryAutobindProbe = (packageName, symbolName, expectedEntryIndex 
   if (symbolStatus === L0_PROBE_STATUS.OK && symbolRaw !== 0) {
     fcellRaw = ex.wasm_probe_symbol_fcell(symbolRaw >>> 0) >>> 0;
     fcellStatus = ex.wasm_probe_last_status() >>> 0;
-    if (typeof ex.wasm_debug_header_element_count === "function") {
-      fcellHeaderLen = ex.wasm_debug_header_element_count(fcellRaw >>> 0) | 0;
-    }
-    if (
-      fcellStatus === L0_PROBE_STATUS.OK &&
-      typeof ex.wasm_debug_function_entry_index === "function"
-    ) {
-      const entry = ex.wasm_debug_function_entry_index(fcellRaw >>> 0) | 0;
-      fcellEntry = entry >= 0 ? (entry >>> 0) : null;
-      if (
-        fcellEntry != null &&
-        typeof ex.wasm_get_entry_call_abi === "function"
-      ) {
-        fcellCallAbi = ex.wasm_get_entry_call_abi(fcellEntry >>> 0) >>> 0;
-      }
-    }
   }
   trace(
     `boundary-autobind probe symbol=${String(symbolName ?? "").toUpperCase()}` +
@@ -5451,77 +4689,6 @@ const tryRecoverBoundaryConstPoolEntry = (specrefDiag) => {
   }
   return status === 1;
 };
-let startupTruthCloseAndExtractCompleted = false;
-const configureStartupTruthCollectOrFail = (enabled) => {
-  if (typeof ex.wasm_configure_startup_truth_collect !== "function") {
-    fail("kernel missing wasm_configure_startup_truth_collect");
-  }
-  if (typeof ex.wasm_clear_pending_throw === "function") {
-    ex.wasm_clear_pending_throw();
-  }
-  const scratch = sharedProbeUtf8Scratch;
-  scratch.reset();
-  const pathMem = scratch.allocUtf8(startupTruthPersistencePath, encoder);
-  const rc = ex.wasm_configure_startup_truth_collect(
-    enabled ? 1 : 0,
-    pathMem.ptr >>> 0,
-    pathMem.len >>> 0,
-  ) | 0;
-  if (rc !== 0) {
-    fail(`wasm_configure_startup_truth_collect returned ${rc}`);
-  }
-};
-const extractPersistenceFileToHostOrFail = async (persistPath, hostPath) => {
-  const openRes = microkernel.persistence.openFile(persistPath, FILE_MODE_READ);
-  if (!openRes?.ok) {
-    fail(`failed to open ${persistPath} in persistence store`);
-  }
-  const handle = openRes.value;
-  const chunks = [];
-  for (;;) {
-    const part = handle.read(1 << 20);
-    if (!part || part.length === 0) break;
-    chunks.push(Buffer.from(part));
-  }
-  handle.close();
-  const persistedBytes = Buffer.concat(chunks);
-  await fs.mkdir(path.dirname(hostPath), { recursive: true });
-  await fs.writeFile(hostPath, persistedBytes);
-  return persistedBytes.length;
-};
-const closeAndExtractStartupTruthOrFail = async (reason) => {
-  if (!startupTruthCollectEnabled || startupTruthCloseAndExtractCompleted) {
-    return;
-  }
-  if (typeof ex.wasm_startup_truth_close_sink === "function") {
-    const closeRc = ex.wasm_startup_truth_close_sink() | 0;
-    if (closeRc !== 0) {
-      fail(`wasm_startup_truth_close_sink returned ${closeRc}`);
-    }
-  }
-  const bytes = await extractPersistenceFileToHostOrFail(
-    startupTruthPersistencePath,
-    startupTruthHostOutPath,
-  );
-  startupTruthCloseAndExtractCompleted = true;
-  console.log(`STARTUP_TRUTH_COLLECT ${JSON.stringify({
-    schema_version: "startup_truth_collect_v1",
-    status: "ok",
-    reason,
-    wasm_path: startupTruthPersistencePath,
-    host_path: displayPath(startupTruthHostOutPath),
-    bytes,
-  })}`);
-};
-if (startupTruthCollectEnabled) {
-  configureStartupTruthCollectOrFail(true);
-}
-if (startupTruthCollectEnabled && l0BootstrapContractFailureCount > 0) {
-  await closeAndExtractStartupTruthOrFail("l0-bootstrap-contract-fail");
-  fail(
-    `startup-truth collect halted before required fasloads: pre-fasload L0 bootstrap contract failed (${l0BootstrapContractFailureCount} requirement(s))`,
-  );
-}
 const requiredFasloadQueue = skipRequiredFasloads ? [] : requiredFasls;
 for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
   const faslPath = requiredFasloadQueue[faslIndex];
@@ -5534,9 +4701,6 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
   }
   if (traceEnabled && pendingThrowProbe) {
     trace(`fasload pre path=${faslPath} pending=${pendingThrowProbe()}`);
-  }
-  if (typeof subex.wasm_debug_reset_specref_failure === "function") {
-    subex.wasm_debug_reset_specref_failure();
   }
   const fasloadPathScratch = sharedProbeUtf8Scratch;
   fasloadPathScratch.reset();
@@ -5560,14 +4724,14 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
         trapMessage: err?.message ?? String(err),
       }))}`);
     }
-    const specrefDiag = debugReadSpecrefFailure(`fasload trap path=${faslPath}`);
+    const specrefDiag = null;
     const unresolvedFunction = classifyBoundaryUnresolvedFunction(specrefDiag);
     const boundaryReason = unresolvedFunction
       ? "required-fasload-unresolved-function-symbol-after-unified-startup-binding-map-apply"
       : "required-fasload-trap-after-unified-startup-binding-map-apply";
     const pending = pendingThrowProbe ? pendingThrowProbe() : null;
     const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
-    const pendingSymbol = pendingRaw != null && kernelDebugSymbolName ? kernelDebugSymbolName(pendingRaw) : null;
+    const pendingSymbol = pendingRaw != null && null;
     const bootPhaseRaw = typeof ex.wasm_boot_get_phase === "function"
       ? (ex.wasm_boot_get_phase() >>> 0)
       : null;
@@ -5602,12 +4766,11 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
       faslIndex = Math.max(-1, (faslIndex | 0) - 1);
       continue;
     }
-    await closeAndExtractStartupTruthOrFail("required-fasload-trap-fail");
     fail(`wasm_fasload_path(${faslPath}) trapped: ${err?.message ?? err}`);
   }
   if (traceEnabled && pendingThrowProbe) {
     const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
-    const pendingName = pendingRaw != null && kernelDebugSymbolName ? kernelDebugSymbolName(pendingRaw) : null;
+    const pendingName = pendingRaw != null && null;
     trace(
       `fasload post path=${faslPath} rc=${faslRc} pending=${pendingThrowProbe()}` +
       (pendingRaw == null ? "" : ` pending_raw=0x${pendingRaw.toString(16)}`) +
@@ -5623,14 +4786,14 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
     }))}`);
   }
   if (faslRc !== 0) {
-    const specrefDiag = debugReadSpecrefFailure(`fasload rc=${faslRc} path=${faslPath}`);
+    const specrefDiag = null;
     const unresolvedFunction = classifyBoundaryUnresolvedFunction(specrefDiag);
     const boundaryReason = unresolvedFunction
       ? "required-fasload-unresolved-function-symbol-after-unified-startup-binding-map-apply"
       : "required-fasload-failed-after-unified-startup-binding-map-apply";
     const pending = pendingThrowProbe ? pendingThrowProbe() : null;
     const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
-    const pendingSymbol = pendingRaw != null && kernelDebugSymbolName ? kernelDebugSymbolName(pendingRaw) : null;
+    const pendingSymbol = pendingRaw != null && null;
     const bootPhaseRaw = typeof ex.wasm_boot_get_phase === "function"
       ? (ex.wasm_boot_get_phase() >>> 0)
       : null;
@@ -5673,10 +4836,8 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
         const dumpCount = Math.min(nargsCount, 8);
         for (let i = 0; i < dumpCount; i++) {
           const value = ex.wasm_vsp_ref(i >>> 0) >>> 0;
-          const subtag = typeof ex.wasm_debug_misc_subtag === "function"
-            ? (ex.wasm_debug_misc_subtag(value >>> 0) | 0)
-            : null;
-          const symbolName = kernelDebugSymbolName ? kernelDebugSymbolName(value >>> 0) : null;
+          const subtag = null;
+          const symbolName = null;
           trace(
             `fasload failure vsp[${i}]=0x${value.toString(16)} subtag=${subtag == null ? "n/a" : subtag}` +
             (symbolName ? ` symbol=${JSON.stringify(symbolName)}` : ""),
@@ -5692,10 +4853,8 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
       for (const [name, reader] of registerReaders) {
         if (typeof reader !== "function") continue;
         const value = reader() >>> 0;
-        const subtag = typeof ex.wasm_debug_misc_subtag === "function"
-          ? (ex.wasm_debug_misc_subtag(value >>> 0) | 0)
-          : null;
-        const symbolName = kernelDebugSymbolName ? kernelDebugSymbolName(value >>> 0) : null;
+        const subtag = null;
+        const symbolName = null;
         trace(
           `fasload failure reg ${name}=0x${value.toString(16)} subtag=${subtag == null ? "n/a" : subtag}` +
           (symbolName ? ` symbol=${JSON.stringify(symbolName)}` : ""),
@@ -5717,7 +4876,6 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
         trace(`fasload diag script rc=${diagRc}`);
       }
     }
-    await closeAndExtractStartupTruthOrFail("required-fasload-rc-fail");
     fail(`wasm_fasload_path(${faslPath}) returned ${faslRc}`);
   }
   if (faslIndex === 0) {
@@ -5742,7 +4900,6 @@ for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
     })}`);
   }
 }
-await closeAndExtractStartupTruthOrFail("required-fasload-loop-complete");
 if (!skipRequiredFasloads && requiredFasls.length > 0) {
   setBootPhaseOrFail(WASM_BOOT_PHASE.RUNTIME, { reason: "post-required-fasload-boundary" });
 }

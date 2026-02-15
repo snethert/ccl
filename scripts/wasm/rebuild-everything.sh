@@ -13,7 +13,6 @@ fi
 FORCE=1
 BUILD_ROOT_IMAGE=1
 ROOT_IMAGE_ALLOW_FAIL=1
-TRUTH_COLLECT=0
 
 # Use environment variables for build paths with fallbacks
 BUILD_DIR="${CCL_WASM_BUILD_DIR:-$ROOT_DIR/build/wasm32}"
@@ -26,7 +25,6 @@ ROOT_IMAGE_RESOLUTION_OUT="${ROOT_IMAGE_RESOLUTION_OUT:-$MODULES_DIR/startup-sym
 MODULES_OUT="${MODULES_OUT:-$MODULES_DIR/wasm-runtime-modules.json}"
 CONTRACT_OUT="${CONTRACT_OUT:-$MODULES_DIR/bootstrap-l0-contract.v1.json}"
 SCOPE_OUT="${SCOPE_OUT:-$MODULES_DIR/startup-symbol-scope.source_scope_v1.json}"
-STARTUP_TRUTH_OUT="${CCL_WASM_STARTUP_TRUTH_OUT:-$MODULES_DIR/startup_truth_v1.jsonl}"
 
 usage() {
   cat <<'EOF'
@@ -49,8 +47,6 @@ Options:
   --no-force                Do incremental builds where supported
   --no-root-image           Skip root.image rebuild
   --strict-root-image       Treat root.image failure as fatal
-  --collect-truth           Set CCL_WASM_STARTUP_TRUTH_COLLECT=1 for root.image step
-  --truth-out PATH          CCL_WASM_STARTUP_TRUTH_OUT for root.image step
   --root-image PATH         root.image output path
   --manifest-out PATH       root.image manifest output path
   --resolution-out PATH     startup symbol resolution output path
@@ -87,17 +83,6 @@ while [ "${1:-}" != "" ]; do
       ;;
     --strict-root-image)
       ROOT_IMAGE_ALLOW_FAIL=0
-      ;;
-    --collect-truth)
-      TRUTH_COLLECT=1
-      ;;
-    --truth-out)
-      if [ -z "${2:-}" ]; then
-        echo "error: --truth-out requires a path" >&2
-        exit 1
-      fi
-      STARTUP_TRUTH_OUT="$(resolve_path "$2")"
-      shift
       ;;
     --root-image)
       if [ -z "${2:-}" ]; then
@@ -181,7 +166,7 @@ fi
 
 log "repo=$ROOT_DIR"
 log "branch=$(git -C "$ROOT_DIR" symbolic-ref --short -q HEAD || echo detached) head=$(git -C "$ROOT_DIR" rev-parse --short HEAD)"
-log "force=$FORCE build_root_image=$BUILD_ROOT_IMAGE root_image_allow_fail=$ROOT_IMAGE_ALLOW_FAIL truth_collect=$TRUTH_COLLECT"
+log "force=$FORCE build_root_image=$BUILD_ROOT_IMAGE root_image_allow_fail=$ROOT_IMAGE_ALLOW_FAIL"
 
 run make -C "$ROOT_DIR/lisp-kernel/wasm32" "${MAKE_ARGS[@]}" all
 run "$ROOT_DIR/scripts/wasm/build-wasm-boot.sh" "${BOOT_ARGS[@]}"
@@ -197,21 +182,11 @@ if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
     --startup-symbol-resolution-out "$ROOT_IMAGE_RESOLUTION_OUT"
     --startup-symbol-contract "$CONTRACT_OUT"
   )
-  if [ "$TRUTH_COLLECT" -eq 1 ]; then
-    if [ "$ROOT_IMAGE_ALLOW_FAIL" -eq 1 ]; then
-      log "RUN (root image, collect-truth, non-fatal): CCL_WASM_STARTUP_TRUTH_COLLECT=1 CCL_WASM_STARTUP_TRUTH_OUT=$STARTUP_TRUTH_OUT ${ROOT_CMD[*]}"
-      CCL_WASM_STARTUP_TRUTH_COLLECT=1 CCL_WASM_STARTUP_TRUTH_OUT="$STARTUP_TRUTH_OUT" "${ROOT_CMD[@]}" || \
-        log "WARN: root.image rebuild failed (allowed); inspect logs/output paths"
-    else
-      run env CCL_WASM_STARTUP_TRUTH_COLLECT=1 CCL_WASM_STARTUP_TRUTH_OUT="$STARTUP_TRUTH_OUT" "${ROOT_CMD[@]}"
-    fi
+  if [ "$ROOT_IMAGE_ALLOW_FAIL" -eq 1 ]; then
+    log "RUN (root image, non-fatal): ${ROOT_CMD[*]}"
+    "${ROOT_CMD[@]}" || log "WARN: root.image rebuild failed (allowed); inspect logs/output paths"
   else
-    if [ "$ROOT_IMAGE_ALLOW_FAIL" -eq 1 ]; then
-      log "RUN (root image, non-fatal): ${ROOT_CMD[*]}"
-      "${ROOT_CMD[@]}" || log "WARN: root.image rebuild failed (allowed); inspect logs/output paths"
-    else
-      run "${ROOT_CMD[@]}"
-    fi
+    run "${ROOT_CMD[@]}"
   fi
 fi
 

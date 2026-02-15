@@ -197,149 +197,6 @@ wasm_t_value(void)
 #define WASM_KEYWORD_FLAG_REST ((LispObj)1 << (fixnum_shift + 2))
 #define WASM_KEYWORD_FLAG_UNKNOWN_KEYWORD ((LispObj)1 << (fixnum_shift + 3))
 
-enum {
-  WASM_DEBUG_KEYWORD_BIND_STAGE_NONE = 0,
-  WASM_DEBUG_KEYWORD_BIND_STAGE_TCR_NULL = 1,
-  WASM_DEBUG_KEYWORD_BIND_STAGE_RAW_TAG = 2,
-  WASM_DEBUG_KEYWORD_BIND_STAGE_NEGATIVE_COUNT = 3,
-  WASM_DEBUG_KEYWORD_BIND_STAGE_FN_NOT_MISC = 4,
-  WASM_DEBUG_KEYWORD_BIND_STAGE_KEYVEC_NOT_MISC = 5,
-  WASM_DEBUG_KEYWORD_BIND_STAGE_KEYVEC_LENGTH_RANGE = 6,
-  WASM_DEBUG_KEYWORD_BIND_STAGE_STACK_NULL = 7,
-  WASM_DEBUG_KEYWORD_BIND_STAGE_DONE = 255,
-};
-
-static volatile uint32_t wasm_debug_keyword_bind_stage = WASM_DEBUG_KEYWORD_BIND_STAGE_NONE;
-static volatile uint32_t wasm_debug_keyword_bind_raw_nargs = 0;
-static volatile uint32_t wasm_debug_keyword_bind_raw_prev = 0;
-static volatile uint32_t wasm_debug_keyword_bind_keyword_flags = 0;
-static volatile uint32_t wasm_debug_keyword_bind_nargs_tag = 0;
-static volatile uint32_t wasm_debug_keyword_bind_prev_tag = 0;
-static volatile uint32_t wasm_debug_keyword_bind_keyword_flags_tag = 0;
-static volatile int32_t wasm_debug_keyword_bind_nargs_count = 0;
-static volatile int32_t wasm_debug_keyword_bind_prev_count = 0;
-static volatile int32_t wasm_debug_keyword_bind_key_value_count = 0;
-static volatile uint32_t wasm_debug_keyword_bind_fn_raw = 0;
-static volatile uint32_t wasm_debug_keyword_bind_fn_fulltag = 0;
-static volatile uint32_t wasm_debug_keyword_bind_keyvec_raw = 0;
-static volatile uint32_t wasm_debug_keyword_bind_keyvec_fulltag = 0;
-static volatile uint32_t wasm_debug_keyword_bind_keyvec_header = 0;
-static volatile int32_t wasm_debug_keyword_bind_keyvec_len = 0;
-static volatile uint32_t wasm_debug_keyword_bind_vsp_raw = 0;
-
-static volatile uint32_t wasm_debug_funcall_guard_limit = 0;
-static volatile uint32_t wasm_debug_funcall_guard_counter = 0;
-static volatile uint32_t wasm_debug_funcall_guard_triggered = 0;
-static volatile uint32_t wasm_debug_funcall_guard_last_entry_index = 0xffffffffu;
-static volatile uint32_t wasm_debug_funcall_guard_last_nfn_raw = 0;
-static volatile uint32_t wasm_debug_funcall_guard_last_name_raw = 0;
-static volatile uint32_t wasm_debug_funcall_guard_last_arg_z_raw = 0;
-static volatile uint32_t wasm_debug_funcall_guard_last_arg_y_raw = 0;
-static volatile uint32_t wasm_debug_funcall_guard_last_nargs_raw = 0;
-
-static void
-wasm_debug_reset_keyword_bind_state(void)
-{
-  wasm_debug_keyword_bind_stage = WASM_DEBUG_KEYWORD_BIND_STAGE_NONE;
-  wasm_debug_keyword_bind_raw_nargs = 0;
-  wasm_debug_keyword_bind_raw_prev = 0;
-  wasm_debug_keyword_bind_keyword_flags = 0;
-  wasm_debug_keyword_bind_nargs_tag = 0;
-  wasm_debug_keyword_bind_prev_tag = 0;
-  wasm_debug_keyword_bind_keyword_flags_tag = 0;
-  wasm_debug_keyword_bind_nargs_count = 0;
-  wasm_debug_keyword_bind_prev_count = 0;
-  wasm_debug_keyword_bind_key_value_count = 0;
-  wasm_debug_keyword_bind_fn_raw = 0;
-  wasm_debug_keyword_bind_fn_fulltag = 0;
-  wasm_debug_keyword_bind_keyvec_raw = 0;
-  wasm_debug_keyword_bind_keyvec_fulltag = 0;
-  wasm_debug_keyword_bind_keyvec_header = 0;
-  wasm_debug_keyword_bind_keyvec_len = 0;
-  wasm_debug_keyword_bind_vsp_raw = 0;
-}
-
-static void
-wasm_debug_reset_funcall_guard_state(void)
-{
-  wasm_debug_funcall_guard_counter = 0;
-  wasm_debug_funcall_guard_triggered = 0;
-  wasm_debug_funcall_guard_last_entry_index = 0xffffffffu;
-  wasm_debug_funcall_guard_last_nfn_raw = 0;
-  wasm_debug_funcall_guard_last_name_raw = 0;
-  wasm_debug_funcall_guard_last_arg_z_raw = 0;
-  wasm_debug_funcall_guard_last_arg_y_raw = 0;
-  wasm_debug_funcall_guard_last_nargs_raw = 0;
-}
-
-__attribute__((used, visibility("default"), export_name("wasm_debug_reset_keyword_bind_state")))
-void wasm_debug_reset_keyword_bind_state_export(void) { wasm_debug_reset_keyword_bind_state(); }
-__attribute__((used, visibility("default"), export_name("wasm_debug_keyword_bind_stage")))
-uint32_t wasm_debug_keyword_bind_stage_export(void) { return wasm_debug_keyword_bind_stage; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_keyword_bind_raw_nargs")))
-uint32_t wasm_debug_keyword_bind_raw_nargs_export(void) { return wasm_debug_keyword_bind_raw_nargs; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_keyword_bind_raw_prev")))
-uint32_t wasm_debug_keyword_bind_raw_prev_export(void) { return wasm_debug_keyword_bind_raw_prev; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_keyword_bind_keyword_flags")))
-uint32_t wasm_debug_keyword_bind_keyword_flags_export(void) { return wasm_debug_keyword_bind_keyword_flags; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_keyword_bind_nargs_tag")))
-uint32_t wasm_debug_keyword_bind_nargs_tag_export(void) { return wasm_debug_keyword_bind_nargs_tag; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_keyword_bind_prev_tag")))
-uint32_t wasm_debug_keyword_bind_prev_tag_export(void) { return wasm_debug_keyword_bind_prev_tag; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_keyword_bind_keyword_flags_tag")))
-uint32_t wasm_debug_keyword_bind_keyword_flags_tag_export(void) { return wasm_debug_keyword_bind_keyword_flags_tag; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_keyword_bind_nargs_count")))
-int32_t wasm_debug_keyword_bind_nargs_count_export(void) { return wasm_debug_keyword_bind_nargs_count; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_keyword_bind_prev_count")))
-int32_t wasm_debug_keyword_bind_prev_count_export(void) { return wasm_debug_keyword_bind_prev_count; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_keyword_bind_key_value_count")))
-int32_t wasm_debug_keyword_bind_key_value_count_export(void) { return wasm_debug_keyword_bind_key_value_count; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_keyword_bind_fn_raw")))
-uint32_t wasm_debug_keyword_bind_fn_raw_export(void) { return wasm_debug_keyword_bind_fn_raw; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_keyword_bind_fn_fulltag")))
-uint32_t wasm_debug_keyword_bind_fn_fulltag_export(void) { return wasm_debug_keyword_bind_fn_fulltag; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_keyword_bind_keyvec_raw")))
-uint32_t wasm_debug_keyword_bind_keyvec_raw_export(void) { return wasm_debug_keyword_bind_keyvec_raw; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_keyword_bind_keyvec_fulltag")))
-uint32_t wasm_debug_keyword_bind_keyvec_fulltag_export(void) { return wasm_debug_keyword_bind_keyvec_fulltag; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_keyword_bind_keyvec_header")))
-uint32_t wasm_debug_keyword_bind_keyvec_header_export(void) { return wasm_debug_keyword_bind_keyvec_header; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_keyword_bind_keyvec_len")))
-int32_t wasm_debug_keyword_bind_keyvec_len_export(void) { return wasm_debug_keyword_bind_keyvec_len; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_keyword_bind_vsp_raw")))
-uint32_t wasm_debug_keyword_bind_vsp_raw_export(void) { return wasm_debug_keyword_bind_vsp_raw; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_set_funcall_guard_limit")))
-void
-wasm_debug_set_funcall_guard_limit(uint32_t limit)
-{
-  wasm_debug_funcall_guard_limit = limit;
-  wasm_debug_reset_funcall_guard_state();
-}
-__attribute__((used, visibility("default"), export_name("wasm_debug_reset_funcall_guard_state")))
-void
-wasm_debug_reset_funcall_guard_state_export(void)
-{
-  wasm_debug_reset_funcall_guard_state();
-}
-__attribute__((used, visibility("default"), export_name("wasm_debug_funcall_guard_limit")))
-uint32_t wasm_debug_funcall_guard_limit_export(void) { return wasm_debug_funcall_guard_limit; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_funcall_guard_counter")))
-uint32_t wasm_debug_funcall_guard_counter_export(void) { return wasm_debug_funcall_guard_counter; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_funcall_guard_triggered")))
-uint32_t wasm_debug_funcall_guard_triggered_export(void) { return wasm_debug_funcall_guard_triggered; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_funcall_guard_last_entry_index")))
-uint32_t wasm_debug_funcall_guard_last_entry_index_export(void) { return wasm_debug_funcall_guard_last_entry_index; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_funcall_guard_last_nfn_raw")))
-uint32_t wasm_debug_funcall_guard_last_nfn_raw_export(void) { return wasm_debug_funcall_guard_last_nfn_raw; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_funcall_guard_last_name_raw")))
-uint32_t wasm_debug_funcall_guard_last_name_raw_export(void) { return wasm_debug_funcall_guard_last_name_raw; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_funcall_guard_last_arg_z_raw")))
-uint32_t wasm_debug_funcall_guard_last_arg_z_raw_export(void) { return wasm_debug_funcall_guard_last_arg_z_raw; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_funcall_guard_last_arg_y_raw")))
-uint32_t wasm_debug_funcall_guard_last_arg_y_raw_export(void) { return wasm_debug_funcall_guard_last_arg_y_raw; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_funcall_guard_last_nargs_raw")))
-uint32_t wasm_debug_funcall_guard_last_nargs_raw_export(void) { return wasm_debug_funcall_guard_last_nargs_raw; }
-
 #define WASM_DEBIND_MASK_KEYP (1u << 25)
 #define WASM_DEBIND_MASK_AOK (1u << 26)
 #define WASM_DEBIND_MASK_RESTP (1u << 27)
@@ -2149,20 +2006,6 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
 
   {
     uint32_t entry_index = (uint32_t)unbox_fixnum(entry);
-    if (wasm_debug_funcall_guard_limit != 0u) {
-      uint32_t counter = wasm_debug_funcall_guard_counter + 1u;
-      wasm_debug_funcall_guard_counter = counter;
-      wasm_debug_funcall_guard_last_entry_index = entry_index;
-      wasm_debug_funcall_guard_last_nfn_raw = (uint32_t)wasm_reg(tcr, nfn);
-      wasm_debug_funcall_guard_last_name_raw = (uint32_t)name;
-      wasm_debug_funcall_guard_last_arg_z_raw = (uint32_t)wasm_reg(tcr, arg_z);
-      wasm_debug_funcall_guard_last_arg_y_raw = (uint32_t)wasm_reg(tcr, arg_y);
-      wasm_debug_funcall_guard_last_nargs_raw = (uint32_t)wasm_reg(tcr, nargs);
-      if (counter >= wasm_debug_funcall_guard_limit) {
-        wasm_debug_funcall_guard_triggered = 1u;
-        wasm_subprims_trap();
-      }
-    }
     uint32_t entry_call_abi = wasm_prepare_entry_call(entry_index);
     switch (entry_call_abi) {
     case WASM_ENTRY_CALL_ABI_UNARY_I32: {
@@ -5400,128 +5243,37 @@ _SPgets64(void)
   wasm_signal_wrong_type(tcr, value, wasm_type_signed_byte(tcr, 64));
 }
 
-enum {
-  WASM_DEBUG_SPECREF_STAGE_NONE = 0,
-  WASM_DEBUG_SPECREF_STAGE_TCR_NULL = 1,
-  WASM_DEBUG_SPECREF_STAGE_SYMBOL_FULLTAG = 2,
-  WASM_DEBUG_SPECREF_STAGE_SYMBOL_SUBTAG = 3,
-  WASM_DEBUG_SPECREF_STAGE_BINDING_INDEX_TAG = 4,
-  WASM_DEBUG_SPECREF_STAGE_TLB_LIMIT_TAG = 5,
-  WASM_DEBUG_SPECREF_STAGE_TLB_POINTER_NULL = 6,
-};
-
-static volatile uint32_t wasm_debug_specref_stage = WASM_DEBUG_SPECREF_STAGE_NONE;
-static volatile uint32_t wasm_debug_specref_tcr_raw = 0;
-static volatile uint32_t wasm_debug_specref_symbol_raw = 0;
-static volatile uint32_t wasm_debug_specref_symbol_fulltag = 0;
-static volatile uint32_t wasm_debug_specref_symbol_header = 0;
-static volatile uint32_t wasm_debug_specref_symbol_subtag = 0;
-static volatile uint32_t wasm_debug_specref_binding_index_raw = 0;
-static volatile uint32_t wasm_debug_specref_binding_index_tag = 0;
-static volatile uint32_t wasm_debug_specref_limit_raw = 0;
-static volatile uint32_t wasm_debug_specref_limit_tag = 0;
-static volatile uint32_t wasm_debug_specref_tlb_pointer_raw = 0;
-
-static void
-wasm_debug_reset_specref_failure_state(void)
-{
-  wasm_debug_specref_stage = WASM_DEBUG_SPECREF_STAGE_NONE;
-  wasm_debug_specref_tcr_raw = 0;
-  wasm_debug_specref_symbol_raw = 0;
-  wasm_debug_specref_symbol_fulltag = 0;
-  wasm_debug_specref_symbol_header = 0;
-  wasm_debug_specref_symbol_subtag = 0;
-  wasm_debug_specref_binding_index_raw = 0;
-  wasm_debug_specref_binding_index_tag = 0;
-  wasm_debug_specref_limit_raw = 0;
-  wasm_debug_specref_limit_tag = 0;
-  wasm_debug_specref_tlb_pointer_raw = 0;
-}
-
-__attribute__((used, visibility("default"), export_name("wasm_debug_reset_specref_failure")))
-void
-wasm_debug_reset_specref_failure(void)
-{
-  wasm_debug_reset_specref_failure_state();
-}
-
-__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_stage")))
-uint32_t wasm_debug_specref_failure_stage(void) { return wasm_debug_specref_stage; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_tcr_raw")))
-uint32_t wasm_debug_specref_failure_tcr_raw(void) { return wasm_debug_specref_tcr_raw; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_symbol_raw")))
-uint32_t wasm_debug_specref_failure_symbol_raw(void) { return wasm_debug_specref_symbol_raw; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_symbol_fulltag")))
-uint32_t wasm_debug_specref_failure_symbol_fulltag(void) { return wasm_debug_specref_symbol_fulltag; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_symbol_header")))
-uint32_t wasm_debug_specref_failure_symbol_header(void) { return wasm_debug_specref_symbol_header; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_symbol_subtag")))
-uint32_t wasm_debug_specref_failure_symbol_subtag(void) { return wasm_debug_specref_symbol_subtag; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_binding_index_raw")))
-uint32_t wasm_debug_specref_failure_binding_index_raw(void) { return wasm_debug_specref_binding_index_raw; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_binding_index_tag")))
-uint32_t wasm_debug_specref_failure_binding_index_tag(void) { return wasm_debug_specref_binding_index_tag; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_limit_raw")))
-uint32_t wasm_debug_specref_failure_limit_raw(void) { return wasm_debug_specref_limit_raw; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_limit_tag")))
-uint32_t wasm_debug_specref_failure_limit_tag(void) { return wasm_debug_specref_limit_tag; }
-__attribute__((used, visibility("default"), export_name("wasm_debug_specref_failure_tlb_pointer_raw")))
-uint32_t wasm_debug_specref_failure_tlb_pointer_raw(void) { return wasm_debug_specref_tlb_pointer_raw; }
-
 __attribute__((used, visibility("default"), export_name("_SPspecref")))
 void
 _SPspecref(void)
 {
-  wasm_debug_reset_specref_failure_state();
-
   TCR *tcr = wasm_get_current_tcr();
   if (tcr == NULL) {
-    wasm_debug_specref_stage = WASM_DEBUG_SPECREF_STAGE_TCR_NULL;
     wasm_subprims_trap();
   }
-  wasm_debug_specref_tcr_raw = (uint32_t)(uintptr_t)tcr;
 
   LispObj symbol = wasm_reg(tcr, arg_z);
-  wasm_debug_specref_symbol_raw = (uint32_t)symbol;
-  unsigned symbol_fulltag = fulltag_of(symbol);
-  wasm_debug_specref_symbol_fulltag = symbol_fulltag;
-  if (symbol_fulltag != fulltag_misc) {
-    wasm_debug_specref_stage = WASM_DEBUG_SPECREF_STAGE_SYMBOL_FULLTAG;
+  if (fulltag_of(symbol) != fulltag_misc) {
     wasm_subprims_trap();
   }
 
-  LispObj symbol_header = header_of(symbol);
-  wasm_debug_specref_symbol_header = (uint32_t)symbol_header;
-  unsigned symbol_subtag = header_subtag(symbol_header);
-  wasm_debug_specref_symbol_subtag = symbol_subtag;
-  if (symbol_subtag != subtag_symbol) {
-    wasm_debug_specref_stage = WASM_DEBUG_SPECREF_STAGE_SYMBOL_SUBTAG;
+  if (header_subtag(header_of(symbol)) != subtag_symbol) {
     wasm_subprims_trap();
   }
 
   lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(symbol));
   LispObj binding_index = sym->binding_index;
-  wasm_debug_specref_binding_index_raw = (uint32_t)binding_index;
-  unsigned binding_index_tag = tag_of(binding_index);
-  wasm_debug_specref_binding_index_tag = binding_index_tag;
-  if (binding_index_tag != tag_fixnum) {
-    wasm_debug_specref_stage = WASM_DEBUG_SPECREF_STAGE_BINDING_INDEX_TAG;
+  if (tag_of(binding_index) != tag_fixnum) {
     wasm_subprims_trap();
   }
 
   LispObj limit = tcr->tlb_limit;
-  wasm_debug_specref_limit_raw = (uint32_t)limit;
-  unsigned limit_tag = tag_of(limit);
-  wasm_debug_specref_limit_tag = limit_tag;
-  if (limit_tag != tag_fixnum) {
-    wasm_debug_specref_stage = WASM_DEBUG_SPECREF_STAGE_TLB_LIMIT_TAG;
+  if (tag_of(limit) != tag_fixnum) {
     wasm_subprims_trap();
   }
 
   LispObj *binding_slots = tcr->tlb_pointer;
-  wasm_debug_specref_tlb_pointer_raw = (uint32_t)(uintptr_t)binding_slots;
   if (binding_slots == NULL) {
-    wasm_debug_specref_stage = WASM_DEBUG_SPECREF_STAGE_TLB_POINTER_NULL;
     wasm_subprims_trap();
   }
 
@@ -6339,42 +6091,27 @@ __attribute__((used, visibility("default"), export_name("_SPkeyword_bind")))
 void
 _SPkeyword_bind(void)
 {
-  wasm_debug_reset_keyword_bind_state();
-
   TCR *tcr = wasm_get_current_tcr();
   if (tcr == NULL) {
-    wasm_debug_keyword_bind_stage = WASM_DEBUG_KEYWORD_BIND_STAGE_TCR_NULL;
     wasm_subprims_trap();
   }
 
   LispObj raw_nargs = wasm_reg(tcr, nargs);
   LispObj raw_prev = wasm_reg(tcr, imm0);
   LispObj keyword_flags = wasm_reg(tcr, arg_y);
-  wasm_debug_keyword_bind_raw_nargs = (uint32_t)raw_nargs;
-  wasm_debug_keyword_bind_raw_prev = (uint32_t)raw_prev;
-  wasm_debug_keyword_bind_keyword_flags = (uint32_t)keyword_flags;
-  wasm_debug_keyword_bind_nargs_tag = (uint32_t)tag_of(raw_nargs);
-  wasm_debug_keyword_bind_prev_tag = (uint32_t)tag_of(raw_prev);
-  wasm_debug_keyword_bind_keyword_flags_tag = (uint32_t)tag_of(keyword_flags);
   if (tag_of(raw_nargs) != tag_fixnum || tag_of(raw_prev) != tag_fixnum || tag_of(keyword_flags) != tag_fixnum) {
-    wasm_debug_keyword_bind_stage = WASM_DEBUG_KEYWORD_BIND_STAGE_RAW_TAG;
     wasm_subprims_trap();
   }
 
   signed_natural nargs_count = unbox_fixnum(raw_nargs);
   signed_natural prev_count = unbox_fixnum(raw_prev);
-  wasm_debug_keyword_bind_nargs_count = (int32_t)nargs_count;
-  wasm_debug_keyword_bind_prev_count = (int32_t)prev_count;
   if (nargs_count < 0 || prev_count < 0) {
-    wasm_debug_keyword_bind_stage = WASM_DEBUG_KEYWORD_BIND_STAGE_NEGATIVE_COUNT;
     wasm_subprims_trap();
   }
 
   signed_natural key_value_count = nargs_count - prev_count;
-  wasm_debug_keyword_bind_key_value_count = (int32_t)key_value_count;
   if (key_value_count < 0) {
     key_value_count = 0;
-    wasm_debug_keyword_bind_key_value_count = (int32_t)key_value_count;
   }
   if (key_value_count & 1) {
     wasm_set_nargs_count(tcr, key_value_count);
@@ -6386,34 +6123,20 @@ _SPkeyword_bind(void)
   }
 
   LispObj fn_obj = wasm_reg(tcr, Rfn);
-  wasm_debug_keyword_bind_fn_raw = (uint32_t)fn_obj;
-  wasm_debug_keyword_bind_fn_fulltag = (uint32_t)fulltag_of(fn_obj);
   if (fulltag_of(fn_obj) != fulltag_misc) {
-    wasm_debug_keyword_bind_stage = WASM_DEBUG_KEYWORD_BIND_STAGE_FN_NOT_MISC;
     wasm_subprims_trap();
   }
 
   LispObj keyvec = deref(fn_obj, 3);
-  wasm_debug_keyword_bind_keyvec_raw = (uint32_t)keyvec;
   signed_natural keyvec_len = 0;
   if (keyvec != (LispObj)nil_value) {
-    wasm_debug_keyword_bind_keyvec_fulltag = (uint32_t)fulltag_of(keyvec);
     if (fulltag_of(keyvec) != fulltag_misc) {
-      wasm_debug_keyword_bind_stage = WASM_DEBUG_KEYWORD_BIND_STAGE_KEYVEC_NOT_MISC;
       wasm_subprims_trap();
     }
-    LispObj keyvec_header = header_of(keyvec);
-    wasm_debug_keyword_bind_keyvec_header = (uint32_t)keyvec_header;
-    keyvec_len = header_element_count(keyvec_header);
-    wasm_debug_keyword_bind_keyvec_len = (int32_t)keyvec_len;
+    keyvec_len = header_element_count(header_of(keyvec));
     if (keyvec_len < 0 || keyvec_len > 256) {
-      wasm_debug_keyword_bind_stage = WASM_DEBUG_KEYWORD_BIND_STAGE_KEYVEC_LENGTH_RANGE;
       wasm_subprims_trap();
     }
-  } else {
-    wasm_debug_keyword_bind_keyvec_fulltag = (uint32_t)fulltag_of(keyvec);
-    wasm_debug_keyword_bind_keyvec_header = 0;
-    wasm_debug_keyword_bind_keyvec_len = 0;
   }
 
   LispObj values[256];
@@ -6424,9 +6147,7 @@ _SPkeyword_bind(void)
   }
 
   LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
-  wasm_debug_keyword_bind_vsp_raw = (uint32_t)(uintptr_t)stack_ptr;
   if (stack_ptr == NULL) {
-    wasm_debug_keyword_bind_stage = WASM_DEBUG_KEYWORD_BIND_STAGE_STACK_NULL;
     wasm_subprims_trap();
   }
   LispObj *vsp_ptr = stack_ptr;
@@ -6509,7 +6230,6 @@ _SPkeyword_bind(void)
 
   wasm_set_reg(tcr, vsp, (LispObj)vsp_ptr);
   tcr->save_vsp = vsp_ptr;
-  wasm_debug_keyword_bind_stage = WASM_DEBUG_KEYWORD_BIND_STAGE_DONE;
 }
 
 __attribute__((used, visibility("default"), export_name("_SPdebind")))

@@ -124,7 +124,6 @@ Exit criteria:
 - Bridge passes in headless browser with deterministic output.
 
 Status note:
-- Browser harness now runs the WASM UI demo turn via the kernel export (`wasm_ui_demo_turn`) when using the minimal image; a full Lisp/UI image is still required to exercise the compiled Lisp UI path.
 - Headless harness now falls back to an in-process route server when localhost binds are blocked, but Playwright still requires browser launch permissions (some environments skip with EPERM/Mach port errors).
 
 Status: Complete (WASM)

@@ -176,9 +176,6 @@ function createApplyHarness({ presentSymbols = [], disableSetSymbolCellInitializ
     wasm_probe_last_status() {
       return lastStatus >>> 0;
     },
-    wasm_debug_function_entry_index() {
-      return -1;
-    },
   };
   if (!disableSetSymbolCellInitializer) {
     ex.wasm_set_symbol_cell_initializer = (
