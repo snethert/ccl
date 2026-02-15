@@ -1221,3 +1221,43 @@ Immediate next step:
 1. Keep publish-path behavior unchanged.
 2. Trace and fix the required-fasload trap call chain (`wasm_prepare_entry_call` -> `_SPfuncall` path) so collect runs can execute deeper instrumentation.
 3. Expand passive event hooks to cover package lifecycle events once trap is unblocked.
+
+### 16.14 Status Update (2026-02-14, post-M1k7 collect-lane pre-fasload hard-stop)
+
+What changed in this update:
+1. Restored normal startup binding-map behavior in collect lane (removed collect-only startup-map skip), so collect no longer mutates L0 setup policy.
+2. Added an explicit collect-lane guard in `doc/wasm/js/make-real-image.mjs`:
+- if pre-fasload L0 contract fails, collect now closes/extracts `startup_truth_v1.jsonl` and exits before required-fasload execution.
+- this replaces trap-driven termination with deterministic contract-fail termination.
+3. Performed full sync rebuild order to eliminate artifact skew:
+- `scripts/wasm/rebuild-everything.sh --no-root-image`
+- this rebuilt `wasm-boot.image`, regenerated `doc/wasm/wasm-runtime-modules.json` + `.idx`, refreshed `doc/wasm/bootstrap-l0-contract.v1.json`, and regenerated `doc/wasm/startup-symbol-scope.source_scope_v1.json`.
+
+Milestone-boundary verification (primary + repeat) on 2026-02-14:
+- Run logs:
+  - `/private/tmp/m1k7.run1.final.log`
+  - `/private/tmp/m1k7.run2.final.log`
+- Collected outputs:
+  - `/private/tmp/m1k7.startup_truth.run1.jsonl`
+  - `/private/tmp/m1k7.startup_truth.run2.jsonl`
+
+Observed outcomes:
+1. First-required-fasload trap path is no longer reached in collect mode:
+- no `REQUIRED_FASLOAD_BOUNDARY` emission
+- no `Maximum call stack size exceeded` in run logs
+2. Collect output remains deterministic and non-empty:
+- both runs emit `STARTUP_TRUTH_COLLECT {"status":"ok","reason":"l0-bootstrap-contract-fail",...}`
+- both outputs exist and match (`12` lines, `3055` bytes, `cmp` pass)
+3. Current blocker is now explicit and earlier:
+- pre-fasload L0 contract fails with `6` requirement failures (`symbol/callable/special unresolved`), then collect lane exits cleanly.
+
+Revised M1 status:
+- Improved/stabilized:
+  - collect lane now fails deterministically without entering the unstable first-fasload trap path.
+  - startup truth artifact extraction is preserved on fail path.
+- Still pending for full M1 acceptance:
+  - passive runtime package lifecycle stream remains incomplete (artifact content is still baseline-seeded rather than deep runtime event capture).
+
+Immediate next step:
+1. Resolve pre-fasload L0 contract failures (especially missing CCL symbols/specials around vector-output-stream and structure refs) so collect can progress past pre-fasload gates.
+2. Once L0 gate passes, re-enable required-fasload boundary traversal under collect and validate non-baseline runtime event emission.
