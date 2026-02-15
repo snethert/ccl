@@ -136,7 +136,6 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_reset_root_image_runtime_state \
 	  --export=wasm_set_entry_call_abi --export=wasm_get_entry_call_abi --export=wasm_clear_entry_call_abi \
 	  --export=wasm_kernel_ui_poll --export=wasm_kernel_ui_render --export=wasm_kernel_ui_measure_text \
-	  --export=wasm_ui_demo_turn \
 	  --export=wasm_ffi_test_add \
 	  --export=wasm_save_image_direct \
 	  --export=wasm_box_signed_64 \

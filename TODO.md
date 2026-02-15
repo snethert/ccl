@@ -71,11 +71,45 @@ These must be fixed before any new features. Everything else is blocked.
 
 ---
 
+### Audit Kernel for Residual Instrumentation Cruft ✅ **COMPLETED 2026-02-15**
+
+**Problem:** After bulk instrumentation removal, residual cruft remained: MVP-2 web-ui demo payloads, dead diagnostic code behind undefined compile flags, debug state capture variables, and duplicate declarations.
+
+**Approach:** Repeated audit passes of `wasm-kernel-stubs.c` until a clean pass (zero matches for all instrumentation patterns). Any audit that finds something is a fail.
+
+**Solution implemented:**
+- ✅ Removed 4 UI demo payload binary blobs (`wasm_ui_payload_Ready`, `wasm_ui_payload_Clicked`, `wasm_ui_payload_Canvas_demo_canvas_top`, `wasm_ui_payload_WebGL_demo_webgl_top`) + length constants (~176 lines)
+- ✅ Removed `wasm_ui_demo_phase` variable and `wasm_ui_demo_turn` exported function (MVP-2 demo code)
+- ✅ Removed 6 `wasm_debug_last_toplevel_*` variables and `wasm_debug_capture_toplevel_throw` function + all usage
+- ✅ Removed all `#if WASM_STARTUP_DIAG_ENABLED` dead code blocks (~180 lines, flag was never defined)
+- ✅ Removed 8 `wasm_const_pool_debug_*` static variables, `WASM_CONST_POOL_DEBUG_ERROR_*` enum, and `wasm_const_pool_error_from_intern_status` helper
+- ✅ Removed duplicate forward declarations
+- ✅ Removed unused `phase_code` local variables (only used by removed diag blocks)
+- ✅ Removed `wasm_ui_demo_turn` export from Makefile
+- ✅ Deleted backup files (`.before-fixes`, `.backup`)
+
+**Files modified:**
+- `lisp-kernel/wasm-kernel-stubs.c` - Removed ~628 lines (5592 → 4964)
+- `lisp-kernel/wasm32/Makefile` - Removed 1 export declaration
+
+**Audit results:**
+- Audit pass 1: FAIL (7 categories of cruft found)
+- Audit pass 2: PASS (zero matches for all instrumentation patterns)
+
+**Acceptance criteria:**
+- [x] Zero matches for `wasm_debug_|wasm_diag_|wasm_startup_diag|wasm_emit_|wasm_ui_payload|wasm_ui_demo|WASM_STARTUP_DIAG|wasm_const_pool_debug`
+- [x] No duplicate declarations
+- [x] No backup files
+- [x] Kernel rebuilds successfully
+- [x] All basic smoke tests pass
+
+---
+
 ### Fix minimal.image Bootstrap Failures ❌
 
 **Problem:** `minimal.image` fails strict pre-start bootstrap contract
 
-**Blocked by:** FASL loading task (must work first), instrumentation removal (clean code before testing)
+**Blocked by:** FASL loading task (must work first)
 
 **Acceptance criteria:**
 - [ ] `minimal.image` passes strict bootstrap checks
@@ -90,7 +124,7 @@ These must be fixed before any new features. Everything else is blocked.
 
 **Problem:** `root.image` has core symbol/function dispatch instability during persistence
 
-**Blocked by:** FASL loading task (same root cause likely), instrumentation removal (clean code before testing)
+**Blocked by:** FASL loading task (same root cause likely)
 
 **Reference:** [wasm-ui-persistence-problem-tracker.md](doc/wasm/wasm-ui-persistence-problem-tracker.md)
 
@@ -155,7 +189,7 @@ These are the next tasks for MVP-1, but don't start until regressions are fixed.
 **What to remove:**
 - [ ] Obsolete image loading mechanisms
 - [ ] Superseded bootstrap code
-- [ ] Unused diagnostic scaffolding
+- [x] Unused diagnostic scaffolding (removed in instrumentation + audit passes)
 - [ ] Confusing "replacement lane" terminology
 
 **Impact:** Easier debugging, clearer code paths
@@ -182,9 +216,9 @@ These are explicitly NOT being worked on until MVP-1 ships.
 
 ## 📊 Current Status
 
-**Can start immediately:** Instrumentation removal (marked NEXT)
-**Blocked:** minimal.image and root.image fixes (waiting on cleanup)
-**MVP-1 completion:** 25% (FASL loading fixed, cleanup in progress)
+**Completed:** FASL loading fix, instrumentation removal, residual cruft audit
+**Ready:** minimal.image and root.image fixes (cleanup prerequisites met)
+**MVP-1 completion:** 30% (FASL loading fixed, kernel cleaned up)
 
 ---
 
@@ -249,3 +283,12 @@ _Sub-problems discovered during main track work. Decide: fix now, workaround, or
 - Basic smoke tests passing (smoke-test, gc-forwarding, kernel-request)
 - Fixed test infrastructure import paths (created symlinks for ccl-loader.mjs, ipc-conformance.mjs, etc.)
 - Discovered missing build artifacts blocking full FASL test (deferred to blocker B1)
+
+**2026-02-15 (evening):** Completed residual cruft audit of wasm-kernel-stubs.c
+- Audit pass 1: Found 7 categories of residual cruft (UI payload blobs, dead diagnostic code, debug state vars, duplicate declarations, MVP-2 demo function, const pool debug vars, backup files)
+- Removed ~628 lines total (5592 → 4964 lines)
+- Removed 1 Makefile export (`wasm_ui_demo_turn`)
+- Deleted 2 backup files
+- Audit pass 2: PASS (zero matches for all instrumentation patterns)
+- Kernel rebuilds cleanly, all smoke tests pass
+- Combined with earlier instrumentation removal: ~2400+ lines of cruft removed from kernel

@@ -56,182 +56,8 @@ static LispObj wasm_intern_runtime(TCR *tcr, const uint8_t *name_bytes, uint32_t
 static LispObj wasm_intern_dispatch(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg);
 static LispObj wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg);
 
-static const uint8_t wasm_ui_payload_Ready[] = {
-  49, 66, 73, 85, 1, 0, 0, 0, 14, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  3, 0, 0, 0, 100, 105, 118, 6, 0, 0, 0, 98, 117, 116, 116, 111, 110, 14, 0, 0, 0, 100, 97, 116,
-  97, 45, 119, 105, 100, 103, 101, 116, 45, 105, 100, 11, 0, 0, 0, 100, 101, 109, 111, 45, 98, 117, 116, 116,
-  111, 110, 5, 0, 0, 0, 67, 108, 105, 99, 107, 10, 0, 0, 0, 100, 101, 109, 111, 45, 108, 97, 98, 101,
-  108, 5, 0, 0, 0, 82, 101, 97, 100, 121, 6, 0, 0, 0, 99, 97, 110, 118, 97, 115, 11, 0, 0, 0,
-  100, 101, 109, 111, 45, 99, 97, 110, 118, 97, 115, 17, 0, 0, 0, 100, 97, 116, 97, 45, 99, 97, 110, 118,
-  97, 115, 45, 115, 99, 101, 110, 101, 198, 0, 0, 0, 91, 123, 34, 105, 100, 34, 58, 34, 98, 111, 116, 116,
-  111, 109, 34, 44, 34, 107, 105, 110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100,
-  115, 34, 58, 123, 34, 120, 34, 58, 48, 44, 34, 121, 34, 58, 48, 44, 34, 119, 105, 100, 116, 104, 34, 58,
-  53, 48, 44, 34, 104, 101, 105, 103, 104, 116, 34, 58, 53, 48, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58,
-  123, 34, 102, 105, 108, 108, 34, 58, 34, 35, 48, 48, 48, 34, 125, 125, 44, 123, 34, 105, 100, 34, 58, 34,
-  116, 111, 112, 34, 44, 34, 107, 105, 110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110,
-  100, 115, 34, 58, 123, 34, 120, 34, 58, 53, 44, 34, 121, 34, 58, 53, 44, 34, 119, 105, 100, 116, 104, 34,
-  58, 50, 48, 44, 34, 104, 101, 105, 103, 104, 116, 34, 58, 50, 48, 125, 44, 34, 112, 114, 111, 112, 115, 34,
-  58, 123, 34, 102, 105, 108, 108, 34, 58, 34, 35, 102, 48, 48, 34, 125, 125, 93, 10, 0, 0, 0, 100, 101,
-  109, 111, 45, 119, 101, 98, 103, 108, 16, 0, 0, 0, 100, 97, 116, 97, 45, 119, 101, 98, 103, 108, 45, 115,
-  99, 101, 110, 101, 198, 0, 0, 0, 91, 123, 34, 105, 100, 34, 58, 34, 98, 111, 116, 116, 111, 109, 34, 44,
-  34, 107, 105, 110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58, 123,
-  34, 120, 34, 58, 48, 44, 34, 121, 34, 58, 48, 44, 34, 119, 105, 100, 116, 104, 34, 58, 52, 48, 44, 34,
-  104, 101, 105, 103, 104, 116, 34, 58, 52, 48, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102, 105,
-  108, 108, 34, 58, 34, 35, 48, 48, 48, 34, 125, 125, 44, 123, 34, 105, 100, 34, 58, 34, 116, 111, 112, 34,
-  44, 34, 107, 105, 110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58,
-  123, 34, 120, 34, 58, 56, 44, 34, 121, 34, 58, 56, 44, 34, 119, 105, 100, 116, 104, 34, 58, 49, 54, 44,
-  34, 104, 101, 105, 103, 104, 116, 34, 58, 49, 54, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102,
-  105, 108, 108, 34, 58, 34, 35, 48, 102, 48, 34, 125, 125, 93, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255,
-  255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 5, 0,
-  0, 0, 6, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 1, 0, 0, 0, 1, 0,
-  0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 2, 0,
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 4, 0, 0, 0, 1, 0, 0, 0, 0, 0,
-  0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0,
-  0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255,
-  255, 255, 6, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 7, 0, 0, 0, 2, 0,
-  0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 9, 0,
-  0, 0, 3, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255,
-  255, 255, 7, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 11, 0,
-  0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 3, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0,
-};
-static const uint32_t wasm_ui_payload_Ready_len = 862;
-
 static LispObj *
 wasm_toplevel_slot(TCR *tcr);
-__attribute__((import_module("ccl"), import_name("wasm_host_install_const_pool")))
-int32_t wasm_host_install_const_pool(uint32_t entry_index);
-extern int lisp_open(char *path, int flags, mode_t mode);
-extern int lisp_close(int fd);
-extern ssize_t lisp_write(int fd, void *buf, size_t count);
-extern OSErr save_application(int fd, Boolean egc_was_enabled);
-LispObj wasm_misc_alloc(TCR *tcr, unsigned subtag, signed_natural count);
-static LispObj wasm_intern_startup(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg);
-static LispObj wasm_intern_runtime(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg);
-static LispObj wasm_intern_dispatch(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg);
-static LispObj wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg);
-
-
-static const uint8_t wasm_ui_payload_Clicked[] = {
-  49, 66, 73, 85, 1, 0, 0, 0, 14, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  3, 0, 0, 0, 100, 105, 118, 6, 0, 0, 0, 98, 117, 116, 116, 111, 110, 14, 0, 0, 0, 100, 97, 116,
-  97, 45, 119, 105, 100, 103, 101, 116, 45, 105, 100, 11, 0, 0, 0, 100, 101, 109, 111, 45, 98, 117, 116, 116,
-  111, 110, 5, 0, 0, 0, 67, 108, 105, 99, 107, 10, 0, 0, 0, 100, 101, 109, 111, 45, 108, 97, 98, 101,
-  108, 7, 0, 0, 0, 67, 108, 105, 99, 107, 101, 100, 6, 0, 0, 0, 99, 97, 110, 118, 97, 115, 11, 0,
-  0, 0, 100, 101, 109, 111, 45, 99, 97, 110, 118, 97, 115, 17, 0, 0, 0, 100, 97, 116, 97, 45, 99, 97,
-  110, 118, 97, 115, 45, 115, 99, 101, 110, 101, 198, 0, 0, 0, 91, 123, 34, 105, 100, 34, 58, 34, 98, 111,
-  116, 116, 111, 109, 34, 44, 34, 107, 105, 110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117,
-  110, 100, 115, 34, 58, 123, 34, 120, 34, 58, 48, 44, 34, 121, 34, 58, 48, 44, 34, 119, 105, 100, 116, 104,
-  34, 58, 53, 48, 44, 34, 104, 101, 105, 103, 104, 116, 34, 58, 53, 48, 125, 44, 34, 112, 114, 111, 112, 115,
-  34, 58, 123, 34, 102, 105, 108, 108, 34, 58, 34, 35, 48, 48, 48, 34, 125, 125, 44, 123, 34, 105, 100, 34,
-  58, 34, 116, 111, 112, 34, 44, 34, 107, 105, 110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111,
-  117, 110, 100, 115, 34, 58, 123, 34, 120, 34, 58, 53, 44, 34, 121, 34, 58, 53, 44, 34, 119, 105, 100, 116,
-  104, 34, 58, 50, 48, 44, 34, 104, 101, 105, 103, 104, 116, 34, 58, 50, 48, 125, 44, 34, 112, 114, 111, 112,
-  115, 34, 58, 123, 34, 102, 105, 108, 108, 34, 58, 34, 35, 102, 48, 48, 34, 125, 125, 93, 10, 0, 0, 0,
-  100, 101, 109, 111, 45, 119, 101, 98, 103, 108, 16, 0, 0, 0, 100, 97, 116, 97, 45, 119, 101, 98, 103, 108,
-  45, 115, 99, 101, 110, 101, 198, 0, 0, 0, 91, 123, 34, 105, 100, 34, 58, 34, 98, 111, 116, 116, 111, 109,
-  34, 44, 34, 107, 105, 110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34,
-  58, 123, 34, 120, 34, 58, 48, 44, 34, 121, 34, 58, 48, 44, 34, 119, 105, 100, 116, 104, 34, 58, 52, 48,
-  44, 34, 104, 101, 105, 103, 104, 116, 34, 58, 52, 48, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34,
-  102, 105, 108, 108, 34, 58, 34, 35, 48, 48, 48, 34, 125, 125, 44, 123, 34, 105, 100, 34, 58, 34, 116, 111,
-  112, 34, 44, 34, 107, 105, 110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115,
-  34, 58, 123, 34, 120, 34, 58, 56, 44, 34, 121, 34, 58, 56, 44, 34, 119, 105, 100, 116, 104, 34, 58, 49,
-  54, 44, 34, 104, 101, 105, 103, 104, 116, 34, 58, 49, 54, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123,
-  34, 102, 105, 108, 108, 34, 58, 34, 35, 48, 102, 48, 34, 125, 125, 93, 1, 0, 0, 0, 0, 0, 0, 0,
-  255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0,
-  5, 0, 0, 0, 6, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 1, 0, 0, 0,
-  1, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0,
-  2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 4, 0, 0, 0, 1, 0, 0, 0,
-  0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0,
-  3, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  255, 255, 255, 255, 6, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 7, 0, 0, 0,
-  2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0,
-  9, 0, 0, 0, 3, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,
-  255, 255, 255, 255, 7, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0,
-  11, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 3, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0,
-};
-static const uint32_t wasm_ui_payload_Clicked_len = 864;
-
-static const uint8_t wasm_ui_payload_Canvas_demo_canvas_top[] = {
-  49, 66, 73, 85, 1, 0, 0, 0, 14, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  3, 0, 0, 0, 100, 105, 118, 6, 0, 0, 0, 98, 117, 116, 116, 111, 110, 14, 0, 0, 0, 100, 97, 116,
-  97, 45, 119, 105, 100, 103, 101, 116, 45, 105, 100, 11, 0, 0, 0, 100, 101, 109, 111, 45, 98, 117, 116, 116,
-  111, 110, 5, 0, 0, 0, 67, 108, 105, 99, 107, 10, 0, 0, 0, 100, 101, 109, 111, 45, 108, 97, 98, 101,
-  108, 22, 0, 0, 0, 67, 97, 110, 118, 97, 115, 32, 100, 101, 109, 111, 45, 99, 97, 110, 118, 97, 115, 58,
-  116, 111, 112, 6, 0, 0, 0, 99, 97, 110, 118, 97, 115, 11, 0, 0, 0, 100, 101, 109, 111, 45, 99, 97,
-  110, 118, 97, 115, 17, 0, 0, 0, 100, 97, 116, 97, 45, 99, 97, 110, 118, 97, 115, 45, 115, 99, 101, 110,
-  101, 198, 0, 0, 0, 91, 123, 34, 105, 100, 34, 58, 34, 98, 111, 116, 116, 111, 109, 34, 44, 34, 107, 105,
-  110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58, 123, 34, 120, 34,
-  58, 48, 44, 34, 121, 34, 58, 48, 44, 34, 119, 105, 100, 116, 104, 34, 58, 53, 48, 44, 34, 104, 101, 105,
-  103, 104, 116, 34, 58, 53, 48, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102, 105, 108, 108, 34,
-  58, 34, 35, 48, 48, 48, 34, 125, 125, 44, 123, 34, 105, 100, 34, 58, 34, 116, 111, 112, 34, 44, 34, 107,
-  105, 110, 100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58, 123, 34, 120,
-  34, 58, 53, 44, 34, 121, 34, 58, 53, 44, 34, 119, 105, 100, 116, 104, 34, 58, 50, 48, 44, 34, 104, 101,
-  105, 103, 104, 116, 34, 58, 50, 48, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102, 105, 108, 108,
-  34, 58, 34, 35, 102, 48, 48, 34, 125, 125, 93, 10, 0, 0, 0, 100, 101, 109, 111, 45, 119, 101, 98, 103,
-  108, 16, 0, 0, 0, 100, 97, 116, 97, 45, 119, 101, 98, 103, 108, 45, 115, 99, 101, 110, 101, 198, 0, 0,
-  0, 91, 123, 34, 105, 100, 34, 58, 34, 98, 111, 116, 116, 111, 109, 34, 44, 34, 107, 105, 110, 100, 34, 58,
-  34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58, 123, 34, 120, 34, 58, 48, 44, 34,
-  121, 34, 58, 48, 44, 34, 119, 105, 100, 116, 104, 34, 58, 52, 48, 44, 34, 104, 101, 105, 103, 104, 116, 34,
-  58, 52, 48, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102, 105, 108, 108, 34, 58, 34, 35, 48,
-  48, 48, 34, 125, 125, 44, 123, 34, 105, 100, 34, 58, 34, 116, 111, 112, 34, 44, 34, 107, 105, 110, 100, 34,
-  58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58, 123, 34, 120, 34, 58, 56, 44,
-  34, 121, 34, 58, 56, 44, 34, 119, 105, 100, 116, 104, 34, 58, 49, 54, 44, 34, 104, 101, 105, 103, 104, 116,
-  34, 58, 49, 54, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102, 105, 108, 108, 34, 58, 34, 35,
-  48, 102, 48, 34, 125, 125, 93, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 0,
-  0, 0, 0, 4, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 5, 0, 0, 0, 6, 0, 0, 0, 1,
-  0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 2,
-  0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 255, 255, 255, 255, 4, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 0,
-  0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 5, 0, 0, 0, 0,
-  0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 6, 0, 0, 0, 1,
-  0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 7, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2,
-  0, 0, 0, 3, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 3, 0, 0, 0, 10,
-  0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 7, 0, 0, 0, 2,
-  0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 12,
-  0, 0, 0, 3, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0,
-};
-static const uint32_t wasm_ui_payload_Canvas_demo_canvas_top_len = 879;
-
-static const uint8_t wasm_ui_payload_WebGL_demo_webgl_top[] = {
-  49, 66, 73, 85, 1, 0, 0, 0, 14, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  3, 0, 0, 0, 100, 105, 118, 6, 0, 0, 0, 98, 117, 116, 116, 111, 110, 14, 0, 0, 0, 100, 97, 116,
-  97, 45, 119, 105, 100, 103, 101, 116, 45, 105, 100, 11, 0, 0, 0, 100, 101, 109, 111, 45, 98, 117, 116, 116,
-  111, 110, 5, 0, 0, 0, 67, 108, 105, 99, 107, 10, 0, 0, 0, 100, 101, 109, 111, 45, 108, 97, 98, 101,
-  108, 20, 0, 0, 0, 87, 101, 98, 71, 76, 32, 100, 101, 109, 111, 45, 119, 101, 98, 103, 108, 58, 116, 111,
-  112, 6, 0, 0, 0, 99, 97, 110, 118, 97, 115, 11, 0, 0, 0, 100, 101, 109, 111, 45, 99, 97, 110, 118,
-  97, 115, 17, 0, 0, 0, 100, 97, 116, 97, 45, 99, 97, 110, 118, 97, 115, 45, 115, 99, 101, 110, 101, 198,
-  0, 0, 0, 91, 123, 34, 105, 100, 34, 58, 34, 98, 111, 116, 116, 111, 109, 34, 44, 34, 107, 105, 110, 100,
-  34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58, 123, 34, 120, 34, 58, 48,
-  44, 34, 121, 34, 58, 48, 44, 34, 119, 105, 100, 116, 104, 34, 58, 53, 48, 44, 34, 104, 101, 105, 103, 104,
-  116, 34, 58, 53, 48, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102, 105, 108, 108, 34, 58, 34,
-  35, 48, 48, 48, 34, 125, 125, 44, 123, 34, 105, 100, 34, 58, 34, 116, 111, 112, 34, 44, 34, 107, 105, 110,
-  100, 34, 58, 34, 114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58, 123, 34, 120, 34, 58,
-  53, 44, 34, 121, 34, 58, 53, 44, 34, 119, 105, 100, 116, 104, 34, 58, 50, 48, 44, 34, 104, 101, 105, 103,
-  104, 116, 34, 58, 50, 48, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102, 105, 108, 108, 34, 58,
-  34, 35, 102, 48, 48, 34, 125, 125, 93, 10, 0, 0, 0, 100, 101, 109, 111, 45, 119, 101, 98, 103, 108, 16,
-  0, 0, 0, 100, 97, 116, 97, 45, 119, 101, 98, 103, 108, 45, 115, 99, 101, 110, 101, 198, 0, 0, 0, 91,
-  123, 34, 105, 100, 34, 58, 34, 98, 111, 116, 116, 111, 109, 34, 44, 34, 107, 105, 110, 100, 34, 58, 34, 114,
-  101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58, 123, 34, 120, 34, 58, 48, 44, 34, 121, 34,
-  58, 48, 44, 34, 119, 105, 100, 116, 104, 34, 58, 52, 48, 44, 34, 104, 101, 105, 103, 104, 116, 34, 58, 52,
-  48, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102, 105, 108, 108, 34, 58, 34, 35, 48, 48, 48,
-  34, 125, 125, 44, 123, 34, 105, 100, 34, 58, 34, 116, 111, 112, 34, 44, 34, 107, 105, 110, 100, 34, 58, 34,
-  114, 101, 99, 116, 34, 44, 34, 98, 111, 117, 110, 100, 115, 34, 58, 123, 34, 120, 34, 58, 56, 44, 34, 121,
-  34, 58, 56, 44, 34, 119, 105, 100, 116, 104, 34, 58, 49, 54, 44, 34, 104, 101, 105, 103, 104, 116, 34, 58,
-  49, 54, 125, 44, 34, 112, 114, 111, 112, 115, 34, 58, 123, 34, 102, 105, 108, 108, 34, 58, 34, 35, 48, 102,
-  48, 34, 125, 125, 93, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0, 0, 0, 0, 0,
-  0, 4, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 5, 0, 0, 0, 6, 0, 0, 0, 1, 0, 0,
-  0, 0, 0, 0, 0, 255, 255, 255, 255, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0,
-  0, 3, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-  0, 255, 255, 255, 255, 4, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 0, 0, 0,
-  0, 1, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0,
-  0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 6, 0, 0, 0, 1, 0, 0,
-  0, 0, 0, 0, 0, 255, 255, 255, 255, 7, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0,
-  0, 3, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 3, 0, 0, 0, 10, 0, 0,
-  0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 7, 0, 0, 0, 2, 0, 0,
-  0, 0, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0,
-  0, 3, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0,
-};
-static const uint32_t wasm_ui_payload_WebGL_demo_webgl_top_len = 877;
 
 enum {
   WASM_SUBPRIM_FUNCALL_INDEX = 24,
@@ -686,69 +512,9 @@ wasm_save_image_direct(uint32_t path_ptr, uint32_t path_len, uint32_t egc_enable
   return (int32_t)err;
 }
 
-static uint32_t wasm_ui_demo_phase = 0;
-static uint32_t wasm_debug_last_toplevel_throw = 0;
-static uint32_t wasm_debug_last_toplevel_arg_z = 0;
-static uint32_t wasm_debug_last_toplevel_arg_y = 0;
-static uint32_t wasm_debug_last_toplevel_nfn = 0;
-static uint32_t wasm_debug_last_toplevel_nargs = 0;
-static uint32_t wasm_debug_last_toplevel_topfn = 0;
-
-static void
-wasm_debug_capture_toplevel_throw(TCR *tcr)
-{
-  if (tcr == NULL) {
-    return;
-  }
-  wasm_debug_last_toplevel_throw = (uint32_t)tcr->wasm_pending_throw;
-  wasm_debug_last_toplevel_arg_z = (uint32_t)tcr->wasm_gprs[arg_z];
-  wasm_debug_last_toplevel_arg_y = (uint32_t)tcr->wasm_gprs[arg_y];
-  wasm_debug_last_toplevel_nfn = (uint32_t)tcr->wasm_gprs[nfn];
-  wasm_debug_last_toplevel_nargs = (uint32_t)tcr->wasm_gprs[nargs];
-}
-
-__attribute__((used, visibility("default"), export_name("wasm_ui_demo_turn")))
-int32_t
-wasm_ui_demo_turn(void)
-{
-  const uint8_t *payload = wasm_ui_payload_Ready;
-  uint32_t payload_len = wasm_ui_payload_Ready_len;
-
-  switch (wasm_ui_demo_phase) {
-    case 0:
-      payload = wasm_ui_payload_Ready;
-      payload_len = wasm_ui_payload_Ready_len;
-      break;
-    case 1:
-      payload = wasm_ui_payload_Clicked;
-      payload_len = wasm_ui_payload_Clicked_len;
-      break;
-    case 2:
-      payload = wasm_ui_payload_Canvas_demo_canvas_top;
-      payload_len = wasm_ui_payload_Canvas_demo_canvas_top_len;
-      break;
-    default:
-      payload = wasm_ui_payload_WebGL_demo_webgl_top;
-      payload_len = wasm_ui_payload_WebGL_demo_webgl_top_len;
-      break;
-  }
-
-  if (wasm_ui_demo_phase < 3) {
-    wasm_ui_demo_phase++;
-  }
-
-  return wasm_kernel_ui_render(payload, payload_len);
-}
-
 static int
 wasm_toplevel_loop(TCR *tcr)
 {
-  wasm_debug_last_toplevel_throw = 0;
-  wasm_debug_last_toplevel_arg_z = 0;
-  wasm_debug_last_toplevel_arg_y = 0;
-  wasm_debug_last_toplevel_nfn = 0;
-  wasm_debug_last_toplevel_nargs = 0;
-  wasm_debug_last_toplevel_topfn = 0;
   for (;;) {
     LispObj *vsp_ptr = (LispObj *)tcr->wasm_gprs[vsp];
     if (vsp_ptr == NULL) {
@@ -762,7 +528,6 @@ wasm_toplevel_loop(TCR *tcr)
       return -1;
     }
     LispObj topfn = *vsp_ptr;
-    wasm_debug_last_toplevel_topfn = (uint32_t)topfn;
     if (topfn == lisp_nil) {
       return 0;
     }
@@ -776,7 +541,6 @@ wasm_toplevel_loop(TCR *tcr)
     tcr->wasm_gprs[Rfn] = topfn;
     wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_FUNCALL_INDEX));
     if (tcr->wasm_pending_throw) {
-      wasm_debug_capture_toplevel_throw(tcr);
       wasm_maybe_refresh_compiled_modules();
       return WASM_TOPLEVEL_PENDING_THROW;
     }
@@ -3535,186 +3299,6 @@ wasm_lisp_string_equals_bytes(LispObj str,
                               const uint8_t *bytes,
                               uint32_t len);
 
-#if WASM_STARTUP_DIAG_ENABLED
-static uint32_t
-wasm_diag_obj_tag(LispObj obj)
-{
-  return (uint32_t)fulltag_of(obj);
-}
-
-static uint32_t
-wasm_diag_obj_subtag(LispObj obj)
-{
-  if (fulltag_of(obj) != fulltag_misc) {
-    return 0xffffffffu;
-  }
-  if (!wasm_lispobj_in_scannable_area(obj)) {
-    return 0xffffffffu;
-  }
-  return (uint32_t)header_subtag(header_of(obj));
-}
-
-static uint32_t
-wasm_diag_string_len(LispObj obj)
-{
-  if (fulltag_of(obj) != fulltag_misc) {
-    return 0xffffffffu;
-  }
-  if (!wasm_lispobj_in_scannable_area(obj)) {
-    return 0xffffffffu;
-  }
-  LispObj header = header_of(obj);
-  if (header_subtag(header) != subtag_simple_base_string) {
-    return 0xffffffffu;
-  }
-  return (uint32_t)header_element_count(header);
-}
-
-static LispObj
-wasm_diag_symbol_fcell(LispObj obj)
-{
-  if (fulltag_of(obj) != fulltag_misc) {
-    return (LispObj)0;
-  }
-  if (!wasm_lispobj_in_scannable_area(obj)) {
-    return (LispObj)0;
-  }
-  LispObj header = header_of(obj);
-  if (header_subtag(header) != subtag_symbol) {
-    return (LispObj)0;
-  }
-  lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(obj));
-  return (sym == NULL) ? (LispObj)0 : sym->fcell;
-}
-
-static uint32_t
-wasm_diag_obj_is_symbol(LispObj obj)
-{
-  if (fulltag_of(obj) != fulltag_misc) {
-    return 0u;
-  }
-  if (!wasm_lispobj_in_scannable_area(obj)) {
-    return 0u;
-  }
-  return (header_subtag(header_of(obj)) == subtag_symbol) ? 1u : 0u;
-}
-
-static void
-wasm_fill_startup_diag_v2(wasm_startup_diag_v2 *diag,
-                          uint32_t event_code,
-                          int32_t rc,
-                          uint32_t line,
-                          uint32_t abort_reason_code,
-                          TCR *tcr,
-                          LispObj intern_sym,
-                          LispObj pkg,
-                          LispObj name_obj,
-                          const uint8_t *name_bytes,
-                          uint32_t name_len_input,
-                          LispObj result,
-                          uint32_t throw_before,
-                          uint32_t throw_after,
-                          uint32_t pending_condition_snapshot_before_clear,
-                          uint32_t csp_before,
-                          uint32_t vsp_before,
-                          uint32_t tsp_before,
-                          uint32_t csp_after,
-                          uint32_t vsp_after,
-                          uint32_t tsp_after)
-{
-  if (diag == NULL) {
-    return;
-  }
-
-  memset(diag, 0, sizeof(*diag));
-  diag->magic = WASM_STARTUP_DIAG_MAGIC_V2;
-  diag->version = WASM_STARTUP_DIAG_VERSION_V2;
-  diag->event_code = event_code;
-  diag->rc = rc;
-  diag->line = line;
-  diag->tcr_ptr = (uint32_t)(uintptr_t)tcr;
-  diag->throw_before = throw_before;
-  diag->throw_after = throw_after;
-  diag->pending_condition_before = throw_before;
-
-  diag->intern_sym_obj = (uint32_t)intern_sym;
-  diag->intern_sym_tag = wasm_diag_obj_tag(intern_sym);
-  diag->intern_sym_subtag = wasm_diag_obj_subtag(intern_sym);
-  LispObj intern_fcell = wasm_diag_symbol_fcell(intern_sym);
-  diag->intern_fcell_obj = (uint32_t)intern_fcell;
-  diag->intern_fcell_tag = wasm_diag_obj_tag(intern_fcell);
-  diag->intern_fcell_subtag = wasm_diag_obj_subtag(intern_fcell);
-
-  uint32_t pkg_in_scannable_area = wasm_lispobj_in_scannable_area(pkg) ? 1u : 0u;
-  diag->pkg_obj = (uint32_t)pkg;
-  diag->pkg_tag = wasm_diag_obj_tag(pkg);
-  diag->pkg_subtag = wasm_diag_obj_subtag(pkg);
-  diag->pkg_in_scannable_area = pkg_in_scannable_area;
-
-  uint32_t name_len_obj = wasm_diag_string_len(name_obj);
-  diag->name_obj = (uint32_t)name_obj;
-  diag->name_tag = wasm_diag_obj_tag(name_obj);
-  diag->name_subtag = wasm_diag_obj_subtag(name_obj);
-  diag->name_len_input = name_len_input;
-  diag->name_len_obj = name_len_obj;
-
-  diag->result_obj = (uint32_t)result;
-  diag->result_tag = wasm_diag_obj_tag(result);
-  diag->result_subtag = wasm_diag_obj_subtag(result);
-
-  diag->csp_before = csp_before;
-  diag->vsp_before = vsp_before;
-  diag->tsp_before = tsp_before;
-  diag->csp_after = csp_after;
-  diag->vsp_after = vsp_after;
-  diag->tsp_after = tsp_after;
-
-  diag->callable_obj = diag->intern_sym_obj;
-  diag->callable_tag = diag->intern_sym_tag;
-  diag->callable_subtag = diag->intern_sym_subtag;
-  diag->callable_valid = wasm_diag_obj_is_symbol(intern_sym);
-  diag->intern_fcell_resolved =
-    (intern_fcell != (LispObj)0 && intern_fcell != nrs_UDF.vcell) ? 1u : 0u;
-  diag->intern_fcell_is_udf = (intern_fcell == nrs_UDF.vcell) ? 1u : 0u;
-  diag->pkg_valid =
-    (pkg_in_scannable_area &&
-     fulltag_of(pkg) == fulltag_misc &&
-     header_subtag(header_of(pkg)) == subtag_package) ? 1u : 0u;
-  diag->name_is_base_string =
-    (name_len_obj != 0xffffffffu) ? 1u : 0u;
-  diag->name_len_matches_input =
-    (name_len_obj != 0xffffffffu && name_len_obj == name_len_input) ? 1u : 0u;
-  diag->name_bytes_match_input =
-    (diag->name_is_base_string && name_bytes != NULL)
-      ? (wasm_lisp_string_equals_bytes(name_obj, name_bytes, name_len_input) ? 1u : 0u)
-      : 0u;
-  diag->pending_condition_snapshot_before_clear = pending_condition_snapshot_before_clear;
-  diag->abort_reason_code = abort_reason_code;
-  diag->first_fail_name_len = name_len_input;
-  diag->abort_on_first_failure = (abort_reason_code == WASM_DIAG_ABORT_NONE) ? 0u : 1u;
-
-  uint32_t hash = 2166136261u; /* FNV-1a */
-  if (name_bytes != NULL) {
-    for (uint32_t i = 0; i < name_len_input; i++) {
-      hash ^= (uint32_t)name_bytes[i];
-      hash *= 16777619u;
-    }
-  } else {
-    hash = 0u;
-  }
-  diag->first_fail_name_hash = hash;
-
-  uint32_t prefix = 0u;
-  if (name_bytes != NULL) {
-    uint32_t prefix_len = (name_len_input < 4u) ? name_len_input : 4u;
-    for (uint32_t i = 0; i < prefix_len; i++) {
-      prefix |= ((uint32_t)name_bytes[i]) << (i * 8u);
-    }
-  }
-  diag->first_fail_name_prefix = prefix;
-}
-#endif
-
 static int
 wasm_lisp_string_equals_bytes(LispObj str,
                               const uint8_t *bytes,
@@ -4601,7 +4185,6 @@ wasm_cached_intern_symbol(void)
 static LispObj
 wasm_intern_startup(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg)
 {
-  const uint32_t phase_code = wasm_boot_phase_normalize(wasm_boot_phase_state);
   if (tcr == NULL || name_bytes == NULL || name_len == 0) {
     wasm_set_last_intern_status(WASM_INTERN_STATUS_ARG_INVALID);
     return (LispObj)0;
@@ -4631,36 +4214,6 @@ wasm_intern_startup(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, Lisp
       wasm_set_last_intern_status(WASM_INTERN_STATUS_SYMBOL_SYNTHESIZED);
       return synthesized;
     }
-#if WASM_STARTUP_DIAG_ENABLED
-    uint32_t csp_snapshot = (uint32_t)tcr->wasm_gprs[csp];
-    uint32_t vsp_snapshot = (uint32_t)tcr->wasm_gprs[vsp];
-    uint32_t tsp_snapshot = (uint32_t)tcr->wasm_gprs[tsp];
-    uint32_t throw_snapshot = (uint32_t)tcr->wasm_pending_throw;
-    wasm_startup_diag_v2 diag;
-    wasm_fill_startup_diag_v2(
-      &diag,
-      WASM_DIAG_INTERN_SYMBOL_UNAVAILABLE,
-      -1,
-      __LINE__,
-      WASM_DIAG_ABORT_INTERN_SYMBOL_UNAVAILABLE,
-      tcr,
-      intern_sym,
-      pkg,
-      (LispObj)0,
-      name_bytes,
-      name_len,
-      (LispObj)0,
-      throw_snapshot,
-      throw_snapshot,
-      throw_snapshot,
-      csp_snapshot,
-      vsp_snapshot,
-      tsp_snapshot,
-      csp_snapshot,
-      vsp_snapshot,
-      tsp_snapshot);
-    wasm_emit_startup_diag_v2(&diag);
-#endif
     wasm_set_last_intern_status(WASM_INTERN_STATUS_INTERN_UNAVAILABLE);
     return (LispObj)0;
   }
@@ -4671,73 +4224,9 @@ wasm_intern_startup(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, Lisp
     return (LispObj)0;
   }
 
-#if WASM_STARTUP_DIAG_ENABLED
-  uint32_t csp_before = (uint32_t)tcr->wasm_gprs[csp];
-  uint32_t vsp_before = (uint32_t)tcr->wasm_gprs[vsp];
-  uint32_t tsp_before = (uint32_t)tcr->wasm_gprs[tsp];
-  uint32_t throw_before = (uint32_t)tcr->wasm_pending_throw;
-  wasm_startup_diag_v2 call_pre_diag;
-  wasm_fill_startup_diag_v2(
-    &call_pre_diag,
-    WASM_DIAG_INTERN_CALL_PRE,
-    0,
-    __LINE__,
-    WASM_DIAG_ABORT_NONE,
-    tcr,
-    intern_sym,
-    pkg_arg,
-    name_str,
-    name_bytes,
-    name_len,
-    (LispObj)0,
-    throw_before,
-    throw_before,
-    throw_before,
-    csp_before,
-    vsp_before,
-    tsp_before,
-    csp_before,
-    vsp_before,
-    tsp_before);
-  wasm_emit_startup_diag_v2(&call_pre_diag);
-#endif
-
   LispObj result = wasm_funcall2(intern_sym, name_str, pkg_arg);
 
-#if WASM_STARTUP_DIAG_ENABLED
-  uint32_t csp_after = (uint32_t)tcr->wasm_gprs[csp];
-  uint32_t vsp_after = (uint32_t)tcr->wasm_gprs[vsp];
-  uint32_t tsp_after = (uint32_t)tcr->wasm_gprs[tsp];
-  uint32_t throw_after = (uint32_t)tcr->wasm_pending_throw;
-#endif
-
   if (tcr->wasm_pending_throw) {
-#if WASM_STARTUP_DIAG_ENABLED
-    wasm_startup_diag_v2 throw_diag;
-    wasm_fill_startup_diag_v2(
-      &throw_diag,
-      WASM_DIAG_INTERN_CALL_THROW,
-      -2,
-      __LINE__,
-      WASM_DIAG_ABORT_INTERN_CALL_THROW,
-      tcr,
-      intern_sym,
-      pkg_arg,
-      name_str,
-      name_bytes,
-      name_len,
-      result,
-      throw_before,
-      throw_after,
-      throw_after,
-      csp_before,
-      vsp_before,
-      tsp_before,
-      csp_after,
-      vsp_after,
-      tsp_after);
-    wasm_emit_startup_diag_v2(&throw_diag);
-#endif
     wasm_set_last_intern_status(WASM_INTERN_STATUS_THROW);
     return (LispObj)0;
   }
@@ -4745,32 +4234,6 @@ wasm_intern_startup(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, Lisp
   if (fulltag_of(result) != fulltag_misc ||
       !wasm_lispobj_in_scannable_area(result) ||
       header_subtag(header_of(result)) != subtag_symbol) {
-#if WASM_STARTUP_DIAG_ENABLED
-    wasm_startup_diag_v2 bad_tag_diag;
-    wasm_fill_startup_diag_v2(
-      &bad_tag_diag,
-      WASM_DIAG_INTERN_RESULT_BAD_TAG,
-      -3,
-      __LINE__,
-      WASM_DIAG_ABORT_INTERN_RESULT_BAD_TAG,
-      tcr,
-      intern_sym,
-      pkg_arg,
-      name_str,
-      name_bytes,
-      name_len,
-      result,
-      throw_before,
-      throw_after,
-      throw_after,
-      csp_before,
-      vsp_before,
-      tsp_before,
-      csp_after,
-      vsp_after,
-      tsp_after);
-    wasm_emit_startup_diag_v2(&bad_tag_diag);
-#endif
     wasm_set_last_intern_status(WASM_INTERN_STATUS_RESULT_NON_SYMBOL);
     return (LispObj)0;
   }
@@ -4782,7 +4245,6 @@ wasm_intern_startup(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, Lisp
 static LispObj
 wasm_intern_runtime(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg)
 {
-  const uint32_t phase_code = WASM_BOOT_RUNTIME;
   if (tcr == NULL || name_bytes == NULL || name_len == 0) {
     wasm_set_last_intern_status(WASM_INTERN_STATUS_ARG_INVALID);
     return (LispObj)0;
@@ -4949,51 +4411,6 @@ wasm_const_pool_normalize_subtag(uint32_t raw_subtag)
   return subtag;
 }
 
-static uint32_t wasm_const_pool_debug_entry = 0u;
-static uint32_t wasm_const_pool_debug_phase = 0u;
-static uint32_t wasm_const_pool_debug_index = 0xffffffffu;
-static uint32_t wasm_const_pool_debug_tag = 0xffffffffu;
-static uint32_t wasm_const_pool_debug_offset = 0u;
-static uint32_t wasm_const_pool_debug_error = 0u;
-static uint32_t wasm_const_pool_debug_symbol_name_len = 0u;
-static uint32_t wasm_const_pool_debug_symbol_pkg_len = 0u;
-
-enum {
-  WASM_CONST_POOL_DEBUG_ERROR_NONE = 0u,
-  WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_READ = 1u,
-  WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_PACKAGE_MISSING = 2u,
-  WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_INTERN = 3u,
-  WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_BAD_TAG = 4u,
-  WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_INTERN_UNAVAILABLE = 5u,
-  WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_INTERN_THROW = 6u,
-  WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_INTERN_NON_SYMBOL = 7u,
-  WASM_CONST_POOL_DEBUG_ERROR_FUNCTION_UDF = 8u,
-  WASM_CONST_POOL_DEBUG_ERROR_FUNCTION_BAD_TAG = 9u,
-  WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_MISSING = 10u,
-};
-
-static uint32_t
-wasm_const_pool_error_from_intern_status(uint32_t intern_status)
-{
-  switch (intern_status) {
-  case WASM_INTERN_STATUS_INTERN_UNAVAILABLE:
-    return WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_INTERN_UNAVAILABLE;
-  case WASM_INTERN_STATUS_THROW:
-    return WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_INTERN_THROW;
-  case WASM_INTERN_STATUS_RESULT_NON_SYMBOL:
-    return WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_INTERN_NON_SYMBOL;
-  case WASM_INTERN_STATUS_SYMBOL_MISSING:
-    return WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_MISSING;
-  case WASM_INTERN_STATUS_ARG_INVALID:
-  case WASM_INTERN_STATUS_NAME_ALLOC_FAILED:
-  case WASM_INTERN_STATUS_NONE:
-  case WASM_INTERN_STATUS_OK:
-  case WASM_INTERN_STATUS_EXISTING_SYMBOL:
-  default:
-    return WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_INTERN;
-  }
-}
-
 __attribute__((used, visibility("default"), export_name("wasm_const_pool_install")))
 LispObj
 wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t payload_len)
@@ -5010,15 +4427,6 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
   const uint8_t *bytes = (const uint8_t *)(uintptr_t)payload_ptr;
   uint32_t offset = 0;
   int ok = 1;
-
-  wasm_const_pool_debug_entry = entry_index;
-  wasm_const_pool_debug_phase = 1u;
-  wasm_const_pool_debug_index = 0xffffffffu;
-  wasm_const_pool_debug_tag = 0xffffffffu;
-  wasm_const_pool_debug_offset = 0u;
-  wasm_const_pool_debug_error = WASM_CONST_POOL_DEBUG_ERROR_NONE;
-  wasm_const_pool_debug_symbol_name_len = 0u;
-  wasm_const_pool_debug_symbol_pkg_len = 0u;
 
   uint32_t version = 0;
   uint32_t count = 0;
@@ -5044,13 +4452,7 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
   LispObj *pool_data = (LispObj *)((BytePtr)pool + misc_data_offset);
 
   for (uint32_t i = 0; i < count; i++) {
-    wasm_const_pool_debug_phase = 1u;
-    wasm_const_pool_debug_index = i;
-    wasm_const_pool_debug_tag = 0xffffffffu;
-    wasm_const_pool_debug_offset = offset;
     uint32_t tag = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
-    wasm_const_pool_debug_tag = tag;
-    wasm_const_pool_debug_offset = offset;
     if (!ok) {
       return lisp_nil;
     }
@@ -5156,17 +4558,10 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
         const uint8_t *name_bytes = wasm_const_pool_read_bytes(bytes, payload_len, &offset, name_len, &ok);
         uint32_t pkg_len = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
         const uint8_t *pkg_bytes = wasm_const_pool_read_bytes(bytes, payload_len, &offset, pkg_len, &ok);
-        wasm_const_pool_debug_symbol_name_len = name_len;
-        wasm_const_pool_debug_symbol_pkg_len = pkg_len;
-        wasm_const_pool_debug_offset = offset;
         if (!ok || !name_bytes) {
-          wasm_const_pool_debug_error = WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_READ;
-          wasm_const_pool_debug_offset = offset;
           return lisp_nil;
         }
         if (pkg_len > 0 && !pkg_bytes) {
-          wasm_const_pool_debug_error = WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_READ;
-          wasm_const_pool_debug_offset = offset;
           return lisp_nil;
         }
         LispObj pkg = (LispObj)0;
@@ -5181,8 +4576,6 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
             if (found != lisp_nil) {
               pkg = found;
             } else {
-              wasm_const_pool_debug_error = WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_PACKAGE_MISSING;
-              wasm_const_pool_debug_offset = offset;
               return lisp_nil;
             }
           }
@@ -5190,15 +4583,11 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
         wasm_set_last_intern_status(WASM_INTERN_STATUS_NONE);
         LispObj sym = wasm_const_pool_intern_symbol(tcr, name_bytes, name_len, pkg);
         if (tcr->wasm_pending_throw || sym == (LispObj)0) {
-          wasm_const_pool_debug_error = wasm_const_pool_error_from_intern_status(wasm_last_intern_status);
-          wasm_const_pool_debug_offset = offset;
           return lisp_nil;
         }
         if (sym != lisp_nil &&
             (fulltag_of(sym) != fulltag_misc ||
              header_subtag(header_of(sym)) != subtag_symbol)) {
-          wasm_const_pool_debug_error = WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_BAD_TAG;
-          wasm_const_pool_debug_offset = offset;
           return lisp_nil;
         }
         pool_data[i] = sym;
@@ -5247,15 +4636,10 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
         const uint8_t *name_bytes = wasm_const_pool_read_bytes(bytes, payload_len, &offset, name_len, &ok);
         uint32_t pkg_len = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
         const uint8_t *pkg_bytes = wasm_const_pool_read_bytes(bytes, payload_len, &offset, pkg_len, &ok);
-        wasm_const_pool_debug_symbol_name_len = name_len;
-        wasm_const_pool_debug_symbol_pkg_len = pkg_len;
-        wasm_const_pool_debug_offset = offset;
         if (!ok || !name_bytes) {
-          wasm_const_pool_debug_error = WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_READ;
           return lisp_nil;
         }
         if (pkg_len > 0 && !pkg_bytes) {
-          wasm_const_pool_debug_error = WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_READ;
           return lisp_nil;
         }
         LispObj pkg = (LispObj)0;
@@ -5270,7 +4654,6 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
             if (found != lisp_nil) {
               pkg = found;
             } else {
-              wasm_const_pool_debug_error = WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_PACKAGE_MISSING;
               return lisp_nil;
             }
           }
@@ -5278,23 +4661,19 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
         wasm_set_last_intern_status(WASM_INTERN_STATUS_NONE);
         LispObj sym = wasm_const_pool_intern_symbol(tcr, name_bytes, name_len, pkg);
         if (tcr->wasm_pending_throw || sym == (LispObj)0) {
-          wasm_const_pool_debug_error = wasm_const_pool_error_from_intern_status(wasm_last_intern_status);
           return lisp_nil;
         }
         if (fulltag_of(sym) != fulltag_misc || header_subtag(header_of(sym)) != subtag_symbol) {
-          wasm_const_pool_debug_error = WASM_CONST_POOL_DEBUG_ERROR_SYMBOL_BAD_TAG;
           return lisp_nil;
         }
         lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(untag(sym));
         LispObj fn = rawsym->fcell;
         if (fn == nrs_UDF.vcell) {
-          wasm_const_pool_debug_error = WASM_CONST_POOL_DEBUG_ERROR_FUNCTION_UDF;
           return lisp_nil;
         }
         if (fulltag_of(fn) != fulltag_misc ||
             (header_subtag(header_of(fn)) != subtag_function &&
              header_subtag(header_of(fn)) != subtag_pseudofunction)) {
-          wasm_const_pool_debug_error = WASM_CONST_POOL_DEBUG_ERROR_FUNCTION_BAD_TAG;
           return lisp_nil;
         }
         pool_data[i] = fn;
@@ -5423,13 +4802,7 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
     return lisp_nil;
   }
   for (uint32_t i = 0; i < count; i++) {
-    wasm_const_pool_debug_phase = 2u;
-    wasm_const_pool_debug_index = i;
-    wasm_const_pool_debug_tag = 0xffffffffu;
-    wasm_const_pool_debug_offset = patch_offset;
     uint32_t tag = wasm_const_pool_read_nat(bytes, payload_len, &patch_offset, patch_version, &patch_ok);
-    wasm_const_pool_debug_tag = tag;
-    wasm_const_pool_debug_offset = patch_offset;
     if (!patch_ok) {
       return lisp_nil;
     }
@@ -5551,7 +4924,6 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
   }
   LispObj *table_data = (LispObj *)((BytePtr)table + misc_data_offset);
   table_data[entry_index] = pool;
-  wasm_const_pool_debug_phase = 0u;
   return pool;
 }
 

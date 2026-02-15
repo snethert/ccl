@@ -1,17 +1,16 @@
 # Porting Status Checklist (CCL→WASM)
 
-**Status:** Living document  
-**Purpose:** Track what is implemented, partially complete, or missing.
+**Status:** Active
+**Scope:** Track what is implemented, partially complete, or missing
+**Last Updated:** 2026-02-15
+**Doc Version:** 1.0.0
 
-## Track Split (Normative)
+## Two-Mode Architecture
 
-- Legacy compatibility lane: current unattended defaults and memory-snapshot
-  persistence behavior remain documented for ongoing compatibility workflows.
-- Replacement lane target architecture: secure-only startup gates,
-  shared-memory-first runtime/UI transport, required worker topology, and
-  Storage V2 local-core persistence profile.
-- References in this file to memory-snapshot defaults are legacy-lane status
-  notes, not replacement-lane target posture.
+- **MVP-1 (Library/Embedded Mode):** Single-runner, postMessage interface,
+  works anywhere. Current development focus.
+- **MVP-2 (Full Runtime Mode):** Multi-runner, SharedArrayBuffer,
+  secure context required. Deferred until MVP-1 ships.
 
 ## Kernel (C, WASM backend)
 
@@ -57,25 +56,19 @@
   `lisp_open/lisp_stat` via `NAMED_RO` stream kind.
 - **Real Lisp toplevel entry:** ⚠️  
   `start_lisp` entry is callable in bring-up flows and strict root-image
-  bootstrap checks are now passing (`root.image` manifest lane). `minimal.image`
-  still fails strict pre-start bootstrap contract (expected bring-up lane).
-- **Image boot path:** ❌ **CRITICALLY BROKEN**
-  `wasm_ccl_load_image` loads image bytes into memory successfully, but **symbols
-  are not findable** because post-load fixup is missing:
+  bootstrap checks are now passing (`root.image` manifest). `minimal.image`
+  still fails strict pre-start bootstrap contract.
+- **Image boot path:** ⚠️
+  `wasm_ccl_load_image` loads image bytes into memory successfully.
   - ✅ Image sections map correctly (readonly, dynamic, static)
   - ✅ Symbol objects physically exist in memory with correct structure
-  - ❌ **Package hash tables NOT rebuilt** - contain stale pointers
-  - ❌ **`RESTORE-LISP-POINTERS` never called** - `start_lisp()` skips this step
-  - ❌ **`wasm_find_symbol_named_bytes()` fails** - hash lookup broken
-  - ❌ **Cannot load `level-1.lafsl`** - returns -7 when trying to find `CCL::%FASLOAD`
-
-  Native CCL always calls `RESTORE-LISP-POINTERS` after loading an image to rehash
-  package tables. WASM skips this, making the loaded image unusable for FASL loading.
+  - ✅ **`RESTORE-LISP-POINTERS` called** after image load (fixed 2026-02-15)
+  - ✅ **Package hash tables rebuilt** - stale pointer issue resolved
+  - ⚠️ Full FASL loading pending end-to-end validation (blocked by build artifacts)
 
   `scripts/wasm/lib/load-image.mjs` supports loader modes (`boot-only|start-lisp|run-toplevel`),
-  manifest validation, and bootstrap contract checking, but the underlying symbol
-  lookup is broken regardless of mode. See `doc/wasm/image-loader-spec.md` for details
-  on the missing fixup step.
+  manifest validation, and bootstrap contract checking. See `doc/wasm/image-loader-spec.md`
+  for details on the post-load fixup step.
 
 ## JS microkernel / host
 
@@ -213,19 +206,15 @@
   `node scripts/wasm/tests/start-lisp-noninteractive-smoke.mjs` is green in default
   mode (contract-enforced fail case + warn-mode continuation case), and strict
   root gate is passing when explicitly requested. `node scripts/wasm/tests/all-smoke.mjs`
-  is green with current regenerated artifacts. Root-lane compiled-Lisp UI
+  is green with current regenerated artifacts. `root.image` compiled-Lisp UI
   persistence smoke is now passing
   (`node scripts/wasm/tests/wasm-ui-persist-smoke.mjs --verbose --image root`).
 
 ## Major Gaps / Next Blockers
 
-- Permanent fix for root-lane core symbol/function dispatch instability
-  discovered during persistence trap investigation.
-- Continue hardening regression gates for the new UI save/restore persistence
-  path while preserving legacy unattended `memory-snapshot` defaults and
-  keeping replacement-lane Storage V2 requirements explicit.
+- Fix `minimal.image` bootstrap failures (strict pre-start bootstrap contract).
+- Stabilize `root.image` symbol/function dispatch during persistence.
+- End-to-end FASL loading validation (blocked by missing build artifacts:
+  `wasm-smoke-modules.json`, `subprims.wasm`).
 - Capability negotiation protocol beyond `CAPS` bitfield.
-- Ongoing integration hardening for LMDB/IndexedDB lanes while keeping
-  `memory-snapshot` as legacy unattended default.
-- Replacement-lane worker/shared-memory startup and transport contracts remain
-  the architecture target (secure-only, no-fallback).
+- MVP-2: Multi-runner worker/SharedArrayBuffer startup and transport contracts.
