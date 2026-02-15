@@ -1,1 +1,0 @@
-STARTUP_SYMBOL_SCOPE_BUILD {"schema_version":"startup_symbol_scope_build_v1","artifact_schema_version":"startup_symbol_scope_v1","out_path":"doc/wasm/startup-symbol-scope.source_scope_v1.json","symbols_total":0,"files_scanned_total":69,"excluded_by_reason":{"read-eval-disabled":36,"reader-parse-error":6}}

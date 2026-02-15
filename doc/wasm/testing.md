@@ -6,24 +6,24 @@ WASM-specific commands in one place.
 ## Sandbox-Safe
 
 - `scripts/tests/run-sandbox-tests.sh`
-- `node doc/wasm/js/all-smoke.mjs`
+- `node scripts/wasm/tests/all-smoke.mjs`
 - `npm --prefix web-ui run test:sandbox`
-- `node doc/wasm/js/wasm-ui-persist-smoke.mjs`
-- `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs`
-- `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`
+- `node scripts/wasm/tests/wasm-ui-persist-smoke.mjs`
+- `node scripts/wasm/tests/start-lisp-noninteractive-smoke.mjs`
+- `node scripts/wasm/tests/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive`
 - Target persistence default lane:
-  `CCL_PERSIST_BACKEND=memory-snapshot CCL_PERSIST_SNAPSHOT_FILE=.tmp/persist-smoke.snapshot.json node doc/wasm/js/wasm-ui-persist-smoke.mjs`
+  `CCL_PERSIST_BACKEND=memory-snapshot CCL_PERSIST_SNAPSHOT_FILE=.tmp/persist-smoke.snapshot.json node scripts/wasm/tests/wasm-ui-persist-smoke.mjs`
 
 ## Additional Targeted Smoke (Sandbox-Safe)
 
-- `node doc/wasm/js/interrupt-smoke.mjs`
+- `node scripts/wasm/tests/interrupt-smoke.mjs`
 
 ## External / Host-Only
 
-- `node doc/wasm/js/lmdb-smoke.mjs`
-- `CCL_ENABLE_LMDB_TESTS=1 node --test doc/wasm/js/persist-service.test.mjs`
+- `node scripts/wasm/tests/lmdb-smoke.mjs`
+- `CCL_ENABLE_LMDB_TESTS=1 node --test scripts/wasm/tests/persist-service.test.mjs`
 - `scripts/wasm/idb-smoke-server-control.sh start`
-- Open `http://127.0.0.1:5173/doc/wasm/js/idb-smoke.html`
+- Open `http://127.0.0.1:5173/scripts/wasm/tests/idb-smoke.html`
 - `scripts/wasm/idb-smoke-server-control.sh stop`
 - `scripts/tests/run-external-tests.sh` starts IDB smoke server only with
   `RUN_IDB_SMOKE_SERVER=1`.
@@ -43,4 +43,4 @@ WASM-specific commands in one place.
   persistence workflow used for unattended execution.
 - Default unattended persistence architecture is memory-first snapshot backend;
   LMDB/IndexedDB remain integration lanes.
-- Known status: `node doc/wasm/js/all-smoke.mjs` is green.
+- Known status: `node scripts/wasm/tests/all-smoke.mjs` is green.

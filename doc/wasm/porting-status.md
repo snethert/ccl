@@ -16,7 +16,7 @@
 ## Kernel (C, WASM backend)
 
 - **Build (freestanding, no WASI runtime):** ✅  
-  `lisp-kernel/wasm32/Makefile` builds `doc/wasm/js/wasmcl.wasm`.
+  `lisp-kernel/wasm32/Makefile` builds `build/wasm32/wasmcl.wasm`.
 - **KERNEL_IMPORTS table (WASM):** ✅  
   Table points at kernel-owned functions and stubs.
 - **Subprims readiness flag (host-set):** ✅  
@@ -26,7 +26,7 @@
   `wasm_get_compiled_module_registry`, compiler records module entries, and
   JS loader installs them via `installCompiledModulesFromRegistry`.
 - **Subprims provider module (separate build):** ✅  
-  `lisp-kernel/wasm32/subprims/Makefile` builds `doc/wasm/js/subprims.wasm`.
+  `lisp-kernel/wasm32/subprims/Makefile` builds `build/wasm32/subprims.wasm`.
 - **Tier‑0 subprims (C):** ✅  
   `_SPmkcatch1v`, `_SPnthrow1value`, `_SPfuncall` implemented with cooperative
   unwind + table‑index function entry ABI; `_SPfuncall` syncs arg regs from
@@ -59,17 +59,23 @@
   `start_lisp` entry is callable in bring-up flows and strict root-image
   bootstrap checks are now passing (`root.image` manifest lane). `minimal.image`
   still fails strict pre-start bootstrap contract (expected bring-up lane).
-- **Image boot path:** ⚠️  
-  `wasm_ccl_load_image` works for the minimal image and the cross‑xload boot
-  image (`wasm-boot.image` from `cross-xload-level-0 :wasm32`).
-  `doc/wasm/js/load-image.mjs` now supports explicit loader modes
-  (`boot-only|start-lisp|run-toplevel`), manifest hash validation, strict
-  module policy controls, scripted stdin preload, and bootstrap contract modes
-  (`strict|warn|off`, default strict). Root-lane compiled-Lisp UI persistence
-  smoke is now green with save/restore wired through runtime file-backed
-  persistence (`/ui/wasm-ui-state.bin`) and legacy-lane memory-snapshot
-  dirty-flush regression checks; remaining work is core dispatch hardening plus
-  replacement-lane convergence.
+- **Image boot path:** ❌ **CRITICALLY BROKEN**
+  `wasm_ccl_load_image` loads image bytes into memory successfully, but **symbols
+  are not findable** because post-load fixup is missing:
+  - ✅ Image sections map correctly (readonly, dynamic, static)
+  - ✅ Symbol objects physically exist in memory with correct structure
+  - ❌ **Package hash tables NOT rebuilt** - contain stale pointers
+  - ❌ **`RESTORE-LISP-POINTERS` never called** - `start_lisp()` skips this step
+  - ❌ **`wasm_find_symbol_named_bytes()` fails** - hash lookup broken
+  - ❌ **Cannot load `level-1.lafsl`** - returns -7 when trying to find `CCL::%FASLOAD`
+
+  Native CCL always calls `RESTORE-LISP-POINTERS` after loading an image to rehash
+  package tables. WASM skips this, making the loaded image unusable for FASL loading.
+
+  `scripts/wasm/lib/load-image.mjs` supports loader modes (`boot-only|start-lisp|run-toplevel`),
+  manifest validation, and bootstrap contract checking, but the underlying symbol
+  lookup is broken regardless of mode. See `doc/wasm/image-loader-spec.md` for details
+  on the missing fixup step.
 
 ## JS microkernel / host
 
@@ -204,12 +210,12 @@
   `web-ui-debugger-smoke.mjs`, `closure-unwind-mv-smoke.mjs`,
   `mv-helpers-smoke.mjs`, `mvcall-smoke.mjs`.
 - **Known gate status:** ⚠️  
-  `node doc/wasm/js/start-lisp-noninteractive-smoke.mjs` is green in default
+  `node scripts/wasm/tests/start-lisp-noninteractive-smoke.mjs` is green in default
   mode (contract-enforced fail case + warn-mode continuation case), and strict
-  root gate is passing when explicitly requested. `node doc/wasm/js/all-smoke.mjs`
+  root gate is passing when explicitly requested. `node scripts/wasm/tests/all-smoke.mjs`
   is green with current regenerated artifacts. Root-lane compiled-Lisp UI
   persistence smoke is now passing
-  (`node doc/wasm/js/wasm-ui-persist-smoke.mjs --verbose --image root`).
+  (`node scripts/wasm/tests/wasm-ui-persist-smoke.mjs --verbose --image root`).
 
 ## Major Gaps / Next Blockers
 

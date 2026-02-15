@@ -1,6 +1,0 @@
-validation_id	result	exit_code	note
-VRG-02-rerun	pass	0	ok
-VRG-04-rerun	pass	0	ok
-VRG-05-rerun	pass	0	ok
-VRG-05-browser	pass	0	ok
-VRG-10-rerun	pass	1	ok

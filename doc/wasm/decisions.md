@@ -114,7 +114,7 @@ LispObj wasm_utf8_to_string(uint8_t *utf8_bytes, size_t len);
 ```
 
 ```javascript
-// doc/wasm/js/ microkernel
+// scripts/wasm/lib/microkernel.mjs
 const encoder = new TextEncoder();       // JS → UTF-8
 const decoder = new TextDecoder('utf-8'); // UTF-8 → JS
 
@@ -275,6 +275,87 @@ Use explicit stepping (`wasm_ccl_step`) rather than stack-suspension toolchains:
 **References:**
 - [yield-resume.md](yield-resume.md)
 - Original ADR-0005 (archived decisions)
+
+---
+
+## ADR-0007: MVP-2 Documentation Relocated for Sequential Development
+
+**Status:** Accepted
+**Date:** 2026-02-15
+
+**Decision:**
+
+Move all MVP-2 (Full Runtime Mode) specification documents out of the active `doc/wasm/` directory to preserve them for future reference without cluttering current MVP-1 focused work.
+
+**Location:**
+
+22 files moved to `~/Documents/ccl-proj-history/`:
+
+**MVP-2 Feature Specifications (11 files):**
+- browser-ui-spec.md - Browser UI toolkit specification
+- browser-ui-sample-snippets.md - UI code examples
+- threads.md - Threading and runtime worker model
+- threads-protocol.md - Shared-heap threading protocol
+- ui-bridge-protocol.md - UI bridge wire formats
+- yield-resume.md - Yield/resume model for async operations
+- runtime-bridge.md - Runtime to UI message protocol
+- interrupts.md - Interrupt handling model
+- INTERRUPT-WORK.md - Interrupt implementation plan
+- capability-matrix.md - Capability-based contract
+- capability-negotiation.md - Capability handshake mechanism
+
+**Obsolete/Superseded (7 files):**
+- TICKET-PROCESS-RETIRED.md
+- startup-regression-ref-map.md
+- persistence-service-spec.md
+- mvp-unattended-execution-plan.md
+- mvp-unattended-execution-report.md
+- wasm-startup-autoresolution-report-2026-02-14.md
+- wasm-ui-persistence-problem-tracker.md
+
+**Process Artifacts (4 files):**
+- subprims-execution-prompt.md
+- subprims-provider-plan.md
+- subprims-work-remaining.md
+- quicklisp.md
+
+**Rationale:**
+
+**Why relocate (not delete):**
+- MVP-2 specifications represent substantial design work
+- May inform implementation when MVP-2 work begins
+- Provides historical context for future contributors
+- Allows referencing if design questions arise
+
+**Why relocate now:**
+- ADR-0001 establishes sequential delivery (MVP-1 first, then MVP-2)
+- Having both MVP-1 and MVP-2 specs in same directory creates confusion
+- Current focus is fixing MVP-1 blockers, not designing MVP-2 features
+- Reduces cognitive load when scanning documentation
+- Makes conformance updates clearer (only active specs need updating)
+
+**Impact:**
+
+**Before:** 41 markdown files (mixed MVP-1, MVP-2, obsolete)
+**After:** 19 markdown files (MVP-1 focused)
+
+Active documentation now exclusively covers:
+- MVP-1 (Library/Embedded Mode) specifications
+- Core build/setup documentation
+- Kernel ABI (shared by both modes)
+- Project governance (README, roadmap, decisions)
+
+**When to relocate back:**
+
+When beginning MVP-2 implementation:
+1. Review relocated specs for current relevance
+2. Update for any architectural changes since relocation
+3. Apply current style guide conformance (version 1.0.0+)
+4. Move only needed specs back to active `doc/wasm/`
+
+**References:**
+- ADR-0001: Two-Mode, Two-Phase Development Strategy
+- `~/Documents/ccl-proj-history/` - Relocated specifications
 
 ---
 

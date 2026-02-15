@@ -152,12 +152,12 @@ This generates all required artifacts in `build/wasm32/`.
 **Run individual smoke test:**
 ```bash
 cd /Users/buildsomething/Source/ccl
-node doc/wasm/js/kernel-request-smoke.mjs
+node scripts/wasm/tests/kernel-request-smoke.mjs
 ```
 
 **Run all smoke tests:**
 ```bash
-node doc/wasm/js/all-smoke.mjs
+node scripts/wasm/tests/all-smoke.mjs
 ```
 
 **Common errors:**
@@ -186,7 +186,7 @@ scripts/wasm/dev-server.sh --mvp2
 ```
 
 **Access tests:**
-- Open `https://localhost:8080/doc/wasm/js/`
+- Open `https://localhost:8080/scripts/wasm/tests/`
 - Browser tests currently incomplete
 - Requires manually opening individual `.mjs` files or creating HTML wrappers
 
@@ -197,7 +197,7 @@ scripts/wasm/dev-server.sh --mvp2
 
 ### Test File Locations
 
-All smoke tests are in `doc/wasm/js/*.mjs`. They reference build artifacts via relative paths:
+All smoke tests are in `scripts/wasm/tests/*.mjs`. They reference build artifacts via relative paths:
 
 ```javascript
 // Correct (current):
@@ -249,7 +249,7 @@ scripts/wasm/rebuild-everything.sh
 
 **After kernel changes:**
 ```bash
-make -C lisp-kernel/wasm32 && node doc/wasm/js/kernel-request-smoke.mjs
+make -C lisp-kernel/wasm32 && node scripts/wasm/tests/kernel-request-smoke.mjs
 ```
 
 **After build system changes:**
@@ -279,7 +279,7 @@ grep -r "✅\|❌\|⚠️\|⏸️" doc/wasm/*.md
 If moving artifacts between directories, update ALL references:
 
 1. **Build scripts:** `scripts/wasm/*.sh`, `*.py`, `*.mjs`
-2. **Test files:** `doc/wasm/js/*.mjs`
+2. **Test files:** `scripts/wasm/tests/*.mjs`
 3. **Documentation:** `doc/wasm/*.md`
 4. **Source comments:** `lisp-kernel/*.c`, `xdump/*.lisp`
 5. **Makefiles:** `lisp-kernel/wasm32/Makefile`, `config.mk`
@@ -295,7 +295,7 @@ grep -r "doc/wasm/js" --include="*.md" --include="*.sh" .
 
 ### Current Path Conventions
 
-| Artifact | Path | Relative from doc/wasm/js/ |
+| Artifact | Path | Relative from scripts/wasm/tests/ |
 |----------|------|---------------------------|
 | Kernel | `build/wasm32/kernel/wasmcl.wasm` | `../../../build/wasm32/kernel/wasmcl.wasm` |
 | Subprims | `build/wasm32/subprims/subprims.wasm` | `../../../build/wasm32/subprims/subprims.wasm` |
@@ -374,7 +374,7 @@ scripts/wasm/rebuild-everything.sh
 ```bash
 # Always run from repo root
 cd /Users/buildsomething/Source/ccl
-node doc/wasm/js/compiler-smoke.mjs
+node scripts/wasm/tests/compiler-smoke.mjs
 ```
 
 **Expected failures:**
@@ -449,7 +449,7 @@ scripts/wasm/rebuild-everything.sh
 make -C lisp-kernel/wasm32
 
 # Run test
-node doc/wasm/js/kernel-request-smoke.mjs
+node scripts/wasm/tests/kernel-request-smoke.mjs
 
 # Start dev server
 scripts/wasm/dev-server.sh

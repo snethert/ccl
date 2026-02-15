@@ -1,3 +1,0 @@
-[VRG-09] COMMAND: CCL_STARTUP_GATE_TEST_INVALID_SUMMARY=1 node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive
-[VRG-09] START: 2026-02-10T22:54:30Z
-FAIL: [RPL01-E011] malformed startup diagnostics payload rejected: root-start-lisp-invalid-startup-summary: invalid STARTUP_GATE_SUMMARY JSON: SyntaxError: Unexpected end of JSON input

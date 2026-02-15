@@ -184,11 +184,11 @@ Run tests directly with Node.js:
 
 ```bash
 # All smoke tests
-node doc/wasm/js/all-smoke.mjs
+node scripts/wasm/tests/all-smoke.mjs
 
 # Individual tests
-node doc/wasm/js/kernel-request-smoke.mjs
-node doc/wasm/js/compiler-smoke.mjs
+node scripts/wasm/tests/kernel-request-smoke.mjs
+node scripts/wasm/tests/compiler-smoke.mjs
 ```
 
 ### Browser Tests (HTTPS Dev Server)
@@ -219,7 +219,7 @@ scripts/wasm/dev-server.sh --port 3000
 scripts/wasm/dev-server.sh --mvp2
 ```
 
-Then open `https://localhost:8080/doc/wasm/js/` in your browser.
+Then open `https://localhost:8080/scripts/wasm/tests/` in your browser for tests.
 
 **Why HTTPS?**
 - ES6 modules work best over HTTPS
@@ -332,16 +332,14 @@ Minimum versions:
 
 ### Build artifacts end up in wrong location
 
-**Problem:** Files in `doc/wasm/js/` instead of `build/wasm32/`
+**Problem:** Build artifacts not found
 
-**Cause:** Old build system used `doc/` for artifacts
+**Cause:** Looking in old location (`doc/wasm/js/`) instead of new build directory
 
-**Solution:** Set environment variables explicitly:
-```bash
-export CCL_WASM_BUILD_DIR=$(pwd)/build/wasm32
-source scripts/wasm/env.sh
-scripts/wasm/rebuild-everything.sh
-```
+**Solution:** All build artifacts are now in `build/wasm32/`. Update any scripts or commands to use the new paths:
+- WASM kernel: `build/wasm32/wasmcl.wasm` (not `doc/wasm/js/wasmcl.wasm`)
+- Tests: `scripts/wasm/tests/*.mjs` (not `doc/wasm/js/*.mjs`)
+- Library code: `scripts/wasm/lib/*.mjs`
 
 ### "Permission denied" when running scripts
 
@@ -420,13 +418,12 @@ ccl/
 
 **Old behavior (before 2026-02-15):** Build artifacts were placed in `doc/wasm/js/`
 
-**New behavior:** All artifacts go to `build/wasm32/`
+**New behavior (2026-02-15):** All build artifacts in `build/wasm32/`, tests/infrastructure in `scripts/wasm/`
 
-If you have old artifacts, clean them:
-```bash
-rm -f doc/wasm/js/wasmcl.wasm doc/wasm/js/subprims.wasm
-rm -f doc/wasm/*.image doc/wasm/*.json doc/wasm/*.bin doc/wasm/*.idx
-```
+Directory reorganization:
+- WASM binaries: `doc/wasm/js/*.wasm` → `build/wasm32/*.wasm`
+- Tests: `doc/wasm/js/*-smoke.mjs` → `scripts/wasm/tests/*-smoke.mjs`
+- Infrastructure: `doc/wasm/js/*.mjs` → `scripts/wasm/lib/*.mjs`
 
 ---
 

@@ -1,178 +1,204 @@
-# Image Loader Specification (WASM)
+# Image Loader Specification
 
-**Status:** Draft  
-**Scope:** Defines how a WASM runner receives a Lisp heap image and how the
-kernel consumes it. This is a bring‑up spec; it does not define the long‑term
-image format or module‑level loader semantics.
+**Status:** Active – Blocking issues prevent FASL loading
+**Scope:** Kernel ABI for loading CCL heap images in WASM runtime
+**Last Updated:** 2026-02-15
+**Doc Version:** 1.0.0
 
-## Goals
+## Purpose
 
-- Allow a host to place an image in linear memory and ask the kernel to boot.
-- Keep the ABI stable while real toplevel/loader integration is developed.
-- Support a minimal “boot‑only” path for early verification.
+This document defines the stable ABI between the WASM kernel and host JavaScript for loading CCL heap images into linear memory. It covers the boot-only path required for MVP-1 (Library Mode) and documents the critical missing fixup step that currently prevents FASL loading.
 
-## Non‑goals
+This specification focuses on bringing up a working image loader. Long-term image format design and dynamic module loading semantics are out of scope.
 
-- Define the image file format (assumed to be CCL‑compatible for now).
-- Provide a full module loader or dynamic linker.
-- Automatically enter the Lisp toplevel loop as part of image load.
+## Current Implementation Status
 
-## Current ABI
+### ✅ What Works
 
-The kernel exports:
+- **Image byte loading:** `wasm_ccl_load_image()` successfully copies image data into linear memory
+- **Section mapping:** Image sections (readonly, dynamic, static) map correctly
+- **Memory layout:** Kernel respects host-provided cstack bounds and image placement
+- **Symbol structure:** Symbol objects exist in loaded memory with correct internal structure
+- **Boot-only mode:** Returns control to host after loading without entering toplevel
+
+### ❌ Critical Issues (MVP-1 Blockers)
+
+**FASL loading fails with error code -7**
+
+Root cause: Package hash tables are never rebuilt after image load.
+
+Native CCL always calls `RESTORE-LISP-POINTERS` after loading an image to:
+1. Rehash package hash tables (makes symbols findable)
+2. Refresh FFI entrypoints
+3. Run registered fixup hooks
+4. Initialize interactive streams
+
+WASM never calls this function. Image load sequence comparison:
 
 ```
-wasm_ccl_load_image(image_bytes_ptr: u32, image_bytes_len: u32) -> i32
-wasm_ccl_start_lisp() -> i32
+Native CCL:  load_image → map sections → restore-lisp-pointers → toplevel
+WASM:        load_image → map sections → [MISSING] → toplevel
 ```
 
-Host responsibilities:
+Impact:
+- Symbols exist but cannot be found via `wasm_find_symbol_named_bytes()`
+- `INTERN` operations fail
+- Cannot load `level-1.lafsl` (needs to find `CCL::%FASLOAD`)
+- Dynamic loading impossible
 
-1. Ensure `env.memory` is large enough for the image + cstack + scratch space.
-2. Call `wasm_set_cstack_bounds(base, size)` before entering Lisp.
-3. Copy image bytes into linear memory at a safe address.
-4. Call `wasm_ccl_load_image(ptr, len)`.
+**Required fix:** Call `RESTORE-LISP-POINTERS` in [`lisp-kernel/wasm-kernel-stubs.c`](../../lisp-kernel/wasm-kernel-stubs.c) before entering toplevel.
 
-Kernel behavior (current bring‑up):
+See [§ Implementation Notes](#implementation-notes) for proposed C code.
 
-- Stores the image pointer/length via `wasm_set_boot_image`.
-- Sets `wasm_boot_only = 1`.
-- Calls `wasm_ccl_start()`, which returns to the host after loading the image.
+## Kernel ABI
 
-Optional host entry paths (current bring‑up):
+The kernel exports two entry points for image loading:
 
-- **Boot-only:** `wasm_ccl_load_image(ptr, len)` (returns to host).
-- **Boot + start_lisp (post‑load):** `wasm_ccl_load_image(ptr, len)` then
-  `wasm_ccl_start_lisp()`. The host must ensure the function table contains the
-  entrypoint index used by the image (the minimal image uses table index 200 → `wasm_boot_entry`).
-- **Boot + start_lisp (direct):** `wasm_set_boot_image(ptr, len)` then `wasm_ccl_start()`.
-- **Explicit toplevel:** `wasm_run_toplevel()` (one-shot) or `wasm_ccl_step()` (host‑stepped).
+```c
+// Load image bytes into linear memory, return to host
+int32_t wasm_ccl_load_image(uint32_t image_ptr, uint32_t image_len);
 
-If the image references compiled modules, the host should install them from the
-registry before entering `start_lisp` or stepping the toplevel. The current
-boot images do not always populate the registry; for bring‑up the host uses an
-external compiled‑modules bundle (JSON + `.bin` sidecar) produced by
-`scripts/wasm/compile-wasm-fasls.sh --modules-out …` and loads it via
-`doc/wasm/js/load-image.mjs --modules ...`.
+// Enter Lisp toplevel (call after wasm_ccl_load_image)
+int32_t wasm_ccl_start_lisp(void);
+```
 
-## Real Image Policy (Seed)
+### Return Codes
 
-For “real” WASM images (as opposed to the minimal stub image), the image build
-path must seed the kernel toplevel function explicitly:
+| Code | Meaning |
+|------|---------|
+| 0    | Success |
+| -7   | Symbol lookup failure during boot (current blocker) |
+| Other | Kernel-specific error codes |
 
-- `%toplevel-function%` (NRS index 16) is set to `toplevel-loop` in the image.
-  The kernel copies this into the VSP toplevel slot before entering
-  `start_lisp`.
-- `%wasm-compiled-modules%` (NRS index 33) may contain the compiled‑modules
-  registry. If non‑NIL, the host should install these modules before entering
-  `start_lisp`.
+## Host Requirements
 
-The seed image build script is `scripts/wasm/make-real-image.lisp`.
-It will inject `:wasm32-target` into `*features*` if needed, so a normal
-64‑bit host CCL (including a native macOS build) is sufficient for the
-current workflow and there is no 32‑bit host requirement.
-The Node‑hosted helper (`doc/wasm/js/make-real-image.mjs`) now supports
-the wasm‑only save path by calling `wasm_save_image_direct` and extracting
-the result from persistence storage.
-On non-WASM hosts, the Lisp script preserves direct-host workflow by
-delegating to the Node helper.
-The boot image it consumes is produced via `cross-xload-level-0 :wasm32`
-(wrapper: `scripts/wasm/build-wasm-boot.sh`), which now completes and writes
-`ccl:ccl;wasm-boot.image`.
+Hosts must perform these steps before calling `wasm_ccl_load_image()`:
 
-The JS loader and Node helper accept `--modules PATH` and will load the
-compiled‑modules bundle before `start_lisp`. This is required for real images
-until the compiled‑modules registry is reliably embedded in the image.
-`make-real-image.mjs` now performs a bootstrap sanity gate before publishing
-artifacts: source `wasm-boot.image` must pass strict pre-start checks and the
-emitted root-image candidate must pass strict `start_lisp` checks; on failure,
-manifest output is not refreshed.
+1. **Allocate linear memory:** Size must accommodate image + cstack + scratch space
+2. **Configure cstack:** Call `wasm_set_cstack_bounds(base, size)` to define C stack region
+3. **Place image bytes:** Copy image file into linear memory at 16-byte aligned address
+4. **Ensure non-overlap:** Image, cstack, and scratch regions must not overlap
 
-## Artifact Contract (Current)
+Memory layout is a host policy decision. The reference implementation ([`scripts/wasm/lib/load-image.mjs`](../../scripts/wasm/lib/load-image.mjs)) uses:
+- Cstack at top of linear memory
+- Image blob placed below cstack (16-byte aligned)
+- Small scratch reserve below image
 
-Runtime compiled modules are consumed as a v2 bundle contract:
+## Boot Image Build Process
 
-- manifest: `ccl-wasm-modules-v2` JSON (`.json`)
-- binary sidecar (`.bin`)
-- index sidecar (`.idx`)
+The WASM boot image is created via cross-compilation from a native CCL host.
 
-`scripts/wasm/compile-wasm-fasls.sh --modules-out ...` now emits this contract
-by compiling inline bundle data and repacking it through
-`scripts/wasm/pack-inline-bundle-v2.mjs`.
+### Build Script
 
-Real image generation now writes a root-image manifest by default:
+[`scripts/wasm/build-wasm-boot.sh`](../../scripts/wasm/build-wasm-boot.sh)
 
-- image: `doc/wasm/root.image`
-- manifest: `doc/wasm/root.image.manifest.json`
-- schema: `doc/wasm/root-image-manifest.schema.json`
+Invokes:
+```bash
+ccl --no-init --batch -l scripts/wasm/build-wasm-boot.lisp [-- --force]
+```
 
-The manifest includes SHA-256 checksums for:
+This calls `cross-xload-level-0 :wasm32` which:
+1. Loads WASM backend compiler
+2. Cross-compiles all level-0 Lisp runtime FASLs
+3. Writes boot image to `ccl:ccl;wasm-boot.image`
 
-- root image
-- runtime modules manifest/binary/index
-- `wasmcl.wasm`
-- `subprims.wasm`
+### Output Location
 
-The loader can validate this contract pre-boot via:
+**Current:** `wasm-boot.image` at repository root
+**Future:** Should relocate to `build/wasm32/` for proper build hygiene
 
-`doc/wasm/js/load-image.mjs --manifest ...`
+Output path is specified in [`xdump/xwasmfasload.lisp:72`](../../xdump/xwasmfasload.lisp#L72):
+```lisp
+:default-image-name "ccl:ccl;wasm-boot.image"
+```
 
-## Loader Modes and Non-Interactive Controls
+### Image Contents
 
-`doc/wasm/js/load-image.mjs` now supports explicit modes:
+The boot image contains:
+- All level-0 runtime code (package system, basic I/O, error handling)
+- Core symbols including `CCL::%FASLOAD`
+- Static nilreg (nil-relative symbols) section
+- Package hash tables (in stale state until fixup runs)
 
-- `--mode boot-only`
-- `--mode start-lisp`
-- `--mode run-toplevel`
+## Testing & Validation
 
-Compatibility aliases remain:
+### Boot-Only Mode
 
-- `--start-lisp` -> `--mode start-lisp`
-- `--run` -> `--mode run-toplevel`
+Verify image loads without entering toplevel:
 
-Policy/validation controls:
+```bash
+node scripts/wasm/lib/load-image.mjs --mode boot-only wasm-boot.image
+```
 
-- `--manifest PATH` (hash validation before boot)
-- `--strict-modules` / `--allow-partial-modules`
-- `--bootstrap-contract strict|warn|off` (default `strict`)
-- `--expect-rc N`
+Expected: Returns 0, no errors.
 
-Non-interactive stdin preload:
+### Start-Lisp Mode (Currently Broken)
 
-- `--stdin-script PATH`
-- `--stdin-text TEXT`
-- `--close-stdin`
+Attempt to enter toplevel after loading:
 
-Current status:
+```bash
+node scripts/wasm/lib/load-image.mjs --mode start-lisp wasm-boot.image
+```
 
-- Bootstrap contract enforcement is active by default in `load-image.mjs`.
-- `root.image` (with regenerated manifest-matched artifacts) now passes strict
-  pre-start and post-start bootstrap checks.
-- `minimal.image` remains a bring-up lane and fails strict pre-start contract;
-  warn mode remains available for deterministic continuation coverage.
-- Remaining persistence-path work does not change the loader ABI contract in
-  this document.
+**Current result:** May succeed for minimal images, fails when attempting FASL load (error -7).
 
-## Reference host placement strategy (current)
+### Full Load Test (Blocked)
 
-The JS host loader (`doc/wasm/js/load-image.mjs`) uses:
+Test loading level-1 FASL bundle:
 
-- A manual cstack at the top of linear memory.
-- The image blob placed just below the cstack (16‑byte aligned).
-- A small scratch “reserve” area below the image.
+```bash
+node scripts/wasm/lib/load-image.mjs \
+  --mode start-lisp \
+  --modules path/to/compiled-modules-v2.json \
+  wasm-boot.image
+```
 
-This is a policy decision for bring‑up and **not** a requirement of the ABI.
-Hosts may choose a different layout as long as it does not overlap with the
-cstack or the image.
+**Current result:** Fails with -7 when trying to intern `CCL::%FASLOAD`.
 
-## Invariants
+## Implementation Notes
 
-- The image bytes are treated as **read‑only input** by the kernel.
-- The kernel does **not** retain host pointers; it only remembers offsets.
-- The host must not move the image once `wasm_ccl_load_image` is invoked.
+### Proposed Fix: Call RESTORE-LISP-POINTERS
 
-## Open Questions
+In [`lisp-kernel/wasm-kernel-stubs.c`](../../lisp-kernel/wasm-kernel-stubs.c) function `start_lisp()`, before calling `wasm_toplevel_loop()`:
 
-- What is the canonical image format for WASM (raw CCL heap image vs. WASM‑native)?
-- Do we need image versioning or metadata (endianness, word size, tag layout)?
-- How does dynamic module loading interact with images?
+```c
+// Rebuild package hash tables and run fixup hooks
+LispObj restore_fn = nrs_RESTORE_LISP_POINTERS.vcell;
+if (restore_fn != lisp_nil &&
+    fulltag_of(restore_fn) == fulltag_misc &&
+    header_subtag(header_of(restore_fn)) == subtag_function) {
+
+    tcr->wasm_gprs[nargs] = box_fixnum(0);
+    tcr->wasm_gprs[nfn] = restore_fn;
+    wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_FUNCALL_INDEX));
+
+    if (tcr->wasm_pending_throw) {
+        // Fixup failed, abort boot
+        goto done;
+    }
+}
+```
+
+This matches native CCL behavior where the toplevel function calls `restore-lisp-pointers` from [`lib/dumplisp.lisp:328`](../../lib/dumplisp.lisp#L328).
+
+### ABI Invariants
+
+- **Read-only input:** Image bytes are not modified by the kernel
+- **No retained pointers:** Kernel stores offsets, not host-side pointers
+- **Immutable after load:** Host must not move image data after calling `wasm_ccl_load_image()`
+
+## Future Work
+
+Deferred to MVP-2 or later:
+
+- ⏸️ Image format versioning and metadata (endianness, word size, tag layout)
+- ⏸️ WASM-native image format (vs. current CCL-compatible format)
+- ⏸️ Embedded compiled-modules registry in image (currently external JSON bundle)
+- ⏸️ Dynamic module loading integration
+
+## Related Documentation
+
+- [Porting Status](./porting-status.md) – Overall feature implementation status
+- [Bootstrap Architecture](./bootstrap-wasm32.md) – Level-0/Level-1 bootstrap sequence
+- [Roadmap](./roadmap.md) – MVP-1 vs MVP-2 strategy
+- [Project Overview](./project-overview.md) – High-level architecture vision

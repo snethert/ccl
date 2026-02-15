@@ -1,9 +1,0 @@
-validation_id	result	exit_code	first_failure_code	lane_status	command
-R4V-01	pass	0	null	pass	node doc/wasm/js/wasm-ui-persist-smoke.mjs --image root --verbose
-R4V-04	pass	0	null	pass	node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive
-R4V-06	pass	0	null	pass	node doc/wasm/js/all-smoke.mjs
-R4V-07	fail	1	RPL03-E008	fail	CCL_IPC_TEST_INJECT_FAILURE=RPL03-E008 node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive
-R4V-08	fail	1	RPL03-E010	fail	CCL_IPC_TEST_INJECT_FAILURE=RPL03-E010 CCL_IPC_TEST_INJECT_LANE_CLASS=headless_runtime node doc/wasm/js/wasm-ui-persist-smoke.mjs --image root --verbose
-R4V-09	fail	1	RPL03-E002	fail	CCL_IPC_TEST_INJECT_FAILURE=RPL03-E002 CCL_IPC_TEST_INJECT_CHANNEL=ipc.ui.req.ring.v1 node doc/wasm/js/wasm-ui-persist-smoke.mjs --image root --verbose
-R4V-10	fail	1	RPL03-E003	fail	CCL_IPC_TEST_INJECT_FAILURE=RPL03-E003 CCL_IPC_TEST_INJECT_CHANNEL=ipc.ui.resp.ring.v1 node doc/wasm/js/wasm-ui-persist-smoke.mjs --image root --verbose
-R4V-11	fail	1	RPL03-E007	fail	CCL_IPC_TEST_INJECT_FAILURE=RPL03-E007 node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive

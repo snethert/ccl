@@ -1,4 +1,0 @@
-STARTUP_FUNCTION_DESIGNATOR_GATE {"schema_version":"startup_function_designator_gate_v1","phase":"pre-toplevel","status":"pass","mode":"strict","symbol_name":"TOPLEVEL","entry_index":4772,"resolved_entry_index":4772,"source":"metadata","binding_state":"resolved-entry-function","reason":null}
-STARTUP_FUNCTION_DESIGNATOR_GATE {"schema_version":"startup_function_designator_gate_v1","phase":"pre-toplevel","status":"pass","mode":"strict","symbol_name":"RUN-READ-LOOP","entry_index":5452,"resolved_entry_index":5452,"source":"metadata","binding_state":"resolved-entry-function","reason":null}
-STARTUP_FUNCTION_DESIGNATOR_GATE {"schema_version":"startup_function_designator_gate_v1","phase":"pre-toplevel","status":"pass","mode":"strict","symbol_name":"RUNTIME-BRIDGE-PUMP-COMMANDS","entry_index":5559,"resolved_entry_index":5559,"source":"metadata","binding_state":"resolved-entry-function","reason":null}
-FAIL: wasm_fasload_path(level-1.lafsl) returned -7

@@ -66,13 +66,13 @@ make -C lisp-kernel/wasm32/subprims
 ## 4) Verify "No WASI Runtime" + Smoke Tests
 
 ```bash
-wasm-objdump -x doc/wasm/js/wasmcl.wasm | rg 'wasi_snapshot_preview1' || true
+wasm-objdump -x build/wasm32/wasmcl.wasm | rg 'wasi_snapshot_preview1' || true
 ```
 
 Run all JS smoke tests:
 
 ```bash
-node doc/wasm/js/all-smoke.mjs
+node scripts/wasm/tests/all-smoke.mjs
 ```
 
 These smoke tests are sandbox-safe. External LMDB/IndexedDB integration tests

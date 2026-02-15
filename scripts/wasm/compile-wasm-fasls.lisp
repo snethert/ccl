@@ -188,7 +188,7 @@
 
 (defun compile-wasm-real-image-entry (root)
   (let* ((source (merge-pathnames "scripts/wasm/make-real-image-entry.lisp" root))
-         (output (merge-pathnames "doc/wasm/make-real-image-entry.lafsl" root)))
+         (output (merge-pathnames "build/wasm32/make-real-image-entry.lafsl" root)))
     (unless (probe-file source)
       (error "Missing helper source: ~a" source))
     (compile-file source

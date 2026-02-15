@@ -78,7 +78,7 @@ Lifecycle script:
 
 Defaults:
 
-- URL: `http://127.0.0.1:5173/doc/wasm/js/idb-smoke.html`
+- URL: `http://127.0.0.1:5173/scripts/wasm/tests/idb-smoke.html`
 - PID file: `/tmp/ccl-idb-smoke-server.pid`
 - Log file: `/tmp/ccl-idb-smoke-server.log`
 
@@ -100,7 +100,7 @@ Overrides:
 Default persistence smoke lane:
 
 ```bash
-CCL_PERSIST_BACKEND=memory-snapshot CCL_PERSIST_SNAPSHOT_FILE=.tmp/persist-smoke.snapshot.json node doc/wasm/js/wasm-ui-persist-smoke.mjs
+CCL_PERSIST_BACKEND=memory-snapshot CCL_PERSIST_SNAPSHOT_FILE=.tmp/persist-smoke.snapshot.json node scripts/wasm/tests/wasm-ui-persist-smoke.mjs
 ```
 
 ## Notes

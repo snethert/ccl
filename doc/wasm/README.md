@@ -14,14 +14,25 @@ This is an **active, experimental port** of Clozure Common Lisp to WebAssembly. 
 1. **MVP-1:** Library/Embedded Mode (single-runner, postMessage, works anywhere)
 2. **MVP-2:** Full Runtime Mode (multi-runner, SAB, secure context, full IDE)
 
-### 🚨 Critical Regression
+### 🚨 Critical Issue: Symbol Lookup Broken After Image Load
 
-**FASL loading is broken** - the system **used to load fasls without trouble**, now:
-- `level-1.lafsl` returns -7 (load failure)
-- `minimal.image` fails strict bootstrap
-- `root.image` has symbol resolution failures
+**FASL loading fails with -7** - cannot find symbols that physically exist in the image:
+- `level-1.lafsl` returns -7 when trying to find `CCL::%FASLOAD` symbol
+- Symbols exist in loaded memory but are not findable
+- Package hash tables are never rebuilt after image load
 
-**This regression blocks MVP-1 and must be fixed before new features.**
+**Root Cause:** WASM never calls `RESTORE-LISP-POINTERS` after loading an image.
+
+Native CCL always calls this function to rehash package tables and make symbols
+findable via `FIND-SYMBOL`/`INTERN`. WASM's `start_lisp()` skips this step and
+jumps directly to the toplevel, leaving package hash tables in a stale state.
+
+**Impact:** Cannot load any FASLs, including `level-1.lafsl`. The loaded image
+is unusable for dynamic loading despite containing all the necessary data.
+
+**See:** `doc/wasm/image-loader-spec.md` for technical details and proposed fix.
+
+**This blocks MVP-1 and must be fixed before new features.**
 
 ### What Actually Works Today
 
@@ -158,7 +169,7 @@ See [roadmap.md](roadmap.md) for detailed two-phase strategy.
 ### Testing
 
 - **[testing.md](testing.md)** - Test strategy and infrastructure
-- **Test location**: `doc/wasm/js/tests/` (limited coverage)
+- **Test location**: `scripts/wasm/tests/` (smoke tests and conformance tests)
 
 ### Future Work
 
@@ -185,7 +196,7 @@ scripts/wasm/rebuild-everything.sh
 ```
 
 This rebuilds:
-1. WASM kernel (`doc/wasm/js/wasmcl.wasm`)
+1. WASM kernel (`build/wasm32/wasmcl.wasm`)
 2. Boot image (`wasm-boot.image`)
 3. Runtime modules (`doc/wasm/wasm-runtime-modules.json`)
 4. Versioned artifacts (contract + symbol scope)
@@ -198,13 +209,13 @@ This rebuilds:
 npm --prefix web-ui test
 
 # Smoke tests (status unclear based on code scan)
-node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive
-node doc/wasm/js/all-smoke.mjs
+node scripts/wasm/tests/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive
+node scripts/wasm/tests/all-smoke.mjs
 
 # Persistence smoke test
 CCL_PERSIST_BACKEND=memory-snapshot \
   CCL_PERSIST_SNAPSHOT_FILE=.tmp/persist-smoke.snapshot.json \
-  node doc/wasm/js/wasm-ui-persist-smoke.mjs
+  node scripts/wasm/tests/wasm-ui-persist-smoke.mjs
 ```
 
 **Warning**: Based on code analysis, test results may not reflect claimed "passing" status.
@@ -275,9 +286,9 @@ Per [wasm-ui-persistence-problem-tracker.md](wasm-ui-persistence-problem-tracker
 Before claiming "MVP complete", these must pass:
 ```bash
 npm --prefix web-ui test
-node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive
-CCL_PERSIST_BACKEND=memory-snapshot node doc/wasm/js/wasm-ui-persist-smoke.mjs
-node doc/wasm/js/all-smoke.mjs
+node scripts/wasm/tests/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive
+CCL_PERSIST_BACKEND=memory-snapshot node scripts/wasm/tests/wasm-ui-persist-smoke.mjs
+node scripts/wasm/tests/all-smoke.mjs
 ```
 
 Current status: Unknown (tests exist but functional coverage unclear)

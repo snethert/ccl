@@ -1,6 +1,0 @@
-validation_id	command	exit_code	expect_exit	result	note
-VRG-02-rerun	node doc/wasm/js/start-lisp-noninteractive-smoke.mjs --strict-start-lisp-noninteractive	0	0	pass	ok
-VRG-04-rerun	node doc/wasm/js/all-smoke.mjs	0	0	pass	ok
-VRG-05-rerun	npm --prefix web-ui run test:sandbox	0	0	pass	ok
-VRG-05-browser	npm --prefix web-ui run test:browser	0	0	pass	ok
-VRG-10-rerun	CCL_STARTUP_GATE_TEST_FAIL_CHECK=SRG-01 node doc/wasm/js/all-smoke.mjs	1	nonzero	pass	ok
