@@ -223,11 +223,11 @@ async function collectSubprimDynamicCounts({
   };
 }
 
-const kernelUrl = new URL("./wasmcl.wasm", import.meta.url);
-const subprimsUrl = new URL("./subprims.wasm", import.meta.url);
+const kernelUrl = new URL("../../../build/wasm32/kernel/wasmcl.wasm", import.meta.url);
+const subprimsUrl = new URL("../../../build/wasm32/subprims/subprims.wasm", import.meta.url);
 const subprimsMapUrl = new URL("../../../build/wasm32/subprims-map.json", import.meta.url);
-const imageUrl = new URL("../minimal.image", import.meta.url);
-const bundleUrl = new URL("../wasm-smoke-modules.json", import.meta.url);
+const imageUrl = new URL("../../../build/wasm32/images/minimal.image", import.meta.url);
+const bundleUrl = new URL("../../../build/wasm32/modules/wasm-smoke-modules.json", import.meta.url);
 
 let bundle;
 let bundleBinaryBytes;

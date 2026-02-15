@@ -54,14 +54,14 @@ function readFileUrl(url) {
 }
 
 const scriptUrl = import.meta.url;
-const kernelBytes = await readFileUrl(new URL("./wasmcl.wasm", scriptUrl));
-const subprimsBytes = await readFileUrl(new URL("./subprims.wasm", scriptUrl));
-const rootImageBytes = await readFileUrl(new URL("../root.image", scriptUrl));
+const kernelBytes = await readFileUrl(new URL("../../../build/wasm32/kernel/wasmcl.wasm", scriptUrl));
+const subprimsBytes = await readFileUrl(new URL("../../../build/wasm32/subprims/subprims.wasm", scriptUrl));
+const rootImageBytes = await readFileUrl(new URL("../../../build/wasm32/images/minimal.image", scriptUrl));
 const subprimsMap = JSON.parse(
   await fs.readFile(fileURLToPath(new URL("../../../build/wasm32/subprims-map.json", scriptUrl)), "utf8")
 );
 const runtimeModulesBundle = JSON.parse(
-  await fs.readFile(fileURLToPath(new URL("../wasm-runtime-modules.json", scriptUrl)), "utf8")
+  await fs.readFile(fileURLToPath(new URL("../../../build/wasm32/modules/wasm-smoke-modules.json", scriptUrl)), "utf8")
 );
 function normalizeDesignatorNameSet(values) {
   const out = new Set();

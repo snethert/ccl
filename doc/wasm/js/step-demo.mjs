@@ -28,7 +28,7 @@ function readFileUrl(url) {
   return fs.readFile(fileURLToPath(url));
 }
 
-const kernelUrl = new URL("./wasmcl.wasm", import.meta.url);
+const kernelUrl = new URL("../../../build/wasm32/kernel/wasmcl.wasm", import.meta.url);
 const kernelBytes = await readFileUrl(kernelUrl);
 
 const runtime = createSharedCclRuntime({

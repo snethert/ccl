@@ -73,3 +73,9 @@ __pycache__/
 
 # wasm build artifacts (now in build/ directory)
 /build/
+
+# Local HTTPS certificates (mkcert)
+localhost-key.pem
+localhost-cert.pem
+localhost.pem
+localhost+*.pem

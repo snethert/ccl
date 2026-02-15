@@ -38,14 +38,14 @@ const STEP_BLOCKED = 1;
 const STEP_EXITED = 2;
 const STEP_TRAPPED = 3;
 
-const kernelUrl = new URL("./wasmcl.wasm", import.meta.url);
+const kernelUrl = new URL("../../../build/wasm32/kernel/wasmcl.wasm", import.meta.url);
 const kernelBytes = await readFileUrl(kernelUrl);
 
-const imageUrl = new URL("../minimal.image", import.meta.url);
+const imageUrl = new URL("../../../build/wasm32/images/minimal.image", import.meta.url);
 const imageBytes = await readFileUrl(imageUrl);
 const imageLen = imageBytes.byteLength >>> 0;
 
-const subprimsUrl = new URL("./subprims.wasm", import.meta.url);
+const subprimsUrl = new URL("../../../build/wasm32/subprims/subprims.wasm", import.meta.url);
 const subprimsBytes = await readFileUrl(subprimsUrl);
 const subprimsMapUrl = new URL("../../../build/wasm32/subprims-map.json", import.meta.url);
 const subprimsMap = JSON.parse(await fs.readFile(fileURLToPath(subprimsMapUrl), "utf-8"));

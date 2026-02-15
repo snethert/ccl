@@ -20,7 +20,7 @@ function assert(cond, msg) {
   if (!cond) fail(msg);
 }
 
-const manifestUrl = new URL("../wasm-runtime-modules.json", import.meta.url);
+const manifestUrl = new URL("../../../build/wasm32/modules/wasm-smoke-modules.json", import.meta.url);
 const manifestPath = fileURLToPath(manifestUrl);
 const manifestDir = path.dirname(manifestPath);
 

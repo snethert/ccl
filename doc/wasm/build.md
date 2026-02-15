@@ -176,7 +176,11 @@ scripts/wasm/rebuild-everything.sh
 
 ## Testing
 
-After building, run the smoke tests to verify everything works:
+After building, run the smoke tests to verify everything works.
+
+### Node.js Tests (Current Workflow)
+
+Run tests directly with Node.js:
 
 ```bash
 # All smoke tests
@@ -186,6 +190,47 @@ node doc/wasm/js/all-smoke.mjs
 node doc/wasm/js/kernel-request-smoke.mjs
 node doc/wasm/js/compiler-smoke.mjs
 ```
+
+### Browser Tests (HTTPS Dev Server)
+
+For browser testing, use the HTTPS development server:
+
+**One-time setup:**
+
+```bash
+# Install mkcert for locally-trusted certificates
+brew install mkcert
+mkcert -install
+
+# Generate certificate (automatic on first run)
+scripts/wasm/dev-server.sh
+```
+
+**Running the server:**
+
+```bash
+# Start HTTPS dev server (default port 8080)
+scripts/wasm/dev-server.sh
+
+# Custom port
+scripts/wasm/dev-server.sh --port 3000
+
+# Enable MVP-2 mode (SharedArrayBuffer support, future)
+scripts/wasm/dev-server.sh --mvp2
+```
+
+Then open `https://localhost:8080/doc/wasm/js/` in your browser.
+
+**Why HTTPS?**
+- ES6 modules work best over HTTPS
+- SharedArrayBuffer (MVP-2) requires secure context + COOP/COEP headers
+- mkcert creates locally-trusted certificates (no browser warnings)
+
+**Dev server features:**
+- Serves from repository root
+- Tests access build artifacts via `/build/wasm32/`
+- Auto-generates certificate on first run
+- `--mvp2` flag enables SharedArrayBuffer headers when needed
 
 **Note:** Test suite is limited. See [README.md](README.md) for current test status.
 

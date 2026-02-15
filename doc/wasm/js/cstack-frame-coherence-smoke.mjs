@@ -26,8 +26,8 @@ function readFileUrl(url) {
   return fs.readFile(fileURLToPath(url));
 }
 
-const kernelUrl = new URL("./wasmcl.wasm", import.meta.url);
-const imageUrl = new URL("../minimal.image", import.meta.url);
+const kernelUrl = new URL("../../../build/wasm32/kernel/wasmcl.wasm", import.meta.url);
+const imageUrl = new URL("../../../build/wasm32/images/minimal.image", import.meta.url);
 const kernelBytes = await readFileUrl(kernelUrl);
 const imageBytes = await readFileUrl(imageUrl);
 const imageLen = imageBytes.byteLength >>> 0;
