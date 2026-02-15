@@ -16,23 +16,7 @@
     },
     {
       "packageName": "CCL",
-      "symbolName": "%MAKE-VECTOR-OUTPUT-STREAM"
-    },
-    {
-      "packageName": "CCL",
-      "symbolName": "MAKE-UARRAY-1"
-    },
-    {
-      "packageName": "CCL",
-      "symbolName": "%MAKE-DISPLACED-ARRAY"
-    },
-    {
-      "packageName": "CCL",
       "symbolName": "%SET-SIMPLE-ARRAY-P"
-    },
-    {
-      "packageName": "CCL",
-      "symbolName": "INIT-UVECTOR-CONTENTS"
     }
   ],
   "requiredConstPools": [
@@ -61,12 +45,10 @@
       "source": "fasload-open"
     },
     {
-      "entryIndex": 4412,
+      "entryIndex": 4812,
       "requiredRefs": [
         0,
-        1,
-        2,
-        3
+        1
       ],
       "source": "fasload-dispatch"
     }
@@ -83,20 +65,6 @@
     }
   ],
   "requiredSpecialVariables": [
-    {
-      "packageName": "CCL",
-      "requireNonNil": false,
-      "symbolName": "%STRUCTURE-REFS%"
-    },
-    {
-      "initializer": {
-        "fixnumValue": 64,
-        "kind": "literal-fixnum"
-      },
-      "packageName": "CCL",
-      "requireNonNil": true,
-      "symbolName": "*VECTOR-OUTPUT-STREAM-DEFAULT-INITIAL-ALLOCATION*"
-    },
     {
       "packageName": "CCL",
       "requireNonNil": false,
@@ -121,18 +89,8 @@
     },
     {
       "packageName": "KEYWORD",
-      "source": "entry-4412",
+      "source": "entry-4812",
       "symbolName": "DEFAULT"
-    },
-    {
-      "packageName": "CCL",
-      "source": "entry-4412",
-      "symbolName": "*VECTOR-OUTPUT-STREAM-DEFAULT-INITIAL-ALLOCATION*"
-    },
-    {
-      "packageName": "CCL",
-      "source": "entry-4360/4372",
-      "symbolName": "%STRUCTURE-REFS%"
     }
   ]
 }

@@ -27,8 +27,8 @@ const REQUIRED_CONST_POOLS = Object.freeze([
     source: "fasload-open",
   }),
   Object.freeze({
-    entryIndex: 4412,
-    requiredRefs: Object.freeze([0, 1, 2, 3]),
+    entryIndex: 4812,
+    requiredRefs: Object.freeze([0, 1]),
     source: "fasload-dispatch",
   }),
 ]);
@@ -40,37 +40,17 @@ const REQUIRED_SYMBOLS = Object.freeze([
   Object.freeze({ packageName: "CCL", symbolName: "%FASLOAD", source: "fasload-core" }),
   Object.freeze({ packageName: "CCL", symbolName: "%FASL-OPEN", source: "fasload-core" }),
   Object.freeze({ packageName: "CCL", symbolName: "%SIMPLE-FASL-OPEN", source: "fasload-core" }),
-  Object.freeze({ packageName: "KEYWORD", symbolName: "DEFAULT", source: "entry-4412" }),
-  Object.freeze({ packageName: "CCL", symbolName: "*VECTOR-OUTPUT-STREAM-DEFAULT-INITIAL-ALLOCATION*", source: "entry-4412" }),
-  Object.freeze({ packageName: "CCL", symbolName: "%STRUCTURE-REFS%", source: "entry-4360/4372" }),
+  Object.freeze({ packageName: "KEYWORD", symbolName: "DEFAULT", source: "entry-4812" }),
 ]);
 
 const REQUIRED_CALLABLES = Object.freeze([
   Object.freeze({ packageName: "CCL", symbolName: "%FASLOAD" }),
   Object.freeze({ packageName: "CCL", symbolName: "%FASL-OPEN" }),
   Object.freeze({ packageName: "CCL", symbolName: "%SIMPLE-FASL-OPEN" }),
-  Object.freeze({ packageName: "CCL", symbolName: "%MAKE-VECTOR-OUTPUT-STREAM" }),
-  Object.freeze({ packageName: "CCL", symbolName: "MAKE-UARRAY-1" }),
-  Object.freeze({ packageName: "CCL", symbolName: "%MAKE-DISPLACED-ARRAY" }),
   Object.freeze({ packageName: "CCL", symbolName: "%SET-SIMPLE-ARRAY-P" }),
-  Object.freeze({ packageName: "CCL", symbolName: "INIT-UVECTOR-CONTENTS" }),
 ]);
 
 const REQUIRED_SPECIALS = Object.freeze([
-  Object.freeze({
-    packageName: "CCL",
-    symbolName: "%STRUCTURE-REFS%",
-    requireNonNil: false,
-  }),
-  Object.freeze({
-    packageName: "CCL",
-    symbolName: "*VECTOR-OUTPUT-STREAM-DEFAULT-INITIAL-ALLOCATION*",
-    requireNonNil: true,
-    initializer: Object.freeze({
-      kind: "literal-fixnum",
-      fixnumValue: 64,
-    }),
-  }),
   Object.freeze({
     packageName: "CCL",
     symbolName: "*FASL-API*",

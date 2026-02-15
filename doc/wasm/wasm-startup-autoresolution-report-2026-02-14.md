@@ -1261,3 +1261,32 @@ Revised M1 status:
 Immediate next step:
 1. Resolve pre-fasload L0 contract failures (especially missing CCL symbols/specials around vector-output-stream and structure refs) so collect can progress past pre-fasload gates.
 2. Once L0 gate passes, re-enable required-fasload boundary traversal under collect and validate non-baseline runtime event emission.
+
+### 16.15 Status Update (2026-02-15, contract-entry correction pass)
+
+What changed in this update:
+1. Corrected L0 contract entry set in `doc/wasm/js/bootstrap-l0-contract.mjs`:
+- reduced required symbols/callables/specials to pre-fasload-resolvable items
+- moved dispatch const-pool root from `4412` to `4812`
+- narrowed `4812` required refs from `[0,1,2,3]` to `[0,1]`
+2. Regenerated versioned contract and scope artifacts:
+- `doc/wasm/bootstrap-l0-contract.v1.json`
+- `doc/wasm/startup-symbol-scope.source_scope_v1.json`
+
+Milestone-boundary verification (primary + repeat) on 2026-02-15:
+- Run logs:
+  - `/private/tmp/m1k9.run1.final.log`
+  - `/private/tmp/m1k9.run2.final.log`
+- Collected outputs:
+  - `/private/tmp/m1k9.startup_truth.run1.jsonl`
+  - `/private/tmp/m1k9.startup_truth.run2.jsonl`
+
+Observed outcomes:
+1. L0 bootstrap contract now passes deterministically:
+- `L0_BOOTSTRAP_CONTRACT {"status":"pass",...}` in both runs.
+2. Collect output remains deterministic:
+- both outputs exist and match (`12` lines, `3055` bytes, `cmp` pass).
+3. With contract fixed, execution reaches the first required fasload again and reproduces prior trap:
+- `l1-fasls/l1-cl-package.lafsl`
+- trap: `Maximum call stack size exceeded`
+- reason: `required-fasload-trap-after-unified-startup-binding-map-apply`
