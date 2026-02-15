@@ -262,6 +262,32 @@ function bootstrapDiff(beforeState, afterState) {
   return diffs;
 }
 
+function runShellScript(scriptPath, args, { cwd = process.cwd(), timeoutMs = 300000 } = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(scriptPath, args, {
+      cwd,
+      stdio: ["ignore", "inherit", "inherit"],
+    });
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      child.kill("SIGKILL");
+    }, timeoutMs);
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+    child.on("close", (code, signal) => {
+      clearTimeout(timer);
+      if (timedOut) {
+        reject(new Error(`timed out after ${timeoutMs}ms`));
+        return;
+      }
+      resolve({ code: code == null ? null : (code | 0), signal: signal ?? null });
+    });
+  });
+}
+
 function runNodeScript(args, { cwd = process.cwd(), timeoutMs = 180000 } = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, args, {
@@ -429,7 +455,7 @@ const modulesDir = process.env.CCL_WASM_MODULES_DIR ?? path.join(buildDir, "modu
 const kernelDir = process.env.CCL_WASM_KERNEL_DIR ?? path.join(buildDir, "kernel");
 const subprimsDir = process.env.CCL_WASM_SUBPRIMS_DIR ?? path.join(buildDir, "subprims");
 
-const defaultBootImage = path.join(root, "wasm-boot.image");
+const defaultBootImage = path.join(buildDir, "wasm-boot.image");
 const defaultOutput = path.join(imagesDir, "root.image");
 const defaultWasmOutput = "build/wasm32/images/root.image";
 // Policy: keep compiled modules external by default (JSON + .bin sidecar)
@@ -551,7 +577,18 @@ if (!(await fileExists(subprimsMapPath))) {
   fail(`Missing subprims map: ${subprimsMapPath}`);
 }
 if (!(await fileExists(bootImagePath))) {
-  fail(`Missing boot image: ${bootImagePath} (run scripts/wasm/build-wasm-boot.sh)`);
+  const bootScript = path.join(root, "scripts/wasm/build-wasm-boot.sh");
+  if (!(await fileExists(bootScript))) {
+    fail(`Missing boot image: ${bootImagePath} (and build script not found: ${bootScript})`);
+  }
+  console.error(`Boot image not found at ${bootImagePath} — building automatically...`);
+  const bootResult = await runShellScript(bootScript, [], { cwd: root });
+  if (bootResult.code !== 0) {
+    fail(`boot image build failed (exit ${bootResult.code})`);
+  }
+  if (!(await fileExists(bootImagePath))) {
+    fail(`boot image build succeeded but ${bootImagePath} still missing`);
+  }
 }
 if (!(await fileExists(modulesPath))) {
   fail(`Missing compiled modules bundle: ${modulesPath} (run scripts/wasm/compile-wasm-fasls.sh --modules-out ${modulesPath})`);
