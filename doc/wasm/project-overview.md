@@ -1,6 +1,11 @@
-## Project overview
+# Project Overview
 
-**Status: Early Development / Experimental** • **See [README.md](README.md) for current implementation status**
+**Status:** Active
+**Scope:** Architectural vision and design goals for the CCL WASM port
+**Last Updated:** 2026-02-15
+**Doc Version:** 1.0.0
+
+**See [README.md](README.md) for current implementation status.**
 
 This is a **Common Lisp system derived from CCL's architecture** that targets **WebAssembly as the primary execution substrate**, with a **JavaScript microkernel** acting as the host "operating environment." The goal is not to cram a POSIX Lisp into the browser; the goal is to deliver the **rational, portable parts of Common Lisp**—a **Lisp-2**, **macro system**, **reader/printer**, dynamic function definition/loading—inside a WASM process model that is honest about the web.
 
@@ -16,7 +21,7 @@ This is a **Common Lisp system derived from CCL's architecture** that targets **
 * **Dynamic loading** is essential: you want to **add new functions to a running environment** in WASM (not "spin up compilers," not "rebuild the world"). - ❌ Currently broken (image loading fails)
 * **Safepoints are assumed** in generated code (same category of "given" as type checks): for interrupts, cancellation, and any future concurrency coordination. - ⚠️ Architectural assumption, partial implementation
 * **Strings use UTF-8 wire format** (CCL's internal UTF-32 ↔ UTF-8 at boundary ↔ JS's UTF-16) for full Unicode support from day one. - ✅ Design complete
-* **Full Runtime Mode (MVP-2) concurrency**: Secure-context-only startup requires worker/thread capability and shared-memory coordination for hot paths, while CL thread semantics remain explicitly deferred. - ❌ Not implemented (single-runner only)
+* **Full Runtime Mode (MVP-2) concurrency**: Secure-context-only startup requires worker/thread capability and shared-memory coordination for hot paths, while CL thread semantics remain explicitly deferred. - ⏸️ Deferred to MVP-2 (single-runner only)
 * **Quicklisp compatibility is a post‑MVP goal**: design the capability‑gated VFS so Quicklisp/ASDF can be enabled later, but keep it out of the current MVP scope. - ⏸️ Deferred as planned
 
 **Legend**: ✅ Working | ⚠️ Partial | ❌ Not working | ⏸️ Intentionally deferred
@@ -225,16 +230,11 @@ Script path: `scripts/wasm/rebuild-everything.sh`
 This runs the full dependency-ordered rebuild:
 
 1. `lisp-kernel/wasm32` (`build/wasm32/kernel/wasmcl.wasm`) - ✅ builds successfully
-2. `build/wasm32/wasm-boot.image` - ⚠️ builds but has stability issues
-3. runtime fasls/modules (`build/wasm32/modules/wasm-runtime-modules.json` and `.idx`) - ⚠️ partial
-4. versioned startup artifacts:
-   `build/wasm32/modules/bootstrap-l0-contract.v1.json` and
-   `build/wasm32/modules/startup-symbol-scope.source_scope_v1.json` - ✅ generates
-5. `build/wasm32/images/root.image` + manifest/resolution outputs - ❌ has documented bootstrap failures
+2. `build/wasm32/wasm-boot.image` - ✅ builds (auto-built when missing)
+3. runtime fasls/modules (`build/wasm32/modules/wasm-runtime-modules.json`) - ✅ 7557 modules compiled
+4. `build/wasm32/images/root.image` + manifest - ❌ fails due to compiled module installation (B2)
 
 **Note**: Build completion doesn't guarantee runtime stability. See [README.md](README.md) for current execution status.
-
-Yes: this includes the versioned-artifact refresh path (the contract sidecar + startup symbol scope generation), so those files are regenerated in the same run instead of by separate ad hoc commands.
 
 ## Summary: Vision vs. Current Reality
 

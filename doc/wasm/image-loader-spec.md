@@ -1,13 +1,13 @@
 # Image Loader Specification
 
-**Status:** Active – Blocking issues prevent FASL loading
+**Status:** Active
 **Scope:** Kernel ABI for loading CCL heap images in WASM runtime
 **Last Updated:** 2026-02-15
 **Doc Version:** 1.0.0
 
 ## Purpose
 
-This document defines the stable ABI between the WASM kernel and host JavaScript for loading CCL heap images into linear memory. It covers the boot-only path required for MVP-1 (Library Mode) and documents the critical missing fixup step that currently prevents FASL loading.
+This document defines the stable ABI between the WASM kernel and host JavaScript for loading CCL heap images into linear memory. It covers the boot-only path required for MVP-1 (Library Mode) and documents the post-load fixup sequence.
 
 This specification focuses on bringing up a working image loader. Long-term image format design and dynamic module loading semantics are out of scope.
 
@@ -20,35 +20,16 @@ This specification focuses on bringing up a working image loader. Long-term imag
 - **Memory layout:** Kernel respects host-provided cstack bounds and image placement
 - **Symbol structure:** Symbol objects exist in loaded memory with correct internal structure
 - **Boot-only mode:** Returns control to host after loading without entering toplevel
+- **RESTORE-LISP-POINTERS:** Called after image load to rebuild package hash tables (fixed 2026-02-15)
+- **Boot image auto-build:** `make-real-image.mjs` automatically triggers boot image build when missing
 
 ### ❌ Critical Issues (MVP-1 Blockers)
 
-**FASL loading fails with error code -7**
+**Compiled module installation skips 99.97% of modules**
 
-Root cause: Package hash tables are never rebuilt after image load.
+The image loader and RESTORE-LISP-POINTERS work correctly. The current blocker is downstream: the compiled module installer rejects 7555 of 7557 modules during root image build, leaving function table entries unpopulated. When FASL loading subsequently attempts to call compiled functions, it traps with "table index is out of bounds."
 
-Native CCL always calls `RESTORE-LISP-POINTERS` after loading an image to:
-1. Rehash package hash tables (makes symbols findable)
-2. Refresh FFI entrypoints
-3. Run registered fixup hooks
-4. Initialize interactive streams
-
-WASM never calls this function. Image load sequence comparison:
-
-```
-Native CCL:  load_image → map sections → restore-lisp-pointers → toplevel
-WASM:        load_image → map sections → [MISSING] → toplevel
-```
-
-Impact:
-- Symbols exist but cannot be found via `wasm_find_symbol_named_bytes()`
-- `INTERN` operations fail
-- Cannot load `level-1.lafsl` (needs to find `CCL::%FASLOAD`)
-- Dynamic loading impossible
-
-**Required fix:** Call `RESTORE-LISP-POINTERS` in [`lisp-kernel/wasm-kernel-stubs.c`](../../lisp-kernel/wasm-kernel-stubs.c) before entering toplevel.
-
-See [§ Implementation Notes](#implementation-notes) for proposed C code.
+This is tracked as blocker B2 in [TODO.md](../../TODO.md).
 
 ## Kernel ABI
 
@@ -67,7 +48,8 @@ int32_t wasm_ccl_start_lisp(void);
 | Code | Meaning |
 |------|---------|
 | 0    | Success |
-| -7   | Symbol lookup failure during boot (current blocker) |
+| -3   | Function not defined (expected for boot images before level-1 is loaded) |
+| -7   | Symbol lookup failure during boot |
 | Other | Kernel-specific error codes |
 
 ## Host Requirements
@@ -79,10 +61,44 @@ Hosts must perform these steps before calling `wasm_ccl_load_image()`:
 3. **Place image bytes:** Copy image file into linear memory at 16-byte aligned address
 4. **Ensure non-overlap:** Image, cstack, and scratch regions must not overlap
 
-Memory layout is a host policy decision. The reference implementation ([`scripts/wasm/lib/load-image.mjs`](../../scripts/wasm/lib/load-image.mjs)) uses:
+Memory layout is a host policy decision. The reference implementation ([`scripts/wasm/lib/make-real-image.mjs`](../../scripts/wasm/lib/make-real-image.mjs)) uses:
 - Cstack at top of linear memory
 - Image blob placed below cstack (16-byte aligned)
 - Small scratch reserve below image
+
+## Post-Load Fixup: RESTORE-LISP-POINTERS
+
+After loading an image, `RESTORE-LISP-POINTERS` must be called to:
+1. Rehash package hash tables (makes symbols findable via `FIND-SYMBOL`/`INTERN`)
+2. Refresh FFI entrypoints
+3. Run registered fixup hooks
+4. Initialize interactive streams
+
+This matches native CCL behavior where the toplevel function calls `restore-lisp-pointers` from [`lib/dumplisp.lisp:328`](../../lib/dumplisp.lisp#L328).
+
+### Implementation
+
+The kernel exports `wasm_restore_lisp_pointers()` as a standalone callable function:
+
+```c
+int32_t wasm_restore_lisp_pointers(void);
+```
+
+| Return Code | Meaning |
+|-------------|---------|
+| 0 | Success |
+| -3 | Function not defined (boot image, level-1 not loaded yet) |
+| Other | Error |
+
+**Timing in `make-real-image.mjs`:**
+
+1. **Early call** (after image load, before FASLs): Returns -3 for boot images because RESTORE-LISP-POINTERS is a level-1 function not yet defined. This is expected — boot image hash tables are freshly built and valid.
+2. **Post-fasload call** (after level-1 FASLs loaded): Should succeed (rc=0), rehashing any tables built during FASL loading.
+
+```
+Boot image:  load_image → restore-lisp-pointers (rc=-3, deferred) → fasload → restore-lisp-pointers (rc=0)
+Saved image: load_image → restore-lisp-pointers (rc=0) → toplevel
+```
 
 ## Boot Image Build Process
 
@@ -102,6 +118,10 @@ This calls `cross-xload-level-0 :wasm32` which:
 2. Cross-compiles all level-0 Lisp runtime FASLs
 3. Writes boot image to `build/wasm32/wasm-boot.image`
 
+### Auto-Build
+
+When `make-real-image.mjs` finds the boot image missing at `build/wasm32/wasm-boot.image`, it automatically runs `scripts/wasm/build-wasm-boot.sh` to create it. This avoids a manual build step.
+
 ### Output Location
 
 **Location:** `build/wasm32/wasm-boot.image`
@@ -117,7 +137,7 @@ The boot image contains:
 - All level-0 runtime code (package system, basic I/O, error handling)
 - Core symbols including `CCL::%FASLOAD`
 - Static nilreg (nil-relative symbols) section
-- Package hash tables (in stale state until fixup runs)
+- Package hash tables (freshly built, valid without fixup)
 
 ## Testing & Validation
 
@@ -131,7 +151,7 @@ node scripts/wasm/lib/load-image.mjs --mode boot-only build/wasm32/wasm-boot.ima
 
 Expected: Returns 0, no errors.
 
-### Start-Lisp Mode (Currently Broken)
+### Start-Lisp Mode
 
 Attempt to enter toplevel after loading:
 
@@ -139,46 +159,21 @@ Attempt to enter toplevel after loading:
 node scripts/wasm/lib/load-image.mjs --mode start-lisp build/wasm32/wasm-boot.image
 ```
 
-**Current result:** May succeed for minimal images, fails when attempting FASL load (error -7).
+**Current result:** Image loads and RESTORE-LISP-POINTERS is deferred (rc=-3, expected for boot image). FASL loading fails due to compiled module installation issue (B2).
 
-### Full Load Test (Blocked)
+### Full Load Test (Blocked by B2)
 
-Test loading level-1 FASL bundle:
+Test loading with compiled modules:
 
 ```bash
-node scripts/wasm/lib/load-image.mjs \
-  --mode start-lisp \
-  --modules path/to/compiled-modules-v2.json \
-  build/wasm32/wasm-boot.image
+node scripts/wasm/lib/make-real-image.mjs \
+  --modules build/wasm32/modules/wasm-runtime-modules.json \
+  --output build/wasm32/images/root.image
 ```
 
-**Current result:** Fails with -7 when trying to intern `CCL::%FASLOAD`.
+**Current result:** 7555/7557 compiled modules skipped, FASL loading traps with "table index is out of bounds."
 
 ## Implementation Notes
-
-### Proposed Fix: Call RESTORE-LISP-POINTERS
-
-In [`lisp-kernel/wasm-kernel-stubs.c`](../../lisp-kernel/wasm-kernel-stubs.c) function `start_lisp()`, before calling `wasm_toplevel_loop()`:
-
-```c
-// Rebuild package hash tables and run fixup hooks
-LispObj restore_fn = nrs_RESTORE_LISP_POINTERS.vcell;
-if (restore_fn != lisp_nil &&
-    fulltag_of(restore_fn) == fulltag_misc &&
-    header_subtag(header_of(restore_fn)) == subtag_function) {
-
-    tcr->wasm_gprs[nargs] = box_fixnum(0);
-    tcr->wasm_gprs[nfn] = restore_fn;
-    wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_FUNCALL_INDEX));
-
-    if (tcr->wasm_pending_throw) {
-        // Fixup failed, abort boot
-        goto done;
-    }
-}
-```
-
-This matches native CCL behavior where the toplevel function calls `restore-lisp-pointers` from [`lib/dumplisp.lisp:328`](../../lib/dumplisp.lisp#L328).
 
 ### ABI Invariants
 
@@ -198,6 +193,6 @@ Deferred to MVP-2 or later:
 ## Related Documentation
 
 - [Porting Status](./porting-status.md) – Overall feature implementation status
-- [Bootstrap Architecture](./bootstrap-wasm32.md) – Level-0/Level-1 bootstrap sequence
 - [Roadmap](./roadmap.md) – MVP-1 vs MVP-2 strategy
 - [Project Overview](./project-overview.md) – High-level architecture vision
+- [Build](./build.md) – Build instructions and build pipeline

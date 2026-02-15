@@ -1,6 +1,11 @@
-Stream System Specification
+# Stream System Specification
 
-1. Scope
+**Status:** Active
+**Scope:** Stream model used by the Lisp runtime and implemented by the JavaScript microkernel
+**Last Updated:** 2026-02-15
+**Doc Version:** 1.0.0
+
+## Purpose
 
 This document specifies the stream model used by the Lisp runtime and implemented by the JavaScript microkernel.
 
@@ -81,15 +86,12 @@ Text conversion rules are:
    •   The microkernel may expose character streams directly (for UI terminals and similar devices).
    •   The Lisp runtime is responsible for buffering and for mapping between character streams and byte streams when needed.
 
-If the system is in “ASCII-only” mode:
-   •   Character streams deliver and accept only ASCII code points.
-   •   Lisp treats characters as integers in the ASCII range (or an internal character abstraction backed by that range).
-   •   Non-ASCII input on a character stream must be rejected, replaced, or escaped by the endpoint’s policy (implementation-defined), but must not silently produce ambiguous values.
+The system uses UTF-8 as the wire format for text crossing the CL/JS boundary (see decisions.md ADR-0002):
+   •   CCL internal: UTF-32 (native character representation)
+   •   Wire format: UTF-8 (all strings crossing CL/JS boundary)
+   •   JavaScript internal: UTF-16 (native JS string representation)
 
-Future UTF-8 support, if added, must be layered as:
-   •   A byte stream carrying UTF-8 bytes
-   •   Lisp-side decoding into a character stream abstraction
-so that the underlying transport remains stable.
+Character streams carry UTF-8 encoded bytes at the transport level. Lisp-side decoding to CCL's internal UTF-32 representation is layered on top of byte streams, keeping the underlying transport stable.
 
 ⸻
 

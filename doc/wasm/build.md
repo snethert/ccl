@@ -1,6 +1,9 @@
 # Building CCL WASM
 
 **Last Updated:** 2026-02-15
+**Status:** Active
+**Scope:** Build instructions and dependencies for the CCL WASM port
+**Doc Version:** 1.0.0
 
 This guide covers how to build the CCL WASM port from source.
 

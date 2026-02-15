@@ -1,8 +1,10 @@
 # Kernel Opcode Registry (kernel_request)
 
-**Status:** Draft  
+**Status:** Draft
 **Scope:** Canonical registry for `kernel_request` opcodes and stream kinds.
 Detailed layouts remain in `doc/wasm/kernel-request-abi.md`.
+**Last Updated:** 2026-02-15
+**Doc Version:** 1.0.0
 
 ## Reserved Ranges
 

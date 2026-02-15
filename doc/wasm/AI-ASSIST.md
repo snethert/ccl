@@ -1,7 +1,9 @@
 # CCL WASM: AI Assistant Guide
 
+**Status:** Active
+**Scope:** Operational context for AI coding assistants working on the CCL WASM port
 **Last Updated:** 2026-02-15
-**Audience:** AI coding assistants (Claude, Codex, etc.)
+**Doc Version:** 1.0.0
 
 This document provides operational context for AI assistants working on the CCL WASM port. Read this first when starting a session to understand what works, what doesn't, and how to verify changes.
 
@@ -13,7 +15,7 @@ This document provides operational context for AI assistants working on the CCL 
 **Repository:** `/Users/buildsomething/Source/ccl`
 **Branch:** `wasm-port`
 **Status:** Early development / experimental
-**Documentation:** `doc/wasm/` (40+ markdown files)
+**Task Tracking:** `TODO.md` (root of repository)
 
 **Critical Reading:**
 - [README.md](README.md) - Current status (what works vs documented)
@@ -26,23 +28,34 @@ This document provides operational context for AI assistants working on the CCL 
 ## Current Status (2026-02-15)
 
 ### What Works ✅
-- **Build system:** Kernel builds successfully
+- **Build pipeline:** End-to-end functional (kernel → boot image → modules → root image attempt)
+- **WASM kernel:** Compiles successfully (~1MB binary)
+- **Image loading:** Loads into memory, sections map correctly
+- **RESTORE-LISP-POINTERS:** Called after image load, package hash tables rebuilt
+- **Boot image auto-build:** Triggered when missing during root image build
 - **Environment:** Auto-detects macOS/Linux toolchain
-- **Artifacts:** All outputs go to `build/wasm32/` (professional layout)
-- **Node.js smoke tests:** Framework exists (requires full build to run)
+- **Artifacts:** All outputs go to `build/wasm32/`
+- **Code cleanup:** ~7000 lines of dead code removed (instrumentation, startup binding map, startup truth)
 
-### What's Broken ❌
-- **FASL loading regression:** `level-1.lafsl` returns -7 (CRITICAL BLOCKER)
-- **Bootstrap unstable:** minimal.image and root.image inconsistent
-- **Tests:** Require artifacts not currently built by default
-- **Full runtime:** Many features incomplete or non-functional
+### Current Blocker ❌
+- **B2: Compiled module installation** — 7555/7557 modules skipped during root image build
+- **FASL loading:** Blocked by B2 (function table entries not populated)
+- **Root image:** Build reaches FASL loading but fails due to B2
+
+### What Was Fixed (2026-02-15)
+- ✅ RESTORE-LISP-POINTERS now called (was missing — root cause of -7 error)
+- ✅ ~2400 lines kernel instrumentation removed (wasm_emit_*, wasm_debug_*, startup truth)
+- ✅ ~2100 lines JS/Lisp/shell dead code removed
+- ✅ ~2500 lines startup binding map removed (was unnecessary WASM-only workaround)
+- ✅ Build artifacts resolved (subprims.wasm, stale paths, missing exports)
+- ✅ Boot image auto-build added
 
 ### Architecture (Two-Mode Strategy)
 
 **MVP-1: Library/Embedded Mode** (current focus)
 - Single runner, postMessage interface
 - Works anywhere (no SharedArrayBuffer required)
-- **BLOCKED** by FASL loading regression
+- **BLOCKED** by compiled module installation (B2)
 
 **MVP-2: Full Runtime Mode** (deferred)
 - Multi-runner, SharedArrayBuffer required
@@ -58,9 +71,9 @@ This document provides operational context for AI assistants working on the CCL 
 ```
 ccl/
 ├── build/wasm32/              # Build outputs (gitignored)
-│   ├── kernel/wasmcl.wasm     # WASM kernel (613 KB)
+│   ├── kernel/wasmcl.wasm     # WASM kernel
 │   ├── images/*.image         # Heap images
-│   ├── modules/*.json         # Compiled modules + sidecars
+│   ├── modules/*.json         # Compiled modules
 │   ├── subprims/subprims.wasm # Subprims provider
 │   └── subprims-map.json      # Generated subprims table
 ├── lisp-kernel/wasm32/        # C kernel source
@@ -69,32 +82,17 @@ ccl/
 ├── scripts/wasm/              # Build scripts
 │   ├── env.sh                 # Toolchain setup
 │   ├── rebuild-everything.sh  # Full build orchestrator
-│   ├── dev-server.sh          # HTTPS dev server
-│   └── *.py, *.sh             # Build utilities
-└── doc/wasm/                  # Documentation ONLY
-    ├── README.md              # Entry point
-    ├── js/*.mjs               # Smoke tests
-    └── *.md                   # Design docs
+│   ├── lib/                   # JS runtime libraries
+│   │   ├── make-real-image.mjs  # Root image builder
+│   │   ├── ccl-loader.mjs       # CCL loader
+│   │   └── microkernel.mjs      # Microkernel
+│   └── tests/                 # Smoke tests
+├── doc/wasm/                  # Documentation ONLY (no artifacts)
+│   └── *.md                   # Design docs
+└── TODO.md                    # Task tracking
 ```
 
-**IMPORTANT:** No build artifacts should ever be in `doc/` - only source files and documentation.
-
-### Environment Variables
-
-All build paths are configurable via environment variables:
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `CCL_WASM_BUILD_DIR` | `build/wasm32` | Root build directory |
-| `CCL_WASM_KERNEL_DIR` | `$BUILD_DIR/kernel` | Kernel output |
-| `CCL_WASM_IMAGES_DIR` | `$BUILD_DIR/images` | Image files |
-| `CCL_WASM_MODULES_DIR` | `$BUILD_DIR/modules` | Module bundles |
-| `CCL_WASM_SUBPRIMS_DIR` | `$BUILD_DIR/subprims` | Subprims module |
-| `CCL_WASM_CC` | `clang` (auto-detected) | C compiler |
-| `CCL_WASM_LD` | `wasm-ld` (auto-detected) | WASM linker |
-| `CCL_WASM_SYSROOT` | (auto-detected) | WASI sysroot |
-| `CCL_WASM_OPT` | `-O2` | Optimization level |
-| `CCL_WASM_DEBUG` | `-g` | Debug symbols |
+**IMPORTANT:** No build artifacts should ever be in `doc/` - only documentation files.
 
 ### Building
 
@@ -117,320 +115,78 @@ make -C lisp-kernel/wasm32 clean
 rm -rf build/wasm32
 ```
 
-### Generated Files
-
-These files are **generated** and belong in `build/`, not `doc/`:
-
-- `build/wasm32/kernel/wasmcl.wasm` - WASM kernel binary
-- `build/wasm32/subprims-map.json` - Generated by `scripts/wasm/generate_subprims_artifacts.py`
-- `build/wasm32/images/*.image` - Heap snapshots
-- `build/wasm32/modules/*.json` - Compiled module manifests
-- `build/wasm32/modules/*.bin` - Binary bundles
-- `build/wasm32/modules/*.idx` - Module indices
-
-These files are **source** and stay in `doc/`:
-
-- `doc/wasm/root-image-manifest.schema.json` - JSON Schema definition (tracked in git)
-
 ---
 
 ## Testing
 
-### Prerequisites
-
-Tests require a **full build** first:
-
-```bash
-source scripts/wasm/env.sh
-scripts/wasm/rebuild-everything.sh
-```
-
-This generates all required artifacts in `build/wasm32/`.
-
 ### Node.js Tests
-
-**Run individual smoke test:**
-```bash
-cd /Users/buildsomething/Source/ccl
-node scripts/wasm/tests/kernel-request-smoke.mjs
-```
 
 **Run all smoke tests:**
 ```bash
+cd /Users/buildsomething/Source/ccl
 node scripts/wasm/tests/all-smoke.mjs
+```
+
+**Individual tests:**
+```bash
+node scripts/wasm/tests/kernel-request-smoke.mjs
+node scripts/wasm/tests/compiler-smoke.mjs
+node scripts/wasm/tests/smoke-test.mjs
 ```
 
 **Common errors:**
 - `ENOENT: no such file or directory` - Artifacts missing, run full build
 - `Module not found` - Wrong working directory, must run from repo root
-- Test failures - Expected in current state, FASL loading broken
-
-### Browser Tests
-
-**One-time setup:**
-```bash
-brew install mkcert
-mkcert -install
-```
-
-**Start HTTPS dev server:**
-```bash
-cd /Users/buildsomething/Source/ccl
-scripts/wasm/dev-server.sh
-
-# Custom port
-scripts/wasm/dev-server.sh --port 3000
-
-# Enable SharedArrayBuffer (MVP-2)
-scripts/wasm/dev-server.sh --mvp2
-```
-
-**Access tests:**
-- Open `https://localhost:8080/scripts/wasm/tests/`
-- Browser tests currently incomplete
-- Requires manually opening individual `.mjs` files or creating HTML wrappers
-
-**Why HTTPS?**
-- ES6 modules prefer secure context
-- SharedArrayBuffer (MVP-2) **requires** HTTPS + secure headers
-- mkcert provides locally-trusted certificates (no warnings)
-
-### Test File Locations
-
-All smoke tests are in `scripts/wasm/tests/*.mjs`. They reference build artifacts via relative paths:
-
-```javascript
-// Correct (current):
-const kernelUrl = new URL("../../../build/wasm32/kernel/wasmcl.wasm", import.meta.url);
-const subprimsUrl = new URL("../../../build/wasm32/subprims/subprims.wasm", import.meta.url);
-const imageUrl = new URL("../../../build/wasm32/images/minimal.image", import.meta.url);
-
-// Wrong (old, DON'T USE):
-const kernelUrl = new URL("./wasmcl.wasm", import.meta.url);  // ❌ Artifacts not in doc/
-```
-
----
-
-## Common Workflows
-
-### 1. Make Code Changes
-
-**Kernel (C code):**
-```bash
-# Edit files in lisp-kernel/wasm32/
-source scripts/wasm/env.sh
-make -C lisp-kernel/wasm32
-# Output: build/wasm32/kernel/wasmcl.wasm
-```
-
-**Lisp code:**
-```bash
-# Edit files in level-0/, level-1/, compiler/
-# Rebuild everything (complex dependencies)
-source scripts/wasm/env.sh
-scripts/wasm/rebuild-everything.sh
-```
-
-### 2. Update Documentation
-
-**Edit markdown files in `doc/wasm/`:**
-- Follow two-mode terminology (MVP-1, MVP-2)
-- Use status markers: ✅ ⚠️ ❌ ⏸️
-- Distinguish "designed" vs "implemented"
-- Keep professional tone (avoid casual phrases)
-
-**Update this file (AI-ASSIST.md) when:**
-- Build system changes
-- New workflows established
-- Critical issues resolved
-- Test procedures change
-
-### 3. Verify Changes Work
-
-**After kernel changes:**
-```bash
-make -C lisp-kernel/wasm32 && node scripts/wasm/tests/kernel-request-smoke.mjs
-```
-
-**After build system changes:**
-```bash
-# Clean rebuild
-rm -rf build/wasm32
-scripts/wasm/rebuild-everything.sh
-# Verify artifacts in correct locations
-ls -lh build/wasm32/kernel/wasmcl.wasm
-ls -lh build/wasm32/subprims-map.json
-```
-
-**After documentation changes:**
-```bash
-# Check for broken links
-grep -r "](.*\.md)" doc/wasm/*.md
-# Verify status markers are current
-grep -r "✅\|❌\|⚠️\|⏸️" doc/wasm/*.md
-```
-
----
-
-## File Reference Patterns
-
-### When Updating Paths
-
-If moving artifacts between directories, update ALL references:
-
-1. **Build scripts:** `scripts/wasm/*.sh`, `*.py`, `*.mjs`
-2. **Test files:** `scripts/wasm/tests/*.mjs`
-3. **Documentation:** `doc/wasm/*.md`
-4. **Source comments:** `lisp-kernel/*.c`, `xdump/*.lisp`
-5. **Makefiles:** `lisp-kernel/wasm32/Makefile`, `config.mk`
-
-**Search commands:**
-```bash
-# Find all references to a file
-grep -r "wasmcl.wasm" --include="*.sh" --include="*.py" --include="*.mjs" .
-
-# Find all references to a directory
-grep -r "doc/wasm/js" --include="*.md" --include="*.sh" .
-```
-
-### Current Path Conventions
-
-| Artifact | Path | Relative from scripts/wasm/tests/ |
-|----------|------|---------------------------|
-| Kernel | `build/wasm32/kernel/wasmcl.wasm` | `../../../build/wasm32/kernel/wasmcl.wasm` |
-| Subprims | `build/wasm32/subprims/subprims.wasm` | `../../../build/wasm32/subprims/subprims.wasm` |
-| Subprims map | `build/wasm32/subprims-map.json` | `../../../build/wasm32/subprims-map.json` |
-| Images | `build/wasm32/images/*.image` | `../../../build/wasm32/images/*.image` |
-| Modules | `build/wasm32/modules/*.json` | `../../../build/wasm32/modules/*.json` |
 
 ---
 
 ## Critical Context
 
-### FASL Loading Regression (CRITICAL)
+### Compiled Module Installation (CRITICAL BLOCKER)
 
-**Problem:** `level-1.lafsl` returns error code -7
-**Impact:** Blocks MVP-1 bootstrap
-**Status:** Highest priority bug
-**Location:** See [README.md](README.md) critical issues
+**Problem:** 7555 of 7557 compiled modules are skipped during installation
+**Impact:** Function table entries not populated, FASL loading traps
+**Status:** Uninvestigated — next critical-path task
+**Location:** See [TODO.md](../../TODO.md) blocker B2
 
-**What this means:**
-- Full bootstrap broken
-- Can't create working images
-- Tests may fail due to missing/incomplete images
-- Focus should be on diagnosing this before adding features
+### What Was Removed (2026-02-15)
+
+**Startup binding map** — A 2,500+ line WASM-only workaround that does NOT exist on any native CCL platform (x86, ARM, PPC). It was compensating for a missing RESTORE-LISP-POINTERS call. Removed entirely:
+- 6 source files deleted
+- Build pipeline cleaned (compile-wasm-fasls.sh, rebuild-everything.sh, make-real-image.lisp, pack-inline-bundle-v2.mjs)
+- make-real-image.mjs stripped from ~4800 to ~2300 lines
+
+**Instrumentation** — ~2400 lines of C kernel debug code (wasm_emit_*, wasm_debug_*, startup truth, UI demo payloads) and ~2100 lines of JS/Lisp/shell references.
+
+**Startup truth** — An end-to-end diagnostic feature (shell → JS → C → Lisp) fully retired.
+
+### RESTORE-LISP-POINTERS (FIXED)
+
+**What:** Every native CCL platform calls RESTORE-LISP-POINTERS after loading an image to rehash package hash tables. WASM was missing this call.
+
+**Fix:** Added `wasm_restore_lisp_pointers()` kernel export. Called from make-real-image.mjs:
+- **Early call** (after image load): Returns -3 for boot images (expected — function not yet defined)
+- **Post-fasload call** (after FASLs loaded): Succeeds (rc=0)
 
 ### Character Encoding
 
 **Design:** UTF-32 (CL internal) ↔ UTF-8 (wire) ↔ UTF-16 (JS internal)
 **NOT ASCII-only:** Full Unicode support from day one
-**NOT ASCII-first:** Superseded encoding strategy
-
-When discussing or documenting encoding, use correct terminology.
 
 ### Two-Mode Strategy
 
-**DON'T SAY:** "replacement lane", "legacy lane", "ASCII-first"
+**DON'T SAY:** "replacement lane", "legacy lane", "ASCII-first", "ASCII-only"
 **DO SAY:** "MVP-1 / Library Mode", "MVP-2 / Full Runtime Mode", "UTF-8 wire format"
 
-**MVP-1 vs MVP-2:**
-- MVP-1: Single runner, works anywhere, current focus
-- MVP-2: Multi-runner, SharedArrayBuffer, deferred until MVP-1 ships
-- web-ui and web-ide are MVP-2 features - **ignore** for now
-
 ---
 
-## Troubleshooting
+## Session Start Protocol
 
-### Build Fails
-
-**Check toolchain:**
-```bash
-source scripts/wasm/env.sh
-# Should print: CCL WASM Environment Configured
-```
-
-**Missing dependencies (macOS):**
-```bash
-brew install llvm lld wasi-libc
-```
-
-**Artifacts in wrong location:**
-```bash
-export CCL_WASM_BUILD_DIR=/Users/buildsomething/Source/ccl/build/wasm32
-source scripts/wasm/env.sh
-scripts/wasm/rebuild-everything.sh
-```
-
-### Tests Fail
-
-**Missing artifacts:**
-```bash
-# Full rebuild required
-scripts/wasm/rebuild-everything.sh
-```
-
-**Wrong working directory:**
-```bash
-# Always run from repo root
-cd /Users/buildsomething/Source/ccl
-node scripts/wasm/tests/compiler-smoke.mjs
-```
-
-**Expected failures:**
-- FASL loading broken - many tests will fail
-- Bootstrap incomplete - image-based tests fail
-- This is **known** - don't spend time fixing tests until FASL loading works
-
-### Dev Server Won't Start
-
-**mkcert not installed:**
-```bash
-brew install mkcert
-mkcert -install
-```
-
-**Port in use:**
-```bash
-scripts/wasm/dev-server.sh --port 3000
-```
-
-**Certificate errors:**
-```bash
-rm localhost-*.pem
-scripts/wasm/dev-server.sh  # Regenerates cert
-```
-
----
-
-## Documentation Standards
-
-### Status Markers
-
-Use consistently across all docs:
-
-- ✅ **Working** - Actually implemented and tested
-- ⚠️ **Partial** - Partially implemented, unstable
-- ❌ **Not working** - Broken or not implemented
-- ⏸️ **Deferred** - Designed but deferred to MVP-2
-
-### Honesty Policy
-
-**ALWAYS distinguish:**
-- "Designed" vs "Implemented"
-- "Documented" vs "Working"
-- "Planned" vs "Available"
-
-**Example:**
-- ✅ Good: "Image loading is designed but FASL loading is broken (error -7)"
-- ❌ Bad: "Image loading works" (misleading)
-
-### Tone
-
-- Professional, technical
-- No informal phrases: "core bet", "the hard question", casual asides
-- No emoji in code/comments (only in status markers)
-- Clear, concise, actionable
+1. Read `TODO.md` to understand current task status
+2. Identify the highest-priority unblocked task
+3. Ask user which task to work on (suggest the critical path task)
+4. Use TodoWrite for micro-tracking within the session
+5. Update TODO.md when tasks complete or new blockers discovered
 
 ---
 
@@ -448,11 +204,8 @@ scripts/wasm/rebuild-everything.sh
 # Kernel only
 make -C lisp-kernel/wasm32
 
-# Run test
-node scripts/wasm/tests/kernel-request-smoke.mjs
-
-# Start dev server
-scripts/wasm/dev-server.sh
+# Run tests
+node scripts/wasm/tests/all-smoke.mjs
 
 # Clean
 rm -rf build/wasm32
@@ -461,70 +214,33 @@ make -C lisp-kernel/wasm32 clean
 
 ### Key Files
 
-- `doc/wasm/README.md` - Start here
+- `TODO.md` - Task tracking and blockers
+- `doc/wasm/README.md` - Status and navigation
 - `doc/wasm/roadmap.md` - Strategy
 - `doc/wasm/build.md` - Build system
-- `lisp-kernel/wasm32/Makefile` - Kernel build
-- `scripts/wasm/env.sh` - Environment setup
+- `scripts/wasm/lib/make-real-image.mjs` - Root image builder
 - `scripts/wasm/rebuild-everything.sh` - Build orchestrator
 
-### Key Directories
+---
 
-- `build/wasm32/` - All build outputs (gitignored)
-- `doc/wasm/` - Documentation + tests (no artifacts)
-- `lisp-kernel/wasm32/` - C kernel source
-- `scripts/wasm/` - Build scripts
+## Documentation Standards
+
+See [STYLE-GUIDE.md](STYLE-GUIDE.md) for full standards.
+
+- ✅ **Working** - Actually implemented and tested
+- ⚠️ **Partial** - Partially implemented, unstable
+- ❌ **Not working** - Broken or not implemented
+- ⏸️ **Deferred** - Designed but deferred to MVP-2
+
+**Honesty:** Always distinguish "designed" vs "implemented" and "documented" vs "working."
 
 ---
 
-## For AI Assistants
+## Related Documentation
 
-### When Starting a Session
-
-1. Read this file (AI-ASSIST.md) for current status
-2. Check [README.md](README.md) for what actually works
-3. Note the FASL loading regression (critical blocker)
-4. Understand two-mode strategy (MVP-1 focus)
-
-### When Making Changes
-
-1. **Build system:** Test with full rebuild
-2. **Paths:** Update ALL references (scripts, tests, docs, comments)
-3. **Documentation:** Keep status markers current
-4. **Tests:** Verify tests can find artifacts in build/
-
-### When Stuck
-
-1. Check if FASL loading regression is the root cause
-2. Verify artifacts exist: `ls -lh build/wasm32/`
-3. Run from repo root: `cd /Users/buildsomething/Source/ccl`
-4. Full rebuild: `scripts/wasm/rebuild-everything.sh`
-
-### What NOT to Do
-
-- ❌ Put build artifacts in `doc/`
-- ❌ Use "replacement lane" terminology
-- ❌ Mention web-ui/web-ide (MVP-2, deferred)
-- ❌ Claim things work when they're only designed
-- ❌ Add casual tone to documentation
-
----
-
-## Changelog
-
-**2026-02-15:**
-- Initial AI-ASSIST.md creation
-- Documented build system reorganization (build/ directory)
-- Added test apparatus setup (Node.js + browser)
-- Documented two-mode strategy and current blockers
-- Added comprehensive troubleshooting and workflows
-
----
-
-## See Also
-
-- [README.md](README.md) - Current status and navigation
-- [roadmap.md](roadmap.md) - Development strategy
-- [build.md](build.md) - Complete build documentation
-- [project-overview.md](project-overview.md) - Architecture overview
-- [porting-status.md](porting-status.md) - Feature implementation status
+- [README.md](README.md) – Current status and navigation
+- [roadmap.md](roadmap.md) – Development strategy
+- [build.md](build.md) – Build documentation
+- [project-overview.md](project-overview.md) – Architecture overview
+- [porting-status.md](porting-status.md) – Feature implementation status
+- [STYLE-GUIDE.md](STYLE-GUIDE.md) – Documentation standards

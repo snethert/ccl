@@ -64,7 +64,8 @@
   - ✅ Symbol objects physically exist in memory with correct structure
   - ✅ **`RESTORE-LISP-POINTERS` called** after image load (fixed 2026-02-15)
   - ✅ **Package hash tables rebuilt** - stale pointer issue resolved
-  - ⚠️ Full FASL loading pending end-to-end validation (blocked by build artifacts)
+  - ❌ **Compiled module installation:** 7555/7557 modules skipped (B2 blocker)
+  - ❌ Full FASL loading blocked by compiled module installation (B2)
 
   `scripts/wasm/lib/load-image.mjs` supports loader modes (`boot-only|start-lisp|run-toplevel`),
   manifest validation, and bootstrap contract checking. See `doc/wasm/image-loader-spec.md`
@@ -212,9 +213,17 @@
 
 ## Major Gaps / Next Blockers
 
-- Fix `minimal.image` bootstrap failures (strict pre-start bootstrap contract).
-- Stabilize `root.image` symbol/function dispatch during persistence.
-- End-to-end FASL loading validation (blocked by missing build artifacts:
-  `wasm-smoke-modules.json`, `subprims.wasm`).
-- Capability negotiation protocol beyond `CAPS` bitfield.
-- MVP-2: Multi-runner worker/SharedArrayBuffer startup and transport contracts.
+- ❌ **Compiled module installation (B2):** 7555/7557 modules skipped during root image build. This is the single gate blocking FASL loading and MVP-1 end-to-end.
+- ❌ **End-to-end FASL loading:** Blocked by B2. Function table entries not populated, causing "table index is out of bounds" traps.
+- ❌ Fix `minimal.image` bootstrap failures (strict pre-start bootstrap contract).
+- ❌ Stabilize `root.image` symbol/function dispatch during persistence.
+- ⏸️ Capability negotiation protocol beyond `CAPS` bitfield.
+- ⏸️ MVP-2: Multi-runner worker/SharedArrayBuffer startup and transport contracts.
+
+### Resolved Blockers
+
+- ✅ **B1: Missing build artifacts** — subprims.wasm, wasm-runtime-modules.json, stale paths all fixed (2026-02-15)
+- ✅ **RESTORE-LISP-POINTERS** — Called after image load, package hash tables rebuilt (2026-02-15)
+- ✅ **Instrumentation cruft** — ~2400 lines C + ~2100 lines JS/Lisp/shell removed (2026-02-15)
+- ✅ **Startup binding map** — Removed ~2500 lines, was unnecessary WASM-only workaround (2026-02-15)
+- ✅ **Startup truth feature** — Fully retired across C/JS/Lisp/shell (2026-02-15)

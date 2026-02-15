@@ -1,5 +1,10 @@
 # WASM Persistence Dev Environment
 
+**Status:** Active
+**Scope:** Persistence execution model and development workflow
+**Last Updated:** 2026-02-15
+**Doc Version:** 1.0.0
+
 This runbook defines the persistence execution model used during MVP completion.
 
 ## Decision (authoritative)
@@ -13,8 +18,6 @@ Operational model:
 - Execute all persistence operations in memory.
 - Rewrite the snapshot file on exit only when state is dirty.
 - Keep LMDB/IndexedDB as explicit integration lanes.
-
-This is tracked as RZ0.6 in `web-ide/phase-8/implementation-plan.md`.
 
 ## Why this model
 

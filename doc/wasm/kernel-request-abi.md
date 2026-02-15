@@ -1,6 +1,9 @@
 # Kernel Request ABI (WASM Imports)
 
-**Status:** Draft (replacement-track shared-memory-first hot paths)
+**Status:** Draft
+**Scope:** Guest-host ABI for WASM runner requests to the JavaScript microkernel
+**Last Updated:** 2026-02-15
+**Doc Version:** 1.0.0
 
 ## Scope
 
@@ -11,7 +14,7 @@ It specifies:
 
 - the required WASM imports and their semantics,
 - request lifecycle and error conventions,
-- replacement-track shared-memory transport requirements for hot-path classes,
+- Full Runtime Mode (MVP-2) shared-memory transport requirements for hot-path classes,
 - compatibility copy-response behavior for bootstrap/control/diagnostics lanes,
 - an initial opcode registry and payload/response layouts.
 
@@ -51,16 +54,15 @@ All functions below are imported from the WASM module namespace `ccl`.
 - `0`: do not block (equivalent to `kernel_poll`)
 - `>0`: wait up to `deadlineMs` milliseconds
 
-### Replacement-track transport contract (normative)
+### Full Runtime Mode transport contract (normative)
 
-For replacement-track runtime lanes:
+For Full Runtime Mode runtime lanes:
 
 - Hot-path runtime/kernel/storage/UI classes MUST use shared-memory channel
   transport contracts (`shared_ring_v1`) defined by
   `doc/wasm/tickets/RPL-03-shared-memory-ipc-core.md`.
 - Copy/message request/response paths are compatibility-only and MUST be
-  limited to bootstrap, control, diagnostics, and explicitly labeled legacy
-  lanes.
+  limited to bootstrap, control, and diagnostics.
 - Routing a required hot-path class through copy/message transport is a
   contract violation and MUST fail startup-gate validation (`SRG-08`).
 
@@ -83,7 +85,7 @@ errors in the WASM backend.
 
 ## Interrupt ABI (host-side flags)
 
-Interrupt delivery is **cooperative** in the secure replacement runtime model.
+Interrupt delivery is **cooperative** in the secure Full Runtime Mode model.
 There is no
 `kernel_request` opcode for interrupts in the MVP. Instead:
 
@@ -149,7 +151,7 @@ implementations SHOULD use the values from the toolchain's `errno.h`
 ## Response payload (copy path for compatibility lanes)
 
 The microkernel may associate an optional response byte buffer with each
-request. For replacement-track lanes, this copy path is compatibility-only for
+request. For Full Runtime Mode lanes, this copy path is compatibility-only for
 bootstrap/control/diagnostics operations; hot-path classes MUST use shared
 channel transport. The guest obtains copy-path responses by:
 
@@ -168,14 +170,14 @@ Requirements:
 
 ### Shared-channel and direct-write response evolution (TODO)
 
-Replacement-track hot paths are shared-channel-first and do not rely on
+Full Runtime Mode hot-path transport is shared-channel-first and does not rely on
 `kernel_copy_response` as their normative response mechanism.
 
 TODO(zero-copy): Provide optional ABI extensions that avoid this copy by writing
 responses directly into guest linear memory (caller-provided output buffers or a
 shared arena/ring buffer). Any zero-copy form MUST define explicit lifetime and
 invalidation rules. Copy-path behavior remains required only for compatibility
-lanes (bootstrap/control/diagnostics and explicit legacy paths).
+lanes (bootstrap/control/diagnostics).
 
 **Implementation note:** JS and C implementations SHOULD include explicit
 `TODO(zero-copy)` comments near the copy boundary to keep this planned

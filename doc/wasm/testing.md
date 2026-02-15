@@ -1,5 +1,10 @@
 # WASM Testing
 
+**Status:** Active
+**Scope:** WASM-specific test commands and testing workflow
+**Last Updated:** 2026-02-15
+**Doc Version:** 1.0.0
+
 Project-wide test mode split is in `doc/testing.md`. This file keeps the
 WASM-specific commands in one place.
 

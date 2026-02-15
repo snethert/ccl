@@ -1,5 +1,10 @@
 # Linux (Debian/Ubuntu) WASM Toolchain Setup
 
+**Status:** Active
+**Scope:** Linux-specific WASM toolchain installation and verification
+**Last Updated:** 2026-02-15
+**Doc Version:** 1.0.0
+
 This mirrors the Linux bring-up toolchain for the current **no-WASI runtime**
 CCL WASM32 kernel build.
 

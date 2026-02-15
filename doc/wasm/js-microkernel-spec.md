@@ -1,17 +1,20 @@
-## JS microkernel specification
+# JS Microkernel Specification
 
-**Status:** Draft (replacement-track secure-only posture)
+**Status:** Draft
+**Scope:** Responsibilities, interfaces, and behavioral guarantees of the JavaScript microkernel
+**Last Updated:** 2026-02-15
+**Doc Version:** 1.0.0
 
 ## Scope
 
-This specification defines the responsibilities, interfaces, and behavioral guarantees of the JavaScript microkernel that hosts WASM worlds and runners. It covers world/runner lifecycle management, module loading/linking, I/O mediation, and coordination primitives. It does not define the Lisp runtime’s internal semantics or the compiler backend.
+This specification defines the responsibilities, interfaces, and behavioral guarantees of the JavaScript microkernel that hosts WASM worlds and runners. It covers world/runner lifecycle management, module loading/linking, I/O mediation, and coordination primitives. It does not define the Lisp runtime's internal semantics or the compiler backend.
 
 ## Goals
 
 * Provide a minimal, explicit host API for WASM runners that avoids implicit OS assumptions.
 * Support fast spawning via clone-from-image semantics.
 * Mediate all external capabilities (I/O, timers, UI, storage) through explicit requests.
-* Enforce a secure-only replacement startup profile with explicit hard-fail on missing required capabilities.
+* Enforce a secure-only Full Runtime Mode startup profile with explicit hard-fail on missing required capabilities.
 * Support shared-memory worker topology for runtime, kernel I/O, storage, and UI bridge hot paths.
 
 ## Non-goals
@@ -23,7 +26,7 @@ This specification defines the responsibilities, interfaces, and behavioral guar
 ## Definitions
 
 * **World:** A logical Lisp runtime environment (heap + global runtime state). A world may be hosted by a single runner or by multiple runners, depending on the embedding and capabilities.
-* **Runner:** A WASM instance (hosted in a Worker for replacement lanes) that executes Lisp code with required shared-memory/Atomics capability and deterministic role ownership.
+* **Runner:** A WASM instance (hosted in a Worker for Full Runtime Mode) that executes Lisp code with required shared-memory/Atomics capability and deterministic role ownership.
 * **Kernel:** The JS microkernel process managing worlds/runners and host capabilities (I/O, timers, module loading, etc.).
 * **Image:** A serialized or preinitialized runtime snapshot used to spawn worlds cheaply.
 * **Request:** A structured message from a runner to the kernel for external services.
@@ -90,17 +93,17 @@ The payload format and opcode registry are defined in `doc/wasm/kernel-request-a
 
 ### Shared-channel and direct-write response evolution (TODO)
 
-Replacement-track hot-path transport is shared-channel-first. Copy-response handling is compatibility-only for bootstrap/control/diagnostics lanes.
+Full Runtime Mode hot-path transport is shared-channel-first. Copy-response handling is compatibility-only for bootstrap/control/diagnostics lanes.
 
 TODO(zero-copy): Provide optional ABI extensions that avoid copy-path responses by writing directly into guest linear memory (caller-provided output buffers or a shared arena/ring buffer). Any direct-write form MUST define explicit lifetime and invalidation rules; compatibility copy-path behavior remains limited to non-hot lanes.
 
-### Replacement-track startup contract (normative)
+### Full Runtime Mode startup contract (normative)
 
-For replacement-track runtime lanes:
+For Full Runtime Mode lanes:
 
 * Startup MUST satisfy the secure runtime gate contract (`SRG-01`..`SRG-12`).
 * Required capabilities (cross-origin isolation, `SharedArrayBuffer`, Atomics/worker wait, worker topology, shared-memory transport policy) are mandatory, not optional.
-* Any required capability failure MUST terminate startup with explicit diagnostics and MUST NOT silently degrade to a portable fallback lane.
+* Any required capability failure MUST terminate startup with explicit diagnostics and MUST NOT silently degrade.
 * Hot-path runtime/kernel/storage/UI traffic MUST use shared-memory channel mappings defined by `IPCP-*` contracts.
 
 ## Functional requirements
@@ -109,9 +112,9 @@ For replacement-track runtime lanes:
 * The kernel MUST support spawn-from-image cloning semantics for worlds.
 * The kernel MUST deliver responses to runner requests in a deterministic format.
 * The kernel MUST provide a capability boundary: all external I/O MUST be mediated by the kernel.
-* The kernel MUST enforce replacement-track worker topology and role ownership for startup.
-* The kernel MUST require shared-memory/Atomics capability for replacement-track runtime execution.
-* If required replacement capabilities are unavailable, startup MUST hard-fail with explicit diagnostics; no degraded fallback runtime is launched.
+* The kernel MUST enforce Full Runtime Mode worker topology and role ownership for startup.
+* The kernel MUST require shared-memory/Atomics capability for Full Runtime Mode execution.
+* If required capabilities are unavailable, startup MUST hard-fail with explicit diagnostics; no degraded runtime is launched.
 
 ## Operational requirements
 
@@ -123,7 +126,7 @@ For replacement-track runtime lanes:
 
 * If a runner crashes or terminates unexpectedly, the kernel MUST surface a termination event and release associated resources.
 * If a request cannot be fulfilled, the kernel MUST return a structured error response to the runner.
-* If a required replacement capability is unavailable, the kernel MUST emit explicit failure diagnostics and abort startup rather than silently degrade.
+* If a required capability is unavailable, the kernel MUST emit explicit failure diagnostics and abort startup rather than silently degrade.
 
 ## Security and capability constraints
 
@@ -133,14 +136,14 @@ For replacement-track runtime lanes:
 
 ## Concurrency model
 
-Replacement-track execution uses a secure-only worker model:
+Full Runtime Mode (MVP-2) uses a secure-only worker model:
 
 * Runtime lanes execute in workers with required `SharedArrayBuffer` and Atomics capabilities.
 * Hot-path transport is shared-memory-first; copy/message lanes are control/diagnostics compatibility paths only.
 * `kernel_wait` may be used when supported, but startup capability checks remain strict and no-fallback.
 * If required capabilities are missing, startup fails explicitly and deterministically.
 
-Legacy single-runner portable bring-up behavior may exist in historical lanes, but it is not the normative replacement-track contract.
+Library Mode (MVP-1) provides single-runner execution without requiring shared memory or secure context.
 
 ## Image and module management
 

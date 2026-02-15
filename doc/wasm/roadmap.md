@@ -1,7 +1,9 @@
 # CCL→WASM Roadmap (Two-Mode, Two-Phase Strategy)
 
-**Last updated:** 2026-02-15
-**Status:** Early Development / Experimental
+**Status:** Active
+**Scope:** Development roadmap, phased delivery strategy, and current priorities
+**Last Updated:** 2026-02-15
+**Doc Version:** 1.0.0
 
 **See also:** [README.md](README.md) for current status, [porting-status.md](porting-status.md) for detailed features
 
@@ -20,30 +22,36 @@ This port targets **two distinct deployment modes**:
 
 ---
 
-## 🚨 Critical Issues
+## Current Status
 
-### Regression: FASL Loading Broken
+### What's Been Fixed
 
-**Status:** ❌ **BLOCKING**
+- ✅ **RESTORE-LISP-POINTERS** called after image load (package hash tables rebuilt)
+- ✅ **Build pipeline** end-to-end functional (kernel → boot image → modules → root image attempt)
+- ✅ **Instrumentation cruft** removed (~2400 lines C, ~2100 lines JS/Lisp/shell)
+- ✅ **Startup truth feature** fully retired
+- ✅ **Startup binding map** removed (~2500 lines, was unnecessary workaround)
+- ✅ **Boot image auto-build** when missing during root image build
+- ✅ **Build artifacts** resolved (subprims.wasm, runtime modules, stale paths fixed)
 
-The system **used to load fasls without trouble**. Now:
-- `level-1.lafsl` returns -7 (load failure)
-- `minimal.image` fails strict bootstrap
-- `root.image` has bootstrap symbol resolution failures
+### Current Blocker
 
-**This is a regression that must be fixed before new features.**
+**B2: Compiled module installation skips 99.97% of modules** (7555/7557)
 
-### Code Cleanup Needed
+- Root image build reaches FASL loading but fails
+- Module installer rejects almost all modules — only 2 install
+- FASL loading traps with "table index is out of bounds"
+- Uninvestigated — next critical-path task
 
-**Status:** ⚠️ Technical debt
+See [TODO.md](../../TODO.md) for full details.
 
-There is **code from previous attempts littered throughout** the codebase that needs removal:
-- Obsolete approaches to image loading
-- Superseded bootstrap mechanisms
-- Unused diagnostic scaffolding
-- Conflicting terminology ("replacement lane" vs actual use cases)
+### Code Cleanup Completed
 
-**Impact:** Makes debugging harder, obscures working code paths.
+- ✅ Removed ~2400 lines of kernel instrumentation (wasm_emit_*, wasm_debug_*, startup truth)
+- ✅ Removed ~2100 lines of JS/Lisp/shell dead code referencing deleted exports
+- ✅ Removed ~2500 lines of startup binding map infrastructure (6 files deleted)
+- ✅ Retired startup truth feature (env var path shell → JS → C → Lisp eliminated)
+- ⚠️ Remaining: obsolete image loading mechanisms, "replacement lane" terminology in some docs
 
 ---
 
@@ -75,12 +83,12 @@ There is **code from previous attempts littered throughout** the codebase that n
 **Use case:** Complete development environment (web-ui/ide vision)
 
 **Characteristics:**
-- ⚠️ Multi-runner with Web Workers
-- ⚠️ SharedArrayBuffer + Atomics for coordination
-- ⚠️ Requires secure context (COOP + COEP headers)
-- ⚠️ Full storage backend (IndexedDB)
-- ⚠️ Complete IDE capabilities
-- ⚠️ Larger footprint, richer features
+- ⏸️ Multi-runner with Web Workers
+- ⏸️ SharedArrayBuffer + Atomics for coordination
+- ⏸️ Requires secure context (COOP + COEP headers)
+- ⏸️ Full storage backend (IndexedDB)
+- ⏸️ Complete IDE capabilities
+- ⏸️ Larger footprint, richer features
 
 **Target users:** Developers using CCL as their primary environment
 
@@ -103,11 +111,13 @@ Cross-Origin-Embedder-Policy: require-corp
 **Prerequisites:**
 1. ✅ WASM kernel builds
 2. ✅ Basic compiler works (constants, fixnums, control flow)
-3. ❌ **FASL loading works** (currently broken - regression)
-4. ❌ **Image bootstrap stable** (currently broken)
-5. ❌ Symbol/function dispatch reliable (currently unstable)
-6. ⚠️ Single-runner REPL functional
-7. ⚠️ postMessage API defined and tested
+3. ✅ Image loading works (RESTORE-LISP-POINTERS fixed)
+4. ✅ Build pipeline end-to-end functional
+5. ❌ **Compiled module installation** (B2 — 7555/7557 skipped)
+6. ❌ **FASL loading works end-to-end** (blocked by B2)
+7. ❌ Symbol/function dispatch reliable
+8. ❌ Single-runner REPL functional
+9. ⏸️ postMessage API defined and tested
 
 **Success criteria:**
 - Can load and run Lisp code dynamically
@@ -116,7 +126,7 @@ Cross-Origin-Embedder-Policy: require-corp
 - Documented limitations clear
 - Real users can evaluate it
 
-**Timeline:** Fix regressions first, then stabilize, then ship
+**Timeline:** Fix B2, then stabilize, then ship
 
 ### MVP-2: Full Runtime Mode (Future)
 
@@ -148,16 +158,12 @@ Cross-Origin-Embedder-Policy: require-corp
 
 **Goal:** Kernel compiles and links as freestanding WASM
 
-**Status:** Complete
-
 **Delivered:**
-- `lisp-kernel/wasm32/` builds to `wasmcl.wasm` (~1MB)
+- `lisp-kernel/wasm32/` builds to `build/wasm32/kernel/wasmcl.wasm` (~1MB)
 - KERNEL_IMPORTS table defined
 - `kernel_request` ABI wrappers
 - Manual cstack management
 - Step/yield entrypoints
-
-**Reality check:** This works and is stable.
 
 ---
 
@@ -165,23 +171,17 @@ Cross-Origin-Embedder-Policy: require-corp
 
 **Goal:** Minimal JS host that can drive the kernel
 
-**Status:** Complete
-
 **Delivered:**
 - `kernel_request` implementation (CAPS, LOG, STREAM, TIME_NOW)
 - Named byte sources for NAMED_RO streams
 - Runner scaffolding (single runner only)
 - Basic I/O (stdin/stdout/stderr)
 
-**Reality check:** stdio works, basic kernel interaction works.
-
 ---
 
 ### ⚠️ Phase 3: Compiler Backend (PARTIAL)
 
 **Goal:** Emit WASM code compatible with subprims ABI
-
-**Status:** Minimal implementation only (~8,900 lines)
 
 **What works:**
 - ✅ Constants (nil, t, fixnums, symbols)
@@ -197,39 +197,32 @@ Cross-Origin-Embedder-Policy: require-corp
 - ❌ Hash tables
 - ❌ Structures and classes (CLOS)
 - ❌ Optimization passes
-- ❌ Type checking (documented but not implemented)
-- ❌ Most Common Lisp features
-
-**Blockers:**
-- Need stable runtime before expanding compiler
-- Should validate minimal feature set works first
+- ❌ Type checking
 
 ---
 
-### ❌ Phase 4: Image Loading & Bootstrap (BROKEN - REGRESSION)
+### ⚠️ Phase 4: Image Loading & Bootstrap (PARTIAL)
 
 **Goal:** Load images and boot to toplevel
 
-**Status:** Broken (used to work)
+**What works:**
+- ✅ Image loading into memory (sections map correctly)
+- ✅ RESTORE-LISP-POINTERS called (package hash tables rebuilt)
+- ✅ Boot image build and auto-build
+- ✅ Compiled module compilation (7557 modules)
+- ✅ Build pipeline orchestration
 
-**Current failures:**
-- ❌ `level-1.lafsl` returns -7 (load failure)
-- ❌ `minimal.image` fails strict bootstrap
-- ❌ `root.image` has symbol resolution failures
-- ❌ Core symbol/function dispatch unstable during persistence
-
-**Tracking:**
-- [wasm-ui-persistence-problem-tracker.md](wasm-ui-persistence-problem-tracker.md)
-- Various logs in `doc/wasm/repro/`
-
-**This is the #1 blocker for MVP-1.**
+**Current blocker:**
+- ❌ Compiled module installation (B2): 7555/7557 modules skipped
+- ❌ FASL loading (blocked by B2): function table entries not populated
+- ❌ Root image bootstrap (blocked by B2)
 
 **Required actions:**
-1. Identify what changed to break fasl loading
-2. Fix the regression
-3. Stabilize bootstrap symbol resolution
-4. Clean up obsolete code from previous attempts
-5. Add regression tests to prevent future breakage
+1. Investigate why module installer rejects 99.97% of modules
+2. Fix module installation
+3. Validate FASL loading end-to-end
+4. Stabilize bootstrap symbol resolution
+5. Add regression tests
 
 ---
 
@@ -250,11 +243,6 @@ Cross-Origin-Embedder-Policy: require-corp
 - Single-runner mode is field-tested
 - Clear user demand for threading model
 
-**When implemented:**
-- Requires secure context (COOP + COEP)
-- No fallback to single-runner (fail explicitly)
-- Targets Full Runtime Mode only
-
 ---
 
 ### ⏸️ Phase 6: Storage Backend (DEFERRED to MVP-2)
@@ -263,16 +251,10 @@ Cross-Origin-Embedder-Policy: require-corp
 
 **Status:** Not started
 
-**Design exists in:**
-- [persistence-service-spec.md](persistence-service-spec.md)
-- Current memory-snapshot backend is legacy compatibility only
-
 **Requirements:**
 - Secure context (same as multi-runner)
 - Full Runtime Mode only
 - Library Mode has no persistence (by design)
-
-**Not implementing until:** MVP-2
 
 ---
 
@@ -280,47 +262,25 @@ Cross-Origin-Embedder-Policy: require-corp
 
 **Goal:** Full browser-based development environment
 
-**Status:** Reference implementation exists, integration broken
-
-**Current state:**
-- ✅ UI spec exists: [browser-ui-spec.md](browser-ui-spec.md)
-- ✅ Reference JS implementation in `web-ui/`
-- ⚠️ Lisp↔JS bridge partially implemented
-- ❌ Full integration blocked by image loading regression
-
-**Not implementing until:**
-- MVP-1 stable
-- Image loading fixed
-- Bootstrap stable
-- MVP-2 multi-runner architecture in place
+**Status:** Reference implementation exists, integration blocked by runtime stability
 
 ---
 
-## Current Focus (Next 30 Days)
+## Current Focus
 
-### Priority 1: Fix Regressions ❌ BLOCKING
+### Priority 1: Fix Compiled Module Installation ❌ BLOCKING
 
-**Tasks:**
-1. Debug and fix `level-1.lafsl` load failure (returns -7)
-2. Fix minimal.image bootstrap failures
-3. Fix root.image symbol resolution
-4. Stabilize core symbol/function dispatch
-5. Add regression tests
+**Task:** Investigate and fix B2 (7555/7557 modules skipped)
+
+**Success metric:** All or nearly all compiled modules install successfully
+
+### Priority 2: Validate FASL Loading ❌ (blocked by P1)
+
+**Task:** End-to-end FASL loading after module installation fixed
 
 **Success metric:** Can boot to toplevel reliably
 
-### Priority 2: Code Cleanup ⚠️
-
-**Tasks:**
-1. Remove obsolete code from previous attempts
-2. Consolidate bootstrap mechanisms
-3. Clean up diagnostic scaffolding
-4. Update confusing terminology (replace "replacement lane" with "Full Runtime Mode")
-5. Document what's obsolete vs active
-
-**Success metric:** Clear code paths, easier debugging
-
-### Priority 3: Stabilize Single-Runner MVP-1 ⚠️
+### Priority 3: Stabilize Single-Runner MVP-1 ⏸️
 
 **Tasks:**
 1. Validate compiler backend features work end-to-end
@@ -337,31 +297,31 @@ Cross-Origin-Embedder-Policy: require-corp
 
 These are explicitly deferred until MVP-1 is stable:
 
-- ❌ Multi-runner/threading implementation
-- ❌ SharedArrayBuffer coordination
-- ❌ Storage backend (IndexedDB)
-- ❌ Web UI/IDE integration
-- ❌ Quicklisp/ASDF compatibility
-- ❌ FFI/callbacks
-- ❌ Networking
-- ❌ Complex data structures (arrays, hash tables, CLOS)
-- ❌ Optimization passes
+- ⏸️ Multi-runner/threading implementation
+- ⏸️ SharedArrayBuffer coordination
+- ⏸️ Storage backend (IndexedDB)
+- ⏸️ Web UI/IDE integration
+- ⏸️ Quicklisp/ASDF compatibility
+- ⏸️ FFI/callbacks
+- ⏸️ Networking
+- ⏸️ Complex data structures (arrays, hash tables, CLOS)
+- ⏸️ Optimization passes
 
-**Rationale:** These require working foundation. Fix what's broken, ship what works, then expand.
+**Rationale:** Fix what's broken, ship what works, then expand.
 
 ---
 
 ## Success Criteria by Phase
 
 ### MVP-1 Success (Library/Embedded Mode)
-- [ ] FASL loading works (regression fixed)
+- [ ] Compiled module installation works (B2 fixed)
+- [ ] FASL loading works end-to-end
 - [ ] Bootstrap to toplevel reliable
 - [ ] Can define and call Lisp functions
 - [ ] REPL functional in browser
 - [ ] postMessage API documented and tested
 - [ ] Embedding examples working
 - [ ] Known limitations documented
-- [ ] At least 3 external users successfully embed it
 
 ### MVP-2 Success (Full Runtime Mode)
 - [ ] Multi-runner spawning works
@@ -386,7 +346,7 @@ These are explicitly deferred until MVP-1 is stable:
 
 ### Sequential Delivery Strategy
 
-We're building Library Mode first because:
+Library Mode first because:
 1. It's simpler (validates architecture)
 2. It has clear deliverable (embeddable CCL WASM)
 3. It provides user feedback
@@ -400,23 +360,13 @@ Both modes fail explicitly when capabilities are unavailable:
 - Full Runtime Mode refuses to start without secure context
 - No "try threading, fall back to single-runner" behavior
 
-This preserves clarity about what works in which mode.
-
 ---
 
-## Status Legend
-
-- ✅ Complete and working
-- ⚠️ Partial implementation or has known issues
-- ❌ Not working or broken
-- ⏸️ Intentionally deferred
-
----
-
-## Document Cross-References
+## Related Documentation
 
 - **Current status:** [README.md](README.md)
 - **Architecture vision:** [project-overview.md](project-overview.md)
 - **Feature details:** [porting-status.md](porting-status.md)
-- **Active blockers:** [wasm-ui-persistence-problem-tracker.md](wasm-ui-persistence-problem-tracker.md)
+- **Task tracking:** [TODO.md](../../TODO.md)
 - **Build instructions:** [build.md](build.md)
+- **Decisions:** [decisions.md](decisions.md)

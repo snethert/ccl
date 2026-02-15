@@ -1,5 +1,10 @@
 # WASM Subprims ABI (Decisions)
 
+**Status:** Active
+**Scope:** WASM backend subprims ABI decisions and calling conventions
+**Last Updated:** 2026-02-15
+**Doc Version:** 1.0.0
+
 This document captures the current decisions for the WASM backend subprims ABI.
 
 ## Summary

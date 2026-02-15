@@ -1,7 +1,9 @@
 # Architectural Decisions (CCL→WASM)
 
-**Status:** Living document (restarted 2026-02-15)
-**Purpose:** Record major architectural and strategic decisions
+**Status:** Active
+**Scope:** Record of major architectural and strategic decisions (ADRs)
+**Last Updated:** 2026-02-15
+**Doc Version:** 1.0.0
 
 **Previous decisions:** See [archive/decisions-2026-02-15-archived.md](archive/decisions-2026-02-15-archived.md) for historical ADRs
 

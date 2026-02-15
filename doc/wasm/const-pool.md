@@ -1,6 +1,9 @@
 # WASM2 Constant Pool (v1/v2)
 
-**Status:** Draft  
+**Status:** Draft
+**Scope:** Constant pool data format and materialization rules for WASM2-compiled modules
+**Last Updated:** 2026-02-15
+**Doc Version:** 1.0.0
 **Goal:** Enable WASM2-compiled modules to reference non-immediate Lisp objects
 (symbols, strings, vectors, function references, and function vectors in v1)
 by materializing a per-module constant pool at install time.
@@ -17,8 +20,8 @@ shape and required loader behavior.
 ## Where the Constant Pool Lives
 
 Constant pools are attached to compiled module bundle entries emitted by
-`scripts/wasm/compile-*.lisp` (e.g., `doc/wasm/wasm-smoke-modules.json`,
-`doc/wasm/wasm-ui-modules.json`).
+`scripts/wasm/compile-*.lisp` (e.g., `build/wasm32/modules/wasm-smoke-modules.json`,
+`build/wasm32/modules/wasm-ui-modules.json`).
 
 Each module entry MAY include a `constPoolBytes` field containing the binary
 constant-pool encoding (see below). For debugging, a parallel `constPool`

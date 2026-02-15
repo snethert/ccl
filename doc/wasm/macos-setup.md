@@ -1,4 +1,9 @@
-# macOS (iMac Pro) WASM Toolchain Setup
+# macOS WASM Toolchain Setup
+
+**Status:** Active
+**Scope:** macOS-specific WASM toolchain installation and verification
+**Last Updated:** 2026-02-15
+**Doc Version:** 1.0.0
 
 This document mirrors the Linux bring-up toolchain (clang + wasm-ld + WASI headers)
 for the current **no-WASI runtime** CCL WASM32 kernel build.
