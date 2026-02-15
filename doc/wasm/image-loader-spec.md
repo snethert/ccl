@@ -100,16 +100,15 @@ ccl --no-init --batch -l scripts/wasm/build-wasm-boot.lisp [-- --force]
 This calls `cross-xload-level-0 :wasm32` which:
 1. Loads WASM backend compiler
 2. Cross-compiles all level-0 Lisp runtime FASLs
-3. Writes boot image to `ccl:ccl;wasm-boot.image`
+3. Writes boot image to `build/wasm32/wasm-boot.image`
 
 ### Output Location
 
-**Current:** `wasm-boot.image` at repository root
-**Future:** Should relocate to `build/wasm32/` for proper build hygiene
+**Location:** `build/wasm32/wasm-boot.image`
 
 Output path is specified in [`xdump/xwasmfasload.lisp:72`](../../xdump/xwasmfasload.lisp#L72):
 ```lisp
-:default-image-name "ccl:ccl;wasm-boot.image"
+:default-image-name "ccl:build;wasm32;wasm-boot.image"
 ```
 
 ### Image Contents
@@ -127,7 +126,7 @@ The boot image contains:
 Verify image loads without entering toplevel:
 
 ```bash
-node scripts/wasm/lib/load-image.mjs --mode boot-only wasm-boot.image
+node scripts/wasm/lib/load-image.mjs --mode boot-only build/wasm32/wasm-boot.image
 ```
 
 Expected: Returns 0, no errors.
@@ -137,7 +136,7 @@ Expected: Returns 0, no errors.
 Attempt to enter toplevel after loading:
 
 ```bash
-node scripts/wasm/lib/load-image.mjs --mode start-lisp wasm-boot.image
+node scripts/wasm/lib/load-image.mjs --mode start-lisp build/wasm32/wasm-boot.image
 ```
 
 **Current result:** May succeed for minimal images, fails when attempting FASL load (error -7).
@@ -150,7 +149,7 @@ Test loading level-1 FASL bundle:
 node scripts/wasm/lib/load-image.mjs \
   --mode start-lisp \
   --modules path/to/compiled-modules-v2.json \
-  wasm-boot.image
+  build/wasm32/wasm-boot.image
 ```
 
 **Current result:** Fails with -7 when trying to intern `CCL::%FASLOAD`.

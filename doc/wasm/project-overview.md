@@ -225,7 +225,7 @@ Script path: `scripts/wasm/rebuild-everything.sh`
 This runs the full dependency-ordered rebuild:
 
 1. `lisp-kernel/wasm32` (`build/wasm32/kernel/wasmcl.wasm`) - ✅ builds successfully
-2. `wasm-boot.image` - ⚠️ builds but has stability issues
+2. `build/wasm32/wasm-boot.image` - ⚠️ builds but has stability issues
 3. runtime fasls/modules (`build/wasm32/modules/wasm-runtime-modules.json` and `.idx`) - ⚠️ partial
 4. versioned startup artifacts:
    `build/wasm32/modules/bootstrap-l0-contract.v1.json` and

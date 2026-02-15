@@ -69,8 +69,8 @@
    :macro-apply-code-function 'wasm-fixup-macro-apply-code
    :closure-trampoline-code *wasm-closure-trampoline-code*
    :udf-code *wasm-udf-code*
-   :default-image-name "ccl:ccl;wasm-boot.image"
-   :default-startup-file-name "level-1.lafsl"
+   :default-image-name "ccl:build;wasm32;wasm-boot.image"
+   :default-startup-file-name "ccl:build;wasm32;level-1.lafsl"
    :subdirs '("ccl:level-0;WASM;")
    :compiler-target-name :wasm32
    :image-base-address #x10000000
