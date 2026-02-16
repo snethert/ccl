@@ -69,6 +69,22 @@ Design it as:
 - Stack frames are navigable: click to view locals, click to jump to source, click to inspect any local value.
 - "Time travel" basics: keep the last N evaluations, their results, and their warnings, so users can backtrack mentally.
 
+### 5.1 Stepper and Breakpoint Contract
+Stepping is part of the debugger experience, not a separate product surface.
+
+The stepper should combine the strongest patterns from LispWorks, Genera/Open Genera, and Franz/Allegro:
+- Expression-level breakpoints in source views, including explicit entry/exit semantics.
+- Closing-paren placement maps to "break on return" and surfaces return values prominently.
+- A dual-lane stepping model:
+  - Source lane for form-level `into`/`over`/`out`.
+  - Low-level lane for runtime-level stepping with explicit handoff.
+- A slide-point model for ambiguous stopping points, so users can move to the nearest valid source-correlated stop without losing context.
+- Restart-frame stepping from debugger frames, preserving restart-first recovery.
+- In-step REPL access with lexical context, auditable actions, and clear safety affordances for value overrides.
+
+This doctrine defines interaction and UX requirements only.
+The exact compiler/runtime source-mapping representation is intentionally deferred to a follow-up design step.
+
 ### 6. The Inspector Is the Universal Pivot
 Make the Inspector the place where "Lisp feels like a system" instead of a terminal.
 Capabilities:
@@ -98,7 +114,7 @@ If you keep the surface minimal, the IDE can still be definitive if these are fl
 - Editor (structural awareness, eval hooks, navigation)
 - REPL (live, history, object links)
 - Inspector (pivot for everything)
-- Debugger (restart-first, source-first)
+- Debugger (restart-first, source-first, with integrated stepper lane)
 - Problems (warnings/errors as a navigable queue)
 - Search/Command palette (the gateway to everything else)
 Everything beyond this must justify itself by removing friction, not adding "capability presence".

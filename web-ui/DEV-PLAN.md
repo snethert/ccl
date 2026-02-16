@@ -99,6 +99,119 @@ Exit criteria:
 - Keybinding viewer lists bindings across scopes.
 - Key resolution trace is testable and deterministic.
 
+### Phase 10: Stepper and Breakpoint UX
+Goals:
+- Expression-precise breakpoint placement in source-facing surfaces.
+- Entry/exit breakpoints with explicit break-on-return behavior and return-value presentation.
+- Dual-lane stepping controls (source lane and low-level lane) with explicit handoff.
+- Slide-point controls for ambiguous source-correlated stop locations.
+- Debugger-integrated stepper panel with frame stepping and in-step REPL shell.
+
+Exit criteria:
+- Users can place entry/exit breakpoints from editor surfaces and inspect policy metadata.
+- Closing-paren break-on-return behavior is represented in UI state and command flows.
+- Stepper interactions replay deterministically from event logs.
+- Debugger and transcript remain coherent during stepping sessions.
+
+Decision boundary (deferred):
+- Source-map/debug-metadata representation is intentionally tabled for the next design step.
+- Phase 10 locks UI/state/command behavior first, then binds to finalized runtime metadata.
+
+## Kernel/Compiler/GC Dependency Register (Authoritative)
+
+This section is the canonical tracking surface for non-UI implementation work required by `web-ui` and `web-ide`.
+
+Tracking policy:
+- Future kernel/compiler/GC dependencies discovered in any planning or status doc must be added here.
+- Phase planning may remain distributed, but dependency status for non-UI work is tracked here.
+- Replacement of legacy runtime pathways is allowed when required for protocol determinism and debugger correctness.
+
+### Source scan basis (2026-02-16)
+- `web-ui/FRONT-END-DEV-PLAN.md`
+- `web-ide/ide-doctrine.md`
+- `web-ide/phase-5/implementation-plan.md`
+- `web-ide/phase-5/m3-typed-command-dispatch-plan.md`
+- `web-ide/phase-5/m4-restarts-debugger-plan.md`
+- `web-ide/phase-5/m5-inspector-place-edit-plan.md`
+- `web-ide/phase-9/implementation-plan.md`
+- `web-ide/phase-9/debugger-stepper-spec.md`
+- `doc/wasm/*.md` documents referenced by the above plans (scanned for existing required modifications; not edited here)
+
+### Dependency register
+
+| ID | Area | Required modifications | Status | Source provenance |
+|---|---|---|---|---|
+| KCG-01 | Kernel transport | Maintain/extend runtime command queue opcode path (`KERNEL_OP_RUNTIME_COMMAND_POLL`) and host wrappers for deterministic poll/dequeue semantics and backpressure handling. | Complete baseline; ongoing extension required | `web-ide/phase-5/m3-typed-command-dispatch-plan.md`, `web-ide/phase-5/implementation-plan.md` |
+| KCG-02 | Kernel transport | Maintain/extend runtime event transport (`KERNEL_OP_RUNTIME_EVENT`) so debugger/inspector/stepper payloads remain typed and versioned end-to-end. | Complete baseline; stepper extensions pending | `web-ide/phase-5/implementation-plan.md`, `web-ide/phase-9/debugger-stepper-spec.md` |
+| KCG-03 | Compiler + kernel + GC | Preserve const-pool install/materialization path, including GC root retention for pooled objects, symbol interning stability, and function identity resolution. | Complete baseline; regression-sensitive | `web-ui/FRONT-END-DEV-PLAN.md` |
+| KCG-04 | Compiler + GC safety | Keep `external-call` lowering and spill/restore GC-safety rules in the WASM backend explicit and tested for UI/runtime call paths. | Complete baseline; regression-sensitive | `web-ui/FRONT-END-DEV-PLAN.md` |
+| KCG-05 | Runtime debugger | Replace current restart-only/empty-frame debugger snapshot behavior with full frame/scope/binding payloads per Phase 9 schema. | Planned (required for Phase 10) | `web-ide/phase-9/debugger-stepper-spec.md`, `web-ide/phase-9/implementation-plan.md` |
+| KCG-06 | Runtime stepper | Implement runtime debugger step commands/events (`runtime.debugger.step.*`, breakpoint lifecycle commands, stop/resume/session updates). | Planned (required for Phase 10) | `web-ide/phase-9/debugger-stepper-spec.md` |
+| KCG-07 | Runtime frame model | Implement frame operations against runtime-owned simulated stack model; do not depend on architecture-fragile host backtrace/apply-in-frame pathways. | Planned (required for Phase 10) | `web-ide/phase-9/debugger-stepper-spec.md` |
+| KCG-08 | Compiler metadata | Define compiler emission contract for expression anchor metadata (entry/exit, return sites, slide-point candidates) behind the deferred `LocationProvider` abstraction. | Deferred decision gate (DM1) | `web-ide/ide-doctrine.md`, `web-ide/phase-9/implementation-plan.md`, `web-ide/phase-9/debugger-stepper-spec.md` |
+| KCG-09 | GC + identity | Provide GC-safe stable identity tokens/handles for debugger/inspector/watch references so UI never depends on raw movable addresses. | Planned; cross-image behavior deferred | `web-ide/ide-doctrine.md`, `web-ide/phase-9/debugger-stepper-spec.md` |
+| KCG-10 | Runtime safety hooks | Add/maintain bounded evaluation and policy hooks for conditional breakpoints and probe actions (error policy, safety classification, auditability). | Planned (required for Phase 10) | `web-ide/phase-9/debugger-stepper-spec.md` |
+| KCG-11 | Runtime persistence boundary | Enforce handle revalidation rules for persisted UI state touching runtime objects (watches/inspector/debugger pointers) to avoid stale-handle corruption after GC/runtime reload. | Planned | `web-ide/ide-doctrine.md`, `web-ide/implementation-plan.md`, `web-ui/FRONT-END-DEV-PLAN.md` |
+| KCG-12 | Kernel UI ABI | Keep/complete kernel ABI and host helper support for Lisp-authoritative UI opcodes (`UI_POLL`, `UI_RENDER`, `UI_MEASURE_TEXT`) and nonblocking yield semantics. | Partial (WASM bridge path complete; Lisp-authoritative path still staged) | `web-ui/FRONT-END-DEV-PLAN.md` |
+| KCG-13 | Kernel persistence lane | Keep/complete kernel_request-backed persistence transport for Lisp UI snapshots, including deterministic restore behavior for inspector/debugger window state. | Partial | `web-ui/FRONT-END-DEV-PLAN.md` |
+| KCG-14 | Editor anchor resolver | Add compiler/runtime hook to resolve cursor/selection to canonical expression anchor (`sourceRef`, `formId`, `anchorKind=entry|exit`) and return deterministic failures for unmappable regions. | Planned (required for seamless editor breakpoint UX) | `web-ide/phase-9/implementation-plan.md`, `web-ide/phase-9/debugger-stepper-spec.md` |
+| KCG-15 | Stop-to-editor mapping | Add runtime event fields/hook path for stop-location projection back into editor (reveal location, highlight span, slide-group candidate set). | Planned | `web-ide/phase-9/debugger-stepper-spec.md`, `web-ide/ide-doctrine.md` |
+| KCG-16 | Breakpoint resolution ACK | Add runtime breakpoint upsert response contract that returns normalized/resolved anchor, validity, and degradation reason when source placement is ambiguous or stale. | Planned | `web-ide/phase-9/debugger-stepper-spec.md` |
+| KCG-17 | Source revision handshake | Add source revision/hash handshake in breakpoint/stop payloads so editor can detect stale mappings after edits and trigger re-resolution instead of mis-highlighting. | Planned | `web-ide/ide-doctrine.md`, `web-ide/phase-9/debugger-stepper-spec.md` |
+| KCG-18 | Edit invalidation + metadata refresh | Add runtime/compiler hooks to invalidate and refresh debug-location metadata after defun/file recompiles without requiring full runtime reset. | Planned; depends on DM1 metadata work | `web-ide/phase-9/implementation-plan.md`, `web-ide/phase-9/debugger-stepper-spec.md` |
+| KCG-19 | Editor-initiated frame eval | Keep/extend `runtime.debugger.eval.in-frame` and binding-set pathways so editor actions (eval selection, set local) run against selected frame with audit metadata. | Planned (partial baseline exists) | `web-ide/phase-9/debugger-stepper-spec.md`, `web-ide/phase-5/implementation-plan.md` |
+| KCG-20 | Jump-to-source provenance | Add stable definition/source provenance hooks in runtime payloads so debugger frame rows and inspector values can always resolve to editor targets (or explicit “unavailable”). | Planned | `web-ide/ide-doctrine.md`, `web-ide/phase-5/m4-restarts-debugger-plan.md`, `web-ide/phase-9/debugger-stepper-spec.md` |
+
+### Editor hook runtime command/event mini-contract (normative, Phase 10)
+
+This contract makes `KCG-14..KCG-20` implementable without ambiguity.
+
+Protocol baseline:
+- Use runtime bridge envelope v1 (`requestId`, `invocationId`, `commandId`, `args`, `context`, terminal `command.result|command.error`).
+- All mapping-bearing payloads include `sourceRef`, `sourceRevision`, and `mappingEpoch`.
+
+Required commands:
+
+| Command ID | Purpose | Required args | Terminal success payload | Required error codes |
+|---|---|---|---|---|
+| `runtime.editor.source.handshake` | Register/confirm editor buffer revision for mapping correctness. | `sourceRef`, `sourceRevision`, `contentHash` | `accepted`, `latestRevision`, `mappingEpoch` | `unknown-source`, `invalid-args` |
+| `runtime.editor.anchor.resolve` | Resolve cursor/selection to canonical expression anchor. | `sourceRef`, `sourceRevision`, `selection:{start,end}`, `preferredAnchorKind:entry|exit|either` | `resolved:true`, `anchor:{formId,anchorKind,line,column,charStart,charEnd}`, `mappingEpoch` | `stale-source-revision`, `mapping-unavailable`, `ambiguous-anchor`, `no-anchor-at-selection` |
+| `runtime.debugger.breakpoint.upsert` | Upsert breakpoint using editor-provided anchor intent. | `sourceRef`, `sourceRevision`, `requestedAnchor`, `policy`, `enabled` | `breakpointId`, `resolvedAnchor`, `resolution:{status,reason}`, `mappingEpoch` | `stale-source-revision`, `invalid-breakpoint`, `mapping-unavailable` |
+| `runtime.debugger.breakpoint.delete` | Remove breakpoint by id. | `breakpointId` | `deleted:true`, `breakpointId` | `invalid-breakpoint` |
+| `runtime.debugger.eval.in-frame` | Evaluate editor form/selection in selected frame context. | `frameId`, `sourceRef`, `sourceRevision`, `form` | `valueRefs`, `effects`, `auditId` | `invalid-frame`, `unsupported-operation`, `stale-source-revision` |
+| `runtime.debugger.binding.set` | Set arg/local value from editor action in selected frame. | `frameId`, `bindingId`, `newValueForm` | `updated:true`, `bindingId`, `valueRef`, `auditId` | `invalid-frame`, `invalid-binding`, `unsupported-operation` |
+
+Required events:
+
+| Event kind | Required fields | Notes |
+|---|---|---|
+| `debugger.stop` | `stopId`, `frameId`, `reason`, `location:{sourceRef,sourceRevision,mappingEpoch,formId,anchorKind,line,column,charStart,charEnd}`, `slideGroup:{id,candidates[]|null}`, `returnValues` | Drives reveal/highlight and slide-point navigation (`KCG-15`). |
+| `debugger.breakpoint.updated` | `breakpointId`, `sourceRef`, `sourceRevision`, `mappingEpoch`, `requestedAnchor`, `resolvedAnchor`, `resolution:{status,reason}` | Carries normalization/degradation ACK (`KCG-16`). |
+| `debugger.breakpoint.deleted` | `breakpointId` | Deterministic breakpoint lifecycle event. |
+| `debugger.mapping.invalidated` | `sourceRef`, `invalidatedRevision`, `reason`, `mappingEpoch` | Emitted after edits/recompile invalidate prior mappings (`KCG-17`, `KCG-18`). |
+| `debugger.mapping.refreshed` | `sourceRef`, `sourceRevision`, `mappingEpoch`, `coverageSummary` | Signals editor can clear stale mapping warnings. |
+| `debugger.frame.selected` | `frameId`, `sourceProvenance:{sourceRef|nil,definitionRef|nil,resolvable:boolean}` | Supports jump-to-source provenance (`KCG-20`). |
+| `debugger.eval.result` | `frameId`, `auditId`, `valueRefs`, `sourceRef`, `sourceRevision` | Audit-linked editor eval feedback (`KCG-19`). |
+
+Determinism and safety rules:
+- Anchor resolution must be deterministic for a fixed `(sourceRef, sourceRevision, selection, preferredAnchorKind, mappingEpoch)`.
+- Ambiguous anchor selection must use a stable tie-break rule and return `resolution.reason`.
+- `sourceRevision` mismatch must never silently remap; runtime returns `stale-source-revision` or emits `debugger.mapping.invalidated`.
+- Mapping epoch is monotonic per `sourceRef`; all stop and breakpoint events carry the epoch used for resolution.
+- All editor-initiated eval/mutation commands emit auditable terminal payloads with `auditId`.
+
+Phase 10 test gate additions:
+- `editor-anchor-resolve` round-trip determinism fixture.
+- stale revision handshake fixture (`source.handshake` + stale command rejection).
+- breakpoint upsert normalization fixture (entry/exit + degradation reason).
+- stop-to-editor projection fixture (reveal/highlight/slide candidates).
+- edit-invalidate-refresh fixture (invalidate then remap without runtime reset).
+
+### Immediate tracking rules for future work
+- Any PR that changes `lisp-kernel/*`, `compiler/*`, `level-1/*`, `xdump/*`, or WASM microkernel/runtime bridge ABI must update this register.
+- For each new dependency, add: scope, required modifications, status, and source provenance.
+- When a dependency is completed, keep the row and mark it complete (do not delete history).
+
 ## Phase 0 Detailed Plan (Test Harness First)
 
 ### Objectives
@@ -332,3 +445,16 @@ Exit criteria:
 - Added default open/dismiss keybindings for command palette and keybinding viewer.
 - Added command routing tests for configurable context/widget precedence.
 - Added deeper keybinding trace coverage with skipped-after-match entries.
+
+### Phase 10 Planned Track (Stepper and Breakpoint UX)
+- Authoritative spec: `web-ide/phase-9/debugger-stepper-spec.md`.
+- Add typed command IDs for stepping and breakpoint operations (`step.into`, `step.over`, `step.out`, `continue`, breakpoint policy updates).
+- Add state model support for breakpoint anchors (`entry` and `exit`), policy, hit counts, and enablement.
+- Add source-surface interactions for opening-paren (`entry`) and closing-paren (`exit`) placement.
+- Add debugger stepper shell with frame-local stepping controls and in-step REPL panel.
+- Add slide-point navigation controls and deterministic selection behavior.
+- Extend runtime bridge adapters for stepper snapshots and breakpoint updates.
+- Add event-log/replay fixtures covering full step session flows.
+- Add unit/integration suites for editor->debugger->transcript step/breakpoint round trips.
+- Permit replacement of legacy debugger bridge/state paths when required for protocol determinism and parity.
+- Keep source-map/debug-metadata mechanism deferred; use fixture-backed mappings until next-step design is finalized.

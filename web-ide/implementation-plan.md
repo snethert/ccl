@@ -225,6 +225,42 @@ Exit criteria:
 - Compatibility, security, and recovery gates pass.
 - Runbooks and rollout gates are approved and executable.
 
+## Phase 9: Stepper and Breakpoint Experience
+Outcome: Best-of-class stepping and breakpoint workflows integrated into the existing restart-first debugger model.
+Status: Planned (February 16, 2026).
+Detailed execution plan: `web-ide/phase-9/implementation-plan.md`.
+Authoritative specification: `web-ide/phase-9/debugger-stepper-spec.md`.
+
+1. Stepper interaction model.
+- Dual-lane stepping: source-form lane and low-level lane with explicit user handoff.
+- Core controls: step-into, step-over, step-out, continue, and slide-to-next-valid-stop.
+
+2. Breakpoint model.
+- Expression-precise breakpoint anchors in source surfaces.
+- Entry and exit breakpoint kinds, including break-on-return behavior with visible return values.
+- Breakpoint policies and actions (always, once, conditional; inspect/watch actions).
+
+3. Debugger and restart integration.
+- Frame-level "restart frame stepping" paths.
+- In-step REPL and value inspection/editing with auditable command history.
+
+4. Deterministic behavior and tests.
+- Event-log and replay coverage for stepping and breakpoint lifecycles.
+- Cross-surface tests for editor, transcript, debugger, and inspector handoff.
+
+Decision gate (explicitly deferred):
+- Compiler/runtime source-map and debug-metadata representation is intentionally tabled for the next design step.
+- Phase 9 will lock UX, state, command, and test contracts first so metadata implementation can follow a stable interface.
+
+Implementation policy:
+- Existing debugger/bridge plumbing may be replaced where it conflicts with the Phase 9 protocol/state contract.
+- Addition-only migration is not required.
+
+Exit criteria:
+- Users can place and manage entry/exit breakpoints directly in source.
+- Closing-paren break-on-return is represented in UX and command/state contracts.
+- Stepping flows are deterministic, replayable, and integrated with restarts and frame navigation.
+
 ## Risks and Mitigations
 - Canvas-only editor risk: mitigated by DOM backend for text surfaces.
 - Schema churn: freeze in Phase 0, enforce migration discipline.
