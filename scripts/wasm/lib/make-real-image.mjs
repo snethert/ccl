@@ -34,8 +34,6 @@ import {
   storedLengthFor,
 } from "./ccl-loader.mjs";
 import {
-  collectBootstrapState,
-  formatBootstrapState,
   STARTUP_FUNCTION_DESIGNATOR_POLICY_V1,
   STARTUP_SYMBOL_TO_ENTRY_FUNCTION_DESIGNATORS_PRE_TOPLEVEL_V1,
 } from "./bootstrap-contract.mjs";
@@ -46,12 +44,7 @@ import {
   STARTUP_SYMBOL_PACKAGE_OVERRIDES_CANONICAL_V1,
   rewriteConstPoolFunctionDesignators,
 } from "./bootstrap-function-resolver.mjs";
-import {
-  FILE_MODE_CREATE,
-  FILE_MODE_READ,
-  FILE_MODE_TRUNCATE,
-  FILE_MODE_WRITE,
-} from "./persist-service.mjs";
+import { FILE_MODE_READ } from "./persist-service.mjs";
 
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
@@ -64,37 +57,6 @@ function trace(msg) {
     console.error(`[make-real-image] ${msg}`);
   }
 }
-const diagConstPoolInstallEnabled = process.env.CCL_WASM_DIAG_PREINSTALL_ATTEMPTS === "1";
-const diagConstPoolContinueOnThrowEnabled = process.env.CCL_WASM_DIAG_PREINSTALL_CONTINUE_ON_THROW === "1";
-function logConstPoolInstallDiag({
-  phase,
-  entryIndex,
-  status = null,
-  reason = null,
-  installRc = null,
-  installOk = null,
-  info = null,
-  errorMessage = null,
-}) {
-  if (!diagConstPoolInstallEnabled) return;
-  const payload = {
-    schema_version: "const_pool_install_attempt_v1",
-    phase: typeof phase === "string" && phase.length > 0 ? phase : "unknown",
-    entry_index: Number.isInteger(entryIndex) ? (entryIndex >>> 0) : null,
-    status: typeof status === "string" && status.length > 0 ? status : null,
-    reason: typeof reason === "string" && reason.length > 0 ? reason : null,
-    install_rc: Number.isInteger(installRc) ? (installRc >>> 0) : null,
-    install_ok: typeof installOk === "boolean" ? installOk : null,
-    const_pool_id: Number.isInteger(info?.id) ? (info.id >>> 0) : null,
-    const_pool_offset: Number.isInteger(info?.offset) ? (info.offset >>> 0) : null,
-    const_pool_length: Number.isInteger(info?.length) ? (info.length >>> 0) : null,
-    const_pool_stored_length: Number.isInteger(info?.storedLength) ? (info.storedLength >>> 0) : null,
-    const_pool_encoding: typeof info?.encoding === "string" && info.encoding.length > 0 ? info.encoding : "raw",
-    error_message: typeof errorMessage === "string" && errorMessage.length > 0 ? errorMessage : null,
-  };
-  console.error(`CONST_POOL_INSTALL_ATTEMPT ${JSON.stringify(payload)}`);
-}
-
 const WASM_BOOT_PHASE = Object.freeze({
   EARLY: 0,
   L0_READY: 1,
@@ -136,7 +98,6 @@ function usage() {
   console.log("  --kernel PATH       wasmcl.wasm path (default: build/wasm32/kernel/wasmcl.wasm)");
   console.log("  --subprims PATH     subprims.wasm path (default: build/wasm32/subprims/subprims.wasm)");
   console.log("  --subprims-map PATH subprims-map.json path (default: build/wasm32/subprims-map.json)");
-  console.log("  --bootstrap-boundary-report PATH  Optional JSON state/diff report");
   console.log("  -h, --help          Show this help");
 }
 
@@ -175,9 +136,6 @@ function parseArgs(argv) {
         break;
       case "--subprims-map":
         out.subprimsMap = argv[++i];
-        break;
-      case "--bootstrap-boundary-report":
-        out.bootstrapBoundaryReport = argv[++i];
         break;
       default:
         if (arg.startsWith("--")) {
@@ -222,44 +180,6 @@ async function loadBuildProvenance(provenancePath) {
     fail(`--build-provenance must contain a JSON object: ${provenancePath}`);
   }
   return parsed;
-}
-
-const BOOTSTRAP_STATE_PREFIX = "BOOTSTRAP_STATE_JSON ";
-
-function parseBootstrapStateLines(text) {
-  const states = [];
-  for (const line of String(text ?? "").split(/\r?\n/)) {
-    if (!line.startsWith(BOOTSTRAP_STATE_PREFIX)) continue;
-    const payload = line.slice(BOOTSTRAP_STATE_PREFIX.length).trim();
-    if (!payload) continue;
-    try {
-      states.push(JSON.parse(payload));
-    } catch (_err) {
-      // Ignore malformed lines and continue parsing others.
-    }
-  }
-  return states;
-}
-
-function bootstrapDiff(beforeState, afterState) {
-  if (!beforeState || !afterState) return [];
-  const fields = [
-    "nil",
-    "commonLispPackage",
-    "toplevelSymbol",
-    "toplfuncRaw",
-    "toplfuncEntryIndex",
-    "toplfuncSubtag",
-  ];
-  const diffs = [];
-  for (const field of fields) {
-    const before = beforeState[field];
-    const after = afterState[field];
-    if (before !== after) {
-      diffs.push({ field, before, after });
-    }
-  }
-  return diffs;
 }
 
 function runShellScript(scriptPath, args, { cwd = process.cwd(), timeoutMs = 300000 } = {}) {
@@ -472,9 +392,6 @@ const modulesPath = args.modules ?? defaultModules;
 const buildProvenancePath = args.buildProvenance
   ? path.resolve(args.buildProvenance)
   : null;
-const bootstrapBoundaryReportPath = args.bootstrapBoundaryReport
-  ? path.resolve(args.bootstrapBoundaryReport)
-  : null;
 const buildProvenance = await loadBuildProvenance(buildProvenancePath);
 
 function displayPath(filePath) {
@@ -521,48 +438,6 @@ async function assertBootstrapSanity({
       (details ? `\n${details}` : ""),
     );
   }
-}
-
-async function collectBootstrapStatesFromImage({
-  label,
-  scriptDirPath,
-  repoRootPath,
-  imagePathToCheck,
-  runtimeModulesPath,
-  mode = "start-lisp",
-}) {
-  const loadImageScriptPath = path.join(scriptDirPath, "load-image.mjs");
-  const childArgs = [
-    loadImageScriptPath,
-    "--mode",
-    mode,
-    "--bootstrap-contract",
-    "off",
-    "--bootstrap-state-json",
-    "--modules",
-    runtimeModulesPath,
-  ];
-  if (mode === "start-lisp") {
-    childArgs.push("--stdin-text", "(quit)\n", "--close-stdin");
-  }
-  childArgs.push(imagePathToCheck);
-
-  const result = await runNodeScript(childArgs, { cwd: repoRootPath });
-  if (result.code !== 0) {
-    const details = [result.stdout, result.stderr]
-      .filter((part) => part && part.trim().length > 0)
-      .join("\n")
-      .trim();
-    throw new Error(
-      `${label} bootstrap state probe failed (exit=${result.code}${result.signal ? ` signal=${result.signal}` : ""})` +
-      (details ? `\n${details}` : ""),
-    );
-  }
-  const states = parseBootstrapStateLines(`${result.stdout}\n${result.stderr}`);
-  if (!states.length) {
-    throw new Error(`${label} bootstrap state probe returned no state lines`);
-  }
-  return states;
 }
 
 trace("resolved input paths");
@@ -614,27 +489,6 @@ await addFile(namedBytes, level1Path, "level-1.lafsl");
 await collectFasls(namedBytes, l1Dir, "l1-fasls");
 await collectFasls(namedBytes, binDir, "bin");
 await addFile(namedBytes, path.join(root, "scripts/wasm/make-real-image.lisp"), "scripts/wasm/make-real-image.lisp");
-if (traceEnabled) {
-  const fasloadDiagSource = [
-    '(in-package "CCL")',
-    '(format t "~&FASLOAD-DIAG begin~%")',
-    '(multiple-value-bind (value condition)',
-    '    (ignore-errors (%fasload "level-1.lafsl"))',
-    '  (format t "~&FASLOAD-DIAG value=~S~%" value)',
-    '  (if condition',
-    '      (progn',
-    '        (format t "~&FASLOAD-DIAG condition-type=~S~%" (type-of condition))',
-    '        (format t "~&FASLOAD-DIAG condition=~A~%" condition))',
-    '      (format t "~&FASLOAD-DIAG condition=nil~%")))',
-    '(format t "~&FASLOAD-DIAG end~%")',
-    "",
-  ].join("\n");
-  addNamedBytes(
-    namedBytes,
-    "scripts/wasm/fasload-diag.lisp",
-    new TextEncoder().encode(fasloadDiagSource),
-  );
-}
 trace("loaded named bytes");
 
 const requiredBin = ["lists.lafsl", "sequences.lafsl", "hash.lafsl", "defstruct.lafsl", "dll-node.lafsl", "chars.lafsl", "dumplisp.lafsl"];
@@ -674,9 +528,6 @@ const resolverRegistration = registerResolverFunctionsFromBundle(
 trace(
   `bootstrap resolver registered: +${resolverRegistration.registered} names (ignored=${resolverRegistration.ignored}, unique=${resolverRegistration.uniqueNames}, ambiguous=${resolverRegistration.ambiguous})`,
 );
-function runPreToplevelFunctionDesignatorGateOrFail() {
-  /* No-op: RESTORE-LISP-POINTERS makes pre-toplevel symbol gating unnecessary. */
-}
 trace("loaded kernel/subprims/boot/modules assets");
 let compiledModulesIndexBytes = null;
 let compiledModulesHandle = null;
@@ -693,70 +544,6 @@ let constPoolSharedBlobRaw = null;
 const constPoolSpanKey = (offset, storedLength, encoding, rawLength) =>
   `${offset >>> 0}:${storedLength >>> 0}:${encoding ?? "raw"}:${rawLength >>> 0}`;
 const constPoolsInstalled = new Set();
-const DEFAULT_CONST_POOL_DIAG_ENTRIES = Object.freeze([4412]);
-function parseConstPoolDiagEntries(rawValue) {
-  const parsed = new Set();
-  const text = String(rawValue ?? "").trim();
-  if (!text) {
-    for (const value of DEFAULT_CONST_POOL_DIAG_ENTRIES) {
-      parsed.add(value >>> 0);
-    }
-    return parsed;
-  }
-  for (const part of text.split(",")) {
-    const value = Number(part.trim());
-    if (!Number.isInteger(value) || value < 0) continue;
-    parsed.add(value >>> 0);
-  }
-  if (parsed.size === 0) {
-    for (const value of DEFAULT_CONST_POOL_DIAG_ENTRIES) {
-      parsed.add(value >>> 0);
-    }
-  }
-  return parsed;
-}
-const CONST_POOL_DIAG_ENTRIES = parseConstPoolDiagEntries(
-  process.env.CCL_WASM_CONST_POOL_DIAG_ENTRY,
-);
-const constPoolProbeInFlight = new Set();
-const CONST_POOL_ERROR_NAMES = new Map([
-  [0, "none"],
-  [1, "symbol-read"],
-  [2, "symbol-package-missing"],
-  [3, "symbol-intern"],
-  [4, "symbol-bad-tag"],
-  [5, "symbol-intern-unavailable"],
-  [6, "symbol-intern-throw"],
-  [7, "symbol-intern-non-symbol"],
-  [8, "function-udf"],
-  [9, "function-bad-tag"],
-  [10, "symbol-missing"],
-]);
-
-function hexSample(bytesLike, maxBytes = 64) {
-  if (!bytesLike || bytesLike.length === 0) return "";
-  const bytes = bytesLike instanceof Uint8Array ? bytesLike : Uint8Array.from(bytesLike);
-  const limit = Math.min(Math.max(maxBytes | 0, 0), bytes.length);
-  if (limit <= 0) return "";
-  return Array.from(bytes.subarray(0, limit), (b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-function readConstPoolRawSample(info, maxBytes = 64) {
-  const sampleLen = Math.min(Math.max(maxBytes | 0, 0), info?.storedLength >>> 0);
-  if (!Number.isFinite(sampleLen) || sampleLen <= 0) return new Uint8Array(0);
-  if (constPoolSharedBlobInfo && constPoolSharedBlobRaw) {
-    const start = (info.offset >>> 0) - (constPoolSharedBlobInfo.offset >>> 0);
-    const end = start + sampleLen;
-    if (start >= 0 && end <= constPoolSharedBlobRaw.length) {
-      return constPoolSharedBlobRaw.subarray(start, end);
-    }
-  }
-  if (compiledModulesFd == null) return new Uint8Array(0);
-  const out = Buffer.allocUnsafe(sampleLen);
-  const read = fsSync.readSync(compiledModulesFd, out, 0, sampleLen, info.offset >>> 0);
-  if (read <= 0) return new Uint8Array(0);
-  return out.subarray(0, read);
-}
 
 if (typeof compiledModulesBundle?.index === "string" && compiledModulesBundle.index.length > 0) {
   const indexPath = path.join(path.dirname(modulesPath), compiledModulesBundle.index);
@@ -998,197 +785,50 @@ function decodeConstPoolForInfo(info) {
 function installConstPoolOnDemand(entryIndexRaw) {
   if (!kernelExports || compiledModulesFd == null) return 0;
   const entryIndex = entryIndexRaw >>> 0;
-  if (constPoolsInstalled.has(entryIndex)) {
-    logConstPoolInstallDiag({
-      phase: "host-install-const-pool",
-      entryIndex,
-      status: "already-installed",
-      reason: "const-pool-already-installed",
-    });
-    return 1;
-  }
+  if (constPoolsInstalled.has(entryIndex)) return 1;
 
   const info = constPoolEntries.get(entryIndex);
-  if (!info) {
-    logConstPoolInstallDiag({
-      phase: "host-install-const-pool",
-      entryIndex,
-      status: "missing",
-      reason: "const-pool-entry-missing",
-    });
-    return 0;
-  }
-  logConstPoolInstallDiag({
-    phase: "host-install-const-pool",
-    entryIndex,
-    status: "begin",
-    reason: "attempt-install",
-    info,
-  });
+  if (!info) return 0;
+
   const decodedBytes = decodeConstPoolForInfo(info);
-  if (!decodedBytes) {
-    logConstPoolInstallDiag({
-      phase: "host-install-const-pool",
-      entryIndex,
-      status: "missing",
-      reason: "const-pool-decode-missing",
-      info,
-    });
-    return 0;
-  }
-  const shouldProbe = traceEnabled &&
-    CONST_POOL_DIAG_ENTRIES.has(entryIndex) &&
-    !constPoolProbeInFlight.has(entryIndex);
-  if (shouldProbe) {
-    constPoolProbeInFlight.add(entryIndex);
-    const rawSample = readConstPoolRawSample(info, 64);
-    const bootPhase = typeof kernelExports.wasm_boot_get_phase === "function"
-      ? (kernelExports.wasm_boot_get_phase() >>> 0)
-      : null;
-    trace(
-      `diag-const-pool entry=${entryIndex} boot_phase=${bootPhase == null ? "n/a" : formatBootPhase(bootPhase)}`,
-    );
-    trace(
-      `diag-const-pool entry=${entryIndex}` +
-      ` offset=${info.offset >>> 0}` +
-      ` length=${info.length >>> 0}` +
-      ` storedLength=${info.storedLength >>> 0}` +
-      ` encoding=${info.encoding ?? "raw"}` +
-      ` constPoolId=${info.id == null ? "null" : (info.id >>> 0)}` +
-      ` baseId=${info.baseId == null ? "null" : (info.baseId >>> 0)}` +
-      ` deltaOp=${info.deltaOp ?? "null"}` +
-      ` raw64=${hexSample(rawSample, 64)}` +
-      ` decoded64=${hexSample(decodedBytes, 64)}`,
-    );
-  }
+  if (!decodedBytes) return 0;
+
   let payloadBytes = decodedBytes;
-  let rewrite = null;
   try {
-    try {
-      rewrite = rewriteConstPoolFunctionDesignators(decodedBytes, {
-        resolver: bootstrapFunctionResolver,
-        entryIndex,
-        requiredResolveOrFailNames: startupRequiredPreToplevelDesignators,
-        deferredAllowedNames: startupDeferredPreToplevelDesignators,
-        symbolToEntryFunctionNames: startupSymbolToEntryPreToplevelDesignators,
-        symbolPackageOverrides: STARTUP_SYMBOL_PACKAGE_OVERRIDES_CANONICAL_V1,
-      });
-      payloadBytes = rewrite.bytes;
-    } catch (_err) {
-      payloadBytes = decodedBytes;
-    }
-    if ((rewrite?.deferredUnresolvedCount ?? 0) > 0) {
-      const diagnostics = Array.isArray(rewrite?.deferredUnresolved) ? rewrite.deferredUnresolved : [];
-      for (const item of diagnostics) {
-        console.log(
-          `STARTUP_CONSTPOOL_FUNCTION_GATE ${JSON.stringify({
-            schema_version: "startup_constpool_function_gate_v1",
-            phase: "pre-toplevel",
-            status: "deferred",
-            mode: "strict",
-            entry_index: entryIndex >>> 0,
-            const_index: Number.isFinite(item?.constIndex) ? (item.constIndex >>> 0) : null,
-            symbol_name: item?.name ?? null,
-            package_name: item?.packageName ?? null,
-            policy_class: item?.policyClass ?? "deferred-allowed",
-            binding_state: item?.bindingState ?? "deferred-symbolic-function-designator",
-            reason: item?.reason ?? "missing",
-          })}`,
-        );
-      }
-    }
+    const rewrite = rewriteConstPoolFunctionDesignators(decodedBytes, {
+      resolver: bootstrapFunctionResolver,
+      entryIndex,
+      requiredResolveOrFailNames: startupRequiredPreToplevelDesignators,
+      deferredAllowedNames: startupDeferredPreToplevelDesignators,
+      symbolToEntryFunctionNames: startupSymbolToEntryPreToplevelDesignators,
+      symbolPackageOverrides: STARTUP_SYMBOL_PACKAGE_OVERRIDES_CANONICAL_V1,
+    });
+    payloadBytes = rewrite.bytes;
     if ((rewrite?.requiredUnresolvedCount ?? 0) > 0) {
-      const diagnostics = Array.isArray(rewrite?.requiredUnresolved) ? rewrite.requiredUnresolved : [];
-      for (const item of diagnostics) {
-        console.error(
-          `STARTUP_CONSTPOOL_FUNCTION_GATE ${JSON.stringify({
-            schema_version: "startup_constpool_function_gate_v1",
-            phase: "pre-toplevel",
-            status: "fail",
-            mode: "strict",
-            entry_index: entryIndex >>> 0,
-            const_index: Number.isFinite(item?.constIndex) ? (item.constIndex >>> 0) : null,
-            symbol_name: item?.name ?? null,
-            package_name: item?.packageName ?? null,
-            policy_class: item?.policyClass ?? "required-resolve-or-fail",
-            binding_state: item?.bindingState ?? "unresolved-required-function-designator",
-            reason: item?.reason ?? "missing",
-          })}`,
-        );
-      }
-      fail(
-        `startup const-pool function gate failed for entry ${entryIndex}: unresolved required designators=` +
-        diagnostics.map((item) => String(item?.name ?? "").trim()).filter(Boolean).join(","),
-      );
+      const names = (rewrite.requiredUnresolved ?? [])
+        .map((item) => String(item?.name ?? "").trim())
+        .filter(Boolean)
+        .join(",");
+      fail(`startup const-pool function gate failed for entry ${entryIndex}: unresolved=${names}`);
     }
-
-    if (shouldProbe && payloadBytes !== decodedBytes) {
-      trace(`diag-const-pool entry=${entryIndex} rewritten64=${hexSample(payloadBytes, 64)}`);
-    }
-    const rc = installConstPoolBytes({
-      kernelExports,
-      memory: runtime.memory,
-      entryIndex,
-      constPoolBytes: payloadBytes,
-    });
-    const nilValue = typeof kernelExports.wasm_get_lisp_nil === "function"
-      ? (kernelExports.wasm_get_lisp_nil() >>> 0)
-      : null;
-    const installOk = rc !== 0 && (nilValue == null || rc !== nilValue);
-    if (!installOk) {
-      logConstPoolInstallDiag({
-        phase: "host-install-const-pool",
-        entryIndex,
-        status: "result",
-        reason: "const-pool-install-returned-nil-or-zero",
-        installRc: rc >>> 0,
-        installOk,
-        info,
-      });
-      return 0;
-    }
-
-    constPoolsInstalled.add(entryIndex);
-    logConstPoolInstallDiag({
-      phase: "host-install-const-pool",
-      entryIndex,
-      status: "result",
-      reason: "const-pool-install-succeeded",
-      installRc: rc >>> 0,
-      installOk,
-      info,
-    });
-    return 1;
-  } catch (error) {
-    const errorMessage = error instanceof Error
-      ? error.message
-      : String(error ?? "");
-    logConstPoolInstallDiag({
-      phase: "host-install-const-pool",
-      entryIndex,
-      status: "throw",
-      reason: "const-pool-install-threw",
-      info,
-      errorMessage,
-    });
-    if (diagConstPoolContinueOnThrowEnabled) {
-      logConstPoolInstallDiag({
-        phase: "host-install-const-pool",
-        entryIndex,
-        status: "result",
-        reason: "const-pool-install-threw-continued-by-env",
-        installOk: false,
-        info,
-        errorMessage,
-      });
-      return 0;
-    }
-    throw error;
-  } finally {
-    if (shouldProbe) {
-      constPoolProbeInFlight.delete(entryIndex);
-    }
+  } catch (err) {
+    if (err?.message?.startsWith?.("FAIL:")) throw err;
+    payloadBytes = decodedBytes;
   }
+
+  const rc = installConstPoolBytes({
+    kernelExports,
+    memory: runtime.memory,
+    entryIndex,
+    constPoolBytes: payloadBytes,
+  });
+  const nilValue = typeof kernelExports.wasm_get_lisp_nil === "function"
+    ? (kernelExports.wasm_get_lisp_nil() >>> 0)
+    : null;
+  if (rc === 0 || (nilValue != null && rc === nilValue)) return 0;
+
+  constPoolsInstalled.add(entryIndex);
+  return 1;
 }
 
 const hostDesignatorDecoder = new TextDecoder("utf-8");
@@ -1285,26 +925,6 @@ function setBootPhaseOrFail(phase, { reason } = {}) {
 
 setBootPhaseOrFail(WASM_BOOT_PHASE.EARLY, { reason: "kernel-startup" });
 
-const SPECREF_FAILURE_STAGE_NAMES = new Map([
-  [0, "none"],
-  [1, "tcr-null"],
-  [2, "symbol-fulltag"],
-  [3, "symbol-subtag"],
-  [4, "binding-index-tag"],
-  [5, "tlb-limit-tag"],
-  [6, "tlb-pointer-null"],
-]);
-const KEYWORD_BIND_STAGE_NAMES = new Map([
-  [0, "none"],
-  [1, "tcr-null"],
-  [2, "raw-tag"],
-  [3, "negative-count"],
-  [4, "fn-not-misc"],
-  [5, "keyvec-not-misc"],
-  [6, "keyvec-length-range"],
-  [7, "stack-null"],
-  [255, "done"],
-]);
 if (typeof ex.wasm_set_cstack_bounds !== "function") {
   fail("kernel missing wasm_set_cstack_bounds");
 }
@@ -1362,31 +982,6 @@ if (traceEnabled) {
   );
 }
 
-if (process.env.CCL_WASM_DIAG_START_LISP_BEFORE_MODULE_INSTALL === "1") {
-  if (typeof ex.wasm_ccl_start_lisp !== "function") {
-    fail("kernel missing wasm_ccl_start_lisp for CCL_WASM_DIAG_START_LISP_BEFORE_MODULE_INSTALL");
-  }
-  if (typeof ex.wasm_set_subprims_ready === "function") {
-    ex.wasm_set_subprims_ready(1);
-  }
-  const pendingBefore = typeof ex.wasm_pending_throw_p === "function"
-    ? (ex.wasm_pending_throw_p() >>> 0)
-    : null;
-  const rc = ex.wasm_ccl_start_lisp() >>> 0;
-  const pendingAfter = typeof ex.wasm_pending_throw_p === "function"
-    ? (ex.wasm_pending_throw_p() >>> 0)
-    : null;
-  const pendingRaw = typeof ex.wasm_pending_throw_raw === "function"
-    ? (ex.wasm_pending_throw_raw() >>> 0)
-    : null;
-  trace(
-    `diag start_lisp_before_module_install rc=0x${rc.toString(16)}` +
-    (pendingBefore == null ? "" : ` pending_before=${pendingBefore}`) +
-    (pendingAfter == null ? "" : ` pending_after=${pendingAfter}`) +
-    (pendingRaw == null ? "" : ` pending_raw=0x${pendingRaw.toString(16)}`),
-  );
-}
-
 const bundleInstall = await installCompiledModulesFromBundle({
   bundle: compiledModulesBundle,
   binaryReader: compiledModulesReader,
@@ -1426,171 +1021,8 @@ trace(
   ` source=${hasBootCompiledModuleRegistrySnapshot ? "boot-snapshot" : "current-registry"}` +
   ` installed=${registryInstall.installed}/${registryInstall.count}`,
 );
-runPreToplevelFunctionDesignatorGateOrFail();
 
-const diagRunToplevelEarly = process.env.CCL_WASM_DIAG_RUN_TOPLEVEL_EARLY === "1";
-const diagRunToplevelEarlyOnly = process.env.CCL_WASM_DIAG_RUN_TOPLEVEL_EARLY_ONLY === "1";
-if (diagRunToplevelEarly) {
-  if (typeof ex.wasm_run_toplevel !== "function") {
-    fail("kernel missing wasm_run_toplevel for CCL_WASM_DIAG_RUN_TOPLEVEL_EARLY");
-  }
-  const pendingBefore = typeof ex.wasm_pending_throw_p === "function"
-    ? (ex.wasm_pending_throw_p() >>> 0)
-    : null;
-  trace(`diag early_toplevel pre pending=${pendingBefore == null ? "n/a" : pendingBefore}`);
-  const rc = ex.wasm_run_toplevel() | 0;
-  const pendingAfter = typeof ex.wasm_pending_throw_p === "function"
-    ? (ex.wasm_pending_throw_p() >>> 0)
-    : null;
-  const pendingRaw = typeof ex.wasm_pending_throw_raw === "function"
-    ? (ex.wasm_pending_throw_raw() >>> 0)
-    : null;
-  trace(
-    `diag early_toplevel post rc=${rc}` +
-    (pendingAfter == null ? "" : ` pending=${pendingAfter}`) +
-    (pendingRaw == null ? "" : ` pending_raw=0x${pendingRaw.toString(16)}`),
-  );
-  if (diagRunToplevelEarlyOnly) {
-    trace("diag early_toplevel complete; exiting early (CCL_WASM_DIAG_RUN_TOPLEVEL_EARLY_ONLY=1)");
-    process.exit(0);
-  }
-}
-const diagPreFasloadToplfuncEntryRaw = process.env.CCL_WASM_DIAG_PRE_FASLOAD_TOPLFUNC_ENTRY;
-if (diagPreFasloadToplfuncEntryRaw != null && diagPreFasloadToplfuncEntryRaw !== "") {
-  if (typeof ex.wasm_set_toplfunc_entry !== "function") {
-    fail("kernel missing wasm_set_toplfunc_entry for CCL_WASM_DIAG_PRE_FASLOAD_TOPLFUNC_ENTRY");
-  }
-  const parsed = Number(diagPreFasloadToplfuncEntryRaw);
-  if (!Number.isInteger(parsed) || parsed < 0) {
-    fail(`invalid CCL_WASM_DIAG_PRE_FASLOAD_TOPLFUNC_ENTRY=${JSON.stringify(diagPreFasloadToplfuncEntryRaw)}`);
-  }
-  const setRc = ex.wasm_set_toplfunc_entry(parsed >>> 0) | 0;
-  trace(`diag pre_fasload_set_toplfunc entry=${parsed} rc=${setRc}`);
-  if (setRc !== 0) {
-    fail(`wasm_set_toplfunc_entry(${parsed}) failed during pre-fasload diag: rc=${setRc}`);
-  }
-
-  if (process.env.CCL_WASM_DIAG_RUN_TOPLEVEL_AFTER_PRESET === "1") {
-    if (typeof ex.wasm_run_toplevel !== "function") {
-      fail("kernel missing wasm_run_toplevel for CCL_WASM_DIAG_RUN_TOPLEVEL_AFTER_PRESET");
-    }
-    const prePending = typeof ex.wasm_pending_throw_p === "function"
-      ? (ex.wasm_pending_throw_p() >>> 0)
-      : null;
-    const runRc = ex.wasm_run_toplevel() | 0;
-    const postPending = typeof ex.wasm_pending_throw_p === "function"
-      ? (ex.wasm_pending_throw_p() >>> 0)
-      : null;
-    const postPendingRaw = typeof ex.wasm_pending_throw_raw === "function"
-      ? (ex.wasm_pending_throw_raw() >>> 0)
-      : null;
-    trace(
-      `diag pre_fasload_toplevel_run rc=${runRc}` +
-      (prePending == null ? "" : ` pre_pending=${prePending}`) +
-      (postPending == null ? "" : ` post_pending=${postPending}`) +
-      (postPendingRaw == null ? "" : ` post_pending_raw=0x${postPendingRaw.toString(16)}`),
-    );
-  }
-}
-if (process.env.CCL_WASM_DIAG_START_LISP_ONCE === "1") {
-  if (typeof ex.wasm_ccl_start_lisp !== "function") {
-    fail("kernel missing wasm_ccl_start_lisp for CCL_WASM_DIAG_START_LISP_ONCE");
-  }
-  const pendingBefore = typeof ex.wasm_pending_throw_p === "function"
-    ? (ex.wasm_pending_throw_p() >>> 0)
-    : null;
-  const rc = ex.wasm_ccl_start_lisp() >>> 0;
-  const pendingAfter = typeof ex.wasm_pending_throw_p === "function"
-    ? (ex.wasm_pending_throw_p() >>> 0)
-    : null;
-  const pendingRaw = typeof ex.wasm_pending_throw_raw === "function"
-    ? (ex.wasm_pending_throw_raw() >>> 0)
-    : null;
-  trace(
-    `diag start_lisp_once rc=0x${rc.toString(16)}` +
-    (pendingBefore == null ? "" : ` pending_before=${pendingBefore}`) +
-    (pendingAfter == null ? "" : ` pending_after=${pendingAfter}`) +
-    (pendingRaw == null ? "" : ` pending_raw=0x${pendingRaw.toString(16)}`),
-  );
-}
 const encoder = new TextEncoder();
-
-const L0_PROBE_STATUS = Object.freeze({
-  OK: 0,
-  ARG_INVALID: 1,
-  PACKAGE_MISSING: 2,
-  SYMBOL_MISSING: 3,
-  SYMBOL_NOT_SYMBOL: 4,
-  SYMBOL_INVALID: 5,
-  PACKAGE_NOT_PACKAGE: 6,
-});
-
-const L0_PROBE_STATUS_NAMES = new Map([
-  [L0_PROBE_STATUS.OK, "ok"],
-  [L0_PROBE_STATUS.ARG_INVALID, "arg-invalid"],
-  [L0_PROBE_STATUS.PACKAGE_MISSING, "package-missing"],
-  [L0_PROBE_STATUS.SYMBOL_MISSING, "symbol-missing"],
-  [L0_PROBE_STATUS.SYMBOL_NOT_SYMBOL, "symbol-not-symbol"],
-  [L0_PROBE_STATUS.SYMBOL_INVALID, "symbol-invalid"],
-  [L0_PROBE_STATUS.PACKAGE_NOT_PACKAGE, "package-not-package"],
-]);
-
-const WASM_SYMBOL_TARGET_CELL = Object.freeze({
-  VCELL: 1,
-  FCELL: 2,
-});
-
-const WASM_SYMBOL_CELL_INITIALIZER_KIND = Object.freeze({
-  LITERAL_FIXNUM: 1,
-  LITERAL_NIL: 2,
-  ENTRY_FUNCTION: 3,
-  LITERAL_SYMBOL: 4,
-  LITERAL_KEYWORD: 5,
-});
-
-const LITERAL_SYMBOL_KEYWORD_RUNTIME_GUARDS = Object.freeze({
-  "literal-symbol": Object.freeze({
-    initializer_label: "symbol literal",
-    optional_defer_reason: "initializer-kind-not-supported",
-    required_exports: Object.freeze([
-      "wasm_set_symbol_cell_initializer",
-      "wasm_probe_symbol",
-    ]),
-  }),
-  "literal-keyword": Object.freeze({
-    initializer_label: "keyword literal",
-    optional_defer_reason: "initializer-kind-not-supported",
-    required_exports: Object.freeze([
-      "wasm_set_symbol_cell_initializer",
-      "wasm_probe_symbol",
-    ]),
-  }),
-});
-
-function l0ProbeStatusName(status) {
-  return L0_PROBE_STATUS_NAMES.get(status >>> 0) ?? `status-${status >>> 0}`;
-}
-
-function startupSymbolResolutionReasonForProbeStatus(status) {
-  switch (status >>> 0) {
-    case L0_PROBE_STATUS.PACKAGE_MISSING:
-      return "package-missing";
-    case L0_PROBE_STATUS.SYMBOL_MISSING:
-      return "symbol-missing";
-    case L0_PROBE_STATUS.ARG_INVALID:
-      return "arg-invalid";
-    case L0_PROBE_STATUS.SYMBOL_NOT_SYMBOL:
-      return "symbol-not-symbol";
-    case L0_PROBE_STATUS.SYMBOL_INVALID:
-      return "symbol-invalid";
-    case L0_PROBE_STATUS.PACKAGE_NOT_PACKAGE:
-      return "package-not-package";
-    default:
-      return "probe-status-not-ok";
-  }
-}
-
-
 
 
 
@@ -1640,488 +1072,25 @@ const requiredFasls = [
 if (typeof ex.wasm_fasload_path !== "function") {
   fail("kernel missing wasm_fasload_path");
 }
-const pendingThrowProbe = typeof ex.wasm_pending_throw_p === "function"
-  ? () => (ex.wasm_pending_throw_p() >>> 0)
-  : null;
-const pendingThrowRawProbe = typeof ex.wasm_pending_throw_raw === "function"
-  ? () => (ex.wasm_pending_throw_raw() >>> 0)
-  : null;
 
-/* Startup symbol resolution build removed — RESTORE-LISP-POINTERS handles fixup. */
-
-
-/* Startup binding map removed — RESTORE-LISP-POINTERS (called after image
-   load) rehashes package tables so normal Lisp symbol resolution works.
-   No pre-binding or contract assertion needed. */
 setBootPhaseOrFail(WASM_BOOT_PHASE.L0_READY, { reason: "restore-lisp-pointers-complete" });
 
-const runBoundaryProbes = process.env.CCL_WASM_RUN_BOUNDARY_PROBES === "1";
-const boundaryProbeOnly = process.env.CCL_WASM_BOUNDARY_PROBE_ONLY === "1";
-const boundaryProbeStrict = process.env.CCL_WASM_BOUNDARY_PROBES_STRICT === "1";
-if (runBoundaryProbes) {
-  if (typeof ex.wasm_probe_foreign_call1 !== "function") {
-    fail("kernel missing wasm_probe_foreign_call1 for boundary probes");
-  }
-  const boundaryProbeScratch = sharedProbeUtf8Scratch;
-  const runBoundaryProbe = (name, mode, arg) => {
-    boundaryProbeScratch.reset();
-    if (typeof ex.wasm_clear_pending_throw === "function") {
-      ex.wasm_clear_pending_throw();
-    }
-    const argMem = boundaryProbeScratch.allocUtf8(String(arg ?? ""), encoder);
-    const rc = ex.wasm_probe_foreign_call1(
-      mode >>> 0,
-      argMem.ptr >>> 0,
-      argMem.len >>> 0,
-    ) | 0;
-    const pending = pendingThrowProbe ? pendingThrowProbe() : null;
-    const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
-    const pendingName = pendingRaw != null && null;
-    console.log(
-      `boundary_probe name=${name} mode=${mode} rc=${rc}` +
-      (pending == null ? "" : ` pending=${pending}`) +
-      (pendingRaw == null ? "" : ` pending_raw=0x${pendingRaw.toString(16)}`) +
-      (pendingName ? ` pending_symbol=${JSON.stringify(pendingName)}` : ""),
-    );
-    return { rc, pending };
-  };
-
-  const identityProbe = runBoundaryProbe("identity", 1, "wasm-boundary-identity");
-  if (boundaryProbeStrict && (identityProbe.rc !== 0 || identityProbe.pending !== 0)) {
-    fail(`boundary identity probe expected rc=0 pending=0, got rc=${identityProbe.rc} pending=${identityProbe.pending}`);
-  } else if (identityProbe.rc !== 0 || identityProbe.pending !== 0) {
-    console.warn(`WARN: boundary identity probe non-clean (set CCL_WASM_BOUNDARY_PROBES_STRICT=1 to enforce) rc=${identityProbe.rc} pending=${identityProbe.pending}`);
-  }
-
-  const errorProbe = runBoundaryProbe("error", 2, "wasm-boundary-error");
-  if (boundaryProbeStrict && (errorProbe.rc !== -7 || errorProbe.pending !== 1)) {
-    fail(`boundary error probe expected rc=-7 pending=1, got rc=${errorProbe.rc} pending=${errorProbe.pending}`);
-  } else if (errorProbe.rc !== -7 || errorProbe.pending !== 1) {
-    console.warn(`WARN: boundary error probe shape changed (set CCL_WASM_BOUNDARY_PROBES_STRICT=1 to enforce) rc=${errorProbe.rc} pending=${errorProbe.pending}`);
-  }
-
-  if (typeof ex.wasm_clear_pending_throw === "function") {
-    ex.wasm_clear_pending_throw();
-  }
-  runBoundaryProbe("fasload.target", 0, "level-1.lafsl");
-  runBoundaryProbe("fasload.missing", 0, "__missing__/missing.lafsl");
-
-  if (typeof ex.wasm_clear_pending_throw === "function") {
-    ex.wasm_clear_pending_throw();
-  }
-  if (boundaryProbeOnly) {
-    trace("boundary probes complete; exiting early (CCL_WASM_BOUNDARY_PROBE_ONLY=1)");
-    process.exit(0);
-  }
-}
-const skipRequiredFasloads = process.env.CCL_WASM_SKIP_REQUIRED_FASLOADS === "1";
-if (skipRequiredFasloads && traceEnabled) {
-  trace("skipping required fasload sequence (CCL_WASM_SKIP_REQUIRED_FASLOADS=1)");
-}
-const classifyBoundaryUnresolvedFunction = (specrefDiag) => {
-  if (!specrefDiag || typeof specrefDiag !== "object") return null;
-  const symbolName = typeof specrefDiag.arg_z_symbol === "string"
-    ? specrefDiag.arg_z_symbol.trim()
-    : "";
-  if (!symbolName) return null;
-  if (Number.isInteger(specrefDiag.nfn_entry) && specrefDiag.nfn_entry >= 0) return null;
-  return {
-    symbol_name: symbolName,
-    nfn_entry: Number.isInteger(specrefDiag.nfn_entry) ? specrefDiag.nfn_entry : null,
-    nfn_owner: typeof specrefDiag.nfn_owner === "string" ? specrefDiag.nfn_owner : null,
-    nargs_raw: Number.isInteger(specrefDiag.nargs_raw) ? (specrefDiag.nargs_raw >>> 0) : null,
-  };
-};
-const probeRequiredCallableSymbolState = (packageName, symbolName) => {
-  if (
-    typeof ex.wasm_probe_symbol !== "function" ||
-    typeof ex.wasm_probe_symbol_fcell !== "function" ||
-    typeof ex.wasm_probe_last_status !== "function"
-  ) {
-    return {
-      package_name: packageName,
-      symbol_name: symbolName,
-      status: "probe-exports-missing",
-    };
-  }
-  const nil = typeof ex.wasm_get_lisp_nil === "function"
-    ? (ex.wasm_get_lisp_nil() >>> 0)
-    : 0;
-  const boundaryDiagScratch = sharedProbeUtf8Scratch;
-  boundaryDiagScratch.reset();
-  const nameMem = boundaryDiagScratch.allocUtf8(String(symbolName ?? ""), encoder);
-  const pkgMem = boundaryDiagScratch.allocUtf8(String(packageName ?? ""), encoder);
-  const symbolRaw = ex.wasm_probe_symbol(
-    nameMem.ptr >>> 0,
-    nameMem.len >>> 0,
-    pkgMem.ptr >>> 0,
-    pkgMem.len >>> 0,
-  ) >>> 0;
-  const symbolStatus = ex.wasm_probe_last_status() >>> 0;
-  if (symbolStatus !== L0_PROBE_STATUS.OK || symbolRaw === 0 || symbolRaw === nil) {
-    return {
-      package_name: packageName,
-      symbol_name: symbolName,
-      status: "symbol-unresolved",
-      symbol_status: symbolStatus,
-      symbol_status_name: l0ProbeStatusName(symbolStatus),
-      symbol_raw: `0x${symbolRaw.toString(16)}`,
-    };
-  }
-  const fcellRaw = ex.wasm_probe_symbol_fcell(symbolRaw >>> 0) >>> 0;
-  const fcellStatus = ex.wasm_probe_last_status() >>> 0;
-  const entryIndex = -1;
-  return {
-    package_name: packageName,
-    symbol_name: symbolName,
-    status: "ok",
-    symbol_status: symbolStatus,
-    symbol_status_name: l0ProbeStatusName(symbolStatus),
-    symbol_raw: `0x${symbolRaw.toString(16)}`,
-    fcell_status: fcellStatus,
-    fcell_status_name: l0ProbeStatusName(fcellStatus),
-    fcell_raw: `0x${fcellRaw.toString(16)}`,
-    fcell_entry_index: entryIndex >= 0 ? (entryIndex >>> 0) : null,
-  };
-};
-const captureRequiredFasloadBoundaryState = ({
-  stage,
-  faslIndex,
-  faslPath,
-  rc = null,
-  trapMessage = null,
-} = {}) => {
-  const pending = pendingThrowProbe ? pendingThrowProbe() : null;
-  const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
-  const pendingSymbol = pendingRaw != null && null;
-  const bootPhaseRaw = typeof ex.wasm_boot_get_phase === "function"
-    ? (ex.wasm_boot_get_phase() >>> 0)
-    : null;
-  return {
-    schema_version: "required_fasload_boundary_diag_v1",
-    stage: String(stage ?? ""),
-    phase: "pre-runtime-required-fasload",
-    fasl_index: Number.isInteger(faslIndex) ? (faslIndex >>> 0) : null,
-    first_required_fasload: faslIndex === 0,
-    path: typeof faslPath === "string" ? faslPath : null,
-    rc: Number.isInteger(rc) ? rc : null,
-    pending_throw: pending,
-    pending_throw_raw: pendingRaw == null ? null : `0x${pendingRaw.toString(16)}`,
-    pending_symbol: pendingSymbol ?? null,
-    boot_phase: bootPhaseRaw == null ? null : formatBootPhase(bootPhaseRaw),
-    required_callable_probes: [
-      probeRequiredCallableSymbolState("CCL", "%FASLOAD"),
-      probeRequiredCallableSymbolState("CCL", "%FASL-OPEN"),
-      probeRequiredCallableSymbolState("CCL", "%SIMPLE-FASL-OPEN"),
-    ],
-    trap_message: trapMessage,
-  };
-};
-const boundaryAutobindEnabled = process.env.CCL_WASM_BOUNDARY_AUTOBIND !== "0";
-const boundaryAutobindMethodFallbackEnabled = process.env.CCL_WASM_BOUNDARY_AUTOBIND_METHOD_FALLBACK === "1";
-const parseBoundaryAutobindSymbolSet = (rawValue, fallbackSymbols = []) => {
-  const out = new Set();
-  const values = [];
-  if (typeof rawValue === "string" && rawValue.trim()) {
-    values.push(...rawValue.split(","));
-  } else {
-    values.push(...fallbackSymbols);
-  }
-  for (const value of values) {
-    const key = String(value ?? "").trim().toUpperCase();
-    if (key) out.add(key);
-  }
-  return out;
-};
-const boundaryAutobindMethodFallbackDenylist = parseBoundaryAutobindSymbolSet(
-  process.env.CCL_WASM_BOUNDARY_AUTOBIND_METHOD_FALLBACK_DENYLIST,
-  ["STREAM-UNREAD-CHAR"],
-);
-const boundaryAutobindMethodFallbackAllowlist = parseBoundaryAutobindSymbolSet(
-  process.env.CCL_WASM_BOUNDARY_AUTOBIND_METHOD_FALLBACK_ALLOWLIST,
-  [],
-);
-const parseBoundaryAutobindEntryOverrides = (raw) => {
-  const out = new Map();
-  const text = String(raw ?? "").trim();
-  if (!text) return out;
-  const parts = text.split(/[,\s]+/).map((part) => part.trim()).filter(Boolean);
-  for (const part of parts) {
-    const eq = part.indexOf("=");
-    if (eq <= 0 || eq >= (part.length - 1)) continue;
-    const key = part.slice(0, eq).trim().toUpperCase();
-    if (!key) continue;
-    const valueText = part.slice(eq + 1).trim();
-    if (!valueText) continue;
-    const valueNum = Number.parseInt(valueText, 10);
-    if (!Number.isInteger(valueNum) || valueNum < 0) continue;
-    out.set(key, valueNum >>> 0);
-  }
-  return out;
-};
-const boundaryAutobindEntryOverrides = parseBoundaryAutobindEntryOverrides(
-  process.env.CCL_WASM_BOUNDARY_AUTOBIND_ENTRY_OVERRIDES,
-);
-const boundaryAutobindMethodFallbackAllowed = (symbolNameUpper) => {
-  if (!boundaryAutobindMethodFallbackEnabled) return false;
-  if (boundaryAutobindMethodFallbackDenylist.has(symbolNameUpper)) return false;
-  if (boundaryAutobindMethodFallbackAllowlist.size > 0 && !boundaryAutobindMethodFallbackAllowlist.has(symbolNameUpper)) {
-    return false;
-  }
-  return true;
-};
-const boundaryAutobindSampleSymbolsEnabled = process.env.CCL_WASM_BOUNDARY_AUTOBIND_SAMPLE_SYMBOLS !== "0";
-const boundaryAutobindAttemptedSymbolsByEpoch = new Map();
-let boundaryAutobindEpoch = 0;
-const boundaryConstPoolRecoveryAttemptedEntries = new Set();
-/* Startup binding map autobind removed — RESTORE-LISP-POINTERS handles symbol resolution. */
-const traceBoundaryAutobindProbe = () => {};
-const tryAutobindBoundaryUnresolvedFunction = () => false;
-const tryAutobindBoundaryCandidates = (unresolvedFunction, specrefDiag) => {
-  const attemptedSymbols = [];
-  if (tryAutobindBoundaryUnresolvedFunction(unresolvedFunction)) {
-    attemptedSymbols.push(String(unresolvedFunction?.symbol_name ?? "").trim().toUpperCase());
-  }
-  if (!boundaryAutobindSampleSymbolsEnabled) {
-    return attemptedSymbols.length > 0;
-  }
-  const sampleSymbols = Array.isArray(specrefDiag?.const_pool_sample_symbols)
-    ? specrefDiag.const_pool_sample_symbols
-    : [];
-  for (const rawSymbol of sampleSymbols) {
-    const symbolName = String(rawSymbol ?? "").trim();
-    if (!symbolName) continue;
-    const symbolUp = symbolName.toUpperCase();
-    if (attemptedSymbols.includes(symbolUp)) continue;
-    if (tryAutobindBoundaryUnresolvedFunction({ symbol_name: symbolName })) {
-      attemptedSymbols.push(symbolUp);
-    }
-  }
-  return attemptedSymbols.length > 0;
-};
-const tryRecoverBoundaryConstPoolEntry = (specrefDiag) => {
-  const constPoolEntry = Number(specrefDiag?.const_pool_entry);
-  if (!Number.isInteger(constPoolEntry) || constPoolEntry < 0) {
-    if (traceEnabled) {
-      trace(`boundary-const-pool-recovery skipped entry=${String(specrefDiag?.const_pool_entry ?? "n/a")}`);
-    }
-    return false;
-  }
-  const entryIndex = constPoolEntry >>> 0;
-  if (boundaryConstPoolRecoveryAttemptedEntries.has(entryIndex)) {
-    if (traceEnabled) {
-      trace(`boundary-const-pool-recovery skipped-already-attempted entry=${entryIndex}`);
-    }
-    return false;
-  }
-  boundaryConstPoolRecoveryAttemptedEntries.add(entryIndex);
-  const status = installConstPoolOnDemand(entryIndex);
-  if (traceEnabled) {
-    trace(`boundary-const-pool-recovery entry=${entryIndex} status=${status}`);
-  }
-  if (status === 1) {
-    boundaryAutobindEpoch = (boundaryAutobindEpoch + 1) >>> 0;
-  }
-  return status === 1;
-};
-const requiredFasloadQueue = skipRequiredFasloads ? [] : requiredFasls;
-for (let faslIndex = 0; faslIndex < requiredFasloadQueue.length; faslIndex++) {
-  const faslPath = requiredFasloadQueue[faslIndex];
-  if (faslIndex === 0) {
-    console.error(`REQUIRED_FASLOAD_BOUNDARY_DIAG_BEFORE ${JSON.stringify(captureRequiredFasloadBoundaryState({
-      stage: "before-call",
-      faslIndex,
-      faslPath,
-    }))}`);
-  }
-  if (traceEnabled && pendingThrowProbe) {
-    trace(`fasload pre path=${faslPath} pending=${pendingThrowProbe()}`);
-  }
-  const fasloadPathScratch = sharedProbeUtf8Scratch;
-  fasloadPathScratch.reset();
-  const faslMem = fasloadPathScratch.allocUtf8(String(faslPath ?? ""), encoder);
-  let faslRc = 0;
+for (const faslPath of requiredFasls) {
+  sharedProbeUtf8Scratch.reset();
+  const faslMem = sharedProbeUtf8Scratch.allocUtf8(faslPath, encoder);
+  let faslRc;
   try {
     faslRc = ex.wasm_fasload_path(faslMem.ptr >>> 0, faslMem.len >>> 0) | 0;
   } catch (err) {
-    const trapStack = typeof err?.stack === "string"
-      ? err.stack.split("\n").slice(0, 12).join(" | ")
-      : null;
-    if (traceEnabled && trapStack) {
-      trace(`fasload trap stack=${JSON.stringify(trapStack)}`);
-    }
-    if (faslIndex === 0) {
-      console.error(`REQUIRED_FASLOAD_BOUNDARY_DIAG_AFTER ${JSON.stringify(captureRequiredFasloadBoundaryState({
-        stage: "after-trap",
-        faslIndex,
-        faslPath,
-        rc: null,
-        trapMessage: err?.message ?? String(err),
-      }))}`);
-    }
-    const specrefDiag = null;
-    const unresolvedFunction = classifyBoundaryUnresolvedFunction(specrefDiag);
-    const boundaryReason = unresolvedFunction
-      ? "required-fasload-unresolved-function-symbol"
-      : "required-fasload-trap";
-    const pending = pendingThrowProbe ? pendingThrowProbe() : null;
-    const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
-    const pendingSymbol = pendingRaw != null && null;
-    const bootPhaseRaw = typeof ex.wasm_boot_get_phase === "function"
-      ? (ex.wasm_boot_get_phase() >>> 0)
-      : null;
-    console.error(`REQUIRED_FASLOAD_BOUNDARY ${JSON.stringify({
-      schema_version: "required_fasload_boundary_v1",
-      status: "fail",
-      phase: "pre-runtime-required-fasload",
-      fasl_index: faslIndex >>> 0,
-      first_required_fasload: faslIndex === 0,
-      path: faslPath,
-      rc: null,
-      pending_throw: pending,
-      pending_throw_raw: pendingRaw == null ? null : `0x${pendingRaw.toString(16)}`,
-      pending_symbol: pendingSymbol ?? null,
-      boot_phase: bootPhaseRaw == null ? null : formatBootPhase(bootPhaseRaw),
-      reason: boundaryReason,
-      unresolved_function_symbol: unresolvedFunction,
-      trap_message: err?.message ?? String(err),
-      trap_stack: trapStack,
-    })}`);
-    const autobindApplied = tryAutobindBoundaryCandidates(unresolvedFunction, specrefDiag);
-    const constPoolRecovered = tryRecoverBoundaryConstPoolEntry(specrefDiag);
-    if (autobindApplied || constPoolRecovered) {
-      if (typeof ex.wasm_clear_pending_throw === "function") {
-        ex.wasm_clear_pending_throw();
-      }
-      faslIndex = Math.max(-1, (faslIndex | 0) - 1);
-      continue;
-    }
     fail(`wasm_fasload_path(${faslPath}) trapped: ${err?.message ?? err}`);
   }
-  if (traceEnabled && pendingThrowProbe) {
-    const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
-    const pendingName = pendingRaw != null && null;
-    trace(
-      `fasload post path=${faslPath} rc=${faslRc} pending=${pendingThrowProbe()}` +
-      (pendingRaw == null ? "" : ` pending_raw=0x${pendingRaw.toString(16)}`) +
-      (pendingName ? ` pending_symbol=${JSON.stringify(pendingName)}` : ""),
-    );
-  }
-  if (faslIndex === 0) {
-    console.error(`REQUIRED_FASLOAD_BOUNDARY_DIAG_AFTER ${JSON.stringify(captureRequiredFasloadBoundaryState({
-      stage: faslRc === 0 ? "after-rc-ok" : "after-rc-fail",
-      faslIndex,
-      faslPath,
-      rc: faslRc,
-    }))}`);
-  }
   if (faslRc !== 0) {
-    const specrefDiag = null;
-    const unresolvedFunction = classifyBoundaryUnresolvedFunction(specrefDiag);
-    const boundaryReason = unresolvedFunction
-      ? "required-fasload-unresolved-function-symbol"
-      : "required-fasload-failed";
-    const pending = pendingThrowProbe ? pendingThrowProbe() : null;
-    const pendingRaw = pendingThrowRawProbe ? pendingThrowRawProbe() : null;
-    const pendingSymbol = pendingRaw != null && null;
-    const bootPhaseRaw = typeof ex.wasm_boot_get_phase === "function"
-      ? (ex.wasm_boot_get_phase() >>> 0)
-      : null;
-    console.error(`REQUIRED_FASLOAD_BOUNDARY ${JSON.stringify({
-      schema_version: "required_fasload_boundary_v1",
-      status: "fail",
-      phase: "pre-runtime-required-fasload",
-      fasl_index: faslIndex >>> 0,
-      first_required_fasload: faslIndex === 0,
-      path: faslPath,
-      rc: faslRc,
-      pending_throw: pending,
-      pending_throw_raw: pendingRaw == null ? null : `0x${pendingRaw.toString(16)}`,
-      pending_symbol: pendingSymbol ?? null,
-      boot_phase: bootPhaseRaw == null ? null : formatBootPhase(bootPhaseRaw),
-      reason: boundaryReason,
-      unresolved_function_symbol: unresolvedFunction,
-    })}`);
-    const autobindApplied = tryAutobindBoundaryCandidates(unresolvedFunction, specrefDiag);
-    const constPoolRecovered = tryRecoverBoundaryConstPoolEntry(specrefDiag);
-    if (autobindApplied || constPoolRecovered) {
-      if (typeof ex.wasm_clear_pending_throw === "function") {
-        ex.wasm_clear_pending_throw();
-      }
-      faslIndex = Math.max(-1, (faslIndex | 0) - 1);
-      continue;
-    }
-    if (traceEnabled) {
-      const nargsRaw = typeof ex.wasm_get_nargs === "function" ? (ex.wasm_get_nargs() >>> 0) : null;
-      const nargsCount = (nargsRaw != null && (nargsRaw & 0x7) === 0)
-        ? (nargsRaw >> 3)
-        : null;
-      trace(`fasload failure nargs_raw=${nargsRaw == null ? "n/a" : `0x${nargsRaw.toString(16)}`} count=${nargsCount == null ? "n/a" : nargsCount}`);
-      if (typeof ex.wasm_vsp_ref === "function" && Number.isFinite(nargsCount) && nargsCount > 0) {
-        const dumpCount = Math.min(nargsCount, 8);
-        for (let i = 0; i < dumpCount; i++) {
-          const value = ex.wasm_vsp_ref(i >>> 0) >>> 0;
-          const subtag = null;
-          const symbolName = null;
-          trace(
-            `fasload failure vsp[${i}]=0x${value.toString(16)} subtag=${subtag == null ? "n/a" : subtag}` +
-            (symbolName ? ` symbol=${JSON.stringify(symbolName)}` : ""),
-          );
-        }
-      }
-      const registerReaders = [
-        ["arg_z", ex.wasm_get_arg_z],
-        ["arg_y", ex.wasm_get_arg_y],
-        ["nfn", ex.wasm_get_nfn],
-        ["nargs", ex.wasm_get_nargs],
-      ];
-      for (const [name, reader] of registerReaders) {
-        if (typeof reader !== "function") continue;
-        const value = reader() >>> 0;
-        const subtag = null;
-        const symbolName = null;
-        trace(
-          `fasload failure reg ${name}=0x${value.toString(16)} subtag=${subtag == null ? "n/a" : subtag}` +
-          (symbolName ? ` symbol=${JSON.stringify(symbolName)}` : ""),
-        );
-      }
-      if (typeof ex.wasm_get_lisp_nil === "function") {
-        const nilValue = ex.wasm_get_lisp_nil() >>> 0;
-        trace(`fasload failure lisp_nil=0x${nilValue.toString(16)}`);
-      }
-      if (typeof ex.wasm_run_script_with_output === "function") {
-        if (typeof ex.wasm_clear_pending_throw === "function") {
-          ex.wasm_clear_pending_throw();
-        }
-        const diagPath = "scripts/wasm/fasload-diag.lisp";
-        const diagPathScratch = sharedProbeUtf8Scratch;
-        diagPathScratch.reset();
-        const diagPathMem = diagPathScratch.allocUtf8(String(diagPath ?? ""), encoder);
-        const diagRc = ex.wasm_run_script_with_output(diagPathMem.ptr >>> 0, diagPathMem.len >>> 0, 0, 0) | 0;
-        trace(`fasload diag script rc=${diagRc}`);
-      }
-    }
     fail(`wasm_fasload_path(${faslPath}) returned ${faslRc}`);
   }
-  if (faslIndex === 0) {
-    const bootPhaseRaw = typeof ex.wasm_boot_get_phase === "function"
-      ? (ex.wasm_boot_get_phase() >>> 0)
-      : null;
-    console.log(`REQUIRED_FASLOAD_BOUNDARY ${JSON.stringify({
-      schema_version: "required_fasload_boundary_v1",
-      status: "pass",
-      phase: "pre-runtime-required-fasload",
-      fasl_index: 0,
-      first_required_fasload: true,
-      path: faslPath,
-      rc: faslRc,
-      boot_phase: bootPhaseRaw == null ? null : formatBootPhase(bootPhaseRaw),
-      reason: "first-required-fasload-crossed",
-    })}`);
-  }
+  trace(`fasload ${faslPath} ok`);
 }
-if (!skipRequiredFasloads && requiredFasls.length > 0) {
-  setBootPhaseOrFail(WASM_BOOT_PHASE.RUNTIME, { reason: "post-required-fasload-boundary" });
+if (requiredFasls.length > 0) {
+  setBootPhaseOrFail(WASM_BOOT_PHASE.RUNTIME, { reason: "post-required-fasloads" });
 }
 
 /* Now that level-1 fasls have been loaded, RESTORE-LISP-POINTERS should be
@@ -2158,14 +1127,6 @@ if (setToplfuncRc !== 0) {
   fail(`wasm_set_toplfunc_entry(${toplevelEntryIndex}) returned ${setToplfuncRc}`);
 }
 
-let preSaveBootstrapState = null;
-try {
-  preSaveBootstrapState = collectBootstrapState({ kernelExports: ex });
-  console.log(`bootstrap_boundary pre-save ${formatBootstrapState(preSaveBootstrapState)}`);
-} catch (err) {
-  console.warn(`WARN: unable to capture pre-save bootstrap state: ${err?.message ?? err}`);
-}
-
 const imagePathBytes = encoder.encode(wasmOutputPath);
 const imagePathPtr = copyBytesToScratch(runtime.memory, imagePathBytes);
 if (typeof ex.wasm_save_image_direct !== "function") {
@@ -2199,51 +1160,6 @@ const persistedBytes = Buffer.concat(chunks);
 await fs.mkdir(path.dirname(outputPath), { recursive: true });
 const tempOutputPath = `${outputPath}.tmp-${process.pid}-${Date.now()}`;
 await fs.writeFile(tempOutputPath, persistedBytes);
-
-let boundaryReport = null;
-try {
-  const candidateStates = await collectBootstrapStatesFromImage({
-    label: "emitted root.image candidate",
-    scriptDirPath: scriptDir,
-    repoRootPath: root,
-    imagePathToCheck: tempOutputPath,
-    runtimeModulesPath: modulesPath,
-    mode: "start-lisp",
-  });
-  const reloadedPreStart = candidateStates.find((item) => item?.phase === "pre-start") ?? null;
-  const reloadedPostStart = candidateStates.find((item) => item?.phase === "post-start") ?? null;
-  if (reloadedPreStart) {
-    console.log(`bootstrap_boundary reload-pre ${formatBootstrapState(reloadedPreStart)}`);
-  }
-  if (reloadedPostStart) {
-    console.log(`bootstrap_boundary reload-post ${formatBootstrapState(reloadedPostStart)}`);
-  }
-  const preVsReloadDiff = bootstrapDiff(preSaveBootstrapState, reloadedPreStart);
-  if (preVsReloadDiff.length) {
-    for (const item of preVsReloadDiff) {
-      console.log(`bootstrap_boundary diff ${item.field}: ${item.before} -> ${item.after}`);
-    }
-  } else if (preSaveBootstrapState && reloadedPreStart) {
-    console.log("bootstrap_boundary diff: no pre-save vs reload-pre differences");
-  }
-  boundaryReport = {
-    generatedAt: new Date().toISOString(),
-    sourceImage: displayPath(bootImagePath),
-    emittedCandidate: displayPath(tempOutputPath),
-    preSaveState: preSaveBootstrapState,
-    reloadPreStartState: reloadedPreStart,
-    reloadPostStartState: reloadedPostStart,
-    preSaveVsReloadPreDiff: preVsReloadDiff,
-  };
-} catch (err) {
-  console.warn(`WARN: bootstrap boundary probe failed: ${err?.message ?? err}`);
-}
-
-if (bootstrapBoundaryReportPath && boundaryReport) {
-  await fs.mkdir(path.dirname(bootstrapBoundaryReportPath), { recursive: true });
-  await fs.writeFile(bootstrapBoundaryReportPath, canonicalJson(boundaryReport));
-  console.log(`Wrote bootstrap boundary report to ${bootstrapBoundaryReportPath}`);
-}
 
 try {
   await assertBootstrapSanity({

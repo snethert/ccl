@@ -114,10 +114,12 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_test_entry_funcall --export=wasm_test_entry_funcall2 \
 	  --export=wasm_const_entry --export=wasm_set_const_value --export=wasm_return_constant \
 	  --export=wasm_get_arg_z --export=wasm_get_arg_y \
-	  --export=wasm_set_arg_z --export=wasm_set_arg_y --export=wasm_set_nargs --export=wasm_get_nfn \
+	  --export=wasm_set_arg_z --export=wasm_set_arg_y --export=wasm_set_arg_x \
+	  --export=wasm_set_nargs --export=wasm_set_nfn --export=wasm_set_imm0 --export=wasm_get_nfn \
 	  --export=wasm_return_arg_z --export=wasm_return_arg_y \
 	  --export=wasm_return_values2 --export=wasm_return_values3 --export=wasm_return_values4 \
 	  --export=wasm_get_mv --export=wasm_get_mv_indexed --export=wasm_restore_vsp \
+	  --export=wasm_vpush --export=wasm_vpop \
 	  --export=wasm_spill_push --export=wasm_spill_pop \
 	  --export=wasm_funcall0 --export=wasm_funcall1 --export=wasm_funcall2 \
 	  --export=wasm_funcall3 --export=wasm_funcall4 --export=wasm_funcall5 --export=wasm_funcall6 \
@@ -144,7 +146,8 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_boot_get_phase --export=wasm_boot_set_phase \
 	  --export=wasm_ccl_load_image --export=wasm_ccl_step --export=wasm_restore_lisp_pointers \
 	  --export=wasm_clear_pending_throw \
-	  --export=wasm_const_pool_install \
+	  --export=wasm_const_pool_install --export=wasm_const_pool_ref \
+	  --export=wasm_lisp_word_ref \
 	  --export=wasm_fasload_path \
 	  --export=wasm_get_nargs \
 	  --export=wasm_kernel_runtime_command_poll --export=wasm_kernel_runtime_event \

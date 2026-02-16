@@ -222,7 +222,7 @@ These are the next tasks for MVP-1, but don't start until regressions are fixed.
 **What to remove:**
 - [ ] Obsolete image loading mechanisms
 - [x] Superseded bootstrap code (startup binding map infrastructure removed)
-- [x] Unused diagnostic scaffolding (removed in instrumentation + audit + JS/Lisp/shell sweep passes)
+- [x] Unused diagnostic scaffolding (removed in instrumentation + audit + JS/Lisp/shell sweep + boundary strip passes)
 - [x] Startup truth feature (fully retired across C/JS/Lisp/shell)
 - [ ] Confusing "replacement lane" terminology
 
@@ -250,10 +250,10 @@ These are explicitly NOT being worked on until MVP-1 ships.
 
 ## 📊 Current Status
 
-**Completed:** FASL loading fix, instrumentation removal (~2400 lines C), residual cruft audit, JS/Lisp/shell dead code sweep (~2100 lines), startup truth feature retired, B1 build artifacts resolved, startup binding map removed (~2500+ lines), RESTORE-LISP-POINTERS kernel export added
-**Blocked on:** B2 — compiled module installation skipping 99.97% of modules (7555/7557 skipped)
+**Completed:** FASL loading fix, instrumentation removal (~2400 lines C), residual cruft audit, JS/Lisp/shell dead code sweep (~2100 lines), startup truth feature retired, B1 build artifacts resolved, startup binding map removed (~2500+ lines), RESTORE-LISP-POINTERS kernel export added, B2 module installation fixed (7557/7557 install), boundary diagnostic scaffolding stripped (~1085 lines)
+**Blocked on:** B3 — FASL loading returns -7 despite modules installed (FASL functions not yet bound)
 **Build pipeline:** Fully functional (kernel → boot image → runtime modules → image build attempt)
-**MVP-1 completion:** 40% (build pipeline works, root.image build reaches FASL loading but fails due to B2)
+**MVP-1 completion:** 45% (build pipeline works, modules install, FASL loading attempted but functions not yet bound)
 
 ---
 
@@ -318,25 +318,53 @@ _Sub-problems discovered during main track work. Decide: fix now, workaround, or
 
 ---
 
-### B2. Compiled Module Installation Skipping 99.97% of Modules
+### B2. Compiled Module Installation Skipping 99.97% of Modules ✅ **RESOLVED 2026-02-15**
 
 **Discovered:** 2026-02-15 during root.image build attempt
-**Impact:** root.image build fails because required callable functions aren't installed
+**Resolved:** 2026-02-15
+
+**Root cause:** Kernel did not implement or export `wasm_const_pool_ref`, but all 7555 generic compiled modules import it as `ccl.wasm_const_pool_ref`. `WebAssembly.instantiate()` threw a LinkError at link time, silently caught by `strict: false`. The 2 modules that succeeded (`ccl_const_entry`, `ccl_identity_entry`) don't import this function.
+
+Additionally, 6 other kernel functions were implemented but not exported in the Makefile: `wasm_lisp_word_ref`, `wasm_set_arg_x`, `wasm_set_imm0`, `wasm_set_nfn`, `wasm_vpush`, `wasm_vpop`.
+
+**Fixes applied:**
+- ✅ Implemented `wasm_const_pool_ref(uint32_t entry_index, uint32_t slot_index)` in wasm-kernel-stubs.c
+- ✅ Added 7 missing `--export=` entries to Makefile
+- ✅ Kernel rebuilt successfully, all smoke tests pass
+- ✅ **7557/7557 compiled modules now install** (was 2/7557)
+- ✅ Stripped ~1085 lines of boundary diagnostic scaffolding from make-real-image.mjs (2346 → 1261)
+
+**Files modified:**
+- `lisp-kernel/wasm-kernel-stubs.c` — Added `wasm_const_pool_ref` (~35 lines)
+- `lisp-kernel/wasm32/Makefile` — Added 7 exports
+- `scripts/wasm/lib/make-real-image.mjs` — Removed boundary probes, autobind, diagnostic JSON, DIAG env blocks
+
+**Remaining issue:** FASL loading still returns -7 after modules install. `%FASLOAD`, `%FASL-OPEN`, `%SIMPLE-FASL-OPEN` not yet bound. This is now a separate investigation — see B3.
+
+---
+
+### B3. FASL Loading Returns -7 Despite 7557/7557 Modules Installed
+
+**Discovered:** 2026-02-15 after B2 fix
+**Impact:** root.image build fails at first FASL load (`l1-fasls/l1-cl-package.lafsl`)
 **Status:** ❌ Uninvestigated
 
 **Symptoms:**
-- `make-real-image.mjs` reports "compiled modules skipped: 7555" (of 7557 total)
-- Only 2 modules install successfully
-- Startup binding map can't bind 4 required callables: `%FASLOAD`, `%FASL-OPEN`, `%SIMPLE-FASL-OPEN`, `%SET-SIMPLE-ARRAY-P`
-- Symbol resolution works (589/6023 resolved) but function bindings are missing
+- All 7557 compiled modules install successfully
+- RESTORE-LISP-POINTERS deferred (not yet defined in boot image, expected)
+- Boot phase set to L0_READY
+- `wasm_fasload_path("l1-fasls/l1-cl-package.lafsl")` returns -7
+- `%FASLOAD`, `%FASL-OPEN`, `%SIMPLE-FASL-OPEN` all unbound
 
-**Error:** FASL loading traps with "table index is out of bounds" because function entries aren't populated
+**Key observation:** This is a chicken-and-egg problem. `%FASLOAD` is defined in level-1 Lisp code which is itself loaded via FASL. The kernel's `wasm_fasload_path` must implement FASL loading in C (or delegate to a minimal loader) without relying on Lisp-defined functions.
 
-**Likely cause:** Module installer is rejecting most modules — need to investigate why (entry index mismatch? table size? format issue?)
+**Possible causes to investigate:**
+1. `wasm_fasload_path` may be trying to call Lisp `%FASLOAD` instead of implementing FASL reading directly
+2. Const pools may not be installed (`installConstPools: false` in the bundle install call)
+3. The function table entries may be populated but not properly wired to the symbols that FASL loading needs
+4. Return code -7 semantics need to be traced in the kernel C code
 
-**Note:** Startup binding map infrastructure was removed (2026-02-15). The binding map was a 2,500+ line workaround for missing RESTORE-LISP-POINTERS — not a real fix. Now RESTORE-LISP-POINTERS is called properly (deferred when function not yet defined in boot image, called after fasls loaded). B2 is the real remaining blocker.
-
-**Decision:** Next critical-path task. This is what actually blocks FASL loading end-to-end.
+**Decision:** Next critical-path task.
 
 ---
 

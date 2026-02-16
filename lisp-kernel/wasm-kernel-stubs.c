@@ -4916,6 +4916,39 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
   return pool;
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_const_pool_ref")))
+LispObj
+wasm_const_pool_ref(uint32_t entry_index, uint32_t slot_index)
+{
+  LispObj table = nrs_WASM_CONST_POOLS.vcell;
+  if (table == lisp_nil ||
+      fulltag_of(table) != fulltag_misc ||
+      header_subtag(header_of(table)) != subtag_simple_vector) {
+    return lisp_nil;
+  }
+
+  uint32_t table_count = (uint32_t)header_element_count(header_of(table));
+  if (entry_index >= table_count) {
+    return lisp_nil;
+  }
+
+  LispObj *table_data = (LispObj *)((BytePtr)table + misc_data_offset);
+  LispObj pool = table_data[entry_index];
+  if (pool == lisp_nil ||
+      fulltag_of(pool) != fulltag_misc ||
+      header_subtag(header_of(pool)) != subtag_simple_vector) {
+    return lisp_nil;
+  }
+
+  uint32_t pool_count = (uint32_t)header_element_count(header_of(pool));
+  if (slot_index >= pool_count) {
+    return lisp_nil;
+  }
+
+  LispObj *pool_data = (LispObj *)((BytePtr)pool + misc_data_offset);
+  return pool_data[slot_index];
+}
+
 
 __attribute__((used, visibility("default"), export_name("wasm_reset_root_image_runtime_state")))
 int32_t

@@ -15,21 +15,21 @@ This is an **active, experimental port** of Clozure Common Lisp to WebAssembly. 
 1. **MVP-1:** Library/Embedded Mode (single-runner, postMessage, works anywhere)
 2. **MVP-2:** Full Runtime Mode (multi-runner, SAB, secure context, full IDE)
 
-### Critical Blocker: Compiled Module Installation
+### Critical Blocker: FASL Loading
 
 **Status:** ❌ BLOCKING MVP-1
 
-The build pipeline completes successfully (kernel, boot image, runtime modules, root image attempt), but the root image build fails because **compiled module installation skips 99.97% of modules** (7555 of 7557).
+The build pipeline completes successfully and all 7557 compiled modules install, but FASL loading returns -7. The kernel's `wasm_fasload_path` cannot load `l1-fasls/l1-cl-package.lafsl` because the FASL loading functions (`%FASLOAD`, `%FASL-OPEN`, `%SIMPLE-FASL-OPEN`) are not yet bound — they are defined in the level-1 Lisp code that FASL loading is trying to load (chicken-and-egg).
 
 - RESTORE-LISP-POINTERS is called correctly (deferred for boot image, called post-fasload)
 - Package hash tables are rebuilt after image load
 - Compiled modules are compiled and bundled (7557 modules, 437MB binary)
-- Module installer rejects almost all modules — only 2 install successfully
-- FASL loading traps with "table index is out of bounds" because function table entries are not populated
+- All 7557 compiled modules install successfully (B2 resolved)
+- `wasm_fasload_path` returns -7 on first FASL
 
 **Impact:** Cannot load level-1 FASLs. Root image build fails. MVP-1 blocked.
 
-**See:** [TODO.md](../../TODO.md) blocker B2 for investigation status.
+**See:** [TODO.md](../../TODO.md) blocker B3 for investigation status.
 
 ### What Works Today
 
@@ -47,8 +47,8 @@ The build pipeline completes successfully (kernel, boot image, runtime modules, 
 
 ### What's Broken or Missing
 
-- ❌ **Compiled module installation**: 7555/7557 modules skipped (blocks everything below)
-- ❌ **FASL loading**: Cannot load level-1 FASLs (function table entries missing)
+- ✅ **Compiled module installation**: 7557/7557 modules install (B2 resolved)
+- ❌ **FASL loading**: Returns -7 (`%FASLOAD` not yet bound — chicken-and-egg, B3)
 - ❌ **Real Lisp toplevel**: Cannot reach toplevel without working FASL loading
 - ❌ **Minimal compiler**: No arrays, hash tables, structures, classes, optimization passes
 - ❌ **No real I/O**: Filesystem is virtual-only stub, no networking
@@ -79,7 +79,7 @@ This port targets **two distinct use cases** with different architectures:
 </script>
 ```
 
-**Status:** Blocked by compiled module installation (B2). Build pipeline works, runtime blocked.
+**Status:** Blocked by FASL loading (B3). Modules install, FASL functions not yet bound.
 
 ### Full Runtime Mode (MVP-2 - Future)
 
@@ -215,7 +215,7 @@ From [project-overview.md](project-overview.md):
 | Subprims (Tier-1+) | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
 | Compiler Backend | ✅ | ⚠️ | ✅ | ⚠️ | ❌ |
 | Image Loading | ✅ | - | - | ✅ | ⚠️ |
-| Module Installation | ✅ | - | ⚠️ | ❌ | ❌ |
+| Module Installation | ✅ | - | - | ✅ | ⚠️ |
 | Toplevel/REPL | ✅ | - | ✅ | ❌ | ❌ |
 | Stdio Streams | ✅ | - | - | ✅ | ⚠️ |
 | Filesystem | ✅ | ✅ | - | - | - |
@@ -237,9 +237,9 @@ From [project-overview.md](project-overview.md):
 
 Per [TODO.md](../../TODO.md):
 
-1. **Fix compiled module installation** (B2 — 7555/7557 modules skipped)
-2. **Validate FASL loading end-to-end** (blocked by B2)
-3. **Stabilize bootstrap** for minimal/root images
+1. **Fix FASL loading** (B3 — returns -7, `%FASLOAD` not bound)
+2. **Stabilize bootstrap** for minimal/root images
+3. **Validate end-to-end** (boot → FASL load → toplevel)
 
 ### Key Directories
 
