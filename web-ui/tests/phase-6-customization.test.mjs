@@ -65,3 +65,18 @@ test("phase-6 customization persists through snapshot restore", () => {
     stableStringify(state.customization)
   );
 });
+
+test("phase-6 customization accepts high-contrast and forced-colors theme modes", () => {
+  let state = createState();
+  state = patchCustomization(state, "session", {
+    theme: { mode: "high-contrast" }
+  });
+  assert.equal(state.customization.effective.theme.mode, "high-contrast");
+  assert.equal(state.theme.mode, "high-contrast");
+
+  state = patchCustomization(state, "session", {
+    theme: { mode: "forced-colors" }
+  });
+  assert.equal(state.customization.effective.theme.mode, "forced-colors");
+  assert.equal(state.theme.mode, "forced-colors");
+});

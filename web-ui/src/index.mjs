@@ -216,10 +216,14 @@ export { normalizeLayout, createLayout } from "./layout.mjs";
 export { normalizeSelection } from "./selection.mjs";
 export {
   DEFAULT_THEME_PRESET_ID,
+  THEME_MODES,
+  isThemeMode,
   THEME_PRESETS,
   DEFAULT_THEME_TOKENS,
   DARK_THEME_TOKENS,
   LIGHT_THEME_TOKENS,
+  HIGH_CONTRAST_THEME_TOKENS,
+  FORCED_COLORS_THEME_TOKENS,
   sanitizeThemeOverrides,
   getThemePreset,
   listThemePresets,
@@ -241,6 +245,15 @@ export {
   evaluateQualityBudgets,
   createQualityCollector
 } from "./quality-gates.mjs";
+export {
+  CONFORMANCE_REPORT_VERSION,
+  CONFORMANCE_HARNESS_TYPES,
+  evaluateConformanceAssertion,
+  expandConformanceLanes,
+  validateConformanceReport,
+  assertConformanceReport,
+  createConformanceRunner
+} from "./conformance-runner.mjs";
 export {
   extractCommandOutput,
   formatClipboardText,
@@ -301,6 +314,7 @@ export {
   importCustomizationProfile
 } from "./customization.mjs";
 export { createRuntimeCommandClient } from "./runtime-command-client.mjs";
+export { SAB_RING_TRANSPORT } from "./runtime-transport.mjs";
 export {
   applyRuntimeMessage,
   applyRuntimeOutput,

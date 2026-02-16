@@ -1,0 +1,629 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ccl.dev/web-ui/spec/snapshot-schema-v1.json",
+  "title": "Web UI Replay Snapshot Schema v1",
+  "description": "Canonical deterministic replay snapshot envelope for web-ui phase-0 state capture.",
+  "x-spec-metadata": {
+    "status": "Draft",
+    "version": "1.0.0",
+    "lastUpdated": "2026-02-16",
+    "scope": "Snapshot envelope and baseline state contract used by replay/golden tests",
+    "compatibility": {
+      "backward": "Readers MAY accept legacy version `0` snapshots and normalize to v1 where fields are absent.",
+      "forward": "Unknown state lanes MAY be preserved when they do not violate required baseline fields.",
+      "deprecation": "Legacy version `0` snapshot writing SHOULD be removed in v2."
+    }
+  },
+  "type": "object",
+  "required": [
+    "version",
+    "state"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "enum": [
+        "1.0.0",
+        "0"
+      ]
+    },
+    "capturedAt": {
+      "$ref": "#/$defs/u53"
+    },
+    "sourceEventSeq": {
+      "$ref": "#/$defs/u53"
+    },
+    "sourceEventType": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*(?::[a-z0-9._-]+)+$|^snapshot$"
+    },
+    "seed": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "state": {
+      "$ref": "#/$defs/stateSnapshot"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "u53": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "idString": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:@/-]{1,192}$"
+    },
+    "workspace": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "taskIds",
+        "activeTaskId",
+        "metadata"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/idString"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "taskIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/idString"
+          }
+        },
+        "activeTaskId": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/idString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metadata": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "task": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "windowIds",
+        "activeWindowId",
+        "metadata"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/idString"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "windowIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/idString"
+          }
+        },
+        "activeWindowId": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/idString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metadata": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "taskMap": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z0-9._:@/-]{1,192}$": {
+          "$ref": "#/$defs/task"
+        }
+      },
+      "additionalProperties": false
+    },
+    "window": {
+      "type": "object",
+      "required": [
+        "id",
+        "taskId",
+        "title",
+        "kind",
+        "rootWidgetId",
+        "metadata"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/idString"
+        },
+        "taskId": {
+          "$ref": "#/$defs/idString"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "rootWidgetId": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/idString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metadata": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "windowMap": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z0-9._:@/-]{1,192}$": {
+          "$ref": "#/$defs/window"
+        }
+      },
+      "additionalProperties": false
+    },
+    "widget": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "parentId",
+        "windowId",
+        "childIds",
+        "props",
+        "model"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/idString"
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "parentId": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/idString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "windowId": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/idString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "childIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/idString"
+          }
+        },
+        "props": {
+          "type": "object"
+        },
+        "model": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "widgetMap": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z0-9._:@/-]{1,192}$": {
+          "$ref": "#/$defs/widget"
+        }
+      },
+      "additionalProperties": false
+    },
+    "commandState": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "reason",
+        "reasonId"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 512
+        },
+        "reasonId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 192
+        }
+      },
+      "additionalProperties": false
+    },
+    "commandStateMap": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z0-9._:@-]{1,192}$": {
+          "$ref": "#/$defs/commandState"
+        }
+      },
+      "additionalProperties": false
+    },
+    "focusTarget": {
+      "type": "object",
+      "required": [
+        "taskId",
+        "windowId",
+        "widgetId",
+        "presentationId"
+      ],
+      "properties": {
+        "taskId": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/idString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "windowId": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/idString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "widgetId": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/idString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "presentationId": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/idString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "focusTargetOrNull": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/focusTarget"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "focusHistoryEntry": {
+      "type": "object",
+      "required": [
+        "seq",
+        "target",
+        "reason"
+      ],
+      "properties": {
+        "seq": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/u53"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target": {
+          "$ref": "#/$defs/focusTargetOrNull"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        }
+      },
+      "additionalProperties": true
+    },
+    "selection": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "targetIds",
+        "anchorId",
+        "metadata"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/idString"
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "targetIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/idString"
+          }
+        },
+        "anchorId": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/idString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metadata": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "selectionOrNull": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/selection"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "layoutNode": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "children",
+        "props"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/idString"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "leaf",
+            "split",
+            "tabs",
+            "dock"
+          ]
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/idString"
+          }
+        },
+        "props": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "layoutEnvelope": {
+      "type": "object",
+      "required": [
+        "rootId",
+        "nodes"
+      ],
+      "properties": {
+        "rootId": {
+          "$ref": "#/$defs/idString"
+        },
+        "nodes": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Za-z0-9._:@/-]{1,192}$": {
+              "$ref": "#/$defs/layoutNode"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "eventLogEntry": {
+      "type": "object",
+      "required": [
+        "seq",
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "seq": {
+          "$ref": "#/$defs/u53"
+        },
+        "ts": {
+          "$ref": "#/$defs/u53"
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "target": {
+          "$ref": "#/$defs/idString"
+        },
+        "payload": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "eventLogRing": {
+      "type": "object",
+      "required": [
+        "capacity",
+        "entries"
+      ],
+      "properties": {
+        "capacity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/eventLogEntry"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "stateSnapshot": {
+      "type": "object",
+      "required": [
+        "workspace",
+        "tasks",
+        "windows",
+        "widgets",
+        "commands",
+        "focus",
+        "focusHistory",
+        "selection",
+        "layout"
+      ],
+      "properties": {
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "tasks": {
+          "$ref": "#/$defs/taskMap"
+        },
+        "windows": {
+          "$ref": "#/$defs/windowMap"
+        },
+        "widgets": {
+          "$ref": "#/$defs/widgetMap"
+        },
+        "commands": {
+          "$ref": "#/$defs/commandStateMap"
+        },
+        "disableReasons": {
+          "type": "object"
+        },
+        "focus": {
+          "$ref": "#/$defs/focusTargetOrNull"
+        },
+        "focusHistory": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/focusHistoryEntry"
+          }
+        },
+        "selection": {
+          "$ref": "#/$defs/selectionOrNull"
+        },
+        "layout": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/layoutEnvelope"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventLog": {
+          "$ref": "#/$defs/eventLogRing"
+        },
+        "presentations": {
+          "type": "object"
+        },
+        "commandHistory": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "idCounters": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z][a-z0-9-]*$": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

@@ -18,6 +18,11 @@ export const UI_STYLES = `
   color-scheme: light;
 }
 
+.ui-root[data-ui-theme="high-contrast"],
+.ui-root[data-ui-theme="forced-colors"] {
+  color-scheme: dark;
+}
+
 .ui-window {
   background: var(--ui-color-surface);
   border: 1px solid var(--ui-color-border);

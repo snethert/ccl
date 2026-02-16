@@ -1,0 +1,1042 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ccl.dev/web-ui/spec/persistence-envelope-schema-v1.json",
+  "title": "Web UI Persistence Envelope v1",
+  "description": "Canonical envelope schema for immutable persistence objects, mutable metadata records, and guarded protected-ref advances.",
+  "oneOf": [
+    { "$ref": "#/$defs/immutableObjectEnvelope" },
+    { "$ref": "#/$defs/mutableRecordEnvelope" },
+    { "$ref": "#/$defs/refAdvanceRequestEnvelope" }
+  ],
+  "$defs": {
+    "envelopeVersion": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "schemaVersionU32": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    },
+    "u64": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "epochMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-fA-F]{64}$"
+    },
+    "objectId": {
+      "type": "string",
+      "pattern": "^(sha256:[0-9a-fA-F]{64}|[A-Za-z0-9._:@-]{8,256})$"
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:@-]{1,192}$"
+    },
+    "workspaceId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:@-]{1,192}$"
+    },
+    "profileId": {
+      "type": "string",
+      "enum": [
+        "file-primacy-v1",
+        "semantic-canonical-v1"
+      ]
+    },
+    "refName": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9/_@.-]{0,255}$"
+    },
+    "typeTag": {
+      "type": "string",
+      "enum": [
+        "blob",
+        "tree",
+        "snapshot",
+        "commit",
+        "doc",
+        "form_node",
+        "form_graph",
+        "merge_record",
+        "chunk_list",
+        "ref_txn"
+      ]
+    },
+    "commitIntent": {
+      "type": "string",
+      "enum": [
+        "save",
+        "autosave",
+        "merge",
+        "sync",
+        "import",
+        "admin"
+      ]
+    },
+    "mergeResolutionKind": {
+      "type": "string",
+      "enum": [
+        "kept_local",
+        "kept_incoming",
+        "merged_structural",
+        "manual_edit",
+        "deleted",
+        "moved",
+        "renamed_identity_preserved",
+        "renamed_identity_split"
+      ]
+    },
+    "formKind": {
+      "type": "string",
+      "enum": [
+        "defun",
+        "defmacro",
+        "defclass",
+        "defmethod",
+        "defgeneric",
+        "defparameter",
+        "defvar",
+        "defconstant",
+        "deftype",
+        "defstruct",
+        "in-package",
+        "defpackage",
+        "eval-when",
+        "progn",
+        "locally",
+        "setf",
+        "setq",
+        "load-time-value",
+        "other"
+      ]
+    },
+    "immutableObjectEnvelope": {
+      "type": "object",
+      "required": [
+        "envelope_version",
+        "record_kind",
+        "object_id",
+        "type_tag",
+        "schema_version",
+        "canonical_encoding",
+        "created_at",
+        "payload"
+      ],
+      "properties": {
+        "envelope_version": { "$ref": "#/$defs/envelopeVersion" },
+        "record_kind": { "type": "string", "const": "immutable_object" },
+        "object_id": { "$ref": "#/$defs/objectId" },
+        "type_tag": { "$ref": "#/$defs/typeTag" },
+        "schema_version": { "$ref": "#/$defs/schemaVersionU32" },
+        "canonical_encoding": {
+          "type": "string",
+          "enum": [
+            "cbor-canonical-v1",
+            "custom-varint-v1",
+            "json-canonical-v1"
+          ]
+        },
+        "created_at": { "$ref": "#/$defs/epochMs" },
+        "payload_byte_length": { "$ref": "#/$defs/u64" },
+        "payload_hash": { "$ref": "#/$defs/hash" },
+        "payload": { "type": "object" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type_tag": { "const": "blob" } }, "required": ["type_tag"] },
+          "then": { "properties": { "payload": { "$ref": "#/$defs/blobPayload" } } }
+        },
+        {
+          "if": { "properties": { "type_tag": { "const": "tree" } }, "required": ["type_tag"] },
+          "then": { "properties": { "payload": { "$ref": "#/$defs/treePayload" } } }
+        },
+        {
+          "if": { "properties": { "type_tag": { "const": "snapshot" } }, "required": ["type_tag"] },
+          "then": { "properties": { "payload": { "$ref": "#/$defs/snapshotPayload" } } }
+        },
+        {
+          "if": { "properties": { "type_tag": { "const": "commit" } }, "required": ["type_tag"] },
+          "then": { "properties": { "payload": { "$ref": "#/$defs/commitPayload" } } }
+        },
+        {
+          "if": { "properties": { "type_tag": { "const": "doc" } }, "required": ["type_tag"] },
+          "then": { "properties": { "payload": { "$ref": "#/$defs/docPayload" } } }
+        },
+        {
+          "if": { "properties": { "type_tag": { "const": "form_node" } }, "required": ["type_tag"] },
+          "then": { "properties": { "payload": { "$ref": "#/$defs/formNodePayload" } } }
+        },
+        {
+          "if": { "properties": { "type_tag": { "const": "form_graph" } }, "required": ["type_tag"] },
+          "then": { "properties": { "payload": { "$ref": "#/$defs/formGraphPayload" } } }
+        },
+        {
+          "if": { "properties": { "type_tag": { "const": "merge_record" } }, "required": ["type_tag"] },
+          "then": { "properties": { "payload": { "$ref": "#/$defs/mergeRecordPayload" } } }
+        },
+        {
+          "if": { "properties": { "type_tag": { "const": "chunk_list" } }, "required": ["type_tag"] },
+          "then": { "properties": { "payload": { "$ref": "#/$defs/chunkListPayload" } } }
+        },
+        {
+          "if": { "properties": { "type_tag": { "const": "ref_txn" } }, "required": ["type_tag"] },
+          "then": { "properties": { "payload": { "$ref": "#/$defs/refTxnPayload" } } }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "blobPayload": {
+      "type": "object",
+      "required": [
+        "byte_length"
+      ],
+      "properties": {
+        "byte_length": { "$ref": "#/$defs/u64" },
+        "media_type": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "origin": {
+          "type": "string",
+          "enum": [
+            "authored",
+            "derived",
+            "projection_cache",
+            "binary"
+          ]
+        },
+        "inline_bytes_base64": { "type": "string", "contentEncoding": "base64" },
+        "chunk_list_id": { "$ref": "#/$defs/objectId" }
+      },
+      "oneOf": [
+        { "required": ["inline_bytes_base64"] },
+        { "required": ["chunk_list_id"] }
+      ],
+      "additionalProperties": false
+    },
+    "treePayload": {
+      "type": "object",
+      "required": [
+        "entries"
+      ],
+      "properties": {
+        "entries": {
+          "type": "object",
+          "patternProperties": {
+            "^(?!\\.?$|\\.\\.$)[^/\\u0000]{1,255}$": { "$ref": "#/$defs/treeEntry" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "treeEntry": {
+      "type": "object",
+      "required": [
+        "node_id",
+        "object_id",
+        "entry_type"
+      ],
+      "properties": {
+        "node_id": { "$ref": "#/$defs/stableId" },
+        "object_id": { "$ref": "#/$defs/objectId" },
+        "entry_type": {
+          "type": "string",
+          "enum": [
+            "blob",
+            "tree",
+            "doc"
+          ]
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "snapshotPayload": {
+      "type": "object",
+      "required": [
+        "created_at",
+        "author_session_id",
+        "workspace_id",
+        "profile_id"
+      ],
+      "properties": {
+        "created_at": { "$ref": "#/$defs/epochMs" },
+        "author_session_id": { "$ref": "#/$defs/stableId" },
+        "workspace_id": { "$ref": "#/$defs/workspaceId" },
+        "profile_id": { "$ref": "#/$defs/profileId" },
+        "root_tree_id": { "$ref": "#/$defs/objectId" },
+        "docs": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Za-z0-9._:@-]{1,192}$": { "$ref": "#/$defs/objectId" }
+          },
+          "additionalProperties": false
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "anyOf": [
+        { "required": ["root_tree_id"] },
+        { "required": ["docs"] }
+      ],
+      "additionalProperties": false
+    },
+    "commitPayload": {
+      "type": "object",
+      "required": [
+        "snapshot_id",
+        "parents",
+        "created_at",
+        "author_session_id",
+        "intent",
+        "finalized"
+      ],
+      "properties": {
+        "snapshot_id": { "$ref": "#/$defs/objectId" },
+        "parents": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/objectId" },
+          "uniqueItems": true
+        },
+        "created_at": { "$ref": "#/$defs/epochMs" },
+        "author_session_id": { "$ref": "#/$defs/stableId" },
+        "message": { "type": "string", "maxLength": 4096 },
+        "intent": { "$ref": "#/$defs/commitIntent" },
+        "finalized": { "type": "boolean", "default": true },
+        "candidate_of": { "$ref": "#/$defs/candidateOf" },
+        "merge_record_id": { "$ref": "#/$defs/objectId" },
+        "commit_metadata": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "signing": { "$ref": "#/$defs/signingBlock" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "finalized": { "const": false } },
+            "required": ["finalized"]
+          },
+          "then": { "required": ["candidate_of"] }
+        },
+        {
+          "if": {
+            "properties": {
+              "intent": { "const": "merge" },
+              "finalized": { "const": true }
+            },
+            "required": ["intent", "finalized"]
+          },
+          "then": { "required": ["merge_record_id"] }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "candidateOf": {
+      "type": "object",
+      "required": [
+        "local_commit_id",
+        "incoming_commit_id",
+        "base_commit_id"
+      ],
+      "properties": {
+        "local_commit_id": { "$ref": "#/$defs/objectId" },
+        "incoming_commit_id": { "$ref": "#/$defs/objectId" },
+        "base_commit_id": { "$ref": "#/$defs/objectId" }
+      },
+      "additionalProperties": false
+    },
+    "signingBlock": {
+      "type": "object",
+      "required": [
+        "algorithm",
+        "key_id",
+        "signature_base64"
+      ],
+      "properties": {
+        "algorithm": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "key_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "signature_base64": { "type": "string", "contentEncoding": "base64" }
+      },
+      "additionalProperties": false
+    },
+    "docPayload": {
+      "type": "object",
+      "required": [
+        "doc_id",
+        "doc_type",
+        "primary_content"
+      ],
+      "properties": {
+        "doc_id": { "$ref": "#/$defs/stableId" },
+        "doc_type": {
+          "type": "string",
+          "enum": [
+            "lisp-source",
+            "text",
+            "binary",
+            "generated",
+            "config",
+            "other"
+          ]
+        },
+        "primary_content": { "$ref": "#/$defs/docPrimaryContent" },
+        "path_hints": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 1024 },
+          "uniqueItems": true
+        },
+        "projection_cache": {
+          "type": "object",
+          "required": [
+            "projection_blob_object_id",
+            "projection_version",
+            "projection_policy_id"
+          ],
+          "properties": {
+            "projection_blob_object_id": { "$ref": "#/$defs/objectId" },
+            "projection_version": { "$ref": "#/$defs/schemaVersionU32" },
+            "projection_policy_id": { "type": "string", "minLength": 1, "maxLength": 128 }
+          },
+          "additionalProperties": false
+        },
+        "doc_metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "doc_type": { "const": "lisp-source" } },
+            "required": ["doc_type"]
+          },
+          "then": {
+            "properties": {
+              "primary_content": {
+                "type": "object",
+                "required": ["formgraph_object_id"],
+                "properties": {
+                  "formgraph_object_id": { "$ref": "#/$defs/objectId" }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "doc_type": {
+                "enum": ["text", "binary", "generated", "config", "other"]
+              }
+            },
+            "required": ["doc_type"]
+          },
+          "then": {
+            "properties": {
+              "primary_content": {
+                "type": "object",
+                "required": ["blob_object_id"],
+                "properties": {
+                  "blob_object_id": { "$ref": "#/$defs/objectId" }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "docPrimaryContent": {
+      "type": "object",
+      "oneOf": [
+        {
+          "required": ["formgraph_object_id"],
+          "properties": {
+            "formgraph_object_id": { "$ref": "#/$defs/objectId" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "required": ["blob_object_id"],
+          "properties": {
+            "blob_object_id": { "$ref": "#/$defs/objectId" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "formNodePayload": {
+      "type": "object",
+      "required": [
+        "form_id",
+        "kind",
+        "payload"
+      ],
+      "properties": {
+        "form_id": { "$ref": "#/$defs/stableId" },
+        "anchor_id": { "$ref": "#/$defs/stableId" },
+        "kind": { "$ref": "#/$defs/formKind" },
+        "head_key": { "type": "string", "minLength": 1, "maxLength": 1024 },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "ast_encoding_base64": { "type": "string", "contentEncoding": "base64" },
+            "surface_encoding_base64": { "type": "string", "contentEncoding": "base64" }
+          },
+          "oneOf": [
+            { "required": ["ast_encoding_base64"] },
+            { "required": ["surface_encoding_base64"] }
+          ],
+          "additionalProperties": false
+        },
+        "trivia": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "source_annotations": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "dependencies": {
+          "type": "object",
+          "properties": {
+            "referenced_symbols": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1, "maxLength": 1024 },
+              "uniqueItems": true
+            },
+            "defined_symbols": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1, "maxLength": 1024 },
+              "uniqueItems": true
+            },
+            "package_affecting": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "formGraphPayload": {
+      "type": "object",
+      "required": [
+        "doc_id",
+        "nodes",
+        "order",
+        "graph_metadata"
+      ],
+      "properties": {
+        "doc_id": { "$ref": "#/$defs/stableId" },
+        "nodes": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Za-z0-9._:@-]{1,192}$": { "$ref": "#/$defs/objectId" }
+          },
+          "additionalProperties": false
+        },
+        "order": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/stableId" },
+          "uniqueItems": true
+        },
+        "index": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "graph_metadata": {
+          "type": "object",
+          "properties": {
+            "reader_policy_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+            "projection_policy_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+            "symbol_encoding_policy_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+            "readtable_case_policy_id": { "type": "string", "minLength": 1, "maxLength": 128 }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "mergeRecordPayload": {
+      "type": "object",
+      "required": [
+        "base_commit_id",
+        "base_selection_spec_id",
+        "local_commit_id",
+        "incoming_commit_id",
+        "tool_version",
+        "created_at"
+      ],
+      "properties": {
+        "base_commit_id": { "$ref": "#/$defs/objectId" },
+        "base_selection_spec_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "local_commit_id": { "$ref": "#/$defs/objectId" },
+        "incoming_commit_id": { "$ref": "#/$defs/objectId" },
+        "doc_resolutions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/docResolution" }
+        },
+        "form_resolutions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/formResolution" }
+        },
+        "tool_version": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "created_at": { "$ref": "#/$defs/epochMs" }
+      },
+      "additionalProperties": false
+    },
+    "docResolution": {
+      "type": "object",
+      "required": [
+        "doc_id",
+        "policy",
+        "result_formgraph_id"
+      ],
+      "properties": {
+        "doc_id": { "$ref": "#/$defs/stableId" },
+        "policy": {
+          "type": "string",
+          "enum": [
+            "preserve_local_order",
+            "preserve_incoming_order",
+            "stable_sort",
+            "explicit_order"
+          ]
+        },
+        "result_formgraph_id": { "$ref": "#/$defs/objectId" },
+        "conflicts_resolved": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 128 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "formResolution": {
+      "type": "object",
+      "required": [
+        "doc_id",
+        "form_id",
+        "resolution_kind"
+      ],
+      "properties": {
+        "doc_id": { "$ref": "#/$defs/stableId" },
+        "form_id": { "$ref": "#/$defs/stableId" },
+        "resolution_kind": { "$ref": "#/$defs/mergeResolutionKind" },
+        "details": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "chunkListPayload": {
+      "type": "object",
+      "required": [
+        "chunk_ids",
+        "chunk_size",
+        "total_bytes"
+      ],
+      "properties": {
+        "chunk_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/objectId" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "chunk_size": { "$ref": "#/$defs/u64" },
+        "total_bytes": { "$ref": "#/$defs/u64" }
+      },
+      "additionalProperties": false
+    },
+    "refTxnPayload": {
+      "type": "object",
+      "required": [
+        "txn_id",
+        "created_at",
+        "writer_token",
+        "moves"
+      ],
+      "properties": {
+        "txn_id": { "$ref": "#/$defs/stableId" },
+        "created_at": { "$ref": "#/$defs/epochMs" },
+        "writer_token": { "$ref": "#/$defs/stableId" },
+        "moves": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/refTxnMove" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "refTxnMove": {
+      "type": "object",
+      "required": [
+        "ref_name",
+        "expected_refgen",
+        "new_commit_id"
+      ],
+      "properties": {
+        "ref_name": { "$ref": "#/$defs/refName" },
+        "expected_refgen": { "$ref": "#/$defs/u64" },
+        "new_commit_id": { "$ref": "#/$defs/objectId" }
+      },
+      "additionalProperties": false
+    },
+    "mutableRecordEnvelope": {
+      "type": "object",
+      "required": [
+        "envelope_version",
+        "record_kind",
+        "record_type",
+        "key",
+        "updated_at",
+        "value"
+      ],
+      "properties": {
+        "envelope_version": { "$ref": "#/$defs/envelopeVersion" },
+        "record_kind": { "type": "string", "const": "mutable_record" },
+        "record_type": {
+          "type": "string",
+          "enum": [
+            "ref_record",
+            "lease_record",
+            "conflict_record",
+            "sync_state",
+            "reftxn_marker",
+            "profile_transition"
+          ]
+        },
+        "key": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "updated_at": { "$ref": "#/$defs/epochMs" },
+        "value": { "type": "object" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "record_type": { "const": "ref_record" } }, "required": ["record_type"] },
+          "then": { "properties": { "value": { "$ref": "#/$defs/refRecordValue" } } }
+        },
+        {
+          "if": { "properties": { "record_type": { "const": "lease_record" } }, "required": ["record_type"] },
+          "then": { "properties": { "value": { "$ref": "#/$defs/leaseRecordValue" } } }
+        },
+        {
+          "if": { "properties": { "record_type": { "const": "conflict_record" } }, "required": ["record_type"] },
+          "then": { "properties": { "value": { "$ref": "#/$defs/conflictRecordValue" } } }
+        },
+        {
+          "if": { "properties": { "record_type": { "const": "sync_state" } }, "required": ["record_type"] },
+          "then": { "properties": { "value": { "$ref": "#/$defs/syncStateValue" } } }
+        },
+        {
+          "if": { "properties": { "record_type": { "const": "reftxn_marker" } }, "required": ["record_type"] },
+          "then": { "properties": { "value": { "$ref": "#/$defs/refTxnMarkerValue" } } }
+        },
+        {
+          "if": { "properties": { "record_type": { "const": "profile_transition" } }, "required": ["record_type"] },
+          "then": { "properties": { "value": { "$ref": "#/$defs/profileTransitionValue" } } }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "refRecordValue": {
+      "type": "object",
+      "required": [
+        "ref_name",
+        "current_commit_id",
+        "refgen",
+        "updated_at"
+      ],
+      "properties": {
+        "ref_name": { "$ref": "#/$defs/refName" },
+        "current_commit_id": { "$ref": "#/$defs/objectId" },
+        "previous_commit_id": { "$ref": "#/$defs/objectId" },
+        "refgen": { "$ref": "#/$defs/u64" },
+        "updated_at": { "$ref": "#/$defs/epochMs" },
+        "last_writer_token": { "$ref": "#/$defs/stableId" },
+        "lease_epoch": { "$ref": "#/$defs/u64" }
+      },
+      "additionalProperties": false
+    },
+    "leaseRecordValue": {
+      "type": "object",
+      "required": [
+        "lease_name",
+        "lease_id",
+        "owner_instance_id",
+        "writer_token",
+        "epoch",
+        "expires_at",
+        "last_heartbeat_at",
+        "capabilities"
+      ],
+      "properties": {
+        "lease_name": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "lease_id": { "$ref": "#/$defs/stableId" },
+        "owner_instance_id": { "$ref": "#/$defs/stableId" },
+        "writer_token": { "$ref": "#/$defs/stableId" },
+        "epoch": { "$ref": "#/$defs/u64" },
+        "expires_at": { "$ref": "#/$defs/epochMs" },
+        "last_heartbeat_at": { "$ref": "#/$defs/epochMs" },
+        "capabilities": {
+          "type": "object",
+          "required": [
+            "write_refs",
+            "workspace_id"
+          ],
+          "properties": {
+            "write_refs": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/refName" }
+            },
+            "workspace_id": { "$ref": "#/$defs/workspaceId" },
+            "role": { "type": "string", "minLength": 1, "maxLength": 128 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "conflictRecordValue": {
+      "type": "object",
+      "required": [
+        "conflict_id",
+        "workspace_id",
+        "base_commit_id",
+        "local_commit_id",
+        "incoming_commit_id",
+        "created_at",
+        "status"
+      ],
+      "properties": {
+        "conflict_id": { "$ref": "#/$defs/stableId" },
+        "workspace_id": { "$ref": "#/$defs/workspaceId" },
+        "base_commit_id": { "$ref": "#/$defs/objectId" },
+        "local_commit_id": { "$ref": "#/$defs/objectId" },
+        "incoming_commit_id": { "$ref": "#/$defs/objectId" },
+        "created_at": { "$ref": "#/$defs/epochMs" },
+        "status": {
+          "type": "string",
+          "enum": [
+            "unresolved",
+            "resolved"
+          ]
+        },
+        "resolution_commit_id": { "$ref": "#/$defs/objectId" },
+        "doc_conflicts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/docConflict" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "docConflict": {
+      "type": "object",
+      "required": [
+        "doc_id",
+        "classification"
+      ],
+      "properties": {
+        "doc_id": { "$ref": "#/$defs/stableId" },
+        "classification": {
+          "type": "string",
+          "enum": [
+            "no_conflict",
+            "disjoint_edits",
+            "same_form_conflicts",
+            "delete_edit_conflicts",
+            "macro_dependent",
+            "binary_conflict"
+          ]
+        },
+        "form_conflicts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/formConflict" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "formConflict": {
+      "type": "object",
+      "required": [
+        "conflict_type"
+      ],
+      "properties": {
+        "form_id": { "$ref": "#/$defs/stableId" },
+        "conflict_type": {
+          "type": "string",
+          "enum": [
+            "same-form-edited",
+            "delete-vs-edit",
+            "insert-collision",
+            "rename-identity",
+            "macro-dependent",
+            "projection-only",
+            "order-conflict-only",
+            "trivia-only"
+          ]
+        },
+        "local_change_ref": { "$ref": "#/$defs/objectId" },
+        "incoming_change_ref": { "$ref": "#/$defs/objectId" },
+        "base_change_ref": { "$ref": "#/$defs/objectId" },
+        "auto_resolvable": { "type": "boolean" },
+        "auto_resolution_reason": { "type": "string", "minLength": 1, "maxLength": 256 }
+      },
+      "additionalProperties": false
+    },
+    "syncStateValue": {
+      "type": "object",
+      "required": [
+        "remote_id",
+        "ref_name",
+        "last_seen_refgen",
+        "updated_at"
+      ],
+      "properties": {
+        "remote_id": { "$ref": "#/$defs/stableId" },
+        "ref_name": { "$ref": "#/$defs/refName" },
+        "last_seen_refgen": { "$ref": "#/$defs/u64" },
+        "last_pulled_commit_id": { "$ref": "#/$defs/objectId" },
+        "last_pushed_commit_id": { "$ref": "#/$defs/objectId" },
+        "updated_at": { "$ref": "#/$defs/epochMs" }
+      },
+      "additionalProperties": false
+    },
+    "refTxnMarkerValue": {
+      "type": "object",
+      "required": [
+        "txn_id",
+        "txn_object_id",
+        "state",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "txn_id": { "$ref": "#/$defs/stableId" },
+        "txn_object_id": { "$ref": "#/$defs/objectId" },
+        "state": {
+          "type": "string",
+          "enum": [
+            "prepared",
+            "committed",
+            "aborted"
+          ]
+        },
+        "created_at": { "$ref": "#/$defs/epochMs" },
+        "updated_at": { "$ref": "#/$defs/epochMs" }
+      },
+      "additionalProperties": false
+    },
+    "profileTransitionValue": {
+      "type": "object",
+      "required": [
+        "transition_id",
+        "workspace_id",
+        "from_profile",
+        "to_profile",
+        "status",
+        "created_at"
+      ],
+      "properties": {
+        "transition_id": { "$ref": "#/$defs/stableId" },
+        "workspace_id": { "$ref": "#/$defs/workspaceId" },
+        "from_profile": { "$ref": "#/$defs/profileId" },
+        "to_profile": { "$ref": "#/$defs/profileId" },
+        "status": {
+          "type": "string",
+          "enum": [
+            "started",
+            "completed",
+            "aborted"
+          ]
+        },
+        "created_at": { "$ref": "#/$defs/epochMs" },
+        "completed_at": { "$ref": "#/$defs/epochMs" },
+        "error_code": { "type": "string", "minLength": 1, "maxLength": 128 }
+      },
+      "additionalProperties": false
+    },
+    "refAdvanceRequestEnvelope": {
+      "type": "object",
+      "required": [
+        "envelope_version",
+        "record_kind",
+        "request_id",
+        "ref_name",
+        "expected_refgen",
+        "new_commit_id",
+        "protected_ref"
+      ],
+      "properties": {
+        "envelope_version": { "$ref": "#/$defs/envelopeVersion" },
+        "record_kind": { "type": "string", "const": "ref_advance_request" },
+        "request_id": { "$ref": "#/$defs/stableId" },
+        "ref_name": { "$ref": "#/$defs/refName" },
+        "expected_refgen": { "$ref": "#/$defs/u64" },
+        "new_commit_id": { "$ref": "#/$defs/objectId" },
+        "writer_token": { "$ref": "#/$defs/stableId" },
+        "protected_ref": { "type": "boolean" },
+        "semantic_guard": { "$ref": "#/$defs/semanticGuard" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "protected_ref": { "const": true } },
+            "required": ["protected_ref"]
+          },
+          "then": {
+            "required": [
+              "writer_token",
+              "semantic_guard"
+            ],
+            "properties": {
+              "semantic_guard": { "$ref": "#/$defs/protectedRefSemanticGuard" }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "semanticGuard": {
+      "type": "object",
+      "properties": {
+        "requires_current_commit_id": { "$ref": "#/$defs/objectId" },
+        "requires_base_commit_id": { "$ref": "#/$defs/objectId" },
+        "requires_no_unresolved_conflicts": { "type": "boolean" },
+        "requires_lease_epoch": { "$ref": "#/$defs/u64" },
+        "requires_finalized": { "type": "boolean" },
+        "requires_profile_id": { "$ref": "#/$defs/profileId" }
+      },
+      "additionalProperties": false
+    },
+    "protectedRefSemanticGuard": {
+      "allOf": [
+        { "$ref": "#/$defs/semanticGuard" },
+        {
+          "type": "object",
+          "required": [
+            "requires_current_commit_id",
+            "requires_no_unresolved_conflicts",
+            "requires_lease_epoch",
+            "requires_finalized"
+          ],
+          "properties": {
+            "requires_no_unresolved_conflicts": { "const": true },
+            "requires_finalized": { "const": true }
+          }
+        }
+      ]
+    }
+  }
+}

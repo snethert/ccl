@@ -1,0 +1,449 @@
+{
+  "metadata": {
+    "id": "web-ui.persistence-conformance-fixtures",
+    "version": "1.0.0",
+    "status": "draft",
+    "lastUpdated": "2026-02-16",
+    "compatibility": {
+      "backward": "Minor versions MAY add scenarios but MUST NOT alter required scenario semantics.",
+      "forward": "Unknown scenario fields MUST be ignored by runners.",
+      "deprecation": "Required scenario IDs MUST remain for one major version before removal."
+    }
+  },
+  "executionProfile": {
+    "seed": "persistence-conformance-v1",
+    "startMs": 1700000000000,
+    "leaseTtlMs": 15000,
+    "suspendGraceMs": 0,
+    "defaultLeaseName": "lease/workspace/main",
+    "defaultRemoteId": "remote-1"
+  },
+  "scenarios": [
+    {
+      "id": "crash.before_ref_commit.v1",
+      "title": "Crash after durable object write and before protected ref commit",
+      "status": "required",
+      "class": "crash",
+      "script": [
+        { "id": "put-c0", "op": "put_commit", "target": "local", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0", "s0"] },
+        { "id": "seed-main", "op": "seed_ref", "target": "local", "ref_name": "workspace/main", "commit_id": "c0", "refgen": 1, "protected_ref": true },
+        { "id": "acquire-lease", "op": "lease_acquire", "lease_name": "lease/workspace/main", "owner_instance_id": "tab-1", "writer_token": "tok-1" },
+        { "id": "put-c1", "op": "put_commit", "target": "local", "commit_id": "c1", "parents": ["c0"], "finalized": true, "closure": ["c1", "s1"] },
+        {
+          "id": "advance-main",
+          "op": "ref_advance",
+          "ref_name": "workspace/main",
+          "expected_refgen": 1,
+          "new_commit_id": "c1",
+          "protected_ref": true,
+          "writer_token": "tok-1",
+          "semantic_guard": {
+            "requires_current_commit_id": "c0",
+            "requires_no_unresolved_conflicts": true,
+            "requires_lease_epoch": 1,
+            "requires_finalized": true
+          }
+        }
+      ],
+      "faults": [
+        { "op_id": "advance-main", "phase": "before_commit", "action": "crash", "once": true }
+      ],
+      "expect": {
+        "crashed": true,
+        "error_codes": ["ERR_HARNESS_CRASH"],
+        "local_refs": {
+          "workspace/main": { "commit_id": "c0", "refgen": 1, "protected_ref": true }
+        },
+        "invariants": ["no_half_state_refs", "protected_refs_resolve_complete_closure"]
+      }
+    },
+    {
+      "id": "crash.after_ref_commit.v1",
+      "title": "Crash immediately after protected ref commit",
+      "status": "required",
+      "class": "crash",
+      "script": [
+        { "id": "put-c0", "op": "put_commit", "target": "local", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0", "s0"] },
+        { "id": "seed-main", "op": "seed_ref", "target": "local", "ref_name": "workspace/main", "commit_id": "c0", "refgen": 1, "protected_ref": true },
+        { "id": "acquire-lease", "op": "lease_acquire", "lease_name": "lease/workspace/main", "owner_instance_id": "tab-1", "writer_token": "tok-1" },
+        { "id": "put-c1", "op": "put_commit", "target": "local", "commit_id": "c1", "parents": ["c0"], "finalized": true, "closure": ["c1", "s1"] },
+        {
+          "id": "advance-main",
+          "op": "ref_advance",
+          "ref_name": "workspace/main",
+          "expected_refgen": 1,
+          "new_commit_id": "c1",
+          "protected_ref": true,
+          "writer_token": "tok-1",
+          "semantic_guard": {
+            "requires_current_commit_id": "c0",
+            "requires_no_unresolved_conflicts": true,
+            "requires_lease_epoch": 1,
+            "requires_finalized": true
+          }
+        }
+      ],
+      "faults": [
+        { "op_id": "advance-main", "phase": "after_commit", "action": "crash", "once": true }
+      ],
+      "expect": {
+        "crashed": true,
+        "error_codes": ["ERR_HARNESS_CRASH"],
+        "local_refs": {
+          "workspace/main": { "commit_id": "c1", "refgen": 2, "protected_ref": true }
+        },
+        "invariants": ["no_half_state_refs", "protected_refs_resolve_complete_closure"]
+      }
+    },
+    {
+      "id": "lease.race.single_writer.v1",
+      "title": "Competing lease acquires resolve to one writer",
+      "status": "required",
+      "class": "lease",
+      "script": [
+        { "id": "acquire-a", "op": "lease_acquire", "lease_name": "lease/workspace/main", "owner_instance_id": "tab-1", "writer_token": "tok-1" },
+        { "id": "acquire-b", "op": "lease_acquire", "lease_name": "lease/workspace/main", "owner_instance_id": "tab-2", "writer_token": "tok-2" }
+      ],
+      "expect": {
+        "crashed": false,
+        "error_codes": ["ERR_LEASE_HELD"],
+        "invariants": ["single_writer_per_lease"]
+      }
+    },
+    {
+      "id": "lease.stale_writer_blocked.v1",
+      "title": "Stale writer token cannot advance protected ref after takeover",
+      "status": "required",
+      "class": "lease",
+      "script": [
+        { "id": "put-c0", "op": "put_commit", "target": "local", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0"] },
+        { "id": "put-c1", "op": "put_commit", "target": "local", "commit_id": "c1", "parents": ["c0"], "finalized": true, "closure": ["c1"] },
+        { "id": "seed-main", "op": "seed_ref", "target": "local", "ref_name": "workspace/main", "commit_id": "c0", "refgen": 7, "protected_ref": true },
+        { "id": "acquire-a", "op": "lease_acquire", "lease_name": "lease/workspace/main", "owner_instance_id": "tab-1", "writer_token": "tok-1" },
+        { "id": "wait-expire", "op": "advance_time", "ms": 20000 },
+        { "id": "takeover-b", "op": "lease_acquire", "mode": "takeover", "lease_name": "lease/workspace/main", "owner_instance_id": "tab-2", "writer_token": "tok-2" },
+        {
+          "id": "stale-write",
+          "op": "ref_advance",
+          "ref_name": "workspace/main",
+          "expected_refgen": 7,
+          "new_commit_id": "c1",
+          "protected_ref": true,
+          "writer_token": "tok-1",
+          "semantic_guard": {
+            "requires_current_commit_id": "c0",
+            "requires_no_unresolved_conflicts": true,
+            "requires_lease_epoch": 1,
+            "requires_finalized": true
+          }
+        }
+      ],
+      "expect": {
+        "error_codes": ["ERR_LEASE_REQUIRED"],
+        "local_refs": {
+          "workspace/main": { "commit_id": "c0", "refgen": 7, "protected_ref": true }
+        },
+        "invariants": ["protected_refs_resolve_complete_closure"]
+      }
+    },
+    {
+      "id": "sync.push.partition_retry.v1",
+      "title": "Push retry after partition advances remote ref exactly once",
+      "status": "required",
+      "class": "sync",
+      "script": [
+        { "id": "put-c0", "op": "put_commit", "target": "both", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0", "base"] },
+        { "id": "put-c1", "op": "put_commit", "target": "local", "commit_id": "c1", "parents": ["c0"], "finalized": true, "closure": ["c1", "next"] },
+        { "id": "seed-local-main", "op": "seed_ref", "target": "local", "ref_name": "workspace/main", "commit_id": "c1", "refgen": 3, "protected_ref": false },
+        { "id": "seed-remote-main", "op": "seed_ref", "target": "remote", "ref_name": "workspace/main", "commit_id": "c0", "refgen": 9, "protected_ref": false },
+        { "id": "push-1", "op": "push", "ref_name": "workspace/main", "remote_id": "remote-1" },
+        { "id": "push-2", "op": "push", "ref_name": "workspace/main", "remote_id": "remote-1" }
+      ],
+      "faults": [
+        { "op_id": "push-1", "phase": "after_upload_before_ref_cas", "action": "partition", "code": "ERR_SYNC_NETWORK", "once": true }
+      ],
+      "expect": {
+        "error_codes": ["ERR_SYNC_NETWORK"],
+        "remote_refs": {
+          "workspace/main": { "commit_id": "c1", "refgen": 10, "protected_ref": false }
+        },
+        "invariants": ["no_half_state_refs"]
+      }
+    },
+    {
+      "id": "sync.pull.divergence_incoming.v1",
+      "title": "Divergent pull creates incoming ref without moving workspace/main",
+      "status": "required",
+      "class": "sync",
+      "script": [
+        { "id": "put-local-c1", "op": "put_commit", "target": "local", "commit_id": "c1", "parents": [], "finalized": true, "closure": ["c1"] },
+        { "id": "put-remote-c2", "op": "put_commit", "target": "remote", "commit_id": "c2", "parents": [], "finalized": true, "closure": ["c2"] },
+        { "id": "seed-local-main", "op": "seed_ref", "target": "local", "ref_name": "workspace/main", "commit_id": "c1", "refgen": 2, "protected_ref": false },
+        { "id": "seed-remote-main", "op": "seed_ref", "target": "remote", "ref_name": "workspace/main", "commit_id": "c2", "refgen": 5, "protected_ref": false },
+        { "id": "pull-diverge", "op": "pull", "ref_name": "workspace/main", "remote_id": "remote-1", "protected_ref": false }
+      ],
+      "expect": {
+        "local_refs": {
+          "workspace/main": { "commit_id": "c1", "refgen": 2, "protected_ref": false }
+        },
+        "incoming_local_ref_prefixes": ["incoming/remote-1/workspace/main/"],
+        "error_codes_absent": ["ERR_SYNC_PROTECTED_REF_GUARD_REQUIRED"],
+        "invariants": ["no_half_state_refs"]
+      }
+    },
+    {
+      "id": "sync.pull.protected_guard_required.v1",
+      "title": "Protected pull requires guard and succeeds on guarded retry",
+      "status": "required",
+      "class": "sync",
+      "script": [
+        { "id": "put-c0", "op": "put_commit", "target": "both", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0"] },
+        { "id": "put-remote-c1", "op": "put_commit", "target": "remote", "commit_id": "c1", "parents": ["c0"], "finalized": true, "closure": ["c1", "obj-c1"] },
+        { "id": "seed-local-main", "op": "seed_ref", "target": "local", "ref_name": "workspace/main", "commit_id": "c0", "refgen": 1, "protected_ref": true },
+        { "id": "seed-remote-main", "op": "seed_ref", "target": "remote", "ref_name": "workspace/main", "commit_id": "c1", "refgen": 1, "protected_ref": true },
+        { "id": "lease", "op": "lease_acquire", "lease_name": "lease/workspace/main", "owner_instance_id": "tab-1", "writer_token": "tok-1" },
+        { "id": "pull-missing-guard", "op": "pull", "ref_name": "workspace/main", "remote_id": "remote-1", "protected_ref": true, "writer_token": "tok-1" },
+        {
+          "id": "pull-with-guard",
+          "op": "pull",
+          "ref_name": "workspace/main",
+          "remote_id": "remote-1",
+          "protected_ref": true,
+          "writer_token": "tok-1",
+          "semantic_guard": {
+            "requires_current_commit_id": "c0",
+            "requires_no_unresolved_conflicts": true,
+            "requires_lease_epoch": 1,
+            "requires_finalized": true
+          }
+        }
+      ],
+      "expect": {
+        "error_codes": ["ERR_SYNC_PROTECTED_REF_GUARD_REQUIRED"],
+        "local_refs": {
+          "workspace/main": { "commit_id": "c1", "refgen": 2, "protected_ref": true }
+        },
+        "invariants": ["protected_refs_resolve_complete_closure"]
+      }
+    },
+    {
+      "id": "sync.pull.partition_mid_fetch_retry.v1",
+      "title": "Pull retry after mid-fetch partition converges deterministically",
+      "status": "required",
+      "class": "sync",
+      "script": [
+        { "id": "put-c0", "op": "put_commit", "target": "both", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0", "base-obj"] },
+        { "id": "put-remote-c3", "op": "put_commit", "target": "remote", "commit_id": "c3", "parents": ["c0"], "finalized": true, "closure": ["c3", "obj31", "obj32", "obj33"] },
+        { "id": "seed-local-main", "op": "seed_ref", "target": "local", "ref_name": "workspace/main", "commit_id": "c0", "refgen": 4, "protected_ref": false },
+        { "id": "seed-remote-main", "op": "seed_ref", "target": "remote", "ref_name": "workspace/main", "commit_id": "c3", "refgen": 8, "protected_ref": false },
+        { "id": "pull-1", "op": "pull", "ref_name": "workspace/main", "remote_id": "remote-1", "protected_ref": false },
+        { "id": "pull-2", "op": "pull", "ref_name": "workspace/main", "remote_id": "remote-1", "protected_ref": false }
+      ],
+      "faults": [
+        { "op_id": "pull-1", "phase": "mid_fetch", "action": "partition", "code": "ERR_SYNC_NETWORK", "once": true }
+      ],
+      "expect": {
+        "error_codes": ["ERR_SYNC_NETWORK"],
+        "local_refs": {
+          "workspace/main": { "commit_id": "c3", "refgen": 5, "protected_ref": false }
+        },
+        "invariants": ["no_half_state_refs"]
+      }
+    },
+    {
+      "id": "pending.crash.object_split_before_manifest.v1",
+      "title": "P1 scaffold: crash during split immutable write before manifest completion",
+      "status": "pending",
+      "class": "crash",
+      "script": [
+        { "id": "put-c0", "op": "put_commit", "target": "local", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0", "s0"] },
+        { "id": "seed-main", "op": "seed_ref", "target": "local", "ref_name": "workspace/main", "commit_id": "c0", "refgen": 11, "protected_ref": false },
+        { "id": "put-c1-split", "op": "put_commit", "target": "local", "commit_id": "c1", "parents": ["c0"], "finalized": true, "closure": ["c1", "chunk-1", "chunk-2", "chunk-manifest"] }
+      ],
+      "faults": [
+        { "op_id": "put-c1-split", "phase": "after", "action": "error", "code": "ERR_OBJECT_TXN_FAILED", "once": true }
+      ],
+      "expect": {
+        "error_codes": ["ERR_OBJECT_TXN_FAILED"],
+        "local_refs": {
+          "workspace/main": { "commit_id": "c0", "refgen": 11, "protected_ref": false }
+        },
+        "invariants": ["no_half_state_refs"]
+      }
+    },
+    {
+      "id": "pending.crash.reftxn_prepared.v1",
+      "title": "P1 scaffold: metadata failure after reftxn prepared and before CAS apply",
+      "status": "pending",
+      "class": "crash",
+      "script": [
+        { "id": "put-c0", "op": "put_commit", "target": "local", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0", "s0"] },
+        { "id": "put-c1", "op": "put_commit", "target": "local", "commit_id": "c1", "parents": ["c0"], "finalized": true, "closure": ["c1", "s1"] },
+        { "id": "seed-main", "op": "seed_ref", "target": "local", "ref_name": "workspace/main", "commit_id": "c0", "refgen": 2, "protected_ref": false },
+        { "id": "seed-autosave", "op": "seed_ref", "target": "local", "ref_name": "autosave/latest", "commit_id": "c0", "refgen": 4, "protected_ref": false },
+        { "id": "reftxn-apply", "op": "ref_advance", "ref_name": "workspace/main", "expected_refgen": 2, "new_commit_id": "c1", "protected_ref": false }
+      ],
+      "faults": [
+        { "op_id": "reftxn-apply", "phase": "before_commit", "action": "error", "code": "ERR_METADATA_TXN_FAILED", "once": true }
+      ],
+      "expect": {
+        "error_codes": ["ERR_METADATA_TXN_FAILED"],
+        "local_refs": {
+          "workspace/main": { "commit_id": "c0", "refgen": 2, "protected_ref": false },
+          "autosave/latest": { "commit_id": "c0", "refgen": 4, "protected_ref": false }
+        },
+        "invariants": ["no_half_state_refs"]
+      }
+    },
+    {
+      "id": "pending.crash.recovery_scanner_restart.v1",
+      "title": "P1 scaffold: startup recovery scanner interruption and deterministic retry",
+      "status": "pending",
+      "class": "crash",
+      "script": [
+        { "id": "put-c0", "op": "put_commit", "target": "both", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0"] },
+        { "id": "seed-local-main", "op": "seed_ref", "target": "local", "ref_name": "workspace/main", "commit_id": "c0", "refgen": 1, "protected_ref": false },
+        { "id": "seed-remote-main", "op": "seed_ref", "target": "remote", "ref_name": "workspace/main", "commit_id": "c0", "refgen": 1, "protected_ref": false },
+        { "id": "startup-scan", "op": "pull", "ref_name": "workspace/main", "remote_id": "remote-1", "protected_ref": false },
+        { "id": "scan-retry", "op": "pull", "ref_name": "workspace/main", "remote_id": "remote-1", "protected_ref": false }
+      ],
+      "faults": [
+        { "op_id": "startup-scan", "phase": "before_fetch", "action": "error", "code": "ERR_RECOVERY_MANUAL_ACTION_REQUIRED", "once": true }
+      ],
+      "expect": {
+        "error_codes": ["ERR_RECOVERY_MANUAL_ACTION_REQUIRED"],
+        "local_refs": {
+          "workspace/main": { "commit_id": "c0", "refgen": 1, "protected_ref": false }
+        },
+        "invariants": ["no_half_state_refs"]
+      }
+    },
+    {
+      "id": "pending.lease.heartbeat_loss_before_write.v1",
+      "title": "P1 scaffold: lease heartbeat loss immediately before protected ref write",
+      "status": "pending",
+      "class": "lease",
+      "script": [
+        { "id": "put-c0", "op": "put_commit", "target": "local", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0"] },
+        { "id": "put-c1", "op": "put_commit", "target": "local", "commit_id": "c1", "parents": ["c0"], "finalized": true, "closure": ["c1"] },
+        { "id": "seed-main", "op": "seed_ref", "target": "local", "ref_name": "workspace/main", "commit_id": "c0", "refgen": 3, "protected_ref": true },
+        { "id": "lease-a", "op": "lease_acquire", "lease_name": "lease/workspace/main", "owner_instance_id": "tab-1", "writer_token": "tok-1" },
+        {
+          "id": "guarded-write",
+          "op": "ref_advance",
+          "ref_name": "workspace/main",
+          "expected_refgen": 3,
+          "new_commit_id": "c1",
+          "protected_ref": true,
+          "writer_token": "tok-1",
+          "semantic_guard": {
+            "requires_current_commit_id": "c0",
+            "requires_no_unresolved_conflicts": true,
+            "requires_lease_epoch": 1,
+            "requires_finalized": true
+          }
+        }
+      ],
+      "faults": [
+        { "op_id": "guarded-write", "phase": "before_commit", "action": "error", "code": "ERR_LEASE_LOST", "once": true }
+      ],
+      "expect": {
+        "error_codes": ["ERR_LEASE_LOST"],
+        "local_refs": {
+          "workspace/main": { "commit_id": "c0", "refgen": 3, "protected_ref": true }
+        },
+        "invariants": ["protected_refs_resolve_complete_closure"]
+      }
+    },
+    {
+      "id": "pending.lease.double_takeover_tiebreak.v1",
+      "title": "P1 scaffold: takeover tie-break resolves to one winner",
+      "status": "pending",
+      "class": "lease",
+      "script": [
+        { "id": "acquire-initial", "op": "lease_acquire", "lease_name": "lease/workspace/main", "owner_instance_id": "tab-0", "writer_token": "tok-0" },
+        { "id": "wait-expire", "op": "advance_time", "ms": 20000 },
+        { "id": "takeover-a", "op": "lease_acquire", "mode": "takeover", "lease_name": "lease/workspace/main", "owner_instance_id": "tab-1", "writer_token": "tok-1" },
+        { "id": "takeover-b", "op": "lease_acquire", "mode": "normal", "lease_name": "lease/workspace/main", "owner_instance_id": "tab-2", "writer_token": "tok-2" }
+      ],
+      "expect": {
+        "error_codes": ["ERR_LEASE_HELD"],
+        "invariants": ["single_writer_per_lease"]
+      }
+    },
+    {
+      "id": "pending.sync.push.cas_mismatch_divergence.v1",
+      "title": "P1 scaffold: push CAS mismatch then divergence path records incoming ref",
+      "status": "pending",
+      "class": "sync",
+      "script": [
+        { "id": "put-c0", "op": "put_commit", "target": "both", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0"] },
+        { "id": "put-c1", "op": "put_commit", "target": "local", "commit_id": "c1", "parents": ["c0"], "finalized": true, "closure": ["c1"] },
+        { "id": "put-c2", "op": "put_commit", "target": "remote", "commit_id": "c2", "parents": [], "finalized": true, "closure": ["c2"] },
+        { "id": "seed-local-main", "op": "seed_ref", "target": "local", "ref_name": "workspace/main", "commit_id": "c1", "refgen": 3, "protected_ref": false },
+        { "id": "seed-remote-main", "op": "seed_ref", "target": "remote", "ref_name": "workspace/main", "commit_id": "c0", "refgen": 7, "protected_ref": false },
+        { "id": "push-cas-mismatch", "op": "push", "ref_name": "workspace/main", "remote_id": "remote-1" },
+        { "id": "seed-remote-diverged-main", "op": "seed_ref", "target": "remote", "ref_name": "workspace/main", "commit_id": "c2", "refgen": 7, "protected_ref": false },
+        { "id": "push-diverged", "op": "push", "ref_name": "workspace/main", "remote_id": "remote-1", "device_id": "device-p1" }
+      ],
+      "faults": [
+        { "op_id": "push-cas-mismatch", "phase": "before_ref_cas", "action": "error", "code": "ERR_SYNC_REF_CAS_MISMATCH", "once": true }
+      ],
+      "expect": {
+        "error_codes": ["ERR_SYNC_REF_CAS_MISMATCH"],
+        "remote_refs": {
+          "workspace/main": { "commit_id": "c2", "refgen": 7, "protected_ref": false }
+        },
+        "incoming_remote_ref_prefixes": ["incoming/device-p1/workspace/main/"],
+        "invariants": ["no_half_state_refs"]
+      }
+    },
+    {
+      "id": "pending.sync.pull.hash_mismatch_reject.v1",
+      "title": "P1 scaffold: pull rejects hash-mismatched object and keeps local head",
+      "status": "pending",
+      "class": "sync",
+      "script": [
+        { "id": "put-c0", "op": "put_commit", "target": "both", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0"] },
+        { "id": "put-remote-c1", "op": "put_commit", "target": "remote", "commit_id": "c1", "parents": ["c0"], "finalized": true, "closure": ["c1", "obj-hash-1", "obj-hash-2"] },
+        { "id": "seed-local-main", "op": "seed_ref", "target": "local", "ref_name": "workspace/main", "commit_id": "c0", "refgen": 5, "protected_ref": false },
+        { "id": "seed-remote-main", "op": "seed_ref", "target": "remote", "ref_name": "workspace/main", "commit_id": "c1", "refgen": 9, "protected_ref": false },
+        { "id": "pull-hash-mismatch", "op": "pull", "ref_name": "workspace/main", "remote_id": "remote-1", "protected_ref": false }
+      ],
+      "faults": [
+        { "op_id": "pull-hash-mismatch", "phase": "mid_fetch", "action": "error", "code": "ERR_SYNC_OBJECT_HASH_MISMATCH", "once": true }
+      ],
+      "expect": {
+        "error_codes": ["ERR_SYNC_OBJECT_HASH_MISMATCH"],
+        "local_refs": {
+          "workspace/main": { "commit_id": "c0", "refgen": 5, "protected_ref": false }
+        },
+        "invariants": ["no_half_state_refs"]
+      }
+    },
+    {
+      "id": "pending.sync.push.retry_idempotent_timeout.v1",
+      "title": "P1 scaffold: push retry after post-CAS timeout remains idempotent",
+      "status": "pending",
+      "class": "sync",
+      "script": [
+        { "id": "put-c0", "op": "put_commit", "target": "both", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0", "base"] },
+        { "id": "put-c1", "op": "put_commit", "target": "local", "commit_id": "c1", "parents": ["c0"], "finalized": true, "closure": ["c1", "next"] },
+        { "id": "seed-local-main", "op": "seed_ref", "target": "local", "ref_name": "workspace/main", "commit_id": "c1", "refgen": 2, "protected_ref": false },
+        { "id": "seed-remote-main", "op": "seed_ref", "target": "remote", "ref_name": "workspace/main", "commit_id": "c0", "refgen": 20, "protected_ref": false },
+        { "id": "push-timeout", "op": "push", "ref_name": "workspace/main", "remote_id": "remote-1" },
+        { "id": "push-retry", "op": "push", "ref_name": "workspace/main", "remote_id": "remote-1" }
+      ],
+      "faults": [
+        { "op_id": "push-timeout", "phase": "after_ref_cas", "action": "partition", "code": "ERR_SYNC_NETWORK", "once": true }
+      ],
+      "expect": {
+        "error_codes": ["ERR_SYNC_NETWORK"],
+        "remote_refs": {
+          "workspace/main": { "commit_id": "c1", "refgen": 21, "protected_ref": false }
+        },
+        "invariants": ["no_half_state_refs"]
+      }
+    }
+  ]
+}

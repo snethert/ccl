@@ -1392,6 +1392,19 @@ wasm_lisp_word_ref(LispObj base, LispObj offset)
   return lisp_nil;
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_lisp_word_set")))
+LispObj
+wasm_lisp_word_set(LispObj base, LispObj offset, LispObj value)
+{
+  if (tag_of(base) == tag_fixnum && tag_of(offset) == tag_fixnum) {
+    signed_natural addr = unbox_fixnum(base);
+    signed_natural idx = unbox_fixnum(offset);
+    LispObj *ptr = (LispObj *)(uintptr_t)addr;
+    ptr[idx] = value;
+  }
+  return value;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_return_arg_z")))
 void
 wasm_return_arg_z(void)
@@ -2056,6 +2069,7 @@ wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natu
   }
 
   tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+  tcr->save_vsp = vsp_ptr;
   tcr->wasm_gprs[nargs] = box_fixnum(count);
   tcr->wasm_gprs[nfn] = fn_value;
   tcr->wasm_gprs[Rfn] = fn_value;
@@ -3098,6 +3112,81 @@ wasm_restore_lisp_pointers(void)
   return result;
 }
 
+/* Execute level-0 cold-boot initialization before FASL loading.
+   Calls Lisp function %RUN-COLD-BOOT-INIT (defined in level-0/nfasload.lisp)
+   which runs cold-load functions, sets up system locks, populates class cells,
+   resizes package hash tables, applies documentation, and updates binding indices.
+   Must be called after compiled modules are installed (so boot module functions
+   are in the table) and before any wasm_fasload_path() calls.
+   Returns 0 on success, negative on error. */
+__attribute__((used, visibility("default"), export_name("wasm_run_cold_boot_init")))
+int
+wasm_run_cold_boot_init(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return -1;
+  }
+  if (!wasm_subprims_ready) {
+    return -2;
+  }
+
+  static const uint8_t ccl_pkg_name[] = { 'C', 'C', 'L' };
+  LispObj ccl_pkg = wasm_find_package_named_bytes(
+    ccl_pkg_name, (uint32_t)sizeof(ccl_pkg_name));
+  if (ccl_pkg == lisp_nil) {
+    static const char msg[] = "cold-boot-init: CCL package not found\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    return -3;
+  }
+
+  static const uint8_t fn_name[] = "%RUN-COLD-BOOT-INIT";
+  LispObj sym = wasm_find_symbol_named_bytes(
+    fn_name, (uint32_t)(sizeof(fn_name) - 1), ccl_pkg);
+  if (sym == (LispObj)0 ||
+      fulltag_of(sym) != fulltag_misc ||
+      header_subtag(header_of(sym)) != subtag_symbol) {
+    static const char msg[] = "cold-boot-init: symbol not found\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    return -4;
+  }
+
+  lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(untag(sym));
+  LispObj fn = rawsym->fcell;
+  if (fn == lisp_nil || fn == nrs_UDF.vcell ||
+      fulltag_of(fn) != fulltag_misc ||
+      header_subtag(header_of(fn)) != subtag_function) {
+    static const char msg[] = "cold-boot-init: function undefined\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    return -5;
+  }
+
+  natural old_last_lisp_frame = wasm_enter_lisp_frame(
+    tcr, 0, 0, (LispObj)tcr->save_vsp);
+  tcr->valence = TCR_STATE_LISP;
+  tcr->wasm_pending_throw = 0;
+  tcr->wasm_gprs[vsp] = (LispObj)tcr->save_vsp;
+
+  tcr->wasm_gprs[nargs] = box_fixnum(0);
+  tcr->wasm_gprs[nfn] = fn;
+  wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_FUNCALL_INDEX));
+
+  int result = 0;
+  if (tcr->wasm_pending_throw) {
+    tcr->wasm_pending_throw = 0;
+    result = -6;
+    static const char msg[] = "cold-boot-init: threw\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+  } else {
+    static const char msg[] = "cold-boot-init: ok\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+  }
+
+  tcr->valence = TCR_STATE_FOREIGN;
+  wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
+  return result;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_run_toplevel")))
 int
 wasm_run_toplevel(void)
@@ -4122,15 +4211,10 @@ wasm_fasload_path(uint32_t path_ptr, uint32_t path_len)
   static const uint8_t fasload_name[] = {
     '%', 'F', 'A', 'S', 'L', 'O', 'A', 'D'
   };
-  static const uint8_t fasl_api_name[] = {
-    '*', 'F', 'A', 'S', 'L', '-', 'A', 'P', 'I', '*'
-  };
   static const uint8_t ccl_pkg_name[] = { 'C', 'C', 'L' };
   const uint8_t *path_bytes = (const uint8_t *)(uintptr_t)path_ptr;
   LispObj fasload_sym = (LispObj)0;
   LispObj fasload_fn = (LispObj)0;
-  LispObj fasl_api_sym = (LispObj)0;
-  LispObj fasl_api_vcell = (LispObj)0;
 
   if (path_ptr == 0 || path_len == 0) {
     return -1;
@@ -4180,16 +4264,6 @@ wasm_fasload_path(uint32_t path_ptr, uint32_t path_len)
     return -8;
   }
 
-  fasl_api_sym = wasm_find_symbol_named_bytes(
-    fasl_api_name,
-    (uint32_t)sizeof(fasl_api_name),
-    ccl_pkg);
-  if (fasl_api_sym != (LispObj)0 &&
-      fulltag_of(fasl_api_sym) == fulltag_misc &&
-      header_subtag(header_of(fasl_api_sym)) == subtag_symbol) {
-    lispsymbol *fasl_api_rawsym = (lispsymbol *)ptr_from_lispobj(untag(fasl_api_sym));
-    fasl_api_vcell = fasl_api_rawsym->vcell;
-  }
   LispObj path = wasm_const_pool_make_base_string(
     tcr,
     (const uint8_t *)(uintptr_t)path_ptr,
@@ -4197,23 +4271,8 @@ wasm_fasload_path(uint32_t path_ptr, uint32_t path_len)
   if (path == lisp_nil) {
     return -6;
   }
-  {
-    LispObj entry = deref(fasload_fn, 1);
-    int32_t entry_idx = (tag_of(entry) == tag_fixnum) ? (int32_t)unbox_fixnum(entry) : -999;
-    char dbg[128];
-    int n = snprintf(dbg, sizeof(dbg),
-                     "DIAG: fasload_fn entry_index=%d pending_throw=%u\n",
-                     entry_idx, (unsigned)tcr->wasm_pending_throw);
-    if (n > 0) wasm_host_log(dbg, (unsigned)n);
-  }
   (void)wasm_foreign_funcall1(tcr, fasload_fn, path);
   if (tcr->wasm_pending_throw) {
-    LispObj throw_val = tcr->wasm_pending_throw;
-    char dbg[128];
-    int n = snprintf(dbg, sizeof(dbg),
-                     "DIAG: fasload threw pending_throw=0x%x\n",
-                     (unsigned)throw_val);
-    if (n > 0) wasm_host_log(dbg, (unsigned)n);
     return -72;  /* fasload threw */
   }
   return 0;

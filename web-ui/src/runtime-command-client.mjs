@@ -1,6 +1,6 @@
 import { createRuntimeMessage, RUNTIME_MESSAGE_KINDS } from "../bridge/runtime.mjs";
 import { materializeInvocation } from "./typed-commands.mjs";
-import { SAB_RING_TRANSPORT } from "../../doc/wasm/js/sab-ring.mjs";
+import { SAB_RING_TRANSPORT } from "./runtime-transport.mjs";
 
 function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);

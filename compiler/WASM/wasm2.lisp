@@ -1562,6 +1562,9 @@
           (wasm2-emit :return)
           (return-from wasm2-if nil)))))
   (wasm2-form seg nil nil testform)
+  ;; Convert Lisp boolean to WASM boolean: non-nil → 1, nil → 0
+  (wasm2-emit :const (target-nil-value))
+  (wasm2-emit :i32-ne)
   (let* ((then-ir (wasm2-with-ir (lambda () (wasm2-form seg nil nil true))))
          (else-ir (wasm2-with-ir (lambda () (wasm2-form seg nil nil false)))))
     (wasm2-emit :if then-ir else-ir))
@@ -1825,6 +1828,9 @@
                            (wasm2-form seg nil nil form)
                            (wasm2-emit :local.set result-temp)
                            (wasm2-emit :local.get result-temp)
+                           ;; Convert Lisp boolean to WASM boolean
+                           (wasm2-emit :const (target-nil-value))
+                           (wasm2-emit :i32-ne)
                            (wasm2-emit :if-void (list (list :br end-label)) nil))
                          (wasm2-form seg nil nil (car (last forms)))
                          (wasm2-emit :local.set result-temp)))))
@@ -2164,6 +2170,9 @@
                                           (lambda ()
                                             (emit-assign var (lambda () (wasm2-form seg nil nil init)))))))
                           (wasm2-emit :local.get sup-temp)
+                          ;; Convert Lisp boolean to WASM boolean
+                          (wasm2-emit :const (target-nil-value))
+                          (wasm2-emit :i32-ne)
                           (wasm2-emit :if-void then-ir else-ir))))
               (dotimes (_ (* 2 keycount))
                 (wasm2-emit :vpop)
@@ -2354,19 +2363,23 @@
     (wasm2-emit :return))
   nil)
 
+;;; NOTE: %fixnum-set and %fixnum-set-natural are NOT acode operators
+;;; (not registered in nxenv.lisp).  They cannot use defwasm2.
+;;; No other backend (ARM, PPC, X86) has handlers for these.
+;;; The compiler routes these through different acode paths.
+
 (defun wasm2-emit-misc-node-slot-address (index)
-  (wasm2-emit :const *wasm2-target-fulltag-misc*)
-  (wasm2-emit :i32-sub)
-  (cond
-    ((minusp *wasm2-target-misc-data-offset*)
-     (wasm2-emit :const (- *wasm2-target-misc-data-offset*))
-     (wasm2-emit :i32-sub))
-    ((plusp *wasm2-target-misc-data-offset*)
-     (wasm2-emit :const *wasm2-target-misc-data-offset*)
-     (wasm2-emit :i32-add)))
-  (unless (zerop index)
-    (wasm2-emit :const (* index *wasm2-target-node-size*))
-    (wasm2-emit :i32-add)))
+  ;; misc-data-offset is already an absolute offset from the tagged pointer.
+  ;; Compute: ptr + misc-data-offset + index * node-size
+  (let ((offset (+ *wasm2-target-misc-data-offset*
+                   (* index *wasm2-target-node-size*))))
+    (cond
+      ((minusp offset)
+       (wasm2-emit :const (- offset))
+       (wasm2-emit :i32-sub))
+      ((plusp offset)
+       (wasm2-emit :const offset)
+       (wasm2-emit :i32-add)))))
 
 (defun wasm2-emit-misc-subtag-test (obj-local subtag)
   (wasm2-emit :local.get obj-local)
@@ -2403,7 +2416,7 @@
     (let* ((then-ir (wasm2-with-ir
                       (lambda ()
                         (wasm2-emit :local.get val-temp)
-                        (wasm2-emit-misc-node-slot-address 1)
+                        (wasm2-emit-misc-node-slot-address 0)
                         (wasm2-emit :i32-load))))
            (else-ir (wasm2-with-ir
                       (lambda ()
@@ -2415,14 +2428,14 @@
     (let* ((then-ir (wasm2-with-ir
                       (lambda ()
                         (wasm2-emit :local.get ptr-temp)
-                        (wasm2-emit-misc-node-slot-address 1)
+                        (wasm2-emit-misc-node-slot-address 0)
                         (wasm2-emit :local.get raw-temp)
                         (wasm2-emit :i32-store)
                         (wasm2-emit :local.get raw-temp))))
            (else-ir (wasm2-with-ir
                       (lambda ()
                         (wasm2-emit-misc-set-fallback-local ptr-temp
-                                                             (wasm2-box-fixnum 1)
+                                                             (wasm2-box-fixnum 0)
                                                              raw-temp
                                                              t)))))
       (wasm2-emit :if then-ir else-ir))
@@ -2486,7 +2499,7 @@
     (wasm2-form seg nil nil form)
     (wasm2-emit :local.set ptr-temp)
     (wasm2-emit-misc-slot-ref-with-subtag-guard ptr-temp
-                                                 1
+                                                 0
                                                  wasm::subtag-macptr)
     (when (wasm2-returning-p xfer)
       (wasm2-emit :set-arg-z)
@@ -2505,7 +2518,7 @@
     (wasm2-emit-misc-alloc-call-known-constants subtag count)
     (wasm2-emit :local.set obj-temp)
     (wasm2-emit :local.get obj-temp)
-    (wasm2-emit-misc-node-slot-address 1)
+    (wasm2-emit-misc-node-slot-address 0)
     (wasm2-emit :local.get addr-temp)
     (wasm2-emit :i32-store)
     (wasm2-emit :local.get addr-temp)
@@ -2603,7 +2616,7 @@
     (if store-ptr
       (progn
         (wasm2-emit-misc-slot-ref-with-subtag-guard val-temp
-                                                     1
+                                                     0
                                                      wasm::subtag-macptr)
         (wasm2-emit :local.set raw-temp)
         (wasm2-emit :local.get addr-temp)
@@ -4763,7 +4776,7 @@
        (wasm2-form seg nil nil arg)
        (wasm2-emit :local.set arg-temp)
        (wasm2-emit-misc-slot-ref-with-subtag-guard arg-temp
-                                                    1
+                                                    0
                                                     wasm::subtag-macptr)))
     (t
      (error "WASM2: unsupported external-call arg type: ~s" spec))))
@@ -4791,7 +4804,7 @@
          (wasm2-emit-misc-alloc-call-known-constants subtag count)
          (wasm2-emit :local.set obj-temp)
          (wasm2-emit :local.get obj-temp)
-         (wasm2-emit-misc-node-slot-address 1)
+         (wasm2-emit-misc-node-slot-address 0)
          (wasm2-emit :local.get addr-temp)
          (wasm2-emit :i32-store)
          (wasm2-emit :local.get addr-temp)))
@@ -5155,6 +5168,7 @@
    (list :get-lisp-nil "wasm_get_lisp_nil" +wasm2-type-void-i32+)
    (list :const-pool-ref "wasm_const_pool_ref" +wasm2-type-i32-i32+)
    (list :lisp-word-ref "wasm_lisp_word_ref" +wasm2-type-i32-i32+)
+   (list :lisp-word-set "wasm_lisp_word_set" +wasm2-type-i32-i32-i32+)
    (list :return-constant "wasm_return_constant" +wasm2-type-i32-void+)
    (list :set-arg-z "wasm_set_arg_z" +wasm2-type-i32-void+)
    (list :set-arg-y "wasm_set_arg_y" +wasm2-type-i32-void+)
@@ -5321,9 +5335,9 @@
     (ir-requires-guard-p ir)))
 
 (defun wasm2-emit-generic-if (body then-ir else-ir label-stack)
+  ;; Condition on stack must be a WASM boolean (0=false, non-zero=true).
+  ;; Callers with Lisp values must convert via (const nil)(i32.ne) first.
   (let ((if-label :if))
-    (wasm2-emit-call-index body (wasm2-generic-import-index :get-lisp-nil))
-    (wasm2-push-u8 body #x47) ; i32.ne
     (wasm2-push-u8 body #x04) ; if
     (wasm2-push-u8 body #x7f) ; blocktype i32
     (wasm2-emit-generic-ir body then-ir (cons if-label label-stack))
@@ -5358,11 +5372,11 @@
   (append (wasm2-ir-ensure-value ir) (list (list :drop))))
 
 (defun wasm2-emit-generic-if-void (body then-ir else-ir label-stack)
+  ;; Condition on stack must be a WASM boolean (0=false, non-zero=true).
+  ;; Callers with Lisp values must convert via (const nil)(i32.ne) first.
   (let* ((if-label :if)
          (then-body (wasm2-ir-voidify then-ir))
          (else-body (wasm2-ir-voidify else-ir)))
-    (wasm2-emit-call-index body (wasm2-generic-import-index :get-lisp-nil))
-    (wasm2-push-u8 body #x47) ; i32.ne
     (wasm2-push-u8 body #x04) ; if
     (wasm2-push-u8 body #x40) ; blocktype void
     (wasm2-emit-generic-ir body then-body (cons if-label label-stack))
@@ -5774,6 +5788,8 @@
            (wasm2-emit-call-index body (wasm2-generic-import-index :const-pool-ref))))
         (:lisp-word-ref
          (wasm2-emit-call-index body (wasm2-generic-import-index :lisp-word-ref)))
+        (:lisp-word-set
+         (wasm2-emit-call-index body (wasm2-generic-import-index :lisp-word-set)))
         (:f32-const
          (wasm2-emit-f32-const body (car args)))
         (:f64-const

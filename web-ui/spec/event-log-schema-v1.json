@@ -1,0 +1,953 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ccl.dev/web-ui/spec/event-log-schema-v1.json",
+  "title": "Web UI Event Log Schema v1",
+  "description": "Canonical event log envelope for deterministic replay in web-ui.",
+  "x-spec-metadata": {
+    "status": "Draft",
+    "version": "1.0.0",
+    "lastUpdated": "2026-02-16",
+    "scope": "Event envelope and payload schema for phase-0 replay and deterministic validation",
+    "compatibility": {
+      "backward": "Readers MAY accept legacy version `0` logs and normalize to v1 semantics.",
+      "forward": "Unknown event types are allowed only when they follow namespaced type syntax and preserve envelope invariants.",
+      "deprecation": "Legacy version `0` write support SHOULD be removed in v2."
+    }
+  },
+  "type": "object",
+  "required": [
+    "version",
+    "events"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "enum": [
+        "1.0.0",
+        "0"
+      ]
+    },
+    "clockProfile": {
+      "$ref": "#/$defs/clockProfile"
+    },
+    "seed": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "source": {
+      "$ref": "#/$defs/sourceInfo"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/event"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "u53": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "idString": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:@/-]{1,192}$"
+    },
+    "clockProfile": {
+      "type": "string",
+      "enum": [
+        "monotonic-ms-v1",
+        "logical-step-v1"
+      ]
+    },
+    "sourceInfo": {
+      "type": "object",
+      "required": [
+        "lane"
+      ],
+      "properties": {
+        "lane": {
+          "type": "string",
+          "enum": [
+            "node",
+            "browser",
+            "wasm"
+          ]
+        },
+        "backend": {
+          "type": "string",
+          "enum": [
+            "state-only",
+            "dom",
+            "canvas",
+            "webgl",
+            "mixed"
+          ]
+        },
+        "host": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "additionalProperties": false
+    },
+    "typeToken": {
+      "type": "string",
+      "anyOf": [
+        {
+          "const": "snapshot"
+        },
+        {
+          "const": "state:init"
+        },
+        {
+          "const": "focus:set"
+        },
+        {
+          "const": "command:execute"
+        },
+        {
+          "const": "command:enable"
+        },
+        {
+          "const": "command:disable"
+        },
+        {
+          "const": "layout:set"
+        },
+        {
+          "const": "recording:append"
+        },
+        {
+          "const": "recording:entry.append"
+        },
+        {
+          "const": "recording:anchor.attach"
+        },
+        {
+          "const": "recording:entry.fold"
+        },
+        {
+          "const": "command-history:append"
+        },
+        {
+          "const": "ui:signal.enqueue"
+        },
+        {
+          "const": "ui:turn.begin"
+        },
+        {
+          "const": "ui:turn.phase"
+        },
+        {
+          "const": "ui:turn.yield"
+        },
+        {
+          "const": "ui:turn.end"
+        },
+        {
+          "pattern": "^command:[a-z0-9._-]+$"
+        },
+        {
+          "pattern": "^focus:[a-z0-9._-]+$"
+        },
+        {
+          "pattern": "^pointer:[a-z0-9._-]+$"
+        },
+        {
+          "pattern": "^keyboard:[a-z0-9._-]+$"
+        },
+        {
+          "pattern": "^layout:[a-z0-9._-]+$"
+        },
+        {
+          "pattern": "^job:[a-z0-9._-]+$"
+        },
+        {
+          "pattern": "^snapshot:[a-z0-9._-]+$"
+        },
+        {
+          "pattern": "^recording:[a-z0-9._-]+$"
+        },
+        {
+          "pattern": "^ui:[a-z0-9._-]+$"
+        },
+        {
+          "pattern": "^runtime:[a-z0-9._-]+$"
+        },
+        {
+          "pattern": "^[a-z][a-z0-9-]*:[a-z0-9._-]+$"
+        }
+      ]
+    },
+    "baseEvent": {
+      "type": "object",
+      "required": [
+        "seq",
+        "type",
+        "payload"
+      ],
+      "properties": {
+        "seq": {
+          "$ref": "#/$defs/u53"
+        },
+        "ts": {
+          "$ref": "#/$defs/u53"
+        },
+        "type": {
+          "$ref": "#/$defs/typeToken"
+        },
+        "target": {
+          "$ref": "#/$defs/idString"
+        },
+        "payload": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "event": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/baseEvent"
+        },
+        {
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "snapshot"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 96
+                      },
+                      "reason": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 192
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "state:init"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "minProperties": 1,
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "focus:set"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "required": [
+                      "target"
+                    ],
+                    "properties": {
+                      "target": {
+                        "oneOf": [
+                          {
+                            "$ref": "#/$defs/idString"
+                          },
+                          {
+                            "type": "null"
+                          },
+                          {
+                            "type": "object"
+                          }
+                        ]
+                      },
+                      "reason": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 96
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "command:execute"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "required": [
+                      "id"
+                    ],
+                    "properties": {
+                      "id": {
+                        "$ref": "#/$defs/idString"
+                      },
+                      "args": {
+                        "type": "object"
+                      },
+                      "context": {
+                        "type": "object"
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "command:enable"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "required": [
+                      "id"
+                    ],
+                    "properties": {
+                      "id": {
+                        "$ref": "#/$defs/idString"
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "command:disable"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "reason"
+                    ],
+                    "properties": {
+                      "id": {
+                        "$ref": "#/$defs/idString"
+                      },
+                      "reason": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 192
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "layout:set"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "required": [
+                      "layout"
+                    ],
+                    "properties": {
+                      "layout": {
+                        "type": "object"
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "recording:append"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "anyOf": [
+                      {
+                        "required": [
+                          "recording"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "id"
+                        ]
+                      }
+                    ],
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "recording:entry.append"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "anyOf": [
+                      {
+                        "required": [
+                          "entry"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "id",
+                          "recordingId"
+                        ]
+                      }
+                    ],
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "recording:anchor.attach"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "anyOf": [
+                      {
+                        "required": [
+                          "anchor"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "id",
+                          "entryId",
+                          "recordingId"
+                        ]
+                      }
+                    ],
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "recording:entry.fold"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "anyOf": [
+                      {
+                        "required": [
+                          "entryId"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "id"
+                        ]
+                      }
+                    ],
+                    "properties": {
+                      "folded": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "command-history:append"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "anyOf": [
+                      {
+                        "required": [
+                          "invocation"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "id",
+                          "commandId"
+                        ]
+                      }
+                    ],
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "ui:signal.enqueue"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "required": [
+                      "signal"
+                    ],
+                    "properties": {
+                      "signal": {
+                        "type": "object"
+                      },
+                      "queueLength": {
+                        "$ref": "#/$defs/u53"
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "ui:turn.begin"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "required": [
+                      "turnId",
+                      "commitPolicy"
+                    ],
+                    "properties": {
+                      "turnId": {
+                        "$ref": "#/$defs/idString"
+                      },
+                      "commitPolicy": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "signalCount": {
+                        "$ref": "#/$defs/u53"
+                      },
+                      "drainedSignals": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "ui:turn.phase"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "required": [
+                      "turnId",
+                      "phase"
+                    ],
+                    "properties": {
+                      "turnId": {
+                        "$ref": "#/$defs/idString"
+                      },
+                      "phase": {
+                        "type": "string",
+                        "enum": [
+                          "signals",
+                          "commands",
+                          "render",
+                          "backend",
+                          "idle",
+                          "yielded"
+                        ]
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "ui:turn.yield"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "required": [
+                      "turnId"
+                    ],
+                    "properties": {
+                      "turnId": {
+                        "$ref": "#/$defs/idString"
+                      },
+                      "reason": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "maxLength": 192
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "ui:turn.end"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "required": [
+                      "turnId",
+                      "phase",
+                      "yielded"
+                    ],
+                    "properties": {
+                      "turnId": {
+                        "$ref": "#/$defs/idString"
+                      },
+                      "phase": {
+                        "type": "string",
+                        "enum": [
+                          "signals",
+                          "commands",
+                          "render",
+                          "backend",
+                          "idle",
+                          "yielded"
+                        ]
+                      },
+                      "yielded": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "pattern": "^pointer:"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number"
+                      },
+                      "y": {
+                        "type": "number"
+                      },
+                      "button": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "buttons": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "pointerType": {
+                        "type": "string",
+                        "enum": [
+                          "mouse",
+                          "pen",
+                          "touch",
+                          "unknown"
+                        ]
+                      },
+                      "modifiers": {
+                        "type": "object",
+                        "properties": {
+                          "alt": {
+                            "type": "boolean"
+                          },
+                          "ctrl": {
+                            "type": "boolean"
+                          },
+                          "meta": {
+                            "type": "boolean"
+                          },
+                          "shift": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "pattern": "^keyboard:"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "properties": {
+                      "key": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "code": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "repeat": {
+                        "type": "boolean"
+                      },
+                      "modifiers": {
+                        "type": "object",
+                        "properties": {
+                          "alt": {
+                            "type": "boolean"
+                          },
+                          "ctrl": {
+                            "type": "boolean"
+                          },
+                          "meta": {
+                            "type": "boolean"
+                          },
+                          "shift": {
+                            "type": "boolean"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "pattern": "^job:"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "payload": {
+                    "type": "object",
+                    "required": [
+                      "jobId"
+                    ],
+                    "properties": {
+                      "jobId": {
+                        "$ref": "#/$defs/idString"
+                      },
+                      "status": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      }
+                    },
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

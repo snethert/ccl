@@ -1,0 +1,136 @@
+# Event Log Ordering and Clock Rules v1
+
+Status: Draft  
+Version: 1.0.0  
+Last updated: 2026-02-16  
+Scope: Deterministic ordering, clock semantics, replay rules, and failure behavior for `web-ui` event logs  
+Depends on: `web-ui/spec/event-log-schema-v1.json`, `web-ui/spec/normative-language-and-conformance-v1.md`, `web-ui/DEV-PLAN.md`  
+Compatibility: `v1.x` preserves ordering and clock semantics; changing sequence/timestamp interpretation requires `v2`.
+
+## 1. Purpose
+
+This contract defines deterministic ordering and clock semantics for replayable `web-ui` event logs.
+It is normative for event recording, validation, replay, and partial replay.
+
+## 2. Event Order Model
+
+Event order is defined by `seq` (sequence number) in `event-log-schema-v1.json`.
+
+Rules:
+
+1. `seq` MUST be an integer in `[0, 2^53-1]`.
+2. `seq` MUST be unique within a log.
+3. `seq` MUST increase strictly by position in `events[]`.
+4. Replayers MUST treat `seq` as authoritative order, not array insertion time, wall clock, or host callback order.
+5. Logs with duplicate or non-increasing `seq` MUST be rejected as invalid.
+
+## 3. Timestamp and Clock Semantics
+
+### 3.1 Clock Profiles
+
+`clockProfile` has two normative values:
+
+1. `monotonic-ms-v1`
+2. `logical-step-v1`
+
+### 3.2 `monotonic-ms-v1`
+
+1. `ts` values, when present, MUST be non-negative integer milliseconds from a monotonic source.
+2. `ts` MUST be non-decreasing with increasing `seq`.
+3. `ts` MAY have equal adjacent values when events occur within the same clock tick.
+4. Wall-clock time MUST NOT be used to reorder events.
+
+### 3.3 `logical-step-v1`
+
+1. `ts` MAY be omitted.
+2. If `ts` is present, it MUST be non-decreasing integer logical time.
+3. Determinism depends on `seq`; `ts` is diagnostic in this profile.
+
+### 3.4 Missing `ts`
+
+1. Writers SHOULD include `ts` for `monotonic-ms-v1`.
+2. For synthetic deterministic harness logs, `ts` MAY be omitted when `clockProfile=logical-step-v1`.
+3. Legacy `version="0"` logs MAY omit `ts`.
+
+## 4. Canonical Event Families
+
+Canonical families are:
+
+1. `command`
+2. `focus`
+3. `pointer`
+4. `keyboard`
+5. `layout`
+6. `job`
+7. `snapshot`
+
+Additional namespaced families (for example `recording:*`, `ui:*`, `runtime:*`) MAY be used if they satisfy schema and determinism constraints.
+
+## 5. Replay Semantics
+
+1. Replay engines MUST validate log schema before execution.
+2. Replay engines MUST process non-`snapshot` events in increasing `seq`.
+3. `snapshot` events MUST capture post-state after all prior non-`snapshot` events have applied.
+4. Replay engines MUST fail deterministic runs when unknown event types are encountered unless an explicit extension handler is installed.
+5. Extension handlers MUST be deterministic for fixed `(state, event, handler-config)`.
+
+## 6. Partial Replay Rules
+
+Partial replay over `[startSeq, endSeq]` is inclusive.
+
+Rules:
+
+1. Events with `seq < startSeq` MUST be excluded.
+2. Events with `seq > endSeq` MUST be excluded.
+3. If `startSeq > endSeq`, replay request MUST fail.
+4. If requested `startSeq` does not exist, the engine MAY start at the first event with `seq > startSeq` only when explicitly configured; otherwise it MUST fail.
+5. Partial replay mode MUST be recorded in diagnostics/report output.
+
+## 7. Determinism and Tie-Break Rules
+
+1. There is no legal tie for `seq`; ties are invalid.
+2. For merged multi-source logs, implementations MUST normalize into one strictly increasing `seq` stream before replay.
+3. If merge requires deterministic tie-breaking, source order MUST be fixed by stable source ID lexical order before reassignment.
+4. Randomized handlers MUST be seeded; seed value MUST be recorded in the log envelope or replay report.
+
+## 8. Failure Semantics
+
+| Code | Meaning | Retryability | Caller obligation |
+|---|---|---|---|
+| `event-log.seq.invalid` | `seq` missing, non-integer, negative, or out of range. | No | Regenerate/repair log. |
+| `event-log.seq.non-monotonic` | `seq` not strictly increasing. | No | Reorder/rebuild log deterministically. |
+| `event-log.seq.duplicate` | Duplicate `seq` value detected. | No | Resolve duplicate at source. |
+| `event-log.ts.invalid` | `ts` violates active `clockProfile` constraints. | Conditional | Fix timestamp source/profile mapping. |
+| `event-log.type.unsupported` | Event type has no handler in strict replay mode. | Conditional | Install deterministic handler or remove event. |
+| `event-log.partial-range.invalid` | Partial replay range is invalid. | No | Correct range request. |
+
+## 9. Compatibility and Migration
+
+1. `version="0"` logs MAY be imported.
+2. Importers SHOULD normalize imported logs to `version="1.0.0"` before persistence.
+3. Normalization MUST preserve `seq` order and event payload semantics.
+4. Importers MUST NOT invent synthetic `seq` gaps or reorder payload effects.
+
+## 10. Conformance Fixtures and Pass Criteria
+
+Minimum required conformance evidence:
+
+1. `web-ui/tests/basic.test.mjs`: deterministic replay with stable snapshot output.
+2. `web-ui/tests/layout.test.mjs`: deterministic snapshot stability under layout mutations.
+3. `web-ui/tests/event-log-buffer.test.mjs`: deterministic sequence retention behavior in ring-buffer mode.
+4. `web-ui/tests/recordings.test.mjs`: monotonic sequence enforcement in recording streams.
+
+Pass criteria:
+
+1. Re-running each fixture with identical inputs yields identical snapshot strings and replay outcomes.
+2. No fixture may pass with non-monotonic or duplicate `seq` input.
+3. Any schema violation MUST surface one stable failure code from Section 8.
+
+## 11. Conformance
+
+An implementation is conformant only if:
+
+1. Event ordering is enforced exactly as specified in Section 2.
+2. Clock semantics are enforced per Section 3.
+3. Replay and partial replay behavior satisfy Sections 5-6.
+4. Determinism and failure semantics satisfy Sections 7-8.

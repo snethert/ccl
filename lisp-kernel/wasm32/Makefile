@@ -147,7 +147,7 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_ccl_load_image --export=wasm_ccl_step --export=wasm_restore_lisp_pointers \
 	  --export=wasm_clear_pending_throw \
 	  --export=wasm_const_pool_install --export=wasm_const_pool_ref --export=wasm_const_pool_diag_fail_get \
-	  --export=wasm_lisp_word_ref \
+	  --export=wasm_lisp_word_ref --export=wasm_lisp_word_set \
 	  --export=wasm_fasload_path \
 	  --export=wasm_get_nargs \
 	  --export=wasm_kernel_runtime_command_poll --export=wasm_kernel_runtime_event \

@@ -1,0 +1,380 @@
+{
+  "metadata": {
+    "id": "web-ui.ui-conformance-fixtures",
+    "version": "1.0.0",
+    "status": "draft",
+    "lastUpdated": "2026-02-16",
+    "compatibility": {
+      "backward": "Minor versions MAY add fixtures but MUST NOT change existing fixture semantics.",
+      "forward": "Unknown fixture fields MUST be ignored by runners.",
+      "deprecation": "Deprecated fixture IDs MUST remain for one major version."
+    }
+  },
+  "executionProfile": {
+    "seed": "ui-conformance-v1",
+    "viewport": { "id": "desktop-lg", "width": 1440, "height": 900, "deviceScaleFactor": 2, "pointer": "fine", "touch": false },
+    "viewports": [
+      { "id": "desktop-lg", "width": 1440, "height": 900, "deviceScaleFactor": 2, "pointer": "fine", "touch": false },
+      { "id": "tablet", "width": 1024, "height": 768, "deviceScaleFactor": 2, "pointer": "coarse", "touch": true },
+      { "id": "mobile", "width": 390, "height": 844, "deviceScaleFactor": 3, "pointer": "coarse", "touch": true }
+    ],
+    "fonts": {
+      "required": ["Inter", "Iosevka"],
+      "fallbackPolicy": "If required fonts are unavailable, run may proceed but MUST set report.env.fontFallback=true."
+    },
+    "timing": {
+      "clock": "monotonic",
+      "animationFrameHz": 60,
+      "maxDurationDriftMs": 16
+    },
+    "modes": ["dark", "light", "high-contrast", "forced-colors"],
+    "backends": ["dom", "canvas", "webgl"],
+    "touchTargets": {
+      "minHitSizePx": 44,
+      "appliesToPointer": "coarse",
+      "allowVisualSizeBelowHitSize": true
+    }
+  },
+  "fixtures": [
+    {
+      "id": "vis.window.baseline.v1",
+      "title": "Window baseline visual snapshot",
+      "class": "visual",
+      "contracts": [
+        "ui-component-visual-contract-v1.md#4.1",
+        "ui-visual-tokens-v1.json"
+      ],
+      "existingTests": [
+        "web-ui/tests/phase-3-dom-snapshots.test.mjs",
+        "web-ui/tests/phase-7-ui-conformance-fixtures.test.mjs"
+      ],
+      "requiredHarness": "snapshot",
+      "modeLanes": ["dark", "light", "high-contrast", "forced-colors"],
+      "viewportLanes": ["desktop-lg", "tablet", "mobile"],
+      "assertions": [
+        { "id": "window-border-width", "metric": "px", "comparator": "==", "target": 1, "tolerance": 0 },
+        { "id": "window-radius-md", "metric": "px", "comparator": "==", "target": 8, "tolerance": 1 },
+        { "id": "window-shadow-level2", "metric": "elevation-level", "comparator": "==", "target": "level2" }
+      ],
+      "artifacts": [
+        "snapshot-dom-dark.json",
+        "snapshot-dom-light.json",
+        "snapshot-dom-high-contrast.json",
+        "snapshot-dom-forced-colors.json"
+      ],
+      "status": "required"
+    },
+    {
+      "id": "vis.component.state-matrix.v1",
+      "title": "Component state matrix",
+      "class": "visual",
+      "contracts": [
+        "ui-component-visual-contract-v1.md#4.2",
+        "ui-component-visual-contract-v1.md#4.3",
+        "ui-component-visual-contract-v1.md#4.4",
+        "ui-component-visual-contract-v1.md#4.5"
+      ],
+      "existingTests": ["web-ui/tests/phase-7-ui-conformance-fixtures.test.mjs"],
+      "requiredHarness": "snapshot",
+      "modeLanes": ["dark", "light", "high-contrast", "forced-colors"],
+      "viewportLanes": ["desktop-lg", "tablet", "mobile"],
+      "assertions": [
+        { "id": "button-states", "metric": "state-coverage", "comparator": ">=", "target": 6 },
+        { "id": "input-states", "metric": "state-coverage", "comparator": ">=", "target": 6 },
+        { "id": "list-row-states", "metric": "state-coverage", "comparator": ">=", "target": 7 }
+      ],
+      "artifacts": ["component-state-matrix-dom.json", "component-state-matrix-canvas.json", "component-state-matrix-webgl.json"],
+      "status": "required"
+    },
+    {
+      "id": "vis.focus.geometry.v1",
+      "title": "Focus ring geometry and visibility",
+      "class": "visual",
+      "contracts": [
+        "ui-component-visual-contract-v1.md#2",
+        "ui-accessibility-visual-map-v1.md#3"
+      ],
+      "existingTests": ["web-ui/tests/phase-7-keyboard-focus.test.mjs"],
+      "requiredHarness": "geometry",
+      "assertions": [
+        { "id": "focus-ring-width", "metric": "px", "comparator": "==", "target": 2, "tolerance": 0 },
+        { "id": "focus-ring-offset", "metric": "px", "comparator": "==", "target": 1, "tolerance": 1 },
+        { "id": "focus-bounds-delta", "metric": "px", "comparator": "<=", "target": 1 }
+      ],
+      "artifacts": ["focus-geometry-report.json"],
+      "status": "required"
+    },
+    {
+      "id": "vis.selection.contrast.v1",
+      "title": "Selection fill and text contrast",
+      "class": "visual",
+      "contracts": [
+        "ui-component-visual-contract-v1.md#4.4",
+        "ui-accessibility-visual-map-v1.md#3"
+      ],
+      "existingTests": [
+        "web-ui/tests/theme.test.mjs",
+        "web-ui/tests/phase-7-ui-conformance-fixtures.test.mjs"
+      ],
+      "requiredHarness": "contrast",
+      "modeLanes": ["dark", "light", "high-contrast", "forced-colors"],
+      "assertions": [
+        { "id": "selection-text-contrast", "metric": "contrast-ratio", "comparator": ">=", "target": 4.5 },
+        { "id": "selection-boundary-contrast", "metric": "contrast-ratio", "comparator": ">=", "target": 3.0 }
+      ],
+      "artifacts": ["selection-contrast-report.json"],
+      "status": "required"
+    },
+    {
+      "id": "vis.disabled-error.legibility.v1",
+      "title": "Disabled and error state legibility",
+      "class": "visual",
+      "contracts": [
+        "ui-component-visual-contract-v1.md#4.2",
+        "ui-component-visual-contract-v1.md#4.3",
+        "ui-accessibility-visual-map-v1.md#5"
+      ],
+      "existingTests": [
+        "web-ui/tests/theme.test.mjs",
+        "web-ui/tests/phase-7-ui-conformance-fixtures.test.mjs"
+      ],
+      "requiredHarness": "contrast",
+      "modeLanes": ["dark", "light", "high-contrast", "forced-colors"],
+      "assertions": [
+        { "id": "disabled-text-contrast", "metric": "contrast-ratio", "comparator": ">=", "target": 4.5 },
+        { "id": "error-boundary-contrast", "metric": "contrast-ratio", "comparator": ">=", "target": 3.0 }
+      ],
+      "artifacts": ["disabled-error-legibility-report.json"],
+      "status": "required"
+    },
+    {
+      "id": "vis.responsive.touch-targets.v1",
+      "title": "Responsive viewport lanes and touch target ergonomics",
+      "class": "visual",
+      "contracts": [
+        "ui-component-visual-contract-v1.md#2",
+        "ui-component-visual-contract-v1.md#4.2",
+        "ui-component-visual-contract-v1.md#4.3",
+        "ui-component-visual-contract-v1.md#4.4",
+        "ui-component-visual-contract-v1.md#4.5",
+        "ui-conformance-fixture-catalog-v1.md#3"
+      ],
+      "existingTests": ["web-ui/tests/phase-7-ui-conformance-fixtures.test.mjs"],
+      "requiredHarness": "geometry",
+      "viewportLanes": ["desktop-lg", "tablet", "mobile"],
+      "pointerLanes": ["fine", "coarse"],
+      "assertions": [
+        { "id": "responsive-viewport-lane-count", "metric": "lane-count", "comparator": ">=", "target": 3 },
+        { "id": "coarse-pointer-hit-target-min", "metric": "px", "comparator": ">=", "target": 44 },
+        { "id": "fine-pointer-control-height-min", "metric": "px", "comparator": ">=", "target": 32 }
+      ],
+      "artifacts": ["responsive-touch-targets-report.json"],
+      "status": "required"
+    },
+    {
+      "id": "parity.dom-canvas.visual.v1",
+      "title": "DOM vs Canvas visual parity",
+      "class": "parity",
+      "contracts": [
+        "ui-component-visual-contract-v1.md#5.1"
+      ],
+      "existingTests": ["web-ui/tests/phase-3-renderer-parity.test.mjs"],
+      "requiredHarness": "parity",
+      "backendLanes": ["dom", "canvas"],
+      "parityBackendPairs": [["dom", "canvas"]],
+      "assertions": [
+        { "id": "geometry-delta", "metric": "px", "comparator": "<=", "target": 1 },
+        { "id": "text-baseline-delta", "metric": "px", "comparator": "<=", "target": 1 },
+        { "id": "color-channel-delta", "metric": "channel-delta", "comparator": "<=", "target": 2 }
+      ],
+      "artifacts": ["dom-canvas-parity-report.json"],
+      "status": "required"
+    },
+    {
+      "id": "parity.dom-webgl.visual.v1",
+      "title": "DOM vs WebGL visual parity",
+      "class": "parity",
+      "contracts": [
+        "ui-component-visual-contract-v1.md#5.2"
+      ],
+      "existingTests": ["web-ui/tests/phase-3-renderer-parity.test.mjs"],
+      "requiredHarness": "parity",
+      "backendLanes": ["dom", "webgl"],
+      "parityBackendPairs": [["dom", "webgl"]],
+      "assertions": [
+        { "id": "geometry-delta", "metric": "px", "comparator": "<=", "target": 1 },
+        { "id": "color-channel-delta", "metric": "channel-delta", "comparator": "<=", "target": 2 },
+        { "id": "alpha-delta", "metric": "alpha-delta", "comparator": "<=", "target": 0.02 }
+      ],
+      "artifacts": ["dom-webgl-parity-report.json"],
+      "status": "required"
+    },
+    {
+      "id": "motion.class-timing.v1",
+      "title": "Approved motion class timing",
+      "class": "motion",
+      "contracts": [
+        "ui-motion-contract-v1.md#3",
+        "ui-motion-contract-v1.md#4"
+      ],
+      "existingTests": ["web-ui/tests/phase-7-ui-conformance-fixtures.test.mjs"],
+      "requiredHarness": "timing",
+      "assertions": [
+        { "id": "inline-state-fast", "metric": "duration-ms", "comparator": "<=", "target": 120, "tolerance": 16 },
+        { "id": "surface-enter-normal", "metric": "duration-ms", "comparator": "<=", "target": 180, "tolerance": 16 },
+        { "id": "max-duration", "metric": "duration-ms", "comparator": "<=", "target": 300 }
+      ],
+      "artifacts": ["motion-class-timing-report.json"],
+      "status": "required"
+    },
+    {
+      "id": "motion.reduced-semantic.v1",
+      "title": "Reduced-motion semantic parity",
+      "class": "motion",
+      "contracts": [
+        "ui-motion-contract-v1.md#5",
+        "ui-accessibility-visual-map-v1.md#4"
+      ],
+      "existingTests": ["web-ui/tests/phase-7-accessibility.test.mjs"],
+      "requiredHarness": "timing",
+      "assertions": [
+        { "id": "reduced-duration-transform", "metric": "duration-ms", "comparator": "==", "target": 0, "tolerance": 0 },
+        { "id": "reduced-duration-opacity", "metric": "duration-ms", "comparator": "<=", "target": 80 },
+        { "id": "semantic-delta", "metric": "state-diff-count", "comparator": "==", "target": 0 }
+      ],
+      "artifacts": ["motion-reduced-semantic-report.json"],
+      "status": "required"
+    },
+    {
+      "id": "motion.interrupt-determinism.v1",
+      "title": "Interrupted transition determinism",
+      "class": "motion",
+      "contracts": [
+        "ui-motion-contract-v1.md#6",
+        "ui-motion-contract-v1.md#8"
+      ],
+      "existingTests": [
+        "web-ui/tests/phase-7-reliability.test.mjs",
+        "web-ui/tests/phase-7-ui-conformance-fixtures.test.mjs"
+      ],
+      "requiredHarness": "replay",
+      "assertions": [
+        { "id": "interrupted-end-state-deterministic", "metric": "stable-hash", "comparator": "==", "target": "repeatable" },
+        { "id": "concurrent-transition-policy", "metric": "last-writer-wins", "comparator": "==", "target": true }
+      ],
+      "artifacts": ["motion-interrupt-determinism-report.json"],
+      "status": "required"
+    },
+    {
+      "id": "motion.backend-drift.v1",
+      "title": "Cross-backend motion drift",
+      "class": "motion",
+      "contracts": [
+        "ui-motion-contract-v1.md#7"
+      ],
+      "existingTests": [
+        "web-ui/tests/phase-7-performance-budgets.test.mjs",
+        "web-ui/tests/phase-7-ui-conformance-fixtures.test.mjs"
+      ],
+      "requiredHarness": "timing",
+      "assertions": [
+        { "id": "duration-drift", "metric": "duration-ms-delta", "comparator": "<=", "target": 16 },
+        { "id": "geometry-end-delta", "metric": "px", "comparator": "<=", "target": 1 }
+      ],
+      "artifacts": ["motion-backend-drift-report.json"],
+      "status": "required"
+    },
+    {
+      "id": "a11y.contrast.v1",
+      "title": "Text and non-text contrast audit",
+      "class": "a11y",
+      "contracts": [
+        "ui-accessibility-visual-map-v1.md#3"
+      ],
+      "existingTests": [
+        "web-ui/tests/theme.test.mjs",
+        "web-ui/tests/phase-7-ui-conformance-fixtures.test.mjs"
+      ],
+      "requiredHarness": "contrast",
+      "modeLanes": ["dark", "light", "high-contrast", "forced-colors"],
+      "assertions": [
+        { "id": "a11y-text-contrast-aa", "metric": "contrast-ratio", "comparator": ">=", "target": 4.5 },
+        { "id": "a11y-nontext-contrast", "metric": "contrast-ratio", "comparator": ">=", "target": 3.0 }
+      ],
+      "artifacts": ["a11y-contrast-report.json"],
+      "status": "required"
+    },
+    {
+      "id": "a11y.high-contrast.forced-colors.v1",
+      "title": "High-contrast and forced-colors accessibility lane",
+      "class": "a11y",
+      "contracts": [
+        "ui-accessibility-visual-map-v1.md#2",
+        "ui-accessibility-visual-map-v1.md#3",
+        "ui-visual-tokens-v1.json"
+      ],
+      "existingTests": ["web-ui/tests/phase-7-ui-conformance-fixtures.test.mjs"],
+      "requiredHarness": "contrast",
+      "modeLanes": ["high-contrast", "forced-colors"],
+      "assertions": [
+        { "id": "a11y-hc-text-contrast-aa", "metric": "contrast-ratio", "comparator": ">=", "target": 7.0 },
+        { "id": "a11y-forced-colors-focus-contrast", "metric": "contrast-ratio", "comparator": ">=", "target": 3.0 },
+        { "id": "a11y-forced-colors-nontext-contrast", "metric": "contrast-ratio", "comparator": ">=", "target": 3.0 }
+      ],
+      "artifacts": ["a11y-high-contrast-report.json", "a11y-forced-colors-report.json"],
+      "status": "required"
+    },
+    {
+      "id": "a11y.focus-visible.v1",
+      "title": "Keyboard focus visibility",
+      "class": "a11y",
+      "contracts": [
+        "ui-accessibility-visual-map-v1.md#3"
+      ],
+      "existingTests": ["web-ui/tests/phase-7-keyboard-focus.test.mjs"],
+      "requiredHarness": "keyboard",
+      "assertions": [
+        { "id": "a11y-focus-visible", "metric": "focus-indicator-presence", "comparator": "==", "target": true },
+        { "id": "focus-indicator-width", "metric": "px", "comparator": ">=", "target": 2 },
+        { "id": "focus-indicator-contrast", "metric": "contrast-ratio", "comparator": ">=", "target": 3.0 }
+      ],
+      "artifacts": ["a11y-focus-visible-report.json"],
+      "status": "required"
+    },
+    {
+      "id": "a11y.noncolor-cues.v1",
+      "title": "Non-color redundancy for severity and safety states",
+      "class": "a11y",
+      "contracts": [
+        "ui-accessibility-visual-map-v1.md#3",
+        "ui-accessibility-visual-map-v1.md#5"
+      ],
+      "existingTests": ["web-ui/tests/phase-7-accessibility.test.mjs"],
+      "requiredHarness": "snapshot",
+      "assertions": [
+        { "id": "a11y-noncolor-state-cue", "metric": "redundant-cue-count", "comparator": ">=", "target": 1 },
+        { "id": "severity-cue-legibility", "metric": "contrast-ratio", "comparator": ">=", "target": 3.0 }
+      ],
+      "artifacts": ["a11y-noncolor-cues-report.json"],
+      "status": "required"
+    },
+    {
+      "id": "a11y.proxy-parity.v1",
+      "title": "Canvas/WebGL accessibility proxy parity",
+      "class": "a11y",
+      "contracts": [
+        "ui-accessibility-visual-map-v1.md#6"
+      ],
+      "existingTests": ["web-ui/tests/phase-7-accessibility.test.mjs"],
+      "requiredHarness": "parity",
+      "backendLanes": ["canvas", "webgl"],
+      "parityBackendPairs": [["canvas", "webgl"]],
+      "assertions": [
+        { "id": "a11y-canvas-webgl-proxy-parity", "metric": "proxy-sync", "comparator": "==", "target": true },
+        { "id": "proxy-bounds-delta", "metric": "px", "comparator": "<=", "target": 1 }
+      ],
+      "artifacts": ["a11y-proxy-parity-report.json"],
+      "status": "required"
+    }
+  ]
+}

@@ -1,0 +1,960 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ccl.dev/web-ui/spec/ui-state-schema-v1.json",
+  "title": "Web UI State Schema v1",
+  "description": "Canonical runtime state graph schema for web-ui core model and command/focus determinism.",
+  "x-spec-metadata": {
+    "status": "Draft",
+    "version": "1.0.0",
+    "lastUpdated": "2026-02-16",
+    "scope": "Runtime state graph for workspace/task/window/widget, command state, focus/selection, layout, recording, and capability lanes",
+    "compatibility": {
+      "backward": "Readers MAY normalize older persisted envelopes before validating against this runtime schema.",
+      "forward": "Unknown future lanes MUST use the `extensions` object and MUST NOT mutate baseline lane semantics.",
+      "deprecation": "Incompatible state-lane contract changes require a new major version."
+    }
+  },
+  "type": "object",
+  "required": [
+    "workspace",
+    "tasks",
+    "windows",
+    "widgets",
+    "presentations",
+    "recordingStore",
+    "commandHistory",
+    "runtimeInspector",
+    "watches",
+    "watchSeq",
+    "editGroups",
+    "editSeq",
+    "domEscapes",
+    "ui",
+    "capabilities",
+    "capabilityRequests",
+    "capabilityPolicy",
+    "capabilityRequestSeq",
+    "sessions",
+    "sessionOrder",
+    "activeSessionId",
+    "customization",
+    "theme",
+    "focus",
+    "focusHistory",
+    "selection",
+    "commands",
+    "layout",
+    "focusReasons",
+    "disableReasons",
+    "windowCauses",
+    "jobCauses",
+    "eventLog",
+    "errors",
+    "jobs",
+    "idCounters"
+  ],
+  "properties": {
+    "workspace": { "$ref": "#/$defs/workspace" },
+    "tasks": { "$ref": "#/$defs/taskMap" },
+    "windows": { "$ref": "#/$defs/windowMap" },
+    "widgets": { "$ref": "#/$defs/widgetMap" },
+    "presentations": { "$ref": "#/$defs/genericMap" },
+    "recordingStore": { "$ref": "#/$defs/recordingStore" },
+    "commandHistory": { "$ref": "#/$defs/commandInvocationList" },
+    "runtimeInspector": { "$ref": "#/$defs/runtimeInspector" },
+    "watches": { "$ref": "#/$defs/watchList" },
+    "watchSeq": { "$ref": "#/$defs/positiveInt" },
+    "editGroups": { "$ref": "#/$defs/editGroupList" },
+    "editSeq": { "$ref": "#/$defs/positiveInt" },
+    "domEscapes": { "$ref": "#/$defs/domEscapeList" },
+    "ui": { "$ref": "#/$defs/uiState" },
+    "capabilities": { "$ref": "#/$defs/capabilities" },
+    "capabilityRequests": { "$ref": "#/$defs/capabilityRequestList" },
+    "capabilityPolicy": { "$ref": "#/$defs/capabilityPolicy" },
+    "capabilityRequestSeq": { "$ref": "#/$defs/positiveInt" },
+    "sessions": { "$ref": "#/$defs/sessionMap" },
+    "sessionOrder": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/idString" }
+    },
+    "activeSessionId": { "$ref": "#/$defs/nullableId" },
+    "customization": { "type": "object" },
+    "theme": { "type": "object" },
+    "focus": { "$ref": "#/$defs/focusTargetOrNull" },
+    "focusHistory": { "$ref": "#/$defs/focusHistoryList" },
+    "selection": { "$ref": "#/$defs/selectionOrNull" },
+    "commands": { "$ref": "#/$defs/commandStateMap" },
+    "layout": { "$ref": "#/$defs/layoutOrNull" },
+    "focusReasons": { "$ref": "#/$defs/reasonMap" },
+    "disableReasons": { "$ref": "#/$defs/reasonMap" },
+    "windowCauses": { "$ref": "#/$defs/genericMap" },
+    "jobCauses": { "$ref": "#/$defs/genericMap" },
+    "eventLog": { "$ref": "#/$defs/eventLogRing" },
+    "errors": { "$ref": "#/$defs/errorList" },
+    "jobs": { "$ref": "#/$defs/jobList" },
+    "idCounters": { "$ref": "#/$defs/idCounters" },
+    "extensions": {
+      "type": "object",
+      "patternProperties": {
+        "^x-[A-Za-z0-9._:-]+$": {}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "u53": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "positiveInt": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "idString": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:@/-]{1,192}$"
+    },
+    "nullableId": {
+      "oneOf": [
+        { "$ref": "#/$defs/idString" },
+        { "type": "null" }
+      ]
+    },
+    "genericMap": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z0-9._:@/-]{1,192}$": {}
+      },
+      "additionalProperties": false
+    },
+    "workspace": {
+      "type": "object",
+      "required": ["id", "title", "taskIds", "activeTaskId", "metadata"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "taskIds": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/idString" }
+        },
+        "activeTaskId": { "$ref": "#/$defs/nullableId" },
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "task": {
+      "type": "object",
+      "required": ["id", "title", "windowIds", "activeWindowId", "metadata"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "windowIds": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/idString" }
+        },
+        "activeWindowId": { "$ref": "#/$defs/nullableId" },
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "taskMap": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z0-9._:@/-]{1,192}$": { "$ref": "#/$defs/task" }
+      },
+      "additionalProperties": false
+    },
+    "window": {
+      "type": "object",
+      "required": ["id", "taskId", "title", "kind", "rootWidgetId", "metadata"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "taskId": { "$ref": "#/$defs/idString" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "kind": { "type": "string", "minLength": 1, "maxLength": 96 },
+        "rootWidgetId": { "$ref": "#/$defs/nullableId" },
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "windowMap": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z0-9._:@/-]{1,192}$": { "$ref": "#/$defs/window" }
+      },
+      "additionalProperties": false
+    },
+    "widget": {
+      "type": "object",
+      "required": ["id", "kind", "parentId", "windowId", "childIds", "props", "model"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "kind": { "type": "string", "minLength": 1, "maxLength": 96 },
+        "parentId": { "$ref": "#/$defs/nullableId" },
+        "windowId": { "$ref": "#/$defs/nullableId" },
+        "childIds": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/idString" }
+        },
+        "props": { "type": "object" },
+        "model": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "widgetMap": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z0-9._:@/-]{1,192}$": { "$ref": "#/$defs/widget" }
+      },
+      "additionalProperties": false
+    },
+    "recordingInput": {
+      "type": "object",
+      "required": ["kind", "text", "package", "sourceLocation"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["unknown", "form", "file", "command"] },
+        "text": { "type": "string" },
+        "package": { "type": ["string", "null"] },
+        "sourceLocation": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["file", "line", "column"],
+              "properties": {
+                "file": { "type": ["string", "null"] },
+                "line": { "type": ["integer", "null"], "minimum": 0 },
+                "column": { "type": ["integer", "null"], "minimum": 0 }
+              },
+              "additionalProperties": false
+            },
+            { "type": "null" }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "recordingContext": {
+      "type": "object",
+      "required": ["commandId", "sessionId", "workspaceId"],
+      "properties": {
+        "commandId": { "type": ["string", "null"] },
+        "sessionId": { "type": ["string", "null"] },
+        "workspaceId": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "recording": {
+      "type": "object",
+      "required": [
+        "id",
+        "jobId",
+        "status",
+        "seqStart",
+        "seqEnd",
+        "tsStart",
+        "tsEnd",
+        "streamId",
+        "input",
+        "context",
+        "entryIds",
+        "metadata"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "jobId": { "type": ["string", "null"] },
+        "status": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "seqStart": { "type": ["integer", "null"], "minimum": 0 },
+        "seqEnd": { "type": ["integer", "null"], "minimum": 0 },
+        "tsStart": { "type": ["integer", "null"], "minimum": 0 },
+        "tsEnd": { "type": ["integer", "null"], "minimum": 0 },
+        "streamId": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "input": { "$ref": "#/$defs/recordingInput" },
+        "context": { "$ref": "#/$defs/recordingContext" },
+        "entryIds": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/idString" }
+        },
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "recordingEntry": {
+      "type": "object",
+      "required": [
+        "id",
+        "recordingId",
+        "kind",
+        "streamId",
+        "seq",
+        "ts",
+        "text",
+        "anchorId",
+        "presentationId",
+        "metadata"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "recordingId": { "$ref": "#/$defs/idString" },
+        "kind": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "streamId": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "seq": { "type": ["integer", "null"], "minimum": 0 },
+        "ts": { "type": ["integer", "null"], "minimum": 0 },
+        "text": { "type": "string" },
+        "anchorId": { "type": ["string", "null"] },
+        "presentationId": { "type": ["string", "null"] },
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "recordingAnchor": {
+      "type": "object",
+      "required": ["id", "entryId", "range", "path"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "entryId": { "$ref": "#/$defs/idString" },
+        "range": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["start", "end"],
+              "properties": {
+                "start": { "type": "integer", "minimum": 0 },
+                "end": { "type": "integer", "minimum": 0 }
+              },
+              "additionalProperties": false
+            },
+            { "type": "null" }
+          ]
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "integer" }
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "recordingStore": {
+      "type": "object",
+      "required": [
+        "recordings",
+        "entries",
+        "anchors",
+        "recordingOrder",
+        "entryOrder",
+        "byAnchor",
+        "byPresentation"
+      ],
+      "properties": {
+        "recordings": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Za-z0-9._:@/-]{1,192}$": { "$ref": "#/$defs/recording" }
+          },
+          "additionalProperties": false
+        },
+        "entries": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Za-z0-9._:@/-]{1,192}$": { "$ref": "#/$defs/recordingEntry" }
+          },
+          "additionalProperties": false
+        },
+        "anchors": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Za-z0-9._:@/-]{1,192}$": { "$ref": "#/$defs/recordingAnchor" }
+          },
+          "additionalProperties": false
+        },
+        "recordingOrder": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/idString" }
+        },
+        "entryOrder": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/idString" }
+        },
+        "byAnchor": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Za-z0-9._:@/-]{1,192}$": {
+              "type": "object",
+              "required": ["entryId", "range", "path"],
+              "properties": {
+                "entryId": { "$ref": "#/$defs/idString" },
+                "range": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "required": ["start", "end"],
+                      "properties": {
+                        "start": { "type": "integer", "minimum": 0 },
+                        "end": { "type": "integer", "minimum": 0 }
+                      },
+                      "additionalProperties": false
+                    },
+                    { "type": "null" }
+                  ]
+                },
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      { "type": "string" },
+                      { "type": "integer" }
+                    ]
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "byPresentation": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Za-z0-9._:@/-]{1,192}$": { "$ref": "#/$defs/idString" }
+          },
+          "additionalProperties": false
+        },
+        "truncation": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "applied",
+                "droppedEntries",
+                "retainedEntries",
+                "maxEntries",
+                "maxBytes",
+                "estimatedRetainedBytes",
+                "firstRetainedEntryId",
+                "lastRetainedEntryId"
+              ],
+              "properties": {
+                "applied": { "type": "boolean" },
+                "droppedEntries": { "type": "integer", "minimum": 0 },
+                "retainedEntries": { "type": "integer", "minimum": 0 },
+                "maxEntries": { "type": "integer", "minimum": 0 },
+                "maxBytes": { "type": "integer", "minimum": 0 },
+                "estimatedRetainedBytes": { "type": "integer", "minimum": 0 },
+                "firstRetainedEntryId": { "type": ["string", "null"] },
+                "lastRetainedEntryId": { "type": ["string", "null"] }
+              },
+              "additionalProperties": false
+            },
+            { "type": "null" }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "commandInvocation": {
+      "type": "object",
+      "required": ["id", "commandId", "args", "defaults", "ts", "source", "result"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "commandId": { "$ref": "#/$defs/idString" },
+        "args": { "type": "object" },
+        "defaults": { "type": "object" },
+        "ts": { "type": ["integer", "null"], "minimum": 0 },
+        "source": { "type": ["string", "null"] },
+        "result": {}
+      },
+      "additionalProperties": true
+    },
+    "commandInvocationList": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/commandInvocation" }
+    },
+    "runtimeInspector": {
+      "type": "object",
+      "required": ["targetId", "targetType", "stale", "view", "lastUpdatedAt"],
+      "properties": {
+        "targetId": { "type": ["string", "null"] },
+        "targetType": { "type": ["string", "null"] },
+        "stale": { "type": "boolean" },
+        "view": { "oneOf": [{ "type": "object" }, { "type": "null" }] },
+        "lastUpdatedAt": { "type": ["integer", "null"], "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "watch": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "label",
+        "entryId",
+        "presentationId",
+        "recordingId",
+        "valueSummary",
+        "pinned",
+        "updatedAt",
+        "metadata"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "kind": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "label": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "entryId": { "type": ["string", "null"] },
+        "presentationId": { "type": ["string", "null"] },
+        "recordingId": { "type": ["string", "null"] },
+        "valueSummary": { "type": "string" },
+        "pinned": { "type": "boolean" },
+        "updatedAt": { "type": ["integer", "null"], "minimum": 0 },
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "watchList": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/watch" }
+    },
+    "editEntry": {
+      "type": "object",
+      "required": ["id", "placeId", "label", "before", "after", "metadata"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "placeId": { "type": ["string", "null"] },
+        "label": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "before": {},
+        "after": {},
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "editGroup": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "status",
+        "edits",
+        "createdAt",
+        "appliedAt",
+        "undoneAt",
+        "failedAt",
+        "metadata"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "label": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "status": { "type": "string", "enum": ["staged", "applied", "undone", "failed"] },
+        "edits": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/editEntry" }
+        },
+        "createdAt": { "type": ["integer", "null"], "minimum": 0 },
+        "appliedAt": { "type": ["integer", "null"], "minimum": 0 },
+        "undoneAt": { "type": ["integer", "null"], "minimum": 0 },
+        "failedAt": { "type": ["integer", "null"], "minimum": 0 },
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "editGroupList": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/editGroup" }
+    },
+    "domEscape": {
+      "type": "object",
+      "required": ["id", "kind", "target", "detail", "capability", "taskId", "windowId", "commandId", "ts"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "kind": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "target": { "type": ["string", "null"] },
+        "detail": { "type": "object" },
+        "capability": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "taskId": { "type": ["string", "null"] },
+        "windowId": { "type": ["string", "null"] },
+        "commandId": { "type": "string", "minLength": 1, "maxLength": 192 },
+        "ts": { "type": ["integer", "null"], "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "domEscapeList": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/domEscape" }
+    },
+    "uiSignal": {
+      "type": "object",
+      "required": ["id", "type", "payload"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "type": { "type": "string", "minLength": 1, "maxLength": 96 },
+        "payload": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "uiTurn": {
+      "type": "object",
+      "required": ["id", "phase", "signals", "commitPolicy", "yielded", "yieldReason", "startedAt"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "phase": {
+          "type": "string",
+          "enum": ["signals", "commands", "render", "backend", "idle", "yielded"]
+        },
+        "signals": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/uiSignal" }
+        },
+        "commitPolicy": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "yielded": { "type": "boolean" },
+        "yieldReason": { "type": ["string", "null"] },
+        "startedAt": { "type": ["number", "null"], "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "uiHistoryEntry": {
+      "type": "object",
+      "required": ["id", "phase", "yielded", "commitPolicy"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "phase": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "yielded": { "type": "boolean" },
+        "commitPolicy": { "type": "string", "minLength": 1, "maxLength": 64 }
+      },
+      "additionalProperties": false
+    },
+    "uiState": {
+      "type": "object",
+      "required": ["queue", "turn", "history", "nextTurnId"],
+      "properties": {
+        "queue": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/uiSignal" }
+        },
+        "turn": {
+          "oneOf": [
+            { "$ref": "#/$defs/uiTurn" },
+            { "type": "null" }
+          ]
+        },
+        "history": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/uiHistoryEntry" }
+        },
+        "nextTurnId": { "$ref": "#/$defs/positiveInt" }
+      },
+      "additionalProperties": false
+    },
+    "capabilityEntry": {
+      "type": "object",
+      "required": ["id", "action", "capability", "reason", "taskId", "windowId", "commandId"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "action": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "capability": { "type": ["string", "null"] },
+        "reason": { "type": ["string", "null"] },
+        "taskId": { "type": ["string", "null"] },
+        "windowId": { "type": ["string", "null"] },
+        "commandId": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "capabilityRequest": {
+      "type": "object",
+      "required": [
+        "id",
+        "capability",
+        "reason",
+        "status",
+        "decisionReason",
+        "decidedBy",
+        "taskId",
+        "windowId",
+        "commandId"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "capability": { "type": ["string", "null"] },
+        "reason": { "type": ["string", "null"] },
+        "status": { "type": "string", "enum": ["pending", "granted", "denied"] },
+        "decisionReason": { "type": ["string", "null"] },
+        "decidedBy": { "type": ["string", "null"] },
+        "taskId": { "type": ["string", "null"] },
+        "windowId": { "type": ["string", "null"] },
+        "commandId": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "capabilityRequestList": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/capabilityRequest" }
+    },
+    "capabilityPolicyRule": {
+      "type": "object",
+      "required": ["id", "capability", "decision", "reason"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "capability": { "type": ["string", "null"] },
+        "decision": { "type": "string", "enum": ["ask", "grant", "deny"] },
+        "reason": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "capabilityPolicy": {
+      "type": "object",
+      "required": ["defaultDecision", "rules"],
+      "properties": {
+        "defaultDecision": { "type": "string", "enum": ["ask", "grant", "deny"] },
+        "rules": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/capabilityPolicyRule" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "capabilities": {
+      "type": "object",
+      "required": ["safeMode", "granted", "log"],
+      "properties": {
+        "safeMode": { "type": "boolean" },
+        "granted": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 128 }
+        },
+        "log": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/capabilityEntry" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "session": {
+      "type": "object",
+      "required": ["id", "name", "notes", "createdAt", "lastOpenedAt", "lastSavedAt", "metadata"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "notes": { "type": "string" },
+        "createdAt": { "type": ["integer", "null"], "minimum": 0 },
+        "lastOpenedAt": { "type": ["integer", "null"], "minimum": 0 },
+        "lastSavedAt": { "type": ["integer", "null"], "minimum": 0 },
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "sessionMap": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z0-9._:@/-]{1,192}$": { "$ref": "#/$defs/session" }
+      },
+      "additionalProperties": false
+    },
+    "focusTarget": {
+      "type": "object",
+      "required": ["taskId", "windowId", "widgetId", "presentationId"],
+      "properties": {
+        "taskId": { "$ref": "#/$defs/nullableId" },
+        "windowId": { "$ref": "#/$defs/nullableId" },
+        "widgetId": { "$ref": "#/$defs/nullableId" },
+        "presentationId": { "$ref": "#/$defs/nullableId" }
+      },
+      "additionalProperties": false
+    },
+    "focusTargetOrNull": {
+      "oneOf": [
+        { "$ref": "#/$defs/focusTarget" },
+        { "type": "null" }
+      ]
+    },
+    "focusHistoryEntry": {
+      "type": "object",
+      "required": ["seq", "target", "reason"],
+      "properties": {
+        "seq": { "oneOf": [{ "$ref": "#/$defs/u53" }, { "type": "null" }] },
+        "target": { "$ref": "#/$defs/focusTargetOrNull" },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 96 },
+        "reasonId": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "focusHistoryList": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/focusHistoryEntry" }
+    },
+    "selection": {
+      "type": "object",
+      "required": ["id", "kind", "targetIds", "anchorId", "metadata"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "kind": { "type": "string", "minLength": 1, "maxLength": 96 },
+        "targetIds": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/idString" }
+        },
+        "anchorId": { "$ref": "#/$defs/nullableId" },
+        "metadata": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "selectionOrNull": {
+      "oneOf": [
+        { "$ref": "#/$defs/selection" },
+        { "type": "null" }
+      ]
+    },
+    "commandState": {
+      "type": "object",
+      "required": ["enabled", "reason", "reasonId"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "reason": { "type": ["string", "null"], "maxLength": 512 },
+        "reasonId": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "commandStateMap": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z0-9._:@-]{1,192}$": { "$ref": "#/$defs/commandState" }
+      },
+      "additionalProperties": false
+    },
+    "layoutNode": {
+      "type": "object",
+      "required": ["id", "kind", "children", "props"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "kind": { "type": "string", "enum": ["leaf", "split", "tabs", "dock"] },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/idString" }
+        },
+        "props": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "layout": {
+      "type": "object",
+      "required": ["rootId", "nodes"],
+      "properties": {
+        "rootId": { "$ref": "#/$defs/idString" },
+        "nodes": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Za-z0-9._:@/-]{1,192}$": { "$ref": "#/$defs/layoutNode" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "layoutOrNull": {
+      "oneOf": [
+        { "$ref": "#/$defs/layout" },
+        { "type": "null" }
+      ]
+    },
+    "reasonEntry": {
+      "type": "object",
+      "required": ["id", "reason", "ts", "details"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "ts": { "type": ["integer", "null"], "minimum": 0 },
+        "details": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "reasonMap": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z0-9._:@/-]{1,192}$": { "$ref": "#/$defs/reasonEntry" }
+      },
+      "additionalProperties": false
+    },
+    "eventLogEntry": {
+      "type": "object",
+      "required": ["seq", "type", "payload"],
+      "properties": {
+        "seq": { "$ref": "#/$defs/u53" },
+        "ts": { "$ref": "#/$defs/u53" },
+        "type": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "target": { "type": "string" },
+        "payload": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "eventLogRing": {
+      "type": "object",
+      "required": ["capacity", "entries"],
+      "properties": {
+        "capacity": { "type": "integer", "minimum": 1 },
+        "entries": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/eventLogEntry" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "errorEntry": {
+      "type": "object",
+      "required": ["id", "taskId", "kind", "message", "status", "count"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" },
+        "taskId": { "$ref": "#/$defs/nullableId" },
+        "kind": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "message": { "type": "string" },
+        "status": { "type": ["string", "null"] },
+        "count": { "type": "integer", "minimum": 1 },
+        "ts": { "type": ["integer", "null"], "minimum": 0 },
+        "lastTs": { "type": ["integer", "null"], "minimum": 0 },
+        "severity": { "type": ["string", "null"] },
+        "location": {},
+        "report": {},
+        "stack": {},
+        "restarts": { "type": "array" },
+        "coalesceKey": { "type": ["string", "null"] },
+        "presentationId": { "type": ["string", "null"] },
+        "debuggerTarget": {}
+      },
+      "additionalProperties": true
+    },
+    "errorList": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/errorEntry" }
+    },
+    "jobEntry": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "$ref": "#/$defs/idString" }
+      },
+      "additionalProperties": true
+    },
+    "jobList": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/jobEntry" }
+    },
+    "idCounters": {
+      "type": "object",
+      "required": ["workspace", "task", "window", "widget", "presentation", "layout", "reason", "error", "job", "session"],
+      "properties": {
+        "workspace": { "type": "integer", "minimum": 0 },
+        "task": { "type": "integer", "minimum": 0 },
+        "window": { "type": "integer", "minimum": 0 },
+        "widget": { "type": "integer", "minimum": 0 },
+        "presentation": { "type": "integer", "minimum": 0 },
+        "layout": { "type": "integer", "minimum": 0 },
+        "reason": { "type": "integer", "minimum": 0 },
+        "error": { "type": "integer", "minimum": 0 },
+        "job": { "type": "integer", "minimum": 0 },
+        "session": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

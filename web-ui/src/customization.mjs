@@ -1,6 +1,7 @@
 import {
   DEFAULT_THEME_PRESET_ID,
   getThemePreset,
+  isThemeMode,
   resolveThemeTokensFromSelection,
   sanitizeThemeOverrides
 } from "./theme.mjs";
@@ -151,7 +152,7 @@ function normalizeString(value, fallback = null) {
 }
 
 function normalizeMode(value, fallback = null) {
-  if (value === "dark" || value === "light") return value;
+  if (isThemeMode(value)) return value;
   return fallback;
 }
 

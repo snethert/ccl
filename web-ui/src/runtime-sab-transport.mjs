@@ -1,5 +1,5 @@
 import { decodeRuntimeMessage } from "../bridge/runtime.mjs";
-import { SAB_RING_TRANSPORT } from "../../doc/wasm/js/sab-ring.mjs";
+import { SAB_RING_TRANSPORT } from "./runtime-transport.mjs";
 
 function resolveReader(transport) {
   if (!transport || transport.transport !== SAB_RING_TRANSPORT) {

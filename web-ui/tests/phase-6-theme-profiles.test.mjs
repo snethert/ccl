@@ -19,6 +19,8 @@ test("phase-6 theme presets are discoverable", () => {
   const ids = new Set(presets.map((preset) => preset.id));
   assert.equal(ids.has("core-dark"), true);
   assert.equal(ids.has("core-light"), true);
+  assert.equal(ids.has("core-high-contrast"), true);
+  assert.equal(ids.has("core-forced-colors"), true);
 });
 
 test("phase-6 setThemePreset and token overrides are reversible", () => {

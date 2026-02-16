@@ -1,4 +1,14 @@
 const DEFAULT_THEME_MODE = "dark";
+export const THEME_MODES = Object.freeze([
+  "dark",
+  "light",
+  "high-contrast",
+  "forced-colors"
+]);
+
+export function isThemeMode(value) {
+  return THEME_MODES.includes(value);
+}
 
 export const DARK_THEME_TOKENS = Object.freeze({
   mode: "dark",
@@ -7,7 +17,7 @@ export const DARK_THEME_TOKENS = Object.freeze({
     surface: "#1b1b1b",
     surfaceRaised: "#232323",
     surfaceSunken: "#0f0f0f",
-    border: "#2a2a2a",
+    border: "#676767",
     text: {
       primary: "#e8e8e8",
       secondary: "#b8b8b8",
@@ -56,7 +66,7 @@ export const LIGHT_THEME_TOKENS = Object.freeze({
     surface: "#ffffff",
     surfaceRaised: "#ffffff",
     surfaceSunken: "#ededed",
-    border: "#d6d6d6",
+    border: "#949494",
     text: {
       primary: "#1a1a1a",
       secondary: "#444444",
@@ -66,7 +76,7 @@ export const LIGHT_THEME_TOKENS = Object.freeze({
     accent: "#2c6dd2",
     accentMuted: "#cfe0f7",
     accentText: "#ffffff",
-    warning: "#b96a10",
+    warning: "#af640f",
     error: "#c23b3b",
     success: "#1e7a4c",
     focus: "#2c6dd2",
@@ -79,6 +89,104 @@ export const LIGHT_THEME_TOKENS = Object.freeze({
     level2: "0 2px 8px rgba(0,0,0,0.14)",
     level3: "0 4px 12px rgba(0,0,0,0.16)",
     level4: "0 8px 20px rgba(0,0,0,0.18)"
+  },
+  radius: { xs: "3px", sm: "4px", md: "8px", lg: "12px" },
+  space: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 },
+  font: {
+    body: "Inter",
+    mono: "Iosevka",
+    size: { xs: 11, sm: 12, md: 14, lg: 16, xl: 20, xxl: 24 },
+    weight: { regular: 400, medium: 500, bold: 600 },
+    lineHeight: { tight: 1.2, normal: 1.4, relaxed: 1.6 }
+  },
+  motion: {
+    fast: 120,
+    normal: 180,
+    slow: 250,
+    easing: "cubic-bezier(0.2, 0, 0.2, 1)",
+    reduced: false
+  }
+});
+
+export const HIGH_CONTRAST_THEME_TOKENS = Object.freeze({
+  mode: "high-contrast",
+  color: {
+    bg: "#000000",
+    surface: "#000000",
+    surfaceRaised: "#0d0d0d",
+    surfaceSunken: "#000000",
+    border: "#ffffff",
+    text: {
+      primary: "#ffffff",
+      secondary: "#ececec",
+      muted: "#cccccc",
+      inverted: "#000000"
+    },
+    accent: "#00ffff",
+    accentMuted: "#006666",
+    accentText: "#000000",
+    warning: "#ffe000",
+    error: "#ff5c5c",
+    success: "#66ffa3",
+    focus: "#ffff00",
+    selection: "#ffffff",
+    selectionText: "#000000",
+    overlay: "rgba(0,0,0,0.65)"
+  },
+  elevation: {
+    level1: "0 1px 4px rgba(0,0,0,0.25)",
+    level2: "0 2px 8px rgba(0,0,0,0.25)",
+    level3: "0 4px 12px rgba(0,0,0,0.28)",
+    level4: "0 8px 20px rgba(0,0,0,0.3)"
+  },
+  radius: { xs: "3px", sm: "4px", md: "8px", lg: "12px" },
+  space: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 },
+  font: {
+    body: "Inter",
+    mono: "Iosevka",
+    size: { xs: 11, sm: 12, md: 14, lg: 16, xl: 20, xxl: 24 },
+    weight: { regular: 400, medium: 500, bold: 600 },
+    lineHeight: { tight: 1.2, normal: 1.4, relaxed: 1.6 }
+  },
+  motion: {
+    fast: 120,
+    normal: 180,
+    slow: 250,
+    easing: "cubic-bezier(0.2, 0, 0.2, 1)",
+    reduced: false
+  }
+});
+
+export const FORCED_COLORS_THEME_TOKENS = Object.freeze({
+  mode: "forced-colors",
+  color: {
+    bg: "#000000",
+    surface: "#000000",
+    surfaceRaised: "#000000",
+    surfaceSunken: "#000000",
+    border: "#ffffff",
+    text: {
+      primary: "#ffffff",
+      secondary: "#ffffff",
+      muted: "#ffffff",
+      inverted: "#000000"
+    },
+    accent: "#ffff00",
+    accentMuted: "#666600",
+    accentText: "#000000",
+    warning: "#ffff00",
+    error: "#ffffff",
+    success: "#ffffff",
+    focus: "#ffff00",
+    selection: "#ffffff",
+    selectionText: "#000000",
+    overlay: "rgba(0,0,0,0)"
+  },
+  elevation: {
+    level1: "0 1px 4px rgba(0,0,0,0.25)",
+    level2: "0 2px 8px rgba(0,0,0,0.25)",
+    level3: "0 4px 12px rgba(0,0,0,0.28)",
+    level4: "0 8px 20px rgba(0,0,0,0.3)"
   },
   radius: { xs: "3px", sm: "4px", md: "8px", lg: "12px" },
   space: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32 },
@@ -116,6 +224,20 @@ export const THEME_PRESETS = Object.freeze({
     mode: "light",
     overrides: Object.freeze({})
   }),
+  "core-high-contrast": Object.freeze({
+    id: "core-high-contrast",
+    title: "Core High Contrast",
+    description: "High-contrast palette for strict visual separation.",
+    mode: "high-contrast",
+    overrides: Object.freeze({})
+  }),
+  "core-forced-colors": Object.freeze({
+    id: "core-forced-colors",
+    title: "Core Forced Colors",
+    description: "System-forced color lane with maximal cue preservation.",
+    mode: "forced-colors",
+    overrides: Object.freeze({})
+  }),
   "slate-dark": Object.freeze({
     id: "slate-dark",
     title: "Slate Dark",
@@ -126,7 +248,7 @@ export const THEME_PRESETS = Object.freeze({
         bg: "#0f1318",
         surface: "#171d24",
         surfaceRaised: "#1e2630",
-        border: "#293240",
+        border: "#566886",
         accent: "#7bb6ff",
         selection: "#2f4f78"
       }
@@ -191,10 +313,27 @@ export function listThemePresets() {
   }));
 }
 
+function resolveBaseThemeTokens(mode) {
+  switch (mode) {
+    case "light":
+      return LIGHT_THEME_TOKENS;
+    case "high-contrast":
+      return HIGH_CONTRAST_THEME_TOKENS;
+    case "forced-colors":
+      return FORCED_COLORS_THEME_TOKENS;
+    default:
+      return DARK_THEME_TOKENS;
+  }
+}
+
 export function resolveThemeTokensFromSelection(selection = {}) {
   const preset = getThemePreset(selection.presetId ?? null);
-  const mode = selection.mode === "light" || selection.mode === "dark" ? selection.mode : preset.mode ?? DEFAULT_THEME_MODE;
-  const base = mode === "light" ? LIGHT_THEME_TOKENS : DARK_THEME_TOKENS;
+  const mode = isThemeMode(selection.mode)
+    ? selection.mode
+    : isThemeMode(preset.mode)
+      ? preset.mode
+      : DEFAULT_THEME_MODE;
+  const base = resolveBaseThemeTokens(mode);
   const presetOverrides = sanitizeThemeOverrides(preset.overrides ?? {});
   const userOverrides = sanitizeThemeOverrides(selection.overrides ?? {});
   const merged = mergeDeep(mergeDeep(base, presetOverrides), userOverrides);
@@ -205,8 +344,8 @@ export function normalizeThemeTokens(tokens) {
   if (!tokens || typeof tokens !== "object") {
     return { ...DEFAULT_THEME_TOKENS };
   }
-  const mode = tokens.mode === "light" ? "light" : "dark";
-  const base = mode === "light" ? LIGHT_THEME_TOKENS : DARK_THEME_TOKENS;
+  const mode = isThemeMode(tokens.mode) ? tokens.mode : DEFAULT_THEME_MODE;
+  const base = resolveBaseThemeTokens(mode);
   const merged = mergeDeep(base, sanitizeThemeOverrides(tokens));
   return { ...merged, mode };
 }

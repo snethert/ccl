@@ -1240,45 +1240,53 @@ Can be removed before shipping once %FASLOAD startup is stable.")
        (finish-output))
      ,n))
 
+(defun %run-cold-boot-init ()
+  "Execute level-0 cold-boot initialization: system locks, cold-load
+   functions, class cells, package rehash, documentation, binding indices.
+   Called from C (wasm_run_cold_boot_init) during image construction before
+   FASL loading, and also from %TOPLEVEL-FUNCTION% during native cold boot.
+   Idempotent: each list is cleared after processing."
+  (declare (special *xload-cold-load-functions*
+                    *xload-cold-load-documentation*
+                    *early-class-cells*))
+  (%wasm-note-startup-step 10)
+  (%set-tcr-toplevel-function (%current-tcr) nil) ; should get reset by l1-boot.
+  (%wasm-note-startup-step 20)
+  (setq %system-locks% (%cons-population nil))
+  (%wasm-note-startup-step 30)
+  ;; Need to make %ALL-PACKAGES-LOCK% early, so that we can casually
+  ;; do SET-PACKAGE in cold load functions.
+  (setq %all-packages-lock% (make-read-write-lock))
+  (%wasm-note-startup-step 40)
+  (dolist (f (prog1 *xload-cold-load-functions* (setq *xload-cold-load-functions* nil)))
+    (funcall f))
+  (%wasm-note-startup-step 50)
+  (dolist (pair (prog1 *early-class-cells* (setq *early-class-cells* nil)))
+    (setf (gethash (car pair) %find-classes%) (cdr pair)))
+  (%wasm-note-startup-step 60)
+  (dolist (p %all-packages%)
+    (%resize-htab (pkg.itab p))
+    (%resize-htab (pkg.etab p)))
+  (%wasm-note-startup-step 70)
+  (dolist (f (prog1 *xload-cold-load-documentation* (setq *xload-cold-load-documentation* nil)))
+    (apply 'set-documentation f))
+  (%wasm-note-startup-step 80)
+  ;; Can't bind any specials until this happens
+  (let* ((max 0))
+    (%map-areas #'(lambda (symvec)
+                    (when (= (the fixnum (typecode symvec))
+                             target::subtag-symbol)
+                      (let* ((s (symvector->symptr symvec))
+                             (idx (symbol-binding-index s)))
+                        (when (> idx 0)
+                          (cold-load-binding-index s))
+                        (when (> idx max)
+                          (setq max idx))))))
+    (%set-binding-index max))
+  (%wasm-note-startup-step 90))
+
 (defvar %toplevel-function%
   #'(lambda ()
-      (declare (special *xload-cold-load-functions*
-                        *xload-cold-load-documentation*
-                        *xload-startup-file*
-                        *early-class-cells*))
-      (%wasm-note-startup-step 10)
-      (%set-tcr-toplevel-function (%current-tcr) nil) ; should get reset by l1-boot.
-      (%wasm-note-startup-step 20)
-      (setq %system-locks% (%cons-population nil))
-      (%wasm-note-startup-step 30)
-      ;; Need to make %ALL-PACKAGES-LOCK% early, so that we can casually
-      ;; do SET-PACKAGE in cold load functions.
-      (setq %all-packages-lock% (make-read-write-lock))
-      (%wasm-note-startup-step 40)
-      (dolist (f (prog1 *xload-cold-load-functions* (setq *xload-cold-load-functions* nil)))
-        (funcall f))
-      (%wasm-note-startup-step 50)
-      (dolist (pair (prog1 *early-class-cells* (setq *early-class-cells* nil)))
-        (setf (gethash (car pair) %find-classes%) (cdr pair)))
-      (%wasm-note-startup-step 60)
-      (dolist (p %all-packages%)
-        (%resize-htab (pkg.itab p))
-        (%resize-htab (pkg.etab p)))
-      (%wasm-note-startup-step 70)
-      (dolist (f (prog1 *xload-cold-load-documentation* (setq *xload-cold-load-documentation* nil)))
-        (apply 'set-documentation f))
-      (%wasm-note-startup-step 80)
-      ;; Can't bind any specials until this happens
-      (let* ((max 0))
-        (%map-areas #'(lambda (symvec)
-                        (when (= (the fixnum (typecode symvec))
-                                 target::subtag-symbol)
-                          (let* ((s (symvector->symptr symvec))
-				 (idx (symbol-binding-index s)))
-                            (when (> idx 0)
-                              (cold-load-binding-index s))
-                            (when (> idx max)
-                              (setq max idx))))))
-        (%set-binding-index max))
-      (%wasm-note-startup-step 90)
+      (declare (special *xload-startup-file*))
+      (%run-cold-boot-init)
       (%fasload *xload-startup-file*)))

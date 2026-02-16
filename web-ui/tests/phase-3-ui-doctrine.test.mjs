@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import { UI_STYLES, UI_STYLE_ID } from "../styles/ui.mjs";
 import { DEFAULT_THEME_TOKENS, themeToCssVars } from "../src/theme.mjs";
@@ -14,6 +15,8 @@ import {
   openDebuggerWindow
 } from "../src/state.mjs";
 
+const UI_DOCTRINE_TEXT = readFileSync(new URL("../ui-doctrine.md", import.meta.url), "utf8");
+
 test("phase-3 ui doctrine includes base ui classes", () => {
   assert.ok(UI_STYLES.includes(".ui-root"));
   assert.ok(UI_STYLES.includes(".ui-window"));
@@ -21,6 +24,8 @@ test("phase-3 ui doctrine includes base ui classes", () => {
   assert.ok(UI_STYLES.includes(".ui-table"));
   assert.ok(UI_STYLES.includes(".ui-canvas-view"));
   assert.ok(UI_STYLES.includes(".ui-webgl-view"));
+  assert.ok(UI_STYLES.includes('[data-ui-theme="high-contrast"]'));
+  assert.ok(UI_STYLES.includes('[data-ui-theme="forced-colors"]'));
 });
 
 test("phase-3 ui doctrine exposes css variables for core tokens", () => {
@@ -75,4 +80,16 @@ test("phase-3 ui doctrine annotates instrument list items", () => {
   assert.ok(restartItem.className.includes("ui-debugger-restart"));
   assert.ok(restartItem.className.includes("is-safe"));
   assert.ok(restartItem.className.includes("is-recommended"));
+});
+
+test("phase-3 ui doctrine remediation clauses remain explicit", () => {
+  assert.ok(UI_DOCTRINE_TEXT.includes("Normative Strata and Claim Rules"));
+  assert.ok(UI_DOCTRINE_TEXT.includes("No clause may be treated as a release gate"));
+  assert.ok(UI_DOCTRINE_TEXT.includes("Text-only checks"));
+  assert.ok(UI_DOCTRINE_TEXT.includes("ui-conformance-runner-contract-v1.md"));
+  assert.ok(UI_DOCTRINE_TEXT.includes("32 px class minima"));
+  assert.ok(UI_DOCTRINE_TEXT.includes("44 x 44 px"));
+  assert.ok(UI_DOCTRINE_TEXT.includes("high-contrast, and forced-colors lanes MUST be tokenized and testable"));
+  assert.ok(UI_DOCTRINE_TEXT.includes("logical properties"));
+  assert.ok(UI_DOCTRINE_TEXT.includes("Evidence Freshness and Audit Integrity"));
 });

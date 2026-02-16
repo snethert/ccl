@@ -13,20 +13,50 @@ It is written as a normative, future-facing design doctrine rather than a style 
 
 This document defines the **presentation doctrine** for the UI system.
 It governs visual form, spatial behavior, and perceptual cues, independent of widget inventory, programming model, or rendering backend.
+It intentionally does not define interaction arbitration semantics (`z-order`, modal stacking, resize rules, focus handoff); those rules are normative in `web-ui/spec/ui-interaction-window-management-contract-v1.md`.
 
 The goal is not trendiness, but **durability**: a UI that looks modern now and defensible years later.
 
 ### Relationship to the IDE Doctrine
-This UI Doctrine governs *presentation*. Interaction semantics, tool behavior, and system capabilities are defined in `web-ide/ide-doctrine.md`.
+This UI Doctrine governs *presentation*. Product interaction semantics, tool behavior, and system capabilities are defined in `web-ide/ide-doctrine.md`.
+System-level interaction/window-management semantics are defined in `web-ui/spec/ui-interaction-window-management-contract-v1.md`.
 If a conflict appears:
 - UI Doctrine controls visual form, motion, and spatial presentation.
-- IDE Doctrine controls interaction semantics and tool behavior.
+- Interaction/Window Management Contract controls z-order, modal stacking, resize governance, and focus handoff.
+- IDE Doctrine controls product/tool interaction semantics and behavior.
 
 ### Backend-Agnostic Application
 This doctrine applies equally to DOM, canvas, and WebGL renderers.
 The system uses a hybrid model where text-heavy surfaces may be DOM-backed for input fidelity.
 DOM usage does not permit OS-native widget styling or browser-default chrome.
 All backends must consume shared theme tokens so the UI reads as one instrument.
+
+### Production Contracts
+For production implementation and conformance, this doctrine is complemented by:
+- `web-ui/spec/ui-visual-tokens-v1.json`
+- `web-ui/spec/ui-component-visual-contract-v1.md`
+- `web-ui/spec/ui-interaction-window-management-contract-v1.md`
+- `web-ui/spec/ui-motion-contract-v1.md`
+- `web-ui/spec/ui-accessibility-visual-map-v1.md`
+- `web-ui/spec/ui-conformance-fixtures-v1.json`
+- `web-ui/spec/ui-conformance-fixture-catalog-v1.md`
+- `web-ui/spec/ui-conformance-runner-contract-v1.md`
+- `web-ui/spec/ui-conformance-matrix-v1.md`
+- `web-ui/spec/ui-conformance-report-schema-v1.json`
+- `web-ui/spec/ui-accessibility-baseline-audit-v1.md`
+
+If any nontrivial ambiguity exists between this doctrine and those contracts, the contracts take precedence for implementation behavior.
+
+### Normative Strata and Claim Rules
+This doctrine distinguishes three layers:
+- **Doctrine layer**: design intent and long-term presentation principles.
+- **Contract layer**: machine-testable requirements and tolerances.
+- **Evidence layer**: executable fixtures, reports, and diagnostics.
+
+Conformance claim rules:
+- No clause may be treated as a release gate unless it maps to contract language and at least one executable fixture.
+- Text-only checks (`document includes phrase X`) are not sufficient evidence for visual conformance.
+- Structural snapshots are useful for regression detection, but they do not substitute for computed-style, geometry, contrast, and parity assertions.
 
 ---
 
@@ -41,14 +71,6 @@ Decoration without informational value is disallowed.
 
 ## 2. Spatial Model: Shallow Physicality
 
-![Image](https://framerusercontent.com/images/ESF6yhevx5TAKUFHpD6y3UJpH8.png?height=420\&width=800)
-
-![Image](https://cdn.sanity.io/images/r115idoc/production/d2c20889a3bbedafaa76c57f6575d1c19fe1c15f-1536x1024.png?auto=format\&fit=clip\&q=75\&w=3840)
-
-![Image](https://m1.material.io/assets/0Bzhp5Z4wHba3VG9SaVpNbkpHb2s/whatismaterial-3d-elevation2.png)
-
-![Image](https://m1.material.io/assets/0B8v7jImPsDi-eV81TDFrR2ZPU1E/whatismaterial-3d-elevation4.png)
-
 ### Doctrine
 
 * The UI exists on a small number of visual planes.
@@ -57,27 +79,20 @@ Decoration without informational value is disallowed.
 
 ### Requirements
 
-* Elevation levels MUST be few (typically 2–4).
+* Elevation levels MUST be few (typically 2-4).
 * Shadows MUST be soft, low-contrast, and directional.
-* Borders MUST NOT be used to imply separation unless conveying data structure.
+* Boundaries MUST use semantic roles (`subtle`, `standard`, `strong`, `focus`) rather than ad hoc styling.
+* Boundaries MAY separate controls, states, and regions when they improve legibility, affordance, or accessibility contrast.
 
 ### Prohibitions
 
 * No skeuomorphism.
-* No hard outlines as default separators.
+* No hard outlines as default separators for every element.
 * No excessive z-stacking.
 
 ---
 
 ## 3. Motion as Semantic Explanation
-
-![Image](https://bs-uploads.toptal.io/blackfish-uploads/components/blog_post_page/5773994/cover_image/regular_1708x683/0422_Ecommerce_microinteractions_Zara_Newsletter___blog-b1b2b6cde92a78c7f6e7fd3659c6a52c.png)
-
-![Image](https://cdn.prod.website-files.com/67fe670fea6c0651a1f95413/690a6a45fc2656dae6642e1a_65538700dc12febd642ab647_6168a51a25c5f38e2c1af7e9_Scene_Morph-optimize.gif)
-
-![Image](https://miro.medium.com/v2/resize%3Afit%3A1400/1%2A-7blyle0JyOt_EXFiR_85A.gif)
-
-![Image](https://www.kvin.me/posts/effortless/figma-panel.png)
 
 ### Doctrine
 
@@ -85,15 +100,18 @@ Motion exists to explain **what changed and why**.
 
 ### Requirements
 
-* All state transitions MUST animate.
-* Motion duration SHOULD be brief (≈120–250 ms).
+* State transitions SHOULD animate when motion clarifies causality or spatial continuity.
+* The following classes MUST NOT animate and MUST snap to final state: `critical-alert`, `rapid-command-feedback`, `high-frequency-update`.
+* Motion duration SHOULD be brief (approximately 120-250 ms).
 * Easing MUST be non-linear (spring or ease-out).
+* Motion class names MUST map to runtime-observable transition categories used by conformance and reliability telemetry.
 
 ### Prohibitions
 
 * No motion as decoration.
 * No linear easing.
 * No animations that block interaction.
+* No unregistered motion category names in production code.
 
 ### Accessibility
 
@@ -102,14 +120,6 @@ Motion exists to explain **what changed and why**.
 ---
 
 ## 4. Typography-First Hierarchy
-
-![Image](https://cdn.dribbble.com/userupload/34759230/file/still-b19dd0e2fb2437cfd0f975009dcd23c4.png?format=webp\&resize=400x300\&vertical=center)
-
-![Image](https://cdn.prod.website-files.com/6365d860c7b7a7191055eb8a/670c831d5e202331a940d715_best-fonts-for-ui-design-cover.webp)
-
-![Image](https://cdn.mos.cms.futurecdn.net/iXCUuEmDeuvN3AvZ36gdVo.jpg)
-
-![Image](https://miro.medium.com/v2/resize%3Afit%3A1400/1%2AkcRTUwpUxc_7r46egoUMIQ.gif)
 
 ### Doctrine
 
@@ -120,6 +130,7 @@ Typography is the primary structural element of the UI.
 * Text MUST precede icons in conveying meaning.
 * Hierarchy MUST be established through size, weight, and spacing.
 * Fonts SHOULD support variable axes and optical sizing.
+* Fallback stacks MUST preserve readability for supported script coverage.
 
 ### Prohibitions
 
@@ -131,14 +142,6 @@ Typography is the primary structural element of the UI.
 
 ## 5. Density and White Space Discipline
 
-![Image](https://miro.medium.com/1%2AYfhAWcTlrqfX4expcYTLAA.jpeg)
-
-![Image](https://cdn.prod.website-files.com/65d605a3b4417479c154329f/65e1ab2defde717f2b8cbf07_Dashboards_Filter-1.png)
-
-![Image](https://cdn.dribbble.com/userupload/34759230/file/still-b19dd0e2fb2437cfd0f975009dcd23c4.png?resize=400x0)
-
-![Image](https://s3-alpha.figma.com/hub/file/1081845947/bba0d90c-cb70-4b9a-87d3-0edb2ba5e0e8-cover.png)
-
 ### Doctrine
 
 The UI should feel calm, not empty.
@@ -148,52 +151,41 @@ The UI should feel calm, not empty.
 * Controls within a component SHOULD be dense.
 * Separation SHOULD occur between conceptual regions, not individual elements.
 * White space MUST communicate grouping.
+* Fine-pointer control geometry SHOULD target compact instrument density (commonly 32 px class minima).
+* Coarse-pointer lanes MUST preserve effective hit targets of at least 44 x 44 px, including hit-slop when visual geometry is smaller.
 
 ### Prohibitions
 
 * Vast empty regions.
 * Floating controls without context.
-* “Gallery-style” layouts for tool interfaces.
+* "Gallery-style" layouts for tool interfaces.
 
 ---
 
-## 6. Dark Mode as a Primary Target
-
-![Image](https://miro.medium.com/1%2AdjOWBfUNhFUPeDHchV9cEQ.jpeg)
-
-![Image](https://developer.chrome.com/static/docs/devtools/customize/image/the-dark-theme-214125f80d58c.png)
-
-![Image](https://buninux.com/images/learn/dm/05.jpg)
-
-![Image](https://miro.medium.com/v2/resize%3Afit%3A1400/1%2Afv6-ppt-zss2f5Bvbu4bDw.jpeg)
+## 6. Color Modes and Visual Lanes
 
 ### Doctrine
 
-Dark mode is a first-class design, not a post-process.
+Dark mode is primary, but not exclusive.
 
 ### Requirements
 
 * Dark mode MUST be designed independently, not inverted.
 * Backgrounds SHOULD be dark gray, not pure black.
 * Text SHOULD be off-white, not pure white.
+* Light, high-contrast, and forced-colors lanes MUST be tokenized and testable.
+* Full conformance claims MUST NOT be made unless all required lanes pass their mapped fixtures.
 
 ### Prohibitions
 
 * Automatic color inversion.
 * High-saturation accents as defaults.
 * Loss of depth cues in dark mode.
+* "Supported in spec only" claims when runtime lane activation is absent.
 
 ---
 
 ## 7. OS Neutrality
-
-![Image](https://cdn.sanity.io/images/h6kk644c/production/159ff8269cc189ec516d66b2358c7da8af90832a-2000x1050.png?auto=format\&fit=clip\&q=75\&w=3840)
-
-![Image](https://uizard.io/static/f9c781343598e39c49fc641ec84feeee/a8e47/a52942f13d38c5c56a4413daa8a15dd50b4f2eef-1440x835.png)
-
-![Image](https://i.sstatic.net/41rdq.png)
-
-![Image](https://cdn.dribbble.com/userupload/15270708/file/original-f4532569cb47c147e5f79dee55a1cd37.png?format=webp\&resize=400x300\&vertical=center)
 
 ### Doctrine
 
@@ -208,12 +200,31 @@ The UI must belong to itself, not to an operating system.
 ### Prohibitions
 
 * macOS / Windows cosplay.
-* Title-bar metaphors.
+* Title-bar metaphors as visual mimicry.
 * System-native widget cloning.
 
 ---
 
-## 8. Windows as Instruments, Not Decorations
+## 8. Directionality and Locale Robustness
+
+### Doctrine
+
+Presentation must remain coherent across writing systems and directionality.
+
+### Requirements
+
+* Layout and spacing SHOULD use logical properties where practical.
+* RTL lanes MUST preserve affordance order, focus visibility, and selection clarity.
+* Directional iconography MUST mirror when semantics require it.
+
+### Prohibitions
+
+* Hardcoded left/right layout semantics for core component structure.
+* Locale-specific clipping or fallback that degrades state legibility.
+
+---
+
+## 9. Windows as Instruments, Not Decorations
 
 ### Doctrine
 
@@ -233,13 +244,13 @@ Windows are containers for tasks, not visual ornaments.
 
 ---
 
-## 9. What This System Must Never Look Like
+## 10. What This System Must Never Look Like
 
 The following aesthetics are explicitly disallowed:
 
 * Heavy gradients
 * Glossy highlights
-* Thick borders
+* Thick borders used everywhere
 * Beveled controls
 * Icon-only toolbars
 * Floating translucent glass effects
@@ -249,11 +260,28 @@ These signal **toolkit demos**, not serious systems.
 
 ---
 
-## 10. Visual North Star
+## 11. Evidence Freshness and Audit Integrity
+
+Doctrine quality depends on current evidence.
+
+### Requirements
+
+* Baseline accessibility and conformance audits MUST record source token version/date and measurement method.
+* Historical failures MAY be retained for traceability, but current pass/fail status MUST be explicitly separated.
+* Draft artifacts MUST NOT be cited as proof of production conformance unless accompanied by passing executable runs.
+
+### Prohibitions
+
+* Mixing historical and current measurements without explicit labeling.
+* Treating stale audits as current release evidence.
+
+---
+
+## 12. Visual North Star
 
 The intended visual target can be summarized as:
 
-> *Editorial clarity × developer tooling seriousness × long-term usability*
+> *Editorial clarity x developer tooling seriousness x long-term usability*
 
 Or more plainly:
 
@@ -261,19 +289,21 @@ Or more plainly:
 
 ---
 
-## 11. Longevity Test
+## 13. Longevity Test
 
 Before adopting any visual feature, ask:
 
 1. Does this explain state or structure?
 2. Would this look embarrassing in five years?
 3. Does removing it reduce clarity?
+4. Can this be measured by an existing contract/fixture path?
 
-If the answer to (3) is “no,” it does not belong.
+If the answer to (3) is "no," it does not belong.
+If the answer to (4) is "no," it is not yet release-gate material.
 
 ---
 
-## 12. Closing Principle
+## 14. Closing Principle
 
 > **Restraint is not minimalism.
 > Restraint is discipline.**

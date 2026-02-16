@@ -1,0 +1,337 @@
+{
+  "metadata": {
+    "id": "web-ui.visual-tokens",
+    "version": "1.0.0",
+    "status": "draft",
+    "lastUpdated": "2026-02-16",
+    "compatibility": {
+      "backward": "Minor versions MUST remain backward compatible for existing token keys.",
+      "forward": "Unknown token keys MUST be ignored by consumers.",
+      "deprecation": "Deprecated keys MUST remain for one major version before removal."
+    }
+  },
+  "units": {
+    "color": "rgba-8",
+    "spacing": "px",
+    "radius": "px",
+    "fontSize": "px",
+    "fontWeight": "numeric",
+    "lineHeight": "unitless",
+    "letterSpacing": "em",
+    "duration": "ms",
+    "easing": "cubic-bezier",
+    "elevation": "px+alpha"
+  },
+  "constraints": {
+    "elevationLevelsMin": 2,
+    "elevationLevelsMax": 4,
+    "requiredModes": ["dark", "light", "high-contrast", "forced-colors"],
+    "focusRingWidthPx": {
+      "min": 2,
+      "max": 3
+    },
+    "touchTargetPx": {
+      "min": 44,
+      "max": 64
+    },
+    "motionDurationMs": {
+      "min": 80,
+      "max": 300
+    },
+    "accessibilityThresholds": {
+      "textNormalContrastMin": 4.5,
+      "textLargeContrastMin": 3.0,
+      "nonTextContrastMin": 3.0
+    },
+    "boundaryRolesRequired": ["subtle", "standard", "strong", "focus"]
+  },
+  "modes": {
+    "dark": {
+      "color": {
+        "bg": { "r": 18, "g": 18, "b": 18, "a": 1 },
+        "surface": { "r": 27, "g": 27, "b": 27, "a": 1 },
+        "surfaceRaised": { "r": 35, "g": 35, "b": 35, "a": 1 },
+        "surfaceSunken": { "r": 15, "g": 15, "b": 15, "a": 1 },
+        "boundarySubtle": { "r": 74, "g": 74, "b": 74, "a": 1 },
+        "boundaryStandard": { "r": 103, "g": 103, "b": 103, "a": 1 },
+        "boundaryStrong": { "r": 146, "g": 146, "b": 146, "a": 1 },
+        "boundaryFocus": { "r": 167, "g": 200, "b": 255, "a": 1 },
+        "border": { "r": 103, "g": 103, "b": 103, "a": 1 },
+        "textPrimary": { "r": 232, "g": 232, "b": 232, "a": 1 },
+        "textSecondary": { "r": 184, "g": 184, "b": 184, "a": 1 },
+        "textMuted": { "r": 138, "g": 138, "b": 138, "a": 1 },
+        "textInverted": { "r": 16, "g": 16, "b": 16, "a": 1 },
+        "accent": { "r": 111, "g": 176, "b": 255, "a": 1 },
+        "accentMuted": { "r": 53, "g": 90, "b": 133, "a": 1 },
+        "accentText": { "r": 12, "g": 18, "b": 27, "a": 1 },
+        "warning": { "r": 240, "g": 179, "b": 91, "a": 1 },
+        "error": { "r": 240, "g": 107, "b": 107, "a": 1 },
+        "success": { "r": 108, "g": 207, "b": 143, "a": 1 },
+        "focus": { "r": 167, "g": 200, "b": 255, "a": 1 },
+        "selection": { "r": 43, "g": 72, "b": 112, "a": 1 },
+        "selectionText": { "r": 242, "g": 246, "b": 255, "a": 1 },
+        "overlay": { "r": 0, "g": 0, "b": 0, "a": 0.35 }
+      }
+    },
+    "light": {
+      "color": {
+        "bg": { "r": 245, "g": 245, "b": 245, "a": 1 },
+        "surface": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "surfaceRaised": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "surfaceSunken": { "r": 237, "g": 237, "b": 237, "a": 1 },
+        "boundarySubtle": { "r": 194, "g": 194, "b": 194, "a": 1 },
+        "boundaryStandard": { "r": 148, "g": 148, "b": 148, "a": 1 },
+        "boundaryStrong": { "r": 106, "g": 106, "b": 106, "a": 1 },
+        "boundaryFocus": { "r": 44, "g": 109, "b": 210, "a": 1 },
+        "border": { "r": 148, "g": 148, "b": 148, "a": 1 },
+        "textPrimary": { "r": 26, "g": 26, "b": 26, "a": 1 },
+        "textSecondary": { "r": 68, "g": 68, "b": 68, "a": 1 },
+        "textMuted": { "r": 102, "g": 102, "b": 102, "a": 1 },
+        "textInverted": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "accent": { "r": 44, "g": 109, "b": 210, "a": 1 },
+        "accentMuted": { "r": 207, "g": 224, "b": 247, "a": 1 },
+        "accentText": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "warning": { "r": 175, "g": 100, "b": 15, "a": 1 },
+        "error": { "r": 194, "g": 59, "b": 59, "a": 1 },
+        "success": { "r": 30, "g": 122, "b": 76, "a": 1 },
+        "focus": { "r": 44, "g": 109, "b": 210, "a": 1 },
+        "selection": { "r": 215, "g": 230, "b": 251, "a": 1 },
+        "selectionText": { "r": 11, "g": 27, "b": 52, "a": 1 },
+        "overlay": { "r": 0, "g": 0, "b": 0, "a": 0.08 }
+      }
+    },
+    "high-contrast": {
+      "color": {
+        "bg": { "r": 0, "g": 0, "b": 0, "a": 1 },
+        "surface": { "r": 0, "g": 0, "b": 0, "a": 1 },
+        "surfaceRaised": { "r": 13, "g": 13, "b": 13, "a": 1 },
+        "surfaceSunken": { "r": 0, "g": 0, "b": 0, "a": 1 },
+        "boundarySubtle": { "r": 220, "g": 220, "b": 220, "a": 1 },
+        "boundaryStandard": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "boundaryStrong": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "boundaryFocus": { "r": 255, "g": 255, "b": 0, "a": 1 },
+        "border": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "textPrimary": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "textSecondary": { "r": 236, "g": 236, "b": 236, "a": 1 },
+        "textMuted": { "r": 204, "g": 204, "b": 204, "a": 1 },
+        "textInverted": { "r": 0, "g": 0, "b": 0, "a": 1 },
+        "accent": { "r": 0, "g": 255, "b": 255, "a": 1 },
+        "accentMuted": { "r": 0, "g": 102, "b": 102, "a": 1 },
+        "accentText": { "r": 0, "g": 0, "b": 0, "a": 1 },
+        "warning": { "r": 255, "g": 224, "b": 0, "a": 1 },
+        "error": { "r": 255, "g": 92, "b": 92, "a": 1 },
+        "success": { "r": 102, "g": 255, "b": 163, "a": 1 },
+        "focus": { "r": 255, "g": 255, "b": 0, "a": 1 },
+        "selection": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "selectionText": { "r": 0, "g": 0, "b": 0, "a": 1 },
+        "overlay": { "r": 0, "g": 0, "b": 0, "a": 0.65 }
+      }
+    },
+    "forced-colors": {
+      "color": {
+        "bg": { "r": 0, "g": 0, "b": 0, "a": 1 },
+        "surface": { "r": 0, "g": 0, "b": 0, "a": 1 },
+        "surfaceRaised": { "r": 0, "g": 0, "b": 0, "a": 1 },
+        "surfaceSunken": { "r": 0, "g": 0, "b": 0, "a": 1 },
+        "boundarySubtle": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "boundaryStandard": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "boundaryStrong": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "boundaryFocus": { "r": 255, "g": 255, "b": 0, "a": 1 },
+        "border": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "textPrimary": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "textSecondary": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "textMuted": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "textInverted": { "r": 0, "g": 0, "b": 0, "a": 1 },
+        "accent": { "r": 255, "g": 255, "b": 0, "a": 1 },
+        "accentMuted": { "r": 102, "g": 102, "b": 0, "a": 1 },
+        "accentText": { "r": 0, "g": 0, "b": 0, "a": 1 },
+        "warning": { "r": 255, "g": 255, "b": 0, "a": 1 },
+        "error": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "success": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "focus": { "r": 255, "g": 255, "b": 0, "a": 1 },
+        "selection": { "r": 255, "g": 255, "b": 255, "a": 1 },
+        "selectionText": { "r": 0, "g": 0, "b": 0, "a": 1 },
+        "overlay": { "r": 0, "g": 0, "b": 0, "a": 0 }
+      }
+    }
+  },
+  "space": {
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "xxl": 32
+  },
+  "radius": {
+    "xs": 3,
+    "sm": 4,
+    "md": 8,
+    "lg": 12
+  },
+  "typography": {
+    "family": {
+      "body": "Inter",
+      "bodyFallbackStack": [
+        "Inter",
+        "Segoe UI",
+        "Roboto",
+        "Noto Sans",
+        "Helvetica Neue",
+        "Arial",
+        "sans-serif"
+      ],
+      "mono": "Iosevka",
+      "monoFallbackStack": [
+        "Iosevka",
+        "SFMono-Regular",
+        "Consolas",
+        "Menlo",
+        "Liberation Mono",
+        "monospace"
+      ]
+    },
+    "scriptCoverage": {
+      "requiredScripts": [
+        "Latin",
+        "Cyrillic",
+        "Greek",
+        "Arabic",
+        "Hebrew",
+        "Devanagari",
+        "Han",
+        "Kana"
+      ],
+      "bodyFallbackByScript": {
+        "Latin": ["Inter", "Segoe UI", "Roboto", "Noto Sans", "Arial", "sans-serif"],
+        "Cyrillic": ["Inter", "Noto Sans", "Segoe UI", "Arial", "sans-serif"],
+        "Greek": ["Inter", "Noto Sans", "Segoe UI", "Arial", "sans-serif"],
+        "Arabic": [
+          "Noto Naskh Arabic",
+          "Noto Sans Arabic",
+          "Segoe UI",
+          "Tahoma",
+          "sans-serif"
+        ],
+        "Hebrew": ["Noto Sans Hebrew", "Segoe UI", "Arial", "sans-serif"],
+        "Devanagari": [
+          "Noto Sans Devanagari",
+          "Mangal",
+          "Kohinoor Devanagari",
+          "sans-serif"
+        ],
+        "Han": ["Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", "sans-serif"],
+        "Kana": ["Noto Sans CJK JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", "sans-serif"]
+      },
+      "monoFallbackByScript": {
+        "Latin": ["Iosevka", "SFMono-Regular", "Consolas", "Menlo", "monospace"],
+        "Cyrillic": ["Iosevka", "Cascadia Mono", "Consolas", "monospace"],
+        "Greek": ["Iosevka", "Cascadia Mono", "Consolas", "monospace"],
+        "Arabic": ["Noto Sans Mono", "monospace"],
+        "Hebrew": ["Noto Sans Mono", "monospace"],
+        "Devanagari": ["Noto Sans Mono", "monospace"],
+        "Han": ["Noto Sans Mono CJK SC", "Sarasa Mono SC", "monospace"],
+        "Kana": ["Noto Sans Mono CJK JP", "Sarasa Mono J", "monospace"]
+      }
+    },
+    "directionality": {
+      "default": "ltr",
+      "rtlLocales": ["ar", "fa", "he", "ur"],
+      "layoutStrategy": "logical-properties",
+      "mirrorDirectionalIcons": true,
+      "bidiIsolationRequired": true
+    },
+    "localeOverrides": {
+      "ja-JP": {
+        "bodyFallbackStack": [
+          "Noto Sans CJK JP",
+          "Hiragino Kaku Gothic ProN",
+          "Yu Gothic",
+          "sans-serif"
+        ],
+        "lineHeight": "relaxed",
+        "letterSpacingMultiplier": 0.8
+      },
+      "zh-CN": {
+        "bodyFallbackStack": [
+          "Noto Sans CJK SC",
+          "PingFang SC",
+          "Microsoft YaHei",
+          "sans-serif"
+        ],
+        "lineHeight": "normal",
+        "letterSpacingMultiplier": 0.9
+      },
+      "ko-KR": {
+        "bodyFallbackStack": [
+          "Noto Sans CJK KR",
+          "Apple SD Gothic Neo",
+          "Malgun Gothic",
+          "sans-serif"
+        ],
+        "lineHeight": "normal",
+        "letterSpacingMultiplier": 0.9
+      },
+      "ar": {
+        "bodyFallbackStack": [
+          "Noto Naskh Arabic",
+          "Noto Sans Arabic",
+          "Segoe UI",
+          "Tahoma",
+          "sans-serif"
+        ],
+        "lineHeight": "relaxed",
+        "letterSpacingMultiplier": 0
+      }
+    },
+    "size": {
+      "xs": 11,
+      "sm": 12,
+      "md": 14,
+      "lg": 16,
+      "xl": 20,
+      "xxl": 24
+    },
+    "weight": {
+      "regular": 400,
+      "medium": 500,
+      "bold": 600
+    },
+    "lineHeight": {
+      "tight": 1.2,
+      "normal": 1.4,
+      "relaxed": 1.6
+    },
+    "letterSpacing": {
+      "default": 0.005,
+      "labelCaps": 0.04
+    }
+  },
+  "motion": {
+    "durationMs": {
+      "fast": 120,
+      "normal": 180,
+      "slow": 250
+    },
+    "easing": {
+      "standard": [0.2, 0.0, 0.2, 1.0],
+      "emphasis": [0.1, 0.0, 0.0, 1.0]
+    },
+    "reduced": {
+      "durationMs": 0,
+      "allowOpacityTransition": true
+    }
+  },
+  "elevation": {
+    "level1": { "x": 0, "y": 1, "blur": 4, "spread": 0, "alpha": 0.25 },
+    "level2": { "x": 0, "y": 2, "blur": 8, "spread": 0, "alpha": 0.25 },
+    "level3": { "x": 0, "y": 4, "blur": 12, "spread": 0, "alpha": 0.28 },
+    "level4": { "x": 0, "y": 8, "blur": 20, "spread": 0, "alpha": 0.3 }
+  },
+  "focus": {
+    "ringWidthPx": 2,
+    "ringOffsetPx": 1,
+    "ringStyle": "solid"
+  },
+  "deprecated": []
+}
