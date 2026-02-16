@@ -196,10 +196,10 @@
                   :verbose t
                   :target :wasm32)))
 
-(defun reset-wasm-entry-index ()
+(defun reset-wasm-entry-index (&optional (start 300))
   (declare (special *wasm2-next-entry-index*))
   (when (boundp '*wasm2-next-entry-index*)
-    (setf *wasm2-next-entry-index* 300)))
+    (setf *wasm2-next-entry-index* start)))
 
 (defun validate-wasm-compiled-modules ()
   (dolist (entry %wasm-compiled-modules%)
@@ -500,6 +500,11 @@
              (unless val
                (error "Missing value for --modules-debug-out"))
              (push (cons :modules-debug-out val) out)))
+          ((string= arg "--start-entry-index")
+           (let ((val (pop args)))
+             (unless val
+               (error "Missing value for --start-entry-index"))
+             (push (cons :start-entry-index (parse-integer val)) out)))
           (seen-delimiter
            (error "Unknown argument: ~s" arg))
           (t
@@ -519,7 +524,8 @@
          (force (cdr (assoc :force argv)))
          (trace-modules (cdr (assoc :trace-modules argv)))
          (modules-out (cdr (assoc :modules-out argv)))
-         (modules-debug-out (cdr (assoc :modules-debug-out argv))))
+         (modules-debug-out (cdr (assoc :modules-debug-out argv)))
+         (start-entry-index (cdr (assoc :start-entry-index argv))))
     (declare (special *wasm2-collect-module-debug*
                       *wasm2-compiled-modules-debug*))
     (when (cdr (assoc :help argv))
@@ -538,7 +544,9 @@
         (when (or modules-out modules-debug-out)
           (setf *wasm2-collect-module-debug* t)
           (wasm2-reset-compiled-modules-debug))
-        (reset-wasm-entry-index)
+        (reset-wasm-entry-index (or start-entry-index 300))
+        (when start-entry-index
+          (format t "~&Level-1 entry index starts at ~d (after boot modules)~%" start-entry-index))
         (format t "~&Cross-compiling ~d WASM32 modules...~%" (length *wasm-runtime-modules*))
         (wasm-target-compile-modules *wasm-runtime-modules* :wasm32 force
                                      :trace-modules trace-modules)

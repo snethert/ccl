@@ -22,6 +22,7 @@ MODULES_DIR="${CCL_WASM_MODULES_DIR:-$BUILD_DIR/modules}"
 ROOT_IMAGE_OUT="${ROOT_IMAGE_OUT:-$IMAGES_DIR/root.image}"
 ROOT_IMAGE_MANIFEST_OUT="${ROOT_IMAGE_MANIFEST_OUT:-$IMAGES_DIR/root.image.manifest.json}"
 MODULES_OUT="${MODULES_OUT:-$MODULES_DIR/wasm-runtime-modules.json}"
+BOOT_MODULES_OUT="${BOOT_MODULES_OUT:-$MODULES_DIR/wasm-boot-modules.json}"
 
 usage() {
   cat <<'EOF'
@@ -151,14 +152,54 @@ BOOT_ARGS=()
 if [ "$FORCE" -eq 1 ]; then
   BOOT_ARGS+=(--force)
 fi
+BOOT_ARGS+=(--boot-modules-out "$BOOT_MODULES_OUT")
 
 log "repo=$ROOT_DIR"
 log "branch=$(git -C "$ROOT_DIR" symbolic-ref --short -q HEAD || echo detached) head=$(git -C "$ROOT_DIR" rev-parse --short HEAD)"
 log "force=$FORCE build_root_image=$BUILD_ROOT_IMAGE root_image_allow_fail=$ROOT_IMAGE_ALLOW_FAIL"
 
-run make -C "$ROOT_DIR/lisp-kernel/wasm32" "${MAKE_ARGS[@]}" all
-run "$ROOT_DIR/scripts/wasm/build-wasm-boot.sh" "${BOOT_ARGS[@]}"
-run "$ROOT_DIR/scripts/wasm/compile-wasm-fasls.sh" "${COMPILE_ARGS[@]}"
+run make -C "$ROOT_DIR/lisp-kernel/wasm32" ${MAKE_ARGS[@]+"${MAKE_ARGS[@]}"} all
+run make -C "$ROOT_DIR/lisp-kernel/wasm32/subprims" clean all
+run "$ROOT_DIR/scripts/wasm/build-wasm-boot.sh" ${BOOT_ARGS[@]+"${BOOT_ARGS[@]}"}
+
+# Compute the start entry index for level-1 so it doesn't overlap boot functions.
+# Use the next-entry-index sidecar file (written by build-wasm-boot.lisp) which
+# captures *wasm2-next-entry-index* after all level-0 functions are compiled.
+# This is the FUNCTION entry index counter, not just the module count.
+# The Lisp script writes the sidecar next to its inline-v1 temp file
+NEXT_ENTRY_INDEX_FILE="${BOOT_MODULES_OUT}.inline-v1.tmp.next-entry-index"
+if [ -f "$NEXT_ENTRY_INDEX_FILE" ]; then
+  BOOT_NEXT_INDEX=$(tr -d '[:space:]' < "$NEXT_ENTRY_INDEX_FILE")
+  if [ -n "$BOOT_NEXT_INDEX" ] && [ "$BOOT_NEXT_INDEX" -gt 0 ] 2>/dev/null; then
+    log "boot next-entry-index=$BOOT_NEXT_INDEX (from sidecar file)"
+    COMPILE_ARGS+=(--start-entry-index "$BOOT_NEXT_INDEX")
+  else
+    log "WARN: could not read next-entry-index from $NEXT_ENTRY_INDEX_FILE"
+  fi
+elif [ -f "$BOOT_MODULES_OUT" ]; then
+  # Fallback: use max module entry index from the bundle index
+  BOOT_MAX_INDEX=$(node --input-type=module -e "
+    import fs from 'fs';
+    import { decodeModuleBundleIndexV2 } from '$ROOT_DIR/scripts/wasm/lib/module-bundle-v2.mjs';
+    const idxPath = process.argv[1].replace(/\.json\$/, '.idx');
+    const idxBytes = fs.readFileSync(idxPath);
+    const decoded = decodeModuleBundleIndexV2(idxBytes);
+    let maxIdx = 0;
+    for (const m of decoded.modules) {
+      if (m.entryIndex > maxIdx) maxIdx = m.entryIndex;
+    }
+    console.log(maxIdx);
+  " "$BOOT_MODULES_OUT" 2>/dev/null || echo "")
+  if [ -n "$BOOT_MAX_INDEX" ] && [ "$BOOT_MAX_INDEX" -gt 0 ] 2>/dev/null; then
+    LEVEL1_START=$((BOOT_MAX_INDEX + 1))
+    log "boot modules max entry index=$BOOT_MAX_INDEX, level-1 starts at $LEVEL1_START (fallback)"
+    COMPILE_ARGS+=(--start-entry-index "$LEVEL1_START")
+  else
+    log "WARN: could not determine boot entry index range, using default"
+  fi
+fi
+
+run "$ROOT_DIR/scripts/wasm/compile-wasm-fasls.sh" ${COMPILE_ARGS[@]+"${COMPILE_ARGS[@]}"}
 
 if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
   ROOT_CMD=(
@@ -166,6 +207,7 @@ if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
     --output "$ROOT_IMAGE_OUT"
     --manifest-out "$ROOT_IMAGE_MANIFEST_OUT"
     --modules "$MODULES_OUT"
+    --boot-modules "$BOOT_MODULES_OUT"
   )
   if [ "$ROOT_IMAGE_ALLOW_FAIL" -eq 1 ]; then
     log "RUN (root image, non-fatal): ${ROOT_CMD[*]}"
@@ -179,6 +221,7 @@ log "sync rebuild complete. key outputs:"
 log "  ${CCL_WASM_KERNEL_DIR:-$BUILD_DIR/kernel}/wasmcl.wasm"
 log "  wasm-boot.image"
 log "  ${MODULES_OUT#$ROOT_DIR/}"
+log "  ${BOOT_MODULES_OUT#$ROOT_DIR/}"
 if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
   log "  ${ROOT_IMAGE_OUT#$ROOT_DIR/}"
   log "  ${ROOT_IMAGE_MANIFEST_OUT#$ROOT_DIR/}"

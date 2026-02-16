@@ -10,6 +10,7 @@ MODULES_OUT=""
 MODULES_DEBUG_OUT=""
 COMPACT_RUNTIME_MODULES=0
 STRIP_RUNTIME_FUNCTIONS=1
+START_ENTRY_INDEX=""
 
 usage() {
   cat <<'EOF'
@@ -52,6 +53,14 @@ while [ "${1:-}" != "" ]; do
       MODULES_DEBUG_OUT="${2:-}"
       if [ -z "$MODULES_DEBUG_OUT" ]; then
         echo "error: --modules-debug-out requires a path" >&2
+        exit 1
+      fi
+      shift
+      ;;
+    --start-entry-index)
+      START_ENTRY_INDEX="${2:-}"
+      if [ -z "$START_ENTRY_INDEX" ]; then
+        echo "error: --start-entry-index requires a number" >&2
         exit 1
       fi
       shift
@@ -119,6 +128,9 @@ if [ -n "$MODULES_OUT" ]; then
 fi
 if [ -n "$MODULES_DEBUG_OUT" ]; then
   SCRIPT_ARGS+=(--modules-debug-out "$MODULES_DEBUG_OUT")
+fi
+if [ -n "$START_ENTRY_INDEX" ]; then
+  SCRIPT_ARGS+=(--start-entry-index "$START_ENTRY_INDEX")
 fi
 
 # Bundled module outputs require a complete recompilation pass so every module

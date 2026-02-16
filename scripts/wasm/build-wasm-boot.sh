@@ -5,15 +5,17 @@ IFS=$'\n\t'
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DRYRUN=0
 FORCE=0
+BOOT_MODULES_OUT=""
 
 usage() {
   cat <<'EOF'
 Usage: scripts/wasm/build-wasm-boot.sh [options]
 
 Options:
-  --force        Recompile even if level-0 fasls are up to date
-  --dry-run      Print commands without executing
-  -h, --help     Show this help
+  --force              Recompile even if level-0 fasls are up to date
+  --boot-modules-out PATH  Export level-0 compiled modules bundle to PATH
+  --dry-run            Print commands without executing
+  -h, --help           Show this help
 EOF
 }
 
@@ -29,6 +31,14 @@ run() {
 while [ "${1:-}" != "" ]; do
   case "$1" in
     --force) FORCE=1 ;;
+    --boot-modules-out)
+      BOOT_MODULES_OUT="${2:-}"
+      if [ -z "$BOOT_MODULES_OUT" ]; then
+        echo "error: --boot-modules-out requires a path" >&2
+        exit 1
+      fi
+      shift
+      ;;
     --dry-run) DRYRUN=1 ;;
     -h|--help) usage; exit 0 ;;
     *)
@@ -63,8 +73,34 @@ if [ ! -f "$SCRIPT" ]; then
   exit 1
 fi
 
+PACK_SCRIPT="$ROOT_DIR/scripts/wasm/pack-inline-bundle-v2.mjs"
+
+SCRIPT_ARGS=()
 if [ "$FORCE" -eq 1 ]; then
-  run "$CCL_BIN" --no-init --batch -l "$SCRIPT" -- --force
+  SCRIPT_ARGS+=(--force)
+fi
+
+INLINE_TMP=""
+if [ -n "$BOOT_MODULES_OUT" ]; then
+  INLINE_TMP="${BOOT_MODULES_OUT}.inline-v1.tmp.json"
+  SCRIPT_ARGS+=(--boot-modules-out "$INLINE_TMP")
+fi
+
+if [ "${#SCRIPT_ARGS[@]}" -gt 0 ]; then
+  run "$CCL_BIN" --no-init --batch -l "$SCRIPT" -- "${SCRIPT_ARGS[@]}"
 else
   run "$CCL_BIN" --no-init --batch -l "$SCRIPT"
+fi
+
+if [ -n "$BOOT_MODULES_OUT" ]; then
+  if [ ! -f "$PACK_SCRIPT" ]; then
+    echo "error: missing $PACK_SCRIPT" >&2
+    exit 1
+  fi
+  run node "$PACK_SCRIPT" --manifest "$INLINE_TMP" --out-manifest "$BOOT_MODULES_OUT"
+  if [ "$DRYRUN" -eq 0 ]; then
+    INLINE_TMP_BIN="${INLINE_TMP%.*}.bin"
+    INLINE_TMP_IDX="${INLINE_TMP%.*}.idx"
+    rm -f "$INLINE_TMP" "$INLINE_TMP_BIN" "$INLINE_TMP_IDX"
+  fi
 fi

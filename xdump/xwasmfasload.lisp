@@ -74,7 +74,9 @@
    :subdirs '("ccl:level-0;WASM;")
    :compiler-target-name :wasm32
    :image-base-address #x10000000
-   :nil-relative-symbols arm::*arm-nil-relative-symbols*
+   :nil-relative-symbols (append arm::*arm-nil-relative-symbols*
+                                  '(ccl::%wasm-compiled-modules%
+                                    ccl::%wasm-const-pools%))
    :static-space-init-function 'wasm-initialize-static-space
    :purespace-reserve (ash 64 20)
    :static-space-address (- (- arm::nil-value arm::fulltag-nil) (ash 1 12))

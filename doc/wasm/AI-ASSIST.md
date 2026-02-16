@@ -2,8 +2,8 @@
 
 **Status:** Active
 **Scope:** Operational context for AI coding assistants working on the CCL WASM port
-**Last Updated:** 2026-02-15
-**Doc Version:** 1.0.0
+**Last Updated:** 2026-02-16
+**Doc Version:** 1.1.0
 
 This document provides operational context for AI assistants working on the CCL WASM port. Read this first when starting a session to understand what works, what doesn't, and how to verify changes.
 
@@ -22,31 +22,37 @@ This document provides operational context for AI assistants working on the CCL 
 - [roadmap.md](roadmap.md) - Two-mode strategy (MVP-1, MVP-2)
 - [project-overview.md](project-overview.md) - Architecture
 - [build.md](build.md) - Build system
+- [debugging.md](debugging.md) - Debugging tools and kernel state inspection (**read when troubleshooting**)
 
 ---
 
-## Current Status (2026-02-15)
+## Current Status (2026-02-16)
 
 ### What Works ✅
-- **Build pipeline:** End-to-end functional (kernel → boot image → modules → root image attempt)
+- **Build pipeline:** End-to-end functional (kernel → subprims → boot image → modules → root image attempt)
 - **WASM kernel:** Compiles successfully (~1MB binary)
+- **Subprims module:** Separate WASM module (`subprims.wasm`) with all `_SP*` implementations
 - **Image loading:** Loads into memory, sections map correctly
 - **RESTORE-LISP-POINTERS:** Called after image load, package hash tables rebuilt
+- **Debugging infrastructure:** State dump fires on funcall errors and `_SPksignalerr`; JS TCR inspector; Chrome DevTools launcher
 - **Boot image auto-build:** Triggered when missing during root image build
 - **Environment:** Auto-detects macOS/Linux toolchain
 - **Artifacts:** All outputs go to `build/wasm32/`
-- **Code cleanup:** ~7000 lines of dead code removed (instrumentation, startup binding map, startup truth)
 
 ### Current Blocker ❌
-- **B2: Compiled module installation** — 7555/7557 modules skipped during root image build
-- **FASL loading:** Blocked by B2 (function table entries not populated)
-- **Root image:** Build reaches FASL loading but fails due to B2
+- **FASL loading regression:** `level-1.lafsl` returns -72. Root cause: `%STRING-TO-STDERR` const pool contains `0x2c` (fixnum 11) where a function object for `LENGTH` should be. Investigation points to const pool encoding in `compiler/WASM/wasm2.lisp` (`wasm2-const-pool-entry` — `functionp` vs `xfunction` case).
+- **Root image:** Build reaches FASL loading but fails due to above
+
+### What Was Fixed (2026-02-16)
+- ✅ `rebuild-everything.sh` now includes `subprims.wasm` rebuild (was missing — stale artifact caused silent failures)
+- ✅ Debugging infrastructure: `wasm_debug_dump_state` rewritten without `snprintf %s` (unreliable); manual string helpers used instead
+- ✅ State dump instrumented at `funcall-error` and `ksignalerr` in subprims module
+- ✅ Spill stack leak on throw/catch fixed (`save_spill_sp` field added to catch frames)
+- ✅ Character encoding bug fixed (`wasm_make_simple_base_string` memcpy)
 
 ### What Was Fixed (2026-02-15)
 - ✅ RESTORE-LISP-POINTERS now called (was missing — root cause of -7 error)
-- ✅ ~2400 lines kernel instrumentation removed (wasm_emit_*, wasm_debug_*, startup truth)
-- ✅ ~2100 lines JS/Lisp/shell dead code removed
-- ✅ ~2500 lines startup binding map removed (was unnecessary WASM-only workaround)
+- ✅ ~7000 lines dead code removed (instrumentation, startup binding map, startup truth)
 - ✅ Build artifacts resolved (subprims.wasm, stale paths, missing exports)
 - ✅ Boot image auto-build added
 
@@ -109,9 +115,15 @@ source scripts/wasm/env.sh
 make -C lisp-kernel/wasm32
 ```
 
+**Subprims only** (after editing `wasm-subprims-provider.c`):
+```bash
+make -C lisp-kernel/wasm32/subprims clean all
+```
+
 **Clean:**
 ```bash
 make -C lisp-kernel/wasm32 clean
+make -C lisp-kernel/wasm32/subprims clean
 rm -rf build/wasm32
 ```
 
@@ -137,6 +149,41 @@ node scripts/wasm/tests/smoke-test.mjs
 **Common errors:**
 - `ENOENT: no such file or directory` - Artifacts missing, run full build
 - `Module not found` - Wrong working directory, must run from repo root
+
+---
+
+## Debugging
+
+See [debugging.md](debugging.md) for comprehensive debugging workflows and tools.
+
+**Quick reference for troubleshooting sessions:**
+
+```bash
+# Run root image build and capture state dumps
+node scripts/wasm/lib/make-real-image.mjs \
+  --output build/wasm32/images/root.image \
+  --modules build/wasm32/modules/wasm-runtime-modules.json \
+  --boot-modules build/wasm32/modules/wasm-boot-modules.json 2>&1 | grep -A 25 "STATE DUMP"
+
+# Interactive debugging with Chrome DevTools
+scripts/wasm/debug-run.sh scripts/wasm/tests/smoke-test.mjs
+
+# Static binary inspection
+wasm-objdump -x build/wasm32/kernel/wasmcl.wasm
+wasm-objdump -x build/wasm32/subprims/subprims.wasm
+```
+
+**Architecture note:** The runtime has two WASM modules. The **kernel** (`wasmcl.wasm`) handles memory, GC, image loading, const pools, debug dump. The **subprims** module (`subprims.wasm`) handles all `_SP*` functions including funcall dispatch, catch/throw, error signaling. Cross-module calls use WASM imports. Both must be rebuilt together.
+
+**snprintf policy:** The kernel provides a hand-rolled `vsnprintf` (no libc linked). Use `snprintf` only for numeric formats (`%x`, `%u`, `%d`). The `%s` format is unreliable with width modifiers. For string output, use the manual helpers in `wasm-kernel-stubs.c` (`wasm_debug_str`, `wasm_debug_hex8`, `wasm_debug_uint`).
+
+**C-side conditional trap:**
+```c
+if (suspicious_condition) {
+  wasm_debug_dump_state("descriptive label");
+  __builtin_trap();
+}
+```
 
 ---
 

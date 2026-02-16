@@ -470,7 +470,9 @@
     ccl::%all-packages%
     ccl::*keyword-package*
     ccl::%os-init-function%
-    ccl::%foreign-thread-control))
+    ccl::%foreign-thread-control
+    ccl::%wasm-compiled-modules%
+    ccl::%wasm-const-pools%))
 
 (defparameter *wasm-nilreg-relative-symbols* *wasm-nil-relative-symbols*)
 

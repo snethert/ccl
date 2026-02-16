@@ -3883,8 +3883,15 @@
   (wasm2-allocate-local nil))
 
 (defun wasm2-ensure-temp-local ()
+  ;; The temp local captures funcall import results in
+  ;; wasm2-emit-call-with-pending.  It must NOT be spillable:
+  ;; spill happens BEFORE the call and restore happens AFTER,
+  ;; so spilling tmp would overwrite the call result with the
+  ;; stale pre-call value.  The result is written after the
+  ;; call (post-GC) and read immediately, so no GC protection
+  ;; is needed.
   (or *wasm2-temp-local*
-      (setf *wasm2-temp-local* (wasm2-allocate-temp))))
+      (setf *wasm2-temp-local* (wasm2-allocate-local nil))))
 
 (defun wasm2-var-closed-p (var)
   (logbitp $vbitclosed (nx-var-bits var)))
@@ -7204,18 +7211,23 @@
   (if (and (boundp '*host-backend*)
            (boundp '*target-backend*)
            (not (eq *host-backend* *target-backend*)))
-    ;; Avoid embedding host xcode-vectors in cross-compiled fasls.
-    (wasm2-box-fixnum entry-index)
+    ;; Cross-compile: return raw index.  FASL serialization + xload will
+    ;; create the proper target fixnum.  Pre-boxing here would double-shift
+    ;; (once by wasm2-box-fixnum, once by xload's fixnum tagging).
+    entry-index
     (wasm2-make-stub-code-vector entry-index)))
 
 (defun wasm2-make-const-function (entry-index const-value name &optional (lfun-bits 0))
-  (let* ((entry-fixnum (wasm2-box-fixnum entry-index))
+  (let* ((cross-p (and (boundp '*host-backend*)
+                       (boundp '*target-backend*)
+                       (not (eq *host-backend* *target-backend*))))
+         ;; In cross-compile mode, store raw entry-index; FASL/xload will
+         ;; create proper target fixnums.  Pre-boxing would double-shift.
+         (entry-fixnum (if cross-p entry-index (wasm2-box-fixnum entry-index)))
          (code-vector (wasm2-const-code-vector entry-index))
          ;; Cross-compilation needs xfunctions so fasl dumping won't treat them
          ;; as native code vectors.
-         (subtag (if (and (boundp '*host-backend*)
-                          (boundp '*target-backend*)
-                          (not (eq *host-backend* *target-backend*)))
+         (subtag (if cross-p
                    target::subtag-xfunction
                    target::subtag-function))
          (function (%alloc-misc 5 subtag)))
@@ -7477,7 +7489,11 @@
 
 (defun wasm2-set-afunc-lfun (afunc entry-index const-value bits)
   (let* ((existing (afunc-lfun afunc))
-         (entry-fixnum (wasm2-box-fixnum entry-index))
+         (cross-p (and (boundp '*host-backend*)
+                       (boundp '*target-backend*)
+                       (not (eq *host-backend* *target-backend*))))
+         ;; In cross-compile mode, store raw entry-index (see wasm2-make-const-function).
+         (entry-fixnum (if cross-p entry-index (wasm2-box-fixnum entry-index)))
          (code-vector (wasm2-const-code-vector entry-index))
          (name (afunc-name afunc)))
     (if existing

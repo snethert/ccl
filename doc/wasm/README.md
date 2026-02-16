@@ -120,10 +120,11 @@ See [roadmap.md](roadmap.md) for detailed two-phase strategy.
 - **[js-microkernel-spec.md](js-microkernel-spec.md)** - Host-side JavaScript microkernel specification
 - **[decisions.md](decisions.md)** - Key architectural decisions
 
-### Building and Running
+### Building, Running, and Debugging
 
 - **[build.md](build.md)** - Build instructions and dependencies
 - **[macos-setup.md](macos-setup.md)** / **[linux-setup.md](linux-setup.md)** - Platform-specific setup
+- **[debugging.md](debugging.md)** - Debugging tools, workflows, and kernel state inspection
 - **Canonical rebuild**: `scripts/wasm/rebuild-everything.sh`
 
 ### Runtime Components

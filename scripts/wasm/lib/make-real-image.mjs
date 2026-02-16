@@ -95,6 +95,7 @@ function usage() {
   console.log("  --build-provenance PATH Optional JSON object merged into manifest build.provenance");
   console.log("  --wasm-output PATH  Path inside wasm persistence (default: build/wasm32/images/root.image)");
   console.log("  --modules PATH      Compiled modules bundle (default: build/wasm32/modules/wasm-runtime-modules.json)");
+  console.log("  --boot-modules PATH Level-0 compiled modules bundle (optional)");
   console.log("  --kernel PATH       wasmcl.wasm path (default: build/wasm32/kernel/wasmcl.wasm)");
   console.log("  --subprims PATH     subprims.wasm path (default: build/wasm32/subprims/subprims.wasm)");
   console.log("  --subprims-map PATH subprims-map.json path (default: build/wasm32/subprims-map.json)");
@@ -127,6 +128,9 @@ function parseArgs(argv) {
         break;
       case "--modules":
         out.modules = argv[++i];
+        break;
+      case "--boot-modules":
+        out.bootModules = argv[++i];
         break;
       case "--kernel":
         out.kernel = argv[++i];
@@ -389,6 +393,7 @@ const outputPath = args.output ?? defaultOutput;
 const manifestOutPath = args.manifestOut ?? `${outputPath}.manifest.json`;
 const wasmOutputPath = args.wasmOutput ?? defaultWasmOutput;
 const modulesPath = args.modules ?? defaultModules;
+const bootModulesPath = args.bootModules ?? null;
 const buildProvenancePath = args.buildProvenance
   ? path.resolve(args.buildProvenance)
   : null;
@@ -468,6 +473,9 @@ if (!(await fileExists(bootImagePath))) {
 if (!(await fileExists(modulesPath))) {
   fail(`Missing compiled modules bundle: ${modulesPath} (run scripts/wasm/compile-wasm-fasls.sh --modules-out ${modulesPath})`);
 }
+if (bootModulesPath && !(await fileExists(bootModulesPath))) {
+  fail(`Missing boot modules bundle: ${bootModulesPath} (run scripts/wasm/build-wasm-boot.sh --boot-modules-out ${bootModulesPath})`);
+}
 
 const level1Path = path.join(root, "level-1.lafsl");
 if (!(await fileExists(level1Path))) {
@@ -544,6 +552,7 @@ let constPoolSharedBlobRaw = null;
 const constPoolSpanKey = (offset, storedLength, encoding, rawLength) =>
   `${offset >>> 0}:${storedLength >>> 0}:${encoding ?? "raw"}:${rawLength >>> 0}`;
 const constPoolsInstalled = new Set();
+const bootConstPoolData = new Map(); /* entry_index → Uint8Array (pre-read boot const pools) */
 
 if (typeof compiledModulesBundle?.index === "string" && compiledModulesBundle.index.length > 0) {
   const indexPath = path.join(path.dirname(modulesPath), compiledModulesBundle.index);
@@ -783,9 +792,35 @@ function decodeConstPoolForInfo(info) {
 
 
 function installConstPoolOnDemand(entryIndexRaw) {
-  if (!kernelExports || compiledModulesFd == null) return 0;
+  if (!kernelExports) return 0;
   const entryIndex = entryIndexRaw >>> 0;
   if (constPoolsInstalled.has(entryIndex)) return 1;
+
+  trace(`const-pool on-demand entry=${entryIndex}`);
+
+  /* Check boot module pre-read const pools first */
+  const bootBytes = bootConstPoolData.get(entryIndex);
+  if (bootBytes) {
+    trace(`const-pool on-demand boot hit entry=${entryIndex} size=${bootBytes.length}`);
+    const rc = installConstPoolBytes({
+      kernelExports,
+      memory: runtime.memory,
+      entryIndex,
+      constPoolBytes: bootBytes,
+    });
+    const nilValue = typeof kernelExports.wasm_get_lisp_nil === "function"
+      ? (kernelExports.wasm_get_lisp_nil() >>> 0)
+      : null;
+    if (rc !== 0 && (nilValue == null || (rc >>> 0) !== nilValue)) {
+      constPoolsInstalled.add(entryIndex);
+      trace(`const-pool on-demand boot OK entry=${entryIndex}`);
+      return 1;
+    }
+    trace(`const-pool on-demand boot FAILED entry=${entryIndex} rc=0x${(rc >>> 0).toString(16)}`);
+    /* Boot const pool install failed; fall through to level-1 check */
+  }
+
+  if (compiledModulesFd == null) return 0;
 
   const info = constPoolEntries.get(entryIndex);
   if (!info) return 0;
@@ -973,13 +1008,102 @@ const bootCompiledModuleRegistry = typeof ex.wasm_get_compiled_module_registry =
   : 0;
 const hasBootCompiledModuleRegistrySnapshot =
   bootCompiledModuleRegistry !== 0 &&
-  bootCompiledModuleRegistry !== bootCompiledModuleRegistryNil;
+  bootCompiledModuleRegistry !== bootCompiledModuleRegistryNil &&
+  (bootCompiledModuleRegistry & 0x7) === 0x5;  /* fulltag_cons — must be a real cons, not unbound marker */
 if (traceEnabled) {
   trace(
     `boot-registry snapshot raw=0x${bootCompiledModuleRegistry.toString(16)}` +
     ` nil=0x${bootCompiledModuleRegistryNil.toString(16)}` +
     ` has_snapshot=${hasBootCompiledModuleRegistrySnapshot ? 1 : 0}`,
   );
+}
+
+/* Install boot (level-0) compiled modules first, so that level-0 function
+   table entries (e.g. %FASLOAD) are populated before wasm_fasload_path is
+   called.  These come from cross-xload-level-0 via build-wasm-boot.sh. */
+if (bootModulesPath) {
+  const bootBundleJson = JSON.parse(await fs.readFile(bootModulesPath, "utf-8"));
+  let bootIndexBytes = null;
+  let bootBinaryReader = null;
+  if (typeof bootBundleJson?.index === "string" && bootBundleJson.index.length > 0) {
+    const bootIndexPath = path.join(path.dirname(bootModulesPath), bootBundleJson.index);
+    bootIndexBytes = await fs.readFile(bootIndexPath);
+  }
+  const bootResolved = await resolveBundleEntries({
+    bundle: bootBundleJson,
+    indexBytes: bootIndexBytes,
+  });
+  if (bootBundleJson?.binary) {
+    const bootBinPath = path.join(path.dirname(bootModulesPath), bootBundleJson.binary);
+    const bootFd = await fs.open(bootBinPath, "r");
+    bootBinaryReader = async (offset, length) => {
+      const size = length >>> 0;
+      if (size === 0) return new Uint8Array(0);
+      const buffer = Buffer.allocUnsafe(size);
+      let total = 0;
+      while (total < size) {
+        const { bytesRead } = await bootFd.read(buffer, total, size - total, (offset >>> 0) + total);
+        if (bytesRead === 0) break;
+        total += bytesRead;
+      }
+      if (total !== size) throw new Error(`short read on boot modules: expected ${size}, got ${total}`);
+      return buffer;
+    };
+    const bootInstall = await installCompiledModulesFromBundle({
+      bundle: bootResolved,
+      binaryReader: bootBinaryReader,
+      indexBytes: bootIndexBytes,
+      kernel: ex,
+      memory: runtime.memory,
+      subprimsTable: runtime.subprimsTable,
+      microkernel,
+      strict: false,
+      installConstPools: false,
+      verbose: traceEnabled,
+    });
+    trace(`boot modules bundle installed ${bootInstall.installed}/${bootInstall.count}`);
+    if (bootInstall.installed === 0 && bootInstall.count > 0) {
+      trace("WARNING: boot modules bundle had entries but none were installed");
+    }
+    /* Pre-read boot const pool data into memory for on-demand installation.
+       Boot const pools are in a separate binary from level-1, so we read them
+       now and cache in bootConstPoolData before closing the FD. */
+    const bootModules = Array.isArray(bootResolved?.modules) ? bootResolved.modules : [];
+    let bootConstPoolCount = 0;
+    for (const entry of bootModules) {
+      if (!Number.isFinite(entry?.entryIndex)) continue;
+      if (!Number.isFinite(entry?.constPoolOffset) || !Number.isFinite(entry?.constPoolLength)) continue;
+      const cpLen = entry.constPoolLength >>> 0;
+      if (cpLen === 0) continue;
+      const cpOff = entry.constPoolOffset >>> 0;
+      const storedLen = Number.isFinite(entry?.constPoolStoredLength)
+        ? (entry.constPoolStoredLength >>> 0) : cpLen;
+      const buf = Buffer.allocUnsafe(storedLen);
+      let total = 0;
+      while (total < storedLen) {
+        const { bytesRead } = await bootFd.read(buf, total, storedLen - total, cpOff + total);
+        if (bytesRead === 0) break;
+        total += bytesRead;
+      }
+      if (total === storedLen) {
+        let decoded = buf;
+        const enc = entry?.constPoolEncoding ?? null;
+        if (enc && typeof decodeBundleBytesSync === "function") {
+          try {
+            decoded = decodeBundleBytesSync(buf, enc, cpLen, "boot const pool", zlib);
+          } catch (_e) { /* use raw */ }
+        }
+        bootConstPoolData.set(entry.entryIndex >>> 0, decoded);
+        bootConstPoolCount++;
+      }
+    }
+    trace(`boot const pools pre-read: ${bootConstPoolCount}`);
+    await bootFd.close();
+  } else {
+    trace("boot modules bundle has no binary — skipping");
+  }
+} else {
+  trace("no boot modules bundle provided (--boot-modules)");
 }
 
 const bundleInstall = await installCompiledModulesFromBundle({
@@ -1082,7 +1206,7 @@ for (const faslPath of requiredFasls) {
   try {
     faslRc = ex.wasm_fasload_path(faslMem.ptr >>> 0, faslMem.len >>> 0) | 0;
   } catch (err) {
-    fail(`wasm_fasload_path(${faslPath}) trapped: ${err?.message ?? err}`);
+    fail(`wasm_fasload_path(${faslPath}) trapped: ${err?.message ?? err}\n${err?.stack ?? ''}`);
   }
   if (faslRc !== 0) {
     fail(`wasm_fasload_path(${faslPath}) returned ${faslRc}`);

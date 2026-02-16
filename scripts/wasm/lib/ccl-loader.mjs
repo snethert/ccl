@@ -382,9 +382,20 @@ function alignUp(value, align) {
   return (value + (align - 1)) & ~(align - 1);
 }
 
+/* Scratch allocation state for reuse.  After wasm_const_pool_install
+   returns, the scratch bytes at lastScratchBase are no longer needed and
+   can be overwritten by the next call. */
+let lastScratchBase = 0;
+let lastScratchSize = 0;
+
 function allocScratch(memory, size, kernelExports = null) {
   const pageSize = 65536;
   const aligned = alignUp(size, 16);
+  /* Reuse previous scratch region if it is large enough. */
+  if (lastScratchBase !== 0 && aligned <= lastScratchSize &&
+      lastScratchBase + aligned <= memory.buffer.byteLength) {
+    return lastScratchBase;
+  }
   const base = memory.buffer.byteLength;
   const pages = Math.ceil(aligned / pageSize);
   if (pages > 0) {
@@ -398,6 +409,8 @@ function allocScratch(memory, size, kernelExports = null) {
       memory.grow(pages);
     }
   }
+  lastScratchBase = base;
+  lastScratchSize = pages * pageSize;
   return base;
 }
 
@@ -1000,6 +1013,12 @@ export async function installCompiledModulesFromRegistry({
     nil = getNil() >>> 0;
   }
 
+  /* The registry may contain an unbound marker or other non-list value
+     (e.g. when the symbol exists in the boot image but was never assigned
+     a value).  Only attempt to decode when the value is nil or a cons. */
+  if (registry !== 0 && registry !== nil && !isCons(registry)) {
+    return { installed: 0, count: 0, entries: [], skipped: "registry is not a list" };
+  }
   const entries = decodeCompiledModuleRegistry({ memory, registry, nil });
   if (entries.length === 0) return { installed: 0, count: 0, entries: [] };
 

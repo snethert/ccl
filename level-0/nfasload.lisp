@@ -868,7 +868,7 @@
 (defparameter *%fasload-verbose* t)
 
 (defmacro %wasm-note-fasload-step (n &optional detail)
-  `(when *%fasload-verbose*
+  `(when (and *%fasload-verbose* (fboundp 'format))
      (format t "~&WASM_FASLOAD_STEP ~D~@[ ~S~]~%" ,n ,detail)
      (finish-output)))
 
@@ -961,7 +961,9 @@
   (%wasm-note-fasload-step 100 string)
   (when (and *%fasload-verbose*
              (not *load-verbose*))
-    (%string-to-stderr ";Loading ") (pdbg string))
+    (%string-to-stderr ";Loading ")
+    (%string-to-stderr string)
+    (%string-to-stderr #.(string #\LineFeed)))
   (let* ((s (%istruct
              'faslstate
              nil
@@ -1233,8 +1235,9 @@ Can be removed before shipping once %FASLOAD startup is stable.")
 (defmacro %wasm-note-startup-step (n)
   `(progn
      (setq *wasm-startup-step* ,n)
-     (format t "~&WASM_STARTUP_STEP ~D~%" ,n)
-     (finish-output)
+     (when (fboundp 'format)
+       (format t "~&WASM_STARTUP_STEP ~D~%" ,n)
+       (finish-output))
      ,n))
 
 (defvar %toplevel-function%

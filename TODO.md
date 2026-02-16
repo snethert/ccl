@@ -1,6 +1,8 @@
 # CCL WASM TODO
 
-**Last updated:** 2026-02-15
+<!-- Debugging guide: doc/wasm/debugging.md — read first when troubleshooting -->
+
+**Last updated:** 2026-02-16
 **Current phase:** MVP-1 (Library/Embedded Mode)
 
 ---
@@ -250,10 +252,10 @@ These are explicitly NOT being worked on until MVP-1 ships.
 
 ## 📊 Current Status
 
-**Completed:** FASL loading fix, instrumentation removal (~2400 lines C), residual cruft audit, JS/Lisp/shell dead code sweep (~2100 lines), startup truth feature retired, B1 build artifacts resolved, startup binding map removed (~2500+ lines), RESTORE-LISP-POINTERS kernel export added, B2 module installation fixed (7557/7557 install), boundary diagnostic scaffolding stripped (~1085 lines)
-**Blocked on:** B3 — FASL loading returns -7 despite modules installed (FASL functions not yet bound)
-**Build pipeline:** Fully functional (kernel → boot image → runtime modules → image build attempt)
-**MVP-1 completion:** 45% (build pipeline works, modules install, FASL loading attempted but functions not yet bound)
+**Completed:** FASL loading fix, instrumentation removal (~2400 lines C), residual cruft audit, JS/Lisp/shell dead code sweep (~2100 lines), startup truth feature retired, B1 build artifacts resolved, startup binding map removed (~2500+ lines), RESTORE-LISP-POINTERS kernel export added, B2 module installation fixed (7557/7557 install), boundary diagnostic scaffolding stripped (~1085 lines), debugging infrastructure built (state dump, TCR inspector, debug launcher), subprims build gap fixed
+**Blocked on:** B3 — const pool encoding bug (fn=0x2c = fixnum(11) where function object expected)
+**Build pipeline:** Fully functional (kernel → subprims → boot image → runtime modules → image build attempt)
+**MVP-1 completion:** 50% (build pipeline works, modules install, debugging infrastructure operational, FASL loading crashes at const pool mismatch)
 
 ---
 
@@ -343,28 +345,42 @@ Additionally, 6 other kernel functions were implemented but not exported in the 
 
 ---
 
-### B3. FASL Loading Returns -7 Despite 7557/7557 Modules Installed
+### B3. FASL Loading Fails — Const Pool Encoding Bug
 
 **Discovered:** 2026-02-15 after B2 fix
-**Impact:** root.image build fails at first FASL load (`l1-fasls/l1-cl-package.lafsl`)
-**Status:** ❌ Uninvestigated
+**Impact:** root.image build fails during FASL load (`level-1.lafsl` returns -72)
+**Status:** ⚠️ Root cause narrowed to const pool encoding
 
 **Symptoms:**
 - All 7557 compiled modules install successfully
-- RESTORE-LISP-POINTERS deferred (not yet defined in boot image, expected)
-- Boot phase set to L0_READY
-- `wasm_fasload_path("l1-fasls/l1-cl-package.lafsl")` returns -7
-- `%FASLOAD`, `%FASL-OPEN`, `%SIMPLE-FASL-OPEN` all unbound
+- FASL loading begins but crashes when calling compiled functions
+- State dump at `funcall-error` shows: `nfn=0x2c`, `Rfn=0x2c` (fixnum 11, not a function object)
+- Crash occurs in `%STRING-TO-STDERR` calling `(length str)` — const pool entry for `LENGTH` contains raw entry index instead of function object
 
-**Key observation:** This is a chicken-and-egg problem. `%FASLOAD` is defined in level-1 Lisp code which is itself loaded via FASL. The kernel's `wasm_fasload_path` must implement FASL loading in C (or delegate to a minimal loader) without relying on Lisp-defined functions.
+**Root cause hypothesis:**
+- `0x2c` = `box_fixnum(11)` — a raw entry index stored where a function object pointer should be
+- Investigation points to const pool encoding in `compiler/WASM/wasm2.lisp` (`wasm2-const-pool-entry`)
+- The `functionp` case (line ~4464) vs `xfunction` case (line ~4411) — possible mismatch between compile-time encoding and runtime installation
+- C-side installation: `wasm_const_pool_make_entry_function` creates function objects with `box_fixnum(entry_index)` in slot 0 — for entry_index=11, this gives exactly 0x2c
+- Tag 4 ("function") installation resolves by symbol name+package lookup; tag 16 ("entry-function") resolves by entry index
 
-**Possible causes to investigate:**
-1. `wasm_fasload_path` may be trying to call Lisp `%FASLOAD` instead of implementing FASL reading directly
-2. Const pools may not be installed (`installConstPools: false` in the bundle install call)
-3. The function table entries may be populated but not properly wired to the symbols that FASL loading needs
-4. Return code -7 semantics need to be traced in the kernel C code
+**State dump evidence (2026-02-16):**
+```
+=== STATE DUMP: funcall-error ===
+  nfn      = 0x0000002c    ← fixnum(11), should be function object for LENGTH
+  Rfn      = 0x0000002c
+  arg_z    = 0x0407769e    ← string argument to %STRING-TO-STDERR
+  nargs    = 0x00000004    ← fixnum(1)
+  spill depth = 219
+```
 
-**Decision:** Next critical-path task.
+**Next steps:**
+1. Trace how `LENGTH` gets encoded in `%STRING-TO-STDERR`'s const pool at compile time
+2. Compare compile-time const pool entry with runtime installation
+3. Determine if tag 4 (function by name) or tag 16 (entry-function by index) is being used
+4. Fix the encoding/installation mismatch
+
+**Decision:** Critical path — must fix before any FASL loading can succeed.
 
 ---
 
@@ -402,11 +418,23 @@ Additionally, 6 other kernel functions were implemented but not exported in the 
 - Removed startup truth defvars/functions from `l1-cl-package.lisp` (~290 lines) and call sites from `l1-symhash.lisp`
 - All smoke tests pass, all JS syntax checks pass, zero remaining references in code files
 
-**2026-02-16:** Compiled kernel functionality inventory
+**2026-02-16 (session 1):** Compiled kernel functionality inventory
 - 132 subprims: 84 substantial, 42 thin wrappers, 6 stubs/no-ops
 - Key finding: most "not implemented" features (hash tables, CLOS, format, reader) are in Lisp level-1 files, not kernel
 - The FASL loading regression is the single gate blocking nearly everything
 - See MEMORY.md or session notes for full inventory
+
+**2026-02-16 (session 2):** Debugging infrastructure + fn=0x2c investigation
+- Built debugging infrastructure: `wasm_debug_dump_state`, TCR inspector, Chrome DevTools launcher
+- Fixed `rebuild-everything.sh` — was missing `subprims.wasm` rebuild (critical gap; stale subprims caused silent failures)
+- Discovered kernel vs subprims two-module architecture: `wasm-subprims-provider.c` compiles as separate `subprims.wasm`, NOT part of kernel. Cross-module calls require WASM import declarations (`__attribute__((import_module(...)))`)
+- Rewrote state dump to avoid unreliable `snprintf %s` — uses manual string helpers instead
+- **snprintf policy decision:** Use only for numeric formats (`%x`, `%u`, `%d`). No `%s` with width modifiers. The hand-rolled `vsnprintf` in `wasm-no-wasi-libc.c` doesn't fully support `%s` formatting.
+- State dump confirmed: fn=0x2c at funcall-error point in `%STRING-TO-STDERR` → `(length str)`
+- Root cause narrowed to const pool encoding mismatch: raw entry index (fixnum 11) stored where function object should be
+- Investigation points to `compiler/WASM/wasm2.lisp` `wasm2-const-pool-entry` function
+- Fixed spill stack leak on throw/catch (`save_spill_sp` field added to catch frames)
+- Fixed character encoding bug in `wasm_make_simple_base_string` memcpy
 
 **2026-02-15 (session 3):** Removed startup binding map infrastructure, added RESTORE-LISP-POINTERS
 - Investigated: startup binding map does NOT exist on any native CCL platform (x86, ARM, PPC)

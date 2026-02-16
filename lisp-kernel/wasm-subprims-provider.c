@@ -7,6 +7,10 @@
 #include "lisp-exceptions.h"
 #include "lisp_globals.h"
 
+/* Imported from kernel module (defined in wasm-kernel-stubs.c) */
+__attribute__((import_module("ccl"), import_name("wasm_debug_dump_state")))
+void wasm_debug_dump_state(const char *label);
+
 /* WASM-only catch frame with dnode-aligned size.
  * Keeps fulltag_misc tagging intact for catch_top pointers.
  */
@@ -21,6 +25,7 @@ typedef struct wasm_catch_frame {
   LispObj nfp;
   LispObj save_vsp;
   LispObj cleanup_entry;
+  LispObj save_spill_sp;
 } wasm_catch_frame;
 
 #define WASM_CATCH_FRAME_ELEMENT_COUNT ((sizeof(wasm_catch_frame) / sizeof(LispObj)) - 1)
@@ -225,8 +230,10 @@ wasm_make_simple_base_string(TCR *tcr, const char *bytes)
     wasm_subprims_trap();
   }
 
-  BytePtr data = (BytePtr)obj + misc_data_offset;
-  memcpy(data, bytes, len);
+  uint32_t *data = (uint32_t *)((BytePtr)obj + misc_data_offset);
+  for (size_t i = 0; i < len; i++) {
+    data[i] = (uint32_t)(unsigned char)bytes[i];
+  }
   return obj;
 }
 
@@ -1703,6 +1710,7 @@ _SPmkcatch1v(void)
   cf->nfp = (LispObj)tcr->nfp;
   cf->save_vsp = wasm_reg(tcr, vsp);
   cf->cleanup_entry = 0;
+  cf->save_spill_sp = (LispObj)tcr->wasm_spill_sp;
 
   tcr->catch_top = ptr_to_lispobj((BytePtr)cf + fulltag_misc);
 }
@@ -1729,6 +1737,7 @@ _SPmkcatchmv(void)
   cf->nfp = (LispObj)tcr->nfp;
   cf->save_vsp = wasm_reg(tcr, vsp);
   cf->cleanup_entry = 0;
+  cf->save_spill_sp = (LispObj)tcr->wasm_spill_sp;
 
   tcr->catch_top = ptr_to_lispobj((BytePtr)cf + fulltag_misc);
 }
@@ -1819,6 +1828,10 @@ _SPnthrow1value(void)
       tcr->save_vsp = saved_stack_ptr;
       wasm_set_reg(tcr, vsp, (LispObj)saved_stack_ptr);
 
+      if (cf->save_spill_sp != 0) {
+        tcr->wasm_spill_sp = (LispObj *)cf->save_spill_sp;
+      }
+
       tcr->unwinding = 0;
       wasm_call_subprim_fixnum(cleanup);
       if (wasm_pending_throw_p(tcr)) {
@@ -1842,13 +1855,17 @@ _SPnthrow1value(void)
       }
       wasm_set_reg(tcr, vsp, (LispObj)saved_stack_ptr);
       tcr->save_vsp = saved_stack_ptr;
+
+      if (cf->save_spill_sp != 0) {
+        tcr->wasm_spill_sp = (LispObj *)cf->save_spill_sp;
+      }
     }
 
     wasm_free_catch_frame(cf);
   }
 
   tcr->unwinding = 0;
-  wasm_set_pending_throw(tcr, box_fixnum(1));
+  wasm_set_pending_throw(tcr, box_fixnum(11));  /* DIAG: nthrow1value */
 }
 
 __attribute__((used, visibility("default"), export_name("_SPnthrowvalues")))
@@ -1907,6 +1924,10 @@ _SPnthrowvalues(void)
       tcr->save_vsp = saved_stack_ptr;
       wasm_set_reg(tcr, vsp, (LispObj)saved_stack_ptr);
 
+      if (cf->save_spill_sp != 0) {
+        tcr->wasm_spill_sp = (LispObj *)cf->save_spill_sp;
+      }
+
       tcr->unwinding = 0;
       wasm_call_subprim_fixnum(cleanup);
       if (wasm_pending_throw_p(tcr)) {
@@ -1945,13 +1966,17 @@ _SPnthrowvalues(void)
       wasm_set_reg(tcr, vsp, (LispObj)dest);
       tcr->save_vsp = dest;
       wasm_sync_arg_regs_from_vsp(tcr);
+
+      if (cf->save_spill_sp != 0) {
+        tcr->wasm_spill_sp = (LispObj *)cf->save_spill_sp;
+      }
     }
 
     wasm_free_catch_frame(cf);
   }
 
   tcr->unwinding = 0;
-  wasm_set_pending_throw(tcr, box_fixnum(1));
+  wasm_set_pending_throw(tcr, box_fixnum(12));  /* DIAG: nthrowvalues */
 }
 
 typedef void (*wasm_lisp_fn_void)(void);
@@ -1982,6 +2007,7 @@ void _SPstack_cons_rest_arg(void);
 static void
 wasm_signal_funcall_error(TCR *tcr, signed_natural errnum, LispObj name)
 {
+  wasm_debug_dump_state("funcall-error");
   wasm_set_reg(tcr, arg_y, box_fixnum(errnum));
   wasm_set_reg(tcr, arg_z, name);
   wasm_set_nargs_count(tcr, 2);
@@ -2258,6 +2284,54 @@ _SPfuncall(void)
   TCR *tcr = wasm_get_current_tcr();
   if (tcr == NULL) {
     wasm_subprims_trap();
+  }
+
+  /* DIAG: log funcall nfn with name for first few calls */
+  {
+    static uint32_t funcall_counter = 0;
+    LispObj nfn_val = wasm_reg(tcr, nfn);
+    funcall_counter++;
+    if (funcall_counter <= 6) {
+      static const char hex[] = "0123456789abcdef";
+      char dbg[128];
+      int pos = 0;
+      static const char pf[] = "DIAG: funcall#";
+      for (int j = 0; j < 14; j++) dbg[pos++] = pf[j];
+      dbg[pos++] = '0' + (funcall_counter % 10);
+      dbg[pos++] = ' ';
+      dbg[pos++] = '0'; dbg[pos++] = 'x';
+      uint32_t v = (uint32_t)nfn_val;
+      for (int i = 7; i >= 0; i--) dbg[pos++] = hex[(v >> (i * 4)) & 0xf];
+      /* Try to get function/symbol name */
+      if (fulltag_of(nfn_val) == fulltag_misc) {
+        LispObj hdr = header_of(nfn_val);
+        unsigned sub = header_subtag(hdr);
+        LispObj pname = (LispObj)0;
+        if (sub == subtag_symbol) {
+          lispsymbol *s = (lispsymbol *)ptr_from_lispobj(untag(nfn_val));
+          pname = s->pname;
+        } else if (sub == subtag_function || sub == subtag_pseudofunction) {
+          /* Try to get fname from lfun-bits or name slot */
+          /* For now, just note it's a function */
+          dbg[pos++] = ' '; dbg[pos++] = 'F'; dbg[pos++] = 'N';
+        }
+        if (pname && fulltag_of(pname) == fulltag_misc) {
+          LispObj ph = header_of(pname);
+          uint32_t len = header_element_count(ph);
+          if (len > 40) len = 40;
+          const uint8_t *data = (const uint8_t *)ptr_from_lispobj(pname + misc_data_offset);
+          dbg[pos++] = ' ';
+          /* Read as 32-bit chars (lisp_char_code) */
+          const lisp_char_code *chars = (const lisp_char_code *)data;
+          for (uint32_t ci = 0; ci < len && pos < 120; ci++) {
+            uint32_t c = (uint32_t)chars[ci];
+            dbg[pos++] = (c >= 32 && c < 127) ? (char)c : '?';
+          }
+        }
+      }
+      dbg[pos++] = '\n';
+      wasm_host_log(dbg, pos);
+    }
   }
 
   wasm_funcall_nfn(tcr);
@@ -4816,6 +4890,59 @@ _SPksignalerr(void)
     wasm_subprims_trap();
   }
 
+  /* DIAG: log error info with hex-encoded err_code */
+  {
+    static const char hex[] = "0123456789abcdef";
+    LispObj err_code = wasm_reg(tcr, arg_y);
+    LispObj err_arg = wasm_reg(tcr, arg_z);
+    char dbg[64] = "DIAG: _SPksignalerr code=0x";
+    /* manually format err_code as 8-hex-digit value */
+    uint32_t v = (uint32_t)err_code;
+    for (int i = 7; i >= 0; i--) {
+      dbg[27 + (7 - i)] = hex[(v >> (i * 4)) & 0xf];
+    }
+    dbg[35] = ' ';
+    dbg[36] = 'a';
+    dbg[37] = 'r';
+    dbg[38] = 'g';
+    dbg[39] = '=';
+    dbg[40] = '0';
+    dbg[41] = 'x';
+    v = (uint32_t)err_arg;
+    for (int i = 7; i >= 0; i--) {
+      dbg[42 + (7 - i)] = hex[(v >> (i * 4)) & 0xf];
+    }
+    dbg[50] = '\n';
+    wasm_host_log(dbg, 51);
+    /* If err_arg looks like a symbol, print its pname */
+    if (fulltag_of(err_arg) == fulltag_misc &&
+        header_subtag(header_of(err_arg)) == subtag_symbol) {
+      lispsymbol *esym = (lispsymbol *)ptr_from_lispobj(untag(err_arg));
+      LispObj pname = esym->pname;
+      if (fulltag_of(pname) == fulltag_misc) {
+        uint32_t hdr = header_of(pname);
+        uint32_t sub = header_subtag(hdr);
+        uint32_t len = header_element_count(hdr);
+        if (len > 80) len = 80;
+        char ascii[96] = "DIAG: ksignalerr sym=";
+        uint32_t pos = 21;
+        const uint8_t *data8 = (const uint8_t *)ptr_from_lispobj(pname + misc_data_offset);
+        if (sub == subtag_simple_base_string) {
+          /* base string: 32-bit chars */
+          const lisp_char_code *chars32 = (const lisp_char_code *)data8;
+          for (uint32_t i = 0; i < len && pos < 90; i++) {
+            uint32_t c = (uint32_t)chars32[i];
+            ascii[pos++] = (c >= 32 && c < 127) ? (char)c : '?';
+          }
+        }
+        ascii[pos++] = '\n';
+        wasm_host_log(ascii, pos);
+      }
+    }
+  }
+
+  wasm_debug_dump_state("ksignalerr");
+
   /*
    * If ERRDISP is unavailable (or recursively faults while signaling),
    * avoid non-terminating self-recursion and surface a pending throw
@@ -4823,20 +4950,20 @@ _SPksignalerr(void)
    */
   static int reentering_errdisp = 0;
   if (reentering_errdisp) {
-    wasm_set_pending_throw(tcr, box_fixnum(1));
+    wasm_set_pending_throw(tcr, box_fixnum(13));  /* DIAG: ksignalerr re-entrant */
     return;
   }
 
   LispObj errdisp = wasm_nrs_symbol_lispobj(&nrs_ERRDISP);
   if (fulltag_of(errdisp) != fulltag_misc || header_subtag(header_of(errdisp)) != subtag_symbol) {
-    wasm_set_pending_throw(tcr, box_fixnum(1));
+    wasm_set_pending_throw(tcr, box_fixnum(14));  /* DIAG: errdisp bad symbol */
     return;
   }
 
   lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(untag(errdisp));
   LispObj fn = rawsym->fcell;
   if (fn == nrs_UDF.vcell || fulltag_of(fn) != fulltag_misc) {
-    wasm_set_pending_throw(tcr, box_fixnum(1));
+    wasm_set_pending_throw(tcr, box_fixnum(15));  /* DIAG: errdisp UDF fcell */
     return;
   }
 
@@ -4882,6 +5009,29 @@ _SPwasm_udf_stub(void)
   }
 
   LispObj name = wasm_error_name_from_tcr(tcr);
+  /* DIAG: log which function is undefined */
+  {
+    static const char prefix[] = "DIAG: _SPwasm_udf_stub name=";
+    wasm_host_log(prefix, sizeof(prefix) - 1);
+    if (fulltag_of(name) == fulltag_misc && header_subtag(header_of(name)) == subtag_symbol) {
+      lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(name));
+      LispObj pname = sym->pname;
+      if (fulltag_of(pname) == fulltag_misc) {
+        uint32_t hdr = header_of(pname);
+        uint32_t len = header_element_count(hdr);
+        if (len > 80) len = 80;
+        const uint32_t *chars = (const uint32_t *)(ptr_from_lispobj(untag(pname)) + 4);
+        char ascii[81];
+        for (uint32_t i = 0; i < len; i++) {
+          uint32_t c = chars[i];
+          ascii[i] = (c >= 32 && c < 127) ? (char)c : '?';
+        }
+        ascii[len] = '\0';
+        wasm_host_log(ascii, len);
+      }
+    }
+    wasm_host_log("\n", 1);
+  }
   wasm_set_reg(tcr, arg_y, box_fixnum(WASM_XFUNBND));
   wasm_set_reg(tcr, arg_z, name);
   wasm_set_nargs_count(tcr, 2);
@@ -5254,26 +5404,31 @@ _SPspecref(void)
 
   LispObj symbol = wasm_reg(tcr, arg_z);
   if (fulltag_of(symbol) != fulltag_misc) {
+    wasm_host_log("DIAG specref: bad fulltag\n", 27);
     wasm_subprims_trap();
   }
 
   if (header_subtag(header_of(symbol)) != subtag_symbol) {
+    wasm_host_log("DIAG specref: not symbol\n", 26);
     wasm_subprims_trap();
   }
 
   lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(symbol));
   LispObj binding_index = sym->binding_index;
   if (tag_of(binding_index) != tag_fixnum) {
+    wasm_host_log("DIAG specref: bad binding_index\n", 33);
     wasm_subprims_trap();
   }
 
   LispObj limit = tcr->tlb_limit;
   if (tag_of(limit) != tag_fixnum) {
+    wasm_host_log("DIAG specref: bad tlb_limit\n", 29);
     wasm_subprims_trap();
   }
 
   LispObj *binding_slots = tcr->tlb_pointer;
   if (binding_slots == NULL) {
+    wasm_host_log("DIAG specref: null tlb_ptr\n", 28);
     wasm_subprims_trap();
   }
 

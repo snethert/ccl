@@ -146,7 +146,7 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_boot_get_phase --export=wasm_boot_set_phase \
 	  --export=wasm_ccl_load_image --export=wasm_ccl_step --export=wasm_restore_lisp_pointers \
 	  --export=wasm_clear_pending_throw \
-	  --export=wasm_const_pool_install --export=wasm_const_pool_ref \
+	  --export=wasm_const_pool_install --export=wasm_const_pool_ref --export=wasm_const_pool_diag_fail_get \
 	  --export=wasm_lisp_word_ref \
 	  --export=wasm_fasload_path \
 	  --export=wasm_get_nargs \
@@ -157,6 +157,10 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_set_toplfunc_entry \
 	  --export=wasm_vsp_ref \
 	  --export=_SPfix_overflow --export=_SPmakes32 \
+	  --export=lisp_open --export=lisp_read --export=lisp_write --export=lisp_close \
+	  --export=lisp_lseek --export=lisp_fstat --export=lisp_ftruncate --export=lisp_fchmod \
+	  --export=wasm_debug_dump_state --export=wasm_debug_tcr_offset \
+	  --export=lisp_bug --export=malloc --export=free \
 	  $(LDFLAGS_EXTRA) \
 	  -o $(KERNEL_WASM) $(KERNELOBJ)
 	@echo "Kernel built: $(KERNEL_WASM)"

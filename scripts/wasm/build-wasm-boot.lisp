@@ -72,6 +72,11 @@
            (push (cons :help t) out))
           ((string= arg "--force")
            (push (cons :force t) out))
+          ((string= arg "--boot-modules-out")
+           (let ((val (pop args)))
+             (unless val
+               (error "Missing value for --boot-modules-out"))
+             (push (cons :boot-modules-out val) out)))
           (seen-delimiter
            (error "Unknown argument: ~s" arg))
           (t
@@ -79,12 +84,94 @@
     out))
 
 (defun usage ()
-  (format t "~&Usage: ccl --no-init --batch -l scripts/wasm/build-wasm-boot.lisp [-- --force]~%")
-  (format t "Builds wasm-boot.image via cross-xload-level-0.~%"))
+  (format t "~&Usage: ccl --no-init --batch -l scripts/wasm/build-wasm-boot.lisp [-- --force] [-- --boot-modules-out PATH]~%")
+  (format t "Builds wasm-boot.image via cross-xload-level-0.~%")
+  (format t "  --boot-modules-out PATH  Export level-0 compiled modules as V1 inline bundle~%"))
+
+(defun boot-json-escape-string (s)
+  (with-output-to-string (out)
+    (loop for ch across s do
+      (case ch
+        (#\" (write-string "\\\"" out))
+        (#\\ (write-string "\\\\" out))
+        (#\Newline (write-string "\\n" out))
+        (#\Return (write-string "\\r" out))
+        (#\Tab (write-string "\\t" out))
+        (t (write-char ch out))))))
+
+(defun boot-json-write-string (out s)
+  (write-char #\" out)
+  (write-string (boot-json-escape-string s) out)
+  (write-char #\" out))
+
+(defun write-boot-module-bundle (output-path modules)
+  "Write level-0 compiled modules as an inline V1 bundle (JSON + binary)."
+  (let* ((json-path (pathname output-path))
+         (bin-path (make-pathname :type "bin" :defaults json-path))
+         (bin-name (file-namestring bin-path))
+         (entries nil)
+         (offset 0))
+    (ensure-directories-exist json-path)
+    (with-open-file (bin bin-path
+                         :direction :output
+                         :if-exists :supersede
+                         :if-does-not-exist :create
+                         :element-type '(unsigned-byte 8))
+      (dolist (entry modules)
+        (let* ((module-bytes (svref entry 0))
+               (module-len (length module-bytes))
+               (module-offset offset)
+               (const-bytes (and (> (length entry) 4) (svref entry 4)))
+               (const-len (if const-bytes (length const-bytes) 0))
+               (const-offset nil))
+          (when (> module-len 0)
+            (write-sequence module-bytes bin))
+          (incf offset module-len)
+          (when (and const-bytes (> const-len 0))
+            (setf const-offset offset)
+            (write-sequence const-bytes bin)
+            (incf offset const-len))
+          (push (list entry module-offset module-len const-offset const-len) entries))))
+    (setf entries (nreverse entries))
+    (with-open-file (out json-path
+                         :direction :output
+                         :if-exists :supersede
+                         :if-does-not-exist :create)
+      (write-char #\{ out)
+      (write-string "\"binary\":" out)
+      (boot-json-write-string out bin-name)
+      (write-string ",\"functions\":[]" out)
+      (write-string ",\"modules\":[" out)
+      (loop for info in entries
+            for idx from 0
+            do (when (> idx 0) (write-char #\, out))
+               (destructuring-bind (entry module-offset module-len const-offset const-len) info
+                 (write-char #\{ out)
+                 (write-string "\"exportName\":" out)
+                 (boot-json-write-string out (svref entry 1))
+                 (write-string ",\"entryIndex\":" out)
+                 (princ (svref entry 2) out)
+                 (write-string ",\"moduleVersion\":" out)
+                 (princ (svref entry 3) out)
+                 (write-string ",\"offset\":" out)
+                 (princ module-offset out)
+                 (write-string ",\"length\":" out)
+                 (princ module-len out)
+                 (when const-offset
+                   (write-string ",\"constPoolOffset\":" out)
+                   (princ const-offset out)
+                   (write-string ",\"constPoolLength\":" out)
+                   (princ const-len out))
+                 (write-char #\} out)))
+      (write-char #\] out)
+      (write-char #\} out)
+      (terpri out))
+    (length entries)))
 
 (defun main ()
   (let* ((argv (parse-argv ccl:*command-line-argument-list*))
-         (force (cdr (assoc :force argv))))
+         (force (cdr (assoc :force argv)))
+         (boot-modules-out (cdr (assoc :boot-modules-out argv))))
     (when (cdr (assoc :help argv))
       (usage)
       (quit 0))
@@ -99,6 +186,36 @@
         (load (merge-pathnames "lib/macros.lisp" root))))
     (format t "~&Building wasm-boot.image...~%")
     (cross-xload-level-0 :wasm32 (if force :force t))
+    ;; Report the final entry index counter for downstream start-entry-index.
+    (let ((next-idx (and (boundp '*wasm2-next-entry-index*) *wasm2-next-entry-index*)))
+      (format t "~&*wasm2-next-entry-index* after cross-xload = ~a~%" next-idx))
+    ;; Diagnostic: check %wasm-compiled-modules% for the range of entry indices
+    (let ((modules (and (boundp '%wasm-compiled-modules%) %wasm-compiled-modules%)))
+      (when modules
+        (let* ((indices (mapcar (lambda (e) (svref e 2)) modules))
+               (min-idx (reduce #'min indices))
+               (max-idx (reduce #'max indices)))
+          (format t "~&DIAG: %wasm-compiled-modules% count=~d min-entry=~d max-entry=~d~%"
+                  (length modules) min-idx max-idx))))
+    (when boot-modules-out
+      (let ((modules (and (boundp '%wasm-compiled-modules%) %wasm-compiled-modules%)))
+        (if (null modules)
+          (format t "~&No level-0 compiled modules to export.~%")
+          (let* ((sorted (sort (copy-list modules) #'<
+                               :key (lambda (e) (svref e 2))))
+                 (count (write-boot-module-bundle boot-modules-out sorted)))
+            (format t "~&Wrote ~d level-0 compiled modules to ~a~%" count boot-modules-out)))
+        ;; Write the next entry index to a sidecar file for rebuild-everything.sh
+        (let ((next-idx (and (boundp '*wasm2-next-entry-index*) *wasm2-next-entry-index*)))
+          (when (and next-idx boot-modules-out)
+            (let ((idx-file (concatenate 'string
+                              (subseq boot-modules-out 0
+                                      (or (position #\. boot-modules-out :from-end t)
+                                          (length boot-modules-out)))
+                              ".next-entry-index")))
+              (with-open-file (s idx-file :direction :output :if-exists :supersede)
+                (format s "~d~%" next-idx))
+              (format t "~&Wrote next-entry-index=~d to ~a~%" next-idx idx-file))))))
     (finish-output)))
 
 (main)
