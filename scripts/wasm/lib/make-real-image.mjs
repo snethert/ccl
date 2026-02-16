@@ -1199,6 +1199,30 @@ if (typeof ex.wasm_fasload_path !== "function") {
 
 setBootPhaseOrFail(WASM_BOOT_PHASE.L0_READY, { reason: "restore-lisp-pointers-complete" });
 
+/* B3 diagnostic: check table entries before FASL loading */
+{
+  const tbl = runtime.subprimsTable;
+  let firstNull = -1, firstFn = -1, nullCount = 0, fnCount = 0;
+  for (let i = 200; i < Math.min(tbl.length, 8700); i++) {
+    const fn = tbl.get(i);
+    if (fn == null) {
+      nullCount++;
+      if (firstNull < 0) firstNull = i;
+    } else {
+      fnCount++;
+      if (firstFn < 0) firstFn = i;
+    }
+  }
+  trace(`B3-TABLE range[200..${Math.min(tbl.length, 8700)}]: nulls=${nullCount} fns=${fnCount} firstNull=${firstNull} firstFn=${firstFn} tbl.length=${tbl.length}`);
+  /* Sample around the boundary */
+  for (const idx of [200, 201, 202, 300, 1100, 1103, 1200, 1300, 1400, 1450, 1499, 1500, 1501]) {
+    if (idx < tbl.length) {
+      const fn = tbl.get(idx);
+      trace(`B3-TABLE idx=${idx} fn=${fn == null ? 'NULL' : typeof fn}`);
+    }
+  }
+}
+
 for (const faslPath of requiredFasls) {
   sharedProbeUtf8Scratch.reset();
   const faslMem = sharedProbeUtf8Scratch.allocUtf8(faslPath, encoder);

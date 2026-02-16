@@ -335,6 +335,20 @@
          (%kernel-import target::kernel-import-free)
          :unsigned-fullword addr :void)))))
 
+;;; On native backends, %stack-block compiles to inline stack allocation
+;;; via dynamic-extent vinsns.  The WASM backend lacks dynamic-extent
+;;; handling, so %stack-block compiles to a call to %new-gcable-ptr.
+;;; That function is normally level-1 (l1-aprims), but its dependencies
+;;; (make-gcable-macptr, malloc) are level-0.  Provide a level-0
+;;; definition so that level-0 code using %stack-block / with-cstrs
+;;; works during early boot before level-1 loads.
+#+(or wasm32-target wasm-target)
+(defun %new-gcable-ptr (size &optional clear-p)
+  (declare (ignore clear-p))
+  (let ((p (make-gcable-macptr $flags_DisposPtr)))
+    (%setf-macptr p (malloc size))
+    p))
+
 #-(or wasm32-target wasm-target)
 (defun malloc (size)
   (ff-call

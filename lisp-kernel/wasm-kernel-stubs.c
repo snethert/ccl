@@ -90,6 +90,11 @@ static uint8_t wasm_named_entry_names[WASM_NAMED_ENTRY_BYTES_MAX];
 static uint32_t wasm_named_entry_count = 0u;
 static uint32_t wasm_named_entry_names_used = 0u;
 
+/* B3 diagnostic: track last const-pool-ref call for funcall-error correlation */
+static uint32_t wasm_diag_last_cpr_entry = 0;
+static uint32_t wasm_diag_last_cpr_slot = 0;
+static LispObj  wasm_diag_last_cpr_val = 0;
+
 static inline LispObj
 wasm_subprim_fixnum(uint32_t index)
 {
@@ -1244,6 +1249,22 @@ wasm_set_nfn(LispObj value)
   if (tcr == NULL) {
     return;
   }
+  /* B3 diagnostic: catch the moment a non-function enters nfn.
+     Log the value plus the last const-pool-ref that produced it. */
+  if (value != lisp_nil &&
+      (fulltag_of(value) != fulltag_misc ||
+       (header_subtag(header_of(value)) != subtag_function &&
+        header_subtag(header_of(value)) != subtag_pseudofunction &&
+        header_subtag(header_of(value)) != subtag_symbol))) {
+    char dbg[120];
+    int n = snprintf(dbg, sizeof(dbg),
+                     "DIAG: set_nfn BAD val=0x%x cpr_e=%u cpr_s=%u cpr_v=0x%x\n",
+                     (unsigned)value,
+                     wasm_diag_last_cpr_entry,
+                     wasm_diag_last_cpr_slot,
+                     (unsigned)wasm_diag_last_cpr_val);
+    if (n > 0) wasm_host_log(dbg, (unsigned)n);
+  }
   tcr->wasm_gprs[nfn] = value;
   tcr->wasm_gprs[Rfn] = value;
 }
@@ -1765,6 +1786,17 @@ wasm_debug_dump_state(const char *label)
   p += wasm_debug_uint(buf + p, wasm_spill_push_count);
   p += wasm_debug_str(buf + p, " spill_pop=");
   p += wasm_debug_uint(buf + p, wasm_spill_pop_count);
+  buf[p++] = '\n';
+  wasm_host_log(buf, (unsigned)p);
+
+  /* B3 diagnostic: last const-pool-ref that was called */
+  p = 0;
+  p += wasm_debug_str(buf + p, "  last_cpr: e=");
+  p += wasm_debug_uint(buf + p, wasm_diag_last_cpr_entry);
+  p += wasm_debug_str(buf + p, " s=");
+  p += wasm_debug_uint(buf + p, wasm_diag_last_cpr_slot);
+  p += wasm_debug_str(buf + p, " val=");
+  p += wasm_debug_hex8(buf + p, (uint32_t)wasm_diag_last_cpr_val);
   buf[p++] = '\n';
   wasm_host_log(buf, (unsigned)p);
 
@@ -5008,6 +5040,15 @@ wasm_const_pool_install_inner(TCR *tcr, uint32_t entry_index, uint32_t payload_p
       default:
         return lisp_nil;
     }
+    /* B3 diagnostic: log when a pool slot gets a fixnum-tagged value.
+       This catches the moment 0x2c (box_fixnum(11)) enters a pool slot. */
+    if (tag_of(pool_data[i]) == tag_fixnum && pool_data[i] != lisp_nil) {
+      char dbg[96];
+      int n = snprintf(dbg, sizeof(dbg),
+                       "DIAG: cpi fix e=%u i=%u tag=%u val=0x%x\n",
+                       entry_index, i, tag, (unsigned)pool_data[i]);
+      if (n > 0) wasm_host_log(dbg, (unsigned)n);
+    }
   }
 
   /* Second pass: patch forward references in vectors/gvectors/function-vectors/conses. */
@@ -5197,24 +5238,10 @@ wasm_const_pool_ref(uint32_t entry_index, uint32_t slot_index)
         if (slot_index < pool_count) {
           LispObj *pool_data = (LispObj *)((BytePtr)pool + misc_data_offset);
           LispObj val = pool_data[slot_index];
-          /* DIAG: log ALL const pool refs for entry 1103 (%FASLOAD) */
-          if (entry_index == 1103) {
-            const char *kind = "?";
-            if (val == lisp_nil) kind = "NIL";
-            else if (tag_of(val) == tag_fixnum) kind = "FIX";
-            else if (fulltag_of(val) == fulltag_misc) {
-              unsigned sub = header_subtag(header_of(val));
-              if (sub == subtag_symbol) kind = "SYM";
-              else if (sub == subtag_simple_base_string) kind = "STR";
-              else if (sub == subtag_function) kind = "FUN";
-              else kind = "MSC";
-            } else if (fulltag_of(val) == fulltag_cons) kind = "CON";
-            char dbg[120];
-            int n = snprintf(dbg, sizeof(dbg),
-                             "DIAG: cpr e=1103 s=%u val=0x%x %s\n",
-                             slot_index, (unsigned)val, kind);
-            if (n > 0) wasm_host_log(dbg, (unsigned)n);
-          }
+          /* B3 diagnostic: track every const-pool-ref for funcall-error correlation */
+          wasm_diag_last_cpr_entry = entry_index;
+          wasm_diag_last_cpr_slot = slot_index;
+          wasm_diag_last_cpr_val = val;
           return val;
         }
         return lisp_nil;
@@ -5251,6 +5278,10 @@ wasm_const_pool_ref(uint32_t entry_index, uint32_t slot_index)
     return lisp_nil;
   }
   LispObj *pool_data = (LispObj *)((BytePtr)pool + misc_data_offset);
+  /* B3 diagnostic: track slow-path return */
+  wasm_diag_last_cpr_entry = entry_index;
+  wasm_diag_last_cpr_slot = slot_index;
+  wasm_diag_last_cpr_val = pool_data[slot_index];
   return pool_data[slot_index];
 }
 

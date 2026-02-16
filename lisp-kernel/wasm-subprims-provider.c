@@ -2032,6 +2032,25 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
 
   {
     uint32_t entry_index = (uint32_t)unbox_fixnum(entry);
+    /* B3 diagnostic: log entry_index and fn before dispatch */
+    {
+      static const char hex[] = "0123456789abcdef";
+      char dbg[64];
+      int p = 0;
+      static const char pf[] = "DIAG: cfv e=";
+      for (int j = 0; pf[j]; j++) dbg[p++] = pf[j];
+      /* decimal entry_index */
+      char tmp[12]; int ti = 0;
+      uint32_t v = entry_index;
+      if (v == 0) { tmp[ti++] = '0'; }
+      else { while (v) { tmp[ti++] = '0' + (v % 10); v /= 10; } }
+      for (int j = ti - 1; j >= 0; j--) dbg[p++] = tmp[j];
+      dbg[p++] = ' '; dbg[p++] = 'f'; dbg[p++] = 'n'; dbg[p++] = '=';
+      dbg[p++] = '0'; dbg[p++] = 'x';
+      for (int i = 7; i >= 0; i--) dbg[p++] = hex[((uint32_t)fn_value >> (i * 4)) & 0xf];
+      dbg[p++] = '\n';
+      wasm_host_log(dbg, p);
+    }
     uint32_t entry_call_abi = wasm_prepare_entry_call(entry_index);
     switch (entry_call_abi) {
     case WASM_ENTRY_CALL_ABI_UNARY_I32: {

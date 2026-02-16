@@ -345,6 +345,7 @@
   (defconstant double-float.value-cell double-float.val-low-cell)
   (define-fixedsized-object complex realpart imagpart)
   (define-fixedsized-object macptr address domain type)
+  (define-fixedsized-object xmacptr address domain type flags link)
   (define-fixedsized-object catch-frame
     link mvflag catch-tag db-link xframe last-lisp-frame nfp)
   (define-fixedsized-object symbol

@@ -21,3 +21,13 @@
   (declare (optimize (speed 3) (safety 0)))
   (let ((raw (uvref ptr 1)))
     (ash raw 2)))
+
+;;; On native backends this is a LAP function that atomically prepends ptr
+;;; to the gcable-pointers kernel global (a linked list through xmacptr.link).
+;;; WASM is single-threaded and lacks LAP, so this is a no-op stub for now.
+;;; The consequence: gcable macptrs won't have their foreign memory freed
+;;; by the GC finalizer.  Acceptable during bootstrap; proper implementation
+;;; requires writing to the gcable-pointers kernel global.
+(defun set-%gcable-macptrs% (ptr)
+  (declare (ignore ptr))
+  nil)

@@ -1756,7 +1756,16 @@
                 (push form current-forms)))
             (push (cons current-label (nreverse current-forms)) segments)
             (setf segments (nreverse segments))
-            (let* ((dispatch-labels (mapcar #'car segments))
+            ;; Allocate fresh unique labels for each segment's block.
+            ;; The tag-label-map can map different tags to the same label
+            ;; when they share a wasm2-tag-key, causing duplicate entries
+            ;; in (mapcar #'car segments).  The br-table handler resolves
+            ;; labels via POSITION, which finds the first (innermost)
+            ;; match — so duplicates cause wrong dispatch depths.
+            (let* ((dispatch-labels (mapcar (lambda (_)
+                                             (declare (ignore _))
+                                             (wasm2-allocate-label))
+                                           segments))
                    (segment-count (length segments)))
               (labels
                   ((segment-ir (forms)
@@ -1770,14 +1779,14 @@
                            (cons :br-table (list dispatch-labels exit-label)))))
                 (let* ((inner (dispatch-ir)))
                   (loop for segment in (reverse segments)
+                        for dispatch-label in (reverse dispatch-labels)
                         for idx from (1- segment-count) downto 0
-                        do (let* ((seg-label (car segment))
-                                  (forms (cdr segment))
+                        do (let* ((forms (cdr segment))
                                   (seg-body (append (segment-ir forms)
                                                    (list (cons :const (list (1+ idx)))
                                                          (cons :local.set (list state-local))
                                                          (cons :br (list loop-label))))))
-                             (setf inner (append (list (cons :block (list seg-label inner)))
+                             (setf inner (append (list (cons :block (list dispatch-label inner)))
                                                  seg-body))))
                   (wasm2-emit :const 0)
                   (wasm2-emit :local.set state-local)
@@ -3601,7 +3610,39 @@
 
 (defwasm2 wasm2-builtin-call builtin-call (seg vreg xfer fn arglist)
   (declare (ignore vreg))
-  (wasm2-emit-call seg fn arglist nil xfer)
+  (let* ((args (wasm2-arglist-forms arglist))
+         (argc (length args))
+         (idx (acode-fixnum-form-p fn))
+         (subprim (and idx (wasm2-builtin-index-subprim-fixnum idx))))
+    (unless subprim
+      (error "WASM2: builtin-call with invalid index: ~S (idx=~S)" fn idx))
+    (case argc
+      (1
+       (wasm2-form seg nil nil (first args))
+       (wasm2-emit :set-arg0)
+       (wasm2-emit-call-subprim subprim)
+       (wasm2-emit :arg0))
+      (2
+       (wasm2-form seg nil nil (first args))
+       (wasm2-form seg nil nil (second args))
+       (wasm2-emit :set-arg1)
+       (wasm2-emit :set-arg0)
+       (wasm2-emit-call-subprim subprim)
+       (wasm2-emit :arg0))
+      (3
+       (wasm2-form seg nil nil (first args))
+       (wasm2-form seg nil nil (second args))
+       (wasm2-form seg nil nil (third args))
+       (wasm2-emit :set-arg2)
+       (wasm2-emit :set-arg1)
+       (wasm2-emit :set-arg0)
+       (wasm2-emit-call-subprim subprim)
+       (wasm2-emit :arg0))
+      (t
+       (error "WASM2: builtin-call unsupported arity: ~d" argc)))
+    (when (wasm2-returning-p xfer)
+      (wasm2-emit :return-constant)
+      (wasm2-emit :return)))
   nil)
 
 (defwasm2 wasm2-lexical-function-call lexical-function-call (seg vreg xfer afunc arglist &optional spread-p)
@@ -3911,6 +3952,15 @@
 
 (defun wasm2-subprim-fixnum (name)
   (wasm2-box-fixnum (subprim-name->offset name)))
+
+(defun wasm2-builtin-index-subprim-fixnum (idx)
+  (let* ((arch (backend-target-arch *target-backend*))
+         (table (arch::target-primitive->subprims arch))
+         (shift (arch::target-subprims-shift arch)))
+    (dolist (cell table)
+      (destructuring-bind ((low . high) . base) cell
+        (when (and (>= idx low) (< idx high))
+          (return (wasm2-box-fixnum (+ base (ash (- idx low) shift)))))))))
 
 (defun wasm2-emit-closed-var-cell (var)
   (let* ((slot (wasm2-closed-var-slot var)))
