@@ -265,6 +265,9 @@ uint32_t wasm_subprim_nonlocal_exit_coherence_selftest(void);
 static LispObj wasm_find_package_named_bytes(const uint8_t *bytes, uint32_t len);
 static LispObj wasm_find_symbol_named_bytes(const uint8_t *name, uint32_t len, LispObj package);
 static int wasm_symbol_object_p(LispObj value);
+static int wasm_debug_hex8(char *buf, uint32_t v);
+static int wasm_debug_str(char *buf, const char *s);
+static int wasm_debug_uint(char *buf, uint32_t v);
 
 static uint32_t
 wasm_boot_phase_normalize(uint32_t phase)
@@ -1372,17 +1375,32 @@ wasm_lisp_word_ref(LispObj base, LispObj offset)
       /* deref(o,0) is the header; data elements start at deref(o,1).
          idx is data-relative (0 = first data element), so add 1. */
       LispObj result = deref(base, idx + 1);
-      /* DIAG: trace misc word ref calls */
+      /* DIAG: trace misc word ref calls — log package accesses and
+         suspicious small-fixnum returns. */
       {
-        static uint32_t misc_ref_counter = 0;
-        misc_ref_counter++;
-        if (misc_ref_counter <= 20) {
-          char dbg[128];
-          int n = snprintf(dbg, sizeof(dbg),
-                           "DIAG: lisp_word_ref misc base=0x%x idx=%d count=%d result=0x%x old=0x%x\n",
-                           (unsigned)base, (int)idx, (int)count,
-                           (unsigned)result, (unsigned)deref(base, idx));
-          if (n > 0) wasm_host_log(dbg, (unsigned)n);
+        int st = header_subtag(header);
+        int log_it = 0;
+        /* Log all accesses on package objects */
+        if (st == subtag_package) log_it = 1;
+        /* Log when result is a small fixnum (likely wrong for a slot) */
+        if (tag_of(result) == tag_fixnum &&
+            (uint32_t)result < 256 &&
+            result != 0 && result != lisp_nil) log_it = 1;
+        if (log_it) {
+          char dbg[160];
+          int p = 0;
+          p += wasm_debug_str(dbg + p, "DIAG: lwref base=");
+          p += wasm_debug_hex8(dbg + p, (uint32_t)base);
+          p += wasm_debug_str(dbg + p, " sub=");
+          p += wasm_debug_hex8(dbg + p, (uint32_t)st);
+          p += wasm_debug_str(dbg + p, " idx=");
+          p += wasm_debug_uint(dbg + p, (uint32_t)idx);
+          p += wasm_debug_str(dbg + p, " cnt=");
+          p += wasm_debug_uint(dbg + p, (uint32_t)count);
+          p += wasm_debug_str(dbg + p, " res=");
+          p += wasm_debug_hex8(dbg + p, (uint32_t)result);
+          dbg[p++] = '\n';
+          wasm_host_log(dbg, (unsigned)p);
         }
       }
       return result;
@@ -3171,6 +3189,73 @@ wasm_run_cold_boot_init(void)
     static const char msg[] = "cold-boot-init: function undefined\n";
     wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
     return -5;
+  }
+
+  /* DIAG: Dump %ALL-PACKAGES% before cold boot init.
+     Find the symbol and walk its value (a list of packages). */
+  {
+    static const uint8_t ap_name[] = "%ALL-PACKAGES%";
+    LispObj ap_sym = wasm_find_symbol_named_bytes(
+      ap_name, (uint32_t)(sizeof(ap_name) - 1), ccl_pkg);
+    char dbg[256];
+    int p = 0;
+    if (ap_sym != (LispObj)0 && fulltag_of(ap_sym) == fulltag_misc &&
+        header_subtag(header_of(ap_sym)) == subtag_symbol) {
+      lispsymbol *rawap = (lispsymbol *)ptr_from_lispobj(untag(ap_sym));
+      LispObj val = rawap->vcell;
+      p = 0;
+      p += wasm_debug_str(dbg + p, "DIAG: %all-packages% sym=");
+      p += wasm_debug_hex8(dbg + p, (uint32_t)ap_sym);
+      p += wasm_debug_str(dbg + p, " val=");
+      p += wasm_debug_hex8(dbg + p, (uint32_t)val);
+      dbg[p++] = '\n';
+      wasm_host_log(dbg, (unsigned)p);
+      /* Walk the list, dumping each element */
+      LispObj cur = val;
+      int elem_idx = 0;
+      while (cur != lisp_nil && fulltag_of(cur) == fulltag_cons && elem_idx < 30) {
+        cons *cell = (cons *)ptr_from_lispobj(untag(cur));
+        LispObj elem = cell->car;
+        p = 0;
+        p += wasm_debug_str(dbg + p, "DIAG: pkg[");
+        p += wasm_debug_uint(dbg + p, (uint32_t)elem_idx);
+        p += wasm_debug_str(dbg + p, "] elem=");
+        p += wasm_debug_hex8(dbg + p, (uint32_t)elem);
+        p += wasm_debug_str(dbg + p, " ft=");
+        p += wasm_debug_uint(dbg + p, (uint32_t)fulltag_of(elem));
+        if (fulltag_of(elem) == fulltag_misc) {
+          LispObj hdr = header_of(elem);
+          p += wasm_debug_str(dbg + p, " sub=");
+          p += wasm_debug_hex8(dbg + p, (uint32_t)(header_subtag(hdr)));
+          p += wasm_debug_str(dbg + p, " cnt=");
+          p += wasm_debug_uint(dbg + p, (uint32_t)header_element_count(hdr));
+          /* Dump slots 0 and 1 (pkg.itab and pkg.etab) */
+          if (header_element_count(hdr) >= 2) {
+            p += wasm_debug_str(dbg + p, " s0=");
+            p += wasm_debug_hex8(dbg + p, (uint32_t)deref(elem, 1));
+            p += wasm_debug_str(dbg + p, " s1=");
+            p += wasm_debug_hex8(dbg + p, (uint32_t)deref(elem, 2));
+          }
+        }
+        dbg[p++] = '\n';
+        wasm_host_log(dbg, (unsigned)p);
+        cur = cell->cdr;
+        elem_idx++;
+      }
+      if (cur != lisp_nil) {
+        p = 0;
+        p += wasm_debug_str(dbg + p, "DIAG: list tail=");
+        p += wasm_debug_hex8(dbg + p, (uint32_t)cur);
+        p += wasm_debug_str(dbg + p, " ft=");
+        p += wasm_debug_uint(dbg + p, (uint32_t)fulltag_of(cur));
+        dbg[p++] = '\n';
+        wasm_host_log(dbg, (unsigned)p);
+      }
+    } else {
+      p = 0;
+      p += wasm_debug_str(dbg + p, "DIAG: %all-packages% NOT FOUND\n");
+      wasm_host_log(dbg, (unsigned)p);
+    }
   }
 
   natural old_last_lisp_frame = wasm_enter_lisp_frame(

@@ -162,23 +162,168 @@ async function fulfillFromDisk(route, rootDir) {
   }
 }
 
+const PLAYWRIGHT_BROWSER_ORDER = ["chromium", "webkit", "firefox"];
+
+function envFlag(name) {
+  return process.env[name] === "1";
+}
+
+function splitEnvList(name) {
+  const raw = process.env[name];
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function splitEnvArgs(name) {
+  const raw = process.env[name];
+  if (!raw) return [];
+  return raw
+    .split(/\s+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function resolveHeadlessMode() {
+  if (envFlag("WEB_UI_BROWSER_HEADED")) return false;
+  if (process.env.WEB_UI_BROWSER_HEADLESS === "0") return false;
+  return true;
+}
+
+function resolveBrowserOrder() {
+  const requested = splitEnvList("WEB_UI_BROWSER_ORDER");
+  const legacy = splitEnvList("WEB_UI_BROWSER");
+  const requestedOrder = requested.length > 0 ? requested : legacy;
+  if (requestedOrder.length === 0) {
+    return [...PLAYWRIGHT_BROWSER_ORDER];
+  }
+  const order = [];
+  for (const name of requestedOrder) {
+    if (!PLAYWRIGHT_BROWSER_ORDER.includes(name)) continue;
+    if (order.includes(name)) continue;
+    order.push(name);
+  }
+  for (const name of PLAYWRIGHT_BROWSER_ORDER) {
+    if (!order.includes(name)) {
+      order.push(name);
+    }
+  }
+  return order;
+}
+
+function withNoSandboxArgs(args) {
+  const merged = [...args];
+  if (!merged.includes("--no-sandbox")) {
+    merged.push("--no-sandbox");
+  }
+  if (!merged.includes("--disable-setuid-sandbox")) {
+    merged.push("--disable-setuid-sandbox");
+  }
+  return merged;
+}
+
+function attemptName(browserName, { channel, executablePath, noSandbox = false } = {}) {
+  const traits = [];
+  if (channel) traits.push(`channel=${channel}`);
+  if (executablePath) traits.push(`executablePath=${executablePath}`);
+  if (noSandbox) traits.push("no-sandbox");
+  if (traits.length === 0) return browserName;
+  return `${browserName} (${traits.join(", ")})`;
+}
+
+function buildPlaywrightLaunchAttempts(playwright) {
+  const headless = resolveHeadlessMode();
+  const browserOrder = resolveBrowserOrder();
+  const args = splitEnvArgs("WEB_UI_BROWSER_ARGS");
+  const disableSandbox = envFlag("WEB_UI_BROWSER_DISABLE_SANDBOX");
+  const channel = (process.env.WEB_UI_BROWSER_CHANNEL ?? "").trim();
+  const executablePath = (process.env.WEB_UI_BROWSER_EXECUTABLE_PATH ?? "").trim();
+  const attempts = [];
+
+  for (const browserName of browserOrder) {
+    const type = playwright[browserName];
+    if (!type) continue;
+    const baseOptions = { headless };
+
+    if (browserName === "chromium") {
+      if (channel) {
+        baseOptions.channel = channel;
+      }
+      if (executablePath) {
+        baseOptions.executablePath = executablePath;
+      }
+      if (args.length > 0) {
+        baseOptions.args = [...args];
+      }
+
+      const argsHaveNoSandbox = (baseOptions.args ?? []).includes("--no-sandbox");
+      if (!disableSandbox) {
+        attempts.push({
+          name: attemptName("chromium", baseOptions),
+          type,
+          options: baseOptions,
+        });
+      }
+      if (disableSandbox || !argsHaveNoSandbox) {
+        const sandboxOptions = {
+          ...baseOptions,
+          args: withNoSandboxArgs(baseOptions.args ?? []),
+        };
+        attempts.push({
+          name: attemptName("chromium", { ...sandboxOptions, noSandbox: true }),
+          type,
+          options: sandboxOptions,
+        });
+      }
+      continue;
+    }
+
+    attempts.push({
+      name: attemptName(browserName),
+      type,
+      options: baseOptions,
+    });
+  }
+
+  return attempts;
+}
+
+function buildLaunchSuggestions(errors) {
+  const joined = errors.join("\n");
+  const suggestions = [];
+  if (/Executable doesn't exist|executable doesn't exist|Please run:\s*npx playwright install/i.test(joined)) {
+    suggestions.push("Install Playwright browsers: npx playwright install chromium firefox webkit");
+  }
+  if (/EPERM|EACCES|Operation not permitted|Mach port|sandbox/i.test(joined)) {
+    suggestions.push(
+      "If launch permissions are restricted, retry with WEB_UI_BROWSER_DISABLE_SANDBOX=1."
+    );
+  }
+  if (/No usable sandbox|setuid sandbox|namespace sandbox/i.test(joined)) {
+    suggestions.push("Set WEB_UI_BROWSER_DISABLE_SANDBOX=1 for restricted Linux/macOS environments.");
+  }
+  if (suggestions.length === 0) {
+    return "";
+  }
+  return `\nSuggestions:\n${suggestions.map((item) => `- ${item}`).join("\n")}`;
+}
+
 async function launchPlaywrightBrowser(playwright) {
-  const attempts = [
-    { name: "chromium", type: playwright.chromium },
-    { name: "webkit", type: playwright.webkit },
-    { name: "firefox", type: playwright.firefox },
-  ];
+  const attempts = buildPlaywrightLaunchAttempts(playwright);
   const errors = [];
   for (const attempt of attempts) {
     if (!attempt.type) continue;
     try {
-      const browser = await attempt.type.launch({ headless: true });
+      const browser = await attempt.type.launch(attempt.options);
       return { browser, name: attempt.name };
     } catch (err) {
       errors.push(`${attempt.name}: ${err?.message ?? err}`);
     }
   }
-  const e = new Error(`Playwright launch failed:\n${errors.join("\n")}`);
+  const suggestions = buildLaunchSuggestions(errors);
+  const e = new Error(`Playwright launch failed:\n${errors.join("\n")}${suggestions}`);
   e.details = errors;
   throw e;
 }

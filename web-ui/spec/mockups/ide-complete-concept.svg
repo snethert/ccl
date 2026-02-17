@@ -1,0 +1,248 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">Completed Browser-First CL IDE Concept</title>
+  <desc id="desc">Spec-aligned dark mode IDE with editor, REPL, inspector, problems, debugger panel, and command palette.</desc>
+
+  <defs>
+    <style>
+      .ui { font-family: Inter, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif; }
+      .mono { font-family: Iosevka, "SFMono-Regular", Consolas, Menlo, "Liberation Mono", monospace; }
+      .t-primary { fill: #e8e8e8; }
+      .t-secondary { fill: #b8b8b8; }
+      .t-muted { fill: #8a8a8a; }
+      .t-accent { fill: #6fb0ff; }
+      .t-error { fill: #f06b6b; }
+      .t-success { fill: #6ccf8f; }
+    </style>
+    <filter id="elev2" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+    <filter id="elev3" x="-20%" y="-20%" width="140%" height="180%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1440" height="900" fill="#121212"/>
+
+  <!-- Top command rail -->
+  <rect x="0" y="0" width="1440" height="52" fill="#1b1b1b" stroke="#676767" stroke-width="1"/>
+  <text class="ui t-primary" x="18" y="31" font-size="15" font-weight="600">Web Lisp IDE</text>
+
+  <!-- Breadcrumbs -->
+  <text class="ui t-secondary" x="150" y="31" font-size="13">workspace/main</text>
+  <text class="ui t-muted" x="250" y="31" font-size="13">/</text>
+  <text class="ui t-secondary" x="262" y="31" font-size="13">src/core</text>
+  <text class="ui t-muted" x="320" y="31" font-size="13">/</text>
+  <text class="ui t-primary" x="332" y="31" font-size="13" font-weight="500">compiler.lisp</text>
+  <text class="ui t-muted" x="414" y="31" font-size="13">/</text>
+  <text class="ui t-accent" x="426" y="31" font-size="13">defun emit-op</text>
+
+  <!-- Top actions (text-first) -->
+  <rect x="930" y="12" width="94" height="28" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui t-primary" x="947" y="30" font-size="12" font-weight="500">Run Defun</text>
+  <rect x="1032" y="12" width="96" height="28" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui t-primary" x="1049" y="30" font-size="12" font-weight="500">Compile File</text>
+  <rect x="1136" y="12" width="110" height="28" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui t-primary" x="1153" y="30" font-size="12" font-weight="500">Open Palette</text>
+  <rect x="1254" y="12" width="168" height="28" rx="4" fill="#0f0f0f" stroke="#4a4a4a"/>
+  <text class="ui t-muted" x="1268" y="30" font-size="12">Search symbol, command...</text>
+
+  <!-- Left instrument column -->
+  <g filter="url(#elev2)">
+    <rect x="12" y="64" width="268" height="824" rx="8" fill="#1b1b1b" stroke="#676767"/>
+  </g>
+  <text class="ui t-primary" x="26" y="92" font-size="13" font-weight="600">Project</text>
+  <text class="ui t-muted" x="230" y="92" font-size="11">worldlet: active</text>
+  <line x1="24" y1="102" x2="268" y2="102" stroke="#4a4a4a"/>
+
+  <text class="ui t-secondary" x="28" y="126" font-size="12">src</text>
+  <text class="ui t-muted" x="44" y="146" font-size="12">compiler.lisp</text>
+  <text class="ui t-muted" x="44" y="166" font-size="12">runtime.lisp</text>
+  <text class="ui t-muted" x="44" y="186" font-size="12">debugger.lisp</text>
+  <text class="ui t-muted" x="28" y="212" font-size="12">tests</text>
+  <text class="ui t-muted" x="44" y="232" font-size="12">compiler.test.lisp</text>
+
+  <text class="ui t-primary" x="26" y="270" font-size="13" font-weight="600">Problems</text>
+  <line x1="24" y1="280" x2="268" y2="280" stroke="#4a4a4a"/>
+
+  <rect x="24" y="292" width="244" height="36" rx="4" fill="#2b4870" stroke="#929292"/>
+  <text class="ui" x="34" y="313" font-size="12" fill="#f2f6ff">warning: unresolved restart metadata</text>
+
+  <rect x="24" y="336" width="244" height="36" rx="4" fill="#232323" stroke="#4a4a4a"/>
+  <circle cx="36" cy="354" r="4" fill="#f06b6b"/>
+  <text class="ui t-secondary" x="46" y="358" font-size="12">error: stepper source mapping stale</text>
+
+  <rect x="24" y="380" width="244" height="36" rx="4" fill="#232323" stroke="#4a4a4a"/>
+  <circle cx="36" cy="398" r="4" fill="#6ccf8f"/>
+  <text class="ui t-secondary" x="46" y="402" font-size="12">build: kernel-free lane passed</text>
+
+  <text class="ui t-primary" x="26" y="450" font-size="13" font-weight="600">Watches</text>
+  <line x1="24" y1="460" x2="268" y2="460" stroke="#4a4a4a"/>
+  <text class="mono t-secondary" x="28" y="484" font-size="12">*last-form*      =&gt; (emit-op ...)</text>
+  <text class="mono t-secondary" x="28" y="504" font-size="12">*breakpoints*    =&gt; 4</text>
+  <text class="mono t-secondary" x="28" y="524" font-size="12">result           =&gt; #&lt;FUNCTION ...&gt;</text>
+
+  <!-- Main editor window -->
+  <g filter="url(#elev2)">
+    <rect x="292" y="64" width="760" height="522" rx="8" fill="#1b1b1b" stroke="#676767"/>
+  </g>
+  <rect x="293" y="65" width="758" height="34" rx="8" fill="#232323"/>
+
+  <!-- Editor focus ring (2px with 1px offset) -->
+  <rect x="291" y="63" width="762" height="526" rx="9" fill="none" stroke="#a7c8ff" stroke-width="2"/>
+
+  <!-- Tabs -->
+  <rect x="308" y="71" width="170" height="22" rx="4" fill="#2b4870" stroke="#929292"/>
+  <text class="ui" x="320" y="86" font-size="12" fill="#f2f6ff">compiler.lisp</text>
+  <rect x="484" y="71" width="142" height="22" rx="4" fill="#1b1b1b" stroke="#4a4a4a"/>
+  <text class="ui t-secondary" x="496" y="86" font-size="12">debugger.lisp</text>
+  <rect x="632" y="71" width="122" height="22" rx="4" fill="#1b1b1b" stroke="#4a4a4a"/>
+  <text class="ui t-secondary" x="644" y="86" font-size="12">repl.lisp</text>
+
+  <!-- Editor code surface -->
+  <rect x="308" y="112" width="728" height="454" rx="4" fill="#0f0f0f" stroke="#4a4a4a"/>
+
+  <!-- Gutter -->
+  <rect x="308" y="112" width="44" height="454" fill="#151515"/>
+  <text class="mono t-muted" x="320" y="138" font-size="12">118</text>
+  <text class="mono t-muted" x="320" y="160" font-size="12">119</text>
+  <text class="mono t-muted" x="320" y="182" font-size="12">120</text>
+  <text class="mono t-muted" x="320" y="204" font-size="12">121</text>
+  <text class="mono t-muted" x="320" y="226" font-size="12">122</text>
+  <text class="mono t-muted" x="320" y="248" font-size="12">123</text>
+  <text class="mono t-muted" x="320" y="270" font-size="12">124</text>
+  <text class="mono t-muted" x="320" y="292" font-size="12">125</text>
+  <text class="mono t-muted" x="320" y="314" font-size="12">126</text>
+
+  <!-- Breakpoint markers and current line -->
+  <circle cx="344" cy="178" r="4" fill="#f06b6b"/>
+  <circle cx="344" cy="244" r="4" fill="#f06b6b"/>
+  <rect x="352" y="166" width="684" height="22" fill="#232323"/>
+
+  <!-- Code text -->
+  <text class="mono t-secondary" x="362" y="138" font-size="13">(defun emit-op (ctx op args)</text>
+  <text class="mono t-secondary" x="362" y="160" font-size="13">  (let* ((frame (current-frame ctx))</text>
+  <text class="mono t-primary" x="362" y="182" font-size="13">         (anchor (resolve-anchor frame op :entry))</text>
+  <text class="mono t-secondary" x="362" y="204" font-size="13">         (result (dispatch-op op args)))</text>
+  <text class="mono t-secondary" x="362" y="226" font-size="13">    (when (debug-enabled-p ctx)</text>
+  <text class="mono t-secondary" x="362" y="248" font-size="13">      (runtime.debugger.breakpoint.upsert</text>
+  <text class="mono t-secondary" x="362" y="270" font-size="13">        :source-ref (source-ref anchor)</text>
+  <text class="mono t-secondary" x="362" y="292" font-size="13">        :requested-anchor :entry))</text>
+  <text class="mono t-secondary" x="362" y="314" font-size="13">    result))</text>
+
+  <!-- Inline status row -->
+  <rect x="362" y="334" width="362" height="24" rx="4" fill="#2b4870" stroke="#929292"/>
+  <text class="ui" x="372" y="350" font-size="12" fill="#f2f6ff">last eval =&gt; #&lt;BREAKPOINT-ACK id:bp-17 resolved:entry&gt;</text>
+
+  <!-- Presentation hints -->
+  <rect x="362" y="366" width="210" height="22" rx="4" fill="#232323" stroke="#4a4a4a"/>
+  <text class="ui t-secondary" x="372" y="381" font-size="12">inspect result (clickable)</text>
+  <rect x="580" y="366" width="188" height="22" rx="4" fill="#232323" stroke="#4a4a4a"/>
+  <text class="ui t-secondary" x="590" y="381" font-size="12">find callers of emit-op</text>
+
+  <!-- Bottom REPL panel -->
+  <g filter="url(#elev2)">
+    <rect x="292" y="596" width="760" height="292" rx="8" fill="#1b1b1b" stroke="#676767"/>
+  </g>
+  <rect x="293" y="597" width="758" height="34" rx="8" fill="#232323"/>
+  <text class="ui t-primary" x="308" y="619" font-size="13" font-weight="600">REPL Transcript</text>
+  <text class="ui t-muted" x="430" y="619" font-size="12">output recording: deterministic</text>
+
+  <rect x="308" y="642" width="728" height="172" rx="4" fill="#0f0f0f" stroke="#4a4a4a"/>
+  <text class="mono t-secondary" x="322" y="664" font-size="12">CL-USER&gt; (compile-file \"compiler.lisp\")</text>
+  <text class="mono t-success" x="322" y="684" font-size="12">; compiled in 182ms (kernel-free lane)</text>
+  <text class="mono t-secondary" x="322" y="706" font-size="12">CL-USER&gt; (emit-op *ctx* 'call '(x y))</text>
+  <text class="mono t-primary" x="322" y="726" font-size="12">#&lt;BREAKPOINT-ACK id:bp-17 status:resolved&gt;   [inspect] [describe] [pin]</text>
+  <text class="mono t-secondary" x="322" y="748" font-size="12">CL-USER&gt; (invoke-restart 'use-value 42)</text>
+  <text class="mono t-error" x="322" y="768" font-size="12">; debugger stop: condition type-error in emit-op</text>
+  <text class="mono t-secondary" x="322" y="790" font-size="12">CL-USER&gt; _</text>
+
+  <rect x="308" y="822" width="728" height="54" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui t-secondary" x="322" y="842" font-size="12">Command context: package CL-USER | frame dbg-21 | target presentation #9842</text>
+  <text class="ui t-muted" x="322" y="860" font-size="12">Defaults inferred: current selection, last result, active frame</text>
+
+  <!-- Right column: Inspector + Debugger -->
+  <g filter="url(#elev2)">
+    <rect x="1064" y="64" width="364" height="402" rx="8" fill="#1b1b1b" stroke="#676767"/>
+  </g>
+  <rect x="1065" y="65" width="362" height="34" rx="8" fill="#232323"/>
+  <text class="ui t-primary" x="1080" y="87" font-size="13" font-weight="600">Inspector</text>
+  <text class="ui t-muted" x="1170" y="87" font-size="12">pivot: #&lt;BREAKPOINT-ACK&gt;</text>
+
+  <rect x="1080" y="112" width="332" height="340" rx="4" fill="#0f0f0f" stroke="#4a4a4a"/>
+  <text class="mono t-secondary" x="1094" y="136" font-size="12">type: BREAKPOINT-ACK</text>
+  <text class="mono t-secondary" x="1094" y="156" font-size="12">id: bp-17</text>
+  <text class="mono t-secondary" x="1094" y="176" font-size="12">resolved-anchor: :entry</text>
+  <text class="mono t-secondary" x="1094" y="196" font-size="12">source-ref: compiler.lisp:120</text>
+
+  <text class="ui t-primary" x="1094" y="228" font-size="12" font-weight="600">Editable Places</text>
+  <rect x="1094" y="238" width="304" height="28" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="mono t-secondary" x="1104" y="256" font-size="12">(slot-value ack 'policy)    :safe</text>
+  <rect x="1094" y="272" width="304" height="28" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="mono t-secondary" x="1104" y="290" font-size="12">(slot-value ack 'enabled)   t</text>
+
+  <rect x="1094" y="316" width="96" height="28" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui t-primary" x="1110" y="334" font-size="12">Stage Edit</text>
+  <rect x="1200" y="316" width="84" height="28" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui t-primary" x="1218" y="334" font-size="12">Apply</text>
+  <rect x="1292" y="316" width="106" height="28" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui t-primary" x="1310" y="334" font-size="12">Undo Group</text>
+
+  <!-- Debugger panel (active, calm, restart-first) -->
+  <g filter="url(#elev3)">
+    <rect x="1064" y="476" width="364" height="412" rx="8" fill="#1b1b1b" stroke="#929292"/>
+  </g>
+  <rect x="1065" y="477" width="362" height="34" rx="8" fill="#232323"/>
+  <text class="ui t-primary" x="1080" y="499" font-size="13" font-weight="600">Debugger</text>
+  <text class="ui t-error" x="1160" y="499" font-size="12">type-error in emit-op</text>
+
+  <rect x="1080" y="520" width="332" height="56" rx="4" fill="#2b4870" stroke="#929292"/>
+  <text class="ui" x="1092" y="542" font-size="12" fill="#f2f6ff">Attempted: runtime.debugger.breakpoint.upsert with stale mapping</text>
+  <text class="ui" x="1092" y="560" font-size="12" fill="#f2f6ff">Recommended restart: re-resolve source revision</text>
+
+  <!-- Restart actions are primary -->
+  <rect x="1080" y="588" width="156" height="30" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui t-primary" x="1093" y="608" font-size="12">Restart: Re-resolve</text>
+  <rect x="1244" y="588" width="168" height="30" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui t-primary" x="1257" y="608" font-size="12">Restart: Use Value 42</text>
+
+  <text class="ui t-primary" x="1080" y="642" font-size="12" font-weight="600">Frames</text>
+  <rect x="1080" y="652" width="332" height="92" rx="4" fill="#0f0f0f" stroke="#4a4a4a"/>
+  <rect x="1088" y="662" width="316" height="24" rx="4" fill="#2b4870" stroke="#929292"/>
+  <text class="mono" x="1098" y="678" font-size="12" fill="#f2f6ff">#0 emit-op (ctx op args)    compiler.lisp:120</text>
+  <text class="mono t-secondary" x="1098" y="700" font-size="12">#1 dispatch-op (...)        runtime.lisp:88</text>
+  <text class="mono t-secondary" x="1098" y="722" font-size="12">#2 command-loop (...)       repl.lisp:211</text>
+
+  <text class="ui t-primary" x="1080" y="766" font-size="12" font-weight="600">Stepper</text>
+  <rect x="1080" y="774" width="332" height="42" rx="4" fill="#0f0f0f" stroke="#4a4a4a"/>
+  <rect x="1090" y="781" width="64" height="28" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui t-primary" x="1108" y="799" font-size="12">Into</text>
+  <rect x="1162" y="781" width="64" height="28" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui t-primary" x="1182" y="799" font-size="12">Over</text>
+  <rect x="1234" y="781" width="64" height="28" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui t-primary" x="1258" y="799" font-size="12">Out</text>
+  <rect x="1306" y="781" width="96" height="28" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui t-primary" x="1321" y="799" font-size="12">Slide Point</text>
+
+  <text class="ui t-muted" x="1080" y="842" font-size="12">Session: dbg-21 | source lane + low-level lane handoff</text>
+  <text class="ui t-muted" x="1080" y="862" font-size="12">In-step REPL enabled with auditable frame actions</text>
+
+  <!-- Command palette overlay (gateway to advanced tools) -->
+  <g filter="url(#elev3)">
+    <rect x="448" y="86" width="544" height="204" rx="8" fill="#1b1b1b" stroke="#929292"/>
+  </g>
+  <rect x="460" y="100" width="520" height="36" rx="4" fill="#0f0f0f" stroke="#a7c8ff" stroke-width="2"/>
+  <text class="ui t-muted" x="474" y="123" font-size="13">&gt; run defun in frame</text>
+
+  <rect x="460" y="146" width="520" height="36" rx="4" fill="#2b4870" stroke="#929292"/>
+  <text class="ui" x="474" y="169" font-size="13" fill="#f2f6ff">runtime.debugger.eval.in-frame   (recommended)</text>
+
+  <rect x="460" y="184" width="520" height="28" rx="4" fill="#1b1b1b" stroke="#4a4a4a"/>
+  <text class="ui t-secondary" x="474" y="202" font-size="12">runtime.debugger.breakpoint.upsert</text>
+
+  <rect x="460" y="214" width="520" height="28" rx="4" fill="#1b1b1b" stroke="#4a4a4a"/>
+  <text class="ui t-secondary" x="474" y="232" font-size="12">inspector.pin-selection</text>
+
+  <rect x="460" y="244" width="520" height="28" rx="4" fill="#1b1b1b" stroke="#4a4a4a"/>
+  <text class="ui t-secondary" x="474" y="262" font-size="12">workspace.restore-worldlet</text>
+</svg>

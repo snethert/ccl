@@ -3,6 +3,19 @@ import assert from "node:assert/strict";
 
 import { runHeadless } from "./browser-runner.mjs";
 
+function summarizeFailure(result) {
+  if (result?.error) {
+    return result.error;
+  }
+  if (result?.uiBundleInfo?.error) {
+    return result.uiBundleInfo.error;
+  }
+  if (result?.wasmUiInfo?.error) {
+    return result.wasmUiInfo.error;
+  }
+  return `Headless harness failed:\n${JSON.stringify(result, null, 2)}`;
+}
+
 test("headless browser harness runs deterministically", async (t) => {
   if (process.env.WEB_UI_ENABLE_BROWSER_TESTS !== "1") {
     t.skip("Set WEB_UI_ENABLE_BROWSER_TESTS=1 to run browser tests");
@@ -13,7 +26,7 @@ test("headless browser harness runs deterministically", async (t) => {
     t.skip(result.reason);
     return;
   }
-  assert.equal(result.ok, true, result.error || "Headless harness failed");
+  assert.equal(result.ok, true, summarizeFailure(result));
   assert.equal(result.snapshotMatch, true);
   assert.equal(result.domOk, true);
   assert.equal(result.domSnapshotMatch, true);
