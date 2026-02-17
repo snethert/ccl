@@ -1,11 +1,11 @@
 # Event Log Ordering and Clock Rules v1
 
 Status: Draft  
-Version: 1.1.0  
+Version: 1.2.0  
 Last updated: 2026-02-16  
 Scope: Deterministic ordering, clock semantics, replay rules, and failure behavior for `web-ui` event logs  
 Depends on: `web-ui/spec/event-log-schema-v1.json`, `web-ui/spec/normative-language-and-conformance-v1.md`, `web-ui/DEV-PLAN.md`  
-Compatibility: `v1.x` preserves ordering and clock semantics; `v1.1+` adds retention and rotation policy without changing replay order semantics.
+Compatibility: `v1.x` preserves ordering and clock semantics; `v1.2+` documents planned coalesced-replay extension rules without changing strict `seq` ordering.
 
 ## 1. Purpose
 
@@ -86,6 +86,16 @@ Rules:
 4. If requested `startSeq` does not exist, the engine MAY start at the first event with `seq > startSeq` only when explicitly configured; otherwise it <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-700BD21460"></a>MUST fail.
 5. Partial replay mode <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-492B28CA1E"></a>MUST be recorded in diagnostics/report output.
 
+## 6.1 Planned Coalesced Replay Rules (Non-blocking)
+
+When a recorder is configured with lossy/coalescing high-rate lanes:
+
+1. Each retained representative event should preserve a stable `coalescing_group_id` for its collapse window.
+2. Replay engines should treat one representative event as authoritative for each `(seq, coalescing_group_id)` pair.
+3. Replay engines should preserve strict `seq` order between coalesced representatives and non-coalesced structural events.
+4. Structural events should not be synthesized, dropped, or reordered by replay to compensate for coalesced high-rate events.
+5. Replay diagnostics should include `coalesced_event_count` and `dropped_event_count` when lossy lanes are present.
+
 ## 7. Retention and Rotation Policy
 
 Default retention profile (`event-log-retention-v1`):
@@ -109,6 +119,7 @@ Retention rules:
 2. For merged multi-source logs, implementations <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-13DFC97A87"></a>MUST normalize into one strictly increasing `seq` stream before replay.
 3. If merge requires deterministic tie-breaking, source order <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-18F26A803C"></a>MUST be fixed by stable source ID lexical order before reassignment.
 4. Randomized handlers <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-16A23C6078"></a>MUST be seeded; seed value <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-621F56AD31"></a>MUST be recorded in the log envelope or replay report.
+5. Planned extension profile: representative-event choice within one coalescing group should use latest-event-by-queue-order tie-break.
 
 ## 9. Failure Semantics
 
@@ -122,6 +133,10 @@ Retention rules:
 | `event-log.partial-range.invalid` | Partial replay range is invalid. | No | Correct range request. |
 | `event-log.retention-config-invalid` | Retention max values are missing/invalid. | No | Provide valid retention limits and restart recorder. |
 | `event-log.retention-write-failed` | Rotation/retention could not persist bounded log state. | Conditional | Repair storage and retry recorder initialization. |
+
+Planned extension failure codes (non-blocking in baseline `v1`):
+
+1. `event-log.coalescing-group-invalid`
 
 ## 10. Compatibility and Migration
 
@@ -138,12 +153,13 @@ Minimum required conformance evidence:
 2. `web-ui/tests/layout.test.mjs`: deterministic snapshot stability under layout mutations.
 3. `web-ui/tests/event-log-buffer.test.mjs`: deterministic sequence retention behavior in ring-buffer mode.
 4. `web-ui/tests/recordings.test.mjs`: monotonic sequence enforcement in recording streams.
+5. `web-ui/tests/bridge-coalescing-determinism.test.mjs`: deterministic ordering under repeated high-volume event selection fixtures.
 
 Pass criteria:
 
 1. Re-running each fixture with identical inputs yields identical snapshot strings and replay outcomes.
 2. No fixture may pass with non-monotonic or duplicate `seq` input.
-3. Any schema violation <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-751B8FFB3C"></a>MUST surface one stable failure code from Section 8.
+3. Any schema violation <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-A93AC6FB5C"></a>MUST surface one stable failure code from Section 9.
 
 ## 12. Conformance
 
@@ -152,4 +168,4 @@ An implementation is conformant only if:
 1. Event ordering is enforced exactly as specified in Section 2.
 2. Clock semantics are enforced per Section 3.
 3. Replay and partial replay behavior satisfy Sections 5-6.
-4. Determinism and failure semantics satisfy Sections 7-8.
+4. Determinism and failure semantics satisfy Sections 8-9.

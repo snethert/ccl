@@ -1,11 +1,11 @@
 # UI Wire Format Events v1
 
 Status: Draft  
-Version: 1.0.0  
+Version: 1.1.0  
 Last updated: 2026-02-17  
 Scope: Binary wire format for UI input event batches returned by `KERNEL_OP_UI_POLL`  
 Depends on: `web-ui/spec/normative-language-and-conformance-v1.md`, `web-ui/bridge/codec.mjs`, `web-ui/bridge/ui-bridge.mjs`, `scripts/wasm/lib/microkernel.mjs`, `doc/wasm/kernel-request-abi.md`  
-Compatibility: `v1.x` preserves batch header/layout, event type IDs, and selection semantics; incompatible wire changes require `v2`.
+Compatibility: `v1.x` preserves batch header/layout, event type IDs, and selection semantics; `v1.1+` documents planned bounded-input/coalescing extensions without changing binary record layout.
 
 ## 1. Purpose
 
@@ -155,6 +155,29 @@ Key flag bits used by the bridge:
 
 For unknown `type_id`, `v1` encoder writes a reserved body of `16` zero bytes.
 
+## 5.10 Planned Coalescing and High-Rate Event Classes (Non-blocking)
+
+Coalescing policy is profile-gated and applies before Section 6 batch selection when the extension profile is enabled.
+
+Event classes:
+
+1. Structural events (expected to be non-coalesced in planned profiles):
+- pointer `down`, `up`, `enter`, `leave`, `cancel`
+- key `keydown`, `keyup`
+- composition `start`, `update`, `end`
+- text input
+- focus/blur
+2. High-rate events (MAY be coalesced):
+- pointer `move`
+- wheel
+
+Coalescing rules:
+
+1. Pointer move coalescing key is `(pointer_id, target_id, window_id, drag_session_id)`.
+2. Wheel coalescing key is `(target_id, window_id, delta_mode, modifiers)`.
+3. If coalesced, the representative event should preserve the latest position/value in queue order.
+4. If coalesced, dropped-event count metadata should be emitted through observability telemetry.
+
 ## 6. Selection and Poll Semantics
 
 The bridge event queue selection <a id="REQ-UI-WIRE-FORMAT-EVENTS-V1-C430C9AF0C"></a>MUST follow this deterministic algorithm:
@@ -170,6 +193,12 @@ The bridge event queue selection <a id="REQ-UI-WIRE-FORMAT-EVENTS-V1-C430C9AF0C"
 5. If the first event alone exceeds `maxBytes`, selection returns `overflow=true` and zero selected events.
 6. If a later event exceeds `maxBytes`, selection stops with current prefix and `overflow=false`.
 
+Planned extension profile notes (non-blocking in baseline `v1`):
+
+1. bounded input queue limits (`inputQueueMaxEvents`, `inputQueueMaxBytes`) are specified in `input-backpressure-and-coalescing-contract-v1.md`.
+2. deterministic high-rate coalescing/drop policy is specified in `input-backpressure-and-coalescing-contract-v1.md`.
+3. saturation telemetry counters are specified in `observability-contract-v1.md`.
+
 `UI_POLL` behavior:
 
 1. Empty queue with `allowPending=true`: return pending.
@@ -182,11 +211,12 @@ The bridge event queue selection <a id="REQ-UI-WIRE-FORMAT-EVENTS-V1-C430C9AF0C"
 2. Batch `event_count` <a id="REQ-UI-WIRE-FORMAT-EVENTS-V1-DBA99D2AAF"></a>MUST equal encoded event record count.
 3. String table index assignment <a id="REQ-UI-WIRE-FORMAT-EVENTS-V1-69D360ECB9"></a>MUST be stable first-seen order.
 4. Encoded event order <a id="REQ-UI-WIRE-FORMAT-EVENTS-V1-B98780F705"></a>MUST match selected queue order.
+5. Planned extension profile: coalescing representative selection should be deterministic for a fixed queue prefix and profile.
 
 ## 8. Security Requirements
 
 1. Event data from DOM/canvas hit-test <a id="REQ-UI-WIRE-FORMAT-EVENTS-V1-028A2239A3"></a>MUST be treated as untrusted until validated by command handlers.
-2. Implementations <a id="REQ-UI-WIRE-FORMAT-EVENTS-V1-BA12FCF0F0"></a>MUST bound batch size via `maxBytes` and/or queue limits.
+2. Implementations <a id="REQ-UI-WIRE-FORMAT-EVENTS-V1-894B660C57"></a>MUST bound batch size via `maxBytes`.
 3. Consumers <a id="REQ-UI-WIRE-FORMAT-EVENTS-V1-701B7DD72C"></a>MUST validate magic/version and buffer bounds before decode.
 4. Producers <a id="REQ-UI-WIRE-FORMAT-EVENTS-V1-D415A36068"></a>MUST not encode host-object references, only primitive lanes.
 
@@ -201,6 +231,11 @@ The bridge event queue selection <a id="REQ-UI-WIRE-FORMAT-EVENTS-V1-C430C9AF0C"
 | `ui-events.service-unavailable` | UI poll service missing (`-ENOSYS`). | No | Install/configure UI service. |
 | `ui-events.invalid-request` | Poll request payload malformed (`-EINVAL`). | No | Send valid poll request fields. |
 
+Planned extension failure codes (non-blocking in baseline `v1`):
+
+1. `ui-events.input-overflow`
+2. `ui-events.backpressure`
+
 ## 10. Conformance Fixtures and Pass Criteria
 
 Minimum required evidence:
@@ -209,12 +244,16 @@ Minimum required evidence:
 2. `web-ui/tests/bridge-microkernel.test.mjs`
 3. `web-ui/tests/browser.test.mjs`
 4. `web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs`
+5. `web-ui/tests/bridge-input-flood.test.mjs`
+6. `web-ui/tests/bridge-coalescing-determinism.test.mjs`
+7. `web-ui/tests/ui-poll-backpressure.test.mjs`
 
 Pass criteria:
 
 1. Encoded batch header and version fields are stable and correct.
 2. Selection honors `maxEvents` and `maxBytes` rules exactly.
 3. Overflow and pending behavior map to expected poll result semantics.
+4. Event ordering remains stable under repeated fixed-input runs.
 
 ## 11. Conformance
 

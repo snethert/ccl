@@ -1109,7 +1109,10 @@ export function createMicrokernel({
           recordRequestError(id, ERRNO.EINVAL);
           break;
         }
-        const capabilityBits = supportsPending ? 0x1 : 0; // bit0: requests may return PENDING
+        // ABI bit mapping (doc/wasm/kernel-request-abi.md):
+        // bit0 pending, bit1 kernel_wait, bit2 shared memory, bit3 zero-copy.
+        // Current baseline runtime advertises only bit0 when pending is supported.
+        const capabilityBits = supportsPending ? 0x1 : 0;
         const caps = encodeCapsResponse({ capabilityBits, maxResponseBytes: 0 });
         recordRequestDone(id, 0, caps);
         break;

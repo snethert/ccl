@@ -55,6 +55,9 @@ LispObj wasm_alloc_cons_bridge(LispObj car_value, LispObj cdr_value);
 __attribute__((import_module("ccl"), import_name("wasm_prepare_entry_call")))
 uint32_t wasm_prepare_entry_call(uint32_t entry_index);
 
+__attribute__((import_module("ccl"), import_name("wasm_get_trace_funcall")))
+uint32_t wasm_get_trace_funcall(void);
+
 void _SPksignalerr(void);
 
 static LispObj wasm_alloc_cons_or_trap(TCR *tcr, LispObj car_value, LispObj cdr_value);
@@ -1685,6 +1688,9 @@ wasm_sync_arg_regs_from_vsp(TCR *tcr)
   }
   LispObj *vsp_ptr = stack_ptr;
 
+  /* ARM convention: arg_z = last (rightmost) parameter.
+     Args are pushed in source order: first arg deepest, last arg on TOS.
+     TOS = vsp_ptr[0] = last arg → arg_z. */
   if (count >= 1) {
     wasm_set_reg(tcr, arg_z, vsp_ptr[0]);
   }
@@ -2121,9 +2127,33 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
       break;
     }
     case WASM_ENTRY_CALL_ABI_LEGACY:
-    default:
+    default: {
+      uint32_t trace_level = wasm_get_trace_funcall();
+      if (trace_level >= 1) {
+        static const char hx[] = "0123456789abcdef";
+        char d[120];
+        int p = 0;
+        /* Level 1: entry index */
+        d[p++]='C'; d[p++]='A'; d[p++]='L'; d[p++]='L'; d[p++]=' ';
+        for (int b=7;b>=0;b--) d[p++]=hx[(entry_index>>(b*4))&0xf];
+        if (trace_level >= 2) {
+          /* Level 2: also print arg registers */
+          d[p++]=' '; d[p++]='z'; d[p++]='=';
+          { LispObj v = wasm_reg(tcr, arg_z);
+            for (int b=7;b>=0;b--) d[p++]=hx[(v>>(b*4))&0xf]; }
+          d[p++]=' '; d[p++]='y'; d[p++]='=';
+          { LispObj v = wasm_reg(tcr, arg_y);
+            for (int b=7;b>=0;b--) d[p++]=hx[(v>>(b*4))&0xf]; }
+          d[p++]=' '; d[p++]='n'; d[p++]='=';
+          { LispObj v = wasm_reg(tcr, nargs);
+            for (int b=7;b>=0;b--) d[p++]=hx[(v>>(b*4))&0xf]; }
+        }
+        d[p++]='\n';
+        wasm_host_log(d, (unsigned)p);
+      }
       wasm_call_entry_index(entry_index);
       break;
+    }
     }
   }
 }
@@ -4893,6 +4923,80 @@ _SPksignalerr(void)
 
   wasm_debug_dump_state("ksignalerr");
 
+  /* Print the name of the undefined function (if arg_z is a symbol) */
+  {
+    LispObj err_arg = wasm_reg(tcr, arg_z);
+    LispObj err_code = wasm_reg(tcr, arg_y);
+    LispObj fname_reg = tcr->wasm_gprs[8]; /* temp1/fname */
+    static const char hex[] = "0123456789abcdef";
+    char msg[128];
+    int p = 0;
+
+    /* Print fname register */
+    msg[p++] = ' '; msg[p++] = ' ';
+    msg[p++] = 'f'; msg[p++] = 'n'; msg[p++] = 'a'; msg[p++] = 'm'; msg[p++] = 'e';
+    msg[p++] = '='; msg[p++] = '0'; msg[p++] = 'x';
+    for (int i = 7; i >= 0; i--) msg[p++] = hex[(fname_reg >> (i*4)) & 0xf];
+    msg[p++] = '\n';
+    wasm_host_log(msg, (unsigned)p);
+
+    /* Try to print symbol pname from arg_z */
+    if (fulltag_of(err_arg) == fulltag_misc) {
+      LispObj hdr = header_of(err_arg);
+      if (header_subtag(hdr) == subtag_symbol) {
+        lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(err_arg));
+        LispObj pname = sym->pname;
+        if (fulltag_of(pname) == fulltag_misc) {
+          LispObj pname_hdr = header_of(pname);
+          if (header_subtag(pname_hdr) == subtag_simple_base_string) {
+            unsigned count = header_element_count(pname_hdr);
+            if (count > 80) count = 80;
+            /* Characters are 32-bit (4 bytes each) on ARM32/WASM */
+            uint32_t *chars32 = (uint32_t *)((char *)ptr_from_lispobj(untag(pname)) + sizeof(LispObj));
+            p = 0;
+            msg[p++] = ' '; msg[p++] = ' '; msg[p++] = 's'; msg[p++] = 'y'; msg[p++] = 'm';
+            msg[p++] = ':'; msg[p++] = ' ';
+            for (unsigned i = 0; i < count && p < 120; i++) msg[p++] = (char)(chars32[i] & 0xff);
+            msg[p++] = '\n';
+            wasm_host_log(msg, (unsigned)p);
+          }
+        }
+        /* Also print the fcell value */
+        LispObj fcell = sym->fcell;
+        p = 0;
+        msg[p++] = ' '; msg[p++] = ' ';
+        msg[p++] = 'f'; msg[p++] = 'c'; msg[p++] = 'e'; msg[p++] = 'l'; msg[p++] = 'l';
+        msg[p++] = '='; msg[p++] = '0'; msg[p++] = 'x';
+        for (int i = 7; i >= 0; i--) msg[p++] = hex[(fcell >> (i*4)) & 0xf];
+        /* If fcell looks like a function, print its entry index */
+        if (fulltag_of(fcell) == fulltag_misc) {
+          LispObj fc_hdr = header_of(fcell);
+          unsigned fc_sub = header_subtag(fc_hdr);
+          if (fc_sub == subtag_function || fc_sub == subtag_pseudofunction) {
+            LispObj entry = deref(fcell, 1);
+            msg[p++] = ' '; msg[p++] = 'e'; msg[p++] = 'n'; msg[p++] = 't'; msg[p++] = '=';
+            msg[p++] = '0'; msg[p++] = 'x';
+            for (int i = 7; i >= 0; i--) msg[p++] = hex[(entry >> (i*4)) & 0xf];
+          }
+        }
+        msg[p++] = '\n';
+        wasm_host_log(msg, (unsigned)p);
+      } else {
+        /* arg_z is misc but not symbol — print subtag */
+        p = 0;
+        msg[p++] = ' '; msg[p++] = ' ';
+        msg[p++] = 'a'; msg[p++] = 'r'; msg[p++] = 'g'; msg[p++] = '_'; msg[p++] = 'z';
+        msg[p++] = ':'; msg[p++] = ' '; msg[p++] = 's'; msg[p++] = 'u'; msg[p++] = 'b';
+        msg[p++] = 't'; msg[p++] = 'a'; msg[p++] = 'g'; msg[p++] = '=';
+        msg[p++] = '0'; msg[p++] = 'x';
+        unsigned st = header_subtag(hdr);
+        for (int i = 1; i >= 0; i--) msg[p++] = hex[(st >> (i*4)) & 0xf];
+        msg[p++] = '\n';
+        wasm_host_log(msg, (unsigned)p);
+      }
+    }
+  }
+
   /*
    * If ERRDISP is unavailable (or recursively faults while signaling),
    * avoid non-terminating self-recursion and surface a pending throw
@@ -4956,6 +5060,26 @@ _SPwasm_udf_stub(void)
   TCR *tcr = wasm_get_current_tcr();
   if (tcr == NULL) {
     wasm_subprims_trap();
+  }
+
+  /* Print the entry index from nfn that led to this UDF stub */
+  {
+    static const char hex[] = "0123456789abcdef";
+    char msg[64];
+    int p = 0;
+    LispObj nfn_val = wasm_reg(tcr, nfn);
+    msg[p++] = 'U'; msg[p++] = 'D'; msg[p++] = 'F'; msg[p++] = ' ';
+    msg[p++] = 'n'; msg[p++] = 'f'; msg[p++] = 'n'; msg[p++] = '=';
+    msg[p++] = '0'; msg[p++] = 'x';
+    for (int i = 7; i >= 0; i--) msg[p++] = hex[(nfn_val >> (i*4)) & 0xf];
+    if (fulltag_of(nfn_val) == fulltag_misc) {
+      LispObj entry = deref(nfn_val, 1);
+      msg[p++] = ' '; msg[p++] = 'e'; msg[p++] = 'n'; msg[p++] = 't'; msg[p++] = '=';
+      msg[p++] = '0'; msg[p++] = 'x';
+      for (int i = 7; i >= 0; i--) msg[p++] = hex[(entry >> (i*4)) & 0xf];
+    }
+    msg[p++] = '\n';
+    wasm_host_log(msg, (unsigned)p);
   }
 
   LispObj name = wasm_error_name_from_tcr(tcr);

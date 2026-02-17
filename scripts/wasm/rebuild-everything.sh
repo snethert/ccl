@@ -227,6 +227,12 @@ fi
 
 run "$ROOT_DIR/scripts/wasm/compile-wasm-fasls.sh" ${COMPILE_ARGS[@]+"${COMPILE_ARGS[@]}"}
 
+# Phase 0A tests — recompile if the script exists
+if [ -f "$ROOT_DIR/scripts/wasm/compile-phase0a-tests.sh" ]; then
+  log "RUN (phase0a tests, non-fatal): scripts/wasm/compile-phase0a-tests.sh"
+  "$ROOT_DIR/scripts/wasm/compile-phase0a-tests.sh" || log "WARN: phase0a test compilation failed (non-fatal)"
+fi
+
 if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
   ROOT_CMD=(
     node --max-old-space-size=8192 "$ROOT_DIR/scripts/wasm/lib/make-real-image.mjs"
@@ -258,3 +264,9 @@ log "Build artifacts location: ${BUILD_DIR#$ROOT_DIR/}"
 
 log "git status (short):"
 git -C "$ROOT_DIR" status --short
+
+# Post-build freshness check
+if [ -f "$ROOT_DIR/scripts/wasm/check-freshness.sh" ]; then
+  log ""
+  "$ROOT_DIR/scripts/wasm/check-freshness.sh" || true
+fi

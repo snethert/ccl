@@ -213,6 +213,10 @@ function resolveBrowserOrder() {
   return order;
 }
 
+function allowLaunchRetries() {
+  return process.env.WEB_UI_BROWSER_RETRY_LAUNCHES === "1";
+}
+
 function withNoSandboxArgs(args) {
   const merged = [...args];
   if (!merged.includes("--no-sandbox")) {
@@ -312,8 +316,9 @@ function buildLaunchSuggestions(errors) {
 
 async function launchPlaywrightBrowser(playwright) {
   const attempts = buildPlaywrightLaunchAttempts(playwright);
+  const effectiveAttempts = allowLaunchRetries() ? attempts : attempts.slice(0, 1);
   const errors = [];
-  for (const attempt of attempts) {
+  for (const attempt of effectiveAttempts) {
     if (!attempt.type) continue;
     try {
       const browser = await attempt.type.launch(attempt.options);
@@ -321,6 +326,11 @@ async function launchPlaywrightBrowser(playwright) {
     } catch (err) {
       errors.push(`${attempt.name}: ${err?.message ?? err}`);
     }
+  }
+  if (!allowLaunchRetries() && attempts.length > 1) {
+    errors.push(
+      "Additional launch attempts were skipped. Set WEB_UI_BROWSER_RETRY_LAUNCHES=1 to re-enable fallback launch attempts."
+    );
   }
   const suggestions = buildLaunchSuggestions(errors);
   const e = new Error(`Playwright launch failed:\n${errors.join("\n")}${suggestions}`);

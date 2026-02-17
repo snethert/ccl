@@ -251,6 +251,12 @@ static uint32_t wasm_subprims_ready = 0;
 static LispObj wasm_last_compiled_modules = 0;
 static volatile uint32_t wasm_boot_phase_state = WASM_BOOT_EARLY;
 
+/* Trace verbosity for funcall dispatch.
+   0 = silent (default)
+   1 = print entry index for LEGACY calls
+   2 = also print arg registers */
+static uint32_t wasm_trace_funcall = 0;
+
 /* Re-entrant guard: when > 0, wasm_intern_startup skips the Lisp INTERN
    path and falls through to C-only synthesis.  This breaks the circular
    dependency where const-pool installation calls INTERN which itself
@@ -321,6 +327,20 @@ uint32_t
 wasm_get_subprims_ready(void)
 {
   return wasm_subprims_ready;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_set_trace_funcall")))
+void
+wasm_set_trace_funcall(uint32_t level)
+{
+  wasm_trace_funcall = level;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_get_trace_funcall")))
+uint32_t
+wasm_get_trace_funcall(void)
+{
+  return wasm_trace_funcall;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_get_lisp_nil")))
@@ -1782,6 +1802,20 @@ wasm_debug_dump_state(const char *label)
   wasm_host_log(buf, (unsigned)p);
 
   wasm_host_log("=== END STATE DUMP ===\n", 23);
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_diag_get_last_cpr_entry")))
+uint32_t
+wasm_diag_get_last_cpr_entry(void)
+{
+  return wasm_diag_last_cpr_entry;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_diag_get_last_cpr_slot")))
+uint32_t
+wasm_diag_get_last_cpr_slot(void)
+{
+  return wasm_diag_last_cpr_slot;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_debug_tcr_offset")))
@@ -3386,9 +3420,11 @@ wasm_test_entry_funcall2(uint32_t entry_index, uint32_t raw_a, uint32_t raw_b)
   tcr->valence = TCR_STATE_LISP;
   tcr->wasm_pending_throw = 0;
 
+  /* Push in source order: first arg (raw_a) first (deep), second (raw_b) on TOS.
+     Matches wasm_funcall_common push order. */
   LispObj *vsp_ptr = saved_vsp;
-  *--vsp_ptr = box_fixnum((signed_natural)raw_b);
   *--vsp_ptr = box_fixnum((signed_natural)raw_a);
+  *--vsp_ptr = box_fixnum((signed_natural)raw_b);
 
   tcr->save_vsp = vsp_ptr;
   tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
@@ -4733,11 +4769,13 @@ wasm_const_pool_install_inner(TCR *tcr, uint32_t entry_index, uint32_t payload_p
     switch (tag) {
       case 6: { /* fixnum */
         if (version >= 2u) {
+          /* Version 2 stores the logical integer value via SLEB32.
+             Must box as a target fixnum (shift left by fixnumshift). */
           uint32_t raw = wasm_const_pool_read_sleb32_raw(bytes, payload_len, &offset, &ok);
           if (!ok) {
             return lisp_nil;
           }
-          pool_data[i] = (LispObj)raw;
+          pool_data[i] = box_fixnum((signed_natural)(int32_t)raw);
         } else {
           uint32_t raw = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
           if (!ok) {

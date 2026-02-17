@@ -1,11 +1,11 @@
 # Performance SLO and Budgets v1
 
 Status: Draft  
-Version: 1.1.0  
+Version: 1.2.0  
 Last updated: 2026-02-16  
 Scope: Normative performance/reliability service-level objectives and budget gates for `web-ui` quality evaluation  
 Depends on: `web-ui/spec/normative-language-and-conformance-v1.md`, `web-ui/src/quality-gates.mjs`, `web-ui/spec/perf-telemetry-sampling-policy-v1.md`  
-Compatibility: `v1.x` preserves budget field names, gate IDs, and percentile semantics; `v1.1+` clarifies UI-turn measurement boundaries and delta-wire expectations without changing existing percentile formulas.
+Compatibility: `v1.x` preserves budget field names, gate IDs, and percentile semantics; `v1.2+` documents planned high-rate input flood/coalescing extension gates without changing baseline formulas.
 
 ## 1. Purpose
 
@@ -116,6 +116,7 @@ The following gate IDs are mandatory in `v1`:
 1. Gate evaluation order <a id="REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-E8F7D3E2B4"></a>MUST be stable and match Section 5 order.
 2. Percentile calculation <a id="REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-7254A90232"></a>MUST be deterministic for identical sample arrays.
 3. Check IDs <a id="REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-F860B79B92"></a>MUST remain stable across `v1.x`.
+4. New gates <a id="REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-9BD279BCB4"></a>MUST be evaluated in Section 5 order after reliability gates.
 
 ## 8. Compatibility and Deprecation
 
@@ -132,6 +133,11 @@ The following gate IDs are mandatory in `v1`:
 | `performance-budget.percentile-input-invalid` | Percentile source data is malformed. | Conditional | Fix telemetry input normalization and re-evaluate. |
 | `performance-budget.report-incomplete` | Required gate IDs absent from report. | No | Regenerate report with full gate set. |
 
+Planned extension failure codes (non-blocking in baseline `v1`):
+
+1. `performance-budget.input-flood-bounded-failed`
+2. `performance-budget.input-coalescing-determinism-failed`
+
 ## 10. Conformance Fixtures and Pass Criteria
 
 Minimum required evidence:
@@ -145,6 +151,14 @@ Pass criteria:
 1. Pass/fail coverage proves every mandatory gate ID in Section 5.
 2. Percentile and reliability checks are deterministic across repeated runs.
 3. Gate report shape and IDs remain stable.
+
+## 10.1 Planned Extension Gates (Non-blocking)
+
+The following gates are planned for staged rollout and are not baseline `v1` blockers:
+
+1. `input-flood-queue-bounded`
+2. `input-flood-drop-budget`
+3. `input-coalescing-deterministic`
 
 ## 11. Conformance
 

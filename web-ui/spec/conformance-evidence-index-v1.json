@@ -1,7 +1,295 @@
 {
   "version": "1.0.0",
-  "generated_at": "2026-02-17T04:39:59.547Z",
+  "generated_at": "2026-02-17T14:15:53.093Z",
   "evidence": [
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-0EAAD95D26",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-0EAAD95D26",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-429281B18E",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-429281B18E",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-433E1065A6",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-433E1065A6",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-4DD5DDF1E2",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-4DD5DDF1E2",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-53FE4D40AD",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-53FE4D40AD",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-5554011232",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-5554011232",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-66F57E719A",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-66F57E719A",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-69B64AE30A",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-69B64AE30A",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-740D6304A2",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-740D6304A2",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-764CB3F93D",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-764CB3F93D",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-D8FB1536F7",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-D8FB1536F7",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-DF1AB1416C",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-DF1AB1416C",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-05786E95CE",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-05786E95CE",
+      "lane_id": "lane.persistence.v1",
+      "command": "node --test ccl/web-ui/tests/persistence.test.mjs ccl/web-ui/tests/phase-1-persistence.test.mjs ccl/web-ui/tests/phase-4-sessions.test.mjs ccl/web-ui/tests/phase-4-restore.test.mjs ccl/web-ui/tests/persistence-conformance-fixtures.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-1EAEEE7832",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-1EAEEE7832",
+      "lane_id": "lane.persistence.v1",
+      "command": "node --test ccl/web-ui/tests/persistence.test.mjs ccl/web-ui/tests/phase-1-persistence.test.mjs ccl/web-ui/tests/phase-4-sessions.test.mjs ccl/web-ui/tests/phase-4-restore.test.mjs ccl/web-ui/tests/persistence-conformance-fixtures.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-1FBBF761C6",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-1FBBF761C6",
+      "lane_id": "lane.persistence.v1",
+      "command": "node --test ccl/web-ui/tests/persistence.test.mjs ccl/web-ui/tests/phase-1-persistence.test.mjs ccl/web-ui/tests/phase-4-sessions.test.mjs ccl/web-ui/tests/phase-4-restore.test.mjs ccl/web-ui/tests/persistence-conformance-fixtures.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-62F86BCC91",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-62F86BCC91",
+      "lane_id": "lane.persistence.v1",
+      "command": "node --test ccl/web-ui/tests/persistence.test.mjs ccl/web-ui/tests/phase-1-persistence.test.mjs ccl/web-ui/tests/phase-4-sessions.test.mjs ccl/web-ui/tests/phase-4-restore.test.mjs ccl/web-ui/tests/persistence-conformance-fixtures.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-63798CE525",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-63798CE525",
+      "lane_id": "lane.persistence.v1",
+      "command": "node --test ccl/web-ui/tests/persistence.test.mjs ccl/web-ui/tests/phase-1-persistence.test.mjs ccl/web-ui/tests/phase-4-sessions.test.mjs ccl/web-ui/tests/phase-4-restore.test.mjs ccl/web-ui/tests/persistence-conformance-fixtures.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-68520C895E",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-68520C895E",
+      "lane_id": "lane.persistence.v1",
+      "command": "node --test ccl/web-ui/tests/persistence.test.mjs ccl/web-ui/tests/phase-1-persistence.test.mjs ccl/web-ui/tests/phase-4-sessions.test.mjs ccl/web-ui/tests/phase-4-restore.test.mjs ccl/web-ui/tests/persistence-conformance-fixtures.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-787264F8B1",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-787264F8B1",
+      "lane_id": "lane.persistence.v1",
+      "command": "node --test ccl/web-ui/tests/persistence.test.mjs ccl/web-ui/tests/phase-1-persistence.test.mjs ccl/web-ui/tests/phase-4-sessions.test.mjs ccl/web-ui/tests/phase-4-restore.test.mjs ccl/web-ui/tests/persistence-conformance-fixtures.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-97343A4AE5",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-97343A4AE5",
+      "lane_id": "lane.persistence.v1",
+      "command": "node --test ccl/web-ui/tests/persistence.test.mjs ccl/web-ui/tests/phase-1-persistence.test.mjs ccl/web-ui/tests/phase-4-sessions.test.mjs ccl/web-ui/tests/phase-4-restore.test.mjs ccl/web-ui/tests/persistence-conformance-fixtures.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-B24D2438DE",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-B24D2438DE",
+      "lane_id": "lane.persistence.v1",
+      "command": "node --test ccl/web-ui/tests/persistence.test.mjs ccl/web-ui/tests/phase-1-persistence.test.mjs ccl/web-ui/tests/phase-4-sessions.test.mjs ccl/web-ui/tests/phase-4-restore.test.mjs ccl/web-ui/tests/persistence-conformance-fixtures.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-C0621FE601",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-C0621FE601",
+      "lane_id": "lane.persistence.v1",
+      "command": "node --test ccl/web-ui/tests/persistence.test.mjs ccl/web-ui/tests/phase-1-persistence.test.mjs ccl/web-ui/tests/phase-4-sessions.test.mjs ccl/web-ui/tests/phase-4-restore.test.mjs ccl/web-ui/tests/persistence-conformance-fixtures.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-CC79BACD67",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-CC79BACD67",
+      "lane_id": "lane.persistence.v1",
+      "command": "node --test ccl/web-ui/tests/persistence.test.mjs ccl/web-ui/tests/phase-1-persistence.test.mjs ccl/web-ui/tests/phase-4-sessions.test.mjs ccl/web-ui/tests/phase-4-restore.test.mjs ccl/web-ui/tests/persistence-conformance-fixtures.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-E0E88B1ABD",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-E0E88B1ABD",
+      "lane_id": "lane.persistence.v1",
+      "command": "node --test ccl/web-ui/tests/persistence.test.mjs ccl/web-ui/tests/phase-1-persistence.test.mjs ccl/web-ui/tests/phase-4-sessions.test.mjs ccl/web-ui/tests/phase-4-restore.test.mjs ccl/web-ui/tests/persistence-conformance-fixtures.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-E68C4BCE0B",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-E68C4BCE0B",
+      "lane_id": "lane.persistence.v1",
+      "command": "node --test ccl/web-ui/tests/persistence.test.mjs ccl/web-ui/tests/phase-1-persistence.test.mjs ccl/web-ui/tests/phase-4-sessions.test.mjs ccl/web-ui/tests/phase-4-restore.test.mjs ccl/web-ui/tests/persistence-conformance-fixtures.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-F9230C30F9",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-F9230C30F9",
+      "lane_id": "lane.persistence.v1",
+      "command": "node --test ccl/web-ui/tests/persistence.test.mjs ccl/web-ui/tests/phase-1-persistence.test.mjs ccl/web-ui/tests/phase-4-sessions.test.mjs ccl/web-ui/tests/phase-4-restore.test.mjs ccl/web-ui/tests/persistence-conformance-fixtures.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-39367FE9D6",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-39367FE9D6",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-461BEF18BF",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-461BEF18BF",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-50080916B5",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-50080916B5",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-6B9A7DEBE7",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-6B9A7DEBE7",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-864460302C",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-864460302C",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-8A4061E003",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-8A4061E003",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-9B103C524A",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-9B103C524A",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-A68BD9E590",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-A68BD9E590",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-A8559617EF",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-A8559617EF",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-C021EA74BA",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-C021EA74BA",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
     {
       "requirement_id": "REQ-CANVAS-BACKEND-CONTRACT-V1-0964E1B178",
       "artifact": "web-ui/spec/canvas-backend-contract-v1.md",
@@ -667,14 +955,6 @@
       "status": "mapped"
     },
     {
-      "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-146A711BBE",
-      "artifact": "web-ui/spec/conformance-gate-profiles-v1.md",
-      "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-146A711BBE",
-      "lane_id": "lane.conformance.lint.v1",
-      "command": "node ccl/web-ui/scripts/lint-conformance.mjs",
-      "status": "mapped"
-    },
-    {
       "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-1AA2E59469",
       "artifact": "web-ui/spec/conformance-gate-profiles-v1.md",
       "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-1AA2E59469",
@@ -691,9 +971,25 @@
       "status": "mapped"
     },
     {
+      "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-21BFB885B5",
+      "artifact": "web-ui/spec/conformance-gate-profiles-v1.md",
+      "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-21BFB885B5",
+      "lane_id": "lane.conformance.lint.v1",
+      "command": "node ccl/web-ui/scripts/lint-conformance.mjs",
+      "status": "mapped"
+    },
+    {
       "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-30280B963E",
       "artifact": "web-ui/spec/conformance-gate-profiles-v1.md",
       "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-30280B963E",
+      "lane_id": "lane.conformance.lint.v1",
+      "command": "node ccl/web-ui/scripts/lint-conformance.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-8B5BC9D3F0",
+      "artifact": "web-ui/spec/conformance-gate-profiles-v1.md",
+      "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-8B5BC9D3F0",
       "lane_id": "lane.conformance.lint.v1",
       "command": "node ccl/web-ui/scripts/lint-conformance.mjs",
       "status": "mapped"
@@ -1827,14 +2123,6 @@
       "status": "mapped"
     },
     {
-      "requirement_id": "REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-751B8FFB3C",
-      "artifact": "web-ui/spec/event-log-ordering-and-clock-rules-v1.md",
-      "anchor": "#REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-751B8FFB3C",
-      "lane_id": "lane.full-runtime.v1",
-      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
-      "status": "mapped"
-    },
-    {
       "requirement_id": "REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-7A6D1142BB",
       "artifact": "web-ui/spec/event-log-ordering-and-clock-rules-v1.md",
       "anchor": "#REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-7A6D1142BB",
@@ -1878,6 +2166,14 @@
       "requirement_id": "REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-A169011002",
       "artifact": "web-ui/spec/event-log-ordering-and-clock-rules-v1.md",
       "anchor": "#REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-A169011002",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-A93AC6FB5C",
+      "artifact": "web-ui/spec/event-log-ordering-and-clock-rules-v1.md",
+      "anchor": "#REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-A93AC6FB5C",
       "lane_id": "lane.full-runtime.v1",
       "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
       "status": "mapped"
@@ -2448,6 +2744,158 @@
       "anchor": "#REQ-INCIDENT-AND-RECOVERY-RUNBOOK-V1-C141694F93",
       "lane_id": "lane.full-runtime.v1",
       "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-01E69A8752",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-01E69A8752",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-07CC1B7F5F",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-07CC1B7F5F",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-1179911820",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-1179911820",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-11B07416BE",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-11B07416BE",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-121BDE9A0B",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-121BDE9A0B",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-1FFD702546",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-1FFD702546",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-23A8A1C137",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-23A8A1C137",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-306BB1843D",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-306BB1843D",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-36505B9F39",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-36505B9F39",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-492428BA03",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-492428BA03",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-52BABAE7E8",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-52BABAE7E8",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-5E7336B8FB",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-5E7336B8FB",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-6D6C661DAC",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-6D6C661DAC",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-A335FC77ED",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-A335FC77ED",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-B14F82370C",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-B14F82370C",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-CB6CD479A6",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-CB6CD479A6",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-CC67419C2D",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-CC67419C2D",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-E082F2BCD2",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-E082F2BCD2",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-F0234081A5",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-F0234081A5",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
       "status": "mapped"
     },
     {
@@ -3798,6 +4246,14 @@
       "requirement_id": "REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-9A92C0B1B2",
       "artifact": "web-ui/spec/performance-slo-and-budgets-v1.md",
       "anchor": "#REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-9A92C0B1B2",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-9BD279BCB4",
+      "artifact": "web-ui/spec/performance-slo-and-budgets-v1.md",
+      "anchor": "#REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-9BD279BCB4",
       "lane_id": "lane.full-runtime.v1",
       "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
       "status": "mapped"
@@ -5875,9 +6331,9 @@
       "status": "mapped"
     },
     {
-      "requirement_id": "REQ-PROTOCOL-VERSION-NEGOTIATION-V1-593CE63620",
+      "requirement_id": "REQ-PROTOCOL-VERSION-NEGOTIATION-V1-26BA1DFE7B",
       "artifact": "web-ui/spec/protocol-version-negotiation-v1.md",
-      "anchor": "#REQ-PROTOCOL-VERSION-NEGOTIATION-V1-593CE63620",
+      "anchor": "#REQ-PROTOCOL-VERSION-NEGOTIATION-V1-26BA1DFE7B",
       "lane_id": "lane.runtime-bridge.v1",
       "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
       "status": "mapped"
@@ -5902,6 +6358,14 @@
       "requirement_id": "REQ-PROTOCOL-VERSION-NEGOTIATION-V1-671D11C945",
       "artifact": "web-ui/spec/protocol-version-negotiation-v1.md",
       "anchor": "#REQ-PROTOCOL-VERSION-NEGOTIATION-V1-671D11C945",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-PROTOCOL-VERSION-NEGOTIATION-V1-6BCD7D1547",
+      "artifact": "web-ui/spec/protocol-version-negotiation-v1.md",
+      "anchor": "#REQ-PROTOCOL-VERSION-NEGOTIATION-V1-6BCD7D1547",
       "lane_id": "lane.runtime-bridge.v1",
       "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
       "status": "mapped"
@@ -5934,14 +6398,6 @@
       "requirement_id": "REQ-PROTOCOL-VERSION-NEGOTIATION-V1-B02655298A",
       "artifact": "web-ui/spec/protocol-version-negotiation-v1.md",
       "anchor": "#REQ-PROTOCOL-VERSION-NEGOTIATION-V1-B02655298A",
-      "lane_id": "lane.runtime-bridge.v1",
-      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
-      "status": "mapped"
-    },
-    {
-      "requirement_id": "REQ-PROTOCOL-VERSION-NEGOTIATION-V1-B167398859",
-      "artifact": "web-ui/spec/protocol-version-negotiation-v1.md",
-      "anchor": "#REQ-PROTOCOL-VERSION-NEGOTIATION-V1-B167398859",
       "lane_id": "lane.runtime-bridge.v1",
       "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
       "status": "mapped"
@@ -6016,6 +6472,86 @@
       "anchor": "#REQ-PROTOCOL-VERSION-NEGOTIATION-V1-F64188A9FF",
       "lane_id": "lane.runtime-bridge.v1",
       "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-13309E0E7B",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-13309E0E7B",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-34EC57B7A6",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-34EC57B7A6",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-416FE9276C",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-416FE9276C",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-84BF0A1F2B",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-84BF0A1F2B",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-8643B64BAC",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-8643B64BAC",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-BABC857DB4",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-BABC857DB4",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-C3C3864601",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-C3C3864601",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-C50287076A",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-C50287076A",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-C839EC3CFD",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-C839EC3CFD",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
+      "status": "mapped"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-DCFD7EDD2E",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-DCFD7EDD2E",
+      "lane_id": "lane.full-runtime.v1",
+      "command": "node ccl/web-ui/scripts/run-kernel-free-tests.mjs",
       "status": "mapped"
     },
     {
@@ -8587,6 +9123,14 @@
       "status": "mapped"
     },
     {
+      "requirement_id": "REQ-UI-WIRE-FORMAT-EVENTS-V1-894B660C57",
+      "artifact": "web-ui/spec/ui-wire-format-events-v1.md",
+      "anchor": "#REQ-UI-WIRE-FORMAT-EVENTS-V1-894B660C57",
+      "lane_id": "lane.runtime-bridge.v1",
+      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
+      "status": "mapped"
+    },
+    {
       "requirement_id": "REQ-UI-WIRE-FORMAT-EVENTS-V1-B278B9ABF4",
       "artifact": "web-ui/spec/ui-wire-format-events-v1.md",
       "anchor": "#REQ-UI-WIRE-FORMAT-EVENTS-V1-B278B9ABF4",
@@ -8598,14 +9142,6 @@
       "requirement_id": "REQ-UI-WIRE-FORMAT-EVENTS-V1-B98780F705",
       "artifact": "web-ui/spec/ui-wire-format-events-v1.md",
       "anchor": "#REQ-UI-WIRE-FORMAT-EVENTS-V1-B98780F705",
-      "lane_id": "lane.runtime-bridge.v1",
-      "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
-      "status": "mapped"
-    },
-    {
-      "requirement_id": "REQ-UI-WIRE-FORMAT-EVENTS-V1-BA12FCF0F0",
-      "artifact": "web-ui/spec/ui-wire-format-events-v1.md",
-      "anchor": "#REQ-UI-WIRE-FORMAT-EVENTS-V1-BA12FCF0F0",
       "lane_id": "lane.runtime-bridge.v1",
       "command": "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs",
       "status": "mapped"

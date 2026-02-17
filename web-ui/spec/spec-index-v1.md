@@ -1,7 +1,7 @@
 # Web UI Spec Index v1
 
 Status: Draft  
-Version: 1.2.0  
+Version: 1.3.0  
 Last updated: 2026-02-17  
 Scope: Canonical registry of `web-ui` normative specification artifacts and conformance profiles  
 Depends on: `web-ui/PRODUCTION-SPEC-GAP-REGISTER.md`  
@@ -109,6 +109,7 @@ Scope rule:
 | Artifact | Class | Notes |
 |---|---|---|
 | `web-ui/spec/persistence-purpose-and-user-contract-v1.md` | `required` | User-facing storage model. |
+| `web-ui/spec/asset-streaming-and-binary-state-contract-v1.md` | `required-planned` | Binary asset lane and structured-state separation contract (staged extension). |
 | `web-ui/spec/persistence-semantic-profile-v1.md` | `required` | Profile and gating semantics. |
 | `web-ui/spec/controlled-reader-contract-v1.md` | `required` | Deterministic controlled-reader profile contract. |
 | `web-ui/spec/persistence-semantic-merge-contract-v1.md` | `required` | Deterministic semantic merge rules. |
@@ -133,6 +134,7 @@ Scope rule:
 | `web-ui/spec/performance-slo-and-budgets-v1.md` | `required` | Interactive/perf SLOs and budgets. |
 | `web-ui/spec/perf-telemetry-sampling-policy-v1.md` | `required` | Sampling and measurement policy. |
 | `web-ui/spec/scale-test-profile-v1.md` | `required` | Scale test profile and gates. |
+| `web-ui/spec/realtime-surface-profile-v1.md` | `required-planned` | Realtime workload class profile and drift/loss constraints (staged extension). |
 
 ### 4.7 Command Surface and Debugger (`full-web-ui-v1`)
 
@@ -154,6 +156,8 @@ Scope rule:
 | Artifact | Class | Notes |
 |---|---|---|
 | `web-ui/spec/runtime-bridge-envelope-v1.md` | `required` | Runtime bridge envelope contract. |
+| `web-ui/spec/bridge-qos-and-lane-contract-v1.md` | `required-planned` | Lane QoS classes, starvation bounds, and contention behavior (staged extension). |
+| `web-ui/spec/input-backpressure-and-coalescing-contract-v1.md` | `required-planned` | High-rate input queue bounds and coalescing policy (staged extension). |
 | `web-ui/spec/ui-wire-format-tree-v1.md` | `required` | Tree payload wire format. |
 | `web-ui/spec/ui-wire-format-tree-delta-v1.md` | `required` | Incremental tree patch wire format. |
 | `web-ui/spec/ui-wire-format-events-v1.md` | `required` | Event payload wire format. |
@@ -164,6 +168,7 @@ Scope rule:
 | Artifact | Class | Notes |
 |---|---|---|
 | `web-ui/spec/security-and-capability-model-v1.md` | `required` | Trust boundary and capability policy. |
+| `web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md` | `required-planned` | Multi-app tenant quotas, enforcement states, and isolation behavior (staged extension). |
 | `web-ui/spec/offline-and-service-worker-contract-v1.md` | `required` | Offline bootstrap and asset caching strategy. |
 | `web-ui/spec/observability-contract-v1.md` | `required` | Logs/metrics/traces contract. |
 | `web-ui/spec/release-compatibility-and-rollout-v1.md` | `required` | Rollout/rollback policy. |

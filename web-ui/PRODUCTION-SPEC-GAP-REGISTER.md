@@ -29,13 +29,25 @@ Design-stage gate note:
 | `web-ui/DEV-PLAN.md` Phase 0 detailed | R3 | Canonical event/snapshot schemas and ordering/diff contracts now exist; ongoing execution quality is tracked by conformance evidence | 1. `web-ui/spec/event-log-schema-v1.json` 2. `web-ui/spec/event-log-ordering-and-clock-rules-v1.md` 3. `web-ui/spec/snapshot-schema-v1.json` 4. `web-ui/spec/snapshot-diff-format-v1.md` |
 | `web-ui/DEV-PLAN.md` Phase 1 detailed | R3 | Canonical state, command, routing, focus/selection, and undo/redo contracts now exist; remaining blockers move to later phases | 1. `web-ui/spec/ui-state-schema-v1.json` 2. `web-ui/spec/command-schema-v1.json` 3. `web-ui/spec/command-routing-algorithm-v1.md` 4. `web-ui/spec/command-undo-redo-contract-v1.md` 5. `web-ui/spec/focus-and-selection-contract-v1.md` |
 | `web-ui/DEV-PLAN.md` Phase 2-6 | R3 | Renderer/backend lifecycle, invalidation, hit-test, text editing parity, and non-DOM accessibility contracts are now formalized; remaining risk is implementation parity depth tracked by conformance fixtures | 1. `web-ui/spec/renderer-backend-contract-v1.md` 2. `web-ui/spec/dom-backend-contract-v1.md` 3. `web-ui/spec/canvas-backend-contract-v1.md` 4. `web-ui/spec/webgl-backend-contract-v1.md` 5. `web-ui/spec/text-editing-contract-v1.md` 6. `web-ui/spec/drag-and-drop-interaction-contract-v1.md` 7. `web-ui/spec/non-dom-accessibility-proxy-contract-v1.md` 8. `web-ui/spec/ui-interaction-window-management-contract-v1.md` |
-| `web-ui/DEV-PLAN.md` Phase 7 (persistence) | R3 | Core contracts plus P0/P1 failure-matrix fixture coverage are now in required conformance lanes; remaining risk is long-run operational parity beyond deterministic fixture envelopes | 1. `web-ui/spec/persistence-purpose-and-user-contract-v1.md` 2. `web-ui/spec/persistence-semantic-profile-v1.md` 3. `web-ui/spec/controlled-reader-contract-v1.md` 4. `web-ui/spec/persistence-semantic-merge-contract-v1.md` 5. `web-ui/spec/persistence-ref-update-protocol-v1.md` 6. `web-ui/spec/persistence-lease-protocol-v1.md` 7. `web-ui/spec/persistence-sync-and-conflict-protocol-v1.md` 8. `web-ui/spec/persistence-storage-backend-matrix-v1.md` 9. `web-ui/spec/persistence-envelope-schema-v1.json` 10. `web-ui/spec/persistence-migration-policy-v1.md` 11. `web-ui/spec/persistence-corruption-recovery-v1.md` 12. `web-ui/spec/persistence-remote-wire-contract-v1.md` 13. `web-ui/spec/persistence-failure-mode-matrix-v1.md` 14. `web-ui/spec/persistence-gc-and-compaction-policy-v1.md` 15. `web-ui/spec/persistence-conformance-fixtures-v1.json` 16. `web-ui/tests/persistence-fault-harness.mjs` 17. `web-ui/tests/persistence-conformance-fixtures.test.mjs` |
-| `web-ui/DEV-PLAN.md` Phase 8 (performance/scale) | R3 | Production SLOs, telemetry sampling policy, and scale acceptance profile are now specified; remaining risk is sustained implementation tuning against these gates | 1. `web-ui/spec/performance-slo-and-budgets-v1.md` 2. `web-ui/spec/perf-telemetry-sampling-policy-v1.md` 3. `web-ui/spec/scale-test-profile-v1.md` |
+| `web-ui/DEV-PLAN.md` Phase 7 (persistence) | R3 | Core contracts plus P0/P1 failure-matrix fixture coverage are now in required conformance lanes; remaining risk is long-run operational parity beyond deterministic fixture envelopes | 1. `web-ui/spec/persistence-purpose-and-user-contract-v1.md` 2. `web-ui/spec/asset-streaming-and-binary-state-contract-v1.md` 3. `web-ui/spec/persistence-semantic-profile-v1.md` 4. `web-ui/spec/controlled-reader-contract-v1.md` 5. `web-ui/spec/persistence-semantic-merge-contract-v1.md` 6. `web-ui/spec/persistence-ref-update-protocol-v1.md` 7. `web-ui/spec/persistence-lease-protocol-v1.md` 8. `web-ui/spec/persistence-sync-and-conflict-protocol-v1.md` 9. `web-ui/spec/persistence-storage-backend-matrix-v1.md` 10. `web-ui/spec/persistence-envelope-schema-v1.json` 11. `web-ui/spec/persistence-migration-policy-v1.md` 12. `web-ui/spec/persistence-corruption-recovery-v1.md` 13. `web-ui/spec/persistence-remote-wire-contract-v1.md` 14. `web-ui/spec/persistence-failure-mode-matrix-v1.md` 15. `web-ui/spec/persistence-gc-and-compaction-policy-v1.md` 16. `web-ui/spec/persistence-conformance-fixtures-v1.json` 17. `web-ui/tests/persistence-fault-harness.mjs` 18. `web-ui/tests/persistence-conformance-fixtures.test.mjs` |
+| `web-ui/DEV-PLAN.md` Phase 8 (performance/scale) | R3 | Production SLOs, telemetry sampling policy, and scale acceptance profile are now specified; remaining risk is sustained implementation tuning against these gates and realtime profile drift budgets | 1. `web-ui/spec/performance-slo-and-budgets-v1.md` 2. `web-ui/spec/perf-telemetry-sampling-policy-v1.md` 3. `web-ui/spec/scale-test-profile-v1.md` 4. `web-ui/spec/realtime-surface-profile-v1.md` |
 | `web-ui/DEV-PLAN.md` Phase 9 (command surface) | R3 | Keybinding precedence/conflict handling, locale, and clipboard history behavior are now formalized; remaining risk is sustained implementation parity against the new conformance gates | 1. `web-ui/spec/keybinding-resolution-contract-v1.md` 2. `web-ui/spec/keymap-localization-and-ime-policy-v1.md` 3. `web-ui/spec/clipboard-interaction-contract-v1.md` 4. `web-ui/spec/i18n-l10n-contract-v1.md` |
 | `web-ui/DEV-PLAN.md` Phase 10 track | R3 | Location-provider abstraction, stepper session lifecycle, and breakpoint policy/degradation behavior are now formalized; remaining risk is implementation parity for full stepper command/event coverage | 1. `web-ui/spec/debug-location-provider-contract-v1.md` 2. `web-ui/spec/debugger-stepper-session-contract-v1.md` 3. `web-ui/spec/debugger-breakpoint-policy-contract-v1.md` |
-| `web-ui/FRONT-END-DEV-PLAN.md` bridge phases | R3 | Runtime envelope, full/delta wire formats, and compatibility negotiation/deprecation policy are now centralized under versioned bridge specs; remaining risk is sustained mixed-version soak validation in implementation lanes | 1. `web-ui/spec/runtime-bridge-envelope-v1.md` 2. `web-ui/spec/ui-wire-format-tree-v1.md` 3. `web-ui/spec/ui-wire-format-tree-delta-v1.md` 4. `web-ui/spec/ui-wire-format-events-v1.md` 5. `web-ui/spec/protocol-version-negotiation-v1.md` |
-| System-level production concerns (cross-cutting) | R3 | Security/capability, offline asset strategy, observability, release compatibility, and incident runbook contracts now exist; remaining risk is sustained implementation parity and operations drill coverage | 1. `web-ui/spec/security-and-capability-model-v1.md` 2. `web-ui/spec/offline-and-service-worker-contract-v1.md` 3. `web-ui/spec/observability-contract-v1.md` 4. `web-ui/spec/release-compatibility-and-rollout-v1.md` 5. `web-ui/spec/incident-and-recovery-runbook-v1.md` |
+| `web-ui/FRONT-END-DEV-PLAN.md` bridge phases | R3 | Runtime envelope, full/delta wire formats, and compatibility negotiation/deprecation policy are now centralized under versioned bridge specs; remaining risk is sustained mixed-version soak validation in implementation lanes and lane contention behavior under flood load | 1. `web-ui/spec/runtime-bridge-envelope-v1.md` 2. `web-ui/spec/bridge-qos-and-lane-contract-v1.md` 3. `web-ui/spec/input-backpressure-and-coalescing-contract-v1.md` 4. `web-ui/spec/ui-wire-format-tree-v1.md` 5. `web-ui/spec/ui-wire-format-tree-delta-v1.md` 6. `web-ui/spec/ui-wire-format-events-v1.md` 7. `web-ui/spec/protocol-version-negotiation-v1.md` |
+| System-level production concerns (cross-cutting) | R3 | Security/capability, offline asset strategy, observability, release compatibility, and incident runbook contracts now exist; remaining risk is sustained implementation parity and operations drill coverage | 1. `web-ui/spec/security-and-capability-model-v1.md` 2. `web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md` 3. `web-ui/spec/offline-and-service-worker-contract-v1.md` 4. `web-ui/spec/observability-contract-v1.md` 5. `web-ui/spec/release-compatibility-and-rollout-v1.md` 6. `web-ui/spec/incident-and-recovery-runbook-v1.md` |
 | System-level production evidence and readiness | R3 | Spec-index required evidence registries and readiness artifacts are tracked as first-class production blockers. | 1. `web-ui/spec/ui-conformance-matrix-v1.md` 2. `web-ui/spec/web-ui-conformance-matrix-v1.md` 3. `web-ui/spec/requirements-index-v1.json` 4. `web-ui/spec/conformance-evidence-index-v1.json` 5. `web-ui/spec/protocol-compatibility-report-v1.md` 6. `web-ui/spec/operational-readiness-review-v1.md` |
+
+## Staged Extension Status (2026-02-17)
+
+The following artifacts are classified as `required-planned` in `web-ui/spec/spec-index-v1.md` and are non-blocking for baseline `full-runtime-v1` gate execution in this remediation wave:
+
+1. `web-ui/spec/input-backpressure-and-coalescing-contract-v1.md`
+2. `web-ui/spec/bridge-qos-and-lane-contract-v1.md`
+3. `web-ui/spec/realtime-surface-profile-v1.md`
+4. `web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md`
+5. `web-ui/spec/asset-streaming-and-binary-state-contract-v1.md`
+
+These staged artifacts remain roadmap requirements for full profile completion, but they are not active blocker gates until runtime support lands.
 
 ## Artifact Requirements (Definition of "Done")
 
@@ -127,6 +139,7 @@ Every required artifact above must satisfy all of the following:
 - [ ] Measurement methodology and sampling policy are documented.
 - [ ] Load/scale test profiles and acceptance thresholds are fixed.
 - [ ] Regression policy defines block/allow thresholds and exception workflow.
+- [ ] Realtime workload profile (`realtime-v1`) defines tick, drift, and loss-marker requirements.
 
 ### G. Runtime Bridge + Wire Protocol
 
@@ -135,6 +148,8 @@ Every required artifact above must satisfy all of the following:
 - [ ] Incremental tree delta wire format is specified and capability-gated.
 - [ ] Protocol negotiation and feature flags are specified.
 - [ ] Compatibility and deprecation policy is explicit for producers/consumers.
+- [ ] Input queue bounds/coalescing policy is specified for high-rate pointer/hover/drag floods.
+- [ ] Lane-level QoS/starvation policy is specified and testable.
 
 ### H. Security + Operations
 
@@ -143,6 +158,7 @@ Every required artifact above must satisfy all of the following:
 - [ ] Offline bootstrap and asset-cache strategy is explicitly specified.
 - [ ] Observability contract defines required telemetry and PII constraints.
 - [ ] Rollout/canary/rollback and incident runbook are documented and tested.
+- [ ] Multi-tenant app quota/isolation and kill-switch semantics are specified.
 
 ### I. Product UX Contracts
 
@@ -150,38 +166,58 @@ Every required artifact above must satisfy all of the following:
 - [ ] Theme override contract defines user/workspace overrides and conformance interaction.
 - [ ] I18N/L10N contract defines resource-key externalization, fallback, and locale-sensitive formatting.
 
+### J. Ecosystem Scaling + Realtime
+
+- [ ] High-rate input backpressure profile is normative and capability-gated.
+- [ ] Cross-lane contention behavior is normative with starvation pass criteria.
+- [ ] Binary asset streaming/state separation is normative for large-app workloads.
+- [ ] Realtime profile defines clock/tick drift handling and deterministic lossy replay markers.
+
 ## Final Production Gate (Auto-derived)
 
 This section is generated by `web-ui/scripts/generate-production-gate-status.mjs`.
 Manual checkbox edits are non-authoritative and must not be used for release decisions.
 
 <!-- AUTO-GENERATED-GATE-STATUS:START -->
-Generated at: 2026-02-17T04:52:48.036Z (UTC)
+Generated at: 2026-02-17T14:15:49.469Z (UTC)
 
 | Signal | Value |
 |---|---:|
-| Requirements indexed | 1143 |
-| Evidence mappings | 1143 |
-| Requirement artifacts | 60 |
+| Requirements indexed | 1210 |
+| Evidence mappings | 1210 |
+| Requirement artifacts | 65 |
 | Unmapped requirements | 0 |
 | Stale evidence entries | 0 |
 
 | Gate ID | Claim scopes | Severity | Result | Duration (s) | Command |
 |---|---|---|---|---:|---|
-| `gate.conformance.lint.v1` | `full-runtime-v1` | `blocker` | `pass` | 0.20 | `node scripts/lint-conformance.mjs --json` |
-| `gate.tests.fast.v1` | `full-runtime-v1` | `blocker` | `pass` | 0.70 | `npm run -s test:gate:fast` |
-| `gate.runtime.bridge.v1` | `full-runtime-v1` | `blocker` | `pass` | 0.38 | `node --test tests/bridge-microkernel.test.mjs tests/phase-5-runtime-output.test.mjs tests/phase-5-runtime-command-roundtrip.test.mjs tests/phase-5-runtime-command-dispatch.test.mjs tests/phase-5-runtime-inspector-integration.test.mjs tests/phase-5-runtime-restart-invoke.test.mjs` |
-| `gate.browser.render-only.v1` | `full-runtime-v1` | `blocker` | `pass` | 1.50 | `npm run -s test:browser:render` |
+| `gate.conformance.lint.v1` | `full-runtime-v1` | `blocker` | `pass` | 0.22 | `node scripts/lint-conformance.mjs --json` |
+| `gate.tests.fast.v1` | `full-runtime-v1` | `blocker` | `pass` | 0.61 | `npm run -s test:gate:fast` |
+| `gate.runtime.bridge.v1` | `full-runtime-v1` | `blocker` | `pass` | 0.39 | `node --test tests/bridge-microkernel.test.mjs tests/phase-5-runtime-output.test.mjs tests/phase-5-runtime-command-roundtrip.test.mjs tests/phase-5-runtime-command-dispatch.test.mjs tests/phase-5-runtime-inspector-integration.test.mjs tests/phase-5-runtime-restart-invoke.test.mjs` |
+| `gate.browser.render-only.v1` | `full-runtime-v1` | `blocker` | `pass` | 2.56 | `npm run -s test:browser:render` |
 | `gate.browser.kernel-preflight.v1` | `full-runtime-v1` | `blocker` | `fail` | 0.38 | `npm run -s test:browser:kernel-preflight` |
-| `gate.browser.kernel-smoke.v1` | `full-runtime-v1` | `blocker` | `fail` | 1.46 | `npm run -s test:browser` |
+| `gate.browser.kernel-smoke.v1` | `full-runtime-v1` | `blocker` | `pass` | 2.57 | `npm run -s test:browser` |
 
 | Claim scope | Verdict | Blocking failures |
 |---|---|---|
-| `full-runtime-v1` | `blocked` | `gate.browser.kernel-preflight.v1`, `gate.browser.kernel-smoke.v1` |
+| `full-runtime-v1` | `blocked` | `gate.browser.kernel-preflight.v1` |
 <!-- AUTO-GENERATED-GATE-STATUS:END -->
 
 ## Progress Notes
 
+- 2026-02-17: Added scaling/realtime extension contracts and first-wave flood/backpressure updates:
+- `web-ui/spec/input-backpressure-and-coalescing-contract-v1.md`
+- `web-ui/spec/bridge-qos-and-lane-contract-v1.md`
+- `web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md`
+- `web-ui/spec/realtime-surface-profile-v1.md`
+- `web-ui/spec/asset-streaming-and-binary-state-contract-v1.md`
+- Updated first-wave existing specs for bounded input + coalescing determinism:
+- `web-ui/spec/ui-wire-format-events-v1.md`
+- `web-ui/spec/protocol-version-negotiation-v1.md`
+- `web-ui/spec/event-log-ordering-and-clock-rules-v1.md`
+- `web-ui/spec/performance-slo-and-budgets-v1.md`
+- `web-ui/spec/conformance-gate-profiles-v1.md`
+- `web-ui/spec/observability-contract-v1.md`
 - 2026-02-17: Integrated all `DESIGN-REVIEW-2026-02-16.md` findings into plan/spec tracking, including:
 - startup-gate scope narrowed to `full-runtime-v1` only (non-SAB/non-thread startup modes intentionally unsupported),
 - command undo/redo contract,

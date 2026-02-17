@@ -228,6 +228,37 @@ if (failed) {
   fail(`test modules failed during install: ${failed}`);
 }
 
+// ── Staleness check ─────────────────────────────────────────────────
+// Warn if key artifacts are out of sync (kernel/subprims newer than test bundle)
+
+{
+  const { statSync } = await import("node:fs");
+  const checkFiles = [
+    { label: "kernel", path: fileURLToPath(kernelUrl) },
+    { label: "subprims", path: fileURLToPath(subprimsUrl) },
+  ];
+  const bundlePath = fileURLToPath(bundleUrl);
+  try {
+    const bundleMtime = statSync(bundlePath).mtimeMs;
+    const stale = checkFiles.filter((f) => {
+      try {
+        return statSync(f.path).mtimeMs > bundleMtime;
+      } catch {
+        return false;
+      }
+    });
+    if (stale.length > 0) {
+      const names = stale.map((s) => s.label).join(", ");
+      console.error(
+        `\n⚠️  STALE TEST MODULES: ${names} newer than test bundle.` +
+          `\n   Results may be unreliable. Run: scripts/wasm/compile-phase0a-tests.sh\n`,
+      );
+    }
+  } catch {
+    // Ignore stat errors
+  }
+}
+
 // ── Run tests ────────────────────────────────────────────────────────
 
 const kernelExports = kernel.instance.exports;

@@ -4351,34 +4351,48 @@
 
 (defun wasm2-arg-prologue-ir ()
   (unless *wasm2-use-arg-regs*
+    (let* ((nargs (length (wasm2-simple-arglist *wasm2-cur-afunc*))))
+      (wasm2-with-ir
+        (lambda ()
+          (dolist (var (afunc-all-vars *wasm2-cur-afunc*))
+            (when (and (wasm2-var-live-p var)
+                       (not (wasm2-var-closed-p var))
+                       (or (wasm2-arg0-var-name-p var)
+                           (wasm2-arg1-var-name-p var)))
+              (let* ((idx (wasm2-ensure-local var)))
+                ;; ARM convention: arg_z = last (rightmost) param.
+                ;; 1-arg: only param -> arg_z
+                ;; 2-arg: first param -> arg_y, second/last param -> arg_z
+                (cond
+                  ((= nargs 1)
+                   (wasm2-emit :arg0))              ; sole param from arg_z
+                  ((wasm2-arg0-var-name-p var)
+                   (wasm2-emit :arg1))              ; first param from arg_y
+                  (t
+                   (wasm2-emit :arg0)))             ; last param from arg_z
+                (wasm2-emit :local.set idx)))))))))
+
+(defun wasm2-closed-arg-prologue-ir ()
+  (let* ((nargs (length (wasm2-simple-arglist *wasm2-cur-afunc*))))
     (wasm2-with-ir
       (lambda ()
         (dolist (var (afunc-all-vars *wasm2-cur-afunc*))
-          (when (and (wasm2-var-live-p var)
-                     (not (wasm2-var-closed-p var))
-                     (or (wasm2-arg0-var-name-p var)
-                         (wasm2-arg1-var-name-p var)))
-            (let* ((idx (wasm2-ensure-local var)))
-              (if (wasm2-arg0-var-name-p var)
-                (wasm2-emit :arg0)
-                (wasm2-emit :arg1))
-              (wasm2-emit :local.set idx))))))))
-
-(defun wasm2-closed-arg-prologue-ir ()
-  (wasm2-with-ir
-    (lambda ()
-      (dolist (var (afunc-all-vars *wasm2-cur-afunc*))
-        (when (wasm2-var-closed-p var)
-          (cond
-            ((wasm2-arg0-var-name-p var)
-             (wasm2-emit :arg0))
-            ((wasm2-arg1-var-name-p var)
-             (wasm2-emit :arg1))
-            (t
-             (setf var nil)))
+          (when (wasm2-var-closed-p var)
+            (cond
+              ;; ARM convention: arg_z = last param.
+              ;; 1-arg: only param -> arg_z
+              ;; 2-arg: first param -> arg_y, second/last param -> arg_z
+              ((and (= nargs 1) (wasm2-arg0-var-name-p var))
+               (wasm2-emit :arg0))
+              ((wasm2-arg0-var-name-p var)
+               (wasm2-emit :arg1))              ; first param from arg_y
+              ((wasm2-arg1-var-name-p var)
+               (wasm2-emit :arg0))              ; last param from arg_z
+              (t
+               (setf var nil)))
           (when var
             (wasm2-emit-make-closed-var-cell-from-stack)
-            (wasm2-emit :local.set (wasm2-ensure-local var))))))))
+            (wasm2-emit :local.set (wasm2-ensure-local var)))))))))
 
 (defun wasm2-emit-constant-return (value)
   (wasm2-emit-const value)

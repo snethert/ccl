@@ -99,6 +99,27 @@ function resolveCommandReferencePath(token) {
   return null;
 }
 
+function resolveEvidenceReferencePath(token) {
+  if (token.startsWith("ccl/web-ui/")) {
+    return path.join(workspaceRoot, token);
+  }
+  if (token.startsWith("web-ui/")) {
+    return path.join(cclRoot, token);
+  }
+  if (
+    token.startsWith("scripts/") ||
+    token.startsWith("doc/") ||
+    token.startsWith("lisp-kernel/") ||
+    token.startsWith("build/")
+  ) {
+    return path.join(cclRoot, token);
+  }
+  if (token.startsWith("tests/") || token.startsWith("spec/")) {
+    return path.join(webUiRoot, token);
+  }
+  return null;
+}
+
 function loadJsonDocument(filePath, errors) {
   try {
     return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -511,6 +532,165 @@ function parseSpecIndexRequiredArtifacts(errors) {
   return { required, informational };
 }
 
+function collectActiveGateCommands(errors) {
+  const gateSpecPath = path.join(specDir, "conformance-gate-profiles-v1.md");
+  const artifact = "web-ui/spec/conformance-gate-profiles-v1.md";
+  if (!fs.existsSync(gateSpecPath)) {
+    errors.push({
+      code: "conformance.gate-spec-missing",
+      message: "conformance-gate-profiles-v1.md not found; cannot validate active gate command references.",
+      path: artifact
+    });
+    return [];
+  }
+
+  const lines = fs.readFileSync(gateSpecPath, "utf8").split(/\r?\n/);
+  const activeHeadingIndex = lines.findIndex((line) =>
+    /^##\s+3(?:\.\d+)?\.?\s+Active Gate Catalog/i.test(line) ||
+    /^##\s+3(?:\.\d+)?\.?\s+Gate Catalog/i.test(line)
+  );
+  if (activeHeadingIndex === -1) {
+    errors.push({
+      code: "conformance.gate-spec-active-section-missing",
+      message: "Could not locate Section 3 active gate catalog heading.",
+      path: artifact
+    });
+    return [];
+  }
+
+  const rows = [];
+  for (let i = activeHeadingIndex + 1; i < lines.length; i += 1) {
+    const line = lines[i];
+    if (/^##\s+/.test(line)) {
+      break;
+    }
+    const rowMatch = line.match(/^\|\s*`([^`]+)`\s*\|\s*`([^`]+)`\s*\|/);
+    if (!rowMatch) {
+      continue;
+    }
+    if (rowMatch[1] === "Gate ID") {
+      continue;
+    }
+    rows.push({
+      gateId: rowMatch[1],
+      command: rowMatch[2],
+      line: i + 1
+    });
+  }
+
+  if (rows.length === 0) {
+    errors.push({
+      code: "conformance.gate-spec-active-rows-missing",
+      message: "Section 3 active gate catalog contains no gate rows.",
+      path: artifact
+    });
+  }
+
+  return rows;
+}
+
+function lintActiveGateCommandReferences(errors) {
+  const activeGates = collectActiveGateCommands(errors);
+  for (const gate of activeGates) {
+    const refs = extractCommandFileReferences(gate.command);
+    for (const token of refs) {
+      const resolvedPath = resolveCommandReferencePath(token);
+      if (!resolvedPath) {
+        continue;
+      }
+      if (!fs.existsSync(resolvedPath)) {
+        errors.push({
+          code: "conformance.gate-command-reference-missing",
+          message: `Active gate ${gate.gateId} command references missing path ${token}.`,
+          path: "web-ui/spec/conformance-gate-profiles-v1.md",
+          line: gate.line
+        });
+      }
+    }
+  }
+}
+
+function extractMinimumEvidenceReferences(artifactPath) {
+  const references = [];
+  const lines = fs.readFileSync(artifactPath, "utf8").split(/\r?\n/);
+  const minimumEvidenceRegex = /^\s*Minimum required(?: conformance)? evidence:/i;
+
+  for (let i = 0; i < lines.length; i += 1) {
+    if (!minimumEvidenceRegex.test(lines[i])) {
+      continue;
+    }
+
+    let foundList = false;
+    for (let j = i + 1; j < lines.length; j += 1) {
+      const line = lines[j];
+      if (/^##\s+/.test(line)) {
+        break;
+      }
+      if (!foundList && line.trim().length === 0) {
+        continue;
+      }
+
+      const listMatch = line.match(/^\s*\d+\.\s+/);
+      if (!listMatch) {
+        if (foundList) {
+          break;
+        }
+        continue;
+      }
+      foundList = true;
+
+      const pathMatch = line.match(/`([^`]+)`/);
+      if (!pathMatch) {
+        continue;
+      }
+      references.push({
+        token: pathMatch[1],
+        line: j + 1
+      });
+    }
+  }
+
+  return references;
+}
+
+function lintMinimumEvidenceReferences({ specIndexArtifacts, errors }) {
+  for (const artifactEntry of specIndexArtifacts) {
+    if (artifactEntry.class !== "required") {
+      continue;
+    }
+    if (!artifactEntry.path.startsWith("web-ui/spec/") || !artifactEntry.path.endsWith("-v1.md")) {
+      continue;
+    }
+
+    const absolutePath = path.join(cclRoot, artifactEntry.path);
+    if (!fs.existsSync(absolutePath)) {
+      continue;
+    }
+
+    const references = extractMinimumEvidenceReferences(absolutePath);
+    for (const reference of references) {
+      const resolvedPath = resolveEvidenceReferencePath(reference.token);
+      if (!resolvedPath) {
+        errors.push({
+          code: "conformance.minimum-evidence-reference-unresolvable",
+          message: `Minimum required evidence path ${reference.token} could not be resolved.`,
+          path: artifactEntry.path,
+          line: reference.line
+        });
+        continue;
+      }
+      if (!fs.existsSync(resolvedPath)) {
+        errors.push({
+          code: "conformance.minimum-evidence-reference-missing",
+          message: `Minimum required evidence path ${reference.token} does not exist on disk.`,
+          path: artifactEntry.path,
+          line: reference.line
+        });
+      }
+    }
+  }
+}
+
 function lintSpecIndexArtifactExistence({ specIndexArtifacts, errors }) {
   for (const entry of specIndexArtifacts) {
     const absolutePath = path.join(cclRoot, entry.path);
@@ -637,6 +817,8 @@ function main() {
   lintErrorCodeNamespaces(errors);
 
   const { required: specIndexArtifacts, informational: informationalPaths } = parseSpecIndexRequiredArtifacts(errors);
+  lintActiveGateCommandReferences(errors);
+  lintMinimumEvidenceReferences({ specIndexArtifacts, errors });
   lintSpecIndexArtifactExistence({ specIndexArtifacts, errors });
   lintArtifactMetadata({ informationalPaths, errors });
   lintRequiredSections({ informationalPaths, errors });

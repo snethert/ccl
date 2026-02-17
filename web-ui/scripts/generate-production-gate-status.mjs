@@ -14,6 +14,8 @@ const evidencePath = path.join(specRoot, "conformance-evidence-index-v1.json");
 const START_MARKER = "<!-- AUTO-GENERATED-GATE-STATUS:START -->";
 const END_MARKER = "<!-- AUTO-GENERATED-GATE-STATUS:END -->";
 
+// Keep this list in lockstep with the active blocker table in:
+// web-ui/spec/conformance-gate-profiles-v1.md (Section 3).
 const GATE_DEFINITIONS = [
   {
     gate_id: "gate.conformance.lint.v1",

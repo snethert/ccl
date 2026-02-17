@@ -983,6 +983,13 @@ trace("boot image loaded");
 if (typeof ex.wasm_set_subprims_ready === "function") {
   ex.wasm_set_subprims_ready(1);
 }
+/* Enable funcall tracing when CCL_WASM_TRACE is set.
+   Level 1: entry index for each LEGACY call.
+   Level 2: also print arg registers (very verbose). */
+if (traceEnabled && typeof ex.wasm_set_trace_funcall === "function") {
+  const traceLevel = parseInt(process.env.CCL_WASM_TRACE_FUNCALL ?? "1", 10);
+  ex.wasm_set_trace_funcall(traceLevel > 0 ? traceLevel : 1);
+}
 if (typeof ex.wasm_restore_lisp_pointers !== "function") {
   fail("kernel missing wasm_restore_lisp_pointers");
 }

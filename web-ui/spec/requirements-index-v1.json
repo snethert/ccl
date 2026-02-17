@@ -1,7 +1,295 @@
 {
   "version": "1.0.0",
-  "generated_at": "2026-02-17T04:39:59.546Z",
+  "generated_at": "2026-02-17T14:15:53.092Z",
   "requirements": [
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-0EAAD95D26",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-0EAAD95D26",
+      "text_hash": "3e3c2360ca6d2fb77751dd705dc23cdcd731c58c3f215c1240c82cf222d2a34a",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-429281B18E",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-429281B18E",
+      "text_hash": "6a1f736fc072255c08df302492aeb2f9f25361f3d64019a96dd850ff3391d5e8",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-433E1065A6",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-433E1065A6",
+      "text_hash": "691d448fa056791a2ca28079969df118c048c9360c0a9dcd576fc7281761e68b",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-4DD5DDF1E2",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-4DD5DDF1E2",
+      "text_hash": "3f287c8c3abbda10ef094e838391201aa252d28e375cc89e14e52df962c5462d",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-53FE4D40AD",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-53FE4D40AD",
+      "text_hash": "98cfef415e47f53e588baf7e97b7e933dc69e18cadb96655393f49dd04c1773f",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-5554011232",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-5554011232",
+      "text_hash": "2e7b757246d67672382919f73d4bc605a707022945196906893c1300c0ba19e0",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-66F57E719A",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-66F57E719A",
+      "text_hash": "32372f075efb439573d7eadb11075625610f32919c261b9e1e37aca23cab7f73",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-69B64AE30A",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-69B64AE30A",
+      "text_hash": "81defaf005fd9044577574b9b2aa6e662c644abe9fb5c585749d095dc2b5faf9",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-740D6304A2",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-740D6304A2",
+      "text_hash": "abb189e8ef2b6ced2924a4613c8a8f58175d6a0cb2a58aca1ce245fbd7bf97b6",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-764CB3F93D",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-764CB3F93D",
+      "text_hash": "5682ff24be654ba719a539d9cb77cbc6ce3a39ed70cf39223df1d2c97e02bb75",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-D8FB1536F7",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-D8FB1536F7",
+      "text_hash": "9823b0ac3d1bfd1906055e695c4b9e2caa068bfac02a17f08491c84d6a4875f3",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-DF1AB1416C",
+      "artifact": "web-ui/spec/app-tenant-isolation-and-quotas-contract-v1.md",
+      "anchor": "#REQ-APP-TENANT-ISOLATION-AND-QUOTAS-CONTRACT-V1-DF1AB1416C",
+      "text_hash": "1a99a814d0b859a75af112894af82cbfca03ca10179cede3f629c2ebadac4c01",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-05786E95CE",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-05786E95CE",
+      "text_hash": "afe5832677ebce02fe7417dacc59d61cfdc8965aa24edbdb94af69d234a189c6",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-1EAEEE7832",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-1EAEEE7832",
+      "text_hash": "9ee1feb19a57bd9880a36bc53f43e5c414063a2c803ed5d45f7e4983b6f01a43",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-1FBBF761C6",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-1FBBF761C6",
+      "text_hash": "d1b68527513d731bd2984a4c05427a730af901529093947a126e6d279435607b",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-62F86BCC91",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-62F86BCC91",
+      "text_hash": "291379bcc6f8489ce0e28dc8c7e1b8702a7a2b0f4a8987e74f447849367bfefb",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-63798CE525",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-63798CE525",
+      "text_hash": "895430e4aca5ee6dda594cb53263907bf7c98cb41f20228566d7bcf54749e295",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-68520C895E",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-68520C895E",
+      "text_hash": "9ad1e084eab03a35a5a6f9263629f23aff306f2ea9a054d937e995fdb20cc066",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-787264F8B1",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-787264F8B1",
+      "text_hash": "95bcf951c4647afef12b314f8be3ae5454a2d6be23555ba6551bf6f51371fc82",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-97343A4AE5",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-97343A4AE5",
+      "text_hash": "315926e1cfcda777d16a249fae5a46c03e9690f647684071c381917e0fcfdc78",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-B24D2438DE",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-B24D2438DE",
+      "text_hash": "1fbdb05bb4bd1466679a7e3fb7808b2fa66ca2de514adbe9d020cc4e1eb556b1",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-C0621FE601",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-C0621FE601",
+      "text_hash": "ed912a24c0e459b9600a52cd62fb101bd2029ce6cb2c509377fb81a618e6bce6",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-CC79BACD67",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-CC79BACD67",
+      "text_hash": "d12291b2bd3fcaa2d04d2accce0f44406182127c006998615e5be80e9e1f6de0",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-E0E88B1ABD",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-E0E88B1ABD",
+      "text_hash": "4f298c48ce2adb6b08053cb1192bf17ae436c287af5bfa41d11db04fd3fd6e12",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-E68C4BCE0B",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-E68C4BCE0B",
+      "text_hash": "45e13aa6477404ae56013778c6fc291b796f0f6515d38a9b080c6ae5b82e3673",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-F9230C30F9",
+      "artifact": "web-ui/spec/asset-streaming-and-binary-state-contract-v1.md",
+      "anchor": "#REQ-ASSET-STREAMING-AND-BINARY-STATE-CONTRACT-V1-F9230C30F9",
+      "text_hash": "8271342937d36c29bdba7f55551efc29bf62f3c3ef113a6aa7c699a6ebb73064",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-39367FE9D6",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-39367FE9D6",
+      "text_hash": "fa703fb0228e37becec726314ba97f9122c6e9978f5f5a7f0668fce5e9fd70d2",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-461BEF18BF",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-461BEF18BF",
+      "text_hash": "47e01060f042beb550274bf672998c61ce58c2b3da0acda09eba6cb389517f68",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-50080916B5",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-50080916B5",
+      "text_hash": "b87684125e6cf8def975ca3159853ce73016425cbc79247f141840ee1f980397",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-6B9A7DEBE7",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-6B9A7DEBE7",
+      "text_hash": "ac095a87b5cd26a92f4f52145ed22aa2cc4c9b571efa4061ff7fcc7938b8a260",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-864460302C",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-864460302C",
+      "text_hash": "325eed2f8f3a874cae1041a14f48f88563c5e5e40e4befbc50e39ea22662a7bf",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-8A4061E003",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-8A4061E003",
+      "text_hash": "d703b9a69b3c172588d5798634d60cd6426a22381b5ebfd2f43f5cc46d9dd26f",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-9B103C524A",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-9B103C524A",
+      "text_hash": "b47de5d1a8ff3df236ef710234851503842405e3e1c782ad340961c0c4461b87",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-A68BD9E590",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-A68BD9E590",
+      "text_hash": "323658d3593aed644e90275f0deaac16f007a25f9af329b0129654cd60dd0daf",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-A8559617EF",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-A8559617EF",
+      "text_hash": "4e88147c2fa5b3da7db355c0d8ad0b87a6c20dced9ae22da03b4a8606fbbec24",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-C021EA74BA",
+      "artifact": "web-ui/spec/bridge-qos-and-lane-contract-v1.md",
+      "anchor": "#REQ-BRIDGE-QOS-AND-LANE-CONTRACT-V1-C021EA74BA",
+      "text_hash": "7e6d11060fec6fc94b926d63bbc9d209456c29cfaf29fe3d861d6f1c8609803c",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
     {
       "requirement_id": "REQ-CANVAS-BACKEND-CONTRACT-V1-0964E1B178",
       "artifact": "web-ui/spec/canvas-backend-contract-v1.md",
@@ -667,14 +955,6 @@
       "status": "draft"
     },
     {
-      "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-146A711BBE",
-      "artifact": "web-ui/spec/conformance-gate-profiles-v1.md",
-      "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-146A711BBE",
-      "text_hash": "e8721f0783014281f2ca26c7df6d315fb31d05a795c3eb00af9dd204bb532278",
-      "profile": "governance-base-v1",
-      "status": "draft"
-    },
-    {
       "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-1AA2E59469",
       "artifact": "web-ui/spec/conformance-gate-profiles-v1.md",
       "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-1AA2E59469",
@@ -691,10 +971,26 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-21BFB885B5",
+      "artifact": "web-ui/spec/conformance-gate-profiles-v1.md",
+      "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-21BFB885B5",
+      "text_hash": "6d3bb3ad9900f05cd1001eb3464b0d33855c09a7af1d5a5f69bfdb1ca402ff06",
+      "profile": "governance-base-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-30280B963E",
       "artifact": "web-ui/spec/conformance-gate-profiles-v1.md",
       "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-30280B963E",
       "text_hash": "0f98bfbea3781d48abe2938e399db9dcbd904d8bb33b57aacfcb38ba0eae70fd",
+      "profile": "governance-base-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-8B5BC9D3F0",
+      "artifact": "web-ui/spec/conformance-gate-profiles-v1.md",
+      "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-8B5BC9D3F0",
+      "text_hash": "f9272765d25ff9163e7da91671216d679f3a655370f56bdd31adebb063d51fbe",
       "profile": "governance-base-v1",
       "status": "draft"
     },
@@ -1827,14 +2123,6 @@
       "status": "draft"
     },
     {
-      "requirement_id": "REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-751B8FFB3C",
-      "artifact": "web-ui/spec/event-log-ordering-and-clock-rules-v1.md",
-      "anchor": "#REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-751B8FFB3C",
-      "text_hash": "de7c85a7dee8e9d8bf958aa2c0adad8fa112cac1c7ffbbf54d1ee002226df996",
-      "profile": "full-web-ui-v1",
-      "status": "draft"
-    },
-    {
       "requirement_id": "REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-7A6D1142BB",
       "artifact": "web-ui/spec/event-log-ordering-and-clock-rules-v1.md",
       "anchor": "#REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-7A6D1142BB",
@@ -1879,6 +2167,14 @@
       "artifact": "web-ui/spec/event-log-ordering-and-clock-rules-v1.md",
       "anchor": "#REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-A169011002",
       "text_hash": "6e6253a88d6a9f1942608ee24e3afd8f7e511feb737f8e098fa9b79559c49d11",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-A93AC6FB5C",
+      "artifact": "web-ui/spec/event-log-ordering-and-clock-rules-v1.md",
+      "anchor": "#REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-A93AC6FB5C",
+      "text_hash": "7c55769312c974387d8fc490dc4e0f5c3b2eba227022d4b653b4cb1926d4dfc0",
       "profile": "full-web-ui-v1",
       "status": "draft"
     },
@@ -2448,6 +2744,158 @@
       "anchor": "#REQ-INCIDENT-AND-RECOVERY-RUNBOOK-V1-C141694F93",
       "text_hash": "25be619ec99d18dc528dac78285f2638c0d53fe614a8c40ee273a5b51d6b7edc",
       "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-01E69A8752",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-01E69A8752",
+      "text_hash": "a316305fa8241aebb08e38fbc53e9e7499e0e55c95bb03afd58ee12c28ae18dc",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-07CC1B7F5F",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-07CC1B7F5F",
+      "text_hash": "70d9c77ec193ef2c045035312b5c429438d81d1b6f3578e0a8be751cea9385c0",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-1179911820",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-1179911820",
+      "text_hash": "fb227208c0c2ca7762a7a955dea0c40a0a08561bcbf846f96998bc6dea20b12f",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-11B07416BE",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-11B07416BE",
+      "text_hash": "0047fda8b0726c0d2ee037917fc716523cdc657dbae23c19fe90a9124bb4bec3",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-121BDE9A0B",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-121BDE9A0B",
+      "text_hash": "f78a50439214868918c2ccedeac052951d5b861c0ca2c5fa8a75acb566df7249",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-1FFD702546",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-1FFD702546",
+      "text_hash": "becd8d5aef25878212c07854eff65235a1b8ccb79c38d4dc6379e14fadc2925e",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-23A8A1C137",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-23A8A1C137",
+      "text_hash": "55ddcffd1106122937d23c5e89aadc821234289a870fbfa5a2d0067b9bf10338",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-306BB1843D",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-306BB1843D",
+      "text_hash": "92eb630794e78c200b82664dc0da02bb768ee80d00b24a1930154e95fd0a559c",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-36505B9F39",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-36505B9F39",
+      "text_hash": "bb54c9c66815ba5bc3b9ffb5ffc729a1942eb22c6a494be8996b149483e6ff7d",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-492428BA03",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-492428BA03",
+      "text_hash": "dea41277388d67b12ad0b2ff7cb723c3fc385ad7f2639a98e2dd0337a5680034",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-52BABAE7E8",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-52BABAE7E8",
+      "text_hash": "80f3a151838780de73ccaa09b1e0cd4166479017b0c75c8436d23fda407d9bef",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-5E7336B8FB",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-5E7336B8FB",
+      "text_hash": "99362fd753f9674f75058baed861e242118a3adfd5920cb028677f0e56a4522a",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-6D6C661DAC",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-6D6C661DAC",
+      "text_hash": "e6ffa518646e36464ac216bd0b9b578c0b026e407819215b8724ee42d4630a5b",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-A335FC77ED",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-A335FC77ED",
+      "text_hash": "fbef0190b6cf94d4c8906d6cb0966b939619ec950c08864e53e67edc17d491b6",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-B14F82370C",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-B14F82370C",
+      "text_hash": "09a5014224513a5a6e07a9ccf7a608024e6eaba1483850cb280586ed44e520ca",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-CB6CD479A6",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-CB6CD479A6",
+      "text_hash": "27d044ce5da8aeb965d9047bdc7f96d70fc0bacea6128c365fbf8d3b6849b3ed",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-CC67419C2D",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-CC67419C2D",
+      "text_hash": "80f3a151838780de73ccaa09b1e0cd4166479017b0c75c8436d23fda407d9bef",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-E082F2BCD2",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-E082F2BCD2",
+      "text_hash": "a77b084280f624c905c66348bfe5f8fb5e9fcc466804f941ecd2ec61bf5562b3",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-F0234081A5",
+      "artifact": "web-ui/spec/input-backpressure-and-coalescing-contract-v1.md",
+      "anchor": "#REQ-INPUT-BACKPRESSURE-AND-COALESCING-CONTRACT-V1-F0234081A5",
+      "text_hash": "82154dc335b15e94e94ffe7203b71cd693ead1bd3bcd8f28dbeddd9db51f5644",
+      "profile": "runtime-bridge-v1",
       "status": "draft"
     },
     {
@@ -3799,6 +4247,14 @@
       "artifact": "web-ui/spec/performance-slo-and-budgets-v1.md",
       "anchor": "#REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-9A92C0B1B2",
       "text_hash": "e7cc570049a131a4f4b2e17477536ed179cd969112d0a3c5eee33abc6603f51b",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-9BD279BCB4",
+      "artifact": "web-ui/spec/performance-slo-and-budgets-v1.md",
+      "anchor": "#REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-9BD279BCB4",
+      "text_hash": "234a993cb6aab8cd9b8d25278396edf28672382f0f9be9ef99499041bc7bb359",
       "profile": "full-web-ui-v1",
       "status": "draft"
     },
@@ -5875,10 +6331,10 @@
       "status": "draft"
     },
     {
-      "requirement_id": "REQ-PROTOCOL-VERSION-NEGOTIATION-V1-593CE63620",
+      "requirement_id": "REQ-PROTOCOL-VERSION-NEGOTIATION-V1-26BA1DFE7B",
       "artifact": "web-ui/spec/protocol-version-negotiation-v1.md",
-      "anchor": "#REQ-PROTOCOL-VERSION-NEGOTIATION-V1-593CE63620",
-      "text_hash": "4a5d2526c000da2c804b078982f92c482723a16124ccfe466c2f4edc97572882",
+      "anchor": "#REQ-PROTOCOL-VERSION-NEGOTIATION-V1-26BA1DFE7B",
+      "text_hash": "7f0596ca22aded2dd3606ec6dfa2ba9c1da0213131e2f8834db93f047dc053b6",
       "profile": "runtime-bridge-v1",
       "status": "draft"
     },
@@ -5903,6 +6359,14 @@
       "artifact": "web-ui/spec/protocol-version-negotiation-v1.md",
       "anchor": "#REQ-PROTOCOL-VERSION-NEGOTIATION-V1-671D11C945",
       "text_hash": "7d3d7b169ffa35d870d4a8f422a3cc9a83116a3021138e57f12ecd8fb9213e01",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-PROTOCOL-VERSION-NEGOTIATION-V1-6BCD7D1547",
+      "artifact": "web-ui/spec/protocol-version-negotiation-v1.md",
+      "anchor": "#REQ-PROTOCOL-VERSION-NEGOTIATION-V1-6BCD7D1547",
+      "text_hash": "147e16382b6a5af86fdac81b444b213b4149cdb012f900678eb21523ca086e7d",
       "profile": "runtime-bridge-v1",
       "status": "draft"
     },
@@ -5935,14 +6399,6 @@
       "artifact": "web-ui/spec/protocol-version-negotiation-v1.md",
       "anchor": "#REQ-PROTOCOL-VERSION-NEGOTIATION-V1-B02655298A",
       "text_hash": "44d4337f8497e6006283c47555c4b27cb4b8a4480926fdc5ecbc0b473f813d19",
-      "profile": "runtime-bridge-v1",
-      "status": "draft"
-    },
-    {
-      "requirement_id": "REQ-PROTOCOL-VERSION-NEGOTIATION-V1-B167398859",
-      "artifact": "web-ui/spec/protocol-version-negotiation-v1.md",
-      "anchor": "#REQ-PROTOCOL-VERSION-NEGOTIATION-V1-B167398859",
-      "text_hash": "4117f5d5dbcd89ccb63662c2a1cad72dd397a3cd8e688af0889e2200f4057af6",
       "profile": "runtime-bridge-v1",
       "status": "draft"
     },
@@ -6016,6 +6472,86 @@
       "anchor": "#REQ-PROTOCOL-VERSION-NEGOTIATION-V1-F64188A9FF",
       "text_hash": "a8a2bdb476dc893cf6f1f460a5492a6a3fb8c1edb77c59c1ceac06883215cf1c",
       "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-13309E0E7B",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-13309E0E7B",
+      "text_hash": "cbde37787b2d3d6523742a32ee73442d000063430a6869005e457d3619524127",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-34EC57B7A6",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-34EC57B7A6",
+      "text_hash": "38ed82bac3a82af2188e959fd7b124178ebdf2b97f32fc67720a05babf02bdcc",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-416FE9276C",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-416FE9276C",
+      "text_hash": "8877010b42f6cbe7ec7f6a43080d8c65dea5f64573f8e870bd586cfd7751093e",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-84BF0A1F2B",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-84BF0A1F2B",
+      "text_hash": "d1b561c469ce8980f605a65b5db94e4d8f491621dd203433789ab84c19fa8995",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-8643B64BAC",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-8643B64BAC",
+      "text_hash": "381318313c9d20ad5bad2bcb36155ae7a2dc1234261a9e97831ac80cf066a88b",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-BABC857DB4",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-BABC857DB4",
+      "text_hash": "7a6d53f79fcba731047c037725d0564fd5079f98959a159f6ca915cb8b5e7188",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-C3C3864601",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-C3C3864601",
+      "text_hash": "eef3b0791e199cdaaa3a8963152ef24347e15c67c2ba04c61024112d9b2f62b0",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-C50287076A",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-C50287076A",
+      "text_hash": "7bc4ea93bed9965d2bc1fd1214ef9ac3c27856a06a5f1a6a3afa4f491c0e8f68",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-C839EC3CFD",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-C839EC3CFD",
+      "text_hash": "c165a07b9f3a31d726ba89f2510f87792fea109e665629e693ed381ce53b2d0e",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-REALTIME-SURFACE-PROFILE-V1-DCFD7EDD2E",
+      "artifact": "web-ui/spec/realtime-surface-profile-v1.md",
+      "anchor": "#REQ-REALTIME-SURFACE-PROFILE-V1-DCFD7EDD2E",
+      "text_hash": "b1cb03bb931d6c2f63cbd165136ea4e4526433eff8832e7b66acafb6642005a5",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -8587,6 +9123,14 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-UI-WIRE-FORMAT-EVENTS-V1-894B660C57",
+      "artifact": "web-ui/spec/ui-wire-format-events-v1.md",
+      "anchor": "#REQ-UI-WIRE-FORMAT-EVENTS-V1-894B660C57",
+      "text_hash": "31bc4b4a2993593ba5b9206b07869dcf167d7025408ffd8cccd8de4cec2c43f2",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-UI-WIRE-FORMAT-EVENTS-V1-B278B9ABF4",
       "artifact": "web-ui/spec/ui-wire-format-events-v1.md",
       "anchor": "#REQ-UI-WIRE-FORMAT-EVENTS-V1-B278B9ABF4",
@@ -8599,14 +9143,6 @@
       "artifact": "web-ui/spec/ui-wire-format-events-v1.md",
       "anchor": "#REQ-UI-WIRE-FORMAT-EVENTS-V1-B98780F705",
       "text_hash": "2f52e6d8678f991ea279586efb3fb39de4c11c0ced9e3a3a2d9b69291170fe07",
-      "profile": "runtime-bridge-v1",
-      "status": "draft"
-    },
-    {
-      "requirement_id": "REQ-UI-WIRE-FORMAT-EVENTS-V1-BA12FCF0F0",
-      "artifact": "web-ui/spec/ui-wire-format-events-v1.md",
-      "anchor": "#REQ-UI-WIRE-FORMAT-EVENTS-V1-BA12FCF0F0",
-      "text_hash": "02b507f3d9aca07605757271cde7eb75dff1e8e2433d2f94280fef094deaf15e",
       "profile": "runtime-bridge-v1",
       "status": "draft"
     },

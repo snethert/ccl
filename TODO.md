@@ -2,7 +2,7 @@
 
 <!-- Debugging guide: doc/wasm/debugging.md — read first when troubleshooting -->
 
-**Last updated:** 2026-02-16
+**Last updated:** 2026-02-17
 **Current phase:** MVP-1 (Library/Embedded Mode)
 **Plan:** [doc/wasm/deterministic-startup-plan.md](doc/wasm/deterministic-startup-plan.md)
 
@@ -95,7 +95,16 @@ used non-existent acode operators, breaking cross-compilation loading. Fixed.
 - Funcall argument ordering: `wasm_funcall_common` push loop was reversed — vsp[0]=first arg instead of vsp[0]=last arg (ARM convention). Fixed in commit `31d89be7`.
 - `%car/%cdr` slot index swap in `wasm2.lisp` — fixed FASL loading regression (fn=0x2c)
 
-**Current blocker:** Root image build fails during cold-boot-init with `ksignalerr` (arg_y=0x18 / fixnum 6, last const-pool-ref entry=856 slot=9). The system loads packages and installs const pools successfully, then errors during initialization code.
+**Bugs fixed during Phase 1 (continued):**
+- **Arg register convention: aligned to ARM (2026-02-17):** The WASM compiler prologue (`wasm2-arg-prologue-ir`, `wasm2-closed-arg-prologue-ir`) had a porting bug — missing `(reverse req)` from ARM — causing `arg_z = first param` instead of `arg_z = last param`. Fixed prologue to be nargs-aware: for 2-arg functions, first param reads `:arg1` (arg_y), second/last param reads `:arg0` (arg_z). Reverted `wasm_sync_arg_regs_from_vsp` to ARM TOS-based convention (`vsp_ptr[0]` → arg_z). Call-setup sites (`:set-arg0`/`:set-arg1`) were already correct. There is no "WASM convention" — the mapping was a bug.
+- **Const pool fixnum boxing (2026-02-17):** `pool_data[i] = (LispObj)raw` stored unboxed fixnums. Fixed to `pool_data[i] = box_fixnum(...)`.
+
+**Current blocker:** Root image build progresses through package/symbol table initialization but fails with `%KERNEL-RESTART` undefined (XFUNBND error code 6). The `%KERNEL-RESTART` function is defined in level-1 but may not be compiled or installed at boot time.
+
+**Tooling added:**
+- `scripts/wasm/check-freshness.sh` — Detects stale build artifacts across the full dependency chain
+- `scripts/wasm/lookup-entry.mjs` — Annotates funcall traces with function names
+- Phase0A test runner now warns when test modules are stale relative to kernel/subprims
 
 **Deliverable:** `doc/wasm/calling-convention-abi.md` — authoritative ABI spec for all calling convention sites.
 
@@ -152,7 +161,7 @@ used non-existent acode operators, breaking cross-compilation loading. Fixed.
 ## 📊 Current Status
 
 **Completed:** B1-B6 fixes, funcall ordering fix, ABI spec, diagnostic cleanup, instrumentation removal (~4500 lines), startup truth retirement, startup binding map removal (~2500 lines), debugging infrastructure, cold-boot init extraction (Phase 1a-1c)
-**Blocked on:** `ksignalerr` during cold-boot-init (arg_y=0x18, entry 856) — investigate error code and function
+**Blocked on:** `%KERNEL-RESTART` undefined during cold-boot-init (XFUNBND). Arg ordering fix resolved GCD-2 crash; boot now progresses further.
 **Build pipeline:** Functional (kernel → subprims → boot image → modules → image assembly)
 **MVP-1 completion:** 65% → Phase 0 unblocks everything
 
@@ -203,6 +212,10 @@ Root cause: 280+ missing WASM LAP bridge functions. Systemic fix: Phase 0A.
 ---
 
 ## 📝 Session Notes
+
+**2026-02-17 (session 2):** Corrected arg register convention fix. Previous session wrongly changed runtime to match compiler bug. Actual fix: WASM compiler prologue (`wasm2-arg-prologue-ir`, `wasm2-closed-arg-prologue-ir`) was missing ARM's `(reverse req)` — porting bug causing `arg_z = first param`. Fixed prologue to be nargs-aware (for 2-arg: first→arg_y, last→arg_z). Reverted `wasm_sync_arg_regs_from_vsp` to ARM TOS-based. Full rebuild passes; root image still fails with `%KERNEL-RESTART` undefined (same blocker, unrelated to arg ordering).
+
+**2026-02-17:** Systemic audit of argument ordering conventions across compiler, C runtime, and JS host. Built `check-freshness.sh` stale artifact detection tool, added phase0a test compilation to `rebuild-everything.sh`, added staleness warnings to test runner. Confirmed all 144 phase0a test failures are pre-existing (not caused by sync fix).
 
 **2026-02-16 (session 3):** Wrote `doc/wasm/calling-convention-abi.md` — authoritative spec covering all 8 calling convention sites. Confirmed ABI is internally consistent for default path (`*wasm2-use-arg-regs*` = nil). Documented latent bug in arg-regs optimization (disabled). Cleaned all diagnostic code from kernel stubs and subprims. Root image build now terminates with `ksignalerr` (was hanging indefinitely due to noisy DIAG logging).
 

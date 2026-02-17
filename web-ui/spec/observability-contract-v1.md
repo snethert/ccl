@@ -1,11 +1,11 @@
 # Observability Contract v1
 
 Status: Draft  
-Version: 1.0.0  
+Version: 1.1.0  
 Last updated: 2026-02-17  
 Scope: Normative logs, metrics, summaries, and correlation requirements for startup, runtime bridge, IPC lanes, and `web-ui` quality gates  
 Depends on: `web-ui/spec/normative-language-and-conformance-v1.md`, `web-ui/spec/perf-telemetry-sampling-policy-v1.md`, `web-ui/spec/performance-slo-and-budgets-v1.md`, `web-ui/spec/runtime-bridge-envelope-v1.md`, `web-ui/spec/protocol-version-negotiation-v1.md`, `scripts/wasm/lib/startup-gate.mjs`, `scripts/wasm/tests/ipc-conformance.mjs`, `web-ui/src/quality-gates.mjs`, `web-ui/src/renderer.mjs`, `scripts/wasm/lib/microkernel.mjs`  
-Compatibility: `v1.x` preserves telemetry schema IDs, lane names, and required correlation fields; incompatible schema changes require `v2`.
+Compatibility: `v1.x` preserves telemetry schema IDs, lane names, and required correlation fields; `v1.1+` documents planned bounded-input/coalescing saturation extensions.
 
 ## 1. Purpose
 
@@ -70,6 +70,11 @@ Additional required fields by record type:
 9. `runtime_ui_bridge_rollback_record_v1`: `rollback_id`, `trigger_class_id`, `trigger_failure_code`, `applied_scope`, `post_rollback_status`.
 10. `runtime_ui_bridge_step2_summary_v1`: `executed_validation_ids`, `compatibility_results`, `x04_step2_ready`, `first_failure_code`, `results_digest`.
 
+Planned extension records (non-blocking in baseline `v1`):
+
+1. Input saturation records: `ui_input_queue_depth`, `ui_input_queue_bytes`, `ui_input_events_coalesced`, `ui_input_events_dropped`, `workload_profile_id`.
+2. Runtime command pressure records: `runtime_command_inflight`, `runtime_command_rejected`, `runtime_command_rejection_code`.
+
 ## 3.3 UI Quality Collector Records
 
 `createQualityCollector()` <a id="REQ-OBSERVABILITY-CONTRACT-V1-B17101086B"></a>MUST expose schema version `1` and these lanes:
@@ -119,6 +124,11 @@ Telemetry producers <a id="REQ-OBSERVABILITY-CONTRACT-V1-FFD5573814"></a>MUST pr
 4. `compatibility_id` entries in `compatibility_results`.
 5. `sequence_no` and `correlation_id` for channel/class event ordering.
 
+Planned extension correlation fields (non-blocking in baseline `v1`):
+
+1. `tenant_id` when execution is partitioned by app/tenant policy.
+2. `workload_profile_id` when workload-profile-specific behavior is active.
+
 ## 5. Sampling, Retention, and Evaluation
 
 Collector retention <a id="REQ-OBSERVABILITY-CONTRACT-V1-A933B819C3"></a>MUST follow bounded defaults:
@@ -138,6 +148,12 @@ Evaluation checks <a id="REQ-OBSERVABILITY-CONTRACT-V1-F88435CFC6"></a>MUST rema
 5. `transcript-supported-scale`
 6. `reliability-unhandled-runtime-faults`
 7. `reliability-deterministic-replay`
+
+Planned extension evaluation checks (non-blocking in baseline `v1`):
+
+1. `input-flood-queue-bounded`
+2. `input-flood-drop-budget`
+3. `input-coalescing-deterministic`
 
 ## 6. Privacy and Redaction Rules
 
