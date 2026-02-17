@@ -1339,6 +1339,16 @@ wasm_lisp_word_ref(LispObj base, LispObj offset)
     }
 
     if (idx == 0) {
+      if (len >= 1 && len <= 20) {
+        char dbg[128];
+        int p = 0;
+        p += wasm_debug_str(dbg + p, "DIAG: lwref list base=");
+        p += wasm_debug_hex8(dbg + p, (uint32_t)base);
+        p += wasm_debug_str(dbg + p, " idx0 len=");
+        p += wasm_debug_uint(dbg + p, (uint32_t)len);
+        dbg[p++] = '\n';
+        wasm_host_log(dbg, (unsigned)p);
+      }
       return box_fixnum(len);
     }
 
@@ -1365,7 +1375,18 @@ wasm_lisp_word_ref(LispObj base, LispObj offset)
   if (tag_of(base) == tag_fixnum) {
     signed_natural addr = unbox_fixnum(base);
     LispObj *ptr = (LispObj *)(uintptr_t)addr;
-    return ptr[idx];
+    LispObj result = ptr[idx];
+    if (result == (LispObj)0x14) {
+      char dbg[144];
+      int p = 0;
+      p += wasm_debug_str(dbg + p, "DIAG: lwref fixptr base=");
+      p += wasm_debug_hex8(dbg + p, (uint32_t)base);
+      p += wasm_debug_str(dbg + p, " idx=");
+      p += wasm_debug_uint(dbg + p, (uint32_t)idx);
+      p += wasm_debug_str(dbg + p, " res=0x14\n");
+      wasm_host_log(dbg, (unsigned)p);
+    }
+    return result;
   }
 
   if (fulltag_of(base) == fulltag_misc) {
