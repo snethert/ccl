@@ -70,10 +70,22 @@
 
 ;;;; ---- Integer length ----
 
-;;; integer-length for fixnums.
-;;; (integer-length n) = (- 32 (clz (if (>= n 0) n (lognot n))))
+;;; integer-length for fixnums: number of significant bits (excluding sign).
+;;; ARM uses CLZ hardware instruction.  This pure-Lisp version uses binary
+;;; search with ash (which the WASM compiler inlines as a subprim call,
+;;; not a Lisp funcall — so no circular dependency).
+;;; Must NOT call (integer-length n) — that dispatches back to %fixnum-intlen.
 (defun %fixnum-intlen (number)
-  (integer-length number))
+  (let ((n (if (minusp number) (lognot number) number))
+        (bits 0))
+    (declare (fixnum n bits))
+    (when (> n #xFFFF)   (incf bits 16) (setq n (ash n -16)))
+    (when (> n #xFF)     (incf bits 8)  (setq n (ash n -8)))
+    (when (> n #xF)      (incf bits 4)  (setq n (ash n -4)))
+    (when (> n #x3)      (incf bits 2)  (setq n (ash n -2)))
+    (when (> n #x1)      (incf bits 1)  (setq n (ash n -1)))
+    (when (> n 0)        (incf bits))
+    bits))
 
 
 ;;;; ---- Float truncation to fixnum ----
@@ -186,22 +198,48 @@
 
 ;;; Return (values quotient remainder) where both are fixnums.
 ;;; This is (truncate dividend divisor) for fixnum arguments.
+;;; ARM uses hardware sdiv via .SPsdiv32 subprim.
+;;; This pure-Lisp version uses binary long division to avoid calling
+;;; TRUNCATE, which would infinite-loop:
+;;;   truncate → truncate-no-rem → %fixnum-truncate → truncate → ...
+;;; (On WASM, called-for-mv-p always returns NIL, so truncate always
+;;; delegates to truncate-no-rem, which calls %fixnum-truncate.)
 (defun %fixnum-truncate (dividend divisor)
   (if (eql divisor -1)
     ;; Special case: negation. If dividend is most-negative-fixnum,
     ;; the result overflows to a bignum — but the ARM code handles
     ;; that via *least-positive-bignum*. We let Lisp handle it.
     (values (- dividend) 0)
-    (multiple-value-bind (q r) (truncate dividend divisor)
-      (values q r))))
+    (if (eql divisor 0)
+      (error 'division-by-zero :operation 'truncate :operands (list dividend divisor))
+      (if (eql divisor 1)
+        (values dividend 0)
+        (let* ((neg-q (if (minusp dividend) (not (minusp divisor)) (minusp divisor)))
+               (neg-r (minusp dividend))
+               (n (if (minusp dividend) (- dividend) dividend))
+               (d (if (minusp divisor) (- divisor) divisor))
+               (q 0))
+          (declare (fixnum n d q))
+          ;; Binary long division — O(30) iterations for 30-bit fixnums
+          (do ((shift (- (integer-length n) (integer-length d)) (1- shift)))
+              ((minusp shift))
+            (when (not (> (ash d shift) n))
+              (incf q (ash 1 shift))
+              (decf n (ash d shift))))
+          ;; n is now the absolute remainder
+          (values (if neg-q (- q) q)
+                  (if neg-r (- n) n)))))))
 
 
-;;;; ---- Multiple-values predicate (stub) ----
+;;;; ---- Multiple-values predicate ----
 
 ;;; On ARM, checks whether the caller expects multiple values by
-;;; inspecting the return address. On WASM, always return NIL.
+;;; inspecting the return address. On WASM, always return T so that
+;;; functions like TRUNCATE always compute and return all values.
+;;; Returning NIL caused REM to get stale/wrong data from the MV area
+;;; because TRUNCATE would skip the remainder computation.
 (defun called-for-mv-p ()
-  nil)
+  t)
 
 
 ;;;; ---- GCD ----

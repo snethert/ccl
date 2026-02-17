@@ -912,9 +912,19 @@ wasm_alloc_node_vector_initialized(TCR *tcr, unsigned subtag, signed_natural cou
   LispObj obj = (LispObj)(newptr + fulltag_misc);
   header_of(obj) = make_header(subtag, count);
 
+  /* Initialize node vector elements.
+     Simple-vectors get fixnum 0, matching native CCL behavior (zero-filled
+     heap).  Hash table code in nfasload.lisp relies on empty slots being
+     fixnum 0 — see %get-hashed-htab-symbol termination (eql elt 0).
+     All other node vectors (symbols, functions, etc.) get lisp_nil so that
+     uninitialized slots behave as "empty" for Lisp-level code. */
   LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
-  for (signed_natural i = 0; i < count; i++) {
-    data[i] = lisp_nil;
+  if (subtag == subtag_simple_vector) {
+    memset(data, 0, (size_t)count * sizeof(LispObj));
+  } else {
+    for (signed_natural i = 0; i < count; i++) {
+      data[i] = lisp_nil;
+    }
   }
 
   return obj;
@@ -1009,6 +1019,15 @@ wasm_alloc_ivector_uninitialized(TCR *tcr, unsigned subtag, signed_natural count
 
   if (bytes > misc_data_offset) {
     memset((BytePtr)obj + misc_data_offset, 0, bytes - misc_data_offset);
+  }
+
+  /* Diagnostic: catch creation of 8-element fixnum-vector (suspect $hprimes) */
+  if (subtag == subtag_fixnum_vector && count == 8) {
+    char d[80]; int p = 0;
+    p += wasm_debug_str(d + p, "DIAG: alloc fixvec8 obj=0x");
+    p += wasm_debug_hex8(d + p, (uint32_t)obj);
+    d[p++] = '\n';
+    wasm_host_log(d, (unsigned)p);
   }
 
   return obj;
@@ -1381,7 +1400,59 @@ wasm_lisp_word_ref(LispObj base, LispObj offset)
       /* deref(o,0) is the header; data elements start at deref(o,1).
          idx is data-relative (0 = first data element), so add 1. */
       LispObj result = deref(base, idx + 1);
+
+      /* Diagnostic: detect NIL in simple-vector slots (hash probe bug) */
+      if (wasm_trace_funcall >= 1 &&
+          header_subtag(header) == subtag_simple_vector &&
+          result == lisp_nil) {
+        static uint32_t nil_svec_logged = 0;
+        if (nil_svec_logged < 20) {
+          char msg[200];
+          int p = 0;
+          p += wasm_debug_str(msg + p, "NIL-IN-SVEC @");
+          p += wasm_debug_hex8(msg + p, (uint32_t)base);
+          p += wasm_debug_str(msg + p, " [");
+          p += wasm_debug_uint(msg + p, (uint32_t)idx);
+          p += wasm_debug_str(msg + p, "/");
+          p += wasm_debug_uint(msg + p, (uint32_t)count);
+          p += wasm_debug_str(msg + p, "]\n");
+          wasm_host_log(msg, (unsigned)p);
+          if (nil_svec_logged == 0) {
+            /* First hit: dump first 8 elements of the vector */
+            int p2 = 0;
+            p2 += wasm_debug_str(msg + p2, "  SVEC-DUMP:");
+            int dump_n = count < 8 ? (int)count : 8;
+            for (int j = 0; j < dump_n; j++) {
+              msg[p2++] = ' ';
+              p2 += wasm_debug_hex8(msg + p2, (uint32_t)deref(base, j + 1));
+            }
+            msg[p2++] = '\n';
+            wasm_host_log(msg, (unsigned)p2);
+          }
+          nil_svec_logged++;
+        }
+      }
+
       return result;
+    }
+
+    /* Out-of-bounds access on misc object */
+    if (wasm_trace_funcall >= 1 &&
+        header_subtag(header) == subtag_simple_vector) {
+      static uint32_t oob_svref_logged = 0;
+      if (oob_svref_logged < 10) {
+        char msg[128];
+        int p = 0;
+        p += wasm_debug_str(msg + p, "OOB-SVREF @");
+        p += wasm_debug_hex8(msg + p, (uint32_t)base);
+        p += wasm_debug_str(msg + p, " idx=");
+        p += wasm_debug_uint(msg + p, (uint32_t)idx);
+        p += wasm_debug_str(msg + p, " cnt=");
+        p += wasm_debug_uint(msg + p, (uint32_t)count);
+        p += wasm_debug_str(msg + p, "\n");
+        wasm_host_log(msg, (unsigned)p);
+        oob_svref_logged++;
+      }
     }
   }
 
@@ -1443,8 +1514,11 @@ wasm_return_values2(LispObj value0, LispObj value1)
     return lisp_nil;
   }
   LispObj *vsp_ptr = saved_vsp;
-  *--vsp_ptr = value1;
+  /* Push value0 first (bottom), value1 last (top).
+     wasm_get_mv(i) reads vsp_ptr[count-1-i], so the highest-indexed
+     value must be at the top (lowest address). */
   *--vsp_ptr = value0;
+  *--vsp_ptr = value1;
   tcr->save_vsp = vsp_ptr;
   tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
   tcr->wasm_gprs[arg_z] = value0;
@@ -1465,9 +1539,9 @@ wasm_return_values3(LispObj value0, LispObj value1, LispObj value2)
     return lisp_nil;
   }
   LispObj *vsp_ptr = saved_vsp;
-  *--vsp_ptr = value2;
-  *--vsp_ptr = value1;
   *--vsp_ptr = value0;
+  *--vsp_ptr = value1;
+  *--vsp_ptr = value2;
   tcr->save_vsp = vsp_ptr;
   tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
   tcr->wasm_gprs[arg_z] = value0;
@@ -1488,10 +1562,10 @@ wasm_return_values4(LispObj value0, LispObj value1, LispObj value2, LispObj valu
     return lisp_nil;
   }
   LispObj *vsp_ptr = saved_vsp;
-  *--vsp_ptr = value3;
-  *--vsp_ptr = value2;
-  *--vsp_ptr = value1;
   *--vsp_ptr = value0;
+  *--vsp_ptr = value1;
+  *--vsp_ptr = value2;
+  *--vsp_ptr = value3;
   tcr->save_vsp = vsp_ptr;
   tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
   tcr->wasm_gprs[arg_z] = value0;
@@ -1641,6 +1715,7 @@ wasm_spill_push(LispObj value)
     return;
   }
   if (sp <= tcr->wasm_spill_base) {
+    wasm_debug_dump_state("spill_push overflow");
     __builtin_trap();
   }
   *--sp = value;
@@ -3158,6 +3233,23 @@ wasm_run_cold_boot_init(void)
     return -5;
   }
 
+  /* Diagnostic: log the entry index of %run-cold-boot-init */
+  {
+    LispObj entry_s0 = deref(fn, 1);
+    char d[80]; int p = 0;
+    p += wasm_debug_str(d + p, "cold-boot-init: fn=0x");
+    p += wasm_debug_hex8(d + p, (uint32_t)fn);
+    p += wasm_debug_str(d + p, " entry=0x");
+    p += wasm_debug_hex8(d + p, (uint32_t)entry_s0);
+    if (tag_of(entry_s0) == tag_fixnum) {
+      p += wasm_debug_str(d + p, " (idx=");
+      p += wasm_debug_uint(d + p, (uint32_t)unbox_fixnum(entry_s0));
+      p += wasm_debug_str(d + p, ")");
+    }
+    d[p++] = '\n';
+    wasm_host_log(d, (unsigned)p);
+  }
+
   natural old_last_lisp_frame = wasm_enter_lisp_frame(
     tcr, 0, 0, (LispObj)tcr->save_vsp);
   tcr->valence = TCR_STATE_LISP;
@@ -3174,6 +3266,30 @@ wasm_run_cold_boot_init(void)
     result = -6;
     static const char msg[] = "cold-boot-init: threw\n";
     wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+
+    /* Diagnostic: read *WASM-STARTUP-STEP* to identify crash point */
+    {
+      static const uint8_t step_name[] = "*WASM-STARTUP-STEP*";
+      LispObj step_sym = wasm_find_symbol_named_bytes(
+        step_name, (uint32_t)(sizeof(step_name) - 1), ccl_pkg);
+      if (step_sym != (LispObj)0 && fulltag_of(step_sym) == fulltag_misc &&
+          header_subtag(header_of(step_sym)) == subtag_symbol) {
+        lispsymbol *ss = (lispsymbol *)ptr_from_lispobj(untag(step_sym));
+        LispObj step_val = ss->vcell;
+        char dbuf[64];
+        int dp = 0;
+        dp += wasm_debug_str(dbuf + dp, "  startup-step=");
+        if (tag_of(step_val) == tag_fixnum) {
+          dp += wasm_debug_uint(dbuf + dp, (uint32_t)unbox_fixnum(step_val));
+        } else {
+          dp += wasm_debug_str(dbuf + dp, "non-fixnum 0x");
+          dp += wasm_debug_hex8(dbuf + dp, (uint32_t)step_val);
+        }
+        dbuf[dp++] = '\n';
+        wasm_host_log(dbuf, (unsigned)dp);
+      }
+
+    }
   } else {
     static const char msg[] = "cold-boot-init: ok\n";
     wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
@@ -5064,6 +5180,64 @@ wasm_const_pool_install_inner(TCR *tcr, uint32_t entry_index, uint32_t payload_p
         pool_data[i] = vec;
         break;
       }
+      case 17: { /* ivector — specialized (immheader) vector */
+        uint32_t raw_subtag = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
+        uint32_t vcount = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
+        if (!ok) {
+          return lisp_nil;
+        }
+        unsigned subtag = wasm_const_pool_normalize_subtag(raw_subtag);
+        {
+          char d[96]; int p = 0;
+          p += wasm_debug_str(d + p, "ivec-cp: raw=0x");
+          p += wasm_debug_hex8(d + p, raw_subtag);
+          p += wasm_debug_str(d + p, " norm=0x");
+          p += wasm_debug_hex8(d + p, subtag);
+          p += wasm_debug_str(d + p, " n=");
+          p += wasm_debug_uint(d + p, vcount);
+          p += wasm_debug_str(d + p, " eidx=");
+          p += wasm_debug_uint(d + p, entry_index);
+          d[p++] = '\n';
+          wasm_host_log(d, (unsigned)p);
+        }
+        LispObj vec = wasm_misc_alloc(tcr, subtag, (signed_natural)vcount);
+        if (vec == lisp_nil) {
+          return lisp_nil;
+        }
+        BytePtr data = (BytePtr)vec + misc_data_offset;
+        if (subtag <= max_32_bit_ivector_subtag) {
+          /* 32-bit elements: fixnum-vector, u32, s32, single-float, base-string */
+          uint32_t *p = (uint32_t *)data;
+          for (uint32_t j = 0; j < vcount; j++) {
+            p[j] = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+            if (!ok) return lisp_nil;
+          }
+        } else if (subtag <= max_8_bit_ivector_subtag) {
+          /* 8-bit elements: u8, s8 */
+          uint8_t *p = (uint8_t *)data;
+          for (uint32_t j = 0; j < vcount; j++) {
+            uint32_t v = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+            if (!ok) return lisp_nil;
+            p[j] = (uint8_t)v;
+          }
+        } else if (subtag <= max_16_bit_ivector_subtag) {
+          /* 16-bit elements: u16, s16 */
+          uint16_t *p = (uint16_t *)data;
+          for (uint32_t j = 0; j < vcount; j++) {
+            uint32_t v = wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+            if (!ok) return lisp_nil;
+            p[j] = (uint16_t)v;
+          }
+        } else {
+          /* bit-vector, double-float-vector, complex-float — skip for now */
+          for (uint32_t j = 0; j < vcount; j++) {
+            (void)wasm_const_pool_read_u32(bytes, payload_len, &offset, &ok);
+            if (!ok) return lisp_nil;
+          }
+        }
+        pool_data[i] = vec;
+        break;
+      }
       case 7: { /* package */
         uint32_t name_len = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
         const uint8_t *name_bytes = wasm_const_pool_read_bytes(bytes, payload_len, &offset, name_len, &ok);
@@ -5190,6 +5364,14 @@ wasm_const_pool_install_inner(TCR *tcr, uint32_t entry_index, uint32_t payload_p
       case 16: /* entry-function */
         (void)wasm_const_pool_read_nat(bytes, payload_len, &patch_offset, patch_version, &patch_ok);
         break;
+      case 17: { /* ivector — no forward refs, just skip subtag + count + raw u32s */
+        (void)wasm_const_pool_read_nat(bytes, payload_len, &patch_offset, patch_version, &patch_ok); /* subtag */
+        uint32_t iv_count = wasm_const_pool_read_nat(bytes, payload_len, &patch_offset, patch_version, &patch_ok);
+        for (uint32_t j = 0; patch_ok && j < iv_count; j++) {
+          (void)wasm_const_pool_read_u32(bytes, payload_len, &patch_offset, &patch_ok);
+        }
+        break;
+      }
       case 9: { /* gvector */
         (void)wasm_const_pool_read_nat(bytes, payload_len, &patch_offset, patch_version, &patch_ok); /* raw_subtag */
         uint32_t vcount = wasm_const_pool_read_nat(bytes, payload_len, &patch_offset, patch_version, &patch_ok);

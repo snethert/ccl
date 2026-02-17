@@ -9,7 +9,7 @@
  *
  * Prereqs:
  *  - wasm-boot.image (cross-xload-level-0 :wasm32)
- *  - level-1.lafsl + l1-fasls/*.lafsl + bin/*.lafsl (cross-compile)
+ *  - build/wasm32/level-1.lafsl + build/wasm32/l1-fasls/*.lafsl + build/wasm32/bin/*.lafsl (cross-compile)
  */
 
 import fsSync from "node:fs";
@@ -477,13 +477,13 @@ if (bootModulesPath && !(await fileExists(bootModulesPath))) {
   fail(`Missing boot modules bundle: ${bootModulesPath} (run scripts/wasm/build-wasm-boot.sh --boot-modules-out ${bootModulesPath})`);
 }
 
-const level1Path = path.join(root, "level-1.lafsl");
+const level1Path = path.join(buildDir, "level-1.lafsl");
 if (!(await fileExists(level1Path))) {
-  fail(`Missing level-1.lafsl (run scripts/wasm/compile-wasm-fasls.sh)`);
+  fail(`Missing ${level1Path} (run scripts/wasm/compile-wasm-fasls.sh)`);
 }
 
-const l1Dir = path.join(root, "l1-fasls");
-const binDir = path.join(root, "bin");
+const l1Dir = path.join(buildDir, "l1-fasls");
+const binDir = path.join(buildDir, "bin");
 if (!(await fileExists(l1Dir))) {
   fail(`Missing directory: ${l1Dir}`);
 }
@@ -1205,6 +1205,18 @@ if (typeof ex.wasm_fasload_path !== "function") {
 }
 
 setBootPhaseOrFail(WASM_BOOT_PHASE.L0_READY, { reason: "restore-lisp-pointers-complete" });
+
+/* Enable funcall tracing if requested via CCL_WASM_TRACE_FUNCALL env var.
+   Level 1: print entry index on each funcall.
+   Level 2: also print arg_z, arg_y, nargs registers.
+   Useful for diagnosing infinite loops during cold-boot-init. */
+if (process.env.CCL_WASM_TRACE_FUNCALL) {
+  const level = parseInt(process.env.CCL_WASM_TRACE_FUNCALL, 10) || 0;
+  if (level > 0 && typeof ex.wasm_set_trace_funcall === "function") {
+    ex.wasm_set_trace_funcall(level);
+    trace(`funcall trace enabled at level ${level}`);
+  }
+}
 
 /* Execute level-0 cold-boot initialization before FASL loading.
    This runs *XLOAD-COLD-LOAD-FUNCTIONS* (initializes *FASL-API*,

@@ -2,8 +2,8 @@
 
 **Status:** Active
 **Scope:** Kernel ABI for loading CCL heap images in WASM runtime
-**Last Updated:** 2026-02-15
-**Doc Version:** 1.0.0
+**Last Updated:** 2026-02-17
+**Doc Version:** 1.1.0
 
 ## Purpose
 
@@ -181,13 +181,34 @@ node scripts/wasm/lib/make-real-image.mjs \
 - **No retained pointers:** Kernel stores offsets, not host-side pointers
 - **Immutable after load:** Host must not move image data after calling `wasm_ccl_load_image()`
 
+### Runtime Profiles (Post-MVP2)
+
+The loader contract now targets two artifact profiles:
+
+1. `dev` profile:
+   - Current mutable behavior (compiler present, dynamic module integration).
+   - Startup may keep dynamic callback paths needed for runtime compilation and
+     redefinition workflows.
+2. `fast` profile:
+   - Finished app behavior (compilerless, closed-world startup).
+   - Startup must only rehydrate predeclared modules/table entries; no dynamic
+     compile/redefine work during launch.
+
+Fast-profile validation requirements:
+
+- Fast-profile app modules must pass a zero-`call_indirect` (`0x11`) opcode
+  scan.
+- This gate is scoped to fast-profile app modules and does not apply to
+  kernel/provider/bootstrap wasm artifacts.
+
 ## Future Work
 
 Deferred to MVP-2 or later:
 
 - ⏸️ Image format versioning and metadata (endianness, word size, tag layout)
 - ⏸️ WASM-native image format (vs. current CCL-compatible format)
-- ⏸️ Embedded compiled-modules registry in image (currently external JSON bundle)
+- ⏸️ Fast-profile packaging lock-in (embedded compiled-module registry vs
+  immutable sidecar startup artifacts)
 - ⏸️ Dynamic module loading integration
 
 ## Related Documentation

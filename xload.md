@@ -103,8 +103,23 @@ Examples:
 ### Deferred / Follow-up
 1. **Host direct image parity:** host-CCL generated images still need a clean
    compatibility path if we want that workflow to match wasm helper output.
-2. **Compiled module persistence policy:** decide whether registry data should
-   be embedded in the saved image or remain an external `--modules` bundle.
+2. **Fast-profile packaging lock-in:** finalize whether fast-profile compiled
+   modules are embedded directly in the image or shipped as an immutable
+   sidecar (`startup-plan` + modules blob).
+
+### Post-MVP2 image profile policy
+1. **`dev` image (mutable/runtime-compiler-on):**
+   - Keep current behavior: compiler available, redefinition allowed, dynamic
+     module callbacks active, and external `--modules` bundle supported.
+   - Keep entry-index indirection paths needed by `_SPfuncall` and generic
+     dynamic call sites.
+2. **`fast` image (finished app/compilerless):**
+   - Save a closed-world runtime image with compiler payload removed.
+   - Hot paths must avoid generic call indirection; emit direct concrete calls
+     (or compile-time expanded wrappers).
+   - Gate fast-profile app modules with a zero-`call_indirect` (`0x11`) check.
+     This gate is module-scoped and does not apply to kernel/provider/bootstrap
+     wasm artifacts.
 
 ## Step 1 — Add a WASM xload backend (foundational)
 **Goal:** produce a wasm boot image via `(cross-xload-level-0 :wasm32)`.
@@ -329,8 +344,8 @@ are generating the image from a host CCL today; required for a wasm‑only path)
    - Current result: helper output is wasm-loadable.
 9. Optional hardening follow-ups.
    - Preserve compatibility for the direct host-CCL image path if needed.
-   - Decide whether to embed compiled module registry in the saved image or
-     keep the external `--modules` bundle contract.
+   - Add fast-profile validation gates (closed-world checks, hot-path generic
+     call rejection, and module-level `0x11` opcode scan).
 
 ## Completion Criteria (Exit to Main‑Loop Work)
 - `scripts/wasm/build-wasm-boot.sh` (or `(cross-xload-level-0 :wasm32)`)

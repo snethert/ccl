@@ -4447,6 +4447,7 @@
 (defconstant +wasm2-const-pool-tag-uint64+ 14)
 (defconstant +wasm2-const-pool-tag-bignum+ 15)
 (defconstant +wasm2-const-pool-tag-entry-function+ 16)
+(defconstant +wasm2-const-pool-tag-ivector+ 17)
 
 (defconstant +wasm2-const-pool-int64-min+ (- (ash 1 63)))
 (defconstant +wasm2-const-pool-int64-max+ (1- (ash 1 63)))
@@ -4511,6 +4512,9 @@
           (list :type "bignum"
                 :digits (wasm2-const-pool-bignum-digits value))))))
     ((and (uvectorp value)
+          ;; NB: target:: here intentionally resolves to HOST arch (x86-64).
+          ;; We're checking the typecode of a HOST Lisp object, not constructing
+          ;; a WASM target object.  Do NOT change to wasm::subtag-xfunction.
           (eql (typecode value) target::subtag-xfunction))
      ;; Cross-compiled functions always carry an entry index in slot 0.
      ;; Encode these by entry index to avoid serializing the full slot graph.
@@ -4539,6 +4543,28 @@
      (list :type "cons"
            :car (wasm2-const-pool-index (car value))
            :cdr (wasm2-const-pool-index (cdr value))))
+    ((and (vectorp value) (not (stringp value)) (not (simple-vector-p value)))
+     ;; Specialized (immheader) vector: u16, u8, u32, fixnum, etc.
+     ;; Use wasm:: directly — target:: resolves at read time to the HOST
+     ;; arch (x86-64), not the cross-compilation target.
+     (let* ((etype (array-element-type value))
+            (target-subtag
+             (cond
+               ((equal etype '(unsigned-byte 16)) wasm::subtag-u16-vector)
+               ((equal etype '(unsigned-byte 8)) wasm::subtag-u8-vector)
+               ((equal etype '(signed-byte 16)) wasm::subtag-s16-vector)
+               ((equal etype '(signed-byte 8)) wasm::subtag-s8-vector)
+               ((equal etype '(unsigned-byte 32)) wasm::subtag-u32-vector)
+               ((equal etype '(signed-byte 32)) wasm::subtag-s32-vector)
+               ((equal etype 'fixnum) wasm::subtag-fixnum-vector)
+               ((equal etype 'single-float) wasm::subtag-single-float-vector)
+               ((equal etype 'double-float) wasm::subtag-double-float-vector)
+               ((equal etype 'bit) wasm::subtag-bit-vector)
+               (t (error "WASM2: unsupported ivector element type: ~S" etype))))
+            (count (length value)))
+       (list :type "ivector"
+             :subtag target-subtag
+             :elements (loop for i below count collect (aref value i)))))
     ((and (vectorp value) (not (stringp value)))
      (list :type "vector"
            :elements (map 'list #'wasm2-const-pool-index value)))
@@ -4703,6 +4729,13 @@
              (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-cons+)
              (wasm2-const-pool-emit-uleb32 out (getf entry :car))
              (wasm2-const-pool-emit-uleb32 out (getf entry :cdr)))
+            ((string= etype "ivector")
+             (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-ivector+)
+             (wasm2-const-pool-emit-uleb32 out (getf entry :subtag))
+             (let ((elements (getf entry :elements)))
+               (wasm2-const-pool-emit-uleb32 out (length elements))
+               (dolist (val elements)
+                 (wasm2-const-pool-emit-u32 out (logand val #xffffffff)))))
             ((string= etype "vector")
              (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-vector+)
              (let ((elements (getf entry :elements)))
@@ -7331,7 +7364,9 @@
          (entry-fixnum (if cross-p entry-index (wasm2-box-fixnum entry-index)))
          (code-vector (wasm2-const-code-vector entry-index))
          ;; Cross-compilation needs xfunctions so fasl dumping won't treat them
-         ;; as native code vectors.
+         ;; as native code vectors.  NB: target:: here intentionally resolves
+         ;; to HOST arch — %alloc-misc creates a HOST object that the HOST CCL
+         ;; must recognize.  Do NOT change to wasm::subtag-*.
          (subtag (if cross-p
                    target::subtag-xfunction
                    target::subtag-function))

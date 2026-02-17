@@ -442,6 +442,69 @@ wasm2wat build/wasm32/kernel/wasmcl.wasm -o kernel.wat
 
 ---
 
+## Funcall Stuck Detector
+
+The subprims include a built-in stuck detector that catches infinite loops,
+recursion, and mutual recursion in the funcall dispatch path.
+
+### How It Works
+
+A ring buffer of the last 32 entry indices is maintained. Every 1M funcall
+dispatches, the detector counts unique entries in the buffer. If there are
+4 or fewer unique entries, the system is stuck — a tiny set of functions is
+repeating endlessly. The detector dumps the repeating pattern and traps.
+
+**Thresholds** (compile-time constants in `wasm-subprims-provider.c`):
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `FUNCALL_RING_SIZE` | 32 | Ring buffer entries |
+| `FUNCALL_CHECK_INTERVAL` | 1,000,000 | Check every N funcalls |
+| `FUNCALL_MAX_UNIQUE` | 4 | Max unique entries before stuck |
+
+**Output format:**
+```
+STUCK after 1000k calls, 03b3 02c9 0395
+```
+
+### Detection Categories
+
+| Pattern | Unique Entries | Example |
+|---|---|---|
+| Infinite recursion | 1-2 | `f → f → f → ...` |
+| Mutual recursion | 2-3 | `f → g → f → g → ...` |
+| Infinite loop | 3-4 | `f → g → h → f → g → h → ...` |
+| Normal operation | 10+ | No detection (many distinct functions) |
+
+### Funcall Tracing
+
+Enable detailed funcall tracing with environment variables:
+
+```bash
+# Level 1: entry index on each funcall
+CCL_WASM_TRACE=1 CCL_WASM_TRACE_FUNCALL=1 node ... make-real-image.mjs ...
+
+# Level 2: entry index + arg_z, arg_y, nargs registers
+CCL_WASM_TRACE=1 CCL_WASM_TRACE_FUNCALL=2 node ... make-real-image.mjs ...
+```
+
+**Level 1 output:** `CALL 000003b3`
+**Level 2 output:** `CALL 000003b3 z=04002d9e y=00000000 n=00000004`
+
+### Looking Up Entry Indices
+
+Use the entry lookup tool to translate hex indices to function names:
+
+```bash
+node scripts/wasm/lookup-entry.mjs 0x3b3 0x2c9 0x395
+# Output:
+# 947 (0x03b3)  SYMBOL-NAME  [boot]
+# 713 (0x02c9)  LENGTH  [boot]
+# 917 (0x0395)  SEQUENCE-TYPE  [boot]
+```
+
+---
+
 ## Related Documentation
 
 - [ABI.md](ABI.md) – Calling conventions and register assignments

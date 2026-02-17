@@ -47,6 +47,10 @@
           (unless (boundp 'platform-os-wasm)
             (defconstant platform-os-wasm 7))
           (load-rel "compiler/WASM/wasm-arch.lisp")
+          ;; NB: Do NOT redirect TARGET → WASM here.  Shared code (nfcomp.lisp
+          ;; etc.) uses #.target:: at read time for HOST arch values.  The ivector
+          ;; const pool code in wasm2.lisp uses wasm:: directly, so the redirect
+          ;; is not needed.
           (load-rel "compiler/WASM/wasm-vinsns.lisp"))
         (let ((*compile-definitions* t))
           ;; Register %fixnum-set and %fixnum-set-natural as acode operators.
@@ -235,7 +239,12 @@
                (min-idx (reduce #'min indices))
                (max-idx (reduce #'max indices)))
           (format t "~&DIAG: %wasm-compiled-modules% count=~d min-entry=~d max-entry=~d~%"
-                  (length modules) min-idx max-idx))))
+                  (length modules) min-idx max-idx)
+          (format t "~&DIAG: All compiled modules:~%")
+          (dolist (m (sort (copy-list modules) #'< :key (lambda (e) (svref e 2))))
+            (format t "  entry=~d name=~s~%"
+                    (svref m 2)
+                    (and (>= (length m) 7) (svref m 6)))))))
     (when boot-modules-out
       (let ((modules (and (boundp '%wasm-compiled-modules%) %wasm-compiled-modules%)))
         (if (null modules)

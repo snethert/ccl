@@ -72,6 +72,18 @@
 
 (defun main ()
   (load-wasm-backend)
+  ;; Redirect TARGET → WASM so that target:: references in cross-compiled
+  ;; code resolve to WASM target values, not the host architecture.
+  ;; Must be AFTER load-wasm-backend (which loads wasm2.lisp whose HOST-correct
+  ;; target:: references have already been read at load time).
+  (let* ((wasm (find-package "WASM"))
+         (cur  (find-package "TARGET")))
+    (when (and cur wasm (not (eq cur wasm)))
+      (rename-package cur (package-name cur)
+                      (remove "TARGET" (package-nicknames cur) :test #'string=)))
+    (when (and wasm (not (member "TARGET" (package-nicknames wasm) :test #'string=)))
+      (rename-package wasm (package-name wasm)
+                      (cons "TARGET" (package-nicknames wasm)))))
   (let* ((backend (find-backend :wasm32))
          (*target-ftd* (or (and backend (backend-target-foreign-type-data backend))
                            *target-ftd*)))

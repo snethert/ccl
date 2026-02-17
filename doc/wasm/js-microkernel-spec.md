@@ -2,7 +2,7 @@
 
 **Status:** Draft
 **Scope:** Responsibilities, interfaces, and behavioral guarantees of the JavaScript microkernel
-**Last Updated:** 2026-02-15
+**Last Updated:** 2026-02-17
 **Doc Version:** 1.0.0
 
 ## Scope
@@ -127,6 +127,21 @@ For Full Runtime Mode lanes:
 * If a runner crashes or terminates unexpectedly, the kernel MUST surface a termination event and release associated resources.
 * If a request cannot be fulfilled, the kernel MUST return a structured error response to the runner.
 * If a required capability is unavailable, the kernel MUST emit explicit failure diagnostics and abort startup rather than silently degrade.
+
+## MVP-2 SAB crash-state introspection
+
+When Full Runtime Mode is active and `SharedArrayBuffer` is in use, the system supports post-crash introspection from JS by reading memorialized runtime state from shared memory.
+
+Normative requirements:
+
+* The runtime MUST publish crash-relevant state in SAB, including TCR fields, root-set metadata, and C-stack memorialization state needed for debugger/postmortem inspection.
+* Crash-state publication MUST use an atomic consistency protocol (for example, sequence counters and state flags) so JS can detect and reject torn snapshots.
+* The kernel MUST treat the SAB memorialization record as authoritative for post-crash inspection; JS object handles or worker-local state are not required for minimum crash diagnostics.
+* If memorialized crash-state is absent or invalid, the kernel MUST report the failure explicitly (for example, `crash_state_unavailable`) rather than presenting partial state as valid.
+
+Non-goal:
+
+* Raw WASM trap metadata alone is not considered sufficient postmortem state; the MVP-2 guarantee depends on runtime memorialization into SAB.
 
 ## Security and capability constraints
 

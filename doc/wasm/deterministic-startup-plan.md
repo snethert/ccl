@@ -583,6 +583,35 @@ These are retained in the simplified [ccl-loader.mjs](scripts/wasm/lib/ccl-loade
 
 ---
 
+### Post-MVP2 Runtime Profiles (`dev` vs `fast`)
+
+The deterministic startup contract above remains the baseline for mutable
+runtime behavior (`dev` profile). Post-MVP2 adds a second saved-app profile for
+finished applications (`fast` profile).
+
+#### `dev` profile
+
+- Keeps dynamic compilation support table exactly as defined above.
+- Keeps mutable function-table behavior and runtime callback paths.
+- Keeps generic call paths needed for open-world redefinition workflows.
+
+#### `fast` profile
+
+- Compiler payload is removed from the saved app image.
+- Startup is closed-world for application modules: no startup-time dynamic
+  compile/redefine work.
+- Hot paths must use direct concrete calls (or compile-time expanded wrappers),
+  not generic runtime function designator dispatch.
+
+#### `call_indirect` gating (fast profile)
+
+- The "zero `call_indirect`" rule is scoped to fast-profile application
+  modules only and is enforced via opcode `0x11` scanning in build/test.
+- Kernel/provider/bootstrap wasm artifacts may still contain `call_indirect`
+  where required by the shared ABI (for example, `_SPfuncall` dispatch).
+
+---
+
 ## Implementation Order
 
 | Phase | What | Prereq | Effort | Net LOC Change |
@@ -592,6 +621,7 @@ These are retained in the simplified [ccl-loader.mjs](scripts/wasm/lib/ccl-loade
 | **1** | Verified build | 0A + 0B | Build time only | +0 |
 | **2** | Proactive const pool install + launch artifacts | 1 | ~150 lines | +150 (`make-real-image.mjs`) |
 | **3** | Deterministic launcher | 2 | ~1000 new, ~4000 deleted | **-2800** net (delete 1138, rewrite 3147 → 800) |
+| **4** | Fast-profile save-app mode + invariants | 3 | Pipeline and validation work | TBD |
 
 **Total net effect:** ~2460 new Lisp + 150 new JS - 2800 deleted JS ≈ **-190 net lines** of JS while gaining deterministic startup.
 

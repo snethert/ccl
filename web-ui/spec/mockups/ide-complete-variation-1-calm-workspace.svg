@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">IDE Variation 1 - Calm Workspace</title>
+  <desc id="desc">Editor-forward layout with minimized debugger rail and persistent inspector, aligned to dark-mode doctrine tokens.</desc>
+  <defs>
+    <style>
+      .ui { font-family: Inter, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif; }
+      .mono { font-family: Iosevka, "SFMono-Regular", Consolas, Menlo, monospace; }
+      .p { fill: #e8e8e8; }
+      .s { fill: #b8b8b8; }
+      .m { fill: #8a8a8a; }
+      .a { fill: #6fb0ff; }
+      .e { fill: #f06b6b; }
+      .ok { fill: #6ccf8f; }
+    </style>
+    <filter id="e2"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.25"/></filter>
+  </defs>
+
+  <rect width="1440" height="900" fill="#121212"/>
+  <rect x="0" y="0" width="1440" height="50" fill="#1b1b1b" stroke="#676767"/>
+  <text class="ui p" x="18" y="31" font-size="15" font-weight="600">Web Lisp IDE</text>
+  <text class="ui s" x="150" y="31" font-size="13">workspace/main / src/core / compiler.lisp</text>
+  <rect x="1186" y="11" width="236" height="28" rx="4" fill="#0f0f0f" stroke="#4a4a4a"/>
+  <text class="ui m" x="1198" y="30" font-size="12">Command palette: Cmd+K</text>
+
+  <!-- Left rail -->
+  <g filter="url(#e2)">
+    <rect x="12" y="62" width="220" height="826" rx="8" fill="#1b1b1b" stroke="#676767"/>
+  </g>
+  <text class="ui p" x="26" y="88" font-size="13" font-weight="600">Project + Problems</text>
+  <line x1="24" y1="98" x2="220" y2="98" stroke="#4a4a4a"/>
+  <text class="ui s" x="28" y="124" font-size="12">src/compiler.lisp</text>
+  <text class="ui s" x="28" y="144" font-size="12">src/runtime.lisp</text>
+  <text class="ui s" x="28" y="164" font-size="12">src/debugger.lisp</text>
+
+  <rect x="24" y="194" width="196" height="32" rx="4" fill="#2b4870" stroke="#929292"/>
+  <text class="ui" x="34" y="214" font-size="12" fill="#f2f6ff">warning: stale source map</text>
+  <rect x="24" y="232" width="196" height="32" rx="4" fill="#232323" stroke="#4a4a4a"/>
+  <text class="ui s" x="34" y="252" font-size="12">error: stepper lane blocked</text>
+
+  <text class="ui p" x="26" y="300" font-size="13" font-weight="600">Pinned Watches</text>
+  <line x1="24" y1="310" x2="220" y2="310" stroke="#4a4a4a"/>
+  <text class="mono s" x="28" y="334" font-size="12">*last-result* =&gt; #&lt;ACK bp-17&gt;</text>
+  <text class="mono s" x="28" y="354" font-size="12">*active-frame* =&gt; emit-op</text>
+  <text class="mono s" x="28" y="374" font-size="12">*worldlet* =&gt; main-session</text>
+
+  <!-- Center editor -->
+  <g filter="url(#e2)">
+    <rect x="244" y="62" width="860" height="610" rx="8" fill="#1b1b1b" stroke="#676767"/>
+  </g>
+  <rect x="245" y="63" width="858" height="34" rx="8" fill="#232323"/>
+  <rect x="243" y="61" width="864" height="614" rx="9" fill="none" stroke="#a7c8ff" stroke-width="2"/>
+  <rect x="260" y="70" width="170" height="22" rx="4" fill="#2b4870" stroke="#929292"/>
+  <text class="ui" x="272" y="85" font-size="12" fill="#f2f6ff">compiler.lisp</text>
+  <rect x="438" y="70" width="130" height="22" rx="4" fill="#1b1b1b" stroke="#4a4a4a"/>
+  <text class="ui s" x="450" y="85" font-size="12">repl.lisp</text>
+
+  <rect x="260" y="110" width="828" height="548" rx="4" fill="#0f0f0f" stroke="#4a4a4a"/>
+  <rect x="260" y="110" width="46" height="548" fill="#151515"/>
+  <text class="mono m" x="272" y="136" font-size="12">116</text>
+  <text class="mono m" x="272" y="158" font-size="12">117</text>
+  <text class="mono m" x="272" y="180" font-size="12">118</text>
+  <text class="mono m" x="272" y="202" font-size="12">119</text>
+  <text class="mono m" x="272" y="224" font-size="12">120</text>
+  <text class="mono m" x="272" y="246" font-size="12">121</text>
+  <circle cx="298" cy="220" r="4" fill="#f06b6b"/>
+  <rect x="306" y="208" width="782" height="22" fill="#232323"/>
+
+  <text class="mono s" x="314" y="136" font-size="13">(defun emit-op (ctx op args)</text>
+  <text class="mono s" x="314" y="158" font-size="13">  (let ((anchor (resolve-anchor (current-frame ctx) op :entry))</text>
+  <text class="mono p" x="314" y="180" font-size="13">        (result (dispatch-op op args)))</text>
+  <text class="mono s" x="314" y="202" font-size="13">    (when (debug-enabled-p ctx)</text>
+  <text class="mono s" x="314" y="224" font-size="13">      (runtime.debugger.breakpoint.upsert :source-ref (source-ref anchor)))</text>
+  <text class="mono s" x="314" y="246" font-size="13">    result))</text>
+
+  <rect x="314" y="274" width="380" height="24" rx="4" fill="#2b4870" stroke="#929292"/>
+  <text class="ui" x="324" y="290" font-size="12" fill="#f2f6ff">eval =&gt; #&lt;ACK id:bp-17 status:resolved&gt;</text>
+
+  <rect x="314" y="308" width="174" height="22" rx="4" fill="#232323" stroke="#4a4a4a"/>
+  <text class="ui s" x="324" y="323" font-size="12">inspect value</text>
+  <rect x="496" y="308" width="164" height="22" rx="4" fill="#232323" stroke="#4a4a4a"/>
+  <text class="ui s" x="506" y="323" font-size="12">find references</text>
+
+  <!-- Bottom strip repl -->
+  <g filter="url(#e2)">
+    <rect x="244" y="684" width="860" height="204" rx="8" fill="#1b1b1b" stroke="#676767"/>
+  </g>
+  <rect x="245" y="685" width="858" height="34" rx="8" fill="#232323"/>
+  <text class="ui p" x="260" y="707" font-size="13" font-weight="600">REPL + Output Recording</text>
+  <text class="ui m" x="434" y="707" font-size="12">deterministic transcript anchors enabled</text>
+
+  <rect x="260" y="730" width="828" height="142" rx="4" fill="#0f0f0f" stroke="#4a4a4a"/>
+  <text class="mono s" x="274" y="752" font-size="12">CL-USER&gt; (compile-file \"compiler.lisp\")</text>
+  <text class="mono ok" x="274" y="772" font-size="12">; compiled in 179ms</text>
+  <text class="mono s" x="274" y="792" font-size="12">CL-USER&gt; (emit-op *ctx* 'call '(x y))</text>
+  <text class="mono p" x="274" y="812" font-size="12">#&lt;ACK bp-17&gt; [inspect] [pin] [describe]</text>
+
+  <!-- Right inspector + minimized debugger rail -->
+  <g filter="url(#e2)">
+    <rect x="1116" y="62" width="312" height="760" rx="8" fill="#1b1b1b" stroke="#676767"/>
+  </g>
+  <rect x="1117" y="63" width="310" height="34" rx="8" fill="#232323"/>
+  <text class="ui p" x="1132" y="85" font-size="13" font-weight="600">Inspector</text>
+  <text class="ui m" x="1200" y="85" font-size="12">presentation-first</text>
+
+  <rect x="1132" y="110" width="280" height="644" rx="4" fill="#0f0f0f" stroke="#4a4a4a"/>
+  <text class="mono s" x="1144" y="134" font-size="12">type: BREAKPOINT-ACK</text>
+  <text class="mono s" x="1144" y="154" font-size="12">id: bp-17</text>
+  <text class="mono s" x="1144" y="174" font-size="12">source-ref: compiler.lisp:120</text>
+  <text class="ui p" x="1144" y="208" font-size="12" font-weight="600">Actions</text>
+  <rect x="1144" y="218" width="120" height="28" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui p" x="1162" y="236" font-size="12">Stage Edit</text>
+  <rect x="1272" y="218" width="80" height="28" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui p" x="1292" y="236" font-size="12">Apply</text>
+
+  <rect x="1116" y="832" width="312" height="56" rx="8" fill="#1b1b1b" stroke="#676767"/>
+  <text class="ui p" x="1132" y="854" font-size="12" font-weight="600">Debugger (minimized)</text>
+  <text class="ui m" x="1132" y="872" font-size="12">Condition ready. Press `D` to expand restart panel.</text>
+</svg>

@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">IDE Variation 2 - Debug Session</title>
+  <desc id="desc">Debugger-dominant layout with restart-first controls, stack/source linkage, and integrated in-frame REPL.</desc>
+  <defs>
+    <style>
+      .ui { font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif; }
+      .mono { font-family: Iosevka, "SFMono-Regular", Consolas, Menlo, monospace; }
+      .p { fill: #e8e8e8; }
+      .s { fill: #b8b8b8; }
+      .m { fill: #8a8a8a; }
+      .a { fill: #6fb0ff; }
+      .err { fill: #f06b6b; }
+      .ok { fill: #6ccf8f; }
+    </style>
+    <filter id="e2"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.25"/></filter>
+    <filter id="e3"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.28"/></filter>
+  </defs>
+
+  <rect width="1440" height="900" fill="#121212"/>
+  <rect x="0" y="0" width="1440" height="52" fill="#1b1b1b" stroke="#676767"/>
+  <text class="ui p" x="18" y="31" font-size="15" font-weight="600">Web Lisp IDE</text>
+  <text class="ui err" x="170" y="31" font-size="13">Debug session active: type-error / emit-op</text>
+  <rect x="1120" y="12" width="302" height="28" rx="4" fill="#0f0f0f" stroke="#4a4a4a"/>
+  <text class="ui m" x="1134" y="30" font-size="12">Cmd+K: invoke-restart | step-over | eval-in-frame</text>
+
+  <!-- Left: restart rail -->
+  <g filter="url(#e2)">
+    <rect x="12" y="64" width="278" height="824" rx="8" fill="#1b1b1b" stroke="#676767"/>
+  </g>
+  <text class="ui p" x="28" y="92" font-size="13" font-weight="600">Restart Rail</text>
+  <line x1="24" y1="102" x2="278" y2="102" stroke="#4a4a4a"/>
+
+  <rect x="24" y="116" width="254" height="64" rx="6" fill="#2b4870" stroke="#929292"/>
+  <text class="ui" x="36" y="138" font-size="12" fill="#f2f6ff">Recommended Restart</text>
+  <text class="ui" x="36" y="158" font-size="12" fill="#f2f6ff">re-resolve source revision</text>
+
+  <rect x="24" y="190" width="254" height="44" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui p" x="36" y="218" font-size="12">Use Value 42</text>
+  <rect x="24" y="240" width="254" height="44" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui p" x="36" y="268" font-size="12">Retry with Fresh Mapping</text>
+  <rect x="24" y="290" width="254" height="44" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui p" x="36" y="318" font-size="12">Abort to Top Level</text>
+
+  <text class="ui p" x="28" y="362" font-size="13" font-weight="600">Condition</text>
+  <line x1="24" y1="372" x2="278" y2="372" stroke="#4a4a4a"/>
+  <text class="mono s" x="28" y="398" font-size="12">TYPE-ERROR:</text>
+  <text class="mono s" x="28" y="418" font-size="12">breakpoint mapping epoch mismatch</text>
+  <text class="mono s" x="28" y="438" font-size="12">requested: 91, active: 94</text>
+
+  <text class="ui p" x="28" y="486" font-size="13" font-weight="600">Frame Locals</text>
+  <line x1="24" y1="496" x2="278" y2="496" stroke="#4a4a4a"/>
+  <text class="mono s" x="28" y="520" font-size="12">anchor =&gt; #&lt;ANCHOR entry&gt;</text>
+  <text class="mono s" x="28" y="540" font-size="12">source-rev =&gt; 91</text>
+  <text class="mono s" x="28" y="560" font-size="12">runtime-rev =&gt; 94</text>
+
+  <!-- Center: debugger first -->
+  <g filter="url(#e3)">
+    <rect x="302" y="64" width="772" height="536" rx="8" fill="#1b1b1b" stroke="#929292"/>
+  </g>
+  <rect x="303" y="65" width="770" height="34" rx="8" fill="#232323"/>
+  <text class="ui p" x="318" y="87" font-size="13" font-weight="600">Debugger Core</text>
+  <text class="ui err" x="430" y="87" font-size="12">stop-id: dbg-stop-201 | frame: emit-op</text>
+
+  <rect x="318" y="114" width="740" height="58" rx="4" fill="#2b4870" stroke="#929292"/>
+  <text class="ui" x="332" y="136" font-size="12" fill="#f2f6ff">Attempted: runtime.debugger.breakpoint.upsert with stale source revision</text>
+  <text class="ui" x="332" y="156" font-size="12" fill="#f2f6ff">Next safe action: restart or step to nearest slide-point candidate</text>
+
+  <text class="ui p" x="318" y="198" font-size="12" font-weight="600">Stack + Source</text>
+  <rect x="318" y="206" width="332" height="248" rx="4" fill="#0f0f0f" stroke="#4a4a4a"/>
+  <rect x="326" y="216" width="316" height="24" rx="4" fill="#2b4870" stroke="#929292"/>
+  <text class="mono" x="336" y="232" font-size="12" fill="#f2f6ff">#0 emit-op (...) compiler.lisp:120</text>
+  <text class="mono s" x="336" y="254" font-size="12">#1 dispatch-op (...) runtime.lisp:88</text>
+  <text class="mono s" x="336" y="276" font-size="12">#2 command-loop (...) repl.lisp:211</text>
+  <text class="mono s" x="336" y="308" font-size="12">Locals: anchor, op, args, mapping-epoch</text>
+
+  <rect x="664" y="206" width="394" height="248" rx="4" fill="#0f0f0f" stroke="#4a4a4a"/>
+  <rect x="664" y="206" width="42" height="248" fill="#151515"/>
+  <text class="mono m" x="676" y="230" font-size="11">118</text>
+  <text class="mono m" x="676" y="250" font-size="11">119</text>
+  <text class="mono m" x="676" y="270" font-size="11">120</text>
+  <text class="mono m" x="676" y="290" font-size="11">121</text>
+  <rect x="706" y="258" width="352" height="20" fill="#232323"/>
+  <text class="mono s" x="714" y="230" font-size="12">(let ((anchor ...)</text>
+  <text class="mono s" x="714" y="250" font-size="12">      (result ...))</text>
+  <text class="mono p" x="714" y="270" font-size="12">  (runtime.debugger.breakpoint.upsert ...)</text>
+  <text class="mono s" x="714" y="290" font-size="12">  result)</text>
+
+  <text class="ui p" x="318" y="484" font-size="12" font-weight="600">Stepper</text>
+  <rect x="318" y="492" width="740" height="94" rx="4" fill="#0f0f0f" stroke="#4a4a4a"/>
+  <rect x="332" y="506" width="80" height="30" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui p" x="356" y="526" font-size="12">Into</text>
+  <rect x="420" y="506" width="80" height="30" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui p" x="444" y="526" font-size="12">Over</text>
+  <rect x="508" y="506" width="80" height="30" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui p" x="536" y="526" font-size="12">Out</text>
+  <rect x="596" y="506" width="132" height="30" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui p" x="610" y="526" font-size="12">Slide-Point Next</text>
+  <rect x="736" y="506" width="160" height="30" rx="4" fill="#232323" stroke="#676767"/>
+  <text class="ui p" x="748" y="526" font-size="12">Eval in Selected Frame</text>
+  <text class="ui m" x="332" y="560" font-size="12">source lane + low-level lane handoff visible | reduced-motion compliant snaps</text>
+
+  <!-- Bottom: in-frame REPL and transcript -->
+  <g filter="url(#e2)">
+    <rect x="302" y="612" width="772" height="276" rx="8" fill="#1b1b1b" stroke="#676767"/>
+  </g>
+  <rect x="303" y="613" width="770" height="34" rx="8" fill="#232323"/>
+  <text class="ui p" x="318" y="635" font-size="13" font-weight="600">In-Frame REPL</text>
+  <text class="ui m" x="418" y="635" font-size="12">frame: #0 emit-op | auditable actions on</text>
+
+  <rect x="318" y="660" width="740" height="212" rx="4" fill="#0f0f0f" stroke="#4a4a4a"/>
+  <text class="mono s" x="332" y="684" font-size="12">DBG[emit-op]&gt; source-rev</text>
+  <text class="mono p" x="332" y="704" font-size="12">91</text>
+  <text class="mono s" x="332" y="724" font-size="12">DBG[emit-op]&gt; (invoke-restart 're-resolve-source-revision)</text>
+  <text class="mono ok" x="332" y="744" font-size="12">; restart accepted, mapping epoch advanced to 94</text>
+  <text class="mono s" x="332" y="764" font-size="12">DBG[emit-op]&gt; (step-over)</text>
+  <text class="mono ok" x="332" y="784" font-size="12">; stop moved to compiler.lisp:121</text>
+  <text class="mono s" x="332" y="804" font-size="12">DBG[emit-op]&gt; _</text>
+
+  <!-- Right: context inspector + command palette -->
+  <g filter="url(#e2)">
+    <rect x="1086" y="64" width="342" height="542" rx="8" fill="#1b1b1b" stroke="#676767"/>
+  </g>
+  <rect x="1087" y="65" width="340" height="34" rx="8" fill="#232323"/>
+  <text class="ui p" x="1102" y="87" font-size="13" font-weight="600">Inspector + Timeline</text>
+
+  <rect x="1102" y="112" width="312" height="476" rx="4" fill="#0f0f0f" stroke="#4a4a4a"/>
+  <text class="mono s" x="1114" y="136" font-size="12">object: #&lt;BREAKPOINT-ACK bp-17&gt;</text>
+  <text class="mono s" x="1114" y="158" font-size="12">resolution: stale-source-revision</text>
+  <text class="mono s" x="1114" y="180" font-size="12">policy: safe</text>
+  <text class="ui p" x="1114" y="214" font-size="12" font-weight="600">Recent Stops</text>
+  <text class="ui s" x="1114" y="236" font-size="12">dbg-stop-201  emit-op:120</text>
+  <text class="ui s" x="1114" y="256" font-size="12">dbg-stop-200  dispatch-op:88</text>
+  <text class="ui s" x="1114" y="276" font-size="12">dbg-stop-199  emit-op:120</text>
+
+  <g filter="url(#e2)">
+    <rect x="1086" y="618" width="342" height="270" rx="8" fill="#1b1b1b" stroke="#929292"/>
+  </g>
+  <rect x="1098" y="632" width="318" height="34" rx="4" fill="#0f0f0f" stroke="#a7c8ff" stroke-width="2"/>
+  <text class="ui m" x="1110" y="653" font-size="13">&gt; restart re-resolve</text>
+  <rect x="1098" y="674" width="318" height="32" rx="4" fill="#2b4870" stroke="#929292"/>
+  <text class="ui" x="1110" y="695" font-size="12" fill="#f2f6ff">invoke-restart re-resolve-source-revision</text>
+  <rect x="1098" y="710" width="318" height="26" rx="4" fill="#1b1b1b" stroke="#4a4a4a"/>
+  <text class="ui s" x="1110" y="727" font-size="12">runtime.debugger.eval.in-frame</text>
+  <rect x="1098" y="740" width="318" height="26" rx="4" fill="#1b1b1b" stroke="#4a4a4a"/>
+  <text class="ui s" x="1110" y="757" font-size="12">runtime.debugger.step.over</text>
+  <rect x="1098" y="770" width="318" height="26" rx="4" fill="#1b1b1b" stroke="#4a4a4a"/>
+  <text class="ui s" x="1110" y="787" font-size="12">inspector.pin-selection</text>
+</svg>

@@ -9,7 +9,11 @@
 ;;; CRITICAL: Hash algorithm must match ARM LAP exactly.
 ;;; Algorithm: accum = 0; for each 32-bit word w in str:
 ;;;   accum = ror32(accum, 27) ^ w
-;;; return (accum << 5) >>> (5 - fixnumshift) as fixnum
+;;; return bottom 27 bits of accum as a fixnum.
+;;;
+;;; ARM LAP returns (accum << 5) >>> (5 - fixnumshift) as a TAGGED fixnum.
+;;; The Lisp value is accum & #x07FFFFFF (bottom 27 bits).
+;;; Since this is a Lisp function (not LAP), we return the untagged value.
 ;;;
 ;;; ror32(x, 27) = (x >> 27) | ((x & 0x7FFFFFF) << 5)
 ;;; All arithmetic is 32-bit unsigned.
@@ -21,14 +25,13 @@
     0
     (let ((accum 0))
       (dotimes (i len)
-        (let* ((w (uvref str i))
+        (let* ((w (char-code (uvref str i)))
                (rotated (logand #xFFFFFFFF
                           (logior (ash accum -27)
                                   (ash (logand accum #x7FFFFFF) 5)))))
           (setq accum (logand #xFFFFFFFF (logxor rotated w)))))
-      ;; (accum << 5) then unsigned >> (5 - fixnumshift)
-      ;; fixnumshift = 2, so >> 3
-      (ash (logand #xFFFFFFFF (ash accum 5)) -3))))
+      ;; Return bottom 27 bits of accum, matching the ARM LAP result.
+      (logand accum #x07FFFFFF))))
 
 (defun %string-hash (start str len)
   (declare (fixnum start len)
@@ -37,12 +40,12 @@
     0
     (let ((accum 0))
       (dotimes (i len)
-        (let* ((w (uvref str (the fixnum (+ start i))))
+        (let* ((w (char-code (uvref str (the fixnum (+ start i)))))
                (rotated (logand #xFFFFFFFF
                           (logior (ash accum -27)
                                   (ash (logand accum #x7FFFFFF) 5)))))
           (setq accum (logand #xFFFFFFFF (logxor rotated w)))))
-      (ash (logand #xFFFFFFFF (ash accum 5)) -3))))
+      (logand accum #x07FFFFFF))))
 
 ;;; On ARM, %function checks the fcell of a symbol and traps if not
 ;;; a function. The WASM compiler handles this as an intrinsic

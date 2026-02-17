@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# check-lisp-syntax.sh — Fast parenthesis/reader check for Lisp files using SBCL
+# check-lisp-syntax.sh — Fast parenthesis/reader check for Lisp files using CCL
 #
-# Uses SBCL's reader with *read-suppress* = T to verify all forms can be read
+# Uses CCL's reader with *read-suppress* = T to verify all forms can be read
 # without errors. This catches unmatched parentheses, unterminated strings,
 # and other reader-level syntax errors WITHOUT needing packages or definitions.
 #
@@ -18,8 +18,8 @@ IFS=$'\n\t'
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-if ! command -v sbcl >/dev/null 2>&1; then
-  echo "error: sbcl is required (brew install sbcl)" >&2
+if ! command -v ccl >/dev/null 2>&1; then
+  echo "error: ccl is required" >&2
   exit 2
 fi
 
@@ -97,13 +97,12 @@ fi
 # Deduplicate
 UNIQUE_FILES=($(printf '%s\n' "${FILES[@]}" | sort -u))
 
-# Build the SBCL check script
 # We pass file paths via a temp file to avoid shell quoting issues
 FILELIST=$(mktemp)
 trap 'rm -f "$FILELIST"' EXIT
 printf '%s\n' "${UNIQUE_FILES[@]}" > "$FILELIST"
 
-sbcl --noinform --non-interactive --eval "
+ccl --batch --quiet --eval "
 (let ((total-forms 0)
       (total-files 0)
       (errors 0)
@@ -135,5 +134,5 @@ sbcl --noinform --non-interactive --eval "
   (format t \"~%~d file~:p, ~d form~:p, ~d error~:p~%\" total-files total-forms errors)
   (when (plusp errors)
     (format t \"~%SYNTAX ERRORS FOUND~%\")
-    (sb-ext:exit :code 1)))
-"
+    (ccl:quit 1)))
+" 2>/dev/null

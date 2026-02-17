@@ -2058,6 +2058,88 @@ wasm_call_entry_index_binary_i32(uint32_t index, LispObj arg0, LispObj arg1)
 void _SPstack_misc_alloc(void);
 void _SPstack_cons_rest_arg(void);
 
+/* ============================================================
+ * Funcall Stuck Detector
+ * ============================================================
+ * Catches infinite loops, recursion, and mutual recursion in the
+ * funcall dispatch path.  Works by maintaining a ring buffer of
+ * the last FUNCALL_RING_SIZE entry indices.  Every
+ * FUNCALL_CHECK_INTERVAL calls, counts the number of unique
+ * entries in the ring buffer.  If there are <= FUNCALL_MAX_UNIQUE
+ * unique entries, the system is stuck (repeating a tiny set of
+ * functions endlessly).  Dumps the repeating pattern and traps.
+ *
+ * Catches:
+ *   - Infinite recursion (1-2 unique entries)
+ *   - Mutual recursion  (2-3 unique entries)
+ *   - Infinite loops calling a few functions (3-4 unique entries)
+ *
+ * Normal code calls many different functions, so the ring buffer
+ * always has >4 unique entries during correct operation.
+ *
+ * Performance: one array write + counter increment per funcall
+ * (~2 ns), uniqueness check every 1M calls (~50 ns amortized).
+ *
+ * See doc/wasm/debugging.md for usage documentation.
+ * ============================================================ */
+#define FUNCALL_RING_SIZE 32
+#define FUNCALL_CHECK_INTERVAL 2000  /* lowered from 1M for WASM stack overflow debugging */
+#define FUNCALL_MAX_UNIQUE 4            /* <=4 unique entries = stuck */
+
+static uint32_t funcall_ring[FUNCALL_RING_SIZE];
+static uint32_t funcall_ring_pos = 0;
+static uint64_t funcall_total = 0;
+
+static void funcall_stuck_record(uint32_t entry_index) {
+  funcall_ring[funcall_ring_pos & (FUNCALL_RING_SIZE - 1)] = entry_index;
+  funcall_ring_pos++;
+  funcall_total++;
+  if ((funcall_total % FUNCALL_CHECK_INTERVAL) == 0) {
+    /* Count unique entries in ring buffer */
+    uint32_t seen[FUNCALL_MAX_UNIQUE + 1];
+    int n_unique = 0;
+    for (int i = 0; i < FUNCALL_RING_SIZE; i++) {
+      uint32_t e = funcall_ring[i];
+      int found = 0;
+      for (int j = 0; j < n_unique; j++) {
+        if (seen[j] == e) { found = 1; break; }
+      }
+      if (!found) {
+        if (n_unique <= FUNCALL_MAX_UNIQUE) seen[n_unique] = e;
+        n_unique++;
+        if (n_unique > FUNCALL_MAX_UNIQUE) return;  /* not stuck */
+      }
+    }
+    /* n_unique <= FUNCALL_MAX_UNIQUE → stuck: dump and trap */
+    {
+      static const char hx[] = "0123456789abcdef";
+      char msg[256];
+      int p = 0;
+      const char *pfx = "STUCK after ";
+      while (*pfx) msg[p++] = *pfx++;
+      /* print funcall_total / 1000 as decimal + 'k' */
+      { uint64_t k = funcall_total / 1000;
+        char dbuf[20]; int dlen = 0;
+        do { dbuf[dlen++] = '0' + (char)(k % 10); k /= 10; } while (k > 0);
+        for (int i = dlen-1; i >= 0; i--) msg[p++] = dbuf[i]; }
+      msg[p++] = 'k';
+      msg[p++] = ' ';
+      msg[p++] = 'c'; msg[p++] = 'a'; msg[p++] = 'l';
+      msg[p++] = 'l'; msg[p++] = 's'; msg[p++] = ',';
+      msg[p++] = ' ';
+      /* print unique entries as hex */
+      for (int i = 0; i < n_unique; i++) {
+        if (i > 0) { msg[p++] = ' '; }
+        for (int b = 3; b >= 0; b--)
+          msg[p++] = hx[(seen[i] >> (b*4)) & 0xf];
+      }
+      msg[p++] = '\n';
+      wasm_host_log(msg, (unsigned)p);
+      wasm_subprims_trap();
+    }
+  }
+}
+
 static void
 wasm_signal_funcall_error(TCR *tcr, signed_natural errnum, LispObj name)
 {
@@ -2068,9 +2150,22 @@ wasm_signal_funcall_error(TCR *tcr, signed_natural errnum, LispObj name)
   _SPksignalerr();
 }
 
+static uint32_t wasm_funcall_depth = 0;
+
 static void
 wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
 {
+  wasm_funcall_depth++;
+  if (wasm_funcall_depth > 800) {
+    /* Approaching WASM native stack limit.  Set pending_throw instead of
+       letting the JS runtime crash with RangeError. */
+    static const char msg[] = "funcall depth exceeded\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    wasm_funcall_depth = 0;
+    tcr->wasm_pending_throw = 1;
+    return;
+  }
+
   if (wasm_reg(tcr, nfn) != fn_value) {
     wasm_set_reg(tcr, nfn, fn_value);
   }
@@ -2081,6 +2176,7 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
   LispObj entry = deref(fn_value, 1);
   if (tag_of(entry) != tag_fixnum) {
     wasm_signal_funcall_error(tcr, WASM_XNOTFUN, name);
+    wasm_funcall_depth--;
     return;
   }
 
@@ -2089,6 +2185,16 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
     uint32_t entry_call_abi = wasm_prepare_entry_call(entry_index);
     switch (entry_call_abi) {
     case WASM_ENTRY_CALL_ABI_UNARY_I32: {
+      funcall_stuck_record(entry_index);
+      { uint32_t tl = wasm_get_trace_funcall();
+        if (tl >= 1) {
+          static const char hx[] = "0123456789abcdef";
+          char d[60]; int p = 0;
+          d[p++]='U'; d[p++]='1'; d[p++]=' ';
+          for (int b=7;b>=0;b--) d[p++]=hx[(entry_index>>(b*4))&0xf];
+          d[p++]='\n'; wasm_host_log(d,(unsigned)p);
+        }
+      }
       LispObj result;
       LispObj raw_nargs = wasm_reg(tcr, nargs);
       if (raw_nargs != box_fixnum(1)) {
@@ -2097,6 +2203,7 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
         wasm_signal_funcall_error(tcr,
                                   (nargs_count < 1) ? WASM_XCALLTOOFEW : WASM_XCALLTOOMANY,
                                   name);
+        wasm_funcall_depth--;
         return;
       }
       result = wasm_call_entry_index_unary_i32(entry_index, wasm_reg(tcr, arg_z));
@@ -2107,6 +2214,16 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
       break;
     }
     case WASM_ENTRY_CALL_ABI_BINARY_I32: {
+      funcall_stuck_record(entry_index);
+      { uint32_t tl = wasm_get_trace_funcall();
+        if (tl >= 1) {
+          static const char hx[] = "0123456789abcdef";
+          char d[60]; int p = 0;
+          d[p++]='B'; d[p++]='2'; d[p++]=' ';
+          for (int b=7;b>=0;b--) d[p++]=hx[(entry_index>>(b*4))&0xf];
+          d[p++]='\n'; wasm_host_log(d,(unsigned)p);
+        }
+      }
       LispObj result;
       LispObj raw_nargs = wasm_reg(tcr, nargs);
       if (raw_nargs != box_fixnum(2)) {
@@ -2115,6 +2232,7 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
         wasm_signal_funcall_error(tcr,
                                   (nargs_count < 2) ? WASM_XCALLTOOFEW : WASM_XCALLTOOMANY,
                                   name);
+        wasm_funcall_depth--;
         return;
       }
       result = wasm_call_entry_index_binary_i32(entry_index,
@@ -2128,6 +2246,7 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
     }
     case WASM_ENTRY_CALL_ABI_LEGACY:
     default: {
+      funcall_stuck_record(entry_index);
       uint32_t trace_level = wasm_get_trace_funcall();
       if (trace_level >= 1) {
         static const char hx[] = "0123456789abcdef";
@@ -2156,6 +2275,7 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
     }
     }
   }
+  wasm_funcall_depth--;
 }
 
 static void
@@ -3458,22 +3578,70 @@ _SPsubtag_misc_ref(void)
   }
 
   LispObj subtag_val = wasm_reg(tcr, imm0);
-  signed_natural subtag = wasm_unbox_fixnum_or_trap(subtag_val);
+  if (tag_of(subtag_val) != tag_fixnum) {
+    char msg[128]; unsigned p = 0;
+    p = wasm_diag_append_str(msg, p, "subtag_misc_ref: imm0 not fixnum 0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)subtag_val);
+    msg[p++] = '\n'; wasm_host_log(msg, p);
+    wasm_debug_dump_state("subtag_misc_ref-bad-imm0");
+    wasm_subprims_trap();
+  }
+  signed_natural subtag = unbox_fixnum(subtag_val);
   if (subtag < 0) {
+    char msg[128]; unsigned p = 0;
+    p = wasm_diag_append_str(msg, p, "subtag_misc_ref: negative subtag ");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)subtag);
+    msg[p++] = '\n'; wasm_host_log(msg, p);
     wasm_subprims_trap();
   }
 
   LispObj obj = wasm_reg(tcr, arg_z);
   if (fulltag_of(obj) != fulltag_misc) {
+    char msg[128]; unsigned p = 0;
+    p = wasm_diag_append_str(msg, p, "subtag_misc_ref: arg_z not misc 0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)obj);
+    p = wasm_diag_append_str(msg, p, " imm0=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)subtag_val);
+    msg[p++] = '\n'; wasm_host_log(msg, p);
+    wasm_debug_dump_state("subtag_misc_ref-bad-tag");
     wasm_subprims_trap();
   }
   LispObj header = header_of(obj);
   if (header_subtag(header) != (unsigned)subtag) {
+    char msg[160]; unsigned p = 0;
+    p = wasm_diag_append_str(msg, p, "subtag_misc_ref: subtag mismatch hdr=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)header);
+    p = wasm_diag_append_str(msg, p, " exp=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)subtag);
+    p = wasm_diag_append_str(msg, p, " obj=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)obj);
+    msg[p++] = '\n'; wasm_host_log(msg, p);
+    wasm_debug_dump_state("subtag_misc_ref-mismatch");
     wasm_subprims_trap();
   }
-  signed_natural index = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, arg_y));
+  LispObj idx_val = wasm_reg(tcr, arg_y);
+  if (tag_of(idx_val) != tag_fixnum) {
+    char msg[128]; unsigned p = 0;
+    p = wasm_diag_append_str(msg, p, "subtag_misc_ref: arg_y not fixnum 0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)idx_val);
+    msg[p++] = '\n'; wasm_host_log(msg, p);
+    wasm_debug_dump_state("subtag_misc_ref-bad-idx");
+    wasm_subprims_trap();
+  }
+  signed_natural index = unbox_fixnum(idx_val);
   signed_natural count = header_element_count(header);
   if ((natural)index >= (natural)count) {
+    char msg[160]; unsigned p = 0;
+    p = wasm_diag_append_str(msg, p, "subtag_misc_ref: oob idx=");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)index);
+    p = wasm_diag_append_str(msg, p, " cnt=");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)count);
+    p = wasm_diag_append_str(msg, p, " obj=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)obj);
+    p = wasm_diag_append_str(msg, p, " hdr=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)header);
+    msg[p++] = '\n'; wasm_host_log(msg, p);
+    wasm_debug_dump_state("subtag_misc_ref-oob");
     wasm_subprims_trap();
   }
 
@@ -5082,11 +5250,11 @@ _SPwasm_udf_stub(void)
     wasm_host_log(msg, (unsigned)p);
   }
 
-  LispObj name = wasm_error_name_from_tcr(tcr);
-  wasm_set_reg(tcr, arg_y, box_fixnum(WASM_XFUNBND));
-  wasm_set_reg(tcr, arg_z, name);
-  wasm_set_nargs_count(tcr, 2);
-  _SPksignalerr();
+  /* During early boot, _SPksignalerr dispatches through ERRDISP which
+     triggers GF dispatch before methods are installed, causing infinite
+     recursion in %%no-applicable-method.  Set pending_throw directly
+     so the caller gets a clean error instead of stack overflow. */
+  tcr->wasm_pending_throw = 1;
 }
 
 __attribute__((used, visibility("default"), export_name("_SPreset")))

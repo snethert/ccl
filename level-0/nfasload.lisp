@@ -1232,6 +1232,7 @@
   "Temporary startup-step telemetry for wasm boot diagnosis.
 Can be removed before shipping once %FASLOAD startup is stable.")
 
+
 (defmacro %wasm-note-startup-step (n)
   `(progn
      (setq *wasm-startup-step* ,n)

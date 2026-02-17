@@ -2,8 +2,8 @@
 
 **Status:** Active
 **Scope:** WASM backend subprims ABI decisions and calling conventions
-**Last Updated:** 2026-02-15
-**Doc Version:** 1.0.0
+**Last Updated:** 2026-02-17
+**Doc Version:** 1.1.0
 
 This document captures the current decisions for the WASM backend subprims ABI.
 
@@ -15,6 +15,35 @@ This document captures the current decisions for the WASM backend subprims ABI.
 - The dispatcher performs **`call_indirect`** using the table index extracted from the fixnum.
 - The WASM table order **must match the ARM `sptab` order** so indices align.
 - The current TCR pointer is accessed via **`wasm_get_current_tcr` / `wasm_set_current_tcr`**.
+- Post-MVP2 runtime uses **two profiles**: `dev` (dynamic) and `fast`
+  (compilerless/closed-world for selected hot paths).
+
+## Execution Profiles (Post-MVP2)
+
+### `dev` profile (default, mutable runtime)
+
+- Keep the current ABI: subprim fixnum indices + dispatcher + `call_indirect`.
+- Keep dynamic behaviors: runtime compilation, function/method redefinition, and
+  host callbacks for const-pool/function-designator resolution.
+- `_SPfuncall` continues entry-index dispatch via `call_indirect`.
+
+### `fast` profile (finished app runtime)
+
+- Saved app excludes compiler payload and treats hot paths as closed-world.
+- Compiler may emit direct subprim imports for allowlisted hot paths instead of
+  going through `wasm_call_subprim_fixnum`.
+- Hot-path generic calls are forbidden unless rewritten as direct concrete calls
+  (or compile-time expanded wrappers).
+- Runtime method/function redefinition is disallowed for fast-profile hot paths.
+
+### `call_indirect` policy
+
+- The core kernel ABI remains entry-index based and still supports
+  `call_indirect` for compatibility.
+- A strict "no `call_indirect`" gate is valid only for fast-profile app modules
+  produced by the specialized pipeline.
+- Enforcement is by opcode scan for `0x11` on fast-profile app modules (not on
+  kernel/provider/bootstrap artifacts).
 
 ## Rationale
 
@@ -244,9 +273,13 @@ The following changes will be required (no code included here):
 
 - Any place that computes a subprim address via `SUBPRIMS_BASE` must instead treat the subprim value as **an index**.
 - Any "PC-in-subprims-range" checks must be reworked for WASM.
-- The compiler must emit calls via the dispatcher or otherwise use table indices.
+- `dev` profile compiler output continues to use dispatcher/table-index paths.
+- `fast` profile compiler output may use direct subprim imports for allowlisted
+  hot paths, with module-level `0x11` opcode gating.
 
 ## Status
 
 - Header added: `lisp-kernel/wasm-subprims.h` (dispatcher declaration and helpers).
 - Runtime now implements `call_indirect` and imports the WASM table.
+- Post-MVP2 profile split (`dev` vs `fast`) is now part of the ABI planning
+  contract.

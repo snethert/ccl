@@ -190,11 +190,25 @@
           '(lists sequences hash defstruct dll-node chars dumplisp))
   "Modules required by level-1.lisp plus dumplisp for save-application.")
 
+(defun wasm-redirect-fasl-path (fasl root)
+  "Redirect a WASM fasl from repo root to build/wasm32/.
+Logical pathnames are translated first. If the resolved path starts with ROOT,
+the root prefix is replaced with ROOT/build/wasm32/."
+  (let* ((resolved (namestring (translate-logical-pathname fasl)))
+         (root-str (namestring root))
+         (build-str (namestring (merge-pathnames "build/wasm32/" root))))
+    (if (and (>= (length resolved) (length root-str))
+             (string= root-str resolved :end2 (length root-str)))
+      (let ((relative (subseq resolved (length root-str))))
+        (pathname (concatenate 'string build-str relative)))
+      fasl)))
+
 (defun wasm-target-compile-modules (modules target force-compile &key trace-modules)
   (when (not (listp modules))
     (setf modules (list modules)))
   (let ((total (length modules))
-        (index 0))
+        (index 0)
+        (root (repo-root-from-script)))
     (in-development-mode
      (dolist (module modules t)
        (incf index)
@@ -202,15 +216,17 @@
          (format t "~&[~d/~d] ~s~%" index total module)
          (finish-output))
        (multiple-value-bind (fasl sources) (find-module module target)
-         (when (needs-compile-p fasl sources force-compile)
-           ;; Some earlier compiles can drop the TARGET nickname; refresh it
-           ;; before each module compile to keep target:: references readable.
-           (ensure-wasm-target-nickname)
-           (require 'nfcomp)
-           (compile-file (car sources)
-                         :output-file fasl
-                         :verbose t
-                         :target target)))))))
+         (let ((build-fasl (wasm-redirect-fasl-path fasl root)))
+           (ensure-directories-exist build-fasl)
+           (when (needs-compile-p build-fasl sources force-compile)
+             ;; Some earlier compiles can drop the TARGET nickname; refresh it
+             ;; before each module compile to keep target:: references readable.
+             (ensure-wasm-target-nickname)
+             (require 'nfcomp)
+             (compile-file (car sources)
+                           :output-file build-fasl
+                           :verbose t
+                           :target target))))))))
 
 (defun compile-wasm-real-image-entry (root)
   (let* ((source (merge-pathnames "scripts/wasm/make-real-image-entry.lisp" root))

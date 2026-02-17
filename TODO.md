@@ -1,5 +1,6 @@
 # CCL WASM TODO
 
+<!-- Entry index lookup tool: scripts/wasm/lookup-entry.mjs <index> -->
 <!-- Debugging guide: doc/wasm/debugging.md — read first when troubleshooting -->
 
 **Last updated:** 2026-02-17
@@ -99,7 +100,12 @@ used non-existent acode operators, breaking cross-compilation loading. Fixed.
 - **Arg register convention: aligned to ARM (2026-02-17):** The WASM compiler prologue (`wasm2-arg-prologue-ir`, `wasm2-closed-arg-prologue-ir`) had a porting bug — missing `(reverse req)` from ARM — causing `arg_z = first param` instead of `arg_z = last param`. Fixed prologue to be nargs-aware: for 2-arg functions, first param reads `:arg1` (arg_y), second/last param reads `:arg0` (arg_z). Reverted `wasm_sync_arg_regs_from_vsp` to ARM TOS-based convention (`vsp_ptr[0]` → arg_z). Call-setup sites (`:set-arg0`/`:set-arg1`) were already correct. There is no "WASM convention" — the mapping was a bug.
 - **Const pool fixnum boxing (2026-02-17):** `pool_data[i] = (LispObj)raw` stored unboxed fixnums. Fixed to `pool_data[i] = box_fixnum(...)`.
 
-**Current blocker:** Root image build progresses through package/symbol table initialization but fails with `%KERNEL-RESTART` undefined (XFUNBND error code 6). The `%KERNEL-RESTART` function is defined in level-1 but may not be compiled or installed at boot time.
+**Bugs fixed during Phase 1 (2026-02-17 sessions 3-4):**
+- **`%pname-hash`/`%string-hash` char-code fix:** `(uvref str i)` returns tagged characters, but hash algorithms expect integer codes. Fixed both functions to use `(char-code (uvref str i))`. This resolved the `%KERNEL-RESTART` XFUNBND error during cold-boot-init step 60 (hash table resize).
+- **Ivector const pool support:** Added const pool tag 17 (ivector) to both the cross-compiler serializer (`wasm2.lisp`) and C installer (`wasm-kernel-stubs.c`). Specialized arrays (u16-vector, u8-vector, etc.) are now correctly serialized with their target subtags and element data, instead of being flattened to generic simple-vectors.
+- **`target::` package resolution bug:** `target::subtag-*` references in `wasm2.lisp` resolved at read time to the HOST x86-64 architecture, not the WASM target. Fixed by using `wasm::subtag-*` directly. Also added TARGET package nickname redirect to `build-wasm-boot.lisp` as a safety measure.
+
+**Current blocker:** Root image build now progresses past hash table resize (step 60) but crashes with spill stack overflow in `TRUNCATE-NO-REM` (entry 822). Push/pop imbalance (52867 pushes, 20099 pops) suggests infinite recursion in arithmetic code during cold-boot-init.
 
 **Tooling added:**
 - `scripts/wasm/check-freshness.sh` — Detects stale build artifacts across the full dependency chain
@@ -160,8 +166,8 @@ used non-existent acode operators, breaking cross-compilation loading. Fixed.
 
 ## 📊 Current Status
 
-**Completed:** B1-B6 fixes, funcall ordering fix, ABI spec, diagnostic cleanup, instrumentation removal (~4500 lines), startup truth retirement, startup binding map removal (~2500 lines), debugging infrastructure, cold-boot init extraction (Phase 1a-1c)
-**Blocked on:** `%KERNEL-RESTART` undefined during cold-boot-init (XFUNBND). Arg ordering fix resolved GCD-2 crash; boot now progresses further.
+**Completed:** B1-B6 fixes, funcall ordering fix, ABI spec, diagnostic cleanup, instrumentation removal (~4500 lines), startup truth retirement, startup binding map removal (~2500 lines), debugging infrastructure, cold-boot init extraction (Phase 1a-1c), hash function char-code fix, ivector const pool support, target:: package resolution fix
+**Blocked on:** Spill stack overflow in `TRUNCATE-NO-REM` during cold-boot-init. Previous blockers (`%KERNEL-RESTART` XFUNBND, $hprimes subtag mismatch) resolved.
 **Build pipeline:** Functional (kernel → subprims → boot image → modules → image assembly)
 **MVP-1 completion:** 65% → Phase 0 unblocks everything
 
@@ -212,6 +218,8 @@ Root cause: 280+ missing WASM LAP bridge functions. Systemic fix: Phase 0A.
 ---
 
 ## 📝 Session Notes
+
+**2026-02-17 (sessions 3-4):** Fixed `%pname-hash`/`%string-hash` — both used `(uvref str i)` which returns tagged characters; hash algorithm expects integer codes. Wrapping with `char-code` resolved the `%KERNEL-RESTART` XFUNBND crash at step 60 (hash table resize). Next crash was `_SPsubtag_misc_ref` — `$hprimes` (u16-vector) was being created as fixnum-vector. Root cause: the const pool serializer treated all non-string vectors as generic simple-vectors. Added ivector const pool tag (17) with element-type-to-subtag mapping. Hit secondary bug: `target::subtag-*` in `wasm2.lisp` resolved at read time to HOST (x86-64) subtag values, not WASM target. Fixed by using `wasm::subtag-*` directly. Also added TARGET package nickname redirect to `build-wasm-boot.lisp`. Verified `$hprimes` now gets subtag=0xd7 (u16-vector). Boot progressed past hash tables to new crash: spill stack overflow in `TRUNCATE-NO-REM` (entry 822).
 
 **2026-02-17 (session 2):** Corrected arg register convention fix. Previous session wrongly changed runtime to match compiler bug. Actual fix: WASM compiler prologue (`wasm2-arg-prologue-ir`, `wasm2-closed-arg-prologue-ir`) was missing ARM's `(reverse req)` — porting bug causing `arg_z = first param`. Fixed prologue to be nargs-aware (for 2-arg: first→arg_y, last→arg_z). Reverted `wasm_sync_arg_regs_from_vsp` to ARM TOS-based. Full rebuild passes; root image still fails with `%KERNEL-RESTART` undefined (same blocker, unrelated to arg ordering).
 
