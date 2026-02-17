@@ -129,6 +129,33 @@ wasm_call_entry_index_binary_i32(uint32_t index, LispObj arg0, LispObj arg1)
   return ((wasm_lisp_fn_binary_i32)(uintptr_t)index)(arg0, arg1);
 }
 
+static uint32_t wasm_diag_funcall2_log_count = 0;
+
+static uint32_t
+wasm_diag_function_entry_index(LispObj fn_value)
+{
+  if (fulltag_of(fn_value) != fulltag_misc) {
+    return 0xffffffffu;
+  }
+  unsigned subtag = header_subtag(header_of(fn_value));
+  if (subtag == subtag_symbol) {
+    lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(fn_value));
+    fn_value = sym->fcell;
+    if (fulltag_of(fn_value) != fulltag_misc) {
+      return 0xffffffffu;
+    }
+    subtag = header_subtag(header_of(fn_value));
+  }
+  if (subtag != subtag_function && subtag != subtag_pseudofunction) {
+    return 0xffffffffu;
+  }
+  LispObj entry = deref(fn_value, 1);
+  if (tag_of(entry) != tag_fixnum) {
+    return 0xffffffffu;
+  }
+  return (uint32_t)unbox_fixnum(entry);
+}
+
 static void
 wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
 {
@@ -2105,8 +2132,27 @@ wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natu
   }
   tcr->wasm_pending_throw = 0;
 
+  if (count == 2 && args != NULL && wasm_diag_funcall2_log_count < 256u) {
+    uint32_t caller_entry = wasm_diag_function_entry_index(tcr->wasm_gprs[nfn]);
+    uint32_t callee_entry = wasm_diag_function_entry_index(fn_value);
+    if (((caller_entry >= 1000u) && (caller_entry <= 1200u)) ||
+        ((callee_entry >= 1000u) && (callee_entry <= 1200u))) {
+      char msg[192];
+      int n = snprintf(msg, sizeof(msg),
+                       "DIAG: f2 caller=%u callee=%u a0=0x%08x a1=0x%08x\n",
+                       caller_entry,
+                       callee_entry,
+                       (unsigned)args[0],
+                       (unsigned)args[1]);
+      if (n > 0) {
+        wasm_host_log(msg, (unsigned)n);
+      }
+      wasm_diag_funcall2_log_count++;
+    }
+  }
+
   LispObj *vsp_ptr = saved_vsp;
-  for (signed_natural i = 0; i < count; i++) {
+  for (signed_natural i = count - 1; i >= 0; i--) {
     *--vsp_ptr = args[i];
   }
 

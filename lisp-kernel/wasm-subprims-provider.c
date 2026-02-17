@@ -114,6 +114,54 @@ wasm_c_strlen(const char *bytes)
   return len;
 }
 
+static unsigned
+wasm_diag_append_str(char *dst, unsigned pos, const char *src)
+{
+  while (*src != '\0') {
+    dst[pos++] = *src++;
+  }
+  return pos;
+}
+
+static unsigned
+wasm_diag_append_hex32(char *dst, unsigned pos, uint32_t value)
+{
+  static const char hex[] = "0123456789abcdef";
+  for (int shift = 28; shift >= 0; shift -= 4) {
+    dst[pos++] = hex[(value >> shift) & 0x0fu];
+  }
+  return pos;
+}
+
+static void
+wasm_diag_log_misc_alloc_bad_count(TCR *tcr, LispObj subtag_val, LispObj count_val)
+{
+  uint32_t entry_index = 0xffffffffu;
+  LispObj fn_value = wasm_reg(tcr, nfn);
+  if (fulltag_of(fn_value) == fulltag_misc) {
+    unsigned fn_subtag = header_subtag(header_of(fn_value));
+    if (fn_subtag == subtag_function || fn_subtag == subtag_pseudofunction) {
+      LispObj entry = deref(fn_value, 1);
+      if (tag_of(entry) == tag_fixnum) {
+        entry_index = (uint32_t)unbox_fixnum(entry);
+      }
+    }
+  }
+
+  char msg[160];
+  unsigned pos = 0;
+  pos = wasm_diag_append_str(msg, pos, "DIAG: _SPmisc_alloc bad-count s=0x");
+  pos = wasm_diag_append_hex32(msg, pos, (uint32_t)subtag_val);
+  pos = wasm_diag_append_str(msg, pos, " c=0x");
+  pos = wasm_diag_append_hex32(msg, pos, (uint32_t)count_val);
+  pos = wasm_diag_append_str(msg, pos, " fn=0x");
+  pos = wasm_diag_append_hex32(msg, pos, (uint32_t)fn_value);
+  pos = wasm_diag_append_str(msg, pos, " e=0x");
+  pos = wasm_diag_append_hex32(msg, pos, entry_index);
+  msg[pos++] = '\n';
+  wasm_host_log(msg, pos);
+}
+
 static LispObj *
 wasm_skip_over_ivector(natural start, LispObj header)
 {
@@ -381,7 +429,7 @@ wasm_signal_capability_unavailable(TCR *tcr,
     wasm_subprims_trap();
   }
   LispObj *vsp_ptr = stack_ptr;
-  for (signed_natural i = 0; i < count; i++) {
+  for (signed_natural i = count - 1; i >= 0; i--) {
     *--vsp_ptr = args[i];
   }
   wasm_set_reg(tcr, vsp, (LispObj)vsp_ptr);
@@ -2982,6 +3030,7 @@ _SPmisc_alloc(void)
   }
   LispObj count_val = wasm_reg(tcr, arg_y);
   if (tag_of(count_val) != tag_fixnum) {
+    wasm_diag_log_misc_alloc_bad_count(tcr, subtag_val, count_val);
     static const char msg[] = "WASM _SPmisc_alloc: count not fixnum\n";
     wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
     wasm_subprims_trap();
