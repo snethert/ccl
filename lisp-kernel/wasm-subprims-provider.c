@@ -429,7 +429,7 @@ wasm_signal_capability_unavailable(TCR *tcr,
     wasm_subprims_trap();
   }
   LispObj *vsp_ptr = stack_ptr;
-  for (signed_natural i = count - 1; i >= 0; i--) {
+  for (signed_natural i = 0; i < count; i++) {
     *--vsp_ptr = args[i];
   }
   wasm_set_reg(tcr, vsp, (LispObj)vsp_ptr);

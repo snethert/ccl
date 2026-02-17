@@ -295,6 +295,7 @@ static int wasm_symbol_object_p(LispObj value);
 static int wasm_debug_hex8(char *buf, uint32_t v);
 static int wasm_debug_str(char *buf, const char *s);
 static int wasm_debug_uint(char *buf, uint32_t v);
+static uint32_t wasm_diag_vsp1339_count = 0;
 
 static uint32_t
 wasm_boot_phase_normalize(uint32_t phase)
@@ -1592,7 +1593,7 @@ wasm_get_mv(uint32_t index)
   if (vsp_ptr == NULL) {
     return lisp_nil;
   }
-  return vsp_ptr[index];
+  return vsp_ptr[count - 1 - (signed_natural)index];
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_get_mv_indexed")))
@@ -1672,7 +1673,23 @@ wasm_vsp_ref(uint32_t index)
   if (count <= 0 || (signed_natural)index >= count) {
     return lisp_nil;
   }
-  return vsp_ptr[index];
+  LispObj value = vsp_ptr[count - 1 - (signed_natural)index];
+  if (wasm_diag_vsp1339_count < 48u) {
+    uint32_t entry = wasm_diag_function_entry_index(tcr->wasm_gprs[nfn]);
+    if (entry == 1339u) {
+      char msg[128];
+      int n = snprintf(msg, sizeof(msg),
+                       "DIAG: vsp1339 i=%u v=0x%08x n=%d\n",
+                       (unsigned)index,
+                       (unsigned)value,
+                       (int)count);
+      if (n > 0) {
+        wasm_host_log(msg, (unsigned)n);
+      }
+      wasm_diag_vsp1339_count++;
+    }
+  }
+  return value;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_vpop")))
@@ -2152,7 +2169,7 @@ wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natu
   }
 
   LispObj *vsp_ptr = saved_vsp;
-  for (signed_natural i = count - 1; i >= 0; i--) {
+  for (signed_natural i = 0; i < count; i++) {
     *--vsp_ptr = args[i];
   }
 
