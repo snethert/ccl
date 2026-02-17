@@ -298,6 +298,23 @@
               (nx1-form :value base)
               (nx1-form :value offset)))
 
+;; WASM32 needs %fixnum-set as an operator (lowered to :lisp-word-set in wasm2);
+;; other backends keep normal function-call semantics (they use LAP definitions).
+(defnx1 nx1-fixnum-set ((%fixnum-set) (%fixnum-set-natural)) context (base offset &optional (new-value offset new-value-p))
+  (if (eq (backend-name *target-backend*) :wasm32)
+    (if new-value-p
+      (make-acode (%nx1-default-operator)
+                  (nx1-form :value base)
+                  (nx1-form :value offset)
+                  (nx1-form :value new-value))
+      (make-acode (%nx1-default-operator)
+                  (nx1-form :value base)
+                  (nx1-form :value 0)
+                  (nx1-form :value offset)))
+    (if new-value-p
+      (nx1-typed-call context (car *nx-sfname*) (list base offset new-value))
+      (nx1-typed-call context (car *nx-sfname*) (list base 0 offset)))))
+
 ;; WASM32 needs these as operators (lowered in wasm2); other backends keep
 ;; normal function-call semantics.
 (defnx1 nx1-%tcr-toplevel-function ((%tcr-toplevel-function)) context (tcr)

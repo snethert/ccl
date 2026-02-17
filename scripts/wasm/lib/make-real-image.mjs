@@ -932,7 +932,7 @@ trace("subprims table installed");
 const imageLen = bootBytes.byteLength >>> 0;
 const pageSize = 65536;
 const cstackSize = 1 << 20;
-const reserve = 4 << 20;
+const reserve = 64 << 20;
 const needBytes = imageLen + cstackSize + reserve;
 let haveBytes = runtime.memory.buffer.byteLength;
 if (needBytes > haveBytes) {

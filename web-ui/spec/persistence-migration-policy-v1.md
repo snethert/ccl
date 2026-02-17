@@ -10,7 +10,7 @@ Depends on: `web-ui/spec/persistence-purpose-and-user-contract-v1.md`, `web-ui/s
 
 This policy defines how persistence data is migrated without violating durability, determinism, or user trust guarantees.
 
-The migration system MUST guarantee:
+The migration system <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-0CCE6BB38C"></a>MUST guarantee:
 
 1. No protected ref points to a partial or unreadable commit closure.
 2. No silent profile/schema transition occurs.
@@ -28,7 +28,7 @@ This policy does not define:
 
 ## 3. Hard Invariants
 
-Migration MUST preserve all of the following:
+Migration <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-603BA5854D"></a>MUST preserve all of the following:
 
 1. Immutable objects are never rewritten in place.
 2. Protected refs are advanced only by guarded CAS (`requires_current_commit_id`, `requires_no_unresolved_conflicts=true`, `requires_lease_epoch`, `requires_finalized=true`).
@@ -47,11 +47,11 @@ Supported migration classes:
 4. Backend migration: storage lane changes (`indexeddb`, `opfs+idb`, `memory-snapshot`, integration lanes).
 5. Policy migration: reader/profile policy identifiers that affect canonical encoding or semantic behavior.
 
-Each migration execution MUST declare one migration class and MAY include additional linked classes when coupled transitions are unavoidable.
+Each migration execution <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-81D1B2793F"></a>MUST declare one migration class and MAY include additional linked classes when coupled transitions are unavoidable.
 
 ## 5. Migration Record
 
-Each migration operation MUST persist a mutable migration record:
+Each migration operation <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-12DC6401FC"></a>MUST persist a mutable migration record:
 
 Key:
 
@@ -83,7 +83,7 @@ Optional fields:
 7. `error_detail`
 8. `rollback_of_migration_id`
 
-Migration records MUST be retained until at least one successful post-migration health window completes.
+Migration records <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-F716AD92FC"></a>MUST be retained until at least one successful post-migration health window completes.
 
 ## 6. Migration State Machine
 
@@ -110,11 +110,11 @@ Allowed transitions:
 6. `failed -> rolling_back | aborted`
 7. `rolling_back -> rolled_back | failed`
 
-Any transition not listed above MUST be rejected with `ERR_MIGRATION_STATE_INVALID`.
+Any transition not listed above <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-56B4207AB2"></a>MUST be rejected with `ERR_MIGRATION_STATE_INVALID`.
 
 ## 7. Preflight Validation
 
-Before entering `prepared`, the implementation MUST perform all checks:
+Before entering `prepared`, the implementation <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-9FB2161555"></a>MUST perform all checks:
 
 1. Acquire lease for all target protected ref namespaces.
 2. Verify no unresolved conflict records exist for protected refs to be cut over.
@@ -124,7 +124,7 @@ Before entering `prepared`, the implementation MUST perform all checks:
 6. Estimate closure size and quota headroom.
 7. Validate that destination schema/profile/backend is supported by the running build.
 
-If any check fails, migration MUST end in `aborted` or `failed` with explicit error code.
+If any check fails, migration <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-69366AF1E1"></a>MUST end in `aborted` or `failed` with explicit error code.
 
 ## 8. Migration Execution Modes
 
@@ -141,7 +141,7 @@ Rules:
 
 ### 8.2 Eager Rewrite Mode
 
-Eager mode MUST be used when backward-compatible reads are impossible or unsafe.
+Eager mode <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-B838CC8CBA"></a>MUST be used when backward-compatible reads are impossible or unsafe.
 
 Required algorithm:
 
@@ -156,11 +156,11 @@ Required algorithm:
 9. Advance protected refs via guarded CAS with mandatory protected-ref guard clauses.
 10. Mark migration `committed` only after all target ref moves succeed.
 
-If any step fails before step 9, refs MUST remain unchanged.
+If any step fails before step 9, refs <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-B9028EEB64"></a>MUST remain unchanged.
 
 ## 9. Cutover Rules
 
-Cutover (protected ref advancement) MUST satisfy:
+Cutover (protected ref advancement) <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-A8FB607DEA"></a>MUST satisfy:
 
 1. `requires_current_commit_id` equals pre-migration ref head commit.
 2. `requires_no_unresolved_conflicts=true`.
@@ -168,7 +168,7 @@ Cutover (protected ref advancement) MUST satisfy:
 4. `requires_finalized=true` for destination commits.
 5. `requires_base_commit_id` for merge-finalization related cutovers.
 
-Cutover of multiple protected refs for one migration MUST use one metadata transaction when platform supports it.
+Cutover of multiple protected refs for one migration <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-63123342F0"></a>MUST use one metadata transaction when platform supports it.
 
 ## 10. Rollback Policy
 
@@ -176,34 +176,34 @@ Rollback is a first-class migration operation.
 
 Rules:
 
-1. Rollback MUST use pinned `pre_migration_ref_state` from migration record.
-2. Rollback MUST use guarded CAS semantics identical to forward cutover.
-3. Rollback MUST NOT delete migrated objects immediately.
-4. Rollback result MUST be recorded as `rolled_back` or `failed`.
+1. Rollback <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-102A153492"></a>MUST use pinned `pre_migration_ref_state` from migration record.
+2. Rollback <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-5AE1822BE4"></a>MUST use guarded CAS semantics identical to forward cutover.
+3. Rollback <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-C3610C38B0"></a>MUST NOT delete migrated objects immediately.
+4. Rollback result <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-4A5741F966"></a>MUST be recorded as `rolled_back` or `failed`.
 
-The system MUST NOT auto-rollback without an auditable policy trigger.
+The system <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-8E5B3CAF44"></a>MUST NOT auto-rollback without an auditable policy trigger.
 
 ## 11. Mixed-Version and Mixed-Profile Behavior
 
 Rules for interoperability:
 
-1. Sync handshake MUST exchange profile id and minimum readable schema versions.
-2. If remote compatibility cannot be guaranteed, protected refs MUST NOT auto-advance.
-3. Mixed-profile collaboration MUST use explicit compatibility mode or fail fast with a stable error.
-4. Migration MUST NOT conceal incompatible semantic-canonical payloads behind file-primacy labels.
+1. Sync handshake <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-846CC02DD9"></a>MUST exchange profile id and minimum readable schema versions.
+2. If remote compatibility cannot be guaranteed, protected refs <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-7C70BD6488"></a>MUST NOT auto-advance.
+3. Mixed-profile collaboration <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-D373F60D67"></a>MUST use explicit compatibility mode or fail fast with a stable error.
+4. Migration <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-503D8EE301"></a>MUST NOT conceal incompatible semantic-canonical payloads behind file-primacy labels.
 
 ## 12. Quota, Retention, and GC
 
-Migration MUST integrate with quota/GC controls:
+Migration <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-5AF7754D1E"></a>MUST integrate with quota/GC controls:
 
-1. Pre-migration closures MUST be pinned until migration health window completes.
-2. Post-migration GC MUST keep both pre- and post-cutover closures until rollback window expires.
-3. On quota pressure during migration, system MUST stop autosave first, then evict derived data, then pause migration before risking authored data.
-4. Migration MUST never reclaim data required for deterministic rollback within retention window.
+1. Pre-migration closures <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-DCFB360CEE"></a>MUST be pinned until migration health window completes.
+2. Post-migration GC <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-BC248D3365"></a>MUST keep both pre- and post-cutover closures until rollback window expires.
+3. On quota pressure during migration, system <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-92B02EC59A"></a>MUST stop autosave first, then evict derived data, then pause migration before risking authored data.
+4. Migration <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-EB34A5F831"></a>MUST never reclaim data required for deterministic rollback within retention window.
 
 ## 13. Failure Semantics and Error Codes
 
-Implementations MUST expose stable migration errors:
+Implementations <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-87D9E0DC71"></a>MUST expose stable migration errors:
 
 1. `ERR_MIGRATION_UNSUPPORTED`
 2. `ERR_MIGRATION_STATE_INVALID`
@@ -219,7 +219,7 @@ Implementations MUST expose stable migration errors:
 12. `ERR_MIGRATION_ROLLBACK_REQUIRED`
 13. `ERR_MIGRATION_ROLLBACK_FAILED`
 
-Each error MUST define caller action as one of:
+Each error <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-B632FEC1CF"></a>MUST define caller action as one of:
 
 1. retry safe
 2. retry after operator action
@@ -228,7 +228,7 @@ Each error MUST define caller action as one of:
 
 ## 14. Observability and Audit
 
-Migration events MUST include:
+Migration events <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-6E9D52FE36"></a>MUST include:
 
 1. `migration_id`
 2. `workspace_id`
@@ -243,7 +243,7 @@ Migration events MUST include:
 11. `result`
 12. `error_code` (if any)
 
-Migration event streams MUST support reconstruction of exact state transitions for post-incident analysis.
+Migration event streams <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-E9833AA94F"></a>MUST support reconstruction of exact state transitions for post-incident analysis.
 
 ## 15. Conformance Tests
 
@@ -266,7 +266,7 @@ Recommended rollout sequence:
 3. Incremental rollout with automatic stop conditions on migration failure threshold.
 4. Default enablement after conformance and incident-drill signoff.
 
-Stop conditions MUST include:
+Stop conditions <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-748F5859D2"></a>MUST include:
 
 1. repeated `ERR_MIGRATION_REF_CAS_FAILED`
 2. repeated `ERR_MIGRATION_SOURCE_OBJECT_CORRUPT`

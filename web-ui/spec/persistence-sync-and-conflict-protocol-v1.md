@@ -10,7 +10,7 @@ Depends on: `web-ui/spec/persistence-ref-update-protocol-v1.md`, `web-ui/spec/pe
 
 This protocol defines deterministic sync behavior that preserves local-first semantics and user trust.
 
-The protocol MUST guarantee:
+The protocol <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-C694C0A253"></a>MUST guarantee:
 
 1. Local editing and saves never block on network availability.
 2. Sync transfers objects and refs; it does not rewrite authored files in place.
@@ -78,19 +78,19 @@ Required steps:
 
 Protected-ref fast-forward guard requirements:
 
-1. Guard shape MUST conform to `web-ui/spec/persistence-envelope-schema-v1.json` (`ref_advance_request` with `protected_ref=true`).
-2. Guard MUST include `requires_current_commit_id`, `requires_no_unresolved_conflicts=true`, `requires_lease_epoch`, and `requires_finalized=true`.
-3. Fast-forward MUST be blocked if commit is `finalized=false` or local conflict state is unresolved.
+1. Guard shape <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-E26FD77433"></a>MUST conform to `web-ui/spec/persistence-envelope-schema-v1.json` (`ref_advance_request` with `protected_ref=true`).
+2. Guard <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-48747B36D9"></a>MUST include `requires_current_commit_id`, `requires_no_unresolved_conflicts=true`, `requires_lease_epoch`, and `requires_finalized=true`.
+3. Fast-forward <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-ED48F9EF47"></a>MUST be blocked if commit is `finalized=false` or local conflict state is unresolved.
 
 ## 6. Verification Rules
 
-Every received object MUST pass:
+Every received object <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-618AB47347"></a>MUST pass:
 
 1. Hash check (`hash(bytes) == object_id`).
 2. Type envelope validation.
 3. Schema/version parse sanity checks.
 
-Failure MUST reject object and preserve existing local ref state.
+Failure <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-80DA116895"></a>MUST reject object and preserve existing local ref state.
 
 ## 7. Background Sync Policy
 
@@ -99,7 +99,7 @@ Background sync MAY:
 1. Upload/download immutable objects.
 2. Sync autosave/session refs per policy.
 
-Background sync MUST NOT:
+Background sync <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-B70549144B"></a>MUST NOT:
 
 1. Advance `workspace/main` unless explicit fast-forward-only policy allows it.
 2. Advance to commits flagged non-finalized by policy.
@@ -156,9 +156,9 @@ Supported user actions SHOULD include:
 
 Hard gate:
 
-1. `workspace/main` MUST NOT advance directly from divergence detection.
-2. Resolution MUST proceed through explicit merge-candidate workflow or explicit user-selected non-merge action.
-3. Background workers MUST NOT bypass this gate.
+1. `workspace/main` <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-76E3DF9FFA"></a>MUST NOT advance directly from divergence detection.
+2. Resolution <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-4CB332CD82"></a>MUST proceed through explicit merge-candidate workflow or explicit user-selected non-merge action.
+3. Background workers <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-9903009124"></a>MUST NOT bypass this gate.
 
 Manual-merge baseline:
 
@@ -172,8 +172,8 @@ Manual-merge baseline:
 
 For semantic conflict workflows:
 
-1. `base_commit_id` MUST be computed before structural or semantic merge.
-2. If base cannot be established, system MUST fall back to explicit non-semantic resolution paths.
+1. `base_commit_id` <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-65CD958850"></a>MUST be computed before structural or semantic merge.
+2. If base cannot be established, system <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-14D8F61270"></a>MUST fall back to explicit non-semantic resolution paths.
 
 ### 9.2 MergeRecord
 
@@ -192,18 +192,18 @@ Accepted merge commit SHOULD reference `merge_record_id`.
 
 ## 10. Safe Auto-Merge Policy (Optional)
 
-If enabled, auto-merge MUST remain narrow:
+If enabled, auto-merge <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-CC1790EF78"></a>MUST remain narrow:
 
 1. Disjoint file edits only, or
 2. Pure additive changes with no overlapping mutations.
 
-Auto-merge MUST stage result in merge-candidate ref first.
-Auto-merge MUST require explicit user acceptance before `workspace/main` advancement.
-Auto-merge MUST NOT silently rewrite `workspace/main`.
+Auto-merge <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-9DE63A0822"></a>MUST stage result in merge-candidate ref first.
+Auto-merge <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-8D14700015"></a>MUST require explicit user acceptance before `workspace/main` advancement.
+Auto-merge <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-16D68025AD"></a>MUST NOT silently rewrite `workspace/main`.
 
 ## 11. Error Codes
 
-Implementations MUST expose:
+Implementations <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-EA45DE537F"></a>MUST expose:
 
 1. `ERR_SYNC_NETWORK`
 2. `ERR_SYNC_OBJECT_MISSING`
@@ -218,7 +218,7 @@ Implementations MUST expose:
 
 ## 12. Observability
 
-Sync events MUST include:
+Sync events <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-B29C3BD50C"></a>MUST include:
 
 1. `remote_id`
 2. `ref_name`

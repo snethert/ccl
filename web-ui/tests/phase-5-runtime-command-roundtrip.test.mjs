@@ -4,8 +4,8 @@ import assert from "node:assert/strict";
 import {
   createMicrokernel,
   KERNEL_OP_RUNTIME_COMMAND_POLL
-} from "../../doc/wasm/js/microkernel.mjs";
-import { createSabRing, SAB_RING_TRANSPORT } from "../../doc/wasm/js/sab-ring.mjs";
+} from "../../scripts/wasm/lib/microkernel.mjs";
+import { createSabRing, SAB_RING_TRANSPORT } from "../../scripts/wasm/lib/sab-ring.mjs";
 import { createRuntimeCommandClient } from "../src/index.mjs";
 
 function decodeUtf8(bytes) {

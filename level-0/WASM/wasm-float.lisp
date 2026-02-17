@@ -366,7 +366,7 @@
                   (logior sign-bit
                           (ash s-exp 23)
                           (logand s-sig #x7FFFFF))))))
-       dest)))
+       dest))))
 
 ;;; Convert fixnum to single-float.
 (defun %int-to-sfloat! (int result)

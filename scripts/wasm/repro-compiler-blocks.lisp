@@ -28,8 +28,34 @@
           (load-rel "compiler/WASM/wasm-arch.lisp")
           (load-rel "compiler/WASM/wasm-vinsns.lisp"))
         (let ((*compile-definitions* t))
+          ;; Register %fixnum-set and %fixnum-set-natural as acode operators.
+          ;; Find empty () slots in the live operator table and fill them.
+          (let ((filled 0))
+            (do ((tail *next-nx-operators* (cdr tail)))
+                ((or (null tail) (>= filled 2)))
+              (when (null (car tail))
+                (cond ((= filled 0)
+                       (setf (car tail)
+                             (list '%fixnum-set
+                                   (logior operator-single-valued-mask
+                                           operator-acode-subforms-mask)
+                                   t))
+                       (incf filled))
+                      ((= filled 1)
+                       (setf (car tail)
+                             (list '%fixnum-set-natural
+                                   (logior operator-single-valued-mask
+                                           operator-acode-subforms-mask)
+                                   'natural))
+                       (incf filled)))))
+            (format t "~&DIAG: Patched ~d operators into table~%" filled)
+            (unless (= filled 2)
+              (error "Failed to find empty slots for %fixnum-set operators")))
           (load-rel "compiler/WASM/wasm-ffi.lisp")
           (load-rel "compiler/acode-rewrite.lisp")
+          (load-rel "compiler/nx1.lisp")
+          ;; Refresh fasl dumping to pick up local compiler edits.
+          (load-rel "lib/nfcomp.lisp")
           (load-rel "compiler/WASM/wasm2.lisp")
           (load-rel "compiler/WASM/wasm-backend.lisp"))))))
 

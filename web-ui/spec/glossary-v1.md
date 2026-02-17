@@ -15,7 +15,7 @@ If a term appears in normative language and is defined here, this definition is 
 ## 2. Usage Rules
 
 1. Terms are case-insensitive in prose, but their canonical spelling in this glossary is preferred.
-2. Hyphenated machine tokens (for example `required-planned`) MUST match canonical form exactly.
+2. Hyphenated machine tokens (for example `required-planned`) <a id="REQ-GLOSSARY-V1-D791361F0E"></a>MUST match canonical form exactly.
 3. New normative terms SHOULD be added here in the same change set that introduces them.
 4. Synonyms MAY be used in explanatory prose, but normative clauses SHOULD use canonical term names.
 
@@ -50,8 +50,8 @@ If a term appears in normative language and is defined here, this definition is 
 | protected ref | A reference namespace that requires lease and semantic guard validation before advancement. |
 | ref CAS | Compare-and-swap style reference update guarded by expected generation/value checks. |
 | refgen | Monotonic reference generation counter used for CAS safety and ordering. |
-| release gate | A blocking quality condition that MUST pass before release progression. |
-| required artifact | Artifact class that MUST exist and pass conformance for the owning profile claim. |
+| release gate | A blocking quality condition that <a id="REQ-GLOSSARY-V1-6D4BA43FC8"></a>MUST pass before release progression. |
+| required artifact | Artifact class that <a id="REQ-GLOSSARY-V1-9BFD960AC5"></a>MUST exist and pass conformance for the owning profile claim. |
 | required-planned artifact | Artifact class reserved as mandatory but not yet fully authored; blocks final profile/system claims. |
 | schema | Machine-validated structural contract for payloads, records, or reports. |
 | snapshot | Canonical serialized state representation used for restore, replay checks, and diffing. |

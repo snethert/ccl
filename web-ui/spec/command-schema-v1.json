@@ -1,0 +1,852 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ccl.dev/web-ui/spec/command-schema-v1.json",
+  "title": "Web UI Command Schema v1",
+  "description": "Canonical command registry, keymap, invocation, and execution result schema for web-ui.",
+  "x-spec-metadata": {
+    "status": "Draft",
+    "version": "1.0.0",
+    "lastUpdated": "2026-02-16",
+    "scope": "Phase-1 command registry, typed invocation defaults, key routing traces, and command result envelopes",
+    "compatibility": {
+      "backward": "Readers MAY accept version `0` command envelopes and normalize missing fields to v1 defaults.",
+      "forward": "Unknown metadata subfields MAY be preserved when baseline command semantics remain unchanged.",
+      "deprecation": "Behavioral changes to command routing precedence or invocation semantics require a major version increment."
+    }
+  },
+  "type": "object",
+  "required": [
+    "version",
+    "registry"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "enum": [
+        "1.0.0",
+        "0"
+      ]
+    },
+    "registry": {
+      "$ref": "#/$defs/registry"
+    },
+    "invocations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/invocation"
+      }
+    },
+    "resolutionTraces": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/resolutionTrace"
+      }
+    },
+    "enablementReports": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/enablementReport"
+      }
+    },
+    "executionReports": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/executionReport"
+      }
+    },
+    "presentationTranslations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/presentationTranslation"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "u53": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "idString": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:@/-]{1,192}$"
+    },
+    "commandId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{1,192}$"
+    },
+    "nullableCommandId": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/commandId"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "global",
+        "task",
+        "context",
+        "widget"
+      ]
+    },
+    "namespacePolicy": {
+      "type": "string",
+      "enum": [
+        "allow",
+        "require-dot"
+      ]
+    },
+    "argType": {
+      "type": "string",
+      "enum": [
+        "string",
+        "number",
+        "boolean",
+        "symbol",
+        "package",
+        "file",
+        "location",
+        "presentation",
+        "selection",
+        "frame",
+        "binding",
+        "place",
+        "command",
+        "list",
+        "map"
+      ]
+    },
+    "defaultSource": {
+      "type": "string",
+      "enum": [
+        "selection",
+        "presentation",
+        "lastResult",
+        "package",
+        "lastDefinition",
+        "sourceLocation"
+      ]
+    },
+    "argSpec": {
+      "type": "object",
+      "required": [
+        "name",
+        "type",
+        "required",
+        "default",
+        "defaultFrom"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 96,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_-]*$"
+        },
+        "type": {
+          "$ref": "#/$defs/argType"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "default": {},
+        "defaultFrom": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/defaultSource"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "beginnerPolicy": {
+      "type": "object",
+      "properties": {
+        "hidden": {
+          "type": "boolean"
+        },
+        "advanced": {
+          "type": "boolean"
+        },
+        "confirm": {
+          "type": "boolean"
+        },
+        "explanation": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 512
+        }
+      },
+      "additionalProperties": false
+    },
+    "commandMetadata": {
+      "type": "object",
+      "properties": {
+        "runtime": {
+          "type": "boolean"
+        },
+        "beginner": {
+          "$ref": "#/$defs/beginnerPolicy"
+        }
+      },
+      "patternProperties": {
+        "^x-[A-Za-z0-9._:-]+$": {}
+      },
+      "additionalProperties": false
+    },
+    "capabilityRequirement": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "uniqueItems": true
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "commandSpec": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "doc",
+        "scope",
+        "capability",
+        "args",
+        "metadata"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/commandId"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "doc": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 4096
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "capability": {
+          "$ref": "#/$defs/capabilityRequirement"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/argSpec"
+          }
+        },
+        "enabledKind": {
+          "type": "string",
+          "enum": [
+            "none",
+            "predicate"
+          ]
+        },
+        "execKind": {
+          "type": "string",
+          "enum": [
+            "none",
+            "local",
+            "runtime"
+          ]
+        },
+        "metadata": {
+          "$ref": "#/$defs/commandMetadata"
+        }
+      },
+      "additionalProperties": false
+    },
+    "globalKeybinding": {
+      "type": "object",
+      "required": [
+        "scope",
+        "scopeId",
+        "key",
+        "commandId"
+      ],
+      "properties": {
+        "scope": {
+          "const": "global"
+        },
+        "scopeId": {
+          "type": "null"
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "commandId": {
+          "$ref": "#/$defs/commandId"
+        }
+      },
+      "additionalProperties": false
+    },
+    "scopedKeybinding": {
+      "type": "object",
+      "required": [
+        "scope",
+        "scopeId",
+        "key",
+        "commandId"
+      ],
+      "properties": {
+        "scope": {
+          "type": "string",
+          "enum": [
+            "task",
+            "context",
+            "widget"
+          ]
+        },
+        "scopeId": {
+          "$ref": "#/$defs/idString"
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "commandId": {
+          "$ref": "#/$defs/commandId"
+        }
+      },
+      "additionalProperties": false
+    },
+    "keybinding": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/globalKeybinding"
+        },
+        {
+          "$ref": "#/$defs/scopedKeybinding"
+        }
+      ]
+    },
+    "keymapConflict": {
+      "type": "object",
+      "required": [
+        "id",
+        "key",
+        "winner",
+        "shadowed",
+        "reason"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/idString"
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "winner": {
+          "$ref": "#/$defs/keybinding"
+        },
+        "shadowed": {
+          "$ref": "#/$defs/keybinding"
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "override",
+            "duplicate-binding",
+            "shadowed-by-precedence"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "keymaps": {
+      "type": "object",
+      "required": [
+        "global",
+        "task",
+        "context",
+        "widget"
+      ],
+      "properties": {
+        "global": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/globalKeybinding"
+          }
+        },
+        "task": {
+          "type": "array",
+          "items": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/scopedKeybinding"
+              },
+              {
+                "properties": {
+                  "scope": {
+                    "const": "task"
+                  }
+                },
+                "required": [
+                  "scope"
+                ]
+              }
+            ]
+          }
+        },
+        "context": {
+          "type": "array",
+          "items": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/scopedKeybinding"
+              },
+              {
+                "properties": {
+                  "scope": {
+                    "const": "context"
+                  }
+                },
+                "required": [
+                  "scope"
+                ]
+              }
+            ]
+          }
+        },
+        "widget": {
+          "type": "array",
+          "items": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/scopedKeybinding"
+              },
+              {
+                "properties": {
+                  "scope": {
+                    "const": "widget"
+                  }
+                },
+                "required": [
+                  "scope"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "registry": {
+      "type": "object",
+      "required": [
+        "precedence",
+        "namespacePolicy",
+        "version",
+        "commands",
+        "keymaps",
+        "keymapConflicts"
+      ],
+      "properties": {
+        "precedence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/scope"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "namespacePolicy": {
+          "$ref": "#/$defs/namespacePolicy"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/commandSpec"
+          }
+        },
+        "keymaps": {
+          "$ref": "#/$defs/keymaps"
+        },
+        "keymapConflicts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/keymapConflict"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "invocationDefault": {
+      "type": "object",
+      "required": [
+        "source"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/defaultSource"
+        }
+      },
+      "additionalProperties": false
+    },
+    "invocation": {
+      "type": "object",
+      "required": [
+        "id",
+        "commandId",
+        "args",
+        "defaults",
+        "ts",
+        "source",
+        "result"
+      ],
+      "properties": {
+        "id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/idString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "commandId": {
+          "$ref": "#/$defs/commandId"
+        },
+        "args": {
+          "type": "object"
+        },
+        "defaults": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Za-z_][A-Za-z0-9_-]*$": {
+              "$ref": "#/$defs/invocationDefault"
+            }
+          },
+          "additionalProperties": false
+        },
+        "ts": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/u53"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "result": {}
+      },
+      "additionalProperties": false
+    },
+    "enablement": {
+      "type": "object",
+      "required": [
+        "enabled",
+        "reason"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 512
+        }
+      },
+      "additionalProperties": false
+    },
+    "enablementReport": {
+      "type": "object",
+      "required": [
+        "commandId",
+        "enablement"
+      ],
+      "properties": {
+        "commandId": {
+          "$ref": "#/$defs/commandId"
+        },
+        "enablement": {
+          "$ref": "#/$defs/enablement"
+        }
+      },
+      "additionalProperties": false
+    },
+    "confirmation": {
+      "type": "object",
+      "required": [
+        "commandId",
+        "explanation"
+      ],
+      "properties": {
+        "commandId": {
+          "$ref": "#/$defs/commandId"
+        },
+        "explanation": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 512
+        }
+      },
+      "additionalProperties": false
+    },
+    "executionFailure": {
+      "type": "object",
+      "required": [
+        "ok",
+        "reason"
+      ],
+      "properties": {
+        "ok": {
+          "const": false
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "missing": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 96
+          }
+        },
+        "invocation": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/invocation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confirmation": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/confirmation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "executionSuccess": {
+      "type": "object",
+      "required": [
+        "ok",
+        "result"
+      ],
+      "properties": {
+        "ok": {
+          "const": true
+        },
+        "result": {},
+        "invocation": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/invocation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pending": {
+          "type": "boolean"
+        },
+        "runtimeDispatched": {
+          "type": "boolean"
+        },
+        "requestId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 192
+        }
+      },
+      "additionalProperties": false
+    },
+    "executionResult": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/executionFailure"
+        },
+        {
+          "$ref": "#/$defs/executionSuccess"
+        }
+      ]
+    },
+    "executionReport": {
+      "type": "object",
+      "required": [
+        "commandId",
+        "result"
+      ],
+      "properties": {
+        "commandId": {
+          "$ref": "#/$defs/commandId"
+        },
+        "result": {
+          "$ref": "#/$defs/executionResult"
+        }
+      },
+      "additionalProperties": false
+    },
+    "traceEntry": {
+      "type": "object",
+      "required": [
+        "scope",
+        "scopeId",
+        "key",
+        "commandId",
+        "matched",
+        "reason"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "scopeId": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/idString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "commandId": {
+          "$ref": "#/$defs/nullableCommandId"
+        },
+        "matched": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "unbound",
+            "missing-scope-id",
+            "no-scope-map",
+            null
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "resolutionTrace": {
+      "type": "object",
+      "required": [
+        "commandId",
+        "trace"
+      ],
+      "properties": {
+        "commandId": {
+          "$ref": "#/$defs/nullableCommandId"
+        },
+        "trace": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/traceEntry"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "presentationTranslation": {
+      "type": "object",
+      "required": [
+        "type",
+        "gesture",
+        "commandId",
+        "context"
+      ],
+      "properties": {
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "gesture": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 96
+        },
+        "commandId": {
+          "$ref": "#/$defs/commandId"
+        },
+        "context": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

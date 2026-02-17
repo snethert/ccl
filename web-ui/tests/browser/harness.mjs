@@ -9,25 +9,35 @@ import { createDomBackend, createDomRoot } from "../../backends/dom/renderer.mjs
 import { createCanvasBackend } from "../../backends/canvas/renderer.mjs";
 import { createWebGLBackend } from "../../backends/webgl/renderer.mjs";
 import { createIndexedDBStore, createPersistenceManager, createSnapshot } from "../../src/index.mjs";
-import {
-  createMicrokernel,
-  KERNEL_OP_UI_POLL,
-  KERNEL_OP_UI_RENDER,
-  KERNEL_OP_UI_MEASURE_TEXT
-} from "../../../doc/wasm/js/microkernel.mjs";
-import {
-  createCclImports,
-  createSharedCclRuntime,
-  installCompiledModulesFromBundle,
-  installConstPoolBytes,
-  installSubprimsTable,
-  instantiateWasm
-} from "../../../doc/wasm/js/ccl-loader.mjs";
-import { runStartupGate } from "../../../doc/wasm/js/startup-gate.mjs";
 import { createUiBridge } from "../../bridge/ui-bridge.mjs";
 
 const WASM_DOC_ROOT = "/doc/wasm";
-const WASM_UI_BUNDLE_PATH = `${WASM_DOC_ROOT}/wasm-ui-modules.json`;
+const WASM_UI_BUNDLE_PATHS = [
+  `${WASM_DOC_ROOT}/wasm-ui-modules.json`,
+  "/build/wasm32/modules/wasm-ui-modules.json",
+  "/build/wasm32/wasm-ui-modules.json"
+];
+const WASM_KERNEL_PATHS = [
+  "/build/wasm32/kernel/wasmcl.wasm",
+  "/build/wasm32/wasmcl.wasm",
+  "/doc/wasm/js/wasmcl.wasm"
+];
+const WASM_SUBPRIMS_PATHS = [
+  "/build/wasm32/subprims/subprims.wasm",
+  "/build/wasm32/subprims.wasm",
+  "/doc/wasm/js/subprims.wasm"
+];
+const WASM_SUBPRIMS_MAP_PATHS = [
+  "/build/wasm32/subprims-map.json"
+];
+const WASM_ROOT_IMAGE_PATHS = [
+  "/build/wasm32/root.image",
+  `${WASM_DOC_ROOT}/root.image`
+];
+const WASM_MINIMAL_IMAGE_PATHS = [
+  "/build/wasm32/minimal.image",
+  `${WASM_DOC_ROOT}/minimal.image`
+];
 
 const _bridgeEncoder = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
 const _bridgeDecoder = typeof TextDecoder !== "undefined" ? new TextDecoder("utf-8") : null;
@@ -269,7 +279,7 @@ function buildUiBridgeWebglPayload() {
   };
 }
 
-function enforceBrowserStartupGate() {
+function enforceBrowserStartupGate(runStartupGate) {
   const result = runStartupGate({ source: "web-ui/tests/browser/harness.mjs" });
   if (result.status === "pass") {
     return;
@@ -354,42 +364,100 @@ async function loadBytes(relPath) {
   return response.arrayBuffer();
 }
 
-function resolveWasmDocPath(pathOrName, fallbackName = null) {
+function uniquePathList(paths) {
+  const out = [];
+  const seen = new Set();
+  for (const path of paths) {
+    if (typeof path !== "string" || path.length === 0 || seen.has(path)) continue;
+    seen.add(path);
+    out.push(path);
+  }
+  return out;
+}
+
+async function loadFirstJson(paths, label) {
+  const candidates = uniquePathList(paths);
+  const errors = [];
+  for (const path of candidates) {
+    try {
+      return { path, value: await loadJson(path) };
+    } catch (err) {
+      errors.push(`${path}: ${err?.message ?? String(err)}`);
+    }
+  }
+  throw new Error(`Failed to load ${label} from candidate paths:\n${errors.join("\n")}`);
+}
+
+async function loadFirstBytes(paths, label) {
+  const candidates = uniquePathList(paths);
+  const errors = [];
+  for (const path of candidates) {
+    try {
+      return { path, value: await loadBytes(path) };
+    } catch (err) {
+      errors.push(`${path}: ${err?.message ?? String(err)}`);
+    }
+  }
+  throw new Error(`Failed to load ${label} from candidate paths:\n${errors.join("\n")}`);
+}
+
+function resolveWasmDocPath(pathOrName, fallbackName = null, options = {}) {
   const selected = typeof pathOrName === "string" && pathOrName.trim().length > 0
     ? pathOrName.trim()
     : fallbackName;
   if (!selected) return null;
   if (selected.startsWith("/")) return selected;
-  return `${WASM_DOC_ROOT}/${selected.replace(/^[./]+/, "")}`;
+  const normalized = selected.replace(/^[./]+/, "");
+  const bundlePath = typeof options.bundlePath === "string" ? options.bundlePath : null;
+  if (bundlePath && bundlePath.startsWith("/")) {
+    const lastSlash = bundlePath.lastIndexOf("/");
+    const baseDir = lastSlash >= 0 ? bundlePath.slice(0, lastSlash + 1) : "/";
+    return `${baseDir}${normalized}`;
+  }
+  return `${WASM_DOC_ROOT}/${normalized}`;
 }
 
 async function run() {
+  const query = new URLSearchParams(window.location.search);
+  const kernelMode = String(query.get("kernel") ?? "on").toLowerCase();
+  const kernelEnabled = !(kernelMode === "off" || kernelMode === "0" || kernelMode === "false");
+
   const initialState = await loadJson("../fixtures/basic-state.json");
   const eventLog = await loadJson("../fixtures/basic-events.json");
   const expectedSnapshot = await loadJson("../fixtures/basic-snapshot.json");
   const expectedDomSnapshot = await loadJson("../fixtures/dom-snapshot.json");
   let uiBundleOk = false;
   let uiBundleInfo = null;
-  try {
-    const uiBundle = await loadJson(WASM_UI_BUNDLE_PATH);
-    const modules = Array.isArray(uiBundle?.modules) ? uiBundle.modules : [];
-    const moduleCount = modules.length > 0
-      ? modules.length
-      : (Number.isFinite(uiBundle?.moduleCount) ? (uiBundle.moduleCount >>> 0) : 0);
-    const functions = Array.isArray(uiBundle?.functions) ? uiBundle.functions : [];
-    const functionNames = new Set(functions.map((fn) => fn?.name).filter(Boolean));
-    uiBundleOk =
-      moduleCount > 0 &&
-      functionNames.has("WASM-UI-DEMO") &&
-      functionNames.has("WASM-UI-TURN") &&
-      functionNames.has("WASM-UI-POLL");
-    uiBundleInfo = {
-      format: typeof uiBundle?.format === "string" ? uiBundle.format : "legacy",
-      modules: moduleCount,
-      functions: functions.length
-    };
-  } catch (err) {
-    uiBundleInfo = { error: err?.message ?? String(err) };
+  let wasmUiBundle = null;
+  let wasmUiBundlePath = null;
+  if (kernelEnabled) {
+    try {
+      const loadedBundle = await loadFirstJson(WASM_UI_BUNDLE_PATHS, "wasm-ui-modules.json");
+      wasmUiBundle = loadedBundle.value;
+      wasmUiBundlePath = loadedBundle.path;
+      const modules = Array.isArray(wasmUiBundle?.modules) ? wasmUiBundle.modules : [];
+      const moduleCount = modules.length > 0
+        ? modules.length
+        : (Number.isFinite(wasmUiBundle?.moduleCount) ? (wasmUiBundle.moduleCount >>> 0) : 0);
+      const functions = Array.isArray(wasmUiBundle?.functions) ? wasmUiBundle.functions : [];
+      const functionNames = new Set(functions.map((fn) => fn?.name).filter(Boolean));
+      uiBundleOk =
+        moduleCount > 0 &&
+        functionNames.has("WASM-UI-DEMO") &&
+        functionNames.has("WASM-UI-TURN") &&
+        functionNames.has("WASM-UI-POLL");
+      uiBundleInfo = {
+        path: wasmUiBundlePath,
+        format: typeof wasmUiBundle?.format === "string" ? wasmUiBundle.format : "legacy",
+        modules: moduleCount,
+        functions: functions.length
+      };
+    } catch (err) {
+      uiBundleInfo = { error: err?.message ?? String(err) };
+    }
+  } else {
+    uiBundleOk = true;
+    uiBundleInfo = { skipped: true, reason: "kernel disabled by harness mode" };
   }
 
   const result = replayEvents(initialState, eventLog.events);
@@ -1012,21 +1080,53 @@ async function run() {
   await persistStore.clearSnapshot("workspace-0");
   persistManager.close();
 
-  const bridgeTarget = document.createElement("div");
-  bridgeTarget.id = "ui-bridge-target";
-  root.appendChild(bridgeTarget);
+  let uiBridgeOk = true;
+  let uiBridgeCanvasOk = true;
+  let uiBridgeWebglOk = true;
+  let wasmUiOk = true;
+  let wasmUiInfo = { skipped: !kernelEnabled, reason: kernelEnabled ? null : "kernel disabled by harness mode" };
 
-  const uiBridge = createUiBridge({ container: bridgeTarget, document });
-  const uiMemory = new WebAssembly.Memory({ initial: 1 });
-  const uiMicrokernel = createMicrokernel({ memory: uiMemory, uiService: uiBridge });
-  const {
-    kernel_request,
-    kernel_poll,
-    kernel_result,
-    kernel_response_size,
-    kernel_copy_response,
-    kernel_drop_request
-  } = uiMicrokernel.imports;
+  if (kernelEnabled) {
+    const [
+      microkernelModule,
+      loaderModule,
+      startupGateModule
+    ] = await Promise.all([
+      import("/scripts/wasm/lib/microkernel.mjs"),
+      import("/scripts/wasm/lib/ccl-loader.mjs"),
+      import("/scripts/wasm/lib/startup-gate.mjs")
+    ]);
+    const {
+      createMicrokernel,
+      KERNEL_OP_UI_POLL,
+      KERNEL_OP_UI_RENDER,
+      KERNEL_OP_UI_MEASURE_TEXT
+    } = microkernelModule;
+    const {
+      createCclImports,
+      createSharedCclRuntime,
+      installCompiledModulesFromBundle,
+      installConstPoolBytes,
+      installSubprimsTable,
+      instantiateWasm
+    } = loaderModule;
+    const { runStartupGate } = startupGateModule;
+
+    const bridgeTarget = document.createElement("div");
+    bridgeTarget.id = "ui-bridge-target";
+    root.appendChild(bridgeTarget);
+
+    const uiBridge = createUiBridge({ container: bridgeTarget, document });
+    const uiMemory = new WebAssembly.Memory({ initial: 1 });
+    const uiMicrokernel = createMicrokernel({ memory: uiMemory, uiService: uiBridge });
+    const {
+      kernel_request,
+      kernel_poll,
+      kernel_result,
+      kernel_response_size,
+      kernel_copy_response,
+      kernel_drop_request
+    } = uiMicrokernel.imports;
 
   function writeUiBytes(ptr, bytes) {
     new Uint8Array(uiMemory.buffer, ptr, bytes.length).set(bytes);
@@ -1054,22 +1154,22 @@ async function run() {
     return { status, count, size, copied, batch };
   }
 
-  const uiTreePayload = buildUiBridgeTreePayload();
-  const uiTreePtr = 256;
-  writeUiBytes(uiTreePtr, uiTreePayload);
-  const renderId = kernel_request(KERNEL_OP_UI_RENDER, uiTreePtr, uiTreePayload.length);
-  const renderResult = kernel_result(renderId) | 0;
-  kernel_drop_request(renderId);
-  const uiBridgeRenderOk = renderResult === 0;
-  if (typeof uiBridge.flush === "function") {
-    uiBridge.flush();
-  }
+    const uiTreePayload = buildUiBridgeTreePayload();
+    const uiTreePtr = 256;
+    writeUiBytes(uiTreePtr, uiTreePayload);
+    const renderId = kernel_request(KERNEL_OP_UI_RENDER, uiTreePtr, uiTreePayload.length);
+    const renderResult = kernel_result(renderId) | 0;
+    kernel_drop_request(renderId);
+    const uiBridgeRenderOk = renderResult === 0;
+    if (typeof uiBridge.flush === "function") {
+      uiBridge.flush();
+    }
 
-  const uiButton = bridgeTarget.querySelector("[data-widget-id='btn-1']");
-  const uiBridgeDomOk = Boolean(uiButton && uiButton.textContent === "Click");
+    const uiButton = bridgeTarget.querySelector("[data-widget-id='btn-1']");
+    const uiBridgeDomOk = Boolean(uiButton && uiButton.textContent === "Click");
 
-  let uiBridgeEventOk = false;
-  if (uiButton && typeof PointerEvent === "function") {
+    let uiBridgeEventOk = false;
+    if (uiButton && typeof PointerEvent === "function") {
     const rect = uiButton.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
     const y = rect.top + rect.height / 2;
@@ -1090,45 +1190,45 @@ async function run() {
       targetHit;
   }
 
-  const fontBytes = encodeBridgeUtf8("12px monospace");
-  const textBytes = encodeBridgeUtf8("Hello");
-  const measPtr = 8192;
-  const fontPtr = measPtr + 16;
-  const textPtr = fontPtr + fontBytes.length + 8;
-  writeUiBytes(fontPtr, fontBytes);
-  writeUiBytes(textPtr, textBytes);
-  const measView = new DataView(uiMemory.buffer, measPtr, 16);
-  measView.setUint32(0, fontPtr, true);
-  measView.setUint32(4, fontBytes.length, true);
-  measView.setUint32(8, textPtr, true);
-  measView.setUint32(12, textBytes.length, true);
-  const measId = kernel_request(KERNEL_OP_UI_MEASURE_TEXT, measPtr, 16);
-  const measResult = kernel_result(measId) | 0;
-  const measSize = kernel_response_size(measId) >>> 0;
-  let uiBridgeMeasureOk = false;
-  if (measSize === 32) {
-    const measOutPtr = textPtr + textBytes.length + 16;
-    kernel_copy_response(measId, measOutPtr, measSize);
-    const measDv = new DataView(uiMemory.buffer, measOutPtr, measSize);
-    const width = measDv.getFloat64(0, true);
-    const height = measDv.getFloat64(8, true);
-    uiBridgeMeasureOk = measResult === 0 && width > 0 && height > 0;
-  }
-  kernel_drop_request(measId);
+    const fontBytes = encodeBridgeUtf8("12px monospace");
+    const textBytes = encodeBridgeUtf8("Hello");
+    const measPtr = 8192;
+    const fontPtr = measPtr + 16;
+    const textPtr = fontPtr + fontBytes.length + 8;
+    writeUiBytes(fontPtr, fontBytes);
+    writeUiBytes(textPtr, textBytes);
+    const measView = new DataView(uiMemory.buffer, measPtr, 16);
+    measView.setUint32(0, fontPtr, true);
+    measView.setUint32(4, fontBytes.length, true);
+    measView.setUint32(8, textPtr, true);
+    measView.setUint32(12, textBytes.length, true);
+    const measId = kernel_request(KERNEL_OP_UI_MEASURE_TEXT, measPtr, 16);
+    const measResult = kernel_result(measId) | 0;
+    const measSize = kernel_response_size(measId) >>> 0;
+    let uiBridgeMeasureOk = false;
+    if (measSize === 32) {
+      const measOutPtr = textPtr + textBytes.length + 16;
+      kernel_copy_response(measId, measOutPtr, measSize);
+      const measDv = new DataView(uiMemory.buffer, measOutPtr, measSize);
+      const width = measDv.getFloat64(0, true);
+      const height = measDv.getFloat64(8, true);
+      uiBridgeMeasureOk = measResult === 0 && width > 0 && height > 0;
+    }
+    kernel_drop_request(measId);
 
-  const canvasInfo = buildUiBridgeCanvasPayload();
-  const canvasPtr = 16384;
-  writeUiBytes(canvasPtr, canvasInfo.payload);
-  const canvasRenderId = kernel_request(KERNEL_OP_UI_RENDER, canvasPtr, canvasInfo.payload.length);
-  const canvasRenderResult = kernel_result(canvasRenderId) | 0;
-  kernel_drop_request(canvasRenderId);
-  if (typeof uiBridge.flush === "function") {
-    uiBridge.flush();
-  }
+    const canvasInfo = buildUiBridgeCanvasPayload();
+    const canvasPtr = 16384;
+    writeUiBytes(canvasPtr, canvasInfo.payload);
+    const canvasRenderId = kernel_request(KERNEL_OP_UI_RENDER, canvasPtr, canvasInfo.payload.length);
+    const canvasRenderResult = kernel_result(canvasRenderId) | 0;
+    kernel_drop_request(canvasRenderId);
+    if (typeof uiBridge.flush === "function") {
+      uiBridge.flush();
+    }
 
-  const bridgeCanvasNode = bridgeTarget.querySelector("[data-widget-id='canvas-1']");
-  let uiBridgeCanvasOk = false;
-  if (bridgeCanvasNode && typeof PointerEvent === "function") {
+    const bridgeCanvasNode = bridgeTarget.querySelector("[data-widget-id='canvas-1']");
+    uiBridgeCanvasOk = false;
+    if (bridgeCanvasNode && typeof PointerEvent === "function") {
     const rect = bridgeCanvasNode.getBoundingClientRect();
     const x = rect.left + 12;
     const y = rect.top + 12;
@@ -1145,19 +1245,19 @@ async function run() {
     uiBridgeCanvasOk = canvasRenderResult === 0 && hit;
   }
 
-  const webglInfo = buildUiBridgeWebglPayload();
-  const webglPtr = canvasPtr + canvasInfo.payload.length + 1024;
-  writeUiBytes(webglPtr, webglInfo.payload);
-  const webglRenderId = kernel_request(KERNEL_OP_UI_RENDER, webglPtr, webglInfo.payload.length);
-  const webglRenderResult = kernel_result(webglRenderId) | 0;
-  kernel_drop_request(webglRenderId);
-  if (typeof uiBridge.flush === "function") {
-    uiBridge.flush();
-  }
+    const webglInfo = buildUiBridgeWebglPayload();
+    const webglPtr = canvasPtr + canvasInfo.payload.length + 1024;
+    writeUiBytes(webglPtr, webglInfo.payload);
+    const webglRenderId = kernel_request(KERNEL_OP_UI_RENDER, webglPtr, webglInfo.payload.length);
+    const webglRenderResult = kernel_result(webglRenderId) | 0;
+    kernel_drop_request(webglRenderId);
+    if (typeof uiBridge.flush === "function") {
+      uiBridge.flush();
+    }
 
-  const bridgeWebglNode = bridgeTarget.querySelector("[data-widget-id='webgl-1']");
-  let uiBridgeWebglOk = false;
-  if (bridgeWebglNode && typeof PointerEvent === "function") {
+    const bridgeWebglNode = bridgeTarget.querySelector("[data-widget-id='webgl-1']");
+    uiBridgeWebglOk = false;
+    if (bridgeWebglNode && typeof PointerEvent === "function") {
     const rect = bridgeWebglNode.getBoundingClientRect();
     const x = rect.left + 14;
     const y = rect.top + 14;
@@ -1179,12 +1279,12 @@ async function run() {
     }
   }
 
-  const uiBridgeOk =
-    uiBridgeRenderOk && uiBridgeDomOk && uiBridgeEventOk && uiBridgeMeasureOk && uiBridgeCanvasOk && uiBridgeWebglOk;
+    uiBridgeOk =
+      uiBridgeRenderOk && uiBridgeDomOk && uiBridgeEventOk && uiBridgeMeasureOk && uiBridgeCanvasOk && uiBridgeWebglOk;
 
-  let wasmUiOk = false;
-  let wasmUiInfo = null;
-  if (uiBundleOk) {
+    wasmUiOk = false;
+    wasmUiInfo = null;
+    if (uiBundleOk) {
     try {
       enforceBrowserStartupGate();
 
@@ -1203,7 +1303,8 @@ async function run() {
         persistence: { backend: "memory-snapshot" }
       });
 
-      const kernelBytes = await loadBytes("/doc/wasm/js/wasmcl.wasm");
+      const kernelAsset = await loadFirstBytes(WASM_KERNEL_PATHS, "wasm kernel (wasmcl.wasm)");
+      const kernelBytes = kernelAsset.value;
       const kernel = await instantiateWasm(
         kernelBytes,
         createCclImports({
@@ -1214,8 +1315,10 @@ async function run() {
       );
       const kernelExports = kernel.instance.exports;
 
-      const subprimsBytes = await loadBytes("/doc/wasm/js/subprims.wasm");
-      const subprimsMap = await loadJson("/build/wasm32/subprims-map.json");
+      const subprimsAsset = await loadFirstBytes(WASM_SUBPRIMS_PATHS, "subprims wasm");
+      const subprimsBytes = subprimsAsset.value;
+      const subprimsMapAsset = await loadFirstJson(WASM_SUBPRIMS_MAP_PATHS, "subprims map");
+      const subprimsMap = subprimsMapAsset.value;
       const subprims = await instantiateWasm(
         subprimsBytes,
         createCclImports({
@@ -1243,10 +1346,15 @@ async function run() {
       }
 
       let imageBytes;
+      let imageSource = null;
       try {
-        imageBytes = new Uint8Array(await loadBytes("/doc/wasm/root.image"));
-      } catch (_err) {
-        imageBytes = new Uint8Array(await loadBytes("/doc/wasm/minimal.image"));
+        const rootImageAsset = await loadFirstBytes(WASM_ROOT_IMAGE_PATHS, "root image");
+        imageBytes = new Uint8Array(rootImageAsset.value);
+        imageSource = rootImageAsset.path;
+      } catch (_rootErr) {
+        const minimalImageAsset = await loadFirstBytes(WASM_MINIMAL_IMAGE_PATHS, "minimal image");
+        imageBytes = new Uint8Array(minimalImageAsset.value);
+        imageSource = minimalImageAsset.path;
       }
       const imageLen = imageBytes.byteLength >>> 0;
       const pageSize = 65536;
@@ -1274,7 +1382,10 @@ async function run() {
         }
       }
 
-      const uiBundle = await loadJson(WASM_UI_BUNDLE_PATH);
+      const uiBundle = wasmUiBundle;
+      if (!uiBundle) {
+        throw new Error("wasm-ui bundle missing after preflight load");
+      }
       const uiModules = Array.isArray(uiBundle?.modules) ? uiBundle.modules : [];
       const uiFunctions = Array.isArray(uiBundle?.functions) ? uiBundle.functions : [];
       const kernelDemoTurn = null;
@@ -1321,8 +1432,16 @@ async function run() {
             runtime.subprimsTable.set(idx, fn);
           }
         } else {
-          const binaryPath = resolveWasmDocPath(uiBundle?.binary, "wasm-ui-modules.bin");
-          const indexPath = resolveWasmDocPath(uiBundle?.index, "wasm-ui-modules.idx");
+          const binaryPath = resolveWasmDocPath(
+            uiBundle?.binary,
+            "wasm-ui-modules.bin",
+            { bundlePath: wasmUiBundlePath }
+          );
+          const indexPath = resolveWasmDocPath(
+            uiBundle?.index,
+            "wasm-ui-modules.idx",
+            { bundlePath: wasmUiBundlePath }
+          );
           if (!binaryPath || !indexPath) {
             throw new Error("wasm-ui bundle is missing binary/index assets");
           }
@@ -1449,6 +1568,11 @@ async function run() {
       wasmUiOk = initialOk && clickOk && canvasOk && webglOk;
       wasmUiInfo = {
         turnResults,
+        imageSource,
+        kernelPath: kernelAsset.path,
+        subprimsPath: subprimsAsset.path,
+        subprimsMapPath: subprimsMapAsset.path,
+        bundlePath: wasmUiBundlePath,
         initialLabel,
         clickLabel,
         canvasLabel,
@@ -1457,13 +1581,14 @@ async function run() {
     } catch (err) {
       wasmUiInfo = { error: err?.message ?? String(err) };
     }
-  } else {
-    wasmUiInfo = { error: "missing wasm-ui-modules.json" };
+    } else {
+      wasmUiInfo = { error: "missing wasm-ui-modules.json", uiBundleInfo };
+    }
   }
 
   const ok =
-    uiBundleOk &&
-    snapshotMatch &&
+    (kernelEnabled ? uiBundleOk : true) &&
+    (kernelEnabled ? snapshotMatch : true) &&
     domOk &&
     domSnapshotMatch &&
     domReuseOk &&
@@ -1497,7 +1622,7 @@ async function run() {
     webglMeasureOk &&
     persistenceOk &&
     uiBridgeOk &&
-    wasmUiOk;
+    (kernelEnabled ? wasmUiOk : true);
   const payload = {
     ok,
     uiBundleOk,
@@ -1539,7 +1664,8 @@ async function run() {
     persistenceOk,
     uiBridgeOk,
     uiBridgeCanvasOk,
-    uiBridgeWebglOk
+    uiBridgeWebglOk,
+    kernelEnabled
   };
 
   if (window.__WEB_UI_TEST_DONE__) {

@@ -179,17 +179,18 @@
 ;;; ---------------------------------------------------------------
 ;;; Multi-dimensional array access.
 ;;; On ARM these dispatch via subprims (.SParef2, .SParef3, etc.).
-;;; On WASM, delegate to standard aref/aset.
+;;; On WASM, use row-major indexing — the WASM backend has no handlers
+;;; for GENERAL-AREF2/GENERAL-ASET2 opcodes, so we cannot use (aref a i j).
 ;;; ---------------------------------------------------------------
 
 (defun %aref2 (array i j)
-  (aref array i j))
+  (row-major-aref array (array-row-major-index array i j)))
 
 (defun %aref3 (array i j k)
-  (aref array i j k))
+  (row-major-aref array (array-row-major-index array i j k)))
 
 (defun %aset2 (array i j newval)
-  (setf (aref array i j) newval))
+  (setf (row-major-aref array (array-row-major-index array i j)) newval))
 
 (defun %aset3 (array i j k newval)
-  (setf (aref array i j k) newval))
+  (setf (row-major-aref array (array-row-major-index array i j k)) newval))

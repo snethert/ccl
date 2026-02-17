@@ -26,24 +26,24 @@ The merge model assumes:
 
 ## 3. Controlled Reader Requirements
 
-All Lisp-source documents MUST be ingested and modified through a controlled reader profile selected by workspace policy.
+All Lisp-source documents <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-FB3DD9989F"></a>MUST be ingested and modified through a controlled reader profile selected by workspace policy.
 
-The controlled reader profile MUST define:
+The controlled reader profile <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-62ED3CC7CE"></a>MUST define:
 
 1. Allowed readtable behavior:
    fixed readtable, or explicit readtable-change forms tracked as first-class operations with deterministic scope.
 2. Package behavior:
    `in-package` and `defpackage` are semantics-critical forms with explicit ordering rules.
 3. Forbidden/restricted reader features:
-   `#.` read-time evaluation is forbidden by default; if enabled it MUST be sandboxed, deterministic, and recorded as policy override.
+   `#.` read-time evaluation is forbidden by default; if enabled it <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-0953B3042E"></a>MUST be sandboxed, deterministic, and recorded as policy override.
 4. Circular structure policy:
    `#n=` / `#n#` are either forbidden or normalized into canonical internal form.
 5. Feature-conditional policy:
    `#+` / `#-` are either preserved as explicit conditional nodes or treated as opaque text regions by policy.
 6. Readability boundary rules:
-   policy MUST define readable boundary behavior for autosave/merge, including dispatch macros and conditional regions.
+   policy <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-467E59A9DD"></a>MUST define readable boundary behavior for autosave/merge, including dispatch macros and conditional regions.
 
-The controlled reader MUST be capable of:
+The controlled reader <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-F3E9A87D47"></a>MUST be capable of:
 
 1. Producing normalized AST encodings.
 2. Externalizing trivia under selected trivia policy.
@@ -53,7 +53,7 @@ The controlled reader MUST be capable of:
 
 Goal: improve conflict classification and UI ordering without macroexpansion.
 
-Dependency hints MUST be derived without executing user code:
+Dependency hints <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-E11B422AED"></a>MUST be derived without executing user code:
 
 1. `referenced_symbols`: deterministic symbol set from operator/high-signal positions.
 2. `defined_symbols`: symbols introduced by definition forms.
@@ -66,7 +66,7 @@ Use:
 2. Merge UI ordering:
    prioritize package-affecting and definition changes.
 3. Safety warnings:
-   warnings are heuristic and MUST NOT depend on macroexpansion.
+   warnings are heuristic and <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-52ED05FB85"></a>MUST NOT depend on macroexpansion.
 
 Out of scope:
 
@@ -75,11 +75,11 @@ Out of scope:
 
 ## 4. Merge Base Requirement
 
-Semantic merge MUST compute and record `base_commit_id`.
+Semantic merge <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-D4BB610A69"></a>MUST compute and record `base_commit_id`.
 
 If merge base is unavailable:
 
-1. Semantic merge MUST abort with explicit error.
+1. Semantic merge <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-8F4DA43195"></a>MUST abort with explicit error.
 2. System MAY offer non-semantic fallback workflows.
 
 ## 5. Deterministic 3-Way Merge
@@ -93,11 +93,11 @@ Given `(base, local, incoming)` for each document:
 5. Produce deterministic candidate graph and conflict list.
 6. Apply semantics-critical ordering constraints before cosmetic ordering policy.
 
-Ordering/tie-breaks MUST NOT depend on hash-map iteration order.
+Ordering/tie-breaks <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-2E36FF47AC"></a>MUST NOT depend on hash-map iteration order.
 
 Semantics-critical ordering constraint:
 
-1. `defpackage` / `in-package` (and other package-affecting directives) MUST remain before forms whose interpretation depends on them unless explicit `MergeRecord` override exists.
+1. `defpackage` / `in-package` (and other package-affecting directives) <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-97166CF605"></a>MUST remain before forms whose interpretation depends on them unless explicit `MergeRecord` override exists.
 2. If both sides edit package-affecting forms and changes are non-identical, classify as conflict.
 
 ## 6. Conflict Taxonomy
@@ -130,7 +130,7 @@ By default, semantic auto-merge MAY resolve:
 2. Order-only differences using deterministic order policy.
 3. Trivia-only differences under active trivia policy.
 
-By default, semantic auto-merge MUST NOT finalize silently for:
+By default, semantic auto-merge <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-3DD6DC5E38"></a>MUST NOT finalize silently for:
 
 1. same-form divergent edits without deterministic structural rule,
 2. macro-dependent conflicts,
@@ -138,7 +138,7 @@ By default, semantic auto-merge MUST NOT finalize silently for:
 
 ## 8. Merge Candidate and Finalization
 
-Semantic merge MUST follow merge-candidate-first flow:
+Semantic merge <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-9D2D60ACF0"></a>MUST follow merge-candidate-first flow:
 
 1. Write merge candidate snapshot and commit with:
    `intent=merge`, `finalized=false`, `candidate_of={base_commit_id, local_commit_id, incoming_commit_id}`.
@@ -149,7 +149,7 @@ Accepted merge SHOULD produce `MergeRecord` with per-doc/per-form resolution aud
 
 Rule:
 
-1. Candidate commits MUST be intrinsically marked by `finalized=false`; ref naming alone is insufficient.
+1. Candidate commits <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-E3915F65BA"></a>MUST be intrinsically marked by `finalized=false`; ref naming alone is insufficient.
 
 ## 9. MergeRecord Semantics
 
@@ -166,7 +166,7 @@ Rule:
 
 Rule:
 
-1. `MergeRecord` MUST reference the actual base commit used and the base-selection algorithm/spec id.
+1. `MergeRecord` <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-225CF65ED7"></a>MUST reference the actual base commit used and the base-selection algorithm/spec id.
 
 Resolution outcomes SHOULD include:
 
@@ -185,7 +185,7 @@ Macro-dependent conflicts SHOULD be flagged conservatively.
 
 Rules:
 
-1. Semantic merge MUST NOT treat macroexpansion output as canonical persisted source.
+1. Semantic merge <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-0A95AD108D"></a>MUST NOT treat macroexpansion output as canonical persisted source.
 2. Expansion MAY be used for diagnostics only.
 3. Macro-dependent auto-finalization is disabled by default.
 
@@ -193,13 +193,13 @@ Rules:
 
 When semantic merge cannot proceed:
 
-1. System MUST preserve refs and current workspace state.
-2. System MUST surface explicit fallback options.
+1. System <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-A369B1CF49"></a>MUST preserve refs and current workspace state.
+2. System <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-7BAABB5BDC"></a>MUST surface explicit fallback options.
 3. Fallback MAY use file-level merge workflow without silent ref advancement.
 
 ## 12. Error Codes
 
-Implementations MUST expose:
+Implementations <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-77FD7F6225"></a>MUST expose:
 
 1. `ERR_SEMANTIC_MERGE_BASE_MISSING`
 2. `ERR_SEMANTIC_IDENTITY_UNRESOLVED`

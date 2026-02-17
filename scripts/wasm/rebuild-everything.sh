@@ -160,6 +160,32 @@ log "force=$FORCE build_root_image=$BUILD_ROOT_IMAGE root_image_allow_fail=$ROOT
 
 run make -C "$ROOT_DIR/lisp-kernel/wasm32" ${MAKE_ARGS[@]+"${MAKE_ARGS[@]}"} all
 run make -C "$ROOT_DIR/lisp-kernel/wasm32/subprims" clean all
+
+# Phase 0B: Extract __heap_base from the kernel so the boot image can use it
+# as :image-base-address, ensuring bias=0 (no relocation walk at load time).
+# In wasm-ld, __heap_base == initial __stack_pointer (both set to memoryPtr
+# after stack placement).  We read it from wasm-objdump and align to 64KiB
+# (heap_segment_size), matching the kernel's ReserveMemoryForHeap() alignment.
+KERNEL_WASM="${CCL_WASM_KERNEL_DIR:-$BUILD_DIR/kernel}/wasmcl.wasm"
+if [ -f "$KERNEL_WASM" ] && command -v wasm-objdump >/dev/null 2>&1; then
+  RAW_HEAP_BASE=$(wasm-objdump -x "$KERNEL_WASM" 2>/dev/null \
+    | grep '__stack_pointer.*init' \
+    | sed 's/.*init i32=//' \
+    | tr -d '[:space:]')
+  if [ -n "$RAW_HEAP_BASE" ] && [ "$RAW_HEAP_BASE" -gt 0 ] 2>/dev/null; then
+    # Align up to 64KiB (heap_segment_size = 0x10000)
+    ALIGNED_IMAGE_BASE=$(( ($RAW_HEAP_BASE + 0xFFFF) & ~0xFFFF ))
+    CCL_WASM_IMAGE_BASE=$(printf '%x' $ALIGNED_IMAGE_BASE)
+    export CCL_WASM_IMAGE_BASE
+    log "heap_base=$RAW_HEAP_BASE image_base=0x$CCL_WASM_IMAGE_BASE ($(printf '%d' $ALIGNED_IMAGE_BASE))"
+    echo "$CCL_WASM_IMAGE_BASE" > "$BUILD_DIR/.heap-base"
+  else
+    log "WARN: could not extract __heap_base from $KERNEL_WASM"
+  fi
+else
+  log "WARN: kernel wasm or wasm-objdump not found; skipping image base extraction"
+fi
+
 run "$ROOT_DIR/scripts/wasm/build-wasm-boot.sh" ${BOOT_ARGS[@]+"${BOOT_ARGS[@]}"}
 
 # Compute the start entry index for level-1 so it doesn't overlap boot functions.

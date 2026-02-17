@@ -11,7 +11,7 @@ import {
   executeCommand
 } from "../src/index.mjs";
 import { RUNTIME_MESSAGE_KINDS } from "../bridge/runtime.mjs";
-import { createSabRing, SAB_RING_TRANSPORT } from "../../doc/wasm/js/sab-ring.mjs";
+import { createSabRing, SAB_RING_TRANSPORT } from "../../scripts/wasm/lib/sab-ring.mjs";
 
 function commandSpec() {
   return {

@@ -73,7 +73,12 @@
    :default-startup-file-name "ccl:build;wasm32;level-1.lafsl"
    :subdirs '("ccl:level-0;WASM;")
    :compiler-target-name :wasm32
-   :image-base-address #x10000000
+   ;; Phase 0B: Read image base from CCL_WASM_IMAGE_BASE env var
+   ;; (set by rebuild-everything.sh from __heap_base aligned to 64KiB).
+   ;; This ensures bias=0 at load time — no relocation walk needed.
+   :image-base-address (or (let ((s (getenv "CCL_WASM_IMAGE_BASE")))
+                             (and s (parse-integer s :radix 16 :junk-allowed t)))
+                           #x10000000)
    :nil-relative-symbols (append arm::*arm-nil-relative-symbols*
                                   '(ccl::%wasm-compiled-modules%
                                     ccl::%wasm-const-pools%))

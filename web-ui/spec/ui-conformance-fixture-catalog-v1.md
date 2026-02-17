@@ -33,12 +33,12 @@ Required environment:
 3. Modes: dark, light, high-contrast, forced-colors.
 4. Backends: dom, canvas, webgl.
 5. Monotonic clock and 60 Hz animation-frame scheduling.
-6. Coarse-pointer touch targets: effective interactive hit box MUST be `>=44x44` px.
+6. Coarse-pointer touch targets: effective interactive hit box <a id="REQ-UI-CONFORMANCE-FIXTURE-CATALOG-V1-3CA08F19A1"></a>MUST be `>=44x44` px.
 
 Required annotation:
 
 1. If required fonts are unavailable, run MAY proceed.
-2. Report MUST set `env.fontFallback=true`.
+2. Report <a id="REQ-UI-CONFORMANCE-FIXTURE-CATALOG-V1-4A8CBA8502"></a>MUST set `env.fontFallback=true`.
 
 ## 4. Fixture Classes
 
@@ -58,14 +58,14 @@ Comparators are normative:
 
 Tolerance:
 
-1. If assertion includes `tolerance`, measured value MUST satisfy comparator after tolerance is applied.
+1. If assertion includes `tolerance`, measured value <a id="REQ-UI-CONFORMANCE-FIXTURE-CATALOG-V1-16A94C3F2E"></a>MUST satisfy comparator after tolerance is applied.
 2. If tolerance is omitted, no tolerance is permitted.
 
 Parity pair scoping:
 
 1. Fixtures with `requiredHarness=parity` MAY declare `parityBackendPairs`.
-2. When `parityBackendPairs` is declared, runners MUST execute only those pairs.
-3. Backends listed in `parityBackendPairs` MUST be valid members of the fixture's effective backend lanes.
+2. When `parityBackendPairs` is declared, runners <a id="REQ-UI-CONFORMANCE-FIXTURE-CATALOG-V1-19EB318DC4"></a>MUST execute only those pairs.
+3. Backends listed in `parityBackendPairs` <a id="REQ-UI-CONFORMANCE-FIXTURE-CATALOG-V1-EE70E7C375"></a>MUST be valid members of the fixture's effective backend lanes.
 
 ## 6. Required Fixture Set
 
@@ -109,20 +109,20 @@ The following existing tests are accepted as baseline bindings:
 5. `web-ui/tests/theme.test.mjs`
 6. `web-ui/tests/phase-7-ui-conformance-fixtures.test.mjs`
 
-Any fixture without an existing binding MUST be implemented before production gate closure.
+Any fixture without an existing binding <a id="REQ-UI-CONFORMANCE-FIXTURE-CATALOG-V1-5F72D98BA2"></a>MUST be implemented before production gate closure.
 
 ## 8. Failure Semantics
 
 If any required fixture fails:
 
-1. The run status MUST be `failed`.
-2. Report MUST include failing fixture ID and assertion IDs.
-3. Report MUST include deterministic reproduction metadata (`seed`, mode, backend, test path).
-4. Production conformance gate MUST block release.
+1. The run status <a id="REQ-UI-CONFORMANCE-FIXTURE-CATALOG-V1-C7DE5E9C60"></a>MUST be `failed`.
+2. Report <a id="REQ-UI-CONFORMANCE-FIXTURE-CATALOG-V1-2A0894A499"></a>MUST include failing fixture ID and assertion IDs.
+3. Report <a id="REQ-UI-CONFORMANCE-FIXTURE-CATALOG-V1-9971CFD14F"></a>MUST include deterministic reproduction metadata (`seed`, mode, backend, test path).
+4. Production conformance gate <a id="REQ-UI-CONFORMANCE-FIXTURE-CATALOG-V1-8C0D9A4862"></a>MUST block release.
 
 ## 9. Change Policy
 
-1. Fixture IDs are stable contract keys and MUST NOT be reused.
+1. Fixture IDs are stable contract keys and <a id="REQ-UI-CONFORMANCE-FIXTURE-CATALOG-V1-6D7B4E538E"></a>MUST NOT be reused.
 2. New fixtures MAY be added in minor versions.
 3. Existing fixture semantics MAY only change in major versions.
-4. Deprecation MUST be announced with migration replacement fixture ID.
+4. Deprecation <a id="REQ-UI-CONFORMANCE-FIXTURE-CATALOG-V1-5801AF6606"></a>MUST be announced with migration replacement fixture ID.

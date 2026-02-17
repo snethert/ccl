@@ -19,13 +19,13 @@ This contract defines explicit persistence profiles so file-primacy and semantic
 
 ## 2. Profile Model
 
-An implementation MUST expose a profile identifier in workspace metadata.
+An implementation <a id="REQ-PERSISTENCE-SEMANTIC-PROFILE-V1-B06B0E6117"></a>MUST expose a profile identifier in workspace metadata.
 
 Primary invariants:
 
 1. After crash recovery, every ref resolves to one complete commit state.
-2. Canonical semantic state MAY be represented as `FormGraph`, but projection-to-FormGraph round-tripping MUST preserve user intent under configured reader/projection policy.
-3. Merge candidates MUST be intrinsically marked unfinalized in commit metadata; ref naming alone is insufficient.
+2. Canonical semantic state MAY be represented as `FormGraph`, but projection-to-FormGraph round-tripping <a id="REQ-PERSISTENCE-SEMANTIC-PROFILE-V1-C3F44A2C56"></a>MUST preserve user intent under configured reader/projection policy.
+3. Merge candidates <a id="REQ-PERSISTENCE-SEMANTIC-PROFILE-V1-EF1EB29192"></a>MUST be intrinsically marked unfinalized in commit metadata; ref naming alone is insufficient.
 
 Supported profiles:
 
@@ -41,7 +41,7 @@ In `file-primacy-v1`:
 3. Merge uses file-level baseline with optional semantic assist.
 4. User-visible workflow remains path/file primary.
 
-This profile MUST remain the default unless explicitly changed by policy/user action.
+This profile <a id="REQ-PERSISTENCE-SEMANTIC-PROFILE-V1-73C106FAC7"></a>MUST remain the default unless explicitly changed by policy/user action.
 
 ## 4. Semantic-Canonical Profile (Optional)
 
@@ -52,11 +52,11 @@ In `semantic-canonical-v1`:
 3. Merge semantics are graph-structural first, text fallback second.
 4. Non-Lisp docs may remain blob-canonical.
 
-This profile MUST be opt-in and explicit.
+This profile <a id="REQ-PERSISTENCE-SEMANTIC-PROFILE-V1-CC8CCBA15A"></a>MUST be opt-in and explicit.
 
 ## 5. Activation and Migration Rules
 
-Profile changes MUST obey:
+Profile changes <a id="REQ-PERSISTENCE-SEMANTIC-PROFILE-V1-5F624B5B43"></a>MUST obey:
 
 1. No silent profile transitions.
 2. Explicit compatibility check before transition.
@@ -67,25 +67,25 @@ When switching to `semantic-canonical-v1`, implementation SHOULD support reversi
 
 ## 6. Sync and Compatibility
 
-Mixed-profile collaborators MUST be treated as compatibility-sensitive.
+Mixed-profile collaborators <a id="REQ-PERSISTENCE-SEMANTIC-PROFILE-V1-4A53D7D099"></a>MUST be treated as compatibility-sensitive.
 
 Required rules:
 
-1. Profile id MUST be included in sync metadata handshake.
-2. If remote profile is incompatible, sync MUST fail with explicit compatibility error or negotiate downgraded behavior.
-3. `workspace/main` MUST NOT auto-advance across incompatible profile boundaries.
+1. Profile id <a id="REQ-PERSISTENCE-SEMANTIC-PROFILE-V1-F0EEA0DE12"></a>MUST be included in sync metadata handshake.
+2. If remote profile is incompatible, sync <a id="REQ-PERSISTENCE-SEMANTIC-PROFILE-V1-C8081EEB49"></a>MUST fail with explicit compatibility error or negotiate downgraded behavior.
+3. `workspace/main` <a id="REQ-PERSISTENCE-SEMANTIC-PROFILE-V1-3EC1D2C9A0"></a>MUST NOT auto-advance across incompatible profile boundaries.
 
 ## 7. Guardrails
 
 Regardless of profile:
 
 1. Ref/lease safety rules remain mandatory.
-2. Background workers MUST NOT silently advance `workspace/main`.
-3. Conflict states MUST remain explicit and auditable.
+2. Background workers <a id="REQ-PERSISTENCE-SEMANTIC-PROFILE-V1-C43494C6BD"></a>MUST NOT silently advance `workspace/main`.
+3. Conflict states <a id="REQ-PERSISTENCE-SEMANTIC-PROFILE-V1-E786228C73"></a>MUST remain explicit and auditable.
 
 ## 8. Error Codes
 
-Implementations MUST expose:
+Implementations <a id="REQ-PERSISTENCE-SEMANTIC-PROFILE-V1-EF4AD4FCBF"></a>MUST expose:
 
 1. `ERR_PROFILE_UNSUPPORTED`
 2. `ERR_PROFILE_INCOMPATIBLE`
@@ -94,7 +94,7 @@ Implementations MUST expose:
 
 ## 9. Observability
 
-Profile operations MUST emit:
+Profile operations <a id="REQ-PERSISTENCE-SEMANTIC-PROFILE-V1-1A2932CAE6"></a>MUST emit:
 
 1. `workspace_id`
 2. `from_profile`

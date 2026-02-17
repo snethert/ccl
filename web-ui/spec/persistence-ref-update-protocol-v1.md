@@ -10,7 +10,7 @@ Depends on: `web-ui/spec/persistence-purpose-and-user-contract-v1.md`, `web-ui/s
 
 This protocol defines normative state transitions for moving persistence refs without half-state exposure.
 
-The protocol MUST guarantee:
+The protocol <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-8F36519EBF"></a>MUST guarantee:
 
 1. Ref moves are atomic.
 2. Refs never point to incomplete commit closures.
@@ -24,9 +24,9 @@ The protocol MUST guarantee:
 3. `commit_id`: `object_id` of a commit object.
 4. `ref`: mutable pointer to `commit_id`.
 5. `refgen`: monotonically increasing generation value used for CAS.
-6. `protected ref`: a ref namespace that MUST enforce lease + semantic guard checks before advancement.
+6. `protected ref`: a ref namespace that <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-7C3FCF6AE8"></a>MUST enforce lease + semantic guard checks before advancement.
 
-Protected refs MUST include `workspace/main` and MAY include additional policy-mapped namespaces.
+Protected refs <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-C50F0718D6"></a>MUST include `workspace/main` and MAY include additional policy-mapped namespaces.
 
 ## 3. Persistent Records
 
@@ -57,7 +57,7 @@ Optional fields:
 
 Rule:
 
-1. Commits with `finalized=false` MUST NOT be treated as runnable history for build/compile/export unless explicitly requested.
+1. Commits with `finalized=false` <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-299BD14077"></a>MUST NOT be treated as runnable history for build/compile/export unless explicitly requested.
 
 ### 3.3 Mutable Ref Record
 
@@ -75,12 +75,12 @@ Optional fields:
 
 ## 4. Write Ordering (Hard Invariant)
 
-Refs MUST NOT be updated until all referenced immutable objects are durably committed.
+Refs <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-5B50A0D77C"></a>MUST NOT be updated until all referenced immutable objects are durably committed.
 
 For IndexedDB:
 
-1. Object writes MUST commit first in object-store transaction(s).
-2. Ref updates MUST commit after object durability in metadata transaction(s).
+1. Object writes <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-D05BC334E4"></a>MUST commit first in object-store transaction(s).
+2. Ref updates <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-7CF1DEE72F"></a>MUST commit after object durability in metadata transaction(s).
 3. Object writes and ref updates SHOULD NOT share one transaction boundary.
 
 ## 5. Single-Ref CAS Advance
@@ -102,18 +102,18 @@ Supported guard clauses:
 5. `requires_finalized`
 6. `requires_profile_id`
 
-If present, all guard clauses MUST pass before the CAS write step.
+If present, all guard clauses <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-29A802C441"></a>MUST pass before the CAS write step.
 
-For protected refs, `semantic_guard` MUST include:
+For protected refs, `semantic_guard` <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-2A8202EF7C"></a>MUST include:
 
 1. `requires_current_commit_id`
 2. `requires_no_unresolved_conflicts=true`
 3. `requires_lease_epoch`
 4. `requires_finalized=true`
 
-For protected ref merge finalization writes, `requires_base_commit_id` MUST also be present.
+For protected ref merge finalization writes, `requires_base_commit_id` <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-5E8604DB24"></a>MUST also be present.
 
-The request/record shape for guarded ref advances MUST conform to `web-ui/spec/persistence-envelope-schema-v1.json` (`ref_advance_request` envelope).
+The request/record shape for guarded ref advances <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-2EFD38EBC7"></a>MUST conform to `web-ui/spec/persistence-envelope-schema-v1.json` (`ref_advance_request` envelope).
 
 Required steps:
 
@@ -139,7 +139,7 @@ Crash safety:
 
 ## 6. Multi-Ref Atomic Advance
 
-If one user operation MUST move multiple refs together, implementations MUST use a single atomic metadata transaction for all moves.
+If one user operation <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-4D77F0009A"></a>MUST move multiple refs together, implementations <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-42A40C26B7"></a>MUST use a single atomic metadata transaction for all moves.
 
 Optional audit/journal:
 
@@ -149,7 +149,7 @@ Optional audit/journal:
 ### 6.1 Required Behavior
 
 1. Validate all destination commits before applying any move.
-2. All CAS checks for the set MUST pass before any ref update is committed.
+2. All CAS checks for the set <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-09088BF293"></a>MUST pass before any ref update is committed.
 3. If any check fails, no ref move in the set may commit.
 4. Recovery scanner for incomplete/`prepared` txn markers SHOULD run at startup.
 
@@ -176,7 +176,7 @@ Required sequence:
 
 ### 7.2 Autosave
 
-Autosave MUST:
+Autosave <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-07E440E10F"></a>MUST:
 
 1. Follow same object/snapshot/commit ordering.
 2. Advance `autosave/latest` only.
@@ -186,15 +186,15 @@ Autosave MUST:
 
 Reader-stable boundary policy:
 
-1. Autosave MUST NOT create a semantically different program by truncation unless `prefix_autosave_enabled` is explicitly active.
+1. Autosave <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-9C83A8B093"></a>MUST NOT create a semantically different program by truncation unless `prefix_autosave_enabled` is explicitly active.
 2. If current buffer/projection state is unreadable under active reader policy, autosave SHOULD skip that document and emit a marker.
 3. If `prefix_autosave_enabled` policy is active, autosave MAY persist readable prefix only.
-4. Prefix autosave payloads MUST include explicit boundary metadata and `autosave_prefix=true`.
-5. Prefix autosave results MUST NOT be treated as authoritative user-save equivalent.
+4. Prefix autosave payloads <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-6ED6E1A46E"></a>MUST include explicit boundary metadata and `autosave_prefix=true`.
+5. Prefix autosave results <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-0C5323DFF1"></a>MUST NOT be treated as authoritative user-save equivalent.
 
 ## 8. Error Codes
 
-Implementations MUST expose stable error categories:
+Implementations <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-D8EABD0D3B"></a>MUST expose stable error categories:
 
 1. `ERR_REFGEN_MISMATCH`
 2. `ERR_COMMIT_MISSING`
@@ -210,7 +210,7 @@ Implementations MUST expose stable error categories:
 
 ## 9. Observability
 
-Ref updates MUST emit structured events including:
+Ref updates <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-1BC7043815"></a>MUST emit structured events including:
 
 1. `ref_name`
 2. `from_commit_id`

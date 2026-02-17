@@ -2363,10 +2363,33 @@
     (wasm2-emit :return))
   nil)
 
-;;; NOTE: %fixnum-set and %fixnum-set-natural are NOT acode operators
-;;; (not registered in nxenv.lisp).  They cannot use defwasm2.
-;;; No other backend (ARM, PPC, X86) has handlers for these.
-;;; The compiler routes these through different acode paths.
+;;; %fixnum-set and %fixnum-set-natural: registered as acode operators in
+;;; nxenv.lisp.  On non-WASM backends, the defnx1 falls through to a function
+;;; call (ARM/PPC/X86 use LAP definitions).  On WASM, lowered to :lisp-word-set.
+
+(defwasm2 wasm2-%fixnum-set %fixnum-set (seg vreg xfer base offset value)
+  (declare (ignore vreg))
+  (wasm2-form seg nil nil base)
+  (wasm2-form seg nil nil offset)
+  (wasm2-form seg nil nil value)
+  (wasm2-emit :lisp-word-set)
+  (when (wasm2-returning-p xfer)
+    (wasm2-emit :set-arg-z)
+    (wasm2-emit :set-nargs 1)
+    (wasm2-emit :return))
+  nil)
+
+(defwasm2 wasm2-%fixnum-set-natural %fixnum-set-natural (seg vreg xfer base offset value)
+  (declare (ignore vreg))
+  (wasm2-form seg nil nil base)
+  (wasm2-form seg nil nil offset)
+  (wasm2-form seg nil nil value)
+  (wasm2-emit :lisp-word-set)
+  (when (wasm2-returning-p xfer)
+    (wasm2-emit :set-arg-z)
+    (wasm2-emit :set-nargs 1)
+    (wasm2-emit :return))
+  nil)
 
 (defun wasm2-emit-misc-node-slot-address (index)
   ;; misc-data-offset is already an absolute offset from the tagged pointer.
@@ -3849,15 +3872,17 @@
 
 (defun wasm2-register-compiled-module (module-bytes export-name entry-index module-version
                                          &optional const-pool-bytes debug-info
-                                                   (gc-root-policy-mode +wasm2-gc-root-mode-runtime-default+))
+                                                   (gc-root-policy-mode +wasm2-gc-root-mode-runtime-default+)
+                                                   function-name)
   (when module-bytes
-    (let* ((entry (make-array 6 :initial-contents
+    (let* ((entry (make-array 7 :initial-contents
                               (list module-bytes
                                     export-name
                                     entry-index
                                     module-version
                                     const-pool-bytes
-                                    gc-root-policy-mode))))
+                                    gc-root-policy-mode
+                                    (and function-name (prin1-to-string function-name))))))
       (unless (find entry-index %wasm-compiled-modules%
                     :key (lambda (item) (svref item 2))
                     :test #'eql)
@@ -7817,7 +7842,8 @@
                                         1
                                         const-pool-bytes
                                         debug-info
-                                        gc-root-policy-mode)
+                                        gc-root-policy-mode
+                                        (afunc-name afunc))
         (let ((info (list* 'wasm-module-bytes module-bytes
                            'wasm-module-export export-name
                            'wasm-module-version 1

@@ -10,7 +10,7 @@ Depends on: `web-ui/spec/persistence-purpose-and-user-contract-v1.md`, `web-ui/s
 
 This policy defines how the system detects corruption and recovers without violating data-safety guarantees.
 
-The recovery system MUST guarantee:
+The recovery system <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-C392C036EA"></a>MUST guarantee:
 
 1. No silent data destruction.
 2. No ref advancement onto unreadable or unverified commit closures.
@@ -19,7 +19,7 @@ The recovery system MUST guarantee:
 
 ## 2. Recovery Principles
 
-All recovery actions MUST follow:
+All recovery actions <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-63BA7BF331"></a>MUST follow:
 
 1. Preserve authored data first.
 2. Prefer repair by content-address verification and fetch by hash.
@@ -44,7 +44,7 @@ Corruption classes:
 
 ## 4. Detection Points
 
-Detection MUST run at:
+Detection <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-25D7DB41BE"></a>MUST run at:
 
 1. Startup integrity scan.
 2. Pre-ref-advance validation.
@@ -52,7 +52,7 @@ Detection MUST run at:
 4. Object read path (on-demand).
 5. Optional background scrubber.
 
-Detection MUST use deterministic checks:
+Detection <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-F626D9955C"></a>MUST use deterministic checks:
 
 1. hash verification
 2. envelope/schema validation
@@ -62,7 +62,7 @@ Detection MUST use deterministic checks:
 
 ## 5. Startup Integrity Scan
 
-On startup, system MUST execute:
+On startup, system <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-7B8A889862"></a>MUST execute:
 
 1. Enumerate protected refs and critical operational refs.
 2. For each ref head, verify commit readability and minimal closure (`commit`, `snapshot`, immediate roots/doc map).
@@ -77,11 +77,11 @@ Workspace health status values:
 3. `degraded-readonly`
 4. `degraded-export-only`
 
-If startup scan cannot establish safe write semantics, workspace MUST enter `degraded-readonly` or stricter.
+If startup scan cannot establish safe write semantics, workspace <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-0F1FBDA5EF"></a>MUST enter `degraded-readonly` or stricter.
 
 ## 6. Runtime Integrity Checks
 
-Before any protected ref move, implementation MUST confirm:
+Before any protected ref move, implementation <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-9C4D6C5EA1"></a>MUST confirm:
 
 1. destination commit is readable and closure-complete for required scope,
 2. destination commit envelope validates,
@@ -89,7 +89,7 @@ Before any protected ref move, implementation MUST confirm:
 4. no unresolved conflicts block policy,
 5. lease/guard state remains valid.
 
-On any runtime integrity failure, write MUST fail with stable error code and no partial mutation.
+On any runtime integrity failure, write <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-E3132E872C"></a>MUST fail with stable error code and no partial mutation.
 
 ## 7. Recovery Actions by Corruption Class
 
@@ -145,7 +145,7 @@ Required actions:
 
 ## 8. Quarantine Policy
 
-Quarantine store MUST preserve suspect bytes and metadata for forensics.
+Quarantine store <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-20ADADCE13"></a>MUST preserve suspect bytes and metadata for forensics.
 
 Required fields for each quarantine record:
 
@@ -158,7 +158,7 @@ Required fields for each quarantine record:
 7. `detector`
 8. `linked_operation_id`
 
-Quarantine retention MUST outlive immediate recovery attempts and support incident analysis.
+Quarantine retention <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-B3935D0BCB"></a>MUST outlive immediate recovery attempts and support incident analysis.
 
 ## 9. Degraded Mode Policy
 
@@ -168,9 +168,9 @@ Allowed degraded modes:
 2. `degraded-readonly`: writes blocked; inspection and export allowed.
 3. `degraded-export-only`: interactive edits blocked; explicit export/recovery workflows only.
 
-Mode transitions MUST be explicit, logged, and user-visible.
+Mode transitions <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-3C4AF6D464"></a>MUST be explicit, logged, and user-visible.
 
-The system MUST NOT claim durability when operating in an ephemeral fallback backend during degraded recovery.
+The system <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-2813442E35"></a>MUST NOT claim durability when operating in an ephemeral fallback backend during degraded recovery.
 
 ## 10. User-Facing Contract During Recovery
 
@@ -181,7 +181,7 @@ User-facing requirements:
 3. Never silently rewrite user files to mask corruption.
 4. Preserve clear ownership of any repair action that changes refs.
 
-If save is blocked due to integrity risk, UI MUST provide non-destructive export path.
+If save is blocked due to integrity risk, UI <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-35A7A70837"></a>MUST provide non-destructive export path.
 
 ## 11. Remote-Assisted Repair Rules
 
@@ -195,15 +195,15 @@ Rules:
 
 ## 12. Recovery Interaction with Migration and GC
 
-Recovery and migration MUST interlock safely:
+Recovery and migration <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-354B109386"></a>MUST interlock safely:
 
-1. Migration MUST pause when corruption status is unresolved.
-2. GC MUST not reclaim suspect or pre-repair objects needed for rollback/forensics.
-3. Recovery actions that create new commits/refs MUST comply with protected-ref guards.
+1. Migration <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-E5C2FAD58A"></a>MUST pause when corruption status is unresolved.
+2. GC <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-9CE5C730B8"></a>MUST not reclaim suspect or pre-repair objects needed for rollback/forensics.
+3. Recovery actions that create new commits/refs <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-EE8F4DB616"></a>MUST comply with protected-ref guards.
 
 ## 13. Error Codes
 
-Implementations MUST expose stable corruption/recovery errors:
+Implementations <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-CA90667121"></a>MUST expose stable corruption/recovery errors:
 
 1. `ERR_CORRUPTION_MISSING_OBJECT`
 2. `ERR_CORRUPTION_HASH_MISMATCH`
@@ -221,7 +221,7 @@ Implementations MUST expose stable corruption/recovery errors:
 
 ## 14. Observability and Incident Artifacts
 
-Recovery telemetry MUST include:
+Recovery telemetry <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-4EDD59FCBF"></a>MUST include:
 
 1. `incident_id`
 2. `workspace_id`
@@ -235,7 +235,7 @@ Recovery telemetry MUST include:
 10. `duration_ms`
 11. `error_code`
 
-Each incident MUST produce a compact incident record suitable for operator review and automated alerting.
+Each incident <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-F001F471A4"></a>MUST produce a compact incident record suitable for operator review and automated alerting.
 
 ## 15. Conformance Tests
 

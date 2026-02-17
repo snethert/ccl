@@ -13,7 +13,7 @@ import {
   INSPECTOR_EDIT_STAGE_COMMAND,
   INSPECTOR_EDIT_APPLY_COMMAND
 } from "../src/index.mjs";
-import { createSabRing, SAB_RING_TRANSPORT } from "../../doc/wasm/js/sab-ring.mjs";
+import { createSabRing, SAB_RING_TRANSPORT } from "../../scripts/wasm/lib/sab-ring.mjs";
 
 test("inspector watch pin command dispatches runtime command and settles with inspector update", async () => {
   const registry = createRegistry();

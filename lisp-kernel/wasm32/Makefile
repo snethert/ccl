@@ -99,7 +99,7 @@ all: wasmcl
 wasmcl: $(KERNELOBJ)
 	@echo "Building WASM kernel..."
 	@mkdir -p $(KERNEL_DIR)
-	$(WASM_LD) --no-entry --import-memory --import-table \
+	$(WASM_LD) --no-entry --import-memory --import-table -z stack-size=1048576 \
 	  --export=wasm_ccl_start \
 	  --export=wasm_ccl_start_lisp \
 	  --export=wasm_set_current_tcr --export=wasm_get_current_tcr \

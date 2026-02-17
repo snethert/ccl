@@ -11,8 +11,8 @@ import {
   createMicrokernel,
   KERNEL_OP_STREAM_WRITE,
   KERNEL_OP_RUNTIME_EVENT
-} from "../../doc/wasm/js/microkernel.mjs";
-import { createSabRing, SAB_RING_TRANSPORT } from "../../doc/wasm/js/sab-ring.mjs";
+} from "../../scripts/wasm/lib/microkernel.mjs";
+import { createSabRing, SAB_RING_TRANSPORT } from "../../scripts/wasm/lib/sab-ring.mjs";
 
 function encodeUtf8(text) {
   return new TextEncoder().encode(String(text));

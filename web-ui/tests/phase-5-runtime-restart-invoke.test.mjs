@@ -13,7 +13,7 @@ import {
   applyRuntimeMessage,
   DEBUGGER_RESTART_INVOKE_COMMAND
 } from "../src/index.mjs";
-import { createSabRing, SAB_RING_TRANSPORT } from "../../doc/wasm/js/sab-ring.mjs";
+import { createSabRing, SAB_RING_TRANSPORT } from "../../scripts/wasm/lib/sab-ring.mjs";
 
 test("debugger restart command dispatches to runtime command client and settles history", async () => {
   const registry = createRegistry();

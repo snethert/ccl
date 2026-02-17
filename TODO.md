@@ -59,23 +59,41 @@ used non-existent acode operators, breaking cross-compilation loading. Fixed.
 
 ---
 
-### Phase 0B: Zero-Relocation Image Base ❌
+### Phase 0B: Zero-Relocation Image Base ✅
 
 **Goal:** Image base = `__heap_base`. Bias = 0. No relocation walk.
 
-- [ ] Extract `__heap_base` from kernel in `rebuild-everything.sh`
-- [ ] Make `xwasmfasload.lisp` read image base from env var
-- [ ] Remove relocation walk from launcher
+- [x] Extract `__heap_base` from kernel in `rebuild-everything.sh`
+- [x] Make `xwasmfasload.lisp` read image base from env var (`CCL_WASM_IMAGE_BASE`)
+- [x] Relocation walk: already a no-op when bias=0 (`image.c:456`)
+
+**How it works:**
+- `rebuild-everything.sh` extracts `__heap_base` from `wasmcl.wasm` (via `__stack_pointer` init value in wasm-objdump), aligns to 64KiB (matching kernel's `ReserveMemoryForHeap()`)
+- Exports `CCL_WASM_IMAGE_BASE` hex value; `xwasmfasload.lisp` reads it as `:image-base-address`
+- At runtime, kernel computes `image_base` from same `__heap_base` → `bias = image_base - ACTUAL_IMAGE_BASE(header) = 0`
+- C relocation walk (`relocate_area_contents`) already skips when `bias=0`
+- Current kernel: `__heap_base=76592` → aligned `image_base=0x20000`
 
 ---
 
-### Phase 1: Verified Build ❌
+### Phase 1: Verified Build ⚠️
 
 **Goal:** Rebuild with Phase 0 changes. Verify everything works.
 
-- [ ] `cold-boot-init: ok`
-- [ ] All 35 level-1 FASL files load
-- [ ] `root.image` saved successfully
+- [x] Kernel + subprims build
+- [x] All 12 wasm-*.lisp files compile and load (333 bridge functions)
+- [x] Boot image written (`wasm-boot.image`)
+- [x] 1110 boot modules compiled
+- [x] 7557 runtime modules compiled
+- [x] Phase 0B image base extraction works (`__heap_base=76592 → 0x20000`)
+- [ ] Root image build — crashes in `wasm_pending_throw_p` (FASL loading regression)
+
+**Bugs fixed during Phase 1:**
+- `GENERAL-AREF2` unimplemented opcode: `%aref2`/`%aref3`/`%aset2`/`%aset3` rewrote to use `row-major-aref` + `array-row-major-index`
+- Unclosed paren in `wasm-bignum.lisp` `truncate-guess-loop` (line 695)
+- Unclosed paren in `wasm-float.lisp` `%double-float->short-float` (line 369)
+
+**Remaining blocker:** Root image assembly crashes at runtime — this is the same FASL loading regression documented in the critical issues section (fn=0x2c where function object expected, const pool encoding mismatch).
 
 ---
 

@@ -9,7 +9,7 @@ Fixture source: `web-ui/spec/ui-conformance-fixtures-v1.json`
 ## 1. Purpose
 
 This matrix provides strict traceability from contract clauses to conformance fixtures.
-Every normative clause listed here MUST map to at least one required fixture.
+Every normative clause listed here <a id="REQ-UI-CONFORMANCE-MATRIX-V1-52EAAFB445"></a>MUST map to at least one required fixture.
 
 ## 2. Traceability Table
 

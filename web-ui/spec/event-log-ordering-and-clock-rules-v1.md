@@ -18,11 +18,11 @@ Event order is defined by `seq` (sequence number) in `event-log-schema-v1.json`.
 
 Rules:
 
-1. `seq` MUST be an integer in `[0, 2^53-1]`.
-2. `seq` MUST be unique within a log.
-3. `seq` MUST increase strictly by position in `events[]`.
-4. Replayers MUST treat `seq` as authoritative order, not array insertion time, wall clock, or host callback order.
-5. Logs with duplicate or non-increasing `seq` MUST be rejected as invalid.
+1. `seq` <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-8BE29DF4B0"></a>MUST be an integer in `[0, 2^53-1]`.
+2. `seq` <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-95ECA7D3EF"></a>MUST be unique within a log.
+3. `seq` <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-AB3771014E"></a>MUST increase strictly by position in `events[]`.
+4. Replayers <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-D4B403F665"></a>MUST treat `seq` as authoritative order, not array insertion time, wall clock, or host callback order.
+5. Logs with duplicate or non-increasing `seq` <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-219E67EF13"></a>MUST be rejected as invalid.
 
 ## 3. Timestamp and Clock Semantics
 
@@ -35,15 +35,15 @@ Rules:
 
 ### 3.2 `monotonic-ms-v1`
 
-1. `ts` values, when present, MUST be non-negative integer milliseconds from a monotonic source.
-2. `ts` MUST be non-decreasing with increasing `seq`.
+1. `ts` values, when present, <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-363C6915EB"></a>MUST be non-negative integer milliseconds from a monotonic source.
+2. `ts` <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-F20CE56A9A"></a>MUST be non-decreasing with increasing `seq`.
 3. `ts` MAY have equal adjacent values when events occur within the same clock tick.
-4. Wall-clock time MUST NOT be used to reorder events.
+4. Wall-clock time <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-E5DA3F02C7"></a>MUST NOT be used to reorder events.
 
 ### 3.3 `logical-step-v1`
 
 1. `ts` MAY be omitted.
-2. If `ts` is present, it MUST be non-decreasing integer logical time.
+2. If `ts` is present, it <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-FF74F32BE6"></a>MUST be non-decreasing integer logical time.
 3. Determinism depends on `seq`; `ts` is diagnostic in this profile.
 
 ### 3.4 Missing `ts`
@@ -68,11 +68,11 @@ Additional namespaced families (for example `recording:*`, `ui:*`, `runtime:*`) 
 
 ## 5. Replay Semantics
 
-1. Replay engines MUST validate log schema before execution.
-2. Replay engines MUST process non-`snapshot` events in increasing `seq`.
-3. `snapshot` events MUST capture post-state after all prior non-`snapshot` events have applied.
-4. Replay engines MUST fail deterministic runs when unknown event types are encountered unless an explicit extension handler is installed.
-5. Extension handlers MUST be deterministic for fixed `(state, event, handler-config)`.
+1. Replay engines <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-CE9A7DF2C6"></a>MUST validate log schema before execution.
+2. Replay engines <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-113605FA68"></a>MUST process non-`snapshot` events in increasing `seq`.
+3. `snapshot` events <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-DE4DE6A4A4"></a>MUST capture post-state after all prior non-`snapshot` events have applied.
+4. Replay engines <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-2A590AFBB1"></a>MUST fail deterministic runs when unknown event types are encountered unless an explicit extension handler is installed.
+5. Extension handlers <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-A169011002"></a>MUST be deterministic for fixed `(state, event, handler-config)`.
 
 ## 6. Partial Replay Rules
 
@@ -80,18 +80,18 @@ Partial replay over `[startSeq, endSeq]` is inclusive.
 
 Rules:
 
-1. Events with `seq < startSeq` MUST be excluded.
-2. Events with `seq > endSeq` MUST be excluded.
-3. If `startSeq > endSeq`, replay request MUST fail.
-4. If requested `startSeq` does not exist, the engine MAY start at the first event with `seq > startSeq` only when explicitly configured; otherwise it MUST fail.
-5. Partial replay mode MUST be recorded in diagnostics/report output.
+1. Events with `seq < startSeq` <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-50D1D090AB"></a>MUST be excluded.
+2. Events with `seq > endSeq` <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-0E99DDDBEF"></a>MUST be excluded.
+3. If `startSeq > endSeq`, replay request <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-7A6D1142BB"></a>MUST fail.
+4. If requested `startSeq` does not exist, the engine MAY start at the first event with `seq > startSeq` only when explicitly configured; otherwise it <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-700BD21460"></a>MUST fail.
+5. Partial replay mode <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-492B28CA1E"></a>MUST be recorded in diagnostics/report output.
 
 ## 7. Determinism and Tie-Break Rules
 
 1. There is no legal tie for `seq`; ties are invalid.
-2. For merged multi-source logs, implementations MUST normalize into one strictly increasing `seq` stream before replay.
-3. If merge requires deterministic tie-breaking, source order MUST be fixed by stable source ID lexical order before reassignment.
-4. Randomized handlers MUST be seeded; seed value MUST be recorded in the log envelope or replay report.
+2. For merged multi-source logs, implementations <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-13DFC97A87"></a>MUST normalize into one strictly increasing `seq` stream before replay.
+3. If merge requires deterministic tie-breaking, source order <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-18F26A803C"></a>MUST be fixed by stable source ID lexical order before reassignment.
+4. Randomized handlers <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-16A23C6078"></a>MUST be seeded; seed value <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-621F56AD31"></a>MUST be recorded in the log envelope or replay report.
 
 ## 8. Failure Semantics
 
@@ -108,8 +108,8 @@ Rules:
 
 1. `version="0"` logs MAY be imported.
 2. Importers SHOULD normalize imported logs to `version="1.0.0"` before persistence.
-3. Normalization MUST preserve `seq` order and event payload semantics.
-4. Importers MUST NOT invent synthetic `seq` gaps or reorder payload effects.
+3. Normalization <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-D40F67CE39"></a>MUST preserve `seq` order and event payload semantics.
+4. Importers <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-347CB07CAD"></a>MUST NOT invent synthetic `seq` gaps or reorder payload effects.
 
 ## 10. Conformance Fixtures and Pass Criteria
 
@@ -124,7 +124,7 @@ Pass criteria:
 
 1. Re-running each fixture with identical inputs yields identical snapshot strings and replay outcomes.
 2. No fixture may pass with non-monotonic or duplicate `seq` input.
-3. Any schema violation MUST surface one stable failure code from Section 8.
+3. Any schema violation <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-751B8FFB3C"></a>MUST surface one stable failure code from Section 8.
 
 ## 11. Conformance
 

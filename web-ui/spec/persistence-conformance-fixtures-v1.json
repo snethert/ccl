@@ -1,9 +1,9 @@
 {
   "metadata": {
     "id": "web-ui.persistence-conformance-fixtures",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "status": "draft",
-    "lastUpdated": "2026-02-16",
+    "lastUpdated": "2026-02-17",
     "compatibility": {
       "backward": "Minor versions MAY add scenarios but MUST NOT alter required scenario semantics.",
       "forward": "Unknown scenario fields MUST be ignored by runners.",
@@ -251,9 +251,9 @@
       }
     },
     {
-      "id": "pending.crash.object_split_before_manifest.v1",
-      "title": "P1 scaffold: crash during split immutable write before manifest completion",
-      "status": "pending",
+      "id": "crash.object_split_before_manifest.v1",
+      "title": "Crash during split immutable write before manifest completion",
+      "status": "required",
       "class": "crash",
       "script": [
         { "id": "put-c0", "op": "put_commit", "target": "local", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0", "s0"] },
@@ -272,9 +272,9 @@
       }
     },
     {
-      "id": "pending.crash.reftxn_prepared.v1",
-      "title": "P1 scaffold: metadata failure after reftxn prepared and before CAS apply",
-      "status": "pending",
+      "id": "crash.reftxn_prepared.v1",
+      "title": "Metadata failure after reftxn prepared and before CAS apply",
+      "status": "required",
       "class": "crash",
       "script": [
         { "id": "put-c0", "op": "put_commit", "target": "local", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0", "s0"] },
@@ -296,9 +296,9 @@
       }
     },
     {
-      "id": "pending.crash.recovery_scanner_restart.v1",
-      "title": "P1 scaffold: startup recovery scanner interruption and deterministic retry",
-      "status": "pending",
+      "id": "crash.recovery_scanner_restart.v1",
+      "title": "Startup recovery scanner interruption and deterministic retry",
+      "status": "required",
       "class": "crash",
       "script": [
         { "id": "put-c0", "op": "put_commit", "target": "both", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0"] },
@@ -319,9 +319,9 @@
       }
     },
     {
-      "id": "pending.lease.heartbeat_loss_before_write.v1",
-      "title": "P1 scaffold: lease heartbeat loss immediately before protected ref write",
-      "status": "pending",
+      "id": "lease.heartbeat_loss_before_write.v1",
+      "title": "Lease heartbeat loss immediately before protected ref write",
+      "status": "required",
       "class": "lease",
       "script": [
         { "id": "put-c0", "op": "put_commit", "target": "local", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0"] },
@@ -356,9 +356,9 @@
       }
     },
     {
-      "id": "pending.lease.double_takeover_tiebreak.v1",
-      "title": "P1 scaffold: takeover tie-break resolves to one winner",
-      "status": "pending",
+      "id": "lease.double_takeover_tiebreak.v1",
+      "title": "Takeover tie-break resolves to one winner",
+      "status": "required",
       "class": "lease",
       "script": [
         { "id": "acquire-initial", "op": "lease_acquire", "lease_name": "lease/workspace/main", "owner_instance_id": "tab-0", "writer_token": "tok-0" },
@@ -372,9 +372,9 @@
       }
     },
     {
-      "id": "pending.sync.push.cas_mismatch_divergence.v1",
-      "title": "P1 scaffold: push CAS mismatch then divergence path records incoming ref",
-      "status": "pending",
+      "id": "sync.push.cas_mismatch_divergence.v1",
+      "title": "Push CAS mismatch then divergence path records incoming ref",
+      "status": "required",
       "class": "sync",
       "script": [
         { "id": "put-c0", "op": "put_commit", "target": "both", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0"] },
@@ -399,9 +399,9 @@
       }
     },
     {
-      "id": "pending.sync.pull.hash_mismatch_reject.v1",
-      "title": "P1 scaffold: pull rejects hash-mismatched object and keeps local head",
-      "status": "pending",
+      "id": "sync.pull.hash_mismatch_reject.v1",
+      "title": "Pull rejects hash-mismatched object and keeps local head",
+      "status": "required",
       "class": "sync",
       "script": [
         { "id": "put-c0", "op": "put_commit", "target": "both", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0"] },
@@ -422,9 +422,9 @@
       }
     },
     {
-      "id": "pending.sync.push.retry_idempotent_timeout.v1",
-      "title": "P1 scaffold: push retry after post-CAS timeout remains idempotent",
-      "status": "pending",
+      "id": "sync.push.retry_idempotent_timeout.v1",
+      "title": "Push retry after post-CAS timeout remains idempotent",
+      "status": "required",
       "class": "sync",
       "script": [
         { "id": "put-c0", "op": "put_commit", "target": "both", "commit_id": "c0", "parents": [], "finalized": true, "closure": ["c0", "base"] },

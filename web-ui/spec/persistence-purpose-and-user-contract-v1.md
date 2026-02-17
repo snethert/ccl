@@ -8,9 +8,9 @@ Depends on: `web-ui/DEV-PLAN.md`, `web-ui/FRONT-END-DEV-PLAN.md`, `web-ui/PRODUC
 
 ## 1. Purpose
 
-This specification defines why the persistence system exists and what user contract it MUST preserve.
+This specification defines why the persistence system exists and what user contract it <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-5607F51897"></a>MUST preserve.
 
-The persistence system for browser-hosted CCL MUST:
+The persistence system for browser-hosted CCL <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-18028F490B"></a>MUST:
 
 1. Preserve normal programming workflow based on files, directories, and stable paths.
 2. Provide crash-safe, deterministic durability and recovery.
@@ -30,7 +30,7 @@ From the user's perspective:
 4. Tooling that expects POSIX-like file workflows (within documented constraints) continues to work.
 5. CCL launch procedures that rely on filesystem access remain supported.
 
-The system MUST NOT require users to adopt an object-centric workflow for ordinary development.
+The system <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-C292173F0B"></a>MUST NOT require users to adopt an object-centric workflow for ordinary development.
 
 ## 3. Non-Goals
 
@@ -45,7 +45,7 @@ This persistence system explicitly does not aim to be:
 
 The primary product outcome is trust.
 
-Users forgive missing features; they do not forgive storage betrayal. The persistence system MUST prioritize:
+Users forgive missing features; they do not forgive storage betrayal. The persistence system <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-C4FF70F346"></a>MUST prioritize:
 
 1. No silent data loss.
 2. No surprising rewrites.
@@ -58,7 +58,7 @@ The design is successful only if the surface model stays boring and predictable 
 
 ### 5.1 Path Model
 
-Path semantics MUST be portable POSIX-like:
+Path semantics <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-EE0CFF87DF"></a>MUST be portable POSIX-like:
 
 1. Path separator is `/`.
 2. Workspace root is `/`.
@@ -69,15 +69,15 @@ Path semantics MUST be portable POSIX-like:
 
 ### 5.2 Unicode and Length
 
-1. Path components MUST be normalized to NFC on ingest.
-2. Normalization handling (canonicalize or reject) MUST be deterministic.
-3. Component-length and full-path-length limits MUST be explicit and enforced.
+1. Path components <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-3487C2FCD7"></a>MUST be normalized to NFC on ingest.
+2. Normalization handling (canonicalize or reject) <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-0479E05907"></a>MUST be deterministic.
+3. Component-length and full-path-length limits <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-0CA0DAFA34"></a>MUST be explicit and enforced.
 
 ### 5.3 Permissions and Executability
 
 1. Full POSIX mode-bit emulation is out of scope.
 2. Executable metadata MAY exist for interoperability/export.
-3. Runtime semantics MUST treat executability as metadata, not authority.
+3. Runtime semantics <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-4A34D2E3A5"></a>MUST treat executability as metadata, not authority.
 
 ## 6. Internal Storage Model
 
@@ -90,7 +90,7 @@ Core model:
 3. Snapshot-based history.
 4. Mutable references to snapshots.
 
-Objects MUST NOT be mutated in place. References MAY advance atomically.
+Objects <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-636FD7EF38"></a>MUST NOT be mutated in place. References MAY advance atomically.
 
 ### 6.1 Object Classes
 
@@ -109,22 +109,22 @@ Objects MUST NOT be mutated in place. References MAY advance atomically.
 
 A file is a first-class authored unit, not a storage illusion.
 
-The storage layer MUST treat file blobs as authoritative user-authored content:
+The storage layer <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-32D0701880"></a>MUST treat file blobs as authoritative user-authored content:
 
 1. A source file is edited, saved, and versioned as a whole file.
 2. Ordering, spacing, comments, and narrative structure are preserved exactly unless the user changes them.
 3. Semantic data is derived from files, not a replacement for files.
-4. Tooling MAY index or analyze files, but MUST NOT require file fragmentation into storage-native semantic nodes.
+4. Tooling MAY index or analyze files, but <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-6DD45E7EA5"></a>MUST NOT require file fragmentation into storage-native semantic nodes.
 
 ### 7.1 Profile Boundary
 
 Default behavior is `file-primacy-v1`.
 
-Any semantic-canonical mode MUST be explicit, policy-bound, and auditable:
+Any semantic-canonical mode <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-C316647AFC"></a>MUST be explicit, policy-bound, and auditable:
 
 1. No silent transition from file-primacy default.
 2. No implicit replacement of file/path user contract.
-3. Mixed-profile compatibility MUST be checked before protected ref advancement.
+3. Mixed-profile compatibility <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-FEBAB2C533"></a>MUST be checked before protected ref advancement.
 
 ## 8. Snapshot and Reference Policy
 
@@ -132,14 +132,14 @@ Any semantic-canonical mode MUST be explicit, policy-bound, and auditable:
 
 1. User-save snapshots are authoritative and created on explicit save/save-all.
 2. Autosave snapshots are safety-only and created at stable points (idle, time-coalesced, boundary-triggered).
-3. Autosaves MUST NOT overwrite user-save history.
-4. Crash checkpoints MUST preserve atomic ref movement guarantees.
+3. Autosaves <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-DE8017AFA5"></a>MUST NOT overwrite user-save history.
+4. Crash checkpoints <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-7F36A358E4"></a>MUST preserve atomic ref movement guarantees.
 
 ### 8.2 Atomicity and Recovery
 
 1. Object persistence is append-only.
-2. Ref updates MUST be crash-safe and journaled or equivalently atomic.
-3. Recovery MUST always resolve each ref to one complete snapshot state.
+2. Ref updates <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-E7D4D5EEF8"></a>MUST be crash-safe and journaled or equivalently atomic.
+3. Recovery <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-0D839C0819"></a>MUST always resolve each ref to one complete snapshot state.
 
 ## 9. Reference Names and Roles
 
@@ -150,67 +150,67 @@ Common refs SHOULD include:
 3. `session/<id>`
 4. Optional named checkpoints
 
-Background automation MUST NOT advance user-visible working refs unless an explicit policy allows it.
+Background automation <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-854E8777D8"></a>MUST NOT advance user-visible working refs unless an explicit policy allows it.
 
 ## 10. Sync and Concurrency
 
 ### 10.1 Local-First
 
-1. Edit/save/history operations MUST work offline.
+1. Edit/save/history operations <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-DD8011EA2D"></a>MUST work offline.
 2. Sync is asynchronous and secondary to local interaction latency.
 
 ### 10.2 Sync Behavior
 
 1. Sync moves objects and refs, not file-level surprise rewrites.
-2. Divergence MUST be represented as explicit ref state, not ad hoc conflict filename litter.
+2. Divergence <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-CF2121E6FA"></a>MUST be represented as explicit ref state, not ad hoc conflict filename litter.
 3. Merge/finalization requires deterministic policy and/or explicit user acceptance.
 
 ### 10.3 Multi-Tab/Team Coordination
 
 1. Protected refs SHOULD use single-writer lease semantics.
-2. Secondary writers MUST default to explicit branch/session refs or read-only.
-3. Protected ref advancement MUST be gated in storage semantics, not UI alone.
+2. Secondary writers <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-E0AB710C1E"></a>MUST default to explicit branch/session refs or read-only.
+3. Protected ref advancement <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-004808A9CA"></a>MUST be gated in storage semantics, not UI alone.
 
 ## 11. Derived Data and Tooling
 
 ### 11.1 Lisp-Aware Indexing
 
 1. Indexes are derived and rebuildable.
-2. Indexes MUST key by snapshot/file/blob identities.
+2. Indexes <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-EFF25C863F"></a>MUST key by snapshot/file/blob identities.
 3. Identical blobs SHOULD reuse parse/index results.
 
 ### 11.2 Parser Strategy
 
 1. Use Lisp reader where possible.
 2. Tolerant mode MAY support incomplete dirty buffers.
-3. Dirty-buffer indexing MUST remain separate from authoritative snapshot indexing.
+3. Dirty-buffer indexing <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-C457D96066"></a>MUST remain separate from authoritative snapshot indexing.
 
 ### 11.3 Artifacts
 
-1. Authored and derived artifacts MUST be separable.
-2. Derived artifacts MUST be discardable and reproducible.
+1. Authored and derived artifacts <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-F3768C060F"></a>MUST be separable.
+2. Derived artifacts <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-F59068000B"></a>MUST be discardable and reproducible.
 
 ## 12. Failure and Storage Pressure Policy
 
-On storage pressure, implementations MUST prioritize:
+On storage pressure, implementations <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-30F1192F34"></a>MUST prioritize:
 
 1. Stop autosaves first.
 2. Evict derived artifacts second.
 3. Refuse user saves only as last resort, with export or explicit recovery path.
 
-Authored work MUST NOT be silently destroyed.
+Authored work <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-5A171F0B78"></a>MUST NOT be silently destroyed.
 
 ## 13. Security and Privacy
 
-1. Content integrity MUST be verifiable.
+1. Content integrity <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-2812BBA576"></a>MUST be verifiable.
 2. Optional encryption MAY be supported, with explicit key management and recovery policy.
-3. Security controls MUST NOT break deterministic durability semantics.
+3. Security controls <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-527B1EB947"></a>MUST NOT break deterministic durability semantics.
 
 ## 14. Interoperability
 
-1. A filesystem API surface MUST remain explicit.
+1. A filesystem API surface <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-1E9D167E86"></a>MUST remain explicit.
 2. Interop with Git or external VCS is interchange, not canonical storage truth.
-3. Storage internals MUST remain hidden unless explicitly requested for diagnostics/export.
+3. Storage internals <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-CA3C48418D"></a>MUST remain hidden unless explicitly requested for diagnostics/export.
 
 ## 15. Conformance
 
@@ -227,7 +227,7 @@ An implementation is conformant only if all conditions hold:
 
 ### 16.1 Positive invariants
 
-The system MUST maximize:
+The system <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-9F8D51FC59"></a>MUST maximize:
 
 1. Predictability.
 2. Clear ownership of changes.
@@ -237,7 +237,7 @@ The system MUST maximize:
 
 ### 16.2 Negative invariants
 
-The system MUST avoid:
+The system <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-35CB88A25A"></a>MUST avoid:
 
 1. Ambiguous sync state.
 2. Surprise conflict filenames.
@@ -247,4 +247,4 @@ The system MUST avoid:
 
 ### 16.3 Guiding principle
 
-Trust is the primary storage product property. Feature work MUST NOT compromise trust invariants.
+Trust is the primary storage product property. Feature work <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-BD41526F25"></a>MUST NOT compromise trust invariants.

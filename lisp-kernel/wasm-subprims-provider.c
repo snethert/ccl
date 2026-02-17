@@ -2014,9 +2014,13 @@ wasm_signal_funcall_error(TCR *tcr, signed_natural errnum, LispObj name)
   _SPksignalerr();
 }
 
+static uint32_t wasm_cfv_depth = 0;
+
 static void
 wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
 {
+  wasm_cfv_depth++;
+
   if (wasm_reg(tcr, nfn) != fn_value) {
     wasm_set_reg(tcr, nfn, fn_value);
   }
@@ -2027,15 +2031,16 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
   LispObj entry = deref(fn_value, 1);
   if (tag_of(entry) != tag_fixnum) {
     wasm_signal_funcall_error(tcr, WASM_XNOTFUN, name);
+    wasm_cfv_depth--;
     return;
   }
 
   {
     uint32_t entry_index = (uint32_t)unbox_fixnum(entry);
-    /* B3 diagnostic: log entry_index and fn before dispatch */
+    /* B3 diagnostic: log entry_index, fn, and call depth before dispatch */
     {
       static const char hex[] = "0123456789abcdef";
-      char dbg[64];
+      char dbg[80];
       int p = 0;
       static const char pf[] = "DIAG: cfv e=";
       for (int j = 0; pf[j]; j++) dbg[p++] = pf[j];
@@ -2048,6 +2053,19 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
       dbg[p++] = ' '; dbg[p++] = 'f'; dbg[p++] = 'n'; dbg[p++] = '=';
       dbg[p++] = '0'; dbg[p++] = 'x';
       for (int i = 7; i >= 0; i--) dbg[p++] = hex[((uint32_t)fn_value >> (i * 4)) & 0xf];
+      /* add depth */
+      dbg[p++] = ' '; dbg[p++] = 'd'; dbg[p++] = '=';
+      { char dt[12]; int di = 0; uint32_t dv = wasm_cfv_depth;
+        if (dv == 0) { dt[di++] = '0'; }
+        else { while (dv) { dt[di++] = '0' + (dv % 10); dv /= 10; } }
+        for (int j = di - 1; j >= 0; j--) dbg[p++] = dt[j]; }
+      /* Also log arg_z for the last few entries before crash */
+      {
+        LispObj az = wasm_reg(tcr, arg_z);
+        dbg[p++] = ' '; dbg[p++] = 'a'; dbg[p++] = 'z'; dbg[p++] = '=';
+        dbg[p++] = '0'; dbg[p++] = 'x';
+        for (int i = 7; i >= 0; i--) dbg[p++] = hex[((uint32_t)az >> (i * 4)) & 0xf];
+      }
       dbg[p++] = '\n';
       wasm_host_log(dbg, p);
     }
@@ -2097,6 +2115,7 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
       break;
     }
   }
+  wasm_cfv_depth--;
 }
 
 static void

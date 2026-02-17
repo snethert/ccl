@@ -25,12 +25,6 @@ function requiredScenarios(fixtureSet) {
   );
 }
 
-function pendingScenarios(fixtureSet) {
-  return (fixtureSet.scenarios ?? []).filter(
-    (scenario) => String(scenario.status ?? "required") === "pending"
-  );
-}
-
 function formatFailures(report) {
   const lines = [];
   for (const result of report.results ?? []) {
@@ -52,7 +46,7 @@ test("persistence conformance fixture set validates and covers required classes"
   assert.equal(validation.ok, true, `fixture set validation failed: ${stableStringify(validation.errors)}`);
 
   const required = requiredScenarios(fixtureSet);
-  assert.ok(required.length >= 6, "expected at least six required persistence scenarios");
+  assert.ok(required.length >= 14, "expected broad required persistence scenario coverage");
 
   const classes = new Set(required.map((scenario) => String(scenario.class ?? "")));
   for (const classId of ["crash", "lease", "sync"]) {
@@ -94,23 +88,38 @@ test("persistence conformance replay is deterministic for fixed seed", () => {
   assert.equal(stableStringify(reportA), stableStringify(reportB));
 });
 
-test("persistence conformance includes P1 scaffold scenarios from failure matrix", () => {
+test("persistence conformance full fixture run passes with no pending scenarios", () => {
   const fixtureSet = readSpecJson("web-ui/spec/persistence-conformance-fixtures-v1.json");
-  const pending = pendingScenarios(fixtureSet);
-  const pendingIds = new Set(pending.map((scenario) => String(scenario.id ?? "")));
+  const pending = (fixtureSet.scenarios ?? []).filter(
+    (scenario) => String(scenario.status ?? "required") === "pending"
+  );
+  assert.equal(pending.length, 0, "fixture set should not contain pending scenarios");
+
+  const report = runPersistenceFixtureSet(fixtureSet, {
+    seed: "persistence-conformance-v1",
+    requiredOnly: false
+  });
+  assert.equal(report.summary.scenarioCount, (fixtureSet.scenarios ?? []).length);
+  assert.equal(report.summary.failed, 0, formatFailures(report));
+  assert.equal(report.ok, true, formatFailures(report));
+});
+
+test("persistence conformance includes promoted P1 scenarios as required coverage", () => {
+  const fixtureSet = readSpecJson("web-ui/spec/persistence-conformance-fixtures-v1.json");
+  const requiredIds = new Set(requiredScenarios(fixtureSet).map((scenario) => String(scenario.id ?? "")));
 
   const expectedP1ScenarioIds = [
-    "pending.crash.object_split_before_manifest.v1",
-    "pending.crash.reftxn_prepared.v1",
-    "pending.crash.recovery_scanner_restart.v1",
-    "pending.lease.heartbeat_loss_before_write.v1",
-    "pending.lease.double_takeover_tiebreak.v1",
-    "pending.sync.push.cas_mismatch_divergence.v1",
-    "pending.sync.pull.hash_mismatch_reject.v1",
-    "pending.sync.push.retry_idempotent_timeout.v1"
+    "crash.object_split_before_manifest.v1",
+    "crash.reftxn_prepared.v1",
+    "crash.recovery_scanner_restart.v1",
+    "lease.heartbeat_loss_before_write.v1",
+    "lease.double_takeover_tiebreak.v1",
+    "sync.push.cas_mismatch_divergence.v1",
+    "sync.pull.hash_mismatch_reject.v1",
+    "sync.push.retry_idempotent_timeout.v1"
   ];
 
   for (const id of expectedP1ScenarioIds) {
-    assert.equal(pendingIds.has(id), true, `missing pending P1 scaffold scenario: ${id}`);
+    assert.equal(requiredIds.has(id), true, `missing promoted P1 required scenario: ${id}`);
   }
 });

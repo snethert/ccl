@@ -6,7 +6,7 @@ import {
   KERNEL_OP_UI_POLL,
   KERNEL_OP_UI_RENDER,
   KERNEL_OP_UI_MEASURE_TEXT,
-} from "../../doc/wasm/js/microkernel.mjs";
+} from "../../scripts/wasm/lib/microkernel.mjs";
 
 import { encodeEvents, EVENT_TYPES } from "../bridge/codec.mjs";
 

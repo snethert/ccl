@@ -24,11 +24,11 @@ Interpretation rules:
 
 ## 3. Requirement Traceability Rules
 
-1. Every normative artifact MUST include a `Conformance` section.
-2. Every `MUST` requirement MUST be traceable to at least one automated test, fixture, or schema validation check.
-3. Requirement-to-evidence links MUST be machine-indexable by path and stable ID.
-4. If a requirement cannot yet be automated, it MUST be tagged as `manual-gate` and listed in a blocking gap report.
-5. Normative contradictions across artifacts MUST be resolved by explicit precedence declaration.
+1. Every normative artifact <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-D9359BFD45"></a>MUST include a `Conformance` section.
+2. Every `MUST` requirement <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-D6D74319FA"></a>MUST be traceable to at least one automated test, fixture, or schema validation check.
+3. Requirement-to-evidence links <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-74E9627135"></a>MUST be machine-indexable by path and stable ID.
+4. If a requirement cannot yet be automated, it <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-3BCC8A1549"></a>MUST be tagged as `manual-gate` and listed in a blocking gap report.
+5. Normative contradictions across artifacts <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-11F1853C4A"></a>MUST be resolved by explicit precedence declaration.
 
 Precedence order:
 
@@ -38,7 +38,7 @@ Precedence order:
 
 ## 4. Artifact Metadata Requirements
 
-Each normative `web-ui/spec/*-vN.*` artifact MUST declare:
+Each normative `web-ui/spec/*-vN.*` artifact <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-505B61010E"></a>MUST declare:
 
 1. `Status`
 2. `Version`
@@ -83,7 +83,7 @@ System conformance requires:
 
 ## 6. Evidence Contract
 
-Evidence MUST include:
+Evidence <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-F94B4AD8F3"></a>MUST include:
 
 1. Conformance report output path(s).
 2. Fixture/test IDs executed.
@@ -95,14 +95,14 @@ Evidence MAY be rejected if it cannot be replayed deterministically from capture
 
 ## 7. Determinism Rules
 
-1. Conformance verdicts MUST be deterministic for identical inputs and seed.
-2. When multiple valid matches exist, tie-break behavior MUST be declared and stable.
-3. Timestamp-based checks MUST use monotonic clocks unless wall-clock behavior is explicitly required.
-4. Unordered structures in reports MUST be canonicalized before comparison.
+1. Conformance verdicts <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-139E7A7D59"></a>MUST be deterministic for identical inputs and seed.
+2. When multiple valid matches exist, tie-break behavior <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-08DBA87D72"></a>MUST be declared and stable.
+3. Timestamp-based checks <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-BF5D447F12"></a>MUST use monotonic clocks unless wall-clock behavior is explicitly required.
+4. Unordered structures in reports <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-31333C5C08"></a>MUST be canonicalized before comparison.
 
 ## 8. Failure Semantics
 
-Conformance systems MUST use stable error codes:
+Conformance systems <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-3B7E0EEF2C"></a>MUST use stable error codes:
 
 | Code | Meaning | Retryability | Caller obligation |
 |---|---|---|---|
@@ -115,20 +115,20 @@ Conformance systems MUST use stable error codes:
 
 ## 9. Compatibility and Versioning Policy
 
-1. Major version changes (`vN` to `vN+1`) MAY break compatibility and MUST provide migration notes.
-2. Minor version changes (`x.Y.z`) MUST be backward compatible for existing artifact IDs and claim semantics.
-3. Patch changes (`x.y.Z`) MUST be non-semantic clarifications or fixes that do not alter conformance verdicts.
-4. Removed requirements MUST include explicit deprecation and replacement mapping.
-5. Deprecated requirements MUST remain valid for at least one full minor version overlap unless a security-critical exception is declared.
+1. Major version changes (`vN` to `vN+1`) MAY break compatibility and <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-D74259FAF4"></a>MUST provide migration notes.
+2. Minor version changes (`x.Y.z`) <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-53A4664A89"></a>MUST be backward compatible for existing artifact IDs and claim semantics.
+3. Patch changes (`x.y.Z`) <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-F83D56E970"></a>MUST be non-semantic clarifications or fixes that do not alter conformance verdicts.
+4. Removed requirements <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-FDCC5F0483"></a>MUST include explicit deprecation and replacement mapping.
+5. Deprecated requirements <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-000D492A27"></a>MUST remain valid for at least one full minor version overlap unless a security-critical exception is declared.
 
 ## 10. Change Control
 
 When normative behavior changes:
 
-1. Related artifact version MUST be updated.
-2. `spec-index-v1.md` MUST be updated if artifact class, profile membership, or identity changes.
-3. `glossary-v1.md` MUST be updated when introducing a new normative term.
-4. Conformance matrix/fixtures MUST be updated in the same change set.
+1. Related artifact version <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-0B7C93C122"></a>MUST be updated.
+2. `spec-index-v1.md` <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-DB8A73B9DE"></a>MUST be updated if artifact class, profile membership, or identity changes.
+3. `glossary-v1.md` <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-D96AE6972A"></a>MUST be updated when introducing a new normative term.
+4. Conformance matrix/fixtures <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-43D27A9C44"></a>MUST be updated in the same change set.
 
 ## 11. Conformance
 

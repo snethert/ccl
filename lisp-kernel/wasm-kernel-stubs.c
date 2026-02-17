@@ -1844,6 +1844,18 @@ wasm_pending_throw_p(void)
   if (tcr == NULL) {
     return 0;
   }
+  /* Bounds check: TCR + pending_throw offset must be within WASM memory */
+  uintptr_t tcr_addr = (uintptr_t)tcr;
+  uintptr_t field_end = tcr_addr + offsetof(TCR, wasm_pending_throw) + sizeof(LispObj);
+  uintptr_t mem_size = (uintptr_t)__builtin_wasm_memory_size(0) * 65536u;
+  if (field_end > mem_size) {
+    char buf[128];
+    int n = snprintf(buf, sizeof(buf),
+      "DIAG: ptp OOB tcr=0x%x field_end=0x%x mem=0x%x\n",
+      (unsigned)tcr_addr, (unsigned)field_end, (unsigned)mem_size);
+    if (n > 0) wasm_host_log(buf, (unsigned)n);
+    return 0;
+  }
   return tcr->wasm_pending_throw ? 1 : 0;
 }
 

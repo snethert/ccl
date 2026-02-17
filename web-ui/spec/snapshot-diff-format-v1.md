@@ -18,7 +18,7 @@ A snapshot diff is a JSON object with these required fields:
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `version` | string | yes | Diff format version. MUST be `1.0.0`. |
+| `version` | string | yes | Diff format version. <a id="REQ-SNAPSHOT-DIFF-FORMAT-V1-66542B07D1"></a>MUST be `1.0.0`. |
 | `baseSnapshotHash` | string | yes | `sha256:<64-hex>` hash of canonical base snapshot string. |
 | `targetSnapshotHash` | string | yes | `sha256:<64-hex>` hash of canonical target snapshot string. |
 | `generatedAt` | integer | yes | Non-negative timestamp in active clock profile units. |
@@ -35,7 +35,7 @@ Optional fields:
 
 ## 3. Stats Contract
 
-`stats` MUST include:
+`stats` <a id="REQ-SNAPSHOT-DIFF-FORMAT-V1-30BE1175F6"></a>MUST include:
 
 1. `added`
 2. `removed`
@@ -44,11 +44,11 @@ Optional fields:
 5. `unchanged`
 6. `totalCompared`
 
-All stats fields MUST be non-negative integers.
+All stats fields <a id="REQ-SNAPSHOT-DIFF-FORMAT-V1-6B1C3C4FC1"></a>MUST be non-negative integers.
 
 ## 4. Diff Entry Contract
 
-Each entry MUST include:
+Each entry <a id="REQ-SNAPSHOT-DIFF-FORMAT-V1-2C668319CA"></a>MUST include:
 
 1. `op`: one of `add`, `remove`, `replace`, `move`
 2. `path`: RFC6901 JSON Pointer path
@@ -67,25 +67,25 @@ Optional fields:
 
 ## 5. Path and Identity Rules
 
-1. `path` and `from` MUST use RFC6901 JSON Pointer encoding.
-2. Paths MUST resolve against normalized snapshot JSON trees.
-3. Node identity MUST prefer stable IDs already present in snapshots; array index movement MUST be represented by `move` when identity is preserved.
+1. `path` and `from` <a id="REQ-SNAPSHOT-DIFF-FORMAT-V1-48B81C8861"></a>MUST use RFC6901 JSON Pointer encoding.
+2. Paths <a id="REQ-SNAPSHOT-DIFF-FORMAT-V1-A07F64787B"></a>MUST resolve against normalized snapshot JSON trees.
+3. Node identity <a id="REQ-SNAPSHOT-DIFF-FORMAT-V1-A7D4BB437D"></a>MUST prefer stable IDs already present in snapshots; array index movement <a id="REQ-SNAPSHOT-DIFF-FORMAT-V1-B8E4728ABA"></a>MUST be represented by `move` when identity is preserved.
 4. If identity cannot be preserved deterministically, emit `remove` + `add` instead of `move`.
 
 ## 6. Value Normalization Rules
 
-Before diffing, both snapshots MUST be canonicalized:
+Before diffing, both snapshots <a id="REQ-SNAPSHOT-DIFF-FORMAT-V1-3F1D5CCBD1"></a>MUST be canonicalized:
 
 1. Object keys sorted lexically.
 2. No host-specific pointer/address values.
 3. No non-JSON values (`undefined`, function, symbol).
 4. Numeric values compared as JSON numbers without locale formatting.
 
-Canonicalization MUST be deterministic and consistent with snapshot serialization semantics.
+Canonicalization <a id="REQ-SNAPSHOT-DIFF-FORMAT-V1-90C795730E"></a>MUST be deterministic and consistent with snapshot serialization semantics.
 
 ## 7. Deterministic Entry Ordering
 
-Entries MUST be emitted in stable order:
+Entries <a id="REQ-SNAPSHOT-DIFF-FORMAT-V1-DBCBE5DEC1"></a>MUST be emitted in stable order:
 
 1. Primary key: `path` lexical ascending.
 2. Secondary key: operation precedence `remove`, `move`, `replace`, `add`.
@@ -95,11 +95,11 @@ When two entries remain tied after these keys, emit in deterministic generator t
 
 ## 8. Generation Rules
 
-1. Diff engines MUST compare normalized trees only.
-2. `replace` MUST be preferred over `remove+add` when path identity is unchanged.
-3. `move` MUST be emitted only when stable identity is provably preserved.
+1. Diff engines <a id="REQ-SNAPSHOT-DIFF-FORMAT-V1-D747F30B39"></a>MUST compare normalized trees only.
+2. `replace` <a id="REQ-SNAPSHOT-DIFF-FORMAT-V1-6AD8122BEB"></a>MUST be preferred over `remove+add` when path identity is unchanged.
+3. `move` <a id="REQ-SNAPSHOT-DIFF-FORMAT-V1-FC61E70C78"></a>MUST be emitted only when stable identity is provably preserved.
 4. Engines SHOULD coalesce redundant operations on identical paths within one output.
-5. Diff output MUST be replayable to transform base into target deterministically.
+5. Diff output <a id="REQ-SNAPSHOT-DIFF-FORMAT-V1-CC36DAEAFE"></a>MUST be replayable to transform base into target deterministically.
 
 ## 9. Failure Semantics
 
@@ -114,9 +114,9 @@ When two entries remain tied after these keys, emit in deterministic generator t
 ## 10. Compatibility Policy
 
 1. Minor versions MAY add optional metadata fields.
-2. Minor versions MUST NOT change operation semantics or ordering rules.
+2. Minor versions <a id="REQ-SNAPSHOT-DIFF-FORMAT-V1-A565C07D5E"></a>MUST NOT change operation semantics or ordering rules.
 3. New operation types require major version change.
-4. Deprecated fields MUST remain accepted for at least one full minor version overlap.
+4. Deprecated fields <a id="REQ-SNAPSHOT-DIFF-FORMAT-V1-85F353B541"></a>MUST remain accepted for at least one full minor version overlap.
 
 ## 11. Conformance Fixtures and Pass Criteria
 

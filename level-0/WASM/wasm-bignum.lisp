@@ -692,7 +692,7 @@ Uses the standard decomposition into 16-bit halves."
                      ((< gy2-hi m) (return))          ; gy2-hi < m: done
                      ;; gy2-hi = m: compare gy2-lo with x2
                      ((> gy2-lo x2) (decf guess))
-                     (t (return)))))))))
+                     (t (return))))))))))
     (values (%high-half (%u32 guess))
             (%low-half (%u32 guess)))))
 

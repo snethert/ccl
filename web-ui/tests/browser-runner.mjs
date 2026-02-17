@@ -8,6 +8,8 @@ const __dirname = path.dirname(__filename);
 const WEB_UI_ROOT = path.resolve(__dirname, "..");
 const REPO_ROOT = path.resolve(WEB_UI_ROOT, "..");
 const DOC_ROOT = path.join(REPO_ROOT, "doc");
+const SCRIPTS_ROOT = path.join(REPO_ROOT, "scripts");
+const BUILD_ROOT = path.join(REPO_ROOT, "build");
 
 const MIME_TYPES = new Map([
   [".html", "text/html; charset=utf-8"],
@@ -40,6 +42,14 @@ function resolvePath(rootDir, urlPath) {
   if (cleaned.startsWith("/doc/")) {
     const rel = cleaned.replace(/^\/doc\//, "");
     return toSafePath(DOC_ROOT, rel);
+  }
+  if (cleaned.startsWith("/scripts/")) {
+    const rel = cleaned.replace(/^\/scripts\//, "");
+    return toSafePath(SCRIPTS_ROOT, rel);
+  }
+  if (cleaned.startsWith("/build/")) {
+    const rel = cleaned.replace(/^\/build\//, "");
+    return toSafePath(BUILD_ROOT, rel);
   }
   return toSafePath(rootDir, cleaned);
 }
@@ -182,6 +192,8 @@ export async function runHeadless(options = {}) {
   }
 
   const timeoutMs = options.timeoutMs ?? 5000;
+  const debug = options.debug === true || process.env.WEB_UI_BROWSER_DEBUG === "1";
+  const kernelEnabled = options.kernelEnabled !== false;
   let server;
   let baseUrl;
   let useRouteServer = false;
@@ -216,6 +228,23 @@ export async function runHeadless(options = {}) {
     return { skipped: true, reason: err?.message ?? "Playwright launch failed" };
   }
   const page = await browser.newPage();
+  const debugLogs = [];
+  if (debug) {
+    page.on("console", (msg) => {
+      debugLogs.push(`console.${msg.type()}: ${msg.text()}`);
+    });
+    page.on("pageerror", (err) => {
+      debugLogs.push(`pageerror: ${err?.message ?? String(err)}`);
+    });
+    page.on("response", (res) => {
+      if (res.status() >= 400) {
+        debugLogs.push(`http.${res.status()}: ${res.url()}`);
+      }
+    });
+    page.on("requestfailed", (req) => {
+      debugLogs.push(`requestfailed: ${req.url()} (${req.failure()?.errorText ?? "unknown"})`);
+    });
+  }
   if (useRouteServer) {
     await page.route("**/*", (route) => fulfillFromDisk(route, WEB_UI_ROOT));
   }
@@ -228,7 +257,10 @@ export async function runHeadless(options = {}) {
   });
 
   const timer = setTimeout(() => {
-    rejectResult(new Error("Headless test timed out"));
+    const suffix = debugLogs.length > 0
+      ? `\nBrowser diagnostics:\n${debugLogs.join("\n")}`
+      : "";
+    rejectResult(new Error(`Headless test timed out${suffix}`));
   }, timeoutMs);
 
   await page.exposeFunction("__WEB_UI_TEST_DONE__", (result) => {
@@ -236,12 +268,20 @@ export async function runHeadless(options = {}) {
     resolveResult(result);
   });
 
-  const url = `${baseUrl}/tests/browser/harness.html`;
+  const params = new URLSearchParams();
+  if (!kernelEnabled) {
+    params.set("kernel", "off");
+  }
+  const query = params.toString();
+  const url = `${baseUrl}/tests/browser/harness.html${query ? `?${query}` : ""}`;
   await page.goto(url);
 
   try {
     const result = await resultPromise;
     result.browserName = browserName;
+    if (debug && debugLogs.length > 0) {
+      result.debugLogs = debugLogs;
+    }
     return result;
   } finally {
     await browser.close();

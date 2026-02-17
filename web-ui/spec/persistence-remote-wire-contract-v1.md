@@ -10,7 +10,7 @@ Depends on: `web-ui/spec/persistence-envelope-schema-v1.json`, `web-ui/spec/pers
 
 This contract defines the concrete wire surface for persistence remotes so independent implementations can interoperate without ambiguity.
 
-The wire contract MUST guarantee:
+The wire contract <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-5A82661BE3"></a>MUST guarantee:
 
 1. Deterministic request/response formats.
 2. Stable error codes and retry semantics.
@@ -22,21 +22,21 @@ The wire contract MUST guarantee:
 
 Required transport profile:
 
-1. Base path MUST be `/api/persistence/v1`.
-2. Networked deployments MUST use HTTPS.
-3. Request and response bodies MUST use UTF-8 JSON.
+1. Base path <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-951193896F"></a>MUST be `/api/persistence/v1`.
+2. Networked deployments <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-A8A75BA72B"></a>MUST use HTTPS.
+3. Request and response bodies <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-B7C251A592"></a>MUST use UTF-8 JSON.
 4. Protocol version is `1.0.0`.
-5. Clients MUST send `protocol_version` in every request body.
-6. Server MUST reject unknown major versions with `ERR_PROTOCOL_VERSION_UNSUPPORTED`.
+5. Clients <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-5554AF3608"></a>MUST send `protocol_version` in every request body.
+6. Server <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-CF7B2AA77D"></a>MUST reject unknown major versions with `ERR_PROTOCOL_VERSION_UNSUPPORTED`.
 
 ## 3. Common Envelope
 
-Every request body MUST include:
+Every request body <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-6249C5DD25"></a>MUST include:
 
 1. `protocol_version` (string, required, value `1.0.0`)
 2. `request_id` (string, required, stable per attempt)
 
-Every response body MUST include:
+Every response body <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-A745F23370"></a>MUST include:
 
 1. `protocol_version` (string, required)
 2. `request_id` (string, required, echoed from request when available)
@@ -106,9 +106,9 @@ Request fields:
 
 Rules:
 
-1. Path `object_id` MUST equal `object.object_id`.
-2. Server MUST validate envelope and content-address consistency.
-3. Operation MUST be idempotent.
+1. Path `object_id` <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-AA035E3764"></a>MUST equal `object.object_id`.
+2. Server <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-1B1608A173"></a>MUST validate envelope and content-address consistency.
+3. Operation <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-E33453EC69"></a>MUST be idempotent.
 
 Success `result` fields:
 
@@ -127,7 +127,7 @@ Success `result` fields:
 
 Rules:
 
-1. Returned object MUST hash-validate to requested `object_id`.
+1. Returned object <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-DE5438D66F"></a>MUST hash-validate to requested `object_id`.
 
 ## 6. Ref API
 
@@ -162,10 +162,10 @@ Request fields:
 
 Rules:
 
-1. CAS semantics MUST compare `advance.expected_refgen` against remote state.
-2. On mismatch, server MUST return `ERR_REF_CAS_MISMATCH`.
-3. For protected refs, server MUST enforce protected-ref guard requirements from envelope schema.
-4. Server MUST reject unresolved-conflict/finalization violations for protected refs.
+1. CAS semantics <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-05E4E9AA25"></a>MUST compare `advance.expected_refgen` against remote state.
+2. On mismatch, server <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-EE85CBD260"></a>MUST return `ERR_REF_CAS_MISMATCH`.
+3. For protected refs, server <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-9C2682D4C1"></a>MUST enforce protected-ref guard requirements from envelope schema.
+4. Server <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-6863B0FA3F"></a>MUST reject unresolved-conflict/finalization violations for protected refs.
 
 Success `result` fields:
 
@@ -177,7 +177,7 @@ Success `result` fields:
 
 ## 7. Lease API (Optional Capability)
 
-If `capabilities.lease_api=true`, server MUST expose:
+If `capabilities.lease_api=true`, server <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-71D0E582F4"></a>MUST expose:
 
 1. `POST /api/persistence/v1/leases/acquire`
 2. `POST /api/persistence/v1/leases/renew`
@@ -223,7 +223,7 @@ Release success `result` fields:
 
 ## 8. Commit Walk API (Optional Capability)
 
-If `capabilities.commit_walk_api=true`, server MUST expose:
+If `capabilities.commit_walk_api=true`, server <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-63F918F684"></a>MUST expose:
 
 1. `POST /api/persistence/v1/commits/walk`
 
@@ -243,7 +243,7 @@ Use:
 
 ## 9. HTTP Status Mapping
 
-Servers MUST map errors consistently:
+Servers <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-2E14F86EAE"></a>MUST map errors consistently:
 
 1. `200` success.
 2. `201` created object where preferred.
@@ -260,7 +260,7 @@ Servers MUST map errors consistently:
 
 ## 10. Stable Error Codes
 
-Servers MUST emit the following wire-visible codes where applicable:
+Servers <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-AAFA68EB9E"></a>MUST emit the following wire-visible codes where applicable:
 
 1. `ERR_PROTOCOL_VERSION_UNSUPPORTED`
 2. `ERR_REQUEST_INVALID`
@@ -296,20 +296,20 @@ Client obligations:
 
 Server obligations:
 
-1. Object PUT MUST be idempotent by content id.
-2. CAS failure MUST never partially apply ref updates.
-3. Lease mutations MUST be atomic per lease record.
+1. Object PUT <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-7C60D05A35"></a>MUST be idempotent by content id.
+2. CAS failure <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-C2799A591A"></a>MUST never partially apply ref updates.
+3. Lease mutations <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-73425949D7"></a>MUST be atomic per lease record.
 
 ## 12. Security Requirements
 
-1. Server MUST authenticate callers before mutable operations.
-2. Server MUST authorize ref namespaces independently.
-3. Protected refs MUST require elevated policy checks.
-4. Logs MUST avoid storing raw secrets in clear text.
+1. Server <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-CCE05497CE"></a>MUST authenticate callers before mutable operations.
+2. Server <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-C18257E0C8"></a>MUST authorize ref namespaces independently.
+3. Protected refs <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-5CF7816C20"></a>MUST require elevated policy checks.
+4. Logs <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-1CC02E3D13"></a>MUST avoid storing raw secrets in clear text.
 
 ## 13. Observability Requirements
 
-Each operation MUST emit structured telemetry with:
+Each operation <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-16D1BAF890"></a>MUST emit structured telemetry with:
 
 1. `request_id`
 2. `operation`
