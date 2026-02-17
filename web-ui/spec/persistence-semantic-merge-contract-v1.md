@@ -212,7 +212,16 @@ Implementations <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-77FD7F6225"></
 3. `ERR_SEMANTIC_MACRO_DEPENDENT_CONFLICT`
 4. `ERR_SEMANTIC_MERGE_REQUIRES_ACCEPTANCE`
 
-## 13. Conformance
+## 13. Failure Semantics
+
+| Code | Meaning | Retryability | Caller obligation |
+|---|---|---|---|
+| `persistence-semantic-merge.base-missing` | Merge base commit could not be computed or located. | No | Fall back to non-semantic resolution path or request user guidance. |
+| `persistence-semantic-merge.identity-unresolved` | Form identity matching produced ambiguous or conflicting results. | No | Present conflict to user for manual resolution. |
+| `persistence-semantic-merge.macro-dependent-conflict` | Conflict involves macro-dependent forms that cannot be auto-resolved. | No | Flag conflict conservatively and require explicit user acceptance. |
+| `persistence-semantic-merge.acceptance-required` | Merge candidate exists but has not received explicit user acceptance. | No | Present merge candidate for review; do not advance protected refs. |
+
+## 14. Conformance
 
 An implementation is conformant only if:
 

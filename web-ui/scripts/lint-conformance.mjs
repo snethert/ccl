@@ -405,6 +405,217 @@ function lintEvidenceIndex({ requirementsById, evidenceDocument, errors }) {
   return evidenceByRequirementId;
 }
 
+function parseRegisteredNamespaces() {
+  const registryPath = path.join(specDir, "error-code-registry-v1.md");
+  if (!fs.existsSync(registryPath)) {
+    return null;
+  }
+  const lines = fs.readFileSync(registryPath, "utf8").split(/\r?\n/);
+  const namespaces = new Set();
+  for (const line of lines) {
+    const match = line.match(/^\|\s*`([a-z][-a-z0-9]+)`\s*\|/);
+    if (match) {
+      namespaces.add(match[1]);
+    }
+  }
+  return namespaces;
+}
+
+function lintErrorCodeNamespaces(errors) {
+  const registered = parseRegisteredNamespaces();
+  if (!registered) {
+    errors.push({
+      code: "conformance.error-registry-missing",
+      message: "error-code-registry-v1.md not found; cannot validate error-code namespaces.",
+      path: "web-ui/spec/error-code-registry-v1.md"
+    });
+    return;
+  }
+
+  for (const fileName of listSpecMarkdownArtifacts()) {
+    if (fileName === "error-code-registry-v1.md") {
+      continue;
+    }
+    const absolutePath = path.join(specDir, fileName);
+    const artifact = toPosix(path.relative(cclRoot, absolutePath));
+    const lines = fs.readFileSync(absolutePath, "utf8").split(/\r?\n/);
+
+    let inFailureSemantics = false;
+    const seen = new Set();
+
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+      const line = lines[lineIndex];
+
+      if (/^#+\s.*Failure Semantics/i.test(line)) {
+        inFailureSemantics = true;
+        continue;
+      }
+      if (inFailureSemantics && /^#+\s/.test(line)) {
+        inFailureSemantics = false;
+        continue;
+      }
+
+      if (!inFailureSemantics) {
+        continue;
+      }
+
+      const codeMatch = line.match(/^\|\s*`([a-z][-a-z0-9]+)\./);
+      if (!codeMatch) {
+        continue;
+      }
+
+      const namespace = codeMatch[1];
+      if (seen.has(namespace)) {
+        continue;
+      }
+      seen.add(namespace);
+
+      if (!registered.has(namespace)) {
+        errors.push({
+          code: "conformance.error-namespace-unregistered",
+          message: `Error-code namespace "${namespace}" is used but not registered in error-code-registry-v1.md.`,
+          path: artifact,
+          line: lineIndex + 1
+        });
+      }
+    }
+  }
+}
+
+function parseSpecIndexRequiredArtifacts(errors) {
+  const specIndexPath = path.join(specDir, "spec-index-v1.md");
+  if (!fs.existsSync(specIndexPath)) {
+    errors.push({
+      code: "conformance.spec-index-missing",
+      message: "spec-index-v1.md not found.",
+      path: "web-ui/spec/spec-index-v1.md"
+    });
+    return { required: [], informational: new Set() };
+  }
+  const lines = fs.readFileSync(specIndexPath, "utf8").split(/\r?\n/);
+  const required = [];
+  const informational = new Set();
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const row = lines[i].match(/^\|\s*`([^`]+)`\s*\|\s*`(required|required-planned|informational)`\s*\|/);
+    if (!row) {
+      continue;
+    }
+    const artifactPath = row[1];
+    const artifactClass = row[2];
+    if (artifactClass === "informational") {
+      informational.add(artifactPath);
+    }
+    required.push({ path: artifactPath, class: artifactClass, line: i + 1 });
+  }
+  return { required, informational };
+}
+
+function lintSpecIndexArtifactExistence({ specIndexArtifacts, errors }) {
+  for (const entry of specIndexArtifacts) {
+    const absolutePath = path.join(cclRoot, entry.path);
+    if (!fs.existsSync(absolutePath)) {
+      errors.push({
+        code: "conformance.spec-index-artifact-missing",
+        message: `Spec-index artifact "${entry.path}" (class=${entry.class}) does not exist on disk.`,
+        path: "web-ui/spec/spec-index-v1.md",
+        line: entry.line
+      });
+    }
+  }
+}
+
+const REQUIRED_METADATA_FIELDS = ["Status", "Version", "Last updated", "Scope", "Depends on", "Compatibility"];
+
+function lintArtifactMetadata({ informationalPaths, errors }) {
+  for (const fileName of listSpecMarkdownArtifacts()) {
+    const absolutePath = path.join(specDir, fileName);
+    const artifact = toPosix(path.relative(cclRoot, absolutePath));
+    const content = fs.readFileSync(absolutePath, "utf8");
+    const headerLines = content.split(/\r?\n/).slice(0, 30);
+
+    for (const field of REQUIRED_METADATA_FIELDS) {
+      const pattern = new RegExp(`^${field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*:`);
+      const found = headerLines.some((line) => pattern.test(line));
+      if (!found) {
+        errors.push({
+          code: "conformance.metadata-field-missing",
+          message: `Required metadata field "${field}" is missing.`,
+          path: artifact
+        });
+      }
+    }
+  }
+}
+
+// Artifacts that are meta-governance or catalog documents without operational
+// failure modes.  These are exempt from the Failure Semantics section
+// requirement but still require a Conformance section.
+const FAILURE_SEMANTICS_EXEMPT = new Set([
+  "error-code-registry-v1.md",
+  "glossary-v1.md",
+  "persistence-failure-mode-matrix-v1.md",
+  "ui-conformance-matrix-v1.md"
+]);
+
+function lintRequiredSections({ informationalPaths, errors }) {
+  for (const fileName of listSpecMarkdownArtifacts()) {
+    const absolutePath = path.join(specDir, fileName);
+    const artifact = toPosix(path.relative(cclRoot, absolutePath));
+    const fullPath = `web-ui/spec/${fileName}`;
+
+    if (informationalPaths.has(fullPath)) {
+      continue;
+    }
+
+    const content = fs.readFileSync(absolutePath, "utf8");
+
+    if (!/^#+\s+(?:\d+\.\s*)?Conformance\s*$/m.test(content)) {
+      errors.push({
+        code: "conformance.section-conformance-missing",
+        message: "Required Conformance section is missing.",
+        path: artifact
+      });
+    }
+
+    if (!FAILURE_SEMANTICS_EXEMPT.has(fileName) &&
+        !/^#+\s+(?:\d+\.\s*)?Failure Semantics\s*$/m.test(content)) {
+      errors.push({
+        code: "conformance.section-failure-semantics-missing",
+        message: "Required Failure Semantics section is missing.",
+        path: artifact
+      });
+    }
+  }
+}
+
+function lintRegistryDuplicateNamespaces(errors) {
+  const registryPath = path.join(specDir, "error-code-registry-v1.md");
+  if (!fs.existsSync(registryPath)) {
+    return;
+  }
+  const lines = fs.readFileSync(registryPath, "utf8").split(/\r?\n/);
+  const seen = new Map();
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const match = lines[i].match(/^\|\s*`([a-z][-a-z0-9]+)`\s*\|/);
+    if (!match) {
+      continue;
+    }
+    const namespace = match[1];
+    if (seen.has(namespace)) {
+      errors.push({
+        code: "conformance.error-namespace-duplicate",
+        message: `Duplicate error-code namespace "${namespace}" in registry (first at line ${seen.get(namespace)}).`,
+        path: "web-ui/spec/error-code-registry-v1.md",
+        line: i + 1
+      });
+    } else {
+      seen.set(namespace, i + 1);
+    }
+  }
+}
+
 function formatIssue(issue) {
   const location = issue.line
     ? `${issue.path}:${issue.line}${issue.column ? `:${issue.column}` : ""}`
@@ -423,6 +634,13 @@ function main() {
 
   const requirementsById = lintRequirementsIndex({ anchorsById, requirementsDocument, errors });
   lintEvidenceIndex({ requirementsById, evidenceDocument, errors });
+  lintErrorCodeNamespaces(errors);
+
+  const { required: specIndexArtifacts, informational: informationalPaths } = parseSpecIndexRequiredArtifacts(errors);
+  lintSpecIndexArtifactExistence({ specIndexArtifacts, errors });
+  lintArtifactMetadata({ informationalPaths, errors });
+  lintRequiredSections({ informationalPaths, errors });
+  lintRegistryDuplicateNamespaces(errors);
 
   const summary = {
     ok: errors.length === 0,

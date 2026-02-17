@@ -320,7 +320,17 @@ Each operation <a id="REQ-PERSISTENCE-REMOTE-WIRE-CONTRACT-V1-16D1BAF890"></a>MU
 6. `result`
 7. `error_code` (when failed)
 
-## 14. Conformance
+## 14. Failure Semantics
+
+| Code | Meaning | Retryability | Caller obligation |
+|---|---|---|---|
+| `persistence-remote-wire.protocol-version-unsupported` | Client sent an unknown or incompatible protocol major version. | No | Upgrade or downgrade client to a supported protocol version. |
+| `persistence-remote-wire.object-hash-mismatch` | Uploaded object bytes do not match declared object id. | No | Recompute content address and re-upload correct object bytes. |
+| `persistence-remote-wire.ref-cas-mismatch` | Expected refgen does not match remote ref state. | Conditional | Re-read remote ref state and retry CAS with updated refgen. |
+| `persistence-remote-wire.rate-limited` | Server rejected request due to rate limiting. | Yes | Back off and retry after delay indicated by server. |
+| `persistence-remote-wire.remote-unavailable` | Remote server is temporarily unreachable or returning 503. | Yes | Back off and retry; queue operations for later if persistent. |
+
+## 15. Conformance
 
 A remote implementation is conformant only if:
 

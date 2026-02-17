@@ -238,7 +238,17 @@ Recovery telemetry <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-4EDD59FCBF"></a
 
 Each incident <a id="REQ-PERSISTENCE-CORRUPTION-RECOVERY-V1-F001F471A4"></a>MUST produce a compact incident record suitable for operator review and automated alerting.
 
-## 15. Conformance Tests
+## 15. Failure Semantics
+
+| Code | Meaning | Retryability | Caller obligation |
+|---|---|---|---|
+| `persistence-corruption.hash-mismatch` | Stored object bytes do not match declared content address. | No | Quarantine object and attempt remote refetch by object id. |
+| `persistence-corruption.closure-incomplete` | Commit exists but transitive object closure is missing required objects. | Conditional | Fetch missing objects from remote; if unavailable, keep ref unchanged and enter degraded mode. |
+| `persistence-corruption.dangling-ref` | Ref points to a missing or unreadable commit. | Conditional | Attempt recovery from previous commit; if both heads are unreadable, require operator action. |
+| `persistence-corruption.repair-unsafe` | Automatic repair cannot guarantee data safety. | No | Enter degraded-readonly mode and provide export path to user. |
+| `persistence-corruption.degraded-mode-active` | Workspace is operating in degraded mode due to unresolved corruption. | No | Resolve corruption or export data before resuming normal writes. |
+
+## 16. Conformance Tests
 
 An implementation is conformant only if it passes all:
 
@@ -252,7 +262,7 @@ An implementation is conformant only if it passes all:
 8. Crash during recovery action with no half-applied ref state.
 9. User-save blocked under unsafe state still provides export path.
 
-## 16. Operational Guidance
+## 17. Operational Guidance
 
 Recommended operator playbook order:
 
@@ -261,3 +271,7 @@ Recommended operator playbook order:
 3. If repair fails, keep workspace read-only and export immediately.
 4. Execute explicit ref repair/rollback if and only if preconditions are provable.
 5. Close incident only after follow-up integrity scan reports `healthy`.
+
+## 18. Conformance
+
+An implementation is corruption-recovery-conformant only if every corruption class in Section 3 has a deterministic detection and recovery path, no recovery action silently destroys authored data, and degraded-mode transitions are explicit and user-visible as required by Sections 9 and 10.

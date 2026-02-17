@@ -125,7 +125,17 @@ Backends <a id="REQ-PERSISTENCE-STORAGE-BACKEND-MATRIX-V1-4CDAD0833B"></a>MUST r
 4. transaction failure counts,
 5. quota pressure signals.
 
-## 11. Conformance
+## 11. Failure Semantics
+
+| Code | Meaning | Retryability | Caller obligation |
+|---|---|---|---|
+| `persistence-storage-backend.unavailable` | Selected backend is not accessible or failed initialization. | Conditional | Fall back to next backend in policy order; enter degraded mode if no durable backend available. |
+| `persistence-storage-backend.object-write-failed` | Object store transaction failed to commit. | Yes | Retry object write; do not advance refs until objects are durable. |
+| `persistence-storage-backend.metadata-write-failed` | Metadata transaction (ref/lease update) failed to commit. | Yes | Retry metadata transaction with backoff. |
+| `persistence-storage-backend.quota-exceeded` | Storage quota exhausted for active backend. | Conditional | Execute pressure policy: stop autosave, evict derived data, then surface export path. |
+| `persistence-storage-backend.read-integrity-failed` | Stored object failed hash or envelope validation on read. | No | Quarantine object and initiate corruption recovery workflow. |
+
+## 12. Conformance
 
 An implementation is conformant only if:
 

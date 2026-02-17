@@ -104,7 +104,16 @@ Profile operations <a id="REQ-PERSISTENCE-SEMANTIC-PROFILE-V1-1A2932CAE6"></a>MU
 5. `compatibility_mode`
 6. `error_code` (if failed)
 
-## 10. Conformance
+## 10. Failure Semantics
+
+| Code | Meaning | Retryability | Caller obligation |
+|---|---|---|---|
+| `persistence-semantic-profile.unsupported` | Requested profile is not supported by the running build. | No | Use a supported profile or upgrade the runtime. |
+| `persistence-semantic-profile.incompatible` | Remote or target profile is incompatible with local workspace profile. | No | Negotiate compatible mode or reject sync/migration. |
+| `persistence-semantic-profile.transition-aborted` | Profile transition was aborted before protected refs were advanced. | No | Inspect abort reason and retry transition after resolving preconditions. |
+| `persistence-semantic-profile.silent-transition-blocked` | Implicit profile transition was detected and blocked by policy. | No | Request explicit user/policy approval before changing profile. |
+
+## 11. Conformance
 
 An implementation is conformant only if:
 

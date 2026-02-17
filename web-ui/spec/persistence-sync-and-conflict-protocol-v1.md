@@ -231,7 +231,17 @@ Sync events <a id="REQ-PERSISTENCE-SYNC-AND-CONFLICT-PROTOCOL-V1-B29C3BD50C"></a
 8. `conflict_id` (when divergence/resolution paths apply)
 9. `merge_candidate_ref` (when created)
 
-## 13. Conformance
+## 13. Failure Semantics
+
+| Code | Meaning | Retryability | Caller obligation |
+|---|---|---|---|
+| `persistence-sync.network-unavailable` | Remote is unreachable during sync operation. | Yes | Queue sync operation and retry when connectivity is restored. |
+| `persistence-sync.object-hash-mismatch` | Fetched remote object fails content-address verification. | No | Reject object, preserve local ref state, and report integrity failure. |
+| `persistence-sync.ref-cas-mismatch` | Remote ref CAS failed due to concurrent update. | Conditional | Re-read remote ref state and retry push if still fast-forwardable. |
+| `persistence-sync.divergence-detected` | Local and remote commits are not ancestor-related. | No | Create incoming ref and conflict record; do not auto-advance protected refs. |
+| `persistence-sync.conflict-unresolved` | Protected ref advance blocked by unresolved conflict state. | No | Complete conflict resolution workflow before advancing protected refs. |
+
+## 14. Conformance
 
 An implementation is conformant only if:
 

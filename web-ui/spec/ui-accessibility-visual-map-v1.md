@@ -112,3 +112,7 @@ Canonical fixture IDs and assertion definitions are in:
 
 Current baseline measurement record:
 - `web-ui/spec/ui-accessibility-baseline-audit-v1.md`
+
+## 10. Conformance
+
+A build is accessibility-visual-conformant only if all contrast, focus-visibility, non-color-cue, and motion-accessibility criteria in Sections 3 through 6 pass across dark, light, high-contrast, and forced-colors modes, and any criterion failure triggers the degradation and diagnostic behavior specified in Section 7.

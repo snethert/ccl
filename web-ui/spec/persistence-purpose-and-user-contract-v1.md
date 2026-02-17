@@ -214,7 +214,16 @@ Authored work <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-5A171F0B78"></
 2. Interop with Git or external VCS is interchange, not canonical storage truth.
 3. Storage internals <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-CA3C48418D"></a>MUST remain hidden unless explicitly requested for diagnostics/export.
 
-## 15. Conformance
+## 15. Failure Semantics
+
+| Code | Meaning | Retryability | Caller obligation |
+|---|---|---|---|
+| `persistence-user-contract.save-blocked` | User save refused due to storage pressure or integrity risk. | Conditional | Provide non-destructive export path and surface recovery options. |
+| `persistence-user-contract.ref-inconsistent` | Ref does not resolve to a complete snapshot after crash recovery. | No | Run integrity scan and enter degraded mode until resolved. |
+| `persistence-user-contract.path-invalid` | Path contains forbidden characters or exceeds length limits. | No | Reject operation and report invalid path component to caller. |
+| `persistence-user-contract.silent-mutation-detected` | Background process attempted implicit mutation of user-visible ref. | No | Block mutation and emit audit diagnostic for investigation. |
+
+## 16. Conformance
 
 An implementation is conformant only if all conditions hold:
 
@@ -225,7 +234,7 @@ An implementation is conformant only if all conditions hold:
 5. Conflict states are explicit and inspectable.
 6. Storage pressure policy preserves authored work and degrades predictably.
 
-## 16. UX Doctrine (Normative Summary)
+## 17. UX Doctrine (Normative Summary)
 
 ### 16.1 Positive invariants
 

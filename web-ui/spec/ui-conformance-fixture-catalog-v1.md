@@ -128,3 +128,7 @@ If any required fixture fails:
 2. New fixtures MAY be added in minor versions.
 3. Existing fixture semantics MAY only change in major versions.
 4. Deprecation <a id="REQ-UI-CONFORMANCE-FIXTURE-CATALOG-V1-5801AF6606"></a>MUST be announced with migration replacement fixture ID.
+
+## 10. Conformance
+
+A conformance run is catalog-conformant only if every fixture with `status=required` executes in all declared viewport, mode, and backend lanes, all assertions pass, and the emitted report validates against `ui-conformance-report-schema-v1.json` as specified in Sections 2 and 8.

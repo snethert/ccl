@@ -165,7 +165,17 @@ Lease operations <a id="REQ-PERSISTENCE-LEASE-PROTOCOL-V1-6950C1C05F"></a>MUST e
 6. `result` (`acquired`, `renewed`, `lost`, `rejected`)
 7. `reason` (error code)
 
-## 11. Conformance
+## 11. Failure Semantics
+
+| Code | Meaning | Retryability | Caller obligation |
+|---|---|---|---|
+| `persistence-lease.held` | Lease is already held by another writer instance. | Conditional | Wait for lease expiry or request explicit takeover via UI policy. |
+| `persistence-lease.lost` | Writer token or epoch no longer matches active lease. | No | Immediately drop write capability and re-acquire lease. |
+| `persistence-lease.txn-failed` | Metadata transaction for lease operation failed. | Yes | Retry with backoff per frozen retry schedule. |
+| `persistence-lease.takeover-blocked` | Takeover conditions not met and user confirmation not provided. | No | Wait for suspend grace period or obtain explicit user confirmation. |
+| `persistence-lease.scope-unsupported` | Requested lease scope exceeds v1 local-origin coordination. | No | Use server-authoritative coordination for cross-machine scenarios. |
+
+## 12. Conformance
 
 An implementation is conformant only if:
 

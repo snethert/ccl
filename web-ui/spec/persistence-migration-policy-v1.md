@@ -202,7 +202,17 @@ Migration <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-5AF7754D1E"></a>MUST integr
 3. On quota pressure during migration, system <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-92B02EC59A"></a>MUST stop autosave first, then evict derived data, then pause migration before risking authored data.
 4. Migration <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-EB34A5F831"></a>MUST never reclaim data required for deterministic rollback within retention window.
 
-## 13. Failure Semantics and Error Codes
+## 13. Failure Semantics
+
+| Code | Meaning | Retryability | Caller obligation |
+|---|---|---|---|
+| `persistence-migration.state-invalid` | Migration state transition is not in the allowed set. | No | Abort or roll back migration to a valid state. |
+| `persistence-migration.precheck-failed` | Preflight validation failed before entering prepared state. | Conditional | Resolve failing precondition and retry migration planning. |
+| `persistence-migration.source-corrupt` | Source object is missing or fails hash/envelope validation. | No | Run corruption recovery before retrying migration. |
+| `persistence-migration.ref-cas-failed` | Protected ref CAS failed during cutover. | Conditional | Re-read ref state and retry cutover if preconditions still hold. |
+| `persistence-migration.rollback-failed` | Rollback operation could not restore pre-migration ref state. | No | Require operator intervention and manual ref repair. |
+
+## 14. Error Codes
 
 Implementations <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-87D9E0DC71"></a>MUST expose stable migration errors:
 
@@ -227,7 +237,7 @@ Each error <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-B632FEC1CF"></a>MUST defin
 3. manual recovery required
 4. abort required
 
-## 14. Observability and Audit
+## 15. Observability and Audit
 
 Migration events <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-6E9D52FE36"></a>MUST include:
 
@@ -246,7 +256,7 @@ Migration events <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-6E9D52FE36"></a>MUST
 
 Migration event streams <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-E9833AA94F"></a>MUST support reconstruction of exact state transitions for post-incident analysis.
 
-## 15. Conformance Tests
+## 16. Conformance Tests
 
 An implementation is conformant only if it passes at minimum:
 
@@ -258,7 +268,7 @@ An implementation is conformant only if it passes at minimum:
 6. Mixed-profile handshake rejection test for incompatible lanes.
 7. Quota-pressure migration pause test preserving authored data invariants.
 
-## 16. Operational Rollout Guidance
+## 17. Operational Rollout Guidance
 
 Recommended rollout sequence:
 
@@ -273,3 +283,7 @@ Stop conditions <a id="REQ-PERSISTENCE-MIGRATION-POLICY-V1-748F5859D2"></a>MUST 
 2. repeated `ERR_MIGRATION_SOURCE_OBJECT_CORRUPT`
 3. rollback failure rate above policy threshold
 4. unresolved degraded mode after migration
+
+## 18. Conformance
+
+An implementation is migration-conformant only if all migration state transitions follow the state machine in Section 6, protected-ref advances satisfy the guarded CAS rules in Section 9, rollback restores pinned pre-migration ref state exactly, and crash at any migration phase yields either pre-cutover or post-cutover state with no partial mutation.

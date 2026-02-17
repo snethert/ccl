@@ -222,7 +222,17 @@ Ref updates <a id="REQ-PERSISTENCE-REF-UPDATE-PROTOCOL-V1-1BC7043815"></a>MUST e
 7. `semantic_guard` (if provided)
 8. `result` (`ok` or error code)
 
-## 10. Conformance
+## 10. Failure Semantics
+
+| Code | Meaning | Retryability | Caller obligation |
+|---|---|---|---|
+| `persistence-ref-update.refgen-mismatch` | Expected refgen does not match current ref state. | Conditional | Re-read ref state and retry CAS with updated refgen. |
+| `persistence-ref-update.commit-missing` | Target commit id does not exist in object store. | No | Ensure commit and its closure are durably written before advancing ref. |
+| `persistence-ref-update.semantic-guard-failed` | One or more semantic guard predicates failed validation. | Conditional | Resolve guard violations (unresolved conflicts, finalization, lease) and retry. |
+| `persistence-ref-update.metadata-txn-failed` | Metadata transaction aborted or could not commit. | Yes | Retry with backoff; if persistent, investigate backend health. |
+| `persistence-ref-update.object-txn-failed` | Object store transaction failed before ref update. | Yes | Retry object writes; do not attempt ref advance until objects are durable. |
+
+## 11. Conformance
 
 An implementation is conformant only if:
 

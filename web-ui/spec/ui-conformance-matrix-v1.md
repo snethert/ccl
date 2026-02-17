@@ -56,3 +56,7 @@ The matrix is complete only when:
 
 1. Matrix updates are required whenever a referenced contract adds or removes normative clauses.
 2. Matrix updates are required whenever fixture IDs are added, removed, or deprecated.
+
+## 5. Conformance
+
+A spec set is matrix-conformant only if every normative clause in the referenced contracts maps to at least one required fixture, every mapped fixture has a bound automated test implementation, and no normative clause is left unmapped as defined in Section 3.
