@@ -86,14 +86,18 @@ used non-existent acode operators, breaking cross-compilation loading. Fixed.
 - [x] 1110 boot modules compiled
 - [x] 7557 runtime modules compiled
 - [x] Phase 0B image base extraction works (`__heap_base=76592 → 0x20000`)
-- [ ] Root image build — crashes in `wasm_pending_throw_p` (FASL loading regression)
+- [ ] Root image build — fails with `ksignalerr` during cold-boot-init
 
 **Bugs fixed during Phase 1:**
 - `GENERAL-AREF2` unimplemented opcode: `%aref2`/`%aref3`/`%aset2`/`%aset3` rewrote to use `row-major-aref` + `array-row-major-index`
 - Unclosed paren in `wasm-bignum.lisp` `truncate-guess-loop` (line 695)
 - Unclosed paren in `wasm-float.lisp` `%double-float->short-float` (line 369)
+- Funcall argument ordering: `wasm_funcall_common` push loop was reversed — vsp[0]=first arg instead of vsp[0]=last arg (ARM convention). Fixed in commit `31d89be7`.
+- `%car/%cdr` slot index swap in `wasm2.lisp` — fixed FASL loading regression (fn=0x2c)
 
-**Remaining blocker:** Root image assembly crashes at runtime — this is the same FASL loading regression documented in the critical issues section (fn=0x2c where function object expected, const pool encoding mismatch).
+**Current blocker:** Root image build fails during cold-boot-init with `ksignalerr` (arg_y=0x18 / fixnum 6, last const-pool-ref entry=856 slot=9). The system loads packages and installs const pools successfully, then errors during initialization code.
+
+**Deliverable:** `doc/wasm/calling-convention-abi.md` — authoritative ABI spec for all calling convention sites.
 
 ---
 
@@ -147,8 +151,8 @@ used non-existent acode operators, breaking cross-compilation loading. Fixed.
 
 ## 📊 Current Status
 
-**Completed:** B1-B5 fixes, instrumentation removal (~4500 lines), startup truth retirement, startup binding map removal (~2500 lines), debugging infrastructure, cold-boot init extraction (Phase 1a-1c)
-**Blocked on:** B6 — missing WASM LAP bridge functions (`%store-node-conditional`, `%get-errno`, 280+ others)
+**Completed:** B1-B6 fixes, funcall ordering fix, ABI spec, diagnostic cleanup, instrumentation removal (~4500 lines), startup truth retirement, startup binding map removal (~2500 lines), debugging infrastructure, cold-boot init extraction (Phase 1a-1c)
+**Blocked on:** `ksignalerr` during cold-boot-init (arg_y=0x18, entry 856) — investigate error code and function
 **Build pipeline:** Functional (kernel → subprims → boot image → modules → image assembly)
 **MVP-1 completion:** 65% → Phase 0 unblocks everything
 
@@ -199,6 +203,10 @@ Root cause: 280+ missing WASM LAP bridge functions. Systemic fix: Phase 0A.
 ---
 
 ## 📝 Session Notes
+
+**2026-02-16 (session 3):** Wrote `doc/wasm/calling-convention-abi.md` — authoritative spec covering all 8 calling convention sites. Confirmed ABI is internally consistent for default path (`*wasm2-use-arg-regs*` = nil). Documented latent bug in arg-regs optimization (disabled). Cleaned all diagnostic code from kernel stubs and subprims. Root image build now terminates with `ksignalerr` (was hanging indefinitely due to noisy DIAG logging).
+
+**2026-02-16 (session 2):** Fixed funcall argument ordering bug (commit `31d89be7`). Confirmed FASL regression was already fixed. Root image build went from crashing at `_SPmisc_alloc` to hanging (now progresses through package loading).
 
 **2026-02-16:** Designed deterministic startup plan. Key insights:
 - Const pools installed on-demand (`installConstPools: false`), not proactively → Phase 2A fixes this

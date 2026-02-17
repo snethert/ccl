@@ -90,7 +90,7 @@ static uint8_t wasm_named_entry_names[WASM_NAMED_ENTRY_BYTES_MAX];
 static uint32_t wasm_named_entry_count = 0u;
 static uint32_t wasm_named_entry_names_used = 0u;
 
-/* B3 diagnostic: track last const-pool-ref call for funcall-error correlation */
+/* Last const-pool-ref call — used by wasm_debug_dump_state */
 static uint32_t wasm_diag_last_cpr_entry = 0;
 static uint32_t wasm_diag_last_cpr_slot = 0;
 static LispObj  wasm_diag_last_cpr_val = 0;
@@ -127,33 +127,6 @@ static inline LispObj
 wasm_call_entry_index_binary_i32(uint32_t index, LispObj arg0, LispObj arg1)
 {
   return ((wasm_lisp_fn_binary_i32)(uintptr_t)index)(arg0, arg1);
-}
-
-static uint32_t wasm_diag_funcall2_log_count = 0;
-
-static uint32_t
-wasm_diag_function_entry_index(LispObj fn_value)
-{
-  if (fulltag_of(fn_value) != fulltag_misc) {
-    return 0xffffffffu;
-  }
-  unsigned subtag = header_subtag(header_of(fn_value));
-  if (subtag == subtag_symbol) {
-    lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(fn_value));
-    fn_value = sym->fcell;
-    if (fulltag_of(fn_value) != fulltag_misc) {
-      return 0xffffffffu;
-    }
-    subtag = header_subtag(header_of(fn_value));
-  }
-  if (subtag != subtag_function && subtag != subtag_pseudofunction) {
-    return 0xffffffffu;
-  }
-  LispObj entry = deref(fn_value, 1);
-  if (tag_of(entry) != tag_fixnum) {
-    return 0xffffffffu;
-  }
-  return (uint32_t)unbox_fixnum(entry);
 }
 
 static void
@@ -295,7 +268,7 @@ static int wasm_symbol_object_p(LispObj value);
 static int wasm_debug_hex8(char *buf, uint32_t v);
 static int wasm_debug_str(char *buf, const char *s);
 static int wasm_debug_uint(char *buf, uint32_t v);
-static uint32_t wasm_diag_vsp1339_count = 0;
+
 
 static uint32_t
 wasm_boot_phase_normalize(uint32_t phase)
@@ -1280,22 +1253,6 @@ wasm_set_nfn(LispObj value)
   if (tcr == NULL) {
     return;
   }
-  /* B3 diagnostic: catch the moment a non-function enters nfn.
-     Log the value plus the last const-pool-ref that produced it. */
-  if (value != lisp_nil &&
-      (fulltag_of(value) != fulltag_misc ||
-       (header_subtag(header_of(value)) != subtag_function &&
-        header_subtag(header_of(value)) != subtag_pseudofunction &&
-        header_subtag(header_of(value)) != subtag_symbol))) {
-    char dbg[120];
-    int n = snprintf(dbg, sizeof(dbg),
-                     "DIAG: set_nfn BAD val=0x%x cpr_e=%u cpr_s=%u cpr_v=0x%x\n",
-                     (unsigned)value,
-                     wasm_diag_last_cpr_entry,
-                     wasm_diag_last_cpr_slot,
-                     (unsigned)wasm_diag_last_cpr_val);
-    if (n > 0) wasm_host_log(dbg, (unsigned)n);
-  }
   tcr->wasm_gprs[nfn] = value;
   tcr->wasm_gprs[Rfn] = value;
 }
@@ -1367,16 +1324,6 @@ wasm_lisp_word_ref(LispObj base, LispObj offset)
     }
 
     if (idx == 0) {
-      if (len >= 1 && len <= 20) {
-        char dbg[128];
-        int p = 0;
-        p += wasm_debug_str(dbg + p, "DIAG: lwref list base=");
-        p += wasm_debug_hex8(dbg + p, (uint32_t)base);
-        p += wasm_debug_str(dbg + p, " idx0 len=");
-        p += wasm_debug_uint(dbg + p, (uint32_t)len);
-        dbg[p++] = '\n';
-        wasm_host_log(dbg, (unsigned)p);
-      }
       return box_fixnum(len);
     }
 
@@ -1404,16 +1351,6 @@ wasm_lisp_word_ref(LispObj base, LispObj offset)
     signed_natural addr = unbox_fixnum(base);
     LispObj *ptr = (LispObj *)(uintptr_t)addr;
     LispObj result = ptr[idx];
-    if (result == (LispObj)0x14) {
-      char dbg[144];
-      int p = 0;
-      p += wasm_debug_str(dbg + p, "DIAG: lwref fixptr base=");
-      p += wasm_debug_hex8(dbg + p, (uint32_t)base);
-      p += wasm_debug_str(dbg + p, " idx=");
-      p += wasm_debug_uint(dbg + p, (uint32_t)idx);
-      p += wasm_debug_str(dbg + p, " res=0x14\n");
-      wasm_host_log(dbg, (unsigned)p);
-    }
     return result;
   }
 
@@ -1424,34 +1361,6 @@ wasm_lisp_word_ref(LispObj base, LispObj offset)
       /* deref(o,0) is the header; data elements start at deref(o,1).
          idx is data-relative (0 = first data element), so add 1. */
       LispObj result = deref(base, idx + 1);
-      /* DIAG: trace misc word ref calls — log package accesses and
-         suspicious small-fixnum returns. */
-      {
-        int st = header_subtag(header);
-        int log_it = 0;
-        /* Log all accesses on package objects */
-        if (st == subtag_package) log_it = 1;
-        /* Log when result is a small fixnum (likely wrong for a slot) */
-        if (tag_of(result) == tag_fixnum &&
-            (uint32_t)result < 256 &&
-            result != 0 && result != lisp_nil) log_it = 1;
-        if (log_it) {
-          char dbg[160];
-          int p = 0;
-          p += wasm_debug_str(dbg + p, "DIAG: lwref base=");
-          p += wasm_debug_hex8(dbg + p, (uint32_t)base);
-          p += wasm_debug_str(dbg + p, " sub=");
-          p += wasm_debug_hex8(dbg + p, (uint32_t)st);
-          p += wasm_debug_str(dbg + p, " idx=");
-          p += wasm_debug_uint(dbg + p, (uint32_t)idx);
-          p += wasm_debug_str(dbg + p, " cnt=");
-          p += wasm_debug_uint(dbg + p, (uint32_t)count);
-          p += wasm_debug_str(dbg + p, " res=");
-          p += wasm_debug_hex8(dbg + p, (uint32_t)result);
-          dbg[p++] = '\n';
-          wasm_host_log(dbg, (unsigned)p);
-        }
-      }
       return result;
     }
   }
@@ -1674,21 +1583,6 @@ wasm_vsp_ref(uint32_t index)
     return lisp_nil;
   }
   LispObj value = vsp_ptr[count - 1 - (signed_natural)index];
-  if (wasm_diag_vsp1339_count < 48u) {
-    uint32_t entry = wasm_diag_function_entry_index(tcr->wasm_gprs[nfn]);
-    if (entry == 1339u) {
-      char msg[128];
-      int n = snprintf(msg, sizeof(msg),
-                       "DIAG: vsp1339 i=%u v=0x%08x n=%d\n",
-                       (unsigned)index,
-                       (unsigned)value,
-                       (int)count);
-      if (n > 0) {
-        wasm_host_log(msg, (unsigned)n);
-      }
-      wasm_diag_vsp1339_count++;
-    }
-  }
   return value;
 }
 
@@ -1710,7 +1604,7 @@ wasm_vpop(void)
   return value;
 }
 
-/* DIAG: spill stack tracing — log imbalances and suspicious pops */
+/* Spill stack counters — used by wasm_debug_dump_state */
 static uint32_t wasm_spill_push_count = 0;
 static uint32_t wasm_spill_pop_count = 0;
 
@@ -1876,7 +1770,7 @@ wasm_debug_dump_state(const char *label)
   buf[p++] = '\n';
   wasm_host_log(buf, (unsigned)p);
 
-  /* B3 diagnostic: last const-pool-ref that was called */
+  /* Last const-pool-ref that was called */
   p = 0;
   p += wasm_debug_str(buf + p, "  last_cpr: e=");
   p += wasm_debug_uint(buf + p, wasm_diag_last_cpr_entry);
@@ -1923,11 +1817,6 @@ wasm_pending_throw_p(void)
   uintptr_t field_end = tcr_addr + offsetof(TCR, wasm_pending_throw) + sizeof(LispObj);
   uintptr_t mem_size = (uintptr_t)__builtin_wasm_memory_size(0) * 65536u;
   if (field_end > mem_size) {
-    char buf[128];
-    int n = snprintf(buf, sizeof(buf),
-      "DIAG: ptp OOB tcr=0x%x field_end=0x%x mem=0x%x\n",
-      (unsigned)tcr_addr, (unsigned)field_end, (unsigned)mem_size);
-    if (n > 0) wasm_host_log(buf, (unsigned)n);
     return 0;
   }
   return tcr->wasm_pending_throw ? 1 : 0;
@@ -2148,25 +2037,6 @@ wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natu
     tcr->valence = TCR_STATE_LISP;
   }
   tcr->wasm_pending_throw = 0;
-
-  if (count == 2 && args != NULL && wasm_diag_funcall2_log_count < 256u) {
-    uint32_t caller_entry = wasm_diag_function_entry_index(tcr->wasm_gprs[nfn]);
-    uint32_t callee_entry = wasm_diag_function_entry_index(fn_value);
-    if (((caller_entry >= 1000u) && (caller_entry <= 1200u)) ||
-        ((callee_entry >= 1000u) && (callee_entry <= 1200u))) {
-      char msg[192];
-      int n = snprintf(msg, sizeof(msg),
-                       "DIAG: f2 caller=%u callee=%u a0=0x%08x a1=0x%08x\n",
-                       caller_entry,
-                       callee_entry,
-                       (unsigned)args[0],
-                       (unsigned)args[1]);
-      if (n > 0) {
-        wasm_host_log(msg, (unsigned)n);
-      }
-      wasm_diag_funcall2_log_count++;
-    }
-  }
 
   LispObj *vsp_ptr = saved_vsp;
   for (signed_natural i = 0; i < count; i++) {
@@ -3252,73 +3122,6 @@ wasm_run_cold_boot_init(void)
     static const char msg[] = "cold-boot-init: function undefined\n";
     wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
     return -5;
-  }
-
-  /* DIAG: Dump %ALL-PACKAGES% before cold boot init.
-     Find the symbol and walk its value (a list of packages). */
-  {
-    static const uint8_t ap_name[] = "%ALL-PACKAGES%";
-    LispObj ap_sym = wasm_find_symbol_named_bytes(
-      ap_name, (uint32_t)(sizeof(ap_name) - 1), ccl_pkg);
-    char dbg[256];
-    int p = 0;
-    if (ap_sym != (LispObj)0 && fulltag_of(ap_sym) == fulltag_misc &&
-        header_subtag(header_of(ap_sym)) == subtag_symbol) {
-      lispsymbol *rawap = (lispsymbol *)ptr_from_lispobj(untag(ap_sym));
-      LispObj val = rawap->vcell;
-      p = 0;
-      p += wasm_debug_str(dbg + p, "DIAG: %all-packages% sym=");
-      p += wasm_debug_hex8(dbg + p, (uint32_t)ap_sym);
-      p += wasm_debug_str(dbg + p, " val=");
-      p += wasm_debug_hex8(dbg + p, (uint32_t)val);
-      dbg[p++] = '\n';
-      wasm_host_log(dbg, (unsigned)p);
-      /* Walk the list, dumping each element */
-      LispObj cur = val;
-      int elem_idx = 0;
-      while (cur != lisp_nil && fulltag_of(cur) == fulltag_cons && elem_idx < 30) {
-        cons *cell = (cons *)ptr_from_lispobj(untag(cur));
-        LispObj elem = cell->car;
-        p = 0;
-        p += wasm_debug_str(dbg + p, "DIAG: pkg[");
-        p += wasm_debug_uint(dbg + p, (uint32_t)elem_idx);
-        p += wasm_debug_str(dbg + p, "] elem=");
-        p += wasm_debug_hex8(dbg + p, (uint32_t)elem);
-        p += wasm_debug_str(dbg + p, " ft=");
-        p += wasm_debug_uint(dbg + p, (uint32_t)fulltag_of(elem));
-        if (fulltag_of(elem) == fulltag_misc) {
-          LispObj hdr = header_of(elem);
-          p += wasm_debug_str(dbg + p, " sub=");
-          p += wasm_debug_hex8(dbg + p, (uint32_t)(header_subtag(hdr)));
-          p += wasm_debug_str(dbg + p, " cnt=");
-          p += wasm_debug_uint(dbg + p, (uint32_t)header_element_count(hdr));
-          /* Dump slots 0 and 1 (pkg.itab and pkg.etab) */
-          if (header_element_count(hdr) >= 2) {
-            p += wasm_debug_str(dbg + p, " s0=");
-            p += wasm_debug_hex8(dbg + p, (uint32_t)deref(elem, 1));
-            p += wasm_debug_str(dbg + p, " s1=");
-            p += wasm_debug_hex8(dbg + p, (uint32_t)deref(elem, 2));
-          }
-        }
-        dbg[p++] = '\n';
-        wasm_host_log(dbg, (unsigned)p);
-        cur = cell->cdr;
-        elem_idx++;
-      }
-      if (cur != lisp_nil) {
-        p = 0;
-        p += wasm_debug_str(dbg + p, "DIAG: list tail=");
-        p += wasm_debug_hex8(dbg + p, (uint32_t)cur);
-        p += wasm_debug_str(dbg + p, " ft=");
-        p += wasm_debug_uint(dbg + p, (uint32_t)fulltag_of(cur));
-        dbg[p++] = '\n';
-        wasm_host_log(dbg, (unsigned)p);
-      }
-    } else {
-      p = 0;
-      p += wasm_debug_str(dbg + p, "DIAG: %all-packages% NOT FOUND\n");
-      wasm_host_log(dbg, (unsigned)p);
-    }
   }
 
   natural old_last_lisp_frame = wasm_enter_lisp_frame(
@@ -5259,15 +5062,6 @@ wasm_const_pool_install_inner(TCR *tcr, uint32_t entry_index, uint32_t payload_p
       default:
         return lisp_nil;
     }
-    /* B3 diagnostic: log when a pool slot gets a fixnum-tagged value.
-       This catches the moment 0x2c (box_fixnum(11)) enters a pool slot. */
-    if (tag_of(pool_data[i]) == tag_fixnum && pool_data[i] != lisp_nil) {
-      char dbg[96];
-      int n = snprintf(dbg, sizeof(dbg),
-                       "DIAG: cpi fix e=%u i=%u tag=%u val=0x%x\n",
-                       entry_index, i, tag, (unsigned)pool_data[i]);
-      if (n > 0) wasm_host_log(dbg, (unsigned)n);
-    }
   }
 
   /* Second pass: patch forward references in vectors/gvectors/function-vectors/conses. */
@@ -5457,7 +5251,7 @@ wasm_const_pool_ref(uint32_t entry_index, uint32_t slot_index)
         if (slot_index < pool_count) {
           LispObj *pool_data = (LispObj *)((BytePtr)pool + misc_data_offset);
           LispObj val = pool_data[slot_index];
-          /* B3 diagnostic: track every const-pool-ref for funcall-error correlation */
+          /* Track for wasm_debug_dump_state */
           wasm_diag_last_cpr_entry = entry_index;
           wasm_diag_last_cpr_slot = slot_index;
           wasm_diag_last_cpr_val = val;
@@ -5497,7 +5291,7 @@ wasm_const_pool_ref(uint32_t entry_index, uint32_t slot_index)
     return lisp_nil;
   }
   LispObj *pool_data = (LispObj *)((BytePtr)pool + misc_data_offset);
-  /* B3 diagnostic: track slow-path return */
+  /* Track for wasm_debug_dump_state */
   wasm_diag_last_cpr_entry = entry_index;
   wasm_diag_last_cpr_slot = slot_index;
   wasm_diag_last_cpr_val = pool_data[slot_index];
