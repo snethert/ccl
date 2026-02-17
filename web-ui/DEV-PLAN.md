@@ -2,6 +2,36 @@
 
 Status: Draft
 
+## Design Review Integration Register (2026-02-17)
+
+This register maps all items from `web-ui/DESIGN-REVIEW-2026-02-16.md` into plan-owned artifacts and phases.
+
+| Review ID | Plan integration target | Tracking artifacts |
+|---|---|---|
+| `C-1` | Front-end deployment policy and startup gating scoped to full-runtime only | `web-ui/FRONT-END-DEV-PLAN.md`, `web-ui/spec/security-and-capability-model-v1.md` |
+| `C-2` | Runtime bridge wire format expansion | `web-ui/spec/ui-wire-format-tree-v1.md`, `web-ui/spec/protocol-version-negotiation-v1.md` |
+| `C-3` | Core command model completion | `web-ui/spec/command-undo-redo-contract-v1.md` |
+| `C-4` | Governance precedence cleanup | `web-ui/spec/glossary-v1.md`, `web-ui/spec/normative-language-and-conformance-v1.md` |
+| `S-1` | Cross-backend text-editing parity | `web-ui/spec/text-editing-contract-v1.md` |
+| `S-2` | Clipboard subsystem contract with required multi-item history | `web-ui/spec/clipboard-interaction-contract-v1.md` |
+| `S-3` | Drag/drop interaction protocol | `web-ui/spec/drag-and-drop-interaction-contract-v1.md` |
+| `S-4` | Persistence retention/compaction planning | `web-ui/spec/persistence-gc-and-compaction-policy-v1.md` |
+| `S-5` | Offline/service-worker loading strategy | `web-ui/spec/offline-and-service-worker-contract-v1.md` |
+| `S-6` | Incremental tree wire updates for scale lanes | `web-ui/spec/ui-wire-format-tree-delta-v1.md`, `web-ui/spec/performance-slo-and-budgets-v1.md` |
+| `M-1` | Non-DOM accessibility plan formalization | `web-ui/spec/non-dom-accessibility-proxy-contract-v1.md` |
+| `M-2` | Multi-runner debugger planning lane | `web-ui/spec/debugger-stepper-session-contract-v1.md` |
+| `M-3` | Theme customization planning lane | `web-ui/spec/theme-override-contract-v1.md` |
+| `M-4` | Internationalization planning lane | `web-ui/spec/i18n-l10n-contract-v1.md` |
+| `M-5` | Event log retention/rotation planning | `web-ui/spec/event-log-ordering-and-clock-rules-v1.md` |
+| `M-6` | Lease scope/clock assumptions planning | `web-ui/spec/persistence-lease-protocol-v1.md` |
+| `M-7` | Controlled-reader planning dependency | `web-ui/spec/controlled-reader-contract-v1.md` |
+| `G-1` | Spec index profile registration | `web-ui/spec/spec-index-v1.md` |
+| `G-2` | Draft-stage gate evaluation policy | `web-ui/spec/spec-ratification-policy-v1.md`, `web-ui/PRODUCTION-SPEC-GAP-REGISTER.md` |
+| `G-3` | Glossary term governance updates | `web-ui/spec/glossary-v1.md` |
+| `G-4` | Gate timeout planning constraints | `web-ui/spec/conformance-gate-profiles-v1.md` |
+| `G-5` | Governance bootstrap ordering | `web-ui/spec/spec-index-v1.md` |
+| `G-6` | Cross-spec error code governance | `web-ui/spec/error-code-registry-v1.md` |
+
 ## Staged Plan (High Level)
 
 ### Phase 0: Test Harness First
@@ -93,11 +123,13 @@ Goals:
 - Command palette with filterable command list.
 - Keybinding viewer with scope-aware listings.
 - Inspectable keybinding resolution trace.
+- Clipboard manager with multi-item history and deterministic history paste selection.
 
 Exit criteria:
 - Palette lists commands deterministically and supports filtering.
 - Keybinding viewer lists bindings across scopes.
 - Key resolution trace is testable and deterministic.
+- Clipboard history capture/paste commands are deterministic across replay and backend lanes.
 
 ### Phase 10: Stepper and Breakpoint UX
 Goals:

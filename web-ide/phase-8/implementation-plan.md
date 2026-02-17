@@ -284,8 +284,8 @@ Define exactly what gets shipped and how versions evolve.
 4. Define deprecation policy for schema and protocol changes.
 
 ### Deliverables
-- `web-ide/phase-8/release-artifact-contract.md`
-- `web-ide/phase-8/versioning-and-compatibility-policy.md`
+- `web-ide/phase-8/release-artifact-contract.md` (planned; not yet authored)
+- `web-ide/phase-8/versioning-and-compatibility-policy.md` (planned; not yet authored)
 - Release manifest schema in docs (and test fixtures).
 
 ### Exit Criteria
@@ -328,7 +328,7 @@ Lock supported environments with explicit test evidence.
 4. Document expected behavior under reduced capability (no WebGL, limited storage, etc.).
 
 ### Deliverables
-- `web-ide/phase-8/compatibility-matrix.md`
+- `web-ide/phase-8/compatibility-matrix.md` (planned; not yet authored)
 - Compatibility acceptance tests in `web-ui/tests/phase-8-*.test.mjs`.
 - CI profile for compatibility checks.
 
@@ -350,7 +350,7 @@ Ship with conservative defaults and predictable permission boundaries.
    opt-in only in integration lanes (`doc/wasm/persistence-dev-environment.md`).
 
 ### Deliverables
-- Security hardening policy doc in `web-ide/phase-8/security-hardening.md`.
+- Security hardening policy doc in `web-ide/phase-8/security-hardening.md` (planned; not yet authored).
 - Hardened defaults in runtime/UI config paths.
 - Security regression tests.
 
@@ -373,7 +373,7 @@ Provide enough diagnostics to operate and troubleshoot production issues.
 5. Define support bundle format for issue triage.
 
 ### Deliverables
-- `web-ide/phase-8/observability-contract.md`
+- `web-ide/phase-8/observability-contract.md` (planned; not yet authored)
 - Diagnostic schema fixtures and tests.
 - Support bundle extraction and validation workflow.
 
@@ -395,7 +395,7 @@ Ensure recoverability across bad deployments and schema transitions.
 4. Add release-time backup verification step.
 
 ### Deliverables
-- `web-ide/phase-8/data-recovery-runbook.md`
+- `web-ide/phase-8/data-recovery-runbook.md` (planned; not yet authored)
 - Recovery and rollback acceptance tests.
 - Operational backup/restore checklist.
 
@@ -418,9 +418,9 @@ Document execution paths for launch, incident response, and recovery.
 4. Add verification drills for top incident classes.
 
 ### Deliverables
-- `web-ide/phase-8/release-runbook.md`
-- `web-ide/phase-8/incident-response-runbook.md`
-- `web-ide/phase-8/support-escalation-policy.md`
+- `web-ide/phase-8/release-runbook.md` (planned; not yet authored)
+- `web-ide/phase-8/incident-response-runbook.md` (planned; not yet authored)
+- `web-ide/phase-8/support-escalation-policy.md` (planned; not yet authored)
 
 ### Exit Criteria
 - A new operator can execute release and rollback by runbook.
@@ -445,7 +445,7 @@ Create an objective promotion model from candidate to stable.
 5. Add post-release review template for continuous hardening.
 
 ### Deliverables
-- `web-ide/phase-8/release-gates.md`
+- `web-ide/phase-8/release-gates.md` (planned; not yet authored)
 - Staged rollout checklist.
 - Post-release review template.
 
@@ -484,7 +484,7 @@ Create an objective promotion model from candidate to stable.
 - `doc/wasm/js/persist-service.mjs`
 - `doc/wasm/js/microkernel.mjs`
 - `web-ui/package.json`
-- `web-ui/tests/phase-8-*.test.mjs`
+- `web-ui/tests/phase-8-*.test.mjs` (planned; not yet authored)
 - `web-ui/src/runtime-bridge.mjs`
 - `web-ui/src/persistence/serialize.mjs`
 - `web-ui/src/persistence/migrate.mjs`
@@ -492,16 +492,16 @@ Create an objective promotion model from candidate to stable.
 - `doc/wasm/persistence-dev-environment.md`
 - `scripts/wasm/*`
 - `doc/wasm/wasm-runtime-modules.json`
-- `web-ide/phase-8/*.md`
+- `web-ide/phase-8/*.md` (planned set; currently only `web-ide/phase-8/implementation-plan.md` is authored)
 
 ## Planned Phase 8 Acceptance Suites
-- `web-ui/tests/phase-8-release-artifacts.test.mjs`
-- `web-ui/tests/phase-8-compatibility.test.mjs`
-- `web-ui/tests/phase-8-security-hardening.test.mjs`
-- `web-ui/tests/phase-8-observability.test.mjs`
-- `web-ui/tests/phase-8-data-recovery.test.mjs`
-- `web-ui/tests/phase-8-rollout-gates.test.mjs`
-- `web-ui/tests/phase-8-integration.test.mjs`
+- `web-ui/tests/phase-8-release-artifacts.test.mjs` (planned; not yet authored)
+- `web-ui/tests/phase-8-compatibility.test.mjs` (planned; not yet authored)
+- `web-ui/tests/phase-8-security-hardening.test.mjs` (planned; not yet authored)
+- `web-ui/tests/phase-8-observability.test.mjs` (planned; not yet authored)
+- `web-ui/tests/phase-8-data-recovery.test.mjs` (planned; not yet authored)
+- `web-ui/tests/phase-8-rollout-gates.test.mjs` (planned; not yet authored)
+- `web-ui/tests/phase-8-integration.test.mjs` (planned; not yet authored)
 
 ## Risks and Mitigations
 - Risk: release workflow complexity slows iteration.

@@ -5,6 +5,7 @@ Version: 1.0.0
 Last updated: 2026-02-16  
 Scope: Baseline contrast audit of current theme token values  
 Depends on: `web-ui/spec/ui-visual-tokens-v1.json`, `web-ui/spec/ui-accessibility-visual-map-v1.md`
+Compatibility: `v1.x` preserves normative requirements and failure semantics; incompatible changes require `v2`.
 
 ## 1. Purpose
 

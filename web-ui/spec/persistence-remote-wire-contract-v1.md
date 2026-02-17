@@ -5,6 +5,7 @@ Version: 1.0.0
 Last updated: 2026-02-16  
 Scope: Exact remote API contract for persistence object/ref/lease synchronization  
 Depends on: `web-ui/spec/persistence-envelope-schema-v1.json`, `web-ui/spec/persistence-ref-update-protocol-v1.md`, `web-ui/spec/persistence-lease-protocol-v1.md`, `web-ui/spec/persistence-sync-and-conflict-protocol-v1.md`
+Compatibility: `v1.x` preserves normative requirements and failure semantics; incompatible changes require `v2`.
 
 ## 1. Purpose
 

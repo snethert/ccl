@@ -5,6 +5,7 @@ Version: 1.1.0
 Last updated: 2026-02-17  
 Scope: Normative crash/race/partition failure matrix for persistence conformance and fault-injection coverage  
 Depends on: `web-ui/spec/persistence-ref-update-protocol-v1.md`, `web-ui/spec/persistence-lease-protocol-v1.md`, `web-ui/spec/persistence-sync-and-conflict-protocol-v1.md`, `web-ui/spec/persistence-conformance-fixtures-v1.json`, `web-ui/tests/persistence-fault-harness.mjs`
+Compatibility: `v1.x` preserves normative requirements and failure semantics; incompatible changes require `v2`.
 
 ## 1. Purpose
 

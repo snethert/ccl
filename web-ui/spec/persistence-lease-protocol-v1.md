@@ -1,14 +1,20 @@
 # Persistence Lease Protocol v1
 
 Status: Draft  
-Version: 1.2.0  
+Version: 1.3.0  
 Last updated: 2026-02-17  
 Scope: Writer coordination and lease-gated ref updates for workspace persistence  
 Depends on: `web-ui/spec/persistence-ref-update-protocol-v1.md`, `web-ui/spec/persistence-purpose-and-user-contract-v1.md`, `web-ui/spec/persistence-envelope-schema-v1.json`
+Compatibility: `v1.x` preserves normative requirements and failure semantics; incompatible changes require `v2`.
 
 ## 1. Purpose
 
 This protocol defines deterministic single-writer coordination for protected refs.
+
+Deployment scope:
+
+1. `v1` leases are local-origin coordination primitives (same browser profile and origin, multi-tab/multi-worker).
+2. Cross-machine or WAN writer arbitration is out of scope for this lease and <a id="REQ-PERSISTENCE-LEASE-PROTOCOL-V1-7118F68528"></a>MUST use server-authoritative coordination.
 
 The protocol <a id="REQ-PERSISTENCE-LEASE-PROTOCOL-V1-7F2FBD2C30"></a>MUST:
 
@@ -40,12 +46,13 @@ Implementations <a id="REQ-PERSISTENCE-LEASE-PROTOCOL-V1-0037B84F09"></a>MUST us
 1. `LEASE_TTL_MS = 15000`
 2. `HEARTBEAT_MS = 5000`
 3. `SUSPEND_GRACE_MS = 30000`
-4. `CLOCK_SKEW_TOLERANCE_MS = 1000`
+4. `CLOCK_SKEW_TOLERANCE_MS = 1000` (local-only tolerance)
 
 Validation rules:
 
 1. Renewal validity window <a id="REQ-PERSISTENCE-LEASE-PROTOCOL-V1-C015A73B6F"></a>MUST treat lease-expired only when `now > expires_at + CLOCK_SKEW_TOLERANCE_MS`.
 2. Takeover eligibility <a id="REQ-PERSISTENCE-LEASE-PROTOCOL-V1-1C86BC3DBC"></a>MUST require `now >= expires_at + SUSPEND_GRACE_MS + CLOCK_SKEW_TOLERANCE_MS` unless user-confirmed takeover is explicit.
+3. Remote-coordination mode <a id="REQ-PERSISTENCE-LEASE-PROTOCOL-V1-0C32003796"></a>MUST be rejected for `v1` with `ERR_LEASE_SCOPE_UNSUPPORTED`.
 
 Retry policy (frozen for `v1`):
 
@@ -144,6 +151,7 @@ Implementations <a id="REQ-PERSISTENCE-LEASE-PROTOCOL-V1-D2D9B04736"></a>MUST ex
 4. `ERR_TAKEOVER_NOT_ALLOWED`
 5. `ERR_LEASE_TXN_FAILED`
 6. `ERR_SEMANTIC_GUARD_REQUIRED`
+7. `ERR_LEASE_SCOPE_UNSUPPORTED`
 
 ## 10. Observability
 

@@ -1,10 +1,11 @@
 # UI Accessibility Visual Map v1
 
 Status: Draft  
-Version: 1.0.0  
+Version: 1.1.0  
 Last updated: 2026-02-16  
 Scope: Visual accessibility conformance for `web-ui`  
-Depends on: `web-ui/spec/ui-visual-tokens-v1.json`, `web-ui/spec/ui-component-visual-contract-v1.md`, `web-ui/spec/ui-motion-contract-v1.md`
+Depends on: `web-ui/spec/ui-visual-tokens-v1.json`, `web-ui/spec/ui-component-visual-contract-v1.md`, `web-ui/spec/ui-motion-contract-v1.md`, `web-ui/spec/non-dom-accessibility-proxy-contract-v1.md`
+Compatibility: `v1.x` preserves normative requirements and failure semantics; incompatible changes require `v2`.
 
 ## 1. Purpose
 
@@ -68,6 +69,10 @@ For non-DOM surfaces:
 2. Proxy focus location <a id="REQ-UI-ACCESSIBILITY-VISUAL-MAP-V1-04A956DBCF"></a>MUST match rendered target bounds within +/- 1 px.
 3. Proxy state (`selected`, `error`, `disabled`) <a id="REQ-UI-ACCESSIBILITY-VISUAL-MAP-V1-BB6E48B70A"></a>MUST mirror rendered state exactly.
 4. Loss of proxy synchronization <a id="REQ-UI-ACCESSIBILITY-VISUAL-MAP-V1-4A105DC72D"></a>MUST be treated as a conformance failure.
+
+Detailed non-DOM proxy lifecycle, naming, and focus-mirroring rules are specified in:
+
+- `web-ui/spec/non-dom-accessibility-proxy-contract-v1.md`
 
 ## 7. Failure Semantics
 

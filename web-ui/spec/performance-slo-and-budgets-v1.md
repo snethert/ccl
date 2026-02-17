@@ -1,11 +1,11 @@
 # Performance SLO and Budgets v1
 
 Status: Draft  
-Version: 1.0.0  
+Version: 1.1.0  
 Last updated: 2026-02-16  
 Scope: Normative performance/reliability service-level objectives and budget gates for `web-ui` quality evaluation  
 Depends on: `web-ui/spec/normative-language-and-conformance-v1.md`, `web-ui/src/quality-gates.mjs`, `web-ui/spec/perf-telemetry-sampling-policy-v1.md`  
-Compatibility: `v1.x` preserves budget field names, gate IDs, and percentile semantics; incompatible gate semantics require `v2`.
+Compatibility: `v1.x` preserves budget field names, gate IDs, and percentile semantics; `v1.1+` clarifies UI-turn measurement boundaries and delta-wire expectations without changing existing percentile formulas.
 
 ## 1. Purpose
 
@@ -93,6 +93,16 @@ The following gate IDs are mandatory in `v1`:
 
 1. `reliability-unhandled-runtime-faults` <a id="REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-A50E785A90"></a>MUST compare runtime fault sample count against `maxUnhandledRuntimeFaults`.
 2. `reliability-deterministic-replay` <a id="REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-3E4E9EE5B2"></a>MUST fail when any replay-run sample reports `deterministic=false` and enforcement is enabled.
+
+### 5.6 UI Tree Emission Scope
+
+`ui-turn-p95` and `ui-turn-p99` measurement boundaries:
+
+1. Timers <a id="REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-9A92C0B1B2"></a>MUST include runtime-bridge ingress, decode, reducer apply, and backend render scheduling.
+2. Timers <a id="REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-B11D21359A"></a>MUST exclude producer-side Lisp tree construction/serialization time unless explicitly sampled as a separate metric lane.
+3. Scale lanes with frequent partial updates <a id="REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-84D8B586ED"></a>MUST either:
+- enable `ui-wire-format-tree-delta-v1`, or
+- declare full-tree-only lane exceptions with documented expected throughput limits.
 
 ## 6. Release Policy Requirements
 

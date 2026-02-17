@@ -26,8 +26,7 @@ It complements normative contracts with executable outcomes.
 
 | Claim scope | Required protocol evidence lanes | Current verdict | Blocking lanes |
 |---|---|---|---|
-| `kernel-free-v1` | `compat.runtime-bridge.version-check.v1`, `compat.command-frame.version.v1`, `compat.microkernel.bridge-opcodes.v1`, `compat.runtime-output.transport.v1`, `compat.browser.render-kernelless.v1` | pass | none |
-| `kernel-full-v1` | all `kernel-free-v1` lanes plus kernel ABI/browser kernel-on lanes | blocked | `compat.kernel.abi-negotiation.v1`, `compat.browser.kernel-on.v1` |
+| `full-runtime-v1` | `compat.runtime-bridge.version-check.v1`, `compat.command-frame.version.v1`, `compat.microkernel.bridge-opcodes.v1`, `compat.runtime-output.transport.v1`, `compat.browser.render-kernelless.v1`, `compat.kernel.abi-negotiation.v1`, `compat.browser.kernel-on.v1` | blocked | `compat.kernel.abi-negotiation.v1`, `compat.browser.kernel-on.v1` |
 
 ## 4. Mixed-Version Behavior Matrix
 
@@ -37,12 +36,12 @@ It complements normative contracts with executable outcomes.
 | Runtime envelope | `v99` | `v1` | Reject with unsupported-version failure | `tests/phase-5-runtime-bridge.test.mjs` | pass |
 | Runtime command frame | `v1` | `v1` | Poll/decode succeeds with stable header layout | `tests/phase-5-runtime-command-roundtrip.test.mjs` | pass |
 | UI tree/event wire payloads | `v1` | `v1` | Decode succeeds through bridge codec paths | `tests/bridge-codec.test.mjs` | pass |
-| Kernel ABI negotiation (`KERNEL_OP_CAPS`) | unknown | `v1` runtime | Must enforce strict-major gate before startup | Not executable in current environment | pending (`kernel-full-v1` blocker only) |
+| Kernel ABI negotiation (`KERNEL_OP_CAPS`) | unknown | `v1` runtime | Must enforce strict-major gate before startup | Not executable in current environment | pending (`full-runtime-v1` blocker only) |
 
 ## 5. Known Gaps
 
-1. Kernel-enabled negotiation evidence is blocked in the current environment and remains an open lane for `kernel-full-v1`.
-2. Kernel-on browser harness (`tests/browser.test.mjs`) is not part of `kernel-free-v1` verdicts while kernel execution is unavailable.
+1. Kernel-enabled negotiation evidence is blocked in the current environment and remains an open lane for `full-runtime-v1`.
+2. Kernel-on browser harness (`tests/browser.test.mjs`) is required for `full-runtime-v1` and is currently blocked while kernel assets are unavailable.
 3. Current asset preflight shows kernel-on browser lane is blocked by missing local artifacts:
    - `wasm-ui-modules.json` (all candidate locations missing)
    - `root.image`/`minimal.image` (all candidate locations missing)
@@ -61,6 +60,6 @@ It complements normative contracts with executable outcomes.
 This report is conformant only if:
 
 1. Section 2 contains at least one passing lane for each scoped protocol surface.
-2. Section 3 declares verdicts for both `kernel-free-v1` and `kernel-full-v1`.
+2. Section 3 declares a verdict for `full-runtime-v1`.
 3. Section 4 includes both acceptance and rejection behavior for version negotiation where executable.
-4. Pending kernel-only rows block only `kernel-full-v1` claims and <a id="REQ-PROTOCOL-COMPATIBILITY-REPORT-V1-7EED2E3ED4"></a>MUST NOT invalidate `kernel-free-v1` claims.
+4. Pending required rows <a id="REQ-PROTOCOL-COMPATIBILITY-REPORT-V1-0D3CDB1195"></a>MUST keep `full-runtime-v1` blocked until passing evidence is recorded.

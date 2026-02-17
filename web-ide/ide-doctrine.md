@@ -13,6 +13,7 @@ This IDE uses a hybrid rendering model:
 - High-density visuals and custom instruments use canvas/WebGL (graphs, inspectors, timelines, visualizations).
 - All backends must consume the same theme tokens and spacing metrics to preserve a single visual language.
 - DOM usage does not imply OS-native appearance; the UI Doctrine still governs visual form.
+- Clipboard UX includes required multi-item history with deterministic history-paste behavior.
 
 ## Core Principles
 

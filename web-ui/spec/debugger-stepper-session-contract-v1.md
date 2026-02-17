@@ -1,11 +1,11 @@
 # Debugger Stepper Session Contract v1
 
 Status: Draft  
-Version: 1.0.0  
+Version: 1.1.0  
 Last updated: 2026-02-16  
 Scope: Debugger session lifecycle, step-command protocol, and runtime/UI synchronization for `web-ui`  
 Depends on: `web-ui/spec/normative-language-and-conformance-v1.md`, `web-ui/spec/command-schema-v1.json`, `web-ui/spec/ui-state-schema-v1.json`, `web-ui/spec/debug-location-provider-contract-v1.md`, `web-ui/src/state.mjs`, `web-ui/src/runtime-bridge.mjs`, `web-ui/src/runtime-command-client.mjs`, `web-ui/bridge/runtime.mjs`, `web-ui/DEV-PLAN.md`  
-Compatibility: `v1.x` preserves debugger payload normalization rules, restart-step coexistence, step command IDs, and session state vocabulary; incompatible lifecycle changes require `v2`.
+Compatibility: `v1.x` preserves debugger payload normalization rules, restart-step coexistence, step command IDs, and session state vocabulary; `v1.1+` adds runner identity lanes without changing single-runner behavior.
 
 ## 1. Purpose
 
@@ -37,6 +37,7 @@ Closed-set pause reasons:
 Canonical step-session shape:
 
 1. `stepSessionId`
+2. `runnerId`
 2. `mode` (`source|low-level`)
 3. `originFrameId`
 4. `originLocationId`
@@ -44,6 +45,12 @@ Canonical step-session shape:
 6. `pendingCommand` (`step.into|step.over|step.out|continue|slide.next|slide.prev|none`)
 7. `lastStopId`
 8. `outTargetFrameId`
+
+Identity namespace rules:
+
+1. `stepSessionId` <a id="REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-DBFC1EB6C0"></a>MUST be unique per `runnerId`.
+2. `stopId` <a id="REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-5CD50F1CD7"></a>MUST be unique within `(runnerId, stopId)` tuple space.
+3. `frameId` <a id="REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-A9FC1BB001"></a>MUST be interpreted in runner scope and <a id="REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-6A23B968AA"></a>MUST NOT be assumed globally unique across runners.
 
 ## 3. Baseline Runtime Ingestion (Current `v1` Core)
 
@@ -128,17 +135,19 @@ Related baseline debugger command IDs:
 ## 5.2 `debugger.stop` Minimum Fields
 
 1. `stopId`
-2. `frameId`
-3. `reason`
-4. `location` (provider-normalized)
-5. `slideGroup` (`{id,candidates[]|null}`)
-6. `returnValues` (required for exit-bound breakpoint stops)
+2. `runnerId`
+3. `frameId`
+4. `reason`
+5. `location` (provider-normalized)
+6. `slideGroup` (`{id,candidates[]|null}`)
+7. `returnValues` (required for exit-bound breakpoint stops)
 
 ## 5.3 Ordering and Correlation
 
 1. Runtime event `sequence` <a id="REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-3302D788A3"></a>MUST be monotonic for a stream.
 2. Stop/resume/session updates <a id="REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-4074D8871F"></a>MUST be applied in envelope order.
-3. Frame-selection and eval-result events <a id="REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-4A5A6E41B7"></a>MUST include frame correlation lanes.
+3. Frame-selection and eval-result events <a id="REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-24B6EF8FF6"></a>MUST include runner and frame correlation lanes.
+4. Simultaneous stops from different runners <a id="REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-D749B2C65D"></a>MUST NOT overwrite each other; UI state tracks one active stop per runner plus one user-selected active runner.
 
 ## 6. Determinism and Replay Rules
 

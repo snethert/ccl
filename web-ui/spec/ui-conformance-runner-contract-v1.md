@@ -5,6 +5,7 @@ Version: 1.0.0
 Last updated: 2026-02-16  
 Scope: Execution semantics for `web-ui` conformance fixtures across DOM/Canvas/WebGL  
 Depends on: `web-ui/spec/ui-conformance-fixtures-v1.json`, `web-ui/spec/ui-conformance-report-schema-v1.json`
+Compatibility: `v1.x` preserves normative requirements and failure semantics; incompatible changes require `v2`.
 
 ## 1. Purpose
 

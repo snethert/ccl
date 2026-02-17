@@ -1,7 +1,7 @@
 # Spec Ratification Policy v1
 
 Status: Draft  
-Version: 1.0.0  
+Version: 1.1.0  
 Last updated: 2026-02-17  
 Scope: Ratification workflow and sign-off requirements for normative `web-ui` spec artifacts  
 Depends on: `web-ui/spec/spec-index-v1.md`, `web-ui/spec/normative-language-and-conformance-v1.md`, `web-ui/spec/conformance-gate-profiles-v1.md`  
@@ -71,7 +71,17 @@ Before entering `Frozen`, the artifact <a id="REQ-SPEC-RATIFICATION-POLICY-V1-BD
 3. A `Frozen` artifact <a id="REQ-SPEC-RATIFICATION-POLICY-V1-2D6F38C499"></a>MUST NOT receive normative behavior changes without reopening at `Review` with a version bump.
 4. Non-normative clarifications to `Frozen` artifacts MAY remain in `Frozen` when conformance verdicts are unaffected.
 
-## 6. Sign-off Fields
+## 6. Design-Stage Gate Evaluation Exemption
+
+Gate execution is allowed for design-stage signal while artifacts remain `Draft`.
+
+Rules:
+
+1. Draft-state gate runs <a id="REQ-SPEC-RATIFICATION-POLICY-V1-8514D1DE36"></a>MUST be labeled `design-stage` and <a id="REQ-SPEC-RATIFICATION-POLICY-V1-37BA371ED8"></a>MUST NOT be published as `Approved` conformance claims.
+2. Reports produced under this exemption <a id="REQ-SPEC-RATIFICATION-POLICY-V1-A1BC1413D7"></a>MUST include artifact ratification state and explicit disclaimer text.
+3. Promotion from draft signal to production claim <a id="REQ-SPEC-RATIFICATION-POLICY-V1-E6CD13F982"></a>MUST satisfy all Section 4 state-exit criteria.
+
+## 7. Sign-off Fields
 
 Sign-off entries:
 
@@ -83,14 +93,15 @@ Sign-off entries:
 
 At least one `owner` and one non-owner `reviewer` approval <a id="REQ-SPEC-RATIFICATION-POLICY-V1-2B027FBDAC"></a>MUST be present for `Approved` or `Frozen` states.
 
-## 7. Failure Semantics
+## 8. Failure Semantics
 
 | Code | Meaning | Retryability | Caller obligation |
 |---|---|---|---|
 | `ratification.invalid-transition` | Requested state transition is not allowed by Section 5. | No | Use a valid transition path. |
 | `ratification.missing-signoff` | Required sign-off fields or decisions are missing. | No | Complete sign-off record and retry transition. |
 | `ratification.evidence-missing` | Required gate evidence is absent or failing. | Conditional | Re-run gates and attach passing evidence. |
+| `ratification.claim-draft-only` | Claim attempted production conformance while artifacts remain draft without exemption labeling. | No | Reclassify as design-stage or complete ratification. |
 
-## 8. Conformance
+## 9. Conformance
 
-A ratification workflow is conformant only if it enforces Sections 2-7 for all normative artifacts in `spec-index-v1.md`.
+A ratification workflow is conformant only if it enforces Sections 2-8 for all normative artifacts in `spec-index-v1.md`.

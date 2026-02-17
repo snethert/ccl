@@ -5,6 +5,7 @@ Version: 1.0.0
 Last updated: 2026-02-16  
 Scope: Motion semantics for `web-ui` across DOM/Canvas/WebGL  
 Depends on: `web-ui/spec/ui-visual-tokens-v1.json`
+Compatibility: `v1.x` preserves normative requirements and failure semantics; incompatible changes require `v2`.
 
 ## 1. Purpose
 

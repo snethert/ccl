@@ -1,7 +1,7 @@
 # Security and Capability Model v1
 
 Status: Draft  
-Version: 1.0.0  
+Version: 1.3.0  
 Last updated: 2026-02-17  
 Scope: Trust boundaries, strict startup gate, capability mediation, and safe-mode behavior for `web-ui` and runtime bridge surfaces  
 Depends on: `web-ui/spec/normative-language-and-conformance-v1.md`, `web-ui/spec/runtime-bridge-envelope-v1.md`, `web-ui/spec/protocol-version-negotiation-v1.md`, `scripts/wasm/lib/startup-gate.mjs`, `scripts/wasm/lib/load-image.mjs`, `web-ui/src/state.mjs`, `web-ui/src/commands.mjs`  
@@ -35,14 +35,21 @@ Implementations <a id="REQ-SECURITY-AND-CAPABILITY-MODEL-V1-F132F3DB6D"></a>MUST
 
 `runStartupGate()` is the authoritative startup security precondition gate for replacement track `RPL-01`.
 
+Applicability:
+
+1. This startup gate applies only to `full-runtime-v1` deployment (shared-memory runtime with `SharedArrayBuffer`, worker atomics, and WASM threads).
+2. Non-SAB/non-thread fallback startup modes are not supported by this contract.
+
 Normative requirements:
 
-1. Gate execution order <a id="REQ-SECURITY-AND-CAPABILITY-MODEL-V1-B9CCD5DF60"></a>MUST be fixed to `SRG-01..SRG-12`.
-2. Gate mode <a id="REQ-SECURITY-AND-CAPABILITY-MODEL-V1-B337248075"></a>MUST be strict: `startup_gate_mode="strict"` and `allow_fallback=false`.
-3. Check execution <a id="REQ-SECURITY-AND-CAPABILITY-MODEL-V1-82097CB300"></a>MUST stop at first failure.
-4. `load-image.mjs` <a id="REQ-SECURITY-AND-CAPABILITY-MODEL-V1-C336665FAE"></a>MUST terminate startup on gate failure or malformed summary.
+1. `full-web-ui-v1` production claims <a id="REQ-SECURITY-AND-CAPABILITY-MODEL-V1-5C624A4C9C"></a>MUST use `full-runtime-v1`.
+2. Deployments missing full-runtime prerequisites <a id="REQ-SECURITY-AND-CAPABILITY-MODEL-V1-D7208A3F6B"></a>MUST fail startup and <a id="REQ-SECURITY-AND-CAPABILITY-MODEL-V1-6DC9ED6E3E"></a>MUST NOT silently downgrade transport/capability behavior.
+3. Startup mode metadata <a id="REQ-SECURITY-AND-CAPABILITY-MODEL-V1-019AEA6B2C"></a>MUST be recorded in startup diagnostics.
+4. Gate mode <a id="REQ-SECURITY-AND-CAPABILITY-MODEL-V1-7C9A47EE32"></a>MUST be strict: `startup_gate_mode="strict"` and `allow_fallback=false`.
+5. Check execution <a id="REQ-SECURITY-AND-CAPABILITY-MODEL-V1-1A3FCE4F38"></a>MUST stop at first failure.
+6. `load-image.mjs` <a id="REQ-SECURITY-AND-CAPABILITY-MODEL-V1-189559492F"></a>MUST terminate startup on gate failure or malformed summary.
 
-### 4.1 Required Check and Failure Mapping
+### 4.1 Required Check and Failure Mapping (`full-runtime-v1`)
 
 | Check ID | Canonical failure code | Security condition |
 |---|---|---|
@@ -79,17 +86,18 @@ Normative requirements:
 
 1. `run_id`
 2. `replacement_track` (`RPL-01`)
-3. `startup_gate_mode` (`strict`)
-4. `allow_fallback` (`false`)
-5. `check_order`
-6. `checks_executed`
-7. `status` (`pass|fail`)
-8. `failure_check_id`
-9. `failure_code`
-10. `message`
-11. `contradiction_ids`
-12. `remediation`
-13. `results_digest`
+3. `startup_profile` (`full-runtime-v1`)
+4. `startup_gate_mode` (`strict`)
+5. `allow_fallback` (`false`)
+6. `check_order`
+7. `checks_executed`
+8. `status` (`pass|fail`)
+9. `failure_check_id`
+10. `failure_code`
+11. `message`
+12. `contradiction_ids`
+13. `remediation`
+14. `results_digest`
 
 ## 5. Capability State and Policy Model
 

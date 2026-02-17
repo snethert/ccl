@@ -1708,15 +1708,6 @@ wasm_spill_pop(void)
   LispObj value = *sp++;
   tcr->wasm_spill_sp = sp;
   wasm_spill_pop_count++;
-  /* DIAG: log if a pop returns 0x2c (the suspicious value) */
-  if (value == (LispObj)0x2c) {
-    uint32_t depth = (uint32_t)(tcr->wasm_spill_limit - sp + 1);
-    char dbg[100];
-    int n = snprintf(dbg, sizeof(dbg),
-                     "DIAG: spill_pop GOT 0x2c! push=%u pop=%u depth=%u\n",
-                     wasm_spill_push_count, wasm_spill_pop_count, depth);
-    if (n > 0) wasm_host_log(dbg, (unsigned)n);
-  }
   return value;
 }
 
@@ -2115,7 +2106,7 @@ wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natu
   tcr->wasm_pending_throw = 0;
 
   LispObj *vsp_ptr = saved_vsp;
-  for (signed_natural i = count - 1; i >= 0; i--) {
+  for (signed_natural i = 0; i < count; i++) {
     *--vsp_ptr = args[i];
   }
 
@@ -2710,18 +2701,6 @@ __attribute__((used, visibility("default"), export_name("wasm_funcall1")))
 LispObj
 wasm_funcall1(LispObj fn_value, LispObj arg0)
 {
-  /* DIAG: trace funcall1 fn values */
-  {
-    static uint32_t fc1_counter = 0;
-    fc1_counter++;
-    if (fc1_counter <= 10) {
-      char dbg[80];
-      int n = snprintf(dbg, sizeof(dbg),
-                       "DIAG: funcall1 #%u fn=0x%x arg=0x%x\n",
-                       fc1_counter, (unsigned)fn_value, (unsigned)arg0);
-      if (n > 0) wasm_host_log(dbg, (unsigned)n);
-    }
-  }
   TCR *tcr = wasm_get_current_tcr();
   LispObj args[1];
   args[0] = arg0;

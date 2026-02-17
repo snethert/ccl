@@ -1,69 +1,49 @@
 # Web UI
 
-**Status:** Design stage (MVP-2)
-**Priority:** Deferred until MVP-1 (Library/Embedded Mode) ships
-**Spec count:** 62 artifacts across 10 domains
+**Status:** Design stage (MVP-2)  
+**Deployment policy:** `full-runtime-v1` only (SAB + worker atomics + shared-memory thread path)
 
 ## What This Is
 
-This directory contains the complete specification suite for the CCL web-based windowing and UI toolkit. These are **design documents** — normative contracts written ahead of implementation to guide future development.
-
-Nothing here is running yet. The runtime it depends on (MVP-1) is still blocked on FASL loading. These specs exist so that when implementation begins, the target is unambiguous and a separate team could build it without ad hoc interpretation.
+This directory contains the specification suite and implementation scaffolding for the CCL browser UI runtime.
+The specs are normative design artifacts intended to be implementation-ready for a separate team.
 
 ## Relationship to the WASM Port
 
-The CCL WASM port follows a two-mode, two-phase strategy:
+The CCL WASM effort is split into two runtime tracks:
 
-1. **MVP-1: Library/Embedded Mode** — Single-runner, postMessage interface, works anywhere. Current focus. See `doc/wasm/roadmap.md`.
-2. **MVP-2: Full Runtime Mode** — Multi-runner, SharedArrayBuffer, secure context required. This is where `web-ui` lives.
+1. **MVP-1 Library/Embedded runtime**: broad portability and bring-up.
+2. **MVP-2 Full runtime UI track (`web-ui`)**: full shared-memory runtime requirements.
 
-`web-ui` is entirely MVP-2 infrastructure. It requires a working kernel, compiled Lisp modules, and a stable runtime bridge — none of which exist yet.
+`web-ui` is explicitly scoped to MVP-2 full-runtime deployment and does not support non-SAB fallback lanes.
 
 ## Directory Structure
 
-```
+```text
 web-ui/
-  DEV-PLAN.md                 # Phased development roadmap (Phases 0-10)
-  FRONT-END-DEV-PLAN.md       # Lisp<->JS bridge integration plan
-  PRODUCTION-SPEC-GAP-REGISTER.md  # Gap analysis and production gate status
-  ui-doctrine.md              # Visual presentation principles
-  spec/                       # Normative specification artifacts
-  bridge/                     # JS bridge modules (runtime<->UI)
-  src/                        # UI core implementation modules
-  tests/                      # Test suites and conformance fixtures
-  scripts/                    # Build and gate automation
+  DEV-PLAN.md
+  FRONT-END-DEV-PLAN.md
+  PRODUCTION-SPEC-GAP-REGISTER.md
+  ui-doctrine.md
+  spec/
+  bridge/
+  src/
+  tests/
+  scripts/
 ```
 
-## Spec Organization
+## Canonical Sources
 
-| Domain | Specs | Purpose |
-|---|---|---|
-| Governance | 5 | Spec index, normative language, glossary, ratification, conformance gates |
-| Visual/UI | 10 | Tokens, component states, motion, accessibility, conformance runner |
-| Core Model | 8 | Event log, snapshots, state graph, commands, focus/selection |
-| Rendering | 4 | Backend lifecycle, DOM, Canvas, WebGL contracts |
-| Persistence | 13 | Storage model, sync, conflict, leases, corruption recovery |
-| Performance | 3 | SLOs, telemetry sampling, scale testing |
-| Commands/Debug | 5 | Keybindings, IME, location provider, stepper, breakpoints |
-| Runtime Bridge | 4 | Wire formats, envelope, protocol negotiation |
-| Security/Ops | 4 | Capability model, observability, rollout, incident runbook |
-| Evidence | 5 | Conformance matrix, requirements index, readiness review |
+1. `spec/spec-index-v1.md` for authoritative artifact/profile registry.
+2. `spec/normative-language-and-conformance-v1.md` for requirement/evidence rules.
+3. `PRODUCTION-SPEC-GAP-REGISTER.md` for design-stage gate status.
 
-Entry point: [spec/spec-index-v1.md](spec/spec-index-v1.md)
+## Current Gate Posture
 
-## Reading Order
+Conformance claim scope is `full-runtime-v1`.
+Current blocker status is determined by `PRODUCTION-SPEC-GAP-REGISTER.md` auto-generated gate output.
 
-For understanding the design:
+## Historical Context
 
-1. `ui-doctrine.md` — Visual philosophy
-2. `DEV-PLAN.md` — Phase structure and kernel dependencies
-3. `FRONT-END-DEV-PLAN.md` — How Lisp and JS interact
-4. `spec/glossary-v1.md` — Terminology
-5. Domain specs as needed (start with `command-routing-algorithm-v1.md` and `renderer-backend-contract-v1.md`)
-
-## Current Gate Status
-
-See `PRODUCTION-SPEC-GAP-REGISTER.md` for auto-generated gate results.
-
-- `kernel-free-v1` (JS-only, no WASM runtime): **PASS**
-- `kernel-full-v1` (with WASM runtime): **BLOCKED** (missing kernel artifacts)
+Older docs and reviews may mention prior dual-scope claim labels.
+Those labels are superseded; current policy is single-scope `full-runtime-v1`.

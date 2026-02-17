@@ -20,15 +20,14 @@ It is evidence-oriented and references executable lanes where available.
 | Rollout/rollback policy | Compatibility and rollback rules exist and are linked to release policy artifacts. | `web-ui/spec/release-compatibility-and-rollout-v1.md` | pass |
 | Incident response | Incident runbook exists with escalation/recovery actions. | `web-ui/spec/incident-and-recovery-runbook-v1.md` | pass |
 | Capability enforcement | Capability checks have executable coverage. | `tests/capabilities.test.mjs` | pass |
-| Browser render fallback lane | Kernel-free browser render path has executable coverage. | `tests/browser-render-only.test.mjs` | pass |
+| Browser render fallback lane | Browser render-only path has executable coverage. | `tests/browser-render-only.test.mjs` | pass |
 | Kernel-enabled ops lane | Kernel-on smoke and incident-drill lanes execute in CI-like environment. | Not executable in current environment | pending |
 
 ## 3. Claim Scope Verdicts
 
 | Claim scope | Required blocker gates | Current verdict | Blocking gates |
 |---|---|---|---|
-| `kernel-free-v1` | `ops.gate.fast.v1`, `ops.browser.render-only.v1`, `ops.runtime.bridge.v1` | pass | none |
-| `kernel-full-v1` | all `kernel-free-v1` gates plus `ops.browser.kernel-preflight.v1` and kernel-on smoke lanes | blocked | `ops.browser.kernel-preflight.v1`, `ops.browser.kernel-on-smoke.v1` |
+| `full-runtime-v1` | `ops.gate.fast.v1`, `ops.browser.render-only.v1`, `ops.runtime.bridge.v1`, `ops.browser.kernel-preflight.v1`, `ops.browser.kernel-on-smoke.v1` | blocked | `ops.browser.kernel-preflight.v1`, `ops.browser.kernel-on-smoke.v1` |
 
 ## 4. Executed Gate Evidence
 
@@ -42,9 +41,9 @@ It is evidence-oriented and references executable lanes where available.
 
 ## 5. Readiness Decision
 
-1. `kernel-free-v1` release lanes are operationally ready under current evidence.
-2. `kernel-full-v1` operational readiness remains blocked by environment constraints.
-3. Kernel-only blocked lanes do not invalidate `kernel-free-v1` claims.
+1. Render-only and runtime-bridge operational lanes are passing under current evidence.
+2. `full-runtime-v1` operational readiness remains blocked by missing kernel assets in the current environment.
+3. Full release-readiness remains blocked until the kernel-on lanes pass.
 
 ## 6. Failure Semantics
 
@@ -60,6 +59,6 @@ It is evidence-oriented and references executable lanes where available.
 This review is conformant only if:
 
 1. Every checklist row in Section 2 has explicit evidence and status.
-2. Section 3 declares verdicts for both `kernel-free-v1` and `kernel-full-v1`.
-3. Any `pending` kernel-only status blocks only `kernel-full-v1` unless explicitly promoted.
+2. Section 3 declares a verdict for `full-runtime-v1`.
+3. Any required `pending` or failed lane blocks `full-runtime-v1` unless an explicit waiver is declared.
 4. Section 4 gate evidence is current for the release window.

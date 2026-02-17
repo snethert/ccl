@@ -85,7 +85,7 @@ Implement doctrine-aligned styling for widget classes in DOM surfaces.
 4. Ensure spacing and grouping follow the density doctrine.
 
 ### Deliverables
-- `web-ui/styles/ui.css` (or equivalent) with token-backed variables.
+- `web-ui/styles/ui.mjs` (or equivalent) with token-backed variables.
 - DOM backend hooks to attach the stylesheet.
 - Visual smoke test fixtures for DOM output.
 

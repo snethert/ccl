@@ -4,6 +4,8 @@ Status: Draft
 Version: 1.0.0  
 Last updated: 2026-02-16  
 Scope: Requirement-to-fixture traceability for doctrine production contracts  
+Depends on: `web-ui/spec/ui-conformance-fixtures-v1.json`, `web-ui/spec/ui-conformance-fixture-catalog-v1.md`, `web-ui/spec/ui-conformance-runner-contract-v1.md`
+Compatibility: `v1.x` preserves requirement-to-fixture mapping IDs and traceability semantics; incompatible mapping-model changes require `v2`.
 Fixture source: `web-ui/spec/ui-conformance-fixtures-v1.json`
 
 ## 1. Purpose

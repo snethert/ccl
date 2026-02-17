@@ -1,10 +1,10 @@
 # Web UI Glossary v1
 
 Status: Draft  
-Version: 1.0.0  
+Version: 1.1.0  
 Last updated: 2026-02-16  
 Scope: Canonical definitions for normative `web-ui` specification terms  
-Depends on: `web-ui/spec/spec-index-v1.md`, `web-ui/spec/normative-language-and-conformance-v1.md`, `web-ui/DEV-PLAN.md`, `web-ui/FRONT-END-DEV-PLAN.md`  
+Depends on: `web-ui/spec/spec-index-v1.md`, `web-ui/DEV-PLAN.md`, `web-ui/FRONT-END-DEV-PLAN.md`  
 Compatibility: Existing term meanings are stable across `v1.x`; incompatible redefinitions require `v2`.
 
 ## 1. Purpose
@@ -27,14 +27,17 @@ If a term appears in normative language and is defined here, this definition is 
 | artifact conformance | A verdict that one artifact satisfies all of its `MUST` requirements with linked evidence. |
 | backend | A rendering/runtime surface implementation such as DOM, Canvas, or WebGL. |
 | backend parity | Required equivalence checks across two or more backend lanes for the same fixture semantics. |
+| blocker | A gate severity level indicating claim progression must stop until the failing condition is resolved. |
 | capability | An explicitly granted permission or feature gate required for behavior that crosses trust boundaries. |
+| claim scope | A named gate-evaluation scope (for example `full-runtime-v1`) that determines required lanes for a conformance verdict. |
 | command | A typed, routable user/system action with stable ID, arguments, and result/error semantics. |
 | command routing | Deterministic selection of a command handler based on scope, state, and precedence rules. |
 | compatibility statement | The metadata clause that defines backward/forward compatibility expectations for an artifact version. |
 | conformance | A pass/fail determination that an implementation or process meets normative spec requirements. |
 | conformance matrix | A traceability map from normative requirements to automated fixtures/tests. |
 | deterministic | Producing identical outputs and verdicts for identical inputs, ordering, and seed. |
-| doctrine | A design-principle document that guides intent; contracts and schemas are authoritative for executable behavior. |
+| doctrine | A design-principle artifact for intent and presentation behavior. Doctrine clauses may use binding normative language for presentation semantics, but executable behavior conflicts are resolved by contract and schema artifacts. |
+| elevation | A semantic visual-depth tier used to convey layering, focus, and containment. |
 | envelope | The top-level structured payload carrying version, identity, and payload metadata. |
 | event log | Ordered event sequence used to replay behavior and validate deterministic state transitions. |
 | fixture | A defined input/expected-result case used for automated conformance checks. |
@@ -42,14 +45,21 @@ If a term appears in normative language and is defined here, this definition is 
 | full-web-ui-v1 | The union profile requiring all `required` and `required-planned` artifacts from the v1 index. |
 | governance-base-v1 | The baseline profile containing spec index, normative-language contract, and glossary artifacts. |
 | hit test | Resolution of input coordinates to target identity under defined coordinate and tie-break semantics. |
+| full-runtime-v1 | Claim scope that requires the full blocker-gate set, including kernel-enabled lanes and preflight/smoke requirements. |
 | lane | An execution dimension such as backend, mode, viewport, locale, or input class. |
 | major version | The `vN` segment indicating potentially incompatible artifact semantics. |
 | metadata | Required artifact header fields (`Status`, `Version`, `Last updated`, `Scope`, `Depends on`, `Compatibility`). |
+| manual-gate | A requirement that is normatively required but currently validated by documented manual review rather than automated execution. |
+| MergeRecord | Audit record capturing semantic merge base selection, per-document/per-form outcomes, and resolution provenance. |
+| motion class | A named motion category used by runtime and conformance tooling to classify transition semantics. |
 | normative | Binding requirement language interpreted using RFC2119/RFC8174 keywords. |
+| persistence profile | A named persistence semantic mode (for example `file-primacy-v1`, `semantic-canonical-v1`) that controls merge, ref advancement, and conflict policy behavior. |
 | profile conformance | A verdict that all required artifacts in a named profile are artifact-conformant. |
 | protected ref | A reference namespace that requires lease and semantic guard validation before advancement. |
 | ref CAS | Compare-and-swap style reference update guarded by expected generation/value checks. |
 | refgen | Monotonic reference generation counter used for CAS safety and ordering. |
+| ratification | The controlled state transition workflow (`Draft`, `Review`, `Approved`, `Frozen`) for normative artifacts. |
+| ratification record | Structured metadata proving artifact ownership, review decisions, evidence links, and state transition history. |
 | release gate | A blocking quality condition that <a id="REQ-GLOSSARY-V1-6D4BA43FC8"></a>MUST pass before release progression. |
 | required artifact | Artifact class that <a id="REQ-GLOSSARY-V1-9BFD960AC5"></a>MUST exist and pass conformance for the owning profile claim. |
 | required-planned artifact | Artifact class reserved as mandatory but not yet fully authored; blocks final profile/system claims. |

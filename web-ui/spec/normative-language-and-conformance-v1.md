@@ -1,7 +1,7 @@
 # Web UI Normative Language and Conformance v1
 
 Status: Draft  
-Version: 1.0.0  
+Version: 1.1.0  
 Last updated: 2026-02-16  
 Scope: Normative keyword interpretation, requirement traceability, conformance claims, and compatibility/deprecation policy for `web-ui` specs  
 Depends on: `web-ui/spec/spec-index-v1.md`, `web-ui/spec/glossary-v1.md`, `web-ui/PRODUCTION-SPEC-GAP-REGISTER.md`  
@@ -35,6 +35,7 @@ Precedence order:
 1. Schema contracts (`*.json`) over prose where field constraints conflict.
 2. Specialized contract artifacts over doctrine/planning prose.
 3. Newer minor version over older minor version within the same major.
+4. Doctrine-level normative clauses remain binding for presentation behavior when not in conflict with higher-precedence contracts.
 
 ## 4. Artifact Metadata Requirements
 
@@ -112,6 +113,11 @@ Conformance systems <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-3B7E0EEF2C"
 | `conformance.evidence-missing` | Required evidence record is absent. | No | Produce and attach evidence. |
 | `conformance.nondeterministic-result` | Repeated run produced different verdict/output. | Conditional | Stabilize nondeterminism, then re-run. |
 | `conformance.profile-blocked` | Profile includes unresolved `required-planned` artifacts. | No | Complete pending required artifacts. |
+
+Cross-spec error code policy:
+
+1. Spec-defined error codes <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-4ACD33BD0F"></a>MUST be registered in `web-ui/spec/error-code-registry-v1.md`.
+2. Error code names <a id="REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-B56EB61E0C"></a>MUST follow one canonical naming family from the registry for each namespace.
 
 ## 9. Compatibility and Versioning Policy
 

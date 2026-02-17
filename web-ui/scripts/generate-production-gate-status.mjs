@@ -19,41 +19,41 @@ const GATE_DEFINITIONS = [
     gate_id: "gate.conformance.lint.v1",
     command: "node scripts/lint-conformance.mjs --json",
     severity: "blocker",
-    scopes: ["kernel-free-v1", "kernel-full-v1"]
+    scopes: ["full-runtime-v1"]
   },
   {
     gate_id: "gate.tests.fast.v1",
     command: "npm run -s test:gate:fast",
     severity: "blocker",
-    scopes: ["kernel-free-v1", "kernel-full-v1"]
+    scopes: ["full-runtime-v1"]
   },
   {
     gate_id: "gate.runtime.bridge.v1",
     command: "node --test tests/bridge-microkernel.test.mjs tests/phase-5-runtime-output.test.mjs tests/phase-5-runtime-command-roundtrip.test.mjs tests/phase-5-runtime-command-dispatch.test.mjs tests/phase-5-runtime-inspector-integration.test.mjs tests/phase-5-runtime-restart-invoke.test.mjs",
     severity: "blocker",
-    scopes: ["kernel-free-v1", "kernel-full-v1"]
+    scopes: ["full-runtime-v1"]
   },
   {
     gate_id: "gate.browser.render-only.v1",
     command: "npm run -s test:browser:render",
     severity: "blocker",
-    scopes: ["kernel-free-v1", "kernel-full-v1"]
+    scopes: ["full-runtime-v1"]
   },
   {
     gate_id: "gate.browser.kernel-preflight.v1",
     command: "npm run -s test:browser:kernel-preflight",
     severity: "blocker",
-    scopes: ["kernel-full-v1"]
+    scopes: ["full-runtime-v1"]
   },
   {
     gate_id: "gate.browser.kernel-smoke.v1",
     command: "npm run -s test:browser",
     severity: "blocker",
-    scopes: ["kernel-full-v1"]
+    scopes: ["full-runtime-v1"]
   }
 ];
 
-const CLAIM_SCOPES = ["kernel-free-v1", "kernel-full-v1"];
+const CLAIM_SCOPES = ["full-runtime-v1"];
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));

@@ -2,6 +2,12 @@
 
 This plan moves authoritative UI state into the WASM/Lisp runner while reusing the existing JS backends for rendering and input. It is sequential and executable end-to-end.
 
+Deployment policy is explicit:
+
+1. `full-runtime-v1` (SAB + worker atomics + shared-memory thread path) is required for `full-web-ui-v1`.
+2. Non-SAB/non-thread startup modes are intentionally unsupported for this UI runtime track.
+3. Startup security checks enforce this full-runtime-only policy (fail closed, no fallback).
+
 ## Phase 0: Lock the Bridge Contract (Spec + ABI)
 1. Add `doc/wasm/ui-bridge-protocol.md` defining wire formats for UI render trees and input event batches.
 2. Extend `doc/wasm/kernel-opcode-registry.md` with UI opcodes.

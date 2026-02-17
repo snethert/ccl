@@ -5,6 +5,7 @@ Version: 1.0.0
 Last updated: 2026-02-16  
 Scope: Profile model for file-primary vs semantic-canonical persistence behavior  
 Depends on: `web-ui/spec/persistence-purpose-and-user-contract-v1.md`, `web-ui/spec/persistence-ref-update-protocol-v1.md`, `web-ui/spec/persistence-sync-and-conflict-protocol-v1.md`
+Compatibility: `v1.x` preserves normative requirements and failure semantics; incompatible changes require `v2`.
 
 ## 1. Purpose
 

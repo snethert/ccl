@@ -5,6 +5,7 @@ Version: 1.1.0
 Last updated: 2026-02-16  
 Scope: Atomic ref movement, write ordering, and crash recovery for persistent workspace refs  
 Depends on: `web-ui/spec/persistence-purpose-and-user-contract-v1.md`, `web-ui/spec/persistence-envelope-schema-v1.json`
+Compatibility: `v1.x` preserves normative requirements and failure semantics; incompatible changes require `v2`.
 
 ## 1. Purpose
 

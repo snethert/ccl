@@ -1,10 +1,11 @@
 # Persistence Purpose and User Contract v1
 
 Status: Draft  
-Version: 1.0.0  
+Version: 1.1.0  
 Last updated: 2026-02-16  
 Scope: User-facing storage contract and rationale for browser-hosted CCL web UI/workspace persistence  
-Depends on: `web-ui/DEV-PLAN.md`, `web-ui/FRONT-END-DEV-PLAN.md`, `web-ui/PRODUCTION-SPEC-GAP-REGISTER.md`
+Depends on: `web-ui/DEV-PLAN.md`, `web-ui/FRONT-END-DEV-PLAN.md`, `web-ui/PRODUCTION-SPEC-GAP-REGISTER.md`, `web-ui/spec/offline-and-service-worker-contract-v1.md`
+Compatibility: `v1.x` preserves normative requirements and failure semantics; incompatible changes require `v2`.
 
 ## 1. Purpose
 
@@ -156,8 +157,9 @@ Background automation <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-854E87
 
 ### 10.1 Local-First
 
-1. Edit/save/history operations <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-DD8011EA2D"></a>MUST work offline.
+1. Edit/save/history operations <a id="REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-7AA1FEFFF2"></a>MUST work offline after successful workspace bootstrap.
 2. Sync is asynchronous and secondary to local interaction latency.
+3. Initial application bootstrap/offline asset behavior is defined by `web-ui/spec/offline-and-service-worker-contract-v1.md`.
 
 ### 10.2 Sync Behavior
 

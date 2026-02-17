@@ -33,11 +33,11 @@ const PROFILE_LANES = {
     command: "node --test ccl/web-ui/tests/bridge-codec.test.mjs ccl/web-ui/tests/bridge-microkernel.test.mjs ccl/web-ui/tests/phase-5-runtime-bridge.test.mjs ccl/web-ui/tests/phase-5-runtime-command-roundtrip.test.mjs ccl/web-ui/tests/phase-5-runtime-command-dispatch.test.mjs ccl/web-ui/tests/phase-5-runtime-output.test.mjs ccl/web-ui/tests/phase-5-runtime-inspector-integration.test.mjs ccl/web-ui/tests/phase-5-runtime-restart-invoke.test.mjs"
   },
   "full-web-ui-v1": {
-    lane_id: "lane.kernel-free.full.v1",
+    lane_id: "lane.full-runtime.v1",
     command: "node ccl/web-ui/scripts/run-kernel-free-tests.mjs"
   },
   "unindexed-v1": {
-    lane_id: "lane.kernel-free.full.v1",
+    lane_id: "lane.full-runtime.v1",
     command: "node ccl/web-ui/scripts/run-kernel-free-tests.mjs"
   }
 };

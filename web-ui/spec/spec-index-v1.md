@@ -1,16 +1,25 @@
 # Web UI Spec Index v1
 
 Status: Draft  
-Version: 1.1.0  
+Version: 1.2.0  
 Last updated: 2026-02-17  
 Scope: Canonical registry of `web-ui` normative specification artifacts and conformance profiles  
-Depends on: `web-ui/spec/normative-language-and-conformance-v1.md`, `web-ui/spec/glossary-v1.md`, `web-ui/PRODUCTION-SPEC-GAP-REGISTER.md`  
+Depends on: `web-ui/PRODUCTION-SPEC-GAP-REGISTER.md`  
 Compatibility: `v1.x` preserves artifact identity, profile names, and claim scope names; removing or renaming required artifacts requires `v2`.
 
 ## 1. Purpose
 
 This document is the canonical index for production `web-ui` specification artifacts.
 It defines artifact classes, conformance profiles, and profile-to-artifact requirements.
+
+### 1.1 Governance Bootstrap Order
+
+To avoid governance bootstrapping ambiguity, initialization order is:
+
+1. `spec-index-v1.md` (artifact registry root)
+2. `glossary-v1.md` (canonical terms)
+3. `normative-language-and-conformance-v1.md` (keyword and evidence process)
+4. Remaining profile artifacts
 
 ## 2. Artifact Classes
 
@@ -34,16 +43,13 @@ Conformance profiles are cumulative unless explicitly marked otherwise.
 
 ### 3.1 Claim Scope Model
 
-Claims are evaluated against these scopes:
+Claims are evaluated against this scope:
 
-1. `kernel-free-v1`
-2. `kernel-full-v1`
+1. `full-runtime-v1`
 
-Scope rules:
+Scope rule:
 
-1. `kernel-full-v1` includes all `kernel-free-v1` gate requirements plus kernel-enabled lanes.
-2. Pending or blocked kernel-only lanes affect `kernel-full-v1` only.
-3. `kernel-free-v1` claims remain valid when kernel-only lanes are blocked, if all non-kernel blocker gates pass.
+1. `full-runtime-v1` requires all blocker gates, including kernel-enabled lanes.
 
 ## 4. Canonical Artifact Registry
 
@@ -56,6 +62,7 @@ Scope rules:
 | `web-ui/spec/glossary-v1.md` | `required` | Canonical terminology. |
 | `web-ui/spec/spec-ratification-policy-v1.md` | `required` | Spec lifecycle states and sign-off workflow. |
 | `web-ui/spec/conformance-gate-profiles-v1.md` | `required` | Claim-scope gate commands and blocker semantics. |
+| `web-ui/spec/error-code-registry-v1.md` | `required` | Cross-spec error-code namespace and naming registry. |
 
 ### 4.2 UI Visual Doctrine Contracts (`ui-visual-v1`)
 
@@ -70,6 +77,8 @@ Scope rules:
 | `web-ui/spec/ui-conformance-runner-contract-v1.md` | `required` | Runner behavior contract. |
 | `web-ui/spec/ui-conformance-matrix-v1.md` | `required` | Requirement-to-fixture mapping. |
 | `web-ui/spec/ui-conformance-report-schema-v1.json` | `required` | Report schema contract. |
+| `web-ui/spec/theme-override-contract-v1.md` | `required` | User/workspace theme override behavior. |
+| `web-ui/spec/non-dom-accessibility-proxy-contract-v1.md` | `required` | Canvas/WebGL accessibility proxy contract. |
 | `web-ui/spec/ui-accessibility-baseline-audit-v1.md` | `informational` | Baseline audit and remediation notes. |
 
 ### 4.3 Core Model, Events, Commands (`full-web-ui-v1`)
@@ -83,6 +92,7 @@ Scope rules:
 | `web-ui/spec/ui-state-schema-v1.json` | `required` | State graph schema. |
 | `web-ui/spec/command-schema-v1.json` | `required` | Command registry and invocation schema. |
 | `web-ui/spec/command-routing-algorithm-v1.md` | `required` | Deterministic routing rules. |
+| `web-ui/spec/command-undo-redo-contract-v1.md` | `required` | Undo/redo transaction and reversibility rules. |
 | `web-ui/spec/focus-and-selection-contract-v1.md` | `required` | Focus/selection lifecycle rules. |
 
 ### 4.4 Render Backends (`full-web-ui-v1`)
@@ -100,6 +110,7 @@ Scope rules:
 |---|---|---|
 | `web-ui/spec/persistence-purpose-and-user-contract-v1.md` | `required` | User-facing storage model. |
 | `web-ui/spec/persistence-semantic-profile-v1.md` | `required` | Profile and gating semantics. |
+| `web-ui/spec/controlled-reader-contract-v1.md` | `required` | Deterministic controlled-reader profile contract. |
 | `web-ui/spec/persistence-semantic-merge-contract-v1.md` | `required` | Deterministic semantic merge rules. |
 | `web-ui/spec/persistence-ref-update-protocol-v1.md` | `required` | CAS/ref advancement protocol. |
 | `web-ui/spec/persistence-lease-protocol-v1.md` | `required` | Writer lease semantics. |
@@ -110,6 +121,7 @@ Scope rules:
 | `web-ui/spec/persistence-corruption-recovery-v1.md` | `required` | Corruption detection/recovery behavior. |
 | `web-ui/spec/persistence-remote-wire-contract-v1.md` | `required` | Remote wire API contract. |
 | `web-ui/spec/persistence-failure-mode-matrix-v1.md` | `required` | Crash/race/partition matrix. |
+| `web-ui/spec/persistence-gc-and-compaction-policy-v1.md` | `required` | Reachability, retention, and compaction policy. |
 | `web-ui/spec/persistence-conformance-fixtures-v1.json` | `required` | Persistence fixtures source. |
 | `web-ui/tests/persistence-fault-harness.mjs` | `required` | Deterministic fault harness. |
 | `web-ui/tests/persistence-conformance-fixtures.test.mjs` | `required` | Fixture conformance tests. |
@@ -128,6 +140,11 @@ Scope rules:
 |---|---|---|
 | `web-ui/spec/keybinding-resolution-contract-v1.md` | `required` | Keybinding precedence and conflicts. |
 | `web-ui/spec/keymap-localization-and-ime-policy-v1.md` | `required` | Locale and IME behavior. |
+| `web-ui/spec/i18n-l10n-contract-v1.md` | `required` | UI string externalization and locale formatting rules. |
+| `web-ui/spec/text-editing-contract-v1.md` | `required` | Cursor/selection/IME editing model across backends. |
+| `web-ui/spec/clipboard-interaction-contract-v1.md` | `required` | Clipboard command and sanitization behavior. |
+| `web-ui/spec/drag-and-drop-interaction-contract-v1.md` | `required` | Drag source/target and drop negotiation protocol. |
+| `web-ui/spec/ui-interaction-window-management-contract-v1.md` | `required` | Window focus/stacking/resize governance. |
 | `web-ui/spec/debug-location-provider-contract-v1.md` | `required` | Source mapping abstraction contract. |
 | `web-ui/spec/debugger-stepper-session-contract-v1.md` | `required` | Stepper session lifecycle rules. |
 | `web-ui/spec/debugger-breakpoint-policy-contract-v1.md` | `required` | Breakpoint policy and degradation behavior. |
@@ -138,6 +155,7 @@ Scope rules:
 |---|---|---|
 | `web-ui/spec/runtime-bridge-envelope-v1.md` | `required` | Runtime bridge envelope contract. |
 | `web-ui/spec/ui-wire-format-tree-v1.md` | `required` | Tree payload wire format. |
+| `web-ui/spec/ui-wire-format-tree-delta-v1.md` | `required` | Incremental tree patch wire format. |
 | `web-ui/spec/ui-wire-format-events-v1.md` | `required` | Event payload wire format. |
 | `web-ui/spec/protocol-version-negotiation-v1.md` | `required` | Negotiation/deprecation policy. |
 
@@ -146,6 +164,7 @@ Scope rules:
 | Artifact | Class | Notes |
 |---|---|---|
 | `web-ui/spec/security-and-capability-model-v1.md` | `required` | Trust boundary and capability policy. |
+| `web-ui/spec/offline-and-service-worker-contract-v1.md` | `required` | Offline bootstrap and asset caching strategy. |
 | `web-ui/spec/observability-contract-v1.md` | `required` | Logs/metrics/traces contract. |
 | `web-ui/spec/release-compatibility-and-rollout-v1.md` | `required` | Rollout/rollback policy. |
 | `web-ui/spec/incident-and-recovery-runbook-v1.md` | `required` | Operational incident playbook. |
@@ -166,7 +185,7 @@ Scope rules:
 2. A profile claim <a id="REQ-SPEC-INDEX-V1-E63FD82BFB"></a>MUST fail if any profile artifact is absent or marked non-conformant.
 3. A profile claim <a id="REQ-SPEC-INDEX-V1-8A84C4E043"></a>MUST include evidence links to at least one automated fixture or test per `required` artifact.
 4. `required-planned` artifacts block final profile conformance and <a id="REQ-SPEC-INDEX-V1-44EDF71EF6"></a>MUST be reported as open gaps.
-5. Kernel-only blocked lanes <a id="REQ-SPEC-INDEX-V1-1C20C881D8"></a>MUST block `kernel-full-v1` claims and <a id="REQ-SPEC-INDEX-V1-C0ACF18EDC"></a>MUST NOT block `kernel-free-v1` claims.
+5. Any failing blocker lane <a id="REQ-SPEC-INDEX-V1-6FA1AE70CC"></a>MUST block `full-runtime-v1` claims.
 6. Partial claims MAY be made for subset profiles (`governance-base-v1`, `ui-visual-v1`, `persistence-v1`, `runtime-bridge-v1`).
 
 ## 6. Determinism and Tie-Break Baseline

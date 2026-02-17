@@ -256,7 +256,6 @@ Codify customization and beginner-mode reliability as automated gates.
 - `web-ui/src/theme.mjs`
 - `web-ui/src/commands.mjs`
 - `web-ui/src/typed-commands.mjs`
-- `web-ui/src/widgets-command.mjs`
 - `web-ui/src/state.mjs`
 - `web-ui/src/widgets.mjs`
 - `web-ui/tests/*`

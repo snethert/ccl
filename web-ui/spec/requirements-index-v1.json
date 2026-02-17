@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated_at": "2026-02-17T01:19:06.814Z",
+  "generated_at": "2026-02-17T04:39:59.546Z",
   "requirements": [
     {
       "requirement_id": "REQ-CANVAS-BACKEND-CONTRACT-V1-0964E1B178",
@@ -275,6 +275,94 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-202E415B06",
+      "artifact": "web-ui/spec/clipboard-interaction-contract-v1.md",
+      "anchor": "#REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-202E415B06",
+      "text_hash": "87aa00839ea8004eebc890255da5bcbe5e4aac843a401a7a99701769f2a22533",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-3D3796C594",
+      "artifact": "web-ui/spec/clipboard-interaction-contract-v1.md",
+      "anchor": "#REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-3D3796C594",
+      "text_hash": "0eaba8322aff981bd8bb36c8f67aad3d38b16c25114a5b755dc2a171a706147b",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-3E6997F683",
+      "artifact": "web-ui/spec/clipboard-interaction-contract-v1.md",
+      "anchor": "#REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-3E6997F683",
+      "text_hash": "2b3834a9ef9bc6e39c4fbbf1f88886754af34ef67955a5d9bc19e9aac8fadd73",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-4793766D43",
+      "artifact": "web-ui/spec/clipboard-interaction-contract-v1.md",
+      "anchor": "#REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-4793766D43",
+      "text_hash": "98bd8ae7f7a2c648141690f21c3b0395f18e22dcf6ccf9fba6d75639327feb43",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-47D572DAF7",
+      "artifact": "web-ui/spec/clipboard-interaction-contract-v1.md",
+      "anchor": "#REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-47D572DAF7",
+      "text_hash": "2ada08192d7beb0193a4ce5d59e4a424ad966fcc57d2a876c57456ea634f0e79",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-75F9465FF3",
+      "artifact": "web-ui/spec/clipboard-interaction-contract-v1.md",
+      "anchor": "#REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-75F9465FF3",
+      "text_hash": "d069beaa4c79882a96f0b2b2d04f2f855c85154eec6a63d3d7a97233b7b3d6e1",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-765112F04D",
+      "artifact": "web-ui/spec/clipboard-interaction-contract-v1.md",
+      "anchor": "#REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-765112F04D",
+      "text_hash": "a52ece96ca2a5a778e79233352a8bcac3c9487dcb8fb7fac3220da7b016d048b",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-7B3FCA3FDE",
+      "artifact": "web-ui/spec/clipboard-interaction-contract-v1.md",
+      "anchor": "#REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-7B3FCA3FDE",
+      "text_hash": "f594b0776e47b8b3698386892c5afe8fa69d67547dd5b48018fb0173d2c4be34",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-7FC06E0FC1",
+      "artifact": "web-ui/spec/clipboard-interaction-contract-v1.md",
+      "anchor": "#REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-7FC06E0FC1",
+      "text_hash": "5600fa9a2c9e5683db42a22aab6837cc3fba0e70d1011b84fccffdeff45ec3e0",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-A9CBACC6D4",
+      "artifact": "web-ui/spec/clipboard-interaction-contract-v1.md",
+      "anchor": "#REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-A9CBACC6D4",
+      "text_hash": "092a7e04e7061bb66effdd2dd56783d94494c01fd61e4f5a651c1d924cb1bcfa",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-D3939445C8",
+      "artifact": "web-ui/spec/clipboard-interaction-contract-v1.md",
+      "anchor": "#REQ-CLIPBOARD-INTERACTION-CONTRACT-V1-D3939445C8",
+      "text_hash": "46121e16d999c82b6ed07aa13e78a55a984b120408d2d2274a65ed411f164074",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-COMMAND-ROUTING-ALGORITHM-V1-0420C85E87",
       "artifact": "web-ui/spec/command-routing-algorithm-v1.md",
       "anchor": "#REQ-COMMAND-ROUTING-ALGORITHM-V1-0420C85E87",
@@ -499,6 +587,86 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-COMMAND-UNDO-REDO-CONTRACT-V1-0B784E1AAA",
+      "artifact": "web-ui/spec/command-undo-redo-contract-v1.md",
+      "anchor": "#REQ-COMMAND-UNDO-REDO-CONTRACT-V1-0B784E1AAA",
+      "text_hash": "c79f31dfa0ee1d58ed833f2086770ba4f40af4ae3b21780558a020e4e7b39659",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-COMMAND-UNDO-REDO-CONTRACT-V1-11EFE7642A",
+      "artifact": "web-ui/spec/command-undo-redo-contract-v1.md",
+      "anchor": "#REQ-COMMAND-UNDO-REDO-CONTRACT-V1-11EFE7642A",
+      "text_hash": "a0b8f013e24486ff2ea140aa5929871842f7b43b9feb318f1d7ce3bad0e847fe",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-COMMAND-UNDO-REDO-CONTRACT-V1-143E8FE166",
+      "artifact": "web-ui/spec/command-undo-redo-contract-v1.md",
+      "anchor": "#REQ-COMMAND-UNDO-REDO-CONTRACT-V1-143E8FE166",
+      "text_hash": "57348b02180e22921e9c5b49932b7190e3b30bf8c0cebea6d68ef3df307c45bf",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-COMMAND-UNDO-REDO-CONTRACT-V1-2F014EF7F4",
+      "artifact": "web-ui/spec/command-undo-redo-contract-v1.md",
+      "anchor": "#REQ-COMMAND-UNDO-REDO-CONTRACT-V1-2F014EF7F4",
+      "text_hash": "b0b0949e9cc745634ca209ea971c7c38404b5dc2e38db9252b833f3a7b5d75a2",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-COMMAND-UNDO-REDO-CONTRACT-V1-447706C047",
+      "artifact": "web-ui/spec/command-undo-redo-contract-v1.md",
+      "anchor": "#REQ-COMMAND-UNDO-REDO-CONTRACT-V1-447706C047",
+      "text_hash": "7a4e56fa50064089666cfe330c12b6d0676896db9fa61be9aed07eaa22cb83a9",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-COMMAND-UNDO-REDO-CONTRACT-V1-573E72C591",
+      "artifact": "web-ui/spec/command-undo-redo-contract-v1.md",
+      "anchor": "#REQ-COMMAND-UNDO-REDO-CONTRACT-V1-573E72C591",
+      "text_hash": "8ff5557fe4aa0bba45134227f52d17c403b17a2817fe79e2348875bdfb3d0f9b",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-COMMAND-UNDO-REDO-CONTRACT-V1-62A6A13AC3",
+      "artifact": "web-ui/spec/command-undo-redo-contract-v1.md",
+      "anchor": "#REQ-COMMAND-UNDO-REDO-CONTRACT-V1-62A6A13AC3",
+      "text_hash": "62729da204d6278f9f551bffc0fd84b2c0572eaf1b4db3ca69574db42acb54c8",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-COMMAND-UNDO-REDO-CONTRACT-V1-6DE63DBC7D",
+      "artifact": "web-ui/spec/command-undo-redo-contract-v1.md",
+      "anchor": "#REQ-COMMAND-UNDO-REDO-CONTRACT-V1-6DE63DBC7D",
+      "text_hash": "165a3e11a1dff00a183258f94154799e7d82c9849a03df4be403758094677f97",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-COMMAND-UNDO-REDO-CONTRACT-V1-83643CF122",
+      "artifact": "web-ui/spec/command-undo-redo-contract-v1.md",
+      "anchor": "#REQ-COMMAND-UNDO-REDO-CONTRACT-V1-83643CF122",
+      "text_hash": "a64ae65774ebc9cca447cc434b990296524cbd965983ed375f7b66aba01bdc9a",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-COMMAND-UNDO-REDO-CONTRACT-V1-D612ADB658",
+      "artifact": "web-ui/spec/command-undo-redo-contract-v1.md",
+      "anchor": "#REQ-COMMAND-UNDO-REDO-CONTRACT-V1-D612ADB658",
+      "text_hash": "f01d9bc687f24acb219bfaa6ad0c585e94dd16252dcee0a72982da13b090af53",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-146A711BBE",
       "artifact": "web-ui/spec/conformance-gate-profiles-v1.md",
       "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-146A711BBE",
@@ -515,35 +683,83 @@
       "status": "draft"
     },
     {
-      "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-32DA05AABD",
+      "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-1B3EDE0EC1",
       "artifact": "web-ui/spec/conformance-gate-profiles-v1.md",
-      "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-32DA05AABD",
-      "text_hash": "487c0cdcc1c12cf781a5494d09a6f7a7754e30626ff934456b6c6fdb4aa4788c",
+      "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-1B3EDE0EC1",
+      "text_hash": "29c63abae912e5449360767771034adbc8a14f5124d37e1b35859b532bec3ea6",
       "profile": "governance-base-v1",
       "status": "draft"
     },
     {
-      "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-462A227637",
+      "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-30280B963E",
       "artifact": "web-ui/spec/conformance-gate-profiles-v1.md",
-      "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-462A227637",
-      "text_hash": "de382de4d95f25a06d90171a2d7a31126fa18ea58c93abd8df8bafbe219723f3",
+      "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-30280B963E",
+      "text_hash": "0f98bfbea3781d48abe2938e399db9dcbd904d8bb33b57aacfcb38ba0eae70fd",
       "profile": "governance-base-v1",
       "status": "draft"
     },
     {
-      "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-6D978DCAA4",
+      "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-A5F07A4223",
       "artifact": "web-ui/spec/conformance-gate-profiles-v1.md",
-      "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-6D978DCAA4",
-      "text_hash": "12200d8f9cb2d6fdd0aea24e2c60ca968082066ef0db9214af8cd1fabbce194d",
+      "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-A5F07A4223",
+      "text_hash": "b2e89e725f6955f154eb6a7b9f1a3466fca26680ca67476b9b1441d148ab879a",
       "profile": "governance-base-v1",
       "status": "draft"
     },
     {
-      "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-BFFDC50482",
+      "requirement_id": "REQ-CONFORMANCE-GATE-PROFILES-V1-E1935EE821",
       "artifact": "web-ui/spec/conformance-gate-profiles-v1.md",
-      "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-BFFDC50482",
-      "text_hash": "ae02d2376d4cd9c6030a40024e6b0c51401072c7890d784d2bb83425118d0b04",
+      "anchor": "#REQ-CONFORMANCE-GATE-PROFILES-V1-E1935EE821",
+      "text_hash": "bd594afddfbb8030cc91caecb5360285c389355ac3a6a2833cbe29445f958246",
       "profile": "governance-base-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-CONTROLLED-READER-CONTRACT-V1-26F19B9EBE",
+      "artifact": "web-ui/spec/controlled-reader-contract-v1.md",
+      "anchor": "#REQ-CONTROLLED-READER-CONTRACT-V1-26F19B9EBE",
+      "text_hash": "cf3caf5d404228de75373f15523cf0f9ca90b1b0c6c9e9ae2260a10828a5d490",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-CONTROLLED-READER-CONTRACT-V1-4FD8C342DF",
+      "artifact": "web-ui/spec/controlled-reader-contract-v1.md",
+      "anchor": "#REQ-CONTROLLED-READER-CONTRACT-V1-4FD8C342DF",
+      "text_hash": "d84d7f7f768d7c3d3d8bcc203dcd7088b786f577ab4e11b302cb75b294a6b62f",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-CONTROLLED-READER-CONTRACT-V1-5C37D8C777",
+      "artifact": "web-ui/spec/controlled-reader-contract-v1.md",
+      "anchor": "#REQ-CONTROLLED-READER-CONTRACT-V1-5C37D8C777",
+      "text_hash": "7a58b736383634d95339d02e8f8bf959ce1cc3178028283abcc96259bea0791f",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-CONTROLLED-READER-CONTRACT-V1-8FE0A52B91",
+      "artifact": "web-ui/spec/controlled-reader-contract-v1.md",
+      "anchor": "#REQ-CONTROLLED-READER-CONTRACT-V1-8FE0A52B91",
+      "text_hash": "85a7fc325bb1fc87c3ae34d9e300fb39d0060376c4f728a5a1a9e204a7150ced",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-CONTROLLED-READER-CONTRACT-V1-DF2DAA541C",
+      "artifact": "web-ui/spec/controlled-reader-contract-v1.md",
+      "anchor": "#REQ-CONTROLLED-READER-CONTRACT-V1-DF2DAA541C",
+      "text_hash": "1c86e1e86eec8f86b621fb9ec081800ce0f8d740fad2abe2dd33c657a2c74952",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-CONTROLLED-READER-CONTRACT-V1-E4AE040377",
+      "artifact": "web-ui/spec/controlled-reader-contract-v1.md",
+      "anchor": "#REQ-CONTROLLED-READER-CONTRACT-V1-E4AE040377",
+      "text_hash": "240c075edadca6140c74f671ab6286c5561b872ec73ee75ccec8ccae624c9160",
+      "profile": "persistence-v1",
       "status": "draft"
     },
     {
@@ -923,6 +1139,14 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-24B6EF8FF6",
+      "artifact": "web-ui/spec/debugger-stepper-session-contract-v1.md",
+      "anchor": "#REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-24B6EF8FF6",
+      "text_hash": "742fbcb8cf34a0099883e8f2c8f29bbedbcd0e8760c01bd979eae5328f0f1976",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-3302D788A3",
       "artifact": "web-ui/spec/debugger-stepper-session-contract-v1.md",
       "anchor": "#REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-3302D788A3",
@@ -955,10 +1179,10 @@
       "status": "draft"
     },
     {
-      "requirement_id": "REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-4A5A6E41B7",
+      "requirement_id": "REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-5CD50F1CD7",
       "artifact": "web-ui/spec/debugger-stepper-session-contract-v1.md",
-      "anchor": "#REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-4A5A6E41B7",
-      "text_hash": "bf9cb74eb495037f16b77818c412ef1568d92e662df06f3c6daeb76897a5fea3",
+      "anchor": "#REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-5CD50F1CD7",
+      "text_hash": "e71ae29f8e83a78f8dd09897ee501949cd8cb7ef0686bccd8682a8ad411fb8f5",
       "profile": "full-web-ui-v1",
       "status": "draft"
     },
@@ -967,6 +1191,14 @@
       "artifact": "web-ui/spec/debugger-stepper-session-contract-v1.md",
       "anchor": "#REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-6279751A17",
       "text_hash": "faac158ec0e072ecc04b13096424326ea2fb0cce0f155f2fb7ba54c04363c892",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-6A23B968AA",
+      "artifact": "web-ui/spec/debugger-stepper-session-contract-v1.md",
+      "anchor": "#REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-6A23B968AA",
+      "text_hash": "f51497bbfb6cd667f5ea6b803136ce26b83476eadb2d44c428d0728b72d299c7",
       "profile": "full-web-ui-v1",
       "status": "draft"
     },
@@ -1003,6 +1235,14 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-A9FC1BB001",
+      "artifact": "web-ui/spec/debugger-stepper-session-contract-v1.md",
+      "anchor": "#REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-A9FC1BB001",
+      "text_hash": "f51497bbfb6cd667f5ea6b803136ce26b83476eadb2d44c428d0728b72d299c7",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-CB3068EDBA",
       "artifact": "web-ui/spec/debugger-stepper-session-contract-v1.md",
       "anchor": "#REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-CB3068EDBA",
@@ -1015,6 +1255,22 @@
       "artifact": "web-ui/spec/debugger-stepper-session-contract-v1.md",
       "anchor": "#REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-D17101C41E",
       "text_hash": "3bf961400ce2c853745e1129587bb918b30b03f4742b02e12ab5b27245ad0386",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-D749B2C65D",
+      "artifact": "web-ui/spec/debugger-stepper-session-contract-v1.md",
+      "anchor": "#REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-D749B2C65D",
+      "text_hash": "81835024044f1c2dcb9d45485fb052090f51e38264ff167ea2e662ecfb442d9d",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-DBFC1EB6C0",
+      "artifact": "web-ui/spec/debugger-stepper-session-contract-v1.md",
+      "anchor": "#REQ-DEBUGGER-STEPPER-SESSION-CONTRACT-V1-DBFC1EB6C0",
+      "text_hash": "bd3d3fea63b25ca03390f16720e3c8e209605eb9d0892198d194a450d95ddaa4",
       "profile": "full-web-ui-v1",
       "status": "draft"
     },
@@ -1371,6 +1627,86 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-DRAG-AND-DROP-INTERACTION-CONTRACT-V1-0502B46978",
+      "artifact": "web-ui/spec/drag-and-drop-interaction-contract-v1.md",
+      "anchor": "#REQ-DRAG-AND-DROP-INTERACTION-CONTRACT-V1-0502B46978",
+      "text_hash": "ad605cff906e67e6361c7eca3cb7f40c16a3b9989b9287ca2b384ee59a77f967",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-DRAG-AND-DROP-INTERACTION-CONTRACT-V1-05FF74F3D5",
+      "artifact": "web-ui/spec/drag-and-drop-interaction-contract-v1.md",
+      "anchor": "#REQ-DRAG-AND-DROP-INTERACTION-CONTRACT-V1-05FF74F3D5",
+      "text_hash": "b1a52b76a73c7336a4110fa7b7e034629ac10c2129eda6e0653dfeb7d05bcdc6",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-DRAG-AND-DROP-INTERACTION-CONTRACT-V1-23749BD447",
+      "artifact": "web-ui/spec/drag-and-drop-interaction-contract-v1.md",
+      "anchor": "#REQ-DRAG-AND-DROP-INTERACTION-CONTRACT-V1-23749BD447",
+      "text_hash": "b8cd84728f740d8596e36c73a4fd0351b54112182e4cb6c10ed820130503673e",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-DRAG-AND-DROP-INTERACTION-CONTRACT-V1-2CAA9DDE48",
+      "artifact": "web-ui/spec/drag-and-drop-interaction-contract-v1.md",
+      "anchor": "#REQ-DRAG-AND-DROP-INTERACTION-CONTRACT-V1-2CAA9DDE48",
+      "text_hash": "ac902a530ee9f9372465d1ce6b25742ae64f1f93da851ba24f3bf9b6b20bec0a",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-DRAG-AND-DROP-INTERACTION-CONTRACT-V1-34BB4FB6BD",
+      "artifact": "web-ui/spec/drag-and-drop-interaction-contract-v1.md",
+      "anchor": "#REQ-DRAG-AND-DROP-INTERACTION-CONTRACT-V1-34BB4FB6BD",
+      "text_hash": "d89e6198d31179579161d4031ef83ee0e0fddd7b655d1c4decd5afe2cd604943",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-DRAG-AND-DROP-INTERACTION-CONTRACT-V1-CD7B18B243",
+      "artifact": "web-ui/spec/drag-and-drop-interaction-contract-v1.md",
+      "anchor": "#REQ-DRAG-AND-DROP-INTERACTION-CONTRACT-V1-CD7B18B243",
+      "text_hash": "6ca3ebcbd4be2cf96f4003b3f356ae573086d9b8ec3cc8d45baf14193856d626",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-DRAG-AND-DROP-INTERACTION-CONTRACT-V1-F29E85F07E",
+      "artifact": "web-ui/spec/drag-and-drop-interaction-contract-v1.md",
+      "anchor": "#REQ-DRAG-AND-DROP-INTERACTION-CONTRACT-V1-F29E85F07E",
+      "text_hash": "87e02e28c5797760d04f6b260b434f7e089778f796f94129e8d01e8092660ed0",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-ERROR-CODE-REGISTRY-V1-9A8D205E48",
+      "artifact": "web-ui/spec/error-code-registry-v1.md",
+      "anchor": "#REQ-ERROR-CODE-REGISTRY-V1-9A8D205E48",
+      "text_hash": "8cecb6be4d4e75e1cf8c414814ff382f74f9a639e562f4bc9e102cc752e9ffbf",
+      "profile": "governance-base-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-ERROR-CODE-REGISTRY-V1-BDC64069B9",
+      "artifact": "web-ui/spec/error-code-registry-v1.md",
+      "anchor": "#REQ-ERROR-CODE-REGISTRY-V1-BDC64069B9",
+      "text_hash": "2c4ecc1bf85fe9289711f4ef43da9c33f77065ca0c84119a42693bb9854755e4",
+      "profile": "governance-base-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-ERROR-CODE-REGISTRY-V1-CE408497C2",
+      "artifact": "web-ui/spec/error-code-registry-v1.md",
+      "anchor": "#REQ-ERROR-CODE-REGISTRY-V1-CE408497C2",
+      "text_hash": "b586a2f3f816562535dcd833cb36afe67095e744f2c0a307d1ab3020e2ae81c9",
+      "profile": "governance-base-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-0E99DDDBEF",
       "artifact": "web-ui/spec/event-log-ordering-and-clock-rules-v1.md",
       "anchor": "#REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-0E99DDDBEF",
@@ -1427,6 +1763,14 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-318080297D",
+      "artifact": "web-ui/spec/event-log-ordering-and-clock-rules-v1.md",
+      "anchor": "#REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-318080297D",
+      "text_hash": "ee73110646a97823ec77c66314f0813c4600c7a07726d64d1a11cc046b4a0c59",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-347CB07CAD",
       "artifact": "web-ui/spec/event-log-ordering-and-clock-rules-v1.md",
       "anchor": "#REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-347CB07CAD",
@@ -1455,6 +1799,14 @@
       "artifact": "web-ui/spec/event-log-ordering-and-clock-rules-v1.md",
       "anchor": "#REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-50D1D090AB",
       "text_hash": "1aa396d68e7fca7e38804784697cc9efab894be4ce061f43539dc1e5a57f9eb9",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-5CAE86BF08",
+      "artifact": "web-ui/spec/event-log-ordering-and-clock-rules-v1.md",
+      "anchor": "#REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-5CAE86BF08",
+      "text_hash": "c4c90d3933e07407a65b4a5d33750dd1b2ac704bb03578ba1727de33da2dcf5f",
       "profile": "full-web-ui-v1",
       "status": "draft"
     },
@@ -1499,10 +1851,26 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-8CEF9316EC",
+      "artifact": "web-ui/spec/event-log-ordering-and-clock-rules-v1.md",
+      "anchor": "#REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-8CEF9316EC",
+      "text_hash": "4144c9003098d6385120cb559ce47f9305803faf8a0d66d2c299bc02ac520388",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-95ECA7D3EF",
       "artifact": "web-ui/spec/event-log-ordering-and-clock-rules-v1.md",
       "anchor": "#REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-95ECA7D3EF",
       "text_hash": "52099a793c79d8f01c8b2c681e44244c1def4b752d607ac5099793706aa3d1e7",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-9ABFFADCCB",
+      "artifact": "web-ui/spec/event-log-ordering-and-clock-rules-v1.md",
+      "anchor": "#REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-9ABFFADCCB",
+      "text_hash": "f5939664b6a79f5aada7c92dbc711a00474e9483111e3b4465e9be245fba1e92",
       "profile": "full-web-ui-v1",
       "status": "draft"
     },
@@ -1559,6 +1927,14 @@
       "artifact": "web-ui/spec/event-log-ordering-and-clock-rules-v1.md",
       "anchor": "#REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-E5DA3F02C7",
       "text_hash": "46b2fbfbe0a82a07180a70f0ddf89ac992f22f7c3181452bf11bdd957353b32f",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-EECDC72672",
+      "artifact": "web-ui/spec/event-log-ordering-and-clock-rules-v1.md",
+      "anchor": "#REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-EECDC72672",
+      "text_hash": "1312404d0c91544d8d25da8893934c3937f8b1ccdab581f33aec7b21f77f67dc",
       "profile": "full-web-ui-v1",
       "status": "draft"
     },
@@ -1984,6 +2360,54 @@
       "anchor": "#REQ-GLOSSARY-V1-D791361F0E",
       "text_hash": "741b76fb23e373b812417523d2c9d35456467897bc4672797f66f3b726a38f19",
       "profile": "governance-base-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-I18N-L10N-CONTRACT-V1-2A8A9295BE",
+      "artifact": "web-ui/spec/i18n-l10n-contract-v1.md",
+      "anchor": "#REQ-I18N-L10N-CONTRACT-V1-2A8A9295BE",
+      "text_hash": "44d24b10c42e3126814455d4551289451e34da67fd82292409bcd6b874fadc01",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-I18N-L10N-CONTRACT-V1-8D270F2713",
+      "artifact": "web-ui/spec/i18n-l10n-contract-v1.md",
+      "anchor": "#REQ-I18N-L10N-CONTRACT-V1-8D270F2713",
+      "text_hash": "f76794ed6761c464b23d1f4c0b51b565aabad09aca5c6fc369cabf7dfb88812b",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-I18N-L10N-CONTRACT-V1-B03EFB483C",
+      "artifact": "web-ui/spec/i18n-l10n-contract-v1.md",
+      "anchor": "#REQ-I18N-L10N-CONTRACT-V1-B03EFB483C",
+      "text_hash": "ce6d1c1723edcf13d6a64f2ccb8834d8db514cb2b45b0f8dc5596bebb33c207c",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-I18N-L10N-CONTRACT-V1-E6E086C44B",
+      "artifact": "web-ui/spec/i18n-l10n-contract-v1.md",
+      "anchor": "#REQ-I18N-L10N-CONTRACT-V1-E6E086C44B",
+      "text_hash": "ab8614a7a35f808d94f2ce2399decfa23e0c225bd3aff1c8d41adf3205fcaf0d",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-I18N-L10N-CONTRACT-V1-EB35E2E01E",
+      "artifact": "web-ui/spec/i18n-l10n-contract-v1.md",
+      "anchor": "#REQ-I18N-L10N-CONTRACT-V1-EB35E2E01E",
+      "text_hash": "b6cc3bdf29cc033c8669131989bbed4b69df6f9e487eb66a42a4e1353b97e6cf",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-I18N-L10N-CONTRACT-V1-F9A1089438",
+      "artifact": "web-ui/spec/i18n-l10n-contract-v1.md",
+      "anchor": "#REQ-I18N-L10N-CONTRACT-V1-F9A1089438",
+      "text_hash": "df8b49d7d30ad6bf0289fd52e892656a15602f78a5e633abd99ec2437c84d7de",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -2643,6 +3067,62 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-NON-DOM-ACCESSIBILITY-PROXY-CONTRACT-V1-20C574204E",
+      "artifact": "web-ui/spec/non-dom-accessibility-proxy-contract-v1.md",
+      "anchor": "#REQ-NON-DOM-ACCESSIBILITY-PROXY-CONTRACT-V1-20C574204E",
+      "text_hash": "b76e7ff980d9cd024487eefa863dfdc4bc4f15da3077837b09d1fa8ce0f1e982",
+      "profile": "ui-visual-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-NON-DOM-ACCESSIBILITY-PROXY-CONTRACT-V1-32C3F788B7",
+      "artifact": "web-ui/spec/non-dom-accessibility-proxy-contract-v1.md",
+      "anchor": "#REQ-NON-DOM-ACCESSIBILITY-PROXY-CONTRACT-V1-32C3F788B7",
+      "text_hash": "ce0c15d0342fe8277ae7aae631a87a5831d4fc53db94c39e11335d88faeae369",
+      "profile": "ui-visual-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-NON-DOM-ACCESSIBILITY-PROXY-CONTRACT-V1-7FCB701C7E",
+      "artifact": "web-ui/spec/non-dom-accessibility-proxy-contract-v1.md",
+      "anchor": "#REQ-NON-DOM-ACCESSIBILITY-PROXY-CONTRACT-V1-7FCB701C7E",
+      "text_hash": "34bd2218cbedd70633e9b75c370b081fa67c23c509832258a88e6c8b0cf2b76b",
+      "profile": "ui-visual-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-NON-DOM-ACCESSIBILITY-PROXY-CONTRACT-V1-81D5DD5F37",
+      "artifact": "web-ui/spec/non-dom-accessibility-proxy-contract-v1.md",
+      "anchor": "#REQ-NON-DOM-ACCESSIBILITY-PROXY-CONTRACT-V1-81D5DD5F37",
+      "text_hash": "a7b76d7a9983e82a4374d50ad839d7b0da82558990d6f9fbd4a6a4f6f5e49802",
+      "profile": "ui-visual-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-NON-DOM-ACCESSIBILITY-PROXY-CONTRACT-V1-A0A50DB308",
+      "artifact": "web-ui/spec/non-dom-accessibility-proxy-contract-v1.md",
+      "anchor": "#REQ-NON-DOM-ACCESSIBILITY-PROXY-CONTRACT-V1-A0A50DB308",
+      "text_hash": "bb1e81a9b3fb7fc8a55265ed5fe6b2c9fc9a62dd68c6d9f487f1ae5a6f1b863c",
+      "profile": "ui-visual-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-NON-DOM-ACCESSIBILITY-PROXY-CONTRACT-V1-B68610A595",
+      "artifact": "web-ui/spec/non-dom-accessibility-proxy-contract-v1.md",
+      "anchor": "#REQ-NON-DOM-ACCESSIBILITY-PROXY-CONTRACT-V1-B68610A595",
+      "text_hash": "4a35b27d7535b372543ab06436e43f8a46336fbe6dd2fdfd47d9659fcd1713a0",
+      "profile": "ui-visual-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-NON-DOM-ACCESSIBILITY-PROXY-CONTRACT-V1-FF609AA3E8",
+      "artifact": "web-ui/spec/non-dom-accessibility-proxy-contract-v1.md",
+      "anchor": "#REQ-NON-DOM-ACCESSIBILITY-PROXY-CONTRACT-V1-FF609AA3E8",
+      "text_hash": "af37794eaa2de9f36b968ef0c96ccaafb6f68dd834e2ddfdb59a2cda5b605e0d",
+      "profile": "ui-visual-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-000D492A27",
       "artifact": "web-ui/spec/normative-language-and-conformance-v1.md",
       "anchor": "#REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-000D492A27",
@@ -2715,6 +3195,14 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-4ACD33BD0F",
+      "artifact": "web-ui/spec/normative-language-and-conformance-v1.md",
+      "anchor": "#REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-4ACD33BD0F",
+      "text_hash": "7a3441991d2af1f281e77b3e63cf6e46363d0832b032cbddf04b7b10d225395c",
+      "profile": "governance-base-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-505B61010E",
       "artifact": "web-ui/spec/normative-language-and-conformance-v1.md",
       "anchor": "#REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-505B61010E",
@@ -2735,6 +3223,14 @@
       "artifact": "web-ui/spec/normative-language-and-conformance-v1.md",
       "anchor": "#REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-74E9627135",
       "text_hash": "226f7fb5e4cbcc36ae15bd632ff80c96726ef452b96fa5904ed8faedc0ba1052",
+      "profile": "governance-base-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-B56EB61E0C",
+      "artifact": "web-ui/spec/normative-language-and-conformance-v1.md",
+      "anchor": "#REQ-NORMATIVE-LANGUAGE-AND-CONFORMANCE-V1-B56EB61E0C",
+      "text_hash": "d7beaa1bf023bd188e77949c2500053de74a7971641f8d7e3c0e57f9d2260dee",
       "profile": "governance-base-v1",
       "status": "draft"
     },
@@ -2927,6 +3423,86 @@
       "artifact": "web-ui/spec/observability-contract-v1.md",
       "anchor": "#REQ-OBSERVABILITY-CONTRACT-V1-FFD5573814",
       "text_hash": "3a4a3f08815bc46e0dd8d0328575366b2fc80de690a5c02da6c0aeb70d366459",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-12DB55C51B",
+      "artifact": "web-ui/spec/offline-and-service-worker-contract-v1.md",
+      "anchor": "#REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-12DB55C51B",
+      "text_hash": "7829b19375afc24d43295d3a3a2a60276546e081cac3c12af5583ab779135a6f",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-5A2FA9023F",
+      "artifact": "web-ui/spec/offline-and-service-worker-contract-v1.md",
+      "anchor": "#REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-5A2FA9023F",
+      "text_hash": "0f01f70b3898fb0e4b6cddc2bcdb9ea67516fab2753a26fd61094c62fb562cf1",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-6A981E59A7",
+      "artifact": "web-ui/spec/offline-and-service-worker-contract-v1.md",
+      "anchor": "#REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-6A981E59A7",
+      "text_hash": "f9dfaed3934f13f34ae414d232e33f1593e90d7953c68d201ac34acd575197b4",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-708095A365",
+      "artifact": "web-ui/spec/offline-and-service-worker-contract-v1.md",
+      "anchor": "#REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-708095A365",
+      "text_hash": "14da87a3020423fe66a650a27398d3d691f9b371a04cbfb474accf838a37ecd2",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-81EA9D1F66",
+      "artifact": "web-ui/spec/offline-and-service-worker-contract-v1.md",
+      "anchor": "#REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-81EA9D1F66",
+      "text_hash": "f96a67a8a826e268fe0d1b9c6246febf4a23fe192e5c64fd5d770a4993103464",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-9431BC4444",
+      "artifact": "web-ui/spec/offline-and-service-worker-contract-v1.md",
+      "anchor": "#REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-9431BC4444",
+      "text_hash": "4ea66ab71a06385fdafcf8654cba0a312838f0b5fb4101419e86aea2f035abeb",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-A9DCA5DA96",
+      "artifact": "web-ui/spec/offline-and-service-worker-contract-v1.md",
+      "anchor": "#REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-A9DCA5DA96",
+      "text_hash": "f3ee41caec4b93134b1dc671ce3655afdecb64d61d62cb4f275e9eccbf768319",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-DF5FA51C48",
+      "artifact": "web-ui/spec/offline-and-service-worker-contract-v1.md",
+      "anchor": "#REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-DF5FA51C48",
+      "text_hash": "d3e3e0e3daaa456cbbcd65268540e63dc8023296b6f8041b91695b7f92b5823e",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-E417DD8E2F",
+      "artifact": "web-ui/spec/offline-and-service-worker-contract-v1.md",
+      "anchor": "#REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-E417DD8E2F",
+      "text_hash": "2cc32ac68259100d4646655fe82a13562d1ace709b6e9995dc6949a07f0aaf1d",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-F68EE010FB",
+      "artifact": "web-ui/spec/offline-and-service-worker-contract-v1.md",
+      "anchor": "#REQ-OFFLINE-AND-SERVICE-WORKER-CONTRACT-V1-F68EE010FB",
+      "text_hash": "342b43c7e7f9fc4522174b89edcda580197cabd1d181a67c4d6450496bdba41f",
       "profile": "full-web-ui-v1",
       "status": "draft"
     },
@@ -3187,6 +3763,14 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-84D8B586ED",
+      "artifact": "web-ui/spec/performance-slo-and-budgets-v1.md",
+      "anchor": "#REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-84D8B586ED",
+      "text_hash": "b24e7983911cca379ba8a3aa30cc9c6e1b46dc9b56470ae765533ce0aba9b015",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-8AE0810792",
       "artifact": "web-ui/spec/performance-slo-and-budgets-v1.md",
       "anchor": "#REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-8AE0810792",
@@ -3211,6 +3795,14 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-9A92C0B1B2",
+      "artifact": "web-ui/spec/performance-slo-and-budgets-v1.md",
+      "anchor": "#REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-9A92C0B1B2",
+      "text_hash": "e7cc570049a131a4f4b2e17477536ed179cd969112d0a3c5eee33abc6603f51b",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-A50E785A90",
       "artifact": "web-ui/spec/performance-slo-and-budgets-v1.md",
       "anchor": "#REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-A50E785A90",
@@ -3231,6 +3823,14 @@
       "artifact": "web-ui/spec/performance-slo-and-budgets-v1.md",
       "anchor": "#REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-AAC59C89A8",
       "text_hash": "e24eedeec2d97c3b5121739c724a4c94631b19aab35ac7e45573873a36a5f804",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-B11D21359A",
+      "artifact": "web-ui/spec/performance-slo-and-budgets-v1.md",
+      "anchor": "#REQ-PERFORMANCE-SLO-AND-BUDGETS-V1-B11D21359A",
+      "text_hash": "9f59aeb7969e7930eaa0ac90d0e5c112954beaa4ee5792f87a982b33ab30e4be",
       "profile": "full-web-ui-v1",
       "status": "draft"
     },
@@ -3515,6 +4115,62 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-PERSISTENCE-GC-AND-COMPACTION-POLICY-V1-0F5EDCAF7F",
+      "artifact": "web-ui/spec/persistence-gc-and-compaction-policy-v1.md",
+      "anchor": "#REQ-PERSISTENCE-GC-AND-COMPACTION-POLICY-V1-0F5EDCAF7F",
+      "text_hash": "cdc1dd7ce59c06bd4e5b1283d280ddc998ff7bac7622d6047b47595bce146586",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-PERSISTENCE-GC-AND-COMPACTION-POLICY-V1-2A6873E80F",
+      "artifact": "web-ui/spec/persistence-gc-and-compaction-policy-v1.md",
+      "anchor": "#REQ-PERSISTENCE-GC-AND-COMPACTION-POLICY-V1-2A6873E80F",
+      "text_hash": "150ea9e02b08b4e6a74cf5f69e89d2f3c73fff39ca0d68895289dcdf444a62cc",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-PERSISTENCE-GC-AND-COMPACTION-POLICY-V1-32C694E57A",
+      "artifact": "web-ui/spec/persistence-gc-and-compaction-policy-v1.md",
+      "anchor": "#REQ-PERSISTENCE-GC-AND-COMPACTION-POLICY-V1-32C694E57A",
+      "text_hash": "008dc5aee27b552c1025fd31e7881bc91aec2144c6aa5452f23c1b7300c61a57",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-PERSISTENCE-GC-AND-COMPACTION-POLICY-V1-41D184E042",
+      "artifact": "web-ui/spec/persistence-gc-and-compaction-policy-v1.md",
+      "anchor": "#REQ-PERSISTENCE-GC-AND-COMPACTION-POLICY-V1-41D184E042",
+      "text_hash": "a75c153b7127d0f02967d3e19a53292322b1247407c386132b88929570173736",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-PERSISTENCE-GC-AND-COMPACTION-POLICY-V1-5344625734",
+      "artifact": "web-ui/spec/persistence-gc-and-compaction-policy-v1.md",
+      "anchor": "#REQ-PERSISTENCE-GC-AND-COMPACTION-POLICY-V1-5344625734",
+      "text_hash": "0ca70bdaa0c4690d8bf58fc5444247e49a35c8497aba429d4792293f2eb18a13",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-PERSISTENCE-GC-AND-COMPACTION-POLICY-V1-78123ECFC7",
+      "artifact": "web-ui/spec/persistence-gc-and-compaction-policy-v1.md",
+      "anchor": "#REQ-PERSISTENCE-GC-AND-COMPACTION-POLICY-V1-78123ECFC7",
+      "text_hash": "31fe9df2dba41a768b3f3505b29b88ad2462d0c5711dd945549cc74279faa22b",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-PERSISTENCE-GC-AND-COMPACTION-POLICY-V1-CB7F152F1F",
+      "artifact": "web-ui/spec/persistence-gc-and-compaction-policy-v1.md",
+      "anchor": "#REQ-PERSISTENCE-GC-AND-COMPACTION-POLICY-V1-CB7F152F1F",
+      "text_hash": "38eadc5c4dea41c595f2e6a3c6e1aad57634853210eb336322017fd33209077b",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-PERSISTENCE-LEASE-PROTOCOL-V1-0037B84F09",
       "artifact": "web-ui/spec/persistence-lease-protocol-v1.md",
       "anchor": "#REQ-PERSISTENCE-LEASE-PROTOCOL-V1-0037B84F09",
@@ -3527,6 +4183,14 @@
       "artifact": "web-ui/spec/persistence-lease-protocol-v1.md",
       "anchor": "#REQ-PERSISTENCE-LEASE-PROTOCOL-V1-022C861162",
       "text_hash": "2c6b90f046b783de37399403c3e292181000e68005075af4a39ed2119e09148d",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-PERSISTENCE-LEASE-PROTOCOL-V1-0C32003796",
+      "artifact": "web-ui/spec/persistence-lease-protocol-v1.md",
+      "anchor": "#REQ-PERSISTENCE-LEASE-PROTOCOL-V1-0C32003796",
+      "text_hash": "3735a3a9d28fd80d00cd414a57ca3eaf014f5ea9709e79be96e4ce7ef1c5f65a",
       "profile": "persistence-v1",
       "status": "draft"
     },
@@ -3575,6 +4239,14 @@
       "artifact": "web-ui/spec/persistence-lease-protocol-v1.md",
       "anchor": "#REQ-PERSISTENCE-LEASE-PROTOCOL-V1-6950C1C05F",
       "text_hash": "a2e9d581baaa16fe258186fd06f2817cb5b8afecd1ce466245a4a113f078a79d",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-PERSISTENCE-LEASE-PROTOCOL-V1-7118F68528",
+      "artifact": "web-ui/spec/persistence-lease-protocol-v1.md",
+      "anchor": "#REQ-PERSISTENCE-LEASE-PROTOCOL-V1-7118F68528",
+      "text_hash": "f1a8167552a5ed0b0921ea5fb8580d54f0d98f4bbcf1e04eba93ba9c93989503",
       "profile": "persistence-v1",
       "status": "draft"
     },
@@ -4027,6 +4699,14 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-7AA1FEFFF2",
+      "artifact": "web-ui/spec/persistence-purpose-and-user-contract-v1.md",
+      "anchor": "#REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-7AA1FEFFF2",
+      "text_hash": "2ba9cebfcc1028163ff445574b086653a21f4d9feec15af6f62a3fe0a0fe5734",
+      "profile": "persistence-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-7F36A358E4",
       "artifact": "web-ui/spec/persistence-purpose-and-user-contract-v1.md",
       "anchor": "#REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-7F36A358E4",
@@ -4103,14 +4783,6 @@
       "artifact": "web-ui/spec/persistence-purpose-and-user-contract-v1.md",
       "anchor": "#REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-CF2121E6FA",
       "text_hash": "5204ca5069aeff2a633a42cf1e7988134dad3d7d828e891b1f1f4e19c65f819e",
-      "profile": "persistence-v1",
-      "status": "draft"
-    },
-    {
-      "requirement_id": "REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-DD8011EA2D",
-      "artifact": "web-ui/spec/persistence-purpose-and-user-contract-v1.md",
-      "anchor": "#REQ-PERSISTENCE-PURPOSE-AND-USER-CONTRACT-V1-DD8011EA2D",
-      "text_hash": "d38f5a5ff031f7c274ffff836f1098ffdf59c5a2b9502d3e6bba67da2483a4bd",
       "profile": "persistence-v1",
       "status": "draft"
     },
@@ -5179,10 +5851,10 @@
       "status": "draft"
     },
     {
-      "requirement_id": "REQ-PROTOCOL-COMPATIBILITY-REPORT-V1-7EED2E3ED4",
+      "requirement_id": "REQ-PROTOCOL-COMPATIBILITY-REPORT-V1-0D3CDB1195",
       "artifact": "web-ui/spec/protocol-compatibility-report-v1.md",
-      "anchor": "#REQ-PROTOCOL-COMPATIBILITY-REPORT-V1-7EED2E3ED4",
-      "text_hash": "9fbf052992b92f1c5b5637cb01259827389040db586c8407fcc83c952ff6b51f",
+      "anchor": "#REQ-PROTOCOL-COMPATIBILITY-REPORT-V1-0D3CDB1195",
+      "text_hash": "80e8686f707df044d47575d13e400781860deda6ec966da2bd4c39affa58237c",
       "profile": "full-web-ui-v1",
       "status": "draft"
     },
@@ -5199,6 +5871,14 @@
       "artifact": "web-ui/spec/protocol-version-negotiation-v1.md",
       "anchor": "#REQ-PROTOCOL-VERSION-NEGOTIATION-V1-2574133877",
       "text_hash": "2b10d5b8133efb962eec9619d1815bffcb734059ec16239351501f503c5db2c4",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-PROTOCOL-VERSION-NEGOTIATION-V1-593CE63620",
+      "artifact": "web-ui/spec/protocol-version-negotiation-v1.md",
+      "anchor": "#REQ-PROTOCOL-VERSION-NEGOTIATION-V1-593CE63620",
+      "text_hash": "4a5d2526c000da2c804b078982f92c482723a16124ccfe466c2f4edc97572882",
       "profile": "runtime-bridge-v1",
       "status": "draft"
     },
@@ -5255,6 +5935,14 @@
       "artifact": "web-ui/spec/protocol-version-negotiation-v1.md",
       "anchor": "#REQ-PROTOCOL-VERSION-NEGOTIATION-V1-B02655298A",
       "text_hash": "44d4337f8497e6006283c47555c4b27cb4b8a4480926fdc5ecbc0b473f813d19",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-PROTOCOL-VERSION-NEGOTIATION-V1-B167398859",
+      "artifact": "web-ui/spec/protocol-version-negotiation-v1.md",
+      "anchor": "#REQ-PROTOCOL-VERSION-NEGOTIATION-V1-B167398859",
+      "text_hash": "4117f5d5dbcd89ccb63662c2a1cad72dd397a3cd8e688af0889e2200f4057af6",
       "profile": "runtime-bridge-v1",
       "status": "draft"
     },
@@ -5923,6 +6611,14 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-SECURITY-AND-CAPABILITY-MODEL-V1-019AEA6B2C",
+      "artifact": "web-ui/spec/security-and-capability-model-v1.md",
+      "anchor": "#REQ-SECURITY-AND-CAPABILITY-MODEL-V1-019AEA6B2C",
+      "text_hash": "ee41d518e85bf4b039308581ecf7a45afef871a495db19fd6002f8998054b329",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-SECURITY-AND-CAPABILITY-MODEL-V1-030D362578",
       "artifact": "web-ui/spec/security-and-capability-model-v1.md",
       "anchor": "#REQ-SECURITY-AND-CAPABILITY-MODEL-V1-030D362578",
@@ -5943,6 +6639,22 @@
       "artifact": "web-ui/spec/security-and-capability-model-v1.md",
       "anchor": "#REQ-SECURITY-AND-CAPABILITY-MODEL-V1-13FEE0C70E",
       "text_hash": "2f9d37fb6a0346afc7a5e0aaea9dc8653c830c6796a2e41f651d357afa543ba1",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-SECURITY-AND-CAPABILITY-MODEL-V1-189559492F",
+      "artifact": "web-ui/spec/security-and-capability-model-v1.md",
+      "anchor": "#REQ-SECURITY-AND-CAPABILITY-MODEL-V1-189559492F",
+      "text_hash": "45ade188d1aae80542ba74ae4970b593a935867eccc266e8939a2bd3889d4534",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-SECURITY-AND-CAPABILITY-MODEL-V1-1A3FCE4F38",
+      "artifact": "web-ui/spec/security-and-capability-model-v1.md",
+      "anchor": "#REQ-SECURITY-AND-CAPABILITY-MODEL-V1-1A3FCE4F38",
+      "text_hash": "e21bee6052a316a84db7eefaa1a2c4cf3ab495874ecc2e3b5a8fe425c4928187",
       "profile": "full-web-ui-v1",
       "status": "draft"
     },
@@ -6003,10 +6715,26 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-SECURITY-AND-CAPABILITY-MODEL-V1-5C624A4C9C",
+      "artifact": "web-ui/spec/security-and-capability-model-v1.md",
+      "anchor": "#REQ-SECURITY-AND-CAPABILITY-MODEL-V1-5C624A4C9C",
+      "text_hash": "3b6b1d5a62d4a38443de610269caf5edbf0fe857c8cadb0f4185a7df0df28043",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-SECURITY-AND-CAPABILITY-MODEL-V1-6102BA4748",
       "artifact": "web-ui/spec/security-and-capability-model-v1.md",
       "anchor": "#REQ-SECURITY-AND-CAPABILITY-MODEL-V1-6102BA4748",
       "text_hash": "2b00f83cafd5ff705f1821b18c50633110d117148c9415a8a9024f4fa624a8ae",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-SECURITY-AND-CAPABILITY-MODEL-V1-6DC9ED6E3E",
+      "artifact": "web-ui/spec/security-and-capability-model-v1.md",
+      "anchor": "#REQ-SECURITY-AND-CAPABILITY-MODEL-V1-6DC9ED6E3E",
+      "text_hash": "9978b645201b9d0d2e7858ed92859ca6e8fff07513352c1f94a703775dbb11ee",
       "profile": "full-web-ui-v1",
       "status": "draft"
     },
@@ -6019,10 +6747,10 @@
       "status": "draft"
     },
     {
-      "requirement_id": "REQ-SECURITY-AND-CAPABILITY-MODEL-V1-82097CB300",
+      "requirement_id": "REQ-SECURITY-AND-CAPABILITY-MODEL-V1-7C9A47EE32",
       "artifact": "web-ui/spec/security-and-capability-model-v1.md",
-      "anchor": "#REQ-SECURITY-AND-CAPABILITY-MODEL-V1-82097CB300",
-      "text_hash": "1304a8048830bc3a91a9c25c7b8f5238d00e929dc5a904c9418577ab2a222063",
+      "anchor": "#REQ-SECURITY-AND-CAPABILITY-MODEL-V1-7C9A47EE32",
+      "text_hash": "549644a0f6cd2210816e15cbdbcc6a41d49ede60f52a140532e37e47aff36a86",
       "profile": "full-web-ui-v1",
       "status": "draft"
     },
@@ -6067,34 +6795,10 @@
       "status": "draft"
     },
     {
-      "requirement_id": "REQ-SECURITY-AND-CAPABILITY-MODEL-V1-B337248075",
-      "artifact": "web-ui/spec/security-and-capability-model-v1.md",
-      "anchor": "#REQ-SECURITY-AND-CAPABILITY-MODEL-V1-B337248075",
-      "text_hash": "2dbbd55c1394490f5d5dc54456baeea33d631d3499ceb89b16e8ec565e8c0d58",
-      "profile": "full-web-ui-v1",
-      "status": "draft"
-    },
-    {
-      "requirement_id": "REQ-SECURITY-AND-CAPABILITY-MODEL-V1-B9CCD5DF60",
-      "artifact": "web-ui/spec/security-and-capability-model-v1.md",
-      "anchor": "#REQ-SECURITY-AND-CAPABILITY-MODEL-V1-B9CCD5DF60",
-      "text_hash": "1174422f3674e7728175a95091d25ebb111865508eff17802ad56b0b2b546701",
-      "profile": "full-web-ui-v1",
-      "status": "draft"
-    },
-    {
       "requirement_id": "REQ-SECURITY-AND-CAPABILITY-MODEL-V1-BC814E705C",
       "artifact": "web-ui/spec/security-and-capability-model-v1.md",
       "anchor": "#REQ-SECURITY-AND-CAPABILITY-MODEL-V1-BC814E705C",
       "text_hash": "26d73cae4fe050ef8a066ec1aed9fc5dd590c83e46c5e6c0796a332ef4e3b6d1",
-      "profile": "full-web-ui-v1",
-      "status": "draft"
-    },
-    {
-      "requirement_id": "REQ-SECURITY-AND-CAPABILITY-MODEL-V1-C336665FAE",
-      "artifact": "web-ui/spec/security-and-capability-model-v1.md",
-      "anchor": "#REQ-SECURITY-AND-CAPABILITY-MODEL-V1-C336665FAE",
-      "text_hash": "5667bcd53cbd46e4ce0e8160d176cea44aca4c8bbc174fe22c41a6370a2718a2",
       "profile": "full-web-ui-v1",
       "status": "draft"
     },
@@ -6111,6 +6815,14 @@
       "artifact": "web-ui/spec/security-and-capability-model-v1.md",
       "anchor": "#REQ-SECURITY-AND-CAPABILITY-MODEL-V1-C6CF6670C6",
       "text_hash": "4f5341053b79625228e502a4ea2a0f11fb11be2e76cff2274aecf4f1b6b3ce9b",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-SECURITY-AND-CAPABILITY-MODEL-V1-D7208A3F6B",
+      "artifact": "web-ui/spec/security-and-capability-model-v1.md",
+      "anchor": "#REQ-SECURITY-AND-CAPABILITY-MODEL-V1-D7208A3F6B",
+      "text_hash": "9978b645201b9d0d2e7858ed92859ca6e8fff07513352c1f94a703775dbb11ee",
       "profile": "full-web-ui-v1",
       "status": "draft"
     },
@@ -6291,14 +7003,6 @@
       "status": "draft"
     },
     {
-      "requirement_id": "REQ-SPEC-INDEX-V1-1C20C881D8",
-      "artifact": "web-ui/spec/spec-index-v1.md",
-      "anchor": "#REQ-SPEC-INDEX-V1-1C20C881D8",
-      "text_hash": "db293732dc9329311233e1cc3b0c37d7a13b3cfbc251ea030e156ff8f71f6a2e",
-      "profile": "governance-base-v1",
-      "status": "draft"
-    },
-    {
       "requirement_id": "REQ-SPEC-INDEX-V1-2AC094D916",
       "artifact": "web-ui/spec/spec-index-v1.md",
       "anchor": "#REQ-SPEC-INDEX-V1-2AC094D916",
@@ -6311,6 +7015,14 @@
       "artifact": "web-ui/spec/spec-index-v1.md",
       "anchor": "#REQ-SPEC-INDEX-V1-44EDF71EF6",
       "text_hash": "d910bc789f67a7b199d1c07dc964c8c16276e1b7ac8be446116d9296a847a507",
+      "profile": "governance-base-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-SPEC-INDEX-V1-6FA1AE70CC",
+      "artifact": "web-ui/spec/spec-index-v1.md",
+      "anchor": "#REQ-SPEC-INDEX-V1-6FA1AE70CC",
+      "text_hash": "a0d839e37a0108b5e55ef175c07a9ed60519b6a3e94dbe64d32cd7c1eb5125f4",
       "profile": "governance-base-v1",
       "status": "draft"
     },
@@ -6359,14 +7071,6 @@
       "artifact": "web-ui/spec/spec-index-v1.md",
       "anchor": "#REQ-SPEC-INDEX-V1-ACB4251149",
       "text_hash": "5017008b1ca770c73f6c81fbec436ce5e7d7fc610795b66ea858339703c27baf",
-      "profile": "governance-base-v1",
-      "status": "draft"
-    },
-    {
-      "requirement_id": "REQ-SPEC-INDEX-V1-C0ACF18EDC",
-      "artifact": "web-ui/spec/spec-index-v1.md",
-      "anchor": "#REQ-SPEC-INDEX-V1-C0ACF18EDC",
-      "text_hash": "db293732dc9329311233e1cc3b0c37d7a13b3cfbc251ea030e156ff8f71f6a2e",
       "profile": "governance-base-v1",
       "status": "draft"
     },
@@ -6427,6 +7131,14 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-SPEC-RATIFICATION-POLICY-V1-37BA371ED8",
+      "artifact": "web-ui/spec/spec-ratification-policy-v1.md",
+      "anchor": "#REQ-SPEC-RATIFICATION-POLICY-V1-37BA371ED8",
+      "text_hash": "05e8abf06ee5bf0c7b55bd54ca2c3281afb4b9032121078e018b9da38a033bb3",
+      "profile": "governance-base-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-SPEC-RATIFICATION-POLICY-V1-5AF5436FEF",
       "artifact": "web-ui/spec/spec-ratification-policy-v1.md",
       "anchor": "#REQ-SPEC-RATIFICATION-POLICY-V1-5AF5436FEF",
@@ -6439,6 +7151,22 @@
       "artifact": "web-ui/spec/spec-ratification-policy-v1.md",
       "anchor": "#REQ-SPEC-RATIFICATION-POLICY-V1-7FDDD717F6",
       "text_hash": "0762ce0beb7fdd864fb21c75586b584539fd9b9a08dcae395aafa5e8b6954108",
+      "profile": "governance-base-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-SPEC-RATIFICATION-POLICY-V1-8514D1DE36",
+      "artifact": "web-ui/spec/spec-ratification-policy-v1.md",
+      "anchor": "#REQ-SPEC-RATIFICATION-POLICY-V1-8514D1DE36",
+      "text_hash": "05e8abf06ee5bf0c7b55bd54ca2c3281afb4b9032121078e018b9da38a033bb3",
+      "profile": "governance-base-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-SPEC-RATIFICATION-POLICY-V1-A1BC1413D7",
+      "artifact": "web-ui/spec/spec-ratification-policy-v1.md",
+      "anchor": "#REQ-SPEC-RATIFICATION-POLICY-V1-A1BC1413D7",
+      "text_hash": "a0420c0950abdfa0037e02f7f4802620518f1d927145e712955962ab9b4f0da4",
       "profile": "governance-base-v1",
       "status": "draft"
     },
@@ -6456,6 +7184,134 @@
       "anchor": "#REQ-SPEC-RATIFICATION-POLICY-V1-BD208AF039",
       "text_hash": "82ea7c61b32aeb90fddc5193a7b9f2f9a7e6282d3c64a26f952b435e3892920e",
       "profile": "governance-base-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-SPEC-RATIFICATION-POLICY-V1-E6CD13F982",
+      "artifact": "web-ui/spec/spec-ratification-policy-v1.md",
+      "anchor": "#REQ-SPEC-RATIFICATION-POLICY-V1-E6CD13F982",
+      "text_hash": "3569dfb6f592ac1731510f852245869c63ef02175f54f760bbc059e12eb424b4",
+      "profile": "governance-base-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-TEXT-EDITING-CONTRACT-V1-141639E428",
+      "artifact": "web-ui/spec/text-editing-contract-v1.md",
+      "anchor": "#REQ-TEXT-EDITING-CONTRACT-V1-141639E428",
+      "text_hash": "9925da8f73fa395d9377755431fe005be0b9f760fb9720571b6ac8f5beb21bdc",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-TEXT-EDITING-CONTRACT-V1-23DAE4618F",
+      "artifact": "web-ui/spec/text-editing-contract-v1.md",
+      "anchor": "#REQ-TEXT-EDITING-CONTRACT-V1-23DAE4618F",
+      "text_hash": "4fea14d514ab158d3824cbd679cf836f8ddb22414e57ff867006a5439456e247",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-TEXT-EDITING-CONTRACT-V1-244E5C4FCC",
+      "artifact": "web-ui/spec/text-editing-contract-v1.md",
+      "anchor": "#REQ-TEXT-EDITING-CONTRACT-V1-244E5C4FCC",
+      "text_hash": "17ab7773fabf3c40aebef12cacb7c66019627a3ef162856400e486b4d5c86e30",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-TEXT-EDITING-CONTRACT-V1-2BCAD0FD46",
+      "artifact": "web-ui/spec/text-editing-contract-v1.md",
+      "anchor": "#REQ-TEXT-EDITING-CONTRACT-V1-2BCAD0FD46",
+      "text_hash": "a7ab40020016ab69298a4856dae5362d85edbfe76d6533c4789b510801c04308",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-TEXT-EDITING-CONTRACT-V1-81D70F9491",
+      "artifact": "web-ui/spec/text-editing-contract-v1.md",
+      "anchor": "#REQ-TEXT-EDITING-CONTRACT-V1-81D70F9491",
+      "text_hash": "1c001d722e64d762f7e1001a245f9e736f7d6c858613eba7826b1f89f379d1b6",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-TEXT-EDITING-CONTRACT-V1-8A34A55B20",
+      "artifact": "web-ui/spec/text-editing-contract-v1.md",
+      "anchor": "#REQ-TEXT-EDITING-CONTRACT-V1-8A34A55B20",
+      "text_hash": "c0a5538db14a77cb0d9929b8b1e091fc9ed78a9d063c1b3cde123512f58a11f7",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-TEXT-EDITING-CONTRACT-V1-ADBC2F737E",
+      "artifact": "web-ui/spec/text-editing-contract-v1.md",
+      "anchor": "#REQ-TEXT-EDITING-CONTRACT-V1-ADBC2F737E",
+      "text_hash": "def1968a12f3f64ae8ab348cce56099dd7e26f1395d0adde8b2ce6687cae0bc9",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-TEXT-EDITING-CONTRACT-V1-B12C57C0FC",
+      "artifact": "web-ui/spec/text-editing-contract-v1.md",
+      "anchor": "#REQ-TEXT-EDITING-CONTRACT-V1-B12C57C0FC",
+      "text_hash": "2500fbe12d808629a6b6465bd2f4783c4d0ccaa0d3988db6a5c12d51c93c453c",
+      "profile": "full-web-ui-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-THEME-OVERRIDE-CONTRACT-V1-1F1A1363E4",
+      "artifact": "web-ui/spec/theme-override-contract-v1.md",
+      "anchor": "#REQ-THEME-OVERRIDE-CONTRACT-V1-1F1A1363E4",
+      "text_hash": "c5c2dd2251521fdb7414c4a4aa8e221c924a2da58eaf97651980a5870e699793",
+      "profile": "ui-visual-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-THEME-OVERRIDE-CONTRACT-V1-40FD22896D",
+      "artifact": "web-ui/spec/theme-override-contract-v1.md",
+      "anchor": "#REQ-THEME-OVERRIDE-CONTRACT-V1-40FD22896D",
+      "text_hash": "6e97feec86c31145688341f612b57efc255a6d77355b8771e81c322dda12f83b",
+      "profile": "ui-visual-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-THEME-OVERRIDE-CONTRACT-V1-5FB2D661A0",
+      "artifact": "web-ui/spec/theme-override-contract-v1.md",
+      "anchor": "#REQ-THEME-OVERRIDE-CONTRACT-V1-5FB2D661A0",
+      "text_hash": "60b96a5eb528ed692e990402ad1381fc3e17a8b3370504639c0c1d3ee9bbd89c",
+      "profile": "ui-visual-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-THEME-OVERRIDE-CONTRACT-V1-63947C4765",
+      "artifact": "web-ui/spec/theme-override-contract-v1.md",
+      "anchor": "#REQ-THEME-OVERRIDE-CONTRACT-V1-63947C4765",
+      "text_hash": "18ba1a3359c2ee797bfbdaa6fc0897994c38e86bcf72dacd17d207eb6297139d",
+      "profile": "ui-visual-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-THEME-OVERRIDE-CONTRACT-V1-69F34DABFE",
+      "artifact": "web-ui/spec/theme-override-contract-v1.md",
+      "anchor": "#REQ-THEME-OVERRIDE-CONTRACT-V1-69F34DABFE",
+      "text_hash": "0bcb9e68ef26808730119a58477489f4f7210169be0ddcb1a667f17567a2988f",
+      "profile": "ui-visual-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-THEME-OVERRIDE-CONTRACT-V1-A18CB919C0",
+      "artifact": "web-ui/spec/theme-override-contract-v1.md",
+      "anchor": "#REQ-THEME-OVERRIDE-CONTRACT-V1-A18CB919C0",
+      "text_hash": "ed857260eccd0a538945a9328e91ba9e3e4fe4b30d70e727c7bdb8ad542e9e30",
+      "profile": "ui-visual-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-THEME-OVERRIDE-CONTRACT-V1-E91177A9BD",
+      "artifact": "web-ui/spec/theme-override-contract-v1.md",
+      "anchor": "#REQ-THEME-OVERRIDE-CONTRACT-V1-E91177A9BD",
+      "text_hash": "e99deb969671e7b141090aeffd8f07d997956663d8a125965776669f0159cff4",
+      "profile": "ui-visual-v1",
       "status": "draft"
     },
     {
@@ -7255,7 +8111,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-023AEC3DEE",
       "text_hash": "b204a4465d461a48a64454f3660e8f4325b943017d4895617c1d5530c785ac09",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7263,7 +8119,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-024828369C",
       "text_hash": "749a2a75ef328c3202f95d8d1ea33948b45d1a8c84918aedd44b56757d4a8c05",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7271,7 +8127,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-0BE0853D0D",
       "text_hash": "d179dc99d5bb42f07afc7c9f0eba3268617ef2c306a0efee1a5285fa5d7a58ac",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7279,7 +8135,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-15FD368021",
       "text_hash": "fa2d79c4195313be58924c50e46fbd961277961b59b3293be13cea5424311612",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7287,7 +8143,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-1DC1918195",
       "text_hash": "1e52ba938925c9a280115a72a7d1d35be2a117eb8d92495699bf38699e0a9bc0",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7295,7 +8151,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-1FF1615D57",
       "text_hash": "fa2d79c4195313be58924c50e46fbd961277961b59b3293be13cea5424311612",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7303,7 +8159,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-3E71FE2E7C",
       "text_hash": "78d4c479d6f9e74641d09b632d9a078679b8e82c1aea9d95168c5004fa3c211b",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7311,7 +8167,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-45A1126D5B",
       "text_hash": "85e62d41358ee6ad8625db490a9f3e2915777f358c897b68df848696afd393e0",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7319,7 +8175,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-4E89394DA3",
       "text_hash": "2070bb35b646f624c5254959508362693f798bf8ed536f49986083ace5bf1fa3",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7327,7 +8183,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-4FA09AA340",
       "text_hash": "d179dc99d5bb42f07afc7c9f0eba3268617ef2c306a0efee1a5285fa5d7a58ac",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7335,7 +8191,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-5698D29561",
       "text_hash": "223530786a8b45eeeda32c12eb8a71e47cb4098499b255df8cd1a6249474c428",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7343,7 +8199,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-752364C399",
       "text_hash": "3a4fcf5fa89ff5e54f8c78d75ceaf12f6c7ea51cbb595042e199dda9302fa4d1",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7351,7 +8207,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-7885ECFB75",
       "text_hash": "9c040bc2adafc15d83554e5971b87465ce456688627b5b6679ab02352656181a",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7359,7 +8215,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-7BC0CF1339",
       "text_hash": "b262c4375569f1f023aa1e8855d1250a9a553c1dd7d5e34004347111f994024a",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7367,7 +8223,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-816E841D61",
       "text_hash": "6813ebb2991fca01dce632281f70cd3c5158b1631bb525e7eb2d09cc41c22edc",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7375,7 +8231,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-82EB156FC8",
       "text_hash": "f1bbc18579c8a5ba3d2c64c073e6ba5d99118bd7d374294c19c8e913276beee2",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7383,7 +8239,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-9A50B8880B",
       "text_hash": "450773d1116ef8b3ffd7d0fef3c9786fb1b1062d49bd1f285e7af9a47d260497",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7391,7 +8247,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-AA4787D39E",
       "text_hash": "d1480297402b5449bdaa587509ba17e7983851b5fbfd20b5c568e5927df010f7",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7399,7 +8255,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-ABB5456D65",
       "text_hash": "9e7aeabfc26046d3278d817e8bbccaaa6fd2d6d42914efb7b723b8c7e03046a1",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7407,7 +8263,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-B901EF42C8",
       "text_hash": "e5b4a7d0f14964a7e72bbd0dd825ee4674863c72e89cfe2fbfc207f0b59177e3",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7415,7 +8271,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-C902D2E7C2",
       "text_hash": "f627309c5e0babaa6f1e262bdd170acdc1578f952674aa850298dc8015106097",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7423,7 +8279,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-D3E1BFD6CD",
       "text_hash": "eec2fbe736b6a1f715c578f2b5676a7155b271199467a1f70afb26366243f98b",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7431,7 +8287,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-DA6B16ED9B",
       "text_hash": "f391e736f8b5034628b767a978a86fc97687eb2fd3b11a05863a9bf4f6fa956b",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7439,7 +8295,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-E561803A28",
       "text_hash": "fcbd4290e27287679ada00938979322be2c6f9de465d4d7528294c0eeaf6a49d",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7447,7 +8303,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-ECF02D0B0E",
       "text_hash": "033b48a153babf1b852102330145ecf4c0441598dc06faf5af02fe1aa757d65e",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7455,7 +8311,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-F3334533E9",
       "text_hash": "5605d6d01fa90835476533e26047a16354365db3e8c265e6a857761b5011aaeb",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7463,7 +8319,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-FB137D29F4",
       "text_hash": "f6151bff71ee8f429773242ef6e0ccc211cccf608bc719668079d2955bc895b9",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7471,7 +8327,7 @@
       "artifact": "web-ui/spec/ui-interaction-window-management-contract-v1.md",
       "anchor": "#REQ-UI-INTERACTION-WINDOW-MANAGEMENT-CONTRACT-V1-FE49D86150",
       "text_hash": "cf9e2976dab024226be0a677652f5e4bbc62badc6317e858605f2c65e24b2582",
-      "profile": "unindexed-v1",
+      "profile": "full-web-ui-v1",
       "status": "draft"
     },
     {
@@ -7795,6 +8651,86 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-UI-WIRE-FORMAT-TREE-DELTA-V1-0ACEFC80DB",
+      "artifact": "web-ui/spec/ui-wire-format-tree-delta-v1.md",
+      "anchor": "#REQ-UI-WIRE-FORMAT-TREE-DELTA-V1-0ACEFC80DB",
+      "text_hash": "bed57fc3a296569090c2199e0febc58ee96c45af29ef399f7bb7e67bb65ec3b8",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-UI-WIRE-FORMAT-TREE-DELTA-V1-19F631F498",
+      "artifact": "web-ui/spec/ui-wire-format-tree-delta-v1.md",
+      "anchor": "#REQ-UI-WIRE-FORMAT-TREE-DELTA-V1-19F631F498",
+      "text_hash": "1e4451ba4a2d2fa52f83b3df7cfb362bb093f9271c0b52c80da4c75fda57d97d",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-UI-WIRE-FORMAT-TREE-DELTA-V1-2D5B9DEFE4",
+      "artifact": "web-ui/spec/ui-wire-format-tree-delta-v1.md",
+      "anchor": "#REQ-UI-WIRE-FORMAT-TREE-DELTA-V1-2D5B9DEFE4",
+      "text_hash": "4407ed8bd54eea037e71381e349b806cdc6b98012d08c46ab8c905cc053ff3fd",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-UI-WIRE-FORMAT-TREE-DELTA-V1-6042BF40D0",
+      "artifact": "web-ui/spec/ui-wire-format-tree-delta-v1.md",
+      "anchor": "#REQ-UI-WIRE-FORMAT-TREE-DELTA-V1-6042BF40D0",
+      "text_hash": "75be47d5c4e6bbc6a488321128df7d9d7749a2191b9ab2eabc58b4eae9712537",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-UI-WIRE-FORMAT-TREE-DELTA-V1-704F801503",
+      "artifact": "web-ui/spec/ui-wire-format-tree-delta-v1.md",
+      "anchor": "#REQ-UI-WIRE-FORMAT-TREE-DELTA-V1-704F801503",
+      "text_hash": "f940050c6e6c5a469cd251ebffbef0664c18944f4fc30a6b695de5bac24a801d",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-UI-WIRE-FORMAT-TREE-DELTA-V1-C49681AFE7",
+      "artifact": "web-ui/spec/ui-wire-format-tree-delta-v1.md",
+      "anchor": "#REQ-UI-WIRE-FORMAT-TREE-DELTA-V1-C49681AFE7",
+      "text_hash": "facef348cca474ca1bfb19ca8575dc4900c312712a553cb9e240e21c33bfe04a",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-UI-WIRE-FORMAT-TREE-DELTA-V1-E6F22DB994",
+      "artifact": "web-ui/spec/ui-wire-format-tree-delta-v1.md",
+      "anchor": "#REQ-UI-WIRE-FORMAT-TREE-DELTA-V1-E6F22DB994",
+      "text_hash": "048ac685165be1b8b9c71b7273ec26075fcd4a7db24583d937d91a9d4b66a4da",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-UI-WIRE-FORMAT-TREE-DELTA-V1-EFDAA214F2",
+      "artifact": "web-ui/spec/ui-wire-format-tree-delta-v1.md",
+      "anchor": "#REQ-UI-WIRE-FORMAT-TREE-DELTA-V1-EFDAA214F2",
+      "text_hash": "2cd2f64aa182e89f8f5a1a8df9d26525f8d0492beaf962095f91967f5aeab6de",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-UI-WIRE-FORMAT-TREE-V1-0069BE6FE8",
+      "artifact": "web-ui/spec/ui-wire-format-tree-v1.md",
+      "anchor": "#REQ-UI-WIRE-FORMAT-TREE-V1-0069BE6FE8",
+      "text_hash": "7980e80ca5ac0f0ee686d03b291eab366feb1279e641d48b045ff60e304101f6",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-UI-WIRE-FORMAT-TREE-V1-381B8E8476",
+      "artifact": "web-ui/spec/ui-wire-format-tree-v1.md",
+      "anchor": "#REQ-UI-WIRE-FORMAT-TREE-V1-381B8E8476",
+      "text_hash": "bb07cd6881eb9bb5e38afdee2e415b20daa88fe065bf41fcd98b1cf5a0a5716c",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-UI-WIRE-FORMAT-TREE-V1-47FDBD3672",
       "artifact": "web-ui/spec/ui-wire-format-tree-v1.md",
       "anchor": "#REQ-UI-WIRE-FORMAT-TREE-V1-47FDBD3672",
@@ -7843,10 +8779,26 @@
       "status": "draft"
     },
     {
+      "requirement_id": "REQ-UI-WIRE-FORMAT-TREE-V1-871214838F",
+      "artifact": "web-ui/spec/ui-wire-format-tree-v1.md",
+      "anchor": "#REQ-UI-WIRE-FORMAT-TREE-V1-871214838F",
+      "text_hash": "34955e45f47b3fe50ed53d75a96269746de6528604679f8e58796601725006d1",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
       "requirement_id": "REQ-UI-WIRE-FORMAT-TREE-V1-8CBECBE8C0",
       "artifact": "web-ui/spec/ui-wire-format-tree-v1.md",
       "anchor": "#REQ-UI-WIRE-FORMAT-TREE-V1-8CBECBE8C0",
       "text_hash": "36c7983d981ffc20534eefd54d6e83deb6e5e0741e7225bcebaac70a775e3582",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-UI-WIRE-FORMAT-TREE-V1-9BBB89FA74",
+      "artifact": "web-ui/spec/ui-wire-format-tree-v1.md",
+      "anchor": "#REQ-UI-WIRE-FORMAT-TREE-V1-9BBB89FA74",
+      "text_hash": "03934b6cb5a998fbe4d07a1f598caedfecaaa6262581fdf1b0a52ed7e6d5f45a",
       "profile": "runtime-bridge-v1",
       "status": "draft"
     },
@@ -7863,6 +8815,22 @@
       "artifact": "web-ui/spec/ui-wire-format-tree-v1.md",
       "anchor": "#REQ-UI-WIRE-FORMAT-TREE-V1-B938A5E548",
       "text_hash": "f17134563b50041903d76b63e17da46c4b3ab62ed60e9ccafcfc146030224247",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-UI-WIRE-FORMAT-TREE-V1-CC0A4F7768",
+      "artifact": "web-ui/spec/ui-wire-format-tree-v1.md",
+      "anchor": "#REQ-UI-WIRE-FORMAT-TREE-V1-CC0A4F7768",
+      "text_hash": "7a21e9109b23cd9fcb0fc8ad0ff304af21331590d4efc667ee3a2ef3f34def1d",
+      "profile": "runtime-bridge-v1",
+      "status": "draft"
+    },
+    {
+      "requirement_id": "REQ-UI-WIRE-FORMAT-TREE-V1-CE3D15E5E8",
+      "artifact": "web-ui/spec/ui-wire-format-tree-v1.md",
+      "anchor": "#REQ-UI-WIRE-FORMAT-TREE-V1-CE3D15E5E8",
+      "text_hash": "5f3608503b0971c4053515e508ee21364033f9b50e5f42f2e8fce8c21e8c12bd",
       "profile": "runtime-bridge-v1",
       "status": "draft"
     },

@@ -1,10 +1,11 @@
 # Persistence Semantic Merge Contract v1
 
 Status: Draft  
-Version: 1.0.0  
+Version: 1.1.0  
 Last updated: 2026-02-16  
 Scope: Deterministic reader-driven semantic merge behavior for Lisp documents  
-Depends on: `web-ui/spec/persistence-semantic-profile-v1.md`, `web-ui/spec/persistence-sync-and-conflict-protocol-v1.md`
+Depends on: `web-ui/spec/persistence-semantic-profile-v1.md`, `web-ui/spec/persistence-sync-and-conflict-protocol-v1.md`, `web-ui/spec/controlled-reader-contract-v1.md`
+Compatibility: `v1.x` preserves normative requirements and failure semantics; incompatible changes require `v2`.
 
 ## 1. Purpose
 
@@ -27,6 +28,11 @@ The merge model assumes:
 ## 3. Controlled Reader Requirements
 
 All Lisp-source documents <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-FB3DD9989F"></a>MUST be ingested and modified through a controlled reader profile selected by workspace policy.
+
+The controlled reader is a separate normative artifact:
+
+1. `web-ui/spec/controlled-reader-contract-v1.md` defines reader profile surface, policy controls, and deterministic parsing constraints.
+2. This merge contract consumes the reader outputs and policy decisions from that artifact.
 
 The controlled reader profile <a id="REQ-PERSISTENCE-SEMANTIC-MERGE-CONTRACT-V1-62ED3CC7CE"></a>MUST define:
 

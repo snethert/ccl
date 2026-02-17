@@ -229,7 +229,7 @@ run "$ROOT_DIR/scripts/wasm/compile-wasm-fasls.sh" ${COMPILE_ARGS[@]+"${COMPILE_
 
 if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
   ROOT_CMD=(
-    node "$ROOT_DIR/scripts/wasm/lib/make-real-image.mjs"
+    node --max-old-space-size=8192 "$ROOT_DIR/scripts/wasm/lib/make-real-image.mjs"
     --output "$ROOT_IMAGE_OUT"
     --manifest-out "$ROOT_IMAGE_MANIFEST_OUT"
     --modules "$MODULES_OUT"

@@ -1,11 +1,11 @@
 # Event Log Ordering and Clock Rules v1
 
 Status: Draft  
-Version: 1.0.0  
+Version: 1.1.0  
 Last updated: 2026-02-16  
 Scope: Deterministic ordering, clock semantics, replay rules, and failure behavior for `web-ui` event logs  
 Depends on: `web-ui/spec/event-log-schema-v1.json`, `web-ui/spec/normative-language-and-conformance-v1.md`, `web-ui/DEV-PLAN.md`  
-Compatibility: `v1.x` preserves ordering and clock semantics; changing sequence/timestamp interpretation requires `v2`.
+Compatibility: `v1.x` preserves ordering and clock semantics; `v1.1+` adds retention and rotation policy without changing replay order semantics.
 
 ## 1. Purpose
 
@@ -86,14 +86,31 @@ Rules:
 4. If requested `startSeq` does not exist, the engine MAY start at the first event with `seq > startSeq` only when explicitly configured; otherwise it <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-700BD21460"></a>MUST fail.
 5. Partial replay mode <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-492B28CA1E"></a>MUST be recorded in diagnostics/report output.
 
-## 7. Determinism and Tie-Break Rules
+## 7. Retention and Rotation Policy
+
+Default retention profile (`event-log-retention-v1`):
+
+1. `max_events = 10000`
+2. `max_bytes = 33554432` (32 MiB serialized envelope budget)
+3. Rotation policy `ring-buffer-drop-oldest`
+4. Snapshot cadence hint: at least one checkpoint per 512 non-snapshot events
+
+Retention rules:
+
+1. Implementations <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-EECDC72672"></a>MUST enforce both `max_events` and `max_bytes` bounds.
+2. When limits are exceeded, rotation <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-8CEF9316EC"></a>MUST evict oldest events first while preserving strict `seq` ordering of retained entries.
+3. Rotation <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-9ABFFADCCB"></a>MUST emit diagnostics with pre/post ranges (`firstSeq`, `lastSeq`, `evictedCount`, `evictedBytes`).
+4. Retention enforcement <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-318080297D"></a>MUST NOT block command execution; on retention failure, recording degrades with explicit error code.
+5. Retained logs <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-5CAE86BF08"></a>MUST remain schema-valid and replayable.
+
+## 8. Determinism and Tie-Break Rules
 
 1. There is no legal tie for `seq`; ties are invalid.
 2. For merged multi-source logs, implementations <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-13DFC97A87"></a>MUST normalize into one strictly increasing `seq` stream before replay.
 3. If merge requires deterministic tie-breaking, source order <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-18F26A803C"></a>MUST be fixed by stable source ID lexical order before reassignment.
 4. Randomized handlers <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-16A23C6078"></a>MUST be seeded; seed value <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-621F56AD31"></a>MUST be recorded in the log envelope or replay report.
 
-## 8. Failure Semantics
+## 9. Failure Semantics
 
 | Code | Meaning | Retryability | Caller obligation |
 |---|---|---|---|
@@ -103,15 +120,17 @@ Rules:
 | `event-log.ts.invalid` | `ts` violates active `clockProfile` constraints. | Conditional | Fix timestamp source/profile mapping. |
 | `event-log.type.unsupported` | Event type has no handler in strict replay mode. | Conditional | Install deterministic handler or remove event. |
 | `event-log.partial-range.invalid` | Partial replay range is invalid. | No | Correct range request. |
+| `event-log.retention-config-invalid` | Retention max values are missing/invalid. | No | Provide valid retention limits and restart recorder. |
+| `event-log.retention-write-failed` | Rotation/retention could not persist bounded log state. | Conditional | Repair storage and retry recorder initialization. |
 
-## 9. Compatibility and Migration
+## 10. Compatibility and Migration
 
 1. `version="0"` logs MAY be imported.
 2. Importers SHOULD normalize imported logs to `version="1.0.0"` before persistence.
 3. Normalization <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-D40F67CE39"></a>MUST preserve `seq` order and event payload semantics.
 4. Importers <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-347CB07CAD"></a>MUST NOT invent synthetic `seq` gaps or reorder payload effects.
 
-## 10. Conformance Fixtures and Pass Criteria
+## 11. Conformance Fixtures and Pass Criteria
 
 Minimum required conformance evidence:
 
@@ -126,7 +145,7 @@ Pass criteria:
 2. No fixture may pass with non-monotonic or duplicate `seq` input.
 3. Any schema violation <a id="REQ-EVENT-LOG-ORDERING-AND-CLOCK-RULES-V1-751B8FFB3C"></a>MUST surface one stable failure code from Section 8.
 
-## 11. Conformance
+## 12. Conformance
 
 An implementation is conformant only if:
 

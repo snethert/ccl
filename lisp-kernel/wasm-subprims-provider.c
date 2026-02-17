@@ -381,7 +381,7 @@ wasm_signal_capability_unavailable(TCR *tcr,
     wasm_subprims_trap();
   }
   LispObj *vsp_ptr = stack_ptr;
-  for (signed_natural i = count - 1; i >= 0; i--) {
+  for (signed_natural i = 0; i < count; i++) {
     *--vsp_ptr = args[i];
   }
   wasm_set_reg(tcr, vsp, (LispObj)vsp_ptr);
@@ -2014,13 +2014,9 @@ wasm_signal_funcall_error(TCR *tcr, signed_natural errnum, LispObj name)
   _SPksignalerr();
 }
 
-static uint32_t wasm_cfv_depth = 0;
-
 static void
 wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
 {
-  wasm_cfv_depth++;
-
   if (wasm_reg(tcr, nfn) != fn_value) {
     wasm_set_reg(tcr, nfn, fn_value);
   }
@@ -2031,44 +2027,11 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
   LispObj entry = deref(fn_value, 1);
   if (tag_of(entry) != tag_fixnum) {
     wasm_signal_funcall_error(tcr, WASM_XNOTFUN, name);
-    wasm_cfv_depth--;
     return;
   }
 
   {
     uint32_t entry_index = (uint32_t)unbox_fixnum(entry);
-    /* B3 diagnostic: log entry_index, fn, and call depth before dispatch */
-    {
-      static const char hex[] = "0123456789abcdef";
-      char dbg[80];
-      int p = 0;
-      static const char pf[] = "DIAG: cfv e=";
-      for (int j = 0; pf[j]; j++) dbg[p++] = pf[j];
-      /* decimal entry_index */
-      char tmp[12]; int ti = 0;
-      uint32_t v = entry_index;
-      if (v == 0) { tmp[ti++] = '0'; }
-      else { while (v) { tmp[ti++] = '0' + (v % 10); v /= 10; } }
-      for (int j = ti - 1; j >= 0; j--) dbg[p++] = tmp[j];
-      dbg[p++] = ' '; dbg[p++] = 'f'; dbg[p++] = 'n'; dbg[p++] = '=';
-      dbg[p++] = '0'; dbg[p++] = 'x';
-      for (int i = 7; i >= 0; i--) dbg[p++] = hex[((uint32_t)fn_value >> (i * 4)) & 0xf];
-      /* add depth */
-      dbg[p++] = ' '; dbg[p++] = 'd'; dbg[p++] = '=';
-      { char dt[12]; int di = 0; uint32_t dv = wasm_cfv_depth;
-        if (dv == 0) { dt[di++] = '0'; }
-        else { while (dv) { dt[di++] = '0' + (dv % 10); dv /= 10; } }
-        for (int j = di - 1; j >= 0; j--) dbg[p++] = dt[j]; }
-      /* Also log arg_z for the last few entries before crash */
-      {
-        LispObj az = wasm_reg(tcr, arg_z);
-        dbg[p++] = ' '; dbg[p++] = 'a'; dbg[p++] = 'z'; dbg[p++] = '=';
-        dbg[p++] = '0'; dbg[p++] = 'x';
-        for (int i = 7; i >= 0; i--) dbg[p++] = hex[((uint32_t)az >> (i * 4)) & 0xf];
-      }
-      dbg[p++] = '\n';
-      wasm_host_log(dbg, p);
-    }
     uint32_t entry_call_abi = wasm_prepare_entry_call(entry_index);
     switch (entry_call_abi) {
     case WASM_ENTRY_CALL_ABI_UNARY_I32: {
@@ -2115,7 +2078,6 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
       break;
     }
   }
-  wasm_cfv_depth--;
 }
 
 static void
@@ -2322,54 +2284,6 @@ _SPfuncall(void)
   TCR *tcr = wasm_get_current_tcr();
   if (tcr == NULL) {
     wasm_subprims_trap();
-  }
-
-  /* DIAG: log funcall nfn with name for first few calls */
-  {
-    static uint32_t funcall_counter = 0;
-    LispObj nfn_val = wasm_reg(tcr, nfn);
-    funcall_counter++;
-    if (funcall_counter <= 6) {
-      static const char hex[] = "0123456789abcdef";
-      char dbg[128];
-      int pos = 0;
-      static const char pf[] = "DIAG: funcall#";
-      for (int j = 0; j < 14; j++) dbg[pos++] = pf[j];
-      dbg[pos++] = '0' + (funcall_counter % 10);
-      dbg[pos++] = ' ';
-      dbg[pos++] = '0'; dbg[pos++] = 'x';
-      uint32_t v = (uint32_t)nfn_val;
-      for (int i = 7; i >= 0; i--) dbg[pos++] = hex[(v >> (i * 4)) & 0xf];
-      /* Try to get function/symbol name */
-      if (fulltag_of(nfn_val) == fulltag_misc) {
-        LispObj hdr = header_of(nfn_val);
-        unsigned sub = header_subtag(hdr);
-        LispObj pname = (LispObj)0;
-        if (sub == subtag_symbol) {
-          lispsymbol *s = (lispsymbol *)ptr_from_lispobj(untag(nfn_val));
-          pname = s->pname;
-        } else if (sub == subtag_function || sub == subtag_pseudofunction) {
-          /* Try to get fname from lfun-bits or name slot */
-          /* For now, just note it's a function */
-          dbg[pos++] = ' '; dbg[pos++] = 'F'; dbg[pos++] = 'N';
-        }
-        if (pname && fulltag_of(pname) == fulltag_misc) {
-          LispObj ph = header_of(pname);
-          uint32_t len = header_element_count(ph);
-          if (len > 40) len = 40;
-          const uint8_t *data = (const uint8_t *)ptr_from_lispobj(pname + misc_data_offset);
-          dbg[pos++] = ' ';
-          /* Read as 32-bit chars (lisp_char_code) */
-          const lisp_char_code *chars = (const lisp_char_code *)data;
-          for (uint32_t ci = 0; ci < len && pos < 120; ci++) {
-            uint32_t c = (uint32_t)chars[ci];
-            dbg[pos++] = (c >= 32 && c < 127) ? (char)c : '?';
-          }
-        }
-      }
-      dbg[pos++] = '\n';
-      wasm_host_log(dbg, pos);
-    }
   }
 
   wasm_funcall_nfn(tcr);

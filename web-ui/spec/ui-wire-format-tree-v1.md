@@ -1,11 +1,11 @@
 # UI Wire Format Tree v1
 
 Status: Draft  
-Version: 1.0.0  
+Version: 1.1.0  
 Last updated: 2026-02-17  
 Scope: Binary wire format for `KERNEL_OP_UI_RENDER` tree payloads (`decodeTree`)  
 Depends on: `web-ui/spec/normative-language-and-conformance-v1.md`, `web-ui/bridge/codec.mjs`, `web-ui/bridge/ui-bridge.mjs`, `scripts/wasm/lib/microkernel.mjs`, `doc/wasm/kernel-request-abi.md`  
-Compatibility: `v1.x` preserves magic, header layout, node encoding, and value type semantics; incompatible layout or semantic changes require `v2`.
+Compatibility: `v1.x` preserves magic, header layout, node encoding, and scalar value semantics (`value_type=0..3`); `v1.1+` adds negotiated composite value types (`4=array`, `5=object`) and optional composite tables without changing existing scalar decoding rules.
 
 ## 1. Purpose
 
@@ -36,6 +36,7 @@ After header:
 
 1. String table entries (Section 4).
 2. Node records in index order `0..node_count-1` (Section 5).
+3. Optional composite value table (Section 5.5), present only when composite values are used.
 
 ## 4. String Table Layout
 
@@ -114,7 +115,7 @@ Key decode:
 
 1. `propKey = strings[prop_key_index] ?? ""`
 
-## 5.4 Property Value Types (`v1`)
+## 5.4 Property Value Types (`v1.1`)
 
 | `value_type` | Name | Decode rule |
 |---:|---|---|
@@ -122,7 +123,54 @@ Key decode:
 | `1` | `bool` | `value_lo !== 0` |
 | `2` | `number` | IEEE754 `f64` reconstructed from `(value_lo,value_hi)` little-endian lanes |
 | `3` | `string` | `strings[value_lo] ?? ""` |
+| `4` | `array` | `composites[value_lo]` where composite kind is array |
+| `5` | `object` | `composites[value_lo]` where composite kind is object |
 | other | unknown | `null` |
+
+Composite types are gated by protocol negotiation:
+
+1. Producers <a id="REQ-UI-WIRE-FORMAT-TREE-V1-9BBB89FA74"></a>MUST NOT emit `value_type=4|5` unless negotiated capability `ui-tree-composite-values-v1` is active.
+2. Consumers without active composite capability <a id="REQ-UI-WIRE-FORMAT-TREE-V1-871214838F"></a>MUST fail decode when `value_type=4|5` appears.
+
+## 5.5 Composite Value Table Layout (`v1.1+`)
+
+When any property uses `value_type=4|5`, payload appends this region after node records:
+
+| Offset | Size | Type | Field |
+|---|---:|---|---|
+| `+0` | 4 | `u32` | `composite_count` |
+| `+4` | variable | entries | `composite_count` entries in index order |
+
+Each composite entry:
+
+| Offset | Size | Type | Field | Rules |
+|---|---:|---|---|---|
+| `+0` | 4 | `u32` | `composite_kind` | `0=array`, `1=object` |
+| `+4` | 4 | `u32` | `entry_count` | number of child entries |
+| `+8` | variable | bytes | encoded entries | See below |
+
+Array entry encoding (`composite_kind=0`):
+
+1. `entry_count` value descriptors, each `12` bytes:
+2. `item_value_type:u32`
+3. `item_value_lo:u32`
+4. `item_value_hi:u32`
+
+Object entry encoding (`composite_kind=1`):
+
+1. `entry_count` key/value descriptors, each `16` bytes:
+2. `item_key_index:u32` (string table index)
+3. `item_value_type:u32`
+4. `item_value_lo:u32`
+5. `item_value_hi:u32`
+
+Composite decode rules:
+
+1. Composite indices are positional in the composite table.
+2. Composites MAY contain nested composites by referencing `value_type=4|5`.
+3. Cycles are invalid; decoders fail when cycle detection triggers.
+4. Object key order <a id="REQ-UI-WIRE-FORMAT-TREE-V1-0069BE6FE8"></a>MUST preserve encoded order.
+5. Duplicate object keys <a id="REQ-UI-WIRE-FORMAT-TREE-V1-CE3D15E5E8"></a>MUST resolve by last-write-wins in encoded order.
 
 ## 6. Child Resolution Rules
 
@@ -141,6 +189,9 @@ Decoder <a id="REQ-UI-WIRE-FORMAT-TREE-V1-D472AA5995"></a>MUST fail when:
 4. Payload truncates while decoding node metadata.
 5. `root_index >= node_count` when `node_count > 0`.
 6. Node kind is unsupported (`kind` not `0` or `1`).
+7. Composite values are present without negotiated composite capability.
+8. Composite table truncates or references invalid indices.
+9. Composite graph contains cycles.
 
 `KERNEL_OP_UI_RENDER` integration:
 
@@ -154,6 +205,7 @@ Decoder <a id="REQ-UI-WIRE-FORMAT-TREE-V1-D472AA5995"></a>MUST fail when:
 2. Property and child iteration order <a id="REQ-UI-WIRE-FORMAT-TREE-V1-AE0B21FC50"></a>MUST remain encoded order.
 3. Unknown property types <a id="REQ-UI-WIRE-FORMAT-TREE-V1-47FDBD3672"></a>MUST deterministically decode as `null`.
 4. Missing string indices <a id="REQ-UI-WIRE-FORMAT-TREE-V1-72523EBCCD"></a>MUST use stable fallbacks (`""` or `"div"` as defined).
+5. Composite-object key collision behavior <a id="REQ-UI-WIRE-FORMAT-TREE-V1-CC0A4F7768"></a>MUST be deterministic (`last-write-wins`).
 
 ## 9. Security Requirements
 
@@ -161,6 +213,7 @@ Decoder <a id="REQ-UI-WIRE-FORMAT-TREE-V1-D472AA5995"></a>MUST fail when:
 2. Implementations <a id="REQ-UI-WIRE-FORMAT-TREE-V1-B938A5E548"></a>MUST treat payload bytes as untrusted input.
 3. Render path <a id="REQ-UI-WIRE-FORMAT-TREE-V1-8CBECBE8C0"></a>MUST avoid executing arbitrary code from payload values.
 4. Integrators SHOULD impose upper bounds on payload sizes before decode.
+5. Integrators <a id="REQ-UI-WIRE-FORMAT-TREE-V1-381B8E8476"></a>MUST enforce maximum composite nesting depth and entry counts to prevent resource exhaustion.
 
 ## 10. Failure Semantics
 
@@ -172,6 +225,8 @@ Decoder <a id="REQ-UI-WIRE-FORMAT-TREE-V1-D472AA5995"></a>MUST fail when:
 | `ui-tree.root-index-invalid` | Root index is outside node table. | No | Correct root/node counts and indices. |
 | `ui-tree.payload-truncated` | Buffer ended before all declared fields were read. | No | Send full payload bytes. |
 | `ui-tree.node-kind-unsupported` | Node kind is not supported in `v1`. | Conditional | Use supported kinds or upgrade both sides. |
+| `ui-tree.composite-capability-required` | Composite value payload used without negotiation. | No | Negotiate `ui-tree-composite-values-v1` first. |
+| `ui-tree.composite-invalid` | Composite table is malformed, cyclic, or index-invalid. | No | Emit valid acyclic composite payload. |
 | `ui-tree.render-invalid` | Render failed after decode (`-EINVAL`). | Conditional | Correct payload and retry render. |
 | `ui-tree.service-unavailable` | UI service not installed (`-ENOSYS`). | No | Install/enable UI service. |
 

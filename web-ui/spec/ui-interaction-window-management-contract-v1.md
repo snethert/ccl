@@ -5,6 +5,7 @@ Version: 1.0.0
 Last updated: 2026-02-16  
 Scope: Cross-window interaction semantics for `web-ui` across DOM/Canvas/WebGL  
 Depends on: `web-ui/ui-doctrine.md`, `web-ide/ide-doctrine.md`
+Compatibility: `v1.x` preserves normative requirements and failure semantics; incompatible changes require `v2`.
 
 ## 1. Purpose
 
