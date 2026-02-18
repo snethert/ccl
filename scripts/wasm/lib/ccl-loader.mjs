@@ -918,6 +918,9 @@ export async function installCompiledModulesFromBundle({
     }
   }
 
+  const moduleInstanceCache = new Map();
+  let _moduleInstallCount = 0;
+  const _moduleTotal = modules.length;
   for (const entry of modules) {
     try {
       const moduleBytes = await loadModuleBytes(entry);
@@ -949,8 +952,14 @@ export async function installCompiledModulesFromBundle({
         }
       }
 
-      const bytes = moduleBytes instanceof Uint8Array ? moduleBytes : Uint8Array.from(moduleBytes);
-      const { instance } = await instantiateWasm(bytes, imports);
+      const instCacheKey = Number.isFinite(entry?.offset) ? `${entry.offset}:${entry.length}` : null;
+      let instance = instCacheKey ? moduleInstanceCache.get(instCacheKey) : undefined;
+      if (!instance) {
+        const bytes = moduleBytes instanceof Uint8Array ? moduleBytes : Uint8Array.from(moduleBytes);
+        const result = await instantiateWasm(bytes, imports);
+        instance = result.instance;
+        if (instCacheKey) moduleInstanceCache.set(instCacheKey, instance);
+      }
       const fn = instance?.exports?.[entry.exportName];
       if (typeof fn !== "function") {
         throw new Error(`compiled module missing export ${entry.exportName}`);
@@ -963,8 +972,14 @@ export async function installCompiledModulesFromBundle({
       subprimsTable.set(idx, fn);
       registerEntryCallAbi(setEntryCallAbi, idx, fn);
       installed++;
+      _moduleInstallCount++;
+      if (_moduleInstallCount % 500 === 0) {
+        // eslint-disable-next-line no-console
+        console.error(`[progress] modules: ${_moduleInstallCount}/${_moduleTotal} installed (entry ${idx})`);
+      }
     } catch (e) {
       failed++;
+      _moduleInstallCount++;
       if (verbose) {
         // eslint-disable-next-line no-console
         console.warn(`compiled module install failed ${entry.exportName}: ${e}`);

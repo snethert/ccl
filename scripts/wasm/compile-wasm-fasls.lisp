@@ -337,7 +337,72 @@ the root prefix is replaced with ROOT/build/wasm32/."
                (json-write-string-list out (cdr row)))
       (write-char #\} out))))
 
-(defun write-module-bundle (output-path modules &key functions debug-entries)
+(defun validate-wasm-bytes (bytes)
+  "Validate WASM module bytes using wasm-validate. Returns T if valid, NIL otherwise."
+  (let* ((temp-path "/tmp/ccl-wasm-validate.wasm"))
+    (unwind-protect
+      (progn
+        (with-open-file (f temp-path
+                           :direction :output
+                           :if-exists :supersede
+                           :element-type '(unsigned-byte 8))
+          (write-sequence bytes f))
+        (let* ((process (run-program "/usr/local/bin/wasm-validate"
+                                     (list temp-path)
+                                     :output nil
+                                     :error nil))
+               (status (external-process-status process))
+               (exit-code (ccl::external-process-%exit-code process)))
+          (and (eq status :exited) (zerop exit-code))))
+      (ignore-errors (delete-file temp-path)))))
+
+(defun partition-modules-for-merging (modules)
+  "Separate modules into (values mergeable individual).
+Mergeable = has code-body (slot 7) non-nil."
+  (let ((mergeable nil)
+        (individual nil))
+    (dolist (entry modules)
+      (if (and (> (length entry) 7) (svref entry 7))
+        (push entry mergeable)
+        (push entry individual)))
+    (values (nreverse mergeable) (nreverse individual))))
+
+(defun merge-module-batches (mergeable batch-size)
+  "Group mergeable entries into batches and merge each batch.
+Returns (values merged-batches failed-entries).
+If a merged batch fails WASM validation, its entries go to failed-entries."
+  (let ((batches nil)
+        (failed-entries nil)
+        (current-batch nil)
+        (current-count 0))
+    (flet ((flush-batch ()
+             (when current-batch
+               (let* ((batch (nreverse current-batch))
+                      (triples (mapcar (lambda (e)
+                                         (list (svref e 7)    ; code-body
+                                               (svref e 1)    ; export-name
+                                               (svref e 8)))  ; entry-call-abi
+                                       batch))
+                      (merged-bytes (wasm2-merged-module-bytes triples)))
+                 (if (validate-wasm-bytes merged-bytes)
+                   (push (cons merged-bytes batch) batches)
+                   (progn
+                     (format t "~&WARNING: Merged batch of ~d modules failed WASM validation, falling back to individual~%"
+                             (length batch))
+                     (dolist (entry batch)
+                       (push entry failed-entries)))))
+               (setf current-batch nil
+                     current-count 0))))
+      (dolist (entry mergeable)
+        (push entry current-batch)
+        (incf current-count)
+        (when (>= current-count batch-size)
+          (flush-batch)))
+      (flush-batch))
+    (values (nreverse batches) (nreverse failed-entries))))
+
+(defun write-module-bundle (output-path modules &key functions debug-entries
+                            (batch-size 750))
   (let* ((json-path (pathname output-path))
          (bin-path (make-pathname :type "bin" :defaults json-path))
          (bin-name (file-namestring bin-path))
@@ -349,39 +414,72 @@ the root prefix is replaced with ROOT/build/wasm32/."
          (unique-const-bytes 0)
          (reused-const-pools 0))
     (ensure-directories-exist json-path)
-    (with-open-file (bin bin-path
-                         :direction :output
-                         :if-exists :supersede
-                         :if-does-not-exist :create
-                         :element-type '(unsigned-byte 8))
-      (dolist (entry modules)
-        (let* ((module-bytes (svref entry 0))
-               (module-len (length module-bytes))
-               (module-offset offset)
-               (const-bytes (and (> (length entry) 4) (svref entry 4)))
-               (const-len (if const-bytes (length const-bytes) 0))
-               (gc-mode (module-gc-root-policy-mode entry))
-               (const-offset nil))
-          (when (> module-len 0)
-            (write-sequence module-bytes bin))
-          (incf offset module-len)
-          (when const-bytes
-            (incf raw-const-bytes const-len)
-            (multiple-value-bind (existing-offset sig)
-                (maybe-reuse-const-pool const-pool-index const-bytes)
-              (if existing-offset
-                (progn
-                  (setf const-offset existing-offset)
-                  (incf reused-const-pools))
-                (progn
-                  (setf const-offset offset)
-                  (write-sequence const-bytes bin)
-                  (incf offset const-len)
-                  (incf unique-const-bytes const-len)
-                  (push (cons const-offset const-bytes)
-                        (gethash sig const-pool-index))))))
-          (push (list entry module-offset module-len const-offset const-len gc-mode) entries))))
-    (setf entries (nreverse entries))
+    (multiple-value-bind (mergeable individual)
+        (partition-modules-for-merging modules)
+      (multiple-value-bind (merged-batches validation-failures)
+          (if mergeable
+            (merge-module-batches mergeable batch-size)
+            (values nil nil))
+        (when validation-failures
+          (setf individual (append individual validation-failures)))
+        (format t "~&Module merge: ~d mergeable -> ~d batches, ~d individual (~d validation fallback)~%"
+                (length mergeable) (length merged-batches) (length individual)
+                (length validation-failures))
+        (with-open-file (bin bin-path
+                             :direction :output
+                             :if-exists :supersede
+                             :if-does-not-exist :create
+                             :element-type '(unsigned-byte 8))
+          ;; Pass 1: Write all module bytes (no const pools yet).
+          ;; Merged module batches
+          (dolist (batch merged-batches)
+            (let* ((merged-bytes (car batch))
+                   (batch-entries (cdr batch))
+                   (merged-offset offset)
+                   (merged-len (length merged-bytes)))
+              (write-sequence merged-bytes bin)
+              (incf offset merged-len)
+              (dolist (entry batch-entries)
+                (push (list entry merged-offset merged-len nil 0
+                            (module-gc-root-policy-mode entry))
+                      entries))))
+          ;; Individual modules
+          (dolist (entry individual)
+            (let* ((module-bytes (svref entry 0))
+                   (module-len (length module-bytes))
+                   (module-offset offset))
+              (when (> module-len 0)
+                (write-sequence module-bytes bin))
+              (incf offset module-len)
+              (push (list entry module-offset module-len nil 0
+                          (module-gc-root-policy-mode entry))
+                    entries)))
+          ;; Sort by entry-index before writing const pools.
+          ;; This ensures const pool offsets are non-decreasing in entry order.
+          (setf entries (sort entries #'< :key (lambda (info) (svref (first info) 2))))
+          ;; Pass 2: Write const pools in entry-index order.
+          (dolist (info entries)
+            (let* ((entry (first info))
+                   (const-bytes (and (> (length entry) 4) (svref entry 4)))
+                   (const-len (if const-bytes (length const-bytes) 0)))
+              (when const-bytes
+                (incf raw-const-bytes const-len)
+                (multiple-value-bind (existing-offset sig)
+                    (maybe-reuse-const-pool const-pool-index const-bytes)
+                  (if existing-offset
+                    (progn
+                      (setf (fourth info) existing-offset)
+                      (setf (fifth info) const-len)
+                      (incf reused-const-pools))
+                    (progn
+                      (setf (fourth info) offset)
+                      (setf (fifth info) const-len)
+                      (write-sequence const-bytes bin)
+                      (incf offset const-len)
+                      (incf unique-const-bytes const-len)
+                      (push (cons (fourth info) const-bytes)
+                            (gethash sig const-pool-index)))))))))))
+    ;; entries already sorted by entry-index from pass 2
     (with-open-file (out json-path
                          :direction :output
                          :if-exists :supersede

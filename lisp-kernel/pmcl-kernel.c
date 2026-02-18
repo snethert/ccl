@@ -394,7 +394,7 @@ unsigned unsigned_max(unsigned x, unsigned y)
 
 natural
 #ifdef WASM32
-reserved_area_size = (1024 << 20);  /* 1 GB — CCL needs large heap for compilation */
+reserved_area_size = (3994u << 20);  /* 3.9 GB — CCL needs large heap for compilation */
 #else
 reserved_area_size = MAXIMUM_MAPPABLE_MEMORY;
 #endif
@@ -2118,6 +2118,9 @@ main
     }
   }
 
+#ifdef WASM32
+  wasm_host_log("[boot] create_reserved_area...\n", 31);
+#endif
   while (1) {
     if (create_reserved_area(reserved_area_size)) {
       break;
@@ -2125,9 +2128,18 @@ main
     reserved_area_size = reserved_area_size *.9;
   }
 
+#ifdef WASM32
+  wasm_host_log("[boot] gc_init...\n", 18);
+#endif
   gc_init();
 
+#ifdef WASM32
+  wasm_host_log("[boot] load_image...\n", 21);
+#endif
   set_nil(load_image(image_name));
+#ifdef WASM32
+  wasm_host_log("[boot] load_image done\n", 23);
+#endif
   lisp_heap_notify_threshold = lisp_global(GC_NOTIFY_THRESHOLD);
   lisp_heap_threshold_from_image = lisp_global(LISP_HEAP_THRESHOLD);
   
@@ -2280,6 +2292,7 @@ main
 #endif
 #ifdef WASM32
   if (wasm_boot_only) {
+    wasm_host_log("[boot] wasm_boot_only return\n", 29);
     wasm_boot_only = 0;
     return 0;
   }

@@ -436,6 +436,29 @@ The startup plan provides `{ offset, length }` for each entry. `make-real-image.
 
 **Size estimate:** ~8255 modules × ~6KB average = ~50MB. Acceptable for development. For distribution, compress externally (gzip/brotli). The launcher reads uncompressed `modules.bin`.
 
+### Phase 2C: Module Merging
+
+**Goal:** Reduce ~8,000 separate WASM module instantiations to ~10-20 merged modules for sub-second startup.
+
+**Problem:** Each `WebAssembly.instantiate()` call has per-module overhead (V8 compilation, import resolution, export object creation). With 8,000 separate modules, even parallel compilation takes minutes. Sequential takes ~40 minutes. This is unacceptable for REPL startup — native CCL boots in under a second.
+
+**Solution:** After Phase 2B emits `modules.bin`, merge the individual WASM modules into a small number of merged modules using Binaryen's `wasm-merge` tool. Each merged module exports multiple functions (e.g., 400-800 functions per merged module).
+
+**Build step** (after `modules.bin` is written):
+```bash
+# Split ~8000 modules into ~20 groups, merge each group
+wasm-merge group_0.wasm group_1.wasm ... -o merged_0.wasm
+```
+
+**Startup plan format change:** Instead of per-function `{ offset, length }` into `modules.bin`, entries reference a merged module index + export name:
+```json
+{ "index": 132, "source": "merged", "mergedModule": 0, "export": "ccl_generic_entry_132" }
+```
+
+**Launcher impact:** Step 8 instantiates ~20 merged modules instead of ~8,000 individual ones. Each merged module populates hundreds of table entries from its exports.
+
+**Effort:** ~100 lines in build pipeline + startup plan format update.
+
 ---
 
 ## Phase 3: Deterministic Launcher
@@ -500,14 +523,13 @@ for (const e of plan.functionTable.entries.filter(e => e.source === "subprims"))
 for (const e of plan.functionTable.entries.filter(e => e.source === "kernel"))
   table.set(e.index, kernel.instance.exports[e.export]);
 
-// 8. Parallel module compilation + table fill
-const moduleEntries = plan.functionTable.entries.filter(e => e.source === "modules");
-const compiled = await Promise.all(
-  moduleEntries.map(e =>
-    WebAssembly.compile(modulesBin.slice(e.offset, e.offset + e.length))));
-for (let i = 0; i < compiled.length; i++) {
-  const inst = await WebAssembly.instantiate(compiled[i], imports);
-  table.set(moduleEntries[i].index, inst.exports[moduleEntries[i].export]);
+// 8. Instantiate merged modules (~20) + fill table
+const mergedModules = plan.mergedModules; // [{file: "merged_0.wasm", entries: [{index, export}, ...]}, ...]
+for (const mm of mergedModules) {
+  const bytes = readFileSync(mm.file);
+  const inst = await WebAssembly.instantiate(bytes, imports);
+  for (const e of mm.entries)
+    table.set(e.index, inst.exports[e.export]);
 }
 
 // 9. Start
@@ -522,14 +544,7 @@ kernel.instance.exports.wasm_ccl_start_lisp();
 - No bootstrap contract semantic validation (replaced by SHA-256 hash check)
 - No relocation walk (bias = 0)
 
-**Step 8 detail — parallel compilation:** `Promise.all()` with ~8255 `WebAssembly.compile()` calls leverages V8's background compilation threads. If this overwhelms the engine, batch in chunks of 500:
-```javascript
-for (let i = 0; i < moduleEntries.length; i += 500) {
-  const batch = moduleEntries.slice(i, i + 500);
-  const compiled = await Promise.all(batch.map(e => WebAssembly.compile(...)));
-  // instantiate + table.set for each...
-}
-```
+**Step 8 detail:** With module merging (Phase 2C), this step instantiates ~20 merged WASM modules instead of ~8,000 individual ones. Each merged module is larger but V8 compiles large modules efficiently. Expected time: sub-second.
 
 ### Microkernel Rewrite
 
@@ -619,8 +634,9 @@ finished applications (`fast` profile).
 | **0A** | All WASM LAP bridge functions | None | ~2200 new lines | +2460 (11 new + 1 extended `.lisp`) |
 | **0B** | Zero-relocation image base | None | ~20 lines | +15 (`xwasmfasload.lisp`, `rebuild-everything.sh`) |
 | **1** | Verified build | 0A + 0B | Build time only | +0 |
-| **2** | Proactive const pool install + launch artifacts | 1 | ~150 lines | +150 (`make-real-image.mjs`) |
-| **3** | Deterministic launcher | 2 | ~1000 new, ~4000 deleted | **-2800** net (delete 1138, rewrite 3147 → 800) |
+| **2A-B** | Proactive const pool install + launch artifacts | 1 | ~150 lines | +150 (`make-real-image.mjs`) |
+| **2C** | Module merging (Binaryen `wasm-merge`) | 2B | ~100 lines | +100 (build pipeline) |
+| **3** | Deterministic launcher | 2C | ~1000 new, ~4000 deleted | **-2800** net (delete 1138, rewrite 3147 → 800) |
 | **4** | Fast-profile save-app mode + invariants | 3 | Pipeline and validation work | TBD |
 
 **Total net effect:** ~2460 new Lisp + 150 new JS - 2800 deleted JS ≈ **-190 net lines** of JS while gaining deterministic startup.
@@ -637,7 +653,7 @@ finished applications (`fast` profile).
 | R4 | Bignum/float pure-Lisp too slow | Build takes longer | Acceptable per user: "can take days" |
 | R5 | Frame walking needs WASM spill stack model | Backtrace/error handling broken | Implement based on spill stack layout |
 | R6 | Proactive const pool install fails for some entries | Some pools missing in image | Log failures; fallback to on-demand for those entries |
-| R7 | ~8255 parallel `WebAssembly.compile()` overwhelms V8 | Launch OOM or slow | Batch in chunks of 500 |
+| R7 | Merged modules too large for V8 | Compilation slow or OOM | Tune group size (target ~400 functions per merged module) |
 | R8 | `__heap_base` extraction fragile across toolchains | Wrong image base → relocation needed | Validate in build script; fail loudly on mismatch |
 | R9 | `values` needs subprim dispatch, not simple `apply` | MV return protocol breaks | Route through `.SPvalues` subprim |
 
@@ -708,7 +724,6 @@ Tags 1, 4, 7 require interning/lookup — this is why proactive installation mus
 ## Future Optimizations (Not In Scope)
 
 - **V8 WASM code cache:** `WebAssembly.Module` serialization for faster second-launch
-- **Module merging:** Combine compiled Lisp modules (Binaryen `wasm-merge`) to reduce instantiation count
 - **Direct kernel imports:** Replace request/response buffer with direct WASM function imports for MVP-1 (breaks MVP-2 async compatibility)
 - **Binary startup plan:** Replace JSON with binary format for marginally faster parsing
 - **Streaming compilation:** `WebAssembly.compileStreaming()` for browser deployment

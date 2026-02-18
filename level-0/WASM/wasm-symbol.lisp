@@ -6,14 +6,18 @@
 
 (in-package "CCL")
 
-;;; CRITICAL: Hash algorithm must match ARM LAP exactly.
+;;; CRITICAL: Hash algorithm must match x86-64 LAP exactly.
 ;;; Algorithm: accum = 0; for each 32-bit word w in str:
 ;;;   accum = ror32(accum, 27) ^ w
-;;; return bottom 27 bits of accum as a fixnum.
+;;; Return bottom 29 bits of accum (= target most-positive-fixnum).
 ;;;
-;;; ARM LAP returns (accum << 5) >>> (5 - fixnumshift) as a TAGGED fixnum.
-;;; The Lisp value is accum & #x07FFFFFF (bottom 27 bits).
-;;; Since this is a Lisp function (not LAP), we return the untagged value.
+;;; x86-64 LAP returns the full 32-bit accumulator as a 62-bit fixnum.
+;;; ARM LAP returns the bottom 27 bits (32-bit shift drops top 5 bits).
+;;; During cross-compilation, mixup-hash-code masks to target fixnum range:
+;;;   (logand hash target::target-most-positive-fixnum)
+;;; On WASM32, target most-positive-fixnum = #x1FFFFFFF (29 bits).
+;;; So we must return 29 bits to match the cross-compiled boot image's
+;;; hash tables. 29 bits fits exactly in a WASM32 fixnum.
 ;;;
 ;;; ror32(x, 27) = (x >> 27) | ((x & 0x7FFFFFF) << 5)
 ;;; All arithmetic is 32-bit unsigned.
@@ -23,29 +27,39 @@
            (optimize (speed 3) (safety 0)))
   (if (eql len 0)
     0
-    (let ((accum 0))
+    ;; Split 32-bit accumulator into hi16/lo16 halves to avoid bignums.
+    ;; WASM32 fixnums are 30 bits; 32-bit intermediates would overflow.
+    ;; Algorithm: accum = ror32(accum, 27) ^ char_code per character.
+    (let ((hi 0) (lo 0))
+      (declare (fixnum hi lo))
       (dotimes (i len)
         (let* ((w (char-code (uvref str i)))
-               (rotated (logand #xFFFFFFFF
-                          (logior (ash accum -27)
-                                  (ash (logand accum #x7FFFFFF) 5)))))
-          (setq accum (logand #xFFFFFFFF (logxor rotated w)))))
-      ;; Return bottom 27 bits of accum, matching the ARM LAP result.
-      (logand accum #x07FFFFFF))))
+               ;; ror32(hi:lo, 27) = (accum >> 27) | ((accum << 5) & 0xFFFFFFFF)
+               (rot-lo (logior (logand (ash lo 5) #xFFFF)
+                               (ash hi -11)))
+               (rot-hi (logior (ash (logand hi #x7FF) 5)
+                               (ash lo -11))))
+          (setq lo (logxor rot-lo (logand w #xFFFF)))
+          (setq hi (logxor rot-hi (logand (ash w -16) #xFFFF)))))
+      ;; Bottom 29 bits of accum = lo | (hi & 0x1FFF) << 16
+      (logior lo (ash (logand hi #x1FFF) 16)))))
 
 (defun %string-hash (start str len)
   (declare (fixnum start len)
            (optimize (speed 3) (safety 0)))
   (if (eql len 0)
     0
-    (let ((accum 0))
+    (let ((hi 0) (lo 0))
+      (declare (fixnum hi lo))
       (dotimes (i len)
         (let* ((w (char-code (uvref str (the fixnum (+ start i)))))
-               (rotated (logand #xFFFFFFFF
-                          (logior (ash accum -27)
-                                  (ash (logand accum #x7FFFFFF) 5)))))
-          (setq accum (logand #xFFFFFFFF (logxor rotated w)))))
-      (logand accum #x07FFFFFF))))
+               (rot-lo (logior (logand (ash lo 5) #xFFFF)
+                               (ash hi -11)))
+               (rot-hi (logior (ash (logand hi #x7FF) 5)
+                               (ash lo -11))))
+          (setq lo (logxor rot-lo (logand w #xFFFF)))
+          (setq hi (logxor rot-hi (logand (ash w -16) #xFFFF)))))
+      (logior lo (ash (logand hi #x1FFF) 16)))))
 
 ;;; On ARM, %function checks the fcell of a symbol and traps if not
 ;;; a function. The WASM compiler handles this as an intrinsic

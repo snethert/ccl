@@ -3,7 +3,7 @@
 <!-- Entry index lookup tool: scripts/wasm/lookup-entry.mjs <index> -->
 <!-- Debugging guide: doc/wasm/debugging.md — read first when troubleshooting -->
 
-**Last updated:** 2026-02-17
+**Last updated:** 2026-02-18
 **Current phase:** MVP-1 (Library/Embedded Mode)
 **Plan:** [doc/wasm/deterministic-startup-plan.md](doc/wasm/deterministic-startup-plan.md)
 
@@ -105,7 +105,25 @@ used non-existent acode operators, breaking cross-compilation loading. Fixed.
 - **Ivector const pool support:** Added const pool tag 17 (ivector) to both the cross-compiler serializer (`wasm2.lisp`) and C installer (`wasm-kernel-stubs.c`). Specialized arrays (u16-vector, u8-vector, etc.) are now correctly serialized with their target subtags and element data, instead of being flattened to generic simple-vectors.
 - **`target::` package resolution bug:** `target::subtag-*` references in `wasm2.lisp` resolved at read time to the HOST x86-64 architecture, not the WASM target. Fixed by using `wasm::subtag-*` directly. Also added TARGET package nickname redirect to `build-wasm-boot.lisp` as a safety measure.
 
-**Current blocker:** Root image build now progresses past hash table resize (step 60) but crashes with spill stack overflow in `TRUNCATE-NO-REM` (entry 822). Push/pop imbalance (52867 pushes, 20099 pops) suggests infinite recursion in arithmetic code during cold-boot-init.
+**Bugs fixed during Phase 1 (2026-02-17 session 5):**
+- **Subprims .rodata data segment collision:** Both kernel (`wasmcl.wasm`) and subprims (`subprims.wasm`) used default `--global-base=1024`, causing their `.rodata` and BSS regions to overlap in shared linear memory. The subprims `__wasm_init_memory` start function's `memory.fill` for BSS zeroing destroyed kernel `.rodata` at addresses 0x7B0–0x189C. This corrupted the ".image" suffix string → `open()` shim didn't intercept → `load_openmcl_image` never called → Fatal. Fixed with `--global-base=1064960` in subprims Makefile, relocating subprims data to 0x104000.
+- **Verbose ivec-cp diagnostic logging:** Removed per-element const pool logging in `wasm-kernel-stubs.c` that generated millions of lines during const pool installation.
+- **Heap size:** Increased from 128 MB to 3.9 GB (`reserved_area_size = 3994u << 20` in `pmcl-kernel.c`, `reserve = 4058 * (1 << 20)` in `make-real-image.mjs`). 1 GB produced 3,982 "reserve failed" errors; 3.9 GB produces zero. All 7,557 runtime modules install successfully (0 failed, ~40 minutes).
+- **Module installation progress logging:** Added progress counter to `installCompiledModulesFromBundle` loop in `ccl-loader.mjs` (every 500 modules).
+
+- **Boot modules omission diagnosed:** Entry 1123 crash was caused by running `make-real-image.mjs` without `--boot-modules`. The 1,110 level-0 functions (entries 0–~1400, including `%RUN-COLD-BOOT-INIT` at 1123) are in the boot modules bundle, not the runtime modules bundle. Without `--boot-modules build/wasm32/modules/wasm-boot-modules.json`, these entries are never populated in the function table. The runtime modules (entries ~1404–8904) install successfully but cold-boot-init immediately calls entry 1123 and crashes.
+
+**CRITICAL: `--boot-modules` is required.** Always pass `--boot-modules build/wasm32/modules/wasm-boot-modules.json` when running `make-real-image.mjs` directly. The `rebuild-everything.sh` script does this automatically. Running without boot modules produces a misleading "null function" crash with no warning.
+
+**Resolved blocker (2026-02-17):** `_SPbuiltin_length` / `_SPbuiltin_seqtype` infinite recursion during cold-boot-init. Fixed by adding inline fast paths (vectorH, simple-vector, CL ivectors, proper lists) matching ARM assembly logic. Both subprims now handle common types without calling into Lisp.
+
+**Resolved blocker (2026-02-18):** Module consolidation: 2 of 11 merged batches failed `WebAssembly.Module()` validation (bad stack discipline in ~2 Lisp functions). Added `validate-wasm-bytes` + fallback to individual modules in `compile-wasm-fasls.lisp`. Result: 7557/7557 modules installed, 0 failed (was 6057/7557).
+
+**Resolved blocker (2026-02-18):** `_SPbuiltin_ash` OOB crash during cold-boot-init. Root cause: `%pname-hash` and `%string-hash` in `wasm-symbol.lisp` used 32-bit unsigned arithmetic (`#xFFFFFFFF` masks, `(ash x 5)` on 27-bit values) that overflows WASM32's 30-bit fixnums → bignums → corrupted pointers → OOB crash in `wasm_lisp_word_ref`. Fix: rewrote both hash functions with split hi16/lo16 accumulator — all intermediates ≤ 16 bits, well within fixnum range.
+
+**Resolved blocker (2026-02-18):** Infinite `SYMBOL-NAME` loop in `%GET-HASHED-HTAB-SYMBOL` during cold-boot-init. Root cause: hash value mismatch between cross-compilation (x86-64 HOST) and WASM runtime. The x86-64 `%pname-hash` LAP returns the full 32-bit accumulator. During cross-compilation, `mixup-hash-code` (#+cross-compiling version) masks this to `target::target-most-positive-fixnum` = 29 bits on WASM32. But our WASM `%pname-hash` only returned 27 bits. The 2-bit difference (bits 27-28) caused symbol lookups to start at wrong hash table slots → infinite linear probing. Fix: changed final return from `(logand hi #x7FF)` (27 bits) to `(logand hi #x1FFF)` (29 bits). Verified against 24 test strings: `(logand native-x86-64-hash #x1FFFFFFF)` = our 29-bit split, 0 mismatches.
+
+**Current blocker:** TBD — awaiting rebuild with 29-bit hash fix.
 
 **Tooling added:**
 - `scripts/wasm/check-freshness.sh` — Detects stale build artifacts across the full dependency chain
@@ -166,8 +184,8 @@ used non-existent acode operators, breaking cross-compilation loading. Fixed.
 
 ## 📊 Current Status
 
-**Completed:** B1-B6 fixes, funcall ordering fix, ABI spec, diagnostic cleanup, instrumentation removal (~4500 lines), startup truth retirement, startup binding map removal (~2500 lines), debugging infrastructure, cold-boot init extraction (Phase 1a-1c), hash function char-code fix, ivector const pool support, target:: package resolution fix
-**Blocked on:** Spill stack overflow in `TRUNCATE-NO-REM` during cold-boot-init. Previous blockers (`%KERNEL-RESTART` XFUNBND, $hprimes subtag mismatch) resolved.
+**Completed:** B1-B6 fixes, funcall ordering fix, ABI spec, diagnostic cleanup, instrumentation removal (~4500 lines), startup truth retirement, startup binding map removal (~2500 lines), debugging infrastructure, cold-boot init extraction (Phase 1a-1c), hash function char-code fix, ivector const pool support, target:: package resolution fix, subprims .rodata collision fix, heap increase to 3.9 GB, `_SPbuiltin_length`/`_SPbuiltin_seqtype` inline fast paths, module consolidation (merge + pack dedup), module validation fallback (7557/7557 installed)
+**Blocked on:** awaiting rebuild after `%pname-hash` 29-bit hash fix. Previous blockers (`_SPbuiltin_ash` OOB, SYMBOL-NAME infinite loop, `_SPbuiltin_length` recursion, 1500 failed merged modules, spill stack overflow, `%KERNEL-RESTART` XFUNBND, $hprimes subtag, .rodata corruption) resolved.
 **Build pipeline:** Functional (kernel → subprims → boot image → modules → image assembly)
 **MVP-1 completion:** 65% → Phase 0 unblocks everything
 
@@ -218,6 +236,18 @@ Root cause: 280+ missing WASM LAP bridge functions. Systemic fix: Phase 0A.
 ---
 
 ## 📝 Session Notes
+
+**2026-02-18 (session 2):** Diagnosed and fixed TWO `%pname-hash` bugs:
+
+1. **Bignum overflow crash**: `%pname-hash` intermediate arithmetic produced bignums on WASM32 (e.g., `(ash (logand accum #x7FFFFFF) 5)` → up to 32 bits → bignum → corrupted pointers → OOB crash in `wasm_lisp_word_ref`). Fix: rewrote with split hi16/lo16 accumulator — all intermediates ≤ 16 bits.
+
+2. **Hash value mismatch (27-bit vs 29-bit)**: After fixing the bignum crash, cold-boot-init hit an infinite `SYMBOL-NAME` loop in `%GET-HASHED-HTAB-SYMBOL`. Root cause: the x86-64 HOST's `%pname-hash` LAP returns the full 32-bit accumulator. During cross-compilation, the `#+cross-compiling` `mixup-hash-code` masks to `target::target-most-positive-fixnum` = 29 bits on WASM32. But our WASM version only returned 27 bits (matching ARM LAP convention, but the boot image was built by x86-64 HOST). Verified with 24 test strings on HOST: `(logand native-x86-64-hash #x1FFFFFFF)` = our 29-bit split, 0 mismatches. Fix: changed return mask from `#x7FF` (27 bits) to `#x1FFF` (29 bits). Max result = `#x1FFFFFFF` = `most-positive-fixnum` on WASM32 — always a fixnum.
+
+Also added heap bounds guards to `wasm_lisp_word_ref` (permanent safety) and ASH fallback diagnostics (temporary). Found `%KERNEL-RESTART` entry-index mismatch (fcell points to entry 524 = `%SHORT-FLOAT-RATIO` — function never compiled as WASM module).
+
+**2026-02-18:** Module validation fallback implemented and verified. Added `validate-wasm-bytes` function to `compile-wasm-fasls.lisp` — writes merged module bytes to temp file, runs `wasm-validate` (WABT), falls back to individual modules on failure. Modified `merge-module-batches` to return `(values merged-batches failed-entries)` and `write-module-bundle` to append failures to individual list. Full rebuild result: 9 valid merged batches + 1502 individual (1500 validation fallback + 2 original), 7557/7557 modules installed (0 failed), 5446 const pools, ~770 MB binary. Cold-boot-init now gets past the previous `_SPbuiltin_length` recursion blocker (inline fast paths added previously) but crashes with `memory access out of bounds` in `wasm_lisp_word_ref` during `_SPbuiltin_ash` Lisp fallback.
+
+**2026-02-17 (session 5):** Found and fixed subprims .rodata data segment collision — both kernel and subprims used `--global-base=1024`, causing the subprims `__wasm_init_memory` BSS zeroing to destroy kernel `.rodata` (addresses 0x7B0–0x189C). Fixed with `--global-base=1064960` in subprims Makefile. This was the root cause of the boot image Fatal crash — ".image" suffix was being zeroed, so `open()` shim never intercepted, `load_openmcl_image` never called. Also increased heap from 128 MB to 3 GB (1 GB still had 3,982 "reserve failed" errors). Removed verbose per-element ivec-cp diagnostic logging from `wasm-kernel-stubs.c`. Boot image now loads successfully; cold-boot-init reaches entry 1123 then crashes with `null function or function signature mismatch`.
 
 **2026-02-17 (sessions 3-4):** Fixed `%pname-hash`/`%string-hash` — both used `(uvref str i)` which returns tagged characters; hash algorithm expects integer codes. Wrapping with `char-code` resolved the `%KERNEL-RESTART` XFUNBND crash at step 60 (hash table resize). Next crash was `_SPsubtag_misc_ref` — `$hprimes` (u16-vector) was being created as fixnum-vector. Root cause: the const pool serializer treated all non-string vectors as generic simple-vectors. Added ivector const pool tag (17) with element-type-to-subtag mapping. Hit secondary bug: `target::subtag-*` in `wasm2.lisp` resolved at read time to HOST (x86-64) subtag values, not WASM target. Fixed by using `wasm::subtag-*` directly. Also added TARGET package nickname redirect to `build-wasm-boot.lisp`. Verified `$hprimes` now gets subtag=0xd7 (u16-vector). Boot progressed past hash tables to new crash: spill stack overflow in `TRUNCATE-NO-REM` (entry 822).
 

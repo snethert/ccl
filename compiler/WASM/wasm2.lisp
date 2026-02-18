@@ -1688,14 +1688,33 @@
   (declare (ignore vreg))
   (let* ((label (wasm2-allocate-label))
          (result-local (wasm2-allocate-temp))
-         (mvpass (wasm2-mv-p xfer)))
+         (mvpass (wasm2-mv-p xfer))
+         (returning (wasm2-returning-p xfer)))
     (setf (car blocktag) (list label result-local mvpass))
     (let* ((body-ir (wasm2-with-ir
                       (lambda ()
+                        ;; For returning+mvpass, pre-set nargs=1 for fall-through path.
+                        (when (and mvpass returning)
+                          (wasm2-emit :set-nargs 1))
                         (wasm2-form seg nil (if mvpass $backend-mvpass nil) body)
-                        (wasm2-emit :local.set result-local)))))
+                        ;; Fall-through: set arg_z and nargs for return.
+                        ;; For returning+mvpass: also set arg_z via :set-arg0 so that
+                        ;; constants/variable-refs have arg_z set correctly.
+                        (if (and mvpass returning)
+                          (progn
+                            (wasm2-emit :local.tee result-local)
+                            (wasm2-emit :set-arg0))
+                          (wasm2-emit :local.set result-local))))))
       (wasm2-emit :block label body-ir)
-      (wasm2-emit :local.get result-local)))
+      ;; When in return position, emit :return directly to avoid the
+      ;; function-level fallback (return_constant + return) which clobbers
+      ;; nargs and destroys MV state.
+      (if returning
+        (progn
+          (wasm2-emit :local.get result-local)
+          (wasm2-emit :drop)
+          (wasm2-emit :return))
+        (wasm2-emit :local.get result-local))))
   nil)
 
 (defwasm2 wasm2-local-return-from local-return-from (seg vreg xfer blocktag value)
@@ -1704,8 +1723,19 @@
     (unless info
       (wasm2-unimplemented))
     (destructuring-bind (label result-local mvpass) info
+      ;; When MV-propagating, pre-set nargs=1 as the default for single-value
+      ;; returns.  return_values3 etc. will override nargs for MV forms.
+      (when mvpass
+        (wasm2-emit :set-nargs 1))
       (wasm2-form seg nil (if mvpass $backend-mvpass nil) value)
-      (wasm2-emit :local.set result-local)
+      (if mvpass
+        (progn
+          ;; Store primary value AND set arg_z (for constants/variable-refs
+          ;; that don't set arg_z themselves).  local.tee keeps on WASM stack,
+          ;; :set-arg0 consumes it -> net zero on WASM stack for br.
+          (wasm2-emit :local.tee result-local)
+          (wasm2-emit :set-arg0))
+        (wasm2-emit :local.set result-local))
       (wasm2-emit :br label)))
   nil)
 
@@ -3873,16 +3903,19 @@
 (defun wasm2-register-compiled-module (module-bytes export-name entry-index module-version
                                          &optional const-pool-bytes debug-info
                                                    (gc-root-policy-mode +wasm2-gc-root-mode-runtime-default+)
-                                                   function-name)
+                                                   function-name
+                                                   code-body entry-call-abi)
   (when module-bytes
-    (let* ((entry (make-array 7 :initial-contents
+    (let* ((entry (make-array 9 :initial-contents
                               (list module-bytes
                                     export-name
                                     entry-index
                                     module-version
                                     const-pool-bytes
                                     gc-root-policy-mode
-                                    (and function-name (prin1-to-string function-name))))))
+                                    (and function-name (prin1-to-string function-name))
+                                    code-body
+                                    entry-call-abi))))
       (unless (find entry-index %wasm-compiled-modules%
                     :key (lambda (item) (svref item 2))
                     :test #'eql)
@@ -4793,8 +4826,9 @@
      (wasm2-external-import-index name type-index)))
 
 (defun wasm2-runtime-misc-alloc-import-index ()
-  ;; Type index 4 is (i32 i32 i32) -> i32.
-  (wasm2-external-import-call-index "wasm_misc_alloc" 4))
+  ;; Now a generic import — use generic import index directly.
+  ;; Function indices do not include the memory import, so no +1 offset.
+  (wasm2-generic-import-index :misc-alloc))
 
 (defun wasm2-with-spilled-locals (thunk)
   (if *wasm2-spilling-p*
@@ -5296,7 +5330,10 @@
    (list :clear-pending-throw "wasm_clear_pending_throw" +wasm2-type-void-void+)
    (list :get-current-tcr "wasm_get_current_tcr" +wasm2-type-void-i32+)
    (list :get-tcr-toplevel-function "wasm_get_tcr_toplevel_function" +wasm2-type-i32-i32-ret+)
-   (list :set-tcr-toplevel-function "wasm_set_tcr_toplevel_function" +wasm2-type-i32-i32+)))
+   (list :set-tcr-toplevel-function "wasm_set_tcr_toplevel_function" +wasm2-type-i32-i32+)
+   ;; misc-alloc: promoted from external import so all non-FFI modules share
+   ;; identical import sections, enabling zero-remap module merging.
+   (list :misc-alloc "wasm_misc_alloc" +wasm2-type-i32-i32-i32+)))
 
 (defun wasm2-external-call-type-index (argc)
   (case argc
@@ -6344,8 +6381,102 @@
       (wasm2-emit-uleb code 1)
       (wasm2-emit-uleb code (length body))
       (dotimes (i (length body))
-        (wasm2-push-u8 code (aref body i))))
+        (wasm2-push-u8 code (aref body i)))
 
+      (dolist (section (list (wasm2-section 1 types)
+                             (wasm2-section 2 imports)
+                             (wasm2-section 3 funcs)
+                             (wasm2-section 7 exports)
+                             (wasm2-section 10 code))
+                       out)
+        (dotimes (i (length section))
+          (wasm2-push-u8 out (aref section i))))
+      ;; Return both the full module bytes and the raw code body for module merging.
+      ;; The code body contains local-decls + instructions + end (0x0b) and can be
+      ;; directly embedded in a multi-function module's code section.
+      (values out body))))
+
+;;; Multi-function merged module generation.
+;;; Creates a single WASM module containing N compiled functions.
+;;; All functions must share the same import section (generic imports only,
+;;; no external imports).
+;;;
+;;; ENTRIES is a list of (code-body export-name entry-call-abi) triples where:
+;;;   code-body     = u8 array of local-decls + instructions + end
+;;;   export-name   = string like "ccl_generic_entry_1234"
+;;;   entry-call-abi = :generic | :unary-i32 | :binary-i32
+(defun wasm2-merged-module-bytes (entries)
+  (let* ((out (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
+         (types (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
+         (imports (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
+         (funcs (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
+         (exports (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
+         (code (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0))
+         (n (length entries))
+         (import-count (length *wasm2-generic-imports*)))
+    ;; Module header
+    (wasm2-emit-bytes out '(0 #x61 #x73 #x6d 1 0 0 0))
+
+    ;; Type section — same 14 types as wasm2-generic-module-bytes
+    (wasm2-emit-uleb types 14)
+    ;; 0: () -> i32
+    (wasm2-push-u8 types #x60) (wasm2-emit-uleb types 0) (wasm2-emit-uleb types 1) (wasm2-push-u8 types #x7f)
+    ;; 1: (i32) -> ()
+    (wasm2-push-u8 types #x60) (wasm2-emit-uleb types 1) (wasm2-push-u8 types #x7f) (wasm2-emit-uleb types 0)
+    ;; 2: () -> ()
+    (wasm2-push-u8 types #x60) (wasm2-emit-uleb types 0) (wasm2-emit-uleb types 0)
+    ;; 3: (i32 i32) -> i32
+    (wasm2-push-u8 types #x60) (wasm2-emit-uleb types 2) (wasm2-push-u8 types #x7f) (wasm2-push-u8 types #x7f)
+    (wasm2-emit-uleb types 1) (wasm2-push-u8 types #x7f)
+    ;; 4: (i32 i32 i32) -> i32
+    (wasm2-push-u8 types #x60) (wasm2-emit-uleb types 3) (dotimes (_i 3) (wasm2-push-u8 types #x7f))
+    (wasm2-emit-uleb types 1) (wasm2-push-u8 types #x7f)
+    ;; 5: (i32) -> i32
+    (wasm2-push-u8 types #x60) (wasm2-emit-uleb types 1) (wasm2-push-u8 types #x7f)
+    (wasm2-emit-uleb types 1) (wasm2-push-u8 types #x7f)
+    ;; 6-13: (i32 x N) -> i32 for N = 4..11
+    (loop for param-count from 4 to 11 do
+      (wasm2-push-u8 types #x60)
+      (wasm2-emit-uleb types param-count)
+      (dotimes (_i param-count) (wasm2-push-u8 types #x7f))
+      (wasm2-emit-uleb types 1) (wasm2-push-u8 types #x7f))
+
+    ;; Import section — memory + generic imports only (NO external imports)
+    (wasm2-emit-uleb imports (+ 1 import-count))
+    (wasm2-emit-import-memory imports)
+    (dolist (imp *wasm2-generic-imports*)
+      (destructuring-bind (_key name type-index) imp
+        (declare (ignore _key))
+        (wasm2-emit-string imports "ccl")
+        (wasm2-emit-string imports name)
+        (wasm2-push-u8 imports 0)
+        (wasm2-emit-uleb imports type-index)))
+
+    ;; Function section — N functions
+    (wasm2-emit-uleb funcs n)
+    (dolist (entry entries)
+      (let ((abi (third entry)))
+        (wasm2-emit-uleb funcs (wasm2-entry-call-abi-function-type-index
+                                 (or abi +wasm2-entry-call-abi-generic+)))))
+
+    ;; Export section — N exports
+    (wasm2-emit-uleb exports n)
+    (let ((func-idx import-count))
+      (dolist (entry entries)
+        (wasm2-emit-string exports (second entry))
+        (wasm2-push-u8 exports 0)
+        (wasm2-emit-uleb exports func-idx)
+        (incf func-idx)))
+
+    ;; Code section — N code bodies
+    (wasm2-emit-uleb code n)
+    (dolist (entry entries)
+      (let ((body (first entry)))
+        (wasm2-emit-uleb code (length body))
+        (dotimes (i (length body))
+          (wasm2-push-u8 code (aref body i)))))
+
+    ;; Assemble sections
     (dolist (section (list (wasm2-section 1 types)
                            (wasm2-section 2 imports)
                            (wasm2-section 3 funcs)
@@ -7871,20 +8002,21 @@
                                       +wasm2-gc-root-mode-runtime-default+
                                       +wasm2-gc-root-mode-runtime-bootstrap+))
                (const-pool-bytes (and const-pool-entries
-                                      (wasm2-const-pool-bytes const-pool-entries)))
-               (module-bytes (wasm2-generic-module-bytes module-ir export-name
-                                                         module-local-types
-                                                         spillable-locals
-                                                         entry-index
-                                                         entry-call-abi))
-               (debug-info (and *wasm2-collect-module-debug*
-                                (wasm2-make-module-debug-info export-name entry-index 1
-                                                              :afunc afunc
-                                                              :ir module-ir
-                                                              :gc-root-policy-mode
-                                                              gc-root-policy-mode
-                                                              :gc-root-boundary-ops
-                                                              gc-root-boundary-ops))))
+                                      (wasm2-const-pool-bytes const-pool-entries))))
+          (multiple-value-bind (module-bytes code-body)
+              (wasm2-generic-module-bytes module-ir export-name
+                                           module-local-types
+                                           spillable-locals
+                                           entry-index
+                                           entry-call-abi)
+            (let ((debug-info (and *wasm2-collect-module-debug*
+                                   (wasm2-make-module-debug-info export-name entry-index 1
+                                                                 :afunc afunc
+                                                                 :ir module-ir
+                                                                 :gc-root-policy-mode
+                                                                 gc-root-policy-mode
+                                                                 :gc-root-boundary-ops
+                                                                 gc-root-boundary-ops))))
         (wasm2-register-compiled-module module-bytes
                                         export-name
                                         entry-index
@@ -7892,7 +8024,9 @@
                                         const-pool-bytes
                                         debug-info
                                         gc-root-policy-mode
-                                        (afunc-name afunc))
+                                        (afunc-name afunc)
+                                        code-body
+                                        entry-call-abi)
         (let ((info (list* 'wasm-module-bytes module-bytes
                            'wasm-module-export export-name
                            'wasm-module-version 1
@@ -7905,7 +8039,7 @@
           (setf (afunc-lfun-info afunc) info))
         (setf (afunc-argsword afunc) bits)
         (wasm2-set-afunc-lfun afunc entry-index keyvec-slot bits)
-        (return-from wasm2-compile afunc)))
+        (return-from wasm2-compile afunc)))))
   )))
 
 (provide "WASM2")

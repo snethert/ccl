@@ -206,6 +206,8 @@ async function main() {
     inputBinaryFd = fs.openSync(inputBinaryPath, "r");
   }
 
+  const moduleSpanCache = new Map();
+
   try {
     for (const entry of manifest.modules) {
       const entryIndex = entry?.entryIndex >>> 0;
@@ -216,9 +218,17 @@ async function main() {
         throw new Error(`module ${entryIndex} missing exportName`);
       }
 
-      let moduleBytes;
+      let moduleOutOffset;
+      let moduleOutLength;
       if (entry?.moduleBytes != null) {
-        moduleBytes = asBuffer(entry.moduleBytes, `module ${entryIndex} moduleBytes`);
+        const moduleBytes = asBuffer(entry.moduleBytes, `module ${entryIndex} moduleBytes`);
+        if (moduleBytes.length === 0) {
+          throw new Error(`module ${entryIndex} has empty moduleBytes`);
+        }
+        moduleOutOffset = offset;
+        moduleOutLength = moduleBytes.length >>> 0;
+        chunks.push(moduleBytes);
+        offset += moduleBytes.length;
       } else {
         if (!inputBinaryFd) {
           throw new Error(`module ${entryIndex} missing moduleBytes and no input binary is open`);
@@ -226,15 +236,27 @@ async function main() {
         if (!Number.isFinite(entry?.offset) || !Number.isFinite(entry?.length)) {
           throw new Error(`module ${entryIndex} missing offset/length for binary span`);
         }
-        moduleBytes = readSpan(
-          inputBinaryFd,
-          entry.offset >>> 0,
-          entry.length >>> 0,
-          `module ${entryIndex} module span`,
-        );
-      }
-      if (moduleBytes.length === 0) {
-        throw new Error(`module ${entryIndex} has empty moduleBytes`);
+        const spanKey = `${entry.offset >>> 0}:${entry.length >>> 0}`;
+        const cached = moduleSpanCache.get(spanKey);
+        if (cached) {
+          moduleOutOffset = cached.outOffset;
+          moduleOutLength = cached.outLength;
+        } else {
+          const moduleBytes = readSpan(
+            inputBinaryFd,
+            entry.offset >>> 0,
+            entry.length >>> 0,
+            `module ${entryIndex} module span`,
+          );
+          if (moduleBytes.length === 0) {
+            throw new Error(`module ${entryIndex} has empty moduleBytes`);
+          }
+          moduleOutOffset = offset;
+          moduleOutLength = moduleBytes.length >>> 0;
+          chunks.push(moduleBytes);
+          offset += moduleBytes.length;
+          moduleSpanCache.set(spanKey, { outOffset: moduleOutOffset, outLength: moduleOutLength });
+        }
       }
 
       const gcMode = Number.isFinite(entry?.gcRootPolicyMode)
@@ -252,11 +274,9 @@ async function main() {
         exportName: entry.exportName,
         entryIndex,
         moduleVersion: Number.isFinite(entry?.moduleVersion) ? (entry.moduleVersion >>> 0) : 1,
-        offset,
-        length: moduleBytes.length >>> 0,
+        offset: moduleOutOffset,
+        length: moduleOutLength,
       };
-      chunks.push(moduleBytes);
-      offset += moduleBytes.length;
 
       let constPoolBytes = null;
       if (entry?.constPoolBytes != null) {

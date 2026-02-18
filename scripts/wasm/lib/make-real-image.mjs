@@ -791,11 +791,17 @@ function decodeConstPoolForInfo(info) {
 
 
 
+let _cpInstallCount = 0;
+let _cpSkipCount = 0;
 function installConstPoolOnDemand(entryIndexRaw) {
   if (!kernelExports) return 0;
   const entryIndex = entryIndexRaw >>> 0;
   if (constPoolsInstalled.has(entryIndex)) return 1;
 
+  _cpInstallCount++;
+  if (_cpInstallCount % 10000 === 0) {
+    console.error(`[progress] const-pool installs: ${_cpInstallCount} (skipped: ${_cpSkipCount}) latest entry=${entryIndex}`);
+  }
   trace(`const-pool on-demand entry=${entryIndex}`);
 
   /* Check boot module pre-read const pools first */
@@ -931,7 +937,7 @@ trace("subprims table installed");
 const imageLen = bootBytes.byteLength >>> 0;
 const pageSize = 65536;
 const cstackSize = 1 << 20;
-const reserve = 1088 << 20;  // Must exceed kernel's reserved_area_size (1024 MB)
+const reserve = 4058 * (1 << 20);  // Must exceed kernel's reserved_area_size (3994 MB / 3.9 GB)
 const needBytes = imageLen + cstackSize + reserve;
 let haveBytes = runtime.memory.buffer.byteLength;
 if (needBytes > haveBytes) {
@@ -965,7 +971,8 @@ if (typeof ex.wasm_set_cstack_bounds !== "function") {
 const cstackBase = runtime.memory.buffer.byteLength;
 ex.wasm_set_cstack_bounds(cstackBase, cstackSize);
 
-const blobBase = (cstackBase - cstackSize - imageLen) & ~15;
+const blobBaseRaw = cstackBase - cstackSize - imageLen;
+const blobBase = blobBaseRaw - (blobBaseRaw % 16);  // align down to 16 (no bitwise — safe for >2GB)
 if (blobBase < 0) {
   fail("not enough memory to place boot image below cstack");
 }
@@ -990,7 +997,7 @@ try {
   console.error(e.stack);
   process.exit(1);
 }
-trace("boot image loaded");
+console.error("[stage] boot image loaded");
 
 /* Mark subprims ready so RESTORE-LISP-POINTERS (and fasload) can dispatch
    through the subprim table. */
@@ -1039,6 +1046,7 @@ if (traceEnabled) {
   );
 }
 
+console.error("[stage] installing compiled modules...");
 /* Install boot (level-0) compiled modules first, so that level-0 function
    table entries (e.g. %FASLOAD) are populated before wasm_fasload_path is
    called.  These come from cross-xload-level-0 via build-wasm-boot.sh. */
@@ -1138,7 +1146,7 @@ const bundleInstall = await installCompiledModulesFromBundle({
   strict: false,
   installConstPools: true,
 });
-trace(`compiled module bundle installed ${bundleInstall.installed}/${bundleInstall.count}`);
+console.error(`[stage] compiled modules: ${bundleInstall.installed}/${bundleInstall.count} installed, ${bundleInstall.failed || 0} failed`);
 if (bundleInstall.count === 0) {
   fail("compiled modules bundle is empty; refusing to proceed");
 }
@@ -1240,6 +1248,7 @@ if (process.env.CCL_WASM_TRACE_FUNCALL) {
 if (typeof ex.wasm_run_cold_boot_init !== "function") {
   fail("kernel missing wasm_run_cold_boot_init — rebuild kernel");
 }
+console.error(`[stage] cold-boot-init starting (const-pool installs so far: ${_cpInstallCount}, skipped: ${_cpSkipCount})`);
 const coldBootRc = ex.wasm_run_cold_boot_init() | 0;
 if (coldBootRc !== 0) {
   fail(`wasm_run_cold_boot_init returned ${coldBootRc}`);

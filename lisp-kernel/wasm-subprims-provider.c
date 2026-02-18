@@ -2185,7 +2185,7 @@ void _SPstack_cons_rest_arg(void);
  * See doc/wasm/debugging.md for usage documentation.
  * ============================================================ */
 #define FUNCALL_RING_SIZE 32
-#define FUNCALL_CHECK_INTERVAL 2000  /* lowered from 1M for WASM stack overflow debugging */
+#define FUNCALL_CHECK_INTERVAL 1000000  /* restored: builtin_length/seqtype recursion fixed */
 #define FUNCALL_MAX_UNIQUE 4            /* <=4 unique entries = stuck */
 
 static uint32_t funcall_ring[FUNCALL_RING_SIZE];
@@ -3779,15 +3779,54 @@ _SPmisc_set(void)
   }
 
   LispObj obj = wasm_reg(tcr, arg_z);
-  signed_natural index = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, arg_y));
+  LispObj raw_index = wasm_reg(tcr, arg_y);
   LispObj value = wasm_reg(tcr, arg_x);
+
+  if (tag_of(raw_index) != tag_fixnum) {
+    char msg[256]; unsigned p = 0;
+    p = wasm_diag_append_str(msg, p, "misc_set: index not fixnum idx=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)raw_index);
+    p = wasm_diag_append_str(msg, p, " obj=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)obj);
+    p = wasm_diag_append_str(msg, p, " val=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)value);
+    p = wasm_diag_append_str(msg, p, "\nfuncall_ring(last 8): ");
+    for (int i = 8; i > 0; i--) {
+      uint32_t ri = funcall_ring[(funcall_ring_pos - i) & (FUNCALL_RING_SIZE - 1)];
+      p = wasm_diag_append_hex32(msg, p, ri);
+      if (i > 1) { msg[p++] = ' '; }
+    }
+    msg[p++] = '\n'; wasm_host_log(msg, p);
+    wasm_debug_dump_state("misc_set-badfixnum");
+    wasm_subprims_trap();
+  }
+  signed_natural index = unbox_fixnum(raw_index);
+
   if (fulltag_of(obj) != fulltag_misc) {
+    char msg[80]; unsigned p = 0;
+    p = wasm_diag_append_str(msg, p, "misc_set: obj not misc obj=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)obj);
+    p = wasm_diag_append_str(msg, p, " ft=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)fulltag_of(obj));
+    msg[p++] = '\n'; wasm_host_log(msg, p);
+    wasm_debug_dump_state("misc_set-badobj");
     wasm_subprims_trap();
   }
   LispObj header = header_of(obj);
   unsigned subtag = header_subtag(header);
   signed_natural count = header_element_count(header);
   if ((natural)index >= (natural)count) {
+    char msg[128]; unsigned p = 0;
+    p = wasm_diag_append_str(msg, p, "misc_set: oob idx=");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)index);
+    p = wasm_diag_append_str(msg, p, " count=");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)count);
+    p = wasm_diag_append_str(msg, p, " subtag=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)subtag);
+    p = wasm_diag_append_str(msg, p, " obj=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)obj);
+    msg[p++] = '\n'; wasm_host_log(msg, p);
+    wasm_debug_dump_state("misc_set-oob");
     wasm_subprims_trap();
   }
 
@@ -4061,6 +4100,12 @@ _SPbuiltin_eql(void)
   wasm_call_builtin(tcr, WASM_BUILTIN_EQL, 2);
 }
 
+/* Inline fast path for LENGTH, ported from ARM _SPbuiltin_length.
+ * Handles vectorH, simple vectors, CL ivectors, and proper lists inline.
+ * Falls through to Lisp LENGTH only for exotic types (CLOS sequences, etc.).
+ * This avoids infinite recursion during cold-boot-init when CLOS is not yet
+ * initialized: LENGTH -> SEQUENCE-TYPE -> SYMBOL-NAME -> LENGTH loop.
+ */
 __attribute__((used, visibility("default"), export_name("_SPbuiltin_length")))
 void
 _SPbuiltin_length(void)
@@ -4070,9 +4115,82 @@ _SPbuiltin_length(void)
     wasm_subprims_trap();
   }
 
+  LispObj obj = wasm_reg(tcr, arg_z);
+  unsigned typecode;
+
+  /* extract_typecode: for misc-tagged objects, get subtag from header;
+   * for everything else, use the 2-bit tag directly. */
+  if (tag_of(obj) == tag_misc) {
+    typecode = header_subtag(header_of(obj));
+  } else {
+    typecode = tag_of(obj);
+  }
+
+  /* Array header (vectorH) — return logical size field (already a fixnum) */
+  if (typecode == subtag_vectorH) {
+    LispObj logsize = deref(obj, 1);  /* vectorH.logsize: first data slot */
+    wasm_set_reg(tcr, arg_z, logsize);
+    wasm_set_nargs_count(tcr, 1);
+    return;
+  }
+
+  /* Simple vector — return element count from header */
+  if (typecode == subtag_simple_vector) {
+    LispObj header = header_of(obj);
+    wasm_set_reg(tcr, arg_z, box_fixnum(header_element_count(header)));
+    wasm_set_nargs_count(tcr, 1);
+    return;
+  }
+
+  /* CL ivector types (strings, bit-vectors, typed arrays) */
+  if ((typecode & fulltagmask) == fulltag_immheader &&
+      typecode >= min_cl_ivector_subtag) {
+    LispObj header = header_of(obj);
+    wasm_set_reg(tcr, arg_z, box_fixnum(header_element_count(header)));
+    wasm_set_nargs_count(tcr, 1);
+    return;
+  }
+
+  /* List — tortoise-and-hare algorithm (Floyd's cycle detection) */
+  if (typecode == tag_list) {
+    LispObj fast = obj;
+    LispObj slow = obj;
+    signed_natural count = -1;
+
+    for (;;) {
+      count++;
+      if (fast == (LispObj)nil_value) {
+        /* End of proper list — return count as fixnum */
+        wasm_set_reg(tcr, arg_z, box_fixnum(count));
+        wasm_set_nargs_count(tcr, 1);
+        return;
+      }
+      if (tag_of(fast) != tag_list) {
+        break;  /* Dotted list — fall through to Lisp */
+      }
+      /* Advance fast pointer */
+      cons *fast_cell = (cons *)ptr_from_lispobj(untag(fast));
+      fast = fast_cell->cdr;
+      /* Advance slow pointer every other step */
+      if (count & 1) {
+        cons *slow_cell = (cons *)ptr_from_lispobj(untag(slow));
+        slow = slow_cell->cdr;
+        if (slow == fast) {
+          break;  /* Circular list — fall through to Lisp */
+        }
+      }
+    }
+  }
+
+  /* Fall through to Lisp builtin for other types (CLOS, dotted/circular lists) */
   wasm_call_builtin(tcr, WASM_BUILTIN_LENGTH, 1);
 }
 
+/* Inline fast path for SEQUENCE-TYPE, ported from ARM _SPbuiltin_seqtype.
+ * Returns NIL for any vector type, T for lists.
+ * Falls through to Lisp only for exotic types (CLOS sequences).
+ * Same cold-boot-init recursion avoidance as _SPbuiltin_length.
+ */
 __attribute__((used, visibility("default"), export_name("_SPbuiltin_seqtype")))
 void
 _SPbuiltin_seqtype(void)
@@ -4082,6 +4200,33 @@ _SPbuiltin_seqtype(void)
     wasm_subprims_trap();
   }
 
+  LispObj obj = wasm_reg(tcr, arg_z);
+  unsigned typecode;
+
+  if (tag_of(obj) == tag_misc) {
+    typecode = header_subtag(header_of(obj));
+  } else {
+    typecode = tag_of(obj);
+  }
+
+  /* Any vector type → return NIL (meaning "vector/array sequence") */
+  if (typecode == subtag_vectorH ||
+      typecode == subtag_simple_vector ||
+      ((typecode & fulltagmask) == fulltag_immheader &&
+       typecode >= min_cl_ivector_subtag)) {
+    wasm_set_reg(tcr, arg_z, (LispObj)nil_value);
+    wasm_set_nargs_count(tcr, 1);
+    return;
+  }
+
+  /* List → return T (meaning "list sequence") */
+  if (typecode == tag_list) {
+    wasm_set_reg(tcr, arg_z, wasm_t_value());
+    wasm_set_nargs_count(tcr, 1);
+    return;
+  }
+
+  /* Fall through to Lisp for other types (CLOS sequences, non-sequences) */
   wasm_call_builtin(tcr, WASM_BUILTIN_SEQTYPE, 1);
 }
 
@@ -4210,6 +4355,15 @@ _SPbuiltin_ash(void)
     }
 
     if (shift > 32) {
+      {
+        char msg[120]; unsigned p = 0;
+        p = wasm_diag_append_str(msg, p, "ASH-FALLBACK shift>32 z=0x");
+        p = wasm_diag_append_hex32(msg, p, (uint32_t)value);
+        p = wasm_diag_append_str(msg, p, " y=0x");
+        p = wasm_diag_append_hex32(msg, p, (uint32_t)shift_val);
+        msg[p++] = '\n';
+        wasm_host_log(msg, p);
+      }
       wasm_call_builtin(tcr, WASM_BUILTIN_ASH, 2);
       return;
     }
@@ -4220,6 +4374,19 @@ _SPbuiltin_ash(void)
     return;
   }
 
+  {
+    char msg[160]; unsigned p = 0;
+    p = wasm_diag_append_str(msg, p, "ASH-FALLBACK nonfixnum z=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)value);
+    p = wasm_diag_append_str(msg, p, " y=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)shift_val);
+    p = wasm_diag_append_str(msg, p, " zt=");
+    p = wasm_diag_append_hex32(msg, p, tag_of(value));
+    p = wasm_diag_append_str(msg, p, " yt=");
+    p = wasm_diag_append_hex32(msg, p, tag_of(shift_val));
+    msg[p++] = '\n';
+    wasm_host_log(msg, p);
+  }
   wasm_call_builtin(tcr, WASM_BUILTIN_ASH, 2);
 }
 

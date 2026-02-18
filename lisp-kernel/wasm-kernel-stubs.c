@@ -917,14 +917,34 @@ wasm_alloc_node_vector_initialized(TCR *tcr, unsigned subtag, signed_natural cou
      heap).  Hash table code in nfasload.lisp relies on empty slots being
      fixnum 0 — see %get-hashed-htab-symbol termination (eql elt 0).
      All other node vectors (symbols, functions, etc.) get lisp_nil so that
-     uninitialized slots behave as "empty" for Lisp-level code. */
+     uninitialized slots behave as "empty" for Lisp-level code.
+     NOTE: Use explicit word-at-a-time loop instead of memset — the custom
+     memset in wasm-no-wasi-libc.c or compiler-generated memory.fill may
+     not behave correctly in all WASM environments during early boot. */
   LispObj *data = (LispObj *)((BytePtr)obj + misc_data_offset);
   if (subtag == subtag_simple_vector) {
-    memset(data, 0, (size_t)count * sizeof(LispObj));
+    for (signed_natural i = 0; i < count; i++) {
+      data[i] = 0;
+    }
   } else {
     for (signed_natural i = 0; i < count; i++) {
       data[i] = lisp_nil;
     }
+  }
+
+  /* Diagnostic: trace node vector allocations to debug NIL-vs-0 issue */
+  if (count > 10) {
+    char d[128]; int p = 0;
+    p += wasm_debug_str(d + p, "NODEVEC subtag=0x");
+    p += wasm_debug_hex8(d + p, subtag);
+    p += wasm_debug_str(d + p, " count=");
+    p += wasm_debug_uint(d + p, (uint32_t)count);
+    p += wasm_debug_str(d + p, " d0=0x");
+    p += wasm_debug_hex8(d + p, (uint32_t)data[0]);
+    p += wasm_debug_str(d + p, " sv=");
+    p += wasm_debug_uint(d + p, (subtag == subtag_simple_vector) ? 1 : 0);
+    d[p++] = '\n';
+    wasm_host_log(d, (unsigned)p);
   }
 
   return obj;
@@ -1388,12 +1408,42 @@ wasm_lisp_word_ref(LispObj base, LispObj offset)
 
   if (tag_of(base) == tag_fixnum) {
     signed_natural addr = unbox_fixnum(base);
+    uintptr_t target = (uintptr_t)addr + (uintptr_t)idx * sizeof(LispObj);
+    uintptr_t mem_limit = (uintptr_t)__builtin_wasm_memory_size(0) * 65536u;
+    if (target + sizeof(LispObj) > mem_limit || addr < 0) {
+      char msg[160]; int p = 0;
+      p += wasm_debug_str(msg + p, "HEAP-OOB fixnum-ref base=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)base);
+      p += wasm_debug_str(msg + p, " addr=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)(uintptr_t)addr);
+      p += wasm_debug_str(msg + p, " idx=");
+      p += wasm_debug_uint(msg + p, (uint32_t)idx);
+      p += wasm_debug_str(msg + p, " limit=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)mem_limit);
+      msg[p++] = '\n';
+      wasm_host_log(msg, (unsigned)p);
+      return lisp_nil;
+    }
     LispObj *ptr = (LispObj *)(uintptr_t)addr;
     LispObj result = ptr[idx];
     return result;
   }
 
   if (fulltag_of(base) == fulltag_misc) {
+    uintptr_t raw = (uintptr_t)untag(base);
+    uintptr_t mem_limit = (uintptr_t)__builtin_wasm_memory_size(0) * 65536u;
+    if (raw + sizeof(LispObj) > mem_limit) {
+      char msg[120]; int p = 0;
+      p += wasm_debug_str(msg + p, "HEAP-OOB misc-ref base=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)base);
+      p += wasm_debug_str(msg + p, " raw=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)raw);
+      p += wasm_debug_str(msg + p, " limit=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)mem_limit);
+      msg[p++] = '\n';
+      wasm_host_log(msg, (unsigned)p);
+      return lisp_nil;
+    }
     LispObj header = header_of(base);
     signed_natural count = header_element_count(header);
     if (idx >= 0 && idx < count) {
@@ -1587,6 +1637,26 @@ wasm_get_mv(uint32_t index)
   }
   signed_natural count = unbox_fixnum(raw);
   if ((signed_natural)index < 0 || (signed_natural)index >= count) {
+    /* Diagnostic: log first few MV index-out-of-range for index >= 2 */
+    if (index >= 2) {
+      static int mv_diag_count = 0;
+      if (mv_diag_count < 5) {
+        mv_diag_count++;
+        char msg[128]; int p = 0;
+        p += wasm_debug_str(msg + p, "get_mv OOB: idx=");
+        p += wasm_debug_uint(msg + p, (uint32_t)index);
+        p += wasm_debug_str(msg + p, " count=");
+        p += wasm_debug_uint(msg + p, (uint32_t)count);
+        p += wasm_debug_str(msg + p, " nargs_raw=0x");
+        p += wasm_debug_hex8(msg + p, (uint32_t)raw);
+        p += wasm_debug_str(msg + p, " vsp=0x");
+        p += wasm_debug_hex8(msg + p, (uint32_t)tcr->wasm_gprs[vsp]);
+        p += wasm_debug_str(msg + p, " save_vsp=0x");
+        p += wasm_debug_hex8(msg + p, (uint32_t)(uintptr_t)tcr->save_vsp);
+        msg[p++] = '\n';
+        wasm_host_log(msg, (unsigned)p);
+      }
+    }
     return lisp_nil;
   }
   if (index == 0) {
