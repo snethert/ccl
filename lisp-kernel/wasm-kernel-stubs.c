@@ -5187,19 +5187,6 @@ wasm_const_pool_install_inner(TCR *tcr, uint32_t entry_index, uint32_t payload_p
           return lisp_nil;
         }
         unsigned subtag = wasm_const_pool_normalize_subtag(raw_subtag);
-        {
-          char d[96]; int p = 0;
-          p += wasm_debug_str(d + p, "ivec-cp: raw=0x");
-          p += wasm_debug_hex8(d + p, raw_subtag);
-          p += wasm_debug_str(d + p, " norm=0x");
-          p += wasm_debug_hex8(d + p, subtag);
-          p += wasm_debug_str(d + p, " n=");
-          p += wasm_debug_uint(d + p, vcount);
-          p += wasm_debug_str(d + p, " eidx=");
-          p += wasm_debug_uint(d + p, entry_index);
-          d[p++] = '\n';
-          wasm_host_log(d, (unsigned)p);
-        }
         LispObj vec = wasm_misc_alloc(tcr, subtag, (signed_natural)vcount);
         if (vec == lisp_nil) {
           return lisp_nil;

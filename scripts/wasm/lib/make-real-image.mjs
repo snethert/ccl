@@ -920,7 +920,6 @@ const subprims = await instantiateWasm(
   }),
 );
 trace("subprims instantiated");
-const subex = subprims.instance.exports;
 
 installSubprimsTable({
   table: runtime.subprimsTable,
@@ -932,7 +931,7 @@ trace("subprims table installed");
 const imageLen = bootBytes.byteLength >>> 0;
 const pageSize = 65536;
 const cstackSize = 1 << 20;
-const reserve = 64 << 20;
+const reserve = 1088 << 20;  // Must exceed kernel's reserved_area_size (1024 MB)
 const needBytes = imageLen + cstackSize + reserve;
 let haveBytes = runtime.memory.buffer.byteLength;
 if (needBytes > haveBytes) {
@@ -975,7 +974,22 @@ new Uint8Array(runtime.memory.buffer).set(bootBytes, blobBase);
 if (typeof ex.wasm_ccl_load_image !== "function") {
   fail("kernel missing wasm_ccl_load_image");
 }
-ex.wasm_ccl_load_image(blobBase, imageLen);
+/* Diagnostic: verify boot image placement and integrity before loading */
+{
+  const mem = new Uint8Array(runtime.memory.buffer);
+  const sig = mem.slice(blobBase + imageLen - 16, blobBase + imageLen);
+  console.error(`DIAG boot image: blobBase=0x${blobBase.toString(16)} imageLen=${imageLen} memSize=0x${runtime.memory.buffer.byteLength.toString(16)} cstackBase=0x${cstackBase.toString(16)}`);
+  console.error(`DIAG boot image trailer (last 16 bytes): ${Array.from(sig).map(b => b.toString(16).padStart(2,'0')).join(' ')}`);
+  const hdr = mem.slice(blobBase, blobBase + 16);
+  console.error(`DIAG boot image header (first 16 bytes): ${Array.from(hdr).map(b => b.toString(16).padStart(2,'0')).join(' ')}`);
+}
+try {
+  ex.wasm_ccl_load_image(blobBase, imageLen);
+} catch (e) {
+  console.error(`wasm_ccl_load_image failed: ${e.message}`);
+  console.error(e.stack);
+  process.exit(1);
+}
 trace("boot image loaded");
 
 /* Mark subprims ready so RESTORE-LISP-POINTERS (and fasload) can dispatch
@@ -1065,7 +1079,7 @@ if (bootModulesPath) {
       subprimsTable: runtime.subprimsTable,
       microkernel,
       strict: false,
-      installConstPools: false,
+      installConstPools: true,
       verbose: traceEnabled,
     });
     trace(`boot modules bundle installed ${bootInstall.installed}/${bootInstall.count}`);
@@ -1122,7 +1136,7 @@ const bundleInstall = await installCompiledModulesFromBundle({
   subprimsTable: runtime.subprimsTable,
   microkernel,
   strict: false,
-  installConstPools: false,
+  installConstPools: true,
 });
 trace(`compiled module bundle installed ${bundleInstall.installed}/${bundleInstall.count}`);
 if (bundleInstall.count === 0) {

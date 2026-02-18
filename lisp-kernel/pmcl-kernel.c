@@ -394,7 +394,7 @@ unsigned unsigned_max(unsigned x, unsigned y)
 
 natural
 #ifdef WASM32
-reserved_area_size = (128 << 20);
+reserved_area_size = (1024 << 20);  /* 1 GB — CCL needs large heap for compilation */
 #else
 reserved_area_size = MAXIMUM_MAPPABLE_MEMORY;
 #endif

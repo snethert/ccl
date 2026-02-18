@@ -49,6 +49,7 @@ all: subprims
 subprims: $(COBJ)
 	@echo "Building subprims module..."
 	@mkdir -p $(SUBPRIMS_DIR)
-	$(WASM_LD) --no-entry --import-memory --import-table -z stack-size=1048576 \
+	$(WASM_LD) --no-entry --import-memory --import-table \
+	  --global-base=1064960 -z stack-size=16384 \
 	  -o $(SUBPRIMS_WASM) $(COBJ)
 	@echo "Subprims built: $(SUBPRIMS_WASM)"

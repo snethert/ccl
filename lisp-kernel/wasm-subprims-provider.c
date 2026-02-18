@@ -136,6 +136,108 @@ wasm_diag_append_hex32(char *dst, unsigned pos, uint32_t value)
   return pos;
 }
 
+#define WASM_DIAG_ENTRY_UNKNOWN 0xffffffffu
+#define WASM_DIAG_ENTRY_LENGTH 713u
+#define WASM_DIAG_ENTRY_SEQUENCE_TYPE 917u
+#define WASM_DIAG_ENTRY_SYMBOL_NAME 947u
+#define WASM_DIAG_ENTRY_CLEAR_ALL_GF_CACHES 2000u
+#define WASM_DIAG_EDGE_LOG_LIMIT 256u
+#define WASM_DIAG_CALLSTACK_MAX 1024u
+
+static uint32_t wasm_diag_callstack[WASM_DIAG_CALLSTACK_MAX];
+static uint32_t wasm_diag_edge_log_count = 0u;
+
+static int
+wasm_diag_entry_is_watch(uint32_t entry_index)
+{
+  switch (entry_index) {
+  case WASM_DIAG_ENTRY_LENGTH:
+  case WASM_DIAG_ENTRY_SEQUENCE_TYPE:
+  case WASM_DIAG_ENTRY_SYMBOL_NAME:
+  case WASM_DIAG_ENTRY_CLEAR_ALL_GF_CACHES:
+    return 1;
+  default:
+    return 0;
+  }
+}
+
+static const char *
+wasm_diag_entry_watch_name(uint32_t entry_index)
+{
+  switch (entry_index) {
+  case WASM_DIAG_ENTRY_LENGTH:
+    return "LENGTH";
+  case WASM_DIAG_ENTRY_SEQUENCE_TYPE:
+    return "SEQUENCE-TYPE";
+  case WASM_DIAG_ENTRY_SYMBOL_NAME:
+    return "SYMBOL-NAME";
+  case WASM_DIAG_ENTRY_CLEAR_ALL_GF_CACHES:
+    return "CLEAR-ALL-GF-CACHES";
+  default:
+    return "OTHER";
+  }
+}
+
+static void
+wasm_diag_log_watch_call(TCR *tcr, uint32_t caller_entry, uint32_t callee_entry, uint32_t depth)
+{
+  if (wasm_diag_edge_log_count >= WASM_DIAG_EDGE_LOG_LIMIT) {
+    return;
+  }
+  if (!wasm_diag_entry_is_watch(caller_entry) && !wasm_diag_entry_is_watch(callee_entry)) {
+    return;
+  }
+  char msg[320];
+  unsigned p = 0;
+  p = wasm_diag_append_str(msg, p, "edge d=0x");
+  p = wasm_diag_append_hex32(msg, p, depth);
+  p = wasm_diag_append_str(msg, p, " c=0x");
+  p = wasm_diag_append_hex32(msg, p, caller_entry);
+  p = wasm_diag_append_str(msg, p, "(");
+  p = wasm_diag_append_str(msg, p, wasm_diag_entry_watch_name(caller_entry));
+  p = wasm_diag_append_str(msg, p, ")->0x");
+  p = wasm_diag_append_hex32(msg, p, callee_entry);
+  p = wasm_diag_append_str(msg, p, "(");
+  p = wasm_diag_append_str(msg, p, wasm_diag_entry_watch_name(callee_entry));
+  p = wasm_diag_append_str(msg, p, ")");
+  p = wasm_diag_append_str(msg, p, " n=0x");
+  p = wasm_diag_append_hex32(msg, p, (uint32_t)wasm_reg(tcr, nargs));
+  p = wasm_diag_append_str(msg, p, " z=0x");
+  p = wasm_diag_append_hex32(msg, p, (uint32_t)wasm_reg(tcr, arg_z));
+  p = wasm_diag_append_str(msg, p, " y=0x");
+  p = wasm_diag_append_hex32(msg, p, (uint32_t)wasm_reg(tcr, arg_y));
+  msg[p++] = '\n';
+  wasm_host_log(msg, p);
+  wasm_diag_edge_log_count++;
+}
+
+static void
+wasm_diag_log_watch_return(TCR *tcr, uint32_t entry_index, uint32_t depth)
+{
+  if (wasm_diag_edge_log_count >= WASM_DIAG_EDGE_LOG_LIMIT) {
+    return;
+  }
+  if (entry_index != WASM_DIAG_ENTRY_CLEAR_ALL_GF_CACHES) {
+    return;
+  }
+  char msg[256];
+  unsigned p = 0;
+  p = wasm_diag_append_str(msg, p, "edge-ret d=0x");
+  p = wasm_diag_append_hex32(msg, p, depth);
+  p = wasm_diag_append_str(msg, p, " 0x");
+  p = wasm_diag_append_hex32(msg, p, entry_index);
+  p = wasm_diag_append_str(msg, p, "(CLEAR-ALL-GF-CACHES)");
+  p = wasm_diag_append_str(msg, p, " throw=0x");
+  p = wasm_diag_append_hex32(msg, p, (uint32_t)tcr->wasm_pending_throw);
+  p = wasm_diag_append_str(msg, p, " n=0x");
+  p = wasm_diag_append_hex32(msg, p, (uint32_t)wasm_reg(tcr, nargs));
+  p = wasm_diag_append_str(msg, p, " z=0x");
+  p = wasm_diag_append_hex32(msg, p, (uint32_t)wasm_reg(tcr, arg_z));
+  msg[p++] = '\n';
+  wasm_host_log(msg, p);
+  wasm_diag_edge_log_count++;
+}
+
 static void
 wasm_diag_log_misc_alloc_bad_count(TCR *tcr, LispObj subtag_val, LispObj count_val)
 {
@@ -2182,6 +2284,16 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
 
   {
     uint32_t entry_index = (uint32_t)unbox_fixnum(entry);
+    uint32_t caller_entry = WASM_DIAG_ENTRY_UNKNOWN;
+    uint32_t depth = wasm_funcall_depth;
+    if (depth > 0 && (depth - 1) < WASM_DIAG_CALLSTACK_MAX) {
+      wasm_diag_callstack[depth - 1] = entry_index;
+    }
+    if (depth > 1 && (depth - 2) < WASM_DIAG_CALLSTACK_MAX) {
+      caller_entry = wasm_diag_callstack[depth - 2];
+    }
+    wasm_diag_log_watch_call(tcr, caller_entry, entry_index, depth);
+
     uint32_t entry_call_abi = wasm_prepare_entry_call(entry_index);
     switch (entry_call_abi) {
     case WASM_ENTRY_CALL_ABI_UNARY_I32: {
@@ -2274,6 +2386,7 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
       break;
     }
     }
+    wasm_diag_log_watch_return(tcr, entry_index, depth);
   }
   wasm_funcall_depth--;
 }
