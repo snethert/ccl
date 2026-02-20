@@ -12,11 +12,15 @@ Keep the entrypoint index in sync with the kernel boot stub.
 from __future__ import annotations
 
 import argparse
+import os
 import struct
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "build" / "wasm32"))
+sys.path.insert(0, os.environ.get(
+    "CCL_WASM_BUILD_DIR",
+    str(Path(__file__).resolve().parents[2] / "build" / "wasm32"),
+))
 from abi_constants import *  # noqa: F403,E402
 
 

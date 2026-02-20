@@ -19,6 +19,7 @@ import {
   installSubprimsTable,
   instantiateWasm,
 } from "./ccl-loader.mjs";
+import { WASM_BOOT_ENTRY_INDEX } from "./abi-constants.mjs";
 import { runStartupGate } from "./startup-gate.mjs";
 import {
   assertBootstrapContract,
@@ -340,7 +341,7 @@ if (typeof kernelExports.wasm_reset_root_image_runtime_state === "function") {
 }
 
 if (!skipStartLisp) {
-  const bootIndex = 200;
+  const bootIndex = WASM_BOOT_ENTRY_INDEX;
   assert(typeof kernelExports.wasm_boot_entry === "function", "missing wasm_boot_entry export");
   if (runtime.subprimsTable.length <= bootIndex) {
     runtime.subprimsTable.grow(bootIndex - runtime.subprimsTable.length + 1);

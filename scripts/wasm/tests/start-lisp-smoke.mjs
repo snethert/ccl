@@ -8,6 +8,7 @@
 import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
+import { WASM_BOOT_ENTRY_INDEX } from "./abi-constants.mjs";
 import { createMicrokernel } from "./microkernel.mjs";
 import {
   createCclImports,
@@ -114,7 +115,7 @@ await installCompiledModulesFromRegistry({
   microkernel,
 });
 
-const bootIndex = 200;
+const bootIndex = WASM_BOOT_ENTRY_INDEX;
 assert(typeof ex.wasm_boot_entry === "function", "missing wasm_boot_entry export");
 if (runtime.subprimsTable.length <= bootIndex) {
   runtime.subprimsTable.grow(bootIndex - runtime.subprimsTable.length + 1);
