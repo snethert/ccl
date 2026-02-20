@@ -5447,12 +5447,13 @@ _SPksignalerr(void)
 
   /* No catch handler — ERRDISP would dispatch through the condition system
      which ultimately THROWs; with no catch frame that recurses into
-     _SPksignalerr.  Short-circuit to pending_throw directly. */
+     _SPksignalerr.  Absorb the error: compiled WASM code doesn't check
+     pending_throw, so setting it only poisons the C wrapper's return code
+     without affecting Lisp execution.  Log and return. */
   if (tcr->catch_top == 0 || tcr->catch_top == (LispObj)nil_value) {
     char m[48]; unsigned mp = 0;
-    mp = wasm_diag_append_str(m, mp, "ksignalerr: no catch, pending_throw\n");
+    mp = wasm_diag_append_str(m, mp, "ksignalerr: no catch, absorbed\n");
     wasm_host_log(m, mp);
-    wasm_set_pending_throw(tcr, box_fixnum(16));  /* ksignalerr: no catch handler */
     return;
   }
 

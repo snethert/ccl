@@ -16,6 +16,7 @@ WASM_LD := $(CCL_WASM_LD)
 WASM_TARGET := $(CCL_WASM_TARGET)
 
 # Build directories
+BUILD_DIR := $(CCL_WASM_BUILD_DIR)
 SUBPRIMS_DIR := $(CCL_WASM_SUBPRIMS_DIR)
 SUBPRIMS_WASM := $(SUBPRIMS_DIR)/subprims.wasm
 
@@ -33,7 +34,7 @@ PLATFORM_H = platform-wasm32.h
 .DEFAULT_GOAL := all
 
 .c.o:
-	$(CC) --target=$(WASM_TARGET) -include ../../$(PLATFORM_H) -c $< $(CDEFINES) $(CDEBUG) $(COPT) $(WFORMAT) -o $@
+	$(CC) --target=$(WASM_TARGET) -include ../../$(PLATFORM_H) -I$(BUILD_DIR) -c $< $(CDEFINES) $(CDEBUG) $(COPT) $(WFORMAT) -o $@
 
 COBJ = wasm-subprims-provider.o
 
