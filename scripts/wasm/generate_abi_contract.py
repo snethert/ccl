@@ -536,11 +536,14 @@ def write_lisp(out_dir: Path, contract: dict) -> None:
     lines.append("                    name expected actual))))")
     lines.append("")
 
-    # Tag constants
+    # Tag constants — guarded by boundp since not all C constants have
+    # Lisp equivalents (e.g. node_shift exists in C but not wasm-arch.lisp).
+    # The C _Static_assert still validates these; Lisp checks what it defines.
     lines.append("    ;; Tag constants")
     for c_name, val in tags.items():
         lisp_name = c_to_lisp(c_name)
-        lines.append(f'    (abi-check "{lisp_name}" {val} {lisp_name})')
+        lines.append(f"    (when (boundp '{lisp_name})")
+        lines.append(f'      (abi-check "{lisp_name}" {val} (symbol-value \'{lisp_name})))')
     lines.append("")
 
     # Key subtags (the ones most likely to cause bugs)
@@ -554,10 +557,12 @@ def write_lisp(out_dir: Path, contract: dict) -> None:
     for c_name in key_subtags:
         if c_name in subtags:
             lisp_name = c_to_lisp(c_name)
-            lines.append(f'    (abi-check "{lisp_name}" {subtags[c_name]} {lisp_name})')
+            lines.append(f"    (when (boundp '{lisp_name})")
+            lines.append(f'      (abi-check "{lisp_name}" {subtags[c_name]} (symbol-value \'{lisp_name})))')
     lines.append("")
 
-    # Named subprim index cross-checks
+    # Named subprim index cross-checks — guarded since *wasm-subprim-names*
+    # may not be bound in all loading contexts (e.g. cross-compiler bootstrap).
     lines.append("    ;; Named subprim indices (cross-check against *wasm-subprim-names*)")
     sp_to_lisp_sym = {
         "WASM_SUBPRIM_FUNCALL_INDEX": ".SPfuncall",
@@ -567,19 +572,21 @@ def write_lisp(out_dir: Path, contract: dict) -> None:
         "WASM_SUBPRIM_NTHROWVALUES_INDEX": ".SPnthrowvalues",
         "WASM_SUBPRIM_NTHROW1VALUE_INDEX": ".SPnthrow1value",
     }
+    lines.append("    (when (boundp '*wasm-subprim-names*)")
     for c_name, idx in named_sp.items():
         lisp_sym = sp_to_lisp_sym.get(c_name)
         if lisp_sym:
             lines.append(
-                f'    (abi-check "{c_name}" {idx}'
+                f'      (abi-check "{c_name}" {idx}'
                 f" (position '{lisp_sym} *wasm-subprim-names*))"
             )
     lines.append("")
 
     # Subprims count
-    lines.append("    ;; Subprims count (must match generated subprims-map.json)")
-    lines.append('    (abi-check "subprims-count" +wasm-subprims-count+')
-    lines.append("               (length *wasm-subprim-names*))")
+    lines.append("      ;; Subprims count (must match generated subprims-map.json)")
+    lines.append('      (abi-check "subprims-count" +wasm-subprims-count+')
+    lines.append("                 (length *wasm-subprim-names*))")
+    lines.append("    )  ;; end when boundp *wasm-subprim-names*")
     lines.append("")
 
     lines.append("    ))")  # close flet and eval-when
