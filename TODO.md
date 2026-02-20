@@ -139,7 +139,15 @@ used non-existent acode operators, breaking cross-compilation loading. Fixed.
 
 **Resolved blocker (2026-02-19):** `_SPmisc_alloc: bad count` crash in `%CONS-NHASH-VECTOR` during cold-boot-init. Root cause: `wasm2-%alloc-misc` 3-arg register assignment was wrong — compiler put count→arg_y, subtag→arg_z, initval→arg_x, but `_SPmisc_alloc_init` (ported from ARM) expects count→arg_x, subtag→arg_y, initval→arg_z. The 2-arg case was correct because WASM 2-arg convention (1st→arg_y, 2nd→arg_z) happens to match ARM 2-arg. But the 3-arg extension was rotated by one position. Fix: changed 3-arg case to use `:set-arg2` (arg_x=count), `:set-arg1` (arg_y=subtag), `:set-arg0` (arg_z=initval). Note: WASM subprims have MIXED conventions — some (`_SPmisc_alloc_init`) follow ARM convention, others (`_SPmisc_set`, `_SPbuiltin_minus`) follow WASM convention (1st→arg_z). The fix is specific to `wasm2-%alloc-misc`.
 
-**Current blocker:** Rebuild v11 in progress — verifying whether `_SPmisc_alloc` fix resolves the hash-vector allocation crash and cold-boot-init progresses further.
+**Resolved blocker (2026-02-20):** `wasm_lisp_word_ref` CAR/CDR contract inconsistency — three bugs in one function:
+1. **Cons case used list-as-sequence traversal instead of direct slot access.** `%cdr` (idx=0) returned `box_fixnum(list_length)` instead of the actual cdr pointer. `%car` (idx=1) only worked on 1-element proper lists. Root cause: the cons-tagged branch counted list length then walked to element `len-idx`, instead of reading struct fields directly. Fix: replaced 35-line traversal with direct struct slot access (`idx 0 → cell->cdr`, `idx 1 → cell->car`), matching `constants.h:41-44` and `wasm-arch.lisp:335`.
+2. **idx<0 early return blocked typecode header reads.** `wasm2-typecode` emits `lisp-word-ref(misc_obj, box_fixnum(-1))` to read the header word, but the blanket `if (idx < 0) return lisp_nil` at the top of the function intercepted it. Fix: removed blanket guard, added `idx == -1 → header_of(base)` in the `fulltag_misc` case.
+3. **JS loader car/cdr variable names swapped.** In `ccl-loader.mjs:decodeCompiledModuleRegistry`, `car` read offset 0 (= cdr field) and `cdr` read offset 4 (= car field). Fix: added `CONS_CDR_OFFSET`/`CONS_CAR_OFFSET` constants, used them in the read calls.
+Note: session notes from 2026-02-18 described adding a "fulltag_cons direct-access case" and "idx==-1 → return header" but neither was implemented in the code.
+
+**Rebuild v12 result (2026-02-20):** CAR/CDR fix verified. Cold-boot-init advanced from spill_push=38,266 (v11) to spill_push=59,659 (v12) — 56% more work completed. Crash: `RuntimeError: unreachable` at entry 652, slot 185, `fname=0x00000000` (null function lookup). `arg_z=0x00000049` still present at crash point. Removed NODEVEC diagnostic (742K lines of unconditional logging per rebuild).
+
+**Current blocker:** Null function lookup at entry 652 during cold-boot-init. Previous blocker (CAR/CDR contract inconsistency) resolved in v12.
 
 **Tooling added:**
 - `scripts/wasm/check-freshness.sh` — Detects stale build artifacts across the full dependency chain

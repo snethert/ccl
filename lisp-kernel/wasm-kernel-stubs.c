@@ -932,21 +932,6 @@ wasm_alloc_node_vector_initialized(TCR *tcr, unsigned subtag, signed_natural cou
     }
   }
 
-  /* Diagnostic: trace node vector allocations to debug NIL-vs-0 issue */
-  if (count > 10) {
-    char d[128]; int p = 0;
-    p += wasm_debug_str(d + p, "NODEVEC subtag=0x");
-    p += wasm_debug_hex8(d + p, subtag);
-    p += wasm_debug_str(d + p, " count=");
-    p += wasm_debug_uint(d + p, (uint32_t)count);
-    p += wasm_debug_str(d + p, " d0=0x");
-    p += wasm_debug_hex8(d + p, (uint32_t)data[0]);
-    p += wasm_debug_str(d + p, " sv=");
-    p += wasm_debug_uint(d + p, (subtag == subtag_simple_vector) ? 1 : 0);
-    d[p++] = '\n';
-    wasm_host_log(d, (unsigned)p);
-  }
-
   return obj;
 }
 
@@ -1366,44 +1351,25 @@ wasm_lisp_word_ref(LispObj base, LispObj offset)
   }
 
   signed_natural idx = unbox_fixnum(offset);
-  if (idx < 0) {
+
+  /* Nil: %car/%cdr of nil = nil (unsafe %car/%cdr skip nil check) */
+  if (base == (LispObj)nil_value) {
     return lisp_nil;
   }
 
-  if (base == (LispObj)nil_value || tag_of(base) == tag_list) {
-    signed_natural len = 0;
-    LispObj cur = base;
-    while (cur != (LispObj)nil_value) {
-      if (tag_of(cur) != tag_list) {
-        return lisp_nil;
-      }
-      cons *cell = (cons *)ptr_from_lispobj(untag(cur));
-      cur = cell->cdr;
-      len++;
-    }
+  /* Cons: direct struct slot access.
+     idx 0 = word 0 = cdr (struct offset 0)
+     idx 1 = word 1 = car (struct offset 4)
+     Matches constants.h:41-44 and wasm-arch.lisp:335. */
+  if (tag_of(base) == tag_list) {
+    cons *cell = (cons *)ptr_from_lispobj(untag(base));
+    if (idx == 0) return cell->cdr;
+    if (idx == 1) return cell->car;
+    return lisp_nil;
+  }
 
-    if (idx == 0) {
-      return box_fixnum(len);
-    }
-
-    signed_natural element_index = len - idx;
-    if (element_index < 0 || element_index >= len) {
-      return lisp_nil;
-    }
-
-    cur = base;
-    for (signed_natural i = 0; i < element_index; i++) {
-      if (cur == (LispObj)nil_value || tag_of(cur) != tag_list) {
-        return lisp_nil;
-      }
-      cons *cell = (cons *)ptr_from_lispobj(untag(cur));
-      cur = cell->cdr;
-    }
-    if (cur == (LispObj)nil_value || tag_of(cur) != tag_list) {
-      return lisp_nil;
-    }
-    cons *cell = (cons *)ptr_from_lispobj(untag(cur));
-    return cell->car;
+  if (idx < 0 && fulltag_of(base) != fulltag_misc) {
+    return lisp_nil;
   }
 
   if (tag_of(base) == tag_fixnum) {
@@ -1444,9 +1410,17 @@ wasm_lisp_word_ref(LispObj base, LispObj offset)
       wasm_host_log(msg, (unsigned)p);
       return lisp_nil;
     }
+    /* idx -1 = header word (used by wasm2-typecode to avoid
+       box_fixnum(untag(obj)) overflow on large heap addresses). */
+    if (idx == -1) {
+      return header_of(base);
+    }
+    if (idx < 0) {
+      return lisp_nil;
+    }
     LispObj header = header_of(base);
     signed_natural count = header_element_count(header);
-    if (idx >= 0 && idx < count) {
+    if (idx < count) {
       /* deref(o,0) is the header; data elements start at deref(o,1).
          idx is data-relative (0 = first data element), so add 1. */
       LispObj result = deref(base, idx + 1);

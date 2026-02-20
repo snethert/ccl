@@ -192,6 +192,9 @@ const FULLTAG_CONS = 0x5;
 const FULLTAG_MISC = 0x6;
 const FULLTAG_NODEHEADER = 0x2;
 const FULLTAG_IMMHEADER = 0x7;
+/* Cons cell layout — matches constants.h: struct cons { cdr; car; } */
+const CONS_CDR_OFFSET = 0;
+const CONS_CAR_OFFSET = 4;
 const NUM_SUBTAG_BITS = 8;
 const SUBTAG_MASK = 0xff;
 const SUBTAG_SIMPLE_VECTOR = (31 << 3) | FULLTAG_NODEHEADER;
@@ -299,8 +302,8 @@ export function decodeCompiledModuleRegistry({ memory, registry, nil }) {
       throw new Error(`compiled module registry is not a list: 0x${list.toString(16)}`);
     }
     const base = untag(list, FULLTAG_CONS);
-    const car = readU32(view, base);
-    const cdr = readU32(view, base + 4);
+    const car = readU32(view, base + CONS_CAR_OFFSET);
+    const cdr = readU32(view, base + CONS_CDR_OFFSET);
 
     const vec = readSimpleVector(view, car);
     if (vec.length < 4) {

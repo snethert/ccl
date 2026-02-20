@@ -79,6 +79,38 @@ For direct subprim calls (e.g., `_SPmisc_alloc` from `wasm2-%alloc-misc`):
 
 These write TCR registers **directly** — they bypass the vstack entirely. The argument semantics are per-subprim (e.g., `_SPmisc_alloc`: arg_z = subtag, arg_y = count).
 
+## Memory Access: wasm_lisp_word_ref
+
+**Source:** `wasm_lisp_word_ref()` in `lisp-kernel/wasm-kernel-stubs.c`
+
+General-purpose tagged memory read used by the WASM compiler for `%car`, `%cdr`, `%svref`, `%slot-ref`, `typecode`, `%fixnum-ref`, and `%lisp-word-ref`.
+
+Dispatch by fulltag of `base`:
+
+| Base tag | idx semantics |
+|----------|---------------|
+| nil | Always returns nil |
+| fulltag_cons | idx 0 = cdr (struct offset 0), idx 1 = car (struct offset 4) |
+| fulltag_misc | idx -1 = header word, idx 0+ = data slot N (deref at N+1) |
+| tag_fixnum | Raw address: `ptr[idx]` (unboxed pointer arithmetic) |
+
+### Cons cell layout
+
+Canonical definition in `constants.h:41-44`:
+
+```c
+typedef struct cons {
+  LispObj cdr;    /* offset 0, word 0 */
+  LispObj car;    /* offset 4, word 1 */
+} cons;
+```
+
+Lisp definition in `wasm-arch.lisp:335`: `(define-lisp-object cons fulltag-cons cdr car)`
+
+JS constants in `ccl-loader.mjs`: `CONS_CDR_OFFSET = 0`, `CONS_CAR_OFFSET = 4`
+
+The compiler emits `%cdr` as `lisp-word-ref(cons, box_fixnum(0))` and `%car` as `lisp-word-ref(cons, box_fixnum(1))`. Mutation goes through `_SPrplaca` / `_SPrplacd` subprims which use struct field access directly.
+
 ## Known Issues
 
 ### Latent bug: `:arg0` register mapping (DISABLED)
