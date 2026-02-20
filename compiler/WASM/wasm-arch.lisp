@@ -933,4 +933,16 @@
 (defconstant fasl-min-version #x66)
 (defparameter *image-abi-version* 1045)
 
+;;; Cross-check against generated ABI contract (if available).
+;;; The probe-file guard means fresh clones (before first generation) still compile.
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (let* ((base (or *load-pathname* *compile-file-pathname*))
+         (abi-path (when base
+                     (merge-pathnames
+                      (make-pathname :directory '(:relative :up :up "build" "wasm32")
+                                     :name "abi-validate" :type "lisp")
+                      base))))
+    (when (and abi-path (probe-file abi-path))
+      (load abi-path))))
+
 (provide "WASM-ARCH")

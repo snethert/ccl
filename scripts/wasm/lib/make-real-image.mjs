@@ -49,6 +49,7 @@ import {
   rewriteConstPoolFunctionDesignators,
 } from "./bootstrap-function-resolver.mjs";
 import { FILE_MODE_READ } from "./persist-service.mjs";
+import { WASM_BOOT_ENTRY_INDEX } from "./abi-constants.mjs";
 
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
@@ -1393,7 +1394,7 @@ try {
 
 const compiledModulesBinaryPath = path.join(path.dirname(modulesPath), compiledModulesBundle.binary);
 const compiledModulesBinaryBytes = await fs.readFile(compiledModulesBinaryPath);
-const bootEntryIndex = 200;
+const bootEntryIndex = WASM_BOOT_ENTRY_INDEX;
 const manifest = {
   $schema: "./root-image-manifest.schema.json",
   schemaVersion: 1,

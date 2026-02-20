@@ -1,6 +1,6 @@
 # Building CCL WASM
 
-**Last Updated:** 2026-02-15
+**Last Updated:** 2026-02-20
 **Status:** Active
 **Scope:** Build instructions and dependencies for the CCL WASM port
 **Doc Version:** 1.0.0
@@ -20,6 +20,7 @@ scripts/wasm/rebuild-everything.sh
 ```
 
 That's it! The script will:
+- Generate the ABI contract (cross-language constant validation)
 - Auto-detect your toolchain
 - Build the WASM kernel
 - Compile runtime modules
@@ -28,6 +29,10 @@ That's it! The script will:
 **Build artifacts** will be in `build/wasm32/`:
 ```
 build/wasm32/
+├── abi-contract.json        # ABI contract (generated)
+├── abi-validate.h           # C _Static_assert checks (generated)
+├── abi-validate.lisp        # Lisp load-time assertions (generated)
+├── abi_constants.py         # Python constants (generated)
 ├── kernel/wasmcl.wasm       # WASM kernel binary
 ├── images/*.image           # Heap images
 └── modules/*.json           # Compiled modules
@@ -397,6 +402,10 @@ make -C lisp-kernel/wasm32 help
 ccl/
 ├── build/                  # Build artifacts (gitignored)
 │   └── wasm32/
+│       ├── abi-contract.json    # ABI contract (generated)
+│       ├── abi-validate.h       # C _Static_assert (generated)
+│       ├── abi-validate.lisp    # Lisp assertions (generated)
+│       ├── abi_constants.py     # Python constants (generated)
 │       ├── kernel/         # wasmcl.wasm
 │       ├── images/         # *.image files
 │       ├── modules/        # *.json, *.bin, *.idx
@@ -406,6 +415,8 @@ ccl/
 │   └── config.mk           # Default configuration
 ├── scripts/wasm/           # Build scripts
 │   ├── env.sh              # Environment setup
+│   ├── generate_abi_contract.py  # ABI contract generator
+│   ├── lib/abi-constants.mjs     # JS constants (generated)
 │   └── rebuild-everything.sh  # Full rebuild orchestrator
 └── doc/wasm/               # Documentation only (no artifacts)
 ```
@@ -413,9 +424,10 @@ ccl/
 ### How It Works
 
 1. **env.sh** detects your platform and toolchain, exports environment variables
-2. **Makefile** reads variables from `config.mk`, builds kernel to `build/wasm32/kernel/`
-3. **rebuild-everything.sh** orchestrates full dependency-ordered rebuild
-4. All artifacts go to **build/** directory (gitignored)
+2. **generate_abi_contract.py** extracts constants from C headers and generates validation/binding files for C, Lisp, JS, and Python
+3. **Makefile** reads variables from `config.mk`, builds kernel to `build/wasm32/kernel/` (includes `_Static_assert` validation from the ABI contract)
+4. **rebuild-everything.sh** orchestrates full dependency-ordered rebuild
+5. All artifacts go to **build/** directory (gitignored)
 
 ### Legacy Note
 
@@ -427,6 +439,37 @@ Directory reorganization:
 - WASM binaries: `doc/wasm/js/*.wasm` → `build/wasm32/*.wasm`
 - Tests: `doc/wasm/js/*-smoke.mjs` → `scripts/wasm/tests/*-smoke.mjs`
 - Infrastructure: `doc/wasm/js/*.mjs` → `scripts/wasm/lib/*.mjs`
+
+---
+
+## ABI Contract (Cross-Language Constant Validation)
+
+The build pipeline includes an ABI contract system that prevents cross-language constant drift between C, Lisp, JS, and Python. The generator script reads canonical definitions from C headers and produces validation and binding files for all four languages.
+
+**Generator:** `scripts/wasm/generate_abi_contract.py`
+
+**Source headers** (canonical):
+- `lisp-kernel/arm-constants.h` — tags, fulltags, registers, subtag values
+- `lisp-kernel/constants.h` — struct layouts (cons, symbol, macptr, etc.)
+- `lisp-kernel/wasm-host.h` — kernel opcodes, status codes, stream kinds
+- `lisp-kernel/wasm-kernel-stubs.c` — boot entry enum, named subprim indices
+
+**Generated outputs:**
+
+| File | Language | Purpose |
+|------|----------|---------|
+| `build/wasm32/abi-contract.json` | JSON | Machine-readable canonical contract |
+| `build/wasm32/abi-validate.h` | C | `_Static_assert` checks (included via `wasm-constants-bridge.h`) |
+| `build/wasm32/abi-validate.lisp` | Lisp | Load-time assertions (loaded from `wasm-arch.lisp`) |
+| `scripts/wasm/lib/abi-constants.mjs` | JS | ES module imported by all JS consumers |
+| `build/wasm32/abi_constants.py` | Python | Module imported by `make_minimal_image.py` |
+
+**Run manually:**
+```bash
+python3 scripts/wasm/generate_abi_contract.py
+```
+
+**Freshness:** `check-freshness.sh` tracks the ABI contract as artifact 0 and flags it stale when any source header or the generator script changes.
 
 ---
 

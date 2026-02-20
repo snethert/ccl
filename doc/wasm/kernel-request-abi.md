@@ -214,6 +214,11 @@ All opcodes are `u32`.
 
 Unrecognized opcodes MUST complete with `kernel_result == -ENOSYS`.
 
+**Note:** All opcode values, status codes, and stream kinds are validated at build
+time by the ABI contract system. The JS microkernel imports these values from
+`abi-constants.mjs` (generated from `wasm-host.h`). See [build.md](build.md) for
+details on the ABI contract generator.
+
 ## Payload and response formats
 
 All payloads are byte strings starting at `payloadPtr` with length `payloadLen`.

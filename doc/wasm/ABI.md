@@ -2,7 +2,7 @@
 
 **Status:** Active
 **Scope:** WASM backend subprims ABI decisions and calling conventions
-**Last Updated:** 2026-02-17
+**Last Updated:** 2026-02-20
 **Doc Version:** 1.1.0
 
 This document captures the current decisions for the WASM backend subprims ABI.
@@ -169,15 +169,15 @@ assumes `wasm_get_current_tcr()` is the single authoritative access path.
 ### Boot Entry Stub (Bring‑Up)
 
 - Minimal boot images may point `%toplevel-function%` at a stub function object.
-- The stub entrypoint is a **table index**; current bring‑up uses **index 200**.
+- The stub entrypoint is a **table index**; current bring‑up uses **index 200** (validated by the ABI contract — see `WASM_BOOT_ENTRY_INDEX` in `abi-constants.mjs`).
 - The host should install the kernel export `wasm_boot_entry` at that table slot.
 - The kernel exports `wasm_get_tcr_toplevel_function` and
   `wasm_set_tcr_toplevel_function` to read/write the per‑TCR toplevel slot
   (`vs_area->high - node_size`). `start_lisp` and `wasm_run_toplevel` will
   use the slot when `%toplevel-function%` is NIL.
 - The funcall smoke test uses a second stub entrypoint at **index 201**
-  (`wasm_test_entry`) to validate the calling convention.
-- The compiler constant-return stub uses **index 202** (`wasm_const_entry`).
+  (`wasm_test_entry`) to validate the calling convention. (Validated by ABI contract: `WASM_TEST_ENTRY_INDEX`.)
+- The compiler constant-return stub uses **index 202** (`wasm_const_entry`). (Validated by ABI contract: `WASM_CONST_ENTRY_INDEX`.)
   The entrypoint reads the constant from the current function object
   (`uvref` slot 2 / `deref(fn, 3)`), falling back to `wasm_set_const_value`
   if no function object is available.
@@ -277,9 +277,24 @@ The following changes will be required (no code included here):
 - `fast` profile compiler output may use direct subprim imports for allowlisted
   hot paths, with module-level `0x11` opcode gating.
 
+## ABI Contract Validation
+
+All tag constants, struct layouts, kernel opcodes, boot entry indices, and
+named subprim indices are validated at build time by the ABI contract system:
+
+- **C:** `_Static_assert` in `build/wasm32/abi-validate.h` (included via `wasm-constants-bridge.h`)
+- **Lisp:** Load-time `assert` in `build/wasm32/abi-validate.lisp` (loaded from `wasm-arch.lisp`)
+- **JS:** Constants imported from generated `scripts/wasm/lib/abi-constants.mjs`
+- **Python:** Constants imported from generated `build/wasm32/abi_constants.py`
+
+The canonical source is C headers; the generator is `scripts/wasm/generate_abi_contract.py`.
+Any constant drift is caught at compile time (C) or load time (Lisp) with a diagnostic
+message identifying the mismatched value.
+
 ## Status
 
 - Header added: `lisp-kernel/wasm-subprims.h` (dispatcher declaration and helpers).
 - Runtime now implements `call_indirect` and imports the WASM table.
 - Post-MVP2 profile split (`dev` vs `fast`) is now part of the ABI planning
   contract.
+- ABI contract system validates all cross-language constants at build time.

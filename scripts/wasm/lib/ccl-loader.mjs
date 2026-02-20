@@ -12,6 +12,23 @@ import {
   MODULE_BUNDLE_V2_DEFAULT_TEMPLATE_PREFIX,
 } from "./module-bundle-v2.mjs";
 
+import {
+  FULLTAGMASK as FULLTAG_MASK,
+  TAGMASK,
+  FIXNUM_SHIFT,
+  FULLTAG_CONS,
+  FULLTAG_MISC,
+  FULLTAG_NODEHEADER,
+  FULLTAG_IMMHEADER,
+  CONS_CDR_OFFSET,
+  CONS_CAR_OFFSET,
+  NUM_SUBTAG_BITS,
+  SUBTAG_MASK,
+  SUBTAG_SIMPLE_VECTOR,
+  SUBTAG_U8_VECTOR,
+  SUBTAG_SIMPLE_BASE_STRING,
+} from "./abi-constants.mjs";
+
 export function createCclImports({
   memory = null,
   subprimsTable,
@@ -185,21 +202,7 @@ export function installSubprimsTable({
   return { installed, needed };
 }
 
-const FULLTAG_MASK = 0x7;
-const TAGMASK = 0x3;
-const FIXNUM_SHIFT = 2;
-const FULLTAG_CONS = 0x5;
-const FULLTAG_MISC = 0x6;
-const FULLTAG_NODEHEADER = 0x2;
-const FULLTAG_IMMHEADER = 0x7;
-/* Cons cell layout — matches constants.h: struct cons { cdr; car; } */
-const CONS_CDR_OFFSET = 0;
-const CONS_CAR_OFFSET = 4;
-const NUM_SUBTAG_BITS = 8;
-const SUBTAG_MASK = 0xff;
-const SUBTAG_SIMPLE_VECTOR = (31 << 3) | FULLTAG_NODEHEADER;
-const SUBTAG_U8_VECTOR = (24 << 3) | FULLTAG_IMMHEADER;
-const SUBTAG_SIMPLE_BASE_STRING = (23 << 3) | FULLTAG_IMMHEADER;
+/* ABI constants now imported from abi-constants.mjs (generated from C headers) */
 
 function u32(x) {
   return x >>> 0;

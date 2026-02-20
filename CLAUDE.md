@@ -53,8 +53,11 @@ The original CODEX-generated web-ui specifications are preserved at
 ## Build Commands
 
 ```bash
-# Full rebuild (kernel, subprims, boot image, modules, root image)
+# Full rebuild (ABI contract, kernel, subprims, boot image, modules, root image)
 scripts/wasm/rebuild-everything.sh
+
+# Regenerate ABI contract after changing C headers
+python3 scripts/wasm/generate_abi_contract.py
 
 # Check if build artifacts are stale
 scripts/wasm/check-freshness.sh
@@ -74,6 +77,8 @@ node spec/web-ui/checks/run-all.mjs
 ### Code Quality
 - After editing `.lisp` files, run: `scripts/wasm/check-lisp-syntax.sh <file>`
 - Before debugging runtime bugs, run: `scripts/wasm/check-freshness.sh`
+- After editing C headers with ABI constants (`arm-constants.h`, `constants.h`, `wasm-host.h`, `wasm-kernel-stubs.c`), regenerate: `python3 scripts/wasm/generate_abi_contract.py`
+- ABI constants in JS and Python are generated — edit the C headers, not `abi-constants.mjs` or `abi_constants.py`
 - Artifact alignment: kernel, subprims, boot image, modules must be from the same build
 
 ### Architecture

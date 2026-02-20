@@ -17,12 +17,7 @@
  *   const snap = inspect.snapshot();
  */
 
-const GPR_NAMES = [
-  "imm0", "imm1", "nargs", "rctx",
-  "arg_z", "arg_y", "arg_x", "temp0",
-  "temp1", "nfn", "vsp", "Rfn",
-  "allocptr", "Rsp", "Rlr", "Rpc",
-];
+import { GPR_NAMES } from "./abi-constants.mjs";
 
 const FIELD_IDS = {
   wasm_gprs: 0,

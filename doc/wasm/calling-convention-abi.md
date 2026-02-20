@@ -107,7 +107,7 @@ typedef struct cons {
 
 Lisp definition in `wasm-arch.lisp:335`: `(define-lisp-object cons fulltag-cons cdr car)`
 
-JS constants in `ccl-loader.mjs`: `CONS_CDR_OFFSET = 0`, `CONS_CAR_OFFSET = 4`
+JS constants (generated): `CONS_CDR_OFFSET = 0`, `CONS_CAR_OFFSET = 4` in `abi-constants.mjs`, imported by `ccl-loader.mjs`
 
 The compiler emits `%cdr` as `lisp-word-ref(cons, box_fixnum(0))` and `%car` as `lisp-word-ref(cons, box_fixnum(1))`. Mutation goes through `_SPrplaca` / `_SPrplacd` subprims which use struct field access directly.
 

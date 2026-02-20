@@ -2,7 +2,7 @@
 
 **Status:** Active
 **Scope:** Project entry point, current status, and documentation navigation
-**Last Updated:** 2026-02-15
+**Last Updated:** 2026-02-20
 **Doc Version:** 1.0.0
 
 ---
@@ -165,7 +165,8 @@ scripts/wasm/rebuild-everything.sh
 ```
 
 This rebuilds in dependency order:
-1. WASM kernel (`build/wasm32/kernel/wasmcl.wasm`)
+0. ABI contract (`build/wasm32/abi-contract.json` + validation files for C/Lisp/JS/Python)
+1. WASM kernel (`build/wasm32/kernel/wasmcl.wasm`) — includes `_Static_assert` ABI validation
 2. Boot image (`build/wasm32/wasm-boot.image`)
 3. Runtime modules (`build/wasm32/modules/wasm-runtime-modules.json`)
 4. Root image (`build/wasm32/images/root.image`, allowed to fail)
@@ -247,6 +248,10 @@ Per [TODO.md](../../TODO.md):
 ```
 ccl/
 ├── build/wasm32/               # Build outputs (gitignored)
+│   ├── abi-contract.json       # ABI contract (generated)
+│   ├── abi-validate.h          # C _Static_assert (generated)
+│   ├── abi-validate.lisp       # Lisp assertions (generated)
+│   ├── abi_constants.py        # Python constants (generated)
 │   ├── kernel/wasmcl.wasm      # WASM kernel binary
 │   ├── images/*.image          # Heap images
 │   ├── modules/*.json          # Compiled modules
@@ -254,6 +259,8 @@ ccl/
 ├── lisp-kernel/wasm32/         # C kernel source
 ├── compiler/WASM/              # WASM backend (~8,900 lines)
 ├── scripts/wasm/               # Build scripts and infrastructure
+│   ├── generate_abi_contract.py  # ABI contract generator
+│   ├── lib/abi-constants.mjs     # JS constants (generated)
 │   ├── lib/                    # JS runtime libraries
 │   └── tests/                  # Smoke tests
 └── doc/wasm/                   # This documentation

@@ -134,6 +134,9 @@ fi
 # Create build directories
 mkdir -p "$BUILD_DIR" "$IMAGES_DIR" "$MODULES_DIR"
 
+log "Step 0: Generate ABI contract artifacts"
+run python3 "$ROOT_DIR/scripts/wasm/generate_abi_contract.py"
+
 MAKE_ARGS=()
 if [ -n "${CC:-}" ]; then
   MAKE_ARGS+=("CC=$CC")

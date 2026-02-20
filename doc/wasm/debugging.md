@@ -2,7 +2,7 @@
 
 **Status:** Active
 **Scope:** Debugging tools, workflows, and kernel state inspection for the CCL WASM port
-**Last Updated:** 2026-02-16
+**Last Updated:** 2026-02-20
 **Doc Version:** 1.1.0
 
 ## Purpose
@@ -60,7 +60,7 @@ void wasm_debug_dump_state(const char *label);
 
 The kernel also contains stub implementations of all subprims (`wasm-subprims-standin.c`) that call `Bug()`. These stubs exist so the kernel links standalone; the JS host replaces them with the real subprims module implementations at instantiation via the shared function table.
 
-**Build ordering matters:** `rebuild-everything.sh` builds kernel first, then subprims, then boot image, then compiled modules, then root image. All artifacts must be from the same build.
+**Build ordering matters:** `rebuild-everything.sh` generates the ABI contract first, then builds kernel, then subprims, then boot image, then compiled modules, then root image. All artifacts must be from the same build.
 
 ---
 
@@ -436,9 +436,13 @@ wasm2wat build/wasm32/kernel/wasmcl.wasm -o kernel.wat
 | `lisp-kernel/gc-common.c` | Kernel | GC root scanning (including spill stack) |
 | `lisp-kernel/arm-constants.h` | — | TCR structure, register indices, catch_frame |
 | `compiler/WASM/wasm2.lisp` | — | Compiler backend — spill discipline, code generation, const pool encoding |
-| `scripts/wasm/lib/tcr-inspector.mjs` | — | JS-side state inspector |
+| `scripts/wasm/lib/tcr-inspector.mjs` | — | JS-side state inspector (GPR names from `abi-constants.mjs`) |
 | `scripts/wasm/lib/ccl-loader.mjs` | — | WASM instantiation, import wiring, subprims table |
 | `scripts/wasm/lib/microkernel.mjs` | — | Host-side kernel request dispatch |
+| `scripts/wasm/lib/abi-constants.mjs` | — | Generated JS constants (tags, opcodes, struct offsets, GPR names) |
+| `scripts/wasm/generate_abi_contract.py` | — | ABI contract generator (reads C headers, produces all language bindings) |
+| `build/wasm32/abi-contract.json` | — | Machine-readable ABI contract |
+| `build/wasm32/abi-validate.h` | — | Generated `_Static_assert` checks for C compilation |
 
 ---
 

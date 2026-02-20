@@ -88,6 +88,7 @@ expand_sources() {
 # --- Rebuild command lookup (no associative arrays for bash 3.2) ---
 rebuild_cmd_for() {
   case "$1" in
+    abi_contract)    echo "python3 scripts/wasm/generate_abi_contract.py" ;;
     kernel)          echo "make -C lisp-kernel/wasm32 clean all" ;;
     subprims)        echo "make -C lisp-kernel/wasm32/subprims clean all" ;;
     boot_image)      echo "scripts/wasm/build-wasm-boot.sh --force" ;;
@@ -180,6 +181,14 @@ if [ "$MODE" = "report" ]; then
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo ""
 fi
+
+# 0. ABI Contract (depends on C headers + generator script)
+check_one "abi_contract" "ABI Contract" "$BUILD_DIR/abi-contract.json" \
+  "$ROOT_DIR/lisp-kernel/arm-constants.h" \
+  "$ROOT_DIR/lisp-kernel/constants.h" \
+  "$ROOT_DIR/lisp-kernel/wasm-host.h" \
+  "$ROOT_DIR/lisp-kernel/wasm-kernel-stubs.c" \
+  "$ROOT_DIR/scripts/wasm/generate_abi_contract.py"
 
 # 1. Kernel
 check_one "kernel" "Kernel" "$KERNEL_WASM" \

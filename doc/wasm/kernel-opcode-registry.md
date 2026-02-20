@@ -48,7 +48,15 @@ Detailed layouts remain in `doc/wasm/kernel-request-abi.md`.
 | `1` | `NAMED_RO` | Implemented | Read‑only named byte source |
 | `2` | `FILE` | Implemented | Persistence service file stream |
 
+## Cross-Language Validation
+
+All opcode values and status codes are validated by the ABI contract system.
+The generator (`scripts/wasm/generate_abi_contract.py`) extracts canonical values
+from `lisp-kernel/wasm-host.h` and produces validation files for C (`_Static_assert`),
+JS (ES module imports in `abi-constants.mjs`), and Python. Any opcode drift between
+C and JS is caught at build time.
+
 ## Versioning
 
 - ABI version is reported by `KERNEL_OP_CAPS`.
-- Add new opcodes by extending this registry and updating `kernel-request-abi.md`.
+- Add new opcodes by extending this registry, updating `kernel-request-abi.md`, and re-running `python3 scripts/wasm/generate_abi_contract.py`.

@@ -2,7 +2,7 @@
 
 **Status:** Active
 **Scope:** Record of major architectural and strategic decisions (ADRs)
-**Last Updated:** 2026-02-15
+**Last Updated:** 2026-02-20
 **Doc Version:** 1.0.0
 
 **Previous decisions:** See [archive/decisions-2026-02-15-archived.md](archive/decisions-2026-02-15-archived.md) for historical ADRs
@@ -358,6 +358,64 @@ When beginning MVP-2 implementation:
 **References:**
 - ADR-0001: Two-Mode, Two-Phase Development Strategy
 - `~/Documents/ccl-proj-history/` - Relocated specifications
+
+---
+
+## ADR-0008: ABI Contract System (Cross-Language Constant Validation)
+
+**Status:** Accepted
+**Date:** 2026-02-20
+
+**Decision:**
+
+Introduce a single machine-readable ABI contract generated from C headers that
+validates and/or generates constant bindings for all four language layers
+(C, Lisp, JS, Python) in the CCL WASM port.
+
+**Approach:**
+
+- **C and Lisp:** Validate existing definitions with `_Static_assert` (C) and
+  load-time `assert` (Lisp). No definitions are replaced — assertions are added
+  alongside them.
+- **JS and Python:** Replace hardcoded constants with imports from generated modules.
+- **Generator:** `scripts/wasm/generate_abi_contract.py` reads canonical
+  definitions from C headers (`arm-constants.h`, `constants.h`, `wasm-host.h`,
+  `wasm-kernel-stubs.c`) and produces 5 output files.
+
+**Constants covered:** Tag values, fulltags, subtags, struct layouts (cons,
+symbol, macptr, ratio, complex, etc.), struct field offsets, kernel opcodes,
+status codes, stream kinds, file open modes, boot entry indices, named subprim
+indices, GPR names.
+
+**Rationale:**
+
+The CCL WASM port has 4 language layers sharing critical constants across 15+
+files. Past bugs include `%car/%cdr` slot index swap, funcall argument ordering
+reversal, and runtime traps from constant mismatches — all contract drift bugs.
+With a 40-minute compile cycle, trial-and-error debugging of these mismatches is
+untenable. This system catches any future drift at build time with a clear
+diagnostic (e.g., `ABI drift: cons.car offset`) instead of a silent runtime trap.
+
+**Impact:**
+
+- Any constant change in C headers that isn't propagated will fail the kernel
+  build (`_Static_assert`) or Lisp load (`assert`)
+- JS and Python consumers automatically get correct values via generated imports
+- `check-freshness.sh` flags the ABI contract as stale when source headers change
+- `rebuild-everything.sh` regenerates the contract as Step 0 before kernel build
+- Zero behavioral change when all values agree (safe, additive-only)
+
+**What this does NOT do:**
+
+- Does not replace any C `#define` or Lisp `defconstant`
+- Does not run bounded model checking (separate initiative)
+- Does not validate `.wasm` structural correctness (different bug class)
+
+**References:**
+
+- [build.md](build.md) — ABI Contract section
+- [ABI.md](ABI.md) — ABI Contract Validation section
+- `scripts/wasm/generate_abi_contract.py` — Generator implementation
 
 ---
 

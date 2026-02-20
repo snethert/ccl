@@ -13,6 +13,13 @@ import {
   instantiateWasm,
 } from "./ccl-loader.mjs";
 import { createMicrokernel } from "./microkernel.mjs";
+import {
+  FULLTAGMASK as FULLTAG_MASK,
+  FULLTAG_MISC,
+  SUBTAG_MASK,
+  SUBTAG_BIGNUM,
+  NUM_SUBTAG_BITS,
+} from "./abi-constants.mjs";
 
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
@@ -22,12 +29,6 @@ function fail(msg) {
 function assert(cond, msg) {
   if (!cond) fail(msg);
 }
-
-const FULLTAG_MASK = 0x7;
-const FULLTAG_MISC = 0x6;
-const SUBTAG_MASK = 0xff;
-const SUBTAG_BIGNUM = 0x7;
-const NUM_SUBTAG_BITS = 8;
 
 function readFileUrl(url) {
   return fs.readFile(fileURLToPath(url));

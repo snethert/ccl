@@ -15,6 +15,7 @@ import {
   installSubprimsTable,
 } from "./ccl-loader.mjs";
 import { createMicrokernel } from "./microkernel.mjs";
+import { WASM_BOOT_ENTRY_INDEX as BOOT_ENTRY_INDEX } from "./abi-constants.mjs";
 
 function normalizeBytes(bytes) {
   if (bytes instanceof Uint8Array) return bytes;
@@ -24,7 +25,6 @@ function normalizeBytes(bytes) {
 }
 
 const REQUIRED_SUBPRIMS = ["_SPmkcatch1v", "_SPfuncall", "_SPnthrow1value"];
-const BOOT_ENTRY_INDEX = 200;
 
 function hasRequiredSubprims(exports) {
   return REQUIRED_SUBPRIMS.every((name) => typeof exports?.[name] === "function");

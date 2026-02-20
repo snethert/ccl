@@ -43,8 +43,8 @@ import {
   STARTUP_FUNCTION_DESIGNATOR_POLICY_V1,
   STARTUP_SYMBOL_TO_ENTRY_FUNCTION_DESIGNATORS_PRE_TOPLEVEL_V1
 } from "./bootstrap-contract.mjs";
+import { WASM_BOOT_ENTRY_INDEX as BOOT_ENTRY_INDEX } from "./abi-constants.mjs";
 
-const BOOT_ENTRY_INDEX = 200;
 const CSTACK_SIZE = 1 << 20;
 const HEAP_RESERVE_BYTES = 4 << 20;
 const RUN_TOPLEVEL_ATTEMPTS = 32;
