@@ -84,12 +84,20 @@ CHEADERS = area.h bits.h arm-constants.h lisp-errors.h gc.h lisp.h \
 .DEFAULT_GOAL := all
 
 # Compilation rule
+# -I$(BUILD_DIR): find generated abi-validate.h in the build directory
 .c.o:
-	$(CC) --target=$(WASM_TARGET) -include ../$(PLATFORM_H) -c $< \
+	$(CC) --target=$(WASM_TARGET) -include ../$(PLATFORM_H) -I$(BUILD_DIR) -c $< \
 	  $(CDEFINES) $(CDEBUG) $(COPT) $(WFORMAT) $(CFLAGS_EXTRA) -o $@
 
+# ABI contract header (auto-generated; run generator if missing)
+ABI_VALIDATE_H := $(BUILD_DIR)/abi-validate.h
+
+$(ABI_VALIDATE_H):
+	@echo "Generating ABI contract artifacts..."
+	python3 $(REPO_ROOT)/scripts/wasm/generate_abi_contract.py --build-dir $(BUILD_DIR)
+
 # Dependencies
-$(COBJ): $(CHEADERS)
+$(COBJ): $(CHEADERS) $(ABI_VALIDATE_H)
 
 # Build targets
 .PHONY: all wasmcl clean cclean

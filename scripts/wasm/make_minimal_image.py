@@ -55,21 +55,24 @@ WASM_MODULES_INDEX = 33
 WASM_CONST_POOLS_INDEX = 34
 
 COMPILED_CONST_VALUE = 23
+# Entry indices: WASM_CONST_ENTRY_INDEX from ABI contract, sequential after that.
+# Index 203 (WASM_CONST_ENTRY_INDEX + 1) is reserved/unused.
+_STUB_BASE = WASM_CONST_ENTRY_INDEX + 2
 COMPILED_MODULES = [
-    ("ccl_const_entry", 202, 1, "wasm_return_constant", COMPILED_CONST_VALUE << FIXNUM_SHIFT),
-    ("ccl_fixnum_add_entry", 204, 1, "wasm_return_fixnum_add", None),
-    ("ccl_fixnum_sub_entry", 205, 1, "wasm_return_fixnum_sub", None),
-    ("ccl_fixnum_mul_entry", 206, 1, "wasm_return_fixnum_mul", None),
-    ("ccl_fixnum_ash_entry", 207, 1, "wasm_return_fixnum_ash", None),
-    ("ccl_fixnum_logand_entry", 208, 1, "wasm_return_fixnum_logand", None),
-    ("ccl_fixnum_logior_entry", 209, 1, "wasm_return_fixnum_logior", None),
-    ("ccl_fixnum_logxor_entry", 210, 1, "wasm_return_fixnum_logxor", None),
-    ("ccl_fixnum_lognot_entry", 211, 1, "wasm_return_fixnum_lognot", None),
-    ("ccl_fixnum_neg_entry", 212, 1, "wasm_return_fixnum_neg", None),
-    ("ccl_if_entry", 213, 1, "wasm_if", (T_VALUE, NIL_VALUE)),
-    ("ccl_if_arg_entry", 214, 1, "wasm_if_arg", 17 << FIXNUM_SHIFT),
-    ("ccl_identity_entry", 215, 1, "wasm_identity", None),
-    ("ccl_identity_y_entry", 216, 1, "wasm_identity_y", None),
+    ("ccl_const_entry", WASM_CONST_ENTRY_INDEX, 1, "wasm_return_constant", COMPILED_CONST_VALUE << FIXNUM_SHIFT),
+    ("ccl_fixnum_add_entry", _STUB_BASE + 0, 1, "wasm_return_fixnum_add", None),
+    ("ccl_fixnum_sub_entry", _STUB_BASE + 1, 1, "wasm_return_fixnum_sub", None),
+    ("ccl_fixnum_mul_entry", _STUB_BASE + 2, 1, "wasm_return_fixnum_mul", None),
+    ("ccl_fixnum_ash_entry", _STUB_BASE + 3, 1, "wasm_return_fixnum_ash", None),
+    ("ccl_fixnum_logand_entry", _STUB_BASE + 4, 1, "wasm_return_fixnum_logand", None),
+    ("ccl_fixnum_logior_entry", _STUB_BASE + 5, 1, "wasm_return_fixnum_logior", None),
+    ("ccl_fixnum_logxor_entry", _STUB_BASE + 6, 1, "wasm_return_fixnum_logxor", None),
+    ("ccl_fixnum_lognot_entry", _STUB_BASE + 7, 1, "wasm_return_fixnum_lognot", None),
+    ("ccl_fixnum_neg_entry", _STUB_BASE + 8, 1, "wasm_return_fixnum_neg", None),
+    ("ccl_if_entry", _STUB_BASE + 9, 1, "wasm_if", (T_VALUE, NIL_VALUE)),
+    ("ccl_if_arg_entry", _STUB_BASE + 10, 1, "wasm_if_arg", 17 << FIXNUM_SHIFT),
+    ("ccl_identity_entry", _STUB_BASE + 11, 1, "wasm_identity", None),
+    ("ccl_identity_y_entry", _STUB_BASE + 12, 1, "wasm_identity_y", None),
 ]
 
 
@@ -768,7 +771,7 @@ def build_image(entry_index: int, output_path: Path) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", default="doc/wasm/minimal.image")
-    parser.add_argument("--entrypoint-index", type=int, default=200)
+    parser.add_argument("--entrypoint-index", type=int, default=WASM_BOOT_ENTRY_INDEX)
     args = parser.parse_args()
 
     output_path = Path(args.output)

@@ -30,6 +30,7 @@ import {
   installSubprimsTable,
   storedLengthFor,
 } from "./ccl-loader.mjs";
+import { WASM_BOOT_ENTRY_INDEX } from "./abi-constants.mjs";
 import { createMicrokernel } from "./microkernel.mjs";
 import {
   collectBootstrapState,
@@ -828,7 +829,7 @@ if (typeof kernel.instance.exports.wasm_get_lisp_nil !== "function") {
   fail("kernel missing export wasm_get_lisp_nil");
 }
 
-const bootIndex = 200;
+const bootIndex = WASM_BOOT_ENTRY_INDEX;
 function installBootEntry() {
   const bootEntry = kernel.instance.exports.wasm_boot_entry;
   if (typeof bootEntry !== "function") {

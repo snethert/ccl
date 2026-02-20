@@ -135,7 +135,7 @@ fi
 mkdir -p "$BUILD_DIR" "$IMAGES_DIR" "$MODULES_DIR"
 
 log "Step 0: Generate ABI contract artifacts"
-run python3 "$ROOT_DIR/scripts/wasm/generate_abi_contract.py"
+run python3 "$ROOT_DIR/scripts/wasm/generate_abi_contract.py" --build-dir "$BUILD_DIR"
 
 MAKE_ARGS=()
 if [ -n "${CC:-}" ]; then

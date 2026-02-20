@@ -18,6 +18,7 @@ typedef struct blocks. Enums are parsed from enum { ... } blocks.
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from datetime import datetime, timezone
@@ -862,8 +863,23 @@ def write_python(out_dir: Path, contract: dict) -> None:
 # ---------------------------------------------------------------------------
 
 def main() -> int:
+    import argparse as _ap
+
+    parser = _ap.ArgumentParser(description="Generate CCL WASM ABI contract artifacts")
+    parser.add_argument(
+        "--build-dir",
+        default=None,
+        help="Output directory for generated artifacts (default: $CCL_WASM_BUILD_DIR or build/wasm32)",
+    )
+    args = parser.parse_args()
+
     repo_root = Path(__file__).resolve().parents[2]
-    build_dir = repo_root / "build" / "wasm32"
+    if args.build_dir:
+        build_dir = Path(args.build_dir)
+    elif "CCL_WASM_BUILD_DIR" in os.environ:
+        build_dir = Path(os.environ["CCL_WASM_BUILD_DIR"])
+    else:
+        build_dir = repo_root / "build" / "wasm32"
     scripts_lib = repo_root / "scripts" / "wasm" / "lib"
 
     build_dir.mkdir(parents=True, exist_ok=True)

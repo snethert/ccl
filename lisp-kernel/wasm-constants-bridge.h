@@ -7,8 +7,9 @@
 /* wasm-host.h defines kernel opcodes validated by the ABI contract. */
 #include "wasm-host.h"
 #include <stddef.h>
-/* Cross-language ABI contract validation (auto-generated). */
-#include "../build/wasm32/abi-validate.h"
+/* Cross-language ABI contract validation (auto-generated).
+   Found via -I$(BUILD_DIR) in the Makefile. */
+#include "abi-validate.h"
 #endif
 
 #endif
