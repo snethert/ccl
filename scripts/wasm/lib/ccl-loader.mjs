@@ -983,10 +983,9 @@ export async function installCompiledModulesFromBundle({
     } catch (e) {
       failed++;
       _moduleInstallCount++;
-      if (verbose) {
-        // eslint-disable-next-line no-console
-        console.warn(`compiled module install failed ${entry.exportName}: ${e}`);
-      }
+      // Always log — silent failures hide critical table-slot gaps
+      // eslint-disable-next-line no-console
+      console.warn(`[module-fail] entry=${entry.entryIndex} export=${entry.exportName}: ${e.message ?? e}`);
       if (strict) {
         throw new Error(
           `compiled module install failed ${entry.exportName} (entry ${entry.entryIndex}): ${e}`,
@@ -998,6 +997,26 @@ export async function installCompiledModulesFromBundle({
   }
 
   return { installed, count: modules.length, failed, entries: modules };
+}
+
+/**
+ * Fill all null slots in the indirect-function table with a trap stub.
+ * Converts opaque `RuntimeError: unreachable` from WASM call_indirect on
+ * null table entries into diagnosable Lisp XNOTFUN errors.
+ *
+ * @param {WebAssembly.Table} subprimsTable
+ * @param {Function} trapFn — typically subprims.exports._SPentry_not_installed
+ * @returns {{ filled: number }}
+ */
+export function fillNullTableSlots({ subprimsTable, trapFn }) {
+  let filled = 0;
+  for (let i = 0; i < subprimsTable.length; i++) {
+    if (subprimsTable.get(i) === null) {
+      subprimsTable.set(i, trapFn);
+      filled++;
+    }
+  }
+  return { filled };
 }
 
 export async function installCompiledModulesFromRegistry({

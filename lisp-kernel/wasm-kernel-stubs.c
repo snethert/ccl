@@ -1937,6 +1937,41 @@ wasm_diag_get_last_cpr_slot(void)
   return wasm_diag_last_cpr_slot;
 }
 
+/* Validate all entries in %builtin-functions% by logging each builtin's
+   entry index.  Called by JS host before cold-boot-init so the output can
+   be cross-referenced with manifests to find stale/gap entries. */
+__attribute__((used, visibility("default"), export_name("wasm_validate_builtin_entries")))
+uint32_t
+wasm_validate_builtin_entries(void)
+{
+  LispObj vec = nrs_BUILTIN_FUNCTIONS.vcell;
+  if (vec == (LispObj)nil_value || fulltag_of(vec) != fulltag_misc) return 0;
+  LispObj header = header_of(vec);
+  signed_natural count = header_element_count(header);
+  LispObj *data = (LispObj *)((BytePtr)vec + misc_data_offset);
+  uint32_t logged = 0;
+  static const char hx[] = "0123456789abcdef";
+
+  for (signed_natural i = 0; i < count; i++) {
+    LispObj fn = data[i];
+    if (fn == (LispObj)nil_value || fulltag_of(fn) != fulltag_misc) continue;
+    unsigned subtag = header_subtag(header_of(fn));
+    if (subtag != subtag_function && subtag != subtag_pseudofunction) continue;
+    LispObj entry = deref(fn, 1);
+    if (tag_of(entry) != tag_fixnum) continue;
+    uint32_t eidx = (uint32_t)unbox_fixnum(entry);
+    char msg[60]; int p = 0;
+    msg[p++] = 'B'; msg[p++] = 'V'; msg[p++] = ' ';
+    for (int b = 3; b >= 0; b--) msg[p++] = hx[(i >> (b * 4)) & 0xf];
+    msg[p++] = '='; msg[p++] = 'e';
+    for (int b = 7; b >= 0; b--) msg[p++] = hx[(eidx >> (b * 4)) & 0xf];
+    msg[p++] = '\n';
+    wasm_host_log(msg, (unsigned)p);
+    logged++;
+  }
+  return logged;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_debug_tcr_offset")))
 uint32_t
 wasm_debug_tcr_offset(uint32_t field_id)

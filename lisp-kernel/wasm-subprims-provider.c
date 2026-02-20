@@ -7243,4 +7243,29 @@ _SPfix_overflow(void)
   wasm_set_reg(tcr, arg_z, wasm_box_i64_prefer_fixnum(tcr, (int64_t)val));
   wasm_set_nargs_count(tcr, 1);
 }
+
+/* Trap stub for null table entries.  Installed by JS host into all
+   unoccupied slots of the indirect-function table so that call_indirect
+   produces a diagnosable Lisp error instead of an opaque "unreachable". */
+__attribute__((used, visibility("default"), export_name("_SPentry_not_installed")))
+void
+_SPentry_not_installed(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  char msg[80]; unsigned p = 0;
+  p = wasm_diag_append_str(msg, p, "ENTRY NOT INSTALLED fn=0x");
+  { LispObj fn = tcr ? wasm_reg(tcr, nfn) : 0;
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)fn); }
+  p = wasm_diag_append_str(msg, p, " nargs=0x");
+  { LispObj na = tcr ? wasm_reg(tcr, nargs) : 0;
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)na); }
+  msg[p++] = '\n';
+  wasm_host_log(msg, p);
+
+  if (tcr) {
+    wasm_signal_funcall_error(tcr, WASM_XNOTFUN, wasm_reg(tcr, nfn));
+  } else {
+    __builtin_trap();
+  }
+}
 #endif

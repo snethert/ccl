@@ -32,6 +32,7 @@ import {
   installCompiledModulesFromBundle,
   installConstPoolBytes,
   installCompiledModulesFromRegistry,
+  fillNullTableSlots,
   resolveBundleEntries,
   installSubprimsTable,
   storedLengthFor,
@@ -1241,6 +1242,26 @@ if (process.env.CCL_WASM_TRACE_FUNCALL) {
     ex.wasm_set_trace_funcall(level);
     trace(`funcall trace enabled at level ${level}`);
   }
+}
+
+/* Fill null table slots with a trap stub so that call_indirect on an
+   uninstalled entry produces a diagnosable Lisp XNOTFUN error instead
+   of an opaque RuntimeError: unreachable. */
+{
+  const trapFn = subprims.instance.exports._SPentry_not_installed;
+  if (typeof trapFn === "function") {
+    const { filled } = fillNullTableSlots({ subprimsTable: runtime.subprimsTable, trapFn });
+    console.error(`[stage] filled ${filled} null table slots with trap stub`);
+  } else {
+    console.error("[stage] WARN: _SPentry_not_installed not found in subprims — null table slots unguarded");
+  }
+}
+
+/* Validate builtin-functions vector entry indices (diagnostic output
+   goes to stderr via wasm_host_log for cross-referencing with manifests). */
+if (typeof ex.wasm_validate_builtin_entries === "function") {
+  const count = ex.wasm_validate_builtin_entries() >>> 0;
+  console.error(`[stage] validated ${count} builtin function entries`);
 }
 
 /* Execute level-0 cold-boot initialization before FASL loading.

@@ -3,7 +3,7 @@
 <!-- Entry index lookup tool: scripts/wasm/lookup-entry.mjs <index> -->
 <!-- Debugging guide: doc/wasm/debugging.md — read first when troubleshooting -->
 
-**Last updated:** 2026-02-19
+**Last updated:** 2026-02-20
 **Current phase:** MVP-1 (Library/Embedded Mode)
 **Plan:** [doc/wasm/deterministic-startup-plan.md](doc/wasm/deterministic-startup-plan.md)
 
@@ -147,7 +147,22 @@ Note: session notes from 2026-02-18 described adding a "fulltag_cons direct-acce
 
 **Rebuild v12 result (2026-02-20):** CAR/CDR fix verified. Cold-boot-init advanced from spill_push=38,266 (v11) to spill_push=59,659 (v12) — 56% more work completed. Crash: `RuntimeError: unreachable` at entry 652, slot 185, `fname=0x00000000` (null function lookup). `arg_z=0x00000049` still present at crash point. Removed NODEVEC diagnostic (742K lines of unconditional logging per rebuild).
 
-**Current blocker:** Null function lookup at entry 652 during cold-boot-init. Previous blocker (CAR/CDR contract inconsistency) resolved in v12.
+**Rebuild v13 result (2026-02-20):** Added null-table-slot trap stub (`_SPentry_not_installed`), `fillNullTableSlots`, `wasm_validate_builtin_entries`, and always-on module failure logging. Results:
+- 7557/7557 runtime modules installed (0 failed); 5 boot module failures now visible (entries 679, 683, 688, 696, 975 — import type mismatches + WASM validation error)
+- Filled **170 null table slots** with trap stub
+- Builtin validation returned 0 (vector nil before cold-boot-init — expected)
+- **Trap stub was NEVER triggered** — crash is NOT from null table entries
+- **Crash at identical point** as v12: spill_push=59,659, last_cpr e=652 s=185
+- **New: three `_SPksignalerr` state dumps visible:**
+  1. spill_push=37,978: nargs=0x0c(3), arg_x=0x274, last_cpr e=581 s=22 — **survives**
+  2. spill_push=38,266: nargs=0x0c(3), arg_x=0x274, last_cpr e=581 s=28 — **survives**
+  3. spill_push=59,659: nargs=0x04(1), arg_z=0x49, arg_y=0x10, arg_x=0x48, last_cpr e=652 s=185 — **FATAL**
+- **Fatal crash is in `_SPksignalerr` itself** (wasm-function[19]:0x1e8b → `unreachable`), not a null table slot
+- **`catch_top=0x00000000`** — no error handler established during cold-boot-init. Error signaling crashes because there's nothing to catch the error.
+- Stack: `wasm_run_cold_boot_init → %RUN-COLD-BOOT-INIT(1113) → funcall → funcall → _SPksignalerr → compiled code → unreachable`
+- arg_z=0x49 (tag_list 0x01) persists from v12 — likely the operand triggering the error
+
+**Current blocker:** `_SPksignalerr` crashes with `unreachable` during cold-boot-init because `catch_top=0x00000000` (no error handler). The error itself may be legitimate (arg_z=0x49 looks like a bad tagged value). Two earlier errors at spill_push 37978/38266 also fire `_SPksignalerr` but survive. Need to investigate: (1) why the first two errors survive but the third doesn't, (2) what _SPksignalerr does when catch_top is null, (3) what's generating the 0x49 error value.
 
 **Tooling added:**
 - `scripts/wasm/check-freshness.sh` — Detects stale build artifacts across the full dependency chain

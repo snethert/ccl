@@ -161,6 +161,7 @@ wasmcl: $(KERNELOBJ)
 	  --export=lisp_lseek --export=lisp_fstat --export=lisp_ftruncate --export=lisp_fchmod \
 	  --export=wasm_debug_dump_state --export=wasm_debug_tcr_offset \
 	  --export=wasm_diag_get_last_cpr_entry --export=wasm_diag_get_last_cpr_slot \
+	  --export=wasm_validate_builtin_entries \
 	  --export=wasm_set_trace_funcall --export=wasm_get_trace_funcall \
 	  --export=lisp_bug --export=malloc --export=free \
 	  $(LDFLAGS_EXTRA) \
