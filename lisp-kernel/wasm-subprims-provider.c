@@ -5445,13 +5445,15 @@ _SPksignalerr(void)
     }
   }
 
-  /* DIAGNOSTIC: Force trap on 3rd ksignalerr call to get WASM stack trace.
-   * Calls 1-2 are non-fatal REALP errors; call 3 is the target crash.
-   * Remove this counter after diagnosing the %symbol-bits 0x49 bug. */
-  static int ksignalerr_trap_counter = 0;
-  ksignalerr_trap_counter++;
-  if (ksignalerr_trap_counter >= 3) {
-    __builtin_trap();
+  /* No catch handler — ERRDISP would dispatch through the condition system
+     which ultimately THROWs; with no catch frame that recurses into
+     _SPksignalerr.  Short-circuit to pending_throw directly. */
+  if (tcr->catch_top == 0 || tcr->catch_top == (LispObj)nil_value) {
+    char m[48]; unsigned mp = 0;
+    mp = wasm_diag_append_str(m, mp, "ksignalerr: no catch, pending_throw\n");
+    wasm_host_log(m, mp);
+    wasm_set_pending_throw(tcr, box_fixnum(16));  /* ksignalerr: no catch handler */
+    return;
   }
 
   /*
