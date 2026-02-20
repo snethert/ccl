@@ -553,7 +553,7 @@
 (defparameter *spin-lock-tries* 1)
 (defparameter *spin-lock-timeouts* 0)
 
-#+(and (not futex) (not x86-target))
+#+(and (not futex) (not x86-target) (not wasm32-target))
 (defun %get-spin-lock (p)
   (let* ((self (%current-tcr))
          (n *spin-lock-tries*))
@@ -574,7 +574,7 @@
 (eval-when (:compile-toplevel)
   (declaim (inline %lock-recursive-lock-ptr %unlock-recursive-lock-ptr)))
 
-#-futex
+#-(or futex wasm32-target)
 (defun %lock-recursive-lock-ptr (ptr lock flag)
   (with-macptrs ((p)
                  (owner (%get-ptr ptr target::lockptr.owner))
@@ -687,7 +687,7 @@
 
 
 
-#-futex
+#-(or futex wasm32-target)
 (defun %try-recursive-lock-object (lock &optional flag)
   (let* ((ptr (recursive-lock-ptr lock)))
     (with-macptrs ((p)
@@ -740,7 +740,7 @@
 
 
 
-#-futex
+#-(or futex wasm32-target)
 (defun %unlock-recursive-lock-ptr (ptr lock)
   (with-macptrs ((signal (%get-ptr ptr target::lockptr.signal))
                  (spin (%inc-ptr ptr target::lockptr.spinlock)))
@@ -855,7 +855,7 @@
 ;;; What happens if there are some pending readers and another writer,
 ;;; and we abort out of the semaphore wait ?  If the writer semaphore is
 ;;; signaled before we abandon interest in it
-#-futex
+#-(or futex wasm32-target)
 (defun %write-lock-rwlock-ptr (ptr lock &optional flag)
   (with-macptrs ((write-signal (%get-ptr ptr target::rwlock.writer-signal)) )
     (if (istruct-typep flag 'lock-acquisition)
@@ -929,7 +929,7 @@
 (defun write-lock-rwlock (lock &optional flag)
   (%write-lock-rwlock-ptr (read-write-lock-ptr lock) lock flag))
 
-#-futex
+#-(or futex wasm32-target)
 (defun %read-lock-rwlock-ptr (ptr lock &optional flag)
   (with-macptrs ((read-signal (%get-ptr ptr target::rwlock.reader-signal)))
     (if (istruct-typep flag 'lock-acquisition)
@@ -1005,7 +1005,7 @@
 
 
 
-#-futex
+#-(or futex wasm32-target)
 (defun %unlock-rwlock-ptr (ptr lock)
   (with-macptrs ((reader-signal (%get-ptr ptr target::rwlock.reader-signal))
                  (writer-signal (%get-ptr ptr target::rwlock.writer-signal)))
@@ -1107,6 +1107,7 @@
 ;;; to circumvent that if we use the same notifcation object here
 ;;; that controls that cleanup process.)
 
+#-wasm32-target
 (defun %promote-rwlock (lock &optional flag)
   (let* ((ptr (read-write-lock-ptr lock)))
     (if (istruct-typep flag 'lock-acquisition)

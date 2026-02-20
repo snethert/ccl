@@ -1259,9 +1259,28 @@ Can be removed before shipping once %FASLOAD startup is stable.")
   ;; do SET-PACKAGE in cold load functions.
   (setq %all-packages-lock% (make-read-write-lock))
   (%wasm-note-startup-step 40)
-  (dolist (f (prog1 *xload-cold-load-functions* (setq *xload-cold-load-functions* nil)))
-    (funcall f))
-  (%wasm-note-startup-step 50)
+  (let ((cold-fn-count 0))
+    (let ((cold-fns (prog1 *xload-cold-load-functions*
+                           (setq *xload-cold-load-functions* nil))))
+      (setq cold-fn-count (length cold-fns))
+      (%wasm-note-startup-step (+ 4000 cold-fn-count))
+      (let ((idx 0))
+        (dolist (f cold-fns)
+          (%wasm-note-startup-step (+ 4100 idx))
+          (funcall f)
+          (%wasm-note-startup-step (+ 4200 idx))
+          (incf idx)))
+      (%wasm-note-startup-step 49))
+    (%wasm-note-startup-step 50)
+    (if (fboundp '%set-binding-index)
+      (%wasm-note-startup-step 51)
+      (progn
+        ;; Encode cold-fn-count into step so C wrapper reports it:
+        ;; step=52000 → list was empty, step=52063 → 63 functions ran but didn't bind
+        (%wasm-note-startup-step (+ 52000 cold-fn-count))
+        ;; Force immediate throw here (instead of continuing to step 80)
+        ;; so the step value is preserved in the error report.
+        (%set-binding-index 0))))
   (dolist (pair (prog1 *early-class-cells* (setq *early-class-cells* nil)))
     (setf (gethash (car pair) %find-classes%) (cdr pair)))
   (%wasm-note-startup-step 60)

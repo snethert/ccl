@@ -3,7 +3,7 @@
 <!-- Entry index lookup tool: scripts/wasm/lookup-entry.mjs <index> -->
 <!-- Debugging guide: doc/wasm/debugging.md — read first when troubleshooting -->
 
-**Last updated:** 2026-02-18
+**Last updated:** 2026-02-19
 **Current phase:** MVP-1 (Library/Embedded Mode)
 **Plan:** [doc/wasm/deterministic-startup-plan.md](doc/wasm/deterministic-startup-plan.md)
 
@@ -123,7 +123,23 @@ used non-existent acode operators, breaking cross-compilation loading. Fixed.
 
 **Resolved blocker (2026-02-18):** Infinite `SYMBOL-NAME` loop in `%GET-HASHED-HTAB-SYMBOL` during cold-boot-init. Root cause: hash value mismatch between cross-compilation (x86-64 HOST) and WASM runtime. The x86-64 `%pname-hash` LAP returns the full 32-bit accumulator. During cross-compilation, `mixup-hash-code` (#+cross-compiling version) masks this to `target::target-most-positive-fixnum` = 29 bits on WASM32. But our WASM `%pname-hash` only returned 27 bits. The 2-bit difference (bits 27-28) caused symbol lookups to start at wrong hash table slots → infinite linear probing. Fix: changed final return from `(logand hi #x7FF)` (27 bits) to `(logand hi #x1FFF)` (29 bits). Verified against 24 test strings: `(logand native-x86-64-hash #x1FFFFFFF)` = our 29-bit split, 0 mismatches.
 
-**Current blocker:** TBD — awaiting rebuild with 29-bit hash fix.
+**Resolved blocker (2026-02-18):** OOB-SVREF in hash table probing + `%car`/`%cdr` i32 overflow. Two bugs fixed:
+1. `fast-mod` called `mod → rem → %fixnum-truncate`, whose pure-Lisp binary long division (using `integer-length` and large `ash` shifts) produces wrong results when compiled to WASM. The hash table probing index was 16,776,896 instead of 25 (= 16776896 mod 337). Fix: replaced `fast-mod` with binary doubling+subtraction using only primitive fixnum ops (+, -, comparisons, `ash -1`). Zero OOB-SVREF occurrences after fix.
+2. `%car`/`%cdr` compilation did untag(cons) → box_fixnum(<<2) → lisp-word-ref. The <<2 overflows i32 when heap > 1GB. Fix: added `fulltag_cons` direct-access case in `wasm_lisp_word_ref` and simplified compiler to pass tagged cons directly.
+
+**Resolved blocker (2026-02-19):** `%SET-BINDING-INDEX` XFUNBND at cold-boot-init step 80. Root cause: compiler temp local reuse bug in `wasm2-emit-prog1`. The `prog1` form in `%run-cold-boot-init` saved the specref result in `wasm2-ensure-temp-local` (shared local 0), then the body's `setq` also grabbed local 0 via `wasm2-emit-setq-symbol` → overwrote the 63-element cold-load functions list with NIL. Fix: changed `wasm2-emit-prog1` and 8 other vulnerable sites from `wasm2-ensure-temp-local` to `wasm2-allocate-temp` (fresh unique local). Cold-boot-init now reaches step 4100 (was step 80).
+
+**Resolved (2026-02-19):** Missing architecture definitions in `wasm-arch.lisp`. Added `define-fixedsized-object lock`, `define-storage-layout lockptr`, `define-storage-layout rwlock`, `define-storage-layout tcr`, `defconstant tcr-bias`, `defconstant interrupt-level-binding-index`. Eliminated all 20 "Undeclared free variable WASM::" warnings during cross-compilation.
+
+**Resolved blocker (2026-02-19):** `READ-WRITE-LOCK` XFUNBND at cold-boot-init step 4100. Root cause: `wasm2-typecode` used `box_fixnum(untag(obj))` to pass the base address to `wasm_lisp_word_ref`. For misc objects allocated in high memory (>0x3FFFFFFF, e.g., locks at 0x94E6xxxx), `box_fixnum` (shift left by 2) overflows 32-bit arithmetic, causing header reads from a completely wrong address → wrong subtag → type check failure → cascade into XFUNBND. Fix: modified `wasm2-typecode` to pass the tagged misc object directly with idx=-1, and added `idx==-1 → return header` to `wasm_lisp_word_ref`'s `fulltag_misc` case. Same overflow class as the `%car/%cdr` fix (2026-02-18) — large WASM heaps (>1GB) expose 32-bit overflow in `box_fixnum(untag(ptr))`.
+
+**Resolved blocker (2026-02-19):** LOCK-ACQUISITION XFUNBND at cold-boot-init step 4100. Root cause: WASM lock stubs in `wasm-misc.lisp` were loaded BEFORE generic definitions in `l0-misc.lisp` (`xfasload.lisp:2053-2059` loads subdirs first, then root), so the generic `#-futex` lock implementations overwrote our no-op stubs. The generic lock functions dereference macptrs/spinlocks/semaphores that don't exist on WASM → type check failures → XFUNBND cascade. Fix: added `#-(or futex wasm32-target)` reader conditionals to 8 lock functions in `l0-misc.lisp`, fixed `%unlock-recursive-lock-ptr` signature in `wasm-misc.lisp` (1 arg → 2 args), added `%try-recursive-lock-object` and `%promote-rwlock` stubs. Note: modifying `l0-misc.lisp` (shared CCL source) follows the established `#-futex`/`#+futex` reader conditional pattern — WASM is single-threaded and all lock operations are meaningless.
+
+**Resolved blocker (2026-02-19):** PROCLAIM XFUNBND at cold-boot-init step 4103. Root cause: three WASM-specific `(declaim ...)` forms in level-0 files expanded to load-time `(proclaim ...)` calls that became cold-load functions. PROCLAIM is defined in level-1, unavailable during cold-boot-init. All three declaims were WASM additions not present on ARM. Fix: changed to `(eval-when (:compile-toplevel :execute) (proclaim '...))` in `wasm-bignum.lisp`, `l0-bignum32.lisp`, and `l0-float.lisp`. Cold-boot-init advanced past step 4103.
+
+**Resolved blocker (2026-02-19):** `_SPmisc_alloc: bad count` crash in `%CONS-NHASH-VECTOR` during cold-boot-init. Root cause: `wasm2-%alloc-misc` 3-arg register assignment was wrong — compiler put count→arg_y, subtag→arg_z, initval→arg_x, but `_SPmisc_alloc_init` (ported from ARM) expects count→arg_x, subtag→arg_y, initval→arg_z. The 2-arg case was correct because WASM 2-arg convention (1st→arg_y, 2nd→arg_z) happens to match ARM 2-arg. But the 3-arg extension was rotated by one position. Fix: changed 3-arg case to use `:set-arg2` (arg_x=count), `:set-arg1` (arg_y=subtag), `:set-arg0` (arg_z=initval). Note: WASM subprims have MIXED conventions — some (`_SPmisc_alloc_init`) follow ARM convention, others (`_SPmisc_set`, `_SPbuiltin_minus`) follow WASM convention (1st→arg_z). The fix is specific to `wasm2-%alloc-misc`.
+
+**Current blocker:** Rebuild v11 in progress — verifying whether `_SPmisc_alloc` fix resolves the hash-vector allocation crash and cold-boot-init progresses further.
 
 **Tooling added:**
 - `scripts/wasm/check-freshness.sh` — Detects stale build artifacts across the full dependency chain
@@ -184,8 +200,8 @@ used non-existent acode operators, breaking cross-compilation loading. Fixed.
 
 ## 📊 Current Status
 
-**Completed:** B1-B6 fixes, funcall ordering fix, ABI spec, diagnostic cleanup, instrumentation removal (~4500 lines), startup truth retirement, startup binding map removal (~2500 lines), debugging infrastructure, cold-boot init extraction (Phase 1a-1c), hash function char-code fix, ivector const pool support, target:: package resolution fix, subprims .rodata collision fix, heap increase to 3.9 GB, `_SPbuiltin_length`/`_SPbuiltin_seqtype` inline fast paths, module consolidation (merge + pack dedup), module validation fallback (7557/7557 installed)
-**Blocked on:** awaiting rebuild after `%pname-hash` 29-bit hash fix. Previous blockers (`_SPbuiltin_ash` OOB, SYMBOL-NAME infinite loop, `_SPbuiltin_length` recursion, 1500 failed merged modules, spill stack overflow, `%KERNEL-RESTART` XFUNBND, $hprimes subtag, .rodata corruption) resolved.
+**Completed:** B1-B6 fixes, funcall ordering fix, ABI spec, diagnostic cleanup, instrumentation removal (~4500 lines), startup truth retirement, startup binding map removal (~2500 lines), debugging infrastructure, cold-boot init extraction (Phase 1a-1c), hash function char-code fix, ivector const pool support, target:: package resolution fix, subprims .rodata collision fix, heap increase to 3.9 GB, `_SPbuiltin_length`/`_SPbuiltin_seqtype` inline fast paths, module consolidation (merge + pack dedup), module validation fallback (7557/7557 installed), prog1 temp local reuse fix (9 sites), missing arch definitions (lock struct, lockptr/rwlock/tcr layouts, tcr-bias, interrupt-level-binding-index), typecode box_fixnum overflow fix, WASM lock stubs + l0-misc.lisp reader conditionals, PROCLAIM declaim compile-time fix, `%alloc-misc` 3-arg register fix
+**Blocked on:** Rebuild v11 in progress. Previous blockers (`READ-WRITE-LOCK` XFUNBND, LOCK-ACQUISITION XFUNBND, PROCLAIM XFUNBND, `_SPmisc_alloc` bad count, `%SET-BINDING-INDEX` XFUNBND/prog1 temp reuse, OOB-SVREF/fast-mod, `%car`/`%cdr` i32 overflow, `_SPbuiltin_ash` OOB, SYMBOL-NAME infinite loop, `_SPbuiltin_length` recursion, 1500 failed merged modules, spill stack overflow, `%KERNEL-RESTART` XFUNBND, $hprimes subtag, .rodata corruption) resolved.
 **Build pipeline:** Functional (kernel → subprims → boot image → modules → image assembly)
 **MVP-1 completion:** 65% → Phase 0 unblocks everything
 
@@ -236,6 +252,40 @@ Root cause: 280+ missing WASM LAP bridge functions. Systemic fix: Phase 0A.
 ---
 
 ## 📝 Session Notes
+
+**2026-02-19 (session 2):** Fixed LOCK-ACQUISITION, PROCLAIM, and `%alloc-misc` bad count blockers.
+
+1. **LOCK-ACQUISITION XFUNBND**: WASM lock stubs in `wasm-misc.lisp` were overwritten by generic `l0-misc.lisp` definitions because `xfasload.lisp:2053-2059` loads arch subdirectory files BEFORE generic root files. Fixed by adding `#-(or futex wasm32-target)` reader conditionals to 8 functions in `l0-misc.lisp` and completing stubs in `wasm-misc.lisp` (`%unlock-recursive-lock-ptr` signature fix, added `%try-recursive-lock-object` and `%promote-rwlock`).
+
+2. **PROCLAIM XFUNBND**: Three WASM-specific `(declaim ...)` forms generated load-time `(proclaim ...)` cold-load functions, but PROCLAIM is level-1. Fixed by changing to `(eval-when (:compile-toplevel :execute) (proclaim '...))` in `wasm-bignum.lisp`, `l0-bignum32.lisp`, `l0-float.lisp`.
+
+3. **`_SPmisc_alloc: bad count` in `%CONS-NHASH-VECTOR`**: 3-arg register assignment in `wasm2-%alloc-misc` was rotated — compiler put count→arg_y, subtag→arg_z, initval→arg_x, but `_SPmisc_alloc_init` (ARM convention) expects count→arg_x, subtag→arg_y, initval→arg_z. Fixed 3-arg case to use `:set-arg2`/`:set-arg1`/`:set-arg0` (ARM convention). Note: WASM subprims have mixed conventions — `_SPmisc_alloc_init` follows ARM, but `_SPmisc_set`/`_SPbuiltin_*` follow WASM convention (1st→arg_z). Only `wasm2-%alloc-misc` was fixed.
+
+4. **box_fixnum overflow in typecode**: `wasm2-typecode` overflowed for misc objects in high memory (>0x3FFFFFFF). Fixed to pass tagged misc directly with idx=-1.
+
+Results: Cold-boot-init progresses well past step 4103 (spill_push=38266). Rebuild v11 in progress to verify `%alloc-misc` fix.
+
+**2026-02-19 (session 1):** Fixed compiler temp local reuse bug and missing architecture definitions.
+
+1. **prog1 temp local reuse (ROOT CAUSE of `%SET-BINDING-INDEX` XFUNBND)**: `wasm2-emit-prog1` used `wasm2-ensure-temp-local` (shared, cached local) to save first form's result. When body form `(setq *xload-cold-load-functions* nil)` was compiled, `wasm2-emit-setq-symbol` also called `wasm2-ensure-temp-local`, getting the SAME local index, overwriting the saved 63-element cold-load functions list with NIL. Fixed by changing to `wasm2-allocate-temp` (unique local). Also fixed 8 similar vulnerable sites: `wasm2-values` (2), `wasm2-multiple-value-call` (2), `wasm2-emit-spread-call` (2, was aliasing 3 locals to same index), `wasm2-emit-call`, `wasm2-lexical-function-call`, `wasm2-self-call` (all >10 args cases). Verified in WAT: prog1 result now in `local 31`, setq NIL in `local 0` — different locals.
+
+2. **Missing `define-fixedsized-object lock`**: WASM architecture was missing the lock struct definition that all other architectures (ARM, x86, PPC) define. Added to `wasm-arch.lisp` with 6 fields: `_value`, `kind`, `writer`, `name`, `whostate`, `whostate-2`.
+
+3. **Missing storage layouts and constants**: Added `define-storage-layout lockptr` (7 fields), `define-storage-layout rwlock` (8 fields), `defconstant tcr-bias` (=0), `define-storage-layout tcr` (43 fields matching ARM), `defconstant interrupt-level-binding-index`. Eliminated all 20 "Undeclared free variable WASM::" warnings during cross-compilation.
+
+4. **Removed diagnostic code**: Cleaned ~200 lines of investigative diagnostics from `wasm-kernel-stubs.c` (vcell check, const pool dump, manual specrefcheck test).
+
+Results: Cold-boot-init progresses from step 80 to step 4100 (63 cold-load functions now available). New blocker: `READ-WRITE-LOCK` XFUNBND when first cold-load function tries to acquire `%all-packages-lock%` via `read-write-lock-ptr` (entry 316). The lock type check fails → `report-bad-arg` → condition system → XFUNBND.
+
+**2026-02-18 (session 3):** Diagnosed and fixed OOB-SVREF in hash table probing + `%car`/`%cdr` i32 overflow.
+
+1. **OOB-SVREF root cause**: `fast-mod` called `mod → rem → %fixnum-truncate`. The pure-Lisp `%fixnum-truncate` (binary long division using `integer-length` and large positive `ash` shifts) is mathematically correct but compiles incorrectly on WASM. For inputs (16776896, 337), expected result=25, actual result=16776896 (unchanged). This caused hash table probing to access vector slot 16,776,896 in a 337-element vector. Fix: replaced `fast-mod` and `fast-mod-3` in `level-0/WASM/wasm-hash.lisp` with a binary doubling+subtraction algorithm using only primitive fixnum ops.
+
+2. **`%car`/`%cdr` i32 overflow**: The WASM compiler compiled `%car` as `untag(cons) → box_fixnum(<<2) → lisp-word-ref(fixnum, offset)`. The `<<2` overflows i32 when cons addresses exceed ~1GB (heap is at ~2.5GB by cold-boot-init). Fix: (a) added `fulltag_cons` direct-access case in `wasm_lisp_word_ref` in `wasm-kernel-stubs.c` that reads car/cdr directly from the cons struct without fixnum math, (b) simplified `wasm2-%car`, `wasm2-%cdr`, `wasm2-car`, `wasm2-cdr` in `wasm2.lisp` to pass tagged cons directly instead of untagging+boxing.
+
+3. **Diagnostic cleanup**: Gated NODEVEC, NIL-IN-SVEC, OOB-SVREF diagnostics behind `wasm_trace_funcall >= 1`.
+
+Results: Zero OOB-SVREF occurrences. SYMBOL-NAME called on many different symbols (hash table rehashing works). Cold-boot-init progresses to step 80, then fails with `%SET-BINDING-INDEX` XFUNBND. Note: underlying `%fixnum-truncate` WASM compilation bug still exists — affects all `mod`/`rem`/`truncate` use; `fast-mod` workaround is specific to hash probing.
 
 **2026-02-18 (session 2):** Diagnosed and fixed TWO `%pname-hash` bugs:
 

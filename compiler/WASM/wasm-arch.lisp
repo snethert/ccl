@@ -348,6 +348,13 @@
   (define-fixedsized-object xmacptr address domain type flags link)
   (define-fixedsized-object catch-frame
     link mvflag catch-tag db-link xframe last-lisp-frame nfp)
+  (define-fixedsized-object lock
+    _value                                ;finalizable pointer to kernel object
+    kind                                  ; '0 = recursive-lock, '1 = rwlock
+    writer                                ;tcr of owning thread or 0
+    name
+    whostate
+    whostate-2)
   (define-fixedsized-object symbol
     pname vcell fcell package-predicate flags plist binding-index)
   (define-fixedsized-object function entrypoint codevector)
@@ -370,6 +377,11 @@
     older younger h softprot hardprot owner refbits threshold gc-count
     static-dnodes static-used)
   (define-storage-layout lisp-frame 0 marker savevsp savefn savelr)
+  (define-storage-layout lockptr 0
+    avail owner count signal waiting malloced-ptr spinlock)
+  (define-storage-layout rwlock 0
+    spin state blocked-writers blocked-readers writer
+    reader-signal writer-signal malloced-ptr)
   (defmacro define-header (name element-count subtag)
     `(defconstant ,name (logior (ash ,element-count num-subtag-bits) ,subtag)))
   (define-header single-float-header single-float.element-count subtag-single-float)
@@ -385,7 +397,57 @@
   (define-header three-digit-bignum-header 3 subtag-bignum)
   (define-header symbol-header symbol.element-count subtag-symbol)
   (define-header value-cell-header value-cell.element-count subtag-value-cell)
-  (define-header macptr-header macptr.element-count subtag-macptr))
+  (define-header macptr-header macptr.element-count subtag-macptr)
+
+  (defconstant tcr-bias 0)
+
+  (define-storage-layout tcr (- tcr-bias)
+    prev                                  ; in doubly-linked list
+    next                                  ; in doubly-linked list
+    lisp-fpscr
+    pad
+    db-link                               ; special binding chain head
+    catch-top                             ; top catch frame
+    save-vsp                              ; VSP when in foreign code
+    save-tsp                              ; TSP when in foreign code
+    cs-area                               ; cstack area pointer
+    vs-area                               ; vstack area pointer
+    last-lisp-frame
+    cs-limit                              ; cstack overflow limit
+    total-bytes-allocated-low
+    total-bytes-allocated-high
+    log2-allocation-quantum               ; unboxed
+    interrupt-pending                     ; fixnum
+    xframe                                ; exception frame linked list
+    errno-loc                             ; thread-private, maybe
+    ffi-exception                         ; fpscr bits from ff-call.
+    osid                                  ; OS thread id
+    valence                               ; odd when in foreign code
+    foreign-exception-status
+    native-thread-info
+    native-thread-id
+    last-allocptr
+    save-allocptr
+    save-allocbase
+    reset-completion
+    activate
+    suspend-count
+    suspend-context
+    pending-exception-context
+    suspend                               ; semaphore for suspension notify
+    resume                                ; semaphore for resumption notify
+    flags                                 ; foreign, being reset, ...
+    gc-context
+    termination-semaphore
+    unwinding
+    tlb-limit
+    tlb-pointer
+    shutdown-count
+    safe-ref-address
+    architecture-version                  ; keep in each TCR for ease of access.
+    nfp)
+
+  (defconstant interrupt-level-binding-index (ash 1 fixnumshift)))
 
 (defparameter *wasm-kernel-globals*
   '(get-tcr

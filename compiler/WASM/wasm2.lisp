@@ -1032,10 +1032,10 @@
 
 (defwasm2 wasm2-%car %car (seg vreg xfer form)
   (declare (ignore vreg))
+  ;; Pass tagged cons directly — the fulltag_cons case in
+  ;; wasm_lisp_word_ref handles untagging.  Avoids i32 overflow
+  ;; from box_fixnum(untag(cons)) when cons addr > 0x3FFFFFFF.
   (wasm2-form seg nil nil form)
-  (wasm2-emit :const (wasm2-untag-mask))
-  (wasm2-emit :i32-and)
-  (wasm2-emit-box-fixnum)
   (wasm2-emit :const (wasm2-box-fixnum 1))
   (wasm2-emit :lisp-word-ref)
   (when (wasm2-returning-p xfer)
@@ -1046,10 +1046,8 @@
 
 (defwasm2 wasm2-%cdr %cdr (seg vreg xfer form)
   (declare (ignore vreg))
+  ;; Pass tagged cons directly — see wasm2-%car comment.
   (wasm2-form seg nil nil form)
-  (wasm2-emit :const (wasm2-untag-mask))
-  (wasm2-emit :i32-and)
-  (wasm2-emit-box-fixnum)
   (wasm2-emit :const (wasm2-box-fixnum 0))
   (wasm2-emit :lisp-word-ref)
   (when (wasm2-returning-p xfer)
@@ -1071,9 +1069,6 @@
            (else-ir (wasm2-with-ir
                       (lambda ()
                         (wasm2-emit :local.get list-temp)
-                        (wasm2-emit :const (wasm2-untag-mask))
-                        (wasm2-emit :i32-and)
-                        (wasm2-emit-box-fixnum)
                         (wasm2-emit :const (wasm2-box-fixnum 1))
                         (wasm2-emit :lisp-word-ref)))))
       (wasm2-emit :if then-ir else-ir)))
@@ -1096,9 +1091,6 @@
            (else-ir (wasm2-with-ir
                       (lambda ()
                         (wasm2-emit :local.get list-temp)
-                        (wasm2-emit :const (wasm2-untag-mask))
-                        (wasm2-emit :i32-and)
-                        (wasm2-emit-box-fixnum)
                         (wasm2-emit :const (wasm2-box-fixnum 0))
                         (wasm2-emit :lisp-word-ref)))))
       (wasm2-emit :if then-ir else-ir)))
@@ -1141,11 +1133,11 @@
     (wasm2-emit :i32-eq)
     (let* ((then-ir (wasm2-with-ir
                       (lambda ()
+                        ;; Pass tagged misc obj directly with idx=-1
+                        ;; to read header.  Avoids i32 overflow from
+                        ;; box_fixnum(untag(obj)) when obj > 0x3FFFFFFF.
                         (wasm2-emit :local.get obj-temp)
-                        (wasm2-emit :const (wasm2-untag-mask))
-                        (wasm2-emit :i32-and)
-                        (wasm2-emit-box-fixnum)
-                        (wasm2-emit :const (wasm2-box-fixnum 0))
+                        (wasm2-emit :const (wasm2-box-fixnum -1))
                         (wasm2-emit :lisp-word-ref)
                         (wasm2-emit :const #xff)
                         (wasm2-emit :i32-and)
@@ -1884,7 +1876,7 @@
 (defun wasm2-emit-prog1 (seg vreg xfer forms)
   (if (eq (list-length forms) 1)
     (backend-use-operator (%nx1-operator values) seg vreg xfer forms)
-    (let* ((tmp (wasm2-ensure-temp-local)))
+    (let* ((tmp (wasm2-allocate-temp)))
       (wasm2-form seg nil nil (car forms))
       (wasm2-emit :local.set tmp)
       (dolist (form (cdr forms))
@@ -2574,7 +2566,10 @@
     (wasm2-emit-misc-node-slot-address 0)
     (wasm2-emit :local.get addr-temp)
     (wasm2-emit :i32-store)
-    (wasm2-emit :local.get addr-temp)
+    ;; Return the allocated macptr object, not the raw address.
+    ;; Bug was: :local.get addr-temp — returned fixnum 0 for (%null-ptr),
+    ;; causing _SPmisc_set crash when with-macptrs tried %setf-macptr on it.
+    (wasm2-emit :local.get obj-temp)
     (when (wasm2-returning-p xfer)
       (wasm2-emit :set-arg-z)
       (wasm2-emit :set-nargs 1)
@@ -2893,18 +2888,36 @@
          (nilsym-offset wasm::nilsym-offset))
     (wasm2-form seg nil nil sym)
     (wasm2-emit :local.set sym-temp)
-    (let* ((then-ir (wasm2-with-ir
-                      (lambda ()
-                        (wasm2-emit :local.get sym-temp)
-                        (wasm2-emit :const nilsym-offset)
-                        (wasm2-emit :i32-add))))
-           (else-ir (wasm2-with-ir
-                      (lambda ()
-                        (wasm2-emit :local.get sym-temp)))))
+    (let* ((nil-then-ir (wasm2-with-ir
+                          (lambda ()
+                            ;; NIL → nilsym proxy
+                            (wasm2-emit :local.get sym-temp)
+                            (wasm2-emit :const nilsym-offset)
+                            (wasm2-emit :i32-add))))
+           (non-nil-ir (wasm2-with-ir
+                         (lambda ()
+                           ;; Non-NIL: verify fulltag is misc (6) before passing through
+                           (wasm2-emit :local.get sym-temp)
+                           (wasm2-emit :const *wasm2-target-fulltagmask*)
+                           (wasm2-emit :i32-and)
+                           (wasm2-emit :const *wasm2-target-fulltag-misc*)
+                           (wasm2-emit :i32-eq)
+                           (let* ((ok-ir (wasm2-with-ir
+                                           (lambda ()
+                                             (wasm2-emit :local.get sym-temp))))
+                                  (bad-ir (wasm2-with-ir
+                                            (lambda ()
+                                              ;; Not a misc object — dump state and trap
+                                              (wasm2-emit :local.get sym-temp)
+                                              (wasm2-emit :set-arg0)
+                                              (wasm2-emit-call-subprim
+                                                (wasm2-subprim-fixnum '.SPksignalerr))
+                                              (wasm2-emit :local.get sym-temp)))))
+                             (wasm2-emit :if ok-ir bad-ir))))))
       (wasm2-emit :local.get sym-temp)
       (wasm2-emit :const (target-nil-value))
       (wasm2-emit :i32-eq)
-      (wasm2-emit :if then-ir else-ir))
+      (wasm2-emit :if nil-then-ir non-nil-ir))
     (when (wasm2-returning-p xfer)
       (wasm2-emit :set-arg-z)
       (wasm2-emit :set-nargs 1)
@@ -3201,14 +3214,14 @@
                (wasm2-emit :return)
                (wasm2-emit :arg0))))))
       ((= count 2)
-       (let* ((tmp (wasm2-ensure-temp-local)))
+       (let* ((tmp (wasm2-allocate-temp)))
          (wasm2-form seg nil nil (first forms))
          (wasm2-emit :local.set tmp)
          (wasm2-form seg nil nil (second forms))
          (wasm2-emit :drop)
          (wasm2-emit :local.get tmp)))
       (t
-       (let* ((tmp (wasm2-ensure-temp-local)))
+       (let* ((tmp (wasm2-allocate-temp)))
          (wasm2-form seg nil nil (first forms))
          (wasm2-emit :local.set tmp)
          (dolist (form (rest forms))
@@ -3228,7 +3241,7 @@
          (wasm2-form seg nil nil fn)
          (wasm2-emit-call-by-arity 0 mvpass tmp)))
       ((= argc 1)
-       (let* ((fn-temp (wasm2-ensure-temp-local)))
+       (let* ((fn-temp (wasm2-allocate-temp)))
          (wasm2-form seg nil nil fn)
          (wasm2-emit :local.set fn-temp)
         (wasm2-multiple-value-body seg (car args))
@@ -3236,7 +3249,7 @@
         (wasm2-emit :set-nfn)
         (wasm2-emit-funcall-nfn-boundary xfer)))
       (t
-       (let* ((fn-temp (wasm2-ensure-temp-local)))
+       (let* ((fn-temp (wasm2-allocate-temp)))
          (wasm2-form seg nil nil fn)
          (wasm2-emit :local.set fn-temp)
          (wasm2-multiple-value-body seg (car args))
@@ -3361,12 +3374,14 @@
   (declare (ignore vreg))
   (if initval
     (progn
+      ;; ARM convention: arg_x=1st, arg_y=2nd, arg_z=3rd (last)
+      ;; _SPmisc_alloc_init reads: arg_x=count, arg_y=subtag, arg_z=initval
       (wasm2-form seg nil nil element-count)
-      (wasm2-emit :set-arg1)
-      (wasm2-form seg nil nil st)
-      (wasm2-emit :set-arg0)
-      (wasm2-form seg nil nil initval)
       (wasm2-emit :set-arg2)
+      (wasm2-form seg nil nil st)
+      (wasm2-emit :set-arg1)
+      (wasm2-form seg nil nil initval)
+      (wasm2-emit :set-arg0)
       (wasm2-emit-misc-alloc-init-call))
     (progn
       (wasm2-form seg nil nil element-count)
@@ -3502,8 +3517,8 @@
          (list-arg (car (last args)))
          (argc (length fixed-args))
          (mvpass (wasm2-mv-p xfer))
-         (fn-temp (wasm2-ensure-temp-local))
-         (list-temp (and list-arg (wasm2-ensure-temp-local)))
+         (fn-temp (wasm2-allocate-temp))
+         (list-temp (and list-arg (wasm2-allocate-temp)))
          (spread-subprim (wasm2-spread-subprim-fixnum spread-p))
          (tmp (wasm2-ensure-temp-local)))
     (unless list-arg
@@ -3641,7 +3656,7 @@
                (emit-fixnum-unary :fixnum-neg (first args))
                (return-from wasm2-emit-call nil)))))))
     (when (> argc 10)
-      (let* ((fn-temp (wasm2-ensure-temp-local)))
+      (let* ((fn-temp (wasm2-allocate-temp)))
         (wasm2-form seg nil nil fn)
         (wasm2-emit :local.set fn-temp)
         (wasm2-emit-funcall-subprim seg xfer fn-temp args)
@@ -3728,7 +3743,7 @@
          spread-p)
         (return-from wasm2-lexical-function-call nil))
       (when (> argc 10)
-        (let* ((fn-temp (wasm2-ensure-temp-local)))
+        (let* ((fn-temp (wasm2-allocate-temp)))
           (wasm2-emit-const lfun)
           (wasm2-emit :local.set fn-temp)
           (wasm2-emit-funcall-subprim seg xfer fn-temp args)
@@ -3767,7 +3782,7 @@
          spread-p)
         (return-from wasm2-self-call nil))
       (when (> argc 10)
-        (let* ((fn-temp (wasm2-ensure-temp-local)))
+        (let* ((fn-temp (wasm2-allocate-temp)))
           (if lfun
             (wasm2-emit-const lfun)
             (wasm2-emit :get-nfn))

@@ -11,14 +11,34 @@
 
 
 ;;; Equivalent to cl:mod when both args are positive fixnums.
+;;; Uses binary doubling+subtraction to avoid mod/rem/%fixnum-truncate,
+;;; whose pure-Lisp binary long division (using integer-length and large
+;;; ash shifts) compiles incorrectly on WASM.  O(log(n/d)) iterations.
 (defun fast-mod (number divisor)
-  (mod number divisor))
+  (declare (fixnum number divisor)
+           (optimize (speed 3) (safety 0)))
+  (let ((n number))
+    (declare (fixnum n))
+    (when (< n divisor) (return-from fast-mod n))
+    ;; Phase 1: double divisor to largest power-of-2 multiple <= n
+    (let ((d divisor))
+      (declare (fixnum d))
+      (loop
+        (let ((d2 (the fixnum (+ d d))))
+          (if (or (<= d2 0) (> d2 n))
+            (return)
+            (setq d d2))))
+      ;; Phase 2: subtract from largest down to divisor
+      (loop
+        (when (>= n d) (setq n (the fixnum (- n d))))
+        (when (eql d divisor) (return-from fast-mod n))
+        (setq d (the fixnum (ash d -1)))))))
 
 ;;; Faster mod using reciprocal multiplication.
-;;; On WASM, just fall back to simple mod.
+;;; On WASM, just use the binary reduction above.
 (defun fast-mod-3 (number divisor recip)
   (declare (ignore recip))
-  (mod number divisor))
+  (fast-mod number divisor))
 
 ;;; Hash a double-float.
 ;;; Double-float layout on WASM32: (header pad val-low val-high).

@@ -26,7 +26,10 @@
 ;;; Helpers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(declaim (inline %u32 %high-half %low-half %compose-digit %mul32x32))
+;;; compile-time only — declaim generates a load-time (proclaim ...) call,
+;;; but PROCLAIM is level-1 and unavailable during cold-boot-init.
+(eval-when (:compile-toplevel :execute)
+  (proclaim '(inline %u32 %high-half %low-half %compose-digit %mul32x32)))
 
 (defun %u32 (x)
   "Mask to 32-bit unsigned."

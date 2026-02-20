@@ -12,6 +12,9 @@
  *  - build/wasm32/level-1.lafsl + build/wasm32/l1-fasls/*.lafsl + build/wasm32/bin/*.lafsl (cross-compile)
  */
 
+/* DIAGNOSTIC: Increase stack trace depth for WASM debugging */
+Error.stackTraceLimit = 200;
+
 import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";

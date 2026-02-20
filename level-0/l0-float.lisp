@@ -18,11 +18,14 @@
 
 (in-package "CCL")
 
+;;; compile-time only — declaim generates a load-time (proclaim ...) call,
+;;; but PROCLAIM is level-1 and unavailable during cold-boot-init.
 #+wasm32-target
-(declaim (ftype (function (t t t) t) %%scale-sfloat!)
-         (ftype (function (t &optional t) t) %short-float %short-float-ratio
-                                          %double-float->short-float
-                                          %fixnum-sfloat %bignum-sfloat))
+(eval-when (:compile-toplevel :execute)
+  (proclaim '(ftype (function (t t t) t) %%scale-sfloat!))
+  (proclaim '(ftype (function (t &optional t) t) %short-float %short-float-ratio
+                                                  %double-float->short-float
+                                                  %fixnum-sfloat %bignum-sfloat)))
 
 #+wasm32-target
 (eval-when (:compile-toplevel)

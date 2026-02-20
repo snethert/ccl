@@ -16,11 +16,14 @@
 
 (in-package "CCL")
 
+;;; compile-time only — declaim generates a load-time (proclaim ...) call,
+;;; but PROCLAIM is level-1 and unavailable during cold-boot-init.
 #+(and 32-bit-target wasm32-target)
-(declaim (ftype (function (t t t t t t t) t) %add-with-carry %subtract-with-borrow)
-         (ftype (function (t t t) t) bignum-ashift-left-digits)
-         (ftype (function (t t t t t t) t) try-bignum-truncate-guess)
-         (ftype (function (t t) t) %digit-0-or-plusp))
+(eval-when (:compile-toplevel :execute)
+  (proclaim '(ftype (function (t t t t t t t) t) %add-with-carry %subtract-with-borrow))
+  (proclaim '(ftype (function (t t t) t) bignum-ashift-left-digits))
+  (proclaim '(ftype (function (t t t t t t) t) try-bignum-truncate-guess))
+  (proclaim '(ftype (function (t t) t) %digit-0-or-plusp)))
 
 
 #+32-bit-target                         ; the whole shebang

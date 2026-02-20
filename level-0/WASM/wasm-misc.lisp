@@ -531,4 +531,54 @@
   (declare (ignore flags fd))
   nil)
 
+;;; Rwlock operations — no-ops on single-threaded WASM.
+;;; These override the generic #-futex versions in l0-misc.lisp which use
+;;; macptrs, spinlocks, and semaphores that don't exist on WASM.
+
+(defun %read-lock-rwlock-ptr (ptr lock &optional flag)
+  (declare (ignore ptr lock))
+  (if (istruct-typep flag 'lock-acquisition)
+    (setf (lock-acquisition.status flag) t))
+  t)
+
+(defun %write-lock-rwlock-ptr (ptr lock &optional flag)
+  (declare (ignore ptr lock))
+  (if (istruct-typep flag 'lock-acquisition)
+    (setf (lock-acquisition.status flag) t))
+  t)
+
+(defun %unlock-rwlock-ptr (ptr lock)
+  (declare (ignore ptr lock))
+  nil)
+
+;;; Recursive lock operations — no-ops on single-threaded WASM.
+(defun %lock-recursive-lock-ptr (ptr lock flag)
+  (declare (ignore ptr lock))
+  (if (istruct-typep flag 'lock-acquisition)
+    (setf (lock-acquisition.status flag) t))
+  t)
+
+(defun %unlock-recursive-lock-ptr (ptr lock)
+  (declare (ignore ptr lock))
+  nil)
+
+;;; Spin lock — no-op on single-threaded WASM.
+(defun %get-spin-lock (ptr)
+  (declare (ignore ptr))
+  nil)
+
+;;; Try-lock — always succeeds on single-threaded WASM.
+(defun %try-recursive-lock-object (lock &optional flag)
+  (declare (ignore lock))
+  (if (istruct-typep flag 'lock-acquisition)
+    (setf (lock-acquisition.status flag) t))
+  t)
+
+;;; Promote rwlock — no-op on single-threaded WASM.
+(defun %promote-rwlock (lock &optional flag)
+  (declare (ignore lock))
+  (if (istruct-typep flag 'lock-acquisition)
+    (setf (lock-acquisition.status flag) t))
+  t)
+
 ;;; end of wasm-misc.lisp

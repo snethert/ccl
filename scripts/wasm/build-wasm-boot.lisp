@@ -228,6 +228,8 @@
       (let ((*warn-if-redefine-kernel* nil))
         (load (merge-pathnames "lib/macros.lisp" root))))
     (format t "~&Building wasm-boot.image...~%")
+    ;; DIAG: Log cold-load functions pushed during xdump
+    (setq *xload-show-cold-load-functions* t)
     (cross-xload-level-0 :wasm32 (if force :force t))
     ;; Report the final entry index counter for downstream start-entry-index.
     (let ((next-idx (and (boundp '*wasm2-next-entry-index*) *wasm2-next-entry-index*)))

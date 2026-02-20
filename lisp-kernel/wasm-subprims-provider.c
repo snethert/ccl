@@ -5445,6 +5445,15 @@ _SPksignalerr(void)
     }
   }
 
+  /* DIAGNOSTIC: Force trap on 3rd ksignalerr call to get WASM stack trace.
+   * Calls 1-2 are non-fatal REALP errors; call 3 is the target crash.
+   * Remove this counter after diagnosing the %symbol-bits 0x49 bug. */
+  static int ksignalerr_trap_counter = 0;
+  ksignalerr_trap_counter++;
+  if (ksignalerr_trap_counter >= 3) {
+    __builtin_trap();
+  }
+
   /*
    * If ERRDISP is unavailable (or recursively faults while signaling),
    * avoid non-terminating self-recursion and surface a pending throw
