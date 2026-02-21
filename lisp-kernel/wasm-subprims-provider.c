@@ -5369,91 +5369,111 @@ _SPksignalerr(void)
     wasm_subprims_trap();
   }
 
-  wasm_debug_dump_state("ksignalerr");
+  static unsigned ksignalerr_count = 0;
+  static unsigned ksignalerr_absorbed = 0;
+  unsigned this_call = ksignalerr_count++;
 
-  /* Print the name of the undefined function (if arg_z is a symbol) */
-  {
-    LispObj err_arg = wasm_reg(tcr, arg_z);
-    LispObj err_code = wasm_reg(tcr, arg_y);
-    LispObj fname_reg = tcr->wasm_gprs[8]; /* temp1/fname */
-    static const char hex[] = "0123456789abcdef";
-    char msg[128];
-    int p = 0;
+  /* Verbose diagnostics for first 5 errors only */
+  if (this_call < 5) {
+    wasm_debug_dump_state("ksignalerr");
 
-    /* Print fname register */
-    msg[p++] = ' '; msg[p++] = ' ';
-    msg[p++] = 'f'; msg[p++] = 'n'; msg[p++] = 'a'; msg[p++] = 'm'; msg[p++] = 'e';
-    msg[p++] = '='; msg[p++] = '0'; msg[p++] = 'x';
-    for (int i = 7; i >= 0; i--) msg[p++] = hex[(fname_reg >> (i*4)) & 0xf];
-    msg[p++] = '\n';
-    wasm_host_log(msg, (unsigned)p);
+    /* Print the name of the undefined function (if arg_z is a symbol) */
+    {
+      LispObj err_arg = wasm_reg(tcr, arg_z);
+      LispObj err_code = wasm_reg(tcr, arg_y);
+      LispObj fname_reg = tcr->wasm_gprs[8]; /* temp1/fname */
+      static const char hex[] = "0123456789abcdef";
+      char msg[128];
+      int p = 0;
 
-    /* Try to print symbol pname from arg_z */
-    if (fulltag_of(err_arg) == fulltag_misc) {
-      LispObj hdr = header_of(err_arg);
-      if (header_subtag(hdr) == subtag_symbol) {
-        lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(err_arg));
-        LispObj pname = sym->pname;
-        if (fulltag_of(pname) == fulltag_misc) {
-          LispObj pname_hdr = header_of(pname);
-          if (header_subtag(pname_hdr) == subtag_simple_base_string) {
-            unsigned count = header_element_count(pname_hdr);
-            if (count > 80) count = 80;
-            /* Characters are 32-bit (4 bytes each) on ARM32/WASM */
-            uint32_t *chars32 = (uint32_t *)((char *)ptr_from_lispobj(untag(pname)) + sizeof(LispObj));
-            p = 0;
-            msg[p++] = ' '; msg[p++] = ' '; msg[p++] = 's'; msg[p++] = 'y'; msg[p++] = 'm';
-            msg[p++] = ':'; msg[p++] = ' ';
-            for (unsigned i = 0; i < count && p < 120; i++) msg[p++] = (char)(chars32[i] & 0xff);
-            msg[p++] = '\n';
-            wasm_host_log(msg, (unsigned)p);
+      /* Print fname register */
+      msg[p++] = ' '; msg[p++] = ' ';
+      msg[p++] = 'f'; msg[p++] = 'n'; msg[p++] = 'a'; msg[p++] = 'm'; msg[p++] = 'e';
+      msg[p++] = '='; msg[p++] = '0'; msg[p++] = 'x';
+      for (int i = 7; i >= 0; i--) msg[p++] = hex[(fname_reg >> (i*4)) & 0xf];
+      msg[p++] = '\n';
+      wasm_host_log(msg, (unsigned)p);
+
+      /* Try to print symbol pname from arg_z */
+      if (fulltag_of(err_arg) == fulltag_misc) {
+        LispObj hdr = header_of(err_arg);
+        if (header_subtag(hdr) == subtag_symbol) {
+          lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(err_arg));
+          LispObj pname = sym->pname;
+          if (fulltag_of(pname) == fulltag_misc) {
+            LispObj pname_hdr = header_of(pname);
+            if (header_subtag(pname_hdr) == subtag_simple_base_string) {
+              unsigned count = header_element_count(pname_hdr);
+              if (count > 80) count = 80;
+              /* Characters are 32-bit (4 bytes each) on ARM32/WASM */
+              uint32_t *chars32 = (uint32_t *)((char *)ptr_from_lispobj(untag(pname)) + sizeof(LispObj));
+              p = 0;
+              msg[p++] = ' '; msg[p++] = ' '; msg[p++] = 's'; msg[p++] = 'y'; msg[p++] = 'm';
+              msg[p++] = ':'; msg[p++] = ' ';
+              for (unsigned i = 0; i < count && p < 120; i++) msg[p++] = (char)(chars32[i] & 0xff);
+              msg[p++] = '\n';
+              wasm_host_log(msg, (unsigned)p);
+            }
           }
-        }
-        /* Also print the fcell value */
-        LispObj fcell = sym->fcell;
-        p = 0;
-        msg[p++] = ' '; msg[p++] = ' ';
-        msg[p++] = 'f'; msg[p++] = 'c'; msg[p++] = 'e'; msg[p++] = 'l'; msg[p++] = 'l';
-        msg[p++] = '='; msg[p++] = '0'; msg[p++] = 'x';
-        for (int i = 7; i >= 0; i--) msg[p++] = hex[(fcell >> (i*4)) & 0xf];
-        /* If fcell looks like a function, print its entry index */
-        if (fulltag_of(fcell) == fulltag_misc) {
-          LispObj fc_hdr = header_of(fcell);
-          unsigned fc_sub = header_subtag(fc_hdr);
-          if (fc_sub == subtag_function || fc_sub == subtag_pseudofunction) {
-            LispObj entry = deref(fcell, 1);
-            msg[p++] = ' '; msg[p++] = 'e'; msg[p++] = 'n'; msg[p++] = 't'; msg[p++] = '=';
-            msg[p++] = '0'; msg[p++] = 'x';
-            for (int i = 7; i >= 0; i--) msg[p++] = hex[(entry >> (i*4)) & 0xf];
+          /* Also print the fcell value */
+          LispObj fcell = sym->fcell;
+          p = 0;
+          msg[p++] = ' '; msg[p++] = ' ';
+          msg[p++] = 'f'; msg[p++] = 'c'; msg[p++] = 'e'; msg[p++] = 'l'; msg[p++] = 'l';
+          msg[p++] = '='; msg[p++] = '0'; msg[p++] = 'x';
+          for (int i = 7; i >= 0; i--) msg[p++] = hex[(fcell >> (i*4)) & 0xf];
+          /* If fcell looks like a function, print its entry index */
+          if (fulltag_of(fcell) == fulltag_misc) {
+            LispObj fc_hdr = header_of(fcell);
+            unsigned fc_sub = header_subtag(fc_hdr);
+            if (fc_sub == subtag_function || fc_sub == subtag_pseudofunction) {
+              LispObj entry = deref(fcell, 1);
+              msg[p++] = ' '; msg[p++] = 'e'; msg[p++] = 'n'; msg[p++] = 't'; msg[p++] = '=';
+              msg[p++] = '0'; msg[p++] = 'x';
+              for (int i = 7; i >= 0; i--) msg[p++] = hex[(entry >> (i*4)) & 0xf];
+            }
           }
+          msg[p++] = '\n';
+          wasm_host_log(msg, (unsigned)p);
+        } else {
+          /* arg_z is misc but not symbol — print subtag */
+          p = 0;
+          msg[p++] = ' '; msg[p++] = ' ';
+          msg[p++] = 'a'; msg[p++] = 'r'; msg[p++] = 'g'; msg[p++] = '_'; msg[p++] = 'z';
+          msg[p++] = ':'; msg[p++] = ' '; msg[p++] = 's'; msg[p++] = 'u'; msg[p++] = 'b';
+          msg[p++] = 't'; msg[p++] = 'a'; msg[p++] = 'g'; msg[p++] = '=';
+          msg[p++] = '0'; msg[p++] = 'x';
+          unsigned st = header_subtag(hdr);
+          for (int i = 1; i >= 0; i--) msg[p++] = hex[(st >> (i*4)) & 0xf];
+          msg[p++] = '\n';
+          wasm_host_log(msg, (unsigned)p);
         }
-        msg[p++] = '\n';
-        wasm_host_log(msg, (unsigned)p);
-      } else {
-        /* arg_z is misc but not symbol — print subtag */
-        p = 0;
-        msg[p++] = ' '; msg[p++] = ' ';
-        msg[p++] = 'a'; msg[p++] = 'r'; msg[p++] = 'g'; msg[p++] = '_'; msg[p++] = 'z';
-        msg[p++] = ':'; msg[p++] = ' '; msg[p++] = 's'; msg[p++] = 'u'; msg[p++] = 'b';
-        msg[p++] = 't'; msg[p++] = 'a'; msg[p++] = 'g'; msg[p++] = '=';
-        msg[p++] = '0'; msg[p++] = 'x';
-        unsigned st = header_subtag(hdr);
-        for (int i = 1; i >= 0; i--) msg[p++] = hex[(st >> (i*4)) & 0xf];
-        msg[p++] = '\n';
-        wasm_host_log(msg, (unsigned)p);
       }
     }
   }
 
   /* No catch handler — ERRDISP would dispatch through the condition system
      which ultimately THROWs; with no catch frame that recurses into
-     _SPksignalerr.  Absorb the error: compiled WASM code doesn't check
-     pending_throw, so setting it only poisons the C wrapper's return code
-     without affecting Lisp execution.  Log and return. */
+     _SPksignalerr.  Set pending_throw so the funcall dispatcher (which
+     checks pending_throw after every call) unwinds the call stack.
+     Without pending_throw, the error-causing code loops forever (v15
+     produced 4M+ absorbed errors in an infinite loop).
+     The C wrapper (wasm_run_cold_boot_init) checks *WASM-STARTUP-STEP*
+     to decide whether work completed before the error hit. */
   if (tcr->catch_top == 0 || tcr->catch_top == (LispObj)nil_value) {
-    char m[48]; unsigned mp = 0;
-    mp = wasm_diag_append_str(m, mp, "ksignalerr: no catch, absorbed\n");
-    wasm_host_log(m, mp);
+    ksignalerr_absorbed++;
+    /* Log first 5 absorbed, then every millionth */
+    if (ksignalerr_absorbed <= 5 ||
+        (ksignalerr_absorbed % 1000000) == 0) {
+      char m[80]; unsigned mp = 0;
+      mp = wasm_diag_append_str(m, mp, "ksignalerr: absorbed=0x");
+      mp = wasm_diag_append_hex32(m, mp, ksignalerr_absorbed);
+      mp = wasm_diag_append_str(m, mp, " calls=0x");
+      mp = wasm_diag_append_hex32(m, mp, ksignalerr_count);
+      m[mp++] = '\n';
+      wasm_host_log(m, mp);
+    }
+    wasm_set_pending_throw(tcr, box_fixnum(16)); /* absorbed ksignalerr */
     return;
   }
 
