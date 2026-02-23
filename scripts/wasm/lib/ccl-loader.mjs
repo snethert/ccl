@@ -96,6 +96,31 @@ export function createCclImports({
     };
   }
 
+  /* ── Type-adaptation wrappers ─────────────────────────────────────────
+   * The WASM cross-compiler generates all FFI calls with i32 return type
+   * (wasm2-external-call-type-index always selects an i32-returning type
+   * index).  Void-returning C functions therefore need JS wrappers that
+   * return 0 so the WASM import signature (i32)->i32 matches.
+   *
+   * Similarly, lisp_lseek/lisp_ftruncate use i64 args in C but the Lisp
+   * FFI uses :signed-fullword (i32).  Those are handled by changing the
+   * C signatures directly (see unix-calls.c WASM32 section).  These
+   * wrappers handle only the void->i32 return-type cases where changing
+   * the C signature would cause linker conflicts.
+   */
+  if (typeof ccl.free === "function") {
+    const origFree = ccl.free;
+    ccl.free = (p) => { origFree(p); return 0; };
+  }
+  if (typeof ccl.lisp_free === "function") {
+    const origLispFree = ccl.lisp_free;
+    ccl.lisp_free = (p) => { origLispFree(p); return 0; };
+  }
+  if (typeof ccl.lisp_bug === "function") {
+    const origLispBug = ccl.lisp_bug;
+    ccl.lisp_bug = (p) => { origLispBug(p); return 0; };
+  }
+
   return { ...extra, env, ccl };
 }
 

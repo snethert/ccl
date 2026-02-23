@@ -139,8 +139,8 @@ export function createInspector(exports, memory) {
       console.error(`  0x${(addr >>> 0).toString(16)}: not a valid object pointer`);
       return null;
     }
-    const untagged = addr & ~3;
-    const tag = addr & 3;
+    const untagged = addr & ~7;  // FULLTAGMASK = 7 (3-bit tags on WASM32)
+    const tag = addr & 7;
     const header = u32(untagged);
     const subtag = header & 0xFF;
     const count = header >>> 8;

@@ -21,9 +21,9 @@
 extern int lisp_open(char *path, int flags, mode_t mode);
 extern ssize_t lisp_read(int fd, void *buf, size_t count);
 extern ssize_t lisp_write(int fd, void *buf, size_t count);
-extern int64_t lisp_lseek(int fd, int64_t offset, int whence);
+extern int32_t lisp_lseek(int fd, int32_t offset, int whence);
 extern int lisp_close(int fd);
-extern int lisp_ftruncate(int fd, off_t length);
+extern int lisp_ftruncate(int fd, int32_t length);
 extern int lisp_stat(char *path, void *buf);
 
 __attribute__((used, visibility("default"), export_name("wasm_kernel_caps_abi_version")))

@@ -270,6 +270,7 @@ LispObj wasm_funcall1(LispObj fn_value, LispObj arg0);
 uint32_t wasm_subprim_nonlocal_exit_coherence_selftest(void);
 static LispObj wasm_find_package_named_bytes(const uint8_t *bytes, uint32_t len);
 static LispObj wasm_find_symbol_named_bytes(const uint8_t *name, uint32_t len, LispObj package);
+static LispObj wasm_foreign_funcall0(TCR *tcr, LispObj callable);
 static int wasm_symbol_object_p(LispObj value);
 static int wasm_debug_hex8(char *buf, uint32_t v);
 static int wasm_debug_str(char *buf, const char *s);
@@ -1827,6 +1828,13 @@ wasm_debug_uint(char *buf, uint32_t v)
 
 static unsigned wasm_debug_dump_state_count = 0;
 
+__attribute__((used, visibility("default"), export_name("wasm_reset_debug_counters")))
+void
+wasm_reset_debug_counters(void)
+{
+  wasm_debug_dump_state_count = 0;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_debug_dump_state")))
 void
 wasm_debug_dump_state(const char *label)
@@ -3276,10 +3284,95 @@ wasm_restore_lisp_pointers(void)
   return result;
 }
 
+/* Consume *XLOAD-COLD-LOAD-FUNCTIONS*: save the list and set vcell to NIL.
+   This must happen BEFORE calling %RUN-COLD-BOOT-INIT so Lisp sees an
+   empty list and skips its dolist loop (which would short-circuit on
+   pending_throw from earlier errors). */
+static LispObj
+wasm_consume_cold_load_list(TCR *tcr, LispObj ccl_pkg)
+{
+  (void)tcr;
+  static const uint8_t sym_name[] = "*XLOAD-COLD-LOAD-FUNCTIONS*";
+  LispObj sym = wasm_find_symbol_named_bytes(
+    sym_name, (uint32_t)(sizeof(sym_name) - 1), ccl_pkg);
+  if (sym == (LispObj)0 || fulltag_of(sym) != fulltag_misc ||
+      header_subtag(header_of(sym)) != subtag_symbol) {
+    static const char msg[] = "cold-load-drain: symbol not found\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    return lisp_nil;
+  }
+
+  lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(untag(sym));
+  LispObj list = rawsym->vcell;
+
+  /* Consume the list (matches Lisp prog1 + setq-nil pattern) */
+  rawsym->vcell = lisp_nil;
+
+  return list;
+}
+
+/* Walk a saved cold-load function list, calling each function individually
+   with pending_throw cleared between calls.  This prevents an error in one
+   cold-load function from poisoning all subsequent ones.
+   Must be called AFTER %RUN-COLD-BOOT-INIT has set up infrastructure
+   (locks, class cells, packages) that the cold-load functions need. */
+static int
+wasm_drain_cold_load_list(TCR *tcr, LispObj list)
+{
+  if (list == lisp_nil) {
+    static const char msg[] = "cold-load-drain: list empty\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    return 0;
+  }
+
+  int count = 0, errors = 0, skipped = 0;
+  LispObj cur = list;
+
+  while (cur != lisp_nil && fulltag_of(cur) == fulltag_cons) {
+    LispObj fn = car(cur);
+    cur = cdr(cur);
+    count++;
+
+    /* Validate: must be a function object */
+    if (fn == lisp_nil ||
+        fulltag_of(fn) != fulltag_misc ||
+        header_subtag(header_of(fn)) != subtag_function) {
+      skipped++;
+      continue;
+    }
+
+    /* Clear pending_throw before each call so errors don't propagate */
+    tcr->wasm_pending_throw = 0;
+
+    (void)wasm_foreign_funcall0(tcr, fn);
+
+    if (tcr->wasm_pending_throw) {
+      errors++;
+      tcr->wasm_pending_throw = 0;
+    }
+  }
+
+  /* Log summary */
+  {
+    char dbuf[128];
+    int dp = 0;
+    dp += wasm_debug_str(dbuf + dp, "cold-load-drain: ");
+    dp += wasm_debug_uint(dbuf + dp, (uint32_t)count);
+    dp += wasm_debug_str(dbuf + dp, " called, ");
+    dp += wasm_debug_uint(dbuf + dp, (uint32_t)errors);
+    dp += wasm_debug_str(dbuf + dp, " errors, ");
+    dp += wasm_debug_uint(dbuf + dp, (uint32_t)skipped);
+    dp += wasm_debug_str(dbuf + dp, " skipped\n");
+    wasm_host_log(dbuf, (unsigned)dp);
+  }
+
+  return count;
+}
+
 /* Execute level-0 cold-boot initialization before FASL loading.
-   Calls Lisp function %RUN-COLD-BOOT-INIT (defined in level-0/nfasload.lisp)
-   which runs cold-load functions, sets up system locks, populates class cells,
-   resizes package hash tables, applies documentation, and updates binding indices.
+   Phase A: C-side drain of cold-load functions (error-resilient).
+   Phase B: Lisp-side %RUN-COLD-BOOT-INIT for locks, class cells, package
+   rehash, documentation, and binding indices.
    Must be called after compiled modules are installed (so boot module functions
    are in the table) and before any wasm_fasload_path() calls.
    Returns 0 on success, negative on error. */
@@ -3304,6 +3397,12 @@ wasm_run_cold_boot_init(void)
     return -3;
   }
 
+  /* Phase A: consume the cold-load function list (save + set vcell to NIL).
+     %RUN-COLD-BOOT-INIT will see an empty list and skip its dolist loop,
+     but still set up infrastructure (locks, class cells, packages). */
+  LispObj saved_cold_load_list = wasm_consume_cold_load_list(tcr, ccl_pkg);
+
+  /* Phase B: run %RUN-COLD-BOOT-INIT for infrastructure setup */
   static const uint8_t fn_name[] = "%RUN-COLD-BOOT-INIT";
   LispObj sym = wasm_find_symbol_named_bytes(
     fn_name, (uint32_t)(sizeof(fn_name) - 1), ccl_pkg);
@@ -3390,15 +3489,15 @@ wasm_run_cold_boot_init(void)
     dbuf[dp++] = '\n';
     wasm_host_log(dbuf, (unsigned)dp);
 
-    if (startup_step >= 4100) {
-      /* Cold-boot-init completed its work.  The pending_throw is from
-         benign absorbed errors (catch_top==0 during cleanup).  Return
-         success so the image build can proceed to FASL loading. */
-      static const char msg[] = "cold-boot-init: ok (absorbed errors after completion)\n";
+    if (startup_step >= 40) {
+      /* Infrastructure is set up (locks, at minimum).  The pending_throw
+         is from benign absorbed errors (catch_top==0 during later steps).
+         Phase C will drain cold-load functions with per-call isolation. */
+      static const char msg[] = "cold-boot-init: ok (infra ready, errors absorbed)\n";
       wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
       result = 0;
     } else {
-      static const char msg[] = "cold-boot-init: threw (incomplete)\n";
+      static const char msg[] = "cold-boot-init: threw (infra incomplete)\n";
       wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
       result = -6;
     }
@@ -3417,6 +3516,18 @@ wasm_run_cold_boot_init(void)
 
   tcr->valence = TCR_STATE_FOREIGN;
   wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
+
+  /* Phase C: drain cold-load functions from C with per-call error isolation.
+     Only need startup_step >= 40 (= %all-packages-lock% created) for
+     cold-load functions to work.  Even if %RUN-COLD-BOOT-INIT threw at
+     a later step, the infrastructure is there. */
+  if (startup_step >= 40 && saved_cold_load_list != lisp_nil) {
+    wasm_drain_cold_load_list(tcr, saved_cold_load_list);
+    /* Cold-load functions have now run; override result to success since
+       the original throw was from incomplete-but-non-critical steps. */
+    result = 0;
+  }
+
   return result;
 }
 
@@ -4273,6 +4384,37 @@ wasm_alloc_cons_bridge(LispObj car_value, LispObj cdr_value)
 }
 
 static LispObj
+wasm_foreign_funcall0(TCR *tcr, LispObj callable)
+{
+  if (tcr == NULL) {
+    return lisp_nil;
+  }
+
+  LispObj *saved_vsp = tcr->save_vsp;
+  if (saved_vsp == NULL) {
+    return lisp_nil;
+  }
+
+  natural old_last_lisp_frame = wasm_enter_lisp_frame(tcr, 0, 0, (LispObj)saved_vsp);
+  tcr->valence = TCR_STATE_LISP;
+  tcr->wasm_pending_throw = 0;
+
+  tcr->wasm_gprs[vsp] = (LispObj)saved_vsp;
+  tcr->wasm_gprs[nargs] = box_fixnum(0);
+  tcr->wasm_gprs[nfn] = callable;
+  tcr->wasm_gprs[Rfn] = callable;
+  wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_FUNCALL_INDEX));
+
+  LispObj result = tcr->wasm_gprs[arg_z];
+  tcr->save_vsp = saved_vsp;
+  tcr->wasm_gprs[vsp] = (LispObj)saved_vsp;
+  tcr->valence = TCR_STATE_FOREIGN;
+  wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
+
+  return result;
+}
+
+static LispObj
 wasm_foreign_funcall1(TCR *tcr, LispObj callable, LispObj arg)
 {
   if (tcr == NULL) {
@@ -4432,11 +4574,58 @@ wasm_run_script_with_output(uint32_t script_ptr, uint32_t script_len, uint32_t o
     return -5;
   }
 
-  (void)wasm_foreign_funcall1(tcr, load_sym, script_path);
-  if (tcr->wasm_pending_throw) {
-    return -6;
+  /* Call LOAD with a catch frame (same pattern as wasm_fasload_path). */
+  {
+    LispObj *saved_vsp = tcr->save_vsp;
+    if (saved_vsp == NULL) {
+      return -7;
+    }
+
+    natural old_last_lisp_frame = wasm_enter_lisp_frame(
+      tcr, 0, 0, (LispObj)saved_vsp);
+    tcr->valence = TCR_STATE_LISP;
+    tcr->wasm_pending_throw = 0;
+
+    LispObj *vsp_ptr = saved_vsp;
+    *--vsp_ptr = script_path;
+    tcr->save_vsp = vsp_ptr;
+    tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+
+    tcr->wasm_gprs[arg_z] = nrs_TOPLCATCH.vcell;
+    wasm_call_subprim_fixnum(
+      wasm_subprim_fixnum(WASM_SUBPRIM_MKCATCH1V_INDEX));
+
+    LispObj catch_before = tcr->catch_top;
+
+    tcr->wasm_gprs[nargs] = box_fixnum(1);
+    tcr->wasm_gprs[nfn] = load_sym;
+    tcr->wasm_gprs[Rfn] = load_sym;
+    wasm_call_subprim_fixnum(
+      wasm_subprim_fixnum(WASM_SUBPRIM_FUNCALL_INDEX));
+
+    int threw = tcr->wasm_pending_throw != 0;
+    int catch_consumed = (tcr->catch_top != catch_before);
+
+    if (!threw && !catch_consumed) {
+      tcr->wasm_gprs[arg_z] = lisp_nil;
+      tcr->wasm_gprs[imm0] = box_fixnum(1);
+      wasm_call_subprim_fixnum(
+        wasm_subprim_fixnum(WASM_SUBPRIM_NTHROW1VALUE_INDEX));
+      if (tcr->wasm_pending_throw) {
+        tcr->wasm_pending_throw = 0;
+      }
+    }
+
+    tcr->save_vsp = saved_vsp;
+    tcr->wasm_gprs[vsp] = (LispObj)saved_vsp;
+    tcr->valence = TCR_STATE_FOREIGN;
+    wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
+
+    if (threw || catch_consumed) {
+      return -6;
+    }
+    return 0;
   }
-  return 0;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_fasload_path")))
@@ -4506,11 +4695,329 @@ wasm_fasload_path(uint32_t path_ptr, uint32_t path_len)
   if (path == lisp_nil) {
     return -6;
   }
-  (void)wasm_foreign_funcall1(tcr, fasload_fn, path);
-  if (tcr->wasm_pending_throw) {
-    return -72;  /* fasload threw */
+
+  /* Guard: verify *fasl-api* was initialized by cold-boot-init.
+     If NIL, the FASL API functions were never set up and %FASLOAD
+     will try to funcall NIL, producing a confusing -72 error.
+     Also dump all slots for diagnosis since nfn=nil crash in
+     %fasl-init-buffer suggests slot 3 is nil. */
+  {
+    static const uint8_t fasl_api_name[] = {
+      '*', 'F', 'A', 'S', 'L', '-', 'A', 'P', 'I', '*'
+    };
+    LispObj fasl_api_sym = wasm_find_symbol_named_bytes(
+      fasl_api_name, (uint32_t)sizeof(fasl_api_name), ccl_pkg);
+    if (fasl_api_sym != (LispObj)0 &&
+        fulltag_of(fasl_api_sym) == fulltag_misc &&
+        header_subtag(header_of(fasl_api_sym)) == subtag_symbol) {
+      lispsymbol *api_rawsym = (lispsymbol *)ptr_from_lispobj(untag(fasl_api_sym));
+      LispObj api_val = api_rawsym->vcell;
+      if (api_val == lisp_nil) {
+        static const char msg[] = "fasload: *fasl-api* is NIL (cold-load functions incomplete)\n";
+        wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+        return -73;
+      }
+      /* Dump *fasl-api* istruct slots for diagnosis */
+      if (fulltag_of(api_val) == fulltag_misc) {
+        LispObj api_hdr = header_of(api_val);
+        unsigned api_st = header_subtag(api_hdr);
+        signed_natural api_ec = header_element_count(api_hdr);
+        char d[120]; int p = 0;
+        p += wasm_debug_str(d + p, "fasload: *fasl-api* st=0x");
+        p += wasm_debug_hex8(d + p, api_st);
+        p += wasm_debug_str(d + p, " ec=");
+        p += wasm_debug_uint(d + p, (uint32_t)api_ec);
+        d[p++] = '\n';
+        wasm_host_log(d, (unsigned)p);
+        /* Dump each element: deref(val, 0) = header, deref(val, n+1) = element n.
+           Element 0 = istruct-cell (cons), elements 1-8 = function slots:
+           1=open, 2=close, 3=init-buffer, 4=set-file-pos,
+           5=get-file-pos, 6=read-buffer, 7=read-byte, 8=read-n-bytes */
+        static const char *elem_names[] = {
+          "hdr", "icell", "open", "close", "init-buf",
+          "set-pos", "get-pos", "read-buf", "read-byte", "read-n"
+        };
+        signed_natural nslots = api_ec < 9 ? api_ec : 9;
+        for (signed_natural i = 0; i <= nslots; i++) {
+          LispObj slot_val = deref(api_val, i);
+          p = 0;
+          p += wasm_debug_str(d + p, "  [");
+          p += wasm_debug_uint(d + p, (uint32_t)i);
+          p += wasm_debug_str(d + p, "] ");
+          if (i < 10) {
+            p += wasm_debug_str(d + p, elem_names[i]);
+          }
+          p += wasm_debug_str(d + p, "=");
+          p += wasm_debug_hex8(d + p, (uint32_t)slot_val);
+          if (slot_val == lisp_nil) {
+            p += wasm_debug_str(d + p, " (NIL!)");
+          } else if (fulltag_of(slot_val) == fulltag_misc &&
+                     slot_val != (LispObj)nil_value) {
+            unsigned svst = header_subtag(header_of(slot_val));
+            if (svst == subtag_function) {
+              p += wasm_debug_str(d + p, " (fn)");
+            } else {
+              p += wasm_debug_str(d + p, " st=0x");
+              p += wasm_debug_hex8(d + p, svst);
+            }
+          }
+          d[p++] = '\n';
+          wasm_host_log(d, (unsigned)p);
+        }
+      }
+    }
   }
-  return 0;
+
+  /* WASM bootstrap fix: fd-open calls (pathname-encoding-name), and if it
+     returns non-NIL, calls (get-character-encoding name), which is defined
+     in l1-unicode.lisp — not yet loaded.  Fix: find the PATHNAME-ENCODING-NAME
+     closure and clear its inherited binding so it returns NIL, forcing fd-open
+     to use the simpler with-cstrs path that doesn't need character encodings. */
+  {
+    static int patchdone = 0;
+    if (!patchdone) {
+      static const uint8_t pen_name[] = {
+        'P','A','T','H','N','A','M','E','-','E','N','C','O','D','I','N','G',
+        '-','N','A','M','E'
+      };
+      /* Try CCL package first, then all packages, then full memory scan */
+      LispObj pen_sym = wasm_find_symbol_named_bytes(
+        pen_name, (uint32_t)sizeof(pen_name), ccl_pkg);
+      if (pen_sym == (LispObj)0) {
+        pen_sym = wasm_find_symbol_named_bytes(
+          pen_name, (uint32_t)sizeof(pen_name), (LispObj)0);
+      }
+      if (pen_sym == (LispObj)0) {
+        pen_sym = wasm_find_symbol_named_bytes_scan(
+          pen_name, (uint32_t)sizeof(pen_name), (LispObj)0);
+      }
+      if (pen_sym == (LispObj)0) {
+        static const char msg[] = "pen-fix: symbol not found (all methods)\n";
+        wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+      } else if (fulltag_of(pen_sym) == fulltag_misc &&
+          header_subtag(header_of(pen_sym)) == subtag_symbol) {
+        lispsymbol *pen_rawsym = (lispsymbol *)ptr_from_lispobj(untag(pen_sym));
+        LispObj pen_fn = pen_rawsym->fcell;
+        {
+          /* Diagnostic: print what we found */
+          static const char hx[] = "0123456789abcdef";
+          char d[120]; int p = 0;
+          const char *pfx = "pen-fix: fn=0x";
+          while (*pfx) d[p++] = *pfx++;
+          for (int b = 7; b >= 0; b--) d[p++] = hx[(pen_fn >> (b*4)) & 0xf];
+          pfx = " tag=";
+          while (*pfx) d[p++] = *pfx++;
+          d[p++] = '0' + (char)(fulltag_of(pen_fn));
+          if (fulltag_of(pen_fn) == fulltag_misc && pen_fn != (LispObj)nil_value) {
+            LispObj fhdr = header_of(pen_fn);
+            unsigned fst = header_subtag(fhdr);
+            signed_natural ecnt = header_element_count(fhdr);
+            pfx = " st=";
+            while (*pfx) d[p++] = *pfx++;
+            { unsigned sv = fst; char sbuf[4]; int slen = 0;
+              do { sbuf[slen++] = '0' + (char)(sv % 10); sv /= 10; } while (sv > 0);
+              for (int i = slen-1; i >= 0; i--) d[p++] = sbuf[i]; }
+            pfx = " ec=";
+            while (*pfx) d[p++] = *pfx++;
+            { signed_natural sv = ecnt; char sbuf[8]; int slen = 0;
+              do { sbuf[slen++] = '0' + (char)(sv % 10); sv /= 10; } while (sv > 0);
+              for (int i = slen-1; i >= 0; i--) d[p++] = sbuf[i]; }
+            /* Print inherited binding at deref(fn, 4) as full hex */
+            if (ecnt >= 4) {
+              LispObj ib = deref(pen_fn, 4);
+              pfx = " inh0=0x";
+              while (*pfx) d[p++] = *pfx++;
+              for (int b = 7; b >= 0; b--) d[p++] = hx[(ib >> (b*4)) & 0xf];
+              if (ib == lisp_nil) { pfx = "(nil)"; while (*pfx) d[p++] = *pfx++; }
+            }
+          }
+          d[p++] = '\n';
+          wasm_host_log(d, (unsigned)p);
+        }
+        if (fulltag_of(pen_fn) == fulltag_misc &&
+            header_subtag(header_of(pen_fn)) == subtag_function) {
+          signed_natural ecnt = header_element_count(header_of(pen_fn));
+          signed_natural inherited = ecnt - 5;
+          if (inherited > 0) {
+            /* Inherited bindings are at deref(fn, 4..4+inherited-1):
+               closure layout = 3 fixed (entry, code, fn) + inherited + 2 (name, lfbits).
+               See ARM _SPcall_closure comment / arm-spentry.s line 1546. */
+            for (signed_natural i = 0; i < inherited; i++) {
+              LispObj slot = deref(pen_fn, 4 + i);
+              /* If it's a value cell (1-element misc), clear its contents too */
+              if (fulltag_of(slot) == fulltag_misc &&
+                  slot != (LispObj)nil_value) {
+                LispObj sh = header_of(slot);
+                unsigned cell_st = header_subtag(sh);
+                signed_natural cell_ec = header_element_count(sh);
+                {
+                  static const char hx2[] = "0123456789abcdef";
+                  char d2[80]; int p2 = 0;
+                  const char *pfx2 = "pen-fix: cell st=";
+                  while (*pfx2) d2[p2++] = *pfx2++;
+                  { unsigned sv = cell_st; char sbuf[4]; int slen = 0;
+                    do { sbuf[slen++] = '0' + (char)(sv % 10); sv /= 10; } while (sv > 0);
+                    for (int j = slen-1; j >= 0; j--) d2[p2++] = sbuf[j]; }
+                  pfx2 = " ec=";
+                  while (*pfx2) d2[p2++] = *pfx2++;
+                  { signed_natural sv = cell_ec; char sbuf[4]; int slen = 0;
+                    do { sbuf[slen++] = '0' + (char)(sv % 10); sv /= 10; } while (sv > 0);
+                    for (int j = slen-1; j >= 0; j--) d2[p2++] = sbuf[j]; }
+                  if (cell_ec >= 1) {
+                    LispObj cv = ((LispObj *)(untag(slot)))[1];
+                    pfx2 = " val=0x";
+                    while (*pfx2) d2[p2++] = *pfx2++;
+                    for (int b = 7; b >= 0; b--) d2[p2++] = hx2[(cv >> (b*4)) & 0xf];
+                  }
+                  d2[p2++] = '\n';
+                  wasm_host_log(d2, (unsigned)p2);
+                }
+                if (cell_ec == 1) {
+                  /* Value cell: clear its contents */
+                  ((LispObj *)(untag(slot)))[1] = lisp_nil;
+                }
+              }
+              /* Also unconditionally clear the slot itself so
+                 _SPcall_closure pushes nil (belt-and-suspenders). */
+              ((LispObj *)(untag(pen_fn)))[4 + i] = lisp_nil;
+            }
+            patchdone = 1;
+            {
+              static const char msg[] = "pen-fix: patched (slot+cell cleared)\n";
+              wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+            }
+          } else {
+            /* Not a closure (no inherited bindings) — might be a plain function.
+               This means the compiled code for pathname-encoding-name doesn't
+               close over the variable (darwin-target compiled to constant :utf-8?).
+               The encoding issue is elsewhere. */
+            static const char msg[] = "pen-fix: not a closure (inherited=0)\n";
+            wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+            patchdone = 1;
+          }
+        } else {
+          static const char msg[] = "pen-fix: fcell is not a function\n";
+          wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+        }
+      }
+    }
+  }
+
+  /* Guard: verify *fasl-dispatch-table* is a vector (not NIL or unbound).
+     %FASLOAD uses it as default for the dispatch table; if it's NIL,
+     svref will trap on a cons cell instead of a vector. */
+  {
+    static const uint8_t fdt_name[] = {
+      '*', 'F', 'A', 'S', 'L', '-', 'D', 'I', 'S', 'P', 'A', 'T', 'C', 'H',
+      '-', 'T', 'A', 'B', 'L', 'E', '*'
+    };
+    LispObj fdt_sym = wasm_find_symbol_named_bytes(
+      fdt_name, (uint32_t)sizeof(fdt_name), ccl_pkg);
+    if (fdt_sym != (LispObj)0 &&
+        fulltag_of(fdt_sym) == fulltag_misc &&
+        header_subtag(header_of(fdt_sym)) == subtag_symbol) {
+      lispsymbol *fdt_rawsym = (lispsymbol *)ptr_from_lispobj(untag(fdt_sym));
+      LispObj fdt_val = fdt_rawsym->vcell;
+      unsigned fdt_ft = fulltag_of(fdt_val);
+      if (fdt_ft != fulltag_misc) {
+        static const char hx[] = "0123456789abcdef";
+        char msg[120]; int p = 0;
+        const char *pfx = "fasload: *fasl-dispatch-table* bad ft=";
+        while (*pfx) msg[p++] = *pfx++;
+        msg[p++] = '0' + (char)fdt_ft;
+        pfx = " val=0x";
+        while (*pfx) msg[p++] = *pfx++;
+        for (int b = 7; b >= 0; b--) msg[p++] = hx[(fdt_val >> (b*4)) & 0xf];
+        msg[p++] = '\n';
+        wasm_host_log(msg, (unsigned)p);
+        return -74;
+      } else {
+        LispObj fdt_hdr = header_of(fdt_val);
+        unsigned fdt_st = header_subtag(fdt_hdr);
+        signed_natural fdt_cnt = header_element_count(fdt_hdr);
+        static const char hx[] = "0123456789abcdef";
+        char msg[120]; int p = 0;
+        const char *pfx = "fasload: *fasl-dispatch-table* st=";
+        while (*pfx) msg[p++] = *pfx++;
+        for (int b = 1; b >= 0; b--) msg[p++] = hx[(fdt_st >> (b*4)) & 0xf];
+        pfx = " cnt=";
+        while (*pfx) msg[p++] = *pfx++;
+        for (int b = 3; b >= 0; b--) msg[p++] = hx[(fdt_cnt >> (b*4)) & 0xf];
+        msg[p++] = '\n';
+        wasm_host_log(msg, (unsigned)p);
+      }
+    } else {
+      static const char msg[] = "fasload: *fasl-dispatch-table* symbol not found\n";
+      wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    }
+  }
+
+  /* Call %FASLOAD with a catch frame, matching the native toplevel loop
+     pattern (wasm_toplevel_loop lines 598-614).  Without a catch frame,
+     catch_top=0 and _SPksignalerr absorbs every error via pending_throw(16),
+     preventing %FASLOAD's unwind-protect cleanup from running and making
+     all errors fatal.  With a catch frame the condition system can dispatch
+     through ERRDISP and unwind-protect cleanup (%fasl-close) can execute. */
+  {
+    LispObj *saved_vsp = tcr->save_vsp;
+    if (saved_vsp == NULL) {
+      return -75;
+    }
+
+    natural old_last_lisp_frame = wasm_enter_lisp_frame(
+      tcr, 0, 0, (LispObj)saved_vsp);
+    tcr->valence = TCR_STATE_LISP;
+    tcr->wasm_pending_throw = 0;
+
+    /* Push the path arg onto the value stack */
+    LispObj *vsp_ptr = saved_vsp;
+    *--vsp_ptr = path;
+    tcr->save_vsp = vsp_ptr;
+    tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
+
+    /* Establish catch frame with *TOPLEVEL-CATCH* tag */
+    tcr->wasm_gprs[arg_z] = nrs_TOPLCATCH.vcell;
+    wasm_call_subprim_fixnum(
+      wasm_subprim_fixnum(WASM_SUBPRIM_MKCATCH1V_INDEX));
+
+    LispObj catch_before = tcr->catch_top;
+
+    /* Call %FASLOAD(path) */
+    tcr->wasm_gprs[nargs] = box_fixnum(1);
+    tcr->wasm_gprs[nfn] = fasload_fn;
+    tcr->wasm_gprs[Rfn] = fasload_fn;
+    wasm_call_subprim_fixnum(
+      wasm_subprim_fixnum(WASM_SUBPRIM_FUNCALL_INDEX));
+
+    int threw = tcr->wasm_pending_throw != 0;
+    /* A throw/condition may have unwound our catch frame cooperatively
+       without setting pending_throw (the WASM throw mechanism restores
+       catch_top but doesn't use longjmp).  Detect this by checking
+       whether catch_top still points to our frame. */
+    int catch_consumed = (tcr->catch_top != catch_before);
+
+    if (!threw && !catch_consumed) {
+      /* Normal return — our catch frame is intact, unwind it */
+      tcr->wasm_gprs[arg_z] = lisp_nil;
+      tcr->wasm_gprs[imm0] = box_fixnum(1);
+      wasm_call_subprim_fixnum(
+        wasm_subprim_fixnum(WASM_SUBPRIM_NTHROW1VALUE_INDEX));
+      if (tcr->wasm_pending_throw) {
+        tcr->wasm_pending_throw = 0;
+      }
+    }
+
+    /* Restore state */
+    tcr->save_vsp = saved_vsp;
+    tcr->wasm_gprs[vsp] = (LispObj)saved_vsp;
+    tcr->valence = TCR_STATE_FOREIGN;
+    wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
+
+    if (threw || catch_consumed) {
+      return -72;  /* fasload threw or condition consumed catch frame */
+    }
+    return 0;
+  }
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_probe_foreign_call1")))

@@ -38,7 +38,8 @@ extern int lisp_open(char *path, int flags, mode_t mode);
 extern int lisp_close(int fd);
 extern ssize_t lisp_read(int fd, void *buf, size_t count);
 extern ssize_t lisp_write(int fd, void *buf, size_t count);
-extern int64_t lisp_lseek(int fd, int64_t offset, int whence);
+extern int32_t lisp_lseek(int fd, int32_t offset, int whence);
+extern int32_t wasm_kernel_stream_seek(uint32_t sid, int64_t offset, uint32_t whence, uint64_t *out_pos);
 extern int lisp_stat(char *path, void *buf);
 extern int lisp_fstat(int fd, void *buf);
 
@@ -822,8 +823,12 @@ lseek(int fd, off_t offset, int whence)
     wasm_boot_image_off = (size_t)next;
     return (off_t)next;
   }
-  int64_t pos = lisp_lseek(fd, (int64_t)offset, whence);
-  if (pos < 0) {
+  /* Call microkernel directly with 64-bit offset/result to avoid
+     the int32 truncation in lisp_lseek (needed for > 2 GiB files). */
+  uint64_t pos = 0;
+  int32_t r = wasm_kernel_stream_seek((uint32_t)fd, (int64_t)offset, (uint32_t)whence, &pos);
+  if (r < 0) {
+    errno = -r;
     char msg[128];
     int n = snprintf(msg, sizeof(msg),
                      "WASM lseek fail fd=%d whence=%d errno=%d\n",
@@ -831,6 +836,7 @@ lseek(int fd, off_t offset, int whence)
     if (n > 0) {
       wasm_host_log(msg, (unsigned)n);
     }
+    return (off_t)-1;
   }
   return (off_t)pos;
 }
@@ -841,8 +847,10 @@ __wasilibc_tell(int fd)
   if (fd == wasm_boot_image_fd && wasm_boot_image_bytes != NULL) {
     return (off_t)wasm_boot_image_off;
   }
-  int64_t pos = lisp_lseek(fd, 0, SEEK_CUR);
-  if (pos < 0) {
+  uint64_t pos = 0;
+  int32_t r = wasm_kernel_stream_seek((uint32_t)fd, (int64_t)0, (uint32_t)SEEK_CUR, &pos);
+  if (r < 0) {
+    errno = -r;
     return (off_t)-1;
   }
   return (off_t)pos;

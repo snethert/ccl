@@ -477,9 +477,14 @@ const kernelUrl = new URL("wasmcl.wasm", import.meta.url);
 const kernelBytes = await fs.readFile(fileURLToPath(kernelUrl));
 assertManifestHash("kernelWasm", kernelBytes, manifest?.artifacts?.kernelWasm?.path);
 
-const imageBytes = await fs.readFile(imagePath);
-const imageLen = imageBytes.byteLength >>> 0;
-assertManifestHash("rootImage", imageBytes, manifest?.artifacts?.rootImage?.path);
+// Use stat + chunked read for images > 2 GiB (Node.js fs.readFile limit).
+const imageStat = await fs.stat(imagePath);
+const imageLen = Number(imageStat.size) >>> 0;
+let imageBytes = null;
+if (imageStat.size <= 2_000_000_000) {
+  imageBytes = await fs.readFile(imagePath);
+  assertManifestHash("rootImage", imageBytes, manifest?.artifacts?.rootImage?.path);
+}
 
 const runtime = createSharedCclRuntime({
   // Start with 16 MiB and grow if needed.
@@ -823,7 +828,27 @@ const blobBase = (cstackBase - cstackSize - imageLen) & ~15;
 if (blobBase < 0) {
   fail("not enough memory to place boot image below cstack");
 }
-new Uint8Array(runtime.memory.buffer).set(imageBytes, blobBase);
+if (imageBytes) {
+  new Uint8Array(runtime.memory.buffer).set(imageBytes, blobBase);
+} else {
+  // Chunked read for large images (> 2 GiB).
+  const fh = await fs.open(imagePath, "r");
+  const chunkSize = 64 * 1024 * 1024; // 64 MiB chunks
+  let offset = 0;
+  const dest = new Uint8Array(runtime.memory.buffer);
+  while (offset < imageLen) {
+    const toRead = Math.min(chunkSize, imageLen - offset);
+    const buf = Buffer.alloc(toRead);
+    const { bytesRead } = await fh.read(buf, 0, toRead, offset);
+    if (bytesRead === 0) break;
+    dest.set(new Uint8Array(buf.buffer, buf.byteOffset, bytesRead), blobBase + offset);
+    offset += bytesRead;
+  }
+  await fh.close();
+  if (offset !== imageLen) {
+    fail(`short read on image: expected ${imageLen}, got ${offset}`);
+  }
+}
 
 if (typeof kernel.instance.exports.wasm_get_lisp_nil !== "function") {
   fail("kernel missing export wasm_get_lisp_nil");

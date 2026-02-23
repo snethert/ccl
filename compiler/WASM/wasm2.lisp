@@ -2476,13 +2476,20 @@
                         (wasm2-emit-misc-node-slot-address 0)
                         (wasm2-emit :local.get raw-temp)
                         (wasm2-emit :i32-store)
-                        (wasm2-emit :local.get raw-temp))))
+                        ;; Return the macptr object, not the raw address.
+                        ;; Bug was: :local.get raw-temp — callers of
+                        ;; %setf-macptr (e.g. %incf-ptr → %set-ptr in
+                        ;; nfasload) expect a macptr, not a raw address.
+                        ;; The ARM backend confirms: %setf-macptr returns
+                        ;; the modified macptr object (arm2.lisp:8868).
+                        (wasm2-emit :local.get ptr-temp))))
            (else-ir (wasm2-with-ir
                       (lambda ()
                         (wasm2-emit-misc-set-fallback-local ptr-temp
                                                              (wasm2-box-fixnum 0)
                                                              raw-temp
-                                                             t)))))
+                                                             nil)
+                        (wasm2-emit :local.get ptr-temp)))))
       (wasm2-emit :if then-ir else-ir))
     (when (wasm2-returning-p xfer)
       (wasm2-emit :set-arg-z)
@@ -2660,16 +2667,23 @@
       (wasm2-emit :local.set addr-temp))
     (wasm2-form seg nil nil val)
     (wasm2-emit :local.set val-temp)
-    (wasm2-emit :local.get val-temp)
     (if store-ptr
       (progn
+        ;; Extract raw address from the macptr val-temp.
+        ;; Don't push val-temp onto the stack here — the subtag-guard
+        ;; uses val-temp internally via local.get and the result goes
+        ;; to raw-temp.  Pushing it before the if/else blocks would
+        ;; leave an unconsumed value below the block boundary.
         (wasm2-emit-misc-slot-ref-with-subtag-guard val-temp
                                                      0
                                                      wasm::subtag-macptr)
         (wasm2-emit :local.set raw-temp)
         (wasm2-emit :local.get addr-temp)
         (wasm2-emit :local.get raw-temp))
-      (wasm2-emit-unbox-fixnum))
+      (progn
+        ;; Non-pointer store: push val-temp and unbox for i32.store.
+        (wasm2-emit :local.get val-temp)
+        (wasm2-emit-unbox-fixnum)))
     (case store-size
       (1 (wasm2-emit :i32-store8))
       (2 (wasm2-emit :i32-store16))

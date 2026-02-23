@@ -1234,11 +1234,12 @@ Can be removed before shipping once %FASLOAD startup is stable.")
 
 
 (defmacro %wasm-note-startup-step (n)
+  ;; Just set the step variable; the C wrapper (wasm_run_cold_boot_init)
+  ;; reads *WASM-STARTUP-STEP* for diagnostics.  Calling FORMAT here is
+  ;; unsafe because FORMAT needs CLOS stream infrastructure (SET-SLOT-ID-VALUE)
+  ;; which is not yet defined at cold-boot time.
   `(progn
      (setq *wasm-startup-step* ,n)
-     (when (fboundp 'format)
-       (format t "~&WASM_STARTUP_STEP ~D~%" ,n)
-       (finish-output))
      ,n))
 
 (defun %run-cold-boot-init ()

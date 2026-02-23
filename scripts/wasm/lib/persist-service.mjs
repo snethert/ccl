@@ -649,7 +649,15 @@ export function createPersistenceService({ errno, now = () => Date.now(), chunkS
           const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
           const end = position + data.length;
           if (!buffer || end > buffer.length) {
-            const newLen = Math.max(end, buffer ? buffer.length * 2 : end);
+            // For large buffers (>1 GiB), grow to exact size + 1 MiB slack
+            // instead of doubling, to avoid multi-GiB over-allocation that
+            // can cause OOM on WASM32 save-image (2+ GiB heap images).
+            let newLen;
+            if (buffer && buffer.length > 1_073_741_824) {
+              newLen = end + 1_048_576;
+            } else {
+              newLen = Math.max(end, buffer ? buffer.length * 2 : end);
+            }
             const next = new Uint8Array(newLen);
             if (buffer && buffer.length) next.set(buffer.subarray(0, length));
             buffer = next;
@@ -662,10 +670,16 @@ export function createPersistenceService({ errno, now = () => Date.now(), chunkS
         seek(whence, offset) {
           const offNum = Number(offset);
           if (!Number.isFinite(offNum)) return -errno.EINVAL;
-          const off = Math.trunc(offNum);
+          let off = Math.trunc(offNum);
           let base = 0;
           switch (whence >>> 0) {
           case 0: // SEEK_SET
+            // WASM32 workaround: lisp_lseek passes int32_t offsets via
+            // int64 sign-extension.  Positions > 2 GiB appear as negative.
+            // Recover the unsigned uint32 value.
+            if (off < 0 && off >= -2147483648) {
+              off = off + 4294967296;
+            }
             base = 0;
             break;
           case 1: // SEEK_CUR

@@ -143,6 +143,13 @@ lisp_open(char *path, int flags, mode_t mode)
     return -1;
   }
 
+  /* Normalize POSIX O_RDONLY=0 for WASI compatibility.
+     Lisp FFI code (nfasload.lisp) passes 0 for read-only, but WASI libc
+     defines O_RDONLY=0x04000000.  Treat flags=0 as O_RDONLY. */
+  if (flags == 0) {
+    flags = O_RDONLY;
+  }
+
   int accmode = (flags & O_ACCMODE);
   uint32_t mode_flags = 0;
   switch (accmode) {
@@ -215,8 +222,10 @@ lisp_fchmod(int fd, mode_t mode)
   return -1;
 }
 
-int64_t
-lisp_lseek(int fd, int64_t offset, int whence)
+/* WASM32 Lisp FFI uses :signed-fullword (i32) for offset and return.
+   Internal host API (wasm_kernel_stream_seek) still uses 64-bit. */
+int32_t
+lisp_lseek(int fd, int32_t offset, int whence)
 {
   if (fd < 0) {
     errno = EBADF;
@@ -224,21 +233,19 @@ lisp_lseek(int fd, int64_t offset, int whence)
   }
 
   uint64_t pos = 0;
-  int32_t r = wasm_kernel_stream_seek((uint32_t)fd, offset, (uint32_t)whence, &pos);
+  int32_t r = wasm_kernel_stream_seek((uint32_t)fd, (int64_t)offset, (uint32_t)whence, &pos);
   if (r < 0) {
     errno = -r;
-#ifdef WASM32
     char msg[160];
     int n = snprintf(msg, sizeof(msg),
-                     "WASM lisp_lseek fail fd=%d off=%lld whence=%d errno=%d\n",
-                     fd, (long long)offset, whence, errno);
+                     "WASM lisp_lseek fail fd=%d off=%d whence=%d errno=%d\n",
+                     fd, offset, whence, errno);
     if (n > 0) {
       wasm_host_log(msg, (unsigned)n);
     }
-#endif
     return -1;
   }
-  return (int64_t)pos;
+  return (int32_t)pos;
 }
 
 int
@@ -257,8 +264,9 @@ lisp_close(int fd)
   return 0;
 }
 
+/* WASM32 Lisp FFI uses :off_t = :signed-fullword (i32) for length. */
 int
-lisp_ftruncate(int fd, off_t length)
+lisp_ftruncate(int fd, int32_t length)
 {
   if (fd < 0) {
     errno = EBADF;
@@ -269,7 +277,7 @@ lisp_ftruncate(int fd, off_t length)
     return -1;
   }
 
-  int32_t r = wasm_kernel_stream_truncate((uint32_t)fd, (uint64_t)length);
+  int32_t r = wasm_kernel_stream_truncate((uint32_t)fd, (uint64_t)(uint32_t)length);
   if (r < 0) {
     errno = -r;
     return -1;

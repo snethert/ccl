@@ -893,6 +893,22 @@ export function createMicrokernel({
         off += take;
         return chunk;
       },
+      seek(whence, offset) {
+        if (closed) return -ERRNO.EBADF;
+        let newOff;
+        if (whence === 0) {        // SEEK_SET
+          newOff = offset;
+        } else if (whence === 1) { // SEEK_CUR
+          newOff = off + offset;
+        } else if (whence === 2) { // SEEK_END
+          newOff = data.length + offset;
+        } else {
+          return -ERRNO.EINVAL;
+        }
+        if (newOff < 0 || newOff > data.length) return -ERRNO.EINVAL;
+        off = newOff;
+        return off;
+      },
       close() {
         closed = true;
       },
@@ -1285,7 +1301,13 @@ export function createMicrokernel({
           break;
         }
         if (typeof stream.write === "function") {
-          const wrote = stream.write(bytes);
+          let wrote;
+          try {
+            wrote = stream.write(bytes);
+          } catch (_e) {
+            recordRequestDone(id, -ERRNO.ENOMEM);
+            break;
+          }
           if (typeof wrote === "number") {
             recordRequestDone(id, i32(wrote));
           } else {

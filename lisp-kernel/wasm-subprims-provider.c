@@ -2192,7 +2192,12 @@ static uint32_t funcall_ring[FUNCALL_RING_SIZE];
 static uint32_t funcall_ring_pos = 0;
 static uint64_t funcall_total = 0;
 
-static void funcall_stuck_record(uint32_t entry_index) {
+static void funcall_stuck_record(TCR *tcr, uint32_t entry_index) {
+  /* Skip recording during error unwinding — pending_throw causes the
+     funcall dispatcher to short-circuit every call, which looks like a
+     stuck loop but is actually cooperative unwinding to the C caller. */
+  if (tcr != NULL && tcr->wasm_pending_throw) return;
+
   funcall_ring[funcall_ring_pos & (FUNCALL_RING_SIZE - 1)] = entry_index;
   funcall_ring_pos++;
   funcall_total++;
@@ -2237,7 +2242,14 @@ static void funcall_stuck_record(uint32_t entry_index) {
       }
       msg[p++] = '\n';
       wasm_host_log(msg, (unsigned)p);
-      wasm_subprims_trap();
+      /* Set pending_throw instead of trapping.  This breaks the stuck loop
+         gracefully — the funcall dispatcher will short-circuit, and the C
+         caller (e.g. wasm_drain_cold_load_list) can recover. */
+      if (tcr != NULL) {
+        tcr->wasm_pending_throw = box_fixnum(16);
+      } else {
+        wasm_subprims_trap();  /* no TCR = can't recover, hard trap */
+      }
     }
   }
 }
@@ -2246,6 +2258,85 @@ static void
 wasm_signal_funcall_error(TCR *tcr, signed_natural errnum, LispObj name)
 {
   wasm_debug_dump_state("funcall-error");
+
+  /* Diagnostic: identify the object type that failed funcall validation */
+  {
+    static const char hx[] = "0123456789abcdef";
+    char d[160]; int p = 0;
+    const char *pfx = "funcall-err: code=";
+    while (*pfx) d[p++] = *pfx++;
+    { uint32_t ev = (uint32_t)errnum; char ebuf[4]; int elen = 0;
+      do { ebuf[elen++] = '0' + (char)(ev % 10); ev /= 10; } while (ev > 0);
+      for (int i = elen-1; i >= 0; i--) d[p++] = ebuf[i]; }
+    pfx = " name=0x";
+    while (*pfx) d[p++] = *pfx++;
+    for (int b = 7; b >= 0; b--) d[p++] = hx[(name >> (b*4)) & 0xf];
+    pfx = " tag=";
+    while (*pfx) d[p++] = *pfx++;
+    d[p++] = '0' + (char)(fulltag_of(name));
+    if (fulltag_of(name) == fulltag_misc && name != (LispObj)nil_value) {
+      LispObj hdr = header_of(name);
+      unsigned st = header_subtag(hdr);
+      pfx = " hdr=0x";
+      while (*pfx) d[p++] = *pfx++;
+      for (int b = 7; b >= 0; b--) d[p++] = hx[(hdr >> (b*4)) & 0xf];
+      pfx = " subtag=";
+      while (*pfx) d[p++] = *pfx++;
+      { unsigned sv = st; char sbuf[4]; int slen = 0;
+        do { sbuf[slen++] = '0' + (char)(sv % 10); sv /= 10; } while (sv > 0);
+        for (int i = slen-1; i >= 0; i--) d[p++] = sbuf[i]; }
+      if (st == subtag_symbol) {
+        lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(name));
+        LispObj fc = sym->fcell;
+        pfx = " fcell=0x";
+        while (*pfx) d[p++] = *pfx++;
+        for (int b = 7; b >= 0; b--) d[p++] = hx[(fc >> (b*4)) & 0xf];
+        /* Print symbol name (pname) — CCL ARM/WASM uses 32-bit chars */
+        LispObj pn = sym->pname;
+        if (fulltag_of(pn) == fulltag_misc && pn != (LispObj)nil_value) {
+          LispObj phdr = header_of(pn);
+          unsigned pst = header_subtag(phdr);
+          if (pst == subtag_simple_base_string) {
+            unsigned plen = (unsigned)header_element_count(phdr);
+            if (plen > 60) plen = 60;
+            uint32_t *pchars = (uint32_t *)(untag(pn) + sizeof(LispObj));
+            pfx = " sym=";
+            while (*pfx) d[p++] = *pfx++;
+            for (unsigned ci = 0; ci < plen && p < 148; ci++)
+              d[p++] = (char)(pchars[ci] & 0x7f);
+          }
+        }
+      }
+    }
+    /* Also print caller info (Rfn) */
+    {
+      LispObj rfn = wasm_reg(tcr, Rfn);
+      pfx = " Rfn=0x";
+      while (*pfx) d[p++] = *pfx++;
+      for (int b = 7; b >= 0; b--) d[p++] = hx[(rfn >> (b*4)) & 0xf];
+      if (fulltag_of(rfn) == fulltag_misc && rfn != (LispObj)nil_value) {
+        LispObj rfn_hdr = header_of(rfn);
+        unsigned rfn_st = header_subtag(rfn_hdr);
+        if (rfn_st == subtag_function || rfn_st == subtag_pseudofunction) {
+          LispObj eidx = deref(rfn, 1);
+          pfx = " e=";
+          while (*pfx) d[p++] = *pfx++;
+          if (tag_of(eidx) == tag_fixnum) {
+            uint32_t idx = (uint32_t)unbox_fixnum(eidx);
+            char ibuf[10]; int ilen = 0;
+            do { ibuf[ilen++] = '0' + (char)(idx % 10); idx /= 10; } while (idx > 0);
+            for (int i = ilen-1; i >= 0; i--) d[p++] = ibuf[i];
+          } else {
+            pfx = "?";
+            while (*pfx) d[p++] = *pfx++;
+          }
+        }
+      }
+    }
+    d[p++] = '\n';
+    wasm_host_log(d, (unsigned)p);
+  }
+
   wasm_set_reg(tcr, arg_y, box_fixnum(errnum));
   wasm_set_reg(tcr, arg_z, name);
   wasm_set_nargs_count(tcr, 2);
@@ -2253,6 +2344,14 @@ wasm_signal_funcall_error(TCR *tcr, signed_natural errnum, LispObj name)
 }
 
 static uint32_t wasm_funcall_depth = 0;
+
+/* Code_vector self-tail-call trampoline state.
+   wasm_cv_trampoline_active: entry_index+1 of the entry currently in a
+   trampoline loop, or 0 if none.  Nested trampolines save/restore this.
+   wasm_cv_restart: set to 1 by a nested code_vector self-call to signal
+   the trampoline loop to re-dispatch instead of recursing. */
+static uint32_t wasm_cv_trampoline_active = 0;
+static int wasm_cv_restart = 0;
 
 static void
 wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
@@ -2265,6 +2364,65 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
     wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
     wasm_funcall_depth = 0;
     tcr->wasm_pending_throw = 1;
+    return;
+  }
+
+  /* Catch funcall-nil early: deref(nil, 1) reads nil_value+3 which is
+     0x00000000 (tag_fixnum), so nil passes the entry-index check below.
+     Detect and report it explicitly instead of calling entry 0. */
+  if (fn_value == (LispObj)nil_value) {
+    static unsigned funcall_nil_count = 0;
+    funcall_nil_count++;
+    if (funcall_nil_count <= 5) {
+      static const char hx[] = "0123456789abcdef";
+      char d[120]; int p = 0;
+      const char *pfx = "FUNCALL-NIL: caller_nfn=0x";
+      while (*pfx) d[p++] = *pfx++;
+      LispObj caller_rfn = wasm_reg(tcr, Rfn);
+      for (int b = 7; b >= 0; b--) d[p++] = hx[(caller_rfn >> (b*4)) & 0xf];
+      /* Try to get caller's entry index */
+      if (fulltag_of(caller_rfn) == fulltag_misc &&
+          caller_rfn != (LispObj)nil_value) {
+        LispObj caller_entry = deref(caller_rfn, 1);
+        if (tag_of(caller_entry) == tag_fixnum) {
+          uint32_t idx = (uint32_t)unbox_fixnum(caller_entry);
+          pfx = " e=";
+          while (*pfx) d[p++] = *pfx++;
+          char ibuf[10]; int ilen = 0;
+          do { ibuf[ilen++] = '0' + (char)(idx % 10); idx /= 10; } while (idx > 0);
+          for (int i = ilen-1; i >= 0; i--) d[p++] = ibuf[i];
+        }
+      }
+      pfx = " nargs=";
+      while (*pfx) d[p++] = *pfx++;
+      { uint32_t na = (uint32_t)wasm_reg(tcr, nargs);
+        char nbuf[10]; int nlen = 0;
+        do { nbuf[nlen++] = '0' + (char)(na % 10); na /= 10; } while (na > 0);
+        for (int i = nlen-1; i >= 0; i--) d[p++] = nbuf[i]; }
+      pfx = " name=0x";
+      while (*pfx) d[p++] = *pfx++;
+      for (int b = 7; b >= 0; b--) d[p++] = hx[(name >> (b*4)) & 0xf];
+      /* Print name symbol if available */
+      if (fulltag_of(name) == fulltag_misc && name != (LispObj)nil_value &&
+          header_subtag(header_of(name)) == subtag_symbol) {
+        lispsymbol *nsym = (lispsymbol *)ptr_from_lispobj(untag(name));
+        LispObj pn = nsym->pname;
+        if (fulltag_of(pn) == fulltag_misc && pn != (LispObj)nil_value &&
+            header_subtag(header_of(pn)) == subtag_simple_base_string) {
+          unsigned plen = header_element_count(header_of(pn));
+          if (plen > 40) plen = 40;
+          uint32_t *chars = (uint32_t *)(untag(pn) + sizeof(LispObj));
+          pfx = " sym=";
+          while (*pfx) d[p++] = *pfx++;
+          for (unsigned ci = 0; ci < plen && p < 110; ci++)
+            d[p++] = (char)(chars[ci] & 0x7f);
+        }
+      }
+      d[p++] = '\n';
+      wasm_host_log(d, (unsigned)p);
+    }
+    wasm_signal_funcall_error(tcr, WASM_XNOTFUN, name);
+    wasm_funcall_depth--;
     return;
   }
 
@@ -2297,7 +2455,7 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
     uint32_t entry_call_abi = wasm_prepare_entry_call(entry_index);
     switch (entry_call_abi) {
     case WASM_ENTRY_CALL_ABI_UNARY_I32: {
-      funcall_stuck_record(entry_index);
+      funcall_stuck_record(tcr, entry_index);
       { uint32_t tl = wasm_get_trace_funcall();
         if (tl >= 1) {
           static const char hx[] = "0123456789abcdef";
@@ -2326,7 +2484,7 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
       break;
     }
     case WASM_ENTRY_CALL_ABI_BINARY_I32: {
-      funcall_stuck_record(entry_index);
+      funcall_stuck_record(tcr, entry_index);
       { uint32_t tl = wasm_get_trace_funcall();
         if (tl >= 1) {
           static const char hx[] = "0123456789abcdef";
@@ -2358,7 +2516,7 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
     }
     case WASM_ENTRY_CALL_ABI_LEGACY:
     default: {
-      funcall_stuck_record(entry_index);
+      funcall_stuck_record(tcr, entry_index);
       uint32_t trace_level = wasm_get_trace_funcall();
       if (trace_level >= 1) {
         static const char hx[] = "0123456789abcdef";
@@ -2424,6 +2582,54 @@ wasm_call_function_or_symbol(TCR *tcr, LispObj fn_value)
     }
     header = header_of(fn_value);
     subtag = header_subtag(header);
+  }
+  if (subtag == subtag_code_vector) {
+    /* WASM workaround: on ARM, code_vectors are executable machine code —
+       jumping to one is a GOTO (no stack growth).  Code_vectors appear as
+       funcall targets in two cases:
+         (a) Self-tail-call: a function jumps to its own code_vector.
+         (b) Closure dispatch: _SPcall_closure sets nfn to the inner
+             function's code_vector and calls _SPfuncall.
+       On WASM, code_vectors are 1-element stubs with just the entry index.
+       We dispatch the entry directly (nfn is left as-is — the caller set
+       it up correctly).  A trampoline loop handles self-calls: nested
+       dispatches of the same entry signal restart instead of recursing. */
+    LispObj cv_entry = deref(fn_value, 1);
+    if (tag_of(cv_entry) != tag_fixnum) {
+      wasm_signal_funcall_error(tcr, WASM_XNOTFUN, name);
+      return;
+    }
+    uint32_t cv_entry_index = (uint32_t)unbox_fixnum(cv_entry);
+
+    /* If a trampoline for this exact entry is already running,
+       signal restart instead of recursing (self-tail-call). */
+    if (wasm_cv_trampoline_active == cv_entry_index + 1) {
+      wasm_cv_restart = 1;
+      return;
+    }
+
+    /* Dispatch entry directly in a trampoline loop.
+       Do NOT modify nfn/Rfn — the caller already set them up
+       (e.g. _SPcall_closure sets nfn to the target code_vector). */
+    {
+      uint32_t saved_trampoline = wasm_cv_trampoline_active;
+      wasm_cv_trampoline_active = cv_entry_index + 1;
+      wasm_funcall_depth++;
+      if (wasm_funcall_depth > 800) {
+        wasm_funcall_depth = 0;
+        wasm_cv_trampoline_active = saved_trampoline;
+        tcr->wasm_pending_throw = 1;
+        return;
+      }
+      funcall_stuck_record(tcr, cv_entry_index);
+      do {
+        wasm_cv_restart = 0;
+        wasm_call_entry_index(cv_entry_index);
+      } while (wasm_cv_restart && !wasm_pending_throw_p(tcr));
+      wasm_cv_trampoline_active = saved_trampoline;
+      wasm_funcall_depth--;
+    }
+    return;
   }
   if (!wasm_function_like_subtag(subtag)) {
     wasm_signal_funcall_error(tcr, WASM_XNOTFUN, name);
@@ -3388,14 +3594,50 @@ _SPmisc_ref(void)
   }
 
   LispObj obj = wasm_reg(tcr, arg_z);
-  signed_natural index = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, arg_y));
+  LispObj raw_index = wasm_reg(tcr, arg_y);
+  if (tag_of(raw_index) != tag_fixnum) {
+    char msg[128];
+    unsigned p = 0;
+    p = wasm_diag_append_str(msg, p, "misc_ref: bad index tag obj=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)obj);
+    p = wasm_diag_append_str(msg, p, " idx=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)raw_index);
+    msg[p++] = '\n';
+    wasm_host_log(msg, p);
+    wasm_subprims_trap();
+  }
+  signed_natural index = unbox_fixnum(raw_index);
   if (fulltag_of(obj) != fulltag_misc) {
+    char msg[128];
+    unsigned p = 0;
+    p = wasm_diag_append_str(msg, p, "misc_ref: bad tag obj=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)obj);
+    p = wasm_diag_append_str(msg, p, " ft=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)fulltag_of(obj));
+    p = wasm_diag_append_str(msg, p, " idx=");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)index);
+    msg[p++] = '\n';
+    wasm_host_log(msg, p);
     wasm_subprims_trap();
   }
   LispObj header = header_of(obj);
   unsigned subtag = header_subtag(header);
   signed_natural count = header_element_count(header);
   if ((natural)index >= (natural)count) {
+    char msg[192];
+    unsigned p = 0;
+    p = wasm_diag_append_str(msg, p, "misc_ref: oob obj=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)obj);
+    p = wasm_diag_append_str(msg, p, " idx=");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)index);
+    p = wasm_diag_append_str(msg, p, " cnt=");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)count);
+    p = wasm_diag_append_str(msg, p, " st=");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)subtag);
+    p = wasm_diag_append_str(msg, p, " hdr=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)header);
+    msg[p++] = '\n';
+    wasm_host_log(msg, p);
     wasm_subprims_trap();
   }
 
@@ -5360,6 +5602,18 @@ _SPdiscard_stack_object(void)
   }
 }
 
+/* File-scope so wasm_reset_ksignalerr_counters can reach them. */
+static unsigned ksignalerr_count = 0;
+static unsigned ksignalerr_absorbed = 0;
+
+__attribute__((used, visibility("default"), export_name("wasm_reset_ksignalerr_counters")))
+void
+wasm_reset_ksignalerr_counters(void)
+{
+  ksignalerr_count = 0;
+  ksignalerr_absorbed = 0;
+}
+
 __attribute__((used, visibility("default"), export_name("_SPksignalerr")))
 void
 _SPksignalerr(void)
@@ -5369,8 +5623,6 @@ _SPksignalerr(void)
     wasm_subprims_trap();
   }
 
-  static unsigned ksignalerr_count = 0;
-  static unsigned ksignalerr_absorbed = 0;
   unsigned this_call = ksignalerr_count++;
 
   /* Verbose diagnostics for first 5 errors only */
@@ -6752,7 +7004,7 @@ _SPcall_closure(void)
 
     LispObj *combined = (LispObj *)__builtin_alloca((size_t)total * sizeof(LispObj));
     for (signed_natural i = 0; i < inherited; i++) {
-      combined[i] = deref(closure, 3 + i);
+      combined[i] = deref(closure, 4 + i);
     }
     for (signed_natural i = 0; i < argc; i++) {
       combined[inherited + i] = explicit[i];
@@ -6766,11 +7018,33 @@ _SPcall_closure(void)
     wasm_set_reg(tcr, vsp, (LispObj)vsp_ptr);
     tcr->save_vsp = vsp_ptr;
     wasm_set_nargs_count(tcr, total);
+
+    /* CCL calling convention: last min(nargs, 3) args go in arg_z/arg_y/arg_x,
+       NOT on the vstack.  The ARM _SPcall_closure sets registers directly for
+       total <= nargregs, and calls vpop_all_argregs for total > nargregs.
+       We use wasm_vpop_argregs to pop the register args off the vstack. */
+    wasm_vpop_argregs(tcr);
   }
 
-  LispObj target_fn = deref(closure, 2);
+  /* On ARM, _SPcall_closure tail-jumps into the inner function (fn)
+     via vrefr(nfn,nfn,2) then ldr pc,[nfn,entrypoint] — a GOTO.
+     On WASM, we can't tail-jump; instead RETURN so the compiled WASM
+     code after `call _SPcall_closure` (the function body) executes.
+
+     Closure layout (ARM comment: "first three = entrypoint, closure
+     code, fn; last two = name, lfbits"):
+       deref(closure, 1) = entrypoint (fixnum)
+       deref(closure, 2) = closure code (code_vector)
+       deref(closure, 3) = fn (inner function) ← nfn target
+       deref(closure, 4..ec-2) = inherited bindings
+       deref(closure, ec-1) = name
+       deref(closure, ec) = lfun-bits
+
+     ARM: vrefr(nfn,nfn,2) = element 2 (0-indexed) = deref(closure, 3). */
+  LispObj target_fn = deref(closure, 3);
   wasm_set_reg(tcr, nfn, target_fn);
-  _SPfuncall();
+  /* Do NOT call _SPfuncall — just return into the body code. */
+  return;
 }
 
 __attribute__((used, visibility("default"), export_name("_SPkeyword_bind")))

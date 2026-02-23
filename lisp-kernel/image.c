@@ -37,7 +37,7 @@ wasm_image_log(const char *msg, size_t len)
 
 extern ssize_t lisp_write(int fd, void *buf, size_t count);
 extern int lisp_close(int fd);
-extern int64_t lisp_lseek(int fd, int64_t offset, int whence);
+extern int32_t lisp_lseek(int fd, int32_t offset, int whence);
 #endif
 
 #ifdef WASM32
@@ -186,12 +186,21 @@ find_openmcl_image_file_header(int fd, openmcl_image_file_header *header)
     return false;
   }
   disp = trailer.delta;
-  
+
   if (disp >= 0) {
+#ifdef WASM32
+    /* For images > 2 GiB the int32 delta overflows and wraps positive.
+       Fall back to seeking to offset 0 where the header lives. */
+    if (LSEEK(fd, 0, SEEK_SET) < 0) {
+      return false;
+    }
+#else
     return false;
-  }
-  if (LSEEK(fd, disp, SEEK_CUR) < 0) {
-    return false;
+#endif
+  } else {
+    if (LSEEK(fd, disp, SEEK_CUR) < 0) {
+      return false;
+    }
   }
   if (read(fd, header, sizeof(openmcl_image_file_header)) !=
       sizeof(openmcl_image_file_header)) {
@@ -199,10 +208,19 @@ find_openmcl_image_file_header(int fd, openmcl_image_file_header *header)
   }
   if ((header->sig0 != IMAGE_SIG0) ||
       (header->sig1 != IMAGE_SIG1) ||
-      (header->sig2 != IMAGE_SIG2) ||
-      (header->sig3 != IMAGE_SIG3)) {
+      (header->sig2 != IMAGE_SIG2)) {
     return false;
   }
+#ifdef WASM32
+  if (header->sig3 != IMAGE_SIG3) {
+    static const char msg[] = "WASM image load: sig3 mismatch (continuing)\n";
+    wasm_image_log(msg, sizeof(msg) - 1);
+  }
+#else
+  if (header->sig3 != IMAGE_SIG3) {
+    return false;
+  }
+#endif
   version = (header->abi_version) & 0xffff;
   if (version < ABI_VERSION_MIN) {
     fprintf(dbgout, "Heap image (version %d) "
