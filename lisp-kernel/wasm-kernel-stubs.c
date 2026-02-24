@@ -3455,7 +3455,9 @@ wasm_run_cold_boot_init(void)
   LispObj final_pending = tcr->wasm_pending_throw;
   tcr->wasm_pending_throw = 0;
 
-  /* Read *WASM-STARTUP-STEP* to determine how far cold-boot-init got */
+  /* Read *WASM-STARTUP-STEP* to determine how far cold-boot-init got.
+     Must read through TLB (thread-local bindings) since _SPspecset may
+     have written to the TLB slot rather than the vcell. */
   signed_natural startup_step = -1;
   {
     static const uint8_t step_name[] = "*WASM-STARTUP-STEP*";
@@ -3465,6 +3467,20 @@ wasm_run_cold_boot_init(void)
         header_subtag(header_of(step_sym)) == subtag_symbol) {
       lispsymbol *ss = (lispsymbol *)ptr_from_lispobj(untag(step_sym));
       LispObj step_val = ss->vcell;
+      /* Check TLB for a thread-local binding */
+      LispObj bi = ss->binding_index;
+      if (tag_of(bi) == tag_fixnum) {
+        signed_natural idx = unbox_fixnum(bi);
+        LispObj lim = tcr->tlb_limit;
+        if (tag_of(lim) == tag_fixnum && idx > 0 &&
+            (unsigned)idx < (unsigned)unbox_fixnum(lim) &&
+            tcr->tlb_pointer != NULL) {
+          LispObj tval = tcr->tlb_pointer[idx];
+          if (tval != (LispObj)no_thread_local_binding_marker) {
+            step_val = tval;
+          }
+        }
+      }
       if (tag_of(step_val) == tag_fixnum) {
         startup_step = unbox_fixnum(step_val);
       }

@@ -11,8 +11,10 @@
 __attribute__((import_module("ccl"), import_name("wasm_debug_dump_state")))
 void wasm_debug_dump_state(const char *label);
 
-/* WASM-only catch frame with dnode-aligned size.
- * Keeps fulltag_misc tagging intact for catch_top pointers.
+/* WASM-only catch frame with dnode-aligned size (48 bytes = 12 slots).
+ * Must be a multiple of 8 bytes so that stack-allocated frames keep
+ * fulltag_misc tagging intact for catch_top pointers.
+ * 11 meaningful slots + 1 pad slot = 12 * 4 = 48.
  */
 typedef struct wasm_catch_frame {
   LispObj header;
@@ -26,10 +28,13 @@ typedef struct wasm_catch_frame {
   LispObj save_vsp;
   LispObj cleanup_entry;
   LispObj save_spill_sp;
+  LispObj _pad;
 } wasm_catch_frame;
 
 #define WASM_CATCH_FRAME_ELEMENT_COUNT ((sizeof(wasm_catch_frame) / sizeof(LispObj)) - 1)
 #define WASM_CATCH_FRAME_HEADER make_header(subtag_catch_frame, WASM_CATCH_FRAME_ELEMENT_COUNT)
+_Static_assert(sizeof(wasm_catch_frame) % 8 == 0,
+               "wasm_catch_frame must be dnode-aligned (multiple of 8 bytes)");
 
 __attribute__((import_module("ccl"), import_name("wasm_get_current_tcr")))
 TCR *wasm_get_current_tcr(void);
@@ -2359,9 +2364,37 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
   wasm_funcall_depth++;
   if (wasm_funcall_depth > 800) {
     /* Approaching WASM native stack limit.  Set pending_throw instead of
-       letting the JS runtime crash with RangeError. */
-    static const char msg[] = "funcall depth exceeded\n";
-    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+       letting the JS runtime crash with RangeError.
+       Build entire diagnostic into one buffer — at depth 800+ the JS call
+       stack is near exhaustion so multiple wasm_host_log calls may fail. */
+    {
+      /* Show first 20 + last 20 entries to reveal how recursion starts. */
+      char buf[600]; int p = 0;
+      const char *s = "funcall depth exceeded\ncallstack first 20: ";
+      while (*s) buf[p++] = *s++;
+      uint32_t limit = wasm_funcall_depth < WASM_DIAG_CALLSTACK_MAX
+                        ? wasm_funcall_depth : WASM_DIAG_CALLSTACK_MAX;
+      uint32_t first_end = limit < 20 ? limit : 20;
+      for (uint32_t i = 0; i < first_end && p < 560; i++) {
+        uint32_t e = wasm_diag_callstack[i];
+        char ibuf[10]; int ilen = 0;
+        do { ibuf[ilen++] = '0' + (char)(e % 10); e /= 10; } while (e > 0);
+        for (int j = ilen-1; j >= 0; j--) buf[p++] = ibuf[j];
+        buf[p++] = ' ';
+      }
+      s = "\ncallstack last 20: ";
+      while (*s) buf[p++] = *s++;
+      uint32_t last_start = limit > 20 ? limit - 20 : 0;
+      for (uint32_t i = last_start; i < limit && p < 580; i++) {
+        uint32_t e = wasm_diag_callstack[i];
+        char ibuf[10]; int ilen = 0;
+        do { ibuf[ilen++] = '0' + (char)(e % 10); e /= 10; } while (e > 0);
+        for (int j = ilen-1; j >= 0; j--) buf[p++] = ibuf[j];
+        buf[p++] = ' ';
+      }
+      buf[p++] = '\n';
+      wasm_host_log(buf, (unsigned)p);
+    }
     wasm_funcall_depth = 0;
     tcr->wasm_pending_throw = 1;
     return;

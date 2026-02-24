@@ -97,6 +97,10 @@ if [ -n "$BOOT_MODULES_OUT" ]; then
     echo "error: missing $PACK_SCRIPT" >&2
     exit 1
   fi
+  # If BOOT_MODULES_OUT is a directory, target the standard filename inside it.
+  if [ -d "$BOOT_MODULES_OUT" ]; then
+    BOOT_MODULES_OUT="$BOOT_MODULES_OUT/wasm-boot-modules.json"
+  fi
   run node "$PACK_SCRIPT" --manifest "$INLINE_TMP" --out-manifest "$BOOT_MODULES_OUT"
   if [ "$DRYRUN" -eq 0 ]; then
     INLINE_TMP_BIN="${INLINE_TMP%.*}.bin"

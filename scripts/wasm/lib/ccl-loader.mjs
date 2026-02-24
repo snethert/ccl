@@ -663,6 +663,7 @@ export async function installCompiledModulesFromBundle({
   verbose = false,
   strict = true,
   installConstPools = true,
+  excludeEntries = null,
 } = {}) {
   if (!memory) throw new Error("installCompiledModulesFromBundle: memory is required");
   if (!subprimsTable) throw new Error("installCompiledModulesFromBundle: subprimsTable is required");
@@ -952,8 +953,14 @@ export async function installCompiledModulesFromBundle({
   const moduleInstanceCache = new Map();
   let _moduleInstallCount = 0;
   const _moduleTotal = modules.length;
+  let excluded = 0;
   for (const entry of modules) {
     try {
+      if (excludeEntries && excludeEntries.has(entry.entryIndex >>> 0)) {
+        excluded++;
+        _moduleInstallCount++;
+        continue;
+      }
       const moduleBytes = await loadModuleBytes(entry);
       const constPoolBytes = await resolveConstPoolBytes(entry);
 
@@ -1024,7 +1031,7 @@ export async function installCompiledModulesFromBundle({
     }
   }
 
-  return { installed, count: modules.length, failed, entries: modules };
+  return { installed, count: modules.length, failed, excluded, entries: modules };
 }
 
 /**

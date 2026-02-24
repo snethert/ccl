@@ -1064,6 +1064,11 @@ if (traceEnabled) {
 }
 
 console.error("[stage] installing compiled modules...");
+/* Boot entry indices — collected after boot module installation so that the
+   compiled-modules bundle (which shares the same entry index space) does not
+   overwrite boot module WASM code with unrelated runtime functions. */
+const bootEntryIndices = new Set();
+
 /* Install boot (level-0) compiled modules first, so that level-0 function
    table entries (e.g. %FASLOAD) are populated before wasm_fasload_path is
    called.  These come from cross-xload-level-0 via build-wasm-boot.sh. */
@@ -1107,7 +1112,12 @@ if (bootModulesPath) {
       installConstPools: true,
       verbose: traceEnabled,
     });
-    trace(`boot modules bundle installed ${bootInstall.installed}/${bootInstall.count}`);
+    for (const entry of bootInstall.entries) {
+      if (Number.isFinite(entry?.entryIndex)) {
+        bootEntryIndices.add(entry.entryIndex >>> 0);
+      }
+    }
+    trace(`boot modules bundle installed ${bootInstall.installed}/${bootInstall.count}, ${bootEntryIndices.size} entry indices reserved`);
     if (bootInstall.installed === 0 && bootInstall.count > 0) {
       trace("WARNING: boot modules bundle had entries but none were installed");
     }
@@ -1162,8 +1172,9 @@ const bundleInstall = await installCompiledModulesFromBundle({
   microkernel,
   strict: false,
   installConstPools: true,
+  excludeEntries: bootEntryIndices.size > 0 ? bootEntryIndices : null,
 });
-console.error(`[stage] compiled modules: ${bundleInstall.installed}/${bundleInstall.count} installed, ${bundleInstall.failed || 0} failed`);
+console.error(`[stage] compiled modules: ${bundleInstall.installed}/${bundleInstall.count} installed, ${bundleInstall.failed || 0} failed, ${bundleInstall.excluded || 0} skipped (boot)`);
 if (bundleInstall.count === 0) {
   fail("compiled modules bundle is empty; refusing to proceed");
 }

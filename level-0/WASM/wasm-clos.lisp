@@ -145,6 +145,90 @@
 
 
 ;;; ---------------------------------------------------------------
+;;; Slot-ID access stubs for WASM from-scratch cold boot.
+;;; On native CCL these are defined in l1-clos-boot.lisp and dispatch
+;;; through the instance's class wrapper.  For the WASM from-scratch
+;;; build, CLOS infrastructure (wrappers, class-of, generic dispatch)
+;;; is not yet set up when cold-boot-init runs, so we provide no-op
+;;; stubs.  Level-1 will override these with real implementations.
+;;;
+;;; The compiler optimizer transforms (SETF (SLOT-VALUE obj 'name) val)
+;;; into (SET-SLOT-ID-VALUE obj (ensure-slot-id 'name) val), and
+;;; cold-boot-init may execute code compiled with that expansion.
+;;; ---------------------------------------------------------------
+
+(defun slot-id-value (instance slot-id)
+  (declare (ignore instance slot-id))
+  nil)
+
+(defun set-slot-id-value (instance slot-id value)
+  (declare (ignore instance slot-id))
+  value)
+
+
+;;; ---------------------------------------------------------------
+;;; Instance wrapper / slots stubs for WASM from-scratch cold boot.
+;;; The compiler macro for INSTANCE-CLASS-WRAPPER (optimizers.lisp)
+;;; expands to a typecode check: for subtag-instance it inlines
+;;; INSTANCE.CLASS-WRAPPER; for everything else it calls
+;;; NON-STANDARD-INSTANCE-CLASS-WRAPPER.  Similarly INSTANCE-SLOTS
+;;; expands to call %NON-STANDARD-INSTANCE-SLOTS.
+;;; These functions are normally defined in l1-clos-boot.lisp (level-1),
+;;; which is not yet loaded during cold boot.
+;;;
+;;; Returning nil from non-standard-instance-class-wrapper causes
+;;; XNOTFUN because callers funcall wrapper slots (e.g.
+;;; %wrapper-slot-id-value at slot 8).  So we return a dummy wrapper
+;;; whose funcallable slots point to safe no-op functions.
+;;;
+;;; Wrapper layout (class-wrapper istruct, 13 slots including type):
+;;;   0: type marker ('class-wrapper)
+;;;   1: %wrapper-hash-index
+;;;   2: %wrapper-class
+;;;   3: %wrapper-instance-slots
+;;;   4: %wrapper-class-slots
+;;;   5: %wrapper-slot-id->slotd
+;;;   6: %wrapper-slot-id-map
+;;;   7: %wrapper-slot-definition-table
+;;;   8: %wrapper-slot-id-value       (funcalled: instance slot-id → value)
+;;;   9: %wrapper-set-slot-id-value   (funcalled: instance slot-id value → value)
+;;;  10: %wrapper-cpl-bits
+;;;  11: %wrapper-cpl-ordinal
+;;;  12: %wrapper-unused
+;;; ---------------------------------------------------------------
+
+;;; Dummy wrapper for cold-boot.  Slot 8 references SLOT-ID-VALUE
+;;; (our no-op stub above), slot 9 references SET-SLOT-ID-VALUE.
+(defvar *cold-boot-dummy-wrapper*
+  (%istruct 'class-wrapper
+    0                             ; 1: hash-index
+    nil                           ; 2: class
+    nil                           ; 3: instance-slots
+    nil                           ; 4: class-slots
+    nil                           ; 5: slot-id->slotd
+    nil                           ; 6: slot-id-map
+    nil                           ; 7: slot-definition-table
+    #'slot-id-value               ; 8: slot-id-value  (instance slot-id → nil)
+    #'set-slot-id-value           ; 9: set-slot-id-value (instance slot-id val → val)
+    nil                           ; 10: cpl-bits
+    0                             ; 11: cpl-ordinal
+    nil))                         ; 12: unused
+
+;;; Return the dummy wrapper for any non-standard instance.
+;;; class-of causes infinite recursion during cold boot.
+;;; Level-1 (l1-clos-boot.lisp) replaces this.
+(defun non-standard-instance-class-wrapper (instance)
+  (declare (ignore instance))
+  *cold-boot-dummy-wrapper*)
+
+;;; For non-standard instances, return nil (no accessible slots).
+;;; The real version (l1-clos-boot.lisp) handles macptrs and GFs.
+(defun %non-standard-instance-slots (instance typecode)
+  (declare (ignore instance typecode))
+  nil)
+
+
+;;; ---------------------------------------------------------------
 ;;; Generic function dispatch trampolines.
 ;;; ---------------------------------------------------------------
 
