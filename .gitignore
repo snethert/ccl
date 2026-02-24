@@ -17,6 +17,9 @@ tags
 /*.image
 /*boot*
 
+# WASM build artifacts copied for test-booting
+scripts/wasm/lib/*.wasm
+
 /armcl
 /?x86cl
 /?x86cl64
