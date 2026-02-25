@@ -951,83 +951,127 @@ export async function installCompiledModulesFromBundle({
   }
 
   const moduleInstanceCache = new Map();
+  const compilationPromises = new Map(); // cacheKey -> Promise<instance>
   let _moduleInstallCount = 0;
   const _moduleTotal = modules.length;
   let excluded = 0;
-  for (const entry of modules) {
-    try {
+
+  // Parallel prefetch+compile, sequential registration.
+  // resolveConstPoolBytes uses constPoolDecodeInFlight cycle detection
+  // and is NOT safe for concurrent calls, so it stays in Phase 2.
+  const BATCH_SIZE = 64;
+  for (let batchStart = 0; batchStart < modules.length; batchStart += BATCH_SIZE) {
+    const batch = modules.slice(batchStart, batchStart + BATCH_SIZE);
+
+    // Phase 1: parallel load + compile (no kernel state touched)
+    const prepared = await Promise.all(batch.map(async (entry) => {
       if (excludeEntries && excludeEntries.has(entry.entryIndex >>> 0)) {
+        return { entry, excluded: true };
+      }
+      try {
+        const moduleBytes = await loadModuleBytes(entry);
+        if (!moduleBytes || moduleBytes.length === 0) {
+          return { entry, error: new Error(`compiled module missing bytes for ${entry.exportName}`) };
+        }
+
+        const instCacheKey = Number.isFinite(entry?.offset) ? `${entry.offset}:${entry.length}` : null;
+        let instance = instCacheKey ? moduleInstanceCache.get(instCacheKey) : undefined;
+        if (!instance) {
+          // Deduplicate in-flight compilations across the batch
+          let promise = instCacheKey ? compilationPromises.get(instCacheKey) : undefined;
+          if (!promise) {
+            const bytes = moduleBytes instanceof Uint8Array ? moduleBytes : Uint8Array.from(moduleBytes);
+            promise = instantiateWasm(bytes, imports).then(r => {
+              if (instCacheKey) moduleInstanceCache.set(instCacheKey, r.instance);
+              return r.instance;
+            });
+            if (instCacheKey) compilationPromises.set(instCacheKey, promise);
+          }
+          instance = await promise;
+        }
+        return { entry, instance, error: null };
+      } catch (e) {
+        return { entry, error: e };
+      }
+    }));
+
+    // Phase 2: sequential const-pool resolution + registration (kernel state)
+    for (const item of prepared) {
+      const { entry } = item;
+      if (item.excluded) {
         excluded++;
         _moduleInstallCount++;
         continue;
       }
-      const moduleBytes = await loadModuleBytes(entry);
-      const constPoolBytes = await resolveConstPoolBytes(entry);
-
-      if (!moduleBytes || moduleBytes.length === 0) {
-        throw new Error(`compiled module missing bytes for ${entry.exportName}`);
-      }
-
-      if (installConstPools && constPoolBytes?.length) {
-        const installResult = installConstPoolBytes({
-          kernelExports,
-          memory,
-          entryIndex: entry.entryIndex,
-          constPoolBytes,
-        });
-        if (nilValue != null && (installResult >>> 0) === nilValue) {
-          throw new Error(`const pool install returned NIL for entry ${entry.entryIndex}`);
-        }
-        if (hasPendingThrowProbe && (kernelExports.wasm_pending_throw_p() >>> 0)) {
-          throw new Error(`const pool install signaled pending throw for entry ${entry.entryIndex}`);
-        }
-      }
-
-      if (setEntryGcRootPolicyMode) {
-        const mode = normalizeGcRootPolicyMode(entry?.gcRootPolicyMode);
-        if (mode != null) {
-          setEntryGcRootPolicyMode(entry.entryIndex >>> 0, mode);
-        }
-      }
-
-      const instCacheKey = Number.isFinite(entry?.offset) ? `${entry.offset}:${entry.length}` : null;
-      let instance = instCacheKey ? moduleInstanceCache.get(instCacheKey) : undefined;
-      if (!instance) {
-        const bytes = moduleBytes instanceof Uint8Array ? moduleBytes : Uint8Array.from(moduleBytes);
-        const result = await instantiateWasm(bytes, imports);
-        instance = result.instance;
-        if (instCacheKey) moduleInstanceCache.set(instCacheKey, instance);
-      }
-      const fn = instance?.exports?.[entry.exportName];
-      if (typeof fn !== "function") {
-        throw new Error(`compiled module missing export ${entry.exportName}`);
-      }
-
-      const idx = entry.entryIndex >>> 0;
-      if (subprimsTable.length <= idx) {
-        subprimsTable.grow(idx - subprimsTable.length + 1);
-      }
-      subprimsTable.set(idx, fn);
-      registerEntryCallAbi(setEntryCallAbi, idx, fn);
-      installed++;
-      _moduleInstallCount++;
-      if (_moduleInstallCount % 500 === 0) {
+      if (item.error) {
+        failed++;
+        _moduleInstallCount++;
         // eslint-disable-next-line no-console
-        console.error(`[progress] modules: ${_moduleInstallCount}/${_moduleTotal} installed (entry ${idx})`);
+        console.warn(`[module-fail] entry=${entry.entryIndex} export=${entry.exportName}: ${item.error.message ?? item.error}`);
+        if (strict) {
+          throw new Error(
+            `compiled module install failed ${entry.exportName} (entry ${entry.entryIndex}): ${item.error}`,
+            { cause: item.error },
+          );
+        }
+        continue;
       }
-    } catch (e) {
-      failed++;
-      _moduleInstallCount++;
-      // Always log — silent failures hide critical table-slot gaps
-      // eslint-disable-next-line no-console
-      console.warn(`[module-fail] entry=${entry.entryIndex} export=${entry.exportName}: ${e.message ?? e}`);
-      if (strict) {
-        throw new Error(
-          `compiled module install failed ${entry.exportName} (entry ${entry.entryIndex}): ${e}`,
-          { cause: e },
-        );
+
+      try {
+        const constPoolBytes = await resolveConstPoolBytes(entry);
+
+        if (installConstPools && constPoolBytes?.length) {
+          const installResult = installConstPoolBytes({
+            kernelExports,
+            memory,
+            entryIndex: entry.entryIndex,
+            constPoolBytes,
+          });
+          if (nilValue != null && (installResult >>> 0) === nilValue) {
+            throw new Error(`const pool install returned NIL for entry ${entry.entryIndex}`);
+          }
+          if (hasPendingThrowProbe && (kernelExports.wasm_pending_throw_p() >>> 0)) {
+            throw new Error(`const pool install signaled pending throw for entry ${entry.entryIndex}`);
+          }
+        }
+
+        if (setEntryGcRootPolicyMode) {
+          const mode = normalizeGcRootPolicyMode(entry?.gcRootPolicyMode);
+          if (mode != null) {
+            setEntryGcRootPolicyMode(entry.entryIndex >>> 0, mode);
+          }
+        }
+
+        const fn = item.instance?.exports?.[entry.exportName];
+        if (typeof fn !== "function") {
+          throw new Error(`compiled module missing export ${entry.exportName}`);
+        }
+
+        const idx = entry.entryIndex >>> 0;
+        if (subprimsTable.length <= idx) {
+          subprimsTable.grow(idx - subprimsTable.length + 1);
+        }
+        subprimsTable.set(idx, fn);
+        registerEntryCallAbi(setEntryCallAbi, idx, fn);
+        installed++;
+        _moduleInstallCount++;
+        if (_moduleInstallCount % 500 === 0) {
+          // eslint-disable-next-line no-console
+          console.error(`[progress] modules: ${_moduleInstallCount}/${_moduleTotal} installed (entry ${idx})`);
+        }
+      } catch (e) {
+        failed++;
+        _moduleInstallCount++;
+        // eslint-disable-next-line no-console
+        console.warn(`[module-fail] entry=${entry.entryIndex} export=${entry.exportName}: ${e.message ?? e}`);
+        if (strict) {
+          throw new Error(
+            `compiled module install failed ${entry.exportName} (entry ${entry.entryIndex}): ${e}`,
+            { cause: e },
+          );
+        }
+        continue;
       }
-      continue;
     }
   }
 

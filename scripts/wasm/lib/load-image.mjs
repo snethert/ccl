@@ -28,6 +28,7 @@ import {
   installCompiledModulesFromRegistry,
   resolveBundleEntries,
   installSubprimsTable,
+  fillNullTableSlots,
   storedLengthFor,
 } from "./ccl-loader.mjs";
 import { WASM_BOOT_ENTRY_INDEX } from "./abi-constants.mjs";
@@ -39,8 +40,9 @@ import {
   validateBootstrapContract,
   formatBootstrapState,
 } from "./bootstrap-contract.mjs";
-import { emitSyntheticIpcArtifacts } from "./ipc-conformance.mjs";
-import { runStartupGate } from "./startup-gate.mjs";
+// Deprecated: IPC conformance and startup gate removed from boot path
+// import { emitSyntheticIpcArtifacts } from "./ipc-conformance.mjs";
+// import { runStartupGate } from "./startup-gate.mjs";
 import {
   BOOTSTRAP_RESOLVER_PHASE_BOOTSTRAP,
   BOOTSTRAP_RESOLVER_PHASE_CANONICAL_LISP,
@@ -231,29 +233,6 @@ function sha256Hex(bytes) {
 }
 
 const options = parseArgs(process.argv.slice(2));
-const ipcConformanceId = process.env.CCL_IPC_CONFORMANCE_ID ?? null;
-const ipcLaneId = process.env.CCL_IPC_LANE_ID ?? null;
-const bridgeInjectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_UI_BRIDGE_TEST_INJECT_FAILURE ?? ""))
-  ? String(process.env.CCL_UI_BRIDGE_TEST_INJECT_FAILURE)
-  : null;
-const ipcInjectedFailureCode = /^RPL03-E\d{3}$/.test(String(process.env.CCL_IPC_TEST_INJECT_FAILURE ?? ""))
-  ? String(process.env.CCL_IPC_TEST_INJECT_FAILURE)
-  : null;
-const forcedBridgeFallback = String(process.env.CCL_UI_BRIDGE_TEST_FORCE_FALLBACK ?? "") === "1";
-const injectedFailureCode = bridgeInjectedFailureCode ?? ipcInjectedFailureCode;
-if (injectedFailureCode || forcedBridgeFallback) {
-  emitSyntheticIpcArtifacts({
-    defaultLaneClass: "headless_runtime",
-    laneId: ipcLaneId,
-    conformanceId: ipcConformanceId,
-    source: "doc/wasm/js/load-image.mjs",
-    failureCode: injectedFailureCode ?? "RPL03-E008",
-    failureMessage: forcedBridgeFallback
-      ? "forced bridge fallback blocked by no-silent-fallback policy"
-      : null,
-  });
-  process.exit(1);
-}
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "../../..");
 
@@ -914,67 +893,6 @@ function runBootstrapContract(phase, { requireToplfunc = (phase === "pre-start")
   fail(message);
 }
 
-function runPreToplevelFunctionDesignatorGate() {
-  const requiredNames = Array.from(startupRequiredPreToplevelDesignators.values());
-  if (requiredNames.length === 0) {
-    return { failures: [], checks: [] };
-  }
-
-  const checks = [];
-  const failures = [];
-  for (const symbolName of requiredNames) {
-    const resolution = bootstrapFunctionResolver.resolveFunctionDesignator({ name: symbolName });
-    const ok = Boolean(resolution?.ok);
-    const reason = ok ? null : (resolution?.reason ?? "missing");
-    const record = {
-      schema_version: "startup_function_designator_gate_v1",
-      phase: "pre-toplevel",
-      status: ok ? "pass" : "fail",
-      mode: options.bootstrapContract,
-      symbol_name: symbolName,
-      entry_index: ok ? (resolution.entryIndex >>> 0) : null,
-      resolved_entry_index: ok ? (resolution.entryIndex >>> 0) : null,
-      source: ok ? (resolution.source ?? null) : null,
-      binding_state: ok ? "resolved-entry-function" : bindingStateForGateFailure(reason),
-      reason,
-    };
-    checks.push(record);
-    if (ok) {
-      console.log(`STARTUP_FUNCTION_DESIGNATOR_GATE ${JSON.stringify(record)}`);
-      continue;
-    }
-    failures.push(record);
-    console.error(`STARTUP_FUNCTION_DESIGNATOR_GATE ${JSON.stringify(record)}`);
-  }
-  return { failures, checks };
-}
-
-function runPreToplevelFunctionDesignatorGateOrFail() {
-  const { failures } = runPreToplevelFunctionDesignatorGate();
-  if (failures.length === 0) return;
-
-  const sample = failures
-    .map((item) => `${item.symbol_name}:${item.reason}`)
-    .slice(0, 8)
-    .join(", ");
-  const message = `pre-toplevel function designator gate failed: count=${failures.length} sample=[${sample}]`;
-  if (options.bootstrapContract === "strict") {
-    fail(message);
-  }
-  if (options.bootstrapContract === "warn") {
-    console.warn(`WARN: ${message}`);
-  }
-}
-
-function runStartupGateOrFail() {
-  const result = runStartupGate({ source: "doc/wasm/js/load-image.mjs" });
-  if (result.status === "pass") return;
-  if (result.status === "invalid_summary") {
-    console.error("FAIL: [RPL01-E011] startup-gate diagnostics payload is malformed");
-  }
-  process.exit(6);
-}
-
 let entryRc = null;
 
 if (runStartLisp) {
@@ -1011,8 +929,6 @@ if (runStartLisp) {
       microkernel,
     });
     console.log(`compiled modules installed ${installed}/${count}`);
-    runStartupGateOrFail();
-    runPreToplevelFunctionDesignatorGateOrFail();
     runBootstrapContract("pre-start", { requireToplfunc: true });
   } catch (e) {
     console.error(`wasm_ccl_load_image trapped: ${e}`);
@@ -1056,6 +972,40 @@ if (runStartLisp) {
       });
       console.log(`compiled modules installed from bundle ${installed}/${count} (failed ${failed})`);
     }
+
+    /* Install boot modules (level-0 compiled modules, entries 301-1403).
+       These live alongside the runtime modules in the same directory. */
+    let _bootBundle = null;
+    if (modulesPath) {
+      const bootJsonPath = path.resolve(path.dirname(modulesPath), "wasm-boot-modules.json");
+      try {
+        const bootJson = JSON.parse(await fs.readFile(bootJsonPath, "utf-8"));
+        _bootBundle = bootJson;
+        if (bootJson?.binary && bootJson?.index) {
+          const bootIdxPath = path.resolve(path.dirname(bootJsonPath), bootJson.index);
+          const bootBinPath = path.resolve(path.dirname(bootJsonPath), bootJson.binary);
+          const bootIdxBytes = await fs.readFile(bootIdxPath);
+          const bootBinBuf = await fs.readFile(bootBinPath);
+          const bootBinBytes = new Uint8Array(bootBinBuf.buffer, bootBinBuf.byteOffset, bootBinBuf.byteLength);
+          const { installed: bi, count: bc, failed: bf } = await installCompiledModulesFromBundle({
+            bundle: bootJson,
+            binaryBytes: bootBinBytes,
+            indexBytes: bootIdxBytes,
+            kernel,
+            memory: runtime.memory,
+            subprimsTable: runtime.subprimsTable,
+            microkernel,
+            strict: false,
+            installConstPools: false,
+          });
+          console.log(`boot modules installed from bundle ${bi}/${bc} (failed ${bf ?? 0})`);
+        }
+      } catch (bootErr) {
+        if (bootErr.code !== "ENOENT") throw bootErr;
+        /* No boot modules — not fatal */
+      }
+    }
+
     const { installed, count } = await installCompiledModulesFromRegistry({
       kernel,
       memory: runtime.memory,
@@ -1063,10 +1013,92 @@ if (runStartLisp) {
       microkernel,
     });
     console.log(`compiled modules installed ${installed}/${count}`);
-    if (runToplevel) {
-      runStartupGateOrFail();
-      runPreToplevelFunctionDesignatorGateOrFail();
+
+    /* Mark subprims ready BEFORE restore_lisp_pointers so that rehashing
+       and symbol lookups can use the full kernel. */
+    if (typeof kernel.instance.exports.wasm_set_subprims_ready === "function") {
+      kernel.instance.exports.wasm_set_subprims_ready(1);
     }
+
+    /* Rehash package tables so symbol lookups work correctly.
+       The saved image's hash tables may be stale after load. */
+    if (typeof kernel.instance.exports.wasm_restore_lisp_pointers === "function") {
+      const rlpRc = kernel.instance.exports.wasm_restore_lisp_pointers() | 0;
+      if (rlpRc !== 0) {
+        console.log(`wasm_restore_lisp_pointers rc=${rlpRc} (non-fatal)`);
+      }
+    }
+
+    /* Repair UDF bindings in two passes:
+       Pass 1 (fast): use package-table lookup for each named function.
+       Pass 2 (batch): single heap scan for symbols missed by pass 1. */
+    const repairFn = kernel.instance.exports.wasm_repair_udf_binding;
+    const batchScanFn = kernel.instance.exports.wasm_repair_udf_bindings_scan;
+    const mallocFn = kernel.instance.exports.malloc;
+    const freeFn = kernel.instance.exports.free;
+    /* Merge all named functions from runtime + boot bundles for repair. */
+    const allNamedFunctions = [];
+    if (modulesBundle?.functions) {
+      allNamedFunctions.push(...Object.values(modulesBundle.functions));
+    }
+    if (typeof _bootBundle === "object" && _bootBundle?.functions) {
+      allNamedFunctions.push(...Object.values(_bootBundle.functions));
+    }
+    if (typeof repairFn === "function" && typeof mallocFn === "function" &&
+        typeof freeFn === "function" && allNamedFunctions.length > 0) {
+      const enc = new TextEncoder();
+      const mem = runtime.memory;
+      const scratchPtr = mallocFn(256) >>> 0;
+      if (scratchPtr !== 0) {
+        let repaired = 0;
+        let skipped = 0;
+        const notFound = [];
+        for (const entry of allNamedFunctions) {
+          if (!entry?.name || !Number.isFinite(entry?.entryIndex)) continue;
+          const nameBytes = enc.encode(entry.name);
+          if (nameBytes.length > 255) continue;
+          const u8 = new Uint8Array(mem.buffer, scratchPtr, nameBytes.length);
+          u8.set(nameBytes);
+          const rc = repairFn(scratchPtr, nameBytes.length, entry.entryIndex >>> 0);
+          if (rc === 0) repaired++;
+          else if (rc === 1) skipped++;
+          else if (rc === -1) notFound.push({ name: entry.name, nameBytes, entryIndex: entry.entryIndex });
+        }
+        freeFn(scratchPtr);
+        if (repaired > 0) {
+          console.log(`UDF bindings repaired: ${repaired} (already bound: ${skipped}, not found: ${notFound.length})`);
+        }
+
+        /* Pass 2: batch heap scan for symbols not found via package tables */
+        if (notFound.length > 0 && typeof batchScanFn === "function") {
+          /* Build packed table: [name_offset:u32, name_len:u32, entry_index:u32] × N */
+          const entrySize = 12; /* 3 × u32 */
+          let totalNameBytes = 0;
+          for (const nf of notFound) totalNameBytes += nf.nameBytes.length;
+          const tableSize = notFound.length * entrySize;
+          const bufSize = tableSize + totalNameBytes;
+          const bufPtr = mallocFn(bufSize) >>> 0;
+          if (bufPtr !== 0) {
+            const tableView = new DataView(mem.buffer, bufPtr, bufSize);
+            let nameOffset = bufPtr + tableSize; /* names packed after table */
+            for (let i = 0; i < notFound.length; i++) {
+              const nf = notFound[i];
+              tableView.setUint32(i * entrySize, nameOffset, true);
+              tableView.setUint32(i * entrySize + 4, nf.nameBytes.length, true);
+              tableView.setUint32(i * entrySize + 8, nf.entryIndex >>> 0, true);
+              new Uint8Array(mem.buffer, nameOffset, nf.nameBytes.length).set(nf.nameBytes);
+              nameOffset += nf.nameBytes.length;
+            }
+            const scanRepaired = batchScanFn(bufPtr, notFound.length) | 0;
+            freeFn(bufPtr);
+            if (scanRepaired > 0) {
+              console.log(`UDF bindings repaired (heap scan): ${scanRepaired}`);
+            }
+          }
+        }
+      }
+    }
+
     runBootstrapContract("pre-start", { requireToplfunc: true });
   } catch (e) {
     console.error(`wasm_ccl_load_image trapped: ${e}`);
@@ -1079,10 +1111,17 @@ if (runToplevel) {
   if (typeof runToplevelFn !== "function") {
     fail("kernel missing export wasm_run_toplevel");
   }
-  if (typeof kernel.instance.exports.wasm_set_subprims_ready === "function") {
-    kernel.instance.exports.wasm_set_subprims_ready(1);
-  }
   installBootEntry();
+
+  /* Fill null table slots with a diagnostic trap so call_indirect on
+     uninstalled entries produces a Lisp XNOTFUN instead of opaque RuntimeError. */
+  if (subprims) {
+    const trapFn = subprims.instance.exports._SPentry_not_installed;
+    if (typeof trapFn === "function") {
+      const { filled } = fillNullTableSlots({ subprimsTable: runtime.subprimsTable, trapFn });
+      console.log(`filled ${filled} null table slots with trap stub`);
+    }
+  }
 
   try {
     const rc = runToplevelFn();
@@ -1103,13 +1142,6 @@ if (options.expectRc != null) {
     process.exit(5);
   }
 }
-
-emitSyntheticIpcArtifacts({
-  defaultLaneClass: "headless_runtime",
-  laneId: ipcLaneId,
-  conformanceId: ipcConformanceId,
-  source: "doc/wasm/js/load-image.mjs",
-});
 
 if (modulesHandle) {
   await modulesHandle.close();

@@ -895,4 +895,23 @@ fsync(int fd)
   return 0;
 }
 
+/* flush_cache_lines — no-op on WASM (no instruction cache to flush). */
+void
+flush_cache_lines(void *start, uint32_t nbytes)
+{
+  (void)start;
+  (void)nbytes;
+}
+
+/* wcslen — wide character string length.
+   Normally behind #ifdef WINDOWS, but the linker pulls it in. */
+size_t
+wcslen(const void *s)
+{
+  const int32_t *p = (const int32_t *)s;
+  size_t n = 0;
+  if (p) { while (p[n]) n++; }
+  return n;
+}
+
 #endif /* WASM32 */

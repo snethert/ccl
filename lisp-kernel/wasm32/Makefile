@@ -143,7 +143,7 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_return_fixnum_logxor --export=wasm_return_fixnum_lognot \
 	  --export=wasm_return_fixnum_neg \
 	  --export=wasm_test_entry_funcall1_raw --export=wasm_test_entry_funcall0_raw \
-	  --export=wasm_reset_root_image_runtime_state \
+	  --export=wasm_reset_root_image_runtime_state --export=wasm_repair_udf_binding --export=wasm_repair_udf_bindings_scan \
 	  --export=wasm_set_entry_call_abi --export=wasm_get_entry_call_abi --export=wasm_clear_entry_call_abi \
 	  --export=wasm_kernel_ui_poll --export=wasm_kernel_ui_render --export=wasm_kernel_ui_measure_text \
 	  --export=wasm_ffi_test_add \
@@ -175,6 +175,9 @@ wasmcl: $(KERNELOBJ)
 	  $(LDFLAGS_EXTRA) \
 	  -o $(KERNEL_WASM) $(KERNELOBJ)
 	@echo "Kernel built: $(KERNEL_WASM)"
+	@# Keep scripts/wasm/lib copy in sync (load-image.mjs loads from there)
+	@cp $(KERNEL_WASM) $(REPO_ROOT)/scripts/wasm/lib/wasmcl.wasm
+	@echo "Kernel synced: $(REPO_ROOT)/scripts/wasm/lib/wasmcl.wasm"
 
 # Clean targets
 cclean:

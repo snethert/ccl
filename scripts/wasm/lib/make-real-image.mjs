@@ -1068,6 +1068,8 @@ console.error("[stage] installing compiled modules...");
    compiled-modules bundle (which shares the same entry index space) does not
    overwrite boot module WASM code with unrelated runtime functions. */
 const bootEntryIndices = new Set();
+let bootModuleEntries = []; /* saved for startup-plan.json emission */
+let bootBinaryPath = null; /* saved for modules.bin emission */
 
 /* Install boot (level-0) compiled modules first, so that level-0 function
    table entries (e.g. %FASLOAD) are populated before wasm_fasload_path is
@@ -1086,6 +1088,7 @@ if (bootModulesPath) {
   });
   if (bootBundleJson?.binary) {
     const bootBinPath = path.join(path.dirname(bootModulesPath), bootBundleJson.binary);
+    bootBinaryPath = bootBinPath;
     const bootFd = await fs.open(bootBinPath, "r");
     bootBinaryReader = async (offset, length) => {
       const size = length >>> 0;
@@ -1115,8 +1118,14 @@ if (bootModulesPath) {
     for (const entry of bootInstall.entries) {
       if (Number.isFinite(entry?.entryIndex)) {
         bootEntryIndices.add(entry.entryIndex >>> 0);
+        /* Track that const pool was installed during module installation
+           (installConstPoolBytes doesn't update constPoolsInstalled). */
+        if (Number.isFinite(entry?.constPoolLength) && entry.constPoolLength > 0) {
+          constPoolsInstalled.add(entry.entryIndex >>> 0);
+        }
       }
     }
+    bootModuleEntries = Array.isArray(bootResolved?.modules) ? bootResolved.modules : [];
     trace(`boot modules bundle installed ${bootInstall.installed}/${bootInstall.count}, ${bootEntryIndices.size} entry indices reserved`);
     if (bootInstall.installed === 0 && bootInstall.count > 0) {
       trace("WARNING: boot modules bundle had entries but none were installed");
@@ -1174,6 +1183,12 @@ const bundleInstall = await installCompiledModulesFromBundle({
   installConstPools: true,
   excludeEntries: bootEntryIndices.size > 0 ? bootEntryIndices : null,
 });
+/* Track const pools installed during module installation. */
+for (const entry of bundleInstall.entries) {
+  if (Number.isFinite(entry?.entryIndex) && Number.isFinite(entry?.constPoolLength) && entry.constPoolLength > 0) {
+    constPoolsInstalled.add(entry.entryIndex >>> 0);
+  }
+}
 console.error(`[stage] compiled modules: ${bundleInstall.installed}/${bundleInstall.count} installed, ${bundleInstall.failed || 0} failed, ${bundleInstall.excluded || 0} skipped (boot)`);
 if (bundleInstall.count === 0) {
   fail("compiled modules bundle is empty; refusing to proceed");
@@ -1627,6 +1642,56 @@ if (setToplfuncRc !== 0) {
   fail(`wasm_set_toplfunc_entry(${toplevelEntryIndex}) returned ${setToplfuncRc}`);
 }
 
+console.error(
+  `[stage] pre-GC: ${constPoolsInstalled.size} const pools installed during FASL loading,` +
+  ` memory ${(runtime.memory.buffer.byteLength / (1024*1024)).toFixed(0)} MB`
+);
+
+/* Trigger a full GC before proactive const pool installation.
+   FASL loading leaves significant garbage in the heap (~800MB-1.2GB).
+   Collecting it frees headroom for const pool allocation. */
+if (typeof ex.wasm_trigger_gc === "function") {
+  const freed = ex.wasm_trigger_gc() | 0;
+  console.error(
+    `[stage] post-GC: freed ${freed} bytes (${(freed / (1024 * 1024)).toFixed(1)} MB),` +
+    ` memory ${(runtime.memory.buffer.byteLength / (1024*1024)).toFixed(0)} MB`
+  );
+} else {
+  console.error(`[stage] WARN: wasm_trigger_gc not available — const pool installs may hit 4GB ceiling`);
+}
+
+/* Phase 2A: Proactive const pool installation.
+   Install ALL const pools into the heap BEFORE saving the image.
+   Pools that fail (heap exhaustion at the 4GB WASM32 ceiling) are recorded
+   so startup-plan.json can flag entries that still need on-demand install. */
+const constPoolFailedIndices = new Set();
+{
+  const allPoolIndices = new Set([
+    ...bootConstPoolData.keys(),
+    ...constPoolEntries.keys(),
+  ]);
+
+  /* constPoolsInstalled was populated after installCompiledModulesFromBundle calls,
+     so it already tracks pools installed during module installation. */
+  const alreadyInstalled = [...allPoolIndices].filter(idx => constPoolsInstalled.has(idx)).length;
+  console.error(`[stage] const-pool tracking: ${alreadyInstalled}/${allPoolIndices.size} already installed by module loader`);
+
+  let proactiveInstalled = 0, proactiveFailed = 0, proactiveSkipped = 0;
+  for (const idx of allPoolIndices) {
+    if (constPoolsInstalled.has(idx)) { proactiveSkipped++; continue; }
+    const rc = installConstPoolOnDemand(idx);
+    if (rc === 1) proactiveInstalled++;
+    else { proactiveFailed++; constPoolFailedIndices.add(idx); }
+  }
+  console.error(
+    `[stage] proactive-const-pool-install: ${proactiveInstalled} installed,` +
+    ` ${proactiveFailed} failed, ${proactiveSkipped} already installed,` +
+    ` ${constPoolsInstalled.size} total`
+  );
+  /* Free JS-side const pool caches — data is now in the Lisp heap. */
+  bootConstPoolData.clear();
+}
+
 const imagePathBytes = encoder.encode(wasmOutputPath);
 const imagePathPtr = copyBytesToScratch(runtime.memory, imagePathBytes);
 if (typeof ex.wasm_save_image_direct !== "function") {
@@ -1819,6 +1884,138 @@ const manifest = {
 
 await fs.mkdir(path.dirname(manifestOutPath), { recursive: true });
 await fs.writeFile(manifestOutPath, canonicalJson(manifest));
+
+/* Phase 2B: Emit startup-plan.json and modules.bin.
+   The startup plan is a flat function-table map that tells the deterministic
+   launcher exactly which WASM function goes into each table slot.  modules.bin
+   is a flat concatenation of all WASM module binaries (boot + runtime) with
+   offsets recorded in the plan. */
+{
+  const startupPlanEntries = [];
+
+  /* Subprim entries (indices 0..subprimsMap.symbols.length-1).
+     Each symbol name maps to the corresponding table index. */
+  const spExports = subprims.instance.exports;
+  for (let i = 0; i < subprimsMap.symbols.length; i++) {
+    const sym = subprimsMap.symbols[i];
+    const provider = typeof spExports[sym] === "function" ? "subprims"
+      : typeof ex[sym] === "function" ? "kernel" : null;
+    if (provider) {
+      startupPlanEntries.push({ index: i, source: provider, export: sym });
+    }
+  }
+
+  /* Build modules.bin from boot + runtime module binaries with deduplication.
+     Many entries share binary data at the same source offset (V2 bundle dedup).
+     We detect shared spans and map them to the same modules.bin offset. */
+  const bootBinBytes = bootBinaryPath ? await fs.readFile(bootBinaryPath) : null;
+  let modulesBinOffset = 0;
+  const modulesBinChunks = [];
+  const spanDedup = new Map(); /* "srcBin:srcOffset:storedLen" → modulesBinOffset */
+
+  function addModuleEntry(entry, srcBinLabel, srcBinBytes) {
+    if (!Number.isFinite(entry?.entryIndex)) return;
+    const idx = entry.entryIndex >>> 0;
+    const srcOffset = entry.offset >>> 0;
+    const moduleLen = entry.length >>> 0;
+    const storedLen = Number.isFinite(entry?.moduleStoredLength)
+      ? (entry.moduleStoredLength >>> 0) : moduleLen;
+    const encoding = entry.moduleEncoding || undefined;
+    const dedupKey = `${srcBinLabel}:${srcOffset}:${storedLen}`;
+
+    let binOffset;
+    if (spanDedup.has(dedupKey)) {
+      binOffset = spanDedup.get(dedupKey);
+    } else {
+      binOffset = modulesBinOffset;
+      spanDedup.set(dedupKey, binOffset);
+      if (srcBinBytes && srcOffset + storedLen <= srcBinBytes.length) {
+        modulesBinChunks.push(srcBinBytes.subarray(srcOffset, srcOffset + storedLen));
+      }
+      modulesBinOffset += storedLen;
+    }
+
+    startupPlanEntries.push({
+      index: idx,
+      source: "modules",
+      offset: binOffset,
+      length: moduleLen,
+      storedLength: storedLen !== moduleLen ? storedLen : undefined,
+      encoding,
+      export: entry.exportName || "fn",
+    });
+  }
+
+  /* Boot module entries — from hoisted bootModuleEntries (resolved bundle). */
+  for (const entry of bootModuleEntries) {
+    addModuleEntry(entry, "boot", bootBinBytes);
+  }
+
+  /* Runtime module entries — from resolvedBundle.modules. */
+  const runtimeModules = Array.isArray(resolvedBundle?.modules) ? resolvedBundle.modules : [];
+  for (const entry of runtimeModules) {
+    if (!Number.isFinite(entry?.entryIndex)) continue;
+    if (bootEntryIndices.has(entry.entryIndex >>> 0)) continue;
+    addModuleEntry(entry, "runtime", compiledModulesBinaryBytes);
+  }
+
+  /* Sort entries by table index. */
+  startupPlanEntries.sort((a, b) => a.index - b.index);
+
+  /* Remove undefined fields for cleaner JSON.
+     Tag entries whose const pool failed proactive installation. */
+  const cleanEntries = startupPlanEntries.map(e => {
+    const o = { index: e.index, source: e.source, export: e.export };
+    if (e.source === "modules") {
+      o.offset = e.offset;
+      o.length = e.length;
+      if (e.storedLength !== undefined) o.storedLength = e.storedLength;
+      if (e.encoding !== undefined) o.encoding = e.encoding;
+      if (constPoolFailedIndices.has(e.index)) o.constPoolBaked = false;
+    }
+    return o;
+  });
+
+  const unbaked = cleanEntries.filter(e => e.constPoolBaked === false).length;
+  const startupPlan = {
+    schemaVersion: 1,
+    generatedAt: new Date().toISOString(),
+    memory: {
+      initialPages: runtime.memory.buffer.byteLength / 65536,
+      imageSize: persistedBytes.length,
+    },
+    constPools: {
+      baked: constPoolsInstalled.size,
+      unbaked,
+      total: constPoolsInstalled.size + unbaked,
+    },
+    functionTable: {
+      size: runtime.subprimsTable.length,
+      entries: cleanEntries,
+    },
+    toplevelIndex: toplevelEntryIndex,
+    artifacts: {
+      rootImage: { sha256: manifest.artifacts.rootImage.sha256 },
+      kernelWasm: { sha256: manifest.artifacts.kernelWasm.sha256 },
+      subprimsWasm: { sha256: manifest.artifacts.subprimsWasm.sha256 },
+    },
+  };
+
+  const startupPlanPath = path.resolve(path.dirname(outputPath), "startup-plan.json");
+  await fs.writeFile(startupPlanPath, JSON.stringify(startupPlan, null, 2));
+  console.error(`[stage] startup-plan.json: ${cleanEntries.length} entries, table size ${runtime.subprimsTable.length}`);
+
+  /* Write modules.bin — flat concatenation of all module binaries. */
+  if (modulesBinChunks.length > 0) {
+    const modulesBinPath = path.resolve(path.dirname(outputPath), "modules.bin");
+    const modulesBinBuf = Buffer.concat(modulesBinChunks);
+    await fs.writeFile(modulesBinPath, modulesBinBuf);
+    startupPlan.artifacts.modulesBin = { sha256: sha256Hex(modulesBinBuf), bytes: modulesBinBuf.length };
+    /* Re-write plan with modules.bin hash. */
+    await fs.writeFile(startupPlanPath, JSON.stringify(startupPlan, null, 2));
+    console.error(`[stage] modules.bin: ${modulesBinBuf.length} bytes (${(modulesBinBuf.length / (1024*1024)).toFixed(1)} MiB), ${modulesBinChunks.length} modules`);
+  }
+}
 
 if (compiledModulesHandle) {
   await compiledModulesHandle.close();

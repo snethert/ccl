@@ -469,6 +469,44 @@ wasm_cstack_frame_coherence_selftest_export(void)
   return wasm_cstack_frame_coherence_selftest();
 }
 
+/* Trigger a full garbage collection from the JS host.
+   Returns bytes freed (approximate, clamped to int32 range).
+   Safe to call when Lisp has returned to JS (TCR state is consistent). */
+__attribute__((used, visibility("default"), export_name("wasm_trigger_gc")))
+int32_t
+wasm_trigger_gc(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) return 0;
+
+  area *a = active_dynamic_area;
+  if (a == NULL) return 0;
+
+  BytePtr oldfree = a->active;
+
+  /* Force a full (non-ephemeral) GC by temporarily clearing OLDEST_EPHEMERAL. */
+  LispObj saved_oldest = lisp_global(OLDEST_EPHEMERAL);
+  lisp_global(OLDEST_EPHEMERAL) = 0;
+
+  gc(tcr, 0);
+
+  lisp_global(OLDEST_EPHEMERAL) = saved_oldest;
+
+  /* GC compaction moves a->active down but does NOT refresh the TCR's
+     allocation pointers.  Reset them so the next allocation goes through
+     new_heap_segment, which will carve a proper segment from the
+     compacted heap. */
+  tcr->save_allocptr = (void *)VOID_ALLOCPTR;
+  tcr->save_allocbase = (void *)VOID_ALLOCPTR;
+  tcr->last_allocptr = (void *)VOID_ALLOCPTR;
+
+  BytePtr newfree = a->active;
+  signed_natural freed = (signed_natural)(oldfree - newfree);
+  if (freed > 0x7FFFFFFF) freed = 0x7FFFFFFF;
+  if (freed < -0x7FFFFFFF) freed = -0x7FFFFFFF;
+  return (int32_t)freed;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_save_image_direct")))
 int32_t
 wasm_save_image_direct(uint32_t path_ptr, uint32_t path_len, uint32_t egc_enabled)
@@ -596,12 +634,32 @@ wasm_toplevel_loop(TCR *tcr)
     }
 
     tcr->wasm_gprs[arg_z] = nrs_TOPLCATCH.vcell;
+    { static const char m[] = "TL: MKCATCH1V\n";
+      wasm_host_log(m, sizeof(m)-1); }
     wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_MKCATCH1V_INDEX));
 
     tcr->wasm_gprs[arg_z] = lisp_nil;
     tcr->wasm_gprs[nargs] = box_fixnum(0);
     tcr->wasm_gprs[nfn] = topfn;
     tcr->wasm_gprs[Rfn] = topfn;
+    { static const char hx[] = "0123456789abcdef";
+      char d[60]; int p = 0;
+      const char *s = "TL: FUNCALL nfn=0x";
+      while (*s) d[p++] = *s++;
+      for (int b = 7; b >= 0; b--) d[p++] = hx[(topfn>>(b*4))&0xf];
+      /* extract entry index from function object */
+      if (fulltag_of(topfn) == fulltag_misc && topfn != lisp_nil) {
+        LispObj entry = deref(topfn, 1);
+        s = " e=";
+        while (*s) d[p++] = *s++;
+        if (tag_of(entry) == tag_fixnum) {
+          uint32_t idx = (uint32_t)unbox_fixnum(entry);
+          for (int b = 7; b >= 0; b--) d[p++] = hx[(idx>>(b*4))&0xf];
+        } else {
+          s = "non-fix"; while (*s) d[p++] = *s++;
+        }
+      }
+      d[p++] = '\n'; wasm_host_log(d, (unsigned)p); }
     wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_FUNCALL_INDEX));
     if (tcr->wasm_pending_throw) {
       wasm_maybe_refresh_compiled_modules();
@@ -611,6 +669,8 @@ wasm_toplevel_loop(TCR *tcr)
     LispObj result = tcr->wasm_gprs[arg_z];
     tcr->wasm_gprs[arg_z] = lisp_nil;
     tcr->wasm_gprs[imm0] = box_fixnum(1);
+    { static const char m[] = "TL: NTHROW1VALUE\n";
+      wasm_host_log(m, sizeof(m)-1); }
     wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_NTHROW1VALUE_INDEX));
     if (tcr->wasm_pending_throw) {
       tcr->wasm_pending_throw = 0;
@@ -6148,6 +6208,198 @@ wasm_const_pool_ref(uint32_t entry_index, uint32_t slot_index)
   return pool_data[slot_index];
 }
 
+
+/*
+ * wasm_repair_udf_binding: Given a symbol name (in the CCL package) and
+ * a compiled-module entry index, check whether the symbol's function cell
+ * is UDF.  If so, synthesize a function object pointing to the given entry
+ * and install it as the symbol's fcell.
+ *
+ * Returns:
+ *   0  = repaired (was UDF, now bound)
+ *   1  = already bound (no action taken)
+ *  -1  = symbol not found
+ *  -2  = no TCR
+ *  -3  = allocation failed
+ *  -4  = invalid entry_index
+ */
+__attribute__((used, visibility("default"), export_name("wasm_repair_udf_binding")))
+int32_t
+wasm_repair_udf_binding(uint32_t name_ptr, uint32_t name_len, uint32_t entry_index)
+{
+  if (name_len == 0 || name_ptr == 0) {
+    return -1;
+  }
+  static const uint8_t ccl_pkg_name[] = { 'C', 'C', 'L' };
+  static const uint8_t cl_pkg_name[] = {
+    'C', 'O', 'M', 'M', 'O', 'N', '-', 'L', 'I', 'S', 'P'
+  };
+  const uint8_t *sym_name = (const uint8_t *)(uintptr_t)name_ptr;
+
+  /* Try CCL package first, then CL */
+  LispObj pkg = wasm_find_package_named_bytes(ccl_pkg_name, (uint32_t)sizeof(ccl_pkg_name));
+  LispObj sym = (LispObj)0;
+  if (pkg != lisp_nil) {
+    sym = wasm_find_symbol_named_bytes(sym_name, name_len, pkg);
+  }
+  if (sym == (LispObj)0) {
+    pkg = wasm_find_package_named_bytes(cl_pkg_name, (uint32_t)sizeof(cl_pkg_name));
+    if (pkg != lisp_nil) {
+      sym = wasm_find_symbol_named_bytes(sym_name, name_len, pkg);
+    }
+  }
+  if (sym == (LispObj)0) {
+    /* Try all packages as last resort */
+    sym = wasm_find_symbol_in_all_packages_bytes(sym_name, name_len);
+  }
+  if (sym == (LispObj)0 ||
+      fulltag_of(sym) != fulltag_misc ||
+      header_subtag(header_of(sym)) != subtag_symbol) {
+    return -1;
+  }
+
+  lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(untag(sym));
+  LispObj current_fcell = rawsym->fcell;
+
+  /* If the function cell is NOT UDF, leave it alone */
+  if (current_fcell != nrs_UDF.vcell) {
+    return 1;
+  }
+
+  /* Validate entry index */
+  if (entry_index == 0 || entry_index > 0xFFFF) {
+    return -4;
+  }
+
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return -2;
+  }
+
+  /* Synthesize a function object: 3 slots (entry, entry, nil for keys) */
+  LispObj fn = wasm_misc_alloc(tcr, subtag_function, (signed_natural)3);
+  if (fn == lisp_nil) {
+    return -3;
+  }
+  LispObj entry = box_fixnum((signed_natural)entry_index);
+  LispObj *fn_data = (LispObj *)((BytePtr)fn + misc_data_offset);
+  fn_data[0] = entry;
+  fn_data[1] = entry;
+  fn_data[2] = lisp_nil;
+
+  rawsym->fcell = fn;
+  return 0;
+}
+
+/*
+ * Batch repair: walk the heap ONCE, find all symbols with UDF fcell, and
+ * match them against a provided name→entryIndex lookup table.
+ *
+ * table_ptr points to an array of packed entries:
+ *   [name_offset:u32, name_len:u32, entry_index:u32] × table_count
+ * where name_offset is a pointer into linear memory containing the name bytes.
+ *
+ * Returns the number of symbols repaired.
+ */
+__attribute__((used, visibility("default"), export_name("wasm_repair_udf_bindings_scan")))
+int32_t
+wasm_repair_udf_bindings_scan(uint32_t table_ptr, uint32_t table_count)
+{
+  if (table_ptr == 0 || table_count == 0) {
+    return 0;
+  }
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return -1;
+  }
+
+  typedef struct {
+    uint32_t name_offset;
+    uint32_t name_len;
+    uint32_t entry_index;
+  } repair_entry;
+
+  const repair_entry *entries = (const repair_entry *)(uintptr_t)table_ptr;
+  LispObj udf_fn = nrs_UDF.vcell;
+  int32_t repaired = 0;
+
+  /* Walk all memory areas looking for symbols with UDF fcell */
+  area *areas = (area *)ptr_from_lispobj(lisp_global(ALL_AREAS));
+  if (areas == NULL) {
+    return 0;
+  }
+
+  area *a = areas->succ;
+  while (a != NULL && a->code != AREA_VOID) {
+    area_code code = a->code;
+    if (code == AREA_STATIC || code == AREA_DYNAMIC ||
+        code == AREA_MANAGED_STATIC || code == AREA_STATIC_CONS) {
+      LispObj *start = (LispObj *)a->low;
+      LispObj *end = (LispObj *)a->active;
+
+      while (start < end) {
+        LispObj header = *start;
+        natural tag = fulltag_of(header);
+
+        if (header_subtag(header) == subtag_symbol) {
+          lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(ptr_to_lispobj(start));
+
+          /* Only process symbols with UDF fcell */
+          if (rawsym->fcell == udf_fn) {
+            /* Get symbol's pname */
+            LispObj pname = rawsym->pname;
+            if (fulltag_of(pname) == fulltag_misc &&
+                header_subtag(header_of(pname)) == subtag_simple_base_string) {
+              uint32_t pname_len = (uint32_t)header_element_count(header_of(pname));
+              uint32_t *pname_data = (uint32_t *)ptr_from_lispobj(pname + misc_data_offset);
+
+              /* Match against table entries */
+              for (uint32_t i = 0; i < table_count; i++) {
+                if (entries[i].name_len != pname_len) continue;
+                if (entries[i].entry_index == 0 || entries[i].entry_index > 0xFFFF) continue;
+
+                const uint8_t *name = (const uint8_t *)(uintptr_t)entries[i].name_offset;
+                int match = 1;
+                for (uint32_t j = 0; j < pname_len; j++) {
+                  if ((pname_data[j] & 0xffu) != name[j]) {
+                    match = 0;
+                    break;
+                  }
+                }
+                if (match) {
+                  /* Synthesize function and repair */
+                  LispObj fn = wasm_misc_alloc(tcr, subtag_function, (signed_natural)3);
+                  if (fn != lisp_nil) {
+                    LispObj entry_val = box_fixnum((signed_natural)entries[i].entry_index);
+                    LispObj *fn_data = (LispObj *)((BytePtr)fn + misc_data_offset);
+                    fn_data[0] = entry_val;
+                    fn_data[1] = entry_val;
+                    fn_data[2] = lisp_nil;
+                    rawsym->fcell = fn;
+                    repaired++;
+                  }
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        /* Advance to next heap object */
+        if (nodeheader_tag_p(tag)) {
+          start += (~1 & (2 + header_element_count(header)));
+        } else if (immheader_tag_p(tag)) {
+          start = (LispObj *)skip_over_ivector((natural)start, header);
+        } else {
+          start += 2;
+        }
+      }
+    }
+    a = a->succ;
+  }
+
+  return repaired;
+}
 
 __attribute__((used, visibility("default"), export_name("wasm_reset_root_image_runtime_state")))
 int32_t

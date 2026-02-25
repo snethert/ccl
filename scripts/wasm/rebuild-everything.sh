@@ -236,6 +236,21 @@ if [ -f "$ROOT_DIR/scripts/wasm/compile-phase0a-tests.sh" ]; then
   "$ROOT_DIR/scripts/wasm/compile-phase0a-tests.sh" || log "WARN: phase0a test compilation failed (non-fatal)"
 fi
 
+# Phase 2C: Merge singleton modules to reduce instantiation count.
+# Uses wasm-merge to combine individual-function modules into multi-export
+# batches, reducing load-time instantiations from ~2600 to ~40.
+if command -v wasm-merge >/dev/null 2>&1; then
+  log "merging singleton modules (boot)..."
+  run node "$ROOT_DIR/scripts/wasm/merge-singleton-modules.mjs" \
+    --manifest "$BOOT_MODULES_OUT" --in-place --batch-size 100
+
+  log "merging singleton modules (runtime)..."
+  run node "$ROOT_DIR/scripts/wasm/merge-singleton-modules.mjs" \
+    --manifest "$MODULES_OUT" --in-place --batch-size 100
+else
+  log "WARN: wasm-merge not found; skipping singleton module merge"
+fi
+
 if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
   ROOT_CMD=(
     node --max-old-space-size=8192 "$ROOT_DIR/scripts/wasm/lib/make-real-image.mjs"
