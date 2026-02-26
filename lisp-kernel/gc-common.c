@@ -1879,6 +1879,27 @@ gc(TCR *tcr, signed_natural param)
     do {
       forward_tcr_xframes(other_tcr);
       forward_tcr_tlb(other_tcr);
+#ifdef WASM32
+      /* Forward wasm_gprs and spill stack.  mark_tcr_xframes marks these
+         as roots but forward_tcr_xframes only forwards xp registers
+         (ExceptionInformation.gpr[]), which is separate storage from
+         tcr->wasm_gprs[].  Without this, compaction leaves stale
+         pre-compaction addresses in the TCR register shadow. */
+      {
+        int r;
+        for (r = arg_z; r <= Rfn; r++) {
+          update_noderef(&other_tcr->wasm_gprs[r]);
+        }
+        if (other_tcr->wasm_spill_sp && other_tcr->wasm_spill_limit &&
+            other_tcr->wasm_spill_sp < other_tcr->wasm_spill_limit) {
+          LispObj *cursor = other_tcr->wasm_spill_sp;
+          while (cursor < other_tcr->wasm_spill_limit) {
+            update_noderef(cursor);
+            cursor++;
+          }
+        }
+      }
+#endif
       other_tcr = TCR_AUX(other_tcr)->next;
     } while (other_tcr != tcr);
 
