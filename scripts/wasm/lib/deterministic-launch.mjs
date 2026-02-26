@@ -29,6 +29,7 @@ import {
 } from "./ccl-loader.mjs";
 import { WASM_BOOT_ENTRY_INDEX } from "./abi-constants.mjs";
 import { createMicrokernel } from "./microkernel.mjs";
+import { createInMemoryPersistenceStore } from "./persist-service.mjs";
 
 /* ── Paths ────────────────────────────────────────────────────────── */
 
@@ -36,14 +37,63 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "../../..");
 
 let imagesDir = path.join(repoRoot, "build/wasm32/images");
+let imagePathArg = null;
 for (let i = 2; i < process.argv.length; i++) {
   if (process.argv[i] === "--images-dir" && process.argv[i + 1]) {
     imagesDir = path.resolve(process.argv[++i]);
+    continue;
+  }
+  if (!process.argv[i].startsWith("-") && imagePathArg === null) {
+    imagePathArg = path.resolve(process.argv[i]);
   }
 }
 
 const t0 = performance.now();
 const log = (msg) => console.error(`[${((performance.now() - t0) / 1000).toFixed(2)}s] ${msg}`);
+
+async function mountHostImageFile({ hostPath, mountPath }) {
+  const store = createInMemoryPersistenceStore({ chunkSize: 256 * 1024 });
+  const chunkIds = [];
+  const fh = await fs.open(hostPath, "r");
+  const chunkSize = store.chunkSize >>> 0;
+  const readBuf = Buffer.allocUnsafe(chunkSize);
+  let total = 0;
+
+  try {
+    while (true) {
+      const { bytesRead } = await fh.read(readBuf, 0, readBuf.length, total);
+      if (bytesRead === 0) break;
+      const id = `c${store.nextChunkId++}`;
+      const chunk = new Uint8Array(bytesRead);
+      chunk.set(new Uint8Array(readBuf.buffer, readBuf.byteOffset, bytesRead));
+      store.chunks.set(id, chunk);
+      chunkIds.push(id);
+      total += bytesRead;
+    }
+  } finally {
+    await fh.close();
+  }
+
+  if (total > 0xffffffff) {
+    throw new Error(`image too large for WASM32 persistence metadata: ${total}`);
+  }
+
+  store.meta.set(mountPath, {
+    path: mountPath,
+    type: "file",
+    size: total >>> 0,
+    mtime: Date.now(),
+    readonly: true,
+    content: {
+      chunk_size: chunkSize,
+      chunk_count: chunkIds.length >>> 0,
+      chunk_ids: chunkIds,
+      etag: null,
+    },
+  });
+  store.readonly = true;
+  return { store, total, chunks: chunkIds.length };
+}
 
 /* ── 1. Read startup plan ─────────────────────────────────────────── */
 
@@ -64,10 +114,13 @@ const [kernelBytes, subprimsBytes, subprimsMap, modulesBinBuf] = await Promise.a
 ]);
 const modulesBin = new Uint8Array(modulesBinBuf.buffer, modulesBinBuf.byteOffset, modulesBinBuf.byteLength);
 /* Image is loaded later via streaming read (may exceed Node.js 2 GiB fs.readFile limit). */
-const imagePath = path.join(imagesDir, "root.image");
+const imagePath = imagePathArg ?? path.join(imagesDir, "root.image");
 const imageStat = await fs.stat(imagePath);
 const imageLen = imageStat.size;
 log(`artifacts loaded: kernel=${kernelBytes.length} subprims=${subprimsBytes.length} image=${imageLen} modules.bin=${modulesBin.length}`);
+const kernelImagePath = "/wasmcl.image";
+const imageMount = await mountHostImageFile({ hostPath: imagePath, mountPath: kernelImagePath });
+log(`image mounted: ${imageMount.total} bytes at ${kernelImagePath} (${imageMount.chunks} chunks)`);
 
 /* ── 3. Create shared runtime ─────────────────────────────────────── */
 
@@ -88,6 +141,9 @@ const microkernel = createMicrokernel({
   memory: runtime.memory,
   writeStdout: (bytes) => process.stdout.write(bytes),
   writeStderr: (bytes) => process.stderr.write(bytes),
+  persistence: {
+    readOnlyMounts: [{ prefix: "/", store: imageMount.store }],
+  },
 });
 
 /* ── 4. Instantiate kernel ────────────────────────────────────────── */
@@ -131,9 +187,9 @@ for (const entry of plan.functionTable.entries) {
 }
 log(`subprims wired: ${subprimsWired}`);
 
-/* ── 7. Load image into WASM memory ──────────────────────────────── */
+/* ── 7. Load image via persistence service ───────────────────────── */
 
-const needBytes = imageLen + cstackSize + (4 << 20); // image + cstack + 4 MiB slack
+const needBytes = cstackSize + (4 << 20); // cstack + 4 MiB slack
 let haveBytes = runtime.memory.buffer.byteLength;
 if (needBytes > haveBytes) {
   const growPages = Math.ceil((needBytes - haveBytes) / pageSize);
@@ -142,23 +198,8 @@ if (needBytes > haveBytes) {
 const memoryTop = runtime.memory.buffer.byteLength;
 ex.wasm_set_cstack_bounds(memoryTop, cstackSize);
 
-const blobBase = (memoryTop - cstackSize - imageLen) & ~15;
-
-// Stream image directly into WASM memory in chunks (avoids Node.js 2 GiB Buffer limit)
-const imageFh = await fs.open(imagePath);
-const readChunkSize = 256 * 1024 * 1024; // 256 MiB
-let totalRead = 0;
-while (totalRead < imageLen) {
-  const toRead = Math.min(readChunkSize, imageLen - totalRead);
-  const view = new Uint8Array(runtime.memory.buffer, blobBase + totalRead, toRead);
-  const { bytesRead } = await imageFh.read(view, 0, toRead, totalRead);
-  totalRead += bytesRead;
-  if (bytesRead === 0) break;
-}
-await imageFh.close();
-log(`image streamed: ${totalRead} bytes into WASM memory at 0x${blobBase.toString(16)}`);
-
-const loadRc = ex.wasm_ccl_load_image(blobBase, imageLen);
+/* Force kernel load path through lisp_open/read from persistence. */
+const loadRc = ex.wasm_ccl_load_image(0, 0);
 const nil = ex.wasm_get_lisp_nil() >>> 0;
 const postLoadMem = runtime.memory.buffer.byteLength;
 log(`image loaded: rc=${loadRc} nil=0x${nil.toString(16)} memory=${(postLoadMem/(1024*1024)).toFixed(0)} MiB`);

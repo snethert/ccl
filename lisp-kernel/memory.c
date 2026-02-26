@@ -467,26 +467,31 @@ MapFile(LogicalAddress addr, natural pos, natural nbytes, int permissions, int f
     return false;
   }
 
+  /* Cap individual reads at 16 MiB.  The microkernel's kernel_copy_response
+     allocates a JS Uint8Array for each chunk; reads near INT_MAX (~2 GiB)
+     hit V8 TypedArray limits and fail silently on some Node.js builds.
+     Smaller chunks also reduce transient JS heap pressure. */
+#define WASM_MAPFILE_CHUNK (16u << 20)   /* 16 MiB */
   while (total < nbytes) {
     size_t want = nbytes - total;
-    if (want > INT_MAX) {
-      want = INT_MAX;
+    if (want > WASM_MAPFILE_CHUNK) {
+      want = WASM_MAPFILE_CHUNK;
     }
     signed_natural got = (signed_natural)read(fd, addr + total, want);
     if (got <= 0) {
-#ifdef WASM32
       char buf[128];
       int n = snprintf(buf, sizeof(buf),
-                       "WASM MapFile: read failed (want=%lu got=%ld)\n",
+                       "WASM MapFile: read failed at offset %lu/%lu (want=%lu got=%ld)\n",
+                       (unsigned long)total, (unsigned long)nbytes,
                        (unsigned long)want, (long)got);
       if (n > 0) {
         wasm_host_log(buf, (unsigned)n);
       }
-#endif
       return false;
     }
     total += (size_t)got;
   }
+#undef WASM_MAPFILE_CHUNK
 
   (void)LSEEK(fd, opos, SEEK_SET);
   return true;
