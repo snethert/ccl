@@ -793,6 +793,24 @@ save_application_internal(unsigned fd, Boolean egc_was_enabled)
 
 
 
+#ifdef WASM32
+  /* Pre-write pool table verification */
+  {
+    LispObj pools = nrs_WASM_CONST_POOLS.vcell;
+    char _buf[256]; int _n;
+    if (pools != lisp_nil && is_node_fulltag(fulltag_of(pools))) {
+      LispObj *raw = (LispObj *)ptr_from_lispobj(untag(pools));
+      _n = snprintf(_buf, sizeof(_buf),
+        "SAVE-VERIFY: vcell=0x%08x raw=0x%08x hdr=0x%08x subtag=%d dynlow=0x%08x active=0x%08x\n",
+        (unsigned)pools, (unsigned)(uintptr_t)raw,
+        (unsigned)raw[0], (int)header_subtag(raw[0]),
+        (unsigned)(uintptr_t)active_dynamic_area->low,
+        (unsigned)(uintptr_t)active_dynamic_area->active);
+      if (_n > 0) wasm_image_log(_buf, (size_t)_n);
+    }
+  }
+#endif
+
   for (i = 0; i < NUM_IMAGE_SECTIONS; i++) {
     natural n;
     a = areas[i];

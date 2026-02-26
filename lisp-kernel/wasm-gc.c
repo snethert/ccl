@@ -1928,21 +1928,6 @@ compact_dynamic_heap()
           }
         }
 
-#ifdef WASM32
-        {
-          extern natural wasm_saved_pool_dnode;
-          if (dnode == wasm_saved_pool_dnode) {
-            extern void wasm_host_log(const char *bytes, unsigned len);
-            char _pbuf[256]; int _pn;
-            _pn = snprintf(_pbuf, sizeof(_pbuf),
-              "COMPACT-POOL-HIT: dnode=%lu src=0x%08x dest=0x%08x src_hdr=0x%08x\n",
-              (unsigned long)dnode, (unsigned)(uintptr_t)src,
-              (unsigned)(uintptr_t)dest, (unsigned)*src);
-            if (_pn > 0) wasm_host_log(_pbuf, (unsigned)_pn);
-          }
-        }
-#endif
-
         node = *src++;
         tag = fulltag_of(node);
 
@@ -1974,18 +1959,6 @@ compact_dynamic_heap()
           if (claimed_dnodes > 1 &&
               (dnode + claimed_dnodes - 1) < GCndnodes_in_area &&
               !ref_bit(markbits, dnode + claimed_dnodes - 1)) {
-            { static int logged = 0;
-              if (!logged) {
-                extern void wasm_host_log(const char *bytes, unsigned len);
-                char _buf[256]; int _n;
-                _n = snprintf(_buf, sizeof(_buf),
-                  "GC-TYPE-CONFUSION: dnode=%lu claimed=%lu hdr=0x%08x fulltag=%d\n",
-                  (unsigned long)dnode, (unsigned long)claimed_dnodes,
-                  (unsigned)node, tag);
-                if (_n > 0) wasm_host_log(_buf, (unsigned)_n);
-                logged = 1;
-              }
-            }
             tag = fulltag_even_fixnum; /* Force cons treatment */
           }
         }
@@ -2088,21 +2061,6 @@ compact_dynamic_heap()
       }
     }
   }
-#ifdef WASM32
-  {
-    extern void wasm_host_log(const char *bytes, unsigned len);
-    extern LispObj wasm_saved_pool_vcell;
-    extern natural wasm_saved_pool_dnode;
-    char _cbuf[256]; int _cn;
-    LispObj fwd = nrs_WASM_CONST_POOLS.vcell;
-    unsigned fwd_hdr = (is_node_fulltag(fulltag_of(fwd))) ? (unsigned)header_of(fwd) : 0;
-    _cn = snprintf(_cbuf, sizeof(_cbuf),
-      "COMPACT-END: dest=0x%08x fwd_vcell=0x%08x fwd_hdr=0x%08x orig_dnode=%lu final_dnode=%lu\n",
-      (unsigned)(uintptr_t)dest, (unsigned)fwd, fwd_hdr,
-      (unsigned long)wasm_saved_pool_dnode, (unsigned long)dnode);
-    if (_cn > 0) wasm_host_log(_cbuf, (unsigned)_cn);
-  }
-#endif
   return ptr_to_lispobj(dest);
 }
 

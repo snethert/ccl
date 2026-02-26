@@ -1661,119 +1661,15 @@ bootConstPoolData.clear();
    through nrs_WASM_CONST_POOLS.vcell, so pool vectors survive collection
    while FASL-loading garbage is reclaimed. */
 
-/* Diagnostic: snapshot pool table state BEFORE GC */
-{
-  const nil = ex.wasm_get_lisp_nil() >>> 0;
-  const nrsBase = nil - 1 + 8;  // nil - fulltag_nil + dnode_size
-  const sym34Addr = nrsBase + 34 * 32;
-  const vcellAddr = sym34Addr + 8;
-  const dv = new DataView(runtime.memory.buffer);
-  const vcellVal = dv.getUint32(vcellAddr, true);
-  console.error(`[gc-diag] PRE-GC: nrs_WASM_CONST_POOLS.vcell = 0x${vcellVal.toString(16)}`);
-  if (vcellVal !== nil) {
-    const tableAddr = (vcellVal & ~7) >>> 0;  // untag
-    const tableHdr = dv.getUint32(tableAddr, true);
-    const subtag = tableHdr & 0xFF;
-    const count = tableHdr >>> 8;
-    console.error(`[gc-diag] PRE-GC: table @ 0x${tableAddr.toString(16)} hdr=0x${tableHdr.toString(16)} subtag=${subtag} count=${count}`);
-    // Check first few entries
-    let nonNil = 0;
-    const checkCount = Math.min(count, 8959);
-    for (let i = 0; i < checkCount; i++) {
-      const entry = dv.getUint32(tableAddr + 4 + i * 4, true);
-      if (entry !== nil) nonNil++;
-    }
-    console.error(`[gc-diag] PRE-GC: ${nonNil}/${checkCount} non-nil entries`);
-    // Sample specific entries
-    for (const idx of [0, 1, 100, 200, 300, 1000, 5000, 8000]) {
-      if (idx < checkCount) {
-        const entry = dv.getUint32(tableAddr + 4 + idx * 4, true);
-        console.error(`[gc-diag] PRE-GC: entry[${idx}] = 0x${entry.toString(16)} (nil=${entry === nil})`);
-      }
-    }
-  }
-}
-
-/* Read dynamic area bounds for diagnostics */
-if (typeof ex.wasm_get_gc_area_bounds === "function" && typeof ex.malloc === "function") {
-  const diagBuf = ex.malloc(20) >>> 0;
-  if (diagBuf !== 0) {
-    const rc = ex.wasm_get_gc_area_bounds(diagBuf);
-    if (rc === 0) {
-      const dv = new DataView(runtime.memory.buffer);
-      const areaLow = dv.getUint32(diagBuf, true);
-      const areaActive = dv.getUint32(diagBuf + 4, true);
-      const areaHigh = dv.getUint32(diagBuf + 8, true);
-      const poolVcell = dv.getUint32(diagBuf + 12, true);
-      const oldestEphemeral = dv.getUint32(diagBuf + 16, true);
-      console.error(`[gc-diag] area: low=0x${areaLow.toString(16)} active=0x${areaActive.toString(16)} high=0x${areaHigh.toString(16)}`);
-      console.error(`[gc-diag] pool_vcell=0x${poolVcell.toString(16)} oldest_ephemeral=0x${oldestEphemeral.toString(16)}`);
-      const poolAddr = (poolVcell & ~7) >>> 0;
-      const inRange = poolAddr >= areaLow && poolAddr < areaActive;
-      console.error(`[gc-diag] pool table in dynamic area range: ${inRange} (pool=0x${poolAddr.toString(16)})`);
-    }
-    ex.free(diagBuf);
-  }
-}
-
 /* Pre-save GC: compact the heap to reduce image size.
    The kernel's gc-common.c now handles const pool marking and forwarding
    for out-of-area pool tables (NRS symbols are in nilreg, not the area chain). */
 console.error(`[stage] running pre-save GC...`);
 
-/* Diagnostic: snapshot pool table state BEFORE GC */
-{
-  const nil = ex.wasm_get_lisp_nil() >>> 0;
-  const nrsBase = nil - 1 + 8;
-  const sym34Addr = nrsBase + 34 * 32;
-  const vcellAddr = sym34Addr + 8;
-  const dv = new DataView(runtime.memory.buffer);
-  const vcellVal = dv.getUint32(vcellAddr, true);
-  console.error(`[gc-diag] PRE-GC: nrs_WASM_CONST_POOLS.vcell = 0x${vcellVal.toString(16)}`);
-  if (vcellVal !== nil) {
-    const tableAddr = (vcellVal & ~7) >>> 0;
-    const tableHdr = dv.getUint32(tableAddr, true);
-    const subtag = tableHdr & 0xFF;
-    const count = tableHdr >>> 8;
-    console.error(`[gc-diag] PRE-GC: table @ 0x${tableAddr.toString(16)} hdr=0x${tableHdr.toString(16)} subtag=${subtag} count=${count}`);
-  }
-}
-
 const preGcMem = runtime.memory.buffer.byteLength;
 const gcFreed = ex.wasm_trigger_gc();
 const postGcMem = runtime.memory.buffer.byteLength;
 console.error(`[stage] GC freed ${gcFreed} bytes (memory: ${preGcMem} -> ${postGcMem})`);
-
-/* Diagnostic: snapshot pool table state AFTER GC */
-{
-  const nil = ex.wasm_get_lisp_nil() >>> 0;
-  const nrsBase = nil - 1 + 8;
-  const sym34Addr = nrsBase + 34 * 32;
-  const vcellAddr = sym34Addr + 8;
-  const dv = new DataView(runtime.memory.buffer);
-  const vcellVal = dv.getUint32(vcellAddr, true);
-  console.error(`[gc-diag] POST-GC: nrs_WASM_CONST_POOLS.vcell = 0x${vcellVal.toString(16)}`);
-  if (vcellVal !== nil) {
-    const tableAddr = (vcellVal & ~7) >>> 0;
-    const tableHdr = dv.getUint32(tableAddr, true);
-    const subtag = tableHdr & 0xFF;
-    const count = tableHdr >>> 8;
-    console.error(`[gc-diag] POST-GC: table @ 0x${tableAddr.toString(16)} hdr=0x${tableHdr.toString(16)} subtag=${subtag} count=${count}`);
-    let nonNil = 0;
-    const checkCount = Math.min(count, 8959);
-    for (let i = 0; i < checkCount; i++) {
-      const entry = dv.getUint32(tableAddr + 4 + i * 4, true);
-      if (entry !== nil) nonNil++;
-    }
-    console.error(`[gc-diag] POST-GC: ${nonNil}/${checkCount} non-nil entries`);
-    for (const idx of [0, 1, 100, 200, 300, 1000, 5000, 8000]) {
-      if (idx < checkCount) {
-        const entry = dv.getUint32(tableAddr + 4 + idx * 4, true);
-        console.error(`[gc-diag] POST-GC: entry[${idx}] = 0x${entry.toString(16)} (nil=${entry === nil})`);
-      }
-    }
-  }
-}
 
 const imagePathBytes = encoder.encode(wasmOutputPath);
 const imagePathPtr = copyBytesToScratch(runtime.memory, imagePathBytes);
