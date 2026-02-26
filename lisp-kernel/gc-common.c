@@ -1907,6 +1907,8 @@ gc(TCR *tcr, signed_natural param)
     forward_gcable_ptrs();
 
 #ifdef WASM32
+    update_noderef(&nrs_WASM_CONST_POOLS.vcell);
+
     /* Forward const pool table entries ONLY if the pool table is outside
        the GC area.  forward_range(GCarealow, GCfirstunmarked) at line
        above already forwards all objects within the area (including the

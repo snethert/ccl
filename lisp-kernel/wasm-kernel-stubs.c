@@ -6218,6 +6218,9 @@ wasm_const_pool_diag_fail_get(void)
   return wasm_const_pool_diag_fail;
 }
 
+/* Diagnostic: count const-pool-ref failures for debugging. */
+static uint32_t wasm_cpr_fail_count = 0;
+
 __attribute__((used, visibility("default"), export_name("wasm_const_pool_ref")))
 LispObj
 wasm_const_pool_ref(uint32_t entry_index, uint32_t slot_index)
@@ -6245,14 +6248,79 @@ wasm_const_pool_ref(uint32_t entry_index, uint32_t slot_index)
           wasm_diag_last_cpr_val = val;
           return val;
         }
+        /* Diagnostic: slot_index out of range */
+        if (wasm_cpr_fail_count < 5) {
+          char msg[128]; int p = 0;
+          p += wasm_debug_str(msg + p, "CPR-FAIL: slot OOB e=");
+          p += wasm_debug_uint(msg + p, entry_index);
+          p += wasm_debug_str(msg + p, " s=");
+          p += wasm_debug_uint(msg + p, slot_index);
+          p += wasm_debug_str(msg + p, " cnt=");
+          p += wasm_debug_uint(msg + p, pool_count);
+          msg[p++] = '\n';
+          wasm_host_log(msg, (unsigned)p);
+          wasm_cpr_fail_count++;
+        }
         return lisp_nil;
       }
+      /* Diagnostic: pool entry has wrong type */
+      if (wasm_cpr_fail_count < 5) {
+        char msg[128]; int p = 0;
+        p += wasm_debug_str(msg + p, "CPR-FAIL: pool bad e=");
+        p += wasm_debug_uint(msg + p, entry_index);
+        p += wasm_debug_str(msg + p, " pool=0x");
+        p += wasm_debug_hex8(msg + p, (uint32_t)pool);
+        p += wasm_debug_str(msg + p, " ftag=");
+        p += wasm_debug_uint(msg + p, (uint32_t)fulltag_of(pool));
+        msg[p++] = '\n';
+        wasm_host_log(msg, (unsigned)p);
+        wasm_cpr_fail_count++;
+      }
     }
+  }
+
+  /* Diagnostic: log why we fell through the fast path */
+  if (wasm_cpr_fail_count < 10) {
+    char msg[160]; int p = 0;
+    p += wasm_debug_str(msg + p, "CPR-SLOW: e=");
+    p += wasm_debug_uint(msg + p, entry_index);
+    p += wasm_debug_str(msg + p, " s=");
+    p += wasm_debug_uint(msg + p, slot_index);
+    p += wasm_debug_str(msg + p, " tbl=0x");
+    p += wasm_debug_hex8(msg + p, (uint32_t)table);
+    if (table != lisp_nil &&
+        fulltag_of(table) == fulltag_misc &&
+        header_subtag(header_of(table)) == subtag_simple_vector) {
+      uint32_t tc = (uint32_t)header_element_count(header_of(table));
+      p += wasm_debug_str(msg + p, " tc=");
+      p += wasm_debug_uint(msg + p, tc);
+      if (entry_index < tc) {
+        LispObj *td = (LispObj *)((BytePtr)table + misc_data_offset);
+        LispObj pool = td[entry_index];
+        p += wasm_debug_str(msg + p, " pool=0x");
+        p += wasm_debug_hex8(msg + p, (uint32_t)pool);
+        p += wasm_debug_str(msg + p, " ft=");
+        p += wasm_debug_uint(msg + p, (uint32_t)fulltag_of(pool));
+      }
+    }
+    msg[p++] = '\n';
+    wasm_host_log(msg, (unsigned)p);
   }
 
   /* Slow path: pool not installed.  Ask the host to install it on demand. */
   int32_t rc = wasm_host_install_const_pool(entry_index);
   if (rc <= 0) {
+    /* Diagnostic: host install failed */
+    if (wasm_cpr_fail_count < 10) {
+      char msg[128]; int p = 0;
+      p += wasm_debug_str(msg + p, "CPR-FAIL: host-install e=");
+      p += wasm_debug_uint(msg + p, entry_index);
+      p += wasm_debug_str(msg + p, " rc=");
+      p += wasm_debug_uint(msg + p, (uint32_t)rc);
+      msg[p++] = '\n';
+      wasm_host_log(msg, (unsigned)p);
+      wasm_cpr_fail_count++;
+    }
     return lisp_nil;
   }
 

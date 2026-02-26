@@ -184,12 +184,27 @@ log(`image loaded: rc=${loadRc} nil=0x${nil.toString(16)} memory=${(postLoadMem/
     const subtag = tableHdr & 0xff;
     const elementCount = tableHdr >>> 8;
     log(`  table: rawAddr=0x${tableRawAddr.toString(16)} hdr=0x${tableHdr.toString(16)} subtag=${subtag} count=${elementCount}`);
-    // Test a few const pool refs via kernel
-    const cpRef = ex.wasm_const_pool_ref;
-    if (typeof cpRef === "function") {
-      for (const testIdx of [0, 1, 100, 200, 300]) {
-        const v = cpRef(testIdx >>> 0, 0) >>> 0;
-        log(`  const_pool_ref(${testIdx}, 0) = 0x${v.toString(16)} (nil=${v===nil})`);
+    // Check if header looks like a forwarding pointer
+    // subtag_simple_vector = 250 = 0xFA on WASM32
+    const SUBTAG_SV = 0xFA;
+    const headerSubtag = tableHdr & 0xFF;
+    log(`  header subtag=0x${headerSubtag.toString(16)} (expected 0xfa for simple_vector)`);
+    if (headerSubtag !== SUBTAG_SV && (tableHdr & 7) === 6) {
+      // Header looks like a tagged misc pointer → forwarding pointer from GC compaction!
+      const fwdTarget = (tableHdr - 6) >>> 0; // untag
+      const fwdHdr = dv.getUint32(fwdTarget, true);
+      const fwdSubtag = fwdHdr & 0xFF;
+      const fwdCount = fwdHdr >>> 8;
+      log(`  FORWARDING PTR: 0x${tableHdr.toString(16)} → addr=0x${fwdTarget.toString(16)} hdr=0x${fwdHdr.toString(16)} subtag=0x${fwdSubtag.toString(16)} count=${fwdCount}`);
+      if (fwdSubtag === SUBTAG_SV && fwdCount > 8954) {
+        const fwdData = fwdTarget + 4;
+        const pool8954 = dv.getUint32(fwdData + 8954 * 4, true);
+        log(`  FWD table[8954]=0x${pool8954.toString(16)} (pool for RESTORE-LISP-POINTERS)`);
+        if (pool8954 !== nil && (pool8954 & 7) === 6) {
+          const poolRaw = (pool8954 - 6) >>> 0;
+          const poolHdr = dv.getUint32(poolRaw, true);
+          log(`  pool obj hdr=0x${poolHdr.toString(16)} subtag=0x${(poolHdr & 0xFF).toString(16)} count=${poolHdr >>> 8}`);
+        }
       }
     }
   }
@@ -304,7 +319,7 @@ if (typeof trapFn === "function") {
 // entries with wasm_boot_entry (a clean no-op that returns nil).
 {
   const noopFns = [
-    "RESTORE-LISP-POINTERS",    // crashes at _SPsetqsym — needs further investigation
+    // "RESTORE-LISP-POINTERS" — removed to test crash diagnostics
     "RESTORE-PASCAL-FUNCTIONS",  // calls reset-callback-storage, revives macptrs
     "RESET-CALLBACK-STORAGE",    // clears callback vector
     "REFRESH-EXTERNAL-ENTRYPOINTS", // resolves foreign function pointers

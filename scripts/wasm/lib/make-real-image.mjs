@@ -1720,6 +1720,25 @@ if (typeof ex.wasm_get_gc_area_bounds === "function" && typeof ex.malloc === "fu
    The kernel's gc-common.c now handles const pool marking and forwarding
    for out-of-area pool tables (NRS symbols are in nilreg, not the area chain). */
 console.error(`[stage] running pre-save GC...`);
+
+/* Diagnostic: snapshot pool table state BEFORE GC */
+{
+  const nil = ex.wasm_get_lisp_nil() >>> 0;
+  const nrsBase = nil - 1 + 8;
+  const sym34Addr = nrsBase + 34 * 32;
+  const vcellAddr = sym34Addr + 8;
+  const dv = new DataView(runtime.memory.buffer);
+  const vcellVal = dv.getUint32(vcellAddr, true);
+  console.error(`[gc-diag] PRE-GC: nrs_WASM_CONST_POOLS.vcell = 0x${vcellVal.toString(16)}`);
+  if (vcellVal !== nil) {
+    const tableAddr = (vcellVal & ~7) >>> 0;
+    const tableHdr = dv.getUint32(tableAddr, true);
+    const subtag = tableHdr & 0xFF;
+    const count = tableHdr >>> 8;
+    console.error(`[gc-diag] PRE-GC: table @ 0x${tableAddr.toString(16)} hdr=0x${tableHdr.toString(16)} subtag=${subtag} count=${count}`);
+  }
+}
+
 const preGcMem = runtime.memory.buffer.byteLength;
 const gcFreed = ex.wasm_trigger_gc();
 const postGcMem = runtime.memory.buffer.byteLength;

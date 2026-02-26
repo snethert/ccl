@@ -1004,6 +1004,24 @@ static inline lispsymbol *
 wasm_symbol_or_trap(LispObj symbol)
 {
   if (fulltag_of(symbol) != fulltag_misc || header_subtag(header_of(symbol)) != subtag_symbol) {
+    /* Diagnostic: log the failing value before trapping */
+    {
+      char msg[160];
+      unsigned p = 0;
+      p = wasm_diag_append_str(msg, p, "SYMBOL-TRAP: val=0x");
+      p = wasm_diag_append_hex32(msg, p, (uint32_t)symbol);
+      p = wasm_diag_append_str(msg, p, " ftag=0x");
+      p = wasm_diag_append_hex32(msg, p, (uint32_t)fulltag_of(symbol));
+      if (fulltag_of(symbol) == fulltag_misc) {
+        p = wasm_diag_append_str(msg, p, " hdr=0x");
+        p = wasm_diag_append_hex32(msg, p, (uint32_t)header_of(symbol));
+        p = wasm_diag_append_str(msg, p, " subtag=0x");
+        p = wasm_diag_append_hex32(msg, p, (uint32_t)header_subtag(header_of(symbol)));
+      }
+      msg[p++] = '\n';
+      wasm_host_log(msg, p);
+    }
+    wasm_debug_dump_state("symbol-trap");
     wasm_subprims_trap();
   }
   return (lispsymbol *)ptr_from_lispobj(untag(symbol));
