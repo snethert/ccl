@@ -265,6 +265,9 @@
         #+arm-target
         (= (logand subtag arm::fulltagmask)
            arm::fulltag-immheader)
+        #+wasm32-target
+        (= (logand subtag target::fulltagmask)
+           target::fulltag-immheader)
       (error "~s is not an ivector subtype." element-type))
     (let* ((size-in-octets (ccl::subtag-bytes subtag element-count)))
       (multiple-value-bind (vector pointer)

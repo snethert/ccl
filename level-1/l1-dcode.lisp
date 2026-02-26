@@ -402,11 +402,15 @@
 (defvar *fi-trampoline-code* (uvref #'funcallable-trampoline 0))
 #+arm-target
 (defvar *fi-trampoline-code* (uvref #'funcallable-trampoline 1))
+#+wasm32-target
+(defvar *fi-trampoline-code* (uvref #'funcallable-trampoline 1))
 
 
 #+ppc-target
 (defvar *unset-fin-code* (uvref #'unset-fin-trampoline 0))
 #+arm-target
+(defvar *unset-fin-code* (uvref #'unset-fin-trampoline 1))
+#+wasm32-target
 (defvar *unset-fin-code* (uvref #'unset-fin-trampoline 1))
 
 

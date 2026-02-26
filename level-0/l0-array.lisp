@@ -188,6 +188,21 @@
      (complex single-float)
      (complex double-float)
      bit))
+#+wasm32-target
+(defconstant target::*immheader-array-types*
+  '#(short-float
+     (unsigned-byte 32)
+     (signed-byte 32)
+     fixnum
+     character
+     (unsigned-byte 8)
+     (signed-byte 8)
+     (unsigned-byte 16)
+     (signed-byte 16)
+     double-float
+     (complex single-float)
+     (complex double-float)
+     bit))
 
 
 (defun array-element-type (array)
@@ -221,6 +236,9 @@
       #+arm-target
       (svref arm::*immheader-array-types*
              (ash (the fixnum (- subtag arm::min-cl-ivector-subtag)) -3))
+      #+wasm32-target
+      (svref target::*immheader-array-types*
+             (ash (the fixnum (- subtag target::min-cl-ivector-subtag)) (- target::ntagbits)))
       )))
 
 

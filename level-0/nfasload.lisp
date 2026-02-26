@@ -703,6 +703,8 @@
       (setf (%svref vector i) (%fasl-expr s)))
     #+arm-target (when (= subtype arm::subtag-function)
                    (%fix-fn-entrypoint vector))
+    #+wasm32-target (when (= subtype target::subtag-function)
+                      (%fix-fn-entrypoint vector))
     (setf (faslstate.faslval s) vector)))
 
 (deffaslop $fasl-vgvec (s)

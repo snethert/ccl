@@ -364,7 +364,7 @@ if (typeof trapFn === "function") {
     "RESTORE-PASCAL-FUNCTIONS",  // calls reset-callback-storage, revives macptrs
     "RESET-CALLBACK-STORAGE",    // clears callback vector
     "REFRESH-EXTERNAL-ENTRYPOINTS", // resolves foreign function pointers
-    "INITIALIZE-INTERACTIVE-STREAMS", // calls lookup-character-encoding etc.
+    // "INITIALIZE-INTERACTIVE-STREAMS" — REMOVED: needed for REPL I/O
   ];
   const noopEntry = ex.wasm_boot_entry;
   if (typeof noopEntry === "function") {

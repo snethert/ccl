@@ -1719,6 +1719,18 @@ governs whether DEFCLASS makes that distinction or not.")
                     #'false
                     0
                     (logior (ash 1 $lfbits-gfn-bit)
+                            (ash 1 $lfbits-aok-bit))))
+           #+wasm32-target
+           (%fix-fn-entrypoint
+            (gvector :function
+                     0
+                    *unset-fin-code*
+                    wrapper
+                    slots
+                    dt
+                    #'false
+                    0
+                    (logior (ash 1 $lfbits-gfn-bit)
                             (ash 1 $lfbits-aok-bit))))))
     (setf (slot-vector.instance slots) fn)
     (when dt

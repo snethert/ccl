@@ -707,7 +707,7 @@ terminate the list"
 #+arm-target
 (progn
   (defparameter array-element-subtypes
-    #(single-float 
+    #(single-float
       (unsigned-byte 32)
       (signed-byte 32)
       fixnum
@@ -720,13 +720,37 @@ terminate the list"
       (complex single-float)
       (complex double-float)
       bit))
-  
+
   ;; given uvector subtype - what is the corresponding element-type
   (defun element-subtype-type (subtype)
     (declare (fixnum subtype))
     (if  (= subtype arm::subtag-simple-vector) t
-        (svref array-element-subtypes 
+        (svref array-element-subtypes
                (ash (- subtype arm::min-cl-ivector-subtag) (- arm::ntagbits)))))
+  )
+
+#+wasm32-target
+(progn
+  (defparameter array-element-subtypes
+    #(single-float
+      (unsigned-byte 32)
+      (signed-byte 32)
+      fixnum
+      base-char                         ;ucs4
+      (unsigned-byte 8)
+      (signed-byte 8)
+      (unsigned-byte 16)
+      (signed-byte 16)
+      double-float
+      (complex single-float)
+      (complex double-float)
+      bit))
+
+  (defun element-subtype-type (subtype)
+    (declare (fixnum subtype))
+    (if (= subtype target::subtag-simple-vector) t
+        (svref array-element-subtypes
+               (ash (- subtype target::min-cl-ivector-subtag) (- target::ntagbits)))))
   )
 
 

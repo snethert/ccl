@@ -239,6 +239,11 @@
          ((>= i n))
       (declare (fixnum i))
       (funcall f (uvref lfv i)))
+    #+wasm32-target
+    (do* ((i 2 (1+ i)))
+         ((>= i n))
+      (declare (fixnum i))
+      (funcall f (uvref lfv i)))
     ))
          
     
