@@ -1674,6 +1674,24 @@ forward_range(LispObj *range_start, LispObj *range_end)
     node = *p;
     tag_n = fulltag_of(node);
     if (immheader_tag_p(tag_n)) {
+#ifdef WASM32
+      {
+        LispObj *end_p = (LispObj *) skip_over_ivector((natural) p, node);
+        natural obj_dnodes = ((char *)end_p - (char *)p) / dnode_size;
+        natural this_dnode = gc_dynamic_area_dnode(ptr_to_lispobj(p));
+        if (obj_dnodes > 1 &&
+            this_dnode < GCndynamic_dnodes_in_area &&
+            !ref_bit(GCmarkbits, this_dnode + obj_dnodes - 1)) {
+          /* Type confusion: treat as cons, forward both words */
+          new = node_forwarding_address(node);
+          if (new != node) { *p = new; }
+          p++;
+          update_noderef(p);
+          p++;
+          continue;
+        }
+      }
+#endif
       p = (LispObj *) skip_over_ivector((natural) p, node);
     } else if (nodeheader_tag_p(tag_n)) {
       nwords = header_element_count(node);
@@ -1905,13 +1923,74 @@ compact_dynamic_heap()
 
         if (GCDebug) {
           if (dest != ptr_from_lispobj(locative_forwarding_address(ptr_to_lispobj(src)))) {
-            Bug(NULL, "Out of synch in heap compaction.  Forwarding from 0x%lx to 0x%lx,\n expected to go to 0x%lx\n", 
+            Bug(NULL, "Out of synch in heap compaction.  Forwarding from 0x%lx to 0x%lx,\n expected to go to 0x%lx\n",
                 src, dest, locative_forwarding_address(ptr_to_lispobj(src)));
           }
         }
 
+#ifdef WASM32
+        {
+          extern natural wasm_saved_pool_dnode;
+          if (dnode == wasm_saved_pool_dnode) {
+            extern void wasm_host_log(const char *bytes, unsigned len);
+            char _pbuf[256]; int _pn;
+            _pn = snprintf(_pbuf, sizeof(_pbuf),
+              "COMPACT-POOL-HIT: dnode=%lu src=0x%08x dest=0x%08x src_hdr=0x%08x\n",
+              (unsigned long)dnode, (unsigned)(uintptr_t)src,
+              (unsigned)(uintptr_t)dest, (unsigned)*src);
+            if (_pn > 0) wasm_host_log(_pbuf, (unsigned)_pn);
+          }
+        }
+#endif
+
         node = *src++;
         tag = fulltag_of(node);
+
+#ifdef WASM32
+        /* Mark-bit consistency: if the first word looks like a vector header
+           but the mark bits don't cover the full claimed size, this is a cons
+           whose car has a header-like fulltag (type confusion). */
+        if (nodeheader_tag_p(tag) || immheader_tag_p(tag)) {
+          natural claimed_dnodes;
+          elements = header_element_count(node);
+          if (nodeheader_tag_p(tag)) {
+            claimed_dnodes = (elements + 2) >> 1;
+          } else {
+            subtag = header_subtag(node);
+            if (subtag <= max_32_bit_ivector_subtag) {
+              claimed_dnodes = (((elements+1)+1)>>1);
+            } else if (subtag <= max_8_bit_ivector_subtag) {
+              claimed_dnodes = (((elements+4)+7)>>3);
+            } else if (subtag <= max_16_bit_ivector_subtag) {
+              claimed_dnodes = (((elements+2)+3)>>2);
+            } else if (subtag == subtag_bit_vector) {
+              claimed_dnodes = (((elements+32)+63)>>6);
+            } else if (subtag == subtag_complex_double_float_vector) {
+              claimed_dnodes = (elements*2)+1;
+            } else {
+              claimed_dnodes = elements+1;
+            }
+          }
+          if (claimed_dnodes > 1 &&
+              (dnode + claimed_dnodes - 1) < GCndnodes_in_area &&
+              !ref_bit(markbits, dnode + claimed_dnodes - 1)) {
+            { static int logged = 0;
+              if (!logged) {
+                extern void wasm_host_log(const char *bytes, unsigned len);
+                char _buf[256]; int _n;
+                _n = snprintf(_buf, sizeof(_buf),
+                  "GC-TYPE-CONFUSION: dnode=%lu claimed=%lu hdr=0x%08x fulltag=%d\n",
+                  (unsigned long)dnode, (unsigned long)claimed_dnodes,
+                  (unsigned)node, tag);
+                if (_n > 0) wasm_host_log(_buf, (unsigned)_n);
+                logged = 1;
+              }
+            }
+            tag = fulltag_even_fixnum; /* Force cons treatment */
+          }
+        }
+#endif
+
         if (nodeheader_tag_p(tag)) {
           elements = header_element_count(node);
           node_dnodes = (elements+2)>>1;
@@ -2009,6 +2088,21 @@ compact_dynamic_heap()
       }
     }
   }
+#ifdef WASM32
+  {
+    extern void wasm_host_log(const char *bytes, unsigned len);
+    extern LispObj wasm_saved_pool_vcell;
+    extern natural wasm_saved_pool_dnode;
+    char _cbuf[256]; int _cn;
+    LispObj fwd = nrs_WASM_CONST_POOLS.vcell;
+    unsigned fwd_hdr = (is_node_fulltag(fulltag_of(fwd))) ? (unsigned)header_of(fwd) : 0;
+    _cn = snprintf(_cbuf, sizeof(_cbuf),
+      "COMPACT-END: dest=0x%08x fwd_vcell=0x%08x fwd_hdr=0x%08x orig_dnode=%lu final_dnode=%lu\n",
+      (unsigned)(uintptr_t)dest, (unsigned)fwd, fwd_hdr,
+      (unsigned long)wasm_saved_pool_dnode, (unsigned long)dnode);
+    if (_cn > 0) wasm_host_log(_cbuf, (unsigned)_cn);
+  }
+#endif
   return ptr_to_lispobj(dest);
 }
 

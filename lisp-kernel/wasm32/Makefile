@@ -162,7 +162,7 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_probe_foreign_call1 \
 	  --export=wasm_run_script_with_output \
 	  --export=wasm_set_entry_gc_root_policy_mode --export=wasm_set_subprims_ready \
-	  --export=wasm_set_toplfunc_entry \
+	  --export=wasm_set_toplfunc_entry --export=wasm_set_symbol_function_entry \
 	  --export=wasm_vsp_ref \
 	  --export=_SPfix_overflow --export=_SPmakes32 \
 	  --export=lisp_open --export=lisp_read --export=lisp_write --export=lisp_close \

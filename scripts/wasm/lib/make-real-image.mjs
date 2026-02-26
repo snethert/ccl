@@ -1069,6 +1069,7 @@ console.error("[stage] installing compiled modules...");
    overwrite boot module WASM code with unrelated runtime functions. */
 const bootEntryIndices = new Set();
 let bootModuleEntries = []; /* saved for startup-plan.json emission */
+let bootNamedFunctions = []; /* saved for startup-plan.json namedFunctions */
 let bootBinaryPath = null; /* saved for modules.bin emission */
 
 /* Install boot (level-0) compiled modules first, so that level-0 function
@@ -1126,6 +1127,7 @@ if (bootModulesPath) {
       }
     }
     bootModuleEntries = Array.isArray(bootResolved?.modules) ? bootResolved.modules : [];
+    bootNamedFunctions = Array.isArray(bootBundleJson?.functions) ? bootBundleJson.functions : [];
     trace(`boot modules bundle installed ${bootInstall.installed}/${bootInstall.count}, ${bootEntryIndices.size} entry indices reserved`);
     if (bootInstall.installed === 0 && bootInstall.count > 0) {
       trace("WARNING: boot modules bundle had entries but none were installed");
@@ -1642,54 +1644,116 @@ if (setToplfuncRc !== 0) {
   fail(`wasm_set_toplfunc_entry(${toplevelEntryIndex}) returned ${setToplfuncRc}`);
 }
 
+/* Const pools are installed in the heap from FASL loading.
+   The kernel no longer clears nrs_WASM_CONST_POOLS during reset, so they
+   will be persisted in the saved image for zero-cost deterministic launch.
+   The GC mark phase now roots nrs_WASM_CONST_POOLS.vcell so pool vectors
+   survive collection. */
 console.error(
-  `[stage] pre-GC: ${constPoolsInstalled.size} const pools installed during FASL loading,` +
+  `[stage] const pools: ${constPoolsInstalled.size} installed (pre-baked in image),` +
   ` memory ${(runtime.memory.buffer.byteLength / (1024*1024)).toFixed(0)} MB`
 );
 
-/* Trigger a full GC before proactive const pool installation.
-   FASL loading leaves significant garbage in the heap (~800MB-1.2GB).
-   Collecting it frees headroom for const pool allocation. */
-if (typeof ex.wasm_trigger_gc === "function") {
-  const freed = ex.wasm_trigger_gc() | 0;
-  console.error(
-    `[stage] post-GC: freed ${freed} bytes (${(freed / (1024 * 1024)).toFixed(1)} MB),` +
-    ` memory ${(runtime.memory.buffer.byteLength / (1024*1024)).toFixed(0)} MB`
-  );
-} else {
-  console.error(`[stage] WARN: wasm_trigger_gc not available — const pool installs may hit 4GB ceiling`);
+/* Free JS-side const pool caches — no longer needed. */
+bootConstPoolData.clear();
+
+/* GC before save — the kernel's mark phase now roots the const-pools table
+   through nrs_WASM_CONST_POOLS.vcell, so pool vectors survive collection
+   while FASL-loading garbage is reclaimed. */
+
+/* Diagnostic: snapshot pool table state BEFORE GC */
+{
+  const nil = ex.wasm_get_lisp_nil() >>> 0;
+  const nrsBase = nil - 1 + 8;  // nil - fulltag_nil + dnode_size
+  const sym34Addr = nrsBase + 34 * 32;
+  const vcellAddr = sym34Addr + 8;
+  const dv = new DataView(runtime.memory.buffer);
+  const vcellVal = dv.getUint32(vcellAddr, true);
+  console.error(`[gc-diag] PRE-GC: nrs_WASM_CONST_POOLS.vcell = 0x${vcellVal.toString(16)}`);
+  if (vcellVal !== nil) {
+    const tableAddr = (vcellVal & ~7) >>> 0;  // untag
+    const tableHdr = dv.getUint32(tableAddr, true);
+    const subtag = tableHdr & 0xFF;
+    const count = tableHdr >>> 8;
+    console.error(`[gc-diag] PRE-GC: table @ 0x${tableAddr.toString(16)} hdr=0x${tableHdr.toString(16)} subtag=${subtag} count=${count}`);
+    // Check first few entries
+    let nonNil = 0;
+    const checkCount = Math.min(count, 8959);
+    for (let i = 0; i < checkCount; i++) {
+      const entry = dv.getUint32(tableAddr + 4 + i * 4, true);
+      if (entry !== nil) nonNil++;
+    }
+    console.error(`[gc-diag] PRE-GC: ${nonNil}/${checkCount} non-nil entries`);
+    // Sample specific entries
+    for (const idx of [0, 1, 100, 200, 300, 1000, 5000, 8000]) {
+      if (idx < checkCount) {
+        const entry = dv.getUint32(tableAddr + 4 + idx * 4, true);
+        console.error(`[gc-diag] PRE-GC: entry[${idx}] = 0x${entry.toString(16)} (nil=${entry === nil})`);
+      }
+    }
+  }
 }
 
-/* Phase 2A: Proactive const pool installation.
-   Install ALL const pools into the heap BEFORE saving the image.
-   Pools that fail (heap exhaustion at the 4GB WASM32 ceiling) are recorded
-   so startup-plan.json can flag entries that still need on-demand install. */
-const constPoolFailedIndices = new Set();
-{
-  const allPoolIndices = new Set([
-    ...bootConstPoolData.keys(),
-    ...constPoolEntries.keys(),
-  ]);
-
-  /* constPoolsInstalled was populated after installCompiledModulesFromBundle calls,
-     so it already tracks pools installed during module installation. */
-  const alreadyInstalled = [...allPoolIndices].filter(idx => constPoolsInstalled.has(idx)).length;
-  console.error(`[stage] const-pool tracking: ${alreadyInstalled}/${allPoolIndices.size} already installed by module loader`);
-
-  let proactiveInstalled = 0, proactiveFailed = 0, proactiveSkipped = 0;
-  for (const idx of allPoolIndices) {
-    if (constPoolsInstalled.has(idx)) { proactiveSkipped++; continue; }
-    const rc = installConstPoolOnDemand(idx);
-    if (rc === 1) proactiveInstalled++;
-    else { proactiveFailed++; constPoolFailedIndices.add(idx); }
+/* Read dynamic area bounds for diagnostics */
+if (typeof ex.wasm_get_gc_area_bounds === "function" && typeof ex.malloc === "function") {
+  const diagBuf = ex.malloc(20) >>> 0;
+  if (diagBuf !== 0) {
+    const rc = ex.wasm_get_gc_area_bounds(diagBuf);
+    if (rc === 0) {
+      const dv = new DataView(runtime.memory.buffer);
+      const areaLow = dv.getUint32(diagBuf, true);
+      const areaActive = dv.getUint32(diagBuf + 4, true);
+      const areaHigh = dv.getUint32(diagBuf + 8, true);
+      const poolVcell = dv.getUint32(diagBuf + 12, true);
+      const oldestEphemeral = dv.getUint32(diagBuf + 16, true);
+      console.error(`[gc-diag] area: low=0x${areaLow.toString(16)} active=0x${areaActive.toString(16)} high=0x${areaHigh.toString(16)}`);
+      console.error(`[gc-diag] pool_vcell=0x${poolVcell.toString(16)} oldest_ephemeral=0x${oldestEphemeral.toString(16)}`);
+      const poolAddr = (poolVcell & ~7) >>> 0;
+      const inRange = poolAddr >= areaLow && poolAddr < areaActive;
+      console.error(`[gc-diag] pool table in dynamic area range: ${inRange} (pool=0x${poolAddr.toString(16)})`);
+    }
+    ex.free(diagBuf);
   }
-  console.error(
-    `[stage] proactive-const-pool-install: ${proactiveInstalled} installed,` +
-    ` ${proactiveFailed} failed, ${proactiveSkipped} already installed,` +
-    ` ${constPoolsInstalled.size} total`
-  );
-  /* Free JS-side const pool caches — data is now in the Lisp heap. */
-  bootConstPoolData.clear();
+}
+
+/* Pre-save GC: compact the heap to reduce image size.
+   The kernel's gc-common.c now handles const pool marking and forwarding
+   for out-of-area pool tables (NRS symbols are in nilreg, not the area chain). */
+console.error(`[stage] running pre-save GC...`);
+const preGcMem = runtime.memory.buffer.byteLength;
+const gcFreed = ex.wasm_trigger_gc();
+const postGcMem = runtime.memory.buffer.byteLength;
+console.error(`[stage] GC freed ${gcFreed} bytes (memory: ${preGcMem} -> ${postGcMem})`);
+
+/* Diagnostic: snapshot pool table state AFTER GC */
+{
+  const nil = ex.wasm_get_lisp_nil() >>> 0;
+  const nrsBase = nil - 1 + 8;
+  const sym34Addr = nrsBase + 34 * 32;
+  const vcellAddr = sym34Addr + 8;
+  const dv = new DataView(runtime.memory.buffer);
+  const vcellVal = dv.getUint32(vcellAddr, true);
+  console.error(`[gc-diag] POST-GC: nrs_WASM_CONST_POOLS.vcell = 0x${vcellVal.toString(16)}`);
+  if (vcellVal !== nil) {
+    const tableAddr = (vcellVal & ~7) >>> 0;
+    const tableHdr = dv.getUint32(tableAddr, true);
+    const subtag = tableHdr & 0xFF;
+    const count = tableHdr >>> 8;
+    console.error(`[gc-diag] POST-GC: table @ 0x${tableAddr.toString(16)} hdr=0x${tableHdr.toString(16)} subtag=${subtag} count=${count}`);
+    let nonNil = 0;
+    const checkCount = Math.min(count, 8959);
+    for (let i = 0; i < checkCount; i++) {
+      const entry = dv.getUint32(tableAddr + 4 + i * 4, true);
+      if (entry !== nil) nonNil++;
+    }
+    console.error(`[gc-diag] POST-GC: ${nonNil}/${checkCount} non-nil entries`);
+    for (const idx of [0, 1, 100, 200, 300, 1000, 5000, 8000]) {
+      if (idx < checkCount) {
+        const entry = dv.getUint32(tableAddr + 4 + idx * 4, true);
+        console.error(`[gc-diag] POST-GC: entry[${idx}] = 0x${entry.toString(16)} (nil=${entry === nil})`);
+      }
+    }
+  }
 }
 
 const imagePathBytes = encoder.encode(wasmOutputPath);
@@ -1962,8 +2026,7 @@ await fs.writeFile(manifestOutPath, canonicalJson(manifest));
   /* Sort entries by table index. */
   startupPlanEntries.sort((a, b) => a.index - b.index);
 
-  /* Remove undefined fields for cleaner JSON.
-     Tag entries whose const pool failed proactive installation. */
+  /* Remove undefined fields for cleaner JSON. */
   const cleanEntries = startupPlanEntries.map(e => {
     const o = { index: e.index, source: e.source, export: e.export };
     if (e.source === "modules") {
@@ -1971,12 +2034,10 @@ await fs.writeFile(manifestOutPath, canonicalJson(manifest));
       o.length = e.length;
       if (e.storedLength !== undefined) o.storedLength = e.storedLength;
       if (e.encoding !== undefined) o.encoding = e.encoding;
-      if (constPoolFailedIndices.has(e.index)) o.constPoolBaked = false;
     }
     return o;
   });
 
-  const unbaked = cleanEntries.filter(e => e.constPoolBaked === false).length;
   const startupPlan = {
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
@@ -1984,16 +2045,23 @@ await fs.writeFile(manifestOutPath, canonicalJson(manifest));
       initialPages: runtime.memory.buffer.byteLength / 65536,
       imageSize: persistedBytes.length,
     },
-    constPools: {
-      baked: constPoolsInstalled.size,
-      unbaked,
-      total: constPoolsInstalled.size + unbaked,
-    },
+    constPools: { baked: true, count: constPoolsInstalled.size },
     functionTable: {
       size: runtime.subprimsTable.length,
       entries: cleanEntries,
     },
     toplevelIndex: toplevelEntryIndex,
+    /* Named function→entryIndex mappings for UDF binding repair at launch. */
+    namedFunctions: [
+      ...(Array.isArray(compiledModulesBundle?.functions)
+        ? compiledModulesBundle.functions
+            .filter(e => e?.name && Number.isFinite(e?.entryIndex))
+            .map(e => ({ name: e.name, entryIndex: e.entryIndex >>> 0 }))
+        : []),
+      ...bootNamedFunctions
+        .filter(e => e?.name && Number.isFinite(e?.entryIndex))
+        .map(e => ({ name: e.name, entryIndex: e.entryIndex >>> 0 })),
+    ],
     artifacts: {
       rootImage: { sha256: manifest.artifacts.rootImage.sha256 },
       kernelWasm: { sha256: manifest.artifacts.kernelWasm.sha256 },

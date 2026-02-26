@@ -1556,7 +1556,12 @@ mark_memoized_area(area *a, natural num_memo_dnodes, bitvector refidx)
 }
 
 
-void 
+#ifdef WASM32
+LispObj wasm_saved_pool_vcell = 0;
+natural wasm_saved_pool_dnode = 0;
+#endif
+
+void
 gc(TCR *tcr, signed_natural param)
 {
   struct timeval start, stop;
@@ -1750,6 +1755,33 @@ gc(TCR *tcr, signed_natural param)
       }
     }
 
+#ifdef WASM32
+    /* Mark const-pools so pool vectors and their contents survive GC.
+       wasm_const_pool_install() bypasses the write barrier, so the GC
+       mark phase won't discover the pool table through refbits.
+       mark_root() has a bounds check that silently returns if the pool
+       table is outside the dynamic GC area.  When that happens, walk
+       the table manually and mark each entry. */
+    {
+      LispObj pools = nrs_WASM_CONST_POOLS.vcell;
+      wasm_saved_pool_vcell = pools;
+      if (pools != lisp_nil && is_node_fulltag(fulltag_of(pools))) {
+        natural pool_dnode = gc_area_dnode(pools);
+        wasm_saved_pool_dnode = pool_dnode;
+        if (pool_dnode < GCndnodes_in_area) {
+          mark_root(pools);
+        } else if (fulltag_of(pools) == fulltag_misc &&
+                   header_subtag(header_of(pools)) == subtag_simple_vector) {
+          natural count = header_element_count(header_of(pools));
+          LispObj *pool_data = (LispObj *)((BytePtr)pools + misc_data_offset);
+          for (natural i = 0; i < count; i++) {
+            mark_root(pool_data[i]);
+          }
+        }
+      }
+    }
+#endif
+
     if (GCephemeral_low) {
       mark_memoized_area(tenured_area, area_dnode(a->low,tenured_area->low), tenured_area->refidx);
       mark_memoized_area(managed_static_area,managed_static_area->ndnodes, managed_static_area->refidx);
@@ -1853,7 +1885,45 @@ gc(TCR *tcr, signed_natural param)
   
     forward_gcable_ptrs();
 
-
+#ifdef WASM32
+    /* Forward const pool table entries ONLY if the pool table is outside
+       the GC area.  forward_range(GCarealow, GCfirstunmarked) at line
+       above already forwards all objects within the area (including the
+       pool table if it's there).  Double-forwarding would produce wrong
+       results because the relocation table maps original dnode positions.
+       When the pool table is outside the area (e.g., nilreg area), its
+       entries still hold pre-compaction pointers and need explicit update. */
+    {
+      LispObj pools = nrs_WASM_CONST_POOLS.vcell;
+      if (pools != lisp_nil &&
+          fulltag_of(pools) == fulltag_misc &&
+          header_subtag(header_of(pools)) == subtag_simple_vector) {
+        natural pool_dnode = gc_area_dnode(pools);
+        if (pool_dnode >= GCndnodes_in_area) {
+          /* Pool table is outside the GC area — forward explicitly */
+          natural count = header_element_count(header_of(pools));
+          LispObj *pool_data = (LispObj *)((BytePtr)pools + misc_data_offset);
+          /* Forward the table entries (pointers to per-entry pools) */
+          for (natural i = 0; i < count; i++) {
+            update_noderef(&pool_data[i]);
+          }
+          /* Forward contents of each per-entry pool vector */
+          for (natural i = 0; i < count; i++) {
+            LispObj entry = pool_data[i];
+            if (entry != lisp_nil &&
+                fulltag_of(entry) == fulltag_misc &&
+                header_subtag(header_of(entry)) == subtag_simple_vector) {
+              natural entry_count = header_element_count(header_of(entry));
+              LispObj *entry_data = (LispObj *)((BytePtr)entry + misc_data_offset);
+              for (natural j = 0; j < entry_count; j++) {
+                update_noderef(&entry_data[j]);
+              }
+            }
+          }
+        }
+      }
+    }
+#endif
 
     {
       area *next_area;
@@ -1895,7 +1965,43 @@ gc(TCR *tcr, signed_natural param)
     } else {
       forward_memoized_area(managed_static_area,area_dnode(managed_static_area->active,managed_static_area->low),managed_static_refbits, NULL);
     }
+#ifdef WASM32
+    {
+      extern void wasm_host_log(const char *bytes, unsigned len);
+      char _buf[256]; int _n;
+      LispObj fwd_vcell = nrs_WASM_CONST_POOLS.vcell;
+      int orig_marked = 0;
+      if (wasm_saved_pool_dnode < GCndnodes_in_area) {
+        natural bits, *bitsp, mask;
+        set_bits_vars(GCmarkbits, wasm_saved_pool_dnode, bitsp, bits, mask);
+        orig_marked = (bits & mask) != 0;
+      }
+      /* Check header at ORIGINAL address (still valid before compact) */
+      unsigned orig_hdr = 0;
+      if (is_node_fulltag(fulltag_of(wasm_saved_pool_vcell)))
+        orig_hdr = (unsigned)header_of(wasm_saved_pool_vcell);
+      _n = snprintf(_buf, sizeof(_buf),
+        "GC-PRE-COMPACT: fwd=0x%08x orig=0x%08x orig_dnode=%lu orig_marked=%d orig_hdr=0x%08x GCfirstunmarked=0x%08x\n",
+        (unsigned)fwd_vcell, (unsigned)wasm_saved_pool_vcell,
+        (unsigned long)wasm_saved_pool_dnode, orig_marked, orig_hdr,
+        (unsigned)(uintptr_t)GCfirstunmarked);
+      if (_n > 0) wasm_host_log(_buf, (unsigned)_n);
+    }
+#endif
     a->active = (BytePtr) ptr_from_lispobj(compact_dynamic_heap());
+#ifdef WASM32
+    {
+      extern void wasm_host_log(const char *bytes, unsigned len);
+      char _buf[256]; int _n;
+      LispObj pools = nrs_WASM_CONST_POOLS.vcell;
+      _n = snprintf(_buf, sizeof(_buf),
+        "GC-POST-COMPACT: vcell=0x%08x hdr=0x%08x subtag=%d\n",
+        (unsigned)pools,
+        (is_node_fulltag(fulltag_of(pools))) ? (unsigned)header_of(pools) : 0u,
+        (is_node_fulltag(fulltag_of(pools))) ? (int)header_subtag(header_of(pools)) : -1);
+      if (_n > 0) wasm_host_log(_buf, (unsigned)_n);
+    }
+#endif
 
     forward_weakvll_links();
 
