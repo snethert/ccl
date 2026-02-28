@@ -125,4 +125,52 @@
     (ash (logand x (lognot target::fulltagmask))
          (- target::fixnumshift target::ntagbits))))
 
+;;; ---------------------------------------------------------------
+;;; Hash vector initialization — WASM override.
+;;; The generic %init-nhash-vector computes:
+;;;   (floor (ash 1 (- nbits-in-word fixnumshift)) size)
+;;; which is (floor 2^30 size) — a bignum division.
+;;; On WASM, fast-mod-3 ignores the reciprocal (uses binary reduction
+;;; instead), so the value is never read.  Skip the bignum arithmetic
+;;; which crashes during early boot when bignum support is fragile.
+;;; ---------------------------------------------------------------
+
+(defun %init-nhash-vector (vector flags)
+  (let ((size (vector-index->index (uvsize vector))))
+    (declare (fixnum size))
+    (setf (nhash.vector.link vector) 0
+          (nhash.vector.flags vector) flags
+          (nhash.vector.gc-count vector) (%get-gc-count)
+          (nhash.vector.free-alist vector) nil
+          (nhash.vector.finalization-alist vector) nil
+          (nhash.vector.hash vector) nil
+          (nhash.vector.deleted-count vector) 0
+          (nhash.vector.count vector) 0
+          (nhash.vector.cache-key vector) free-hash-marker
+          (nhash.vector.cache-value vector) nil
+          (nhash.vector.cache-idx vector) nil
+          (nhash.vector.size vector) size
+          ;; Reciprocal unused on WASM (fast-mod-3 ignores it).
+          ;; Set to 0 to avoid (floor 2^30 size) bignum arithmetic.
+          (nhash.vector.size-reciprocal vector) 0)))
+
+;;; ---------------------------------------------------------------
+;;; Hash table locking — single-threaded WASM needs no locking.
+;;; The generic versions in l0-hash.lisp reference *CURRENT-PROCESS*
+;;; which is only defined in level-1 (l1-processes.lisp) and therefore
+;;; unbound during cold-boot.  Override them here to avoid XUNBND.
+;;; ---------------------------------------------------------------
+
+(defun read-lock-hash-table (hash)
+  (if (nhash.read-only hash) :readonly nil))
+
+(defun write-lock-hash-table (hash)
+  (if (nhash.read-only hash)
+    (signal-read-only-hash-table-error hash)
+    nil))
+
+(defun unlock-hash-table (hash was-readonly)
+  (declare (ignore hash was-readonly))
+  nil)
+
 ;;; end of wasm-hash.lisp

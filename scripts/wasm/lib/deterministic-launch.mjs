@@ -412,14 +412,27 @@ if (typeof trapFn === "function") {
       if (pnameWordIdx < 1 || pnameWordIdx >= totalWords) continue;
 
       const pnameHdr = mem32[pnameWordIdx];
+      const pnameSubtag = pnameHdr & 0xFF;
       const pnameCount = pnameHdr >>> 8;
       if (pnameCount < 1 || pnameCount > 255) continue;
       const dataPos = pnameWordIdx + 1;
-      if (dataPos + pnameCount > totalWords) continue;
 
       let name = "";
-      for (let i = 0; i < pnameCount; i++) {
-        name += String.fromCharCode(mem32[dataPos + i] & 0xFF);
+      if (pnameSubtag === 0x36) {
+        // SIMPLE-BASE-STRING (subtag 0x36): 4 ASCII chars packed per word
+        const dataWords = ((pnameCount + 3) >>> 2);
+        if (dataPos + dataWords > totalWords) continue;
+        for (let i = 0; i < pnameCount; i++) {
+          const wordOff = i >>> 2;
+          const byteOff = i & 3;
+          name += String.fromCharCode((mem32[dataPos + wordOff] >>> (byteOff * 8)) & 0xFF);
+        }
+      } else {
+        // SIMPLE-GENERAL-STRING (subtag 0x5A): 1 char per word
+        if (dataPos + pnameCount > totalWords) continue;
+        for (let i = 0; i < pnameCount; i++) {
+          name += String.fromCharCode(mem32[dataPos + i] & 0xFFFF);
+        }
       }
 
       const entryIdx = remaining.get(name);

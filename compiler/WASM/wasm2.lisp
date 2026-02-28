@@ -790,7 +790,7 @@
   (wasm2-form seg vreg xfer
               (make-acode (%nx1-operator call)
                           (make-acode (%nx1-operator immediate) 'logbitp)
-                          (list nil (list int bitnum))))
+                          (list nil (list bitnum int))))
   nil)
 
 (defwasm2 wasm2-%new-ptr %new-ptr (seg vreg xfer size clear-p)
@@ -2501,9 +2501,9 @@
   (declare (ignore vreg))
   (let* ((returning (wasm2-returning-p xfer))
          (val-temp (wasm2-allocate-temp)))
+    ;; misc-dfloat-offset is relative to the TAGGED pointer.
+    ;; Do NOT subtract fulltag-misc first — that double-counts the tag offset.
     (wasm2-form seg nil nil double-node)
-    (wasm2-emit :const *wasm2-target-fulltag-misc*)
-    (wasm2-emit :i32-sub)
     (when (minusp *wasm2-target-misc-dfloat-offset*)
       (wasm2-emit :const (- *wasm2-target-misc-dfloat-offset*))
       (wasm2-emit :i32-sub))
@@ -2525,9 +2525,9 @@
   (declare (ignore vreg))
   (let* ((returning (wasm2-returning-p xfer))
          (val-temp (wasm2-allocate-temp)))
+    ;; misc-data-offset is relative to the TAGGED pointer.
+    ;; Do NOT subtract fulltag-misc first — that double-counts the tag offset.
     (wasm2-form seg nil nil single-node)
-    (wasm2-emit :const *wasm2-target-fulltag-misc*)
-    (wasm2-emit :i32-sub)
     (when (minusp *wasm2-target-misc-data-offset*)
       (wasm2-emit :const (- *wasm2-target-misc-data-offset*))
       (wasm2-emit :i32-sub))
@@ -5046,16 +5046,16 @@
   (wasm2-emit :i32-shl))
 
 (defun wasm2-emit-unbox-single ()
-  (wasm2-emit :const *wasm2-target-fulltag-misc*)
-  (wasm2-emit :i32-sub)
+  ;; misc-data-offset is relative to the TAGGED pointer (see wasm2-emit-misc-node-slot-address).
+  ;; Do NOT subtract fulltag-misc first — that double-counts the tag offset.
   (when (minusp *wasm2-target-misc-data-offset*)
     (wasm2-emit :const (- *wasm2-target-misc-data-offset*))
     (wasm2-emit :i32-sub))
   (wasm2-emit :f32-load (if (minusp *wasm2-target-misc-data-offset*) 0 *wasm2-target-misc-data-offset*)))
 
 (defun wasm2-emit-unbox-double ()
-  (wasm2-emit :const *wasm2-target-fulltag-misc*)
-  (wasm2-emit :i32-sub)
+  ;; misc-dfloat-offset is relative to the TAGGED pointer.
+  ;; Do NOT subtract fulltag-misc first — that double-counts the tag offset.
   (when (minusp *wasm2-target-misc-dfloat-offset*)
     (wasm2-emit :const (- *wasm2-target-misc-dfloat-offset*))
     (wasm2-emit :i32-sub))
@@ -5069,9 +5069,9 @@
     (wasm2-emit :local.set val-temp)
     (wasm2-emit-misc-alloc-call-known-constants subtag count)
     (wasm2-emit :local.set obj-temp)
+    ;; misc-data-offset is relative to the TAGGED pointer (see wasm2-emit-misc-node-slot-address).
+    ;; Do NOT subtract fulltag-misc first — that double-counts the tag offset.
     (wasm2-emit :local.get obj-temp)
-    (wasm2-emit :const *wasm2-target-fulltag-misc*)
-    (wasm2-emit :i32-sub)
     (when (minusp *wasm2-target-misc-data-offset*)
       (wasm2-emit :const (- *wasm2-target-misc-data-offset*))
       (wasm2-emit :i32-sub))
@@ -5087,9 +5087,9 @@
     (wasm2-emit :local.set val-temp)
     (wasm2-emit-misc-alloc-call-known-constants subtag count)
     (wasm2-emit :local.set obj-temp)
+    ;; misc-dfloat-offset is relative to the TAGGED pointer.
+    ;; Do NOT subtract fulltag-misc first — that double-counts the tag offset.
     (wasm2-emit :local.get obj-temp)
-    (wasm2-emit :const *wasm2-target-fulltag-misc*)
-    (wasm2-emit :i32-sub)
     (when (minusp *wasm2-target-misc-dfloat-offset*)
       (wasm2-emit :const (- *wasm2-target-misc-dfloat-offset*))
       (wasm2-emit :i32-sub))

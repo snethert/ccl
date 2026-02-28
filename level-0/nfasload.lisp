@@ -1262,6 +1262,17 @@ Can be removed before shipping once %FASLOAD startup is stable.")
   ;; do SET-PACKAGE in cold load functions.
   (setq %all-packages-lock% (make-read-write-lock))
   (%wasm-note-startup-step 40)
+  #+wasm32-target
+  (progn
+    ;; Ensure critical hash tables exist before cold-load functions run.
+    ;; Some cold-load functions call FIND-CLASS-CELL or LOOKUP-LFUN-NAME
+    ;; before the SETQ forms in l0-pred.lisp / l0-def.lisp execute.
+    ;; On native platforms the (DBG name) guard halts at the debugger;
+    ;; on WASM there is no debugger, so pre-initialise instead.
+    (unless %find-classes%
+      (setq %find-classes% (make-hash-table :test 'eq)))
+    (unless (and (boundp '*lfun-names*) *lfun-names*)
+      (setq *lfun-names* (make-hash-table :test 'eq :weak t))))
   (let ((cold-fn-count 0))
     (let ((cold-fns (prog1 *xload-cold-load-functions*
                            (setq *xload-cold-load-functions* nil))))

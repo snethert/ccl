@@ -411,6 +411,9 @@
 (defun hash-table-p (hash)
   (istruct-typep hash 'hash-table))
 
+;;; Ensure (typep x 'hash-table) works during cold-boot before level-1
+;;; FASLs load.  lib/hash.lisp sets this again later (harmless duplicate).
+(setf (type-predicate 'hash-table) 'hash-table-p)
 
 
 (defparameter *shared-hash-table-default* t

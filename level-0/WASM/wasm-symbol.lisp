@@ -96,12 +96,14 @@
       symptr)))
 
 ;;; Thread-local value of a symbol. On ARM calls .SPspecref.
-;;; On single-threaded WASM, just return the symbol's value cell.
+;;; On single-threaded WASM, just return the symbol's value cell directly.
+;;; Must NOT call symbol-value here — symbol-value calls %sym-value which
+;;; calls %symptr-value, creating an infinite recursion.
 (defun %symptr-value (symptr)
-  (symbol-value (%symptr->symbol symptr)))
+  (%svref (symptr->symvector symptr) target::symbol.vcell-cell))
 
 (defun %set-symptr-value (symptr val)
-  (set (%symptr->symbol symptr) val))
+  (setf (%svref (symptr->symvector symptr) target::symbol.vcell-cell) val))
 
 ;;; Return the binding address for a symbol in the current thread.
 ;;; On ARM, checks TLB. On WASM single-threaded, return the symbol's

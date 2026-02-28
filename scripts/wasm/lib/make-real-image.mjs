@@ -1222,8 +1222,184 @@ trace(
 
 const encoder = new TextEncoder();
 
+/* ── Fix function object entry points in boot image ────────────────────
+   During cross-loading, function objects get UDF stub code vectors
+   (entry 131).  Module installation puts the correct WASM code into
+   the function TABLE, but the Lisp-side function OBJECTS still reference
+   entry 131.  When l1-dcode evaluates (defvar *unset-fin-code*
+   (uvref #'unset-fin-trampoline 1)), it reads the stale slot and every
+   GF created from that point inherits the UDF entry.
+   Fix: scan Lisp memory for symbol headers, match pnames against named
+   functions, and UPDATE the existing function objects IN PLACE — only
+   changing slot 0 (entrypoint) and slot 1 (code vector) to the correct
+   entry index while preserving all other slots.  No new memory is
+   allocated, so function object structure and slot count are preserved. */
+{
+  const SYMBOL_HDR = 0x0000073A;   // (7 << 8) | subtag_symbol
+  const FULLTAG_MISC = 6;
+  const SUBTAG_FUNCTION = 0x2A;    // subtag_function = 42
+  const FN_HDR_3SLOT = 0x0000032A; // (3 << 8) | subtag_function
 
+  const nil = typeof ex.wasm_get_lisp_nil === "function"
+    ? (ex.wasm_get_lisp_nil() >>> 0)
+    : 0x04000001;
 
+  const mallocFn = ex.malloc;
+
+  // Collect named functions from boot + compiled modules
+  const allNamedFunctions = [
+    ...bootNamedFunctions,
+    ...(Array.isArray(compiledModulesBundle?.functions)
+      ? compiledModulesBundle.functions : []),
+  ];
+
+  const rebindMap = new Map();
+  for (const e of allNamedFunctions) {
+    if (!e?.name || !Number.isFinite(e?.entryIndex)) continue;
+    if (e.name.startsWith("(:INTERNAL")) continue;
+    rebindMap.set(e.name, e.entryIndex);
+  }
+
+  // Bootstrap stubs: map GFs/functions that aren't standalone WASM modules
+  // to their bootstrap/early equivalents so FASL loading can proceed.
+  const bootstrapStubs = {
+    "PREPARE-TO-DESTRUCTURE": "%EARLY-PREPARE-TO-DESTRUCTURE",
+    "RECORD-SOURCE-FILE": "BOOTSTRAPPING-RECORD-SOURCE-FILE",
+    "SET-DOCUMENTATION": "%PUT-DOCUMENTATION",
+    "CONDITION-P": "FALSE",  // default method returns nil
+    "RECURSIVE-LOCK": "FALSE",  // class not yet defined; return nil (safe on single-threaded WASM)
+  };
+  let stubsAdded = 0;
+  for (const [gfName, earlyName] of Object.entries(bootstrapStubs)) {
+    if (rebindMap.has(gfName)) continue; // already has a direct entry
+    const earlyEntry = rebindMap.get(earlyName);
+    if (earlyEntry !== undefined) {
+      rebindMap.set(gfName, earlyEntry);
+      stubsAdded++;
+    }
+  }
+  if (stubsAdded > 0) {
+    console.error(`[stage] added ${stubsAdded} bootstrap stubs to rebind map`);
+  }
+
+  if (rebindMap.size > 0) {
+    const mem32 = new Uint32Array(runtime.memory.buffer);
+    const totalWords = mem32.length;
+    const scanStart = 0x400000 >>> 2;
+    let symbolCount = 0, patched = 0, allocated = 0, skippedNoFn = 0;
+    const remaining = new Map(rebindMap);
+
+    for (let w = scanStart; w < totalWords && remaining.size > 0; w += 2) {
+      if (mem32[w] !== SYMBOL_HDR) continue;
+      symbolCount++;
+
+      const pnameTagged = mem32[w + 1];
+      if ((pnameTagged & 7) !== FULLTAG_MISC) continue;
+      const pnameUntagged = (pnameTagged - FULLTAG_MISC) >>> 0;
+      const pnameWordIdx = pnameUntagged >>> 2;
+      if (pnameWordIdx < 1 || pnameWordIdx >= totalWords) continue;
+
+      const pnameHdr = mem32[pnameWordIdx];
+      const pnameSubtag = pnameHdr & 0xFF;
+      const pnameCount = pnameHdr >>> 8;
+      if (pnameCount < 1 || pnameCount > 255) continue;
+      const dataPos = pnameWordIdx + 1;
+
+      let name = "";
+      if (pnameSubtag === 0x36) {
+        // SIMPLE-BASE-STRING (subtag 0x36): 4 ASCII chars packed per word
+        const dataWords = ((pnameCount + 3) >>> 2);
+        if (dataPos + dataWords > totalWords) continue;
+        for (let i = 0; i < pnameCount; i++) {
+          const wordOff = i >>> 2;
+          const byteOff = i & 3;
+          name += String.fromCharCode((mem32[dataPos + wordOff] >>> (byteOff * 8)) & 0xFF);
+        }
+      } else {
+        // SIMPLE-GENERAL-STRING (subtag 0x5A): 1 char per word
+        if (dataPos + pnameCount > totalWords) continue;
+        for (let i = 0; i < pnameCount; i++) {
+          name += String.fromCharCode(mem32[dataPos + i] & 0xFFFF);
+        }
+      }
+
+      const entryIdx = remaining.get(name);
+      if (entryIdx === undefined) continue;
+
+      // Read the symbol's fcell (word +3 from header)
+      const fcellTagged = mem32[w + 3];
+      if ((fcellTagged & 7) !== FULLTAG_MISC) { skippedNoFn++; remaining.delete(name); continue; }
+      const fnUntagged = (fcellTagged - FULLTAG_MISC) >>> 0;
+      const fnWordIdx = fnUntagged >>> 2;
+      if (fnWordIdx < 1 || fnWordIdx >= totalWords - 1) { skippedNoFn++; remaining.delete(name); continue; }
+
+      const fnHdr = mem32[fnWordIdx];
+      const fnSubtag = fnHdr & 0xFF;
+
+      if (fnSubtag === SUBTAG_FUNCTION) {
+        // Existing function object: update entry points in place, preserve other slots
+        mem32[fnWordIdx + 1] = entryIdx << 2;  // slot 0: entrypoint (fixnum)
+        mem32[fnWordIdx + 2] = entryIdx << 2;  // slot 1: code vector (fixnum)
+        patched++;
+      } else if (typeof mallocFn === "function") {
+        // UDF pseudofunction or other non-function: allocate new 3-slot function object
+        const fnPtr = mallocFn(16) >>> 0;
+        if (fnPtr !== 0) {
+          const m = new Uint32Array(runtime.memory.buffer);
+          const fw = fnPtr >>> 2;
+          m[fw] = FN_HDR_3SLOT;
+          m[fw + 1] = entryIdx << 2;   // slot 0: entrypoint (fixnum)
+          m[fw + 2] = entryIdx << 2;   // slot 1: code vector (fixnum)
+          m[fw + 3] = nil;             // slot 2: name
+          m[w + 3] = (fnPtr + FULLTAG_MISC) >>> 0;  // patch symbol fcell
+          allocated++;
+        }
+      } else {
+        skippedNoFn++;
+      }
+      remaining.delete(name);
+    }
+    console.error(`[stage] image fixup: ${patched} in-place + ${allocated} new-alloc / ${rebindMap.size} total (${symbolCount} syms, ${skippedNoFn} skipped, ${remaining.size} unmatched)`);
+
+    /* Second pass: patch any symbol fcells that still point to UDF
+       pseudofunctions (entry 131) so they return NIL instead of
+       triggering cascading error-handler funcalls during cold-boot.
+       Each real definition loaded from FASLs later overwrites the stub. */
+    const SUBTAG_PSEUDOFUNCTION = 0x02;
+    const UDF_ENTRY_FIXNUM = 131 << 2;
+    const falseEntry = rebindMap.get("FALSE");
+    if (falseEntry !== undefined && typeof mallocFn === "function") {
+      const falseFnPtr = mallocFn(16) >>> 0;
+      if (falseFnPtr !== 0) {
+        const m2 = new Uint32Array(runtime.memory.buffer);
+        const tw2 = m2.length;
+        const fw = falseFnPtr >>> 2;
+        m2[fw] = FN_HDR_3SLOT;
+        m2[fw + 1] = falseEntry << 2;
+        m2[fw + 2] = falseEntry << 2;
+        m2[fw + 3] = nil;
+        const falseFnTagged = (falseFnPtr + FULLTAG_MISC) >>> 0;
+        let udfPatched = 0;
+        for (let w = scanStart; w < tw2; w += 2) {
+          if (m2[w] !== SYMBOL_HDR) continue;
+          const fcellTagged = m2[w + 3];
+          if ((fcellTagged & 7) !== FULLTAG_MISC) continue;
+          const fnUnt = (fcellTagged - FULLTAG_MISC) >>> 0;
+          const fwi = fnUnt >>> 2;
+          if (fwi < 1 || fwi >= tw2 - 1) continue;
+          if ((m2[fwi] & 0xFF) === SUBTAG_PSEUDOFUNCTION &&
+              m2[fwi + 1] === UDF_ENTRY_FIXNUM) {
+            m2[w + 3] = falseFnTagged;
+            udfPatched++;
+          }
+        }
+        console.error(`[stage] patched ${udfPatched} UDF pseudofunction fcells to FALSE (entry ${falseEntry})`);
+      }
+    }
+  } else {
+    console.error("[stage] WARN: image fixup skipped — no named functions available");
+  }
+}
 
 const requiredFasls = [
   "l1-fasls/l1-cl-package.lafsl",

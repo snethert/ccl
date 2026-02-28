@@ -562,6 +562,23 @@
   (declare (ignore ptr lock))
   nil)
 
+;;; Object-level lock wrappers — must override the unconditionalized
+;;; versions in l0-misc.lisp which call RECURSIVE-LOCK-PTR (a type-check
+;;; that fails during cold-boot when lock slots are uninitialized).
+(defun %lock-recursive-lock-object (lock &optional flag)
+  (declare (ignore lock))
+  (if (istruct-typep flag 'lock-acquisition)
+    (setf (lock-acquisition.status flag) t))
+  t)
+
+(defun %unlock-recursive-lock-object (lock)
+  (declare (ignore lock))
+  nil)
+
+(defun %%lock-owner (lock)
+  (declare (ignore lock))
+  nil)
+
 ;;; Spin lock — no-op on single-threaded WASM.
 (defun %get-spin-lock (ptr)
   (declare (ignore ptr))
@@ -580,5 +597,34 @@
   (if (istruct-typep flag 'lock-acquisition)
     (setf (lock-acquisition.status flag) t))
   t)
+
+;;; Object-level rwlock wrappers — must override the unconditionalized
+;;; versions in l0-misc.lisp which call READ-WRITE-LOCK-PTR (a type-check
+;;; that fails during cold-boot when lock slots are uninitialized).
+(defun write-lock-rwlock (lock &optional flag)
+  (declare (ignore lock))
+  (if (istruct-typep flag 'lock-acquisition)
+    (setf (lock-acquisition.status flag) t))
+  t)
+
+(defun read-lock-rwlock (lock &optional flag)
+  (declare (ignore lock))
+  (if (istruct-typep flag 'lock-acquisition)
+    (setf (lock-acquisition.status flag) t))
+  t)
+
+(defun unlock-rwlock (lock)
+  (declare (ignore lock))
+  nil)
+
+;;; ---------------------------------------------------------------
+;;; Bind threading variables that level-0 code references but that
+;;; are only defvar'd in level-1 (l1-processes.lisp).  On WASM
+;;; there is a single thread; NIL is adequate until the level-1
+;;; definitions override these.
+;;; ---------------------------------------------------------------
+
+(defvar *current-process* nil)
+(defvar *initial-process* nil)
 
 ;;; end of wasm-misc.lisp

@@ -5697,6 +5697,56 @@ _SPksignalerr(void)
       msg[p++] = '\n';
       wasm_host_log(msg, (unsigned)p);
 
+      /* Unconditional: dump error code + datum header + expected type.
+         Previous conditional (if err_code == XWRONGTYPE) was eliminated by -O2 DCE. */
+      {
+        LispObj ax = wasm_reg(tcr, arg_x);
+        LispObj ay = wasm_reg(tcr, arg_y);
+        LispObj az = wasm_reg(tcr, arg_z);
+        p = 0;
+        p = wasm_diag_append_str(msg, p, "  errcode=0x");
+        p = wasm_diag_append_hex32(msg, p, ax);
+        p = wasm_diag_append_str(msg, p, " datum=0x");
+        p = wasm_diag_append_hex32(msg, p, ay);
+        p = wasm_diag_append_str(msg, p, " ft=");
+        msg[p++] = hex[fulltag_of(ay) & 0xf];
+        if (fulltag_of(ay) == fulltag_misc) {
+          LispObj dhdr = header_of(ay);
+          p = wasm_diag_append_str(msg, p, " hdr=0x");
+          p = wasm_diag_append_hex32(msg, p, dhdr);
+          p = wasm_diag_append_str(msg, p, " sub=0x");
+          unsigned dsub = header_subtag(dhdr);
+          msg[p++] = hex[(dsub >> 4) & 0xf];
+          msg[p++] = hex[dsub & 0xf];
+          /* Also print first data word (float value for single-float) */
+          LispObj *data = (LispObj *)((char *)ptr_from_lispobj(untag(ay)) + misc_data_offset);
+          p = wasm_diag_append_str(msg, p, " d0=0x");
+          p = wasm_diag_append_hex32(msg, p, data[0]);
+        }
+        msg[p++] = '\n';
+        wasm_host_log(msg, (unsigned)p);
+        /* Expected type */
+        p = 0;
+        p = wasm_diag_append_str(msg, p, "  expected=0x");
+        p = wasm_diag_append_hex32(msg, p, az);
+        p = wasm_diag_append_str(msg, p, " ft=");
+        msg[p++] = hex[fulltag_of(az) & 0xf];
+        if (fulltag_of(az) == fulltag_cons) {
+          LispObj cell = az;
+          p = wasm_diag_append_str(msg, p, " (");
+          for (int depth = 0; depth < 4 && fulltag_of(cell) == fulltag_cons; depth++) {
+            if (depth > 0) msg[p++] = ' ';
+            LispObj cv = car(cell);
+            p = wasm_diag_append_str(msg, p, "0x");
+            p = wasm_diag_append_hex32(msg, p, cv);
+            cell = cdr(cell);
+          }
+          msg[p++] = ')';
+        }
+        msg[p++] = '\n';
+        wasm_host_log(msg, (unsigned)p);
+      }
+
       /* Try to print symbol pname from arg_z */
       if (fulltag_of(err_arg) == fulltag_misc) {
         LispObj hdr = header_of(err_arg);

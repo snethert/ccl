@@ -126,8 +126,10 @@
 
 #+wasm32-target
 (defun %make-recursive-lock-ptr ()
-  (record-system-lock
-   (make-gcable-macptr $flags_DisposeRecursiveLock)))
+  ;; WASM is single-threaded; lock pointers are never used.
+  ;; Return fixnum 0 — lock ops in wasm-misc.lisp ignore the ptr arg.
+  ;; Skip record-system-lock since %revive-system-locks is a no-op on WASM.
+  0)
 
 #-wasm32-target
 (defun %make-recursive-lock-ptr ()
@@ -139,8 +141,8 @@
 
 #+wasm32-target
 (defun %make-rwlock-ptr ()
-  (record-system-lock
-   (make-gcable-macptr $flags_DisposeRwLock)))
+  ;; WASM is single-threaded; rwlock pointers are never used.
+  0)
 
 #-wasm32-target
 (defun %make-rwlock-ptr ()
