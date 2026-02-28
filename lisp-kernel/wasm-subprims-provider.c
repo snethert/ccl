@@ -712,6 +712,21 @@ static void
 wasm_call_builtin(TCR *tcr, signed_natural index, signed_natural nargs_count)
 {
   LispObj fn = wasm_builtin_function(index);
+  /* The WASM compiler places args into registers as:
+       arg_z = 1st, arg_y = 2nd, arg_x = 3rd
+     but the ARM Lisp calling convention (used by compiled functions) is:
+       arg_z = last, arg_y = 2nd (or 1st for 2-arg), arg_x = 1st (for 3-arg)
+     Swap to match the Lisp convention before calling. */
+  if (nargs_count == 2) {
+    LispObj tmp = wasm_reg(tcr, arg_z);
+    wasm_set_reg(tcr, arg_z, wasm_reg(tcr, arg_y));
+    wasm_set_reg(tcr, arg_y, tmp);
+  } else if (nargs_count >= 3) {
+    LispObj tmp = wasm_reg(tcr, arg_z);
+    wasm_set_reg(tcr, arg_z, wasm_reg(tcr, arg_x));
+    wasm_set_reg(tcr, arg_x, tmp);
+    /* arg_y stays — it's the 2nd arg in both conventions */
+  }
   wasm_set_nargs_count(tcr, nargs_count);
   wasm_call_function_or_symbol(tcr, fn);
 }
@@ -4258,13 +4273,12 @@ _SPbuiltin_eq(void)
 
   LispObj a = wasm_reg(tcr, arg_z);
   LispObj b = wasm_reg(tcr, arg_y);
-  if (tag_of(a) == tag_fixnum && tag_of(b) == tag_fixnum) {
-    wasm_set_reg(tcr, arg_z, wasm_bool_to_lisp(unbox_fixnum(a) == unbox_fixnum(b)));
-    wasm_set_nargs_count(tcr, 1);
-    return;
-  }
-
-  wasm_call_builtin(tcr, WASM_BUILTIN_EQ, 2);
+  /* EQ is pointer identity — works for all types, never needs Lisp fallthrough.
+     The previous fixnum-only fast path fell through to wasm_call_builtin for
+     non-fixnum objects (symbols, cons, nil, etc.), triggering complex method
+     dispatch that crashed during cold-boot before CLOS was initialized. */
+  wasm_set_reg(tcr, arg_z, wasm_bool_to_lisp(a == b));
+  wasm_set_nargs_count(tcr, 1);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPbuiltin_ne")))
@@ -4278,13 +4292,10 @@ _SPbuiltin_ne(void)
 
   LispObj a = wasm_reg(tcr, arg_z);
   LispObj b = wasm_reg(tcr, arg_y);
-  if (tag_of(a) == tag_fixnum && tag_of(b) == tag_fixnum) {
-    wasm_set_reg(tcr, arg_z, wasm_bool_to_lisp(unbox_fixnum(a) != unbox_fixnum(b)));
-    wasm_set_nargs_count(tcr, 1);
-    return;
-  }
-
-  wasm_call_builtin(tcr, WASM_BUILTIN_NE, 2);
+  /* NEQ is pointer non-identity — works for all types, never needs Lisp fallthrough.
+     See _SPbuiltin_eq comment for rationale. */
+  wasm_set_reg(tcr, arg_z, wasm_bool_to_lisp(a != b));
+  wasm_set_nargs_count(tcr, 1);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPbuiltin_gt")))

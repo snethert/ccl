@@ -280,6 +280,11 @@
 
 (defun wasm2-emit-builtin-subprim-binary-call (seg xfer subprim-name x y)
   (let* ((subprim (wasm2-subprim-fixnum subprim-name)))
+    ;; N.B. This places arg_z=first, arg_y=second — opposite of the ARM
+    ;; Lisp calling convention (arg_y=first, arg_z=last).  The C subprim
+    ;; fast paths match this convention, but wasm_call_builtin swaps the
+    ;; registers before falling through to a Lisp function.  See the
+    ;; comment in wasm_call_builtin (wasm-subprims-provider.c).
     (wasm2-form seg nil nil x)
     (wasm2-form seg nil nil y)
     (wasm2-emit :set-arg1)
@@ -889,18 +894,66 @@
 
 (defwasm2 wasm2-numcmp numcmp (seg vreg xfer cc x y)
   (declare (ignore vreg xfer))
-  (let* ((op (wasm2-int-cc-op (acode-immediate-operand cc) t))
-         (tmp (wasm2-allocate-temp)))
+  ;; The old code unconditionally unboxed both operands as fixnums and
+  ;; used i32 compare, producing wrong results for non-fixnum numeric
+  ;; types (single-float, double-float, bignum, ratio).  This caused
+  ;; MAKE-HASH-TABLE to reject valid float rehash-threshold arguments.
+  ;;
+  ;; Fix: runtime fixnum tag check on both operands.  If both are
+  ;; fixnums, do inline integer compare (fast path).  Otherwise call
+  ;; the corresponding builtin subprim (e.g. _SPbuiltin_le) which
+  ;; handles all numeric types.  This mirrors the ARM/x86 backends.
+  (let* ((cond (acode-immediate-operand cc))
+         (op (wasm2-int-cc-op cond t))
+         (name (ecase cond
+                 (:eq '=-2) (:ne '/=-2)
+                 (:lt '<-2) (:le '<=-2)
+                 (:gt '>-2) (:ge '>=-2)))
+         (index (arch::builtin-function-name-offset name))
+         (subprim (wasm2-builtin-index-subprim-fixnum index))
+         (x-temp (wasm2-allocate-temp))
+         (y-temp (wasm2-allocate-temp)))
+    ;; Evaluate both operands into temp locals.
     (wasm2-form seg nil nil x)
-    (wasm2-emit-unbox-fixnum)
+    (wasm2-emit :local.set x-temp)
     (wasm2-form seg nil nil y)
-    (wasm2-emit-unbox-fixnum)
-    (wasm2-emit op)
-    (wasm2-emit :local.set tmp)
-    (wasm2-emit :const (target-t-value))
-    (wasm2-emit :const (target-nil-value))
-    (wasm2-emit :local.get tmp)
-    (wasm2-emit :select))
+    (wasm2-emit :local.set y-temp)
+    ;; Runtime fixnum test: (x | y) & lowtag_mask == 0 => both fixnums.
+    (wasm2-emit :local.get x-temp)
+    (wasm2-emit :local.get y-temp)
+    (wasm2-emit :i32-or)
+    (wasm2-emit :const (1- (ash 1 *wasm2-target-fixnum-shift*)))
+    (wasm2-emit :i32-and)
+    (wasm2-emit :i32-eqz)
+    (let* ((then-ir
+             (wasm2-with-ir
+               (lambda ()
+                 ;; Fast path: both fixnums — inline integer compare.
+                 (let ((tmp (wasm2-allocate-temp)))
+                   (wasm2-emit :local.get x-temp)
+                   (wasm2-emit-unbox-fixnum)
+                   (wasm2-emit :local.get y-temp)
+                   (wasm2-emit-unbox-fixnum)
+                   (wasm2-emit op)
+                   (wasm2-emit :local.set tmp)
+                   (wasm2-emit :const (target-t-value))
+                   (wasm2-emit :const (target-nil-value))
+                   (wasm2-emit :local.get tmp)
+                   (wasm2-emit :select)))))
+           (else-ir
+             (wasm2-with-ir
+               (lambda ()
+                 ;; Slow path: call builtin subprim for generic numeric compare.
+                 ;; N.B. arg_z=x (first), arg_y=y (second) — opposite of the
+                 ;; ARM Lisp convention.  wasm_call_builtin swaps before
+                 ;; calling the Lisp function.
+                 (wasm2-emit :local.get x-temp)
+                 (wasm2-emit :local.get y-temp)
+                 (wasm2-emit :set-arg1)
+                 (wasm2-emit :set-arg0)
+                 (wasm2-emit-call-subprim subprim)
+                 (wasm2-emit :arg0)))))
+      (wasm2-emit :if then-ir else-ir)))
   nil)
 
 (defwasm2 wasm2-int>0-p int>0-p (seg vreg xfer cc form)
@@ -5955,6 +6008,10 @@
         (:local.tee
          (wasm2-push-u8 body #x22)
          (wasm2-emit-uleb body (car args)))
+        (:nop
+         (wasm2-push-u8 body #x01))
+        (:unreachable
+         (wasm2-push-u8 body #x00))
         (:drop
          (wasm2-push-u8 body #x1a))
         (:set-arg0
@@ -5987,14 +6044,38 @@
          (wasm2-push-u8 body #x6a))
         (:i32-sub
          (wasm2-push-u8 body #x6b))
+        (:i32-mul
+         (wasm2-push-u8 body #x6c))
+        (:i32-div-s
+         (wasm2-push-u8 body #x6d))
+        (:i32-div-u
+         (wasm2-push-u8 body #x6e))
+        (:i32-rem-s
+         (wasm2-push-u8 body #x6f))
+        (:i32-rem-u
+         (wasm2-push-u8 body #x70))
         (:i32-and
          (wasm2-push-u8 body #x71))
+        (:i32-or
+         (wasm2-push-u8 body #x72))
+        (:i32-xor
+         (wasm2-push-u8 body #x73))
         (:i32-shl
          (wasm2-push-u8 body #x74))
         (:i32-shr-s
          (wasm2-push-u8 body #x75))
         (:i32-shr-u
          (wasm2-push-u8 body #x76))
+        (:i32-rotl
+         (wasm2-push-u8 body #x77))
+        (:i32-rotr
+         (wasm2-push-u8 body #x78))
+        (:i32-clz
+         (wasm2-push-u8 body #x67))
+        (:i32-ctz
+         (wasm2-push-u8 body #x68))
+        (:i32-popcnt
+         (wasm2-push-u8 body #x69))
         (:i32-eq
          (wasm2-push-u8 body #x46))
         (:i32-eqz
@@ -6209,6 +6290,12 @@
              (wasm2-emit-uleb body default-depth))))
         (:return
          (wasm2-push-u8 body #x0f))
+        ;; NOTE: :return-arg0 / :return-arg1 are not handled here.
+        ;; They are currently resolved via pattern-match short-circuit
+        ;; in the typed-entry optimization and never reach the generic
+        ;; emitter.  Adding them here would require defining the
+        ;; correct call-index semantics; left for future work since
+        ;; they don't affect the current boot path.
         (t
          (error "Unhandled WASM2 IR opcode ~s" op))))))
 
