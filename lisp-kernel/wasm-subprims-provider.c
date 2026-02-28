@@ -5718,8 +5718,10 @@ _SPksignalerr(void)
           unsigned dsub = header_subtag(dhdr);
           msg[p++] = hex[(dsub >> 4) & 0xf];
           msg[p++] = hex[dsub & 0xf];
-          /* Also print first data word (float value for single-float) */
-          LispObj *data = (LispObj *)((char *)ptr_from_lispobj(untag(ay)) + misc_data_offset);
+          /* Print first data word (float value for single-float).
+             misc_data_offset is relative to the TAGGED pointer
+             (-fulltag_misc + node_size = -2), so use ay directly. */
+          LispObj *data = (LispObj *)((char *)ptr_from_lispobj(ay) + misc_data_offset);
           p = wasm_diag_append_str(msg, p, " d0=0x");
           p = wasm_diag_append_hex32(msg, p, data[0]);
         }

@@ -1161,8 +1161,13 @@ wasm_alloc_ivector_uninitialized(TCR *tcr, unsigned subtag, signed_natural count
   LispObj obj = (LispObj)(newptr + fulltag_misc);
   header_of(obj) = make_header(subtag, count);
 
-  if (bytes > misc_data_offset) {
-    memset((BytePtr)obj + misc_data_offset, 0, bytes - misc_data_offset);
+  /* Zero the data area (everything after the header word).
+     Previous code compared size_t bytes > misc_data_offset (-2 signed),
+     which promoted -2 to huge unsigned → always false → memset never ran.
+     Also, bytes - misc_data_offset = bytes+2 would overrun by 6 bytes.
+     Fix: header is node_size (4) bytes; data area is bytes - node_size. */
+  if (bytes > (size_t)node_size) {
+    memset((BytePtr)obj + misc_data_offset, 0, bytes - node_size);
   }
 
   /* Diagnostic: catch creation of 8-element fixnum-vector (suspect $hprimes) */
