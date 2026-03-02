@@ -1958,7 +1958,12 @@ before doing so.")
           (nhash.vector.cache-value vector) nil
           (nhash.vector.cache-idx vector) nil
           (nhash.vector.size vector) size
-          (nhash.vector.size-reciprocal vector) (floor (ash 1 (- target::nbits-in-word target::fixnumshift)) size))))
+          ;; On WASM, fast-mod-3 ignores the reciprocal (uses binary
+          ;; reduction), and (floor 2^30 size) is bignum arithmetic that
+          ;; crashes during early boot.  Set to 0 like wasm-hash.lisp.
+          (nhash.vector.size-reciprocal vector)
+          #+wasm32-target 0
+          #-wasm32-target (floor (ash 1 (- target::nbits-in-word target::fixnumshift)) size))))
 
 (defun assert-hash-table-readonly (hash)
   (unless (typep hash 'hash-table)

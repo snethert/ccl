@@ -496,6 +496,10 @@ If a merged batch fails WASM validation, its entries go to failed-entries."
                (json-write-string out (getf fn :name))
                (write-string ",\"entryIndex\":" out)
                (princ (getf fn :entry-index) out)
+               (let ((fn-slots (getf fn :fn-slots)))
+                 (when fn-slots
+                   (write-string ",\"fnSlots\":" out)
+                   (princ fn-slots out)))
                (write-char #\} out))
       (write-char #\] out)
       (write-string ",\"modules\":[" out)
@@ -554,9 +558,13 @@ If a merged batch fails WASM validation, its entries go to failed-entries."
          (out nil))
     (dolist (entry sorted (nreverse out))
       (let ((name (getf entry :afunc-name))
-            (entry-index (getf entry :entry-index)))
+            (entry-index (getf entry :entry-index))
+            (fn-slots (getf entry :fn-slots)))
         (when (and (stringp name) (plusp (length name)) (fixnump entry-index))
-          (push (list :name name :entry-index entry-index) out))))))
+          (push (if fn-slots
+                  (list :name name :entry-index entry-index :fn-slots fn-slots)
+                  (list :name name :entry-index entry-index))
+                out))))))
 
 (defun write-module-debug (output-path entries)
   (let* ((json-path (pathname output-path))

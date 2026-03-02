@@ -1257,7 +1257,10 @@ const encoder = new TextEncoder();
   for (const e of allNamedFunctions) {
     if (!e?.name || !Number.isFinite(e?.entryIndex)) continue;
     if (e.name.startsWith("(:INTERNAL")) continue;
-    rebindMap.set(e.name, e.entryIndex);
+    rebindMap.set(e.name, {
+      entryIndex: e.entryIndex,
+      fnSlots: Number.isFinite(e?.fnSlots) ? e.fnSlots : 3,
+    });
   }
 
   // Bootstrap stubs: map GFs/functions that aren't standalone WASM modules
@@ -1323,8 +1326,10 @@ const encoder = new TextEncoder();
         }
       }
 
-      const entryIdx = remaining.get(name);
-      if (entryIdx === undefined) continue;
+      const info = remaining.get(name);
+      if (info === undefined) continue;
+      const entryIdx = info.entryIndex;
+      const fnSlots = info.fnSlots;
 
       // Read the symbol's fcell (word +3 from header)
       const fcellTagged = mem32[w + 3];
@@ -1342,15 +1347,19 @@ const encoder = new TextEncoder();
         mem32[fnWordIdx + 2] = entryIdx << 2;  // slot 1: code vector (fixnum)
         patched++;
       } else if (typeof mallocFn === "function") {
-        // UDF pseudofunction or other non-function: allocate new 3-slot function object
-        const fnPtr = mallocFn(16) >>> 0;
+        // UDF pseudofunction or other non-function: allocate new function object
+        // fnSlots comes from the cross-compiler; closures need more than 3 slots
+        // for their captured environment variables.
+        const fnBytes = (1 + fnSlots) * 4;   // header word + data slots
+        const fnHdrVal = (fnSlots << 8) | SUBTAG_FUNCTION;
+        const fnPtr = mallocFn(fnBytes) >>> 0;
         if (fnPtr !== 0) {
           const m = new Uint32Array(runtime.memory.buffer);
           const fw = fnPtr >>> 2;
-          m[fw] = FN_HDR_3SLOT;
+          m[fw] = fnHdrVal;
           m[fw + 1] = entryIdx << 2;   // slot 0: entrypoint (fixnum)
           m[fw + 2] = entryIdx << 2;   // slot 1: code vector (fixnum)
-          m[fw + 3] = nil;             // slot 2: name
+          for (let s = 3; s <= fnSlots; s++) m[fw + s] = nil;
           m[w + 3] = (fnPtr + FULLTAG_MISC) >>> 0;  // patch symbol fcell
           allocated++;
         }
@@ -1367,16 +1376,17 @@ const encoder = new TextEncoder();
        Each real definition loaded from FASLs later overwrites the stub. */
     const SUBTAG_PSEUDOFUNCTION = 0x02;
     const UDF_ENTRY_FIXNUM = 131 << 2;
-    const falseEntry = rebindMap.get("FALSE");
-    if (falseEntry !== undefined && typeof mallocFn === "function") {
+    const falseInfo = rebindMap.get("FALSE");
+    if (falseInfo !== undefined && typeof mallocFn === "function") {
+      const falseEntryIdx = falseInfo.entryIndex;
       const falseFnPtr = mallocFn(16) >>> 0;
       if (falseFnPtr !== 0) {
         const m2 = new Uint32Array(runtime.memory.buffer);
         const tw2 = m2.length;
         const fw = falseFnPtr >>> 2;
-        m2[fw] = FN_HDR_3SLOT;
-        m2[fw + 1] = falseEntry << 2;
-        m2[fw + 2] = falseEntry << 2;
+        m2[fw] = FN_HDR_3SLOT;   // FALSE is not a closure — 3 slots is correct
+        m2[fw + 1] = falseEntryIdx << 2;
+        m2[fw + 2] = falseEntryIdx << 2;
         m2[fw + 3] = nil;
         const falseFnTagged = (falseFnPtr + FULLTAG_MISC) >>> 0;
         let udfPatched = 0;
@@ -1393,7 +1403,7 @@ const encoder = new TextEncoder();
             udfPatched++;
           }
         }
-        console.error(`[stage] patched ${udfPatched} UDF pseudofunction fcells to FALSE (entry ${falseEntry})`);
+        console.error(`[stage] patched ${udfPatched} UDF pseudofunction fcells to FALSE (entry ${falseEntryIdx})`);
       }
     }
   } else {

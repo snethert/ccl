@@ -232,13 +232,22 @@
 (defvar *interrupt-level* -1)
 
 ;;; Special binding indices, and the inverse mapping between indices
-;;; and symbols
-(let* ((binding-index-lock (make-lock))
-       (binding-index-reverse-map (make-hash-table :test #'eq :weak :value))
+;;; and symbols.
+;;; Initializers are nil so the xloader can execute this let* during image
+;;; construction, creating proper closure objects in the boot image.
+;;; make-lock / make-hash-table are deferred to first use because they
+;;; require infrastructure that isn't available during cross-loading.
+(let* ((binding-index-lock nil)
+       (binding-index-reverse-map nil)
        (next-binding-index 0))
+  (defun %binding-index-init ()
+    (unless binding-index-lock
+      (setq binding-index-lock (make-lock))
+      (setq binding-index-reverse-map (make-hash-table :test #'eq :weak :value))))
   (defun %set-binding-index (val) (setq next-binding-index val))
   (defun next-binding-index () (1+ next-binding-index))
   (defun ensure-binding-index (sym)
+    (%binding-index-init)
     (with-lock-grabbed (binding-index-lock)
       (let* ((symvec (symptr->symvector (%symbol->symptr sym)))
              (idx (%svref symvec target::symbol.binding-index-cell))
@@ -255,11 +264,13 @@
               (setf (gethash new-idx binding-index-reverse-map) sym))))
         sym)))
   (defun binding-index-symbol (idx)
+    (%binding-index-init)
     (with-lock-grabbed (binding-index-lock)
       (gethash idx binding-index-reverse-map)))
   (defun cold-load-binding-index (sym)
     ;; Index may have been assigned via xloader.  Update
     ;; reverse map
+    (%binding-index-init)
     (with-lock-grabbed (binding-index-lock)
       (let* ((idx (%svref (symptr->symvector (%symbol->symptr sym))
                           target::symbol.binding-index-cell)))

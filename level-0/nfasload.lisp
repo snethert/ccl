@@ -1177,17 +1177,28 @@
       (setf (%svref symvec target::symbol.package-predicate-cell) package-or-nil))))
 
 
-(let* ((force-export-packages (list *keyword-package*))
-       (force-export-packages-lock (make-lock)))
+;;; Initializers are nil so the xloader can execute this let* during image
+;;; construction, creating proper closure objects in the boot image.
+;;; make-lock is deferred to first use via %force-export-init.
+(let* ((force-export-packages nil)
+       (force-export-packages-lock nil))
+  (defun %force-export-init ()
+    (unless force-export-packages-lock
+      (setq force-export-packages-lock (make-lock))
+      (unless force-export-packages
+        (setq force-export-packages (list *keyword-package*)))))
   (defun force-export-packages ()
+    (%force-export-init)
     (with-lock-grabbed (force-export-packages-lock)
       (copy-list force-export-packages)))
   (defun package-force-export (p)
+    (%force-export-init)
     (let* ((pkg (pkg-arg p)))
       (with-lock-grabbed (force-export-packages-lock)
         (pushnew pkg force-export-packages))
     pkg))
   (defun force-export-package-p (pkg)
+    (%force-export-init)
     (with-lock-grabbed (force-export-packages-lock)
       (if (memq pkg force-export-packages)
         t))))

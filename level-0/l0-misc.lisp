@@ -501,30 +501,34 @@
   %documentation-lock% (make-lock))
 
 (defun %put-documentation (thing doc-id doc)
-  (with-lock-grabbed (%documentation-lock%)
-    (let* ((info (gethash thing %documentation))
-	   (pair (assoc doc-id info)))
-      (if doc
-        (progn
-          (unless (typep doc 'string)
-            (report-bad-arg doc 'string))
-          (if pair
-            (setf (cdr pair) doc)
-            (setf (gethash thing %documentation) (cons (cons doc-id doc) info))))
-	(when pair
-	  (if (setq info (nremove pair info))
-	    (setf (gethash thing %documentation) info)
-	    (remhash thing %documentation))))))
+  ;; %documentation is NIL during cold boot until l0-misc's top-level
+  ;; SETQ runs.  Silently skip; documentation is non-critical.
+  (when (and %documentation %documentation-lock%)
+    (with-lock-grabbed (%documentation-lock%)
+      (let* ((info (gethash thing %documentation))
+             (pair (assoc doc-id info)))
+        (if doc
+          (progn
+            (unless (typep doc 'string)
+              (report-bad-arg doc 'string))
+            (if pair
+              (setf (cdr pair) doc)
+              (setf (gethash thing %documentation) (cons (cons doc-id doc) info))))
+          (when pair
+            (if (setq info (nremove pair info))
+              (setf (gethash thing %documentation) info)
+              (remhash thing %documentation)))))))
   doc)
 
 (defun %get-documentation (object doc-id)
-  (cdr (assoc doc-id (gethash object %documentation))))
+  (when %documentation
+    (cdr (assoc doc-id (gethash object %documentation)))))
 
 ;;; This pretends to be (SETF DOCUMENTATION), until that generic function
 ;;; is defined.  It handles a few common cases.
 (defun %set-documentation (thing doc-id doc-string)
   (case doc-id
-    (function 
+    (function
      (if (typep thing 'function)
        (%put-documentation thing t doc-string)
        (if (typep thing 'symbol)

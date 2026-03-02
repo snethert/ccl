@@ -182,6 +182,10 @@
               (boot-json-write-string out fn-name)
               (write-string ",\"entryIndex\":" out)
               (princ (svref entry 2) out)
+              (let ((fn-slots (and (>= (length entry) 10) (svref entry 9))))
+                (when fn-slots
+                  (write-string ",\"fnSlots\":" out)
+                  (princ fn-slots out)))
               (write-char #\} out)))))
       (write-char #\] out)
       (write-string ",\"modules\":[" out)

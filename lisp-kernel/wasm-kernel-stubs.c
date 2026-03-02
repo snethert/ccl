@@ -197,9 +197,11 @@ wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
         wasm_debug_dump_state("nargs mismatch binary");
         __builtin_trap();
       }
+      /* ARM convention: arg_y = first formal, arg_z = last formal.
+         Typed entry: param0 = first formal, param1 = last formal. */
       result = wasm_call_entry_index_binary_i32(entry_index,
-                                                tcr->wasm_gprs[arg_z],
-                                                tcr->wasm_gprs[arg_y]);
+                                                tcr->wasm_gprs[arg_y],
+                                                tcr->wasm_gprs[arg_z]);
       if (!tcr->wasm_pending_throw) {
         tcr->wasm_gprs[arg_z] = result;
         tcr->wasm_gprs[nargs] = box_fixnum(1);

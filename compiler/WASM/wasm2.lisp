@@ -795,7 +795,9 @@
   (wasm2-form seg vreg xfer
               (make-acode (%nx1-operator call)
                           (make-acode (%nx1-operator immediate) 'logbitp)
-                          (list nil (list bitnum int))))
+                          ;; reg-forms must be in ARM register order (last formal first)
+                          ;; for wasm2-arglist-forms to nreverse them to source order.
+                          (list nil (list int bitnum))))
   nil)
 
 (defwasm2 wasm2-%new-ptr %new-ptr (seg vreg xfer size clear-p)
@@ -830,50 +832,50 @@
   (wasm2-form seg vreg xfer
               (make-acode (%nx1-operator call)
                           (make-acode (%nx1-operator immediate) '-)
-                          (list nil (list x y))))
+                          (list nil (list y x))))
   nil)
 
 (defwasm2 wasm2-%natural+ %natural+ (seg vreg xfer x y)
   (wasm2-form seg vreg xfer
               (make-acode (%nx1-operator call)
                           (make-acode (%nx1-operator immediate) '+)
-                          (list nil (list x y))))
+                          (list nil (list y x))))
   nil)
 
 (defwasm2 wasm2-%natural-logand %natural-logand (seg vreg xfer x y)
   (wasm2-form seg vreg xfer
               (make-acode (%nx1-operator call)
                           (make-acode (%nx1-operator immediate) 'logand)
-                          (list nil (list x y))))
+                          (list nil (list y x))))
   nil)
 
 (defwasm2 wasm2-%natural-logior %natural-logior (seg vreg xfer x y)
   (wasm2-form seg vreg xfer
               (make-acode (%nx1-operator call)
                           (make-acode (%nx1-operator immediate) 'logior)
-                          (list nil (list x y))))
+                          (list nil (list y x))))
   nil)
 
 (defwasm2 wasm2-%natural-logxor %natural-logxor (seg vreg xfer x y)
   (wasm2-form seg vreg xfer
               (make-acode (%nx1-operator call)
                           (make-acode (%nx1-operator immediate) 'logxor)
-                          (list nil (list x y))))
+                          (list nil (list y x))))
   nil)
 
 (defwasm2 wasm2-natural-shift-left natural-shift-left (seg vreg xfer num amt)
   (wasm2-form seg vreg xfer
               (make-acode (%nx1-operator call)
                           (make-acode (%nx1-operator immediate) 'ash)
-                          (list nil (list num amt))))
+                          (list nil (list amt num))))
   nil)
 
 (defwasm2 wasm2-natural-shift-right natural-shift-right (seg vreg xfer num amt)
   (wasm2-form seg vreg xfer
               (make-acode (%nx1-operator call)
                           (make-acode (%nx1-operator immediate) 'ash)
-                          (list nil (list num
-                                          (make-acode (%nx1-operator %ineg) amt)))))
+                          (list nil (list (make-acode (%nx1-operator %ineg) amt)
+                                          num))))
   nil)
 
 (defwasm2 wasm2-%natural<> %natural<> (seg vreg xfer cc x y)
@@ -3975,7 +3977,12 @@
           :if-count (and ir (wasm2-ir-count-op ir :if))
           :if-void-count (and ir (wasm2-ir-count-op ir :if-void))
           :ir-tail (and tail (mapcar #'symbol-name tail))
-          :ir-short ir-short)))
+          :ir-short ir-short
+          :fn-slots (and afunc
+                         (let ((inherited (afunc-inherited-vars afunc)))
+                           (when inherited
+                             (+ (length inherited)
+                                +wasm2-closure-cells-base+ 2)))))))
 
 (defstruct wasm2-tagbody-context
   tag-map
@@ -3988,7 +3995,8 @@
                                                    function-name
                                                    code-body entry-call-abi)
   (when module-bytes
-    (let* ((entry (make-array 9 :initial-contents
+    (let* ((fn-slots (and debug-info (getf debug-info :fn-slots)))
+           (entry (make-array 10 :initial-contents
                               (list module-bytes
                                     export-name
                                     entry-index
@@ -3997,7 +4005,8 @@
                                     gc-root-policy-mode
                                     (and function-name (prin1-to-string function-name))
                                     code-body
-                                    entry-call-abi))))
+                                    entry-call-abi
+                                    fn-slots))))
       (unless (find entry-index %wasm-compiled-modules%
                     :key (lambda (item) (svref item 2))
                     :test #'eql)

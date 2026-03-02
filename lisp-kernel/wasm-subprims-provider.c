@@ -643,10 +643,9 @@ wasm_signal_errdisp_2(TCR *tcr, LispObj arg0, LispObj arg1, signed_natural errnu
   if (tcr == NULL) {
     wasm_subprims_trap();
   }
-  /* arg_y is the first errarg, arg_z the second; errnum lives in arg_x. */
+  wasm_set_reg(tcr, arg_x, box_fixnum(errnum));
   wasm_set_reg(tcr, arg_y, arg0);
   wasm_set_reg(tcr, arg_z, arg1);
-  wasm_set_reg(tcr, arg_x, box_fixnum(errnum));
   wasm_set_nargs_count(tcr, 3);
   _SPksignalerr();
 }
@@ -1403,6 +1402,14 @@ wasm_misc_ref_imm_dispatch(TCR *tcr, LispObj obj, unsigned subtag, signed_natura
       uint32_t *data = (uint32_t *)((BytePtr)obj + misc_data_offset);
       uint32_t bit = (data[(uint32_t)index >> 5] >> ((uint32_t)index & 31u)) & 1u;
       return box_fixnum((signed_natural)bit);
+    }
+    case subtag_bignum: {
+      /* Bignum digits are 32-bit values returned as fixnums with modular
+         wrapping, matching ARM32 convention.  All CCL bignum arithmetic
+         (%bignum-ref, bignum-minusp, logbitp) expects uvref to return
+         fixnums for bignum elements. */
+      int32_t *data = (int32_t *)((BytePtr)obj + misc_data_offset);
+      return box_fixnum((signed_natural)data[index]);
     }
     default:
       break;
@@ -2571,9 +2578,11 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
         wasm_funcall_depth--;
         return;
       }
+      /* ARM convention: arg_y = first formal, arg_z = last formal.
+         Typed entry: param0 = first formal, param1 = last formal. */
       result = wasm_call_entry_index_binary_i32(entry_index,
-                                                wasm_reg(tcr, arg_z),
-                                                wasm_reg(tcr, arg_y));
+                                                wasm_reg(tcr, arg_y),
+                                                wasm_reg(tcr, arg_z));
       if (!wasm_pending_throw_p(tcr)) {
         wasm_set_reg(tcr, arg_z, result);
         wasm_set_nargs_count(tcr, 1);
@@ -5815,6 +5824,7 @@ _SPksignalerr(void)
           wasm_host_log(msg, (unsigned)p);
         }
       }
+
     }
   }
 
