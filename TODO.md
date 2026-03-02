@@ -173,6 +173,8 @@ Three benign errors during cold-boot-init (all with catch_top=0):
 - #2 spill_push=38266: $XWRONGTYPE (arg_x=0x274=fixnum 157), e=581 s=28
 - #3 spill_push=59659: unknown (arg_z=0x49, nargs=1), e=652 s=185
 
+**Resolved blocker (2026-03-02):** Phase D crash — `misc_set: obj=NIL` at entry 1115 (`%RUN-BINDING-INDEX-SETUP`). Root cause: `%set-binding-index` (entry 944) is a closure over a shared `let*` block in `l0-symbol.lisp:240-248`. The WASM32 xloader does not populate inner-lambda environment slots; the closure env (function slot 2) is NIL at Phase D. When entry 1115 calls `(%set-binding-index ...)` via `wasm_funcall1`, `nfn` = the xload-time template → `_SPmisc_set(NIL, ...) → trap`. Crash was in entry 944, NOT at `(setq *%binding-index-setup-max* 0)` as originally hypothesized (Codex analysis confirmed, independently verified). Fix: added closure-free `defvar *%next-binding-index*` + top-level `defun %set-binding-index` / `defun next-binding-index` overrides in `wasm-symbol.lisp`, overwriting the closure fcells whether Phase C succeeded or not. Build 46: `binding-index-setup: ok`. Commit: `a89359a9`.
+
 **Current blocker:** FASL loading. `l1-cl-package.lafsl` fails with return code -72. The FASL loader starts (`";Loading l1-fasls/l1-cl-package.lafsl"`), but hits a funcall-error at entry 1087 with `nfn=0x04000001` (likely a GC-forwarded or stale function reference). This is the new frontier — cold-boot-init is complete.
 
 **Tooling added:**

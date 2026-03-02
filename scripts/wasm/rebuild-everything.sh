@@ -267,6 +267,9 @@ if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
   fi
 fi
 
+python3 "$ROOT_DIR/scripts/wasm/make_minimal_image.py" \
+  --output "$IMAGES_DIR/minimal.image"
+
 log "sync rebuild complete. key outputs:"
 log "  ${CCL_WASM_KERNEL_DIR:-$BUILD_DIR/kernel}/wasmcl.wasm"
 log "  wasm-boot.image"

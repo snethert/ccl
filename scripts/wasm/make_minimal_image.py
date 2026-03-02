@@ -621,8 +621,8 @@ class DynamicBuilder:
 
     def alloc_cons(self, car: int, cdr: int) -> int:
         off = self.alloc(8)
-        write_u32(self.buf, off + 0, car)
-        write_u32(self.buf, off + 4, cdr)
+        write_u32(self.buf, off + 0, cdr)  # CDR at offset 0 (CCL/ARM convention)
+        write_u32(self.buf, off + 4, car)  # CAR at offset 4
         return self.base + off + FULLTAG_CONS
 
     def alloc_list(self, items: list[int], nil_value: int) -> int:
