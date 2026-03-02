@@ -3993,9 +3993,11 @@
                                          &optional const-pool-bytes debug-info
                                                    (gc-root-policy-mode +wasm2-gc-root-mode-runtime-default+)
                                                    function-name
-                                                   code-body entry-call-abi)
+                                                   code-body entry-call-abi
+                                                   fn-slots-override)
   (when module-bytes
-    (let* ((fn-slots (and debug-info (getf debug-info :fn-slots)))
+    (let* ((fn-slots (or fn-slots-override
+                         (and debug-info (getf debug-info :fn-slots))))
            (entry (make-array 10 :initial-contents
                               (list module-bytes
                                     export-name
@@ -8134,14 +8136,19 @@
                                            spillable-locals
                                            entry-index
                                            entry-call-abi)
-            (let ((debug-info (and *wasm2-collect-module-debug*
-                                   (wasm2-make-module-debug-info export-name entry-index 1
-                                                                 :afunc afunc
-                                                                 :ir module-ir
-                                                                 :gc-root-policy-mode
-                                                                 gc-root-policy-mode
-                                                                 :gc-root-boundary-ops
-                                                                 gc-root-boundary-ops))))
+            (let* ((debug-info (and *wasm2-collect-module-debug*
+                                    (wasm2-make-module-debug-info export-name entry-index 1
+                                                                  :afunc afunc
+                                                                  :ir module-ir
+                                                                  :gc-root-policy-mode
+                                                                  gc-root-policy-mode
+                                                                  :gc-root-boundary-ops
+                                                                  gc-root-boundary-ops)))
+                   ;; Always compute fn-slots for closures (needed by boot manifest
+                   ;; even when debug collection is disabled)
+                   (inherited (afunc-inherited-vars afunc))
+                   (fn-slots (when inherited
+                               (+ (length inherited) +wasm2-closure-cells-base+ 2))))
         (wasm2-register-compiled-module module-bytes
                                         export-name
                                         entry-index
@@ -8151,7 +8158,8 @@
                                         gc-root-policy-mode
                                         (afunc-name afunc)
                                         code-body
-                                        entry-call-abi)
+                                        entry-call-abi
+                                        fn-slots)
         (let ((info (list* 'wasm-module-bytes module-bytes
                            'wasm-module-export export-name
                            'wasm-module-version 1

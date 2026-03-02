@@ -3486,6 +3486,16 @@ wasm_drain_cold_load_list(TCR *tcr, LispObj list)
       continue;
     }
 
+    /* Log entry index for diagnostics */
+    {
+      LispObj entry_s0 = deref(fn, 1);
+      char d[48]; int p = 0;
+      d[p++] = 'C'; d[p++] = 'F'; d[p++] = ' ';
+      p += wasm_debug_hex8(d + p, (uint32_t)entry_s0);
+      d[p++] = '\n';
+      wasm_host_log(d, (unsigned)p);
+    }
+
     /* Clear pending_throw before each call so errors don't propagate */
     tcr->wasm_pending_throw = 0;
 
@@ -3493,6 +3503,15 @@ wasm_drain_cold_load_list(TCR *tcr, LispObj list)
 
     if (tcr->wasm_pending_throw) {
       errors++;
+      /* Log which CF had the error */
+      {
+        LispObj err_s0 = deref(fn, 1);
+        char ed[64]; int ep = 0;
+        ep += wasm_debug_str(ed + ep, "CF-ERR ");
+        ep += wasm_debug_hex8(ed + ep, (uint32_t)err_s0);
+        ed[ep++] = '\n';
+        wasm_host_log(ed, (unsigned)ep);
+      }
       tcr->wasm_pending_throw = 0;
     }
   }
@@ -3687,6 +3706,96 @@ wasm_run_cold_boot_init(void)
     /* Cold-load functions have now run; override result to success since
        the original throw was from incomplete-but-non-critical steps. */
     result = 0;
+  }
+
+  /* Phase D: run deferred binding-index setup.
+     Step 80 in %RUN-COLD-BOOT-INIT calls closure-backed functions
+     (%set-binding-index, cold-load-binding-index) whose environments
+     aren't available until Phase C executes their let* cold-load function.
+     So step 80 is deferred to here (after Phase C). */
+  if (result == 0) {
+    static const uint8_t setup_name[] = "%RUN-BINDING-INDEX-SETUP";
+    LispObj setup_sym = wasm_find_symbol_named_bytes(
+      setup_name, (uint32_t)(sizeof(setup_name) - 1), ccl_pkg);
+    if (setup_sym != (LispObj)0 && fulltag_of(setup_sym) == fulltag_misc) {
+      lispsymbol *setup_rawsym = (lispsymbol *)ptr_from_lispobj(untag(setup_sym));
+      LispObj setup_fn = setup_rawsym->fcell;
+      /* Inspect %SET-BINDING-INDEX closure before calling setup */
+      {
+        static const uint8_t sbi_name[] = "%SET-BINDING-INDEX";
+        LispObj sbi_sym = wasm_find_symbol_named_bytes(
+          sbi_name, (uint32_t)(sizeof(sbi_name) - 1), ccl_pkg);
+        if (sbi_sym != (LispObj)0 && fulltag_of(sbi_sym) == fulltag_misc) {
+          lispsymbol *sbi_raw = (lispsymbol *)ptr_from_lispobj(untag(sbi_sym));
+          LispObj sbi_fn = sbi_raw->fcell;
+          char dd[160]; int dp = 0;
+          dp += wasm_debug_str(dd + dp, "D-diag: SBI fcell=0x");
+          dp += wasm_debug_hex8(dd + dp, (uint32_t)sbi_fn);
+          if (sbi_fn != lisp_nil && fulltag_of(sbi_fn) == fulltag_misc) {
+            LispObj hdr = header_of(sbi_fn);
+            dp += wasm_debug_str(dd + dp, " hdr=0x");
+            dp += wasm_debug_hex8(dd + dp, (uint32_t)hdr);
+            dp += wasm_debug_str(dd + dp, " s0=0x");
+            dp += wasm_debug_hex8(dd + dp, (uint32_t)deref(sbi_fn, 1));
+            dp += wasm_debug_str(dd + dp, " s1=0x");
+            dp += wasm_debug_hex8(dd + dp, (uint32_t)deref(sbi_fn, 2));
+            natural nslots = header_element_count(hdr);
+            if (nslots >= 3) {
+              dp += wasm_debug_str(dd + dp, " s2=0x");
+              dp += wasm_debug_hex8(dd + dp, (uint32_t)deref(sbi_fn, 3));
+            }
+            if (nslots >= 4) {
+              dp += wasm_debug_str(dd + dp, " s3=0x");
+              dp += wasm_debug_hex8(dd + dp, (uint32_t)deref(sbi_fn, 4));
+            }
+          }
+          dd[dp++] = '\n';
+          wasm_host_log(dd, (unsigned)dp);
+        }
+      }
+      /* Inspect setup_fn itself */
+      {
+        LispObj setup_hdr = header_of(setup_fn);
+        char dd2[128]; int dp2 = 0;
+        dp2 += wasm_debug_str(dd2 + dp2, "D-diag: setup fcell=0x");
+        dp2 += wasm_debug_hex8(dd2 + dp2, (uint32_t)setup_fn);
+        dp2 += wasm_debug_str(dd2 + dp2, " hdr=0x");
+        dp2 += wasm_debug_hex8(dd2 + dp2, (uint32_t)setup_hdr);
+        dp2 += wasm_debug_str(dd2 + dp2, " s0=0x");
+        dp2 += wasm_debug_hex8(dd2 + dp2, (uint32_t)deref(setup_fn, 1));
+        dp2 += wasm_debug_str(dd2 + dp2, " s1=0x");
+        dp2 += wasm_debug_hex8(dd2 + dp2, (uint32_t)deref(setup_fn, 2));
+        natural ns = header_element_count(setup_hdr);
+        if (ns >= 3) {
+          dp2 += wasm_debug_str(dd2 + dp2, " s2=0x");
+          dp2 += wasm_debug_hex8(dd2 + dp2, (uint32_t)deref(setup_fn, 3));
+        }
+        dd2[dp2++] = '\n';
+        wasm_host_log(dd2, (unsigned)dp2);
+      }
+
+      if (setup_fn != lisp_nil &&
+          fulltag_of(setup_fn) == fulltag_misc &&
+          header_subtag(header_of(setup_fn)) == subtag_function) {
+        natural old_frame2 = wasm_enter_lisp_frame(
+          tcr, 0, 0, (LispObj)tcr->save_vsp);
+        tcr->valence = TCR_STATE_LISP;
+        tcr->wasm_pending_throw = 0;
+        tcr->wasm_gprs[nargs] = box_fixnum(0);
+        tcr->wasm_gprs[nfn] = setup_fn;
+        wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_FUNCALL_INDEX));
+        if (tcr->wasm_pending_throw) {
+          static const char msg[] = "binding-index-setup threw\n";
+          wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+          tcr->wasm_pending_throw = 0;
+        } else {
+          static const char msg[] = "binding-index-setup: ok\n";
+          wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+        }
+        tcr->valence = TCR_STATE_FOREIGN;
+        wasm_exit_lisp_frame(tcr, old_frame2);
+      }
+    }
   }
 
   return result;

@@ -1177,9 +1177,10 @@
       (setf (%svref symvec target::symbol.package-predicate-cell) package-or-nil))))
 
 
-;;; Initializers are nil so the xloader can execute this let* during image
-;;; construction, creating proper closure objects in the boot image.
-;;; make-lock is deferred to first use via %force-export-init.
+;;; On WASM32, this let*+defun form is deferred by the xloader as a
+;;; cold-load function (Phase C).  Initializers are nil so the lazy-init
+;;; pattern works at cold-load time; make-lock is created on first use
+;;; via %force-export-init.
 (let* ((force-export-packages nil)
        (force-export-packages-lock nil))
   (defun %force-export-init ()
@@ -1283,7 +1284,9 @@ Can be removed before shipping once %FASLOAD startup is stable.")
     (unless %find-classes%
       (setq %find-classes% (make-hash-table :test 'eq)))
     (unless (and (boundp '*lfun-names*) *lfun-names*)
-      (setq *lfun-names* (make-hash-table :test 'eq :weak t))))
+      (setq *lfun-names* (make-hash-table :test 'eq :weak t)))
+)
+
   (let ((cold-fn-count 0))
     (let ((cold-fns (prog1 *xload-cold-load-functions*
                            (setq *xload-cold-load-functions* nil))))
@@ -1315,20 +1318,58 @@ Can be removed before shipping once %FASLOAD startup is stable.")
   (%wasm-note-startup-step 70)
   (dolist (f (prog1 *xload-cold-load-documentation* (setq *xload-cold-load-documentation* nil)))
     (apply 'set-documentation f))
-  (%wasm-note-startup-step 80)
-  ;; Can't bind any specials until this happens
-  (let* ((max 0))
-    (%map-areas #'(lambda (symvec)
-                    (when (= (the fixnum (typecode symvec))
-                             target::subtag-symbol)
-                      (let* ((s (symvector->symptr symvec))
-                             (idx (symbol-binding-index s)))
-                        (when (> idx 0)
-                          (cold-load-binding-index s))
-                        (when (> idx max)
-                          (setq max idx))))))
-    (%set-binding-index max))
+  ;; On WASM32, step 80 is deferred to %run-binding-index-setup (called
+  ;; from C after Phase C cold-load drain) because %set-binding-index and
+  ;; cold-load-binding-index are closures whose environments aren't
+  ;; available until Phase C executes their let* cold-load function.
+  #-wasm32-target
+  (progn
+    (%wasm-note-startup-step 80)
+    ;; Can't bind any specials until this happens
+    (let* ((max 0))
+      (%map-areas #'(lambda (symvec)
+                      (when (= (the fixnum (typecode symvec))
+                               target::subtag-symbol)
+                        (let* ((s (symvector->symptr symvec))
+                               (idx (symbol-binding-index s)))
+                          (when (> idx 0)
+                            (cold-load-binding-index s))
+                          (when (> idx max)
+                            (setq max idx))))))
+      (%set-binding-index max))
+    (%wasm-note-startup-step 90))
+  #+wasm32-target
   (%wasm-note-startup-step 90))
+
+;;; On WASM32, called from C after Phase C cold-load drain so that
+;;; closure-backed functions (%set-binding-index, cold-load-binding-index)
+;;; have their environments populated.
+;;;
+;;; IMPORTANT: These must be top-level defuns (no inner lambdas) because
+;;; the WASM32 xloader doesn't populate inner function template slots
+;;; in parent function objects — slot 2 ends up as 0, causing misc_set
+;;; crashes when the compiled code tries to create closures at runtime.
+#+wasm32-target
+(defvar *%binding-index-setup-max* 0)
+
+#+wasm32-target
+(defun %binding-index-area-callback (symvec)
+  (when (= (the fixnum (typecode symvec))
+           target::subtag-symbol)
+    (let* ((s (symvector->symptr symvec))
+           (idx (symbol-binding-index s)))
+      (when (> idx 0)
+        (cold-load-binding-index s))
+      (when (> idx *%binding-index-setup-max*)
+        (setq *%binding-index-setup-max* idx)))))
+
+#+wasm32-target
+(defun %run-binding-index-setup ()
+  (%wasm-note-startup-step 80)
+  (setq *%binding-index-setup-max* 0)
+  (%map-areas #'%binding-index-area-callback)
+  (%set-binding-index *%binding-index-setup-max*)
+  (%wasm-note-startup-step 81))
 
 (defvar %toplevel-function%
   #'(lambda ()

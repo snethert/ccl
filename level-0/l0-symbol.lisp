@@ -233,10 +233,10 @@
 
 ;;; Special binding indices, and the inverse mapping between indices
 ;;; and symbols.
-;;; Initializers are nil so the xloader can execute this let* during image
-;;; construction, creating proper closure objects in the boot image.
-;;; make-lock / make-hash-table are deferred to first use because they
-;;; require infrastructure that isn't available during cross-loading.
+;;; On WASM32, this let*+defun form is deferred by the xloader as a
+;;; cold-load function (Phase C).  Initializers are nil so the lazy-init
+;;; pattern works at cold-load time; make-lock / make-hash-table are
+;;; created on first use via %binding-index-init.
 (let* ((binding-index-lock nil)
        (binding-index-reverse-map nil)
        (next-binding-index 0))

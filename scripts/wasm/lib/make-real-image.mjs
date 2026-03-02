@@ -1246,11 +1246,14 @@ const encoder = new TextEncoder();
 
   const mallocFn = ex.malloc;
 
-  // Collect named functions from boot + compiled modules
+  // Collect named functions for image fixup.
+  // IMPORTANT: only use BOOT module entries here.  Runtime (level-1) module
+  // entries must NOT override boot stubs during image fixup because their
+  // initialization (defvar, defclass, etc.) hasn't run yet — that happens
+  // later during FASL loading.  FASL loading will naturally replace boot
+  // stubs with the runtime implementations alongside their initialization.
   const allNamedFunctions = [
     ...bootNamedFunctions,
-    ...(Array.isArray(compiledModulesBundle?.functions)
-      ? compiledModulesBundle.functions : []),
   ];
 
   const rebindMap = new Map();
