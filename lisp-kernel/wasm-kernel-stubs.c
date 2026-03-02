@@ -2918,9 +2918,13 @@ wasm_subprim_nonlocal_exit_coherence_selftest(void)
     return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_CATCH_INSTALL;
   }
 
-  funcall_mv_args[0] = funcall_mv0;
-  funcall_mv_args[1] = funcall_mv1;
-  funcall_mv_args[2] = funcall_mv2;
+  /* ARM convention: wasm_funcall_common pushes args[0..n-1] in order,
+   * making args[n-1] the TOS.  wasm_funcall_value calls
+   * wasm_sync_arg_regs_from_vsp which loads TOS → arg_z (primary value
+   * register).  So the primary value (funcall_mv0) must be at args[2]. */
+  funcall_mv_args[0] = funcall_mv2;   /* deepest → arg_x */
+  funcall_mv_args[1] = funcall_mv1;   /* middle  → arg_y */
+  funcall_mv_args[2] = funcall_mv0;   /* TOS     → arg_z (primary) */
   tcr->wasm_pending_throw = 0;
   tcr->wasm_gprs[arg_z] = funcall_mv0;
   tcr->wasm_gprs[imm0] = box_fixnum(1);
