@@ -200,12 +200,26 @@
                         *wasm2-collect-module-debug*))
       (dolist (entry *wasm-smoke-functions*)
         (destructuring-bind (name lambda-form) entry
-          (multiple-value-bind (fn warnings)
-              (compile-named-function lambda-form :name name :target :wasm32)
-            (declare (ignore warnings))
-            (push (list :name (symbol-name name)
-                        :entry-index (function-entry-index fn))
-                  results)))))
+          ;; Snapshot the module list before compilation so we can find which
+          ;; module(s) were just registered.  wasm2 compiles inner functions
+          ;; first (each pushed to the front of %wasm-compiled-modules%), then
+          ;; pushes the outer function last — so after compilation the outer
+          ;; function's record is always at (car %wasm-compiled-modules%).
+          ;; Reading the entry index from the module record avoids the
+          ;; function-entry-index fallback which double-shifts: in cross-compile
+          ;; mode wasm2-set-afunc-lfun stores the raw (unboxed) entry-index at
+          ;; slot 0, but the fallback applies (ash raw -target-shift) = /4,
+          ;; turning entry 300 into 75 and causing groups of 4 to collide.
+          (let* ((mods-before %wasm-compiled-modules%))
+            (multiple-value-bind (fn warnings)
+                (compile-named-function lambda-form :name name :target :wasm32)
+              (declare (ignore fn warnings))
+              (let* ((new-head %wasm-compiled-modules%))
+                (when (eq new-head mods-before)
+                  (error "compile-smoke-functions: no module registered for ~a" name))
+                (push (list :name (symbol-name name)
+                            :entry-index (svref (car new-head) 2))
+                      results)))))))
   (nreverse results)))
 
 (defun repo-root-from-script ()
