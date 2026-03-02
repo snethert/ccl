@@ -123,3 +123,22 @@
 (defun %ensure-tlb-index (idx)
   (declare (ignore idx))
   (%fixnum-ref (%current-tcr) target::tcr.tlb-pointer))
+
+;;; Closure-free binding-index counter.
+;;;
+;;; l0-symbol.lisp defines %set-binding-index and next-binding-index as
+;;; closures over a shared (let* ((next-binding-index 0) ...) ...) block.
+;;; On WASM32 the xloader does not populate inner-lambda environment slots,
+;;; so the closure environment (function slot 2) remains NIL at Phase D.
+;;; Calling %set-binding-index then crashes: _SPmisc_set(NIL, ...) → trap.
+;;;
+;;; Fix: override both functions with top-level defuns backed by a defvar.
+;;; These are compiled into the boot image after l0-symbol.lisp loads,
+;;; overwriting the closure fcells whether Phase C succeeded or not.
+(defvar *%next-binding-index* 0)
+
+(defun %set-binding-index (val)
+  (setq *%next-binding-index* val))
+
+(defun next-binding-index ()
+  (1+ *%next-binding-index*))
