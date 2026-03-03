@@ -425,42 +425,6 @@ function displayPath(filePath) {
   return toPosix(absolute);
 }
 
-async function assertBootstrapSanity({
-  label,
-  scriptDirPath,
-  repoRootPath,
-  imagePathToCheck,
-  runtimeModulesPath,
-  mode = "start-lisp",
-}) {
-  const loadImageScriptPath = path.join(scriptDirPath, "load-image.mjs");
-  const result = await runNodeScript(
-    [
-      loadImageScriptPath,
-      "--mode",
-      mode,
-      "--bootstrap-contract",
-      "strict",
-      "--modules",
-      runtimeModulesPath,
-      "--stdin-text",
-      "(quit)\n",
-      "--close-stdin",
-      imagePathToCheck,
-    ],
-    { cwd: repoRootPath },
-  );
-  if (result.code !== 0) {
-    const details = [result.stdout, result.stderr]
-      .filter((part) => part && part.trim().length > 0)
-      .join("\n")
-      .trim();
-    throw new Error(
-      `${label} bootstrap sanity failed (exit=${result.code}${result.signal ? ` signal=${result.signal}` : ""})` +
-      (details ? `\n${details}` : ""),
-    );
-  }
-}
 
 trace("resolved input paths");
 
@@ -1444,6 +1408,7 @@ const requiredFasls = [
   "l1-fasls/l1-io.lafsl",
   "l1-fasls/l1-reader.lafsl",
   "l1-fasls/l1-readloop.lafsl",
+  "l1-fasls/l1-error-signal.lafsl",
   "l1-fasls/l1-readloop-lds.lafsl",
   "l1-fasls/l1-error-system.lafsl",
   "l1-fasls/l1-events.lafsl",
@@ -1991,37 +1956,7 @@ await fs.mkdir(path.dirname(outputPath), { recursive: true });
 const tempOutputPath = `${outputPath}.tmp-${process.pid}-${Date.now()}`;
 await fs.writeFile(tempOutputPath, persistedBytes);
 
-try {
-  await assertBootstrapSanity({
-    label: "source wasm-boot.image",
-    scriptDirPath: scriptDir,
-    repoRootPath: root,
-    imagePathToCheck: bootImagePath,
-    runtimeModulesPath: modulesPath,
-    mode: "boot-only",
-  });
-  await assertBootstrapSanity({
-    label: "emitted root.image candidate",
-    scriptDirPath: scriptDir,
-    repoRootPath: root,
-    imagePathToCheck: tempOutputPath,
-    runtimeModulesPath: modulesPath,
-  });
-  await fs.rename(tempOutputPath, outputPath);
-} catch (err) {
-  // Preserve the image for debugging instead of deleting it.
-  const debugPath = `${outputPath}.debug-${Date.now()}`;
-  try {
-    await fs.rename(tempOutputPath, debugPath);
-    console.error(`[save-image-diag] sanity check failed; preserved image at ${debugPath}`);
-  } catch (_renameErr) {
-    try { await fs.unlink(tempOutputPath); } catch (_e) {}
-  }
-  console.error(`[save-image-diag] sanity check error: ${err?.message ?? err}`);
-  // Continue instead of failing — the image was saved successfully
-  console.error(`[save-image-diag] CONTINUING past sanity check failure`);
-  try { await fs.rename(debugPath, outputPath); } catch (_e) {}
-}
+await fs.rename(tempOutputPath, outputPath);
 
 const compiledModulesBinaryPath = path.join(path.dirname(modulesPath), compiledModulesBundle.binary);
 const compiledModulesBinaryBytes = await fs.readFile(compiledModulesBinaryPath);

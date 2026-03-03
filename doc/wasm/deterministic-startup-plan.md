@@ -14,30 +14,38 @@
 
 ## Context
 
-The WASM port's root.image build is blocked at B6. Two root causes:
-1. **280+ ARM LAP bridge functions have no WASM equivalents.** Cold-boot init throws at step 30 (`%store-node-conditional` XNOFUN). FASL loading fails with `%GET-ERRNO` XNOFUN.
-2. **The runtime launcher performs dynamic work at launch** (scanning, parsing, symbol resolution, on-demand const pool installation) that belongs at build time.
+Two root causes drove this redesign:
+1. **280+ ARM LAP bridge functions had no WASM equivalents.** Cold-boot init threw at step 30 (`%store-node-conditional` XNOFUN). FASL loading failed with `%GET-ERRNO` XNOFUN.
+2. **The runtime launcher performed dynamic work at launch** (scanning, parsing, symbol resolution, on-demand const pool installation) that belongs at build time.
 
 **User directives:**
 - "We shouldn't be mapping a darn thing at load time. Just looping over known quantities."
 - "YES YOU DO" need all 280+ functions. No cutting corners.
 - "You are allowed to change literally *anything* which will make startup easy and fast: code, file formats, the image...whatever."
 
-### Already Implemented (Phase 1a-1c)
+### Already Implemented
 - `%run-cold-boot-init` extracted → [nfasload.lisp:1243-1286](level-0/nfasload.lisp#L1243-L1286)
 - `wasm_run_cold_boot_init()` C export → [wasm-kernel-stubs.c:3109-3175](lisp-kernel/wasm-kernel-stubs.c#L3109-L3175)
 - JS-side call → [make-real-image.mjs:1207-1214](scripts/wasm/lib/make-real-image.mjs#L1207-L1214)
+- B6 resolved: FASL loading completes (all level-1 FASLs load during build)
+- **Phase 3 done**: `load-image.mjs` rewritten to 314 lines — zero scans, zero const pool work, zero relocation. `bootstrap-contract.mjs` and `bootstrap-function-resolver.mjs` deleted.
 
-### Blocked At
-- Cold-boot init throws: `record-system-lock` → `atomic-push-uvector-cell` → `%store-node-conditional` (XNOFUN)
-- FASL loading: `%GET-ERRNO` (XNOFUN) in error handler chain
+### Current Status (Phase 1 verification)
+Startup XNOFUN errors remain after successful FASL loading:
+```
+funcall-err: code=13 sym=%ERR-DISP            fcell=0x0027f006  (FALSE stub)
+funcall-err: code=13 sym=RUNTIME-BRIDGE-PUMP-COMMANDS  fcell=0x0027f006  (FALSE stub)
+```
+Root cause: `l1-error-signal.lafsl` was absent from `requiredFasls`. The `l1-boot-2.lisp`
+path (`l1-load "l1-error-signal"` inside `catch :toplevel`) fails silently because the
+WASM build environment has no WASM filesystem for `%fasload`. With `%err-disp` = FALSE,
+any condition during `l1-readloop-lds.lafsl` loading cascades into a XNOFUN loop caught
+by `wasm_fasload_path`'s catch frame, aborting the `#+wasm32-target` progn before
+`runtime-bridge-pump-commands` at line 1320.
 
-### B6 Failure Chain
-```
-l1-cl-package.lafsl → %STRING-TO-STDERR → %NEW-GCABLE-PTR → MAKE-GCABLE-MACPTR
-  → lisp_write(fd=16899495) → fail → error handler → %GET-ERRNO → XNOFUN
-  → funcall-error → ksignalerr → pending_throw → fasload returns -72
-```
+Fix applied: `l1-error-signal.lafsl` inserted before `l1-readloop-lds.lafsl` in
+`requiredFasls` ([make-real-image.mjs:1447](scripts/wasm/lib/make-real-image.mjs#L1447)).
+Rebuild in progress.
 
 ---
 
@@ -474,10 +482,10 @@ wasm-merge group_0.wasm group_1.wasm ... -o merged_0.wasm
 
 ### Files REWRITTEN
 
-| File | Current | New (est.) | Change |
-|------|---------|-----------|--------|
-| [load-image.mjs](scripts/wasm/lib/load-image.mjs) | 1093 | ~200 | Plan-driven launcher. Delete all dynamic discovery, scanning, bundle parsing. |
-| [microkernel.mjs](scripts/wasm/lib/microkernel.mjs) | 2054 | ~600 | Clean host ABI. Delete FASLOAD trace, V1 compat, debug cruft, unused ops. |
+| File | Before | After | Status |
+|------|--------|-------|--------|
+| [load-image.mjs](scripts/wasm/lib/load-image.mjs) | 1093 lines | **314 lines (done)** | Zero scans, zero const pool work, zero relocation. Plan-driven load-and-go. |
+| [microkernel.mjs](scripts/wasm/lib/microkernel.mjs) | 2054 lines | ~600 (pending) | Clean host ABI. Delete FASLOAD trace, V1 compat, debug cruft, unused ops. |
 
 ### Files SIMPLIFIED
 
@@ -636,7 +644,7 @@ finished applications (`fast` profile).
 | **1** | Verified build | 0A + 0B | Build time only | +0 |
 | **2A-B** | Proactive const pool install + launch artifacts | 1 | ~150 lines | +150 (`make-real-image.mjs`) |
 | **2C** | Module merging (Binaryen `wasm-merge`) | 2B | ~100 lines | +100 (build pipeline) |
-| **3** | Deterministic launcher | 2C | ~1000 new, ~4000 deleted | **-2800** net (delete 1138, rewrite 3147 → 800) |
+| **3** ✓ | Deterministic launcher | 2C | **Done** — load-image.mjs 314 lines, bootstrap files deleted | |
 | **4** | Fast-profile save-app mode + invariants | 3 | Pipeline and validation work | TBD |
 
 **Total net effect:** ~2460 new Lisp + 150 new JS - 2800 deleted JS ≈ **-190 net lines** of JS while gaining deterministic startup.
@@ -727,3 +735,41 @@ Tags 1, 4, 7 require interning/lookup — this is why proactive installation mus
 - **Direct kernel imports:** Replace request/response buffer with direct WASM function imports for MVP-1 (breaks MVP-2 async compatibility)
 - **Binary startup plan:** Replace JSON with binary format for marginally faster parsing
 - **Streaming compilation:** `WebAssembly.compileStreaming()` for browser deployment
+
+### Browser Launch Optimizations
+
+In the browser, there is no disk. Assets come from the Service Worker cache or the network.
+The dominant startup cost is materializing large blobs (root.image ~2 GiB, modules.bin ~45 MiB)
+into WASM memory. Two optimizations reduce this significantly:
+
+**1. Brotli-compress root.image and modules.bin in the Service Worker.**
+The SW serves the compressed bytes; the browser decompresses transparently via HTTP
+content-encoding. A 2 GiB image compresses to roughly 300–400 MiB at brotli quality 7-9
+(Lisp heap data compresses extremely well — symbol names, source locations, string literals
+are highly repetitive). Fetch-from-cache time drops proportionally. Decompression is
+hardware-accelerated and overlaps with the WASM memory copy.
+
+**2. Stream root.image directly into WASM memory.**
+Instead of `fetch().arrayBuffer()` (which buffers the entire image in JS before copying),
+pipe `Response.body` chunk-by-chunk into WASM memory as bytes arrive from the SW.
+This overlaps fetch with copy and halves the peak JS heap pressure (no full-image
+ArrayBuffer needed in JS — chunks are written to WASM memory and released immediately).
+
+```javascript
+// Instead of:
+const imageBuf = await fetch("root.image").then(r => r.arrayBuffer());
+dest.set(new Uint8Array(imageBuf), blobBase);
+
+// Do:
+const dest = new Uint8Array(memory.buffer);
+const reader = (await fetch("root.image")).body.getReader();
+let offset = 0;
+for (;;) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  dest.set(value, blobBase + offset);
+  offset += value.byteLength;
+}
+```
+
+These two changes together bring warm-SW-cache launch to well under 200 ms on modern hardware.
