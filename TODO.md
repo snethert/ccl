@@ -89,6 +89,8 @@ used non-existent acode operators, breaking cross-compilation loading. Fixed.
 - [x] Phase 0B image base extraction works (`__heap_base=76592 → 0x20000`)
 - [x] Root image build — cold-boot-init returns 0 (startup-step=4131)
 - [x] FASL loading — boot metadata alias fix (2026-03-03): `%SIMPLE-FASL-INIT-BUFFER` now present in `functions[]`
+- [x] Phase 2A — proactive const pool installation (2026-03-03): 7885 pools pre-baked into root.image
+- [x] Phase 3 — deterministic launcher (2026-03-03): `load-image.mjs` rewritten, 1151→314 lines, `wasm_ccl_start_lisp rc=0`
 
 **Bugs fixed during Phase 1:**
 - `GENERAL-AREF2` unimplemented opcode: `%aref2`/`%aref3`/`%aset2`/`%aset3` rewrote to use `row-major-aref` + `array-row-major-index`
@@ -236,10 +238,10 @@ Three benign errors during cold-boot-init (all with catch_top=0):
 
 ## 📊 Current Status
 
-**Completed:** B1-B6 fixes, funcall ordering fix, ABI spec, diagnostic cleanup, instrumentation removal (~4500 lines), startup truth retirement, startup binding map removal (~2500 lines), debugging infrastructure, cold-boot init extraction (Phase 1a-1c), hash function char-code fix, ivector const pool support, target:: package resolution fix, subprims .rodata collision fix, heap increase to 3.9 GB, `_SPbuiltin_length`/`_SPbuiltin_seqtype` inline fast paths, module consolidation (merge + pack dedup), module validation fallback (7557/7557 installed), prog1 temp local reuse fix (9 sites), missing arch definitions (lock struct, lockptr/rwlock/tcr layouts, tcr-bias, interrupt-level-binding-index), typecode box_fixnum overflow fix, WASM lock stubs + l0-misc.lisp reader conditionals, PROCLAIM declaim compile-time fix, `%alloc-misc` 3-arg register fix, CAR/CDR contract fix, null table slot stubs, **cold-boot-init success** (v15.3), **FASL boot metadata alias fix** (2026-03-03: `%SIMPLE-FASL-INIT-BUFFER` now in `functions[]`), MV calling convention (`wasm_return_values2/3/4` + `wasm_push_value_set` arg_y/arg_x assignments)
-**Blocked on:** End-to-end FASL loading verification in full runtime (Phase0AA tests should now unblock).
-**Build pipeline:** Functional (kernel → subprims → boot image → modules → image assembly)
-**MVP-1 completion:** 70%
+**Completed:** B1-B6 fixes, funcall ordering fix, ABI spec, diagnostic cleanup, instrumentation removal (~4500 lines), startup truth retirement, startup binding map removal (~2500 lines), debugging infrastructure, cold-boot init extraction (Phase 1a-1c), hash function char-code fix, ivector const pool support, target:: package resolution fix, subprims .rodata collision fix, heap increase to 3.9 GB, `_SPbuiltin_length`/`_SPbuiltin_seqtype` inline fast paths, module consolidation (merge + pack dedup), module validation fallback (7557/7557 installed), prog1 temp local reuse fix (9 sites), missing arch definitions (lock struct, lockptr/rwlock/tcr layouts, tcr-bias, interrupt-level-binding-index), typecode box_fixnum overflow fix, WASM lock stubs + l0-misc.lisp reader conditionals, PROCLAIM declaim compile-time fix, `%alloc-misc` 3-arg register fix, CAR/CDR contract fix, null table slot stubs, **cold-boot-init success** (v15.3), **FASL boot metadata alias fix** (2026-03-03), MV calling convention (`wasm_return_values2/3/4` + `wasm_push_value_set` arg_y/arg_x assignments), **Phase 2A — proactive const pool bake** (7885 pools in root.image), **Phase 3 — deterministic launcher** (load-image.mjs 1151→314 lines, `wasm_ccl_start_lisp rc=0`)
+**Blocked on:** `RUNTIME-BRIDGE-PUMP-COMMANDS` + `%ERR-DISP` XNOFUN at startup (caught, non-fatal, but indicates missing function bindings needed for toplevel operation).
+**Build pipeline:** Functional (kernel → subprims → boot image → modules → image assembly → startup-plan.json + modules.bin)
+**MVP-1 completion:** 80%
 
 ---
 
@@ -291,6 +293,8 @@ Root cause: 280+ missing WASM LAP bridge functions. Systemic fix: Phase 0A.
 ---
 
 ## 📝 Session Notes
+
+**2026-03-03 (session 2):** Phase 2A + Phase 3 complete. Phase 2A: added proactive const pool install loop in `make-real-image.mjs` after `wasm_restore_lisp_pointers` (post-FASL), before `wasm_reset_root_image_runtime_state`. All 7885 const pools were already installed by `installConstPools:true` during module installation; proactive loop confirmed complete coverage. `startup-plan.json` updated: `constPools:{baked:true, count:7885}`. Phase 3: rewrote `load-image.mjs` (1151→314 lines). Reads startup-plan.json, loads root.image (2.1GB, chunked into WASM memory), compiles 36 merged module binaries in parallel (`Promise.all`), fills 8675+132 table entries, calls `wasm_ccl_start_lisp`. First run: `rc=0`. Benign XNOFUN errors on `RUNTIME-BRIDGE-PUMP-COMMANDS` and `%ERR-DISP` (both caught, non-fatal). Key finding: modules.bin already had 36 merged module groups (Phase 2C effectively done). `bootstrap-contract.mjs` and `bootstrap-function-resolver.mjs` retained (still needed by `make-real-image.mjs` for build-time const pool function designator rewriting).
 
 **2026-03-03:** Fixed FASL boot metadata alias bug (Codex-diagnosed). Five bootstrap-entry call sites in `wasm2-compile` were passing `nil` as `function-name`, so all const-folded functions (entry 202, 213, 214…) were silently dropped from `functions[]` by the module-level dedup. Added `%wasm2-name-aliases%` tracking list outside dedup, passed `(afunc-name afunc)` at all 5 sites, emitted alias loop in `build-wasm-boot.lisp`. Verified: `*fasl-api*` slot 3 `init-buf=0x0412cfe6 (fn)`. Also fixed MV calling convention: `wasm_return_values2/3/4` and `wasm_push_value_set` were not assigning `arg_y`/`arg_x`. Fixed `closure-unwind-mv-smoke.mjs`: removed inner closure + `(cons x nil)` from compiled lambda (both cause symbol-ref failures in minimal image). All smoke tests PASS including `root-image-manifest-smoke.mjs` (previously always failing due to stale manifest). Full rebuild completed cleanly.
 

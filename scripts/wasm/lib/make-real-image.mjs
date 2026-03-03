@@ -1810,6 +1810,39 @@ if (postFasloadRestoreRc === 0) {
   trace(`RESTORE-LISP-POINTERS post-fasload rc=${postFasloadRestoreRc} (non-fatal)`);
 }
 
+/* Phase 2A: Proactive const pool installation.
+   At this point the full standard library is loaded — all packages exist,
+   all symbols are interned, all functions are defined.  Install every
+   remaining const pool so the saved image contains complete Lisp state.
+   At launch time, zero const pool callbacks will fire. */
+{
+  const allEntries = new Set([
+    ...bootConstPoolData.keys(),
+    ...constPoolEntries.keys(),
+  ]);
+  let proactiveInstalled = 0;
+  let proactiveSkipped = 0;
+  let proactiveFailed = 0;
+  for (const entryIndex of allEntries) {
+    if (constPoolsInstalled.has(entryIndex)) {
+      proactiveSkipped++;
+      continue;
+    }
+    const rc = installConstPoolOnDemand(entryIndex);
+    if (rc !== 0) {
+      proactiveInstalled++;
+    } else {
+      proactiveFailed++;
+      trace(`proactive const-pool FAILED entry=${entryIndex}`);
+    }
+  }
+  console.error(
+    `[stage] proactive const-pool install: ${proactiveInstalled} installed,` +
+    ` ${proactiveSkipped} already done, ${proactiveFailed} failed,` +
+    ` ${constPoolsInstalled.size} total baked into image`
+  );
+}
+
 if (typeof ex.wasm_reset_root_image_runtime_state !== "function") {
   fail("kernel missing wasm_reset_root_image_runtime_state");
 }
