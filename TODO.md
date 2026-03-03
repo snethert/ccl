@@ -3,7 +3,7 @@
 <!-- Entry index lookup tool: scripts/wasm/lookup-entry.mjs <index> -->
 <!-- Debugging guide: doc/wasm/debugging.md — read first when troubleshooting -->
 
-**Last updated:** 2026-02-20
+**Last updated:** 2026-03-03
 **Current phase:** MVP-1 (Library/Embedded Mode)
 **Plan:** [doc/wasm/deterministic-startup-plan.md](doc/wasm/deterministic-startup-plan.md)
 
@@ -88,7 +88,7 @@ used non-existent acode operators, breaking cross-compilation loading. Fixed.
 - [x] 7557 runtime modules compiled
 - [x] Phase 0B image base extraction works (`__heap_base=76592 → 0x20000`)
 - [x] Root image build — cold-boot-init returns 0 (startup-step=4131)
-- [ ] FASL loading — first FASL (`l1-cl-package.lafsl`) fails with -72
+- [x] FASL loading — boot metadata alias fix (2026-03-03): `%SIMPLE-FASL-INIT-BUFFER` now present in `functions[]`
 
 **Bugs fixed during Phase 1:**
 - `GENERAL-AREF2` unimplemented opcode: `%aref2`/`%aref3`/`%aset2`/`%aset3` rewrote to use `row-major-aref` + `array-row-major-index`
@@ -175,7 +175,7 @@ Three benign errors during cold-boot-init (all with catch_top=0):
 
 **Resolved blocker (2026-03-02):** Phase D crash — `misc_set: obj=NIL` at entry 1115 (`%RUN-BINDING-INDEX-SETUP`). Root cause: `%set-binding-index` (entry 944) is a closure over a shared `let*` block in `l0-symbol.lisp:240-248`. The WASM32 xloader does not populate inner-lambda environment slots; the closure env (function slot 2) is NIL at Phase D. When entry 1115 calls `(%set-binding-index ...)` via `wasm_funcall1`, `nfn` = the xload-time template → `_SPmisc_set(NIL, ...) → trap`. Crash was in entry 944, NOT at `(setq *%binding-index-setup-max* 0)` as originally hypothesized (Codex analysis confirmed, independently verified). Fix: added closure-free `defvar *%next-binding-index*` + top-level `defun %set-binding-index` / `defun next-binding-index` overrides in `wasm-symbol.lisp`, overwriting the closure fcells whether Phase C succeeded or not. Build 46: `binding-index-setup: ok`. Commit: `a89359a9`.
 
-**Current blocker:** FASL loading. `l1-cl-package.lafsl` fails with return code -72. The FASL loader starts (`";Loading l1-fasls/l1-cl-package.lafsl"`), but hits a funcall-error at entry 1087 with `nfn=0x04000001` (likely a GC-forwarded or stale function reference). This is the new frontier — cold-boot-init is complete.
+**Resolved blocker (2026-03-03):** FASL loading. Root cause: five bootstrap-entry call sites in `wasm2-compile` (const, if, if-arg, identity, identity-y) all passed `nil` as `function-name` to `wasm2-register-compiled-module`. Module-level dedup by entry-index kept only one record per shared bootstrap entry (e.g., entry 202 for const-folded nil-returning functions). `build-wasm-boot.lisp:write-boot-module-bundle` built `functions[]` from the deduplicated list — so all aliases sharing an entry were silently dropped. `%SIMPLE-FASL-INIT-BUFFER` (a trivial nil-returning function → entry 202) was absent from `functions[]`. At runtime `(faslapi.fasl-init-buffer *fasl-api*)` returned NIL → funcall-error at entry 1087. Fix (Codex-diagnosed): (1) added `%wasm2-name-aliases%` global tracking list in `wasm2.lisp` populated outside the dedup check; (2) passed `(afunc-name afunc)` at all 5 bootstrap-entry call sites; (3) emitted alias loop in `build-wasm-boot.lisp`. Verified: `[4] init-buf=0x0412cfe6 (fn)` — slot 3 of `*fasl-api*` is a valid function. All smoke tests pass after full rebuild.
 
 **Tooling added:**
 - `scripts/wasm/check-freshness.sh` — Detects stale build artifacts across the full dependency chain
@@ -236,10 +236,10 @@ Three benign errors during cold-boot-init (all with catch_top=0):
 
 ## 📊 Current Status
 
-**Completed:** B1-B6 fixes, funcall ordering fix, ABI spec, diagnostic cleanup, instrumentation removal (~4500 lines), startup truth retirement, startup binding map removal (~2500 lines), debugging infrastructure, cold-boot init extraction (Phase 1a-1c), hash function char-code fix, ivector const pool support, target:: package resolution fix, subprims .rodata collision fix, heap increase to 3.9 GB, `_SPbuiltin_length`/`_SPbuiltin_seqtype` inline fast paths, module consolidation (merge + pack dedup), module validation fallback (7557/7557 installed), prog1 temp local reuse fix (9 sites), missing arch definitions (lock struct, lockptr/rwlock/tcr layouts, tcr-bias, interrupt-level-binding-index), typecode box_fixnum overflow fix, WASM lock stubs + l0-misc.lisp reader conditionals, PROCLAIM declaim compile-time fix, `%alloc-misc` 3-arg register fix, CAR/CDR contract fix, null table slot stubs, **cold-boot-init success** (v15.3: pending_throw + startup-step check)
-**Blocked on:** FASL loading. `l1-cl-package.lafsl` fails with -72 (funcall-error at entry 1087). All previous blockers resolved.
+**Completed:** B1-B6 fixes, funcall ordering fix, ABI spec, diagnostic cleanup, instrumentation removal (~4500 lines), startup truth retirement, startup binding map removal (~2500 lines), debugging infrastructure, cold-boot init extraction (Phase 1a-1c), hash function char-code fix, ivector const pool support, target:: package resolution fix, subprims .rodata collision fix, heap increase to 3.9 GB, `_SPbuiltin_length`/`_SPbuiltin_seqtype` inline fast paths, module consolidation (merge + pack dedup), module validation fallback (7557/7557 installed), prog1 temp local reuse fix (9 sites), missing arch definitions (lock struct, lockptr/rwlock/tcr layouts, tcr-bias, interrupt-level-binding-index), typecode box_fixnum overflow fix, WASM lock stubs + l0-misc.lisp reader conditionals, PROCLAIM declaim compile-time fix, `%alloc-misc` 3-arg register fix, CAR/CDR contract fix, null table slot stubs, **cold-boot-init success** (v15.3), **FASL boot metadata alias fix** (2026-03-03: `%SIMPLE-FASL-INIT-BUFFER` now in `functions[]`), MV calling convention (`wasm_return_values2/3/4` + `wasm_push_value_set` arg_y/arg_x assignments)
+**Blocked on:** End-to-end FASL loading verification in full runtime (Phase0AA tests should now unblock).
 **Build pipeline:** Functional (kernel → subprims → boot image → modules → image assembly)
-**MVP-1 completion:** 65% → Phase 0 unblocks everything
+**MVP-1 completion:** 70%
 
 ---
 
@@ -285,9 +285,14 @@ Fresh unique labels per segment in `wasm2-local-tagbody`.
 ### B6. l1-cl-package.lafsl Loading Failure ⚠️ (2026-02-16)
 Root cause: 280+ missing WASM LAP bridge functions. Systemic fix: Phase 0A.
 
+### B7. FASL Boot Metadata Alias Bug ✅ (2026-03-03)
+`%SIMPLE-FASL-INIT-BUFFER` absent from `functions[]` because all 5 bootstrap-entry call sites in `wasm2-compile` passed `nil` as `function-name`; module dedup by entry-index silently dropped all aliases. Fixed by tracking all names in `%wasm2-name-aliases%` (outside dedup) in `wasm2.lisp` and emitting them in `build-wasm-boot.lisp`. Diagnosed by Codex read-only audit.
+
 ---
 
 ## 📝 Session Notes
+
+**2026-03-03:** Fixed FASL boot metadata alias bug (Codex-diagnosed). Five bootstrap-entry call sites in `wasm2-compile` were passing `nil` as `function-name`, so all const-folded functions (entry 202, 213, 214…) were silently dropped from `functions[]` by the module-level dedup. Added `%wasm2-name-aliases%` tracking list outside dedup, passed `(afunc-name afunc)` at all 5 sites, emitted alias loop in `build-wasm-boot.lisp`. Verified: `*fasl-api*` slot 3 `init-buf=0x0412cfe6 (fn)`. Also fixed MV calling convention: `wasm_return_values2/3/4` and `wasm_push_value_set` were not assigning `arg_y`/`arg_x`. Fixed `closure-unwind-mv-smoke.mjs`: removed inner closure + `(cons x nil)` from compiled lambda (both cause symbol-ref failures in minimal image). All smoke tests PASS including `root-image-manifest-smoke.mjs` (previously always failing due to stale manifest). Full rebuild completed cleanly.
 
 **2026-02-19 (session 2):** Fixed LOCK-ACQUISITION, PROCLAIM, and `%alloc-misc` bad count blockers.
 

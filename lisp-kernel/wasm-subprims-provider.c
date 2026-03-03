@@ -1748,10 +1748,15 @@ wasm_push_value_set(TCR *tcr)
   }
 
   if (count > 0) {
-    new_vsp[4] = wasm_reg(tcr, arg_z);
+    new_vsp[4] = wasm_reg(tcr, arg_z);   /* MV[0] always in arg_z */
     if (count > 1) {
-      for (signed_natural i = 1; i < count; i++) {
-        new_vsp[4 + i] = old_vsp[i];
+      new_vsp[5] = wasm_reg(tcr, arg_y); /* MV[1] always in arg_y */
+      if (count > 2) {
+        new_vsp[6] = wasm_reg(tcr, arg_x); /* MV[2] always in arg_x */
+        /* MV[3+]: read from descending VSP (TOS=old_vsp[0]=MV[count-1]) */
+        for (signed_natural i = 3; i < count; i++) {
+          new_vsp[4 + i] = old_vsp[count - 1 - i];
+        }
       }
     }
   }
@@ -1801,11 +1806,13 @@ wasm_recover_value_sets(TCR *tcr)
   }
 
   LispObj *new_vsp = newest - total;
-  signed_natural out = 0;
+  /* Fill descending so new_vsp[total-1]=MV[0]=arg_z, new_vsp[total-2]=MV[1], ...
+     new_vsp[0]=MV[total-1].  This matches wasm_get_mv: vsp[count-1-i] = MV[i]. */
+  signed_natural out = total - 1;
   for (LispObj *cur = oldest; cur != NULL; ) {
     signed_natural count = wasm_unbox_fixnum_or_trap(cur[2]);
     for (signed_natural j = 0; j < count; j++) {
-      new_vsp[out++] = cur[4 + j];
+      new_vsp[out--] = cur[4 + j];
     }
     signed_natural younger = wasm_unbox_fixnum_or_trap(cur[1]);
     if (younger == 0) {
@@ -1814,7 +1821,7 @@ wasm_recover_value_sets(TCR *tcr)
     cur = cur + younger;
   }
 
-  wasm_set_reg(tcr, arg_z, new_vsp[0]);
+  wasm_set_reg(tcr, arg_z, new_vsp[total - 1]);
   wasm_set_reg(tcr, vsp, (LispObj)new_vsp);
   tcr->save_vsp = new_vsp;
   wasm_set_nargs_count(tcr, total);

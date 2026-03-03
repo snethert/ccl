@@ -465,7 +465,7 @@ def build_identity_y_module_bytes(export_name: str) -> bytes:
     push_u8(imports, 0x00)
     push_uleb(imports, 0)
     push_string(imports, "ccl")
-    push_string(imports, "wasm_return_arg_y")
+    push_string(imports, "wasm_return_arg_z")
     push_u8(imports, 0x00)
     push_uleb(imports, 1)
 
@@ -506,6 +506,118 @@ def build_identity_y_module_bytes(export_name: str) -> bytes:
         out.extend(sec)
 
     return bytes(out)
+
+
+def build_noncommutative_call_import_module_bytes(import_name: str, export_name: str) -> bytes:
+    """Build module bytes for a non-commutative binary op.
+
+    Funcall convention delivers args as arg_y=x (first/left), arg_z=y (second/right).
+    The helper uses compiler convention: arg_z=x (left), arg_y=y (right).
+    Emit a swap (get_arg_y, get_arg_z, set_arg_y, set_arg_z) before calling the helper.
+    """
+    out = bytearray([0x00, 0x61, 0x73, 0x6D, 0x01, 0x00, 0x00, 0x00])
+
+    types = bytearray()
+    # type 0: () → i32   (pending_throw_p, get_arg_y, get_arg_z)
+    # type 1: () → void  (the helper)
+    # type 2: (i32) → void  (set_arg_y, set_arg_z)
+    push_uleb(types, 3)
+    push_u8(types, 0x60)
+    push_uleb(types, 0)
+    push_uleb(types, 1)
+    push_u8(types, 0x7F)
+    push_u8(types, 0x60)
+    push_uleb(types, 0)
+    push_uleb(types, 0)
+    push_u8(types, 0x60)
+    push_uleb(types, 1)
+    push_u8(types, 0x7F)
+    push_uleb(types, 0)
+
+    imports = bytearray()
+    # func 0: wasm_pending_throw_p () → i32
+    # func 1: the helper           () → void
+    # func 2: wasm_get_arg_y       () → i32
+    # func 3: wasm_get_arg_z       () → i32
+    # func 4: wasm_set_arg_y  (i32) → void
+    # func 5: wasm_set_arg_z  (i32) → void
+    push_uleb(imports, 6)
+    push_string(imports, "ccl")
+    push_string(imports, "wasm_pending_throw_p")
+    push_u8(imports, 0x00)
+    push_uleb(imports, 0)
+    push_string(imports, "ccl")
+    push_string(imports, import_name)
+    push_u8(imports, 0x00)
+    push_uleb(imports, 1)
+    push_string(imports, "ccl")
+    push_string(imports, "wasm_get_arg_y")
+    push_u8(imports, 0x00)
+    push_uleb(imports, 0)
+    push_string(imports, "ccl")
+    push_string(imports, "wasm_get_arg_z")
+    push_u8(imports, 0x00)
+    push_uleb(imports, 0)
+    push_string(imports, "ccl")
+    push_string(imports, "wasm_set_arg_y")
+    push_u8(imports, 0x00)
+    push_uleb(imports, 2)
+    push_string(imports, "ccl")
+    push_string(imports, "wasm_set_arg_z")
+    push_u8(imports, 0x00)
+    push_uleb(imports, 2)
+
+    funcs = bytearray()
+    push_uleb(funcs, 1)
+    push_uleb(funcs, 1)  # local func: type 1 () → void
+
+    exports = bytearray()
+    push_uleb(exports, 1)
+    push_string(exports, export_name)
+    push_u8(exports, 0x00)
+    push_uleb(exports, 6)  # local func after 6 func imports
+
+    code = bytearray()
+    body = bytearray()
+    push_uleb(body, 0)           # 0 locals
+    # check pending throw
+    push_u8(body, 0x10)
+    push_uleb(body, 0)           # call func 0: wasm_pending_throw_p
+    push_u8(body, 0x04)
+    push_u8(body, 0x40)
+    push_u8(body, 0x0F)          # return
+    push_u8(body, 0x0B)          # end if
+    # swap: arg_y (funcall x) → arg_z, arg_z (funcall y) → arg_y
+    push_u8(body, 0x10)
+    push_uleb(body, 2)           # call func 2: wasm_get_arg_y → stack: [x]
+    push_u8(body, 0x10)
+    push_uleb(body, 3)           # call func 3: wasm_get_arg_z → stack: [x, y]
+    push_u8(body, 0x10)
+    push_uleb(body, 4)           # call func 4: wasm_set_arg_y → arg_y=y, stack: [x]
+    push_u8(body, 0x10)
+    push_uleb(body, 5)           # call func 5: wasm_set_arg_z → arg_z=x
+    # call the helper
+    push_u8(body, 0x10)
+    push_uleb(body, 1)           # call func 1: the helper
+    push_u8(body, 0x0B)          # end
+    push_uleb(code, 1)
+    push_uleb(code, len(body))
+    code.extend(body)
+
+    for sec in (
+        section(1, types),
+        section(2, imports),
+        section(3, funcs),
+        section(7, exports),
+        section(10, code),
+    ):
+        out.extend(sec)
+
+    return bytes(out)
+
+
+# Non-commutative binary op helpers that need funcall→compiler convention swap.
+_NONCOMMUTATIVE_IMPORTS = {"wasm_return_fixnum_sub", "wasm_return_fixnum_ash"}
 
 
 def build_call_import_module_bytes(import_name: str, export_name: str) -> bytes:
@@ -693,6 +805,8 @@ def build_dynamic_area(entry_fixnum: int) -> tuple[bytearray, int, int]:
             module_bytes = build_identity_module_bytes(export_name)
         elif import_name == "wasm_identity_y":
             module_bytes = build_identity_y_module_bytes(export_name)
+        elif import_name in _NONCOMMUTATIVE_IMPORTS:
+            module_bytes = build_noncommutative_call_import_module_bytes(import_name, export_name)
         else:
             module_bytes = build_call_import_module_bytes(import_name, export_name)
         bytes_ptr = builder.alloc_u8_vector(module_bytes)

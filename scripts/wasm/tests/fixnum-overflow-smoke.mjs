@@ -168,7 +168,7 @@ assert(addMax === maxFixnum, `unexpected max add result: got=${addMax} expected=
 const subMin = kernel.instance.exports.wasm_test_entry_funcall2(205, minFixnum, 0) >> 2;
 assert(subMin === minFixnum, `unexpected min sub result: got=${subMin} expected=${minFixnum}`);
 
-const negResult = kernel.instance.exports.wasm_test_entry_funcall2(212, 5, 0) >> 2;
+const negResult = kernel.instance.exports.wasm_test_entry_funcall1_raw(212, 5 << 2) >> 2;
 assert(negResult === -5, `unexpected neg result: got=${negResult} expected=-5`);
 
 const addOverflow = kernel.instance.exports.wasm_test_entry_funcall2(204, maxFixnum, 1) >>> 0;
@@ -177,7 +177,7 @@ assertBignum(runtime.memory, addOverflow, maxFixnum + 1, "add overflow");
 const subOverflow = kernel.instance.exports.wasm_test_entry_funcall2(205, minFixnum, 1) >>> 0;
 assertBignum(runtime.memory, subOverflow, minFixnum - 1, "sub overflow");
 
-const negOverflow = kernel.instance.exports.wasm_test_entry_funcall2(212, minFixnum, 0) >>> 0;
+const negOverflow = kernel.instance.exports.wasm_test_entry_funcall1_raw(212, minFixnum << 2) >>> 0;
 assertBignum(runtime.memory, negOverflow, -minFixnum, "neg overflow");
 
 const ashOverflow = kernel.instance.exports.wasm_test_entry_funcall2(207, 1, 70) >>> 0;

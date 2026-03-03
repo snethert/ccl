@@ -722,8 +722,8 @@ if (!perfCheckpoint) {
   process.exit(0);
 }
 
-const perfIterations = readPositiveIntOption(args, "--perf-iterations", 300000);
-const perfWarmup = readPositiveIntOption(args, "--perf-warmup", 60000);
+const perfIterations = readPositiveIntOption(args, "--perf-iterations", 80000);
+const perfWarmup = readPositiveIntOption(args, "--perf-warmup", 5000);
 const perfRounds = readPositiveIntOption(args, "--perf-rounds", 5);
 const perfSamples = readPositiveIntOption(args, "--perf-samples", 1);
 const perfPathIterations = readPositiveIntOption(args, "--perf-path-iterations", 20000);

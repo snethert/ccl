@@ -28,7 +28,7 @@ const kernelUrl = new URL("../../../build/wasm32/kernel/wasmcl.wasm", import.met
 const kernelBytes = await readFileUrl(kernelUrl);
 
 const runtime = createSharedCclRuntime({
-  memoryInitialPages: 8, // 512 KiB is enough for this test
+  memoryInitialPages: 17, // kernel declares min 17 pages
   // The kernel links against an imported indirect function table with a
   // non-trivial minimum size (subprims slots). Leave plenty of room.
   subprimsTableInitial: 256,

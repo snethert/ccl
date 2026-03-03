@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "../../..");
-const loadImageScript = path.join(scriptDir, "load-image.mjs");
+const loadImageScript = path.join(scriptDir, "../lib/load-image.mjs");
 
 function runNode(args, { env = {} } = {}) {
   return new Promise((resolve, reject) => {
@@ -57,11 +57,11 @@ const result = await runNode(
     "--bootstrap-contract",
     "strict",
     "--modules",
-    "doc/wasm/wasm-runtime-modules.json",
+    "build/wasm32/modules/wasm-runtime-modules.json",
     "--stdin-text",
     "(quit)\\n",
     "--close-stdin",
-    "doc/wasm/root.image",
+    "build/wasm32/images/root.image",
   ],
   {
     env: {

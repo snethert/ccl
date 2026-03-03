@@ -1692,6 +1692,7 @@ wasm_return_values2(LispObj value0, LispObj value1)
   tcr->save_vsp = vsp_ptr;
   tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
   tcr->wasm_gprs[arg_z] = value0;
+  tcr->wasm_gprs[arg_y] = value1;
   tcr->wasm_gprs[nargs] = box_fixnum(2);
   return value0;
 }
@@ -1715,6 +1716,8 @@ wasm_return_values3(LispObj value0, LispObj value1, LispObj value2)
   tcr->save_vsp = vsp_ptr;
   tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
   tcr->wasm_gprs[arg_z] = value0;
+  tcr->wasm_gprs[arg_y] = value1;
+  tcr->wasm_gprs[arg_x] = value2;
   tcr->wasm_gprs[nargs] = box_fixnum(3);
   return value0;
 }
@@ -1739,6 +1742,8 @@ wasm_return_values4(LispObj value0, LispObj value1, LispObj value2, LispObj valu
   tcr->save_vsp = vsp_ptr;
   tcr->wasm_gprs[vsp] = (LispObj)vsp_ptr;
   tcr->wasm_gprs[arg_z] = value0;
+  tcr->wasm_gprs[arg_y] = value1;
+  tcr->wasm_gprs[arg_x] = value2;
   tcr->wasm_gprs[nargs] = box_fixnum(4);
   return value0;
 }
@@ -2767,9 +2772,9 @@ wasm_subprim_nonlocal_exit_coherence_selftest(void)
     wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
     return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_SAVEVSP;
   }
-  if ((tcr->save_vsp[0] != mv0) ||
+  if ((tcr->save_vsp[2] != mv0) ||
       (tcr->save_vsp[1] != mv1) ||
-      (tcr->save_vsp[2] != mv2)) {
+      (tcr->save_vsp[0] != mv2)) {
     wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
     return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_MV_VALUES;
   }
@@ -2950,9 +2955,9 @@ wasm_subprim_nonlocal_exit_coherence_selftest(void)
     return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_SAVETSP;
   }
   if ((tcr->save_vsp == NULL) ||
-      (tcr->save_vsp[0] != funcall_mv0) ||
+      (tcr->save_vsp[2] != funcall_mv0) ||
       (tcr->save_vsp[1] != funcall_mv1) ||
-      (tcr->save_vsp[2] != funcall_mv2)) {
+      (tcr->save_vsp[0] != funcall_mv2)) {
     wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
     return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_MV_SAVEVSP_VALUES;
   }

@@ -6,6 +6,7 @@
  */
 
 import fs from "node:fs/promises";
+import { createReadStream } from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -19,8 +20,14 @@ function assert(cond, msg) {
   if (!cond) fail(msg);
 }
 
-function sha256Hex(bytes) {
-  return crypto.createHash("sha256").update(bytes).digest("hex");
+function sha256HexStream(filePath) {
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash("sha256");
+    createReadStream(filePath)
+      .on("data", (chunk) => hash.update(chunk))
+      .on("end", () => resolve(hash.digest("hex")))
+      .on("error", reject);
+  });
 }
 
 const args = process.argv.slice(2);
@@ -30,7 +37,7 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "../../..");
 const manifestPath = manifestArgIndex >= 0 && args[manifestArgIndex + 1]
   ? path.resolve(args[manifestArgIndex + 1])
-  : path.resolve(repoRoot, "doc/wasm/root.image.manifest.json");
+  : path.resolve(repoRoot, "build/wasm32/images/root.image.manifest.json");
 
 const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8"));
 assert(Number.isFinite(manifest?.schemaVersion) && (manifest.schemaVersion >>> 0) >= 1, "invalid schemaVersion");
@@ -53,8 +60,7 @@ for (const key of artifactKeys) {
   const absolutePath = path.isAbsolute(artifact.path)
     ? artifact.path
     : path.resolve(repoRoot, artifact.path);
-  const bytes = await fs.readFile(absolutePath);
-  const digest = sha256Hex(bytes);
+  const digest = await sha256HexStream(absolutePath);
   assert(digest === artifact.sha256, `${key} hash mismatch: expected ${artifact.sha256}, got ${digest}`);
 }
 

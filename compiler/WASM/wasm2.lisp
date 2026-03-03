@@ -18,6 +18,7 @@
 (defvar *wasm2-specials* nil)
 (defvar *wasm2-record-symbols* nil)
 (defvar %wasm-compiled-modules% nil)
+(defvar %wasm2-name-aliases% nil)   ; (name-string . entry-index) for all compiled fns
 (defvar *wasm2-spillable-locals* nil)
 (defvar *wasm2-spilling-p* nil)
 ;; Default const-pool on for wasm2; bind to NIL to reproduce pre-pool behavior.
@@ -66,7 +67,8 @@
                   *wasm2-generic-imports*
                   *wasm2-external-imports* *wasm2-external-import-map*
                   *wasm2-emit-entry-index* *wasm2-fixnum-direct-scratch-base*
-                  %wasm-compiled-modules%))
+                  %wasm-compiled-modules%
+                  %wasm2-name-aliases%))
 (unless (or (and (boundp '*wasm2-skip-next-nx-defops*)
                  *wasm2-skip-next-nx-defops*)
             (and (boundp '*nx1-operators*)
@@ -4009,6 +4011,13 @@
                                     code-body
                                     entry-call-abi
                                     fn-slots))))
+      ;; Always record name alias regardless of module dedup.  Bootstrap entry
+      ;; slots (202, 213, 214, …) are shared; only the first function at each
+      ;; index reaches the module record.  Aliases let build-wasm-boot.lisp
+      ;; include all names in functions[] so the bootstrap resolver can find them.
+      (when function-name
+        (push (cons (prin1-to-string function-name) entry-index)
+              %wasm2-name-aliases%))
       (unless (find entry-index %wasm-compiled-modules%
                     :key (lambda (item) (svref item 2))
                     :test #'eql)
@@ -6974,7 +6983,7 @@
     (wasm2-emit-uleb types 0)
     (wasm2-emit-uleb types 0)
 
-    ;; Imports: env.memory, ccl.wasm_pending_throw_p (type 0), ccl.wasm_return_arg_y (type 1)
+    ;; Imports: env.memory, ccl.wasm_pending_throw_p (type 0), ccl.wasm_return_arg_z (type 1)
     (wasm2-emit-uleb imports 3)
     (wasm2-emit-import-memory imports)
     (wasm2-emit-string imports "ccl")
@@ -6982,7 +6991,7 @@
     (wasm2-push-u8 imports 0)
     (wasm2-emit-uleb imports 0)
     (wasm2-emit-string imports "ccl")
-    (wasm2-emit-string imports "wasm_return_arg_y")
+    (wasm2-emit-string imports "wasm_return_arg_z")
     (wasm2-push-u8 imports 0)
     (wasm2-emit-uleb imports 1)
 
@@ -6996,7 +7005,7 @@
     (wasm2-push-u8 exports 0)
     (wasm2-emit-uleb exports 2)
 
-    ;; Code: local decls = 0, guard pending_throw then return arg_y
+    ;; Code: local decls = 0, guard pending_throw then return arg_z
     (let* ((body (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0)))
       (wasm2-emit-uleb body 0)
       (wasm2-push-u8 body #x10)
@@ -7094,7 +7103,10 @@
          (code (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0)))
     (wasm2-emit-bytes out '(0 #x61 #x73 #x6d 1 0 0 0))
 
-    (wasm2-emit-uleb types 2)
+    ;; type 0: () → i32   (wasm_pending_throw_p, wasm_get_arg_y, wasm_get_arg_z)
+    ;; type 1: () → void  (wasm_return_fixnum_sub)
+    ;; type 2: (i32) → void  (wasm_set_arg_y, wasm_set_arg_z)
+    (wasm2-emit-uleb types 3)
     (wasm2-push-u8 types #x60)
     (wasm2-emit-uleb types 0)
     (wasm2-emit-uleb types 1)
@@ -7102,8 +7114,14 @@
     (wasm2-push-u8 types #x60)
     (wasm2-emit-uleb types 0)
     (wasm2-emit-uleb types 0)
+    (wasm2-push-u8 types #x60)
+    (wasm2-emit-uleb types 1)
+    (wasm2-push-u8 types #x7f)
+    (wasm2-emit-uleb types 0)
 
-    (wasm2-emit-uleb imports 3)
+    ;; 1 memory + 6 func imports: pending_throw_p(0), return_fixnum_sub(1),
+    ;; get_arg_y(2), get_arg_z(3), set_arg_y(4), set_arg_z(5)
+    (wasm2-emit-uleb imports 7)
     (wasm2-emit-import-memory imports)
     (wasm2-emit-string imports "ccl")
     (wasm2-emit-string imports "wasm_pending_throw_p")
@@ -7113,6 +7131,22 @@
     (wasm2-emit-string imports "wasm_return_fixnum_sub")
     (wasm2-push-u8 imports 0)
     (wasm2-emit-uleb imports 1)
+    (wasm2-emit-string imports "ccl")
+    (wasm2-emit-string imports "wasm_get_arg_y")
+    (wasm2-push-u8 imports 0)
+    (wasm2-emit-uleb imports 0)
+    (wasm2-emit-string imports "ccl")
+    (wasm2-emit-string imports "wasm_get_arg_z")
+    (wasm2-push-u8 imports 0)
+    (wasm2-emit-uleb imports 0)
+    (wasm2-emit-string imports "ccl")
+    (wasm2-emit-string imports "wasm_set_arg_y")
+    (wasm2-push-u8 imports 0)
+    (wasm2-emit-uleb imports 2)
+    (wasm2-emit-string imports "ccl")
+    (wasm2-emit-string imports "wasm_set_arg_z")
+    (wasm2-push-u8 imports 0)
+    (wasm2-emit-uleb imports 2)
 
     (wasm2-emit-uleb funcs 1)
     (wasm2-emit-uleb funcs 1)
@@ -7120,16 +7154,26 @@
     (wasm2-emit-uleb exports 1)
     (wasm2-emit-string exports +wasm-fixnum-sub-export-name+)
     (wasm2-push-u8 exports 0)
-    (wasm2-emit-uleb exports 2)
+    (wasm2-emit-uleb exports 6)         ; local func after 6 func imports
 
     (let* ((body (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0)))
       (wasm2-emit-uleb body 0)
       (wasm2-push-u8 body #x10)
-      (wasm2-emit-uleb body 0)
+      (wasm2-emit-uleb body 0)          ; call func 0: wasm_pending_throw_p
       (wasm2-push-u8 body #x04)
       (wasm2-push-u8 body #x40)
       (wasm2-push-u8 body #x0f)
       (wasm2-push-u8 body #x0b)
+      ;; Funcall convention: arg_y=x (minuend), arg_z=y (subtrahend).
+      ;; Compiler convention: arg_z=x, arg_y=y.  Swap before calling helper.
+      (wasm2-push-u8 body #x10)
+      (wasm2-emit-uleb body 2)          ; call func 2: wasm_get_arg_y → stack: [x]
+      (wasm2-push-u8 body #x10)
+      (wasm2-emit-uleb body 3)          ; call func 3: wasm_get_arg_z → stack: [x, y]
+      (wasm2-push-u8 body #x10)
+      (wasm2-emit-uleb body 4)          ; call func 4: wasm_set_arg_y → arg_y=y, stack: [x]
+      (wasm2-push-u8 body #x10)
+      (wasm2-emit-uleb body 5)          ; call func 5: wasm_set_arg_z → arg_z=x
       (wasm2-push-u8 body #x10)
       (wasm2-emit-uleb body 1)
       (wasm2-push-u8 body #x0b)
@@ -7218,7 +7262,10 @@
          (code (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0)))
     (wasm2-emit-bytes out '(0 #x61 #x73 #x6d 1 0 0 0))
 
-    (wasm2-emit-uleb types 2)
+    ;; type 0: () → i32   (wasm_pending_throw_p, wasm_get_arg_y, wasm_get_arg_z)
+    ;; type 1: () → void  (wasm_return_fixnum_ash)
+    ;; type 2: (i32) → void  (wasm_set_arg_y, wasm_set_arg_z)
+    (wasm2-emit-uleb types 3)
     (wasm2-push-u8 types #x60)
     (wasm2-emit-uleb types 0)
     (wasm2-emit-uleb types 1)
@@ -7226,8 +7273,14 @@
     (wasm2-push-u8 types #x60)
     (wasm2-emit-uleb types 0)
     (wasm2-emit-uleb types 0)
+    (wasm2-push-u8 types #x60)
+    (wasm2-emit-uleb types 1)
+    (wasm2-push-u8 types #x7f)
+    (wasm2-emit-uleb types 0)
 
-    (wasm2-emit-uleb imports 3)
+    ;; 1 memory + 6 func imports: pending_throw_p(0), return_fixnum_ash(1),
+    ;; get_arg_y(2), get_arg_z(3), set_arg_y(4), set_arg_z(5)
+    (wasm2-emit-uleb imports 7)
     (wasm2-emit-import-memory imports)
     (wasm2-emit-string imports "ccl")
     (wasm2-emit-string imports "wasm_pending_throw_p")
@@ -7237,6 +7290,22 @@
     (wasm2-emit-string imports "wasm_return_fixnum_ash")
     (wasm2-push-u8 imports 0)
     (wasm2-emit-uleb imports 1)
+    (wasm2-emit-string imports "ccl")
+    (wasm2-emit-string imports "wasm_get_arg_y")
+    (wasm2-push-u8 imports 0)
+    (wasm2-emit-uleb imports 0)
+    (wasm2-emit-string imports "ccl")
+    (wasm2-emit-string imports "wasm_get_arg_z")
+    (wasm2-push-u8 imports 0)
+    (wasm2-emit-uleb imports 0)
+    (wasm2-emit-string imports "ccl")
+    (wasm2-emit-string imports "wasm_set_arg_y")
+    (wasm2-push-u8 imports 0)
+    (wasm2-emit-uleb imports 2)
+    (wasm2-emit-string imports "ccl")
+    (wasm2-emit-string imports "wasm_set_arg_z")
+    (wasm2-push-u8 imports 0)
+    (wasm2-emit-uleb imports 2)
 
     (wasm2-emit-uleb funcs 1)
     (wasm2-emit-uleb funcs 1)
@@ -7244,16 +7313,26 @@
     (wasm2-emit-uleb exports 1)
     (wasm2-emit-string exports +wasm-fixnum-ash-export-name+)
     (wasm2-push-u8 exports 0)
-    (wasm2-emit-uleb exports 2)
+    (wasm2-emit-uleb exports 6)         ; local func after 6 func imports
 
     (let* ((body (make-array 0 :element-type '(unsigned-byte 8) :adjustable t :fill-pointer 0)))
       (wasm2-emit-uleb body 0)
       (wasm2-push-u8 body #x10)
-      (wasm2-emit-uleb body 0)
+      (wasm2-emit-uleb body 0)          ; call func 0: wasm_pending_throw_p
       (wasm2-push-u8 body #x04)
       (wasm2-push-u8 body #x40)
       (wasm2-push-u8 body #x0f)
       (wasm2-push-u8 body #x0b)
+      ;; Funcall convention: arg_y=x (value), arg_z=y (shift amt).
+      ;; Compiler convention: arg_z=x, arg_y=y.  Swap before calling helper.
+      (wasm2-push-u8 body #x10)
+      (wasm2-emit-uleb body 2)          ; call func 2: wasm_get_arg_y → stack: [x]
+      (wasm2-push-u8 body #x10)
+      (wasm2-emit-uleb body 3)          ; call func 3: wasm_get_arg_z → stack: [x, y]
+      (wasm2-push-u8 body #x10)
+      (wasm2-emit-uleb body 4)          ; call func 4: wasm_set_arg_y → arg_y=y, stack: [x]
+      (wasm2-push-u8 body #x10)
+      (wasm2-emit-uleb body 5)          ; call func 5: wasm_set_arg_z → arg_z=x
       (wasm2-push-u8 body #x10)
       (wasm2-emit-uleb body 1)
       (wasm2-push-u8 body #x0b)
@@ -8017,7 +8096,8 @@
                                                 +wasm-const-module-version+
                                                 nil
                                                 nil
-                                                +wasm2-gc-root-mode-runtime-bootstrap+)
+                                                +wasm2-gc-root-mode-runtime-bootstrap+
+                                                (afunc-name afunc))
                 (setf (afunc-lfun-info afunc)
                       (list* 'wasm-module-bytes module-bytes
                              'wasm-module-export +wasm-const-export-name+
@@ -8041,7 +8121,8 @@
                                               +wasm-if-module-version+
                                               nil
                                               nil
-                                              +wasm2-gc-root-mode-runtime-bootstrap+)
+                                              +wasm2-gc-root-mode-runtime-bootstrap+
+                                              (afunc-name afunc))
               (setf (afunc-lfun-info afunc)
                     (list* 'wasm-module-bytes module-bytes
                            'wasm-module-export +wasm-if-export-name+
@@ -8060,7 +8141,8 @@
                                               +wasm-if-arg-module-version+
                                               nil
                                               nil
-                                              +wasm2-gc-root-mode-runtime-bootstrap+)
+                                              +wasm2-gc-root-mode-runtime-bootstrap+
+                                              (afunc-name afunc))
               (setf (afunc-lfun-info afunc)
                     (list* 'wasm-module-bytes module-bytes
                            'wasm-module-export +wasm-if-arg-export-name+
@@ -8078,7 +8160,8 @@
                                             +wasm-identity-module-version+
                                             nil
                                             nil
-                                            +wasm2-gc-root-mode-runtime-bootstrap+)
+                                            +wasm2-gc-root-mode-runtime-bootstrap+
+                                            (afunc-name afunc))
             (setf (afunc-lfun-info afunc)
                   (list* 'wasm-module-bytes module-bytes
                          'wasm-module-export +wasm-identity-export-name+
@@ -8096,7 +8179,8 @@
                                             +wasm-identity-y-module-version+
                                             nil
                                             nil
-                                            +wasm2-gc-root-mode-runtime-bootstrap+)
+                                            +wasm2-gc-root-mode-runtime-bootstrap+
+                                            (afunc-name afunc))
             (setf (afunc-lfun-info afunc)
                   (list* 'wasm-module-bytes module-bytes
                          'wasm-module-export +wasm-identity-y-export-name+

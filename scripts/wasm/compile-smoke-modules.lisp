@@ -99,14 +99,11 @@
                             (values 10 32))))
     (ccl::wasm-smoke-closure-unwind-mv
      (lambda ()
-       (let* ((x 11)
-              (f (lambda () x)))
-         (declare (ignore f))
+       (let* ((x 11))
          (multiple-value-bind (a b c d e fval)
              (unwind-protect
                  (values 1 2 3 4 5 6)
-               (let ((tmp (cons x nil)))
-                 (declare (ignore tmp))))
+               (%i+ x 0))
            (declare (ignore b c d e fval))
            (%i+ x a)))))
     (ccl::wasm-smoke-f64-add

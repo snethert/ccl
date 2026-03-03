@@ -140,7 +140,7 @@ assert(logiorResult === (6 | 3), `unexpected fixnum logior result: got=${logiorR
 const logxorResult = kernel.instance.exports.wasm_test_entry_funcall2(210, 6, 3) >> 2;
 assert(logxorResult === (6 ^ 3), `unexpected fixnum logxor result: got=${logxorResult} expected=${6 ^ 3}`);
 
-const lognotResult = kernel.instance.exports.wasm_test_entry_funcall2(211, 5, 0) >> 2;
+const lognotResult = kernel.instance.exports.wasm_test_entry_funcall1_raw(211, 5 << 2) >> 2;
 assert(lognotResult === ~5, `unexpected fixnum lognot result: got=${lognotResult} expected=${~5}`);
 
 console.log("PASS: wasm fixnum ops smoke test");

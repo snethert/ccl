@@ -28,7 +28,7 @@ const kernelUrl = new URL("../../../build/wasm32/kernel/wasmcl.wasm", import.met
 const kernelBytes = await readFileUrl(kernelUrl);
 
 const runtime = createSharedCclRuntime({
-  memoryInitialPages: 8,
+  memoryInitialPages: 17, // kernel declares min 17 pages
   subprimsTableInitial: 256,
   createMemory: true,
 });

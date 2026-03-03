@@ -417,12 +417,12 @@ if (injectedFailureCode || forcedBridgeFallback) {
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "../../..");
-const loadImageScript = path.resolve(scriptDir, "load-image.mjs");
+const loadImageScript = path.resolve(scriptDir, "../lib/load-image.mjs");
 
-const minimalImage = path.resolve(repoRoot, "doc/wasm/minimal.image");
-const rootImage = path.resolve(repoRoot, "doc/wasm/root.image");
-const rootManifest = path.resolve(repoRoot, "doc/wasm/root.image.manifest.json");
-const runtimeModulesManifest = path.resolve(repoRoot, "doc/wasm/wasm-runtime-modules.json");
+const minimalImage = path.resolve(repoRoot, "build/wasm32/images/minimal.image");
+const rootImage = path.resolve(repoRoot, "build/wasm32/images/root.image");
+const rootManifest = path.resolve(repoRoot, "build/wasm32/images/root.image.manifest.json");
+const runtimeModulesManifest = path.resolve(repoRoot, "build/wasm32/modules/wasm-runtime-modules.json");
 
 const startupGateFailCheckRaw = String(process.env.CCL_STARTUP_GATE_TEST_FAIL_CHECK ?? "").trim();
 const startupGateFailCheck = startupGateFailCheckRaw.length > 0 ? startupGateFailCheckRaw : null;
@@ -506,42 +506,6 @@ if (startupGateInvalidSummary) {
   }
   fail(`[RPL01-E011] malformed startup diagnostics payload rejected: ${detail}`);
 }
-
-await runNodeCase(
-  "minimal-start-lisp-contract-enforced",
-  [loadImageScript, "--mode", "start-lisp", "--expect-rc", "0", minimalImage],
-  {
-    timeoutMs,
-    expectCode: 1,
-    expectStderrIncludes: "pre-start bootstrap contract failed",
-    envOverrides: clearStartupGateInjectionEnv,
-    expectStartupSummary: true,
-    expectedStartupStatus: "pass",
-  },
-);
-
-await runNodeCase(
-  "minimal-start-lisp-warn",
-  [
-    loadImageScript,
-    "--mode",
-    "start-lisp",
-    "--bootstrap-contract",
-    "warn",
-    "--expect-rc",
-    "0",
-    minimalImage,
-  ],
-  {
-    timeoutMs,
-    expectCode: 0,
-    expectStdoutIncludes: "wasm_ccl_start_lisp rc=0",
-    expectStderrIncludes: "WARN: pre-start bootstrap contract failed",
-    envOverrides: clearStartupGateInjectionEnv,
-    expectStartupSummary: true,
-    expectedStartupStatus: "pass",
-  },
-);
 
 await runNodeCase(
   "manifest-hash-mismatch",

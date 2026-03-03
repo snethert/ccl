@@ -186,7 +186,25 @@
                 (when fn-slots
                   (write-string ",\"fnSlots\":" out)
                   (princ fn-slots out)))
-              (write-char #\} out)))))
+              (write-char #\} out))))
+        ;; Also emit aliases for const-folded / bootstrap-entry functions.
+        ;; These share a fixed entry index (202=const, 213=if, 214=if-arg,
+        ;; 215=identity, 216=identity-y) so the module-level dedup discards
+        ;; all but the first.  %wasm2-name-aliases% captures every name.
+        (let ((aliases (and (boundp '%wasm2-name-aliases%) %wasm2-name-aliases%)))
+          (dolist (alias aliases)
+            (let ((fn-name (car alias))
+                  (entry-idx (cdr alias)))
+              (when fn-name
+                (if first-fn
+                  (setf first-fn nil)
+                  (write-char #\, out))
+                (write-char #\{ out)
+                (write-string "\"name\":" out)
+                (boot-json-write-string out fn-name)
+                (write-string ",\"entryIndex\":" out)
+                (princ entry-idx out)
+                (write-char #\} out))))))
       (write-char #\] out)
       (write-string ",\"modules\":[" out)
       (loop for info in entries
