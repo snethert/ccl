@@ -101,7 +101,7 @@ function usage() {
   console.log("  --build-provenance PATH Optional JSON object merged into manifest build.provenance");
   console.log("  --wasm-output PATH  Path inside wasm persistence (default: build/wasm32/images/root.image)");
   console.log("  --modules PATH      Compiled modules bundle (default: build/wasm32/modules/wasm-runtime-modules.json)");
-  console.log("  --boot-modules PATH Level-0 compiled modules bundle (optional)");
+  console.log("  --boot-modules PATH Level-0 compiled modules bundle (default: build/wasm32/modules/wasm-boot-modules.json)");
   console.log("  --kernel PATH       wasmcl.wasm path (default: build/wasm32/kernel/wasmcl.wasm)");
   console.log("  --subprims PATH     subprims.wasm path (default: build/wasm32/subprims/subprims.wasm)");
   console.log("  --subprims-map PATH subprims-map.json path (default: build/wasm32/subprims-map.json)");
@@ -402,6 +402,7 @@ const defaultWasmOutput = "build/wasm32/images/root.image";
 // Policy: keep compiled modules external by default (JSON + .bin sidecar)
 // instead of embedding them in the saved heap image.
 const defaultModules = path.join(modulesDir, "wasm-runtime-modules.json");
+const defaultBootModules = path.join(modulesDir, "wasm-boot-modules.json");
 const kernelPath = args.kernel ?? path.join(kernelDir, "wasmcl.wasm");
 const subprimsPath = args.subprims ?? path.join(subprimsDir, "subprims.wasm");
 const subprimsMapPath = args.subprimsMap ?? path.join(buildDir, "subprims-map.json");
@@ -410,7 +411,7 @@ const outputPath = args.output ?? defaultOutput;
 const manifestOutPath = args.manifestOut ?? `${outputPath}.manifest.json`;
 const wasmOutputPath = args.wasmOutput ?? defaultWasmOutput;
 const modulesPath = args.modules ?? defaultModules;
-const bootModulesPath = args.bootModules ?? null;
+const bootModulesPath = args.bootModules ?? defaultBootModules;
 const buildProvenancePath = args.buildProvenance
   ? path.resolve(args.buildProvenance)
   : null;
@@ -1076,7 +1077,7 @@ if (bootModulesPath) {
       memory: runtime.memory,
       subprimsTable: runtime.subprimsTable,
       microkernel,
-      strict: false,
+      strict: true,
       installConstPools: true,
       verbose: traceEnabled,
     });
@@ -1094,7 +1095,7 @@ if (bootModulesPath) {
     bootNamedFunctions = Array.isArray(bootBundleJson?.functions) ? bootBundleJson.functions : [];
     trace(`boot modules bundle installed ${bootInstall.installed}/${bootInstall.count}, ${bootEntryIndices.size} entry indices reserved`);
     if (bootInstall.installed === 0 && bootInstall.count > 0) {
-      trace("WARNING: boot modules bundle had entries but none were installed");
+      fail("boot modules bundle had entries but none were installed");
     }
     /* Pre-read boot const pool data into memory for on-demand installation.
        Boot const pools are in a separate binary from level-1, so we read them
@@ -1209,11 +1210,14 @@ const criticalSymAddrs = new Map();   // name → word index into mem32
   const FULLTAG_MISC = 6;
   const SUBTAG_FUNCTION = 0x2A;    // subtag_function = 42
 
-  const nil = typeof ex.wasm_get_lisp_nil === "function"
-    ? (ex.wasm_get_lisp_nil() >>> 0)
-    : 0x04000001;
-
-  const mallocFn = ex.malloc;
+  const miscAllocFn = (typeof ex.wasm_misc_alloc === "function" &&
+                       typeof ex.wasm_get_current_tcr === "function")
+    ? (subtag, count) => {
+        const tcr = ex.wasm_get_current_tcr();
+        if (!tcr) return 0;
+        return ex.wasm_misc_alloc(tcr, subtag, count) >>> 0;
+      }
+    : null;
 
   // Collect named functions for image fixup.
   // IMPORTANT: only use BOOT module entries here.  Runtime (level-1) module
@@ -1324,21 +1328,16 @@ const criticalSymAddrs = new Map();   // name → word index into mem32
         mem32[fnWordIdx + 1] = entryIdx << 2;  // slot 0: entrypoint (fixnum)
         mem32[fnWordIdx + 2] = entryIdx << 2;  // slot 1: code vector (fixnum)
         patched++;
-      } else if (typeof mallocFn === "function") {
+      } else if (miscAllocFn) {
         // UDF pseudofunction or other non-function: allocate new function object
-        // fnSlots comes from the cross-compiler; closures need more than 3 slots
-        // for their captured environment variables.
-        const fnBytes = (1 + fnSlots) * 4;   // header word + data slots
-        const fnHdrVal = (fnSlots << 8) | SUBTAG_FUNCTION;
-        const fnPtr = mallocFn(fnBytes) >>> 0;
-        if (fnPtr !== 0) {
+        // in the Lisp heap (via wasm_misc_alloc) so it survives image save.
+        const fnTagged = miscAllocFn(SUBTAG_FUNCTION, fnSlots);
+        if (fnTagged !== 0 && (fnTagged & 7) === FULLTAG_MISC) {
           const m = new Uint32Array(runtime.memory.buffer);
-          const fw = fnPtr >>> 2;
-          m[fw] = fnHdrVal;
+          const fw = ((fnTagged - FULLTAG_MISC) >>> 0) >>> 2;
           m[fw + 1] = entryIdx << 2;   // slot 0: entrypoint (fixnum)
           m[fw + 2] = entryIdx << 2;   // slot 1: code vector (fixnum)
-          for (let s = 3; s <= fnSlots; s++) m[fw + s] = nil;
-          m[w + 3] = (fnPtr + FULLTAG_MISC) >>> 0;  // patch symbol fcell
+          m[w + 3] = fnTagged;          // patch symbol fcell
           allocated++;
         }
       } else {
@@ -1849,67 +1848,11 @@ if (postFasloadRestoreRc === 0) {
   }
 }
 
-/* Invariant gate: critical symbols must be correctly bound after force-rebind.
-   Uses symbol LispObj word-offsets captured during image fixup — no C-side
-   string lookup or allocation needed.  Patches fcells directly via mem32,
-   exactly like the image fixup in-place path does. */
-{
-  const FULLTAG_MISC_G = 6;
-  const SUBTAG_FUNCTION_G = 0x2A;
-  const mem32g = new Uint32Array(runtime.memory.buffer);
-  const totalWordsG = mem32g.length;
-  const nilG = typeof ex.wasm_get_lisp_nil === "function"
-    ? (ex.wasm_get_lisp_nil() >>> 0)
-    : 0x04000001;
-  const mallocG = ex.malloc;
-  for (const symName of ["RUNTIME-BRIDGE-PUMP-COMMANDS", "%ERR-DISP"]) {
-    const fn = (compiledModulesBundle?.functions ?? []).find(f => f?.name === symName);
-    if (!fn || !Number.isFinite(fn.entryIndex)) {
-      fail(`invariant: ${symName} not found in compiled modules bundle`);
-    }
-    const symW = criticalSymAddrs.get(symName);
-    if (symW === undefined) {
-      fail(`invariant: ${symName} symbol address not captured during image fixup`);
-    }
-
-    const entryIdx = fn.entryIndex;
-    const fcellTagged = mem32g[symW + 3];
-
-    if ((fcellTagged & 7) === FULLTAG_MISC_G) {
-      const fnUntagged = (fcellTagged - FULLTAG_MISC_G) >>> 0;
-      const fnW = fnUntagged >>> 2;
-      if (fnW >= 1 && fnW < totalWordsG - 2) {
-        const fnHdr = mem32g[fnW];
-        if ((fnHdr & 0xFF) === SUBTAG_FUNCTION_G) {
-          /* In-place: update existing function object */
-          mem32g[fnW + 1] = entryIdx << 2;
-          mem32g[fnW + 2] = entryIdx << 2;
-          console.error(`[invariant] ${symName} entry=${entryIdx} fcell patched in-place`);
-          continue;
-        }
-      }
-    }
-
-    /* Allocate new function object via JS malloc and patch symbol fcell */
-    if (typeof mallocG === "function") {
-      const fnBytes = (1 + 3) * 4;  /* header + 3 data slots */
-      const fnPtr = mallocG(fnBytes) >>> 0;
-      if (fnPtr !== 0) {
-        const m = new Uint32Array(runtime.memory.buffer);
-        const fw = fnPtr >>> 2;
-        m[fw] = (3 << 8) | SUBTAG_FUNCTION_G;  /* 3-slot function header */
-        m[fw + 1] = entryIdx << 2;
-        m[fw + 2] = entryIdx << 2;
-        m[fw + 3] = nilG;
-        m[symW + 3] = (fnPtr + FULLTAG_MISC_G) >>> 0;
-        console.error(`[invariant] ${symName} entry=${entryIdx} fcell new-alloc`);
-        continue;
-      }
-    }
-
-    fail(`invariant: ${symName} fcell patch failed (no in-place fn, malloc unavailable/failed)`);
-  }
-}
+/* Invariant gate deferred: critical symbol fcells are patched AFTER the
+   pre-toplfunc GC so wasm_set_symbol_function_entry allocates function
+   objects in the Lisp heap (via wasm_misc_alloc).  Objects allocated via
+   C malloc are outside the Lisp heap areas and are NOT serialized into
+   root.image — the old JS-side invariant gate had this bug. */
 
 if (typeof ex.wasm_reset_root_image_runtime_state !== "function") {
   fail("kernel missing wasm_reset_root_image_runtime_state");
@@ -1939,6 +1882,30 @@ if (typeof ex.wasm_trigger_gc === "function") {
   const gcFreed = ex.wasm_trigger_gc() | 0;
   console.error(`[stage] pre-toplfunc GC freed ${gcFreed} bytes`);
 }
+
+/* Invariant gate: patch critical symbol fcells using the C kernel's
+   wasm_set_symbol_function_entry.  This allocates function objects in the
+   Lisp heap (via wasm_misc_alloc) so they survive image serialization.
+   Must run AFTER the GC (which frees heap space for allocation). */
+if (typeof ex.wasm_set_symbol_function_entry === "function") {
+  for (const symName of ["RUNTIME-BRIDGE-PUMP-COMMANDS", "%ERR-DISP"]) {
+    const fn = (compiledModulesBundle?.functions ?? []).find(f => f?.name === symName);
+    if (!fn || !Number.isFinite(fn.entryIndex)) {
+      fail(`invariant: ${symName} not found in compiled modules bundle`);
+    }
+    const nameBytes = encoder.encode(symName);
+    const namePtr = ex.malloc(nameBytes.length);
+    if (!namePtr) fail(`invariant: malloc failed for ${symName} name buffer`);
+    new Uint8Array(runtime.memory.buffer).set(nameBytes, namePtr);
+    const rc = ex.wasm_set_symbol_function_entry(namePtr, nameBytes.length, fn.entryIndex, 0) | 0;
+    if (typeof ex.free === "function") ex.free(namePtr);
+    if (rc !== 0) {
+      fail(`invariant: wasm_set_symbol_function_entry(${symName}, entry=${fn.entryIndex}) rc=${rc}`);
+    }
+    console.error(`[invariant] ${symName} entry=${fn.entryIndex} fcell set (Lisp heap)`);
+  }
+}
+
 const setToplfuncRc = ex.wasm_set_toplfunc_entry(toplevelEntryIndex >>> 0) | 0;
 if (setToplfuncRc !== 0) {
   fail(`wasm_set_toplfunc_entry(${toplevelEntryIndex}) returned ${setToplfuncRc}`);

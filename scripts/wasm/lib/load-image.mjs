@@ -290,6 +290,7 @@ let entryRc = null;
     console.log(`wasm_ccl_start_lisp rc=${entryRc}`);
   } catch (e) {
     console.error(`wasm_ccl_start_lisp trapped: ${e}`);
+    if (e instanceof Error && e.stack) console.error(e.stack);
     process.exit(4);
   }
 }
