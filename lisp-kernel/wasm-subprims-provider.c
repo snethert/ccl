@@ -2408,6 +2408,10 @@ static int wasm_cv_restart = 0;
 static void
 wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
 {
+  if (wasm_pending_throw_p(tcr)) {
+    return;
+  }
+
   wasm_funcall_depth++;
   if (wasm_funcall_depth > 800) {
     /* Approaching WASM native stack limit.  Set pending_throw instead of
@@ -2640,6 +2644,15 @@ wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
 static void
 wasm_call_function_or_symbol(TCR *tcr, LispObj fn_value)
 {
+  /* Short-circuit when an error/throw is already propagating.
+     Compiled WASM code doesn't check pending_throw between instructions —
+     it keeps making funcalls that all land here.  Without this check,
+     a single UDF error cascades into ~176M useless funcalls that exhaust
+     the 4 GB WASM32 heap. */
+  if (wasm_pending_throw_p(tcr)) {
+    return;
+  }
+
   LispObj name = fn_value;
   if (fn_value == nrs_UDF.vcell) {
     wasm_signal_funcall_error(tcr, WASM_XFUNBND, name);
@@ -5865,6 +5878,13 @@ _SPksignalerr(void)
    * avoid non-terminating self-recursion and surface a pending throw
    * to the host boundary instead.
    */
+  /* If an error/throw is already propagating, don't try to dispatch another
+     error through the condition system — just let it unwind. */
+  if (wasm_pending_throw_p(tcr)) {
+    ksignalerr_absorbed++;
+    return;
+  }
+
   static int reentering_errdisp = 0;
   if (reentering_errdisp) {
     wasm_set_pending_throw(tcr, box_fixnum(13));  /* ksignalerr: re-entrant */
@@ -5887,6 +5907,30 @@ _SPksignalerr(void)
   reentering_errdisp = 1;
   wasm_call_lisp_function(tcr, errdisp);
   reentering_errdisp = 0;
+
+  /* WASM can't unwind the native call stack (no longjmp/setjmp).  When ERRDISP
+     fails internally (e.g. %KERNEL-RESTART is UDF during early boot), the
+     reentering_errdisp guard sets pending_throw — but compiled code doesn't
+     check pending_throw between instructions.  If pending_throw stays set,
+     the caller's funcall loop spins forever (every _SPfuncall is absorbed but
+     the loop condition never changes).
+
+     Unconditionally clear pending_throw after ERRDISP returns.  ERRDISP was
+     given its chance to handle the error; whether it pushed internal catch
+     frames (HANDLER-BIND/RESTART-CASE from the condition system after
+     l1-boot-3 initializes it) or not, keeping pending_throw set only causes
+     the compiled-code caller to spin.  If ERRDISP actually threw to a real
+     handler (e.g. *TOPLEVEL-CATCH*), wasm_fasload_path detects that via its
+     own catch_consumed check (wasm-kernel-stubs.c:5276).
+
+     Previous version gated this on catch_top == catch_before_errdisp, but
+     after l1-boot-3.lafsl loads the condition system, ERRDISP pushes internal
+     catch frames whose cleanup funcalls are absorbed by pending_throw —
+     leaving catch_top changed and the condition false, so pending_throw was
+     never cleared and dumplisp.lafsl spun forever. */
+  if (tcr->wasm_pending_throw) {
+    tcr->wasm_pending_throw = 0;
+  }
 }
 
 static LispObj

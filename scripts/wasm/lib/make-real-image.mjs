@@ -1149,12 +1149,12 @@ const bundleInstall = await installCompiledModulesFromBundle({
   installConstPools: true,
   excludeEntries: bootEntryIndices.size > 0 ? bootEntryIndices : null,
 });
-/* Track const pools installed during module installation. */
-for (const entry of bundleInstall.entries) {
-  if (Number.isFinite(entry?.entryIndex) && Number.isFinite(entry?.constPoolLength) && entry.constPoolLength > 0) {
-    constPoolsInstalled.add(entry.entryIndex >>> 0);
-  }
-}
+/* NOTE: Do NOT optimistically mark runtime const pools as installed here.
+   installCompiledModulesFromBundle runs before FASL loading, so symbols
+   referenced by runtime const pools (e.g. RUNTIME-COMMAND--POLL-FRAME) are
+   not yet interned — they would resolve to placeholders.  The proactive
+   install pass (below, after all FASLs are loaded) installs them with
+   correctly-interned symbols and marks constPoolsInstalled at that point. */
 console.error(`[stage] compiled modules: ${bundleInstall.installed}/${bundleInstall.count} installed, ${bundleInstall.failed || 0} failed, ${bundleInstall.excluded || 0} skipped (boot)`);
 if (bundleInstall.count === 0) {
   fail("compiled modules bundle is empty; refusing to proceed");
@@ -1198,11 +1198,16 @@ const encoder = new TextEncoder();
    changing slot 0 (entrypoint) and slot 1 (code vector) to the correct
    entry index while preserving all other slots.  No new memory is
    allocated, so function object structure and slot count are preserved. */
+
+/* Critical symbols whose LispObj word-offsets are captured during image fixup
+   so the invariant gate can patch their fcells directly in JS. */
+const criticalSymNames = new Set(["RUNTIME-BRIDGE-PUMP-COMMANDS", "%ERR-DISP"]);
+const criticalSymAddrs = new Map();   // name → word index into mem32
+
 {
   const SYMBOL_HDR = 0x0000073A;   // (7 << 8) | subtag_symbol
   const FULLTAG_MISC = 6;
   const SUBTAG_FUNCTION = 0x2A;    // subtag_function = 42
-  const FN_HDR_3SLOT = 0x0000032A; // (3 << 8) | subtag_function
 
   const nil = typeof ex.wasm_get_lisp_nil === "function"
     ? (ex.wasm_get_lisp_nil() >>> 0)
@@ -1259,7 +1264,7 @@ const encoder = new TextEncoder();
     let symbolCount = 0, patched = 0, allocated = 0, skippedNoFn = 0;
     const remaining = new Map(rebindMap);
 
-    for (let w = scanStart; w < totalWords && remaining.size > 0; w += 2) {
+    for (let w = scanStart; w < totalWords && (remaining.size > 0 || criticalSymAddrs.size < criticalSymNames.size); w += 2) {
       if (mem32[w] !== SYMBOL_HDR) continue;
       symbolCount++;
 
@@ -1291,6 +1296,12 @@ const encoder = new TextEncoder();
         for (let i = 0; i < pnameCount; i++) {
           name += String.fromCharCode(mem32[dataPos + i] & 0xFFFF);
         }
+      }
+
+      /* Capture critical symbol addresses during the walk — these are used
+         by the invariant gate later to patch fcells directly in JS. */
+      if (criticalSymNames.has(name) && !criticalSymAddrs.has(name)) {
+        criticalSymAddrs.set(name, w);
       }
 
       const info = remaining.get(name);
@@ -1337,42 +1348,11 @@ const encoder = new TextEncoder();
     }
     console.error(`[stage] image fixup: ${patched} in-place + ${allocated} new-alloc / ${rebindMap.size} total (${symbolCount} syms, ${skippedNoFn} skipped, ${remaining.size} unmatched)`);
 
-    /* Second pass: patch any symbol fcells that still point to UDF
-       pseudofunctions (entry 131) so they return NIL instead of
-       triggering cascading error-handler funcalls during cold-boot.
-       Each real definition loaded from FASLs later overwrites the stub. */
-    const SUBTAG_PSEUDOFUNCTION = 0x02;
-    const UDF_ENTRY_FIXNUM = 131 << 2;
-    const falseInfo = rebindMap.get("FALSE");
-    if (falseInfo !== undefined && typeof mallocFn === "function") {
-      const falseEntryIdx = falseInfo.entryIndex;
-      const falseFnPtr = mallocFn(16) >>> 0;
-      if (falseFnPtr !== 0) {
-        const m2 = new Uint32Array(runtime.memory.buffer);
-        const tw2 = m2.length;
-        const fw = falseFnPtr >>> 2;
-        m2[fw] = FN_HDR_3SLOT;   // FALSE is not a closure — 3 slots is correct
-        m2[fw + 1] = falseEntryIdx << 2;
-        m2[fw + 2] = falseEntryIdx << 2;
-        m2[fw + 3] = nil;
-        const falseFnTagged = (falseFnPtr + FULLTAG_MISC) >>> 0;
-        let udfPatched = 0;
-        for (let w = scanStart; w < tw2; w += 2) {
-          if (m2[w] !== SYMBOL_HDR) continue;
-          const fcellTagged = m2[w + 3];
-          if ((fcellTagged & 7) !== FULLTAG_MISC) continue;
-          const fnUnt = (fcellTagged - FULLTAG_MISC) >>> 0;
-          const fwi = fnUnt >>> 2;
-          if (fwi < 1 || fwi >= tw2 - 1) continue;
-          if ((m2[fwi] & 0xFF) === SUBTAG_PSEUDOFUNCTION &&
-              m2[fwi + 1] === UDF_ENTRY_FIXNUM) {
-            m2[w + 3] = falseFnTagged;
-            udfPatched++;
-          }
-        }
-        console.error(`[stage] patched ${udfPatched} UDF pseudofunction fcells to FALSE (entry ${falseEntryIdx})`);
-      }
-    }
+    /* UDF pseudofunction fcells (entry 131) are left as-is.  The C kernel's
+       UDF check (fn_value == nrs_UDF.vcell) catches these and signals XFUNBND.
+       The pending_throw pre-check in wasm_call_function_or_symbol prevents the
+       error-handler cascade that the old FALSE-patching was trying to avoid.
+       Each real definition loaded from FASLs later overwrites the UDF fcell. */
   } else {
     console.error("[stage] WARN: image fixup skipped — no named functions available");
   }
@@ -1779,7 +1759,14 @@ if (postFasloadRestoreRc === 0) {
    At this point the full standard library is loaded — all packages exist,
    all symbols are interned, all functions are defined.  Install every
    remaining const pool so the saved image contains complete Lisp state.
-   At launch time, zero const pool callbacks will fire. */
+   At launch time, zero const pool callbacks will fire.
+
+   NOTE: Some entries may fail due to heap exhaustion (no GC is safe here
+   because compacting GC invalidates package hash tables and
+   RESTORE-LISP-POINTERS may not be available during early boot).
+   Failed entries are logged but not fatal — the pre-save GC (below) will
+   free memory, and any remaining pools will be installed on-demand at
+   launch time by load-image.mjs. */
 {
   const allEntries = new Set([
     ...bootConstPoolData.keys(),
@@ -1798,14 +1785,130 @@ if (postFasloadRestoreRc === 0) {
       proactiveInstalled++;
     } else {
       proactiveFailed++;
-      trace(`proactive const-pool FAILED entry=${entryIndex}`);
+      if (proactiveFailed <= 5) {
+        console.error(`[stage] proactive const-pool install failed for entry=${entryIndex} (will install on-demand at launch)`);
+      }
     }
   }
   console.error(
     `[stage] proactive const-pool install: ${proactiveInstalled} installed,` +
-    ` ${proactiveSkipped} already done, ${proactiveFailed} failed,` +
+    ` ${proactiveSkipped} already done,` +
     ` ${constPoolsInstalled.size} total baked into image`
   );
+}
+
+/* Phase 2B: Force-rebind all WASM-compiled runtime functions.
+   FASL loading silently fails to bind xfunction objects (subtag-xfunction = 0x92)
+   because %defun's (typep named-fn 'function) check rejects them.  Additionally,
+   early const pool install can synthesize placeholder symbols that
+   wasm_set_symbol_function_entry (package-table lookup) would miss.
+   wasm_force_rebind_scan does a full heap scan and unconditionally binds every
+   symbol object whose pname matches a table entry — catching both the canonical
+   symbol and any const-pool-synthesized placeholders.
+   This runs BEFORE image save; it is NOT a launch-time repair. */
+{
+  const enc2 = new TextEncoder();
+  const runtimeFns = (compiledModulesBundle?.functions ?? [])
+    .filter(fn => fn?.name && Number.isFinite(fn.entryIndex)
+                  && !bootEntryIndices.has(fn.entryIndex >>> 0));
+
+  if (runtimeFns.length === 0) {
+    fail("force-rebind: no runtime functions found in compiled modules bundle");
+  }
+  if (typeof ex.wasm_force_rebind_scan !== "function") {
+    fail("kernel missing wasm_force_rebind_scan");
+  }
+
+  // Encode all name strings up front
+  const allNameBytes = runtimeFns.map(fn => enc2.encode(fn.name));
+  const tableSize = runtimeFns.length * 12;   // 12 bytes per entry: name_offset u32, name_len u32, entry_index u32
+  const namesSize = allNameBytes.reduce((s, b) => s + b.length, 0);
+
+  // Grow WASM linear memory to hold the repair table + name strings.
+  // After allocScratch the buffer reference changes — always use runtime.memory.buffer.
+  const tableBase = allocScratch(runtime.memory, tableSize + namesSize);
+  const mem8 = new Uint8Array(runtime.memory.buffer);
+  const memDV = new DataView(runtime.memory.buffer);
+
+  // Write name strings contiguously after the table, then back-fill table entries.
+  let nameWriteOff = tableBase + tableSize;
+  for (let i = 0; i < runtimeFns.length; i++) {
+    const nb = allNameBytes[i];
+    mem8.set(nb, nameWriteOff);
+    const eBase = tableBase + i * 12;
+    memDV.setUint32(eBase,     nameWriteOff,          true);  // name_offset
+    memDV.setUint32(eBase + 4, nb.length,             true);  // name_len
+    memDV.setUint32(eBase + 8, runtimeFns[i].entryIndex >>> 0, true);  // entry_index
+    nameWriteOff += nb.length;
+  }
+
+  const rebound = ex.wasm_force_rebind_scan(tableBase >>> 0, runtimeFns.length >>> 0) | 0;
+  console.error(`[stage] force-rebind: ${rebound} symbols rebound (${runtimeFns.length} runtime entries)`);
+  if (rebound < 0) {
+    fail(`wasm_force_rebind_scan failed: rc=${rebound}`);
+  }
+}
+
+/* Invariant gate: critical symbols must be correctly bound after force-rebind.
+   Uses symbol LispObj word-offsets captured during image fixup — no C-side
+   string lookup or allocation needed.  Patches fcells directly via mem32,
+   exactly like the image fixup in-place path does. */
+{
+  const FULLTAG_MISC_G = 6;
+  const SUBTAG_FUNCTION_G = 0x2A;
+  const mem32g = new Uint32Array(runtime.memory.buffer);
+  const totalWordsG = mem32g.length;
+  const nilG = typeof ex.wasm_get_lisp_nil === "function"
+    ? (ex.wasm_get_lisp_nil() >>> 0)
+    : 0x04000001;
+  const mallocG = ex.malloc;
+  for (const symName of ["RUNTIME-BRIDGE-PUMP-COMMANDS", "%ERR-DISP"]) {
+    const fn = (compiledModulesBundle?.functions ?? []).find(f => f?.name === symName);
+    if (!fn || !Number.isFinite(fn.entryIndex)) {
+      fail(`invariant: ${symName} not found in compiled modules bundle`);
+    }
+    const symW = criticalSymAddrs.get(symName);
+    if (symW === undefined) {
+      fail(`invariant: ${symName} symbol address not captured during image fixup`);
+    }
+
+    const entryIdx = fn.entryIndex;
+    const fcellTagged = mem32g[symW + 3];
+
+    if ((fcellTagged & 7) === FULLTAG_MISC_G) {
+      const fnUntagged = (fcellTagged - FULLTAG_MISC_G) >>> 0;
+      const fnW = fnUntagged >>> 2;
+      if (fnW >= 1 && fnW < totalWordsG - 2) {
+        const fnHdr = mem32g[fnW];
+        if ((fnHdr & 0xFF) === SUBTAG_FUNCTION_G) {
+          /* In-place: update existing function object */
+          mem32g[fnW + 1] = entryIdx << 2;
+          mem32g[fnW + 2] = entryIdx << 2;
+          console.error(`[invariant] ${symName} entry=${entryIdx} fcell patched in-place`);
+          continue;
+        }
+      }
+    }
+
+    /* Allocate new function object via JS malloc and patch symbol fcell */
+    if (typeof mallocG === "function") {
+      const fnBytes = (1 + 3) * 4;  /* header + 3 data slots */
+      const fnPtr = mallocG(fnBytes) >>> 0;
+      if (fnPtr !== 0) {
+        const m = new Uint32Array(runtime.memory.buffer);
+        const fw = fnPtr >>> 2;
+        m[fw] = (3 << 8) | SUBTAG_FUNCTION_G;  /* 3-slot function header */
+        m[fw + 1] = entryIdx << 2;
+        m[fw + 2] = entryIdx << 2;
+        m[fw + 3] = nilG;
+        m[symW + 3] = (fnPtr + FULLTAG_MISC_G) >>> 0;
+        console.error(`[invariant] ${symName} entry=${entryIdx} fcell new-alloc`);
+        continue;
+      }
+    }
+
+    fail(`invariant: ${symName} fcell patch failed (no in-place fn, malloc unavailable/failed)`);
+  }
 }
 
 if (typeof ex.wasm_reset_root_image_runtime_state !== "function") {
@@ -1825,6 +1928,16 @@ if (!Number.isFinite(toplevelEntryIndex)) {
 }
 if (typeof ex.wasm_set_toplfunc_entry !== "function") {
   fail("kernel missing wasm_set_toplfunc_entry");
+}
+/* GC before setting toplfunc: FASL loading generates temporary objects
+   (reader buffers, condition objects from %KERNEL-RESTART UDF errors, etc.)
+   that are never collected because the C kernel stubs do not trigger GC on
+   allocation pressure.  In a native CCL build this garbage is collected
+   implicitly throughout; here we must do it explicitly.  This also compacts
+   the heap so the saved image contains only live data. */
+if (typeof ex.wasm_trigger_gc === "function") {
+  const gcFreed = ex.wasm_trigger_gc() | 0;
+  console.error(`[stage] pre-toplfunc GC freed ${gcFreed} bytes`);
 }
 const setToplfuncRc = ex.wasm_set_toplfunc_entry(toplevelEntryIndex >>> 0) | 0;
 if (setToplfuncRc !== 0) {

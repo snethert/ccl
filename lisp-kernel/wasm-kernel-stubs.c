@@ -272,6 +272,7 @@ LispObj wasm_funcall1(LispObj fn_value, LispObj arg0);
 uint32_t wasm_subprim_nonlocal_exit_coherence_selftest(void);
 static LispObj wasm_find_package_named_bytes(const uint8_t *bytes, uint32_t len);
 static LispObj wasm_find_symbol_named_bytes(const uint8_t *name, uint32_t len, LispObj package);
+static LispObj wasm_find_symbol_named_bytes_scan(const uint8_t *name, uint32_t len, LispObj package);
 static LispObj wasm_find_symbol_in_all_packages_bytes(const uint8_t *name, uint32_t len);
 static LispObj wasm_foreign_funcall0(TCR *tcr, LispObj callable);
 static int wasm_symbol_object_p(LispObj value);
@@ -855,6 +856,11 @@ wasm_set_symbol_function_entry(uint32_t name_ptr, uint32_t name_len,
     if (pkg != lisp_nil) sym = wasm_find_symbol_named_bytes(sym_name, name_len, pkg);
   }
   if (sym == (LispObj)0) sym = wasm_find_symbol_in_all_packages_bytes(sym_name, name_len);
+  /* Fall back to O(N) memory scan if package hash tables miss.
+     This handles the case where FASL loading errors (%KERNEL-RESTART UDF)
+     prevent proper symbol interning into package hash tables, but the
+     symbol object exists on the heap from the boot image. */
+  if (sym == (LispObj)0) sym = wasm_find_symbol_named_bytes_scan(sym_name, name_len, (LispObj)0);
   if (sym == (LispObj)0 || fulltag_of(sym) != fulltag_misc ||
       header_subtag(header_of(sym)) != subtag_symbol) return -1;
 
