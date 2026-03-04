@@ -24,28 +24,41 @@ Two root causes drove this redesign:
 - "You are allowed to change literally *anything* which will make startup easy and fast: code, file formats, the image...whatever."
 
 ### Already Implemented
-- `%run-cold-boot-init` extracted → [nfasload.lisp:1243-1286](level-0/nfasload.lisp#L1243-L1286)
-- `wasm_run_cold_boot_init()` C export → [wasm-kernel-stubs.c:3109-3175](lisp-kernel/wasm-kernel-stubs.c#L3109-L3175)
-- JS-side call → [make-real-image.mjs:1207-1214](scripts/wasm/lib/make-real-image.mjs#L1207-L1214)
+- `%run-cold-boot-init` extracted → [nfasload.lisp:1259](level-0/nfasload.lisp#L1259)
+- `wasm_run_cold_boot_init()` C export → [wasm-kernel-stubs.c:3575](lisp-kernel/wasm-kernel-stubs.c#L3575)
+- JS-side call → [make-real-image.mjs:1446-1450](scripts/wasm/lib/make-real-image.mjs#L1446-L1450)
 - B6 resolved: FASL loading completes (all level-1 FASLs load during build)
-- **Phase 3 done**: `load-image.mjs` rewritten to 314 lines — zero scans, zero const pool work, zero relocation. `bootstrap-contract.mjs` and `bootstrap-function-resolver.mjs` deleted.
+- **Phase 3 done**: `load-image.mjs` rewritten to 315 lines — zero scans, zero const pool work, zero relocation. `bootstrap-contract.mjs` and `bootstrap-function-resolver.mjs` are vestigial (still on disk but unused by the launcher).
 
 ### Current Status (Phase 1 verification)
-Startup XNOFUN errors remain after successful FASL loading:
-```
-funcall-err: code=13 sym=%ERR-DISP            fcell=0x0027f006  (FALSE stub)
-funcall-err: code=13 sym=RUNTIME-BRIDGE-PUMP-COMMANDS  fcell=0x0027f006  (FALSE stub)
-```
-Root cause: `l1-error-signal.lafsl` was absent from `requiredFasls`. The `l1-boot-2.lisp`
-path (`l1-load "l1-error-signal"` inside `catch :toplevel`) fails silently because the
-WASM build environment has no WASM filesystem for `%fasload`. With `%err-disp` = FALSE,
-any condition during `l1-readloop-lds.lafsl` loading cascades into a XNOFUN loop caught
-by `wasm_fasload_path`'s catch frame, aborting the `#+wasm32-target` progn before
-`runtime-bridge-pump-commands` at line 1320.
 
-Fix applied: `l1-error-signal.lafsl` inserted before `l1-readloop-lds.lafsl` in
-`requiredFasls` ([make-real-image.mjs:1447](scripts/wasm/lib/make-real-image.mjs#L1447)).
-Rebuild in progress.
+**Resolved:**
+- B1: `%RUN-COLD-BOOT-INIT` XNOFUN — root cause was missing `--boot-modules` default in
+  `make-real-image.mjs`. Entry 1113 (`%RUN-COLD-BOOT-INIT`) only exists in boot modules.
+  Fixed: added `defaultBootModules` path, `strict: true` on boot install.
+- B2: `%ERR-DISP` / `RUNTIME-BRIDGE-PUMP-COMMANDS` XNOFUN — root cause was JS-side invariant
+  gate allocating function objects via C `malloc` (outside Lisp heap, not serialized into
+  `root.image`). Fixed: moved invariant gate after GC, uses `wasm_set_symbol_function_entry`
+  which allocates via `wasm_misc_alloc` in Lisp heap.
+- B3: `l1-error-signal.lafsl` missing from `requiredFasls` — fixed.
+- B4: Image-fixup fallback used `malloc` — replaced with `wasm_misc_alloc`.
+
+**In progress (build running):**
+- B5: `_SPkeyword_bind` trap at startup. After fixing B1-B4, startup reaches `TOPLEVEL-LOOP`
+  but traps in `_SPkeyword_bind` when calling `RUNTIME-BRIDGE-PUMP-COMMANDS` (which accepts
+  `(&key (max-commands 4))`). Root cause (Codex analysis): force-rebind and invariant gate
+  **destroy FASL-created function objects** by allocating new stub objects that lack keyvects.
+  `_SPkeyword_bind` reads keyvect from slot 2 (`deref(fn_obj, 3)`) — if the function object
+  was replaced by a 2-slot stub (no slot 2) or 3-slot stub (slot 2 = nil but keyvect lost),
+  the read either goes out-of-bounds or finds garbage.
+
+  Fix applied (commit pending):
+  - `wasm_force_rebind_scan`: now patches slots 0/1 in place when fcell already has a
+    `subtag_function` object, preserving keyvect and closed vars.
+  - `wasm_set_symbol_function_entry`: same in-place patching for fcell; new allocations
+    changed from 2-slot to 3-slot so `_SPkeyword_bind` reads valid nil keyvect.
+  - `_SPkeyword_bind`: added `wasm_debug_dump_state` before all 7 trap points with unique
+    labels for diagnostics if it still traps.
 
 ---
 
@@ -114,7 +127,7 @@ These are WASM imports that the kernel module expects. **The import contract mus
 
 **Cross-loader autodiscovery** ([xwasmfasload.lisp:74](xdump/xwasmfasload.lisp#L74)): `:subdirs '("ccl:level-0;WASM;")`. New `.lisp` files in `level-0/WASM/` auto-compiled and included in boot image. Subdirs load FIRST (alphabetically), before root `level-0/` files.
 
-**Critical handoff:** Stage 3 writes `*wasm2-next-entry-index*` to sidecar → Stage 4 reads it. ~830 boot + ~7557 runtime = ~8387 total entries.
+**Critical handoff:** Stage 3 writes `*wasm2-next-entry-index*` to sidecar → Stage 4 reads it. ~2189 boot + ~4756 runtime = ~6945 total entries (counts grow as new functions are added).
 
 ---
 
@@ -473,25 +486,25 @@ wasm-merge group_0.wasm group_1.wasm ... -o merged_0.wasm
 
 **Goal:** Launch = read plan → load image → instantiate modules → fill table → run. No scanning, parsing, resolving, or const pool work.
 
-### Files DELETED
+### Files VESTIGIAL (unused by launcher, deletion pending)
 
-| File | Lines | Reason |
+| File | Lines | Status |
 |------|-------|--------|
-| [bootstrap-contract.mjs](scripts/wasm/lib/bootstrap-contract.mjs) | 163 | Semantic validation of startup functions. Replaced by artifact hash check. |
-| [bootstrap-function-resolver.mjs](scripts/wasm/lib/bootstrap-function-resolver.mjs) | 975 | Symbol scanning + const pool walk to resolve function designators. Replaced by precomputed plan. |
+| [bootstrap-contract.mjs](scripts/wasm/lib/bootstrap-contract.mjs) | 163 | Unused by launcher. Semantic validation replaced by artifact hash check. |
+| [bootstrap-function-resolver.mjs](scripts/wasm/lib/bootstrap-function-resolver.mjs) | 975 | Unused by launcher. Symbol scanning replaced by precomputed plan. |
 
 ### Files REWRITTEN
 
 | File | Before | After | Status |
 |------|--------|-------|--------|
-| [load-image.mjs](scripts/wasm/lib/load-image.mjs) | 1093 lines | **314 lines (done)** | Zero scans, zero const pool work, zero relocation. Plan-driven load-and-go. |
-| [microkernel.mjs](scripts/wasm/lib/microkernel.mjs) | 2054 lines | ~600 (pending) | Clean host ABI. Delete FASLOAD trace, V1 compat, debug cruft, unused ops. |
+| [load-image.mjs](scripts/wasm/lib/load-image.mjs) | 1093 lines | **315 lines (done)** | Zero scans, zero const pool work, zero relocation. Plan-driven load-and-go. |
+| [microkernel.mjs](scripts/wasm/lib/microkernel.mjs) | 2114 lines | ~600 (pending) | Clean host ABI. Delete FASLOAD trace, V1 compat, debug cruft, unused ops. |
 
 ### Files SIMPLIFIED
 
 | File | Current | Change |
 |------|---------|--------|
-| [ccl-loader.mjs](scripts/wasm/lib/ccl-loader.mjs) | 1159 | Gut startup logic. Keep ONLY runtime dynamic compilation support: `installCompiledModulesFromRegistry()`, on-demand const pool callback, function designator resolution. |
+| [ccl-loader.mjs](scripts/wasm/lib/ccl-loader.mjs) | 1275 | Gut startup logic. Keep ONLY runtime dynamic compilation support: `installCompiledModulesFromRegistry()`, on-demand const pool callback, function designator resolution. |
 
 ### Launcher Core Logic
 

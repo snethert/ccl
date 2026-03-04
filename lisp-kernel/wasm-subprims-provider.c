@@ -7228,6 +7228,7 @@ _SPkeyword_bind(void)
 {
   TCR *tcr = wasm_get_current_tcr();
   if (tcr == NULL) {
+    wasm_debug_dump_state("keyword_bind-trap1-tcr-null");
     wasm_subprims_trap();
   }
 
@@ -7235,12 +7236,14 @@ _SPkeyword_bind(void)
   LispObj raw_prev = wasm_reg(tcr, imm0);
   LispObj keyword_flags = wasm_reg(tcr, arg_y);
   if (tag_of(raw_nargs) != tag_fixnum || tag_of(raw_prev) != tag_fixnum || tag_of(keyword_flags) != tag_fixnum) {
+    wasm_debug_dump_state("keyword_bind-trap2-bad-fixnum");
     wasm_subprims_trap();
   }
 
   signed_natural nargs_count = unbox_fixnum(raw_nargs);
   signed_natural prev_count = unbox_fixnum(raw_prev);
   if (nargs_count < 0 || prev_count < 0) {
+    wasm_debug_dump_state("keyword_bind-trap3-neg-count");
     wasm_subprims_trap();
   }
 
@@ -7259,6 +7262,7 @@ _SPkeyword_bind(void)
 
   LispObj fn_obj = wasm_reg(tcr, Rfn);
   if (fulltag_of(fn_obj) != fulltag_misc) {
+    wasm_debug_dump_state("keyword_bind-trap4-fn-not-misc");
     wasm_subprims_trap();
   }
 
@@ -7266,10 +7270,12 @@ _SPkeyword_bind(void)
   signed_natural keyvec_len = 0;
   if (keyvec != (LispObj)nil_value) {
     if (fulltag_of(keyvec) != fulltag_misc) {
+      wasm_debug_dump_state("keyword_bind-trap5-keyvec-bad-tag");
       wasm_subprims_trap();
     }
     keyvec_len = header_element_count(header_of(keyvec));
     if (keyvec_len < 0 || keyvec_len > 256) {
+      wasm_debug_dump_state("keyword_bind-trap6-keyvec-len");
       wasm_subprims_trap();
     }
   }
@@ -7283,6 +7289,7 @@ _SPkeyword_bind(void)
 
   LispObj *stack_ptr = (LispObj *)wasm_reg(tcr, vsp);
   if (stack_ptr == NULL) {
+    wasm_debug_dump_state("keyword_bind-trap7-vsp-null");
     wasm_subprims_trap();
   }
   LispObj *vsp_ptr = stack_ptr;

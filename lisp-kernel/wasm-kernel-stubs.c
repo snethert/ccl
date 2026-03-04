@@ -864,18 +864,35 @@ wasm_set_symbol_function_entry(uint32_t name_ptr, uint32_t name_len,
   if (sym == (LispObj)0 || fulltag_of(sym) != fulltag_misc ||
       header_subtag(header_of(sym)) != subtag_symbol) return -1;
 
-  LispObj fn = wasm_misc_alloc(tcr, subtag_function, (signed_natural)2);
-  if (fn == lisp_nil) return -4;
   LispObj entry = box_fixnum((signed_natural)entry_index);
-  LispObj *fn_data = (LispObj *)((BytePtr)fn + misc_data_offset);
-  fn_data[0] = entry;
-  fn_data[1] = entry;
-
   lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(untag(sym));
+
   if (slot == 1) {
+    /* vcell — always allocate fresh (no keyvect concern). */
+    LispObj fn = wasm_misc_alloc(tcr, subtag_function, (signed_natural)2);
+    if (fn == lisp_nil) return -4;
+    LispObj *fn_data = (LispObj *)((BytePtr)fn + misc_data_offset);
+    fn_data[0] = entry;
+    fn_data[1] = entry;
     rawsym->vcell = fn;
   } else {
-    rawsym->fcell = fn;
+    /* fcell — preserve existing function object if present,
+       so keyvect (slot 2) and closed vars are not destroyed. */
+    LispObj existing = rawsym->fcell;
+    if (fulltag_of(existing) == fulltag_misc &&
+        header_subtag(header_of(existing)) == subtag_function) {
+      LispObj *fn_data = (LispObj *)((BytePtr)existing + misc_data_offset);
+      fn_data[0] = entry;
+      fn_data[1] = entry;
+    } else {
+      LispObj fn = wasm_misc_alloc(tcr, subtag_function, (signed_natural)3);
+      if (fn == lisp_nil) return -4;
+      LispObj *fn_data = (LispObj *)((BytePtr)fn + misc_data_offset);
+      fn_data[0] = entry;
+      fn_data[1] = entry;
+      fn_data[2] = lisp_nil;
+      rawsym->fcell = fn;
+    }
   }
   return 0;
 }
@@ -6743,16 +6760,28 @@ wasm_force_rebind_scan(uint32_t table_ptr, uint32_t table_count)
                 }
               }
               if (match) {
-                LispObj fn = wasm_misc_alloc(tcr, subtag_function, (signed_natural)3);
-                if (fn != lisp_nil) {
-                  LispObj entry_val = box_fixnum((signed_natural)entries[i].entry_index);
-                  LispObj *fn_data = (LispObj *)((BytePtr)fn + misc_data_offset);
+                LispObj existing = rawsym->fcell;
+                LispObj entry_val = box_fixnum((signed_natural)entries[i].entry_index);
+
+                if (fulltag_of(existing) == fulltag_misc &&
+                    header_subtag(header_of(existing)) == subtag_function) {
+                  /* Existing function object — patch entry slots in place,
+                     preserving keyvect (slot 2) and closed vars (slot 3+). */
+                  LispObj *fn_data = (LispObj *)((BytePtr)existing + misc_data_offset);
                   fn_data[0] = entry_val;
                   fn_data[1] = entry_val;
-                  fn_data[2] = lisp_nil;
-                  rawsym->fcell = fn;
-                  rebound++;
+                } else {
+                  /* No existing function — allocate a new 3-slot stub. */
+                  LispObj fn = wasm_misc_alloc(tcr, subtag_function, (signed_natural)3);
+                  if (fn != lisp_nil) {
+                    LispObj *fn_data = (LispObj *)((BytePtr)fn + misc_data_offset);
+                    fn_data[0] = entry_val;
+                    fn_data[1] = entry_val;
+                    fn_data[2] = lisp_nil;
+                    rawsym->fcell = fn;
+                  }
                 }
+                rebound++;
                 break;
               }
             }
