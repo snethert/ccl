@@ -90,6 +90,10 @@ static uint8_t wasm_named_entry_names[WASM_NAMED_ENTRY_BYTES_MAX];
 static uint32_t wasm_named_entry_count = 0u;
 static uint32_t wasm_named_entry_names_used = 0u;
 
+/* Counters for wasm_set_symbol_function_entry paths */
+static uint32_t wasm_fcell_inplace = 0;
+static uint32_t wasm_fcell_newstub = 0;
+
 /* Last const-pool-ref call — used by wasm_debug_dump_state */
 static uint32_t wasm_diag_last_cpr_entry = 0;
 static uint32_t wasm_diag_last_cpr_slot = 0;
@@ -155,7 +159,8 @@ wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
     subtag = header_subtag(header);
   }
 
-  if (subtag != subtag_function && subtag != subtag_pseudofunction) {
+  if (subtag != subtag_function && subtag != subtag_pseudofunction &&
+      subtag != subtag_xfunction) {
     wasm_debug_dump_state("fn not function");
     __builtin_trap();
   }
@@ -880,10 +885,13 @@ wasm_set_symbol_function_entry(uint32_t name_ptr, uint32_t name_len,
        so keyvect (slot 2) and closed vars are not destroyed. */
     LispObj existing = rawsym->fcell;
     if (fulltag_of(existing) == fulltag_misc &&
-        header_subtag(header_of(existing)) == subtag_function) {
+        (header_subtag(header_of(existing)) == subtag_function ||
+         header_subtag(header_of(existing)) == subtag_xfunction)) {
+      /* Patch in place — preserves keyvect (slot 2) and all other slots. */
       LispObj *fn_data = (LispObj *)((BytePtr)existing + misc_data_offset);
       fn_data[0] = entry;
       fn_data[1] = entry;
+      wasm_fcell_inplace++;
     } else {
       LispObj fn = wasm_misc_alloc(tcr, subtag_function, (signed_natural)3);
       if (fn == lisp_nil) return -4;
@@ -892,9 +900,22 @@ wasm_set_symbol_function_entry(uint32_t name_ptr, uint32_t name_len,
       fn_data[1] = entry;
       fn_data[2] = lisp_nil;
       rawsym->fcell = fn;
+      wasm_fcell_newstub++;
     }
   }
   return 0;
+}
+
+/* Check if a symbol (found by name in all packages) is fbound.
+   Returns: 1 = fbound, 0 = UDF, -1 = symbol not found. */
+__attribute__((used, visibility("default"), export_name("wasm_check_symbol_fbound")))
+int32_t
+wasm_check_symbol_fbound(const uint8_t *name, uint32_t len)
+{
+  LispObj sym = wasm_find_symbol_in_all_packages_bytes(name, len);
+  if (sym == (LispObj)0) return -1;
+  lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(sym - fulltag_misc);
+  return (rawsym->fcell != nrs_UDF.vcell) ? 1 : 0;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_boot_entry")))
@@ -2150,7 +2171,8 @@ wasm_validate_builtin_entries(void)
     LispObj fn = data[i];
     if (fn == (LispObj)nil_value || fulltag_of(fn) != fulltag_misc) continue;
     unsigned subtag = header_subtag(header_of(fn));
-    if (subtag != subtag_function && subtag != subtag_pseudofunction) continue;
+    if (subtag != subtag_function && subtag != subtag_pseudofunction &&
+        subtag != subtag_xfunction) continue;
     LispObj entry = deref(fn, 1);
     if (tag_of(entry) != tag_fixnum) continue;
     uint32_t eidx = (uint32_t)unbox_fixnum(entry);
@@ -3531,21 +3553,35 @@ wasm_drain_cold_load_list(TCR *tcr, LispObj list)
     /* Clear pending_throw before each call so errors don't propagate */
     tcr->wasm_pending_throw = 0;
 
+    /* Safety guard: cap function calls per cold-load function.
+       Phase-gated L0 bootstraps handle error cascades; this catches
+       compiled loops that spin without checking pending_throw. */
+    extern void wasm_set_funcall_fuel(int32_t n);
+    extern int32_t wasm_get_funcall_fuel(void);
+    wasm_set_funcall_fuel(50000);
     (void)wasm_foreign_funcall0(tcr, fn);
+    int32_t remaining_fuel = wasm_get_funcall_fuel();
+    wasm_set_funcall_fuel(-1);
 
     if (tcr->wasm_pending_throw) {
       errors++;
-      /* Log which CF had the error */
       {
         LispObj err_s0 = deref(fn, 1);
-        char ed[64]; int ep = 0;
+        char ed[80]; int ep = 0;
         ep += wasm_debug_str(ed + ep, "CF-ERR ");
         ep += wasm_debug_hex8(ed + ep, (uint32_t)err_s0);
+        if (remaining_fuel <= 0) {
+          ep += wasm_debug_str(ed + ep, " STUCK");
+        }
         ed[ep++] = '\n';
         wasm_host_log(ed, (unsigned)ep);
       }
       tcr->wasm_pending_throw = 0;
     }
+
+    /* GC after each cold-load function to keep memory bounded.
+       GC is cheap compared to compile time. */
+    wasm_trigger_gc();
   }
 
   /* Log summary */
@@ -6570,18 +6606,28 @@ wasm_repair_udf_binding(uint32_t name_ptr, uint32_t name_len, uint32_t entry_ind
     return -2;
   }
 
-  /* Synthesize a function object: 3 slots (entry, entry, nil for keys) */
-  LispObj fn = wasm_misc_alloc(tcr, subtag_function, (signed_natural)3);
-  if (fn == lisp_nil) {
-    return -3;
-  }
   LispObj entry = box_fixnum((signed_natural)entry_index);
-  LispObj *fn_data = (LispObj *)((BytePtr)fn + misc_data_offset);
-  fn_data[0] = entry;
-  fn_data[1] = entry;
-  fn_data[2] = lisp_nil;
+  LispObj existing = rawsym->fcell;
 
-  rawsym->fcell = fn;
+  if (fulltag_of(existing) == fulltag_misc &&
+      (header_subtag(header_of(existing)) == subtag_function ||
+       header_subtag(header_of(existing)) == subtag_xfunction)) {
+    /* Patch in place — preserves keyvect (slot 2) and all other slots. */
+    LispObj *fn_data = (LispObj *)((BytePtr)existing + misc_data_offset);
+    fn_data[0] = entry;
+    fn_data[1] = entry;
+  } else {
+    /* Synthesize a function object: 3 slots (entry, entry, nil for keys) */
+    LispObj fn = wasm_misc_alloc(tcr, subtag_function, (signed_natural)3);
+    if (fn == lisp_nil) {
+      return -3;
+    }
+    LispObj *fn_data = (LispObj *)((BytePtr)fn + misc_data_offset);
+    fn_data[0] = entry;
+    fn_data[1] = entry;
+    fn_data[2] = lisp_nil;
+    rawsym->fcell = fn;
+  }
   return 0;
 }
 
@@ -6660,17 +6706,26 @@ wasm_repair_udf_bindings_scan(uint32_t table_ptr, uint32_t table_count)
                   }
                 }
                 if (match) {
-                  /* Synthesize function and repair */
-                  LispObj fn = wasm_misc_alloc(tcr, subtag_function, (signed_natural)3);
-                  if (fn != lisp_nil) {
-                    LispObj entry_val = box_fixnum((signed_natural)entries[i].entry_index);
-                    LispObj *fn_data = (LispObj *)((BytePtr)fn + misc_data_offset);
+                  LispObj entry_val = box_fixnum((signed_natural)entries[i].entry_index);
+                  LispObj existing = rawsym->fcell;
+                  if (fulltag_of(existing) == fulltag_misc &&
+                      (header_subtag(header_of(existing)) == subtag_function ||
+                       header_subtag(header_of(existing)) == subtag_xfunction)) {
+                    /* Patch in place — preserves keyvect and all other slots. */
+                    LispObj *fn_data = (LispObj *)((BytePtr)existing + misc_data_offset);
                     fn_data[0] = entry_val;
                     fn_data[1] = entry_val;
-                    fn_data[2] = lisp_nil;
-                    rawsym->fcell = fn;
-                    repaired++;
+                  } else {
+                    LispObj fn = wasm_misc_alloc(tcr, subtag_function, (signed_natural)3);
+                    if (fn != lisp_nil) {
+                      LispObj *fn_data = (LispObj *)((BytePtr)fn + misc_data_offset);
+                      fn_data[0] = entry_val;
+                      fn_data[1] = entry_val;
+                      fn_data[2] = lisp_nil;
+                      rawsym->fcell = fn;
+                    }
                   }
+                  repaired++;
                   break;
                 }
               }
@@ -6764,8 +6819,9 @@ wasm_force_rebind_scan(uint32_t table_ptr, uint32_t table_count)
                 LispObj entry_val = box_fixnum((signed_natural)entries[i].entry_index);
 
                 if (fulltag_of(existing) == fulltag_misc &&
-                    header_subtag(header_of(existing)) == subtag_function) {
-                  /* Existing function object — patch entry slots in place,
+                    (header_subtag(header_of(existing)) == subtag_function ||
+                     header_subtag(header_of(existing)) == subtag_xfunction)) {
+                  /* Existing function/xfunction — patch entry slots in place,
                      preserving keyvect (slot 2) and closed vars (slot 3+). */
                   LispObj *fn_data = (LispObj *)((BytePtr)existing + misc_data_offset);
                   fn_data[0] = entry_val;

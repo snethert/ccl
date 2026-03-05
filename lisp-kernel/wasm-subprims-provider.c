@@ -250,7 +250,8 @@ wasm_diag_log_misc_alloc_bad_count(TCR *tcr, LispObj subtag_val, LispObj count_v
   LispObj fn_value = wasm_reg(tcr, nfn);
   if (fulltag_of(fn_value) == fulltag_misc) {
     unsigned fn_subtag = header_subtag(header_of(fn_value));
-    if (fn_subtag == subtag_function || fn_subtag == subtag_pseudofunction) {
+    if (fn_subtag == subtag_function || fn_subtag == subtag_pseudofunction ||
+        fn_subtag == subtag_xfunction) {
       LispObj entry = deref(fn_value, 1);
       if (tag_of(entry) == tag_fixnum) {
         entry_index = (uint32_t)unbox_fixnum(entry);
@@ -704,7 +705,8 @@ wasm_builtin_function(signed_natural index)
 static inline int
 wasm_function_like_subtag(unsigned subtag)
 {
-  return (subtag == subtag_function) || (subtag == subtag_pseudofunction);
+  return (subtag == subtag_function) || (subtag == subtag_pseudofunction) ||
+         (subtag == subtag_xfunction);
 }
 
 static void
@@ -2369,7 +2371,8 @@ wasm_signal_funcall_error(TCR *tcr, signed_natural errnum, LispObj name)
       if (fulltag_of(rfn) == fulltag_misc && rfn != (LispObj)nil_value) {
         LispObj rfn_hdr = header_of(rfn);
         unsigned rfn_st = header_subtag(rfn_hdr);
-        if (rfn_st == subtag_function || rfn_st == subtag_pseudofunction) {
+        if (rfn_st == subtag_function || rfn_st == subtag_pseudofunction ||
+            rfn_st == subtag_xfunction) {
           LispObj eidx = deref(rfn, 1);
           pfx = " e=";
           while (*pfx) d[p++] = *pfx++;
@@ -2397,6 +2400,16 @@ wasm_signal_funcall_error(TCR *tcr, signed_natural errnum, LispObj name)
 
 static uint32_t wasm_funcall_depth = 0;
 
+/* Fuel guard: limits function calls during cold-load drain to catch compiled
+   loops that spin without checking pending_throw.  Set to -1 to disable. */
+static int32_t wasm_funcall_fuel = -1;
+
+__attribute__((used, visibility("default"), export_name("wasm_set_funcall_fuel")))
+void wasm_set_funcall_fuel(int32_t n) { wasm_funcall_fuel = n; }
+
+__attribute__((used, visibility("default"), export_name("wasm_get_funcall_fuel")))
+int32_t wasm_get_funcall_fuel(void) { return wasm_funcall_fuel; }
+
 /* Code_vector self-tail-call trampoline state.
    wasm_cv_trampoline_active: entry_index+1 of the entry currently in a
    trampoline loop, or 0 if none.  Nested trampolines save/restore this.
@@ -2410,6 +2423,15 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
 {
   if (wasm_pending_throw_p(tcr)) {
     return;
+  }
+
+  /* Fuel guard: abort if budget exhausted */
+  if (wasm_funcall_fuel >= 0) {
+    if (wasm_funcall_fuel == 0) {
+      wasm_set_pending_throw(tcr, box_fixnum(18));
+      return;
+    }
+    wasm_funcall_fuel--;
   }
 
   wasm_funcall_depth++;
@@ -2876,7 +2898,8 @@ _SPfix_nfn_entrypoint(void)
   }
 
   LispObj fn_value = wasm_reg(tcr, nfn);
-  if (fulltag_of(fn_value) != fulltag_misc || header_subtag(header_of(fn_value)) != subtag_function) {
+  if (fulltag_of(fn_value) != fulltag_misc ||
+      !wasm_function_like_subtag(header_subtag(header_of(fn_value)))) {
     wasm_subprims_trap();
   }
 
@@ -5821,7 +5844,8 @@ _SPksignalerr(void)
           if (fulltag_of(fcell) == fulltag_misc) {
             LispObj fc_hdr = header_of(fcell);
             unsigned fc_sub = header_subtag(fc_hdr);
-            if (fc_sub == subtag_function || fc_sub == subtag_pseudofunction) {
+            if (fc_sub == subtag_function || fc_sub == subtag_pseudofunction ||
+                fc_sub == subtag_xfunction) {
               LispObj entry = deref(fcell, 1);
               msg[p++] = ' '; msg[p++] = 'e'; msg[p++] = 'n'; msg[p++] = 't'; msg[p++] = '=';
               msg[p++] = '0'; msg[p++] = 'x';
@@ -7122,7 +7146,8 @@ _SPcall_closure(void)
   }
 
   LispObj closure = wasm_reg(tcr, nfn);
-  if (fulltag_of(closure) != fulltag_misc || header_subtag(header_of(closure)) != subtag_function) {
+  if (fulltag_of(closure) != fulltag_misc ||
+      !wasm_function_like_subtag(header_subtag(header_of(closure)))) {
     wasm_subprims_trap();
   }
 

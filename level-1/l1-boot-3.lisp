@@ -40,6 +40,32 @@
         (make-package "COMMON-LISP-USER" :use '("COMMON-LISP" "CCL") :NICKNAMES '("CL-USER")))
 )
 
+;;; On WASM32, activate full L1 error handlers now that the condition system
+;;; is initialized, then clear the /full placeholder fcells before GC.
+#+wasm32-target
+(progn
+  (fset '%kernel-restart #'%kernel-restart/full)
+  (fset '%kernel-restart-internal #'%kernel-restart-internal/full)
+  (fset '%err-disp #'%err-disp/full)
+  (fset '%err-disp-internal #'%err-disp-internal/full)
+  (fset '%err-disp-common #'%err-disp-common/full)
+  (fset '%error #'%error/full)
+  (fset 'error #'error/full)
+  (fset 'cerror #'cerror/full)
+  (fset '%errno-disp #'%errno-disp/full)
+  (fset '%errno-disp-internal #'%errno-disp-internal/full)
+  ;; Clear /full fcells so pre-save GC doesn't retain duplicates
+  (fmakunbound '%kernel-restart/full)
+  (fmakunbound '%kernel-restart-internal/full)
+  (fmakunbound '%err-disp/full)
+  (fmakunbound '%err-disp-internal/full)
+  (fmakunbound '%err-disp-common/full)
+  (fmakunbound '%error/full)
+  (fmakunbound 'error/full)
+  (fmakunbound 'cerror/full)
+  (fmakunbound '%errno-disp/full)
+  (fmakunbound '%errno-disp-internal/full))
+
 (set-periodic-task-interval .33)
 (setq cmain xcmain)
 (setq %err-disp %xerr-disp)

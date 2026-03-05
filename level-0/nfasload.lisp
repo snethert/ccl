@@ -335,7 +335,9 @@
 (defun set-package (name &aux (pkg (find-package name)))
   (if pkg
     (setq *package* pkg)
-    (set-package (%kernel-restart $xnopkg name))))
+    (let ((result (%kernel-restart $xnopkg name)))
+      #+wasm32-target (when result (set-package result))
+      #-wasm32-target (set-package result))))
 
 ;;; TODO: Optimize package lookup.
 ;;; According to dlowe from freenode, we do not need to use STRING= in PKG-ARG or the explicit
@@ -695,6 +697,13 @@
     vector))
 
 (defun fasl-read-gvector (s subtype)
+  ;; On WASM, cross-compiled xfunctions must become regular functions
+  ;; so %defun accepts them and their keyvect (slot 2) is preserved.
+  ;; The xfunction subtag only exists for the HOST CCL's FASL dumper;
+  ;; on the TARGET, function and xfunction have identical gvector layouts.
+  #+wasm32-target
+  (when (= subtype target::subtag-xfunction)
+    (setq subtype target::subtag-function))
   (let* ((n (%fasl-read-count s))
          (vector (%alloc-misc n subtype)))
     (declare (fixnum n subtype))
@@ -1370,6 +1379,51 @@ Can be removed before shipping once %FASLOAD startup is stable.")
   (%map-areas #'%binding-index-area-callback)
   (%set-binding-index *%binding-index-setup-max*)
   (%wasm-note-startup-step 81))
+
+;;; Bootstrap error handlers for WASM cold boot.
+;;; L1's error functions are defined under /full names (phase-gated) so these
+;;; L0 bootstraps survive through cold-load drain.  l1-boot-3 activates the
+;;; full versions via fset once the condition system is ready.
+;;; Each bootstrap logs for diagnostics and returns nil (safe).
+#+wasm32-target
+(unless (fboundp '%kernel-restart)
+  (defun %kernel-restart (error-type &rest args)
+    (%string-to-stderr ";; bootstrap %kernel-restart: ")
+    (let ((a (car args)))
+      (when (stringp a)
+        (%string-to-stderr a)))
+    (%string-to-stderr (string #\Newline))
+    nil))
+
+#+wasm32-target
+(unless (fboundp '%kernel-restart-internal)
+  (defun %kernel-restart-internal (error-type args frame-ptr)
+    (declare (ignore frame-ptr))
+    (apply #'%kernel-restart error-type args)))
+
+#+wasm32-target
+(unless (fboundp '%err-disp)
+  (defun %err-disp (err-num &rest errargs)
+    (declare (ignore errargs))
+    (%string-to-stderr ";; bootstrap %err-disp")
+    (%string-to-stderr (string #\Newline))
+    nil))
+
+#+wasm32-target
+(unless (fboundp '%err-disp-internal)
+  (defun %err-disp-internal (err-num errargs frame-ptr)
+    (declare (ignore errargs frame-ptr))
+    (%string-to-stderr ";; bootstrap %err-disp-internal")
+    (%string-to-stderr (string #\Newline))
+    nil))
+
+#+wasm32-target
+(unless (fboundp '%error)
+  (defun %error (condition args error-pointer)
+    (declare (ignore condition args error-pointer))
+    (%string-to-stderr ";; bootstrap %error")
+    (%string-to-stderr (string #\Newline))
+    nil))
 
 (defvar %toplevel-function%
   #'(lambda ()
