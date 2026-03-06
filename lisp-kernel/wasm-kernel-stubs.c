@@ -641,6 +641,18 @@ wasm_save_image_direct(uint32_t path_ptr, uint32_t path_len, uint32_t egc_enable
     egc_control(false, active_area->active);
   }
 
+  /* Full GC before image save.  With EGC already disabled the entire
+     heap is one contiguous area, so gc() compacts everything.  Without
+     this the saved image contains all dead objects accumulated during
+     the build — easily 3-5x larger than necessary. */
+  {
+    static const char msg_gc[] = "WASM save-image: pre-save GC...\n";
+    wasm_host_log(msg_gc, (unsigned)(sizeof(msg_gc) - 1));
+    wasm_trigger_gc();
+    static const char msg_gc_done[] = "WASM save-image: pre-save GC done\n";
+    wasm_host_log(msg_gc_done, (unsigned)(sizeof(msg_gc_done) - 1));
+  }
+
   Boolean save_egc_enabled = (egc_enabled != 0) ? true : egc_was_enabled;
   OSErr err = save_application(fd, save_egc_enabled);
 
