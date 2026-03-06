@@ -1784,6 +1784,18 @@ if (requiredFasls.length > 0) {
   setBootPhaseOrFail(WASM_BOOT_PHASE.RUNTIME, { reason: "l1-baked-in" });
 }
 
+/* Post-module-install GC: the heap is now enormous (several GB) and mostly
+   garbage from compiled-module instantiation.  Compact it BEFORE any further
+   Lisp execution so that RESTORE-LISP-POINTERS and const-pool installation
+   don't trigger repeated full GCs on the bloated heap. */
+{
+  console.error("[stage] post-module-install GC...");
+  const gcBefore = Date.now();
+  ex.wasm_trigger_gc();
+  const gcMs = Date.now() - gcBefore;
+  console.error(`[stage] post-module-install GC done (${gcMs} ms)`);
+}
+
 /* Now that level-1 fasls have been loaded, RESTORE-LISP-POINTERS should be
    defined.  Call it to rehash any package hash tables that were modified
    during FASL loading.  This ensures INTERN/FIND-SYMBOL work correctly
@@ -1801,12 +1813,10 @@ if (postFasloadRestoreRc === 0) {
    remaining const pool so the saved image contains complete Lisp state.
    At launch time, zero const pool callbacks will fire.
 
-   NOTE: Some entries may fail due to heap exhaustion (no GC is safe here
-   because compacting GC invalidates package hash tables and
-   RESTORE-LISP-POINTERS may not be available during early boot).
-   Failed entries are logged but not fatal — the pre-save GC (below) will
-   free memory, and any remaining pools will be installed on-demand at
-   launch time by load-image.mjs. */
+   NOTE: The post-module-install GC above already compacted the heap,
+   so allocation failures here should be rare.  Any failed entries are
+   logged but not fatal — remaining pools will be installed on-demand
+   at launch time by load-image.mjs. */
 {
   const allEntries = new Set([
     ...bootConstPoolData.keys(),
