@@ -386,6 +386,8 @@ if (typeof trapFn === "function") {
   const SYMBOL_HDR = 0x0000073A;  // (7 << 8) | subtag_symbol
   const FULLTAG_MISC = 6;
   const FN_HDR_3SLOT = 0x0000032A; // (3 << 8) | subtag_function
+  const SUBTAG_FUNCTION = 0x2A;
+  const SUBTAG_XFUNCTION = 0x92;
 
   const rebindMap = new Map();
   for (const e of namedFunctions) {
@@ -398,7 +400,7 @@ if (typeof trapFn === "function") {
     const mem32 = new Uint32Array(runtime.memory.buffer);
     const totalWords = mem32.length;
     const scanStart = 0x400000 >>> 2;
-    let symbolCount = 0, rebound = 0;
+    let symbolCount = 0, rebound = 0, patchedInPlace = 0;
     const remaining = new Map(rebindMap);
 
     for (let w = scanStart; w < totalWords && remaining.size > 0; w += 2) {
@@ -438,20 +440,48 @@ if (typeof trapFn === "function") {
       const entryIdx = remaining.get(name);
       if (entryIdx === undefined) continue;
 
-      // Allocate 3-slot function object (16 bytes)
-      const fnPtr = mallocFn(16) >>> 0;
-      if (fnPtr === 0) continue;
-      const m32 = new Uint32Array(runtime.memory.buffer);
-      const fw = fnPtr >>> 2;
-      m32[fw] = FN_HDR_3SLOT;
-      m32[fw + 1] = entryIdx << 2;
-      m32[fw + 2] = entryIdx << 2;
-      m32[fw + 3] = nil;
-      m32[w + 3] = (fnPtr + FULLTAG_MISC) >>> 0;  // patch fcell
+      // Check if existing fcell is a function or xfunction — patch in place
+      // to preserve keyvect (slot 2) and all other slots.
+      const existingFcell = mem32[w + 3];
+      const existingFt = existingFcell & 7;
+      let patched = false;
+      if (existingFt === FULLTAG_MISC) {
+        const existingBase = (existingFcell - FULLTAG_MISC) >>> 2;
+        if (existingBase > 0 && existingBase < totalWords) {
+          const existingSub = mem32[existingBase] & 0xFF;
+          if (existingSub === SUBTAG_FUNCTION || existingSub === SUBTAG_XFUNCTION) {
+            mem32[existingBase + 1] = entryIdx << 2;  // slot 0: entry
+            mem32[existingBase + 2] = entryIdx << 2;  // slot 1: codevec
+            patched = true;
+          }
+        }
+      }
+      if (!patched) {
+        // Allocate 3-slot function object (16 bytes)
+        const fnPtr = mallocFn(16) >>> 0;
+        if (fnPtr === 0) continue;
+        const m32 = new Uint32Array(runtime.memory.buffer);
+        const fw = fnPtr >>> 2;
+        m32[fw] = FN_HDR_3SLOT;
+        m32[fw + 1] = entryIdx << 2;
+        m32[fw + 2] = entryIdx << 2;
+        m32[fw + 3] = nil;
+        m32[w + 3] = (fnPtr + FULLTAG_MISC) >>> 0;  // patch fcell
+      }
       rebound++;
+      if (patched) patchedInPlace++;
       remaining.delete(name);
+      // Debug: show READ-LOOP details
+      if (name === 'READ-LOOP' || name === 'TOPLEVEL-LOOP') {
+        const fcell = mem32[w + 3];
+        const fcellBase = (fcell - (fcell & 7)) >>> 2;
+        const hdr = mem32[fcellBase];
+        const slot2 = mem32[fcellBase + 3]; // keyvect
+        const nslots = hdr >>> 8;
+        log(`  ${name}: entry=${entryIdx} patched=${patched} subtag=0x${(hdr&0xFF).toString(16)} nslots=${nslots} keyvect=0x${slot2.toString(16)} fcell=0x${fcell.toString(16)}`);
+      }
     }
-    log(`JS rebind: ${rebound}/${rebindMap.size} (${symbolCount} syms, ${remaining.size} missing)`);
+    log(`JS rebind: ${rebound}/${rebindMap.size} (${symbolCount} syms, ${remaining.size} missing, ${patchedInPlace} in-place)`);
   }
 }
 

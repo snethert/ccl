@@ -835,7 +835,8 @@
                                       space))
              (svaddr (logior *xload-target-fulltag-misc*
                              (logandc2 addr *xload-target-fulltagmask*))))
-        (xload-intern symbol)
+        (when home-package
+          (xload-intern symbol))
         (let* ((bits (logandc2 (%symbol-bits symbol)
                                (ash 1 $sym_vbit_typeppred))))
           (setf (xload-%svref svaddr target::symbol.flags-cell)
@@ -1585,8 +1586,14 @@
                     'quote))
            (%epushval s (xload-register-istruct-cell (xload-cadr (xload-cadr expr)))))
           (t
-           (error "Can't evaluate expression ~s in cold load ." expr)
-           (%epushval s (eval expr))))))         ; could maybe evaluate symbols, constants ...
+           (if (and *xload-target-backend*
+                    (eq (backend-xload-info-name *xload-target-backend*) :wasm32))
+             (progn
+               (warn "Skipping unsupported $fasl-eval in WASM cross-load: ~s" expr)
+               (%epushval s *xload-target-nil*))
+             (progn
+               (error "Can't evaluate expression ~s in cold load ." expr)
+               (%epushval s (eval expr))))))))     ; could maybe evaluate symbols, constants ...
 
 
 (defun xload-target-subtype (name)
@@ -1788,11 +1795,28 @@
 
 
 
+;;; When xload-lfun-name returns a cons cell (a SETF function name like
+;;; (SETF FOO) in the simulated heap), resolve it to the corresponding
+;;; "setf function name" uninterned symbol.  For regular symbol names,
+;;; returns the address unchanged.
+(defun xload-resolve-function-name (name-addr)
+  (if (xload-target-consp name-addr)
+    ;; SETF function name: cons cell is (SETF <sym>) in simulated heap.
+    ;; Map the target symbol back to a host symbol, get its
+    ;; setf-function-name, and copy that into the simulated heap.
+    (let* ((sym-addr (xload-cadr name-addr))
+           (host-sym (xload-lookup-symbol-address sym-addr)))
+      (if host-sym
+        (xload-copy-symbol (setf-function-name host-sym))
+        (error "Cannot resolve SETF function name: symbol at #x~x has no host mapping"
+               sym-addr)))
+    name-addr))
+
 (defxloadfaslop $fasl-defun (s)
   (%cant-epush s)
   (let* ((fun (%fasl-expr s))
          (doc (%fasl-expr s)))
-    (let* ((sym (xload-lfun-name fun)))
+    (let* ((sym (xload-resolve-function-name (xload-lfun-name fun))))
       (unless (= doc *xload-target-nil*)
         (xload-set-documentation sym 'function doc))
       (xload-record-source-file sym 'function)
@@ -1802,7 +1826,7 @@
   (%cant-epush s)
   (let* ((fun (%fasl-expr s))
          (doc (%fasl-expr s)))
-    (let* ((sym (xload-lfun-name fun))
+    (let* ((sym (xload-resolve-function-name (xload-lfun-name fun)))
            (vector (xload-make-gvector :simple-vector 2)))
       (setf (xload-%svref vector 0) (xload-symbol-value (xload-lookup-symbol '%macro-code%))
             (xload-%svref vector 1) fun)

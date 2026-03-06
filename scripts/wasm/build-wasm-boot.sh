@@ -5,6 +5,7 @@ IFS=$'\n\t'
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DRYRUN=0
 FORCE=0
+WITH_L1=0
 BOOT_MODULES_OUT=""
 
 usage() {
@@ -31,6 +32,7 @@ run() {
 while [ "${1:-}" != "" ]; do
   case "$1" in
     --force) FORCE=1 ;;
+    --with-l1) WITH_L1=1 ;;
     --boot-modules-out)
       BOOT_MODULES_OUT="${2:-}"
       if [ -z "$BOOT_MODULES_OUT" ]; then
@@ -78,6 +80,9 @@ PACK_SCRIPT="$ROOT_DIR/scripts/wasm/pack-inline-bundle-v2.mjs"
 SCRIPT_ARGS=()
 if [ "$FORCE" -eq 1 ]; then
   SCRIPT_ARGS+=(--force)
+fi
+if [ "$WITH_L1" -eq 1 ]; then
+  SCRIPT_ARGS+=(--with-l1)
 fi
 
 INLINE_TMP=""

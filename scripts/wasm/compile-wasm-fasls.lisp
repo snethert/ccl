@@ -688,6 +688,9 @@ If a merged batch fails WASM validation, its entries go to failed-entries."
       (let ((*target-backend* (find-backend :wasm32))
             (*compile-definitions* nil))
         (install-wasm-os-constants)
+        ;; Reload number-case-macro so the expansion-time *target-backend*
+        ;; check disables the retry loop on WASM.
+        (load (merge-pathnames "lib/number-case-macro.lisp" root))
         (setf %wasm-compiled-modules% nil)
         (when (or modules-out modules-debug-out)
           (setf *wasm2-collect-module-debug* t)

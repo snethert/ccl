@@ -420,7 +420,9 @@
   "Be sure that you understand the implications of changing this
 before doing so.")
 
-(defparameter *lock-free-hash-table-default* :shared
+(defparameter *lock-free-hash-table-default*
+  #+wasm32-target nil  ;; WASM32 is single-threaded; CAS retry loops spin forever
+  #-wasm32-target :shared
   "If NIL, hash tables default to using the standard algorithms, with locks for shared tables.
    If :SHARED, shared hash tables default to using the \"lock-free\" algorithm,
    which is faster for typical access but slower for rehashing or growing the table.

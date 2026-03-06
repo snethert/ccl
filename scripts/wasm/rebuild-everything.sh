@@ -230,6 +230,15 @@ fi
 
 run "$ROOT_DIR/scripts/wasm/compile-wasm-fasls.sh" ${COMPILE_ARGS[@]+"${COMPILE_ARGS[@]}"}
 
+# Rebuild boot image with L1 baked in.  L0 was already compiled above
+# (timestamps match, so no recompile happens).  L1 .lafsl files from
+# compile-wasm-fasls.sh are fed into xfasload alongside L0.
+BOOT_L1_ARGS=(--with-l1)
+if [ "$FORCE" -eq 1 ]; then
+  BOOT_L1_ARGS+=(--force)
+fi
+run "$ROOT_DIR/scripts/wasm/build-wasm-boot.sh" ${BOOT_L1_ARGS[@]+"${BOOT_L1_ARGS[@]}"}
+
 # Phase 0A tests — recompile if the script exists
 if [ -f "$ROOT_DIR/scripts/wasm/compile-phase0a-tests.sh" ]; then
   log "RUN (phase0a tests, non-fatal): scripts/wasm/compile-phase0a-tests.sh"
@@ -258,6 +267,7 @@ if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
     --manifest-out "$ROOT_IMAGE_MANIFEST_OUT"
     --modules "$MODULES_OUT"
     --boot-modules "$BOOT_MODULES_OUT"
+    --no-fasload
   )
   if [ "$ROOT_IMAGE_ALLOW_FAIL" -eq 1 ]; then
     log "RUN (root image, non-fatal): ${ROOT_CMD[*]}"

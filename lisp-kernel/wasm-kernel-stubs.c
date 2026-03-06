@@ -280,6 +280,7 @@ static LispObj wasm_find_symbol_named_bytes(const uint8_t *name, uint32_t len, L
 static LispObj wasm_find_symbol_named_bytes_scan(const uint8_t *name, uint32_t len, LispObj package);
 static LispObj wasm_find_symbol_in_all_packages_bytes(const uint8_t *name, uint32_t len);
 static LispObj wasm_foreign_funcall0(TCR *tcr, LispObj callable);
+static LispObj wasm_foreign_funcall1(TCR *tcr, LispObj callable, LispObj arg);
 static int wasm_symbol_object_p(LispObj value);
 static int wasm_debug_hex8(char *buf, uint32_t v);
 static int wasm_debug_str(char *buf, const char *s);
@@ -3553,26 +3554,15 @@ wasm_drain_cold_load_list(TCR *tcr, LispObj list)
     /* Clear pending_throw before each call so errors don't propagate */
     tcr->wasm_pending_throw = 0;
 
-    /* Safety guard: cap function calls per cold-load function.
-       Phase-gated L0 bootstraps handle error cascades; this catches
-       compiled loops that spin without checking pending_throw. */
-    extern void wasm_set_funcall_fuel(int32_t n);
-    extern int32_t wasm_get_funcall_fuel(void);
-    wasm_set_funcall_fuel(50000);
     (void)wasm_foreign_funcall0(tcr, fn);
-    int32_t remaining_fuel = wasm_get_funcall_fuel();
-    wasm_set_funcall_fuel(-1);
 
     if (tcr->wasm_pending_throw) {
       errors++;
       {
         LispObj err_s0 = deref(fn, 1);
-        char ed[80]; int ep = 0;
+        char ed[64]; int ep = 0;
         ep += wasm_debug_str(ed + ep, "CF-ERR ");
         ep += wasm_debug_hex8(ed + ep, (uint32_t)err_s0);
-        if (remaining_fuel <= 0) {
-          ep += wasm_debug_str(ed + ep, " STUCK");
-        }
         ed[ep++] = '\n';
         wasm_host_log(ed, (unsigned)ep);
       }

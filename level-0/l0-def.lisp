@@ -316,4 +316,12 @@
               (info (%lisp-word-ref valptr i)))))
         (info)))))
 
+;;; Bootstrap %defvar for WASM cold boot.
+;;; Level-1 l1-utils.lisp redefines with record-source-file + set-documentation.
+#+wasm32-target
+(defun %defvar (var &optional doc)
+  (declare (ignore doc))
+  (%proclaim-special var)
+  (boundp var))
+
 ;;; end of l0-def.lisp

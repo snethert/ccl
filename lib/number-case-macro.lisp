@@ -144,7 +144,20 @@
                         `(,selector ,@(cdr case))))
                   cases)
                ,@(if (not t-case)
-                   `((t (setq ,var (%kernel-restart $xwrongtype ,var ',(nd-type-compose selectors-so-far)))
-                        (go ,tag)))))))))))
+                   ;; On WASM, do NOT retry: the bootstrap %kernel-restart
+                   ;; returns nil during cold boot, causing an infinite
+                   ;; (go tag) loop.  Without retry, nil propagates up and
+                   ;; the drain loop's error isolation catches it.
+                   ;; NB: Must check *target-backend* at expansion time
+                   ;; (not via reader conditionals) because this macro is
+                   ;; loaded from a pre-compiled .dx64fsl by the host CCL.
+                   (if (eq (arch::target-name
+                            (backend-target-arch *target-backend*))
+                           :wasm32)
+                     `((t (%kernel-restart $xwrongtype ,var
+                            ',(nd-type-compose selectors-so-far))))
+                     `((t (setq ,var (%kernel-restart $xwrongtype ,var
+                                       ',(nd-type-compose selectors-so-far)))
+                          (go ,tag))))))))))))
 
 (provide "NUMBER-CASE-MACRO")

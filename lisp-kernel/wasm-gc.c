@@ -664,7 +664,8 @@ check_range(LispObj *start, LispObj *end, Boolean header_allowed)
       }
       subtag = header_subtag(node);
       if ((subtag == subtag_function) ||
-          (subtag == subtag_pseudofunction)) {
+          (subtag == subtag_pseudofunction) ||
+          (subtag == subtag_xfunction)) {
         if (fulltag_of(current[0]) == fulltag_odd_fixnum) {
           if (untag(current[0]) != untag(current[1])) {
             Bug(NULL, "In function at 0x%lx, entrypoint (0x%lx) and codevector (0x%lx) don't match\n", (LispObj)prev,current[0],current[1]);
@@ -1725,7 +1726,8 @@ forward_range(LispObj *range_start, LispObj *range_end)
         p++;
         subtag = header_subtag(node);
         if ((subtag == subtag_function) ||
-            (subtag == subtag_pseudofunction)) {
+            (subtag == subtag_pseudofunction) ||
+          (subtag == subtag_xfunction)) {
           update_locref(p);
           p++;
           nwords--;
@@ -1801,7 +1803,8 @@ forward_cstack_area(area *a)
       current++;
       subtag = header_subtag(header);
       if ((subtag == subtag_function) ||
-          (subtag == subtag_pseudofunction)) {
+          (subtag == subtag_pseudofunction) ||
+          (subtag == subtag_xfunction)) {
         update_locref(current);
         current++;
         elements--;
@@ -2003,7 +2006,8 @@ compact_dynamic_heap()
             *dest++ = node;
             subtag = header_subtag(node);
             if ((subtag == subtag_function) ||
-                (subtag == subtag_pseudofunction)) {
+                (subtag == subtag_pseudofunction) ||
+          (subtag == subtag_xfunction)) {
               *dest++ = locative_forwarding_address(*src++);
             } else {
               *dest++ = node_forwarding_address(*src++);
@@ -2241,7 +2245,8 @@ purify_range(LispObj *start, LispObj *end, BytePtr low, BytePtr high, area *to)
         start++;
         subtag = header_subtag(header);
         if ((subtag == subtag_function) ||
-            (subtag == subtag_pseudofunction)) {
+            (subtag == subtag_pseudofunction) ||
+          (subtag == subtag_xfunction)) {
           LispObj entrypt = *start;
           if ((entrypt > (LispObj)low) && 
               (entrypt < (LispObj)high) &&
@@ -2312,7 +2317,8 @@ purify_cstack_area(area *a, BytePtr low, BytePtr high, area *to)
       current++;
       subtag = header_subtag(header);
       if ((subtag == subtag_function) ||
-          (subtag == subtag_pseudofunction)) {
+          (subtag == subtag_pseudofunction) ||
+          (subtag == subtag_xfunction)) {
         purify_locref(current, low, high, to);
         current++;
         elements--;
@@ -2527,7 +2533,8 @@ impurify_cstack_area(area *a, LispObj low, LispObj high, int delta)
       current++;
       subtag = header_subtag(header);
       if ((subtag == subtag_function) || 
-          (subtag == subtag_pseudofunction)) {
+          (subtag == subtag_pseudofunction) ||
+          (subtag == subtag_xfunction)) {
         impurify_locref(current, low, high, delta);
         current++;
         elements--;
@@ -2584,7 +2591,8 @@ impurify_range(LispObj *start, LispObj *end, LispObj low, LispObj high, int delt
       start++;
       subtag = header_subtag(header);
       if ((subtag == subtag_function) ||
-          (subtag == subtag_pseudofunction)) {
+          (subtag == subtag_pseudofunction) ||
+          (subtag == subtag_xfunction)) {
         LispObj entrypt = *start;
         if ((entrypt > (LispObj)low) && 
             (entrypt < (LispObj)high) &&

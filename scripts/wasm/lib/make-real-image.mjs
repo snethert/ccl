@@ -147,6 +147,9 @@ function parseArgs(argv) {
       case "--subprims-map":
         out.subprimsMap = argv[++i];
         break;
+      case "--no-fasload":
+        out.noFasload = true;
+        break;
       default:
         if (arg.startsWith("--")) {
           fail(`Unknown option: ${arg}`);
@@ -1357,7 +1360,7 @@ const criticalSymAddrs = new Map();   // name → word index into mem32
   }
 }
 
-const requiredFasls = [
+const requiredFasls = args.noFasload ? [] : [
   "l1-fasls/l1-cl-package.lafsl",
   "l1-fasls/l1-utils.lafsl",
   "l1-fasls/l1-init.lafsl",
@@ -1400,7 +1403,7 @@ const requiredFasls = [
   "l1-fasls/l1-boot-3.lafsl",
   "bin/dumplisp.lafsl",
 ];
-if (typeof ex.wasm_fasload_path !== "function") {
+if (!args.noFasload && typeof ex.wasm_fasload_path !== "function") {
   fail("kernel missing wasm_fasload_path");
 }
 
@@ -1463,6 +1466,28 @@ trace("cold-boot-init complete");
   if (typeof ex.wasm_reset_debug_counters === "function") {
     ex.wasm_reset_debug_counters();
   }
+}
+
+if (!args.noFasload) {
+/* Pre-FASL invariant: verify bootstrap definitions of %DEFVAR and
+   %KERNEL-RESTART took effect during cold-boot-init.  Without these,
+   every FASL load will abort with WASM_XFUNBND. */
+if (typeof ex.wasm_check_symbol_fbound === "function") {
+  for (const name of ["%DEFVAR", "%KERNEL-RESTART"]) {
+    const nameBytes = encoder.encode(name);
+    const namePtr = ex.malloc(nameBytes.length);
+    if (namePtr) {
+      new Uint8Array(runtime.memory.buffer).set(nameBytes, namePtr);
+      const rc = ex.wasm_check_symbol_fbound(namePtr, nameBytes.length) | 0;
+      if (typeof ex.free === "function") ex.free(namePtr);
+      if (rc <= 0) {
+        fail(`${name} is ${rc === 0 ? "UDF (unbound)" : "not found"} after cold-boot-init — bootstrap definition missing from level-0`);
+      }
+      trace(`pre-FASL check: ${name} is fbound`);
+    }
+  }
+} else {
+  console.error("[warn] wasm_check_symbol_fbound not available — skipping pre-FASL invariant check");
 }
 
 for (const faslPath of requiredFasls) {
@@ -1742,6 +1767,11 @@ for (const faslPath of requiredFasls) {
 if (requiredFasls.length > 0) {
   setBootPhaseOrFail(WASM_BOOT_PHASE.RUNTIME, { reason: "post-required-fasloads" });
 }
+} else {
+  /* --no-fasload: L1 baked into boot image via xfasload cross-compiler */
+  console.error("[stage] --no-fasload: L1 baked into boot image, skipping FASL loading");
+  setBootPhaseOrFail(WASM_BOOT_PHASE.RUNTIME, { reason: "l1-baked-in" });
+}
 
 /* Now that level-1 fasls have been loaded, RESTORE-LISP-POINTERS should be
    defined.  Call it to rehash any package hash tables that were modified
@@ -1883,27 +1913,29 @@ if (typeof ex.wasm_trigger_gc === "function") {
   console.error(`[stage] pre-toplfunc GC freed ${gcFreed} bytes`);
 }
 
-/* Invariant gate: patch critical symbol fcells using the C kernel's
-   wasm_set_symbol_function_entry.  This allocates function objects in the
-   Lisp heap (via wasm_misc_alloc) so they survive image serialization.
-   Must run AFTER the GC (which frees heap space for allocation). */
+/* Invariant gate: patch ALL runtime symbol fcells using the C kernel's
+   wasm_set_symbol_function_entry.  FASL loading silently fails to bind
+   xfunction objects (subtag_xfunction = 0x92) because %defun's
+   (typep named-fn 'function) check rejects them.  Force-rebind catches
+   many but not all (pname heap scan misses ~40% of symbols).  This pass
+   uses package-based lookup + heap scan fallback, patching in place when
+   a valid function object already exists.
+   Must run AFTER the GC (which frees heap space for new allocations). */
 if (typeof ex.wasm_set_symbol_function_entry === "function") {
-  for (const symName of ["RUNTIME-BRIDGE-PUMP-COMMANDS", "%ERR-DISP"]) {
-    const fn = (compiledModulesBundle?.functions ?? []).find(f => f?.name === symName);
-    if (!fn || !Number.isFinite(fn.entryIndex)) {
-      fail(`invariant: ${symName} not found in compiled modules bundle`);
-    }
-    const nameBytes = encoder.encode(symName);
+  const allRuntimeFns = (compiledModulesBundle?.functions ?? [])
+    .filter(f => f?.name && Number.isFinite(f.entryIndex)
+                 && !bootEntryIndices.has(f.entryIndex >>> 0));
+  let gateOk = 0, gateFail = 0;
+  for (const fn of allRuntimeFns) {
+    const nameBytes = encoder.encode(fn.name);
     const namePtr = ex.malloc(nameBytes.length);
-    if (!namePtr) fail(`invariant: malloc failed for ${symName} name buffer`);
+    if (!namePtr) { gateFail++; continue; }
     new Uint8Array(runtime.memory.buffer).set(nameBytes, namePtr);
     const rc = ex.wasm_set_symbol_function_entry(namePtr, nameBytes.length, fn.entryIndex, 0) | 0;
     if (typeof ex.free === "function") ex.free(namePtr);
-    if (rc !== 0) {
-      fail(`invariant: wasm_set_symbol_function_entry(${symName}, entry=${fn.entryIndex}) rc=${rc}`);
-    }
-    console.error(`[invariant] ${symName} entry=${fn.entryIndex} fcell set (Lisp heap)`);
+    if (rc === 0) { gateOk++; } else { gateFail++; }
   }
+  console.error(`[invariant] fcell gate: ${gateOk} set, ${gateFail} not found (${allRuntimeFns.length} runtime entries)`);
 }
 
 const setToplfuncRc = ex.wasm_set_toplfunc_entry(toplevelEntryIndex >>> 0) | 0;

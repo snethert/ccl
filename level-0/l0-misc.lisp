@@ -497,7 +497,8 @@
 (defvar %documentation-lock% nil)
 
 (setq %documentation
-  (make-hash-table :weak t :size 100 :test 'eq :rehash-threshold .95)
+  (make-hash-table :weak t :size 100 :test 'eq :rehash-threshold .95
+                   #+wasm32-target :lock-free #+wasm32-target nil)
   %documentation-lock% (make-lock))
 
 (defun %put-documentation (thing doc-id doc)

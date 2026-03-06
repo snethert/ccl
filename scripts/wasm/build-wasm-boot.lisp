@@ -25,8 +25,13 @@
   (let ((*warn-if-redefine-kernel* nil))
     ;; Ensure fasl reader macros are available before loading xfasload.lisp.
     (require "FASLENV" "ccl:xdump;faslenv")
-    (let* ((xfasload (or (probe-file (merge-pathnames "xdump/xfasload.dx64fsl" root))
-                         (merge-pathnames "xdump/xfasload.lisp" root))))
+    (let* ((xfasload-src (merge-pathnames "xdump/xfasload.lisp" root))
+           (xfasload-fsl (probe-file (merge-pathnames "xdump/xfasload.dx64fsl" root)))
+           (xfasload (if (and xfasload-fsl
+                              (> (file-write-date xfasload-fsl)
+                                 (file-write-date xfasload-src)))
+                       xfasload-fsl
+                       xfasload-src)))
       (load xfasload))
     ;; Ensure ARM-ARCH is provided before xwasmfasload's REQUIRE runs.
     (load (merge-pathnames "compiler/ARM/arm-arch.lisp" root))
@@ -99,6 +104,8 @@
            (push (cons :help t) out))
           ((string= arg "--force")
            (push (cons :force t) out))
+          ((string= arg "--with-l1")
+           (push (cons :with-l1 t) out))
           ((string= arg "--boot-modules-out")
            (let ((val (pop args)))
              (unless val
@@ -233,9 +240,115 @@
       (terpri out))
     (length entries)))
 
+;;; L1 FASL loading into boot image — ordered list matching requiredFasls
+;;; in make-real-image.mjs.  Each entry is (name subdir) where subdir is
+;;; "l1-fasls" or "bin" under build/wasm32/.
+
+(defparameter *wasm-l1-module-specs*
+  '(("l1-cl-package" "l1-fasls") ("l1-utils" "l1-fasls")
+    ("l1-init" "l1-fasls") ("l1-symhash" "l1-fasls")
+    ("l1-numbers" "l1-fasls") ("l1-aprims" "l1-fasls")
+    ("l1-callbacks" "l1-fasls") ("l1-sort" "l1-fasls")
+    ("lists" "bin") ("sequences" "bin")
+    ("l1-dcode" "l1-fasls") ("l1-clos-boot" "l1-fasls")
+    ("hash" "bin") ("l1-clos" "l1-fasls")
+    ("defstruct" "bin") ("dll-node" "bin")
+    ("l1-unicode" "l1-fasls") ("l1-streams" "l1-fasls")
+    ("linux-files" "l1-fasls") ("chars" "bin")
+    ("l1-files" "l1-fasls") ("l1-typesys" "l1-fasls")
+    ("sysutils" "l1-fasls") ("l1-lisp-threads" "l1-fasls")
+    ("l1-application" "l1-fasls") ("l1-processes" "l1-fasls")
+    ("l1-io" "l1-fasls") ("l1-reader" "l1-fasls")
+    ("l1-readloop" "l1-fasls") ("l1-error-signal" "l1-fasls")
+    ("l1-readloop-lds" "l1-fasls") ("l1-error-system" "l1-fasls")
+    ("l1-events" "l1-fasls") ("l1-format" "l1-fasls")
+    ("l1-sysio" "l1-fasls") ("l1-pathnames" "l1-fasls")
+    ("l1-boot-lds" "l1-fasls") ("l1-boot-1" "l1-fasls")
+    ("l1-boot-2" "l1-fasls") ("l1-boot-3" "l1-fasls")
+    ("dumplisp" "bin")))
+
+(defun wasm-l1-fasl-paths (root)
+  "Return ordered list of L1 FASL pathnames from build/wasm32/."
+  (let ((build-dir (namestring (merge-pathnames "build/wasm32/" root))))
+    (mapcar (lambda (spec)
+              (let* ((name (first spec))
+                     (subdir (second spec))
+                     (path (pathname (format nil "~a~a/~a.lafsl" build-dir subdir name))))
+                (unless (probe-file path)
+                  (error "L1 FASL missing: ~a (compile L1 first with compile-wasm-fasls.sh)" path))
+                (truename path)))
+            *wasm-l1-module-specs*)))
+
+(defun cross-xload-wasm-with-l1 (&optional (recompile t))
+  "Cross-load WASM32 boot image with L0 + L1 baked in."
+  (with-cross-compilation-target (:wasm32)
+    (let* ((*target-backend* (find-backend :wasm32))
+           (*xload-target-backend* (or (find-xload-backend :wasm32)
+                                       *xload-default-backend*))
+           ;; No startup file needed — L1 is baked into the image.
+           (*xload-startup-file* ""))
+      (in-development-mode
+       (when recompile
+         (target-Xcompile-level-0 :wasm32 (eq recompile :force)))
+       (let* ((*xload-image-base-address* *xload-image-base-address*)
+              (*xload-readonly-space-address* *xload-readonly-space-address*)
+              (*xload-dynamic-space-address* *xload-dynamic-space-address*)
+              (*xload-target-nil* *xload-target-nil*)
+              (*xload-target-unbound-marker* *xload-target-unbound-marker*)
+              (*xload-target-misc-header-offset* *xload-target-misc-header-offset*)
+              (*xload-target-misc-subtag-offset* *xload-target-misc-subtag-offset*)
+              (*xload-target-fixnumshift* *xload-target-fixnumshift*)
+              (*xload-target-fulltag-cons* *xload-target-fulltag-cons*)
+              (*xload-target-car-offset* *xload-target-car-offset*)
+              (*xload-target-cdr-offset* *xload-target-cdr-offset*)
+              (*xload-target-cons-size* *xload-target-cons-size*)
+              (*xload-target-fulltagmask* *xload-target-fulltagmask*)
+              (*xload-target-misc-data-offset* *xload-target-misc-data-offset*)
+              (*xload-target-fulltag-misc* *xload-target-fulltag-misc*)
+              (*xload-target-subtag-char* *xload-target-subtag-char*)
+              (*xload-target-charcode-shift* *xload-target-charcode-shift*)
+              (*xload-target-big-endian* *xload-target-big-endian*)
+              (*xload-host-big-endian* *xload-host-big-endian*)
+              (*xload-target-use-code-vectors* *xload-target-use-code-vectors*)
+              (*xload-target-fulltag-for-symbols* *xload-target-fulltag-for-symbols*)
+              (*xload-target-fulltag-for-functions* *xload-target-fulltag-for-functions*)
+              (*xload-target-char-code-limit* *xload-target-char-code-limit*)
+              (*xload-purespace-reserve* *xload-purespace-reserve*)
+              (*xload-static-space-address* *xload-static-space-address*))
+         (setup-xload-target-parameters)
+         (let* ((*load-verbose* t)
+                (compiler-backend (find-backend
+                                   (backend-xload-info-compiler-target-name
+                                    *xload-target-backend*)))
+                (wild-fasls (concatenate 'simple-string
+                                         "*."
+                                         (pathname-type
+                                          (backend-target-fasl-pathname
+                                           compiler-backend))))
+                (wild-root (merge-pathnames "ccl:level-0;" wild-fasls))
+                (wild-subdirs
+                 (mapcar #'(lambda (d) (merge-pathnames d wild-fasls))
+                         (backend-xload-info-subdirs *xload-target-backend*)))
+                (*xload-image-file-name* (backend-xload-info-default-image-name
+                                          *xload-target-backend*))
+                (root (repo-root-from-script))
+                (l0-fasls (append
+                           (apply #'append
+                                  (mapcar #'(lambda (d)
+                                              (sort (directory d) #'string< :key #'namestring))
+                                          wild-subdirs))
+                           (sort (directory wild-root) #'string< :key #'namestring)))
+                (l1-fasls (wasm-l1-fasl-paths root)))
+           (format t "~&;Loading ~d L0 + ~d L1 FASLs into boot image~%"
+                   (length l0-fasls) (length l1-fasls))
+           (apply #'xfasload *xload-image-file-name*
+                  (append l0-fasls l1-fasls))
+           (format t "~&;Wrote bootstrapping image: ~s" (truename *xload-image-file-name*))))))))
+
 (defun main ()
   (let* ((argv (parse-argv ccl:*command-line-argument-list*))
          (force (cdr (assoc :force argv)))
+         (with-l1 (cdr (assoc :with-l1 argv)))
          (boot-modules-out (cdr (assoc :boot-modules-out argv))))
     (when (cdr (assoc :help argv))
       (usage)
@@ -248,11 +361,19 @@
         (load (merge-pathnames "lib/number-macros.lisp" root)))
       ;; Refresh macros so wasm-aware variants are visible during cross-compile.
       (let ((*warn-if-redefine-kernel* nil))
-        (load (merge-pathnames "lib/macros.lisp" root))))
-    (format t "~&Building wasm-boot.image...~%")
+        (load (merge-pathnames "lib/macros.lisp" root)))
+      ;; Reload number-case-macro so the expansion-time *target-backend* check
+      ;; disables the retry loop on WASM (the host's built-in version lacks this).
+      (load (merge-pathnames "lib/number-case-macro.lisp" root)))
     ;; DIAG: Log cold-load functions pushed during xdump
     (setq *xload-show-cold-load-functions* t)
-    (cross-xload-level-0 :wasm32 (if force :force t))
+    (if with-l1
+      (progn
+        (format t "~&Building wasm-boot.image with L1 baked in...~%")
+        (cross-xload-wasm-with-l1 (if force :force t)))
+      (progn
+        (format t "~&Building wasm-boot.image...~%")
+        (cross-xload-level-0 :wasm32 (if force :force t))))
     ;; Report the final entry index counter for downstream start-entry-index.
     (let ((next-idx (and (boundp '*wasm2-next-entry-index*) *wasm2-next-entry-index*)))
       (format t "~&*wasm2-next-entry-index* after cross-xload = ~a~%" next-idx))

@@ -1384,16 +1384,38 @@ Can be removed before shipping once %FASLOAD startup is stable.")
 ;;; L1's error functions are defined under /full names (phase-gated) so these
 ;;; L0 bootstraps survive through cold-load drain.  l1-boot-3 activates the
 ;;; full versions via fset once the condition system is ready.
-;;; Each bootstrap logs for diagnostics and returns nil (safe).
+;;; Each bootstrap logs for diagnostics and returns nil.
+;;; The number-case macro's retry loop is disabled on WASM (#+wasm-target in
+;;; lib/number-case-macro.lisp) so returning nil does not cause infinite loops.
 #+wasm32-target
 (unless (fboundp '%kernel-restart)
-  (defun %kernel-restart (error-type &rest args)
-    (%string-to-stderr ";; bootstrap %kernel-restart: ")
-    (let ((a (car args)))
-      (when (stringp a)
-        (%string-to-stderr a)))
-    (%string-to-stderr (string #\Newline))
-    nil))
+  (let ((call-count 0))
+    (defun %kernel-restart (error-type &rest args)
+      (%string-to-stderr ";; bootstrap %kernel-restart: ")
+      (cond ((eql error-type #.$xwrongtype) (%string-to-stderr "wrongtype"))
+            ((eql error-type #.$xvunbnd) (%string-to-stderr "unbound"))
+            ((eql error-type #.$xnopkg) (%string-to-stderr "no-pkg"))
+            (t (%string-to-stderr "other")))
+      (when args
+        (let ((datum (car args)))
+          (cond ((stringp datum)
+                 (%string-to-stderr " datum=") (%string-to-stderr datum))
+                ((symbolp datum)
+                 (%string-to-stderr " datum=") (%string-to-stderr (symbol-name datum)))
+                ((null datum)
+                 (%string-to-stderr " datum=NIL"))))
+        (when (cdr args)
+          (let ((expected (cadr args)))
+            (cond ((symbolp expected)
+                   (%string-to-stderr " expected=") (%string-to-stderr (symbol-name expected)))
+                  ((stringp expected)
+                   (%string-to-stderr " expected=") (%string-to-stderr expected))))))
+      (%string-to-stderr (string #\Newline))
+      (setq call-count (1+ call-count))
+      (when (> call-count 100)
+        (%string-to-stderr ";; FATAL: >100 bootstrap %kernel-restart calls, halting\n")
+        (tagbody halt-tag (go halt-tag)))
+      nil)))
 
 #+wasm32-target
 (unless (fboundp '%kernel-restart-internal)

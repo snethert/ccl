@@ -5932,29 +5932,17 @@ _SPksignalerr(void)
   wasm_call_lisp_function(tcr, errdisp);
   reentering_errdisp = 0;
 
-  /* WASM can't unwind the native call stack (no longjmp/setjmp).  When ERRDISP
-     fails internally (e.g. %KERNEL-RESTART is UDF during early boot), the
-     reentering_errdisp guard sets pending_throw — but compiled code doesn't
-     check pending_throw between instructions.  If pending_throw stays set,
-     the caller's funcall loop spins forever (every _SPfuncall is absorbed but
-     the loop condition never changes).
+  /* If ERRDISP handled the error by throwing to a catch handler, the throw
+     unwound past _SPksignalerr — we never reach this point.  If we ARE here,
+     ERRDISP failed to handle the error (UDF, bootstrap returned nil, or
+     reentering_errdisp guard fired).  Keep pending_throw set so it propagates
+     to the caller's next wasm_call_function_value check, eventually unwinding
+     to the drain loop or toplevel boundary.
 
-     Unconditionally clear pending_throw after ERRDISP returns.  ERRDISP was
-     given its chance to handle the error; whether it pushed internal catch
-     frames (HANDLER-BIND/RESTART-CASE from the condition system after
-     l1-boot-3 initializes it) or not, keeping pending_throw set only causes
-     the compiled-code caller to spin.  If ERRDISP actually threw to a real
-     handler (e.g. *TOPLEVEL-CATCH*), wasm_fasload_path detects that via its
-     own catch_consumed check (wasm-kernel-stubs.c:5276).
-
-     Previous version gated this on catch_top == catch_before_errdisp, but
-     after l1-boot-3.lafsl loads the condition system, ERRDISP pushes internal
-     catch frames whose cleanup funcalls are absorbed by pending_throw —
-     leaving catch_top changed and the condition false, so pending_throw was
-     never cleared and dumplisp.lafsl spun forever. */
-  if (tcr->wasm_pending_throw) {
-    tcr->wasm_pending_throw = 0;
-  }
+     Previous versions cleared pending_throw here unconditionally, which
+     prevented error propagation during cold boot (the bootstrap %err-disp
+     returns nil without setting pending_throw, but the reentering_errdisp
+     guard does set it — clearing it caused infinite error cascades). */
 }
 
 static LispObj
