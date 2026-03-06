@@ -633,7 +633,7 @@ trace("compiled modules reader initialized");
 
 const runtime = createSharedCclRuntime({
   memoryInitialPages: 256,
-  subprimsTableInitial: 256,
+  subprimsTableInitial: 512,
   createMemory: true,
 });
 const sharedProbeUtf8Scratch = createUtf8ScratchArena(runtime.memory, { initialCapacity: 4096 });

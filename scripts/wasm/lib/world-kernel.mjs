@@ -54,7 +54,7 @@ export function createKernel({
   subprimsMap = null,
   memoryInitialPages = 256,
   memoryMaximumPages = undefined,
-  subprimsTableInitial = 256,
+  subprimsTableInitial = 512,
   subprimsTableMaximum = undefined,
   cstackSize = 1 << 20, // 1 MiB
   reserveBytes = 4 << 20, // scratch/heap slack

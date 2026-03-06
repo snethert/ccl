@@ -55,7 +55,7 @@ const subprimsMap = await ensureSubprimsMap(repoRoot);
 
 const runtime = createSharedCclRuntime({
   memoryInitialPages: 256,
-  subprimsTableInitial: 256,
+  subprimsTableInitial: 512,
   createMemory: true,
 });
 

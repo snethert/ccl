@@ -125,7 +125,7 @@ export function createCclImports({
 }
 
 export function createSharedCclRuntime({
-  subprimsTableInitial = 256,
+  subprimsTableInitial = 512,
   subprimsTableMaximum = undefined,
   // If you want a shared memory across multiple modules, build/link them with
   // an imported memory and pass it here.

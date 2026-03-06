@@ -1384,18 +1384,32 @@ Can be removed before shipping once %FASLOAD startup is stable.")
 ;;; L1's error functions are defined under /full names (phase-gated) so these
 ;;; L0 bootstraps survive through cold-load drain.  l1-boot-3 activates the
 ;;; full versions via fset once the condition system is ready.
-;;; Each bootstrap logs for diagnostics and returns nil.
-;;; The number-case macro's retry loop is disabled on WASM (#+wasm-target in
-;;; lib/number-case-macro.lisp) so returning nil does not cause infinite loops.
+;;;
+;;; %kernel-restart has a re-entrancy guard because %string-to-stderr uses
+;;; with-cstrs → %cstr-pointer which can trigger type checks that re-enter
+;;; the handler.  Recursive calls return nil immediately.
+;;;
+;;; The other bootstraps (%err-disp, %err-disp-internal, %error) just return
+;;; nil silently — no diagnostic output that could recurse.
 #+wasm32-target
 (unless (fboundp '%kernel-restart)
-  (let ((call-count 0))
+  (let ((call-count 0)
+        (in-handler nil))
     (defun %kernel-restart (error-type &rest args)
+      ;; Re-entrancy guard: %string-to-stderr → with-cstrs → %cstr-pointer
+      ;; can trigger type checks that re-enter this handler.  Return nil
+      ;; immediately on recursive entry to break the cycle.
+      (when in-handler
+        (return-from %kernel-restart nil))
+      (setq in-handler t)
+      (setq call-count (1+ call-count))
       (%string-to-stderr ";; bootstrap %kernel-restart: ")
       (cond ((eql error-type #.$xwrongtype) (%string-to-stderr "wrongtype"))
             ((eql error-type #.$xvunbnd) (%string-to-stderr "unbound"))
             ((eql error-type #.$xnopkg) (%string-to-stderr "no-pkg"))
             (t (%string-to-stderr "other")))
+      ;; Datum/expected printing may trigger type checks → recursive call
+      ;; → caught by guard above → returns nil → printing continues safely
       (when args
         (let ((datum (car args)))
           (cond ((stringp datum)
@@ -1403,18 +1417,24 @@ Can be removed before shipping once %FASLOAD startup is stable.")
                 ((symbolp datum)
                  (%string-to-stderr " datum=") (%string-to-stderr (symbol-name datum)))
                 ((null datum)
-                 (%string-to-stderr " datum=NIL"))))
+                 (%string-to-stderr " datum=NIL"))
+                ((fixnump datum)
+                 (%string-to-stderr " datum=<fixnum>"))
+                (t
+                 (%string-to-stderr " datum=<other>"))))
         (when (cdr args)
           (let ((expected (cadr args)))
             (cond ((symbolp expected)
                    (%string-to-stderr " expected=") (%string-to-stderr (symbol-name expected)))
                   ((stringp expected)
-                   (%string-to-stderr " expected=") (%string-to-stderr expected))))))
+                   (%string-to-stderr " expected=") (%string-to-stderr expected))
+                  (t
+                   (%string-to-stderr " expected=<compound>"))))))
       (%string-to-stderr (string #\Newline))
-      (setq call-count (1+ call-count))
-      (when (> call-count 100)
-        (%string-to-stderr ";; FATAL: >100 bootstrap %kernel-restart calls, halting\n")
-        (tagbody halt-tag (go halt-tag)))
+      (setq in-handler nil)
+      ;; No halt — the C drain loop has per-function error isolation via
+      ;; wasm_pending_throw.  Wrongtype during cold boot is expected
+      ;; (in-package thunks, require-type on uninitialized data).
       nil)))
 
 #+wasm32-target
@@ -1426,25 +1446,19 @@ Can be removed before shipping once %FASLOAD startup is stable.")
 #+wasm32-target
 (unless (fboundp '%err-disp)
   (defun %err-disp (err-num &rest errargs)
-    (declare (ignore errargs))
-    (%string-to-stderr ";; bootstrap %err-disp")
-    (%string-to-stderr (string #\Newline))
+    (declare (ignore err-num errargs))
     nil))
 
 #+wasm32-target
 (unless (fboundp '%err-disp-internal)
   (defun %err-disp-internal (err-num errargs frame-ptr)
-    (declare (ignore errargs frame-ptr))
-    (%string-to-stderr ";; bootstrap %err-disp-internal")
-    (%string-to-stderr (string #\Newline))
+    (declare (ignore err-num errargs frame-ptr))
     nil))
 
 #+wasm32-target
 (unless (fboundp '%error)
   (defun %error (condition args error-pointer)
     (declare (ignore condition args error-pointer))
-    (%string-to-stderr ";; bootstrap %error")
-    (%string-to-stderr (string #\Newline))
     nil))
 
 (defvar %toplevel-function%

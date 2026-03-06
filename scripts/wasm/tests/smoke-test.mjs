@@ -39,7 +39,7 @@ const kernelUrl = new URL("../../../build/wasm32/kernel/wasmcl.wasm", import.met
 const runtime = createSharedCclRuntime({
   // The module only requires 2 pages, but use something roomy for smoke tests.
   memoryInitialPages: 256, // 16 MiB
-  subprimsTableInitial: 256,
+  subprimsTableInitial: 512,
   createMemory: true,
 });
 

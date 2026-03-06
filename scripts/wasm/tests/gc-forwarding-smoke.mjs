@@ -29,7 +29,7 @@ const kernelBytes = await readFileUrl(kernelUrl);
 
 const runtime = createSharedCclRuntime({
   memoryInitialPages: 32,
-  subprimsTableInitial: 256,
+  subprimsTableInitial: 512,
   createMemory: true,
 });
 

@@ -50,7 +50,9 @@ all: subprims
 subprims: $(COBJ)
 	@echo "Building subprims module..."
 	@mkdir -p $(SUBPRIMS_DIR)
-	$(WASM_LD) --no-entry --import-memory --import-table \
+	# --table-base=256: match the kernel; keep C function-pointer
+	# indices out of the 0-255 subprim reservation.
+	$(WASM_LD) --no-entry --import-memory --import-table --table-base=256 \
 	  --global-base=1064960 -z stack-size=16384 \
 	  -o $(SUBPRIMS_WASM) $(COBJ)
 	@echo "Subprims built: $(SUBPRIMS_WASM)"

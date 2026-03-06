@@ -34,7 +34,7 @@ const imageLen = imageBytes.byteLength >>> 0;
 
 const runtime = createSharedCclRuntime({
   memoryInitialPages: 64,
-  subprimsTableInitial: 256,
+  subprimsTableInitial: 512,
   createMemory: true,
 });
 

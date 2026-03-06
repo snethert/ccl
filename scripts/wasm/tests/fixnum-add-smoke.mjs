@@ -629,7 +629,7 @@ const bundleUrl = new URL("../../../build/wasm32/modules/wasm-smoke-modules.json
 
 const runtime = createSharedCclRuntime({
   memoryInitialPages: 256,
-  subprimsTableInitial: 256,
+  subprimsTableInitial: 512,
 });
 
 const microkernel = createMicrokernel({

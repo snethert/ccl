@@ -50,7 +50,7 @@ function setSubprimsReady(kernel, ready) {
 const runtime = createSharedCclRuntime({
   // These sizes are placeholders.
   memoryInitialPages: 256, // 16 MiB
-  subprimsTableInitial: 256,
+  subprimsTableInitial: 512,
 });
 
 const microkernel = createMicrokernel({

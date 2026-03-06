@@ -107,7 +107,11 @@ all: wasmcl
 wasmcl: $(KERNELOBJ)
 	@echo "Building WASM kernel..."
 	@mkdir -p $(KERNEL_DIR)
-	$(WASM_LD) --no-entry --import-memory --import-table -z stack-size=1048576 \
+	# --table-base=256: reserve indices 0-255 for the subprims table
+	# (installed by JS installSubprimsTable).  Without this, wasm-ld
+	# assigns C function-pointer indices starting at 1, which overlap
+	# the subprim range and get silently overwritten at runtime.
+	$(WASM_LD) --no-entry --import-memory --import-table --table-base=256 -z stack-size=1048576 \
 	  --export=wasm_ccl_start \
 	  --export=wasm_ccl_start_lisp \
 	  --export=wasm_set_current_tcr --export=wasm_get_current_tcr \

@@ -31,7 +31,7 @@ const runtime = createSharedCclRuntime({
   memoryInitialPages: 17, // kernel declares min 17 pages
   // The kernel links against an imported indirect function table with a
   // non-trivial minimum size (subprims slots). Leave plenty of room.
-  subprimsTableInitial: 256,
+  subprimsTableInitial: 512,
   createMemory: true,
 });
 

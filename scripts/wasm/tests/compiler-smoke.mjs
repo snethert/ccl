@@ -160,7 +160,7 @@ assertPhaseOrderEvidence(
 
 const runtime = createSharedCclRuntime({
   memoryInitialPages: 256,
-  subprimsTableInitial: 256,
+  subprimsTableInitial: 512,
 });
 
 const microkernel = createMicrokernel({

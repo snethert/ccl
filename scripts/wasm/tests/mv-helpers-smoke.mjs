@@ -39,7 +39,7 @@ const imageUrl = new URL("../../../build/wasm32/images/minimal.image", import.me
 
 const runtime = createSharedCclRuntime({
   memoryInitialPages: 256,
-  subprimsTableInitial: 256,
+  subprimsTableInitial: 512,
 });
 
 const microkernel = createMicrokernel({
