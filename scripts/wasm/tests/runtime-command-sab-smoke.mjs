@@ -44,6 +44,7 @@ import {
   STARTUP_SYMBOL_TO_ENTRY_FUNCTION_DESIGNATORS_PRE_TOPLEVEL_V1
 } from "./bootstrap-contract.mjs";
 import { WASM_BOOT_ENTRY_INDEX as BOOT_ENTRY_INDEX } from "./abi-constants.mjs";
+import { ensureSubprimsMap } from "../lib/ensure-subprims-map.mjs";
 
 const CSTACK_SIZE = 1 << 20;
 const HEAP_RESERVE_BYTES = 4 << 20;
@@ -57,9 +58,8 @@ const scriptUrl = import.meta.url;
 const kernelBytes = await readFileUrl(new URL("../../../build/wasm32/kernel/wasmcl.wasm", scriptUrl));
 const subprimsBytes = await readFileUrl(new URL("../../../build/wasm32/subprims/subprims.wasm", scriptUrl));
 const rootImageBytes = await readFileUrl(new URL("../../../build/wasm32/images/minimal.image", scriptUrl));
-const subprimsMap = JSON.parse(
-  await fs.readFile(fileURLToPath(new URL("../../../build/wasm32/subprims-map.json", scriptUrl)), "utf8")
-);
+const repoRoot = path.resolve(path.dirname(fileURLToPath(scriptUrl)), "../../..");
+const subprimsMap = await ensureSubprimsMap(repoRoot);
 const runtimeModulesBundle = JSON.parse(
   await fs.readFile(fileURLToPath(new URL("../../../build/wasm32/modules/wasm-smoke-modules.json", scriptUrl)), "utf8")
 );

@@ -9,6 +9,8 @@ import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import { createKernel } from "./world-kernel.mjs";
+import path from "node:path";
+import { ensureSubprimsMap } from "../lib/ensure-subprims-map.mjs";
 
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
@@ -28,8 +30,8 @@ const kernelBytes = await readFileUrl(kernelUrl);
 
 const subprimsUrl = new URL("../../../build/wasm32/subprims/subprims.wasm", import.meta.url);
 const subprimsBytes = await readFileUrl(subprimsUrl);
-const subprimsMapUrl = new URL("../../../build/wasm32/subprims-map.json", import.meta.url);
-const subprimsMap = JSON.parse(await fs.readFile(fileURLToPath(subprimsMapUrl), "utf-8"));
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+const subprimsMap = await ensureSubprimsMap(repoRoot);
 
 const imageUrl = new URL("../../../build/wasm32/images/minimal.image", import.meta.url);
 const imageBytes = await readFileUrl(imageUrl);

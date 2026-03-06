@@ -131,6 +131,35 @@ if ! command -v git >/dev/null 2>&1; then
   exit 1
 fi
 
+# ── Clean all WASM build artifacts and compiled FASLs ──────────────
+# This ensures a truly fresh build with no stale artifacts.
+log "Cleaning all WASM build artifacts..."
+
+# Cross-compiled L0 FASLs
+find "$ROOT_DIR/level-0" -name '*.lafsl' -delete 2>/dev/null || true
+
+# Cross-compiled L1 FASLs (both root and build copies)
+find "$ROOT_DIR/l1-fasls" -name '*.lafsl' -delete 2>/dev/null || true
+rm -f "$ROOT_DIR/level-1.lafsl"
+
+# Cross-compiled library FASLs
+find "$ROOT_DIR/bin" -name '*.lafsl' -delete 2>/dev/null || true
+
+# Cached host macro compilations (e.g. number-case-macro.dx64fsl)
+# These can mask source changes when the host's *modules* system
+# loads the stale .dx64fsl instead of the modified .lisp source.
+find "$ROOT_DIR/lib" -name '*.dx64fsl' -delete 2>/dev/null || true
+
+# Boot image at repo root
+rm -f "$ROOT_DIR/wasm-boot.image"
+
+# Entire build output directory (modules, images, fasls, kernel, subprims)
+if [ -d "$BUILD_DIR" ]; then
+  rm -rf "$BUILD_DIR"
+fi
+
+log "Clean complete."
+
 # Create build directories
 mkdir -p "$BUILD_DIR" "$IMAGES_DIR" "$MODULES_DIR"
 
@@ -161,8 +190,11 @@ log "repo=$ROOT_DIR"
 log "branch=$(git -C "$ROOT_DIR" symbolic-ref --short -q HEAD || echo detached) head=$(git -C "$ROOT_DIR" rev-parse --short HEAD)"
 log "force=$FORCE build_root_image=$BUILD_ROOT_IMAGE root_image_allow_fail=$ROOT_IMAGE_ALLOW_FAIL"
 
-run make -C "$ROOT_DIR/lisp-kernel/wasm32" ${MAKE_ARGS[@]+"${MAKE_ARGS[@]}"} all
+run make -C "$ROOT_DIR/lisp-kernel/wasm32" clean ${MAKE_ARGS[@]+"${MAKE_ARGS[@]}"} all
 run make -C "$ROOT_DIR/lisp-kernel/wasm32/subprims" clean all
+
+log "Step 0b: Generate subprims artifacts (subprims-map.json, wasm-subprims-map.h)"
+run python3 "$ROOT_DIR/scripts/wasm/generate_subprims_artifacts.py"
 
 # Phase 0B: Extract __heap_base from the kernel so the boot image can use it
 # as :image-base-address, ensuring bias=0 (no relocation walk at load time).

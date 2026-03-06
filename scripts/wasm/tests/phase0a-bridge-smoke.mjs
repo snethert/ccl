@@ -28,6 +28,7 @@ import {
   instantiateWasm,
 } from "./ccl-loader.mjs";
 import { createMicrokernel } from "./microkernel.mjs";
+import { ensureSubprimsMap } from "../lib/ensure-subprims-map.mjs";
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -52,10 +53,6 @@ const kernelUrl = new URL(
 );
 const subprimsUrl = new URL(
   "../../../build/wasm32/subprims/subprims.wasm",
-  import.meta.url,
-);
-const subprimsMapUrl = new URL(
-  "../../../build/wasm32/subprims-map.json",
   import.meta.url,
 );
 // Try minimal.image first, fall back to wasm-boot.image
@@ -125,9 +122,8 @@ const kernel = await instantiateWasm(
 // ── Instantiate subprims ─────────────────────────────────────────────
 
 const subprimsBytes = await readFileUrl(subprimsUrl);
-const subprimsMap = JSON.parse(
-  (await readFileUrl(subprimsMapUrl)).toString("utf8"),
-);
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+const subprimsMap = await ensureSubprimsMap(repoRoot);
 const subprims = await instantiateWasm(
   subprimsBytes,
   createCclImports({

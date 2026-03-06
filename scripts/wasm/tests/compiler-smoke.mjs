@@ -19,6 +19,7 @@ import {
   instantiateWasm,
 } from "./ccl-loader.mjs";
 import { createMicrokernel } from "./microkernel.mjs";
+import { ensureSubprimsMap } from "../lib/ensure-subprims-map.mjs";
 
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
@@ -61,7 +62,6 @@ function assertPhaseOrderEvidence(phaseOrder, completed) {
 
 const kernelUrl = new URL("../../../build/wasm32/kernel/wasmcl.wasm", import.meta.url);
 const subprimsUrl = new URL("../../../build/wasm32/subprims/subprims.wasm", import.meta.url);
-const subprimsMapUrl = new URL("../../../build/wasm32/subprims-map.json", import.meta.url);
 const imageUrl = new URL("../../../build/wasm32/images/minimal.image", import.meta.url);
 const bundleUrl = new URL("../../../build/wasm32/modules/wasm-smoke-modules.json", import.meta.url);
 
@@ -180,7 +180,7 @@ const kernel = await instantiateWasm(
 );
 
 const subprimsBytes = await readFileUrl(subprimsUrl);
-const subprimsMap = JSON.parse((await readFileUrl(subprimsMapUrl)).toString("utf8"));
+const subprimsMap = await ensureSubprimsMap(repoRoot);
 const subprims = await instantiateWasm(
   subprimsBytes,
   createCclImports({

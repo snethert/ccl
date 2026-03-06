@@ -20,6 +20,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { ensureSubprimsMap } from "./ensure-subprims-map.mjs";
 
 import {
   createCclImports,
@@ -109,7 +110,7 @@ log(`startup-plan: ${plan.functionTable.entries.length} entries, table size ${pl
 const [kernelBytes, subprimsBytes, subprimsMap, modulesBinBuf] = await Promise.all([
   fs.readFile(path.join(repoRoot, "build/wasm32/kernel/wasmcl.wasm")),
   fs.readFile(path.join(repoRoot, "build/wasm32/subprims/subprims.wasm")),
-  fs.readFile(path.join(repoRoot, "build/wasm32/subprims-map.json"), "utf-8").then(JSON.parse),
+  ensureSubprimsMap(repoRoot),
   fs.readFile(path.join(imagesDir, "modules.bin")),
 ]);
 const modulesBin = new Uint8Array(modulesBinBuf.buffer, modulesBinBuf.byteOffset, modulesBinBuf.byteLength);

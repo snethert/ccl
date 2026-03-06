@@ -15,11 +15,13 @@ import {
 } from "./ccl-loader.mjs";
 import { createMicrokernel } from "./microkernel.mjs";
 import { WASM_BOOT_ENTRY_INDEX as BOOT_ENTRY_INDEX } from "./abi-constants.mjs";
+import { ensureSubprimsMap } from "./lib/ensure-subprims-map.mjs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 // Update these URLs to point at your built artifacts.
 const kernelUrl = new URL("wasmcl.wasm", import.meta.url);
 const subprimsUrl = new URL("subprims.wasm", import.meta.url);
-const subprimsMapUrl = new URL("../../../build/wasm32/subprims-map.json", import.meta.url);
 
 const REQUIRED_SUBPRIMS = ["_SPmkcatch1v", "_SPfuncall", "_SPnthrow1value"];
 
@@ -97,7 +99,8 @@ try {
   console.warn(`subprims provider not loaded: ${e}`);
 }
 
-const subprimsMap = await fetchJson(subprimsMapUrl);
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const subprimsMap = await ensureSubprimsMap(repoRoot);
 const { installed, needed } = installSubprimsTable({
   table: runtime.subprimsTable,
   subprimsMap,

@@ -19,6 +19,8 @@ import {
   instantiateWasm,
 } from "./ccl-loader.mjs";
 import { createMicrokernel } from "./microkernel.mjs";
+import path from "node:path";
+import { ensureSubprimsMap } from "../lib/ensure-subprims-map.mjs";
 
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
@@ -34,8 +36,6 @@ function readFileUrl(url) {
 }
 
 const kernelUrl = new URL("../../../build/wasm32/kernel/wasmcl.wasm", import.meta.url);
-const subprimsMapUrl = new URL("../../../build/wasm32/subprims-map.json", import.meta.url);
-
 const runtime = createSharedCclRuntime({
   // The module only requires 2 pages, but use something roomy for smoke tests.
   memoryInitialPages: 256, // 16 MiB
@@ -187,7 +187,8 @@ assert(kernel.instance.exports.wasm_get_subprims_ready() === 1, "subprims ready 
   );
 }
 
-const subprimsMap = JSON.parse((await readFileUrl(subprimsMapUrl)).toString("utf8"));
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+const subprimsMap = await ensureSubprimsMap(repoRoot);
 
 const providers = [{ exports: kernel.instance.exports }];
 const { installed, needed } = installSubprimsTable({

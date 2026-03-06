@@ -16,6 +16,8 @@ import {
   instantiateWasm,
   installSubprimsTable,
 } from "./ccl-loader.mjs";
+import path from "node:path";
+import { ensureSubprimsMap } from "../lib/ensure-subprims-map.mjs";
 
 function fail(msg) {
   console.error(`FAIL: ${msg}`);
@@ -39,8 +41,8 @@ const imageLen = imageBytes.byteLength >>> 0;
 
 const subprimsUrl = new URL("../../../build/wasm32/subprims/subprims.wasm", import.meta.url);
 const subprimsBytes = await readFileUrl(subprimsUrl);
-const subprimsMapUrl = new URL("../../../build/wasm32/subprims-map.json", import.meta.url);
-const subprimsMap = JSON.parse(await fs.readFile(fileURLToPath(subprimsMapUrl), "utf-8"));
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+const subprimsMap = await ensureSubprimsMap(repoRoot);
 
 const runtime = createSharedCclRuntime({
   memoryInitialPages: 256,

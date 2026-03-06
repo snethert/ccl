@@ -439,7 +439,18 @@ if (!(await fileExists(subprimsPath))) {
   fail(`Missing subprims: ${subprimsPath}`);
 }
 if (!(await fileExists(subprimsMapPath))) {
-  fail(`Missing subprims map: ${subprimsMapPath}`);
+  const genScript = path.join(root, "scripts/wasm/generate_subprims_artifacts.py");
+  if (!(await fileExists(genScript))) {
+    fail(`Missing subprims map: ${subprimsMapPath} (and generator not found: ${genScript})`);
+  }
+  console.error(`Subprims map not found at ${subprimsMapPath} — generating automatically...`);
+  const genResult = await runShellScript("python3", [genScript], { cwd: root });
+  if (genResult.code !== 0) {
+    fail(`subprims artifact generation failed (exit ${genResult.code})`);
+  }
+  if (!(await fileExists(subprimsMapPath))) {
+    fail(`subprims artifact generation succeeded but ${subprimsMapPath} still missing`);
+  }
 }
 if (!(await fileExists(bootImagePath))) {
   const bootScript = path.join(root, "scripts/wasm/build-wasm-boot.sh");

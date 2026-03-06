@@ -16,6 +16,7 @@ BUILD_DIR="${CCL_WASM_BUILD_DIR:-$ROOT_DIR/build/wasm32}"
 # --- Artifact paths ---
 KERNEL_WASM="$BUILD_DIR/kernel/wasmcl.wasm"
 SUBPRIMS_WASM="$BUILD_DIR/subprims/subprims.wasm"
+SUBPRIMS_MAP="$BUILD_DIR/subprims-map.json"
 BOOT_IMAGE="$ROOT_DIR/wasm-boot.image"
 BOOT_MODULES="$BUILD_DIR/modules/wasm-boot-modules.json"
 RUNTIME_MODULES="$BUILD_DIR/modules/wasm-runtime-modules.json"
@@ -91,6 +92,7 @@ rebuild_cmd_for() {
     abi_contract)    echo "python3 scripts/wasm/generate_abi_contract.py" ;;
     kernel)          echo "make -C lisp-kernel/wasm32 clean all" ;;
     subprims)        echo "make -C lisp-kernel/wasm32/subprims clean all" ;;
+    subprims_map)    echo "python3 scripts/wasm/generate_subprims_artifacts.py" ;;
     boot_image)      echo "scripts/wasm/build-wasm-boot.sh --force" ;;
     boot_modules)    echo "(rebuilt as part of boot image build)" ;;
     runtime_modules) echo "scripts/wasm/compile-wasm-fasls.sh --force" ;;
@@ -203,6 +205,11 @@ check_one "subprims" "Subprims" "$SUBPRIMS_WASM" \
   "$ROOT_DIR/lisp-kernel/wasm-subprims.h" \
   "$ROOT_DIR/lisp-kernel/lisp-exceptions.h" \
   "$ROOT_DIR/lisp-kernel/lisp.h"
+
+# 2b. Subprims Map (depends on ARM spentry + generator script)
+check_one "subprims_map" "Subprims Map" "$SUBPRIMS_MAP" \
+  "$ROOT_DIR/lisp-kernel/arm-spentry.s" \
+  "$ROOT_DIR/scripts/wasm/generate_subprims_artifacts.py"
 
 # 3. Boot Image (depends on kernel + compiler + level-0)
 check_one "boot_image" "Boot Image" "$BOOT_IMAGE" \
