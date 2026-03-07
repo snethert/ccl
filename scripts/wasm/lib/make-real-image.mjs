@@ -1800,50 +1800,30 @@ if (requiredFasls.length > 0) {
    defined.  Call it to rehash any package hash tables that were modified
    during FASL loading.  This ensures INTERN/FIND-SYMBOL work correctly
    at runtime. */
+console.error("[stage] calling RESTORE-LISP-POINTERS...");
+const rlpBefore = Date.now();
 const postFasloadRestoreRc = ex.wasm_restore_lisp_pointers() | 0;
-if (postFasloadRestoreRc === 0) {
-  trace("RESTORE-LISP-POINTERS complete (post-fasload)");
-} else {
+const rlpMs = Date.now() - rlpBefore;
+console.error(`[stage] RESTORE-LISP-POINTERS rc=${postFasloadRestoreRc} (${rlpMs} ms)`);
+if (postFasloadRestoreRc !== 0) {
   trace(`RESTORE-LISP-POINTERS post-fasload rc=${postFasloadRestoreRc} (non-fatal)`);
 }
 
-/* Phase 2A: Proactive const pool installation.
-   At this point the full standard library is loaded — all packages exist,
-   all symbols are interned, all functions are defined.  Install every
-   remaining const pool so the saved image contains complete Lisp state.
-   At launch time, zero const pool callbacks will fire.
-
-   NOTE: The post-module-install GC above already compacted the heap,
-   so allocation failures here should be rare.  Any failed entries are
-   logged but not fatal — remaining pools will be installed on-demand
-   at launch time by load-image.mjs. */
+/* Phase 2A: Proactive const pool installation — SKIPPED.
+   Installing ~7000 const pools triggers repeated full GC on the multi-GB
+   WASM heap, taking hours in interpreted WASM.  Deferred to launch time
+   via on-demand wasm_host_install_const_pool callback in load-image.mjs.
+   Const pools already installed during module instantiation (~778) remain
+   baked into the image. */
 {
   const allEntries = new Set([
     ...bootConstPoolData.keys(),
     ...constPoolEntries.keys(),
   ]);
-  let proactiveInstalled = 0;
-  let proactiveSkipped = 0;
-  let proactiveFailed = 0;
-  for (const entryIndex of allEntries) {
-    if (constPoolsInstalled.has(entryIndex)) {
-      proactiveSkipped++;
-      continue;
-    }
-    const rc = installConstPoolOnDemand(entryIndex);
-    if (rc !== 0) {
-      proactiveInstalled++;
-    } else {
-      proactiveFailed++;
-      if (proactiveFailed <= 5) {
-        console.error(`[stage] proactive const-pool install failed for entry=${entryIndex} (will install on-demand at launch)`);
-      }
-    }
-  }
+  const alreadyInstalled = [...allEntries].filter(e => constPoolsInstalled.has(e)).length;
   console.error(
-    `[stage] proactive const-pool install: ${proactiveInstalled} installed,` +
-    ` ${proactiveSkipped} already done,` +
-    ` ${constPoolsInstalled.size} total baked into image`
+    `[stage] const-pool install SKIPPED: ${alreadyInstalled}/${allEntries.size} already baked,` +
+    ` ${allEntries.size - alreadyInstalled} deferred to launch`
   );
 }
 
@@ -2250,7 +2230,7 @@ await fs.writeFile(manifestOutPath, canonicalJson(manifest));
       initialPages: runtime.memory.buffer.byteLength / 65536,
       imageSize: persistedBytes.length,
     },
-    constPools: { baked: true, count: constPoolsInstalled.size },
+    constPools: { baked: "partial", count: constPoolsInstalled.size },
     functionTable: {
       size: runtime.subprimsTable.length,
       entries: cleanEntries,

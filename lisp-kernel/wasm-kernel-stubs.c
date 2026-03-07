@@ -548,6 +548,33 @@ wasm_trigger_gc(void)
   return (int32_t)freed;
 }
 
+/* Grow the Lisp dynamic area so that at least `extra_bytes` of free space
+   is available for allocation without triggering GC.  Used before bulk
+   operations (const-pool install) that do many small allocations.
+
+   After a compacting GC the dynamic area's `high` is set to
+   `active + lisp_heap_gc_threshold` — typically only ~128 MiB of headroom.
+   But the WASM linear memory may be much larger (up to 4 GiB).
+   resize_dynamic_heap → grow_dynamic_area → CommitMemory will extend
+   `high` within the existing linear memory without needing
+   wasm_memory_grow_and_relocate (which fails when memory is already at
+   the WASM32 4 GiB ceiling).
+
+   Returns 0 on success, negative on failure. */
+__attribute__((used, visibility("default"), export_name("wasm_grow_lisp_heap")))
+int32_t
+wasm_grow_lisp_heap(uint32_t extra_bytes)
+{
+  area *a = active_dynamic_area;
+  if (a == NULL) return -1;
+
+  natural current_free = (natural)(a->high - a->active);
+  if (current_free >= extra_bytes) return 0; /* already have enough */
+
+  if (!resize_dynamic_heap(a->active, (natural)extra_bytes)) return -2;
+  return 0;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_save_image_direct")))
 int32_t
 wasm_save_image_direct(uint32_t path_ptr, uint32_t path_len, uint32_t egc_enabled)

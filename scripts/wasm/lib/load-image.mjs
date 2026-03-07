@@ -94,6 +94,9 @@ if (plan.schemaVersion !== 1) {
 if (!plan.constPools?.baked) {
   fail("startup-plan.json: constPools not baked — rebuild required (run rebuild-everything.sh)");
 }
+if (plan.constPools.baked === "partial") {
+  console.log(`WARN: ${plan.constPools.count} const pools baked; remainder deferred to on-demand install`);
+}
 
 const imageSize    = plan.memory.imageSize >>> 0;
 const initialPages = plan.memory.initialPages >>> 0;
@@ -179,8 +182,8 @@ if (opts.closeStdin || opts.stdinScriptPath || opts.stdinText != null) {
 
 // ── Import factory ─────────────────────────────────────────────────────────
 
-// Const pool callbacks never fire (all pools pre-baked).
-// Function designator callback is a stub for future dynamic compilation.
+// Const pool callback: returns 0 (not-installed) for pools not pre-baked.
+// TODO: wire up on-demand installation from modules binary for partial bake.
 const noopConstPool  = () => 0;
 const noopDesignator = () => -1;
 
