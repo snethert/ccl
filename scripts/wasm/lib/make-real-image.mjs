@@ -1976,12 +1976,23 @@ const imagePathPtr = copyBytesToScratch(runtime.memory, imagePathBytes);
 if (typeof ex.wasm_save_image_direct !== "function") {
   fail("kernel missing wasm_save_image_direct");
 }
+/* When const pools are partial, %save-application-internal (a Lisp function)
+   may crash because its const pool wasn't installed.  Disable the Lisp save
+   path by temporarily clearing wasm_subprims_ready so wasm_save_image_direct
+   goes straight to the C-level save_application. */
+const subprimsWasReady = typeof ex.wasm_set_subprims_ready === "function";
+if (subprimsWasReady) {
+  ex.wasm_set_subprims_ready(0);
+}
 trace(`invoking wasm_save_image_direct for ${wasmOutputPath}`);
 const saveRc = ex.wasm_save_image_direct(
   imagePathPtr,
   imagePathBytes.length >>> 0,
   0,
 ) | 0;
+if (subprimsWasReady) {
+  ex.wasm_set_subprims_ready(1);
+}
 if (saveRc !== 0) {
   console.warn(`WARN: wasm_save_image_direct returned ${saveRc}; attempting to read persisted image anyway`);
 }
