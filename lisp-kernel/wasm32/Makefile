@@ -158,7 +158,7 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_boot_get_phase --export=wasm_boot_set_phase \
 	  --export=wasm_ccl_load_image --export=wasm_ccl_step --export=wasm_restore_lisp_pointers \
 	  --export=wasm_clear_pending_throw \
-	  --export=wasm_const_pool_install --export=wasm_const_pool_ref --export=wasm_const_pool_diag_fail_get \
+	  --export=wasm_const_pool_install --export=wasm_const_pool_alias --export=wasm_entry_fn_cache_clear --export=wasm_const_pool_purge_all --export=wasm_const_pool_ref --export=wasm_const_pool_diag_fail_get \
 	  --export=wasm_lisp_word_ref --export=wasm_lisp_word_set \
 	  --export=wasm_fasload_path \
 	  --export=wasm_get_nargs \
@@ -169,6 +169,7 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_set_toplfunc_entry --export=wasm_set_symbol_function_entry \
 	  --export=wasm_check_symbol_fbound \
 	  --export=wasm_grow_lisp_heap \
+	  --export=wasm_heap_profile \
 	  --export=wasm_vsp_ref \
 	  --export=_SPfix_overflow --export=_SPmakes32 \
 	  --export=lisp_open --export=lisp_read --export=lisp_write --export=lisp_close \

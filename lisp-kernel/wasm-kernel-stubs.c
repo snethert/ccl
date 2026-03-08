@@ -270,6 +270,15 @@ static uint32_t wasm_trace_funcall = 0;
    needs a const pool that hasn't been installed yet. */
 static uint32_t wasm_const_pool_install_depth = 0;
 
+/* Entry-function dedup cache: maps entry_index -> LispObj function vector.
+   Avoids allocating a new 3-slot function vector for every const pool that
+   references the same entry_index. Allocated on first use, cleared via
+   wasm_entry_fn_cache_clear(). */
+static LispObj *wasm_entry_fn_cache = NULL;
+static uint32_t wasm_entry_fn_cache_size = 0;
+static uint32_t wasm_entry_fn_cache_hits = 0;
+static uint32_t wasm_entry_fn_cache_misses = 0;
+
 /* Diagnostic: tracks which exit-point in wasm_const_pool_install_inner
    last returned lisp_nil, for debugging const-pool failures. */
 static uint32_t wasm_const_pool_diag_fail = 0;
@@ -573,6 +582,160 @@ wasm_grow_lisp_heap(uint32_t extra_bytes)
 
   if (!resize_dynamic_heap(a->active, (natural)extra_bytes)) return -2;
   return 0;
+}
+
+/* ── Heap profiler ─────────────────────────────────────────────────────
+   Scan the dynamic area and report bytes consumed per subtag type.
+   Uses skip_over_ivector (from GC) for correct ivector sizing.
+   Writes results via wasm_host_log.  Returns number of live bytes. */
+__attribute__((used, visibility("default"), export_name("wasm_heap_profile")))
+uint32_t
+wasm_heap_profile(void)
+{
+  area *a = active_dynamic_area;
+  if (a == NULL) return 0;
+
+  /* Disable EGC to see the full heap, not just the youngest generation */
+  Boolean egc_was_on = (lisp_global(OLDEST_EPHEMERAL) != 0);
+  if (egc_was_on) {
+    egc_control(false, a->active);
+    a = active_dynamic_area;
+  }
+
+  LispObj *p = (LispObj *)a->low;
+  LispObj *limit = (LispObj *)a->active;
+
+  /* 256 subtag buckets: count and total bytes (use uint32_t to avoid printf issues) */
+  uint32_t counts[256];
+  uint32_t byteslo[256]; /* low 32 bits of bytes */
+  uint32_t cons_count = 0;
+  uint32_t cons_bytes = 0;
+
+  memset(counts, 0, sizeof(counts));
+  memset(byteslo, 0, sizeof(byteslo));
+
+  while (p < limit) {
+    LispObj header = *p;
+    int tag = fulltag_of(header);
+
+    if (immheader_tag_p(tag)) {
+      /* Use skip_over_ivector for exact sizing */
+      LispObj *next = (LispObj *)skip_over_ivector(ptr_to_lispobj(p), header);
+      uint32_t obj_bytes = (uint32_t)((BytePtr)next - (BytePtr)p);
+      uint8_t subtag = header_subtag(header);
+      counts[subtag]++;
+      byteslo[subtag] += obj_bytes;
+      p = next;
+    } else if (nodeheader_tag_p(tag)) {
+      natural element_count = header_element_count(header);
+      uint32_t obj_bytes = (uint32_t)((element_count + 1 + (element_count & 1 ? 0 : 1)) * node_size);
+      /* node objects: header + N elements, dnode-aligned */
+      obj_bytes = (uint32_t)(((element_count + 1) * node_size + 7) & ~7u);
+      uint8_t subtag = header_subtag(header);
+      counts[subtag]++;
+      byteslo[subtag] += obj_bytes;
+      p = (LispObj *)((BytePtr)p + obj_bytes);
+    } else {
+      /* cons cell — 8 bytes (1 dnode) */
+      cons_count++;
+      cons_bytes += dnode_size;
+      p += 2;
+    }
+  }
+
+  uint32_t total_live = (uint32_t)((BytePtr)a->active - (BytePtr)a->low);
+  char buf[160];
+  int n;
+
+  n = snprintf(buf, sizeof(buf),
+    "HEAP-PROFILE: total=%u (%u MiB) cons=%u (%u MiB)\n",
+    total_live, total_live >> 20,
+    cons_count, cons_bytes >> 20);
+  wasm_host_log(buf, n);
+
+  /* Collect and sort by bytes descending */
+  struct { uint8_t subtag; uint32_t count; uint32_t bytes; } entries[256];
+  int nentries = 0;
+  for (int i = 0; i < 256; i++) {
+    if (counts[i] > 0) {
+      entries[nentries].subtag = (uint8_t)i;
+      entries[nentries].count = counts[i];
+      entries[nentries].bytes = byteslo[i];
+      nentries++;
+    }
+  }
+  for (int i = 1; i < nentries; i++) {
+    for (int j = i; j > 0 && entries[j].bytes > entries[j-1].bytes; j--) {
+      typeof(entries[0]) tmp = entries[j];
+      entries[j] = entries[j-1];
+      entries[j-1] = tmp;
+    }
+  }
+
+  static const char *subtag_names[256];
+  static int names_init = 0;
+  if (!names_init) {
+    memset(subtag_names, 0, sizeof(subtag_names));
+    subtag_names[subtag_bignum] = "bignum";
+    subtag_names[subtag_ratio] = "ratio";
+    subtag_names[subtag_single_float] = "sfloat";
+    subtag_names[subtag_double_float] = "dfloat";
+    subtag_names[subtag_complex] = "complex";
+    subtag_names[subtag_bit_vector] = "bitvec";
+    subtag_names[subtag_double_float_vector] = "dfvec";
+    subtag_names[subtag_s16_vector] = "s16vec";
+    subtag_names[subtag_u16_vector] = "u16vec";
+    subtag_names[subtag_s8_vector] = "s8vec";
+    subtag_names[subtag_u8_vector] = "u8vec";
+    subtag_names[subtag_simple_base_string] = "string";
+    subtag_names[subtag_fixnum_vector] = "fxvec";
+    subtag_names[subtag_s32_vector] = "s32vec";
+    subtag_names[subtag_u32_vector] = "u32vec";
+    subtag_names[subtag_single_float_vector] = "sfvec";
+    subtag_names[subtag_vectorH] = "vecH";
+    subtag_names[subtag_arrayH] = "arrH";
+    subtag_names[subtag_simple_vector] = "svec";
+    subtag_names[subtag_pseudofunction] = "pseudo";
+    subtag_names[subtag_macptr] = "macptr";
+    subtag_names[subtag_dead_macptr] = "deadmac";
+    subtag_names[subtag_code_vector] = "codevec";
+    subtag_names[subtag_creole] = "creole";
+    subtag_names[subtag_complex_single_float] = "csf";
+    subtag_names[subtag_complex_double_float] = "cdf";
+    subtag_names[subtag_catch_frame] = "catch";
+    subtag_names[subtag_function] = "func";
+    subtag_names[subtag_basic_stream] = "stream";
+    subtag_names[subtag_symbol] = "sym";
+    subtag_names[subtag_lock] = "lock";
+    subtag_names[subtag_hash_vector] = "hashvec";
+    subtag_names[subtag_pool] = "pool";
+    subtag_names[subtag_weak] = "weak";
+    subtag_names[subtag_package] = "pkg";
+    subtag_names[subtag_slot_vector] = "slotvec";
+    subtag_names[subtag_instance] = "inst";
+    subtag_names[subtag_struct] = "struct";
+    subtag_names[subtag_istruct] = "istruct";
+    subtag_names[subtag_value_cell] = "vcell";
+    subtag_names[subtag_xfunction] = "xfunc";
+    names_init = 1;
+  }
+
+  int show = nentries < 25 ? nentries : 25;
+  for (int i = 0; i < show; i++) {
+    const char *nm = subtag_names[entries[i].subtag];
+    if (!nm) nm = "???";
+    n = snprintf(buf, sizeof(buf),
+      "  0x%02x %s n=%u b=%u (%u MiB)\n",
+      (unsigned)entries[i].subtag, nm,
+      entries[i].count, entries[i].bytes, entries[i].bytes >> 20);
+    wasm_host_log(buf, n);
+  }
+
+  if (egc_was_on) {
+    egc_control(true, active_dynamic_area->active);
+  }
+
+  return total_live;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_save_image_direct")))
@@ -1987,14 +2150,16 @@ wasm_spill_push(LispObj value)
 {
   TCR *tcr = wasm_get_current_tcr();
   if (tcr == NULL) {
-    return;
+    wasm_debug_dump_state("spill_push: NULL tcr");
+    __builtin_trap();
   }
   LispObj *sp = tcr->wasm_spill_sp;
   if (sp == NULL || tcr->wasm_spill_base == NULL) {
-    return;
+    wasm_debug_dump_state("spill_push: NULL spill stack");
+    __builtin_trap();
   }
   if (sp <= tcr->wasm_spill_base) {
-    wasm_debug_dump_state("spill_push overflow");
+    wasm_debug_dump_state("spill_push: overflow");
     __builtin_trap();
   }
   *--sp = value;
@@ -2008,13 +2173,16 @@ wasm_spill_pop(void)
 {
   TCR *tcr = wasm_get_current_tcr();
   if (tcr == NULL) {
-    return lisp_nil;
+    wasm_debug_dump_state("spill_pop: NULL tcr");
+    __builtin_trap();
   }
   LispObj *sp = tcr->wasm_spill_sp;
   if (sp == NULL || tcr->wasm_spill_limit == NULL) {
-    return lisp_nil;
+    wasm_debug_dump_state("spill_pop: NULL spill stack");
+    __builtin_trap();
   }
   if (sp >= tcr->wasm_spill_limit) {
+    wasm_debug_dump_state("spill_pop: underflow");
     __builtin_trap();
   }
   LispObj value = *sp++;
@@ -6140,9 +6308,35 @@ wasm_const_pool_install_inner(TCR *tcr, uint32_t entry_index, uint32_t payload_p
         if (!ok) {
           return lisp_nil;
         }
-        LispObj vec = wasm_const_pool_make_entry_function(tcr, entry_index);
-        if (vec == lisp_nil) {
-          return lisp_nil;
+        /* Check entry-function cache first (cache is calloc'd so 0 = empty) */
+        LispObj vec = (LispObj)0;
+        if (wasm_entry_fn_cache != NULL && entry_index < wasm_entry_fn_cache_size) {
+          vec = wasm_entry_fn_cache[entry_index];
+        }
+        if (vec != (LispObj)0) {
+          wasm_entry_fn_cache_hits++;
+        } else {
+          wasm_entry_fn_cache_misses++;
+          vec = wasm_const_pool_make_entry_function(tcr, entry_index);
+          if (vec == lisp_nil) {
+            return lisp_nil;
+          }
+          /* Store in cache — grow if needed */
+          if (wasm_entry_fn_cache == NULL || entry_index >= wasm_entry_fn_cache_size) {
+            uint32_t new_size = (entry_index + 1024u) & ~1023u;
+            LispObj *new_cache = (LispObj *)calloc(new_size, sizeof(LispObj));
+            if (new_cache != NULL) {
+              if (wasm_entry_fn_cache != NULL) {
+                memcpy(new_cache, wasm_entry_fn_cache, wasm_entry_fn_cache_size * sizeof(LispObj));
+                free(wasm_entry_fn_cache);
+              }
+              wasm_entry_fn_cache = new_cache;
+              wasm_entry_fn_cache_size = new_size;
+            }
+          }
+          if (wasm_entry_fn_cache != NULL && entry_index < wasm_entry_fn_cache_size) {
+            wasm_entry_fn_cache[entry_index] = vec;
+          }
         }
         pool_data[i] = vec;
         break;
@@ -6250,6 +6444,36 @@ wasm_const_pool_install_inner(TCR *tcr, uint32_t entry_index, uint32_t payload_p
           raw->cdr = pool_data[cdr_idx];
         }
         pool_data[i] = cell;
+        break;
+      }
+      case 18: { /* class-ref — serialize class by name, wrap in sentinel cons */
+        uint32_t name_len = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
+        const uint8_t *name_bytes = wasm_const_pool_read_bytes(bytes, payload_len, &offset, name_len, &ok);
+        uint32_t pkg_len = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
+        const uint8_t *pkg_bytes = wasm_const_pool_read_bytes(bytes, payload_len, &offset, pkg_len, &ok);
+        if (!ok || !name_bytes) {
+          return lisp_nil;
+        }
+        if (pkg_len > 0 && !pkg_bytes) {
+          return lisp_nil;
+        }
+        LispObj pkg = (LispObj)0;
+        if (pkg_len > 0 && pkg_bytes) {
+          LispObj found = wasm_find_package_named_bytes(pkg_bytes, pkg_len);
+          if (found != lisp_nil) {
+            pkg = found;
+          }
+        }
+        LispObj sym = wasm_const_pool_intern_symbol(tcr, name_bytes, name_len, pkg);
+        if (sym == (LispObj)0 || (fulltag_of(sym) != fulltag_misc)) {
+          sym = lisp_nil;
+        }
+        /* Wrap in (sym . sentinel) so wasm_const_pool_resolve_class_refs
+           can distinguish class-ref slots from ordinary symbol slots.
+           Sentinel = boxed fixnum 0x434C ('CL'). */
+        LispObj sentinel = box_fixnum(0x434C);
+        LispObj cell = wasm_alloc_cons(tcr, sym, sentinel);
+        pool_data[i] = (cell != lisp_nil) ? cell : sym;
         break;
       }
       default:
@@ -6378,6 +6602,13 @@ wasm_const_pool_install_inner(TCR *tcr, uint32_t entry_index, uint32_t payload_p
         (void)wasm_const_pool_read_bytes(bytes, payload_len, &patch_offset, name_len, &patch_ok);
         break;
       }
+      case 18: { /* class-ref — same wire format as symbol: name + package strings */
+        uint32_t name_len = wasm_const_pool_read_nat(bytes, payload_len, &patch_offset, patch_version, &patch_ok);
+        (void)wasm_const_pool_read_bytes(bytes, payload_len, &patch_offset, name_len, &patch_ok);
+        uint32_t pkg_len = wasm_const_pool_read_nat(bytes, payload_len, &patch_offset, patch_version, &patch_ok);
+        (void)wasm_const_pool_read_bytes(bytes, payload_len, &patch_offset, pkg_len, &patch_ok);
+        break;
+      }
       case 8: { /* cons */
         uint32_t car_idx = wasm_const_pool_read_nat(bytes, payload_len, &patch_offset, patch_version, &patch_ok);
         uint32_t cdr_idx = wasm_const_pool_read_nat(bytes, payload_len, &patch_offset, patch_version, &patch_ok);
@@ -6422,6 +6653,185 @@ wasm_const_pool_install(uint32_t entry_index, uint32_t payload_ptr, uint32_t pay
   LispObj result = wasm_const_pool_install_inner(tcr, entry_index, payload_ptr, payload_len);
   wasm_const_pool_install_depth--;
   return result;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_const_pool_alias")))
+LispObj
+wasm_const_pool_alias(uint32_t target_entry, uint32_t source_entry)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return lisp_nil;
+  }
+  LispObj table = nrs_WASM_CONST_POOLS.vcell;
+  if (table == lisp_nil ||
+      fulltag_of(table) != fulltag_misc ||
+      header_subtag(header_of(table)) != subtag_simple_vector) {
+    return lisp_nil;
+  }
+  uint32_t count = (uint32_t)header_element_count(header_of(table));
+  if (source_entry >= count) {
+    return lisp_nil;
+  }
+  LispObj *src_data = (LispObj *)((BytePtr)table + misc_data_offset);
+  LispObj src_pool = src_data[source_entry];
+  if (src_pool == lisp_nil) {
+    return lisp_nil;
+  }
+  /* Copy the pool vector (don't share) — cold-boot-init may mutate pool slots.
+     Elements (function objects, symbols, etc.) are shared by reference. */
+  if (fulltag_of(src_pool) != fulltag_misc) {
+    return lisp_nil;
+  }
+  uint32_t pool_count = (uint32_t)header_element_count(header_of(src_pool));
+  LispObj new_pool = wasm_misc_alloc(tcr, subtag_simple_vector, (signed_natural)pool_count);
+  if (new_pool == lisp_nil) {
+    return lisp_nil;
+  }
+  LispObj *new_data = (LispObj *)((BytePtr)new_pool + misc_data_offset);
+  LispObj *old_data = (LispObj *)((BytePtr)src_pool + misc_data_offset);
+  for (uint32_t i = 0; i < pool_count; i++) {
+    new_data[i] = old_data[i];
+  }
+  /* wasm_misc_alloc may have grown the table; re-fetch. */
+  table = wasm_const_pool_table_ensure(tcr, target_entry);
+  if (table == lisp_nil) {
+    return lisp_nil;
+  }
+  LispObj *tgt_data = (LispObj *)((BytePtr)table + misc_data_offset);
+  tgt_data[target_entry] = new_pool;
+  return new_pool;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_entry_fn_cache_clear")))
+void
+wasm_entry_fn_cache_clear(void)
+{
+  {
+    char buf[128];
+    int n = snprintf(buf, sizeof(buf),
+      "entry-fn-cache: hits=%u misses=%u size=%u\n",
+      wasm_entry_fn_cache_hits, wasm_entry_fn_cache_misses,
+      wasm_entry_fn_cache_size);
+    wasm_host_log(buf, n);
+  }
+  if (wasm_entry_fn_cache != NULL) {
+    free(wasm_entry_fn_cache);
+    wasm_entry_fn_cache = NULL;
+    wasm_entry_fn_cache_size = 0;
+  }
+  wasm_entry_fn_cache_hits = 0;
+  wasm_entry_fn_cache_misses = 0;
+}
+
+/* Purge all const pool data from the table — set every slot to fixnum 0.
+   LEGACY: no longer called.  Pools are pre-baked in the image with class-refs
+   resolved at build time.  Kept for potential debugging use. */
+__attribute__((used, visibility("default"), export_name("wasm_const_pool_purge_all")))
+uint32_t
+wasm_const_pool_purge_all(void)
+{
+  LispObj table = nrs_WASM_CONST_POOLS.vcell;
+  if (table == lisp_nil ||
+      fulltag_of(table) != fulltag_misc ||
+      header_subtag(header_of(table)) != subtag_simple_vector) {
+    return 0;
+  }
+  uint32_t count = (uint32_t)header_element_count(header_of(table));
+  LispObj *data = (LispObj *)((BytePtr)table + misc_data_offset);
+  uint32_t purged = 0;
+  for (uint32_t i = 0; i < count; i++) {
+    if (data[i] != lisp_nil && data[i] != 0) {
+      data[i] = lisp_nil;  /* set to NIL so wasm_const_pool_ref triggers on-demand install */
+      purged++;
+    }
+  }
+  char buf[128];
+  int n = snprintf(buf, sizeof(buf),
+    "const-pool-purge: %u/%u entries purged\n", purged, count);
+  wasm_host_log(buf, n);
+  return purged;
+}
+
+/* Resolve class-ref sentinel cons cells in all const pools.
+   After all pools are installed and cold-boot-init has completed, walk every
+   pool entry.  Entries that are (symbol . fixnum-0x434C) cons cells are
+   class-refs: look up the class via FIND-CLASS and replace the cons cell with
+   the actual class object.  If FIND-CLASS returns NIL (class not defined yet),
+   leave the symbol as-is (no cons wrapper). */
+__attribute__((used, visibility("default"), export_name("wasm_const_pool_resolve_class_refs")))
+uint32_t
+wasm_const_pool_resolve_class_refs(void)
+{
+  LispObj table = nrs_WASM_CONST_POOLS.vcell;
+  if (table == lisp_nil ||
+      fulltag_of(table) != fulltag_misc ||
+      header_subtag(header_of(table)) != subtag_simple_vector) {
+    return 0;
+  }
+
+  /* Find FIND-CLASS symbol: CL:FIND-CLASS */
+  static const uint8_t fc_name[] = "FIND-CLASS";
+  static const uint8_t cl_pkg[] = "COMMON-LISP";
+  LispObj cl = wasm_find_package_named_bytes(cl_pkg, (uint32_t)sizeof(cl_pkg) - 1);
+  LispObj find_class_sym = (cl != lisp_nil)
+    ? wasm_find_symbol_named_bytes(fc_name, (uint32_t)sizeof(fc_name) - 1, cl)
+    : (LispObj)0;
+
+  if (find_class_sym == (LispObj)0 || find_class_sym == lisp_nil) {
+    static const char msg[] = "const-pool-resolve: FIND-CLASS not found, skipping\n";
+    wasm_host_log(msg, (unsigned)(sizeof(msg) - 1));
+    return 0;
+  }
+
+  LispObj sentinel = box_fixnum(0x434C);
+  uint32_t table_count = (uint32_t)header_element_count(header_of(table));
+  LispObj *table_data = (LispObj *)((BytePtr)table + misc_data_offset);
+  uint32_t resolved = 0;
+  uint32_t unresolved = 0;
+
+  for (uint32_t e = 0; e < table_count; e++) {
+    LispObj pool = table_data[e];
+    if (pool == lisp_nil || pool == 0) continue;
+    if (fulltag_of(pool) != fulltag_misc) continue;
+    if (header_subtag(header_of(pool)) != subtag_simple_vector) continue;
+
+    uint32_t pool_count = (uint32_t)header_element_count(header_of(pool));
+    LispObj *pool_data = (LispObj *)((BytePtr)pool + misc_data_offset);
+
+    for (uint32_t s = 0; s < pool_count; s++) {
+      LispObj slot = pool_data[s];
+      /* Check for sentinel cons: (symbol . fixnum-0x434C) */
+      if (fulltag_of(slot) != fulltag_cons) continue;
+      LispObj cdr_val = deref(slot, 1);
+      if (cdr_val != sentinel) continue;
+
+      LispObj sym = deref(slot, 0);
+      if (fulltag_of(sym) != fulltag_misc) {
+        /* Not a valid symbol — unwrap cons, store sym directly */
+        pool_data[s] = sym;
+        continue;
+      }
+
+      /* Call (FIND-CLASS sym NIL) — NIL second arg means don't error */
+      LispObj cls = wasm_funcall2(find_class_sym, sym, lisp_nil);
+      if (cls != lisp_nil && cls != 0 && fulltag_of(cls) == fulltag_misc) {
+        pool_data[s] = cls;
+        resolved++;
+      } else {
+        /* Class not found — store bare symbol as fallback */
+        pool_data[s] = sym;
+        unresolved++;
+      }
+    }
+  }
+
+  char buf[128];
+  int n = snprintf(buf, sizeof(buf),
+    "const-pool-resolve: %u class-refs resolved, %u unresolved\n",
+    resolved, unresolved);
+  wasm_host_log(buf, n);
+  return resolved;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_const_pool_diag_fail_get")))
@@ -6492,10 +6902,11 @@ wasm_const_pool_ref(uint32_t entry_index, uint32_t slot_index)
     }
   }
 
-  /* Diagnostic: log why we fell through the fast path */
-  if (wasm_cpr_fail_count < 10) {
+  /* Slow path: with pre-baked pools this should never execute.
+   * Dump diagnostics and trap so we can identify the cause. */
+  {
     char msg[160]; int p = 0;
-    p += wasm_debug_str(msg + p, "CPR-SLOW: e=");
+    p += wasm_debug_str(msg + p, "CPR-TRAP: pool not baked e=");
     p += wasm_debug_uint(msg + p, entry_index);
     p += wasm_debug_str(msg + p, " s=");
     p += wasm_debug_uint(msg + p, slot_index);
@@ -6509,62 +6920,19 @@ wasm_const_pool_ref(uint32_t entry_index, uint32_t slot_index)
       p += wasm_debug_uint(msg + p, tc);
       if (entry_index < tc) {
         LispObj *td = (LispObj *)((BytePtr)table + misc_data_offset);
-        LispObj pool = td[entry_index];
+        LispObj pool_val = td[entry_index];
         p += wasm_debug_str(msg + p, " pool=0x");
-        p += wasm_debug_hex8(msg + p, (uint32_t)pool);
+        p += wasm_debug_hex8(msg + p, (uint32_t)pool_val);
         p += wasm_debug_str(msg + p, " ft=");
-        p += wasm_debug_uint(msg + p, (uint32_t)fulltag_of(pool));
+        p += wasm_debug_uint(msg + p, (uint32_t)fulltag_of(pool_val));
       }
     }
     msg[p++] = '\n';
     wasm_host_log(msg, (unsigned)p);
   }
-
-  /* Slow path: pool not installed.  Ask the host to install it on demand. */
-  int32_t rc = wasm_host_install_const_pool(entry_index);
-  if (rc <= 0) {
-    /* Diagnostic: host install failed */
-    if (wasm_cpr_fail_count < 10) {
-      char msg[128]; int p = 0;
-      p += wasm_debug_str(msg + p, "CPR-FAIL: host-install e=");
-      p += wasm_debug_uint(msg + p, entry_index);
-      p += wasm_debug_str(msg + p, " rc=");
-      p += wasm_debug_uint(msg + p, (uint32_t)rc);
-      msg[p++] = '\n';
-      wasm_host_log(msg, (unsigned)p);
-      wasm_cpr_fail_count++;
-    }
-    return lisp_nil;
-  }
-
-  /* Re-read the table (it may have been reallocated by the install). */
-  table = nrs_WASM_CONST_POOLS.vcell;
-  if (table == lisp_nil ||
-      fulltag_of(table) != fulltag_misc ||
-      header_subtag(header_of(table)) != subtag_simple_vector) {
-    return lisp_nil;
-  }
-  uint32_t table_count = (uint32_t)header_element_count(header_of(table));
-  if (entry_index >= table_count) {
-    return lisp_nil;
-  }
-  LispObj *table_data = (LispObj *)((BytePtr)table + misc_data_offset);
-  LispObj pool = table_data[entry_index];
-  if (pool == lisp_nil ||
-      fulltag_of(pool) != fulltag_misc ||
-      header_subtag(header_of(pool)) != subtag_simple_vector) {
-    return lisp_nil;
-  }
-  uint32_t pool_count = (uint32_t)header_element_count(header_of(pool));
-  if (slot_index >= pool_count) {
-    return lisp_nil;
-  }
-  LispObj *pool_data = (LispObj *)((BytePtr)pool + misc_data_offset);
-  /* Track for wasm_debug_dump_state */
-  wasm_diag_last_cpr_entry = entry_index;
-  wasm_diag_last_cpr_slot = slot_index;
-  wasm_diag_last_cpr_val = pool_data[slot_index];
-  return pool_data[slot_index];
+  wasm_debug_dump_state("wasm_const_pool_ref: pool not installed (should be pre-baked)");
+  __builtin_trap();
+  return lisp_nil;  /* unreachable */
 }
 
 
@@ -6858,13 +7226,14 @@ wasm_force_rebind_scan(uint32_t table_ptr, uint32_t table_count)
                 } else {
                   /* No existing function — allocate a new 3-slot stub. */
                   LispObj fn = wasm_misc_alloc(tcr, subtag_function, (signed_natural)3);
-                  if (fn != lisp_nil) {
-                    LispObj *fn_data = (LispObj *)((BytePtr)fn + misc_data_offset);
-                    fn_data[0] = entry_val;
-                    fn_data[1] = entry_val;
-                    fn_data[2] = lisp_nil;
-                    rawsym->fcell = fn;
+                  if (fn == lisp_nil) {
+                    break;  /* allocation failed — skip this symbol */
                   }
+                  LispObj *fn_data = (LispObj *)((BytePtr)fn + misc_data_offset);
+                  fn_data[0] = entry_val;
+                  fn_data[1] = entry_val;
+                  fn_data[2] = lisp_nil;
+                  rawsym->fcell = fn;
                 }
                 rebound++;
                 break;

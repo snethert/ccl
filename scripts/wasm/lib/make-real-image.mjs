@@ -1094,6 +1094,7 @@ if (bootModulesPath) {
       strict: true,
       installConstPools: true,
       verbose: traceEnabled,
+      clearEntryFnCache: true,
     });
     for (const entry of bootInstall.entries) {
       if (Number.isFinite(entry?.entryIndex)) {
@@ -1461,6 +1462,10 @@ if (typeof ex.wasm_run_cold_boot_init !== "function") {
   fail("kernel missing wasm_run_cold_boot_init — rebuild kernel");
 }
 console.error(`[stage] cold-boot-init starting (const-pool installs so far: ${_cpInstallCount}, skipped: ${_cpSkipCount})`);
+if (typeof ex.wasm_heap_profile === "function") {
+  console.error("[stage] pre-cold-boot heap profile:");
+  ex.wasm_heap_profile();
+}
 const coldBootRc = ex.wasm_run_cold_boot_init() | 0;
 if (coldBootRc !== 0) {
   fail(`wasm_run_cold_boot_init returned ${coldBootRc}`);
@@ -1796,6 +1801,13 @@ if (requiredFasls.length > 0) {
   console.error(`[stage] post-module-install GC done (${gcMs} ms)`);
 }
 
+/* Heap profile — understand what's consuming space after GC compaction */
+if (typeof ex.wasm_heap_profile === "function") {
+  console.error("[stage] running heap profile...");
+  const liveBytes = ex.wasm_heap_profile() >>> 0;
+  console.error(`[stage] heap profile done: ${liveBytes} bytes (${(liveBytes / (1024*1024)).toFixed(1)} MiB) live`);
+}
+
 /* Now that level-1 fasls have been loaded, RESTORE-LISP-POINTERS should be
    defined.  Call it to rehash any package hash tables that were modified
    during FASL loading.  This ensures INTERN/FIND-SYMBOL work correctly
@@ -1948,6 +1960,18 @@ bootConstPoolData.clear();
 /* Pre-save GC: compact the heap to reduce image size.
    The kernel's gc-common.c now handles const pool marking and forwarding
    for out-of-area pool tables (NRS symbols are in nilreg, not the area chain). */
+/* Resolve class-ref sentinel cons cells in all pools.  The serializer now
+   emits class-ref tags (tag 18) for named class objects instead of deep-copying
+   their entire gvector graph.  The deserializer stored (symbol . sentinel)
+   cons cells as placeholders.  This pass resolves them to actual class objects
+   via FIND-CLASS, now that cold-boot-init has completed and all classes exist. */
+if (typeof ex.wasm_const_pool_resolve_class_refs === "function") {
+  const resolved = ex.wasm_const_pool_resolve_class_refs();
+  console.error(`[stage] const pool class-ref resolution: ${resolved} refs resolved`);
+} else {
+  console.error(`[stage] const pool class-ref resolution: kernel missing export (skipped)`);
+}
+
 console.error(`[stage] running pre-save GC...`);
 
 const preGcMem = runtime.memory.buffer.byteLength;
@@ -1960,10 +1984,9 @@ const imagePathPtr = copyBytesToScratch(runtime.memory, imagePathBytes);
 if (typeof ex.wasm_save_image_direct !== "function") {
   fail("kernel missing wasm_save_image_direct");
 }
-/* When const pools are partial, %save-application-internal (a Lisp function)
-   may crash because its const pool wasn't installed.  Disable the Lisp save
-   path by temporarily clearing wasm_subprims_ready so wasm_save_image_direct
-   goes straight to the C-level save_application. */
+/* Disable the Lisp save path — use C-level save_application directly.
+   The Lisp %save-application-internal path requires a fully running
+   top-level loop which we don't have during the build. */
 const subprimsWasReady = typeof ex.wasm_set_subprims_ready === "function";
 if (subprimsWasReady) {
   ex.wasm_set_subprims_ready(0);
@@ -2179,7 +2202,11 @@ await fs.writeFile(manifestOutPath, canonicalJson(manifest));
       modulesBinOffset += storedLen;
     }
 
-    startupPlanEntries.push({
+    /* Const pool bytes are NOT embedded in modules.bin — pools are pre-baked
+       in the saved image and resolved at build time.  Only compiled function
+       code goes into modules.bin.  This eliminates ~790 MB of const pool data. */
+
+    const planEntry = {
       index: idx,
       source: "modules",
       offset: binOffset,
@@ -2187,7 +2214,8 @@ await fs.writeFile(manifestOutPath, canonicalJson(manifest));
       storedLength: storedLen !== moduleLen ? storedLen : undefined,
       encoding,
       export: entry.exportName || "fn",
-    });
+    };
+    startupPlanEntries.push(planEntry);
   }
 
   /* Boot module entries — from hoisted bootModuleEntries (resolved bundle). */
@@ -2225,7 +2253,10 @@ await fs.writeFile(manifestOutPath, canonicalJson(manifest));
       initialPages: runtime.memory.buffer.byteLength / 65536,
       imageSize: persistedBytes.length,
     },
-    constPools: { baked: "partial", count: constPoolsInstalled.size },
+    constPools: {
+      baked: true,
+      bakedCount: constPoolsInstalled.size,
+    },
     functionTable: {
       size: runtime.subprimsTable.length,
       entries: cleanEntries,

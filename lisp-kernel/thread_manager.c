@@ -1881,11 +1881,10 @@ new_tcr(natural vstack_size, natural tstack_size)
   tcr->save_vsp = (LispObj *) a->active;  
 #ifdef WASM32
   tcr->wasm_spill_base = (LispObj *)malloc(WASM_SPILL_STACK_WORDS * sizeof(LispObj));
-  if (tcr->wasm_spill_base) {
-    tcr->wasm_spill_limit = tcr->wasm_spill_base + WASM_SPILL_STACK_WORDS;
-  } else {
-    tcr->wasm_spill_limit = NULL;
+  if (tcr->wasm_spill_base == NULL) {
+    Bug(NULL, "TCR spill stack allocation failed");
   }
+  tcr->wasm_spill_limit = tcr->wasm_spill_base + WASM_SPILL_STACK_WORDS;
   tcr->wasm_spill_sp = tcr->wasm_spill_limit;
 #endif
 #if !defined(ARM) && !defined(WASM32)

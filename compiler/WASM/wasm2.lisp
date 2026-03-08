@@ -4583,6 +4583,7 @@
 (defconstant +wasm2-const-pool-tag-bignum+ 15)
 (defconstant +wasm2-const-pool-tag-entry-function+ 16)
 (defconstant +wasm2-const-pool-tag-ivector+ 17)
+(defconstant +wasm2-const-pool-tag-class-ref+ 18)
 
 (defconstant +wasm2-const-pool-int64-min+ (- (ash 1 63)))
 (defconstant +wasm2-const-pool-int64-max+ (1- (ash 1 63)))
@@ -4716,6 +4717,17 @@
                                          (wasm2-const-pool-function-slot (uvref value i))))))
            (list :type "function-vector"
                  :elements elements)))))
+    ;; Named classes: emit compact class-ref (tag 18) instead of deep-copying
+    ;; the entire class hierarchy as a gvector.  The deserializer resolves
+    ;; class-refs to canonical class objects via FIND-CLASS at build time.
+    ((and (typep value 'class)
+          (ignore-errors (class-name value))
+          (symbolp (class-name value)))
+     (let ((name (class-name value)))
+       (list :type "class-ref"
+             :name (symbol-name name)
+             :package (let ((pkg (symbol-package name)))
+                        (when pkg (package-name pkg))))))
     ((and (gvectorp value) (not (typep value 'function-vector)))
      (let* ((count (uvsize value))
             (subtag (typecode value))
@@ -4897,6 +4909,10 @@
             ((string= etype "entry-function")
              (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-entry-function+)
              (wasm2-const-pool-emit-uleb32 out (getf entry :entry-index)))
+            ((string= etype "class-ref")
+             (wasm2-const-pool-emit-uleb32 out +wasm2-const-pool-tag-class-ref+)
+             (wasm2-const-pool-emit-string out (getf entry :name))
+             (wasm2-const-pool-emit-maybe-string out (getf entry :package)))
             (t
              (error "WASM2: unknown const-pool entry type: ~S" etype)))))
       out)))

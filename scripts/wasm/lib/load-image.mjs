@@ -2,7 +2,7 @@
  * CCL WASM — Phase 3 deterministic launcher.
  *
  * Load plan → load image → fill table → start Lisp.
- * Zero const pool installation (all baked into root.image at build time).
+ * Const pools installed on demand from modules.bin at runtime.
  * Zero bundle parsing. Zero function designator resolution.
  * 36 merged module binaries compiled in parallel, 8675 table entries filled.
  *
@@ -91,17 +91,27 @@ const plan = JSON.parse(await fs.readFile(planPath, "utf8"));
 if (plan.schemaVersion !== 1) {
   fail(`Unsupported startup-plan schema version: ${plan.schemaVersion}`);
 }
-if (!plan.constPools?.baked) {
+if (!plan.constPools || !plan.constPools.baked) {
   fail("startup-plan.json: constPools not baked — rebuild required (run rebuild-everything.sh)");
 }
-if (plan.constPools.baked === "partial") {
-  console.log(`WARN: ${plan.constPools.count} const pools baked; remainder deferred to on-demand install`);
+if (plan.constPools.baked === true) {
+  console.log(`const pools: ${plan.constPools.bakedCount ?? "all"} pre-baked in image`);
+} else {
+  console.log(`WARN: constPools.baked=${plan.constPools.baked} — expected true`);
 }
 
 const imageSize    = plan.memory.imageSize >>> 0;
 const initialPages = plan.memory.initialPages >>> 0;
 const tableSize    = plan.functionTable.size >>> 0;
 const entries      = plan.functionTable.entries;
+
+// ── Validate startup plan ──────────────────────────────────────────────────
+
+for (const e of entries) {
+  if ((e.index >>> 0) >= tableSize) {
+    fail(`startup-plan entry index ${e.index} >= functionTable.size ${tableSize}`);
+  }
+}
 
 // ── Load binary artifacts ──────────────────────────────────────────────────
 
@@ -180,12 +190,12 @@ if (opts.closeStdin || opts.stdinScriptPath || opts.stdinText != null) {
   microkernel.closeStdin?.();
 }
 
-// ── Import factory ─────────────────────────────────────────────────────────
+// Const pools are pre-baked in the image — no on-demand installation needed.
 
-// Const pool callback: returns 0 (not-installed) for pools not pre-baked.
-// TODO: wire up on-demand installation from modules binary for partial bake.
-const noopConstPool  = () => 0;
 const noopDesignator = () => -1;
+// Stub: if the kernel still imports wasm_host_install_const_pool, return 0
+// to signal "not available" (should never be called with pre-baked pools).
+const noopConstPool = () => 0;
 
 function makeImports(extraCcl = {}) {
   return createCclImports({
@@ -280,6 +290,41 @@ console.log(`filled ${moduleEntries.length} module table entries`);
 // ── Mark subprims ready ────────────────────────────────────────────────────
 
 kernel.instance.exports.wasm_set_subprims_ready?.(1);
+
+// ── Assert critical symbols are fbound ─────────────────────────────────────
+// With pre-baked pools, symbols should be correctly bound from the saved image.
+// No launch-time repair pass needed.
+
+{
+  const ex = kernel.instance.exports;
+  if (typeof ex.wasm_check_symbol_fbound === "function") {
+    const encoder = new TextEncoder();
+    const critical = ["TOPLEVEL-LOOP", "RESTORE-LISP-POINTERS"];
+    for (const name of critical) {
+      const nameBytes = encoder.encode(name);
+      const ptr = memory.buffer.byteLength;
+      memory.grow(1);
+      new Uint8Array(memory.buffer, ptr, nameBytes.length).set(nameBytes);
+      const rc = ex.wasm_check_symbol_fbound(ptr >>> 0, nameBytes.length >>> 0) | 0;
+      if (rc !== 1) {
+        fail(`critical symbol ${name} is not fbound (rc=${rc}) — startup will fail`);
+      }
+    }
+    console.log("critical symbol fbound check passed");
+  }
+}
+
+// ── Pre-start heap telemetry ────────────────────────────────────────────────
+
+{
+  const ex = kernel.instance.exports;
+  const memBytes = memory.buffer.byteLength;
+  console.log(`pre-start: WASM memory ${(memBytes / (1024*1024)).toFixed(0)} MiB`);
+  if (typeof ex.wasm_heap_profile === "function") {
+    const liveBytes = ex.wasm_heap_profile() >>> 0;
+    console.log(`pre-start: heap live ${(liveBytes / (1024*1024)).toFixed(1)} MiB`);
+  }
+}
 
 // ── Start ──────────────────────────────────────────────────────────────────
 

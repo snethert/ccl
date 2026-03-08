@@ -664,6 +664,7 @@ export async function installCompiledModulesFromBundle({
   strict = true,
   installConstPools = true,
   excludeEntries = null,
+  clearEntryFnCache = true,
 } = {}) {
   if (!memory) throw new Error("installCompiledModulesFromBundle: memory is required");
   if (!subprimsTable) throw new Error("installCompiledModulesFromBundle: subprimsTable is required");
@@ -756,6 +757,8 @@ export async function installCompiledModulesFromBundle({
   const moduleSpanCache = new Map();
   const constPoolSpanCache = new Map();
   const constPoolDecodedById = new Map();
+  const constPoolInstalledByPoolId = new Map(); // poolId -> first entryIndex that installed it
+  let aliasCount = 0;
   const constPoolDecodeInFlight = new Set();
   let constPoolSharedBlobRaw = null;
   let constPoolSharedBlobRawInFlight = null;
@@ -1021,17 +1024,31 @@ export async function installCompiledModulesFromBundle({
         const constPoolBytes = await resolveConstPoolBytes(entry);
 
         if (installConstPools && constPoolBytes?.length) {
-          const installResult = installConstPoolBytes({
-            kernelExports,
-            memory,
-            entryIndex: entry.entryIndex,
-            constPoolBytes,
-          });
-          if (nilValue != null && (installResult >>> 0) === nilValue) {
-            throw new Error(`const pool install returned NIL for entry ${entry.entryIndex}`);
-          }
-          if (hasPendingThrowProbe && (kernelExports.wasm_pending_throw_p() >>> 0)) {
-            throw new Error(`const pool install signaled pending throw for entry ${entry.entryIndex}`);
+          const poolId = Number.isFinite(entry?.constPoolId) ? (entry.constPoolId >>> 0) : null;
+          const aliasSource = undefined; // aliasing disabled — shared elements cause cold-boot-init mutation conflicts
+          if (aliasSource != null && typeof kernelExports.wasm_const_pool_alias === "function") {
+            // Same pool bytes already installed for another entry — alias instead of reinstalling
+            const aliasResult = kernelExports.wasm_const_pool_alias(entry.entryIndex >>> 0, aliasSource >>> 0);
+            aliasCount++;
+            if (nilValue != null && (aliasResult >>> 0) === nilValue) {
+              throw new Error(`const pool alias returned NIL for entry ${entry.entryIndex} (source ${aliasSource})`);
+            }
+          } else {
+            const installResult = installConstPoolBytes({
+              kernelExports,
+              memory,
+              entryIndex: entry.entryIndex,
+              constPoolBytes,
+            });
+            if (nilValue != null && (installResult >>> 0) === nilValue) {
+              throw new Error(`const pool install returned NIL for entry ${entry.entryIndex}`);
+            }
+            if (hasPendingThrowProbe && (kernelExports.wasm_pending_throw_p() >>> 0)) {
+              throw new Error(`const pool install signaled pending throw for entry ${entry.entryIndex}`);
+            }
+            if (poolId != null) {
+              constPoolInstalledByPoolId.set(poolId, entry.entryIndex >>> 0);
+            }
           }
         }
 
@@ -1073,6 +1090,14 @@ export async function installCompiledModulesFromBundle({
         continue;
       }
     }
+  }
+
+  // Release the entry-function dedup cache now that all pools are installed
+  if (clearEntryFnCache && typeof kernelExports.wasm_entry_fn_cache_clear === "function") {
+    kernelExports.wasm_entry_fn_cache_clear();
+  }
+  if (aliasCount > 0) {
+    console.log(`[stage] const pool aliasing: ${aliasCount} aliased, ${constPoolInstalledByPoolId.size} unique`);
   }
 
   return { installed, count: modules.length, failed, excluded, entries: modules };
