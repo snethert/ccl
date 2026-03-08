@@ -1162,15 +1162,15 @@ const bundleInstall = await installCompiledModulesFromBundle({
   subprimsTable: runtime.subprimsTable,
   microkernel,
   strict: false,
-  installConstPools: true,
+  installConstPools: false,
   excludeEntries: bootEntryIndices.size > 0 ? bootEntryIndices : null,
 });
-/* NOTE: Do NOT optimistically mark runtime const pools as installed here.
-   installCompiledModulesFromBundle runs before FASL loading, so symbols
-   referenced by runtime const pools (e.g. RUNTIME-COMMAND--POLL-FRAME) are
-   not yet interned — they would resolve to placeholders.  The proactive
-   install pass (below, after all FASLs are loaded) installs them with
-   correctly-interned symbols and marks constPoolsInstalled at that point. */
+/* Runtime const pools are NOT installed here.  Installing pools before
+   cold-boot-init causes wasm_intern_startup to synthesize non-canonical
+   symbol objects (wasm_const_pool_install_depth > 0 blocks Lisp INTERN).
+   These corrupt symbol identity — cold-boot-init throws TYPE-ERROR.
+   Runtime pools are installed late, after cold-boot-init + FASL loading
+   + RESTORE-LISP-POINTERS, when all symbols are canonical. */
 console.error(`[stage] compiled modules: ${bundleInstall.installed}/${bundleInstall.count} installed, ${bundleInstall.failed || 0} failed, ${bundleInstall.excluded || 0} skipped (boot)`);
 if (bundleInstall.count === 0) {
   fail("compiled modules bundle is empty; refusing to proceed");
@@ -1821,12 +1821,8 @@ if (postFasloadRestoreRc !== 0) {
   trace(`RESTORE-LISP-POINTERS post-fasload rc=${postFasloadRestoreRc} (non-fatal)`);
 }
 
-/* Phase 2A: Proactive const pool installation — SKIPPED.
-   Installing ~7000 const pools triggers repeated full GC on the multi-GB
-   WASM heap, taking hours in interpreted WASM.  Deferred to launch time
-   via on-demand wasm_host_install_const_pool callback in load-image.mjs.
-   Const pools already installed during module instantiation (~778) remain
-   baked into the image. */
+/* Phase 2A: Const pool status.  Boot pools installed during module install.
+   Runtime pools deferred to Phase 2C (after force-rebind, before save). */
 {
   const allEntries = new Set([
     ...bootConstPoolData.keys(),
@@ -1834,8 +1830,8 @@ if (postFasloadRestoreRc !== 0) {
   ]);
   const alreadyInstalled = [...allEntries].filter(e => constPoolsInstalled.has(e)).length;
   console.error(
-    `[stage] const-pool install SKIPPED: ${alreadyInstalled}/${allEntries.size} already baked,` +
-    ` ${allEntries.size - alreadyInstalled} deferred to launch`
+    `[stage] const-pool status: ${alreadyInstalled}/${allEntries.size} installed (boot),` +
+    ` ${allEntries.size - alreadyInstalled} deferred to Phase 2C`
   );
 }
 
@@ -1950,16 +1946,47 @@ console.error(
   ` memory ${(runtime.memory.buffer.byteLength / (1024*1024)).toFixed(0)} MB`
 );
 
-/* Free JS-side const pool caches — no longer needed. */
+/* Free JS-side boot const pool caches — no longer needed (boot pools are
+   already installed and baked into the image). */
 bootConstPoolData.clear();
 
-/* GC before save — the kernel's mark phase now roots the const-pools table
-   through nrs_WASM_CONST_POOLS.vcell, so pool vectors survive collection
-   while FASL-loading garbage is reclaimed. */
+/* Phase 2C: Install runtime const pools.
+   Deferred from module-install time because wasm_intern_startup synthesized
+   non-canonical symbol objects when called during pool install (depth > 0).
+   Now that cold-boot-init, FASL loading, and RESTORE-LISP-POINTERS are done,
+   all symbols are canonical and INTERN works properly.  The pools reference
+   canonical symbols, class-refs are sentinel cons cells resolved next. */
+{
+  let installed = 0, failed = 0, skipped = 0;
+  for (const [entryIndex, info] of constPoolEntries) {
+    if (constPoolsInstalled.has(entryIndex)) { skipped++; continue; }
+    const decoded = decodeConstPoolForInfo(info);
+    if (!decoded || decoded.length === 0) { skipped++; continue; }
+    try {
+      const rc = installConstPoolBytes({
+        kernelExports: ex,
+        memory: runtime.memory,
+        entryIndex,
+        constPoolBytes: decoded,
+      });
+      const nilValue = ex.wasm_get_lisp_nil?.() >>> 0;
+      if (nilValue != null && (rc >>> 0) === nilValue) {
+        failed++;
+      } else {
+        constPoolsInstalled.add(entryIndex);
+        installed++;
+      }
+    } catch (e) {
+      console.error(`[stage] late pool install entry ${entryIndex} error: ${e.message}`);
+      failed++;
+    }
+    if ((installed + failed) % 500 === 0) {
+      console.error(`[progress] late pool install: ${installed + failed}/${constPoolEntries.size}`);
+    }
+  }
+  console.error(`[stage] late runtime const-pool install: ${installed} installed, ${failed} failed, ${skipped} skipped (boot)`);
+}
 
-/* Pre-save GC: compact the heap to reduce image size.
-   The kernel's gc-common.c now handles const pool marking and forwarding
-   for out-of-area pool tables (NRS symbols are in nilreg, not the area chain). */
 /* Resolve class-ref sentinel cons cells in all pools.  The serializer now
    emits class-ref tags (tag 18) for named class objects instead of deep-copying
    their entire gvector graph.  The deserializer stored (symbol . sentinel)

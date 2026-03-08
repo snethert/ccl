@@ -3916,6 +3916,34 @@ wasm_run_cold_boot_init(void)
     }
   }
 
+  /* Diagnostic: if startup-step is 0 or unknown and there was a throw,
+     check whether *WASM-STARTUP-STEP* was written to a non-canonical
+     (synthesized) symbol object — a different heap object with the same
+     pname but not in the package hash table. */
+  if (final_pending && startup_step <= 0) {
+    static const uint8_t diag_step_name[] = "*WASM-STARTUP-STEP*";
+    LispObj canonical = wasm_find_symbol_named_bytes(
+      diag_step_name, (uint32_t)(sizeof(diag_step_name) - 1), ccl_pkg);
+    LispObj scanned = wasm_find_symbol_named_bytes_scan(
+      diag_step_name, (uint32_t)(sizeof(diag_step_name) - 1), (LispObj)0);
+    if (scanned != (LispObj)0 && scanned != canonical) {
+      lispsymbol *ss2 = (lispsymbol *)ptr_from_lispobj(untag(scanned));
+      LispObj step_val2 = ss2->vcell;
+      char d2[128]; int p2 = 0;
+      p2 += wasm_debug_str(d2 + p2, "cold-boot-init: DIAG alt *WASM-STARTUP-STEP* sym=0x");
+      p2 += wasm_debug_hex8(d2 + p2, (uint32_t)scanned);
+      p2 += wasm_debug_str(d2 + p2, " val=0x");
+      p2 += wasm_debug_hex8(d2 + p2, (uint32_t)step_val2);
+      if (tag_of(step_val2) == tag_fixnum) {
+        p2 += wasm_debug_str(d2 + p2, " (step=");
+        p2 += wasm_debug_uint(d2 + p2, (uint32_t)unbox_fixnum(step_val2));
+        p2 += wasm_debug_str(d2 + p2, ")");
+      }
+      d2[p2++] = '\n';
+      wasm_host_log(d2, (unsigned)p2);
+    }
+  }
+
   if (final_pending) {
     /* pending_throw was set — could be absorbed ksignalerr (code 16)
        or a real error.  If startup-step reached 4100+ (effectively
@@ -5796,10 +5824,22 @@ wasm_intern_startup(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, Lisp
     }
   }
 
-  /* Re-entrant guard: during const-pool installation, skip the Lisp
-     INTERN path to avoid circular dependency (INTERN's own const pool
-     may not yet be installed).  Fall through to C-only synthesis. */
+  /* Re-entrant guard: during const-pool installation at RUNTIME phase,
+     only canonical lookup is allowed.  Symbol synthesis creates non-canonical
+     objects (not registered in package tables) that corrupt identity.
+     Return 0 so the tag handler stores NIL/UDF as placeholder.
+
+     During STARTUP phase (boot pool install), synthesis is still needed
+     because some L0 symbols aren't yet in package hash tables — they're
+     in the heap but the hash table indices haven't been built yet.
+     Boot pool synthesis is safe: synthesized symbols inherit vcell/fcell
+     from any existing symbol with the same pname. */
   if (wasm_const_pool_install_depth > 0) {
+    uint32_t phase = wasm_boot_phase_normalize(wasm_boot_phase_state);
+    if (phase == WASM_BOOT_RUNTIME) {
+      return (LispObj)0;
+    }
+    /* STARTUP phase: fall through to synthesis for boot pools */
     LispObj synthesized = wasm_intern_startup_synthesize_symbol(tcr, name_bytes, name_len, pkg_arg);
     if (wasm_symbol_object_p(synthesized)) {
       return synthesized;
@@ -6807,8 +6847,9 @@ wasm_const_pool_resolve_class_refs(void)
       if (cdr_val != sentinel) continue;
 
       LispObj sym = deref(slot, 0);
-      if (fulltag_of(sym) != fulltag_misc) {
-        /* Not a valid symbol — unwrap cons, store sym directly */
+      if (fulltag_of(sym) != fulltag_misc ||
+          header_subtag(header_of(sym)) != subtag_symbol) {
+        /* car is not a symbol — unwrap sentinel, store raw value */
         pool_data[s] = sym;
         continue;
       }
