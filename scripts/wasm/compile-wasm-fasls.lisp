@@ -141,29 +141,54 @@
           (load-rel "compiler/WASM/wasm-arch.lisp")
           (load-rel "compiler/WASM/wasm-vinsns.lisp"))
         (let ((*compile-definitions* t))
-          ;; Register %fixnum-set and %fixnum-set-natural as acode operators.
-          ;; Find empty () slots in the live operator table and fill them.
-          (let ((filled 0))
+          ;; Register WASM-specific acode operators into empty () slots in the
+          ;; live operator table.  The host CCL's compiled code uses baked-in
+          ;; operator indices, so we must NOT change existing indices — only
+          ;; fill empty slots.
+          (let ((ops-to-patch
+                 (list (list '%fixnum-set
+                             (logior operator-single-valued-mask
+                                     operator-acode-subforms-mask)
+                             t)
+                       (list '%fixnum-set-natural
+                             (logior operator-single-valued-mask
+                                     operator-acode-subforms-mask)
+                             'natural)
+                       (list '%single-to-fixnum
+                             (logior operator-assignment-free-mask
+                                     operator-single-valued-mask
+                                     operator-acode-subforms-mask
+                                     operator-side-effect-free-mask)
+                             'fixnum)
+                       (list '%double-to-fixnum
+                             (logior operator-assignment-free-mask
+                                     operator-single-valued-mask
+                                     operator-acode-subforms-mask
+                                     operator-side-effect-free-mask)
+                             'fixnum)
+                       (list '%single-round-to-fixnum
+                             (logior operator-assignment-free-mask
+                                     operator-single-valued-mask
+                                     operator-acode-subforms-mask
+                                     operator-side-effect-free-mask)
+                             'fixnum)
+                       (list '%double-round-to-fixnum
+                             (logior operator-assignment-free-mask
+                                     operator-single-valued-mask
+                                     operator-acode-subforms-mask
+                                     operator-side-effect-free-mask)
+                             'fixnum)))
+                (filled 0)
+                (needed 6))
             (do ((tail *next-nx-operators* (cdr tail)))
-                ((or (null tail) (>= filled 2)))
+                ((or (null tail) (>= filled needed)))
               (when (null (car tail))
-                (cond ((= filled 0)
-                       (setf (car tail)
-                             (list '%fixnum-set
-                                   (logior operator-single-valued-mask
-                                           operator-acode-subforms-mask)
-                                   t))
-                       (incf filled))
-                      ((= filled 1)
-                       (setf (car tail)
-                             (list '%fixnum-set-natural
-                                   (logior operator-single-valued-mask
-                                           operator-acode-subforms-mask)
-                                   'natural))
-                       (incf filled)))))
+                (setf (car tail) (nth filled ops-to-patch))
+                (incf filled)))
             (format t "~&DIAG: Patched ~d operators into table~%" filled)
-            (unless (= filled 2)
-              (error "Failed to find empty slots for %fixnum-set operators")))
+            (unless (= filled needed)
+              (error "Failed to find ~d empty slots for WASM operators (found ~d)"
+                     needed filled)))
           (load-rel "compiler/WASM/wasm-ffi.lisp")
           (load-rel "compiler/acode-rewrite.lisp")
           (load-rel "compiler/nx1.lisp")

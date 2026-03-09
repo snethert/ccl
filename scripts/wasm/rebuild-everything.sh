@@ -221,6 +221,26 @@ else
   log "WARN: kernel wasm or wasm-objdump not found; skipping image base extraction"
 fi
 
+# Validate that subprims --global-base is far enough above kernel __heap_base.
+# Both modules share linear memory; the kernel's C bump allocator starts at
+# __heap_base and grows upward.  If the gap is < 1 MiB, the allocator can
+# overwrite subprims statics (wasm_funcall_fuel etc.).
+SUBPRIMS_WASM="${CCL_WASM_SUBPRIMS_DIR:-$BUILD_DIR/subprims}/subprims.wasm"
+if [ -f "$SUBPRIMS_WASM" ] && command -v wasm-objdump >/dev/null 2>&1; then
+  SUBPRIMS_SP=$(wasm-objdump -x "$SUBPRIMS_WASM" 2>/dev/null \
+    | grep '__stack_pointer.*init' \
+    | sed 's/.*init i32=//' \
+    | tr -d '[:space:]')
+  if [ -n "$SUBPRIMS_SP" ] && [ -n "$RAW_HEAP_BASE" ]; then
+    GAP=$(( SUBPRIMS_SP - RAW_HEAP_BASE ))
+    log "subprims_sp=$SUBPRIMS_SP kernel_heap_base=$RAW_HEAP_BASE gap=$GAP"
+    if [ "$GAP" -lt 1048576 ]; then
+      log "ERROR: subprims too close to kernel heap base (gap=$GAP < 1 MiB). Risk of C heap clobbering subprims data."
+      exit 1
+    fi
+  fi
+fi
+
 run "$ROOT_DIR/scripts/wasm/build-wasm-boot.sh" ${BOOT_ARGS[@]+"${BOOT_ARGS[@]}"}
 
 # Compute the start entry index for level-1 so it doesn't overlap boot functions.

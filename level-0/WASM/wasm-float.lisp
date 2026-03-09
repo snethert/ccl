@@ -274,150 +274,33 @@
 
 ;;;; ---- Conversion ----
 
-;;; Convert single-float to double-float by decomposing and recomposing.
+;;; Convert single-float to double-float.
+;;; On ARM this decomposes/recomposes IEEE 754 bits.
+;;; On WASM we use the compiler's %single-to-double which emits inline
+;;; f64.promote.f32, avoiding generic Lisp arithmetic on raw IEEE 754 bits
+;;; that produces bignums exceeding fixnum range.
 (defun %short-float->double-float (src dest)
-  (let* ((word (uvref src target::single-float.value-cell))
-         (sign-bit (logand word #x80000000))
-         (s-exp (logand #xFF (ash word -23)))
-         (s-sig (logand word #x7FFFFF)))
-    (cond
-      ;; Zero or denormalized
-      ((zerop s-exp)
-       (if (zerop s-sig)
-         ;; Signed zero
-         (progn
-           (setf (uvref dest target::double-float.val-high-cell)
-                 sign-bit)
-           (setf (uvref dest target::double-float.val-low-cell) 0))
-         ;; Denormalized single -> normalized double
-         ;; Shift significand left until hidden bit appears
-         (let* ((shift 0))
-           (loop while (zerop (logand s-sig (ash 1 22)))
-                 do (setq s-sig (ash s-sig 1))
-                    (incf shift))
-           ;; Remove hidden bit
-           (setq s-sig (logand s-sig #x3FFFFF))
-           ;; Double exponent: 1 - 127 + 1023 - shift = 897 - shift
-           (let* ((d-exp (- 897 shift))
-                  ;; Expand 22-bit significand to 52-bit: shift left 30
-                  ;; High 20 bits go to high word, low 2 bits << 30 go to low word
-                  (d-sig-hi (ash s-sig -2))
-                  (d-sig-lo (ash (logand s-sig #x3) 30)))
-             (setf (uvref dest target::double-float.val-high-cell)
-                   (logior sign-bit (ash d-exp 20) d-sig-hi))
-             (setf (uvref dest target::double-float.val-low-cell) d-sig-lo)))))
-      ;; Infinity or NaN
-      ((= s-exp #xFF)
-       (setf (uvref dest target::double-float.val-high-cell)
-             (logior sign-bit #x7FF00000 (ash s-sig -3)))
-       (setf (uvref dest target::double-float.val-low-cell)
-             (logand #xFFFFFFFF (ash s-sig 29))))
-      ;; Normal
-      (t
-       ;; Double exponent = single exponent - 127 + 1023 = s-exp + 896
-       (let* ((d-exp (+ s-exp 896))
-              ;; Expand 23-bit significand to 52-bit: shift left 29
-              ;; Top 20 bits -> high word significand, low 3 bits << 29 -> low word
-              (d-sig-hi (ash s-sig -3))
-              (d-sig-lo (logand #xFFFFFFFF (ash (logand s-sig #x7) 29))))
-         (setf (uvref dest target::double-float.val-high-cell)
-               (logior sign-bit (ash d-exp 20) d-sig-hi))
-         (setf (uvref dest target::double-float.val-low-cell) d-sig-lo)))))
-  dest)
+  (%copy-double-float (%single-to-double src) dest))
 
 ;;; Convert double-float to single-float (may lose precision).
+;;; On WASM we use the compiler's %double-to-single which emits inline
+;;; f32.demote.f64, avoiding manual IEEE 754 bit manipulation.
 (defun %double-float->short-float (src dest)
-  (let* ((hi-word (uvref src target::double-float.val-high-cell))
-         (lo-word (uvref src target::double-float.val-low-cell))
-         (sign-bit (logand hi-word #x80000000))
-         (d-exp (logand #x7FF (ash hi-word -20)))
-         (d-sig-hi (logand hi-word #xFFFFF))
-         ;; Combine to 52-bit significand, then take top 23 bits
-         ;; 52-bit sig = (d-sig-hi << 32) | lo-word
-         ;; Single significand = top 23 bits = (d-sig-hi << 3) | (lo-word >> 29)
-         (s-sig (logior (ash d-sig-hi 3)
-                        (logand #x7 (ash lo-word -29)))))
-    (cond
-      ;; Zero or denormalized double
-      ((zerop d-exp)
-       (setf (uvref dest target::single-float.value-cell)
-             (logior sign-bit 0))  ; flush denorms to zero for simplicity
-       dest)
-      ;; Infinity or NaN
-      ((= d-exp #x7FF)
-       (setf (uvref dest target::single-float.value-cell)
-             (logior sign-bit #x7F800000 (logand s-sig #x7FFFFF)))
-       dest)
-      ;; Normal
-      (t
-       ;; Single exponent = double exponent - 896 (= -1023 + 127)
-       (let* ((s-exp (- d-exp 896)))
-         (cond
-           ;; Overflow -> infinity
-           ((> s-exp #xFE)
-            (setf (uvref dest target::single-float.value-cell)
-                  (logior sign-bit #x7F800000)))
-           ;; Underflow -> zero (flush to zero)
-           ((<= s-exp 0)
-            (setf (uvref dest target::single-float.value-cell)
-                  sign-bit))
-           (t
-            (setf (uvref dest target::single-float.value-cell)
-                  (logior sign-bit
-                          (ash s-exp 23)
-                          (logand s-sig #x7FFFFF))))))
-       dest))))
+  (%copy-short-float (%double-to-single src) dest))
 
 ;;; Convert fixnum to single-float.
+;;; On ARM this is a single vcvt.f32.s32 LAP instruction.
+;;; On WASM we use the compiler's %fixnum-to-single which emits inline
+;;; f32.convert_i32_s, avoiding generic Lisp arithmetic that overflows
+;;; fixnum range and triggers spill/restore corruption during cold boot.
 (defun %int-to-sfloat! (int result)
-  (let* ((negative (minusp int))
-         (abs-val (if negative (- int) int)))
-    (if (zerop abs-val)
-      (setf (uvref result target::single-float.value-cell) 0)
-      ;; Find the position of the highest bit
-      (let* ((bit-len (integer-length abs-val))
-             ;; Biased exponent: bit-len - 1 + 127
-             (exp (+ (1- bit-len) 127))
-             ;; Significand: remove hidden bit, keep 23 bits
-             ;; Shift to align: if bit-len > 24, shift right; if < 24, shift left
-             (sig (if (> bit-len 24)
-                    (ash abs-val (- 24 bit-len))
-                    (ash abs-val (- 24 bit-len))))
-             (sig-bits (logand sig #x7FFFFF))
-             (word (logior (if negative #x80000000 0)
-                           (ash (logand exp #xFF) 23)
-                           sig-bits)))
-        (setf (uvref result target::single-float.value-cell) word)))
-    result))
+  (%copy-short-float (%fixnum-to-single int) result))
 
 ;;; Convert fixnum to double-float.
+;;; Same approach as %int-to-sfloat! — use compiler primitives that emit
+;;; inline WASM f64.convert_i32_s instead of manual bit manipulation.
 (defun %int-to-dfloat (int result)
-  (let* ((negative (minusp int))
-         (abs-val (if negative (- int) int)))
-    (if (zerop abs-val)
-      (progn
-        (setf (uvref result target::double-float.val-high-cell) 0)
-        (setf (uvref result target::double-float.val-low-cell) 0))
-      ;; Find the position of the highest bit
-      (let* ((bit-len (integer-length abs-val))
-             ;; Biased exponent: bit-len - 1 + 1023
-             (exp (+ (1- bit-len) 1023))
-             ;; Significand: remove hidden bit, keep 52 bits
-             ;; Shift to align: we need 53 bits total (including hidden bit)
-             (sig (if (> bit-len 53)
-                    (ash abs-val (- 53 bit-len))
-                    (ash abs-val (- 53 bit-len))))
-             ;; Remove hidden bit
-             (sig-bits (logand sig (1- (ash 1 52))))
-             ;; Split into high 20 and low 32
-             (sig-hi (ash sig-bits -32))
-             (sig-lo (logand sig-bits #xFFFFFFFF))
-             (hi-word (logior (if negative #x80000000 0)
-                              (ash (logand exp #x7FF) 20)
-                              sig-hi)))
-        (setf (uvref result target::double-float.val-high-cell) hi-word)
-        (setf (uvref result target::double-float.val-low-cell) sig-lo)))
-    result))
+  (%copy-double-float (%fixnum-to-double int) result))
 
 
 ;;;; ---- FPU status/control (all stubs on WASM) ----

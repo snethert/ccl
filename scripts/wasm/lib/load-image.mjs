@@ -244,6 +244,11 @@ const loadRc = kernel.instance.exports.wasm_ccl_load_image(blobBase, imageSize) 
 const nil    = kernel.instance.exports.wasm_get_lisp_nil?.() >>> 0;
 console.log(`wasm_ccl_load_image rc=${loadRc} nil=0x${nil.toString(16)}`);
 
+/* Set the runtime nil value in subprims before any subprim execution. */
+if (typeof subprims.instance.exports.wasm_set_subprims_nil === "function") {
+  subprims.instance.exports.wasm_set_subprims_nil(nil);
+}
+
 const resetFn = kernel.instance.exports.wasm_reset_root_image_runtime_state;
 if (typeof resetFn === "function") {
   const resetRc = resetFn() | 0;

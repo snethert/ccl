@@ -52,7 +52,11 @@ subprims: $(COBJ)
 	@mkdir -p $(SUBPRIMS_DIR)
 	# --table-base=256: match the kernel; keep C function-pointer
 	# indices out of the 0-255 subprim reservation.
+	# --global-base=10485760 (0xA00000, 10 MiB): place subprims data well
+	# above the kernel's C bump-allocator ceiling (~2.3 MiB).  Both modules
+	# share linear memory; if subprims globals are too close to the kernel's
+	# __heap_base the bump allocator will overwrite them (see CODEX-ANALYSIS-REQUEST-5).
 	$(WASM_LD) --no-entry --import-memory --import-table --table-base=256 \
-	  --global-base=1064960 -z stack-size=16384 \
+	  --global-base=10485760 -z stack-size=16384 \
 	  -o $(SUBPRIMS_WASM) $(COBJ)
 	@echo "Subprims built: $(SUBPRIMS_WASM)"

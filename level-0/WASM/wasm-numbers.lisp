@@ -91,107 +91,39 @@
 ;;;; ---- Float truncation to fixnum ----
 
 ;;; Truncate a double-float to a fixnum (caller guarantees result fits).
+;;; On ARM this is a single vcvt instruction (ftosizd).
+;;; On WASM we use the compiler's %double-to-fixnum which emits inline
+;;; i32.trunc_f64_s, avoiding generic Lisp arithmetic on raw IEEE bits
+;;; that overflows fixnum range and triggers corruption during cold boot.
 (defun %truncate-double-float->fixnum (float)
-  (let* ((hi-word (uvref float target::double-float.val-high-cell))
-         (lo-word (uvref float target::double-float.val-low-cell))
-         (sign (if (logbitp 31 hi-word) -1 1))
-         (d-exp (logand #x7FF (ash hi-word -20)))
-         (sig-hi (logand hi-word #xFFFFF)))
-    ;; If exponent is 0, the value is +/- 0 or denormalized (truncates to 0)
-    (if (zerop d-exp)
-      0
-      ;; Unbiased exponent
-      (let* ((unbiased (- d-exp 1023))
-             ;; Full 53-bit significand with hidden bit
-             (mantissa (logior (ash (logior sig-hi (ash 1 20)) 32) lo-word)))
-        (if (< unbiased 0)
-          0 ; |value| < 1
-          (let* ((shift (- unbiased 52)))
-            ;; shift > 0 means shift left, shift < 0 means shift right
-            (* sign (ash mantissa shift))))))))
+  (%double-to-fixnum float))
 
 
 ;;; Truncate a single-float to a fixnum (caller guarantees result fits).
+;;; On ARM this is a single vcvt instruction (ftosizs).
+;;; On WASM we use the compiler's %single-to-fixnum which emits inline
+;;; i32.trunc_f32_s, avoiding generic Lisp arithmetic on raw IEEE bits
+;;; that overflows fixnum range and triggers corruption during cold boot.
 (defun %truncate-short-float->fixnum (float)
-  (let* ((word (uvref float target::single-float.value-cell))
-         (sign (if (logbitp 31 word) -1 1))
-         (s-exp (logand #xFF (ash word -23)))
-         (sig (logand word #x7FFFFF)))
-    (if (zerop s-exp)
-      0
-      (let* ((unbiased (- s-exp 127))
-             ;; Full 24-bit significand with hidden bit
-             (mantissa (logior sig (ash 1 23))))
-        (if (< unbiased 0)
-          0
-          (let* ((shift (- unbiased 23)))
-            (* sign (ash mantissa shift))))))))
+  (%single-to-fixnum float))
 
 
 ;;;; ---- Rounding to nearest fixnum ----
 
 ;;; Round a double-float to the nearest fixnum (round-to-even).
+;;; On WASM we use f64.nearest (round-to-nearest-even) followed by
+;;; i32.trunc_f64_s, avoiding manual IEEE 754 bit manipulation that
+;;; creates 53-bit intermediate values overflowing fixnum range.
 (defun %round-nearest-double-float->fixnum (float)
-  (let* ((hi-word (uvref float target::double-float.val-high-cell))
-         (lo-word (uvref float target::double-float.val-low-cell))
-         (sign (if (logbitp 31 hi-word) -1 1))
-         (d-exp (logand #x7FF (ash hi-word -20)))
-         (sig-hi (logand hi-word #xFFFFF)))
-    (if (zerop d-exp)
-      0
-      (let* ((unbiased (- d-exp 1023))
-             ;; Full 53-bit significand with hidden bit
-             (mantissa (logior (ash (logior sig-hi (ash 1 20)) 32) lo-word))
-             (shift (- unbiased 52)))
-        (if (< unbiased -1)
-          0
-          (if (>= shift 0)
-            ;; No fractional bits to round
-            (* sign (ash mantissa shift))
-            ;; Need to round: shift is negative
-            (let* ((neg-shift (- shift))
-                   (truncated (ash mantissa shift))
-                   ;; The bit just below the rounding point
-                   (half-bit (logbitp (1- neg-shift) mantissa))
-                   ;; Any bits below the half bit?
-                   (remainder-bits (if (> neg-shift 1)
-                                     (not (zerop (logand mantissa
-                                                         (1- (ash 1 (1- neg-shift))))))
-                                     nil)))
-              ;; Round to even: round up if half-bit set and (odd or remainder)
-              (if (and half-bit
-                       (or remainder-bits (oddp truncated)))
-                (* sign (1+ truncated))
-                (* sign truncated)))))))))
+  (%double-round-to-fixnum float))
 
 
 ;;; Round a single-float to the nearest fixnum (round-to-even).
+;;; On WASM we use f32.nearest (round-to-nearest-even) followed by
+;;; i32.trunc_f32_s, avoiding manual IEEE 754 bit manipulation on
+;;; raw float bits that overflow fixnum range.
 (defun %round-nearest-short-float->fixnum (float)
-  (let* ((word (uvref float target::single-float.value-cell))
-         (sign (if (logbitp 31 word) -1 1))
-         (s-exp (logand #xFF (ash word -23)))
-         (sig (logand word #x7FFFFF)))
-    (if (zerop s-exp)
-      0
-      (let* ((unbiased (- s-exp 127))
-             ;; Full 24-bit significand with hidden bit
-             (mantissa (logior sig (ash 1 23)))
-             (shift (- unbiased 23)))
-        (if (< unbiased -1)
-          0
-          (if (>= shift 0)
-            (* sign (ash mantissa shift))
-            (let* ((neg-shift (- shift))
-                   (truncated (ash mantissa shift))
-                   (half-bit (logbitp (1- neg-shift) mantissa))
-                   (remainder-bits (if (> neg-shift 1)
-                                     (not (zerop (logand mantissa
-                                                         (1- (ash 1 (1- neg-shift))))))
-                                     nil)))
-              (if (and half-bit
-                       (or remainder-bits (oddp truncated)))
-                (* sign (1+ truncated))
-                (* sign truncated)))))))))
+  (%single-round-to-fixnum float))
 
 
 ;;;; ---- Fixnum truncate (division) ----

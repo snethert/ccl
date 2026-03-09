@@ -11,28 +11,38 @@
 
 
 ;;; Equivalent to cl:mod when both args are positive fixnums.
-;;; Uses binary doubling+subtraction to avoid mod/rem/%fixnum-truncate,
-;;; whose pure-Lisp binary long division (using integer-length and large
-;;; ash shifts) compiles incorrectly on WASM.  O(log(n/d)) iterations.
+;;; Uses chunked subtraction to avoid mod/rem/%fixnum-truncate,
+;;; whose pure-Lisp binary long division compiles incorrectly on WASM.
+;;; Also avoids the binary-doubling/halving algorithm — both the
+;;; ash-based and dotimes-based variants trigger WASM codegen bugs
+;;; for large fixnums near the 30-bit boundary.
+;;;
+;;; Algorithm: precompute d256 = divisor*256 using only fixnum addition.
+;;; Subtract d256 while possible, then d16, then divisor.  Worst case:
+;;; n/(256*d) + 16 + 16 iterations.  For hash-table sizes (d ≈ 887),
+;;; max n = 2^29, this is ≈ 2400 iterations — fast enough for cold boot.
+;;; Overflow guard: if d256 or d16 wraps negative, skip that chunk tier.
 (defun fast-mod (number divisor)
   (declare (fixnum number divisor)
            (optimize (speed 3) (safety 0)))
   (let ((n number))
     (declare (fixnum n))
     (when (< n divisor) (return-from fast-mod n))
-    ;; Phase 1: double divisor to largest power-of-2 multiple <= n
-    (let ((d divisor))
-      (declare (fixnum d))
-      (loop
-        (let ((d2 (the fixnum (+ d d))))
-          (if (or (<= d2 0) (> d2 n))
-            (return)
-            (setq d d2))))
-      ;; Phase 2: subtract from largest down to divisor
-      (loop
-        (when (>= n d) (setq n (the fixnum (- n d))))
-        (when (eql d divisor) (return-from fast-mod n))
-        (setq d (the fixnum (ash d -1)))))))
+    (let* ((d2   (the fixnum (+ divisor divisor)))
+           (d4   (the fixnum (+ d2  d2)))
+           (d8   (the fixnum (+ d4  d4)))
+           (d16  (the fixnum (+ d8  d8)))
+           (d32  (the fixnum (+ d16 d16)))
+           (d64  (the fixnum (+ d32 d32)))
+           (d128 (the fixnum (+ d64 d64)))
+           (d256 (the fixnum (+ d128 d128))))
+      (declare (fixnum d2 d4 d8 d16 d32 d64 d128 d256))
+      ;; Subtract in large chunks first (skip if multiplier overflowed)
+      (when (> d256 0)
+        (loop (when (< n d256) (return)) (setq n (the fixnum (- n d256)))))
+      (when (> d16 0)
+        (loop (when (< n d16)  (return)) (setq n (the fixnum (- n d16)))))
+      (loop (when (< n divisor) (return n)) (setq n (the fixnum (- n divisor)))))))
 
 ;;; Faster mod using reciprocal multiplication.
 ;;; On WASM, just use the binary reduction above.

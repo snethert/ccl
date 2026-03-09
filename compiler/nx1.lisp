@@ -2174,6 +2174,22 @@
   (make-acode (%nx1-operator %fixnum-to-single)
               (nx1-form :value arg)))
 
+(defnx1 nx1-%single-to-fixnum ((%single-to-fixnum)) context (arg)
+  (make-acode (%nx1-operator %single-to-fixnum)
+              (nx1-form :value arg)))
+
+(defnx1 nx1-%double-to-fixnum ((%double-to-fixnum)) context (arg)
+  (make-acode (%nx1-operator %double-to-fixnum)
+              (nx1-form :value arg)))
+
+(defnx1 nx1-%single-round-to-fixnum ((%single-round-to-fixnum)) context (arg)
+  (make-acode (%nx1-operator %single-round-to-fixnum)
+              (nx1-form :value arg)))
+
+(defnx1 nx1-%double-round-to-fixnum ((%double-round-to-fixnum)) context (arg)
+  (make-acode (%nx1-operator %double-round-to-fixnum)
+              (nx1-form :value arg)))
+
 (defnx1 nx1-%double-float ((%double-float)) context (&whole whole arg &optional (result nil result-p))
   (declare (ignore result))
   (if result-p

@@ -52,6 +52,19 @@ align_up_uintptr(uintptr_t p, uintptr_t a)
 /* Extremely simple bump allocator. free() is a no-op. */
 static uintptr_t wasm_heap_ptr = 0;
 
+/* Advance the bump allocator past a reserved region so that future malloc()
+   calls never write into it.  Called from pmcl-kernel.c after load_image to
+   skip past the Lisp purespace (which occupies memory starting at the same
+   __heap_base that the bump allocator grows from). */
+void
+wasm_advance_malloc_past(uintptr_t addr)
+{
+  uintptr_t aligned = align_up_uintptr(addr, 16);
+  if (wasm_heap_ptr < aligned) {
+    wasm_heap_ptr = aligned;
+  }
+}
+
 /* Optional in-memory boot image backing store.
  * `open/read/lseek/stat` will expose this as a pseudo-file to the kernel image loader.
  */

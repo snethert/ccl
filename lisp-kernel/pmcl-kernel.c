@@ -2139,6 +2139,15 @@ main
   set_nil(load_image(image_name));
 #ifdef WASM32
   wasm_host_log("[boot] load_image done\n", 23);
+  /* The C bump allocator (wasm-no-wasi-libc.c) starts at __heap_base which
+     is just below purespace.  Advance it past pure_space_limit so that
+     subsequent mallocs (e.g. during const-pool install from the JS build
+     pipeline) never overwrite Lisp objects in purespace.  The 32 MiB gap
+     between pure_space_limit and the dynamic area is unused. */
+  {
+    extern void wasm_advance_malloc_past(uintptr_t addr);
+    wasm_advance_malloc_past((uintptr_t)pure_space_limit);
+  }
 #endif
   lisp_heap_notify_threshold = lisp_global(GC_NOTIFY_THRESHOLD);
   lisp_heap_threshold_from_image = lisp_global(LISP_HEAP_THRESHOLD);

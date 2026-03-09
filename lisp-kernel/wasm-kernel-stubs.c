@@ -136,7 +136,7 @@ wasm_call_entry_index_binary_i32(uint32_t index, LispObj arg0, LispObj arg1)
 static void
 wasm_call_lisp_function(TCR *tcr, LispObj fn_value)
 {
-  if (fn_value == (LispObj)nil_value) {
+  if (fn_value == lisp_nil) {
     wasm_debug_dump_state("fn==nil");
     __builtin_trap();
   }
@@ -258,12 +258,6 @@ static uint32_t wasm_subprims_ready = 0;
 static LispObj wasm_last_compiled_modules = 0;
 static volatile uint32_t wasm_boot_phase_state = WASM_BOOT_EARLY;
 
-/* Trace verbosity for funcall dispatch.
-   0 = silent (default)
-   1 = print entry index for LEGACY calls
-   2 = also print arg registers */
-static uint32_t wasm_trace_funcall = 0;
-
 /* Re-entrant guard: when > 0, wasm_intern_startup skips the Lisp INTERN
    path and falls through to C-only synthesis.  This breaks the circular
    dependency where const-pool installation calls INTERN which itself
@@ -347,20 +341,6 @@ uint32_t
 wasm_get_subprims_ready(void)
 {
   return wasm_subprims_ready;
-}
-
-__attribute__((used, visibility("default"), export_name("wasm_set_trace_funcall")))
-void
-wasm_set_trace_funcall(uint32_t level)
-{
-  wasm_trace_funcall = level;
-}
-
-__attribute__((used, visibility("default"), export_name("wasm_get_trace_funcall")))
-uint32_t
-wasm_get_trace_funcall(void)
-{
-  return wasm_trace_funcall;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_get_lisp_nil")))
@@ -1161,7 +1141,7 @@ wasm_test_entry(void)
   }
 }
 
-static LispObj wasm_const_value = (LispObj)nil_value;
+static LispObj wasm_const_value = 0;  /* set to lisp_nil lazily */
 
 static inline int64_t
 wasm_fixnum_min(void)
@@ -1426,6 +1406,26 @@ wasm_alloc_ivector_uninitialized(TCR *tcr, unsigned subtag, signed_natural count
     p += wasm_debug_hex8(d + p, (uint32_t)obj);
     d[p++] = '\n';
     wasm_host_log(d, (unsigned)p);
+  }
+
+  /* Diagnostic: log first 16 single-float allocations to track header integrity */
+  {
+    static uint32_t sfalloc_count = 0;
+    if (subtag == subtag_single_float && sfalloc_count < 16) {
+      sfalloc_count++;
+      LispObj readback = header_of(obj);
+      char d[120]; int p = 0;
+      p += wasm_debug_str(d + p, "SFALLOC obj=0x");
+      p += wasm_debug_hex8(d + p, (uint32_t)obj);
+      p += wasm_debug_str(d + p, " hdr=0x");
+      p += wasm_debug_hex8(d + p, (uint32_t)readback);
+      p += wasm_debug_str(d + p, " sub=0x");
+      p += wasm_debug_hex8(d + p, header_subtag(readback));
+      p += wasm_debug_str(d + p, " aptr=0x");
+      p += wasm_debug_hex8(d + p, (uint32_t)(uintptr_t)newptr);
+      d[p++] = '\n';
+      wasm_host_log(d, (unsigned)p);
+    }
   }
 
   return obj;
@@ -1746,7 +1746,7 @@ wasm_lisp_word_ref(LispObj base, LispObj offset)
   signed_natural idx = unbox_fixnum(offset);
 
   /* Nil: %car/%cdr of nil = nil (unsafe %car/%cdr skip nil check) */
-  if (base == (LispObj)nil_value) {
+  if (base == lisp_nil) {
     return lisp_nil;
   }
 
@@ -1818,58 +1818,7 @@ wasm_lisp_word_ref(LispObj base, LispObj offset)
          idx is data-relative (0 = first data element), so add 1. */
       LispObj result = deref(base, idx + 1);
 
-      /* Diagnostic: detect NIL in simple-vector slots (hash probe bug) */
-      if (wasm_trace_funcall >= 1 &&
-          header_subtag(header) == subtag_simple_vector &&
-          result == lisp_nil) {
-        static uint32_t nil_svec_logged = 0;
-        if (nil_svec_logged < 20) {
-          char msg[200];
-          int p = 0;
-          p += wasm_debug_str(msg + p, "NIL-IN-SVEC @");
-          p += wasm_debug_hex8(msg + p, (uint32_t)base);
-          p += wasm_debug_str(msg + p, " [");
-          p += wasm_debug_uint(msg + p, (uint32_t)idx);
-          p += wasm_debug_str(msg + p, "/");
-          p += wasm_debug_uint(msg + p, (uint32_t)count);
-          p += wasm_debug_str(msg + p, "]\n");
-          wasm_host_log(msg, (unsigned)p);
-          if (nil_svec_logged == 0) {
-            /* First hit: dump first 8 elements of the vector */
-            int p2 = 0;
-            p2 += wasm_debug_str(msg + p2, "  SVEC-DUMP:");
-            int dump_n = count < 8 ? (int)count : 8;
-            for (int j = 0; j < dump_n; j++) {
-              msg[p2++] = ' ';
-              p2 += wasm_debug_hex8(msg + p2, (uint32_t)deref(base, j + 1));
-            }
-            msg[p2++] = '\n';
-            wasm_host_log(msg, (unsigned)p2);
-          }
-          nil_svec_logged++;
-        }
-      }
-
       return result;
-    }
-
-    /* Out-of-bounds access on misc object */
-    if (wasm_trace_funcall >= 1 &&
-        header_subtag(header) == subtag_simple_vector) {
-      static uint32_t oob_svref_logged = 0;
-      if (oob_svref_logged < 10) {
-        char msg[128];
-        int p = 0;
-        p += wasm_debug_str(msg + p, "OOB-SVREF @");
-        p += wasm_debug_hex8(msg + p, (uint32_t)base);
-        p += wasm_debug_str(msg + p, " idx=");
-        p += wasm_debug_uint(msg + p, (uint32_t)idx);
-        p += wasm_debug_str(msg + p, " cnt=");
-        p += wasm_debug_uint(msg + p, (uint32_t)count);
-        p += wasm_debug_str(msg + p, "\n");
-        wasm_host_log(msg, (unsigned)p);
-        oob_svref_logged++;
-      }
     }
   }
 
@@ -2368,7 +2317,7 @@ uint32_t
 wasm_validate_builtin_entries(void)
 {
   LispObj vec = nrs_BUILTIN_FUNCTIONS.vcell;
-  if (vec == (LispObj)nil_value || fulltag_of(vec) != fulltag_misc) return 0;
+  if (vec == lisp_nil || fulltag_of(vec) != fulltag_misc) return 0;
   LispObj header = header_of(vec);
   signed_natural count = header_element_count(header);
   LispObj *data = (LispObj *)((BytePtr)vec + misc_data_offset);
@@ -2377,7 +2326,7 @@ wasm_validate_builtin_entries(void)
 
   for (signed_natural i = 0; i < count; i++) {
     LispObj fn = data[i];
-    if (fn == (LispObj)nil_value || fulltag_of(fn) != fulltag_misc) continue;
+    if (fn == lisp_nil || fulltag_of(fn) != fulltag_misc) continue;
     unsigned subtag = header_subtag(header_of(fn));
     if (subtag != subtag_function && subtag != subtag_pseudofunction &&
         subtag != subtag_xfunction) continue;
@@ -2647,8 +2596,15 @@ wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natu
   if (!in_lisp) {
     old_last_lisp_frame = wasm_enter_lisp_frame(tcr, 0, 0, (LispObj)saved_vsp);
     tcr->valence = TCR_STATE_LISP;
+    /* C-to-Lisp call: clear any stale pending_throw from prior invocations. */
+    tcr->wasm_pending_throw = 0;
+  } else if (tcr->wasm_pending_throw) {
+    /* Lisp-to-Lisp call with an error already propagating.  Do NOT clear
+       pending_throw — let the error unwind through the funcall dispatcher
+       back to the C boundary.  Without this, _SPksignalerr's absorption
+       flag is silently eaten and the caller proceeds with garbage state. */
+    return tcr->wasm_gprs[arg_z];
   }
-  tcr->wasm_pending_throw = 0;
 
   LispObj *vsp_ptr = saved_vsp;
   for (signed_natural i = 0; i < count; i++) {
@@ -2948,7 +2904,7 @@ wasm_subprim_nonlocal_exit_coherence_selftest(void)
     wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
     return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_PENDING_THROW;
   }
-  if (tcr->wasm_gprs[arg_z] != (LispObj)nil_value) {
+  if (tcr->wasm_gprs[arg_z] != lisp_nil) {
     wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
     return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_DIRECT_UNWIND_ARGZ;
   }
@@ -3120,7 +3076,7 @@ wasm_subprim_nonlocal_exit_coherence_selftest(void)
     wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
     return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_PENDING_THROW;
   }
-  if (tcr->wasm_gprs[arg_z] != (LispObj)nil_value) {
+  if (tcr->wasm_gprs[arg_z] != lisp_nil) {
     wasm_restore_subprim_nonlocal_exit_selftest_state(tcr, &original);
     return WASM_SUBPRIM_NONLOCAL_EXIT_SELFTEST_FUNCALL_UNWIND_ARGZ;
   }
@@ -5315,7 +5271,7 @@ wasm_fasload_path(uint32_t path_ptr, uint32_t path_len)
           if (slot_val == lisp_nil) {
             p += wasm_debug_str(d + p, " (NIL!)");
           } else if (fulltag_of(slot_val) == fulltag_misc &&
-                     slot_val != (LispObj)nil_value) {
+                     slot_val != lisp_nil) {
             unsigned svst = header_subtag(header_of(slot_val));
             if (svst == subtag_function) {
               p += wasm_debug_str(d + p, " (fn)");
@@ -5371,7 +5327,7 @@ wasm_fasload_path(uint32_t path_ptr, uint32_t path_len)
           pfx = " tag=";
           while (*pfx) d[p++] = *pfx++;
           d[p++] = '0' + (char)(fulltag_of(pen_fn));
-          if (fulltag_of(pen_fn) == fulltag_misc && pen_fn != (LispObj)nil_value) {
+          if (fulltag_of(pen_fn) == fulltag_misc && pen_fn != lisp_nil) {
             LispObj fhdr = header_of(pen_fn);
             unsigned fst = header_subtag(fhdr);
             signed_natural ecnt = header_element_count(fhdr);
@@ -5409,7 +5365,7 @@ wasm_fasload_path(uint32_t path_ptr, uint32_t path_len)
               LispObj slot = deref(pen_fn, 4 + i);
               /* If it's a value cell (1-element misc), clear its contents too */
               if (fulltag_of(slot) == fulltag_misc &&
-                  slot != (LispObj)nil_value) {
+                  slot != lisp_nil) {
                 LispObj sh = header_of(slot);
                 unsigned cell_st = header_subtag(sh);
                 signed_natural cell_ec = header_element_count(sh);

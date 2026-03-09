@@ -995,17 +995,21 @@ try {
 }
 console.error("[stage] boot image loaded");
 
+/* Set the runtime nil value in subprims.  The compile-time nil_value constant
+   (0x04000001 from arm-constants.h) does not match the runtime lisp_nil address
+   in WASM linear memory.  Must be called before any subprim execution. */
+if (typeof subprims.instance.exports.wasm_set_subprims_nil === "function") {
+  const nilVal = ex.wasm_get_lisp_nil() >>> 0;
+  console.error(`[stage] setting subprims nil to 0x${nilVal.toString(16)}`);
+  subprims.instance.exports.wasm_set_subprims_nil(nilVal);
+} else {
+  console.error("[stage] WARNING: wasm_set_subprims_nil not found in subprims exports");
+}
+
 /* Mark subprims ready so RESTORE-LISP-POINTERS (and fasload) can dispatch
    through the subprim table. */
 if (typeof ex.wasm_set_subprims_ready === "function") {
   ex.wasm_set_subprims_ready(1);
-}
-/* Enable funcall tracing when CCL_WASM_TRACE is set.
-   Level 1: entry index for each LEGACY call.
-   Level 2: also print arg registers (very verbose). */
-if (traceEnabled && typeof ex.wasm_set_trace_funcall === "function") {
-  const traceLevel = parseInt(process.env.CCL_WASM_TRACE_FUNCALL ?? "1", 10);
-  ex.wasm_set_trace_funcall(traceLevel > 0 ? traceLevel : 1);
 }
 if (typeof ex.wasm_restore_lisp_pointers !== "function") {
   fail("kernel missing wasm_restore_lisp_pointers");
@@ -1162,15 +1166,17 @@ const bundleInstall = await installCompiledModulesFromBundle({
   subprimsTable: runtime.subprimsTable,
   microkernel,
   strict: false,
-  installConstPools: false,
+  installConstPools: true,
   excludeEntries: bootEntryIndices.size > 0 ? bootEntryIndices : null,
 });
-/* Runtime const pools are NOT installed here.  Installing pools before
-   cold-boot-init causes wasm_intern_startup to synthesize non-canonical
-   symbol objects (wasm_const_pool_install_depth > 0 blocks Lisp INTERN).
-   These corrupt symbol identity — cold-boot-init throws TYPE-ERROR.
-   Runtime pools are installed late, after cold-boot-init + FASL loading
-   + RESTORE-LISP-POINTERS, when all symbols are canonical. */
+/* Runtime const pools ARE now installed during module install.  Previously
+   deferred to Phase 2C because wasm_intern_startup synthesized non-canonical
+   symbol objects.  The nil_value mismatch fix (wasm_nil() in subprims) and
+   pending_throw propagation fix (wasm_funcall_common) resolved the upstream
+   corruption that caused those TYPE-ERRORs.  Installing all pools before
+   cold-boot-init is required because wasm_drain_cold_load_list calls runtime
+   module functions (e.g. entry 1717 = %MAKE-METHOD-INSTANCE) that need their
+   const pools. */
 console.error(`[stage] compiled modules: ${bundleInstall.installed}/${bundleInstall.count} installed, ${bundleInstall.failed || 0} failed, ${bundleInstall.excluded || 0} skipped (boot)`);
 if (bundleInstall.count === 0) {
   fail("compiled modules bundle is empty; refusing to proceed");
@@ -1420,18 +1426,6 @@ if (!args.noFasload && typeof ex.wasm_fasload_path !== "function") {
 }
 
 setBootPhaseOrFail(WASM_BOOT_PHASE.L0_READY, { reason: "restore-lisp-pointers-complete" });
-
-/* Enable funcall tracing if requested via CCL_WASM_TRACE_FUNCALL env var.
-   Level 1: print entry index on each funcall.
-   Level 2: also print arg_z, arg_y, nargs registers.
-   Useful for diagnosing infinite loops during cold-boot-init. */
-if (process.env.CCL_WASM_TRACE_FUNCALL) {
-  const level = parseInt(process.env.CCL_WASM_TRACE_FUNCALL, 10) || 0;
-  if (level > 0 && typeof ex.wasm_set_trace_funcall === "function") {
-    ex.wasm_set_trace_funcall(level);
-    trace(`funcall trace enabled at level ${level}`);
-  }
-}
 
 /* Fill null table slots with a trap stub so that call_indirect on an
    uninstalled entry produces a diagnosable Lisp XNOTFUN error instead

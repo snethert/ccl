@@ -186,14 +186,7 @@
 
 (defwasm2 wasm2-add2 add2 (seg vreg xfer x y)
   (declare (ignore vreg))
-  (if (and (wasm2-returning-p xfer)
-           (wasm2-arg0-form-p x)
-           (wasm2-arg1-form-p y))
-    (wasm2-emit-fixnum-add)
-    (progn
-      (wasm2-form seg nil nil x)
-      (wasm2-form seg nil nil y)
-      (wasm2-emit :fixnum-add)))
+  (wasm2-emit-builtin-subprim-binary-call seg xfer '.SPbuiltin-plus x y)
   nil)
 
 (defwasm2 wasm2-fixnum-sub-no-overflow fixnum-sub-no-overflow (seg vreg xfer x y)
@@ -222,14 +215,7 @@
 
 (defwasm2 wasm2-sub2 sub2 (seg vreg xfer x y)
   (declare (ignore vreg))
-  (if (and (wasm2-returning-p xfer)
-           (wasm2-arg0-form-p x)
-           (wasm2-arg1-form-p y))
-    (wasm2-emit-fixnum-sub)
-    (progn
-      (wasm2-form seg nil nil x)
-      (wasm2-form seg nil nil y)
-      (wasm2-emit :fixnum-sub)))
+  (wasm2-emit-builtin-subprim-binary-call seg xfer '.SPbuiltin-minus x y)
   nil)
 
 (defwasm2 wasm2-%i+ %i+ (seg vreg xfer x y &optional overflow)
@@ -270,14 +256,7 @@
 
 (defwasm2 wasm2-mul2 mul2 (seg vreg xfer x y)
   (declare (ignore vreg))
-  (if (and (wasm2-returning-p xfer)
-           (wasm2-arg0-form-p x)
-           (wasm2-arg1-form-p y))
-    (wasm2-emit-fixnum-mul)
-    (progn
-      (wasm2-form seg nil nil x)
-      (wasm2-form seg nil nil y)
-      (wasm2-emit :fixnum-mul)))
+  (wasm2-emit-builtin-subprim-binary-call seg xfer '.SPbuiltin-times x y)
   nil)
 
 (defun wasm2-emit-builtin-subprim-binary-call (seg xfer subprim-name x y)
@@ -540,6 +519,40 @@
   (wasm2-emit-unbox-fixnum)
   (wasm2-emit :f64-convert-i32-s)
   (wasm2-emit-box-double)
+  nil)
+
+(defwasm2 wasm2-%single-to-fixnum %single-to-fixnum (seg vreg xfer arg)
+  (declare (ignore vreg xfer))
+  (wasm2-form seg nil nil arg)
+  (wasm2-emit-unbox-single)
+  (wasm2-emit :i32-trunc-f32-s)
+  (wasm2-emit-box-fixnum)
+  nil)
+
+(defwasm2 wasm2-%double-to-fixnum %double-to-fixnum (seg vreg xfer arg)
+  (declare (ignore vreg xfer))
+  (wasm2-form seg nil nil arg)
+  (wasm2-emit-unbox-double)
+  (wasm2-emit :i32-trunc-f64-s)
+  (wasm2-emit-box-fixnum)
+  nil)
+
+(defwasm2 wasm2-%single-round-to-fixnum %single-round-to-fixnum (seg vreg xfer arg)
+  (declare (ignore vreg xfer))
+  (wasm2-form seg nil nil arg)
+  (wasm2-emit-unbox-single)
+  (wasm2-emit :f32-nearest)
+  (wasm2-emit :i32-trunc-f32-s)
+  (wasm2-emit-box-fixnum)
+  nil)
+
+(defwasm2 wasm2-%double-round-to-fixnum %double-round-to-fixnum (seg vreg xfer arg)
+  (declare (ignore vreg xfer))
+  (wasm2-form seg nil nil arg)
+  (wasm2-emit-unbox-double)
+  (wasm2-emit :f64-nearest)
+  (wasm2-emit :i32-trunc-f64-s)
+  (wasm2-emit-box-fixnum)
   nil)
 
 (defwasm2 wasm2-%single-to-double %single-to-double (seg vreg xfer arg)
@@ -5519,6 +5532,7 @@
     :f32-const :f64-const :f32-add :f32-sub :f32-mul :f32-div :f32-neg
     :f64-add :f64-sub :f64-mul :f64-div :f64-neg :f32-convert-i32-s
     :f64-convert-i32-s :f64-promote-f32 :f32-demote-f64
+    :i32-trunc-f32-s :i32-trunc-f64-s :f32-nearest :f64-nearest
     :f32-eq :f32-ne :f32-lt :f32-gt :f32-le :f32-ge
     :f64-eq :f64-ne :f64-lt :f64-gt :f64-le :f64-ge
     :select
@@ -5981,6 +5995,10 @@
   (wasm2-emit-call-index body (wasm2-generic-import-index key))
   (wasm2-push-u8 body #x21) ; local.set
   (wasm2-emit-uleb body tmp)
+  ;; Restore locals BEFORE pending check — spill stack must always
+  ;; be balanced regardless of whether we take the early exit.
+  ;; tmp is non-spillable so restore-locals does not clobber it.
+  (wasm2-emit-restore-locals body)
   (wasm2-emit-call-index body (wasm2-generic-import-index :pending-throw))
   (wasm2-push-u8 body #x04) ; if
   (wasm2-push-u8 body #x40) ; blocktype void
@@ -5992,7 +6010,6 @@
       (wasm2-emit-uleb body depth))
     (wasm2-push-u8 body #x0f)) ; return
   (wasm2-push-u8 body #x0b) ; end
-  (wasm2-emit-restore-locals body)
   (wasm2-push-u8 body #x20) ; local.get
   (wasm2-emit-uleb body tmp))
 
@@ -6194,6 +6211,10 @@
         (:f64-neg (wasm2-push-u8 body #x9a))
         (:f32-convert-i32-s (wasm2-push-u8 body #xb2))
         (:f64-convert-i32-s (wasm2-push-u8 body #xb7))
+        (:i32-trunc-f32-s (wasm2-push-u8 body #xa8))
+        (:i32-trunc-f64-s (wasm2-push-u8 body #xaa))
+        (:f32-nearest (wasm2-push-u8 body #x90))
+        (:f64-nearest (wasm2-push-u8 body #x9b))
         (:f64-promote-f32 (wasm2-push-u8 body #xbb))
         (:f32-demote-f64 (wasm2-push-u8 body #xb6))
         (:f32-eq (wasm2-push-u8 body #x5b))
@@ -7926,6 +7947,7 @@
     :f32-const :f64-const :f32-add :f32-sub :f32-mul :f32-div :f32-neg
     :f64-add :f64-sub :f64-mul :f64-div :f64-neg :f32-convert-i32-s
     :f64-convert-i32-s :f64-promote-f32 :f32-demote-f64
+    :i32-trunc-f32-s :i32-trunc-f64-s :f32-nearest :f64-nearest
     :f32-eq :f32-ne :f32-lt :f32-gt :f32-le :f32-ge
     :f64-eq :f64-ne :f64-lt :f64-gt :f64-le :f64-ge
     :select
