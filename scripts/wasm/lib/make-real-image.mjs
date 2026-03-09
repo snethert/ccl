@@ -1014,19 +1014,13 @@ if (typeof ex.wasm_set_subprims_ready === "function") {
 if (typeof ex.wasm_restore_lisp_pointers !== "function") {
   fail("kernel missing wasm_restore_lisp_pointers");
 }
-/* Try to call RESTORE-LISP-POINTERS now.  In a boot image the function is
-   not yet defined (rc=-3) because it is part of level-1.  That is OK —
-   the boot image hash tables are freshly built and valid.  We will call
-   it again after fasls are loaded to rehash any tables that were built
-   during FASL loading. */
-const earlyRestoreRc = ex.wasm_restore_lisp_pointers() | 0;
-if (earlyRestoreRc === 0) {
-  trace("RESTORE-LISP-POINTERS complete (early)");
-} else if (earlyRestoreRc === -3) {
-  trace("RESTORE-LISP-POINTERS not yet defined in boot image (deferred to post-fasload)");
-} else {
-  fail(`wasm_restore_lisp_pointers failed: rc=${earlyRestoreRc}`);
-}
+/* RESTORE-LISP-POINTERS is NOT called here.  The function object exists in
+   the boot image's fcell but its WASM function table entry has not been
+   populated yet (compiled modules are loaded later).  Calling it now would
+   trap with "table index is out of bounds".
+   The boot image's hash tables are freshly built and valid — no rehash needed.
+   We call RESTORE-LISP-POINTERS after fasls are loaded (post-fasload). */
+trace("RESTORE-LISP-POINTERS deferred to post-fasload (function table not yet populated)");
 
 const bootCompiledModuleRegistryNil = typeof ex.wasm_get_lisp_nil === "function"
   ? (ex.wasm_get_lisp_nil() >>> 0)
@@ -1802,18 +1796,11 @@ if (typeof ex.wasm_heap_profile === "function") {
   console.error(`[stage] heap profile done: ${liveBytes} bytes (${(liveBytes / (1024*1024)).toFixed(1)} MiB) live`);
 }
 
-/* Now that level-1 fasls have been loaded, RESTORE-LISP-POINTERS should be
-   defined.  Call it to rehash any package hash tables that were modified
-   during FASL loading.  This ensures INTERN/FIND-SYMBOL work correctly
-   at runtime. */
-console.error("[stage] calling RESTORE-LISP-POINTERS...");
-const rlpBefore = Date.now();
-const postFasloadRestoreRc = ex.wasm_restore_lisp_pointers() | 0;
-const rlpMs = Date.now() - rlpBefore;
-console.error(`[stage] RESTORE-LISP-POINTERS rc=${postFasloadRestoreRc} (${rlpMs} ms)`);
-if (postFasloadRestoreRc !== 0) {
-  trace(`RESTORE-LISP-POINTERS post-fasload rc=${postFasloadRestoreRc} (non-fatal)`);
-}
+/* RESTORE-LISP-POINTERS deferred to after vcell repair (Phase 2D).
+   It must run after force-rebind (fcells), late const-pool install,
+   and vcell repair — otherwise it reads stale/unbound symbol values
+   (e.g., *character-encodings* is unbound_marker if the synthesized
+   symbol duplicate hasn't been repaired yet). */
 
 /* Phase 2A: Const pool status.  Boot pools installed during module install.
    Runtime pools deferred to Phase 2C (after force-rebind, before save). */
@@ -1991,6 +1978,36 @@ if (typeof ex.wasm_const_pool_resolve_class_refs === "function") {
   console.error(`[stage] const pool class-ref resolution: ${resolved} refs resolved`);
 } else {
   console.error(`[stage] const pool class-ref resolution: kernel missing export (skipped)`);
+}
+
+/* Phase 2D: Vcell repair pass — analogous to force-rebind (fcells).
+   Synthesized symbol duplicates from const-pool install may have stale
+   vcells (unbound_marker or NIL) while the canonical symbol (in the
+   package table) was properly initialized by defvar.  This pass copies
+   the canonical vcell to all duplicates. */
+if (typeof ex.wasm_repair_vcell_scan === "function") {
+  const vcellRepaired = ex.wasm_repair_vcell_scan() | 0;
+  console.error(`[stage] vcell repair: ${vcellRepaired} symbols repaired`);
+  if (vcellRepaired < 0) {
+    fail(`wasm_repair_vcell_scan failed: rc=${vcellRepaired}`);
+  }
+} else {
+  console.error(`[stage] vcell repair: kernel missing wasm_repair_vcell_scan (skipped)`);
+}
+
+/* Now call RESTORE-LISP-POINTERS.  All prerequisites are met:
+   - Level-1 FASLs loaded (function is defined)
+   - force-rebind done (function table entries patched)
+   - Late const pools installed (all symbol refs canonical)
+   - Vcell repair done (synthesized symbol duplicates have correct values)
+   This rehashes package tables and runs fixup hooks for runtime correctness. */
+console.error("[stage] calling RESTORE-LISP-POINTERS...");
+const rlpBefore = Date.now();
+const postFasloadRestoreRc = ex.wasm_restore_lisp_pointers() | 0;
+const rlpMs = Date.now() - rlpBefore;
+console.error(`[stage] RESTORE-LISP-POINTERS rc=${postFasloadRestoreRc} (${rlpMs} ms)`);
+if (postFasloadRestoreRc !== 0) {
+  trace(`RESTORE-LISP-POINTERS rc=${postFasloadRestoreRc} (non-fatal)`);
 }
 
 console.error(`[stage] running pre-save GC...`);

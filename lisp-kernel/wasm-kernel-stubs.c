@@ -3564,8 +3564,9 @@ start_lisp(TCR *tcr, LispObj arg)
 
     /* Call RESTORE-LISP-POINTERS to rebuild package hash tables and run fixup hooks.
        This is critical for symbol lookup and FASL loading to work correctly.
-       Native CCL always does this after loading an image. */
-    LispObj restore_fn = nrs_RESTORE_LISP_POINTERS.vcell;
+       Native CCL always does this after loading an image.
+       ARM reads symbol.fcell via ref_nrs_function — defun sets fcell, not vcell. */
+    LispObj restore_fn = nrs_RESTORE_LISP_POINTERS.fcell;
     if (restore_fn != lisp_nil &&
         fulltag_of(restore_fn) == fulltag_misc &&
         header_subtag(header_of(restore_fn)) == subtag_function) {
@@ -3604,6 +3605,7 @@ done:
    symbol lookup (INTERN, FIND-SYMBOL) works correctly.
    Every native CCL platform does this after image load;
    the WASM port was missing this step.
+   ARM reads symbol.fcell via ref_nrs_function — defun sets fcell, not vcell.
    Returns 0 on success, negative on error. */
 __attribute__((used, visibility("default"), export_name("wasm_restore_lisp_pointers")))
 int
@@ -3623,7 +3625,7 @@ wasm_restore_lisp_pointers(void)
   tcr->wasm_pending_throw = 0;
   tcr->wasm_gprs[vsp] = (LispObj)tcr->save_vsp;
 
-  LispObj restore_fn = nrs_RESTORE_LISP_POINTERS.vcell;
+  LispObj restore_fn = nrs_RESTORE_LISP_POINTERS.fcell;
   if (restore_fn == lisp_nil ||
       fulltag_of(restore_fn) != fulltag_misc ||
       header_subtag(header_of(restore_fn)) != subtag_function) {
@@ -5685,7 +5687,7 @@ wasm_intern_startup_synthesize_symbol(TCR *tcr,
 
   lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(untag(sym));
   rawsym->pname = name_str;
-  rawsym->vcell = lisp_nil;
+  rawsym->vcell = unbound_marker;
   rawsym->fcell = nrs_UDF.vcell;
   rawsym->package_predicate = pkg;
   rawsym->flags = box_fixnum(0);
@@ -7253,6 +7255,82 @@ wasm_force_rebind_scan(uint32_t table_ptr, uint32_t table_count)
   }
 
   return rebound;
+}
+
+/* Vcell repair pass — analogous to wasm_force_rebind_scan for fcells.
+ * Walks all symbols in the heap and canonicalizes value cells.
+ * For each symbol whose vcell is unbound_marker, look up the canonical
+ * symbol (via package hash table) and copy its vcell if bound.
+ * This repairs synthesized symbol duplicates created during const-pool
+ * install whose vcells were never set by defvar (because defvar ran on
+ * the canonical symbol, not the duplicate). */
+__attribute__((used, visibility("default"), export_name("wasm_repair_vcell_scan")))
+int32_t
+wasm_repair_vcell_scan(void)
+{
+  extern LispObj lisp_nil;
+  int32_t repaired = 0;
+
+  area *areas_head = (area *)ptr_from_lispobj(lisp_global(ALL_AREAS));
+  if (areas_head == NULL) return 0;
+
+  area *a = areas_head->succ;
+  while (a != NULL && a->code != AREA_VOID) {
+    area_code code = a->code;
+    if (code != AREA_CSTACK && code != AREA_VSTACK && code != AREA_TSTACK) {
+      LispObj *start = (LispObj *)a->low;
+      LispObj *end = (LispObj *)a->active;
+
+      while (start < end) {
+        LispObj header = *start;
+        natural tag = fulltag_of(header);
+
+        if (header_subtag(header) == subtag_symbol) {
+          lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(ptr_to_lispobj(start));
+          LispObj sym_obj = ptr_to_lispobj(start) | fulltag_misc;
+
+          /* Only repair symbols whose vcell is unbound or nil (the old bug) */
+          if (rawsym->vcell == unbound_marker || rawsym->vcell == lisp_nil) {
+            LispObj pname = rawsym->pname;
+            if (fulltag_of(pname) == fulltag_misc &&
+                header_subtag(header_of(pname)) == subtag_simple_base_string) {
+              uint32_t pname_len = (uint32_t)header_element_count(header_of(pname));
+              /* Extract pname bytes (stored as 32-bit elements, ASCII in low byte) */
+              uint32_t *pname_data = (uint32_t *)ptr_from_lispobj(pname + misc_data_offset);
+              uint8_t name_buf[256];
+              if (pname_len <= sizeof(name_buf)) {
+                for (uint32_t j = 0; j < pname_len; j++) {
+                  name_buf[j] = (uint8_t)(pname_data[j] & 0xffu);
+                }
+                /* Package-table lookup (fast, O(1) per symbol) */
+                LispObj pkg = rawsym->package_predicate;
+                LispObj canonical = wasm_find_symbol_named_bytes(name_buf, pname_len, pkg);
+                if (canonical != (LispObj)0 && canonical != sym_obj) {
+                  lispsymbol *canon_raw = (lispsymbol *)ptr_from_lispobj(untag(canonical));
+                  if (canon_raw->vcell != unbound_marker) {
+                    rawsym->vcell = canon_raw->vcell;
+                    repaired++;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        /* Advance to next heap object */
+        if (nodeheader_tag_p(tag)) {
+          start += (~1 & (2 + header_element_count(header)));
+        } else if (immheader_tag_p(tag)) {
+          start = (LispObj *)skip_over_ivector((natural)start, header);
+        } else {
+          start += 2;
+        }
+      }
+    }
+    a = a->succ;
+  }
+
+  return repaired;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_reset_root_image_runtime_state")))

@@ -325,6 +325,17 @@
       (%err-disp err))))
   
 
+#+wasm32-target
+(defun restore-lisp-pointers ()
+  ;; WASM-specific: skip FFI (refresh-external-entrypoints), callbacks
+  ;; (restore-pascal-functions), and interactive streams (no TTY/fd).
+  ;; Only do what WASM needs: reset state and revive locks.
+  (setq *interactive-streams-initialized* nil)
+  (setq *heap-ivectors* nil)
+  (%revive-system-locks)
+  nil)
+
+#-wasm32-target
 (defun restore-lisp-pointers ()
   (setq *interactive-streams-initialized* nil)
   (setq *heap-ivectors* nil)
@@ -341,7 +352,7 @@
       (with-simple-restart (abort "Abort (possibly crucial) startup functions.")
         (let ((call-with-restart
                #'(lambda (f)
-                   (with-simple-restart 
+                   (with-simple-restart
                      (continue "Skip (possibly crucial) startup function ~s."
                                (if (symbolp f) f (function-name f)))
                      (funcall f)))))
@@ -353,6 +364,12 @@
   nil)
 
 
+#+wasm32-target
+(defun restore-pascal-functions ()
+  ;; WASM has no callbacks, trampolines, or executable pages.
+  nil)
+
+#-wasm32-target
 (defun restore-pascal-functions ()
   (reset-callback-storage)
   (when (simple-vector-p %pascal-functions%)

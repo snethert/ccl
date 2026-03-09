@@ -946,6 +946,12 @@ return that address encapsulated in a MACPTR, else returns NIL."
 )
 
 
+#+wasm32-target
+(defun refresh-external-entrypoints ()
+  ;; WASM has no shared libraries, dlsym, or external entrypoints.
+  nil)
+
+#-wasm32-target
 (defun refresh-external-entrypoints ()
   #+linux-target
   (setq *statically-linked* (not (eql 0 (%get-kernel-global 'statically-linked))))

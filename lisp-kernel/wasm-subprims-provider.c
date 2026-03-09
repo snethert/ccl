@@ -60,9 +60,6 @@ LispObj wasm_alloc_cons_bridge(LispObj car_value, LispObj cdr_value);
 __attribute__((import_module("ccl"), import_name("wasm_prepare_entry_call")))
 uint32_t wasm_prepare_entry_call(uint32_t entry_index);
 
-__attribute__((import_module("ccl"), import_name("wasm_get_trace_funcall")))
-uint32_t wasm_get_trace_funcall(void);
-
 __attribute__((import_module("ccl"), import_name("wasm_get_lisp_nil")))
 LispObj wasm_get_lisp_nil(void);
 
@@ -2688,15 +2685,6 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
     switch (entry_call_abi) {
     case WASM_ENTRY_CALL_ABI_UNARY_I32: {
       funcall_stuck_record(tcr, entry_index);
-      { uint32_t tl = wasm_get_trace_funcall();
-        if (tl >= 1) {
-          static const char hx[] = "0123456789abcdef";
-          char d[60]; int p = 0;
-          d[p++]='U'; d[p++]='1'; d[p++]=' ';
-          for (int b=7;b>=0;b--) d[p++]=hx[(entry_index>>(b*4))&0xf];
-          d[p++]='\n'; wasm_host_log(d,(unsigned)p);
-        }
-      }
       LispObj result;
       LispObj raw_nargs = wasm_reg(tcr, nargs);
       if (raw_nargs != box_fixnum(1)) {
@@ -2717,15 +2705,6 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
     }
     case WASM_ENTRY_CALL_ABI_BINARY_I32: {
       funcall_stuck_record(tcr, entry_index);
-      { uint32_t tl = wasm_get_trace_funcall();
-        if (tl >= 1) {
-          static const char hx[] = "0123456789abcdef";
-          char d[60]; int p = 0;
-          d[p++]='B'; d[p++]='2'; d[p++]=' ';
-          for (int b=7;b>=0;b--) d[p++]=hx[(entry_index>>(b*4))&0xf];
-          d[p++]='\n'; wasm_host_log(d,(unsigned)p);
-        }
-      }
       LispObj result;
       LispObj raw_nargs = wasm_reg(tcr, nargs);
       if (raw_nargs != box_fixnum(2)) {
@@ -2751,29 +2730,6 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
     case WASM_ENTRY_CALL_ABI_LEGACY:
     default: {
       funcall_stuck_record(tcr, entry_index);
-      uint32_t trace_level = wasm_get_trace_funcall();
-      if (trace_level >= 1) {
-        static const char hx[] = "0123456789abcdef";
-        char d[120];
-        int p = 0;
-        /* Level 1: entry index */
-        d[p++]='C'; d[p++]='A'; d[p++]='L'; d[p++]='L'; d[p++]=' ';
-        for (int b=7;b>=0;b--) d[p++]=hx[(entry_index>>(b*4))&0xf];
-        if (trace_level >= 2) {
-          /* Level 2: also print arg registers */
-          d[p++]=' '; d[p++]='z'; d[p++]='=';
-          { LispObj v = wasm_reg(tcr, arg_z);
-            for (int b=7;b>=0;b--) d[p++]=hx[(v>>(b*4))&0xf]; }
-          d[p++]=' '; d[p++]='y'; d[p++]='=';
-          { LispObj v = wasm_reg(tcr, arg_y);
-            for (int b=7;b>=0;b--) d[p++]=hx[(v>>(b*4))&0xf]; }
-          d[p++]=' '; d[p++]='n'; d[p++]='=';
-          { LispObj v = wasm_reg(tcr, nargs);
-            for (int b=7;b>=0;b--) d[p++]=hx[(v>>(b*4))&0xf]; }
-        }
-        d[p++]='\n';
-        wasm_host_log(d, (unsigned)p);
-      }
       wasm_call_entry_index(entry_index);
       break;
     }

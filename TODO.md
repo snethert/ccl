@@ -243,6 +243,17 @@ Three benign errors during cold-boot-init (all with catch_top=0):
 **Build pipeline:** Functional (kernel → subprims → boot image → modules → image assembly → startup-plan.json + modules.bin)
 **MVP-1 completion:** 80%
 
+### Known Compiler/Runtime Issues (Must Fix)
+
+1. **WASM compiler codegen bug — `loop`/`dotimes` with fixnum arithmetic near 30-bit boundary.**
+   `loop`/`dotimes` constructs that use `ash`, `integer-length`, or large shift operations near the WASM32 30-bit fixnum boundary produce incorrect compiled code (infinite loops or wrong results). Root cause is in the WASM backend codegen. This is the underlying bug that broke `%fixnum-truncate`, `mod`, `rem`, and `truncate` when compiled to WASM. Affects any code path that uses these operations. Needs a focused compiler investigation.
+
+2. **Bignum arithmetic correctness.**
+   The pure-Lisp bignum implementations in `wasm-bignum.lisp` have not been thoroughly validated. Several operations (`%fixnum-truncate`, binary long division) produce wrong results when compiled to WASM — unclear how much is the loop codegen bug (#1) vs genuine bignum logic errors. Needs systematic testing once #1 is fixed.
+
+3. **`fast-mod` chunked subtraction is a workaround, not a fix.**
+   The current `fast-mod` in `wasm-hash.lisp` uses chunked subtraction (powers-of-2 repeated subtract) to avoid the compiler codegen bug. This is O(n/d) worst case. The real fix is to resolve the loop codegen bug (#1) so the proper binary-doubling `fast-mod` algorithm works. Once #1 is fixed, `fast-mod` should be rewritten to use the efficient O(log(n/d)) algorithm.
+
 ---
 
 ## 🎯 MVP-1 Success Criteria
