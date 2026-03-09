@@ -1,0 +1,17 @@
+{
+  "b10v10": {
+    "maxCounts": {
+      "wasm_return_fixnum_add": 2
+    }
+  },
+  "b10v11": {
+    "artifacts": {
+      "fixnumAdd": { "path": "doc/wasm/tickets/evidence/bpl-10/b10c-01a-17-fixnum-add-perf.json" },
+      "miscLane":  { "path": "doc/wasm/tickets/evidence/bpl-10/b10c-01a-18-misc-set-fallback.json" }
+    }
+  },
+  "b10v12": {
+    "phaseOrder": ["B10C-01A-17", "B10C-01A-18", "B10V-10", "B10V-11"],
+    "completed":  ["B10C-01A-17", "B10C-01A-18", "B10V-10", "B10V-11"]
+  }
+}

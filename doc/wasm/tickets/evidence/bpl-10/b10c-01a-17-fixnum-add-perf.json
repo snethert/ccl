@@ -1,0 +1,167 @@
+{
+  "capturedAt": "2026-03-02T20:33:41.940Z",
+  "host": {
+    "node": "v25.6.1",
+    "platform": "darwin",
+    "arch": "x64"
+  },
+  "options": {
+    "perfIterations": 80000,
+    "perfWarmup": 5000,
+    "perfRounds": 5,
+    "perfSamples": 1,
+    "perfPathIterations": 20000,
+    "perfBudgetDeltaNs": 0,
+    "perfMaxDirectHelperCallsPerOp": 0
+  },
+  "samples": [
+    {
+      "sample": 1,
+      "beforeCompat": {
+        "nsPerOpMedian": 62.418,
+        "nsPerOpMin": 60.985,
+        "nsPerOpMax": 106.242,
+        "roundNsPerOp": [
+          106.242,
+          64.553,
+          60.985,
+          61.97,
+          62.418
+        ],
+        "checksum": -81664
+      },
+      "afterDirect": {
+        "nsPerOpMedian": 56.795,
+        "nsPerOpMin": 53.666,
+        "nsPerOpMax": 59.649,
+        "roundNsPerOp": [
+          59.649,
+          56.795,
+          55.75,
+          56.996,
+          53.666
+        ],
+        "checksum": -81664
+      },
+      "deltas": {
+        "latencyNsPerOp": -5.624,
+        "latencyPct": -9.01
+      }
+    }
+  ],
+  "lanes": {
+    "beforeCompat": {
+      "label": "compat helper lane",
+      "entryIndex": 204,
+      "exportName": "ccl_fixnum_add_entry",
+      "latency": {
+        "nsPerOpMedian": 62.418,
+        "nsPerOpMin": 62.418,
+        "nsPerOpMax": 62.418,
+        "sampleMediansNsPerOp": [
+          62.418
+        ],
+        "sampleRoundNsPerOp": [
+          [
+            106.242,
+            64.553,
+            60.985,
+            61.97,
+            62.418
+          ]
+        ]
+      },
+      "instructionPath": {
+        "instructionCount": 6,
+        "callCount": 2,
+        "callIndirectCount": 0,
+        "ifCount": 1,
+        "localCount": 0,
+        "importCallSites": {
+          "ccl.wasm_pending_throw_p": 1,
+          "ccl.wasm_return_fixnum_add": 1
+        }
+      },
+      "dynamicPath": {
+        "totalCalls": {
+          "wasm_pending_throw_p": 20000,
+          "wasm_return_fixnum_add": 20000
+        },
+        "callsPerOperation": {
+          "wasm_pending_throw_p": 1,
+          "wasm_return_fixnum_add": 1
+        }
+      }
+    },
+    "afterDirect": {
+      "label": "direct lowered lane",
+      "entryIndex": 301,
+      "exportName": "ccl_generic_entry_301",
+      "latency": {
+        "nsPerOpMedian": 56.795,
+        "nsPerOpMin": 56.795,
+        "nsPerOpMax": 56.795,
+        "sampleMediansNsPerOp": [
+          56.795
+        ],
+        "sampleRoundNsPerOp": [
+          [
+            59.649,
+            56.795,
+            55.75,
+            56.996,
+            53.666
+          ]
+        ]
+      },
+      "instructionPath": {
+        "instructionCount": 42,
+        "callCount": 8,
+        "callIndirectCount": 0,
+        "ifCount": 2,
+        "localCount": 4,
+        "importCallSites": {
+          "ccl.wasm_get_arg_z": 2,
+          "ccl.wasm_return_fixnum_add": 2,
+          "ccl.wasm_set_arg_y": 2,
+          "ccl.wasm_set_arg_z": 2
+        }
+      },
+      "dynamicPath": {
+        "totalCalls": {},
+        "callsPerOperation": {}
+      }
+    }
+  },
+  "deltas": {
+    "latencyNsPerOp": -5.624,
+    "latencyNsPerOpMin": -5.624,
+    "latencyNsPerOpMax": -5.624,
+    "latencyPct": -9.01,
+    "latencyPctMin": -9.01,
+    "latencyPctMax": -9.01,
+    "instructionCount": 36,
+    "callCount": 6,
+    "callIndirectCount": 0,
+    "ifCount": 1
+  },
+  "repeatability": {
+    "sampleCount": 1,
+    "budget": {
+      "maxLatencyDeltaNsPerOp": 0
+    },
+    "withinBudgetSamples": 1,
+    "allSamplesWithinBudget": true,
+    "latencyDeltaNsPerOpSamples": [
+      -5.624
+    ],
+    "latencyDeltaPctSamples": [
+      -9.01
+    ]
+  },
+  "bounds": {
+    "directFixnumAddCallsPerOp": 0,
+    "maxDirectFixnumAddCallsPerOp": 0,
+    "withinDirectFixnumAddBound": true
+  }
+}
