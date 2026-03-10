@@ -366,6 +366,7 @@ const SUBTAG_MACPTR = 0x1F;
 const SUBTAG_FUNCTION = 0x2A;
 const SUBTAG_SYMBOL = 0x3A;
 const SUBTAG_HASH_VECTOR = 0x4A;
+const SUBTAG_SGS = 0x5A;
 const SUBTAG_PACKAGE = 0x62;
 const SUBTAG_ISTRUCT = 0x82;
 const SUBTAG_XFUNCTION = 0x92;
@@ -376,9 +377,11 @@ const SUBTAG_NAMES = {
   [SUBTAG_FUNCTION]: "function",
   [SUBTAG_SYMBOL]: "symbol",
   [SUBTAG_HASH_VECTOR]: "hash-vec",
+  [SUBTAG_SGS]: "string",
   [SUBTAG_PACKAGE]: "package",
   [SUBTAG_ISTRUCT]: "istruct",
   [SUBTAG_XFUNCTION]: "xfunction",
+  [SUBTAG_SBS]: "string",
   [SUBTAG_SIMPLE_VECTOR]: "simple-vector",
 };
 
@@ -420,18 +423,22 @@ function createRuntimeObjectReader(memory, { compiledFunctionByEntryIndex = null
 
   function readBaseString(ptr) {
     const info = descMisc(ptr);
-    if (!info || info.st !== SUBTAG_SBS) return null;
-    const dataStart = ptr - 2;
+    if (!info || (info.st !== SUBTAG_SBS && info.st !== SUBTAG_SGS)) return null;
     const chars = [];
     const reader = dv();
+    const dataStart = ptr - 2;
     for (let i = 0; i < Math.min(info.cnt, 128); i++) {
-      const ch = reader.getUint32(dataStart + i * 4, true);
+      const word = reader.getUint32(dataStart + i * 4, true);
+      const ch = info.st === SUBTAG_SBS ? (word & 0xFF) : (word & 0xFFFF);
       if (ch === 0) break;
-      chars.push(ch & 0xFF);
+      chars.push(ch);
     }
     if (chars.length > 0) return String.fromCharCode(...chars);
-    const bytes = new Uint8Array(memory.buffer, dataStart, Math.min(info.cnt, 128));
-    return String.fromCharCode(...bytes.filter((b) => b !== 0));
+    if (info.st === SUBTAG_SBS) {
+      const bytes = new Uint8Array(memory.buffer, dataStart, Math.min(info.cnt, 128));
+      return String.fromCharCode(...bytes.filter((b) => b !== 0));
+    }
+    return "";
   }
 
   function readSymbolName(symPtr) {
@@ -487,12 +494,14 @@ function createRuntimeObjectReader(memory, { compiledFunctionByEntryIndex = null
   function readPackageName(pkgPtr) {
     const info = descMisc(pkgPtr);
     if (!info || info.st !== SUBTAG_PACKAGE || info.cnt === 0) return null;
-    const names = readMiscElement(pkgPtr, 0);
-    if ((names & 0x7) === FULLTAG_CONS) {
-      const head = readCons(names)?.car ?? 0;
-      return readBaseString(head) ?? readSymbolName(head);
+    for (let i = 0; i < Math.min(info.cnt, 8); i++) {
+      const slot = readMiscElement(pkgPtr, i);
+      if ((slot & 0x7) !== FULLTAG_CONS) continue;
+      const head = readCons(slot)?.car ?? 0;
+      const name = readBaseString(head) ?? readSymbolName(head);
+      if (name) return name;
     }
-    return readBaseString(names) ?? readSymbolName(names);
+    return null;
   }
 
   function describeValue(value, depth = 0) {
@@ -510,6 +519,11 @@ function createRuntimeObjectReader(memory, { compiledFunctionByEntryIndex = null
     const info = descMisc(raw);
     if (!info) return `misc@0x${raw.toString(16)}`;
     switch (info.st) {
+      case SUBTAG_SBS:
+      case SUBTAG_SGS: {
+        const text = readBaseString(raw);
+        return `string ${JSON.stringify(text ?? "")}`;
+      }
       case SUBTAG_SYMBOL:
         return `symbol ${readSymbolName(raw) ?? `@0x${raw.toString(16)}`}`;
       case SUBTAG_FUNCTION:
@@ -594,6 +608,7 @@ function createRuntimeObjectReader(memory, { compiledFunctionByEntryIndex = null
     describeValue,
     dumpFunction,
     dumpObjectSlots,
+    readCons,
     readFunctionEntryIndex,
     readFunctionName,
     readPackageName,
@@ -635,6 +650,30 @@ function dumpFasloadFailureContext({
   for (const [name, index] of [["arg_x", 6], ["arg_y", 5], ["arg_z", 4]]) {
     const value = inspect.getGPR(index) >>> 0;
     reader.dumpObjectSlots(value, `${label} ${name}`, 8);
+  }
+
+  if (typeof ex.wasm_lookup_symbol_value === "function") {
+    const debugSymbols = [
+      "*%WASM-FASLOAD-CURRENT-FILE%*",
+      "*%WASM-FASLOAD-CURRENT-BLOCK%*",
+      "*%WASM-FASLOAD-CURRENT-OP%*",
+      "*%WASM-FASLOAD-CURRENT-POS%*",
+      "*%WASM-FASLOAD-CURRENT-VERSION%*",
+      "*%WASM-FASLOAD-CURRENT-DISPATCH%*",
+      "*%WASM-FASLOAD-CURRENT-EVEC-COUNT%*",
+      "*%WASM-FASLOAD-CURRENT-VALUE%*",
+      "*%WASM-FASLOAD-CURRENT-LFUNCALL-TARGET%*",
+      "*%WASM-FASLOAD-CURRENT-LFUNCALL-RESULT%*",
+    ];
+    sharedProbeUtf8Scratch.reset();
+    for (const symbolName of debugSymbols) {
+      const symMem = sharedProbeUtf8Scratch.allocUtf8(symbolName, encoder);
+      const value = ex.wasm_lookup_symbol_value(symMem.ptr >>> 0, symMem.len >>> 0) >>> 0;
+      if (value === 0) continue;
+      console.error(`[${label}] ${symbolName}=0x${value.toString(16).padStart(8, "0")} (${reader.describeValue(value)})`);
+      reader.dumpFunction(value, `${label} ${symbolName}`, 8);
+      reader.dumpObjectSlots(value, `${label} ${symbolName}`, 8);
+    }
   }
 
   const spillSp = inspect.getField("wasm_spill_sp");
@@ -2125,6 +2164,25 @@ function lookupSymbolFunctionValue(name) {
   }
 }
 
+function lookupSymbolValue(name) {
+  if (typeof ex.wasm_lookup_symbol_value !== "function") {
+    fail("kernel missing wasm_lookup_symbol_value");
+  }
+  const nameBytes = encoder.encode(name);
+  const namePtr = ex.malloc(nameBytes.length);
+  if (!namePtr) {
+    fail(`lookupSymbolValue: malloc failed for ${name}`);
+  }
+  new Uint8Array(runtime.memory.buffer).set(nameBytes, namePtr);
+  try {
+    return ex.wasm_lookup_symbol_value(namePtr, nameBytes.length) >>> 0;
+  } finally {
+    if (typeof ex.free === "function") {
+      ex.free(namePtr);
+    }
+  }
+}
+
 function setSymbolFunctionEntry(name, entryIndex, slot = 0) {
   const nameBytes = encoder.encode(name);
   const namePtr = ex.malloc(nameBytes.length);
@@ -2223,6 +2281,65 @@ function runProtectedBootSymbolGate(stageLabel) {
   }
 }
 
+function packageNamesFromList(listPtr, reader, nilValue, limit = 16) {
+  const names = [];
+  let cur = listPtr >>> 0;
+  const seen = new Set();
+  while (cur !== 0 && cur !== (nilValue >>> 0) && names.length < limit) {
+    if (seen.has(cur)) {
+      names.push("<cycle>");
+      break;
+    }
+    seen.add(cur);
+    const cell = reader.readCons(cur);
+    if (!cell) {
+      names.push(`<non-cons 0x${cur.toString(16)}>`);
+      break;
+    }
+    const pkgName = reader.readPackageName(cell.car);
+    names.push(pkgName ?? reader.describeValue(cell.car));
+    cur = cell.cdr >>> 0;
+  }
+  if (cur !== 0 && cur !== (nilValue >>> 0) && names.length >= limit) {
+    names.push("...");
+  }
+  return names;
+}
+
+function logPreFaslPackageState(stageLabel) {
+  if (typeof ex.wasm_lookup_symbol_value !== "function") {
+    return;
+  }
+  const nilValue = typeof ex.wasm_get_lisp_nil === "function" ? (ex.wasm_get_lisp_nil() >>> 0) : 0;
+  const reader = createRuntimeObjectReader(runtime.memory, { compiledFunctionByEntryIndex, nilValue });
+  const packageValue = lookupSymbolValue("*PACKAGE*");
+  const allPackagesValue = lookupSymbolValue("%ALL-PACKAGES%");
+  const allPackagesLockValue = lookupSymbolValue("%ALL-PACKAGES-LOCK%");
+  const packageNames = packageNamesFromList(allPackagesValue, reader, nilValue, 12);
+  const summary = packageNames.length > 0 ? packageNames.join(", ") : "<empty>";
+  console.error(
+    `[stage] ${stageLabel}: *PACKAGE*=${reader.describeValue(packageValue)} ` +
+    `%ALL-PACKAGES%=${reader.describeValue(allPackagesValue)} ` +
+    `%ALL-PACKAGES-LOCK%=${reader.describeValue(allPackagesLockValue)}`,
+  );
+  console.error(`[stage] ${stageLabel}: package names [${packageNames.length}] ${summary}`);
+  for (const fnName of ["SET-PACKAGE", "FIND-PACKAGE", "%FIND-PKG", "PACKAGE-%LOCAL-NICKNAMES"]) {
+    const callableValue = lookupSymbolFunctionValue(fnName);
+    const callable = reader.describeCallable(callableValue);
+    console.error(
+      `[stage] ${stageLabel}: fn ${fnName}=${reader.describeValue(callableValue)} ` +
+      `callable=${callable.name ?? callable.kind} entry=${callable.entryIndex ?? "?"}`,
+    );
+  }
+  if (!packageNames.includes("CCL") || !packageNames.includes("COMMON-LISP")) {
+    reader.dumpObjectSlots(packageValue, `${stageLabel} *PACKAGE*`, 8);
+    const cell = reader.readCons(allPackagesValue);
+    if (cell) {
+      reader.dumpObjectSlots(cell.car, `${stageLabel} first-package`, 8);
+    }
+  }
+}
+
 console.error(`[stage] cold-boot-init starting (const-pool installs so far: ${_cpInstallCount}, skipped: ${_cpSkipCount})`);
 if (typeof ex.wasm_heap_profile === "function") {
   console.error("[stage] pre-cold-boot heap profile:");
@@ -2239,6 +2356,7 @@ logColdLoadEntries(coldLoadEntries, {
   startIndex: Math.max(0, COLD_LOAD_C_MAX - 4),
   count: 16,
 });
+logPreFaslPackageState("pre-FASL package gate");
 rebindProtectedBootSymbols("pre-FASL lock repair");
 runProtectedBootSymbolGate("pre-FASL lock gate");
 

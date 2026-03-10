@@ -21,7 +21,7 @@
 ;;; compile-time only — declaim generates a load-time (proclaim ...) call,
 ;;; but PROCLAIM is level-1 and unavailable during cold-boot-init.
 #+wasm32-target
-(eval-when (:compile-toplevel :execute)
+(eval-when (:compile-toplevel)
   (proclaim '(ftype (function (t t t) t) %%scale-sfloat!))
   (proclaim '(ftype (function (t &optional t) t) %short-float %short-float-ratio
                                                   %double-float->short-float

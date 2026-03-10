@@ -16,7 +16,7 @@
 
 (in-package "CCL")
 
-(eval-when (:compile-toplevel :execute)
+(eval-when (:compile-toplevel)
   (require "NUMBER-MACROS")
   (require "NUMBER-CASE-MACRO")
 )
@@ -49,7 +49,7 @@
      (if (minusp n) (- n) n))))
 
 
-(eval-when (:compile-toplevel :execute)
+(eval-when (:compile-toplevel)
   (assert (< (char-code #\9) (char-code #\A) (char-code #\a))))
 
 (defun token2int (string start len radix)

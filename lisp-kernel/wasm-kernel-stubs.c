@@ -1125,6 +1125,16 @@ wasm_lookup_symbol_function(const uint8_t *name, uint32_t len)
   return (uint32_t)rawsym->fcell;
 }
 
+__attribute__((used, visibility("default"), export_name("wasm_lookup_symbol_value")))
+uint32_t
+wasm_lookup_symbol_value(const uint8_t *name, uint32_t len)
+{
+  LispObj sym = wasm_find_symbol_any_bytes(name, len);
+  if (sym == (LispObj)0) return 0;
+  lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(sym - fulltag_misc);
+  return (uint32_t)rawsym->vcell;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_boot_entry")))
 void
 wasm_boot_entry(void)
@@ -3929,6 +3939,76 @@ wasm_cold_load_run_one(int index)
    COLD_LOAD_C_MAX entries (safe subset).  JS-driven drain should be
    preferred for the full 2000+ list. */
 #define COLD_LOAD_C_MAX 128
+static void
+wasm_log_cold_load_callable(const char *prefix, int index, LispObj fn)
+{
+  char m[192];
+  int p = 0;
+  uint8_t sub = header_subtag(header_of(fn));
+
+  p += wasm_debug_str(m + p, prefix);
+  p += wasm_debug_str(m + p, " idx=");
+  p += wasm_debug_uint(m + p, (uint32_t)index);
+
+  if (sub == subtag_symbol) {
+    lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(fn));
+    LispObj pname = sym->pname;
+    LispObj fcell = sym->fcell;
+    p += wasm_debug_str(m + p, " kind=symbol");
+    if (pname != lisp_nil && fulltag_of(pname) == fulltag_misc &&
+        header_subtag(header_of(pname)) == subtag_simple_base_string) {
+      natural len = header_element_count(header_of(pname));
+      uint8_t *chars = (uint8_t *)((BytePtr)pname + misc_data_offset);
+      if (len > 40) len = 40;
+      p += wasm_debug_str(m + p, " name=");
+      for (natural i = 0; i < len && p < (int)(sizeof(m) - 2); i++) {
+        m[p++] = (char)chars[i];
+      }
+    }
+    if (fcell != lisp_nil &&
+        fulltag_of(fcell) == fulltag_misc &&
+        header_subtag(header_of(fcell)) == subtag_function) {
+      LispObj entry_s0 = deref(fcell, 1);
+      if (tag_of(entry_s0) == tag_fixnum) {
+        p += wasm_debug_str(m + p, " fentry=");
+        p += wasm_debug_uint(m + p, (uint32_t)unbox_fixnum(entry_s0));
+      }
+    }
+  } else if (sub == subtag_function) {
+    LispObj entry_s0 = deref(fn, 1);
+    natural nelems = header_element_count(header_of(fn));
+    p += wasm_debug_str(m + p, " kind=function");
+    if (tag_of(entry_s0) == tag_fixnum) {
+      p += wasm_debug_str(m + p, " entry=");
+      p += wasm_debug_uint(m + p, (uint32_t)unbox_fixnum(entry_s0));
+    }
+    if (nelems >= 2) {
+      LispObj last = deref(fn, nelems);
+      if (fulltag_of(last) == fulltag_misc &&
+          header_subtag(header_of(last)) == subtag_symbol) {
+        lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(last));
+        LispObj pname = sym->pname;
+        if (pname != lisp_nil && fulltag_of(pname) == fulltag_misc &&
+            header_subtag(header_of(pname)) == subtag_simple_base_string) {
+          natural len = header_element_count(header_of(pname));
+          uint8_t *chars = (uint8_t *)((BytePtr)pname + misc_data_offset);
+          if (len > 40) len = 40;
+          p += wasm_debug_str(m + p, " name=");
+          for (natural i = 0; i < len && p < (int)(sizeof(m) - 2); i++) {
+            m[p++] = (char)chars[i];
+          }
+        }
+      }
+    }
+  } else {
+    p += wasm_debug_str(m + p, " kind=other sub=");
+    p += wasm_debug_uint(m + p, (uint32_t)sub);
+  }
+
+  m[p++] = '\n';
+  wasm_host_log(m, (unsigned)p);
+}
+
 static int
 wasm_drain_cold_load_list(TCR *tcr, LispObj list)
 {
@@ -3961,29 +4041,14 @@ wasm_drain_cold_load_list(TCR *tcr, LispObj list)
       }
     }
 
-    /* Log entry index for diagnostics (only for function objects) */
-    if (header_subtag(header_of(fn)) == subtag_function) {
-      LispObj entry_s0 = deref(fn, 1);
-      char d[48]; int p = 0;
-      d[p++] = 'C'; d[p++] = 'F'; d[p++] = ' ';
-      p += wasm_debug_hex8(d + p, (uint32_t)entry_s0);
-      d[p++] = '\n';
-      wasm_host_log(d, (unsigned)p);
-    }
+    wasm_log_cold_load_callable("CF", i, fn);
 
     tcr->wasm_pending_throw = 0;
     (void)wasm_foreign_funcall0(tcr, fn);
 
     if (tcr->wasm_pending_throw) {
       errors++;
-      {
-        LispObj err_s0 = deref(fn, 1);
-        char ed[64]; int ep = 0;
-        ep += wasm_debug_str(ed + ep, "CF-ERR ");
-        ep += wasm_debug_hex8(ed + ep, (uint32_t)err_s0);
-        ed[ep++] = '\n';
-        wasm_host_log(ed, (unsigned)ep);
-      }
+      wasm_log_cold_load_callable("CF-ERR", i, fn);
       tcr->wasm_pending_throw = 0;
     }
   }

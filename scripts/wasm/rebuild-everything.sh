@@ -14,6 +14,7 @@ FORCE=1
 BUILD_ROOT_IMAGE=1
 ROOT_IMAGE_ALLOW_FAIL=1
 BUILD_BOOT_WITH_L1="${BUILD_BOOT_WITH_L1:-0}"
+ROOT_IMAGE_BUILT=0
 
 # Use environment variables for build paths with fallbacks
 BUILD_DIR="${CCL_WASM_BUILD_DIR:-$ROOT_DIR/build/wasm32}"
@@ -168,6 +169,9 @@ mkdir -p "$BUILD_DIR" "$IMAGES_DIR" "$MODULES_DIR"
 log "Step 0: Generate ABI contract artifacts"
 run python3 "$ROOT_DIR/scripts/wasm/generate_abi_contract.py" --build-dir "$BUILD_DIR"
 
+log "Step 0b: Generate subprims artifacts (subprims-map.json, wasm-subprims-map.h, standins)"
+run python3 "$ROOT_DIR/scripts/wasm/generate_subprims_artifacts.py"
+
 MAKE_ARGS=()
 if [ -n "${CC:-}" ]; then
   MAKE_ARGS+=("CC=$CC")
@@ -194,9 +198,6 @@ log "force=$FORCE build_root_image=$BUILD_ROOT_IMAGE root_image_allow_fail=$ROOT
 
 run make -C "$ROOT_DIR/lisp-kernel/wasm32" clean ${MAKE_ARGS[@]+"${MAKE_ARGS[@]}"} all
 run make -C "$ROOT_DIR/lisp-kernel/wasm32/subprims" clean all
-
-log "Step 0b: Generate subprims artifacts (subprims-map.json, wasm-subprims-map.h)"
-run python3 "$ROOT_DIR/scripts/wasm/generate_subprims_artifacts.py"
 
 # Phase 0B: Extract __heap_base from the kernel so the boot image can use it
 # as :image-base-address, ensuring bias=0 (no relocation walk at load time).
@@ -298,12 +299,6 @@ else
   log "skipping --with-l1 boot rebuild for root-image path (BUILD_BOOT_WITH_L1=0)"
 fi
 
-# Phase 0A tests — recompile if the script exists
-if [ -f "$ROOT_DIR/scripts/wasm/compile-phase0a-tests.sh" ]; then
-  log "RUN (phase0a tests, non-fatal): scripts/wasm/compile-phase0a-tests.sh"
-  "$ROOT_DIR/scripts/wasm/compile-phase0a-tests.sh" || log "WARN: phase0a test compilation failed (non-fatal)"
-fi
-
 if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
   ROOT_CMD=(
     node --max-old-space-size=8192 "$ROOT_DIR/scripts/wasm/lib/make-real-image.mjs"
@@ -314,9 +309,14 @@ if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
   )
   if [ "$ROOT_IMAGE_ALLOW_FAIL" -eq 1 ]; then
     log "RUN (root image, non-fatal): ${ROOT_CMD[*]}"
-    "${ROOT_CMD[@]}" || log "WARN: root.image rebuild failed (allowed); inspect logs/output paths"
+    if "${ROOT_CMD[@]}"; then
+      ROOT_IMAGE_BUILT=1
+    else
+      log "WARN: root.image rebuild failed (allowed); inspect logs/output paths"
+    fi
   else
     run "${ROOT_CMD[@]}"
+    ROOT_IMAGE_BUILT=1
   fi
 fi
 
@@ -335,17 +335,26 @@ else
   log "WARN: wasm-merge not found; skipping singleton module merge"
 fi
 
+# Phase 0A tests — rebuild after boot/runtime manifests settle so the
+# post-build freshness check compares against their final mtimes.
+if [ -f "$ROOT_DIR/scripts/wasm/compile-phase0a-tests.sh" ]; then
+  log "RUN (phase0a tests, non-fatal): scripts/wasm/compile-phase0a-tests.sh"
+  "$ROOT_DIR/scripts/wasm/compile-phase0a-tests.sh" || log "WARN: phase0a test compilation failed (non-fatal)"
+fi
+
 python3 "$ROOT_DIR/scripts/wasm/make_minimal_image.py" \
   --output "$IMAGES_DIR/minimal.image"
 
 log "sync rebuild complete. key outputs:"
 log "  ${CCL_WASM_KERNEL_DIR:-$BUILD_DIR/kernel}/wasmcl.wasm"
-log "  wasm-boot.image"
+log "  ${BUILD_DIR#$ROOT_DIR/}/wasm-boot.image"
 log "  ${MODULES_OUT#$ROOT_DIR/}"
 log "  ${BOOT_MODULES_OUT#$ROOT_DIR/}"
-if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
+if [ "$BUILD_ROOT_IMAGE" -eq 1 ] && [ "$ROOT_IMAGE_BUILT" -eq 1 ] && [ -f "$ROOT_IMAGE_OUT" ]; then
   log "  ${ROOT_IMAGE_OUT#$ROOT_DIR/}"
   log "  ${ROOT_IMAGE_MANIFEST_OUT#$ROOT_DIR/}"
+elif [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
+  log "  root.image not written"
 fi
 
 log ""

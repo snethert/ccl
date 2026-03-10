@@ -152,6 +152,7 @@
 
 ;All Lisp package variables... Dunno if this still matters, but it
 ;used to happen in the kernel...
+#-wasm32-target
 (dolist (x '(* ** *** *APPLYHOOK* *DEBUG-IO*
              *DEFAULT-PATHNAME-DEFAULTS* *ERROR-OUTPUT* *EVALHOOK*
              *FEATURES* *LOAD-VERBOSE* *MACROEXPAND-HOOK* *MODULES*

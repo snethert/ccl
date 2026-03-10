@@ -40,6 +40,11 @@
 (eval-when (:execute :compile-toplevel)
   (assert (= 80 numfaslops)))
 
+#+wasm32-target
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (declaim (special *%wasm-fasload-current-lfuncall-target%*
+                    *%wasm-fasload-current-lfuncall-result%*)))
+
 
 
 
@@ -297,24 +302,26 @@
 (defvar *package-refs-lock*)
 (setq *package-refs-lock* (make-lock))
 
-(defun register-package-ref (name)
+(defun %ensure-package-ref (name)
   (unless (typep name 'string)
     (report-bad-arg name 'string))
-  (let* ((ref
-          (or (gethash name *package-refs*)
-              (with-lock-grabbed (*package-refs-lock*)
-                (or
-                 (gethash name *package-refs*) ; check again
-                 (let* ((r (make-package-ref name)))
-                   (setf (gethash name *package-refs*) r)))))))
+  (or (gethash name *package-refs*)
+      (with-lock-grabbed (*package-refs-lock*)
+        (or
+         (gethash name *package-refs*) ; check again
+         (let* ((r (make-package-ref name)))
+           (setf (gethash name *package-refs*) r))))))
+
+(defun register-package-ref (name)
+  (let* ((ref (%ensure-package-ref name)))
     (unless (package-ref.pkg ref)
       (setf (package-ref.pkg ref) (find-package name)))
     ref))
 
-
-(dolist (p %all-packages%)
-  (dolist (name (pkg.names p))
-    (setf (package-ref.pkg (register-package-ref name)) p)))
+(defun %populate-package-refs-from-all-packages ()
+  (dolist (p %all-packages%)
+    (dolist (name (pkg.names p))
+      (setf (package-ref.pkg (%ensure-package-ref name)) p))))
 
 ;; Early definitions. Redefined in l1-symhash.
 (defun package-%local-nicknames (package)      (declare (ignore package)) '())
@@ -466,8 +473,13 @@
     
 (deffaslop $fasl-lfuncall (s)
   (let* ((fun (%fasl-expr-preserve-epush s)))
-    ;(break "fun = ~s" fun)
-     (%epushval s (funcall fun))))
+    #+wasm32-target
+    (setf *%wasm-fasload-current-lfuncall-target%* fun
+          *%wasm-fasload-current-lfuncall-result%* nil)
+    (let* ((result (funcall fun)))
+      #+wasm32-target
+      (setf *%wasm-fasload-current-lfuncall-result%* result)
+      (%epushval s result))))
 
 (deffaslop $fasl-globals (s)
   (setf (faslstate.faslgsymbols s) (%fasl-expr s)))
@@ -950,6 +962,33 @@
 			   #'%simple-fasl-read-byte
 			   #'%simple-fasl-read-n-bytes))
 
+#+wasm32-target
+(progn
+  (defvar *%wasm-fasload-current-file%* nil)
+  (defvar *%wasm-fasload-current-block%* nil)
+  (defvar *%wasm-fasload-current-op%* nil)
+  (defvar *%wasm-fasload-current-pos%* nil)
+  (defvar *%wasm-fasload-current-version%* nil)
+  (defvar *%wasm-fasload-current-dispatch%* nil)
+  (defvar *%wasm-fasload-current-evec-count%* nil)
+  (defvar *%wasm-fasload-current-value%* nil)
+  (defvar *%wasm-fasload-current-lfuncall-target%* nil)
+  (defvar *%wasm-fasload-current-lfuncall-result%* nil)
+
+  (defun %wasm-fasload-record-state (s block-index op)
+    (setf *%wasm-fasload-current-file%* (faslstate.faslfname s)
+          *%wasm-fasload-current-block%* block-index
+          *%wasm-fasload-current-op%* op
+          *%wasm-fasload-current-pos%* (%fasl-get-file-pos s)
+          *%wasm-fasload-current-version%* (faslstate.faslversion s)
+          *%wasm-fasload-current-dispatch%*
+          (if (and (faslstate.fasldispatch s)
+                   (< op (length (faslstate.fasldispatch s))))
+            (svref (faslstate.fasldispatch s) op)
+            nil)
+          *%wasm-fasload-current-evec-count%* (faslstate.faslecnt s)
+          *%wasm-fasload-current-value%* (faslstate.faslval s))))
+
 (defun %fasl-open (string s)
   (funcall (faslapi.fasl-open *fasl-api*) string s))
 (defun %fasl-close (s)
@@ -980,6 +1019,17 @@
 (defun %fasload (string &optional (table *fasl-dispatch-table*))
   ;;(dbg string)
   (%wasm-note-fasload-step 100 string)
+  #+wasm32-target
+  (setf *%wasm-fasload-current-file%* string
+        *%wasm-fasload-current-block%* nil
+        *%wasm-fasload-current-op%* nil
+        *%wasm-fasload-current-pos%* 0
+        *%wasm-fasload-current-version%* 0
+        *%wasm-fasload-current-dispatch%* nil
+        *%wasm-fasload-current-evec-count%* 0
+        *%wasm-fasload-current-value%* nil
+        *%wasm-fasload-current-lfuncall-target%* nil
+        *%wasm-fasload-current-lfuncall-result%* nil)
   (when (and *%fasload-verbose*
              (not *load-verbose*))
     (%string-to-stderr ";Loading ")
@@ -1056,6 +1106,8 @@
                               (do* ((op (%fasl-read-byte s) (%fasl-read-byte s)))
                                    ((= op $faslend))
                                 (declare (fixnum op))
+                                #+wasm32-target
+                                (%wasm-fasload-record-state s i op)
                                 (%fasl-dispatch s op))
                               (%wasm-note-fasload-step 180 i))))))))))
           (%wasm-note-fasload-step 190)
@@ -1376,6 +1428,7 @@ Can be removed before shipping once %FASLOAD startup is stable.")
   (dolist (p %all-packages%)
     (%resize-htab (pkg.itab p))
     (%resize-htab (pkg.etab p)))
+  (%populate-package-refs-from-all-packages)
   (%wasm-note-startup-step 70)
   (dolist (f (prog1 *xload-cold-load-documentation* (setq *xload-cold-load-documentation* nil)))
     (apply 'set-documentation f))

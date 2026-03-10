@@ -412,7 +412,9 @@
 ;;; the function, which uses the string=-based istruct-typep fallback.
 ;;; Without this, the compiler inlines an eq check on istruct cells
 ;;; that fails for const-pool-deep-copied cells.
-#+wasm32-target (declaim (notinline hash-table-p))
+#+wasm32-target
+(eval-when (:compile-toplevel)
+  (declaim (notinline hash-table-p)))
 (defun hash-table-p (hash)
   (istruct-typep hash 'hash-table))
 

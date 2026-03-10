@@ -19,7 +19,7 @@
 ;;; compile-time only — declaim generates a load-time (proclaim ...) call,
 ;;; but PROCLAIM is level-1 and unavailable during cold-boot-init.
 #+(and 32-bit-target wasm32-target)
-(eval-when (:compile-toplevel :execute)
+(eval-when (:compile-toplevel)
   (proclaim '(ftype (function (t t t t t t t) t) %add-with-carry %subtract-with-borrow))
   (proclaim '(ftype (function (t t t) t) bignum-ashift-left-digits))
   (proclaim '(ftype (function (t t t t t t) t) try-bignum-truncate-guess))
