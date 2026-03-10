@@ -35,6 +35,7 @@
 #include <sys/syscall.h>
 #include <sys/time.h>
 #include <stdint.h>
+#include <stdarg.h>
 #include <stdio.h>
 #ifndef WASM32
 #include <signal.h>
@@ -66,6 +67,80 @@ wasm_normalize_named_path(const char *path, size_t *out_len)
     *out_len = len;
   }
   return p;
+}
+
+static unsigned
+wasm_diag_append_bytes(char *dst, unsigned pos, size_t dst_size, const char *src, size_t src_len)
+{
+  size_t limit = (dst_size > 0) ? (dst_size - 1) : 0;
+
+  while ((src_len > 0) && ((size_t)pos < limit)) {
+    dst[pos++] = *src++;
+    src_len--;
+  }
+
+  if (dst_size > 0) {
+    dst[pos] = '\0';
+  }
+  return pos;
+}
+
+static unsigned
+wasm_diag_append_fmt(char *dst, unsigned pos, size_t dst_size, const char *fmt, ...)
+{
+  if (dst_size == 0) {
+    return 0;
+  }
+
+  if ((size_t)pos >= dst_size) {
+    dst[dst_size - 1] = '\0';
+    return (unsigned)(dst_size - 1);
+  }
+
+  va_list ap;
+  va_start(ap, fmt);
+  int n = vsnprintf(dst + pos, dst_size - (size_t)pos, fmt, ap);
+  va_end(ap);
+
+  if (n <= 0) {
+    dst[pos] = '\0';
+    return pos;
+  }
+
+  if ((size_t)n >= (dst_size - (size_t)pos)) {
+    return (unsigned)(dst_size - 1);
+  }
+
+  return pos + (unsigned)n;
+}
+
+static void
+wasm_diag_log_named_open_result(const char *status,
+                                const char *name,
+                                size_t name_len,
+                                uint32_t sid,
+                                uint64_t size,
+                                int32_t code)
+{
+  char msg[160];
+  unsigned pos = 0;
+
+  pos = wasm_diag_append_fmt(msg, pos, sizeof(msg),
+                             "lisp_open: named-open %s name=\"",
+                             status);
+  pos = wasm_diag_append_bytes(msg, pos, sizeof(msg), name, name_len);
+  if (code < 0) {
+    pos = wasm_diag_append_fmt(msg, pos, sizeof(msg), "\" rn=%d\n", code);
+  } else {
+    pos = wasm_diag_append_fmt(msg, pos, sizeof(msg),
+                               "\" sid=%u size=%llu\n",
+                               sid,
+                               (unsigned long long)size);
+  }
+
+  if (pos > 0) {
+    wasm_host_log(msg, pos);
+  }
 }
 /* No WASI, no POSIX. These are placeholders for the FFI imports table.
  * The JS microkernel should provide real implementations later.
@@ -214,39 +289,11 @@ lisp_open(char *path, int flags, mode_t mode)
       int32_t rn = wasm_kernel_stream_open_named(name, (uint32_t)len, &sid, &size);
       if (rn < 0) {
         /* Diagnostic: log named-open failure */
-        char msg[160]; int mp = 0;
-        const char *pfx = "lisp_open: named-open FAIL name=\"";
-        while (*pfx) msg[mp++] = *pfx++;
-        for (size_t i = 0; i < len && mp < 120; i++) msg[mp++] = name[i];
-        pfx = "\" rn=";
-        while (*pfx) msg[mp++] = *pfx++;
-        { int32_t v = rn; if (v < 0) { msg[mp++] = '-'; v = -v; }
-          char nb[12]; int nl = 0;
-          do { nb[nl++] = '0' + (char)(v % 10); v /= 10; } while (v > 0);
-          for (int j = nl-1; j >= 0; j--) msg[mp++] = nb[j]; }
-        msg[mp++] = '\n';
-        wasm_host_log(msg, (unsigned)mp);
+        wasm_diag_log_named_open_result("FAIL", name, len, sid, size, rn);
         errno = -rn;
         return -1;
       }
-      {
-        char msg[160]; int mp = 0;
-        const char *pfx = "lisp_open: named-open OK name=\"";
-        while (*pfx) msg[mp++] = *pfx++;
-        for (size_t i = 0; i < len && mp < 120; i++) msg[mp++] = name[i];
-        pfx = "\" sid=";
-        while (*pfx) msg[mp++] = *pfx++;
-        { uint32_t v = sid; char nb[12]; int nl = 0;
-          do { nb[nl++] = '0' + (char)(v % 10); v /= 10; } while (v > 0);
-          for (int j = nl-1; j >= 0; j--) msg[mp++] = nb[j]; }
-        pfx = " size=";
-        while (*pfx) msg[mp++] = *pfx++;
-        { uint64_t v = size; char nb[20]; int nl = 0;
-          do { nb[nl++] = '0' + (char)(v % 10); v /= 10; } while (v > 0);
-          for (int j = nl-1; j >= 0; j--) msg[mp++] = nb[j]; }
-        msg[mp++] = '\n';
-        wasm_host_log(msg, (unsigned)mp);
-      }
+      wasm_diag_log_named_open_result("OK", name, len, sid, size, 0);
       (void)size;
       return (int)sid;
     }
