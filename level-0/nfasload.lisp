@@ -431,11 +431,10 @@
     #+wasm32-target
     ;; WASM: host-platform kernel global may not match FASL platform.
     ;; Log mismatch but skip the error (which calls FORMAT -> recursion).
+    ;; Keep the diagnostic level-0 safe: %INTEGER-TO-STRING reaches %SUBSTR,
+    ;; which is only available later from level-1.
     (when (not (= platform host-platform))
-      (%string-to-stderr ";; FASL platform mismatch (ignored): fasl=")
-      (%string-to-stderr (%integer-to-string platform))
-      (%string-to-stderr " host=")
-      (%string-to-stderr (%integer-to-string host-platform))
+      (%string-to-stderr ";; FASL platform mismatch (ignored)" )
       (%string-to-stderr #.(string #\LineFeed)))
     #-wasm32-target
     (unless (= platform host-platform)
@@ -952,15 +951,23 @@
   nil)
 
 (defvar *fasl-api* nil)
-(setf *fasl-api* (%istruct 'faslapi
-			   #'%simple-fasl-open
-			   #'%simple-fasl-close
-			   #'%simple-fasl-init-buffer
-			   #'%simple-fasl-set-file-pos
-			   #'%simple-fasl-get-file-pos
-			   #'%simple-fasl-read-buffer
-			   #'%simple-fasl-read-byte
-			   #'%simple-fasl-read-n-bytes))
+(defun %make-fasl-api ()
+  (%istruct 'faslapi
+            #'%simple-fasl-open
+            #'%simple-fasl-close
+            #'%simple-fasl-init-buffer
+            #'%simple-fasl-set-file-pos
+            #'%simple-fasl-get-file-pos
+            #'%simple-fasl-read-buffer
+            #'%simple-fasl-read-byte
+            #'%simple-fasl-read-n-bytes))
+
+(defun %initialize-fasl-api ()
+  (unless *fasl-api*
+    (setq *fasl-api* (%make-fasl-api)))
+  *fasl-api*)
+
+(%initialize-fasl-api)
 
 #+wasm32-target
 (progn
@@ -1343,8 +1350,22 @@
       (when hook (funcall hook symbol)))
     symbol))
 
+#+wasm32-target
+(progn
+  (defvar *%wasm-last-add-symbol-pname%* nil)
+  (defvar *%wasm-last-add-symbol-package%* nil)
+  (defvar *%wasm-last-add-symbol-internal-idx%* nil)
+  (defvar *%wasm-last-add-symbol-external-idx%* nil)
+  (defvar *%wasm-last-add-symbol-force-export%* nil))
+
 ;;; PNAME must be a simple string!
 (defun %add-symbol (pname package internal-idx external-idx &optional force-export)
+  #+wasm32-target
+  (setq *%wasm-last-add-symbol-pname%* pname
+        *%wasm-last-add-symbol-package%* package
+        *%wasm-last-add-symbol-internal-idx%* internal-idx
+        *%wasm-last-add-symbol-external-idx%* external-idx
+        *%wasm-last-add-symbol-force-export%* force-export)
   (let* ((sym (make-symbol pname)))
     (%insert-symbol sym package internal-idx external-idx force-export)))
 

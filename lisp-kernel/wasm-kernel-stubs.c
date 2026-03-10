@@ -4269,20 +4269,13 @@ wasm_run_cold_boot_init(void)
   tcr->valence = TCR_STATE_FOREIGN;
   wasm_exit_lisp_frame(tcr, old_last_lisp_frame);
 
-  /* Phase C: drain cold-load functions from C with per-call error isolation.
-     Only need startup_step >= 40 (= %all-packages-lock% created) for
-     cold-load functions to work.  Even if %RUN-COLD-BOOT-INIT threw at
-     a later step, the infrastructure is there. */
-  if (startup_step >= 40 && saved_cold_load_list != lisp_nil) {
-    /* Pre-grow heap so GC doesn't trigger during cold-load-drain.
-       fn_array holds raw Lisp pointers that GC compaction would invalidate;
-       with enough free space, allocation pressure won't trigger GC. */
-    wasm_grow_lisp_heap(256u * 1024u * 1024u);  /* 256 MiB headroom */
-    wasm_drain_cold_load_list(tcr, saved_cold_load_list);
-    /* Cold-load functions have now run; override result to success since
-       the original throw was from incomplete-but-non-critical steps. */
-    result = 0;
-  }
+  /* Phase C is intentionally deferred to JS.
+     Preserve the saved list as a snapshot for the JS-driven drain, but do not
+     auto-run it here.  Snapshotting must happen after the internal setup above
+     so the kernel can still perform binding-index/error activation first, and
+     immediately before return so no further kernel-side work can GC and stale
+     the saved function pointers before JS reads them. */
+  (void)wasm_cold_load_snapshot_fn(saved_cold_load_list);
 
   /* Phase D: run deferred binding-index setup.
      Step 80 in %RUN-COLD-BOOT-INIT calls closure-backed functions
@@ -6133,12 +6126,23 @@ wasm_intern_startup_synthesize_symbol(TCR *tcr,
   rawsym->plist = lisp_nil;
   rawsym->binding_index = box_fixnum(0);
 
-  LispObj any_sym = wasm_find_symbol_named_bytes_scan(name_bytes, name_len, (LispObj)0);
-  if (wasm_symbol_object_p(any_sym)) {
-    lispsymbol *any_rawsym = (lispsymbol *)ptr_from_lispobj(untag(any_sym));
-    rawsym->vcell = any_rawsym->vcell;
-    rawsym->fcell = any_rawsym->fcell;
-    rawsym->plist = any_rawsym->plist;
+  /*
+   * Package identity matters here.  Boot const-pool synthesis runs before the
+   * runtime package/type system is fully live, so a same-name symbol from the
+   * wrong package can carry an incompatible fcell into early startup.  That is
+   * exactly how CCL-internal bootstrap symbols such as STRING/%FIND-PKG pick up
+   * late COMMON-LISP/runtime definitions too early.  Only inherit cells from an
+   * exact package match.
+   */
+  LispObj pkg_sym = wasm_find_symbol_named_bytes(name_bytes, name_len, pkg);
+  if (!wasm_symbol_object_p(pkg_sym)) {
+    pkg_sym = wasm_find_symbol_named_bytes_scan(name_bytes, name_len, pkg);
+  }
+  if (wasm_symbol_object_p(pkg_sym)) {
+    lispsymbol *pkg_rawsym = (lispsymbol *)ptr_from_lispobj(untag(pkg_sym));
+    rawsym->vcell = pkg_rawsym->vcell;
+    rawsym->fcell = pkg_rawsym->fcell;
+    rawsym->plist = pkg_rawsym->plist;
   }
 
   if (pkg == nrs_KEYWORD_PACKAGE.vcell) {
@@ -6221,22 +6225,21 @@ wasm_intern_startup(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, Lisp
     }
   }
 
-  /* Re-entrant guard: during const-pool installation at RUNTIME phase,
-     only canonical lookup is allowed.  Symbol synthesis creates non-canonical
-     objects (not registered in package tables) that corrupt identity.
-     Return 0 so the tag handler stores NIL/UDF as placeholder.
+  /* Re-entrant guard: const-pool installation must not synthesize fresh
+     symbol objects after EARLY boot.  Those non-canonical symbols are not
+     registered in package tables and can carry stale UDF fcells into FASL
+     startup.  EARLY boot still needs synthesis for boot pools because some
+     level-0 symbols exist in the heap before their package tables are built.
 
-     During STARTUP phase (boot pool install), synthesis is still needed
-     because some L0 symbols aren't yet in package hash tables — they're
-     in the heap but the hash table indices haven't been built yet.
-     Boot pool synthesis is safe: synthesized symbols inherit vcell/fcell
-     from any existing symbol with the same pname. */
+     Once boot reaches L0_READY or RUNTIME, lookup/scan only: either the
+     canonical symbol exists and should be used, or the install should leave
+     a NIL/UDF placeholder instead of creating a duplicate symbol object. */
   if (wasm_const_pool_install_depth > 0) {
     uint32_t phase = wasm_boot_phase_normalize(wasm_boot_phase_state);
-    if (phase == WASM_BOOT_RUNTIME) {
-      return (LispObj)0;
+    if (phase != WASM_BOOT_EARLY) {
+      return wasm_intern_runtime(tcr, name_bytes, name_len, pkg_arg);
     }
-    /* STARTUP phase: fall through to synthesis for boot pools */
+    /* EARLY phase: fall through to synthesis for boot pools. */
     LispObj synthesized = wasm_intern_startup_synthesize_symbol(tcr, name_bytes, name_len, pkg_arg);
     if (wasm_symbol_object_p(synthesized)) {
       return synthesized;
@@ -7286,63 +7289,77 @@ __attribute__((used, visibility("default"), export_name("wasm_const_pool_ref")))
 LispObj
 wasm_const_pool_ref(uint32_t entry_index, uint32_t slot_index)
 {
-  LispObj table = nrs_WASM_CONST_POOLS.vcell;
+  uint32_t install_attempted = 0;
 
-  /* Fast path: table exists and pool is already installed. */
-  if (table != lisp_nil &&
-      fulltag_of(table) == fulltag_misc &&
-      header_subtag(header_of(table)) == subtag_simple_vector) {
-    uint32_t table_count = (uint32_t)header_element_count(header_of(table));
-    if (entry_index < table_count) {
-      LispObj *table_data = (LispObj *)((BytePtr)table + misc_data_offset);
-      LispObj pool = table_data[entry_index];
-      if (pool != lisp_nil &&
-          fulltag_of(pool) == fulltag_misc &&
-          header_subtag(header_of(pool)) == subtag_simple_vector) {
-        uint32_t pool_count = (uint32_t)header_element_count(header_of(pool));
-        if (slot_index < pool_count) {
-          LispObj *pool_data = (LispObj *)((BytePtr)pool + misc_data_offset);
-          LispObj val = pool_data[slot_index];
-          /* Track for wasm_debug_dump_state */
-          wasm_diag_last_cpr_entry = entry_index;
-          wasm_diag_last_cpr_slot = slot_index;
-          wasm_diag_last_cpr_val = val;
-          return val;
+retry_lookup:
+  {
+    LispObj table = nrs_WASM_CONST_POOLS.vcell;
+
+    /* Fast path: table exists and pool is already installed. */
+    if (table != lisp_nil &&
+        fulltag_of(table) == fulltag_misc &&
+        header_subtag(header_of(table)) == subtag_simple_vector) {
+      uint32_t table_count = (uint32_t)header_element_count(header_of(table));
+      if (entry_index < table_count) {
+        LispObj *table_data = (LispObj *)((BytePtr)table + misc_data_offset);
+        LispObj pool = table_data[entry_index];
+        if (pool != lisp_nil &&
+            fulltag_of(pool) == fulltag_misc &&
+            header_subtag(header_of(pool)) == subtag_simple_vector) {
+          uint32_t pool_count = (uint32_t)header_element_count(header_of(pool));
+          if (slot_index < pool_count) {
+            LispObj *pool_data = (LispObj *)((BytePtr)pool + misc_data_offset);
+            LispObj val = pool_data[slot_index];
+            /* Track for wasm_debug_dump_state */
+            wasm_diag_last_cpr_entry = entry_index;
+            wasm_diag_last_cpr_slot = slot_index;
+            wasm_diag_last_cpr_val = val;
+            return val;
+          }
+          /* Diagnostic: slot_index out of range */
+          if (wasm_cpr_fail_count < 5) {
+            char msg[128]; int p = 0;
+            p += wasm_debug_str(msg + p, "CPR-FAIL: slot OOB e=");
+            p += wasm_debug_uint(msg + p, entry_index);
+            p += wasm_debug_str(msg + p, " s=");
+            p += wasm_debug_uint(msg + p, slot_index);
+            p += wasm_debug_str(msg + p, " cnt=");
+            p += wasm_debug_uint(msg + p, pool_count);
+            msg[p++] = '\n';
+            wasm_host_log(msg, (unsigned)p);
+            wasm_cpr_fail_count++;
+          }
+          return lisp_nil;
         }
-        /* Diagnostic: slot_index out of range */
+        /* Diagnostic: pool entry has wrong type */
         if (wasm_cpr_fail_count < 5) {
           char msg[128]; int p = 0;
-          p += wasm_debug_str(msg + p, "CPR-FAIL: slot OOB e=");
+          p += wasm_debug_str(msg + p, "CPR-FAIL: pool bad e=");
           p += wasm_debug_uint(msg + p, entry_index);
-          p += wasm_debug_str(msg + p, " s=");
-          p += wasm_debug_uint(msg + p, slot_index);
-          p += wasm_debug_str(msg + p, " cnt=");
-          p += wasm_debug_uint(msg + p, pool_count);
+          p += wasm_debug_str(msg + p, " pool=0x");
+          p += wasm_debug_hex8(msg + p, (uint32_t)pool);
+          p += wasm_debug_str(msg + p, " ftag=");
+          p += wasm_debug_uint(msg + p, (uint32_t)fulltag_of(pool));
           msg[p++] = '\n';
           wasm_host_log(msg, (unsigned)p);
           wasm_cpr_fail_count++;
         }
-        return lisp_nil;
       }
-      /* Diagnostic: pool entry has wrong type */
-      if (wasm_cpr_fail_count < 5) {
-        char msg[128]; int p = 0;
-        p += wasm_debug_str(msg + p, "CPR-FAIL: pool bad e=");
-        p += wasm_debug_uint(msg + p, entry_index);
-        p += wasm_debug_str(msg + p, " pool=0x");
-        p += wasm_debug_hex8(msg + p, (uint32_t)pool);
-        p += wasm_debug_str(msg + p, " ftag=");
-        p += wasm_debug_uint(msg + p, (uint32_t)fulltag_of(pool));
-        msg[p++] = '\n';
-        wasm_host_log(msg, (unsigned)p);
-        wasm_cpr_fail_count++;
+    }
+
+    if (!install_attempted) {
+      int32_t host_rc = wasm_host_install_const_pool(entry_index);
+      install_attempted = 1;
+      if (host_rc > 0) {
+        goto retry_lookup;
       }
     }
   }
 
-  /* Slow path: with pre-baked pools this should never execute.
+  /* Slow path: host install failed or did not materialize the requested pool.
    * Dump diagnostics and trap so we can identify the cause. */
   {
+    LispObj table = nrs_WASM_CONST_POOLS.vcell;
     char msg[160]; int p = 0;
     p += wasm_debug_str(msg + p, "CPR-TRAP: pool not baked e=");
     p += wasm_debug_uint(msg + p, entry_index);

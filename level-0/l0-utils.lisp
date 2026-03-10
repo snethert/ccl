@@ -90,7 +90,12 @@
     (%map-areas filter '(:dynamic :static :managed-static :readonly))))
 
 
+#+wasm32-target
+(defvar *%wasm-last-ensure-simple-string-arg%* nil)
+
 (defun ensure-simple-string (s)
+  #+wasm32-target
+  (setq *%wasm-last-ensure-simple-string-arg%* s)
   (cond ((simple-string-p s) s)
         ((stringp s)
          (let* ((len (length s))
