@@ -1501,126 +1501,249 @@ if (typeof ex.wasm_validate_builtin_entries === "function") {
 if (typeof ex.wasm_run_cold_boot_init !== "function") {
   fail("kernel missing wasm_run_cold_boot_init — rebuild kernel");
 }
+const COLD_LOAD_C_MAX = 128;
+/* The first JS-only cold-load entries after the C-side safe subset are the
+   remaining package bootstrap thunks (%DEFINE-PACKAGE and pkg-iter helpers).
+   Draining only this prefix before FASL loading repairs package state without
+   reaching later thunks that still assume post-FASL runtime definitions. */
+const PRE_FASL_COLD_LOAD_JS_LIMIT = 134;
+const COLD_LOAD_MAX_PASSES = 5;
+let coldLoadSkipSet = null;
+
+function loadColdLoadSkipSet() {
+  if (coldLoadSkipSet) {
+    return coldLoadSkipSet;
+  }
+  coldLoadSkipSet = new Set();
+  try {
+    const skipPath = path.join(
+      path.dirname(fileURLToPath(import.meta.url)),
+      "../../../build/wasm32/cold-load-skip.txt",
+    );
+    const skipData = fsSync.readFileSync(skipPath, "utf8");
+    for (const line of skipData.split("\n")) {
+      const n = parseInt(line.trim(), 10);
+      if (!Number.isNaN(n)) {
+        coldLoadSkipSet.add(n);
+      }
+    }
+  } catch {
+    /* file missing = no skips */
+  }
+  return coldLoadSkipSet;
+}
+
+function coldLoadRange(startIndex, endIndex) {
+  const indices = [];
+  for (let i = startIndex; i < endIndex; i++) {
+    indices.push(i);
+  }
+  return indices;
+}
+
+function drainColdLoadEntries({
+  stageLabel,
+  indices = null,
+  startIndex = 0,
+  endIndex = Number.MAX_SAFE_INTEGER,
+  maxPasses = COLD_LOAD_MAX_PASSES,
+}) {
+  if (typeof ex.wasm_cold_load_count !== "function" ||
+      typeof ex.wasm_cold_load_run_one !== "function") {
+    console.error(`[stage] ${stageLabel}: cold-load JS helpers unavailable`);
+    return null;
+  }
+
+  const total = ex.wasm_cold_load_count() | 0;
+  const stopIndex = Math.min(total, endIndex);
+  const initialPending = indices
+    ? [...indices].filter((idx, pos, all) => idx >= 0 && idx < total && all.indexOf(idx) === pos)
+    : coldLoadRange(startIndex, stopIndex);
+  if (initialPending.length === 0) {
+    console.error(`[stage] ${stageLabel}: no pending entries (snapshot=${total})`);
+    return { total, attempted: 0, remaining: [] };
+  }
+
+  const skipSet = loadColdLoadSkipSet();
+  const spEx = subprims.instance.exports;
+  const hasFuel = typeof spEx.wasm_set_funcall_fuel === "function";
+  let failed = initialPending;
+  let totalOk = 0;
+  let totalErr = 0;
+  let totalTrapped = 0;
+  let totalSkipped = 0;
+
+  console.error(
+    `[stage] ${stageLabel}: ${failed.length} entries pending (snapshot=${total}, skip=${skipSet.size}, hasFuel=${hasFuel})`,
+  );
+
+  for (let pass = 1; pass <= maxPasses && failed.length > 0; pass++) {
+    let passOk = 0;
+    let passErr = 0;
+    let passTrapped = 0;
+    let passSkipped = 0;
+    const nextFailed = [];
+
+    console.error(`[stage] ${stageLabel} pass ${pass}: starting ${failed.length} entries`);
+    for (const idx of failed) {
+      if (skipSet.has(idx)) {
+        passSkipped++;
+        continue;
+      }
+      try {
+        if (hasFuel) {
+          spEx.wasm_set_funcall_fuel(100000);
+        }
+        const rc = ex.wasm_cold_load_run_one(idx) | 0;
+        if (hasFuel) {
+          spEx.wasm_set_funcall_fuel(-1);
+        }
+        if (rc === 0) {
+          passOk++;
+        } else if (rc === 1) {
+          passSkipped++;
+        } else {
+          passErr++;
+          nextFailed.push(idx);
+        }
+      } catch (e) {
+        if (hasFuel) {
+          spEx.wasm_set_funcall_fuel(-1);
+        }
+        if (typeof ex.wasm_recover_after_trap === "function") {
+          ex.wasm_recover_after_trap();
+        }
+        passTrapped++;
+        nextFailed.push(idx);
+      }
+    }
+
+    totalOk += passOk;
+    totalErr += passErr;
+    totalTrapped += passTrapped;
+    totalSkipped += passSkipped;
+    console.error(
+      `[stage] ${stageLabel} pass ${pass}: ${passOk} ok, ${passErr} lisp-err, ${passTrapped} trapped, ${passSkipped} skipped`,
+    );
+    failed = nextFailed;
+    if (passOk === 0) {
+      break;
+    }
+  }
+
+  console.error(
+    `[stage] ${stageLabel}: ${totalOk} ok, ${totalErr} lisp-err, ${totalTrapped} trapped, ${totalSkipped} skipped, ${failed.length} remaining`,
+  );
+  return {
+    total,
+    attempted: initialPending.length,
+    remaining: failed,
+  };
+}
+
+function selectRebindEntries(namedFunctions) {
+  const dedup = new Map();
+  for (const fn of namedFunctions) {
+    if (!fn?.name || !Number.isFinite(fn.entryIndex) || fn.name.startsWith("(:INTERNAL")) {
+      continue;
+    }
+    const fnSlots = Number.isFinite(fn.fnSlots) ? fn.fnSlots : 3;
+    const existing = dedup.get(fn.name);
+    if (!existing ||
+        fnSlots > existing.fnSlots ||
+        (fnSlots === existing.fnSlots && fn.entryIndex > existing.entryIndex)) {
+      dedup.set(fn.name, {
+        entryIndex: fn.entryIndex >>> 0,
+        fnSlots,
+      });
+    }
+  }
+  return [...dedup.entries()].map(([name, info]) => ({ name, ...info }));
+}
+
+function runForceRebindScan({ stageLabel, namedFunctions }) {
+  if (namedFunctions.length === 0) {
+    fail(`${stageLabel}: no functions found for heap scan`);
+  }
+  if (typeof ex.wasm_force_rebind_scan !== "function") {
+    fail("kernel missing wasm_force_rebind_scan");
+  }
+
+  const enc = new TextEncoder();
+  const allNameBytes = namedFunctions.map((fn) => enc.encode(fn.name));
+  const tableSize = namedFunctions.length * 16;
+  const namesSize = allNameBytes.reduce((sum, bytes) => sum + bytes.length, 0);
+  const tableBase = allocScratch(runtime.memory, tableSize + namesSize);
+  const mem8 = new Uint8Array(runtime.memory.buffer);
+  const memDV = new DataView(runtime.memory.buffer);
+
+  let nameWriteOff = tableBase + tableSize;
+  for (let i = 0; i < namedFunctions.length; i++) {
+    const nb = allNameBytes[i];
+    mem8.set(nb, nameWriteOff);
+    const eBase = tableBase + i * 16;
+    memDV.setUint32(eBase,      nameWriteOff,                        true);
+    memDV.setUint32(eBase + 4,  nb.length,                           true);
+    memDV.setUint32(eBase + 8,  namedFunctions[i].entryIndex >>> 0,  true);
+    memDV.setUint32(eBase + 12, (namedFunctions[i].fnSlots ?? 3) >>> 0, true);
+    nameWriteOff += nb.length;
+  }
+
+  const rebound = ex.wasm_force_rebind_scan(tableBase >>> 0, namedFunctions.length >>> 0) | 0;
+  console.error(`[stage] ${stageLabel}: ${rebound} symbols rebound (${namedFunctions.length} entries)`);
+  if (rebound < 0) {
+    fail(`${stageLabel}: wasm_force_rebind_scan failed: rc=${rebound}`);
+  }
+  return rebound;
+}
+
+const runtimeRebindFns = selectRebindEntries(
+  (compiledModulesBundle?.functions ?? [])
+    .filter((fn) => fn?.name && Number.isFinite(fn.entryIndex)
+                    && !bootEntryIndices.has(fn.entryIndex >>> 0)),
+);
+
 console.error(`[stage] cold-boot-init starting (const-pool installs so far: ${_cpInstallCount}, skipped: ${_cpSkipCount})`);
 if (typeof ex.wasm_heap_profile === "function") {
   console.error("[stage] pre-cold-boot heap profile:");
   ex.wasm_heap_profile();
 }
-/* No fuel guard needed for C-side cold-boot — it completed successfully
-   in prior runs (all phases A-F finished).  The bail trap in subprims
-   handles any individual cold-load entry that spins with pending_throw. */
-console.error("[stage] calling wasm_run_cold_boot_init...");
-let coldBootRc;
-try {
-  coldBootRc = ex.wasm_run_cold_boot_init() | 0;
-} catch (e) {
-  /* Bail trap fired during C-side cold-boot — recover and continue */
-  console.error(`[stage] cold-boot-init trapped: ${(e.message || "").slice(0, 100)}`);
-  if (typeof ex.wasm_recover_after_trap === "function") {
-    ex.wasm_recover_after_trap();
-  }
-  coldBootRc = -99;
-}
-console.error(`[stage] cold-boot-init returned rc=${coldBootRc}`);
-if (coldBootRc !== 0 && coldBootRc !== -99) {
+const coldBootRc = ex.wasm_run_cold_boot_init() | 0;
+if (coldBootRc !== 0) {
   fail(`wasm_run_cold_boot_init returned ${coldBootRc}`);
 }
-if (coldBootRc === -99) {
-  console.error("[stage] cold-boot-init aborted by trap — continuing with JS drain");
-}
+trace("cold-boot-init complete");
 
-/* JS-driven drain of remaining cold-load functions.
-   The C-side drain (inside wasm_run_cold_boot_init) only runs the first
-   128 entries safely.  The full list can have 2000+ entries.  JS try/catch
-   can recover from hard WASM traps that kill the C drain.
-   The snapshot was already taken by the C drain; we just run indices 128+. */
-if (typeof ex.wasm_cold_load_count === "function" &&
-    typeof ex.wasm_cold_load_run_one === "function") {
-  const total = ex.wasm_cold_load_count() | 0;
-  const cSideLimit = 128;  /* must match COLD_LOAD_C_MAX in wasm-kernel-stubs.c */
-  if (total > cSideLimit) {
-    /* Multi-pass drain: each pass may install functions that unblock
-       later ones.  Stop when no progress (same error count). */
-    const MAX_PASSES = 5;
-    let failed = [];
-    for (let i = cSideLimit; i < total; i++) failed.push(i);
+const preFaslColdLoad = drainColdLoadEntries({
+  stageLabel: "pre-FASL cold-load prefix",
+  startIndex: COLD_LOAD_C_MAX,
+  endIndex: PRE_FASL_COLD_LOAD_JS_LIMIT,
+  maxPasses: 3,
+});
+runForceRebindScan({
+  stageLabel: "pre-FASL force-rebind",
+  namedFunctions: runtimeRebindFns,
+});
+const preFaslRetry = drainColdLoadEntries({
+  stageLabel: "pre-FASL cold-load retry",
+  indices: preFaslColdLoad?.remaining ?? [],
+  maxPasses: 3,
+});
+const coldLoadSnapshotCount = preFaslColdLoad?.total ??
+  (typeof ex.wasm_cold_load_count === "function" ? (ex.wasm_cold_load_count() | 0) : 0);
+const preFaslRemaining = preFaslRetry?.remaining ?? preFaslColdLoad?.remaining ?? [];
 
-    /* Some cold-load entries compile to tight WASM loops with no subprim
-       calls — the fuel mechanism can't interrupt pure WASM code, and V8's
-       Runtime.terminateExecution doesn't interrupt WASM either.
-
-       Solution: load a skip-list from a file.  A wrapper script
-       (cold-load-discover.sh) iteratively runs the build with increasing
-       timeouts, discovers stuck entries, and builds the skip-list.
-
-       Skip-list file format: one entry index per line (decimal).
-       Location: build/wasm32/cold-load-skip.txt */
-    const COLD_LOAD_SKIP = new Set();
-    try {
-      const skipPath = path.join(path.dirname(fileURLToPath(import.meta.url)),
-                                  "../../../build/wasm32/cold-load-skip.txt");
-      const skipData = fsSync.readFileSync(skipPath, "utf8");
-      for (const line of skipData.split("\n")) {
-        const n = parseInt(line.trim(), 10);
-        if (!isNaN(n)) COLD_LOAD_SKIP.add(n);
-      }
-    } catch {}  /* file missing = no skips */
-
-    console.error(`[stage] JS cold-load drain: ${failed.length} entries pending, skip=${COLD_LOAD_SKIP.size}, hasFuel=${typeof subprims.instance.exports.wasm_set_funcall_fuel === "function"}`);
-    for (let pass = 1; pass <= MAX_PASSES && failed.length > 0; pass++) {
-      let passOk = 0, passErr = 0, passTrapped = 0, passSkipped = 0;
-      const nextFailed = [];
-      const spEx = subprims.instance.exports;
-      const hasFuel = typeof spEx.wasm_set_funcall_fuel === "function";
-      console.error(`[stage] JS drain pass ${pass}: starting ${failed.length} entries, hasFuel=${hasFuel}, skip=${COLD_LOAD_SKIP.size}`);
-      for (const idx of failed) {
-        if (COLD_LOAD_SKIP.has(idx)) {
-          passSkipped++;
-          continue;
-        }
-        try {
-          /* Fuel limit: prevent infinite loops via subprim calls. */
-          if (hasFuel) spEx.wasm_set_funcall_fuel(100000);
-          const rc = ex.wasm_cold_load_run_one(idx) | 0;
-          if (hasFuel) spEx.wasm_set_funcall_fuel(-1);
-          if (rc === 0) passOk++;
-          else if (rc === 1) passSkipped++;
-          else { passErr++; nextFailed.push(idx); }
-        } catch (e) {
-          if (hasFuel) spEx.wasm_set_funcall_fuel(-1);
-          /* Recover TCR state after WASM trap (bail trap from pending_throw
-             loop or genuine unreachable).  Without recovery, vsp/lisp-frame
-             are corrupted and the next cold-load entry crashes. */
-          if (typeof ex.wasm_recover_after_trap === "function") {
-            ex.wasm_recover_after_trap();
-          }
-          passTrapped++;
-          nextFailed.push(idx);
-        }
-      }
-      console.error(`[stage] JS cold-load pass ${pass}: ${failed.length} attempted, ${passOk} ok, ${passErr} lisp-err, ${passTrapped} trapped, ${passSkipped} skipped`);
-      if (passOk === 0) break;  /* no progress — stop */
-      failed = nextFailed;
-    }
-  }
-  /* GC after full drain (C + JS passes).  The C-side drain defers GC
-     to here so that cold_load_snapshot[] pointers remain valid. */
-  if (typeof ex.wasm_trigger_gc === "function") {
-    ex.wasm_trigger_gc();
-    trace("post-cold-load-drain GC complete");
-  }
-}
-
-/* Spill reset: cold-load drain leaks ~32K spill pushes from trapped
-   entries (WASM traps skip restore-locals cleanup).  Reset to empty
-   before FASL loading so FASLs have a clean spill stack. */
+/* Spill reset: trapped cold-load entries can leak spill pushes because WASM
+   traps skip restore-locals cleanup.  Reset before FASL loading so the FASL
+   phase starts with a clean spill stack. */
 if (typeof ex.wasm_spill_reset === "function") {
   ex.wasm_spill_reset();
   trace("spill stack reset before FASL loading");
 }
 
 /* Reset diagnostic counters so FASL-phase errors get full verbose
-   diagnostics (cold-boot-init consumed some of the quota). */
+   diagnostics (cold-boot-init and the pre-FASL cold-load prefix consume some
+   of the quota). */
 {
   const spEx = subprims.instance.exports;
   if (typeof spEx.wasm_reset_ksignalerr_counters === "function") {
@@ -1628,59 +1751,6 @@ if (typeof ex.wasm_spill_reset === "function") {
   }
   if (typeof ex.wasm_reset_debug_counters === "function") {
     ex.wasm_reset_debug_counters();
-  }
-}
-
-/* Post-cold-boot force-rebind: heap scan ALL symbols (including const-pool-synthesized
-   duplicates) and patch fcells for ALL compiled functions (boot + runtime).
-   Runs after cold-boot drain to avoid masking XFUNBND errors (which cold-boot drain
-   handles gracefully) with hard WASM traps from uninitialized closure stubs.
-   Must run before FASL loading because FASL dispatch goes through the function table
-   and const pool symbols need valid fcells. */
-{
-  if (typeof ex.wasm_force_rebind_scan !== "function") {
-    fail("kernel missing wasm_force_rebind_scan");
-  }
-  const enc2 = new TextEncoder();
-  const allFnsForRebind = [
-    ...(bootNamedFunctions || []),
-    ...(compiledModulesBundle?.functions ?? []),
-  ].filter(fn => fn?.name && Number.isFinite(fn.entryIndex)
-                  && !fn.name.startsWith("(:INTERNAL"));
-  const rebindDedup = new Map();
-  for (const fn of allFnsForRebind) {
-    const existing = rebindDedup.get(fn.name);
-    const slots = Number.isFinite(fn.fnSlots) ? fn.fnSlots : 3;
-    if (!existing || slots > existing.fnSlots || (slots === existing.fnSlots && fn.entryIndex > existing.entryIndex)) {
-      rebindDedup.set(fn.name, { entryIndex: fn.entryIndex, fnSlots: existing ? Math.max(existing.fnSlots, slots) : slots });
-    }
-  }
-  const rebindEntries = [...rebindDedup.entries()].map(([name, info]) => ({ name, ...info }));
-  if (rebindEntries.length === 0) {
-    fail("force-rebind: no functions found for heap scan");
-  }
-
-  const allNameBytes = rebindEntries.map(fn => enc2.encode(fn.name));
-  const tableSize = rebindEntries.length * 16;
-  const namesSize = allNameBytes.reduce((s, b) => s + b.length, 0);
-  const tableBase = allocScratch(runtime.memory, tableSize + namesSize);
-  const mem8 = new Uint8Array(runtime.memory.buffer);
-  const memDV = new DataView(runtime.memory.buffer);
-  let nameWriteOff = tableBase + tableSize;
-  for (let i = 0; i < rebindEntries.length; i++) {
-    const nb = allNameBytes[i];
-    mem8.set(nb, nameWriteOff);
-    const eBase = tableBase + i * 16;
-    memDV.setUint32(eBase,      nameWriteOff,          true);
-    memDV.setUint32(eBase + 4,  nb.length,             true);
-    memDV.setUint32(eBase + 8,  rebindEntries[i].entryIndex >>> 0, true);
-    memDV.setUint32(eBase + 12, (rebindEntries[i].fnSlots ?? 3) >>> 0, true);
-    nameWriteOff += nb.length;
-  }
-  const rebound = ex.wasm_force_rebind_scan(tableBase >>> 0, rebindEntries.length >>> 0) | 0;
-  console.error(`[stage] post-cold-boot force-rebind: ${rebound} symbols rebound (${rebindEntries.length} entries, boot+runtime)`);
-  if (rebound < 0) {
-    fail(`wasm_force_rebind_scan failed: rc=${rebound}`);
   }
 }
 
@@ -1836,15 +1906,14 @@ const hasFuncallErrCounter = typeof ex.wasm_get_funcall_error_count === "functio
 
 const faslResults = { ok: [], fail: [], skip: [] };
 for (const faslPath of requiredFasls) {
-  /* Skip known-empty FASLs (cross-compilation didn't expand read-time evals) */
+  /* Some WASM fasls are valid thin loaders into the module bundle, so size
+     alone is not a safe reason to skip loading. */
   {
     const fullPath = path.join(buildDir, faslPath);
     try {
       const stat = fsSync.statSync(fullPath);
       if (stat.size < 100) {
-        console.error(`[fasload] SKIP ${faslPath} — only ${stat.size} bytes (empty FASL)`);
-        faslResults.skip.push(faslPath);
-        continue;
+        console.error(`[fasload] WARN ${faslPath} — only ${stat.size} bytes; attempting load anyway`);
       }
     } catch (_) { /* stat failed — try loading anyway */ }
   }
@@ -2165,16 +2234,29 @@ if (requiredFasls.length > 0) {
   setBootPhaseOrFail(WASM_BOOT_PHASE.RUNTIME, { reason: "l1-baked-in" });
 }
 
-/* Post-module-install GC: the heap is now enormous (several GB) and mostly
-   garbage from compiled-module instantiation.  Compact it BEFORE any further
-   Lisp execution so that RESTORE-LISP-POINTERS and const-pool installation
-   don't trigger repeated full GCs on the bloated heap. */
+const postFaslPending = [
+  ...preFaslRemaining,
+  ...coldLoadRange(Math.min(PRE_FASL_COLD_LOAD_JS_LIMIT, coldLoadSnapshotCount), coldLoadSnapshotCount),
+];
+const postFaslColdLoad = drainColdLoadEntries({
+  stageLabel: "post-FASL cold-load tail",
+  indices: postFaslPending,
+});
+if (postFaslColdLoad && typeof ex.wasm_spill_reset === "function") {
+  ex.wasm_spill_reset();
+  trace("spill stack reset after post-FASL cold-load tail");
+}
+
+/* Post-runtime-cold-load GC: the heap is now enormous (several GB) and mostly
+   garbage from compiled-module instantiation and bootstrap work.  Compact it
+   after the deferred cold-load tail completes so the snapshot pointers stay
+   valid until the last JS-driven drain finishes. */
 {
-  console.error("[stage] post-module-install GC...");
+  console.error("[stage] post-runtime-cold-load GC...");
   const gcBefore = Date.now();
   ex.wasm_trigger_gc();
   const gcMs = Date.now() - gcBefore;
-  console.error(`[stage] post-module-install GC done (${gcMs} ms)`);
+  console.error(`[stage] post-runtime-cold-load GC done (${gcMs} ms)`);
 }
 
 /* Heap profile — understand what's consuming space after GC compaction */
@@ -2204,9 +2286,19 @@ if (typeof ex.wasm_heap_profile === "function") {
   );
 }
 
-/* Phase 2B (force-rebind) moved to pre-FASL position — see "Pre-FASL force-rebind" above.
-   The heap scan now runs before FASL loading so that const-pool-synthesized symbol
-   duplicates get proper fcell bindings before any compiled code executes. */
+/* Phase 2B: Force-rebind all WASM-compiled runtime functions.
+   FASL loading silently fails to bind xfunction objects (subtag-xfunction = 0x92)
+   because %defun's (typep named-fn 'function) check rejects them.  Additionally,
+   early const pool install can synthesize placeholder symbols that
+   wasm_set_symbol_function_entry (package-table lookup) would miss.
+   wasm_force_rebind_scan does a full heap scan and unconditionally binds every
+   symbol object whose pname matches a table entry — catching both the canonical
+   symbol and any const-pool-synthesized placeholders.
+   This runs BEFORE image save; it is NOT a launch-time repair. */
+runForceRebindScan({
+  stageLabel: "force-rebind",
+  namedFunctions: runtimeRebindFns,
+});
 
 /* Invariant gate deferred: critical symbol fcells are patched AFTER the
    pre-toplfunc GC so wasm_set_symbol_function_entry allocates function
@@ -2247,10 +2339,9 @@ if (typeof ex.wasm_trigger_gc === "function") {
    The per-symbol wasm_set_symbol_function_entry call falls back to an
    O(N) heap scan for each unresolved symbol.  With ~4756 entries and a
    2 GB heap, this takes hours in interpreted WASM.
-   force-rebind (above) already rebound 3177 symbols via its own heap
-   scan; the remaining ~1600 will resolve at launch via the function
-   table entries already in place. */
-console.error("[stage] invariant fcell gate SKIPPED (force-rebind covered 3177 symbols)");
+   force-rebind (above) already rebounds the runtime functions via its own
+   heap scan; the remaining symbols resolve through the function table. */
+console.error("[stage] invariant fcell gate SKIPPED");
 
 const setToplfuncRc = ex.wasm_set_toplfunc_entry(toplevelEntryIndex >>> 0) | 0;
 if (setToplfuncRc !== 0) {

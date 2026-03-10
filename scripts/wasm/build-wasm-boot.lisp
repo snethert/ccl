@@ -22,6 +22,9 @@
   (ensure-ccl-logical-host root))
 
 (let* ((root (repo-root-from-script)))
+  (load (merge-pathnames "scripts/wasm/wasm-startup-order.lisp" root)))
+
+(let* ((root (repo-root-from-script)))
   (let ((*warn-if-redefine-kernel* nil))
     ;; Ensure fasl reader macros are available before loading xfasload.lisp.
     (require "FASLENV" "ccl:xdump;faslenv")
@@ -265,32 +268,9 @@
       (terpri out))
     (length entries)))
 
-;;; L1 FASL loading into boot image — ordered list matching requiredFasls
-;;; in make-real-image.mjs.  Each entry is (name subdir) where subdir is
-;;; "l1-fasls" or "bin" under build/wasm32/.
+;;; L1 FASL loading into boot image — canonical order matching root-image startup.
 
-(defparameter *wasm-l1-module-specs*
-  '(("l1-cl-package" "l1-fasls") ("l1-utils" "l1-fasls")
-    ("l1-init" "l1-fasls") ("l1-symhash" "l1-fasls")
-    ("l1-numbers" "l1-fasls") ("l1-aprims" "l1-fasls")
-    ("l1-callbacks" "l1-fasls") ("l1-sort" "l1-fasls")
-    ("lists" "bin") ("sequences" "bin")
-    ("l1-dcode" "l1-fasls") ("l1-clos-boot" "l1-fasls")
-    ("hash" "bin") ("l1-clos" "l1-fasls")
-    ("defstruct" "bin") ("dll-node" "bin")
-    ("l1-unicode" "l1-fasls") ("l1-streams" "l1-fasls")
-    ("linux-files" "l1-fasls") ("chars" "bin")
-    ("l1-files" "l1-fasls") ("l1-typesys" "l1-fasls")
-    ("sysutils" "l1-fasls") ("l1-lisp-threads" "l1-fasls")
-    ("l1-application" "l1-fasls") ("l1-processes" "l1-fasls")
-    ("l1-io" "l1-fasls") ("l1-reader" "l1-fasls")
-    ("l1-readloop" "l1-fasls") ("l1-error-signal" "l1-fasls")
-    ("l1-readloop-lds" "l1-fasls") ("l1-error-system" "l1-fasls")
-    ("l1-events" "l1-fasls") ("l1-format" "l1-fasls")
-    ("l1-sysio" "l1-fasls") ("l1-pathnames" "l1-fasls")
-    ("l1-boot-lds" "l1-fasls") ("l1-boot-1" "l1-fasls")
-    ("l1-boot-2" "l1-fasls") ("l1-boot-3" "l1-fasls")
-    ("dumplisp" "bin")))
+(defparameter *wasm-l1-module-specs* *wasm-runtime-startup-module-specs*)
 
 (defun wasm-l1-fasl-paths (root)
   "Return ordered list of L1 FASL pathnames from build/wasm32/."
@@ -378,6 +358,7 @@
     (when (cdr (assoc :help argv))
       (usage)
       (quit 0))
+    (validate-wasm-runtime-startup-module-specs)
     (load-wasm-backend)
     (let* ((root (repo-root-from-script)))
       (let ((*features* (cons :wasm32-target *features*)))

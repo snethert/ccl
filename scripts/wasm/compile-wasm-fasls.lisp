@@ -117,6 +117,9 @@
 (let* ((root (repo-root-from-script)))
   (ensure-ccl-logical-host root))
 
+(let* ((root (repo-root-from-script)))
+  (load (merge-pathnames "scripts/wasm/wasm-startup-order.lisp" root)))
+
 (let ((*warn-if-redefine-kernel* nil))
   (require "compile-ccl")
   ;; Reload macros from source so WASM-specific guards are visible in this session.
@@ -211,9 +214,9 @@
                         (cons "TARGET" (package-nicknames wasm)))))))
 
 (defparameter *wasm-runtime-modules*
-  (append *level-1-modules*
-          '(lists sequences hash defstruct dll-node chars dumplisp))
-  "Modules required by level-1.lisp plus dumplisp for save-application.")
+  (append (wasm-runtime-startup-module-symbols)
+          (wasm-runtime-extra-compile-module-symbols))
+  "WASM runtime bundle order: canonical startup sequence followed by compile-only extras.")
 
 (defun wasm-redirect-fasl-path (fasl root)
   "Redirect a WASM fasl from repo root to build/wasm32/.
@@ -723,6 +726,7 @@ If a merged batch fails WASM validation, its entries go to failed-entries."
         (reset-wasm-entry-index (or start-entry-index 300))
         (when start-entry-index
           (format t "~&Level-1 entry index starts at ~d (after boot modules)~%" start-entry-index))
+        (validate-wasm-runtime-startup-module-specs)
         (format t "~&Cross-compiling ~d WASM32 modules...~%" (length *wasm-runtime-modules*))
         (wasm-target-compile-modules *wasm-runtime-modules* :wasm32 force
                                      :trace-modules trace-modules)
