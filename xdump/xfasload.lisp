@@ -2024,6 +2024,28 @@
 (defun cross-compile-level-0 (target &optional (recompile t))
   (with-cross-compilation-target (target)
     (target-xcompile-level-0 target recompile)))
+
+(defun target-xload-level-0-fasls (xload-backend compiler-backend)
+  (let* ((wild-fasls (concatenate 'simple-string
+                                  "*."
+                                  (pathname-type
+                                   (backend-target-fasl-pathname
+                                    compiler-backend))))
+         (root-fasls (sort (directory (merge-pathnames "ccl:level-0;" wild-fasls))
+                           #'string<
+                           :key #'namestring))
+         (subdir-fasls
+          (apply #'append
+                 (mapcar #'(lambda (d)
+                             (sort (directory (merge-pathnames d wild-fasls))
+                                   #'string<
+                                   :key #'namestring))
+                         (backend-xload-info-subdirs xload-backend)))))
+    (if (eq (backend-xload-info-compiler-target-name xload-backend) :wasm32)
+      ;; WASM subdir fasls intentionally override several generic level-0
+      ;; definitions (locks, hash-table locking, etc.), so they must load last.
+      (append root-fasls subdir-fasls)
+      (append subdir-fasls root-fasls))))
     
 (defun target-Xload-level-0 (target &optional (recompile t))
   (let* ((*xload-target-backend* (or (find-xload-backend target)
@@ -2063,24 +2085,11 @@
               (compiler-backend (find-backend
                                  (backend-xload-info-compiler-target-name
                                   *xload-target-backend*)))
-              (wild-fasls (concatenate 'simple-string
-                                       "*."
-                                       (pathname-type
-                                        (backend-target-fasl-pathname
-                                         compiler-backend))))
-              (wild-root (merge-pathnames "ccl:level-0;" wild-fasls))
-              (wild-subdirs
-               (mapcar #'(lambda (d)
-                           (merge-pathnames d wild-fasls))
-                       (backend-xload-info-subdirs *xload-target-backend*)))
+              (l0-fasls (target-xload-level-0-fasls *xload-target-backend*
+                                                    compiler-backend))
               (*xload-image-file-name* (backend-xload-info-default-image-name *xload-target-backend*)))
          (apply #'xfasload *xload-image-file-name*
-                (append
-                 (apply #'append
-                        (mapcar #'(lambda (d)
-                                    (sort (directory d) #'string< :key #'namestring))
-                                wild-subdirs))
-                 (sort (directory wild-root) #'string< :key #'namestring)))
+                l0-fasls)
          (format t "~&;Wrote bootstrapping image: ~s" (truename *xload-image-file-name*)))))))
 
 (defun Xcompile-directory (dir &optional force)

@@ -358,6 +358,312 @@ async function addFile(map, filePath, relName) {
   addNamedBytes(map, relName, bytes);
 }
 
+const FT_NAMES = ["fix", "nil", "nhdr", "imm", "fix", "cons", "misc", "ihdr"];
+const FULLTAG_CONS = 0x5;
+const FULLTAG_MISC = 0x6;
+const SUBTAG_PSEUDOFUNCTION = 0x02;
+const SUBTAG_MACPTR = 0x1F;
+const SUBTAG_FUNCTION = 0x2A;
+const SUBTAG_SYMBOL = 0x3A;
+const SUBTAG_HASH_VECTOR = 0x4A;
+const SUBTAG_PACKAGE = 0x62;
+const SUBTAG_ISTRUCT = 0x82;
+const SUBTAG_XFUNCTION = 0x92;
+const SUBTAG_SBS = 0xBF;
+const SUBTAG_SIMPLE_VECTOR = 0xFA;
+const SUBTAG_NAMES = {
+  [SUBTAG_PSEUDOFUNCTION]: "pseudofn",
+  [SUBTAG_FUNCTION]: "function",
+  [SUBTAG_SYMBOL]: "symbol",
+  [SUBTAG_HASH_VECTOR]: "hash-vec",
+  [SUBTAG_PACKAGE]: "package",
+  [SUBTAG_ISTRUCT]: "istruct",
+  [SUBTAG_XFUNCTION]: "xfunction",
+  [SUBTAG_SIMPLE_VECTOR]: "simple-vector",
+};
+
+function createRuntimeObjectReader(memory, { compiledFunctionByEntryIndex = null, nilValue = null } = {}) {
+  const inBounds = (ptr) => Number.isFinite(ptr) && ptr >= 0x100 && ptr < memory.buffer.byteLength;
+  const isFixnum = (value) => (value & 0x3) === 0;
+
+  function dv() {
+    return new DataView(memory.buffer);
+  }
+
+  function descMisc(ptr) {
+    if ((ptr & 0x7) !== FULLTAG_MISC || !inBounds(ptr)) return null;
+    const header = dv().getUint32(ptr - FULLTAG_MISC, true);
+    const st = header & 0xFF;
+    return {
+      ptr: ptr >>> 0,
+      header: header >>> 0,
+      st,
+      cnt: header >>> 8,
+      name: SUBTAG_NAMES[st] ?? `st=0x${st.toString(16)}`,
+    };
+  }
+
+  function readMiscElement(ptr, index) {
+    const info = descMisc(ptr);
+    if (!info || index < 0 || index >= info.cnt) return null;
+    return dv().getUint32(ptr - 2 + index * 4, true) >>> 0;
+  }
+
+  function readCons(ptr) {
+    if ((ptr & 0x7) !== FULLTAG_CONS || !inBounds(ptr & ~0x7)) return null;
+    const base = ptr & ~0x7;
+    return {
+      car: dv().getUint32(base + 4, true) >>> 0,
+      cdr: dv().getUint32(base, true) >>> 0,
+    };
+  }
+
+  function readBaseString(ptr) {
+    const info = descMisc(ptr);
+    if (!info || info.st !== SUBTAG_SBS) return null;
+    const dataStart = ptr - 2;
+    const chars = [];
+    const reader = dv();
+    for (let i = 0; i < Math.min(info.cnt, 128); i++) {
+      const ch = reader.getUint32(dataStart + i * 4, true);
+      if (ch === 0) break;
+      chars.push(ch & 0xFF);
+    }
+    if (chars.length > 0) return String.fromCharCode(...chars);
+    const bytes = new Uint8Array(memory.buffer, dataStart, Math.min(info.cnt, 128));
+    return String.fromCharCode(...bytes.filter((b) => b !== 0));
+  }
+
+  function readSymbolName(symPtr) {
+    const info = descMisc(symPtr);
+    if (!info || info.st !== SUBTAG_SYMBOL) return null;
+    const pname = readMiscElement(symPtr, 0);
+    return pname == null ? null : readBaseString(pname);
+  }
+
+  function readFunctionEntryIndex(fnPtr) {
+    const info = descMisc(fnPtr);
+    if (!info || ![SUBTAG_FUNCTION, SUBTAG_PSEUDOFUNCTION, SUBTAG_XFUNCTION].includes(info.st)) {
+      return null;
+    }
+    const rawEntry = readMiscElement(fnPtr, 0);
+    if (rawEntry == null || !isFixnum(rawEntry)) return null;
+    return rawEntry >>> 2;
+  }
+
+  function readFunctionName(fnPtr) {
+    const info = descMisc(fnPtr);
+    if (!info || ![SUBTAG_FUNCTION, SUBTAG_PSEUDOFUNCTION, SUBTAG_XFUNCTION].includes(info.st)) {
+      return null;
+    }
+    if (info.cnt >= 4) {
+      const lfunInfo = readMiscElement(fnPtr, 3);
+      if ((lfunInfo & 0x7) === FULLTAG_MISC && inBounds(lfunInfo)) {
+        const lfunHdr = dv().getUint32(lfunInfo - FULLTAG_MISC, true);
+        const lfunSubtag = lfunHdr & 0xFF;
+        if (lfunSubtag === SUBTAG_SYMBOL) {
+          return readSymbolName(lfunInfo);
+        }
+        if (lfunSubtag === SUBTAG_SIMPLE_VECTOR) {
+          const nameSlot = readMiscElement(lfunInfo, 0);
+          if ((nameSlot & 0x7) === FULLTAG_MISC) {
+            return readSymbolName(nameSlot);
+          }
+        }
+      }
+    }
+    const entryIndex = readFunctionEntryIndex(fnPtr);
+    const bundleFn = entryIndex != null ? compiledFunctionByEntryIndex?.get(entryIndex) : null;
+    return bundleFn?.name ?? null;
+  }
+
+  function readSymbolFunctionEntryIndex(symPtr) {
+    const info = descMisc(symPtr);
+    if (!info || info.st !== SUBTAG_SYMBOL) return null;
+    const fcell = readMiscElement(symPtr, 2);
+    return fcell == null ? null : readFunctionEntryIndex(fcell);
+  }
+
+  function readPackageName(pkgPtr) {
+    const info = descMisc(pkgPtr);
+    if (!info || info.st !== SUBTAG_PACKAGE || info.cnt === 0) return null;
+    const names = readMiscElement(pkgPtr, 0);
+    if ((names & 0x7) === FULLTAG_CONS) {
+      const head = readCons(names)?.car ?? 0;
+      return readBaseString(head) ?? readSymbolName(head);
+    }
+    return readBaseString(names) ?? readSymbolName(names);
+  }
+
+  function describeValue(value, depth = 0) {
+    const raw = value >>> 0;
+    if (nilValue != null && raw === (nilValue >>> 0)) return "NIL";
+    if (isFixnum(raw)) return `fixnum=${raw >> 2}`;
+    const ft = raw & 0x7;
+    if (ft === FULLTAG_CONS) {
+      if (depth > 0) return `cons@0x${raw.toString(16)}`;
+      const cell = readCons(raw);
+      if (!cell) return `cons@0x${raw.toString(16)}`;
+      return `cons(car=${describeValue(cell.car, depth + 1)}, cdr=${describeValue(cell.cdr, depth + 1)})`;
+    }
+    if (ft !== FULLTAG_MISC) return `0x${raw.toString(16)}`;
+    const info = descMisc(raw);
+    if (!info) return `misc@0x${raw.toString(16)}`;
+    switch (info.st) {
+      case SUBTAG_SYMBOL:
+        return `symbol ${readSymbolName(raw) ?? `@0x${raw.toString(16)}`}`;
+      case SUBTAG_FUNCTION:
+      case SUBTAG_PSEUDOFUNCTION:
+      case SUBTAG_XFUNCTION: {
+        const entryIndex = readFunctionEntryIndex(raw);
+        const name = readFunctionName(raw);
+        return `${info.name} ${name ?? `@0x${raw.toString(16)}`}` +
+          (entryIndex != null ? ` entry=${entryIndex}` : "");
+      }
+      case SUBTAG_PACKAGE:
+        return `package ${readPackageName(raw) ?? `@0x${raw.toString(16)}`}`;
+      default:
+        return `${info.name} cnt=${info.cnt}`;
+    }
+  }
+
+  function dumpFunction(fnPtr, label, maxElems = 8) {
+    const info = descMisc(fnPtr);
+    if (!info || ![SUBTAG_FUNCTION, SUBTAG_PSEUDOFUNCTION, SUBTAG_XFUNCTION].includes(info.st)) return;
+    const name = readFunctionName(fnPtr);
+    const entryIndex = readFunctionEntryIndex(fnPtr);
+    console.error(
+      `[${label}] 0x${fnPtr.toString(16)} ${info.name} count=${info.cnt}` +
+      (name ? ` name=${name}` : "") +
+      (entryIndex != null ? ` entry=${entryIndex}` : ""),
+    );
+    for (let i = 0; i < Math.min(info.cnt, maxElems); i++) {
+      const elem = readMiscElement(fnPtr, i);
+      console.error(
+        `    [${i}] 0x${elem.toString(16).padStart(8, "0")} ` +
+        `(${describeValue(elem, 1)})`,
+      );
+    }
+  }
+
+  function dumpObjectSlots(ptr, label, maxElems = 8) {
+    const info = descMisc(ptr);
+    if (!info || info.cnt === 0) return;
+    console.error(`[${label}] 0x${ptr.toString(16)} ${info.name} count=${info.cnt}`);
+    for (let i = 0; i < Math.min(info.cnt, maxElems); i++) {
+      const elem = readMiscElement(ptr, i);
+      console.error(`    [${i}] 0x${elem.toString(16).padStart(8, "0")} (${describeValue(elem, 1)})`);
+    }
+  }
+
+  function describeCallable(ptr) {
+    const info = descMisc(ptr);
+    if (!info) {
+      return { ptr: ptr >>> 0, kind: "other", name: null, entryIndex: null, summary: describeValue(ptr) };
+    }
+    if (info.st === SUBTAG_SYMBOL) {
+      return {
+        ptr: ptr >>> 0,
+        kind: "symbol",
+        name: readSymbolName(ptr),
+        entryIndex: readSymbolFunctionEntryIndex(ptr),
+        summary: describeValue(ptr),
+      };
+    }
+    if ([SUBTAG_FUNCTION, SUBTAG_PSEUDOFUNCTION, SUBTAG_XFUNCTION].includes(info.st)) {
+      return {
+        ptr: ptr >>> 0,
+        kind: info.name,
+        name: readFunctionName(ptr),
+        entryIndex: readFunctionEntryIndex(ptr),
+        summary: describeValue(ptr),
+      };
+    }
+    return {
+      ptr: ptr >>> 0,
+      kind: info.name,
+      name: null,
+      entryIndex: null,
+      summary: describeValue(ptr),
+    };
+  }
+
+  return {
+    descMisc,
+    describeCallable,
+    describeValue,
+    dumpFunction,
+    dumpObjectSlots,
+    readFunctionEntryIndex,
+    readFunctionName,
+    readPackageName,
+    readSymbolName,
+  };
+}
+
+function dumpFasloadFailureContext({
+  ex,
+  runtime,
+  faslPath,
+  label,
+  detail,
+  compiledFunctionByEntryIndex,
+}) {
+  const mem = runtime.memory;
+  const inspect = createInspector(ex, mem);
+  const nilValue = typeof ex.wasm_get_lisp_nil === "function" ? (ex.wasm_get_lisp_nil() >>> 0) : null;
+  const reader = createRuntimeObjectReader(mem, { compiledFunctionByEntryIndex, nilValue });
+
+  console.error(`[${label}] ${faslPath}: ${detail}`);
+  inspect.dumpAll();
+
+  const regs = [
+    ["arg_x", 6],
+    ["arg_y", 5],
+    ["arg_z", 4],
+    ["nfn", 9],
+    ["Rfn", 11],
+  ];
+  for (const [name, index] of regs) {
+    const value = inspect.getGPR(index) >>> 0;
+    console.error(`[${label}] ${name}=0x${value.toString(16).padStart(8, "0")} (${reader.describeValue(value)})`);
+  }
+
+  reader.dumpFunction(inspect.getGPR(9) >>> 0, `${label} nfn`);
+  reader.dumpFunction(inspect.getGPR(11) >>> 0, `${label} Rfn`);
+
+  for (const [name, index] of [["arg_x", 6], ["arg_y", 5], ["arg_z", 4]]) {
+    const value = inspect.getGPR(index) >>> 0;
+    reader.dumpObjectSlots(value, `${label} ${name}`, 8);
+  }
+
+  const spillSp = inspect.getField("wasm_spill_sp");
+  const spillLimit = inspect.getField("wasm_spill_limit");
+  const spillUsed = (spillLimit - spillSp) / 4;
+  console.error(`[${label}] spill stack symbols/functions:`);
+  for (let i = 0; i < Math.min(40, spillUsed); i++) {
+    const addr = spillSp + i * 4;
+    const word = new DataView(mem.buffer).getUint32(addr, true) >>> 0;
+    const callable = reader.describeCallable(word);
+    if (callable.name) {
+      console.error(`    [${i}] 0x${addr.toString(16)} ${callable.kind} ${callable.name}`);
+    }
+  }
+
+  const vsp = inspect.getGPR(10) >>> 0;
+  for (let off = 0; off < 256; off += 4) {
+    const addr = vsp + off;
+    if (addr + 4 > mem.buffer.byteLength) break;
+    const word = new DataView(mem.buffer).getUint32(addr, true) >>> 0;
+    const info = reader.descMisc(word);
+    if (info && info.st === SUBTAG_ISTRUCT && info.cnt === 15) {
+      console.error(`[${label}] faslstate @0x${word.toString(16)} (vsp+${off})`);
+      reader.dumpObjectSlots(word, `${label} faslstate`, 15);
+      break;
+    }
+  }
+}
+
 async function collectFasls(map, dirPath, relDir) {
   let entries;
   try {
@@ -1182,6 +1488,30 @@ if (bundleInstall.failed) {
   console.log(`compiled modules skipped: ${bundleInstall.failed}`);
 }
 
+const compiledFunctionByEntryIndex = new Map();
+for (const fn of [
+  ...bootNamedFunctions,
+  ...(Array.isArray(compiledModulesBundle?.functions) ? compiledModulesBundle.functions : []),
+]) {
+  if (!Number.isFinite(fn?.entryIndex)) continue;
+  compiledFunctionByEntryIndex.set(fn.entryIndex >>> 0, fn);
+}
+
+function maxEntryIndexByName(functions) {
+  const maxByName = new Map();
+  for (const fn of functions) {
+    if (!fn?.name || !Number.isFinite(fn.entryIndex)) continue;
+    const entryIndex = fn.entryIndex >>> 0;
+    const prev = maxByName.get(fn.name);
+    if (prev == null || entryIndex > prev) {
+      maxByName.set(fn.name, entryIndex);
+    }
+  }
+  return maxByName;
+}
+
+const bootNamedFunctionMaxEntryByName = maxEntryIndexByName(bootNamedFunctions);
+
 const registryInstall = await installCompiledModulesFromRegistry({
   kernel: ex,
   memory: runtime.memory,
@@ -1286,9 +1616,10 @@ const criticalSymAddrs = new Map();   // name → word index into mem32
     const totalWords = mem32.length;
     const scanStart = 0x400000 >>> 2;
     let symbolCount = 0, patched = 0, allocated = 0, skippedNoFn = 0;
-    const remaining = new Map(rebindMap);
+    const seenNames = new Set();
+    let duplicateMatches = 0;
 
-    for (let w = scanStart; w < totalWords && (remaining.size > 0 || criticalSymAddrs.size < criticalSymNames.size); w += 2) {
+    for (let w = scanStart; w < totalWords; w += 2) {
       if (mem32[w] !== SYMBOL_HDR) continue;
       symbolCount++;
 
@@ -1328,17 +1659,22 @@ const criticalSymAddrs = new Map();   // name → word index into mem32
         criticalSymAddrs.set(name, w);
       }
 
-      const info = remaining.get(name);
+      const info = rebindMap.get(name);
       if (info === undefined) continue;
+      if (seenNames.has(name)) {
+        duplicateMatches++;
+      } else {
+        seenNames.add(name);
+      }
       const entryIdx = info.entryIndex;
       const fnSlots = info.fnSlots;
 
       // Read the symbol's fcell (word +3 from header)
       const fcellTagged = mem32[w + 3];
-      if ((fcellTagged & 7) !== FULLTAG_MISC) { skippedNoFn++; remaining.delete(name); continue; }
+      if ((fcellTagged & 7) !== FULLTAG_MISC) { skippedNoFn++; continue; }
       const fnUntagged = (fcellTagged - FULLTAG_MISC) >>> 0;
       const fnWordIdx = fnUntagged >>> 2;
-      if (fnWordIdx < 1 || fnWordIdx >= totalWords - 1) { skippedNoFn++; remaining.delete(name); continue; }
+      if (fnWordIdx < 1 || fnWordIdx >= totalWords - 1) { skippedNoFn++; continue; }
 
       const fnHdr = mem32[fnWordIdx];
       const fnSubtag = fnHdr & 0xFF;
@@ -1393,9 +1729,12 @@ const criticalSymAddrs = new Map();   // name → word index into mem32
       } else {
         skippedNoFn++;
       }
-      remaining.delete(name);
     }
-    console.error(`[stage] image fixup: ${patched} in-place + ${allocated} new-alloc / ${rebindMap.size} total (${symbolCount} syms, ${skippedNoFn} skipped, ${remaining.size} unmatched)`);
+    const unmatched = rebindMap.size - seenNames.size;
+    console.error(
+      `[stage] image fixup: ${patched} in-place + ${allocated} new-alloc / ${rebindMap.size} total ` +
+      `(${symbolCount} syms, ${skippedNoFn} skipped, ${duplicateMatches} duplicates, ${unmatched} unmatched)`,
+    );
 
     /* UDF pseudofunction fcells (entry 131) are left as-is.  The C kernel's
        UDF check (fn_value == nrs_UDF.vcell) catches these and signals XFUNBND.
@@ -1502,12 +1841,26 @@ if (typeof ex.wasm_run_cold_boot_init !== "function") {
   fail("kernel missing wasm_run_cold_boot_init — rebuild kernel");
 }
 const COLD_LOAD_C_MAX = 128;
-/* The first JS-only cold-load entries after the C-side safe subset are the
-   remaining package bootstrap thunks (%DEFINE-PACKAGE and pkg-iter helpers).
-   Draining only this prefix before FASL loading repairs package state without
-   reaching later thunks that still assume post-FASL runtime definitions. */
-const PRE_FASL_COLD_LOAD_JS_LIMIT = 134;
 const COLD_LOAD_MAX_PASSES = 5;
+const PRE_FASL_JS_ENTRY_NAMES = new Set();
+const DISALLOWED_LOCK_CALLABLE_NAMES = new Set(["RECURSIVE-LOCK-PTR", "READ-WRITE-LOCK-PTR"]);
+const protectedBootSymbolSpecs = [
+  { lookupNames: ["%LOCK-RECURSIVE-LOCK-PTR"], manifestName: "%LOCK-RECURSIVE-LOCK-PTR" },
+  { lookupNames: ["%UNLOCK-RECURSIVE-LOCK-PTR"], manifestName: "%UNLOCK-RECURSIVE-LOCK-PTR" },
+  { lookupNames: ["%LOCK-RECURSIVE-LOCK-OBJECT"], manifestName: "%LOCK-RECURSIVE-LOCK-OBJECT" },
+  { lookupNames: ["%UNLOCK-RECURSIVE-LOCK-OBJECT"], manifestName: "%UNLOCK-RECURSIVE-LOCK-OBJECT" },
+  { lookupNames: ["%TRY-RECURSIVE-LOCK-OBJECT"], manifestName: "%TRY-RECURSIVE-LOCK-OBJECT" },
+  { lookupNames: ["READ-LOCK-RWLOCK"], manifestName: "READ-LOCK-RWLOCK" },
+  { lookupNames: ["WRITE-LOCK-RWLOCK"], manifestName: "WRITE-LOCK-RWLOCK" },
+  { lookupNames: ["UNLOCK-RWLOCK"], manifestName: "UNLOCK-RWLOCK" },
+  { lookupNames: ["%%LOCK-OWNER", "%LOCK-OWNER"], manifestName: "%%LOCK-OWNER" },
+  { lookupNames: ["READ-LOCK-HASH-TABLE"], manifestName: "READ-LOCK-HASH-TABLE" },
+  { lookupNames: ["WRITE-LOCK-HASH-TABLE"], manifestName: "WRITE-LOCK-HASH-TABLE" },
+  { lookupNames: ["UNLOCK-HASH-TABLE"], manifestName: "UNLOCK-HASH-TABLE" },
+];
+const protectedBootSymbolNames = new Set(
+  protectedBootSymbolSpecs.map((spec) => spec.manifestName),
+);
 let coldLoadSkipSet = null;
 
 function loadColdLoadSkipSet() {
@@ -1539,6 +1892,19 @@ function coldLoadRange(startIndex, endIndex) {
     indices.push(i);
   }
   return indices;
+}
+
+function dedupeIndices(indices) {
+  return [...new Set(indices.filter((idx) => Number.isFinite(idx) && idx >= 0))];
+}
+
+function selectColdLoadEntriesByName(entries, names) {
+  if (!(names instanceof Set) || names.size === 0) return [];
+  return dedupeIndices(
+    entries
+      .filter((entry) => entry?.name && names.has(entry.name))
+      .map((entry) => entry.index),
+  ).sort((a, b) => a - b);
 }
 
 function drainColdLoadEntries({
@@ -1700,8 +2066,162 @@ function runForceRebindScan({ stageLabel, namedFunctions }) {
 const runtimeRebindFns = selectRebindEntries(
   (compiledModulesBundle?.functions ?? [])
     .filter((fn) => fn?.name && Number.isFinite(fn.entryIndex)
-                    && !bootEntryIndices.has(fn.entryIndex >>> 0)),
+                    && !bootEntryIndices.has(fn.entryIndex >>> 0)
+                    && !protectedBootSymbolNames.has(fn.name)),
 );
+
+function describeColdLoadSnapshotEntries() {
+  if (typeof ex.wasm_cold_load_count !== "function" || typeof ex.wasm_cold_load_ref !== "function") {
+    return [];
+  }
+  const nilValue = typeof ex.wasm_get_lisp_nil === "function" ? (ex.wasm_get_lisp_nil() >>> 0) : null;
+  const reader = createRuntimeObjectReader(runtime.memory, { compiledFunctionByEntryIndex, nilValue });
+  const total = ex.wasm_cold_load_count() | 0;
+  const entries = [];
+  for (let idx = 0; idx < total; idx++) {
+    const fnPtr = ex.wasm_cold_load_ref(idx) >>> 0;
+    const desc = reader.describeCallable(fnPtr);
+    entries.push({
+      index: idx,
+      fnPtr,
+      kind: desc.kind,
+      name: desc.name,
+      entryIndex: desc.entryIndex,
+      summary: desc.summary,
+    });
+  }
+  return entries;
+}
+
+function logColdLoadEntries(entries, { stageLabel, startIndex = 0, count = 16 } = {}) {
+  if (!Array.isArray(entries) || entries.length === 0) return;
+  const start = Math.max(0, startIndex | 0);
+  const end = Math.min(entries.length, start + Math.max(0, count | 0));
+  console.error(`[stage] ${stageLabel}: cold-load entries ${start}..${Math.max(start, end - 1)} of ${entries.length}`);
+  for (let i = start; i < end; i++) {
+    const entry = entries[i];
+    console.error(
+      `  [${entry.index}] kind=${entry.kind}` +
+      (entry.name ? ` name=${entry.name}` : "") +
+      (entry.entryIndex != null ? ` entry=${entry.entryIndex}` : "") +
+      ` ptr=0x${entry.fnPtr.toString(16)} ${entry.summary}`,
+    );
+  }
+}
+
+function lookupSymbolFunctionValue(name) {
+  const nameBytes = encoder.encode(name);
+  const namePtr = ex.malloc(nameBytes.length);
+  if (!namePtr) {
+    fail(`lookupSymbolFunctionValue: malloc failed for ${name}`);
+  }
+  new Uint8Array(runtime.memory.buffer).set(nameBytes, namePtr);
+  try {
+    return ex.wasm_lookup_symbol_function(namePtr, nameBytes.length) >>> 0;
+  } finally {
+    if (typeof ex.free === "function") {
+      ex.free(namePtr);
+    }
+  }
+}
+
+function setSymbolFunctionEntry(name, entryIndex, slot = 0) {
+  const nameBytes = encoder.encode(name);
+  const namePtr = ex.malloc(nameBytes.length);
+  if (!namePtr) {
+    fail(`setSymbolFunctionEntry: malloc failed for ${name}`);
+  }
+  new Uint8Array(runtime.memory.buffer).set(nameBytes, namePtr);
+  try {
+    return ex.wasm_set_symbol_function_entry(
+      namePtr,
+      nameBytes.length,
+      entryIndex >>> 0,
+      slot >>> 0,
+    ) | 0;
+  } finally {
+    if (typeof ex.free === "function") {
+      ex.free(namePtr);
+    }
+  }
+}
+
+function expectedBootEntryForSpec(spec) {
+  const expectedEntry = bootNamedFunctionMaxEntryByName.get(spec.manifestName);
+  if (!Number.isFinite(expectedEntry)) {
+    fail(`boot manifest missing ${spec.manifestName}`);
+  }
+  return expectedEntry >>> 0;
+}
+
+function resolveProtectedBootSymbol(spec) {
+  for (const name of spec.lookupNames) {
+    const value = lookupSymbolFunctionValue(name);
+    if (value !== 0) {
+      return { lookupName: name, value };
+    }
+  }
+  return { lookupName: spec.lookupNames[0], value: 0 };
+}
+
+function rebindProtectedBootSymbols(stageLabel) {
+  if (typeof ex.wasm_set_symbol_function_entry !== "function") {
+    fail("kernel missing wasm_set_symbol_function_entry");
+  }
+  console.error(`[stage] ${stageLabel}: repairing ${protectedBootSymbolSpecs.length} boot-owned symbols`);
+  let rebound = 0;
+  for (const spec of protectedBootSymbolSpecs) {
+    const expectedEntry = expectedBootEntryForSpec(spec);
+    let reboundAny = false;
+    for (const name of spec.lookupNames) {
+      const rc = setSymbolFunctionEntry(name, expectedEntry, 0);
+      if (rc === 0) {
+        rebound++;
+        reboundAny = true;
+      } else if (rc !== -1) {
+        fail(`${stageLabel}: ${name} rebind failed rc=${rc}`);
+      }
+    }
+    if (!reboundAny) {
+      fail(`${stageLabel}: ${spec.lookupNames[0]} not found for repair`);
+    }
+  }
+  console.error(`[stage] ${stageLabel}: rebound ${rebound} exact symbol bindings`);
+}
+
+function runProtectedBootSymbolGate(stageLabel) {
+  if (typeof ex.wasm_lookup_symbol_function !== "function") {
+    fail("kernel missing wasm_lookup_symbol_function");
+  }
+  const nilValue = typeof ex.wasm_get_lisp_nil === "function" ? (ex.wasm_get_lisp_nil() >>> 0) : null;
+  const reader = createRuntimeObjectReader(runtime.memory, { compiledFunctionByEntryIndex, nilValue });
+
+  console.error(`[stage] ${stageLabel}: checking ${protectedBootSymbolSpecs.length} boot-owned symbols`);
+  for (const spec of protectedBootSymbolSpecs) {
+    const expectedEntry = expectedBootEntryForSpec(spec);
+    const resolved = resolveProtectedBootSymbol(spec);
+    if (resolved.value === 0) {
+      fail(`${stageLabel}: ${spec.lookupNames[0]} not found`);
+    }
+    const callable = reader.describeCallable(resolved.value);
+    console.error(
+      `[stage] ${stageLabel}: ${spec.lookupNames[0]} via=${resolved.lookupName} ` +
+      `callable=${callable.name ?? callable.kind} entry=${callable.entryIndex ?? "?"} expected=${expectedEntry}`,
+    );
+    if (!Number.isFinite(callable.entryIndex)) {
+      fail(`${stageLabel}: ${spec.lookupNames[0]} is not a compiled function`);
+    }
+    if (callable.name && DISALLOWED_LOCK_CALLABLE_NAMES.has(callable.name)) {
+      fail(`${stageLabel}: ${spec.lookupNames[0]} resolved to disallowed ${callable.name}`);
+    }
+    if ((callable.entryIndex >>> 0) !== (expectedEntry >>> 0)) {
+      fail(
+        `${stageLabel}: ${spec.lookupNames[0]} resolved to entry ${callable.entryIndex}, ` +
+        `expected boot entry ${expectedEntry}`,
+      );
+    }
+  }
+}
 
 console.error(`[stage] cold-boot-init starting (const-pool installs so far: ${_cpInstallCount}, skipped: ${_cpSkipCount})`);
 if (typeof ex.wasm_heap_profile === "function") {
@@ -1713,24 +2233,31 @@ if (coldBootRc !== 0) {
   fail(`wasm_run_cold_boot_init returned ${coldBootRc}`);
 }
 trace("cold-boot-init complete");
+const coldLoadEntries = describeColdLoadSnapshotEntries();
+logColdLoadEntries(coldLoadEntries, {
+  stageLabel: "post-cold-boot snapshot near C/JS handoff",
+  startIndex: Math.max(0, COLD_LOAD_C_MAX - 4),
+  count: 16,
+});
+rebindProtectedBootSymbols("pre-FASL lock repair");
+runProtectedBootSymbolGate("pre-FASL lock gate");
 
+const preFaslColdLoadIndices = selectColdLoadEntriesByName(coldLoadEntries, PRE_FASL_JS_ENTRY_NAMES);
 const preFaslColdLoad = drainColdLoadEntries({
   stageLabel: "pre-FASL cold-load prefix",
-  startIndex: COLD_LOAD_C_MAX,
-  endIndex: PRE_FASL_COLD_LOAD_JS_LIMIT,
+  indices: preFaslColdLoadIndices,
   maxPasses: 3,
 });
 runForceRebindScan({
   stageLabel: "pre-FASL force-rebind",
   namedFunctions: runtimeRebindFns,
 });
+runProtectedBootSymbolGate("post-rebind lock gate");
 const preFaslRetry = drainColdLoadEntries({
   stageLabel: "pre-FASL cold-load retry",
   indices: preFaslColdLoad?.remaining ?? [],
   maxPasses: 3,
 });
-const coldLoadSnapshotCount = preFaslColdLoad?.total ??
-  (typeof ex.wasm_cold_load_count === "function" ? (ex.wasm_cold_load_count() | 0) : 0);
 const preFaslRemaining = preFaslRetry?.remaining ?? preFaslColdLoad?.remaining ?? [];
 
 /* Spill reset: trapped cold-load entries can leak spill pushes because WASM
@@ -1928,256 +2455,15 @@ for (const faslPath of requiredFasls) {
   try {
     faslRc = ex.wasm_fasload_path(faslMem.ptr >>> 0, faslMem.len >>> 0) | 0;
   } catch (err) {
-    /* JS-level post-crash diagnostics — dump TCR state, faslstate memory,
-       and vstack without needing a kernel rebuild. */
     try {
-      const mem = runtime.memory;
-      const inspect = createInspector(ex, mem);
-
-      /* 1. Dump all GPRs, spill stack, vstack, catch frames via inspector */
-      inspect.dumpAll();
-
-      /* 2. Read arg_z (the faulty object) dynamically from GPR[4] */
-      const argZ = inspect.getGPR(4);  /* REG_ARG_Z */
-      console.error(`[fasload-diag] arg_z=0x${argZ.toString(16).padStart(8,"0")}`);
-
-      /* 3. Dump cons cell contents if arg_z is cons-tagged (fulltag 5) */
-      if ((argZ & 7) === 5) {
-        const base = argZ & ~7;
-        const dv = new DataView(mem.buffer);
-        const car = dv.getUint32(base + 4, true);
-        const cdr = dv.getUint32(base, true);
-        console.error(`[fasload-diag] cons@0x${argZ.toString(16)}: car=0x${car.toString(16).padStart(8,"0")} cdr=0x${cdr.toString(16).padStart(8,"0")}`);
-      }
-
-      /* 4. Helper: describe a misc object from its tagged pointer */
-      const FT_NAMES = ["fix","nil","nhdr","imm","fix","cons","misc","ihdr"];
-      const SUBTAG_NAMES = {
-        0x02: "pseudofn", 0x0a: "ratio", 0x1a: "complex",
-        0x22: "catch", 0x2a: "function", 0x32: "stream", 0x3a: "symbol",
-        0x42: "lock", 0x4a: "hash-vec", 0x52: "pool", 0x5a: "weak",
-        0x62: "package", 0x6a: "slot-vec", 0x72: "instance", 0x7a: "struct",
-        0x82: "istruct", 0x8a: "value-cell", 0x92: "xfunction",
-        0xea: "arrayH", 0xf2: "vectorH", 0xfa: "simple-vector",
-      };
-      const memLimit = mem.buffer.byteLength;
-      function descMisc(ptr) {
-        if ((ptr & 7) !== 6 || ptr < 0x100 || ptr >= memLimit) return null;
-        const hdr = new DataView(mem.buffer).getUint32(ptr - 6, true);
-        const st = hdr & 0xFF, cnt = hdr >>> 8;
-        return { ptr, st, cnt, name: SUBTAG_NAMES[st] || `st=0x${st.toString(16)}` };
-      }
-
-      /* 5a. Helper: read a simple-base-string (subtag 0xBF) as JS string.
-         WASM32 uses 32-bit characters (4 bytes each). cnt = char count. */
-      const SUBTAG_SBS = 0xBF;       /* simple-base-string */
-      const SUBTAG_SYMBOL = 0x3A;    /* symbol */
-      const SUBTAG_FUNCTION = 0x2a;  /* function */
-      function readBaseString(ptr) {
-        if ((ptr & 7) !== 6 || ptr < 0x100 || ptr >= memLimit) return null;
-        const dv = new DataView(mem.buffer);
-        const hdr = dv.getUint32(ptr - 6, true);
-        const st = hdr & 0xFF, cnt = hdr >>> 8;
-        if (st !== SUBTAG_SBS) return null;
-        const dataStart = ptr - 2;  /* misc_data_offset */
-        /* Try 32-bit chars first (WASM32 uses 32-bit char encoding) */
-        const chars = [];
-        for (let i = 0; i < Math.min(cnt, 64); i++) {
-          const c = dv.getUint32(dataStart + i * 4, true);
-          if (c === 0) break;  /* stop at null */
-          chars.push(c & 0xFF);
-        }
-        if (chars.length > 0) return String.fromCharCode(...chars);
-        /* Fallback: try 8-bit chars */
-        const bytes = new Uint8Array(mem.buffer, dataStart, Math.min(cnt, 128));
-        return String.fromCharCode(...bytes.filter(b => b !== 0));
-      }
-
-      /* 5b. Helper: read a symbol's name (pname is element 0) */
-      function readSymbolName(symPtr) {
-        if ((symPtr & 7) !== 6 || symPtr < 0x100 || symPtr >= memLimit) return null;
-        const dv = new DataView(mem.buffer);
-        const hdr = dv.getUint32(symPtr - 6, true);
-        if ((hdr & 0xFF) !== SUBTAG_SYMBOL) return null;
-        const pname = dv.getUint32(symPtr - 2, true);  /* element 0 = pname */
-        return readBaseString(pname);
-      }
-
-      /* 5c. Helper: read a function's name from lfun-info (element 3) */
-      function readFunctionName(fnPtr) {
-        if ((fnPtr & 7) !== 6 || fnPtr < 0x100 || fnPtr >= memLimit) return null;
-        const dv = new DataView(mem.buffer);
-        const hdr = dv.getUint32(fnPtr - 6, true);
-        if ((hdr & 0xFF) !== SUBTAG_FUNCTION) return null;
-        const cnt = hdr >>> 8;
-        if (cnt < 4) return null;
-        /* Element 3 = lfun-info. Could be a symbol or a simple-vector. */
-        const lfunInfo = dv.getUint32(fnPtr - 2 + 3 * 4, true);
-        /* If it's a symbol, read its name */
-        if ((lfunInfo & 7) === 6) {
-          const infoHdr = dv.getUint32(lfunInfo - 6, true);
-          const infoSt = infoHdr & 0xFF;
-          if (infoSt === SUBTAG_SYMBOL) return readSymbolName(lfunInfo);
-          /* If it's a simple-vector, element 0 is often the name */
-          if (infoSt === 0xFA) { /* simple-vector */
-            const nameSlot = dv.getUint32(lfunInfo - 2, true);
-            if ((nameSlot & 7) === 6) return readSymbolName(nameSlot);
-          }
-        }
-        return `lfun-info@0x${lfunInfo.toString(16)}`;
-      }
-
-      /* 5d. Identify Rfn (current function) */
-      const rfn = inspect.getGPR(11);  /* REG_RFN */
-      const rfnInfo = descMisc(rfn);
-      const rfnName = readFunctionName(rfn);
-      if (rfnInfo) {
-        console.error(`[fasload-diag] Rfn=0x${rfn.toString(16)}: ${rfnInfo.name} count=${rfnInfo.cnt} name=${rfnName || "?"}`);
-        /* Always dump elements for function-like objects */
-        if (rfnInfo.st === 0x2a || rfnInfo.st === 0x02 || rfnInfo.st === 0x92) {
-          const dBase = rfn - 2;
-          for (let i = 0; i < Math.min(rfnInfo.cnt, 8); i++) {
-            const elem = new DataView(mem.buffer).getUint32(dBase + i * 4, true);
-            let extra = "";
-            if (i === 0 && (elem & 3) === 0) extra = ` entry=${elem >> 2}`;
-            if ((elem & 7) === 6) {
-              const n = readSymbolName(elem);
-              if (n) extra = ` sym=${n}`;
-              else {
-                const f = readFunctionName(elem);
-                if (f) extra = ` fn=${f}`;
-              }
-            }
-            console.error(`    Rfn[${i}] = 0x${elem.toString(16).padStart(8,"0")} (ft=${FT_NAMES[elem & 7]})${extra}`);
-          }
-        }
-      }
-
-      /* 5e. Walk spill stack for interesting objects: symbols, functions */
-      console.error(`[fasload-diag] spill stack symbols/functions:`);
-      const spillSp2 = inspect.getField("wasm_spill_sp");
-      const spillLimit2 = inspect.getField("wasm_spill_limit");
-      const spillUsed2 = (spillLimit2 - spillSp2) / 4;
-      for (let i = 0; i < Math.min(40, spillUsed2); i++) {
-        const a = spillSp2 + i * 4;
-        if (a + 4 > memLimit) break;
-        const w = new DataView(mem.buffer).getUint32(a, true);
-        if ((w & 7) === 6 && w > 0x100 && w < memLimit) {
-          const hdr = new DataView(mem.buffer).getUint32(w - 6, true);
-          const st = hdr & 0xFF;
-          if (st === SUBTAG_SYMBOL) {
-            const name = readSymbolName(w);
-            if (name) console.error(`    [${i}] 0x${a.toString(16)}: sym ${name}`);
-          } else if (st === SUBTAG_FUNCTION) {
-            const name = readFunctionName(w);
-            if (name) console.error(`    [${i}] 0x${a.toString(16)}: fn ${name}`);
-          }
-        }
-      }
-
-      /* 6. Scan vstack for faslstate (15-element istruct, subtag 0x82) — once */
-      const vsp = inspect.getGPR(10);  /* REG_VSP */
-      const FASLSTATE_FIELDS = [
-        "istruct-cell", "faslfname", "faslevec", "faslecnt", "faslfd",
-        "faslval", "faslstr", "oldfaslstr", "faslerr", "iobuffer",
-        "bufcount", "faslversion", "faslepush", "faslgsymbols", "fasldispatch"
-      ];
-      let foundFaslstate = false;
-      for (let off = 0; off < 256 && !foundFaslstate; off += 4) {
-        const addr = vsp + off;
-        if (addr + 4 > memLimit) break;
-        const word = new DataView(mem.buffer).getUint32(addr, true);
-        const info = (word & 7) === 6 ? descMisc(word) : null;
-        if (info && info.st === 0x82 && info.cnt === 15) {
-          foundFaslstate = true;
-          console.error(`[fasload-diag] faslstate @0x${word.toString(16)} (vsp+${off}):`);
-          const dataBase = word - 2;
-          for (let i = 0; i < 15; i++) {
-            const elem = new DataView(mem.buffer).getUint32(dataBase + i * 4, true);
-            const ft = elem & 7;
-            let extra = "";
-            /* Describe misc-tagged fields */
-            if (ft === 6) {
-              const ei = descMisc(elem);
-              if (ei) extra = ` [${ei.name} cnt=${ei.cnt}]`;
-            }
-            console.error(`    [${i}] ${FASLSTATE_FIELDS[i].padEnd(14)} = 0x${elem.toString(16).padStart(8,"0")} (ft=${FT_NAMES[ft]})${extra}`);
-          }
-        }
-      }
-
-      /* 6b. Read iobuffer internals to understand FASL stream state */
-      if (foundFaslstate) {
-        /* The faslstate was found; re-read specific slots */
-        /* Slot 9 = iobuffer (macptr), slot 10 = bufcount, slot 6 = faslstr */
-        const fsBase = (function() {
-          /* re-find faslstate ptr from vsp scan */
-          for (let off = 0; off < 256; off += 4) {
-            const addr = vsp + off;
-            if (addr + 4 > memLimit) break;
-            const w = new DataView(mem.buffer).getUint32(addr, true);
-            if ((w & 7) === 6 && w > 0x100 && w < memLimit) {
-              const h = new DataView(mem.buffer).getUint32(w - 6, true);
-              if ((h & 0xFF) === 0x82 && (h >>> 8) === 15) return w;
-            }
-          }
-          return 0;
-        })();
-        if (fsBase) {
-          const dv = new DataView(mem.buffer);
-          const iobuf = dv.getUint32(fsBase - 2 + 9 * 4, true);  /* slot 9 = iobuffer */
-          const bufcnt = dv.getUint32(fsBase - 2 + 10 * 4, true); /* slot 10 = bufcount */
-          console.error(`[fasload-diag] iobuffer=0x${iobuf.toString(16)} bufcount=${bufcnt >> 2}`);
-          /* If iobuffer is a macptr, read the raw address it wraps */
-          if ((iobuf & 7) === 6 && iobuf > 0x100 && iobuf < memLimit) {
-            const iobHdr = dv.getUint32(iobuf - 6, true);
-            if ((iobHdr & 0xFF) === 0x1F) { /* subtag_macptr */
-              const rawAddr = dv.getUint32(iobuf - 2, true);
-              console.error(`[fasload-diag] iobuffer macptr raw addr = 0x${rawAddr.toString(16).padStart(8,"0")}`);
-              /* The raw addr points to the buffer. First 4 bytes = current read pos ptr */
-              const curPos = dv.getUint32(rawAddr, true);
-              console.error(`[fasload-diag] buffer cur-pos ptr = 0x${curPos.toString(16).padStart(8,"0")}`);
-              const dataStart = rawAddr + 4;
-              console.error(`[fasload-diag] buffer data start = 0x${dataStart.toString(16).padStart(8,"0")}`);
-              /* Dump first 32 bytes of the buffer data */
-              const preview = [];
-              for (let i = 0; i < 32 && dataStart + i < memLimit; i++) {
-                preview.push(new Uint8Array(mem.buffer)[dataStart + i].toString(16).padStart(2, "0"));
-              }
-              console.error(`[fasload-diag] buffer data: ${preview.join(" ")}`);
-            }
-          }
-        }
-      }
-
-      /* 7. Dump memory around the bad object for context (16 words) */
-      if (argZ > 0x100 && argZ < memLimit) {
-        const dumpBase = (argZ & ~7) - 16;
-        console.error(`[fasload-diag] mem dump around obj 0x${argZ.toString(16)}:`);
-        for (let i = 0; i < 16; i++) {
-          const a = dumpBase + i * 4;
-          if (a >= 0 && a + 4 <= memLimit) {
-            const w = new DataView(mem.buffer).getUint32(a, true);
-            const marker = (a === (argZ & ~7)) ? " <-- untag(obj)" : "";
-            console.error(`    0x${a.toString(16)}: 0x${w.toString(16).padStart(8,"0")}${marker}`);
-          }
-        }
-      }
-
-      /* 8. Dump spill stack context (top 16) */
-      console.error(`[fasload-diag] spill stack (top 16):`);
-      const spillSp = inspect.getField("wasm_spill_sp");
-      const spillLimit = inspect.getField("wasm_spill_limit");
-      const spillUsed = (spillLimit - spillSp) / 4;
-      for (let i = 0; i < Math.min(16, spillUsed); i++) {
-        const a = spillSp + i * 4;
-        if (a + 4 <= memLimit) {
-          const w = new DataView(mem.buffer).getUint32(a, true);
-          const info = (w & 7) === 6 ? descMisc(w) : null;
-          const extra = info ? ` [${info.name} cnt=${info.cnt}]` : "";
-          console.error(`    [${i}] 0x${a.toString(16)}: 0x${w.toString(16).padStart(8,"0")} (ft=${FT_NAMES[w & 7]})${extra}`);
-        }
-      }
+      dumpFasloadFailureContext({
+        ex,
+        runtime,
+        faslPath,
+        label: "fasload-diag",
+        detail: `trap: ${err?.message ?? err}`,
+        compiledFunctionByEntryIndex,
+      });
     } catch (diagErr) {
       console.error(`[fasload-diag] diagnostic failed: ${diagErr?.message ?? diagErr}`);
     }
@@ -2186,12 +2472,15 @@ for (const faslPath of requiredFasls) {
     continue;
   }
   if (faslRc !== 0) {
-    /* Non-trap failure — dump TCR state for diagnosis */
     try {
-      const mem = runtime.memory;
-      const inspect = createInspector(ex, mem);
-      console.error(`[fasload-rc] wasm_fasload_path(${faslPath}) returned ${faslRc}`);
-      inspect.dumpAll();
+      dumpFasloadFailureContext({
+        ex,
+        runtime,
+        faslPath,
+        label: "fasload-rc",
+        detail: `rc=${faslRc}`,
+        compiledFunctionByEntryIndex,
+      });
     } catch (diagErr) {
       console.error(`[fasload-rc-diag] failed: ${diagErr?.message ?? diagErr}`);
     }
@@ -2236,11 +2525,13 @@ if (requiredFasls.length > 0) {
 
 const postFaslPending = [
   ...preFaslRemaining,
-  ...coldLoadRange(Math.min(PRE_FASL_COLD_LOAD_JS_LIMIT, coldLoadSnapshotCount), coldLoadSnapshotCount),
+  ...coldLoadEntries
+    .filter((entry) => !preFaslColdLoadIndices.includes(entry.index))
+    .map((entry) => entry.index),
 ];
 const postFaslColdLoad = drainColdLoadEntries({
   stageLabel: "post-FASL cold-load tail",
-  indices: postFaslPending,
+  indices: dedupeIndices(postFaslPending),
 });
 if (postFaslColdLoad && typeof ex.wasm_spill_reset === "function") {
   ex.wasm_spill_reset();

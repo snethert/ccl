@@ -13,6 +13,7 @@ fi
 FORCE=1
 BUILD_ROOT_IMAGE=1
 ROOT_IMAGE_ALLOW_FAIL=1
+BUILD_BOOT_WITH_L1="${BUILD_BOOT_WITH_L1:-0}"
 
 # Use environment variables for build paths with fallbacks
 BUILD_DIR="${CCL_WASM_BUILD_DIR:-$ROOT_DIR/build/wasm32}"
@@ -40,6 +41,7 @@ Environment variables:
   CCL_WASM_BUILD_DIR        Build output directory (default: build/wasm32)
   CCL_WASM_IMAGES_DIR       Image files directory (default: $BUILD_DIR/images)
   CCL_WASM_MODULES_DIR      Module files directory (default: $BUILD_DIR/modules)
+  BUILD_BOOT_WITH_L1        Rebuild wasm-boot.image with L1 baked in (default: 0)
 
 Options:
   --no-force                Do incremental builds where supported
@@ -282,34 +284,24 @@ fi
 
 run "$ROOT_DIR/scripts/wasm/compile-wasm-fasls.sh" ${COMPILE_ARGS[@]+"${COMPILE_ARGS[@]}"}
 
-# Rebuild boot image with L1 baked in.  L0 was already compiled above
-# (timestamps match, so no recompile happens).  L1 .lafsl files from
-# compile-wasm-fasls.sh are fed into xfasload alongside L0.
-BOOT_L1_ARGS=(--with-l1)
-if [ "$FORCE" -eq 1 ]; then
-  BOOT_L1_ARGS+=(--force)
+# The root-image builder owns required FASL loading.  Replacing the plain L0
+# boot image with an L1-baked variant here duplicates cold-load/FASL state and
+# regresses root-image startup.  Keep the plain boot image by default; allow
+# the legacy L1-baked path only via an explicit env override.
+if [ "$BUILD_BOOT_WITH_L1" = "1" ]; then
+  BOOT_L1_ARGS=(--with-l1)
+  if [ "$FORCE" -eq 1 ]; then
+    BOOT_L1_ARGS+=(--force)
+  fi
+  run "$ROOT_DIR/scripts/wasm/build-wasm-boot.sh" ${BOOT_L1_ARGS[@]+"${BOOT_L1_ARGS[@]}"}
+else
+  log "skipping --with-l1 boot rebuild for root-image path (BUILD_BOOT_WITH_L1=0)"
 fi
-run "$ROOT_DIR/scripts/wasm/build-wasm-boot.sh" ${BOOT_L1_ARGS[@]+"${BOOT_L1_ARGS[@]}"}
 
 # Phase 0A tests — recompile if the script exists
 if [ -f "$ROOT_DIR/scripts/wasm/compile-phase0a-tests.sh" ]; then
   log "RUN (phase0a tests, non-fatal): scripts/wasm/compile-phase0a-tests.sh"
   "$ROOT_DIR/scripts/wasm/compile-phase0a-tests.sh" || log "WARN: phase0a test compilation failed (non-fatal)"
-fi
-
-# Phase 2C: Merge singleton modules to reduce instantiation count.
-# Uses wasm-merge to combine individual-function modules into multi-export
-# batches, reducing load-time instantiations from ~2600 to ~40.
-if command -v wasm-merge >/dev/null 2>&1; then
-  log "merging singleton modules (boot)..."
-  run node "$ROOT_DIR/scripts/wasm/merge-singleton-modules.mjs" \
-    --manifest "$BOOT_MODULES_OUT" --in-place --batch-size 100
-
-  log "merging singleton modules (runtime)..."
-  run node "$ROOT_DIR/scripts/wasm/merge-singleton-modules.mjs" \
-    --manifest "$MODULES_OUT" --in-place --batch-size 100
-else
-  log "WARN: wasm-merge not found; skipping singleton module merge"
 fi
 
 if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
@@ -326,6 +318,21 @@ if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
   else
     run "${ROOT_CMD[@]}"
   fi
+fi
+
+# Merge singleton modules after root.image generation.  make-real-image relies
+# on the canonical boot/runtime manifests; merging earlier regresses startup
+# with uniform FASL failures while providing no benefit to image generation.
+if command -v wasm-merge >/dev/null 2>&1; then
+  log "merging singleton modules (boot)..."
+  run node "$ROOT_DIR/scripts/wasm/merge-singleton-modules.mjs" \
+    --manifest "$BOOT_MODULES_OUT" --in-place --batch-size 100
+
+  log "merging singleton modules (runtime)..."
+  run node "$ROOT_DIR/scripts/wasm/merge-singleton-modules.mjs" \
+    --manifest "$MODULES_OUT" --in-place --batch-size 100
+else
+  log "WARN: wasm-merge not found; skipping singleton module merge"
 fi
 
 python3 "$ROOT_DIR/scripts/wasm/make_minimal_image.py" \

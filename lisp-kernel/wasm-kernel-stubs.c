@@ -1022,6 +1022,36 @@ wasm_set_toplfunc_entry(uint32_t entry_index)
    slot: 0 = fcell (defun bindings), 1 = vcell (defvar function values like
    *RESTORE-LISP-POINTERS*).
    This is used to repair NRS function pointers broken by GC compaction. */
+static LispObj
+wasm_find_symbol_any_bytes(const uint8_t *sym_name, uint32_t name_len)
+{
+  static const uint8_t ccl_pkg[] = { 'C', 'C', 'L' };
+  static const uint8_t cl_pkg[] = { 'C', 'O', 'M', 'M', 'O', 'N', '-', 'L', 'I', 'S', 'P' };
+
+  LispObj pkg = wasm_find_package_named_bytes(ccl_pkg, (uint32_t)sizeof(ccl_pkg));
+  LispObj sym = (LispObj)0;
+  if (pkg != lisp_nil) {
+    sym = wasm_find_symbol_named_bytes(sym_name, name_len, pkg);
+  }
+  if (sym == (LispObj)0) {
+    pkg = wasm_find_package_named_bytes(cl_pkg, (uint32_t)sizeof(cl_pkg));
+    if (pkg != lisp_nil) {
+      sym = wasm_find_symbol_named_bytes(sym_name, name_len, pkg);
+    }
+  }
+  if (sym == (LispObj)0) {
+    sym = wasm_find_symbol_in_all_packages_bytes(sym_name, name_len);
+  }
+  if (sym == (LispObj)0) {
+    sym = wasm_find_symbol_named_bytes_scan(sym_name, name_len, (LispObj)0);
+  }
+  if (sym == (LispObj)0 || fulltag_of(sym) != fulltag_misc ||
+      header_subtag(header_of(sym)) != subtag_symbol) {
+    return (LispObj)0;
+  }
+  return sym;
+}
+
 __attribute__((used, visibility("default"), export_name("wasm_set_symbol_function_entry")))
 int32_t
 wasm_set_symbol_function_entry(uint32_t name_ptr, uint32_t name_len,
@@ -1033,24 +1063,8 @@ wasm_set_symbol_function_entry(uint32_t name_ptr, uint32_t name_len,
   if (!wasm_subprims_ready) return -3;
 
   const uint8_t *sym_name = (const uint8_t *)(uintptr_t)name_ptr;
-  static const uint8_t ccl_pkg[] = { 'C', 'C', 'L' };
-  static const uint8_t cl_pkg[] = { 'C', 'O', 'M', 'M', 'O', 'N', '-', 'L', 'I', 'S', 'P' };
-
-  LispObj pkg = wasm_find_package_named_bytes(ccl_pkg, (uint32_t)sizeof(ccl_pkg));
-  LispObj sym = (LispObj)0;
-  if (pkg != lisp_nil) sym = wasm_find_symbol_named_bytes(sym_name, name_len, pkg);
-  if (sym == (LispObj)0) {
-    pkg = wasm_find_package_named_bytes(cl_pkg, (uint32_t)sizeof(cl_pkg));
-    if (pkg != lisp_nil) sym = wasm_find_symbol_named_bytes(sym_name, name_len, pkg);
-  }
-  if (sym == (LispObj)0) sym = wasm_find_symbol_in_all_packages_bytes(sym_name, name_len);
-  /* Fall back to O(N) memory scan if package hash tables miss.
-     This handles the case where FASL loading errors (%KERNEL-RESTART UDF)
-     prevent proper symbol interning into package hash tables, but the
-     symbol object exists on the heap from the boot image. */
-  if (sym == (LispObj)0) sym = wasm_find_symbol_named_bytes_scan(sym_name, name_len, (LispObj)0);
-  if (sym == (LispObj)0 || fulltag_of(sym) != fulltag_misc ||
-      header_subtag(header_of(sym)) != subtag_symbol) return -1;
+  LispObj sym = wasm_find_symbol_any_bytes(sym_name, name_len);
+  if (sym == (LispObj)0) return -1;
 
   LispObj entry = box_fixnum((signed_natural)entry_index);
   lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(untag(sym));
@@ -1095,10 +1109,20 @@ __attribute__((used, visibility("default"), export_name("wasm_check_symbol_fboun
 int32_t
 wasm_check_symbol_fbound(const uint8_t *name, uint32_t len)
 {
-  LispObj sym = wasm_find_symbol_in_all_packages_bytes(name, len);
+  LispObj sym = wasm_find_symbol_any_bytes(name, len);
   if (sym == (LispObj)0) return -1;
   lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(sym - fulltag_misc);
   return (rawsym->fcell != nrs_UDF.vcell) ? 1 : 0;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_lookup_symbol_function")))
+uint32_t
+wasm_lookup_symbol_function(const uint8_t *name, uint32_t len)
+{
+  LispObj sym = wasm_find_symbol_any_bytes(name, len);
+  if (sym == (LispObj)0) return 0;
+  lispsymbol *rawsym = (lispsymbol *)ptr_from_lispobj(sym - fulltag_misc);
+  return (uint32_t)rawsym->fcell;
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_boot_entry")))
@@ -3791,6 +3815,16 @@ int
 wasm_cold_load_count_fn(void)
 {
   return cold_load_snapshot_count;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_cold_load_ref")))
+uint32_t
+wasm_cold_load_ref_fn(int index)
+{
+  if (index < 0 || index >= cold_load_snapshot_count) {
+    return 0;
+  }
+  return (uint32_t)cold_load_snapshot[index];
 }
 
 /* Run a single cold-load function by snapshot index.

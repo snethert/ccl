@@ -272,6 +272,30 @@
 
 (defparameter *wasm-l1-module-specs* *wasm-runtime-startup-module-specs*)
 
+(defun wasm-l0-fasl-paths ()
+  "Return ordered level-0 FASL pathnames for WASM cross-xload.
+Generic level-0 fasls load first; WASM subdir fasls load last so their
+override definitions survive into wasm-boot.image."
+  (let* ((compiler-backend (find-backend
+                            (backend-xload-info-compiler-target-name
+                             *xload-target-backend*)))
+         (wild-fasls (concatenate 'simple-string
+                                  "*."
+                                  (pathname-type
+                                   (backend-target-fasl-pathname
+                                    compiler-backend))))
+         (root-fasls (sort (directory (merge-pathnames "ccl:level-0;" wild-fasls))
+                           #'string<
+                           :key #'namestring))
+         (subdir-fasls
+          (apply #'append
+                 (mapcar #'(lambda (d)
+                             (sort (directory (merge-pathnames d wild-fasls))
+                                   #'string<
+                                   :key #'namestring))
+                         (backend-xload-info-subdirs *xload-target-backend*)))))
+    (append root-fasls subdir-fasls)))
+
 (defun wasm-l1-fasl-paths (root)
   "Return ordered list of L1 FASL pathnames from build/wasm32/."
   (let ((build-dir (namestring (merge-pathnames "build/wasm32/" root))))
@@ -322,27 +346,10 @@
               (*xload-static-space-address* *xload-static-space-address*))
          (setup-xload-target-parameters)
          (let* ((*load-verbose* t)
-                (compiler-backend (find-backend
-                                   (backend-xload-info-compiler-target-name
-                                    *xload-target-backend*)))
-                (wild-fasls (concatenate 'simple-string
-                                         "*."
-                                         (pathname-type
-                                          (backend-target-fasl-pathname
-                                           compiler-backend))))
-                (wild-root (merge-pathnames "ccl:level-0;" wild-fasls))
-                (wild-subdirs
-                 (mapcar #'(lambda (d) (merge-pathnames d wild-fasls))
-                         (backend-xload-info-subdirs *xload-target-backend*)))
                 (*xload-image-file-name* (backend-xload-info-default-image-name
                                           *xload-target-backend*))
                 (root (repo-root-from-script))
-                (l0-fasls (append
-                           (apply #'append
-                                  (mapcar #'(lambda (d)
-                                              (sort (directory d) #'string< :key #'namestring))
-                                          wild-subdirs))
-                           (sort (directory wild-root) #'string< :key #'namestring)))
+                (l0-fasls (wasm-l0-fasl-paths))
                 (l1-fasls (wasm-l1-fasl-paths root)))
            (format t "~&;Loading ~d L0 + ~d L1 FASLs into boot image~%"
                    (length l0-fasls) (length l1-fasls))
