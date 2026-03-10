@@ -1627,8 +1627,8 @@
   ;; Convert Lisp boolean to WASM boolean: non-nil → 1, nil → 0
   (wasm2-emit :const (target-nil-value))
   (wasm2-emit :i32-ne)
-  (let* ((then-ir (wasm2-with-ir (lambda () (wasm2-form seg nil nil true))))
-         (else-ir (wasm2-with-ir (lambda () (wasm2-form seg nil nil false)))))
+  (let* ((then-ir (wasm2-with-ir (lambda () (wasm2-form seg nil xfer true))))
+         (else-ir (wasm2-with-ir (lambda () (wasm2-form seg nil xfer false)))))
     (wasm2-emit :if then-ir else-ir))
   nil)
 

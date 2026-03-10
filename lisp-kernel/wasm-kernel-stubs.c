@@ -57,6 +57,7 @@ static LispObj wasm_intern_runtime(TCR *tcr, const uint8_t *name_bytes, uint32_t
 static LispObj wasm_intern_dispatch(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg);
 static LispObj wasm_const_pool_intern_symbol(TCR *tcr, const uint8_t *name_bytes, uint32_t name_len, LispObj pkg);
 void wasm_debug_dump_state(const char *label);
+static int wasm_debug_callable_summary(char *buf, LispObj fn);
 
 static LispObj *
 wasm_toplevel_slot(TCR *tcr);
@@ -1949,6 +1950,32 @@ wasm_return_values3(LispObj value0, LispObj value1, LispObj value2)
   tcr->wasm_gprs[arg_y] = value1;
   tcr->wasm_gprs[arg_x] = value2;
   tcr->wasm_gprs[nargs] = box_fixnum(3);
+  if (wasm_diag_last_cpr_entry == 1102 ||
+      wasm_diag_last_cpr_entry == 1103 ||
+      wasm_diag_last_cpr_entry == 1104) {
+    static int mv_ret3_diag_count = 0;
+    if (mv_ret3_diag_count < 32) {
+      char msg[256];
+      int p = 0;
+      mv_ret3_diag_count++;
+      p += wasm_debug_str(msg + p, "RET3 cpr_e=");
+      p += wasm_debug_uint(msg + p, wasm_diag_last_cpr_entry);
+      p += wasm_debug_str(msg + p, " cpr_s=");
+      p += wasm_debug_uint(msg + p, wasm_diag_last_cpr_slot);
+      p += wasm_debug_str(msg + p, " nfn{");
+      p += wasm_debug_callable_summary(msg + p, tcr->wasm_gprs[nfn]);
+      p += wasm_debug_str(msg + p, "} Rfn{");
+      p += wasm_debug_callable_summary(msg + p, tcr->wasm_gprs[Rfn]);
+      p += wasm_debug_str(msg + p, "} v0=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)value0);
+      p += wasm_debug_str(msg + p, " v1=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)value1);
+      p += wasm_debug_str(msg + p, " v2=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)value2);
+      p += wasm_debug_str(msg + p, "\n");
+      wasm_host_log(msg, (unsigned)p);
+    }
+  }
   return value0;
 }
 
@@ -2008,6 +2035,16 @@ wasm_get_mv(uint32_t index)
         p += wasm_debug_hex8(msg + p, (uint32_t)tcr->wasm_gprs[vsp]);
         p += wasm_debug_str(msg + p, " save_vsp=0x");
         p += wasm_debug_hex8(msg + p, (uint32_t)(uintptr_t)tcr->save_vsp);
+        p += wasm_debug_str(msg + p, " nfn{");
+        p += wasm_debug_callable_summary(msg + p, tcr->wasm_gprs[nfn]);
+        p += wasm_debug_str(msg + p, "}");
+        p += wasm_debug_str(msg + p, " Rfn{");
+        p += wasm_debug_callable_summary(msg + p, tcr->wasm_gprs[Rfn]);
+        p += wasm_debug_str(msg + p, "}");
+        p += wasm_debug_str(msg + p, " cpr_e=");
+        p += wasm_debug_uint(msg + p, wasm_diag_last_cpr_entry);
+        p += wasm_debug_str(msg + p, " cpr_s=");
+        p += wasm_debug_uint(msg + p, wasm_diag_last_cpr_slot);
         msg[p++] = '\n';
         wasm_host_log(msg, (unsigned)p);
       }
@@ -2244,6 +2281,86 @@ wasm_debug_uint(char *buf, uint32_t v)
   while (v > 0) { tmp[len++] = '0' + (v % 10); v /= 10; }
   for (int i = 0; i < len; i++) buf[i] = tmp[len - 1 - i];
   return len;
+}
+
+static int
+wasm_debug_callable_summary(char *buf, LispObj fn)
+{
+  int p = 0;
+  if (fn == lisp_nil || fulltag_of(fn) != fulltag_misc) {
+    p += wasm_debug_str(buf + p, "obj=0x");
+    p += wasm_debug_hex8(buf + p, (uint32_t)fn);
+    return p;
+  }
+
+  uint8_t sub = header_subtag(header_of(fn));
+  if (sub == subtag_symbol) {
+    lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(fn));
+    LispObj pname = sym->pname;
+    p += wasm_debug_str(buf + p, "sym=");
+    if (pname != lisp_nil &&
+        fulltag_of(pname) == fulltag_misc &&
+        header_subtag(header_of(pname)) == subtag_simple_base_string) {
+      natural len = header_element_count(header_of(pname));
+      uint8_t *chars = (uint8_t *)((BytePtr)pname + misc_data_offset);
+      if (len > 24) len = 24;
+      for (natural i = 0; i < len && p < 120; i++) {
+        buf[p++] = (char)chars[i];
+      }
+    } else {
+      buf[p++] = '?';
+    }
+    LispObj fcell = sym->fcell;
+    if (fcell != lisp_nil &&
+        fulltag_of(fcell) == fulltag_misc &&
+        header_subtag(header_of(fcell)) == subtag_function) {
+      LispObj entry = deref(fcell, 1);
+      if (tag_of(entry) == tag_fixnum) {
+        p += wasm_debug_str(buf + p, " entry=");
+        p += wasm_debug_uint(buf + p, (uint32_t)unbox_fixnum(entry));
+      }
+    }
+    return p;
+  }
+
+  if (sub == subtag_function) {
+    LispObj entry = deref(fn, 1);
+    p += wasm_debug_str(buf + p, "entry=");
+    if (tag_of(entry) == tag_fixnum) {
+      p += wasm_debug_uint(buf + p, (uint32_t)unbox_fixnum(entry));
+    } else {
+      buf[p++] = '?';
+    }
+    natural nelems = header_element_count(header_of(fn));
+    if (nelems >= 2) {
+      LispObj last = deref(fn, nelems);
+      if (fulltag_of(last) == fulltag_misc &&
+          header_subtag(header_of(last)) == subtag_symbol) {
+        lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(last));
+        LispObj pname = sym->pname;
+        p += wasm_debug_str(buf + p, " name=");
+        if (pname != lisp_nil &&
+            fulltag_of(pname) == fulltag_misc &&
+            header_subtag(header_of(pname)) == subtag_simple_base_string) {
+          natural len = header_element_count(header_of(pname));
+          uint8_t *chars = (uint8_t *)((BytePtr)pname + misc_data_offset);
+          if (len > 24) len = 24;
+          for (natural i = 0; i < len && p < 120; i++) {
+            buf[p++] = (char)chars[i];
+          }
+        } else {
+          buf[p++] = '?';
+        }
+      }
+    }
+    return p;
+  }
+
+  p += wasm_debug_str(buf + p, "sub=");
+  p += wasm_debug_uint(buf + p, (uint32_t)sub);
+  p += wasm_debug_str(buf + p, " obj=0x");
+  p += wasm_debug_hex8(buf + p, (uint32_t)fn);
+  return p;
 }
 
 static unsigned wasm_debug_dump_state_count = 0;
@@ -2713,10 +2830,61 @@ wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natu
   tcr->wasm_gprs[nfn] = fn_value;
   tcr->wasm_gprs[Rfn] = fn_value;
 
+  LispObj traced_callable = lisp_nil;
+  int traced_entry = -1;
+  if (preserve_mv &&
+      fn_value != lisp_nil &&
+      fulltag_of(fn_value) == fulltag_misc) {
+    traced_callable = fn_value;
+    if (header_subtag(header_of(traced_callable)) == subtag_symbol) {
+      lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(traced_callable));
+      traced_callable = sym->fcell;
+    }
+    if (traced_callable != lisp_nil &&
+        fulltag_of(traced_callable) == fulltag_misc &&
+        header_subtag(header_of(traced_callable)) == subtag_function) {
+      LispObj entry_s0 = deref(traced_callable, 1);
+      if (tag_of(entry_s0) == tag_fixnum) {
+        traced_entry = (int)unbox_fixnum(entry_s0);
+        if (traced_entry != 1102 &&
+            traced_entry != 1103 &&
+            traced_entry != 1104) {
+          traced_entry = -1;
+        }
+      }
+    }
+  }
+
   wasm_call_subprim_fixnum(wasm_subprim_fixnum(WASM_SUBPRIM_FUNCALL_INDEX));
 
   LispObj result = tcr->wasm_gprs[arg_z];
   if (tcr->wasm_pending_throw) {
+    if (traced_entry >= 0) {
+      static int mv_funcall_throw_diag_count = 0;
+      if (mv_funcall_throw_diag_count < 24) {
+        char msg[320];
+        int p = 0;
+        mv_funcall_throw_diag_count++;
+        p += wasm_debug_str(msg + p, "MV-CALL throw entry=");
+        p += wasm_debug_uint(msg + p, (uint32_t)traced_entry);
+        p += wasm_debug_str(msg + p, " fn=0x");
+        p += wasm_debug_hex8(msg + p, (uint32_t)fn_value);
+        p += wasm_debug_str(msg + p, " Rfn=0x");
+        p += wasm_debug_hex8(msg + p, (uint32_t)tcr->wasm_gprs[Rfn]);
+        p += wasm_debug_str(msg + p, " nfn=0x");
+        p += wasm_debug_hex8(msg + p, (uint32_t)tcr->wasm_gprs[nfn]);
+        p += wasm_debug_str(msg + p, " pending=0x");
+        p += wasm_debug_hex8(msg + p, (uint32_t)tcr->wasm_pending_throw);
+        p += wasm_debug_str(msg + p, " argz=0x");
+        p += wasm_debug_hex8(msg + p, (uint32_t)tcr->wasm_gprs[arg_z]);
+        p += wasm_debug_str(msg + p, " argy=0x");
+        p += wasm_debug_hex8(msg + p, (uint32_t)tcr->wasm_gprs[arg_y]);
+        p += wasm_debug_str(msg + p, " argx=0x");
+        p += wasm_debug_hex8(msg + p, (uint32_t)tcr->wasm_gprs[arg_x]);
+        p += wasm_debug_str(msg + p, "\n");
+        wasm_host_log(msg, (unsigned)p);
+      }
+    }
     LispObj *throw_vsp = (LispObj *)tcr->wasm_gprs[vsp];
     if (throw_vsp == NULL) {
       throw_vsp = saved_vsp;
@@ -2732,6 +2900,63 @@ wasm_funcall_common(TCR *tcr, LispObj fn_value, const LispObj *args, signed_natu
 
   LispObj raw_nargs = tcr->wasm_gprs[nargs];
   signed_natural value_count = (tag_of(raw_nargs) == tag_fixnum) ? unbox_fixnum(raw_nargs) : 1;
+  signed_natural expected_count = 0;
+  if (traced_entry == 1102 || traced_entry == 1103) {
+    expected_count = 3;
+  } else if (traced_entry == 1104) {
+    expected_count = 4;
+  }
+
+  if (traced_entry >= 0) {
+    static int mv_funcall_diag_count = 0;
+    if ((expected_count != 0 && value_count != expected_count) ||
+        mv_funcall_diag_count < 48) {
+      char msg[384];
+      int p = 0;
+      if (mv_funcall_diag_count < 48) {
+        mv_funcall_diag_count++;
+      }
+      p += wasm_debug_str(msg + p, "MV-CALL entry=");
+      p += wasm_debug_uint(msg + p, (uint32_t)traced_entry);
+      if (fn_value != lisp_nil &&
+          fulltag_of(fn_value) == fulltag_misc &&
+          header_subtag(header_of(fn_value)) == subtag_symbol) {
+        lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(fn_value));
+        LispObj pname = sym->pname;
+        if (pname != lisp_nil &&
+            fulltag_of(pname) == fulltag_misc &&
+            header_subtag(header_of(pname)) == subtag_simple_base_string) {
+          natural len = header_element_count(header_of(pname));
+          uint8_t *chars = (uint8_t *)((BytePtr)pname + misc_data_offset);
+          if (len > 48) len = 48;
+          p += wasm_debug_str(msg + p, " name=");
+          for (natural i = 0; i < len && p < (int)(sizeof(msg) - 2); i++) {
+            msg[p++] = (char)chars[i];
+          }
+        }
+      }
+      p += wasm_debug_str(msg + p, " raw_nargs=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)raw_nargs);
+      p += wasm_debug_str(msg + p, " count=");
+      p += wasm_debug_uint(msg + p, (uint32_t)value_count);
+      if (expected_count != 0) {
+        p += wasm_debug_str(msg + p, " expected=");
+        p += wasm_debug_uint(msg + p, (uint32_t)expected_count);
+      }
+      p += wasm_debug_str(msg + p, " argz=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)tcr->wasm_gprs[arg_z]);
+      p += wasm_debug_str(msg + p, " argy=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)tcr->wasm_gprs[arg_y]);
+      p += wasm_debug_str(msg + p, " argx=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)tcr->wasm_gprs[arg_x]);
+      p += wasm_debug_str(msg + p, " vsp=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)tcr->wasm_gprs[vsp]);
+      p += wasm_debug_str(msg + p, " save_vsp=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)(uintptr_t)saved_vsp);
+      p += wasm_debug_str(msg + p, "\n");
+      wasm_host_log(msg, (unsigned)p);
+    }
+  }
 
   if (preserve_mv && value_count > 1) {
     LispObj *mv_vsp = (LispObj *)tcr->wasm_gprs[vsp];
