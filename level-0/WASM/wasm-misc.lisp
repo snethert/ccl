@@ -536,15 +536,11 @@
 ;;; macptrs, spinlocks, and semaphores that don't exist on WASM.
 
 (defun %read-lock-rwlock-ptr (ptr lock &optional flag)
-  (declare (ignore ptr lock))
-  (if (istruct-typep flag 'lock-acquisition)
-    (setf (lock-acquisition.status flag) t))
+  (declare (ignore ptr lock flag))
   t)
 
 (defun %write-lock-rwlock-ptr (ptr lock &optional flag)
-  (declare (ignore ptr lock))
-  (if (istruct-typep flag 'lock-acquisition)
-    (setf (lock-acquisition.status flag) t))
+  (declare (ignore ptr lock flag))
   t)
 
 (defun %unlock-rwlock-ptr (ptr lock)
@@ -553,9 +549,7 @@
 
 ;;; Recursive lock operations — no-ops on single-threaded WASM.
 (defun %lock-recursive-lock-ptr (ptr lock flag)
-  (declare (ignore ptr lock))
-  (if (istruct-typep flag 'lock-acquisition)
-    (setf (lock-acquisition.status flag) t))
+  (declare (ignore ptr lock flag))
   t)
 
 (defun %unlock-recursive-lock-ptr (ptr lock)
@@ -566,9 +560,7 @@
 ;;; versions in l0-misc.lisp which call RECURSIVE-LOCK-PTR (a type-check
 ;;; that fails during cold-boot when lock slots are uninitialized).
 (defun %lock-recursive-lock-object (lock &optional flag)
-  (declare (ignore lock))
-  (if (istruct-typep flag 'lock-acquisition)
-    (setf (lock-acquisition.status flag) t))
+  (declare (ignore lock flag))
   t)
 
 (defun %unlock-recursive-lock-object (lock)
@@ -585,32 +577,26 @@
   nil)
 
 ;;; Try-lock — always succeeds on single-threaded WASM.
+;;; Avoid istruct-typep: it calls type-keyword-code (level-1, UDF during bootstrap).
 (defun %try-recursive-lock-object (lock &optional flag)
-  (declare (ignore lock))
-  (if (istruct-typep flag 'lock-acquisition)
-    (setf (lock-acquisition.status flag) t))
+  (declare (ignore lock flag))
   t)
 
 ;;; Promote rwlock — no-op on single-threaded WASM.
 (defun %promote-rwlock (lock &optional flag)
-  (declare (ignore lock))
-  (if (istruct-typep flag 'lock-acquisition)
-    (setf (lock-acquisition.status flag) t))
+  (declare (ignore lock flag))
   t)
 
 ;;; Object-level rwlock wrappers — must override the unconditionalized
 ;;; versions in l0-misc.lisp which call READ-WRITE-LOCK-PTR (a type-check
 ;;; that fails during cold-boot when lock slots are uninitialized).
+;;; Pure no-ops: single-threaded WASM, no lock contention possible.
 (defun write-lock-rwlock (lock &optional flag)
-  (declare (ignore lock))
-  (if (istruct-typep flag 'lock-acquisition)
-    (setf (lock-acquisition.status flag) t))
+  (declare (ignore lock flag))
   t)
 
 (defun read-lock-rwlock (lock &optional flag)
-  (declare (ignore lock))
-  (if (istruct-typep flag 'lock-acquisition)
-    (setf (lock-acquisition.status flag) t))
+  (declare (ignore lock flag))
   t)
 
 (defun unlock-rwlock (lock)

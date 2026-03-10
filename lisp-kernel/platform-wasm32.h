@@ -59,7 +59,7 @@ struct ExceptionInformation {
 };
 
 #ifndef WASM_SPILL_STACK_WORDS
-#define WASM_SPILL_STACK_WORDS (1u << 15)
+#define WASM_SPILL_STACK_WORDS (1u << 15)  /* 32K entries — original size; spill reset before FASL loading reclaims cold-load drain leak */
 #endif
 
 /* xp accessors (stubs for wasm32). */

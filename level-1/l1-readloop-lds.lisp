@@ -27,19 +27,14 @@
 
 #+wasm32-target
 (defun toplevel-loop ()
+  ;; MVP-1: straight REPL, no runtime bridge pump or JS yield.
+  ;; runtime-bridge-pump-commands and :wasm-yield are MVP-2.
   (loop
-    (runtime-bridge-pump-commands)
-    (let ((yielded
-           (catch :wasm-yield
-             (progn
-               (if (eq (catch :toplevel
-                         (read-loop :break-level 0))
-                       $xstkover)
-                 (format t "~&;[Stacks reset due to overflow.]")
-                 (toplevel))
-               nil))))
-      (when yielded
-        (return yielded)))))
+    (if (eq (catch :toplevel
+              (read-loop :break-level 0))
+            $xstkover)
+      (format t "~&;[Stacks reset due to overflow.]")
+      (toplevel))))
 
 #-wasm32-target
 (defun toplevel-loop ()

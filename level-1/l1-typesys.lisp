@@ -1477,6 +1477,72 @@
   (logand (sxhash spec) type-cache-mask))
 
 
+;;; On WASM32 (single-threaded), avoid closure-backed let* so the xloader
+;;; can install these as plain top-level functions without closure slots.
+;;; No cache initially — correctness first, caching can be added later
+;;; via defvar-backed arrays if profiling shows it's needed.
+#+wasm32-target
+(progn
+  (defvar *%type-cache-specs% (make-array type-cache-size))
+  (defvar *%type-cache-ctypes% (make-array type-cache-size))
+  (defvar *%type-cache-probes% 0)
+  (defvar *%type-cache-hits% 0)
+  (defvar *%type-cache-ncleared% 0)
+  (defvar *%type-cache-locked% nil)
+
+  (defun clear-type-cache ()
+    (%init-misc 0 *%type-cache-specs%)
+    (%init-misc 0 *%type-cache-ctypes%)
+    (incf *%type-cache-ncleared%)
+    nil)
+
+  (defun values-specifier-type (spec &optional env)
+    (if (typep spec 'class)
+      (let* ((class-ctype (%class.ctype spec)))
+        (or (class-ctype-translation class-ctype) class-ctype))
+      (handler-case
+          (if *%type-cache-locked%
+            (or (values-specifier-type-internal spec env)
+                (make-unknown-ctype :specifier spec))
+            (unwind-protect
+                 (progn
+                   (setq *%type-cache-locked% t)
+                   (if (or (symbolp spec)
+                           (and (consp spec)
+                                (symbolp (car spec))
+                                (not (and (eq (car spec) 'member)
+                                          (some (lambda (x)
+                                                  (typep x '(or cons string bit-vector pathname)))
+                                                (cdr spec))))))
+                     (let* ((idx (hash-type-specifier spec)))
+                       (incf *%type-cache-probes%)
+                       (if (equal (svref *%type-cache-specs% idx) spec)
+                         (progn
+                           (incf *%type-cache-hits%)
+                           (svref *%type-cache-ctypes% idx))
+                         (let* ((ctype (values-specifier-type-internal spec env)))
+                           (if ctype
+                             (progn
+                               (when (cacheable-ctype-p ctype)
+                                 (let* ((spec (copy-tree spec)))
+                                   (setf (svref *%type-cache-specs% idx) spec
+                                         (svref *%type-cache-ctypes% idx) ctype)))
+                               ctype)
+                             (make-unknown-ctype :specifier spec)))))
+                     (values-specifier-type-internal spec env)))
+              (setq *%type-cache-locked% nil)))
+        (error (condition) (error condition)))))
+
+  (defun type-cache-hit-rate ()
+    (values *%type-cache-hits% *%type-cache-probes%))
+
+  (defun type-cache-locked-p ()
+    *%type-cache-locked%)
+
+  (defun lock-type-cache ()
+    (setq *%type-cache-locked% t)))
+
+#-wasm32-target
 (let* ((type-cache-specs (make-array type-cache-size))
        (type-cache-ctypes (make-array type-cache-size))
        (probes 0)
@@ -1484,7 +1550,7 @@
        (ncleared 0)
        (locked nil)
        (lock (make-lock)))
-  
+
   (defun clear-type-cache ()
     (with-lock-grabbed (lock)
       (%init-misc 0 type-cache-specs)
@@ -1531,10 +1597,10 @@
                        (values-specifier-type-internal spec env)))
                 (setq locked nil))))
         (error (condition) (error condition)))))
-  
+
   (defun type-cache-hit-rate ()
     (values hits probes))
-  
+
   (defun type-cache-locked-p ()
     locked)
 
@@ -4392,3 +4458,6 @@
                          (multiple-value-bind (win sure)
                              (ctypep value nowctype)
                            (or (not sure) win))))))))))
+
+#+wasm32-target
+(setq *wasm-type-system-ready* t)

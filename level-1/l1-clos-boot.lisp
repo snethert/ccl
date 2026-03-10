@@ -609,6 +609,17 @@
    real use (for one thing, it's known to break gf tracing), but may be helpful for
    profiling")
 
+;;; On WASM32 (single-threaded), avoid closure-backed let* so the xloader
+;;; can install this as a plain top-level function without closure slots.
+#+wasm32-target
+(progn
+  (defvar *%class-wrapper-random-state% (make-random-state))
+
+  (defun new-class-wrapper-hash-index ()
+    ;; mustn't be 0
+    (the fixnum (1+ (the fixnum (random target::target-most-positive-fixnum *%class-wrapper-random-state%))))))
+
+#-wasm32-target
 (let* ((class-wrapper-random-state (make-random-state))
        (class-wrapper-random-state-lock (make-lock)))
 

@@ -772,9 +772,57 @@ wasm_diag_log_builtin(const char *name, TCR *tcr, signed_natural index)
   wasm_host_log(msg, p);
 }
 
+static uint32_t wasm_builtin_total_calls = 0;
+
+/* Forward declarations for fuel mechanism (defined later in file) */
+static int32_t wasm_funcall_fuel;
+static void wasm_set_pending_throw(TCR *tcr, LispObj flag);
+static int wasm_pending_throw_p(TCR *tcr);
+
 static void
 wasm_call_builtin(TCR *tcr, signed_natural index, signed_natural nargs_count)
 {
+  /* Direct fuel + bail for BLT operations.  BLTs are the primary dispatch
+     path from compiled arithmetic/comparison code.  Consume fuel HERE
+     regardless of what path wasm_call_function_or_symbol takes internally,
+     so BLT-heavy loops always respect the JS drain's fuel limit. */
+  if (wasm_pending_throw_p(tcr)) {
+    return;
+  }
+  wasm_builtin_total_calls++;
+  if (wasm_funcall_fuel >= 0) {
+    if (wasm_funcall_fuel == 0) {
+      {
+        char fm[64]; int fp = 0;
+        fp += wasm_diag_append_str(fm, fp, "BLT-FUEL-OUT idx=");
+        fp += wasm_diag_append_hex32(fm, fp, (uint32_t)index);
+        fp += wasm_diag_append_str(fm, fp, " total=");
+        fp += wasm_diag_append_hex32(fm, fp, wasm_builtin_total_calls);
+        fm[fp++] = '\n';
+        wasm_host_log(fm, (unsigned)fp);
+      }
+      wasm_set_pending_throw(tcr, box_fixnum(18));
+      return;
+    }
+    wasm_funcall_fuel--;
+  }
+  /* Periodic log: prove BLTs are still executing after diagnostic limit */
+  if ((wasm_builtin_total_calls & 0xFFFF) == 0) {
+    char fm[64]; int fp = 0;
+    fp += wasm_diag_append_str(fm, fp, "BLT-TICK n=");
+    fp += wasm_diag_append_hex32(fm, fp, wasm_builtin_total_calls);
+    fp += wasm_diag_append_str(fm, fp, " fuel=");
+    { int32_t fv = wasm_funcall_fuel; char fb[12]; int fl = 0;
+      int neg = 0; uint32_t uv;
+      if (fv < 0) { neg = 1; uv = (uint32_t)(-(fv+1)) + 1; }
+      else { uv = (uint32_t)fv; }
+      do { fb[fl++] = '0'+(char)(uv%10); uv /= 10; } while (uv > 0);
+      if (neg) fm[fp++] = '-';
+      for (int i = fl-1; i >= 0; i--) fm[fp++] = fb[i]; }
+    fm[fp++] = '\n';
+    wasm_host_log(fm, (unsigned)fp);
+  }
+
   LispObj fn = wasm_builtin_function(index);
   /* The WASM compiler places args into registers as:
        arg_z = 1st, arg_y = 2nd, arg_x = 3rd
@@ -2430,13 +2478,26 @@ static void funcall_stuck_record(TCR *tcr, uint32_t entry_index) {
   }
 }
 
+static uint32_t wasm_funcall_error_count = 0;
+static uint32_t wasm_funcall_error_log_limit = 20;
+
+__attribute__((used, visibility("default"), export_name("wasm_get_funcall_error_count")))
+uint32_t
+wasm_get_funcall_error_count(void)
+{
+  return wasm_funcall_error_count;
+}
+
 static void
 wasm_signal_funcall_error(TCR *tcr, signed_natural errnum, LispObj name)
 {
-  wasm_debug_dump_state("funcall-error");
+  wasm_funcall_error_count++;
+  if (wasm_funcall_error_count <= wasm_funcall_error_log_limit) {
+    wasm_debug_dump_state("funcall-error");
+  }
 
   /* Diagnostic: identify the object type that failed funcall validation */
-  {
+  if (wasm_funcall_error_count <= wasm_funcall_error_log_limit) {
     static const char hx[] = "0123456789abcdef";
     char d[160]; int p = 0;
     const char *pfx = "funcall-err: code=";
@@ -2526,8 +2587,13 @@ static uint32_t wasm_funcall_depth = 0;
    loops that spin without checking pending_throw.  Set to -1 to disable. */
 static int32_t wasm_funcall_fuel = -1;
 
+/* Bail trap counter: counts consecutive funcall returns due to pending_throw.
+   After 10K such returns, wasm_call_function_or_symbol forces a WASM trap
+   to break compiled loops whose exit conditions depend on funcall results. */
+static uint32_t wasm_pending_throw_bail_count = 0;
+
 __attribute__((used, visibility("default"), export_name("wasm_set_funcall_fuel")))
-void wasm_set_funcall_fuel(int32_t n) { wasm_funcall_fuel = n; }
+void wasm_set_funcall_fuel(int32_t n) { wasm_funcall_fuel = n; wasm_builtin_total_calls = 0; }
 
 __attribute__((used, visibility("default"), export_name("wasm_get_funcall_fuel")))
 int32_t wasm_get_funcall_fuel(void) { return wasm_funcall_fuel; }
@@ -2550,10 +2616,27 @@ wasm_call_function_value(TCR *tcr, LispObj fn_value, LispObj name)
   /* Fuel guard: abort if budget exhausted */
   if (wasm_funcall_fuel >= 0) {
     if (wasm_funcall_fuel == 0) {
+      {
+        char fm[48]; int fp = 0;
+        fp += wasm_diag_append_str(fm, fp, "FUEL-OUT depth=");
+        fp += wasm_diag_append_hex32(fm, fp, (uint32_t)wasm_funcall_depth);
+        fm[fp++] = '\n';
+        wasm_host_log(fm, (unsigned)fp);
+      }
       wasm_set_pending_throw(tcr, box_fixnum(18));
       return;
     }
     wasm_funcall_fuel--;
+    /* Log first fuel consumption to verify fuel is active */
+    if (wasm_funcall_fuel == 99999 || wasm_funcall_fuel == 99000 || wasm_funcall_fuel == 90000 || wasm_funcall_fuel == 50000 || wasm_funcall_fuel == 10000 || wasm_funcall_fuel == 1000 || wasm_funcall_fuel == 100) {
+      char fm[48]; int fp = 0;
+      fp += wasm_diag_append_str(fm, fp, "FUEL=");
+      { uint32_t fv = (uint32_t)wasm_funcall_fuel; char fb[10]; int fl = 0;
+        do { fb[fl++] = '0'+(char)(fv%10); fv /= 10; } while (fv > 0);
+        for (int i = fl-1; i >= 0; i--) fm[fp++] = fb[i]; }
+      fm[fp++] = '\n';
+      wasm_host_log(fm, (unsigned)fp);
+    }
   }
 
   wasm_funcall_depth++;
@@ -2752,10 +2835,27 @@ wasm_call_function_or_symbol(TCR *tcr, LispObj fn_value)
      Compiled WASM code doesn't check pending_throw between instructions —
      it keeps making funcalls that all land here.  Without this check,
      a single UDF error cascades into ~176M useless funcalls that exhaust
-     the 4 GB WASM32 heap. */
+     the 4 GB WASM32 heap.
+     Bail trap: compiled WASM loop back-edges don't check pending_throw,
+     so a loop whose exit condition depends on funcall results will spin
+     forever with every funcall returning immediately.  After 10K
+     pending_throw returns, force a WASM trap that JS can catch. */
   if (wasm_pending_throw_p(tcr)) {
+    wasm_pending_throw_bail_count++;
+    if (wasm_pending_throw_bail_count > 10000) {
+      {
+        char bm[64]; int bp = 0;
+        bp += wasm_diag_append_str(bm, bp, "BAIL-TRAP pt=0x");
+        bp += wasm_diag_append_hex32(bm, bp, (uint32_t)tcr->wasm_pending_throw);
+        bm[bp++] = '\n';
+        wasm_host_log(bm, (unsigned)bp);
+      }
+      wasm_pending_throw_bail_count = 0;
+      wasm_subprims_trap();
+    }
     return;
   }
+  wasm_pending_throw_bail_count = 0;
 
   LispObj name = fn_value;
   if (fn_value == nrs_UDF.vcell) {
@@ -2811,6 +2911,16 @@ wasm_call_function_or_symbol(TCR *tcr, LispObj fn_value)
        Do NOT modify nfn/Rfn — the caller already set them up
        (e.g. _SPcall_closure sets nfn to the target code_vector). */
     {
+      /* Fuel guard: code_vector dispatch bypasses wasm_call_function_value,
+         so consume fuel here too.  Without this, closures and self-tail-calls
+         run with unlimited fuel even when the JS drain sets a limit. */
+      if (wasm_funcall_fuel >= 0) {
+        if (wasm_funcall_fuel == 0) {
+          wasm_set_pending_throw(tcr, box_fixnum(18));
+          return;
+        }
+        wasm_funcall_fuel--;
+      }
       uint32_t saved_trampoline = wasm_cv_trampoline_active;
       wasm_cv_trampoline_active = cv_entry_index + 1;
       wasm_funcall_depth++;
@@ -2827,6 +2937,15 @@ wasm_call_function_or_symbol(TCR *tcr, LispObj fn_value)
           wasm_cv_restart = 0;
           wasm_call_entry_index(cv_entry_index);
           trampoline_iters++;
+          /* Fuel check inside trampoline: self-tail-call loops consume
+             fuel per iteration so they respect the JS drain's limit. */
+          if (wasm_funcall_fuel >= 0) {
+            if (wasm_funcall_fuel == 0) {
+              wasm_set_pending_throw(tcr, box_fixnum(18));
+              break;
+            }
+            wasm_funcall_fuel--;
+          }
           if (trampoline_iters == 10000000) {
             char msg[80]; int p = 0;
             p += wasm_diag_append_str(msg, p, "TRAMPOLINE-STUCK entry=");
@@ -4493,6 +4612,19 @@ _SPbuiltin_gt(void)
     return;
   }
 
+  {
+    char msg[200]; unsigned p = 0;
+    p = wasm_diag_append_str(msg, p, "GT-FALLTHRU a=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)a);
+    p = wasm_diag_append_str(msg, p, " taga=");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)tag_of(a));
+    p = wasm_diag_append_str(msg, p, " b=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)b);
+    p = wasm_diag_append_str(msg, p, " tagb=");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)tag_of(b));
+    msg[p++] = '\n';
+    wasm_host_log(msg, p);
+  }
   wasm_diag_log_builtin("GT", tcr, WASM_BUILTIN_GT);
   wasm_call_builtin(tcr, WASM_BUILTIN_GT, 2);
 }
@@ -4534,6 +4666,19 @@ _SPbuiltin_lt(void)
     return;
   }
 
+  {
+    char msg[200]; unsigned p = 0;
+    p = wasm_diag_append_str(msg, p, "LT-FALLTHRU a=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)a);
+    p = wasm_diag_append_str(msg, p, " taga=");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)tag_of(a));
+    p = wasm_diag_append_str(msg, p, " b=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)b);
+    p = wasm_diag_append_str(msg, p, " tagb=");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)tag_of(b));
+    msg[p++] = '\n';
+    wasm_host_log(msg, p);
+  }
   wasm_call_builtin(tcr, WASM_BUILTIN_LT, 2);
 }
 
@@ -5864,6 +6009,71 @@ _SPksignalerr(void)
     wasm_subprims_trap();
   }
 
+  /* WASM bootstrap: handle XWRONGTYPE without calling ERRDISP.
+     Calling ERRDISP for wrongtype during bootstrap causes catch-frame
+     corruption and infinite loops.  Instead:
+     (a) For istruct false positives (pname match): return silently — the
+         datum IS the correct type, just `eq` failed on duplicate symbols.
+     (b) For genuine wrongtype: set pending_throw to kill the current form
+         without calling ERRDISP (avoids catch-frame corruption). */
+  {
+    int nargs_val = (int)unbox_fixnum(wasm_reg(tcr, nargs));
+    LispObj err_code = (nargs_val >= 3)
+      ? wasm_reg(tcr, arg_x)
+      : wasm_reg(tcr, arg_y);
+
+    if (err_code == box_fixnum(WASM_XWRONGTYPE)) {
+      /* For nargs>=3: check if datum is an istruct with matching pname */
+      if (nargs_val >= 3) {
+        LispObj datum = wasm_reg(tcr, arg_y);
+        LispObj expected = wasm_reg(tcr, arg_z);
+
+        if (fulltag_of(datum) == fulltag_misc &&
+            header_subtag(header_of(datum)) == subtag_istruct) {
+          LispObj *datum_data = (LispObj *)ptr_from_lispobj(datum + misc_data_offset);
+          LispObj cell = datum_data[0];
+
+          if (fulltag_of(cell) == fulltag_cons) {
+            LispObj actual_type = car(cell);
+            if (fulltag_of(actual_type) == fulltag_misc &&
+                header_subtag(header_of(actual_type)) == subtag_symbol &&
+                fulltag_of(expected) == fulltag_misc &&
+                header_subtag(header_of(expected)) == subtag_symbol) {
+              lispsymbol *actual_sym = (lispsymbol *)ptr_from_lispobj(untag(actual_type));
+              lispsymbol *expected_sym = (lispsymbol *)ptr_from_lispobj(untag(expected));
+              LispObj actual_pname = actual_sym->pname;
+              LispObj expected_pname = expected_sym->pname;
+              if (fulltag_of(actual_pname) == fulltag_misc &&
+                  fulltag_of(expected_pname) == fulltag_misc &&
+                  header_subtag(header_of(actual_pname)) == subtag_simple_base_string &&
+                  header_subtag(header_of(expected_pname)) == subtag_simple_base_string) {
+                uint32_t alen = (uint32_t)header_element_count(header_of(actual_pname));
+                uint32_t elen = (uint32_t)header_element_count(header_of(expected_pname));
+                if (alen == elen) {
+                  uint32_t *adat = (uint32_t *)ptr_from_lispobj(actual_pname + misc_data_offset);
+                  uint32_t *edat = (uint32_t *)ptr_from_lispobj(expected_pname + misc_data_offset);
+                  int match = 1;
+                  for (uint32_t j = 0; j < alen; j++) {
+                    if ((adat[j] & 0xffu) != (edat[j] & 0xffu)) {
+                      match = 0;
+                      break;
+                    }
+                  }
+                  if (match) {
+                    return;  /* false positive — istruct IS valid */
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      /* Genuine wrongtype — set pending_throw directly (no ERRDISP call) */
+      wasm_set_pending_throw(tcr, box_fixnum(17));
+      return;
+    }
+  }
+
   unsigned this_call = ksignalerr_count++;
 
   /* Verbose diagnostics for first 5 errors only */
@@ -6077,21 +6287,30 @@ _SPksignalerr(void)
     return;
   }
 
+  /* Save error code BEFORE calling ERRDISP — the call clobbers TCR regs.
+     For nargs>=3: error code is in arg_x.  For nargs==2: arg_y. */
+  int saved_nargs = (int)unbox_fixnum(wasm_reg(tcr, nargs));
+  LispObj saved_err_code = (saved_nargs >= 3)
+    ? wasm_reg(tcr, arg_x)
+    : wasm_reg(tcr, arg_y);
+
   reentering_errdisp = 1;
   wasm_call_lisp_function(tcr, errdisp);
   reentering_errdisp = 0;
 
   /* If ERRDISP handled the error by throwing to a catch handler, the throw
      unwound past _SPksignalerr — we never reach this point.  If we ARE here,
-     ERRDISP failed to handle the error (UDF, bootstrap returned nil, or
-     reentering_errdisp guard fired).  Keep pending_throw set so it propagates
-     to the caller's next wasm_call_function_value check, eventually unwinding
-     to the drain loop or toplevel boundary.
+     ERRDISP returned without handling the error.  Set pending_throw so the
+     error propagates cleanly to the caller's next check.  Without this,
+     the caller continues with corrupted register state and hits
+     unreachable traps.
 
-     Previous versions cleared pending_throw here unconditionally, which
-     prevented error propagation during cold boot (the bootstrap %err-disp
-     returns nil without setting pending_throw, but the reentering_errdisp
-     guard does set it — clearing it caused infinite error cascades). */
+     Note: XWRONGTYPE false positives from istruct duplicate symbols are
+     handled by the early-return check at the top of this function and
+     never reach here. */
+  if (!wasm_pending_throw_p(tcr)) {
+    wasm_set_pending_throw(tcr, box_fixnum(17));  /* errdisp returned without throwing */
+  }
 }
 
 static LispObj
@@ -7893,13 +8112,60 @@ void
 _SPentry_not_installed(void)
 {
   TCR *tcr = wasm_get_current_tcr();
-  char msg[80]; unsigned p = 0;
+  char msg[200]; unsigned p = 0;
   p = wasm_diag_append_str(msg, p, "ENTRY NOT INSTALLED fn=0x");
-  { LispObj fn = tcr ? wasm_reg(tcr, nfn) : 0;
-    p = wasm_diag_append_hex32(msg, p, (uint32_t)fn); }
+  LispObj fn_val = tcr ? wasm_reg(tcr, nfn) : 0;
+  p = wasm_diag_append_hex32(msg, p, (uint32_t)fn_val);
   p = wasm_diag_append_str(msg, p, " nargs=0x");
   { LispObj na = tcr ? wasm_reg(tcr, nargs) : 0;
     p = wasm_diag_append_hex32(msg, p, (uint32_t)na); }
+  /* Print entry index and function name if available */
+  if (fn_val && fulltag_of(fn_val) == fulltag_misc && fn_val != wasm_nil()) {
+    LispObj fhdr = header_of(fn_val);
+    unsigned fst = header_subtag(fhdr);
+    signed_natural fec = header_element_count(fhdr);
+    if ((fst == subtag_function || fst == subtag_pseudofunction) && fec >= 1) {
+      LispObj eidx = deref(fn_val, 1);
+      p = wasm_diag_append_str(msg, p, " e=");
+      if (tag_of(eidx) == tag_fixnum) {
+        uint32_t idx = (uint32_t)unbox_fixnum(eidx);
+        char ib[10]; int il = 0;
+        do { ib[il++] = '0' + (char)(idx%10); idx/=10; } while(idx>0);
+        for (int i=il-1;i>=0;i--) msg[p++] = ib[i];
+      }
+      /* Print all elements of the function vector */
+      for (signed_natural ei = 1; ei <= fec; ei++) {
+        LispObj ev = deref(fn_val, ei);
+        p = wasm_diag_append_str(msg, p, " [");
+        { char ib[4]; int il = 0; signed_natural ev2 = ei;
+          do { ib[il++] = '0' + (char)(ev2%10); ev2/=10; } while(ev2>0);
+          for (int i=il-1;i>=0;i--) msg[p++] = ib[i]; }
+        p = wasm_diag_append_str(msg, p, "]=0x");
+        p = wasm_diag_append_hex32(msg, p, (uint32_t)ev);
+      }
+      /* Print function name (last element) if it's a symbol */
+      if (fec >= 3) {
+        LispObj fn_name = deref(fn_val, fec);
+        if (fulltag_of(fn_name) == fulltag_misc && fn_name != wasm_nil()) {
+          LispObj fnh = header_of(fn_name);
+          if (header_subtag(fnh) == subtag_symbol) {
+            lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(fn_name));
+            LispObj pname = sym->pname;
+            if (fulltag_of(pname) == fulltag_misc && pname != wasm_nil()) {
+              LispObj ph = header_of(pname);
+              if (header_subtag(ph) == subtag_simple_base_string) {
+                signed_natural slen = header_element_count(ph);
+                if (slen > 60) slen = 60;
+                p = wasm_diag_append_str(msg, p, " name=");
+                char *sdata = (char *)((BytePtr)pname - fulltag_misc + misc_data_offset);
+                for (signed_natural i = 0; i < slen; i++) msg[p++] = sdata[i];
+              }
+            }
+          }
+        }
+      }
+    }
+  }
   msg[p++] = '\n';
   wasm_host_log(msg, p);
 

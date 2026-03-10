@@ -4618,10 +4618,22 @@
 (defun wasm2-const-pool-entry-function-index (value)
   (when (and (uvectorp value)
              (> (uvsize value) 0))
-    (let* ((slot0 (ignore-errors (uvref value 0)))
-           (entry (and slot0 (wasm2-const-pool-unbox-entry-index slot0))))
-      (when entry
-        entry))))
+    ;; Check %lfun-info for wasm-entry-index first (set by the compiler).
+    ;; This is authoritative for both native and cross-compiled functions.
+    (let* ((info (ignore-errors (%lfun-info value)))
+           (from-info (and info (getf info 'wasm-entry-index))))
+      (or from-info
+          ;; Fallback: read slot 0.
+          ;; Cross-compiled xfunctions store the RAW entry index (not a
+          ;; boxed target fixnum) — see wasm2-make-const-function.
+          ;; Native functions store a boxed target fixnum needing unbox.
+          (let* ((slot0 (ignore-errors (uvref value 0))))
+            (when (and slot0 (fixnump slot0))
+              (if (eql (typecode value) target::subtag-xfunction)
+                ;; Cross-compiled: raw entry index, no unboxing
+                (and (>= slot0 0) slot0)
+                ;; Native: boxed target fixnum
+                (wasm2-const-pool-unbox-entry-index slot0))))))))
 
 (defun wasm2-const-pool-bignum-digits (value)
   (let* ((neg (minusp value))

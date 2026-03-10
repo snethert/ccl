@@ -84,7 +84,19 @@ lisp_read(int fd, void *buf, size_t count)
   int32_t r = wasm_kernel_stream_read((uint32_t)fd, buf, (uint32_t)count, &nread);
   if (r < 0) {
     errno = -r;
+    char msg[160];
+    int n = snprintf(msg, sizeof(msg),
+                     "WASM lisp_read FAIL fd=%d count=%lu r=%d\n",
+                     fd, (unsigned long)count, r);
+    if (n > 0) wasm_host_log(msg, (unsigned)n);
     return -1;
+  }
+  {
+    char msg[160];
+    int n = snprintf(msg, sizeof(msg),
+                     "WASM lisp_read OK fd=%d count=%lu r=%d nread=%u\n",
+                     fd, (unsigned long)count, r, nread);
+    if (n > 0) wasm_host_log(msg, (unsigned)n);
   }
   return (ssize_t)r;
 }
@@ -201,8 +213,39 @@ lisp_open(char *path, int flags, mode_t mode)
       uint64_t size = 0;
       int32_t rn = wasm_kernel_stream_open_named(name, (uint32_t)len, &sid, &size);
       if (rn < 0) {
+        /* Diagnostic: log named-open failure */
+        char msg[160]; int mp = 0;
+        const char *pfx = "lisp_open: named-open FAIL name=\"";
+        while (*pfx) msg[mp++] = *pfx++;
+        for (size_t i = 0; i < len && mp < 120; i++) msg[mp++] = name[i];
+        pfx = "\" rn=";
+        while (*pfx) msg[mp++] = *pfx++;
+        { int32_t v = rn; if (v < 0) { msg[mp++] = '-'; v = -v; }
+          char nb[12]; int nl = 0;
+          do { nb[nl++] = '0' + (char)(v % 10); v /= 10; } while (v > 0);
+          for (int j = nl-1; j >= 0; j--) msg[mp++] = nb[j]; }
+        msg[mp++] = '\n';
+        wasm_host_log(msg, (unsigned)mp);
         errno = -rn;
         return -1;
+      }
+      {
+        char msg[160]; int mp = 0;
+        const char *pfx = "lisp_open: named-open OK name=\"";
+        while (*pfx) msg[mp++] = *pfx++;
+        for (size_t i = 0; i < len && mp < 120; i++) msg[mp++] = name[i];
+        pfx = "\" sid=";
+        while (*pfx) msg[mp++] = *pfx++;
+        { uint32_t v = sid; char nb[12]; int nl = 0;
+          do { nb[nl++] = '0' + (char)(v % 10); v /= 10; } while (v > 0);
+          for (int j = nl-1; j >= 0; j--) msg[mp++] = nb[j]; }
+        pfx = " size=";
+        while (*pfx) msg[mp++] = *pfx++;
+        { uint64_t v = size; char nb[20]; int nl = 0;
+          do { nb[nl++] = '0' + (char)(v % 10); v /= 10; } while (v > 0);
+          for (int j = nl-1; j >= 0; j--) msg[mp++] = nb[j]; }
+        msg[mp++] = '\n';
+        wasm_host_log(msg, (unsigned)mp);
       }
       (void)size;
       return (int)sid;
@@ -244,6 +287,15 @@ lisp_lseek(int fd, int32_t offset, int whence)
       wasm_host_log(msg, (unsigned)n);
     }
     return -1;
+  }
+  {
+    char msg[160];
+    int n = snprintf(msg, sizeof(msg),
+                     "WASM lisp_lseek OK fd=%d off=%d whence=%d pos=%u\n",
+                     fd, offset, whence, (unsigned)(uint32_t)pos);
+    if (n > 0) {
+      wasm_host_log(msg, (unsigned)n);
+    }
   }
   return (int32_t)pos;
 }

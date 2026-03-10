@@ -408,6 +408,11 @@
   (setf (sbit rehash-bits primary) 1))
 
 
+;;; On WASM, prevent inlining so callers like GETHASH call through
+;;; the function, which uses the string=-based istruct-typep fallback.
+;;; Without this, the compiler inlines an eq check on istruct cells
+;;; that fails for const-pool-deep-copied cells.
+#+wasm32-target (declaim (notinline hash-table-p))
 (defun hash-table-p (hash)
   (istruct-typep hash 'hash-table))
 
@@ -999,7 +1004,7 @@ before doing so.")
   "Finds the entry in HASH-TABLE whose key is KEY and returns the associated
    value and T as multiple values, or returns DEFAULT and NIL if there is no
    such entry. Entries can be added using SETF."
-  (unless (typep hash 'hash-table)
+  (unless (hash-table-p hash)
     (report-bad-arg hash 'hash-table))
   (when (or (eq key free-hash-marker)
             (eq key deleted-hash-key-marker))
@@ -1053,7 +1058,7 @@ before doing so.")
 (defun remhash (key hash)
   "Remove the entry in HASH-TABLE associated with KEY. Return T if there
    was such an entry, or NIL if not."
-  (unless (typep hash 'hash-table)
+  (unless (hash-table-p hash)
     (setq hash (require-type hash 'hash-table)))
   (when (hash-lock-free-p hash)
     (return-from remhash (lock-free-remhash key hash)))
@@ -1099,7 +1104,7 @@ before doing so.")
 (defun clrhash (hash)
   "This removes all the entries from HASH-TABLE and returns the hash table
    itself."
-  (unless (typep hash 'hash-table)
+  (unless (hash-table-p hash)
     (report-bad-arg hash 'hash-table))
   (when (hash-lock-free-p hash)
     (return-from clrhash (lock-free-clrhash hash)))
@@ -1135,7 +1140,7 @@ before doing so.")
 
 (defun puthash (key hash default &optional (value default))
   (declare (optimize (speed 3) (space 0)))
-  (unless (typep hash 'hash-table)
+  (unless (hash-table-p hash)
     (report-bad-arg hash 'hash-table))
   (when (invalid-hash-key-p key)
     (error "Can't use ~s as a hash-table key" key))
@@ -1202,7 +1207,7 @@ before doing so.")
           (return count))))))
 
 (defun grow-hash-table (hash)
-  (unless (typep hash 'hash-table)
+  (unless (hash-table-p hash)
     (setq hash (require-type hash 'hash-table)))
   (%grow-hash-table hash))
 
@@ -1849,7 +1854,7 @@ before doing so.")
                    (when (not (consp key))
                      (return (values hash address-p)))
                    (setq key (cdr key)))))
-              ((typep key 'hash-table)
+              ((hash-table-p key)
                (equalphash-hash-table key))
               ; what are the dudes called that contain bits? they are uvectors but not gvectors?
               ; ivectors.
@@ -1862,7 +1867,7 @@ before doing so.")
 
 (defun alist-hash-table (alist &rest hash-table-args)
   (declare (dynamic-extent hash-table-args))
-  (if (typep alist 'hash-table)
+  (if (hash-table-p alist)
     alist
     (let ((hash-table (apply #'make-hash-table hash-table-args)))
       (dolist (cons alist) (puthash (car cons) hash-table (cdr cons)))
@@ -1968,7 +1973,7 @@ before doing so.")
           #-wasm32-target (floor (ash 1 (- target::nbits-in-word target::fixnumshift)) size))))
 
 (defun assert-hash-table-readonly (hash)
-  (unless (typep hash 'hash-table)
+  (unless (hash-table-p hash)
     (report-bad-arg hash 'hash-table))
   (or (nhash.read-only hash)
       (when (nhash.owner hash)
@@ -1992,24 +1997,24 @@ before doing so.")
 ;; This is dangerous, if multiple threads are accessing a read-only
 ;; hash table. Use it responsibly.
 (defun assert-hash-table-writeable (hash)
-  (unless (typep hash 'hash-table)
+  (unless (hash-table-p hash)
     (report-bad-arg hash 'hash-table))
   (when (nhash.read-only hash)
     (setf (nhash.read-only hash) nil)
     t))
 
 (defun readonly-hash-table-p (hash)
-  (unless (typep hash 'hash-table)
+  (unless (hash-table-p hash)
     (report-bad-arg hash 'hash-table))
   (nhash.read-only hash))
 
 (defun hash-table-owner (hash)
-  (unless (typep hash 'hash-table)
+  (unless (hash-table-p hash)
     (report-bad-arg hash 'hash-table))
   (nhash.owner hash))
 
 (defun claim-hash-table (hash &optional steal)
-  (unless (typep hash 'hash-table)
+  (unless (hash-table-p hash)
     (report-bad-arg hash 'hash-table))
   (let* ((owner (nhash.owner hash)))
     (if owner
@@ -2053,7 +2058,7 @@ before doing so.")
             (incf out-idx)))))))
 
 (defun enumerate-hash-keys-and-values (hash keys values)
-  (unless (typep hash 'hash-table)
+  (unless (hash-table-p hash)
     (report-bad-arg hash 'hash-table))
   (when (hash-lock-free-p hash)
     (return-from enumerate-hash-keys-and-values
@@ -2085,21 +2090,21 @@ before doing so.")
 
 
 (defun release-thread-private-hash-table (hash)
-  (unless (and (typep hash 'hash-table)
+  (unless (and (hash-table-p hash)
                (not (nhash.read-only hash))
                (not (hash-lock-free-p hash)))
     (error "~&~s is not a thread-private hash table. " hash))
   (store-gvector-conditional nhash.owner hash *current-process* nil))
 
 (defun acquire-thread-private-hash-table (hash)
-  (unless (and (typep hash 'hash-table)
+  (unless (and (hash-table-p hash)
                (not (nhash.read-only hash))
                (not (hash-lock-free-p hash)))
     (error "~&~s is not a thread-private hash table. " hash))
   (store-gvector-conditional nhash.owner hash *current-process* nil))
 
 (defun thread-private-hash-table-owner (hash)
-  (unless (and (typep hash 'hash-table)
+  (unless (and (hash-table-p hash)
                (not (nhash.read-only hash))
                (not (hash-lock-free-p hash)))
     (error "~&~s is not a thread-private hash table. " hash))

@@ -231,7 +231,13 @@
                     (fd-open-path p flags create-mode))
   #+windows-target (with-native-utf-16-cstrs ((p path))
                      (fd-open-path p flags create-mode))
-  #-(or darwin-target windows-target)
+  ;; WASM: no character-encoding machinery at level-0; use plain C strings.
+  ;; get-character-encoding lives in l1-unicode.lisp (not yet loaded during
+  ;; FASL bootstrap), so pathname-encoding-name must never return non-NIL here.
+  #+(or wasm32-target wasm-target)
+  (with-cstrs ((p path))
+    (fd-open-path p flags create-mode))
+  #-(or darwin-target windows-target wasm32-target wasm-target)
   (let* ((encoding (pathname-encoding-name)))
     (if encoding
       (with-encoded-cstrs encoding ((p path))

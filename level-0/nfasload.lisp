@@ -421,6 +421,16 @@
   (let* ((platform (%fasl-expr s))
          (host-platform (%get-kernel-global 'host-platform)))
     (declare (fixnum platform host-platform))
+    #+wasm32-target
+    ;; WASM: host-platform kernel global may not match FASL platform.
+    ;; Log mismatch but skip the error (which calls FORMAT -> recursion).
+    (when (not (= platform host-platform))
+      (%string-to-stderr ";; FASL platform mismatch (ignored): fasl=")
+      (%string-to-stderr (%integer-to-string platform))
+      (%string-to-stderr " host=")
+      (%string-to-stderr (%integer-to-string host-platform))
+      (%string-to-stderr #.(string #\LineFeed)))
+    #-wasm32-target
     (unless (= platform host-platform)
       (error "Not a native fasl file : ~s" (faslstate.faslfname s)))))
 
@@ -1021,8 +1031,20 @@
                         (let* ((version (%fasl-read-word s)))
                           (declare (fixnum version))
                           (%wasm-note-fasload-step 160 version)
-                          (if (or (> version (target-fasl-max-version))
-                                  (< version (target-fasl-min-version)))
+                          (if (or (> version
+                                     ;; WASM: target-fasl-max-version may not be
+                                     ;; fbound yet (its %fhave is a cold-load
+                                     ;; function that can fail before FASL loading).
+                                     ;; Use the constant directly.
+                                     #+(or wasm32-target wasm-target)
+                                     (logior #xff00 (logand #xff target::fasl-max-version))
+                                     #-(or wasm32-target wasm-target)
+                                     (target-fasl-max-version))
+                                  (< version
+                                     #+(or wasm32-target wasm-target)
+                                     (logior #xff00 (logand #xff target::fasl-min-version))
+                                     #-(or wasm32-target wasm-target)
+                                     (target-fasl-min-version)))
                             (%err-disp (if (>= version #xff00) $xfaslvers $xnotfasl))
                             (progn
                               (setf (faslstate.faslversion s) version)
@@ -1186,10 +1208,40 @@
       (setf (%svref symvec target::symbol.package-predicate-cell) package-or-nil))))
 
 
-;;; On WASM32, this let*+defun form is deferred by the xloader as a
-;;; cold-load function (Phase C).  Initializers are nil so the lazy-init
-;;; pattern works at cold-load time; make-lock is created on first use
-;;; via %force-export-init.
+;;; Force-export package tracking.
+;;;
+;;; Native backends use a closure-based pattern with a lock for thread safety.
+;;; WASM is single-threaded: no locks needed.  More importantly, the closure
+;;; pattern fails during WASM bootstrap because:
+;;;   1. The let* form needs cold-boot drain to initialize closure vars
+;;;   2. Cold-boot drain fails for most functions (77%)
+;;;   3. Force-rebind creates stub function objects with nil closure vars
+;;;   4. Compiled code accesses nil closure vars → crash
+;;; So on WASM we use defvar globals instead of closures.
+
+#+wasm32-target
+(progn
+  (defvar *%force-export-packages%* nil)
+
+  (defun %force-export-init ()
+    (unless *%force-export-packages%*
+      (setq *%force-export-packages%* (list *keyword-package*))))
+
+  (defun force-export-packages ()
+    (%force-export-init)
+    (copy-list *%force-export-packages%*))
+
+  (defun package-force-export (p)
+    (%force-export-init)
+    (let* ((pkg (pkg-arg p)))
+      (pushnew pkg *%force-export-packages%*)
+      pkg))
+
+  (defun force-export-package-p (pkg)
+    (%force-export-init)
+    (if (memq pkg *%force-export-packages%*) t)))
+
+#-wasm32-target
 (let* ((force-export-packages nil)
        (force-export-packages-lock nil))
   (defun %force-export-init ()
@@ -1392,50 +1444,51 @@ Can be removed before shipping once %FASLOAD startup is stable.")
 ;;; The other bootstraps (%err-disp, %err-disp-internal, %error) just return
 ;;; nil silently — no diagnostic output that could recurse.
 #+wasm32-target
-(unless (fboundp '%kernel-restart)
-  (let ((call-count 0)
-        (in-handler nil))
-    (defun %kernel-restart (error-type &rest args)
-      ;; Re-entrancy guard: %string-to-stderr → with-cstrs → %cstr-pointer
-      ;; can trigger type checks that re-enter this handler.  Return nil
-      ;; immediately on recursive entry to break the cycle.
-      (when in-handler
-        (return-from %kernel-restart nil))
-      (setq in-handler t)
-      (setq call-count (1+ call-count))
-      (%string-to-stderr ";; bootstrap %kernel-restart: ")
-      (cond ((eql error-type #.$xwrongtype) (%string-to-stderr "wrongtype"))
-            ((eql error-type #.$xvunbnd) (%string-to-stderr "unbound"))
-            ((eql error-type #.$xnopkg) (%string-to-stderr "no-pkg"))
-            (t (%string-to-stderr "other")))
-      ;; Datum/expected printing may trigger type checks → recursive call
-      ;; → caught by guard above → returns nil → printing continues safely
-      (when args
-        (let ((datum (car args)))
-          (cond ((stringp datum)
-                 (%string-to-stderr " datum=") (%string-to-stderr datum))
-                ((symbolp datum)
-                 (%string-to-stderr " datum=") (%string-to-stderr (symbol-name datum)))
-                ((null datum)
-                 (%string-to-stderr " datum=NIL"))
-                ((fixnump datum)
-                 (%string-to-stderr " datum=<fixnum>"))
+(progn
+  (defvar *%kernel-restart-call-count%* 0)
+  (defvar *%kernel-restart-in-handler%* nil)
+  (defun %kernel-restart (error-type &rest args)
+    ;; Re-entrancy guard: %string-to-stderr → with-cstrs → %cstr-pointer
+    ;; can trigger type checks that re-enter this handler.  Return nil
+    ;; immediately on recursive entry to break the cycle.
+    (when *%kernel-restart-in-handler%*
+      (return-from %kernel-restart nil))
+    (setq *%kernel-restart-in-handler%* t)
+    (setq *%kernel-restart-call-count%* (1+ *%kernel-restart-call-count%*))
+    (%string-to-stderr ";; bootstrap %kernel-restart: ")
+    (cond ((eql error-type #.$xwrongtype) (%string-to-stderr "wrongtype"))
+          ((eql error-type #.$xvunbnd) (%string-to-stderr "unbound"))
+          ((eql error-type #.$xnopkg) (%string-to-stderr "no-pkg"))
+          (t (%string-to-stderr "other")))
+    ;; Datum/expected printing may trigger type checks → recursive call
+    ;; → caught by guard above → returns nil → printing continues safely
+    (when args
+      (let ((datum (car args)))
+        (cond ((stringp datum)
+               (%string-to-stderr " datum=") (%string-to-stderr datum))
+              ((symbolp datum)
+               (%string-to-stderr " datum=") (%string-to-stderr (symbol-name datum)))
+              ((null datum)
+               (%string-to-stderr " datum=NIL"))
+              ((fixnump datum)
+               (%string-to-stderr " datum=<fixnum>"))
+              (t
+               (%string-to-stderr " datum=<other>"))))
+      (when (cdr args)
+        (let ((expected (cadr args)))
+          (cond ((symbolp expected)
+                 (%string-to-stderr " expected=") (%string-to-stderr (symbol-name expected)))
+                ((stringp expected)
+                 (%string-to-stderr " expected=") (%string-to-stderr expected))
                 (t
-                 (%string-to-stderr " datum=<other>"))))
-        (when (cdr args)
-          (let ((expected (cadr args)))
-            (cond ((symbolp expected)
-                   (%string-to-stderr " expected=") (%string-to-stderr (symbol-name expected)))
-                  ((stringp expected)
-                   (%string-to-stderr " expected=") (%string-to-stderr expected))
-                  (t
-                   (%string-to-stderr " expected=<compound>"))))))
-      (%string-to-stderr (string #\Newline))
-      (setq in-handler nil)
-      ;; No halt — the C drain loop has per-function error isolation via
-      ;; wasm_pending_throw.  Wrongtype during cold boot is expected
-      ;; (in-package thunks, require-type on uninitialized data).
-      nil)))
+                 (%string-to-stderr " expected=<compound>"))))))
+    (%string-to-stderr "
+")
+    (setq *%kernel-restart-in-handler%* nil)
+    ;; No halt — the C drain loop has per-function error isolation via
+    ;; wasm_pending_throw.  Wrongtype during cold boot is expected
+    ;; (in-package thunks, require-type on uninitialized data).
+    nil))
 
 #+wasm32-target
 (unless (fboundp '%kernel-restart-internal)

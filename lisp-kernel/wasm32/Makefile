@@ -132,7 +132,7 @@ wasmcl: $(KERNELOBJ)
 	  --export=wasm_return_values2 --export=wasm_return_values3 --export=wasm_return_values4 \
 	  --export=wasm_get_mv --export=wasm_get_mv_indexed --export=wasm_restore_vsp \
 	  --export=wasm_vpush --export=wasm_vpop \
-	  --export=wasm_spill_push --export=wasm_spill_pop \
+	  --export=wasm_spill_push --export=wasm_spill_pop --export=wasm_spill_save --export=wasm_spill_restore --export=wasm_spill_reset \
 	  --export=wasm_funcall0 --export=wasm_funcall1 --export=wasm_funcall2 \
 	  --export=wasm_funcall3 --export=wasm_funcall4 --export=wasm_funcall5 --export=wasm_funcall6 \
 	  --export=wasm_funcall7 --export=wasm_funcall8 --export=wasm_funcall9 --export=wasm_funcall10 \

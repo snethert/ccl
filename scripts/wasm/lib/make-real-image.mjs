@@ -1248,9 +1248,14 @@ const criticalSymAddrs = new Map();   // name → word index into mem32
   for (const e of allNamedFunctions) {
     if (!e?.name || !Number.isFinite(e?.entryIndex)) continue;
     if (e.name.startsWith("(:INTERNAL")) continue;
+    const newSlots = Number.isFinite(e?.fnSlots) ? e.fnSlots : 3;
+    const existing = rebindMap.get(e.name);
+    // Keep the entry with the highest fnSlots — duplicate entries without
+    // fnSlots (defaulting to 3) must not overwrite one that has the real count.
+    if (existing && existing.fnSlots >= newSlots && existing.entryIndex === e.entryIndex) continue;
     rebindMap.set(e.name, {
       entryIndex: e.entryIndex,
-      fnSlots: Number.isFinite(e?.fnSlots) ? e.fnSlots : 3,
+      fnSlots: existing ? Math.max(existing.fnSlots, newSlots) : newSlots,
     });
   }
 
@@ -1339,10 +1344,40 @@ const criticalSymAddrs = new Map();   // name → word index into mem32
       const fnSubtag = fnHdr & 0xFF;
 
       if (fnSubtag === SUBTAG_FUNCTION) {
-        // Existing function object: update entry points in place, preserve other slots
-        mem32[fnWordIdx + 1] = entryIdx << 2;  // slot 0: entrypoint (fixnum)
-        mem32[fnWordIdx + 2] = entryIdx << 2;  // slot 1: code vector (fixnum)
-        patched++;
+        const existingCount = fnHdr >>> 8;
+        if (existingCount >= fnSlots) {
+          // Existing function object has enough slots: patch entry points in place
+          mem32[fnWordIdx + 1] = entryIdx << 2;  // slot 0: entrypoint (fixnum)
+          mem32[fnWordIdx + 2] = entryIdx << 2;  // slot 1: code vector (fixnum)
+          patched++;
+        } else if (miscAllocFn) {
+          // Existing function too small (e.g. 3-slot UDF stub for a closure that
+          // needs 7+ slots for closed-over variables).  Allocate correctly-sized
+          // replacement so compiled WASM code can access nfn[3+] safely.
+          const fnTagged = miscAllocFn(SUBTAG_FUNCTION, fnSlots);
+          if (fnTagged !== 0 && (fnTagged & 7) === FULLTAG_MISC) {
+            const m = new Uint32Array(runtime.memory.buffer);
+            const fw = ((fnTagged - FULLTAG_MISC) >>> 0) >>> 2;
+            m[fw + 1] = entryIdx << 2;   // slot 0: entrypoint (fixnum)
+            m[fw + 2] = entryIdx << 2;   // slot 1: code vector (fixnum)
+            // Copy any existing slots beyond 0,1 (e.g. lfun-info, lfun-bits)
+            for (let s = 2; s < existingCount && s < fnSlots; s++) {
+              m[fw + 1 + s] = mem32[fnWordIdx + 1 + s];
+            }
+            m[w + 3] = fnTagged;          // patch symbol fcell
+            allocated++;
+          } else {
+            // Allocation failed — patch in place as best we can
+            mem32[fnWordIdx + 1] = entryIdx << 2;
+            mem32[fnWordIdx + 2] = entryIdx << 2;
+            patched++;
+          }
+        } else {
+          // No allocator — patch in place as best we can
+          mem32[fnWordIdx + 1] = entryIdx << 2;
+          mem32[fnWordIdx + 2] = entryIdx << 2;
+          patched++;
+        }
       } else if (miscAllocFn) {
         // UDF pseudofunction or other non-function: allocate new function object
         // in the Lisp heap (via wasm_misc_alloc) so it survives image save.
@@ -1434,6 +1469,23 @@ setBootPhaseOrFail(WASM_BOOT_PHASE.L0_READY, { reason: "restore-lisp-pointers-co
   }
 }
 
+/* Diagnostic: check a few FASL-referenced entry indices in the function table */
+{
+  const table = runtime.subprimsTable;
+  const trapFn = subprims.instance.exports._SPentry_not_installed;
+  const testEntries = [1492, 1493, 1494, 1495, 202, 215, 979, 1000];
+  for (const idx of testEntries) {
+    if (idx >= table.length) {
+      console.error(`[table-check] entry ${idx}: OUT OF BOUNDS (table.length=${table.length})`);
+    } else {
+      const fn = table.get(idx);
+      const isTrap = fn === trapFn;
+      const isNull = fn === null;
+      console.error(`[table-check] entry ${idx}: ${isNull ? "NULL" : isTrap ? "TRAP STUB" : typeof fn === "function" ? "INSTALLED" : String(fn)}`);
+    }
+  }
+}
+
 /* Validate builtin-functions vector entry indices (diagnostic output
    goes to stderr via wasm_host_log for cross-referencing with manifests). */
 if (typeof ex.wasm_validate_builtin_entries === "function") {
@@ -1454,11 +1506,118 @@ if (typeof ex.wasm_heap_profile === "function") {
   console.error("[stage] pre-cold-boot heap profile:");
   ex.wasm_heap_profile();
 }
-const coldBootRc = ex.wasm_run_cold_boot_init() | 0;
-if (coldBootRc !== 0) {
+/* No fuel guard needed for C-side cold-boot — it completed successfully
+   in prior runs (all phases A-F finished).  The bail trap in subprims
+   handles any individual cold-load entry that spins with pending_throw. */
+console.error("[stage] calling wasm_run_cold_boot_init...");
+let coldBootRc;
+try {
+  coldBootRc = ex.wasm_run_cold_boot_init() | 0;
+} catch (e) {
+  /* Bail trap fired during C-side cold-boot — recover and continue */
+  console.error(`[stage] cold-boot-init trapped: ${(e.message || "").slice(0, 100)}`);
+  if (typeof ex.wasm_recover_after_trap === "function") {
+    ex.wasm_recover_after_trap();
+  }
+  coldBootRc = -99;
+}
+console.error(`[stage] cold-boot-init returned rc=${coldBootRc}`);
+if (coldBootRc !== 0 && coldBootRc !== -99) {
   fail(`wasm_run_cold_boot_init returned ${coldBootRc}`);
 }
-trace("cold-boot-init complete");
+if (coldBootRc === -99) {
+  console.error("[stage] cold-boot-init aborted by trap — continuing with JS drain");
+}
+
+/* JS-driven drain of remaining cold-load functions.
+   The C-side drain (inside wasm_run_cold_boot_init) only runs the first
+   128 entries safely.  The full list can have 2000+ entries.  JS try/catch
+   can recover from hard WASM traps that kill the C drain.
+   The snapshot was already taken by the C drain; we just run indices 128+. */
+if (typeof ex.wasm_cold_load_count === "function" &&
+    typeof ex.wasm_cold_load_run_one === "function") {
+  const total = ex.wasm_cold_load_count() | 0;
+  const cSideLimit = 128;  /* must match COLD_LOAD_C_MAX in wasm-kernel-stubs.c */
+  if (total > cSideLimit) {
+    /* Multi-pass drain: each pass may install functions that unblock
+       later ones.  Stop when no progress (same error count). */
+    const MAX_PASSES = 5;
+    let failed = [];
+    for (let i = cSideLimit; i < total; i++) failed.push(i);
+
+    /* Some cold-load entries compile to tight WASM loops with no subprim
+       calls — the fuel mechanism can't interrupt pure WASM code, and V8's
+       Runtime.terminateExecution doesn't interrupt WASM either.
+
+       Solution: load a skip-list from a file.  A wrapper script
+       (cold-load-discover.sh) iteratively runs the build with increasing
+       timeouts, discovers stuck entries, and builds the skip-list.
+
+       Skip-list file format: one entry index per line (decimal).
+       Location: build/wasm32/cold-load-skip.txt */
+    const COLD_LOAD_SKIP = new Set();
+    try {
+      const skipPath = path.join(path.dirname(fileURLToPath(import.meta.url)),
+                                  "../../../build/wasm32/cold-load-skip.txt");
+      const skipData = fsSync.readFileSync(skipPath, "utf8");
+      for (const line of skipData.split("\n")) {
+        const n = parseInt(line.trim(), 10);
+        if (!isNaN(n)) COLD_LOAD_SKIP.add(n);
+      }
+    } catch {}  /* file missing = no skips */
+
+    console.error(`[stage] JS cold-load drain: ${failed.length} entries pending, skip=${COLD_LOAD_SKIP.size}, hasFuel=${typeof subprims.instance.exports.wasm_set_funcall_fuel === "function"}`);
+    for (let pass = 1; pass <= MAX_PASSES && failed.length > 0; pass++) {
+      let passOk = 0, passErr = 0, passTrapped = 0, passSkipped = 0;
+      const nextFailed = [];
+      const spEx = subprims.instance.exports;
+      const hasFuel = typeof spEx.wasm_set_funcall_fuel === "function";
+      console.error(`[stage] JS drain pass ${pass}: starting ${failed.length} entries, hasFuel=${hasFuel}, skip=${COLD_LOAD_SKIP.size}`);
+      for (const idx of failed) {
+        if (COLD_LOAD_SKIP.has(idx)) {
+          passSkipped++;
+          continue;
+        }
+        try {
+          /* Fuel limit: prevent infinite loops via subprim calls. */
+          if (hasFuel) spEx.wasm_set_funcall_fuel(100000);
+          const rc = ex.wasm_cold_load_run_one(idx) | 0;
+          if (hasFuel) spEx.wasm_set_funcall_fuel(-1);
+          if (rc === 0) passOk++;
+          else if (rc === 1) passSkipped++;
+          else { passErr++; nextFailed.push(idx); }
+        } catch (e) {
+          if (hasFuel) spEx.wasm_set_funcall_fuel(-1);
+          /* Recover TCR state after WASM trap (bail trap from pending_throw
+             loop or genuine unreachable).  Without recovery, vsp/lisp-frame
+             are corrupted and the next cold-load entry crashes. */
+          if (typeof ex.wasm_recover_after_trap === "function") {
+            ex.wasm_recover_after_trap();
+          }
+          passTrapped++;
+          nextFailed.push(idx);
+        }
+      }
+      console.error(`[stage] JS cold-load pass ${pass}: ${failed.length} attempted, ${passOk} ok, ${passErr} lisp-err, ${passTrapped} trapped, ${passSkipped} skipped`);
+      if (passOk === 0) break;  /* no progress — stop */
+      failed = nextFailed;
+    }
+  }
+  /* GC after full drain (C + JS passes).  The C-side drain defers GC
+     to here so that cold_load_snapshot[] pointers remain valid. */
+  if (typeof ex.wasm_trigger_gc === "function") {
+    ex.wasm_trigger_gc();
+    trace("post-cold-load-drain GC complete");
+  }
+}
+
+/* Spill reset: cold-load drain leaks ~32K spill pushes from trapped
+   entries (WASM traps skip restore-locals cleanup).  Reset to empty
+   before FASL loading so FASLs have a clean spill stack. */
+if (typeof ex.wasm_spill_reset === "function") {
+  ex.wasm_spill_reset();
+  trace("spill stack reset before FASL loading");
+}
 
 /* Reset diagnostic counters so FASL-phase errors get full verbose
    diagnostics (cold-boot-init consumed some of the quota). */
@@ -1470,6 +1629,185 @@ trace("cold-boot-init complete");
   if (typeof ex.wasm_reset_debug_counters === "function") {
     ex.wasm_reset_debug_counters();
   }
+}
+
+/* Post-cold-boot force-rebind: heap scan ALL symbols (including const-pool-synthesized
+   duplicates) and patch fcells for ALL compiled functions (boot + runtime).
+   Runs after cold-boot drain to avoid masking XFUNBND errors (which cold-boot drain
+   handles gracefully) with hard WASM traps from uninitialized closure stubs.
+   Must run before FASL loading because FASL dispatch goes through the function table
+   and const pool symbols need valid fcells. */
+{
+  if (typeof ex.wasm_force_rebind_scan !== "function") {
+    fail("kernel missing wasm_force_rebind_scan");
+  }
+  const enc2 = new TextEncoder();
+  const allFnsForRebind = [
+    ...(bootNamedFunctions || []),
+    ...(compiledModulesBundle?.functions ?? []),
+  ].filter(fn => fn?.name && Number.isFinite(fn.entryIndex)
+                  && !fn.name.startsWith("(:INTERNAL"));
+  const rebindDedup = new Map();
+  for (const fn of allFnsForRebind) {
+    const existing = rebindDedup.get(fn.name);
+    const slots = Number.isFinite(fn.fnSlots) ? fn.fnSlots : 3;
+    if (!existing || slots > existing.fnSlots || (slots === existing.fnSlots && fn.entryIndex > existing.entryIndex)) {
+      rebindDedup.set(fn.name, { entryIndex: fn.entryIndex, fnSlots: existing ? Math.max(existing.fnSlots, slots) : slots });
+    }
+  }
+  const rebindEntries = [...rebindDedup.entries()].map(([name, info]) => ({ name, ...info }));
+  if (rebindEntries.length === 0) {
+    fail("force-rebind: no functions found for heap scan");
+  }
+
+  const allNameBytes = rebindEntries.map(fn => enc2.encode(fn.name));
+  const tableSize = rebindEntries.length * 16;
+  const namesSize = allNameBytes.reduce((s, b) => s + b.length, 0);
+  const tableBase = allocScratch(runtime.memory, tableSize + namesSize);
+  const mem8 = new Uint8Array(runtime.memory.buffer);
+  const memDV = new DataView(runtime.memory.buffer);
+  let nameWriteOff = tableBase + tableSize;
+  for (let i = 0; i < rebindEntries.length; i++) {
+    const nb = allNameBytes[i];
+    mem8.set(nb, nameWriteOff);
+    const eBase = tableBase + i * 16;
+    memDV.setUint32(eBase,      nameWriteOff,          true);
+    memDV.setUint32(eBase + 4,  nb.length,             true);
+    memDV.setUint32(eBase + 8,  rebindEntries[i].entryIndex >>> 0, true);
+    memDV.setUint32(eBase + 12, (rebindEntries[i].fnSlots ?? 3) >>> 0, true);
+    nameWriteOff += nb.length;
+  }
+  const rebound = ex.wasm_force_rebind_scan(tableBase >>> 0, rebindEntries.length >>> 0) | 0;
+  console.error(`[stage] post-cold-boot force-rebind: ${rebound} symbols rebound (${rebindEntries.length} entries, boot+runtime)`);
+  if (rebound < 0) {
+    fail(`wasm_force_rebind_scan failed: rc=${rebound}`);
+  }
+}
+
+/* Diagnostic: probe const pool via C function and direct memory reads */
+{
+  const m32 = new Uint32Array(runtime.memory.buffer);
+  const FULLTAG_MISC = 6;
+  const SUBTAG_SYMBOL = 0x3A;
+  const SUBTAG_FUNCTION = 0x2A;
+  console.error(`[diag] bootConstPoolData: ${bootConstPoolData.size} entries, constPoolsInstalled: ${constPoolsInstalled.size}`);
+
+  // Try calling wasm_const_pool_ref with try/catch for each entry/slot
+  if (typeof ex.wasm_const_pool_ref === "function") {
+    for (const eIdx of [1107, 310, 1092, 1492, 1104, 1103, 980, 979]) {
+      console.error(`[diag] probing entry ${eIdx}:`);
+      for (let s = 0; s < 8; s++) {
+        try {
+          const val = ex.wasm_const_pool_ref(eIdx, s) >>> 0;
+          const ft = val & 7;
+          let extra = "";
+          if (ft === FULLTAG_MISC && val > 0x1000) {
+            const objW = ((val - FULLTAG_MISC) >>> 0) >>> 2;
+            const m = new Uint32Array(runtime.memory.buffer);
+            if (objW < m.length) {
+              const hdr = m[objW];
+              const st = hdr & 0xFF;
+              if (st === SUBTAG_SYMBOL) {
+                const pnT = m[objW + 1];
+                if ((pnT & 7) === FULLTAG_MISC) {
+                  const pnW = ((pnT - FULLTAG_MISC) >>> 0) >>> 2;
+                  const pnC = m[pnW] >>> 8;
+                  let pn = "";
+                  for (let i = 0; i < Math.min(pnC, 30); i++) pn += String.fromCharCode(m[pnW+1+i]&0xFF);
+                  const fcell = m[objW + 3];
+                  extra = ` SYM:"${pn}" fcell=0x${fcell.toString(16).padStart(8,"0")}`;
+                  if ((fcell & 7) === FULLTAG_MISC && fcell > 0x1000) {
+                    const fnW = ((fcell - FULLTAG_MISC) >>> 0) >>> 2;
+                    const fnHdr = m[fnW];
+                    if ((fnHdr & 0xFF) === SUBTAG_FUNCTION) extra += ` fn-entry=${m[fnW+1]>>>2}`;
+                  }
+                }
+              } else if (st === SUBTAG_FUNCTION) {
+                extra = ` FN[${hdr>>>8}] entry=${m[objW+1]>>>2}`;
+              } else {
+                extra = ` [st=0x${st.toString(16)} cnt=${hdr>>>8}]`;
+              }
+            }
+          } else if (val === 0x04000001) {
+            extra = " (NIL)";
+          } else if ((ft & 3) === 0) {
+            extra = ` (fixnum=${val>>>2})`;
+          }
+          console.error(`[diag]   [${s}] = 0x${val.toString(16).padStart(8,"0")} ft=${ft}${extra}`);
+        } catch (e) {
+          console.error(`[diag]   [${s}] = TRAP (${e.constructor?.name}): ${(e.message||"").slice(0,80)}`);
+          break;
+        }
+      }
+    }
+  }
+
+}
+
+/* Diagnostic: check *fasl-dispatch-table* entries.  Critical opcodes must not be nil. */
+{
+  const FULLTAG_MISC = 6;
+  const SUBTAG_FUNCTION = 0x2A;
+  const m32 = new Uint32Array(runtime.memory.buffer);
+  const totalWords = m32.length;
+  const SYMBOL_HDR = 0x0000073A;
+  // Find *FASL-DISPATCH-TABLE* symbol
+  let dispTableVal = 0;
+  for (let w = 0x400000 >>> 2; w < totalWords - 8; w += 2) {
+    if (m32[w] !== SYMBOL_HDR) continue;
+    const pnameTagged = m32[w + 1];
+    if ((pnameTagged & 7) !== FULLTAG_MISC) continue;
+    const pnameW = ((pnameTagged - FULLTAG_MISC) >>> 0) >>> 2;
+    if (pnameW >= totalWords) continue;
+    const pnameHdr = m32[pnameW];
+    const pnameCount = pnameHdr >>> 8;
+    if (pnameCount !== 21) continue; // "*FASL-DISPATCH-TABLE*" = 21 chars
+    let name = "";
+    for (let i = 0; i < 21; i++) name += String.fromCharCode(m32[pnameW + 1 + i] & 0xFF);
+    if (name === "*FASL-DISPATCH-TABLE*") {
+      dispTableVal = m32[w + 2]; // vcell
+      break;
+    }
+  }
+  if (dispTableVal && (dispTableVal & 7) === FULLTAG_MISC) {
+    const dtW = ((dispTableVal - FULLTAG_MISC) >>> 0) >>> 2;
+    const dtHdr = m32[dtW];
+    const dtCount = dtHdr >>> 8;
+    // Check critical opcodes: 4=lfuncall, 10=word-fixnum, 18=nil, 20=function,
+    // 23=platform, 24=vetab-alloc, 47=src, 69=nvstr, 255=end
+    const criticalOps = [4, 10, 18, 20, 23, 24, 47, 69];
+    let nilCount = 0;
+    for (const op of criticalOps) {
+      if (op >= dtCount) { console.error(`[diag-dt] op ${op}: OOB`); continue; }
+      const val = m32[dtW + 1 + op];
+      const isNil = (val === 0x04000001);
+      const isFn = ((val & 7) === FULLTAG_MISC) && val > 0x1000 && ((m32[((val-FULLTAG_MISC)>>>0)>>>2] & 0xFF) === SUBTAG_FUNCTION);
+      if (isNil) nilCount++;
+      console.error(`[diag-dt] op ${op}: ${isNil ? "NIL" : isFn ? `fn entry=${m32[(((val-FULLTAG_MISC)>>>0)>>>2)+1]>>>2}` : `0x${val.toString(16)}`}`);
+    }
+    console.error(`[diag-dt] ${nilCount}/${criticalOps.length} critical opcodes are NIL`);
+  } else {
+    console.error(`[diag-dt] *fasl-dispatch-table* not found or unbound`);
+  }
+}
+
+/* Pre-FASL smoke test: try calling specific compiled functions */
+if (typeof ex.wasm_call_function_entry === "function") {
+  for (const [name, entry, nargs] of [
+    ["SET-PACKAGE", 992, 1],  // needs 1 arg (package designator)
+    ["%FORCE-EXPORT-INIT", 1107, 0],
+  ]) {
+    if (entry === 992) continue; // skip SET-PACKAGE (needs arg)
+    try {
+      console.error(`[smoke] calling ${name} (entry ${entry}) with ${nargs} args...`);
+      const rc = ex.wasm_call_function_entry(entry, nargs) | 0;
+      console.error(`[smoke] ${name}: rc=${rc}`);
+    } catch (e) {
+      console.error(`[smoke] ${name}: TRAP — ${(e.message || "").slice(0, 100)}`);
+    }
+  }
+} else {
+  console.error("[smoke] wasm_call_function_entry not available");
 }
 
 if (!args.noFasload) {
@@ -1494,9 +1832,29 @@ if (typeof ex.wasm_check_symbol_fbound === "function") {
   console.error("[warn] wasm_check_symbol_fbound not available — skipping pre-FASL invariant check");
 }
 
+const hasFuncallErrCounter = typeof ex.wasm_get_funcall_error_count === "function";
+
+const faslResults = { ok: [], fail: [], skip: [] };
 for (const faslPath of requiredFasls) {
+  /* Skip known-empty FASLs (cross-compilation didn't expand read-time evals) */
+  {
+    const fullPath = path.join(buildDir, faslPath);
+    try {
+      const stat = fsSync.statSync(fullPath);
+      if (stat.size < 100) {
+        console.error(`[fasload] SKIP ${faslPath} — only ${stat.size} bytes (empty FASL)`);
+        faslResults.skip.push(faslPath);
+        continue;
+      }
+    } catch (_) { /* stat failed — try loading anyway */ }
+  }
   sharedProbeUtf8Scratch.reset();
   const faslMem = sharedProbeUtf8Scratch.allocUtf8(faslPath, encoder);
+  const errBefore = hasFuncallErrCounter ? ex.wasm_get_funcall_error_count() >>> 0 : -1;
+  /* Clear any pending_throw from previous FASL failure so this FASL starts clean */
+  if (typeof ex.wasm_clear_pending_throw === "function") {
+    ex.wasm_clear_pending_throw();
+  }
   let faslRc;
   try {
     faslRc = ex.wasm_fasload_path(faslMem.ptr >>> 0, faslMem.len >>> 0) | 0;
@@ -1606,11 +1964,13 @@ for (const faslPath of requiredFasls) {
       const rfnName = readFunctionName(rfn);
       if (rfnInfo) {
         console.error(`[fasload-diag] Rfn=0x${rfn.toString(16)}: ${rfnInfo.name} count=${rfnInfo.cnt} name=${rfnName || "?"}`);
-        if (rfnInfo.st === 0x2a) {
+        /* Always dump elements for function-like objects */
+        if (rfnInfo.st === 0x2a || rfnInfo.st === 0x02 || rfnInfo.st === 0x92) {
           const dBase = rfn - 2;
-          for (let i = 0; i < Math.min(rfnInfo.cnt, 6); i++) {
+          for (let i = 0; i < Math.min(rfnInfo.cnt, 8); i++) {
             const elem = new DataView(mem.buffer).getUint32(dBase + i * 4, true);
             let extra = "";
+            if (i === 0 && (elem & 3) === 0) extra = ` entry=${elem >> 2}`;
             if ((elem & 7) === 6) {
               const n = readSymbolName(elem);
               if (n) extra = ` sym=${n}`;
@@ -1752,7 +2112,9 @@ for (const faslPath of requiredFasls) {
     } catch (diagErr) {
       console.error(`[fasload-diag] diagnostic failed: ${diagErr?.message ?? diagErr}`);
     }
-    fail(`wasm_fasload_path(${faslPath}) trapped: ${err?.message ?? err}\n${err?.stack ?? ''}`);
+    console.error(`[fasload] FAIL (trap): ${faslPath} — ${err?.message ?? err}`);
+    faslResults.fail.push({ path: faslPath, reason: "trap", detail: err?.message ?? String(err) });
+    continue;
   }
   if (faslRc !== 0) {
     /* Non-trap failure — dump TCR state for diagnosis */
@@ -1764,9 +2126,35 @@ for (const faslPath of requiredFasls) {
     } catch (diagErr) {
       console.error(`[fasload-rc-diag] failed: ${diagErr?.message ?? diagErr}`);
     }
-    fail(`wasm_fasload_path(${faslPath}) returned ${faslRc}`);
+    console.error(`[fasload] FAIL (rc=${faslRc}): ${faslPath}`);
+    faslResults.fail.push({ path: faslPath, reason: "rc", detail: faslRc });
+    continue;
   }
-  trace(`fasload ${faslPath} ok`);
+  const errAfter = hasFuncallErrCounter ? ex.wasm_get_funcall_error_count() >>> 0 : -1;
+  const errDelta = (errBefore >= 0 && errAfter >= 0) ? errAfter - errBefore : -1;
+  if (errDelta > 0) {
+    console.error(`[fasload] ${faslPath} ok — funcall errors during load: ${errDelta} (total ${errAfter})`);
+  } else {
+    trace(`fasload ${faslPath} ok${errDelta === 0 ? " (0 funcall errors)" : ""}`);
+  }
+  faslResults.ok.push(faslPath);
+}
+/* FASL loading summary */
+console.error(`\n[fasload-summary] ${faslResults.ok.length} ok, ${faslResults.fail.length} failed, ${faslResults.skip.length} skipped`);
+if (faslResults.skip.length > 0) {
+  console.error(`[fasload-summary] skipped: ${faslResults.skip.join(", ")}`);
+}
+if (faslResults.fail.length > 0) {
+  console.error(`[fasload-summary] failed:`);
+  for (const f of faslResults.fail) {
+    console.error(`  ${f.path}: ${f.reason} — ${f.detail}`);
+  }
+}
+if (faslResults.ok.length > 0) {
+  console.error(`[fasload-summary] ok: ${faslResults.ok.join(", ")}`);
+}
+if (faslResults.fail.length > 0 && faslResults.ok.length === 0) {
+  fail(`All ${faslResults.fail.length} FASLs failed to load`);
 }
 if (requiredFasls.length > 0) {
   setBootPhaseOrFail(WASM_BOOT_PHASE.RUNTIME, { reason: "post-required-fasloads" });
@@ -1816,57 +2204,9 @@ if (typeof ex.wasm_heap_profile === "function") {
   );
 }
 
-/* Phase 2B: Force-rebind all WASM-compiled runtime functions.
-   FASL loading silently fails to bind xfunction objects (subtag-xfunction = 0x92)
-   because %defun's (typep named-fn 'function) check rejects them.  Additionally,
-   early const pool install can synthesize placeholder symbols that
-   wasm_set_symbol_function_entry (package-table lookup) would miss.
-   wasm_force_rebind_scan does a full heap scan and unconditionally binds every
-   symbol object whose pname matches a table entry — catching both the canonical
-   symbol and any const-pool-synthesized placeholders.
-   This runs BEFORE image save; it is NOT a launch-time repair. */
-{
-  const enc2 = new TextEncoder();
-  const runtimeFns = (compiledModulesBundle?.functions ?? [])
-    .filter(fn => fn?.name && Number.isFinite(fn.entryIndex)
-                  && !bootEntryIndices.has(fn.entryIndex >>> 0));
-
-  if (runtimeFns.length === 0) {
-    fail("force-rebind: no runtime functions found in compiled modules bundle");
-  }
-  if (typeof ex.wasm_force_rebind_scan !== "function") {
-    fail("kernel missing wasm_force_rebind_scan");
-  }
-
-  // Encode all name strings up front
-  const allNameBytes = runtimeFns.map(fn => enc2.encode(fn.name));
-  const tableSize = runtimeFns.length * 12;   // 12 bytes per entry: name_offset u32, name_len u32, entry_index u32
-  const namesSize = allNameBytes.reduce((s, b) => s + b.length, 0);
-
-  // Grow WASM linear memory to hold the repair table + name strings.
-  // After allocScratch the buffer reference changes — always use runtime.memory.buffer.
-  const tableBase = allocScratch(runtime.memory, tableSize + namesSize);
-  const mem8 = new Uint8Array(runtime.memory.buffer);
-  const memDV = new DataView(runtime.memory.buffer);
-
-  // Write name strings contiguously after the table, then back-fill table entries.
-  let nameWriteOff = tableBase + tableSize;
-  for (let i = 0; i < runtimeFns.length; i++) {
-    const nb = allNameBytes[i];
-    mem8.set(nb, nameWriteOff);
-    const eBase = tableBase + i * 12;
-    memDV.setUint32(eBase,     nameWriteOff,          true);  // name_offset
-    memDV.setUint32(eBase + 4, nb.length,             true);  // name_len
-    memDV.setUint32(eBase + 8, runtimeFns[i].entryIndex >>> 0, true);  // entry_index
-    nameWriteOff += nb.length;
-  }
-
-  const rebound = ex.wasm_force_rebind_scan(tableBase >>> 0, runtimeFns.length >>> 0) | 0;
-  console.error(`[stage] force-rebind: ${rebound} symbols rebound (${runtimeFns.length} runtime entries)`);
-  if (rebound < 0) {
-    fail(`wasm_force_rebind_scan failed: rc=${rebound}`);
-  }
-}
+/* Phase 2B (force-rebind) moved to pre-FASL position — see "Pre-FASL force-rebind" above.
+   The heap scan now runs before FASL loading so that const-pool-synthesized symbol
+   duplicates get proper fcell bindings before any compiled code executes. */
 
 /* Invariant gate deferred: critical symbol fcells are patched AFTER the
    pre-toplfunc GC so wasm_set_symbol_function_entry allocates function

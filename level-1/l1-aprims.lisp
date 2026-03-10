@@ -24,6 +24,28 @@
                   target::xmacptr.element-count))
 
 
+;;; On WASM32 (single-threaded), avoid closure-backed let* so the xloader
+;;; can install these as plain top-level functions without closure slots.
+#+wasm32-target
+(progn
+  (defvar *%standard-initial-bindings% ())
+
+  (defun standard-initial-bindings ()
+    (copy-list *%standard-initial-bindings%))
+
+  (defun define-standard-initial-binding (symbol initform)
+    (setq symbol (require-type symbol 'symbol))
+    (%proclaim-special symbol)
+    (unless (boundp symbol)
+      (set symbol (funcall initform)))
+    (let* ((pair (assoc symbol *%standard-initial-bindings%)))
+      (if pair
+        (setf (cdr pair) initform)
+        (push (cons symbol initform) *%standard-initial-bindings%)))
+    (record-source-file symbol 'variable)
+    symbol))
+
+#-wasm32-target
 (let* ((standard-initial-bindings ())
        (standard-initial-bindings-lock (make-read-write-lock)))
 
@@ -263,18 +285,31 @@ terminate the list"
           (return top-of-top)))))))
 
 
-(defvar %setf-function-names% (make-hash-table :weak t :test 'eq))
-(defvar %setf-function-name-inverses% (make-hash-table :weak t :test 'eq))
+#+wasm32-target
+(progn
+  (defvar %setf-function-names% (make-hash-table :test 'eq))
+  (defvar %setf-function-name-inverses% (make-hash-table :test 'eq))
+  ;; Single-threaded WASM — no lock needed, no weak refs (avoid GC complications)
+  (defun setf-function-name (sym)
+    "Returns the uninterned symbol that holds the binding of (SETF sym)"
+    (or (gethash sym %setf-function-names%)
+        (let* ((setf-function-symbol (construct-setf-function-name sym)))
+          (setf (gethash setf-function-symbol %setf-function-name-inverses%) sym
+                (gethash sym %setf-function-names%) setf-function-symbol)))))
 
-(defvar *setf-names-lock* (make-lock))
-(defun setf-function-name (sym)
-  "Returns the uninterned symbol that holds the binding of (SETF sym)"
-   (or (gethash sym %setf-function-names%)
-       (with-lock-grabbed (*setf-names-lock*)
-         (or (gethash sym %setf-function-names%)
-             (let* ((setf-function-symbol (construct-setf-function-name sym)))
-               (setf (gethash setf-function-symbol %setf-function-name-inverses%) sym
-                     (gethash sym %setf-function-names%) setf-function-symbol))))))
+#-wasm32-target
+(progn
+  (defvar %setf-function-names% (make-hash-table :weak t :test 'eq))
+  (defvar %setf-function-name-inverses% (make-hash-table :weak t :test 'eq))
+  (defvar *setf-names-lock* (make-lock))
+  (defun setf-function-name (sym)
+    "Returns the uninterned symbol that holds the binding of (SETF sym)"
+    (or (gethash sym %setf-function-names%)
+        (with-lock-grabbed (*setf-names-lock*)
+          (or (gethash sym %setf-function-names%)
+              (let* ((setf-function-symbol (construct-setf-function-name sym)))
+                (setf (gethash setf-function-symbol %setf-function-name-inverses%) sym
+                      (gethash sym %setf-function-names%) setf-function-symbol)))))))
 
 (defun existing-setf-function-name (sym)
   (gethash sym %setf-function-names%))

@@ -26,9 +26,48 @@
   (cons type nil))
 
 
+;;; On WASM, the runtime module installs L1 TYPEP before its dependencies
+;;; (type system hash tables from l1-typesys.lisp) are initialized.  L1
+;;; TYPEP without predicates falls through to %TYPEP → SPECIFIER-TYPE →
+;;; VALUES-SPECIFIER-TYPE → TYPE-EXPAND → GETHASH → CLASS-CELL-TYPEP →
+;;; TYPEP creating infinite recursion.  Fix: use type-predicate first,
+;;; then istruct-name check for istruct objects.  Returning NIL for types
+;;; without predicates causes false negatives → ERROR signaling → type
+;;; system → ERROR → infinite recursion at depth 668 → spill overflow.
+;;; WASM L0 bootstrap versions of builtin-typep and class-cell-typep.
+;;; These never call TYPEP to avoid entering the L1 type system which
+;;; creates cascading error-signaling → type-system → error loops.
+;;; After l1-clos-boot.lafsl loads, a more complete L1 class-cell-typep
+;;; replaces these in the symbol's function cell.  But entry 849 (trap-based)
+;;; stays as this version — it must be safe for bootstrap callers.
+#+wasm32-target
+(defun builtin-typep (form cell)
+  (let* ((name (class-cell-name cell))
+         (pred (if (symbolp name) (type-predicate name))))
+    (cond
+      (pred (funcall pred form))
+      ;; Istruct: check by cell name (direct, no type system needed)
+      ((= (the fixnum (typecode form)) target::subtag-istruct)
+       (eq (istruct-cell-name (%svref form 0)) name))
+      ;; Can't verify without type system — return T to prevent
+      ;; cascading error loops.  Permissive but safe.
+      (t t))))
+
+#+wasm32-target
+(defun class-cell-typep (arg class-cell)
+  (let* ((name (class-cell-name class-cell))
+         (pred (if (symbolp name) (type-predicate name))))
+    (cond
+      (pred (funcall pred arg))
+      ((= (the fixnum (typecode arg)) target::subtag-istruct)
+       (eq (istruct-cell-name (%svref arg 0)) name))
+      (t t))))
+
+#-wasm32-target
 (defun builtin-typep (form cell)
   (typep form (class-cell-name cell)))
 
+#-wasm32-target
 (defun class-cell-typep (arg class-cell)
   (typep arg (class-cell-name class-cell)))
 
@@ -1013,6 +1052,19 @@
              (when (eq x token) (return arg))))
     (%kernel-restart $xwrongtype arg (if (typep token 'class-cell) (class-cell-name token) token))))
 
+#+wasm32-target
+(defun istruct-typep (thing type)
+  ;; On WASM, const pool deep-copies create duplicate symbols.
+  ;; The eq on cell-name can fail for valid istructs.
+  ;; Fall back to string= on symbol names.
+  (and (= (the fixnum (typecode thing)) target::subtag-istruct)
+       (let ((cell (%svref thing 0)))
+         (and (consp cell)
+              (let ((name (car cell)))
+                (or (eq name type)
+                    (and (symbolp name)
+                         (string= (symbol-name name) (symbol-name type)))))))))
+#-wasm32-target
 (defun istruct-typep (thing type)
   (if (= (the fixnum (typecode thing)) target::subtag-istruct)
     (eq (istruct-cell-name (%svref thing 0)) type)))

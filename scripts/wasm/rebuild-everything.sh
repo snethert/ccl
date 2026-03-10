@@ -319,7 +319,6 @@ if [ "$BUILD_ROOT_IMAGE" -eq 1 ]; then
     --manifest-out "$ROOT_IMAGE_MANIFEST_OUT"
     --modules "$MODULES_OUT"
     --boot-modules "$BOOT_MODULES_OUT"
-    --no-fasload
   )
   if [ "$ROOT_IMAGE_ALLOW_FAIL" -eq 1 ]; then
     log "RUN (root image, non-fatal): ${ROOT_CMD[*]}"

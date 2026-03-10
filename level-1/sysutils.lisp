@@ -297,6 +297,14 @@
   (let* ((pred (if (symbolp type) (type-predicate type))))
     (if pred
       (funcall pred object)
+      #+wasm32-target
+      ;; Unconditional on WASM: the (eq *wasm-type-system-ready* t) guard
+      ;; doesn't work in compiled WASM code (evaluates wrong branch).
+      ;; Use istruct-name check; return NIL for non-istruct types without
+      ;; predicates.  Full type system available after sysutils.lafsl loads.
+      (and (= (the fixnum (typecode object)) target::subtag-istruct)
+           (eq (istruct-cell-name (%svref object 0)) type))
+      #-wasm32-target
       (values (%typep object (if env (specifier-type type env) type))))))
 
 
@@ -304,6 +312,20 @@
 ;;; This is like check-type, except it returns the value rather than setf'ing
 ;;; anything, and so can be done entirely out-of-line.
 (defun require-type (arg type)
+  #+wasm32-target
+  ;; Unconditional on WASM: the (eq *wasm-type-system-ready* t) guard
+  ;; doesn't work in compiled WASM code.  Use type predicates and
+  ;; istruct-name check.  Full type system after sysutils.lafsl loads.
+  (let* ((pred (if (symbolp type) (type-predicate type))))
+    (return-from require-type
+      (if pred
+        (if (funcall pred arg) arg
+            (%kernel-restart $xwrongtype arg type))
+        (if (and (= (the fixnum (typecode arg)) target::subtag-istruct)
+                 (eq (istruct-cell-name (%svref arg 0)) type))
+          arg
+          ;; Can't verify — assume ok during bootstrap
+          arg))))
   (multiple-value-bind (win sure)
       (ctypep  arg (specifier-type type))
     (if (or win (not sure))

@@ -2140,6 +2140,41 @@ wasm_spill_pop(void)
   return value;
 }
 
+/* Spill stack save/restore — for JS-level isolation of WASM calls.
+   WASM traps abort compiled functions mid-call, leaving spill pushes
+   unmatched.  JS callers should save before and restore after any
+   call that might trap (cold-load drain, FASL loading). */
+static LispObj *wasm_saved_spill_sp = NULL;
+
+__attribute__((used, visibility("default"), export_name("wasm_spill_save")))
+void
+wasm_spill_save(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr) wasm_saved_spill_sp = tcr->wasm_spill_sp;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_spill_restore")))
+void
+wasm_spill_restore(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr && wasm_saved_spill_sp) tcr->wasm_spill_sp = wasm_saved_spill_sp;
+}
+
+/* Reset spill stack to empty.  Safe at known quiescent points
+   (between cold-load entries, between FASL loads) when no compiled
+   Lisp code is on the call stack. */
+__attribute__((used, visibility("default"), export_name("wasm_spill_reset")))
+void
+wasm_spill_reset(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr && tcr->wasm_spill_limit) {
+    tcr->wasm_spill_sp = tcr->wasm_spill_limit;
+  }
+}
+
 /* ====================================================================
  * Debug state inspection — reusable across all debugging sessions.
  * See doc/wasm/debugging.md for usage.
@@ -2403,6 +2438,33 @@ wasm_clear_pending_throw(void)
     return;
   }
   tcr->wasm_pending_throw = 0;
+}
+
+/* Recover TCR state after a WASM trap (unreachable) during cold-load drain.
+   Traps unwind the WASM call stack without executing cleanup code, leaving
+   TCR in an inconsistent state (lisp frame not exited, vsp not restored).
+   This function restores TCR to a safe state for the next cold-load entry. */
+__attribute__((used, visibility("default"), export_name("wasm_recover_after_trap")))
+void
+wasm_recover_after_trap(void)
+{
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) {
+    return;
+  }
+  tcr->wasm_pending_throw = 0;
+  tcr->valence = TCR_STATE_FOREIGN;
+  tcr->catch_top = 0;
+  tcr->db_link = 0;
+  /* Restore vsp to top of vstack area */
+  if (tcr->vs_area != NULL) {
+    LispObj *top = (LispObj *)(tcr->vs_area->high - sizeof(LispObj));
+    tcr->save_vsp = top;
+    tcr->wasm_gprs[vsp] = (LispObj)top;
+    tcr->vs_area->active = (BytePtr)top;
+  }
+  /* Clear last_lisp_frame chain */
+  tcr->last_lisp_frame = 0;
 }
 
 /*
@@ -3681,6 +3743,158 @@ wasm_consume_cold_load_list(TCR *tcr, LispObj ccl_pkg)
    cold-load function from poisoning all subsequent ones.
    Must be called AFTER %RUN-COLD-BOOT-INIT has set up infrastructure
    (locks, class cells, packages) that the cold-load functions need. */
+/* ---- Cold-load drain: JS-driven approach ----
+   The cold-load function list can have 2000+ entries.  Some thunks cause
+   hard WASM traps (unreachable) that cannot be caught from C.  JavaScript
+   CAN catch WASM traps with try/catch, so we export the snapshot and a
+   run-one function, letting JS drive the loop with per-call isolation. */
+
+#define COLD_LOAD_MAX 4096
+static LispObj cold_load_snapshot[COLD_LOAD_MAX];
+static int cold_load_snapshot_count = 0;
+
+__attribute__((used, visibility("default"), export_name("wasm_cold_load_snapshot")))
+int
+wasm_cold_load_snapshot_fn(LispObj list)
+{
+  cold_load_snapshot_count = 0;
+  if (list == lisp_nil) return 0;
+  LispObj cur = list;
+  while (cur != lisp_nil && fulltag_of(cur) == fulltag_cons &&
+         cold_load_snapshot_count < COLD_LOAD_MAX) {
+    cold_load_snapshot[cold_load_snapshot_count++] = car(cur);
+    cur = cdr(cur);
+  }
+  int overflow = 0;
+  while (cur != lisp_nil && fulltag_of(cur) == fulltag_cons) {
+    overflow++;
+    cur = cdr(cur);
+  }
+  {
+    char m[128]; int p = 0;
+    p += wasm_debug_str(m + p, "cold-load-snapshot: ");
+    p += wasm_debug_uint(m + p, (uint32_t)cold_load_snapshot_count);
+    p += wasm_debug_str(m + p, " captured");
+    if (overflow > 0) {
+      p += wasm_debug_str(m + p, ", ");
+      p += wasm_debug_uint(m + p, (uint32_t)overflow);
+      p += wasm_debug_str(m + p, " overflow");
+    }
+    m[p++] = '\n';
+    wasm_host_log(m, (unsigned)p);
+  }
+  return cold_load_snapshot_count;
+}
+
+__attribute__((used, visibility("default"), export_name("wasm_cold_load_count")))
+int
+wasm_cold_load_count_fn(void)
+{
+  return cold_load_snapshot_count;
+}
+
+/* Run a single cold-load function by snapshot index.
+   Returns:  0 = success
+             1 = skipped (not a function)
+             2 = Lisp error (pending_throw, absorbed)
+            -1 = invalid index */
+__attribute__((used, visibility("default"), export_name("wasm_cold_load_run_one")))
+int
+wasm_cold_load_run_one(int index)
+{
+  if (index < 0 || index >= cold_load_snapshot_count) return -1;
+  LispObj fn = cold_load_snapshot[index];
+  /* Accept both function objects and symbols — $fasl-lfuncall can push
+     symbols when the FASL says (funcall 'SOME-SYMBOL).  _SPfuncall
+     handles both via the function cell lookup. */
+  if (fn == lisp_nil || fulltag_of(fn) != fulltag_misc) {
+    return 1;  /* skip: not a misc-tagged object */
+  }
+  {
+    uint8_t sub = header_subtag(header_of(fn));
+    if (sub != subtag_function && sub != subtag_symbol) {
+      return 1;  /* skip: not callable */
+    }
+  }
+  TCR *tcr = wasm_get_current_tcr();
+  if (tcr == NULL) return -1;
+
+  /* Diagnostic: log details of the fn being called so we can identify stuck entries */
+  {
+    char m[128]; int p = 0;
+    p += wasm_debug_str(m + p, "CLRO idx=");
+    p += wasm_debug_uint(m + p, (uint32_t)index);
+    p += wasm_debug_str(m + p, " fn=");
+    p += wasm_debug_uint(m + p, (uint32_t)fn);
+    LispObj hdr = header_of(fn);
+    p += wasm_debug_str(m + p, " sub=");
+    p += wasm_debug_uint(m + p, (uint32_t)header_subtag(hdr));
+    uint8_t sub = header_subtag(hdr);
+    if (sub == subtag_symbol) {
+      lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(fn));
+      LispObj pname = sym->pname;
+      if (pname != lisp_nil && fulltag_of(pname) == fulltag_misc) {
+        LispObj phdr = header_of(pname);
+        if (header_subtag(phdr) == subtag_simple_base_string) {
+          natural len = header_element_count(phdr);
+          if (len > 40) len = 40;
+          uint8_t *chars = (uint8_t *)((BytePtr)pname + misc_data_offset);
+          p += wasm_debug_str(m + p, " sym=");
+          for (natural ci = 0; ci < len && p < 120; ci++) m[p++] = (char)chars[ci];
+        }
+      }
+    } else if (sub == subtag_function) {
+      /* Log the entry index and function name.
+         deref(fn,0) = header, deref(fn,1) = element 0 = code/entrypoint
+         Function name is in the lfun-bits area.  In ARM32 CCL, element 1
+         is typically the code_vector or entry index.  Dump first 4 elements
+         to help identify the function. */
+      natural nelems = header_element_count(hdr);
+      p += wasm_debug_str(m + p, " ne=");
+      p += wasm_debug_uint(m + p, (uint32_t)nelems);
+      /* Element 1 = code/entry */
+      LispObj cv = deref(fn, 1);
+      if (tag_of(cv) == tag_fixnum) {
+        p += wasm_debug_str(m + p, " eidx=");
+        p += wasm_debug_uint(m + p, (uint32_t)unbox_fixnum(cv));
+      }
+      /* Last element is typically lfun-name (for named functions) */
+      if (nelems >= 2) {
+        LispObj last = deref(fn, nelems);
+        if (fulltag_of(last) == fulltag_misc) {
+          LispObj lhdr = header_of(last);
+          if (header_subtag(lhdr) == subtag_symbol) {
+            lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(last));
+            LispObj pname = sym->pname;
+            if (pname != lisp_nil && fulltag_of(pname) == fulltag_misc &&
+                header_subtag(header_of(pname)) == subtag_simple_base_string) {
+              natural len = header_element_count(header_of(pname));
+              if (len > 30) len = 30;
+              uint8_t *chars = (uint8_t *)((BytePtr)pname + misc_data_offset);
+              p += wasm_debug_str(m + p, " nm=");
+              for (natural ci = 0; ci < len && p < 120; ci++) m[p++] = (char)chars[ci];
+            }
+          }
+        }
+      }
+    }
+    m[p++] = '\n';
+    wasm_host_log(m, (unsigned)p);
+  }
+
+  tcr->wasm_pending_throw = 0;
+  (void)wasm_foreign_funcall0(tcr, fn);
+  if (tcr->wasm_pending_throw) {
+    tcr->wasm_pending_throw = 0;
+    return 2;  /* Lisp error, absorbed */
+  }
+  return 0;
+}
+
+/* Legacy C-side drain for backward compatibility.  Only runs the first
+   COLD_LOAD_C_MAX entries (safe subset).  JS-driven drain should be
+   preferred for the full 2000+ list. */
+#define COLD_LOAD_C_MAX 128
 static int
 wasm_drain_cold_load_list(TCR *tcr, LispObj list)
 {
@@ -3690,24 +3904,31 @@ wasm_drain_cold_load_list(TCR *tcr, LispObj list)
     return 0;
   }
 
-  int count = 0, errors = 0, skipped = 0;
-  LispObj cur = list;
+  /* Snapshot into the global array (also used by JS-driven drain) */
+  int snap_count = wasm_cold_load_snapshot_fn(list);
 
-  while (cur != lisp_nil && fulltag_of(cur) == fulltag_cons) {
-    LispObj fn = car(cur);
-    cur = cdr(cur);
+  int limit = snap_count < COLD_LOAD_C_MAX ? snap_count : COLD_LOAD_C_MAX;
+  int count = 0, errors = 0, skipped = 0;
+
+  for (int i = 0; i < limit; i++) {
+    LispObj fn = cold_load_snapshot[i];
     count++;
 
-    /* Validate: must be a function object */
-    if (fn == lisp_nil ||
-        fulltag_of(fn) != fulltag_misc ||
-        header_subtag(header_of(fn)) != subtag_function) {
+    /* Accept both functions and symbols — see cold_load_run_one comment */
+    if (fn == lisp_nil || fulltag_of(fn) != fulltag_misc) {
       skipped++;
       continue;
     }
-
-    /* Log entry index for diagnostics */
     {
+      uint8_t sub = header_subtag(header_of(fn));
+      if (sub != subtag_function && sub != subtag_symbol) {
+        skipped++;
+        continue;
+      }
+    }
+
+    /* Log entry index for diagnostics (only for function objects) */
+    if (header_subtag(header_of(fn)) == subtag_function) {
       LispObj entry_s0 = deref(fn, 1);
       char d[48]; int p = 0;
       d[p++] = 'C'; d[p++] = 'F'; d[p++] = ' ';
@@ -3716,9 +3937,7 @@ wasm_drain_cold_load_list(TCR *tcr, LispObj list)
       wasm_host_log(d, (unsigned)p);
     }
 
-    /* Clear pending_throw before each call so errors don't propagate */
     tcr->wasm_pending_throw = 0;
-
     (void)wasm_foreign_funcall0(tcr, fn);
 
     if (tcr->wasm_pending_throw) {
@@ -3733,11 +3952,12 @@ wasm_drain_cold_load_list(TCR *tcr, LispObj list)
       }
       tcr->wasm_pending_throw = 0;
     }
-
-    /* GC after each cold-load function to keep memory bounded.
-       GC is cheap compared to compile time. */
-    wasm_trigger_gc();
   }
+
+  /* NOTE: Do NOT trigger GC here — the JS-driven drain still needs
+     the cold_load_snapshot[] array to contain valid pointers.  GC
+     would compact the heap and invalidate them.  The JS caller should
+     trigger GC after the full drain (C + JS passes) is complete. */
 
   /* Log summary */
   {
@@ -3745,6 +3965,8 @@ wasm_drain_cold_load_list(TCR *tcr, LispObj list)
     int dp = 0;
     dp += wasm_debug_str(dbuf + dp, "cold-load-drain: ");
     dp += wasm_debug_uint(dbuf + dp, (uint32_t)count);
+    dp += wasm_debug_str(dbuf + dp, "/");
+    dp += wasm_debug_uint(dbuf + dp, (uint32_t)snap_count);
     dp += wasm_debug_str(dbuf + dp, " called, ");
     dp += wasm_debug_uint(dbuf + dp, (uint32_t)errors);
     dp += wasm_debug_str(dbuf + dp, " errors, ");
@@ -3953,6 +4175,10 @@ wasm_run_cold_boot_init(void)
      cold-load functions to work.  Even if %RUN-COLD-BOOT-INIT threw at
      a later step, the infrastructure is there. */
   if (startup_step >= 40 && saved_cold_load_list != lisp_nil) {
+    /* Pre-grow heap so GC doesn't trigger during cold-load-drain.
+       fn_array holds raw Lisp pointers that GC compaction would invalidate;
+       with enough free space, allocation pressure won't trigger GC. */
+    wasm_grow_lisp_heap(256u * 1024u * 1024u);  /* 256 MiB headroom */
     wasm_drain_cold_load_list(tcr, saved_cold_load_list);
     /* Cold-load functions have now run; override result to success since
        the original throw was from incomplete-but-non-critical steps. */
@@ -4046,6 +4272,118 @@ wasm_run_cold_boot_init(void)
         tcr->valence = TCR_STATE_FOREIGN;
         wasm_exit_lisp_frame(tcr, old_frame2);
       }
+    }
+  }
+
+  /* Phase E: Activate L1 error handlers before any external %fasload.
+     l1-boot-3.lisp does (fset 'error #'error/full) etc., but that
+     activation thunk is one of the cold-load functions.  If it failed
+     (among the 28 errors), ERROR etc. remain UDF and FASL loading
+     cascades on the first signaled condition.
+     Fix: for each pair, if /FULL is fbound and the plain name is still
+     UDF, copy the fcell.  This mirrors l1-boot-3:46-55. */
+  {
+    static const struct {
+      const char *plain;
+      const char *full;
+    } error_activations[] = {
+      { "%KERNEL-RESTART",          "%KERNEL-RESTART/FULL" },
+      { "%KERNEL-RESTART-INTERNAL", "%KERNEL-RESTART-INTERNAL/FULL" },
+      { "%ERR-DISP",               "%ERR-DISP/FULL" },
+      { "%ERR-DISP-INTERNAL",      "%ERR-DISP-INTERNAL/FULL" },
+      { "%ERR-DISP-COMMON",        "%ERR-DISP-COMMON/FULL" },
+      { "%ERROR",                   "%ERROR/FULL" },
+      { "ERROR",                    "ERROR/FULL" },
+      { "CERROR",                   "CERROR/FULL" },
+      { "%ERRNO-DISP",             "%ERRNO-DISP/FULL" },
+      { "%ERRNO-DISP-INTERNAL",    "%ERRNO-DISP-INTERNAL/FULL" },
+    };
+    int n_activated = 0;
+    for (unsigned i = 0; i < sizeof(error_activations)/sizeof(error_activations[0]); i++) {
+      const char *pname = error_activations[i].plain;
+      const char *full_name = error_activations[i].full;
+      /* Search all packages: ERROR/CERROR are CL symbols (inherited
+         by CCL via use-list, not in CCL itab/etab), while %ERROR etc.
+         are CCL-internal.  All-packages search finds both. */
+      LispObj plain_sym = wasm_find_symbol_named_bytes(
+        (const uint8_t *)pname, (uint32_t)strlen(pname), (LispObj)0);
+      LispObj full_sym = wasm_find_symbol_named_bytes(
+        (const uint8_t *)full_name, (uint32_t)strlen(full_name), (LispObj)0);
+      if (plain_sym == 0 || full_sym == 0) continue;
+      if (fulltag_of(plain_sym) != fulltag_misc) continue;
+      if (fulltag_of(full_sym) != fulltag_misc) continue;
+      lispsymbol *plain_raw = (lispsymbol *)ptr_from_lispobj(untag(plain_sym));
+      lispsymbol *full_raw = (lispsymbol *)ptr_from_lispobj(untag(full_sym));
+      LispObj full_fn = full_raw->fcell;
+      /* Only activate if /FULL is fbound and plain is UDF */
+      if (full_fn != lisp_nil &&
+          fulltag_of(full_fn) == fulltag_misc &&
+          header_subtag(header_of(full_fn)) == subtag_function &&
+          plain_raw->fcell == nrs_UDF.vcell) {
+        plain_raw->fcell = full_fn;
+        n_activated++;
+      }
+    }
+    {
+      char msg[80]; int p = 0;
+      p += wasm_debug_str(msg + p, "error-activate: ");
+      p += wasm_debug_uint(msg + p, (uint32_t)n_activated);
+      p += wasm_debug_str(msg + p, " of 10 activated\n");
+      wasm_host_log(msg, (unsigned)p);
+    }
+  }
+
+  /* Phase F: Invariant gate — check critical symbols before FASL loading.
+     Log which key runtime symbols are still UDF so we know whether
+     cold-load-drain + retry + error-activate was sufficient. */
+  {
+    static const char *gate_symbols[] = {
+      "VALUES-SPECIFIER-TYPE",
+      "WRITE-CHAR",
+      "HASH-TABLE-P",
+      "ERROR",
+      "CERROR",
+      "%ERROR",
+      "%FASLOAD",
+      "GETHASH",
+      "MAKE-HASH-TABLE",
+      "%CONS-HASH-TABLE",
+      "HOUSEKEEPING",
+      "%USE-TOPLEVEL-COMMANDS",
+    };
+    int n_gate = (int)(sizeof(gate_symbols) / sizeof(gate_symbols[0]));
+    int n_fbound = 0, n_udf = 0;
+    for (int g = 0; g < n_gate; g++) {
+      const char *sname = gate_symbols[g];
+      LispObj gsym = wasm_find_symbol_named_bytes(
+        (const uint8_t *)sname, (uint32_t)strlen(sname), (LispObj)0);
+      if (gsym == 0 || fulltag_of(gsym) != fulltag_misc) {
+        n_udf++;
+        continue;
+      }
+      lispsymbol *graw = (lispsymbol *)ptr_from_lispobj(untag(gsym));
+      LispObj gfn = graw->fcell;
+      if (gfn == nrs_UDF.vcell || gfn == lisp_nil) {
+        n_udf++;
+        char gd[80]; int gp = 0;
+        gp += wasm_debug_str(gd + gp, "GATE-UDF: ");
+        gp += wasm_debug_str(gd + gp, sname);
+        gd[gp++] = '\n';
+        wasm_host_log(gd, (unsigned)gp);
+      } else {
+        n_fbound++;
+      }
+    }
+    {
+      char gm[96]; int gmp = 0;
+      gmp += wasm_debug_str(gm + gmp, "gate-check: ");
+      gmp += wasm_debug_uint(gm + gmp, (uint32_t)n_fbound);
+      gmp += wasm_debug_str(gm + gmp, "/");
+      gmp += wasm_debug_uint(gm + gmp, (uint32_t)n_gate);
+      gmp += wasm_debug_str(gm + gmp, " fbound, ");
+      gmp += wasm_debug_uint(gm + gmp, (uint32_t)n_udf);
+      gmp += wasm_debug_str(gm + gmp, " UDF\n");
+      wasm_host_log(gm, (unsigned)gmp);
     }
   }
 
@@ -5175,6 +5513,8 @@ wasm_fasload_path(uint32_t path_ptr, uint32_t path_len)
   if (wasm_boot_phase_state == WASM_BOOT_EARLY) {
     return -10;
   }
+  /* Clear any pending_throw from previous FASL so this one starts clean */
+  tcr->wasm_pending_throw = 0;
   LispObj ccl_pkg = wasm_find_package_named_bytes(ccl_pkg_name, (uint32_t)sizeof(ccl_pkg_name));
   if (ccl_pkg == lisp_nil) {
     return -4;
@@ -7167,6 +7507,7 @@ wasm_force_rebind_scan(uint32_t table_ptr, uint32_t table_count)
     uint32_t name_offset;
     uint32_t name_len;
     uint32_t entry_index;
+    uint32_t fn_slots;
   } repair_entry;
 
   const repair_entry *entries = (const repair_entry *)(uintptr_t)table_ptr;
@@ -7223,15 +7564,22 @@ wasm_force_rebind_scan(uint32_t table_ptr, uint32_t table_count)
                   fn_data[0] = entry_val;
                   fn_data[1] = entry_val;
                 } else {
-                  /* No existing function — allocate a new 3-slot stub. */
-                  LispObj fn = wasm_misc_alloc(tcr, subtag_function, (signed_natural)3);
+                  /* No existing function — allocate stub with correct slot count.
+                     Closure functions need extra slots for closed-over variables;
+                     using fn_slots from the manifest preserves the layout that
+                     compiled WASM code expects when accessing nfn[3+]. */
+                  uint32_t slots = entries[i].fn_slots;
+                  if (slots < 3) slots = 3;
+                  LispObj fn = wasm_misc_alloc(tcr, subtag_function, (signed_natural)slots);
                   if (fn == lisp_nil) {
                     break;  /* allocation failed — skip this symbol */
                   }
                   LispObj *fn_data = (LispObj *)((BytePtr)fn + misc_data_offset);
                   fn_data[0] = entry_val;
                   fn_data[1] = entry_val;
-                  fn_data[2] = lisp_nil;
+                  for (uint32_t s = 2; s < slots; s++) {
+                    fn_data[s] = lisp_nil;
+                  }
                   rawsym->fcell = fn;
                 }
                 rebound++;
