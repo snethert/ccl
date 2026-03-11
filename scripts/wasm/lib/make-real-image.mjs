@@ -48,6 +48,11 @@ import {
   STARTUP_SYMBOL_PACKAGE_OVERRIDES_CANONICAL_V1,
   rewriteConstPoolFunctionDesignators,
 } from "./bootstrap-function-resolver.mjs";
+import {
+  entrySpaceFromBundle,
+  findEntrySpaceConflicts,
+  formatEntrySpaceConflictSummary,
+} from "./module-entry-space.mjs";
 import { FILE_MODE_READ } from "./persist-service.mjs";
 import { WASM_BOOT_ENTRY_INDEX } from "./abi-constants.mjs";
 import { createInspector } from "./tcr-inspector.mjs";
@@ -570,6 +575,28 @@ function createRuntimeObjectReader(memory, { compiledFunctionByEntryIndex = null
     }
   }
 
+  function dumpConsList(ptr, label, { maxItems = 32 } = {}) {
+    let current = ptr >>> 0;
+    console.error(`[${label}] list@0x${current.toString(16)}`);
+    for (let i = 0; i < maxItems; i++) {
+      if (nilValue != null && current === (nilValue >>> 0)) {
+        console.error(`    [${i}] NIL`);
+        return;
+      }
+      const cell = readCons(current);
+      if (!cell) {
+        console.error(`    [${i}] 0x${current.toString(16).padStart(8, "0")} (${describeValue(current)})`);
+        return;
+      }
+      console.error(
+        `    [${i}] car=0x${cell.car.toString(16).padStart(8, "0")} (${describeValue(cell.car)}) ` +
+        `cdr=0x${cell.cdr.toString(16).padStart(8, "0")} (${describeValue(cell.cdr, 1)})`,
+      );
+      current = cell.cdr >>> 0;
+    }
+    console.error(`    ... truncated after ${maxItems} items`);
+  }
+
   function describeCallable(ptr) {
     const info = descMisc(ptr);
     if (!info) {
@@ -606,6 +633,7 @@ function createRuntimeObjectReader(memory, { compiledFunctionByEntryIndex = null
     descMisc,
     describeCallable,
     describeValue,
+    dumpConsList,
     dumpFunction,
     dumpObjectSlots,
     readCons,
@@ -615,6 +643,97 @@ function createRuntimeObjectReader(memory, { compiledFunctionByEntryIndex = null
     readPackageName,
     readSymbolName,
   };
+}
+
+function scanHeapForNamedPackages(reader, packageName, { limit = 8 } = {}) {
+  const matches = [];
+  const end = runtime.memory.buffer.byteLength & ~0x7;
+  for (let base = 0x100; base < end; base += 8) {
+    const ptr = (base + FULLTAG_MISC) >>> 0;
+    const info = reader.descMisc(ptr);
+    if (!info || info.st !== SUBTAG_PACKAGE) continue;
+    if (reader.readPackageName(ptr) !== packageName) continue;
+    matches.push({
+      ptr,
+      names: reader.readMiscElement(ptr, 0) >>> 0,
+      used: reader.readMiscElement(ptr, 1) >>> 0,
+      shadowed: reader.readMiscElement(ptr, 2) >>> 0,
+    });
+    if (matches.length >= limit) break;
+  }
+  return matches;
+}
+
+function scanHeapForNamedSymbols(reader, symbolName, { limit = 12 } = {}) {
+  const matches = [];
+  const end = runtime.memory.buffer.byteLength & ~0x7;
+  for (let base = 0x100; base < end; base += 8) {
+    const ptr = (base + FULLTAG_MISC) >>> 0;
+    const info = reader.descMisc(ptr);
+    if (!info || info.st !== SUBTAG_SYMBOL) continue;
+    if (reader.readSymbolName(ptr) !== symbolName) continue;
+    const pkg = reader.readMiscElement(ptr, 3) >>> 0;
+    matches.push({
+      ptr,
+      packagePtr: pkg,
+      packageName: reader.readPackageName(pkg),
+      vcell: reader.readMiscElement(ptr, 1) >>> 0,
+      fcell: reader.readMiscElement(ptr, 2) >>> 0,
+    });
+    if (matches.length >= limit) break;
+  }
+  return matches;
+}
+
+function logNamedPackageScan(reader, packageName) {
+  const matches = scanHeapForNamedPackages(reader, packageName);
+  const summary = matches
+    .map((entry) => `0x${entry.ptr.toString(16)} names=${reader.describeValue(entry.names)}`)
+    .join(" | ");
+  console.error(`[stage] package-scan ${packageName}: ${matches.length} match(es)${summary ? ` ${summary}` : ""}`);
+  for (const entry of matches) {
+    reader.dumpObjectSlots(entry.ptr, `package-scan ${packageName} 0x${entry.ptr.toString(16)}`, 8);
+  }
+}
+
+function logNamedSymbolScan(reader, symbolName) {
+  const matches = scanHeapForNamedSymbols(reader, symbolName);
+  const summary = matches
+    .map((entry) => (
+      `0x${entry.ptr.toString(16)} pkg=0x${entry.packagePtr.toString(16)} ` +
+      `(${entry.packageName ?? "?"}) v=0x${entry.vcell.toString(16)} f=0x${entry.fcell.toString(16)}`
+    ))
+    .join(" | ");
+  console.error(`[stage] symbol-scan ${symbolName}: ${matches.length} match(es)${summary ? ` ${summary}` : ""}`);
+  for (const entry of matches) {
+    reader.dumpObjectSlots(entry.ptr, `symbol-scan ${symbolName} 0x${entry.ptr.toString(16)}`, 8);
+  }
+}
+
+function logConstPoolSlotValue({
+  ex,
+  runtime,
+  compiledFunctionByEntryIndex,
+  label,
+  entryIndex,
+  slot,
+} = {}) {
+  if (typeof ex?.wasm_const_pool_ref !== "function") return;
+  const nilValue = typeof ex.wasm_get_lisp_nil === "function" ? (ex.wasm_get_lisp_nil() >>> 0) : null;
+  const reader = createRuntimeObjectReader(runtime.memory, { compiledFunctionByEntryIndex, nilValue });
+  try {
+    const value = ex.wasm_const_pool_ref(entryIndex >>> 0, slot >>> 0) >>> 0;
+    console.error(
+      `[stage] ${label}: const[${entryIndex}:${slot}]=0x${value.toString(16).padStart(8, "0")} ` +
+      `(${reader.describeValue(value)})`,
+    );
+    reader.dumpObjectSlots(value, `${label} const[${entryIndex}:${slot}]`, 8);
+  } catch (err) {
+    console.error(
+      `[stage] ${label}: const[${entryIndex}:${slot}] trap ${(err?.constructor?.name ?? "Error")}: ` +
+      `${(err?.message ?? "").slice(0, 160)}`,
+    );
+  }
 }
 
 function dumpFasloadFailureContext({
@@ -704,6 +823,14 @@ function dumpFasloadFailureContext({
             `    [${slot}] TRAP ${(e?.constructor?.name ?? "Error")}: ${(e?.message ?? "").slice(0, 120)}`,
           );
           break;
+        }
+      }
+      if (targetEntryIndex === 1434) {
+        try {
+          const listValue = ex.wasm_const_pool_ref(targetEntryIndex >>> 0, 1) >>> 0;
+          reader.dumpConsList(listValue, `${label} lfuncall-target const[1] list`, { maxItems: 40 });
+        } catch (err) {
+          console.error(`[${label}] failed to dump entry 1434 list: ${err?.message ?? err}`);
         }
       }
     }
@@ -1253,7 +1380,19 @@ function installConstPoolOnDemand(entryIndexRaw) {
   const nilValue = typeof kernelExports.wasm_get_lisp_nil === "function"
     ? (kernelExports.wasm_get_lisp_nil() >>> 0)
     : null;
-  if (rc === 0 || (nilValue != null && rc === nilValue)) return 0;
+  if (rc === 0 || (nilValue != null && rc === nilValue)) {
+    const entryName = compiledFunctionByEntryIndex.get(entryIndex)?.name ?? null;
+    const diag = typeof kernelExports.wasm_const_pool_diag_fail_get === "function"
+      ? (kernelExports.wasm_const_pool_diag_fail_get() | 0)
+      : null;
+    console.error(
+      `[const-pool] on-demand install failed: entry=${entryIndex}` +
+      (entryName ? ` name=${entryName}` : "") +
+      ` rc=0x${(rc >>> 0).toString(16)}` +
+      (diag != null ? ` diag=${diag}` : ""),
+    );
+    return 0;
+  }
 
   constPoolsInstalled.add(entryIndex);
   return 1;
@@ -1455,6 +1594,15 @@ if (bootModulesPath) {
     bundle: bootBundleJson,
     indexBytes: bootIndexBytes,
   });
+  const bootEntrySpace = entrySpaceFromBundle(bootBundleJson, bootResolved, { path: bootModulesPath });
+  const runtimeEntrySpace = entrySpaceFromBundle(compiledModulesBundle, resolvedBundle, { path: modulesPath });
+  const entrySpaceConflicts = await findEntrySpaceConflicts(bootEntrySpace, runtimeEntrySpace);
+  if (entrySpaceConflicts.total > 0) {
+    fail(
+      `boot/runtime module entry overlap between ${displayPath(bootModulesPath)} and ${displayPath(modulesPath)}: `
+      + formatEntrySpaceConflictSummary(entrySpaceConflicts, "boot", "runtime"),
+    );
+  }
   if (bootBundleJson?.binary) {
     const bootBinPath = path.join(path.dirname(bootModulesPath), bootBundleJson.binary);
     bootBinaryPath = bootBinPath;
@@ -1542,6 +1690,16 @@ if (bootModulesPath) {
   trace("no boot modules bundle provided (--boot-modules)");
 }
 
+if (bootEntryIndices.size > 0) {
+  let pruned = 0;
+  for (const entryIndex of bootEntryIndices) {
+    if (constPoolEntries.delete(entryIndex >>> 0)) {
+      pruned++;
+    }
+  }
+  trace(`runtime const-pool overlaps pruned: ${pruned}`);
+}
+
 const bundleInstall = await installCompiledModulesFromBundle({
   bundle: compiledModulesBundle,
   binaryReader: compiledModulesReader,
@@ -1577,6 +1735,14 @@ for (const fn of [
   if (!Number.isFinite(fn?.entryIndex)) continue;
   compiledFunctionByEntryIndex.set(fn.entryIndex >>> 0, fn);
 }
+logConstPoolSlotValue({
+  ex,
+  runtime,
+  compiledFunctionByEntryIndex,
+  label: "post-module-install",
+  entryIndex: 1096,
+  slot: 12,
+});
 
 function maxEntryIndexByName(functions) {
   const maxByName = new Map();
@@ -1654,22 +1820,15 @@ const criticalSymAddrs = new Map();   // name → word index into mem32
   // initialization (defvar, defclass, etc.) hasn't run yet — that happens
   // later during FASL loading.  FASL loading will naturally replace boot
   // stubs with the runtime implementations alongside their initialization.
-  const allNamedFunctions = [
-    ...bootNamedFunctions,
-  ];
+  const allNamedFunctions = selectRebindEntries(bootNamedFunctions);
 
   const rebindMap = new Map();
   for (const e of allNamedFunctions) {
     if (!e?.name || !Number.isFinite(e?.entryIndex)) continue;
     if (e.name.startsWith("(:INTERNAL")) continue;
-    const newSlots = Number.isFinite(e?.fnSlots) ? e.fnSlots : 3;
-    const existing = rebindMap.get(e.name);
-    // Keep the entry with the highest fnSlots — duplicate entries without
-    // fnSlots (defaulting to 3) must not overwrite one that has the real count.
-    if (existing && existing.fnSlots >= newSlots && existing.entryIndex === e.entryIndex) continue;
     rebindMap.set(e.name, {
-      entryIndex: e.entryIndex,
-      fnSlots: existing ? Math.max(existing.fnSlots, newSlots) : newSlots,
+      entryIndex: e.entryIndex >>> 0,
+      fnSlots: Number.isFinite(e?.fnSlots) ? e.fnSlots : 3,
     });
   }
 
@@ -1877,8 +2036,6 @@ if (!args.noFasload && typeof ex.wasm_fasload_path !== "function") {
   fail("kernel missing wasm_fasload_path");
 }
 
-setBootPhaseOrFail(WASM_BOOT_PHASE.L0_READY, { reason: "restore-lisp-pointers-complete" });
-
 /* Fill null table slots with a trap stub so that call_indirect on an
    uninstalled entry produces a diagnosable Lisp XNOTFUN error instead
    of an opaque RuntimeError: unreachable. */
@@ -1916,17 +2073,43 @@ if (typeof ex.wasm_validate_builtin_entries === "function") {
   console.error(`[stage] validated ${count} builtin function entries`);
 }
 
-/* Execute level-0 cold-boot initialization before FASL loading.
-   This runs *XLOAD-COLD-LOAD-FUNCTIONS* (initializes *FASL-API*,
-   PATHNAME-ENCODING-NAME, *PACKAGE-REFS*, etc.), sets up system locks,
-   populates early class cells, resizes package hash tables, and
-   updates binding indices.  Effects are baked into root.image. */
+/* Pre-cold-boot vcell repair.
+   Boot/runtime const-pool install can synthesize duplicate symbol objects whose
+   vcells are still NIL/unbound while the canonical package-table symbol already
+   has the correct global value. cold-boot-init and early FASL loading read
+   globals like *PACKAGE-REFS* through compiled code before the later save-time
+   vcell repair runs, so canonicalize them here as well. */
+if (typeof ex.wasm_repair_vcell_scan === "function") {
+  const preColdBootVcellRepaired = ex.wasm_repair_vcell_scan() | 0;
+  console.error(`[stage] pre-cold-boot vcell repair: ${preColdBootVcellRepaired} symbols repaired`);
+  if (preColdBootVcellRepaired < 0) {
+    fail(`pre-cold-boot wasm_repair_vcell_scan failed: rc=${preColdBootVcellRepaired}`);
+  }
+} else {
+  console.error("[stage] pre-cold-boot vcell repair: kernel missing wasm_repair_vcell_scan (skipped)");
+}
+logConstPoolSlotValue({
+  ex,
+  runtime,
+  compiledFunctionByEntryIndex,
+  label: "post-pre-cold-boot-vcell-repair",
+  entryIndex: 1096,
+  slot: 12,
+});
+
+/* Execute level-0 cold boot before FASL loading.
+   The kernel prelude sets up only the infrastructure that deferred
+   cold-load thunks need.  The saved cold-load list is then drained under
+   host control, and a separate finalize phase performs package/doc/binding
+   work only after that drain is complete. */
 if (typeof ex.wasm_run_cold_boot_init !== "function") {
   fail("kernel missing wasm_run_cold_boot_init — rebuild kernel");
 }
+if (typeof ex.wasm_run_cold_boot_finalize !== "function") {
+  fail("kernel missing wasm_run_cold_boot_finalize — rebuild kernel");
+}
 const COLD_LOAD_C_MAX = 128;
 const COLD_LOAD_MAX_PASSES = 5;
-const PRE_FASL_JS_ENTRY_NAMES = new Set();
 const DISALLOWED_LOCK_CALLABLE_NAMES = new Set(["RECURSIVE-LOCK-PTR", "READ-WRITE-LOCK-PTR"]);
 const protectedBootSymbolSpecs = [
   { lookupNames: ["%LOCK-RECURSIVE-LOCK-PTR"], manifestName: "%LOCK-RECURSIVE-LOCK-PTR" },
@@ -1946,6 +2129,10 @@ const preFaslBootstrapAliasSpecs = [
   {
     symbolName: "PREPARE-TO-DESTRUCTURE",
     targetName: "%EARLY-PREPARE-TO-DESTRUCTURE",
+  },
+  {
+    symbolName: "FORMAT",
+    targetName: "BOOTSTRAPPING-FORMAT",
   },
 ];
 const protectedBootSymbolNames = new Set(
@@ -1986,15 +2173,6 @@ function coldLoadRange(startIndex, endIndex) {
 
 function dedupeIndices(indices) {
   return [...new Set(indices.filter((idx) => Number.isFinite(idx) && idx >= 0))];
-}
-
-function selectColdLoadEntriesByName(entries, names) {
-  if (!(names instanceof Set) || names.size === 0) return [];
-  return dedupeIndices(
-    entries
-      .filter((entry) => entry?.name && names.has(entry.name))
-      .map((entry) => entry.index),
-  ).sort((a, b) => a - b);
 }
 
 function drainColdLoadEntries({
@@ -2097,124 +2275,36 @@ function drainColdLoadEntries({
   };
 }
 
-function describeSymbolValue(name, value, reader) {
-  return `${name}=${reader.describeValue(value)}`;
-}
-
-function bootstrapColdLoadUntilFaslApi({
-  stageLabel,
-  entries,
-}) {
-  if (typeof ex.wasm_cold_load_count !== "function" ||
-      typeof ex.wasm_cold_load_run_one !== "function") {
-    console.error(`[stage] ${stageLabel}: cold-load JS helpers unavailable`);
-    return { attemptedIndices: [], completedIndices: [], remainingIndices: [] };
-  }
-  const faslApiValue = lookupSymbolValue("*FASL-API*");
-  const nilValue = typeof ex.wasm_get_lisp_nil === "function"
-    ? (ex.wasm_get_lisp_nil() >>> 0)
-    : null;
-  const reader = createRuntimeObjectReader(runtime.memory, { compiledFunctionByEntryIndex, nilValue });
-  const faslApiReady = () => {
-    const value = lookupSymbolValue("*FASL-API*");
-    return value !== 0 && (nilValue == null || value !== nilValue);
-  };
-  const attemptedIndices = [];
-  const completedIndices = [];
-  const remainingIndices = [];
-  let lispErrCount = 0;
-  let trappedCount = 0;
-  let skippedCount = 0;
-
-  if (faslApiReady()) {
-    console.error(
-      `[stage] ${stageLabel}: already ready ` +
-      `(${describeSymbolValue("*FASL-API*", faslApiValue, reader)})`,
-    );
-    return { attemptedIndices, completedIndices, remainingIndices };
-  }
-
-  const pendingEntries = [...entries].sort((a, b) => a.index - b.index);
-  const spEx = subprims.instance.exports;
-  const hasFuel = typeof spEx.wasm_set_funcall_fuel === "function";
-
-  console.error(
-    `[stage] ${stageLabel}: *FASL-API* is NIL; draining cold-load prefix until it initializes`,
-  );
-  for (const entry of pendingEntries) {
-    if (faslApiReady()) break;
-    attemptedIndices.push(entry.index);
-    console.error(
-      `[stage] ${stageLabel}: idx=${entry.index} kind=${entry.kind}` +
-      (entry.name ? ` name=${entry.name}` : "") +
-      (entry.entryIndex != null ? ` entry=${entry.entryIndex}` : ""),
-    );
-    try {
-      if (hasFuel) {
-        spEx.wasm_set_funcall_fuel(100000);
-      }
-      const rc = ex.wasm_cold_load_run_one(entry.index) | 0;
-      if (hasFuel) {
-        spEx.wasm_set_funcall_fuel(-1);
-      }
-      if (rc === 0) {
-        completedIndices.push(entry.index);
-      } else if (rc === 1) {
-        skippedCount++;
-        completedIndices.push(entry.index);
-      } else {
-        lispErrCount++;
-        remainingIndices.push(entry.index);
-        console.error(
-          `[stage] ${stageLabel}: cold-load idx ${entry.index} returned rc=${rc}; continuing bootstrap search`,
-        );
-      }
-    } catch (e) {
-      if (hasFuel) {
-        spEx.wasm_set_funcall_fuel(-1);
-      }
-      if (typeof ex.wasm_recover_after_trap === "function") {
-        ex.wasm_recover_after_trap();
-      }
-      trappedCount++;
-      remainingIndices.push(entry.index);
-      console.error(
-        `[stage] ${stageLabel}: cold-load idx ${entry.index} trapped before *FASL-API* init: ` +
-        `${e?.message ?? e}; continuing bootstrap search`,
-      );
-    }
-  }
-
-  const finalFaslApiValue = lookupSymbolValue("*FASL-API*");
-  if (!faslApiReady()) {
-    fail(
-      `${stageLabel}: *FASL-API* still NIL after ${attemptedIndices.length} cold-load entries ` +
-      `(${describeSymbolValue("*FASL-API*", finalFaslApiValue, reader)}; ` +
-      `${lispErrCount} lisp-err, ${trappedCount} trapped, ${skippedCount} skipped)`,
-    );
-  }
-  console.error(
-    `[stage] ${stageLabel}: ready after ${attemptedIndices.length} entries ` +
-    `(${describeSymbolValue("*FASL-API*", finalFaslApiValue, reader)}; ` +
-    `${lispErrCount} lisp-err, ${trappedCount} trapped, ${skippedCount} skipped, ` +
-    `${remainingIndices.length} deferred)`,
-  );
-  return { attemptedIndices, completedIndices, remainingIndices };
-}
-
 function selectRebindEntries(namedFunctions) {
   const dedup = new Map();
   for (const fn of namedFunctions) {
     if (!fn?.name || !Number.isFinite(fn.entryIndex) || fn.name.startsWith("(:INTERNAL")) {
       continue;
     }
+    const entryIndex = fn.entryIndex >>> 0;
     const fnSlots = Number.isFinite(fn.fnSlots) ? fn.fnSlots : 3;
     const existing = dedup.get(fn.name);
-    if (!existing ||
-        fnSlots > existing.fnSlots ||
-        (fnSlots === existing.fnSlots && fn.entryIndex > existing.entryIndex)) {
+    if (!existing) {
       dedup.set(fn.name, {
-        entryIndex: fn.entryIndex >>> 0,
+        entryIndex,
+        fnSlots,
+      });
+      continue;
+    }
+    if (entryIndex > existing.entryIndex) {
+      /* Later compiled entries override earlier ones, even if the earlier
+         definition was a closure with a larger manifest fnSlots count.
+         That preserves intentional WASM overrides such as replacing a
+         closure-backed bootstrap defun with a plain top-level defun. */
+      dedup.set(fn.name, {
+        entryIndex,
+        fnSlots,
+      });
+      continue;
+    }
+    if (entryIndex === existing.entryIndex && fnSlots > existing.fnSlots) {
+      dedup.set(fn.name, {
+        entryIndex,
         fnSlots,
       });
     }
@@ -2277,23 +2367,95 @@ const PRE_FASL_DEFERRED_RUNTIME_SYMBOL_NAMES = new Set([
 ]);
 
 /*
- * Pre-FASL runtime rebinding must be stricter than the post-FASL repair pass.
- * wasm_force_rebind_scan matches by pname only and ignores package identity, so
- * rebinding late runtime names here can rewrite bootstrap/package-local symbols
- * inside boot const pools.  That is exactly how early SET-PACKAGE/%FIND-PKG
- * thunks end up seeing STRING/OR/CHARACTER rebound to late runtime entries.
- *
- * Keep the pre-FASL phase as an explicit allowlist.  The initial set is empty:
- * boot image fixup, protected lock repair, and exact bootstrap alias repair are
- * the only allowed pre-FASL fcell mutations.
+ * Runtime entries exist before required FASLs, but many of their symbols do
+ * not.  Trying to prebind those entries before the defining FASL has interned
+ * its symbols is semantically wrong: symbols like %DEFPARAMETER simply do not
+ * exist anywhere in the heap before l1-utils loads.  Let FASL execution intern
+ * and bind them at the native point of definition, then canonicalize all
+ * runtime const pools in Phase 2C after the required FASLs complete.
  */
-const PRE_FASL_RUNTIME_REBIND_SYMBOL_NAMES = new Set();
+const EXACT_RUNTIME_BINDING_SPECS = [];
 
-const preFaslRuntimeRebindFns = runtimeRebindFns.filter(
-  (fn) =>
-    PRE_FASL_RUNTIME_REBIND_SYMBOL_NAMES.has(fn.name) &&
-    !PRE_FASL_DEFERRED_RUNTIME_SYMBOL_NAMES.has(fn.name),
+const PRE_FASL_RUNTIME_BINDING_SPECS = EXACT_RUNTIME_BINDING_SPECS.filter(
+  (spec) => spec.bindBeforeFasl == null,
 );
+const PRE_LOAD_RUNTIME_BINDING_SPECS_BY_TRIGGER = new Map();
+for (const spec of EXACT_RUNTIME_BINDING_SPECS) {
+  if (spec.bindBeforeFasl == null) continue;
+  const specs = PRE_LOAD_RUNTIME_BINDING_SPECS_BY_TRIGGER.get(spec.bindBeforeFasl) ?? [];
+  specs.push(spec);
+  PRE_LOAD_RUNTIME_BINDING_SPECS_BY_TRIGGER.set(spec.bindBeforeFasl, specs);
+}
+
+function rebindExactRuntimeSymbols(stageLabel, specs) {
+  const nilValue = typeof ex.wasm_get_lisp_nil === "function" ? (ex.wasm_get_lisp_nil() >>> 0) : null;
+  const reader = createRuntimeObjectReader(runtime.memory, { compiledFunctionByEntryIndex, nilValue });
+  console.error(`[stage] ${stageLabel}: repairing ${specs.length} canonical symbols`);
+  let rebound = 0;
+  for (const spec of specs) {
+    const expectedEntry = expectedRuntimeEntryByName(spec.symbolName);
+    let reboundPkg = null;
+    for (const packageName of spec.packages) {
+      const rc = setPackageSymbolFunctionEntry(packageName, spec.symbolName, expectedEntry, 0);
+      if (rc === 0) {
+        rebound++;
+        reboundPkg = packageName;
+        break;
+      }
+      if (rc !== -1) {
+        fail(`${stageLabel}: ${packageName}::${spec.symbolName} rebind failed rc=${rc}`);
+      }
+    }
+    if (!reboundPkg) {
+      logNamedSymbolScan(reader, spec.symbolName);
+      for (const packageName of spec.packages) {
+        logNamedPackageScan(reader, packageName);
+        const value = lookupPackageSymbolFunctionValue(packageName, spec.symbolName);
+        if (value !== 0) {
+          console.error(
+            `[stage] ${stageLabel}: ${packageName}::${spec.symbolName} ` +
+            `lookup returned 0x${value.toString(16)} (${reader.describeValue(value)})`,
+          );
+          reader.dumpObjectSlots(value, `${stageLabel} ${packageName}::${spec.symbolName}`, 8);
+        }
+      }
+      fail(`${stageLabel}: canonical symbol not found for ${spec.symbolName}`);
+    }
+    console.error(`[stage] ${stageLabel}: ${reboundPkg}::${spec.symbolName} -> entry ${expectedEntry}`);
+  }
+  console.error(`[stage] ${stageLabel}: rebound ${rebound} canonical symbols`);
+}
+
+function runExactRuntimeSymbolGate(stageLabel, specs) {
+  const nilValue = typeof ex.wasm_get_lisp_nil === "function" ? (ex.wasm_get_lisp_nil() >>> 0) : null;
+  const reader = createRuntimeObjectReader(runtime.memory, { compiledFunctionByEntryIndex, nilValue });
+  console.error(`[stage] ${stageLabel}: checking ${specs.length} canonical symbols`);
+  for (const spec of specs) {
+    const expectedEntry = expectedRuntimeEntryByName(spec.symbolName);
+    let resolved = null;
+    for (const packageName of spec.packages) {
+      const value = lookupPackageSymbolFunctionValue(packageName, spec.symbolName);
+      if (value !== 0) {
+        resolved = { packageName, value };
+        break;
+      }
+    }
+    if (!resolved) {
+      fail(`${stageLabel}: canonical symbol not found for ${spec.symbolName}`);
+    }
+    const callable = reader.describeCallable(resolved.value);
+    console.error(
+      `[stage] ${stageLabel}: ${resolved.packageName}::${spec.symbolName} ` +
+      `callable=${callable.name ?? callable.kind} entry=${callable.entryIndex ?? "?"} expected=${expectedEntry}`,
+    );
+    if (!Number.isFinite(callable.entryIndex) || (callable.entryIndex >>> 0) !== (expectedEntry >>> 0)) {
+      fail(
+        `${stageLabel}: ${resolved.packageName}::${spec.symbolName} resolved to entry ` +
+        `${callable.entryIndex ?? "?"}, expected ${expectedEntry}`,
+      );
+    }
+  }
+}
 
 function describeColdLoadSnapshotEntries() {
   if (typeof ex.wasm_cold_load_count !== "function" || typeof ex.wasm_cold_load_ref !== "function") {
@@ -2350,6 +2512,41 @@ function lookupSymbolFunctionValue(name) {
   }
 }
 
+function lookupPackageSymbolFunctionValue(packageName, symbolName) {
+  if (typeof ex.wasm_lookup_package_symbol_function !== "function") {
+    fail("kernel missing wasm_lookup_package_symbol_function");
+  }
+  const packageBytes = encoder.encode(packageName);
+  const symbolBytes = encoder.encode(symbolName);
+  const packagePtr = ex.malloc(packageBytes.length);
+  if (!packagePtr) {
+    fail(`lookupPackageSymbolFunctionValue: malloc failed for package ${packageName}`);
+  }
+  const symbolPtr = ex.malloc(symbolBytes.length);
+  if (!symbolPtr) {
+    if (typeof ex.free === "function") {
+      ex.free(packagePtr);
+    }
+    fail(`lookupPackageSymbolFunctionValue: malloc failed for ${packageName}::${symbolName}`);
+  }
+  const mem8 = new Uint8Array(runtime.memory.buffer);
+  mem8.set(packageBytes, packagePtr);
+  mem8.set(symbolBytes, symbolPtr);
+  try {
+    return ex.wasm_lookup_package_symbol_function(
+      packagePtr,
+      packageBytes.length,
+      symbolPtr,
+      symbolBytes.length,
+    ) >>> 0;
+  } finally {
+    if (typeof ex.free === "function") {
+      ex.free(symbolPtr);
+      ex.free(packagePtr);
+    }
+  }
+}
+
 function lookupSymbolValue(name) {
   if (typeof ex.wasm_lookup_symbol_value !== "function") {
     fail("kernel missing wasm_lookup_symbol_value");
@@ -2386,6 +2583,43 @@ function setSymbolFunctionEntry(name, entryIndex, slot = 0) {
   } finally {
     if (typeof ex.free === "function") {
       ex.free(namePtr);
+    }
+  }
+}
+
+function setPackageSymbolFunctionEntry(packageName, symbolName, entryIndex, slot = 0) {
+  if (typeof ex.wasm_set_package_symbol_function_entry !== "function") {
+    fail("kernel missing wasm_set_package_symbol_function_entry");
+  }
+  const packageBytes = encoder.encode(packageName);
+  const symbolBytes = encoder.encode(symbolName);
+  const packagePtr = ex.malloc(packageBytes.length);
+  if (!packagePtr) {
+    fail(`setPackageSymbolFunctionEntry: malloc failed for package ${packageName}`);
+  }
+  const symbolPtr = ex.malloc(symbolBytes.length);
+  if (!symbolPtr) {
+    if (typeof ex.free === "function") {
+      ex.free(packagePtr);
+    }
+    fail(`setPackageSymbolFunctionEntry: malloc failed for ${packageName}::${symbolName}`);
+  }
+  const mem8 = new Uint8Array(runtime.memory.buffer);
+  mem8.set(packageBytes, packagePtr);
+  mem8.set(symbolBytes, symbolPtr);
+  try {
+    return ex.wasm_set_package_symbol_function_entry(
+      packagePtr,
+      packageBytes.length,
+      symbolPtr,
+      symbolBytes.length,
+      entryIndex >>> 0,
+      slot >>> 0,
+    ) | 0;
+  } finally {
+    if (typeof ex.free === "function") {
+      ex.free(symbolPtr);
+      ex.free(packagePtr);
     }
   }
 }
@@ -2595,16 +2829,31 @@ function logPreFaslPackageState(stageLabel) {
   const nilValue = typeof ex.wasm_get_lisp_nil === "function" ? (ex.wasm_get_lisp_nil() >>> 0) : 0;
   const reader = createRuntimeObjectReader(runtime.memory, { compiledFunctionByEntryIndex, nilValue });
   const packageValue = lookupSymbolValue("*PACKAGE*");
+  const commonLispPackageValue = lookupSymbolValue("*COMMON-LISP-PACKAGE*");
+  const cclPackageValue = lookupSymbolValue("*CCL-PACKAGE*");
   const allPackagesValue = lookupSymbolValue("%ALL-PACKAGES%");
   const allPackagesLockValue = lookupSymbolValue("%ALL-PACKAGES-LOCK%");
   const packageNames = packageNamesFromList(allPackagesValue, reader, nilValue, 12);
   const summary = packageNames.length > 0 ? packageNames.join(", ") : "<empty>";
   console.error(
     `[stage] ${stageLabel}: *PACKAGE*=${reader.describeValue(packageValue)} ` +
+    `*COMMON-LISP-PACKAGE*=${reader.describeValue(commonLispPackageValue)} ` +
+    `*CCL-PACKAGE*=${reader.describeValue(cclPackageValue)} ` +
     `%ALL-PACKAGES%=${reader.describeValue(allPackagesValue)} ` +
     `%ALL-PACKAGES-LOCK%=${reader.describeValue(allPackagesLockValue)}`,
   );
   console.error(`[stage] ${stageLabel}: package names [${packageNames.length}] ${summary}`);
+  for (const packageName of ["CCL", "COMMON-LISP"]) {
+    logNamedPackageScan(reader, packageName);
+  }
+  for (const symbolName of ["*PACKAGE-REFS*", "*PACKAGE-REFS-LOCK*", "%ALL-PACKAGES%"]) {
+    logNamedSymbolScan(reader, symbolName);
+    const symbolValue = lookupSymbolValue(symbolName);
+    console.error(
+      `[stage] ${stageLabel}: vcell ${symbolName}=0x${symbolValue.toString(16).padStart(8, "0")} ` +
+      `(${reader.describeValue(symbolValue)})`,
+    );
+  }
   for (const fnName of ["SET-PACKAGE", "FIND-PACKAGE", "%FIND-PKG", "PACKAGE-%LOCAL-NICKNAMES"]) {
     const callableValue = lookupSymbolFunctionValue(fnName);
     const callable = reader.describeCallable(callableValue);
@@ -2628,10 +2877,17 @@ function logPreRestoreLispPointersState() {
   }
   const nilValue = typeof ex.wasm_get_lisp_nil === "function" ? (ex.wasm_get_lisp_nil() >>> 0) : 0;
   const reader = createRuntimeObjectReader(runtime.memory, { compiledFunctionByEntryIndex, nilValue });
+  for (const packageName of ["CCL", "COMMON-LISP"]) {
+    logNamedPackageScan(reader, packageName);
+  }
   const trackedSymbols = [
     "*INTERACTIVE-STREAMS-INITIALIZED*",
     "*HEAP-IVECTORS*",
+    "%REVIVE-SYSTEM-LOCKS",
   ];
+  for (const symbolName of trackedSymbols) {
+    logNamedSymbolScan(reader, symbolName);
+  }
   for (const symbolName of trackedSymbols) {
     const vcellValue = lookupSymbolValue(symbolName);
     console.error(
@@ -2670,6 +2926,57 @@ function logPreRestoreLispPointersState() {
   }
 }
 
+function installOrRefreshRuntimeConstPools({ stageLabel, refreshEntryIndices = new Set() } = {}) {
+  let installed = 0;
+  let refreshed = 0;
+  let failed = 0;
+  let skipped = 0;
+  const nilValue = typeof ex.wasm_get_lisp_nil === "function"
+    ? (ex.wasm_get_lisp_nil() >>> 0)
+    : null;
+
+  for (const [entryIndex, info] of constPoolEntries) {
+    const decoded = decodeConstPoolForInfo(info);
+    if (!decoded || decoded.length === 0) {
+      skipped++;
+      continue;
+    }
+    const refresh = refreshEntryIndices.has(entryIndex);
+    try {
+      const rc = installConstPoolBytes({
+        kernelExports: ex,
+        memory: runtime.memory,
+        entryIndex,
+        constPoolBytes: decoded,
+      });
+      if (nilValue != null && (rc >>> 0) === nilValue) {
+        failed++;
+      } else {
+        constPoolsInstalled.add(entryIndex);
+        if (refresh) {
+          refreshed++;
+        } else {
+          installed++;
+        }
+      }
+    } catch (e) {
+      console.error(`[stage] ${stageLabel}: entry ${entryIndex} error: ${e.message}`);
+      failed++;
+    }
+    if ((installed + refreshed + failed) % 500 === 0) {
+      console.error(
+        `[progress] ${stageLabel}: ${installed + refreshed + failed}/${constPoolEntries.size}`,
+      );
+    }
+  }
+
+  console.error(
+    `[stage] ${stageLabel}: ${installed} installed, ${refreshed} refreshed, ` +
+    `${failed} failed, ${skipped} skipped (empty)`,
+  );
+  return { installed, refreshed, failed, skipped };
+}
+
 console.error(`[stage] cold-boot-init starting (const-pool installs so far: ${_cpInstallCount}, skipped: ${_cpSkipCount})`);
 if (typeof ex.wasm_heap_profile === "function") {
   console.error("[stage] pre-cold-boot heap profile:");
@@ -2679,54 +2986,48 @@ const coldBootRc = ex.wasm_run_cold_boot_init() | 0;
 if (coldBootRc !== 0) {
   fail(`wasm_run_cold_boot_init returned ${coldBootRc}`);
 }
-trace("cold-boot-init complete");
+logConstPoolSlotValue({
+  ex,
+  runtime,
+  compiledFunctionByEntryIndex,
+  label: "post-cold-boot-init",
+  entryIndex: 1096,
+  slot: 12,
+});
+trace("cold-boot-init prelude complete");
 const coldLoadEntries = describeColdLoadSnapshotEntries();
 logColdLoadEntries(coldLoadEntries, {
   stageLabel: "post-cold-boot snapshot near C/JS handoff",
   startIndex: Math.max(0, COLD_LOAD_C_MAX - 4),
   count: 16,
 });
-logPreFaslPackageState("pre-FASL package gate");
 rebindProtectedBootSymbols("pre-FASL lock repair");
 runProtectedBootSymbolGate("pre-FASL lock gate");
-
-const preFaslBootstrap = bootstrapColdLoadUntilFaslApi({
-  stageLabel: "pre-FASL bootstrap cold-load",
-  entries: coldLoadEntries,
+const preFaslColdLoad = drainColdLoadEntries({
+  stageLabel: "pre-FASL cold-load tail",
+  indices: dedupeIndices(coldLoadEntries.map((entry) => entry.index)),
+  maxPasses: 3,
 });
-const preFaslBootstrapCompletedIndices = dedupeIndices(preFaslBootstrap.completedIndices);
-const preFaslColdLoadIndices = dedupeIndices(
-  selectColdLoadEntriesByName(coldLoadEntries, PRE_FASL_JS_ENTRY_NAMES)
-    .filter((idx) => !preFaslBootstrapCompletedIndices.includes(idx)),
-);
-const preFaslColdLoad = preFaslColdLoadIndices.length > 0
-  ? drainColdLoadEntries({
-      stageLabel: "pre-FASL cold-load prefix",
-      indices: preFaslColdLoadIndices,
-      maxPasses: 3,
-    })
-  : { remaining: [] };
-if (preFaslRuntimeRebindFns.length > 0) {
-  runForceRebindScan({
-    stageLabel: "pre-FASL force-rebind",
-    namedFunctions: preFaslRuntimeRebindFns,
-  });
+const preFaslRemaining = dedupeIndices(preFaslColdLoad?.remaining ?? []);
+if (preFaslRemaining.length > 0) {
+  fail(`pre-FASL cold-load drain left ${preFaslRemaining.length} unresolved entries`);
+}
+const coldBootFinalizeRc = ex.wasm_run_cold_boot_finalize() | 0;
+if (coldBootFinalizeRc !== 0) {
+  fail(`wasm_run_cold_boot_finalize returned ${coldBootFinalizeRc}`);
+}
+trace("cold-boot-finalize complete");
+logPreFaslPackageState("pre-FASL package gate");
+if (PRE_FASL_RUNTIME_BINDING_SPECS.length > 0) {
+  rebindExactRuntimeSymbols("pre-FASL exact bind", PRE_FASL_RUNTIME_BINDING_SPECS);
+  runExactRuntimeSymbolGate("pre-FASL exact bind gate", PRE_FASL_RUNTIME_BINDING_SPECS);
 } else {
-  console.error("[stage] pre-FASL force-rebind: skipped (explicit allowlist empty)");
+  console.error("[stage] pre-FASL exact bind: skipped (explicit allowlist empty)");
 }
 rebindPreFaslBootstrapAliases("pre-FASL bootstrap alias repair");
 logPreFaslPackageState("post-pre-FASL rebind package gate");
 runPreFaslBootstrapAliasGate("pre-FASL bootstrap alias gate");
 runProtectedBootSymbolGate("post-rebind lock gate");
-const preFaslRetry = drainColdLoadEntries({
-  stageLabel: "pre-FASL cold-load retry",
-  indices: preFaslColdLoad?.remaining ?? [],
-  maxPasses: 3,
-});
-const preFaslRemaining = dedupeIndices([
-  ...(preFaslBootstrap.remainingIndices ?? []),
-  ...(preFaslRetry?.remaining ?? preFaslColdLoad?.remaining ?? []),
-]);
 
 /* Spill reset: trapped cold-load entries can leak spill pushes because WASM
    traps skip restore-locals cleanup.  Reset before FASL loading so the FASL
@@ -2750,6 +3051,8 @@ if (typeof ex.wasm_spill_reset === "function") {
 }
 
 if (!args.noFasload) {
+setBootPhaseOrFail(WASM_BOOT_PHASE.L0_READY, { reason: "pre-required-fasloads" });
+
 /* Pre-FASL invariant: verify bootstrap definitions of %DEFVAR and
    %KERNEL-RESTART took effect during cold-boot-init.  Without these,
    every FASL load will abort with WASM_XFUNBND. */
@@ -2775,6 +3078,11 @@ const hasFuncallErrCounter = typeof ex.wasm_get_funcall_error_count === "functio
 
 const faslResults = { ok: [], fail: [], skip: [] };
 for (const faslPath of requiredFasls) {
+  const stagedRuntimeBindings = PRE_LOAD_RUNTIME_BINDING_SPECS_BY_TRIGGER.get(faslPath);
+  if (stagedRuntimeBindings && stagedRuntimeBindings.length > 0) {
+    rebindExactRuntimeSymbols(`pre-${faslPath} exact bind`, stagedRuntimeBindings);
+    runExactRuntimeSymbolGate(`pre-${faslPath} exact bind gate`, stagedRuntimeBindings);
+  }
   /* Some WASM fasls are valid thin loaders into the module bundle, so size
      alone is not a safe reason to skip loading. */
   {
@@ -2865,14 +3173,7 @@ if (requiredFasls.length > 0) {
   setBootPhaseOrFail(WASM_BOOT_PHASE.RUNTIME, { reason: "l1-baked-in" });
 }
 
-const postFaslPending = [
-  ...preFaslRemaining,
-  ...coldLoadEntries
-    .filter((entry) =>
-      !preFaslBootstrapCompletedIndices.includes(entry.index) &&
-      !preFaslColdLoadIndices.includes(entry.index))
-    .map((entry) => entry.index),
-];
+const postFaslPending = [...preFaslRemaining];
 const postFaslColdLoad = drainColdLoadEntries({
   stageLabel: "post-FASL cold-load tail",
   indices: dedupeIndices(postFaslPending),
@@ -3015,43 +3316,10 @@ bootConstPoolData.clear();
    and must be refreshed here.  At this point cold-boot-init and FASL loading
    are done, so runtime const pools can be canonicalized before the image save.
    Class-refs are left as sentinel cons cells and resolved next. */
-{
-  let installed = 0, refreshed = 0, failed = 0, skipped = 0;
-  for (const [entryIndex, info] of constPoolEntries) {
-    const decoded = decodeConstPoolForInfo(info);
-    if (!decoded || decoded.length === 0) { skipped++; continue; }
-    const refresh = runtimeConstPoolsInstalledBeforePhase2C.has(entryIndex);
-    try {
-      const rc = installConstPoolBytes({
-        kernelExports: ex,
-        memory: runtime.memory,
-        entryIndex,
-        constPoolBytes: decoded,
-      });
-      const nilValue = ex.wasm_get_lisp_nil?.() >>> 0;
-      if (nilValue != null && (rc >>> 0) === nilValue) {
-        failed++;
-      } else {
-        constPoolsInstalled.add(entryIndex);
-        if (refresh) {
-          refreshed++;
-        } else {
-          installed++;
-        }
-      }
-    } catch (e) {
-      console.error(`[stage] late pool install entry ${entryIndex} error: ${e.message}`);
-      failed++;
-    }
-    if ((installed + failed) % 500 === 0) {
-      console.error(`[progress] late pool install: ${installed + failed}/${constPoolEntries.size}`);
-    }
-  }
-  console.error(
-    `[stage] late runtime const-pool install: ${installed} installed, ` +
-    `${refreshed} refreshed, ${failed} failed, ${skipped} skipped (empty)`,
-  );
-}
+installOrRefreshRuntimeConstPools({
+  stageLabel: "late runtime const-pool install",
+  refreshEntryIndices: runtimeConstPoolsInstalledBeforePhase2C,
+});
 
 /* Resolve class-ref sentinel cons cells in all pools.  The serializer now
    emits class-ref tags (tag 18) for named class objects instead of deep-copying
@@ -3094,6 +3362,47 @@ const rlpMs = Date.now() - rlpBefore;
 console.error(`[stage] RESTORE-LISP-POINTERS rc=${postFasloadRestoreRc} (${rlpMs} ms)`);
 if (postFasloadRestoreRc !== 0) {
   trace(`RESTORE-LISP-POINTERS rc=${postFasloadRestoreRc} (non-fatal)`);
+}
+
+/* Match the native image-builder contract: the saved image must carry
+   canonical symbol bindings for these runtime entry points, not just the
+   raw %TOPLEVEL-FUNCTION% slot.  This has to run after
+   RESTORE-LISP-POINTERS, once package tables are rehashed and canonical
+   symbols are discoverable again. */
+{
+  const finalRuntimeSymbolNames = [
+    "TOPLEVEL",
+    "STARTUP-CCL",
+    "TOPLEVEL-LOOP",
+  ];
+  console.error(`[stage] final runtime symbol bind: repairing ${finalRuntimeSymbolNames.length} symbols`);
+  for (const name of finalRuntimeSymbolNames) {
+    const expectedEntry = expectedRuntimeEntryByName(name);
+    const rc = setSymbolFunctionEntry(name, expectedEntry, 0);
+    if (rc !== 0) {
+      fail(`[stage] final runtime symbol bind: ${name} -> ${expectedEntry} failed rc=${rc}`);
+    }
+  }
+  const nilValue = typeof ex.wasm_get_lisp_nil === "function" ? (ex.wasm_get_lisp_nil() >>> 0) : null;
+  const reader = createRuntimeObjectReader(runtime.memory, { compiledFunctionByEntryIndex, nilValue });
+  for (const name of finalRuntimeSymbolNames) {
+    const expectedEntry = expectedRuntimeEntryByName(name);
+    const value = lookupSymbolFunctionValue(name);
+    if (value === 0) {
+      fail(`[stage] final runtime symbol bind: ${name} not found after repair`);
+    }
+    const callable = reader.describeCallable(value);
+    console.error(
+      `[stage] final runtime symbol bind: ${name} ` +
+      `entry=${callable.entryIndex ?? "?"} expected=${expectedEntry}`,
+    );
+    if (!Number.isFinite(callable.entryIndex) || (callable.entryIndex >>> 0) !== (expectedEntry >>> 0)) {
+      fail(
+        `[stage] final runtime symbol bind: ${name} resolved to entry ` +
+        `${callable.entryIndex ?? "?"}, expected ${expectedEntry}`,
+      );
+    }
+  }
 }
 
 console.error(`[stage] running pre-save GC...`);
@@ -3153,6 +3462,7 @@ console.error(`[save-image-diag] persisted image size: ${persistedBytes.length} 
 const IMAGE_SIG0 = 0x4F70656E;
 const IMAGE_SIG1 = 0x4D434C49;
 const IMAGE_SIG2 = 0x6D616765;
+const IMAGE_SIG3 = 0x46696C65;
 
 if (persistedBytes.length >= 16) {
   const first16 = persistedBytes.subarray(0, 16);
@@ -3160,7 +3470,6 @@ if (persistedBytes.length >= 16) {
   console.error(`[save-image-diag] first 16 bytes: ${Buffer.from(first16).toString("hex").match(/../g).join(" ")}`);
   console.error(`[save-image-diag] last 16 bytes:  ${Buffer.from(last16).toString("hex").match(/../g).join(" ")}`);
 
-  // Check for trailer: 3 signature uint32s (LE) followed by int32 delta
   const dv = new DataView(persistedBytes.buffer, persistedBytes.byteOffset, persistedBytes.length);
   const tailOff = persistedBytes.length - 16;
   const hasTrailer = tailOff >= 0 &&
@@ -3168,44 +3477,24 @@ if (persistedBytes.length >= 16) {
     dv.getUint32(tailOff + 4, true) === IMAGE_SIG1 &&
     dv.getUint32(tailOff + 8, true) === IMAGE_SIG2;
 
-  if (hasTrailer) {
-    const delta = dv.getInt32(tailOff + 12, true);
-    console.error(`[save-image-diag] trailer present at offset ${tailOff}, delta=${delta}`);
-  } else {
-    console.error(`[save-image-diag] trailer NOT found at end of image — appending fixup trailer`);
-    // Find header position: scan from start for sig0+sig1+sig2 on a page boundary.
-    // Only match the first 3 sigs (same as the trailer); sig3 may differ
-    // on WASM32 (observed 0xFFFFFFF0 instead of 0x46696C65).
-    let headerPos = -1;
-    for (let off = 0; off <= Math.min(persistedBytes.length - 16, 65536); off += 4096) {
-      if (dv.getUint32(off, true) === IMAGE_SIG0 &&
-          dv.getUint32(off + 4, true) === IMAGE_SIG1 &&
-          dv.getUint32(off + 8, true) === IMAGE_SIG2) {
-        headerPos = off;
-        console.error(`[save-image-diag] header found at offset ${off}, sig3=0x${dv.getUint32(off + 12, true).toString(16).padStart(8, "0")}`);
-        break;
-      }
-    }
-    if (headerPos >= 0) {
-      // Construct trailer: sig0, sig1, sig2, delta
-      // delta = header_pos - eof_pos  (negative, pointing backward)
-      const eofPos = persistedBytes.length + 16; // after appending trailer
-      const delta = headerPos - eofPos;
-      const trailer = Buffer.alloc(16);
-      trailer.writeUint32LE(IMAGE_SIG0, 0);
-      trailer.writeUint32LE(IMAGE_SIG1, 4);
-      trailer.writeUint32LE(IMAGE_SIG2, 8);
-      // For images > 2 GiB the delta exceeds int32 range; write as
-      // uint32 two's complement.  The C loader cannot load > 2 GiB
-      // images anyway (lisp_lseek int32 overflow), so best-effort.
-      trailer.writeUint32LE(delta >>> 0, 12);
-      persistedBytes = Buffer.concat([persistedBytes, trailer]);
-      console.error(`[save-image-diag] appended trailer: headerPos=${headerPos} eofPos=${eofPos} delta=${delta} (u32=0x${(delta >>> 0).toString(16)})`);
-      console.error(`[save-image-diag] fixed image size: ${persistedBytes.length} bytes`);
-    } else {
-      console.error(`[save-image-diag] ERROR: could not find image header — cannot fix trailer`);
-    }
+  if (!hasTrailer) {
+    fail("persisted image missing trailer after wasm_save_image_direct");
   }
+
+  const delta = dv.getInt32(tailOff + 12, true);
+  console.error(`[save-image-diag] trailer present at offset ${tailOff}, delta=${delta}`);
+
+  const headerPos = delta >= 0 ? 0 : persistedBytes.length + delta;
+  if (headerPos < 0 || headerPos + 16 > persistedBytes.length) {
+    fail(`persisted image header out of range after save (offset ${headerPos})`);
+  }
+  if (dv.getUint32(headerPos, true) !== IMAGE_SIG0 ||
+      dv.getUint32(headerPos + 4, true) !== IMAGE_SIG1 ||
+      dv.getUint32(headerPos + 8, true) !== IMAGE_SIG2 ||
+      dv.getUint32(headerPos + 12, true) !== IMAGE_SIG3) {
+    fail(`persisted image header invalid after save (offset ${headerPos})`);
+  }
+  console.error(`[save-image-diag] header present at offset ${headerPos}, sig3=0x${dv.getUint32(headerPos + 12, true).toString(16).padStart(8, "0")}`);
 }
 await fs.mkdir(path.dirname(outputPath), { recursive: true });
 const tempOutputPath = `${outputPath}.tmp-${process.pid}-${Date.now()}`;
