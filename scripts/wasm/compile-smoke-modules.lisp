@@ -105,15 +105,27 @@
                  (values 1 2 3 4 5 6)
                (%i+ x 0))
            (declare (ignore b c d e fval))
-           (%i+ x a)))))
+           (%i+ x a))))
+    (ccl::wasm-smoke-funcall-values3
+     (lambda ()
+       (labels ((produce ()
+                  (values 10 20 30)))
+         (multiple-value-bind (a b c) (produce)
+           (if (and (= a 10) (= b 20) (= c 30)) 1 0)))))
+    (ccl::wasm-smoke-block-values3
+     (lambda ()
+       (multiple-value-bind (a b c)
+           (block nil
+             (return (values 10 20 30)))
+         (if (and (= a 10) (= b 20) (= c 30)) 1 0))))
     (ccl::wasm-smoke-f64-add
      (lambda (x y)
        (declare (fixnum x y))
        (let* ((a (%double-float x))
-              (b (%double-float y))
+             (b (%double-float y))
               (sum (+ a b)))
          (declare (double-float a b sum))
-         (if (= sum 3.0d0) 1 0))))))
+         (if (= sum 3.0d0) 1 0)))))))
 
 (defun parse-argv (argv)
   (let ((out nil)

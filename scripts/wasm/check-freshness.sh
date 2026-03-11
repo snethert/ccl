@@ -12,6 +12,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 BUILD_DIR="${CCL_WASM_BUILD_DIR:-$ROOT_DIR/build/wasm32}"
+ENTRY_SPACE_HELPER="$ROOT_DIR/scripts/wasm/lib/module-entry-space.mjs"
 
 # --- Artifact paths ---
 KERNEL_WASM="$BUILD_DIR/kernel/wasmcl.wasm"
@@ -98,6 +99,7 @@ rebuild_cmd_for() {
     runtime_modules) echo "scripts/wasm/compile-wasm-fasls.sh --force" ;;
     phase0a_tests)   echo "scripts/wasm/compile-phase0a-tests.sh" ;;
     root_image)      echo "scripts/wasm/rebuild-everything.sh" ;;
+    entry_space)     echo "scripts/wasm/rebuild-everything.sh" ;;
     *)               echo "unknown" ;;
   esac
 }
@@ -177,6 +179,29 @@ check_one() {
   fi
 }
 
+check_entry_space() {
+  if [ ! -f "$BOOT_MODULES" ] || [ ! -f "$RUNTIME_MODULES" ]; then
+    return
+  fi
+
+  local status
+  if status=$(node "$ENTRY_SPACE_HELPER" assert-disjoint \
+    --boot-manifest "$BOOT_MODULES" \
+    --runtime-manifest "$RUNTIME_MODULES" 2>&1); then
+    if [ "$MODE" = "report" ]; then
+      printf "  ${GREEN}OK${RESET}    %-22s %s\n" "Entry Space" "boot/runtime manifests are disjoint"
+    fi
+    return
+  fi
+
+  if [ "$MODE" = "report" ]; then
+    printf "  ${RED}BAD${RESET}   %-22s %s\n" "Entry Space" "$status"
+    printf "        ${YELLOW}fix: %s${RESET}\n" "$(rebuild_cmd_for "entry_space")"
+  fi
+  ANY_STALE=1
+  STALE_NAMES="$STALE_NAMES entry_space"
+}
+
 if [ "$MODE" = "report" ]; then
   echo ""
   printf "${BOLD}WASM Build Artifact Freshness Check${RESET}\n"
@@ -233,6 +258,9 @@ check_one "runtime_modules" "Runtime Modules" "$RUNTIME_MODULES" \
   "$ROOT_DIR/level-1/*.lisp" \
   "$ROOT_DIR/scripts/wasm/compile-wasm-fasls.lisp" \
   "$ROOT_DIR/scripts/wasm/compile-wasm-fasls.sh"
+
+# 5b. Boot/runtime entry space must remain disjoint
+check_entry_space
 
 # 6. Phase 0A Tests (depends on kernel + subprims + boot modules)
 check_one "phase0a_tests" "Phase 0A Tests" "$PHASE0A_TESTS" \

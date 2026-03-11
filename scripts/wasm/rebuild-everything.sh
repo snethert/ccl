@@ -20,6 +20,7 @@ ROOT_IMAGE_BUILT=0
 BUILD_DIR="${CCL_WASM_BUILD_DIR:-$ROOT_DIR/build/wasm32}"
 IMAGES_DIR="${CCL_WASM_IMAGES_DIR:-$BUILD_DIR/images}"
 MODULES_DIR="${CCL_WASM_MODULES_DIR:-$BUILD_DIR/modules}"
+ENTRY_SPACE_HELPER="$ROOT_DIR/scripts/wasm/lib/module-entry-space.mjs"
 
 ROOT_IMAGE_OUT="${ROOT_IMAGE_OUT:-$IMAGES_DIR/root.image}"
 ROOT_IMAGE_MANIFEST_OUT="${ROOT_IMAGE_MANIFEST_OUT:-$IMAGES_DIR/root.image.manifest.json}"
@@ -247,21 +248,14 @@ fi
 run "$ROOT_DIR/scripts/wasm/build-wasm-boot.sh" ${BOOT_ARGS[@]+"${BOOT_ARGS[@]}"}
 
 # Compute the start entry index for level-1 so it doesn't overlap boot functions.
-# Use the next-entry-index sidecar file (written by build-wasm-boot.lisp) which
-# captures *wasm2-next-entry-index* after all level-0 functions are compiled.
-# This is the FUNCTION entry index counter, not just the module count.
-# The Lisp script writes the sidecar next to its inline-v1 temp file
+# Use the sidecar file written by build-wasm-boot.lisp, but treat the boot
+# bundle's max entry index as authoritative if it is higher. Fixed bootstrap
+# slots can sit above the raw allocator counter, so the runtime handoff must be
+# the first unused entry index, not merely *wasm2-next-entry-index*.
+# The Lisp script writes the sidecar next to its inline-v1 temp file.
 NEXT_ENTRY_INDEX_FILE="${BOOT_MODULES_OUT}.inline-v1.tmp.next-entry-index"
-if [ -f "$NEXT_ENTRY_INDEX_FILE" ]; then
-  BOOT_NEXT_INDEX=$(tr -d '[:space:]' < "$NEXT_ENTRY_INDEX_FILE")
-  if [ -n "$BOOT_NEXT_INDEX" ] && [ "$BOOT_NEXT_INDEX" -gt 0 ] 2>/dev/null; then
-    log "boot next-entry-index=$BOOT_NEXT_INDEX (from sidecar file)"
-    COMPILE_ARGS+=(--start-entry-index "$BOOT_NEXT_INDEX")
-  else
-    log "WARN: could not read next-entry-index from $NEXT_ENTRY_INDEX_FILE"
-  fi
-elif [ -f "$BOOT_MODULES_OUT" ]; then
-  # Fallback: use max module entry index from the bundle index
+BOOT_MAX_INDEX=""
+if [ -f "$BOOT_MODULES_OUT" ]; then
   BOOT_MAX_INDEX=$(node --input-type=module -e "
     import fs from 'fs';
     import { decodeModuleBundleIndexV2 } from '$ROOT_DIR/scripts/wasm/lib/module-bundle-v2.mjs';
@@ -274,6 +268,23 @@ elif [ -f "$BOOT_MODULES_OUT" ]; then
     }
     console.log(maxIdx);
   " "$BOOT_MODULES_OUT" 2>/dev/null || echo "")
+fi
+if [ -f "$NEXT_ENTRY_INDEX_FILE" ]; then
+  BOOT_NEXT_INDEX=$(tr -d '[:space:]' < "$NEXT_ENTRY_INDEX_FILE")
+  if [ -n "$BOOT_NEXT_INDEX" ] && [ "$BOOT_NEXT_INDEX" -gt 0 ] 2>/dev/null; then
+    if [ -n "$BOOT_MAX_INDEX" ] && [ "$BOOT_MAX_INDEX" -ge "$BOOT_NEXT_INDEX" ] 2>/dev/null; then
+      LEVEL1_START=$((BOOT_MAX_INDEX + 1))
+      log "boot next-entry-index=$BOOT_NEXT_INDEX, boot max entry index=$BOOT_MAX_INDEX; using start=$LEVEL1_START"
+      COMPILE_ARGS+=(--start-entry-index "$LEVEL1_START")
+    else
+      log "boot next-entry-index=$BOOT_NEXT_INDEX (from sidecar file)"
+      COMPILE_ARGS+=(--start-entry-index "$BOOT_NEXT_INDEX")
+    fi
+  else
+    log "WARN: could not read next-entry-index from $NEXT_ENTRY_INDEX_FILE"
+  fi
+elif [ -f "$BOOT_MODULES_OUT" ]; then
+  # Fallback: use max module entry index from the bundle index.
   if [ -n "$BOOT_MAX_INDEX" ] && [ "$BOOT_MAX_INDEX" -gt 0 ] 2>/dev/null; then
     LEVEL1_START=$((BOOT_MAX_INDEX + 1))
     log "boot modules max entry index=$BOOT_MAX_INDEX, level-1 starts at $LEVEL1_START (fallback)"
@@ -284,6 +295,7 @@ elif [ -f "$BOOT_MODULES_OUT" ]; then
 fi
 
 run "$ROOT_DIR/scripts/wasm/compile-wasm-fasls.sh" ${COMPILE_ARGS[@]+"${COMPILE_ARGS[@]}"}
+run node "$ENTRY_SPACE_HELPER" assert-disjoint --boot-manifest "$BOOT_MODULES_OUT" --runtime-manifest "$MODULES_OUT"
 
 # The root-image builder owns required FASL loading.  Replacing the plain L0
 # boot image with an L1-baked variant here duplicates cold-load/FASL state and

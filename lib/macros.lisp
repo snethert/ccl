@@ -1670,23 +1670,23 @@ to open."
 
 ;;Add function to lisp system pointer functions, and run it if it's not already
 ;; there.
-(defmacro def-ccl-pointers (name arglist &body body &aux (old (gensym)))
-  `(flet ((,name ,arglist ,@body))
+(defmacro def-ccl-pointers (name arglist &body body &aux (fn (gensym)) (old (gensym)))
+  `(let ((,fn (nfunction ,name (lambda ,arglist ,@body))))
      (let ((,old (member ',name *lisp-system-pointer-functions* :key #'function-name)))
        (if ,old
-         (rplaca ,old #',name)
+         (rplaca ,old ,fn)
          (progn
-           (push #',name *lisp-system-pointer-functions*)
-           (,name))))))
+           (push ,fn *lisp-system-pointer-functions*)
+           (funcall ,fn))))))
 
-(defmacro def-load-pointers (name arglist &body body &aux (old (gensym)))
-  `(flet ((,name ,arglist ,@body))
+(defmacro def-load-pointers (name arglist &body body &aux (fn (gensym)) (old (gensym)))
+  `(let ((,fn (nfunction ,name (lambda ,arglist ,@body))))
      (let ((,old (member ',name *lisp-user-pointer-functions* :key #'function-name)))
        (if ,old
-         (rplaca ,old #',name)
+         (rplaca ,old ,fn)
          (progn
-           (push #',name *lisp-user-pointer-functions*)
-           (,name))))))
+           (push ,fn *lisp-user-pointer-functions*)
+           (funcall ,fn))))))
 
 ;Queue up some code to run after ccl all loaded up, or, if ccl is already
 ;loaded up, just run it right now.

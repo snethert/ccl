@@ -894,7 +894,8 @@
     (values (xload-save-string str n) str n new-p)))
 
 (defun xload-clone-packages (packages)
-  (let* ((alist (mapcar #'(lambda (p)
+  (let* ((unique-packages (remove-duplicates packages :test #'eq))
+         (alist (mapcar #'(lambda (p)
                             (cons p
                                   (gvector :package
                                             (cons (make-array (the fixnum (length (car (uvref p 0))))
@@ -909,12 +910,12 @@
                                                   (cons 0 (cddr (pkg.etab p))))
                                             nil                         ; used
                                             nil                         ; used-by
-                                            (copy-list (pkg.names p))     ; names
-                                            nil ;shadowed
-                                            nil ;lock
-                                            nil ;intern-hook
+                                            (copy-list (pkg.names p))   ; names
+                                            nil                         ; shadowed
+                                            nil                         ; lock
+                                            nil                         ; intern-hook
                                             )))
-                        packages)))
+                        unique-packages)))
     (flet ((lookup-clone (p) (let* ((clone (cdr (assq p alist))))
                                (when clone (list clone)))))
       (dolist (pair alist alist)
@@ -1163,6 +1164,13 @@
                                         ; This could be a little less ... procedural.
     (xload-set '*package* (xload-package->addr *ccl-package*))
     (xload-set '*keyword-package* (xload-package->addr *keyword-package*))
+    ;; These package globals are referenced by level-1 before l1-init
+    ;; reestablishes them as constants, so make sure the symbols exist in
+    ;; the xload world before seeding their canonical package objects.
+    (xload-copy-symbol '*common-lisp-package*)
+    (xload-copy-symbol '*ccl-package*)
+    (xload-set '*common-lisp-package* (xload-package->addr *common-lisp-package*))
+    (xload-set '*ccl-package* (xload-package->addr *ccl-package*))
     (xload-set '%all-packages% (xload-save-list (mapcar #'cdr *xload-aliased-package-addresses*)))
     (xload-set '%unbound-function% (%xload-unbound-function%))
     (xload-set '*gc-event-status-bits* (xload-integer 0 #|(ash 1 $gc-integrity-check-bit)|#))

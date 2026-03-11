@@ -478,6 +478,22 @@ const tagbodyFalse = kernelExports.wasm_test_entry_funcall1_raw(tagbodyEntry, ni
 assert(tagbodyFalse === 2, `unexpected tagbody false result: got=${tagbodyFalse} expected=2`);
 assertGcRootPolicyModePublished(tagbodyEntry, "tagbody");
 
+const funcallValues3Entry = entryIndex("WASM-SMOKE-FUNCALL-VALUES3");
+const funcallValues3Result = kernelExports.wasm_test_entry_funcall(funcallValues3Entry, 0) >> 2;
+assert(
+  funcallValues3Result === 1,
+  `unexpected funcall-values3 result: got=${funcallValues3Result} expected=1`,
+);
+assertGcRootPolicyModePublished(funcallValues3Entry, "funcall-values3");
+
+const blockValues3Entry = entryIndex("WASM-SMOKE-BLOCK-VALUES3");
+const blockValues3Result = kernelExports.wasm_test_entry_funcall(blockValues3Entry, 0) >> 2;
+assert(
+  blockValues3Result === 1,
+  `unexpected block-values3 result: got=${blockValues3Result} expected=1`,
+);
+assertGcRootPolicyModePublished(blockValues3Entry, "block-values3");
+
 // multiple-value-call execution paths are covered by mvcall-smoke.mjs.
 
 await installBundle("reload");

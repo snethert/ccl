@@ -1814,80 +1814,95 @@
              (loop-label (wasm2-allocate-label))
              (exit-label (wasm2-allocate-label))
              (state-local (wasm2-allocate-raw-temp))
-             (tag-map (make-hash-table :test #'eq))
              (tag-label-map (make-hash-table :test #'eq))
              (tag-labels (mapcar (lambda (_tag) (declare (ignore _tag)) (wasm2-allocate-label))
                                  taglist)))
         (loop for tag in taglist
-              for idx from 1
               for label in tag-labels
               do (let* ((key (wasm2-tag-key tag)))
-                   (setf (gethash key tag-map) idx)
                    (setf (gethash key tag-label-map) label)
                    (unless (eq key tag)
-                     (setf (gethash tag tag-map) idx)
                      (setf (gethash tag tag-label-map) label))))
-        (let* ((ctx (make-wasm2-tagbody-context :tag-map tag-map
-                                                :loop-label loop-label
-                                                :state-local state-local))
-               (*wasm2-tagbody-stack* (cons ctx *wasm2-tagbody-stack*)))
-          (when *wasm2-tagbody-global-map*
-            (dolist (tag taglist)
-              (let* ((key (wasm2-tag-key tag)))
-                (setf (gethash key *wasm2-tagbody-global-map*) ctx)
+        (let* ((segments nil)
+               (current-label entry-label)
+               (current-forms nil))
+          (dolist (form body)
+            (if (and (acode-p form) (eq (acode-operator form) tagop))
+              (let* ((tag (cdar (acode-operands form)))
+                     (label (or (gethash tag tag-label-map)
+                                (gethash (wasm2-tag-key tag) tag-label-map))))
+                (push (cons current-label (nreverse current-forms)) segments)
+                (setf current-label label)
+                (setf current-forms nil))
+              (push form current-forms)))
+          (push (cons current-label (nreverse current-forms)) segments)
+          (setf segments (nreverse segments))
+          ;; WASM tagbody dispatch is driven by segment order, not tag-declaration
+          ;; order.  Keep local-go state numbers aligned with the actual segment
+          ;; sequence that the br-table executes.
+          (let* ((segment-state-map (make-hash-table :test #'eq))
+                 (tag-map (make-hash-table :test #'eq)))
+            (loop for segment in segments
+                  for state from 0
+                  do (setf (gethash (car segment) segment-state-map) state))
+            (loop for tag in taglist
+                  for fallback-state from 1
+                  do
+              (let* ((key (wasm2-tag-key tag))
+                     (label (or (gethash tag tag-label-map)
+                                (gethash key tag-label-map)))
+                     (state (or (and label (gethash label segment-state-map))
+                                fallback-state)))
+                (setf (gethash key tag-map) state)
                 (unless (eq key tag)
-                  (setf (gethash tag *wasm2-tagbody-global-map*) ctx)))))
-          (let* ((segments nil)
-                 (current-label entry-label)
-                 (current-forms nil))
-            (dolist (form body)
-              (if (and (acode-p form) (eq (acode-operator form) tagop))
-                (let* ((tag (cdar (acode-operands form)))
-                       (label (or (gethash tag tag-label-map)
-                                  (gethash (wasm2-tag-key tag) tag-label-map))))
-                  (push (cons current-label (nreverse current-forms)) segments)
-                  (setf current-label label)
-                  (setf current-forms nil))
-                (push form current-forms)))
-            (push (cons current-label (nreverse current-forms)) segments)
-            (setf segments (nreverse segments))
-            ;; Allocate fresh unique labels for each segment's block.
-            ;; The tag-label-map can map different tags to the same label
-            ;; when they share a wasm2-tag-key, causing duplicate entries
-            ;; in (mapcar #'car segments).  The br-table handler resolves
-            ;; labels via POSITION, which finds the first (innermost)
-            ;; match — so duplicates cause wrong dispatch depths.
-            (let* ((dispatch-labels (mapcar (lambda (_)
-                                             (declare (ignore _))
-                                             (wasm2-allocate-label))
-                                           segments))
-                   (segment-count (length segments)))
-              (labels
-                  ((segment-ir (forms)
-                     (wasm2-with-ir
-                       (lambda ()
-                         (dolist (form forms)
-                           (wasm2-form seg nil nil form)
-                           (wasm2-emit :drop)))))
-                   (dispatch-ir ()
-                     (list (cons :local.get (list state-local))
-                           (cons :br-table (list dispatch-labels exit-label)))))
-                (let* ((inner (dispatch-ir)))
-                  (loop for segment in (reverse segments)
-                        for dispatch-label in (reverse dispatch-labels)
-                        for idx from (1- segment-count) downto 0
-                        do (let* ((forms (cdr segment))
-                                  (seg-body (append (segment-ir forms)
-                                                   (list (cons :const (list (1+ idx)))
-                                                         (cons :local.set (list state-local))
-                                                         (cons :br (list loop-label))))))
-                             (setf inner (append (list (cons :block (list dispatch-label inner)))
-                                                 seg-body))))
-                  (wasm2-emit :const 0)
-                  (wasm2-emit :local.set state-local)
-                  (wasm2-emit :block exit-label (list (list :loop loop-label inner)))
-                  (wasm2-emit-const (target-nil-value)))))))))
-  nil))
+                  (setf (gethash tag tag-map) state))))
+            (let* ((ctx (make-wasm2-tagbody-context :tag-map tag-map
+                                                    :loop-label loop-label
+                                                    :state-local state-local))
+                   (*wasm2-tagbody-stack* (cons ctx *wasm2-tagbody-stack*)))
+              (when *wasm2-tagbody-global-map*
+                (dolist (tag taglist)
+                  (let* ((key (wasm2-tag-key tag)))
+                    (setf (gethash key *wasm2-tagbody-global-map*) ctx)
+                    (unless (eq key tag)
+                      (setf (gethash tag *wasm2-tagbody-global-map*) ctx)))))
+              ;; Allocate fresh unique labels for each segment's block.
+              ;; The tag-label-map can map different tags to the same label
+              ;; when they share a wasm2-tag-key, causing duplicate entries
+              ;; in (mapcar #'car segments).  The br-table handler resolves
+              ;; labels via POSITION, which finds the first (innermost)
+              ;; match — so duplicates cause wrong dispatch depths.
+              (let* ((dispatch-labels (mapcar (lambda (_)
+                                               (declare (ignore _))
+                                               (wasm2-allocate-label))
+                                             segments))
+                     (segment-count (length segments)))
+                (labels
+                    ((segment-ir (forms)
+                       (wasm2-with-ir
+                         (lambda ()
+                           (dolist (form forms)
+                             (wasm2-form seg nil nil form)
+                             (wasm2-emit :drop)))))
+                     (dispatch-ir ()
+                       (list (cons :local.get (list state-local))
+                             (cons :br-table (list dispatch-labels exit-label)))))
+                  (let* ((inner (dispatch-ir)))
+                    (loop for segment in (reverse segments)
+                          for dispatch-label in (reverse dispatch-labels)
+                          for idx from (1- segment-count) downto 0
+                          do (let* ((forms (cdr segment))
+                                    (seg-body (append (segment-ir forms)
+                                                     (list (cons :const (list (1+ idx)))
+                                                           (cons :local.set (list state-local))
+                                                           (cons :br (list loop-label))))))
+                               (setf inner (append (list (cons :block (list dispatch-label inner)))
+                                                   seg-body))))
+                    (wasm2-emit :const 0)
+                    (wasm2-emit :local.set state-local)
+                    (wasm2-emit :block exit-label (list (list :loop loop-label inner)))
+                    (wasm2-emit-const (target-nil-value)))))))))))
+  nil)
 
 (defwasm2 wasm2-local-go local-go (seg vreg xfer tag)
   (declare (ignore seg vreg xfer))
@@ -4578,6 +4593,43 @@
      nil)
     (t value)))
 
+(defun wasm2-const-pool-trivial-entry-function-p (value)
+  (and (uvectorp value)
+       (= (uvsize value) 5)
+       (let* ((slot2 (ignore-errors (uvref value 2)))
+              (slot3 (ignore-errors (uvref value 3)))
+              (slot4 (ignore-errors (uvref value 4))))
+         (and (or (null slot2)
+                  (and (fixnump slot2) (zerop slot2)))
+              (null slot3)
+              (and (fixnump slot4) (zerop slot4))))))
+
+(defun wasm2-const-pool-function-vector-elements (value)
+  (let* ((count (uvsize value))
+         (slot0 (and (> count 0) (ignore-errors (uvref value 0)))))
+    (loop for i below count
+          for raw = (ignore-errors (uvref value i))
+          collect (wasm2-const-pool-index
+                   (cond
+                     ;; Target function vectors use the entry fixnum in both
+                     ;; dispatch slots.  Preserve that when serializing full
+                     ;; function vectors instead of dropping the code slot.
+                     ((and (= i 1)
+                           (or (typep raw 'xcode-vector)
+                               (typep raw 'code-vector)))
+                      slot0)
+                     (t
+                      (wasm2-const-pool-function-slot raw)))))))
+
+(defun wasm2-const-pool-global-function-name (value)
+  (let ((name (function-name value)))
+    (and (symbolp name)
+         ;; Preserve native semantics: only canonical global definitions may be
+         ;; serialized by name. Load-time thunks and other named non-global
+         ;; functions must keep their actual object shape.
+         (eq value (ignore-errors (fboundp name)))
+         name)))
+
 (defconstant +wasm2-const-pool-version+ 2)
 (defconstant +wasm2-const-pool-tag-symbol+ 1)
 (defconstant +wasm2-const-pool-tag-string+ 2)
@@ -4678,17 +4730,15 @@
           ;; a WASM target object.  Do NOT change to wasm::subtag-xfunction.
           (eql (typecode value) target::subtag-xfunction))
      ;; Cross-compiled functions always carry an entry index in slot 0.
-     ;; Encode these by entry index to avoid serializing the full slot graph.
+     ;; Only collapse truly trivial entry shells.  Real function vectors carry
+     ;; const/name/bits/closure data in later slots; losing those breaks FASL
+     ;; startup because the loader reconstructs an incomplete callable.
      (let ((entry-index (wasm2-const-pool-entry-function-index value)))
-       (if entry-index
+       (if (and entry-index
+                (wasm2-const-pool-trivial-entry-function-p value))
          (list :type "entry-function"
                :entry-index entry-index)
-         ;; Some host/runtime xfunction constants do not carry a wasm entry
-         ;; index in slot 0. Preserve prior behavior by serializing slots.
-         (let* ((count (uvsize value))
-                (elements (loop for i below count
-                                collect (wasm2-const-pool-index
-                                         (wasm2-const-pool-function-slot (uvref value i))))))
+         (let* ((elements (wasm2-const-pool-function-vector-elements value)))
            (list :type "function-vector"
                  :elements elements)))))
     ((symbolp value)
@@ -4730,16 +4780,14 @@
      (list :type "vector"
            :elements (map 'list #'wasm2-const-pool-index value)))
     ((typep value 'function-vector)
-     ;; Prefer compact entry-index references for WASM function objects.
+     ;; Only trivial entry shells are safe to collapse to a bare entry index.
+     ;; Preserve real function-vector slots for boot/FASL thunks and closures.
      (let ((entry-index (wasm2-const-pool-entry-function-index value)))
-       (if entry-index
+       (if (and entry-index
+                (wasm2-const-pool-trivial-entry-function-p value))
          (list :type "entry-function"
                :entry-index entry-index)
-         ;; Fallback for non-WASM function vectors.
-         (let* ((count (uvsize value))
-                (elements (loop for i below count
-                                collect (wasm2-const-pool-index
-                                         (wasm2-const-pool-function-slot (uvref value i))))))
+         (let* ((elements (wasm2-const-pool-function-vector-elements value)))
            (list :type "function-vector"
                  :elements elements)))))
     ;; Named classes: emit compact class-ref (tag 18) instead of deep-copying
@@ -4762,8 +4810,8 @@
              :subtag subtag
              :elements elements)))
     ((functionp value)
-     (let ((name (function-name value)))
-       (if (symbolp name)
+     (let ((name (wasm2-const-pool-global-function-name value)))
+       (if name
          (list :type "function"
                :name (symbol-name name)
                :package (let ((pkg (symbol-package name)))
@@ -4773,13 +4821,11 @@
            (unless fv
              (error "WASM2: unsupported function constant: ~S" value))
            (let ((entry-index (wasm2-const-pool-entry-function-index fv)))
-             (if entry-index
+             (if (and entry-index
+                      (wasm2-const-pool-trivial-entry-function-p fv))
                (list :type "entry-function"
                      :entry-index entry-index)
-               (let* ((count (uvsize fv))
-                      (elements (loop for i below count
-                                      collect (wasm2-const-pool-index
-                                               (wasm2-const-pool-function-slot (uvref fv i))))))
+               (let* ((elements (wasm2-const-pool-function-vector-elements fv)))
                  (list :type "function-vector"
                        :elements elements))))))))
     (t
@@ -6034,14 +6080,23 @@
          (wasm2-push-u8 body #x41)
          (wasm2-emit-sleb32 body (logand (car args) #xffffffff)))
         (:const-pool-ref
-         (let ((entry-index *wasm2-emit-entry-index*))
+         (let ((entry-index *wasm2-emit-entry-index*)
+               (tmp (wasm2-ensure-temp-local)))
            (unless entry-index
              (error "WASM2: const-pool-ref emitted without entry index"))
+           ;; Const-pool refs may trigger host-side pool installation, which can
+           ;; allocate and GC.  Live Lisp locals must be rooted across the import.
+           (wasm2-emit-spill-locals body)
            (wasm2-push-u8 body #x41)
            (wasm2-emit-sleb32 body (logand entry-index #xffffffff))
            (wasm2-push-u8 body #x41)
            (wasm2-emit-sleb32 body (logand (car args) #xffffffff))
-           (wasm2-emit-call-index body (wasm2-generic-import-index :const-pool-ref))))
+           (wasm2-emit-call-index body (wasm2-generic-import-index :const-pool-ref))
+           (wasm2-push-u8 body #x21) ; local.set
+           (wasm2-emit-uleb body tmp)
+           (wasm2-emit-restore-locals body)
+           (wasm2-push-u8 body #x20) ; local.get
+           (wasm2-emit-uleb body tmp)))
         (:lisp-word-ref
          (wasm2-emit-call-index body (wasm2-generic-import-index :lisp-word-ref)))
         (:lisp-word-set

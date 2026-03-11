@@ -1776,11 +1776,20 @@ to replace that class with ~s" name old-class new-class)
 
   
 
-(let ((*dont-find-class-optimize* t)
-      (ordinal-type-class-alist ())
-      (ordinal-type-class-alist-lock (make-lock)))
+(defmacro with-clos-bootstrap-phase (&body body)
+  `(let ((*dont-find-class-optimize* t))
+     (declare (optimize speed))
+     ,@body))
 
-  (declare (optimize speed)) ;; make sure everything gets inlined that needs to be.
+(defstatic *ordinal-type-class-alist* nil)
+(defstatic *ordinal-type-class-alist-lock* (make-lock))
+(declaim (special *ordinal-type-class-alist*
+                  *ordinal-type-class-alist-lock*
+                  *n-foreign-object-domains*
+                  *foreign-object-domains*
+                  *foreign-object-domain-lock*))
+
+(with-clos-bootstrap-phase
 
 ;; The built-in classes.
   (defstatic *array-class* (make-built-in-class 'array))
@@ -1973,7 +1982,9 @@ to replace that class with ~s" name old-class new-class)
 
   (make-built-in-class 'xfunction)
   (make-built-in-class 'xcode-vector)
+  )
 
+(with-clos-bootstrap-phase
   (defun class-cell-find-class (class-cell errorp)
     (unless (istruct-typep class-cell 'class-cell)
       (setq class-cell (%kernel-restart $xwrongtype class-cell 'class-cell)))
@@ -2133,367 +2144,433 @@ to replace that class with ~s" name old-class new-class)
             (find-class 'complex-single-float-vector)
             (find-class 'complex-double-float-vector)
             (find-class 'bit-vector)))
+  )
 
 
 
 
-  (defun make-foreign-object-domain (&key index name recognize class-of classp
-                                          instance-class-wrapper
-                                          class-own-wrapper
-                                          slots-vector class-ordinal
-                                          set-class-ordinal)
-    (%istruct 'foreign-object-domain index name recognize class-of classp
-              instance-class-wrapper class-own-wrapper slots-vector
-              class-ordinal set-class-ordinal))
-  
-  (let* ((n-foreign-object-domains 0)
-         (foreign-object-domains (make-array 10))
-         (foreign-object-domain-lock (make-lock)))
-    (defun register-foreign-object-domain (name
-                                           &key
-                                           recognize
-                                           class-of
-                                           classp
-                                           instance-class-wrapper
-                                           class-own-wrapper
-                                           slots-vector
-                                           class-ordinal
-                                           set-class-ordinal)
-      (with-lock-grabbed (foreign-object-domain-lock)
-        (dotimes (i n-foreign-object-domains)
-          (let* ((already (svref foreign-object-domains i)))
-            (when (eq name (foreign-object-domain-name already))
-              (setf (foreign-object-domain-recognize already) recognize
-                    (foreign-object-domain-class-of already) class-of
-                    (foreign-object-domain-classp already) classp
-                    (foreign-object-domain-instance-class-wrapper already)
-                    instance-class-wrapper
-                    (foreign-object-domain-class-own-wrapper already)
-                    class-own-wrapper
-                    (foreign-object-domain-slots-vector already) slots-vector
-                    (foreign-object-domain-class-ordinal already) class-ordinal
-                    (foreign-object-domain-set-class-ordinal already)
-                    set-class-ordinal)
-              (return-from register-foreign-object-domain i))))
-        (let* ((i n-foreign-object-domains)
-               (new (make-foreign-object-domain :index i
-                                                :name name
-                                                :recognize recognize
-                                                :class-of class-of
-                                                :classp classp
-                                                :instance-class-wrapper
-                                                instance-class-wrapper
-                                                :class-own-wrapper
-                                                class-own-wrapper
-                                                :slots-vector
-                                                slots-vector
-                                                :class-ordinal class-ordinal
-                                                :set-class-ordinal set-class-ordinal)))
-          (incf n-foreign-object-domains)
-          (if (= i (length foreign-object-domains))
-            (setq foreign-object-domains (%extend-vector i foreign-object-domains (* i 2))))
-          (setf (svref foreign-object-domains i) new)
-          i)))
-    (defun foreign-class-of (p)
-      (funcall (foreign-object-domain-class-of (svref foreign-object-domains (%macptr-domain p))) p))
-    (defun foreign-classp (p)
-      (funcall (foreign-object-domain-classp (svref foreign-object-domains (%macptr-domain p))) p))
-    (defun foreign-instance-class-wrapper (p)
-      (funcall (foreign-object-domain-instance-class-wrapper (svref foreign-object-domains (%macptr-domain p))) p))
-    (defun foreign-class-own-wrapper (p)
-      (funcall (foreign-object-domain-class-own-wrapper (svref foreign-object-domains (%macptr-domain p))) p))
-    (defun foreign-slots-vector (p)
-      (funcall (foreign-object-domain-slots-vector (svref foreign-object-domains (%macptr-domain p))) p))
-    (defun foreign-class-ordinal (p)
-      (funcall (foreign-object-domain-class-ordinal (svref foreign-object-domains (%macptr-domain p))) p))
-    (defun (setf foreign-class-ordinal) (new p)
-      (funcall (foreign-object-domain-set-class-ordinal (svref foreign-object-domains (%macptr-domain p))) p new))
-    (defun classify-foreign-pointer (p)
-      (do* ((i (1- n-foreign-object-domains) (1- i)))
-           ((zerop i) (error "this can't happen"))
-        (when (funcall (foreign-object-domain-recognize (svref foreign-object-domains i)) p)
-          (%set-macptr-domain p i)
-          (return p)))))
+(defun make-foreign-object-domain (&key index name recognize class-of classp
+                                        instance-class-wrapper
+                                        class-own-wrapper
+                                        slots-vector class-ordinal
+                                        set-class-ordinal)
+  (%istruct 'foreign-object-domain index name recognize class-of classp
+            instance-class-wrapper class-own-wrapper slots-vector
+            class-ordinal set-class-ordinal))
+
+(with-clos-bootstrap-phase
+  (defstatic *n-foreign-object-domains* 0)
+  (defstatic *foreign-object-domains* (make-array 10))
+  (defstatic *foreign-object-domain-lock* (make-lock))
+  (declaim (special *n-foreign-object-domains*
+                    *foreign-object-domains*
+                    *foreign-object-domain-lock*))
+
+  (defun register-foreign-object-domain (name
+                                         &key
+                                         recognize
+                                         class-of
+                                         classp
+                                         instance-class-wrapper
+                                         class-own-wrapper
+                                         slots-vector
+                                         class-ordinal
+                                         set-class-ordinal)
+    (with-lock-grabbed (*foreign-object-domain-lock*)
+      (dotimes (i *n-foreign-object-domains*)
+        (let* ((already (svref *foreign-object-domains* i)))
+          (when (eq name (foreign-object-domain-name already))
+            (setf (foreign-object-domain-recognize already) recognize
+                  (foreign-object-domain-class-of already) class-of
+                  (foreign-object-domain-classp already) classp
+                  (foreign-object-domain-instance-class-wrapper already)
+                  instance-class-wrapper
+                  (foreign-object-domain-class-own-wrapper already)
+                  class-own-wrapper
+                  (foreign-object-domain-slots-vector already) slots-vector
+                  (foreign-object-domain-class-ordinal already) class-ordinal
+                  (foreign-object-domain-set-class-ordinal already)
+                  set-class-ordinal)
+            (return-from register-foreign-object-domain i))))
+      (let* ((i *n-foreign-object-domains*)
+             (new (make-foreign-object-domain :index i
+                                              :name name
+                                              :recognize recognize
+                                              :class-of class-of
+                                              :classp classp
+                                              :instance-class-wrapper
+                                              instance-class-wrapper
+                                              :class-own-wrapper
+                                              class-own-wrapper
+                                              :slots-vector
+                                              slots-vector
+                                              :class-ordinal class-ordinal
+                                              :set-class-ordinal set-class-ordinal)))
+        (incf *n-foreign-object-domains*)
+        (if (= i (length *foreign-object-domains*))
+          (setq *foreign-object-domains*
+                (%extend-vector i *foreign-object-domains* (* i 2))))
+        (setf (svref *foreign-object-domains* i) new)
+        i)))
+
+  (defun foreign-class-of (p)
+    (funcall (foreign-object-domain-class-of (svref *foreign-object-domains*
+                                                    (%macptr-domain p)))
+             p))
+
+  (defun foreign-classp (p)
+    (funcall (foreign-object-domain-classp (svref *foreign-object-domains*
+                                                  (%macptr-domain p)))
+             p))
+
+  (defun foreign-instance-class-wrapper (p)
+    (funcall (foreign-object-domain-instance-class-wrapper
+              (svref *foreign-object-domains* (%macptr-domain p)))
+             p))
+
+  (defun foreign-class-own-wrapper (p)
+    (funcall (foreign-object-domain-class-own-wrapper
+              (svref *foreign-object-domains* (%macptr-domain p)))
+             p))
+
+  (defun foreign-slots-vector (p)
+    (funcall (foreign-object-domain-slots-vector
+              (svref *foreign-object-domains* (%macptr-domain p)))
+             p))
+
+  (defun foreign-class-ordinal (p)
+    (funcall (foreign-object-domain-class-ordinal
+              (svref *foreign-object-domains* (%macptr-domain p)))
+             p))
+
+  (defun (setf foreign-class-ordinal) (new p)
+    (funcall (foreign-object-domain-set-class-ordinal
+              (svref *foreign-object-domains* (%macptr-domain p)))
+             p
+             new))
+
+  (defun classify-foreign-pointer (p)
+    (do* ((i (1- *n-foreign-object-domains*) (1- i)))
+         ((zerop i) (error "this can't happen"))
+      (when (funcall (foreign-object-domain-recognize
+                      (svref *foreign-object-domains* i))
+                     p)
+        (%set-macptr-domain p i)
+        (return p))))
 
 
 
   (defun %register-type-ordinal-class (foreign-type class-name)
     ;; ordinal-type-class shouldn't already exist
-    (with-lock-grabbed (ordinal-type-class-alist-lock)
-      (or (let* ((class (cdr (assq foreign-type ordinal-type-class-alist))))
+    (with-lock-grabbed (*ordinal-type-class-alist-lock*)
+      (or (let* ((class (cdr (assq foreign-type *ordinal-type-class-alist*))))
             (if (and class (eq class-name (class-name class)))
               class))
           (let* ((class (make-built-in-class class-name 'macptr)))
-            (push (cons foreign-type class) ordinal-type-class-alist)
+            (push (cons foreign-type class) *ordinal-type-class-alist*)
             class))))
 
   (defun %ordinal-type-class-for-macptr (p)
-    (with-lock-grabbed (ordinal-type-class-alist-lock)
+    (with-lock-grabbed (*ordinal-type-class-alist-lock*)
       (or (unless (%null-ptr-p p)
-            (cdr (assoc (%macptr-type p) ordinal-type-class-alist :key #'foreign-type-ordinal)))
+            (cdr (assoc (%macptr-type p) *ordinal-type-class-alist* :key #'foreign-type-ordinal)))
           *macptr-class*)))
-                  
 
-  (register-foreign-object-domain :unclassified
-                                  :recognize #'(lambda (p)
-                                                 (declare (ignore p))
-                                                 (error "Shouldn't happen"))
-                                  :class-of #'(lambda (p)
-                                                (foreign-class-of
-                                                 (classify-foreign-pointer p)))
-                                  :classp #'(lambda (p)
-                                              (foreign-classp
-                                               (classify-foreign-pointer p)))
-                                  :instance-class-wrapper
-                                  #'(lambda (p)
-                                      (foreign-instance-class-wrapper
-                                       (classify-foreign-pointer p)))
-                                  :class-own-wrapper
-                                  #'(lambda (p)
-                                      (foreign-class-own-wrapper 
-                                       (classify-foreign-pointer p)))
-                                  :slots-vector
-                                  #'(lambda (p)
-                                      (foreign-slots-vector
-                                       (classify-foreign-pointer p))))
+  (defun foreign-domain-unclassified-recognize (p)
+    (declare (ignore p))
+    (error "Shouldn't happen"))
 
-;;; "Raw" macptrs, that aren't recognized as "standard foreign objects"
-;;; in some other domain, should always be recognized as such (and this
-;;; pretty much has to be domain #1.)
+  (defun foreign-domain-unclassified-class-of (p)
+    (foreign-class-of (classify-foreign-pointer p)))
 
-  (register-foreign-object-domain :raw
-                                  :recognize #'true
-                                  :class-of #'%ordinal-type-class-for-macptr
-                                  :classp #'false
-                                  :instance-class-wrapper
-                                  (lambda (p)
-                                    (%class.own-wrapper (%ordinal-type-class-for-macptr p)))
-                                  :class-own-wrapper #'false
-                                  :slots-vector #'false)
+  (defun foreign-domain-unclassified-classp (p)
+    (foreign-classp (classify-foreign-pointer p)))
 
-  (defstatic *class-table*
-      (let* ((v (make-array 256 :initial-element nil))
-             (class-of-function-function
-              #'(lambda (thing)
-                  (let ((bits (lfun-bits-known-function thing)))
-                    (declare (fixnum bits))
-                    (if (logbitp $lfbits-trampoline-bit bits)
-                      ;; closure
-                      (let ((inner-fn (closure-function thing)))
-                        (if (neq inner-fn thing)
-                          (let ((inner-bits (lfun-bits inner-fn)))
-                            (if (logbitp $lfbits-method-bit inner-bits)
-                              *compiled-lexical-closure-class*
-                              (if (logbitp $lfbits-gfn-bit inner-bits)
-                                (%wrapper-class (gf.instance.class-wrapper thing))
-                                (if (logbitp $lfbits-cm-bit inner-bits)
-                                  *combined-method-class*
-                                  *compiled-lexical-closure-class*))))
-                          *compiled-lexical-closure-class*))
-                      (if (logbitp  $lfbits-method-bit bits)
-                        *method-function-class* 
-                        (if (logbitp $lfbits-gfn-bit bits)
-                          (%wrapper-class (gf.instance.class-wrapper thing))
-                          (if (logbitp $lfbits-cm-bit bits)
-                            *combined-method-class*
-                            *compiled-function-class*))))))))
-        ;; Make one loop through the vector, initializing fixnum & list
-        ;; cells.  Set all immediates to *immediate-class*, then
-        ;; special-case characters later.
-        #+ppc32-target
-        (do* ((slice 0 (+ 8 slice)))
-             ((= slice 256))
-          (declare (type (unsigned-byte 8) slice))
-          (setf (%svref v (+ slice ppc32::fulltag-even-fixnum)) *fixnum-class*
-                (%svref v (+ slice ppc32::fulltag-odd-fixnum))  *fixnum-class*
-                (%svref v (+ slice ppc32::fulltag-cons)) *cons-class*
-                (%svref v (+ slice ppc32::fulltag-nil)) *null-class*
-                (%svref v (+ slice ppc32::fulltag-imm)) *immediate-class*))
-        #+ppc64-target
-        (do* ((slice 0 (+ 16 slice)))
-             ((= slice 256))
-          (declare (type (unsigned-byte 8) slice))
-          (setf (%svref v (+ slice ppc64::fulltag-even-fixnum)) *fixnum-class*
-                (%svref v (+ slice ppc64::fulltag-odd-fixnum))  *fixnum-class*
-                (%svref v (+ slice ppc64::fulltag-cons)) *cons-class*
-                (%svref v (+ slice ppc64::fulltag-imm-0)) *immediate-class*
-                (%svref v (+ slice ppc64::fulltag-imm-1)) *immediate-class*
-                (%svref v (+ slice ppc64::fulltag-imm-2)) *immediate-class*
-                (%svref v (+ slice ppc64::fulltag-imm-3)) *immediate-class*))
-        #+x8632-target
-        (do* ((slice 0 (+ 8 slice))
-	      (cons-fn #'(lambda (x) (if (null x) *null-class* *cons-class*))))
-             ((= slice 256))
-          (declare (type (unsigned-byte 8) slice))
-          (setf (%svref v (+ slice x8632::fulltag-even-fixnum)) *fixnum-class*
-                (%svref v (+ slice x8632::fulltag-odd-fixnum))  *fixnum-class*
-                (%svref v (+ slice x8632::fulltag-cons)) cons-fn
-                (%svref v (+ slice x8632::fulltag-tra)) *tagged-return-address-class*
-                (%svref v (+ slice x8632::fulltag-imm)) *immediate-class*))
+  (defun foreign-domain-unclassified-instance-class-wrapper (p)
+    (foreign-instance-class-wrapper (classify-foreign-pointer p)))
+
+  (defun foreign-domain-unclassified-class-own-wrapper (p)
+    (foreign-class-own-wrapper (classify-foreign-pointer p)))
+
+  (defun foreign-domain-unclassified-slots-vector (p)
+    (foreign-slots-vector (classify-foreign-pointer p)))
+
+  (defun foreign-domain-raw-instance-class-wrapper (p)
+    (%class.own-wrapper (%ordinal-type-class-for-macptr p)))
+
+  (defun initialize-foreign-object-domains ()
+    (register-foreign-object-domain :unclassified
+                                    :recognize #'foreign-domain-unclassified-recognize
+                                    :class-of #'foreign-domain-unclassified-class-of
+                                    :classp #'foreign-domain-unclassified-classp
+                                    :instance-class-wrapper
+                                    #'foreign-domain-unclassified-instance-class-wrapper
+                                    :class-own-wrapper
+                                    #'foreign-domain-unclassified-class-own-wrapper
+                                    :slots-vector
+                                    #'foreign-domain-unclassified-slots-vector)
+
+    ;; "Raw" macptrs, that aren't recognized as "standard foreign objects"
+    ;; in some other domain, should always be recognized as such (and this
+    ;; pretty much has to be domain #1.)
+    (register-foreign-object-domain :raw
+                                    :recognize #'true
+                                    :class-of #'%ordinal-type-class-for-macptr
+                                    :classp #'false
+                                    :instance-class-wrapper
+                                    #'foreign-domain-raw-instance-class-wrapper
+                                    :class-own-wrapper #'false
+                                    :slots-vector #'false))
+
+  (initialize-foreign-object-domains)
+  )
+
+(with-clos-bootstrap-phase
+  (defun class-of-function-object (thing)
+    (let ((bits (lfun-bits-known-function thing)))
+      (declare (fixnum bits))
+      (if (logbitp $lfbits-trampoline-bit bits)
+        ;; closure
+        (let ((inner-fn (closure-function thing)))
+          (if (neq inner-fn thing)
+            (let ((inner-bits (lfun-bits inner-fn)))
+              (if (logbitp $lfbits-method-bit inner-bits)
+                *compiled-lexical-closure-class*
+                (if (logbitp $lfbits-gfn-bit inner-bits)
+                  (%wrapper-class (gf.instance.class-wrapper thing))
+                  (if (logbitp $lfbits-cm-bit inner-bits)
+                    *combined-method-class*
+                    *compiled-lexical-closure-class*))))
+            *compiled-lexical-closure-class*))
+        (if (logbitp  $lfbits-method-bit bits)
+          *method-function-class*
+          (if (logbitp $lfbits-gfn-bit bits)
+            (%wrapper-class (gf.instance.class-wrapper thing))
+            (if (logbitp $lfbits-cm-bit bits)
+              *combined-method-class*
+              *compiled-function-class*))))))
+
+  (defun initialize-class-table-lowtags (v)
+    ;; Make one loop through the vector, initializing fixnum & list cells.
+    ;; Set all immediates to *immediate-class*, then special-case
+    ;; characters later.
+    #+ppc32-target
+    (do* ((slice 0 (+ 8 slice)))
+         ((= slice 256))
+      (declare (type (unsigned-byte 8) slice))
+      (setf (%svref v (+ slice ppc32::fulltag-even-fixnum)) *fixnum-class*
+            (%svref v (+ slice ppc32::fulltag-odd-fixnum))  *fixnum-class*
+            (%svref v (+ slice ppc32::fulltag-cons)) *cons-class*
+            (%svref v (+ slice ppc32::fulltag-nil)) *null-class*
+            (%svref v (+ slice ppc32::fulltag-imm)) *immediate-class*))
+    #+ppc64-target
+    (do* ((slice 0 (+ 16 slice)))
+         ((= slice 256))
+      (declare (type (unsigned-byte 8) slice))
+      (setf (%svref v (+ slice ppc64::fulltag-even-fixnum)) *fixnum-class*
+            (%svref v (+ slice ppc64::fulltag-odd-fixnum))  *fixnum-class*
+            (%svref v (+ slice ppc64::fulltag-cons)) *cons-class*
+            (%svref v (+ slice ppc64::fulltag-imm-0)) *immediate-class*
+            (%svref v (+ slice ppc64::fulltag-imm-1)) *immediate-class*
+            (%svref v (+ slice ppc64::fulltag-imm-2)) *immediate-class*
+            (%svref v (+ slice ppc64::fulltag-imm-3)) *immediate-class*))
+    #+x8632-target
+    (do* ((slice 0 (+ 8 slice))
+          (cons-fn #'(lambda (x) (if (null x) *null-class* *cons-class*))))
+         ((= slice 256))
+      (declare (type (unsigned-byte 8) slice))
+      (setf (%svref v (+ slice x8632::fulltag-even-fixnum)) *fixnum-class*
+            (%svref v (+ slice x8632::fulltag-odd-fixnum))  *fixnum-class*
+            (%svref v (+ slice x8632::fulltag-cons)) cons-fn
+            (%svref v (+ slice x8632::fulltag-tra)) *tagged-return-address-class*
+            (%svref v (+ slice x8632::fulltag-imm)) *immediate-class*))
+    #+x8664-target
+    (do* ((slice 0 (+ 16 slice)))
+         ((= slice 256))
+      (declare (type (unsigned-byte 8) slice))
+      (setf (%svref v (+ slice x8664::fulltag-even-fixnum)) *fixnum-class*
+            (%svref v (+ slice x8664::fulltag-odd-fixnum))  *fixnum-class*
+            (%svref v (+ slice x8664::fulltag-cons)) *cons-class*
+            (%svref v (+ slice x8664::fulltag-imm-0)) *immediate-class*
+            (%svref v (+ slice x8664::fulltag-imm-1)) *immediate-class*
+            (%svref v (+ slice x8664::fulltag-tra-0)) *tagged-return-address-class*
+            (%svref v (+ slice x8664::fulltag-tra-1)) *tagged-return-address-class*
+            (%svref v (+ slice x8664::fulltag-nil)) *null-class*))
+    #+(or arm-target wasm32-target)
+    (do* ((slice 0 (+ 8 slice)))
+         ((= slice 256))
+      (declare (type (unsigned-byte 8) slice))
+      (setf (%svref v (+ slice arm::fulltag-even-fixnum)) *fixnum-class*
+            (%svref v (+ slice arm::fulltag-odd-fixnum))  *fixnum-class*
+            (%svref v (+ slice arm::fulltag-cons)) *cons-class*
+            (%svref v (+ slice arm::fulltag-nil)) *null-class*
+            (%svref v (+ slice arm::fulltag-imm)) *immediate-class*))
+    v)
+
+  (defun initialize-class-table-builtin-subtags (v)
+    (macrolet ((map-subtag (subtag class-name)
+                 `(setf (%svref v ,subtag) (find-class ',class-name))))
+      ;; immheader types map to built-in classes.
+      (map-subtag target::subtag-bignum bignum)
+      (map-subtag target::subtag-double-float double-float)
+      (map-subtag target::subtag-single-float short-float)
+      (map-subtag target::subtag-dead-macptr ivector)
+      #+ppc32-target
+      (map-subtag ppc32::subtag-code-vector code-vector)
+      #+ppc64-target
+      (map-subtag ppc64::subtag-code-vector code-vector)
+      #+(or arm-target wasm32-target)
+      (map-subtag arm::subtag-code-vector code-vector)
+      #+ppc32-target
+      (map-subtag ppc32::subtag-creole-object creole-object)
+      (map-subtag target::subtag-xcode-vector xcode-vector)
+      (map-subtag target::subtag-xfunction xfunction)
+      #+(or arm-target wasm32-target)
+      (map-subtag arm::subtag-pseudofunction pseudofunction)
+      (map-subtag target::subtag-single-float-vector simple-short-float-vector)
+      #+64-bit-target
+      (map-subtag target::subtag-u64-vector simple-unsigned-doubleword-vector)
+      #+64-bit-target
+      (map-subtag target::subtag-s64-vector simple-doubleword-vector)
+      (map-subtag target::subtag-fixnum-vector simple-fixnum-vector)
+      (map-subtag target::subtag-u32-vector simple-unsigned-long-vector)
+      (map-subtag target::subtag-s32-vector simple-long-vector)
+      (map-subtag target::subtag-u8-vector simple-unsigned-byte-vector)
+      (map-subtag target::subtag-s8-vector simple-byte-vector)
+      (map-subtag target::subtag-simple-base-string simple-base-string)
+      (map-subtag target::subtag-u16-vector simple-unsigned-word-vector)
+      (map-subtag target::subtag-s16-vector simple-word-vector)
+      (map-subtag target::subtag-double-float-vector simple-double-float-vector)
+      (map-subtag target::subtag-bit-vector simple-bit-vector)
+      ;; Some nodeheader types map to built-in-classes; others require
+      ;; further dispatching.
+      (map-subtag target::subtag-ratio ratio)
+      (map-subtag target::subtag-complex complex)
+      (map-subtag target::subtag-complex-single-float complex-single-float)
+      (map-subtag target::subtag-complex-double-float complex-double-float)
+      (map-subtag target::subtag-complex-single-float-vector simple-complex-single-float-vector)
+      (map-subtag target::subtag-complex-double-float-vector simple-complex-double-float-vector)
+      (map-subtag target::subtag-catch-frame catch-frame)
+      (map-subtag target::subtag-hash-vector hash-table-vector)
+      (map-subtag target::subtag-value-cell value-cell)
+      (map-subtag target::subtag-pool pool)
+      (map-subtag target::subtag-weak population)
+      (map-subtag target::subtag-package package)
+      (map-subtag target::subtag-simple-vector simple-vector)
+      (map-subtag target::subtag-slot-vector slot-vector)
+      #+x8664-target (map-subtag x8664::subtag-symbol symbol-vector)
+      #+x8664-target (map-subtag x8664::subtag-function function-vector))
+    v)
+
+  (defun class-table-array-header-class (x)
+    (if (logbitp $arh_simple_bit
+                 (the fixnum (%svref x target::arrayH.flags-cell)))
+      *simple-array-class*
+      *array-class*))
+
+  (defun class-table-character-class (c)
+    (let* ((code (%char-code c)))
+      (if (or (eq c #\NewLine)
+              (and (>= code (char-code #\space))
+                   (< code (char-code #\rubout))))
+        *standard-char-class*
+        *base-char-class*)))
+
+  (defun class-table-struct-class (s)
+    (%structure-class-of s))
+
+  (defun class-table-istruct-class (i)
+    (let* ((cell (%svref i 0))
+           (wrapper (istruct-cell-info cell)))
+      (if wrapper
+        (%wrapper-class wrapper)
+        (or (find-class (istruct-cell-name cell) nil)
+            *istruct-class*))))
+
+  (defun class-table-basic-stream-class (b)
+    (%wrapper-class (basic-stream.wrapper b)))
+
+  (defun class-table-symbol-class (s)
+    #-ppc64-target
+    (if (eq (symbol-package s) *keyword-package*)
+      *keyword-class*
+      *symbol-class*)
+    #+ppc64-target
+    (if s
+      (if (eq (symbol-package s) *keyword-package*)
+        *keyword-class*
+        *symbol-class*)
+      *null-class*))
+
+  (defun class-table-vectorh-class (v)
+    (declare (special *ivector-vector-classes*))
+    (let* ((subtype (%array-header-subtype v)))
+      (declare (fixnum subtype))
+      (if (eql subtype target::subtag-simple-vector)
+        *general-vector-class*
+        #-x8664-target
+        (%svref *ivector-vector-classes*
+                #+ppc32-target
+                (ash (the fixnum (- subtype ppc32::min-cl-ivector-subtag))
+                     (- ppc32::ntagbits))
+                #+(or arm-target wasm32-target)
+                (ash (the fixnum (- subtype arm::min-cl-ivector-subtag))
+                     (- arm::ntagbits))
+                #+ppc64-target
+                (ash (the fixnum (logand subtype #x7f)) (- ppc64::nlowtagbits))
+                #+x8632-target
+                (ash (the fixnum (- subtype x8632::min-cl-ivector-subtag))
+                     (- x8632::ntagbits)))
         #+x8664-target
-        (do* ((slice 0 (+ 16 slice)))
-             ((= slice 256))
-          (declare (type (unsigned-byte 8) slice))
-          (setf (%svref v (+ slice x8664::fulltag-even-fixnum)) *fixnum-class*
-                (%svref v (+ slice x8664::fulltag-odd-fixnum))  *fixnum-class*
-                (%svref v (+ slice x8664::fulltag-cons)) *cons-class*
-                (%svref v (+ slice x8664::fulltag-imm-0)) *immediate-class*
-                (%svref v (+ slice x8664::fulltag-imm-1)) *immediate-class*
-                (%svref v (+ slice x8664::fulltag-tra-0)) *tagged-return-address-class*
-                (%svref v (+ slice x8664::fulltag-tra-1)) *tagged-return-address-class*
-                (%svref v (+ slice x8664::fulltag-nil)) *null-class*))
-        #+(or arm-target wasm32-target)
-        (do* ((slice 0 (+ 8 slice)))
-             ((= slice 256))
-          (declare (type (unsigned-byte 8) slice))
-          (setf (%svref v (+ slice arm::fulltag-even-fixnum)) *fixnum-class*
-                (%svref v (+ slice arm::fulltag-odd-fixnum))  *fixnum-class*
-                (%svref v (+ slice arm::fulltag-cons)) *cons-class*
-                (%svref v (+ slice arm::fulltag-nil)) *null-class*
-                (%svref v (+ slice arm::fulltag-imm)) *immediate-class*))
+        (let* ((class (logand x8664::fulltagmask subtype))
+               (idx (ash subtype (- x8664::ntagbits))))
+          (cond ((= class x8664::fulltag-immheader-0)
+                 (%svref *immheader-0-classes* idx))
+                ((= class x8664::fulltag-immheader-1)
+                 (%svref *immheader-1-classes* idx))
+                ((= class x8664::fulltag-immheader-2)
+                 (%svref *immheader-2-classes* idx))
+                (t *t-class*))))))
 
-        (macrolet ((map-subtag (subtag class-name)
-                     `(setf (%svref v ,subtag) (find-class ',class-name))))
-          ;; immheader types map to built-in classes.
-          (map-subtag target::subtag-bignum bignum)
-          (map-subtag target::subtag-double-float double-float)
-          (map-subtag target::subtag-single-float short-float)
-          (map-subtag target::subtag-dead-macptr ivector)
-          #+ppc32-target
-          (map-subtag ppc32::subtag-code-vector code-vector)
-          #+ppc64-target
-          (map-subtag ppc64::subtag-code-vector code-vector)
-          #+(or arm-target wasm32-target)
-          (map-subtag arm::subtag-code-vector code-vector)
-          #+ppc32-target
-          (map-subtag ppc32::subtag-creole-object creole-object)
-          (map-subtag target::subtag-xcode-vector xcode-vector)
-          (map-subtag target::subtag-xfunction xfunction)
-          #+(or arm-target wasm32-target)
-          (map-subtag arm::subtag-pseudofunction pseudofunction)
-          (map-subtag target::subtag-single-float-vector simple-short-float-vector)
-          #+64-bit-target
-          (map-subtag target::subtag-u64-vector simple-unsigned-doubleword-vector)
-          #+64-bit-target
-          (map-subtag target::subtag-s64-vector simple-doubleword-vector)
-          (map-subtag target::subtag-fixnum-vector simple-fixnum-vector)
-          (map-subtag target::subtag-u32-vector simple-unsigned-long-vector)
-          (map-subtag target::subtag-s32-vector simple-long-vector)
-          (map-subtag target::subtag-u8-vector simple-unsigned-byte-vector)
-          (map-subtag target::subtag-s8-vector simple-byte-vector)
-          (map-subtag target::subtag-simple-base-string simple-base-string)
-          (map-subtag target::subtag-u16-vector simple-unsigned-word-vector)
-          (map-subtag target::subtag-s16-vector simple-word-vector)
-          (map-subtag target::subtag-double-float-vector simple-double-float-vector)
-          (map-subtag target::subtag-bit-vector simple-bit-vector)
-          ;; Some nodeheader types map to built-in-classes; others require
-          ;; further dispatching.
-          (map-subtag target::subtag-ratio ratio)
-          (map-subtag target::subtag-complex complex)
-          (map-subtag target::subtag-complex-single-float complex-single-float)
-          (map-subtag target::subtag-complex-double-float complex-double-float)
-          (map-subtag target::subtag-complex-single-float-vector simple-complex-single-float-vector)
-          (map-subtag target::subtag-complex-double-float-vector simple-complex-double-float-vector)
-          (map-subtag target::subtag-catch-frame catch-frame)
-          (map-subtag target::subtag-hash-vector hash-table-vector)
-          (map-subtag target::subtag-value-cell value-cell)
-          (map-subtag target::subtag-pool pool)
-          (map-subtag target::subtag-weak population)
-          (map-subtag target::subtag-package package)
-          (map-subtag target::subtag-simple-vector simple-vector)
-          (map-subtag target::subtag-slot-vector slot-vector)
-          #+x8664-target (map-subtag x8664::subtag-symbol symbol-vector)
-          #+x8664-target (map-subtag x8664::subtag-function function-vector))
-        (setf (%svref v target::subtag-arrayH)
-              #'(lambda (x)
-                  (if (logbitp $arh_simple_bit
-                               (the fixnum (%svref x target::arrayH.flags-cell)))
-                    *simple-array-class*
-                    *array-class*)))
-        ;; These need to be special-cased:
-        (setf (%svref v target::subtag-macptr) #'foreign-class-of)
-        (setf (%svref v target::subtag-character)
-              #'(lambda (c) (let* ((code (%char-code c)))
-                              (if (or (eq c #\NewLine)
-                                      (and (>= code (char-code #\space))
-                                           (< code (char-code #\rubout))))
-                                *standard-char-class*
-                                *base-char-class*))))
-        (setf (%svref v target::subtag-struct)
-              #'(lambda (s) (%structure-class-of s))) ; need DEFSTRUCT
-        (setf (%svref v target::subtag-istruct)
-              #'(lambda (i)
-                  (let* ((cell (%svref i 0))
-                         (wrapper (istruct-cell-info  cell)))
-                    (if wrapper
-                      (%wrapper-class wrapper)
-                      (or (find-class (istruct-cell-name cell) nil)
-                          *istruct-class*)))))
-        (setf (%svref v target::subtag-basic-stream)
-              #'(lambda (b) (%wrapper-class (basic-stream.wrapper b))))
-        (setf (%svref v target::subtag-instance)
-              #'%class-of-instance)
-        (setf (%svref v #+ppc-target target::subtag-symbol
-                      #+(or arm-target wasm32-target) target::subtag-symbol
-		      #+x8632-target target::subtag-symbol
-		      #+x8664-target target::tag-symbol)
-              #-ppc64-target
-              #'(lambda (s) (if (eq (symbol-package s) *keyword-package*)
-                              *keyword-class*
-                              *symbol-class*))
-              #+ppc64-target
-              #'(lambda (s)
-                  (if s
-                    (if (eq (symbol-package s) *keyword-package*)
-                      *keyword-class*
-                      *symbol-class*)
-                    *null-class*)))
-        
-        (setf (%svref v
-                      #+ppc-target target::subtag-function
-                      #+(or arm-target wasm32-target) target::subtag-function
-                      #+x8632-target target::subtag-function
-                      #+x8664-target target::tag-function) 
-              class-of-function-function)
-        (setf (%svref v target::subtag-vectorH)
-              #'(lambda (v)
-                  (declare (special *ivector-vector-classes*))
-                  (let* ((subtype (%array-header-subtype v)))
-                    (declare (fixnum subtype))
-                    (if (eql subtype target::subtag-simple-vector)
-                      *general-vector-class*
-                      #-x8664-target
-                      (%svref *ivector-vector-classes*
-                              #+ppc32-target
-                              (ash (the fixnum (- subtype ppc32::min-cl-ivector-subtag))
-                                   (- ppc32::ntagbits))
-                              #+(or arm-target wasm32-target)
-                              (ash (the fixnum (- subtype arm::min-cl-ivector-subtag))
-                                   (- arm::ntagbits))
-                              #+ppc64-target
-                              (ash (the fixnum (logand subtype #x7f)) (- ppc64::nlowtagbits))
-			      #+x8632-target
-			      (ash (the fixnum (- subtype x8632::min-cl-ivector-subtag))
-				   (- x8632::ntagbits)))
-                      #+x8664-target
-                      (let* ((class (logand x8664::fulltagmask subtype))
-                             (idx (ash subtype (- x8664::ntagbits))))
-                        (cond ((= class x8664::fulltag-immheader-0)
-                               (%svref *immheader-0-classes* idx))
-                              ((= class x8664::fulltag-immheader-1)
-                               (%svref *immheader-1-classes* idx))
-                              ((= class x8664::fulltag-immheader-2)
-                               (%svref *immheader-2-classes* idx))
-                              (t *t-class*)))
-                               
-                      ))))
-        (setf (%svref v target::subtag-lock)
-              #'(lambda (thing)
-                  (case (%svref thing target::lock.kind-cell)
-                    (recursive-lock *recursive-lock-class*)
-                    (read-write-lock *read-write-lock-class*)
-                    (t *lock-class*))))
-        v))
+  (defun class-table-lock-class (thing)
+    (case (%svref thing target::lock.kind-cell)
+      (recursive-lock *recursive-lock-class*)
+      (read-write-lock *read-write-lock-class*)
+      (t *lock-class*)))
+
+  (defun initialize-class-table-special-subtags (v)
+    (setf (%svref v target::subtag-arrayH) #'class-table-array-header-class)
+    ;; These need to be special-cased:
+    (setf (%svref v target::subtag-macptr) #'foreign-class-of)
+    (setf (%svref v target::subtag-character) #'class-table-character-class)
+    (setf (%svref v target::subtag-struct) #'class-table-struct-class)
+    (setf (%svref v target::subtag-istruct) #'class-table-istruct-class)
+    (setf (%svref v target::subtag-basic-stream) #'class-table-basic-stream-class)
+    (setf (%svref v target::subtag-instance) #'%class-of-instance)
+    (setf (%svref v #+ppc-target target::subtag-symbol
+                  #+(or arm-target wasm32-target) target::subtag-symbol
+                  #+x8632-target target::subtag-symbol
+                  #+x8664-target target::tag-symbol)
+          #'class-table-symbol-class)
+
+    (setf (%svref v
+                  #+ppc-target target::subtag-function
+                  #+(or arm-target wasm32-target) target::subtag-function
+                  #+x8632-target target::subtag-function
+                  #+x8664-target target::tag-function)
+          #'class-of-function-object)
+    (setf (%svref v target::subtag-vectorH) #'class-table-vectorh-class)
+    (setf (%svref v target::subtag-lock) #'class-table-lock-class)
+    v)
+
+  (defun make-class-table ()
+    (let* ((v (make-array 256 :initial-element nil)))
+      (initialize-class-table-lowtags v)
+      (initialize-class-table-builtin-subtags v)
+      (initialize-class-table-special-subtags v)
+      v))
+
+  (defstatic *class-table* (make-class-table))
 
 
 
@@ -2508,7 +2585,7 @@ to replace that class with ~s" name old-class new-class)
 
 
 
-  )                                     ; end let
+  )
 
 
 

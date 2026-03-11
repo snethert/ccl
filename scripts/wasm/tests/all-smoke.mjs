@@ -51,6 +51,7 @@ const tests = [
   "./stream-open-smoke.mjs",
   "./stream-seek-truncate-smoke.mjs",
   "./stream-seek-truncate-wasm-smoke.mjs",
+  "./save-image-direct-smoke.mjs",
   "./pending-stdin-smoke.mjs",
   "./ccl-step-smoke.mjs",
   "./start-lisp-smoke.mjs",

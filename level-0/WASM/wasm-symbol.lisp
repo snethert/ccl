@@ -124,21 +124,61 @@
   (declare (ignore idx))
   (%fixnum-ref (%current-tcr) target::tcr.tlb-pointer))
 
-;;; Closure-free binding-index counter.
+;;; Closure-free binding-index state.
 ;;;
-;;; l0-symbol.lisp defines %set-binding-index and next-binding-index as
-;;; closures over a shared (let* ((next-binding-index 0) ...) ...) block.
-;;; On WASM32 the xloader does not populate inner-lambda environment slots,
-;;; so the closure environment (function slot 2) remains NIL at Phase D.
-;;; Calling %set-binding-index then crashes: _SPmisc_set(NIL, ...) → trap.
+;;; ARM keeps these functions in a shared let* closure.  That works there
+;;; because the native xloader preserves the closed-over cells.  The WASM
+;;; xloader does not: the boot image ends up with callable function objects
+;;; whose inherited slots are still NIL, and startup later traps when
+;;; %binding-index-init / ensure-binding-index touch those cells.
 ;;;
-;;; Fix: override both functions with top-level defuns backed by a defvar.
-;;; These are compiled into the boot image after l0-symbol.lisp loads,
-;;; overwriting the closure fcells whether Phase C succeeded or not.
+;;; Keep the semantics but move the state into globals so the boot image
+;;; contains ordinary top-level functions instead of closure shells.
+(defvar *%binding-index-lock* nil)
+(defvar *%binding-index-reverse-map* nil)
 (defvar *%next-binding-index* 0)
+
+(defun %binding-index-init ()
+  (unless *%binding-index-lock*
+    (setq *%binding-index-lock* (make-lock)))
+  (unless *%binding-index-reverse-map*
+    (setq *%binding-index-reverse-map* (make-hash-table :test #'eq :weak :value))))
 
 (defun %set-binding-index (val)
   (setq *%next-binding-index* val))
 
 (defun next-binding-index ()
   (1+ *%next-binding-index*))
+
+(defun ensure-binding-index (sym)
+  (%binding-index-init)
+  (with-lock-grabbed (*%binding-index-lock*)
+    (let* ((symvec (symptr->symvector (%symbol->symptr sym)))
+           (idx (%svref symvec target::symbol.binding-index-cell))
+           (bits (%symbol-bits sym)))
+      (declare (fixnum idx bits))
+      (if (or (logbitp $sym_vbit_global bits)
+              (logbitp $sym_vbit_const bits))
+        (unless (zerop idx)
+          (remhash idx *%binding-index-reverse-map*)
+          (setf (%svref symvec target::symbol.binding-index-cell) 0))
+        (if (zerop idx)
+          (let* ((new-idx (incf *%next-binding-index*)))
+            (setf (%svref symvec target::symbol.binding-index-cell) new-idx)
+            (setf (gethash new-idx *%binding-index-reverse-map*) sym))))
+      sym)))
+
+(defun binding-index-symbol (idx)
+  (%binding-index-init)
+  (with-lock-grabbed (*%binding-index-lock*)
+    (gethash idx *%binding-index-reverse-map*)))
+
+(defun cold-load-binding-index (sym)
+  ;; Index may have been assigned via xloader.  Update reverse map.
+  (%binding-index-init)
+  (with-lock-grabbed (*%binding-index-lock*)
+    (let* ((idx (%svref (symptr->symvector (%symbol->symptr sym))
+                        target::symbol.binding-index-cell)))
+      (declare (fixnum idx))
+      (unless (zerop idx)
+        (setf (gethash idx *%binding-index-reverse-map*) sym)))))

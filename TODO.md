@@ -3,7 +3,7 @@
 <!-- Entry index lookup tool: scripts/wasm/lookup-entry.mjs <index> -->
 <!-- Debugging guide: doc/wasm/debugging.md — read first when troubleshooting -->
 
-**Last updated:** 2026-03-03
+**Last updated:** 2026-03-10
 **Current phase:** MVP-1 (Library/Embedded Mode)
 **Plan:** [doc/wasm/deterministic-startup-plan.md](doc/wasm/deterministic-startup-plan.md)
 
@@ -239,7 +239,7 @@ Three benign errors during cold-boot-init (all with catch_top=0):
 ## 📊 Current Status
 
 **Completed:** B1-B6 fixes, funcall ordering fix, ABI spec, diagnostic cleanup, instrumentation removal (~4500 lines), startup truth retirement, startup binding map removal (~2500 lines), debugging infrastructure, cold-boot init extraction (Phase 1a-1c), hash function char-code fix, ivector const pool support, target:: package resolution fix, subprims .rodata collision fix, heap increase to 3.9 GB, `_SPbuiltin_length`/`_SPbuiltin_seqtype` inline fast paths, module consolidation (merge + pack dedup), module validation fallback (7557/7557 installed), prog1 temp local reuse fix (9 sites), missing arch definitions (lock struct, lockptr/rwlock/tcr layouts, tcr-bias, interrupt-level-binding-index), typecode box_fixnum overflow fix, WASM lock stubs + l0-misc.lisp reader conditionals, PROCLAIM declaim compile-time fix, `%alloc-misc` 3-arg register fix, CAR/CDR contract fix, null table slot stubs, **cold-boot-init success** (v15.3), **FASL boot metadata alias fix** (2026-03-03), MV calling convention (`wasm_return_values2/3/4` + `wasm_push_value_set` arg_y/arg_x assignments), **Phase 2A — proactive const pool bake** (7885 pools in root.image), **Phase 3 — deterministic launcher** (load-image.mjs 1151→314 lines, `wasm_ccl_start_lisp rc=0`)
-**Blocked on:** `RUNTIME-BRIDGE-PUMP-COMMANDS` + `%ERR-DISP` XNOFUN at startup (caught, non-fatal, but indicates missing function bindings needed for toplevel operation).
+**Blocked on:** root-image startup regression during pre-FASL package/bootstrap work. Current aligned failure shows a multiple-value boundary collapse on the `%FIND-SYMBOL` / `%GET-HTAB-SYMBOL` / `%GET-HASHED-HTAB-SYMBOL` path: `get_mv OOB: idx=2 count=1 nargs_raw=0x00000004`, followed by `%HTAB-ADD-SYMBOL` receiving `NIL` where the hash-table slot index should be a fixnum.
 **Build pipeline:** Functional (kernel → subprims → boot image → modules → image assembly → startup-plan.json + modules.bin)
 **MVP-1 completion:** 80%
 
@@ -253,6 +253,24 @@ Three benign errors during cold-boot-init (all with catch_top=0):
 
 3. **`fast-mod` chunked subtraction is a workaround, not a fix.**
    The current `fast-mod` in `wasm-hash.lisp` uses chunked subtraction (powers-of-2 repeated subtract) to avoid the compiler codegen bug. This is O(n/d) worst case. The real fix is to resolve the loop codegen bug (#1) so the proper binary-doubling `fast-mod` algorithm works. Once #1 is fixed, `fast-mod` should be rewritten to use the efficient O(log(n/d)) algorithm.
+
+4. **Current startup blocker: multiple-value return count collapse on the package/hash lookup path.**
+   This is the active root-image failure as of 2026-03-10. The aligned boot/runtime artifacts now point to a return-value transport bug, not a package-name hack: calls on the `%FIND-SYMBOL` / `%GET-HTAB-SYMBOL` / `%GET-HASHED-HTAB-SYMBOL` path are reaching a `get_mv` read with only one returned value when later code expects at least three. The visible consequence is `%HTAB-ADD-SYMBOL` receiving `NIL` for the slot index and poisoning FASL/package bootstrap. This needs to be fixed at the multiple-value/call boundary, not by weakening package or hash-table checks.
+
+5. **WASM hash behavior still contains a temporary algorithmic workaround.**
+   The current hash-table probing path is only viable because `wasm-hash.lisp` replaced the normal `fast-mod` logic with a chunked-subtraction implementation. That workaround was useful to get past the earlier crash, but it is still technical debt and should be retired once the underlying WASM codegen bug is fixed. ARM does not need this path; WASM should not keep it indefinitely.
+
+6. **Phase 0A/compiler smoke tooling has drifted from the backend operator table.**
+   `scripts/wasm/compile-smoke-modules.lisp` still patches only two custom operators into `*next-nx-operators*`, while the live backend now expects six (`%fixnum-set`, `%fixnum-set-natural`, `%single-to-fixnum`, `%double-to-fixnum`, `%single-round-to-fixnum`, `%double-round-to-fixnum`). This is why `compile-smoke-modules.sh` currently fails with `Bug - operator not found for %SINGLE-TO-FIXNUM`. It is a tooling bug and needs to be kept in sync with `build-wasm-boot.lisp`.
+
+7. **Spill-stack reset in `make-real-image.mjs` is still a temporary mitigation.**
+   The explicit spill-stack reset before FASL loading is a patch to keep investigation moving; it does not explain or repair the underlying trap-cleanup / state-recovery bug. The branch should not be considered stable while this reset remains necessary to recover from earlier trapped work.
+
+8. **Deterministic startup should not depend on on-demand const-pool installation.**
+   Launch-time startup is supposed to be explicit and deterministic. Any remaining dependence on lazy const-pool materialization during root-image construction or launch is a correctness problem, not an acceptable final design. Keep eliminating on-demand behavior as root causes are fixed.
+
+9. **Image trailer fixups belong in the C save path, not JS post-processing.**
+   The earlier JS-side trailer append logic in `make-real-image.mjs` was a bandaid and has been removed after verifying direct image save writes a valid trailer. If image trailer corruption reappears, the bug should be fixed in the C-side save/load implementation, not papered over in JS.
 
 ---
 

@@ -900,6 +900,11 @@
 (defparameter *%fasload-verbose* t)
 
 (defmacro %wasm-note-fasload-step (n &optional detail)
+  #+wasm32-target
+  (declare (ignore n detail))
+  #+wasm32-target
+  nil
+  #-wasm32-target
   `(when (and *%fasload-verbose* (fboundp 'format))
      (format t "~&WASM_FASLOAD_STEP ~D~@[ ~S~]~%" ,n ,detail)
      (finish-output)))
@@ -1390,12 +1395,9 @@ Can be removed before shipping once %FASLOAD startup is stable.")
      (setq *wasm-startup-step* ,n)
      ,n))
 
-(defun %run-cold-boot-init ()
-  "Execute level-0 cold-boot initialization: system locks, cold-load
-   functions, class cells, package rehash, documentation, binding indices.
-   Called from C (wasm_run_cold_boot_init) during image construction before
-   FASL loading, and also from %TOPLEVEL-FUNCTION% during native cold boot.
-   Idempotent: each list is cleared after processing."
+(defun %run-cold-boot-prelude ()
+  "Execute the cold-boot setup that must happen before any deferred
+   cold-load thunks run."
   (declare (special *xload-cold-load-functions*
                     *xload-cold-load-documentation*
                     *early-class-cells*))
@@ -1419,8 +1421,11 @@ Can be removed before shipping once %FASLOAD startup is stable.")
       (setq %find-classes% (make-hash-table :test 'eq)))
     (unless (and (boundp '*lfun-names*) *lfun-names*)
       (setq *lfun-names* (make-hash-table :test 'eq :weak t)))
-)
+))
 
+(defun %run-cold-boot-drain ()
+  "Drain and clear *XLOAD-COLD-LOAD-FUNCTIONS* in Lisp order, returning
+   the number of thunks that were present."
   (let ((cold-fn-count 0))
     (let ((cold-fns (prog1 *xload-cold-load-functions*
                            (setq *xload-cold-load-functions* nil))))
@@ -1433,16 +1438,23 @@ Can be removed before shipping once %FASLOAD startup is stable.")
           (%wasm-note-startup-step (+ 4200 idx))
           (incf idx)))
       (%wasm-note-startup-step 49))
-    (%wasm-note-startup-step 50)
-    (if (fboundp '%set-binding-index)
-      (%wasm-note-startup-step 51)
-      (progn
-        ;; Encode cold-fn-count into step so C wrapper reports it:
-        ;; step=52000 → list was empty, step=52063 → 63 functions ran but didn't bind
-        (%wasm-note-startup-step (+ 52000 cold-fn-count))
-        ;; Force immediate throw here (instead of continuing to step 80)
-        ;; so the step value is preserved in the error report.
-        (%set-binding-index 0))))
+    cold-fn-count))
+
+(defun %run-cold-boot-finalize (&optional (cold-fn-count 0))
+  "Finalize cold boot after all deferred level-0 cold-load thunks have run."
+  (declare (special *xload-cold-load-functions*
+                    *xload-cold-load-documentation*
+                    *early-class-cells*))
+  (%wasm-note-startup-step 50)
+  (if (fboundp '%set-binding-index)
+    (%wasm-note-startup-step 51)
+    (progn
+      ;; Encode cold-fn-count into step so C wrapper reports it:
+      ;; step=52000 → list was empty, step=52063 → 63 functions ran but didn't bind
+      (%wasm-note-startup-step (+ 52000 cold-fn-count))
+      ;; Force immediate throw here (instead of continuing to step 80)
+      ;; so the step value is preserved in the error report.
+      (%set-binding-index 0)))
   (dolist (pair (prog1 *early-class-cells* (setq *early-class-cells* nil)))
     (setf (gethash (car pair) %find-classes%) (cdr pair)))
   (%wasm-note-startup-step 60)
@@ -1454,9 +1466,9 @@ Can be removed before shipping once %FASLOAD startup is stable.")
   (dolist (f (prog1 *xload-cold-load-documentation* (setq *xload-cold-load-documentation* nil)))
     (apply 'set-documentation f))
   ;; On WASM32, step 80 is deferred to %run-binding-index-setup (called
-  ;; from C after Phase C cold-load drain) because %set-binding-index and
-  ;; cold-load-binding-index are closures whose environments aren't
-  ;; available until Phase C executes their let* cold-load function.
+  ;; from C after Phase C cold-load drain) because startup is split across
+  ;; host/kernel phases and binding-index population still has to wait
+  ;; until the deferred cold-load work is done.
   #-wasm32-target
   (progn
     (%wasm-note-startup-step 80)
@@ -1476,9 +1488,18 @@ Can be removed before shipping once %FASLOAD startup is stable.")
   #+wasm32-target
   (%wasm-note-startup-step 90))
 
-;;; On WASM32, called from C after Phase C cold-load drain so that
-;;; closure-backed functions (%set-binding-index, cold-load-binding-index)
-;;; have their environments populated.
+(defun %run-cold-boot-init ()
+  "Execute level-0 cold-boot initialization: prelude, cold-load
+   functions, class cells, package rehash, documentation, binding indices.
+   Called from %TOPLEVEL-FUNCTION% during native cold boot.  WASM splits
+   the same phases across host/kernel boundaries, but this wrapper keeps
+   the native semantics intact."
+  (%run-cold-boot-prelude)
+  (%run-cold-boot-finalize (%run-cold-boot-drain)))
+
+;;; On WASM32, called from C after Phase C cold-load drain once deferred
+;;; cold-load work is complete and the binding-index reverse map can be
+;;; rebuilt from the populated symbol set.
 ;;;
 ;;; IMPORTANT: These must be top-level defuns (no inner lambdas) because
 ;;; the WASM32 xloader doesn't populate inner function template slots
@@ -1542,6 +1563,18 @@ Can be removed before shipping once %FASLOAD startup is stable.")
                (%string-to-stderr " datum=") (%string-to-stderr datum))
               ((symbolp datum)
                (%string-to-stderr " datum=") (%string-to-stderr (symbol-name datum)))
+              ((functionp datum)
+               (%string-to-stderr " datum=<function")
+               (let ((fname (ignore-errors (function-name datum))))
+                 (cond ((symbolp fname)
+                        (%string-to-stderr " ")
+                        (%string-to-stderr (symbol-name fname)))
+                       ((and (consp fname)
+                             (eq (car fname) 'setf)
+                             (symbolp (cadr fname)))
+                        (%string-to-stderr " SETF ")
+                        (%string-to-stderr (symbol-name (cadr fname))))))
+               (%string-to-stderr ">"))
               ((null datum)
                (%string-to-stderr " datum=NIL"))
               ((fixnump datum)

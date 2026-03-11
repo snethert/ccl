@@ -367,7 +367,7 @@ override definitions survive into wasm-boot.image."
       (quit 0))
     (validate-wasm-runtime-startup-module-specs)
     (load-wasm-backend)
-    (let* ((root (repo-root-from-script)))
+    (let ((root (repo-root-from-script)))
       (let ((*features* (cons :wasm32-target *features*)))
         ;; Reload number-macros with wasm32-target enabled so macroexpansion
         ;; avoids wasm-unimplemented complex-float ops.
@@ -381,47 +381,57 @@ override definitions survive into wasm-boot.image."
     ;; DIAG: Log cold-load functions pushed during xdump
     (setq *xload-show-cold-load-functions* t)
     (if with-l1
-      (progn
-        (format t "~&Building wasm-boot.image with L1 baked in...~%")
-        (cross-xload-wasm-with-l1 (if force :force t)))
-      (progn
-        (format t "~&Building wasm-boot.image...~%")
-        (cross-xload-level-0 :wasm32 (if force :force t))))
-    ;; Report the final entry index counter for downstream start-entry-index.
+        (progn
+          (format t "~&Building wasm-boot.image with L1 baked in...~%")
+          (cross-xload-wasm-with-l1 (if force :force t)))
+        (progn
+          (format t "~&Building wasm-boot.image...~%")
+          (cross-xload-level-0 :wasm32 (if force :force t))))
+    ;; Report the final entry index counter for downstream diagnostics.
     (let ((next-idx (and (boundp '*wasm2-next-entry-index*) *wasm2-next-entry-index*)))
       (format t "~&*wasm2-next-entry-index* after cross-xload = ~a~%" next-idx))
-    ;; Diagnostic: check %wasm-compiled-modules% for the range of entry indices
-    (let ((modules (and (boundp '%wasm-compiled-modules%) %wasm-compiled-modules%)))
+    ;; Check %wasm-compiled-modules% for the range of entry indices and
+    ;; compute the first unused runtime entry index.
+    (let* ((modules (and (boundp '%wasm-compiled-modules%) %wasm-compiled-modules%))
+           (start-entry-index nil))
       (when modules
         (let* ((indices (mapcar (lambda (e) (svref e 2)) modules))
                (min-idx (reduce #'min indices))
-               (max-idx (reduce #'max indices)))
+               (max-idx (reduce #'max indices))
+               (next-idx (and (boundp '*wasm2-next-entry-index*) *wasm2-next-entry-index*)))
+          ;; Fixed bootstrap slots can sit above *WASM2-NEXT-ENTRY-INDEX*,
+          ;; so the runtime handoff must be the first UNUSED entry index,
+          ;; not the raw allocator counter.
+          (setq start-entry-index
+                (max (1+ max-idx)
+                     (or next-idx 0)))
           (format t "~&DIAG: %wasm-compiled-modules% count=~d min-entry=~d max-entry=~d~%"
                   (length modules) min-idx max-idx)
+          (format t "~&DIAG: runtime start-entry-index = ~d~%" start-entry-index)
           (format t "~&DIAG: All compiled modules:~%")
           (dolist (m (sort (copy-list modules) #'< :key (lambda (e) (svref e 2))))
             (format t "  entry=~d name=~s~%"
                     (svref m 2)
-                    (and (>= (length m) 7) (svref m 6)))))))
-    (when boot-modules-out
-      (let ((modules (and (boundp '%wasm-compiled-modules%) %wasm-compiled-modules%)))
+                    (and (>= (length m) 7) (svref m 6))))))
+      (when boot-modules-out
         (if (null modules)
-          (format t "~&No level-0 compiled modules to export.~%")
-          (let* ((sorted (sort (copy-list modules) #'<
-                               :key (lambda (e) (svref e 2))))
-                 (count (write-boot-module-bundle boot-modules-out sorted)))
-            (format t "~&Wrote ~d level-0 compiled modules to ~a~%" count boot-modules-out)))
-        ;; Write the next entry index to a sidecar file for rebuild-everything.sh
-        (let ((next-idx (and (boundp '*wasm2-next-entry-index*) *wasm2-next-entry-index*)))
-          (when (and next-idx boot-modules-out)
-            (let ((idx-file (concatenate 'string
-                              (subseq boot-modules-out 0
-                                      (or (position #\. boot-modules-out :from-end t)
-                                          (length boot-modules-out)))
-                              ".next-entry-index")))
-              (with-open-file (s idx-file :direction :output :if-exists :supersede)
-                (format s "~d~%" next-idx))
-              (format t "~&Wrote next-entry-index=~d to ~a~%" next-idx idx-file))))))
+            (format t "~&No level-0 compiled modules to export.~%")
+            (let* ((sorted (sort (copy-list modules) #'<
+                                 :key (lambda (e) (svref e 2))))
+                   (count (write-boot-module-bundle boot-modules-out sorted)))
+              (format t "~&Wrote ~d level-0 compiled modules to ~a~%" count boot-modules-out)))
+        ;; Write the first UNUSED entry index to a sidecar file for
+        ;; rebuild-everything.sh. This must account for fixed bootstrap entry
+        ;; slots that can sit above *WASM2-NEXT-ENTRY-INDEX*.
+        (when (and start-entry-index boot-modules-out)
+          (let* ((idx-file (concatenate 'string
+                                        (subseq boot-modules-out 0
+                                                (or (position #\. boot-modules-out :from-end t)
+                                                    (length boot-modules-out)))
+                                        ".next-entry-index")))
+            (with-open-file (s idx-file :direction :output :if-exists :supersede)
+              (format s "~d~%" start-entry-index))
+            (format t "~&Wrote next-entry-index=~d to ~a~%" start-entry-index idx-file)))))
     (finish-output)))
 
 (main)

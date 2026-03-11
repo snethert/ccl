@@ -12,6 +12,16 @@ COMPACT_RUNTIME_MODULES=0
 STRIP_RUNTIME_FUNCTIONS=1
 START_ENTRY_INDEX=""
 
+if [ -f "$ROOT_DIR/scripts/wasm/env.sh" ]; then
+  # shellcheck source=/dev/null
+  . "$ROOT_DIR/scripts/wasm/env.sh" >/dev/null 2>&1 || true
+fi
+
+BUILD_DIR="${CCL_WASM_BUILD_DIR:-$ROOT_DIR/build/wasm32}"
+MODULES_DIR="${CCL_WASM_MODULES_DIR:-$BUILD_DIR/modules}"
+BOOT_MODULES_DEFAULT="${MODULES_DIR}/wasm-boot-modules.json"
+ENTRY_SPACE_HELPER="$ROOT_DIR/scripts/wasm/lib/module-entry-space.mjs"
+
 usage() {
   cat <<'EOF'
 Usage: scripts/wasm/compile-wasm-fasls.sh [options]
@@ -21,6 +31,7 @@ Options:
   --trace-modules Print module names as they are processed
   --modules-out PATH Write compiled module bundle JSON to PATH
   --modules-debug-out PATH Write compiled module debug JSON to PATH
+  --start-entry-index N Start runtime entry numbering at N
   --compact-runtime-modules Compact runtime module bundle after packing
   --no-strip-runtime-functions Keep functions[] in compacted runtime manifest
   --dry-run      Print commands without executing
@@ -112,6 +123,10 @@ if [ "$COMPACT_RUNTIME_MODULES" -eq 1 ] && [ ! -f "$COMPACT_SCRIPT" ]; then
   echo "error: missing $COMPACT_SCRIPT" >&2
   exit 1
 fi
+if [ ! -f "$ENTRY_SPACE_HELPER" ]; then
+  echo "error: missing $ENTRY_SPACE_HELPER" >&2
+  exit 1
+fi
 
 SCRIPT_ARGS=()
 if [ "$FORCE" -eq 1 ]; then
@@ -130,6 +145,22 @@ if [ -n "$MODULES_DEBUG_OUT" ]; then
   SCRIPT_ARGS+=(--modules-debug-out "$MODULES_DEBUG_OUT")
 fi
 if [ -n "$START_ENTRY_INDEX" ]; then
+  SCRIPT_ARGS+=(--start-entry-index "$START_ENTRY_INDEX")
+fi
+
+if [ -z "$START_ENTRY_INDEX" ] && { [ -n "$MODULES_OUT" ] || [ -n "$MODULES_DEBUG_OUT" ]; }; then
+  SIDECAR_PATH="${BOOT_MODULES_DEFAULT}.inline-v1.tmp.next-entry-index"
+  if [ ! -f "$BOOT_MODULES_DEFAULT" ]; then
+    echo "error: runtime module bundle requires boot module entry space; missing $BOOT_MODULES_DEFAULT" >&2
+    echo "       run scripts/wasm/build-wasm-boot.sh --boot-modules-out $BOOT_MODULES_DEFAULT first, or pass --start-entry-index explicitly" >&2
+    exit 1
+  fi
+  START_ENTRY_INDEX="$(node "$ENTRY_SPACE_HELPER" next-entry-index --boot-manifest "$BOOT_MODULES_DEFAULT" --sidecar "$SIDECAR_PATH")"
+  if [ -z "$START_ENTRY_INDEX" ]; then
+    echo "error: failed to derive runtime start entry index from $BOOT_MODULES_DEFAULT" >&2
+    exit 1
+  fi
+  echo "Derived runtime start-entry-index=$START_ENTRY_INDEX from $BOOT_MODULES_DEFAULT" >&2
   SCRIPT_ARGS+=(--start-entry-index "$START_ENTRY_INDEX")
 fi
 

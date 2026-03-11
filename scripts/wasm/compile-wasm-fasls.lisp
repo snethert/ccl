@@ -384,6 +384,39 @@ the root prefix is replaced with ROOT/build/wasm32/."
           (and (eq status :exited) (zerop exit-code))))
       (ignore-errors (delete-file temp-path)))))
 
+(defun wasm-node-executable ()
+  (or (and (probe-file "/usr/local/bin/node") "/usr/local/bin/node")
+      (and (probe-file "/opt/homebrew/bin/node") "/opt/homebrew/bin/node")
+      "node"))
+
+(defun launch-compilable-wasm-bytes-p (bytes)
+  "Return true if the host JS engine can WebAssembly.compile BYTES.
+This catches oversized merged batches that pass wasm-validate but fail at
+actual launch time."
+  (let* ((temp-path "/tmp/ccl-wasm-compile.wasm")
+         (script
+           "const fs=require('fs');const p=process.argv[1];WebAssembly.compile(fs.readFileSync(p)).then(()=>process.exit(0)).catch(()=>process.exit(1));"))
+    (unwind-protect
+      (progn
+        (with-open-file (f temp-path
+                           :direction :output
+                           :if-exists :supersede
+                           :element-type '(unsigned-byte 8))
+          (write-sequence bytes f))
+        (let* ((process (run-program (wasm-node-executable)
+                                     (list "-e" script temp-path)
+                                     :output nil
+                                     :error nil))
+               (status (external-process-status process))
+               (exit-code (ccl::external-process-%exit-code process)))
+          (and (eq status :exited) (zerop exit-code))))
+      (ignore-errors (delete-file temp-path)))))
+
+(defun merged-wasm-batch-valid-p (bytes)
+  "Return true if merged module BYTES are both structurally valid and launchable."
+  (and (validate-wasm-bytes bytes)
+       (launch-compilable-wasm-bytes-p bytes)))
+
 (defun partition-modules-for-merging (modules)
   "Separate modules into (values mergeable individual).
 Mergeable = has code-body (slot 7) non-nil."
@@ -412,10 +445,10 @@ If a merged batch fails WASM validation, its entries go to failed-entries."
                                                (svref e 8)))  ; entry-call-abi
                                        batch))
                       (merged-bytes (wasm2-merged-module-bytes triples)))
-                 (if (validate-wasm-bytes merged-bytes)
+                 (if (merged-wasm-batch-valid-p merged-bytes)
                    (push (cons merged-bytes batch) batches)
                    (progn
-                     (format t "~&WARNING: Merged batch of ~d modules failed WASM validation, falling back to individual~%"
+                     (format t "~&WARNING: Merged batch of ~d modules failed validation/host compile, falling back to individual~%"
                              (length batch))
                      (dolist (entry batch)
                        (push entry failed-entries)))))

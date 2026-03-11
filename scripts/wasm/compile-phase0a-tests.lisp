@@ -178,6 +178,27 @@
        (multiple-value-bind (a b c) (values 1 2 3)
          (if (and (= a 1) (= b 2) (= c 3)) 1 0))))
 
+    (ccl::test-values-funcall-multiple
+     (lambda ()
+       (labels ((produce ()
+                  (values 1 2 3)))
+         (multiple-value-bind (a b c) (produce)
+           (if (and (= a 1) (= b 2) (= c 3)) 1 0)))))
+
+    (ccl::test-values-return-from-multiple
+     (lambda ()
+       (multiple-value-bind (a b c)
+           (block nil
+             (return (values 1 2 3)))
+         (if (and (= a 1) (= b 2) (= c 3)) 1 0))))
+
+    (ccl::test-values-do-termination-multiple
+     (lambda ()
+       (multiple-value-bind (a b c)
+           (do* ((i 0 (1+ i)))
+                ((= i 0) (values 1 2 3)))
+         (if (and (= a 1) (= b 2) (= c 3)) 1 0))))
+
     ;; interrupt-level / set-interrupt-level
     ;; These access TCR — may trap if TCR not set up. Category A with caveats.
 
