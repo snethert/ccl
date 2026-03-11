@@ -2003,11 +2003,34 @@ __attribute__((used, visibility("default"), export_name("wasm_set_nargs")))
 void
 wasm_set_nargs(uint32_t count)
 {
+  static uint32_t proclaim_set_nargs_diag_count = 0;
   TCR *tcr = wasm_get_current_tcr();
   if (tcr == NULL) {
     return;
   }
   tcr->wasm_gprs[nargs] = box_fixnum((signed_natural)count);
+  if (proclaim_set_nargs_diag_count < 24) {
+    int32_t current_entry = wasm_callable_entry_index(tcr->wasm_gprs[nfn]);
+    if (current_entry == 1483) {
+      char msg[256];
+      int p = 0;
+      proclaim_set_nargs_diag_count++;
+      p += wasm_debug_str(msg + p, "P-SETN count=0x");
+      p += wasm_debug_hex8(msg + p, count);
+      p += wasm_debug_str(msg + p, " vsp=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)tcr->wasm_gprs[vsp]);
+      p += wasm_debug_str(msg + p, " save_vsp=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)(uintptr_t)tcr->save_vsp);
+      p += wasm_debug_str(msg + p, " argz=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)tcr->wasm_gprs[arg_z]);
+      p += wasm_debug_str(msg + p, " argy=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)tcr->wasm_gprs[arg_y]);
+      p += wasm_debug_str(msg + p, " argx=0x");
+      p += wasm_debug_hex8(msg + p, (uint32_t)tcr->wasm_gprs[arg_x]);
+      msg[p++] = '\n';
+      wasm_host_log(msg, (unsigned)p);
+    }
+  }
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_set_nfn")))
@@ -2419,10 +2442,6 @@ wasm_vsp_ref(uint32_t index)
   if (tcr == NULL) {
     return lisp_nil;
   }
-  LispObj *vsp_ptr = tcr->save_vsp;
-  if (vsp_ptr == NULL) {
-    return lisp_nil;
-  }
   LispObj raw = tcr->wasm_gprs[nargs];
   if (tag_of(raw) != tag_fixnum) {
     return lisp_nil;
@@ -2431,8 +2450,11 @@ wasm_vsp_ref(uint32_t index)
   if (count <= 0 || (signed_natural)index >= count) {
     return lisp_nil;
   }
-  LispObj value = vsp_ptr[count - 1 - (signed_natural)index];
-  return value;
+  LispObj *vsp_ptr = tcr->save_vsp;
+  if (vsp_ptr == NULL) {
+    return lisp_nil;
+  }
+  return vsp_ptr[count - 1 - (signed_natural)index];
 }
 
 __attribute__((used, visibility("default"), export_name("wasm_vpop")))
@@ -7433,6 +7455,7 @@ wasm_const_pool_normalize_subtag(uint32_t raw_subtag)
 static LispObj
 wasm_const_pool_install_inner(TCR *tcr, uint32_t entry_index, uint32_t payload_ptr, uint32_t payload_len)
 {
+  wasm_const_pool_diag_fail = 0;
   if (payload_ptr == 0 || payload_len == 0u) {
     wasm_const_pool_diag_fail = 1;
     return lisp_nil;
@@ -7466,6 +7489,17 @@ wasm_const_pool_install_inner(TCR *tcr, uint32_t entry_index, uint32_t payload_p
     return lisp_nil;
   }
   LispObj *pool_data = (LispObj *)((BytePtr)pool + misc_data_offset);
+  for (uint32_t i = 0; i < count; i++) {
+    pool_data[i] = lisp_nil;
+  }
+
+  LispObj table = wasm_const_pool_table_ensure(tcr, entry_index);
+  if (table == lisp_nil) {
+    wasm_const_pool_diag_fail = 21;
+    return lisp_nil;
+  }
+  LispObj *table_data = (LispObj *)((BytePtr)table + misc_data_offset);
+  table_data[entry_index] = pool;
 
   for (uint32_t i = 0; i < count; i++) {
     uint32_t tag = wasm_const_pool_read_nat(bytes, payload_len, &offset, version, &ok);
@@ -7592,8 +7626,8 @@ wasm_const_pool_install_inner(TCR *tcr, uint32_t entry_index, uint32_t payload_p
           pkg_len
         );
         if (tcr->wasm_pending_throw) {
-          wasm_const_pool_diag_fail = 43;
-          return lisp_nil;
+          tcr->wasm_pending_throw = 0;
+          sym = (LispObj)0;
         }
         /* If intern returned 0, the symbol isn't available yet. Store NIL
            as placeholder; the module can still work if code paths that
@@ -7665,8 +7699,8 @@ wasm_const_pool_install_inner(TCR *tcr, uint32_t entry_index, uint32_t payload_p
           pkg_len
         );
         if (tcr->wasm_pending_throw) {
-          wasm_const_pool_diag_fail = 63;
-          return lisp_nil;
+          tcr->wasm_pending_throw = 0;
+          sym = (LispObj)0;
         }
         LispObj fn = nrs_UDF.vcell;
         if (sym != (LispObj)0 && sym != lisp_nil &&
@@ -7873,6 +7907,10 @@ wasm_const_pool_install_inner(TCR *tcr, uint32_t entry_index, uint32_t payload_p
           pkg_bytes,
           pkg_len
         );
+        if (tcr->wasm_pending_throw) {
+          tcr->wasm_pending_throw = 0;
+          sym = (LispObj)0;
+        }
         if (sym == (LispObj)0 || (fulltag_of(sym) != fulltag_misc)) {
           sym = lisp_nil;
         }
@@ -8040,12 +8078,6 @@ wasm_const_pool_install_inner(TCR *tcr, uint32_t entry_index, uint32_t payload_p
     }
   }
 
-  LispObj table = wasm_const_pool_table_ensure(tcr, entry_index);
-  if (table == lisp_nil) {
-    return lisp_nil;
-  }
-  LispObj *table_data = (LispObj *)((BytePtr)table + misc_data_offset);
-  table_data[entry_index] = pool;
   return pool;
 }
 
@@ -8299,7 +8331,14 @@ retry_lookup:
           }
           return lisp_nil;
         }
-        /* Diagnostic: pool entry has wrong type */
+        if (!install_attempted) {
+          int32_t host_rc = wasm_host_install_const_pool(entry_index);
+          install_attempted = 1;
+          if (host_rc > 0) {
+            goto retry_lookup;
+          }
+        }
+        /* Diagnostic: pool entry still has wrong type after install attempt. */
         if (wasm_cpr_fail_count < 5) {
           char msg[128]; int p = 0;
           p += wasm_debug_str(msg + p, "CPR-FAIL: pool bad e=");

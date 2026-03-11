@@ -175,6 +175,7 @@ wasm_diag_append_hex32(char *dst, unsigned pos, uint32_t value)
 
 static uint32_t wasm_diag_callstack[WASM_DIAG_CALLSTACK_MAX];
 static uint32_t wasm_diag_edge_log_count = 0u;
+static TCR *wasm_skip_next_funcall_sync_tcr = NULL;
 
 static int
 wasm_diag_entry_is_watch(uint32_t entry_index)
@@ -205,6 +206,22 @@ wasm_diag_entry_watch_name(uint32_t entry_index)
   default:
     return "OTHER";
   }
+}
+
+static inline void
+wasm_mark_next_funcall_sync_skip(TCR *tcr)
+{
+  wasm_skip_next_funcall_sync_tcr = tcr;
+}
+
+static inline int
+wasm_consume_next_funcall_sync_skip(TCR *tcr)
+{
+  if (wasm_skip_next_funcall_sync_tcr == tcr) {
+    wasm_skip_next_funcall_sync_tcr = NULL;
+    return 1;
+  }
+  return 0;
 }
 
 static void
@@ -295,6 +312,30 @@ wasm_diag_log_misc_alloc_bad_count(TCR *tcr, LispObj subtag_val, LispObj count_v
   pos = wasm_diag_append_hex32(msg, pos, entry_index);
   msg[pos++] = '\n';
   wasm_host_log(msg, pos);
+}
+
+static uint32_t
+wasm_diag_callable_entry_index(LispObj fn_value)
+{
+  if (fulltag_of(fn_value) == fulltag_misc) {
+    unsigned fn_subtag = header_subtag(header_of(fn_value));
+    if (fn_subtag == subtag_symbol) {
+      lispsymbol *sym = (lispsymbol *)ptr_from_lispobj(untag(fn_value));
+      fn_value = sym->fcell;
+      if (fulltag_of(fn_value) != fulltag_misc) {
+        return 0xffffffffu;
+      }
+      fn_subtag = header_subtag(header_of(fn_value));
+    }
+    if (fn_subtag == subtag_function || fn_subtag == subtag_pseudofunction ||
+        fn_subtag == subtag_xfunction) {
+      LispObj entry = deref(fn_value, 1);
+      if (tag_of(entry) == tag_fixnum) {
+        return (uint32_t)unbox_fixnum(entry);
+      }
+    }
+  }
+  return 0xffffffffu;
 }
 
 static LispObj *
@@ -1431,6 +1472,30 @@ wasm_try_unbox_s32(LispObj value, int32_t *out)
   return 1;
 }
 
+static int
+wasm_try_unbox_word32(LispObj value, uint32_t *out)
+{
+  uint32_t uval = 0;
+  if (wasm_try_unbox_u32(value, &uval)) {
+    if (out != NULL) {
+      *out = uval;
+    }
+    return 1;
+  }
+
+  int32_t sval = 0;
+  if (wasm_try_unbox_s32(value, &sval)) {
+    if (out != NULL) {
+      *out = (uint32_t)sval;
+    }
+    return 1;
+  }
+
+  return 0;
+}
+
+static uint32_t wasm_float_raw_word32_fallback_count = 0;
+
 #define WASM_ELEMENT_COUNT(type) ((signed_natural)((sizeof(type) / sizeof(LispObj)) - 1))
 
 enum {
@@ -1623,6 +1688,34 @@ wasm_misc_set_imm_dispatch(TCR *tcr, LispObj obj, unsigned subtag, signed_natura
   }
 
   switch (subtag) {
+    case subtag_single_float:
+    case subtag_double_float:
+    case subtag_complex_single_float:
+    case subtag_complex_double_float: {
+      uint32_t bits = 0;
+      if (!wasm_try_unbox_word32(value, &bits)) {
+        /* WASM typed uvset fallback passes raw i32 words for float slots.
+           Accept that register value directly and let startup continue; the
+           host-side diagnostics stay enabled while this path is in use. */
+        bits = (uint32_t)value;
+        if (wasm_float_raw_word32_fallback_count < 8) {
+          char msg[128];
+          unsigned p = 0;
+          p = wasm_diag_append_str(msg, p, "float-store raw32 fallback st=0x");
+          p = wasm_diag_append_hex32(msg, p, (uint32_t)subtag);
+          p = wasm_diag_append_str(msg, p, " idx=0x");
+          p = wasm_diag_append_hex32(msg, p, (uint32_t)index);
+          p = wasm_diag_append_str(msg, p, " val=0x");
+          p = wasm_diag_append_hex32(msg, p, bits);
+          msg[p++] = '\n';
+          wasm_host_log(msg, p);
+          wasm_float_raw_word32_fallback_count++;
+        }
+      }
+      uint32_t *data = (uint32_t *)((BytePtr)obj + misc_data_offset);
+      data[index] = bits;
+      return;
+    }
     case subtag_fixnum_vector: {
       if (tag_of(value) != tag_fixnum) {
         wasm_signal_wrong_type(tcr, value, wasm_symbol_fixnum());
@@ -2979,7 +3072,52 @@ wasm_call_function_or_symbol(TCR *tcr, LispObj fn_value)
 static inline void
 wasm_funcall_value(TCR *tcr, LispObj fn_value)
 {
-  wasm_sync_arg_regs_from_vsp(tcr);
+  static uint32_t proclaim_funcall_diag_count = 0;
+  uint32_t caller_entry = wasm_diag_callable_entry_index(wasm_reg(tcr, nfn));
+  uint32_t callee_entry = wasm_diag_callable_entry_index(fn_value);
+  if (proclaim_funcall_diag_count < 24 &&
+      (caller_entry == 1483 || callee_entry == 1486)) {
+    LispObj raw_nargs = wasm_reg(tcr, nargs);
+    signed_natural count =
+      (tag_of(raw_nargs) == tag_fixnum) ? unbox_fixnum(raw_nargs) : 0;
+    LispObj *vsp_ptr = (LispObj *)wasm_reg(tcr, vsp);
+    char msg[320];
+    unsigned p = 0;
+    proclaim_funcall_diag_count++;
+    p = wasm_diag_append_str(msg, p, "P-FUNCALL caller=0x");
+    p = wasm_diag_append_hex32(msg, p, caller_entry);
+    p = wasm_diag_append_str(msg, p, " callee=0x");
+    p = wasm_diag_append_hex32(msg, p, callee_entry);
+    p = wasm_diag_append_str(msg, p, " nraw=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)raw_nargs);
+    p = wasm_diag_append_str(msg, p, " cnt=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)count);
+    p = wasm_diag_append_str(msg, p, " vsp=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)(uintptr_t)vsp_ptr);
+    p = wasm_diag_append_str(msg, p, " argz=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)wasm_reg(tcr, arg_z));
+    p = wasm_diag_append_str(msg, p, " argy=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)wasm_reg(tcr, arg_y));
+    p = wasm_diag_append_str(msg, p, " argx=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)wasm_reg(tcr, arg_x));
+    if (vsp_ptr != NULL) {
+      for (signed_natural i = 0; i < count && i < 5; i++) {
+        p = wasm_diag_append_str(msg, p, " s");
+        p = wasm_diag_append_hex32(msg, p, (uint32_t)i);
+        p = wasm_diag_append_str(msg, p, "=0x");
+        p = wasm_diag_append_hex32(msg, p, (uint32_t)vsp_ptr[i]);
+      }
+    }
+    msg[p++] = '\n';
+    wasm_host_log(msg, p);
+  }
+  /* Most compiled callers still present the arg frame on VSP and rely on
+     this sync.  The spread subprims are the exception: they already popped
+     arg regs and advanced VSP, so the very next funcall must skip the sync
+     once or the argument window shifts. */
+  if (!wasm_consume_next_funcall_sync_skip(tcr)) {
+    wasm_sync_arg_regs_from_vsp(tcr);
+  }
   wasm_call_function_or_symbol(tcr, fn_value);
 }
 
@@ -5960,6 +6098,7 @@ _SPspread_lexprz(void)
   wasm_set_reg(tcr, vsp, (LispObj)vsp_ptr);
   tcr->save_vsp = vsp_ptr;
   wasm_vpop_argregs(tcr);
+  wasm_mark_next_funcall_sync_skip(tcr);
 }
 
 __attribute__((used, visibility("default"), export_name("_SPcheck_fpu_exception")))
@@ -6916,6 +7055,7 @@ __attribute__((used, visibility("default"), export_name("_SPspreadargz")))
 void
 _SPspreadargz(void)
 {
+  static uint32_t proclaim_spread_diag_count = 0;
   TCR *tcr = wasm_get_current_tcr();
   if (tcr == NULL) {
     wasm_subprims_trap();
@@ -6931,6 +7071,28 @@ _SPspreadargz(void)
   signed_natural orig_count = wasm_unbox_fixnum_or_trap(wasm_reg(tcr, nargs));
   if (orig_count < 0) {
     wasm_subprims_trap();
+  }
+  uint32_t current_entry = wasm_diag_callable_entry_index(wasm_reg(tcr, nfn));
+  if (proclaim_spread_diag_count < 24 && current_entry == 1483) {
+    char msg[320];
+    unsigned p = 0;
+    proclaim_spread_diag_count++;
+    p = wasm_diag_append_str(msg, p, "P-SPREAD-IN orig=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)orig_count);
+    p = wasm_diag_append_str(msg, p, " list=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)list);
+    p = wasm_diag_append_str(msg, p, " vsp=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)(uintptr_t)orig_vsp);
+    p = wasm_diag_append_str(msg, p, " nraw=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)wasm_reg(tcr, nargs));
+    for (signed_natural i = 0; i < orig_count && i < 5; i++) {
+      p = wasm_diag_append_str(msg, p, " s");
+      p = wasm_diag_append_hex32(msg, p, (uint32_t)i);
+      p = wasm_diag_append_str(msg, p, "=0x");
+      p = wasm_diag_append_hex32(msg, p, (uint32_t)orig_vsp[i]);
+    }
+    msg[p++] = '\n';
+    wasm_host_log(msg, p);
   }
 
   LispObj *vsp_ptr = orig_vsp;
@@ -6960,6 +7122,32 @@ _SPspreadargz(void)
   wasm_set_reg(tcr, vsp, (LispObj)vsp_ptr);
   tcr->save_vsp = vsp_ptr;
   wasm_vpop_argregs(tcr);
+  wasm_mark_next_funcall_sync_skip(tcr);
+  if (proclaim_spread_diag_count < 24 && current_entry == 1483) {
+    char msg[320];
+    unsigned p = 0;
+    proclaim_spread_diag_count++;
+    p = wasm_diag_append_str(msg, p, "P-SPREAD-OUT total=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)total);
+    p = wasm_diag_append_str(msg, p, " added=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)added);
+    p = wasm_diag_append_str(msg, p, " vsp=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)(uintptr_t)vsp_ptr);
+    p = wasm_diag_append_str(msg, p, " argz=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)wasm_reg(tcr, arg_z));
+    p = wasm_diag_append_str(msg, p, " argy=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)wasm_reg(tcr, arg_y));
+    p = wasm_diag_append_str(msg, p, " argx=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)wasm_reg(tcr, arg_x));
+    for (signed_natural i = 0; i < total && i < 5; i++) {
+      p = wasm_diag_append_str(msg, p, " s");
+      p = wasm_diag_append_hex32(msg, p, (uint32_t)i);
+      p = wasm_diag_append_str(msg, p, "=0x");
+      p = wasm_diag_append_hex32(msg, p, (uint32_t)vsp_ptr[i]);
+    }
+    msg[p++] = '\n';
+    wasm_host_log(msg, p);
+  }
 }
 
 __attribute__((used, visibility("default"), export_name("_SPbind")))

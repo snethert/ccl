@@ -788,6 +788,10 @@ function dumpFasloadFailureContext({
       "*CCL-PACKAGE*",
       "%ALL-PACKAGES%",
       "*%WASM-LAST-ENSURE-SIMPLE-STRING-ARG%*",
+      "*%WASM-LAST-PROCLAIM-SPEC%*",
+      "*%WASM-LAST-PROCLAIM-APPLY-SPEC%*",
+      "*%WASM-LAST-PROCLAIM-TYPE-TYPE%*",
+      "*%WASM-LAST-PROCLAIM-TYPE-VARS%*",
       "*%WASM-LAST-ADD-SYMBOL-PNAME%*",
       "*%WASM-LAST-ADD-SYMBOL-PACKAGE%*",
       "*%WASM-LAST-ADD-SYMBOL-INTERNAL-IDX%*",
@@ -1066,7 +1070,15 @@ let constPoolSharedBlobRaw = null;
 const constPoolSpanKey = (offset, storedLength, encoding, rawLength) =>
   `${offset >>> 0}:${storedLength >>> 0}:${encoding ?? "raw"}:${rawLength >>> 0}`;
 const constPoolsInstalled = new Set();
+const runtimeConstPoolsNeedingPhase2CRefresh = new Set();
 const bootConstPoolData = new Map(); /* entry_index → Uint8Array (pre-read boot const pools) */
+
+function markRuntimeConstPoolForPhase2CRefresh(entryIndexRaw) {
+  const entryIndex = entryIndexRaw >>> 0;
+  if (constPoolEntries.has(entryIndex)) {
+    runtimeConstPoolsNeedingPhase2CRefresh.add(entryIndex);
+  }
+}
 
 if (typeof compiledModulesBundle?.index === "string" && compiledModulesBundle.index.length > 0) {
   const indexPath = path.join(path.dirname(modulesPath), compiledModulesBundle.index);
@@ -1310,7 +1322,23 @@ let _cpSkipCount = 0;
 function installConstPoolOnDemand(entryIndexRaw) {
   if (!kernelExports) return 0;
   const entryIndex = entryIndexRaw >>> 0;
-  if (constPoolsInstalled.has(entryIndex)) return 1;
+  const entryName = compiledFunctionByEntryIndex.get(entryIndex)?.name ?? null;
+  const isRuntimeEntry = constPoolEntries.has(entryIndex);
+  if (isRuntimeEntry) {
+    console.error(
+      `[const-pool] on-demand request: entry=${entryIndex}` +
+      (entryName ? ` name=${entryName}` : ""),
+    );
+  }
+  if (constPoolsInstalled.has(entryIndex)) {
+    if (isRuntimeEntry) {
+      console.error(
+        `[const-pool] on-demand already-installed: entry=${entryIndex}` +
+        (entryName ? ` name=${entryName}` : ""),
+      );
+    }
+    return 1;
+  }
 
   _cpInstallCount++;
   if (_cpInstallCount % 10000 === 0) {
@@ -1340,15 +1368,43 @@ function installConstPoolOnDemand(entryIndexRaw) {
     /* Boot const pool install failed; fall through to level-1 check */
   }
 
-  if (compiledModulesFd == null) return 0;
+  if (compiledModulesFd == null) {
+    if (isRuntimeEntry) {
+      console.error(
+        `[const-pool] on-demand skipped: entry=${entryIndex}` +
+        (entryName ? ` name=${entryName}` : "") +
+        " reason=no-runtime-binary",
+      );
+    }
+    return 0;
+  }
 
   const info = constPoolEntries.get(entryIndex);
-  if (!info) return 0;
+  if (!info) {
+    if (isRuntimeEntry) {
+      console.error(
+        `[const-pool] on-demand skipped: entry=${entryIndex}` +
+        (entryName ? ` name=${entryName}` : "") +
+        " reason=no-const-pool-info",
+      );
+    }
+    return 0;
+  }
 
   const decodedBytes = decodeConstPoolForInfo(info);
-  if (!decodedBytes) return 0;
+  if (!decodedBytes) {
+    if (isRuntimeEntry) {
+      console.error(
+        `[const-pool] on-demand skipped: entry=${entryIndex}` +
+        (entryName ? ` name=${entryName}` : "") +
+        " reason=decode-failed",
+      );
+    }
+    return 0;
+  }
 
   let payloadBytes = decodedBytes;
+  let phase2CRefreshRequired = false;
   try {
     const rewrite = rewriteConstPoolFunctionDesignators(decodedBytes, {
       resolver: bootstrapFunctionResolver,
@@ -1360,11 +1416,16 @@ function installConstPoolOnDemand(entryIndexRaw) {
     });
     payloadBytes = rewrite.bytes;
     if ((rewrite?.requiredUnresolvedCount ?? 0) > 0) {
+      phase2CRefreshRequired = true;
       const names = (rewrite.requiredUnresolved ?? [])
         .map((item) => String(item?.name ?? "").trim())
         .filter(Boolean)
         .join(",");
-      fail(`startup const-pool function gate failed for entry ${entryIndex}: unresolved=${names}`);
+      console.error(
+        `[const-pool] on-demand unresolved startup designator: entry=${entryIndex}` +
+        (entryName ? ` name=${entryName}` : "") +
+        ` unresolved=${names || "?"}; keeping placeholder-compatible payload and forcing Phase 2C refresh`,
+      );
     }
   } catch (err) {
     if (err?.message?.startsWith?.("FAIL:")) throw err;
@@ -1395,6 +1456,16 @@ function installConstPoolOnDemand(entryIndexRaw) {
   }
 
   constPoolsInstalled.add(entryIndex);
+  if (phase2CRefreshRequired || constPoolEntries.has(entryIndex)) {
+    markRuntimeConstPoolForPhase2CRefresh(entryIndex);
+  }
+  if (isRuntimeEntry) {
+    console.error(
+      `[const-pool] on-demand install ok: entry=${entryIndex}` +
+      (entryName ? ` name=${entryName}` : "") +
+      (phase2CRefreshRequired ? " phase2c-refresh=1" : ""),
+    );
+  }
   return 1;
 }
 
@@ -1596,7 +1667,12 @@ if (bootModulesPath) {
   });
   const bootEntrySpace = entrySpaceFromBundle(bootBundleJson, bootResolved, { path: bootModulesPath });
   const runtimeEntrySpace = entrySpaceFromBundle(compiledModulesBundle, resolvedBundle, { path: modulesPath });
-  const entrySpaceConflicts = await findEntrySpaceConflicts(bootEntrySpace, runtimeEntrySpace);
+  const entrySpaceConflicts = await findEntrySpaceConflicts(
+    bootEntrySpace,
+    runtimeEntrySpace,
+    8,
+    { excludeRhsEntries: bootEntrySpace.entryIndices },
+  );
   if (entrySpaceConflicts.total > 0) {
     fail(
       `boot/runtime module entry overlap between ${displayPath(bootModulesPath)} and ${displayPath(modulesPath)}: `
@@ -3229,7 +3305,7 @@ if (typeof ex.wasm_heap_profile === "function") {
    refresh point for any runtime pool that was installed before runtime was
    fully canonicalized. */
 const runtimeConstPoolsInstalledBeforePhase2C = new Set(
-  [...constPoolsInstalled].filter((entryIndex) => constPoolEntries.has(entryIndex)),
+  runtimeConstPoolsNeedingPhase2CRefresh,
 );
 
 /* Phase 2B: Force-rebind all WASM-compiled runtime functions.

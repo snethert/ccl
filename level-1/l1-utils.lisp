@@ -518,7 +518,21 @@ vector
 
 
 
+#+wasm32-target
+(defvar *%wasm-last-proclaim-spec%* nil)
+
+#+wasm32-target
+(defvar *%wasm-last-proclaim-apply-spec%* nil)
+
+#+wasm32-target
+(defvar *%wasm-last-proclaim-type-type%* nil)
+
+#+wasm32-target
+(defvar *%wasm-last-proclaim-type-vars%* nil)
+
 (defun proclaim (spec)
+  #+wasm32-target
+  (setq *%wasm-last-proclaim-spec%* spec)
   (case (car spec)
     (special (apply #'proclaim-special (%cdr spec)))
     (notspecial (apply #'proclaim-notspecial (%cdr spec)))
@@ -528,13 +542,22 @@ vector
     (declaration (apply #'proclaim-declaration (%cdr spec)))
     (ignore (apply #'proclaim-ignore t (%cdr spec)))
     (unignore (apply #'proclaim-ignore nil (%cdr spec)))
-    (type (apply #'proclaim-type (%cdr spec)))
+    (type
+     #+wasm32-target
+     (setq *%wasm-last-proclaim-apply-spec%* (%cdr spec))
+     (apply #'proclaim-type (%cdr spec)))
     (ftype (apply #'proclaim-ftype (%cdr spec)))
-    (function (apply #'proclaim-type spec))
+    (function
+     #+wasm32-target
+     (setq *%wasm-last-proclaim-apply-spec%* spec)
+     (apply #'proclaim-type spec))
     (t (unless (memq (%car spec) *nx-known-declarations*)
          ;; Any type name is now (ANSI CL) a valid declaration.
          (if (specifier-type-if-known (%car spec))
-           (apply #'proclaim-type spec)
+           (progn
+             #+wasm32-target
+             (setq *%wasm-last-proclaim-apply-spec%* spec)
+             (apply #'proclaim-type spec))
            (signal-program-error "Unknown declaration specifier ~s in ~S" (%car spec) spec))))))
 
 (defun bad-proclaim-spec (spec)
@@ -547,7 +570,11 @@ vector
 (defun proclaim-type (type &rest vars)
   (declare (dynamic-extent vars))
   ;; Called too early to use (every #'symbolp vars)
-  (unless (loop for v in vars always (symbolp v)) (bad-proclaim-spec `(,type ,@vars)))
+  (unless (loop for v in vars always (symbolp v))
+    #+wasm32-target
+    (setq *%wasm-last-proclaim-type-type%* type
+          *%wasm-last-proclaim-type-vars%* vars)
+    (bad-proclaim-spec `(,type ,@vars)))
   (when *type-system-initialized*
     ;; Check the type.  This will signal program-error's in case of invalid types, let it.
     ;; Do not signal anything about unknown types though -- it should be ok to have forward

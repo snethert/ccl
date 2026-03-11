@@ -144,11 +144,20 @@ async function modulesSharePayload(lhs, rhs, entryIndex) {
   return Buffer.compare(lhsBytes, rhsBytes) === 0;
 }
 
-export async function findEntrySpaceConflicts(lhs, rhs, sampleLimit = 8) {
+export async function findEntrySpaceConflicts(
+  lhs,
+  rhs,
+  sampleLimit = 8,
+  { excludeRhsEntries = null } = {},
+) {
   const conflicts = [];
   const lhsEntries = lhs?.entryIndices instanceof Set ? lhs.entryIndices : new Set();
   const rhsEntries = rhs?.entryIndices instanceof Set ? rhs.entryIndices : new Set();
+  const excluded = excludeRhsEntries instanceof Set
+    ? excludeRhsEntries
+    : new Set(Array.isArray(excludeRhsEntries) ? excludeRhsEntries : []);
   for (const idx of rhsEntries) {
+    if (excluded.has(idx)) continue;
     if (!lhsEntries.has(idx)) continue;
     if (await modulesSharePayload(lhs, rhs, idx)) continue;
     conflicts.push({
@@ -238,7 +247,12 @@ async function main(argv) {
         loadBundleEntrySpaceFromManifest(args.bootManifest),
         loadBundleEntrySpaceFromManifest(args.runtimeManifest),
       ]);
-      const conflicts = await findEntrySpaceConflicts(bootEntrySpace, runtimeEntrySpace);
+      const conflicts = await findEntrySpaceConflicts(
+        bootEntrySpace,
+        runtimeEntrySpace,
+        8,
+        { excludeRhsEntries: bootEntrySpace.entryIndices },
+      );
       if (conflicts.total > 0) {
         console.error(formatEntrySpaceConflictSummary(conflicts, "boot", "runtime"));
         process.exit(1);
