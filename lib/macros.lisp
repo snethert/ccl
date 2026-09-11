@@ -1672,7 +1672,10 @@ to open."
 ;; there.
 (defmacro def-ccl-pointers (name arglist &body body &aux (fn (gensym)) (old (gensym)))
   `(let ((,fn (nfunction ,name (lambda ,arglist ,@body))))
-     (let ((,old (member ',name *lisp-system-pointer-functions* :key #'function-name)))
+     (let ((,old (do* ((l *lisp-system-pointer-functions* (cdr l)))
+                      ((endp l) nil)
+                  (when (eq (function-name (car l)) ',name)
+                    (return l)))))
        (if ,old
          (rplaca ,old ,fn)
          (progn
@@ -1681,7 +1684,10 @@ to open."
 
 (defmacro def-load-pointers (name arglist &body body &aux (fn (gensym)) (old (gensym)))
   `(let ((,fn (nfunction ,name (lambda ,arglist ,@body))))
-     (let ((,old (member ',name *lisp-user-pointer-functions* :key #'function-name)))
+     (let ((,old (do* ((l *lisp-user-pointer-functions* (cdr l)))
+                      ((endp l) nil)
+                  (when (eq (function-name (car l)) ',name)
+                    (return l)))))
        (if ,old
          (rplaca ,old ,fn)
          (progn

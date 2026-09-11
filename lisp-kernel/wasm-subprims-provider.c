@@ -719,6 +719,26 @@ wasm_signal_errdisp_2(TCR *tcr, LispObj arg0, LispObj arg1, signed_natural errnu
 static void
 wasm_signal_wrong_type(TCR *tcr, LispObj datum, LispObj expected)
 {
+  static uint32_t wrong_type_diag_count = 0;
+  if (wrong_type_diag_count < 32 && tcr != NULL) {
+    char msg[256];
+    unsigned p = 0;
+    wrong_type_diag_count++;
+    p = wasm_diag_append_str(msg, p, "WT caller=0x");
+    p = wasm_diag_append_hex32(msg, p, wasm_diag_callable_entry_index(wasm_reg(tcr, nfn)));
+    p = wasm_diag_append_str(msg, p, " rfn=0x");
+    p = wasm_diag_append_hex32(msg, p, wasm_diag_callable_entry_index(wasm_reg(tcr, Rfn)));
+    p = wasm_diag_append_str(msg, p, " datum=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)datum);
+    p = wasm_diag_append_str(msg, p, " expected=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)expected);
+    p = wasm_diag_append_str(msg, p, " nargs=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)wasm_reg(tcr, nargs));
+    p = wasm_diag_append_str(msg, p, " vsp=0x");
+    p = wasm_diag_append_hex32(msg, p, (uint32_t)(uintptr_t)tcr->save_vsp);
+    msg[p++] = '\n';
+    wasm_host_log(msg, p);
+  }
   wasm_signal_errdisp_2(tcr, datum, expected, WASM_XWRONGTYPE);
 }
 

@@ -530,34 +530,55 @@ vector
 #+wasm32-target
 (defvar *%wasm-last-proclaim-type-vars%* nil)
 
+(defun proclaim-type-spec (spec)
+  (let ((type (car spec))
+        (vars (%cdr spec)))
+    ;; Called too early to use (every #'symbolp vars)
+    (unless (loop for v in vars always (symbolp v))
+      #+wasm32-target
+      (setq *%wasm-last-proclaim-type-type%* type
+            *%wasm-last-proclaim-type-vars%* vars)
+      (bad-proclaim-spec spec))
+    (when *type-system-initialized*
+      ;; Check the type.  This will signal program-error's in case of invalid
+      ;; types, let it.  Do not signal anything about unknown types though --
+      ;; it should be ok to have forward references here, before anybody needs
+      ;; the info.
+      (specifier-type type))
+    (dolist (var vars)
+      (let ((spec (assq var *nx-proclaimed-types*)))
+        (if spec
+          (rplacd spec type)
+          (push (cons var type) *nx-proclaimed-types*))))))
+
 (defun proclaim (spec)
   #+wasm32-target
   (setq *%wasm-last-proclaim-spec%* spec)
   (case (car spec)
-    (special (apply #'proclaim-special (%cdr spec)))
-    (notspecial (apply #'proclaim-notspecial (%cdr spec)))
+    (special (proclaim-special-spec (%cdr spec)))
+    (notspecial (proclaim-notspecial-spec (%cdr spec)))
     (optimize (%proclaim-optimize (%cdr spec)))
-    (inline (apply #'proclaim-inline t (%cdr spec)))
-    (notinline (apply #'proclaim-inline nil (%cdr spec)))
-    (declaration (apply #'proclaim-declaration (%cdr spec)))
-    (ignore (apply #'proclaim-ignore t (%cdr spec)))
-    (unignore (apply #'proclaim-ignore nil (%cdr spec)))
+    (inline (proclaim-inline-spec t (%cdr spec)))
+    (notinline (proclaim-inline-spec nil (%cdr spec)))
+    (declaration (proclaim-declaration-spec (%cdr spec)))
+    (ignore (proclaim-ignore-spec t (%cdr spec)))
+    (unignore (proclaim-ignore-spec nil (%cdr spec)))
     (type
      #+wasm32-target
      (setq *%wasm-last-proclaim-apply-spec%* (%cdr spec))
-     (apply #'proclaim-type (%cdr spec)))
-    (ftype (apply #'proclaim-ftype (%cdr spec)))
+     (proclaim-type-spec (%cdr spec)))
+    (ftype (proclaim-ftype-spec (cadr spec) (cddr spec)))
     (function
      #+wasm32-target
      (setq *%wasm-last-proclaim-apply-spec%* spec)
-     (apply #'proclaim-type spec))
+     (proclaim-type-spec spec))
     (t (unless (memq (%car spec) *nx-known-declarations*)
          ;; Any type name is now (ANSI CL) a valid declaration.
          (if (specifier-type-if-known (%car spec))
            (progn
              #+wasm32-target
              (setq *%wasm-last-proclaim-apply-spec%* spec)
-             (apply #'proclaim-type spec))
+             (proclaim-type-spec spec))
            (signal-program-error "Unknown declaration specifier ~s in ~S" (%car spec) spec))))))
 
 (defun bad-proclaim-spec (spec)
@@ -569,25 +590,9 @@ vector
 
 (defun proclaim-type (type &rest vars)
   (declare (dynamic-extent vars))
-  ;; Called too early to use (every #'symbolp vars)
-  (unless (loop for v in vars always (symbolp v))
-    #+wasm32-target
-    (setq *%wasm-last-proclaim-type-type%* type
-          *%wasm-last-proclaim-type-vars%* vars)
-    (bad-proclaim-spec `(,type ,@vars)))
-  (when *type-system-initialized*
-    ;; Check the type.  This will signal program-error's in case of invalid types, let it.
-    ;; Do not signal anything about unknown types though -- it should be ok to have forward
-    ;; references here, before anybody needs the info.
-    (specifier-type type))
-  (dolist (var vars)
-    (let ((spec (assq var *nx-proclaimed-types*)))
-      (if spec
-        (rplacd spec type)
-        (push (cons var type) *nx-proclaimed-types*)))))
+  (proclaim-type-spec (cons type vars)))
 
-(defun proclaim-ftype (ftype &rest names)
-  (declare (dynamic-extent names))
+(defun proclaim-ftype-spec (ftype names)
   (unless (every (lambda (v) (or (symbolp v) (setf-function-name-p v))) names)
     (bad-proclaim-spec `(ftype ,ftype ,@names)))
   (unless *nx-proclaimed-ftypes*
@@ -602,6 +607,10 @@ vector
   (dolist (name names)
     (setf (gethash (maybe-setf-function-name name) *nx-proclaimed-ftypes*) ftype)))
 
+(defun proclaim-ftype (ftype &rest names)
+  (declare (dynamic-extent names))
+  (proclaim-ftype-spec ftype names))
+
 
 
 (defun proclaimed-ftype (name)
@@ -609,19 +618,24 @@ vector
     (gethash (ensure-valid-function-name name) *nx-proclaimed-ftypes*)))
 
 
-(defun proclaim-special (&rest vars)
-  (declare (dynamic-extent vars))
+(defun proclaim-special-spec (vars)
   (unless (every #'symbolp vars) (bad-proclaim-spec `(special ,@vars)))
   (dolist (sym vars) (%proclaim-special sym)))
 
-
-(defun proclaim-notspecial (&rest vars)
+(defun proclaim-special (&rest vars)
   (declare (dynamic-extent vars))
+  (proclaim-special-spec vars))
+
+
+(defun proclaim-notspecial-spec (vars)
   (unless (every #'symbolp vars) (bad-proclaim-spec `(special ,@vars)))
   (dolist (sym vars) (%proclaim-notspecial sym)))
 
-(defun proclaim-inline (t-or-nil &rest names)
-  (declare (dynamic-extent names))
+(defun proclaim-notspecial (&rest vars)
+  (declare (dynamic-extent vars))
+  (proclaim-notspecial-spec vars))
+
+(defun proclaim-inline-spec (t-or-nil names)
   ;;This is just to make it more likely to detect forgetting about the
   ;;first arg...
   (unless (or (eq nil t-or-nil) (eq t t-or-nil)) (report-bad-arg t-or-nil '(member t nil)))
@@ -637,8 +651,11 @@ vector
       (setf (gethash name *nx-proclaimed-inline*)
             (or t-or-nil (if (compiler-special-form-p name) t))))))
 
-(defun proclaim-declaration (&rest syms)
-  (declare (dynamic-extent syms))
+(defun proclaim-inline (t-or-nil &rest names)
+  (declare (dynamic-extent names))
+  (proclaim-inline-spec t-or-nil names))
+
+(defun proclaim-declaration-spec (syms)
   (unless (every #'symbolp syms) (bad-proclaim-spec `(declaration ,@syms)))
   (dolist (sym syms)
     (when (type-specifier-p sym)
@@ -652,8 +669,11 @@ vector
 	    "Cannot ~a ~s because ~:*~s has been declared as a declaration name" why name)
     (setq *nx-known-declarations* (remove name *nx-known-declarations*))))
 
-(defun proclaim-ignore (t-or-nil &rest syms)
+(defun proclaim-declaration (&rest syms)
   (declare (dynamic-extent syms))
+  (proclaim-declaration-spec syms))
+
+(defun proclaim-ignore-spec (t-or-nil syms)
   ;;This is just to make it more likely to detect forgetting about the
   ;;first arg...
   (unless (or (eq nil t-or-nil) (eq t t-or-nil)) (report-bad-arg t-or-nil '(member t nil)))
@@ -661,6 +681,10 @@ vector
   (dolist (sym syms)
     (setq *nx-proclaimed-ignore*
           (alist-adjoin sym t-or-nil *nx-proclaimed-ignore*))))
+
+(defun proclaim-ignore (t-or-nil &rest syms)
+  (declare (dynamic-extent syms))
+  (proclaim-ignore-spec t-or-nil syms))
 
 
 (queue-fixup

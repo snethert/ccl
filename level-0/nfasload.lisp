@@ -43,7 +43,10 @@
 #+wasm32-target
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (declaim (special *%wasm-fasload-current-lfuncall-target%*
-                    *%wasm-fasload-current-lfuncall-result%*)))
+                    *%wasm-fasload-current-lfuncall-result%*
+                    *%wasm-fasload-current-file%*
+                    *%wasm-fasload-current-op%*
+                    *%wasm-fasload-current-pos%*)))
 
 
 
@@ -1589,6 +1592,34 @@ Can be removed before shipping once %FASLOAD startup is stable.")
                  (%string-to-stderr " expected=") (%string-to-stderr expected))
                 (t
                  (%string-to-stderr " expected=<compound>"))))))
+    (when (and (eql error-type #.$xwrongtype)
+               (eq (car args) '*warn-if-redefine-kernel*)
+               (eq (cadr args) '*warn-if-redefine-kernel*))
+      (when (stringp *%wasm-fasload-current-file%*)
+        (%string-to-stderr " file=")
+        (%string-to-stderr *%wasm-fasload-current-file%*))
+      (when (fixnump *%wasm-fasload-current-op%*)
+        (%string-to-stderr " op=")
+        (%string-to-stderr (%integer-to-string *%wasm-fasload-current-op%*)))
+      (when (fixnump *%wasm-fasload-current-pos%*)
+        (%string-to-stderr " pos=")
+        (%string-to-stderr (%integer-to-string *%wasm-fasload-current-pos%*)))
+      (let ((target *%wasm-fasload-current-lfuncall-target%*))
+        (cond ((functionp target)
+               (%string-to-stderr " lfuncall=<function")
+               (let ((fname (ignore-errors (function-name target))))
+                 (cond ((symbolp fname)
+                        (%string-to-stderr " ")
+                        (%string-to-stderr (symbol-name fname)))
+                       ((and (consp fname)
+                             (eq (car fname) 'setf)
+                             (symbolp (cadr fname)))
+                        (%string-to-stderr " SETF ")
+                        (%string-to-stderr (symbol-name (cadr fname))))))
+               (%string-to-stderr ">"))
+              ((symbolp target)
+               (%string-to-stderr " lfuncall=")
+               (%string-to-stderr (symbol-name target))))))
     (%string-to-stderr "
 ")
     (setq *%kernel-restart-in-handler%* nil)
