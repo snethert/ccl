@@ -68,3 +68,38 @@ Claude checked the 64-byte header against the writer, C assertions and host orac
 Nonblocking observations: policy-1 unavailable values are still materialized and rooted, so no optimized storage-cost claim is proved; the shared cell has a permanent root and proves relocation rather than capture/escape; and the duplicated C/schema lexical table remains a limitation of this hand-built proof. The labels now state those bounds directly. Generated closure semantics and measured D3 costs remain required.
 
 The inventory-churn recommendation is implemented separately as [v2 per-test binding](../contracts/evidence-binding.md). It preserves original snapshots and validates the test plus transitive prerequisites. This new tooling and its producer changes are not covered by Claude’s r3 audit. No result is promoted to ACCEPTED.
+
+## Third Claude audit and reviewer sign-off — HEAD 9c2ef44d, 11 September 2026
+
+Reviewer: Claude Fable 5.1, executing in its own session on the reference host. Scope: every tested functionality at the current checkout, including the two Codex commits after the second audit (H(G) retirement 04288377 and v2 evidence binding 9c2ef44d). This is a reviewer sign-off with evidence. Project acceptance, which flips the gate's per-record disposition, remains the operator's decision and is not asserted here.
+
+### Evidence gathered at HEAD
+
+| Check | Result |
+| --- | --- |
+| Upstream source since v1.13 | `git diff c994217a HEAD` outside `doc/WASM`, `tests/wasm`, `CLAUDE.md`, `AGENTS.md` is empty. |
+| Document tooling | `manage.py check` PASS; 32 checker controls PASS; 42 contract-binding controls PASS; 33 retained evidence identities PASS; `git diff --check` clean. |
+| Probes, fresh | 3 PASS; 6 of 6 modules byte-identical to retained r7. |
+| Boundary, integrated and frames, fresh (one runner) | Boundary 12 cases / 9 controls; integrated 22 / 14 / 1,000 seeds; frames 11 / 11; all six S0 records PASS. 49 of 49 rebuilt modules and objects byte-identical to retained r5. Gate on the fresh envelope: BLOCKED, 49 reasons, none a provenance or execution failure. |
+| v2 binding invariance | The fresh run's `S0-LL23-b` contract digest equals r5's although the two runs retained different inventory snapshots; the binding varies with contract content, not with unrelated inventory edits, as designed. |
+| Combined current gate | Re-running `gate.py` on the retained combined envelope reproduces the recorded result exactly: BLOCKED, 49 reasons, 7 of them "unreviewed" for the seven executed records. |
+| Native Gate 0, v2 envelope | 375 of 375 execution artifacts byte-identical to the original r3 pack; the 4 additional files are the binding source and snapshot. No new native execution was claimed, and none occurred. |
+| Native Gate 0, independent reproduction | Two clean builds from the pinned inputs in the reviewer's session: 21,843 / 21,843 eligible tests each, 164 / 164 FASLs raw-identical, and all 164 hashes identical to the r3 pack. The 2026-head diagnostic reproduced its three failures. |
+| Evidence repository | `catalog.py check` PASS: 6,767 immutable files, 157 indexed identities; 8 catalog controls PASS; `git fsck --full` clean apart from one dangling blob. Working tree clean at e57e1d9. |
+
+### Review of the v2 binding tooling
+
+Read in full: `evidence_binding.py`, `bind-evidence.py`, the `gate.py` and `check-evidence.py` integrations, `test-bindings.py`, the three runner changes and `record.py`. The semantic digest covers the test entry and its transitive prerequisites minus bookkeeping fields, plus inventory context minus the test list and note; cycles, unknown prerequisites, duplicate IDs and escaping paths are rejected; migrations never overwrite and never rewrite an artifact. The 42 controls exercise the cases that matter, including a changed prerequisite description and a changed runner. One limitation, not a defect: `binding_errors` stops at the first error, so a report with several problems reveals them one at a time. No defect found.
+
+### Sign-off
+
+| Record | Reviewer disposition |
+| --- | --- |
+| G0-U1-a, native r3 (v2 envelope) | SIGNED OFF for same-host execution and repeatability. Second-Mac reproduction S0-LL08-c remains open. |
+| S0-LL13-c, S0-LL19-b | SIGNED OFF, hand-built scope. |
+| S0-LL20-a, S0-LL20-b, S0-LL20-c | SIGNED OFF, hand-built cons-only scope at recorded bounds. |
+| S0-LL23-b, frames r3 through r5 | SIGNED OFF, hand-built scope; observations from the r3 audit stand and are now labeled in the fixture. |
+| Probes r7 | Verified; diagnostics only, no S0 credit. |
+| v2 evidence binding and evidence repository | REVIEWED, no defect found. |
+
+Bounds of this sign-off: it covers the mechanisms as executed in kilobyte-scale cons-only fixtures on Node and V8, and the native baseline on one Mac. It does not cover scale, startup, browser engines, generated code, the census track or D3. To make the gate count these records, the project needs an acceptance envelope that sets `review_disposition` to ACCEPTED with this record as `review_record`; producing that envelope is a project decision and a small producer step, not a reviewer action.

@@ -1,5 +1,14 @@
 # Change history
 
+## 2026-09-11 — third Claude audit: full verification and reviewer sign-off at 9c2ef44d
+
+Authorized by the user's request to verify all tested functionality with evidence and sign off.
+
+- Claude re-executed probes, boundary, integrated and frame fixtures at HEAD: 6/6 and 49/49 modules and objects byte-identical to retained r7 and r5; gate on the fresh envelope reproduces BLOCKED with 49 reasons. The retained combined gate result reproduces exactly.
+- Native r3's v2 envelope verified: 375/375 execution artifacts identical to the original pack; no new native execution. Claude's own two-build reproduction matches all 164 FASL hashes.
+- v2 evidence binding reviewed in full with its 42 controls; the fresh run's contract digest equals r5's across different inventory snapshots. Evidence repository catalog check passes on 6,767 files. No defect found in any reviewed component.
+- Reviewer sign-off recorded per record in `stage0/claude-review.md` and as `external_review` on the current index entries. `inventory.json` unchanged. No record is promoted to ACCEPTED; that requires a project acceptance envelope.
+
 ## 2026-09-11 — H(G) retired from mandatory work; product risks and evidence repository
 
 The user explicitly directed: “Ignore H(G) entirely except as a possible future enhancement. It should not stop progress.” Outline 0.15, acceptance 1.5 and decisions 1.6 now require only C/C4/B. Five H correctness variants and eight H benchmark rows are removed; all 38 acceptance IDs remain, with 24 required candidate/workload measurements. H has no Stage 0 dependency, generated-code deadline or Stage 1 gate. No required generic candidate has been omitted or marked passing.

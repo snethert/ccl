@@ -296,7 +296,7 @@
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
       "currency": "ORIGINAL_FAILURE",
-      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged."
+      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged."
     },
     {
       "id": "INTEGRATED-RUNTIME-r10",
@@ -506,10 +506,16 @@
       "inventory_sha256": "30c04b52092d76d197e317209bde129da994b9d77983a7267b87f9f236b9ad01",
       "execution_status": "PASS",
       "scope": "Initial hand-built probes only; Stage 0 remains incomplete.",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "EXTERNALLY_REVIEWED_NOT_ACCEPTED",
       "results_member": "results.json",
       "currency": "CURRENT_DIAGNOSTIC",
-      "note": "Unchanged PROBE-only diagnostic; original inventory hash retained as execution provenance. Never eligible for required acceptance IDs; no replay caused by review bookkeeping."
+      "note": "Unchanged PROBE-only diagnostic; original inventory hash retained as execution provenance. Never eligible for required acceptance IDs; no replay caused by review bookkeeping.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Third audit at HEAD 9c2ef44d: fresh re-execution, byte comparison and tooling review in the reviewer's own session, 2026-09-11",
+        "disposition": "REVIEWED_DIAGNOSTIC_ONLY",
+        "record": "stage0/claude-review.md"
+      }
     },
     {
       "id": "MACOS-NATIVE-GATE0-r3-UNIFORM-INVENTORY",
@@ -535,12 +541,18 @@
       "inventory_sha256": "30c04b52092d76d197e317209bde129da994b9d77983a7267b87f9f236b9ad01",
       "execution_status": "PASS",
       "scope": "Hand-built logical debugger-frame slice S0-LL23-b, with freshly executed C boundary and integrated-runtime prerequisites. Not a CCL debugger, D3 selection or full Stage 0 acceptance.",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "EXTERNALLY_REVIEWED_NOT_ACCEPTED",
       "results_member": "results.json",
       "currency": "CURRENT",
       "note": "Fresh v2 producers: 11/11 frame cases/controls, runtime 22/14/1000 and boundary 12/9. Claude reviewed r3 core sources; the new binding tooling is NOT_REVIEWED. All results remain NOT_ACCEPTED.",
       "envelope_version": 2,
-      "inventory_version": 1
+      "inventory_version": 1,
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Third audit at HEAD 9c2ef44d: fresh re-execution, byte comparison and tooling review in the reviewer's own session, 2026-09-11",
+        "disposition": "REVIEWER_SIGNED_OFF_NOT_PROJECT_ACCEPTED",
+        "record": "stage0/claude-review.md"
+      }
     },
     {
       "id": "MACOS-NATIVE-GATE0-r3-CONTRACT-V2",
@@ -553,11 +565,17 @@
       "inventory_version": 1,
       "execution_status": "PASS",
       "scope": "Separate v2 format upgrade of original reviewed native r3 execution; original report and artifacts verified, no new native run.",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "EXTERNALLY_REVIEWED_NOT_ACCEPTED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "original_execution_record": "MACOS-NATIVE-GATE0-r3",
-      "note": "Preserves original execution timestamp, inventory snapshot and raw review disposition. Historical Claude audit remains about the original execution; new format tooling awaits review."
+      "note": "Preserves original execution timestamp, inventory snapshot and raw review disposition. Historical Claude audit remains about the original execution; new format tooling awaits review.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Third audit at HEAD 9c2ef44d: fresh re-execution, byte comparison and tooling review in the reviewer's own session, 2026-09-11",
+        "disposition": "REVIEWER_SIGNED_OFF_NOT_PROJECT_ACCEPTED",
+        "record": "stage0/claude-review.md"
+      }
     }
   ],
   "auxiliary_records": [
