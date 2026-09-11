@@ -1,0 +1,24 @@
+{
+  "generator": "tools/manage.py",
+  "generator_sha256": "a357be272308e35eece5b8b101930bff27e153dcabc626fdf131478aa87a37e4",
+  "documents": [
+    {
+      "source": "outline.md",
+      "source_sha256": "9a81c54d032d869e8d1224362f0d5df6c7db671dd2d18825e230377582c664b8",
+      "output": "Clozure_CL_WebAssembly_Port_Outline_v0_14.docx",
+      "output_sha256": "ab98df9828138d5fa0830a4f165e288a5852713bbb0155777fc0b7eb15eac449"
+    },
+    {
+      "source": "acceptance.md",
+      "source_sha256": "cdc6442558da1961ed9b3ea25281ba258034dfdbf3ff11a9b432ae99ac687081",
+      "output": "CCL_WebAssembly_Acceptance_Policy_and_Regression_Register_v1_4.docx",
+      "output_sha256": "a59dd1dd2b943855930937782423919f0600fe87540f9513987f2b44f21cca18"
+    },
+    {
+      "source": "decisions.md",
+      "source_sha256": "68a974342d97c430b4527c67c1a5b5ef4aca8b9902f2cfb051afaea9ee5c0eab",
+      "output": "CCL_WebAssembly_Stage0_Desk_Decisions_v1_5.docx",
+      "output_sha256": "8ed18718a6c42e0f4847da7878ae8f6a378a22a91773208d88f05e2ac922eb8a"
+    }
+  ]
+}

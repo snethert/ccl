@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "status": "INITIAL_CONTRACT_NOT_ACCEPTED",
+  "coverage": "Fixnums, tag values and ordinary cons fields only. This is not the full object schema.",
+  "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+  "sources": ["compiler/X86/X8632/x8632-arch.lisp", "lisp-kernel/constants.h"],
+  "word_bytes": 4,
+  "endianness": "little",
+  "object_alignment": 8,
+  "fixnum_shift": 2,
+  "fixnum_min": -536870912,
+  "fixnum_max": 536870911,
+  "fulltags": {"even_fixnum": 0, "cons": 1, "nodeheader": 2, "imm": 3, "odd_fixnum": 4, "reserved_tra": 5, "misc": 6, "immheader": 7},
+  "cons": {"size_bytes": 8, "alignment": 8, "tag": 1, "cdr_raw_offset": 0, "car_raw_offset": 4, "cdr_tagged_displacement": -1, "car_tagged_displacement": 3},
+  "outstanding": ["Canonical NIL/T address and behavior", "Every other immediate and object subtag", "Symbols and packages", "Numeric and vector payloads", "Function objects and closures", "TCR and complete roots", "C assertions and generated-code access", "Cross-dump and GC walkers"]
+}

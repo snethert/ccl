@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-09-11T20:10:49.143109+00:00",
+  "scope": "Retained artifact and raw-statistic verification; not independent acceptance.",
+  "archive_sha256": "699ce0c484ea33abcbe903d33bcf91883c6fad25dfdf4e525a31adaac4117042",
+  "verified_artifacts": 171,
+  "current_fixture_sources_match_snapshot": true,
+  "randomized_seeds": 1000,
+  "retained_scheduler_decisions": 26847,
+  "independent_timing_recomputation": "PASS",
+  "source_preservation": "ALL_UPSTREAM_SOURCE_UNCHANGED",
+  "full_stage0": "BLOCKED",
+  "original_failure_packs": [
+    "runs/2026-09-11-integrated-r3.zip",
+    "runs/2026-09-11-integrated-r6.zip",
+    "runs/2026-09-11-integrated-r9.zip"
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "status": "PREDECLARED_INITIAL_POLICY_NOT_MEASURED",
+  "change_control": "Record rationale and old/new policy hashes before rerunning affected selection measurements.",
+  "candidates": [
+    "C",
+    "C4",
+    "B",
+    "H(G)"
+  ],
+  "sequence": [
+    "C/C4/B correctness",
+    "C/C4/B measurements",
+    "H(G) correctness",
+    "H(G) versus the same G measurements"
+  ],
+  "required_correctness": [
+    "S0-LL05-a",
+    "S0-LL05-b",
+    "S0-LL05-c",
+    "S0-LL05-d",
+    "S0-LL20-a",
+    "S0-LL20-b",
+    "S0-LL20-c",
+    "S0-LL21-a",
+    "S0-LL21-b"
+  ],
+  "workloads": [
+    "direct calls",
+    "unknown indirect callees",
+    "closures",
+    "optional/rest/keyword binding",
+    "APPLY",
+    "multiple values",
+    "cross-arity tail chains",
+    "allocation with forced collection"
+  ],
+  "initial_workload_weights": "Equal weights across the eight workloads; census-driven revisions must be frozen and hashed before selection measurements.",
+  "debug_policy": 1,
+  "run_order": "Seeded randomized paired candidate/baseline trials on the same dedicated host and engine tier.",
+  "minimum_independent_trials": 30,
+  "minimum_warmup_ms_per_workload": 1000,
+  "minimum_sample_ms_per_workload": 250,
+  "confidence_level": 0.95,
+  "maximum_relative_confidence_interval_half_width": 0.025,
+  "estimator": "Geometric mean of paired runtime ratios across the fixed workload weights; paired bootstrap over independent trials, not inner iterations, with seed and 10000 resamples recorded.",
+  "uniform_simplicity_order": [
+    "B",
+    "C",
+    "C4"
+  ],
+  "uniform_near_best_max_slowdown": 0.05,
+  "uniform_rule": "Choose the simplest candidate whose upper 95% confidence bound for runtime ratio to the measured best is at most 1.05. If uncertainty exceeds the bound, gather more trials or record no selection.",
+  "hybrid_minimum_geomean_speedup": 0.1,
+  "hybrid_maximum_per_workload_slowdown": 0.05,
+  "hybrid_maximum_code_and_metadata_growth": 0.15,
+  "hybrid_maximum_cold_install_time_growth": 0.1,
+  "hybrid_maximum_per_worker_memory_growth": 0.1,
+  "hybrid_rule": "Select H only when the lower 95% confidence bound on representative speedup versus its own G is at least 10%, and upper bounds on each regression/resource ratio meet all budgets. Include incremental checks, adapters, stubs, frame/root costs and table storage. H failing selection does not mean its evidence can be omitted.",
+  "cold_measurements_separate": true,
+  "engine_policy": "Pin engine/version/tier, host CPU/OS, flags and toolchain. Qualify multivalue, tail calls, selected EH encoding, shared-memory atomics and bulk memory explicitly. JSPI is required only for its profile. No cross-engine pooling.",
+  "dedicated_host_progress_limits": {
+    "safepoint_latency_p99_ms": 10,
+    "safepoint_latency_max_ms": 100,
+    "rendezvous_timeout_ms": 1000,
+    "per_schedule_timeout_ms": 5000,
+    "random_schedule_seeds_minimum": 1000,
+    "scope": "Controlled harness on the recorded dedicated host; these limits do not promise browser background-tab or OS scheduling latency. A timeout fails the run and is investigated, never counted as success."
+  },
+  "abi_experiment_review_after_engineer_days": 20,
+  "ratio_definitions": "runtime_ratio = candidate runtime / baseline runtime; speedup = (1 / runtime_ratio) - 1. Resource growth = candidate / baseline - 1."
+}

@@ -1,0 +1,68 @@
+{
+  "positive_cases": 22,
+  "rejected_controls": 14,
+  "randomized_schedules": 1000,
+  "safepoint_latency_p99_ms": 0.04062199592590332,
+  "safepoint_latency_max_ms": 0.6262039989233017,
+  "rendezvous_max_ms": 4.481299996376038,
+  "run": "INTEGRATED-RUNTIME-r10",
+  "archive": "runs/2026-09-11-integrated-r10.zip",
+  "archive_sha256": "699ce0c484ea33abcbe903d33bcf91883c6fad25dfdf4e525a31adaac4117042",
+  "results_member": "results.json",
+  "execution_results": [
+    {
+      "id": "S0-LL13-c",
+      "status": "PASS",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL19-b",
+      "status": "PASS",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL20-a",
+      "status": "PASS",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL20-b",
+      "status": "PASS",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL20-c",
+      "status": "PASS",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "review_disposition": "NOT_REVIEWED"
+    }
+  ],
+  "toolchain": {
+    "clang": "Homebrew clang version 21.1.8\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /usr/local/Cellar/llvm/21.1.8/bin\nConfiguration file: /usr/local/etc/clang/x86_64-apple-darwin24.cfg",
+    "linker": "Homebrew LLD 21.1.8",
+    "wabt": "1.0.39",
+    "node": "v25.6.1",
+    "v8": "14.1.146.11-node.19",
+    "paths": {
+      "clang": "/usr/local/opt/llvm/bin/clang",
+      "linker": "/usr/local/opt/lld/bin/wasm-ld",
+      "wabt": "/usr/local/bin/wat2wasm"
+    },
+    "executable_sha256": {
+      "clang": "55073cc34822cc7ac601733b9ab9dfe621073954f88e105d73555e5e2c29c86e",
+      "linker": "e1e647c6476370ace95caf6448463a12532bbe2900a50384a7d1284461e29d63",
+      "wabt": "1f6ec9bc16a530c5d83e6cdd0e9aceb27384ac1d9ca86ba6a8e3981e76e21d7d"
+    },
+    "os": "darwin",
+    "release": "24.6.0",
+    "architecture": "x64",
+    "cpu": "Intel(R) Xeon(R) W-2140B CPU @ 3.20GHz",
+    "logical_cpus": 16,
+    "node_flags": []
+  },
+  "scope": "Hand-built S0-LL20-a/b/c integration, with freshly executed S0-LL13-c/S0-LL19-b prerequisites. Not full Stage 0 acceptance."
+}

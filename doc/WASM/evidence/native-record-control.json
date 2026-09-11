@@ -1,0 +1,14 @@
+{
+  "scope": "CONTROL EXECUTION: reject an actual failed native run, without rewriting it.",
+  "command": [
+    "python3",
+    "tests/wasm/native-baseline/record.py",
+    "--run",
+    "/Users/buildsomething/Source/ccl-evidence/2026-09-11-macos-gate0-r1",
+    "--inventory",
+    "doc/WASM/stage0/inventory.json"
+  ],
+  "exit_code": 1,
+  "stderr": "Traceback (most recent call last):\n  File \"/Users/buildsomething/Source/ccl/tests/wasm/native-baseline/record.py\", line 71, in <module>\n    print(record(args.run.resolve(), args.inventory.resolve()))\n          ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/buildsomething/Source/ccl/tests/wasm/native-baseline/record.py\", line 21, in record\n    raise ValueError('native run did not complete two successful builds and test runs')\nValueError: native run did not complete two successful builds and test runs\n",
+  "status": "REJECTED"
+}

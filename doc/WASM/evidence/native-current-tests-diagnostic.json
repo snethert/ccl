@@ -1,0 +1,23 @@
+{
+  "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+  "test_revision": "442fb0577ffa1308f19ea95f4b3df020c3f1d23a",
+  "status": "FAIL",
+  "test_summary": {
+    "registered": 21928,
+    "eligible": 21853,
+    "upstream_disabled": 75,
+    "passed": 21850,
+    "failed": 3,
+    "missing": 0,
+    "unexpected": 0,
+    "success": false
+  },
+  "failed_tests": [
+    "CL-TEST::CCL.BITVECTOR-READER",
+    "CL-TEST::CCL.CONSTIDX-CSF-VECTOR",
+    "CL-TEST::SHARPSIGN-DOT.VALUES.MULTIPLE"
+  ],
+  "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-macos-latest-tests-r2/manifest.json",
+  "sha256": "425ba9e3c297de075364fb6cd8b327dd0e9cf78b0c313b14bd8fe8a8e8138897",
+  "scope": "Fresh 2026-head corpus on unchanged U1 with upstream default invocation: 21850 pass, three post-v1.13 regressions fail; 75 upstream-disabled tests disclosed. Not release-corpus Gate 0 qualification."
+}

@@ -1,0 +1,176 @@
+{
+  "version": 3,
+  "scope": "Hand-built shared wasm32 Stage 0 LL20 proof: bounded cons-only copying collector, explicit roots, D5 admission and stable host requests. Not the production CCL collector or a selected D3 ABI.",
+  "memory_pages": {
+    "minimum": 8,
+    "maximum": 16,
+    "shared": true
+  },
+  "workers": 4,
+  "tcr_bytes": 256,
+  "tcr_alignment": 16,
+  "c_stack_bytes": 16384,
+  "c_stack_alignment": 16,
+  "semispace_bytes": 4096,
+  "request_bytes": 256,
+  "requests_per_worker": 2,
+  "payload_offset": 64,
+  "payload_capacity": 192,
+  "tcr": {
+    "root_head": 24,
+    "binding_depth": 28,
+    "vsp": 32,
+    "tsp": 36,
+    "csp": 40,
+    "nvalues": 44,
+    "mv_base": 48,
+    "mv_owner_top": 52,
+    "boundary_cleanup": 80,
+    "observed_c_frame": 88,
+    "state": 128,
+    "pending": 132,
+    "id": 136,
+    "lifetime": 140,
+    "admitted": 144,
+    "requests": 148,
+    "root_slot": 152,
+    "stops": 156,
+    "interrupts": 160,
+    "reloads": 164,
+    "allocation_checks": 168,
+    "cleanup": 172,
+    "nested": 176,
+    "retire_serial": 180,
+    "reclaimed": 184,
+    "mode": 188,
+    "active_request": 192,
+    "old_root": 196,
+    "observed_root": 200,
+    "observed_raw": 204,
+    "continuation": 208,
+    "handler_cookie": 212,
+    "binding_cookie": 216,
+    "progress": 220
+  },
+  "request": {
+    "opcode": 0,
+    "generation": 12,
+    "owner_lifetime": 4,
+    "wake": 8,
+    "outcome": 16,
+    "result": 20,
+    "active": 24,
+    "cancel_requested": 28,
+    "length": 32,
+    "consumed": 36,
+    "payload": 64
+  },
+  "states": {
+    "CREATING": 0,
+    "PARKED": 1,
+    "RUNNING": 2,
+    "FOREIGN": 3,
+    "STOPPED_GC": 4,
+    "TERMINATING": 5
+  },
+  "pending": {
+    "GC": 1,
+    "INTERRUPT": 2
+  },
+  "wake": {
+    "ARMED": 0,
+    "INTERRUPTED": 1,
+    "TERMINAL": 2
+  },
+  "outcome": {
+    "PENDING": 0,
+    "COMPLETE": 1,
+    "CANCELLED": 2
+  },
+  "events": {
+    "PROBE": 1,
+    "EVEN": 2,
+    "STOPPED": 3,
+    "BEFORE_CAS": 4,
+    "ACQUIRED": 5,
+    "CAS_LOST": 6,
+    "SNAPSHOT": 7,
+    "PENDING_SET": 8,
+    "MEMBERSHIP_CLOSED": 9,
+    "MOVED": 10,
+    "RELEASED": 11,
+    "RECHECK": 12,
+    "WAITING": 13,
+    "WOKE": 14,
+    "INTERRUPT": 15,
+    "REARM": 16,
+    "RETURNING": 17,
+    "CREATOR_READY": 18,
+    "CHILD_PUBLISHED": 19,
+    "RETIRED": 20,
+    "RECLAIMED": 21,
+    "POLLING": 22,
+    "ALLOCATED": 23
+  },
+  "roots": {
+    "previous_raw_offset": 0,
+    "count_raw_offset": 4,
+    "tagged_values_offset": 8,
+    "maximum_values": 8,
+    "maximum_frames": 16
+  },
+  "fixture_nil": 65,
+  "synchronization": "All shared state transitions are sequentially consistent. Scheduler hooks only control test interleavings; I/O wakeups use atomic wait/notify on the stable request descriptor.",
+  "lifetime": "gc_gen wraps by parity. Separate completed-collection and lifetime counters reject exhaustion rather than wrap; reclamation requires a collection after retirement and terminal host outcomes for every active request.",
+  "allowed_function_imports": {
+    "bridge.park": {
+      "params": [
+        "i32",
+        "i32"
+      ],
+      "results": []
+    },
+    "emitted.raise": {
+      "params": [
+        "i32"
+      ],
+      "results": []
+    },
+    "schedule.point": {
+      "params": [
+        "i32",
+        "i32",
+        "i32"
+      ],
+      "results": []
+    },
+    "host.request": {
+      "params": [
+        "i32",
+        "i32"
+      ],
+      "results": []
+    },
+    "host.callback": {
+      "params": [
+        "i32"
+      ],
+      "results": []
+    },
+    "host.install": {
+      "params": [
+        "i32"
+      ],
+      "results": []
+    }
+  },
+  "wake_generation_pair": {
+    "offset": 8,
+    "bytes": 8,
+    "alignment": 8,
+    "low_u32": "wake",
+    "high_u32": "generation",
+    "publication": "C publishes a fresh generation before descriptor reuse. Host final wake uses an atomic 64-bit compare/exchange guarded by that generation; a delayed completion cannot write a newer request. Durable outcome and payload precede the final wake. Notify follows successful wake publication."
+  },
+  "active_request": "Raw pointer to the descriptor currently being waited on, distinct from all outstanding requests. Nested calls save/restore it. The emitted nonlocal-exit adapter restores it with the stack/root checkpoints. Thread interrupt delivery targets this descriptor."
+}

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "scope": "Hand-built S0-LL13-c and S0-LL19-b boundary fixture only; not a production TCR, complete layout, collector or selected D3 ABI.",
+  "memory_pages": {"minimum": 2, "maximum": 16, "shared": true},
+  "c_stack_bytes": 16384,
+  "c_stack_alignment": 16,
+  "tcr_bytes": 128,
+  "tcr_alignment": 16,
+  "tcr_offsets": {"token": 0, "frame_address": 4, "tcr_before": 8, "tcr_after": 12, "stack_ok": 16, "post_exit_effect": 20, "root_head": 24, "binding_depth": 28, "vsp": 32, "tsp": 36, "csp": 40, "nvalues": 44, "mv_base": 48, "mv_owner_top": 52, "ready": 72, "release": 76, "cleanup_effect": 80, "catch_reason": 84, "observed_sp": 88},
+  "roots": {"bytes": 16, "previous_raw_offset": 0, "count_raw_offset": 4, "tagged_slots": [8, 12]},
+  "fixture_nil": 65,
+  "fixture_cons": 129,
+  "note": "Fixture NIL/cons addresses are local to these tests and do not select production canonical addresses.",
+  "allowed_function_imports": {"bridge.park": {"params": ["i32", "i32"], "results": []}, "emitted.raise": {"params": ["i32"], "results": []}},
+  "boundary": "The emitted adapter owns restoration of C SP and root/binding/VSP/TSP/CSP checkpoints on both ordinary and exceptional return; no safepoint occurs between helper exit and completed restoration.",
+  "results": "The emitted fixture returns value0/nvalues. The TCR mv_base/count descriptor refers to a caller-owned VSP result region, not a second backing buffer. VSP grows upward; the caller reserves an aligned 32-byte region for at most six tagged values, retains it across the helper/cleanup, and releases it only after consuming the complete sequence. Zero values return fixture NIL. Candidate-specific argument placement remains D3 work.",
+  "restarts": {"0": "Return all supplied values from the handler outside the unwound C helper.", "1": "Propagate the original exit after restoration.", "2": "Cleanup transfers again with a distinct tag after restoration."},
+  "unsupported": ["Resuming an unwound C activation", "Implicit C epilogues on Wasm exceptional exits", "Moving GC during this boundary slice", "Arbitrary native CCL restart/condition semantics"]
+}

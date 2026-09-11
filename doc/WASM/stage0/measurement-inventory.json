@@ -1,0 +1,550 @@
+{
+  "version": 1,
+  "acceptance_record": "S0-ABI-selection",
+  "measurements": [
+    {
+      "id": "S0-ABI-C-01",
+      "candidate": "C",
+      "workload": "direct calls",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-C-02",
+      "candidate": "C",
+      "workload": "unknown indirect callees",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-C-03",
+      "candidate": "C",
+      "workload": "closures",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-C-04",
+      "candidate": "C",
+      "workload": "optional/rest/keyword binding",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-C-05",
+      "candidate": "C",
+      "workload": "APPLY",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-C-06",
+      "candidate": "C",
+      "workload": "multiple values",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-C-07",
+      "candidate": "C",
+      "workload": "cross-arity tail chains",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-C-08",
+      "candidate": "C",
+      "workload": "allocation with forced collection",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-C4-01",
+      "candidate": "C4",
+      "workload": "direct calls",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-C4-02",
+      "candidate": "C4",
+      "workload": "unknown indirect callees",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-C4-03",
+      "candidate": "C4",
+      "workload": "closures",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-C4-04",
+      "candidate": "C4",
+      "workload": "optional/rest/keyword binding",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-C4-05",
+      "candidate": "C4",
+      "workload": "APPLY",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-C4-06",
+      "candidate": "C4",
+      "workload": "multiple values",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-C4-07",
+      "candidate": "C4",
+      "workload": "cross-arity tail chains",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-C4-08",
+      "candidate": "C4",
+      "workload": "allocation with forced collection",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-B-01",
+      "candidate": "B",
+      "workload": "direct calls",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-B-02",
+      "candidate": "B",
+      "workload": "unknown indirect callees",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-B-03",
+      "candidate": "B",
+      "workload": "closures",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-B-04",
+      "candidate": "B",
+      "workload": "optional/rest/keyword binding",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-B-05",
+      "candidate": "B",
+      "workload": "APPLY",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-B-06",
+      "candidate": "B",
+      "workload": "multiple values",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-B-07",
+      "candidate": "B",
+      "workload": "cross-arity tail chains",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-B-08",
+      "candidate": "B",
+      "workload": "allocation with forced collection",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 2
+    },
+    {
+      "id": "S0-ABI-H(G)-01",
+      "candidate": "H(G)",
+      "workload": "direct calls",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 4
+    },
+    {
+      "id": "S0-ABI-H(G)-02",
+      "candidate": "H(G)",
+      "workload": "unknown indirect callees",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 4
+    },
+    {
+      "id": "S0-ABI-H(G)-03",
+      "candidate": "H(G)",
+      "workload": "closures",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 4
+    },
+    {
+      "id": "S0-ABI-H(G)-04",
+      "candidate": "H(G)",
+      "workload": "optional/rest/keyword binding",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 4
+    },
+    {
+      "id": "S0-ABI-H(G)-05",
+      "candidate": "H(G)",
+      "workload": "APPLY",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 4
+    },
+    {
+      "id": "S0-ABI-H(G)-06",
+      "candidate": "H(G)",
+      "workload": "multiple values",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 4
+    },
+    {
+      "id": "S0-ABI-H(G)-07",
+      "candidate": "H(G)",
+      "workload": "cross-arity tail chains",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 4
+    },
+    {
+      "id": "S0-ABI-H(G)-08",
+      "candidate": "H(G)",
+      "workload": "allocation with forced collection",
+      "status": "NOT_RUN",
+      "required_fields": [
+        "raw paired trials",
+        "correctness result references",
+        "policy SHA-256",
+        "engine and tier",
+        "generic G for H",
+        "seed",
+        "warmup and sample durations",
+        "runtime/code/metadata/install/Worker memory metrics"
+      ],
+      "phase": 4
+    }
+  ]
+}

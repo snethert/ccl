@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "implementation": {
+    "revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+    "tag": "v1.13",
+    "gate0_status": "EXECUTED_NOT_ACCEPTED",
+    "selection_reason": "User selected macOS as the sole Wasm project reference host on 2026-09-11; U1 native qualification uses its supported x86-64 Darwin target.",
+    "bootstrap_sha256": "0eceab57e519f82bd6db011c596eb2a28e2a510abcd76e217d49a10e90f4002f",
+    "ccl_tests_revision": "561ab1be82fefd53a61089eaad4357023e1fa961",
+    "native_target": "macOS x86-64",
+    "bootstrap_url": "https://github.com/Clozure/ccl/releases/download/v1.13/darwinx86.tar.gz",
+    "test_selection_reason": "Last ccl-tests commit before U1 v1.13; 2026-head diagnostic failures are retained separately.",
+    "execution_record": "evidence/native-baseline-summary.json",
+    "same_host_fasl_repeatability": "164/164 RAW_IDENTICAL",
+    "eligible_tests_passed_per_run": 21843,
+    "upstream_disabled_tests": 75
+  },
+  "historical": {
+    "revision": "4ca4df402e319789401cd33e680702e51ec601fc",
+    "role": "Earlier design census and E1\u2013E5 reports; not implementation qualification",
+    "reported_gate0": "ACCEPTED_HISTORICALLY_NOT_REVERIFIED",
+    "changed_files_to_implementation": 194,
+    "arm64_recipe_applicable_to_implementation": false
+  },
+  "protected_native_source_policy": "Existing target-specific implementation files must not change.",
+  "comparison_policy": "acceptance.md section 2",
+  "reference_platform": "macOS",
+  "second_host": "A second macOS x86-64 host, with matching pins; not a different operating system."
+}

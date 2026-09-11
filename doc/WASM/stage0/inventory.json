@@ -1,0 +1,837 @@
+{
+  "version": 1,
+  "stage": "Stage 0 plus current Gate 0 prerequisite",
+  "authority": "acceptance.md LL metadata, decisions.md D7 and outline Stage 0 exit criteria",
+  "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+  "required_record_roles": [
+    "implementation",
+    "test",
+    "schema",
+    "log"
+  ],
+  "acceptance_note": "All variants required for Stage 0. H(G) records must name a qualified G; H cases are scheduled after generic correctness and baselines. PROBE IDs never discharge S0 IDs. Missing runners are explicit outstanding implementation, not substitute tests.",
+  "tests": [
+    {
+      "id": "G0-U1-a",
+      "obligation": "LL22",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "NATIVE BASELINE EXECUTION",
+      "variants": [
+        "macos-x86-64"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "G0-U1-a:contract",
+          "description": "Pin bootstrap, ccl-tests and environment; build kernel, clean rebuild, run pinned tests in rebuilt Lisp and capture repeatability separately. Retain exact commands, full artifacts/logs and review."
+        }
+      ],
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/native-baseline/run.py",
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-ABI-selection",
+      "obligation": "LL05",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "BENCHMARK EXECUTION",
+      "variants": [
+        "complete-report"
+      ],
+      "prerequisites": [
+        "S0-ENGINE-a",
+        "S0-CONTRACTS-a",
+        "S0-LL05-a",
+        "S0-LL05-b",
+        "S0-LL05-c",
+        "S0-LL05-d",
+        "S0-LL20-a",
+        "S0-LL20-b",
+        "S0-LL20-c"
+      ],
+      "assertions": [
+        {
+          "id": "S0-ABI-selection:1",
+          "description": "all 32 measurement IDs from measurement-inventory.json with raw artifact hashes"
+        },
+        {
+          "id": "S0-ABI-selection:2",
+          "description": "correctness-before-measurement and generic-before-H phase ordering"
+        },
+        {
+          "id": "S0-ABI-selection:3",
+          "description": "policy hash, confidence interval and weighted-workload calculation"
+        },
+        {
+          "id": "S0-ABI-selection:4",
+          "description": "cold/warm separation, code/metadata/table/Worker resource budgets"
+        },
+        {
+          "id": "S0-ABI-selection:5",
+          "description": "same-G hybrid comparison and recorded choice/rejection rationale"
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-CONTRACTS-a",
+      "obligation": "LL04",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "CONTROL EXECUTION",
+      "variants": [
+        "complete-report"
+      ],
+      "prerequisites": [
+        "S0-LL04-a",
+        "S0-LL13-c",
+        "S0-LL19-b",
+        "S0-LL23-b"
+      ],
+      "assertions": [
+        {
+          "id": "S0-CONTRACTS-a:1",
+          "description": "complete versioned schema and source-to-target ledger"
+        },
+        {
+          "id": "S0-CONTRACTS-a:2",
+          "description": "frames, roots, TCR, allocation/store protocols and C-boundary restoration"
+        },
+        {
+          "id": "S0-CONTRACTS-a:3",
+          "description": "link-derived memory/table ownership with actual executed fixtures"
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-ENGINE-a",
+      "obligation": "LL21",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "complete-report"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-ENGINE-a:1",
+          "description": "engine features and version/profile matrix"
+        },
+        {
+          "id": "S0-ENGINE-a:2",
+          "description": "EH, multivalue, tail calls, atomics and bulk memory"
+        },
+        {
+          "id": "S0-ENGINE-a:3",
+          "description": "each admitted profile suspension path"
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL01-a",
+      "obligation": "LL01",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "CONTROL EXECUTION",
+      "variants": [
+        "control"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL01-a:contract",
+          "description": "Fail early, middle and late initializers separately; reject every partial bootstrap with the first failing step identified."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL01-b",
+      "obligation": "LL01",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "CONTROL EXECUTION",
+      "variants": [
+        "control"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL01-b:contract",
+          "description": "Fail, kill and time out required child commands; production aggregate must be non-passing with the failing step identified."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL02-a",
+      "obligation": "LL02",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "CONTROL EXECUTION",
+      "variants": [
+        "control"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL02-a:contract",
+          "description": "Omit an expected test ID and require BLOCKED from the production gate."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL02-b",
+      "obligation": "LL02",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "CONTROL EXECUTION",
+      "variants": [
+        "control"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL02-b:contract",
+          "description": "Mutate extra returned values, captured closure state and observable cleanup separately; each mutant must fail the production assertions and remain quarantined."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL03-a",
+      "obligation": "LL03",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "CONTROL EXECUTION",
+      "variants": [
+        "control"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL03-a:contract",
+          "description": "Reject a hand-built or synthetic evidence record offered for compiler-generated acceptance. Label candidate, profile, substitution and exact artifacts independently of pass/fail."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL04-a",
+      "obligation": "LL04",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL04-a:contract",
+          "description": "Compare independent raw unequal cons fixtures with target-compiled C assertions and emitted probes, including NIL, mutation and graph structure. Both representations must agree with the independent oracle."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL04-b",
+      "obligation": "LL04",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL04-b:contract",
+          "description": "Inject a one-sided CAR/CDR swap and require fixture rejection; neither symmetric values nor a shared writer/reader error may conceal it."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL05-a",
+      "obligation": "LL05",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full:C",
+        "full:C4",
+        "full:B",
+        "full:H(G)"
+      ],
+      "prerequisites": [
+        "S0-LL04-a",
+        "S0-LL13-a"
+      ],
+      "assertions": [
+        {
+          "id": "S0-LL05-a:contract",
+          "description": "First for C, C4 and B, then for each later H(G): verify ordered arguments 0\u20136 and long overflow, nested side effects, direct/indirect/closure calls, APPLY and optional/rest/keyword binding, and every zero/one/many result. Check explicit stack/count ownership."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL05-b",
+      "obligation": "LL05",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full:C",
+        "full:C4",
+        "full:B",
+        "full:H(G)"
+      ],
+      "prerequisites": [
+        "S0-LL04-a",
+        "S0-LL13-a"
+      ],
+      "assertions": [
+        {
+          "id": "S0-LL05-b:contract",
+          "description": "Place different signatures in one table and call matching entries. Reject wrong-signature mutants; an isolated probe confirms trapping before stub entry. Also substitute G for E_4/E_5/E_1 where types coincide: role validation or semantic assertions must detect what the engine type check cannot."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL05-c",
+      "obligation": "LL05",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full:C",
+        "full:C4",
+        "full:B",
+        "full:H(G)"
+      ],
+      "prerequisites": [
+        "S0-LL04-a",
+        "S0-LL13-a"
+      ],
+      "assertions": [
+        {
+          "id": "S0-LL05-c:contract",
+          "description": "Force G and every supported E_k through their own lazy stub. Check eligibility/fallback for exact versus variable arity, preserve closure self and overflow space, and reload roots after allowed collection/suspension."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL05-d",
+      "obligation": "LL05",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full:C",
+        "full:C4",
+        "full:B",
+        "full:H(G)"
+      ],
+      "prerequisites": [
+        "S0-LL04-a",
+        "S0-LL13-a"
+      ],
+      "assertions": [
+        {
+          "id": "S0-LL05-d:contract",
+          "description": "Run generic/specialized cross-arity tail chains, shrinking/growing overflow and adapters. Observe bounded explicit-stack/root use, complete multiple values and preserved cleanup/binding extent."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL07-a",
+      "obligation": "LL07",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL07-a:contract",
+          "description": "Check signed fixnum, raw address, logical-ID and typed-slot conversions separately. Synthetic addresses above 2 GiB retain bits through JS; checked exhaustion rejects invalid IDs and capacities."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL08-a",
+      "obligation": "LL08",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HOST COMPILATION",
+      "variants": [
+        "native"
+      ],
+      "prerequisites": [
+        "G0-U1-a"
+      ],
+      "assertions": [
+        {
+          "id": "S0-LL08-a:contract",
+          "description": "validate the actual registration patch in clean host sessions with target state set before reading."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL08-b",
+      "obligation": "LL08",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HOST COMPILATION",
+      "variants": [
+        "native"
+      ],
+      "prerequisites": [
+        "G0-U1-a"
+      ],
+      "assertions": [
+        {
+          "id": "S0-LL08-b:contract",
+          "description": "compare evaluated acode IDs/flags and reserved slots under R6a."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL08-c",
+      "obligation": "LL08",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HOST COMPILATION",
+      "variants": [
+        "native"
+      ],
+      "prerequisites": [
+        "G0-U1-a"
+      ],
+      "assertions": [
+        {
+          "id": "S0-LL08-c:contract",
+          "description": "repeat the pinned U1 macOS x86-64 baseline on a second Mac and compare retained digests under R6 normalization, separately from target-state proof and native behavior. This supersedes the unexecuted H1/E5 ARM64 reproduction slice because U1 lacks that backend; history/changes.md records the scope change. H1 evidence remains historical."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL13-a",
+      "obligation": "LL13",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL13-a:contract",
+          "description": "reject overlap/undersized ranges before publication."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL13-b",
+      "obligation": "LL13",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL13-b:contract",
+          "description": "mutate shared state, then instantiate a late Worker and preserve it while initializing only owned private regions."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL13-c",
+      "obligation": "LL13",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL13-c:contract",
+          "description": "concurrent C-helper activity uses distinct C stacks/current-TCR state; wrong initialization/stack-base mutants fail."
+        }
+      ],
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/stage0/runtime-boundary/run.mjs",
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL15-a",
+      "obligation": "LL15",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL15-a:contract",
+          "description": "Bind every harness initializer to prerequisite state and completion, including the loader\u2019s own dependencies. An omitted required module fails loading; a no-load path cannot satisfy a load test."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL15-b",
+      "obligation": "LL15",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HOST COMPILATION",
+      "variants": [
+        "native"
+      ],
+      "prerequisites": [
+        "G0-U1-a",
+        "S0-LL08-a",
+        "S0-LL08-b"
+      ],
+      "assertions": [
+        {
+          "id": "S0-LL15-b:contract",
+          "description": "Validate the actual qualified-compiler joined census and conservative closure under contracts/census.md; include all phases, reviewed seeds, unknown edges, required initializers and external trace reconciliation."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL15-c",
+      "obligation": "LL15",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HOST COMPILATION",
+      "variants": [
+        "native"
+      ],
+      "prerequisites": [
+        "G0-U1-a",
+        "S0-LL08-a",
+        "S0-LL08-b"
+      ],
+      "assertions": [
+        {
+          "id": "S0-LL15-c:contract",
+          "description": "Independently specified missing-node/edge/seed, concealed unknown-call and cyclic initializer mutants must be rejected by the instrumentation and gate path."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL19-a",
+      "obligation": "LL19",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL19-a:contract",
+          "description": "EH through nested frames and cleanup that throws restores bindings, roots and VSP/TSP/CSP, preserves all values and suppresses post-exit effects."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL19-b",
+      "obligation": "LL19",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL19-b:contract",
+          "description": "test the chosen emitted/C boundary and restart/result contracts explicitly."
+        }
+      ],
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/stage0/runtime-boundary/run.mjs",
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL20-a",
+      "obligation": "LL20",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full"
+      ],
+      "prerequisites": [
+        "S0-LL13-c",
+        "S0-LL19-b"
+      ],
+      "assertions": [
+        {
+          "id": "S0-LL20-a:contract",
+          "description": "Suspend inside nested Lisp state, collect/install code and resume without suspension-triggered cleanup. Verify the same continuation, bindings and complete values."
+        }
+      ],
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/stage0/integrated-runtime/run.mjs",
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL20-b",
+      "obligation": "LL20",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full"
+      ],
+      "prerequisites": [
+        "S0-LL13-c",
+        "S0-LL19-b"
+      ],
+      "assertions": [
+        {
+          "id": "S0-LL20-b:contract",
+          "description": "Deterministically schedule competing collectors, CAS loss, owner-only release, host completion, PARKED/STOPPED_GC admission, a new request during admission, parity wrap, final membership rescan, child handoff roots and allocation recheck. Fetch-add acquisition and omitted-rescan mutants must fail. Also park a FOREIGN Worker on an unfinished I/O request, interrupt it without completing the host operation, and require INTERRUPTED plus notification to reach interrupt service through GC admission/root reload. Resume waiting on the same descriptor or observe raced completion/cancellation acknowledgement. Include GC during wake, completion on either side of the interrupt store, and an interrupt during rearming. Pending-bit-only, omitted-notify, lost-terminal-outcome and premature-reuse mutants must fail."
+        }
+      ],
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/stage0/integrated-runtime/run.mjs",
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL20-c",
+      "obligation": "LL20",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full"
+      ],
+      "prerequisites": [
+        "S0-LL13-c",
+        "S0-LL19-b"
+      ],
+      "assertions": [
+        {
+          "id": "S0-LL20-c:contract",
+          "description": "Stable request payloads survive GC. Interrupt handling, nested debugger requests and nonlocal exit do not reuse an outstanding descriptor. Cancellation without host acknowledgement cannot permit TCR/request reclamation; a late completion is checked against the original lifetime generation."
+        }
+      ],
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/stage0/integrated-runtime/run.mjs",
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL21-a",
+      "obligation": "LL21",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL21-a:contract",
+          "description": "publish prebuilt code and first-call from another/late Worker."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL21-b",
+      "obligation": "LL21",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full:C",
+        "full:C4",
+        "full:B",
+        "full:H(G)"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL21-b:contract",
+          "description": "map one code ID to G/E_k slots, fill new callable slots with matching stubs, reject conflicting signatures, preserve old function objects across a prebuilt redefinition."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL21-c",
+      "obligation": "LL21",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "shared-template",
+        "unshared-template"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL21-c:contract",
+          "description": "validate shared/unshared materialized binaries, import limits and profile suspension; reject wrong patch bytes/hashes/features."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL22-a",
+      "obligation": "LL22",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "CONTROL EXECUTION",
+      "variants": [
+        "control"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL22-a:contract",
+          "description": "Verify source, implementation, test, ABI, template and installed-binary identities against retained hashes; reject mixed builds and stale evidence."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL22-b",
+      "obligation": "LL22",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "CONTROL EXECUTION",
+      "variants": [
+        "control"
+      ],
+      "prerequisites": [
+        "G0-U1-a"
+      ],
+      "assertions": [
+        {
+          "id": "S0-LL22-b:contract",
+          "description": "Apply all four R6 artifact categories and evaluated R6a comparisons to the actual shared-source patch; classify intentional changes narrowly and reject unexplained executable or operator differences."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL23-a",
+      "obligation": "LL23",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL23-a:contract",
+          "description": "Structured diagnostics name the exact build, logical code ID, entry kind, signature, slot and faulting operation. Preserve the first error and bound output; a last-observed event is not labeled as the failing frame."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL23-b",
+      "obligation": "LL23",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "variants": [
+        "full"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL23-b:contract",
+          "description": "Prove frame order, lexical identities, source-site maps, unavailable-value policy, moved roots and frame restoration across suspension/nested debugging/EH under contracts/debug-frames.md. Reject stale-slot, generation and metadata mutants."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    },
+    {
+      "id": "S0-LL24-a",
+      "obligation": "LL24",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "CONTROL EXECUTION",
+      "variants": [
+        "control"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S0-LL24-a:contract",
+          "description": "One current ledger and separate history; explicit authorization for criterion changes; preserve earlier accepted evidence scope and link delivery claims to identified artifacts."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED"
+    }
+  ]
+}

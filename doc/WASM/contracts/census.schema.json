@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CCL Wasm census v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "source_revision",
+    "profile",
+    "instrumentation_sha256",
+    "inputs_sha256",
+    "trace_sha256",
+    "seed_review",
+    "seeds",
+    "nodes",
+    "edges",
+    "initializers",
+    "observed_modules",
+    "unobserved_modules"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source_revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "profile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "instrumentation_sha256": {
+      "$ref": "#/$defs/hash"
+    },
+    "inputs_sha256": {
+      "$ref": "#/$defs/hash"
+    },
+    "trace_sha256": {
+      "$ref": "#/$defs/hash"
+    },
+    "seed_review": {
+      "type": "string",
+      "minLength": 1
+    },
+    "seeds": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "disposition",
+          "required",
+          "implementation",
+          "evidence",
+          "tests",
+          "reason"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "operator",
+              "handler",
+              "vinsn",
+              "lap",
+              "subprimitive",
+              "import",
+              "trap",
+              "store",
+              "module",
+              "function",
+              "initializer"
+            ]
+          },
+          "disposition": {
+            "enum": [
+              "implemented",
+              "replaced",
+              "unsupported",
+              "unresolved"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "implementation": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "evidence": {
+            "type": "string",
+            "minLength": 1
+          },
+          "tests": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "targets",
+          "phase",
+          "origin",
+          "resolution",
+          "evidence"
+        ],
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "phase": {
+            "enum": [
+              "read",
+              "macroexpand",
+              "compile",
+              "load",
+              "run",
+              "callback"
+            ]
+          },
+          "origin": {
+            "enum": [
+              "observed",
+              "conservative"
+            ]
+          },
+          "resolution": {
+            "enum": [
+              "complete",
+              "unresolved"
+            ]
+          },
+          "evidence": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "initializers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "node",
+          "prerequisites",
+          "rank",
+          "completion_assertion"
+        ],
+        "properties": {
+          "node": {
+            "type": "string"
+          },
+          "prerequisites": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "rank": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "completion_assertion": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "observed_modules": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "unobserved_modules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "node",
+          "reason"
+        ],
+        "properties": {
+          "node": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

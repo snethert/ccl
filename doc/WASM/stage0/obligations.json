@@ -1,0 +1,324 @@
+{
+  "version": 1,
+  "authority": "acceptance.md section 4",
+  "metadata": [
+    {
+      "id": "LL01",
+      "title": "Fail closed at initialization, installation and build boundaries",
+      "first_acceptance": [
+        0
+      ],
+      "extensions": [
+        1
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL02",
+      "title": "Tests retain their behavioral assertions and required inventory",
+      "first_acceptance": [
+        0
+      ],
+      "extensions": [
+        1,
+        2,
+        3
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL03",
+      "title": "Separate fixtures, minimal-entry tests and measurements from runtime proof",
+      "first_acceptance": [
+        0
+      ],
+      "extensions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "standing_control": true,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL04",
+      "title": "CDR-before-CAR is one row of a cross-language layout schema",
+      "first_acceptance": [
+        0
+      ],
+      "extensions": [
+        1,
+        5
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL05",
+      "title": "Argument order, arity and return protocol are per-boundary contracts",
+      "first_acceptance": [
+        0
+      ],
+      "extensions": [
+        1
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL06",
+      "title": "Temporary lifetime and evaluation order precede bootstrap breadth",
+      "first_acceptance": [
+        1
+      ],
+      "extensions": [],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL07",
+      "title": "Raw addresses, tagged values and integer payloads are not interchangeable",
+      "first_acceptance": [
+        0
+      ],
+      "extensions": [
+        1
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL08",
+      "title": "The cross-compiler must not inherit host target state",
+      "first_acceptance": [
+        0
+      ],
+      "extensions": [
+        1
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL09",
+      "title": "Canonical symbols, package hashes and runtime NIL must agree",
+      "first_acceptance": [
+        1
+      ],
+      "extensions": [
+        5
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL10",
+      "title": "Constant pools preserve representation as well as values",
+      "first_acceptance": [
+        1
+      ],
+      "extensions": [
+        5
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL11",
+      "title": "Deduplicating code must not erase aliases or collide entries",
+      "first_acceptance": [
+        1
+      ],
+      "extensions": [
+        3
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL12",
+      "title": "A callable entry is not a complete function object",
+      "first_acceptance": [
+        1
+      ],
+      "extensions": [
+        5
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL13",
+      "title": "Modules share memory and table namespaces that must have owners",
+      "first_acceptance": [
+        0
+      ],
+      "extensions": [
+        1,
+        2
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL14",
+      "title": "An image contains only serialized state plus declared reconstruction data",
+      "first_acceptance": [
+        1
+      ],
+      "extensions": [
+        5
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL15",
+      "title": "Bootstrap completeness includes dependency cycles and initialization order",
+      "first_acceptance": [
+        0
+      ],
+      "extensions": [
+        1
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL16",
+      "title": "Numeric primitives must terminate and compute correctly before reuse",
+      "first_acceptance": [
+        1
+      ],
+      "extensions": [
+        2,
+        4
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL17",
+      "title": "Single-thread execution still requires dynamic bindings",
+      "first_acceptance": [
+        1
+      ],
+      "extensions": [
+        2
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL18",
+      "title": "GC proof requires visible reclamation and complete root coverage",
+      "first_acceptance": [
+        1
+      ],
+      "extensions": [
+        2
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL19",
+      "title": "Error flags alone do not establish nonlocal control correctness",
+      "first_acceptance": [
+        0
+      ],
+      "extensions": [
+        1,
+        2,
+        3
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL20",
+      "title": "A host API must prove continuation and GC/lifecycle semantics",
+      "first_acceptance": [
+        0
+      ],
+      "extensions": [
+        2,
+        3,
+        5
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL21",
+      "title": "Packaging success cannot replace semantic completeness",
+      "first_acceptance": [
+        0
+      ],
+      "extensions": [
+        1,
+        3,
+        5
+      ],
+      "standing_control": false,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL22",
+      "title": "Artifact identity and R6 require narrow, explainable comparisons",
+      "first_acceptance": [
+        "Gate 0"
+      ],
+      "extensions": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "standing_control": true,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL23",
+      "title": "Diagnostics must identify the exact build and first violated invariant",
+      "first_acceptance": [
+        0
+      ],
+      "extensions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "standing_control": true,
+      "regression": "all later stages in scope"
+    },
+    {
+      "id": "LL24",
+      "title": "Scope, status and acceptance changes are explicit project decisions",
+      "first_acceptance": [
+        0
+      ],
+      "extensions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "standing_control": true,
+      "regression": "all later stages in scope"
+    }
+  ]
+}
