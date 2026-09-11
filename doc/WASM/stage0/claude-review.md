@@ -16,3 +16,35 @@ Claude reported fresh fixture execution and byte-identical rebuilt binaries, mat
 | Evidence weight and missing standing rules | Superseded packs moved byte-for-byte to the external local store with locators/hashes. Current packs and original integrated failures r3/r6/r9 stay in the repository. Root AGENTS.md and CLAUDE.md record the user-supplied scope and verification rules. |
 
 The r10 runtime result records remain **NOT_REVIEWED** because the changes following Claude's r8 audit have not received a new external review. Stage 0 remains incomplete. No shared compiler or upstream `lisp-kernel` source was edited. Same-author verification of these fixes supports a reviewable commit, not acceptance.
+
+## Second Claude audit — r10, probes r5 and native Gate 0 — 11 September 2026
+
+Reviewer: Claude Fable 5.1, executing directly in its own session on the reference host (macOS 24.6.0, Intel Xeon W-2140B, Node v25.6.1 / V8 14.1, Homebrew clang and LLD 21.1.8, WABT 1.0.39). Author of the reviewed changes: Codex. This section covers the changes made after the r8 audit above. It is a reviewer disposition, not a project acceptance decision; every slice below stays NOT ACCEPTED until the acceptance policy's review record exists.
+
+Note on provenance: `history/claude-first-review.txt` retains the second of Claude's conversation reviews (the integrated-harness update); the initial document-level review and the Codex-authorship pass were not retained verbatim. Their findings are all represented in the disposition table above.
+
+### Verification performed
+
+- `manage.py check`, `test-controls.py` (29 controls) and `check-evidence.py --include-external` (23 identities) pass on the committed tree.
+- Fresh execution of all three Wasm runners into empty directories outside the checkout. Probes: 3 PASS. Boundary: 2 PASS, 12 cases, 9 rejected controls. Integrated: 22 positive PASS, 14 REJECTED, 1,000 seeded schedules PASS. Each fresh envelope binds the current inventory hash and gates BLOCKED with 54 remaining reasons and no provenance failure.
+- Every rebuilt module and object is byte-identical to the retained current packs: r10 kernel, program, lazy, emitted, boundary object, the omitted-park mutant and the prerequisite boundary modules; r5 cons, late-worker and materialized memory modules.
+- Retained archive hashes for r10, r9, r6, r3 and r5 match `evidence/index.json`. r9 retains the original FAIL for the idle-RUNNING defect found in the r8 audit.
+- Code review of the fixes: `program.mjs` now parks on the exceptional path after checkpoint restoration; `retire` admits before mutating; the new `collection-between-nonlocal-exit-and-retirement` case exercises the previously uncovered window; the `omitted-exception-park` control is rejected with the specific failed-collector snapshot. D5 protocol v1.1 text matches the fixture's generation-guarded wake pair, active-request routing and idle-boundary parking. Toolchain selection is pinned by explicit path and version check; the r10 record was produced with all selection variables unset.
+- Native Gate 0 reproduced independently from the pinned inputs with the unmodified runner: two clean builds from the pinned v1.13 bootstrap, 21,843/21,843 eligible tests passing in each, 75 upstream-disabled tests recorded, 164/164 FASLs raw-identical between the two builds, and all 164 FASL hashes identical to the retained r3 pack (same host, independent execution). Archived source unchanged.
+- The 2026-head diagnostic reproduced exactly: 21,850 pass, the same three post-release failures (bitvector reader, constant-index complex-single-float vector, `#.` multiple values), 75 upstream-disabled tests.
+- No tracked upstream source is modified by commit 85adc038; its changes are confined to `doc/WASM`, `tests/wasm`, `CLAUDE.md` and `AGENTS.md`.
+
+### Dispositions
+
+| Slice / record | Disposition |
+| --- | --- |
+| S0-LL13-c, S0-LL19-b (r10 prerequisites) | REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED, hand-built scope only. |
+| S0-LL20-a, S0-LL20-b, S0-LL20-c (r10) | REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED, hand-built scope only. The r8 defect is fixed and its regression is retained. |
+| PROBE-* (r5) | REVIEWED_NO_DEFECT_FOUND; probes never discharge S0 IDs. |
+| G0-U1-a (native r3) | REVIEWED_REPRODUCED_NOT_ACCEPTED: execution and same-host repeatability confirmed independently; second-Mac reproduction (S0-LL08-c) and the acceptance decision remain outstanding. |
+
+### Findings not blocking commit
+
+- The external evidence store is a set of absolute local paths under `/Users/buildsomething/Source/ccl-evidence` with no version control or backup. The index says so. The packs are hash-bound, so relocation is safe, but durability depends on that directory surviving.
+- Commit 85adc038 was authored by Codex under the operator's git identity and its message does not say so. This record and the commit that adds it state the provenance; rewriting the earlier message is the operator's choice.
+- Stage 0 remains BLOCKED on the census, layout, ABI, engine and control slices; nothing in this audit changes that.

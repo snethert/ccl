@@ -307,10 +307,16 @@
       "inventory_sha256": "35be990465b480d0d214741f9a648af0d170e57e0860002a7a8b0235d2b4269b",
       "execution_status": "PASS",
       "scope": "Hand-built S0-LL20-a/b/c integration, with freshly executed S0-LL13-c/S0-LL19-b prerequisites. Not full Stage 0 acceptance.",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "EXTERNALLY_REVIEWED_NOT_ACCEPTED",
       "results_member": "results.json",
       "currency": "CURRENT",
-      "note": "Current: 22 positive cases, 14 rejected controls, 1000 seeded schedules; two freshly executed boundary prerequisites. LLVM 21.1.8 selected without environment overrides."
+      "note": "Current: 22 positive cases, 14 rejected controls, 1000 seeded schedules; two freshly executed boundary prerequisites. LLVM 21.1.8 selected without environment overrides.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Direct re-execution and code review in the reviewer's own session, 2026-09-11",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
+        "record": "stage0/claude-review.md"
+      }
     },
     {
       "id": "INITIAL-PROBES-r5",
@@ -321,10 +327,16 @@
       "inventory_sha256": "35be990465b480d0d214741f9a648af0d170e57e0860002a7a8b0235d2b4269b",
       "execution_status": "PASS",
       "scope": "Initial hand-built probes only; Stage 0 remains incomplete.",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "EXTERNALLY_REVIEWED_NOT_ACCEPTED",
       "results_member": "results.json",
       "currency": "CURRENT",
-      "note": "Current inventory: all three probes pass. Full Stage 0 remains BLOCKED."
+      "note": "Current inventory: all three probes pass. Full Stage 0 remains BLOCKED.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Direct re-execution and code review in the reviewer's own session, 2026-09-11",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
+        "record": "stage0/claude-review.md"
+      }
     },
     {
       "id": "MACOS-NATIVE-GATE0-r3",
@@ -335,11 +347,18 @@
       "inventory_sha256": "35be990465b480d0d214741f9a648af0d170e57e0860002a7a8b0235d2b4269b",
       "execution_status": "PASS",
       "scope": "Unchanged U1 macOS x86-64 kernel, clean Lisp rebuild, upstream tests and same-host raw repeatability.",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "EXTERNALLY_REVIEWED_NOT_ACCEPTED",
       "results_member": "gate-results.json",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "note": "Two unchanged native builds: 21843/21843 eligible tests pass each; 75 upstream-disabled tests recorded; all 164 FASLs byte-identical."
+      "note": "Two unchanged native builds: 21843/21843 eligible tests pass each; 75 upstream-disabled tests recorded; all 164 FASLs byte-identical.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Independent re-execution of tests/wasm/native-baseline/run.py from the pinned inputs in the reviewer's own session, 2026-09-11",
+        "disposition": "REVIEWED_REPRODUCED_NOT_ACCEPTED",
+        "record": "stage0/claude-review.md",
+        "reproduction": "21843/21843 eligible tests in two clean builds; 164/164 FASL hashes identical to this pack"
+      }
     },
     {
       "id": "MACOS-NATIVE-GATE0-r1",

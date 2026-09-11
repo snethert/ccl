@@ -1,5 +1,13 @@
 # Change history
 
+## 2026-09-11 — second Claude audit of r10, probes r5 and native Gate 0
+
+Authorized by the user's request to verify the latest tests and mark the documents.
+
+- Claude Fable 5.1 re-executed all three Wasm runners and the native baseline runner from the pinned inputs in its own session. Wasm modules are byte-identical to r10 and r5; native results match r3 exactly, including all 164 FASL hashes. The 2026-head diagnostic reproduced its three failures.
+- Recorded reviewer dispositions in `stage0/claude-review.md`, `evidence/index.json` (external_review on r10, r5 and native r3) and `STATUS.md`. `stage0/inventory.json` is unchanged so every CURRENT envelope keeps its inventory binding. No slice is accepted; the combined gate remains BLOCKED.
+- Provenance: commit 85adc038 was authored by Codex under the operator's git identity. This entry and the commit adding it record that fact.
+
 ## 2026-09-11 — macOS reference, Claude audit fixes and evidence retention
 
 Authorized by the user's macOS platform decision and supplied Claude reviews.
