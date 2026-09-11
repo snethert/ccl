@@ -1,6 +1,6 @@
 # Integrated runtime execution and implementer review — 2026-09-11
 
-The requested hand-built moving-GC, concurrency and interruptible-I/O work is implemented and executed. Current run **INTEGRATED-RUNTIME-r10** passes S0-LL20-a/b/c and freshly reruns S0-LL13-c/S0-LL19-b. See the [runner and contracts](../../../tests/wasm/stage0/integrated-runtime/README.md), [machine summary](../evidence/integrated-runtime-summary.json) and [complete retained pack](../evidence/runs/2026-09-11-integrated-r10.zip).
+The requested hand-built moving-GC, concurrency and interruptible-I/O work is implemented and executed. The externally reviewed run **INTEGRATED-RUNTIME-r10** passes S0-LL20-a/b/c and freshly reruns S0-LL13-c/S0-LL19-b. See the [runner and contracts](../../../tests/wasm/stage0/integrated-runtime/README.md), [machine summary](../evidence/integrated-runtime-summary.json) and [retained-pack index](../evidence/index.json).
 
 | Slice | Deterministic positive cases | Rejection controls | Observed behavior |
 | --- | --- | --- | --- |
@@ -14,11 +14,11 @@ The runner additionally executes 1,000 seeds with a concurrently polling mutator
 
 From the repository root, use the runner command in its README. Output must be a new directory outside the checkout. Each pack contains `results.json`, source snapshots, the exact inventory and benchmark policy, toolchain/host identity, build commands, objects, final modules, link metadata, deterministic cases, raw seeded traces and quarantined mutants.
 
-For the retained run, extract the linked ZIP into an empty directory and run `doc/WASM/tools/gate.py` with the current inventory and the extracted `results.json`. The expected full-Stage-0 result is **BLOCKED**, exit 2, for remaining results and acceptance reviews. The [retained gate assessment](../evidence/integrated-runtime-gate-result.json) verifies the actual archived artifacts; documentation generation is not an acceptance substitute.
+For the current execution, extract DEBUG-FRAMES-r3 from the [index](../evidence/index.json) into an empty directory and run `doc/WASM/tools/gate.py` with the current inventory and the extracted `prerequisites/results.json`. Historical r10 must use its own archived inventory; its original binding is not current. The expected full-Stage-0 result is **BLOCKED**, exit 2, for remaining results and acceptance reviews. The [retained gate assessment](../evidence/integrated-runtime-gate-result.json) verifies the actual archived artifacts; documentation generation is not an acceptance substitute.
 
 ## Implementer review
 
-The points below are implementer verification. [Claude’s external r8 audit and its dispositions](claude-review.md) are recorded separately. The r10 fixes have not received a follow-up external review; all Stage 0 result records remain unaccepted.
+The points below are implementer verification. [Claude’s external r8 audit and its dispositions](claude-review.md) are recorded separately. Claude’s second audit re-executed r10 byte-identically and found no further defect; acceptance remains a separate project decision. The logical-frame proof freshly reruns the unchanged integrated prerequisites against the updated inventory; its new code has not received that audit.
 
 - The collector copies objects and scans actual published root chains, including live C stack records, emitted binding frames and complete result regions. Tests read the relocated graph, preserve cycles/aliases, inspect rewritten roots and require old-space poison. Separate C and Wasm stale-reference mutants fail.
 - GC ownership is acquired by CAS. A loser cannot change parity. Former owners and losing requesters retry admission when a new collection races with wake-up. Registration precedes child execution; final membership rescan includes a handoff root after its parent relinquishes it. An unpublished-child admission is rejected.

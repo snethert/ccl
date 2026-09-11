@@ -296,11 +296,10 @@
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
       "currency": "ORIGINAL_FAILURE",
-      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged."
+      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged."
     },
     {
       "id": "INTEGRATED-RUNTIME-r10",
-      "path": "evidence/runs/2026-09-11-integrated-r10.zip",
       "sha256": "699ce0c484ea33abcbe903d33bcf91883c6fad25dfdf4e525a31adaac4117042",
       "timestamp": "2026-09-11T20:02:55.068Z",
       "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
@@ -309,18 +308,19 @@
       "scope": "Hand-built S0-LL20-a/b/c integration, with freshly executed S0-LL13-c/S0-LL19-b prerequisites. Not full Stage 0 acceptance.",
       "review_disposition": "EXTERNALLY_REVIEWED_NOT_ACCEPTED",
       "results_member": "results.json",
-      "currency": "CURRENT",
-      "note": "Current: 22 positive cases, 14 rejected controls, 1000 seeded schedules; two freshly executed boundary prerequisites. LLVM 21.1.8 selected without environment overrides.",
+      "currency": "SUPERSEDED",
+      "note": "Current: 22 positive cases, 14 rejected controls, 1000 seeded schedules; two freshly executed boundary prerequisites. LLVM 21.1.8 selected without environment overrides. Original inventory binding retained; superseded by the logical-frame inventory update. External review remains scoped to these unchanged original bytes.",
       "external_review": {
         "reviewer": "Claude Fable 5.1",
         "provenance": "Direct re-execution and code review in the reviewer's own session, 2026-09-11",
         "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
         "record": "stage0/claude-review.md"
-      }
+      },
+      "locator": "/Users/buildsomething/Source/ccl-evidence/superseded/2026-09-11-integrated-r10.zip",
+      "availability": "EXTERNAL_LOCAL_STORE"
     },
     {
       "id": "INITIAL-PROBES-r5",
-      "path": "evidence/runs/2026-09-11-probes-r5.zip",
       "sha256": "fceecf0098d6044543b2c96a92e967c154c72fffd0cdc520bbe4fade651aea74",
       "timestamp": "2026-09-11T20:06:49.921Z",
       "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
@@ -329,14 +329,16 @@
       "scope": "Initial hand-built probes only; Stage 0 remains incomplete.",
       "review_disposition": "EXTERNALLY_REVIEWED_NOT_ACCEPTED",
       "results_member": "results.json",
-      "currency": "CURRENT",
-      "note": "Current inventory: all three probes pass. Full Stage 0 remains BLOCKED.",
+      "currency": "SUPERSEDED",
+      "note": "Current inventory: all three probes pass. Full Stage 0 remains BLOCKED. Original inventory binding retained; superseded by the logical-frame inventory update. External review remains scoped to these unchanged original bytes.",
       "external_review": {
         "reviewer": "Claude Fable 5.1",
         "provenance": "Direct re-execution and code review in the reviewer's own session, 2026-09-11",
         "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
         "record": "stage0/claude-review.md"
-      }
+      },
+      "locator": "/Users/buildsomething/Source/ccl-evidence/superseded/2026-09-11-probes-r5.zip",
+      "availability": "EXTERNAL_LOCAL_STORE"
     },
     {
       "id": "MACOS-NATIVE-GATE0-r3",
@@ -349,9 +351,9 @@
       "scope": "Unchanged U1 macOS x86-64 kernel, clean Lisp rebuild, upstream tests and same-host raw repeatability.",
       "review_disposition": "EXTERNALLY_REVIEWED_NOT_ACCEPTED",
       "results_member": "gate-results.json",
-      "currency": "CURRENT",
+      "currency": "SUPERSEDED",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "note": "Two unchanged native builds: 21843/21843 eligible tests pass each; 75 upstream-disabled tests recorded; all 164 FASLs byte-identical.",
+      "note": "Two unchanged native builds: 21843/21843 eligible tests pass each; 75 upstream-disabled tests recorded; all 164 FASLs byte-identical. Original inventory binding retained; superseded by the logical-frame inventory update. External review remains scoped to these unchanged original bytes.",
       "external_review": {
         "reviewer": "Claude Fable 5.1",
         "provenance": "Independent re-execution of tests/wasm/native-baseline/run.py from the pinned inputs in the reviewer's own session, 2026-09-11",
@@ -397,6 +399,79 @@
       "currency": "CURRENT_DIAGNOSTIC",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Fresh 2026-head corpus on unchanged U1 with upstream default invocation: 21850 pass, three post-v1.13 regressions fail; 75 upstream-disabled tests disclosed. Not release-corpus Gate 0 qualification."
+    },
+    {
+      "id": "DEBUG-FRAMES-r1",
+      "sha256": "ad076065ddafba08c66fc0db3e4f54fe2ac16b05aadb78aec085dd1eb0386074",
+      "timestamp": "2026-09-11T20:58:01.858Z",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "bb58190a12a6aca48b0ba45411323226e96533a283bcf71d945a0961d6c4c110",
+      "execution_status": "PASS",
+      "scope": "Hand-built logical debugger-frame slice S0-LL23-b, with freshly executed C boundary and integrated-runtime prerequisites. Not a CCL debugger, D3 selection or full Stage 0 acceptance.",
+      "review_disposition": "NOT_REVIEWED",
+      "results_member": "results.json",
+      "currency": "SUPERSEDED",
+      "note": "Ten frame cases and eleven controls; superseded after discovering insufficient reply capacity for eight frames.",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/superseded/2026-09-11-debug-frames-r1.zip",
+      "availability": "EXTERNAL_LOCAL_STORE"
+    },
+    {
+      "id": "DEBUG-FRAMES-r2",
+      "sha256": "2a06fd09d0f0b6b6a364bbfe4c4755605531bf180fca20bc288ab141872a0ed5",
+      "timestamp": "2026-09-11T21:00:01.654Z",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "bb58190a12a6aca48b0ba45411323226e96533a283bcf71d945a0961d6c4c110",
+      "execution_status": "PASS",
+      "scope": "Hand-built logical debugger-frame slice S0-LL23-b, with freshly executed C boundary and integrated-runtime prerequisites. Not a CCL debugger, D3 selection or full Stage 0 acceptance.",
+      "review_disposition": "NOT_REVIEWED",
+      "results_member": "results.json",
+      "currency": "SUPERSEDED",
+      "note": "Eleven frame cases and eleven controls; capacity driver then received its own exact source-site mappings.",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/superseded/2026-09-11-debug-frames-r2.zip",
+      "availability": "EXTERNAL_LOCAL_STORE"
+    },
+    {
+      "id": "DEBUG-FRAMES-r3",
+      "sha256": "c2a196068b77ca654d62b20b1aa5902a52668dcecf8207bd97282d89fc414f1a",
+      "timestamp": "2026-09-11T21:01:43.523Z",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "bb58190a12a6aca48b0ba45411323226e96533a283bcf71d945a0961d6c4c110",
+      "execution_status": "PASS",
+      "scope": "Hand-built logical debugger-frame slice S0-LL23-b, with freshly executed C boundary and integrated-runtime prerequisites. Not a CCL debugger, D3 selection or full Stage 0 acceptance.",
+      "review_disposition": "NOT_REVIEWED",
+      "results_member": "results.json",
+      "currency": "CURRENT",
+      "note": "Eleven frame cases and eleven controls, fresh integrated 22/14/1000 prerequisites and boundary 12/9 prerequisites. New frame work has no external review.",
+      "path": "evidence/runs/2026-09-11-debug-frames-r3.zip"
+    },
+    {
+      "id": "INITIAL-PROBES-r6",
+      "path": "evidence/runs/2026-09-11-probes-r6.zip",
+      "sha256": "c9243dc25e1c9ef834de4122ad56a2b6d383e5a0a75d3a8d8547761ad83d5877",
+      "timestamp": "2026-09-11T20:58:36.797Z",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "bb58190a12a6aca48b0ba45411323226e96533a283bcf71d945a0961d6c4c110",
+      "execution_status": "PASS",
+      "scope": "Initial hand-built probes only; Stage 0 remains incomplete.",
+      "review_disposition": "NOT_REVIEWED",
+      "results_member": "results.json",
+      "currency": "CURRENT",
+      "note": "Three unchanged probes freshly executed against the inventory identifying S0-LL23-b. Historical r5 retains its own Claude review."
+    },
+    {
+      "id": "MACOS-NATIVE-GATE0-r3-FRAME-INVENTORY",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-macos-gate0-r3-frame-inventory/gate-results.json",
+      "sha256": "de63b31710e7fa5d103d328f26c7d8f6134e8853b27f2ba718d7033a05587ba6",
+      "timestamp": "2026-09-11T20:12:03Z",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "bb58190a12a6aca48b0ba45411323226e96533a283bcf71d945a0961d6c4c110",
+      "execution_status": "PASS",
+      "scope": "Inventory-only rebind of the unchanged, externally reviewed native r3 execution; no fresh native run.",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "note": "Original r3 report/artifact bytes verified by record.py. G0-U1-a contract and runner unchanged. Claude reviewed the original execution, not this new envelope.",
+      "original_execution_record": "MACOS-NATIVE-GATE0-r3"
     }
   ],
   "auxiliary_records": [
@@ -461,10 +536,52 @@
       "scope": "Pinned source, bootstrap and test archives retained alongside pins.json."
     },
     {
-      "id": "CURRENT-STAGE0-COMBINED",
+      "id": "PRE-DEBUG-FRAMES-STAGE0-COMBINED",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-stage0-current/results.json",
       "sha256": "41272730425d10cfa50ba6fb3ea1280cb6faa5c309c4a5b2f43d73f4f3c849a8",
       "scope": "Verified native Gate 0 and five Wasm slices; full gate BLOCKED for remaining results/reviews."
+    },
+    {
+      "id": "PRE-DEBUG-FRAMES-INTEGRATED-RUNTIME-SUMMARY",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/superseded/pre-debug-frames-integrated-runtime-summary.json",
+      "sha256": "d289302f1185d729ed54c4de06ba8c9ea5d3f2531dec34f56a5d562d00d1ea2d",
+      "scope": "Snapshot before the logical-frame proof and inventory update; original review provenance retained."
+    },
+    {
+      "id": "PRE-DEBUG-FRAMES-NATIVE-BASELINE-SUMMARY",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/superseded/pre-debug-frames-native-baseline-summary.json",
+      "sha256": "a6251e95f41734d8e00a0e1298f8b8afbcae1cb32b53e0a192cde1671039f973",
+      "scope": "Snapshot before the logical-frame proof and inventory update; original review provenance retained."
+    },
+    {
+      "id": "PRE-DEBUG-FRAMES-CURRENT-STAGE0-GATE-RESULT",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/superseded/pre-debug-frames-current-stage0-gate-result.json",
+      "sha256": "96d42ef5237293faf9952dd43cb92eb1e4b484cd674c2a004f1072d63015688d",
+      "scope": "Snapshot before the logical-frame proof and inventory update; original review provenance retained."
+    },
+    {
+      "id": "PRE-DEBUG-FRAMES-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/superseded/pre-debug-frames-verification.json",
+      "sha256": "003b553c4a7e42f21ba681f22389a6ce5dd361a7b87fa9288673308102be5230",
+      "scope": "Snapshot before the logical-frame proof and inventory update; original review provenance retained."
+    },
+    {
+      "id": "CURRENT-STAGE0-COMBINED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-stage0-debug-frames/results.json",
+      "sha256": "b566e243051df033cafb0c6031be5bd2691942da0141fdd6973955d7f245f86b",
+      "scope": "Unchanged native r3 execution re-bound to the current inventory and six freshly executed hand-built Wasm slices; no acceptance."
+    },
+    {
+      "id": "PRE-DEBUG-FRAMES-INTEGRATED-RUNTIME-GATE-RESULT",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/superseded/pre-debug-frames-integrated-runtime-gate-result.json",
+      "sha256": "4334f5db9f2720b50f36c0a5d198ed6efb862365050be17b7e08a5cf612609f8",
+      "scope": "Original r10 gate assessment with its then-current inventory; superseded."
+    },
+    {
+      "id": "DEBUG-FRAMES-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-debug-frames-verification/manifest.json",
+      "sha256": "5e08506760b3ed921ff906259e3ffdc6639def67045603e35294268c17beec7e",
+      "scope": "Same-author verification scripts and fresh build comparison; not independent acceptance."
     }
   ]
 }

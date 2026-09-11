@@ -2,13 +2,14 @@
   "positive_cases": 22,
   "rejected_controls": 14,
   "randomized_schedules": 1000,
-  "safepoint_latency_p99_ms": 0.04062199592590332,
-  "safepoint_latency_max_ms": 0.6262039989233017,
-  "rendezvous_max_ms": 4.481299996376038,
-  "run": "INTEGRATED-RUNTIME-r10",
-  "archive": "runs/2026-09-11-integrated-r10.zip",
-  "archive_sha256": "699ce0c484ea33abcbe903d33bcf91883c6fad25dfdf4e525a31adaac4117042",
-  "results_member": "results.json",
+  "safepoint_latency_p99_ms": 0.05295899510383606,
+  "safepoint_latency_max_ms": 1.014162003993988,
+  "rendezvous_max_ms": 1.0849090069532394,
+  "run": "DEBUG-FRAMES-r3 prerequisites",
+  "archive": "runs/2026-09-11-debug-frames-r3.zip",
+  "archive_sha256": "c2a196068b77ca654d62b20b1aa5902a52668dcecf8207bd97282d89fc414f1a",
+  "results_member": "prerequisites/results.json",
+  "inventory_sha256": "bb58190a12a6aca48b0ba45411323226e96533a283bcf71d945a0961d6c4c110",
   "execution_results": [
     {
       "id": "S0-LL13-c",
@@ -64,5 +65,5 @@
     "logical_cpus": 16,
     "node_flags": []
   },
-  "scope": "Hand-built S0-LL20-a/b/c integration, with freshly executed S0-LL13-c/S0-LL19-b prerequisites. Not full Stage 0 acceptance."
+  "scope": "Fresh execution of unchanged reviewed integrated source; original Claude-reviewed r10 retained separately."
 }

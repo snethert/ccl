@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-09-11T20:16:39.000581+00:00",
-  "scope": "Current documentation, tooling and retained-evidence verification; not external acceptance.",
+  "timestamp": "2026-09-11T21:07:56.501716+00:00",
+  "scope": "Current documentation, tooling and retained-evidence verification by Codex; not external acceptance.",
   "tool_sha256": {
     "check-census.py": "54561cb85ed6f7d7ace8b81d0605808584d8b1b4881e77f0791d3810e873fa6c",
     "check-evidence.py": "2e7deeeb91e90d9e5b3d4a88ff7dff53ade19a0277593d2fbae30d8b3346db49",
@@ -38,7 +38,7 @@
         "--include-external"
       ],
       "exit_code": 0,
-      "stdout": "PASS: 23 retained evidence identities; CURRENT inventory bindings match.\n",
+      "stdout": "PASS: 28 retained evidence identities; CURRENT inventory bindings match.\n",
       "stderr": ""
     },
     {
@@ -50,13 +50,6 @@
       "exit_code": 0,
       "stdout": "",
       "stderr": ""
-    },
-    {
-      "document": "Clozure_CL_WebAssembly_Port_Outline_v0_14.docx",
-      "sha256": "ab98df9828138d5fa0830a4f165e288a5852713bbb0155777fc0b7eb15eac449",
-      "textutil_exit_code": 0,
-      "words": 6765,
-      "xml": "VALID"
     },
     {
       "document": "CCL_WebAssembly_Acceptance_Policy_and_Regression_Register_v1_4.docx",
@@ -73,12 +66,25 @@
       "xml": "VALID"
     },
     {
-      "check": "retained r5 probe artifacts and current-inventory gate",
-      "result": "PASS; full gate BLOCKED"
+      "document": "Clozure_CL_WebAssembly_Port_Outline_v0_14.docx",
+      "sha256": "ab98df9828138d5fa0830a4f165e288a5852713bbb0155777fc0b7eb15eac449",
+      "textutil_exit_code": 0,
+      "words": 6765,
+      "xml": "VALID"
+    },
+    {
+      "check": "all auxiliary evidence identities",
+      "result": "PASS",
+      "count": 18
+    },
+    {
+      "check": "retained frame artifact/source/packet verification and native inventory-only rebind",
+      "result": "PASS",
+      "record": "debug-frames-verification.json"
     },
     {
       "check": "r3/r6/r9 original failure packs",
-      "result": "PASS: original FAIL records and current index hashes verified"
+      "result": "PASS: original FAIL records retained and full hashes verified"
     }
   ],
   "upstream_source_diff": "",

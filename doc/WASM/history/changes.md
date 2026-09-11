@@ -1,5 +1,13 @@
 # Change history
 
+## 2026-09-11 — logical debugger-frame prerequisite
+
+Authorized by the user's “What is next? Proceed.” Codex added the isolated S0-LL23-b fixture before D3 ABI selection. It links the reviewed runtime objects unchanged and publishes explicit frames, independent C readers, lexical/root maps and build-bound source locations. Cases exercise moving roots, complete results, lower-policy unavailable values, nested debugging, EH restoration, escaped captured cells and generation/version lifetimes. Dedicated controls reject stale slots, invalid metadata, fabricated values, collapsed lexical identities, broken restoration and bounds violations.
+
+The initial formal r1 run passed ten cases and eleven controls. A subsequent capacity review found that its 2,048-byte inspection packet could not represent all eight advertised frames with six values (2,056 bytes). The next revision enlarges the packet to 4,096 bytes and exercises the full eight-frame capacity across moving GC. The narrower original r1 remains retained, without relabeling it as evidence of maximum-capacity coverage.
+
+The new runner changes the inventory identity. Fresh probes and runtime prerequisites use that identity; native r3 is re-bound only after verifying its original artifacts and unchanged native contract. Original execution timestamps and Claude's prior review scope are retained. The new proof is NOT_REVIEWED and NOT_ACCEPTED; no shared compiler or upstream kernel source is modified. C/C4/B correctness and measurements, qualified census work and remaining Stage 0 obligations are still open.
+
 ## 2026-09-11 — second Claude audit of r10, probes r5 and native Gate 0
 
 Authorized by the user's request to verify the latest tests and mark the documents.

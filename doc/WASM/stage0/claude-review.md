@@ -15,7 +15,7 @@ Claude reported fresh fixture execution and byte-identical rebuilt binaries, mat
 | Heading, sentence, typo and stale DOCX verification | Fixed in the coordinated outline 0.14 / acceptance 1.4 / decisions 1.5 package; reading copies and verification regenerated. |
 | Evidence weight and missing standing rules | Superseded packs moved byte-for-byte to the external local store with locators/hashes. Current packs and original integrated failures r3/r6/r9 stay in the repository. Root AGENTS.md and CLAUDE.md record the user-supplied scope and verification rules. |
 
-The r10 runtime result records remain **NOT_REVIEWED** because the changes following Claude's r8 audit have not received a new external review. Stage 0 remains incomplete. No shared compiler or upstream `lisp-kernel` source was edited. Same-author verification of these fixes supports a reviewable commit, not acceptance.
+At this first-audit checkpoint, the r10 runtime result records remained **NOT_REVIEWED** because the changes following Claude's r8 audit had not received a new external review. The second audit below supersedes that review status without rewriting the original result envelopes. Stage 0 remains incomplete. No shared compiler or upstream `lisp-kernel` source was edited. Same-author verification of these fixes supports a reviewable commit, not acceptance.
 
 ## Second Claude audit — r10, probes r5 and native Gate 0 — 11 September 2026
 
@@ -48,3 +48,7 @@ Note on provenance: `history/claude-first-review.txt` retains the second of Clau
 - The external evidence store is a set of absolute local paths under `/Users/buildsomething/Source/ccl-evidence` with no version control or backup. The index says so. The packs are hash-bound, so relocation is safe, but durability depends on that directory surviving.
 - Commit 85adc038 was authored by Codex under the operator's git identity and its message does not say so. This record and the commit that adds it state the provenance; rewriting the earlier message is the operator's choice.
 - Stage 0 remains BLOCKED on the census, layout, ABI, engine and control slices; nothing in this audit changes that.
+
+## Subsequent Codex frame fixture — review boundary
+
+The S0-LL23-b frame proof was authored after this audit. Its fresh integrated prerequisites use the same reviewed runtime source, but this audit does not review the new frame reader, emitted frames, maps or controls. r10, probes r5 and native r3 retain their original bytes and review records in the evidence index. Adding the frame runner changes the global inventory hash: fresh Wasm runs bind the new inventory, while the unchanged native r3 execution is explicitly re-bound by verifying its original artifacts. No new native execution or external frame review is claimed.

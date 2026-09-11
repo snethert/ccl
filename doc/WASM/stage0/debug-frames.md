@@ -1,0 +1,23 @@
+# Logical debugger-frame execution
+
+Codex implemented and executed the isolated S0-LL23-b prerequisite before D3 calling-convention selection. Current run **DEBUG-FRAMES-r3** passes eleven positive cases and rejects eleven deliberate controls. The [retained pack](../evidence/runs/2026-09-11-debug-frames-r3.zip), [machine summary](../evidence/debug-frames-summary.json) and [runner documentation](../../../tests/wasm/stage0/debug-frames/README.md) identify the exact scope and reproduction command. This work is **NOT_REVIEWED** and **NOT_ACCEPTED**.
+
+The fixture links the previously reviewed runtime and C-boundary objects with a separate frame reader. The reviewed collector, request protocol, Worker actor and boundary sources are unchanged. Every formal run freshly executes their prerequisites: twelve boundary cases and nine controls, followed by twenty-two integrated cases, fourteen controls and 1,000 seeded schedules. Claude's prior audit remains evidence about the original r10 runtime, r5 probes and native r3; it is not an audit of this addition.
+
+| Observation | Executed check |
+| --- | --- |
+| Frame publication and roots | Independent WAT writer, C structure/static assertions, and literal-offset host oracle; all eight advertised frame slots exercised across real moving collection. |
+| Debugger values | Unequal arguments, distinct identities for shadowed `x` bindings, captured cons cell retained after exit, complete zero/six result values, explicit unavailable reasons at policy 1. |
+| Source and code identity | Full build ID in each reply; lexical metadata and exact source-site lines in hashed emitted WAT; old/new versioned entries retain their own descriptors when the old entry is called again. |
+| Inspection ownership | Self-inspection by the admitted Worker at declared sites; host consumes atomically published, immutable packets in nonmoving storage. No host debugger heap walk. |
+| Suspension and transfer | Real unfinished C requests, nested debugger requests, normal/EH restoration, cancellation acknowledgement, and collection during the exceptional idle handoff. |
+| Handles and bounds | A live handle succeeds; popped/reused handles and wrong thread lifetime fail. Frame-generation exhaustion and explicit-stack overflow trap. |
+| Rejection controls | Stale debug root, reused generation, rejection of live handle, wrong code version/site, fabricated unavailable value, collapsed lexical identity, omitted restoration/root publication, generation exhaustion and stack overflow. Only the named assertion or trap counts. |
+
+The initial r1 passed ten cases and eleven controls. Capacity review then found a numerical defect: eight frames plus six values require a 2,056-byte reply, exceeding the initial 2,048-byte buffer. r2 enlarged the buffer to 4,096 bytes and added the full-capacity case. r3 gives that capacity driver dedicated source sites as well. Original r1/r2 packs remain unchanged in the external local store, with hashes in the [index](../evidence/index.json); their narrower coverage is explicit. Each Worker now reserves eight 160-byte frames and twenty-four one-use 4,096-byte reply slots. These are fixed fixture allocations, not measured D3 costs. The fixture supports at most eight frames and six values per inspection, with 24 replies per Worker; it does not handle arbitrarily large cases. A production design needs bounded chunks for replies, growable frame storage and explicit resource-exhaustion behavior, with separate scale tests.
+
+The old/new entries and captured cell are hand-built surrogates. This proof does not implement CCL's compiler, debugger, closure conversion, symbol redefinition, arbitrary target inspection, tail-frame elimination, complete restart semantics or saved-image reconstruction. Generated-frame validation and ABI candidate publication costs remain required. No shared compiler or upstream kernel source was edited.
+
+Adding the runner changed the global inventory hash. The current pack contains fresh runtime prerequisites, and probes r6 are fresh. Native r3 was re-bound by verifying the original completed report and every original artifact against the unchanged Gate 0 contract; its execution timestamp is preserved. This is an inventory update, not another native run. The original reviewed archives retain their old inventory identities and audit provenance.
+
+Next: obtain independent review of this frame fixture, and implement C/C4/B correctness through one parameterized corpus with the same frame, root, multiple-value and cleanup obligations. Measurements and H(G) comparisons follow that correctness work; D3 and full Stage 0 remain open.

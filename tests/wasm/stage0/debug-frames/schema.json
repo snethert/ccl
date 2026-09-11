@@ -1,0 +1,726 @@
+{
+  "version": 1,
+  "scope": "S0-LL23-b hand-built logical frames; existing reviewed D5 runtime reused unchanged",
+  "frame_bytes": 160,
+  "header_bytes": 64,
+  "alignment": 8,
+  "frame_capacity": 8,
+  "reply_bytes": 4096,
+  "reply_capacity": 24,
+  "reply_magic": 1145194289,
+  "tcr": {
+    "frame_head": 224,
+    "frame_serial": 228,
+    "frame_cursor": 232,
+    "frame_base": 236,
+    "frame_limit": 240,
+    "reply_cursor": 244,
+    "reply_limit": 248,
+    "debug_policy": 252
+  },
+  "header": {
+    "layout_version": 0,
+    "frame_bytes": 4,
+    "previous_frame": 8,
+    "frame_generation": 12,
+    "logical_code_id": 16,
+    "code_version": 20,
+    "source_site_id": 24,
+    "policy_flags": 28,
+    "binding_checkpoint": 32,
+    "handler_checkpoint": 36,
+    "root_descriptor": 40,
+    "self_slot": 44,
+    "argument_count": 48,
+    "value_count": 52,
+    "mv_descriptor": 56,
+    "reserved": 60
+  },
+  "payload": {
+    "root_previous": 64,
+    "root_count": 68,
+    "self": 72,
+    "argument_a": 76,
+    "argument_b": 80,
+    "shadow_x": 84,
+    "captured_cell": 88,
+    "pending": 92,
+    "raw_snapshot": 96,
+    "unavailable_poison": 100,
+    "saved_vsp": 104,
+    "saved_tsp": 108,
+    "saved_csp": 112,
+    "saved_binding_depth": 116,
+    "saved_handler_cookie": 120,
+    "saved_binding_cookie": 124,
+    "saved_mv_base": 128,
+    "saved_mv_owner_top": 132,
+    "saved_active_request": 136
+  },
+  "slot_order": [
+    "self",
+    "a",
+    "b",
+    "x",
+    "cell",
+    "pending",
+    "raw-snapshot",
+    "later"
+  ],
+  "availability": {
+    "available": 0,
+    "optimized-out": 1,
+    "out-of-scope": 2,
+    "unavailable-at-site": 3
+  },
+  "storage": {
+    "tagged": 1,
+    "u32": 2,
+    "none": 0
+  },
+  "codes": [
+    {
+      "id": 41,
+      "version": 1,
+      "name": "outer",
+      "sites": {
+        "4101": "call inner",
+        "4102": "inner returned",
+        "4141": "capacity recursive call",
+        "4142": "capacity host suspension",
+        "4143": "capacity resumed inspection"
+      },
+      "lexical_base": 41000,
+      "entry_export": "outer",
+      "bindings": [
+        {
+          "lexical_id": 41001,
+          "display_name": "self",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "outer:v1:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 72,
+          "width_bytes": 4,
+          "live_sites": [
+            4101,
+            4102,
+            4141,
+            4142,
+            4143
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 41002,
+          "display_name": "a",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "outer:v1:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 76,
+          "width_bytes": 4,
+          "live_sites": [
+            4101,
+            4102,
+            4141,
+            4142,
+            4143
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 41003,
+          "display_name": "b",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "outer:v1:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 80,
+          "width_bytes": 4,
+          "live_sites": [
+            4101,
+            4102,
+            4141,
+            4142,
+            4143
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 41004,
+          "display_name": "x",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "outer:v1:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 84,
+          "width_bytes": 4,
+          "live_sites": [
+            4101,
+            4102,
+            4141,
+            4142,
+            4143
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "optimized-out"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 41005,
+          "display_name": "cell",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "outer:v1:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 88,
+          "width_bytes": 4,
+          "live_sites": [
+            4101,
+            4102,
+            4141,
+            4142,
+            4143
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 41006,
+          "display_name": "pending",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "outer:v1:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 92,
+          "width_bytes": 4,
+          "live_sites": [
+            4101,
+            4102,
+            4141,
+            4142,
+            4143
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "unavailable-at-site"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 41007,
+          "display_name": "raw-snapshot",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "outer:v1:lexical-scope",
+          "storage_kind": "u32",
+          "frame_byte_offset": 96,
+          "width_bytes": 4,
+          "live_sites": [
+            4101,
+            4102,
+            4141,
+            4142,
+            4143
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": false
+        },
+        {
+          "lexical_id": 41008,
+          "display_name": "later",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "outer:v1:lexical-scope",
+          "storage_kind": "none",
+          "frame_byte_offset": null,
+          "width_bytes": 0,
+          "live_sites": [],
+          "availability_by_policy": {
+            "3": "out-of-scope",
+            "1": "out-of-scope"
+          },
+          "gc_root": false
+        }
+      ],
+      "capacity_entry_export": "deep"
+    },
+    {
+      "id": 41,
+      "version": 2,
+      "name": "outer",
+      "sites": {
+        "4111": "call inner, new definition",
+        "4112": "inner returned, new definition"
+      },
+      "lexical_base": 141000,
+      "entry_export": "new_outer",
+      "bindings": [
+        {
+          "lexical_id": 141001,
+          "display_name": "self",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "outer:v2:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 72,
+          "width_bytes": 4,
+          "live_sites": [
+            4111,
+            4112
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 141002,
+          "display_name": "a",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "outer:v2:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 76,
+          "width_bytes": 4,
+          "live_sites": [
+            4111,
+            4112
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 141003,
+          "display_name": "b",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "outer:v2:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 80,
+          "width_bytes": 4,
+          "live_sites": [
+            4111,
+            4112
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 141004,
+          "display_name": "x",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "outer:v2:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 84,
+          "width_bytes": 4,
+          "live_sites": [
+            4111,
+            4112
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "optimized-out"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 141005,
+          "display_name": "cell",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "outer:v2:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 88,
+          "width_bytes": 4,
+          "live_sites": [
+            4111,
+            4112
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 141006,
+          "display_name": "pending",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "outer:v2:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 92,
+          "width_bytes": 4,
+          "live_sites": [
+            4111,
+            4112
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "unavailable-at-site"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 141007,
+          "display_name": "raw-snapshot",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "outer:v2:lexical-scope",
+          "storage_kind": "u32",
+          "frame_byte_offset": 96,
+          "width_bytes": 4,
+          "live_sites": [
+            4111,
+            4112
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": false
+        },
+        {
+          "lexical_id": 141008,
+          "display_name": "later",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "outer:v2:lexical-scope",
+          "storage_kind": "none",
+          "frame_byte_offset": null,
+          "width_bytes": 0,
+          "live_sites": [],
+          "availability_by_policy": {
+            "3": "out-of-scope",
+            "1": "out-of-scope"
+          },
+          "gc_root": false
+        }
+      ]
+    },
+    {
+      "id": 42,
+      "version": 1,
+      "name": "inner",
+      "sites": {
+        "4201": "unfinished host wait",
+        "4202": "resumed host wait"
+      },
+      "lexical_base": 42000,
+      "entry_export": null,
+      "bindings": [
+        {
+          "lexical_id": 42001,
+          "display_name": "self",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "inner:v1:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 72,
+          "width_bytes": 4,
+          "live_sites": [
+            4201,
+            4202
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 42002,
+          "display_name": "a",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "inner:v1:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 76,
+          "width_bytes": 4,
+          "live_sites": [
+            4201,
+            4202
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 42003,
+          "display_name": "b",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "inner:v1:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 80,
+          "width_bytes": 4,
+          "live_sites": [
+            4201,
+            4202
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 42004,
+          "display_name": "x",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "inner:v1:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 84,
+          "width_bytes": 4,
+          "live_sites": [
+            4201,
+            4202
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "optimized-out"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 42005,
+          "display_name": "cell",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "inner:v1:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 88,
+          "width_bytes": 4,
+          "live_sites": [
+            4201,
+            4202
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 42006,
+          "display_name": "pending",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "inner:v1:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 92,
+          "width_bytes": 4,
+          "live_sites": [
+            4201,
+            4202
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "unavailable-at-site"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 42007,
+          "display_name": "raw-snapshot",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "inner:v1:lexical-scope",
+          "storage_kind": "u32",
+          "frame_byte_offset": 96,
+          "width_bytes": 4,
+          "live_sites": [
+            4201,
+            4202
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": false
+        },
+        {
+          "lexical_id": 42008,
+          "display_name": "later",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "inner:v1:lexical-scope",
+          "storage_kind": "none",
+          "frame_byte_offset": null,
+          "width_bytes": 0,
+          "live_sites": [],
+          "availability_by_policy": {
+            "3": "out-of-scope",
+            "1": "out-of-scope"
+          },
+          "gc_root": false
+        }
+      ]
+    },
+    {
+      "id": 43,
+      "version": 1,
+      "name": "debugger",
+      "sites": {
+        "4301": "nested debugger wait",
+        "4302": "nested debugger resumed"
+      },
+      "lexical_base": 43000,
+      "entry_export": "debugger",
+      "bindings": [
+        {
+          "lexical_id": 43001,
+          "display_name": "self",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "debugger:v1:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 72,
+          "width_bytes": 4,
+          "live_sites": [
+            4301,
+            4302
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 43002,
+          "display_name": "a",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "debugger:v1:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 76,
+          "width_bytes": 4,
+          "live_sites": [
+            4301,
+            4302
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 43003,
+          "display_name": "b",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "debugger:v1:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 80,
+          "width_bytes": 4,
+          "live_sites": [
+            4301,
+            4302
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 43004,
+          "display_name": "x",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "debugger:v1:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 84,
+          "width_bytes": 4,
+          "live_sites": [
+            4301,
+            4302
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "optimized-out"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 43005,
+          "display_name": "cell",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "debugger:v1:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 88,
+          "width_bytes": 4,
+          "live_sites": [
+            4301,
+            4302
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 43006,
+          "display_name": "pending",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "debugger:v1:lexical-scope",
+          "storage_kind": "tagged",
+          "frame_byte_offset": 92,
+          "width_bytes": 4,
+          "live_sites": [
+            4301,
+            4302
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "unavailable-at-site"
+          },
+          "gc_root": true
+        },
+        {
+          "lexical_id": 43007,
+          "display_name": "raw-snapshot",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "debugger:v1:lexical-scope",
+          "storage_kind": "u32",
+          "frame_byte_offset": 96,
+          "width_bytes": 4,
+          "live_sites": [
+            4301,
+            4302
+          ],
+          "availability_by_policy": {
+            "3": "available",
+            "1": "available"
+          },
+          "gc_root": false
+        },
+        {
+          "lexical_id": 43008,
+          "display_name": "later",
+          "package": "FRAME-FIXTURE",
+          "source_scope": "debugger:v1:lexical-scope",
+          "storage_kind": "none",
+          "frame_byte_offset": null,
+          "width_bytes": 0,
+          "live_sites": [],
+          "availability_by_policy": {
+            "3": "out-of-scope",
+            "1": "out-of-scope"
+          },
+          "gc_root": false
+        }
+      ]
+    }
+  ],
+  "inspection": "Own-thread admitted inspection at declared call/suspension sites. Replies are immutable for the lifetime of the fixture run, bounded to 16 packets per Worker. Host only consumes copies from declared stable reply regions. Unavailable values contain no fabricated Lisp value.",
+  "handle": "Memory-instance/build identity plus owning TCR/lifetime and frame address/generation; only the owning admitted Worker resolves a handle against its current chain."
+}

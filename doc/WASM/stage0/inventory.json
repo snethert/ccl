@@ -810,8 +810,8 @@
           "description": "Prove frame order, lexical identities, source-site maps, unavailable-value policy, moved roots and frame restoration across suspension/nested debugging/EH under contracts/debug-frames.md. Reject stale-slot, generation and metadata mutants."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/stage0/debug-frames/run.mjs",
       "review_disposition": "NOT_REVIEWED"
     },
     {

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-09-11T21:06:55.996554+00:00",
+  "scope": "Same-author verification of retained frame evidence, not independent review or acceptance.",
+  "archive_sha256": "c2a196068b77ca654d62b20b1aa5902a52668dcecf8207bd97282d89fc414f1a",
+  "inventory_sha256": "bb58190a12a6aca48b0ba45411323226e96533a283bcf71d945a0961d6c4c110",
+  "verified_artifacts": 267,
+  "current_fixture_source_files_match": 28,
+  "runtime_objects_and_modules_byte_identical_to_reviewed_r10": 31,
+  "positive_cases": 11,
+  "rejected_controls": 11,
+  "validated_reply_packets": 78,
+  "largest_serialized_reply_bytes": 2056,
+  "source_site_entries_checked": 11,
+  "native_rebind": "Original report and artifacts byte-identical; G0-U1-a inventory contract unchanged; no new native execution.",
+  "upstream_source_diff": "",
+  "stage0_status": "BLOCKED",
+  "fresh_build_comparison": {
+    "identical_artifacts": 20,
+    "record": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-debug-frames-verification/rebuild.json",
+    "sha256": "7f876d1fca14808ad72f0d8c30e6d9f9ba4868daa5454c06715970d6cda5b763"
+  },
+  "verification_scripts": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-debug-frames-verification/manifest.json"
+}

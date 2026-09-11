@@ -50,3 +50,5 @@ The original DOCX files and PNG are retained byte-for-byte in [history/2026-09-1
 Current fixture packs and original failure packs stay in-tree. Superseded packs are retained in an external local evidence store with full hashes and locators in the index; a locator is not a claim of remote backup. Current records must match the current inventory. Historical hashes are never rewritten to make old evidence appear current.
 
 The native reference and reproduction procedure are in [baseline.json](stage0/baseline.json) and the [macOS runner](../../tests/wasm/native-baseline/README.md). [Claude’s external audit](stage0/claude-review.md) records findings and fixes; post-audit verification does not imply acceptance.
+
+The next D3 prerequisite now has a [logical debugger-frame fixture](../../tests/wasm/stage0/debug-frames/README.md), with [execution scope and remaining work](stage0/debug-frames.md). It exercises hand-built frames on the macOS reference and remains pending independent review.

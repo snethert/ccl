@@ -1,13 +1,4 @@
 {
-  "command": [
-    "python3",
-    "doc/WASM/tools/gate.py",
-    "--inventory",
-    "doc/WASM/stage0/inventory.json",
-    "--results",
-    "/Users/buildsomething/Source/ccl-evidence/2026-09-11-stage0-current/results.json"
-  ],
-  "exit_code": 2,
   "status": "BLOCKED",
   "reasons": [
     "unreviewed G0-U1-a [macos-x86-64]",
@@ -62,7 +53,7 @@
     "missing S0-LL22-a [control]",
     "missing S0-LL22-b [control]",
     "missing S0-LL23-a [full]",
-    "missing S0-LL23-b [full]",
+    "unreviewed S0-LL23-b [full]",
     "missing S0-LL24-a [control]"
   ]
 }

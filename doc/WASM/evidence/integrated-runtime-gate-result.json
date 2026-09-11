@@ -5,7 +5,7 @@
     "--inventory",
     "doc/WASM/stage0/inventory.json",
     "--results",
-    "/tmp/ccl-wasm-integrated-r10-retained-check/results.json"
+    "/Users/buildsomething/Source/ccl-evidence/2026-09-11-debug-frames-r3/prerequisites/results.json"
   ],
   "exit_code": 2,
   "status": "BLOCKED",
