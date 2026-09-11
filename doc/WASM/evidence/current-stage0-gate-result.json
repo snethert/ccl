@@ -5,7 +5,7 @@
     "--inventory",
     "doc/WASM/stage0/inventory.json",
     "--results",
-    "/Users/buildsomething/Source/ccl-evidence/2026-09-11-stage0-uniform-abi/results.json"
+    "/Users/buildsomething/Source/ccl-evidence/2026-09-11-contract-bindings/combined/results.json"
   ],
   "exit_code": 2,
   "status": "BLOCKED",

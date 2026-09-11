@@ -1,24 +1,24 @@
 {
   "generator": "tools/manage.py",
-  "generator_sha256": "3869103c425c64d461da5caeb10f3aff1e8f594d1c0b7821335f4c344acfb3ac",
+  "generator_sha256": "47a2177e92df159487265fe985e3b42d9ffeaf63a67b7d386dc966ef8152a1e0",
   "documents": [
     {
       "source": "outline.md",
-      "source_sha256": "3b37fec78c8ae502c11fc10e209c889f511028dbc3b9d8ea9882ebde3864cc7e",
-      "output": "Clozure_CL_WebAssembly_Port_Outline_v0_15.docx",
-      "output_sha256": "531446cfee9eea917807d41a6833c9b7d372ec7ad286f0094c95e56b36400bf1"
+      "source_sha256": "e2f4eb35c15907d7824500adb6f2647b00d05d346010ae22e93af3f7c26e1f0e",
+      "output": "Clozure_CL_WebAssembly_Port_Outline_v0_16.docx",
+      "output_sha256": "21f33a7a32f2cbca0ac4c63c6a4bd6247bf9e6bb40aa8a76da1f0790cb7188ae"
     },
     {
       "source": "acceptance.md",
-      "source_sha256": "c56762e7fb21951feff3c973de09c532fc83e7e56e8c9f8086d375f6d42726a4",
-      "output": "CCL_WebAssembly_Acceptance_Policy_and_Regression_Register_v1_5.docx",
-      "output_sha256": "b41bb4c4c42ad8520d5902cad85815f9947b874c032c5ffb3e0ffb27a272309f"
+      "source_sha256": "f8845f97142ea9ba94a3502a69acc8928430ed7852aea7df200139e038efe8aa",
+      "output": "CCL_WebAssembly_Acceptance_Policy_and_Regression_Register_v1_6.docx",
+      "output_sha256": "62971fe005bbb6d3620d1f7c260f98bae3bfd3287a09a6ca5430cd6c45a20acf"
     },
     {
       "source": "decisions.md",
-      "source_sha256": "a9ced142177194702b15cac937f5c6050c0466a3132fd65128805fc27dd11ab2",
-      "output": "CCL_WebAssembly_Stage0_Desk_Decisions_v1_6.docx",
-      "output_sha256": "b8cde549f2894fd9aa9c6b36819c506754b654739eb98d41c56399f975df93b9"
+      "source_sha256": "eedbbce4b862c9f5bb484cdebaa7fab4eedc31ce6312710702f4bab070402f8a",
+      "output": "CCL_WebAssembly_Stage0_Desk_Decisions_v1_7.docx",
+      "output_sha256": "72f964acfff346ed62f6a41b7dd000f355adddf93db52d24fbe630a9ad441576"
     }
   ]
 }

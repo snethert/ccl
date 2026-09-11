@@ -1,15 +1,18 @@
 {
-  "timestamp": "2026-09-11T21:29:30.517829+00:00",
-  "scope": "Current documentation, gate tooling and retained-evidence verification by Codex; not external acceptance.",
+  "timestamp": "2026-09-11T21:55:04.899119+00:00",
+  "scope": "Current documentation, gate tooling, binding/migration and retained-evidence verification by Codex; not external acceptance.",
   "tool_sha256": {
+    "bind-evidence.py": "a950b640b2e7c4f926a2c881f3f091693632962d423302c92a6ba51e95b285df",
     "check-census.py": "54561cb85ed6f7d7ace8b81d0605808584d8b1b4881e77f0791d3810e873fa6c",
-    "check-evidence.py": "2e7deeeb91e90d9e5b3d4a88ff7dff53ade19a0277593d2fbae30d8b3346db49",
-    "gate.py": "54a1a681f1be26dd399183776f550966d61ef45356101a7b8bb7a5e5f20bf766",
-    "manage.py": "3869103c425c64d461da5caeb10f3aff1e8f594d1c0b7821335f4c344acfb3ac",
+    "check-evidence.py": "608bec973719edbcb9b008861ed9f8c91f40dd25b3c9e04daf19efedaa8c380e",
+    "evidence_binding.py": "488ff2c6b706c0085658b8c29b78c4ea91c7fbf3dbfeeb32c79747c3a9c44f7a",
+    "gate.py": "bf31c7c1bc9a22b3d883cb4bc1a94d873a7d9a45312098e1d4f58c42fc157932",
+    "manage.py": "47a2177e92df159487265fe985e3b42d9ffeaf63a67b7d386dc966ef8152a1e0",
     "materialize.mjs": "fe20bcd6ef9491a56e6cd60f9e3401f6ddb9932ec93b7f97cdbc38e028344895",
     "probe-worker.mjs": "d427f84f018113b7c570e1eff20b3487e05e1ef6b067b1bd1abb6ee527b3b187",
     "run-probes.mjs": "5a2921a41cef706b5323123d8fa4edcb52ebc008ef119f5a9e2160f335cec798",
-    "test-controls.py": "efaf3e5742d901eed4b87fcbbb6ecf0c78160937032a4da925aed7f02460a401"
+    "test-bindings.py": "6d093c9dfebb617029e2902ff5d6b8e303af07a71134bf9bd488596e6072f6f1",
+    "test-controls.py": "85461af48fa62c728b1f15c1ca6fe0998f2d2f6535f47ae11279d6b6ba5a896f"
   },
   "checks": [
     {
@@ -34,11 +37,20 @@
     {
       "command": [
         "python3",
+        "doc/WASM/tools/test-bindings.py"
+      ],
+      "exit_code": 0,
+      "stdout": "PASS: 42 contract-binding and migration controls; no runtime acceptance claim.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
         "doc/WASM/tools/check-evidence.py",
         "--include-external"
       ],
       "exit_code": 0,
-      "stdout": "PASS: 31 retained evidence identities; CURRENT inventory bindings match.\n",
+      "stdout": "PASS: 33 retained evidence identities; CURRENT inventory bindings match.\n",
       "stderr": ""
     },
     {
@@ -52,35 +64,41 @@
       "stderr": ""
     },
     {
-      "document": "CCL_WebAssembly_Acceptance_Policy_and_Regression_Register_v1_5.docx",
-      "sha256": "b41bb4c4c42ad8520d5902cad85815f9947b874c032c5ffb3e0ffb27a272309f",
+      "document": "CCL_WebAssembly_Acceptance_Policy_and_Regression_Register_v1_6.docx",
+      "sha256": "62971fe005bbb6d3620d1f7c260f98bae3bfd3287a09a6ca5430cd6c45a20acf",
       "textutil_exit_code": 0,
-      "words": 5787,
+      "words": 5898,
       "xml": "VALID"
     },
     {
-      "document": "CCL_WebAssembly_Stage0_Desk_Decisions_v1_6.docx",
-      "sha256": "b8cde549f2894fd9aa9c6b36819c506754b654739eb98d41c56399f975df93b9",
+      "document": "CCL_WebAssembly_Stage0_Desk_Decisions_v1_7.docx",
+      "sha256": "72f964acfff346ed62f6a41b7dd000f355adddf93db52d24fbe630a9ad441576",
       "textutil_exit_code": 0,
-      "words": 7730,
+      "words": 7775,
       "xml": "VALID"
     },
     {
-      "document": "Clozure_CL_WebAssembly_Port_Outline_v0_15.docx",
-      "sha256": "531446cfee9eea917807d41a6833c9b7d372ec7ad286f0094c95e56b36400bf1",
+      "document": "Clozure_CL_WebAssembly_Port_Outline_v0_16.docx",
+      "sha256": "21f33a7a32f2cbca0ac4c63c6a4bd6247bf9e6bb40aa8a76da1f0790cb7188ae",
       "textutil_exit_code": 0,
-      "words": 6750,
+      "words": 6768,
       "xml": "VALID"
     },
     {
       "check": "all auxiliary evidence identities",
       "result": "PASS",
-      "count": 21
+      "count": 26
     },
     {
-      "check": "H retirement, fresh unchanged fixtures, and native inventory-only rebind",
+      "check": "fresh r5, original r3/native migration, actual aggregate compatibility and native producer",
       "result": "PASS",
       "record": "debug-frames-verification.json"
+    },
+    {
+      "check": "migrated reports and 267 frame / 375 native artifacts match original reviewed ZIPs",
+      "result": "PASS",
+      "record": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-contract-bindings/original-archive-verification.json",
+      "sha256": "e3b5d1ee682f6b4a885fbf887e49b790976191afc7559b5cfaa53c234da12568"
     },
     {
       "check": "separate evidence repository, exact Git blobs and eight catalog controls",

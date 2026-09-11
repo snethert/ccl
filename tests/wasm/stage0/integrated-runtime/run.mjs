@@ -38,7 +38,7 @@ try {
   const prior=JSON.parse(fs.readFileSync(path.join(out,'prerequisites/results.json')));
   assert.equal(prior.inventory_sha256,report.inventory_sha256);
   assert.deepEqual(prior.results.map(r=>[r.id,r.status]),[['S0-LL13-c','PASS'],['S0-LL19-b','PASS']]);
-  report.results.push(...prior.results.map(r=>({...r,artifacts:r.artifacts.map(a=>({...a,path:'prerequisites/'+a.path}))})));
+  report.results.push(...prior.results.map(r=>({...r,contract_binding:r.contract_binding?{...r.contract_binding,inventory_path:'prerequisites/'+r.contract_binding.inventory_path}:undefined,artifacts:r.artifacts.map(a=>({...a,path:'prerequisites/'+a.path}))})));
   built=build(out);
   const write=(name,value,negative)=>save(path.join(out,negative?'quarantine':'cases',name+'.json'),value);
   cases=await executeCases(built,write);
@@ -69,6 +69,10 @@ for(const id of ['S0-LL20-a','S0-LL20-b','S0-LL20-c']) {
     cases:cases?.filter(c=>c.id===id).map(c=>({name:c.name,status:c.status})),artifacts});
   console.log(`${status} ${id}`);
 }
-save(path.join(out,'results.json'),report);
+save(path.join(out,'execution-results.json'),report);
+const binding=spawnSync('python3',[path.join(repo,'doc/WASM/tools/bind-evidence.py'),
+  '--results',path.join(out,'execution-results.json'),'--inventory',path.join(out,'inventory.json'),
+  '--output',path.join(out,'results.json'),'--fresh'],{cwd:repo,encoding:'utf8',timeout:30000});
+if(binding.error||binding.status!==0)throw Error('evidence binding failed: '+(binding.stderr||binding.error));
 console.log(`Evidence: ${out}; full Stage 0 remains incomplete.`);
 process.exitCode=report.failure?1:0;

@@ -5,6 +5,8 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 
 
 def digest(path):
@@ -58,8 +60,12 @@ def record(root, inventory_path):
                                 'repeatability': report['repeatability']},
               'substitutions': [], 'skips': [], 'review_disposition': 'NOT_REVIEWED',
               'assertions': [{'id': a['id'], 'status': 'PASS'} for a in gate0['assertions']], 'artifacts': artifacts}
-    result_path.write_text(json.dumps({'version': 1, 'source_revision': report['source_revision'],
+    unbound = root / 'unbound-gate-results.json'
+    unbound.write_text(json.dumps({'version': 1, 'source_revision': report['source_revision'],
                                      'inventory_sha256': digest(inventory_path), 'results': [result]}, indent=2) + '\n')
+    subprocess.run([sys.executable, str(Path(__file__).resolve().parents[3] / 'doc/WASM/tools/bind-evidence.py'),
+                    '--results', str(unbound), '--inventory', str(root / 'inventory.json'),
+                    '--output', str(result_path)], check=True)
     return result_path
 
 

@@ -11,9 +11,9 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = {
-    "outline.md": "Clozure_CL_WebAssembly_Port_Outline_v0_15.docx",
-    "acceptance.md": "CCL_WebAssembly_Acceptance_Policy_and_Regression_Register_v1_5.docx",
-    "decisions.md": "CCL_WebAssembly_Stage0_Desk_Decisions_v1_6.docx",
+    "outline.md": "Clozure_CL_WebAssembly_Port_Outline_v0_16.docx",
+    "acceptance.md": "CCL_WebAssembly_Acceptance_Policy_and_Regression_Register_v1_6.docx",
+    "decisions.md": "CCL_WebAssembly_Stage0_Desk_Decisions_v1_7.docx",
 }
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
@@ -255,7 +255,7 @@ def validate_inputs():
     actual = [(m["candidate"], m["workload"]) for m in measurements["measurements"]]
     if set(actual) != wanted or len(actual) != len(wanted):
         raise ValueError("Measurement inventory does not cover each candidate/workload exactly once")
-    for source, version in [("outline.md", "0.15"), ("acceptance.md", "1.5"), ("decisions.md", "1.6")]:
+    for source, version in [("outline.md", "0.16"), ("acceptance.md", "1.6"), ("decisions.md", "1.7")]:
         if f"VERSION {version} " not in (ROOT / source).read_text().splitlines()[0]:
             raise ValueError(f"Wrong document version: {source}")
     baseline = json.loads((ROOT / "stage0/baseline.json").read_text())

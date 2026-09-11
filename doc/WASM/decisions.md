@@ -1,12 +1,12 @@
-DECISION RECORD  /  VERSION 1.6  •  11 SEPTEMBER 2026
+DECISION RECORD  /  VERSION 1.7  •  11 SEPTEMBER 2026
 
 # Stage 0 Desk Decisions
 
-Companion to Port Outline v0.15 and Acceptance Policy and Regression Register v1.5
+Companion to Port Outline v0.16 and Acceptance Policy and Regression Register v1.6
 
-Version 1.6 replaces v1.5. At the user’s direction, D3 requires only C/C4/B; H(G) is optional future work and does not gate progress. D3 measurements state granularity and startup assumptions. The macOS reference, D5 protocol v1.1 and the other decided contracts remain in force. Execution and acceptance remain separate. [17–19]
+Version 1.7 replaces v1.6. D7 adopts versioned per-test evidence bindings to avoid whole-inventory churn. At the user’s direction, D3 requires only C/C4/B; H(G) is optional future work and does not gate progress. D3 measurements state granularity and startup assumptions. The macOS reference, D5 protocol v1.1 and the other decided contracts remain in force. Execution and acceptance remain separate. [17–19]
 
-R7 in the Acceptance Policy and Regression Register v1.5 governs all delivery and verification claims; recording a decision does not claim that its artifacts have been implemented or its tests run. [17]
+R7 in the Acceptance Policy and Regression Register v1.6 governs all delivery and verification claims; recording a decision does not claim that its artifacts have been implemented or its tests run. [17]
 
 | ID | Decision / experiment | Decision status |
 | --- | --- | --- |
@@ -301,9 +301,9 @@ Revise the vocabulary or lowering rule only if the census or a demonstrated sema
 
 ### Authoritative obligations, typed-call tests and negative controls
 
-Decision. Use the register-derived ID and inventory scheme below. Acceptance Policy and Regression Register v1.5 is authoritative for first acceptance, extensions and continuing regressions; this section maps its Stage 0 slices and standing controls without creating a second stage schedule. All LL01–LL24 obligations remain in force. Stage 0 includes LL01, LL02, LL04, LL05, LL07, LL08, LL13, LL15, LL19–LL21 plus standing LL03 and LL22–LL24. [17, 18]
+Decision. Use the register-derived ID and inventory scheme below. Acceptance Policy and Regression Register v1.6 is authoritative for first acceptance, extensions and continuing regressions; this section maps its Stage 0 slices and standing controls without creating a second stage schedule. All LL01–LL24 obligations remain in force. Stage 0 includes LL01, LL02, LL04, LL05, LL07, LL08, LL13, LL15, LL19–LL21 plus standing LL03 and LL22–LL24. [17, 18]
 
-Use S<stage>-LL<nn>-<letter> with an evidence kind and pinned test revision. The JSON inventory lists mandatory IDs, profile/candidate variants, assertions and prerequisites for each experiment phase. Missing mandatory evidence is BLOCKED or NOT RUN, never PASS. H(G) is absent from the required candidate and measurement inventories.
+Use S<stage>-LL<nn>-<letter> with an evidence kind and pinned test revision. The JSON inventory lists mandatory IDs, profile/candidate variants, assertions and prerequisites for each experiment phase. The [evidence-binding contract](contracts/evidence-binding.md) binds each result to its semantic test entry and transitive prerequisites plus the inventory version. Retain exact original inventories and artifacts; unrelated test additions do not require rebinding or rerunning existing results. Missing mandatory evidence is BLOCKED or NOT RUN, never PASS. H(G) is absent from the required candidate and measurement inventories.
 
 #### Acceptance, representation and ABI
 
@@ -354,7 +354,7 @@ Revise D7’s scheme only for a demonstrated conflict with the register’s auth
 
 ### Source basis and provenance
 
-U1 is c994217adc56b3f8a564526cee4695893ac84d86. Historical upstream source links below retain H1 4ca4df402e319789401cd33e680702e51ec601fc where they record earlier inspection; they do not override U1. D1 layout references [1–3] are repinned to U1, whose referenced files were inspected. Requalify other edit sites and census claims before implementation. Outline v0.15, register v1.5 and this decision record form the coordinated document set. Specification/toolchain references retain their prior recorded basis; no new engine qualification is claimed. Reference [18] dates the agreement’s confirmation, and [19] dates this exchange’s corrections; neither is a file-creation timestamp.
+U1 is c994217adc56b3f8a564526cee4695893ac84d86. Historical upstream source links below retain H1 4ca4df402e319789401cd33e680702e51ec601fc where they record earlier inspection; they do not override U1. D1 layout references [1–3] are repinned to U1, whose referenced files were inspected. Requalify other edit sites and census claims before implementation. Outline v0.16, register v1.6 and this decision record form the coordinated document set. Specification/toolchain references retain their prior recorded basis; no new engine qualification is claimed. Reference [18] dates the agreement’s confirmation, and [19] dates this exchange’s corrections; neither is a file-creation timestamp.
 
 [1] x8632 architecture data and execution layouts Tag constants, widths, canonical NIL/T, cons ordering and native execution-layout exceptions. [x8632-arch.lisp](https://github.com/Clozure/ccl/blob/c994217adc56b3f8a564526cee4695893ac84d86/compiler/X86/X8632/x8632-arch.lisp)
 
@@ -392,7 +392,7 @@ U1 is c994217adc56b3f8a564526cee4695893ac84d86. Historical upstream source links
 
 [16] WebAssembly numeric semantics Floating-point operation and operand cases; result classification alone is not a CCL condition policy. [Core numerics](https://webassembly.github.io/spec/core/exec/numerics.html)
 
-[17] Coordinated project-document authority Port Outline v0.15; Acceptance Policy and Regression Register v1.5; Stage 0 Desk Decisions v1.6. The outline owns architecture scope, the register owns acceptance and obligation metadata, and this record owns D1–D7 choices and protocols. Source inputs are identified below.
+[17] Coordinated project-document authority Port Outline v0.16; Acceptance Policy and Regression Register v1.6; Stage 0 Desk Decisions v1.7. The outline owns architecture scope, the register owns acceptance and obligation metadata, and this record owns D1–D7 choices and protocols. Source inputs are identified below.
 
 [18] Agreed decision amendments, reaffirmed 11 September 2026 Project exchange confirming the v1.2 agreement: decided statuses and reversal criteria; owner-only CAS acquisition and atomic-store release; parity admission/root reload; final membership rescan; host-acknowledged cancellation; and the then-current baseline-first incremental H(G) accounting, superseded by the user’s later instruction to make H(G) optional future work. The date identifies the confirmation exchange, not this file’s revision or an inferred earlier message timestamp.
 

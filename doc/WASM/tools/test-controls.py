@@ -109,7 +109,7 @@ with tempfile.TemporaryDirectory(prefix="ccl-wasm-evidence-control-") as tmp:
     (root / 'stage0/inventory.json').write_text('{"fixture": "current"}')
     current = evidence.digest(root / 'stage0/inventory.json')
     with ZipFile(root / 'pack.zip', 'w') as archive:
-        archive.writestr('results.json', json.dumps({'inventory_sha256': current}))
+        archive.writestr('results.json', json.dumps({'version': 1, 'inventory_sha256': current}))
     rec = {'id': 'CONTROL-retained', 'path': 'pack.zip', 'sha256': evidence.digest(root / 'pack.zip'),
            'currency': 'CURRENT', 'inventory_sha256': current, 'results_member': 'results.json'}
     evidence.ROOT = root
@@ -123,6 +123,6 @@ with tempfile.TemporaryDirectory(prefix="ccl-wasm-evidence-control-") as tmp:
     expect(retained(rec), 'PASS', 'current archive and index agree')
     expect(retained({**rec, 'inventory_sha256': '0' * 64}), 'FAIL', 'stale index labeled CURRENT')
     with ZipFile(root / 'pack.zip', 'w') as archive:
-        archive.writestr('results.json', json.dumps({'inventory_sha256': '0' * 64}))
+        archive.writestr('results.json', json.dumps({'version': 1, 'inventory_sha256': '0' * 64}))
     expect(retained({**rec, 'sha256': evidence.digest(root / 'pack.zip')}), 'FAIL', 'old archive relabeled with a current index hash')
 print(f"PASS: {count} synthetic checker positive/negative controls; no production acceptance claim.")

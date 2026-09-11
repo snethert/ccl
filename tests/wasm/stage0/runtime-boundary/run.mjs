@@ -268,6 +268,10 @@ for (const id of Object.keys(checks)) {
     assertions: [{ id: id + ':contract', status }], checks: checks[id], artifacts });
   console.log(`${status} ${id}`);
 }
-json('results.json', report);
+json('execution-results.json', report);
+const binding = spawnSync('python3', [path.join(repo, 'doc/WASM/tools/bind-evidence.py'),
+  '--results', path.join(out, 'execution-results.json'), '--inventory', path.join(out, 'inventory.json'),
+  '--output', path.join(out, 'results.json'), '--fresh'], {cwd:repo,encoding:'utf8',timeout:30000});
+if(binding.error || binding.status !== 0) throw Error('evidence binding failed: ' + (binding.stderr || binding.error));
 console.log(`Evidence: ${out}; full Stage 0 remains incomplete.`);
 process.exitCode = report.results.some(r => r.status !== 'PASS') ? 1 : 0;

@@ -50,7 +50,7 @@ async function activation(h,{count=6,policy=3,nested=false,exception=false,versi
   }
   const old=h.replies.find(r=>r.kind===1&&r.phase===1).frames.at(-1);
   assert.equal((await a.run('debug_handle_query',[old.address,old.generation,h.field(0,'lifetime')])).result,0,'popped frame handle remained valid');
-  assert.equal((await a.run('debug_read_capture')).result,800,'escaped captured cell did not survive return/collection');
+  assert.equal((await a.run('debug_read_capture')).result,800,'permanently rooted shared cell did not survive return/collection');
   if(verify)h.verifyReplies();
   return {before:headerBefore,after_moving_gc:headerMoved,old_handle:{address:old.address,generation:old.generation,lifetime:h.field(0,'lifetime')},
     primary:h.ticketRecord(primary),secondary:secondary?h.ticketRecord(secondary):null,final:done.snapshot};

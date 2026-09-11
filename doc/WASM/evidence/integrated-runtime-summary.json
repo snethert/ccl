@@ -2,12 +2,12 @@
   "positive_cases": 22,
   "rejected_controls": 14,
   "randomized_schedules": 1000,
-  "safepoint_latency_p99_ms": 0.04739700257778168,
-  "safepoint_latency_max_ms": 0.4143650084733963,
-  "rendezvous_max_ms": 4.668597996234894,
-  "run": "DEBUG-FRAMES-r4 prerequisites",
-  "archive": "runs/2026-09-11-debug-frames-r4.zip",
-  "archive_sha256": "236060d9cbe76fe90cdc5c80acce57dcacd5dfbf771d81376eb11d25e7a4b739",
+  "safepoint_latency_p99_ms": 0.04667600989341736,
+  "safepoint_latency_max_ms": 1.1085329949855804,
+  "rendezvous_max_ms": 1.3062170147895813,
+  "run": "DEBUG-FRAMES-r5 prerequisites",
+  "archive": "runs/2026-09-11-debug-frames-r5.zip",
+  "archive_sha256": "fb1ea6bed76a89f38b156aa2c12fdacc535269e2650901e557651610ddb08825",
   "results_member": "prerequisites/results.json",
   "inventory_sha256": "30c04b52092d76d197e317209bde129da994b9d77983a7267b87f9f236b9ad01",
   "execution_results": [
@@ -65,5 +65,7 @@
     "logical_cpus": 16,
     "node_flags": []
   },
-  "scope": "Fresh execution of unchanged reviewed integrated source under the uniform-only inventory; historical r10 review retained."
+  "scope": "Fresh execution of reviewed integrated mechanism with new v2 envelope wrapper. All 31 runtime/prerequisite objects and modules identical to reviewed r10; no new acceptance.",
+  "envelope_version": 2,
+  "inventory_version": 1
 }

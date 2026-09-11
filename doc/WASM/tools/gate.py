@@ -6,6 +6,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from evidence_binding import binding_errors, safe_path
 
 
 def sha256(path):
@@ -14,11 +15,18 @@ def sha256(path):
 
 def assess(inventory, report, inventory_hash, evidence_root):
     failures, blocked = [], []
-    if report.get("inventory_sha256") != inventory_hash:
+    if report.get("version") == 2:
+        def read_snapshot(name):
+            path = (evidence_root / safe_path(name)).resolve()
+            if not path.is_relative_to(evidence_root.resolve()):
+                raise ValueError("escaping inventory snapshot")
+            return path.read_bytes()
+        failures.extend(binding_errors(inventory, report, read_snapshot))
+    elif report.get("inventory_sha256") != inventory_hash:
         failures.append("inventory hash mismatch")
     if report.get("source_revision") != inventory["source_revision"]:
         failures.append("implementation revision mismatch")
-    if report.get("version") != 1 or not isinstance(report.get("results"), list):
+    if type(report.get("version")) is not int or report["version"] not in (1, 2) or not isinstance(report.get("results"), list):
         return "FAIL", ["invalid result envelope"]
     records = {}
     for result in report["results"]:

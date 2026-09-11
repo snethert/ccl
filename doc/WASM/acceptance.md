@@ -1,12 +1,12 @@
-COMPANION DOCUMENT  /  VERSION 1.5  •  11 SEPTEMBER 2026
+COMPANION DOCUMENT  /  VERSION 1.6  •  11 SEPTEMBER 2026
 
 # Acceptance Policy and Regression Register
 
-Companion to Port Outline v0.15 and Stage 0 Desk Decisions v1.6
+Companion to Port Outline v0.16 and Stage 0 Desk Decisions v1.7
 
-This document governs milestone acceptance: R7 rules and evidence (section 1), R6 normalization (section 2), sources (section 3), and LL01–LL24 (section 4). It replaces v1.4 and accompanies outline v0.15 and decisions v1.6. Individual obligation metadata remains authoritative; the index and outline stage lists are derived. This register specifies required regressions; execution and acceptance are tracked in [current status](STATUS.md). Documenting a test does not close its implementation.
+This document governs milestone acceptance: R7 rules and evidence (section 1), R6 normalization (section 2), sources (section 3), and LL01–LL24 (section 4). It replaces v1.5 and accompanies outline v0.16 and decisions v1.7. Individual obligation metadata remains authoritative; the index and outline stage lists are derived. This register specifies required regressions; execution and acceptance are tracked in [current status](STATUS.md). Documenting a test does not close its implementation.
 
-Changes in v1.5. Removes H(G) from all scheduled acceptance gates at the user’s direction. C/C4/B correctness and all remaining regressions are required. Retains macOS x86-64 for native regression qualification and second-host reproduction. Historical platform-specific baselines remain in the history ledger; they do not impose current host requirements. R6 source preservation, independent review and all LL obligations remain in force.
+Changes in v1.6. Adds per-test contract binding with verified migration of original evidence, avoiding reruns after unrelated inventory additions. H(G) remains outside all scheduled acceptance gates at the user’s direction. C/C4/B correctness and all remaining regressions are required. Retains macOS x86-64 for native regression qualification and second-host reproduction. Historical platform-specific baselines remain in the history ledger; they do not impose current host requirements. R6 source preservation, independent review and all LL obligations remain in force.
 
 ## 1  /  R7 EVIDENCE-BASED ACCEPTANCE
 
@@ -36,7 +36,9 @@ Evidence kinds are distinct and are labeled on every record: NATIVE BASELINE EXE
 
 #### Evidence record
 
-Each gate record identifies: requirement and test ID; evidence kind; source revision with dirty-tree and untracked-input digest; bootstrap, compiler and toolchain versions; target, profile and engine; command, configuration and seed; input and output hashes; assertions and results; logs; substitutions and skips; timestamp; and review disposition. Test revisions are pinned as well as implementation revisions. Stable semantic metadata is separated from timestamps and diagnostic provenance. For materialized modules, record both template/source and final binary hashes, materializer/emitter version, profile, memory limits and validated imports; a template digest cannot identify different installed binaries. The obligation-metadata revision and derived stage inventory are pinned together.
+Each gate record identifies: requirement and test ID; evidence kind; source revision with dirty-tree and untracked-input digest; bootstrap, compiler and toolchain versions; target, profile and engine; command, configuration and seed; input and output hashes; assertions and results; logs; substitutions and skips; timestamp; and review disposition. Test revisions are pinned as well as implementation revisions.
+
+Version 2 envelopes follow the [evidence-binding contract](contracts/evidence-binding.md): each result identifies its original inventory snapshot, inventory version and the semantic digest of its test and transitive prerequisites. Compare that digest with the current contract, while retaining the original whole-inventory hash as provenance. Unrelated additions leave existing results valid but missing new results still block acceptance. Changed semantics invalidate affected records. Legacy envelopes remain whole-file bound; an explicit, artifact-verified format upgrade writes a separate record and preserves the original execution and review disposition. This compatibility rule does not waive any result, artifact, negative control or acceptance review. Stable semantic metadata is separated from timestamps and diagnostic provenance. For materialized modules, record both template/source and final binary hashes, materializer/emitter version, profile, memory limits and validated imports; a template digest cannot identify different installed binaries. The obligation-metadata revision and derived stage inventory are pinned together.
 
 #### Reporting and agent operating rules
 
@@ -123,7 +125,7 @@ P1 is the historical port; U1 in the outline is the selected v1.13 implementatio
 
 [W1] [WebAssembly threads: memory, atomic access and instantiation](https://github.com/WebAssembly/threads/blob/main/proposals/threads/Overview.md) Shared memory, Resizing, Initializing Memory Only Once, Atomic Memory Accesses, and Wait and Notify. Checked 10 September 2026. Supplies specification facts for LL13 and LL21; the tests are project safeguards, not claimed historical execution.
 
-[D] Stage 0 Desk Decisions v1.6, 11 September 2026 Project authority for D1–D7. D3 remains open; D5 specifies owner-only CAS GC admission, typed entry identity and interruptible FOREIGN I/O. D7 maps authoritative LL stage slices into phased executable inventories, including S0-LL20-b. This is a decision/protocol source, not test-execution evidence. CCL_WebAssembly_Stage0_Desk_Decisions_v1_6.docx
+[D] Stage 0 Desk Decisions v1.7, 11 September 2026 Project authority for D1–D7. D3 remains open; D5 specifies owner-only CAS GC admission, typed entry identity and interruptible FOREIGN I/O. D7 maps authoritative LL stage slices into phased executable inventories, including S0-LL20-b. This is a decision/protocol source, not test-execution evidence. CCL_WebAssembly_Stage0_Desk_Decisions_v1_7.docx
 
 ## 4  /  REGRESSION OBLIGATIONS LL01–LL24
 

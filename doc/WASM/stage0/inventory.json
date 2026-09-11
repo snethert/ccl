@@ -807,7 +807,7 @@
       ],
       "status": "IMPLEMENTED_NOT_ACCEPTED",
       "runner": "tests/wasm/stage0/debug-frames/run.mjs",
-      "review_disposition": "NOT_REVIEWED"
+      "review_disposition": "EXTERNALLY_REVIEWED_NOT_ACCEPTED"
     },
     {
       "id": "S0-LL24-a",

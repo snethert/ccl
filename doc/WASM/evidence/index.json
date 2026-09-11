@@ -438,12 +438,19 @@
       "inventory_sha256": "bb58190a12a6aca48b0ba45411323226e96533a283bcf71d945a0961d6c4c110",
       "execution_status": "PASS",
       "scope": "Hand-built logical debugger-frame slice S0-LL23-b, with freshly executed C boundary and integrated-runtime prerequisites. Not a CCL debugger, D3 selection or full Stage 0 acceptance.",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "EXTERNALLY_REVIEWED_NOT_ACCEPTED",
       "results_member": "results.json",
       "currency": "SUPERSEDED",
-      "note": "Eleven frame cases and eleven controls, fresh integrated 22/14/1000 prerequisites and boundary 12/9 prerequisites. New frame work has no external review. Superseded inventory after the user removed mandatory H(G); original bytes and review scope retained.",
+      "note": "Original reviewed r3 bytes retained. Legacy inventory superseded; a separate verified v2 format upgrade preserves this execution, without claiming a new run or a new tooling review.",
       "locator": "/Users/buildsomething/Source/ccl-evidence/superseded/2026-09-11-debug-frames-r3.zip",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude",
+        "provenance": "User-supplied independent reproduction and code audit of ff900004, received 2026-09-11",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
+        "record": "stage0/claude-review.md",
+        "reproduction": "11/11 frames; fresh boundary 12/9 and runtime 22/14/1000; 49 objects/modules identical; historical tool counts 29 controls and 28 identities"
+      }
     },
     {
       "id": "INITIAL-PROBES-r6",
@@ -477,7 +484,6 @@
     },
     {
       "id": "DEBUG-FRAMES-r4",
-      "path": "evidence/runs/2026-09-11-debug-frames-r4.zip",
       "sha256": "236060d9cbe76fe90cdc5c80acce57dcacd5dfbf771d81376eb11d25e7a4b739",
       "timestamp": "2026-09-11T21:21:59.398Z",
       "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
@@ -486,8 +492,10 @@
       "scope": "Hand-built logical debugger-frame slice S0-LL23-b, with freshly executed C boundary and integrated-runtime prerequisites. Not a CCL debugger, D3 selection or full Stage 0 acceptance.",
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
-      "currency": "CURRENT",
-      "note": "Fresh unchanged fixture execution bound to the C/C4/B-only inventory and current applicable policy; no new acceptance."
+      "currency": "SUPERSEDED",
+      "note": "Fresh unchanged fixture execution bound to the C/C4/B-only inventory and current applicable policy; no new acceptance. Superseded by fresh r5 with v2 contract bindings; original bytes retained.",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/superseded/2026-09-11-debug-frames-r4.zip",
+      "availability": "EXTERNAL_LOCAL_STORE"
     },
     {
       "id": "INITIAL-PROBES-r7",
@@ -500,8 +508,8 @@
       "scope": "Initial hand-built probes only; Stage 0 remains incomplete.",
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
-      "currency": "CURRENT",
-      "note": "Fresh unchanged fixture execution bound to the C/C4/B-only inventory and current applicable policy; no new acceptance."
+      "currency": "CURRENT_DIAGNOSTIC",
+      "note": "Unchanged PROBE-only diagnostic; original inventory hash retained as execution provenance. Never eligible for required acceptance IDs; no replay caused by review bookkeeping."
     },
     {
       "id": "MACOS-NATIVE-GATE0-r3-UNIFORM-INVENTORY",
@@ -513,10 +521,43 @@
       "execution_status": "PASS",
       "scope": "Inventory-only rebind of the unchanged reviewed native r3 execution; no new native execution.",
       "review_disposition": "NOT_REVIEWED",
+      "currency": "SUPERSEDED",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "original_execution_record": "MACOS-NATIVE-GATE0-r3",
+      "note": "Original report/artifacts verified; Gate 0 source, contract and runner unchanged by H(G) retirement. Historical Claude review remains about the original execution. Superseded by a v2 format upgrade from the original r3 report and inventory."
+    },
+    {
+      "id": "DEBUG-FRAMES-r5",
+      "path": "evidence/runs/2026-09-11-debug-frames-r5.zip",
+      "sha256": "fb1ea6bed76a89f38b156aa2c12fdacc535269e2650901e557651610ddb08825",
+      "timestamp": "2026-09-11T21:39:38.616Z",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "30c04b52092d76d197e317209bde129da994b9d77983a7267b87f9f236b9ad01",
+      "execution_status": "PASS",
+      "scope": "Hand-built logical debugger-frame slice S0-LL23-b, with freshly executed C boundary and integrated-runtime prerequisites. Not a CCL debugger, D3 selection or full Stage 0 acceptance.",
+      "review_disposition": "NOT_REVIEWED",
+      "results_member": "results.json",
+      "currency": "CURRENT",
+      "note": "Fresh v2 producers: 11/11 frame cases/controls, runtime 22/14/1000 and boundary 12/9. Claude reviewed r3 core sources; the new binding tooling is NOT_REVIEWED. All results remain NOT_ACCEPTED.",
+      "envelope_version": 2,
+      "inventory_version": 1
+    },
+    {
+      "id": "MACOS-NATIVE-GATE0-r3-CONTRACT-V2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-contract-bindings/native/gate-results.json",
+      "sha256": "89e995a206db12e47c52ef77b39ac6ed86adfa36f13de31b04bc9a56b671689e",
+      "timestamp": "2026-09-11T20:12:03Z",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "35be990465b480d0d214741f9a648af0d170e57e0860002a7a8b0235d2b4269b",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "scope": "Separate v2 format upgrade of original reviewed native r3 execution; original report and artifacts verified, no new native run.",
+      "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "original_execution_record": "MACOS-NATIVE-GATE0-r3",
-      "note": "Original report/artifacts verified; Gate 0 source, contract and runner unchanged by H(G) retirement. Historical Claude review remains about the original execution."
+      "note": "Preserves original execution timestamp, inventory snapshot and raw review disposition. Historical Claude audit remains about the original execution; new format tooling awaits review."
     }
   ],
   "auxiliary_records": [
@@ -635,16 +676,46 @@
       "scope": "Original document versions, benchmark policy, inventories and current evidence summaries before the user made H optional."
     },
     {
-      "id": "CURRENT-STAGE0-COMBINED",
+      "id": "STAGE0-COMBINED-UNIFORM-ABI",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-stage0-uniform-abi/results.json",
       "sha256": "86a73afc1e62aa6b0d51f501084426e5579a08ded4b7df80543e24c7621fa1ca",
-      "scope": "C/C4/B-only current inventory; native r3 execution re-bound and six fresh Wasm slices. Required ABI correctness/measurements and other missing evidence still block Stage 0."
+      "scope": "C/C4/B-only current inventory; native r3 execution re-bound and six fresh Wasm slices. Required ABI correctness/measurements and other missing evidence still block Stage 0. Historical aggregate before v2 bindings."
     },
     {
       "id": "H-RETIREMENT-VERIFICATION",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-h-retirement-verification/manifest.json",
       "sha256": "5434af80016f34de6ccc7fbf241a4da3269600cc45073a38664068fd1b1c3f07",
       "scope": "Verification of user-directed H retirement, evidence identities and unchanged fixture binaries. No acceptance claim."
+    },
+    {
+      "id": "BEFORE-CONTRACT-BINDINGS",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-contract-bindings/before-manifest.json",
+      "sha256": "8954f9325a8de51de8bc700dc3610c47793efc661be7610dd0747938888c70c7",
+      "scope": "Original documents, generated copies, tooling, inventories and summaries from 04288377, retained unchanged."
+    },
+    {
+      "id": "REVIEWED-FRAMES-r3-CONTRACT-V2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-contract-bindings/reviewed-frames/results.json",
+      "sha256": "f511cf763b1340230df89c414c6179dbc7247cce86c8f892801555f3c8d22e0b",
+      "scope": "Format-only upgrade of reviewed r3; all 49 original binaries identical, original timestamps and raw review dispositions preserved."
+    },
+    {
+      "id": "NATIVE-V2-PRODUCER-CONTROL",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-contract-bindings/native-producer/gate-results.json",
+      "sha256": "f5fff308ddd8dd323ff8b6f2b46ccad6ab3f18010872a595387d3a34bfeb6a3c",
+      "scope": "New native producer verified against completed original native r3 artifacts; no new native execution."
+    },
+    {
+      "id": "CURRENT-STAGE0-COMBINED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-contract-bindings/combined/results.json",
+      "sha256": "66b936ce0ad49ec5933981851d6a93330b9c4767f9865d0075bc2f45cd78a71a",
+      "scope": "V2 aggregate: six fresh r5 Wasm slices plus original native r3. Every record retains its own exact inventory snapshot and semantic binding. Gate remains BLOCKED."
+    },
+    {
+      "id": "CONTRACT-BINDINGS-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-contract-bindings/verification.json",
+      "sha256": "d411332f7d06a2c1b8afeaf40cd9a01775d60f30c6d773d5642a6adc72175a6d",
+      "scope": "Same-author verification of fresh fixture sources/binaries, scoped bindings, unrelated additions and unchanged migration artifacts; not acceptance."
     }
   ]
 }

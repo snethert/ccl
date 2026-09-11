@@ -4,9 +4,9 @@ The implementation baseline is upstream CCL v1.13 at `c994217adc56b3f8a564526cee
 
 ## Current documents
 
-- [Port outline v0.15](outline.md): requirements, architecture and delivery stages.
-- [Acceptance policy v1.5](acceptance.md): R6 comparison boundaries, R7 evidence and LL01–LL24 obligations.
-- [Stage 0 decisions v1.6](decisions.md): D1–D7, phased experiments and initial contract references.
+- [Port outline v0.16](outline.md): requirements, architecture and delivery stages.
+- [Acceptance policy v1.6](acceptance.md): R6 comparison boundaries, R7 evidence and LL01–LL24 obligations.
+- [Stage 0 decisions v1.7](decisions.md): D1–D7, phased experiments and initial contract references.
 - [Stage 0 work plan](stage0/plan.md): subgates, dependencies, deliverables and execution commands.
 - [Workflow](workflow.md): independent census and architecture tracks.
 - [Current status](STATUS.md) and [dated change history](history/changes.md).
@@ -21,6 +21,7 @@ Run from the repository root. Document tools use Python 3's standard library. Th
 python3 doc/WASM/tools/manage.py generate
 python3 doc/WASM/tools/manage.py check
 python3 doc/WASM/tools/test-controls.py
+python3 doc/WASM/tools/test-bindings.py
 node doc/WASM/tools/run-probes.mjs --output /tmp/ccl-wasm-probes
 python3 doc/WASM/tools/gate.py --inventory doc/WASM/stage0/inventory.json --results /tmp/ccl-wasm-probes/results.json
 ```
@@ -47,10 +48,10 @@ Each integrated run first executes the earlier C-boundary prerequisites. [Curren
 
 The original DOCX files and PNG are retained byte-for-byte in [history/2026-09-11-inputs](history/2026-09-11-inputs), with hashes in [history/inputs.json](history/inputs.json). The PNG is superseded by the current workflow. Historical evidence availability is recorded separately in [evidence/index.json](evidence/index.json); missing archives have no invented locator or digest.
 
-Current fixture packs and original failure packs stay in-tree. Superseded packs are retained in an external local evidence store with full hashes and locators in the index; a locator is not a claim of remote backup. Current records must match the current inventory. Historical hashes are never rewritten to make old evidence appear current.
+Current fixture packs and original failure packs stay in-tree. Superseded packs are retained in an external local evidence store with full hashes and locators in the index; a locator is not a claim of remote backup. Version 2 records match the current per-test contract, its prerequisites and the inventory version under the [evidence-binding contract](contracts/evidence-binding.md). Unrelated inventory additions do not invalidate earlier results. Original whole-inventory hashes and execution records remain unchanged; legacy envelopes require a verified, separate format upgrade.
 
 The native reference and reproduction procedure are in [baseline.json](stage0/baseline.json) and the [macOS runner](../../tests/wasm/native-baseline/README.md). [Claude’s external audit](stage0/claude-review.md) records findings and fixes; post-audit verification does not imply acceptance.
 
-The next D3 prerequisite now has a [logical debugger-frame fixture](../../tests/wasm/stage0/debug-frames/README.md), with [execution scope and remaining work](stage0/debug-frames.md). It exercises hand-built frames on the macOS reference and remains pending independent review.
+The next D3 prerequisite now has a [logical debugger-frame fixture](../../tests/wasm/stage0/debug-frames/README.md), with [execution scope and remaining work](stage0/debug-frames.md). Claude independently reproduced and reviewed r3 without finding a defect. The new v2 evidence tooling awaits its own independent review; execution and review do not imply acceptance.
 
 The [product-risk plan](stage0/product-risk-plan.md) couples startup, scale and module granularity with C/C4/B measurements. H(G) is optional future work and blocks no scheduled stage. The [separate evidence repository](evidence/repository.json) preserves original runs and supplies a portable hash catalog.
