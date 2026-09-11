@@ -1,12 +1,12 @@
-COMPANION DOCUMENT  /  VERSION 1.6  •  11 SEPTEMBER 2026
+COMPANION DOCUMENT  /  VERSION 1.7  •  11 SEPTEMBER 2026
 
 # Acceptance Policy and Regression Register
 
-Companion to Port Outline v0.16 and Stage 0 Desk Decisions v1.7
+Companion to Port Outline v0.17 and Stage 0 Desk Decisions v1.8
 
-This document governs milestone acceptance: R7 rules and evidence (section 1), R6 normalization (section 2), sources (section 3), and LL01–LL24 (section 4). It replaces v1.5 and accompanies outline v0.16 and decisions v1.7. Individual obligation metadata remains authoritative; the index and outline stage lists are derived. This register specifies required regressions; execution and acceptance are tracked in [current status](STATUS.md). Documenting a test does not close its implementation.
+This document governs milestone acceptance: R7 rules and evidence (section 1), R6 normalization (section 2), sources (section 3), and LL01–LL24 (section 4). It replaces v1.6 and accompanies outline v0.17 and decisions v1.8. Individual obligation metadata remains authoritative; the index and outline stage lists are derived. This register specifies required regressions; execution and acceptance are tracked in [current status](STATUS.md). Documenting a test does not close its implementation.
 
-Changes in v1.6. Adds per-test contract binding with verified migration of original evidence, avoiding reruns after unrelated inventory additions. H(G) remains outside all scheduled acceptance gates at the user’s direction. C/C4/B correctness and all remaining regressions are required. Retains macOS x86-64 for native regression qualification and second-host reproduction. Historical platform-specific baselines remain in the history ledger; they do not impose current host requirements. R6 source preservation, independent review and all LL obligations remain in force.
+Changes in v1.7. D7 requires generic C/C4/B entries and runtime adapters; specialized Lisp entries remain optional. Retains per-test contract binding with verified migration of original evidence, avoiding reruns after unrelated inventory additions. H(G) remains outside all scheduled acceptance gates at the user’s direction. C/C4/B correctness and all remaining regressions are required. Retains macOS x86-64 for native regression qualification and second-host reproduction. Historical platform-specific baselines remain in the history ledger; they do not impose current host requirements. R6 source preservation, independent review and all LL obligations remain in force.
 
 ## 1  /  R7 EVIDENCE-BASED ACCEPTANCE
 
@@ -125,7 +125,7 @@ P1 is the historical port; U1 in the outline is the selected v1.13 implementatio
 
 [W1] [WebAssembly threads: memory, atomic access and instantiation](https://github.com/WebAssembly/threads/blob/main/proposals/threads/Overview.md) Shared memory, Resizing, Initializing Memory Only Once, Atomic Memory Accesses, and Wait and Notify. Checked 10 September 2026. Supplies specification facts for LL13 and LL21; the tests are project safeguards, not claimed historical execution.
 
-[D] Stage 0 Desk Decisions v1.7, 11 September 2026 Project authority for D1–D7. D3 remains open; D5 specifies owner-only CAS GC admission, typed entry identity and interruptible FOREIGN I/O. D7 maps authoritative LL stage slices into phased executable inventories, including S0-LL20-b. This is a decision/protocol source, not test-execution evidence. CCL_WebAssembly_Stage0_Desk_Decisions_v1_7.docx
+[D] Stage 0 Desk Decisions v1.8, 11 September 2026 Project authority for D1–D7. D3 remains open; D5 specifies owner-only CAS GC admission, typed entry identity and interruptible FOREIGN I/O. D7 maps authoritative LL stage slices into phased executable inventories, including S0-LL20-b. This is a decision/protocol source, not test-execution evidence. CCL_WebAssembly_Stage0_Desk_Decisions_v1_8.docx
 
 ## 4  /  REGRESSION OBLIGATIONS LL01–LL24
 

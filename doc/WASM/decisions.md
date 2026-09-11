@@ -1,12 +1,12 @@
-DECISION RECORD  /  VERSION 1.7  •  11 SEPTEMBER 2026
+DECISION RECORD  /  VERSION 1.8  •  11 SEPTEMBER 2026
 
 # Stage 0 Desk Decisions
 
-Companion to Port Outline v0.16 and Acceptance Policy and Regression Register v1.6
+Companion to Port Outline v0.17 and Acceptance Policy and Regression Register v1.7
 
-Version 1.7 replaces v1.6. D7 adopts versioned per-test evidence bindings to avoid whole-inventory churn. At the user’s direction, D3 requires only C/C4/B; H(G) is optional future work and does not gate progress. D3 measurements state granularity and startup assumptions. The macOS reference, D5 protocol v1.1 and the other decided contracts remain in force. Execution and acceptance remain separate. [17–19]
+Version 1.8 replaces v1.7. Removes remaining mandatory specialized-entry obligations from D7. D7 retains versioned per-test evidence bindings to avoid whole-inventory churn. At the user’s direction, D3 requires only C/C4/B; H(G) is optional future work and does not gate progress. D3 measurements state granularity and startup assumptions. The macOS reference, D5 protocol v1.1 and the other decided contracts remain in force. Execution and acceptance remain separate. [17–19]
 
-R7 in the Acceptance Policy and Regression Register v1.6 governs all delivery and verification claims; recording a decision does not claim that its artifacts have been implemented or its tests run. [17]
+R7 in the Acceptance Policy and Regression Register v1.7 governs all delivery and verification claims; recording a decision does not claim that its artifacts have been implemented or its tests run. [17]
 
 | ID | Decision / experiment | Decision status |
 | --- | --- | --- |
@@ -126,13 +126,15 @@ Use stage0/benchmarks.json version 2 for the predeclared trial counts, confidenc
 
 Artifacts: versioned C/C4/B ABI descriptions, generic-entry/stub metadata, the D7 correctness/rejection inventory and all 24 candidate/workload measurement records. Stage 1 repeats the chosen contract through generated code; hand-built results do not certify pass 2. Revisit the ABI when generated correctness or representative measurements overturn its recorded basis. [LL03, LL05, LL21, LL22]
 
+The [dynamic-call protocol v0](abi/dynamic-call.v0.md) specifies the hand-built C/C4/B experiment, including stack/result ownership and typed installation. Its execution is pending independent review; it does not select D3.
+
 ## D4  /  RUNTIME IMPLEMENTATION LANGUAGE
 
 ### Retain the C kernel / emitted subprimitive split
 
 #### Decision
 
-Use a freestanding clang/wasm32 kernel with imported memory and table, no implicit libc/WASI environment and no independent libc allocator. Implement Lisp-callable subprimitives and G/E_k adapters through the Lisp Wasm emitter. Give C runtime entries explicit native-Wasm import/export signatures; ordinary calls to them use named imports. Reserve table slots only for entries that actually require indirect addressing, including C function pointers and Lisp-callable subprimitives. [9, 13]
+Use a freestanding clang/wasm32 kernel with imported memory and table, no implicit libc/WASI environment and no independent libc allocator. Implement Lisp-callable subprimitives, generic Lisp-call entries and runtime adapters through the Lisp Wasm emitter. Give C runtime entries explicit native-Wasm import/export signatures; ordinary calls to them use named imports. Reserve table slots only for entries that actually require indirect addressing, including C function pointers and Lisp-callable subprimitives. [9, 13]
 
 This is a division of implementation responsibility, not a limitation that C cannot receive five scalar parameters. The documented Basic C ABI returns ordinary multi-field aggregates indirectly, unlike D3’s pair of Wasm results; adapters can bridge conventions. Their costs belong in the experiment. One emitted signature family per role remains under D3, not an unconditional requirement that all entries have C’s signature. [13]
 
@@ -229,7 +231,7 @@ D3’s ordinary, tail and adapter transitions must state their VSP/TSP/CSP and r
 
 #### Logical code identity and typed entry slots
 
-Retain process-wide monotonic logical code IDs through Stage 5 and defer reuse to Stage 6. Withdraw the unconditional equation code ID = table slot. For H, one code version may expose G plus several E_k entrypoints, each needing a different slot. Even a uniform baseline records an explicit mapping; equal numbers may be an implementation convenience, not an image ABI promise. [LL07, LL11, LL21]
+Retain process-wide monotonic logical code IDs through Stage 5 and defer reuse to Stage 6. Withdraw the unconditional equation code ID = table slot. A code version records explicit generic and runtime-adapter roles and slots; equal numbers may be an implementation convenience, not an image ABI promise. [LL07, LL11, LL21]
 
 Use checked tagged logical code IDs in 0…2^29 − 1, with recorded reservations and exhaustion failure. Table capacities and slot indices have separate checked bounds. A later unboxed u32 code-ID representation requires an explicit non-root field encoding and schema revision; a finite i32 namespace is never described as unbounded.
 
@@ -301,7 +303,7 @@ Revise the vocabulary or lowering rule only if the census or a demonstrated sema
 
 ### Authoritative obligations, typed-call tests and negative controls
 
-Decision. Use the register-derived ID and inventory scheme below. Acceptance Policy and Regression Register v1.6 is authoritative for first acceptance, extensions and continuing regressions; this section maps its Stage 0 slices and standing controls without creating a second stage schedule. All LL01–LL24 obligations remain in force. Stage 0 includes LL01, LL02, LL04, LL05, LL07, LL08, LL13, LL15, LL19–LL21 plus standing LL03 and LL22–LL24. [17, 18]
+Decision. Use the register-derived ID and inventory scheme below. Acceptance Policy and Regression Register v1.7 is authoritative for first acceptance, extensions and continuing regressions; this section maps its Stage 0 slices and standing controls without creating a second stage schedule. All LL01–LL24 obligations remain in force. Stage 0 includes LL01, LL02, LL04, LL05, LL07, LL08, LL13, LL15, LL19–LL21 plus standing LL03 and LL22–LL24. [17, 18]
 
 Use S<stage>-LL<nn>-<letter> with an evidence kind and pinned test revision. The JSON inventory lists mandatory IDs, profile/candidate variants, assertions and prerequisites for each experiment phase. The [evidence-binding contract](contracts/evidence-binding.md) binds each result to its semantic test entry and transitive prerequisites plus the inventory version. Retain exact original inventories and artifacts; unrelated test additions do not require rebinding or rerunning existing results. Missing mandatory evidence is BLOCKED or NOT RUN, never PASS. H(G) is absent from the required candidate and measurement inventories.
 
@@ -314,8 +316,8 @@ Use S<stage>-LL<nn>-<letter> with an evidence kind and pinned test revision. The
 | LL03 S0-LL03-a | Reject a hand-built or synthetic evidence record offered for compiler-generated acceptance. Label candidate, profile, substitution and exact artifacts independently of pass/fail. |
 | LL04 S0-LL04-a/b | Compare schema with target-compiled C assertions and emitted probes. Independent unequal two-word CAR/CDR fixtures include mutation and NIL; inject a one-sided swap. Exercise dotted, nested, shared and cyclic fixtures where supported by the hand-built slice. |
 | LL05 S0-LL05-a | For C, C4 and B: verify ordered arguments 0–6 and long overflow, nested side effects, direct/indirect/closure calls, APPLY and optional/rest/keyword binding, and every zero/one/many result. Check explicit stack/count ownership. |
-| LL05 S0-LL05-b | Place different signatures in one table and call matching entries. Reject wrong-signature mutants; an isolated probe confirms trapping before stub entry. Also substitute G for E_4/E_5/E_1 where types coincide: role validation or semantic assertions must detect what the engine type check cannot. |
-| LL05 S0-LL05-c | Force G and every supported E_k through their own lazy stub. Check eligibility/fallback for exact versus variable arity, preserve closure self and overflow space, and reload roots after allowed collection/suspension. |
+| LL05 S0-LL05-b | Place different signatures in one table and call matching entries. Reject wrong-signature mutants; an isolated probe confirms trapping before Lisp entry. Reject substitution of a structurally matching entry with the wrong semantic role through role validation and independent semantic assertions. C/C4/B require generic Lisp entries and explicit runtime adapters only. |
+| LL05 S0-LL05-c | Force C/C4/B generic entries and runtime adapters through matching lazy stubs for exact and variable arity. Preserve closure self and overflow space, reload roots after collection/suspension, and report ordinary arity conditions. Specialized typed Lisp entries are optional future work. |
 | LL05 S0-LL05-d | Run generic cross-arity tail chains, shrinking/growing overflow and adapters. Observe bounded explicit-stack/root use, complete multiple values and preserved cleanup/binding extent. |
 | LL07 S0-LL07-a | Check signed fixnum, raw address, logical-ID and typed-slot conversions separately. Synthetic addresses above 2 GiB retain bits through JS; checked exhaustion rejects invalid IDs and capacities. |
 | LL08 S0-LL08-a/b/c | a: validate the actual registration patch in clean host sessions with target state set before reading. b: compare evaluated acode IDs/flags and reserved slots under R6a. c: repeat the pinned U1 macOS x86-64 baseline on a second host and compare retained digests under R6 normalization, separately from target-state proof and native behavior. This supersedes the unexecuted H1/E5 ARM64 reproduction slice because U1 lacks that backend; history/changes.md records the scope change. H1 evidence remains historical. |
@@ -333,7 +335,7 @@ Use S<stage>-LL<nn>-<letter> with an evidence kind and pinned test revision. The
 | LL20 S0-LL20-a | Suspend inside nested Lisp state, collect/install code and resume without suspension-triggered cleanup. Verify the same continuation, bindings and complete values. |
 | LL20 S0-LL20-b | Deterministically schedule competing collectors, CAS loss, owner-only release, host completion, PARKED/STOPPED_GC admission, a new request during admission, parity wrap, final membership rescan, child handoff roots and allocation recheck. Fetch-add acquisition and omitted-rescan mutants must fail. Also park a FOREIGN Worker on an unfinished I/O request, interrupt it without completing the host operation, and require INTERRUPTED plus notification to reach interrupt service through GC admission/root reload. Resume waiting on the same descriptor or observe raced completion/cancellation acknowledgement. Include GC during wake, completion on either side of the interrupt store, and an interrupt during rearming. Pending-bit-only, omitted-notify, lost-terminal-outcome and premature-reuse mutants must fail. |
 | LL20 S0-LL20-c | Stable request payloads survive GC. Interrupt handling, nested debugger requests and nonlocal exit do not reuse an outstanding descriptor. Cancellation without host acknowledgement cannot permit TCR/request reclamation; a late completion is checked against the original lifetime generation. |
-| LL21 S0-LL21-a/b/c | a: publish prebuilt code and first-call from another/late Worker. b: map one code ID to G/E_k slots, fill new callable slots with matching stubs, reject conflicting signatures, preserve old function objects across a prebuilt redefinition. c: validate shared/unshared materialized binaries, import limits and profile suspension; reject wrong patch bytes/hashes/features. |
+| LL21 S0-LL21-a/b/c | a: publish prebuilt code and first-call from another/late Worker. b: Map each code version to explicit generic and runtime-adapter slots, fill new callable slots with matching stubs, reject conflicting signatures or roles, and preserve old function objects across a prebuilt redefinition. c: validate shared/unshared materialized binaries, import limits and profile suspension; reject wrong patch bytes/hashes/features. |
 | LL22 S0-LL22-a/b | Bind implementation, test, ABI, template and materialized bytes to hashes; reject mixed builds and stale evidence. Run R6/R6a comparison for any applied shared-source edit; do not exclude an unexplained differing FASL wholesale. |
 | LL23 S0-LL23-a | Structured diagnostics name the exact build, logical code ID, entry kind, signature, slot and faulting operation. Preserve the first error and bound output; a last-observed event is not labeled as the failing frame. |
 | LL24 S0-LL24-a | One current ledger and separate history; explicit authorization for criterion changes; preserve earlier accepted evidence scope and link delivery claims to identified artifacts. |
@@ -354,7 +356,7 @@ Revise D7’s scheme only for a demonstrated conflict with the register’s auth
 
 ### Source basis and provenance
 
-U1 is c994217adc56b3f8a564526cee4695893ac84d86. Historical upstream source links below retain H1 4ca4df402e319789401cd33e680702e51ec601fc where they record earlier inspection; they do not override U1. D1 layout references [1–3] are repinned to U1, whose referenced files were inspected. Requalify other edit sites and census claims before implementation. Outline v0.16, register v1.6 and this decision record form the coordinated document set. Specification/toolchain references retain their prior recorded basis; no new engine qualification is claimed. Reference [18] dates the agreement’s confirmation, and [19] dates this exchange’s corrections; neither is a file-creation timestamp.
+U1 is c994217adc56b3f8a564526cee4695893ac84d86. Historical upstream source links below retain H1 4ca4df402e319789401cd33e680702e51ec601fc where they record earlier inspection; they do not override U1. D1 layout references [1–3] are repinned to U1, whose referenced files were inspected. Requalify other edit sites and census claims before implementation. Outline v0.17, register v1.7 and this decision record form the coordinated document set. Specification/toolchain references retain their prior recorded basis; no new engine qualification is claimed. Reference [18] dates the agreement’s confirmation, and [19] dates this exchange’s corrections; neither is a file-creation timestamp.
 
 [1] x8632 architecture data and execution layouts Tag constants, widths, canonical NIL/T, cons ordering and native execution-layout exceptions. [x8632-arch.lisp](https://github.com/Clozure/ccl/blob/c994217adc56b3f8a564526cee4695893ac84d86/compiler/X86/X8632/x8632-arch.lisp)
 
@@ -392,7 +394,7 @@ U1 is c994217adc56b3f8a564526cee4695893ac84d86. Historical upstream source links
 
 [16] WebAssembly numeric semantics Floating-point operation and operand cases; result classification alone is not a CCL condition policy. [Core numerics](https://webassembly.github.io/spec/core/exec/numerics.html)
 
-[17] Coordinated project-document authority Port Outline v0.16; Acceptance Policy and Regression Register v1.6; Stage 0 Desk Decisions v1.7. The outline owns architecture scope, the register owns acceptance and obligation metadata, and this record owns D1–D7 choices and protocols. Source inputs are identified below.
+[17] Coordinated project-document authority Port Outline v0.17; Acceptance Policy and Regression Register v1.7; Stage 0 Desk Decisions v1.8. The outline owns architecture scope, the register owns acceptance and obligation metadata, and this record owns D1–D7 choices and protocols. Source inputs are identified below.
 
 [18] Agreed decision amendments, reaffirmed 11 September 2026 Project exchange confirming the v1.2 agreement: decided statuses and reversal criteria; owner-only CAS acquisition and atomic-store release; parity admission/root reload; final membership rescan; host-acknowledged cancellation; and the then-current baseline-first incremental H(G) accounting, superseded by the user’s later instruction to make H(G) optional future work. The date identifies the confirmation exchange, not this file’s revision or an inferred earlier message timestamp.
 

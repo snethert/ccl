@@ -1,0 +1,164 @@
+{
+  "candidates": [
+    "C",
+    "C4",
+    "B"
+  ],
+  "positive_cases_per_candidate": 53,
+  "rejected_controls_per_candidate": 27,
+  "total_positive_cases": 159,
+  "total_rejected_controls": 81,
+  "prerequisites": {
+    "positive_cases": 11,
+    "rejected_controls": 11,
+    "prerequisites": {
+      "positive_cases": 22,
+      "rejected_controls": 14,
+      "randomized_schedules": 1000,
+      "safepoint_latency_p99_ms": 0.055031999945640564,
+      "safepoint_latency_max_ms": 3.7020789980888367,
+      "rendezvous_max_ms": 4.542337000370026
+    },
+    "frame_bytes": 160,
+    "frame_capacity": 8,
+    "reply_bytes": 4096,
+    "reply_capacity": 24,
+    "inspection_replies": 78
+  },
+  "bounds": {
+    "version": 1,
+    "candidates": {
+      "C": 3,
+      "C4": 4,
+      "B": 0
+    },
+    "maximum_arguments": 32,
+    "maximum_values": 6,
+    "frame_bytes": 512,
+    "stack_bytes": 16384,
+    "reply_bytes": 8192,
+    "reply_capacity": 16,
+    "tail_iterations": 100000,
+    "nil": 65,
+    "header_bytes": 64,
+    "checkpoints": {
+      "root_head": 64,
+      "vsp": 68,
+      "tsp": 72,
+      "csp": 76,
+      "mv_base": 80,
+      "mv_owner_top": 84,
+      "binding_depth": 88,
+      "binding_cookie": 92,
+      "handler_cookie": 96,
+      "active_request": 100,
+      "root_blocks": 104,
+      "incoming_count": 108
+    },
+    "result_descriptor": 112,
+    "argument_roots": 128,
+    "result_root": 328,
+    "result_values": 336,
+    "temporary_root": 368,
+    "temporary_values": 376,
+    "tcr": {
+      "frame_head": 224,
+      "frame_serial": 228,
+      "abi_state": 232,
+      "stack_base": 236,
+      "stack_limit": 240,
+      "reply_cursor": 244,
+      "reply_limit": 248,
+      "debug_policy": 252
+    },
+    "state": {
+      "input": 0,
+      "anchors": 4,
+      "output": 8,
+      "lazy_code": 12,
+      "entry_count": 16,
+      "tail_count": 20,
+      "peak_vsp": 24,
+      "peak_roots": 28,
+      "cleanup_count": 32,
+      "effects": 36,
+      "error": 40,
+      "value_count": 44,
+      "suspend": 48,
+      "policy": 52,
+      "initial_vsp": 56,
+      "tail_budget": 60
+    },
+    "entries": [
+      {
+        "code": 10,
+        "version": 1,
+        "name": "fold",
+        "minimum": 0,
+        "maximum": 32
+      },
+      {
+        "code": 11,
+        "version": 2,
+        "name": "fold_new",
+        "minimum": 0,
+        "maximum": 32
+      },
+      {
+        "code": 12,
+        "version": 1,
+        "name": "exact",
+        "minimum": 2,
+        "maximum": 2
+      },
+      {
+        "code": 20,
+        "version": 1,
+        "name": "optional",
+        "minimum": 2,
+        "maximum": 32
+      },
+      {
+        "code": 21,
+        "version": 1,
+        "name": "keyword",
+        "minimum": 0,
+        "maximum": 32
+      },
+      {
+        "code": 30,
+        "version": 1,
+        "name": "tail_small",
+        "minimum": 2,
+        "maximum": 32
+      },
+      {
+        "code": 31,
+        "version": 1,
+        "name": "tail_large",
+        "minimum": 2,
+        "maximum": 32
+      },
+      {
+        "code": 40,
+        "version": 1,
+        "name": "nested",
+        "minimum": 0,
+        "maximum": 6
+      }
+    ],
+    "scope": "Uniform generic entries only. Function objects are cons-based hand-built surrogates; keyword/symbol identities use declared fixture tokens. No CCL compiler, full object schema, production bounds, optimized debug storage or timing claim."
+  },
+  "memory_bytes": 1048576,
+  "live_workers": 3,
+  "ownership_slots": 4,
+  "disclaimer": "Counts demonstrate correctness only at the stated bounds. No performance, scalability, browser or generated-code claim.",
+  "run": "DYNAMIC-CALL-r1",
+  "archive": "runs/2026-09-11-dynamic-call-r1.zip",
+  "archive_sha256": "149d9de882c54517eea43e5ea7787908f1b1366e44764f415e48e15b824eaa8b",
+  "execution_status": "PASS",
+  "review_disposition": "NOT_REVIEWED",
+  "acceptance": "NOT_ACCEPTED",
+  "results_member": "results.json",
+  "scope": "Bounded hand-built C/C4/B correctness with freshly executed frame/runtime/boundary prerequisites. No ABI selection, generated code, production capacity or project acceptance."
+}

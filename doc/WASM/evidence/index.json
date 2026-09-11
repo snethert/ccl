@@ -296,7 +296,7 @@
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
       "currency": "ORIGINAL_FAILURE",
-      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged."
+      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged."
     },
     {
       "id": "INTEGRATED-RUNTIME-r10",
@@ -544,7 +544,7 @@
       "review_disposition": "EXTERNALLY_REVIEWED_NOT_ACCEPTED",
       "results_member": "results.json",
       "currency": "CURRENT",
-      "note": "Fresh v2 producers: 11/11 frame cases/controls, runtime 22/14/1000 and boundary 12/9. Claude reviewed r3 core sources; the new binding tooling is NOT_REVIEWED. All results remain NOT_ACCEPTED.",
+      "note": "Claude sign-off committed as 52639e4e includes the v2 wrappers/tooling. Original raw review disposition and bytes unchanged; scoped project acceptance is recorded separately in PROJECT-ACCEPTANCE-2026-09-11.",
       "envelope_version": 2,
       "inventory_version": 1,
       "external_review": {
@@ -569,13 +569,53 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "original_execution_record": "MACOS-NATIVE-GATE0-r3",
-      "note": "Preserves original execution timestamp, inventory snapshot and raw review disposition. Historical Claude audit remains about the original execution; new format tooling awaits review.",
+      "note": "Claude sign-off committed as 52639e4e includes the v2 wrappers/tooling. Original raw review disposition and bytes unchanged; scoped project acceptance is recorded separately in PROJECT-ACCEPTANCE-2026-09-11.",
       "external_review": {
         "reviewer": "Claude Fable 5.1",
         "provenance": "Third audit at HEAD 9c2ef44d: fresh re-execution, byte comparison and tooling review in the reviewer's own session, 2026-09-11",
         "disposition": "REVIEWER_SIGNED_OFF_NOT_PROJECT_ACCEPTED",
         "record": "stage0/claude-review.md"
       }
+    },
+    {
+      "id": "PROJECT-ACCEPTANCE-2026-09-11",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-project-acceptance/accepted/results.json",
+      "sha256": "30689b48f9a332ded6bcb08e0d321759e9da95d0086dec4113627d9a7549049a",
+      "inventory_sha256": "8fe81a6bcf20c856630125ca0078645f1ca828ba934c05b04500320d43fbf562",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Seven original native/runtime/frame records accepted within the explicit per-record decision; no new execution.",
+      "note": "User authorization follows Claude sign-off 52639e4e. New ABI code is excluded."
+    },
+    {
+      "id": "DYNAMIC-CALL-r1",
+      "path": "evidence/runs/2026-09-11-dynamic-call-r1.zip",
+      "sha256": "149d9de882c54517eea43e5ea7787908f1b1366e44764f415e48e15b824eaa8b",
+      "timestamp": "2026-09-11T23:03:23.957Z",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "2e1e5e93cb9b4b1bfccac50d1d4ef1ada1d398091c881e9f6029fa3c42e4ff84",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "results_member": "results.json",
+      "scope": "Bounded hand-built C/C4/B correctness with freshly executed frame/runtime/boundary prerequisites. No ABI selection, generated code, production capacity or project acceptance.",
+      "note": "159 positive cases and 81 rejected controls across C/C4/B; six fresh prerequisites. New source and linked ABI kernel require independent review."
+    },
+    {
+      "id": "ABI-ORIGINAL-DEVELOPMENT-FAILURES",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-abi-original-failures.zip",
+      "sha256": "bef1a59ff233ad48e5ec63e18001607be969132d68075f846b6b21ea7412de04",
+      "currency": "ORIGINAL_FAILURE",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "execution_status": "FAIL",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Original duplicate-result-scanning and stale-result-count failures, plus source-metadata control expectation failures; untouched development sources, modules and traces. Existing reviewed prerequisite objects reused; no fresh prerequisite execution claimed."
     }
   ],
   "auxiliary_records": [
@@ -724,7 +764,7 @@
       "scope": "New native producer verified against completed original native r3 artifacts; no new native execution."
     },
     {
-      "id": "CURRENT-STAGE0-COMBINED",
+      "id": "PRE-ACCEPTANCE-STAGE0-COMBINED",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-contract-bindings/combined/results.json",
       "sha256": "66b936ce0ad49ec5933981851d6a93330b9c4767f9865d0075bc2f45cd78a71a",
       "scope": "V2 aggregate: six fresh r5 Wasm slices plus original native r3. Every record retains its own exact inventory snapshot and semantic binding. Gate remains BLOCKED."
@@ -734,6 +774,42 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-contract-bindings/verification.json",
       "sha256": "d411332f7d06a2c1b8afeaf40cd9a01775d60f30c6d773d5642a6adc72175a6d",
       "scope": "Same-author verification of fresh fixture sources/binaries, scoped bindings, unrelated additions and unchanged migration artifacts; not acceptance."
+    },
+    {
+      "id": "CURRENT-STAGE0-COMBINED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-stage0-dynamic-call/results.json",
+      "sha256": "90c06ddcca661b4260f09c58fde89da400a69bea3834f094ecac8c37afcfff32",
+      "scope": "Seven scoped accepted original records plus eighteen unreviewed dynamic-call records. No new native execution, ABI selection or full Stage 0 acceptance."
+    },
+    {
+      "id": "BEFORE-DYNAMIC-CALL",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-before-dynamic-call/manifest.json",
+      "sha256": "ab728af21128a860ce5d6aad11459e0e04e57635e259c92456ff6d63ee4c7fe2",
+      "scope": "Original tracked documents, generated copies, tooling, inventories and summaries at 52639e4e."
+    },
+    {
+      "id": "PROJECT-ACCEPTANCE-DECISION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-project-acceptance/decision.json",
+      "sha256": "af96af8a35231502315b435015cc28165e226d126fb4d72c23f9e79329e96c4e",
+      "scope": "Explicit user-authorized per-record acceptance with source/report/reviewer hashes; no execution."
+    },
+    {
+      "id": "DYNAMIC-CALL-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-dynamic-call-verification/verification.json",
+      "sha256": "b0cac6f8c4306cdda17cbf2c8659e5388c6947ff392b90c2598e363371f8cd98",
+      "scope": "Same-author verification: documents, 32 gate controls, 42 binding controls, 14 acceptance controls, original artifact preservation, current gate and untouched upstream sources."
+    },
+    {
+      "id": "DYNAMIC-CALL-BINARY-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-dynamic-call-verification/binary-verification.json",
+      "sha256": "5da27f9fd74e45e549e11eef132f9514d9535bf8ecf277af0bc58655a6fc323b",
+      "scope": "All 35 new objects/modules rebuilt byte-identically; all 49 reviewed prerequisite binaries unchanged; eleven current fixture input files match."
+    },
+    {
+      "id": "DYNAMIC-CALL-FINAL-DOCUMENTS",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-dynamic-call-verification/final-documents.json",
+      "sha256": "bb9cf4fa344e9361e8d8d02044e5c5330e4b161da2f916bfba747d20fa0297a4",
+      "scope": "Final document references corrected to decisions 1.8; regeneration and macOS textutil/XML verification. Earlier full verification remains unchanged."
     }
   ]
 }

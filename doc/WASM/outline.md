@@ -1,4 +1,4 @@
-DESIGN NOTE  /  VERSION 0.16  •  11 SEPTEMBER 2026
+DESIGN NOTE  /  VERSION 0.17  •  11 SEPTEMBER 2026
 
 # Clozure Common Lisp to WebAssembly
 
@@ -8,13 +8,13 @@ High-level porting strategy and delivery outline
 
 Treat Wasm as a new CCL architecture whose effective seam is the existing target abstraction above pass 2. Reuse the target-neutral compiler front end and cross-dump machinery; implement a complete Wasm pass 2/vinsn layer together with the generated-code ABI, primitive/subprimitive layer and target runtime. One Lisp process owns one shared wasm32 linear-memory heap; each Lisp thread executes in a Web Worker.
 
-Version 0.16 replaces v0.15 and accompanies acceptance v1.6 and decisions v1.7. R7 now binds execution records to per-test contracts and the inventory version, retaining original whole-inventory hashes as provenance. The required D3 candidates are C/C4/B; H(G) is optional future work. Module granularity and startup costs join the ABI measurement plan. macOS is the sole reference host for this Wasm project. The native baseline and external census trace use macOS; no alternate operating-system qualification is required. D5 protocol v1.1 records generation-guarded host wakes, nested active-request routing and parking at idle host boundaries. D3 remains open. Runtime acceptance remains evidence-scoped. [D]
+Version 0.17 replaces v0.16 and accompanies acceptance v1.7 and decisions v1.8. The bounded C/C4/B correctness protocol now has an executable corpus; new evidence awaits independent review. R7 binds execution records to per-test contracts and the inventory version, retaining original whole-inventory hashes as provenance. The required D3 candidates are C/C4/B; H(G) is optional future work. Module granularity and startup costs join the ABI measurement plan. macOS is the sole reference host for this Wasm project. The native baseline and external census trace use macOS; no alternate operating-system qualification is required. D5 protocol v1.1 records generation-guarded host wakes, nested active-request routing and parking at idle host boundaries. D3 remains open. Runtime acceptance remains evidence-scoped. [D]
 
 | Document | Content |
 | --- | --- |
-| This outline, v0.16 | Architecture, decisions, contracts, delivery stages and provenance. The authority for what is being built and why. |
-| Acceptance Policy and Regression Register, v1.6 | R7 gate rules, evidence kinds and record schema, R6 normalization policy, sources and LL01–LL24. Individual obligation metadata is authoritative; stage lists and the index are derived. |
-| Stage 0 Desk Decisions, v1.7 | D1–D7 selections, reversal criteria and protocol details; D3 remains the open ABI choice. The decided contracts are build targets, not claims of executed proof. |
+| This outline, v0.17 | Architecture, decisions, contracts, delivery stages and provenance. The authority for what is being built and why. |
+| Acceptance Policy and Regression Register, v1.7 | R7 gate rules, evidence kinds and record schema, R6 normalization policy, sources and LL01–LL24. Individual obligation metadata is authoritative; stage lists and the index are derived. |
+| Stage 0 Desk Decisions, v1.8 | D1–D7 selections, reversal criteria and protocol details; D3 remains the open ABI choice. The decided contracts are build targets, not claims of executed proof. |
 | Evidence records E1–E5 | E1, E2 and E5 identify execution packs; E3 is a status record. E4 is conversation-recorded syscall evidence; its archived trace pack is pending. |
 
 #### Requirements
@@ -415,7 +415,7 @@ Planning assumption: three to six engineer-years through interactive self-hostin
 
 [25] [Emscripten: Asynchronous Code](https://emscripten.org/docs/porting/asyncify.html) Suspension alternatives and the interpreter-on-Wasm baseline.
 
-[D] Stage 0 Desk Decisions v1.7, 11 September 2026 D1 derived data layout; D2 profile materialization; D3 open ABI candidate sequence; D4 selected runtime split; D5 GC admission, logical IDs/entry slots and interruptible mailbox; D6 vocabulary/lowering; D7 phased tests. Decision choices are distinct from implementation/test acceptance. CCL_WebAssembly_Stage0_Desk_Decisions_v1_7.docx
+[D] Stage 0 Desk Decisions v1.8, 11 September 2026 D1 derived data layout; D2 profile materialization; D3 open ABI candidate sequence; D4 selected runtime split; D5 GC admission, logical IDs/entry slots and interruptible mailbox; D6 vocabulary/lowering; D7 phased tests. Decision choices are distinct from implementation/test acceptance. CCL_WebAssembly_Stage0_Desk_Decisions_v1_8.docx
 
 #### Implementation baselines
 

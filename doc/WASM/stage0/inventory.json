@@ -244,8 +244,8 @@
           "description": "Compare independent raw unequal cons fixtures with target-compiled C assertions and emitted probes, including NIL, mutation and graph structure. Both representations must agree with the independent oracle."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/stage0/dynamic-call/run.mjs",
       "review_disposition": "NOT_REVIEWED"
     },
     {
@@ -263,8 +263,8 @@
           "description": "Inject a one-sided CAR/CDR swap and require fixture rejection; neither symmetric values nor a shared writer/reader error may conceal it."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/stage0/dynamic-call/run.mjs",
       "review_disposition": "NOT_REVIEWED"
     },
     {
@@ -287,8 +287,8 @@
           "description": "For C, C4 and B: verify ordered arguments 0\u20136 and long overflow, nested side effects, direct/indirect/closure calls, APPLY and optional/rest/keyword binding, and every zero/one/many result. Check explicit stack/count ownership."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/stage0/dynamic-call/run.mjs",
       "review_disposition": "NOT_REVIEWED"
     },
     {
@@ -308,11 +308,11 @@
       "assertions": [
         {
           "id": "S0-LL05-b:contract",
-          "description": "Place different signatures in one table and call matching entries. Reject wrong-signature mutants; an isolated probe confirms trapping before stub entry. Also substitute G for E_4/E_5/E_1 where types coincide: role validation or semantic assertions must detect what the engine type check cannot."
+          "description": "Place different signatures in one table and call matching entries. Reject wrong-signature mutants; an isolated probe confirms trapping before Lisp entry. Reject substitution of a structurally matching entry with the wrong semantic role through role validation and independent semantic assertions. C/C4/B require generic Lisp entries and explicit runtime adapters only."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/stage0/dynamic-call/run.mjs",
       "review_disposition": "NOT_REVIEWED"
     },
     {
@@ -332,11 +332,11 @@
       "assertions": [
         {
           "id": "S0-LL05-c:contract",
-          "description": "Force G and every supported E_k through their own lazy stub. Check eligibility/fallback for exact versus variable arity, preserve closure self and overflow space, and reload roots after allowed collection/suspension."
+          "description": "Force C/C4/B generic entries and runtime adapters through matching lazy stubs for exact and variable arity. Preserve closure self and overflow space, reload roots after collection/suspension, and report ordinary arity conditions. Specialized typed Lisp entries are optional future work."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/stage0/dynamic-call/run.mjs",
       "review_disposition": "NOT_REVIEWED"
     },
     {
@@ -359,8 +359,8 @@
           "description": "Run generic cross-arity tail chains, shrinking/growing overflow and adapters. Observe bounded explicit-stack/root use, complete multiple values and preserved cleanup/binding extent."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/stage0/dynamic-call/run.mjs",
       "review_disposition": "NOT_REVIEWED"
     },
     {
@@ -460,8 +460,8 @@
           "description": "reject overlap/undersized ranges before publication."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/stage0/dynamic-call/run.mjs",
       "review_disposition": "NOT_REVIEWED"
     },
     {
@@ -704,11 +704,11 @@
       "assertions": [
         {
           "id": "S0-LL21-b:contract",
-          "description": "map one code ID to G/E_k slots, fill new callable slots with matching stubs, reject conflicting signatures, preserve old function objects across a prebuilt redefinition."
+          "description": "Map each code version to explicit generic and runtime-adapter slots, fill new callable slots with matching stubs, reject conflicting signatures or roles, and preserve old function objects across a prebuilt redefinition."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/stage0/dynamic-call/run.mjs",
       "review_disposition": "NOT_REVIEWED"
     },
     {

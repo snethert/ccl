@@ -1,5 +1,7 @@
 # Integrated runtime execution and implementer review — 2026-09-11
 
+Current disposition: Claude signed off the retained runtime and v2 tooling in 52639e4e; the user-authorized [project decision](project-acceptance.md) accepts the three original runtime slices at their recorded bounds. The execution history and earlier raw dispositions below remain historical. New dynamic-call code is excluded.
+
 The requested hand-built moving-GC, concurrency and interruptible-I/O work is implemented and executed. The externally reviewed run **INTEGRATED-RUNTIME-r10** passes S0-LL20-a/b/c and freshly reruns S0-LL13-c/S0-LL19-b. See the [runner and contracts](../../../tests/wasm/stage0/integrated-runtime/README.md), [machine summary](../evidence/integrated-runtime-summary.json) and [retained-pack index](../evidence/index.json).
 
 | Slice | Deterministic positive cases | Rejection controls | Observed behavior |
@@ -18,7 +20,7 @@ For the current execution, extract DEBUG-FRAMES-r5 from the [index](../evidence/
 
 ## Implementer review
 
-The points below are implementer verification. [Claude’s external r8 audit and its dispositions](claude-review.md) are recorded separately. Claude’s second audit re-executed r10 byte-identically and found no further defect; acceptance remains a separate project decision. The logical-frame proof freshly reruns the unchanged integrated prerequisites against the updated inventory; Claude’s later audit also covers the r3 frame mechanism. The v2 envelope wrappers need their own independent review.
+The points below are implementer verification. [Claude’s external r8 audit and its dispositions](claude-review.md) are recorded separately. Claude’s second audit re-executed r10 byte-identically and found no further defect; acceptance remains a separate project decision. The logical-frame proof freshly reruns the unchanged integrated prerequisites against the updated inventory; Claude’s later audit also covers the r3 frame mechanism. Claude subsequently reviewed the v2 envelope wrappers in 52639e4e; the current acceptance decision is linked above.
 
 - The collector copies objects and scans actual published root chains, including live C stack records, emitted binding frames and complete result regions. Tests read the relocated graph, preserve cycles/aliases, inspect rewritten roots and require old-space poison. Separate C and Wasm stale-reference mutants fail.
 - GC ownership is acquired by CAS. A loser cannot change parity. Former owners and losing requesters retry admission when a new collection races with wake-up. Registration precedes child execution; final membership rescan includes a handoff root after its parent relinquishes it. An unpublished-child admission is rejected.

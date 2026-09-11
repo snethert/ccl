@@ -2,15 +2,15 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "e57e1d9f95d8ffb770942e144e0a643c54570395",
+  "commit": "b9d27c8573851ad560a45df8224259bdd1ee9bb2",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "0ae105d40bd6208380a5f5e7aa64f9f14922ace52d7b410772100f43188078dd",
-  "immutable_evidence_files": 6767,
-  "indexed_references_verified": 157,
-  "source_index_snapshot": "catalog/source-index-contract-bindings.json",
-  "source_index_sha256": "4c6945e201e281ef6993933ed0d1a65b639c9d4022fc887bbba43282e328fb5a",
-  "verification": "All catalogued files and committed Git blobs are byte-identical; eight corruption/relocation controls and git fsck --full pass.",
+  "catalog_sha256": "30b8c087ed9e80ff0b292bd01fb7e42aab41222c1579fafc5edb37e9c06b0897",
+  "immutable_evidence_files": 20774,
+  "indexed_references_verified": 292,
+  "source_index_snapshot": "catalog/source-index-dynamic-call-final.json",
+  "source_index_sha256": "abd76cdf71caea79adbd3e0461005a5226e2cda118a7e2d347440fe65901a0dc",
+  "verification": "All catalogued files and 2,390 distinct committed Git blobs match by byte size and SHA-256. Eight catalog controls pass. git fsck --full exits 0 (one unreferenced blob reported).",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository; original execution/review/acceptance dispositions remain unchanged."
+  "scope": "Separate local evidence repository. Original evidence is immutable; project acceptance is a separate seven-record envelope, and new ABI execution remains unreviewed."
 }

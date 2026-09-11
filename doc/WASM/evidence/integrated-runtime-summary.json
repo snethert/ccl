@@ -65,7 +65,11 @@
     "logical_cpus": 16,
     "node_flags": []
   },
-  "scope": "Fresh execution of reviewed integrated mechanism with new v2 envelope wrapper. All 31 runtime/prerequisite objects and modules identical to reviewed r10; no new acceptance.",
+  "scope": "Reviewed integrated mechanism with v2 envelope: all 31 runtime/prerequisite objects and modules identical to reviewed r10. Original execution bytes retained; project acceptance is the separate seven-record decision.",
   "envelope_version": 2,
-  "inventory_version": 1
+  "inventory_version": 1,
+  "review_disposition": "ACCEPTED",
+  "acceptance_record": "stage0/project-acceptance.md",
+  "review_note": "Claude sign-off committed as 52639e4e; user-authorized scoped project acceptance recorded in a separate envelope. Original execution bytes/timestamps unchanged. New dynamic-call implementation is excluded.",
+  "acceptance": "ACCEPTED_RECORDED_SCOPE"
 }

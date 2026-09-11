@@ -1,5 +1,18 @@
 # Change history
 
+## 2026-09-11 — scoped project acceptance and C/C4/B correctness
+
+Following Claude's sign-off committed as 52639e4e, the user authorized proceeding. A separate acceptance envelope records exactly seven original native/runtime/frame records as ACCEPTED within their reviewed scopes. The original report, timestamps, test revisions, contract digests and artifacts are unchanged. Fourteen acceptance-producer controls verify identity, scope, failure rejection and preservation. Acceptance alone reduces the gate from 49 reasons to 42 missing records.
+
+The isolated dynamic-call fixture implements C/C4/B through one corpus: 53 positive cases and 27 rejected controls per candidate, 159/81 total. It freshly executes boundary 12/9, integrated 22/14/1,000 seeds and frames 11/11. New ABI source and its new linked kernel remain NOT_REVIEWED/NOT_ACCEPTED. A separate rebuild reproduces all 35 new objects/modules byte-identically; all 49 prerequisite objects/modules match the previously reviewed r5 pack. No shared compiler, upstream kernel or earlier fixture source changed.
+
+Original ABI development r1 exposed duplicate scanning of a result slot through both the TCR descriptor and a root record. Development r2 exposed a stale frame result count during nested output reuse. Both fixes change only the new fixture, retain original failed evidence and have rejection controls. Later control-development runs detected an old-code substitution via the new source-metadata oracle before the expected value check; the control now recognizes that precise rejection. Larger development evidence is retained in the separate evidence repository, with hashes in the source index.
+
+Outline 0.17, acceptance 1.7 and decisions 1.8 remove the remaining mandatory specialized-entry language in D7, consistent with the user's prior H(G) retirement. Generic C/C4/B and runtime-adapter signature/role/stub checks remain mandatory. The protocol declares finite argument, result, stack, root, frame, reply, Worker and heap bounds. It does not select D3 or claim generated code, production scale or browser/startup qualification.
+
+The current aggregate selects the seven accepted originals plus eighteen new unreviewed records. Its 42 reasons comprise 24 missing and eighteen unreviewed records. Original evidence and pre-change documents are retained. The new implementation needs independent review before project acceptance; measurements and the compiler/census track remain next.
+
+
 ## 2026-09-11 — third Claude audit: full verification and reviewer sign-off at 9c2ef44d
 
 Authorized by the user's request to verify all tested functionality with evidence and sign off.

@@ -20,8 +20,8 @@
   "results_member": "results.json",
   "inventory_sha256": "30c04b52092d76d197e317209bde129da994b9d77983a7267b87f9f236b9ad01",
   "execution_status": "PASS",
-  "review_disposition": "NOT_REVIEWED",
-  "acceptance": "NOT_ACCEPTED",
+  "review_disposition": "ACCEPTED",
+  "acceptance": "ACCEPTED_RECORDED_SCOPE",
   "toolchain": {
     "clang": "Homebrew clang version 21.1.8\nTarget: x86_64-apple-darwin24.6.0\nThread model: posix\nInstalledDir: /usr/local/Cellar/llvm/21.1.8/bin\nConfiguration file: /usr/local/etc/clang/x86_64-apple-darwin24.cfg",
     "linker": "Homebrew LLD 21.1.8",
@@ -48,5 +48,6 @@
   "scope": "Hand-built logical debugger-frame slice S0-LL23-b, with freshly executed C boundary and integrated-runtime prerequisites. Not a CCL debugger, D3 selection or full Stage 0 acceptance.",
   "envelope_version": 2,
   "inventory_version": 1,
-  "review_note": "Claude independently reviewed r3 core, no defect. New v2 wrappers/tooling await review; raw execution dispositions remain unchanged."
+  "review_note": "Claude sign-off committed as 52639e4e; user-authorized scoped project acceptance recorded in a separate envelope. Original execution bytes/timestamps unchanged. New dynamic-call implementation is excluded.",
+  "acceptance_record": "stage0/project-acceptance.md"
 }

@@ -3,9 +3,9 @@
   "evidence_kind": "NATIVE BASELINE EXECUTION",
   "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
   "test_revision": "561ab1be82fefd53a61089eaad4357023e1fa961",
-  "review_disposition": "NOT_REVIEWED",
+  "review_disposition": "ACCEPTED",
   "execution_status": "PASS",
-  "gate0_status": "EXECUTED_NOT_ACCEPTED",
+  "gate0_status": "ACCEPTED_SAME_HOST",
   "runs": [
     {
       "id": "run-1",
@@ -54,10 +54,12 @@
   "archive_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-macos-gate0-r3.zip",
   "archive_sha256": "003973c44c849498ea52e931407aab6dc87300bf0decb5c87f1d3aa41a0fa8e4",
   "inventory_sha256": "35be990465b480d0d214741f9a648af0d170e57e0860002a7a8b0235d2b4269b",
-  "review_note": "Claude independently reproduced original r3. The separate v2 envelope is derived from the original report and inventory after verifying every artifact; no new native execution or external envelope review. Acceptance remains pending.",
+  "review_note": "Claude sign-off committed as 52639e4e; user-authorized scoped project acceptance recorded in a separate envelope. Original execution bytes/timestamps unchanged. New dynamic-call implementation is excluded.",
   "original_archive_inventory_sha256": "35be990465b480d0d214741f9a648af0d170e57e0860002a7a8b0235d2b4269b",
   "gate_results_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-contract-bindings/native/gate-results.json",
   "gate_results_sha256": "89e995a206db12e47c52ef77b39ac6ed86adfa36f13de31b04bc9a56b671689e",
   "envelope_version": 2,
-  "inventory_version": 1
+  "inventory_version": 1,
+  "acceptance_record": "stage0/project-acceptance.md",
+  "accepted_results_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-project-acceptance/accepted/results.json"
 }
