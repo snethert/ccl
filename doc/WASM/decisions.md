@@ -1,18 +1,18 @@
-DECISION RECORD  /  VERSION 1.5  •  11 SEPTEMBER 2026
+DECISION RECORD  /  VERSION 1.6  •  11 SEPTEMBER 2026
 
 # Stage 0 Desk Decisions
 
-Companion to Port Outline v0.14 and Acceptance Policy and Regression Register v1.4
+Companion to Port Outline v0.15 and Acceptance Policy and Regression Register v1.5
 
-Version 1.5 replaces v1.4. It selects the macOS native reference and amends D5 to protocol v1.1 using defects found in the integrated fixture and Claude’s external audit. D1, D2, D4, D6 and D7 remain decided; D3 retains its baseline-first candidate sequence. Execution and acceptance remain separate. [17–19]
+Version 1.6 replaces v1.5. At the user’s direction, D3 requires only C/C4/B; H(G) is optional future work and does not gate progress. D3 measurements state granularity and startup assumptions. The macOS reference, D5 protocol v1.1 and the other decided contracts remain in force. Execution and acceptance remain separate. [17–19]
 
-R7 in the Acceptance Policy and Regression Register v1.4 governs all delivery and verification claims; recording a decision does not claim that its artifacts have been implemented or its tests run. [17]
+R7 in the Acceptance Policy and Regression Register v1.5 governs all delivery and verification claims; recording a decision does not claim that its artifacts have been implemented or its tests run. [17]
 
 | ID | Decision / experiment | Decision status |
 | --- | --- | --- |
 | D1 | Use the x8632-derived data-layout subset, with explicit Wasm execution-state replacements. | Decided. |
 | D2 | Materialize shared/unshared binaries deterministically from one validated canonical template. | Decided. |
-| D3 | Qualify C, C4 and B; measure their baselines; then qualify and compare H(G) against its own G. | Open selection. |
+| D3 | Qualify and compare C, C4 and B. H(G) is only a possible future enhancement. | Open selection among three generic candidates. |
 | D4 | Freestanding C kernel; Lisp-emitted subprimitives and ABI adapters; named runtime imports. | Decided. |
 | D5 | Owner-only GC generation updates; published-root admission, membership rescan, typed entries and stable mailbox storage. | Decided: protocol v1. |
 | D6 | Adopt disposition vocabulary and explicit trap lowering; complete the census and select floating-point policy separately. | Decided: vocabulary and lowering. |
@@ -76,70 +76,55 @@ Use separately emitted, explicitly recorded profile variants if a required seman
 
 ## D3  /  DYNAMIC-CALL ABI
 
-### Open ABI selection: uniform baselines, then H(G)
+### Open ABI selection: C, C4 and B
 
-#### Specification correction
+#### Candidate set and specification
 
-A funcref table may contain functions with different signatures. Each call_indirect specifies a static expected function type and checks the selected table element against it before entry. One instruction cannot derive its signature from a runtime nargs. A uniform generic Lisp ABI is therefore a design choice, not a Wasm table-wide restriction. A module-local type index is not a process-wide signature identifier. [12]
+The user directed on 11 September 2026 that H(G) be ignored except as a possible future enhancement. D3 selects among C, C4 and B. No Stage 0 or Stage 1 prerequisite, mandatory experiment or acceptance gate requires H(G). Its earlier design and thresholds remain historical; reconsideration would be a separately scoped future decision.
 
-#### Candidate set and experiment order
+A funcref table may contain functions with different signatures. Each call_indirect specifies a static expected type and checks the selected element before entry. One instruction cannot derive its signature from runtime nargs. A uniform generic Lisp ABI is a design choice, not a table-wide Wasm restriction; module-local type indices are not process-wide signature identities. [12]
 
-Retain explicit self, a complete generic call path and the proposed two-result convention. First take C, C4 and B through the correctness corpus and establish their baselines; only then evaluate H(G) against its corresponding generic G. H remains a Stage 0 candidate, not a prerequisite for getting the uniform baselines working or a presumed winner. In the signatures below, self, arguments and value0 are tagged Lisp values carried as i32; count encoding and VSP ownership are separate protocol definitions.
+Retain explicit self, a complete generic call path and the two-result convention. Take all three candidates through the correctness corpus before their baseline measurements. Self, arguments and value0 are tagged Lisp values carried as i32; count encoding and VSP ownership are separate protocol definitions.
 
 | ABI ID | Wasm entry shape | Experiment |
 | --- | --- | --- |
 | C | (self, nargs, a0, a1, a2) → (value0, nvalues) | Three argument parameters; remaining arguments on VSP. |
 | C4 | (self, nargs, a0, a1, a2, a3) → (value0, nvalues) | Four argument parameters; remaining arguments on VSP. |
 | B | (self, nargs) → (value0, nvalues) | All Lisp arguments on VSP; simplicity baseline. |
-| H(G) | Generic G chosen from C, C4 or B, plus E_k(self, a0, …, a{k−1}) → (value0, nvalues) | Later candidate: typed fixed-arity entries alongside G. Record G and the supported arities for each H run. |
 
-In an eligible four-argument call, C carries five Wasm parameters including nargs and places the fourth Lisp argument on VSP. E_4 also carries five parameters, but all four Lisp arguments are parameters and the entry contract establishes the count. This removes overflow-argument marshaling for that call; it does not eliminate GC-root publication or establish a speedup. [Design comparison]
-
-#### When a specialized entry may be selected
-
-A known supplied count is not a known callee convention: (funcall f x y) may reach a required-only, optional, rest or keyword function. H initially specializes declared exact-arity entries; variable-arity calls retain G unless a tested adapter implements the complete lambda-list semantics. A call site chooses E_k only after establishing that the actual function object/version advertises that entry and matching signature; otherwise it uses G. Bad designators and wrong arities follow the Lisp error contract, never a Wasm type-mismatch trap. [15; LL05, LL12, LL19]
-
-Unknown-callee cost. Selecting E_k for an unknown function object requires reading its entry descriptor and checking semantic role and arity, with an eligibility/fallback branch on each such call. Measure the incremental descriptor access and checks beyond G against the VSP marshaling they avoid; do not charge H again for an entry lookup G already performs. Include generic-to-specialized and specialized-to-generic adapters and the stub family separately in runtime, code-size and installation accounting. [18]
-
-Every callable function object has a generic entry descriptor. Optional specialized descriptors belong to that object’s code version. Resolve symbol designators under the applicable CCL semantics and preserve live redefinition; a cached specialization must not continue calling an obsolete definition merely because its name and arity match. Old retained function objects continue to call their own code and environments. Known direct calls may already use suitable signatures; H adds a candidate for checked indirect dispatch. [LL11, LL12]
-
-For APPLY, determine the supplied count and validate/spread the list under the Lisp contract, then choose an eligible E_k or G. H does not require an unbounded family of Wasm types: the proof set covers exact arities 0–6 and overflow cases, with other counts using G. Final specialized coverage is selected from measurements and census distributions, not from a claim that an engine has a fixed number of Wasm argument registers.
+Every callable function object has a generic entry descriptor tied to its code version and environment. Resolve symbol designators under the applicable CCL semantics and preserve live redefinition. Old retained function objects continue to call their own code and environments. For APPLY, validate the list and supplied count and spread arguments under the chosen generic protocol. Bad designators and arities follow Lisp error semantics, never a Wasm type-mismatch trap. [15; LL05, LL11, LL12, LL19]
 
 #### Complete argument and result protocols, before timing
 
-abi/dynamic-call.v0 must define the following for each candidate before that candidate is timed. Include contracts/debug-frames.md and charge its publication, storage and inspection-policy costs consistently; S0-LL23-b precedes ABI freeze:
+abi/dynamic-call.v0 must define the following for each candidate before timing. Include contracts/debug-frames.md and charge its publication, storage and inspection-policy costs consistently; S0-LL23-b precedes ABI freeze:
 
 | Contract | Required definition |
 | --- | --- |
-| Arguments | For supplied count N, map every argument number to a parameter or precise VSP-relative address. Define stack growth, reserved extent, alignment, raw/tagged count encoding, unused-parameter contents, arity checks and maximum supported count. “Pushed in order” is not enough. |
-| Ownership | Define caller/callee responsibility for overflow space, temporary roots, incoming-frame lifetime and stack bounds on ordinary return, tail transfer, errors and reentrant callbacks. Record exact before/after VSP, TSP and CSP invariants. |
-| Returns | All candidates return (value0, nvalues). Zero values require value0 = NIL for single-value consumption. Extra values use an explicitly defined VSP region with recorded extent and lifetime; the TCR multiple-value descriptor refers to that region, not an unexplained second buffer. |
-| Nested calls | A caller that needs earlier extra values across another call preserves them in owned, rooted storage. Define who releases the result region and how multiple-value-call and cleanup preserve the complete ordered result sequence. |
-| GC and suspension | Publish live self, arguments, temporaries and extra values at every legal stopping/allocating boundary. After moving GC reload tagged references and re-derive raw pointers before using them. Include stub/adapter and C-helper boundaries. |
+| Arguments | For supplied count N, map each argument to a parameter or precise VSP-relative address. Define stack growth, reserved extent, alignment, raw/tagged count encoding, unused-parameter contents, arity checks and maximum supported count. |
+| Ownership | Define caller/callee responsibility for overflow space, temporary roots, incoming-frame lifetime and bounds on ordinary return, tail transfer, errors and reentrant callbacks. Record before/after VSP, TSP and CSP invariants. |
+| Returns | Return (value0, nvalues), with value0 = NIL for zero values consumed singly. Extra values use an owned VSP region with explicit extent and lifetime; the TCR descriptor refers to it. |
+| Nested calls | Preserve earlier extra values in owned, rooted storage when needed across a later call. Define release and the complete ordered sequence through multiple-value-call and cleanup. |
+| GC and suspension | Publish live self, arguments, temporaries and extra values at legal stopping/allocating boundaries. Reload moved roots and rederive pointers, including stub/adapter and C-helper boundaries. |
 
-#### Lazy installation: shared stubs by type and semantic role
+#### Lazy installation and entry identity
 
-C, C4 and B can each use one shared stub for their uniform Lisp-call convention. H needs a generic stub plus shared specialized stubs, not one stub per Lisp function. Index the stub family by (ABI version, entry kind, structural signature): its implementation fixes the semantic entry role, and self supplies the function/code identity. A structurally incompatible stub traps before it can inspect self. [12; LL05, LL21]
+Each uniform candidate can use one shared stub for its Lisp-call convention. Key entry metadata by ABI version, semantic entry kind and structural signature. The stub's role and self identify the target; a wrong structural signature traps before entry, while matching Wasm types do not establish matching semantic roles. Retain wrong-signature and same-type/wrong-role rejection controls for the generic entry and runtime adapter contracts. [12; LL05, LL21]
 
-Same Wasm type does not mean same argument protocol. C and E_4 both have five i32 parameters and two i32 results, but parameter 1 is nargs in C and the first Lisp argument in E_4. Similarly C4 coincides structurally with E_5, and B with E_1. The engine cannot detect those role substitutions by type alone. Keep distinct generic/specialized stub implementations and entry-role metadata, and test a same-type wrong-role mutant. Combining stubs is allowed only with an explicit discriminator and measured adapter contract. [Design consequence of the candidate signatures]
+Every allocated uninstalled slot contains the matching stub before dispatch. The stub publishes roots, obtains the owning module, validates and instantiates the profile-specific binary, installs admitted entries, reloads moved references and redispatches under the same contract. Preserve count, overflow arguments and result-region ownership. Seed the installer's dependencies eagerly. A blocked Worker uses an accessible byte cache or stable mailbox with notification, not an incoming event-loop message it cannot handle; JSPI uses its declared suspended path. Failure is explicit and non-passing, never a silently missing entry. [LL01, LL13, LL15, LL20–LL22]
 
-Each callable uninstalled slot must already contain the stub matching that slot’s manifest signature and semantic role. The stub publishes roots, requests the exact owning module, validates and instantiates the profile-specific binary, installs its admitted entries, reloads potentially moved references and redispatches through the same expected type. Preserve count, overflow arguments and result-region ownership. Dependencies needed by the installer itself are eager bootstrap dependencies. [LL13, LL15, LL20–LL22]
+#### Tail calls and dynamic extent
 
-A blocked Worker cannot depend on handling an incoming event-loop message to obtain its code. The full-profile installation protocol supplies required module bytes through an already accessible cache or stable mailbox byte region, with notification waking the Worker to instantiate them. The JSPI profile specifies the corresponding suspended continuation. Failure yields a precise non-passing result or the explicitly supported Lisp condition path, not a silently missing table entry. [Design requirement; LL01, LL20, LL21]
-
-#### Tail calls across different argument signatures
-
-Wasm tail-call validation requires compatible result types, not equal caller/callee parameter lists. Keeping (value0, nvalues) permits transfers among G and E_k signatures using the callee’s expected type. Generated code must still provide the correct arguments and release or relocate its own linear-memory frames and root records. A tail instruction does not perform Lisp-stack cleanup. [7, 12]
-
-Active dynamic bindings, handlers or UNWIND-PROTECT cleanup may require the caller’s dynamic extent to remain represented. Use a proved transfer protocol or retain the continuation; do not discard cleanup to obtain a tail call. Test changing arities, growing and shrinking overflow regions, generic-to-specialized and specialized-to-generic adapters, zero/many values, and bounded explicit-stack/root usage under long tail chains. [LL05, LL19]
+Wasm tail-call validation requires compatible result types rather than equal parameter lists. The uniform result pair permits different argument counts, but emitted code must prepare the callee's arguments and release or relocate its own explicit frames and roots. Active bindings, handlers and UNWIND-PROTECT cleanup retain their required dynamic extent. Test growing and shrinking overflow, zero/many values, bounded stack/root use and preserved cleanup under long tail chains. A tail instruction does not perform Lisp-stack cleanup. [7, 12; LL05, LL19]
 
 #### Measurement and decision rule
 
-Sequence. C, C4 and B must each pass the semantic and rejection corpus before their baseline measurements are taken. Once those baselines exist, qualify H(G) on its full correctness corpus and measure it against the same G. Workloads include ordinary direct and checked indirect calls with known and unknown callees, optional/rest/keyword binding, APPLY, closures, multiple values, recursion, cross-arity tail calls and first-call installation. Keep warm calls and cold installation separate; record engine/version/tier, variance, root stores/reloads, code and adapter bytes, table slots, compilation/installation latency and per-Worker resources.
+After all three candidates pass correctness, measure the fixed workloads with direct and indirect calls, closures, optional/rest/keyword binding, APPLY, multiple values, recursion, cross-arity tail calls and first-call installation. Keep cold and warm paths separate; record engine/version/tier, variation, root stores/reloads, code/adapter bytes, table slots, compilation/installation latency and per-Worker resources.
 
-Decision rule. Compare H(G) with the corresponding uniform G so specialization is not confused with a changed generic convention. Charge H only for work G does not already do, including its eligibility check and fallback branch. Reject any candidate that weakens conditions, redefinition, root coverage or lazy installation. Use stage0/benchmarks.json version 1 as the predeclared noise/budget rule, including its trial counts, confidence intervals, simplicity order and resource thresholds. Record its hash before selection measurements; changes require a dated rationale and affected measurements rerun. Prefer the simplest candidate within that rule; choose H only when representative gains justify its added machinery. Three arguments is a native precedent, not a privileged Wasm optimum. [18]
+Each recommendation states its module granularity, eager/lazy boundary, weighted call distribution and Worker counts. Compare same-instance and cross-instance dispatch and test whether granularity changes the ABI ranking under the [product-risk plan](stage0/product-risk-plan.md). Stage 1 finalizes production packaging and repeats affected measurements if it changes the recommendation's basis.
 
-Artifacts: versioned ABI descriptions for C/C4/B/H, typed-entry and stub metadata, the D7 correctness/rejection inventory, and a benchmark report with all tested configurations. D3 is the open selection. Stage 1 repeats the chosen contract through compiler-generated code; hand-built results do not certify pass 2. Revisit a selected ABI if later correctness evidence or representative measurements overturn its recorded basis. [LL03, LL05, LL21, LL22]
+Use stage0/benchmarks.json version 2 for the predeclared trial counts, confidence intervals and simplicity order. Freeze its digest and the representative workload/granularity matrix before selection measurements. Prefer the simplest candidate within the confidence-bound rule; record no selection if correctness, uncertainty or required product evidence is unresolved. Three arguments is a native precedent, not a privileged Wasm optimum. [18]
+
+Artifacts: versioned C/C4/B ABI descriptions, generic-entry/stub metadata, the D7 correctness/rejection inventory and all 24 candidate/workload measurement records. Stage 1 repeats the chosen contract through generated code; hand-built results do not certify pass 2. Revisit the ABI when generated correctness or representative measurements overturn its recorded basis. [LL03, LL05, LL21, LL22]
 
 ## D4  /  RUNTIME IMPLEMENTATION LANGUAGE
 
@@ -316,9 +301,9 @@ Revise the vocabulary or lowering rule only if the census or a demonstrated sema
 
 ### Authoritative obligations, typed-call tests and negative controls
 
-Decision. Use the register-derived ID and inventory scheme below. Acceptance Policy and Regression Register v1.4 is authoritative for first acceptance, extensions and continuing regressions; this section maps its Stage 0 slices and standing controls without creating a second stage schedule. All LL01–LL24 obligations remain in force. Stage 0 includes LL01, LL02, LL04, LL05, LL07, LL08, LL13, LL15, LL19–LL21 plus standing LL03 and LL22–LL24. [17, 18]
+Decision. Use the register-derived ID and inventory scheme below. Acceptance Policy and Regression Register v1.5 is authoritative for first acceptance, extensions and continuing regressions; this section maps its Stage 0 slices and standing controls without creating a second stage schedule. All LL01–LL24 obligations remain in force. Stage 0 includes LL01, LL02, LL04, LL05, LL07, LL08, LL13, LL15, LL19–LL21 plus standing LL03 and LL22–LL24. [17, 18]
 
-Use S<stage>-LL<nn>-<letter> with an evidence kind and pinned test revision. The JSON inventory lists mandatory IDs, profile/candidate variants, assertions and prerequisites for each experiment phase. Missing mandatory evidence is BLOCKED or NOT RUN, never PASS; baseline qualification does not require H variants before the D3 sequence reaches H.
+Use S<stage>-LL<nn>-<letter> with an evidence kind and pinned test revision. The JSON inventory lists mandatory IDs, profile/candidate variants, assertions and prerequisites for each experiment phase. Missing mandatory evidence is BLOCKED or NOT RUN, never PASS. H(G) is absent from the required candidate and measurement inventories.
 
 #### Acceptance, representation and ABI
 
@@ -328,10 +313,10 @@ Use S<stage>-LL<nn>-<letter> with an evidence kind and pinned test revision. The
 | LL02 S0-LL02-a/b | Omit one required test ID and require BLOCKED. Mutate a returned value, capture or cleanup effect and observe the production gate reject the defect; quarantine mutant artifacts. |
 | LL03 S0-LL03-a | Reject a hand-built or synthetic evidence record offered for compiler-generated acceptance. Label candidate, profile, substitution and exact artifacts independently of pass/fail. |
 | LL04 S0-LL04-a/b | Compare schema with target-compiled C assertions and emitted probes. Independent unequal two-word CAR/CDR fixtures include mutation and NIL; inject a one-sided swap. Exercise dotted, nested, shared and cyclic fixtures where supported by the hand-built slice. |
-| LL05 S0-LL05-a | First for C, C4 and B, then for each later H(G): verify ordered arguments 0–6 and long overflow, nested side effects, direct/indirect/closure calls, APPLY and optional/rest/keyword binding, and every zero/one/many result. Check explicit stack/count ownership. |
+| LL05 S0-LL05-a | For C, C4 and B: verify ordered arguments 0–6 and long overflow, nested side effects, direct/indirect/closure calls, APPLY and optional/rest/keyword binding, and every zero/one/many result. Check explicit stack/count ownership. |
 | LL05 S0-LL05-b | Place different signatures in one table and call matching entries. Reject wrong-signature mutants; an isolated probe confirms trapping before stub entry. Also substitute G for E_4/E_5/E_1 where types coincide: role validation or semantic assertions must detect what the engine type check cannot. |
 | LL05 S0-LL05-c | Force G and every supported E_k through their own lazy stub. Check eligibility/fallback for exact versus variable arity, preserve closure self and overflow space, and reload roots after allowed collection/suspension. |
-| LL05 S0-LL05-d | Run generic/specialized cross-arity tail chains, shrinking/growing overflow and adapters. Observe bounded explicit-stack/root use, complete multiple values and preserved cleanup/binding extent. |
+| LL05 S0-LL05-d | Run generic cross-arity tail chains, shrinking/growing overflow and adapters. Observe bounded explicit-stack/root use, complete multiple values and preserved cleanup/binding extent. |
 | LL07 S0-LL07-a | Check signed fixnum, raw address, logical-ID and typed-slot conversions separately. Synthetic addresses above 2 GiB retain bits through JS; checked exhaustion rejects invalid IDs and capacities. |
 | LL08 S0-LL08-a/b/c | a: validate the actual registration patch in clean host sessions with target state set before reading. b: compare evaluated acode IDs/flags and reserved slots under R6a. c: repeat the pinned U1 macOS x86-64 baseline on a second host and compare retained digests under R6 normalization, separately from target-state proof and native behavior. This supersedes the unexecuted H1/E5 ARM64 reproduction slice because U1 lacks that backend; history/changes.md records the scope change. H1 evidence remains historical. |
 
@@ -357,7 +342,7 @@ Use S<stage>-LL<nn>-<letter> with an evidence kind and pinned test revision. The
 
 The LL rows are supplemented by three explicit outline-exit records in stage0/inventory.json. S0-ENGINE-a qualifies the pinned engine/profile matrix including multivalue, tail calls, selected EH encoding, atomics, bulk memory and the profile's suspension path. S0-CONTRACTS-a reviews the complete versioned layout, frame, allocation/root/TCR, C-boundary and ownership contracts against their executed fixtures; the initial layout subset is insufficient. S0-ABI-selection records the complete ordered experiment, all measurement IDs from stage0/measurement-inventory.json, confidence intervals, resource budgets and the selected/rejected candidate rationale. None is replaced by passing a limited PROBE ID.
 
-D3 benchmarks use S0-ABI-<candidate>-<workload> identifiers linked to LL05/LL20/LL21 correctness prerequisites. Inventory phases are: C/C4/B correctness, their baseline measurements, H(G) correctness, then H(G)-versus-G measurements. Record the generic G, specialized arities, incremental descriptor/role/arity checks and fallback branches, adapter/stub counts, VSP/MV protocol, engine/tier and budgets. Keep shared baseline costs out of H’s incremental charge; keep cold and warm paths separate. Correctness failure makes a candidate ineligible for selection. [18]
+D3 benchmarks use 24 S0-ABI-<candidate>-<workload> identifiers linked to LL05/LL20/LL21 correctness prerequisites. Inventory phases are C/C4/B correctness followed by their baseline measurements. Record the candidate, adapter/stub counts, VSP/MV protocol, granularity, call distribution, engine/tier and budgets. Keep cold and warm paths separate. Correctness failure makes a candidate ineligible for selection. H(G) has no required inventory entry. [18]
 
 Stage 1 repeats the chosen ABI, representation and initialization checks through compiler-generated code. The register’s Stage 2 lifecycle/GC and Stage 3 live-compilation/redefinition extensions remain distinct from the prebuilt harness cases. Stage 5 verifies retained entry descriptors and code variants after fresh restoration. D3 selection, the source census, floating-point choice and test work remain on the outstanding-work ledger; the decided architecture and D5 protocol supply their build target.
 
@@ -369,7 +354,7 @@ Revise D7’s scheme only for a demonstrated conflict with the register’s auth
 
 ### Source basis and provenance
 
-U1 is c994217adc56b3f8a564526cee4695893ac84d86. Historical upstream source links below retain H1 4ca4df402e319789401cd33e680702e51ec601fc where they record earlier inspection; they do not override U1. D1 layout references [1–3] are repinned to U1, whose referenced files were inspected. Requalify other edit sites and census claims before implementation. Outline v0.14, register v1.4 and this decision record form the coordinated document set. Specification/toolchain references retain their prior recorded basis; no new engine qualification is claimed. Reference [18] dates the agreement’s confirmation, and [19] dates this exchange’s corrections; neither is a file-creation timestamp.
+U1 is c994217adc56b3f8a564526cee4695893ac84d86. Historical upstream source links below retain H1 4ca4df402e319789401cd33e680702e51ec601fc where they record earlier inspection; they do not override U1. D1 layout references [1–3] are repinned to U1, whose referenced files were inspected. Requalify other edit sites and census claims before implementation. Outline v0.15, register v1.5 and this decision record form the coordinated document set. Specification/toolchain references retain their prior recorded basis; no new engine qualification is claimed. Reference [18] dates the agreement’s confirmation, and [19] dates this exchange’s corrections; neither is a file-creation timestamp.
 
 [1] x8632 architecture data and execution layouts Tag constants, widths, canonical NIL/T, cons ordering and native execution-layout exceptions. [x8632-arch.lisp](https://github.com/Clozure/ccl/blob/c994217adc56b3f8a564526cee4695893ac84d86/compiler/X86/X8632/x8632-arch.lisp)
 
@@ -407,9 +392,9 @@ U1 is c994217adc56b3f8a564526cee4695893ac84d86. Historical upstream source links
 
 [16] WebAssembly numeric semantics Floating-point operation and operand cases; result classification alone is not a CCL condition policy. [Core numerics](https://webassembly.github.io/spec/core/exec/numerics.html)
 
-[17] Coordinated project-document authority Port Outline v0.14; Acceptance Policy and Regression Register v1.4; Stage 0 Desk Decisions v1.5. The outline owns architecture scope, the register owns acceptance and obligation metadata, and this record owns D1–D7 choices and protocols. Source inputs are identified below.
+[17] Coordinated project-document authority Port Outline v0.15; Acceptance Policy and Regression Register v1.5; Stage 0 Desk Decisions v1.6. The outline owns architecture scope, the register owns acceptance and obligation metadata, and this record owns D1–D7 choices and protocols. Source inputs are identified below.
 
-[18] Agreed decision amendments, reaffirmed 11 September 2026 Project exchange confirming the v1.2 agreement: decided statuses and reversal criteria; owner-only CAS acquisition and atomic-store release; parity admission/root reload; final membership rescan; host-acknowledged cancellation; and baseline-first incremental H(G) accounting. The date identifies the confirmation exchange, not this file’s revision or an inferred earlier message timestamp.
+[18] Agreed decision amendments, reaffirmed 11 September 2026 Project exchange confirming the v1.2 agreement: decided statuses and reversal criteria; owner-only CAS acquisition and atomic-store release; parity admission/root reload; final membership rescan; host-acknowledged cancellation; and the then-current baseline-first incremental H(G) accounting, superseded by the user’s later instruction to make H(G) optional future work. The date identifies the confirmation exchange, not this file’s revision or an inferred earlier message timestamp.
 
 [19] Interrupt-wake and companion consistency corrections, 11 September 2026 Project exchange requiring wake-up of a FOREIGN I/O waiter through INTERRUPTED status and notification, admission before interrupt service, retention of its outstanding descriptor, a S0-LL20-b schedule, conditional G/E_k stub wording, separate logical IDs and slots, and corrected revision/exchange dates.
 

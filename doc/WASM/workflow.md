@@ -14,12 +14,13 @@ flowchart TD
     P --> I[0D: integrated GC, I/O interrupt, EH, C stack and Worker lifecycle]
     P --> B[0E: C/C4/B correctness, then baseline measurements]
     I --> B
-    B --> H[H versus its own G: correctness, then measurements]
     J --> Q[0F: close census and ABI; validate complete evidence]
-    H --> Q
+    B --> Q
     I --> Q
     Q --> S[Stage 0 accepted only when every required slice passes]
     S --> N[Stage 1: repeat selected contracts through generated code]
 ```
 
 The initial harness is an implementation aid within 0C. It does not complete that subgate. Census distributions refine 0E's representative workloads but do not prevent earlier correctness experiments. Static unresolved edges remain visible even if no corresponding load appears in a trace. Source and target-state instrumentation is internal to the compiler; load-order observation uses an external macOS file-activity tracer, not `%fasload` hooks.
+
+The [product-risk measurement plan](stage0/product-risk-plan.md) joins module granularity and cold installation with ABI comparisons before a recommendation. Native census work and an authorized experimental pass-2 slice can proceed before Stage 0 acceptance, with explicit provisional contracts and their own evidence. Such a spike does not mean Stage 1 has been accepted or that any Stage 0 requirement has been waived.

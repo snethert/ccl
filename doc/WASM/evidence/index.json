@@ -63,7 +63,7 @@
       "reproduction": "Retain exact original commands, bootstrap/test/toolchain pins, raw logs and full digests; run at original revision. Do not infer missing pins from filenames."
     }
   ],
-  "retention_rule": "Keep the current fixture pack and original failure packs in the repository. Superseded packs remain byte-identical in the external evidence store with full hashes and retrievable locators. Historical inventory hashes are never rewritten. External paths identify local retention, not an independently backed-up remote archive.",
+  "retention_rule": "Keep the current fixture packs and original failure packs in the implementation repository. Preserve all original and superseded bytes in the separate local ccl-evidence Git repository, with a portable SHA-256 catalog, full hashes and retrievable locators. Historical inventory hashes are never rewritten. The local repository is not an off-machine backup; see evidence/repository.json.",
   "current_runs": [
     {
       "id": "INITIAL-PROBES-r1",
@@ -440,13 +440,13 @@
       "scope": "Hand-built logical debugger-frame slice S0-LL23-b, with freshly executed C boundary and integrated-runtime prerequisites. Not a CCL debugger, D3 selection or full Stage 0 acceptance.",
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
-      "currency": "CURRENT",
-      "note": "Eleven frame cases and eleven controls, fresh integrated 22/14/1000 prerequisites and boundary 12/9 prerequisites. New frame work has no external review.",
-      "path": "evidence/runs/2026-09-11-debug-frames-r3.zip"
+      "currency": "SUPERSEDED",
+      "note": "Eleven frame cases and eleven controls, fresh integrated 22/14/1000 prerequisites and boundary 12/9 prerequisites. New frame work has no external review. Superseded inventory after the user removed mandatory H(G); original bytes and review scope retained.",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/superseded/2026-09-11-debug-frames-r3.zip",
+      "availability": "EXTERNAL_LOCAL_STORE"
     },
     {
       "id": "INITIAL-PROBES-r6",
-      "path": "evidence/runs/2026-09-11-probes-r6.zip",
       "sha256": "c9243dc25e1c9ef834de4122ad56a2b6d383e5a0a75d3a8d8547761ad83d5877",
       "timestamp": "2026-09-11T20:58:36.797Z",
       "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
@@ -455,8 +455,10 @@
       "scope": "Initial hand-built probes only; Stage 0 remains incomplete.",
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
-      "currency": "CURRENT",
-      "note": "Three unchanged probes freshly executed against the inventory identifying S0-LL23-b. Historical r5 retains its own Claude review."
+      "currency": "SUPERSEDED",
+      "note": "Three unchanged probes freshly executed against the inventory identifying S0-LL23-b. Historical r5 retains its own Claude review. Superseded inventory after the user removed mandatory H(G); original bytes and review scope retained.",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/superseded/2026-09-11-probes-r6.zip",
+      "availability": "EXTERNAL_LOCAL_STORE"
     },
     {
       "id": "MACOS-NATIVE-GATE0-r3-FRAME-INVENTORY",
@@ -468,10 +470,53 @@
       "execution_status": "PASS",
       "scope": "Inventory-only rebind of the unchanged, externally reviewed native r3 execution; no fresh native run.",
       "review_disposition": "NOT_REVIEWED",
+      "currency": "SUPERSEDED",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "note": "Original r3 report/artifact bytes verified by record.py. G0-U1-a contract and runner unchanged. Claude reviewed the original execution, not this new envelope. Superseded inventory after the user removed mandatory H(G); original bytes and review scope retained.",
+      "original_execution_record": "MACOS-NATIVE-GATE0-r3"
+    },
+    {
+      "id": "DEBUG-FRAMES-r4",
+      "path": "evidence/runs/2026-09-11-debug-frames-r4.zip",
+      "sha256": "236060d9cbe76fe90cdc5c80acce57dcacd5dfbf771d81376eb11d25e7a4b739",
+      "timestamp": "2026-09-11T21:21:59.398Z",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "30c04b52092d76d197e317209bde129da994b9d77983a7267b87f9f236b9ad01",
+      "execution_status": "PASS",
+      "scope": "Hand-built logical debugger-frame slice S0-LL23-b, with freshly executed C boundary and integrated-runtime prerequisites. Not a CCL debugger, D3 selection or full Stage 0 acceptance.",
+      "review_disposition": "NOT_REVIEWED",
+      "results_member": "results.json",
+      "currency": "CURRENT",
+      "note": "Fresh unchanged fixture execution bound to the C/C4/B-only inventory and current applicable policy; no new acceptance."
+    },
+    {
+      "id": "INITIAL-PROBES-r7",
+      "path": "evidence/runs/2026-09-11-probes-r7.zip",
+      "sha256": "1bac33c3206b441119f288899795a393c325f78130b87b8be25762aacccff461",
+      "timestamp": "2026-09-11T21:22:36.592Z",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "30c04b52092d76d197e317209bde129da994b9d77983a7267b87f9f236b9ad01",
+      "execution_status": "PASS",
+      "scope": "Initial hand-built probes only; Stage 0 remains incomplete.",
+      "review_disposition": "NOT_REVIEWED",
+      "results_member": "results.json",
+      "currency": "CURRENT",
+      "note": "Fresh unchanged fixture execution bound to the C/C4/B-only inventory and current applicable policy; no new acceptance."
+    },
+    {
+      "id": "MACOS-NATIVE-GATE0-r3-UNIFORM-INVENTORY",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-macos-gate0-r3-uniform-inventory/gate-results.json",
+      "sha256": "bb026c48498029a6daa7146ab64830d8fefeb054687797573dacb6e6ad591097",
+      "timestamp": "2026-09-11T20:12:03Z",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "30c04b52092d76d197e317209bde129da994b9d77983a7267b87f9f236b9ad01",
+      "execution_status": "PASS",
+      "scope": "Inventory-only rebind of the unchanged reviewed native r3 execution; no new native execution.",
+      "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "note": "Original r3 report/artifact bytes verified by record.py. G0-U1-a contract and runner unchanged. Claude reviewed the original execution, not this new envelope.",
-      "original_execution_record": "MACOS-NATIVE-GATE0-r3"
+      "original_execution_record": "MACOS-NATIVE-GATE0-r3",
+      "note": "Original report/artifacts verified; Gate 0 source, contract and runner unchanged by H(G) retirement. Historical Claude review remains about the original execution."
     }
   ],
   "auxiliary_records": [
@@ -566,7 +611,7 @@
       "scope": "Snapshot before the logical-frame proof and inventory update; original review provenance retained."
     },
     {
-      "id": "CURRENT-STAGE0-COMBINED",
+      "id": "PRE-H-RETIREMENT-STAGE0-COMBINED",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-stage0-debug-frames/results.json",
       "sha256": "b566e243051df033cafb0c6031be5bd2691942da0141fdd6973955d7f245f86b",
       "scope": "Unchanged native r3 execution re-bound to the current inventory and six freshly executed hand-built Wasm slices; no acceptance."
@@ -582,6 +627,24 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-debug-frames-verification/manifest.json",
       "sha256": "5e08506760b3ed921ff906259e3ffdc6639def67045603e35294268c17beec7e",
       "scope": "Same-author verification scripts and fresh build comparison; not independent acceptance."
+    },
+    {
+      "id": "BEFORE-H-RETIREMENT",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-before-h-retirement/manifest.json",
+      "sha256": "d7953e10aea84377b1840562fc904e0d80b2292c7016cee58077d6f3457b84e3",
+      "scope": "Original document versions, benchmark policy, inventories and current evidence summaries before the user made H optional."
+    },
+    {
+      "id": "CURRENT-STAGE0-COMBINED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-stage0-uniform-abi/results.json",
+      "sha256": "86a73afc1e62aa6b0d51f501084426e5579a08ded4b7df80543e24c7621fa1ca",
+      "scope": "C/C4/B-only current inventory; native r3 execution re-bound and six fresh Wasm slices. Required ABI correctness/measurements and other missing evidence still block Stage 0."
+    },
+    {
+      "id": "H-RETIREMENT-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-h-retirement-verification/manifest.json",
+      "sha256": "5434af80016f34de6ccc7fbf241a4da3269600cc45073a38664068fd1b1c3f07",
+      "scope": "Verification of user-directed H retirement, evidence identities and unchanged fixture binaries. No acceptance claim."
     }
   ]
 }

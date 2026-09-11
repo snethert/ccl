@@ -14,7 +14,7 @@ The runner additionally executes 1,000 seeds with a concurrently polling mutator
 
 From the repository root, use the runner command in its README. Output must be a new directory outside the checkout. Each pack contains `results.json`, source snapshots, the exact inventory and benchmark policy, toolchain/host identity, build commands, objects, final modules, link metadata, deterministic cases, raw seeded traces and quarantined mutants.
 
-For the current execution, extract DEBUG-FRAMES-r3 from the [index](../evidence/index.json) into an empty directory and run `doc/WASM/tools/gate.py` with the current inventory and the extracted `prerequisites/results.json`. Historical r10 must use its own archived inventory; its original binding is not current. The expected full-Stage-0 result is **BLOCKED**, exit 2, for remaining results and acceptance reviews. The [retained gate assessment](../evidence/integrated-runtime-gate-result.json) verifies the actual archived artifacts; documentation generation is not an acceptance substitute.
+For the current execution, extract DEBUG-FRAMES-r4 from the [index](../evidence/index.json) into an empty directory and run `doc/WASM/tools/gate.py` with the current inventory and the extracted `prerequisites/results.json`. Historical r10 must use its own archived inventory; its original binding is not current. The expected full-Stage-0 result is **BLOCKED**, exit 2, for remaining results and acceptance reviews. The [retained gate assessment](../evidence/integrated-runtime-gate-result.json) verifies the actual archived artifacts; documentation generation is not an acceptance substitute.
 
 ## Implementer review
 

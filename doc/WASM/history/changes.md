@@ -1,5 +1,15 @@
 # Change history
 
+## 2026-09-11 — H(G) retired from mandatory work; product risks and evidence repository
+
+The user explicitly directed: “Ignore H(G) entirely except as a possible future enhancement. It should not stop progress.” Outline 0.15, acceptance 1.5 and decisions 1.6 now require only C/C4/B. Five H correctness variants and eight H benchmark rows are removed; all 38 acceptance IDs remain, with 24 required candidate/workload measurements. H has no Stage 0 dependency, generated-code deadline or Stage 1 gate. No required generic candidate has been omitted or marked passing.
+
+Benchmark policy v2 preserves the generic comparison statistics and fixture progress limits, removes mandatory hybrid thresholds, and requires a stated granularity/installation basis. Old policy SHA-256: `fcbb9e7ab758a71914d8200f6fa4788b20dd1c48515e8f8be3e8d7fe8ea179c1`. New policy SHA-256: `a9e69df97867b7cc608ce6bd6ae5ea2118a5b53dc03eb4391c72f9e870a838a4`. The original document set, policy and inventory remain in the evidence repository. No ABI selection measurements had run, so no prior ABI measurement is being relabeled. Frame r4 and probes r7 freshly bind the new inventory; native r3 is explicitly re-bound after verifying unchanged artifacts and the same Gate 0 contract, without another native execution.
+
+Claude's broader feedback is recorded in the product-risk plan. Scale and browser startup remain unmeasured; module granularity must accompany ABI comparisons. The plan distinguishes HTTP-byte caching, engine code caching, compilation, per-Worker instantiation and lazy first use, with primary documentation for the corrections. The native census and an authorized small compiler spike can progress alongside the architecture work.
+
+The external evidence store is made a separate local Git repository with a portable SHA-256 catalog, original-pack mirrors and corruption controls. Original failed runs remain byte-identical. No remote or off-machine backup is claimed. The gate checker has 32 synthetic controls, including passing the complete generic set without H and blocking a missing generic candidate even when an H record is supplied. A mistaken initial synthetic-control expectation was preserved and corrected; it was not a runtime regression.
+
 ## 2026-09-11 — logical debugger-frame prerequisite
 
 Authorized by the user's “What is next? Proceed.” Codex added the isolated S0-LL23-b fixture before D3 ABI selection. It links the reviewed runtime objects unchanged and publishes explicit frames, independent C readers, lexical/root maps and build-bound source locations. Cases exercise moving roots, complete results, lower-policy unavailable values, nested debugging, EH restoration, escaped captured cells and generation/version lifetimes. Dedicated controls reject stale slots, invalid metadata, fabricated values, collapsed lexical identities, broken restoration and bounds violations.

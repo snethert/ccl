@@ -11,9 +11,9 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = {
-    "outline.md": "Clozure_CL_WebAssembly_Port_Outline_v0_14.docx",
-    "acceptance.md": "CCL_WebAssembly_Acceptance_Policy_and_Regression_Register_v1_4.docx",
-    "decisions.md": "CCL_WebAssembly_Stage0_Desk_Decisions_v1_5.docx",
+    "outline.md": "Clozure_CL_WebAssembly_Port_Outline_v0_15.docx",
+    "acceptance.md": "CCL_WebAssembly_Acceptance_Policy_and_Regression_Register_v1_5.docx",
+    "decisions.md": "CCL_WebAssembly_Stage0_Desk_Decisions_v1_6.docx",
 }
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
@@ -246,11 +246,16 @@ def validate_inputs():
                 raise ValueError(f"Unknown prerequisite: {dep}")
     policy = json.loads((ROOT / "stage0/benchmarks.json").read_text())
     measurements = json.loads((ROOT / "stage0/measurement-inventory.json").read_text())
+    if policy["candidates"] != ["C", "C4", "B"]:
+        raise ValueError("Required ABI candidates must be C/C4/B; H(G) is optional future work")
+    for test in inventory["tests"]:
+        if any(v.startswith("full:") for v in test["variants"]) and set(test["variants"]) != {"full:C", "full:C4", "full:B"}:
+            raise ValueError("ABI variants must cover exactly C/C4/B: " + test["id"])
     wanted = {(candidate, workload) for candidate in policy["candidates"] for workload in policy["workloads"]}
     actual = [(m["candidate"], m["workload"]) for m in measurements["measurements"]]
     if set(actual) != wanted or len(actual) != len(wanted):
         raise ValueError("Measurement inventory does not cover each candidate/workload exactly once")
-    for source, version in [("outline.md", "0.14"), ("acceptance.md", "1.4"), ("decisions.md", "1.5")]:
+    for source, version in [("outline.md", "0.15"), ("acceptance.md", "1.5"), ("decisions.md", "1.6")]:
         if f"VERSION {version} " not in (ROOT / source).read_text().splitlines()[0]:
             raise ValueError(f"Wrong document version: {source}")
     baseline = json.loads((ROOT / "stage0/baseline.json").read_text())

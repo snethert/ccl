@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "path": "/Users/buildsomething/Source/ccl-evidence",
+  "branch": "main",
+  "commit": "e2cc40180c761b936bd865f095ecca6805fea08a",
+  "catalog": "catalog/files.json",
+  "catalog_sha256": "afefc23efc754cbe25d36ac0601211f4a3f8a84a14b32202d464b4973cf2030b",
+  "immutable_evidence_files": 4730,
+  "indexed_references_verified": 98,
+  "source_index_snapshot": "catalog/source-index-uniform-abi.json",
+  "source_index_sha256": "a96c616fef1d05d28f586a99e6926fd53b39f84a71066942bb1dfe7ddaf9fafa",
+  "verification": "All catalogued files and committed Git blobs are byte-identical; eight corruption/relocation controls and git fsck --full pass.",
+  "remote": null,
+  "off_machine_backup": false,
+  "scope": "Separate local evidence repository; original execution/review/acceptance dispositions remain unchanged."
+}

@@ -53,9 +53,9 @@
   "completed_utc": "2026-09-11T20:12:03Z",
   "archive_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-macos-gate0-r3.zip",
   "archive_sha256": "003973c44c849498ea52e931407aab6dc87300bf0decb5c87f1d3aa41a0fa8e4",
-  "inventory_sha256": "bb58190a12a6aca48b0ba45411323226e96533a283bcf71d945a0961d6c4c110",
+  "inventory_sha256": "30c04b52092d76d197e317209bde129da994b9d77983a7267b87f9f236b9ad01",
   "review_note": "Claude independently reproduced the original r3 execution. Current gate envelope re-binds those verified original artifacts to the new inventory; no new native execution or external envelope review is claimed. Acceptance remains pending.",
   "original_archive_inventory_sha256": "35be990465b480d0d214741f9a648af0d170e57e0860002a7a8b0235d2b4269b",
-  "gate_results_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-macos-gate0-r3-frame-inventory/gate-results.json",
-  "gate_results_sha256": "de63b31710e7fa5d103d328f26c7d8f6134e8853b27f2ba718d7033a05587ba6"
+  "gate_results_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-macos-gate0-r3-uniform-inventory/gate-results.json",
+  "gate_results_sha256": "bb026c48498029a6daa7146ab64830d8fefeb054687797573dacb6e6ad591097"
 }

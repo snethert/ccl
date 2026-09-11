@@ -59,8 +59,6 @@ def assess(inventory, report, inventory_hash, evidence_root):
                 failures.append(f"wrong evidence kind: {label}")
             if result.get("substitutions") != [] or result.get("skips") != []:
                 failures.append(f"substitution/skip or missing disclosure: {label}")
-            if variant.endswith("H(G)") and result.get("generic_abi") not in ["B", "C", "C4"]:
-                failures.append(f"unspecified hybrid generic ABI: {label}")
             wanted = {a["id"] for a in test["assertions"]}
             got = result.get("assertions", [])
             if not isinstance(got, list) or any(not isinstance(a, dict) for a in got):

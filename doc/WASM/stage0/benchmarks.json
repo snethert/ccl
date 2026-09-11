@@ -1,18 +1,15 @@
 {
-  "version": 1,
+  "version": 2,
   "status": "PREDECLARED_INITIAL_POLICY_NOT_MEASURED",
   "change_control": "Record rationale and old/new policy hashes before rerunning affected selection measurements.",
   "candidates": [
     "C",
     "C4",
-    "B",
-    "H(G)"
+    "B"
   ],
   "sequence": [
     "C/C4/B correctness",
-    "C/C4/B measurements",
-    "H(G) correctness",
-    "H(G) versus the same G measurements"
+    "C/C4/B measurements"
   ],
   "required_correctness": [
     "S0-LL05-a",
@@ -51,12 +48,6 @@
   ],
   "uniform_near_best_max_slowdown": 0.05,
   "uniform_rule": "Choose the simplest candidate whose upper 95% confidence bound for runtime ratio to the measured best is at most 1.05. If uncertainty exceeds the bound, gather more trials or record no selection.",
-  "hybrid_minimum_geomean_speedup": 0.1,
-  "hybrid_maximum_per_workload_slowdown": 0.05,
-  "hybrid_maximum_code_and_metadata_growth": 0.15,
-  "hybrid_maximum_cold_install_time_growth": 0.1,
-  "hybrid_maximum_per_worker_memory_growth": 0.1,
-  "hybrid_rule": "Select H only when the lower 95% confidence bound on representative speedup versus its own G is at least 10%, and upper bounds on each regression/resource ratio meet all budgets. Include incremental checks, adapters, stubs, frame/root costs and table storage. H failing selection does not mean its evidence can be omitted.",
   "cold_measurements_separate": true,
   "engine_policy": "Pin engine/version/tier, host CPU/OS, flags and toolchain. Qualify multivalue, tail calls, selected EH encoding, shared-memory atomics and bulk memory explicitly. JSPI is required only for its profile. No cross-engine pooling.",
   "dedicated_host_progress_limits": {
@@ -68,5 +59,7 @@
     "scope": "Controlled harness on the recorded dedicated host; these limits do not promise browser background-tab or OS scheduling latency. A timeout fails the run and is investigated, never counted as success."
   },
   "abi_experiment_review_after_engineer_days": 20,
-  "ratio_definitions": "runtime_ratio = candidate runtime / baseline runtime; speedup = (1 / runtime_ratio) - 1. Resource growth = candidate / baseline - 1."
+  "ratio_definitions": "runtime_ratio = candidate runtime / baseline runtime; speedup = (1 / runtime_ratio) - 1. Resource growth = candidate / baseline - 1.",
+  "future_enhancements": "H(G) is optional future work, with no required experiment or gate at any scheduled stage.",
+  "granularity": "Declare module batching, eager/lazy installation, call distribution and Worker counts; measure ABI ranking sensitivity before a recommendation under stage0/product-risk-plan.md."
 }

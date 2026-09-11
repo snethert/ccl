@@ -1,4 +1,4 @@
-DESIGN NOTE  /  VERSION 0.14  •  11 SEPTEMBER 2026
+DESIGN NOTE  /  VERSION 0.15  •  11 SEPTEMBER 2026
 
 # Clozure Common Lisp to WebAssembly
 
@@ -8,13 +8,13 @@ High-level porting strategy and delivery outline
 
 Treat Wasm as a new CCL architecture whose effective seam is the existing target abstraction above pass 2. Reuse the target-neutral compiler front end and cross-dump machinery; implement a complete Wasm pass 2/vinsn layer together with the generated-code ABI, primitive/subprimitive layer and target runtime. One Lisp process owns one shared wasm32 linear-memory heap; each Lisp thread executes in a Web Worker.
 
-Version 0.14 replaces v0.13 and accompanies acceptance v1.4 and decisions v1.5. macOS is the sole reference host for this Wasm project. The native baseline and external census trace use macOS; no alternate operating-system qualification is required. D5 protocol v1.1 records generation-guarded host wakes, nested active-request routing and parking at idle host boundaries. D3 remains open. Runtime acceptance remains evidence-scoped. [D]
+Version 0.15 replaces v0.14 and accompanies acceptance v1.5 and decisions v1.6. The required D3 candidates are C/C4/B; H(G) is optional future work. Module granularity and startup costs join the ABI measurement plan. macOS is the sole reference host for this Wasm project. The native baseline and external census trace use macOS; no alternate operating-system qualification is required. D5 protocol v1.1 records generation-guarded host wakes, nested active-request routing and parking at idle host boundaries. D3 remains open. Runtime acceptance remains evidence-scoped. [D]
 
 | Document | Content |
 | --- | --- |
-| This outline, v0.14 | Architecture, decisions, contracts, delivery stages and provenance. The authority for what is being built and why. |
-| Acceptance Policy and Regression Register, v1.4 | R7 gate rules, evidence kinds and record schema, R6 normalization policy, sources and LL01–LL24. Individual obligation metadata is authoritative; stage lists and the index are derived. |
-| Stage 0 Desk Decisions, v1.5 | D1–D7 selections, reversal criteria and protocol details; D3 remains the open ABI choice. The decided contracts are build targets, not claims of executed proof. |
+| This outline, v0.15 | Architecture, decisions, contracts, delivery stages and provenance. The authority for what is being built and why. |
+| Acceptance Policy and Regression Register, v1.5 | R7 gate rules, evidence kinds and record schema, R6 normalization policy, sources and LL01–LL24. Individual obligation metadata is authoritative; stage lists and the index are derived. |
+| Stage 0 Desk Decisions, v1.6 | D1–D7 selections, reversal criteria and protocol details; D3 remains the open ABI choice. The decided contracts are build targets, not claims of executed proof. |
 | Evidence records E1–E5 | E1, E2 and E5 identify execution packs; E3 is a status record. E4 is conversation-recorded syscall evidence; its archived trace pack is pending. |
 
 #### Requirements
@@ -87,7 +87,7 @@ The target-specific unit is pass 2 + generated-code ABI + vinsns + primitives/su
 
 #### Dynamic-call ABI: Stage 0 decision
 
-D3 remains open among C, C4 and B, followed by H(G) under the recorded experiment sequence. C, C4 or B selects one uniform generic Lisp-call protocol; H would retain G plus checked arity-specialized E_k entries. A function table may contain heterogeneous signatures: call_indirect checks the call site’s expected type, not a table-wide Lisp signature. D3 fixes argument/count placement, closure self, overflow and zero/one/many values, and entry/stub protocols. Native three-register convention is evidence, not a Wasm requirement. [D, D3; LL05]
+D3 remains open among C, C4 and B, selecting one uniform generic Lisp-call protocol. H(G) is only a possible future enhancement; it does not gate any scheduled stage. A function table may contain heterogeneous signatures: call_indirect checks the call site’s expected type, not a table-wide Lisp signature. D3 fixes argument/count placement, closure self, overflow and zero/one/many values, and entry/stub protocols. Native three-register convention is evidence, not a Wasm requirement. [D, D3; LL05]
 
 #### Runtime implementation language: decided
 
@@ -243,13 +243,13 @@ Control restoration is observable: zero, one and many returned values; nested UN
 
 ### Two artifacts, one identity space
 
-Cross-dump produces two coordinated artifacts because executable code no longer lives in heap code vectors: a bootstrap heap (packages, symbols, constants, closures/functions, data, logical code IDs and roots) and a bootstrap code set (modules, bodies, dependencies and debug/link metadata). The manifest maps (logical code ID, entry kind) to structural signature, callable slot, module/function, ABI/layout versions, profile/materialization records and binary hash. Stage 1 chooses bootstrap granularity and confirms D2’s materialization contract. Boot consumes both artifacts. [D, D2/D5; LL11, LL21]
+Cross-dump produces two coordinated artifacts because executable code no longer lives in heap code vectors: a bootstrap heap (packages, symbols, constants, closures/functions, data, logical code IDs and roots) and a bootstrap code set (modules, bodies, dependencies and debug/link metadata). The manifest maps (logical code ID, entry kind) to structural signature, callable slot, module/function, ABI/layout versions, profile/materialization records and binary hash. Stage 0 measures provisional granularity alongside D3; Stage 1 finalizes production granularity and confirms D2’s materialization contract. Boot consumes both artifacts. [D, D2/D5; LL11, LL21]
 
 Bootstrap image loading is Stage 1; application image save and restore is Stage 5. Saved images persist heap and code metadata at a quiescent boundary and do not serialize Wasm engine stacks. Cold-start load order is observed on the native reference with a macOS external file-activity tracer rather than by hooking %fasload; static load-site projection and runtime load order are compared because REQUIRE introduces additional loads. CCL's cheap-eval permits limited evaluation without the compiler; general interactive evaluation still compiles.
 
-Each Worker has a private WebAssembly.Table with the process-wide entry-to-slot mapping and its own installed references; tables are not structured-clone transferable. The producer installs required entries before publication; other Workers install before first dispatch. Logical code IDs are not table-slot identities: a uniform ABI still records a mapping, and H may expose G plus several E_k slots for one code version. IDs remain monotonic and superseded code retained under a budget through Stage 5. [D, D5; LL11, LL21]
+Each Worker has a private WebAssembly.Table with the process-wide entry-to-slot mapping and its own installed references; tables are not structured-clone transferable. The producer installs required entries before publication; other Workers install before first dispatch. Logical code IDs are not table-slot identities: the uniform ABI still records an explicit entry mapping. IDs remain monotonic and superseded code retained under a budget through Stage 5. [D, D5; LL11, LL21]
 
-Lazy-stub choice remains conditional until D3 closes. A selected C, C4 or B uses one shared stub for its uniform Lisp-call convention. H requires generic and specialized shared stubs keyed by ABI version, semantic entry kind and structural signature, not one table-wide universal stub. Equal Wasm types can carry different protocols, so role validation is separate from the engine type check. Install the correct stub or function in every allocated callable slot before dispatch; unused capacity remains null/non-callable. The C runtime’s named imports need not share the Lisp signature. [D, D3/D5; LL05, LL21]
+Lazy-stub choice remains conditional until D3 closes. A selected C, C4 or B uses one shared stub for its uniform Lisp-call convention. Equal Wasm types can carry different protocols, so role validation is separate from the engine type check. Install the correct stub or function in every allocated callable slot before dispatch; unused capacity remains null/non-callable. The C runtime’s named imports need not share the Lisp signature. [D, D3/D5; LL05, LL21]
 
 Manifest and installation validation reject missing or conflicting ID/entry/slot records, reserved-slot reuse and signature or semantic-role substitution. Stable logical IDs are distinct from module-local type indices and slot capacities. Lazy installation preserves rooted call state across admission, obtains code from accessible cache/request storage rather than a blocked Worker’s event loop, validates the final profile binary, reloads moved references and redispatches under the same entry contract. [D, D3/D5; LL07, LL13, LL20–LL22]
 
@@ -275,7 +275,7 @@ The native execution matrix is macOS x86-64. Preserve all upstream target-specif
 
 Census track, inside the qualified native compiler: enumerate evaluated acode IDs and flags, front-end elimination and rewrites, native handlers, vinsns, LAP and subprimitives, imports, traps, foreign calls and barrier-sensitive stores; instrument cross-compilation against a census stub backend for static module/function reachability; observe cold-start file opens externally with a macOS file-activity tracer and compare with static load-site projection. Join operator keys (IDs, flags, lowering chains) to module/function keys (dependency reachability, observed load order) through the instrumented compilation record. Registering the stub backend is the first shared edit governed by R6 and is followed by the first R6 comparison.
 
-Architecture track, independent of CCL data: qualify engines, EH encoding and JSPI API shape; test the decided D1/D2/D4/D5 contracts and run D3’s ABI experiments. Qualify and measure C/C4/B first, then evaluate H(G) against its own G, charging only incremental eligibility/dispatch work. Prove hand-built allocation, stores, roots, GC admission, lifecycle, interruptible FOREIGN I/O, EH, mailbox, lazy installation and nested debugging. D7 supplies phased inventories; census distributions refine but do not block the track. [D]
+Architecture track, independent of CCL data: qualify engines, EH encoding and JSPI API shape; test the decided D1/D2/D4/D5 contracts and run D3’s ABI experiments. Qualify and measure C/C4/B, with module-granularity assumptions and sensitivity recorded alongside the ABI recommendation. Prove hand-built allocation, stores, roots, GC admission, lifecycle, interruptible FOREIGN I/O, EH, mailbox, lazy installation and nested debugging. D7 supplies phased inventories; census distributions refine but do not block the track. [D]
 
 Rejection tests: omit a required module, alter its ABI or layout version, collide reserved memory or table ranges, and fail an initializer in the proof harness; acceptance must reject each mutant, and a killed process or timeout is not a successful computation.
 
@@ -415,7 +415,7 @@ Planning assumption: three to six engineer-years through interactive self-hostin
 
 [25] [Emscripten: Asynchronous Code](https://emscripten.org/docs/porting/asyncify.html) Suspension alternatives and the interpreter-on-Wasm baseline.
 
-[D] Stage 0 Desk Decisions v1.5, 11 September 2026 D1 derived data layout; D2 profile materialization; D3 open ABI candidate sequence; D4 selected runtime split; D5 GC admission, logical IDs/entry slots and interruptible mailbox; D6 vocabulary/lowering; D7 phased tests. Decision choices are distinct from implementation/test acceptance. CCL_WebAssembly_Stage0_Desk_Decisions_v1_5.docx
+[D] Stage 0 Desk Decisions v1.6, 11 September 2026 D1 derived data layout; D2 profile materialization; D3 open ABI candidate sequence; D4 selected runtime split; D5 GC admission, logical IDs/entry slots and interruptible mailbox; D6 vocabulary/lowering; D7 phased tests. Decision choices are distinct from implementation/test acceptance. CCL_WebAssembly_Stage0_Desk_Decisions_v1_6.docx
 
 #### Implementation baselines
 

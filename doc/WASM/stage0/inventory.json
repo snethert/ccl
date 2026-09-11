@@ -9,7 +9,7 @@
     "schema",
     "log"
   ],
-  "acceptance_note": "All variants required for Stage 0. H(G) records must name a qualified G; H cases are scheduled after generic correctness and baselines. PROBE IDs never discharge S0 IDs. Missing runners are explicit outstanding implementation, not substitute tests.",
+  "acceptance_note": "All listed variants are required for Stage 0. The only required ABI candidates are C, C4 and B. H(G) is optional future work and blocks no scheduled stage. PROBE IDs never discharge S0 IDs; missing runners remain outstanding implementation.",
   "tests": [
     {
       "id": "G0-U1-a",
@@ -52,11 +52,11 @@
       "assertions": [
         {
           "id": "S0-ABI-selection:1",
-          "description": "all 32 measurement IDs from measurement-inventory.json with raw artifact hashes"
+          "description": "all 24 measurement IDs from measurement-inventory.json with raw artifact hashes"
         },
         {
           "id": "S0-ABI-selection:2",
-          "description": "correctness-before-measurement and generic-before-H phase ordering"
+          "description": "C/C4/B correctness before their selection measurements"
         },
         {
           "id": "S0-ABI-selection:3",
@@ -68,7 +68,7 @@
         },
         {
           "id": "S0-ABI-selection:5",
-          "description": "same-G hybrid comparison and recorded choice/rejection rationale"
+          "description": "recorded C/C4/B choice/rejection rationale with module granularity and sensitivity"
         }
       ],
       "status": "NOT_RUN",
@@ -275,8 +275,7 @@
       "variants": [
         "full:C",
         "full:C4",
-        "full:B",
-        "full:H(G)"
+        "full:B"
       ],
       "prerequisites": [
         "S0-LL04-a",
@@ -285,7 +284,7 @@
       "assertions": [
         {
           "id": "S0-LL05-a:contract",
-          "description": "First for C, C4 and B, then for each later H(G): verify ordered arguments 0\u20136 and long overflow, nested side effects, direct/indirect/closure calls, APPLY and optional/rest/keyword binding, and every zero/one/many result. Check explicit stack/count ownership."
+          "description": "For C, C4 and B: verify ordered arguments 0\u20136 and long overflow, nested side effects, direct/indirect/closure calls, APPLY and optional/rest/keyword binding, and every zero/one/many result. Check explicit stack/count ownership."
         }
       ],
       "status": "NOT_RUN",
@@ -300,8 +299,7 @@
       "variants": [
         "full:C",
         "full:C4",
-        "full:B",
-        "full:H(G)"
+        "full:B"
       ],
       "prerequisites": [
         "S0-LL04-a",
@@ -325,8 +323,7 @@
       "variants": [
         "full:C",
         "full:C4",
-        "full:B",
-        "full:H(G)"
+        "full:B"
       ],
       "prerequisites": [
         "S0-LL04-a",
@@ -350,8 +347,7 @@
       "variants": [
         "full:C",
         "full:C4",
-        "full:B",
-        "full:H(G)"
+        "full:B"
       ],
       "prerequisites": [
         "S0-LL04-a",
@@ -360,7 +356,7 @@
       "assertions": [
         {
           "id": "S0-LL05-d:contract",
-          "description": "Run generic/specialized cross-arity tail chains, shrinking/growing overflow and adapters. Observe bounded explicit-stack/root use, complete multiple values and preserved cleanup/binding extent."
+          "description": "Run generic cross-arity tail chains, shrinking/growing overflow and adapters. Observe bounded explicit-stack/root use, complete multiple values and preserved cleanup/binding extent."
         }
       ],
       "status": "NOT_RUN",
@@ -702,8 +698,7 @@
       "variants": [
         "full:C",
         "full:C4",
-        "full:B",
-        "full:H(G)"
+        "full:B"
       ],
       "prerequisites": [],
       "assertions": [

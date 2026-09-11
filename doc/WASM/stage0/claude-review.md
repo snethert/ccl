@@ -52,3 +52,9 @@ Note on provenance: `history/claude-first-review.txt` retains the second of Clau
 ## Subsequent Codex frame fixture — review boundary
 
 The S0-LL23-b frame proof was authored after this audit. Its fresh integrated prerequisites use the same reviewed runtime source, but this audit does not review the new frame reader, emitted frames, maps or controls. r10, probes r5 and native r3 retain their original bytes and review records in the evidence index. Adding the frame runner changes the global inventory hash: fresh Wasm runs bind the new inventory, while the unchanged native r3 execution is explicitly re-bound by verifying its original artifacts. No new native execution or external frame review is claimed.
+
+## Subsequent architecture feedback supplied by the user
+
+Claude expressed confidence in the tested D5 admission protocol, C-boundary restoration, D1/D2 representation choices, D4 split and acceptance machinery. The feedback also identifies scale, cold start and cross-module calling costs as unproved, recommends coupling granularity with D3, and proposes a generated-code H(G) experiment plus parallel census/compiler work. These are recorded in the [product-risk plan](product-risk-plan.md), including corrections to the blanket browser-cache and per-Worker compilation assumptions. This feedback supplies no new run archive or specific audit of the logical-frame addition, and does not change its NOT_REVIEWED/NOT_ACCEPTED status.
+
+The user then explicitly directed that H(G) be ignored except as a possible future enhancement. The revised C/C4/B-only gate implements that scope decision; it does not impose a generated-code H deadline. No other obligation is waived, and no unexecuted candidate is labeled passing.

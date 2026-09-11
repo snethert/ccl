@@ -61,6 +61,16 @@ with tempfile.TemporaryDirectory(prefix="ccl-wasm-control-") as tmp:
     expect(check(mutant), "FAIL", "duplicate evidence")
     mutant = copy.deepcopy(report); mutant["results"][0]["artifacts"][0]["path"] = "../escaped"
     expect(check(mutant), "FAIL", "escaping artifact")
+    generic_inventory = copy.deepcopy(inventory)
+    generic_inventory["tests"][0]["variants"] = ["full:C", "full:C4", "full:B"]
+    generic_report = copy.deepcopy(report)
+    generic_report["results"] = [dict(copy.deepcopy(record), variant=v) for v in generic_inventory["tests"][0]["variants"]]
+    generic_check = lambda r: gate.assess(generic_inventory, r, "a" * 64, path)[0]
+    expect(generic_check(generic_report), "PASS", "all required generic ABIs pass without H")
+    mutant = copy.deepcopy(generic_report); mutant["results"].pop()
+    expect(generic_check(mutant), "BLOCKED", "missing required generic ABI still blocks")
+    mutant = copy.deepcopy(generic_report); mutant["results"].pop(); mutant["results"].append(dict(copy.deepcopy(record), variant="full:H(G)"))
+    expect(generic_check(mutant), "BLOCKED", "future H variant cannot substitute for required evidence")
     (path / "fixture").write_text("mutated after execution")
     expect(check(report), "FAIL", "stale retained artifact")
 

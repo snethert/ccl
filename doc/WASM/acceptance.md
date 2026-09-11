@@ -1,12 +1,12 @@
-COMPANION DOCUMENT  /  VERSION 1.4  •  11 SEPTEMBER 2026
+COMPANION DOCUMENT  /  VERSION 1.5  •  11 SEPTEMBER 2026
 
 # Acceptance Policy and Regression Register
 
-Companion to Port Outline v0.14 and Stage 0 Desk Decisions v1.5
+Companion to Port Outline v0.15 and Stage 0 Desk Decisions v1.6
 
-This document governs milestone acceptance: R7 rules and evidence (section 1), R6 normalization (section 2), sources (section 3), and LL01–LL24 (section 4). It replaces v1.3 and accompanies outline v0.14 and decisions v1.5. Individual obligation metadata remains authoritative; the index and outline stage lists are derived. This register specifies required regressions; execution and acceptance are tracked in [current status](STATUS.md). Documenting a test does not close its implementation.
+This document governs milestone acceptance: R7 rules and evidence (section 1), R6 normalization (section 2), sources (section 3), and LL01–LL24 (section 4). It replaces v1.4 and accompanies outline v0.15 and decisions v1.6. Individual obligation metadata remains authoritative; the index and outline stage lists are derived. This register specifies required regressions; execution and acceptance are tracked in [current status](STATUS.md). Documenting a test does not close its implementation.
 
-Changes in v1.4. Selects macOS x86-64 for native regression qualification and second-host reproduction. Historical platform-specific baselines remain in the history ledger; they do not impose current host requirements. R6 source preservation, independent review and all LL obligations remain in force.
+Changes in v1.5. Removes H(G) from all scheduled acceptance gates at the user’s direction. C/C4/B correctness and all remaining regressions are required. Retains macOS x86-64 for native regression qualification and second-host reproduction. Historical platform-specific baselines remain in the history ledger; they do not impose current host requirements. R6 source preservation, independent review and all LL obligations remain in force.
 
 ## 1  /  R7 EVIDENCE-BASED ACCEPTANCE
 
@@ -123,7 +123,7 @@ P1 is the historical port; U1 in the outline is the selected v1.13 implementatio
 
 [W1] [WebAssembly threads: memory, atomic access and instantiation](https://github.com/WebAssembly/threads/blob/main/proposals/threads/Overview.md) Shared memory, Resizing, Initializing Memory Only Once, Atomic Memory Accesses, and Wait and Notify. Checked 10 September 2026. Supplies specification facts for LL13 and LL21; the tests are project safeguards, not claimed historical execution.
 
-[D] Stage 0 Desk Decisions v1.5, 11 September 2026 Project authority for D1–D7. D3 remains open; D5 specifies owner-only CAS GC admission, typed entry identity and interruptible FOREIGN I/O. D7 maps authoritative LL stage slices into phased executable inventories, including S0-LL20-b. This is a decision/protocol source, not test-execution evidence. CCL_WebAssembly_Stage0_Desk_Decisions_v1_5.docx
+[D] Stage 0 Desk Decisions v1.6, 11 September 2026 Project authority for D1–D7. D3 remains open; D5 specifies owner-only CAS GC admission, typed entry identity and interruptible FOREIGN I/O. D7 maps authoritative LL stage slices into phased executable inventories, including S0-LL20-b. This is a decision/protocol source, not test-execution evidence. CCL_WebAssembly_Stage0_Desk_Decisions_v1_6.docx
 
 ## 4  /  REGRESSION OBLIGATIONS LL01–LL24
 
@@ -179,7 +179,7 @@ First acceptance: Stage 0. Extensions: Stages 1, 5. Regression: all later stages
 
 Reported: prologue, value-stack push/sync and three-argument allocation paths disagreed about first/last argument placement. The earlier ABI retained per-subprimitive conventions. [P2, P5]
 
-Required regression. Stages 0 and 1 exercise zero, one, two, three and overflow arguments with distinct values, subtraction and ordered side effects across direct and dynamic calls, closures, APPLY, optional/rest/keyword binding, primitive entries and host callbacks when in the closure, verifying count encoding and zero/one/many returns against the Stage 0-specified Wasm ABI. Qualify C, C4 and B before their baseline measurements; only afterward qualify any H(G) against its corresponding G. For H, additionally verify entry eligibility/fallback, adapters and signature/semantic-role checks; baseline qualification does not require H variants early. [D, D3/D7]
+Required regression. Stages 0 and 1 exercise zero, one, two, three and overflow arguments with distinct values, subtraction and ordered side effects across direct and dynamic calls, closures, APPLY, optional/rest/keyword binding, primitive entries and host callbacks when in the closure, verifying count encoding and zero/one/many returns against the Stage 0-specified Wasm ABI. Qualify C, C4 and B before their baseline measurements. H(G) is a possible future enhancement and is not required for acceptance at any currently scheduled stage. [D, D3/D7]
 
 First acceptance: Stage 0. Extensions: Stage 1. Regression: all later stages in scope. Outline sections: 02. Status: contract specified; execution and acceptance tracked in STATUS.md.
 
@@ -317,7 +317,7 @@ Observed and reported: required-module installation could continue after failure
 
 Required regression. Stages 0, 1 and 3 validate emitted and packed modules, ABI/imports, required inventory, tables and constants. A rejected pack may use only a separately validated, reported unmerged path, never omitted code. Measure bytes, compile/instantiate/install latency and retained-code growth. Exercise publication and first-call installation in another Worker, including one created after redefinition. Preserve distinct closures and old function objects while sharing code. [D, D3/D5]
 
-Entry identity and stubs. Validate the mapping (logical code ID, entry kind) → structural signature, callable slot, module/function and ABI version; numerical ID/slot equality is never required by the image ABI. Under a selected C, C4 or B, one stub is universal for that uniform Lisp-call convention. Under H, one code version may have G and several E_k slots, with stubs keyed by signature and semantic role. Reject wrong-signature and same-type/wrong-role substitutions, missing mappings and reserved-slot collisions. Every allocated callable slot has a matching stub or implementation before dispatch; unused capacity remains non-callable. H-specific tests enter only at the D3/D7 phase that evaluates H. [D, D3/D5/D7]
+Entry identity and stubs. Validate the mapping (logical code ID, entry kind) → structural signature, callable slot, module/function and ABI version; numerical ID/slot equality is never required by the image ABI. Under a selected C, C4 or B, one stub is universal for that uniform Lisp-call convention. Reject wrong-signature and same-type/wrong-role substitutions, missing mappings and reserved-slot collisions. Every allocated callable slot has a matching stub or implementation before dispatch; unused capacity remains non-callable. [D, D3/D5/D7]
 
 Profile materialization. D2 selects canonical-template materialization; Stage 0 verifies it and Stage 1 confirms the production path before cross-dump. Stage 5 qualifies complete saved/resident-compiled paths across profiles. Retain template/source hash, materializer/emitter version, profile, limits, imports and resulting binary hash; validate final bytes. Reject missing variants, unsupported transforms and stale hashes. Test limit matching, growth and the selected suspension path; unshared atomic load/store/RMW support does not imply wait support. Separately emitted variants require D2’s explicit reversal decision. [D, D2; W1]
 
