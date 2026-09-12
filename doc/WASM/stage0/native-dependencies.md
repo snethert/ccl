@@ -8,6 +8,8 @@ The r7 rebuild records 103,313 calls from 51,342 distinct native compiler functi
 
 The remaining 1,729 call observations comprise 1,072 function-variable calls and 657 computed callees. These remain unresolved. The graph retains 6,019 function-reference records, all exact function targets have observed bodies, and later empty observations cannot erase earlier dependencies. Global binding names have only unqualified compiled candidates: 951 of 5,989 referenced bindings lack a matching compilation in this capture. That is a worklist, not evidence of 951 missing implementations. No pruning or complete runtime candidate-set claim follows from these counts.
 
+The [clean-image candidate follow-up](startup-candidates.md) now supplies native binding candidates for 768 of the 951 unmatched names, identifies the actual startup callback and handler code, and proposes thirteen seeds. All dynamic bounds remain unqualified; the snapshot is not a complete installation history or proof of future runtime targets.
+
 ## L0, L1 and L2 redefinitions
 
 The extension records both source declarations and sampled native binding changes. It recognizes top-level definitions, selected expanded definition forms, `%fhave`/`fset` writes and `setf` of function or macro bindings, preserving source position, observation phase and enclosing `eval-when` situations. It uses the compiler's actual expansion hook. It does not interpret quoted data, arbitrary function bodies or local macro bodies as executed definitions.

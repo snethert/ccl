@@ -2,15 +2,21 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "af41df0b4caaebf54b83e5f0ae8e15477a3bee8d",
+  "commit": "d07bd13c03110855e8c1ba387dc92c642fd47c68",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "2bb447fc8e10f221ded0348b361193f02fbbd899f0d0a1720fdd4b349a547299",
-  "immutable_evidence_files": 159783,
+  "catalog_sha256": "9a68cd49b5f7fbc8b731a210ddb2b74cf9f5ebe520288adccc41a6220f46c56f",
+  "immutable_evidence_files": 159789,
   "indexed_references_verified": 908,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "catalog.py add and check PASS after adding the LL21-a acceptance envelope and 27-record aggregate (Claude, 2026-09-12): 159,783 immutable files. Earlier Git blob and fsck statements refer to the previous snapshot.",
+  "verification": "Scoped addition of six finalized startup-candidate files: producer-computed identities reused, run record hashed once, existing catalog entries retained from af41df0b4caaebf54b83e5f0ae8e15477a3bee8d. No full archive scan or audit performed. Prior indexed-reference verification remains at the recorded source-index snapshot.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository. Original executions, policies, failures and the withdrawn misattributed decision retained. Twenty-seven accepted records: 26 preserved exactly plus S0-LL21-a accepted by the user directly. Complete census and generated code remain open."
+  "scope": "Separate local evidence repository. Original executions, policies, failures and the withdrawn misattributed decision retained. Twenty-seven accepted records: 26 preserved exactly plus S0-LL21-a accepted by the user directly. Complete census and generated code remain open. Startup candidate preparation is retained without gate credit; it is unreviewed and its dynamic bound remains unqualified.",
+  "last_scoped_addition": {
+    "directory": "2026-09-12-startup-candidates-r1",
+    "files": 6,
+    "bytes": 6828080,
+    "prior_commit": "af41df0b4caaebf54b83e5f0ae8e15477a3bee8d"
+  }
 }

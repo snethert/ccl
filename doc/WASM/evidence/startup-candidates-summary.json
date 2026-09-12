@@ -1,0 +1,34 @@
+{
+  "status": "PREPARED_FOR_REVIEW",
+  "census_acceptance": "BLOCKED",
+  "native_functions_including_inspector": 15424,
+  "r7_compiler_bodies": 51342,
+  "native_function_bindings": 9031,
+  "native_macro_bindings": 1019,
+  "proposed_entrypoint_seeds": 13,
+  "startup_callback_identities": 35,
+  "operator_slots": 279,
+  "operator_slots_with_handler_identity": 247,
+  "vinsn_templates": 599,
+  "subprimitives": 154,
+  "dynamic_calls_with_unqualified_candidates": 1729,
+  "global_bindings_without_compiler_candidate_before": 951,
+  "of_those_with_native_binding_now": 768,
+  "still_without_named_candidate": 183,
+  "remaining": [
+    "Independent seed and candidate-bound review",
+    "S0-LL08-a static reachability; prove or widen the finite universe",
+    "Operator-to-lowering/import/trap/store joins",
+    "Semantic compile/load/startup initializer prerequisite joins",
+    "Complete census exchange graph and independent omission witnesses"
+  ],
+  "controls_rejected": 14,
+  "version": 1,
+  "evidence_repository_commit": "d07bd13c03110855e8c1ba387dc92c642fd47c68",
+  "run": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-startup-candidates-r1/run.json",
+    "sha256": "4e3b571f6a124df6e3d57422ff6319f4c206b243aa44da3e83fa4c8d704e9c5f"
+  },
+  "review_disposition": "NOT_REVIEWED",
+  "verification_scope": "Scoped addition of six finalized startup-candidate files: producer-computed identities reused, run record hashed once, existing catalog entries retained from af41df0b4caaebf54b83e5f0ae8e15477a3bee8d. No full archive scan or audit performed. Prior indexed-reference verification remains at the recorded source-index snapshot."
+}

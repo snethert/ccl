@@ -1433,6 +1433,12 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21a-project-acceptance/gate-result.json",
       "sha256": "e6f71b87d1a5158a46ded1f13f1feb20bb7856d6fed9774e5157235bbe2139a9",
       "scope": "BLOCKED: 22 missing and zero unreviewed; 27 accepted."
+    },
+    {
+      "id": "NATIVE-STARTUP-CANDIDATES-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-startup-candidates-r1/run.json",
+      "sha256": "4e3b571f6a124df6e3d57422ff6319f4c206b243aa44da3e83fa4c8d704e9c5f",
+      "scope": "Unreviewed clean-image code/binding/callback/handler identities and thirteen proposed seeds. Candidate bounds remain unqualified; no LL15 gate credit."
     }
   ]
 }
