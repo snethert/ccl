@@ -699,7 +699,14 @@
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "S0-LL08-b/native: 279 evaluated operator slots including 12 reserved slots and unchanged flags under R6a. Reversible observation in disposable U1; two native regression runs, 164 clean FASLs reproduced after removal. No LL15-b/c closure or Wasm backend claim."
+      "scope": "S0-LL08-b/native: 279 evaluated operator slots including 12 reserved slots and unchanged flags under R6a. Reversible observation in disposable U1; two native regression runs, 164 clean FASLs reproduced after removal. No LL15-b/c closure or Wasm backend claim.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Sixth audit at HEAD 3ce72d35: full source and patch review, fresh re-execution (21,843/21,843 twice, 161/164 then 164/164 FASLs, all 164 identical to r5 in every build), observer/reversal/producer controls in the reviewer's own session, 2026-09-12",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
+        "record": "stage0/claude-review.md"
+      },
+      "note": "Claude sixth audit 3ce72d35 found no defect and reproduced the run; six nonblocking observations recorded. Original envelope remains pre-review; project acceptance of S0-LL08-b is a separate decision."
     }
   ],
   "auxiliary_records": [
