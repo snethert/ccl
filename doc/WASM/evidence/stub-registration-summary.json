@@ -12,7 +12,7 @@
   "verification_scope": "New packet, direct sources, native manifest/member joins and semantic controls only; unchanged evidence reused.",
   "version": 1,
   "execution_status": "PASS",
-  "review_disposition": "NOT_REVIEWED",
+  "review_disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
   "test_id": "S0-LL08-a",
   "evidence_repository_commit": "cfe79d1a6504b65b63f080f8c5518f3bec88c1a3",
   "run": {
@@ -31,5 +31,11 @@
   "registration_patch_sha256": "50cf7f44ccde3677c3a8ca6c3b5cf77813f0b947b21238c9ef1d304cca5ee45c",
   "new_evidence_files": 82,
   "new_evidence_bytes": 8073858,
-  "acceptance_note": "Standalone LL08-a execution only, awaiting independent review and project acceptance. Existing 27 accepted records are unchanged. No acceptance aggregate or full historical archive verification was regenerated."
+  "acceptance_note": "Standalone LL08-a execution only, awaiting independent review and project acceptance. Existing 27 accepted records are unchanged. No acceptance aggregate or full historical archive verification was regenerated.",
+  "external_review": {
+    "reviewer": "Claude Fable 5.1",
+    "provenance": "Ninth audit at 21c6aed7: source review, full re-execution from pinned inputs with byte-identical FASLs, module FASLs, snapshot and session rows, unit and producer controls in the reviewer's own session, 2026-09-12",
+    "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
+    "record": "stage0/claude-review.md"
+  }
 }
