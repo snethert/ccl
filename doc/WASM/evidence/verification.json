@@ -1,31 +1,133 @@
 {
-  "timestamp": "2026-09-12T01:02:57.872611+00:00",
-  "scope": "Verification of the fourth-audit acceptance operation and measurement preparation; no new runtime execution or performance claim.",
-  "tool_sha256": {
-    "accept-evidence.py": "2f3b95d68b765750109f2526209e593a32654709e9d59281c46f930e01c5af4f",
-    "bind-evidence.py": "a950b640b2e7c4f926a2c881f3f091693632962d423302c92a6ba51e95b285df",
-    "check-census.py": "54561cb85ed6f7d7ace8b81d0605808584d8b1b4881e77f0791d3810e873fa6c",
-    "check-evidence.py": "608bec973719edbcb9b008861ed9f8c91f40dd25b3c9e04daf19efedaa8c380e",
-    "evidence_binding.py": "488ff2c6b706c0085658b8c29b78c4ea91c7fbf3dbfeeb32c79747c3a9c44f7a",
-    "gate.py": "bf31c7c1bc9a22b3d883cb4bc1a94d873a7d9a45312098e1d4f58c42fc157932",
-    "manage.py": "2dc751f77db7c3d87c03ac51b8be53f8a932d68312d9a26cb76fd86456a17adb",
-    "materialize.mjs": "fe20bcd6ef9491a56e6cd60f9e3401f6ddb9932ec93b7f97cdbc38e028344895",
-    "probe-worker.mjs": "d427f84f018113b7c570e1eff20b3487e05e1ef6b067b1bd1abb6ee527b3b187",
-    "run-probes.mjs": "5a2921a41cef706b5323123d8fa4edcb52ebc008ef119f5a9e2160f335cec798",
-    "test-acceptance.py": "1ae1adde72cb1f2dabf9ddc8ac1e04d4baee60f676f7626dbf6096e5f0edd1d0",
-    "test-bindings.py": "6d093c9dfebb617029e2902ff5d6b8e303af07a71134bf9bd488596e6072f6f1",
-    "test-controls.py": "85461af48fa62c728b1f15c1ca6fe0998f2d2f6535f47ae11279d6b6ba5a896f"
+  "timestamp": "2026-09-12T14:17:23.223298+00:00",
+  "scope": "Executed isolated D3 measurement harness and S0-LL21-a; no new acceptance or ABI selection.",
+  "execution_verification": {
+    "timestamp": "2026-09-12T14:12:27.869767+00:00",
+    "checks": [
+      {
+        "check": "fresh r1 and r2 rebuilt binaries and objects byte-identical",
+        "status": "PASS",
+        "files": 4518
+      },
+      {
+        "check": "unchanged reviewed prerequisite binaries and objects byte-identical",
+        "status": "PASS",
+        "files": 864
+      },
+      {
+        "check": "current measurement sources match retained source; reviewed fixtures unchanged",
+        "status": "PASS"
+      },
+      {
+        "check": "all S0-LL21-a artifacts verified",
+        "status": "PASS",
+        "files": 23760
+      },
+      {
+        "check": "all raw workload timings use complete mixtures and reproduce summaries",
+        "status": "PASS",
+        "workload_rows": 216,
+        "sample_batches": 17351
+      },
+      {
+        "check": "selection policy and inventory unchanged; no selection or acceptance promoted",
+        "status": "PASS"
+      },
+      {
+        "check": "independent Python calculation reproduces every paired ratio and bootstrap interval",
+        "status": "PASS",
+        "resamples_per_packaging": 10000
+      }
+    ],
+    "execution": {
+      "status": "PASS",
+      "positive_cases": 486,
+      "rejected_controls": 279,
+      "positive_batches": 72,
+      "rejected_batch_controls": 27,
+      "trial_candidate_rows": 27,
+      "review_disposition": "NOT_REVIEWED",
+      "selection": "NO_SELECTION",
+      "scope": "Eight hand-built definitions, two live Workers, cons-only 4 KiB semispace. No representative census, product budget, browser, production image, optimized tier or ABI selection claim."
+    }
   },
   "checks": [
     {
-      "check": "seven previous records exactly preserved; eighteen explicit review updates only; all artifact identities",
-      "status": "PASS",
-      "prior": 7,
-      "newly_accepted": 18,
-      "unique_artifacts": 5027
+      "name": "docs",
+      "args": [
+        "python3",
+        "doc/WASM/tools/manage.py",
+        "check"
+      ],
+      "chunk_id": "378096",
+      "wall_time_seconds": 0.037038056,
+      "exit_code": 0,
+      "original_token_count": 26,
+      "output": "PASS: document projections, LL schedule, D7 inventory, local links and original-input hashes (check).\n"
     },
     {
-      "command": [
+      "name": "gate-controls",
+      "args": [
+        "python3",
+        "doc/WASM/tools/test-controls.py"
+      ],
+      "chunk_id": "2e3c79",
+      "wall_time_seconds": 2.331e-06,
+      "exit_code": 0,
+      "original_token_count": 22,
+      "output": "PASS: 32 synthetic checker positive/negative controls; no production acceptance claim.\n"
+    },
+    {
+      "name": "binding-controls",
+      "args": [
+        "python3",
+        "doc/WASM/tools/test-bindings.py"
+      ],
+      "chunk_id": "e78ee2",
+      "wall_time_seconds": 0.041373418,
+      "exit_code": 0,
+      "original_token_count": 20,
+      "output": "PASS: 42 contract-binding and migration controls; no runtime acceptance claim.\n"
+    },
+    {
+      "name": "acceptance-controls",
+      "args": [
+        "python3",
+        "doc/WASM/tools/test-acceptance.py"
+      ],
+      "chunk_id": "9163dd",
+      "wall_time_seconds": 2.235e-06,
+      "exit_code": 0,
+      "original_token_count": 17,
+      "output": "PASS: 14 scoped acceptance controls; no runtime acceptance claim.\n"
+    },
+    {
+      "name": "evidence",
+      "args": [
+        "python3",
+        "doc/WASM/tools/check-evidence.py",
+        "--include-external"
+      ],
+      "chunk_id": "1176d3",
+      "wall_time_seconds": 0.561212409,
+      "exit_code": 0,
+      "original_token_count": 19,
+      "output": "PASS: 38 retained evidence identities; CURRENT inventory bindings match.\n"
+    },
+    {
+      "name": "statistics-controls",
+      "args": [
+        "node",
+        "tests/wasm/stage0/abi-measurements/test-statistics.mjs"
+      ],
+      "chunk_id": "a58f18",
+      "wall_time_seconds": 0.471944142,
+      "exit_code": 0,
+      "original_token_count": 227,
+      "output": "{\n  \"status\": \"PASS\",\n  \"controls\": [\n    {\n      \"name\": \"known paired ratios despite common trial drift\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"name\": \"seeded bootstrap reproduction\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"name\": \"missing candidate rejected\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"name\": \"duplicate candidate rejected\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"name\": \"missing workload rejected\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"name\": \"nonpositive timing rejected\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"name\": \"invalid timing rejected\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"name\": \"inner iterations cannot replace independent trials\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"name\": \"insufficient warmup and samples remain gaps\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"name\": \"invalid durations rejected\",\n      \"status\": \"PASS\"\n    }\n  ]\n}\n"
+    },
+    {
+      "args": [
         "python3",
         "doc/WASM/tools/manage.py",
         "check"
@@ -35,112 +137,17 @@
       "stderr": ""
     },
     {
-      "command": [
-        "python3",
-        "doc/WASM/tools/test-controls.py"
-      ],
-      "exit_code": 0,
-      "stdout": "PASS: 32 synthetic checker positive/negative controls; no production acceptance claim.\n",
-      "stderr": ""
-    },
-    {
-      "command": [
-        "python3",
-        "doc/WASM/tools/test-bindings.py"
-      ],
-      "exit_code": 0,
-      "stdout": "PASS: 42 contract-binding and migration controls; no runtime acceptance claim.\n",
-      "stderr": ""
-    },
-    {
-      "command": [
-        "python3",
-        "doc/WASM/tools/test-acceptance.py"
-      ],
-      "exit_code": 0,
-      "stdout": "PASS: 14 scoped acceptance controls; no runtime acceptance claim.\n",
-      "stderr": ""
-    },
-    {
-      "command": [
-        "python3",
-        "doc/WASM/tools/check-evidence.py",
-        "--include-external"
-      ],
-      "exit_code": 0,
-      "stdout": "PASS: 37 retained evidence identities; CURRENT inventory bindings match.\n",
-      "stderr": ""
-    },
-    {
-      "command": [
-        "python3",
-        "doc/WASM/tools/gate.py",
-        "--inventory",
-        "doc/WASM/stage0/inventory.json",
-        "--results",
-        "/Users/buildsomething/Source/ccl-evidence/2026-09-11-dynamic-call-acceptance/accepted/results.json"
-      ],
-      "exit_code": 2,
-      "stdout": "{\n  \"status\": \"BLOCKED\",\n  \"reasons\": [\n    \"missing S0-ABI-selection [complete-report]\",\n    \"missing S0-CONTRACTS-a [complete-report]\",\n    \"missing S0-ENGINE-a [complete-report]\",\n    \"missing S0-LL01-a [control]\",\n    \"missing S0-LL01-b [control]\",\n    \"missing S0-LL02-a [control]\",\n    \"missing S0-LL02-b [control]\",\n    \"missing S0-LL03-a [control]\",\n    \"missing S0-LL07-a [full]\",\n    \"missing S0-LL08-a [native]\",\n    \"missing S0-LL08-b [native]\",\n    \"missing S0-LL08-c [native]\",\n    \"missing S0-LL13-b [full]\",\n    \"missing S0-LL15-a [full]\",\n    \"missing S0-LL15-b [native]\",\n    \"missing S0-LL15-c [native]\",\n    \"missing S0-LL19-a [full]\",\n    \"missing S0-LL21-a [full]\",\n    \"missing S0-LL21-c [shared-template]\",\n    \"missing S0-LL21-c [unshared-template]\",\n    \"missing S0-LL22-a [control]\",\n    \"missing S0-LL22-b [control]\",\n    \"missing S0-LL23-a [full]\",\n    \"missing S0-LL24-a [control]\"\n  ]\n}\n",
-      "stderr": ""
-    },
-    {
-      "document": "Clozure_CL_WebAssembly_Port_Outline_v0_17.docx",
-      "sha256": "8859d5bf47524f07e8f2baafbaf1203789079bd2963b9acb9874efea1f157550",
-      "textutil_exit_code": 0,
-      "xml": "VALID"
-    },
-    {
-      "document": "CCL_WebAssembly_Acceptance_Policy_and_Regression_Register_v1_7.docx",
-      "sha256": "31f2c534c37e0c963dad42833285760c6474c5d7a698397db4a2b7268cccbbfb",
-      "textutil_exit_code": 0,
-      "xml": "VALID"
-    },
-    {
-      "document": "CCL_WebAssembly_Stage0_Desk_Decisions_v1_8.docx",
-      "sha256": "75e1b7ef18dc8f5d058c3afd2e81873b29b86e176b0ac07f2bc71360b03a1562",
-      "textutil_exit_code": 0,
-      "xml": "VALID"
-    },
-    {
-      "check": "all auxiliary evidence identities",
-      "status": "PASS",
-      "count": 37
-    },
-    {
-      "check": "measurement preparation references unchanged policy and actual accepted/missing prerequisite records",
-      "status": "PASS",
-      "timing_execution": "NONE"
-    },
-    {
-      "command": [
+      "args": [
         "git",
         "diff",
-        "HEAD",
-        "--",
-        "tests/wasm"
+        "--check"
       ],
       "exit_code": 0,
       "stdout": "",
       "stderr": ""
     },
     {
-      "command": [
-        "git",
-        "diff",
-        "HEAD",
-        "--",
-        "doc/WASM/stage0/inventory.json",
-        "doc/WASM/stage0/benchmarks.json",
-        "doc/WASM/stage0/measurement-inventory.json",
-        "doc/WASM/tools"
-      ],
-      "exit_code": 0,
-      "stdout": "",
-      "stderr": ""
-    },
-    {
-      "command": [
+      "args": [
         "git",
         "diff",
         "--name-only",
@@ -157,28 +164,100 @@
       "stderr": ""
     },
     {
-      "command": [
-        "git",
-        "diff",
-        "--check"
-      ],
-      "exit_code": 0,
-      "stdout": "",
-      "stderr": ""
+      "document": "Clozure_CL_WebAssembly_Port_Outline_v0_17.docx",
+      "sha256": "b1ffb6362a26c6ec149dc5cb1a37ca1c5a55186d9ad038c4d8856e7ea5cd5f42",
+      "xml": "VALID",
+      "textutil_exit_code": 0
+    },
+    {
+      "document": "CCL_WebAssembly_Acceptance_Policy_and_Regression_Register_v1_7.docx",
+      "sha256": "31f2c534c37e0c963dad42833285760c6474c5d7a698397db4a2b7268cccbbfb",
+      "xml": "VALID",
+      "textutil_exit_code": 0
+    },
+    {
+      "document": "CCL_WebAssembly_Stage0_Desk_Decisions_v1_8.docx",
+      "sha256": "b47eeb6548e5db36934db7777414b375dbd45ade1d2f19efe1ebd52e7f8dcb03",
+      "xml": "VALID",
+      "textutil_exit_code": 0
+    },
+    {
+      "check": "all auxiliary identities verified",
+      "status": "PASS",
+      "count": 43
     }
   ],
-  "upstream_source_diff": "",
+  "tool_sha256": {
+    "accept-evidence.py": "2f3b95d68b765750109f2526209e593a32654709e9d59281c46f930e01c5af4f",
+    "bind-evidence.py": "a950b640b2e7c4f926a2c881f3f091693632962d423302c92a6ba51e95b285df",
+    "check-census.py": "54561cb85ed6f7d7ace8b81d0605808584d8b1b4881e77f0791d3810e873fa6c",
+    "check-evidence.py": "608bec973719edbcb9b008861ed9f8c91f40dd25b3c9e04daf19efedaa8c380e",
+    "evidence_binding.py": "488ff2c6b706c0085658b8c29b78c4ea91c7fbf3dbfeeb32c79747c3a9c44f7a",
+    "gate.py": "bf31c7c1bc9a22b3d883cb4bc1a94d873a7d9a45312098e1d4f58c42fc157932",
+    "manage.py": "2dc751f77db7c3d87c03ac51b8be53f8a932d68312d9a26cb76fd86456a17adb",
+    "materialize.mjs": "fe20bcd6ef9491a56e6cd60f9e3401f6ddb9932ec93b7f97cdbc38e028344895",
+    "probe-worker.mjs": "d427f84f018113b7c570e1eff20b3487e05e1ef6b067b1bd1abb6ee527b3b187",
+    "run-probes.mjs": "5a2921a41cef706b5323123d8fa4edcb52ebc008ef119f5a9e2160f335cec798",
+    "test-acceptance.py": "1ae1adde72cb1f2dabf9ddc8ac1e04d4baee60f676f7626dbf6096e5f0edd1d0",
+    "test-bindings.py": "6d093c9dfebb617029e2902ff5d6b8e303af07a71134bf9bd488596e6072f6f1",
+    "test-controls.py": "85461af48fa62c728b1f15c1ca6fe0998f2d2f6535f47ae11279d6b6ba5a896f"
+  },
   "stage0_status": "BLOCKED",
-  "missing_records": 24,
-  "unreviewed_records": 0,
+  "missing_records": 23,
+  "unreviewed_records": 1,
+  "gate": {
+    "command": [
+      "python3",
+      "doc/WASM/tools/gate.py",
+      "--inventory",
+      "doc/WASM/stage0/inventory.json",
+      "--results",
+      "/Users/buildsomething/Source/ccl-evidence/2026-09-12-stage0-measurements/results.json"
+    ],
+    "exit_code": 2,
+    "stdout": "{\n  \"status\": \"BLOCKED\",\n  \"reasons\": [\n    \"missing S0-ABI-selection [complete-report]\",\n    \"missing S0-CONTRACTS-a [complete-report]\",\n    \"missing S0-ENGINE-a [complete-report]\",\n    \"missing S0-LL01-a [control]\",\n    \"missing S0-LL01-b [control]\",\n    \"missing S0-LL02-a [control]\",\n    \"missing S0-LL02-b [control]\",\n    \"missing S0-LL03-a [control]\",\n    \"missing S0-LL07-a [full]\",\n    \"missing S0-LL08-a [native]\",\n    \"missing S0-LL08-b [native]\",\n    \"missing S0-LL08-c [native]\",\n    \"missing S0-LL13-b [full]\",\n    \"missing S0-LL15-a [full]\",\n    \"missing S0-LL15-b [native]\",\n    \"missing S0-LL15-c [native]\",\n    \"missing S0-LL19-a [full]\",\n    \"unreviewed S0-LL21-a [full]\",\n    \"missing S0-LL21-c [shared-template]\",\n    \"missing S0-LL21-c [unshared-template]\",\n    \"missing S0-LL22-a [control]\",\n    \"missing S0-LL22-b [control]\",\n    \"missing S0-LL23-a [full]\",\n    \"missing S0-LL24-a [control]\"\n  ]\n}\n",
+    "stderr": "",
+    "result": {
+      "status": "BLOCKED",
+      "reasons": [
+        "missing S0-ABI-selection [complete-report]",
+        "missing S0-CONTRACTS-a [complete-report]",
+        "missing S0-ENGINE-a [complete-report]",
+        "missing S0-LL01-a [control]",
+        "missing S0-LL01-b [control]",
+        "missing S0-LL02-a [control]",
+        "missing S0-LL02-b [control]",
+        "missing S0-LL03-a [control]",
+        "missing S0-LL07-a [full]",
+        "missing S0-LL08-a [native]",
+        "missing S0-LL08-b [native]",
+        "missing S0-LL08-c [native]",
+        "missing S0-LL13-b [full]",
+        "missing S0-LL15-a [full]",
+        "missing S0-LL15-b [native]",
+        "missing S0-LL15-c [native]",
+        "missing S0-LL19-a [full]",
+        "unreviewed S0-LL21-a [full]",
+        "missing S0-LL21-c [shared-template]",
+        "missing S0-LL21-c [unshared-template]",
+        "missing S0-LL22-a [control]",
+        "missing S0-LL22-b [control]",
+        "missing S0-LL23-a [full]",
+        "missing S0-LL24-a [control]"
+      ]
+    }
+  },
+  "prior_acceptances": "25 records preserved verbatim",
+  "upstream_source_diff": "",
   "repository_verification": {
     "record": "repository.json",
-    "commit": "e970adfe944d2a16fd5647a9770044c603deb79b",
-    "files": 25861,
-    "indexed_references": 366,
-    "distinct_git_blobs": 2427,
+    "commit": "8f09c4928f935b0386773383284731f681655789",
+    "files": 102450,
+    "indexed_references": 448,
+    "distinct_git_blobs": 6700,
     "catalog_controls": 8,
     "stable_fsck_exit_code": 0,
-    "diagnostic_record": "2026-09-11-dynamic-call-acceptance/git-verification.json"
-  }
+    "fsck_notes": "Two pre-existing dangling blobs; no missing or corrupt objects."
+  },
+  "current_auxiliary_identities": 44
 }

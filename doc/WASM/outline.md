@@ -10,6 +10,8 @@ Treat Wasm as a new CCL architecture whose effective seam is the existing target
 
 Version 0.17 replaces v0.16 and accompanies acceptance v1.7 and decisions v1.8. The bounded C/C4/B correctness protocol now has an executable corpus; its eighteen correctness records are independently reviewed and accepted at their stated bounds. R7 binds execution records to per-test contracts and the inventory version, retaining original whole-inventory hashes as provenance. The required D3 candidates are C/C4/B; H(G) is optional future work. Module granularity and startup costs join the ABI measurement plan. macOS is the sole reference host for this Wasm project. The native baseline and external census trace use macOS; no alternate operating-system qualification is required. D5 protocol v1.1 records generation-guarded host wakes, nested active-request routing and parking at idle host boundaries. D3 remains open. Runtime acceptance remains evidence-scoped. [D]
 
+The current [D3 exploratory execution](stage0/abi-measurements.md) compares C/C4/B under same-module direct, same-instance indirect and cross-instance indirect packaging. Its new derivative and S0-LL21-a evidence need independent review; these bounded timings do not select an ABI or establish production startup, scale or browser behavior.
+
 | Document | Content |
 | --- | --- |
 | This outline, v0.17 | Architecture, decisions, contracts, delivery stages and provenance. The authority for what is being built and why. |

@@ -1,0 +1,62 @@
+{
+  "timestamp": "2026-09-12T14:12:32.437855+00:00",
+  "status": "EXECUTED_NOT_REVIEWED",
+  "scope": "Eight hand-built definitions, two live Workers, cons-only 4 KiB semispace. No representative census, product budget, browser, production image, optimized tier or ABI selection claim.",
+  "run": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-abi-measurements-r2/results.json",
+    "sha256": "22992c487407bf2548af861ffe348ab24ca99b9e4e0fd2540d09b709c80f180d"
+  },
+  "execution": {
+    "status": "PASS",
+    "positive_cases": 486,
+    "rejected_controls": 279,
+    "positive_batches": 72,
+    "rejected_batch_controls": 27,
+    "trial_candidate_rows": 27,
+    "review_disposition": "NOT_REVIEWED",
+    "selection": "NO_SELECTION",
+    "scope": "Eight hand-built definitions, two live Workers, cons-only 4 KiB semispace. No representative census, product budget, browser, production image, optimized tier or ABI selection claim."
+  },
+  "measurements": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-abi-measurements-r2/measurement-summary.json",
+    "sha256": "a8cd0b4ecd915e6be7fc96065f4e49d311ca3290a3702f7f9640f3de27adb949",
+    "selection": "NO_SELECTION",
+    "packaging": [
+      "same-module direct",
+      "same-instance indirect",
+      "cross-instance indirect"
+    ],
+    "independent_trials_per_packaging": 3,
+    "candidate_trial_rows": 27,
+    "workload_rows": 216,
+    "minimum_warmup_ms": 100,
+    "minimum_sample_ms": 50,
+    "policy_sha256": "a9e69df97867b7cc608ce6bd6ae5ea2118a5b53dc03eb4391c72f9e870a838a4",
+    "qualification": "Exploratory only. All 24 IDs exercised in three packaging configurations; selection inventory remains unqualified."
+  },
+  "reviewed_fixtures": "Original dynamic-call, debugger-frame, integrated-runtime and boundary sources unchanged; derivative needs separate review.",
+  "original_evidence": {
+    "prototype": "2026-09-12-abi-measurements-r1",
+    "development": [
+      "2026-09-12-measurement-development-r1",
+      "2026-09-12-measurement-development-r2",
+      "2026-09-12-measurement-development-r3",
+      "2026-09-12-measurement-development-r4"
+    ]
+  },
+  "remaining": [
+    "independent review and S0-LL21-a project acceptance",
+    "complete engine and object-contract prerequisites",
+    "representative census and packaging/startup/scale matrix",
+    "optimized engine tier and browser evidence",
+    "dynamic root stores/reloads, C-stack high-water, resident Worker memory and GC/safepoint phase latencies",
+    "product budgets and policy-qualified selection trials"
+  ],
+  "verification": {
+    "rebuilt_modules_and_objects_identical": 4518,
+    "reviewed_prerequisite_binaries_identical": 864,
+    "artifact_identities": 23760,
+    "independent_bootstrap": "PASS",
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-abi-measurement-verification/binary-and-execution-verification.json"
+  }
+}

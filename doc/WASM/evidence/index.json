@@ -636,6 +636,21 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Eighteen fourth-audit ABI/foundation records accepted at reviewed bounds; the original seven accepted records retained exactly. No new execution or D3 selection."
+    },
+    {
+      "id": "ABI-MEASUREMENTS-r2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-abi-measurements-r2/results.json",
+      "sha256": "22992c487407bf2548af861ffe348ab24ca99b9e4e0fd2540d09b709c80f180d",
+      "timestamp": "2026-09-12T14:03:36.681Z",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "b6bb97e296c12e81119b88f281bc125591b82a15d583ed47d45354428266ffd1",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Isolated S0-LL21-a prebuilt publication execution across C/C4/B and three packaging choices. Full derivative qualification and exploratory timing artifacts retained; no ABI selection or acceptance."
     }
   ],
   "auxiliary_records": [
@@ -832,7 +847,7 @@
       "scope": "Final document references corrected to decisions 1.8; regeneration and macOS textutil/XML verification. Earlier full verification remains unchanged."
     },
     {
-      "id": "CURRENT-STAGE0-COMBINED",
+      "id": "PRE-MEASUREMENT-STAGE0-COMBINED",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-dynamic-call-acceptance/accepted/results.json",
       "sha256": "a98ca1e35b8eecb0a3ad2011dd85b535c95273e7349a9448d42fbf8a19cee7a7",
       "scope": "25 scoped accepted records; Stage 0 remains BLOCKED for 24 missing records."
@@ -853,13 +868,55 @@
       "id": "D3-MEASUREMENT-READINESS",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-dynamic-call-acceptance/measurement-readiness.json",
       "sha256": "bb030705452dded1400b2ef6e28354c54b2e2d62a0cabee20408726bbbd4fd9a",
-      "scope": "Preparation under unchanged policy; missing prerequisites disclosed, all 24 measurements NOT_RUN."
+      "scope": "Historical pre-implementation preparation, retained unchanged. Current execution is ABI-MEASUREMENTS-r2."
     },
     {
       "id": "DYNAMIC-CALL-ACCEPTANCE-VERIFICATION",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-dynamic-call-acceptance/verification.json",
       "sha256": "e58bbbb909bba758cc1535516930fb8464ef4d5bfc26c9f3b5a35150c79bf48c",
       "scope": "Verified exactly eighteen acceptance changes, seven unchanged prior acceptances, all referenced artifact identities, 88 controls, current gate, documents and unchanged runtime/policy sources."
+    },
+    {
+      "id": "CURRENT-STAGE0-COMBINED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-stage0-measurements/results.json",
+      "sha256": "7a1b3cf9820fb25d060a920a6c0f1de7b97a143073d32b44f40290c0e4802181",
+      "scope": "25 prior accepted records unchanged; S0-LL21-a unreviewed. Gate BLOCKED for 23 missing and one unreviewed."
+    },
+    {
+      "id": "ABI-MEASUREMENT-RAW-SUMMARY",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-abi-measurements-r2/measurement-summary.json",
+      "sha256": "a8cd0b4ecd915e6be7fc96065f4e49d311ca3290a3702f7f9640f3de27adb949",
+      "scope": "Raw paired baseline-tier exploration under three packaging choices. NO_SELECTION."
+    },
+    {
+      "id": "ABI-MEASUREMENT-ORIGINAL-DEVELOPMENT",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-abi-measurement-verification/development-evidence.json",
+      "sha256": "7e0f1fd5b4f0583a42e623e66d24297e457f661a63c93a8842ee70175af4472a",
+      "scope": "Every original development failure and the superseded r1 prototype; sources and artifacts unchanged."
+    },
+    {
+      "id": "ABI-MEASUREMENT-BINARY-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-abi-measurement-verification/binary-and-execution-verification.json",
+      "sha256": "bc6e4da73afbc1bb78b80396a69e58ef395c363c3f081af7203da06fd1bac4c8",
+      "scope": "Fresh binaries, unchanged reviewed prerequisites, artifact hashes, raw accounting and independent paired bootstrap verification."
+    },
+    {
+      "id": "BEFORE-ABI-MEASUREMENTS",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-abi-measurement-verification/before-manifest.json",
+      "sha256": "82f764032470d0f5b51adea4b626008cd4965951bbb1cffca7be19e78c89e268",
+      "scope": "Original document set and inventories at fdebe7b3, before the measurement work."
+    },
+    {
+      "id": "ABI-MEASUREMENT-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-abi-measurement-verification/gate-result.json",
+      "sha256": "1031aec1941386dae84e97e064aba7c3ba61145ccb347d2cf1ca938cfc68eee9",
+      "scope": "Current gate after adding the unreviewed S0-LL21-a record, without changing 25 prior acceptances."
+    },
+    {
+      "id": "ABI-MEASUREMENT-FINAL-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-abi-measurement-verification/verification.json",
+      "sha256": "b470572f008c3d0e8de2c01314007cf1bcd39256873cd546bbddfec48abde0d4",
+      "scope": "4518 byte-identical binaries/objects, 864 reviewed prerequisite identities, all LL21-a artifact hashes, independent bootstrap, 98 checker/statistical controls and document/aggregate verification. No acceptance."
     }
   ]
 }

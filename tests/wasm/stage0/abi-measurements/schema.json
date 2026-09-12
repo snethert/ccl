@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "candidates": {
+    "C": 3,
+    "C4": 4,
+    "B": 0
+  },
+  "maximum_arguments": 32,
+  "maximum_values": 6,
+  "frame_bytes": 512,
+  "stack_bytes": 16384,
+  "reply_bytes": 8192,
+  "reply_capacity": 16,
+  "tail_iterations": 100000,
+  "nil": 65,
+  "header_bytes": 64,
+  "checkpoints": {
+    "root_head": 64,
+    "vsp": 68,
+    "tsp": 72,
+    "csp": 76,
+    "mv_base": 80,
+    "mv_owner_top": 84,
+    "binding_depth": 88,
+    "binding_cookie": 92,
+    "handler_cookie": 96,
+    "active_request": 100,
+    "root_blocks": 104,
+    "incoming_count": 108
+  },
+  "result_descriptor": 112,
+  "argument_roots": 128,
+  "result_root": 328,
+  "result_values": 336,
+  "temporary_root": 368,
+  "temporary_values": 376,
+  "tcr": {
+    "frame_head": 224,
+    "frame_serial": 228,
+    "abi_state": 232,
+    "stack_base": 236,
+    "stack_limit": 240,
+    "reply_cursor": 244,
+    "reply_limit": 248,
+    "debug_policy": 252
+  },
+  "state": {
+    "input": 0,
+    "anchors": 4,
+    "output": 8,
+    "lazy_code": 12,
+    "entry_count": 16,
+    "tail_count": 20,
+    "peak_vsp": 24,
+    "peak_roots": 28,
+    "cleanup_count": 32,
+    "effects": 36,
+    "error": 40,
+    "value_count": 44,
+    "suspend": 48,
+    "policy": 52,
+    "initial_vsp": 56,
+    "tail_budget": 60
+  },
+  "entries": [
+    {
+      "code": 10,
+      "version": 1,
+      "name": "fold",
+      "minimum": 0,
+      "maximum": 32
+    },
+    {
+      "code": 11,
+      "version": 2,
+      "name": "fold_new",
+      "minimum": 0,
+      "maximum": 32
+    },
+    {
+      "code": 12,
+      "version": 1,
+      "name": "exact",
+      "minimum": 2,
+      "maximum": 2
+    },
+    {
+      "code": 20,
+      "version": 1,
+      "name": "optional",
+      "minimum": 2,
+      "maximum": 32
+    },
+    {
+      "code": 21,
+      "version": 1,
+      "name": "keyword",
+      "minimum": 0,
+      "maximum": 32
+    },
+    {
+      "code": 30,
+      "version": 1,
+      "name": "tail_small",
+      "minimum": 2,
+      "maximum": 32
+    },
+    {
+      "code": 31,
+      "version": 1,
+      "name": "tail_large",
+      "minimum": 2,
+      "maximum": 32
+    },
+    {
+      "code": 40,
+      "version": 1,
+      "name": "nested",
+      "minimum": 0,
+      "maximum": 6
+    }
+  ],
+  "scope": "Isolated derivative of the reviewed hand-built dynamic-call fixture. Complete correctness requalification plus exploratory batched measurements; no generated CCL code, production scale, optimized debug storage, representative matrix or ABI selection.",
+  "measurement": {
+    "schedule_base_state_offset": 72,
+    "force_gc_state_offset": 76,
+    "schedule_records": 32,
+    "schedule_record_bytes": 256,
+    "maximum_batch_iterations": 4096,
+    "graph_observation_cons_limit": 64
+  }
+}

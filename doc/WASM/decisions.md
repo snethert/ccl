@@ -126,7 +126,7 @@ Use stage0/benchmarks.json version 2 for the predeclared trial counts, confidenc
 
 Artifacts: versioned C/C4/B ABI descriptions, generic-entry/stub metadata, the D7 correctness/rejection inventory and all 24 candidate/workload measurement records. Stage 1 repeats the chosen contract through generated code; hand-built results do not certify pass 2. Revisit the ABI when generated correctness or representative measurements overturn its recorded basis. [LL03, LL05, LL21, LL22]
 
-The [dynamic-call protocol v0](abi/dynamic-call.v0.md) specifies the hand-built C/C4/B experiment, including stack/result ownership and typed installation. Its eighteen correctness records have been independently reviewed and accepted within the [fourth-audit scope](stage0/project-acceptance.md); they do not select D3.
+The [dynamic-call protocol v0](abi/dynamic-call.v0.md) specifies the hand-built C/C4/B experiment, including stack/result ownership and typed installation. Its eighteen correctness records have been independently reviewed and accepted within the [fourth-audit scope](stage0/project-acceptance.md); they do not select D3. The isolated [measurement derivative](stage0/abi-measurements.md) now supplies exploratory baseline-tier timings across three packaging choices and a new unreviewed S0-LL21-a execution; representative selection evidence remains open.
 
 ## D4  /  RUNTIME IMPLEMENTATION LANGUAGE
 

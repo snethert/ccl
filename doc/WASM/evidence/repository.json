@@ -2,15 +2,15 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "e970adfe944d2a16fd5647a9770044c603deb79b",
+  "commit": "8f09c4928f935b0386773383284731f681655789",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "4e0f81708251b3d548e555d450f667a4c227ea71666b2bd2e10ef5bbc8f1b727",
-  "immutable_evidence_files": 25861,
-  "indexed_references_verified": 366,
-  "source_index_snapshot": "catalog/source-index-dynamic-call-acceptance.json",
-  "source_index_sha256": "b180b6473ca8522eaa162033a0f65a0e564c45ffdc5d9474c900dd9533864b34",
-  "verification": "All 25,861 catalogued files and 2,427 distinct committed Git blobs match by byte size and SHA-256. Eight catalog controls pass. Stable post-staging git fsck --full exits 0 with two unreferenced blobs; the initial concurrent-staging diagnostic is retained in the acceptance pack.",
+  "catalog_sha256": "8736ec4a7cc1081f00a1fc4c9f14829ae0c5cf9427e53513d986a50e519dbbfa",
+  "immutable_evidence_files": 102450,
+  "indexed_references_verified": 448,
+  "source_index_snapshot": "catalog/source-index-abi-measurements.json",
+  "source_index_sha256": "f463458ec8bcb48faddda8d608804066826962b73ce28d88a86a203ec4972cb7",
+  "verification": "All 102,450 catalogued files and 6,700 distinct staged Git blobs match by byte size and SHA-256. Eight catalog controls pass. Sequential git fsck --full exits 0; two pre-existing unreferenced blobs are harmless.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository. Original evidence is immutable; two explicit acceptance decisions cover 25 reviewed native/runtime/frame/ABI records at their recorded bounds. D3 measurement work remains unexecuted."
+  "scope": "Separate local evidence repository. Original failures, the superseded prototype and final exploratory measurement run are retained. Twenty-five prior scoped acceptances remain unchanged; the new LL21-a result and measurement derivative require independent review. No ABI selection."
 }

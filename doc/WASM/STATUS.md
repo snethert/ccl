@@ -1,4 +1,4 @@
-# Current status — 2026-09-11
+# Current status — 2026-09-12
 
 Implementation baseline: upstream v1.13, `c994217adc56b3f8a564526cee4695893ac84d86`. Current document set: outline 0.17, acceptance 1.7, decisions 1.8. macOS is the sole reference host. Shared compiler and upstream kernel source remain unchanged.
 
@@ -10,13 +10,13 @@ Implementation baseline: upstream v1.13, `c994217adc56b3f8a564526cee4695893ac84d
 | Debugger frames S0-LL23-b | ACCEPTED at retained bounds | Eleven cases and eleven controls. Shared-cell relocation does not establish capture semantics; policy-1 unavailability is metadata only. [Frame scope](stage0/debug-frames.md). |
 | Seven-record project acceptance | RECORDED | User-authorized [decision](stage0/project-acceptance.md) following Claude sign-off 52639e4e. Separate envelope preserves original bytes, timestamps, hashes and scopes. Original raw envelopes retain their earlier review flags. |
 | C/C4/B dynamic-call corpus | ACCEPTED at reviewed bounds | 53 positive cases and 27 rejected controls per candidate; 159/81 total. Includes three 100,000-tail-transfer cases per candidate. All eighteen records are accepted after Claude's fourth audit. [Report and bounds](stage0/dynamic-call.md). |
-| D3 selection / product risks | OPEN | No candidate selected or benchmarked. [Scale, startup and granularity](stage0/product-risk-plan.md) need coupled measurements and stated assumptions. Hand-built correctness does not measure production cost. |
+| D3 selection / product risks | OPEN | Exploratory C/C4/B timings now exist for three packaging choices; no candidate selected. [Scale, startup and granularity](stage0/product-risk-plan.md) need coupled measurements and stated assumptions. Hand-built correctness does not measure production cost. |
 | Qualified census / compiler | NOT RUN | Evaluated native instrumentation, closure evidence and executable pass 2 remain absent. Shared compiler work requires an authorized author under the standing rules. |
 | Engine matrix / full object contracts | INCOMPLETE | Node/V8 hand-built execution does not qualify browsers, all profiles, full CCL object layouts or generated code. |
 | Initial probes | Reviewed diagnostics only | Three PASS in r7; cannot discharge complete S0 IDs. Original inventory hash remains provenance. |
 | Evidence repository | Retained separately | Immutable catalog, original failures and index snapshots; [pinned repository manifest](evidence/repository.json). |
 | C/C4/B dynamic-call fixture review | Reviewed and accepted | [Fourth audit](stage0/claude-review.md): full source review, fresh 159/81 run, 864/864 byte-identical binaries, no defect; three nonblocking observations recorded. The eighteen records have a separate scoped acceptance envelope. |
-| Stage 0 acceptance | BLOCKED | The combined gate has 24 missing records and zero unreviewed records. |
+| Stage 0 acceptance | BLOCKED | The combined gate has 23 missing records and one unreviewed record (S0-LL21-a). |
 
 The new ABI fixture adds a separate C extension and new linked kernel. Existing boundary/runtime/frame sources remain unchanged. Fresh prerequisites execute before the ABI corpus. ABI acceptance now follows its own fourth audit and explicit eighteen-record decision. Original ABI development failures exposed duplicate result scanning and a stale frame result count. Both fixes are confined to the new fixture and have rejection controls.
 
@@ -24,4 +24,4 @@ Claude's sign-off includes the v2 evidence binding tooling and evidence reposito
 
 H(G) is optional future work and blocks no scheduled stage. Historical H1 archives remain explicitly unavailable where not retained; their prior claims are not promoted to U1.
 
-D3 measurement preparation is recorded in the [implementation handoff](stage0/abi-measurements.md) and [readiness report](evidence/abi-measurement-readiness.json). The existing benchmark policy still requires the missing S0-LL21-a correctness record; final selection also requires the missing engine and complete-contract records. Building exploratory measurement tooling can proceed. No timing is reported and no benchmark threshold has changed.
+The isolated [measurement fixture](stage0/abi-measurements.md) now passes 486 correctness cases, 279 controls, 72 batch checks and 27 batch controls. S0-LL21-a has a fresh, unreviewed execution. R2 retains three paired exploratory trials per packaging across all eight workloads and C/C4/B, with complete input mixtures and a pinned V8 baseline tier. Its [report](evidence/abi-measurement-summary.json) says NO_SELECTION: benchmark minima, representative workloads, full engine/contracts, product budgets and several resource metrics remain open. New code requires independent review. The earlier readiness report remains historical preparation; no benchmark policy has changed.
