@@ -157,8 +157,12 @@
   "archive": "runs/2026-09-11-dynamic-call-r1.zip",
   "archive_sha256": "149d9de882c54517eea43e5ea7787908f1b1366e44764f415e48e15b824eaa8b",
   "execution_status": "PASS",
-  "review_disposition": "NOT_REVIEWED",
-  "acceptance": "NOT_ACCEPTED",
+  "review_disposition": "ACCEPTED",
+  "acceptance": "ACCEPTED_RECORDED_SCOPE",
   "results_member": "results.json",
-  "scope": "Bounded hand-built C/C4/B correctness with freshly executed frame/runtime/boundary prerequisites. No ABI selection, generated code, production capacity or project acceptance."
+  "scope": "Bounded hand-built C/C4/B correctness with freshly executed frame/runtime/boundary prerequisites. No ABI selection, generated code, production capacity or project acceptance.",
+  "acceptance_record": "stage0/project-acceptance.md",
+  "accepted_results_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-dynamic-call-acceptance/accepted/results.json",
+  "accepted_results_sha256": "a98ca1e35b8eecb0a3ad2011dd85b535c95273e7349a9448d42fbf8a19cee7a7",
+  "review_note": "Claude fourth audit a1761aa5: fresh 159/81 execution and 864 identical binaries. Separate project acceptance; original pack and raw pre-review envelope unchanged."
 }

@@ -2,15 +2,15 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "b9d27c8573851ad560a45df8224259bdd1ee9bb2",
+  "commit": "e970adfe944d2a16fd5647a9770044c603deb79b",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "30b8c087ed9e80ff0b292bd01fb7e42aab41222c1579fafc5edb37e9c06b0897",
-  "immutable_evidence_files": 20774,
-  "indexed_references_verified": 292,
-  "source_index_snapshot": "catalog/source-index-dynamic-call-final.json",
-  "source_index_sha256": "abd76cdf71caea79adbd3e0461005a5226e2cda118a7e2d347440fe65901a0dc",
-  "verification": "All catalogued files and 2,390 distinct committed Git blobs match by byte size and SHA-256. Eight catalog controls pass. git fsck --full exits 0 (one unreferenced blob reported).",
+  "catalog_sha256": "4e0f81708251b3d548e555d450f667a4c227ea71666b2bd2e10ef5bbc8f1b727",
+  "immutable_evidence_files": 25861,
+  "indexed_references_verified": 366,
+  "source_index_snapshot": "catalog/source-index-dynamic-call-acceptance.json",
+  "source_index_sha256": "b180b6473ca8522eaa162033a0f65a0e564c45ffdc5d9474c900dd9533864b34",
+  "verification": "All 25,861 catalogued files and 2,427 distinct committed Git blobs match by byte size and SHA-256. Eight catalog controls pass. Stable post-staging git fsck --full exits 0 with two unreferenced blobs; the initial concurrent-staging diagnostic is retained in the acceptance pack.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository. Original evidence is immutable; project acceptance is a separate seven-record envelope, and new ABI execution remains unreviewed."
+  "scope": "Separate local evidence repository. Original evidence is immutable; two explicit acceptance decisions cover 25 reviewed native/runtime/frame/ABI records at their recorded bounds. D3 measurement work remains unexecuted."
 }

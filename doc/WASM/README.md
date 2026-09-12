@@ -11,7 +11,7 @@ The implementation baseline is upstream CCL v1.13 at `c994217adc56b3f8a564526cee
 - [Workflow](workflow.md): independent census and architecture tracks.
 - [Current status](STATUS.md) and [dated change history](history/changes.md).
 
-Markdown is the editable document source. The three versioned DOCX files are generated reading copies. `stage0/obligations.json` and the stage lists are generated from the acceptance register's LL metadata; `stage0/inventory.json` defines the individual tests. These complementary sources are checked together. Seven reviewed native/runtime/frame records are now accepted within their stated scopes; the remaining Stage 0 obligations are open.
+Markdown is the editable document source. The three versioned DOCX files are generated reading copies. `stage0/obligations.json` and the stage lists are generated from the acceptance register's LL metadata; `stage0/inventory.json` defines the individual tests. These complementary sources are checked together. Twenty-five reviewed native/runtime/frame/ABI records are now accepted within their stated scopes; the remaining Stage 0 obligations are open.
 
 ## Reproduce the document package and initial probes
 
@@ -57,10 +57,12 @@ The next D3 prerequisite now has a [logical debugger-frame fixture](../../tests/
 
 The [product-risk plan](stage0/product-risk-plan.md) couples startup, scale and module granularity with C/C4/B measurements. H(G) is optional future work and blocks no scheduled stage. The [separate evidence repository](evidence/repository.json) preserves original runs and supplies a portable hash catalog.
 
-The [C/C4/B correctness corpus](../../tests/wasm/stage0/dynamic-call/README.md) now executes arguments, multiple values, tail transfer, lazy installation and restoration through one parameterized fixture. Its new evidence awaits independent review. Reproduce it with:
+The [C/C4/B correctness corpus](../../tests/wasm/stage0/dynamic-call/README.md) now executes arguments, multiple values, tail transfer, lazy installation and restoration through one parameterized fixture. Its eighteen records are now accepted after Claude's fourth audit. Reproduce it with:
 
 ```sh
 node tests/wasm/stage0/dynamic-call/run.mjs --output /tmp/ccl-wasm-dynamic-call
 ```
 
 The [dynamic-call report](stage0/dynamic-call.md) identifies bounds, original failures, retained artifacts and the next D3 work. Passing this corpus does not select an ABI.
+
+D3 continues with the [measurement implementation handoff](stage0/abi-measurements.md). The correctness baseline is accepted; timings, a representative packaging matrix and ABI selection remain open.

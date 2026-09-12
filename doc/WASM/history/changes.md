@@ -1,5 +1,12 @@
 # Change history
 
+## 2026-09-11 — accept the fourth-audit C/C4/B records
+
+Following the user's supplied Claude review committed as a1761aa5, a new acceptance envelope records all eighteen DYNAMIC-CALL-r1 records as ACCEPTED at their reviewed bounds. The seven previous accepted records are preserved exactly; all original execution timestamps, test revisions, contract hashes, artifact bytes and raw envelopes remain unchanged. No Wasm, fixture, compiler or kernel source is edited or re-executed in this acceptance step. The combined gate now has 24 missing and zero unreviewed records.
+
+Claude's three nonblocking observations remain disclosed: dispatch-time role rejection is a stand-in with a real semantic companion oracle, circular APPLY reaches capacity condition 911, and single-scanner ownership has no direct inspection assertion. A concrete D3 measurement handoff carries these follow-ups, retains the existing policy and records its still-missing S0-LL21-a prerequisite. Final selection also needs engine/complete-contract records. All 24 measurement IDs remain NOT_RUN; no candidate, performance threshold or packaging assumption is selected from correctness results.
+
+
 ## 2026-09-11 — fourth Claude audit: C/C4/B dynamic-call fixture reviewed
 
 Authorized by the user's request to review the new fixture.

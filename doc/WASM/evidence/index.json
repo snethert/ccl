@@ -296,7 +296,7 @@
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
       "currency": "ORIGINAL_FAILURE",
-      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged."
+      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged."
     },
     {
       "id": "INTEGRATED-RUNTIME-r10",
@@ -605,7 +605,7 @@
       "currency": "CURRENT",
       "results_member": "results.json",
       "scope": "Bounded hand-built C/C4/B correctness with freshly executed frame/runtime/boundary prerequisites. No ABI selection, generated code, production capacity or project acceptance.",
-      "note": "159 positive cases and 81 rejected controls across C/C4/B; six fresh prerequisites. New source and linked ABI kernel require independent review.",
+      "note": "Claude fourth audit a1761aa5 found no defect and reproduced all 864 binaries. Original raw envelope remains pre-review; eighteen-record project acceptance is recorded separately in DYNAMIC-CALL-PROJECT-ACCEPTANCE.",
       "external_review": {
         "reviewer": "Claude Fable 5.1",
         "provenance": "Fourth audit at HEAD 7187a89b: full source review, fresh re-execution and 864/864 byte comparison in the reviewer's own session, 2026-09-11",
@@ -622,6 +622,20 @@
       "execution_status": "FAIL",
       "review_disposition": "NOT_REVIEWED",
       "scope": "Original duplicate-result-scanning and stale-result-count failures, plus source-metadata control expectation failures; untouched development sources, modules and traces. Existing reviewed prerequisite objects reused; no fresh prerequisite execution claimed."
+    },
+    {
+      "id": "DYNAMIC-CALL-PROJECT-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-dynamic-call-acceptance/accepted/results.json",
+      "sha256": "a98ca1e35b8eecb0a3ad2011dd85b535c95273e7349a9448d42fbf8a19cee7a7",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "2e1e5e93cb9b4b1bfccac50d1d4ef1ada1d398091c881e9f6029fa3c42e4ff84",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Eighteen fourth-audit ABI/foundation records accepted at reviewed bounds; the original seven accepted records retained exactly. No new execution or D3 selection."
     }
   ],
   "auxiliary_records": [
@@ -782,7 +796,7 @@
       "scope": "Same-author verification of fresh fixture sources/binaries, scoped bindings, unrelated additions and unchanged migration artifacts; not acceptance."
     },
     {
-      "id": "CURRENT-STAGE0-COMBINED",
+      "id": "PRE-DYNAMIC-CALL-ACCEPTANCE-COMBINED",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-stage0-dynamic-call/results.json",
       "sha256": "90c06ddcca661b4260f09c58fde89da400a69bea3834f094ecac8c37afcfff32",
       "scope": "Seven scoped accepted original records plus eighteen unreviewed dynamic-call records. No new native execution, ABI selection or full Stage 0 acceptance."
@@ -816,6 +830,36 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-dynamic-call-verification/final-documents.json",
       "sha256": "bb9cf4fa344e9361e8d8d02044e5c5330e4b161da2f916bfba747d20fa0297a4",
       "scope": "Final document references corrected to decisions 1.8; regeneration and macOS textutil/XML verification. Earlier full verification remains unchanged."
+    },
+    {
+      "id": "CURRENT-STAGE0-COMBINED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-dynamic-call-acceptance/accepted/results.json",
+      "sha256": "a98ca1e35b8eecb0a3ad2011dd85b535c95273e7349a9448d42fbf8a19cee7a7",
+      "scope": "25 scoped accepted records; Stage 0 remains BLOCKED for 24 missing records."
+    },
+    {
+      "id": "DYNAMIC-CALL-ACCEPTANCE-DECISION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-dynamic-call-acceptance/decision.json",
+      "sha256": "b898447a17e14ed1080989af94342fed1affe7269c516b82f1c84e9fbc3d1540",
+      "scope": "Explicit eighteen-record decision after a1761aa5; original seven acceptances unchanged."
+    },
+    {
+      "id": "BEFORE-DYNAMIC-CALL-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-dynamic-call-acceptance/before-manifest.json",
+      "sha256": "a91f2e9d0142e13e30830ab25e4f71d1af9f81ae6e6b3ec3cfd73874e8043545",
+      "scope": "Original documents, generated copies, inventories, review and index at a1761aa5."
+    },
+    {
+      "id": "D3-MEASUREMENT-READINESS",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-dynamic-call-acceptance/measurement-readiness.json",
+      "sha256": "bb030705452dded1400b2ef6e28354c54b2e2d62a0cabee20408726bbbd4fd9a",
+      "scope": "Preparation under unchanged policy; missing prerequisites disclosed, all 24 measurements NOT_RUN."
+    },
+    {
+      "id": "DYNAMIC-CALL-ACCEPTANCE-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-dynamic-call-acceptance/verification.json",
+      "sha256": "e58bbbb909bba758cc1535516930fb8464ef4d5bfc26c9f3b5a35150c79bf48c",
+      "scope": "Verified exactly eighteen acceptance changes, seven unchanged prior acceptances, all referenced artifact identities, 88 controls, current gate, documents and unchanged runtime/policy sources."
     }
   ]
 }

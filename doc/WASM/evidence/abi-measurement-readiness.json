@@ -1,0 +1,338 @@
+{
+  "version": 1,
+  "status": "PREPARATION_ONLY_NO_TIMING",
+  "scope": "Readiness under existing policy; no selection, benchmark execution or new correctness acceptance.",
+  "accepted_results": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-11-dynamic-call-acceptance/accepted/results.json",
+    "sha256": "a98ca1e35b8eecb0a3ad2011dd85b535c95273e7349a9448d42fbf8a19cee7a7"
+  },
+  "inputs": {
+    "stage0/inventory.json": "2e1e5e93cb9b4b1bfccac50d1d4ef1ada1d398091c881e9f6029fa3c42e4ff84",
+    "stage0/benchmarks.json": "a9e69df97867b7cc608ce6bd6ae5ea2118a5b53dc03eb4391c72f9e870a838a4",
+    "stage0/measurement-inventory.json": "b250036262705a4f7c123da9c12c92685c3883e5bbb1994fe82f2b619a87e11b",
+    "stage0/abi-measurements.md": "e47448926aa2909c57969057de1f1bc2052fb4c26f1892ccaddcedf4eff188d6"
+  },
+  "correctness_requirements": [
+    {
+      "id": "S0-LL05-a",
+      "variant": "full:C",
+      "status": "ACCEPTED",
+      "contract_sha256": "b64904f2d46d910bdb894b62e8322d9a79204716fefc45decd6340db25f10aa1"
+    },
+    {
+      "id": "S0-LL05-a",
+      "variant": "full:C4",
+      "status": "ACCEPTED",
+      "contract_sha256": "b64904f2d46d910bdb894b62e8322d9a79204716fefc45decd6340db25f10aa1"
+    },
+    {
+      "id": "S0-LL05-a",
+      "variant": "full:B",
+      "status": "ACCEPTED",
+      "contract_sha256": "b64904f2d46d910bdb894b62e8322d9a79204716fefc45decd6340db25f10aa1"
+    },
+    {
+      "id": "S0-LL05-b",
+      "variant": "full:C",
+      "status": "ACCEPTED",
+      "contract_sha256": "d6d8efa97bf7e7dd28eeada0f4a85c411bba38c98eff29702aaed5985144029b"
+    },
+    {
+      "id": "S0-LL05-b",
+      "variant": "full:C4",
+      "status": "ACCEPTED",
+      "contract_sha256": "d6d8efa97bf7e7dd28eeada0f4a85c411bba38c98eff29702aaed5985144029b"
+    },
+    {
+      "id": "S0-LL05-b",
+      "variant": "full:B",
+      "status": "ACCEPTED",
+      "contract_sha256": "d6d8efa97bf7e7dd28eeada0f4a85c411bba38c98eff29702aaed5985144029b"
+    },
+    {
+      "id": "S0-LL05-c",
+      "variant": "full:C",
+      "status": "ACCEPTED",
+      "contract_sha256": "5e56cfe4387992725a367a2d49484a0f0504e70b11f69c9068e151f9f32a8f47"
+    },
+    {
+      "id": "S0-LL05-c",
+      "variant": "full:C4",
+      "status": "ACCEPTED",
+      "contract_sha256": "5e56cfe4387992725a367a2d49484a0f0504e70b11f69c9068e151f9f32a8f47"
+    },
+    {
+      "id": "S0-LL05-c",
+      "variant": "full:B",
+      "status": "ACCEPTED",
+      "contract_sha256": "5e56cfe4387992725a367a2d49484a0f0504e70b11f69c9068e151f9f32a8f47"
+    },
+    {
+      "id": "S0-LL05-d",
+      "variant": "full:C",
+      "status": "ACCEPTED",
+      "contract_sha256": "6b905ed9954f987218ddfab5d594025c63a53aca69ac5fd2953dc4d56e155716"
+    },
+    {
+      "id": "S0-LL05-d",
+      "variant": "full:C4",
+      "status": "ACCEPTED",
+      "contract_sha256": "6b905ed9954f987218ddfab5d594025c63a53aca69ac5fd2953dc4d56e155716"
+    },
+    {
+      "id": "S0-LL05-d",
+      "variant": "full:B",
+      "status": "ACCEPTED",
+      "contract_sha256": "6b905ed9954f987218ddfab5d594025c63a53aca69ac5fd2953dc4d56e155716"
+    },
+    {
+      "id": "S0-LL20-a",
+      "variant": "full",
+      "status": "ACCEPTED",
+      "contract_sha256": "54e380deb65aebbb1b51ddbe26745dc2685c43b689099d0c6face605a936e8a4"
+    },
+    {
+      "id": "S0-LL20-b",
+      "variant": "full",
+      "status": "ACCEPTED",
+      "contract_sha256": "3ea9fd5bc9cd4cf16348d287136af6bf6ef7b909590ec547fb51b4e840b592b1"
+    },
+    {
+      "id": "S0-LL20-c",
+      "variant": "full",
+      "status": "ACCEPTED",
+      "contract_sha256": "ec2479c28d5fcf631184008ed48a6e37052f91acd678bf5c4629df871254e092"
+    },
+    {
+      "id": "S0-LL21-a",
+      "variant": "full",
+      "status": "MISSING",
+      "contract_sha256": null
+    },
+    {
+      "id": "S0-LL21-b",
+      "variant": "full:C",
+      "status": "ACCEPTED",
+      "contract_sha256": "a09c4d22fa934a544166f27880e535550fa97f2031e8f09553fa4858e1f02b77"
+    },
+    {
+      "id": "S0-LL21-b",
+      "variant": "full:C4",
+      "status": "ACCEPTED",
+      "contract_sha256": "a09c4d22fa934a544166f27880e535550fa97f2031e8f09553fa4858e1f02b77"
+    },
+    {
+      "id": "S0-LL21-b",
+      "variant": "full:B",
+      "status": "ACCEPTED",
+      "contract_sha256": "a09c4d22fa934a544166f27880e535550fa97f2031e8f09553fa4858e1f02b77"
+    }
+  ],
+  "selection_prerequisites": [
+    {
+      "id": "S0-ENGINE-a",
+      "variant": "complete-report",
+      "status": "MISSING",
+      "contract_sha256": null
+    },
+    {
+      "id": "S0-CONTRACTS-a",
+      "variant": "complete-report",
+      "status": "MISSING",
+      "contract_sha256": null
+    },
+    {
+      "id": "S0-LL05-a",
+      "variant": "full:C",
+      "status": "ACCEPTED",
+      "contract_sha256": "b64904f2d46d910bdb894b62e8322d9a79204716fefc45decd6340db25f10aa1"
+    },
+    {
+      "id": "S0-LL05-a",
+      "variant": "full:C4",
+      "status": "ACCEPTED",
+      "contract_sha256": "b64904f2d46d910bdb894b62e8322d9a79204716fefc45decd6340db25f10aa1"
+    },
+    {
+      "id": "S0-LL05-a",
+      "variant": "full:B",
+      "status": "ACCEPTED",
+      "contract_sha256": "b64904f2d46d910bdb894b62e8322d9a79204716fefc45decd6340db25f10aa1"
+    },
+    {
+      "id": "S0-LL05-b",
+      "variant": "full:C",
+      "status": "ACCEPTED",
+      "contract_sha256": "d6d8efa97bf7e7dd28eeada0f4a85c411bba38c98eff29702aaed5985144029b"
+    },
+    {
+      "id": "S0-LL05-b",
+      "variant": "full:C4",
+      "status": "ACCEPTED",
+      "contract_sha256": "d6d8efa97bf7e7dd28eeada0f4a85c411bba38c98eff29702aaed5985144029b"
+    },
+    {
+      "id": "S0-LL05-b",
+      "variant": "full:B",
+      "status": "ACCEPTED",
+      "contract_sha256": "d6d8efa97bf7e7dd28eeada0f4a85c411bba38c98eff29702aaed5985144029b"
+    },
+    {
+      "id": "S0-LL05-c",
+      "variant": "full:C",
+      "status": "ACCEPTED",
+      "contract_sha256": "5e56cfe4387992725a367a2d49484a0f0504e70b11f69c9068e151f9f32a8f47"
+    },
+    {
+      "id": "S0-LL05-c",
+      "variant": "full:C4",
+      "status": "ACCEPTED",
+      "contract_sha256": "5e56cfe4387992725a367a2d49484a0f0504e70b11f69c9068e151f9f32a8f47"
+    },
+    {
+      "id": "S0-LL05-c",
+      "variant": "full:B",
+      "status": "ACCEPTED",
+      "contract_sha256": "5e56cfe4387992725a367a2d49484a0f0504e70b11f69c9068e151f9f32a8f47"
+    },
+    {
+      "id": "S0-LL05-d",
+      "variant": "full:C",
+      "status": "ACCEPTED",
+      "contract_sha256": "6b905ed9954f987218ddfab5d594025c63a53aca69ac5fd2953dc4d56e155716"
+    },
+    {
+      "id": "S0-LL05-d",
+      "variant": "full:C4",
+      "status": "ACCEPTED",
+      "contract_sha256": "6b905ed9954f987218ddfab5d594025c63a53aca69ac5fd2953dc4d56e155716"
+    },
+    {
+      "id": "S0-LL05-d",
+      "variant": "full:B",
+      "status": "ACCEPTED",
+      "contract_sha256": "6b905ed9954f987218ddfab5d594025c63a53aca69ac5fd2953dc4d56e155716"
+    },
+    {
+      "id": "S0-LL20-a",
+      "variant": "full",
+      "status": "ACCEPTED",
+      "contract_sha256": "54e380deb65aebbb1b51ddbe26745dc2685c43b689099d0c6face605a936e8a4"
+    },
+    {
+      "id": "S0-LL20-b",
+      "variant": "full",
+      "status": "ACCEPTED",
+      "contract_sha256": "3ea9fd5bc9cd4cf16348d287136af6bf6ef7b909590ec547fb51b4e840b592b1"
+    },
+    {
+      "id": "S0-LL20-c",
+      "variant": "full",
+      "status": "ACCEPTED",
+      "contract_sha256": "ec2479c28d5fcf631184008ed48a6e37052f91acd678bf5c4629df871254e092"
+    }
+  ],
+  "measurements": [
+    {
+      "id": "S0-ABI-C-01",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-C-02",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-C-03",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-C-04",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-C-05",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-C-06",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-C-07",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-C-08",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-C4-01",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-C4-02",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-C4-03",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-C4-04",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-C4-05",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-C4-06",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-C4-07",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-C4-08",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-B-01",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-B-02",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-B-03",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-B-04",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-B-05",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-B-06",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-B-07",
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "S0-ABI-B-08",
+      "status": "NOT_RUN"
+    }
+  ],
+  "representative_matrix": "NOT_FROZEN",
+  "engine_tier_and_flags": "NOT_PINNED_FOR_MEASUREMENTS",
+  "product_budgets": "NOT_DEFINED",
+  "fixture_changes": "NONE; reviewed implementation retained byte-identically",
+  "handoff": "stage0/abi-measurements.md"
+}
