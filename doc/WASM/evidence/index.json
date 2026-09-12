@@ -685,6 +685,21 @@
         "sha256": "755f01840caa1fe5efb6329e9a6f391a4b4f6e1843caff6d0c5afcffbe94c258",
         "timestamp": "2026-09-12T14:59:34.206376+00:00"
       }
+    },
+    {
+      "id": "NATIVE-CENSUS-r5",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-r5/gate-results.json",
+      "sha256": "3e64945a9a140690b50ae1597150527baa2c4bfb1b2308bc5f9da04ce5477c17",
+      "timestamp": "2026-09-12T16:01:17Z",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "5e315d82e91ebdda7e06d72d3a8e0409238dd449d3b9dea7a9c2ee085056ca26",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "S0-LL08-b/native: 279 evaluated operator slots including 12 reserved slots and unchanged flags under R6a. Reversible observation in disposable U1; two native regression runs, 164 clean FASLs reproduced after removal. No LL15-b/c closure or Wasm backend claim."
     }
   ],
   "auxiliary_records": [
@@ -1005,6 +1020,132 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/gate-result.json",
       "sha256": "5f20c88fb62f7e7e06468f6d232ed50405fff4ac2d085c8ff005f9cb1d0456dd",
       "scope": "26 scoped accepted records, 23 missing and zero unreviewed under the B engineering-decision contract."
+    },
+    {
+      "id": "NATIVE-CENSUS-DEVELOPMENT-r1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-development-r1/result.json",
+      "sha256": "bf2cfb1f3657eb4f8decaf23ea9ae242c3ad63998b92e47a57b8dad2582393ea",
+      "scope": "Original development execution; scope and outcome preserved without promotion."
+    },
+    {
+      "id": "NATIVE-CENSUS-DEVELOPMENT-r2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-development-r2/result.json",
+      "sha256": "4d9d65b33b319856b4dbbecc83df7395862a4c6f8dcdc7ac428f6d14cf51f981",
+      "scope": "Original development execution; scope and outcome preserved without promotion."
+    },
+    {
+      "id": "NATIVE-CENSUS-DEVELOPMENT-r3",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-development-r3/result.json",
+      "sha256": "379ac7b8b9a539142b08a96600bf1c3cebe878903a2556339bd60531927b2d57",
+      "scope": "Original development execution; scope and outcome preserved without promotion."
+    },
+    {
+      "id": "NATIVE-CENSUS-FAILED-r1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-r1/results.json",
+      "sha256": "5ca2e51cf82bd979169fcf94b89009a1c1afbce2792951d57f7d0e3305b2e94f",
+      "scope": "Original failed native observation run retained; not acceptance evidence."
+    },
+    {
+      "id": "NATIVE-CENSUS-FAILED-r2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-r2/results.json",
+      "sha256": "1d9ccdd00ac9804a98a4dba02dc482c2292d3ed6bf7e9a25f1d3bbf2b5a892d5",
+      "scope": "Original failed native observation run retained; not acceptance evidence."
+    },
+    {
+      "id": "NATIVE-CENSUS-FAILED-r3",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-r3/results.json",
+      "sha256": "3d78ba626207e9ae3d100423ab7eb26fee1afad3a704c6c1d98a107cc4c71066",
+      "scope": "Original failed native observation run retained; not acceptance evidence."
+    },
+    {
+      "id": "NATIVE-CENSUS-r1-CLEAN-RESTORATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-r1-clean-restoration.json",
+      "sha256": "0b20eab7a928bcb7b0ad5405231d9a84db0a31ee59546fd2c73dcd6d77128562",
+      "scope": "Separate clean-output restoration after original r1; original failed report unchanged."
+    },
+    {
+      "id": "NATIVE-CENSUS-r4-SUPERSEDED-RECOVERY",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-r4/results.json",
+      "sha256": "907005e85d314725b1b0db95f67d30ec998cadd1c073c6abee268e848cfb2890",
+      "scope": "Successful native execution; recovery omitted intermediate boot image. Superseded by r5 for final recovery coverage."
+    },
+    {
+      "id": "NATIVE-CENSUS-r5-RAW",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-r5/results.json",
+      "sha256": "40e32bd3ba44b71f0235c97b3f0400fbb54e8553c8779bfac9e0724a48a99edd",
+      "scope": "Original successful native run and all execution artifact hashes; not project acceptance."
+    },
+    {
+      "id": "NATIVE-CENSUS-COLD-DEVELOPMENT-r1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-cold-development-r1/commands.json",
+      "sha256": "c48f00d7a0b3f4510a155217228c30f073e8ad144762943196f05ad360ed48f1",
+      "scope": "Fresh cold-start verification after shared-stream fix, before full r4/r5 runs."
+    },
+    {
+      "id": "NATIVE-CENSUS-OBSERVER-CONTROLS-r1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-observer-controls-r1/results.json",
+      "sha256": "d30e4f0d74cb15f48036aa9439dc83f7e1902b26f78371e4e15fe803f6630a72",
+      "scope": "Real native observer omissions/corruptions: one positive, six rejected, identical probe FASLs. Final r3 uses r5 native image."
+    },
+    {
+      "id": "NATIVE-CENSUS-OBSERVER-CONTROLS-r2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-observer-controls-r2/results.json",
+      "sha256": "ce65209a9f1630fa3635b7751719b434a1dda6c677446233fffba7f2a11d6606",
+      "scope": "Real native observer omissions/corruptions: one positive, six rejected, identical probe FASLs. Final r3 uses r5 native image."
+    },
+    {
+      "id": "NATIVE-CENSUS-OBSERVER-CONTROLS-r3",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-observer-controls-r3/results.json",
+      "sha256": "ca1e2f02a405cec315e7fa98339062122f03f4f6bcf06f8cdb09bd9e070b2b6c",
+      "scope": "Real native observer omissions/corruptions: one positive, six rejected, identical probe FASLs. Final r3 uses r5 native image."
+    },
+    {
+      "id": "NATIVE-STARTUP-TRACE-r1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-startup-trace-r1/trace.json",
+      "sha256": "7c64a70feb9d4d609f8ed434bab822f9cf5a37c1f3228a8679c65283b360f99a",
+      "scope": "Actual privileged tracer attempt UNAVAILABLE; CCL never executed without a live tracer. No trace coverage claim."
+    },
+    {
+      "id": "NATIVE-STARTUP-TRACE-r2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-startup-trace-r2/trace.json",
+      "sha256": "146041cc4ceb4ff9e76c1cb87d69e6eccdfaaa711e474996eda86cc221a55e85",
+      "scope": "Actual privileged tracer attempt UNAVAILABLE; CCL never executed without a live tracer. No trace coverage claim."
+    },
+    {
+      "id": "NATIVE-CENSUS-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-verification-r1/native-verification.json",
+      "sha256": "9b9eadd3927e5d65154c185acb775d6bbdbb417be12692be3d98f5cacec3b965",
+      "scope": "Sources, clean outputs, native test inventory, evaluated state, reversal and evidence controls verified; independent review outstanding."
+    },
+    {
+      "id": "NATIVE-CENSUS-DISASSEMBLY",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-verification-r1/disassembly/results.json",
+      "sha256": "2ddafb481bcba1df2512ebb098854ca5e51628927829c72ca9ca6b9c99807071",
+      "scope": "Raw native before/after disassembly of all six patched functions; inputs and commands retained for independent review."
+    },
+    {
+      "id": "NATIVE-CENSUS-COMPOSITION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-verification-r1/composition-verification.json",
+      "sha256": "95ab5e0c0e2a0f5dd14e83fc85803a5cd7637becddfb2adc69af95a0c61104f8",
+      "scope": "Prior 26 accepted record fields unchanged except explicit artifact/snapshot/review path rebasing; no old artifact bytes copied."
+    },
+    {
+      "id": "NATIVE-CENSUS-COMBINED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-stage0-native-census-results.json",
+      "sha256": "3cfcc6f76c7be143c6879ccaa7aab3e78dd4d749defe5e0c68cf5bef5314c5f4",
+      "scope": "26 prior accepted records and one new unreviewed native LL08-b record, sharing existing evidence files."
+    },
+    {
+      "id": "NATIVE-CENSUS-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-verification-r1/gate-result.json",
+      "sha256": "a8e32693d8253ee32fa650015556f635908d8d9aa077a2dab07f61717a35bf5a",
+      "scope": "BLOCKED: 22 missing and one unreviewed; 26 accepted unchanged."
+    },
+    {
+      "id": "NATIVE-CENSUS-PROCESS-RECOVERY",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-process-recovery-r1/provenance.json",
+      "sha256": "79cf1a235a9defbb4452d4aaf55800c03eaec3c8ec9eddb33c8025fa3b1540a6",
+      "scope": "Eight reversal controls pass, including actual separate-process partial recovery. Supersedes the earlier same-process reconstruction control for that claim; native r5 implementation unchanged."
     }
   ]
 }

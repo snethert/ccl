@@ -2,15 +2,15 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "8b7e8460ce68513e42d6a70f7550f803a9a31c59",
+  "commit": "f2558e82f6dd62c16ea3ad7a95476e3faf69ad5d",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "b438e5df5a2af7331255b8e06d200ba12ae7edd5b27ca618ef0a215ba7bff05d",
-  "immutable_evidence_files": 131310,
-  "indexed_references_verified": 540,
-  "source_index_snapshot": "catalog/source-index-ll21-acceptance-b-choice.json",
-  "source_index_sha256": "a62e620cc51528aa1cfc857df1283cc893f3b31741221b43a07926322ff5e7d5",
-  "verification": "All 131,310 catalogued files and 6,733 distinct staged Git blobs match by byte size and SHA-256. Catalog check and eight controls pass. Git fsck exits 0; the two previously recorded unreferenced blobs remain unchanged.",
+  "catalog_sha256": "d30373b9969eaf649bec763363199396b3e1e0fe2bfaba506669b5fdfded93c3",
+  "immutable_evidence_files": 133821,
+  "indexed_references_verified": 767,
+  "source_index_snapshot": "catalog/source-index-native-census-r5-final-controls.json",
+  "source_index_sha256": "78f9c0debb71bd6f01481fedb380c53e228c5600cf6db16a8ec31856a04f50f1",
+  "verification": "All 133,821 catalogued files and 7,489 distinct staged Git blobs match by byte size and SHA-256. Catalog check and eight controls pass. Git fsck exits 0; two preexisting unreferenced blobs and the intermediate catalog blob are identified in verification.json.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository. Original execution, policies and failures retained. Twenty-five prior accepted records preserved exactly; S0-LL21-a accepted separately at identity-publication bounds. B selected by dated project decision for simplicity and reviewed correctness; benchmark minima not met and frozen rule not applied. Comparative timing deferred."
+  "scope": "Separate local evidence repository. Original failures and executions preserved. Twenty-six accepted record contents retained with explicit relative-path rebasing and no copied old artifact bytes. New S0-LL08-b/native observation remains NOT_REVIEWED. Pristine U1 implementation start; complete census and generated code remain open."
 }

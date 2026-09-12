@@ -1,0 +1,11 @@
+;;; Independently specified observation controls, compiled unchanged in each mode.
+(in-package :cl-user)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar *census-probe-effects* nil)
+  (push :initializer *census-probe-effects*))
+(defmacro census-probe-twice (x) `(+ ,x ,x))
+(declaim (notinline census-probe-leaf))
+(defun census-probe-leaf (x) (census-probe-twice x))
+(defun census-probe-parent (x) (census-probe-leaf (1+ x)))
+(defun census-probe-indirect (f x) (funcall f x))
+(defun census-probe-values (x) (values x (1+ x) (- x)))

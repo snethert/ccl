@@ -417,8 +417,8 @@
           "description": "compare evaluated acode IDs/flags and reserved slots under R6a."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/native-census/run.py",
       "review_disposition": "NOT_REVIEWED"
     },
     {

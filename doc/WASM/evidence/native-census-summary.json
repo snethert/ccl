@@ -1,0 +1,86 @@
+{
+  "date": "2026-09-12",
+  "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+  "execution_status": "PASS",
+  "review_disposition": "NOT_REVIEWED",
+  "scope": "Reversible native observation from pristine U1; S0-LL08-b/native only",
+  "run": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-r5/results.json",
+    "sha256": "40e32bd3ba44b71f0235c97b3f0400fbb54e8553c8779bfac9e0724a48a99edd"
+  },
+  "envelope": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-r5/gate-results.json",
+    "sha256": "3e64945a9a140690b50ae1597150527baa2c4bfb1b2308bc5f9da04ce5477c17"
+  },
+  "verification": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-verification-r1/native-verification.json",
+    "sha256": "9b9eadd3927e5d65154c185acb775d6bbdbb417be12692be3d98f5cacec3b965"
+  },
+  "counts": {
+    "status": "PASS",
+    "scope": "Native observation, reversible patch and R6/R6a comparison only",
+    "operator_slots": 279,
+    "reserved_slots": 12,
+    "native_vinsn_templates": 599,
+    "compiled_function_observations": 51342,
+    "compilation_sources_observed": 164,
+    "call_forms_observed": 103313,
+    "unknown_call_forms_retained": 3647,
+    "startup_callbacks_entered_and_returned": 35,
+    "events": {
+      "build": 175134,
+      "probe": 74,
+      "cold_start": 72,
+      "tests": 117006
+    },
+    "phase_counts": {
+      "snapshot": 1,
+      "frontend": 46376,
+      "before-pass2": 46117,
+      "read": 12802,
+      "macroexpand": 22661,
+      "compile-initializer-enter": 18907,
+      "compile-initializer-return": 18907,
+      "load-initializer-emitted": 9362,
+      "complete": 1
+    },
+    "census_acceptance": "BLOCKED",
+    "remaining": [
+      "privileged external macOS file-operation trace and load-order reconciliation",
+      "reviewed seed set and conservative closure of every required dependency",
+      "complete lowering/import/trap/store joins and initializer prerequisite semantics",
+      "independent review of this observation patch and its evidence"
+    ],
+    "claims_not_made": [
+      "Wasm backend or generated Wasm code",
+      "complete S0-LL15-b/c census",
+      "callback order proves semantic initializer prerequisites",
+      "observed call forms enumerate every possible callee"
+    ]
+  },
+  "native_tests_per_build": 21843,
+  "upstream_disabled_per_build": 75,
+  "unchanged_fasls_during_observation": 161,
+  "intentional_shared_fasls": [
+    "bin/dumplisp.dx64fsl",
+    "bin/nfcomp.dx64fsl",
+    "l1-fasls/nx.dx64fsl"
+  ],
+  "clean_rebuild_identical_fasls": 164,
+  "clean_output_files_restored": 167,
+  "main_compiler_and_kernel_source": "UNCHANGED_FROM_U1",
+  "implementation_start": "Pristine U1; observed images and patched sources retained only as evidence",
+  "external_trace": {
+    "status": "UNAVAILABLE",
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-startup-trace-r2/trace.json",
+    "sha256": "146041cc4ceb4ff9e76c1cb87d69e6eccdfaaa711e474996eda86cc221a55e85"
+  },
+  "census_acceptance": "BLOCKED",
+  "remaining": [
+    "privileged external macOS file-operation trace and load-order reconciliation",
+    "reviewed seed set and conservative closure of every required dependency",
+    "complete lowering/import/trap/store joins and initializer prerequisite semantics",
+    "independent review of this observation patch and its evidence"
+  ],
+  "performance_claim": null
+}

@@ -1,0 +1,85 @@
+--- a/compiler/nx.lisp
++++ b/compiler/nx.lisp
+@@ -314,6 +314,8 @@
+                             env 
+                             (or policy *default-compiler-policy*)
+                             *load-time-eval-token*)))
++               (when (and (boundp '*startup-census-hook*) *startup-census-hook*)
++                 (funcall *startup-census-hook* :frontend afunc))
+                (setq *nx-in-frontend* nil)
+                (if (afunc-lfun afunc)
+                  afunc
+@@ -322,6 +324,8 @@
+                               (afunc-acode afunc))
+                      (let* ((*nx-current-function* afunc))
+                        (rewrite-acode-form (afunc-acode afunc) t)))
++                   (when (and (boundp '*startup-census-hook*) *startup-census-hook*)
++                     (funcall *startup-census-hook* :before-pass2 afunc))
+                    (funcall (backend-p2-compile *target-backend*)
+                             afunc
+                             ;; will also bind *nx-lexical-environment*
+--- a/lib/nfcomp.lisp
++++ b/lib/nfcomp.lisp
+@@ -304,6 +304,9 @@
+ 
+ (defun %compile-time-eval (form env)
+   (declare (ignore env))
++  (when (and (boundp '*startup-census-hook*) *startup-census-hook*)
++    (funcall *startup-census-hook* :compile-initializer-enter form))
++  (multiple-value-prog1
+   (let* ((*target-backend* *host-backend*)
+          (*loading-toplevel-location* (or (fcomp-source-note form)
+                                           *loading-toplevel-location*))
+@@ -326,7 +329,9 @@
+                 :compile-code-coverage nil
+                 :source-notes *fcomp-source-note-map*
+                 :env *fasl-compile-time-env*
+-                :policy *compile-time-evaluation-policy*)))))
++                :policy *compile-time-evaluation-policy*))))
++    (when (and (boundp '*startup-census-hook*) *startup-census-hook*)
++      (funcall *startup-census-hook* :compile-initializer-return form))))
+ 
+ 
+ ;;; No methods by default, not even for structures.  This really sux.
+@@ -509,6 +514,8 @@
+             (when (eq eofval form)
+ 	      (require-type *loading-toplevel-location* 'null)
+ 	      (return))
++            (when (and (boundp '*startup-census-hook*) *startup-census-hook*)
++              (funcall *startup-census-hook* :read form))
+             (fcomp-form form env processing-mode)
+             (fcomp-signal-or-defer-warnings *nx-warnings* env)
+             (setq *fcomp-previous-position* *fcomp-stream-position*))))
+@@ -1005,6 +1012,8 @@
+       (multiple-value-bind (new win)
+           (macroexpand-1 form env)
+         (when win
++          (when (and (boundp '*startup-census-hook*) *startup-census-hook*)
++            (funcall *startup-census-hook* :macroexpand (list form new)))
+           (nx-note-source-transformation form new))
+         (values new win)))))
+ 
+@@ -1068,6 +1077,8 @@
+                                  (compiler-function-overflow)))
+                       ,@forms)))
+            (lambda `(lambda () ,body)))
++      (when (and (boundp '*startup-census-hook*) *startup-census-hook*)
++        (funcall *startup-census-hook* :load-initializer-emitted lambda))
+       ;; Don't assign a location to the lambda so it doesn't confuse acode printing, but
+       ;; arrange to assign it to any inner lambdas.
+       (setf (fcomp-source-note body) *loading-toplevel-location*)
+--- a/lib/dumplisp.lisp
++++ b/lib/dumplisp.lisp
+@@ -341,7 +341,11 @@
+                    (with-simple-restart 
+                      (continue "Skip (possibly crucial) startup function ~s."
+                                (if (symbolp f) f (function-name f)))
+-                     (funcall f)))))
++                     (when (and (boundp '*startup-census-hook*) *startup-census-hook*)
++                       (funcall *startup-census-hook* :startup-enter f))
++                     (multiple-value-prog1 (funcall f)
++                       (when (and (boundp '*startup-census-hook*) *startup-census-hook*)
++                         (funcall *startup-census-hook* :startup-return f)))))))
+           (dolist (f system-ptr-fns) (funcall call-with-restart f))
+           (dolist (f restore-lisp-fns) (funcall call-with-restart f))
+           (dolist (f (reverse user-pointer-fns)) (funcall call-with-restart f))

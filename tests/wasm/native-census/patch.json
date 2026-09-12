@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+  "scope": "Observation-only reversible unit, restricted to a disposable U1 source copy; observer owns hook registration outside CCL source",
+  "patch_sha256": "610934dd76069d1187ebcdc0db53f92b2937ff8fca9985cd0b93abfcd830c493",
+  "files": [
+    {
+      "path": "compiler/nx.lisp",
+      "original_sha256": "8730c225eb010e526e4995639ce89271e706d92f4fa1a2162e008f2ba945c676",
+      "observed_sha256": "f2f0beaee2945c46ebefb35e71b64c3a9d3f8bc5f9e6bbabd38233f1dd9218b9"
+    },
+    {
+      "path": "lib/nfcomp.lisp",
+      "original_sha256": "01dd18489697add1b6580d97782cba4c8c213554dd4f9db8a9289f45371f969c",
+      "observed_sha256": "4a22ff77e15c6385c54d425b845d3370f52fb72536cce0c467b42bb527fe79f0"
+    },
+    {
+      "path": "lib/dumplisp.lisp",
+      "original_sha256": "5cd12bcbfe6164874e4cefdbd6583612725d8cd773f5d970c66b956097408b74",
+      "observed_sha256": "31a3bec10eefec0988c349a88b2796d98e8c595226a2804b6b53e3a277754618"
+    }
+  ]
+}

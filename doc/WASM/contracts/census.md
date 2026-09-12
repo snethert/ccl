@@ -1,6 +1,6 @@
 # Census and bootstrap closure contract v0.1
 
-Status: schema and acceptance algorithm specified; the qualified native census is not yet executed. `census.schema.json` describes the exchange format. `tools/check-census.py` checks required shape, referential integrity, conservative reachability and initializer ordering; it does not prove that compiler instrumentation discovered every edge. That coverage requires S0-LL15-b/c and their omission mutants.
+Status: schema and acceptance algorithm specified; [reversible native observation](../stage0/native-census.md) has executed, but the complete qualified census remains open. `census.schema.json` describes the exchange format. `tools/check-census.py` checks required shape, referential integrity, conservative reachability and initializer ordering; it does not prove that compiler instrumentation discovered every edge. That coverage requires S0-LL15-b/c and their omission mutants.
 
 ## Required records
 

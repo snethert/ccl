@@ -1,67 +1,70 @@
 {
-  "timestamp": "2026-09-12T15:10:26.944981+00:00",
-  "scope": "Scoped LL21-a acceptance and dated B project choice. No new runtime execution or performance claim; frozen benchmark minima not met and rule not applied.",
-  "source_before_commit": "5ff0dc544a8364f91a450ce42a8320ca2c9c2e54",
+  "timestamp": "2026-09-12T16:14:48.390638+00:00",
+  "source_before_commit": "68a4e0fecad66288a067d9637ea37a75d6ac908a",
+  "scope": "Reversible native U1 observation under the 12 September exception; main upstream source unchanged and implementation starts clean. S0-LL08-b executed, not accepted; no LL15 closure, generated Wasm or performance claim.",
   "checks": [
     {
-      "name": "docs",
-      "cmd": "python3 doc/WASM/tools/manage.py check",
-      "chunk_id": "a40880",
-      "wall_time_seconds": 0.018038374,
+      "name": "documents",
+      "command": "python3 doc/WASM/tools/manage.py check",
       "exit_code": 0,
-      "original_token_count": 26,
-      "output": "PASS: document projections, LL schedule, D7 inventory, local links and original-input hashes (check).\n"
+      "result": "PASS"
     },
     {
-      "name": "gate-controls",
-      "cmd": "python3 doc/WASM/tools/test-controls.py",
-      "chunk_id": "f180b2",
-      "wall_time_seconds": 2.231e-06,
+      "name": "gate controls",
+      "command": "python3 doc/WASM/tools/test-controls.py",
       "exit_code": 0,
-      "original_token_count": 22,
-      "output": "PASS: 32 synthetic checker positive/negative controls; no production acceptance claim.\n"
+      "passed": 32
     },
     {
-      "name": "bindings",
-      "cmd": "python3 doc/WASM/tools/test-bindings.py",
-      "chunk_id": "bf3fc3",
-      "wall_time_seconds": 0.033778263,
+      "name": "binding controls",
+      "command": "python3 doc/WASM/tools/test-bindings.py",
       "exit_code": 0,
-      "original_token_count": 20,
-      "output": "PASS: 42 contract-binding and migration controls; no runtime acceptance claim.\n"
+      "passed": 42
     },
     {
-      "name": "acceptance",
-      "cmd": "python3 doc/WASM/tools/test-acceptance.py",
-      "chunk_id": "b8e6bc",
-      "wall_time_seconds": 3.375e-06,
+      "name": "acceptance controls",
+      "command": "python3 doc/WASM/tools/test-acceptance.py",
       "exit_code": 0,
-      "original_token_count": 17,
-      "output": "PASS: 14 scoped acceptance controls; no runtime acceptance claim.\n"
+      "passed": 14
     },
     {
-      "name": "evidence",
-      "cmd": "python3 doc/WASM/tools/check-evidence.py --include-external",
-      "chunk_id": "7d9025",
-      "wall_time_seconds": 0.557127197,
+      "name": "evidence identities",
+      "command": "python3 doc/WASM/tools/check-evidence.py --include-external",
       "exit_code": 0,
-      "original_token_count": 19,
-      "output": "PASS: 39 retained evidence identities; CURRENT inventory bindings match.\n"
+      "identities": 40
     },
     {
-      "name": "statistics compatibility",
-      "cmd": "node tests/wasm/stage0/abi-measurements/test-statistics.mjs",
-      "chunk_id": "37bc04",
-      "wall_time_seconds": 0.443706999,
-      "exit_code": 0,
-      "original_token_count": 227,
-      "output": "{\n  \"status\": \"PASS\",\n  \"controls\": [\n    {\n      \"name\": \"known paired ratios despite common trial drift\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"name\": \"seeded bootstrap reproduction\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"name\": \"missing candidate rejected\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"name\": \"duplicate candidate rejected\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"name\": \"missing workload rejected\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"name\": \"nonpositive timing rejected\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"name\": \"invalid timing rejected\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"name\": \"inner iterations cannot replace independent trials\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"name\": \"insufficient warmup and samples remain gaps\",\n      \"status\": \"PASS\"\n    },\n    {\n      \"name\": \"invalid durations rejected\",\n      \"status\": \"PASS\"\n    }\n  ]\n}\n"
-    },
-    {
-      "document": "Clozure_CL_WebAssembly_Port_Outline_v0_17.docx",
-      "sha256": "20316b7a1a7f495881c0bdc54678f2d9fb4235b5a49f050159826355a47de9a5",
-      "xml": "VALID",
-      "textutil_exit_code": 0
+      "name": "combined gate",
+      "command": "python3 doc/WASM/tools/gate.py --inventory doc/WASM/stage0/inventory.json --results /Users/buildsomething/Source/ccl-evidence/2026-09-12-stage0-native-census-results.json",
+      "exit_code": 2,
+      "result": {
+        "status": "BLOCKED",
+        "reasons": [
+          "missing S0-ABI-selection [complete-report]",
+          "missing S0-CONTRACTS-a [complete-report]",
+          "missing S0-ENGINE-a [complete-report]",
+          "missing S0-LL01-a [control]",
+          "missing S0-LL01-b [control]",
+          "missing S0-LL02-a [control]",
+          "missing S0-LL02-b [control]",
+          "missing S0-LL03-a [control]",
+          "missing S0-LL07-a [full]",
+          "missing S0-LL08-a [native]",
+          "unreviewed S0-LL08-b [native]",
+          "missing S0-LL08-c [native]",
+          "missing S0-LL13-b [full]",
+          "missing S0-LL15-a [full]",
+          "missing S0-LL15-b [native]",
+          "missing S0-LL15-c [native]",
+          "missing S0-LL19-a [full]",
+          "missing S0-LL21-c [shared-template]",
+          "missing S0-LL21-c [unshared-template]",
+          "missing S0-LL22-a [control]",
+          "missing S0-LL22-b [control]",
+          "missing S0-LL23-a [full]",
+          "missing S0-LL24-a [control]"
+        ]
+      }
     },
     {
       "document": "CCL_WebAssembly_Acceptance_Policy_and_Regression_Register_v1_7.docx",
@@ -76,27 +79,10 @@
       "textutil_exit_code": 0
     },
     {
-      "command": [
-        "git",
-        "diff",
-        "--check"
-      ],
-      "exit_code": 0,
-      "stdout": "",
-      "stderr": ""
-    },
-    {
-      "command": [
-        "git",
-        "diff",
-        "--name-only",
-        "HEAD",
-        "--",
-        "tests/wasm"
-      ],
-      "exit_code": 0,
-      "stdout": "",
-      "stderr": ""
+      "document": "Clozure_CL_WebAssembly_Port_Outline_v0_17.docx",
+      "sha256": "6032c4e2f17a005595b73999b2cc12165d4fb5c15298650c8d7e69c45c3ea0e6",
+      "xml": "VALID",
+      "textutil_exit_code": 0
     },
     {
       "command": [
@@ -114,110 +100,284 @@
       "exit_code": 0,
       "stdout": "",
       "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
     }
   ],
+  "native": {
+    "status": "PASS",
+    "run_sha256": "40e32bd3ba44b71f0235c97b3f0400fbb54e8553c8779bfac9e0724a48a99edd",
+    "original_source_files_verified": 872,
+    "clean_outputs_verified": 167,
+    "raw_native_artifacts_verified": 563,
+    "baseline_observed_test_inventory_byte_identical": true,
+    "patch_sha256": "610934dd76069d1187ebcdc0db53f92b2937ff8fca9985cd0b93abfcd830c493",
+    "baseline_observed_probe_byte_identical": true,
+    "observed_probe_controls": {
+      "positive": 1,
+      "rejected": 6,
+      "inputs_verified": 5
+    },
+    "producer_controls": {
+      "status": "PASS",
+      "controls": [
+        {
+          "name": "missing executed observer identity",
+          "status": "REJECTED",
+          "reason": "executed harness differs from this producer: observer.lisp"
+        },
+        {
+          "name": "duplicate artifact identity",
+          "status": "REJECTED",
+          "reason": "missing, repeated, escaping or changed artifact: baseline/build/bin/acode-rewrite.dx64fsl"
+        },
+        {
+          "name": "escaping artifact path",
+          "status": "REJECTED",
+          "reason": "escaping or noncanonical evidence path: ../outside"
+        },
+        {
+          "name": "incomplete native tests",
+          "status": "REJECTED",
+          "reason": "native regression run incomplete"
+        },
+        {
+          "name": "boot image absent from restoration",
+          "status": "REJECTED",
+          "reason": "complete clean output restoration missing"
+        },
+        {
+          "name": "evaluated flags corrupted with matching artifact digest",
+          "status": "REJECTED",
+          "reason": "operator flags overlap the identity bits"
+        }
+      ],
+      "original_run_sha256": "40e32bd3ba44b71f0235c97b3f0400fbb54e8553c8779bfac9e0724a48a99edd"
+    },
+    "reversal_controls": {
+      "status": "PASS",
+      "controls": [
+        "complete patch applies and reverses exactly",
+        "execution failure reverses the whole unit",
+        "interrupt reverses the whole unit",
+        "new process recovers a partially removed unit",
+        "completed recovery is idempotent",
+        "wrong baseline rejected before any source mutation",
+        "unexplained external changes preserved and recovery refused",
+        "Git checkout refused even with a disposable marker"
+      ]
+    },
+    "output_controls": {
+      "status": "PASS",
+      "controls": [
+        "FASLs, kernel, normal image and boot image restored; extra FASL removed",
+        "repeated recovery preserves clean bytes",
+        "damaged backup rejected before mutation"
+      ]
+    },
+    "analysis": {
+      "status": "PASS",
+      "scope": "Native observation, reversible patch and R6/R6a comparison only",
+      "operator_slots": 279,
+      "reserved_slots": 12,
+      "native_vinsn_templates": 599,
+      "compiled_function_observations": 51342,
+      "compilation_sources_observed": 164,
+      "call_forms_observed": 103313,
+      "unknown_call_forms_retained": 3647,
+      "startup_callbacks_entered_and_returned": 35,
+      "events": {
+        "build": 175134,
+        "probe": 74,
+        "cold_start": 72,
+        "tests": 117006
+      },
+      "phase_counts": {
+        "snapshot": 1,
+        "frontend": 46376,
+        "before-pass2": 46117,
+        "read": 12802,
+        "macroexpand": 22661,
+        "compile-initializer-enter": 18907,
+        "compile-initializer-return": 18907,
+        "load-initializer-emitted": 9362,
+        "complete": 1
+      },
+      "census_acceptance": "BLOCKED",
+      "remaining": [
+        "privileged external macOS file-operation trace and load-order reconciliation",
+        "reviewed seed set and conservative closure of every required dependency",
+        "complete lowering/import/trap/store joins and initializer prerequisite semantics",
+        "independent review of this observation patch and its evidence"
+      ],
+      "claims_not_made": [
+        "Wasm backend or generated Wasm code",
+        "complete S0-LL15-b/c census",
+        "callback order proves semantic initializer prerequisites",
+        "observed call forms enumerate every possible callee"
+      ]
+    },
+    "native_fasl_counts": {
+      "total": 164,
+      "raw_identical": 161,
+      "intentional_shared_artifacts": [
+        "bin/dumplisp.dx64fsl",
+        "bin/nfcomp.dx64fsl",
+        "l1-fasls/nx.dx64fsl"
+      ],
+      "unexplained": []
+    },
+    "restored_clean_fasls_identical": 164,
+    "reversal_control_provenance": {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-process-recovery-r1/provenance.json",
+      "sha256": "79cf1a235a9defbb4452d4aaf55800c03eaec3c8ec9eddb33c8025fa3b1540a6"
+    }
+  },
   "preservation": {
     "status": "PASS",
-    "previous_accepted_records_exactly_unchanged": 25,
-    "newly_accepted_records": 1,
-    "new_record_preserves_all_original_fields_except_explicit_review_and_provenance": true,
-    "new_record_original_artifacts": 23760,
-    "combined_artifact_references_verified": 103705,
-    "combined_distinct_artifact_paths_verified": 28791,
-    "original_results_sha256": "22992c487407bf2548af861ffe348ab24ca99b9e4e0fd2540d09b709c80f180d",
-    "original_previous_accepted_results_sha256": "a98ca1e35b8eecb0a3ad2011dd85b535c95273e7349a9448d42fbf8a19cee7a7",
+    "prior_accepted_records_preserved_except_explicit_path_rebasing": 26,
+    "new_unreviewed_records": 1,
     "changed_contracts": [
-      "S0-ABI-selection"
+      "S0-LL08-b",
+      "S0-LL15-b",
+      "S0-LL15-c"
     ],
-    "execution": "No runtime re-execution; immutable artifacts verified and existing review applied."
+    "artifact_bytes_copied": 0,
+    "sources": [
+      {
+        "source": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/combined/results.json",
+        "sha256": "fe0df0789210ff60a533256262d4342f92a82b80a6cca40be1e1aaaf1955b7b4",
+        "path_prefix": "2026-09-12-ll21-project-acceptance/combined/",
+        "scope": "Original record fields retained; only artifact, inventory-snapshot and review paths rebased to evidence repository root"
+      },
+      {
+        "source": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-r5/gate-results.json",
+        "sha256": "3e64945a9a140690b50ae1597150527baa2c4bfb1b2308bc5f9da04ce5477c17",
+        "path_prefix": "2026-09-12-native-census-r5/",
+        "scope": "Original record fields retained; only artifact, inventory-snapshot and review paths rebased to evidence repository root"
+      }
+    ]
   },
-  "contract_and_policy_change": {
-    "status": "PASS",
-    "changed_contracts": [
-      "S0-ABI-selection"
+  "external_trace": {
+    "version": 1,
+    "status": "UNAVAILABLE",
+    "client_command": [
+      "/private/tmp/ccl-native-census-r5/ccl/dx86cl64",
+      "--image-name",
+      "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-r5/baseline/build/dx86cl64.image",
+      "--no-init",
+      "--batch",
+      "--eval",
+      "(progn (format t \"CCL-CLEAN-START-COMPLETE~%\") (finish-output) (ccl:quit))"
     ],
-    "unchanged_other_contracts": 37,
-    "original_inventory_sha256": "b6bb97e296c12e81119b88f281bc125591b82a15d583ed47d45354428266ffd1",
-    "current_inventory_sha256": "189433db969fe7fe4f319f46f5ea33f44f510962ece85af31e0d92353c3cc0c8",
-    "selection_contract_sha256": "5646f9781cb1420a6e387eeee0b0b30aa203869e3865165397b119f13b63eb63",
-    "benchmark_policy_old_sha256": "a9e69df97867b7cc608ce6bd6ae5ea2118a5b53dc03eb4391c72f9e870a838a4",
-    "benchmark_policy_new_sha256": "16c56a442849ee6eae7058fd16f8aa5f555e670be41ccacdd6d9bd94e92c23f1",
-    "numeric_comparison_parameters_unchanged": true,
-    "correctness_progress_limits_unchanged": true,
-    "measurement_rows_promoted_to_pass": 0,
-    "rationale": "Dated project decision chooses B for simplicity and reviewed correctness; frozen benchmark minima not met, frozen rule not applied. Comparative timing deferred; Stage 1 can use B without a performance claim."
-  },
-  "implementation_choice": {
-    "abi": "B",
-    "basis": "PROJECT_DECISION_SIMPLICITY_AND_REVIEWED_CORRECTNESS",
-    "record": "stage0/abi-choice.md",
-    "date": "2026-09-12",
-    "comparative_measurements": "DEFERRED_OPTIONAL"
+    "timestamp": "2026-09-12T16:04:00Z",
+    "inputs_sha256": {
+      "/private/tmp/ccl-native-census-r5/ccl/dx86cl64": "9152418cadc15ae6df3689d4199b03baf0c47915bbfc2309172f27bbc7a99573",
+      "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-r5/baseline/build/dx86cl64.image": "219973d511dd19b4c7f86b69b8905ab2f2ae6c02fdd5883a3569ee745224e57d",
+      "/Users/buildsomething/Source/ccl/tests/wasm/native-census/trace-startup.py": "9904c21035f53966ab7b69a03631802f73ca28b08e22b37edc489de7157a9cf3"
+    },
+    "environment": {
+      "PATH": "/usr/bin:/bin:/usr/sbin:/sbin",
+      "LANG": "C",
+      "LC_ALL": "C",
+      "CCL_DEFAULT_DIRECTORY": "/private/tmp/ccl-native-census-r5/ccl"
+    },
+    "scope": "One clean native image startup, external file operations only",
+    "launcher_command": [
+      "/usr/local/opt/python@3.14/bin/python3.14",
+      "-c",
+      "import os,sys; assert sys.stdin.buffer.read(1)==b\"G\"; open(sys.argv[1],\"rb\").read(); os.execve(sys.argv[2],sys.argv[2:],dict(os.environ))",
+      "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-startup-trace-r2/trace-control-read.txt",
+      "/private/tmp/ccl-native-census-r5/ccl/dx86cl64",
+      "--image-name",
+      "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-r5/baseline/build/dx86cl64.image",
+      "--no-init",
+      "--batch",
+      "--eval",
+      "(progn (format t \"CCL-CLEAN-START-COMPLETE~%\") (finish-output) (ccl:quit))"
+    ],
+    "pid": 1361,
+    "tracer_command": [
+      "/usr/bin/sudo",
+      "-n",
+      "/usr/bin/fs_usage",
+      "-w",
+      "-f",
+      "filesys",
+      "-t",
+      "5",
+      "1361"
+    ],
+    "reason": "fs_usage could not remain active; retain its permission/error output",
+    "artifacts": [
+      {
+        "path": "client.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "fs_usage.log",
+        "sha256": "9b3a3b7a78f239c4473bb193476b1a860c91f1c2b4fab9c7639eceea414a60fb"
+      },
+      {
+        "path": "trace-control-read.txt",
+        "sha256": "2c41c8c7440a68253f01bff27c1054dc3ca387131603444849d58d2b36ba72bf"
+      },
+      {
+        "path": "trace-startup.py",
+        "sha256": "9904c21035f53966ab7b69a03631802f73ca28b08e22b37edc489de7157a9cf3"
+      }
+    ]
   },
   "stage0_status": "BLOCKED",
   "accepted_records": 26,
-  "missing_records": 23,
-  "unreviewed_records": 0,
-  "gate": {
-    "command": [
-      "python3",
-      "doc/WASM/tools/gate.py",
-      "--inventory",
-      "doc/WASM/stage0/inventory.json",
-      "--results",
-      "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/combined/results.json"
+  "missing_records": 22,
+  "unreviewed_records": 1,
+  "review_disposition": "NOT_REVIEWED",
+  "staged_whitespace_check": {
+    "status": "PASS_WITH_VERIFIED_PATCH_CONTEXT",
+    "complete_command": [
+      "git",
+      "diff",
+      "--cached",
+      "--check"
     ],
-    "exit_code": 2,
-    "stdout": "{\n  \"status\": \"BLOCKED\",\n  \"reasons\": [\n    \"missing S0-ABI-selection [complete-report]\",\n    \"missing S0-CONTRACTS-a [complete-report]\",\n    \"missing S0-ENGINE-a [complete-report]\",\n    \"missing S0-LL01-a [control]\",\n    \"missing S0-LL01-b [control]\",\n    \"missing S0-LL02-a [control]\",\n    \"missing S0-LL02-b [control]\",\n    \"missing S0-LL03-a [control]\",\n    \"missing S0-LL07-a [full]\",\n    \"missing S0-LL08-a [native]\",\n    \"missing S0-LL08-b [native]\",\n    \"missing S0-LL08-c [native]\",\n    \"missing S0-LL13-b [full]\",\n    \"missing S0-LL15-a [full]\",\n    \"missing S0-LL15-b [native]\",\n    \"missing S0-LL15-c [native]\",\n    \"missing S0-LL19-a [full]\",\n    \"missing S0-LL21-c [shared-template]\",\n    \"missing S0-LL21-c [unshared-template]\",\n    \"missing S0-LL22-a [control]\",\n    \"missing S0-LL22-b [control]\",\n    \"missing S0-LL23-a [full]\",\n    \"missing S0-LL24-a [control]\"\n  ]\n}\n",
-    "stderr": "",
-    "result": {
-      "status": "BLOCKED",
-      "reasons": [
-        "missing S0-ABI-selection [complete-report]",
-        "missing S0-CONTRACTS-a [complete-report]",
-        "missing S0-ENGINE-a [complete-report]",
-        "missing S0-LL01-a [control]",
-        "missing S0-LL01-b [control]",
-        "missing S0-LL02-a [control]",
-        "missing S0-LL02-b [control]",
-        "missing S0-LL03-a [control]",
-        "missing S0-LL07-a [full]",
-        "missing S0-LL08-a [native]",
-        "missing S0-LL08-b [native]",
-        "missing S0-LL08-c [native]",
-        "missing S0-LL13-b [full]",
-        "missing S0-LL15-a [full]",
-        "missing S0-LL15-b [native]",
-        "missing S0-LL15-c [native]",
-        "missing S0-LL19-a [full]",
-        "missing S0-LL21-c [shared-template]",
-        "missing S0-LL21-c [unshared-template]",
-        "missing S0-LL22-a [control]",
-        "missing S0-LL22-b [control]",
-        "missing S0-LL23-a [full]",
-        "missing S0-LL24-a [control]"
-      ]
-    }
+    "complete_exit_code": 2,
+    "complete_output": "tests/wasm/native-census/observation.patch:4: trailing whitespace.\n+                             env \ntests/wasm/native-census/observation.patch:24: trailing whitespace.\n+ \ntests/wasm/native-census/observation.patch:41: trailing whitespace.\n+ \ntests/wasm/native-census/observation.patch:42: trailing whitespace.\n+ \ntests/wasm/native-census/observation.patch:46: space before tab in indent.\n+ \t      (require-type *loading-toplevel-location* 'null)\ntests/wasm/native-census/observation.patch:47: space before tab in indent.\n+ \t      (return))\ntests/wasm/native-census/observation.patch:61: trailing whitespace.\n+ \ntests/wasm/native-census/observation.patch:74: trailing whitespace.\n+                    (with-simple-restart \n",
+    "scoped_command": [
+      "git",
+      "diff",
+      "--cached",
+      "--check",
+      "--",
+      ".",
+      ":(exclude)tests/wasm/native-census/observation.patch"
+    ],
+    "scoped_exit_code": 0,
+    "rationale": "All eight whitespace diagnostics occur exclusively in unchanged upstream context lines of the retained patch. Keep exact patch bytes; separately verify application/restoration and require every other staged file to pass. No new Lisp line has a whitespace finding.",
+    "patch_sha256": "610934dd76069d1187ebcdc0db53f92b2937ff8fca9985cd0b93abfcd830c493"
   },
-  "original_execution_verification": {
-    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-abi-measurement-verification/binary-and-execution-verification.json",
-    "sha256": "bc6e4da73afbc1bb78b80396a69e58ef395c363c3f081af7203da06fd1bac4c8"
-  },
-  "not_performed": [
-    "No fixture, compiler or kernel source changes",
-    "No runtime or timing trials",
-    "No new same-author adversarial sign-off"
-  ],
   "evidence_repository": {
-    "commit": "8b7e8460ce68513e42d6a70f7550f803a9a31c59",
-    "catalog_sha256": "b438e5df5a2af7331255b8e06d200ba12ae7edd5b27ca618ef0a215ba7bff05d",
-    "catalog_check": "PASS: 131310 immutable evidence files; 540 indexed identities; check.",
-    "staged_blob_check": "PASS: 131310 catalogued paths match 6733 distinct staged Git blobs by byte size and SHA-256.",
+    "commit": "f2558e82f6dd62c16ea3ad7a95476e3faf69ad5d",
+    "catalog_sha256": "d30373b9969eaf649bec763363199396b3e1e0fe2bfaba506669b5fdfded93c3",
+    "catalog_check": "PASS: 133821 immutable evidence files; 767 indexed identities; check.",
+    "staged_blob_check": "PASS: 133821 catalogued paths match 7489 distinct staged Git blobs by byte size and SHA-256.",
     "catalog_controls": 8,
     "fsck_exit_code": 0,
     "preexisting_dangling_blobs": [
       "0b3717b29ed8837324aee9830d06cf627875cdcd",
       "8fec24ae063940defaf988cb640d7b6fdcc8cb35"
-    ]
+    ],
+    "intermediate_catalog_dangling_blob": {
+      "sha1": "7f93c04c17b9a136aa4bea55036b0677eee46944",
+      "verified_contents": "133814-file intermediate catalog staged before the final process control; superseded by committed catalog"
+    }
   }
 }
