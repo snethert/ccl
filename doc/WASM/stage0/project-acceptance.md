@@ -48,3 +48,11 @@ The user's own decision, given to Claude ("I accept S0-LL21-a. Update the docs."
 Scope: identity, digest and generation publication through an atomic generation word with module bytes already held by each Worker; host-actor acquisition and digest validation; matching lazy installation and dispatch in an existing and a late Worker; old function object survival; eight hand-built definitions, cons-only heap, Node/V8 on macOS. Excluded: byte delivery between Workers, Wasm-side acquisition, ABI selection and benchmark policy, production scale, browsers, generated code and the census.
 
 The `LL21A-PROJECT-ACCEPTANCE` record in the [index](../evidence/index.json) retains every original r2 field and artifact, adding only the disposition and provenance. The 27-record aggregate copies the 26 earlier accepted result objects unchanged; 104,279 artifact references were verified. Stage 0 is BLOCKED for 22 missing records and zero unreviewed.
+
+## Ninth-audit acceptance — S0-LL08-a, 12 September 2026
+
+The user's decision, given to Claude ("I accept it.") after the ninth audit (292bd75d), accepts S0-LL08-a / native from CENSUS-STUB-REGISTRATION-r1. Claude produced the envelope with the unchanged `accept-evidence.py` and composed the 28-record aggregate.
+
+Scope: observation-only census backend registration in a disposable U1 copy; a D1-subset target-arch with zero argument registers for B and a capture-only pass-2 entry; target context established before reading; fourteen front-end cases and eight target-state controls in two fresh sessions; native R6 with 21,843 tests clean and registered, 163 of 164 FASLs identical while registered and 164 of 164 after removal. Excluded: the complete LL15-b/c census, static reachability beyond the fixture, lowering and effect joins, a complete architecture record, any target code emission and any functional compiler change.
+
+The `LL08A-PROJECT-ACCEPTANCE` record in the [index](../evidence/index.json) retains every original r1 field and artifact, adding only the disposition and provenance. The aggregate copies the 27 earlier accepted result objects unchanged; 104,363 artifact references were verified. Stage 0 is BLOCKED for 21 missing records and zero unreviewed. LL15-b and LL15-c now have all their prerequisites accepted.

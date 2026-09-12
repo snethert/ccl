@@ -2,21 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "cfe79d1a6504b65b63f080f8c5518f3bec88c1a3",
+  "commit": "288e03c3543699433387806d7ac77b00e9f3c7bc",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "ba8f36d9bd44333933cc4f98618de5a8a650850056bca715ef5f881abc10f66f",
-  "immutable_evidence_files": 159871,
+  "catalog_sha256": "f9116f9b35062ccd5cda0588be59c93ebf51e3da589167a4fdd69df2ae4edbb0",
+  "immutable_evidence_files": 159961,
   "indexed_references_verified": 908,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped addition of the census stub packet: new packet and direct inputs verified by its producer; identities reused for catalog insertion; existing entries retained from d07bd13c03110855e8c1ba387dc92c642fd47c68. No historical archive scan, Git blob audit or acceptance-aggregate copy. Prior indexed-reference verification remains at the recorded source-index snapshot.",
+  "verification": "catalog.py add and check PASS after adding the LL08-a acceptance envelope and 28-record aggregate (Claude, 2026-09-12): 159,961 immutable files. Earlier Git blob and fsck statements refer to previous snapshots.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository. Original executions, policies, failures and the withdrawn misattributed decision retained. Twenty-seven accepted records: 26 preserved exactly plus S0-LL21-a accepted by the user directly. Complete census and generated code remain open. Startup candidate preparation is retained without gate credit; it is unreviewed and its dynamic bound remains unqualified. S0-LL08-a now has a standalone unreviewed execution record with native R6; no project acceptance or full census claim.",
+  "scope": "Separate local evidence repository. Original executions, policies and failures retained. Twenty-eight accepted records: 27 preserved exactly plus S0-LL08-a accepted by the user. Complete census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-12-census-stub-r1",
-    "files": 82,
-    "bytes": 8073858,
-    "prior_commit": "d07bd13c03110855e8c1ba387dc92c642fd47c68"
+    "directory": "2026-09-12-ll08a-project-acceptance",
+    "files": 86,
+    "prior_commit": "cfe79d1a6504b65b63f080f8c5518f3bec88c1a3"
   }
 }

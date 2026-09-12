@@ -804,7 +804,34 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
         "record": "stage0/claude-review.md"
       },
-      "note": "Claude ninth audit found no defect and reproduced the packet byte-identically; project acceptance of S0-LL08-a is a separate decision."
+      "note": "Claude ninth audit found no defect and reproduced the packet byte-identically; project acceptance of S0-LL08-a is a separate decision. The user's acceptance is recorded as LL08A-PROJECT-ACCEPTANCE."
+    },
+    {
+      "id": "LL08A-PROJECT-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll08a-project-acceptance/accepted/accepted-results.json",
+      "sha256": "693f8b4185641b4e57e11bed00822450cbc96bbd33cdbdf7b6e1b3ce2b54b15e",
+      "timestamp": "2026-09-12T19:19:15Z",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "32cbeb2a077d38ed02642a6a293a3587deb2540abca0ca7e9a0eb3ef3c281134",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "S0-LL08-a / native: observation-only census backend registration in a disposable U1 copy (two module records in lib/systems.lisp plus two added census sources), a D1-subset target-arch with zero argument registers for B and a capture-only pass-2 entry; target context established before reading; fourteen front-end cases and eight target-state controls in two fresh sessions; native R6: 21,843/21,843 tests clean and registered, 163/164 FASLs identical while registered with only bin/systems.dx64fsl differing, 164/164 after removal. macOS x86-64, U1 v1.13.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Ninth audit at 21c6aed7: source review, full re-execution from pinned inputs with byte-identical FASLs, module FASLs, snapshot and session rows, unit and producer controls in the reviewer's own session, 2026-09-12",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
+        "record": "stage0/claude-review.md"
+      },
+      "note": "User accepted S0-LL08-a in the reviewer's session on 2026-09-12 after the ninth audit. Original r1 execution timestamp, test revision, contract digest and artifacts retained; no new execution.",
+      "project_acceptance": {
+        "decision": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll08a-project-acceptance/decision.json",
+        "sha256": "945c477886d9e36abe35d1312214763221f083b234932627610afe7df0ae3f9c",
+        "timestamp": "2026-09-12T19:52:56.565442+00:00"
+      }
     }
   ],
   "auxiliary_records": [
@@ -1427,10 +1454,10 @@
       "scope": "Same-author checks, r6/r7 restoration/artifact equivalence, eight dependency and five trace controls, unchanged 26 accepted records and corrected LL21-a disposition; new independent review remains required."
     },
     {
-      "id": "CURRENT-STAGE0-COMBINED",
+      "id": "PRE-LL08A-ACCEPTANCE-COMBINED",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-stage0-ll21a-accepted-results.json",
       "sha256": "2193cd23023d9c10d18f2f75bd93cb28830662b6ae312d15505dc3bd51c03989",
-      "scope": "27 scoped accepted records; 26 earlier result objects preserved exactly, one user-accepted S0-LL21-a record. No new execution; 22 missing and zero unreviewed."
+      "scope": "27 scoped accepted records; 26 earlier result objects preserved exactly, one user-accepted S0-LL21-a record. No new execution; 22 missing and zero unreviewed. Historical: S0-LL08-a subsequently accepted."
     },
     {
       "id": "LL21A-ACCEPTANCE-DECISION",
@@ -1473,6 +1500,36 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-census-stub-r1/results.json",
       "sha256": "437a75c504720ae907ba3de7410b658b0fde2850cc810f7c9e1feef3f757d54f",
       "scope": "Raw native before/registered/restored run, original failures and exact input/toolchain/source identities; no acceptance disposition."
+    },
+    {
+      "id": "CURRENT-STAGE0-COMBINED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-stage0-ll08a-accepted-results.json",
+      "sha256": "0f9928e0e800e3731e4517ee3cae91308f479fc3b7886f65079289d118953f81",
+      "scope": "28 scoped accepted records; 27 earlier result objects preserved exactly, one user-accepted S0-LL08-a record. No new execution; 21 missing and zero unreviewed."
+    },
+    {
+      "id": "LL08A-ACCEPTANCE-DECISION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll08a-project-acceptance/decision.json",
+      "sha256": "945c477886d9e36abe35d1312214763221f083b234932627610afe7df0ae3f9c",
+      "scope": "S0-LL08-a / native: observation-only census backend registration in a disposable U1 copy (two module records in lib/systems.lisp plus two added census sources), a D1-subset target-arch with zero argument registers for B and a capture-only pass-2 entry; target context established before reading; fourteen front-end cases and eight target-state controls in two fresh sessions; native R6: 21,843/21,843 tests clean and registered, 163/164 FASLs identical while registered with only bin/systems.dx64fsl differing, 164/164 after removal. macOS x86-64, U1 v1.13."
+    },
+    {
+      "id": "LL08A-ACCEPTANCE-PRESERVATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll08a-project-acceptance/preservation.json",
+      "sha256": "160407fc9525399622c03a048464bc9e056b923cb3d98c9ae3ece6312faed5ac",
+      "scope": "27 prior accepted records unchanged; 104,363 combined artifact references verified; no execution."
+    },
+    {
+      "id": "LL08A-ACCEPTANCE-PRODUCER-LOG",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll08a-project-acceptance/producer-log.json",
+      "sha256": "d163fc548487ac011a3b45edead13db2bc6345755cccac7be16702df3aa10f99",
+      "scope": "accept-evidence.py invocation."
+    },
+    {
+      "id": "LL08A-ACCEPTANCE-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll08a-project-acceptance/gate-result.json",
+      "sha256": "6165d18525e56ff4f87e1e5f4c0f4769f6ef9da039c54e974c69f10c1c68f4b5",
+      "scope": "BLOCKED: 21 missing and zero unreviewed; 28 accepted."
     }
   ]
 }

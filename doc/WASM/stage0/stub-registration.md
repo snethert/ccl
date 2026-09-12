@@ -1,6 +1,6 @@
 # Census stub registration — 12 September 2026
 
-S0-LL08-a has executed and its [standalone record](../evidence/stub-registration-summary.json) is ready for independent review. It qualifies an observation-only backend-loading recipe and target-state proof. It does not claim a complete bootstrap census, a production Wasm backend or target execution. The existing 27 project acceptances are unchanged.
+S0-LL08-a has executed, was reviewed by Claude's ninth audit with no defect and a byte-identical reproduction, and was accepted by the user at its stated scope; see [project acceptance](project-acceptance.md). It qualifies an observation-only backend-loading recipe and target-state proof. It does not claim a complete bootstrap census, a production Wasm backend or target execution. The existing 27 project acceptances are unchanged.
 
 ## Applied unit and loading recipe
 

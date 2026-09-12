@@ -12,7 +12,7 @@
   "verification_scope": "New packet, direct sources, native manifest/member joins and semantic controls only; unchanged evidence reused.",
   "version": 1,
   "execution_status": "PASS",
-  "review_disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
+  "review_disposition": "ACCEPTED_RECORDED_SCOPE",
   "test_id": "S0-LL08-a",
   "evidence_repository_commit": "cfe79d1a6504b65b63f080f8c5518f3bec88c1a3",
   "run": {
@@ -37,5 +37,22 @@
     "provenance": "Ninth audit at 21c6aed7: source review, full re-execution from pinned inputs with byte-identical FASLs, module FASLs, snapshot and session rows, unit and producer controls in the reviewer's own session, 2026-09-12",
     "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
     "record": "stage0/claude-review.md"
+  },
+  "project_acceptance": {
+    "id": "S0-LL08-a",
+    "variant": "native",
+    "review_disposition": "ACCEPTED",
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll08a-project-acceptance/accepted/accepted-results.json",
+    "sha256": "693f8b4185641b4e57e11bed00822450cbc96bbd33cdbdf7b6e1b3ce2b54b15e",
+    "decision_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll08a-project-acceptance/decision.json",
+    "decision_sha256": "945c477886d9e36abe35d1312214763221f083b234932627610afe7df0ae3f9c",
+    "review_commit": "292bd75d",
+    "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION"
+  },
+  "stage0_gate": {
+    "status": "BLOCKED",
+    "accepted": 28,
+    "missing": 21,
+    "unreviewed": 0
   }
 }
