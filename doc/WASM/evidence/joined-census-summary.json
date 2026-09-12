@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "status": "ASSEMBLED_UNQUALIFIED",
+  "projection_coverage": "PASS",
+  "schema": "PASS",
+  "census_contract": "BLOCKED",
+  "LL15_b": "NOT_QUALIFIED",
+  "LL15_c": "NOT_QUALIFIED",
+  "nodes": 102834,
+  "nodes_by_kind": {
+    "function": 72775,
+    "handler": 268,
+    "import": 1,
+    "initializer": 28308,
+    "lap": 222,
+    "module": 209,
+    "operator": 279,
+    "store": 1,
+    "subprimitive": 155,
+    "trap": 17,
+    "vinsn": 599
+  },
+  "edges": 307672,
+  "reachable_nodes": 102834,
+  "phases": [
+    "callback",
+    "compile",
+    "load",
+    "macroexpand",
+    "read",
+    "run"
+  ],
+  "compile_effects_returned": 18907,
+  "compile_previews_changed": 37,
+  "load_effects_emitted_not_executed": 9362,
+  "startup_callbacks_returned": 35,
+  "dynamic_calls_unqualified": 1729,
+  "missing_named_candidates": 183,
+  "evaluated_templates_decoded": 599,
+  "projection_controls_rejected": 23,
+  "census_error_counts": {
+    "unresolved reachable edge from": 17329,
+    "unimplemented reachable node": 28298
+  },
+  "qualification_work": [
+    "Review the 13 proposed seeds and prove an installation-aware conservative call bound.",
+    "Capture full source reachability under Wasm target state; LL08-a covers fourteen fixture forms.",
+    "Join identity-bearing read/macroexpand effects and semantic compile/load prerequisites/completions.",
+    "Join operator emission, subprimitive cycles, foreign/import targets and pointer-store classes; assign Wasm dispositions.",
+    "Reconcile the r5 traced heap with the r7 inspected/captured heap without conflating their identities.",
+    "Qualify LL15-c on a complete passing census; these controls test an intentionally blocked projection."
+  ],
+  "stage0_gate": {
+    "accepted": 28,
+    "missing": 21,
+    "unreviewed": 0,
+    "basis": "Reuse accepted 02ff713d gate; no new gate credit or aggregate regeneration."
+  },
+  "date": "2026-09-12",
+  "review_disposition": "NOT_REVIEWED",
+  "evidence_repository_commit": "6429a0d2ed8310886c5977ff34c7c9bef10b765f",
+  "packet_files": 7,
+  "packet_bytes": 4760847,
+  "run": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-census-closure-r1/run.json",
+    "sha256": "1a083bca9d8b1e05ea368fcd451a39403d746fb998e698c96f207f1754b6b9fd"
+  },
+  "graph": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-census-closure-r1/census.json.gz",
+    "sha256": "d69f72ba1f8c1863b89972b84a02a98154e7def5da48f98a0d804f419fc13d81",
+    "format": "gzip-compressed census v1 JSON; all qualification gaps remain explicit"
+  },
+  "witnesses": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-census-closure-r1/joins.json.gz",
+    "sha256": "230b96a1d52094725c364fc40184d74bdd36b407cee27e06217908a667b3f9ea"
+  },
+  "verification_scope": "Changed analysis, direct retained inputs and seven new packet files only. No archive audit, native rebuild, acceptance aggregate or gate re-execution."
+}

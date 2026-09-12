@@ -1530,6 +1530,12 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll08a-project-acceptance/gate-result.json",
       "sha256": "6165d18525e56ff4f87e1e5f4c0f4769f6ef9da039c54e974c69f10c1c68f4b5",
       "scope": "BLOCKED: 21 missing and zero unreviewed; 28 accepted."
+    },
+    {
+      "id": "NATIVE-JOINED-CENSUS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-census-closure-r1/run.json",
+      "sha256": "1a083bca9d8b1e05ea368fcd451a39403d746fb998e698c96f207f1754b6b9fd",
+      "scope": "Unreviewed census v1 projection of retained native/stub observations. Schema and input coverage pass; 23 specific omission controls reject. Complete LL15-b/c remains unqualified; no gate credit."
     }
   ]
 }

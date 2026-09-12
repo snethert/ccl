@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "evidence_commit": "288e03c3543699433387806d7ac77b00e9f3c7bc",
+  "inputs": {
+    "image": {
+      "repository": "evidence",
+      "path": "2026-09-12-startup-candidates-r1/image.json",
+      "sha256": "54037597ef8bc0861cf7bbd70169079402a3d7b5b42d1058d09088858e2f484f"
+    },
+    "candidates": {
+      "repository": "evidence",
+      "path": "2026-09-12-startup-candidates-r1/candidates.json",
+      "sha256": "e30e8ff02087722479b163efb7690ec19fcb265e5a6021a865f7f281e9b9b4fa"
+    },
+    "observed": {
+      "repository": "evidence",
+      "path": "2026-09-12-dependencies-analysis-r3/graph.json",
+      "sha256": "04ff3562d3c517831a873af7f0d394d78714cf053efc0915ac5263af53863ffe"
+    },
+    "seeds": {
+      "repository": "source",
+      "path": "tests/wasm/native-census/startup-closure/seeds.json",
+      "sha256": "daef764db1014d75f22aa02edd5776875dba2895cb2c95473db867056571df6b"
+    },
+    "rebuild": {
+      "repository": "evidence",
+      "path": "2026-09-12-native-census-r7/observed-rebuild.jsonl",
+      "sha256": "f06aba8452b61d985f4400ba2340480fb39b32bf77cde1b9adde565aac004b87"
+    },
+    "cold": {
+      "repository": "evidence",
+      "path": "2026-09-12-native-census-r7/observed-cold-start.jsonl",
+      "sha256": "5344797a5bbcfcc0a587b57de9acd59245c604cddc7fb7622b1e05ec8fd62443"
+    },
+    "stub": {
+      "repository": "evidence",
+      "path": "2026-09-12-census-stub-r1/target-sessions/clean-1.json",
+      "sha256": "3f6b5556d8a1028f80a438553e99aac21643e3af5a1835c6acfbd9fb79079440"
+    },
+    "stub_acceptance": {
+      "repository": "evidence",
+      "path": "2026-09-12-ll08a-project-acceptance/accepted/accepted-results.json",
+      "sha256": "693f8b4185641b4e57e11bed00822450cbc96bbd33cdbdf7b6e1b3ce2b54b15e"
+    },
+    "trace": {
+      "repository": "evidence",
+      "path": "2026-09-12-native-startup-terminal-r2/trace.json",
+      "sha256": "b0876c2e28c0321fa9bc71c8c128a7415488f03c407076d16ab242f1ec5e8866"
+    },
+    "trace_log": {
+      "repository": "evidence",
+      "path": "2026-09-12-native-startup-terminal-r2/fs_usage.log",
+      "sha256": "10e916ed744aaa247d821239ec411fa4cb97afe968e759e6636cb00ff4cd0ab6"
+    },
+    "lib/dumplisp.lisp": {
+      "repository": "source",
+      "path": "lib/dumplisp.lisp",
+      "sha256": "5cd12bcbfe6164874e4cefdbd6583612725d8cd773f5d970c66b956097408b74"
+    },
+    "lib/nfcomp.lisp": {
+      "repository": "source",
+      "path": "lib/nfcomp.lisp",
+      "sha256": "01dd18489697add1b6580d97782cba4c8c213554dd4f9db8a9289f45371f969c"
+    }
+  },
+  "instrumentation": {
+    "shared_patch_sha256": "610934dd76069d1187ebcdc0db53f92b2937ff8fca9985cd0b93abfcd830c493",
+    "observer_sha256": "3878619e06d9459ecd51bd3778a4e4af3bf4320e894241880ad9a7c563064e3d",
+    "dependency_extension_sha256": "0b02a038c04edbeff5ef02f2247fd95c8a90be3b28c71c5afe36fc8b5757b73e",
+    "scope": "Reuse reviewed r7 instrumentation and accepted LL08-a capture; no hooks changed."
+  },
+  "provenance": "Existing producer records and reviewed main-tree pins; scoped direct-input verification only."
+}
