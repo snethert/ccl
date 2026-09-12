@@ -103,3 +103,37 @@ Read in full: `evidence_binding.py`, `bind-evidence.py`, the `gate.py` and `chec
 | v2 evidence binding and evidence repository | REVIEWED, no defect found. |
 
 Bounds of this sign-off: it covers the mechanisms as executed in kilobyte-scale cons-only fixtures on Node and V8, and the native baseline on one Mac. It does not cover scale, startup, browser engines, generated code, the census track or D3. To make the gate count these records, the project needs an acceptance envelope that sets `review_disposition` to ACCEPTED with this record as `review_record`; producing that envelope is a project decision and a small producer step, not a reviewer action.
+
+## Fourth Claude audit — C/C4/B dynamic-call fixture, DYNAMIC-CALL-r1 at 7187a89b — 11 September 2026
+
+Reviewer: Claude Fable 5.1, in its own session on the reference host. Author: Codex. Scope: `tests/wasm/stage0/dynamic-call/` in full (`abi.c`, `support.mjs`, `functions.mjs`, `cases.mjs`, `harness.mjs`, `loader.mjs`, `actor.mjs`, `build.mjs`, `run.mjs`, `schema.json`) and `doc/WASM/abi/dynamic-call.v0.md`, against LL05, LL21-b, LL04 and LL13-a as bound in the inventory. Reviewer disposition only; project acceptance is separate.
+
+### Execution evidence
+
+Fresh run at HEAD: 159 positive PASS, 81 controls REJECTED, 0 failures; prerequisites boundary 12/9, integrated 22/14/1,000 seeds, frames 11/11; 24 records PASS. 864 of 864 modules and objects byte-identical to the retained r1 pack, including all 35 new ABI binaries, all 49 previously reviewed prerequisite binaries and every quarantined mutant build. Gate on the fresh envelope: BLOCKED with 25 missing and 24 unreviewed, no provenance or execution failure.
+
+### Mechanism review
+
+- **Frame and roots.** `$enter` builds a 512-byte frame above the caller-owned overflow area, chains one root record per eight argument slots plus a result record and a temporary record, copies parameters and overflow words into rooted slots, then publishes the chain and frame head before any operation that can poll. Unused candidate parameters must be NIL and the root budget is enforced before publication. The C reader's static assertions and `abi_check` verify header, bounds, alignment, block counts and membership of every record in the live chain independently of the writer.
+- **Result ownership.** Each physical result word has exactly one scanner: while the TCR descriptor owns a region its root record count is zero, and `nested_call`, `debugger`, `finish` and `tail_exit` switch ownership with plain stores between polls. I traced the ordinary, nested, nested-twice, debugger, tail and nonlocal paths; the transient windows where a region is briefly double-registered contain no poll, allocation or host entry, which the protocol requires. The two development failures Codex hit here are real and their mutants trap in the collector as claimed.
+- **Tail transfer.** Transfer values are cached in locals, the frame is retired without polling, the overflow area is rewritten for the new count, and `return_call_indirect` dispatches through the loader. Function objects are reachable through the anchors root record, so self reloads survive the fifty collections a 100,000-step chain performs. Bounded stack and root use are asserted against the recorded baseline, and the enclosing binding and handler records are checked on every iteration.
+- **Lazy installation.** The stub publishes self and arguments, suspends on the reviewed request protocol, and after the host supplies bytes the loader checks digest, validity, absence of start/data/element sections, memory profile, table contract, import allow-list, export set and per-export signatures before publishing any slot. The stub then reloads self from its frame, retires its frame and redispatches. The stale-stub mutant traps in the semispace check.
+- **Lisp-level semantics.** Arity, designator, capacity, generation and stack conditions are explicit fixture conditions raised before entry, never engine traps. Optional/rest builds the rest list under forced collection. Keyword processing follows leftmost-wins and leftmost `:allow-other-keys`. APPLY spreads a proper list into rooted staging slots.
+- **Candidates.** C, C4 and B share one corpus; B routes every argument through the overflow area and its swapped-argument mutant targets that path specifically.
+
+### Findings
+
+No defect found. Three observations, none blocking:
+
+1. **Dispatch-time role validation is a stand-in.** Install-time validation is real: export names and signatures are checked before a slot is filled. But the `ROLE_MISMATCH` rejection in `same-signature-wrong-role` is a throw placed on the test-injected path, not a check of a slot's registered role against the requested role. The companion `bypassed-role-validation` control correctly shows that the semantic oracle catches the substitution when that throw is absent. This satisfies S0-LL05-b as written, which admits semantic assertions, but a production loader will need a dispatch-time or install-time role registry, and the mutant should then corrupt that registry.
+2. **A circular APPLY list is reported as the capacity condition (911), not an improper-list condition.** Detection is by exceeding 32 elements. Correct at these bounds; the case name should not suggest cycle detection.
+3. **The single-scanner invariant is not checked at inspection points.** `abi_check` verifies chain membership but not that the TCR-owned region's root record count is zero. Adding that check would turn a class of ownership bugs from collector traps into precise fixture failures.
+
+### Disposition
+
+| Records | Reviewer disposition |
+| --- | --- |
+| S0-LL05-a/b/c/d and S0-LL21-b, variants C, C4 and B | REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED, hand-built scope at the declared bounds: 32 arguments, 6 values, 8 frames, 16 KiB stack, cons-only heap, Node/V8 only. |
+| S0-LL04-a, S0-LL04-b, S0-LL13-a | REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED. Independent C and emitted cons oracles with unequal payloads, dotted, shared, nested and cyclic graphs, NIL reads and mutation; the one-sided swap is rejected; overlapping and undersized ownership maps are rejected before publication. |
+
+Not covered by this audit: ABI timing or selection, module granularity, browser engines, generated code, and any production object model. D3 remains open.

@@ -1,5 +1,14 @@
 # Change history
 
+## 2026-09-11 — fourth Claude audit: C/C4/B dynamic-call fixture reviewed
+
+Authorized by the user's request to review the new fixture.
+
+- Claude read the complete dynamic-call fixture and protocol, re-executed it at HEAD (159 positive, 81 rejected, prerequisites 12/9, 22/14/1,000, 11/11) and confirmed 864/864 modules and objects byte-identical to the retained r1 pack.
+- Mechanism review covered frame publication, single-scanner result ownership across ordinary, nested, debugger, tail and nonlocal paths, tail transfer under fifty collections, lazy installation validation, and the Lisp-level condition paths. No defect found.
+- Three nonblocking observations recorded: dispatch-time role validation is a test-path stand-in, circular APPLY reports the capacity condition, and the single-scanner invariant is not asserted at inspection points.
+- Disposition recorded in `stage0/claude-review.md` and as `external_review` on DYNAMIC-CALL-r1. `inventory.json` unchanged; no record promoted to ACCEPTED.
+
 ## 2026-09-11 — scoped project acceptance and C/C4/B correctness
 
 Following Claude's sign-off committed as 52639e4e, the user authorized proceeding. A separate acceptance envelope records exactly seven original native/runtime/frame records as ACCEPTED within their reviewed scopes. The original report, timestamps, test revisions, contract digests and artifacts are unchanged. Fourteen acceptance-producer controls verify identity, scope, failure rejection and preservation. Acceptance alone reduces the gate from 49 reasons to 42 missing records.

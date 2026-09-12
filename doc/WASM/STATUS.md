@@ -15,6 +15,7 @@ Implementation baseline: upstream v1.13, `c994217adc56b3f8a564526cee4695893ac84d
 | Engine matrix / full object contracts | INCOMPLETE | Node/V8 hand-built execution does not qualify browsers, all profiles, full CCL object layouts or generated code. |
 | Initial probes | Reviewed diagnostics only | Three PASS in r7; cannot discharge complete S0 IDs. Original inventory hash remains provenance. |
 | Evidence repository | Retained separately | Immutable catalog, original failures and index snapshots; [pinned repository manifest](evidence/repository.json). |
+| C/C4/B dynamic-call fixture review | Reviewed by Claude at 7187a89b; NOT ACCEPTED | [Fourth audit](stage0/claude-review.md): full source review, fresh 159/81 run, 864/864 byte-identical binaries, no defect; three nonblocking observations recorded. The eighteen records await project acceptance. |
 | Stage 0 acceptance | BLOCKED | The combined gate has 42 reasons: 24 missing records and 18 new records awaiting review/acceptance. |
 
 The new ABI fixture adds a separate C extension and new linked kernel. Existing boundary/runtime/frame sources remain unchanged. Fresh prerequisites execute before the ABI corpus; their re-execution does not extend the earlier acceptance to new ABI code. Original ABI development failures exposed duplicate result scanning and a stale frame result count. Both fixes are confined to the new fixture and have rejection controls.

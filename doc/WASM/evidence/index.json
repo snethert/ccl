@@ -296,7 +296,7 @@
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
       "currency": "ORIGINAL_FAILURE",
-      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged."
+      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged."
     },
     {
       "id": "INTEGRATED-RUNTIME-r10",
@@ -601,11 +601,17 @@
       "envelope_version": 2,
       "inventory_version": 1,
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "EXTERNALLY_REVIEWED_NOT_ACCEPTED",
       "currency": "CURRENT",
       "results_member": "results.json",
       "scope": "Bounded hand-built C/C4/B correctness with freshly executed frame/runtime/boundary prerequisites. No ABI selection, generated code, production capacity or project acceptance.",
-      "note": "159 positive cases and 81 rejected controls across C/C4/B; six fresh prerequisites. New source and linked ABI kernel require independent review."
+      "note": "159 positive cases and 81 rejected controls across C/C4/B; six fresh prerequisites. New source and linked ABI kernel require independent review.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Fourth audit at HEAD 7187a89b: full source review, fresh re-execution and 864/864 byte comparison in the reviewer's own session, 2026-09-11",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
+        "record": "stage0/claude-review.md"
+      }
     },
     {
       "id": "ABI-ORIGINAL-DEVELOPMENT-FAILURES",
