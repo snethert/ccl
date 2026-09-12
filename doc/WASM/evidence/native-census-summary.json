@@ -2,7 +2,7 @@
   "date": "2026-09-12",
   "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
   "execution_status": "PASS",
-  "review_disposition": "NOT_REVIEWED",
+  "review_disposition": "ACCEPTED_RECORDED_SCOPE",
   "scope": "Reversible native observation from pristine U1; S0-LL08-b/native only",
   "run": {
     "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-r5/results.json",
@@ -82,5 +82,9 @@
     "complete lowering/import/trap/store joins and initializer prerequisite semantics",
     "independent review of this observation patch and its evidence"
   ],
-  "performance_claim": null
+  "performance_claim": null,
+  "acceptance_record": "stage0/project-acceptance.md",
+  "accepted_results_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll08b-project-acceptance/accepted/accepted-results.json",
+  "accepted_results_sha256": "2d1dc5029e77951563cffdd3cb6328bea602139ca88d876ad25cd541ff38bc1b",
+  "review_note": "Claude sixth audit 899baedc: independent re-execution with identical FASLs, snapshots and callback sequence; user acceptance recorded separately. Original r5 envelope unchanged. Census acceptance remains BLOCKED."
 }

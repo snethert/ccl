@@ -2,15 +2,15 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "f2558e82f6dd62c16ea3ad7a95476e3faf69ad5d",
+  "commit": "95fe88e04188d2c7484d9febd1015ced9a5f1496",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "d30373b9969eaf649bec763363199396b3e1e0fe2bfaba506669b5fdfded93c3",
-  "immutable_evidence_files": 133821,
+  "catalog_sha256": "8f258b13a90b60a767fde0486e686fe4442d3f4f082e1c77488d7fbda0c83e3f",
+  "immutable_evidence_files": 134401,
   "indexed_references_verified": 767,
   "source_index_snapshot": "catalog/source-index-native-census-r5-final-controls.json",
   "source_index_sha256": "78f9c0debb71bd6f01481fedb380c53e228c5600cf6db16a8ec31856a04f50f1",
-  "verification": "All 133,821 catalogued files and 7,489 distinct staged Git blobs match by byte size and SHA-256. Catalog check and eight controls pass. Git fsck exits 0; two preexisting unreferenced blobs and the intermediate catalog blob are identified in verification.json.",
+  "verification": "All 134,401 catalogued files verified by catalog.py check after adding the LL08-b acceptance envelope and 27-record aggregate (Claude, 2026-09-12). Earlier Git blob and fsck statements refer to the previous snapshot.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository. Original failures and executions preserved. Twenty-six accepted record contents retained with explicit relative-path rebasing and no copied old artifact bytes. New S0-LL08-b/native observation remains NOT_REVIEWED. Pristine U1 implementation start; complete census and generated code remain open."
+  "scope": "Separate local evidence repository. Original executions, policies and failures retained. Twenty-seven accepted records: 26 preserved exactly plus S0-LL08-b/native accepted at its stated scope. Complete census, external trace and generated code remain open."
 }

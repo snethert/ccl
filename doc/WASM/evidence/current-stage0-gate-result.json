@@ -5,10 +5,10 @@
     "--inventory",
     "doc/WASM/stage0/inventory.json",
     "--results",
-    "/Users/buildsomething/Source/ccl-evidence/2026-09-12-stage0-native-census-results.json"
+    "/Users/buildsomething/Source/ccl-evidence/2026-09-12-stage0-ll08b-accepted-results.json"
   ],
   "exit_code": 2,
-  "stdout": "{\n  \"status\": \"BLOCKED\",\n  \"reasons\": [\n    \"missing S0-ABI-selection [complete-report]\",\n    \"missing S0-CONTRACTS-a [complete-report]\",\n    \"missing S0-ENGINE-a [complete-report]\",\n    \"missing S0-LL01-a [control]\",\n    \"missing S0-LL01-b [control]\",\n    \"missing S0-LL02-a [control]\",\n    \"missing S0-LL02-b [control]\",\n    \"missing S0-LL03-a [control]\",\n    \"missing S0-LL07-a [full]\",\n    \"missing S0-LL08-a [native]\",\n    \"unreviewed S0-LL08-b [native]\",\n    \"missing S0-LL08-c [native]\",\n    \"missing S0-LL13-b [full]\",\n    \"missing S0-LL15-a [full]\",\n    \"missing S0-LL15-b [native]\",\n    \"missing S0-LL15-c [native]\",\n    \"missing S0-LL19-a [full]\",\n    \"missing S0-LL21-c [shared-template]\",\n    \"missing S0-LL21-c [unshared-template]\",\n    \"missing S0-LL22-a [control]\",\n    \"missing S0-LL22-b [control]\",\n    \"missing S0-LL23-a [full]\",\n    \"missing S0-LL24-a [control]\"\n  ]\n}\n",
+  "stdout": "{\n  \"status\": \"BLOCKED\",\n  \"reasons\": [\n    \"missing S0-ABI-selection [complete-report]\",\n    \"missing S0-CONTRACTS-a [complete-report]\",\n    \"missing S0-ENGINE-a [complete-report]\",\n    \"missing S0-LL01-a [control]\",\n    \"missing S0-LL01-b [control]\",\n    \"missing S0-LL02-a [control]\",\n    \"missing S0-LL02-b [control]\",\n    \"missing S0-LL03-a [control]\",\n    \"missing S0-LL07-a [full]\",\n    \"missing S0-LL08-a [native]\",\n    \"missing S0-LL08-c [native]\",\n    \"missing S0-LL13-b [full]\",\n    \"missing S0-LL15-a [full]\",\n    \"missing S0-LL15-b [native]\",\n    \"missing S0-LL15-c [native]\",\n    \"missing S0-LL19-a [full]\",\n    \"missing S0-LL21-c [shared-template]\",\n    \"missing S0-LL21-c [unshared-template]\",\n    \"missing S0-LL22-a [control]\",\n    \"missing S0-LL22-b [control]\",\n    \"missing S0-LL23-a [full]\",\n    \"missing S0-LL24-a [control]\"\n  ]\n}\n",
   "stderr": "",
   "result": {
     "status": "BLOCKED",
@@ -23,7 +23,6 @@
       "missing S0-LL03-a [control]",
       "missing S0-LL07-a [full]",
       "missing S0-LL08-a [native]",
-      "unreviewed S0-LL08-b [native]",
       "missing S0-LL08-c [native]",
       "missing S0-LL13-b [full]",
       "missing S0-LL15-a [full]",

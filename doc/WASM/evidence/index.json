@@ -706,7 +706,34 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
         "record": "stage0/claude-review.md"
       },
-      "note": "Claude sixth audit 3ce72d35 found no defect and reproduced the run; six nonblocking observations recorded. Original envelope remains pre-review; project acceptance of S0-LL08-b is a separate decision."
+      "note": "Claude sixth audit 3ce72d35 found no defect and reproduced the run; six nonblocking observations recorded. Original envelope remains pre-review; project acceptance of S0-LL08-b is a separate decision. User acceptance is now recorded separately as LL08B-PROJECT-ACCEPTANCE; this original raw envelope is unchanged."
+    },
+    {
+      "id": "LL08B-PROJECT-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll08b-project-acceptance/accepted/accepted-results.json",
+      "sha256": "2d1dc5029e77951563cffdd3cb6328bea602139ca88d876ad25cd541ff38bc1b",
+      "timestamp": "2026-09-12T16:01:17Z",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "5e315d82e91ebdda7e06d72d3a8e0409238dd449d3b9dea7a9c2ee085056ca26",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "S0-LL08-b / native: evaluated native operator slots (279, including 12 reserved), flags and dispatch readings unchanged under a reversible three-file observation patch applied only in a disposable U1 copy; two native regression runs of 21,843 eligible tests, 161 of 164 FASLs identical under observation with exactly the three patched files differing, 164 of 164 identical after removal; compilation, probe, test and cold-start callback event logs retained as census inputs. macOS x86-64 reference host, U1 v1.13.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Sixth audit at HEAD 3ce72d35: full source and patch review, fresh re-execution (21,843/21,843 twice, 161/164 then 164/164 FASLs, all 164 identical to r5 in every build), observer/reversal/producer controls in the reviewer's own session, 2026-09-12",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
+        "record": "stage0/claude-review.md"
+      },
+      "note": "User accepted S0-LL08-b at its stated scope after the sixth audit committed as 899baedc, and confirmed the CLAUDE.md clean-start line. Separate disposition only; original execution timestamp, test revision, contract digest and artifacts retained. No new execution.",
+      "project_acceptance": {
+        "decision": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll08b-project-acceptance/decision.json",
+        "sha256": "19ce33c7447ef754620ed8837569a2b75b5880cc0e36351cad12ef82722273a9",
+        "timestamp": "2026-09-12T16:45:30.257744+00:00"
+      }
     }
   ],
   "auxiliary_records": [
@@ -975,10 +1002,10 @@
       "scope": "4518 byte-identical binaries/objects, 864 reviewed prerequisite identities, all LL21-a artifact hashes, independent bootstrap, 98 checker/statistical controls and document/aggregate verification. No acceptance."
     },
     {
-      "id": "CURRENT-STAGE0-COMBINED",
+      "id": "PRE-NATIVE-CENSUS-STAGE0-COMBINED",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/combined/results.json",
       "sha256": "fe0df0789210ff60a533256262d4342f92a82b80a6cca40be1e1aaaf1955b7b4",
-      "scope": "26 scoped accepted records; 25 earlier result objects preserved exactly, one separately accepted LL21-a record. No new execution; 23 missing and zero unreviewed."
+      "scope": "26 scoped accepted records; 25 earlier result objects preserved exactly, one separately accepted LL21-a record. No new execution; 23 missing and zero unreviewed. Historical aggregate before the native observation record."
     },
     {
       "id": "LL21-ACCEPTANCE-DECISION",
@@ -1140,7 +1167,7 @@
       "id": "NATIVE-CENSUS-COMBINED",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-stage0-native-census-results.json",
       "sha256": "3cfcc6f76c7be143c6879ccaa7aab3e78dd4d749defe5e0c68cf5bef5314c5f4",
-      "scope": "26 prior accepted records and one new unreviewed native LL08-b record, sharing existing evidence files."
+      "scope": "26 prior accepted records and one new unreviewed native LL08-b record, sharing existing evidence files. Historical: superseded by the LL08-b acceptance aggregate."
     },
     {
       "id": "NATIVE-CENSUS-GATE",
@@ -1153,6 +1180,36 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-process-recovery-r1/provenance.json",
       "sha256": "79cf1a235a9defbb4452d4aaf55800c03eaec3c8ec9eddb33c8025fa3b1540a6",
       "scope": "Eight reversal controls pass, including actual separate-process partial recovery. Supersedes the earlier same-process reconstruction control for that claim; native r5 implementation unchanged."
+    },
+    {
+      "id": "CURRENT-STAGE0-COMBINED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-stage0-ll08b-accepted-results.json",
+      "sha256": "7640fd8b381ae88b6213cdc567d0615296a197befa6e8bcdeef615e09959f5df",
+      "scope": "27 scoped accepted records; 26 earlier result objects preserved exactly, one separately accepted S0-LL08-b/native record. No new execution; 22 missing and zero unreviewed."
+    },
+    {
+      "id": "LL08B-ACCEPTANCE-DECISION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll08b-project-acceptance/decision.json",
+      "sha256": "19ce33c7447ef754620ed8837569a2b75b5880cc0e36351cad12ef82722273a9",
+      "scope": "S0-LL08-b / native: evaluated native operator slots (279, including 12 reserved), flags and dispatch readings unchanged under a reversible three-file observation patch applied only in a disposable U1 copy; two native regression runs of 21,843 eligible tests, 161 of 164 FASLs identical under observation with exactly the three patched files differing, 164 of 164 identical after removal; compilation, probe, test and cold-start callback event logs retained as census inputs. macOS x86-64 reference host, U1 v1.13."
+    },
+    {
+      "id": "LL08B-ACCEPTANCE-PRESERVATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll08b-project-acceptance/preservation.json",
+      "sha256": "eb265ad98cb5435d7aaa4631224e5def4d97ceea8c524338702735ea5c1d939f",
+      "scope": "26 prior accepted records unchanged; 104,279 combined artifact references verified against retained bytes; no execution."
+    },
+    {
+      "id": "LL08B-ACCEPTANCE-PRODUCER-LOG",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll08b-project-acceptance/producer-log.json",
+      "sha256": "74b929ecc13daf054fc80d80ef2643abd1859560cd69e371aee1dfd177b610d4",
+      "scope": "accept-evidence.py invocation; a first attempt with the output name results.json was refused by the producer because the r5 pack retains an artifact of that name."
+    },
+    {
+      "id": "LL08B-ACCEPTANCE-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll08b-project-acceptance/gate-result.json",
+      "sha256": "c58ff42035188ca40b629b7ccb288f5b21abedb01598ba865485d1b3696119f9",
+      "scope": "BLOCKED: 22 missing and zero unreviewed; 27 accepted."
     }
   ]
 }

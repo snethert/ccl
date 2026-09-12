@@ -11,7 +11,7 @@ The implementation baseline is upstream CCL v1.13 at `c994217adc56b3f8a564526cee
 - [Workflow](workflow.md): independent census and architecture tracks.
 - [Current status](STATUS.md) and [dated change history](history/changes.md).
 
-Markdown is the editable document source. The three versioned DOCX files are generated reading copies. `stage0/obligations.json` and the stage lists are generated from the acceptance register's LL metadata; `stage0/inventory.json` defines the individual tests. These complementary sources are checked together. Twenty-five reviewed native/runtime/frame/ABI records are now accepted within their stated scopes; the remaining Stage 0 obligations are open.
+Markdown is the editable document source. The three versioned DOCX files are generated reading copies. `stage0/obligations.json` and the stage lists are generated from the acceptance register's LL metadata; `stage0/inventory.json` defines the individual tests. These complementary sources are checked together. Twenty-seven reviewed native/runtime/frame/ABI/observation records are now accepted within their stated scopes; the remaining Stage 0 obligations are open.
 
 ## Reproduce the document package and initial probes
 

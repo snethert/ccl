@@ -34,3 +34,7 @@ No defect found. Six observations, none blocking:
 | Build, probe, cold-start and test event logs | Reviewed as census inputs; they do not discharge S0-LL15-b or S0-LL15-c, which still need the seed set, conservative closure, joins, initializer semantics and the external trace. |
 
 Not covered by this audit: the external file trace, the complete census graph, the census checker against a real graph, and any Wasm backend work. The implementation baseline remains pristine U1.
+
+### Follow-up to the sixth audit
+
+The user confirmed the `CLAUDE.md` clean-start line, resolving observation 1, and accepted S0-LL08-b at its stated scope. Claude produced the acceptance envelope at the user's direction; that operation is recorded in `stage0/project-acceptance.md` and is not part of the audit.
