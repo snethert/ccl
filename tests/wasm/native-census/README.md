@@ -80,3 +80,7 @@ After the native run, `record.py --run EVIDENCE --inventory doc/WASM/stage0/inve
 ## Clean-image candidate preparation
 
 The [startup candidate inspector](startup-closure/README.md) reuses the retained clean image and r7 graph without a source patch or rebuild. It identifies resident code, bindings, callbacks and evaluated handlers, and prepares an explicitly unqualified shared candidate set and seed proposal for review. It does not claim the complete LL15 exchange graph.
+
+## Census stub registration
+
+The [registration fixture](stub-backend/README.md) applies two module entries and two observation-only target files in a disposable U1 archive. It validates target state before reading, captures real front-end dependencies, and performs its own native R6 comparison and complete reversal. It emits only the unreviewed S0-LL08-a record; its fourteen-form corpus does not qualify full LL15 closure.

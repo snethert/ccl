@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+  "scope": "Observation-only module registration; target source added only in disposable U1 copies. No implementation backend or emitted code.",
+  "patch_sha256": "50cf7f44ccde3677c3a8ca6c3b5cf77813f0b947b21238c9ef1d304cca5ee45c",
+  "modified": [
+    {
+      "path": "lib/systems.lisp",
+      "before_sha256": "517c6aeb6078a4e6eac63d8dbec523da6fc033a34b2de94da48cef7fd408c0bc",
+      "after_sha256": "1bdfe07c7cdb95f9b46ad4c2c3ec3a9b1bf233c42dca1e5f2532345c33e235f6"
+    }
+  ],
+  "added": [
+    {
+      "path": "compiler/WASM-CENSUS/census-arch.lisp",
+      "fixture": "payload/census-arch.lisp",
+      "sha256": "65431c836d80da75d77d5aba04a706ce19e1fbc525a7279c3052835df518c05a"
+    },
+    {
+      "path": "compiler/WASM-CENSUS/census-backend.lisp",
+      "fixture": "payload/census-backend.lisp",
+      "sha256": "c0ecd2a71bc69808d7db55dfddb77c4e696298bdbe44e40709e3693cd5a01df6"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+--- a/lib/systems.lisp
++++ b/lib/systems.lisp
+@@ -113,6 +113,8 @@
+     (x86-lap          "ccl:bin;x86-lap"          ("ccl:compiler;X86;x86-lap.lisp"))
+     (arm-lap          "ccl:bin;arm-lap"          ("ccl:compiler;ARM;arm-lap.lisp"))
+     (backend          "ccl:bin;backend"          ("ccl:compiler;backend.lisp"))
++    (wasm-census-arch "ccl:bin;wasm-census-arch" ("ccl:compiler;WASM-CENSUS;census-arch.lisp"))
++    (wasm-census-backend "ccl:bin;wasm-census-backend" ("ccl:compiler;WASM-CENSUS;census-backend.lisp"))
+     (ppc32-backend    "ccl:bin;ppc32-backend"    ("ccl:compiler;PPC;PPC32;ppc32-backend.lisp"))			   
+     (ppc64-backend    "ccl:bin;ppc64-backend"    ("ccl:compiler;PPC;PPC64;ppc64-backend.lisp"))
+     (ppc-backend      "ccl:bin;ppc-backend"      ("ccl:compiler;PPC;ppc-backend.lisp"))

@@ -1,0 +1,35 @@
+{
+  "native_tests_per_variant": 21843,
+  "native_fasls": 164,
+  "identical_while_registered": 163,
+  "identical_after_removal": 164,
+  "target_cases": 28,
+  "target_controls_rejected": 8,
+  "unit_controls_rejected": 6,
+  "operator_slots": 279,
+  "reserved_slots": 12,
+  "scope": "Reversible observation-only registration, native R6 and fourteen front-end cases. No target executable/FASL, full source census or foreign/lowering implementation.",
+  "verification_scope": "New packet, direct sources, native manifest/member joins and semantic controls only; unchanged evidence reused.",
+  "version": 1,
+  "execution_status": "PASS",
+  "review_disposition": "NOT_REVIEWED",
+  "test_id": "S0-LL08-a",
+  "evidence_repository_commit": "cfe79d1a6504b65b63f080f8c5518f3bec88c1a3",
+  "run": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-census-stub-r1/results.json",
+    "sha256": "437a75c504720ae907ba3de7410b658b0fde2850cc810f7c9e1feef3f757d54f"
+  },
+  "gate_record": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-census-stub-r1/gate-results.json",
+    "sha256": "8f4062f6e62f4fde883dad77fe77ce9ea849e446d695c52381fed75aa943da90"
+  },
+  "current_producer_controls": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-census-stub-r1/producer-controls-current.json",
+    "sha256": "228d9fea8761a87563d846bec3229aa008e819d0885c4b804c7d6536cbb096ba",
+    "controls_rejected": 11
+  },
+  "registration_patch_sha256": "50cf7f44ccde3677c3a8ca6c3b5cf77813f0b947b21238c9ef1d304cca5ee45c",
+  "new_evidence_files": 82,
+  "new_evidence_bytes": 8073858,
+  "acceptance_note": "Standalone LL08-a execution only, awaiting independent review and project acceptance. Existing 27 accepted records are unchanged. No acceptance aggregate or full historical archive verification was regenerated."
+}

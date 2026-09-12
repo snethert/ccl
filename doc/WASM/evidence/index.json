@@ -783,6 +783,21 @@
         "sha256": "3d3417b17c68953048e82d292f7fc345bfb5a685b11e3eda8faa41af947a166a",
         "timestamp": "2026-09-12T17:57:49.094415+00:00"
       }
+    },
+    {
+      "id": "CENSUS-STUB-REGISTRATION-r1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-census-stub-r1/gate-results.json",
+      "sha256": "8f4062f6e62f4fde883dad77fe77ce9ea849e446d695c52381fed75aa943da90",
+      "timestamp": "2026-09-12T19:19:15Z",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "32cbeb2a077d38ed02642a6a293a3587deb2540abca0ca7e9a0eb3ef3c281134",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "S0-LL08-a: observation-only registration and target-state proof in two fresh host sessions; fourteen source cases per session, eight target-state controls, native R6 and full reversal. Static acode records cover this fixture, not the complete bootstrap corpus. No target executable output or project acceptance."
     }
   ],
   "auxiliary_records": [
@@ -1445,6 +1460,12 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md"
       }
+    },
+    {
+      "id": "CENSUS-STUB-REGISTRATION-RAW-r1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-census-stub-r1/results.json",
+      "sha256": "437a75c504720ae907ba3de7410b658b0fde2850cc810f7c9e1feef3f757d54f",
+      "scope": "Raw native before/registered/restored run, original failures and exact input/toolchain/source identities; no acceptance disposition."
     }
   ]
 }

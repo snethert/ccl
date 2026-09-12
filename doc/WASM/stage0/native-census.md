@@ -30,3 +30,5 @@ See [current evidence summary](../evidence/native-census-summary.json), [index](
 
 
 The r7 [dependency and redefinition extension](native-dependencies.md) uses the same patch and passes its own full before/after/reversal comparison. Its new code and evidence await independent review; the accepted r5 scope is unchanged.
+
+The [stub registration follow-up](stub-registration.md) now executes S0-LL08-a in disposable U1 copies, including its own R6 comparison and two fresh target sessions. It awaits review. Its static records cover fourteen source forms; the full joined census remains open.
