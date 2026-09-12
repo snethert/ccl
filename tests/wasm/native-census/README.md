@@ -2,7 +2,7 @@
 
 This harness starts from the pinned upstream CCL v1.13 source and bootstrap. It runs before any Wasm backend changes. It records evaluated native operator slots/flags and backend tables, top-level compiler read/expansion events, function acode observations before pass 2, compile-time initializer entry/return, emitted load initializers, and the registered image-startup callbacks as they execute.
 
-It is an observation tool. It does not implement a backend, establish the complete bootstrap closure or turn observed calls into a conservative list of every possible callee. Missing external trace/closure evidence remains blocking for S0-LL15-b/c.
+It is an observation tool. It does not implement a backend, establish the complete bootstrap closure or turn observed calls into a conservative list of every possible callee. Complete trace reconciliation and closure remain blocking for S0-LL15-b/c.
 
 ```sh
 python3 tests/wasm/native-census/run.py \
@@ -39,12 +39,12 @@ The probe independently requires named functions, a direct dependency, an unknow
 
 ## External macOS file trace
 
-`trace-startup.py` holds one client process before exec, attaches `fs_usage` to its PID, then lets that same PID read a coverage marker and start a clean image. Only the tracer uses `sudo`; CCL runs as the invoking user. A missing permission, coverage marker, image open, completion marker or clean trace termination cannot become a passing trace. Successful capture still needs parsing and reconciliation with the native module graph.
+`trace-startup.py` holds one client process before exec, selects its PID and a unique executable name in `fs_usage`, then lets that same PID read a coverage marker and start a clean image. It retains a byte-identical kernel copy under the unique name and checks a second file read inside CCL. Only the tracer uses `sudo`; CCL runs as the invoking user. A missing permission, coverage marker, image open, matching PID, completion marker or clean termination cannot become a passing trace. Successful capture still needs parsing and reconciliation with the native module graph.
 
 Run this from a Terminal with administrator access, using the clean baseline image and restored kernel from the completed run:
 
 ```sh
-sudo -v
+sudo -v &&
 python3 tests/wasm/native-census/trace-startup.py \
   --kernel /tmp/ccl-native-census-new/ccl/dx86cl64 \
   --image /absolute/path/to/evidence/baseline/build/dx86cl64.image \
@@ -52,7 +52,26 @@ python3 tests/wasm/native-census/trace-startup.py \
   --output /absolute/path/to/new-trace-evidence
 ```
 
-The current agent session lacks passwordless administrator access. Its retained trace attempt reports UNAVAILABLE and does not execute CCL without a live tracer. Internal compiler/callback observations do not substitute for this external trace.
+The user's Terminal r2 capture succeeded. The earlier PID-only capture failed coverage and is retained unchanged. `reconcile-trace.py --trace TRACE --output NEW-DIRECTORY` verifies actual successful opens and separates harness, image and host activity. Four loader operations still have anonymous/relative pathname contexts; its result is partial reconciliation, not full census acceptance. `test-trace.py` replays the actual trace and five semantic coverage mutants with updated artifact hashes. Internal compiler/callback observations do not substitute for this external trace.
+
+## Dependency and redefinition extension
+
+Add `--observer-extension tests/wasm/native-census/dependencies.lisp` to `run.py` to reproduce the r7 extension. It is loaded in both comparison variants, enabled only in the observed variant, copied into the retained runner and hashed in the report. It uses the existing reversible patch, with no extra shared-source changes. The full clean/observed/reversed build and native suites still run.
+
+```sh
+python3 tests/wasm/native-census/dependency-graph.py \
+  --events /absolute/path/to/evidence/observed-rebuild.jsonl \
+  --output /absolute/path/to/new-graph
+python3 tests/wasm/native-census/test-dependencies.py \
+  --native /absolute/path/to/evidence \
+  --source /tmp/ccl-native-census-new/ccl \
+  --work /tmp/ccl-dependency-probe-new \
+  --output /absolute/path/to/new-dependency-controls
+```
+
+The extension preserves the base observer's `target` field, appending exact compiler-object identities where available. Variable ordinals describe the native afunc variable list, not argument positions. The graph retains a union of repeated observations, unresolved calls, references, native builtin mappings, source declarations and sampled binding history. Global names provide unqualified source-version candidates only. Its format is an intermediate analysis format, not the complete LL15 exchange schema.
+
+Redefinition observations cover recognized top-level/expanded declarations and selected literal binding writes in L0, L1 and L2/library. Native host samples at source transitions, initializer checkpoints and explicit load checkpoints distinguish macro/function identities and preserve previous states. They do not observe every transient replacement or cross-dumped target binding, and compilation order does not select the active definition. The probe separately exercises a bootstrap alias, three-layer function/macro replacement, old-function survival, same-name lexical functions, recursion and unresolved indirect calls. Four unchanged FASLs and eight rejection controls qualify this bounded observation scope. See the [dependency report](../../../doc/WASM/stage0/native-dependencies.md).
 
 ## Retaining the evaluated operator record
 

@@ -37,7 +37,7 @@ def restore_clean_outputs(work):
             'source': 'unmodified native baseline; observed artifacts are evidence only'}
 
 
-def run(inputs, work, output):
+def run(inputs, work, output, observer_extension=None):
     inputs, work, output = [p.resolve() for p in (inputs, work, output)]
     if platform.system() != 'Darwin' or platform.machine() != 'x86_64':
         raise ValueError('requires the pinned macOS x86-64 native reference')
@@ -51,6 +51,9 @@ def run(inputs, work, output):
     save(work / 'disposable.json', {'purpose': 'native-census-disposable-U1', 'source': str(source)})
     shutil.copytree(HERE, output / 'runner', ignore=shutil.ignore_patterns('__pycache__'))
     fixture = output / 'runner'
+    if observer_extension:
+        extension = Path(observer_extension).resolve()
+        shutil.copyfile(extension, fixture / 'observer-extension.lisp')
     pins = json.loads((inputs / 'pins.json').read_text())
     if pins['source_revision'] != U1 or pins['test_revision'] != TESTS:
         raise ValueError('source/test pins differ from accepted native U1')
@@ -82,7 +85,9 @@ def run(inputs, work, output):
     def lisp(name, expression, observer=False, image=None, extra=None, marker='CENSUS-COMPLETE', timeout=1800):
         argv = [str(source / 'dx86cl64'), '--no-init', '--batch']
         if image: argv += ['--image-name', str(image)]
-        if observer: argv += ['--load', str(fixture / 'observer.lisp')]
+        if observer:
+            argv += ['--load', str(fixture / 'observer.lisp')]
+            if observer_extension: argv += ['--load', str(fixture / 'observer-extension.lisp')]
         argv += ['--eval', expression]
         return command(name, argv, extra={'CCL_CENSUS_EVENTS': str(output / (name + '.jsonl')), **(extra or {})}, marker=marker, timeout=timeout)
 
@@ -105,7 +110,9 @@ def run(inputs, work, output):
                 '(ccl:quit (if success 0 1))', '(ccl-startup-census::finish) (ccl:quit (if success 0 1))')
         (dest / 'tests.lisp').write_text(driver)
         argv = [str(source / 'dx86cl64'), '--no-init', '--batch']
-        if observe: argv += ['--load', str(fixture / 'observer.lisp')]
+        if observe:
+            argv += ['--load', str(fixture / 'observer.lisp')]
+            if observer_extension: argv += ['--load', str(fixture / 'observer-extension.lisp')]
         argv += ['--load', str(dest / 'tests.lisp'), '--eval', '(cl-user::run-gate0-tests)']
         command(label, argv, cwd=work / 'ccl-tests', extra={
             'CCL_GATE0_TESTS': str(work / 'ccl-tests') + '/', 'CCL_GATE0_OUTPUT': str(dest) + '/',
@@ -118,6 +125,9 @@ def run(inputs, work, output):
               'scope': 'Reversible native startup/compiler observation before Wasm backend changes',
               'execution_status': 'FAIL', 'review_disposition': 'NOT_REVIEWED',
               'census_acceptance': 'BLOCKED', 'substitutions': [], 'normalizations': []}
+    if observer_extension:
+        report['observer_extension'] = {'path': 'runner/observer-extension.lisp',
+                                       'sha256': digest(fixture / 'observer-extension.lisp')}
     originals = None; unit = None; baseline = None
     try:
         command('extract-source', ['tar', '-xf', str(inputs / 'source.tar'), '-C', str(source)])
@@ -221,6 +231,7 @@ if __name__ == '__main__':
     parser.add_argument('--work', type=Path, required=True)
     parser.add_argument('--output', type=Path)
     parser.add_argument('--restore', action='store_true')
+    parser.add_argument('--observer-extension', type=Path)
     args = parser.parse_args()
     if args.restore:
         source_result = ObservationUnit(args.work, HERE).restore()
@@ -230,4 +241,4 @@ if __name__ == '__main__':
         if not args.inputs or not args.output: parser.error('--inputs and --output required')
         def interrupted(signum, _): raise InterruptedError('signal ' + str(signum))
         signal.signal(signal.SIGTERM, interrupted)
-        sys.exit(run(args.inputs, args.work, args.output))
+        sys.exit(run(args.inputs, args.work, args.output, args.observer_extension))

@@ -2,15 +2,15 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "95fe88e04188d2c7484d9febd1015ced9a5f1496",
+  "commit": "785021428e3981ce82567e3255c23a8455b7d005",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "8f258b13a90b60a767fde0486e686fe4442d3f4f082e1c77488d7fbda0c83e3f",
-  "immutable_evidence_files": 134401,
-  "indexed_references_verified": 767,
-  "source_index_snapshot": "catalog/source-index-native-census-r5-final-controls.json",
-  "source_index_sha256": "78f9c0debb71bd6f01481fedb380c53e228c5600cf6db16a8ec31856a04f50f1",
-  "verification": "All 134,401 catalogued files verified by catalog.py check after adding the LL08-b acceptance envelope and 27-record aggregate (Claude, 2026-09-12). Earlier Git blob and fsck statements refer to the previous snapshot.",
+  "catalog_sha256": "e81f2d12b1476c1105c51b0c1c2f04c7481ee423389c3e14ba8efd17d7cd8a98",
+  "immutable_evidence_files": 136013,
+  "indexed_references_verified": 908,
+  "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
+  "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
+  "verification": "catalog.py add and check PASS: 136,013 immutable files and 908 indexed identities. All 136,013 paths match 7,716 distinct staged Git blobs by byte size and SHA-256; every prior committed catalog entry is preserved exactly. git fsck --full exits 0, with three pre-existing dangling blobs and no integrity error.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository. Original executions, policies and failures retained. Twenty-seven accepted records: 26 preserved exactly plus S0-LL08-b/native accepted at its stated scope. Complete census, external trace and generated code remain open."
+  "scope": "Separate local evidence repository. Native dependency/redefinition r7 and external trace derivative await independent review. Twenty-six accepted records remain, including S0-LL08-b; LL21-a is externally reviewed and awaiting project acceptance after correction of misattributed authorization. Complete census and generated code remain open."
 }

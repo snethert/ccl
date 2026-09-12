@@ -71,20 +71,26 @@
   "main_compiler_and_kernel_source": "UNCHANGED_FROM_U1",
   "implementation_start": "Pristine U1; observed images and patched sources retained only as evidence",
   "external_trace": {
-    "status": "UNAVAILABLE",
-    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-startup-trace-r2/trace.json",
-    "sha256": "146041cc4ceb4ff9e76c1cb87d69e6eccdfaaa711e474996eda86cc221a55e85"
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-startup-terminal-r2/trace.json",
+    "sha256": "b0876c2e28c0321fa9bc71c8c128a7415488f03c407076d16ab242f1ec5e8866",
+    "status": "CAPTURED_REQUIRES_RECONCILIATION",
+    "scope": "New Terminal execution, not part of accepted r5 scope; four loader pathname contexts remain unresolved."
   },
   "census_acceptance": "BLOCKED",
   "remaining": [
-    "privileged external macOS file-operation trace and load-order reconciliation",
-    "reviewed seed set and conservative closure of every required dependency",
-    "complete lowering/import/trap/store joins and initializer prerequisite semantics",
-    "independent review of this observation patch and its evidence"
+    "Qualified seed set and conservative closure of every required dependency",
+    "Complete lowering/import/trap/store joins and initializer prerequisites",
+    "Four external loader pathname contexts and semantic trace/graph join",
+    "Independent review of the dependency extension and trace derivative"
   ],
   "performance_claim": null,
   "acceptance_record": "stage0/project-acceptance.md",
   "accepted_results_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll08b-project-acceptance/accepted/accepted-results.json",
   "accepted_results_sha256": "2d1dc5029e77951563cffdd3cb6328bea602139ca88d876ad25cd541ff38bc1b",
-  "review_note": "Claude sixth audit 899baedc: independent re-execution with identical FASLs, snapshots and callback sequence; user acceptance recorded separately. Original r5 envelope unchanged. Census acceptance remains BLOCKED."
+  "review_note": "Claude sixth audit 899baedc: independent re-execution with identical FASLs, snapshots and callback sequence; user acceptance recorded separately. Original r5 envelope unchanged. Census acceptance remains BLOCKED.",
+  "dependency_followup": {
+    "summary": "native-dependencies-summary.json",
+    "review_disposition": "NOT_REVIEWED",
+    "accepted_r5_scope_unchanged": true
+  }
 }

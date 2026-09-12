@@ -657,7 +657,7 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
         "record": "stage0/claude-review.md"
       },
-      "note": "Claude fifth audit 023181c0 found no defect and reproduced all 4,518 binaries; five nonblocking observations recorded, including identity-only publication and timer sensitivity. Original envelope remains pre-review; project acceptance of S0-LL21-a is a separate decision. User acceptance is now recorded separately as LL21-PROJECT-ACCEPTANCE; this original raw envelope and the reviewer disposition remain unchanged."
+      "note": "Claude fifth audit found no defect. Original execution and review remain retained. The subsequent purported LL21-a acceptance was withdrawn because Codex misattributed reviewer text to the user; see LL21-ACCEPTANCE-CORRECTION."
     },
     {
       "id": "LL21-PROJECT-ACCEPTANCE",
@@ -669,8 +669,8 @@
       "envelope_version": 2,
       "inventory_version": 1,
       "execution_status": "PASS",
-      "review_disposition": "ACCEPTED",
-      "currency": "CURRENT",
+      "review_disposition": "WITHDRAWN_MISATTRIBUTED_AUTHORIZATION",
+      "currency": "HISTORICAL_WITHDRAWN_DISPOSITION",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "S0-LL21-a / full: prebuilt code identity, digest and generation publication with module bytes already held by each Worker; host-actor acquisition and validation, matching lazy installation/dispatch, existing and late Workers and old function survival. Eight hand-built definitions, two existing Workers plus one late Worker, cons-only 4 KiB semispaces, retained Node/V8 baseline-tier execution on macOS.",
       "external_review": {
@@ -679,11 +679,16 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
         "record": "stage0/claude-review.md"
       },
-      "note": "User explicitly accepts S0-LL21-a after the fifth audit committed as 5ff0dc54. Separate disposition only, with original execution timestamp, test revision, contract digest and artifacts retained. No ABI selection or new execution.",
+      "note": "Original mistaken acceptance retained unchanged. Codex misattributed quoted reviewer text to the user; the user clarified that it was all Claude. LL21-a is externally reviewed but not accepted. Corrected aggregate preserves the other 26 accepted records, including LL08-b; execution and B engineering decision are unchanged.",
       "project_acceptance": {
         "decision": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/decision.json",
         "sha256": "755f01840caa1fe5efb6329e9a6f391a4b4f6e1843caff6d0c5afcffbe94c258",
         "timestamp": "2026-09-12T14:59:34.206376+00:00"
+      },
+      "original_review_disposition": "ACCEPTED",
+      "correction": {
+        "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-acceptance-correction/decision.json",
+        "sha256": "bcb41699e3389454123ac8e78bfb49ca6f03c4f516ee6115caa588d9af49992d"
       }
     },
     {
@@ -734,6 +739,16 @@
         "sha256": "19ce33c7447ef754620ed8837569a2b75b5880cc0e36351cad12ef82722273a9",
         "timestamp": "2026-09-12T16:45:30.257744+00:00"
       }
+    },
+    {
+      "id": "NATIVE-DEPENDENCIES-r7",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-r7/results.json",
+      "sha256": "8307f739341023c0a6c09201df48ec74c67c8ce5d253688781781e1e4ae004e4",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "DIAGNOSTIC_NO_GATE_ACCEPTANCE",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Native dependency identities, selected L0/L1/L2 declarations and sampled host binding changes; complete LL15-b/c closure remains blocked."
     }
   ],
   "auxiliary_records": [
@@ -1182,10 +1197,10 @@
       "scope": "Eight reversal controls pass, including actual separate-process partial recovery. Supersedes the earlier same-process reconstruction control for that claim; native r5 implementation unchanged."
     },
     {
-      "id": "CURRENT-STAGE0-COMBINED",
+      "id": "PRE-LL21-CORRECTION-COMBINED",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-stage0-ll08b-accepted-results.json",
       "sha256": "7640fd8b381ae88b6213cdc567d0615296a197befa6e8bcdeef615e09959f5df",
-      "scope": "27 scoped accepted records; 26 earlier result objects preserved exactly, one separately accepted S0-LL08-b/native record. No new execution; 22 missing and zero unreviewed."
+      "scope": "27 scoped accepted records; 26 earlier result objects preserved exactly, one separately accepted S0-LL08-b/native record. No new execution; 22 missing and zero unreviewed. Historical: carried-forward LL21-a acceptance subsequently withdrawn; see corrected current aggregate."
     },
     {
       "id": "LL08B-ACCEPTANCE-DECISION",
@@ -1210,6 +1225,126 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll08b-project-acceptance/gate-result.json",
       "sha256": "c58ff42035188ca40b629b7ccb288f5b21abedb01598ba865485d1b3696119f9",
       "scope": "BLOCKED: 22 missing and zero unreviewed; 27 accepted."
+    },
+    {
+      "id": "CURRENT-STAGE0-COMBINED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-stage0-corrected-acceptance-results.json",
+      "sha256": "7146173d8a74c1164e4a34d148372a19affef7e61ef646e795857ecde00f2dc6",
+      "scope": "26 accepted, 22 missing and one externally reviewed record awaiting project acceptance. Only LL21-a disposition/provenance differs; no execution."
+    },
+    {
+      "id": "LL21-ACCEPTANCE-CORRECTION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-acceptance-correction/decision.json",
+      "sha256": "bcb41699e3389454123ac8e78bfb49ca6f03c4f516ee6115caa588d9af49992d",
+      "scope": "Withdraw Codex misattribution of quoted Claude acceptance text; original execution/review and separate B choice unchanged."
+    },
+    {
+      "id": "LL21-CORRECTION-PRESERVATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-acceptance-correction/preservation.json",
+      "sha256": "3237139bb414e24a92e04f26c757910e43101cc2e5818cc58698950410f478f3",
+      "scope": "Exactly 26 other result objects unchanged, including accepted LL08-b; LL21 execution fields/artifacts unchanged."
+    },
+    {
+      "id": "DEPENDENCIES-r6",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-r6/results.json",
+      "sha256": "ac8f49a41871efa5fa2c4bb47647cce6dcbb654d4b87173967229f357994b4fe",
+      "scope": "Successful native dependency identity precursor, before declaration/binding samples; superseded by r7, no acceptance."
+    },
+    {
+      "id": "DEPENDENCIES-GRAPH-r3",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-dependencies-analysis-r3/graph.json",
+      "sha256": "04ff3562d3c517831a873af7f0d394d78714cf053efc0915ac5263af53863ffe",
+      "scope": "Native dependency identities, selected L0/L1/L2 declarations and sampled host binding changes; complete LL15-b/c closure remains blocked."
+    },
+    {
+      "id": "DEPENDENCIES-SUMMARY-r3",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-dependencies-analysis-r3/summary.json",
+      "sha256": "5adb69a556c2692c084cc57a2993878d2713a6284df05b122d07d50f8079ed9a",
+      "scope": "1918 unnamed call observations resolved; 1729 dynamic targets unresolved; 55 cross-layer declaration groups, 6184 sampled binding changes."
+    },
+    {
+      "id": "DEPENDENCIES-CONTROLS-r4",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-dependencies-controls-r4/results.json",
+      "sha256": "06553f80f5268c91e3b4700e18b2b9fa915a625753fedda077b3902439242b45",
+      "scope": "Two successful native variants, four byte-identical FASLs, eight rejected mutants, repeated empty-body preservation; no complete LL15 acceptance."
+    },
+    {
+      "id": "NATIVE-STARTUP-TERMINAL-r1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-startup-terminal-r1/trace.json",
+      "sha256": "f99e9842f7517b13d8ae9069f42c980134b6726d086bd76f6ecdc00b5c6fda4d",
+      "scope": "Original failed PID-only capture, image open absent; retained unchanged."
+    },
+    {
+      "id": "NATIVE-STARTUP-TERMINAL-r2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-startup-terminal-r2/trace.json",
+      "sha256": "b0876c2e28c0321fa9bc71c8c128a7415488f03c407076d16ab242f1ec5e8866",
+      "scope": "Successful privileged capture of clean r5 image startup, pre/post-exec coverage and image open; new trace not yet independently reviewed."
+    },
+    {
+      "id": "NATIVE-STARTUP-RECONCILIATION-r2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-startup-reconciliation-r2/reconciliation.json",
+      "sha256": "f2f57d2c970a7712c26ea81e44dffa76f88a3ec632df3af27c77c8b00f03ac47",
+      "scope": "Actual opens verified, four anonymous/relative loader path contexts retained; partial reconciliation only."
+    },
+    {
+      "id": "TRACE-CONTROLS-r1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-trace-controls-r1/results.json",
+      "sha256": "ef0a2c5d0640cb65a618da7a1de02596d8c2aa0e2e284ede40ed0cdd3e101cfa",
+      "scope": "Actual trace positive and five semantic coverage mutants rejected after valid artifact rehashes."
+    },
+    {
+      "id": "DEPENDENCIES-RESTORATION-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-dependencies-verification/native-verification.json",
+      "sha256": "9767683c9ed85aca4da503e5080ebe3c0048730c149254b448fd5c1e25960c95",
+      "scope": "All r6/r7 retained execution artifact hashes checked; 164 FASLs equal reviewed r5 in all three build variants."
+    },
+    {
+      "id": "DEPENDENCIES-BEFORE-MANIFEST",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-dependencies-verification/before-manifest.json",
+      "sha256": "3f1574092db14deedb53ebdfc587bc0daec16d47c20c51b681bf798402b500a5",
+      "scope": "Exact tracked pre-change documents and native fixture at f4eb108c retained."
+    },
+    {
+      "id": "2026-09-12-DEPENDENCIES-DEVELOPMENT-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-dependencies-development-r1/result.json",
+      "sha256": "bafba2843d819648bd2c64703bbb74324071d545dc0d0c142a118e5811befea1",
+      "scope": "Development native probe, superseded by dependency controls r4; no acceptance."
+    },
+    {
+      "id": "2026-09-12-DEPENDENCIES-PROBE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-dependencies-probe-r1/result.json",
+      "sha256": "1212f018148c35b869d6704970834f34f237da1c6b59098f12b91f607839a44a",
+      "scope": "Development native probe, superseded by dependency controls r4; no acceptance."
+    },
+    {
+      "id": "2026-09-12-DEPENDENCIES-PROBE-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-dependencies-probe-r2/result.json",
+      "sha256": "ddd35dfe2771e927913d94f8682ae00659f2b8ac5ad709709302b75b3adde3db",
+      "scope": "Development native probe, superseded by dependency controls r4; no acceptance."
+    },
+    {
+      "id": "DEPENDENCIES-CONTROLS-ORIGINAL-FAILURE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-dependencies-controls-r1/failure.json",
+      "sha256": "a3d85b79c8972d9eb2354433ea3fc5301ada73bd4d0f73f2163b4c1206c4211a",
+      "scope": "Original qualifier error retained: lexical names are structured; fixed qualifier checks same-name distinct compiler identities."
+    },
+    {
+      "id": "2026-09-12-DEPENDENCIES-ANALYSIS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-dependencies-analysis-r1/summary.json",
+      "sha256": "6911d56db35cf2bdf1d98b8d62518c920bed5ff6c4b80b51fa68d6e1900484c9",
+      "scope": "Historical intermediate graph; superseded by r3 which retains variable metadata and final validation."
+    },
+    {
+      "id": "2026-09-12-DEPENDENCIES-ANALYSIS-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-dependencies-analysis-r2/summary.json",
+      "sha256": "5adb69a556c2692c084cc57a2993878d2713a6284df05b122d07d50f8079ed9a",
+      "scope": "Historical intermediate graph; superseded by r3 which retains variable metadata and final validation."
+    },
+    {
+      "id": "DEPENDENCIES-FINAL-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-dependencies-verification/verification.json",
+      "sha256": "014c98ed0d40b7118457905a30ee067490c246a1b2f87fd2f820e9e235a32d3e",
+      "scope": "Same-author checks, r6/r7 restoration/artifact equivalence, eight dependency and five trace controls, unchanged 26 accepted records and corrected LL21-a disposition; new independent review remains required."
     }
   ]
 }

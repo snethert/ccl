@@ -1,0 +1,2186 @@
+{
+  "date": "2026-09-12",
+  "review_disposition": "NOT_REVIEWED",
+  "scope": "Native dependency identities, selected L0/L1/L2 declarations and sampled host binding changes; complete LL15-b/c closure remains blocked.",
+  "native_run": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-census-r7/results.json",
+    "sha256": "8307f739341023c0a6c09201df48ec74c67c8ce5d253688781781e1e4ae004e4"
+  },
+  "analysis": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-dependencies-analysis-r3/graph.json",
+    "sha256": "04ff3562d3c517831a873af7f0d394d78714cf053efc0915ac5263af53863ffe"
+  },
+  "counts": {
+    "status": "PASS",
+    "census_acceptance": "BLOCKED",
+    "events": 216660,
+    "function_observations": 51342,
+    "distinct_function_objects": 51342,
+    "call_observations": 103313,
+    "distinct_call_records": 103313,
+    "original_unnamed_target_observations": 3647,
+    "original_unnamed_target_resolution": {
+      "now_resolved": 1918,
+      "still_unresolved": 1729
+    },
+    "call_observations_by_category": {
+      "global-binding": 98166,
+      "lexical": 1522,
+      "builtin": 1500,
+      "self": 379,
+      "function-variable": 1072,
+      "computed-callee": 657,
+      "lexical-function-value": 17
+    },
+    "remaining_unresolved_observations": 1729,
+    "remaining_distinct_unresolved_calls": 1729,
+    "unresolved_calls_by_category": {
+      "function-variable": 1072,
+      "computed-callee": 657
+    },
+    "function_reference_records": 6019,
+    "missing_function_observations": 0,
+    "global_bindings_referenced": 5989,
+    "global_bindings_without_matching_compilation": 951,
+    "names_with_multiple_source_locations": 353,
+    "definition_forms": 24369,
+    "declared_namespaces": 11053,
+    "declared_redefinitions": 263,
+    "binding_samples_with_changes": 6184,
+    "sampled_native_bindings": 10973,
+    "remaining": [
+      "Resolve runtime function-variable/computed targets conservatively",
+      "Establish global binding namespaces, installation epochs and missing target bodies",
+      "Qualify loader/startup seeds, full lowering/effect joins and external trace reconciliation",
+      "Independent review; no S0-LL15-b/c acceptance claim"
+    ]
+  },
+  "cross_layer_declaration_groups": 55,
+  "cross_layer_examples": [
+    {
+      "name": "CCL::%ADVISED-P",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 63511,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/encapsulate.lisp",
+          "source_position": 30124,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "CCL::%DEFUN-ENCAPSULATED-MAYBE",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "lib/encapsulate.lisp",
+          "source_position": 33871,
+          "layer": "L2/library"
+        },
+        {
+          "source": "level-0/l0-def.lisp",
+          "source_position": 2123,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "CCL::%MOVE-METHOD-ENCAPSULATIONS-MAYBE",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-clos-boot.lisp",
+          "source_position": 19353,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/encapsulate.lisp",
+          "source_position": 34886,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "CCL::%REQUIRE-TYPE-BUILTIN",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/sysutils.lisp",
+          "source_position": 9834,
+          "layer": "L1"
+        },
+        {
+          "source": "level-0/l0-pred.lisp",
+          "source_position": 1334,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "CCL::%REQUIRE-TYPE-CLASS-CELL",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-clos-boot.lisp",
+          "source_position": 47743,
+          "layer": "L1"
+        },
+        {
+          "source": "level-0/l0-pred.lisp",
+          "source_position": 1408,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "CCL::%SETF-METHOD",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "lib/setf.lisp",
+          "source_position": 1063,
+          "layer": "L2/library"
+        },
+        {
+          "source": "level-1/l1-utils.lisp",
+          "source_position": 1068,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-utils.lisp",
+          "source_position": 22297,
+          "layer": "L1"
+        }
+      ]
+    },
+    {
+      "name": "CCL::%TRACED-P",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 63366,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/encapsulate.lisp",
+          "source_position": 21908,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "CCL::BUILTIN-TYPEP",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/sysutils.lisp",
+          "source_position": 4944,
+          "layer": "L1"
+        },
+        {
+          "source": "level-0/l0-pred.lisp",
+          "source_position": 879,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "CCL::BYTE-LENGTH",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-aprims.lisp",
+          "source_position": 14413,
+          "layer": "L1"
+        },
+        {
+          "source": "level-0/l0-cfm-support.lisp",
+          "source_position": 2005,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "CCL::CLASS-CELL-TYPEP",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-clos-boot.lisp",
+          "source_position": 46287,
+          "layer": "L1"
+        },
+        {
+          "source": "level-0/l0-pred.lisp",
+          "source_position": 953,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "CCL::ENCAPSULATED-FUNCTION-NAME",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 63188,
+          "layer": "L1"
+        },
+        {
+          "source": "level-0/l0-def.lisp",
+          "source_position": 2298,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "CCL::FIND-BUILTIN-CELL",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/sysutils.lisp",
+          "source_position": 4660,
+          "layer": "L1"
+        },
+        {
+          "source": "level-0/l0-pred.lisp",
+          "source_position": 672,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "CCL::FIND-UNENCAPSULATED-DEFINITION",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-clos-boot.lisp",
+          "source_position": 19617,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/encapsulate.lisp",
+          "source_position": 7771,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "CCL::FORMAT-ERROR",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-format.lisp",
+          "source_position": 11350,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/format.lisp",
+          "source_position": 2095,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "CCL::FSET",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/sysutils.lisp",
+          "source_position": 12562,
+          "layer": "L1"
+        },
+        {
+          "source": "level-0/l0-def.lisp",
+          "source_position": 1747,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "CCL::FUNCTION-ENCAPSULATED-P",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-clos-boot.lisp",
+          "source_position": 19758,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/encapsulate.lisp",
+          "source_position": 4622,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "CCL::PACKAGE-%LOCAL-NICKNAMES",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-symhash.lisp",
+          "source_position": 41395,
+          "layer": "L1"
+        },
+        {
+          "source": "level-0/nfasload.lisp",
+          "source_position": 10772,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "CCL::PACKAGE-%LOCALLY-NICKNAMED-BY",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-symhash.lisp",
+          "source_position": 41551,
+          "layer": "L1"
+        },
+        {
+          "source": "level-0/nfasload.lisp",
+          "source_position": 10899,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "CCL::PHYSICAL-PATHNAME-P",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-utils.lisp",
+          "source_position": 1206,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/pathnames.lisp",
+          "source_position": 2774,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "CCL::POP-FORMAT-ARG",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-format.lisp",
+          "source_position": 1814,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/format.lisp",
+          "source_position": 16734,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "CCL::PREPARE-TO-DESTRUCTURE",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "lib/level-2.lisp",
+          "source_position": 3649,
+          "layer": "L2/library"
+        },
+        {
+          "source": "level-1/l1-utils.lisp",
+          "source_position": 3969,
+          "layer": "L1"
+        }
+      ]
+    },
+    {
+      "name": "CCL::RECORD-SOURCE-FILE",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-utils.lisp",
+          "source_position": 1985,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/source-files.lisp",
+          "source_position": 672,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/source-files.lisp",
+          "source_position": 31925,
+          "layer": "L2/library"
+        },
+        {
+          "source": "level-0/l0-def.lisp",
+          "source_position": 1977,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "CCL::SET-DOCUMENTATION",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "lib/misc.lisp",
+          "source_position": 11496,
+          "layer": "L2/library"
+        },
+        {
+          "source": "level-0/l0-misc.lisp",
+          "source_position": 19344,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "CCL::SET-FUNCTION-INFO",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "lib/misc.lisp",
+          "source_position": 11667,
+          "layer": "L2/library"
+        },
+        {
+          "source": "level-0/l0-def.lisp",
+          "source_position": 2487,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "CCL::SETF-FUNCTION-NAME-P",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-aprims.lisp",
+          "source_position": 9422,
+          "layer": "L1"
+        },
+        {
+          "source": "level-0/l0-def.lisp",
+          "source_position": 7596,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "CCL::STORE-SETF-METHOD",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "lib/setf.lisp",
+          "source_position": 1123,
+          "layer": "L2/library"
+        },
+        {
+          "source": "level-1/l1-utils.lisp",
+          "source_position": 22049,
+          "layer": "L1"
+        }
+      ]
+    },
+    {
+      "name": "CCL::STREAM-CLEAR-INPUT",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 10207,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 10282,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 141435,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 151492,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 153200,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 157042,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 162529,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 166294,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 190203,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 199902,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 225968,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-reader.lisp",
+          "source_position": 171284,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-sysio.lisp",
+          "source_position": 18941,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-sysio.lisp",
+          "source_position": 19356,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-sysio.lisp",
+          "source_position": 19598,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-sysio.lisp",
+          "source_position": 19830,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/swink.lisp",
+          "source_position": 47310,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "CCL::STREAM-CLEAR-OUTPUT",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 9185,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 153200,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 157042,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 166908,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 170066,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 202167,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 202341,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-sysio.lisp",
+          "source_position": 20068,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-sysio.lisp",
+          "source_position": 20271,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/pprint.lisp",
+          "source_position": 20907,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "CCL::STREAM-FINISH-OUTPUT",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 9122,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 153200,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 157042,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 166908,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 169999,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 204119,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 204297,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 243478,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/swink.lisp",
+          "source_position": 45347,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/pprint.lisp",
+          "source_position": 20907,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/pprint.lisp",
+          "source_position": 55468,
+          "layer": "L2/library"
+        },
+        {
+          "source": "library/prefixed-stream.lisp",
+          "source_position": 2125,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "library/timestamped-stream.lisp",
+          "source_position": 2275,
+          "layer": "compiler/tooling/other"
+        }
+      ]
+    },
+    {
+      "name": "CCL::STREAM-FORCE-OUTPUT",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 2503,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 8971,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 153200,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 157042,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 166908,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 169933,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 203317,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 203496,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 243418,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/swink.lisp",
+          "source_position": 45225,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/pprint.lisp",
+          "source_position": 20907,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/pprint.lisp",
+          "source_position": 55150,
+          "layer": "L2/library"
+        },
+        {
+          "source": "library/prefixed-stream.lisp",
+          "source_position": 2017,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "library/timestamped-stream.lisp",
+          "source_position": 2161,
+          "layer": "compiler/tooling/other"
+        }
+      ]
+    },
+    {
+      "name": "CCL::STREAM-FRESH-LINE",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 9817,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 142944,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 153200,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 157042,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 168121,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/pprint.lisp",
+          "source_position": 20907,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "CCL::STREAM-LINE-COLUMN",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 153200,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 157042,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 166908,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 202545,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 202720,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/pprint.lisp",
+          "source_position": 20907,
+          "layer": "L2/library"
+        },
+        {
+          "source": "library/prefixed-stream.lisp",
+          "source_position": 1822,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "library/timestamped-stream.lisp",
+          "source_position": 1957,
+          "layer": "compiler/tooling/other"
+        }
+      ]
+    },
+    {
+      "name": "CCL::STREAM-LINE-LENGTH",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 9902,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 153200,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 157042,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 170132,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 246591,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/pprint.lisp",
+          "source_position": 20907,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "CCL::STREAM-LISTEN",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 10342,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 141244,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 153200,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 157042,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 165801,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 189941,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 200995,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 201162,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-reader.lisp",
+          "source_position": 170433,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/swink.lisp",
+          "source_position": 46856,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "CCL::STREAM-READ-CHAR",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 8575,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 8643,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 150843,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 153200,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 157042,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 160679,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 161807,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 164123,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 199349,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 227558,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-reader.lisp",
+          "source_position": 169792,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/swink.lisp",
+          "source_position": 46038,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "CCL::STREAM-READ-CHAR-NO-HANG",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 140969,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 151013,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 153200,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 157042,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 162217,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 164389,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 192564,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 199537,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-reader.lisp",
+          "source_position": 170036,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/swink.lisp",
+          "source_position": 46541,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "CCL::STREAM-UNREAD-CHAR",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 8737,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 8837,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 151711,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 153200,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 157042,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 162103,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 165633,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 200079,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-reader.lisp",
+          "source_position": 170923,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/swink.lisp",
+          "source_position": 46987,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "CCL::STREAM-WRITE-CHAR",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 8349,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 153200,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 157042,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 166908,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 201776,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 201974,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/swink.lisp",
+          "source_position": 44049,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/pprint.lisp",
+          "source_position": 20907,
+          "layer": "L2/library"
+        },
+        {
+          "source": "library/prefixed-stream.lisp",
+          "source_position": 813,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "library/timestamped-stream.lisp",
+          "source_position": 920,
+          "layer": "compiler/tooling/other"
+        }
+      ]
+    },
+    {
+      "name": "CCL::STREAM-WRITE-STRING",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 143421,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 155545,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 159535,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 166908,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 204506,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 205444,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/swink.lisp",
+          "source_position": 44367,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/pprint.lisp",
+          "source_position": 20907,
+          "layer": "L2/library"
+        },
+        {
+          "source": "library/prefixed-stream.lisp",
+          "source_position": 1071,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "library/timestamped-stream.lisp",
+          "source_position": 1186,
+          "layer": "compiler/tooling/other"
+        }
+      ]
+    },
+    {
+      "name": "CCL::TARGET-FASL-MAX-VERSION",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "lib/nfcomp.lisp",
+          "source_position": 71885,
+          "layer": "L2/library"
+        },
+        {
+          "source": "level-0/nfasload.lisp",
+          "source_position": 31254,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "CCL::TARGET-FASL-MIN-VERSION",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "lib/nfcomp.lisp",
+          "source_position": 71738,
+          "layer": "L2/library"
+        },
+        {
+          "source": "level-0/nfasload.lisp",
+          "source_position": 31086,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "CCL::UI-OBJECT-DO-OPERATION",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "level-1/l1-application.lisp",
+          "source_position": 1759,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/swink.lisp",
+          "source_position": 29647,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/describe.lisp",
+          "source_position": 68448,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "CCL::WRITE-INTERNAL-1",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 12516,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 13839,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/pprint.lisp",
+          "source_position": 17157,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "COMMON-LISP::1+",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "lib/level-2.lisp",
+          "source_position": 14152,
+          "layer": "L2/library"
+        },
+        {
+          "source": "level-0/l0-numbers.lisp",
+          "source_position": 39604,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "COMMON-LISP::1-",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "lib/level-2.lisp",
+          "source_position": 14152,
+          "layer": "L2/library"
+        },
+        {
+          "source": "level-0/l0-numbers.lisp",
+          "source_position": 39667,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "COMMON-LISP::CHANGE-CLASS",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "lib/defstruct.lisp",
+          "source_position": 10780,
+          "layer": "L2/library"
+        },
+        {
+          "source": "level-1/l1-clos-boot.lisp",
+          "source_position": 139646,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-clos-boot.lisp",
+          "source_position": 139854,
+          "layer": "L1"
+        }
+      ]
+    },
+    {
+      "name": "COMMON-LISP::FORMAT",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-format.lisp",
+          "source_position": 5856,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/format.lisp",
+          "source_position": 14018,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "COMMON-LISP::INITIALIZE-INSTANCE",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "level-1/l1-clos-boot.lisp",
+          "source_position": 111732,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-clos.lisp",
+          "source_position": 31514,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-clos.lisp",
+          "source_position": 31704,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-clos.lisp",
+          "source_position": 56235,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-clos.lisp",
+          "source_position": 60088,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-clos.lisp",
+          "source_position": 60269,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-clos.lisp",
+          "source_position": 75761,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/describe.lisp",
+          "source_position": 1446,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/describe.lisp",
+          "source_position": 1755,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/describe.lisp",
+          "source_position": 57779,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/describe.lisp",
+          "source_position": 59126,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/describe.lisp",
+          "source_position": 60785,
+          "layer": "L2/library"
+        },
+        {
+          "source": "library/remote-lisp.lisp",
+          "source_position": 18631,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "tools/asdf.lisp",
+          "source_position": 435258,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "tools/asdf.lisp",
+          "source_position": 481041,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "tools/asdf.lisp",
+          "source_position": 545863,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "library/sockets.lisp",
+          "source_position": 55243,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "library/sockets.lisp",
+          "source_position": 65343,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "library/prefixed-stream.lisp",
+          "source_position": 381,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "library/timestamped-stream.lisp",
+          "source_position": 314,
+          "layer": "compiler/tooling/other"
+        }
+      ]
+    },
+    {
+      "name": "COMMON-LISP::MAKE-LOAD-FORM",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "compiler/vinsn.lisp",
+          "source_position": 2849,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "compiler/subprims.lisp",
+          "source_position": 771,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "compiler/X86/x86-asm.lisp",
+          "source_position": 11376,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "lib/hash.lisp",
+          "source_position": 9364,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/foreign-types.lisp",
+          "source_position": 16814,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/foreign-types.lisp",
+          "source_position": 36132,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/foreign-types.lisp",
+          "source_position": 36681,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/foreign-types.lisp",
+          "source_position": 52568,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/foreign-types.lisp",
+          "source_position": 53742,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/foreign-types.lisp",
+          "source_position": 73682,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/nfcomp.lisp",
+          "source_position": 16170,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/nfcomp.lisp",
+          "source_position": 16303,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/nfcomp.lisp",
+          "source_position": 16437,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/nfcomp.lisp",
+          "source_position": 16564,
+          "layer": "L2/library"
+        },
+        {
+          "source": "level-1/l1-clos.lisp",
+          "source_position": 67449,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-clos.lisp",
+          "source_position": 67627,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-unicode.lisp",
+          "source_position": 121837,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-readloop.lisp",
+          "source_position": 8032,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-reader.lisp",
+          "source_position": 973,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-typesys.lisp",
+          "source_position": 6398,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-typesys.lisp",
+          "source_position": 6518,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/source-files.lisp",
+          "source_position": 7950,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "COMMON-LISP::OUTPUT-STREAM-P",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 139741,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 139807,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 139882,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 153200,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/pprint.lisp",
+          "source_position": 17157,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "COMMON-LISP::PPRINT",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 76754,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/pprint.lisp",
+          "source_position": 54568,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "COMMON-LISP::PRINT-OBJECT",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "compiler/nx.lisp",
+          "source_position": 4489,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "compiler/nx.lisp",
+          "source_position": 40397,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "compiler/nx.lisp",
+          "source_position": 40951,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "compiler/nx.lisp",
+          "source_position": 1114,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "compiler/nx.lisp",
+          "source_position": 2316,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "compiler/vinsn.lisp",
+          "source_position": 25337,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "compiler/vinsn.lisp",
+          "source_position": 41932,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "compiler/subprims.lisp",
+          "source_position": 888,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "compiler/backend.lisp",
+          "source_position": 2735,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "compiler/X86/x86-lap.lisp",
+          "source_position": 8046,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "xdump/xfasload.lisp",
+          "source_position": 11042,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "lib/hash.lisp",
+          "source_position": 6628,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/foreign-types.lisp",
+          "source_position": 1046,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/foreign-types.lisp",
+          "source_position": 14085,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/foreign-types.lisp",
+          "source_position": 52700,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/foreign-types.lisp",
+          "source_position": 53875,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/foreign-types.lisp",
+          "source_position": 54485,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/db-io.lisp",
+          "source_position": 15943,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/db-io.lisp",
+          "source_position": 17565,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/db-io.lisp",
+          "source_position": 33050,
+          "layer": "L2/library"
+        },
+        {
+          "source": "level-1/l1-unicode.lisp",
+          "source_position": 8227,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 11278,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 146939,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 153042,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 156806,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 169118,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 220812,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 242265,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-files.lisp",
+          "source_position": 11045,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 19140,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 19349,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 24093,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 25600,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 25886,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 26155,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 26397,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 30262,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 30518,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 30714,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 31639,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 31762,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 33174,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 33360,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 33556,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 68673,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 68958,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 69187,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 69411,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 69788,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 69988,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-io.lisp",
+          "source_position": 70211,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-reader.lisp",
+          "source_position": 1184,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-reader.lisp",
+          "source_position": 159068,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-sysio.lisp",
+          "source_position": 4785,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-sysio.lisp",
+          "source_position": 15690,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-sysio.lisp",
+          "source_position": 16267,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-events.lisp",
+          "source_position": 858,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-lisp-threads.lisp",
+          "source_position": 7518,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-processes.lisp",
+          "source_position": 5280,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-processes.lisp",
+          "source_position": 14971,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-processes.lisp",
+          "source_position": 16579,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-processes.lisp",
+          "source_position": 17161,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-typesys.lisp",
+          "source_position": 6105,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-typesys.lisp",
+          "source_position": 6262,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-typesys.lisp",
+          "source_position": 6662,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/sysutils.lisp",
+          "source_position": 36565,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-error-system.lisp",
+          "source_position": 28563,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-error-system.lisp",
+          "source_position": 34825,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/linux-files.lisp",
+          "source_position": 41558,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/numbers.lisp",
+          "source_position": 15035,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/source-files.lisp",
+          "source_position": 4706,
+          "layer": "L2/library"
+        },
+        {
+          "source": "compiler/X86/x86-disassemble.lisp",
+          "source_position": 1202,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "lib/method-combination.lisp",
+          "source_position": 2934,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/pprint.lisp",
+          "source_position": 8424,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/describe.lisp",
+          "source_position": 7507,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/describe.lisp",
+          "source_position": 7676,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/describe.lisp",
+          "source_position": 58604,
+          "layer": "L2/library"
+        },
+        {
+          "source": "lib/describe.lisp",
+          "source_position": 60033,
+          "layer": "L2/library"
+        },
+        {
+          "source": "library/remote-lisp.lisp",
+          "source_position": 3061,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "library/remote-lisp.lisp",
+          "source_position": 3982,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "tools/asdf.lisp",
+          "source_position": 92695,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "tools/asdf.lisp",
+          "source_position": 422061,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "tools/asdf.lisp",
+          "source_position": 435258,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "tools/asdf.lisp",
+          "source_position": 506001,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "tools/asdf.lisp",
+          "source_position": 512874,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "tools/asdf.lisp",
+          "source_position": 525515,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "library/sockets.lisp",
+          "source_position": 56402,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "library/prefixed-stream.lisp",
+          "source_position": 652,
+          "layer": "compiler/tooling/other"
+        },
+        {
+          "source": "library/timestamped-stream.lisp",
+          "source_position": 541,
+          "layer": "compiler/tooling/other"
+        }
+      ]
+    },
+    {
+      "name": "COMMON-LISP::PROVIDE",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-files.lisp",
+          "source_position": 58657,
+          "layer": "L1"
+        },
+        {
+          "source": "level-0/nfasload.lisp",
+          "source_position": 26039,
+          "layer": "L0"
+        }
+      ]
+    },
+    {
+      "name": "COMMON-LISP::STREAMP",
+      "namespace": "method",
+      "locations": [
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 8043,
+          "layer": "L1"
+        },
+        {
+          "source": "level-1/l1-streams.lisp",
+          "source_position": 8113,
+          "layer": "L1"
+        },
+        {
+          "source": "lib/pprint.lisp",
+          "source_position": 17157,
+          "layer": "L2/library"
+        }
+      ]
+    },
+    {
+      "name": "COMMON-LISP::UPGRADED-COMPLEX-PART-TYPE",
+      "namespace": "function",
+      "locations": [
+        {
+          "source": "level-1/l1-aprims.lisp",
+          "source_position": 17090,
+          "layer": "L1"
+        },
+        {
+          "source": "level-0/l0-numbers.lisp",
+          "source_position": 76404,
+          "layer": "L0"
+        }
+      ]
+    }
+  ],
+  "native_controls": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-dependencies-controls-r4/results.json",
+    "sha256": "06553f80f5268c91e3b4700e18b2b9fa915a625753fedda077b3902439242b45"
+  },
+  "external_trace": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-startup-terminal-r2/trace.json",
+    "sha256": "b0876c2e28c0321fa9bc71c8c128a7415488f03c407076d16ab242f1ec5e8866"
+  },
+  "trace_reconciliation": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-startup-reconciliation-r2/reconciliation.json",
+    "sha256": "f2f57d2c970a7712c26ea81e44dffa76f88a3ec632df3af27c77c8b00f03ac47"
+  },
+  "trace_controls": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-trace-controls-r1/results.json",
+    "sha256": "ef0a2c5d0640cb65a618da7a1de02596d8c2aa0e2e284ede40ed0cdd3e101cfa"
+  },
+  "source_patch_sha256": "610934dd76069d1187ebcdc0db53f92b2937ff8fca9985cd0b93abfcd830c493",
+  "extension_sha256": "0b02a038c04edbeff5ef02f2247fd95c8a90be3b28c71c5afe36fc8b5757b73e",
+  "clean_implementation_start": "Pristine U1 and pinned bootstrap; observed artifacts are evidence only",
+  "performance_claim": null
+}
