@@ -34,41 +34,38 @@
       "id": "S0-ABI-selection",
       "obligation": "LL05",
       "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
-      "evidence_kind": "BENCHMARK EXECUTION",
+      "evidence_kind": "DESK DECISION",
       "variants": [
         "complete-report"
       ],
       "prerequisites": [
-        "S0-ENGINE-a",
-        "S0-CONTRACTS-a",
         "S0-LL05-a",
         "S0-LL05-b",
         "S0-LL05-c",
         "S0-LL05-d",
         "S0-LL20-a",
         "S0-LL20-b",
-        "S0-LL20-c"
+        "S0-LL20-c",
+        "S0-LL21-a",
+        "S0-LL21-b",
+        "S0-LL23-b"
       ],
       "assertions": [
         {
           "id": "S0-ABI-selection:1",
-          "description": "all 24 measurement IDs from measurement-inventory.json with raw artifact hashes"
+          "description": "record B as the implementation ABI with explicit self/count, all arguments on VSP, two-result and owned-extra-values protocol, and reviewed correctness references at their stated bounds"
         },
         {
           "id": "S0-ABI-selection:2",
-          "description": "C/C4/B correctness before their selection measurements"
+          "description": "dated project direction and engineering rationale choose simplicity and clarity; no claim of demonstrated speed superiority or policy-v2 statistical selection"
         },
         {
           "id": "S0-ABI-selection:3",
-          "description": "policy hash, confidence interval and weighted-workload calculation"
+          "description": "retain C/C4 alternatives and original exploratory artifacts; comparative timing and its sensitivity/instrumentation work are deferred, not required to implement B"
         },
         {
           "id": "S0-ABI-selection:4",
-          "description": "cold/warm separation, code/metadata/table/Worker resource budgets"
-        },
-        {
-          "id": "S0-ABI-selection:5",
-          "description": "recorded C/C4/B choice/rejection rationale with module granularity and sensitivity"
+          "description": "state provisional module granularity, unchanged runtime/frame/cleanup correctness and generated-code confirmation; revisit only for demonstrated correctness or representative performance problems"
         }
       ],
       "status": "NOT_RUN",

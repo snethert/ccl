@@ -125,7 +125,7 @@ P1 is the historical port; U1 in the outline is the selected v1.13 implementatio
 
 [W1] [WebAssembly threads: memory, atomic access and instantiation](https://github.com/WebAssembly/threads/blob/main/proposals/threads/Overview.md) Shared memory, Resizing, Initializing Memory Only Once, Atomic Memory Accesses, and Wait and Notify. Checked 10 September 2026. Supplies specification facts for LL13 and LL21; the tests are project safeguards, not claimed historical execution.
 
-[D] Stage 0 Desk Decisions v1.8, 11 September 2026 Project authority for D1–D7. D3 remains open; D5 specifies owner-only CAS GC admission, typed entry identity and interruptible FOREIGN I/O. D7 maps authoritative LL stage slices into phased executable inventories, including S0-LL20-b. This is a decision/protocol source, not test-execution evidence. CCL_WebAssembly_Stage0_Desk_Decisions_v1_8.docx
+[D] Stage 0 Desk Decisions v1.8, 11 September 2026 Project authority for D1–D7. D3 chooses B by the dated 12 September engineering amendment; D5 specifies owner-only CAS GC admission, typed entry identity and interruptible FOREIGN I/O. D7 maps authoritative LL stage slices into phased executable inventories, including S0-LL20-b. This is a decision/protocol source, not test-execution evidence. CCL_WebAssembly_Stage0_Desk_Decisions_v1_8.docx
 
 ## 4  /  REGRESSION OBLIGATIONS LL01–LL24
 
@@ -181,7 +181,7 @@ First acceptance: Stage 0. Extensions: Stages 1, 5. Regression: all later stages
 
 Reported: prologue, value-stack push/sync and three-argument allocation paths disagreed about first/last argument placement. The earlier ABI retained per-subprimitive conventions. [P2, P5]
 
-Required regression. Stages 0 and 1 exercise zero, one, two, three and overflow arguments with distinct values, subtraction and ordered side effects across direct and dynamic calls, closures, APPLY, optional/rest/keyword binding, primitive entries and host callbacks when in the closure, verifying count encoding and zero/one/many returns against the Stage 0-specified Wasm ABI. Qualify C, C4 and B before their baseline measurements. H(G) is a possible future enhancement and is not required for acceptance at any currently scheduled stage. [D, D3/D7]
+Required regression. Stages 0 and 1 exercise zero, one, two, three and overflow arguments with distinct values, subtraction and ordered side effects across direct and dynamic calls, closures, APPLY, optional/rest/keyword binding, primitive entries and host callbacks when in the closure, verifying count encoding and zero/one/many returns against the Stage 0-specified Wasm ABI. Retain the qualified C/C4/B hand-built corpus and repeat the selected B protocol through generated code. Comparative timing is optional under the 12 September policy revision. H(G) is a possible future enhancement and is not required for acceptance at any currently scheduled stage. [D, D3/D7]
 
 First acceptance: Stage 0. Extensions: Stage 1. Regression: all later stages in scope. Outline sections: 02. Status: contract specified; execution and acceptance tracked in STATUS.md.
 
@@ -339,7 +339,7 @@ First acceptance: Gate 0. Extensions: Stages 0–6. Standing control. Regression
 
 Reported: an entry number was attributed to the wrong function; last-constant-pool-reference data was discussed as though it located the failure; the ledger admits some described fixes were absent. [P16, P2]
 
-Required regression. All stages emit build-bound module/function/code-ID maps and structured errors with phase, operation, expected/actual representation and relevant state; distinguish last observed activity from the faulting frame; bound diagnostic volume and retain first-error data; debug with minimal reproducers and disassembly; never mark a hypothesized diagnosis or prose-only fix complete. Stage 0 S0-LL23-b additionally proves the initial logical frame/source/lexical map and debug availability contract in contracts/debug-frames.md, including moving roots, suspension and nonlocal restoration. Stage 1 repeats with compiler-generated frames; Stage 3 exercises the real debugger. D3 charges the fixed-policy frame cost before ABI freeze.
+Required regression. All stages emit build-bound module/function/code-ID maps and structured errors with phase, operation, expected/actual representation and relevant state; distinguish last observed activity from the faulting frame; bound diagnostic volume and retain first-error data; debug with minimal reproducers and disassembly; never mark a hypothesized diagnosis or prose-only fix complete. Stage 0 S0-LL23-b additionally proves the initial logical frame/source/lexical map and debug availability contract in contracts/debug-frames.md, including moving roots, suspension and nonlocal restoration. Stage 1 repeats with compiler-generated frames; Stage 3 exercises the real debugger. B retains the fixed-policy frame contract; future performance work charges its actual costs.
 
 First acceptance: Stage 0. Extensions: Stages 1–6. Standing control. Regression: all later stages in scope. Outline sections: 06, 09. Status: contract specified; execution and acceptance tracked in STATUS.md.
 

@@ -4,21 +4,21 @@
   "documents": [
     {
       "source": "outline.md",
-      "source_sha256": "76f6d2beac1c2d87a80f360189c5158baa05740464a0b62a5e0f4aff378514a3",
+      "source_sha256": "2fb087e8d8f686213d62dded79972bf0edd85f8781995077a45aae7f179202f2",
       "output": "Clozure_CL_WebAssembly_Port_Outline_v0_17.docx",
-      "output_sha256": "b1ffb6362a26c6ec149dc5cb1a37ca1c5a55186d9ad038c4d8856e7ea5cd5f42"
+      "output_sha256": "20316b7a1a7f495881c0bdc54678f2d9fb4235b5a49f050159826355a47de9a5"
     },
     {
       "source": "acceptance.md",
-      "source_sha256": "09e60fa6ddb0ffcf8b2fc7713bdacd7419f528bd9457bb8eea7fc00656f019b9",
+      "source_sha256": "f93c5564afce6d8f40cb8a94f9bd4eb9b63df9d44fc0250d39a5803efe833bc7",
       "output": "CCL_WebAssembly_Acceptance_Policy_and_Regression_Register_v1_7.docx",
-      "output_sha256": "31f2c534c37e0c963dad42833285760c6474c5d7a698397db4a2b7268cccbbfb"
+      "output_sha256": "51b990f5c715cbdaf3ce007c51d3f6b3c7e984e592cb8b80bd7ae22961becfc1"
     },
     {
       "source": "decisions.md",
-      "source_sha256": "14ea41fedabfa63dfa2b5da1191e2a35d31eab5d8b5a0c2a2448f05763388b0a",
+      "source_sha256": "7e1824521803fdbed6e99a3cd65b690eeae486e19d41d73ec4e90df4bc837bf6",
       "output": "CCL_WebAssembly_Stage0_Desk_Decisions_v1_8.docx",
-      "output_sha256": "b47eeb6548e5db36934db7777414b375dbd45ade1d2f19efe1ebd52e7f8dcb03"
+      "output_sha256": "486622792288ee785dd20651d2b862adbfde2b606e70df52e17ddb4a92e0383f"
     }
   ]
 }

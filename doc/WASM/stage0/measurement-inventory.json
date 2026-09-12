@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "acceptance_record": "S0-ABI-selection",
+  "version": 2,
+  "acceptance_record": null,
   "measurements": [
     {
       "id": "S0-ABI-C-01",
@@ -434,5 +434,8 @@
       ],
       "phase": 2
     }
-  ]
+  ],
+  "status": "DEFERRED_OPTIONAL_COMPARISON",
+  "required_for_stage0": false,
+  "scope": "Retained C/C4/B comparison worklist, not a current exit requirement. B is selected by engineering judgment; no row is promoted to passing."
 }

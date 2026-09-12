@@ -657,7 +657,34 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
         "record": "stage0/claude-review.md"
       },
-      "note": "Claude fifth audit 023181c0 found no defect and reproduced all 4,518 binaries; five nonblocking observations recorded, including identity-only publication and timer sensitivity. Original envelope remains pre-review; project acceptance of S0-LL21-a is a separate decision."
+      "note": "Claude fifth audit 023181c0 found no defect and reproduced all 4,518 binaries; five nonblocking observations recorded, including identity-only publication and timer sensitivity. Original envelope remains pre-review; project acceptance of S0-LL21-a is a separate decision. User acceptance is now recorded separately as LL21-PROJECT-ACCEPTANCE; this original raw envelope and the reviewer disposition remain unchanged."
+    },
+    {
+      "id": "LL21-PROJECT-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/combined/ll21/results.json",
+      "sha256": "cd4a36dee9e187aa58923d82a210ad4b9f963013569b1f9a7cefa747e8dede0c",
+      "timestamp": "2026-09-12T14:03:36.681Z",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "b6bb97e296c12e81119b88f281bc125591b82a15d583ed47d45354428266ffd1",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "S0-LL21-a / full: prebuilt code identity, digest and generation publication with module bytes already held by each Worker; host-actor acquisition and validation, matching lazy installation/dispatch, existing and late Workers and old function survival. Eight hand-built definitions, two existing Workers plus one late Worker, cons-only 4 KiB semispaces, retained Node/V8 baseline-tier execution on macOS.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Fifth audit at HEAD 023181c0: full source review, fresh re-execution (486/279/72/27, 27 trial rows), 4518/4518 byte comparison and independent bootstrap recomputation in the reviewer's own session, 2026-09-12",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
+        "record": "stage0/claude-review.md"
+      },
+      "note": "User explicitly accepts S0-LL21-a after the fifth audit committed as 5ff0dc54. Separate disposition only, with original execution timestamp, test revision, contract digest and artifacts retained. No ABI selection or new execution.",
+      "project_acceptance": {
+        "decision": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/decision.json",
+        "sha256": "755f01840caa1fe5efb6329e9a6f391a4b4f6e1843caff6d0c5afcffbe94c258",
+        "timestamp": "2026-09-12T14:59:34.206376+00:00"
+      }
     }
   ],
   "auxiliary_records": [
@@ -884,10 +911,10 @@
       "scope": "Verified exactly eighteen acceptance changes, seven unchanged prior acceptances, all referenced artifact identities, 88 controls, current gate, documents and unchanged runtime/policy sources."
     },
     {
-      "id": "CURRENT-STAGE0-COMBINED",
+      "id": "PRE-LL21-ACCEPTANCE-STAGE0-COMBINED",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-stage0-measurements/results.json",
       "sha256": "7a1b3cf9820fb25d060a920a6c0f1de7b97a143073d32b44f40290c0e4802181",
-      "scope": "25 prior accepted records unchanged; S0-LL21-a unreviewed. Gate BLOCKED for 23 missing and one unreviewed."
+      "scope": "25 prior accepted records unchanged; S0-LL21-a unreviewed. Gate BLOCKED for 23 missing and one unreviewed. Historical pre-LL21-acceptance aggregate."
     },
     {
       "id": "ABI-MEASUREMENT-RAW-SUMMARY",
@@ -917,13 +944,67 @@
       "id": "ABI-MEASUREMENT-GATE",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-abi-measurement-verification/gate-result.json",
       "sha256": "1031aec1941386dae84e97e064aba7c3ba61145ccb347d2cf1ca938cfc68eee9",
-      "scope": "Current gate after adding the unreviewed S0-LL21-a record, without changing 25 prior acceptances."
+      "scope": "Historical gate before LL21-a acceptance: 25 accepted, 23 missing, one unreviewed. Original assessment retained."
     },
     {
       "id": "ABI-MEASUREMENT-FINAL-VERIFICATION",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-abi-measurement-verification/verification.json",
       "sha256": "b470572f008c3d0e8de2c01314007cf1bcd39256873cd546bbddfec48abde0d4",
       "scope": "4518 byte-identical binaries/objects, 864 reviewed prerequisite identities, all LL21-a artifact hashes, independent bootstrap, 98 checker/statistical controls and document/aggregate verification. No acceptance."
+    },
+    {
+      "id": "CURRENT-STAGE0-COMBINED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/combined/results.json",
+      "sha256": "fe0df0789210ff60a533256262d4342f92a82b80a6cca40be1e1aaaf1955b7b4",
+      "scope": "26 scoped accepted records; 25 earlier result objects preserved exactly, one separately accepted LL21-a record. No new execution; 23 missing and zero unreviewed."
+    },
+    {
+      "id": "LL21-ACCEPTANCE-DECISION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/decision.json",
+      "sha256": "755f01840caa1fe5efb6329e9a6f391a4b4f6e1843caff6d0c5afcffbe94c258",
+      "scope": "S0-LL21-a / full: prebuilt code identity, digest and generation publication with module bytes already held by each Worker; host-actor acquisition and validation, matching lazy installation/dispatch, existing and late Workers and old function survival. Eight hand-built definitions, two existing Workers plus one late Worker, cons-only 4 KiB semispaces, retained Node/V8 baseline-tier execution on macOS."
+    },
+    {
+      "id": "BEFORE-LL21-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/before-manifest.json",
+      "sha256": "e3132f3266d590ad45cdad7a75193f913fc3a27319d24a3a6b7847570e634d91",
+      "scope": "Original Markdown, DOCX and JSON at 5ff0dc54 before acceptance and selection-readiness requirements."
+    },
+    {
+      "id": "LL21-ACCEPTANCE-PRESERVATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/preservation.json",
+      "sha256": "8f612bd8462fc9f590714c3ff3aaf93df97332026532a52190fa3f4b33123d13",
+      "scope": "Earlier accepted records and original LL21 fields/artifacts preserved. Initial verification preceded the user direction to choose B; the final policy/contract change has its own record."
+    },
+    {
+      "id": "B-PROJECT-DECISION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/b-project-decision.md",
+      "sha256": "9814267e1992f5b45e5cdfe6be675c9c976762ecef2f575a989759003620c1fd",
+      "scope": "Dated project choice: B for simplicity and reviewed correctness; benchmark minima not met and rule not applied. Stage 1 can use B without a performance claim."
+    },
+    {
+      "id": "B-POLICY-CHANGE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/b-choice-policy-change.json",
+      "sha256": "de1c94776e208e0466566dc56df0b80c7f472d249961144b74cf6307caa4f987",
+      "scope": "Old/new policy and inventory hashes; comparative measurements explicitly deferred, no measurement marked passing."
+    },
+    {
+      "id": "B-POLICY-CONTRACT-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/final-contract-and-policy-verification.json",
+      "sha256": "21e2670d00c67d10aae408d51fc3d0c95f816955348dcc593268e413f760ec1e",
+      "scope": "Only S0-ABI-selection changes; 37 other contracts, numerical comparison parameters and correctness/progress deadlines unchanged."
+    },
+    {
+      "id": "LL21-ACCEPTANCE-B-CHOICE-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/verification.json",
+      "sha256": "c1c3bdf46b085fc6d334bc1ae3a1c38c3da49b0d3a53cc2a44a36e23957bbd1c",
+      "scope": "Final acceptance preservation, B project policy, document/controls and unchanged source verification. No runtime execution."
+    },
+    {
+      "id": "LL21-ACCEPTANCE-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/gate-result.json",
+      "sha256": "5f20c88fb62f7e7e06468f6d232ed50405fff4ac2d085c8ff005f9cb1d0456dd",
+      "scope": "26 scoped accepted records, 23 missing and zero unreviewed under the B engineering-decision contract."
     }
   ]
 }

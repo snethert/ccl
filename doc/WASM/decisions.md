@@ -4,7 +4,7 @@ DECISION RECORD  /  VERSION 1.8  •  11 SEPTEMBER 2026
 
 Companion to Port Outline v0.17 and Acceptance Policy and Regression Register v1.7
 
-Version 1.8 replaces v1.7. Removes remaining mandatory specialized-entry obligations from D7. D7 retains versioned per-test evidence bindings to avoid whole-inventory churn. At the user’s direction, D3 requires only C/C4/B; H(G) is optional future work and does not gate progress. D3 measurements state granularity and startup assumptions. The macOS reference, D5 protocol v1.1 and the other decided contracts remain in force. Execution and acceptance remain separate. [17–19]
+Version 1.8 replaces v1.7. Removes remaining mandatory specialized-entry obligations from D7. D7 retains versioned per-test evidence bindings to avoid whole-inventory churn. At the user’s direction, D3 requires only C/C4/B; H(G) is optional future work and does not gate progress. The dated 12 September amendment selects B by engineering judgment and defers comparative measurements; policy version 3 records that change. The macOS reference, D5 protocol v1.1 and the other decided contracts remain in force. Execution and acceptance remain separate. [17–19]
 
 R7 in the Acceptance Policy and Regression Register v1.7 governs all delivery and verification claims; recording a decision does not claim that its artifacts have been implemented or its tests run. [17]
 
@@ -12,7 +12,7 @@ R7 in the Acceptance Policy and Regression Register v1.7 governs all delivery an
 | --- | --- | --- |
 | D1 | Use the x8632-derived data-layout subset, with explicit Wasm execution-state replacements. | Decided. |
 | D2 | Materialize shared/unshared binaries deterministically from one validated canonical template. | Decided. |
-| D3 | Qualify and compare C, C4 and B. H(G) is only a possible future enhancement. | Open selection among three generic candidates. |
+| D3 | Use B: all Lisp arguments on VSP, explicit self/count and the existing result protocol. | Decided for implementation on simplicity grounds; comparative timing deferred. |
 | D4 | Freestanding C kernel; Lisp-emitted subprimitives and ABI adapters; named runtime imports. | Decided. |
 | D5 | Owner-only GC generation updates; published-root admission, membership rescan, typed entries and stable mailbox storage. | Decided: protocol v1. |
 | D6 | Adopt disposition vocabulary and explicit trap lowering; complete the census and select floating-point policy separately. | Decided: vocabulary and lowering. |
@@ -76,15 +76,15 @@ Use separately emitted, explicitly recorded profile variants if a required seman
 
 ## D3  /  DYNAMIC-CALL ABI
 
-### Open ABI selection: C, C4 and B
+### Use B for implementation
 
 #### Candidate set and specification
 
-The user directed on 11 September 2026 that H(G) be ignored except as a possible future enhancement. D3 selects among C, C4 and B. No Stage 0 or Stage 1 prerequisite, mandatory experiment or acceptance gate requires H(G). Its earlier design and thresholds remain historical; reconsideration would be a separately scoped future decision.
+The [12 September engineering decision](stage0/abi-choice.md) selects B for implementation: one argument placement rule is simpler than splitting parameters and overflow arguments. The user directed the project to stop spending effort ranking near-equal exploratory timings. No speed superiority is claimed. C and C4 remain alternatives if generated code exposes a concrete problem. H(G) remains optional future work and gates no scheduled stage.
 
 A funcref table may contain functions with different signatures. Each call_indirect specifies a static expected type and checks the selected element before entry. One instruction cannot derive its signature from runtime nargs. A uniform generic Lisp ABI is a design choice, not a table-wide Wasm restriction; module-local type indices are not process-wide signature identities. [12]
 
-Retain explicit self, a complete generic call path and the two-result convention. Take all three candidates through the correctness corpus before their baseline measurements. Self, arguments and value0 are tagged Lisp values carried as i32; count encoding and VSP ownership are separate protocol definitions.
+Retain explicit self, a complete generic call path and the two-result convention. All three candidates have passed the reviewed bounded correctness corpus; implement B. Self, arguments and value0 are tagged Lisp values carried as i32; count encoding and VSP ownership are separate protocol definitions.
 
 | ABI ID | Wasm entry shape | Experiment |
 | --- | --- | --- |
@@ -94,9 +94,9 @@ Retain explicit self, a complete generic call path and the two-result convention
 
 Every callable function object has a generic entry descriptor tied to its code version and environment. Resolve symbol designators under the applicable CCL semantics and preserve live redefinition. Old retained function objects continue to call their own code and environments. For APPLY, validate the list and supplied count and spread arguments under the chosen generic protocol. Bad designators and arities follow Lisp error semantics, never a Wasm type-mismatch trap. [15; LL05, LL11, LL12, LL19]
 
-#### Complete argument and result protocols, before timing
+#### Complete argument and result protocols
 
-abi/dynamic-call.v0 must define the following for each candidate before timing. Include contracts/debug-frames.md and charge its publication, storage and inspection-policy costs consistently; S0-LL23-b precedes ABI freeze:
+abi/dynamic-call.v0 defines the following for the hand-built candidates; generated B must preserve these contracts. Include contracts/debug-frames.md and charge its publication, storage and inspection-policy costs consistently; S0-LL23-b precedes ABI freeze:
 
 | Contract | Required definition |
 | --- | --- |
@@ -116,17 +116,13 @@ Every allocated uninstalled slot contains the matching stub before dispatch. The
 
 Wasm tail-call validation requires compatible result types rather than equal parameter lists. The uniform result pair permits different argument counts, but emitted code must prepare the callee's arguments and release or relocate its own explicit frames and roots. Active bindings, handlers and UNWIND-PROTECT cleanup retain their required dynamic extent. Test growing and shrinking overflow, zero/many values, bounded stack/root use and preserved cleanup under long tail chains. A tail instruction does not perform Lisp-stack cleanup. [7, 12; LL05, LL19]
 
-#### Measurement and decision rule
+#### Engineering choice and future measurements
 
-After all three candidates pass correctness, measure the fixed workloads with direct and indirect calls, closures, optional/rest/keyword binding, APPLY, multiple values, recursion, cross-arity tail calls and first-call installation. Keep cold and warm paths separate; record engine/version/tier, variation, root stores/reloads, code/adapter bytes, table slots, compilation/installation latency and per-Worker resources.
+Use B under the [ABI choice](stage0/abi-choice.md) and benchmark policy version 3. Its simpler argument placement and reviewed correctness justify implementation now. Comparative timings, sensitivity controls and additional comparison instrumentation are deferred. The old confidence-bound rule was not applied, and no candidate is declared statistically faster.
 
-Each recommendation states its module granularity, eager/lazy boundary, weighted call distribution and Worker counts. Compare same-instance and cross-instance dispatch and test whether granularity changes the ABI ranking under the [product-risk plan](stage0/product-risk-plan.md). Stage 1 finalizes production packaging and repeats affected measurements if it changes the recommendation's basis.
+The [dynamic-call protocol v0](abi/dynamic-call.v0.md) and [fourth-audit acceptance](stage0/project-acceptance.md) supply the bounded correctness basis. The [measurement derivative](stage0/abi-measurements.md) and separately accepted S0-LL21-a case retain exploratory timing and identity-publication evidence. Original raw runs and policy version 2 are unchanged.
 
-Use stage0/benchmarks.json version 2 for the predeclared trial counts, confidence intervals and simplicity order. Freeze its digest and the representative workload/granularity matrix before selection measurements. Prefer the simplest candidate within the confidence-bound rule; record no selection if correctness, uncertainty or required product evidence is unresolved. Three arguments is a native precedent, not a privileged Wasm optimum. [18]
-
-Artifacts: versioned C/C4/B ABI descriptions, generic-entry/stub metadata, the D7 correctness/rejection inventory and all 24 candidate/workload measurement records. Stage 1 repeats the chosen contract through generated code; hand-built results do not certify pass 2. Revisit the ABI when generated correctness or representative measurements overturn its recorded basis. [LL03, LL05, LL21, LL22]
-
-The [dynamic-call protocol v0](abi/dynamic-call.v0.md) specifies the hand-built C/C4/B experiment, including stack/result ownership and typed installation. Its eighteen correctness records have been independently reviewed and accepted within the [fourth-audit scope](stage0/project-acceptance.md); they do not select D3. The isolated [measurement derivative](stage0/abi-measurements.md) now supplies exploratory baseline-tier timings across three packaging choices and a new unreviewed S0-LL21-a execution; representative selection evidence remains open.
+Stage 1 confirms B through generated code and determines production packaging. Preserve roots, logical frames, result ownership, tail cleanup, conditions and entry/stub roles. Reconsider the ABI only for a demonstrated generated-code or representative performance problem. If comparisons are reopened, first validate sensitivity and freeze representative weights, granularity, engine/tier and metrics; those tasks do not block implementation now.
 
 ## D4  /  RUNTIME IMPLEMENTATION LANGUAGE
 
@@ -342,11 +338,11 @@ Use S<stage>-LL<nn>-<letter> with an evidence kind and pinned test revision. The
 
 #### Benchmark inventory and later repeats
 
-The LL rows are supplemented by three explicit outline-exit records in stage0/inventory.json. S0-ENGINE-a qualifies the pinned engine/profile matrix including multivalue, tail calls, selected EH encoding, atomics, bulk memory and the profile's suspension path. S0-CONTRACTS-a reviews the complete versioned layout, frame, allocation/root/TCR, C-boundary and ownership contracts against their executed fixtures; the initial layout subset is insufficient. S0-ABI-selection records the complete ordered experiment, all measurement IDs from stage0/measurement-inventory.json, confidence intervals, resource budgets and the selected/rejected candidate rationale. None is replaced by passing a limited PROBE ID.
+The LL rows are supplemented by three explicit outline-exit records in stage0/inventory.json. S0-ENGINE-a qualifies the pinned engine/profile matrix including multivalue, tail calls, selected EH encoding, atomics, bulk memory and the profile suspension path. S0-CONTRACTS-a reviews complete versioned layout, frame, allocation/root/TCR, C-boundary and ownership contracts against executed fixtures. S0-ABI-selection now records the B engineering choice, reviewed correctness references, stated limits and reversal criteria. It no longer requires comparative timing; its formal decision evidence remains outstanding. None is replaced by passing a limited PROBE ID.
 
-D3 benchmarks use 24 S0-ABI-<candidate>-<workload> identifiers linked to LL05/LL20/LL21 correctness prerequisites. Inventory phases are C/C4/B correctness followed by their baseline measurements. Record the candidate, adapter/stub counts, VSP/MV protocol, granularity, call distribution, engine/tier and budgets. Keep cold and warm paths separate. Correctness failure makes a candidate ineligible for selection. H(G) has no required inventory entry. [18]
+The 24 S0-ABI-<candidate>-<workload> identifiers remain in the optional comparison worklist, with original runs preserved and no row promoted to qualified evidence. They are not required for Stage 0 under the 12 September policy change. Dedicated-host correctness/progress deadlines remain unchanged. Future comparisons, if justified, must charge the complete protocol and keep cold/warm paths and actual packaging costs explicit. H(G) has no required entry. [18]
 
-Stage 1 repeats the chosen ABI, representation and initialization checks through compiler-generated code. The register’s Stage 2 lifecycle/GC and Stage 3 live-compilation/redefinition extensions remain distinct from the prebuilt harness cases. Stage 5 verifies retained entry descriptors and code variants after fresh restoration. D3 selection, the source census, floating-point choice and test work remain on the outstanding-work ledger; the decided architecture and D5 protocol supply their build target.
+Stage 1 repeats the chosen ABI, representation and initialization checks through compiler-generated code. The register’s Stage 2 lifecycle/GC and Stage 3 live-compilation/redefinition extensions remain distinct from the prebuilt harness cases. Stage 5 verifies retained entry descriptors and code variants after fresh restoration. The formal B decision evidence, source census, floating-point choice and test work remain on the outstanding-work ledger; the decided architecture and D5 protocol supply their build target.
 
 #### Reversal criterion
 

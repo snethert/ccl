@@ -1,4 +1,4 @@
-# Project acceptance — 11 September 2026
+# Project acceptance
 
 The user authorized proceeding after Claude's sign-off committed as `52639e4e`. The first decision accepts exactly the seven identified execution records below, within their recorded scopes. This is a review-disposition operation; it does not claim another execution.
 
@@ -17,8 +17,16 @@ This accepts neither Stage 0 as a whole nor D3 selection, production scale, star
 
 ## Fourth-audit acceptance — 18 C/C4/B records
 
-Following the user's supplied fourth audit committed as `a1761aa5`, the project accepts the eighteen reviewed DYNAMIC-CALL-r1 records: S0-LL04-a/b and S0-LL13-a, plus C/C4/B variants of S0-LL05-a/b/c/d and S0-LL21-b. The separate `DYNAMIC-CALL-PROJECT-ACCEPTANCE` envelope in the [index](../evidence/index.json) retains all seven earlier acceptances exactly and adds the eighteen explicit dispositions. It contains 25 accepted records; the gate now reports 24 missing and zero unreviewed records. This is not another execution.
+Following the user's supplied fourth audit committed as `a1761aa5`, the project accepts the eighteen reviewed DYNAMIC-CALL-r1 records: S0-LL04-a/b and S0-LL13-a, plus C/C4/B variants of S0-LL05-a/b/c/d and S0-LL21-b. The separate `DYNAMIC-CALL-PROJECT-ACCEPTANCE` envelope in the [index](../evidence/index.json) retains all seven earlier acceptances exactly and adds the eighteen explicit dispositions. It contained 25 accepted records; the gate then reported 24 missing and zero unreviewed records. This is not another execution.
 
 Acceptance is limited to the audited hand-built fixture on Node/V8 and macOS: 32 arguments, six values, bounded frames/roots/stack/replies, cons-only heap and the exact retained code. Claude's fresh 159/81 reproduction and 864 byte-identical binaries are recorded in the [fourth audit](claude-review.md). All original timestamps, test revisions, contract bindings, binaries, failure records and earlier acceptance provenance remain unchanged.
 
 The role-rejection stand-in, capacity-based circular APPLY result and absence of a direct single-scanner inspection assertion remain disclosed nonblocking limitations. No implementation or case name is changed by this decision. Their follow-ups belong to the [measurement implementation handoff](abi-measurements.md) and production loader work. D3 timing/selection, startup, browsers, full objects, generated code, census and S0-LL21-a are excluded. H(G) remains optional.
+
+## Fifth-audit acceptance — S0-LL21-a, 12 September 2026
+
+The user's explicit decision, “I accept S0-LL21-a,” accepts only S0-LL21-a / full from ABI-MEASUREMENTS-r2, after Claude's fifth audit committed as `5ff0dc54`. The publication contains code identity, digest and generation; all Workers already hold the module bytes. The host actor acquires and validates the publication before installing/calling matching entries. This covers eight hand-built definitions, two existing Workers plus a late Worker, cons-only 4 KiB semispaces, and the retained Node/V8 execution on macOS. It does not establish byte delivery between Workers or Wasm-side acquisition/rejection.
+
+The separate LL21-PROJECT-ACCEPTANCE record in the [index](../evidence/index.json) retains the original execution timestamps, test revision, contract binding, artifacts and exact fifth audit. Only the authorized review disposition and acceptance provenance are added. The combined envelope preserves the earlier 25 accepted result objects exactly. It now contains 26 accepted records; Stage 0 is BLOCKED for 23 missing records and zero unreviewed records. No fixture is changed or re-executed by this decision.
+
+Exploratory timings remain NO_SELECTION and supply no candidate-ranking evidence. LL21-a acceptance does not approve the benchmark policy or establish D3 performance, representative weights, production scale/startup, browsers, optimized tiers, generated code or the census. The subsequent [B engineering choice](abi-choice.md) follows the user direction to stop spending effort on the comparison and choose for simplicity. Comparative measurement work is deferred; the qualified census and shared-compiler pass 2 still need an authorized author.

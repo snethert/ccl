@@ -1,7 +1,7 @@
 {
   "timestamp": "2026-09-12T14:12:32.437855+00:00",
-  "status": "EXECUTED_NOT_REVIEWED",
-  "scope": "Eight hand-built definitions, two live Workers, cons-only 4 KiB semispace. No representative census, product budget, browser, production image, optimized tier or ABI selection claim.",
+  "status": "REVIEWED_LL21_A_ACCEPTED_AT_BOUNDS",
+  "scope": "S0-LL21-a / full: prebuilt code identity, digest and generation publication with module bytes already held by each Worker; host-actor acquisition and validation, matching lazy installation/dispatch, existing and late Workers and old function survival. Eight hand-built definitions, two existing Workers plus one late Worker, cons-only 4 KiB semispaces, retained Node/V8 baseline-tier execution on macOS. Exploratory timings have no selection value.",
   "run": {
     "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-abi-measurements-r2/results.json",
     "sha256": "22992c487407bf2548af861ffe348ab24ca99b9e4e0fd2540d09b709c80f180d"
@@ -13,9 +13,9 @@
     "positive_batches": 72,
     "rejected_batch_controls": 27,
     "trial_candidate_rows": 27,
-    "review_disposition": "NOT_REVIEWED",
+    "review_disposition": "NOT_REVIEWED_IN_ORIGINAL_RAW_ENVELOPE",
     "selection": "NO_SELECTION",
-    "scope": "Eight hand-built definitions, two live Workers, cons-only 4 KiB semispace. No representative census, product budget, browser, production image, optimized tier or ABI selection claim."
+    "scope": "S0-LL21-a / full: prebuilt code identity, digest and generation publication with module bytes already held by each Worker; host-actor acquisition and validation, matching lazy installation/dispatch, existing and late Workers and old function survival. Eight hand-built definitions, two existing Workers plus one late Worker, cons-only 4 KiB semispaces, retained Node/V8 baseline-tier execution on macOS. Exploratory timings have no selection value."
   },
   "measurements": {
     "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-abi-measurements-r2/measurement-summary.json",
@@ -32,9 +32,9 @@
     "minimum_warmup_ms": 100,
     "minimum_sample_ms": 50,
     "policy_sha256": "a9e69df97867b7cc608ce6bd6ae5ea2118a5b53dc03eb4391c72f9e870a838a4",
-    "qualification": "Exploratory only. All 24 IDs exercised in three packaging configurations; selection inventory remains unqualified."
+    "qualification": "Exploratory only; no selection value. Raw report and policy-v2 identity are unchanged. B is chosen separately by project decision; the comparison worklist is deferred."
   },
-  "reviewed_fixtures": "Original dynamic-call, debugger-frame, integrated-runtime and boundary sources unchanged; derivative needs separate review.",
+  "reviewed_fixtures": "Claude fifth audit committed as 5ff0dc54 reviewed and reproduced the derivative without finding a defect. Earlier fixtures and the reviewed derivative are unchanged by this acceptance.",
   "original_evidence": {
     "prototype": "2026-09-12-abi-measurements-r1",
     "development": [
@@ -45,12 +45,10 @@
     ]
   },
   "remaining": [
-    "independent review and S0-LL21-a project acceptance",
+    "formal B project-decision evidence; no comparative timing required",
+    "qualified native census and a small generated B pass-2 slice; authorized shared-compiler author unassigned",
     "complete engine and object-contract prerequisites",
-    "representative census and packaging/startup/scale matrix",
-    "optimized engine tier and browser evidence",
-    "dynamic root stores/reloads, C-stack high-water, resident Worker memory and GC/safepoint phase latencies",
-    "product budgets and policy-qualified selection trials"
+    "generated-code correctness, scale/startup, browser and product-budget evidence"
   ],
   "verification": {
     "rebuilt_modules_and_objects_identical": 4518,
@@ -58,5 +56,35 @@
     "artifact_identities": 23760,
     "independent_bootstrap": "PASS",
     "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-abi-measurement-verification/binary-and-execution-verification.json"
+  },
+  "updated_at": "2026-09-12T15:02:21.731840+00:00",
+  "project_acceptance": {
+    "id": "S0-LL21-a",
+    "variant": "full",
+    "review_disposition": "ACCEPTED",
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/combined/ll21/results.json",
+    "sha256": "cd4a36dee9e187aa58923d82a210ad4b9f963013569b1f9a7cefa747e8dede0c",
+    "decision_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/decision.json",
+    "decision_sha256": "755f01840caa1fe5efb6329e9a6f391a4b4f6e1843caff6d0c5afcffbe94c258",
+    "review_commit": "5ff0dc544a8364f91a450ce42a8320ca2c9c2e54",
+    "scope": "S0-LL21-a / full: prebuilt code identity, digest and generation publication with module bytes already held by each Worker; host-actor acquisition and validation, matching lazy installation/dispatch, existing and late Workers and old function survival. Eight hand-built definitions, two existing Workers plus one late Worker, cons-only 4 KiB semispaces, retained Node/V8 baseline-tier execution on macOS.",
+    "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION"
+  },
+  "stage0_gate": {
+    "status": "BLOCKED",
+    "accepted": 26,
+    "missing": 23,
+    "unreviewed": 0
+  },
+  "implementation_choice": {
+    "abi": "B",
+    "basis": "PROJECT_DECISION_SIMPLICITY_AND_REVIEWED_CORRECTNESS",
+    "date": "2026-09-12",
+    "record": "stage0/abi-choice.md",
+    "frozen_benchmark_minima_met": false,
+    "frozen_benchmark_rule_applied": false,
+    "comparative_timing": "DEFERRED_OPTIONAL",
+    "policy_version": 3,
+    "policy_sha256": "16c56a442849ee6eae7058fd16f8aa5f555e670be41ccacdd6d9bd94e92c23f1"
   }
 }

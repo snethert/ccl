@@ -1,15 +1,16 @@
 {
-  "version": 2,
-  "status": "PREDECLARED_INITIAL_POLICY_NOT_MEASURED",
-  "change_control": "Record rationale and old/new policy hashes before rerunning affected selection measurements.",
+  "version": 3,
+  "status": "B_SELECTED_FOR_IMPLEMENTATION_COMPARATIVE_TIMING_DEFERRED",
+  "change_control": "Version 3 explicitly defers comparative ABI selection on 12 September 2026. Preserve version 2 and its raw runs. Dedicated-host correctness/progress limits and optional statistical parameters are unchanged.",
   "candidates": [
     "C",
     "C4",
     "B"
   ],
   "sequence": [
-    "C/C4/B correctness",
-    "C/C4/B measurements"
+    "reviewed C/C4/B correctness retained",
+    "implement B and confirm through generated code",
+    "reconsider comparative timing only for a demonstrated problem"
   ],
   "required_correctness": [
     "S0-LL05-a",
@@ -32,7 +33,7 @@
     "cross-arity tail chains",
     "allocation with forced collection"
   ],
-  "initial_workload_weights": "Equal weights across the eight workloads; census-driven revisions must be frozen and hashed before selection measurements.",
+  "initial_workload_weights": "Equal weights in the retained exploratory run. Census-informed weights are needed only for a future representative comparison; they do not block implementing B.",
   "debug_policy": 1,
   "run_order": "Seeded randomized paired candidate/baseline trials on the same dedicated host and engine tier.",
   "minimum_independent_trials": 30,
@@ -47,7 +48,7 @@
     "C4"
   ],
   "uniform_near_best_max_slowdown": 0.05,
-  "uniform_rule": "Choose the simplest candidate whose upper 95% confidence bound for runtime ratio to the measured best is at most 1.05. If uncertainty exceeds the bound, gather more trials or record no selection.",
+  "uniform_rule": "Optional future comparison only: choose the simplest candidate whose upper 95% confidence bound for runtime ratio to the measured best is at most 1.05. This rule was not used to choose B; the current choice is engineering judgment.",
   "cold_measurements_separate": true,
   "engine_policy": "Pin engine/version/tier, host CPU/OS, flags and toolchain. Qualify multivalue, tail calls, selected EH encoding, shared-memory atomics and bulk memory explicitly. JSPI is required only for its profile. No cross-engine pooling.",
   "dedicated_host_progress_limits": {
@@ -61,5 +62,9 @@
   "abi_experiment_review_after_engineer_days": 20,
   "ratio_definitions": "runtime_ratio = candidate runtime / baseline runtime; speedup = (1 / runtime_ratio) - 1. Resource growth = candidate / baseline - 1.",
   "future_enhancements": "H(G) is optional future work, with no required experiment or gate at any scheduled stage.",
-  "granularity": "Declare module batching, eager/lazy installation, call distribution and Worker counts; measure ABI ranking sensitivity before a recommendation under stage0/product-risk-plan.md."
+  "granularity": "Production packaging remains a Stage 1 decision. Use B with the chosen packaging; investigate cross-module cost on generated code if it is a demonstrated bottleneck. No packaging or ABI ranking sweep is required before implementation.",
+  "selected_abi": "B",
+  "selection_basis": "12 September 2026 user direction: choose a simple clear implementation and stop spending effort ranking near-equal exploratory timings. B is the existing simplicity baseline; no statistically demonstrated speed advantage is claimed.",
+  "comparative_measurements_required_for_implementation": false,
+  "future_comparison_requirements": "If comparative timing is reopened, first establish sensitivity at the relevant cost scale, freeze representative weights and engine/granularity assumptions, and collect the required metrics. Do not run that work now."
 }

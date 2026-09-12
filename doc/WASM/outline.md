@@ -8,15 +8,15 @@ High-level porting strategy and delivery outline
 
 Treat Wasm as a new CCL architecture whose effective seam is the existing target abstraction above pass 2. Reuse the target-neutral compiler front end and cross-dump machinery; implement a complete Wasm pass 2/vinsn layer together with the generated-code ABI, primitive/subprimitive layer and target runtime. One Lisp process owns one shared wasm32 linear-memory heap; each Lisp thread executes in a Web Worker.
 
-Version 0.17 replaces v0.16 and accompanies acceptance v1.7 and decisions v1.8. The bounded C/C4/B correctness protocol now has an executable corpus; its eighteen correctness records are independently reviewed and accepted at their stated bounds. R7 binds execution records to per-test contracts and the inventory version, retaining original whole-inventory hashes as provenance. The required D3 candidates are C/C4/B; H(G) is optional future work. Module granularity and startup costs join the ABI measurement plan. macOS is the sole reference host for this Wasm project. The native baseline and external census trace use macOS; no alternate operating-system qualification is required. D5 protocol v1.1 records generation-guarded host wakes, nested active-request routing and parking at idle host boundaries. D3 remains open. Runtime acceptance remains evidence-scoped. [D]
+Version 0.17 replaces v0.16 and accompanies acceptance v1.7 and decisions v1.8. The bounded C/C4/B correctness protocol now has an executable corpus; its eighteen correctness records are independently reviewed and accepted at their stated bounds. R7 binds execution records to per-test contracts and the inventory version, retaining original whole-inventory hashes as provenance. D3 uses B for implementation; C/C4 remain alternatives; H(G) is optional future work. Module granularity and startup costs join the ABI measurement plan. macOS is the sole reference host for this Wasm project. The native baseline and external census trace use macOS; no alternate operating-system qualification is required. D5 protocol v1.1 records generation-guarded host wakes, nested active-request routing and parking at idle host boundaries. B is chosen for simplicity under the 12 September amendment; comparative timing is deferred. Runtime acceptance remains evidence-scoped. [D]
 
-The current [D3 exploratory execution](stage0/abi-measurements.md) compares C/C4/B under same-module direct, same-instance indirect and cross-instance indirect packaging. Its new derivative and S0-LL21-a evidence need independent review; these bounded timings do not select an ABI or establish production startup, scale or browser behavior.
+The [D3 exploratory execution](stage0/abi-measurements.md) and Claude fifth audit are retained. The user accepted S0-LL21-a for identity publication with pre-provisioned module bytes. The aggregate has 26 scoped acceptances and 23 missing records. [B is the implementation choice](stage0/abi-choice.md) for simplicity; its apparent timing advantage is not established. Comparative measurement work is deferred. Production startup, scale and browser behavior remain open.
 
 | Document | Content |
 | --- | --- |
 | This outline, v0.17 | Architecture, decisions, contracts, delivery stages and provenance. The authority for what is being built and why. |
 | Acceptance Policy and Regression Register, v1.7 | R7 gate rules, evidence kinds and record schema, R6 normalization policy, sources and LL01–LL24. Individual obligation metadata is authoritative; stage lists and the index are derived. |
-| Stage 0 Desk Decisions, v1.8 | D1–D7 selections, reversal criteria and protocol details; D3 remains the open ABI choice. The decided contracts are build targets, not claims of executed proof. |
+| Stage 0 Desk Decisions, v1.8 | D1–D7 selections, reversal criteria and protocol details; D3 chooses B for implementation by engineering judgment. The decided contracts are build targets, not claims of executed proof. |
 | Evidence records E1–E5 | E1, E2 and E5 identify execution packs; E3 is a status record. E4 is conversation-recorded syscall evidence; its archived trace pack is pending. |
 
 #### Requirements
@@ -89,7 +89,7 @@ The target-specific unit is pass 2 + generated-code ABI + vinsns + primitives/su
 
 #### Dynamic-call ABI: Stage 0 decision
 
-D3 remains open among C, C4 and B, selecting one uniform generic Lisp-call protocol. H(G) is only a possible future enhancement; it does not gate any scheduled stage. A function table may contain heterogeneous signatures: call_indirect checks the call site’s expected type, not a table-wide Lisp signature. D3 fixes argument/count placement, closure self, overflow and zero/one/many values, and entry/stub protocols. Native three-register convention is evidence, not a Wasm requirement. [D, D3; LL05]
+D3 selects B: explicit self/count in Wasm parameters, all Lisp arguments on VSP, and the existing zero/one/many-value return and owned-extra-value protocol. This is an engineering choice for simplicity, supported by bounded correctness rather than a timing win. C/C4 remain alternatives; H(G) is optional future work. A function table may contain heterogeneous signatures: call_indirect checks the call site expected type. [D, D3; LL05]
 
 #### Runtime implementation language: decided
 
@@ -251,7 +251,7 @@ Bootstrap image loading is Stage 1; application image save and restore is Stage 
 
 Each Worker has a private WebAssembly.Table with the process-wide entry-to-slot mapping and its own installed references; tables are not structured-clone transferable. The producer installs required entries before publication; other Workers install before first dispatch. Logical code IDs are not table-slot identities: the uniform ABI still records an explicit entry mapping. IDs remain monotonic and superseded code retained under a budget through Stage 5. [D, D5; LL11, LL21]
 
-Lazy-stub choice remains conditional until D3 closes. A selected C, C4 or B uses one shared stub for its uniform Lisp-call convention. Equal Wasm types can carry different protocols, so role validation is separate from the engine type check. Install the correct stub or function in every allocated callable slot before dispatch; unused capacity remains null/non-callable. The C runtime’s named imports need not share the Lisp signature. [D, D3/D5; LL05, LL21]
+B uses one shared stub for its uniform Lisp-call convention. Equal Wasm types can carry different protocols, so role validation is separate from the engine type check. Install the correct stub or function in every allocated callable slot before dispatch; unused capacity remains null/non-callable. The C runtime’s named imports need not share the Lisp signature. [D, D3/D5; LL05, LL21]
 
 Manifest and installation validation reject missing or conflicting ID/entry/slot records, reserved-slot reuse and signature or semantic-role substitution. Stable logical IDs are distinct from module-local type indices and slot capacities. Lazy installation preserves rooted call state across admission, obtains code from accessible cache/request storage rather than a blocked Worker’s event loop, validates the final profile binary, reloads moved references and redispatches under the same entry contract. [D, D3/D5; LL07, LL13, LL20–LL22]
 
@@ -277,7 +277,7 @@ The native execution matrix is macOS x86-64. Preserve all upstream target-specif
 
 Census track, inside the qualified native compiler: enumerate evaluated acode IDs and flags, front-end elimination and rewrites, native handlers, vinsns, LAP and subprimitives, imports, traps, foreign calls and barrier-sensitive stores; instrument cross-compilation against a census stub backend for static module/function reachability; observe cold-start file opens externally with a macOS file-activity tracer and compare with static load-site projection. Join operator keys (IDs, flags, lowering chains) to module/function keys (dependency reachability, observed load order) through the instrumented compilation record. Registering the stub backend is the first shared edit governed by R6 and is followed by the first R6 comparison.
 
-Architecture track, independent of CCL data: qualify engines, EH encoding and JSPI API shape; test the decided D1/D2/D4/D5 contracts and run D3’s ABI experiments. Qualify and measure C/C4/B, with module-granularity assumptions and sensitivity recorded alongside the ABI recommendation. Prove hand-built allocation, stores, roots, GC admission, lifecycle, interruptible FOREIGN I/O, EH, mailbox, lazy installation and nested debugging. D7 supplies phased inventories; census distributions refine but do not block the track. [D]
+Architecture track, independent of CCL data: qualify engines, EH encoding and JSPI API shape; test D1/D2/D4/D5 and implement the selected B protocol. The reviewed C/C4/B hand-built corpus remains the correctness reference; further comparative timing is deferred. Prove allocation, stores, roots, GC admission, lifecycle, interruptible FOREIGN I/O, EH, mailbox, lazy installation and nested debugging. D7 supplies phased inventories; generated code confirms the selected contracts. [D]
 
 Rejection tests: omit a required module, alter its ABI or layout version, collide reserved memory or table ranges, and fail an initializer in the proof harness; acceptance must reject each mutant, and a killed process or timeout is not a successful computation.
 
@@ -285,11 +285,11 @@ Scheduled LL tests: LL01, LL02, LL04, LL05, LL07, LL08, LL13, LL15, LL19, LL20, 
 
 #### Stage 0 subgates and closure/frame contracts
 
-[Stage 0 plan](stage0/plan.md) separates 0A baseline controls, 0B census, 0C representation/engine proofs, 0D integrated control/concurrency, 0E ABI experiments and 0F acceptance. The [workflow](workflow.md) permits architecture work independently of native census work; both tracks join before acceptance. Subgates do not waive any Stage 0 requirement.
+[Stage 0 plan](stage0/plan.md) separates 0A baseline controls, 0B census, 0C representation/engine proofs, 0D integrated control/concurrency, 0E ABI decision/correctness and 0F acceptance. The [workflow](workflow.md) permits architecture work independently of native census work; both tracks join before acceptance. Subgates do not waive any Stage 0 requirement.
 
 [Logical debugger frames](contracts/debug-frames.md) define observable frame identity, source/lexical maps, debug-policy availability and restoration across moving GC, suspension and EH. D3 must account for this contract before freezing an ABI. [Census completeness](contracts/census.md) defines conservative indirect edges, reviewed seeds, a fixed-point closure, initializer prerequisites and external trace reconciliation. S0-LL15-b/c and S0-LL23-b make these explicit acceptance slices under existing obligations.
 
-[Benchmark policy](stage0/benchmarks.json) supplies initial quantitative selection, variance, resource and dedicated-host progress thresholds. Record the policy hash before selection measurements. The initial probes exercise limited mechanisms only; their results cannot satisfy complete S0 IDs.
+[Benchmark policy](stage0/benchmarks.json) version 3 selects B for implementation by engineering judgment and makes further comparative timing optional. It retains the original numerical parameters for any future comparison and leaves dedicated-host progress deadlines unchanged. The initial probes still cannot satisfy complete S0 IDs.
 
 #### Stage 1: target contract and generated bootstrap
 
@@ -417,7 +417,7 @@ Planning assumption: three to six engineer-years through interactive self-hostin
 
 [25] [Emscripten: Asynchronous Code](https://emscripten.org/docs/porting/asyncify.html) Suspension alternatives and the interpreter-on-Wasm baseline.
 
-[D] Stage 0 Desk Decisions v1.8, 11 September 2026 D1 derived data layout; D2 profile materialization; D3 open ABI candidate sequence; D4 selected runtime split; D5 GC admission, logical IDs/entry slots and interruptible mailbox; D6 vocabulary/lowering; D7 phased tests. Decision choices are distinct from implementation/test acceptance. CCL_WebAssembly_Stage0_Desk_Decisions_v1_8.docx
+[D] Stage 0 Desk Decisions v1.8, 11 September 2026 D1 derived data layout; D2 profile materialization; D3 B implementation choice (12 September amendment); D4 selected runtime split; D5 GC admission, logical IDs/entry slots and interruptible mailbox; D6 vocabulary/lowering; D7 phased tests. Decision choices are distinct from implementation/test acceptance. CCL_WebAssembly_Stage0_Desk_Decisions_v1_8.docx
 
 #### Implementation baselines
 
