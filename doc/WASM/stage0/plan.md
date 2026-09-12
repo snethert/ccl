@@ -21,6 +21,21 @@ Before a shared compiler edit, capture an immutable unchanged-source corpus cont
 
 ## Proof implementation order
 
+### Remaining work — user direction, 12 September 2026
+
+The first six steps below supersede the historical implementation order that follows. Work in small commits with one deliverable each. Reuse the reviewed r7 logs, graph and Terminal r2 trace; do not rebuild or rehash their unchanged prerequisite archive for each change. The [standing rules](../../../CLAUDE.md) now require verification scoped to changed work and its dependencies. Preserve R6, original failures and independent review.
+
+1. Prepare the startup census under S0-LL15-b/c: seed set for review, conservative address-taken bounds for the 1,729 dynamic calls, operator/lowering and initializer joins, and classification of the four dyld trace contexts with their provenance retained. Produce the contract exchange format and exercise the existing census checker and omission controls. These records' gate acceptance also requires S0-LL08-a; preparing the graph first does not waive that prerequisite.
+2. Implement S0-LL08-a stub backend registration and static reachability as reversible observation in a disposable pristine U1 copy, with its required R6 comparison. Use it to qualify the census and complete LL15-b/c acceptance prerequisites.
+3. Complete the unblocked standing controls, engine matrix and remaining isolated hand-built fixtures: LL07-a, LL13-b, LL19-a, both LL21-c variants and LL15-a. Keep each deliverable and its validation separate.
+4. Produce the S0-ABI-selection desk-decision record for B, using the existing dated engineering rationale and reviewed correctness evidence. No new timing trials or benchmark-selection claim.
+5. Reproduce S0-LL08-c on a second Mac when the user supplies one. This does not prevent the other work.
+6. Complete S0-CONTRACTS-a after its constituent evidence is available.
+
+The proposed experimental B pass-2 slice is a separate scope decision: disposable U1, actual front-end output, native-result comparison, and adversarial review before any merge into the implementation checkout. The current exception authorizes observation only; this execution order does not itself amend the functional-compiler restriction.
+
+### Historical implementation order
+
 1. Run the limited `PROBE-*` layout, materialization and late-Worker probes to establish the execution/reporting path. Do not map their passing results to full LL slices.
 2. Implement S0-LL13-c and S0-LL19-b with the actual freestanding C build, link maps, isolated C stacks and exceptional restoration. Record allowed helper imports and check the final Wasm, including initialization writes.
 3. Build S0-LL20-a/b/c around that same harness. Use barriers/latches for exact schedules; include collector CAS loss, release/re-admission, child registration, completion versus interrupt/rearm, cancellation acknowledgement and descriptor lifetime. Require real object movement and rereading updated root slots.
@@ -42,7 +57,7 @@ The 0E experiment review occurs after at most 20 engineer-days of ABI-specific w
 
 The macOS reference has now executed two clean builds successfully: 21,843 eligible release-era tests pass in each, and all 164 FASLs match byte-for-byte. See the [native summary](../evidence/native-baseline-summary.json). The 75 upstream-disabled tests are listed with notes. A separate [current-head diagnostic](../evidence/native-current-tests-diagnostic.json) retains three post-v1.13 failures; it is not relabeled as passing. Same-host project acceptance is recorded in [the decision](project-acceptance.md); second-Mac reproduction remains outstanding.
 
-The logical-frame and C/C4/B correctness records are accepted within the [seven-record and fourth-audit decisions](project-acceptance.md). The isolated [measurement fixture](abi-measurements.md) and its S0-LL21-a identity-publication record are reviewed, with LL21-a accepted by the user after correction of the misattributed authorization. [B is chosen](abi-choice.md) for simplicity; comparative timing and proposed comparison instrumentation are deferred. Separately authorized [reversible native observation](native-census.md) has executed from clean U1. S0-LL08-b is accepted. The [dependency extension](native-dependencies.md) has executed with reversible output equivalence and captures L0/L1/L2 declarations and sampled binding changes. The external macOS trace is captured and partially reconciled. Next: independently review the extension, conservatively resolve the remaining 1,729 dynamic calls and global binding versions, qualify seeds, and complete lowering/initializer joins and four loader pathname contexts. A small pass-2 slice can then use actual U1 front-end output. Functional shared compiler changes still require an authorized author; observed images and patched source never become implementation inputs.
+The logical-frame and C/C4/B correctness records are accepted within the [seven-record and fourth-audit decisions](project-acceptance.md). The isolated [measurement fixture](abi-measurements.md) and its S0-LL21-a identity-publication record are reviewed, with LL21-a accepted by the user after correction of the misattributed authorization. [B is chosen](abi-choice.md) for simplicity; comparative timing and proposed comparison instrumentation are deferred. Separately authorized [reversible native observation](native-census.md) has executed from clean U1. S0-LL08-b is accepted. Claude's seventh audit reviewed the [dependency extension](native-dependencies.md) and trace derivative without finding a defect, at their diagnostic scope. Next: conservatively resolve the remaining 1,729 dynamic calls and global binding versions, qualify seeds, and complete lowering/initializer joins and dyld trace classification. Functional shared compiler changes still require an authorized author; observed images and patched source never become implementation inputs.
 
 ## Product-risk work alongside ABI correctness
 
