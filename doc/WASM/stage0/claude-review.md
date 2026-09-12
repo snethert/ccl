@@ -78,3 +78,11 @@ Not covered: the LL15-b/c closure algorithm, the census exchange format, generat
 ### Follow-up to the seventh audit
 
 The user accepted S0-LL21-a directly in the reviewer's session. Claude produced the acceptance envelope at the user's direction; recorded in `stage0/project-acceptance.md`, not part of the audit.
+
+## Eighth Claude audit — dyld context classification and clean-image candidates, at eaa0a273 — 12 September 2026
+
+Scope: `reconcile-trace.py` and `test-trace.py` changes, `startup-closure/` (inspector, candidates, seeds, run, controls), `native-loader-contexts.json`, `startup-candidates-summary.json`, retained packet r1. No shared source changed; checkers and gate unchanged (27 accepted, 22 missing, 0 unreviewed).
+
+Reproduced in the reviewer's session: the candidate packet from the retained r7 kernel and clean image is byte-identical to r1 in all four output files; the retained artifact hashes and every input identity match the committed files; the 14 candidate controls and 16 trace controls pass; the reconciler classifies the four dyld operations and leaves none unresolved. The five explicit pre-callback seeds are the literal first statements of `restore-lisp-pointers`, and the other seeds name real definitions.
+
+No defect. Three observations, none blocking: the dyld rule is a fingerprint of this host's loader sequence, which is acceptable because everything before the image open is by construction pre-Lisp; the candidate universe is deliberately the full superset with no address-taken pruning, so it is sound but not yet informative for the dynamic calls; and 183 referenced names have no candidate in either capture and are the next worklist. Disposition: REVIEWED_NO_DEFECT_FOUND, diagnostic census inputs, no gate credit.

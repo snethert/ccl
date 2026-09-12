@@ -29,6 +29,12 @@
     "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-startup-candidates-r1/run.json",
     "sha256": "4e3b571f6a124df6e3d57422ff6319f4c206b243aa44da3e83fa4c8d704e9c5f"
   },
-  "review_disposition": "NOT_REVIEWED",
-  "verification_scope": "Scoped addition of six finalized startup-candidate files: producer-computed identities reused, run record hashed once, existing catalog entries retained from af41df0b4caaebf54b83e5f0ae8e15477a3bee8d. No full archive scan or audit performed. Prior indexed-reference verification remains at the recorded source-index snapshot."
+  "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+  "verification_scope": "Scoped addition of six finalized startup-candidate files: producer-computed identities reused, run record hashed once, existing catalog entries retained from af41df0b4caaebf54b83e5f0ae8e15477a3bee8d. No full archive scan or audit performed. Prior indexed-reference verification remains at the recorded source-index snapshot.",
+  "external_review": {
+    "reviewer": "Claude Fable 5.1",
+    "provenance": "Eighth audit at eaa0a273: byte-identical reproduction of the candidate packet, input and artifact identities verified, 14 candidate and 16 trace controls run in the reviewer's session, 2026-09-12",
+    "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+    "record": "stage0/claude-review.md"
+  }
 }
