@@ -657,7 +657,7 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
         "record": "stage0/claude-review.md"
       },
-      "note": "Claude fifth audit found no defect. Original execution and review remain retained. The subsequent purported LL21-a acceptance was withdrawn because Codex misattributed reviewer text to the user; see LL21-ACCEPTANCE-CORRECTION."
+      "note": "Claude fifth audit found no defect. Original execution and review remain retained. The subsequent purported LL21-a acceptance was withdrawn because Codex misattributed reviewer text to the user; see LL21-ACCEPTANCE-CORRECTION. The user's own acceptance is now recorded as LL21A-PROJECT-ACCEPTANCE."
     },
     {
       "id": "LL21-PROJECT-ACCEPTANCE",
@@ -679,7 +679,7 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
         "record": "stage0/claude-review.md"
       },
-      "note": "Original mistaken acceptance retained unchanged. Codex misattributed quoted reviewer text to the user; the user clarified that it was all Claude. LL21-a is externally reviewed but not accepted. Corrected aggregate preserves the other 26 accepted records, including LL08-b; execution and B engineering decision are unchanged.",
+      "note": "Original mistaken acceptance retained unchanged. Codex misattributed quoted reviewer text to the user; the user clarified that it was all Claude. LL21-a is externally reviewed but not accepted. Corrected aggregate preserves the other 26 accepted records, including LL08-b; execution and B engineering decision are unchanged. Superseded by LL21A-PROJECT-ACCEPTANCE, authorized by the user directly.",
       "project_acceptance": {
         "decision": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/decision.json",
         "sha256": "755f01840caa1fe5efb6329e9a6f391a4b4f6e1843caff6d0c5afcffbe94c258",
@@ -756,6 +756,33 @@
         "record": "stage0/claude-review.md"
       },
       "note": "Claude seventh audit found no defect and reproduced the run and graph; census input only, no gate credit."
+    },
+    {
+      "id": "LL21A-PROJECT-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21a-project-acceptance/accepted/accepted-results.json",
+      "sha256": "8b54ed868674afddd5c01cf15c5b258ef4cb66795f5f87b8201760589f62bfdb",
+      "timestamp": "2026-09-12T14:03:36.681Z",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "b6bb97e296c12e81119b88f281bc125591b82a15d583ed47d45354428266ffd1",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "S0-LL21-a / full: prebuilt code identity, digest and generation publication through an atomic generation word, with module bytes already held by each Worker; host-actor acquisition and digest validation, matching lazy installation and dispatch in an existing Worker and a late Worker, old function object survival; eight hand-built definitions, cons-only 4 KiB semispaces, retained Node/V8 baseline-tier execution on macOS.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Fifth audit at HEAD 023181c0: full source review, fresh re-execution (486/279/72/27, 27 trial rows), 4518/4518 byte comparison and independent bootstrap recomputation in the reviewer's own session, 2026-09-12",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
+        "record": "stage0/claude-review.md"
+      },
+      "note": "User accepted S0-LL21-a in the reviewer's session on 2026-09-12 after the seventh audit; the withdrawn Codex-produced decision is not relied on. Original r2 execution timestamp, test revision, contract digest and artifacts retained; no new execution.",
+      "project_acceptance": {
+        "decision": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21a-project-acceptance/decision.json",
+        "sha256": "3d3417b17c68953048e82d292f7fc345bfb5a685b11e3eda8faa41af947a166a",
+        "timestamp": "2026-09-12T17:57:49.094415+00:00"
+      }
     }
   ],
   "auxiliary_records": [
@@ -1234,10 +1261,10 @@
       "scope": "BLOCKED: 22 missing and zero unreviewed; 27 accepted."
     },
     {
-      "id": "CURRENT-STAGE0-COMBINED",
+      "id": "PRE-LL21A-ACCEPTANCE-COMBINED",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-stage0-corrected-acceptance-results.json",
       "sha256": "7146173d8a74c1164e4a34d148372a19affef7e61ef646e795857ecde00f2dc6",
-      "scope": "26 accepted, 22 missing and one externally reviewed record awaiting project acceptance. Only LL21-a disposition/provenance differs; no execution."
+      "scope": "26 accepted, 22 missing and one externally reviewed record awaiting project acceptance. Only LL21-a disposition/provenance differs; no execution. Historical: LL21-a subsequently accepted by the user."
     },
     {
       "id": "LL21-ACCEPTANCE-CORRECTION",
@@ -1376,6 +1403,36 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-dependencies-verification/verification.json",
       "sha256": "014c98ed0d40b7118457905a30ee067490c246a1b2f87fd2f820e9e235a32d3e",
       "scope": "Same-author checks, r6/r7 restoration/artifact equivalence, eight dependency and five trace controls, unchanged 26 accepted records and corrected LL21-a disposition; new independent review remains required."
+    },
+    {
+      "id": "CURRENT-STAGE0-COMBINED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-stage0-ll21a-accepted-results.json",
+      "sha256": "2193cd23023d9c10d18f2f75bd93cb28830662b6ae312d15505dc3bd51c03989",
+      "scope": "27 scoped accepted records; 26 earlier result objects preserved exactly, one user-accepted S0-LL21-a record. No new execution; 22 missing and zero unreviewed."
+    },
+    {
+      "id": "LL21A-ACCEPTANCE-DECISION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21a-project-acceptance/decision.json",
+      "sha256": "3d3417b17c68953048e82d292f7fc345bfb5a685b11e3eda8faa41af947a166a",
+      "scope": "S0-LL21-a / full: prebuilt code identity, digest and generation publication through an atomic generation word, with module bytes already held by each Worker; host-actor acquisition and digest validation, matching lazy installation and dispatch in an existing Worker and a late Worker, old function object survival; eight hand-built definitions, cons-only 4 KiB semispaces, retained Node/V8 baseline-tier execution on macOS."
+    },
+    {
+      "id": "LL21A-ACCEPTANCE-PRESERVATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21a-project-acceptance/preservation.json",
+      "sha256": "5ee88f59e431c4c04b6ab882d19942e877ad4e3033eadfbd17a188b9c868484e",
+      "scope": "26 prior accepted records unchanged; 104,279 combined artifact references verified; no execution."
+    },
+    {
+      "id": "LL21A-ACCEPTANCE-PRODUCER-LOG",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21a-project-acceptance/producer-log.json",
+      "sha256": "91ca8aa74c9bee3f6385a21ef49dab3776fe09fe1ad5dcb657f1bb587995fdc3",
+      "scope": "accept-evidence.py invocation."
+    },
+    {
+      "id": "LL21A-ACCEPTANCE-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21a-project-acceptance/gate-result.json",
+      "sha256": "e6f71b87d1a5158a46ded1f13f1feb20bb7856d6fed9774e5157235bbe2139a9",
+      "scope": "BLOCKED: 22 missing and zero unreviewed; 27 accepted."
     }
   ]
 }

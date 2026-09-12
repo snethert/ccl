@@ -62,18 +62,18 @@
     "id": "S0-LL21-a",
     "variant": "full",
     "review_disposition": "ACCEPTED",
-    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/combined/ll21/results.json",
-    "sha256": "cd4a36dee9e187aa58923d82a210ad4b9f963013569b1f9a7cefa747e8dede0c",
-    "decision_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-project-acceptance/decision.json",
-    "decision_sha256": "755f01840caa1fe5efb6329e9a6f391a4b4f6e1843caff6d0c5afcffbe94c258",
-    "review_commit": "5ff0dc544a8364f91a450ce42a8320ca2c9c2e54",
-    "scope": "S0-LL21-a / full: prebuilt code identity, digest and generation publication with module bytes already held by each Worker; host-actor acquisition and validation, matching lazy installation/dispatch, existing and late Workers and old function survival. Eight hand-built definitions, two existing Workers plus one late Worker, cons-only 4 KiB semispaces, retained Node/V8 baseline-tier execution on macOS.",
-    "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION"
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21a-project-acceptance/accepted/accepted-results.json",
+    "sha256": "8b54ed868674afddd5c01cf15c5b258ef4cb66795f5f87b8201760589f62bfdb",
+    "decision_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21a-project-acceptance/decision.json",
+    "decision_sha256": "3d3417b17c68953048e82d292f7fc345bfb5a685b11e3eda8faa41af947a166a",
+    "review_commit": "b72eec93",
+    "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+    "note": "User's own acceptance in the reviewer's session; supersedes the withdrawn misattributed decision."
   },
   "stage0_gate": {
     "status": "BLOCKED",
-    "accepted": 26,
-    "missing": 23,
+    "accepted": 27,
+    "missing": 22,
     "unreviewed": 0
   },
   "implementation_choice": {
