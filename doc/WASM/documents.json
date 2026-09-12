@@ -4,9 +4,9 @@
   "documents": [
     {
       "source": "outline.md",
-      "source_sha256": "73b32689dd77763157da163014bf6b9b11fa3301948925574d3dd9dfbf125267",
+      "source_sha256": "d7a168f59099e9b44801a569e37e5abcb4009998c357afcbdaf7175bd0e3d803",
       "output": "Clozure_CL_WebAssembly_Port_Outline_v0_17.docx",
-      "output_sha256": "567972028e1547fe7f4bf23dedeb3e2449ed1f79f3bc46bec5cb48ca31869c13"
+      "output_sha256": "a05f597135abc253dc0a230d7caa35dd999be77eec141dc4fd7f2108adebaf3e"
     },
     {
       "source": "acceptance.md",
