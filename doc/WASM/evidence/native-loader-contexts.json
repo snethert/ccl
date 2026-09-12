@@ -1,0 +1,218 @@
+{
+  "version": 1,
+  "date": "2026-09-12",
+  "status": "EXECUTED_REQUIRES_INDEPENDENT_REVIEW",
+  "scope": "Classify four retained trace operations as host dyld directory activity; unknown base pathname remains unknown. No census closure or gate acceptance.",
+  "source_trace": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-startup-terminal-r2/trace.json",
+    "sha256": "b0876c2e28c0321fa9bc71c8c128a7415488f03c407076d16ab242f1ec5e8866",
+    "repository_commit": "af41df0b4caaebf54b83e5f0ae8e15477a3bee8d"
+  },
+  "sources_sha256": {
+    "tests/wasm/native-census/reconcile-trace.py": "6f693fc312ae49613f45f3fa51e8cdca65b617c06e35ca638f0299b5a4a34154",
+    "tests/wasm/native-census/test-trace.py": "42df6b86eca4b3c05311e259d1d109a6cd6fd509435d4f1aa0923f6ad5582eca"
+  },
+  "command": "python3 tests/wasm/native-census/test-trace.py --trace /Users/buildsomething/Source/ccl-evidence/2026-09-12-native-startup-terminal-r2 --output NEW-EMPTY-DIRECTORY",
+  "checks": {
+    "image_open": true,
+    "native_control_open": true,
+    "launcher_control_open": true,
+    "matching_pid": true,
+    "clean_exit": true,
+    "no_reported_loss": true,
+    "all_trace_lines_parsed": true
+  },
+  "classification_counts": {
+    "launcher-coverage-control": 6,
+    "descriptor-or-pathless-operation": 100,
+    "host-loader-or-service-path": 7,
+    "byte-identical-kernel-copy": 7,
+    "host-dyld-directory-context": 4,
+    "host-device": 3,
+    "failed-existence-probe": 1,
+    "executable-directory-query": 7,
+    "optional-executable-bundle-metadata": 2,
+    "input-ancestor-metadata": 21,
+    "pinned-clean-image": 2,
+    "post-startup-coverage-control": 5
+  },
+  "dyld_directory_contexts": [
+    {
+      "classified_lines": [
+        13,
+        14,
+        15,
+        16
+      ],
+      "witness_lines": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22
+      ],
+      "descriptors": [
+        3,
+        4,
+        6
+      ],
+      "basis": "Same-thread pre-image dyld/Cryptex directory chain; role inferred from surrounding explicit dyld paths and descriptor use. Anonymous base pathname remains unknown."
+    }
+  ],
+  "classified_rows": [
+    {
+      "line": 13,
+      "operator": "open",
+      "details": "F=3        (R___________f_)",
+      "path": null,
+      "errno": null,
+      "process": "ccltr68c1d98f",
+      "thread": 5731236,
+      "classification": "host-dyld-directory-context"
+    },
+    {
+      "line": 14,
+      "operator": "openat",
+      "details": "F=4        (R_____________)  [3]/../../System/Volumes/Preboot/Cryptexes/OS",
+      "path": "[3]/../../System/Volumes/Preboot/Cryptexes/OS",
+      "errno": null,
+      "process": "ccltr68c1d98f",
+      "thread": 5731236,
+      "classification": "host-dyld-directory-context"
+    },
+    {
+      "line": 15,
+      "operator": "fstatat64",
+      "details": "[4]/System/Library/dyld",
+      "path": "[4]/System/Library/dyld",
+      "errno": null,
+      "process": "ccltr68c1d98f",
+      "thread": 5731236,
+      "classification": "host-dyld-directory-context"
+    },
+    {
+      "line": 16,
+      "operator": "openat",
+      "details": "F=6        (R_____________)  [4]/System/Library/dyld",
+      "path": "[4]/System/Library/dyld",
+      "errno": null,
+      "process": "ccltr68c1d98f",
+      "thread": 5731236,
+      "classification": "host-dyld-directory-context"
+    }
+  ],
+  "unresolved_path_contexts": [],
+  "controls": [
+    {
+      "control": "unchanged",
+      "status": "PASS",
+      "classified_loader_operations": 4
+    },
+    {
+      "control": "missing-image-open",
+      "status": "REJECTED",
+      "reason": "trace coverage/reconciliation failed: {'image_open': False, 'native_control_open': True, 'launcher_control_open': True, 'matching_pid': True, 'clean_exit': True, 'no_reported_loss': True, 'all_trace_lines_parsed': True}"
+    },
+    {
+      "control": "missing-native-read-open",
+      "status": "REJECTED",
+      "reason": "trace coverage/reconciliation failed: {'image_open': True, 'native_control_open': False, 'launcher_control_open': True, 'matching_pid': True, 'clean_exit': True, 'no_reported_loss': True, 'all_trace_lines_parsed': True}"
+    },
+    {
+      "control": "image-errno",
+      "status": "REJECTED",
+      "reason": "trace coverage/reconciliation failed: {'image_open': False, 'native_control_open': True, 'launcher_control_open': True, 'matching_pid': True, 'clean_exit': True, 'no_reported_loss': True, 'all_trace_lines_parsed': True}"
+    },
+    {
+      "control": "wrong-native-pid",
+      "status": "REJECTED",
+      "reason": "trace coverage/reconciliation failed: {'image_open': True, 'native_control_open': True, 'launcher_control_open': True, 'matching_pid': False, 'clean_exit': True, 'no_reported_loss': True, 'all_trace_lines_parsed': True}"
+    },
+    {
+      "control": "unparsed-loss",
+      "status": "REJECTED",
+      "reason": "trace coverage/reconciliation failed: {'image_open': True, 'native_control_open': True, 'launcher_control_open': True, 'matching_pid': True, 'clean_exit': True, 'no_reported_loss': True, 'all_trace_lines_parsed': False}"
+    },
+    {
+      "control": "wrong-base-fd",
+      "status": "REJECTED",
+      "reason": "Unresolved pathname context retained",
+      "unresolved_contexts": 4,
+      "classified_loader_operations": 0
+    },
+    {
+      "control": "wrong-dyld-fd",
+      "status": "REJECTED",
+      "reason": "Unresolved pathname context retained",
+      "unresolved_contexts": 4,
+      "classified_loader_operations": 0
+    },
+    {
+      "control": "different-thread",
+      "status": "REJECTED",
+      "reason": "Unresolved pathname context retained",
+      "unresolved_contexts": 4,
+      "classified_loader_operations": 0
+    },
+    {
+      "control": "lisp-path-in-chain",
+      "status": "REJECTED",
+      "reason": "Unresolved pathname context retained",
+      "unresolved_contexts": 4,
+      "classified_loader_operations": 0
+    },
+    {
+      "control": "failed-directory-open",
+      "status": "REJECTED",
+      "reason": "Unresolved pathname context retained",
+      "unresolved_contexts": 4,
+      "classified_loader_operations": 0
+    },
+    {
+      "control": "missing-dyld-prefix",
+      "status": "REJECTED",
+      "reason": "Unresolved pathname context retained",
+      "unresolved_contexts": 5,
+      "classified_loader_operations": 0
+    },
+    {
+      "control": "missing-cache-witness",
+      "status": "REJECTED",
+      "reason": "Unresolved pathname context retained",
+      "unresolved_contexts": 4,
+      "classified_loader_operations": 0
+    },
+    {
+      "control": "missing-descriptor-close",
+      "status": "REJECTED",
+      "reason": "Unresolved pathname context retained",
+      "unresolved_contexts": 4,
+      "classified_loader_operations": 0
+    },
+    {
+      "control": "after-image-open",
+      "status": "REJECTED",
+      "reason": "Unresolved pathname context retained",
+      "unresolved_contexts": 4,
+      "classified_loader_operations": 0
+    },
+    {
+      "control": "unrelated-anonymous-open",
+      "status": "REJECTED",
+      "reason": "Unresolved pathname context retained",
+      "unresolved_contexts": 1,
+      "classified_loader_operations": 4
+    }
+  ],
+  "remaining": [
+    "Join semantic startup and loader prerequisites into the qualified census",
+    "Independent review; no new acceptance"
+  ],
+  "verification_scope": "Trace input identity checked once, then 15 semantic mutations exercised in memory. No archive scan, copies of prerequisite packs, or native rebuild."
+}

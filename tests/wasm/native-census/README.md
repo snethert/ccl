@@ -52,7 +52,7 @@ python3 tests/wasm/native-census/trace-startup.py \
   --output /absolute/path/to/new-trace-evidence
 ```
 
-The user's Terminal r2 capture succeeded. The earlier PID-only capture failed coverage and is retained unchanged. `reconcile-trace.py --trace TRACE --output NEW-DIRECTORY` verifies actual successful opens and separates harness, image and host activity. Four loader operations still have anonymous/relative pathname contexts; its result is partial reconciliation, not full census acceptance. `test-trace.py` replays the actual trace and five semantic coverage mutants with updated artifact hashes. Internal compiler/callback observations do not substitute for this external trace.
+The user's Terminal r2 capture succeeded. The earlier PID-only capture failed coverage and is retained unchanged. `reconcile-trace.py --trace TRACE --output NEW-DIRECTORY` verifies actual successful opens and separates harness, image and host activity. Four anonymous/relative loader operations are classified by a narrow, same-thread dyld descriptor-chain rule; the anonymous base pathname remains unknown. No unresolved path contexts remain in the retained r2 capture, but semantic census reconciliation is still open. `test-trace.py` authenticates the original input once, then exercises five coverage mutants and ten loader-context mutants in memory. It retains the results and parser sources without copying prerequisite packs. Internal compiler/callback observations do not substitute for this external trace.
 
 ## Dependency and redefinition extension
 
