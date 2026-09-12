@@ -748,7 +748,14 @@
       "review_disposition": "NOT_REVIEWED",
       "currency": "DIAGNOSTIC_NO_GATE_ACCEPTANCE",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Native dependency identities, selected L0/L1/L2 declarations and sampled host binding changes; complete LL15-b/c closure remains blocked."
+      "scope": "Native dependency identities, selected L0/L1/L2 declarations and sampled host binding changes; complete LL15-b/c closure remains blocked.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Seventh audit at HEAD db395218: source review, fresh r7-equivalent re-execution (21,843/21,843 twice, 161/164 then 164/164 FASLs, all equal to r7 and r5), byte-identical graph rebuild, dependency/trace controls in the reviewer's own session, 2026-09-12",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md"
+      },
+      "note": "Claude seventh audit found no defect and reproduced the run and graph; census input only, no gate credit."
     }
   ],
   "auxiliary_records": [
@@ -1236,7 +1243,13 @@
       "id": "LL21-ACCEPTANCE-CORRECTION",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-ll21-acceptance-correction/decision.json",
       "sha256": "bcb41699e3389454123ac8e78bfb49ca6f03c4f516ee6115caa588d9af49992d",
-      "scope": "Withdraw Codex misattribution of quoted Claude acceptance text; original execution/review and separate B choice unchanged."
+      "scope": "Withdraw Codex misattribution of quoted Claude acceptance text; original execution/review and separate B choice unchanged.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Seventh audit at HEAD db395218: source review, fresh r7-equivalent re-execution (21,843/21,843 twice, 161/164 then 164/164 FASLs, all equal to r7 and r5), byte-identical graph rebuild, dependency/trace controls in the reviewer's own session, 2026-09-12",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md"
+      }
     },
     {
       "id": "LL21-CORRECTION-PRESERVATION",
@@ -1254,7 +1267,13 @@
       "id": "DEPENDENCIES-GRAPH-r3",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-dependencies-analysis-r3/graph.json",
       "sha256": "04ff3562d3c517831a873af7f0d394d78714cf053efc0915ac5263af53863ffe",
-      "scope": "Native dependency identities, selected L0/L1/L2 declarations and sampled host binding changes; complete LL15-b/c closure remains blocked."
+      "scope": "Native dependency identities, selected L0/L1/L2 declarations and sampled host binding changes; complete LL15-b/c closure remains blocked.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Seventh audit at HEAD db395218: source review, fresh r7-equivalent re-execution (21,843/21,843 twice, 161/164 then 164/164 FASLs, all equal to r7 and r5), byte-identical graph rebuild, dependency/trace controls in the reviewer's own session, 2026-09-12",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md"
+      }
     },
     {
       "id": "DEPENDENCIES-SUMMARY-r3",
@@ -1278,13 +1297,25 @@
       "id": "NATIVE-STARTUP-TERMINAL-r2",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-startup-terminal-r2/trace.json",
       "sha256": "b0876c2e28c0321fa9bc71c8c128a7415488f03c407076d16ab242f1ec5e8866",
-      "scope": "Successful privileged capture of clean r5 image startup, pre/post-exec coverage and image open; new trace not yet independently reviewed."
+      "scope": "Successful privileged capture of clean r5 image startup, pre/post-exec coverage and image open; new trace not yet independently reviewed.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Seventh audit at HEAD db395218: source review, fresh r7-equivalent re-execution (21,843/21,843 twice, 161/164 then 164/164 FASLs, all equal to r7 and r5), byte-identical graph rebuild, dependency/trace controls in the reviewer's own session, 2026-09-12",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md"
+      }
     },
     {
       "id": "NATIVE-STARTUP-RECONCILIATION-r2",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-native-startup-reconciliation-r2/reconciliation.json",
       "sha256": "f2f57d2c970a7712c26ea81e44dffa76f88a3ec632df3af27c77c8b00f03ac47",
-      "scope": "Actual opens verified, four anonymous/relative loader path contexts retained; partial reconciliation only."
+      "scope": "Actual opens verified, four anonymous/relative loader path contexts retained; partial reconciliation only.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Seventh audit at HEAD db395218: source review, fresh r7-equivalent re-execution (21,843/21,843 twice, 161/164 then 164/164 FASLs, all equal to r7 and r5), byte-identical graph rebuild, dependency/trace controls in the reviewer's own session, 2026-09-12",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md"
+      }
     },
     {
       "id": "TRACE-CONTROLS-r1",

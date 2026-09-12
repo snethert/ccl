@@ -38,3 +38,39 @@ Not covered by this audit: the external file trace, the complete census graph, t
 ### Follow-up to the sixth audit
 
 The user confirmed the `CLAUDE.md` clean-start line, resolving observation 1, and accepted S0-LL08-b at its stated scope. Claude produced the acceptance envelope at the user's direction; that operation is recorded in `stage0/project-acceptance.md` and is not part of the audit.
+
+Correction: the sixth-audit report and the reviewer's notes described S0-LL21-a as accepted, carrying forward an acceptance whose authorization quote the fifth audit had already flagged as reviewer text. The user has since clarified that no such acceptance was given and Codex withdrew it (db395218). S0-LL21-a stands at REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED; the 27-record aggregate the reviewer composed for LL08-b is historical, and the corrected 26-record aggregate is current.
+
+## Seventh Claude audit — dependency extension, external trace and the LL21-a correction, at db395218 — 12 September 2026
+
+Reviewer: Claude Fable 5.1, in its own session on the reference host. Author: Codex, under the reversible-observation exception. Scope: `tests/wasm/native-census/dependencies.lisp`, `dependency-probe.lisp`, `redefinition-probe/`, `dependency-graph.py`, `reconcile-trace.py`, `test-dependencies.py`, `test-trace.py`, the `run.py` and `trace-startup.py` changes, `doc/WASM/stage0/native-dependencies.md`, the r6/r7 native runs, the Terminal trace r2 and its reconciliation, and the LL21-a acceptance correction. Reviewer disposition only.
+
+### Execution evidence
+
+Fresh r7-equivalent run at HEAD in the reviewer's session with `--observer-extension`: execution PASS; both native suites 21,843 / 21,843; 161 of 164 FASLs identical under observation with exactly the three patched files differing; 164 of 164 after removal; all sources and 167 clean outputs restored; the graph built from the reviewer's own build log matches Codex's analysis r3 in every summary count, including 55 cross-layer definition groups. Against retained r7 and r5: all 164 FASL hashes identical in the baseline, observed and restored-clean builds; the extension hash in the report equals the committed `dependencies.lisp` and the retained runner copy; all 573 r7 artifact identities verify. `dependency-graph.py` run by the reviewer over the retained r7 build log produces a `graph.json` byte-identical to Codex's analysis r3 with the same summary counts. `test-dependencies.py` against the reviewer's own r5-equivalent build: two native variants, four identical FASLs, eight controls rejected, repeated empty observation preserves dependencies. `reconcile-trace.py` over the retained Terminal trace reproduces Codex's reconciliation exactly; `test-trace.py` passes with the actual trace positive and five mutants rejected. Document, evidence, acceptance and checker tools pass; the gate on the corrected aggregate is BLOCKED with 22 missing and one "unreviewed", which is LL21-a awaiting a project decision. No file outside `doc/WASM`, `tests/wasm` and `CLAUDE.md` differs from v1.13.
+
+### Mechanism review
+
+- **The extension is observation only.** It redefines four observer functions in the observer's own package and reads compiler objects: afunc identity, parent, variables, acode call operands, the evaluated builtin table, `fboundp` and `macro-function` states. It appends to the observer's JSON records, never to acode. The three-file source patch is unchanged (same hash). Identical FASLs across all three builds and the four probe FASLs confirm no output effect.
+- **Identity, not names.** A weak EQ table assigns identities to afuncs, root variables and call-site nodes, so two same-named lexical functions are distinguished and a self call targets its own afunc. Self calls are read correctly: the first operand is the argument list. Builtin calls are resolved through the evaluated builtin vector and cross-checked by the graph builder against the snapshot. Anything not exactly resolvable is kept as an unresolved category with no fabricated targets, and the graph builder rejects targets on unresolved calls, unknown categories, operator/category disagreement, missing callee bodies and name/identity disagreement.
+- **Declarations versus installations.** Definition forms are recognized from top-level and expanded forms only, never from quoted data or function bodies, and the probe checks that a quoted DEFUN is not reported. Native binding state is sampled at source transitions, initializer entry and return, and explicit load checkpoints, with previous state and sample interval retained; the builder rejects discontinuous histories. The report is explicit that compilation order is not load order and that samples miss transient replacements.
+- **The trace.** The v2 tracer holds the launcher before exec, filters on both the PID and a byte-identical uniquely named kernel copy, and requires a pre-exec read, a post-exec read inside CCL, the image open, a matching native PID, clean exits and no loss report. The reconciler parses every line, excludes other processes, classifies host loader and device activity, and reports the four remaining anonymous or relative dyld path contexts rather than dropping them. The trace shows one image open and no source or FASL reads, as expected for a saved image.
+- **The correction.** The corrected aggregate differs from the previous one only in LL21-a's disposition and review pointer; all 26 other result objects are byte-equal, including LL08-b. Original envelopes and the withdrawn decision are retained.
+
+### Findings
+
+No defect found. Four observations, none blocking:
+
+1. **The LL21-a acceptance was never the user's.** The fifth-audit observation flagged the quote; Codex has now recorded the user's clarification and withdrawn it. The reviewer's own sixth-audit follow-up and memory repeated the misattribution and have been corrected. An acceptance quote must be verified as the user's own words before an envelope is produced.
+2. **`dependency-graph.py` and `README.md` changed after r7 ran.** The retained runner copy is the earlier builder; analysis r3 and the reviewer's byte-identical rebuild use the committed one. Disclosed through the r1 to r3 analysis history.
+3. **Unresolved work is large and honestly stated.** 1,729 dynamic call sites, 951 referenced bindings with no compiled candidate in this capture, and four loader path contexts remain. None of this discharges S0-LL15-b or S0-LL15-c.
+4. **No inventory slot covers this evidence.** The dependency and trace records are census inputs indexed as diagnostics. They earn gate credit only through the LL15-b/c records once closure exists.
+
+### Disposition
+
+| Record | Reviewer disposition |
+| --- | --- |
+| NATIVE-DEPENDENCIES-r7, DEPENDENCIES-GRAPH-r3, TRACE r2 and reconciliation r2 | REVIEWED_NO_DEFECT_FOUND, diagnostic census inputs; no gate acceptance applies. |
+| LL21-a acceptance correction | VERIFIED: only the LL21-a disposition changed; S0-LL21-a remains REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED pending the user's decision. |
+
+Not covered: the LL15-b/c closure algorithm, the census exchange format, generated code. The implementation baseline remains pristine U1.

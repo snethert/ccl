@@ -1,6 +1,6 @@
 # Native dependencies and redefinitions — 12 September 2026
 
-The dependency extension is executed and awaiting independent review. It uses the unchanged three-file observation patch in disposable pristine U1 copies. It adds no shared-source hook, compiler transformation or kernel change. The accepted r5 operator record remains separate; neither this extension nor the complete LL15-b/c census is accepted.
+The dependency extension is executed and independently reviewed by Claude's [seventh audit](claude-review.md) with no defect found and a byte-identical graph reproduction; it remains census input without gate credit. It uses the unchanged three-file observation patch in disposable pristine U1 copies. It adds no shared-source hook, compiler transformation or kernel change. The accepted r5 operator record remains separate; neither this extension nor the complete LL15-b/c census is accepted.
 
 ## Call identities
 
