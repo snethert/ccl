@@ -74,3 +74,7 @@ No defect found. Four observations, none blocking:
 | LL21-a acceptance correction | VERIFIED: only the LL21-a disposition changed; S0-LL21-a remains REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED pending the user's decision. |
 
 Not covered: the LL15-b/c closure algorithm, the census exchange format, generated code. The implementation baseline remains pristine U1.
+
+### Follow-up to the seventh audit
+
+The user accepted S0-LL21-a directly in the reviewer's session. Claude produced the acceptance envelope at the user's direction; recorded in `stage0/project-acceptance.md`, not part of the audit.

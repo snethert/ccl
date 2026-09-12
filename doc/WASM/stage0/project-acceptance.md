@@ -40,3 +40,11 @@ Scope: evaluated native operator slots, flags and dispatch readings unchanged un
 The separate `LL08B-PROJECT-ACCEPTANCE` record in the [index](../evidence/index.json) retains every original r5 field, timestamp, test revision, contract binding and artifact, adding only the review disposition and provenance. The 27-record aggregate copies the 26 earlier accepted result objects unchanged; 104,279 artifact references were verified against retained bytes. Stage 0 is BLOCKED for 22 missing records and zero unreviewed. No fixture is changed or re-executed by this decision.
 
 The sixth-audit aggregate above is historical. The subsequent correction preserves its valid S0-LL08-b acceptance while withdrawing the carried-forward, unsupported LL21-a disposition. Current counts are 26 accepted, 22 missing and one awaiting project acceptance.
+
+## Seventh-audit acceptance — S0-LL21-a, 12 September 2026
+
+The user's own decision, given to Claude ("I accept S0-LL21-a. Update the docs."), accepts S0-LL21-a / full from ABI-MEASUREMENTS-r2 after Claude's fifth audit (5ff0dc54) and seventh audit (b72eec93). It replaces the withdrawn decision that had quoted reviewer text; that withdrawal and its records remain retained. Claude produced the envelope with the unchanged `accept-evidence.py` and composed the aggregate.
+
+Scope: identity, digest and generation publication through an atomic generation word with module bytes already held by each Worker; host-actor acquisition and digest validation; matching lazy installation and dispatch in an existing and a late Worker; old function object survival; eight hand-built definitions, cons-only heap, Node/V8 on macOS. Excluded: byte delivery between Workers, Wasm-side acquisition, ABI selection and benchmark policy, production scale, browsers, generated code and the census.
+
+The `LL21A-PROJECT-ACCEPTANCE` record in the [index](../evidence/index.json) retains every original r2 field and artifact, adding only the disposition and provenance. The 27-record aggregate copies the 26 earlier accepted result objects unchanged; 104,279 artifact references were verified. Stage 0 is BLOCKED for 22 missing records and zero unreviewed.

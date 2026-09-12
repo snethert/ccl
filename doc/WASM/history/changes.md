@@ -23,3 +23,7 @@ The user clarified that the pasted “I accept S0-LL21-a” wording was all Clau
 ## 2026-09-12 — record the seventh audit of the dependency extension, trace and LL21-a correction
 
 Claude's seventh audit at db395218 reviewed the dependency extension, graph builder, trace reconciler and their controls, re-executed the r7 observation from the pinned inputs (21,843/21,843 twice, 161/164 then 164/164 FASLs, all FASL hashes equal to r7 and r5), rebuilt the dependency graph byte-identically from Codex's log and with matching counts from its own, reproduced the trace reconciliation exactly, and ran the dependency and trace controls. It verified that the LL21-a correction changed only that record's disposition. No defect was found; the evidence is census input without gate credit. The reviewer's own sixth-audit follow-up, which had repeated the misattributed LL21-a acceptance, is corrected. S0-LL21-a remains reviewed and awaiting the user's decision; the gate stays at 26 accepted, 22 missing and one pending.
+
+## 2026-09-12 — the user accepts S0-LL21-a
+
+After the seventh audit, the user accepted S0-LL21-a in Claude's session with their own words. Claude produced the envelope with the unchanged producer, composed the 27-record aggregate from the 26 unchanged accepted result objects, verified all 104,279 artifact references, and catalogued and committed the evidence repository (af41df0b). The withdrawn misattributed decision remains retained and is not relied on. Stage 0 is BLOCKED for 22 missing records and zero unreviewed.
