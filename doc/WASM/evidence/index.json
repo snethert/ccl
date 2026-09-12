@@ -650,7 +650,14 @@
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Isolated S0-LL21-a prebuilt publication execution across C/C4/B and three packaging choices. Full derivative qualification and exploratory timing artifacts retained; no ABI selection or acceptance."
+      "scope": "Isolated S0-LL21-a prebuilt publication execution across C/C4/B and three packaging choices. Full derivative qualification and exploratory timing artifacts retained; no ABI selection or acceptance.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Fifth audit at HEAD 023181c0: full source review, fresh re-execution (486/279/72/27, 27 trial rows), 4518/4518 byte comparison and independent bootstrap recomputation in the reviewer's own session, 2026-09-12",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
+        "record": "stage0/claude-review.md"
+      },
+      "note": "Claude fifth audit 023181c0 found no defect and reproduced all 4,518 binaries; five nonblocking observations recorded, including identity-only publication and timer sensitivity. Original envelope remains pre-review; project acceptance of S0-LL21-a is a separate decision."
     }
   ],
   "auxiliary_records": [
