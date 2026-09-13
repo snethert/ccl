@@ -1599,16 +1599,22 @@
       "external_review": {
         "reviewer": "Claude",
         "provenance": "User-supplied review of 363fc2d4, recorded by Codex on 2026-09-13. No reviewer commit was claimed.",
-        "disposition": "REVIEWED_WITH_CLOSURE_FINDING",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md",
-        "scope": "Original observed-emission claims only; subsequent slot-join correction is not reviewed."
+        "scope": "Original observed-emission claims; the closure finding is closed by NATIVE-EMISSION-SLOT-JOINS-R1, reviewed in the fifteenth audit."
       }
     },
     {
       "id": "NATIVE-EMISSION-SLOT-JOINS-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-slot-joins-r1/packet.json",
       "sha256": "226ed18d4f444037fdd421cf9c3212c86aee27d0437821af9be8be983c609b5b",
-      "scope": "Unreviewed correction: 141 explicit slot-equality edges and witnesses, 32 rejected controls, six operand-layout cases and one unknown-offset refusal case. Original emission facts and existing graph records preserved. Full census remains unqualified; no gate credit."
+      "scope": "Reviewed (Claude fifteenth audit, no defect) correction: 141 explicit slot-equality edges and witnesses, 32 rejected controls, six operand-layout cases and one unknown-offset refusal case. Original emission facts and existing graph records preserved. Full census remains unqualified; no gate credit.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Fifteenth audit at e9f5d0c6: joiner re-executed byte-identically; format-2 materialization reproduced the recorded hash; delta independently confirmed as the original fragment plus exactly 141 same-slot edges; every edge and witness checked against the base slot nodes and the pinned image table; all bindings and the catalog at 92182abf verified, 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md"
+      }
     }
   ]
 }
