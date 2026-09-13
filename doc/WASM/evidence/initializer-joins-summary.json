@@ -4,7 +4,7 @@
   "integration_coverage": "PASS",
   "schema_and_graph_invariants": "PASS",
   "census_contract": "BLOCKED",
-  "review_disposition": "NOT_REVIEWED",
+  "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
   "original_nodes_preserved": 102834,
   "original_edges_preserved": 307672,
   "new_nodes": 116996,
@@ -60,7 +60,7 @@
   "checker_follow_up": {
     "date": "2026-09-13",
     "status": "PASS",
-    "review_disposition": "NOT_REVIEWED",
+    "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
     "controls_rejected": 18,
     "former_escapes_reproduced": 5,
     "graph_and_witnesses_reused_unchanged": true,
@@ -87,7 +87,7 @@
   "node_metadata_follow_up": {
     "date": "2026-09-13",
     "status": "PASS",
-    "review_disposition": "NOT_REVIEWED",
+    "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
     "controls_rejected": 24,
     "former_insertion_escapes_reproduced": 5,
     "former_metadata_escapes_reproduced": 6,
@@ -120,8 +120,11 @@
     "record": "stage0/claude-review.md",
     "audits": [
       11,
-      12
+      12,
+      13
     ],
-    "disposition": "Both prior findings addressed; no defect found, with a low metadata residual and an original-provenance caveat. Latest fix and recovered excerpts await review; retained dispositions and acceptance unchanged."
+    "disposition": "All findings closed across the eleventh to thirteenth audits; no defect found. Graph, witnesses and verifier controls reproduced byte-identically; independent insertion and metadata probes reject. The three initializer packets are marked reviewed in the evidence index. Acceptance and the gate are unchanged; LL15-b/c remain missing.",
+    "reviewed_at": "4a7bbb36",
+    "date": "2026-09-13"
   }
 }

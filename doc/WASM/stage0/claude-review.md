@@ -114,7 +114,7 @@ Findings, none blocking. First, the report's statement that eight function rows 
 Disposition: NATIVE-JOINED-CENSUS-R1 and NATIVE-RICH-CENSUS-R1 REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC. No inventory record changes state; S0-LL15-b and S0-LL15-c remain missing until the closure is assembled from these inputs.
 
 
-## Eleventh Claude audit — initializer integration, at f3b4b07e — 12 September 2026
+## Eleventh Claude audit — initializer integration, at f3b4b07e — 13 September 2026
 
 Recorded by Codex from the user's supplied Claude review; the executions below are Claude's, not new Codex verification. Scope: initializer identity and phase-boundary integration and NATIVE-INITIALIZER-JOINS-R1. Verdict: no defect in the deliverable, with a control-coverage gap and an evidence-retention gap to fix before marking the packet reviewed.
 
@@ -131,3 +131,13 @@ Claude's fresh focused verification reproduced controls.json byte-identically in
 Residual: added nodes were compared only by ID and kind, allowing altered implementation text. Comparing full records was recommended. Provenance caveat: development.json asserted that the first temporary r1 succeeded and was superseded by a pin edit, but the reviewer found no supporting on-disk evidence. Claude left acceptance of that explanation to the user. The supplied review did not mark either packet reviewed or accepted; their retained dispositions remain NOT_REVIEWED.
 
 Codex follow-up, 13 September: the original session log has now been located, including the first command's session ID, its exit code 0, printed integration summary and subsequent pin edit/r2 launch. Relevant original log records are retained in the new metadata-checker packet. This supplies evidence for the success claim but does not recover the first run.json or artifact files. The new full-record checker and recovered excerpts postdate Claude's audit and need their own review.
+
+## Thirteenth Claude audit — full node records, at 4a7bbb36 — 13 September 2026
+
+Recorded by Claude directly. Scope: the full added-node-record checker in `identity_join.py`, its six new controls, the extended focused verifier and NATIVE-INITIALIZER-METADATA-R1. The recovered first-run session material was excluded from review at the user's direction.
+
+Verification: the focused verifier re-executed from HEAD in about 140 seconds and produced a controls.json byte-identical to the retained packet, with identical source and artifact hashes; 24 controls reject, five escapes reproduce against the f3b4b07e checker and six against the c421e39a checker. All 14 source blobs at HEAD match the run record; the c421e39a checker blob matches the recorded prior hash; the six packet files match packet.json; packet.json matches the evidence index; the catalog at 8a303b5 matches repository.json and holds exactly the seven new rows; the two earlier initializer packets are untouched. Independent probes, separate from Codex's controls, all reject under the corrected checker: implementation text on a code node, evidence on a front-end function node, a boundary node's reason, a module node's test list, a gap node's reason, and a swap of evidence between two front-end function nodes. The swap rejecting shows the first-reference evidence derivation is order-sensitive rather than a multiset. That derivation (earliest boundary use, reader before callee before callback within a boundary, serialized ancestry walked depth-first) was traced against the producer's recursion and matches.
+
+Findings: none blocking. The eleventh-audit heading above was misdated 12 September and is corrected. The evidence commit was amended after a publisher assertion miscounted six files as seven; the pre-amend commit d1c10b86 remains as a dangling object and the evidence repository has no remote, so nothing external is affected.
+
+Disposition: NATIVE-INITIALIZER-JOINS-R1, NATIVE-INITIALIZER-CHECKER-R1 and NATIVE-INITIALIZER-METADATA-R1 REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC. The eleventh and twelfth audits' findings are closed. No inventory record changes state; S0-LL15-b and S0-LL15-c remain missing until the closure is assembled from these inputs.
