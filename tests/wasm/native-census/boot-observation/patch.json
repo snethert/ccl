@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+  "patch_sha256": "75dfe1abb255fe2e14b556151e4bb2e23321140a0f1f57e86bb542edbabc22bd",
+  "scope": "Early boot owner-thread observation; no compiler emission or runtime behavior changes.",
+  "files": [
+    {
+      "path": "level-0/l0-def.lisp",
+      "original_sha256": "c80400d317c8a6821be46b88cc76d965088ecde828c6d32610ef213a2670f6b6",
+      "observed_sha256": "42c27258232fe07e4c96e29bdbab78fb8cb3e66e9ab386fab3cc5e7c99c9ba42"
+    },
+    {
+      "path": "level-0/nfasload.lisp",
+      "original_sha256": "26af0ec7dfd157b0dcc3c427a2aab674dd6b1877d6f021451ffd761bbb368f20",
+      "observed_sha256": "860339f9062d2e97552b0ee6e33db301c7fad1c25fca6f8ba6eaca79158f100a"
+    },
+    {
+      "path": "level-1/level-1.lisp",
+      "original_sha256": "a5cec77fa445a4b44044ff26fdd75076500e5b3e4a19236458bf84d0587305f1",
+      "observed_sha256": "80f89f663cb627bb8191c02c70965a125aaf1664cd1b49c45830feb6662cbf49"
+    }
+  ]
+}

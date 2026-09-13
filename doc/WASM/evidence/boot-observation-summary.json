@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "status": "EXECUTED_UNQUALIFIED_CENSUS_INPUT",
+  "review_disposition": "NOT_REVIEWED",
+  "packet": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-boot-observation-r1/packet.json",
+    "sha256": "8451f69284474e1643337dd20c2325052398d64a8ab3e59dd02ded9738e491d0"
+  },
+  "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+  "scope": "Owner-thread native boot observation through normal top-level handoff. Separate process identities; not a qualified complete LL15 census.",
+  "counts": {
+    "events": 52441,
+    "cold_initializers": 133,
+    "completed_loads": 121,
+    "completed_readers": 8326,
+    "completed_calls": 8326,
+    "installations": 9335,
+    "removals": 9289,
+    "binding_symbols": 9094,
+    "objects": 26811,
+    "active_handoff_frames": 3
+  },
+  "native": {
+    "baseline_tests_passed": 21843,
+    "observed_tests_passed": 21843,
+    "upstream_disabled": 75,
+    "fasls_total": 164,
+    "fasls_identical_during": 161,
+    "intentional_changes": [
+      "level-0/l0-def.dx64fsl",
+      "level-0/nfasload.dx64fsl",
+      "level-1.dx64fsl"
+    ],
+    "fasls_identical_after": 164,
+    "evaluated_snapshots_identical": true,
+    "clean_observation_state_absent": true
+  },
+  "verification": {
+    "analysis_identical": true,
+    "file_joins_identical": true,
+    "stream_and_file_controls": 25,
+    "native_controls": 3,
+    "unit_controls": 5,
+    "fresh_export_identical": true
+  },
+  "files": {
+    "distinct": 122,
+    "opcode_witnesses": 8327
+  },
+  "retention": {
+    "files": 52,
+    "bytes": 31976550,
+    "development": "development.json and development.zip",
+    "first_failure_limit": "Original r1 boot log, command and patch retained; failing binary was overwritten by clean restoration before failure-binary retention was added."
+  },
+  "gate": {
+    "accepted": 28,
+    "missing": 20,
+    "unreviewed": 0,
+    "new_credit": 0
+  },
+  "next": "Review and integrate the boot process identities into the exchange graph; complete target source traversal, seed/candidate bounds and remaining lowering classifications."
+}
