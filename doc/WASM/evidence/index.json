@@ -1621,7 +1621,14 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-boot-observation-r1/packet.json",
       "sha256": "8451f69284474e1643337dd20c2325052398d64a8ab3e59dd02ded9738e491d0",
       "review_disposition": "NOT_REVIEWED",
-      "scope": "Native boot-process witness: 133 cold initializers, 121 completed loads, 8,326 completed loader calls, 9,094 initial/final binding histories. Three-file reversible U1 instrumentation; native R6 and 25 stream/file, three saved-image and five unit rejection controls. No complete census or gate credit."
+      "scope": "Reviewed native boot execution at the retained bounds; all 133 anonymous cold thunks lack source/module identities. Preserve order-only nodes until an xload-side insertion witness supplies the source join. No complete census or gate credit.",
+      "external_review": {
+        "reviewer": "Claude",
+        "provenance": "User-supplied review of 2b875096, recorded by Codex on 2026-09-13; no reviewer commit was supplied.",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "scope": "Native boot execution and R6 at stated bounds. All 133 cold thunks lack source notes; source/module integration requires an xload insertion witness and a justified positional join."
+      }
     }
   ]
 }

@@ -2,7 +2,7 @@
 
 The boot-image subprocess now has its own observation record. The earlier rich compiler capture never loaded its observer in that process, so it could not establish the execution of the cold initializer queue or L1 installations. The new [reversible fixture](../../../tests/wasm/native-census/boot-observation/README.md) starts recording immediately before U1 drains `*xload-cold-load-functions*` and stops at the explicit normal-top-level handoff. It runs in a disposable pristine U1 archive on macOS x86-64.
 
-This is a separate census input, pending independent review. It supplies observed execution identities; the complete LL15-b/c exchange graph still needs assembly and qualification. Stage 0 remains 28 accepted, 20 missing and zero unreviewed required records. No acceptance envelope changes.
+Claude reviewed this as acceptable at its stated execution scope, with no defect, in the [sixteenth audit](claude-review.md). The source-identity limitation below must remain explicit during integration. It supplies observed execution identities; the complete LL15-b/c exchange graph still needs assembly and qualification. Stage 0 remains 28 accepted, 20 missing and zero unreviewed required records. No acceptance envelope changes.
 
 ## Executed scope
 
@@ -13,12 +13,14 @@ This is a separate census input, pending independent review. It supplies observe
 | Completed file loads | 121 |
 | Completed loader initializer calls and reader frames | 8,326 each |
 | Additional load / reader / initializer frames active at handoff | 1 each |
-| Distinct loaded files / witnessed opcode bytes | 122 / 8,327 |
+| Distinct loaded files / witnessed initializer opcode bytes | 122 / 8,327 |
 | Function-cell installations / removal intents | 9,335 / 9,289 |
 | Binding symbols with initial and final checkpoints | 9,094 |
 | Retained object descriptions | 26,811 |
 
 The recorder retains actual function objects, reader functions, dispatch tables and old/new function-cell values. It never retains the dynamic-extent FASL state. Each reader event carries the filename and actual opcode offset; every recorded byte agrees with the corresponding retained FASL and U1's `$fasl-lfuncall` encoding. Names and source notes are descriptions read after image save/restore, not historical mutable metadata or cross-process identity witnesses.
+
+All 133 cold initializers are anonymous: their retained names are `NIL`, with no source file or source position. They have distinct object identities within the boot process, but this packet cannot map them to source forms or modules. Until an xload-side witness records their queue insertion sites and supplies a justified positional join, census integration must retain them as order-only nodes with unresolved source dependencies.
 
 A separate retained copy of the original cold queue checks execution order and coverage. A first-touch binding checkpoint supplies each symbol's initial value. Replaying the installation/removal events must agree with that initial state and with bindings independently read from the saved image. The first installation remains checkable even if startup later overwrites it.
 

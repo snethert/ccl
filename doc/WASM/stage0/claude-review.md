@@ -161,3 +161,16 @@ Verification: the joiner re-executed from HEAD with all five analysis outputs by
 Findings: none. The retained first correction run failed on a shadowed variable in the test driver and is kept with its source and log, as the rules require.
 
 Disposition: NATIVE-EMISSION-SLOT-JOINS-R1 REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC; the fourteenth audit's closure finding on NATIVE-EMISSION-JOINS-R1 is closed. No inventory record changes state; S0-LL15-b and S0-LL15-c remain missing. Gate 28 accepted, 20 missing, zero unreviewed of 48 after the second-Mac retirement.
+
+
+## Sixteenth Claude audit — native boot observation, at 2b875096 — 13 September 2026
+
+Recorded by Codex from the user's supplied Claude review. The following executions and independent checks are Claude's; no reviewer commit was supplied. Scope: NATIVE-BOOT-OBSERVATION-R1 and the reversible three-file early-boot fixture. Verdict: acceptable at its stated scope, no defect found, with one required source-identity disclosure before census integration.
+
+Claude re-executed the whole native unit in about 4.5 minutes. All 164 baseline FASLs, the three intentionally changed FASLs and all 164 restored FASLs match the retained ones byte-for-byte; both native suites pass 21,843 with 75 upstream-disabled; snapshots agree and the disposable source files restore exactly to U1. Events, analysis and file joins match after normalizing the disposable archive's absolute path. Saved image bytes differ, as expected for image serialization. The retained-stream verifier, three saved-image controls and two positive/five refusal recovery cases reproduce. Packet/index/catalog/source bindings and unchanged prior packets were checked. The recorded analyzer differs from HEAD only by the disclosed path-relocation change.
+
+Independent recount reproduces 133 cold initializers in queue order, 121 completed loads, 8,326 matched reader/call pairs, 9,335 installations, 9,289 removal intents and 9,094 symbol histories. Replay equals the independently read final bindings, with three frames active at handoff. All 8,327 initializer opcodes match retained bytes and pinned U1 lfuncall constants. Source inspection confirms the inline store/call/handoff sites, primitive cons-list recording, owner/refusal checks, no new special bindings and one handoff form; native R6 confines changes to exactly three FASLs.
+
+Required finding: every one of the 133 cold thunks has name NIL and no source file or position. No existing input observes the xload-side push site, so the packet cannot associate them with a source form or module. Disclose this now; retain order-only nodes with unresolved source dependencies until a new insertion witness supports an explicitly justified positional join. Low notes: STATUS must say initializer opcodes, not all reader opcodes; the first failed boot's missing binary remains disclosed, with its log, command and patch retained.
+
+Disposition: REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC for execution at the recorded bounds; source integration remains open. The disclosure and STATUS terminology are corrected alongside this record. The raw packet retains its original disposition and bytes. No project acceptance is claimed; gate stays 28 accepted, 20 missing and zero unreviewed required records.

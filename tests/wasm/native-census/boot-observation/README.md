@@ -40,3 +40,5 @@ python3 tests/wasm/native-census/boot-observation/verify.py \
 ```
 
 The verifier extracts only the supplied baseline archive into its new output directory. It maps original absolute load names through the capture's recorded source root; it never widens that root. The retained kernel is copied and made executable in the verification directory. The evidence store itself is not modified.
+
+The retained r1 capture has 133 anonymous cold thunks: all names are NIL and all source notes are absent. Its local object identities and queue order cannot identify source forms/modules. A separate xload-side insertion witness is required for that join; until then they remain order-only census nodes with unresolved source dependencies.
