@@ -49,10 +49,14 @@ independent review and project acceptance remain separate from execution.
 5. The [declared-type helper slice](target-types.md) now supplies source type-query
    bodies and compound target translation within the private EQL macro. Fifteen
    probes and the genuine file trace expose and repair unsafe EQ decisions for
-   declared boxed integers while respecting declaration policy. Review is pending;
-   general type inference and other helpers remain open. Take a standing control
-   next, then resume remaining helper/type/object qualification, boundary
-   replacements and wider source traversal.
+   declared boxed integers while respecting declaration policy. Claude's
+   twenty-ninth audit reviewed it without defect; general type inference and
+   other helpers remain open.
+6. [S0-LL01-b](child-command-control.md) now exercises the production native
+   aggregate with real failed, killed and timed-out children under synthetic
+   command stimuli. One complete workflow passes and ten controls reject;
+   independent review and project acceptance are pending. Next resume remaining
+   helper/type/object qualification, boundary replacements and wider source traversal.
 
 The B desk record's actual inventory prerequisites are the reviewed ABI/runtime
 records; S0-ENGINE-a is not a prerequisite of S0-ABI-selection. Engine qualification

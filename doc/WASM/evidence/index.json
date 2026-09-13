@@ -995,6 +995,24 @@
         "sha256": "dd8986db01cc7396affc5d5295258d2e21a79a50bb46533aa7ba94933b59734d",
         "timestamp": "2026-09-13T23:00:15.577032+00:00"
       }
+    },
+    {
+      "id": "STANDING-CHILD-COMMAND-CONTROL-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-child-command-control-r1/results.json",
+      "sha256": "7c204ac0c7ea0088e922346f2d21c6c675d705f7e54b9a285d1215ee149b3588",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-child-command-control-r1/packet.json",
+      "packet_sha256": "f5b5d4b60807fd16fd5be2a9472c73a98d965d2c16f4b0ed7c8cf99b97c53c07",
+      "timestamp": "2026-09-13T23:46:25.194640+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "f9e76c63659eb2b8ec400f0338a50c901228f258ec448d356711275e92bf5f50",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "CONTROL EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "S0-LL01-b/control: unchanged production native aggregate with synthetic argv/products. One complete workflow passes; ten real exit/kill/timeout/missing-marker cases fail, identify the exact step and run no later command. No CCL/Wasm execution, initializer or descendant-cleanup claim. Independent review and project acceptance pending."
     }
   ],
   "auxiliary_records": [
@@ -1889,7 +1907,7 @@
       "id": "CURRENT-STAGE0-COMBINED",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-ll03a-accepted-results.json",
       "sha256": "d45b9047e495e20b12d19a951776bcb54aeaee1807e1b31b61935a71c7b71c39",
-      "scope": "Current aggregate: 31 accepted records, including S0-LL03-a; 30 earlier result objects unchanged. Scoped ledger: 17 missing, zero unreviewed."
+      "scope": "Unchanged aggregate of 31 accepted records. The separate S0-LL01-b raw control awaits review/acceptance; current scoped ledger: 16 missing and one unreviewed of 48."
     },
     {
       "id": "LL02A-ACCEPTANCE-DECISION",
@@ -2037,6 +2055,18 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md"
       }
+    },
+    {
+      "id": "CHILD-COMMAND-CONTROL-PACKET",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-child-command-control-r1/packet.json",
+      "sha256": "f5b5d4b60807fd16fd5be2a9472c73a98d965d2c16f4b0ed7c8cf99b97c53c07",
+      "scope": "One compact S0-LL01-b packet: original and replay subprocess evidence, eight direct source pins, 31 compatible accepted bindings and scoped 31/16/1 ledger. Inner native-labelled outputs are synthetic quarantine only."
+    },
+    {
+      "id": "CHILD-COMMAND-CONTROL-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-child-command-control-r1/gate-result.json",
+      "sha256": "adbfebdd4edee2d2a9f0a7bce2059f39117392a5085eae72da76a1d28e409d7e",
+      "scope": "Scoped production-slot result plus unchanged 31 accepted records: 16 missing and one unreviewed of 48. No combined runtime-payload rescan."
     }
   ]
 }
