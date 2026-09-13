@@ -20,9 +20,9 @@ Claude reviewed this as acceptable at its stated execution scope, with no defect
 
 The recorder retains actual function objects, reader functions, dispatch tables and old/new function-cell values. It never retains the dynamic-extent FASL state. Each reader event carries the filename and actual opcode offset; every recorded byte agrees with the corresponding retained FASL and U1's `$fasl-lfuncall` encoding. Names and source notes are descriptions read after image save/restore, not historical mutable metadata or cross-process identity witnesses.
 
-All 133 cold initializers are anonymous: their retained names are `NIL`, with no source file or source position. They have distinct object identities within the boot process, but this packet cannot map them to source forms or modules. Until an xload-side witness records their queue insertion sites and supplies a justified positional join, census integration must retain them as order-only nodes with unresolved source dependencies.
+All 133 cold initializers are anonymous: their retained names are `NIL`, with no source file or source position. They have distinct object identities within the boot process, but this packet cannot map them to source forms or modules. This original packet alone supplies order-only identities. The separately reviewed xload witness below closes their source-origin gap through recorded insertion sites and a checked positional join.
 
-The subsequent [xload origin witness](cold-initializer-origins.md), pending independent review, supplies module origins for all 133 and compiler source contexts for 131. It does not alter this original packet or fill the two absent ranges by inference.
+The subsequent [xload origin witness](cold-initializer-origins.md), reviewed without defect in Claude's seventeenth audit, supplies module origins for all 133 and compiler source contexts for 131. It does not alter this original packet or fill the two absent ranges by inference.
 
 A separate retained copy of the original cold queue checks execution order and coverage. A first-touch binding checkpoint supplies each symbol's initial value. Replaying the installation/removal events must agree with that initial state and with bindings independently read from the saved image. The first installation remains checkable even if startup later overwrites it.
 
@@ -40,6 +40,6 @@ The first development boot trapped because the recorder incorrectly treated `%cu
 
 ## Remaining census work
 
-These are native boot-process identities. The next exchange fragment must preserve that namespace and join it to other captures only with explicit witnesses. No name-only merge, Wasm implementation disposition or full static dependency bound is supplied by this packet. The registered-target source traversal, reviewed seeds and conservative dynamic-call bounds, remaining lowering/import/store classifications, and the complete closure checks remain open.
+These are native boot-process identities. The [boot integration fragment](boot-integration.md) preserves that namespace and adds explicit origin edges. Its source-inventory links express logical-path membership, without claiming cross-run source-byte or callable equality. No name-only merge, Wasm implementation disposition or full static dependency bound is supplied by this packet. The registered-target source traversal, reviewed seeds and conservative dynamic-call bounds, remaining lowering/import/store classifications, and the complete closure checks remain open.
 
 Object retention makes this unsuitable for allocation, GC cost or startup timing claims. It observes function-cell transitions through the instrumented U1 paths, not every possible store to every kind of binding. The observed source and images are evidence only. Implementation continues to start from clean U1 source and bootstrap.

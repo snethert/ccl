@@ -1642,6 +1642,13 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md"
       }
+    },
+    {
+      "id": "NATIVE-BOOT-INTEGRATION-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-boot-integration-r1/packet.json",
+      "sha256": "6421d69695c0f13305b20478137a81f9c01bd634a7b1d6ad836d722c664c35f5",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Executed boot integration: 52,441 ordered boundaries, 133 cold source origins and 9,094 cell histories; 33 controls reject and complete exchange materialization reproduces byte-for-byte. Separate process identities and historical graph preserved. Opaque values and full closure remain unresolved; no gate credit."
     }
   ]
 }

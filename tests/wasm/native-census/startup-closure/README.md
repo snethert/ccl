@@ -118,3 +118,46 @@ Observed handler ancestry remains distinct from exact leaf dispatch and static
 coverage. Six parameterized subprimitive operand layouts have decoding rules;
 the report separates actual execution from synthetic layout cases. See the
 [scope and remaining work](../../../../doc/WASM/stage0/native-emission-joins.md).
+
+
+## Boot execution and cold source origins
+
+```sh
+python3 tests/wasm/native-census/startup-closure/join_boot.py \
+  --evidence-root /Users/buildsomething/Source/ccl-evidence \
+  --output /tmp/ccl-boot-integration-new \
+  --materialize /tmp/ccl-boot-census-new.json.gz
+```
+
+`boot-inputs.json` pins the reviewed initializer base, emission fragment, boot
+capture and cold-origin witness. The runner reconstructs the prior graph and
+checks its already reviewed materialization identity, reproduces the boot
+analysis from the retained event stream, and integrates every observed boundary,
+function-cell checkpoint/change, load and cold source origin. No native process,
+new patch, full build stream or archive catalog is needed.
+
+`boot_join.py` produces the additive fragment. `check_boot.py` independently
+builds full node records and edge multiplicities from the retained inputs,
+checks every event prerequisite and origin witness, and bounds all additions.
+Source paths, code objects and binding values retain the boot namespace.
+Absolute and relative loader aliases combine only when their retained bytes
+agree. Source inventory membership has explicit conservative edges; it is not
+cross-run callable or source-byte equality. Opaque function-cell values remain
+unresolved, and the active handoff frames receive no invented return.
+
+The producer runs corruption controls and the generic census checker. A passing
+integration still reports `BOOT_INTEGRATED_UNQUALIFIED` and a blocked complete
+closure. The optional full graph is disposable; retain only the fragment,
+controls, summary and run record. To check and materialize a retained packet:
+
+```sh
+python3 tests/wasm/native-census/startup-closure/materialize_boot.py \
+  --evidence-root /Users/buildsomething/Source/ccl-evidence \
+  --packet /absolute/path/to/boot-integration-packet \
+  --output /tmp/ccl-boot-materialization-new
+```
+
+That command produces `census.json.gz` and `materialization.json`. It verifies the
+input and fragment bindings, independently checks all added records, preserves
+the base, and compares the complete graph with the producer's materialization
+when one is recorded. See the [integration report](../../../../doc/WASM/stage0/boot-integration.md).

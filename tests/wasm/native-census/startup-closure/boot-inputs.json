@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "reviewed_prerequisites": "079c14d7198048e18daa7c45155e50758295ff55",
+  "inputs": {
+    "base": {
+      "path": "2026-09-12-initializer-joins-r1/census.json.gz",
+      "sha256": "62f2e8b560c723394de0129f448bf3d43f7655164a3e448997036f70358171ae"
+    },
+    "emission_delta": {
+      "path": "2026-09-13-emission-slot-joins-r1/delta.json.gz",
+      "sha256": "251a14cfd4e8917fcc23f0c5934060b32519cb9e05e3fd12f79743aa5b57f965"
+    },
+    "emission_materialization": {
+      "path": "2026-09-13-emission-slot-joins-r1/materialization.json",
+      "sha256": "06bb4eba5b213fbb2b7f823a98ed64facf2dec6637a63c06b76c889edd269655"
+    },
+    "boot_events": {
+      "path": "2026-09-13-boot-observation-r1/capture/events.jsonl.gz",
+      "sha256": "30274f7170e9daa48ad8f8789e56a58c44084262ad4f05489becf3b201fe05be"
+    },
+    "boot_joins": {
+      "path": "2026-09-13-boot-observation-r1/capture/joins.json.gz",
+      "sha256": "0d6ce818f25a3349ecd9b7cfaa17bdb0186e1f9e79b85170d0a86cdce61c683c"
+    },
+    "boot_files": {
+      "path": "2026-09-13-boot-observation-r1/capture/files.json",
+      "sha256": "413fb2ae376ae4b16a61ba76ef00116ad11b7dcd6632621e1015d31cf5c62308"
+    },
+    "boot_run": {
+      "path": "2026-09-13-boot-observation-r1/capture/run.json",
+      "sha256": "391bafe67b9a79a1d22a14a92d0fbaee877e92217e9cf75a66505d26d094705e"
+    },
+    "origins": {
+      "path": "2026-09-13-cold-origins-r1/joins.json",
+      "sha256": "d8984030afb0badb756e38052c780519abbc7f012f2cc9835a218582d5f24217"
+    },
+    "origins_run": {
+      "path": "2026-09-13-cold-origins-r1/run.json",
+      "sha256": "ba20b684d16679189b61b305146c504678f46e9be821638a7fec982121002e6d"
+    }
+  },
+  "scope": "Pinned reviewed direct inputs only. Reconstruct the prior emission graph; no raw build-stream replay, native rebuild or archive scan."
+}

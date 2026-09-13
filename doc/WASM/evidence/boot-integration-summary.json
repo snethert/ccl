@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "status": "BOOT_INTEGRATED_UNQUALIFIED",
+  "review_disposition": "NOT_REVIEWED",
+  "events": 52441,
+  "cold_initializers": 133,
+  "completed_loads": 121,
+  "completed_readers": 8326,
+  "completed_calls": 8326,
+  "installations": 9335,
+  "removals": 9289,
+  "binding_symbols": 9094,
+  "objects": 26811,
+  "active_handoff_frames": 3,
+  "source_modules": 31,
+  "loaded_file_names": 122,
+  "loaded_file_paths": 120,
+  "source_contexts": 131,
+  "missing_source_contexts": [
+    65,
+    106
+  ],
+  "opaque_binding_values": 1059,
+  "delta_nodes": 79406,
+  "delta_edges": 193896,
+  "event_initializers": 52441,
+  "delta_modules": 152,
+  "graph_nodes": 327961,
+  "graph_edges": 816362,
+  "controls_rejected": 33,
+  "schema_and_graph_invariants": "PASS",
+  "census_contract": "BLOCKED",
+  "census_error_counts": {
+    "unresolved reachable edge from": 17329,
+    "unimplemented reachable node": 29361
+  },
+  "scope": "Distinct boot identities, observed event order and explicit source-inventory membership; no cross-run callable equivalence.",
+  "remaining": [
+    "Source traversal against the registered target, reviewed seeds and conservative dynamic-call bounds.",
+    "Opaque function-cell contents, remaining lowering/import/store classifications and final scenario reconciliation."
+  ],
+  "stage0_gate": {
+    "accepted": 28,
+    "missing": 20,
+    "unreviewed": 0,
+    "new_credit": 0,
+    "basis": "Accepted aggregate unchanged; gate not rerun."
+  },
+  "packet": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-boot-integration-r1/packet.json",
+    "sha256": "6421d69695c0f13305b20478137a81f9c01bd634a7b1d6ad836d722c664c35f5"
+  },
+  "retention": {
+    "files": 11,
+    "bytes": 3204086,
+    "scope": "One additive fragment and scoped checks. Full graphs and unchanged captures are not duplicated."
+  },
+  "materialization": {
+    "producer_graph_identical": true,
+    "sha256": "e8dcfee353ec9c47122fc14b16f345159fe16346c13fa272da6d28017e976975"
+  }
+}
