@@ -34,6 +34,8 @@ The first six steps below supersede the historical implementation order that fol
 
 The proposed experimental B pass-2 slice is a separate scope decision: disposable U1, actual front-end output, native-result comparison, and adversarial review before any merge into the implementation checkout. The current exception authorizes observation only; this execution order does not itself amend the functional-compiler restriction.
 
+The [13 September bootstrap design review](bootstrap-design-review.md) makes the integration priorities explicit: establish phase prerequisites and the early-to-full error-service transition; extend the first generated B slice through closures, dynamic binding, multiple values and image identity; then exercise the compiler-to-bootstrap path in a fresh process. Coherent eager bootstrap bundles are a proposed starting configuration, with production packaging still open. The review preserves existing gate criteria and the B decision; the archived survey supplies leads to verify against U1.
+
 ### Historical implementation order
 
 1. Run the limited `PROBE-*` layout, materialization and late-Worker probes to establish the execution/reporting path. Do not map their passing results to full LL slices.

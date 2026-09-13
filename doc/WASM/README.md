@@ -11,6 +11,7 @@ The implementation baseline is upstream CCL v1.13 at `c994217adc56b3f8a564526cee
 - [Workflow](workflow.md): independent census and architecture tracks.
 - [Current status](STATUS.md) and [dated change history](history/changes.md).
 - [Attempt-1 reference survey](history/attempt1-reference.md): what the archived first port established and got wrong, mapped to Stage 0 and Stage 1 obligations. Reference only.
+- [Bootstrap design review](stage0/bootstrap-design-review.md): dated implications for initialization phases, provisional packaging, image identity and reuse assumptions; existing architecture decisions remain in force.
 
 Markdown is the editable document source. The three versioned DOCX files are generated reading copies. `stage0/obligations.json` and the stage lists are generated from the acceptance register's LL metadata; `stage0/inventory.json` defines the individual tests. These complementary sources are checked together. Twenty-eight reviewed native/runtime/frame/ABI/observation records are now accepted within their stated scopes; the remaining Stage 0 obligations are open.
 
@@ -56,7 +57,7 @@ The native reference and reproduction procedure are in [baseline.json](stage0/ba
 
 The next D3 prerequisite now has a [logical debugger-frame fixture](../../tests/wasm/stage0/debug-frames/README.md), with [execution scope and remaining work](stage0/debug-frames.md). Claude independently reproduced and reviewed r3 without finding a defect. Claude also reviewed the v2 evidence tooling at 52639e4e. The user authorized the separate [scoped acceptance decision](stage0/project-acceptance.md).
 
-The [product-risk plan](stage0/product-risk-plan.md) couples startup, scale and module granularity with C/C4/B measurements. H(G) is optional future work and blocks no scheduled stage. The [separate evidence repository](evidence/repository.json) preserves original runs and supplies a portable hash catalog.
+The [product-risk plan](stage0/product-risk-plan.md) addresses startup, scale and module granularity using useful generated B code; comparative ABI measurements remain deferred. H(G) is optional future work and blocks no scheduled stage. The [separate evidence repository](evidence/repository.json) preserves original runs and supplies a portable hash catalog.
 
 The [C/C4/B correctness corpus](../../tests/wasm/stage0/dynamic-call/README.md) now executes arguments, multiple values, tail transfer, lazy installation and restoration through one parameterized fixture. Its eighteen records are now accepted after Claude's fourth audit. Reproduce it with:
 

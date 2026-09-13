@@ -25,6 +25,8 @@ The [B engineering choice](abi-choice.md) defers the hand-built C/C4/B compariso
 
 B is selected for simplicity, independently of a measured ranking or a fixed production packaging. Stage 1 determines module granularity and eager/lazy installation while confirming generated-code correctness. Record those assumptions when measuring product behavior. Reopen the ABI only for a concrete problem; a future comparison must demonstrate sensitivity and account for packaging, engine tier and representative call distribution.
 
+The [13 September bootstrap design review](bootstrap-design-review.md) proposes a small number of coherent eager bundles for the first generated bootstrap, followed by lazy installation where its dependencies are already available. This is a configuration to test, not a frozen module size or measured performance result. Its image proof checks shared constants, symbols and closure environments as well as startup cost; code packaging must preserve their identity.
+
 ## Product budgets and evidence
 
 No startup or memory budget has yet been approved, and no production-sized measurement exists. Record product targets for first usable expression, delayed-call latency, supported devices and resident memory before calling the result acceptable. The optional future comparison parameters in `benchmarks.json` are retained; its dedicated-host fixture deadlines do not become browser product promises. Do not invent absolute acceptance thresholds from a favorable exploratory run.

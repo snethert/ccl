@@ -4,6 +4,8 @@ Status: reference, not evidence. The archived tree at `~/Source/ccl-attempt1` (b
 
 Fork point: attempt 1 forked from upstream master at ce99f8a7 (2025-04-14), 21 commits after v1.13. Its history was rewritten on 2026-02-08, so upstream SHAs are not ancestors; v1.13 appears as 5bfd5fc7 with an identical tree.
 
+Current-design interpretation (Codex, 2026-09-13): the [bootstrap design review](../stage0/bootstrap-design-review.md) separates the survey's warnings from adopted requirements. In particular, the fixed memory gap, name-based class resolution and full-rebuild remedies described below are historical prescriptions, not current project rules. The shared-edit counts describe that attempt and do not predict U1's required changes.
+
 ## How far it got
 
 The full pipeline ran: kernel and subprims linked, level-0 cross-loaded into a boot image, about 8,700 functions compiled into 1,110 boot and 7,557 runtime single-function modules, cold-boot-init completed, 41 level-1 FASLs installed in-process, an image saved (2.43 GB at its worst, about 3 MB after the const-pool fix), and `TOPLEVEL-LOOP` entered. It then crashed in `MAKE-HASH-TABLE`. No REPL ever ran and no Lisp-level test ever passed: 144 test functions compiled, 0 executed correctly. The last commit restored an "rc-72 baseline", meaning FASL loading was failing again at abandonment, with a multiple-value return-count collapse in `%FIND-SYMBOL` as the final unexplained blocker. No document in the tree records why it was abandoned.
