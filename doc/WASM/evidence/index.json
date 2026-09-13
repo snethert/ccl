@@ -2029,8 +2029,14 @@
       "id": "NATIVE-TARGET-TYPES-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-target-types-r1/packet.json",
       "sha256": "70e8cae3e201c59d546963651c415796286aa114c6d73dd1cc44b7b2286a423c",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "Bounded declared-type EQL qualification: source NX-FORM-TYPEP/NX-FORM-TYPE and scalar NX-TARGET-TYPE with a private boolean-type adapter. Fifteen probes distinguish seven EQ from eight EQL cases; 60 file queries, 60 facts and 244 translation steps join to macro events. Six identical file traversals, identical repeat type capture, four native and 17 checker controls. General inference, aliases, native helper/type dependencies and five boundary stops remain open. No Wasm, full macro qualification, graph replacement or gate credit."
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+      "scope": "Reviewed (Claude twenty-ninth audit, no defect) bounded declared-type EQL qualification: source NX-FORM-TYPEP/NX-FORM-TYPE and scalar NX-TARGET-TYPE with a private boolean-type adapter. Fifteen probes distinguish seven EQ from eight EQL cases; 60 file queries, 60 facts and 244 translation steps join to macro events. Six identical file traversals, identical repeat type capture, four native and 17 checker controls. General inference, aliases, native helper/type dependencies and five boundary stops remain open. No Wasm, full macro qualification, graph replacement or gate credit.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Twenty-ninth audit at 43f360fd: all six native sessions re-executed with every retained capture, controls and summary byte-identical and the retained verifier passing; the cause confirmed in U1 source (nx-target-type at nx-basic.lisp translates only a bare FIXNUM, nx-form-typep applies it before subtypep, nx-form-type translates declared types through it, nx-trust-declarations is nil at safety 3); the three new source spans confirmed as the named definitions; packet, catalog at 1f15ddf6 with 25 new rows and all 40 source pins at HEAD verified, 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md"
+      }
     }
   ]
 }

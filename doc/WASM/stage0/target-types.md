@@ -1,6 +1,6 @@
 # Declared-type equality paths — 13 September 2026
 
-Status: executed; independent review pending. Packet `NATIVE-TARGET-TYPES-R1`
+Status: executed; reviewed without defect by [Claude's twenty-ninth audit](claude-review.md) at 43f360fd. Packet `NATIVE-TARGET-TYPES-R1`
 is retained in `2026-09-13-target-types-r1` and bound by the
 [evidence index](../evidence/index.json).
 
