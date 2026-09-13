@@ -92,3 +92,19 @@ Next: implement source traversal and call-bound replacements, integrate the
 revised roots in their correct namespace, witness the save/restore callback
 binding, and submit the revised seeds and graph for independent review. Stage 0
 remains 28 accepted, 20 missing and zero unreviewed required records.
+
+
+## Approval carried into the manifest — 13 September 2026
+
+Claude committed the twentieth audit and seed approval as `219a4129`. The current
+manifest now reads `REVIEWED_APPROVED` and cites that addendum. Its revision,
+entrypoints, method selection, vector requirements and exclusions are unchanged.
+The retained R2 packet still records the original proposal and executed input
+hash; its external review supplies the approval. No native execution or new
+evidence packet is claimed for this metadata update.
+
+Claude reproduced candidates, summary, controls and the reachability diagnostic.
+His image inventory differed in eight combined-method labels containing heap
+addresses, which no join reads. The earlier byte-identical local reproductions
+remain true for those runs; cross-session byte identity of the entire inventory
+is not required or claimed.

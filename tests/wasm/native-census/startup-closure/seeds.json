@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "review_disposition": "PROPOSED_REQUIRES_INDEPENDENT_REVIEW",
+  "review_disposition": "REVIEWED_APPROVED",
   "profile": "Pristine U1 Darwin x86-64 batch image startup with --no-init, plus the pinned native rebuild workload",
   "entrypoints": [
     {
@@ -151,7 +151,7 @@
     }
   ],
   "scope_limits": [
-    "This revised proposal awaits independent review; the prior review with findings is not approval of revision 2.",
+    "The seed entries are independently approved for the stated native profile at 219a4129. This does not approve a complete census graph, candidate bounds, image-save vector equality, or a Wasm implementation.",
     "The finite candidate universe retains all r7 compiler bodies and all resident clean-image code prototypes, including inspector code. It is not a proved bound on arbitrary future EVAL, FASL loading, rebinding, plugins, or all stub-backend paths.",
     "No bootstrap implementation is repaired by scanning the heap or rebinding names; this is observation only.",
     "S0-LL08-a static reachability and operator/lowering/effect qualification remain prerequisites to the complete census.",
@@ -160,7 +160,7 @@
   ],
   "revision": "2026-09-13-kernel-entry-surfaces",
   "supersedes": "seeds-v1.json",
-  "review_basis": "doc/WASM/stage0/seed-review.md at a1df24e7; revised proposal requires a new independent review",
+  "review_basis": "Claude twentieth audit and seed-review.md addendum, committed as 219a4129: revision 2026-09-13-kernel-entry-surfaces approved for the stated native profile. Static closure and call bounds remain open.",
   "cold_start_strategy": {
     "kind": "explicit-source-chain",
     "source": "lib/dumplisp.lisp:save-image and level-1/l1-application.lisp:toplevel-function",

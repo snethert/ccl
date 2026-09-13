@@ -200,3 +200,8 @@ Twenty-seven revised controls and fourteen historical controls pass. Two native 
 ## 2026-09-13 — Claude's twentieth audit approves seed revision 2
 
 Claude reviewed 2ef830cb: inspector and diagnostic re-executed, joined outputs byte-identical, root union re-derived independently, all source pins verified. No defect; NATIVE-STARTUP-SEEDS-R2 is marked reviewed and the revision-2 seed set is approved for the native profile in [seed-review.md](../stage0/seed-review.md). The widening finding is restated: every conservative widening family, not two edges, must be replaced by traversal and call bounds before the seeds are testable. Gate unchanged at 28 accepted, 20 missing and zero unreviewed of 48.
+
+
+## 2026-09-13 — Carry Claude's seed approval into the current manifest
+
+Following Claude's committed twentieth audit at 219a4129 and the user-supplied review, Codex set the current seed manifest to REVIEWED_APPROVED for its stated native profile, updated the review citation and corrected the obsolete pending-review scope sentence. All actual seed requirements and the revision remain unchanged. The retained R2 packet and evidence repository are untouched; this is a review-status update, not new execution or census acceptance. Scoped checks compare the manifest's unchanged semantic fields and exercise the existing candidate producer against retained inputs. The next source-traversal deliverable is specified in the plan; replacing all widening families and proving image-save vector equality remain open. Gate unchanged at 28 accepted, 20 missing and zero unreviewed required records.
