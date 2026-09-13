@@ -1,6 +1,6 @@
 # Source-derived target macro slice — 13 September 2026
 
-Status: executed, independent review pending. Packet `NATIVE-TARGET-MACROS-R1`
+Status: executed; reviewed without defect by [Claude's twenty-fourth audit](claude-review.md) at cb516b22. Packet `NATIVE-TARGET-MACROS-R1`
 is retained in `2026-09-13-target-macros-r1` and bound by the
 [evidence index](../evidence/index.json).
 

@@ -253,3 +253,8 @@ Two native sessions reproduce both raw captures byte-for-byte. Changing the diag
 ## 2026-09-13 — Claude's twenty-third audit of the required-inventory control
 
 Claude reviewed 24f8805e: runner re-executed byte-identically, the retained packet replayed, and the 28/19/1 composite reproduced from two independent production-gate runs. No defect; the packet is marked reviewed and S0-LL02-a awaits the user's acceptance decision. Gate 28 accepted, 19 missing, 1 unreviewed of 48.
+
+
+## 2026-09-13 — Claude's twenty-fourth audit of the source-derived macro slice
+
+Claude reviewed cb516b22: all six native sessions re-executed byte-identically, the eight source spans and both accessor slot orders confirmed from U1, expansions checked against the source bodies, bindings and catalog verified. No defect; the packet is marked reviewed. Gate 28 accepted, 19 missing, 1 unreviewed of 48.

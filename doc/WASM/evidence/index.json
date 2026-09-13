@@ -1737,8 +1737,14 @@
       "id": "NATIVE-TARGET-MACROS-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-target-macros-r1/packet.json",
       "sha256": "40b93ebc1872a75cbce15a4d9ed847acf63dcd12f963be8d7e31b2a1e220523e",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "Source-derived macro slice: fourteen reconstructed metadata/accessor macros from eight U1 forms, seven used in ten real traversal expansions; 293 hook events joined, with 46 other expander identities unqualified. Two identical raw captures, four native and twenty checker controls. Five boundary stops and seven unbounded calls remain; no graph replacement, full macro qualification or gate credit."
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+      "scope": "Reviewed (Claude twenty-fourth audit, no defect) source-derived macro slice: fourteen reconstructed metadata/accessor macros from eight U1 forms, seven used in ten real traversal expansions; 293 hook events joined, with 46 other expander identities unqualified. Two identical raw captures, four native and twenty checker controls. Five boundary stops and seven unbounded calls remain; no graph replacement, full macro qualification or gate credit.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Twenty-fourth audit at cb516b22: all six native sessions re-executed with both raw captures per session, controls and summary byte-identical and the verifier passing; the eight pinned source spans read independently from U1 and confirmed as the named forms with basic-stream slots wrapper/flags/state/info and pfe slots routine-descriptor/proc-info/lisp-function/sym/without-interrupts/trace-p in source order; expansions checked against the source macro bodies; packet, catalog at 0680144e with 25 new rows and all 28 source pins at HEAD verified, 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md"
+      }
     }
   ]
 }
