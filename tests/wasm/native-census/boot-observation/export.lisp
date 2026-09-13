@@ -2,7 +2,7 @@
 ;;; execute in a cold initializer or in a temporarily unbound helper's window.
 (in-package :cl-user)
 
-(defun export-boot-census ()
+(defun export-boot-census (&key after-export)
   (unless (boundp 'ccl::*boot-census-state*) (error "Missing boot observation"))
   (let* ((state (ccl::%sym-global-value 'ccl::*boot-census-state*))
          (events (reverse (third state)))
@@ -72,5 +72,9 @@
           (ccl-startup-census::json (object "version" 1 "kind" "object" "object" row) stream) (terpri stream))
         (ccl-startup-census::json (object "version" 1 "kind" "complete" "events" (length events)
                                         "identities" next-id "described_objects" (hash-table-count descriptions)) stream)
-        (terpri stream)))
+        (terpri stream))
+      ;; Optional post-export inspection shares the established object IDs.
+      ;; It cannot renumber or add records to the already closed legacy stream.
+      (when after-export
+        (funcall after-export identities descriptions #'describe-value #'id next-id)))
     (format t "BOOT-CENSUS-EXPORTED ~d~%" (length events))))

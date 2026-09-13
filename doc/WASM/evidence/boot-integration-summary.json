@@ -67,5 +67,6 @@
     "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
     "record": "stage0/claude-review.md",
     "scope": "Producer and materializer re-executed byte-identically; fragment structure, cross-namespace edges and reachability re-derived independently. Opaque cell contents, target traversal and LL15-b/c remain open."
-  }
+  },
+  "followup": "NATIVE-BOOT-WRAPPERS-R1 decodes all 1,059 formerly opaque values and adds their wrapper dependencies. This original fragment and its recorded counts remain unchanged; the follow-up awaits independent review."
 }

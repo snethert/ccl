@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "reviewed_prerequisites": "b4745023f562e87e3ac42e92514b3bccc90bce06",
+  "inputs": {
+    "image": {
+      "path": "2026-09-13-boot-observation-r1/capture/dx86cl64.image.gz",
+      "sha256": "9de81a310540822d6b6b9703921237a3b5f58be244b53cd3a0ad6c8bde80e9d5"
+    },
+    "legacy_events": {
+      "path": "2026-09-13-boot-observation-r1/capture/events.jsonl.gz",
+      "sha256": "30274f7170e9daa48ad8f8789e56a58c44084262ad4f05489becf3b201fe05be"
+    },
+    "legacy_joins": {
+      "path": "2026-09-13-boot-observation-r1/capture/joins.json.gz",
+      "sha256": "0d6ce818f25a3349ecd9b7cfaa17bdb0186e1f9e79b85170d0a86cdce61c683c"
+    },
+    "boot_run": {
+      "path": "2026-09-13-boot-observation-r1/capture/run.json",
+      "sha256": "391bafe67b9a79a1d22a14a92d0fbaee877e92217e9cf75a66505d26d094705e"
+    },
+    "base_record": {
+      "path": "2026-09-13-boot-integration-r1/materialization.json",
+      "sha256": "73b10377a007b0e5a30a65b0f66accafdb8309703a28644a85a9fd2a2a814858"
+    },
+    "base_run": {
+      "path": "2026-09-13-boot-integration-r1/run.json",
+      "sha256": "c839dc9cd23f9106eca1b11fb738a463e2117b78b891fbc7da73c0cc35ea8dc6"
+    },
+    "kernel": {
+      "path": "2026-09-12-native-census-r7/baseline/build/dx86cl64",
+      "sha256": "2f3a9888f1bf515130e7d124831d31319386c55f3208710393b238637dcf5699"
+    }
+  }
+}
