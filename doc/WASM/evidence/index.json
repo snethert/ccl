@@ -1695,6 +1695,13 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md"
       }
+    },
+    {
+      "id": "NATIVE-TARGET-DESCRIPTIONS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-target-descriptions-r1/packet.json",
+      "sha256": "d2b3507c360c2d710685f28b1e941ab8fdb9fb0f1bf59e3ffe39d266bfa88b87",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Eight U1/D1-derived subtype descriptions, a named unimplemented batch-mode input and eight explicit boundary obligations. Seven dumplisp definitions plus two top-level and four deferred initializer bodies yield 22 prototypes, 74 calls and 12 references; actual deferred literal/owner joins retain four distinct initializer identities. Two byte-identical captures, six native and 26 analysis controls. Five source gaps, seven unbounded calls, macro qualification and all runtime boundary implementations remain open. No graph replacement or gate credit."
     }
   ]
 }

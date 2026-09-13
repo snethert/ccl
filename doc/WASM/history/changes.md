@@ -220,3 +220,12 @@ Two fresh captures are byte-identical. Native controls actually stop after the f
 ## 2026-09-13 — Claude's twenty-first audit of the first source traversal
 
 Claude reviewed 4c7f2162: all four native sessions re-executed byte-identically, form boundaries and gap causes re-derived from the pinned source with an independent scanner, bindings and catalog verified. No defect; the packet is marked reviewed. Gate unchanged at 28 accepted, 20 missing and zero unreviewed of 48.
+
+
+## 2026-09-13 — Describe startup types and preserve deferred initializer dependencies
+
+Following Claude's twenty-first audit committed at ec0602d4 and the user's instruction to proceed, Codex extended the isolated census target. Eight subtype/classification values are derived from U1 under D1; no native kernel-global offsets or pointer layouts are inherited. The batch-flag architecture macro describes a required loader input as a named, unimplemented service dependency. A separate ledger records replacement obligations for the native file/exit/path mechanisms and required entrypoint/callback restoration; no required startup function is discharged as unsupported.
+
+The extension captures seven source definitions, two top-level initializer bodies and four deferred load-time initializers: 22 prototypes, 74 call sites and twelve function references. Five source definitions remain stopped and seven calls retain unknown target sets. Filling in type metadata exposed the old pass-2 escape's stopping at a nested initializer; the derivative now preserves each initializer and the containing function, with actual acode literal/owner joins and guards against execution. The original traversal and accepted registration are unchanged.
+
+Two raw captures reproduce identically; six native and 26 analysis controls reject. The development archive retains the incomplete captures, the real initializer-identity alias defect, the source-call oracle correction and the first formal run's incorrect indirect-call distribution expectation, with their original sources/logs. Source and FASLs remain unchanged, and temporary descriptor changes restore on normal and nonlocal return. One compact packet is pending independent review. Full macro qualification, native boundary implementations and census closure remain open; gate unchanged at 28 accepted, 20 missing and zero unreviewed required records. See the [report](../stage0/target-descriptions.md).

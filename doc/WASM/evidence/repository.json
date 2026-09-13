@@ -2,21 +2,21 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "5cb08e6149f39ab027c92b3696341ccd0dcb0751",
+  "commit": "79940bf28062d8287faaa8affef3da0013b44afb",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "7b23e300d1ac19f7cb2a4a8440731d003fa8797fcfc87946f3d8fee84dcf1101",
-  "immutable_evidence_files": 160299,
+  "catalog_sha256": "1410df8208bacf23c0ad09d1edafd417c547d7229da8de54cfdaf362c32c754d",
+  "immutable_evidence_files": 160326,
   "indexed_references_verified": 908,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped addition of 18 first-source-traversal files, 2026-09-13. New artifacts finalized once; all prior catalog rows reused unchanged without reading their payloads. No archive-wide audit or acceptance scan.",
+  "verification": "Scoped addition of 27 startup-target-description files, 2026-09-13. New artifacts finalized once; all prior catalog rows reused unchanged without reading their payloads. No archive-wide audit or acceptance scan.",
   "remote": null,
   "off_machine_backup": false,
   "scope": "Separate local evidence repository. Original executions, policies and failures retained. Twenty-eight accepted records: 27 preserved exactly plus S0-LL08-a accepted by the user. Complete census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-13-source-traversal-r1",
-    "files": 18,
-    "bytes": 112535,
-    "prior_commit": "b2ca818aa04b8ff4f009ca5c4ae6ce2f6fc1a4a6"
+    "directory": "2026-09-13-target-descriptions-r1",
+    "files": 27,
+    "bytes": 194333,
+    "prior_commit": "5cb08e6149f39ab027c92b3696341ccd0dcb0751"
   }
 }

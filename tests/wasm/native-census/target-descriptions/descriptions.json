@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "status": "CENSUS_DESCRIPTIONS_PENDING_REVIEW",
+  "scope": "Subtype metadata and explicit boundary obligations only. No complete D1 layout, runtime implementation or profile-unsupported discharge.",
+  "source_sha256": {
+    "compiler/X86/X8632/x8632-arch.lisp": "1491906803bac60051385c1691090a19b36b59a2868a2b41b13b1fdb91a6cfcd",
+    "compiler/X86/x86-arch.lisp": "21451586d329d75a4fad5a6e0a1889448ec4e179d2ebe2f6d423293772590334",
+    "compiler/nx.lisp": "8730c225eb010e526e4995639ce89271e706d92f4fa1a2162e008f2ba945c676",
+    "compiler/nx1.lisp": "a0332e9f738ab2dec49a971f537745dc9e2da58c8dcf5362b6e4eea75a752e35",
+    "compiler/nx0.lisp": "9a2ae143496f559693eed0bd8ce901c9c30c316985c1d6219e1a4065a267f100",
+    "compiler/arch.lisp": "a67c2e6f227eea3d79183b3cf12909962902fabc7ef98e7f01806d7ea9778dfc",
+    "lib/nfcomp.lisp": "01dd18489697add1b6580d97782cba4c8c213554dd4f9db8a9289f45371f969c",
+    "lib/dumplisp.lisp": "5cd12bcbfe6164874e4cefdbd6583612725d8cd773f5d970c66b956097408b74",
+    "library/lispequ.lisp": "a392a67132338a125633e157fb164166c66df33bc2125a634ce6d1d7ce49934e",
+    "compiler/optimizers.lisp": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01"
+  },
+  "layout": [
+    {
+      "keyword": "basic-stream",
+      "source_name": "basic-stream",
+      "source_index": 6,
+      "fulltag": 2,
+      "subtag": 50,
+      "constant": "SUBTAG-BASIC-STREAM",
+      "scope": "type-classification metadata; payload layout/GC qualification outstanding"
+    },
+    {
+      "keyword": "instance",
+      "source_name": "instance",
+      "source_index": 14,
+      "fulltag": 2,
+      "subtag": 114,
+      "constant": "SUBTAG-INSTANCE",
+      "scope": "type-classification metadata; payload layout/GC qualification outstanding"
+    },
+    {
+      "keyword": "struct",
+      "source_name": "struct",
+      "source_index": 15,
+      "fulltag": 2,
+      "subtag": 122,
+      "constant": "SUBTAG-STRUCT",
+      "scope": "type-classification metadata; payload layout/GC qualification outstanding"
+    },
+    {
+      "keyword": "istruct",
+      "source_name": "istruct",
+      "source_index": 16,
+      "fulltag": 2,
+      "subtag": 130,
+      "constant": "SUBTAG-ISTRUCT",
+      "scope": "type-classification metadata; payload layout/GC qualification outstanding"
+    },
+    {
+      "keyword": "min-cl-ivector-subtag",
+      "source_name": "single-float-vector",
+      "source_index": 19,
+      "fulltag": 7,
+      "subtag": 159,
+      "constant": "MIN-CL-IVECTOR-SUBTAG",
+      "scope": "type-classification metadata; payload layout/GC qualification outstanding"
+    },
+    {
+      "keyword": "array-header",
+      "source_name": "arrayH",
+      "source_index": 29,
+      "fulltag": 2,
+      "subtag": 234,
+      "constant": "SUBTAG-ARRAYH",
+      "scope": "type-classification metadata; payload layout/GC qualification outstanding"
+    },
+    {
+      "keyword": "vector-header",
+      "source_name": "vectorH",
+      "source_index": 30,
+      "fulltag": 2,
+      "subtag": 242,
+      "constant": "SUBTAG-VECTORH",
+      "scope": "type-classification metadata; payload layout/GC qualification outstanding"
+    },
+    {
+      "keyword": "simple-vector",
+      "source_name": "simple-vector",
+      "source_index": 31,
+      "fulltag": 2,
+      "subtag": 250,
+      "constant": "SUBTAG-SIMPLE-VECTOR",
+      "scope": "type-classification metadata; payload layout/GC qualification outstanding"
+    }
+  ],
+  "contracts": [
+    {
+      "id": "STARTUP-BATCH-FLAG",
+      "source_function": "RESTORE-LISP-POINTERS",
+      "source_form": 15,
+      "disposition": "REPLACEMENT_REQUIRED",
+      "role": "required-startup-input",
+      "description": "The loader supplies an immutable integer batch-mode input before restore-lisp-pointers. Zero means false and a nonzero integer means true, as U1 tests it. The census macro emits a named service dependency; no native NIL-relative kernel-global offset is inherited.",
+      "symbol": "WASM-CENSUS-SERVICES::STARTUP-BATCH-FLAG",
+      "implementation": "ABSENT",
+      "condition_test": "NOT_RUN"
+    },
+    {
+      "id": "KERNEL-RESOURCE-IDENTITY",
+      "source_function": "KERNEL-PATH",
+      "source_form": 12,
+      "disposition": "REPLACEMENT_REQUIRED",
+      "role": "required-source-surface",
+      "description": "Replace the whole native pointer/C-string path with the loader-supplied bootstrap resource identity in the virtual namespace. This is a string/name contract, not a native executable pointer. Do not mark the containing function optional or unsupported merely because the native mechanism is excluded.",
+      "native_only_mechanism": "%GET-KERNEL-GLOBAL-PTR plus native C-string/executable-path access",
+      "implementation": "ABSENT",
+      "condition_test": "NOT_RUN"
+    },
+    {
+      "id": "IMAGE-SAVE-EXIT",
+      "source_function": "SAVE-IMAGE",
+      "source_form": 9,
+      "disposition": "REPLACEMENT_REQUIRED",
+      "role": "image-save-failure-exit",
+      "description": "Replace #_exit with a declared Lisp-process termination host service. Preserve status -1 and the nonreturning failure behavior; do not expose arbitrary foreign lookup.",
+      "native_only_mechanism": "Direct foreign exit resolution",
+      "implementation": "ABSENT",
+      "condition_test": "NOT_RUN"
+    },
+    {
+      "id": "NATIVE-EMBEDDED-IMAGE",
+      "source_function": "SKIP-EMBEDDED-IMAGE",
+      "source_form": 10,
+      "disposition": "REPLACEMENT_REQUIRED",
+      "role": "native-only-mechanism",
+      "description": "Native executable trailer scanning has no Wasm executable-prefix counterpart. Route image loading through the bundle manifest. Any reachable request for native executable embedding needs a tested Lisp condition; no condition is implemented here.",
+      "native_only_mechanism": "Native executable trailer offsets and SEEK_END/SEEK_CUR file descriptor arithmetic",
+      "implementation": "ABSENT",
+      "condition_test": "NOT_RUN"
+    },
+    {
+      "id": "NATIVE-EXECUTABLE-PREFIX",
+      "source_function": "%PREPEND-FILE",
+      "source_form": 11,
+      "disposition": "REPLACEMENT_REQUIRED",
+      "role": "native-only-mechanism",
+      "description": "Native executable prefix copying is excluded from the Wasm bundle format. Preserve image saving separately; reject a reachable native/prepend-kernel request through a tested Lisp condition. Do not treat this classification as that implementation.",
+      "native_only_mechanism": "Executable-prefix byte copying with native file descriptors and SEEK_SET",
+      "implementation": "ABSENT",
+      "condition_test": "NOT_RUN"
+    },
+    {
+      "id": "IMAGE-BUNDLE-WRITER",
+      "source_function": "OPEN-DUMPLISP-FILE",
+      "source_form": 13,
+      "disposition": "REPLACEMENT_REQUIRED",
+      "role": "required-save-surface",
+      "description": "Use a capability-gated bundle output in the virtual namespace. Native O_RDONLY/O_WRONLY/O_CREAT, chmod and executable-prefix modes are not host constants for the Wasm profile. Missing write capability requires a tested Lisp condition. Scheduling writable storage later does not discharge this dependency.",
+      "native_only_mechanism": "POSIX flags, modes and file descriptors",
+      "implementation": "ABSENT",
+      "condition_test": "NOT_RUN"
+    },
+    {
+      "id": "DECLARED-ENTRYPOINT-RESTORE",
+      "source_function": "RESTORE-LISP-POINTERS",
+      "source_form": 15,
+      "disposition": "REPLACEMENT_REQUIRED",
+      "role": "required-startup-call",
+      "symbol": "CCL::REFRESH-EXTERNAL-ENTRYPOINTS",
+      "description": "Restore only the profile-declared runtime/host entry registry; the native FFI/interface database remains excluded. This required startup call cannot be silently deleted or marked unsupported.",
+      "implementation": "ABSENT",
+      "condition_test": "NOT_RUN"
+    },
+    {
+      "id": "CALLBACK-REGISTRY-RESTORE",
+      "source_function": "RESTORE-PASCAL-FUNCTIONS",
+      "source_form": 16,
+      "disposition": "REPLACEMENT_REQUIRED",
+      "role": "required-startup-call",
+      "symbol": "CCL::MAKE-CALLBACK-TRAMPOLINE",
+      "description": "Reconstruct validated Wasm/JavaScript callback entries under the declared table/Worker protocol. Native macptr revival and machine-code trampolines need replacement. The native foreign-thread exclusion does not exclude the required Lisp callback dispatcher.",
+      "implementation": "ABSENT",
+      "condition_test": "NOT_RUN"
+    }
+  ]
+}

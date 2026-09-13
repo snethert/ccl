@@ -90,3 +90,7 @@ gaps needed by these twelve definitions before expanding to more modules. These
 require explicit target layout and replacement choices, not guessed host values.
 Only a complete dependency replacement can remove the corresponding broad graph
 edges; a successful sixteen-form accounting run does not supply that replacement.
+
+The subsequent [target-description extension](target-descriptions.md) captures three
+additional definitions and four deferred load-time initializers. The results above
+remain the reviewed first-run scope; the follow-up has its own packet and review.
