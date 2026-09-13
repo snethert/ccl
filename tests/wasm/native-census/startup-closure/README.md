@@ -109,6 +109,11 @@ python3 tests/wasm/native-census/startup-closure/join_lowering.py \
 
 Materialization verifies the fragment and base identities and the exact graph
 additions. It writes a new file and preserves all original graph records.
+Format 2 also verifies the pinned image and both kernel records, and requires
+an explicit equality-witness edge for every observed build operator slot.
+ID, name, flags, encoded value and handler must match the image slot; process-local
+handler code identities remain separate. Historical format-1 packets require the
+original sources at 363fc2d4 and must be reconciled before feeding closure.
 Observed handler ancestry remains distinct from exact leaf dispatch and static
 coverage. Six parameterized subprimitive operand layouts have decoding rules;
 the report separates actual execution from synthetic layout cases. See the

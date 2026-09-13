@@ -1,6 +1,7 @@
 """Project native emission identities as an additive census fragment."""
 from collections import Counter, defaultdict
 import json
+import re
 
 from exchange import ident
 from identity_join import key
@@ -138,8 +139,11 @@ def node_record(i, kind, implementation, evidence, reason=''):
             'tests': ['S0-LL15-b', 'S0-LL15-c'], 'reason': reason}
 
 
-def make_delta(base, facts, base_sha256):
+def make_delta(base, facts, base_sha256, image_operators, kernel_sha256):
     present = {r['id']: r for r in base['nodes']}; nodes = {}; edges = []
+    image_slots = {r['id']: r for r in image_operators}; witnesses = []
+    if len(image_slots) != len(image_operators): raise ValueError('IMAGE_OPERATOR_DUPLICATE')
+    if not re.fullmatch('[0-9a-f]{64}', kernel_sha256): raise ValueError('OPERATOR_KERNEL_IDENTITY')
     def node(record):
         i = record['id']
         if i not in present: nodes[i] = record
@@ -163,6 +167,21 @@ def make_delta(base, facts, base_sha256):
     for row in facts['operators']:
         op = row['record']; i = node(node_record(key('build', 'operator', op['id']), 'operator', 'Evaluated native slot ' + str(op['id']),
                          'build/operator/' + str(op['id']), json.dumps(op, sort_keys=True, separators=(',', ':'))))
+        image_op = image_slots.get(op['id'])
+        fields = ('id', 'name', 'flags', 'encoded', 'handler')
+        if image_op is None or set(op) != set(fields) or any(op[k] != image_op.get(k) for k in fields):
+            raise ValueError('OPERATOR_SLOT_EQUALITY')
+        canonical = ident('operator', op['id']); base_op = present.get(canonical, {})
+        if any(base_op.get(k) != v for k, v in {
+                'kind': 'operator', 'implementation': 'evaluated native operator slot',
+                'evidence': 'image/operators/' + str(op['id']),
+                'reason': 'Reserved slot' if op['name'] is None else op['name']}.items()):
+            raise ValueError('BASE_OPERATOR_SLOT')
+        label = 'same-operator-slot/' + str(op['id'])
+        # This joins evaluated slots, not process-local handler code objects.
+        edge(canonical, [i], label)
+        witnesses.append({'evidence': 'emission:build/' + label, 'kernel_sha256': kernel_sha256,
+                          'build': dict(op), 'image': dict(image_op)})
         edge(surface, [i], 'operator/' + str(op['id']))
         edge(i, [key('build', 'code', code) for code in row['codes']], 'operator-codes/' + str(op['id']))
     groups = defaultdict(set)
@@ -178,7 +197,7 @@ def make_delta(base, facts, base_sha256):
         groups[row['function']].add(i)
     for owner, targets in sorted(groups.items()):
         edge(key('build', 'afunc', owner), targets, 'subprimitive-targets/' + str(owner))
-    return {'version': 1, 'base_sha256': base_sha256, 'scope': SCOPE,
+    return {'version': 2, 'base_sha256': base_sha256, 'scope': SCOPE, 'operator_slots': witnesses,
             'nodes': [nodes[i] for i in sorted(nodes)], 'edges': edges}
 
 

@@ -1595,7 +1595,20 @@
       "id": "NATIVE-EMISSION-JOINS-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-joins-r1/packet.json",
       "sha256": "87e12492c6a02194bbef118fb66d05437ac364f7b017875f845cf9c56f42cd8b",
-      "scope": "Unreviewed native emission dependency fragment: 2,052,019 emissions and 20,606 parameterized subprimitive calls joined; 17 controls reject, six synthetic operand layouts pass. Full exchange-format materialization verified. Static closure and Wasm dispositions remain unqualified; no gate credit."
+      "scope": "Observed-emission fragment reviewed by Claude as acceptable at its stated diagnostic scope, with explicit operator reconciliation required before feeding closure. Original 17 controls and six operand-layout cases; no gate credit. Corrective packet NATIVE-EMISSION-SLOT-JOINS-R1 requires its own review.",
+      "external_review": {
+        "reviewer": "Claude",
+        "provenance": "User-supplied review of 363fc2d4, recorded by Codex on 2026-09-13. No reviewer commit was claimed.",
+        "disposition": "REVIEWED_WITH_CLOSURE_FINDING",
+        "record": "stage0/claude-review.md",
+        "scope": "Original observed-emission claims only; subsequent slot-join correction is not reviewed."
+      }
+    },
+    {
+      "id": "NATIVE-EMISSION-SLOT-JOINS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-slot-joins-r1/packet.json",
+      "sha256": "226ed18d4f444037fdd421cf9c3212c86aee27d0437821af9be8be983c609b5b",
+      "scope": "Unreviewed correction: 141 explicit slot-equality edges and witnesses, 32 rejected controls, six operand-layout cases and one unknown-offset refusal case. Original emission facts and existing graph records preserved. Full census remains unqualified; no gate credit."
     }
   ]
 }

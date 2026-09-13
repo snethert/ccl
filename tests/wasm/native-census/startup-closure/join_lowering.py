@@ -46,21 +46,26 @@ def run(evidence, output):
         save(output / 'joins.json.gz', facts)
         save(output / 'operand-samples.json', {'scope': 'First retained raw event for each exercised decoder family.', 'samples': samples})
         base = read(paths['base']); base_hash = pins['inputs']['base']['sha256']
-        delta = make_delta(base, facts, base_hash); check(base, delta, facts, base_hash)
+        delta = make_delta(base, facts, base_hash, image['operators'], kernels[0])
+        check(base, delta, facts, base_hash, image['operators'], kernels[0])
         print('Emission joins complete; exercising omission, substitution and operand controls.', flush=True)
-        tests = controls(base, delta, facts, reviewed, oracle, {r['offset']: r['name'] for r in image['subprimitives']}, samples, base_hash)
         graph = apply_delta(base, delta)
         contract = load_tool('emission_census_contract', ROOT / 'doc/WASM/tools/check-census.py')
         errors = contract.validate(graph)
         prefixes = ('unresolved reachable edge from ', 'unimplemented reachable node ')
         unexpected = [e for e in errors if not e.startswith(prefixes)]
         if unexpected: raise ValueError('graph invariant: ' + '; '.join(unexpected[:3]))
+        tests = controls(base, delta, facts, reviewed, oracle, {r['offset']: r['name'] for r in image['subprimitives']},
+                         samples, base_hash, image['operators'], kernels[0], contract.validate, errors)
         summary = {'version': 1, 'status': 'EMISSIONS_JOINED_UNQUALIFIED', 'review_disposition': 'NOT_REVIEWED',
                    **facts['summary'], 'delta_nodes': len(delta['nodes']), 'delta_edges': len(delta['edges']),
+                   'operator_slot_joins': len(delta['operator_slots']),
                    'controls_rejected': len(tests['controls']), 'synthetic_operand_layout_cases': len(tests['operand_layout_cases']),
+                   'synthetic_unknown_offset_case': tests['unknown_offset_case'],
                    'schema_and_graph_invariants': 'PASS', 'census_contract': 'BLOCKED',
                    'census_error_counts': {p.strip(): sum(e.startswith(p) for e in errors) for p in prefixes},
-                   'stage0_gate': {'accepted': 28, 'missing': 21, 'unreviewed': 0, 'basis': 'Accepted records unchanged; gate not rerun.'},
+                   'stage0_gate': {'accepted': 28, 'missing': 20, 'unreviewed': 0,
+                                   'basis': '2026-09-13 second-Mac retirement; accepted records unchanged, gate not rerun.'},
                    'scope': facts['scope'], 'remaining': ['Boot-image subprocess witness and full target traversal.',
                    'Reviewed seed set and conservative dynamic-call bounds.', 'Other subprimitive paths, imports, stores, trap classification and target dispositions.']}
         save(output / 'delta.json.gz', delta); save(output / 'controls.json', tests); save(output / 'summary.json', summary)
@@ -85,7 +90,15 @@ def materialize(evidence, packet, output):
     pin = run_record['input_pins']['inputs']['base']; path = evidence / pin['path']
     if digest(path) != pin['sha256']: raise ValueError('changed base graph')
     base = read(path); delta = read(packet / 'delta.json.gz'); facts = read(packet / 'joins.json.gz')
-    check(base, delta, facts, pin['sha256']); graph = apply_delta(base, delta)
+    sources = {}
+    for name in ('image', 'build_run', 'image_run'):
+        source_pin = run_record['input_pins']['inputs'][name]; source_path = evidence / source_pin['path']
+        if digest(source_path) != source_pin['sha256']: raise ValueError('changed operator source: ' + name)
+        sources[name] = read(source_path)
+    kernels = [v for k, v in sources['image_run']['input_sha256'].items() if Path(k).name == 'dx86cl64']
+    if kernels != [sources['build_run']['kernel']['sha256']] or kernels[0] != run_record['same_kernel_sha256']:
+        raise ValueError('operator sources use different kernels')
+    check(base, delta, facts, pin['sha256'], sources['image']['operators'], kernels[0]); graph = apply_delta(base, delta)
     graph['inputs_sha256'] = hashlib.sha256(json.dumps({'base': base['inputs_sha256'], 'delta': digest(packet / 'delta.json.gz')}, sort_keys=True).encode()).hexdigest()
     save(output, graph)
     return {'status': 'MATERIALIZED_UNQUALIFIED', 'nodes': len(graph['nodes']), 'edges': len(graph['edges'])}

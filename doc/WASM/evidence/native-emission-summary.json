@@ -17,9 +17,18 @@
     "CCL::JUMP-SUBPRIM"
   ],
   "delta_nodes": 28725,
-  "delta_edges": 109333,
-  "controls_rejected": 17,
+  "delta_edges": 109474,
+  "operator_slot_joins": 141,
+  "controls_rejected": 32,
   "synthetic_operand_layout_cases": 6,
+  "synthetic_unknown_offset_case": {
+    "name": "unknown-offset-remains-unresolved",
+    "status": "PASS",
+    "offset": 87241,
+    "node": "identity:build:unknown-subprimitive:87241",
+    "additional_unimplemented_nodes": 1,
+    "scope": "Synthetic operand/facts mutation over the genuine census; no native execution."
+  },
   "schema_and_graph_invariants": "PASS",
   "census_contract": "BLOCKED",
   "census_error_counts": {
@@ -28,9 +37,9 @@
   },
   "stage0_gate": {
     "accepted": 28,
-    "missing": 21,
+    "missing": 20,
     "unreviewed": 0,
-    "basis": "Accepted records unchanged; gate not rerun."
+    "basis": "2026-09-13 second-Mac retirement; accepted records unchanged, gate not rerun."
   },
   "scope": "Observed native emission dependencies; live handler ancestry is not exact leaf dispatch or a static bound. Other template operands, imports, stores and Wasm dispositions remain unqualified.",
   "remaining": [
@@ -40,26 +49,30 @@
   ],
   "date": "2026-09-13",
   "packet": {
-    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-joins-r1/packet.json",
-    "sha256": "87e12492c6a02194bbef118fb66d05437ac364f7b017875f845cf9c56f42cd8b"
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-slot-joins-r1/packet.json",
+    "sha256": "226ed18d4f444037fdd421cf9c3212c86aee27d0437821af9be8be983c609b5b"
   },
   "run": {
-    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-joins-r1/run.json",
-    "sha256": "e92eb3b9cf7e2427a2fa36e717aa5f756d04d948d912a8c7992ec83721726c4d"
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-slot-joins-r1/run.json",
+    "sha256": "eeba15c1a92bb085a348b2445fd1cc363d8e73ad79f8a57c55eda3b92531481f"
   },
   "delta": {
-    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-joins-r1/delta.json.gz",
-    "sha256": "c107c6afddf1bd80351c1aea47b0ca3a05e241ecb4f3a7844f7631ca1b81169c"
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-slot-joins-r1/delta.json.gz",
+    "sha256": "251a14cfd4e8917fcc23f0c5934060b32519cb9e05e3fd12f79743aa5b57f965"
   },
   "joins": {
-    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-joins-r1/joins.json.gz",
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-slot-joins-r1/joins.json.gz",
     "sha256": "2a1cc2cec6669dc72bb2b43841ba96b12524b6f7510519c9bf9d75b3f6e8a0cd"
   },
   "materialization": {
-    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-joins-r1/materialization.json",
-    "sha256": "0a5456f75e8459d9a7918993abc50e66ae126d1e6adad2d50086a02e0dd1b613"
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-slot-joins-r1/materialization.json",
+    "sha256": "06bb4eba5b213fbb2b7f823a98ed64facf2dec6637a63c06b76c889edd269655"
   },
-  "packet_files": 9,
-  "packet_bytes": 2683892,
-  "evidence_repository_commit": "0c1fb1f4fd33be25dab80c53aabdd98b3853d0c8"
+  "packet_files": 17,
+  "packet_bytes": 2717397,
+  "previous_observed_fragment": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-joins-r1/packet.json",
+    "sha256": "87e12492c6a02194bbef118fb66d05437ac364f7b017875f845cf9c56f42cd8b"
+  },
+  "evidence_repository_commit": "92182abf3ea8da739c8c4d793d1c8290d9a16c0e"
 }
