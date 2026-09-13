@@ -2,6 +2,33 @@
 
 This read-only inspector adds resident native code/binding identities and evaluated backend metadata to the reviewed r7 graph. It prepares a candidate set and seed proposal, not the qualified census exchange graph. All dynamic call bounds remain unqualified and LL15 acceptance remains blocked.
 
+The current revision adds kernel callback slots, the builtin vector and applicable
+toplevel methods in the same snapshot. See the [seed revision and reachability
+diagnosis](../../../../doc/WASM/stage0/startup-seed-revision.md). `seeds.json` is
+revision 2; `seeds-v1.json` preserves the historical proposal used by the pinned
+exchange assembler. New snapshot IDs are never substituted into older graphs.
+The callback table is observed after restore; image-save equality remains open.
+The checker retains all callback slots, including the foreign-thread callback.
+
+To reproduce the membership diagnosis, materialize the reviewed wrapper graph
+using its existing verifier, then pass that graph and its recorded digest:
+
+```sh
+python3 tests/wasm/native-census/startup-closure/diagnose_reachability.py \
+  --graph FULL-REVIEWED-GRAPH.json.gz --graph-sha256 RECORDED-SHA256 \
+  --output NEW-DIAGNOSTIC.json
+```
+
+It evaluates the original seed set and counterfactual edge removals. It writes
+only a diagnostic report, never a replacement graph or a closure result. The
+retained revision-2 packet compresses `image.json` and `candidates.json`; its
+manifest records the original filenames and uncompressed hashes. Decompress
+these for comparison with fresh runner output.
+
+If the retained kernel has no executable bit, make an executable disposable copy
+with `install -m 755 RETAINED-KERNEL NEW-KERNEL` and pass that copy below. Preserve
+the archive's permissions and bytes.
+
 From the repository root:
 
 ```sh

@@ -23,6 +23,9 @@ def run(kernel, image, graph, output):
     # save, whole-archive walk or copies of previously retained input artifacts.
     paths = [kernel, image, graph, observer, inspector, seed_path, Path(__file__).resolve(),
              HERE / 'candidates.py', HERE / 'test_candidates.py']
+    paths += [HERE.parents[3] / p for p in ('lib/dumplisp.lisp', 'xdump/xfasload.lisp',
+              'level-1/l1-application.lisp', 'level-1/l1-lisp-threads.lisp',
+              'level-1/l1-callbacks.lisp', 'level-1/x86-trap-support.lisp', 'level-1/x86-error-signal.lisp')]
     identities = {str(p): digest(p) for p in paths}
     pinned_clean = image.parents[2] / 'results.json'
     baseline = json.loads(pinned_clean.read_text())

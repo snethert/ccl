@@ -1668,6 +1668,13 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md"
       }
+    },
+    {
+      "id": "NATIVE-STARTUP-SEEDS-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-startup-seeds-r2/packet.json",
+      "sha256": "e20680f47dfcb06605e212c5c122963315fefd36566384ff1efe818bc37c05b9",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Revision-2 proposal: 22 named entrypoints, 23 builtin slots, 32 callback slots with three live targets, three applicable methods and 49 root prototypes. Post-restore snapshot only; 27 revised and 14 historical controls pass. Original graph preserved; counterfactual reachability shows two-edge removal still masks every seed omission. Independent review, save/restore callback equality, source traversal and call bounds remain open. No gate credit."
     }
   ]
 }

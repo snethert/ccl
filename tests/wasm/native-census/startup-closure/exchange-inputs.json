@@ -19,7 +19,7 @@
     },
     "seeds": {
       "repository": "source",
-      "path": "tests/wasm/native-census/startup-closure/seeds.json",
+      "path": "tests/wasm/native-census/startup-closure/seeds-v1.json",
       "sha256": "daef764db1014d75f22aa02edd5776875dba2895cb2c95473db867056571df6b"
     },
     "rebuild": {

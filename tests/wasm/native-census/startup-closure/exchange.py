@@ -25,6 +25,9 @@ def fixed_point(graph):
 
 
 def build(image, observed, candidates, seeds, effects, lowering, stub, identities):
+    if seeds['version'] != 1 or candidates['version'] != 1:
+        raise ValueError('historical projection requires revision-1 seeds/candidates; '
+                         'revision-2 kernel vectors and methods need explicit graph integration')
     nodes, edges, initializers = {}, [], []
     def node(key, kind, evidence, implementation=None, reason='', unresolved=False):
         if key in nodes:

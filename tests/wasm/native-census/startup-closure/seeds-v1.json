@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "review_disposition": "PROPOSED_REQUIRES_INDEPENDENT_REVIEW",
+  "profile": "Pristine U1 Darwin x86-64 batch image startup with --no-init, plus the pinned native rebuild workload",
+  "entrypoints": [
+    {"name": "CCL::RESTORE-LISP-POINTERS", "phase": "load", "reason": "Restore the image's runtime pointers and invoke its startup callback groups."},
+    {"name": "CCL::%REVIVE-SYSTEM-LOCKS", "phase": "load", "reason": "Explicit pre-callback operation in restore-lisp-pointers; callbacks must use revived locks."},
+    {"name": "CCL::REFRESH-EXTERNAL-ENTRYPOINTS", "phase": "load", "reason": "Explicit pre-callback foreign entrypoint restoration in restore-lisp-pointers."},
+    {"name": "CCL::RESTORE-PASCAL-FUNCTIONS", "phase": "load", "reason": "Explicit pre-callback restoration of callback storage and trampolines."},
+    {"name": "CCL::INITIALIZE-INTERACTIVE-STREAMS", "phase": "load", "reason": "Explicit stream setup before startup callbacks, including the batch scenario."},
+    {"name": "CCL::STARTUP-CCL", "phase": "run", "reason": "Process the selected startup options and load/evaluate their inputs."},
+    {"name": "CCL::TOPLEVEL-FUNCTION", "phase": "run", "reason": "Application top-level dispatch; its generic-function implementation and method bodies remain in the candidate universe."},
+    {"name": "COMMON-LISP::READ", "phase": "read", "reason": "Reader entrypoint for compiler and startup evaluation dependencies."},
+    {"name": "COMMON-LISP::LOAD", "phase": "load", "reason": "Source/FASL loader entrypoint; absence of file opens in one image startup does not remove it."},
+    {"name": "CCL::%FASLOAD", "phase": "load", "reason": "Native binary loader, including installed function and initializer dependencies."},
+    {"name": "COMMON-LISP::COMPILE-FILE", "phase": "compile", "reason": "Compiler entrypoint used by the pinned rebuild workload."},
+    {"name": "CCL::REBUILD-CCL", "phase": "compile", "reason": "Entrypoint for the reviewed r7 clean rebuild and its cross-dumped L0 work."},
+    {"name": "COMMON-LISP::ERROR", "phase": "run", "reason": "Condition path must remain reachable when a requested binding or operation is unavailable."}
+  ],
+  "required_effects": [
+    {"inventory": "startup_groups", "reason": "All four evaluated callback groups, including empty groups, in restore-lisp-pointers traversal order. Bind callback objects directly, not their printed variable labels."},
+    {"inventory": "compile-initializer-enter/return", "reason": "All paired compile-time effects in r7. Completion events witness execution; semantic prerequisite edges still need qualification."},
+    {"inventory": "load-initializer-emitted", "reason": "Keep every emitted load effect, including effects not executed by the compiling host. Emission is not execution."}
+  ],
+  "scope_limits": [
+    "This proposed seed set is not an independently reviewed seed set and confers no LL15 acceptance.",
+    "The finite candidate universe retains all r7 compiler bodies and all resident clean-image code prototypes, including inspector code. It is not a proved bound on arbitrary future EVAL, FASL loading, rebinding, plugins, or all stub-backend paths.",
+    "No bootstrap implementation is repaired by scanning the heap or rebinding names; this is observation only.",
+    "S0-LL08-a static reachability and operator/lowering/effect qualification remain prerequisites to the complete census."
+  ]
+}

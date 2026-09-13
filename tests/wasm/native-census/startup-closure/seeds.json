@@ -1,31 +1,229 @@
 {
-  "version": 1,
+  "version": 2,
   "review_disposition": "PROPOSED_REQUIRES_INDEPENDENT_REVIEW",
   "profile": "Pristine U1 Darwin x86-64 batch image startup with --no-init, plus the pinned native rebuild workload",
   "entrypoints": [
-    {"name": "CCL::RESTORE-LISP-POINTERS", "phase": "load", "reason": "Restore the image's runtime pointers and invoke its startup callback groups."},
-    {"name": "CCL::%REVIVE-SYSTEM-LOCKS", "phase": "load", "reason": "Explicit pre-callback operation in restore-lisp-pointers; callbacks must use revived locks."},
-    {"name": "CCL::REFRESH-EXTERNAL-ENTRYPOINTS", "phase": "load", "reason": "Explicit pre-callback foreign entrypoint restoration in restore-lisp-pointers."},
-    {"name": "CCL::RESTORE-PASCAL-FUNCTIONS", "phase": "load", "reason": "Explicit pre-callback restoration of callback storage and trampolines."},
-    {"name": "CCL::INITIALIZE-INTERACTIVE-STREAMS", "phase": "load", "reason": "Explicit stream setup before startup callbacks, including the batch scenario."},
-    {"name": "CCL::STARTUP-CCL", "phase": "run", "reason": "Process the selected startup options and load/evaluate their inputs."},
-    {"name": "CCL::TOPLEVEL-FUNCTION", "phase": "run", "reason": "Application top-level dispatch; its generic-function implementation and method bodies remain in the candidate universe."},
-    {"name": "COMMON-LISP::READ", "phase": "read", "reason": "Reader entrypoint for compiler and startup evaluation dependencies."},
-    {"name": "COMMON-LISP::LOAD", "phase": "load", "reason": "Source/FASL loader entrypoint; absence of file opens in one image startup does not remove it."},
-    {"name": "CCL::%FASLOAD", "phase": "load", "reason": "Native binary loader, including installed function and initializer dependencies."},
-    {"name": "COMMON-LISP::COMPILE-FILE", "phase": "compile", "reason": "Compiler entrypoint used by the pinned rebuild workload."},
-    {"name": "CCL::REBUILD-CCL", "phase": "compile", "reason": "Entrypoint for the reviewed r7 clean rebuild and its cross-dumped L0 work."},
-    {"name": "COMMON-LISP::ERROR", "phase": "run", "reason": "Condition path must remain reachable when a requested binding or operation is unavailable."}
+    {
+      "name": "CCL::RESTORE-LISP-POINTERS",
+      "phase": "load",
+      "reason": "Restore the image's runtime pointers and invoke its startup callback groups.",
+      "binding_kind": "function"
+    },
+    {
+      "name": "CCL::%REVIVE-SYSTEM-LOCKS",
+      "phase": "load",
+      "reason": "Explicit pre-callback operation in restore-lisp-pointers; callbacks must use revived locks.",
+      "binding_kind": "function"
+    },
+    {
+      "name": "CCL::REFRESH-EXTERNAL-ENTRYPOINTS",
+      "phase": "load",
+      "reason": "Explicit pre-callback foreign entrypoint restoration in restore-lisp-pointers.",
+      "binding_kind": "function"
+    },
+    {
+      "name": "CCL::RESTORE-PASCAL-FUNCTIONS",
+      "phase": "load",
+      "reason": "Explicit pre-callback restoration of callback storage and trampolines.",
+      "binding_kind": "function"
+    },
+    {
+      "name": "CCL::INITIALIZE-INTERACTIVE-STREAMS",
+      "phase": "load",
+      "reason": "Explicit stream setup before startup callbacks, including the batch scenario.",
+      "binding_kind": "function"
+    },
+    {
+      "name": "CCL::STARTUP-CCL",
+      "phase": "run",
+      "reason": "Process the selected startup options and load/evaluate their inputs.",
+      "binding_kind": "function"
+    },
+    {
+      "name": "CCL::TOPLEVEL-FUNCTION",
+      "phase": "run",
+      "reason": "Application generic dispatch; retain the explicitly inspected applicable method bodies below.",
+      "binding_kind": "function"
+    },
+    {
+      "name": "COMMON-LISP::READ",
+      "phase": "read",
+      "reason": "Reader entrypoint for compiler and startup evaluation dependencies.",
+      "binding_kind": "function"
+    },
+    {
+      "name": "COMMON-LISP::LOAD",
+      "phase": "load",
+      "reason": "Source/FASL loader entrypoint; absence of file opens in one image startup does not remove it.",
+      "binding_kind": "function"
+    },
+    {
+      "name": "CCL::%FASLOAD",
+      "phase": "load",
+      "reason": "Native binary loader, including installed function and initializer dependencies.",
+      "binding_kind": "function"
+    },
+    {
+      "name": "COMMON-LISP::COMPILE-FILE",
+      "phase": "compile",
+      "reason": "Compiler entrypoint used by the pinned rebuild workload.",
+      "binding_kind": "function"
+    },
+    {
+      "name": "CCL::REBUILD-CCL",
+      "phase": "compile",
+      "reason": "Entrypoint for the reviewed r7 clean rebuild and its cross-dumped L0 work.",
+      "binding_kind": "function"
+    },
+    {
+      "name": "COMMON-LISP::ERROR",
+      "phase": "run",
+      "reason": "Condition path must remain reachable when a requested binding or operation is unavailable.",
+      "binding_kind": "function"
+    },
+    {
+      "name": "CCL::%SET-TOPLEVEL",
+      "phase": "run",
+      "binding_kind": "function",
+      "reason": "Install each successor in the saved cold-start closure chain."
+    },
+    {
+      "name": "CCL::MAKE-MCL-LISTENER-PROCESS",
+      "phase": "run",
+      "binding_kind": "function",
+      "reason": "Create the listener that runs startup-ccl."
+    },
+    {
+      "name": "CCL::HOUSEKEEPING-LOOP",
+      "phase": "run",
+      "binding_kind": "function",
+      "reason": "Successor toplevel installed by the development-system method."
+    },
+    {
+      "name": "CCL::TOPLEVEL",
+      "phase": "run",
+      "binding_kind": "function",
+      "reason": "Enter the next toplevel via the subprimitive."
+    },
+    {
+      "name": "CCL::LISTENER-FUNCTION",
+      "phase": "run",
+      "binding_kind": "function",
+      "reason": "Default development-system listener body."
+    },
+    {
+      "name": "CCL::THREAD-MAKE-STARTUP-FUNCTION",
+      "phase": "run",
+      "binding_kind": "function",
+      "reason": "Construct the closure entered by start_lisp for each Lisp thread."
+    },
+    {
+      "name": "CCL::%PASCAL-FUNCTIONS%",
+      "phase": "run",
+      "binding_kind": "function",
+      "reason": "Kernel callback dispatcher; restoration alone does not seed dispatch."
+    },
+    {
+      "name": "CCL::XCMAIN",
+      "phase": "run",
+      "binding_kind": "callback",
+      "reason": "Kernel signal, interrupt, suspension and GC-notification callback."
+    },
+    {
+      "name": "CCL::%XERR-DISP",
+      "phase": "run",
+      "binding_kind": "callback",
+      "reason": "Kernel UUO trap entry; COMMON-LISP::ERROR is downstream."
+    }
   ],
   "required_effects": [
-    {"inventory": "startup_groups", "reason": "All four evaluated callback groups, including empty groups, in restore-lisp-pointers traversal order. Bind callback objects directly, not their printed variable labels."},
-    {"inventory": "compile-initializer-enter/return", "reason": "All paired compile-time effects in r7. Completion events witness execution; semantic prerequisite edges still need qualification."},
-    {"inventory": "load-initializer-emitted", "reason": "Keep every emitted load effect, including effects not executed by the compiling host. Emission is not execution."}
+    {
+      "inventory": "startup_groups",
+      "reason": "All four evaluated callback groups, including empty groups, in restore-lisp-pointers traversal order. Bind callback objects directly, not their printed variable labels."
+    },
+    {
+      "inventory": "compile-initializer-enter/return",
+      "reason": "All paired compile-time effects in r7. Completion events witness execution; semantic prerequisite edges still need qualification."
+    },
+    {
+      "inventory": "load-initializer-emitted",
+      "reason": "Keep every emitted load effect, including effects not executed by the compiling host. Emission is not execution."
+    }
   ],
   "scope_limits": [
-    "This proposed seed set is not an independently reviewed seed set and confers no LL15 acceptance.",
+    "This revised proposal awaits independent review; the prior review with findings is not approval of revision 2.",
     "The finite candidate universe retains all r7 compiler bodies and all resident clean-image code prototypes, including inspector code. It is not a proved bound on arbitrary future EVAL, FASL loading, rebinding, plugins, or all stub-backend paths.",
     "No bootstrap implementation is repaired by scanning the heap or rebinding names; this is observation only.",
-    "S0-LL08-a static reachability and operator/lowering/effect qualification remain prerequisites to the complete census."
+    "S0-LL08-a static reachability and operator/lowering/effect qualification remain prerequisites to the complete census.",
+    "Seed revision alone does not repair unconditional image/source membership widening. No old closure result is valid evidence for this revision.",
+    "Callback-vector inspection after restore is recorded as such. Equality with image-save contents and bounds on later callback registration are not inferred."
+  ],
+  "revision": "2026-09-13-kernel-entry-surfaces",
+  "supersedes": "seeds-v1.json",
+  "review_basis": "doc/WASM/stage0/seed-review.md at a1df24e7; revised proposal requires a new independent review",
+  "cold_start_strategy": {
+    "kind": "explicit-source-chain",
+    "source": "lib/dumplisp.lisp:save-image and level-1/l1-application.lisp:toplevel-function",
+    "reason": "Name the whole reviewed source chain and applicable methods. This does not pretend to read the already-executed saved closure after startup."
+  },
+  "method_seeds": [
+    {
+      "generic": "CCL::TOPLEVEL-FUNCTION",
+      "argument_classes": [
+        "CCL::LISP-DEVELOPMENT-SYSTEM",
+        "COMMON-LISP::NULL"
+      ],
+      "selection": "all-applicable-methods",
+      "phase": "run",
+      "reason": "Retain every applicable method conservatively, including a less-specific primary even if standard method combination does not call it."
+    }
+  ],
+  "required_bindings": [
+    {
+      "name": "CCL::%PASCAL-FUNCTIONS%",
+      "kind": "callback-vector",
+      "phase": "load",
+      "scope": "saved-image members and post-restore members; complete slot inventory including empty slots",
+      "reason": "Dispatch can reach every live slot. Snapshot inspection is not a bound on future callback registration; save/restore equality and later registration remain obligations."
+    },
+    {
+      "name": "CCL::%BUILTIN-FUNCTIONS%",
+      "kind": "symbol-vector",
+      "phase": "run",
+      "scope": "all 23 U1 slots in xdump/xfasload.lisp, resolved through their current function cells",
+      "expected_names": [
+        "CCL::+-2",
+        "CCL::--2",
+        "CCL::*-2",
+        "CCL::/-2",
+        "CCL::=-2",
+        "CCL::/=-2",
+        "CCL::>-2",
+        "CCL::>=-2",
+        "CCL::<-2",
+        "CCL::<=-2",
+        "COMMON-LISP::EQL",
+        "COMMON-LISP::LENGTH",
+        "CCL::SEQUENCE-TYPE",
+        "CCL::ASSQ",
+        "CCL::MEMQ",
+        "COMMON-LISP::LOGBITP",
+        "CCL::LOGIOR-2",
+        "CCL::LOGAND-2",
+        "COMMON-LISP::ASH",
+        "CCL::%NEGATE",
+        "CCL::LOGXOR-2",
+        "CCL::%AREF1",
+        "CCL::%ASET1"
+      ],
+      "reason": "Seed every native slow-path target by slot, independently of source-module membership. This is the native census, not a Wasm implementation assertion."
+    }
+  ],
+  "exclusions": [
+    {
+      "name": "CCL::%FOREIGN-THREAD-CONTROL",
+      "scope": "independent root only, for the selected no-init startup plus native rebuild workload",
+      "reason": "The selected workload does not request entry from a foreign-created thread. Batch mode alone does not prohibit such entry. Retain the callback slot and all ordinary references; any workload that admits foreign-created threads must add this entry as a root."
+    }
   ]
 }

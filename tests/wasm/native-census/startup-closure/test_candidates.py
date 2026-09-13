@@ -25,6 +25,26 @@ def run(image, observed, seeds):
     reject('discard-source-version', lambda: mutate_output(lambda r: next(b for b in r['global_bindings'] if b['compiler_functions'])['compiler_functions'].pop()))
     reject('discard-native-binding', lambda: mutate_output(lambda r: next(b for b in r['global_bindings'] if b['native_bindings'])['native_bindings'].pop()))
     reject('claim-acceptance', lambda: mutate_output(lambda r: r.update(census_acceptance='ACCEPTED')))
+    if seeds['version'] == 2:
+        reject('omit-kernel-root-target', lambda: mutate_output(lambda r: r['root_functions'].pop()))
+        reject('omit-applicable-method', lambda: mutate_output(lambda r: r['method_seeds'].pop()))
+        reject('omit-empty-callback-slot', lambda: mutate_output(lambda r: r['kernel_entries']['callbacks'].pop()))
+        reject('change-builtin-slot', lambda: mutate_output(lambda r: r['kernel_entries']['builtins'][0].update(function=-1)))
+        reject('omit-required-vector', lambda: mutate_output(lambda r: r['required_bindings'].pop()))
+        reject('omit-foreign-thread-exclusion', lambda: mutate_output(lambda r: r.update(exclusions=[])))
+        reject('change-seed-revision', lambda: mutate_output(lambda r: r.update(seed_revision='superseded')))
+        for label, change in [
+                ('hide-callback-source-entry', lambda x: x.update(entrypoints=[s for s in x['entrypoints'] if s['name'] != 'CCL::XCMAIN'])),
+                ('hide-thread-source-entry', lambda x: x.update(entrypoints=[s for s in x['entrypoints'] if s['name'] != 'CCL::THREAD-MAKE-STARTUP-FUNCTION'])),
+                ('hide-method-selection', lambda x: x.update(method_seeds=[])),
+                ('hide-vector-obligation', lambda x: x['required_bindings'].pop())]:
+            changed = copy.deepcopy(seeds); change(changed)
+            reject(label, lambda: build(image, observed, changed))
+        broken = copy.deepcopy(image)
+        next(r for r in broken['kernel_entries']['callbacks'] if r['name'] == 'CCL::XCMAIN')['symbol_value_matches'] = False
+        reject('wrong-callback-trampoline', lambda: build(broken, observed, seeds))
+        broken = copy.deepcopy(image); broken['kernel_entries']['builtins'][0]['slot'] = 1
+        reject('duplicate-kernel-slot', lambda: build(broken, observed, seeds))
     broken = copy.deepcopy(image); broken['functions'][0]['literal_functions'].append(-1)
     reject('unknown-literal-code', lambda: build(broken, observed, seeds))
     broken = copy.deepcopy(image); broken['operators'].pop()

@@ -76,7 +76,7 @@ def make(evidence, output):
         pins, values, paths = inputs(evidence)
         record['pinned_inputs'] = pins
         sources = ['assemble.py', 'exchange.py', 'effects.py', 'opcodes.py', 'check_exchange.py',
-                   'test_exchange.py', 'exchange-inputs.json', 'candidates.py', 'seeds.json']
+                   'test_exchange.py', 'exchange-inputs.json', 'candidates.py', 'seeds-v1.json']
         source_paths = [HERE / name for name in sources]
         source_paths += [ROOT / 'doc/WASM/tools/check-census.py', ROOT / 'doc/WASM/contracts/census.schema.json',
                          ROOT / 'doc/WASM/stage0/baseline.json', ROOT / 'doc/WASM/stage0/inventory.json',

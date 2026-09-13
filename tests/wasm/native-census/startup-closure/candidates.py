@@ -10,9 +10,76 @@ def unique(rows, key, label):
     return result
 
 
+def kernel_inputs(image, seeds):
+    """Validate the new entry witnesses without inferring historical bindings."""
+    if seeds['version'] == 1:
+        return None
+    k = image.get('kernel_entries')
+    if not k or k['application_class'] != 'CCL::LISP-DEVELOPMENT-SYSTEM':
+        raise ValueError('kernel entry snapshot or application class missing')
+    native = {f['id'] for f in image['functions']}
+    for field in ('callbacks', 'builtins'):
+        rows = k[field]
+        if [r['slot'] for r in rows] != list(range(len(rows))):
+            raise ValueError('kernel vector slot coverage: ' + field)
+        for r in rows:
+            if r['function'] is None:
+                if field != 'callbacks' or r['name'] is not None or r['symbol_value_matches'] is not None:
+                    raise ValueError('invalid empty callback slot')
+            elif r['function'] not in native:
+                raise ValueError('kernel vector target absent: ' + field)
+    required = {r['name']: r for r in seeds['required_bindings']}
+    if len(required) != 2 or set(required) != {'CCL::%PASCAL-FUNCTIONS%', 'CCL::%BUILTIN-FUNCTIONS%'}:
+        raise ValueError('required kernel vector omitted or duplicated')
+    if (len(k['builtins']) != 23 or [r['name'] for r in k['builtins']] !=
+            required['CCL::%BUILTIN-FUNCTIONS%']['expected_names']):
+        raise ValueError('builtin slot order or source inventory differs')
+    for row in k['builtins']:
+        if not any(b['namespace'] == 'function' and b['name'] == row['name'] and
+                   b['function'] == row['function'] for b in image['bindings']):
+            raise ValueError('builtin function-cell identity differs')
+    callback_names = ['CCL::XCMAIN', 'CCL::%XERR-DISP']
+    for name in callback_names:
+        found = [r for r in k['callbacks'] if r['name'] == name]
+        if len(found) != 1 or not found[0]['symbol_value_matches'] or found[0]['function'] is None:
+            raise ValueError('kernel callback lacks a matching trampoline: ' + name)
+    methods = k['toplevel_methods']
+    signatures = [(tuple(r['qualifiers']), tuple(r['specializers'])) for r in methods]
+    # U1 defines a before method and two primaries. All three are applicable;
+    # the less-specific primary is retained without claiming it executes.
+    expected = {(('KEYWORD::BEFORE',), ('CCL::APPLICATION', 'COMMON-LISP::T')),
+                ((), ('CCL::APPLICATION', 'COMMON-LISP::T')),
+                ((), ('CCL::LISP-DEVELOPMENT-SYSTEM', 'COMMON-LISP::T'))}
+    if (len(methods) != 3 or set(signatures) != expected or
+            any(r['function'] not in native or r['generic'] != 'CCL::TOPLEVEL-FUNCTION' for r in methods)):
+        raise ValueError('applicable toplevel methods differ from U1 source')
+    if (len(seeds['method_seeds']) != 1 or seeds['method_seeds'][0]['generic'] != 'CCL::TOPLEVEL-FUNCTION' or
+        seeds['method_seeds'][0]['argument_classes'] != ['CCL::LISP-DEVELOPMENT-SYSTEM', 'COMMON-LISP::NULL'] or
+        seeds['method_seeds'][0]['selection'] != 'all-applicable-methods'):
+        raise ValueError('required toplevel method selection changed')
+    names = {s['name']: s for s in seeds['entrypoints']}
+    for name in ['RESTORE-LISP-POINTERS', '%REVIVE-SYSTEM-LOCKS', 'REFRESH-EXTERNAL-ENTRYPOINTS',
+                 'RESTORE-PASCAL-FUNCTIONS', 'INITIALIZE-INTERACTIVE-STREAMS', 'STARTUP-CCL',
+                 'TOPLEVEL-FUNCTION', '%FASLOAD', 'REBUILD-CCL', '%SET-TOPLEVEL',
+                 'MAKE-MCL-LISTENER-PROCESS', 'HOUSEKEEPING-LOOP', 'TOPLEVEL', 'LISTENER-FUNCTION',
+                 'THREAD-MAKE-STARTUP-FUNCTION', '%PASCAL-FUNCTIONS%']:
+        if names.get('CCL::' + name, {}).get('binding_kind') != 'function':
+            raise ValueError('kernel source entry omitted: ' + name)
+    for name in ['READ', 'LOAD', 'COMPILE-FILE', 'ERROR']:
+        if names.get('COMMON-LISP::' + name, {}).get('binding_kind') != 'function':
+            raise ValueError('workload source entry omitted: ' + name)
+    if any(names.get(name, {}).get('binding_kind') != 'callback' for name in callback_names):
+        raise ValueError('kernel callback seed omitted or treated as function cell')
+    if not any(r['name'] == 'CCL::%FOREIGN-THREAD-CONTROL' and r['reason'] and r['scope']
+               for r in seeds['exclusions']):
+        raise ValueError('foreign-thread root exclusion not stated')
+    return k
+
+
 def build(image, observed, seeds):
-    if image['version'] != 1 or observed['version'] != 1 or seeds['version'] != 1:
+    if image['version'] != 1 or observed['version'] != 1 or seeds['version'] not in (1, 2):
         raise ValueError('unsupported input version')
+    kernel = kernel_inputs(image, seeds)
     native = unique(image['functions'], 'id', 'native code identity')
     compiled = unique(observed['nodes'], 'id', 'compiler object identity')
     if not native or not compiled:
@@ -46,7 +113,11 @@ def build(image, observed, seeds):
             raise ValueError('callback code identity absent')
     joined_seeds = []
     for seed in seeds['entrypoints']:
-        targets = bindings.get(('function', seed['name']), [])
+        kind = seed.get('binding_kind', 'function')
+        if kind not in ('function', 'callback'):
+            raise ValueError('unsupported seed binding kind')
+        targets = ([r for r in kernel['callbacks'] if r['name'] == seed['name']]
+                   if kind == 'callback' else bindings.get(('function', seed['name']), []))
         if len(targets) != 1:
             raise ValueError('seed lacks one native function binding: ' + seed['name'])
         joined_seeds.append({**seed, 'native_function': targets[0]['function']})
@@ -78,6 +149,14 @@ def build(image, observed, seeds):
               'candidate_universe': universe, 'dynamic_calls': dynamic,
               'global_bindings': globals_, 'startup_groups': image['startup_groups'],
               'operator_handlers': image['operators'], 'scope_limits': seeds['scope_limits']}
+    if kernel:
+        result.update(version=2, seed_revision=seeds['revision'], kernel_entries=kernel,
+                      method_seeds=kernel['toplevel_methods'], required_bindings=seeds['required_bindings'],
+                      exclusions=seeds['exclusions'],
+                      root_functions=sorted({s['native_function'] for s in joined_seeds} |
+                          {r['function'] for r in kernel['toplevel_methods']} |
+                          {r['function'] for r in kernel['callbacks'] + kernel['builtins'] if r['function'] is not None}),
+                      root_scope='Snapshot roots only. No save/restore equality, future registration bound or static closure claimed.')
     missing_before = [r for r in globals_ if not r['compiler_functions']]
     summary = {'status': result['status'], 'census_acceptance': 'BLOCKED',
                'native_functions_including_inspector': len(native), 'r7_compiler_bodies': len(compiled),
@@ -97,11 +176,17 @@ def build(image, observed, seeds):
                              'Operator-to-lowering/import/trap/store joins',
                              'Semantic compile/load/startup initializer prerequisite joins',
                              'Complete census exchange graph and independent omission witnesses']}
+    if kernel:
+        summary.update(seed_revision=seeds['revision'], root_functions=len(result['root_functions']),
+                       applicable_toplevel_methods=len(kernel['toplevel_methods']), builtin_slots=len(kernel['builtins']),
+                       callback_slots=len(kernel['callbacks']), live_callback_slots=sum(r['function'] is not None for r in kernel['callbacks']),
+                       kernel_vector_scope=kernel['descriptor_time'])
     return result, summary
 
 
 def check_coverage(result, image, observed, seeds):
     """Check retained input witnesses, independently of the producer's summary counts."""
+    kernel = kernel_inputs(image, seeds)
     universe = result['candidate_universe']
     for key, rows in [('native_functions', image['functions']), ('compiler_functions', observed['nodes'])]:
         values = universe[key]
@@ -125,9 +210,24 @@ def check_coverage(result, image, observed, seeds):
     if {s['name'] for s in result['seeds']} != required or len(result['seeds']) != len(required):
         raise ValueError('proposed seed omitted or duplicated')
     for seed in result['seeds']:
-        if not any(b['namespace'] == 'function' and b['name'] == seed['name'] and
-                   b['function'] == seed['native_function'] for b in image['bindings']):
+        proposal = next(s for s in seeds['entrypoints'] if s['name'] == seed['name'])
+        rows = (kernel['callbacks'] if proposal.get('binding_kind') == 'callback' else
+                [b for b in image['bindings'] if b['namespace'] == 'function'])
+        if any(seed.get(k) != v for k, v in proposal.items()) or not any(
+                b['name'] == seed['name'] and b['function'] == seed['native_function'] for b in rows):
             raise ValueError('seed does not identify its native function binding')
+    if kernel:
+        if result['version'] != 2 or result['seed_revision'] != seeds['revision']:
+            raise ValueError('seed revision changed')
+        for field, expected in [('kernel_entries', kernel), ('method_seeds', kernel['toplevel_methods']),
+                                ('required_bindings', seeds['required_bindings']), ('exclusions', seeds['exclusions'])]:
+            if result[field] != expected:
+                raise ValueError('kernel witness changed: ' + field)
+        expected = {s['native_function'] for s in result['seeds']}
+        expected.update(r['function'] for r in kernel['toplevel_methods'])
+        expected.update(r['function'] for r in kernel['callbacks'] + kernel['builtins'] if r['function'] is not None)
+        if result['root_functions'] != sorted(expected):
+            raise ValueError('kernel root target omitted or duplicated')
     if result['startup_groups'] != image['startup_groups']:
         raise ValueError('startup callback identity changed')
     if result['operator_handlers'] != image['operators']:

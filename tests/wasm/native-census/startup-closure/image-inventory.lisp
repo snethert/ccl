@@ -62,6 +62,34 @@
                       "source_position" (if note (ccl::source-note-start-pos note) :null)
                       "literal_functions" (sort literals #'<))))
           "bindings" (reverse bindings)
+          "kernel_entries"
+          (object
+           "descriptor_time" "After restoring the retained clean image, before any requested workload; not an image-save observation."
+           "application_class" (label-of (class-name (class-of ccl::*application*)))
+           "callbacks"
+           (ccl::with-lock-grabbed (ccl::*callback-lock*)
+             (loop for entry across ccl::%pascal-functions% for slot from 0 collect
+               (if (null entry)
+                 (object "slot" slot "name" :null "function" :null "symbol_value_matches" :null)
+                 (let ((sym (ccl::pfe.sym entry)))
+                   (object "slot" slot "name" (label-of sym)
+                           "function" (function-id (ccl::pfe.lisp-function entry))
+                           "symbol_value_matches"
+                           (if (and sym (boundp sym)
+                                    (eql (symbol-value sym) (ccl::pfe.routine-descriptor entry)))
+                             :true :false))))))
+           "builtins"
+           (loop for sym across ccl::%builtin-functions% for slot from 0 collect
+             (object "slot" slot "name" (label-of sym)
+                     "function" (function-id (symbol-function sym))))
+           "toplevel_methods"
+           (loop for method in (compute-applicable-methods #'ccl:toplevel-function
+                                                           (list ccl::*application* nil)) collect
+             (object "generic" "CCL::TOPLEVEL-FUNCTION"
+                     "qualifiers" (mapcar #'label-of (ccl::method-qualifiers method))
+                     "specializers" (mapcar (lambda (c) (label-of (class-name c)))
+                                             (ccl::method-specializers method))
+                     "function" (function-id (ccl::method-function method)))))
           "startup_groups"
           (loop for (group fns) in
                 (list (list "system_pointers" (reverse ccl::*lisp-system-pointer-functions*))
