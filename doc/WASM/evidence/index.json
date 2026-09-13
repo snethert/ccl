@@ -897,10 +897,17 @@
       "inventory_version": 1,
       "evidence_kind": "DESK DECISION",
       "record_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "S0-ABI-selection: formal record of the existing B engineering choice on simplicity. Explicit argument/result protocol, 24 accepted prerequisite variants, bounded scope, provisional packaging and reversal criteria; ten rejected controls. No fresh runtime, benchmark selection or speed claim."
+      "scope": "S0-ABI-selection: formal record of the existing B engineering choice on simplicity. Explicit argument/result protocol, 24 accepted prerequisite variants, bounded scope, provisional packaging and reversal criteria; ten rejected controls. No fresh runtime, benchmark selection or speed claim.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Twenty-sixth audit at 629534d2: producer re-executed with basis, controls, decision, scoped gate result, summary and inventory snapshot byte-identical and the direct gate stdout identical; retained verifier passes; the 14-record, 24-variant prerequisite closure, the single changed contract (S0-ABI-selection of 37) and the 29-accepted envelope recomputed independently; B protocol facts checked against abi/dynamic-call.v0.md; packet, catalog at e6e9e4a4 with 24 new rows and all five source pins at HEAD verified, 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "S0-ABI-selection [complete-report] is complete at its stated scope and ready for the user's acceptance decision, subject to the user confirming that the quoted direction in decision.json is their own words; the reviewer could not verify that quotation against any committed record."
+      }
     }
   ],
   "auxiliary_records": [

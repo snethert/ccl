@@ -1,7 +1,7 @@
 # S0-ABI-selection — formal record of the B decision
 
 Decision date: **12 September 2026**. Record prepared: **13 September 2026**.
-Status: **complete desk record; independent review and acceptance pending**.
+Status: **complete desk record; reviewed without defect by [Claude's twenty-sixth audit](claude-review.md) at 629534d2; the user's acceptance pending, including confirmation of the quoted direction**.
 Packet `ABI-DESK-DECISION-R1` is retained in `2026-09-13-abi-decision-r1`, identified
 by the [evidence index](../evidence/index.json).
 
