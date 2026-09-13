@@ -14,6 +14,7 @@ from join_identities import HERE, ROOT, cold_calls, digest, read, save
 from test_identity_join import run as controls
 
 PREVIOUS = 'f3b4b07e'
+METADATA_PREVIOUS = 'c421e39a'
 
 
 def run(evidence, output):
@@ -53,6 +54,11 @@ def run(evidence, output):
         report['source_sha256'] = current
         previous = {'__name__': 'previous_identity_join', '__file__': PREVIOUS + ':' + relative}
         exec(compile(old_source, previous['__file__'], 'exec'), previous)
+        metadata_source = subprocess.check_output(['git', 'show', METADATA_PREVIOUS + ':' + relative], cwd=ROOT)
+        report['metadata_previous_revision'] = METADATA_PREVIOUS
+        report['metadata_previous_checker_sha256'] = hashlib.sha256(metadata_source).hexdigest()
+        metadata_previous = {'__name__': 'metadata_previous_identity_join', '__file__': METADATA_PREVIOUS + ':' + relative}
+        exec(compile(metadata_source, metadata_previous['__file__'], 'exec'), metadata_previous)
         print('Direct inputs and unchanged producer verified; reading retained graph.', flush=True)
         gc.disable()
         base = read(paths['base']); graph = read(paths['extended']); witnesses = read(paths['witnesses'])
@@ -62,15 +68,19 @@ def run(evidence, output):
             data = read(paths[name]); streams[name] = {k: data[k] for k in selected}; del data
         streams['cold']['startup_calls'] = cold_calls(paths['cold_events'])
         print('Checking exact graph bounds and former insertion escapes.', flush=True)
-        result = controls(base, graph, witnesses, streams, previous_checker=previous['check'])
+        result = controls(base, graph, witnesses, streams, previous_checker=previous['check'],
+                          metadata_checker=metadata_previous['check'])
         regressions = [r for r in result['controls'] if r.get('previous_checker') == 'ESCAPED']
         if len(regressions) != 5: raise ValueError('missing former-checker regression')
+        metadata_regressions = [r for r in result['controls'] if r.get('metadata_checker') == 'ESCAPED']
+        if len(metadata_regressions) != 6: raise ValueError('missing metadata-checker regression')
         save(output / 'controls.json', result)
         report.update(status='PASS', controls_rejected=len(result['controls']), previous_escapes_reproduced=len(regressions),
+                      metadata_escapes_reproduced=len(metadata_regressions),
                       retained_graph_unchanged=True, elapsed_seconds=round(time.monotonic() - started, 3),
                       artifacts=[{'path': 'controls.json', 'sha256': digest(output / 'controls.json'),
                                   'bytes': (output / 'controls.json').stat().st_size}])
-        return {k: report[k] for k in ('status', 'controls_rejected', 'previous_escapes_reproduced', 'retained_graph_unchanged')}
+        return {k: report[k] for k in ('status', 'controls_rejected', 'previous_escapes_reproduced', 'metadata_escapes_reproduced', 'retained_graph_unchanged')}
     except BaseException as exc:
         report['error'] = type(exc).__name__ + ': ' + str(exc); raise
     finally:

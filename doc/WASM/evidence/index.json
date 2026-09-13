@@ -1559,13 +1559,33 @@
       "id": "NATIVE-INITIALIZER-JOINS-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-initializer-joins-r1/packet.json",
       "sha256": "678afe4f9478241861c45a4da77e029354211d34cf2da60149358eee2aa16b0d",
-      "scope": "Unreviewed integration of 18,907 compile-time calls, 4,660 loader calls and 35 callbacks with exact code/value witnesses and conservative phase boundaries. Original projection preserved; thirteen controls reject. Full LL15 remains unqualified."
+      "scope": "Integration with supplied Claude audits recorded; retained disposition unchanged. Integration of 18,907 compile-time calls, 4,660 loader calls and 35 callbacks with exact code/value witnesses and conservative phase boundaries. Original projection preserved; thirteen controls reject. Full LL15 remains unqualified.",
+      "external_review": {
+        "reviewer": "Claude (user-supplied reports)",
+        "provenance": "Eleventh audit at f3b4b07e and twelfth audit at c421e39a; recorded by Codex from the user's supplied reviews, 2026-09-13.",
+        "disposition": "FINDINGS_ADDRESSED_WITH_METADATA_RESIDUAL_AND_PROVENANCE_CAVEAT",
+        "record": "stage0/claude-review.md",
+        "scope": "The supplied review did not mark either packet reviewed or accepted. The later full-record checker and recovered original session excerpts await review."
+      }
     },
     {
       "id": "NATIVE-INITIALIZER-CHECKER-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-initializer-checker-r1/packet.json",
       "sha256": "d34a573c42ff586c636c8290b23ef709d5e8a3237d0e9c980d1dcc333a2d87b6",
-      "scope": "Unreviewed fix for the NATIVE-INITIALIZER-JOINS-R1 checker: exact graph-addition bounds, eighteen rejected controls including five reproduced former escapes, and clarification that the first development run succeeded and was superseded by a pin edit. Original graph and packet unchanged; no acceptance change."
+      "scope": "Checker fix with supplied Claude audits recorded; retained disposition unchanged. Fix for the NATIVE-INITIALIZER-JOINS-R1 checker: exact graph-addition bounds, eighteen rejected controls including five reproduced former escapes, and clarification that the first development run succeeded and was superseded by a pin edit. Original graph and packet unchanged; no acceptance change.",
+      "external_review": {
+        "reviewer": "Claude (user-supplied reports)",
+        "provenance": "Eleventh audit at f3b4b07e and twelfth audit at c421e39a; recorded by Codex from the user's supplied reviews, 2026-09-13.",
+        "disposition": "FINDINGS_ADDRESSED_WITH_METADATA_RESIDUAL_AND_PROVENANCE_CAVEAT",
+        "record": "stage0/claude-review.md",
+        "scope": "The supplied review did not mark either packet reviewed or accepted. The later full-record checker and recovered original session excerpts await review."
+      }
+    },
+    {
+      "id": "NATIVE-INITIALIZER-METADATA-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-initializer-metadata-r1/packet.json",
+      "sha256": "1f1697a7df62af6ce5b5c69e44ca9901445144cf618b16aad309035453fce0b5",
+      "scope": "Unreviewed full-node-record checker follow-up: 24 controls rejected, eleven committed-checker escapes reproduced, original first-run session excerpts recovered. Original graph and historical packets unchanged; no acceptance change."
     }
   ]
 }

@@ -187,10 +187,14 @@ def expected_additions(base, streams):
     """Bound the additions from capture records, independently of extend()."""
     nodes, edges, initializers, modules = {}, Counter(), set(), set()
 
-    def node(i, kind):
-        if i in nodes and nodes[i] != kind:
+    def node(i, kind, evidence, implementation, reason='', unresolved=False):
+        record = {'id': i, 'kind': kind, 'disposition': 'unresolved' if unresolved else 'implemented',
+                  'required': True, 'implementation': implementation, 'evidence': evidence,
+                  'tests': ['S0-LL15-b', 'S0-LL15-c'], 'reason': reason}
+        if i in nodes and nodes[i]['kind'] != kind:
             raise ValueError('EXPECTED_NODE_KIND')
-        nodes[i] = kind
+        # A shared afunc retains the evidence of its first boundary reference.
+        nodes.setdefault(i, record)
         if kind == 'module': modules.add(i)
         if kind == 'initializer': initializers.add(i)
         return i
@@ -199,25 +203,33 @@ def expected_additions(base, streams):
         edges[source, (target,), phase, origin, 'complete', evidence] += 1
 
     for stream, data in streams.items():
-        surface = node(key(stream, 'module', '@execution'), 'module')
+        surface = node(key(stream, 'module', '@execution'), 'module', stream + '/recorded-execution',
+                       'Retained native process execution; separate identity namespace')
         root_name = 'CCL::RESTORE-LISP-POINTERS' if stream == 'cold' else 'CCL::REBUILD-CCL'
         root = next(e['from'] for e in base['edges'] if e['evidence'] == 'seeds/binding/' + root_name)
         edge(root, surface, 'callback' if stream == 'cold' else 'compile', stream + '/workload-surface', 'conservative')
-        gap = node(key(stream, 'gap', 'dependency-closure'), 'function')
+        gap = node(key(stream, 'gap', 'dependency-closure'), 'function', stream + '/scope', None,
+                   'Execution identities and ordering do not supply complete static callees, seed review, or target dispositions.', True)
         edge(surface, gap, 'run', stream + '/dependency-closure', 'conservative')
         if stream == 'build':
-            gap = node(key(stream, 'gap', 'boot-process'), 'initializer')
+            gap = node(key(stream, 'gap', 'boot-process'), 'initializer', 'build/boot-process-not-observed', None,
+                       'The boot-image subprocess did not load the observer. Its queued L1 installation needs a separate witness.', True)
             edge(surface, gap, 'load', 'build/boot-process-required', 'conservative')
         calls = {r['initializer']: r['function'] for r in data['compile_calls'] + data['load_calls']}
         callbacks = {r['initializer']: r['function'] for r in data.get('startup_calls', [])}
-        codes = set()
+        codes = {}
         for effect in data['effects']:
             phase = 'compile' if effect['family'] == 'compile-initializer' else 'callback' if effect['family'] == 'startup' else 'load'
-            for event in (effect['enter'], effect['return']):
-                boundary = node(key(stream, 'boundary', event), 'initializer')
+            for label, event in [('enter', effect['enter']), ('return', effect['return'])]:
+                boundary = node(key(stream, 'boundary', event), 'initializer', f'{stream}/event/{event}',
+                                'Observed native ' + effect['family'] + ' ' + label,
+                                'Image-reader completion is not queued Lisp initializer execution.' if effect.get('reader_mode') == 'cross-dump'
+                                else 'Conservative recorded event order, not minimal state read/write dependencies.')
                 edge(surface, boundary, phase, f'{stream}/effect-boundary/{event}')
                 if effect['source']:
-                    source = node(key(stream, 'module', module(effect['source'])), 'module')
+                    m = module(effect['source'])
+                    source = node(key(stream, 'module', m), 'module', f'{stream}/source/{m}',
+                                  'Source surface recorded by this execution')
                     edge(boundary, source, phase, f'{stream}/source-module/{event}')
                 references = []
                 if effect.get('reader_mode'):
@@ -226,20 +238,26 @@ def expected_additions(base, streams):
                     references.append(('callee', calls[effect['enter']], phase))
                 if effect['enter'] in callbacks:
                     references.append(('callback-code', callbacks[effect['enter']], 'callback'))
-                for role, code, call_phase in references:
-                    codes.add(code)
+                for position, (role, code, call_phase) in enumerate(references):
+                    first = (event, position)
+                    codes[code] = min(codes.get(code, first), first)
                     edge(boundary, key(stream, 'code', code), call_phase, f'{stream}/{role}/{event}')
         materialized = {r['function']: r['afunc'] for r in data['materialized']}
         reads = {r['function']: r for r in data['fasl_reads']}
         serialized = {code: r['written']['function'] for code, r in reads.items() if r['written']}
-        pending, seen = list(codes), set()
+        # Walk each code's serialized ancestry at its earliest boundary use. This
+        # determines which native code supplies a shared afunc's evidence text.
+        pending, seen = sorted(codes, key=codes.get, reverse=True), set()
         while pending:
             code = pending.pop()
             if code in seen: continue
             seen.add(code)
-            current = node(key(stream, 'code', code), 'function')
+            current = node(key(stream, 'code', code), 'function', f'{stream}/code/{code}',
+                           'Recorded native callable code identity',
+                           'Identity only; its full call dependencies are not established by this effect slice.')
             if code in materialized:
-                target = node(key(stream, 'afunc', materialized[code]), 'function')
+                target = node(key(stream, 'afunc', materialized[code]), 'function', f'{stream}/materialized/{code}',
+                              'Recorded front-end function materialized as this native callable')
                 edge(current, target, 'compile', f'{stream}/code-afunc/{code}')
             elif code in serialized:
                 target = serialized[code]
@@ -325,8 +343,10 @@ def check(base, graph, witnesses, streams):
     boot = key('build', 'gap', 'boot-process')
     require(boot in nodes and nodes[boot]['disposition'] == 'unresolved' and 'NOT_OBSERVED' in init[boot]['completion_assertion'], 'BOOT_SCOPE')
     expected_nodes, expected_edges, expected_init, expected_modules = expected_additions(base, streams)
-    added_nodes = {n['id']: n['kind'] for n in graph['nodes'][len(base['nodes']):]}
-    require(added_nodes == expected_nodes, 'ADDED_NODES')
+    added_nodes = {n['id']: n for n in graph['nodes'][len(base['nodes']):]}
+    require({i: n['kind'] for i, n in added_nodes.items()} ==
+            {i: n['kind'] for i, n in expected_nodes.items()}, 'ADDED_NODES')
+    require(added_nodes == expected_nodes, 'ADDED_NODE_RECORDS')
     # Count full relations, including evidence identity and multiplicity. Merely
     # checking evidence names would miss a changed endpoint on an unchecked edge.
     added_edges = Counter((e['from'], tuple(e['targets']), e['phase'], e['origin'], e['resolution'], e['evidence'])

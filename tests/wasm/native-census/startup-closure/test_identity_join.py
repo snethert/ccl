@@ -2,7 +2,7 @@
 from identity_join import check, key
 
 
-def run(base, graph, witnesses, streams, previous_checker=None):
+def run(base, graph, witnesses, streams, previous_checker=None, metadata_checker=None):
     result = []
     check(base, graph, witnesses, streams)
     def rejected(name, reason, regression=False):
@@ -10,6 +10,9 @@ def run(base, graph, witnesses, streams, previous_checker=None):
         if regression and previous_checker is not None:
             previous_checker(base, graph, witnesses, streams)
             row['previous_checker'] = 'ESCAPED'
+        if reason == 'ADDED_NODE_RECORDS' and metadata_checker is not None:
+            metadata_checker(base, graph, witnesses, streams)
+            row['metadata_checker'] = 'ESCAPED'
         try: check(base, graph, witnesses, streams)
         except ValueError as exc:
             if not str(exc).startswith(reason): raise AssertionError((name, str(exc), reason))
@@ -61,5 +64,13 @@ def run(base, graph, witnesses, streams, previous_checker=None):
     insert('duplicate-initializer', [(graph['initializers'], [duplicate])], 'DUPLICATE_INITIALIZER')
     insert('duplicate-workload-edge', [(graph['edges'], [dict(edge('build/workload-surface'))])], 'ADDED_EDGES')
     change('source-edge-endpoint-substitution', edge('build/source-module/'), 'targets', [target], 'ADDED_EDGES', regression=True)
+    code = next(n for n in graph['nodes'] if n['id'].startswith('identity:build:code:'))
+    for field, value in [('implementation', 'Injected claim of a complete implementation'),
+                         ('evidence', 'cold/code/injected'), ('reason', 'Dependencies proved complete'),
+                         ('tests', []), ('disposition', 'unresolved')]:
+        change('code-node-' + field + '-substitution', code, field, value, 'ADDED_NODE_RECORDS')
+    code['injected'] = True
+    try: rejected('code-node-surplus-field', 'ADDED_NODE_RECORDS')
+    finally: del code['injected']
     check(base, graph, witnesses, streams)
     return {'status': 'PASS', 'controls': result, 'scope': 'Integration controls with distinct rejection reasons; the complete LL15 census is still blocked.'}

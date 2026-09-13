@@ -83,5 +83,45 @@
       "sha256": "1204380af76d2887559e089191a887c2de63862d07effcb0c41a6e4e98d4c8ee"
     },
     "evidence_repository_commit": "8b0cf560781de0716c67d63ea2f917c7e65bb3c4"
+  },
+  "node_metadata_follow_up": {
+    "date": "2026-09-13",
+    "status": "PASS",
+    "review_disposition": "NOT_REVIEWED",
+    "controls_rejected": 24,
+    "former_insertion_escapes_reproduced": 5,
+    "former_metadata_escapes_reproduced": 6,
+    "graph_and_witnesses_reused_unchanged": true,
+    "packet_files": 7,
+    "packet_bytes": 35226,
+    "packet": {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-initializer-metadata-r1/packet.json",
+      "sha256": "1f1697a7df62af6ce5b5c69e44ca9901445144cf618b16aad309035453fce0b5"
+    },
+    "run": {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-initializer-metadata-r1/run.json",
+      "sha256": "d71409cd605ce2f30dfa39b33cabe81a25be56c0a788912a53161865eee870f1"
+    },
+    "controls": {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-initializer-metadata-r1/controls.json",
+      "sha256": "ff51abe3b84e65058b11fcaf46b821759ccfd2b7cc2725af9abae21e1662e29e"
+    },
+    "development_provenance": {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-initializer-metadata-r1/provenance.json",
+      "sha256": "ef37636482c222e17208450bc396ccfddcebdd3bbc979e776ed917d83a5c6be8"
+    },
+    "first_run_session_excerpts": {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-initializer-metadata-r1/first-run-session.jsonl",
+      "sha256": "8601be368786d733e74ad9848b0837c2372effbbda7af738316926eb03264da9"
+    },
+    "evidence_repository_commit": "8a303b599bad993d6a36da452130f3fc4ecc473e"
+  },
+  "supplied_reviews": {
+    "record": "stage0/claude-review.md",
+    "audits": [
+      11,
+      12
+    ],
+    "disposition": "Both prior findings addressed; no defect found, with a low metadata residual and an original-provenance caveat. Latest fix and recovered excerpts await review; retained dispositions and acceptance unchanged."
   }
 }
