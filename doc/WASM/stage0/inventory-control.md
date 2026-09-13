@@ -1,7 +1,7 @@
 # Required-inventory control — 13 September 2026
 
-S0-LL02-a is implemented and executed. Independent review and project acceptance
-remain pending. Packet `STANDING-INVENTORY-CONTROL-R1` is indexed in
+S0-LL02-a is implemented and executed. [Claude's twenty-third audit](claude-review.md)
+at 24f8805e found no defect; project acceptance remains the user's decision. Packet `STANDING-INVENTORY-CONTROL-R1` is indexed in
 [evidence/index.json](../evidence/index.json).
 
 The [runner](../../../tests/wasm/stage0/inventory-control/README.md) invokes the

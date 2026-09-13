@@ -845,10 +845,17 @@
       "envelope_version": 2,
       "inventory_version": 1,
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "S0-LL02-a/control: actual production-gate CLI rejects seven required-ID/variant omissions, substitutions and duplicates; two complete synthetic control inventories pass. Quarantined inputs are not compiler/runtime evidence. The actual result is blocked only for review/acceptance."
+      "scope": "S0-LL02-a/control: actual production-gate CLI rejects seven required-ID/variant omissions, substitutions and duplicates; two complete synthetic control inventories pass. Quarantined inputs are not compiler/runtime evidence. The actual result is blocked only for review/acceptance.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Twenty-third audit at 24f8805e: runner re-executed with all nine quarantined gate inputs, observations, summary and slot gate byte-identical; retained packet replayed through the verifier; the composite 28/19/1 reproduced by running the production gate on the prior accepted envelope against the updated inventory (28 accepted, S0-LL02-a missing) and on the new result against its slot (only unreviewed); packet, catalog at b8ad0621 with 31 new rows and source pins at HEAD verified, 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "S0-LL02-a [control] is complete at its stated scope and ready for the user's acceptance decision."
+      }
     }
   ],
   "auxiliary_records": [
