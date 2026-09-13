@@ -1554,6 +1554,12 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md"
       }
+    },
+    {
+      "id": "NATIVE-INITIALIZER-JOINS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-initializer-joins-r1/packet.json",
+      "sha256": "678afe4f9478241861c45a4da77e029354211d34cf2da60149358eee2aa16b0d",
+      "scope": "Unreviewed integration of 18,907 compile-time calls, 4,660 loader calls and 35 callbacks with exact code/value witnesses and conservative phase boundaries. Original projection preserved; thirteen controls reject. Full LL15 remains unqualified."
     }
   ]
 }

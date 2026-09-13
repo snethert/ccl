@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "reviewed_at": "fedc3047",
+  "evidence_commit": "041b90a2f694f0355c08f15f9cc6d0b65b7d8dec",
+  "inputs": {
+    "build": {
+      "path": "2026-09-12-rich-census-r1/observed-r4-joins.json.gz",
+      "sha256": "e28b2b42b394285bcfbb0172a8524d5d071474786efaf8d992d8bae9cff2d332"
+    },
+    "cold": {
+      "path": "2026-09-12-rich-census-r1/completion/cold-start-joins.json.gz",
+      "sha256": "11488ef1e0b977c77cfd3c250b6dc3f49e819c3cac34c8b0e96aae39759cc8f4"
+    },
+    "cold_events": {
+      "path": "2026-09-12-rich-census-r1/completion/cold-start.jsonl.gz",
+      "sha256": "c383d7d8588cc4e4be6e7bbda5a0af4c106f952639ef7e4a538685af70771fe0"
+    },
+    "base": {
+      "path": "2026-09-12-census-closure-r1/census.json.gz",
+      "sha256": "d69f72ba1f8c1863b89972b84a02a98154e7def5da48f98a0d804f419fc13d81"
+    },
+    "base_summary": {
+      "path": "2026-09-12-census-closure-r1/summary.json",
+      "sha256": "a18e1d4b49f741820fd4510ee9cf83a2151a070769afe57db015f578ad17be3c"
+    },
+    "identity_packet": {
+      "path": "2026-09-12-rich-census-r1/packet.json",
+      "sha256": "7124dfc3a9bdaa2a552f3e86a8ecf3c45cb209b7f7f7109a169707adeeb9c642"
+    }
+  },
+  "instrumentation_sha256": "2df72d6b664e1ebf0f8a9ef730332004b72f2db066bb255f6c5e5812429d505a",
+  "scope": "Use committed per-file identities from the reviewed producer manifests; verify only direct input bytes.",
+  "instrumentation": {
+    "original_projection": {
+      "shared_patch_sha256": "610934dd76069d1187ebcdc0db53f92b2937ff8fca9985cd0b93abfcd830c493",
+      "observer_sha256": "3878619e06d9459ecd51bd3778a4e4af3bf4320e894241880ad9a7c563064e3d",
+      "dependency_extension_sha256": "0b02a038c04edbeff5ef02f2247fd95c8a90be3b28c71c5afe36fc8b5757b73e",
+      "scope": "Reuse reviewed r7 instrumentation and accepted LL08-a capture; no hooks changed."
+    },
+    "rich_packet_sha256": "7124dfc3a9bdaa2a552f3e86a8ecf3c45cb209b7f7f7109a169707adeeb9c642",
+    "scope": "Packet binds executed build observer, corrected cold observer, sources and continuation; its payloads are reused without a new archive scan."
+  }
+}

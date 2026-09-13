@@ -40,3 +40,27 @@ python3 doc/WASM/tools/check-census.py /tmp/ccl-census-projection.json > /tmp/cc
 ```
 
 That checker is expected to exit 1 for this unqualified projection. See the [joined census report](../../../../doc/WASM/stage0/joined-census.md) for what the inputs prove and the remaining observation work. No LL15 result or project acceptance is inferred from a successful assembly.
+
+## Integrate reviewed compiler/loader identities
+
+```sh
+python3 tests/wasm/native-census/startup-closure/join_identities.py \
+  --evidence-root /Users/buildsomething/Source/ccl-evidence \
+  --output /tmp/ccl-initializer-joins-new
+```
+
+`identity-inputs.json` pins the reviewed original graph, build/cold joins and cold
+callback stream. The rich packet's manifest binds the distinct executed observer
+versions. Only direct inputs are verified; the runner does not scan the catalog,
+repeat native builds or rerun old controls. The output directory must be new.
+
+`identity_join.py` adds process-scoped code identities, exact callee/materialization
+and FASL links, returned-value witnesses and conservative entry/return ordering.
+It preserves all original graph records. Image-reader completion never becomes
+execution of its queued Lisp initializer. `test_identity_join.py` supplies thirteen
+specific corruption controls. The new graph still fails full closure, with its
+existing unresolved obligations and three explicit integration-scope nodes.
+
+The five output files are the extended exchange graph, its identity witnesses,
+summary, controls and producer record. Gzip timestamps are fixed for reproducible
+graph/witness bytes. See the [initializer integration report](../../../../doc/WASM/stage0/initializer-joins.md).

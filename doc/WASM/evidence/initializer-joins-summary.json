@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "status": "IDENTITIES_INTEGRATED_UNQUALIFIED",
+  "integration_coverage": "PASS",
+  "schema_and_graph_invariants": "PASS",
+  "census_contract": "BLOCKED",
+  "review_disposition": "NOT_REVIEWED",
+  "original_nodes_preserved": 102834,
+  "original_edges_preserved": 307672,
+  "new_nodes": 116996,
+  "new_edges": 205320,
+  "build_boundaries": 64900,
+  "cold_boundaries": 70,
+  "compile_callees_joined": 18907,
+  "loader_callees_joined": 4660,
+  "callback_callees_joined": 35,
+  "reader_effects": {
+    "native": 12347,
+    "cross-dump": 1196
+  },
+  "controls_rejected": 13,
+  "census_error_counts": {
+    "unresolved reachable edge from": 17329,
+    "unimplemented reachable node": 28301
+  },
+  "stage0_gate": {
+    "accepted": 28,
+    "missing": 21,
+    "unreviewed": 0,
+    "basis": "Existing acceptance record; not re-executed."
+  },
+  "scope": "Actual execution identities and conservative phase boundaries joined into the existing exchange schema. Older captures remain distinct and unchanged; no historical initializer is promoted based on a different run.",
+  "remaining": [
+    "Bootstrap subprocess installation witness.",
+    "Full target source traversal and static callees, including bounds on the retained 1,729 dynamic sites.",
+    "Review the thirteen seeds and classify lowering, imports and stores for the target.",
+    "Reconcile/supersede provisional obligations only with corresponding scenario and source witnesses, then run the complete passing census and its omission mutants."
+  ],
+  "date": "2026-09-12",
+  "packet_files": 7,
+  "packet_bytes": 12408966,
+  "packet": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-initializer-joins-r1/packet.json",
+    "sha256": "678afe4f9478241861c45a4da77e029354211d34cf2da60149358eee2aa16b0d"
+  },
+  "run": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-initializer-joins-r1/run.json",
+    "sha256": "5a6b361cefdfe58a8e1432355908966bdd9db91e9d2d9be98c2d6481dc94cc8c"
+  },
+  "graph": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-initializer-joins-r1/census.json.gz",
+    "sha256": "62f2e8b560c723394de0129f448bf3d43f7655164a3e448997036f70358171ae"
+  },
+  "witnesses": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-initializer-joins-r1/joins.json.gz",
+    "sha256": "17b6a477a1b49d317464484e951c0489231f6c8dbeb270532ad562ca6b84211d"
+  },
+  "verification_scope": "Changed integration, six direct inputs and seven new packet files. No old payload hashing, native build, acceptance aggregate or gate rerun.",
+  "evidence_repository_commit": "19e75eff23619212bad2aee652a1603bec0cf16c"
+}
