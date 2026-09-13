@@ -6,7 +6,7 @@ Companion to Port Outline v0.17 and Stage 0 Desk Decisions v1.8
 
 This document governs milestone acceptance: R7 rules and evidence (section 1), R6 normalization (section 2), sources (section 3), and LL01–LL24 (section 4). It replaces v1.6 and accompanies outline v0.17 and decisions v1.8. Individual obligation metadata remains authoritative; the index and outline stage lists are derived. This register specifies required regressions; execution and acceptance are tracked in [current status](STATUS.md). Documenting a test does not close its implementation.
 
-Changes in v1.7. D7 requires generic C/C4/B entries and runtime adapters; specialized Lisp entries remain optional. Retains per-test contract binding with verified migration of original evidence, avoiding reruns after unrelated inventory additions. H(G) remains outside all scheduled acceptance gates at the user’s direction. C/C4/B correctness and all remaining regressions are required. Retains macOS x86-64 for native regression qualification and second-host reproduction. Historical platform-specific baselines remain in the history ledger; they do not impose current host requirements. R6 source preservation, independent review and all LL obligations remain in force.
+Changes in v1.7. D7 requires generic C/C4/B entries and runtime adapters; specialized Lisp entries remain optional. Retains per-test contract binding with verified migration of original evidence, avoiding reruns after unrelated inventory additions. H(G) remains outside all scheduled acceptance gates at the user’s direction. C/C4/B correctness and all remaining regressions are required. Retains macOS x86-64 for native regression qualification. The user retired the second-host reproduction requirement on 2026-09-13; see [the project decision](stage0/second-mac-decision.md). Historical platform-specific baselines remain in the history ledger; they do not impose current host requirements. R6 source preservation, independent review and all LL obligations remain in force.
 
 ## 1  /  R7 EVIDENCE-BASED ACCEPTANCE
 
@@ -61,13 +61,13 @@ A native-host compiler FASL modified to support Wasm is not an unchanged-input o
 
 ### Baselines and variance
 
-The native regression reference is **macOS x86-64 at U1 v1.13**. Its bootstrap, tests, toolchain and execution disposition are recorded in [baseline.json](stage0/baseline.json), [current status](STATUS.md) and the [evidence index](evidence/index.json). Repeat the same macOS target on a second Mac for S0-LL08-c. Same-host repeatability, second-host reproducibility and native behavior are separate claims.
+The native regression reference is **macOS x86-64 at U1 v1.13**. Its bootstrap, tests, toolchain and execution disposition are recorded in [baseline.json](stage0/baseline.json), [current status](STATUS.md) and the [evidence index](evidence/index.json). The [13 September project decision](stage0/second-mac-decision.md) retires S0-LL08-c. Native behavior and same-host repeatability remain required; cross-host reproduction is outside the required scope.
 
 Generated code is compared primarily at the FASL level; heap-image byte identity is not required, but image behavior and object-graph validity are. The [historical H1 baseline table](history/pre-macos-evidence.md) and its missing archives retain their original provenance. Other upstream targets are preserved as source; their host provisioning and execution are outside this Wasm project's qualification matrix. This scope change does not permit source or behavior changes to those targets.
 
 Variance policy. A differing file is not automatically a harmless exception, and a whole file is never excluded. An approved normalization identifies the affected fields, byte ranges or decoded semantic components, explains their origin, is independently checked not to erase executable differences, and retains raw digests alongside normalized results. Until characterized, a variance remains unexplained and cannot support an all-artifacts-unchanged claim. Every stage binds code, image, modules, ABI schema, host compiler, test revision, options and logs to content hashes and rejects mixed builds.
 
-Cross-host reproducibility is established by repeating the same build on a second host and diffing against the retained digests. Previously accepted Gate 0 results are preserved with their original evidence scope and are not promoted to full Stage 0 completion.
+If cross-host reproducibility is claimed in future, it requires repeating the same build on a second host and comparing retained digests; no such claim is required or made here. Previously accepted Gate 0 results are preserved with their original evidence scope and are not promoted to full Stage 0 completion.
 
 E4 retention status. The historical syscall counts are conversation-recorded execution results, not an archived trace pack. Commands, environment, raw traces and digests remain to be retained on recapture. This evidence gap does not reset Gate 0 or the established 126/126 ARM64 same-host repeatability result.
 
@@ -331,7 +331,7 @@ First acceptance: Stage 0. Extensions: Stages 1, 3, 5. Regression: all later sta
 
 Observed: build and test paths permit stale artifacts or substitute missing exports; evidence files can be read independently of the measured binary. The follow-up packs demonstrate one x86-64 variance and a repeatable ARM64 cross-build. [P4, P7a, P7e, E2, E5]
 
-Required regression. Every stage binds code, image, modules, ABI schema, host compiler, test revision, options and logs to content hashes and rejects mixed builds; preserves native target files and acode identities mechanically; normalizes only characterized nonsemantic differences, never whole unexplained files; repeats cross-host and native-behavior checks separately and marks unavailable evidence BLOCKED or NOT RUN.
+Required regression. Every stage binds code, image, modules, ABI schema, host compiler, test revision, options and logs to content hashes and rejects mixed builds; preserves native target files and acode identities mechanically; normalizes only characterized nonsemantic differences, never whole unexplained files; repeats native-behavior and same-host repeatability checks as separate claims and marks unavailable required evidence BLOCKED or NOT RUN. Cross-host reproduction is not required under the 2026-09-13 project decision.
 
 First acceptance: Gate 0. Extensions: Stages 0–6. Standing control. Regression: all later stages in scope. Outline sections: 08; section 2 of this document. Status: contract specified; execution and acceptance tracked in STATUS.md.
 

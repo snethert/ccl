@@ -4,7 +4,7 @@ The user authorized proceeding after Claude's sign-off committed as `52639e4e`. 
 
 | Accepted record | Scope |
 | --- | --- |
-| G0-U1-a, macos-x86-64 | Unchanged U1 native execution and same-host repeatability: two clean builds, 21,843 passing eligible tests per build and 164 identical FASLs. Second-Mac reproduction remains open. |
+| G0-U1-a, macos-x86-64 | Unchanged U1 native execution and same-host repeatability: two clean builds, 21,843 passing eligible tests per build and 164 identical FASLs. Second-Mac reproduction was open at this acceptance and was [retired on 13 September](second-mac-decision.md); no additional execution is claimed. |
 | S0-LL13-c / S0-LL19-b, full | Reviewed hand-built C-boundary and exceptional-restoration slices at the retained fixture bounds. |
 | S0-LL20-a/b/c, full | Reviewed hand-built, cons-only moving-GC/admission/lifecycle/I/O slices: 22 cases, 14 controls and 1,000 seeded schedules. |
 | S0-LL23-b, full | Reviewed logical debugger-frame slice: eleven cases and eleven controls. Shared-cell relocation is a surrogate; policy-1 unavailability does not establish optimized storage cost. |

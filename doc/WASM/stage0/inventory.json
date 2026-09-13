@@ -9,7 +9,7 @@
     "schema",
     "log"
   ],
-  "acceptance_note": "All listed variants are required for Stage 0. The only required ABI candidates are C, C4 and B. H(G) is optional future work and blocks no scheduled stage. PROBE IDs never discharge S0 IDs; missing runners remain outstanding implementation.",
+  "acceptance_note": "All listed variants are required for Stage 0. The only required ABI candidates are C, C4 and B. H(G) is optional future work and blocks no scheduled stage. PROBE IDs never discharge S0 IDs; missing runners remain outstanding implementation. S0-LL08-c was retired by user decision on 2026-09-13; second-Mac reproduction is not required.",
   "tests": [
     {
       "id": "G0-U1-a",
@@ -419,27 +419,6 @@
       ],
       "status": "IMPLEMENTED_NOT_ACCEPTED",
       "runner": "tests/wasm/native-census/run.py",
-      "review_disposition": "NOT_REVIEWED"
-    },
-    {
-      "id": "S0-LL08-c",
-      "obligation": "LL08",
-      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
-      "evidence_kind": "HOST COMPILATION",
-      "variants": [
-        "native"
-      ],
-      "prerequisites": [
-        "G0-U1-a"
-      ],
-      "assertions": [
-        {
-          "id": "S0-LL08-c:contract",
-          "description": "repeat the pinned U1 macOS x86-64 baseline on a second Mac and compare retained digests under R6 normalization, separately from target-state proof and native behavior. This supersedes the unexecuted H1/E5 ARM64 reproduction slice because U1 lacks that backend; history/changes.md records the scope change. H1 evidence remains historical."
-        }
-      ],
-      "status": "NOT_RUN",
-      "runner": null,
       "review_disposition": "NOT_REVIEWED"
     },
     {

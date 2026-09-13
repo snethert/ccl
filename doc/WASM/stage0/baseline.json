@@ -25,5 +25,5 @@
   "protected_native_source_policy": "Existing target-specific implementation files must not change.",
   "comparison_policy": "acceptance.md section 2",
   "reference_platform": "macOS",
-  "second_host": "A second macOS x86-64 host, with matching pins; not a different operating system."
+  "second_host": "NOT_REQUIRED: user decision 2026-09-13, stage0/second-mac-decision.md. No cross-host execution or reproducibility claim."
 }

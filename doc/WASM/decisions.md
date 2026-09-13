@@ -289,7 +289,7 @@ An unchecked path under safety 0 is a proposed compatibility choice requiring ap
 
 Retain the proposed additive edit sites: backend registration; a new target architecture; lib/compile-ccl.lisp module lists and target clauses; lib/systems.lisp registrations; a target cross-fasloader derived from the x8632 precedent; and Wasm-specific level-0/level-1 files. Exact clauses, masks and module ordering must be checked against the pinned tree before applying a patch. Existing target clauses and acode identities are preserved under R6/R6a. [3, 8]
 
-This record supplies an edit-site plan, not a prepared executable patch. The actual patch must identify its path, revision and digest, attach the baseline comparison recipe, and produce native FASL/behavior and evaluated acode-ID/flag comparisons after application. Preserve Gate 0 and ARM64 same-host results at their original evidence scope; second-host reproducibility is a separate test. [17; LL08, LL22]
+This record supplies an edit-site plan, not a prepared executable patch. The actual patch must identify its path, revision and digest, attach the baseline comparison recipe, and produce native FASL/behavior and evaluated acode-ID/flag comparisons after application. Preserve Gate 0 and ARM64 same-host results at their original evidence scope; the user retired the separate second-host test on 2026-09-13 (see [the decision](stage0/second-mac-decision.md)). [17; LL08, LL22]
 
 #### Reversal criterion
 
@@ -316,7 +316,7 @@ Use S<stage>-LL<nn>-<letter> with an evidence kind and pinned test revision. The
 | LL05 S0-LL05-c | Force C/C4/B generic entries and runtime adapters through matching lazy stubs for exact and variable arity. Preserve closure self and overflow space, reload roots after collection/suspension, and report ordinary arity conditions. Specialized typed Lisp entries are optional future work. |
 | LL05 S0-LL05-d | Run generic cross-arity tail chains, shrinking/growing overflow and adapters. Observe bounded explicit-stack/root use, complete multiple values and preserved cleanup/binding extent. |
 | LL07 S0-LL07-a | Check signed fixnum, raw address, logical-ID and typed-slot conversions separately. Synthetic addresses above 2 GiB retain bits through JS; checked exhaustion rejects invalid IDs and capacities. |
-| LL08 S0-LL08-a/b/c | a: validate the actual registration patch in clean host sessions with target state set before reading. b: compare evaluated acode IDs/flags and reserved slots under R6a. c: repeat the pinned U1 macOS x86-64 baseline on a second host and compare retained digests under R6 normalization, separately from target-state proof and native behavior. This supersedes the unexecuted H1/E5 ARM64 reproduction slice because U1 lacks that backend; history/changes.md records the scope change. H1 evidence remains historical. |
+| LL08 S0-LL08-a/b | a: validate the actual registration patch in clean host sessions with target state set before reading. b: compare evaluated acode IDs/flags and reserved slots under R6a. |
 
 #### Ownership, control, publication and standing controls
 

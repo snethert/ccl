@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "date": "2026-09-13",
+  "status": "PASS",
+  "scope": "Inventory retirement and existing acceptance bindings only. No artifact audit, acceptance rebind or native execution.",
+  "before_revision": "6f7b53bccd60151b5cb1feaa3ca3d8578879071d",
+  "inventory_before_sha256": "32cbeb2a077d38ed02642a6a293a3587deb2540abca0ca7e9a0eb3ef3c281134",
+  "inventory_after_sha256": "0dc5486ab3e9e0b01814ea778c7b5098ae81af59060f21d65c296b3ff34a57b0",
+  "retired_entry": {
+    "id": "S0-LL08-c",
+    "obligation": "LL08",
+    "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+    "evidence_kind": "HOST COMPILATION",
+    "variants": [
+      "native"
+    ],
+    "prerequisites": [
+      "G0-U1-a"
+    ],
+    "assertions": [
+      {
+        "id": "S0-LL08-c:contract",
+        "description": "repeat the pinned U1 macOS x86-64 baseline on a second Mac and compare retained digests under R6 normalization, separately from target-state proof and native behavior. This supersedes the unexecuted H1/E5 ARM64 reproduction slice because U1 lacks that backend; history/changes.md records the scope change. H1 evidence remains historical."
+      }
+    ],
+    "status": "NOT_RUN",
+    "runner": null,
+    "review_disposition": "NOT_REVIEWED"
+  },
+  "unchanged_remaining_contracts": 37,
+  "accepted_envelope": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-stage0-ll08a-accepted-results.json",
+    "sha256": "0f9928e0e800e3731e4517ee3cae91308f479fc3b7886f65079289d118953f81",
+    "records": 28,
+    "contract_bindings": "PASS"
+  },
+  "previous_gate": {
+    "revision": "6f7b53bccd60151b5cb1feaa3ca3d8578879071d",
+    "path": "doc/WASM/evidence/current-stage0-gate-result.json",
+    "sha256": "6165d18525e56ff4f87e1e5f4c0f4769f6ef9da039c54e974c69f10c1c68f4b5"
+  },
+  "method": "Require exact removal of S0-LL08-c; compare every remaining entry and per-test contract digest; verify retained accepted-envelope hash and its inventory bindings; subtract exactly its missing reason from the previously verified gate. Artifact bytes reuse previous verification.",
+  "checker_controls": {
+    "command": [
+      "python3",
+      "doc/WASM/tools/test-controls.py"
+    ],
+    "exit_code": 0,
+    "stdout": "PASS: 32 synthetic checker positive/negative controls; no production acceptance claim.\n",
+    "stderr": ""
+  },
+  "required_variants": 48,
+  "accepted": 28,
+  "missing": 20,
+  "unreviewed": 0
+}

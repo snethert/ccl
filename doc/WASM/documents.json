@@ -10,15 +10,15 @@
     },
     {
       "source": "acceptance.md",
-      "source_sha256": "f93c5564afce6d8f40cb8a94f9bd4eb9b63df9d44fc0250d39a5803efe833bc7",
+      "source_sha256": "6447c2fba37f8a4d989dc85f238b5175cfc4da166d1bb98d66f2ec369e026316",
       "output": "CCL_WebAssembly_Acceptance_Policy_and_Regression_Register_v1_7.docx",
-      "output_sha256": "51b990f5c715cbdaf3ce007c51d3f6b3c7e984e592cb8b80bd7ae22961becfc1"
+      "output_sha256": "0b9f4afb947aeb968ad66f2499cd882b0a36821dd7d1bdfc0defbece43b8aee5"
     },
     {
       "source": "decisions.md",
-      "source_sha256": "7e1824521803fdbed6e99a3cd65b690eeae486e19d41d73ec4e90df4bc837bf6",
+      "source_sha256": "37a5397630da7d75b20864f3e0cecd7cf17bf649478af0cb1eefc1808067b774",
       "output": "CCL_WebAssembly_Stage0_Desk_Decisions_v1_8.docx",
-      "output_sha256": "486622792288ee785dd20651d2b862adbfde2b606e70df52e17ddb4a92e0383f"
+      "output_sha256": "fe0f75758d18ed54986c4fdd8ff10be44517fd36bcc614d231c1314c85e2ab3f"
     }
   ]
 }

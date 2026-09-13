@@ -1,10 +1,10 @@
-# Current status — 2026-09-12
+# Current status — 2026-09-13
 
 Implementation baseline: upstream v1.13, `c994217adc56b3f8a564526cee4695893ac84d86`. Current document set: outline 0.17, acceptance 1.7, decisions 1.8. macOS is the sole reference host. Shared compiler and upstream kernel source remain unchanged.
 
 | Work | State | Evidence scope / remaining work |
 | --- | --- | --- |
-| U1 native Gate 0 | ACCEPTED for same-host execution/repeatability | Two clean macOS x86-64 builds, 21,843 passing eligible tests per build, 75 upstream-disabled tests disclosed, 164 identical FASLs. Claude independently reproduced the results. Second-Mac reproduction remains open. [Native summary](evidence/native-baseline-summary.json). |
+| U1 native Gate 0 | ACCEPTED for same-host execution/repeatability | Two clean macOS x86-64 builds, 21,843 passing eligible tests per build, 75 upstream-disabled tests disclosed, 164 identical FASLs. Claude independently reproduced the results. Second-Mac reproduction is [no longer required](stage0/second-mac-decision.md). [Native summary](evidence/native-baseline-summary.json). |
 | Boundary S0-LL13-c / S0-LL19-b | ACCEPTED at retained bounds | Twelve cases and nine controls, real C stacks, TLS and exceptional restoration. |
 | Integrated S0-LL20-a/b/c | ACCEPTED at retained bounds | Cons-only moving collector, admission, lifecycle and interruptible I/O; 22 cases, 14 controls, 1,000 seeded schedules. [Runtime scope](stage0/integrated-runtime.md). |
 | Debugger frames S0-LL23-b | ACCEPTED at retained bounds | Eleven cases and eleven controls. Shared-cell relocation does not establish capture semantics; policy-1 unavailability is metadata only. [Frame scope](stage0/debug-frames.md). |
@@ -23,7 +23,7 @@ Implementation baseline: upstream v1.13, `c994217adc56b3f8a564526cee4695893ac84d
 | Evidence repository | Retained separately | Immutable catalog, original failures and index snapshots; [pinned repository manifest](evidence/repository.json). |
 | D3 measurement derivative review | Reviewed; S0-LL21-a ACCEPTED by the user at retained bounds | [Fifth audit](stage0/claude-review.md): full source review, fresh 486/279/72/27 run, 4,518/4,518 byte-identical binaries, independent bootstrap; no defect. The prior acceptance was withdrawn after the user clarified that its quoted authorization was reviewer text. The reviewed scope remains identity/generation publication with pre-provisioned bytes and host-actor acquisition. Timings have no selection value. |
 | C/C4/B dynamic-call fixture review | Reviewed and accepted | [Fourth audit](stage0/claude-review.md): full source review, fresh 159/81 run, 864/864 byte-identical binaries, no defect; three nonblocking observations recorded. The eighteen records have a separate scoped acceptance envelope. |
-| Stage 0 acceptance | BLOCKED | The combined gate has 28 accepted records, 21 missing and zero unreviewed. |
+| Stage 0 acceptance | BLOCKED | The inventory has 48 required variants: 28 accepted records, 20 missing and zero unreviewed after retiring S0-LL08-c. The [scoped gate update](evidence/current-stage0-gate-result.json) reuses the previous artifact verification. |
 
 The new ABI fixture adds a separate C extension and new linked kernel. Existing boundary/runtime/frame sources remain unchanged. Fresh prerequisites execute before the ABI corpus. ABI acceptance now follows its own fourth audit and explicit eighteen-record decision. Original ABI development failures exposed duplicate result scanning and a stale frame result count. Both fixes are confined to the new fixture and have rejection controls.
 
