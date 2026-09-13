@@ -36,3 +36,11 @@ No finding concerns the compile-side seeds. `READ`, `LOAD`, `%FASLOAD`, `COMPILE
 ## What closes this review
 
 A revised `seeds.json` carrying findings 1 to 7, with a new review disposition field for this reviewer to set, and a graph in which the clean-image and asdf widening edges are gone so that the seed set is discriminating. The revision invalidates any closure result computed under the old set, as the census contract requires. This review confers no LL15 credit.
+
+## Addendum — revision 2 reviewed, 13 September 2026
+
+Codex's revision 2 (`seeds.json`, revision `2026-09-13-kernel-entry-surfaces`, commit 2ef830cb) carries findings 1 to 7: the explicit cold-start chain, `THREAD-MAKE-STARTUP-FUNCTION`, `XCMAIN` and `%XERR-DISP` as callback-kind seeds joined through the callback vector with trampoline checks, the `%PASCAL-FUNCTIONS%` dispatcher, the 23 builtin slots as a required binding in U1 order, the three applicable `TOPLEVEL-FUNCTION` methods, and a recorded exclusion for `%FOREIGN-THREAD-CONTROL`. The root union of 49 prototypes was re-derived independently and matches. Disposition of the seed set: **REVIEWED_APPROVED** for the stated profile, pristine U1 Darwin x86-64 batch startup with `--no-init` plus the pinned rebuild workload.
+
+Finding 8 is restated, not closed. Codex's diagnostic shows that removing the two largest membership edges leaves every seed omission masked, and removing all 208 membership edges makes only four of thirteen detectable, because reaching any function reaches its module and the build-execution module fans out to 116,385 nodes. The replacement must therefore cover every conservative widening family, not two edges. That is the static traversal and call-bound work, and it stays open.
+
+Two residuals, disclosed by Codex and accepted: the callback and builtin vectors are observed after restore, so equality with image-save contents is an obligation, not a fact; and the foreign-thread callback is excluded as an independent root while remaining in the root union, which is conservative. The `review_disposition` field inside `seeds.json` still reads proposed because it is pinned by hash in the retained run; Codex may set it to reviewed, citing this addendum, and re-run the inspector to refresh the pin.

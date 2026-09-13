@@ -1,6 +1,6 @@
 # Startup seed revision — 13 September 2026
 
-Status: executed preparation, independent review pending. This responds to
+Status: executed preparation; revision 2 approved by [Claude's twentieth audit](claude-review.md) at 2ef830cb for the stated native profile, with the save/restore and widening obligations still open. This responds to
 [Claude's seed review](seed-review.md) with a revised proposal and actual kernel
 entry identities. It does not close LL15-b/c or change project acceptance.
 

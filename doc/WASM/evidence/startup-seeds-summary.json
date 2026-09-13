@@ -30,7 +30,7 @@
   "live_callback_slots": 3,
   "kernel_vector_scope": "After restoring the retained clean image, before any requested workload; not an image-save observation.",
   "controls_rejected": 27,
-  "review_disposition": "NOT_REVIEWED",
+  "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
   "evidence_id": "NATIVE-STARTUP-SEEDS-R2",
   "scope": "New post-restore snapshot and revised proposal only. No graph splice or qualified closure.",
   "reachability_diagnosis": {
@@ -44,5 +44,15 @@
     "unreviewed": 0,
     "new_credit": 0,
     "basis": "Accepted aggregate unchanged; gate not rerun."
+  },
+  "external_review": {
+    "reviewer": "Claude Fable 5.1",
+    "audit": 20,
+    "reviewed_at": "2ef830cb",
+    "date": "2026-09-13",
+    "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+    "seed_set_disposition": "REVIEWED_APPROVED for the stated native profile",
+    "record": "stage0/claude-review.md",
+    "scope": "Inspector and diagnostic re-executed; joined outputs byte-identical; root union re-derived independently. Save/restore callback equality and the widening replacement remain open."
   }
 }

@@ -1673,8 +1673,15 @@
       "id": "NATIVE-STARTUP-SEEDS-R2",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-startup-seeds-r2/packet.json",
       "sha256": "e20680f47dfcb06605e212c5c122963315fefd36566384ff1efe818bc37c05b9",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "Revision-2 proposal: 22 named entrypoints, 23 builtin slots, 32 callback slots with three live targets, three applicable methods and 49 root prototypes. Post-restore snapshot only; 27 revised and 14 historical controls pass. Original graph preserved; counterfactual reachability shows two-edge removal still masks every seed omission. Independent review, save/restore callback equality, source traversal and call bounds remain open. No gate credit."
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+      "scope": "Reviewed (Claude twentieth audit, no defect; seed revision 2 approved for the stated native profile) proposal: 22 named entrypoints, 23 builtin slots, 32 callback slots with three live targets, three applicable methods and 49 root prototypes. Post-restore snapshot only; 27 revised and 14 historical controls pass. Counterfactual reachability shows membership removal alone does not make seed omissions detectable. Save/restore callback equality, source traversal and call bounds remain open. No gate credit.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Twentieth audit at 2ef830cb: native inspector re-executed with candidates, summary and controls byte-identical and image.json identical except eight combined-method print names carrying heap addresses; reachability diagnostic reproduced exactly; root union of 49 re-derived independently from the seed manifest, callback vector, builtin vector and applicable methods; all 16 source pins verified at HEAD; catalog at b2ca818a verified, 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "seed_set": "Revision 2026-09-13-kernel-entry-surfaces REVIEWED_APPROVED for the native Darwin x86-64 batch profile; findings 1 to 7 of stage0/seed-review.md closed, finding 8 restated per the diagnosis."
+      }
     }
   ]
 }
