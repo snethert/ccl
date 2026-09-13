@@ -2,21 +2,21 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "b8ad0621206816e3f55b078b9ebcbf6fa0de0fed",
+  "commit": "0680144ec5459e68b5d7d93c1711d180dd1e96b0",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "6785a438834422b098328c6944b1562c9ba865e220d022a8b95ed11e1b8f22ec",
-  "immutable_evidence_files": 160357,
-  "indexed_references_verified": 908,
+  "catalog_sha256": "11affec0a6641a4507b5877a0bb938006654dfec6ffdcae8cd39a25fc87301dd",
+  "immutable_evidence_files": 160382,
+  "indexed_references_verified": 909,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped addition of 31 required-inventory control files, 2026-09-13. Only new artifacts and direct checker dependencies verified; prior catalog rows and accepted evidence reused unchanged.",
+  "verification": "Scoped addition of 25 target-macro files, 2026-09-13. New packet and direct source dependencies verified; prior catalog rows and accepted evidence reused unchanged.",
   "remote": null,
   "off_machine_backup": false,
   "scope": "Separate local evidence repository. Original executions, policies and failures retained. Twenty-eight accepted records: 27 preserved exactly plus S0-LL08-a accepted by the user. Complete census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-13-inventory-control-r1",
-    "files": 31,
-    "bytes": 139508,
-    "prior_commit": "79940bf28062d8287faaa8affef3da0013b44afb"
+    "directory": "2026-09-13-target-macros-r1",
+    "files": 25,
+    "bytes": 254392,
+    "prior_commit": "b8ad0621206816e3f55b078b9ebcbf6fa0de0fed"
   }
 }

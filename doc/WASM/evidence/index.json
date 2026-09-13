@@ -1725,6 +1725,13 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md"
       }
+    },
+    {
+      "id": "NATIVE-TARGET-MACROS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-target-macros-r1/packet.json",
+      "sha256": "40b93ebc1872a75cbce15a4d9ed847acf63dcd12f963be8d7e31b2a1e220523e",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Source-derived macro slice: fourteen reconstructed metadata/accessor macros from eight U1 forms, seven used in ten real traversal expansions; 293 hook events joined, with 46 other expander identities unqualified. Two identical raw captures, four native and twenty checker controls. Five boundary stops and seven unbounded calls remain; no graph replacement, full macro qualification or gate credit."
     }
   ]
 }
