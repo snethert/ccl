@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "registration_acceptance": "02ff713d",
+  "scope": "Reuse accepted LL08-a registration binaries in a fresh process, with clean r7 native image and pristine U1 source. No new shared-source patch or build.",
+  "inputs": {
+    "source": {
+      "path": "macos-u1-inputs/source.tar",
+      "sha256": "285977d985b80b1c89ca49e5598fa0e0fb2ca37175bc1ac3536fb2b7a7c1ec9e"
+    },
+    "bootstrap": {
+      "path": "macos-u1-inputs/bootstrap.tar.gz",
+      "sha256": "0eceab57e519f82bd6db011c596eb2a28e2a510abcd76e217d49a10e90f4002f"
+    },
+    "kernel": {
+      "path": "2026-09-12-native-census-r7/baseline/build/dx86cl64",
+      "sha256": "2f3a9888f1bf515130e7d124831d31319386c55f3208710393b238637dcf5699"
+    },
+    "image": {
+      "path": "2026-09-12-native-census-r7/baseline/build/dx86cl64.image",
+      "sha256": "bdab1f640e22414ad06dd0cf2c5b6290cae3b12635eaf418ebd6e77e32548cc9"
+    },
+    "registration": {
+      "path": "2026-09-12-census-stub-r1/registered-systems.dx64fsl",
+      "sha256": "d4eed215396aa779ff1b844dae468f1ae2446eca418353575bc16fdff00fe737"
+    },
+    "architecture": {
+      "path": "2026-09-12-census-stub-r1/wasm-census-arch.dx64fsl",
+      "sha256": "87b368140af30d7f32815cc2a2438cae82baaef94603df9ae43a9b71dca68b3d"
+    },
+    "backend": {
+      "path": "2026-09-12-census-stub-r1/wasm-census-backend.dx64fsl",
+      "sha256": "e0850c6de639e718a7f90b9ae2f6576dd14956ea3c93cb2f5fbd35b30da9cc81"
+    }
+  }
+}

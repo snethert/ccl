@@ -1682,6 +1682,13 @@
         "record": "stage0/claude-review.md",
         "seed_set": "Revision 2026-09-13-kernel-entry-surfaces REVIEWED_APPROVED for the native Darwin x86-64 batch profile; findings 1 to 7 of stage0/seed-review.md closed, finding 8 restated per the diagnosis."
       }
+    },
+    {
+      "id": "NATIVE-SOURCE-TRAVERSAL-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-source-traversal-r1/packet.json",
+      "sha256": "ee259fb9a728fdb1589b74f3a686ef57171f4f52b3e4df4a8040980b5ca679f8",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "First fixed U1 source-file traversal through accepted LL08-a registration: all 16 dumplisp forms accounted for; four definitions plus two initializer bodies, 12 code prototypes, 40 calls and nine references captured; eight definitions retain first-error target gaps. Two raw-byte-identical captures, 21 analysis and two native controls. Inherited macro environment and call facts remain unqualified; no graph replacement or gate credit."
     }
   ]
 }
