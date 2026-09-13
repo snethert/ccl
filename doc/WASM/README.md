@@ -10,6 +10,7 @@ The implementation baseline is upstream CCL v1.13 at `c994217adc56b3f8a564526cee
 - [Stage 0 work plan](stage0/plan.md): subgates, dependencies, deliverables and execution commands.
 - [Workflow](workflow.md): independent census and architecture tracks.
 - [Current status](STATUS.md) and [dated change history](history/changes.md).
+- [Attempt-1 reference survey](history/attempt1-reference.md): what the archived first port established and got wrong, mapped to Stage 0 and Stage 1 obligations. Reference only.
 
 Markdown is the editable document source. The three versioned DOCX files are generated reading copies. `stage0/obligations.json` and the stage lists are generated from the acceptance register's LL metadata; `stage0/inventory.json` defines the individual tests. These complementary sources are checked together. Twenty-eight reviewed native/runtime/frame/ABI/observation records are now accepted within their stated scopes; the remaining Stage 0 obligations are open.
 
