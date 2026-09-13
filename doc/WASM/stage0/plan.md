@@ -35,8 +35,9 @@ independent review and project acceptance remain separate from execution.
    all 293 hook invocations from source, extending the reviewed first slice.
    Sixty-eight native helper names, four computed helper calls, three object
    references and the five source boundary stops remain explicit and unqualified.
-3. Complete the next unblocked standing control or the B desk-decision record,
-   then resume the census traversal and boundary work.
+3. The [B desk-decision record](abi-decision.md) is prepared and verified, awaiting
+   independent review and acceptance. Resume census helper qualification, then
+   the boundary replacements and wider source traversal.
 
 The B desk record's actual inventory prerequisites are the reviewed ABI/runtime
 records; S0-ENGINE-a is not a prerequisite of S0-ABI-selection. Engine qualification

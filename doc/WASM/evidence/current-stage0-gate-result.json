@@ -1,12 +1,10 @@
 {
-  "version": 2,
-  "assessment": "SCOPED_PROJECT_ACCEPTANCE",
-  "date": "2026-09-13",
-  "basis": "The production gate passes the newly accepted S0-LL02-a slot. Prior 28 accepted result objects are unchanged; all 29 contract bindings verified. Reuse prior accepted artifact verification and missing reasons; no full artifact/gate rescan.",
+  "version": 1,
+  "assessment": "SCOPED_DESK_RECORD",
+  "basis": "Production gate validates new record and its artifacts; pinned accepted envelope and current bindings reused. No full combined artifact rescan.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
-      "missing S0-ABI-selection [complete-report]",
       "missing S0-CONTRACTS-a [complete-report]",
       "missing S0-ENGINE-a [complete-report]",
       "missing S0-LL01-a [control]",
@@ -24,20 +22,22 @@
       "missing S0-LL22-a [control]",
       "missing S0-LL22-b [control]",
       "missing S0-LL23-a [full]",
-      "missing S0-LL24-a [control]"
+      "missing S0-LL24-a [control]",
+      "unreviewed S0-ABI-selection [complete-report]"
     ]
   },
-  "prior_result_sha256": "0297da0861b7a9a02fa80585a2d21422e374cdd1a9253762fa3869d5c1ecdeb0",
-  "new_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll02a-project-acceptance/accepted/accepted-results.json",
-  "new_results_sha256": "d27ff70f040080c51f5ed92c301f2e090124e7b898ac8102f0b8d04fc0ccb9cf",
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-ll02a-accepted-results.json",
-  "combined_results_sha256": "9c811ec32408ee0fb9c1eec31e7c0e29fa768b67d16edf25f9c1a2eaa18a9abf",
-  "slot_gate": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll02a-project-acceptance/slot-gate.json",
-  "slot_gate_sha256": "14bac0ed909b95521ff68e542c7c8667e7f75a4b7f6e70aacf8e7f6e104fe2ff",
   "counts": {
     "accepted": 29,
-    "missing": 19,
-    "unreviewed": 0,
+    "missing": 18,
+    "unreviewed": 1,
     "required": 48
-  }
+  },
+  "date": "2026-09-13",
+  "prior_result_sha256": "dd9ad34d4171903b297d57665d7bde8ad15ad92a9b827b1be006dbd823cef3d5",
+  "new_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-abi-decision-r1/results.json",
+  "new_results_sha256": "8490c13fce3085bcb4020bbb4109d3902862b9de2097ecc6571b800601d73c34",
+  "accepted_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-ll02a-accepted-results.json",
+  "accepted_results_sha256": "9c811ec32408ee0fb9c1eec31e7c0e29fa768b67d16edf25f9c1a2eaa18a9abf",
+  "scoped_assessment": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-abi-decision-r1/gate-result.json",
+  "scoped_assessment_sha256": "7f2660a23bc29155093dba82138ad824936f49bc5b035d28c456c8c811d15302"
 }

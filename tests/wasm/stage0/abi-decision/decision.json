@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "id": "S0-ABI-selection",
+  "decision_date": "2026-09-12",
+  "record_date": "2026-09-13",
+  "selected_abi": "B",
+  "basis": "PROJECT_DECISION",
+  "rationale": "One placement rule for every Lisp argument avoids splitting arguments between Wasm parameters and an overflow area. Choose B for simplicity and clarity on the reviewed correctness basis.",
+  "user_direction": "For the record, when this is written down it should be recorded as a project decision with a dated rationale, not as the output of the frozen benchmark rule, since the policy's minima were never met. That keeps the evidence honest and lets Stage 1 proceed on B without a measurement claim behind it.",
+  "direction_provenance": "User to Codex in this project conversation; the existing 12 September ABI choice and policy-change record establish the decision date. This record formalizes that choice without granting acceptance to itself.",
+  "abi": {
+    "parameters": ["self:i32", "nargs:i32"],
+    "results": ["value0:i32", "nvalues:i32"],
+    "tagged_values": ["self", "arguments", "value0"],
+    "counts": "raw unsigned i32",
+    "argument_parameter_count": 0,
+    "argument_address": "incoming_VSP + 4*i, for 0 <= i < nargs",
+    "argument_extent": "align16(4*nargs)",
+    "argument_owner": "caller; callee restores incoming VSP before the caller releases it",
+    "zero_values": "(NIL, 0)",
+    "extra_values": "caller-owned rooted VSP region referenced by the TCR multiple-value descriptor; lifetime ends on owner reuse or release",
+    "nested_values": "copy earlier retained results to owned rooted storage before reusing the output region",
+    "result_scanners": "exactly one scanner per physical result slot; ownership handoffs occur without polling"
+  },
+  "performance": {
+    "policy_v2_rule_applied": false,
+    "policy_v2_minima_met": false,
+    "demonstrated_speed_superiority": false,
+    "comparative_timing": "DEFERRED",
+    "sensitivity_and_comparison_instrumentation": "DEFERRED",
+    "required_before_B_implementation": false
+  },
+  "alternatives": ["C", "C4"],
+  "optional_future_enhancement": "H(G)",
+  "retained_basis": ["accepted", "exploratory", "old_policy", "policy_change"],
+  "module_granularity": {
+    "correctness_fixture": "one callable definition per module plus support/runtime; cross-instance indirect dispatch",
+    "initial_generated_bootstrap": "proposed small number of coherent, eagerly installed bundles",
+    "production_partition": "OPEN_STAGE1_DECISION",
+    "measured_advantage": false
+  },
+  "continuing_obligations": [
+    "publish live roots at stopping boundaries; reload moved values and rederive addresses",
+    "preserve logical debugger frames, source identity and declared availability policy",
+    "preserve VSP/TSP/CSP, result ownership, bindings, handlers and cleanup across tails, callbacks and exceptions",
+    "validate code versions, entry roles, signatures and installation before publication",
+    "confirm the selected B protocol through real compiler-generated code",
+    "complete the independent engine matrix, census and contracts join",
+    "measure startup, scale and memory with useful generated code"
+  ],
+  "fixture_limits": {
+    "maximum_arguments": 32,
+    "maximum_values": 6,
+    "frame_bytes": 512,
+    "stack_bytes": 16384,
+    "tail_iterations": 100000,
+    "memory_bytes": 1048576,
+    "live_workers": 3,
+    "ownership_slots": 4,
+    "scope": "HAND_BUILT_CORRECTNESS_ONLY"
+  },
+  "publication_limit": "S0-LL21-a publishes a generation and code/version digest; every Worker already holds the bytes. It proves neither byte delivery nor Wasm-side acquire.",
+  "reopen_for": ["demonstrated generated-code correctness problem attributable to B", "representative performance problem attributable to B"],
+  "future_comparison_requires": ["positive sensitivity control", "representative workload weights", "declared granularity and engine tier", "required trials and metrics"],
+  "runtime_execution_claimed": false,
+  "compiler_authorization_changed": false,
+  "review_disposition": "NOT_REVIEWED"
+}

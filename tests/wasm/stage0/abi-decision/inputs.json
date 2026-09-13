@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "local": [
+    {
+      "path": "doc/WASM/abi/dynamic-call.v0.md",
+      "sha256": "31bd6adab6c9200e9cc2e138a7de5414162ef9d89578801315e15a3c0284643d"
+    },
+    {
+      "path": "doc/WASM/contracts/debug-frames.md",
+      "sha256": "a7e3b61d840baea1cee0226afb088d2713dd6a89bee05448276da8d2163d1cec"
+    },
+    {
+      "path": "doc/WASM/stage0/benchmarks.json",
+      "sha256": "16c56a442849ee6eae7058fd16f8aa5f555e670be41ccacdd6d9bd94e92c23f1"
+    },
+    {
+      "path": "doc/WASM/evidence/dynamic-call-summary.json",
+      "sha256": "803ec104f5fcbab8dbcbc2ba0181dddc89b605f60e1c2439ef55cb7ff03f5b97"
+    },
+    {
+      "path": "doc/WASM/stage0/bootstrap-design-review.md",
+      "sha256": "46e964dc51c8c2310d41e95af6bc4745cc81122eed36a7a518a478829c5a8d01"
+    },
+    {
+      "path": "doc/WASM/stage0/claude-review.md",
+      "sha256": "a5eca7d23bc80b66c16b41857503c55c1c2e89e5e4ea34804867638ed39c8938",
+      "revision": "ef575ce214166a08271e6ac2ef694b1e70362078"
+    }
+  ],
+  "evidence": {
+    "accepted": {
+      "path": "2026-09-13-stage0-ll02a-accepted-results.json",
+      "sha256": "9c811ec32408ee0fb9c1eec31e7c0e29fa768b67d16edf25f9c1a2eaa18a9abf"
+    },
+    "exploratory": {
+      "path": "2026-09-12-abi-measurements-r2/measurement-summary.json",
+      "sha256": "a8cd0b4ecd915e6be7fc96065f4e49d311ca3290a3702f7f9640f3de27adb949"
+    },
+    "old_policy": {
+      "path": "2026-09-12-ll21-project-acceptance/before/doc/WASM/stage0/benchmarks.json",
+      "sha256": "a9e69df97867b7cc608ce6bd6ae5ea2118a5b53dc03eb4391c72f9e870a838a4"
+    },
+    "policy_change": {
+      "path": "2026-09-12-ll21-project-acceptance/b-choice-policy-change.json",
+      "sha256": "de1c94776e208e0466566dc56df0b80c7f472d249961144b74cf6307caa4f987"
+    }
+  }
+}

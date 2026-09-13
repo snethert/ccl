@@ -2,21 +2,21 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "6b3ecb4a3b90ac6a0ee170313f5bc1c72d6ab027",
+  "commit": "e6e9e4a0f20bed70514441c259f28e2520e4a54e",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "e30e9a87063c2a0c40cf10d33a3d023d33b5bcb8a3da1d93476d0072994b0d73",
-  "immutable_evidence_files": 160451,
-  "indexed_references_verified": 916,
+  "catalog_sha256": "d9a2896c0bd7468172bd8d5050cd13a2242d979e5dc17a82bcfe9f5d86dfe840",
+  "immutable_evidence_files": 160475,
+  "indexed_references_verified": 919,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped source-expander addition, 2026-09-13: 28 new packet files, direct source bindings, reference equivalence and 31 negative controls checked. Prior catalog rows preserved unchanged; no earlier payload rescan or native rebuild.",
+  "verification": "Scoped B desk-decision addition, 2026-09-13: 24 new packet files, 24 prerequisite variants, 29 accepted bindings and ten negative controls checked; fresh desk reproduction matches. Prior catalog rows unchanged. No earlier runtime-payload rescan or runtime execution.",
   "remote": null,
   "off_machine_backup": false,
   "scope": "Separate local evidence repository. Original executions, decisions and failures retained. Twenty-nine accepted records: 28 preserved unchanged plus user-accepted S0-LL02-a. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-13-source-expanders-r1",
-    "files": 28,
-    "bytes": 982975,
-    "prior_commit": "14ee1151e4b65e37451cdd04a1bcd0cbf4bce049"
+    "directory": "2026-09-13-abi-decision-r1",
+    "files": 24,
+    "bytes": 132187,
+    "prior_commit": "6b3ecb4a3b90ac6a0ee170313f5bc1c72d6ab027"
   }
 }

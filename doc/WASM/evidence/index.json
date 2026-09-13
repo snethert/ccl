@@ -885,6 +885,22 @@
         "timestamp": "2026-09-13T20:56:51.873807+00:00"
       },
       "note": "User to Codex: \"I accept it.\" in direct reply to the S0-LL02-a acceptance question. Disposition only, pinned to Claude twenty-third-audit commit 4f5fdcb6; no new execution."
+    },
+    {
+      "id": "ABI-DESK-DECISION-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-abi-decision-r1/results.json",
+      "sha256": "8490c13fce3085bcb4020bbb4109d3902862b9de2097ecc6571b800601d73c34",
+      "timestamp": "2026-09-13T21:43:05.504300+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "bd37fe1d5c68e82ca04affa5978b4ac0b31269aef15e6e2dc310e6f424baac1f",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "DESK DECISION",
+      "record_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "S0-ABI-selection: formal record of the existing B engineering choice on simplicity. Explicit argument/result protocol, 24 accepted prerequisite variants, bounded scope, provisional packaging and reversal criteria; ten rejected controls. No fresh runtime, benchmark selection or speed claim."
     }
   ],
   "auxiliary_records": [
@@ -1817,6 +1833,18 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md"
       }
+    },
+    {
+      "id": "ABI-DESK-DECISION-PACKET",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-abi-decision-r1/packet.json",
+      "sha256": "4f73a642629d617fd28e38aad725f7bf8fa3a2b5f50b9580af7fd25c33cc0a63",
+      "scope": "One compact desk-decision packet with original producer output, reproduction, direct metadata verification and the separate failed preparation expectation. Independent review pending."
+    },
+    {
+      "id": "ABI-DESK-DECISION-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-abi-decision-r1/gate-result.json",
+      "sha256": "7f2660a23bc29155093dba82138ad824936f49bc5b035d28c456c8c811d15302",
+      "scope": "Labeled scoped assessment: production gate validates the new desk record; 29 earlier accepted records and current bindings reused. BLOCKED: 18 missing, one unreviewed. No full runtime-artifact rescan."
     }
   ]
 }
