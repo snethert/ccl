@@ -308,3 +308,8 @@ After the user supplied Claude's twenty-sixth audit, authorized B acceptance and
 Eight numeric probes check expansions and actual front-end EQL builtin targets. Descriptor probes vary the target range and stream subtype, exercise missing-description refusal and confirm restoration. Forty genuine helper calls join to 21 of the file's 293 macro events. Normal/repeat captures are byte-identical, and all six sessions' file traversals agree; seven definitions and five boundary stops remain. Four native and fifteen checker controls reject. Two original development syntax failures, successful diagnostic captures and the inherited-defect witness are retained in one compact packet. The first formal run and retained verifier pass.
 
 Nonconstant type inference, remaining helper dependencies, native object materialization and full macro qualification stay open. No widening edge is removed, no Wasm is emitted and no implementation image is saved. The [scope report](../stage0/target-helpers.md) records the limits. This packet awaits independent review; Stage 0 remains 30 accepted, 18 missing and zero unreviewed required slots. The alternating plan next takes a standing control before resuming census qualification.
+
+
+## 2026-09-13 — Claude's twenty-seventh audit of the numeric and layout helper paths
+
+Claude reviewed 2c08b98c: all six native sessions re-executed byte-identically, the helper claims confirmed in U1 source, bindings and catalog verified. No defect; the packet is marked reviewed. Claude also confirmed the S0-ABI-selection acceptance at 8e7a4221 by a gate run on the combined envelope. Gate 30 accepted, 18 missing, 0 unreviewed of 48.

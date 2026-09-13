@@ -1,6 +1,6 @@
 # Target numeric and layout helper paths — 13 September 2026
 
-Status: executed; independent review pending. Packet `NATIVE-TARGET-HELPERS-R1`
+Status: executed; reviewed without defect by [Claude's twenty-seventh audit](claude-review.md) at 2c08b98c. Packet `NATIVE-TARGET-HELPERS-R1`
 is retained in `2026-09-13-target-helpers-r1` and bound by the
 [evidence index](../evidence/index.json).
 
