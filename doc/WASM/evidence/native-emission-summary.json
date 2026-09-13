@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "status": "EMISSIONS_JOINED_UNQUALIFIED",
+  "review_disposition": "NOT_REVIEWED",
+  "events": 4006405,
+  "emissions": 2052019,
+  "emitting_functions": 51342,
+  "template_identities": 609,
+  "template_names": 413,
+  "live_handler_codes": 207,
+  "observed_operator_slots": 141,
+  "parameterized_subprimitive_calls": 20606,
+  "subprimitive_targets": 36,
+  "unmapped_subprimitive_calls": 0,
+  "rule_templates_seen": [
+    "CCL::CALL-SUBPRIM",
+    "CCL::JUMP-SUBPRIM"
+  ],
+  "delta_nodes": 28725,
+  "delta_edges": 109333,
+  "controls_rejected": 17,
+  "synthetic_operand_layout_cases": 6,
+  "schema_and_graph_invariants": "PASS",
+  "census_contract": "BLOCKED",
+  "census_error_counts": {
+    "unresolved reachable edge from": 17329,
+    "unimplemented reachable node": 28301
+  },
+  "stage0_gate": {
+    "accepted": 28,
+    "missing": 21,
+    "unreviewed": 0,
+    "basis": "Accepted records unchanged; gate not rerun."
+  },
+  "scope": "Observed native emission dependencies; live handler ancestry is not exact leaf dispatch or a static bound. Other template operands, imports, stores and Wasm dispositions remain unqualified.",
+  "remaining": [
+    "Boot-image subprocess witness and full target traversal.",
+    "Reviewed seed set and conservative dynamic-call bounds.",
+    "Other subprimitive paths, imports, stores, trap classification and target dispositions."
+  ],
+  "date": "2026-09-13",
+  "packet": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-joins-r1/packet.json",
+    "sha256": "87e12492c6a02194bbef118fb66d05437ac364f7b017875f845cf9c56f42cd8b"
+  },
+  "run": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-joins-r1/run.json",
+    "sha256": "e92eb3b9cf7e2427a2fa36e717aa5f756d04d948d912a8c7992ec83721726c4d"
+  },
+  "delta": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-joins-r1/delta.json.gz",
+    "sha256": "c107c6afddf1bd80351c1aea47b0ca3a05e241ecb4f3a7844f7631ca1b81169c"
+  },
+  "joins": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-joins-r1/joins.json.gz",
+    "sha256": "2a1cc2cec6669dc72bb2b43841ba96b12524b6f7510519c9bf9d75b3f6e8a0cd"
+  },
+  "materialization": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-joins-r1/materialization.json",
+    "sha256": "0a5456f75e8459d9a7918993abc50e66ae126d1e6adad2d50086a02e0dd1b613"
+  },
+  "packet_files": 9,
+  "packet_bytes": 2683892,
+  "evidence_repository_commit": "0c1fb1f4fd33be25dab80c53aabdd98b3853d0c8"
+}

@@ -1590,6 +1590,12 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md"
       }
+    },
+    {
+      "id": "NATIVE-EMISSION-JOINS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-emission-joins-r1/packet.json",
+      "sha256": "87e12492c6a02194bbef118fb66d05437ac364f7b017875f845cf9c56f42cd8b",
+      "scope": "Unreviewed native emission dependency fragment: 2,052,019 emissions and 20,606 parameterized subprimitive calls joined; 17 controls reject, six synthetic operand layouts pass. Full exchange-format materialization verified. Static closure and Wasm dispositions remain unqualified; no gate credit."
     }
   ]
 }

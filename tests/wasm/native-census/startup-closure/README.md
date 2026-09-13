@@ -80,3 +80,36 @@ producer, and reproduces five former-checker escapes using its source at
 `f3b4b07e` and six metadata escapes at `c421e39a`. All twenty-four cases must
 reject in the corrected checker. It retains
 the comparison in its control report and never copies the graph or native packs.
+
+## Native emission dependencies
+
+Join the retained compiler's emissions and parameterized subprimitive operands:
+
+```sh
+python3 tests/wasm/native-census/startup-closure/join_lowering.py \
+  --evidence-root /Users/buildsomething/Source/ccl-evidence \
+  --output /tmp/ccl-emission-joins-new
+```
+
+`lowering-inputs.json` pins the reviewed graph, full compiler capture, reviewed
+join file, evaluated subprimitive table and the two kernel provenance records.
+The U1 template definitions are a separate source pin. No native process or
+shared-source patch is involved. Only these direct inputs are verified.
+
+The packet retains `delta.json.gz` and `joins.json.gz`, the controls, sampled raw
+operand events, summary and run record. It references the original graph in
+place. To produce a complete exchange-format file from a finalized packet:
+
+```sh
+python3 tests/wasm/native-census/startup-closure/join_lowering.py \
+  --evidence-root /Users/buildsomething/Source/ccl-evidence \
+  --materialize /absolute/path/to/emission-packet \
+  --output /tmp/ccl-emission-census-new.json.gz
+```
+
+Materialization verifies the fragment and base identities and the exact graph
+additions. It writes a new file and preserves all original graph records.
+Observed handler ancestry remains distinct from exact leaf dispatch and static
+coverage. Six parameterized subprimitive operand layouts have decoding rules;
+the report separates actual execution from synthetic layout cases. See the
+[scope and remaining work](../../../../doc/WASM/stage0/native-emission-joins.md).

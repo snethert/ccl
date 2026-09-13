@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "reviewed_prerequisites": "7244b27e",
+  "inputs": {
+    "base": {
+      "path": "2026-09-12-initializer-joins-r1/census.json.gz",
+      "sha256": "62f2e8b560c723394de0129f448bf3d43f7655164a3e448997036f70358171ae"
+    },
+    "joins": {
+      "path": "2026-09-12-rich-census-r1/observed-r4-joins.json.gz",
+      "sha256": "e28b2b42b394285bcfbb0172a8524d5d071474786efaf8d992d8bae9cff2d332"
+    },
+    "image": {
+      "path": "2026-09-12-startup-candidates-r1/image.json",
+      "sha256": "54037597ef8bc0861cf7bbd70169079402a3d7b5b42d1058d09088858e2f484f"
+    },
+    "events": {
+      "path": "2026-09-12-rich-census-r1/observed-r4.jsonl.gz",
+      "sha256": "23b63396031cca638f845822d15d2b7af927aa8d0c5d193ae4c03df70b120a7b"
+    },
+    "build_run": {
+      "path": "2026-09-12-rich-census-r1/run.json",
+      "sha256": "389c23397a08ef91f83fac4e4df26565c182f0a48b3b0bac0c90aedcca9eb572"
+    },
+    "image_run": {
+      "path": "2026-09-12-startup-candidates-r1/run.json",
+      "sha256": "4e3b571f6a124df6e3d57422ff6319f4c206b243aa44da3e83fa4c8d704e9c5f"
+    }
+  },
+  "template_source": {
+    "path": "compiler/X86/X8664/x8664-vinsns.lisp",
+    "sha256": "ed1e98a25e2ee1ddfed6f47692cf12cf07a44e888efcf50332081755f91b28a0"
+  },
+  "scope": "Native x86-64 emissions only; no new native execution or Wasm qualification."
+}
