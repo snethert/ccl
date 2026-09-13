@@ -2024,6 +2024,13 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll03a-project-acceptance/gate-result.json",
       "sha256": "e3383a270f5f7fee97bd37f70c04e433545e831bc7957dcf8f50d1d29a83ccd4",
       "scope": "User-authorized S0-LL03-a acceptance after Claude twenty-eighth audit; 31 accepted, 17 missing, zero unreviewed. Original execution and prior accepted objects unchanged."
+    },
+    {
+      "id": "NATIVE-TARGET-TYPES-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-target-types-r1/packet.json",
+      "sha256": "70e8cae3e201c59d546963651c415796286aa114c6d73dd1cc44b7b2286a423c",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Bounded declared-type EQL qualification: source NX-FORM-TYPEP/NX-FORM-TYPE and scalar NX-TARGET-TYPE with a private boolean-type adapter. Fifteen probes distinguish seven EQ from eight EQL cases; 60 file queries, 60 facts and 244 translation steps join to macro events. Six identical file traversals, identical repeat type capture, four native and 17 checker controls. General inference, aliases, native helper/type dependencies and five boundary stops remain open. No Wasm, full macro qualification, graph replacement or gate credit."
     }
   ]
 }

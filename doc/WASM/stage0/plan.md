@@ -44,8 +44,15 @@ independent review and project acceptance remain separate from execution.
    reviewed without defect by Claude's twenty-seventh audit.
 4. [S0-LL03-a](evidence-kind-control.md) now executes the evidence-kind standing
    control: two complete synthetic inputs pass and 22 defective inputs reject
-   through the unchanged production gate. Accepted after Claude's twenty-eighth audit and the user's explicit decision. Resume census helper/type/object qualification next, followed by
-   boundary replacements and wider source traversal.
+   through the unchanged production gate. Accepted after Claude's twenty-eighth
+   audit and the user's explicit decision.
+5. The [declared-type helper slice](target-types.md) now supplies source type-query
+   bodies and compound target translation within the private EQL macro. Fifteen
+   probes and the genuine file trace expose and repair unsafe EQ decisions for
+   declared boxed integers while respecting declaration policy. Review is pending;
+   general type inference and other helpers remain open. Take a standing control
+   next, then resume remaining helper/type/object qualification, boundary
+   replacements and wider source traversal.
 
 The B desk record's actual inventory prerequisites are the reviewed ABI/runtime
 records; S0-ENGINE-a is not a prerequisite of S0-ABI-selection. Engine qualification

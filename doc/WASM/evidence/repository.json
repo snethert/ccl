@@ -2,21 +2,21 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "c21b6c3f213fa4288ca1a5c6764951fbcb901596",
+  "commit": "1f15ddf2e908a9023de46dba37de6280078b3874",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "bdd661f7d0b07723500339472a4ab27adcbbb6c0bb6d981422ff02a92bb584f8",
-  "immutable_evidence_files": 160662,
+  "catalog_sha256": "f0ef7ded9ac833e547ce757698b55a9785ce7630d33299f66a7d05db96ce47e3",
+  "immutable_evidence_files": 160687,
   "indexed_references_verified": 925,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped LL03-a acceptance: exact acceptance delta, copied new artifacts, 30 unchanged prior accepted objects, 31 current bindings and 14 unchanged producer controls. Prior runtime verification reused.",
+  "verification": "Scoped declared-type qualification: six native sessions, 15 front-end probes, four native and 17 checker controls; retained verifier checks 40 direct source bindings and unchanged traversal. Only 25 new files added; prior catalog rows preserved. No archive-wide scan, native rebuild or acceptance change.",
   "remote": null,
   "off_machine_backup": false,
   "scope": "Separate local evidence repository; original failures retained. Thirty-one accepted records. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-13-ll03a-project-acceptance",
-    "files": 69,
-    "bytes": 32004331,
-    "prior_commit": "61cd80a20e940631a38768b17055fe5c7f5daaf3"
+    "directory": "2026-09-13-target-types-r1",
+    "files": 25,
+    "bytes": 482280,
+    "prior_commit": "c21b6c3f213fa4288ca1a5c6764951fbcb901596"
   }
 }
