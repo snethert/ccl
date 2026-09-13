@@ -2,21 +2,21 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "0680144ec5459e68b5d7d93c1711d180dd1e96b0",
+  "commit": "14ee1151e4b65e37451cdd04a1bcd0cbf4bce049",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "11affec0a6641a4507b5877a0bb938006654dfec6ffdcae8cd39a25fc87301dd",
-  "immutable_evidence_files": 160382,
-  "indexed_references_verified": 909,
+  "catalog_sha256": "71581a31564776c45ad8e6cb2b51997f797248bfecee69cd6eaf3d4f18491236",
+  "immutable_evidence_files": 160423,
+  "indexed_references_verified": 915,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped addition of 25 target-macro files, 2026-09-13. New packet and direct source dependencies verified; prior catalog rows and accepted evidence reused unchanged.",
+  "verification": "Scoped S0-LL02-a acceptance addition, 2026-09-13: 40 packet files and one combined envelope. New artifacts, acceptance delta, 28 unchanged earlier record objects and 29 contract bindings checked. Earlier runtime-payload verification and catalog rows reused unchanged.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository. Original executions, policies and failures retained. Twenty-eight accepted records: 27 preserved exactly plus S0-LL08-a accepted by the user. Complete census and generated code remain open.",
+  "scope": "Separate local evidence repository. Original executions, decisions and failures retained. Twenty-nine accepted records: 28 preserved unchanged plus user-accepted S0-LL02-a. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-13-target-macros-r1",
-    "files": 25,
-    "bytes": 254392,
-    "prior_commit": "b8ad0621206816e3f55b078b9ebcbf6fa0de0fed"
+    "directory": "2026-09-13-ll02a-project-acceptance",
+    "files": 41,
+    "bytes": 30985812,
+    "prior_commit": "0680144ec5459e68b5d7d93c1711d180dd1e96b0"
   }
 }

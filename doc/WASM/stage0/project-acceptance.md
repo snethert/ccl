@@ -56,3 +56,30 @@ The user's decision, given to Claude ("I accept it.") after the ninth audit (292
 Scope: observation-only census backend registration in a disposable U1 copy; a D1-subset target-arch with zero argument registers for B and a capture-only pass-2 entry; target context established before reading; fourteen front-end cases and eight target-state controls in two fresh sessions; native R6 with 21,843 tests clean and registered, 163 of 164 FASLs identical while registered and 164 of 164 after removal. Excluded: the complete LL15-b/c census, static reachability beyond the fixture, lowering and effect joins, a complete architecture record, any target code emission and any functional compiler change.
 
 The `LL08A-PROJECT-ACCEPTANCE` record in the [index](../evidence/index.json) retains every original r1 field and artifact, adding only the disposition and provenance. The aggregate copies the 27 earlier accepted result objects unchanged; 104,363 artifact references were verified. Stage 0 is BLOCKED for 21 missing records and zero unreviewed. LL15-b and LL15-c now have all their prerequisites accepted.
+
+## Twenty-third-audit acceptance — S0-LL02-a, 13 September 2026
+
+The user explicitly told Codex “I accept it.” in direct reply to the question
+“Do you accept S0-LL02-a at that scope?” This accepts only S0-LL02-a / control
+from STANDING-INVENTORY-CONTROL-R1, after Claude's no-defect audit committed as
+`4f5fdcb6`. The decision uses the immutable review text at that commit; the
+subsequent macro-slice review is a separate disposition.
+
+Scope: the unchanged production gate rejects seven quarantined defective inputs
+covering missing required IDs/variants, same-count substitutions and duplicates;
+two complete input orders pass. Synthetic acceptance flags inside those control
+inputs grant no project acceptance or compiler/runtime qualification.
+
+The unchanged acceptance producer creates `LL02A-PROJECT-ACCEPTANCE`, indexed in
+[evidence/index.json](../evidence/index.json). All original execution fields,
+timestamps, test revisions, contract identities and artifacts remain unchanged;
+only acceptance and its provenance are added. The new combined envelope copies
+the 28 earlier accepted result objects unchanged and rebases only the new
+record's reference paths to the evidence repository root.
+
+Verification covers the new slot, its direct artifacts, the producer's fourteen
+controls, preservation of the earlier result objects, and all 29 contract
+bindings. Earlier runtime-payload verification is reused. The accepted slot
+passes the production gate; the scoped Stage 0 assessment is BLOCKED for
+**19 missing and zero unreviewed**, with **29 accepted out of 48**. No fixture
+is re-executed or new Stage 0 capability claimed by this decision.

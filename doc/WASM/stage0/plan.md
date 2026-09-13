@@ -28,7 +28,7 @@ to continue through the next step, interleave census work with independently
 closable Stage 0 records. Keep one deliverable and one compact packet per commit;
 independent review and project acceptance remain separate from execution.
 
-1. [S0-LL02-a](inventory-control.md), the production-gate missing-inventory control, is executed and awaiting independent review.
+1. [S0-LL02-a](inventory-control.md), the production-gate missing-inventory control, is accepted after Claude's twenty-third audit and the user's explicit decision.
 2. Return to the census: establish a target macro environment from source, with
    explicit expander/helper identities and gaps before claiming target qualification.
    The first [source-derived macro slice](target-macros.md) is executed: fourteen

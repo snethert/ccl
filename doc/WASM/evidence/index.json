@@ -855,7 +855,36 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md",
         "acceptance": "S0-LL02-a [control] is complete at its stated scope and ready for the user's acceptance decision."
-      }
+      },
+      "note": "Original reviewed execution envelope is unchanged. The user explicitly accepted S0-LL02-a; the separate envelope is LL02A-PROJECT-ACCEPTANCE."
+    },
+    {
+      "timestamp": "2026-09-13T20:26:23.177472+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "e86cb9ca51458555afaaa17effcad79f1b039f3c76c343286ad6f84b115b8b75",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "id": "LL02A-PROJECT-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll02a-project-acceptance/accepted/accepted-results.json",
+      "sha256": "d27ff70f040080c51f5ed92c301f2e090124e7b898ac8102f0b8d04fc0ccb9cf",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "scope": "S0-LL02-a/control: the unchanged production gate rejects required-ID/variant omissions, same-count substitutions and duplicates in seven quarantined defective inputs; two complete input orders pass. Actual control execution on the retained Python/macOS environment. Synthetic input acceptance flags carry no project or runtime acceptance.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Twenty-third audit at 24f8805e: runner re-executed with all nine quarantined gate inputs, observations, summary and slot gate byte-identical; retained packet replayed through the verifier; the composite 28/19/1 reproduced by running the production gate on the prior accepted envelope against the updated inventory (28 accepted, S0-LL02-a missing) and on the new result against its slot (only unreviewed); packet, catalog at b8ad0621 with 31 new rows and source pins at HEAD verified, 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "S0-LL02-a [control] is complete at its stated scope and ready for the user's acceptance decision."
+      },
+      "project_acceptance": {
+        "decision": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll02a-project-acceptance/decision.json",
+        "sha256": "6b20a645cce14029003410401f5aff176dce93eac998cd395297dcde6fe04726",
+        "timestamp": "2026-09-13T20:56:51.873807+00:00"
+      },
+      "note": "User to Codex: \"I accept it.\" in direct reply to the S0-LL02-a acceptance question. Disposition only, pinned to Claude twenty-third-audit commit 4f5fdcb6; no new execution."
     }
   ],
   "auxiliary_records": [
@@ -1526,10 +1555,10 @@
       "scope": "Raw native before/registered/restored run, original failures and exact input/toolchain/source identities; no acceptance disposition."
     },
     {
-      "id": "CURRENT-STAGE0-COMBINED",
+      "id": "PRE-LL02A-ACCEPTANCE-COMBINED",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-stage0-ll08a-accepted-results.json",
       "sha256": "0f9928e0e800e3731e4517ee3cae91308f479fc3b7886f65079289d118953f81",
-      "scope": "28 scoped accepted records; 27 earlier result objects preserved exactly, one user-accepted S0-LL08-a record. No new execution; 21 missing and zero unreviewed."
+      "scope": "Historical 28-record aggregate before the S0-LL02-a acceptance; every result object is preserved unchanged in the new 29-record aggregate."
     },
     {
       "id": "LL08A-ACCEPTANCE-DECISION",
@@ -1745,6 +1774,36 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md"
       }
+    },
+    {
+      "id": "CURRENT-STAGE0-COMBINED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-ll02a-accepted-results.json",
+      "sha256": "9c811ec32408ee0fb9c1eec31e7c0e29fa768b67d16edf25f9c1a2eaa18a9abf",
+      "scope": "29 scoped accepted records: 28 earlier result objects preserved unchanged plus user-accepted S0-LL02-a/control. Current contracts checked; prior execution-artifact verification reused. Scoped gate BLOCKED for 19 missing, zero unreviewed."
+    },
+    {
+      "id": "LL02A-ACCEPTANCE-DECISION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll02a-project-acceptance/decision.json",
+      "sha256": "6b20a645cce14029003410401f5aff176dce93eac998cd395297dcde6fe04726",
+      "scope": "S0-LL02-a/control: the unchanged production gate rejects required-ID/variant omissions, same-count substitutions and duplicates in seven quarantined defective inputs; two complete input orders pass. Actual control execution on the retained Python/macOS environment. Synthetic input acceptance flags carry no project or runtime acceptance."
+    },
+    {
+      "id": "LL02A-ACCEPTANCE-PRESERVATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll02a-project-acceptance/preservation.json",
+      "sha256": "cc6fcf3ba879886928aef25651ba2ef93e0163a4c25c069fb0dd97dd3c4b0648",
+      "scope": "28 earlier result objects unchanged; exact new acceptance delta and original artifact copies checked, all 29 contract bindings validated. No rescan of prior runtime payloads."
+    },
+    {
+      "id": "LL02A-ACCEPTANCE-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll02a-project-acceptance/gate-result.json",
+      "sha256": "dd9ad34d4171903b297d57665d7bde8ad15ad92a9b827b1be006dbd823cef3d5",
+      "scope": "Scoped acceptance assessment: new slot passes production gate; 29 accepted, 19 missing, zero unreviewed. Previous accepted artifact verification reused."
+    },
+    {
+      "id": "LL02A-ACCEPTANCE-PACKET",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll02a-project-acceptance/packet.json",
+      "sha256": "e1f2861c39034412e3528172e320c227183cc89f87c77ce8a8b95075cb5629e5",
+      "scope": "User-authorized acceptance, exact original/prior-record preservation, production-slot PASS, fourteen producer controls, 29 current contract bindings, scoped 29/19/0 ledger and retained preparation failure. No runtime re-execution."
     }
   ]
 }
