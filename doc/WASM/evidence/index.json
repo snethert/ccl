@@ -296,7 +296,7 @@
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
       "currency": "ORIGINAL_FAILURE",
-      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged."
+      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged."
     },
     {
       "id": "INTEGRATED-RUNTIME-r10",
@@ -1912,6 +1912,13 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-abi-project-acceptance/gate-result.json",
       "sha256": "088d5e8c32da1e3cde9ca650439e00f95fcda94b02fe13037108dbd87763a5ff",
       "scope": "Scoped project acceptance of S0-ABI-selection after Claude twenty-sixth audit. No runtime execution; 30 accepted, 18 missing, zero unreviewed."
+    },
+    {
+      "id": "NATIVE-TARGET-HELPERS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-target-helpers-r1/packet.json",
+      "sha256": "e70cfe1b2d6f8e23efbeb560271ee264a510d79d5a03b98885637f1691458023",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Bounded source helper paths: target reading and target fixnum bounds repair inherited numeric EQL-to-EQ assumptions; private stream/vector subtag lookup. Eight numeric probes check actual front-end calls; 40 helper calls join to 21 genuine expansion events. Repeat and inherited file traversals are byte-identical; four native and 15 checker controls reject. Nonconstant type inference, remaining helpers/objects and five source stops remain open. No full macro qualification, Wasm, graph replacement or gate credit."
     }
   ]
 }
