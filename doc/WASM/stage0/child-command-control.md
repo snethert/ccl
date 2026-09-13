@@ -1,7 +1,7 @@
 # Required-child command control — 13 September 2026
 
-S0-LL01-b has executed successfully and awaits independent review and project
-acceptance. Packet `STANDING-CHILD-COMMAND-CONTROL-R1` is in the
+S0-LL01-b has executed successfully, was reviewed by Claude's thirtieth audit at
+`9285ee40` without defect, and awaits project acceptance. Packet `STANDING-CHILD-COMMAND-CONTROL-R1` is in the
 [evidence index](../evidence/index.json). This follows Claude's twenty-ninth
 audit at `8e8cf13b` and the alternating schedule in the [plan](plan.md).
 

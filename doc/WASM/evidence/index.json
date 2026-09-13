@@ -1009,10 +1009,17 @@
       "inventory_version": 1,
       "evidence_kind": "CONTROL EXECUTION",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "S0-LL01-b/control: unchanged production native aggregate with synthetic argv/products. One complete workflow passes; ten real exit/kill/timeout/missing-marker cases fail, identify the exact step and run no later command. No CCL/Wasm execution, initializer or descendant-cleanup claim. Independent review and project acceptance pending."
+      "scope": "S0-LL01-b/control: unchanged production native aggregate with synthetic argv/products. One complete workflow passes; ten real exit/kill/timeout/missing-marker cases fail, identify the exact step and run no later command. No CCL/Wasm execution, initializer or descendant-cleanup claim. Independent review and project acceptance pending.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Thirtieth audit at 9285ee40: retained verifier passed with a fresh replay; producer re-executed with observations, cases, summary, slot gate and slot inventory byte-identical and results.json equal except execution-specific fields; the 31/16/1 composite reproduced by running the production gate on the accepted envelope against the HEAD inventory (S0-LL01-b missing) and on the new result against its slot (only unreviewed); quarantine archive inspected, all ten inner reports carry synthetic revisions; packet, catalog at 7f1b85fe with 29 new rows and all eight source pins at HEAD verified; two nonblocking observations (kill and exit share one production branch; timeout diagnostic names argv, not step), 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "S0-LL01-b [control] is complete at its stated scope and ready for the user's acceptance decision."
+      }
     }
   ],
   "auxiliary_records": [
