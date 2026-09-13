@@ -1,6 +1,6 @@
 # Boot execution in the census graph
 
-The reviewed boot capture and cold-origin witness are now integrated into the census exchange graph. This completes the next assembly step after [Claude's seventeenth audit](claude-review.md) at `079c14d7`. The new integration needs its own independent review; it does not accept LL15-b/c or change the Stage 0 gate.
+The reviewed boot capture and cold-origin witness are now integrated into the census exchange graph. This completes the next assembly step after [Claude's seventeenth audit](claude-review.md) at `079c14d7`. [Claude's eighteenth audit](claude-review.md) at b90771bb re-executed the producer and materializer and found no defect; the integration does not accept LL15-b/c or change the Stage 0 gate.
 
 | Integrated record | Count |
 | --- | ---: |
