@@ -1,6 +1,6 @@
 # Source expansion bodies for dumplisp — 13 September 2026
 
-Status: executed; independent review pending. Packet `NATIVE-SOURCE-EXPANDERS-R1`
+Status: executed; reviewed without defect by [Claude's twenty-fifth audit](claude-review.md) at b1843dfa. Packet `NATIVE-SOURCE-EXPANDERS-R1`
 is retained in `2026-09-13-source-expanders-r1` and bound by the
 [evidence index](../evidence/index.json).
 

@@ -1809,8 +1809,14 @@
       "id": "NATIVE-SOURCE-EXPANDERS-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-source-expanders-r1/packet.json",
       "sha256": "4e488620d98f3aeb07a8237d96e73421e754117ae06bfae06629d537352d2170",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "All 293 observed dumplisp expansion invocations route to source-rebuilt bodies from 54 pinned forms. Two identical raw captures, byte-identical inherited traversal and matching expansion semantics; four native and 27 checker controls reject. Sixty-eight native helper names, four computed helper calls, three native object references and five source-file stops remain unqualified. No graph replacement, full environment qualification or gate credit."
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+      "scope": "Reviewed (Claude twenty-fifth audit, no defect): all 293 observed dumplisp expansion invocations route to source-rebuilt bodies from 54 pinned forms. Two identical raw captures, byte-identical inherited traversal and matching expansion semantics; four native and 27 checker controls reject. Sixty-eight native helper names, four computed helper calls, three native object references and five source-file stops remain unqualified. No graph replacement, full environment qualification or gate credit.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Twenty-fifth audit at b1843dfa: all seven native sessions re-executed with every retained capture, controls and summary byte-identical and the verifier passing; nine manifest offsets spot-read from U1 and confirmed as the named definitions; the macro construction confirmed as the parse-macro-1 path U1 itself uses in define-compiler-macro at nx0.lisp:191-202; the architecture dispatcher refusal confirmed against backend.lisp; packet, catalog at 6b3ecb4a with 28 new rows and all 33 source pins at HEAD verified, 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md"
+      }
     }
   ]
 }
