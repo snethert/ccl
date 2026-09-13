@@ -1804,6 +1804,13 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll02a-project-acceptance/packet.json",
       "sha256": "e1f2861c39034412e3528172e320c227183cc89f87c77ce8a8b95075cb5629e5",
       "scope": "User-authorized acceptance, exact original/prior-record preservation, production-slot PASS, fourteen producer controls, 29 current contract bindings, scoped 29/19/0 ledger and retained preparation failure. No runtime re-execution."
+    },
+    {
+      "id": "NATIVE-SOURCE-EXPANDERS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-source-expanders-r1/packet.json",
+      "sha256": "4e488620d98f3aeb07a8237d96e73421e754117ae06bfae06629d537352d2170",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "All 293 observed dumplisp expansion invocations route to source-rebuilt bodies from 54 pinned forms. Two identical raw captures, byte-identical inherited traversal and matching expansion semantics; four native and 27 checker controls reject. Sixty-eight native helper names, four computed helper calls, three native object references and five source-file stops remain unqualified. No graph replacement, full environment qualification or gate credit."
     }
   ]
 }

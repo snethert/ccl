@@ -2,21 +2,21 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "14ee1151e4b65e37451cdd04a1bcd0cbf4bce049",
+  "commit": "6b3ecb4a3b90ac6a0ee170313f5bc1c72d6ab027",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "71581a31564776c45ad8e6cb2b51997f797248bfecee69cd6eaf3d4f18491236",
-  "immutable_evidence_files": 160423,
-  "indexed_references_verified": 915,
+  "catalog_sha256": "e30e9a87063c2a0c40cf10d33a3d023d33b5bcb8a3da1d93476d0072994b0d73",
+  "immutable_evidence_files": 160451,
+  "indexed_references_verified": 916,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped S0-LL02-a acceptance addition, 2026-09-13: 40 packet files and one combined envelope. New artifacts, acceptance delta, 28 unchanged earlier record objects and 29 contract bindings checked. Earlier runtime-payload verification and catalog rows reused unchanged.",
+  "verification": "Scoped source-expander addition, 2026-09-13: 28 new packet files, direct source bindings, reference equivalence and 31 negative controls checked. Prior catalog rows preserved unchanged; no earlier payload rescan or native rebuild.",
   "remote": null,
   "off_machine_backup": false,
   "scope": "Separate local evidence repository. Original executions, decisions and failures retained. Twenty-nine accepted records: 28 preserved unchanged plus user-accepted S0-LL02-a. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-13-ll02a-project-acceptance",
-    "files": 41,
-    "bytes": 30985812,
-    "prior_commit": "0680144ec5459e68b5d7d93c1711d180dd1e96b0"
+    "directory": "2026-09-13-source-expanders-r1",
+    "files": 28,
+    "bytes": 982975,
+    "prior_commit": "14ee1151e4b65e37451cdd04a1bcd0cbf4bce049"
   }
 }

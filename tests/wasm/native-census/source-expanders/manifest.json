@@ -1,0 +1,386 @@
+{
+  "version": 1,
+  "scope": "Reconstruct the source bodies of remaining expanders from the reviewed target-macro slice. Helper and literal qualification remains separate.",
+  "basis": {
+    "path": "2026-09-13-target-macros-r1/normal-macros.json.gz",
+    "sha256": "091e443fefea144d2d3113925394a73e542e89d3056bb4598bbc8266102286c3"
+  },
+  "expanders": [
+    {
+      "operator": "COMMON-LISP::IN-PACKAGE",
+      "role": "macro",
+      "source": "lib/macros.lisp",
+      "start": 97580,
+      "source_sha256": "466c93d744a514fb13d53a25fe0b186a19c871fcdee4af9afec74b34f1fb3564",
+      "end": 97876
+    },
+    {
+      "operator": "COMMON-LISP::PROGN",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 36884,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 37008
+    },
+    {
+      "operator": "COMMON-LISP::DEFVAR",
+      "role": "macro",
+      "source": "lib/macros.lisp",
+      "start": 30655,
+      "source_sha256": "466c93d744a514fb13d53a25fe0b186a19c871fcdee4af9afec74b34f1fb3564",
+      "end": 31326
+    },
+    {
+      "operator": "COMMON-LISP::DECLAIM",
+      "role": "macro",
+      "source": "compiler/nx-basic.lisp",
+      "start": 26548,
+      "source_sha256": "303c9ffbe5bb2924183ae2e3705bd31006d117315ec9092780f75068e29d2657",
+      "end": 26923
+    },
+    {
+      "operator": "COMMON-LISP::PROCLAIM",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 41638,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 42138
+    },
+    {
+      "operator": "COMMON-LISP::DEFUN",
+      "role": "macro",
+      "source": "lib/macros.lisp",
+      "start": 29147,
+      "source_sha256": "466c93d744a514fb13d53a25fe0b186a19c871fcdee4af9afec74b34f1fb3564",
+      "end": 30550
+    },
+    {
+      "operator": "COMMON-LISP::SETF",
+      "role": "macro",
+      "source": "lib/macros.lisp",
+      "start": 22188,
+      "source_sha256": "466c93d744a514fb13d53a25fe0b186a19c871fcdee4af9afec74b34f1fb3564",
+      "end": 26311
+    },
+    {
+      "operator": "COMMON-LISP::LAMBDA",
+      "role": "macro",
+      "source": "lib/macros.lisp",
+      "start": 42843,
+      "source_sha256": "466c93d744a514fb13d53a25fe0b186a19c871fcdee4af9afec74b34f1fb3564",
+      "end": 43097
+    },
+    {
+      "operator": "COMMON-LISP::IF",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 21235,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 21479
+    },
+    {
+      "operator": "COMMON-LISP::TYPEP",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 66008,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 66505
+    },
+    {
+      "operator": "CCL::BASIC-STREAM-P",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 75294,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 75408
+    },
+    {
+      "operator": "COMMON-LISP::EQL",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 20905,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 21052
+    },
+    {
+      "operator": "COMMON-LISP::LET",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 23316,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 23503
+    },
+    {
+      "operator": "COMMON-LISP::LET*",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 23505,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 23622
+    },
+    {
+      "operator": "COMMON-LISP::WHEN",
+      "role": "macro",
+      "source": "lib/macros.lisp",
+      "start": 43212,
+      "source_sha256": "466c93d744a514fb13d53a25fe0b186a19c871fcdee4af9afec74b34f1fb3564",
+      "end": 43361
+    },
+    {
+      "operator": "COMMON-LISP::AND",
+      "role": "macro",
+      "source": "lib/macros.lisp",
+      "start": 35409,
+      "source_sha256": "466c93d744a514fb13d53a25fe0b186a19c871fcdee4af9afec74b34f1fb3564",
+      "end": 35755
+    },
+    {
+      "operator": "CCL::STRUCTURE-TYPEP",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 66507,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 66806
+    },
+    {
+      "operator": "CCL::STRUCTURE-TYPECHECK",
+      "role": "macro",
+      "source": "lib/macros.lisp",
+      "start": 119328,
+      "source_sha256": "466c93d744a514fb13d53a25fe0b186a19c871fcdee4af9afec74b34f1fb3564",
+      "end": 119556
+    },
+    {
+      "operator": "CCL::STRUCT-REF",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 42274,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 42433
+    },
+    {
+      "operator": "COMMON-LISP::>=",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 12555,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 12686
+    },
+    {
+      "operator": "COMMON-LISP::SLOT-BOUNDP",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 70798,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 71129
+    },
+    {
+      "operator": "COMMON-LISP::SLOT-VALUE",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 69911,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 70324
+    },
+    {
+      "operator": "CCL::SET-SLOT-VALUE",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 70327,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 70795
+    },
+    {
+      "operator": "COMMON-LISP::UNLESS",
+      "role": "macro",
+      "source": "lib/macros.lisp",
+      "start": 43363,
+      "source_sha256": "466c93d744a514fb13d53a25fe0b186a19c871fcdee4af9afec74b34f1fb3564",
+      "end": 43524
+    },
+    {
+      "operator": "COMMON-LISP::MAPC",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 33482,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 33819
+    },
+    {
+      "operator": "COMMON-LISP::DOLIST",
+      "role": "macro",
+      "source": "lib/macros.lisp",
+      "start": 6477,
+      "source_sha256": "466c93d744a514fb13d53a25fe0b186a19c871fcdee4af9afec74b34f1fb3564",
+      "end": 7192
+    },
+    {
+      "operator": "COMMON-LISP::DO*",
+      "role": "macro",
+      "source": "lib/macros.lisp",
+      "start": 46760,
+      "source_sha256": "466c93d744a514fb13d53a25fe0b186a19c871fcdee4af9afec74b34f1fb3564",
+      "end": 47502
+    },
+    {
+      "operator": "COMMON-LISP::APPLY",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 13586,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 15551
+    },
+    {
+      "operator": "COMMON-LISP::SYMBOLP",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 73320,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 73781
+    },
+    {
+      "operator": "COMMON-LISP::FIND-CLASS",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 66954,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 67199
+    },
+    {
+      "operator": "COMMON-LISP::MAKE-INSTANCE",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 33102,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 33474
+    },
+    {
+      "operator": "COMMON-LISP::LOGIOR",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 54467,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 54577
+    },
+    {
+      "operator": "CCL::%GET-KERNEL-GLOBAL-PTR",
+      "role": "architecture-dispatch",
+      "source": "compiler/backend.lisp",
+      "start": 19582,
+      "source_sha256": "26767180d1b07d0f44a6d4963e3acd41ce09056c7f4aa699f91c2da86c912a42",
+      "end": 19960
+    },
+    {
+      "operator": "CCL::%GET-KERNEL-GLOBAL",
+      "role": "architecture-dispatch",
+      "source": "compiler/backend.lisp",
+      "start": 19582,
+      "source_sha256": "26767180d1b07d0f44a6d4963e3acd41ce09056c7f4aa699f91c2da86c912a42",
+      "end": 19960
+    },
+    {
+      "operator": "COMMON-LISP::WITH-SIMPLE-RESTART",
+      "role": "macro",
+      "source": "lib/macros.lisp",
+      "start": 19839,
+      "source_sha256": "466c93d744a514fb13d53a25fe0b186a19c871fcdee4af9afec74b34f1fb3564",
+      "end": 21035
+    },
+    {
+      "operator": "CCL::%CONS-RESTART",
+      "role": "macro",
+      "source": "lib/macros.lisp",
+      "start": 8523,
+      "source_sha256": "466c93d744a514fb13d53a25fe0b186a19c871fcdee4af9afec74b34f1fb3564",
+      "end": 8648
+    },
+    {
+      "operator": "CCL::REGISTER-ISTRUCT-CELL",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 100299,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 100525
+    },
+    {
+      "operator": "COMMON-LISP::LIST",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 24232,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 24416
+    },
+    {
+      "operator": "COMMON-LISP::CONS",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 18649,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 19364
+    },
+    {
+      "operator": "COMMON-LISP::FORMAT",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 78071,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 80283
+    },
+    {
+      "operator": "COMMON-LISP::DOTIMES",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 19366,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 20414
+    },
+    {
+      "operator": "COMMON-LISP::LENGTH",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 23168,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 23314
+    },
+    {
+      "operator": "COMMON-LISP::DOTIMES",
+      "role": "macro",
+      "source": "lib/macros.lisp",
+      "start": 48524,
+      "source_sha256": "466c93d744a514fb13d53a25fe0b186a19c871fcdee4af9afec74b34f1fb3564",
+      "end": 49176
+    },
+    {
+      "operator": "COMMON-LISP::VECTORP",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 71635,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 72010
+    },
+    {
+      "operator": "COMMON-LISP::LOCALLY",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 24418,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 24602
+    },
+    {
+      "operator": "COMMON-LISP::1+",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 12733,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 12775
+    },
+    {
+      "operator": "COMMON-LISP::+",
+      "role": "compiler-macro",
+      "source": "compiler/optimizers.lisp",
+      "start": 50599,
+      "source_sha256": "0c1f5ec10d809a39538ff1dd35ede32a00a9ec3fdd38eb19b180f1ac8045cd01",
+      "end": 51169
+    }
+  ]
+}

@@ -31,9 +31,10 @@ independent review and project acceptance remain separate from execution.
 1. [S0-LL02-a](inventory-control.md), the production-gate missing-inventory control, is accepted after Claude's twenty-third audit and the user's explicit decision.
 2. Return to the census: establish a target macro environment from source, with
    explicit expander/helper identities and gaps before claiming target qualification.
-   The first [source-derived macro slice](target-macros.md) is executed: fourteen
-   rebuilt macros, seven used in the traversal; 46 other expander identities
-   remain unqualified. Continue that environment and the five boundary stops.
+   The [complete observed expansion routing](source-expanders.md) now rebuilds
+   all 293 hook invocations from source, extending the reviewed first slice.
+   Sixty-eight native helper names, four computed helper calls, three object
+   references and the five source boundary stops remain explicit and unqualified.
 3. Complete the next unblocked standing control or the B desk-decision record,
    then resume the census traversal and boundary work.
 
