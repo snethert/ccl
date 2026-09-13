@@ -40,10 +40,13 @@ independent review and project acceptance remain separate from execution.
    are still unqualified. Remaining helpers, computed calls, object references
    and the five source boundary stops remain explicit.
 3. The [B desk-decision record](abi-decision.md) is accepted after Claude's twenty-sixth
-   audit and the user's explicit decision. The next alternating census deliverable
-   is the helper slice above, now awaiting review. Take an independent standing
-   control next, then resume helper/type/object qualification, boundary replacements
-   and wider source traversal.
+   audit and the user's explicit decision. The subsequent helper slice above is
+   reviewed without defect by Claude's twenty-seventh audit.
+4. [S0-LL03-a](evidence-kind-control.md) now executes the evidence-kind standing
+   control: two complete synthetic inputs pass and 22 defective inputs reject
+   through the unchanged production gate. Review and project acceptance remain
+   pending. Resume census helper/type/object qualification next, followed by
+   boundary replacements and wider source traversal.
 
 The B desk record's actual inventory prerequisites are the reviewed ABI/runtime
 records; S0-ENGINE-a is not a prerequisite of S0-ABI-selection. Engine qualification

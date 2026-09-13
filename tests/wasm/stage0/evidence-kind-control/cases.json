@@ -1,0 +1,309 @@
+{
+  "version": 1,
+  "test_id": "S0-LL03-a",
+  "scope": "Actual production-gate metadata control with quarantined synthetic inputs: declared evidence kinds, C/C4/B and full/reduced labels, substitutions and exact payload identities. No compiler-generated or hand-built Wasm execution is claimed.",
+  "cases": [
+    {
+      "name": "complete",
+      "mutation": "none",
+      "expected": {
+        "status": "PASS",
+        "reasons": []
+      }
+    },
+    {
+      "name": "reordered",
+      "mutation": "reverse",
+      "expected": {
+        "status": "PASS",
+        "reasons": []
+      }
+    },
+    {
+      "name": "hand-as-generated-full-C",
+      "mutation": "kind",
+      "id": "CONTROL-generated",
+      "variant": "full:C",
+      "source_id": "CONTROL-hand",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "wrong evidence kind: CONTROL-generated [full:C]"
+        ]
+      }
+    },
+    {
+      "name": "hand-as-generated-full-C4",
+      "mutation": "kind",
+      "id": "CONTROL-generated",
+      "variant": "full:C4",
+      "source_id": "CONTROL-hand",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "wrong evidence kind: CONTROL-generated [full:C4]"
+        ]
+      }
+    },
+    {
+      "name": "hand-as-generated-full-B",
+      "mutation": "kind",
+      "id": "CONTROL-generated",
+      "variant": "full:B",
+      "source_id": "CONTROL-hand",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "wrong evidence kind: CONTROL-generated [full:B]"
+        ]
+      }
+    },
+    {
+      "name": "hand-as-generated-reduced-C",
+      "mutation": "kind",
+      "id": "CONTROL-generated",
+      "variant": "reduced:C",
+      "source_id": "CONTROL-hand",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "wrong evidence kind: CONTROL-generated [reduced:C]"
+        ]
+      }
+    },
+    {
+      "name": "hand-as-generated-reduced-C4",
+      "mutation": "kind",
+      "id": "CONTROL-generated",
+      "variant": "reduced:C4",
+      "source_id": "CONTROL-hand",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "wrong evidence kind: CONTROL-generated [reduced:C4]"
+        ]
+      }
+    },
+    {
+      "name": "hand-as-generated-reduced-B",
+      "mutation": "kind",
+      "id": "CONTROL-generated",
+      "variant": "reduced:B",
+      "source_id": "CONTROL-hand",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "wrong evidence kind: CONTROL-generated [reduced:B]"
+        ]
+      }
+    },
+    {
+      "name": "synthetic-as-generated-full-C",
+      "mutation": "kind",
+      "id": "CONTROL-generated",
+      "variant": "full:C",
+      "source_id": "CONTROL-synthetic",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "wrong evidence kind: CONTROL-generated [full:C]"
+        ]
+      }
+    },
+    {
+      "name": "synthetic-as-generated-full-C4",
+      "mutation": "kind",
+      "id": "CONTROL-generated",
+      "variant": "full:C4",
+      "source_id": "CONTROL-synthetic",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "wrong evidence kind: CONTROL-generated [full:C4]"
+        ]
+      }
+    },
+    {
+      "name": "synthetic-as-generated-full-B",
+      "mutation": "kind",
+      "id": "CONTROL-generated",
+      "variant": "full:B",
+      "source_id": "CONTROL-synthetic",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "wrong evidence kind: CONTROL-generated [full:B]"
+        ]
+      }
+    },
+    {
+      "name": "synthetic-as-generated-reduced-C",
+      "mutation": "kind",
+      "id": "CONTROL-generated",
+      "variant": "reduced:C",
+      "source_id": "CONTROL-synthetic",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "wrong evidence kind: CONTROL-generated [reduced:C]"
+        ]
+      }
+    },
+    {
+      "name": "synthetic-as-generated-reduced-C4",
+      "mutation": "kind",
+      "id": "CONTROL-generated",
+      "variant": "reduced:C4",
+      "source_id": "CONTROL-synthetic",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "wrong evidence kind: CONTROL-generated [reduced:C4]"
+        ]
+      }
+    },
+    {
+      "name": "synthetic-as-generated-reduced-B",
+      "mutation": "kind",
+      "id": "CONTROL-generated",
+      "variant": "reduced:B",
+      "source_id": "CONTROL-synthetic",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "wrong evidence kind: CONTROL-generated [reduced:B]"
+        ]
+      }
+    },
+    {
+      "name": "wrong-candidate",
+      "mutation": "replace-variant",
+      "id": "CONTROL-generated",
+      "variant": "full:B",
+      "replacement": "full:C",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "duplicate result ('CONTROL-generated', 'full:C')",
+          "missing CONTROL-generated [full:B]"
+        ]
+      }
+    },
+    {
+      "name": "wrong-profile",
+      "mutation": "replace-variant",
+      "id": "CONTROL-generated",
+      "variant": "full:B",
+      "replacement": "reduced:B",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "duplicate result ('CONTROL-generated', 'reduced:B')",
+          "missing CONTROL-generated [full:B]"
+        ]
+      }
+    },
+    {
+      "name": "substituted-import",
+      "mutation": "substitution",
+      "id": "CONTROL-generated",
+      "variant": "full:B",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "substitution/skip or missing disclosure: CONTROL-generated [full:B]"
+        ]
+      }
+    },
+    {
+      "name": "undisclosed-substitutions",
+      "mutation": "omit-substitutions",
+      "id": "CONTROL-generated",
+      "variant": "full:B",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "substitution/skip or missing disclosure: CONTROL-generated [full:B]"
+        ]
+      }
+    },
+    {
+      "name": "skipped-execution",
+      "mutation": "skip",
+      "id": "CONTROL-generated",
+      "variant": "full:B",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "substitution/skip or missing disclosure: CONTROL-generated [full:B]"
+        ]
+      }
+    },
+    {
+      "name": "failed-generated",
+      "mutation": "status",
+      "id": "CONTROL-generated",
+      "variant": "full:B",
+      "value": "FAIL",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "failed execution ('CONTROL-generated', 'full:B')",
+          "non-passing CONTROL-generated [full:B]"
+        ]
+      }
+    },
+    {
+      "name": "failed-hand",
+      "mutation": "status",
+      "id": "CONTROL-hand",
+      "variant": "full:B",
+      "value": "FAIL",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "failed execution ('CONTROL-hand', 'full:B')",
+          "non-passing CONTROL-hand [full:B]"
+        ]
+      }
+    },
+    {
+      "name": "failed-synthetic",
+      "mutation": "status",
+      "id": "CONTROL-synthetic",
+      "variant": "full:B",
+      "value": "FAIL",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "failed execution ('CONTROL-synthetic', 'full:B')",
+          "non-passing CONTROL-synthetic [full:B]"
+        ]
+      }
+    },
+    {
+      "name": "mismatched-artifact",
+      "mutation": "artifact",
+      "id": "CONTROL-generated",
+      "variant": "full:B",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-generated [full:B]"
+        ]
+      }
+    },
+    {
+      "name": "unreviewed-generated",
+      "mutation": "unreviewed",
+      "id": "CONTROL-generated",
+      "variant": "full:B",
+      "expected": {
+        "status": "BLOCKED",
+        "reasons": [
+          "unreviewed CONTROL-generated [full:B]"
+        ]
+      }
+    }
+  ]
+}

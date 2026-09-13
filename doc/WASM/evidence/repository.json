@@ -2,21 +2,21 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "90bf9fc885628598d5fcb1d59ed871a62af36fb7",
+  "commit": "61cd80a20e940631a38768b17055fe5c7f5daaf3",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "e41009d2c7c97280f2de40f757846dea42ed3dd4f10950573b9fb04b4095191e",
-  "immutable_evidence_files": 160527,
+  "catalog_sha256": "27d18e1bd400df639a4fa17b1dc271b68f210863a2e0167df9bc4772bfb33f34",
+  "immutable_evidence_files": 160593,
   "indexed_references_verified": 925,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped helper qualification: six native sessions, identical repeats and file traversals, four native and fifteen checker controls; retained verifier checks 38 direct source bindings. Only 25 new evidence files added, prior catalog rows preserved. No archive-wide scan, runtime rebuild or acceptance change.",
+  "verification": "Scoped S0-LL03-a: 24 production-gate cases, fresh reproduction (54 deterministic files identical), retained verifier and 30 compatible accepted bindings. Only 66 new evidence files added, earlier catalog rows preserved. No runtime execution or archive-wide payload scan.",
   "remote": null,
   "off_machine_backup": false,
   "scope": "Separate local evidence repository. Original runs, decisions and failures retained. Thirty accepted records, including the B desk decision. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-13-target-helpers-r1",
-    "files": 25,
-    "bytes": 629106,
-    "prior_commit": "24b78b71c8444f2de79c317a6b56c66a5330912a"
+    "directory": "2026-09-13-evidence-kind-control-r1",
+    "files": 66,
+    "bytes": 1132950,
+    "prior_commit": "90bf9fc885628598d5fcb1d59ed871a62af36fb7"
   }
 }

@@ -938,6 +938,24 @@
         "sha256": "17016482ed6dc87a9d01c93a8178c074ec7449007cd20db8e2a06c91d4578e9f",
         "timestamp": "2026-09-13T22:03:44.423524+00:00"
       }
+    },
+    {
+      "id": "STANDING-EVIDENCE-KIND-CONTROL-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-evidence-kind-control-r1/results.json",
+      "sha256": "729ad1c4dc740a7fc19fc70d803605274a3507d60f96f7a3827811e7f9a9a7de",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-evidence-kind-control-r1/packet.json",
+      "packet_sha256": "be9c909e7c3b15114558bd3874d601023d9fe00d55c234e34e5fa90bbe776de8",
+      "timestamp": "2026-09-13T22:41:56.705710+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "9e5145b64486a59f5f216269ab5badadf2258155b5770a8881a88e3dff2114b4",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "CONTROL EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "S0-LL03-a/control: unchanged production gate accepts two complete synthetic inputs and rejects 22 controls. Whole hand-built/synthetic records cannot satisfy the declared generated evidence kind; candidate/profile, substitutions and exact fixture identities remain labelled on failure. Declared metadata validation only, no compiler-origin authentication or runtime execution. Independent review/acceptance pending."
     }
   ],
   "auxiliary_records": [
@@ -1832,7 +1850,7 @@
       "id": "CURRENT-STAGE0-COMBINED",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-abi-accepted-results.json",
       "sha256": "69b74d5c145fcd1b64a85b5630bfcc1c145d97bcdd682494d2a6481927cf2289",
-      "scope": "30 accepted records: 29 earlier result objects unchanged plus the B desk decision. Current bindings checked, prior runtime verification reused; 18 missing and zero unreviewed."
+      "scope": "Current accepted-record aggregate: 30 accepted results, unchanged. The separate S0-LL03-a execution remains unreviewed; current scoped ledger is 30 accepted, 17 missing, one unreviewed."
     },
     {
       "id": "LL02A-ACCEPTANCE-DECISION",
@@ -1925,6 +1943,18 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md"
       }
+    },
+    {
+      "id": "EVIDENCE-KIND-CONTROL-PACKET",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-evidence-kind-control-r1/packet.json",
+      "sha256": "be9c909e7c3b15114558bd3874d601023d9fe00d55c234e34e5fa90bbe776de8",
+      "scope": "One compact S0-LL03-a packet: original execution, 54 identical repeat files with differing originals retained, 30 compatible accepted bindings, prior ledger and scoped 30/17/1 assessment."
+    },
+    {
+      "id": "EVIDENCE-KIND-CONTROL-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-evidence-kind-control-r1/gate-result.json",
+      "sha256": "7c53dde66f46e8265adca227425e103ec8ddf0f451dee1adc78638273f8c0f50",
+      "scope": "Scoped production-slot result plus unchanged 30 accepted records: 17 missing and one unreviewed, of 48. No combined runtime-payload rescan."
     }
   ]
 }

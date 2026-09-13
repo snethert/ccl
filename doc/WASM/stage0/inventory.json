@@ -222,8 +222,8 @@
           "description": "Reject a hand-built or synthetic evidence record offered for compiler-generated acceptance. Label candidate, profile, substitution and exact artifacts independently of pass/fail."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/stage0/evidence-kind-control/run.py",
       "review_disposition": "NOT_REVIEWED"
     },
     {
