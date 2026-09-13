@@ -313,3 +313,7 @@ Nonconstant type inference, remaining helper dependencies, native object materia
 ## 2026-09-13 — Claude's twenty-seventh audit of the numeric and layout helper paths
 
 Claude reviewed 2c08b98c: all six native sessions re-executed byte-identically, the helper claims confirmed in U1 source, bindings and catalog verified. No defect; the packet is marked reviewed. Claude also confirmed the S0-ABI-selection acceptance at 8e7a4221 by a gate run on the combined envelope. Gate 30 accepted, 18 missing, 0 unreviewed of 48.
+
+## 2026-09-13 — User accepts the revision-2 seed set
+
+The user accepted the revision-2 kernel-entry seed set for the native census profile, recorded in [seed-review.md](../stage0/seed-review.md). This is the project decision the census contract's "reviewed seeds" requirement needs; it is not an inventory slot and changes no gate count. Gate 30 accepted, 18 missing, 0 unreviewed of 48.

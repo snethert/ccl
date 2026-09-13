@@ -44,3 +44,7 @@ Codex's revision 2 (`seeds.json`, revision `2026-09-13-kernel-entry-surfaces`, c
 Finding 8 is restated, not closed. Codex's diagnostic shows that removing the two largest membership edges leaves every seed omission masked, and removing all 208 membership edges makes only four of thirteen detectable, because reaching any function reaches its module and the build-execution module fans out to 116,385 nodes. The replacement must therefore cover every conservative widening family, not two edges. That is the static traversal and call-bound work, and it stays open.
 
 Two residuals, disclosed by Codex and accepted: the callback and builtin vectors are observed after restore, so equality with image-save contents is an obligation, not a fact; and the foreign-thread callback is excluded as an independent root while remaining in the root union, which is conservative. The `review_disposition` field inside `seeds.json` still reads proposed because it is pinned by hash in the retained run; Codex may set it to reviewed, citing this addendum, and re-run the inspector to refresh the pin.
+
+## User acceptance — 13 September 2026
+
+The user accepted the revision-2 seed set (`2026-09-13-kernel-entry-surfaces`) as the project's reviewed seeds for the native census profile, correcting the chart's "approved" wording to "accepted": "That should be Accepted." The reviewer disposition above is unchanged; this line records the project decision. The save/restore vector equality and widening obligations stay open as stated in the addendum.
