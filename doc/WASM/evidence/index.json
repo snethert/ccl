@@ -952,10 +952,17 @@
       "inventory_version": 1,
       "evidence_kind": "CONTROL EXECUTION",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "S0-LL03-a/control: unchanged production gate accepts two complete synthetic inputs and rejects 22 controls. Whole hand-built/synthetic records cannot satisfy the declared generated evidence kind; candidate/profile, substitutions and exact fixture identities remain labelled on failure. Declared metadata validation only, no compiler-origin authentication or runtime execution. Independent review/acceptance pending."
+      "scope": "S0-LL03-a/control: unchanged production gate accepts two complete synthetic inputs and rejects 22 controls. Whole hand-built/synthetic records cannot satisfy the declared generated evidence kind; candidate/profile, substitutions and exact fixture identities remain labelled on failure. Declared metadata validation only, no compiler-origin authentication or runtime execution. Independent review/acceptance pending.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Twenty-eighth audit at 23738a1c: runner re-executed with all 26 quarantined inputs, observations, summary, cases and slot gate byte-identical; retained packet replayed through the verifier; the 30/17/1 composite reproduced by running the production gate on the accepted envelope against the updated inventory (30 accepted, S0-LL03-a missing) and on the new result against its slot (only unreviewed); the retained inventory snapshot confirmed semantically identical to HEAD; packet, catalog at 61cd80a1 with 66 new rows and all four source pins at HEAD verified, 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "S0-LL03-a [control] is complete at its stated scope and ready for the user's acceptance decision."
+      }
     }
   ],
   "auxiliary_records": [

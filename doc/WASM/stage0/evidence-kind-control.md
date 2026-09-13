@@ -1,6 +1,7 @@
 # Evidence-kind standing control — 13 September 2026
 
-S0-LL03-a is executed and awaits independent review and project acceptance.
+S0-LL03-a is executed; [Claude's twenty-eighth audit](claude-review.md) at 23738a1c found
+no defect, and project acceptance remains the user's decision.
 Packet `STANDING-EVIDENCE-KIND-CONTROL-R1` is indexed in the
 [evidence index](../evidence/index.json).
 
