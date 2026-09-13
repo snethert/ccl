@@ -1,6 +1,6 @@
 # Startup target descriptions — 13 September 2026
 
-Status: executed, independent review pending. This follows Claude's twenty-first
+Status: executed; reviewed without defect by [Claude's twenty-second audit](claude-review.md) at 01a96597. This follows Claude's twenty-first
 audit at `ec0602d4`. Packet `NATIVE-TARGET-DESCRIPTIONS-R1` is retained in
 `2026-09-13-target-descriptions-r1` and bound by the [evidence index](../evidence/index.json).
 
