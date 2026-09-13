@@ -1,7 +1,7 @@
 {
   "version": 1,
   "status": "WRAPPERS_JOINED_UNQUALIFIED",
-  "review_disposition": "NOT_REVIEWED",
+  "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
   "wrappers": 1059,
   "macro_wrappers": 1028,
   "special_wrappers": 31,
@@ -43,5 +43,14 @@
     "patch_reproduced": true,
     "graph_identical": true,
     "sha256": "5ad5f785a7db7288d6db2cfc2ccefbd88722498b50b5e39348a9597aacab69ab"
+  },
+  "external_review": {
+    "reviewer": "Claude Fable 5.1",
+    "audit": 19,
+    "reviewed_at": "55ca26e9",
+    "date": "2026-09-13",
+    "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+    "record": "stage0/claude-review.md",
+    "scope": "Native exports and verifier re-executed byte-identically; wrapper representation confirmed in U1 source; 31 special operators are the 25 standard plus six CCL forms. Target traversal and LL15-b/c remain open."
   }
 }
