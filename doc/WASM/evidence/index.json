@@ -1627,15 +1627,21 @@
         "provenance": "User-supplied review of 2b875096, recorded by Codex on 2026-09-13; no reviewer commit was supplied.",
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md",
-        "scope": "Native boot execution and R6 at stated bounds. All 133 cold thunks lack source notes; source/module integration requires an xload insertion witness and a justified positional join."
+        "scope": "Native boot execution and R6 at stated bounds. All 133 cold thunks lack runtime source notes; their module origins are supplied by NATIVE-COLD-ORIGINS-R1, reviewed in the seventeenth audit, which closes the sixteenth audit's source-join finding."
       }
     },
     {
       "id": "NATIVE-COLD-ORIGINS-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-cold-origins-r1/packet.json",
       "sha256": "7fcbdeec6aacc9ce3fb2d8be2d58ecb0843186597fdc11cbdd4140dec5d37dc2",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "Executed source-module origins for 133 anonymous cold initializers across 31 modules, with 131 compiler contexts and two explicit null ranges. Fresh boot matches the reviewed event stream after root relocation; 164 FASLs unchanged, 20 analysis and two native controls pass. Independent review and exchange-graph integration pending; no gate credit."
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+      "scope": "Reviewed (Claude seventeenth audit, no defect) source-module origins for 133 anonymous cold initializers across 31 modules, with 131 compiler contexts and two explicit null ranges. Fresh boot matches the reviewed event stream after root relocation; 164 FASLs unchanged, 20 analysis and two native controls pass. Exchange-graph integration pending; no gate credit.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Seventeenth audit at 336b1f5f: full native capture re-executed with origins, joins, controls and the fresh boot stream identical after archive-root normalization, the fresh stream also equal to the reviewed boot-observation stream; U1 push, reversal and drain sites confirmed in source; retained-analysis verifier reproduced; bindings and catalog at 7f03f412 verified, 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md"
+      }
     }
   ]
 }

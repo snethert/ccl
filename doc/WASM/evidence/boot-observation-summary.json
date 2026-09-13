@@ -65,7 +65,7 @@
     "provenance": "User-supplied review of 2b875096, recorded by Codex on 2026-09-13; no reviewer commit was supplied.",
     "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
     "record": "stage0/claude-review.md",
-    "scope": "Native boot execution and R6 at stated bounds. All 133 cold thunks lack source notes; source/module integration requires an xload insertion witness and a justified positional join."
+    "scope": "Native boot execution and R6 at stated bounds. All 133 cold thunks lack runtime source notes; NATIVE-COLD-ORIGINS-R1 supplies their module origins (seventeenth audit), closing the source-join finding."
   },
   "cold_initializer_source_identity": {
     "anonymous": 133,
@@ -74,5 +74,8 @@
     "integration_disposition": "ORDER_ONLY_SOURCE_DEPENDENCY_UNRESOLVED",
     "required_witness": "Xload-side queue insertion context, joined by position under an explicitly checked ordering/input rule.",
     "followup": "NATIVE-COLD-ORIGINS-R1 supplies separate xload provenance; this original runtime capture still has no source notes."
+  },
+  "cold_thunk_identity": {
+    "followup": "NATIVE-COLD-ORIGINS-R1 supplies xload provenance for all 133, reviewed in the seventeenth audit; this original runtime capture still has no source notes."
   }
 }
