@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "inputs": {
+    "extended": {
+      "path": "2026-09-12-initializer-joins-r1/census.json.gz",
+      "sha256": "62f2e8b560c723394de0129f448bf3d43f7655164a3e448997036f70358171ae"
+    },
+    "witnesses": {
+      "path": "2026-09-12-initializer-joins-r1/joins.json.gz",
+      "sha256": "17b6a477a1b49d317464484e951c0489231f6c8dbeb270532ad562ca6b84211d"
+    },
+    "original_run": {
+      "path": "2026-09-12-initializer-joins-r1/run.json",
+      "sha256": "5a6b361cefdfe58a8e1432355908966bdd9db91e9d2d9be98c2d6481dc94cc8c"
+    },
+    "original_packet": {
+      "path": "2026-09-12-initializer-joins-r1/packet.json",
+      "sha256": "678afe4f9478241861c45a4da77e029354211d34cf2da60149358eee2aa16b0d"
+    }
+  },
+  "scope": "Retained original integration packet; referenced, never rewritten or copied into the checker-fix packet."
+}

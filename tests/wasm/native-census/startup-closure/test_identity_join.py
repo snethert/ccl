@@ -2,18 +2,31 @@
 from identity_join import check, key
 
 
-def run(base, graph, witnesses, streams):
+def run(base, graph, witnesses, streams, previous_checker=None):
     result = []
     check(base, graph, witnesses, streams)
-    def change(name, obj, field, value, reason):
+    def rejected(name, reason, regression=False):
+        row = {'name': name, 'status': 'REJECTED'}
+        if regression and previous_checker is not None:
+            previous_checker(base, graph, witnesses, streams)
+            row['previous_checker'] = 'ESCAPED'
+        try: check(base, graph, witnesses, streams)
+        except ValueError as exc:
+            if not str(exc).startswith(reason): raise AssertionError((name, str(exc), reason))
+            result.append({**row, 'reason': str(exc)})
+        else: raise AssertionError(name + ' escaped')
+    def change(name, obj, field, value, reason, regression=False):
         old = obj[field]; obj[field] = value
         try:
-            try: check(base, graph, witnesses, streams)
-            except ValueError as exc:
-                if not str(exc).startswith(reason): raise AssertionError((name, str(exc), reason))
-                result.append({'name': name, 'status': 'REJECTED', 'reason': str(exc)})
-            else: raise AssertionError(name + ' escaped')
+            rejected(name, reason, regression)
         finally: obj[field] = old
+    def insert(name, additions, reason):
+        sizes = [(rows, len(rows)) for rows, _ in additions]
+        try:
+            for rows, extra in additions: rows.extend(extra)
+            rejected(name, reason, regression=True)
+        finally:
+            for rows, size in sizes: del rows[size:]
     def edge(prefix): return next(e for e in graph['edges'] if e['evidence'].startswith(prefix))
     def init(prefix): return next(r for r in graph['initializers'] if r['node'].startswith(prefix))
 
@@ -38,5 +51,15 @@ def run(base, graph, witnesses, streams):
     change('trace-relabelled-as-observed-build', graph, 'observed_modules', [key('build', 'module', '@execution')], 'TRACE_PRESERVATION')
     n = next(n for n in graph['nodes'] if n['id'].startswith('identity:build:boundary:'))
     change('effect-boundary-omitted', graph, 'nodes', [r for r in graph['nodes'] if r is not n], 'BOUNDARY_COVERAGE')
+    cross = {**edge('build/callee/'), 'targets': [target], 'evidence': 'build/injected-cross-process-edge'}
+    insert('extra-cross-process-edge', [(graph['edges'], [cross])], 'ADDED_EDGES')
+    invented = {**next(n for n in graph['nodes'] if n['id'].startswith('identity:build:code:')),
+                'id': key('build', 'code', 'insertion-control'), 'implementation': 'Injected control: invented native implementation'}
+    attach = {**cross, 'from': key('build', 'module', '@execution'), 'targets': [invented['id']], 'evidence': 'build/injected-function-edge'}
+    insert('extra-implemented-function', [(graph['nodes'], [invented]), (graph['edges'], [attach])], 'ADDED_NODES')
+    duplicate = {**init('identity:build:boundary:'), 'prerequisites': []}
+    insert('duplicate-initializer', [(graph['initializers'], [duplicate])], 'DUPLICATE_INITIALIZER')
+    insert('duplicate-workload-edge', [(graph['edges'], [dict(edge('build/workload-surface'))])], 'ADDED_EDGES')
+    change('source-edge-endpoint-substitution', edge('build/source-module/'), 'targets', [target], 'ADDED_EDGES', regression=True)
     check(base, graph, witnesses, streams)
     return {'status': 'PASS', 'controls': result, 'scope': 'Integration controls with distinct rejection reasons; the complete LL15 census is still blocked.'}

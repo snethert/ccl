@@ -57,10 +57,25 @@ repeat native builds or rerun old controls. The output directory must be new.
 `identity_join.py` adds process-scoped code identities, exact callee/materialization
 and FASL links, returned-value witnesses and conservative entry/return ordering.
 It preserves all original graph records. Image-reader completion never becomes
-execution of its queued Lisp initializer. `test_identity_join.py` supplies thirteen
-specific corruption controls. The new graph still fails full closure, with its
-existing unresolved obligations and three explicit integration-scope nodes.
+execution of its queued Lisp initializer. `test_identity_join.py` supplies eighteen
+specific corruption controls. The checker derives the exact added node kinds,
+edge relations with multiplicity, initializer IDs and module inventory from the
+captures; surplus graph records also reject. The new graph still fails full
+closure, with its existing unresolved obligations and three explicit integration-scope nodes.
 
 The five output files are the extended exchange graph, its identity witnesses,
 summary, controls and producer record. Gzip timestamps are fixed for reproducible
 graph/witness bytes. See the [initializer integration report](../../../../doc/WASM/stage0/initializer-joins.md).
+
+To verify the checker fixes against the existing graph without regenerating it:
+
+```sh
+python3 tests/wasm/native-census/startup-closure/verify_identity_join.py \
+  --evidence-root /Users/buildsomething/Source/ccl-evidence \
+  --output /tmp/ccl-initializer-check-new
+```
+
+The focused verifier pins the original graph and witnesses, verifies the unchanged
+producer, and reproduces five former-checker escapes using its source at
+`f3b4b07e`. All eighteen cases must reject in the corrected checker. It retains
+the comparison in its control report and never copies the graph or native packs.

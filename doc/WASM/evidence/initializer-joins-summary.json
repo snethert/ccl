@@ -56,5 +56,32 @@
     "sha256": "17b6a477a1b49d317464484e951c0489231f6c8dbeb270532ad562ca6b84211d"
   },
   "verification_scope": "Changed integration, six direct inputs and seven new packet files. No old payload hashing, native build, acceptance aggregate or gate rerun.",
-  "evidence_repository_commit": "19e75eff23619212bad2aee652a1603bec0cf16c"
+  "evidence_repository_commit": "19e75eff23619212bad2aee652a1603bec0cf16c",
+  "checker_follow_up": {
+    "date": "2026-09-13",
+    "status": "PASS",
+    "review_disposition": "NOT_REVIEWED",
+    "controls_rejected": 18,
+    "former_escapes_reproduced": 5,
+    "graph_and_witnesses_reused_unchanged": true,
+    "packet_files": 5,
+    "packet_bytes": 10428,
+    "packet": {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-initializer-checker-r1/packet.json",
+      "sha256": "d34a573c42ff586c636c8290b23ef709d5e8a3237d0e9c980d1dcc333a2d87b6"
+    },
+    "run": {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-initializer-checker-r1/run.json",
+      "sha256": "53baec07ea6e4e43a563608f616b679e903d3fec67d73d7351c870b65307cc8d"
+    },
+    "controls": {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-initializer-checker-r1/controls.json",
+      "sha256": "d0015686c3fc2fbe3c5ffb232d2d496947bde17744c0df516b9add29e2dd7369"
+    },
+    "development_provenance": {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-initializer-checker-r1/development.json",
+      "sha256": "1204380af76d2887559e089191a887c2de63862d07effcb0c41a6e4e98d4c8ee"
+    },
+    "evidence_repository_commit": "8b0cf560781de0716c67d63ea2f917c7e65bb3c4"
+  }
 }

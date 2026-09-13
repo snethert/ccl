@@ -183,6 +183,71 @@ def extend(base, streams, identities):
     return graph, witnesses
 
 
+def expected_additions(base, streams):
+    """Bound the additions from capture records, independently of extend()."""
+    nodes, edges, initializers, modules = {}, Counter(), set(), set()
+
+    def node(i, kind):
+        if i in nodes and nodes[i] != kind:
+            raise ValueError('EXPECTED_NODE_KIND')
+        nodes[i] = kind
+        if kind == 'module': modules.add(i)
+        if kind == 'initializer': initializers.add(i)
+        return i
+
+    def edge(source, target, phase, evidence, origin='observed'):
+        edges[source, (target,), phase, origin, 'complete', evidence] += 1
+
+    for stream, data in streams.items():
+        surface = node(key(stream, 'module', '@execution'), 'module')
+        root_name = 'CCL::RESTORE-LISP-POINTERS' if stream == 'cold' else 'CCL::REBUILD-CCL'
+        root = next(e['from'] for e in base['edges'] if e['evidence'] == 'seeds/binding/' + root_name)
+        edge(root, surface, 'callback' if stream == 'cold' else 'compile', stream + '/workload-surface', 'conservative')
+        gap = node(key(stream, 'gap', 'dependency-closure'), 'function')
+        edge(surface, gap, 'run', stream + '/dependency-closure', 'conservative')
+        if stream == 'build':
+            gap = node(key(stream, 'gap', 'boot-process'), 'initializer')
+            edge(surface, gap, 'load', 'build/boot-process-required', 'conservative')
+        calls = {r['initializer']: r['function'] for r in data['compile_calls'] + data['load_calls']}
+        callbacks = {r['initializer']: r['function'] for r in data.get('startup_calls', [])}
+        codes = set()
+        for effect in data['effects']:
+            phase = 'compile' if effect['family'] == 'compile-initializer' else 'callback' if effect['family'] == 'startup' else 'load'
+            for event in (effect['enter'], effect['return']):
+                boundary = node(key(stream, 'boundary', event), 'initializer')
+                edge(surface, boundary, phase, f'{stream}/effect-boundary/{event}')
+                if effect['source']:
+                    source = node(key(stream, 'module', module(effect['source'])), 'module')
+                    edge(boundary, source, phase, f'{stream}/source-module/{event}')
+                references = []
+                if effect.get('reader_mode'):
+                    references.append(('reader', effect['reader_function'], 'load'))
+                if effect['enter'] in calls:
+                    references.append(('callee', calls[effect['enter']], phase))
+                if effect['enter'] in callbacks:
+                    references.append(('callback-code', callbacks[effect['enter']], 'callback'))
+                for role, code, call_phase in references:
+                    codes.add(code)
+                    edge(boundary, key(stream, 'code', code), call_phase, f'{stream}/{role}/{event}')
+        materialized = {r['function']: r['afunc'] for r in data['materialized']}
+        reads = {r['function']: r for r in data['fasl_reads']}
+        serialized = {code: r['written']['function'] for code, r in reads.items() if r['written']}
+        pending, seen = list(codes), set()
+        while pending:
+            code = pending.pop()
+            if code in seen: continue
+            seen.add(code)
+            current = node(key(stream, 'code', code), 'function')
+            if code in materialized:
+                target = node(key(stream, 'afunc', materialized[code]), 'function')
+                edge(current, target, 'compile', f'{stream}/code-afunc/{code}')
+            elif code in serialized:
+                target = serialized[code]
+                edge(current, key(stream, 'code', target), 'load', f'{stream}/loaded-code/{code}')
+                pending.append(target)
+    return nodes, edges, initializers, modules
+
+
 def check(base, graph, witnesses, streams):
     """Check original coverage plus literal code/value witnesses from each capture."""
     def require(ok, code):
@@ -195,6 +260,7 @@ def check(base, graph, witnesses, streams):
     require(len(nodes) == len(graph['nodes']), 'DUPLICATE_NODE')
     require(all(n['required'] for n in graph['nodes'][len(base['nodes']):]), 'REQUIRED_SCOPE')
     init = {r['node']: r for r in graph['initializers']}
+    require(len(init) == len(graph['initializers']), 'DUPLICATE_INITIALIZER')
     edges = defaultdict(list)
     for e in graph['edges']: edges[e['evidence']].append(e)
     def one(evidence, source, target, phase=None):
@@ -258,4 +324,15 @@ def check(base, graph, witnesses, streams):
         require(gap in nodes and nodes[gap]['disposition'] == 'unresolved' and nodes[gap]['implementation'] is None, 'DEPENDENCY_SCOPE')
     boot = key('build', 'gap', 'boot-process')
     require(boot in nodes and nodes[boot]['disposition'] == 'unresolved' and 'NOT_OBSERVED' in init[boot]['completion_assertion'], 'BOOT_SCOPE')
+    expected_nodes, expected_edges, expected_init, expected_modules = expected_additions(base, streams)
+    added_nodes = {n['id']: n['kind'] for n in graph['nodes'][len(base['nodes']):]}
+    require(added_nodes == expected_nodes, 'ADDED_NODES')
+    # Count full relations, including evidence identity and multiplicity. Merely
+    # checking evidence names would miss a changed endpoint on an unchecked edge.
+    added_edges = Counter((e['from'], tuple(e['targets']), e['phase'], e['origin'], e['resolution'], e['evidence'])
+                          for e in graph['edges'][len(base['edges']):])
+    require(added_edges == expected_edges, 'ADDED_EDGES')
+    require({i['node'] for i in graph['initializers'][len(base['initializers']):]} == expected_init, 'ADDED_INITIALIZERS')
+    require(Counter(m['node'] for m in graph['unobserved_modules'][len(base['unobserved_modules']):]) ==
+            Counter({i: 1 for i in expected_modules}), 'ADDED_MODULES')
     return {'status': 'PASS', 'scope': 'Execution identity/order integration; full census remains unqualified.'}
