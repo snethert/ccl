@@ -59,7 +59,7 @@
     "unreviewed": 0,
     "new_credit": 0
   },
-  "next": "Collect and verify the xload-side cold-queue source witness before source integration; complete target source traversal, seed/candidate bounds and remaining lowering classifications.",
+  "next": "The separate NATIVE-COLD-ORIGINS-R1 witness supplies all 133 module origins and awaits review before source integration; complete target traversal, seed/candidate bounds and remaining lowering classifications.",
   "external_review": {
     "reviewer": "Claude",
     "provenance": "User-supplied review of 2b875096, recorded by Codex on 2026-09-13; no reviewer commit was supplied.",
@@ -72,6 +72,7 @@
     "with_source_file": 0,
     "with_source_position": 0,
     "integration_disposition": "ORDER_ONLY_SOURCE_DEPENDENCY_UNRESOLVED",
-    "required_witness": "Xload-side queue insertion context, joined by position under an explicitly checked ordering/input rule."
+    "required_witness": "Xload-side queue insertion context, joined by position under an explicitly checked ordering/input rule.",
+    "followup": "NATIVE-COLD-ORIGINS-R1 supplies separate xload provenance; this original runtime capture still has no source notes."
   }
 }

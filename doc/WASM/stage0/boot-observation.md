@@ -22,6 +22,8 @@ The recorder retains actual function objects, reader functions, dispatch tables 
 
 All 133 cold initializers are anonymous: their retained names are `NIL`, with no source file or source position. They have distinct object identities within the boot process, but this packet cannot map them to source forms or modules. Until an xload-side witness records their queue insertion sites and supplies a justified positional join, census integration must retain them as order-only nodes with unresolved source dependencies.
 
+The subsequent [xload origin witness](cold-initializer-origins.md), pending independent review, supplies module origins for all 133 and compiler source contexts for 131. It does not alter this original packet or fill the two absent ranges by inference.
+
 A separate retained copy of the original cold queue checks execution order and coverage. A first-touch binding checkpoint supplies each symbol's initial value. Replaying the installation/removal events must agree with that initial state and with bindings independently read from the saved image. The first installation remains checkable even if startup later overwrites it.
 
 Removal is recorded immediately before U1's original primitive clear, as an intent. No successful observation is issued for a failed boot. The outer startup load, its FASL reader and its final initializer transfer into the top level without returning; the record preserves those three active frames at handoff instead of inventing completion.

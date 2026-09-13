@@ -296,7 +296,7 @@
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
       "currency": "ORIGINAL_FAILURE",
-      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged."
+      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged."
     },
     {
       "id": "INTEGRATED-RUNTIME-r10",
@@ -1629,6 +1629,13 @@
         "record": "stage0/claude-review.md",
         "scope": "Native boot execution and R6 at stated bounds. All 133 cold thunks lack source notes; source/module integration requires an xload insertion witness and a justified positional join."
       }
+    },
+    {
+      "id": "NATIVE-COLD-ORIGINS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-cold-origins-r1/packet.json",
+      "sha256": "7fcbdeec6aacc9ce3fb2d8be2d58ecb0843186597fdc11cbdd4140dec5d37dc2",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Executed source-module origins for 133 anonymous cold initializers across 31 modules, with 131 compiler contexts and two explicit null ranges. Fresh boot matches the reviewed event stream after root relocation; 164 FASLs unchanged, 20 analysis and two native controls pass. Independent review and exchange-graph integration pending; no gate credit."
     }
   ]
 }

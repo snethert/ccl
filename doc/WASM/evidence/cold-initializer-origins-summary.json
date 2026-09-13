@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "status": "EXECUTED_UNQUALIFIED_CENSUS_INPUT",
+  "review_disposition": "NOT_REVIEWED",
+  "packet": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-cold-origins-r1/packet.json",
+    "sha256": "7fcbdeec6aacc9ce3fb2d8be2d58ecb0843186597fdc11cbdd4140dec5d37dc2"
+  },
+  "scope": "Witnessed source-module joins for every retained cold initializer; independent review pending. No complete static dependency or LL15 acceptance claim.",
+  "counts": {
+    "initializers": 133,
+    "modules": 31,
+    "with_source_context": 131,
+    "without_source_context": 2
+  },
+  "missing_source_contexts": [
+    {
+      "position": 65,
+      "fasl": "level-0/nfasload.dx64fsl",
+      "opcode_offset": 26416
+    },
+    {
+      "position": 106,
+      "fasl": "level-0/nfasload.dx64fsl",
+      "opcode_offset": 44972
+    }
+  ],
+  "verification": {
+    "analysis_controls_rejected": 20,
+    "native_controls_passed": 2,
+    "fasls_unchanged": 164,
+    "source_unchanged": true,
+    "fresh_boot_stream_identical_after_root_relocation": true,
+    "analysis_reproduction_identical": true,
+    "plain_and_observed_image_bytes_identical": false,
+    "new_shared_source_patch": false,
+    "native_regression_qualification": "Reused reviewed NATIVE-BOOT-OBSERVATION-R1; no new full native suite."
+  },
+  "retention": {
+    "files": 28,
+    "bytes": 10404580,
+    "development": "Original diagnostic logs/source snapshots and r7 failed-save boot input retained in development.zip; limitations in development.json."
+  },
+  "gate": {
+    "accepted": 28,
+    "missing": 20,
+    "unreviewed": 0,
+    "new_credit": 0
+  },
+  "next": "Independent review, then integrate the witnessed module origins into the census; preserve two null source contexts and complete the remaining closure work."
+}
