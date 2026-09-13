@@ -110,3 +110,17 @@ reused in the scoped combined assessment.
 Stage 0 is **BLOCKED: 30 accepted, 18 missing, zero unreviewed of 48**. The current
 gate-summary schema version is restored to 2; the prior version-1 summary stays
 retained. No runtime, benchmark or census work is claimed by this acceptance.
+
+## Twenty-eighth-audit acceptance — S0-LL03-a, 13 September 2026
+
+The user told Codex “I accept S0-LL03-a” after supplying Claude's review committed
+as 2a628dab. The separate LL03A-PROJECT-ACCEPTANCE envelope adds disposition and
+provenance to the reviewed metadata control. Its original assertions, execution
+fields, timestamp and artifacts remain unchanged. Metadata enforcement is its
+scope; no compiler-origin authentication or runtime execution is claimed.
+
+The aggregate preserves all 30 earlier accepted result objects and adds this
+record. Thirty-one current contract bindings, exact preservation checks and
+fourteen unchanged acceptance-producer controls pass. The production gate
+validates the new accepted record; prior runtime-payload verification is reused.
+Stage 0 is BLOCKED: 31 accepted, 17 missing, zero unreviewed of 48.

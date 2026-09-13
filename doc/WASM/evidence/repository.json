@@ -2,21 +2,21 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "61cd80a20e940631a38768b17055fe5c7f5daaf3",
+  "commit": "c21b6c3f213fa4288ca1a5c6764951fbcb901596",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "27d18e1bd400df639a4fa17b1dc271b68f210863a2e0167df9bc4772bfb33f34",
-  "immutable_evidence_files": 160593,
+  "catalog_sha256": "bdd661f7d0b07723500339472a4ab27adcbbb6c0bb6d981422ff02a92bb584f8",
+  "immutable_evidence_files": 160662,
   "indexed_references_verified": 925,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped S0-LL03-a: 24 production-gate cases, fresh reproduction (54 deterministic files identical), retained verifier and 30 compatible accepted bindings. Only 66 new evidence files added, earlier catalog rows preserved. No runtime execution or archive-wide payload scan.",
+  "verification": "Scoped LL03-a acceptance: exact acceptance delta, copied new artifacts, 30 unchanged prior accepted objects, 31 current bindings and 14 unchanged producer controls. Prior runtime verification reused.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository. Original runs, decisions and failures retained. Thirty accepted records, including the B desk decision. Full census and generated code remain open.",
+  "scope": "Separate local evidence repository; original failures retained. Thirty-one accepted records. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-13-evidence-kind-control-r1",
-    "files": 66,
-    "bytes": 1132950,
-    "prior_commit": "90bf9fc885628598d5fcb1d59ed871a62af36fb7"
+    "directory": "2026-09-13-ll03a-project-acceptance",
+    "files": 69,
+    "bytes": 32004331,
+    "prior_commit": "61cd80a20e940631a38768b17055fe5c7f5daaf3"
   }
 }

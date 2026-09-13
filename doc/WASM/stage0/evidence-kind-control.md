@@ -1,7 +1,8 @@
 # Evidence-kind standing control — 13 September 2026
 
-S0-LL03-a is executed; [Claude's twenty-eighth audit](claude-review.md) at 23738a1c found
-no defect, and project acceptance remains the user's decision.
+S0-LL03-a is accepted after Claude's twenty-eighth audit at 2a628dab and the
+user's explicit instruction, “I accept S0-LL03-a”. The separate acceptance
+envelope preserves the original execution.
 Packet `STANDING-EVIDENCE-KIND-CONTROL-R1` is indexed in the
 [evidence index](../evidence/index.json).
 
@@ -75,3 +76,7 @@ This follows [Claude's twenty-seventh audit](claude-review.md) of the target hel
 slice. The next alternating deliverable resumes the census: qualify or bound the
 remaining helper/type/object paths, then resolve the five source boundary stops
 and extend traversal.
+
+The subsequent project acceptance preserves all 30 prior result objects and
+adds S0-LL03-a. Thirty-one current bindings and fourteen acceptance controls
+pass. The current scoped ledger is 31 accepted, 17 missing and zero unreviewed.

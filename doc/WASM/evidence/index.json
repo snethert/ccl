@@ -962,6 +962,38 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md",
         "acceptance": "S0-LL03-a [control] is complete at its stated scope and ready for the user's acceptance decision."
+      },
+      "note": "Original reviewed execution envelope unchanged. User acceptance is retained separately as LL03A-PROJECT-ACCEPTANCE."
+    },
+    {
+      "id": "LL03A-PROJECT-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll03a-project-acceptance/accepted/accepted-results.json",
+      "sha256": "fa507add829b979f5bd9241385f47c3424e02f2794b44e77fdf84aa321662862",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll03a-project-acceptance/packet.json",
+      "packet_sha256": "ad41a16a680c49e114ee8b6f038bcd1369fc32f38130937f7b82f360dff3ee92",
+      "timestamp": "2026-09-13T22:41:56.705710+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "9e5145b64486a59f5f216269ab5badadf2258155b5770a8881a88e3dff2114b4",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "CONTROL EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "S0-LL03-a/control: declared evidence-kind enforcement by the production gate, with candidate/profile, substitution and exact fixture identity retained independently of status. Two complete synthetic inputs pass and 22 controls reject. Metadata enforcement only; no compiler-origin authentication or runtime execution claim.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Twenty-eighth audit at 23738a1c: runner re-executed with all 26 quarantined inputs, observations, summary, cases and slot gate byte-identical; retained packet replayed through the verifier; the 30/17/1 composite reproduced by running the production gate on the accepted envelope against the updated inventory (30 accepted, S0-LL03-a missing) and on the new result against its slot (only unreviewed); the retained inventory snapshot confirmed semantically identical to HEAD; packet, catalog at 61cd80a1 with 66 new rows and all four source pins at HEAD verified, 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "S0-LL03-a [control] is complete at its stated scope and ready for the user's acceptance decision."
+      },
+      "note": "User explicitly accepted S0-LL03-a after Claude twenty-eighth audit 2a628dab. Original execution unchanged; no new runtime execution.",
+      "project_acceptance": {
+        "decision": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll03a-project-acceptance/decision.json",
+        "sha256": "dd8986db01cc7396affc5d5295258d2e21a79a50bb46533aa7ba94933b59734d",
+        "timestamp": "2026-09-13T23:00:15.577032+00:00"
       }
     }
   ],
@@ -1855,9 +1887,9 @@
     },
     {
       "id": "CURRENT-STAGE0-COMBINED",
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-abi-accepted-results.json",
-      "sha256": "69b74d5c145fcd1b64a85b5630bfcc1c145d97bcdd682494d2a6481927cf2289",
-      "scope": "Current accepted-record aggregate: 30 accepted results, unchanged. The separate S0-LL03-a execution remains unreviewed; current scoped ledger is 30 accepted, 17 missing, one unreviewed."
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-ll03a-accepted-results.json",
+      "sha256": "d45b9047e495e20b12d19a951776bcb54aeaee1807e1b31b61935a71c7b71c39",
+      "scope": "Current aggregate: 31 accepted records, including S0-LL03-a; 30 earlier result objects unchanged. Scoped ledger: 17 missing, zero unreviewed."
     },
     {
       "id": "LL02A-ACCEPTANCE-DECISION",
@@ -1962,6 +1994,36 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-evidence-kind-control-r1/gate-result.json",
       "sha256": "7c53dde66f46e8265adca227425e103ec8ddf0f451dee1adc78638273f8c0f50",
       "scope": "Scoped production-slot result plus unchanged 30 accepted records: 17 missing and one unreviewed, of 48. No combined runtime-payload rescan."
+    },
+    {
+      "id": "PRE-LL03A-ACCEPTANCE-COMBINED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-abi-accepted-results.json",
+      "sha256": "69b74d5c145fcd1b64a85b5630bfcc1c145d97bcdd682494d2a6481927cf2289",
+      "scope": "Original 30 accepted records, all preserved unchanged in the 31-record aggregate."
+    },
+    {
+      "id": "LL03A-ACCEPTANCE-PACKET",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll03a-project-acceptance/packet.json",
+      "sha256": "ad41a16a680c49e114ee8b6f038bcd1369fc32f38130937f7b82f360dff3ee92",
+      "scope": "User-authorized S0-LL03-a acceptance after Claude twenty-eighth audit; 31 accepted, 17 missing, zero unreviewed. Original execution and prior accepted objects unchanged."
+    },
+    {
+      "id": "LL03A-ACCEPTANCE-DECISION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll03a-project-acceptance/decision.json",
+      "sha256": "dd8986db01cc7396affc5d5295258d2e21a79a50bb46533aa7ba94933b59734d",
+      "scope": "User-authorized S0-LL03-a acceptance after Claude twenty-eighth audit; 31 accepted, 17 missing, zero unreviewed. Original execution and prior accepted objects unchanged."
+    },
+    {
+      "id": "LL03A-ACCEPTANCE-PRESERVATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll03a-project-acceptance/preservation.json",
+      "sha256": "d082b10478d455a39bd6e666355fc4710969bc8e13146c6be4280034b6ef2387",
+      "scope": "User-authorized S0-LL03-a acceptance after Claude twenty-eighth audit; 31 accepted, 17 missing, zero unreviewed. Original execution and prior accepted objects unchanged."
+    },
+    {
+      "id": "LL03A-ACCEPTANCE-GATE-RESULT",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll03a-project-acceptance/gate-result.json",
+      "sha256": "e3383a270f5f7fee97bd37f70c04e433545e831bc7957dcf8f50d1d29a83ccd4",
+      "scope": "User-authorized S0-LL03-a acceptance after Claude twenty-eighth audit; 31 accepted, 17 missing, zero unreviewed. Original execution and prior accepted objects unchanged."
     }
   ]
 }

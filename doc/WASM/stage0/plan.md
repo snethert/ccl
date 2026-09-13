@@ -44,8 +44,7 @@ independent review and project acceptance remain separate from execution.
    reviewed without defect by Claude's twenty-seventh audit.
 4. [S0-LL03-a](evidence-kind-control.md) now executes the evidence-kind standing
    control: two complete synthetic inputs pass and 22 defective inputs reject
-   through the unchanged production gate. Review and project acceptance remain
-   pending. Resume census helper/type/object qualification next, followed by
+   through the unchanged production gate. Accepted after Claude's twenty-eighth audit and the user's explicit decision. Resume census helper/type/object qualification next, followed by
    boundary replacements and wider source traversal.
 
 The B desk record's actual inventory prerequisites are the reviewed ABI/runtime
