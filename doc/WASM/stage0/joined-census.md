@@ -2,7 +2,7 @@
 
 The retained inputs now have an executable projection into `contracts/census.schema.json`. It passes the schema and independent retained-input coverage checks. **It is not a qualified LL15-b/c census.** The unchanged census checker rejects its explicitly unresolved joins. Stage 0 remains at **28 accepted, 21 missing, zero unreviewed**; no new acceptance envelope or combined gate was produced.
 
-The distinction matters: acceptance of LL08-a established registration and target state for fourteen front-end forms. It did not establish full source coverage. The existing logs also lack complete initializer state dependencies and execution of the emitted load effects. Assembly cannot supply observations that were never captured.
+Acceptance of LL08-a established registration and target state for fourteen front-end forms. It did not establish full source coverage. The inputs used by this projection also lack complete initializer state dependencies and execution of the emitted load effects. Those are collection gaps, not a reason the information cannot be obtained. The subsequent [compiler/loader observation unit](rich-census.md) gathers actual expansion, installation, materialization and loader identities, plus lowering operands and effect boundaries.
 
 See the [summary and retained packet](../evidence/joined-census-summary.json) and [runner](../../../tests/wasm/native-census/startup-closure/README.md). The packet is compressed JSON in the existing exchange schema, with a separate witness file. It references the committed r7 graph/events, clean-image snapshot, proposed seeds, trace and accepted stub session. The assembly runner changes no Lisp source and starts no native build. No instrumentation is carried into an implementation image.
 
@@ -31,6 +31,6 @@ These controls prepare the omission oracle. They do not satisfy LL15-c: that req
 
 ## Next observation work
 
-Extend the reversible observation to capture identities through read/macroexpand, initializer execution and function installation, including generated generic/accessor bindings. Record semantic prerequisite state and completion at the loader boundary, not only compiler emission. Use the registered target to cover the selected source closure, and join lowering/import/store operands to their evaluated targets. Review the seed set and conservative bounds against those observations before producing LL15-b/c execution records.
+Use the [new identity observations](rich-census.md) to replace this projection's provisional compilation-within-an-interval and emitted-only loader joins. The exact image retained by the external trace has now been inspected directly, including its foreign tables; a new administrator trace is unnecessary. Preserve the original projection and each process's actual coverage. Use the registered target to cover the selected source closure, join lowering/import/store operands to their evaluated targets and assign target dispositions. Review the seed set and conservative bounds against those observations before producing LL15-b/c execution records.
 
 This is observation work under the existing exception. Any shared hook change must still be a removable unit in a disposable U1 copy and carry its required native R6 comparison. Functional B emission remains a separate authorization; the implementation baseline remains pristine U1.

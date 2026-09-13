@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "date": "2026-09-12",
+  "status": "COLLECTED_VERIFIED",
+  "review_disposition": "NOT_REVIEWED",
+  "LL15_b": "NOT_QUALIFIED",
+  "LL15_c": "NOT_QUALIFIED",
+  "native_build": {
+    "events": 4006405,
+    "sources": 164,
+    "afuncs": 51601,
+    "materialized_functions": 51601,
+    "compile_initializers_joined": 18907,
+    "load_initializers": 4660,
+    "load_initializers_joined": 4660,
+    "functions_read": 11493,
+    "functions_joined_by_fasl_position": 11493,
+    "image_functions_read": 1240,
+    "image_functions_joined_by_fasl_position": 1240,
+    "reader_effects_by_mode": {
+      "native": 12347,
+      "cross-dump": 1196
+    },
+    "bindings": 6620,
+    "instruction_emissions": 2052019,
+    "emissions_without_live_handler": 0,
+    "expansions": 745930,
+    "distinct_handler_codes": 207,
+    "handler_codes_joined": 207,
+    "calls": 103393,
+    "dynamic_calls": 1762,
+    "completed_effects": 32450,
+    "handler_origin_counts": {
+      "resident-before": 66,
+      "exact-fasl-position": 141
+    },
+    "load_initializer_origin_counts": {
+      "exact-fasl-position": 4660
+    },
+    "serialized_functions_with_afunc": 11493
+  },
+  "source_coverage": {
+    "compiled_sources": 164,
+    "observed_sources": 164,
+    "missing": []
+  },
+  "native_probe": {
+    "status": "PASS",
+    "function_replacements": 6,
+    "macro_replacements": 6,
+    "serialized_function_joins": 28,
+    "state_oracle": "native probe-driver assertions"
+  },
+  "cold_start_callbacks": 35,
+  "traced_image": {
+    "resident_functions": 15424,
+    "bindings": 10050,
+    "kernel_imports": 65,
+    "entrypoints": 118,
+    "foreign_variables": 0,
+    "libraries": 43,
+    "import_controls_rejected": 3
+  },
+  "r6": {
+    "fasls": 164,
+    "byte_identical": 156,
+    "intentional_shared_artifacts": [
+      "bin/dumplisp.dx64fsl",
+      "bin/nfcomp.dx64fsl",
+      "bin/nx2.dx64fsl",
+      "bin/vinsn.dx64fsl",
+      "l1-fasls/l1-readloop.dx64fsl",
+      "l1-fasls/nx.dx64fsl",
+      "level-0/l0-def.dx64fsl",
+      "level-0/nfasload.dx64fsl"
+    ],
+    "unexplained": [],
+    "restored_fasls_equal": 164,
+    "unchanged_probe_fasls": 3,
+    "baseline_tests_passed": 21843,
+    "observed_tests_passed": 21843,
+    "upstream_disabled_per_suite": 75,
+    "clean_outputs_restored": true
+  },
+  "controls": {
+    "actual_collector_omissions_rejected": 3,
+    "semantic_mutations_rejected": 16,
+    "reader_corruptions_rejected": 8,
+    "unsafe_redefinition_windows_rejected": 2,
+    "unit_recovery_positive_cases": 2,
+    "unit_recovery_rejections": 5,
+    "native_initializer_state_rejections": 2,
+    "import_table_rejections": 3,
+    "json_exact_bytes_and_parser_cases": 12,
+    "cold_cross_process_stream_handoff": "PASS"
+  },
+  "records": {
+    "original_build_and_tests": {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-rich-census-r1/run.json",
+      "sha256": "389c23397a08ef91f83fac4e4df26565c182f0a48b3b0bac0c90aedcca9eb572"
+    },
+    "cold_start_and_restoration": {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-rich-census-r1/completion/run.json",
+      "sha256": "a027127e90d095baf5432a303ff2d7da2534c3c779af44d801ce2121de42a5be"
+    },
+    "joins": {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-rich-census-r1/postprocess.json",
+      "sha256": "7427f8792698587f1dc587d2684968ffc15900f71102417268c17ae3b6f5e1a2"
+    },
+    "collector_controls": {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-rich-census-r1/verification-r4/run.json",
+      "sha256": "c37f1dffa92e5fa52f23f7f937a7b6ddb11d521d084ca645226ab53d8c4d0f38"
+    },
+    "reader_controls": {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-rich-census-r1/reader-controls.json",
+      "sha256": "bcbcf77f577cbd691046d00ae5dcebd287782a98964f4946a430f50633ad524c"
+    },
+    "exact_traced_image": {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-rich-census-r1/traced-inspection/run.json",
+      "sha256": "6dbf8e7411af88cf6a605aae70e14cceacf64481f41dd3fa26e7e3a9b77785c7"
+    },
+    "original_failures": {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-rich-census-r1/development/failures.json",
+      "sha256": "d408168bc4f7c1c514a3aff7831ef1128b64a40ff22958573e45c236abb601b1"
+    }
+  },
+  "execution_provenance": "Original attempt 4 passed compilation, R6, probes and native suites, then failed the cold-stream handoff; run.json remains FAIL. The separately pinned completion adds external sharing only to the cold OPEN, passes cold startup and reproduces all baseline FASLs after removal. Both executed observer versions are retained. No new full compilation capture is claimed for the cold-only fix.",
+  "remaining_closure_work": [
+    "Assemble these exact identities and effect order into the LL15 exchange graph, distinguishing observer calls using the patch and baseline.",
+    "Account for boot-image subprocess installation; parent image-builder completion is not execution of queued Lisp initializers.",
+    "Complete static source traversal under the registered Wasm target beyond the accepted fourteen-form corpus.",
+    "Classify native lowering, imports and store operands for the Wasm target.",
+    "Review startup seeds and conservative dynamic-call bounds, including future generated or loaded code.",
+    "Run the complete passing census and its omission mutants; obtain independent review and project acceptance."
+  ],
+  "stage0_gate": {
+    "accepted": 28,
+    "missing": 21,
+    "unreviewed": 0,
+    "basis": "Reuse accepted 02ff713d record; no gate rerun or new acceptance."
+  },
+  "verification_scope": "New collector, its direct inputs, native R6, focused controls and one finalized packet. No archive-wide hashing, fsck, blob scan or acceptance aggregate regeneration.",
+  "packet_files": 148,
+  "packet_bytes": 1327524356,
+  "packet": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-rich-census-r1/packet.json",
+    "sha256": "7124dfc3a9bdaa2a552f3e86a8ecf3c45cb209b7f7f7109a169707adeeb9c642"
+  },
+  "evidence_repository_commit": "041b90a2f694f0355c08f15f9cc6d0b65b7d8dec"
+}

@@ -2,20 +2,21 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "6429a0d2ed8310886c5977ff34c7c9bef10b765f",
+  "commit": "041b90a2f694f0355c08f15f9cc6d0b65b7d8dec",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "7e6203587bfbd4b06c6a76b8e6d6099f5e63fe243f7e398b8c0d2d0bec83690e",
-  "immutable_evidence_files": 159968,
+  "catalog_sha256": "34be74a777073fd19c49bdd493a9dcb7da79fdc9f09dfe2b1fcc2d7f3073d6ad",
+  "immutable_evidence_files": 160116,
   "indexed_references_verified": 908,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped addition of seven census-projection files, 2026-09-12: new bytes verified against producer identities; old catalog entries reused unchanged. The previous full catalog check belongs to commit 288e03c3; no new whole-archive audit or reference scan.",
+  "verification": "Scoped addition of 148 compiler/loader collection files, 2026-09-12: new copied bytes verified; all prior catalog entries reused unchanged. No new whole-archive audit or reference scan.",
   "remote": null,
   "off_machine_backup": false,
   "scope": "Separate local evidence repository. Original executions, policies and failures retained. Twenty-eight accepted records: 27 preserved exactly plus S0-LL08-a accepted by the user. Complete census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-12-census-closure-r1",
-    "files": 7,
-    "prior_commit": "288e03c3543699433387806d7ac77b00e9f3c7bc"
+    "directory": "2026-09-12-rich-census-r1",
+    "files": 148,
+    "bytes": 1327524356,
+    "prior_commit": "6429a0d2ed8310886c5977ff34c7c9bef10b765f"
   }
 }

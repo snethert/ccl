@@ -1,0 +1,13 @@
+(in-package :ccl-rich-census)
+(defun check-json-writer (reference-path current-path)
+  (let ((cases (list nil :null :true :false 0 -123 (ash 1 100) ""
+                     (coerce (loop for i below 128 collect (code-char i)) 'string)
+                     (coerce (mapcar #'code-char '(128 255 8364 128578)) 'string)
+                     (make-string 10000 :initial-element #\a)
+                     (object "nested" (list "quotes\"slash\\" (object "n" -9) nil)))))
+    (with-open-file (reference reference-path :direction :output :if-exists :error :external-format :utf-8)
+      (with-open-file (current current-path :direction :output :if-exists :error :external-format :utf-8)
+        (dolist (value cases)
+          (ccl-startup-census::json value reference) (terpri reference)
+          (write-json value current) (terpri current))))
+    (format t "JSON-CHECK-COMPLETE ~d~%" (length cases))))

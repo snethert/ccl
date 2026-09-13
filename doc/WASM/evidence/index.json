@@ -1536,6 +1536,12 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-census-closure-r1/run.json",
       "sha256": "1a083bca9d8b1e05ea368fcd451a39403d746fb998e698c96f207f1754b6b9fd",
       "scope": "Unreviewed census v1 projection of retained native/stub observations. Schema and input coverage pass; 23 specific omission controls reject. Complete LL15-b/c remains unqualified; no gate credit."
+    },
+    {
+      "id": "NATIVE-RICH-CENSUS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-12-rich-census-r1/packet.json",
+      "sha256": "7124dfc3a9bdaa2a552f3e86a8ecf3c45cb209b7f7f7109a169707adeeb9c642",
+      "scope": "Unreviewed reversible compiler/loader identity collection, native R6, original failures, focused omission controls and exact traced-image inspection. Build/test and corrected cold-start stages retain their distinct executed sources. Inputs to LL15 assembly; no gate credit."
     }
   ]
 }

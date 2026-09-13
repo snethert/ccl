@@ -1,0 +1,292 @@
+--- a/level-0/l0-def.lisp
++++ b/level-0/l0-def.lisp
+@@ -137,7 +137,9 @@
+ 
+ (defun %fhave (name def)
+   (let* ((fname (validate-function-name name)))
+-    (setf (%svref (symptr->symvector (%symbol->symptr fname)) target::symbol.fcell-cell) def)))
++    (multiple-value-prog1
++      (setf (%svref (symptr->symvector (%symbol->symptr fname)) target::symbol.fcell-cell) def)
++      (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :binding-installed (list fname def))))))
+ 
+ ;;; FBOUNDP is true of any symbol whose function-cell contains something other
+ ;;; than %unbound-function%; we expect FBOUNDP to return that something.
+@@ -155,6 +157,7 @@
+   (let* ((symvec (symptr->symvector (%symbol->symptr sym)))
+          (old (%svref symvec target::symbol.fcell-cell))
+          (unbound %unbound-function%))
++    (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :binding-removing (list sym old unbound)))
+     (setf (%svref symvec target::symbol.fcell-cell) unbound)
+     (not (eq old unbound))))
+ 
+--- a/level-0/nfasload.lisp
++++ b/level-0/nfasload.lisp
+@@ -235,8 +235,28 @@
+   #+debug
+   (format t "~& dispatch: op = ~d at ~x" (logand op (lognot (ash 1 $fasl-epush-bit)))
+           (1- (%fasl-get-file-pos s)))
+-  (funcall (svref (faslstate.fasldispatch s) (logand op (lognot (ash 1 $fasl-epush-bit)))) 
+-           s))
++  (let* ((census-reader (svref (faslstate.fasldispatch s) (logand op (lognot (ash 1 $fasl-epush-bit))))) (census-reader-mode (cond ((eq (faslstate.fasldispatch s) *fasl-dispatch-table*) :native) ((and (boundp '*xload-fasl-dispatch-table*) (eq (faslstate.fasldispatch s) *xload-fasl-dispatch-table*)) :cross-dump) (t :other))))
++  (if (and (and (boundp '*startup-census-hook*) *startup-census-hook*) (member (logand op (lognot (ash 1 $fasl-epush-bit))) (list $fasl-lfuncall $fasl-defun $fasl-macro $fasl-defconstant $fasl-defparameter $fasl-defvar $fasl-defvar-init)))
++      (let ((census-observation-returned nil))
++  (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :fasl-effect-enter (list (faslstate.faslfname s) (logand op (lognot (ash 1 $fasl-epush-bit))) (%fasl-get-file-pos s) census-reader-mode census-reader)))
++  (unwind-protect
++      (multiple-value-prog1
++          (funcall census-reader s)
++        (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :fasl-effect-return (list (faslstate.faslfname s) (logand op (lognot (ash 1 $fasl-epush-bit))) (%fasl-get-file-pos s) (faslstate.faslval s) census-reader-mode census-reader)))
++        (setq census-observation-returned t))
++    (unless census-observation-returned
++      (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :fasl-effect-abort (list (faslstate.faslfname s) (logand op (lognot (ash 1 $fasl-epush-bit))) (%fasl-get-file-pos s) census-reader-mode census-reader))))))
++      (if (and (and (boundp '*startup-census-hook*) *startup-census-hook*) (= (logand op (lognot (ash 1 $fasl-epush-bit))) $fasl-clfun))
++          (let ((census-observation-returned nil))
++  (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :fasl-function-enter (list (faslstate.faslfname s) (logand op (lognot (ash 1 $fasl-epush-bit))) (%fasl-get-file-pos s) census-reader-mode census-reader)))
++  (unwind-protect
++      (multiple-value-prog1
++          (funcall census-reader s)
++        (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :fasl-function-return (list (faslstate.faslfname s) (logand op (lognot (ash 1 $fasl-epush-bit))) (%fasl-get-file-pos s) (faslstate.faslval s) census-reader-mode census-reader)))
++        (setq census-observation-returned t))
++    (unless census-observation-returned
++      (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :fasl-function-abort (list (faslstate.faslfname s) (logand op (lognot (ash 1 $fasl-epush-bit))) (%fasl-get-file-pos s) census-reader-mode census-reader))))))
++          (funcall census-reader s)))))
+ 
+ (defun %fasl-expr (s)
+   (%fasl-dispatch s (%fasl-read-byte s))
+@@ -455,7 +475,16 @@
+ (deffaslop $fasl-lfuncall (s)
+   (let* ((fun (%fasl-expr-preserve-epush s)))
+     ;(break "fun = ~s" fun)
+-     (%epushval s (funcall fun))))
++     (let ((result nil))
++       (%epushval s (let ((census-observation-returned nil))
++  (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :load-effect-call (list (faslstate.faslfname s) fun)))
++  (unwind-protect
++      (multiple-value-prog1
++          (setq result (funcall fun))
++        (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :load-effect-value (list (faslstate.faslfname s) fun result)))
++        (setq census-observation-returned t))
++    (unless census-observation-returned
++      (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :load-effect-abort (list (faslstate.faslfname s) fun))))))))))
+ 
+ (deffaslop $fasl-globals (s)
+   (setf (faslstate.faslgsymbols s) (%fasl-expr s)))
+--- a/level-1/l1-readloop.lisp
++++ b/level-1/l1-readloop.lisp
+@@ -253,10 +253,16 @@
+ 
+ (defun %symbol-macroexpand-1 (sym env)
+   (flet ((expand-it (expansion)
+-           (funcall *macroexpand-hook*
+-                    (constantly expansion)
+-                    sym
+-                    env)))
++           (let ((census-hook *macroexpand-hook*) (census-expander (constantly expansion)) (census-form sym) (census-env env) (census-results nil))
++  (let ((census-observation-returned nil))
++  (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :expander-enter (list census-hook census-expander census-form census-env)))
++  (unwind-protect
++      (multiple-value-prog1
++          (progn (setq census-results (multiple-value-list (funcall census-hook census-expander census-form census-env))) (values-list census-results))
++        (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :expander-return (list census-hook census-expander census-form census-env census-results)))
++        (setq census-observation-returned t))
++    (unless census-observation-returned
++      (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :expander-abort (list census-hook census-expander census-form census-env)))))))))
+     (if (and env (not (istruct-typep env 'lexical-environment)))
+       (report-bad-arg env 'lexical-environment))
+     (do* ((env env (lexenv.parent-env env)))
+@@ -390,7 +396,16 @@
+   (if (and (consp form)
+            (symbolp (%car form)))
+     (if (setq fn (macro-function (%car form) env))
+-      (values (funcall *macroexpand-hook* fn form env) t)
++      (values (let ((census-hook *macroexpand-hook*) (census-expander fn) (census-form form) (census-env env) (census-results nil))
++  (let ((census-observation-returned nil))
++  (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :expander-enter (list census-hook census-expander census-form census-env)))
++  (unwind-protect
++      (multiple-value-prog1
++          (progn (setq census-results (multiple-value-list (funcall census-hook census-expander census-form census-env))) (values-list census-results))
++        (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :expander-return (list census-hook census-expander census-form census-env census-results)))
++        (setq census-observation-returned t))
++    (unless census-observation-returned
++      (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :expander-abort (list census-hook census-expander census-form census-env))))))) t)
+       (values form nil))
+     (if (and form (symbolp form))
+       (%symbol-macroexpand-1 form env)
+--- a/compiler/nx.lisp
++++ b/compiler/nx.lisp
+@@ -314,6 +314,8 @@
+                             env 
+                             (or policy *default-compiler-policy*)
+                             *load-time-eval-token*)))
++               (when (and (boundp '*startup-census-hook*) *startup-census-hook*)
++                 (funcall *startup-census-hook* :frontend afunc))
+                (setq *nx-in-frontend* nil)
+                (if (afunc-lfun afunc)
+                  afunc
+@@ -322,12 +324,15 @@
+                               (afunc-acode afunc))
+                      (let* ((*nx-current-function* afunc))
+                        (rewrite-acode-form (afunc-acode afunc) t)))
++                   (when (and (boundp '*startup-census-hook*) *startup-census-hook*)
++                     (funcall *startup-census-hook* :before-pass2 afunc))
+                    (funcall (backend-p2-compile *target-backend*)
+                             afunc
+                             ;; will also bind *nx-lexical-environment*
+                             (if keep-lambda (if (lambda-expression-p keep-lambda) keep-lambda def))
+                             keep-symbols))))))
+           (let* ((f (afunc-lfun def)))
++            (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :function-materialized def))
+             (when *using-linear-scan-won*
+               (setf (gethash   f *stack-access-winners*) name)) 
+             (values f (afunc-warnings def))))
+--- a/compiler/nx0.lisp
++++ b/compiler/nx0.lisp
+@@ -216,7 +216,16 @@
+     (if (and (consp form)
+              (symbolp (car form))
+              (setq expander (compiler-macro-function (car form) env)))
+-      (values (setq newdef (funcall *macroexpand-hook* expander form env)) (neq newdef form))
++      (values (setq newdef (let ((census-hook *macroexpand-hook*) (census-expander expander) (census-form form) (census-env env) (census-results nil))
++  (let ((census-observation-returned nil))
++  (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :expander-enter (list census-hook census-expander census-form census-env)))
++  (unwind-protect
++      (multiple-value-prog1
++          (progn (setq census-results (multiple-value-list (funcall census-hook census-expander census-form census-env))) (values-list census-results))
++        (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :expander-return (list census-hook census-expander census-form census-env census-results)))
++        (setq census-observation-returned t))
++    (unless census-observation-returned
++      (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :expander-abort (list census-hook census-expander census-form census-env)))))))) (neq newdef form))
+       (values form nil))))
+ 
+ ; ... If this exists, it should probably be exported.
+--- a/compiler/nx2.lisp
++++ b/compiler/nx2.lisp
+@@ -351,14 +351,22 @@
+ 
+ (defun backend-use-operator (op seg vreg xfer &rest forms)
+   (declare (dynamic-extent forms))
++  (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :lower-enter (list op forms)))
++  (unwind-protect
++      (progn
+   (apply (svref (backend-p2-dispatch *target-backend*)
+                 (%ilogand op operator-id-mask))
+          seg vreg xfer forms))
++    (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :lower-leave (list op forms)))))
+ 
+ (defun backend-apply-acode (acode seg vreg xfer)
++  (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :lower-enter acode))
++  (unwind-protect
++      (progn
+   (apply (svref (backend-p2-dispatch *target-backend*)
+                 (%ilogand (acode-operator acode) operator-id-mask))
+          seg vreg xfer (acode-operands acode)))
++    (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :lower-leave acode))))
+ 
+ 
+ 
+--- a/compiler/vinsn.lisp
++++ b/compiler/vinsn.lisp
+@@ -524,6 +524,7 @@
+     (when notes
+       (dolist (note notes (setf (dll-header-info vlist) nil))
+         (push note (vinsn-notes vinsn))))
++    (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :vinsn-emitted vinsn))
+     (append-dll-node vinsn vlist)))
+ 
+ (defun varpart-matches-reg (varpart-value class regval spec)
+--- a/lib/nfcomp.lisp
++++ b/lib/nfcomp.lisp
+@@ -304,7 +304,11 @@
+ 
+ (defun %compile-time-eval (form env)
+   (declare (ignore env))
+-  (let* ((*target-backend* *host-backend*)
++  (let ((census-observation-returned nil))
++  (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :compile-initializer-enter form))
++  (unwind-protect
++      (multiple-value-prog1
++          (let* ((*target-backend* *host-backend*)
+          (*loading-toplevel-location* (or (fcomp-source-note form)
+                                           *loading-toplevel-location*))
+          (lambda `(lambda () ,form)))
+@@ -321,12 +325,20 @@
+                               (unless (typep c 'style-warning)
+                                 (setq *fasl-non-style-warnings-signalled-p* t))
+                               (signal c))))
+-      (funcall (compile-named-function
++      (let* ((function (compile-named-function
+                 lambda
+                 :compile-code-coverage nil
+                 :source-notes *fcomp-source-note-map*
+                 :env *fasl-compile-time-env*
+-                :policy *compile-time-evaluation-policy*)))))
++                :policy *compile-time-evaluation-policy*)))
++        (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :compile-effect-call (list form function)))
++        (let ((results (multiple-value-list (funcall function))))
++          (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :compile-effect-values (list form function results)))
++          (values-list results)))))
++        (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :compile-initializer-return form))
++        (setq census-observation-returned t))
++    (unless census-observation-returned
++      (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :compile-initializer-abort form))))))
+ 
+ 
+ ;;; No methods by default, not even for structures.  This really sux.
+@@ -509,6 +521,8 @@
+             (when (eq eofval form)
+ 	      (require-type *loading-toplevel-location* 'null)
+ 	      (return))
++            (when (and (boundp '*startup-census-hook*) *startup-census-hook*)
++              (funcall *startup-census-hook* :read form))
+             (fcomp-form form env processing-mode)
+             (fcomp-signal-or-defer-warnings *nx-warnings* env)
+             (setq *fcomp-previous-position* *fcomp-stream-position*))))
+@@ -1005,6 +1019,8 @@
+       (multiple-value-bind (new win)
+           (macroexpand-1 form env)
+         (when win
++          (when (and (boundp '*startup-census-hook*) *startup-census-hook*)
++            (funcall *startup-census-hook* :macroexpand (list form new)))
+           (nx-note-source-transformation form new))
+         (values new win)))))
+ 
+@@ -1068,6 +1084,8 @@
+                                  (compiler-function-overflow)))
+                       ,@forms)))
+            (lambda `(lambda () ,body)))
++      (when (and (boundp '*startup-census-hook*) *startup-census-hook*)
++        (funcall *startup-census-hook* :load-initializer-emitted lambda))
+       ;; Don't assign a location to the lambda so it doesn't confuse acode printing, but
+       ;; arrange to assign it to any inner lambdas.
+       (setf (fcomp-source-note body) *loading-toplevel-location*)
+@@ -1099,6 +1117,7 @@
+     (fcomp-output-form $fasl-toplevel-location env *loading-toplevel-location*)))
+ 
+ (defun fcomp-output-form (opcode env &rest args)
++  (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :load-operation-emitted (list opcode args)))
+   (fcomp-ensure-source env)
+   (when *fcomp-toplevel-forms* (fcomp-compile-toplevel-forms env))
+   (push (cons opcode args) *fcomp-output-list*))
+@@ -1585,6 +1604,8 @@
+       (fasl-dump-form initform))))
+ 
+ (defun fasl-out-opcode (opcode form)
++  (when (functionp form)
++    (when (and (boundp '*startup-census-hook*) *startup-census-hook*) (funcall *startup-census-hook* :fasl-function-write (list (namestring *fasdump-stream*) (fasl-filepos) opcode form))))
+   (if *fasdump-epush*
+     (progn
+       (setq *fasdump-epush* nil)
+--- a/lib/dumplisp.lisp
++++ b/lib/dumplisp.lisp
+@@ -341,7 +341,11 @@
+                    (with-simple-restart 
+                      (continue "Skip (possibly crucial) startup function ~s."
+                                (if (symbolp f) f (function-name f)))
+-                     (funcall f)))))
++                     (when (and (boundp '*startup-census-hook*) *startup-census-hook*)
++                       (funcall *startup-census-hook* :startup-enter f))
++                     (multiple-value-prog1 (funcall f)
++                       (when (and (boundp '*startup-census-hook*) *startup-census-hook*)
++                         (funcall *startup-census-hook* :startup-return f)))))))
+           (dolist (f system-ptr-fns) (funcall call-with-restart f))
+           (dolist (f restore-lisp-fns) (funcall call-with-restart f))
+           (dolist (f (reverse user-pointer-fns)) (funcall call-with-restart f))

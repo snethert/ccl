@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+  "scope": "Observation-only, removable nine-file unit in a disposable U1 archive.",
+  "patch_sha256": "13f07dfaade2c8ccf13be0e100ab7c5bcfdf9fdf0865e2083ac677e24aea62ad",
+  "files": [
+    {
+      "path": "level-0/l0-def.lisp",
+      "original_sha256": "c80400d317c8a6821be46b88cc76d965088ecde828c6d32610ef213a2670f6b6",
+      "observed_sha256": "b8114cc157f7862c7ab05552000b862280bf70826ff870ac400846e82d562fd6"
+    },
+    {
+      "path": "level-0/nfasload.lisp",
+      "original_sha256": "26af0ec7dfd157b0dcc3c427a2aab674dd6b1877d6f021451ffd761bbb368f20",
+      "observed_sha256": "403914f6438b5713da8ca7660a0612fc0cf7cc2ae56a1b19fc63304a347a6e1f"
+    },
+    {
+      "path": "level-1/l1-readloop.lisp",
+      "original_sha256": "84c7269352818805f7510c5ef7b6ca3f5979dc220388c0421e6c4b16529d9263",
+      "observed_sha256": "ee0c4fe48714bb9b659bf08eac0fa3df560b0ad3509df32feaa1a67ff2e57737"
+    },
+    {
+      "path": "compiler/nx.lisp",
+      "original_sha256": "8730c225eb010e526e4995639ce89271e706d92f4fa1a2162e008f2ba945c676",
+      "observed_sha256": "b4cc783392b28d6fdd984c3c9a0dec47423ca5218cb20d1a4ecebc6e679285aa"
+    },
+    {
+      "path": "compiler/nx0.lisp",
+      "original_sha256": "9a2ae143496f559693eed0bd8ce901c9c30c316985c1d6219e1a4065a267f100",
+      "observed_sha256": "9a54cc3b08ef530a3c20867e6a7e0f31c5858ddcf5b9b546d3c31a2e7dce79fd"
+    },
+    {
+      "path": "compiler/nx2.lisp",
+      "original_sha256": "25a69f68b5607d721deff54a4c8ed06740e0b3469a30243020e19f402925e33a",
+      "observed_sha256": "d3ad0d30794e6dd68639c6232eaca0ff9a57b46fd670e1799288e6e0bf45c95b"
+    },
+    {
+      "path": "compiler/vinsn.lisp",
+      "original_sha256": "783e8bcfb574918614a1459615b8f67b071614f25a018bad2f73c969e22f668f",
+      "observed_sha256": "01d25f9e27a093ce43a6ca06de579d98b57f82794d738ae9ef8af2e3d7514fba"
+    },
+    {
+      "path": "lib/nfcomp.lisp",
+      "original_sha256": "01dd18489697add1b6580d97782cba4c8c213554dd4f9db8a9289f45371f969c",
+      "observed_sha256": "1e10253ffdffd4420b8c827f14516e0a10f9ab8866cda605d10b6ae711f71e95"
+    },
+    {
+      "path": "lib/dumplisp.lisp",
+      "original_sha256": "5cd12bcbfe6164874e4cefdbd6583612725d8cd773f5d970c66b956097408b74",
+      "observed_sha256": "31a3bec10eefec0988c349a88b2796d98e8c595226a2804b6b53e3a277754618"
+    }
+  ]
+}

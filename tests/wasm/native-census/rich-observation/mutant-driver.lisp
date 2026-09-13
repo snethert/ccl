@@ -1,0 +1,21 @@
+;;; Suppress real observations while running the unchanged compiler and corpus.
+(in-package :cl-user)
+(defvar *rich-control-mode* "normal")
+(defun rich-filtered-observe (phase value)
+  (unless
+      (or (and (equal *rich-control-mode* "missing-installation")
+               (eq phase :binding-installed)
+               (eq (car value) 'rich-version))
+          (and (equal *rich-control-mode* "missing-expander")
+               (member phase '(:expander-enter :expander-return :expander-abort))
+               (eq (ccl:function-name (second value)) 'rich-macro))
+          (and (equal *rich-control-mode* "missing-loader-functions")
+               (member phase '(:fasl-function-enter :fasl-function-return :fasl-function-abort))))
+    (ccl-rich-census::observe phase value)))
+
+(defun run-rich-mutant (directory path mode)
+  (setq *rich-control-mode* mode)
+  (ccl-rich-census::start path)
+  (setf ccl::*startup-census-hook* #'rich-filtered-observe)
+  (run-rich-probe directory)
+  (ccl-rich-census::finish))
