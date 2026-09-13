@@ -234,3 +234,10 @@ Two raw captures reproduce identically; six native and 26 analysis controls reje
 ## 2026-09-13 — Claude's twenty-second audit of the startup target descriptions
 
 Claude reviewed 01a96597: all eight native sessions re-executed byte-identically, the subtag values re-derived from x8632-arch.lisp, the deferred-literal shape and initializer sites confirmed in U1 source, bindings and catalog verified. No defect; the packet is marked reviewed. Gate unchanged at 28 accepted, 20 missing and zero unreviewed of 48.
+
+
+## 2026-09-13 — Execute the required-inventory standing control
+
+After Claude's twenty-second audit at 8392a2d4, the user supplied a recommendation to interleave individually closable slots with the census and asked Codex to continue to the next step after finishing. Codex adopted that execution schedule without changing acceptance criteria. S0-LL02-a now has a registered runner and an actual v2 CONTROL EXECUTION result. The unchanged production gate accepts two complete synthetic control inputs and rejects seven missing-ID, missing-variant, duplicate and same-count-substitution cases with exact diagnostics. Synthetic inputs are quarantined; the real slot result remains NOT_REVIEWED and its gate assessment is blocked only for review/acceptance. No earlier acceptance or runtime evidence is changed.
+
+The scoped ledger now has 28 accepted, 19 missing and one unreviewed required variant. Verification covers this runner, its direct production gate/binding dependencies and new retained artifacts only. The next census deliverable is the target macro environment; the inventory also confirms the B desk record does not depend on S0-ENGINE-a. See the [control report](../stage0/inventory-control.md) and [alternating plan](../stage0/plan.md).

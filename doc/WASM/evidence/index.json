@@ -832,6 +832,23 @@
         "sha256": "945c477886d9e36abe35d1312214763221f083b234932627610afe7df0ae3f9c",
         "timestamp": "2026-09-12T19:52:56.565442+00:00"
       }
+    },
+    {
+      "id": "STANDING-INVENTORY-CONTROL-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-inventory-control-r1/results.json",
+      "sha256": "f51a74cbe25a8c10677bd4a6508c1e38cca67b0947eecefc0c330690872f6d6c",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-inventory-control-r1/packet.json",
+      "packet_sha256": "8ab2b28f172ad4d8469cf883fe5a7b52bff02abba84f4077f8c21c723d4c04a4",
+      "timestamp": "2026-09-13T20:26:23.177472+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "e86cb9ca51458555afaaa17effcad79f1b039f3c76c343286ad6f84b115b8b75",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "S0-LL02-a/control: actual production-gate CLI rejects seven required-ID/variant omissions, substitutions and duplicates; two complete synthetic control inventories pass. Quarantined inputs are not compiler/runtime evidence. The actual result is blocked only for review/acceptance."
     }
   ],
   "auxiliary_records": [

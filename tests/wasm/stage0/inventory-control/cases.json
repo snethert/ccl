@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "test_id": "S0-LL02-a",
+  "scope": "Synthetic result data presented to the unchanged production gate; the outer CONTROL EXECUTION record is the actual test result.",
+  "required_tests": [
+    {"id": "CONTROL-first", "variants": ["only"]},
+    {"id": "CONTROL-middle", "variants": ["left", "right"]},
+    {"id": "CONTROL-last", "variants": ["only"]}
+  ],
+  "cases": [
+    {"name": "complete", "mutation": "none", "expected": {"status": "PASS", "reasons": []}},
+    {"name": "reordered", "mutation": "reverse", "expected": {"status": "PASS", "reasons": []}},
+    {"name": "missing-first", "mutation": "omit-id", "id": "CONTROL-first", "expected": {"status": "BLOCKED", "reasons": ["missing CONTROL-first [only]"]}},
+    {"name": "missing-middle", "mutation": "omit-id", "id": "CONTROL-middle", "expected": {"status": "BLOCKED", "reasons": ["missing CONTROL-middle [left]", "missing CONTROL-middle [right]"]}},
+    {"name": "missing-last", "mutation": "omit-id", "id": "CONTROL-last", "expected": {"status": "BLOCKED", "reasons": ["missing CONTROL-last [only]"]}},
+    {"name": "missing-variant", "mutation": "omit-pair", "id": "CONTROL-middle", "variant": "right", "expected": {"status": "BLOCKED", "reasons": ["missing CONTROL-middle [right]"]}},
+    {"name": "same-count-wrong-variant", "mutation": "wrong-variant", "expected": {"status": "BLOCKED", "reasons": ["missing CONTROL-last [only]"]}},
+    {"name": "duplicate-masks-missing", "mutation": "duplicate", "expected": {"status": "FAIL", "reasons": ["duplicate result ('CONTROL-first', 'only')", "missing CONTROL-last [only]"]}},
+    {"name": "missing-all", "mutation": "empty", "expected": {"status": "BLOCKED", "reasons": ["missing CONTROL-first [only]", "missing CONTROL-middle [left]", "missing CONTROL-middle [right]", "missing CONTROL-last [only]"]}}
+  ]
+}

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "assessment": "SCOPED_INVENTORY_UPDATE",
+  "assessment": "SCOPED_RESULT_ADDITION",
   "date": "2026-09-13",
-  "basis": "second-mac-retirement.json; previously verified accepted evidence reused unchanged. gate.py artifact hashing was not rerun.",
+  "basis": "Reuse the previously recorded 28 accepted results unchanged; add the new production-gate assessment of S0-LL02-a. Only its missing reason becomes unreviewed. No aggregate rewrite or archive-wide artifact scan.",
   "verification_sha256": "a41053c5b32d70d5ab115d316cb8646eaca46e27ffe759bffd8f48a0bc5a9f91",
   "result": {
     "status": "BLOCKED",
@@ -12,7 +12,7 @@
       "missing S0-ENGINE-a [complete-report]",
       "missing S0-LL01-a [control]",
       "missing S0-LL01-b [control]",
-      "missing S0-LL02-a [control]",
+      "unreviewed S0-LL02-a [control]",
       "missing S0-LL02-b [control]",
       "missing S0-LL03-a [control]",
       "missing S0-LL07-a [full]",
@@ -28,5 +28,20 @@
       "missing S0-LL23-a [full]",
       "missing S0-LL24-a [control]"
     ]
+  },
+  "prior_result_sha256": "95528d5b18a1bf6281c9c13d401b13b596e36d049678298b5732ca31509ab832",
+  "new_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-inventory-control-r1/results.json",
+  "new_results_sha256": "f51a74cbe25a8c10677bd4a6508c1e38cca67b0947eecefc0c330690872f6d6c",
+  "slot_gate": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-inventory-control-r1/slot-gate.json",
+  "slot_gate_sha256": "f90d7a21810f0c63a6dd01e6a94672c13a23b8a41e285249ac3bcab3b832c6a9",
+  "contract_compatibility": {
+    "unchanged_other_variants": 47,
+    "changed_id": "S0-LL02-a"
+  },
+  "counts": {
+    "accepted": 28,
+    "missing": 19,
+    "unreviewed": 1,
+    "required": 48
   }
 }

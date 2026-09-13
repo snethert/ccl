@@ -21,6 +21,25 @@ Before a shared compiler edit, capture an immutable unchanged-source corpus cont
 
 ## Proof implementation order
 
+### Alternating deliverables — 13 September 2026
+
+Following the user-supplied twenty-second Claude review and the user's instruction
+to continue through the next step, interleave census work with independently
+closable Stage 0 records. Keep one deliverable and one compact packet per commit;
+independent review and project acceptance remain separate from execution.
+
+1. Finish [S0-LL02-a](inventory-control.md), the production-gate missing-inventory control.
+2. Return to the census: establish a target macro environment from source, with
+   explicit expander/helper identities and gaps before claiming target qualification.
+3. Complete the next unblocked standing control or the B desk-decision record,
+   then resume the census traversal and boundary work.
+
+The B desk record's actual inventory prerequisites are the reviewed ABI/runtime
+records; S0-ENGINE-a is not a prerequisite of S0-ABI-selection. Engine qualification
+remains a separate mandatory slot. The other non-census work also includes the
+final S0-CONTRACTS-a join, which stays last. Scheduling a control does not waive
+full source closure or authorize functional shared compiler changes.
+
 ### Remaining work — user direction, 12 September 2026
 
 The five steps below supersede the historical implementation order that follows. Work in small commits with one deliverable each. Reuse the reviewed r7 logs, graph and Terminal r2 trace; do not rebuild or rehash their unchanged prerequisite archive for each change. The [standing rules](../../../CLAUDE.md) now require verification scoped to changed work and its dependencies. Preserve R6, original failures and independent review.
