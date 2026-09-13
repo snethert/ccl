@@ -218,3 +218,7 @@ Verification: the native inspector was re-executed from the retained kernel (exe
 Note, no action: anonymous combined-method names in the inventory carry heap addresses, so image.json is not byte-reproducible across sessions even though every joined output is; a stable label would remove the noise.
 
 Disposition: NATIVE-STARTUP-SEEDS-R2 REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC; seed set revision 2026-09-13-kernel-entry-surfaces REVIEWED_APPROVED for the native profile, recorded in seed-review.md. Finding 8 of the seed review is restated per the diagnosis and remains open. No inventory record changes state. Gate 28 accepted, 20 missing, zero unreviewed of 48.
+
+### Addendum to the twentieth audit — manifest carry at 1a9e95c4
+
+Claude reviewed 1a9e95c4, a metadata-only commit. The manifest changed in exactly three text fields (review disposition, review basis, first scope-limit sentence); entrypoints, required effects, required bindings, method selection, exclusions, revision and profile are byte-unchanged. The retained R2 packet still pins the pre-approval manifest hash, which Codex disclosed; running the candidate producer against the retained image and graph with the current manifest reproduces the retained candidates except the two fields derived from that text, and the coverage checker passes. No native execution, no evidence change, no defect.
