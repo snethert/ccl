@@ -35,8 +35,8 @@ independent review and project acceptance remain separate from execution.
    all 293 hook invocations from source, extending the reviewed first slice.
    Sixty-eight native helper names, four computed helper calls, three object
    references and the five source boundary stops remain explicit and unqualified.
-3. The [B desk-decision record](abi-decision.md) is prepared and verified, awaiting
-   independent review and acceptance. Resume census helper qualification, then
+3. The [B desk-decision record](abi-decision.md) is accepted after Claude's twenty-sixth
+   audit and the user's explicit decision. Resume census helper qualification, then
    the boundary replacements and wider source traversal.
 
 The B desk record's actual inventory prerequisites are the reviewed ABI/runtime

@@ -2,21 +2,23 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "e6e9e4a0f20bed70514441c259f28e2520e4a54e",
+  "commit": "24b78b71c8444f2de79c317a6b56c66a5330912a",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "d9a2896c0bd7468172bd8d5050cd13a2242d979e5dc17a82bcfe9f5d86dfe840",
-  "immutable_evidence_files": 160475,
-  "indexed_references_verified": 919,
+  "catalog_sha256": "e65d2b591b2ac37080d9c029c928ef7aca79868f88b7d16edcf42dfd153306c1",
+  "immutable_evidence_files": 160502,
+  "indexed_references_verified": 925,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped B desk-decision addition, 2026-09-13: 24 new packet files, 24 prerequisite variants, 29 accepted bindings and ten negative controls checked; fresh desk reproduction matches. Prior catalog rows unchanged. No earlier runtime-payload rescan or runtime execution.",
+  "verification": "Scoped B project acceptance: new acceptance artifacts, exact disposition delta, 29 unchanged earlier record objects and 30 current contract bindings checked; fourteen producer controls pass. No runtime rescan or execution.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository. Original executions, decisions and failures retained. Twenty-nine accepted records: 28 preserved unchanged plus user-accepted S0-LL02-a. Full census and generated code remain open.",
+  "scope": "Separate local evidence repository. Original runs, decisions and failures retained. Thirty accepted records, including the B desk decision. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-13-abi-decision-r1",
-    "files": 24,
-    "bytes": 132187,
-    "prior_commit": "6b3ecb4a3b90ac6a0ee170313f5bc1c72d6ab027"
+    "directory": "2026-09-13-abi-project-acceptance",
+    "files": 27,
+    "bytes": 30978631,
+    "catalog_sha256": "e65d2b591b2ac37080d9c029c928ef7aca79868f88b7d16edcf42dfd153306c1",
+    "immutable_evidence_files": 160502,
+    "prior_commit": "e6e9e4a0f20bed70514441c259f28e2520e4a54e"
   }
 }

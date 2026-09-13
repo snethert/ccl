@@ -83,3 +83,30 @@ bindings. Earlier runtime-payload verification is reused. The accepted slot
 passes the production gate; the scoped Stage 0 assessment is BLOCKED for
 **19 missing and zero unreviewed**, with **29 accepted out of 48**. No fixture
 is re-executed or new Stage 0 capability claimed by this decision.
+
+
+## Twenty-sixth-audit acceptance — S0-ABI-selection, 13 September 2026
+
+The user told Codex “lets accept the ABI” after supplying Claude's no-defect
+twenty-sixth audit, committed as `29a57707`. This accepts S0-ABI-selection /
+complete-report from ABI-DESK-DECISION-R1 at its stated desk-decision scope.
+The quoted earlier direction is present verbatim in the user messages available
+to Codex and matches the retained record; Claude did not have that conversation.
+No separate quotation-confirmation words are attributed to the user.
+
+B remains the simplicity-based engineering choice: explicit self/count, all
+arguments on VSP, two Wasm results and owned extra values. The correctness bounds,
+provisional packaging, alternatives and reversal criteria remain unchanged. The
+benchmark rule was not applied and no speed advantage is claimed.
+
+The unchanged producer creates `ABI-PROJECT-ACCEPTANCE`, preserving every original
+desk field and artifact except for the added disposition and provenance. The
+combined envelope preserves all 29 earlier accepted result objects. Thirty
+current contract bindings, exact preservation checks and fourteen acceptance
+controls pass. The production gate validates the new accepted record; its
+separate envelope contains no earlier results, whose runtime verification is
+reused in the scoped combined assessment.
+
+Stage 0 is **BLOCKED: 30 accepted, 18 missing, zero unreviewed of 48**. The current
+gate-summary schema version is restored to 2; the prior version-1 summary stays
+retained. No runtime, benchmark or census work is claimed by this acceptance.

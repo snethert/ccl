@@ -296,7 +296,7 @@
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
       "currency": "ORIGINAL_FAILURE",
-      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged."
+      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged."
     },
     {
       "id": "INTEGRATED-RUNTIME-r10",
@@ -907,6 +907,36 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md",
         "acceptance": "S0-ABI-selection [complete-report] is complete at its stated scope and ready for the user's acceptance decision, subject to the user confirming that the quoted direction in decision.json is their own words; the reviewer could not verify that quotation against any committed record."
+      },
+      "note": "Original reviewed desk envelope unchanged. The user explicitly accepted S0-ABI-selection; the separate envelope is ABI-PROJECT-ACCEPTANCE."
+    },
+    {
+      "id": "ABI-PROJECT-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-abi-project-acceptance/accepted/accepted-results.json",
+      "sha256": "02058171fcf0abc2990ee3ac04059a8fdb3dd2d015efeb62e872a15a60941fac",
+      "timestamp": "2026-09-13T21:43:05.504300+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "bd37fe1d5c68e82ca04affa5978b4ac0b31269aef15e6e2dc310e6f424baac1f",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "DESK DECISION",
+      "record_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "S0-ABI-selection: formal record of the existing B engineering choice on simplicity. Explicit argument/result protocol, 24 accepted prerequisite variants, bounded scope, provisional packaging and reversal criteria; ten rejected controls. No fresh runtime, benchmark selection or speed claim.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Twenty-sixth audit at 629534d2: producer re-executed with basis, controls, decision, scoped gate result, summary and inventory snapshot byte-identical and the direct gate stdout identical; retained verifier passes; the 14-record, 24-variant prerequisite closure, the single changed contract (S0-ABI-selection of 37) and the 29-accepted envelope recomputed independently; B protocol facts checked against abi/dynamic-call.v0.md; packet, catalog at e6e9e4a4 with 24 new rows and all five source pins at HEAD verified, 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "S0-ABI-selection [complete-report] is complete at its stated scope and ready for the user's acceptance decision, subject to the user confirming that the quoted direction in decision.json is their own words; the reviewer could not verify that quotation against any committed record."
+      },
+      "note": "User to Codex: \"lets accept the ABI\" after supplying Claude twenty-sixth audit 29a57707. Original quotation is visible in the author's user-message history; no separate quotation-confirmation words are invented. No new runtime execution.",
+      "project_acceptance": {
+        "decision": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-abi-project-acceptance/decision.json",
+        "sha256": "17016482ed6dc87a9d01c93a8178c074ec7449007cd20db8e2a06c91d4578e9f",
+        "timestamp": "2026-09-13T22:03:44.423524+00:00"
       }
     }
   ],
@@ -1800,9 +1830,9 @@
     },
     {
       "id": "CURRENT-STAGE0-COMBINED",
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-ll02a-accepted-results.json",
-      "sha256": "9c811ec32408ee0fb9c1eec31e7c0e29fa768b67d16edf25f9c1a2eaa18a9abf",
-      "scope": "29 scoped accepted records: 28 earlier result objects preserved unchanged plus user-accepted S0-LL02-a/control. Current contracts checked; prior execution-artifact verification reused. Scoped gate BLOCKED for 19 missing, zero unreviewed."
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-abi-accepted-results.json",
+      "sha256": "69b74d5c145fcd1b64a85b5630bfcc1c145d97bcdd682494d2a6481927cf2289",
+      "scope": "30 accepted records: 29 earlier result objects unchanged plus the B desk decision. Current bindings checked, prior runtime verification reused; 18 missing and zero unreviewed."
     },
     {
       "id": "LL02A-ACCEPTANCE-DECISION",
@@ -1852,6 +1882,36 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-abi-decision-r1/gate-result.json",
       "sha256": "7f2660a23bc29155093dba82138ad824936f49bc5b035d28c456c8c811d15302",
       "scope": "Labeled scoped assessment: production gate validates the new desk record; 29 earlier accepted records and current bindings reused. BLOCKED: 18 missing, one unreviewed. No full runtime-artifact rescan."
+    },
+    {
+      "id": "PRE-ABI-ACCEPTANCE-COMBINED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-ll02a-accepted-results.json",
+      "sha256": "9c811ec32408ee0fb9c1eec31e7c0e29fa768b67d16edf25f9c1a2eaa18a9abf",
+      "scope": "Historical 29-record aggregate; every result object is preserved unchanged in the accepted 30-record aggregate."
+    },
+    {
+      "id": "ABI-ACCEPTANCE-PACKET",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-abi-project-acceptance/packet.json",
+      "sha256": "87692cbcbd01e76be5177c0920757fc59a847a9a6123af3b2d33a54f295efdcc",
+      "scope": "Scoped project acceptance of S0-ABI-selection after Claude twenty-sixth audit. No runtime execution; 30 accepted, 18 missing, zero unreviewed."
+    },
+    {
+      "id": "ABI-ACCEPTANCE-DECISION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-abi-project-acceptance/decision.json",
+      "sha256": "17016482ed6dc87a9d01c93a8178c074ec7449007cd20db8e2a06c91d4578e9f",
+      "scope": "Scoped project acceptance of S0-ABI-selection after Claude twenty-sixth audit. No runtime execution; 30 accepted, 18 missing, zero unreviewed."
+    },
+    {
+      "id": "ABI-ACCEPTANCE-PRESERVATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-abi-project-acceptance/preservation.json",
+      "sha256": "bb00e50a89c1353594cfd1475ff4966eb55763439f765651bb7b994d84b11294",
+      "scope": "Scoped project acceptance of S0-ABI-selection after Claude twenty-sixth audit. No runtime execution; 30 accepted, 18 missing, zero unreviewed."
+    },
+    {
+      "id": "ABI-ACCEPTANCE-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-abi-project-acceptance/gate-result.json",
+      "sha256": "088d5e8c32da1e3cde9ca650439e00f95fcda94b02fe13037108dbd87763a5ff",
+      "scope": "Scoped project acceptance of S0-ABI-selection after Claude twenty-sixth audit. No runtime execution; 30 accepted, 18 missing, zero unreviewed."
     }
   ]
 }

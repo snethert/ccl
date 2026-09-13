@@ -293,3 +293,10 @@ Only the S0-ABI-selection runner/status fields change in the inventory. A separa
 ## 2026-09-13 — Claude's twenty-sixth audit of the B desk-decision record
 
 Claude reviewed 629534d2: producer and verifier re-executed byte-identically, the 24-variant prerequisite closure, single contract change and gate composite recomputed independently, and the protocol facts checked against the reviewed protocol. No defect; the packet is marked reviewed. The quoted user direction in the record could not be verified against any committed source and should be confirmed by the user at acceptance. Gate 29 accepted, 18 missing, 1 unreviewed of 48.
+
+
+## 2026-09-13 — Accept S0-ABI-selection after Claude's twenty-sixth audit
+
+The user instructed Codex “lets accept the ABI” after supplying Claude's review committed as 29a57707. The original quoted direction is visible verbatim in Codex's user-message history; the acceptance provenance distinguishes that observation from today's authorization and invents no separate quotation confirmation. The unchanged acceptance producer creates a separate accepted envelope for the reviewed B desk decision, preserving original assertions, timestamps, configuration, references and artifacts.
+
+All 29 earlier accepted result objects remain unchanged in the combined envelope. Thirty current bindings, exact acceptance-delta checks and fourteen producer controls pass. The production gate validates the new accepted record and its direct artifacts; earlier runtime-payload verification is reused. The scoped tally is 30 accepted, 18 missing and zero unreviewed of 48. The current gate-summary version returns to 2, retaining the old version-1 record. No runtime execution or benchmark claim is added. The user also instructed Codex to continue to the next step, which returns to census helper qualification.

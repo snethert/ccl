@@ -103,8 +103,9 @@ The new envelope is `DESK DECISION`, `PASS`, `NOT_REVIEWED`. PASS means the desk
 record's assertions hold; it claims no fresh runtime execution. The unchanged
 gate validates this record and its artifacts. A labeled scoped ledger combines
 that result with the unchanged accepted set: **29 accepted, 18 missing and one
-unreviewed of 48**. The formal slot still requires independent review and project
-acceptance. The implementation choice of B is already in force.
+unreviewed of 48** before acceptance. The separate accepted envelope now yields
+**30 accepted, 18 missing and zero unreviewed**. The original desk result and its
+execution metadata remain unchanged. The implementation choice of B is in force.
 
 Under the alternating plan, the next census work returns to the 68 native helper
 names and four computed helper calls exposed by the reviewed source-expander
