@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "id": "SWINK-NATIVE-TCP-DISPOSITION",
+  "status": "INTEGRATION_WORKLIST_NOT_APPLIED",
+  "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+  "profile": "Current Wasm profiles; native TCP/POSIX remote-debugger transport excluded",
+  "rationale": "User-supplied Claude research identifies the native Swink server and remote-lisp client. Source inspection confirms listener/client socket operations and lazy module registration. Apply the existing native-service exclusion at this transport boundary.",
+  "requested_disposition": "UNSUPPORTED",
+  "implementation_status": "NOT_IMPLEMENTED",
+  "tested_condition_status": "NOT_RUN",
+  "observed_binding": {
+    "namespace": "identity:build",
+    "symbol_id": 16753,
+    "code_id": 15717373,
+    "name": "SWINK::READ-SEXP",
+    "first_installation": 2889318,
+    "parent": 2889316,
+    "parent_kind": "load-effect-call",
+    "loading_source": "ccl:lib;swink.lisp.newest"
+  },
+  "sources": [
+    {
+      "path": "lib/swink.lisp",
+      "sha256": "368a83ceb23000b94cd9b40089e0be8b98ba66b8fe4024ed6e5209df5f456e64",
+      "anchors": [
+        {
+          "text": "(defmethod read-sexp ((conn connection))",
+          "byte_offset": 9408,
+          "line": 271
+        },
+        {
+          "text": "(defun start-server (&key (port *default-server-port*)",
+          "byte_offset": 15880,
+          "line": 438
+        },
+        {
+          "text": "(socket (make-socket :connect :passive",
+          "byte_offset": 16304,
+          "line": 445
+        }
+      ]
+    },
+    {
+      "path": "library/remote-lisp.lisp",
+      "sha256": "0c82e923c62c318660139c2854abcd76342607fda6c725a3fa83f31cfc82485d",
+      "anchors": [
+        {
+          "text": "(defun connect-to-swink (host port)",
+          "byte_offset": 9951,
+          "line": 209
+        },
+        {
+          "text": "(let* ((socket (make-socket :remote-host host :remote-port port :nodelay t))",
+          "byte_offset": 9989,
+          "line": 210
+        }
+      ]
+    },
+    {
+      "path": "level-1/l1-boot-2.lisp",
+      "sha256": "088d67d46610c825a74b1bad936d30184ccfaece77d5acd2df99df4e51b3c67f",
+      "anchors": [
+        {
+          "text": "(bin-load-provide \"SWINK\" \"swink\")",
+          "byte_offset": 15256,
+          "line": 376
+        }
+      ]
+    },
+    {
+      "path": "lib/systems.lisp",
+      "sha256": "517c6aeb6078a4e6eac63d8dbec523da6fc033a34b2de94da48cef7fd408c0bc",
+      "anchors": [
+        {
+          "text": "(swink            \"ccl:bin;swink\"",
+          "byte_offset": 16525,
+          "line": 225
+        },
+        {
+          "text": "(remote-lisp      \"ccl:bin;remote-lisp\"",
+          "byte_offset": 17003,
+          "line": 231
+        }
+      ]
+    },
+    {
+      "path": "lib/compile-ccl.lisp",
+      "sha256": "61480f2e75a7968beec4f3543c7fe45cb1379cf1bd44e466e2b564e53bcbc0f2",
+      "anchors": [
+        {
+          "text": "    swink))",
+          "byte_offset": 6261,
+          "line": 210
+        }
+      ]
+    },
+    {
+      "path": "cocoa-ide/cocoa-remote-lisp.lisp",
+      "sha256": "cce536f6bbda423972794fe350149514339f0db9f877314cbb65e097dc6f15bb",
+      "anchors": [
+        {
+          "text": "(defun ccl::rlisp-test",
+          "byte_offset": 918,
+          "line": 26
+        },
+        {
+          "text": "(let ((conn  (ccl::connect-to-swink (or host \"localhost\") port)))",
+          "byte_offset": 996,
+          "line": 27
+        }
+      ]
+    }
+  ],
+  "required_integration": [
+    "Keep native compilation, loading and binding witnesses in the census.",
+    "Add explicit module/service and dependency edges for the excluded Swink TCP server/client.",
+    "Implement and test a declared unsupported-operation condition for any reachable target request before socket acquisition or listener publication.",
+    "Bound dynamic REQUIRE and client references; preserve any required initializer until its supported replacement or profile guard is witnessed.",
+    "Keep shared Lisp sequence, stream, CLOS and thread dependencies under their own supported-profile obligations."
+  ],
+  "limitations": [
+    "This record does not prove READ-SEXP is itself a socket operation or classify its body as complete.",
+    "No server ran, no host service or Swink replacement is implemented, no graph edge changes, and no census credit is claimed.",
+    "Wasm Worker/thread support and mailbox-based debugger services are separate from this native TCP transport."
+  ]
+}

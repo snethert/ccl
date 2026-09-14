@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "namespace": "Original rich build identity:build; no cross-process name or numeric-ID joins",
+  "inputs": {
+    "events": {"path": "2026-09-12-rich-census-r1/observed-r4.jsonl.gz", "sha256": "23b63396031cca638f845822d15d2b7af927aa8d0c5d193ae4c03df70b120a7b"},
+    "bindings": {"path": "2026-09-14-binding-versions-r1/facts.json.gz", "sha256": "a55a9f61c97c9d1f72029b8c9fdcb470cb8f383f1e3f5093923fa3d40e715155"},
+    "histories": {"path": "2026-09-14-binding-versions-r1/histories.json.gz", "sha256": "4054a5980aa83a5d22b2749f90683acab663ed3a405d9276cabd4053c544bd69"},
+    "delta": {"path": "2026-09-14-binding-versions-r1/delta.json.gz", "sha256": "4d7ec16f021de6b2c1ae3a101c5740fafdcaa02d30864f97cb816637f4e10ac1"},
+    "bodies": {"path": "2026-09-14-resident-bodies-r1/bodies.json.gz", "sha256": "4e24bfc2387a7ad0e95325b42773f57059240f96fbed7b7570d597fc10b96fae"}
+  }
+}

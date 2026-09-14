@@ -92,7 +92,8 @@ The subsequent [starting-image witness](resident-bodies.md) recovers exact nativ
 payloads for 4,373 of these 5,007 prototypes, with 4,130 reported source ranges.
 It leaves this graph unchanged: native body bytes are inputs to the required
 source/IR traversal, not complete dependency witnesses. The remaining 634 need
-other provenance. Next, resolve those body dependencies and the 95 binding
+other provenance; their [first-descriptor worklist](body-origins.md) now separates
+481 initially resident prototypes from 153 later installations. Next, resolve those body dependencies and the 95 binding
 worklist entries, then use the call graph for parameter-flow and registry bounds.
 The rich build's 1,562 computed calls remain open; the independent file survey
 and r7 retain their separate populations. Target environment qualification,

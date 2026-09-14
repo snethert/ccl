@@ -242,8 +242,15 @@ Use the retained flat graphs and per-call worklists for the remaining work:
    exhaustive. The [starting-image witness](resident-bodies.md) now supplies
    exact native payloads for 4,373 of the 5,007 prototypes without attached
    compiler bodies, including 4,130 reported source ranges. Use those to obtain
-   source/IR dependencies; the other 634 need dynamic-heap, installation or
-   generated-function provenance. The complete read-only image region is
+   source/IR dependencies. The [remaining-body origin worklist](body-origins.md)
+   splits the other 634 into sixteen installer-annotated prototypes, 465
+   initially resident prototypes without source annotations, and 153 later
+   installations (152 in ASDF compile initializers, one in a Swink load effect).
+   Join the sixteen observer wrappers to their original operations; obtain
+   native callable-object/construction witnesses for the resident group and
+   follow the exact initializer contexts for the later installations. Neither
+   function subtype nor heap area can be inferred from the printed name.
+   The complete read-only image region is
    anchored; the different dynamic replay suffix is not joined.
    Connect boot/image generations and assembly
    through witnesses, not printed names. The independent file sessions and r7's
@@ -252,6 +259,11 @@ Use the retained flat graphs and per-call worklists for the remaining work:
    descriptions; complete the mandatory startup service replacements and assign
    justified profile dispositions to native-only surfaces. The 61 incomplete
    target units include native-only code; failure counts are not added criteria.
+   The [Swink transport worklist](../../../tests/wasm/native-census/body-origins/swink-disposition.json)
+   records the current native TCP exclusion. Integrate its explicit service
+   edges and tested unsupported-condition path, preserving native load evidence
+   and any required initializer or shared Lisp dependency. It does not add a
+   replacement TCP debugger or exclude Wasm Worker/thread support.
 3. Bound parameters, registries and other computed values. The original rich
    build now has 200 local bounds and 1,562 computed calls still open; the
    independent file sessions separately have 206 bounds and 1,517 open sites.

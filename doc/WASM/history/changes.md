@@ -949,3 +949,28 @@ is now reviewed by Claude's fiftieth audit and receives no gate credit.
 That concurrent audit commit, 531e5981, also included the in-progress accepted
 count and combined-envelope index pointer authored here by Codex; this entry
 and acceptance commit complete their provenance.
+
+## 2026-09-14 — classify the 634 remaining native prototypes
+
+Following the user's supplied fiftieth Claude review, Codex scans the original
+rich stream for each remaining prototype's first complete function descriptor.
+All 634 are accounted for: 481 in the initial inventory, of which sixteen carry
+installer source annotations and 465 have none; 153 first appear at subsequent
+binding installations, 152 under ASDF compile-initializer entries and one under
+a Swink load effect. The packet retains 725 original event lines, including
+91 direct parents. No allocation-time, callable subtype or heap-area claim is
+inferred from names; all source/IR and runtime-call obligations remain open.
+
+The user's additional Claude research on Swink becomes a source-backed native
+TCP disposition worklist, with six unchanged U1 sources and eleven anchors.
+It requires explicit service edges and a tested unsupported-condition path;
+it applies no graph disposition and does not exclude general Lisp threads,
+CLOS or streams. No new Swink implementation or host service is promised.
+
+Five outputs replay byte-identically, eighteen controls reject and the parser
+probe passes. The exploratory headline-count mistake and its original script
+and output are retained; the production row classification is unaffected.
+Evidence commit 87a1b3bc holds one 16-file, 272,913-byte packet. No native
+process, baseline copy, historical payload scan, acceptance or criterion change
+occurs. The diagnostic awaits adversarial review. The census remains the
+priority; the ledger stays 40 accepted, eight missing and zero unreviewed of 48.

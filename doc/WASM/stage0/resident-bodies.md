@@ -57,9 +57,10 @@ a fresh native export. Original exploratory refusals and the failed first
 producer are retained in one compact evidence packet.
 
 Next, use the witnessed source ranges and complete native payloads to establish
-source/IR dependencies. The remaining 634 prototypes need separate dynamic-heap,
-installation or generated-function provenance; numeric IDs from a new process
-must not be substituted for the old ones. The 95 unwitnessed global bindings
+source/IR dependencies. The [subsequent origin worklist](body-origins.md) splits
+the remaining 634 into 481 initially resident prototypes and 153 later
+installations. They still need separate body/construction provenance; numeric
+IDs from a new process must not be substituted for the old ones. The 95 unwitnessed global bindings
 and 1,562 computed calls also remain on the census worklist. At this execution,
 Stage 0 had
 **39 accepted, eight missing and one unreviewed of 48**.

@@ -2892,6 +2892,16 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll13b-project-acceptance/gate-result.json",
       "sha256": "d183c6430a765f0d2637fbc455440cb34f289b4bcceeb551a7e98c5dc47a4132",
       "scope": "User-authorized acceptance after Claude audit 46; existing execution reused. 40 accepted, eight missing, zero unreviewed."
+    },
+    {
+      "id": "NATIVE-BODY-ORIGINS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-body-origins-r1/packet.json",
+      "sha256": "d4e16ab2e24c3ce80695a72fe076bda69cdc7790f6ed3e3f4ae8265ba89e3512",
+      "scope": "634 remaining prototypes: 481 in the initial inventory (16 installer-annotated, 465 without source annotations) and 153 first descriptors at later installations (152 ASDF, one Swink). Complete original-stream scan, 725 raw witness events, 18 controls and five byte-identical replay outputs. Swink native TCP disposition is an unimplemented worklist. No graph, source/IR, runtime bound or gate credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }
