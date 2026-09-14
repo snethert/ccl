@@ -1219,6 +1219,24 @@
         "sha256": "d8edd073c27cfe281fbad364c190572e795ad5ba7e0b757e56d17cf7269c61f8",
         "timestamp": "2026-09-14T13:10:00.414378+00:00"
       }
+    },
+    {
+      "id": "STRUCTURED-DIAGNOSTICS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-diagnostics-r1/results.json",
+      "sha256": "abceb4d165e4b0d4c395a4d48532abdab0eef4af23220badd4d3a364d0b16993",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-diagnostics-r1/packet.json",
+      "packet_sha256": "d3017c6dc7de7b697845b24199011d4ab9b441ba9411e900a1407f65c1e1bbe4",
+      "timestamp": "2026-09-14T13:31:40.881929+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "63937f5d7b5072ac303921c41ca9732d0d65589bece0e7804d695427a3d8b038",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Hand-built scalar Wasm diagnostics on Node/V8: exact binary-offset fault attribution, build/entry/signature/slot identities, first failure and bounded reporting. Not CCL B execution, browser-stack support, GC, threads or a production debugger."
     }
   ],
   "auxiliary_records": [
@@ -2429,6 +2447,18 @@
       "sha256": "adcfda283847909522b673cc45eeec62aef84a20a3ba93a8593c37edf4156664",
       "review_disposition": "NOT_REVIEWED",
       "scope": "User-authorized per-test role requirements for ten pending production entries. 11 complete synthetic cases, 102 rejected cases; existing 35 accepted contracts unchanged. No new execution slot or runtime claim."
+    },
+    {
+      "id": "STRUCTURED-DIAGNOSTICS-PACKET",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-diagnostics-r1/packet.json",
+      "sha256": "d3017c6dc7de7b697845b24199011d4ab9b441ba9411e900a1407f65c1e1bbe4",
+      "scope": "13 actual execution cases, 3 preflight refusals, 12 reporter mutants and 10 real production-role omissions. Scalar Node/V8 diagnostic scope, awaiting independent review."
+    },
+    {
+      "id": "STRUCTURED-DIAGNOSTICS-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-diagnostics-r1/gate-result.json",
+      "sha256": "31d77a219cfec5712f75fd7089c776b8b82d14ad4be6b96be6e28ad9dd1834b6",
+      "scope": "13 actual execution cases, 3 preflight refusals, 12 reporter mutants and 10 real production-role omissions. Scalar Node/V8 diagnostic scope, awaiting independent review."
     }
   ]
 }

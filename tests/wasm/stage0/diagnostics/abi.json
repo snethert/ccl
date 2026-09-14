@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "scope": "Hand-built scalar diagnostic ABI; not a CCL B calling-convention qualification",
+  "imports": [{"module": "host", "name": "observed", "signature": "(i32)->()"}],
+  "exports": {"invoke": 3, "indirect": 5},
+  "functions": [
+    {"index": 1, "logical_code_id": 701, "entry_kind": "fixed", "signature": "(i32)->(i32)", "slot": 0},
+    {"index": 2, "logical_code_id": 702, "entry_kind": "fixed", "signature": "(i32)->(i32)", "slot": 1},
+    {"index": 3, "logical_code_id": 703, "entry_kind": "generic", "signature": "(i32)->(i32)", "slot": 2},
+    {"index": 4, "logical_code_id": 704, "entry_kind": "bridge", "signature": "()->(i64)", "slot": 3},
+    {"index": 5, "logical_code_id": 705, "entry_kind": "dispatch", "signature": "(i32)->(i32)", "slot": 4}
+  ]
+}

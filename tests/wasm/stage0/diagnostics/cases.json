@@ -1,0 +1,257 @@
+[
+  {
+    "name": "normal-a",
+    "cohort": "a",
+    "calls": [
+      {
+        "export": "invoke",
+        "argument": 0
+      }
+    ]
+  },
+  {
+    "name": "normal-b",
+    "cohort": "b",
+    "calls": [
+      {
+        "export": "invoke",
+        "argument": 0
+      }
+    ]
+  },
+  {
+    "name": "unreachable",
+    "cohort": "a",
+    "calls": [
+      {
+        "export": "invoke",
+        "argument": 1
+      }
+    ]
+  },
+  {
+    "name": "load-bounds",
+    "cohort": "a",
+    "calls": [
+      {
+        "export": "invoke",
+        "argument": 2
+      }
+    ]
+  },
+  {
+    "name": "divide-zero",
+    "cohort": "a",
+    "calls": [
+      {
+        "export": "invoke",
+        "argument": 3
+      }
+    ]
+  },
+  {
+    "name": "signature",
+    "cohort": "a",
+    "calls": [
+      {
+        "export": "indirect",
+        "argument": 3
+      }
+    ]
+  },
+  {
+    "name": "table-bounds",
+    "cohort": "a",
+    "calls": [
+      {
+        "export": "indirect",
+        "argument": 7
+      }
+    ]
+  },
+  {
+    "name": "other-build",
+    "cohort": "b",
+    "calls": [
+      {
+        "export": "invoke",
+        "argument": 1
+      }
+    ]
+  },
+  {
+    "name": "first-failure",
+    "cohort": "a",
+    "calls": [
+      {
+        "export": "invoke",
+        "argument": 1
+      },
+      {
+        "export": "invoke",
+        "argument": 2
+      },
+      {
+        "export": "invoke",
+        "argument": 3
+      }
+    ]
+  },
+  {
+    "name": "bounded-flood",
+    "cohort": "a",
+    "calls": [
+      {
+        "export": "invoke",
+        "argument": 1
+      },
+      {
+        "export": "invoke",
+        "argument": 2
+      },
+      {
+        "export": "invoke",
+        "argument": 3
+      },
+      {
+        "export": "invoke",
+        "argument": 1
+      },
+      {
+        "export": "invoke",
+        "argument": 2
+      },
+      {
+        "export": "invoke",
+        "argument": 3
+      },
+      {
+        "export": "invoke",
+        "argument": 1
+      },
+      {
+        "export": "invoke",
+        "argument": 2
+      },
+      {
+        "export": "invoke",
+        "argument": 3
+      },
+      {
+        "export": "invoke",
+        "argument": 1
+      },
+      {
+        "export": "invoke",
+        "argument": 2
+      },
+      {
+        "export": "invoke",
+        "argument": 3
+      },
+      {
+        "export": "invoke",
+        "argument": 1
+      },
+      {
+        "export": "invoke",
+        "argument": 2
+      },
+      {
+        "export": "invoke",
+        "argument": 3
+      },
+      {
+        "export": "invoke",
+        "argument": 1
+      },
+      {
+        "export": "invoke",
+        "argument": 2
+      },
+      {
+        "export": "invoke",
+        "argument": 3
+      },
+      {
+        "export": "invoke",
+        "argument": 1
+      },
+      {
+        "export": "invoke",
+        "argument": 2
+      },
+      {
+        "export": "invoke",
+        "argument": 3
+      },
+      {
+        "export": "invoke",
+        "argument": 1
+      },
+      {
+        "export": "invoke",
+        "argument": 2
+      },
+      {
+        "export": "invoke",
+        "argument": 3
+      },
+      {
+        "export": "invoke",
+        "argument": 1
+      }
+    ]
+  },
+  {
+    "name": "host-error",
+    "cohort": "a",
+    "calls": [
+      {
+        "export": "invoke",
+        "argument": 0
+      }
+    ],
+    "host_error": true
+  },
+  {
+    "name": "unavailable",
+    "cohort": "a",
+    "calls": [
+      {
+        "export": "invoke",
+        "argument": 2
+      }
+    ],
+    "hide_stack": true
+  },
+  {
+    "name": "obscured-top",
+    "cohort": "a",
+    "calls": [
+      {
+        "export": "invoke",
+        "argument": 2
+      }
+    ],
+    "obscure_top": true
+  },
+  {
+    "name": "stale-binary",
+    "cohort": "a",
+    "calls": [],
+    "preflight": "stale-binary"
+  },
+  {
+    "name": "stale-map",
+    "cohort": "a",
+    "calls": [],
+    "preflight": "stale-map"
+  },
+  {
+    "name": "abi-signature",
+    "cohort": "a",
+    "calls": [],
+    "preflight": "abi-signature"
+  }
+]

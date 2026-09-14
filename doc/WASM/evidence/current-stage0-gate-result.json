@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "assessment": "SCOPED_PROJECT_ACCEPTANCE",
+  "assessment": "SCOPED_DIAGNOSTIC_EXECUTION",
   "date": "2026-09-14",
-  "basis": "Unchanged production gate passes the newly accepted control with its direct artifacts. All 34 earlier accepted result objects are unchanged; all 35 current metadata bindings pass. Prior runtime-payload verification reused; no full combined artifact scan.",
+  "basis": "New real execution slot passes all artifact/role checks and blocks only for review. All 35 accepted bindings unchanged; prior payload verification reused.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
@@ -17,24 +17,36 @@
       "missing S0-LL21-c [shared-template]",
       "missing S0-LL21-c [unshared-template]",
       "missing S0-LL22-b [control]",
-      "missing S0-LL23-a [full]",
-      "missing S0-LL24-a [control]"
+      "missing S0-LL24-a [control]",
+      "unreviewed S0-LL23-a [full]"
     ]
   },
-  "prior_result_sha256": "067e941d697094da09ac9176466b22abc91542550a260198cc9a1a1887c8b70d",
-  "new_results": [
+  "counts": {
+    "accepted": 35,
+    "missing": 12,
+    "unreviewed": 1,
+    "required": 48
+  },
+  "inventory": {
+    "locator": "stage0/inventory.json",
+    "sha256": "63937f5d7b5072ac303921c41ca9732d0d65589bece0e7804d695427a3d8b038"
+  },
+  "active_results": [
     {
-      "id": "S0-LL22-a",
-      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll22a-project-acceptance/S0-LL22-a/accepted/accepted-results.json",
-      "sha256": "b8525f6e882adc774366155e74cdc15a3b45a4d397da80c8d303a18aa068d4cf"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll22a-accepted-results.json",
+      "sha256": "31d91b17ba62c47b33b7050358c9711706192aadc5da8ca9a24e7a6a90ff0049"
+    },
+    {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-diagnostics-r1/results.json",
+      "sha256": "abceb4d165e4b0d4c395a4d48532abdab0eef4af23220badd4d3a364d0b16993"
     }
   ],
   "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll22a-accepted-results.json",
   "combined_results_sha256": "31d91b17ba62c47b33b7050358c9711706192aadc5da8ca9a24e7a6a90ff0049",
-  "counts": {
-    "accepted": 35,
-    "missing": 13,
-    "unreviewed": 0,
-    "required": 48
-  }
+  "new_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-diagnostics-r1/results.json",
+  "new_results_sha256": "abceb4d165e4b0d4c395a4d48532abdab0eef4af23220badd4d3a364d0b16993",
+  "record_gate": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-diagnostics-r1/slot-gate.json",
+  "record_gate_sha256": "705a9db75b739c645fd6c8cf7e224f6b1d25aa953d2297caae49393a86123d2f",
+  "binding_check": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-diagnostics-r1/binding-check.json",
+  "binding_check_sha256": "2904136d356861b651fad4b9b36d9a6f6256e5f4da40f55befc28eaaf59d39da"
 }

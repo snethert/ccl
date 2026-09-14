@@ -523,3 +523,22 @@ binding and acceptance controls pass. One compact policy packet retains the
 old/new inventory, criterion identities and dated user authorization. No runtime
 execution, previous acceptance promotion or old-payload rescan is claimed.
 The enhancement awaits independent review; ledger remains 35/13/0 of 48.
+
+
+## 2026-09-14 — execute S0-LL23-a structured Wasm diagnostics
+
+The user authorized LL23/LL24 after LL22-a acceptance. The new isolated fixture
+executes two hand-built scalar modules and identifies actual V8 Wasm traps by
+function index and binary instruction offset, independently checked against
+WABT disassembly. Thirteen execution cases, three preflight refusals, twelve
+reporter mutants and ten omitted-role controls on the genuine result pass.
+Each report retains exact build and entry identity, keeps observer context
+separate, preserves the first failure and bounds output.
+
+Development exposed attribution to a caller when the top frame was unreadable.
+The original failure is retained; the fix refuses attribution, and its mutant
+fails the same oracle. The retained verifier re-executes all cases and checks
+deterministic bytes. No shared compiler/kernel or accepted frame fixture changes.
+The [scope report](../stage0/diagnostics.md) leaves browsers, mixed-module stacks
+and a production CCL debugger open. Ledger: 35 accepted, twelve missing, one
+unreviewed of 48. Independent review/acceptance are pending; LL24 is next.

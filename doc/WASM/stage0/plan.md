@@ -159,6 +159,8 @@ New acceptance producers use the [version 2 binding contract](../contracts/evide
 The [production role policy](artifact-policy.md) now adds applicable requirements
 to ten pending tests without rewriting the 35 accepted contracts. Complete the outstanding
 S0-LL23-a structured diagnostics fixture and S0-LL24-a ledger/decision control
-as separate deliverables. S0-LL23-b remains accepted at its original frame scope.
+as separate deliverables. [LL23-a now executes](diagnostics.md): actual trap
+locations, first failure, bounded reporting and real artifact-role omissions
+pass. Independent review remains pending; LL24 is next. S0-LL23-b remains accepted at its original frame scope.
 Independent review and user acceptance of new results remain separate steps.
 Then resume the alternating census and remaining Stage 0 work.

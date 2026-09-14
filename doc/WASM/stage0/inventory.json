@@ -827,8 +827,8 @@
           "description": "Structured diagnostics name the exact build, logical code ID, entry kind, signature, slot and faulting operation. Preserve the first error and bound output; a last-observed event is not labeled as the failing frame."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/stage0/diagnostics/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",
