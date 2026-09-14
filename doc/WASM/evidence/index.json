@@ -1297,27 +1297,6 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Production project ledger metadata enforcement on the pinned actual snapshot and live ledger: unique authority and status, explicit criterion decisions, complete preservation of the 35 accepted baseline result objects, evidence classes, bindings and unresolved work. Thirty-one rejected metadata mutations. Does not authenticate human authorization or prose, revalidate old runtime payloads or imply Stage 0 completion."
-    },
-    {
-      "id": "NATIVE-TARGET-SETF-R1",
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-target-setf-r1/run.json",
-      "sha256": "c8e56659c9d3534ce7c86dd3c1584c9bfcef15358a6dcbbea56f3f37c42cb883",
-      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-target-setf-r1/packet.json",
-      "packet_sha256": "686551edf0fda1f159e4be77a4e46f67644ddcc8b9b3288c89f26483c9b820d7",
-      "timestamp": "2026-09-14T14:28:22.586942+00:00",
-      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
-      "evidence_kind": "DIAGNOSTIC_NATIVE_SOURCE_OBSERVATION",
-      "execution_status": "PASS",
-      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
-      "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Five observed SETF lookups, four U1 named inverse declarations and zero observed callable expander calls in dumplisp. Nine target-context probes compared with unchanged native SETF; five native and 25 checker controls. No census gate credit or general macro-environment qualification.",
-      "external_review": {
-        "reviewer": "Claude Fable 5.1",
-        "provenance": "Forty-first audit at 413b938c: retained verifier passed; all seven native sessions re-executed with every capture, the controls and the summary byte-identical; the four DEFSETF declarations, the SETF macro and the registry lookup confirmed in U1 source; packet, catalog at dc1906c8 with 31 new rows and all 46 source pins at HEAD verified; the S0-LL23-a and S0-LL24-a acceptance at 7f78dfcb confirmed by a gate run on the 37-record envelope and by the live ledger checker; two nonblocking observations (zero callable expanders observed in this file; index placement differs from earlier census diagnostics), 2026-09-14",
-        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
-        "record": "stage0/claude-review.md"
-      }
     }
   ],
   "auxiliary_records": [
@@ -2606,6 +2585,23 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-target-setf-r1/verification.json",
       "sha256": "dc398f4469301eaa86adcf51db5e9938e12218be93f77bbbc1614154f2c77f86",
       "scope": "Source SETF lookup witness: five actual lookups and four named setter joins; nine separate target-context probes/native comparisons. No widening edge removed, no gate credit."
+    },
+    {
+      "id": "NATIVE-TARGET-SETF-R1",
+      "scope": "Five observed SETF lookups, four U1 named inverse declarations and zero observed callable expander calls in dumplisp. Nine target-context probes compared with unchanged native SETF; five native and 25 checker controls. No census gate credit or general macro-environment qualification.",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Forty-first audit at 413b938c: retained verifier passed; all seven native sessions re-executed with every capture, the controls and the summary byte-identical; the four DEFSETF declarations, the SETF macro and the registry lookup confirmed in U1 source; packet, catalog at dc1906c8 with 31 new rows and all 46 source pins at HEAD verified; the S0-LL23-a and S0-LL24-a acceptance at 7f78dfcb confirmed by a gate run on the 37-record envelope and by the live ledger checker; two nonblocking observations (zero callable expanders observed in this file; index placement differs from earlier census diagnostics), 2026-09-14",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md"
+      },
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-target-setf-r1/packet.json",
+      "sha256": "686551edf0fda1f159e4be77a4e46f67644ddcc8b9b3288c89f26483c9b820d7",
+      "execution_record": {
+        "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-target-setf-r1/run.json",
+        "sha256": "c8e56659c9d3534ce7c86dd3c1584c9bfcef15358a6dcbbea56f3f37c42cb883"
+      }
     }
   ]
 }
