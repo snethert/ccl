@@ -660,3 +660,7 @@ analyzer refusals and the failed nested-write control construction are retained
 in one compact packet. Independent review pending; ledger remains 38/10/0.
 Next S0-LL07-a typed conversions, then startup boundary replacements and broader
 source traversal under the alternating plan.
+
+## 2026-09-14 — Claude's forty-third audit of the lexical callback bounds
+
+Claude confirmed the user's acceptance of S0-LL22-b at bb439b2e by a gate run on the 38-record envelope and the live ledger checker, then reviewed 41457604: verifier passed, both native sessions re-executed byte-identically, the DECLAIM and APPLY expander spans confirmed in U1 source, 49 pins and catalog verified. No defect; two nonblocking observations (no native mutant sessions in this slice; the bounds cover two expander sites, not the runtime call population). NATIVE-LEXICAL-CALLBACKS-R1 is marked reviewed. Gate 38 accepted, 10 missing, 0 unreviewed of 48.

@@ -1,6 +1,6 @@
 # Lexical callback bounds — 14 September 2026
 
-Status: executed, awaiting independent review. Packet
+Status: executed; reviewed by Claude's forty-third audit at `41457604` without defect. Packet
 `NATIVE-LEXICAL-CALLBACKS-R1` identifies two previously unbounded computed call
 sites inside source-rebuilt macro expanders. No Stage 0 slot changes disposition.
 

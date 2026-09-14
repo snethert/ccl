@@ -296,7 +296,7 @@
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
       "currency": "ORIGINAL_FAILURE",
-      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged."
+      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged."
     },
     {
       "id": "INTEGRATED-RUNTIME-r10",
@@ -2684,9 +2684,15 @@
       "sha256": "c8c18b753e3d13dfd379d9f53e7a38656ca3a10ab5800d29564f01aa35af0a50",
       "scope": "Two DECLAIM/APPLY computed helper calls joined through three immutable lexical bindings; eight target-front-end probes, 21 checker controls. Two native captures identical. No census gate credit; independent review pending.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Forty-third audit at 41457604: retained verifier passed; both native sessions re-executed with every capture, the controls, the joins record and the summary byte-identical; the DECLAIM and APPLY expander spans confirmed in U1 source; packet, catalog at 5def2e77 with 18 new rows and all 49 source pins at HEAD verified; the S0-LL22-b acceptance at bb439b2e confirmed by a gate run on the 38-record envelope and by the live ledger checker; two nonblocking observations (no native mutant sessions; bounds cover two expander sites, not the runtime population), 2026-09-14",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md"
+      }
     }
   ]
 }
