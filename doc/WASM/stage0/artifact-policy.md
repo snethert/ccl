@@ -1,5 +1,8 @@
 # Production artifact policy — 14 September 2026
 
+Status: implemented; reviewed by Claude's thirty-eighth audit at `a6138639` without
+defect.
+
 The user authorized this enhancement when accepting S0-LL22-a: “accept
 S0-LL22-a, add the production-policy enhancement, and proceed with LL23 and
 LL24”. Claude's thirty-sixth audit identified the gap: the control enforced ten

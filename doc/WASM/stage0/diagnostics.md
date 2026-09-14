@@ -1,7 +1,7 @@
 # Structured Wasm diagnostics — 14 September 2026
 
-Status: executed, awaiting independent review and user acceptance as
-S0-LL23-a/full. The fixture uses actual Node/V8 Wasm traps and retains each
+Status: executed; reviewed by Claude's thirty-ninth audit at `39c297c0` without
+defect; awaiting user acceptance as S0-LL23-a/full. The fixture uses actual Node/V8 Wasm traps and retains each
 binary, interface schema, build manifest and decoded instruction map.
 
 A trap is attributed using the engine's Wasm function index and exact binary

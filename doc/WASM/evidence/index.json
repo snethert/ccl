@@ -1233,10 +1233,17 @@
       "inventory_version": 1,
       "evidence_kind": "HAND-BUILT WASM EXECUTION",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Hand-built scalar Wasm diagnostics on Node/V8: exact binary-offset fault attribution, build/entry/signature/slot identities, first failure and bounded reporting. Not CCL B execution, browser-stack support, GC, threads or a production debugger."
+      "scope": "Hand-built scalar Wasm diagnostics on Node/V8: exact binary-offset fault attribution, build/entry/signature/slot identities, first failure and bounded reporting. Not CCL B execution, browser-stack support, GC, threads or a production debugger.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Thirty-ninth audit at 39c297c0: retained verifier passed; producer re-executed with 143 deterministic files byte-identical and re-verified (omission records differ only by timestamp, command and the since-moved inventory snapshot); the unreachable attribution at offset 117 checked independently against the WABT disassembly at 0x75; HEAD slot inventory shows only unreviewed; packet with 175 files, catalog at 3f86ec4b with 176 new rows and all ten source pins at HEAD verified; two nonblocking observations (V8 stack format and harness-simulated foreign stacks; fixture entry-kind labels), 2026-09-14",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "S0-LL23-a [full] is complete at its stated scope and ready for the user's acceptance decision."
+      }
     },
     {
       "id": "PROJECT-LEDGER-CONTROL-R1",
@@ -1251,10 +1258,17 @@
       "inventory_version": 1,
       "evidence_kind": "CONTROL EXECUTION",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Production ledger and decision metadata: one current authority/status projection, explicit criterion-change records, preservation of 35 accepted records, evidence identity/class and unresolved work. Does not authenticate human authorization, infer truth of prose or revalidate accepted runtime payloads."
+      "scope": "Production ledger and decision metadata: one current authority/status projection, explicit criterion-change records, preservation of 35 accepted records, evidence identity/class and unresolved work. Does not authenticate human authorization, infer truth of prose or revalidate accepted runtime payloads.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Fortieth audit at fdb6f0b5: retained verifier passed; producer re-executed with the pinned snapshot, controls, observed ledger, summary and slot gate byte-identical and re-verified; the production checker run against the live project at HEAD returned PASS with the gate BLOCKED at 35/11/2 and 35 accepted records preserved; HEAD slot inventory shows only unreviewed; packet with 30 files, catalog at 19507863 with 31 new rows and all six source pins at HEAD verified; two nonblocking observations (authorization is recorded, not authenticated; each acceptance now also updates the policy pins), 2026-09-14",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "S0-LL24-a [control] is complete at its stated scope and ready for the user's acceptance decision."
+      }
     }
   ],
   "auxiliary_records": [
@@ -2456,15 +2470,27 @@
       "id": "PRODUCTION-ARTIFACT-POLICY-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-artifact-policy-r1/packet.json",
       "sha256": "79ba76cc175c530018bdb0ad736c648d0f34ee5b607db49c8fce34449495099a",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "User-authorized per-test role requirements for ten pending production entries. 11 complete synthetic cases, 102 rejected cases; existing 35 accepted contracts unchanged. No new execution slot or runtime claim."
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+      "scope": "User-authorized per-test role requirements for ten pending production entries. 11 complete synthetic cases, 102 rejected cases; existing 35 accepted contracts unchanged. No new execution slot or runtime claim.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Thirty-eighth audit at a6138639: policy test replayed and re-executed with identical summary, observations and binding check; contract hashes recomputed at d6f705c4 and a6138639 showing exactly the ten pending tests changed and no accepted slot; the gate run on the 35-record envelope shows all bindings current; the S0-LL22-a acceptance at d6f705c4 confirmed; packet, decision, catalog at 91a05f8b with 19 new rows and three source pins at HEAD verified, 2026-09-14",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md"
+      }
     },
     {
       "id": "PRODUCTION-ARTIFACT-POLICY-DECISION",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-artifact-policy-r1/decision.json",
       "sha256": "adcfda283847909522b673cc45eeec62aef84a20a3ba93a8593c37edf4156664",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "User-authorized per-test role requirements for ten pending production entries. 11 complete synthetic cases, 102 rejected cases; existing 35 accepted contracts unchanged. No new execution slot or runtime claim."
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+      "scope": "User-authorized per-test role requirements for ten pending production entries. 11 complete synthetic cases, 102 rejected cases; existing 35 accepted contracts unchanged. No new execution slot or runtime claim.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Thirty-eighth audit at a6138639: policy test replayed and re-executed with identical summary, observations and binding check; contract hashes recomputed at d6f705c4 and a6138639 showing exactly the ten pending tests changed and no accepted slot; the gate run on the 35-record envelope shows all bindings current; the S0-LL22-a acceptance at d6f705c4 confirmed; packet, decision, catalog at 91a05f8b with 19 new rows and three source pins at HEAD verified, 2026-09-14",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md"
+      }
     },
     {
       "id": "STRUCTURED-DIAGNOSTICS-PACKET",

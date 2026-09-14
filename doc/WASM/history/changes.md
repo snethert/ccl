@@ -561,3 +561,7 @@ of offering a changed current envelope, is retained and corrected. Final live
 ledger validation passes after publication. LL23-a and LL24-a remain unreviewed;
 the final count is 35 accepted, eleven missing and two unreviewed of 48.
 No old runtime payload scan or new project acceptance is claimed.
+
+## 2026-09-14 — Claude's thirty-eighth to fortieth audits
+
+Claude confirmed the user's acceptance of S0-LL22-a at d6f705c4, then reviewed a6138639: the policy test replayed and re-executed identically, contract hashes recomputed across the change showing exactly the ten pending tests moved and no accepted slot, the 35 bindings current, decision and pins verified. No defect. Reviewed 39c297c0: verifier passed, producer re-executed with 143 deterministic files byte-identical, the unreachable attribution checked independently against the WABT disassembly, pins and catalog verified. No defect; two nonblocking observations. Reviewed fdb6f0b5: verifier passed, producer re-executed byte-identically, the production ledger checker run live at HEAD with PASS and the gate BLOCKED at 35/11/2, pins and catalog verified. No defect; two nonblocking observations. The policy packet, STRUCTURED-DIAGNOSTICS-R1 and PROJECT-LEDGER-CONTROL-R1 are marked reviewed; S0-LL23-a and S0-LL24-a are ready for the user's acceptance decision. Gate 35 accepted, 11 missing, 2 unreviewed of 48.

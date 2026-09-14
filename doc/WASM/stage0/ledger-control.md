@@ -1,7 +1,7 @@
 # Project ledger and decision control — 14 September 2026
 
-Status: executed, awaiting independent review and user acceptance as
-S0-LL24-a/control. The production checker is
+Status: executed; reviewed by Claude's fortieth audit at `fdb6f0b5` without
+defect; awaiting user acceptance as S0-LL24-a/control. The production checker is
 [`check-project-ledger.py`](../tools/check-project-ledger.py); the
 [policy file](ledger-policy.json) names the canonical ledger, current status
 projection, separate dated history, accepted baseline and criterion decisions.
