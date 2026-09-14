@@ -459,3 +459,30 @@ one unreviewed of 48. Independent review and project acceptance remain pending.
 Claude's RESTART observation is carried into the plan: when registry
 materialization is scheduled, represent target-supplied wrapper contents as a
 required census node, not as completion implied by a serialized registry key.
+
+
+## 2026-09-14 — witness current target architecture macro dispatch
+
+Codex followed the alternating plan after S0-LL22-a with one census helper
+slice. Four U1 bodies are rebuilt privately: the backend dispatcher and the
+architecture macro/function-table/name lookup chain. Actual front-end records
+show five compiled functions and six lexical edges. The two architecture
+expansions in the restore file join to the current Wasm registry: the pointer
+macro is absent and refused; the batch read calls the existing description
+expander and retains its unimplemented service dependency.
+
+Nine probes exercise replacement, removal, present-NIL, absent architecture,
+nonlocal exit and restoration; all agree with the unchanged native dispatcher.
+Four native mutations and 25 checker controls reject. Six native sessions pass
+their expected oracles, with byte-identical normal/repeat captures and unchanged
+file traversal in every mutant session. No new semantic defect was found in
+this lookup chain. The first formal producer and verifier pass; successful
+preliminary observations and exact source versions are retained compactly.
+
+The [report](../stage0/target-dispatch.md) leaves other computed helpers,
+nonconstant inference, five boundary stops and full macro qualification open.
+Source/FASLs/global helper bindings are unchanged, with no shared-source patch,
+Wasm emission, graph replacement, inventory change or acceptance claim. One
+new diagnostic packet awaits independent review. Ledger unchanged at 34
+accepted, 13 missing and one unreviewed of 48. Verification covers the new
+packet and direct inputs; historical evidence is not rescanned.

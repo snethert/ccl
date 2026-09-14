@@ -2346,6 +2346,13 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-artifact-identity-control-r1/gate-result.json",
       "sha256": "067e941d697094da09ac9176466b22abc91542550a260198cc9a1a1887c8b70d",
       "scope": "New production slot gate plus 34 accepted metadata bindings: 13 missing and one unreviewed of 48. Prior payload verification reused."
+    },
+    {
+      "id": "NATIVE-TARGET-DISPATCH-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-target-dispatch-r1/packet.json",
+      "sha256": "56f07f37704ab17a5da2a5c75a116e5309ce7ba6ae091acd3e945385f4088c09",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Four private U1 architecture lookup bodies, five compiled functions/six lexical edges and two genuine restore-file architecture events. Nine registry transition probes agree with the unchanged native dispatcher. Four native and 25 checker controls reject; six sessions, normal/repeat captures and all file traversals byte-identical. One observed successful computed call joined. No arbitrary static candidate bound, full macro qualification, five-stop closure, Wasm, graph replacement or gate credit."
     }
   ]
 }

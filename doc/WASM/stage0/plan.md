@@ -89,8 +89,14 @@ independent review and project acceptance remain separate from execution.
     role checks through the unchanged production gate: two complete synthetic
     builds pass and 36 defective records reject, including different installed
     binaries sharing a template. Independent review and acceptance are pending.
-    Next return to remaining census helpers, the five boundary contracts and
-    broader source traversal.
+13. The [architecture dispatch slice](target-dispatch.md) now supplies four
+    private U1 lookup bodies and joins both real architecture-macro events to
+    the current target registry. Nine transition probes agree with the unchanged
+    native dispatcher; four native and 25 checker controls reject. No new
+    semantic defect found, no widening edge replaced and no gate credit.
+    Independent review is pending. Next return to a remaining standing control,
+    then to the other census helpers, five boundary contracts and broader source
+    traversal.
 
 The B desk record's actual inventory prerequisites are the reviewed ABI/runtime
 records; S0-ENGINE-a is not a prerequisite of S0-ABI-selection. Engine qualification

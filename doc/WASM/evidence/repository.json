@@ -2,21 +2,21 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "1c7f11bc575c60aed7050170b0ae665a5bbaad85",
+  "commit": "6934929b68a855261ac9373b55c08e5dff165d3c",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "658a54ffdda2f8b2e2e47d7e1b12b3fe1ac2ac7c2f860331a09ee029ecfa5253",
-  "immutable_evidence_files": 161134,
+  "catalog_sha256": "50371d31ef499ad3b8dc8b5d2ded486b0bbc0d01ce6b16bc20328c07be5d79c2",
+  "immutable_evidence_files": 161159,
   "indexed_references_verified": 925,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped S0-LL22-a: first/fresh producers and retained verifier; 2 complete inputs, 36 exact gate refusals, deterministic reproduction, four source pins and 34 accepted metadata bindings. Only 85 new files (357707 bytes); prior catalog rows unchanged. No native build, old-payload rescan or archive audit.",
+  "verification": "Scoped architecture dispatch: six native sessions, nine registry/native-reference probes, four native and 25 checker controls, 42 direct source pins. Only 25 new files (445079 bytes); prior catalog rows unchanged. Successful development observations retained compactly. No archive scan, native rebuild or acceptance change.",
   "remote": null,
   "off_machine_backup": false,
   "scope": "Separate local evidence repository; original failures retained. Thirty-four accepted records. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-14-artifact-identity-control-r1",
-    "files": 85,
-    "bytes": 357707,
-    "prior_commit": "bbf08b15cfc31c33eb165d9cfac6147b5d0e412b"
+    "directory": "2026-09-14-target-dispatch-r1",
+    "files": 25,
+    "bytes": 445079,
+    "prior_commit": "1c7f11bc575c60aed7050170b0ae665a5bbaad85"
   }
 }
