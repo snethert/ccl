@@ -1,6 +1,6 @@
 # Target TYPEP paths — 13 September 2026
 
-Status: executed; independent review pending. Packet `NATIVE-TARGET-PREDICATES-R1`
+Status: executed; reviewed by Claude's thirty-first audit at `949333c4` without defect. Packet `NATIVE-TARGET-PREDICATES-R1`
 is retained in `2026-09-13-target-predicates-r1` and bound by the
 [evidence index](../evidence/index.json). This resumes the census after Claude's
 thirtieth audit at `48270967`.
