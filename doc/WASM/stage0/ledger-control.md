@@ -1,7 +1,7 @@
 # Project ledger and decision control — 14 September 2026
 
 Status: executed; reviewed by Claude's fortieth audit at `fdb6f0b5` without
-defect; awaiting user acceptance as S0-LL24-a/control. The production checker is
+defect; accepted by the user on 14 September 2026 as S0-LL24-a/control. The production checker is
 [`check-project-ledger.py`](../tools/check-project-ledger.py); the
 [policy file](ledger-policy.json) names the canonical ledger, current status
 projection, separate dated history, accepted baseline and criterion decisions.
@@ -80,7 +80,19 @@ and freeze the pre-publication input snapshot; the final run adds required
 execution metadata validation and its omission control. These are disclosed test setup
 changes, not reconstructed successes.
 
-After publication, Stage 0 is **35 accepted, eleven missing and two unreviewed
-required slots out of 48**. LL23-a and LL24-a await independent review; the
-production-role enhancement also awaits its own review. Existing acceptances,
+At initial publication, Stage 0 had **35 accepted, eleven missing and two
+unreviewed required slots out of 48**. Subsequent review and acceptance are
+recorded below. Existing acceptances,
 S0-LL23-b's frame evidence and remaining census work are unchanged.
+
+
+Accepted by the user on 14 September 2026 after Claude's review committed at
+`5dda6403`. The separate [acceptance record](project-acceptance.md) preserves
+this execution and its limitations. Current ledger: 37 accepted, eleven missing,
+zero unreviewed of 48.
+
+The acceptance run also corrects the fortieth audit's policy-update note:
+the unchanged checker passes new acceptances by validating their decisions
+directly while preserving the pinned 35-record baseline. No policy edit is
+needed for this acceptance. Authorized criterion changes still extend the
+policy decision chain. The historical fixture and its input pins remain intact.

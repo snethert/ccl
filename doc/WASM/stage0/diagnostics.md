@@ -1,7 +1,7 @@
 # Structured Wasm diagnostics — 14 September 2026
 
 Status: executed; reviewed by Claude's thirty-ninth audit at `39c297c0` without
-defect; awaiting user acceptance as S0-LL23-a/full. The fixture uses actual Node/V8 Wasm traps and retains each
+defect; accepted by the user on 14 September 2026 as S0-LL23-a/full. The fixture uses actual Node/V8 Wasm traps and retains each
 binary, interface schema, build manifest and decoded instruction map.
 
 A trap is attributed using the engine's Wasm function index and exact binary
@@ -87,3 +87,9 @@ binaries and observations remain in the compact development archive.
 
 This deliverable leaves Stage 0 at **35 accepted, twelve missing and one
 unreviewed required slot out of 48**. LL24 is the next authorized deliverable.
+
+
+Accepted by the user on 14 September 2026 after Claude's review committed at
+`5dda6403`. The separate [acceptance record](project-acceptance.md) preserves
+this execution and its limitations. Current ledger: 37 accepted, eleven missing,
+zero unreviewed of 48.

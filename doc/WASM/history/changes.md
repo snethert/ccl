@@ -565,3 +565,17 @@ No old runtime payload scan or new project acceptance is claimed.
 ## 2026-09-14 — Claude's thirty-eighth to fortieth audits
 
 Claude confirmed the user's acceptance of S0-LL22-a at d6f705c4, then reviewed a6138639: the policy test replayed and re-executed identically, contract hashes recomputed across the change showing exactly the ten pending tests moved and no accepted slot, the 35 bindings current, decision and pins verified. No defect. Reviewed 39c297c0: verifier passed, producer re-executed with 143 deterministic files byte-identical, the unreachable attribution checked independently against the WABT disassembly, pins and catalog verified. No defect; two nonblocking observations. Reviewed fdb6f0b5: verifier passed, producer re-executed byte-identically, the production ledger checker run live at HEAD with PASS and the gate BLOCKED at 35/11/2, pins and catalog verified. No defect; two nonblocking observations. The policy packet, STRUCTURED-DIAGNOSTICS-R1 and PROJECT-LEDGER-CONTROL-R1 are marked reviewed; S0-LL23-a and S0-LL24-a are ready for the user's acceptance decision. Gate 35 accepted, 11 missing, 2 unreviewed of 48.
+
+
+## 2026-09-14 — accept S0-LL23-a and S0-LL24-a
+
+The user told Codex “accept them and proceed” after Claude's thirty-ninth and
+fortieth audits at 5dda6403 and the recommendation naming both records. The
+separate acceptance packet preserves original execution and all 35 previous
+accepted result objects. Both accepted slot gates, fourteen producer controls,
+37 current bindings and the unchanged live ledger checker pass: 37 accepted,
+eleven missing and zero unreviewed of 48. The check demonstrates that new
+acceptance decisions do not require replacing the frozen 35-record policy
+baseline, correcting the audit's nonblocking procedural note. Criterion changes
+still require their authorized chain. No old runtime payload scan; next work
+returns to the census SETF helper's computed expander selection.

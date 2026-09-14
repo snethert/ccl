@@ -176,3 +176,21 @@ and artifacts, and all 34 earlier accepted result objects, are preserved. The
 new accepted slot passes the production gate; 35 current metadata bindings and
 fourteen acceptance-producer controls pass. No runtime rerun or old-payload scan.
 Stage 0 remains BLOCKED: **35 accepted, 13 missing, zero unreviewed of 48**.
+
+
+## Thirty-ninth/fortieth-audit acceptance — LL23-a and LL24-a, 14 September 2026
+
+After Claude's reviews at `5dda6403` and Codex's recommendation naming both
+slots, the user instructed “accept them and proceed”. Both records are accepted
+at their reviewed scope: real Node/V8 diagnostic attribution with fixture entry
+labels, and project-ledger metadata enforcement with recorded authorization.
+This does not qualify B entry protocols, other engines, arbitrary diagnostic
+formats, consent authentication or the remaining Stage 0 work.
+
+The unchanged producer preserves the original execution and artifacts, adding
+only disposition and provenance. All 35 earlier accepted result objects remain
+identical; both accepted slot gates, 37 bindings and fourteen producer controls
+pass. The unchanged live ledger checker passes at 37 accepted, eleven missing
+and zero unreviewed of 48. Its frozen baseline need not move: the checker
+validates the new acceptance decisions directly. No runtime rerun or old-payload
+scan was required. Census helper qualification resumes next.

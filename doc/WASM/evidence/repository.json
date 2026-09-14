@@ -2,21 +2,23 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "195078634bf5ebfbabc1e2a843de4519bad0ab8d",
+  "commit": "817813aad0c573719da262ec033093c2131e49c2",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "6c777f9790d514f9c0b212e6e9b5026bf905da5955d058cf824e2790eafe08d8",
-  "immutable_evidence_files": 161474,
+  "catalog_sha256": "8e526f0c821baba08b69a03dfc7a167b559e7f071e5198e28d194891eb9bff9d",
+  "immutable_evidence_files": 161672,
   "indexed_references_verified": 925,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped S0-LL24-a: replay pinned project metadata and 31 changed-input controls; exact source/input/artifact identities and slot gate; separately check final live ledger. All 35 accepted records and bindings preserved. Only 31 new files (559958 bytes); prior catalog rows unchanged and old runtime payloads reused.",
+  "verification": "Scoped two-slot acceptance: original facts/artifacts preserved, both slot gates PASS, 14 producer controls, 35 earlier objects unchanged, 37 bindings and unchanged live ledger checker PASS. No old runtime-payload scan.",
   "remote": null,
   "off_machine_backup": false,
   "scope": "Separate local evidence repository; original failures retained. Thirty-five accepted records. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-14-ledger-control-r1",
-    "files": 31,
-    "bytes": 559958,
-    "prior_commit": "3f86ec40b6f3a6e733727119442f932bb6d8954f"
+    "directory": "2026-09-14-ll23-ll24-project-acceptance",
+    "files": 198,
+    "bytes": 32317386,
+    "catalog_sha256": "8e526f0c821baba08b69a03dfc7a167b559e7f071e5198e28d194891eb9bff9d",
+    "immutable_evidence_files": 161672,
+    "prior_commit": "195078634bf5ebfbabc1e2a843de4519bad0ab8d"
   }
 }

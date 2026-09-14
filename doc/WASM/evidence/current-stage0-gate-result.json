@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "assessment": "SCOPED_LEDGER_EXECUTION",
+  "assessment": "SCOPED_PROJECT_ACCEPTANCE",
   "date": "2026-09-14",
-  "basis": "New control executes against pinned actual project metadata and blocks only for review. All 35 accepted records and bindings preserved; prior runtime payload verification reused.",
+  "basis": "Both newly accepted slots pass the production gate with direct artifacts. All 35 earlier accepted objects unchanged; all 37 current bindings pass. Prior runtime-payload verification reused.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
@@ -16,41 +16,38 @@
       "missing S0-LL19-a [full]",
       "missing S0-LL21-c [shared-template]",
       "missing S0-LL21-c [unshared-template]",
-      "missing S0-LL22-b [control]",
-      "unreviewed S0-LL23-a [full]",
-      "unreviewed S0-LL24-a [control]"
+      "missing S0-LL22-b [control]"
     ]
   },
-  "counts": {
-    "accepted": 35,
-    "missing": 11,
-    "unreviewed": 2,
-    "required": 48
-  },
+  "prior_result_sha256": "f22f7a999f0d70cd742a938882d40762c5589d0fd907ec53d211083a86b47063",
+  "new_results": [
+    {
+      "id": "S0-LL23-a",
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll23-ll24-project-acceptance/S0-LL23-a/accepted/accepted-results.json",
+      "sha256": "e7b1787694cf113d94f0915a59decff73df2111a3273cda6fae84e6ccf733346"
+    },
+    {
+      "id": "S0-LL24-a",
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll23-ll24-project-acceptance/S0-LL24-a/accepted/accepted-results.json",
+      "sha256": "590f76f4244e9c4ea337197e64140c22a9fd71a342902f34b7b22f41bc162419"
+    }
+  ],
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll23-ll24-accepted-results.json",
+  "combined_results_sha256": "6cb349ba8a490a14a991e2fea0a5f3855c4a6448dea3add4dfee60fb9fde03be",
   "inventory": {
     "locator": "stage0/inventory.json",
     "sha256": "c1b14f33f874371b580835e7b32afb83027eef62a563b2ab1cdf2b627c98d53d"
   },
   "active_results": [
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll22a-accepted-results.json",
-      "sha256": "31d91b17ba62c47b33b7050358c9711706192aadc5da8ca9a24e7a6a90ff0049"
-    },
-    {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-diagnostics-r1/results.json",
-      "sha256": "abceb4d165e4b0d4c395a4d48532abdab0eef4af23220badd4d3a364d0b16993"
-    },
-    {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ledger-control-r1/results.json",
-      "sha256": "931c3fe726d1c66cd016b7ae3c655b76c11ec901244272f9a15b71d935b1ff76"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll23-ll24-accepted-results.json",
+      "sha256": "6cb349ba8a490a14a991e2fea0a5f3855c4a6448dea3add4dfee60fb9fde03be"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll22a-accepted-results.json",
-  "combined_results_sha256": "31d91b17ba62c47b33b7050358c9711706192aadc5da8ca9a24e7a6a90ff0049",
-  "new_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ledger-control-r1/results.json",
-  "new_results_sha256": "931c3fe726d1c66cd016b7ae3c655b76c11ec901244272f9a15b71d935b1ff76",
-  "record_gate": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ledger-control-r1/slot-gate.json",
-  "record_gate_sha256": "de926eac7516f2ad9043be759c919a9f5167b6dd71b4cc8bb63c915fc7408cfe",
-  "binding_check": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ledger-control-r1/binding-check.json",
-  "binding_check_sha256": "2904136d356861b651fad4b9b36d9a6f6256e5f4da40f55befc28eaaf59d39da"
+  "counts": {
+    "accepted": 37,
+    "missing": 11,
+    "unreviewed": 0,
+    "required": 48
+  }
 }
