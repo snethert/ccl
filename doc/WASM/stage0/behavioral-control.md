@@ -1,7 +1,7 @@
 # Behavioral assertion control — 13 September 2026
 
-S0-LL02-b has executed successfully and awaits independent review and project
-acceptance. Packet `STANDING-BEHAVIORAL-CONTROL-R1` is in the
+S0-LL02-b has executed successfully, was reviewed by Claude's thirty-second audit at
+`f35d2bfe` without defect, and awaits project acceptance. Packet `STANDING-BEHAVIORAL-CONTROL-R1` is in the
 [evidence index](../evidence/index.json). It follows Claude's thirty-first audit
 at `08a6d5d2` and the alternating plan.
 

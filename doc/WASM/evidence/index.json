@@ -1034,10 +1034,17 @@
       "inventory_version": 1,
       "evidence_kind": "CONTROL EXECUTION",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "S0-LL02-b/control: five real hand-built Wasm calls pass; five mutations independently fail unchanged ordinary assertions for escaped capture, all six values and normal/exception cleanup. Fixed memory/descriptor bounds; no generated compiler, full CCL layout, GC or bootstrap claim. Awaiting independent review and acceptance."
+      "scope": "S0-LL02-b/control: five real hand-built Wasm calls pass; five mutations independently fail unchanged ordinary assertions for escaped capture, all six values and normal/exception cleanup. Fixed memory/descriptor bounds; no generated compiler, full CCL layout, GC or bootstrap claim. Awaiting independent review and acceptance.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Thirty-second audit at f35d2bfe: retained verifier passed with a fresh replay; producer re-executed with all six WAT sources, binaries and observation records byte-identical and re-verified; both gate composites reproduced from the HEAD inventory (accepted envelope shows S0-LL01-b and S0-LL02-b missing; each pending slot shows only unreviewed); retained mutant failures and single-line WAT diffs inspected; packet, catalog at 8f0127bd with 46 new rows and all six source pins at HEAD verified; two nonblocking observations, 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "S0-LL02-b [control] is complete at its stated scope and ready for the user's acceptance decision."
+      }
     }
   ],
   "auxiliary_records": [
@@ -2122,8 +2129,14 @@
       "id": "NATIVE-TARGET-ALIASES-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-target-aliases-r1/packet.json",
       "sha256": "fd72e9948db3f9b599adc19666f0b8c695cee968509b38fc9fa7633c955e2dd6",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "Ten private source-defined DEFTYPE forms: alias expansion before target membership/canonicalization. Sixteen actual front-end constant probes, five source optimizer expansions/25 native evaluations, two bounded refusals, 52 alias edges and 209 helper rows. Five native/twenty checker controls reject. Normal/repeat captures identical; prior file traversal equivalent only under observer identity renaming. Arbitrary aliases/native objects/nonconstant target lowering and five source stops remain open. No Wasm, full macro qualification, graph replacement or gate credit."
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+      "scope": "Ten private source-defined DEFTYPE forms: alias expansion before target membership/canonicalization. Sixteen actual front-end constant probes, five source optimizer expansions/25 native evaluations, two bounded refusals, 52 alias edges and 209 helper rows. Five native/twenty checker controls reject. Normal/repeat captures identical; prior file traversal equivalent only under observer identity renaming. Arbitrary aliases/native objects/nonconstant target lowering and five source stops remain open. No Wasm, full macro qualification, graph replacement or gate credit.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Thirty-third audit at bc3b9bd1: retained verifier passed; all seven native sessions re-executed with every capture, the controls and the summary byte-identical; the ten constant and three optimizer flips confirmed from the retained prior and optimizer-leak captures; TYPE-EXPAND cause and the PARSE-MACRO-INTERNAL construction confirmed in U1 source at the pinned spans; expansions confirmed free of host FIXNUMP/BIGNUMP; packet, catalog at fb3d811b with 29 new rows and all 46 source pins at HEAD verified; one nonblocking observation (identity-bijection equivalence for the prior traversal), 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md"
+      }
     }
   ]
 }
