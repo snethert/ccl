@@ -1,0 +1,12 @@
+;;; Read as data in CCL-TARGET-ALIASES under the Wasm target reader.
+(deftype target-small () 'fixnum)
+(deftype target-large () 'bignum)
+(deftype small-chain () 'target-small)
+(deftype maybe-small () '(or symbol target-small))
+(deftype outside-small () '(and integer (not target-small)))
+(deftype choose-number (&optional (large nil))
+  (if large 'target-large 'target-small))
+(deftype literal-small () '(member target-small))
+(deftype explicit-wide () '(signed-byte 31))
+(deftype cyclic () 'cyclic)
+(deftype growing (&optional (n 0)) `(growing ,(1+ n)))

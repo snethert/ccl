@@ -64,8 +64,13 @@ independent review and project acceptance remain separate from execution.
 8. [S0-LL02-b](behavioral-control.md) now executes an escaping mutable closure,
    all six values and nested cleanup through normal and exceptional Wasm exits.
    Five positive calls and five semantic mutants pass; review and acceptance are
-   pending. Next witness DEFTYPE expansion before target translation, then resume
-   helper/object qualification, boundary replacements and wider traversal.
+   pending.
+9. The [DEFTYPE order slice](target-aliases.md) expands source-defined aliases
+   before target membership and canonicalization. Sixteen constant probes and
+   five recursive optimizer probes expose and correct inherited wrong answers;
+   five native and twenty checker controls reject. Independent review is pending.
+   Next take another standing control, then resume object/helper qualification,
+   boundary replacements and wider traversal.
 
 The B desk record's actual inventory prerequisites are the reviewed ABI/runtime
 records; S0-ENGINE-a is not a prerequisite of S0-ABI-selection. Engine qualification

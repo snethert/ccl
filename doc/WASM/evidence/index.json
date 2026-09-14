@@ -2117,6 +2117,13 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-behavioral-control-r1/gate-result.json",
       "sha256": "008b5151d0a7c6ea7cbe165ea721a1cdf6aa99f0674538f41878070c4be70717",
       "scope": "Scoped slot gate and current metadata bindings: 31 accepted, 15 missing, two unreviewed of 48. No full accepted-payload rescan."
+    },
+    {
+      "id": "NATIVE-TARGET-ALIASES-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-target-aliases-r1/packet.json",
+      "sha256": "fd72e9948db3f9b599adc19666f0b8c695cee968509b38fc9fa7633c955e2dd6",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "Ten private source-defined DEFTYPE forms: alias expansion before target membership/canonicalization. Sixteen actual front-end constant probes, five source optimizer expansions/25 native evaluations, two bounded refusals, 52 alias edges and 209 helper rows. Five native/twenty checker controls reject. Normal/repeat captures identical; prior file traversal equivalent only under observer identity renaming. Arbitrary aliases/native objects/nonconstant target lowering and five source stops remain open. No Wasm, full macro qualification, graph replacement or gate credit."
     }
   ]
 }
