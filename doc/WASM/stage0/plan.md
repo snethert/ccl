@@ -161,6 +161,15 @@ to ten pending tests without rewriting the 35 accepted contracts. Complete the o
 S0-LL23-a structured diagnostics fixture and S0-LL24-a ledger/decision control
 as separate deliverables. [LL23-a now executes](diagnostics.md): actual trap
 locations, first failure, bounded reporting and real artifact-role omissions
-pass. Independent review remains pending; LL24 is next. S0-LL23-b remains accepted at its original frame scope.
+pass. Independent review remains pending. [LL24 now checks the project ledger](ledger-control.md)
+and rejects thirty-one metadata mutations. The production policy, LL23-a and LL24-a
+are ready for independent review; no new result is project-accepted by this work. S0-LL23-b remains accepted at its original frame scope.
 Independent review and user acceptance of new results remain separate steps.
 Then resume the alternating census and remaining Stage 0 work.
+
+
+The user-authorized LL22-a acceptance, production role enhancement, LL23-a and
+LL24-a execution are complete. The next implementation work returns to census
+helper qualification and the five source boundary contracts, then the remaining
+Stage 0 work under the alternating plan. LL22-b remains a separate missing R6
+control; this ledger fixture does not discharge it.

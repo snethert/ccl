@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "basis": "2026-09-14-ledger-control-r1/project",
+  "scope": "Actual pre-delivery project snapshot with LL24 registration present and its execution record still absent. Frozen before publication to avoid self-referential test inputs.",
+  "files": {
+    "STATUS.md": "2808cb469c55ca6eed882cc388e9dc0215a8b7c780fe190812dae11326e3d1d5",
+    "evidence/current-stage0-gate-result.json": "e4134a08d172e47b0d34b95c5f148f47352e68dec63e6da74919dd4775762bbf",
+    "evidence/index.json": "bdd2c8adbb7dda3f36b4364c78daedfc3ea362806bb960ab1bff98a25e680b1d",
+    "evidence/repository.json": "744ff3c7432017fb32f7b01f40c523ec9b6e4b9d170aa6c2b8f6a68236d301f3",
+    "history/changes.md": "a1d4fe3b1ae3e1a6fc026a54bb5bb2631a643e24411214f80304dfe99d9b8e4d",
+    "stage0/inventory.json": "c1b14f33f874371b580835e7b32afb83027eef62a563b2ab1cdf2b627c98d53d",
+    "stage0/ledger-policy.json": "292b693302b0502fb5d9afc966e3247e72c2caa9e26277f93641c8f89e8e2097"
+  }
+}

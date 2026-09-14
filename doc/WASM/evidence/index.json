@@ -1237,6 +1237,24 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Hand-built scalar Wasm diagnostics on Node/V8: exact binary-offset fault attribution, build/entry/signature/slot identities, first failure and bounded reporting. Not CCL B execution, browser-stack support, GC, threads or a production debugger."
+    },
+    {
+      "id": "PROJECT-LEDGER-CONTROL-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ledger-control-r1/results.json",
+      "sha256": "931c3fe726d1c66cd016b7ae3c655b76c11ec901244272f9a15b71d935b1ff76",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ledger-control-r1/packet.json",
+      "packet_sha256": "31ad6b2610acabf3b28340e2f22a24c5015156f4491fa2e7781a8415284fc908",
+      "timestamp": "2026-09-14T13:56:24.011496+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "c1b14f33f874371b580835e7b32afb83027eef62a563b2ab1cdf2b627c98d53d",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "CONTROL EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Production ledger and decision metadata: one current authority/status projection, explicit criterion-change records, preservation of 35 accepted records, evidence identity/class and unresolved work. Does not authenticate human authorization, infer truth of prose or revalidate accepted runtime payloads."
     }
   ],
   "auxiliary_records": [
@@ -2459,6 +2477,24 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-diagnostics-r1/gate-result.json",
       "sha256": "31d77a219cfec5712f75fd7089c776b8b82d14ad4be6b96be6e28ad9dd1834b6",
       "scope": "13 actual execution cases, 3 preflight refusals, 12 reporter mutants and 10 real production-role omissions. Scalar Node/V8 diagnostic scope, awaiting independent review."
+    },
+    {
+      "id": "PROJECT-LEDGER-CONTROL-PACKET",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ledger-control-r1/packet.json",
+      "sha256": "31ad6b2610acabf3b28340e2f22a24c5015156f4491fa2e7781a8415284fc908",
+      "scope": "One pinned actual project snapshot, 31 metadata refusal controls and final live ledger check. All 35 accepted result objects preserved; no old runtime payload scan. Awaiting independent review."
+    },
+    {
+      "id": "PROJECT-LEDGER-CONTROL-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ledger-control-r1/gate-result.json",
+      "sha256": "f22f7a999f0d70cd742a938882d40762c5589d0fd907ec53d211083a86b47063",
+      "scope": "One pinned actual project snapshot, 31 metadata refusal controls and final live ledger check. All 35 accepted result objects preserved; no old runtime payload scan. Awaiting independent review."
+    },
+    {
+      "id": "PROJECT-LEDGER-LIVE-CHECK",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ledger-control-r1/live-ledger-check.json",
+      "sha256": "da00c3e539ef62d4b6007adf4f31b05f1ca803a966e611852010a1efa8aa959a",
+      "scope": "One pinned actual project snapshot, 31 metadata refusal controls and final live ledger check. All 35 accepted result objects preserved; no old runtime payload scan. Awaiting independent review."
     }
   ]
 }

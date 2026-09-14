@@ -542,3 +542,22 @@ deterministic bytes. No shared compiler/kernel or accepted frame fixture changes
 The [scope report](../stage0/diagnostics.md) leaves browsers, mixed-module stacks
 and a production CCL debugger open. Ledger: 35 accepted, twelve missing, one
 unreviewed of 48. Independent review/acceptance are pending; LL24 is next.
+
+
+## 2026-09-14 — execute S0-LL24-a ledger and decision control
+
+The user authorized LL24 alongside LL23 and the production-role enhancement.
+The new checker validates the canonical current ledger, dated criterion decisions,
+retained accepted scope and current status projection. Test execution, rejection
+controls and the resulting gate assessment are retained in the LL24 packet.
+The earlier 35 accepted records and their original runtime evidence remain the
+preservation baseline; they are not promoted to completion of Stage 0.
+
+
+The LL24 execution preserves all 35 accepted records and rejects thirty-one controls.
+The input is a pinned actual pre-delivery snapshot, so publication cannot change
+its own test. The first test setup failure, which mutated the baseline instead
+of offering a changed current envelope, is retained and corrected. Final live
+ledger validation passes after publication. LL23-a and LL24-a remain unreviewed;
+the final count is 35 accepted, eleven missing and two unreviewed of 48.
+No old runtime payload scan or new project acceptance is claimed.

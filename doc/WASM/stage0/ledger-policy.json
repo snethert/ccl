@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "ledger": "evidence/current-stage0-gate-result.json",
+  "status": "STATUS.md",
+  "history": "history/changes.md",
+  "history_heading": "## 2026-09-14 \u2014 execute S0-LL24-a ledger and decision control",
+  "baseline_accepted": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll22a-accepted-results.json",
+    "sha256": "31d91b17ba62c47b33b7050358c9711706192aadc5da8ca9a24e7a6a90ff0049"
+  },
+  "baseline_accepted_count": 35,
+  "criterion_baseline": {
+    "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-artifact-policy-r1/previous-inventory.json",
+    "sha256": "cf801ca1536e662186bf73d8a2f5c67ced572fb08c1d5fa5e6f93122c444a07a"
+  },
+  "criterion_decisions": [
+    {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-artifact-policy-r1/decision.json",
+      "sha256": "adcfda283847909522b673cc45eeec62aef84a20a3ba93a8593c37edf4156664"
+    }
+  ]
+}

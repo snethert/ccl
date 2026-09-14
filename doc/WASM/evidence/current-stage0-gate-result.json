@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "assessment": "SCOPED_DIAGNOSTIC_EXECUTION",
+  "assessment": "SCOPED_LEDGER_EXECUTION",
   "date": "2026-09-14",
-  "basis": "New real execution slot passes all artifact/role checks and blocks only for review. All 35 accepted bindings unchanged; prior payload verification reused.",
+  "basis": "New control executes against pinned actual project metadata and blocks only for review. All 35 accepted records and bindings preserved; prior runtime payload verification reused.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
@@ -17,19 +17,19 @@
       "missing S0-LL21-c [shared-template]",
       "missing S0-LL21-c [unshared-template]",
       "missing S0-LL22-b [control]",
-      "missing S0-LL24-a [control]",
-      "unreviewed S0-LL23-a [full]"
+      "unreviewed S0-LL23-a [full]",
+      "unreviewed S0-LL24-a [control]"
     ]
   },
   "counts": {
     "accepted": 35,
-    "missing": 12,
-    "unreviewed": 1,
+    "missing": 11,
+    "unreviewed": 2,
     "required": 48
   },
   "inventory": {
     "locator": "stage0/inventory.json",
-    "sha256": "63937f5d7b5072ac303921c41ca9732d0d65589bece0e7804d695427a3d8b038"
+    "sha256": "c1b14f33f874371b580835e7b32afb83027eef62a563b2ab1cdf2b627c98d53d"
   },
   "active_results": [
     {
@@ -39,14 +39,18 @@
     {
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-diagnostics-r1/results.json",
       "sha256": "abceb4d165e4b0d4c395a4d48532abdab0eef4af23220badd4d3a364d0b16993"
+    },
+    {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ledger-control-r1/results.json",
+      "sha256": "931c3fe726d1c66cd016b7ae3c655b76c11ec901244272f9a15b71d935b1ff76"
     }
   ],
   "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll22a-accepted-results.json",
   "combined_results_sha256": "31d91b17ba62c47b33b7050358c9711706192aadc5da8ca9a24e7a6a90ff0049",
-  "new_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-diagnostics-r1/results.json",
-  "new_results_sha256": "abceb4d165e4b0d4c395a4d48532abdab0eef4af23220badd4d3a364d0b16993",
-  "record_gate": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-diagnostics-r1/slot-gate.json",
-  "record_gate_sha256": "705a9db75b739c645fd6c8cf7e224f6b1d25aa953d2297caae49393a86123d2f",
-  "binding_check": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-diagnostics-r1/binding-check.json",
+  "new_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ledger-control-r1/results.json",
+  "new_results_sha256": "931c3fe726d1c66cd016b7ae3c655b76c11ec901244272f9a15b71d935b1ff76",
+  "record_gate": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ledger-control-r1/slot-gate.json",
+  "record_gate_sha256": "de926eac7516f2ad9043be759c919a9f5167b6dd71b4cc8bb63c915fc7408cfe",
+  "binding_check": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ledger-control-r1/binding-check.json",
   "binding_check_sha256": "2904136d356861b651fad4b9b36d9a6f6256e5f4da40f55befc28eaaf59d39da"
 }
