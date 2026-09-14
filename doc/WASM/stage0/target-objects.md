@@ -96,7 +96,9 @@ compact development archive, including the successful process exit whose
 fresh-registry identity observation was wrong. A zero process exit is not
 reported as proof of that attempted case.
 
-Stage 0 remains **33 accepted, 14 missing and one unreviewed required slot**.
-S0-LL01-a is independently reviewed and awaits explicit project acceptance.
+This execution left Stage 0 at 33 accepted, 14 missing and one unreviewed required
+slot. The user subsequently [accepted S0-LL01-a](project-acceptance.md), bringing
+the ledger to **34 accepted, 14 missing and zero unreviewed**. This object witness
+remains a diagnostic input awaiting independent review.
 The next scheduled deliverable is a standing control, then the census returns
 to helper qualification, the five boundary contracts and broader traversal.

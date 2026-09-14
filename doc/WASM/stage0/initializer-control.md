@@ -1,7 +1,8 @@
 # Initializer failure control — 13 September 2026
 
-Status: executed; reviewed by Claude's thirty-fourth audit at `f9cde02b` without
-defect; project acceptance pending.
+Status: accepted by the user on 13 September 2026 after Claude's thirty-fourth
+no-defect audit, committed at `72939647`, of fixture commit `f9cde02b`. The
+[acceptance decision](project-acceptance.md) preserves the stated bounds.
 `STANDING-INITIALIZER-CONTROL-R1` is retained in
 `2026-09-13-initializer-control-r1` through the
 [evidence index](../evidence/index.json). This is S0-LL01-a/control, following the
@@ -49,7 +50,8 @@ not count as successful controls.
 The final producer and fresh replay pass. All three modules and thirteen original
 observation records are byte-identical, together with their WAT, manifest, configs,
 mutated loader sources and publication artifacts. Eight direct source pins and
-the production slot gate pass. The slot gate is blocked only for review/acceptance.
+the production slot gate pass. The original envelope retains its unreviewed
+disposition; the separately accepted envelope now passes the slot gate.
 Preparatory successful runs are retained: the first preceded an explicit case-list
 bound and documentation correction; the second used an injected ENOENT instead of
 the final actual missing-file read. No unexpected execution failure occurred.
@@ -60,7 +62,7 @@ collector, threads, initializer timeout, recovery restart or future production
 Stage 1 loader. LL01-b separately covers required-child outcomes. No shared
 compiler, upstream kernel, production gate or existing fixture changed.
 
-The scoped ledger is **33 accepted, 14 missing and one unreviewed of 48**. The new
-slot awaits review and acceptance; earlier accepted records remain unchanged.
-The alternating plan next returns to census helper/object qualification and
-broader source traversal.
+The acceptance ledger is **34 accepted, 14 missing and zero unreviewed of 48**.
+All 33 earlier accepted result objects remain unchanged. The subsequent
+[native object witness](target-objects.md) completes the next census slice; the
+alternating plan now calls for another standing control.

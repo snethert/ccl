@@ -75,7 +75,7 @@ independent review and project acceptance remain separate from execution.
     first error, blocks dependents and withholds ready publication; a missing
     module refuses before initialization. One complete, eight refused bootstraps
     and four rejected loader mutations pass. Claude's thirty-fourth audit reviewed
-    it without defect; explicit project acceptance remains pending.
+    it without defect; the user explicitly accepted S0-LL01-a on 13 September.
 11. The [native object serialization witness](target-objects.md) joins the actual
     IOBLOCK class cell and registered RESTART wrapper to U1's symbolic FASL paths.
     Five native registry roundtrips and four negative inputs pass; seven data

@@ -1132,6 +1132,37 @@
         "record": "stage0/claude-review.md",
         "acceptance": "S0-LL01-a [control] is complete at its stated scope and ready for the user's acceptance decision."
       }
+    },
+    {
+      "id": "STANDING-INITIALIZER-CONTROL-R1-ACCEPTED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll01a-project-acceptance/S0-LL01-a/accepted/accepted-results.json",
+      "sha256": "e591cd40d2fc48da7b32cc0c3763f843a5297d868463bd37ddad2caf51d25827",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll01a-project-acceptance/packet.json",
+      "packet_sha256": "c484db45b2d1efaa5400b6a38f00d3f9f1c7d85eaad8b3ee65c90c3de22063b0",
+      "timestamp": "2026-09-14T01:26:39.639199+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "1c4d0f043a1743c0011f5781b82d76f02e41c8bf99c4b691947f7bab605e924c",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "CONTROL EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Fixed Stage 0 hand-built Wasm harness: nine initializers in three independent chains. One complete and eight refused bootstraps exercise early/middle/late exceptions, diagnostic continuation, first-failure preservation, real missing-module refusal and withheld ready publication. Four one-line loader mutants reject. No CCL image, generated code, arbitrary manifests, cross-chain dependencies, initializer hang/timeout or production Stage 1 loader qualification.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Thirty-fourth audit at f9cde02b: retained verifier passed with a fresh replay; producer re-executed with all 45 deterministic files byte-identical and re-verified; the slot gate rebuilt from the HEAD inventory shows only unreviewed and the production gate on the 33-record accepted envelope shows all bindings current; retained loader mutants and their one-line diffs inspected; packet, catalog at 6fa9b36c with 70 new rows and all eight source pins at HEAD verified; two nonblocking observations (initializer hang not exercised by either LL01 control; fixed three-chain manifest), 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "S0-LL01-a [control] is complete at its stated scope and ready for the user's acceptance decision."
+      },
+      "note": "User explicitly instructed \"accept ll01-a\" after Claude thirty-fourth audit at 72939647. Original execution preserved; no new runtime execution.",
+      "project_acceptance": {
+        "decision": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll01a-project-acceptance/S0-LL01-a/decision.json",
+        "sha256": "c91fd916b4da5464f3c9886777b45fe3c49c76dfe37374ea347b22084565d027",
+        "timestamp": "2026-09-14T02:15:57.030009+00:00"
+      }
     }
   ],
   "auxiliary_records": [
@@ -2024,9 +2055,9 @@
     },
     {
       "id": "CURRENT-STAGE0-COMBINED",
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-two-controls-accepted-results.json",
-      "sha256": "12bcb56b3e372350f75606fad187e6d43e73d1727851977f9a0a94fbdf24a694",
-      "scope": "Unchanged aggregate of 33 accepted records, including user-accepted LL01-b and LL02-b. Separate raw LL01-a awaits review/acceptance; scoped ledger: 14 missing, one unreviewed of 48."
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-ll01a-accepted-results.json",
+      "sha256": "7e42573af6a01bd355d850bd1a8a83de70eb32787aad4056ea40a37226022e31",
+      "scope": "34 accepted records: prior 33 unchanged plus user-accepted S0-LL01-a. Scoped ledger: 14 missing, zero unreviewed of 48."
     },
     {
       "id": "LL02A-ACCEPTANCE-DECISION",
@@ -2261,6 +2292,24 @@
       "sha256": "424edb30e2737ead3b9e70cbaa80070a57f1a5294f89345dc10614b41774f94a",
       "review_disposition": "NOT_REVIEWED",
       "scope": "Actual IOBLOCK class cell and registered RESTART wrapper from 293 source-routed restore expansions. Unchanged U1 writer/native loader: five registry roundtrips, four negative inputs, seven tiny data FASLs, sixteen checker controls. Independent full-byte decoding, sharing and wrapper-payload erasure; two native captures and all data reproduce. U1 sources, existing FASLs and registry entries unchanged. Target materialization, remaining helpers and five source stops remain open. No Wasm, full macro qualification, graph replacement or gate credit."
+    },
+    {
+      "id": "LL01A-PROJECT-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll01a-project-acceptance/packet.json",
+      "sha256": "c484db45b2d1efaa5400b6a38f00d3f9f1c7d85eaad8b3ee65c90c3de22063b0",
+      "scope": "User accepts LL01-a against Claude thirty-fourth audit at 72939647; 34 accepted, 14 missing, zero unreviewed. Original execution and prior accepted objects preserved."
+    },
+    {
+      "id": "LL01A-ACCEPTANCE-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll01a-project-acceptance/gate-result.json",
+      "sha256": "fc5b1853e847bb6b8b8e32efe5769cc52ab70c0cef2d462dc7a6c6d71b9409a7",
+      "scope": "User accepts LL01-a against Claude thirty-fourth audit at 72939647; 34 accepted, 14 missing, zero unreviewed. Original execution and prior accepted objects preserved."
+    },
+    {
+      "id": "LL01A-ACCEPTANCE-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll01a-project-acceptance/verification.json",
+      "sha256": "207a039446857f01e2d76be9e5189f9cdba2f9c72bb57e80a19f1f43721b5617",
+      "scope": "User accepts LL01-a against Claude thirty-fourth audit at 72939647; 34 accepted, 14 missing, zero unreviewed. Original execution and prior accepted objects preserved."
     }
   ]
 }

@@ -140,3 +140,22 @@ execution/artifact preservation, the fourteen producer controls, preservation of
 all 31 earlier accepted result objects and all 33 current metadata bindings pass.
 Prior payload verification is reused. No fixture is re-executed for this decision.
 Stage 0 is **33 accepted, 15 missing, zero unreviewed of 48**.
+
+## Thirty-fourth-audit acceptance — S0-LL01-a, 13 September 2026
+
+The user told Codex “accept ll01-a” after Claude's no-defect review committed at
+`72939647`. The decision accepts S0-LL01-a/control at its fixed Stage 0 harness
+scope: nine Wasm initializers in three independent chains, one complete and eight
+refused bootstraps, and four rejected loader mutants. Initializer hangs,
+cross-chain dependencies, arbitrary manifests and a production Stage 1 loader
+remain outside this evidence's scope.
+
+The unchanged producer creates the separate `LL01A-PROJECT-ACCEPTANCE` envelope,
+adding only disposition and provenance. Its original execution fields and
+artifacts, and all 33 earlier accepted result objects, are preserved. The new
+accepted slot passes the production gate; 34 current metadata bindings and the
+fourteen acceptance-producer controls pass. Prior runtime-payload verification
+is reused, with no fixture rerun or historical archive scan.
+
+Stage 0 remains BLOCKED for missing work: **34 accepted, 14 missing and zero
+unreviewed required slots out of 48**.

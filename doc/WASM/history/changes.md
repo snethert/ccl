@@ -426,3 +426,13 @@ unchanged. The compact packet retains the original development failures and
 semantic mismatch; no prior evidence is rescanned or accepted envelope rebuilt.
 This witness awaits independent review. Stage 0 remains 33 accepted, 14 missing
 and one unreviewed; S0-LL01-a's reviewed status does not imply project acceptance.
+
+## 2026-09-13 — the user accepts S0-LL01-a
+
+The user told Codex “accept ll01-a” after Claude's thirty-fourth audit at 72939647.
+Codex records the bounded initializer control through the unchanged acceptance
+producer. Original execution facts and artifacts and all 33 earlier accepted
+result objects are preserved. The accepted slot passes the production gate;
+34 metadata bindings and fourteen producer controls pass. Prior runtime-payload
+verification is reused. No fixture is rerun and no new capability is claimed.
+Stage 0 is BLOCKED: 34 accepted, 14 missing and zero unreviewed required slots.
