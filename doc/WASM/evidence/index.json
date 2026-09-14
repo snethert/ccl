@@ -1308,10 +1308,16 @@
       "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
       "evidence_kind": "DIAGNOSTIC_NATIVE_SOURCE_OBSERVATION",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Five observed SETF lookups, four U1 named inverse declarations and zero observed callable expander calls in dumplisp. Nine target-context probes compared with unchanged native SETF; five native and 25 checker controls. No census gate credit or general macro-environment qualification."
+      "scope": "Five observed SETF lookups, four U1 named inverse declarations and zero observed callable expander calls in dumplisp. Nine target-context probes compared with unchanged native SETF; five native and 25 checker controls. No census gate credit or general macro-environment qualification.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Forty-first audit at 413b938c: retained verifier passed; all seven native sessions re-executed with every capture, the controls and the summary byte-identical; the four DEFSETF declarations, the SETF macro and the registry lookup confirmed in U1 source; packet, catalog at dc1906c8 with 31 new rows and all 46 source pins at HEAD verified; the S0-LL23-a and S0-LL24-a acceptance at 7f78dfcb confirmed by a gate run on the 37-record envelope and by the live ledger checker; two nonblocking observations (zero callable expanders observed in this file; index placement differs from earlier census diagnostics), 2026-09-14",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md"
+      }
     }
   ],
   "auxiliary_records": [

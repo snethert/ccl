@@ -1,6 +1,6 @@
 # Source SETF lookup and expander protocol — 14 September 2026
 
-Status: executed; independent review pending. Packet `NATIVE-TARGET-SETF-R1`
+Status: executed; reviewed by Claude's forty-first audit at `413b938c` without defect. Packet `NATIVE-TARGET-SETF-R1`
 is retained as `2026-09-14-target-setf-r1` in the
 [evidence index](../evidence/index.json). This resumes census work after the
 user accepted S0-LL23-a and S0-LL24-a.

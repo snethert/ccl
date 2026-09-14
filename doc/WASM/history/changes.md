@@ -599,3 +599,7 @@ verifier passes; no widening edge is removed, no target setter implementation or
 whole macro environment is qualified. Stage 0 remains 37 accepted, eleven missing
 and zero unreviewed of 48; this diagnostic awaits independent review. The next
 alternating deliverable is S0-LL22-b before further census boundary work.
+
+## 2026-09-14 — Claude's forty-first audit of the SETF lookup witness
+
+Claude confirmed the user's acceptance of S0-LL23-a and S0-LL24-a at 7f78dfcb by a gate run on the 37-record envelope and the live ledger checker, accepting Codex's correction that the frozen baseline need not move for acceptances. Claude then reviewed 413b938c: verifier passed, all seven native sessions re-executed byte-identically, the four DEFSETF declarations, SETF macro and registry lookup confirmed in U1 source, 46 pins and catalog verified. No defect; two nonblocking observations (zero callable expanders observed in the restore file; the packet's index placement differs from earlier census diagnostics). NATIVE-TARGET-SETF-R1 is marked reviewed. Gate 37 accepted, 11 missing, 0 unreviewed of 48.
