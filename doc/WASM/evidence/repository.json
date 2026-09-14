@@ -2,23 +2,23 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "817813aad0c573719da262ec033093c2131e49c2",
+  "commit": "dc1906c105e4d0a1d9b1c521b0beb8219c4b302d",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "8e526f0c821baba08b69a03dfc7a167b559e7f071e5198e28d194891eb9bff9d",
-  "immutable_evidence_files": 161672,
+  "catalog_sha256": "28c8965d522f54aa146e7afb0a3ce029d9f6234da4e9698ffe5143ba9cd4df2e",
+  "immutable_evidence_files": 161703,
   "indexed_references_verified": 925,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped two-slot acceptance: original facts/artifacts preserved, both slot gates PASS, 14 producer controls, 35 earlier objects unchanged, 37 bindings and unchanged live ledger checker PASS. No old runtime-payload scan.",
+  "verification": "Scoped SETF diagnostic: seven native sessions, normal/repeat byte identity, five native and 25 checker refusals, retained verifier and direct source/input bindings. Disposable source/FASLs unchanged. 31 new files (835063 bytes); previous catalog rows unchanged, no old runtime rerun.",
   "remote": null,
   "off_machine_backup": false,
   "scope": "Separate local evidence repository; original failures retained. Thirty-five accepted records. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-14-ll23-ll24-project-acceptance",
-    "files": 198,
-    "bytes": 32317386,
-    "catalog_sha256": "8e526f0c821baba08b69a03dfc7a167b559e7f071e5198e28d194891eb9bff9d",
-    "immutable_evidence_files": 161672,
-    "prior_commit": "195078634bf5ebfbabc1e2a843de4519bad0ab8d"
+    "directory": "2026-09-14-target-setf-r1",
+    "files": 31,
+    "bytes": 835063,
+    "catalog_sha256": "28c8965d522f54aa146e7afb0a3ce029d9f6234da4e9698ffe5143ba9cd4df2e",
+    "immutable_evidence_files": 161703,
+    "prior_commit": "817813aad0c573719da262ec033093c2131e49c2"
   }
 }

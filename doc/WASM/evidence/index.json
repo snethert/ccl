@@ -1297,6 +1297,21 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Production project ledger metadata enforcement on the pinned actual snapshot and live ledger: unique authority and status, explicit criterion decisions, complete preservation of the 35 accepted baseline result objects, evidence classes, bindings and unresolved work. Thirty-one rejected metadata mutations. Does not authenticate human authorization or prose, revalidate old runtime payloads or imply Stage 0 completion."
+    },
+    {
+      "id": "NATIVE-TARGET-SETF-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-target-setf-r1/run.json",
+      "sha256": "c8e56659c9d3534ce7c86dd3c1584c9bfcef15358a6dcbbea56f3f37c42cb883",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-target-setf-r1/packet.json",
+      "packet_sha256": "686551edf0fda1f159e4be77a4e46f67644ddcc8b9b3288c89f26483c9b820d7",
+      "timestamp": "2026-09-14T14:28:22.586942+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "DIAGNOSTIC_NATIVE_SOURCE_OBSERVATION",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Five observed SETF lookups, four U1 named inverse declarations and zero observed callable expander calls in dumplisp. Nine target-context probes compared with unchanged native SETF; five native and 25 checker controls. No census gate credit or general macro-environment qualification."
     }
   ],
   "auxiliary_records": [
@@ -2573,6 +2588,18 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll23-ll24-project-acceptance/live-ledger-check.json",
       "sha256": "e82ec10c7f68c6264168c9dfd7ec792df0f81e3845be57d6291e54e7ad551e70",
       "scope": "Explicit user acceptance after Claude audits 39/40 at 5dda6403; 37 accepted, 11 missing, zero unreviewed. Prior 35 result objects preserved."
+    },
+    {
+      "id": "NATIVE-TARGET-SETF-SUMMARY",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-target-setf-r1/summary.json",
+      "sha256": "0353110f54e5729f45d3633cc3af7fce2cf85ca2e92f420d58fab16d30621064",
+      "scope": "Source SETF lookup witness: five actual lookups and four named setter joins; nine separate target-context probes/native comparisons. No widening edge removed, no gate credit."
+    },
+    {
+      "id": "NATIVE-TARGET-SETF-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-target-setf-r1/verification.json",
+      "sha256": "dc398f4469301eaa86adcf51db5e9938e12218be93f77bbbc1614154f2c77f86",
+      "scope": "Source SETF lookup witness: five actual lookups and four named setter joins; nine separate target-context probes/native comparisons. No widening edge removed, no gate credit."
     }
   ]
 }

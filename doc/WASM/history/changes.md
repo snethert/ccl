@@ -579,3 +579,23 @@ acceptance decisions do not require replacing the frozen 35-record policy
 baseline, correcting the audit's nonblocking procedural note. Criterion changes
 still require their authorized chain. No old runtime payload scan; next work
 returns to the census SETF helper's computed expander selection.
+
+
+## 2026-09-14 — witness SETF registry selection and expander values
+
+After accepting LL23-a and LL24-a at the user's direction, Codex resumed census
+helper qualification. A private source-derived SETF macro and lexical
+%SETF-METHOD body record five genuine restore-file lookups. Four name setters
+matching U1 DEFSETF declarations; the remaining stream accessor expands through
+its source macro. No callable expander is invoked in the file. Nine separate
+probes run under target state and match unchanged native SETF, covering current
+registry selection, local function precedence, five expander values, evaluation
+order, nonlocal exit and recovery. Five native mutants and 25 checker controls
+reject. Seven formal native sessions reproduce with source/FASLs unchanged.
+
+Original exploratory load and JSON-null failures, the first successful formal
+run, and the final target-context run are retained in one compact packet. The
+verifier passes; no widening edge is removed, no target setter implementation or
+whole macro environment is qualified. Stage 0 remains 37 accepted, eleven missing
+and zero unreviewed of 48; this diagnostic awaits independent review. The next
+alternating deliverable is S0-LL22-b before further census boundary work.

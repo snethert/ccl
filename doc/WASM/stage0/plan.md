@@ -96,7 +96,7 @@ independent review and project acceptance remain separate from execution.
     the current target registry. Nine transition probes agree with the unchanged
     native dispatcher; four native and 25 checker controls reject. No new
     semantic defect found, no widening edge replaced and no gate credit.
-    Independent review is pending. Next return to a remaining standing control,
+    Claude's thirty-seventh audit reviewed it without defect. Next return to a remaining standing control,
     then to the other census helpers, five boundary contracts and broader source
     traversal.
 
@@ -165,3 +165,12 @@ computed calls in the image-restore traversal, then the five source-boundary
 contracts and broader traversal. Continue the alternating remaining Stage 0
 work. LL22-b remains a separate missing R6 control. Existing fixtures do not
 discharge full census closure or authorize functional shared compiler changes.
+
+
+The [SETF lookup witness](target-setf.md) now joins all five observed lookups to
+their branches and four named setters to U1 declarations. No callable expander
+runs in the restore file. Nine separate target-context probes agree with native
+SETF; five native and 25 checker controls reject. Seven captured definitions and
+five source-boundary stops remain. Independent review is pending; no census gate
+credit. Next take S0-LL22-b, the remaining R6 standing control, then return to
+census helpers and the five boundary replacements under the alternating plan.
