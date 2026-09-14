@@ -296,7 +296,7 @@
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
       "currency": "ORIGINAL_FAILURE",
-      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged."
+      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged."
     },
     {
       "id": "INTEGRATED-RUNTIME-r10",
@@ -1361,6 +1361,20 @@
         "record": "stage0/claude-review.md",
         "acceptance": "S0-LL07-a [full] is complete at its stated scope and ready for the user's acceptance decision."
       }
+    },
+    {
+      "id": "S0-LL07-a-PROJECT-ACCEPTED-20260914",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll07a-accepted-results.json",
+      "sha256": "b58188aa0f6e87e56ea1e71823928af6c802d13c57b3d453a45d24a2e87f6f76",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "63b4fa4cf6f14b901e782c06bc621aa24062507e1e58cb20381f5ed645df7a3a",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Hand-built wasm32 conversions on macOS Node/V8, one mutator, actual memory grown to 2 GiB plus one page; checked scalar fixnums, pointers, logical IDs and typed table slots. No production allocator, GC, C linker, B compiler output, browser or full D1 object-layout claim."
     }
   ],
   "auxiliary_records": [
@@ -2253,9 +2267,9 @@
     },
     {
       "id": "CURRENT-STAGE0-COMBINED",
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll22b-accepted-results.json",
-      "sha256": "d906263872436c9949ab98a22ecb9d9df61f0949a9898ad5405b8a15d7b61447",
-      "scope": "38 explicitly accepted records at reviewed scope."
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll07a-accepted-results.json",
+      "sha256": "ec6b952f735d329a5059c215a4be9756193b6bfdd7fc9f86523eaa588449e45b",
+      "scope": "39 explicitly accepted records at reviewed scope."
     },
     {
       "id": "LL02A-ACCEPTANCE-DECISION",
@@ -2730,6 +2744,18 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-conversions-r1/gate-result.json",
       "sha256": "7f96bf279ca8b4901f45c9966557a9109b6440eef0456a4bb53e84d29af44546",
       "scope": "272 scalar conversion cases, 19 rejected conversion mutants and 10 production-role omissions. Independent review and project acceptance pending."
+    },
+    {
+      "id": "LL07-A-ACCEPTANCE-PACKET",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll07a-project-acceptance/packet.json",
+      "sha256": "7c347e6fcca4b6c5d6f58d7768219f68f06258047ee9e07539e0477b558d2cb1",
+      "scope": "User-authorized acceptance after Claude audit 44; existing execution reused."
+    },
+    {
+      "id": "LL07-A-ACCEPTANCE-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll07a-project-acceptance/gate-result.json",
+      "sha256": "b56daf1d3e2c03e95e4947c27d706d321d8d4a74b7e4c132107bfb60a056f8bb",
+      "scope": "User-authorized acceptance after Claude audit 44; existing execution reused."
     }
   ]
 }

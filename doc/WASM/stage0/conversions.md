@@ -1,7 +1,7 @@
 # Typed conversions — 14 September 2026
 
-Status: S0-LL07-a/full executed; reviewed by Claude's forty-fourth audit at
-`1c1022a3` without defect; awaiting project acceptance. The [fixture](../../../tests/wasm/stage0/conversions/README.md) has
+Status: S0-LL07-a/full accepted by the user after Claude's forty-fourth audit
+of `1c1022a3`, recorded at `b7f9ce52`, without defect. The [fixture](../../../tests/wasm/stage0/conversions/README.md) has
 two hand-built Wasm variants, each executing 136 cases: 83 successful operations
 and 53 expected refusals. All nineteen conversion mutants and ten omissions of
 required artifact roles reject. The retained verifier reproduces 214
@@ -81,7 +81,7 @@ No conversion defect was fixed between those attempts.
 
 The slot result has only its unreviewed reason. Registration changes only
 LL07-a's runner and operational status; all 38 accepted records keep their
-bindings. The composed ledger is **38 accepted, nine missing and one unreviewed
+bindings. At execution publication, the composed ledger was **38 accepted, nine missing and one unreviewed
 out of 48**, still BLOCKED. It reuses the accepted aggregate and verifies this
 new result, without rescanning historical runtime payloads.
 
@@ -93,3 +93,13 @@ objects, function objects, TCR layouts, header-count allocation limits and the
 full cross-dump/GC schema remain outside this slot. Stage 1 repeats conversions
 through generated code. The next scheduled deliverable returns to the startup
 boundary replacements and broader source traversal.
+
+## Project acceptance
+
+The user instructed “accept S0-LL07-a, then proceed” after Claude's forty-fourth
+audit. The unchanged producer records acceptance at this hand-built scope,
+preserving all original execution fields and resolved artifact locations. All
+38 earlier accepted result objects remain identical in the 39-record aggregate.
+The slot gate passes; Stage 0 remains BLOCKED with nine missing slots and zero
+unreviewed. The decision and provenance are retained in
+`2026-09-14-ll07a-project-acceptance` in the evidence repository.

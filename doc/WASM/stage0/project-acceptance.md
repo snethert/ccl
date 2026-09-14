@@ -213,3 +213,14 @@ The new slot's production gate retains only G0's missing-record reason when
 assessed alone; the existing aggregate supplies that accepted prerequisite.
 The unchanged live ledger checker confirms **38 accepted, ten missing, zero
 unreviewed of 48**. No criterion, inventory or frozen ledger-policy change.
+
+## 14 September 2026 — S0-LL07-a typed conversions
+
+The user's instruction “accept S0-LL07-a, then proceed” authorizes acceptance
+after Claude's forty-fourth audit at b7f9ce52. The accepted scope is the
+[hand-built conversion fixture](conversions.md), including actual memory above
+2 GiB, finite checked registries and the stated scalar/engine limits. The
+unchanged producer preserves the original execution and all 38 earlier accepted
+records. The separate decision and envelope retain the review and authorization;
+original artifact bytes are referenced without duplication. The ledger now has
+39 accepted, nine missing and zero unreviewed. Census work proceeds next.
