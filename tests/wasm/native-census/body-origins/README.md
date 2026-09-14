@@ -49,13 +49,15 @@ The producer snapshots its executed source before running. Retention contains
 one finalized packet, references unchanged inputs, and preserves the exploratory
 scripts and results without repeating source trees or prior evidence packs.
 
-`swink-disposition.json` is a separate, source-backed integration worklist. It
-applies the current native-service exclusion to Swink's TCP transport and keeps
-the required unsupported-condition implementation and test open. Its six U1
-source identities and literal anchors record the inspection; it is not consumed
-as an executable classification rule or applied to the census graph. In
-particular, seeing `SWINK::READ-SEXP` installed does not prove its body is a socket
-operation or justify dropping its CLOS/stream dependencies.
+`swink-disposition.json` is a separate, source-backed integration worklist.
+Revision 2 records the user's browser scope clarification: omit the entire
+Swink module and its native remote-lisp clients, including resident and later
+bindings. There is no Swink implementation or replacement task. Check browser
+startup dependencies and, only if a supported entry can request an excluded
+module, the shared loader's unsupported-module path. The six source identities
+remain unchanged. The retained diagnostic packet contains revision 1; neither
+revision is consumed as an executable rule or applied to the census graph.
+Shared CLOS, stream and thread dependencies retain their own obligations.
 
 All 5,007 source/IR body obligations remain open, including the 4,373 prototypes
 with witnessed native payloads. No new callee bound, unsupported runtime path,

@@ -260,10 +260,12 @@ Use the retained flat graphs and per-call worklists for the remaining work:
    justified profile dispositions to native-only surfaces. The 61 incomplete
    target units include native-only code; failure counts are not added criteria.
    The [Swink transport worklist](../../../tests/wasm/native-census/body-origins/swink-disposition.json)
-   records the current native TCP exclusion. Integrate its explicit service
-   edges and tested unsupported-condition path, preserving native load evidence
-   and any required initializer or shared Lisp dependency. It does not add a
-   replacement TCP debugger or exclude Wasm Worker/thread support.
+   records the user's browser module exclusion. Omit Swink and its native
+   remote-lisp clients, account for all resident and later module bindings, and
+   check that required browser startup does not depend on them. Preserve the
+   native evidence and genuinely shared Lisp dependencies. Only a reachable
+   request for an excluded module needs the shared loader's tested refusal;
+   there is no Swink implementation, replacement or host-service task.
 3. Bound parameters, registries and other computed values. The original rich
    build now has 200 local bounds and 1,562 computed calls still open; the
    independent file sessions separately have 206 bounds and 1,517 open sites.

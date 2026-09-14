@@ -44,21 +44,22 @@ transport. U1 source confirms the passive socket in `SWINK:START-SERVER`, the
 client socket in `CCL::CONNECT-TO-SWINK`, the lazy SWINK provider and both system
 registrations. The Cocoa remote client delegates to that same connection path.
 
-The [machine-readable disposition worklist](../../../tests/wasm/native-census/body-origins/swink-disposition.json)
-records **unsupported native TCP transport** for the current Wasm profiles.
-It records six unchanged U1 source files and literal anchors. There is no
-replacement Swink server or new host-service requirement in this work item.
-Wasm Workers/Lisp threads and mailbox-based debugger services retain their
-separate contracts.
+The original packet's disposition worklist records unsupported native TCP
+transport. Following the user's clarification on 14 September, the
+[current worklist, revision 2](../../../tests/wasm/native-census/body-origins/swink-disposition.json)
+states the browser scope directly: **omit Swink and its native remote-lisp
+clients from the browser port**. There is no Swink implementation, replacement
+server, client, socket stub or host-service deliverable. The historical packet
+and its six U1 source identities remain unchanged.
 
-Integration must preserve the native loading and binding witnesses, introduce
-explicit module/service edges, and supply a tested Lisp condition before a
-reachable unsupported request acquires a socket or publishes a listener.
-Dynamic REQUIRE and client references still need bounds. The lone
-`SWINK::READ-SEXP` prototype is not classified as a socket operation merely
-because it belongs to this module. Shared stream, CLOS and thread dependencies,
-and any required bootstrap initializer, retain their own obligations under the
-[census contract](../contracts/census.md).
+The exclusion covers all module bindings, including the 25 initially resident
+unannotated prototypes identified by Claude's fifty-first audit and the later
+`READ-SEXP` installation. Keep their native witnesses and check that the
+required browser startup closure has no dependency on the omitted modules.
+If a supported browser entry can request an excluded module, the shared module
+loader must report that through its tested unsupported-module path; this does
+not require Swink code. Shared stream, CLOS, thread and mailbox-debugger
+dependencies retain their own obligations under the [census contract](../contracts/census.md).
 
 No graph edge or profile disposition has been applied by this diagnostic.
 The census still needs complete body traversal and call bounds; the ledger

@@ -978,3 +978,19 @@ priority; the ledger stays 40 accepted, eight missing and zero unreviewed of 48.
 ## 2026-09-14 — Claude's fifty-first audit of the remaining body origins
 
 Claude confirmed 45f21612 as the user's LL13-b acceptance (39 prior result objects identical, gate and ledger at 40/8/0), then reviewed 6aaedc7e: replay re-scanned all 4,006,405 events with five outputs byte-identical and 18 controls; the 634-row partition, the installer-annotated and ASDF groups and the Swink row tallied independently; all eleven Swink anchors checked against the six pinned U1 sources; packet, six pins, five inputs and sixteen catalog rows verified. No defect; one nonblocking observation (25 initially resident prototypes are called through SWINK symbols, so the module boundary is wider than one function). NATIVE-BODY-ORIGINS-R1 is marked reviewed with no gate credit. Gate 40 accepted, 8 missing, 0 unreviewed of 48.
+## 2026-09-14 — clarify the browser Swink exclusion
+
+The user clarified: “You know we won't use swink in the browser, right?”
+Codex updated the current disposition worklist and plan to omit Swink and its
+native remote-lisp clients from the browser port. No Swink implementation,
+replacement server/client, socket stub or host-service task is planned.
+The scope covers all resident and later module bindings, including the 25
+resident prototypes noted in Claude's fifty-first audit.
+
+The remaining census work is to account for native evidence and check required
+browser startup dependencies. A supported entry that can request an excluded
+module uses the shared module loader's tested refusal; it does not justify a
+Swink-specific implementation. Historical packets and native observations are
+unchanged. This is a scope clarification with no graph, criterion or acceptance
+change and no new evidence packet. The ledger remains 40 accepted, eight missing
+and zero unreviewed of 48.

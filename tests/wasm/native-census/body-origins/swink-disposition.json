@@ -1,23 +1,13 @@
 {
-  "version": 1,
+  "version": 2,
   "id": "SWINK-NATIVE-TCP-DISPOSITION",
-  "status": "INTEGRATION_WORKLIST_NOT_APPLIED",
+  "status": "BROWSER_MODULE_EXCLUSION_NOT_APPLIED_TO_GRAPH",
   "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
-  "profile": "Current Wasm profiles; native TCP/POSIX remote-debugger transport excluded",
-  "rationale": "User-supplied Claude research identifies the native Swink server and remote-lisp client. Source inspection confirms listener/client socket operations and lazy module registration. Apply the existing native-service exclusion at this transport boundary.",
+  "profile": "Browser Wasm profiles: Swink and its native remote-lisp clients are omitted modules",
+  "rationale": "The user clarified that Swink will not be used in the browser. Account for its native-baseline presence and exclude the complete module/client surface from browser packaging. This creates no Swink port, replacement server or host-service deliverable.",
   "requested_disposition": "UNSUPPORTED",
-  "implementation_status": "NOT_IMPLEMENTED",
-  "tested_condition_status": "NOT_RUN",
-  "observed_binding": {
-    "namespace": "identity:build",
-    "symbol_id": 16753,
-    "code_id": 15717373,
-    "name": "SWINK::READ-SEXP",
-    "first_installation": 2889318,
-    "parent": 2889316,
-    "parent_kind": "load-effect-call",
-    "loading_source": "ccl:lib;swink.lisp.newest"
-  },
+  "implementation_status": "NO_SWINK_IMPLEMENTATION_PLANNED",
+  "tested_condition_status": "CONDITIONAL_SHARED_LOADER_OBLIGATION_ONLY",
   "sources": [
     {
       "path": "lib/swink.lisp",
@@ -112,15 +102,34 @@
     }
   ],
   "required_integration": [
-    "Keep native compilation, loading and binding witnesses in the census.",
-    "Add explicit module/service and dependency edges for the excluded Swink TCP server/client.",
-    "Implement and test a declared unsupported-operation condition for any reachable target request before socket acquisition or listener publication.",
-    "Bound dynamic REQUIRE and client references; preserve any required initializer until its supported replacement or profile guard is witnessed.",
-    "Keep shared Lisp sequence, stream, CLOS and thread dependencies under their own supported-profile obligations."
+    "Keep all native compilation, loading and binding witnesses in the native census.",
+    "Record the browser module exclusion for SWINK, remote-lisp and the Cocoa remote client; include all resident and later-loaded module bindings.",
+    "Check that the required browser startup closure does not rely on an excluded module; preserve any genuinely shared Lisp dependency under its own supported contract.",
+    "If a supported browser entry can request an excluded module, use and test the shared module loader unsupported-module condition. Do not create a Swink-specific runtime, socket stub, server or client.",
+    "Do not add a TCP debugger, Swink compatibility layer or new host-service requirement to the plan."
   ],
   "limitations": [
-    "This record does not prove READ-SEXP is itself a socket operation or classify its body as complete.",
-    "No server ran, no host service or Swink replacement is implemented, no graph edge changes, and no census credit is claimed.",
-    "Wasm Worker/thread support and mailbox-based debugger services are separate from this native TCP transport."
-  ]
+    "This is a browser packaging and dependency-scope decision, not a native baseline change or applied graph disposition.",
+    "All module bindings are covered by the scope decision; package membership alone does not prove a function body is a socket operation.",
+    "The browser startup dependency check remains open. Exclusion alone gives no census credit.",
+    "General Lisp threads, streams, CLOS and mailbox-based debugger services retain their own contracts."
+  ],
+  "scope_clarification": {
+    "date": "2026-09-14",
+    "user_words": "You know we won't use swink in the browser, right?",
+    "supersedes_revision": "6aaedc7e",
+    "criterion_change": false,
+    "gate_credit": false
+  },
+  "example_observed_binding": {
+    "namespace": "identity:build",
+    "symbol_id": 16753,
+    "code_id": 15717373,
+    "name": "SWINK::READ-SEXP",
+    "first_installation": 2889318,
+    "parent": 2889316,
+    "parent_kind": "load-effect-call",
+    "loading_source": "ccl:lib;swink.lisp.newest"
+  },
+  "binding_coverage": "The exclusion applies to the whole module and all resident/later binding versions, including the 25 resident unannotated prototypes identified in Claude audit 51. The recorded READ-SEXP installation is an example, not the module boundary."
 }
