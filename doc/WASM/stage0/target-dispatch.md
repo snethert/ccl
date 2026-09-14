@@ -1,6 +1,6 @@
 # Target architecture macro dispatch — 14 September 2026
 
-Status: executed, awaiting independent review. Packet `NATIVE-TARGET-DISPATCH-R1`
+Status: executed; reviewed by Claude's thirty-seventh audit at `4feaef69` without defect. Packet `NATIVE-TARGET-DISPATCH-R1`
 is retained as `2026-09-14-target-dispatch-r1` through the
 [evidence index](../evidence/index.json). This census slice follows the
 [S0-LL22-a standing control](artifact-identity-control.md).

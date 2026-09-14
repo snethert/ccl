@@ -486,3 +486,9 @@ Wasm emission, graph replacement, inventory change or acceptance claim. One
 new diagnostic packet awaits independent review. Ledger unchanged at 34
 accepted, 13 missing and one unreviewed of 48. Verification covers the new
 packet and direct inputs; historical evidence is not rescanned.
+
+## 2026-09-14 — Claude's thirty-sixth and thirty-seventh audits
+
+Claude reviewed 8670212e: verifier passed, producer re-executed with all 68 deterministic files byte-identical and re-verified, gate composites reproduced from the HEAD inventory, observations tallied against the cases file, four pins and catalog verified. No defect; one observation for the acceptance decision: the gate's role policy is inventory-driven and the production inventory requires four roles where the control exercises ten, so the list will need widening when Stage 1 produces real ABI, template and binary artifacts. STANDING-ARTIFACT-IDENTITY-CONTROL-R1 is marked reviewed and S0-LL22-a is ready for the user's acceptance decision.
+
+Claude reviewed 4feaef69: verifier passed, all six native sessions re-executed byte-identically, the four lookup-chain bodies confirmed in U1 source, 42 pins and catalog verified. No defect; one nonblocking observation (no static candidate bound beyond the traversed operators). NATIVE-TARGET-DISPATCH-R1 is marked reviewed. Gate 34 accepted, 13 missing, 1 unreviewed of 48.

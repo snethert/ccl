@@ -1,6 +1,8 @@
 # Artifact identity control — 14 September 2026
 
-Status: executed; independent review and project acceptance pending.
+Status: executed; reviewed by Claude's thirty-sixth audit at `8670212e` without
+defect; project acceptance pending. The audit notes that the production inventory's
+required-role list is narrower than the ten roles this control exercises.
 `STANDING-ARTIFACT-IDENTITY-CONTROL-R1` is retained in
 `2026-09-14-artifact-identity-control-r1` through the
 [evidence index](../evidence/index.json). This is S0-LL22-a/control, the standing

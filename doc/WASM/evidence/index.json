@@ -1177,10 +1177,17 @@
       "inventory_version": 1,
       "evidence_kind": "CONTROL EXECUTION",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "S0-LL22-a/control: unchanged production gate with ten synthetic artifact roles. Two complete inputs pass; 36 mixed/stale-file, missing-file/role, revision/contract/snapshot and review cases refuse with exact diagnostics. Distinct installed bytes share one template; each needs its own digest. No producer authentication, semantic build consistency, runtime execution or R6 normalization claim. Awaiting independent review and acceptance."
+      "scope": "S0-LL22-a/control: unchanged production gate with ten synthetic artifact roles. Two complete inputs pass; 36 mixed/stale-file, missing-file/role, revision/contract/snapshot and review cases refuse with exact diagnostics. Distinct installed bytes share one template; each needs its own digest. No producer authentication, semantic build consistency, runtime execution or R6 normalization claim. Awaiting independent review and acceptance.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Thirty-sixth audit at 8670212e: retained verifier passed; producer re-executed with all 68 deterministic files byte-identical and re-verified; the production gate on the accepted envelope against the HEAD inventory shows S0-LL22-a missing and a HEAD slot inventory shows only unreviewed; observations tallied against the cases file; packet, catalog at 1c7f11b6 with 85 new rows and all four source pins at HEAD verified; one observation for the acceptance decision (the production inventory requires four artifact roles, the control exercises ten), 2026-09-14",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "S0-LL22-a [control] is complete at its stated scope and ready for the user's acceptance decision; the production required-role list is narrower than the control and will need widening when Stage 1 produces real ABI, template and binary artifacts."
+      }
     }
   ],
   "auxiliary_records": [
@@ -2351,8 +2358,14 @@
       "id": "NATIVE-TARGET-DISPATCH-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-target-dispatch-r1/packet.json",
       "sha256": "56f07f37704ab17a5da2a5c75a116e5309ce7ba6ae091acd3e945385f4088c09",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "Four private U1 architecture lookup bodies, five compiled functions/six lexical edges and two genuine restore-file architecture events. Nine registry transition probes agree with the unchanged native dispatcher. Four native and 25 checker controls reject; six sessions, normal/repeat captures and all file traversals byte-identical. One observed successful computed call joined. No arbitrary static candidate bound, full macro qualification, five-stop closure, Wasm, graph replacement or gate credit."
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+      "scope": "Four private U1 architecture lookup bodies, five compiled functions/six lexical edges and two genuine restore-file architecture events. Nine registry transition probes agree with the unchanged native dispatcher. Four native and 25 checker controls reject; six sessions, normal/repeat captures and all file traversals byte-identical. One observed successful computed call joined. No arbitrary static candidate bound, full macro qualification, five-stop closure, Wasm, graph replacement or gate credit.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Thirty-seventh audit at 4feaef69: retained verifier passed; all six native sessions re-executed with every capture, the controls and the summary byte-identical; the four lookup-chain bodies confirmed in U1 source at the pinned spans; packet, catalog at 69349297 with 25 new rows and all 42 source pins at HEAD verified; one nonblocking observation (no static candidate bound beyond the traversed operators), 2026-09-14",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md"
+      }
     }
   ]
 }
