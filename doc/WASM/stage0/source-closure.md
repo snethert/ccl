@@ -1,6 +1,6 @@
 # Source-wide collection and call bounds — 14 September 2026
 
-Status: executed diagnostic, awaiting independent review. **LL15-b/c remain
+Status: executed diagnostic; reviewed by Claude's forty-seventh audit at `363a964f` without defect. **LL15-b/c remain
 incomplete.** This work finishes the general file driver and the source-wide
 observation pass; it does not finish the joined bootstrap census. No slot,
 criterion, accepted record or historical graph changes disposition.

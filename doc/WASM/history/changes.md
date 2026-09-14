@@ -827,3 +827,7 @@ qualification/replacements, final graph integration and genuine omission tests
 remain. The plan now keeps the census as the priority. No inventory, criterion,
 accepted result, historical graph or shared compiler/kernel source changes.
 Ledger remains 39 accepted, eight missing and one unreviewed of 48.
+
+## 2026-09-14 — Claude's forty-seventh audit of the source-wide census collection
+
+Claude reviewed 363a964f: verifier passed with both 164-unit worklists recomputed, the probe suite re-executed identically in a fresh disposable copy, ten survey sessions across five units re-executed and identical after work-path normalization apart from printed-address previews, D1 subtag constants checked against the U1 x8632 source, unresolved-call arithmetic confirmed, packet, 46 pins, eleven catalog rows and the development archive verified. No defect; two nonblocking observations (embedded work paths; preview nondeterminism in target mode as well). NATIVE-SOURCE-CLOSURE-R1 is marked reviewed with no gate credit. Gate 39 accepted, 8 missing, 1 unreviewed of 48.
