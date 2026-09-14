@@ -13,6 +13,20 @@ def sha256(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def required_roles(inventory, test):
+    """Per-test requirements add to the global minimum; they cannot replace it."""
+    global_roles = inventory.get("required_record_roles")
+    local_roles = test.get("required_record_roles", [])
+    for label, roles in (("inventory", global_roles), (test["id"], local_roles)):
+        if (not isinstance(roles, list) or
+                any(not isinstance(role, str) or not role.strip() for role in roles) or
+                len(roles) != len(set(roles))):
+            raise ValueError("invalid artifact-role requirements: " + label)
+    if not global_roles:
+        raise ValueError("empty artifact-role inventory")
+    return set(global_roles) | set(local_roles)
+
+
 def assess(inventory, report, inventory_hash, evidence_root):
     failures, blocked = [], []
     if report.get("version") == 2:
@@ -44,6 +58,10 @@ def assess(inventory, report, inventory_hash, evidence_root):
     if not inventory.get("required_record_roles"):
         return "FAIL", ["empty artifact-role inventory"]
     for test in inventory["tests"]:
+        try:
+            required_roles(inventory, test)
+        except ValueError as exc:
+            return "FAIL", [str(exc)]
         if not test.get("variants") or len(set(test["variants"])) != len(test["variants"]):
             return "FAIL", [f"empty or duplicate variants for {test['id']}"]
         assertions = [a["id"] for a in test.get("assertions", [])]
@@ -87,7 +105,7 @@ def assess(inventory, report, inventory_hash, evidence_root):
                         or sha256(path) != expected):
                     failures.append(f"missing/mismatched/escaping artifact: {label}")
                 roles.add(artifact.get("role"))
-            if not set(inventory["required_record_roles"]).issubset(roles):
+            if not required_roles(inventory, test).issubset(roles):
                 failures.append(f"missing artifact roles: {label}")
             for field in ["command", "toolchain", "engine", "timestamp", "configuration", "seed", "test_revision"]:
                 if result.get(field) is None or result.get(field) == "":

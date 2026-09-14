@@ -14,7 +14,9 @@ Each complete record identifies ten separate files: source, implementation,
 test, ABI, template, installed binary, image, host compiler, options and log.
 The synthetic inventory explicitly requires these ten roles. The gate's role
 policy is inventory-driven; this fixture does not change other inventories'
-required roles or the production gate implementation.
+required roles or the production gate implementation. The separately authorized
+[production policy enhancement](artifact-policy.md) adds per-test requirements
+for pending builds; this original control and its acceptance remain unchanged.
 
 | Cases | Required observation |
 | --- | --- |

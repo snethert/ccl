@@ -20,6 +20,10 @@ The semantic digest includes the binding version, every inventory-level field ex
 
 Canonical encoding is Python's JSON representation with sorted object keys, ASCII escapes, no extra whitespace and nonfinite numbers rejected. `tools/evidence_binding.py` is the single producer/validator implementation. Its source is retained with each new bound report. Inventory-version changes deliberately invalidate compatibility globally; adding a test does not require changing the version. A changed runner identity or contract entry invalidates that test and its dependents, while review/status bookkeeping does not.
 
+The gate also enforces optional per-test `required_record_roles` as additions to
+the inventory-wide minimum. They are semantic test fields, covered by the same
+digest and transitive prerequisite rules. See the [production artifact policy](../stage0/artifact-policy.md).
+
 External specification or policy changes must update the affected contract entry, for example its version, description or declared policy digest. A prose link alone is not an automatically followed semantic dependency. The binding identifies the declared contract; it does not infer new requirements from arbitrary linked documents or replace the retained source, toolchain, configuration and artifact hashes. This is also why acceptance still requires review of those artifacts and the contract's completeness.
 
 ## Validation and migration

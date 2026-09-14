@@ -129,7 +129,14 @@
       ],
       "status": "NOT_RUN",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED"
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "template",
+        "installed-binary",
+        "host-compiler",
+        "options"
+      ]
     },
     {
       "id": "S0-LL01-a",
@@ -377,7 +384,15 @@
       ],
       "status": "NOT_RUN",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED"
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "abi",
+        "template",
+        "installed-binary",
+        "host-compiler",
+        "options"
+      ]
     },
     {
       "id": "S0-LL08-a",
@@ -457,7 +472,15 @@
       ],
       "status": "NOT_RUN",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED"
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "abi",
+        "template",
+        "installed-binary",
+        "host-compiler",
+        "options"
+      ]
     },
     {
       "id": "S0-LL13-c",
@@ -495,7 +518,15 @@
       ],
       "status": "NOT_RUN",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED"
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "abi",
+        "template",
+        "installed-binary",
+        "host-compiler",
+        "options"
+      ]
     },
     {
       "id": "S0-LL15-b",
@@ -518,7 +549,13 @@
       ],
       "status": "NOT_RUN",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED"
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "host-compiler",
+        "image",
+        "options"
+      ]
     },
     {
       "id": "S0-LL15-c",
@@ -541,7 +578,13 @@
       ],
       "status": "NOT_RUN",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED"
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "host-compiler",
+        "image",
+        "options"
+      ]
     },
     {
       "id": "S0-LL19-a",
@@ -560,7 +603,15 @@
       ],
       "status": "NOT_RUN",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED"
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "abi",
+        "template",
+        "installed-binary",
+        "host-compiler",
+        "options"
+      ]
     },
     {
       "id": "S0-LL19-b",
@@ -705,7 +756,15 @@
       ],
       "status": "NOT_RUN",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED"
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "abi",
+        "template",
+        "installed-binary",
+        "host-compiler",
+        "options"
+      ]
     },
     {
       "id": "S0-LL22-a",
@@ -745,7 +804,13 @@
       ],
       "status": "NOT_RUN",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED"
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "host-compiler",
+        "image",
+        "options"
+      ]
     },
     {
       "id": "S0-LL23-a",
@@ -764,7 +829,15 @@
       ],
       "status": "NOT_RUN",
       "runner": null,
-      "review_disposition": "NOT_REVIEWED"
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "abi",
+        "template",
+        "installed-binary",
+        "host-compiler",
+        "options"
+      ]
     },
     {
       "id": "S0-LL23-b",

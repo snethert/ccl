@@ -506,3 +506,20 @@ pass. Ledger: 35 accepted, 13 missing, zero unreviewed of 48.
 The same user instruction authorizes production artifact-role enhancement and
 the outstanding LL23/LL24 deliverables. Each will be separately reviewable;
 this authorization is not acceptance of those future results.
+
+
+## 2026-09-14 — require applicable artifact roles in pending production builds
+
+The user authorized production-policy enhancement alongside LL22-a acceptance.
+The gate now unions global and per-test required roles and refuses malformed
+lists. Ten pending inventory entries require their actual Wasm or native build
+facets; all 35 accepted contracts are unchanged. The unchanged binding algorithm
+already binds these semantic fields. The [policy](../stage0/artifact-policy.md)
+records applicability and the remaining Stage 1 requirement explicitly.
+
+Production role lists are exercised through quarantined gate inputs, including
+omitted roles, malformed lists and attempted global-role waiver. Existing gate,
+binding and acceptance controls pass. One compact policy packet retains the
+old/new inventory, criterion identities and dated user authorization. No runtime
+execution, previous acceptance promotion or old-payload rescan is claimed.
+The enhancement awaits independent review; ledger remains 35/13/0 of 48.

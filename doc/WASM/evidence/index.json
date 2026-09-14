@@ -2415,6 +2415,20 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll22a-project-acceptance/verification.json",
       "sha256": "b2392bf4cfcf85bcf14e4c1ed368e869b5aa5fd06d6447684f49e3646da71782",
       "scope": "User accepts LL22-a against Claude review at 08151452; 35 accepted, 13 missing, zero unreviewed. Production role-policy gap explicit; original execution and previous accepted objects preserved."
+    },
+    {
+      "id": "PRODUCTION-ARTIFACT-POLICY-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-artifact-policy-r1/packet.json",
+      "sha256": "79ba76cc175c530018bdb0ad736c648d0f34ee5b607db49c8fce34449495099a",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "User-authorized per-test role requirements for ten pending production entries. 11 complete synthetic cases, 102 rejected cases; existing 35 accepted contracts unchanged. No new execution slot or runtime claim."
+    },
+    {
+      "id": "PRODUCTION-ARTIFACT-POLICY-DECISION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-artifact-policy-r1/decision.json",
+      "sha256": "adcfda283847909522b673cc45eeec62aef84a20a3ba93a8593c37edf4156664",
+      "review_disposition": "NOT_REVIEWED",
+      "scope": "User-authorized per-test role requirements for ten pending production entries. 11 complete synthetic cases, 102 rejected cases; existing 35 accepted contracts unchanged. No new execution slot or runtime claim."
     }
   ]
 }
