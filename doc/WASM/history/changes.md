@@ -864,3 +864,31 @@ Stage 0 remains 39 accepted, eight missing and one unreviewed of 48.
 ## 2026-09-14 — Claude's forty-eighth audit of the build IR joins
 
 Claude reviewed 5c1ca7b0: verifier replayed all 4,006,405 retained events against the pinned base graph with six outputs byte-identical, 22 controls and eight callback probes reproduced; call, bound and bypass arithmetic recomputed from the facts; the open computed calls characterized as functional parameters, non-lexical initializers, ioblock struct slots, dispatch vectors and hooks; U1's pass-2 bypass confirmed; packet, 19 pins and 16 catalog rows verified. No defect; one nonblocking observation (per-site global gaps inflate graph diagnostics). NATIVE-BUILD-FLOW-R1 is marked reviewed with no gate credit. Gate 39 accepted, 8 missing, 1 unreviewed of 48.
+
+## 2026-09-14 — Codex joins recorded binding versions and consolidates obligations
+
+Following the user's supplied Claude review and audit commit e2149b31, Codex
+reads the original rich stream's before/after inventories and store hooks.
+All 98,213 global-call sites now join by actual symbol identity to 5,693
+binding histories. Of those, 5,598 have value witnesses, 95 remain unwitnessed,
+and 2,060 carry multiple ordinary prototype identities. Earlier versions,
+macro/special-wrapper roles, literal NIL and pre-store removal intent remain
+explicit. Native FASL joins retain exact positions and write generations;
+observations are not promoted to exhaustive runtime bounds.
+
+One unresolved callable-value edge per symbol replaces the repeated per-call
+gaps, retiring only 5,692 obsolete name placeholders. The graph's unresolved
+reachable-edge reports fall from 118,604 to 31,091; this is consolidation,
+not accepted work. All computed calls and prior widening families remain
+unchanged. There are 2,676 observed prototype/body joins and 5,007 prototypes
+still requiring body witnesses. The rich build's 1,562 computed sites and
+259 unattached assembly bodies remain open.
+
+The complete graph passes structural checks. Twenty-two mutation controls
+reject and three positive probes pass; a standalone replay reproduces all
+five analysis outputs byte-identically. The original three development
+failures and their executed sources are retained. Evidence commit a77fa44d
+holds one 13-file packet, NATIVE-BINDING-VERSIONS-R1, with 18 source pins.
+No native session, shared-source edit, inventory change or accepted-envelope
+mutation occurred. The packet awaits adversarial review; LL15-b/c remain
+missing and the ledger stays 39 accepted, eight missing and one unreviewed.

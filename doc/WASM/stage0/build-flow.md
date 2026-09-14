@@ -84,8 +84,11 @@ original development failures. One failure exposed the pass-2 bypass; the
 other exposed the mistaken assumption that every observed function was already
 attached to a seed. Neither failure was converted into a success record.
 
-Next, join global symbols to their recorded binding versions and separate
-observed targets from justified candidate bounds. Then work through the 879
+The subsequent [binding-version derivative](binding-versions.md) joins global
+symbols to their recorded versions and consolidates the repeated per-site
+obligations. It preserves the distinction between observed values and complete
+candidate bounds; this packet's original graph and facts remain unchanged.
+Next work through the remaining binding/body witnesses, then the 879
 unbounded variable calls and 683 other computed callees, connect the assembly
 worklist and boot/image generations, and qualify the target environment and
 required replacements. The reviewed seed revision, complete lowering/import/

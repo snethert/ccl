@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "namespace": "Original rich build identity:build; no joins to another execution by name",
+  "inputs": {
+    "events": {"path": "2026-09-12-rich-census-r1/observed-r4.jsonl.gz", "sha256": "23b63396031cca638f845822d15d2b7af927aa8d0c5d193ae4c03df70b120a7b"},
+    "base": {"producer": "2026-09-13-boot-wrappers-r1/run.json", "sha256": "5ad5f785a7db7288d6db2cfc2ccefbd88722498b50b5e39348a9597aacab69ab"},
+    "flow_delta": {"path": "2026-09-14-build-flow-r1/delta.json.gz", "sha256": "97466105b0f07af83cdb5f69f9169e9d6d3d3c0b61587034f149b89fb64c9e20"},
+    "functions": {"path": "2026-09-14-build-flow-r1/functions.json.gz", "sha256": "0efaf78261ff68266b0a2f7c8b734b1f18b04f33de0dc35fa97b3cebeba4879e"},
+    "calls": {"path": "2026-09-14-build-flow-r1/calls.json.gz", "sha256": "203083dd3328b7d0f268799789e1d9853dc9a870a6f2a73ac271fb2f9aafdadb"}
+  }
+}

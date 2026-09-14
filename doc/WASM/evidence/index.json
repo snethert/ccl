@@ -2832,6 +2832,16 @@
         "record": "stage0/claude-review.md",
         "acceptance": "Diagnostic derivative only; no census gate credit. LL15-b/c remain missing."
       }
+    },
+    {
+      "id": "NATIVE-BINDING-VERSIONS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-binding-versions-r1/packet.json",
+      "sha256": "daf2f67931e02c1aedbd59e8fd40c4f9d1998a5812cb4428ef2860d9442f87dd",
+      "scope": "Original rich-build binding histories: 98,213 global calls join to 5,693 exact symbols; 5,598 have observed values and 95 remain unwitnessed. Earlier versions, callable roles and exact FASL generations retained; per-symbol unresolved obligations replace repeated site gaps. Five outputs replay byte-identically, 22 controls and three positive probes pass. No exhaustive runtime bound, target qualification or census gate credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

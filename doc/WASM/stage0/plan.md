@@ -232,9 +232,14 @@ Use the retained flat graphs and per-call worklists for the remaining work:
 1. The [retained-build IR join](build-flow.md) now uses the original rich stream
    directly: 51,601 actual compiler/code identities, 103,393 calls and 200 local
    bounds. All 51,342 Lisp bodies attach to the existing effect/lowering graph;
-   259 assembly bypasses remain explicit in the unattached worklist. Next join
-   the 98,213 global calls' exact symbol descriptors to recorded binding versions
-   and qualify their candidate sets. Connect boot/image generations and assembly
+   259 assembly bypasses remain explicit in the unattached worklist. The new
+   [binding-version join](binding-versions.md) maps all 98,213 global sites to
+   5,693 exact symbols and preserves their observed versions; 5,598 have value
+   witnesses and 95 remain a concrete source/disposition worklist. Repeated
+   site gaps now share one unresolved obligation per symbol. Resolve those 95
+   entries, obtain the 5,007 remaining observed-prototype body witnesses, and
+   qualify the candidate bounds rather than treating observations as exhaustive.
+   Connect boot/image generations and assembly
    through witnesses, not printed names. The independent file sessions and r7's
    original 1,729 computed sites keep their own identities and counts.
 2. Qualify the reached macro/helper environment and logical-function/registry
