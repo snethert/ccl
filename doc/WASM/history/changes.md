@@ -831,3 +831,32 @@ Ledger remains 39 accepted, eight missing and one unreviewed of 48.
 ## 2026-09-14 — Claude's forty-seventh audit of the source-wide census collection
 
 Claude reviewed 363a964f: verifier passed with both 164-unit worklists recomputed, the probe suite re-executed identically in a fresh disposable copy, ten survey sessions across five units re-executed and identical after work-path normalization apart from printed-address previews, D1 subtag constants checked against the U1 x8632 source, unresolved-call arithmetic confirmed, packet, 46 pins, eleven catalog rows and the development archive verified. No defect; two nonblocking observations (embedded work paths; preview nondeterminism in target mode as well). NATIVE-SOURCE-CLOSURE-R1 is marked reviewed with no gate credit. Gate 39 accepted, 8 missing, 1 unreviewed of 48.
+
+
+## 2026-09-14 — join the retained build IR to native code and census paths
+
+Following the user-supplied forty-seventh review and instruction to proceed,
+Codex consumed the complete IR already retained in the sequential rich build.
+The new derivative joins 51,601 compiler functions to their actual emitted code
+identities, checks 103,393 calls and proves 200 immutable local callback bounds.
+It preserves symbol identities for all 98,213 global calls so binding versions
+can be joined next. The older r7 and independent source-survey populations retain
+their own counts and identities; no name-based cross-process join is made.
+
+All 51,342 Lisp bodies attach to the existing graph. The 259 assembly bypasses
+remain explicitly unattached and untraversed in the worklist; no broad membership
+edge or optional disposition is introduced to hide that gap. All earlier graph
+records, seeds, initializer order and trace mappings remain unchanged. The new
+full graph passes structural checks but remains unqualified, with 1,562 computed
+calls open. Eight reviewed compiler-capture probes replay in the older format
+without assignment bits, 22 IR/fragment controls reject, and the standalone
+verifier reproduces all six deterministic outputs byte-for-byte. Original
+analysis failures and their sources/inputs are retained in one 16-file packet.
+No native build, shared compiler/kernel edit, inventory change, acceptance
+mutation or historical artifact scan occurs. Evidence commit dc94cdd contains
+NATIVE-BUILD-FLOW-R1, awaiting independent review.
+
+The source-wide report also corrects the reproduction wording from Claude's
+latest review: address-bearing previews can differ in both native and target
+captures; work-directory prefixes are separate, disclosed comparison context.
+Stage 0 remains 39 accepted, eight missing and one unreviewed of 48.

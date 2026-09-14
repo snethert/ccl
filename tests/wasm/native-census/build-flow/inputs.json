@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "build_events": {
+    "path": "2026-09-12-rich-census-r1/observed-r4.jsonl.gz",
+    "sha256": "23b63396031cca638f845822d15d2b7af927aa8d0c5d193ae4c03df70b120a7b",
+    "provenance": "Reviewed rich-census packet, tenth audit; original sequential native build."
+  },
+  "base": {
+    "producer": "2026-09-13-boot-wrappers-r1/run.json",
+    "sha256": "5ad5f785a7db7288d6db2cfc2ccefbd88722498b50b5e39348a9597aacab69ab",
+    "provenance": "Reproducible full graph from the reviewed boot-wrapper packet; nineteenth audit."
+  },
+  "callbacks": {
+    "archive": "2026-09-14-source-closure-r1/capture.tar.gz",
+    "archive_sha256": "61dcfce6cf10173912f33be8206a0d67eb06523424dcad693962dc0a15339c88",
+    "member": "probes/callbacks/capture.json.gz",
+    "sha256": "63f2ca47914e20ade411a493b571bd0fc5d34f8fc6a6ddadb72b805c3e139e2d",
+    "provenance": "Eight reviewed compiler-capture probes from the forty-seventh audit; selected bytes reused, no new native execution."
+  }
+}

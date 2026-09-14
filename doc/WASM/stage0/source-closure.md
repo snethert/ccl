@@ -69,11 +69,16 @@ captures, original failures, the per-call worklists and 34 probe/checker control
 in a small number of archive/catalog entries. It references existing source,
 bootstrap, image and registration inputs rather than copying baseline packs.
 
-The target and callback probe pairs reproduce byte-identically. In the native
-pair, eight diagnostic second-operand print previews differ only in printed
-heap addresses; both raw values are retained and no semantic identity is read
-from those previews. Every other field, including the complete graph and native
-code, matches exactly. A separate unwrapped native session reproduces 3,168
+The retained author's target and callback probe pairs reproduced byte-identically;
+that is an observation about those pairs, not a target-mode guarantee. Claude's
+fresh target run differed in the same eight address-bearing previews seen in the
+native pair. Diagnostic second-operand print previews are nondeterministic in
+both modes. Both raw values are retained and no semantic identity is read from
+those previews. Cross-directory comparisons also need an explicitly identified
+disposable-work prefix mapping. With those differences disclosed, Claude's ten
+fresh survey sessions matched every graph, observation, native code prefix,
+gap, effect and read record. The retained verifier continues to compare retained
+bytes directly; no historical capture is rewritten. A separate unwrapped native session reproduces 3,168
 output code bytes across 26 corpus functions. This is a code-prefix comparison,
 not a comparison of arbitrary constant objects or a new full native build.
 
@@ -99,6 +104,12 @@ These are fresh independent file sessions. They do not recreate the sequential
 r7 rebuild's binding environment, and their numbers must not be substituted for
 r7's **1,729** unresolved sites. Joining old and new function generations requires
 an explicit witness; printed names and similar counts are insufficient.
+
+The subsequent [retained-build IR integration](build-flow.md) avoids that
+cross-session inference for the rich build by consuming the full IR already in
+its own stream. It joins actual compiler/code identities and establishes 200
+local bounds in that separate namespace. This source-wide packet and its counts
+remain unchanged.
 
 The target worklist exposes the remaining representation and boundary decisions:
 135 failures request NTH-IMMEDIATE, eighteen request FUNCTION-TO-FUNCTION-VECTOR,

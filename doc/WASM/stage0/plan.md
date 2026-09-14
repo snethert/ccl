@@ -229,16 +229,21 @@ and observation pass, not the qualified closure. No census slot is promoted.
 
 Use the retained flat graphs and per-call worklists for the remaining work:
 
-1. Establish explicit correspondence between the independent file-session bodies
-   and the sequential r7/boot function generations. Account for the 257 native
-   output functions that bypass Lisp pass 2. Do not substitute fresh counts for
-   the original 1,729 computed sites or equate bodies by printed name.
+1. The [retained-build IR join](build-flow.md) now uses the original rich stream
+   directly: 51,601 actual compiler/code identities, 103,393 calls and 200 local
+   bounds. All 51,342 Lisp bodies attach to the existing effect/lowering graph;
+   259 assembly bypasses remain explicit in the unattached worklist. Next join
+   the 98,213 global calls' exact symbol descriptors to recorded binding versions
+   and qualify their candidate sets. Connect boot/image generations and assembly
+   through witnesses, not printed names. The independent file sessions and r7's
+   original 1,729 computed sites keep their own identities and counts.
 2. Qualify the reached macro/helper environment and logical-function/registry
    descriptions; complete the mandatory startup service replacements and assign
    justified profile dispositions to native-only surfaces. The 61 incomplete
    target units include native-only code; failure counts are not added criteria.
-3. Bound parameters, registries and other computed values. The new native
-   sessions prove 206 local callback bounds and leave 1,517 computed calls open.
+3. Bound parameters, registries and other computed values. The original rich
+   build now has 200 local bounds and 1,562 computed calls still open; the
+   independent file sessions separately have 206 bounds and 1,517 open sites.
    Integrate these with the reviewed seed revision, initializer/loader witnesses,
    lowering/import/store classifications and reconciled trace. Replace widening
    only where the corresponding complete source edges and bounds are justified.
