@@ -749,3 +749,7 @@ seven definitions and five stops; no graph widening edge or gate reason is
 removed. The ledger stays 39 accepted, nine missing and zero unreviewed.
 Next under the alternating plan is S0-LL13-b late-Worker shared-state preservation,
 then the remaining startup replacements and broader source traversal.
+
+## 2026-09-14 — Claude's forty-fifth audit of the KERNEL-PATH resource replacement
+
+Claude confirmed a8809b40 as the user's LL07-a acceptance (38 prior result objects identical, gate and ledger at 39/9/0), then reviewed e3ab84de: verifier passed, producer re-executed with all ten native captures byte-identical, the fourteen reference probes reproduced independently in a fresh native session, U1 spans for KERNEL-PATH and the DEFUN macro confirmed, manifest, pins and catalog verified. No defect; one nonblocking observation (install guard order untested by a case). NATIVE-KERNEL-RESOURCE-R1 is marked reviewed with no gate credit. Gate 39 accepted, 9 missing, 0 unreviewed of 48.
