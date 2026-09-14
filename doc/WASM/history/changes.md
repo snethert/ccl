@@ -664,3 +664,20 @@ source traversal under the alternating plan.
 ## 2026-09-14 — Claude's forty-third audit of the lexical callback bounds
 
 Claude confirmed the user's acceptance of S0-LL22-b at bb439b2e by a gate run on the 38-record envelope and the live ledger checker, then reviewed 41457604: verifier passed, both native sessions re-executed byte-identically, the DECLAIM and APPLY expander spans confirmed in U1 source, 49 pins and catalog verified. No defect; two nonblocking observations (no native mutant sessions in this slice; the bounds cover two expander sites, not the runtime call population). NATIVE-LEXICAL-CALLBACKS-R1 is marked reviewed. Gate 38 accepted, 10 missing, 0 unreviewed of 48.
+
+## 2026-09-14 — schedule native runtime semantics from the internals assessment
+
+At the user's request, Codex updated the plan and design documents following the
+user-supplied Claude assessment of the native internals manual and a U1 source
+check. The follow-up schedules hash-key relocation and cache tests, separate
+weak-object/GCTWA census dispositions, store/trap lowering classifications,
+header-size boundaries and complete-root/publication checks. U1's Lisp rehash
+and collector paths refine the historical cache description. LL07-a remains
+next, followed by startup boundaries and source traversal; generated moving-GC
+bootstrap work carries the hash-table proof. The plan also reflects Claude's
+committed forty-third audit. D1, B, D4 and D5 stand, and the ledger remains
+38 accepted, ten missing and zero unreviewed. This is documentation and planning,
+with no new slot, runtime execution, evidence packet or acceptance claim.
+The DOCX reading copies and document manifest were regenerated; document
+projection, schedule, link and whitespace checks pass. Verification stayed
+within the document package and unchanged gate metadata.

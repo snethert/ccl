@@ -136,6 +136,8 @@ For the D1 x8632-derived data scheme, W = 4 and the cons tag T = 1: CDR is at B 
 
 Distinguish tagged Lisp values, raw memory addresses, byte offsets, element indices, logical code IDs and callable table slots. Specify boxing, unboxing, sign extension, range checks, header addressing, NIL/T and unbound markers, string element widths, specialized-vector subtags and numeric payloads. A raw address is not a fixnum merely because both travel in an i32. Host numeric widths, package nicknames and cached macros are never target definitions. [LL07, LL08, LL10]
 
+D1's 32-bit uvector header has an eight-bit subtag and a 24-bit element count. The inherited ARRAY-TOTAL-SIZE-LIMIT is the exclusive bound 2^24, not a byte-capacity promise. Layout probes check the largest encodable count and first rejected count; allocation separately checks element width, header bytes, alignment and available region without wrapping wasm32 arithmetic. These complement the independent NIL and unequal-cons fixtures. [U1; LL04, LL07, LL13]
+
 Argument order and arity are verified at every direct, dynamic, primitive, closure, overflow-argument and foreign boundary. Temporary-local ownership, lexical lifetime, left-to-right evaluation and preservation across nested calls, allocation and nonlocal transfer are tested before bootstrap breadth. The earliest violated compiler invariant is fixed; portable algorithms are not rewritten around wrong code generation. [LL05, LL06]
 
 ## 03  /  MEMORY, GC, SAFEPOINTS AND STORES
@@ -147,6 +149,8 @@ Baseline heap: shared wasm32 WebAssembly.Memory with explicit CCL object layouts
 GC is compiled into the program. A no-collection bootstrap mode may reserve a large heap or inhibit collection, but only defers reclamation; it is a debugging aid, never an exit criterion. [LL18]
 
 Safepoints are new Wasm compiler semantics. Native CCL uses asynchronous suspension and instruction repair; Wasm pass 2 emits cooperative polls. Polls are never placed inside allocation or designated store sequences, so there is no interrupted-sequence repair rule.
+
+This exclusion also forbids host suspension, reentrant callbacks and other collecting transitions while an object, designated store or logical frame is partially published. Allocation slow paths check capacity, publish roots, collect if appropriate and retry with relocated references before entering the indivisible allocation sequence. Native decrement-and-trap sequences are not copied without checked target arithmetic. Type, bounds, arity and unbound failures use the applicable Lisp condition path; stack exhaustion uses explicit bounds with capacity reserved for that path. Before the full condition system exists, use the declared early error service. Unexpected engine traps remain fatal internal failures. The census records each native trap class and its replacement. [LL13, LL15, LL18, LL19, LL23]
 
 - Poll at selected function entries, loop backedges and measured additional points.
 
@@ -160,11 +164,19 @@ Safepoints are new Wasm compiler semantics. Native CCL uses asynchronous suspens
 
 Stage 1's non-generational stop-the-world collector needs no generational write barrier. Stage 0 proves only that potentially relevant stores pass through a replaceable lowering; initially it may emit a plain store. CCL's refbits algorithm is not inherited; the Wasm barrier is designed together with a later generational collector. lisp_egc_control preserves CCL's existing behavior for a target on which EGC is unavailable; Stage 1 does not invent a new generational-control policy.
 
+Classify each native store/subprimitive before removing its generational bookkeeping. Preserve the actual write, applicable type/NIL checks, atomic or synchronization semantics and any independent metadata obligations. A plain store is justified by that classification; the non-generational choice alone does not make the whole primitive a no-op. [LL15, LL18]
+
+Moving collection must preserve address-based hash-table lookup and cache validity. Reusing U1 hashing requires its moved-key/rehash and cache protocols, including their Lisp-side paths; a different hashing scheme needs an explicit replacement and equivalent observable tests. The first generated moving-GC bootstrap proof inserts heap keys into an EQ table, exercises cached lookup, proves that keys actually relocate, then checks lookup/presence, replacement, deletion and entry count. Separate mutants omit movement notification and required cache maintenance; each must fail the semantic oracle. The accepted cons-only collector fixtures do not establish this behavior. [LL15, LL18, LL20]
+
+The census assigns separate dispositions to hash-table repair, weak objects/tables and GCTWA package-symbol handling, with source identities and dependency edges. Anything required by the bootstrap must work before its first relevant collection. A later compatibility stage is no reason to omit it; optional native optimizations need an explicit replacement rationale, and unsupported operations require the declared tested condition path. See the [dated runtime-semantics work plan](stage0/plan.md). [LL15, LL18]
+
 Memory ownership. Emit a checked map of every module's static data and BSS, any C stacks and allocator arenas, per-thread Lisp stacks, TCRs, heap regions and image staging buffers, and map callable entry slots separately from logical code IDs, deriving C function-pointer reservations from the link map and allocating other slots through the process-wide registry. Validate ranges, alignment and initialization writes before publication; read authoritative linker exports or emitter metadata for the selected layout. A fixed gap or a guessed stack pointer is not proof of heap safety. [LL13]
 
 Initialization ownership. Active data segments are applied on every instantiation, including in a newly created Worker. Disjoint module ranges alone do not protect already-live shared state. The installation protocol separates process-once shared initialization from per-Worker setup and prevents later instantiations or start functions from repeating shared data/BSS writes. A late Worker must preserve mutated heap/runtime sentinels and published code; intentional per-Worker writes stay in that Worker’s owned region. Stage 0 proves this in the hand-built harness, Stage 1 checks generated installation, and Stage 2 repeats it with production Worker creation. [17; LL13]
 
 A larger heap is not a collector proof. Stage 1 forces real collection with a small heap, verifies reclamation as well as survival, and checks roots in Wasm locals, explicit stacks, runtime temporaries, closures, multiple-value state, module constants and runtime registries. Invalid tag-like words must not become roots accidentally. Legal high-address and memory-growth boundaries are tested and host views refreshed according to the selected memory protocol. Test safepoints are never inserted inside no-safepoint regions. [LL18, LL07]
+
+B puts arguments on the value stack; it does not make that stack the complete root set. Live tagged self/environment references, results and other temporaries in Wasm locals must be published to explicit collector-visible slots before a collecting transition and reloaded afterwards. C cannot discover those locals by scanning its own stack. [LL06, LL18, LL20]
 
 ## 04  /  THREADS, HOST SUSPENSION AND DEPLOYMENT
 
