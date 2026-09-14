@@ -158,19 +158,22 @@ New acceptance producers use the [version 2 binding contract](../contracts/evide
 
 S0-LL22-a, S0-LL23-a and S0-LL24-a are accepted after their independent reviews
 and the user's explicit decisions. The production artifact policy is reviewed
-without defect. Stage 0 has 37 accepted and eleven missing required slots.
+without defect. Stage 0 has 37 accepted, ten missing and one unreviewed required slot.
 
 Resume census helper qualification with the SETF expander registry and its
 computed calls in the image-restore traversal, then the five source-boundary
 contracts and broader traversal. Continue the alternating remaining Stage 0
-work. LL22-b remains a separate missing R6 control. Existing fixtures do not
-discharge full census closure or authorize functional shared compiler changes.
+work. LL22-b now has an executed [R6 control](r6-control.md), awaiting independent
+review. Existing fixtures do not discharge full census closure or authorize functional shared compiler changes.
 
 
 The [SETF lookup witness](target-setf.md) now joins all five observed lookups to
 their branches and four named setters to U1 declarations. No callable expander
 runs in the restore file. Nine separate target-context probes agree with native
 SETF; five native and 25 checker controls reject. Seven captured definitions and
-five source-boundary stops remain. Independent review is pending; no census gate
-credit. Next take S0-LL22-b, the remaining R6 standing control, then return to
-census helpers and the five boundary replacements under the alternating plan.
+five source-boundary stops remain. Claude's forty-first audit reviewed it without
+defect; no census gate credit. The subsequent [LL22-b control](r6-control.md)
+now compares the actual accepted registration patch under all four R6 categories
+and evaluated R6a, with one complete case and 44 rejected alterations. It reuses
+native execution and awaits independent review. Next return to census helpers
+and the five boundary replacements under the alternating plan.

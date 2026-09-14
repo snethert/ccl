@@ -1,0 +1,187 @@
+{
+  "version": 1,
+  "id": "S0-LL22-b",
+  "scope": "Actual accepted registration evidence plus quarantined damaged copies; controls exercise comparisons after input identity validation. No synthetic native execution.",
+  "cases": [
+    {
+      "name": "complete",
+      "expected": "PASS"
+    },
+    {
+      "name": "target-source-edit",
+      "expected": "TARGET_SOURCE_EDIT"
+    },
+    {
+      "name": "shared-source-edit",
+      "expected": "SHARED_SOURCE_BOUND"
+    },
+    {
+      "name": "additional-source",
+      "expected": "SHARED_SOURCE_BOUND"
+    },
+    {
+      "name": "source-not-restored",
+      "expected": "SOURCE_REVERSAL"
+    },
+    {
+      "name": "registration-still-active",
+      "expected": "SOURCE_REVERSAL"
+    },
+    {
+      "name": "source-byte-mismatch",
+      "expected": "SOURCE_BYTE_JOIN"
+    },
+    {
+      "name": "source-revision",
+      "expected": "INPUT_REVISIONS"
+    },
+    {
+      "name": "bootstrap-image",
+      "expected": "INPUT_TOOLCHAIN_IMAGE"
+    },
+    {
+      "name": "compiler-kernel",
+      "expected": "INPUT_TOOLCHAIN_IMAGE"
+    },
+    {
+      "name": "compiler-options",
+      "expected": "INPUT_OPTIONS_ENVIRONMENT"
+    },
+    {
+      "name": "compiler-environment",
+      "expected": "INPUT_OPTIONS_ENVIRONMENT"
+    },
+    {
+      "name": "normalization-request",
+      "expected": "UNAPPROVED_NORMALIZATION"
+    },
+    {
+      "name": "extra-fasl-change",
+      "expected": "UNCHANGED_INPUT_FASL_CHANGED"
+    },
+    {
+      "name": "missing-fasl",
+      "expected": "FASL_INVENTORY"
+    },
+    {
+      "name": "fasl-not-restored",
+      "expected": "FASL_REVERSAL"
+    },
+    {
+      "name": "whole-file-exemption",
+      "expected": "INTENTIONAL_ALLOWLIST"
+    },
+    {
+      "name": "wrong-fasl-hash",
+      "expected": "FASL_BYTE_JOIN"
+    },
+    {
+      "name": "code-byte",
+      "expected": "FASL_EXECUTABLE_OR_METADATA_CHANGED"
+    },
+    {
+      "name": "code-constant",
+      "expected": "FASL_PACKAGE_CALL"
+    },
+    {
+      "name": "module-data",
+      "expected": "FASL_SOURCE_DATA_JOIN"
+    },
+    {
+      "name": "location",
+      "expected": "FASL_SOURCE_SPAN_JOIN"
+    },
+    {
+      "name": "opcode",
+      "expected": "FASL_EXECUTABLE_OPCODE"
+    },
+    {
+      "name": "trailing-data",
+      "expected": "FASL_END"
+    },
+    {
+      "name": "equivalent-extra-noop",
+      "expected": "FASL_TOPLEVEL"
+    },
+    {
+      "name": "eval-function",
+      "expected": "FASL_EVAL_FORM"
+    },
+    {
+      "name": "operator-id",
+      "expected": "R6A_OPERATOR_RECORDS"
+    },
+    {
+      "name": "operator-flags",
+      "expected": "R6A_OPERATOR_RECORDS"
+    },
+    {
+      "name": "operator-encoded",
+      "expected": "R6A_OPERATOR_RECORDS"
+    },
+    {
+      "name": "operator-handler",
+      "expected": "R6A_OPERATOR_RECORDS"
+    },
+    {
+      "name": "operator-name",
+      "expected": "R6A_OPERATOR_RECORDS"
+    },
+    {
+      "name": "operator-order",
+      "expected": "R6A_OPERATOR_RECORDS"
+    },
+    {
+      "name": "operator-reserved",
+      "expected": "R6A_OPERATOR_RECORDS"
+    },
+    {
+      "name": "operator-omission",
+      "expected": "R6A_OPERATOR_RECORDS"
+    },
+    {
+      "name": "abi-word-size",
+      "expected": "R6A_ABI_FEATURE_SNAPSHOT"
+    },
+    {
+      "name": "target-features",
+      "expected": "R6A_ABI_FEATURE_SNAPSHOT"
+    },
+    {
+      "name": "vinsn-template",
+      "expected": "R6A_ABI_FEATURE_SNAPSHOT"
+    },
+    {
+      "name": "evaluated-registration",
+      "expected": "EVALUATED_MODULE_JOIN"
+    },
+    {
+      "name": "abi-probe",
+      "expected": "NATIVE_PROBE_EXECUTABLE"
+    },
+    {
+      "name": "native-run-failed",
+      "expected": "NATIVE_EXECUTION"
+    },
+    {
+      "name": "native-test-failed",
+      "expected": "NATIVE_TESTS"
+    },
+    {
+      "name": "native-test-missing",
+      "expected": "NATIVE_TESTS"
+    },
+    {
+      "name": "native-test-inventory",
+      "expected": "NATIVE_TEST_MEMBERSHIP"
+    },
+    {
+      "name": "location-metadata",
+      "expected": "FASL_LOCATION_METADATA"
+    },
+    {
+      "name": "table-capacity",
+      "expected": "FASL_UNEXPLAINED_BYTES"
+    }
+  ]
+}

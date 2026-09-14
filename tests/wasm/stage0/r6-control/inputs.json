@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "profile": "U1 observation-only census registration; exact two module additions",
+  "native_inputs": {
+    "directory": "/Users/buildsomething/Source/ccl-evidence/macos-u1-inputs",
+    "pins": {
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "test_revision": "561ab1be82fefd53a61089eaad4357023e1fa961",
+      "native_target": "macOS x86-64",
+      "bootstrap_url": "https://github.com/Clozure/ccl/releases/download/v1.13/darwinx86.tar.gz",
+      "inputs": {
+        "source.tar": "285977d985b80b1c89ca49e5598fa0e0fb2ca37175bc1ac3536fb2b7a7c1ec9e",
+        "tests.tar": "082491b9a1add5ff68b5d3668bb1244dcb27f213e4d81e901d65828bbbec6990",
+        "bootstrap.tar.gz": "0eceab57e519f82bd6db011c596eb2a28e2a510abcd76e217d49a10e90f4002f"
+      },
+      "test_selection_reason": "Last upstream ccl-tests commit preceding the v1.13 release (2024-08-13). The 2026 test-head diagnostic is retained separately; failures are not waived or presented as passing."
+    },
+    "kernel": "/private/tmp/ccl-native-census-r7/ccl/dx86cl64",
+    "kernel_sha256": "2f3a9888f1bf515130e7d124831d31319386c55f3208710393b238637dcf5699"
+  },
+  "test_revision": "561ab1be82fefd53a61089eaad4357023e1fa961",
+  "review_provenance": "S0-LL08-a accepted 02ff713d; its original native run is reused, without a new native-execution claim.",
+  "inputs": [
+    {
+      "path": "macos-u1-inputs/source.tar",
+      "sha256": "285977d985b80b1c89ca49e5598fa0e0fb2ca37175bc1ac3536fb2b7a7c1ec9e",
+      "role": "source"
+    },
+    {
+      "path": "macos-u1-inputs/bootstrap.tar.gz",
+      "sha256": "0eceab57e519f82bd6db011c596eb2a28e2a510abcd76e217d49a10e90f4002f",
+      "role": "image"
+    },
+    {
+      "path": "2026-09-12-native-census-r7/baseline/build/dx86cl64",
+      "sha256": "2f3a9888f1bf515130e7d124831d31319386c55f3208710393b238637dcf5699",
+      "role": "host-compiler"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/results.json",
+      "sha256": "437a75c504720ae907ba3de7410b658b0fde2850cc810f7c9e1feef3f757d54f",
+      "role": "log"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/commands.json",
+      "sha256": "56bed7486b05860de0c873e6e162d4a326212a68daf1e67c60c978cf9876ab8b",
+      "role": "options"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/baseline-fasls.tar.gz",
+      "sha256": "b8c98e9569c69f2af74622217a3bf2e3a1da41fbd16ead62ca2709876152754f",
+      "role": "implementation"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/registered-systems.dx64fsl",
+      "sha256": "d4eed215396aa779ff1b844dae468f1ae2446eca418353575bc16fdff00fe737",
+      "role": "implementation"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/baseline-probe.dx64fsl",
+      "sha256": "8bff6726fab8fbc8ce6bb20bf55b46922f678546bd159441a5baee2520c47fce",
+      "role": "implementation"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/registered-probe.dx64fsl",
+      "sha256": "8bff6726fab8fbc8ce6bb20bf55b46922f678546bd159441a5baee2520c47fce",
+      "role": "implementation"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/baseline-fasls.json",
+      "sha256": "a04c300aa00ddbf03a534cceac219325147be2bfbe6ed63fc68058dd5f71fea7",
+      "role": "log"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/registered-fasls.json",
+      "sha256": "ec27e149d4ba507953c644bf3955d5c87a3afcfffd933bfdd6da82afc73c5b89",
+      "role": "log"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/restored-fasls.json",
+      "sha256": "a04c300aa00ddbf03a534cceac219325147be2bfbe6ed63fc68058dd5f71fea7",
+      "role": "log"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/baseline-snapshot.json",
+      "sha256": "e515879fd80e1dc971ae7935f9e2d20f622fdcb8d6b11b4d897fe62c7a2ed7ef",
+      "role": "log"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/registered-snapshot.json",
+      "sha256": "ad8013e20e354c55cff4fcfad3649000654f26a4b9a2475f4df43e5006d6c6bb",
+      "role": "log"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/host.log",
+      "sha256": "31fd674ddb951680692d7b68cafdeab5baa6b3e82aae843269dad73b53f25fc5",
+      "role": "log"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/compiler.log",
+      "sha256": "0418953a1affcac70a58da60b7ef9221d44002a5e42a5796c150758f6087e5eb",
+      "role": "log"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/baseline-tests/test-summary.json",
+      "sha256": "e4a92c39960f4bdbcff5393f0245a29a077375ffca418cf5a6eb64f666356764",
+      "role": "log"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/baseline-tests/test-results.sexp",
+      "sha256": "3aed48d322364556599abbc6f36574ebbd59275ee071faf1b8c0f8d5a5b19c84",
+      "role": "log"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/baseline-tests/test-inventory.sexp",
+      "sha256": "2c2551df907645167c590987e46df337d670c87a8632b36aa85be391a64102da",
+      "role": "log"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/registered-tests/test-summary.json",
+      "sha256": "e4a92c39960f4bdbcff5393f0245a29a077375ffca418cf5a6eb64f666356764",
+      "role": "log"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/registered-tests/test-results.sexp",
+      "sha256": "3aed48d322364556599abbc6f36574ebbd59275ee071faf1b8c0f8d5a5b19c84",
+      "role": "log"
+    },
+    {
+      "path": "2026-09-12-census-stub-r1/registered-tests/test-inventory.sexp",
+      "sha256": "2c2551df907645167c590987e46df337d670c87a8632b36aa85be391a64102da",
+      "role": "log"
+    }
+  ]
+}

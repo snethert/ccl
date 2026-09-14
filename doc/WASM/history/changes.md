@@ -613,3 +613,17 @@ census diagnostics. The packet and original execution identities, scope and
 Claude review are preserved. No inventory, result, acceptance or retained
 artifact changes. The live ledger remains 37 accepted, eleven missing and
 zero unreviewed; S0-LL22-b is the next deliverable.
+
+### 2026-09-14 — Execute S0-LL22-b against the actual registration patch (Codex)
+
+Following the user-supplied Claude review at d08cfa7b and the standing direction
+to proceed, added the next alternating control. Reapplies/removes the accepted
+census registration in disposable U1; reuses its accepted native builds/tests.
+The comparator checks all four R6 categories and evaluated R6a, decodes the
+entire changed FASL and accounts for only two module entries and their structural
+length fields. One complete input and 44 rejected damaged copies pass and replay.
+Retained original decoder and producer failures. Native input archives are
+referenced in place; one compact packet, no new native build claim. Only LL22-b
+registration changes, with all 37 accepted results/bindings preserved. Ledger:
+37 accepted, ten missing, one awaiting review. Next census helpers and the five
+boundary contracts; functional compiler changes remain outside this scope.

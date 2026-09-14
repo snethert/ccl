@@ -2,23 +2,21 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "dc1906c105e4d0a1d9b1c521b0beb8219c4b302d",
+  "commit": "166e04d5aa014036e75ab130d46c48b8175e1479",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "28c8965d522f54aa146e7afb0a3ce029d9f6234da4e9698ffe5143ba9cd4df2e",
-  "immutable_evidence_files": 161703,
+  "catalog_sha256": "92f37d0aa3f740c52806cd981a571f5b7857c050f1f240a93e38a907cbf271b3",
+  "immutable_evidence_files": 161743,
   "indexed_references_verified": 925,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped SETF diagnostic: seven native sessions, normal/repeat byte identity, five native and 25 checker refusals, retained verifier and direct source/input bindings. Disposable source/FASLs unchanged. 31 new files (835063 bytes); previous catalog rows unchanged, no old runtime rerun.",
+  "verification": "Scoped S0-LL22-b: actual registration unit applied and restored; four-category R6 comparison, 44 rejected controls and six deterministic replay files. Complete changed-FASL decode plus exact byte accounting, direct retained input pins, published production slot gate and live ledger check. Native builds/tests reused; 40 new files (746256 bytes), prior catalog rows unchanged.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository; original failures retained. Thirty-five accepted records. Full census and generated code remain open.",
+  "scope": "Separate local evidence repository; original failures retained. Thirty-seven accepted records. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-14-target-setf-r1",
-    "files": 31,
-    "bytes": 835063,
-    "catalog_sha256": "28c8965d522f54aa146e7afb0a3ce029d9f6234da4e9698ffe5143ba9cd4df2e",
-    "immutable_evidence_files": 161703,
-    "prior_commit": "817813aad0c573719da262ec033093c2131e49c2"
+    "directory": "2026-09-14-r6-control-r1",
+    "files": 40,
+    "bytes": 746256,
+    "prior_commit": "dc1906c105e4d0a1d9b1c521b0beb8219c4b302d"
   }
 }

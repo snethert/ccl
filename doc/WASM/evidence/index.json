@@ -1297,6 +1297,24 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Production project ledger metadata enforcement on the pinned actual snapshot and live ledger: unique authority and status, explicit criterion decisions, complete preservation of the 35 accepted baseline result objects, evidence classes, bindings and unresolved work. Thirty-one rejected metadata mutations. Does not authenticate human authorization or prose, revalidate old runtime payloads or imply Stage 0 completion."
+    },
+    {
+      "id": "R6-REGISTRATION-CONTROL-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-r6-control-r1-results.json",
+      "sha256": "051cc012f395769ca3e016e103dbbf375720b5967cc4d071221d36faec606bf6",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-r6-control-r1/packet.json",
+      "packet_sha256": "10c6dbd7954f9db602aaf6e0eca85e4d5e9fcd7ea3ea370f7a69e7464c8f321c",
+      "timestamp": "2026-09-14T15:02:15.694445+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "dda34ba24ddfa824c886cbe646201f467832f559ee8969e96e7af7856213d70c",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "CONTROL EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "U1 census registration patch only; no general FASL normalizer or Wasm implementation qualification"
     }
   ],
   "auxiliary_records": [
@@ -2602,6 +2620,18 @@
         "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-target-setf-r1/run.json",
         "sha256": "c8e56659c9d3534ce7c86dd3c1584c9bfcef15358a6dcbbea56f3f37c42cb883"
       }
+    },
+    {
+      "id": "R6-REGISTRATION-PACKET",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-r6-control-r1/packet.json",
+      "sha256": "10c6dbd7954f9db602aaf6e0eca85e4d5e9fcd7ea3ea370f7a69e7464c8f321c",
+      "scope": "S0-LL22-b: actual accepted registration patch reapplied/restored; one complete comparison, 44 rejected controls. Native execution reused; awaiting independent review."
+    },
+    {
+      "id": "R6-REGISTRATION-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-r6-control-r1/gate-result.json",
+      "sha256": "f04e18f5d8c38fbdf17a80ed3ececf1e3c252700b921794f767b480c4550175f",
+      "scope": "S0-LL22-b: actual accepted registration patch reapplied/restored; one complete comparison, 44 rejected controls. Native execution reused; awaiting independent review."
     }
   ]
 }
