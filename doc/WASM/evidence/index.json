@@ -1045,6 +1045,68 @@
         "record": "stage0/claude-review.md",
         "acceptance": "S0-LL02-b [control] is complete at its stated scope and ready for the user's acceptance decision."
       }
+    },
+    {
+      "id": "STANDING-CHILD-COMMAND-CONTROL-R1-ACCEPTED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-two-controls-project-acceptance/S0-LL01-b/accepted/accepted-results.json",
+      "sha256": "c187543ba90736e86924907b29f95e2fe54100941baca5d8d68f964a1f07621b",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-two-controls-project-acceptance/packet.json",
+      "packet_sha256": "8e369233f25949e633d60c4382a0a24ae553e23abc6c5e9924d16bab7bf5e446",
+      "timestamp": "2026-09-13T23:46:25.194640+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "f9e76c63659eb2b8ec400f0338a50c901228f258ec448d356711275e92bf5f50",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "CONTROL EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Required-child outcomes through the unchanged native-baseline aggregate, with synthetic argv and products. One complete workflow and ten real exit/SIGKILL/timeout/missing-marker cases. Three outcome branches; timeout step identified by command record. No native CCL build, Wasm, initializer or descendant-cleanup claim.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Thirtieth audit at 9285ee40: retained verifier passed with a fresh replay; producer re-executed with observations, cases, summary, slot gate and slot inventory byte-identical and results.json equal except execution-specific fields; the 31/16/1 composite reproduced by running the production gate on the accepted envelope against the HEAD inventory (S0-LL01-b missing) and on the new result against its slot (only unreviewed); quarantine archive inspected, all ten inner reports carry synthetic revisions; packet, catalog at 7f1b85fe with 29 new rows and all eight source pins at HEAD verified; two nonblocking observations (kill and exit share one production branch; timeout diagnostic names argv, not step), 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "S0-LL01-b [control] is complete at its stated scope and ready for the user's acceptance decision."
+      },
+      "note": "User explicitly instructed \"accept both then\" after both controls were identified. Original execution preserved; no new runtime execution.",
+      "project_acceptance": {
+        "decision": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-two-controls-project-acceptance/S0-LL01-b/decision.json",
+        "sha256": "650b3d6d36be72c97c7001aa185296f2868ad9f3398cb2f783a8497043c16502",
+        "timestamp": "2026-09-14T01:19:08.700309+00:00"
+      }
+    },
+    {
+      "id": "STANDING-BEHAVIORAL-CONTROL-R1-ACCEPTED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-two-controls-project-acceptance/S0-LL02-b/accepted/accepted-results.json",
+      "sha256": "8a3a7a73787d250b278a913a2ef9a1061d5daa558e1fe26ce770dbc93252538a",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-two-controls-project-acceptance/packet.json",
+      "packet_sha256": "8e369233f25949e633d60c4382a0a24ae553e23abc6c5e9924d16bab7bf5e446",
+      "timestamp": "2026-09-14T00:38:45.816217+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "2144bcf649d9773cc47fd55dd033ae4ce4bc109fcf0d66136e02dd43b42cfca7",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "CONTROL EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Actual hand-built Wasm control: escaping mutable environment, all six values, per-call normal/exception cleanup order and effects. Five positive calls and five rejected semantic mutants. Fixed descriptor is not a CCL function object; no generated code, GC, threading or full-layout claim.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Thirty-second audit at f35d2bfe: retained verifier passed with a fresh replay; producer re-executed with all six WAT sources, binaries and observation records byte-identical and re-verified; both gate composites reproduced from the HEAD inventory (accepted envelope shows S0-LL01-b and S0-LL02-b missing; each pending slot shows only unreviewed); retained mutant failures and single-line WAT diffs inspected; packet, catalog at 8f0127bd with 46 new rows and all six source pins at HEAD verified; two nonblocking observations, 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "S0-LL02-b [control] is complete at its stated scope and ready for the user's acceptance decision."
+      },
+      "note": "User explicitly instructed \"accept both then\" after both controls were identified. Original execution preserved; no new runtime execution.",
+      "project_acceptance": {
+        "decision": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-two-controls-project-acceptance/S0-LL02-b/decision.json",
+        "sha256": "59a6ac63be2642a5087baac4e65ac51dbe0a6e35d4c96f4fd76810260d3f728c",
+        "timestamp": "2026-09-14T01:19:08.700309+00:00"
+      }
     }
   ],
   "auxiliary_records": [
@@ -1937,9 +1999,9 @@
     },
     {
       "id": "CURRENT-STAGE0-COMBINED",
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-ll03a-accepted-results.json",
-      "sha256": "d45b9047e495e20b12d19a951776bcb54aeaee1807e1b31b61935a71c7b71c39",
-      "scope": "Unchanged aggregate of 31 accepted records. Separate raw S0-LL01-b and S0-LL02-b records await project acceptance; LL02-b also awaits independent review. Scoped ledger: 15 missing, two unreviewed of 48."
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-two-controls-accepted-results.json",
+      "sha256": "12bcb56b3e372350f75606fad187e6d43e73d1727851977f9a0a94fbdf24a694",
+      "scope": "33 accepted records: prior 31 unchanged plus user-accepted S0-LL01-b and S0-LL02-b. Scoped ledger: 15 missing, zero unreviewed of 48."
     },
     {
       "id": "LL02A-ACCEPTANCE-DECISION",
@@ -2137,6 +2199,24 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md"
       }
+    },
+    {
+      "id": "TWO-CONTROLS-PROJECT-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-two-controls-project-acceptance/packet.json",
+      "sha256": "8e369233f25949e633d60c4382a0a24ae553e23abc6c5e9924d16bab7bf5e446",
+      "scope": "User accepts LL01-b and LL02-b against Claude reviews at 8a3a1d34; 33 accepted, 15 missing, zero unreviewed. Original execution and prior accepted objects preserved."
+    },
+    {
+      "id": "TWO-CONTROLS-ACCEPTANCE-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-two-controls-project-acceptance/gate-result.json",
+      "sha256": "91fdd8e53c6983874f37db8edf86c2fa09852174ade20326bcbc873e0ca040b1",
+      "scope": "User accepts LL01-b and LL02-b against Claude reviews at 8a3a1d34; 33 accepted, 15 missing, zero unreviewed. Original execution and prior accepted objects preserved."
+    },
+    {
+      "id": "TWO-CONTROLS-ACCEPTANCE-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-two-controls-project-acceptance/verification.json",
+      "sha256": "6d626021e63f4326448e0dfe334f2842d4bb1d4e88bc83db06dfd74b30d330b1",
+      "scope": "User accepts LL01-b and LL02-b against Claude reviews at 8a3a1d34; 33 accepted, 15 missing, zero unreviewed. Original execution and prior accepted objects preserved."
     }
   ]
 }

@@ -55,7 +55,7 @@ independent review and project acceptance remain separate from execution.
 6. [S0-LL01-b](child-command-control.md) now exercises the production native
    aggregate with real failed, killed and timed-out children under synthetic
    command stimuli. One complete workflow passes and ten controls reject;
-   Claude's thirtieth audit reviewed it without defect; project acceptance is pending.
+   Claude's thirtieth audit reviewed it without defect; the user has accepted it.
 7. The [TYPEP helper slice](target-predicates.md) corrects host membership answers
    for target fixnums/bignums, supplies the source optimizer body and preserves
    the native ctype guard. Twenty-two front-end probes, five native controls and
@@ -63,12 +63,13 @@ independent review and project acceptance remain separate from execution.
    aliases, native class objects and wider inference remain open.
 8. [S0-LL02-b](behavioral-control.md) now executes an escaping mutable closure,
    all six values and nested cleanup through normal and exceptional Wasm exits.
-   Five positive calls and five semantic mutants pass; review and acceptance are
-   pending.
+   Five positive calls and five semantic mutants pass; accepted by the user after
+   Claude's thirty-second audit.
 9. The [DEFTYPE order slice](target-aliases.md) expands source-defined aliases
    before target membership and canonicalization. Sixteen constant probes and
    five recursive optimizer probes expose and correct inherited wrong answers;
-   five native and twenty checker controls reject. Independent review is pending.
+   five native and twenty checker controls reject. Claude's thirty-third audit
+   reviewed it without defect.
    Next take another standing control, then resume object/helper qualification,
    boundary replacements and wider traversal.
 

@@ -2,21 +2,21 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "fb3d81105a69758116576df9895811f2d312a266",
+  "commit": "2e632d1f3bac9af2e9e6b1de6579ca5789b1e02a",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "57a7064bfdcef33102ac859f60aefe98ebdd0df37763f9a5c661cf8c52cce864",
-  "immutable_evidence_files": 160819,
+  "catalog_sha256": "5ff48e1a1ac163709e521aaae8161d49c26d1fa0dee8e3b257e100aa043b58ba",
+  "immutable_evidence_files": 160888,
   "indexed_references_verified": 925,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped DEFTYPE order: seven native sessions, 16 constant probes, five optimizer probes/25 evaluations, two bounded refusals, five native/twenty checker controls and 46 direct source pins. Only 29 new files added; prior catalog rows unchanged. Original development failures retained. No archive scan, native rebuild or acceptance change.",
+  "verification": "Scoped two-control acceptance: unchanged producer, both new accepted slots pass the production gate, fourteen producer controls, exact preservation of original execution and 31 previous result objects; 33 current metadata bindings. Only new acceptance files catalogued; prior catalog rows and payload verification reused.",
   "remote": null,
   "off_machine_backup": false,
   "scope": "Separate local evidence repository; original failures retained. Thirty-one accepted records. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-13-target-aliases-r1",
-    "files": 29,
-    "bytes": 545756,
-    "prior_commit": "8f0127b148dce9c6573acf499544e46972ab3bfc"
+    "directory": "2026-09-13-two-controls-project-acceptance",
+    "files": 69,
+    "bytes": 31534697,
+    "prior_commit": "fb3d81105a69758116576df9895811f2d312a266"
   }
 }

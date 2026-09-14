@@ -124,3 +124,19 @@ record. Thirty-one current contract bindings, exact preservation checks and
 fourteen unchanged acceptance-producer controls pass. The production gate
 validates the new accepted record; prior runtime-payload verification is reused.
 Stage 0 is BLOCKED: 31 accepted, 17 missing, zero unreviewed of 48.
+
+## Two-control acceptance — S0-LL01-b and S0-LL02-b, 13 September 2026
+
+The user told Codex “accept both then” after Codex identified these two controls
+and recommended acceptance based on Claude's reviews. The decision is bound to
+review commit `8a3a1d34`, containing the thirtieth and thirty-second audits.
+LL01-b retains its synthetic child-command scope and command-record timeout
+identification. LL02-b retains its hand-built Wasm descriptor and per-call cleanup
+scope. Neither acceptance claims generated code or a full CCL bootstrap.
+
+The unchanged producer creates two separate accepted envelopes in
+`TWO-CONTROLS-PROJECT-ACCEPTANCE`. Both pass their production slot gates. Exact
+execution/artifact preservation, the fourteen producer controls, preservation of
+all 31 earlier accepted result objects and all 33 current metadata bindings pass.
+Prior payload verification is reused. No fixture is re-executed for this decision.
+Stage 0 is **33 accepted, 15 missing, zero unreviewed of 48**.
