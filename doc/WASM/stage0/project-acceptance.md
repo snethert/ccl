@@ -224,3 +224,21 @@ unchanged producer preserves the original execution and all 38 earlier accepted
 records. The separate decision and envelope retain the review and authorization;
 original artifact bytes are referenced without duplication. The ledger now has
 39 accepted, nine missing and zero unreviewed. Census work proceeds next.
+
+## 14 September 2026 — S0-LL13-b late-Worker preservation
+
+The user's instruction “Accept LL13-b” authorizes acceptance after Claude's
+forty-sixth audit at `71cfeb0f`. The accepted [fixture](late-worker.md) covers
+four actual Workers, 64 KiB shared memory, eight-slot private tables, preserved
+shared/private state and late lazy-code installation. It does not qualify
+other bounds, browsers, a C linker/TLS implementation, generated B code, full
+CCL layouts or GC. The kernel's second-setup refusal is not directly exercised;
+duplicate ownership is refused by the supervisor.
+
+The unchanged producer preserves original execution fields and artifacts,
+adding only disposition and provenance. All 39 earlier accepted result objects
+remain unchanged, the accepted slot passes the production gate, all 40 bindings
+are current, and fourteen producer controls pass. The live ledger checker
+confirms **40 accepted, eight missing, zero unreviewed of 48**. Existing Wasm
+execution is reused; no inventory, criterion or frozen ledger-policy change
+and no historical payload scan is needed. Census closure remains the priority.

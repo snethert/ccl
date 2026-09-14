@@ -112,7 +112,7 @@ The five steps below supersede the historical implementation order that follows.
 
 1. Complete the startup census under S0-LL15-b/c. The [joined projection](joined-census.md) now preserves the retained input identities, effects and evaluated metadata in the exchange format, with specific omission controls and the reviewed dyld classification. The [richer collector](rich-census.md) now supplies actual expander, installation, materialization and initializer identities, native instruction operands and inspection of the exact traced image. The [initializer integration](initializer-joins.md) now places exact callees, returned values and per-process effect boundaries in that graph. The [native emission joins](native-emission-joins.md) add observed function/template/handler dependencies and parameterized subprimitive operands. The [early-boot witness](boot-observation.md) now records the boot-image subprocess separately; Claude has reviewed its execution scope, but all 133 cold thunks lack runtime source notes. The [xload insertion witness](cold-initializer-origins.md) now supplies module origins for all 133, with 131 source contexts and two null ranges. Claude's seventeenth audit reviewed that witness. The [boot integration](boot-integration.md) now places the execution, binding histories and origin edges in the exchange graph, reviewed by Claude's eighteenth audit; its historical-scenario obligations remain open. The [wrapper follow-up](boot-wrappers.md) resolves the 1,059 previously opaque macro/special values, reviewed by Claude's nineteenth audit. The [seed revision](startup-seed-revision.md) addresses the kernel entry proposal with actual callback, builtin and method identities, approved by Claude's twentieth audit for the native profile; save/restore callback equality remains open. Its diagnostic confirms that removing only the two largest membership edges still masks every seed omission. Replace membership widening with source traversal and bounded calls before closure. Complete target source traversal and the other lowering/import/store classes, and review the seed set and conservative call bounds. Consult the [attempt-1 reference survey](../history/attempt1-reference.md) for the seeds, initialization cycle, conditional load and dynamic-call families that failed there; it is reference, not evidence. Do not infer missing observations from printed previews or treat image construction as initializer execution.
 2. S0-LL08-a's [registration/target-state proof](stub-registration.md), including R6, is accepted at 02ff713d. Extend static reachability beyond its fourteen-form fixture using that registration. All formal LL15 prerequisites are accepted; full source closure is still work to perform. The reviewed [first driver](source-traversal.md) accounts for every top-level form of `lib/dumplisp.lisp`. The [description extension](target-descriptions.md) now captures seven definitions, two top-level initializer bodies and four deferred load-time initializers; five native-boundary stops remain. Its eight D1-derived subtype rows and eight explicit boundary obligations preserve the distinction between data layout, native-only mechanisms and required startup services. Next qualify the inherited macro environment, implement or refine the boundary replacements in isolated fixtures, and bound the restore callback calls before expanding the source inventory. No existing widening edge is removed by this partial capture. General top-level macros, includes and conditional top-level forms still need traversal support and controls. All source experiments remain in disposable pristine U1 copies; implementation starts from a clean baseline.
-3. Complete the unblocked standing controls, engine matrix and remaining isolated hand-built fixtures: LL07-a, LL13-b, LL19-a, both LL21-c variants and LL15-a. Keep each deliverable and its validation separate.
+3. Complete the engine matrix and remaining isolated hand-built fixtures: LL19-a, both LL21-c variants and LL15-a. The standing controls, LL07-a and LL13-b are accepted. Keep each deliverable and its validation separate.
 4. S0-ABI-selection is accepted at 8e7a4221, using the dated engineering rationale and reviewed correctness evidence. No timing trial or benchmark-selection claim was added.
 5. Complete S0-CONTRACTS-a after its constituent evidence is available.
 
@@ -173,7 +173,8 @@ S0-LL22-a, S0-LL23-a and S0-LL24-a are accepted after their independent reviews
 and the user's explicit decisions. The production artifact policy is reviewed
 without defect. S0-LL22-b is also accepted after Claude's forty-second audit and
 the user's explicit decision. S0-LL07-a is accepted after Claude's forty-fourth audit and the user's decision.
-Stage 0 has 39 accepted, eight missing and one unreviewed required slots.
+S0-LL13-b is accepted after Claude's forty-sixth audit and the user's decision.
+Stage 0 has 40 accepted, eight missing and zero unreviewed required slots.
 
 The SETF registry witness and the new lexical callback bounds below advance
 helper qualification. The [LL07-a conversion fixture](conversions.md) now passes
@@ -186,7 +187,7 @@ Wasm service implementation and the full census integration remain open.
 S0-LL13-b now has an executed [late-Worker fixture](late-worker.md): four actual
 Workers, 24 transitions with full-memory comparison, eleven policy refusals,
 nine rejected semantic mutants and ten artifact-role omissions. Claude's
-forty-sixth audit reviewed it without defect; user acceptance remains open. Next return to the remaining startup
+forty-sixth audit reviewed it without defect; the user accepted it. Continue with the remaining startup
 boundaries and broader source traversal. LL22-b now
 has an accepted [R6 control](r6-control.md) for the actual
 registration patch. Existing fixtures do not discharge full census closure or authorize functional shared compiler changes.
@@ -259,7 +260,7 @@ Use the retained flat graphs and per-call worklists for the remaining work:
    only where the corresponding complete source edges and bounds are justified.
 4. Run the genuine joined closure and independent omission controls, then seek
    adversarial review of LL15-b/c. Keep execution, review and user acceptance
-   separate. LL13-b remains pending its own acceptance decision.
+   separate. LL13-b is accepted independently of the census work.
 
 Retain one compact packet per deliverable. The source-wide packet references
 existing baseline inputs and does not repeat native builds, accepted-envelope

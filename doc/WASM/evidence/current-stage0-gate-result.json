@@ -1,14 +1,13 @@
 {
   "version": 2,
-  "assessment": "SCOPED_EXECUTION_COMPOSITE",
+  "assessment": "SCOPED_PROJECT_ACCEPTANCE",
   "date": "2026-09-14",
-  "basis": "LL13-b executes 24 ordered full-memory/instance transitions, eleven policy refusals, nine semantic mutants and ten production-role omissions. The unchanged production slot gate reports only its unreviewed reason. All 39 accepted per-record bindings stay current; their execution is reused. No full historical artifact scan.",
+  "basis": "S0-LL13-b accepted after Claude audit 46 and explicit user decision. The production slot gate passes. All 39 earlier objects are preserved and all 40 bindings are current. Original execution and artifact bytes are reused.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
       "missing S0-CONTRACTS-a [complete-report]",
       "missing S0-ENGINE-a [complete-report]",
-      "unreviewed S0-LL13-b [full]",
       "missing S0-LL15-a [full]",
       "missing S0-LL15-b [native]",
       "missing S0-LL15-c [native]",
@@ -17,34 +16,30 @@
       "missing S0-LL21-c [unshared-template]"
     ]
   },
-  "prior_result_sha256": "b56daf1d3e2c03e95e4947c27d706d321d8d4a74b7e4c132107bfb60a056f8bb",
+  "prior_result_sha256": "0e8c376d2e10ef73fb31414c205c708a28a5a675da001d120776dfa55509cec1",
   "new_results": [
     {
       "id": "S0-LL13-b",
-      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-late-worker-r1/results.json",
-      "sha256": "4387fb6014197d34930639f7c5a13b5b4bdd18f02bb44e28e8036dbc79c280cb"
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll13b-accepted-results.json",
+      "sha256": "637dfa844f74d3613e6d089e9f01aef6f2ce51532b2dba23e74c2cff95491e3b"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll07a-accepted-results.json",
-  "combined_results_sha256": "ec6b952f735d329a5059c215a4be9756193b6bfdd7fc9f86523eaa588449e45b",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll13b-accepted-results.json",
+  "combined_results_sha256": "c5b5049754463d3be79cb7506906413a6dbe27c423c5189d8cb333fcf8975cf4",
   "inventory": {
     "locator": "stage0/inventory.json",
     "sha256": "0900b2f7a3c89e3eb08699b4bc82ce8f496b57df15021a137bffb19c6d438e73"
   },
   "active_results": [
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll07a-accepted-results.json",
-      "sha256": "ec6b952f735d329a5059c215a4be9756193b6bfdd7fc9f86523eaa588449e45b"
-    },
-    {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-late-worker-r1/results.json",
-      "sha256": "4387fb6014197d34930639f7c5a13b5b4bdd18f02bb44e28e8036dbc79c280cb"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll13b-accepted-results.json",
+      "sha256": "c5b5049754463d3be79cb7506906413a6dbe27c423c5189d8cb333fcf8975cf4"
     }
   ],
   "counts": {
-    "accepted": 39,
+    "accepted": 40,
     "missing": 8,
-    "unreviewed": 1,
+    "unreviewed": 0,
     "required": 48
   }
 }

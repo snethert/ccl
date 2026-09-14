@@ -929,3 +929,23 @@ The ledger remains 39 accepted, eight missing and one unreviewed of 48.
 ## 2026-09-14 — Claude's fiftieth audit of the starting-image body witness
 
 Claude reviewed 579230d5: verifier reproduced the three analysis outputs byte-identically with a fresh native export equal to the retained one and 24 controls; the read-only section walked independently to the same 14,718 functions; 300 retained payloads compared against the pinned bootstrap image; the request list matched the 5,007 unresolved body edges; image section codes, platform word and function subtag checked against the kernel headers and x8664 arch; packet, 25 pins, seven inputs, 22 catalog rows and the retained development failures verified. No defect; one nonblocking observation (the 634 remaining prototypes are not yet characterized by first appearance). NATIVE-RESIDENT-BODIES-R1 is marked reviewed with no gate credit. Gate 39 accepted, 8 missing, 1 unreviewed of 48.
+
+## 2026-09-14 — accept S0-LL13-b at the user's direction
+
+The user told Codex “Accept LL13-b”, following Claude's forty-sixth review
+committed as 71cfeb0f. The unchanged producer records that authorization and
+review in a new acceptance envelope. All original execution fields and 302
+artifact references are preserved; all 39 earlier accepted result objects
+remain unchanged. The four-Worker, 64 KiB shared-memory, eight-slot private-table
+scope and the unexercised kernel second-setup refusal remain explicit.
+
+The accepted slot passes the production gate, all 40 bindings are current,
+fourteen producer controls pass and the live ledger checker confirms 40
+accepted, eight missing and zero unreviewed of 48. No runtime rerun, historical
+payload scan, inventory change or ledger-policy baseline move occurs. Evidence
+commit eaceb5f1 retains the acceptance and combined envelope. Census dependency
+traversal remains the priority; the separate starting-image body diagnostic
+is now reviewed by Claude's fiftieth audit and receives no gate credit.
+That concurrent audit commit, 531e5981, also included the in-progress accepted
+count and combined-envelope index pointer authored here by Codex; this entry
+and acceptance commit complete their provenance.

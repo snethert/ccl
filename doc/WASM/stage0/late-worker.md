@@ -1,9 +1,10 @@
 # Late-Worker shared-state preservation — 14 September 2026
 
-Status: S0-LL13-b [full] executed; reviewed by Claude's forty-sixth audit at `8cb81f6b` without defect; project acceptance
-pending. Packet `LATE-WORKER-R1` contains one complete 24-transition scenario,
+Status: S0-LL13-b [full] accepted by the user's explicit instruction after
+Claude's forty-sixth audit of `8cb81f6b`, committed as `71cfeb0f`, without defect.
+Packet `LATE-WORKER-R1` contains one complete 24-transition scenario,
 eleven refused scenarios, nine rejected semantic mutants and ten production
-artifact-role omissions. Stage 0 is **39 accepted, eight missing and one
+artifact-role omissions. Stage 0 is **40 accepted, eight missing and zero
 unreviewed of 48**.
 
 ## What executes
@@ -103,5 +104,13 @@ runner registration changes its contract digest; all 39 accepted bindings remain
 current. The live ledger checker passes at 39/8/1 without rescanning historical
 accepted payloads.
 
-Next under the alternating plan is the census: finish the remaining startup
-boundary replacements and generalize traversal beyond the image-restore file.
+The user subsequently instructed “Accept LL13-b”. The unchanged acceptance
+producer adds disposition and provenance in a separate envelope, preserving
+the original execution and all 39 earlier accepted records. The accepted slot
+passes the production gate, all 40 bindings are current, and the live ledger
+checker confirms 40/8/0. No Wasm rerun or historical payload scan was needed.
+
+The kernel's own repeated-setup refusal is not directly exercised; duplicate
+ownership is refused by the supervisor before a Worker exists. Acceptance
+retains that reviewed limit along with the fixed memory/table bounds and
+hand-built Node/V8 scope. Census dependency traversal remains the priority.

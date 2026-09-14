@@ -60,6 +60,8 @@ Next, use the witnessed source ranges and complete native payloads to establish
 source/IR dependencies. The remaining 634 prototypes need separate dynamic-heap,
 installation or generated-function provenance; numeric IDs from a new process
 must not be substituted for the old ones. The 95 unwitnessed global bindings
-and 1,562 computed calls also remain on the census worklist. Stage 0 remains
-**39 accepted, eight missing and one unreviewed of 48**; LL13-b still awaits
-the user's acceptance decision.
+and 1,562 computed calls also remain on the census worklist. At this execution,
+Stage 0 had
+**39 accepted, eight missing and one unreviewed of 48**.
+The user subsequently accepted LL13-b, taking the ledger to 40/8/0; this
+diagnostic itself receives no gate credit.

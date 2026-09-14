@@ -296,7 +296,7 @@
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
       "currency": "ORIGINAL_FAILURE",
-      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged."
+      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged."
     },
     {
       "id": "INTEGRATED-RUNTIME-r10",
@@ -1400,6 +1400,20 @@
         "record": "stage0/claude-review.md",
         "acceptance": "S0-LL13-b [full] is complete at its stated scope and ready for the user's acceptance decision."
       }
+    },
+    {
+      "id": "S0-LL13-b-PROJECT-ACCEPTED-20260914",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll13b-accepted-results.json",
+      "sha256": "637dfa844f74d3613e6d089e9f01aef6f2ce51532b2dba23e74c2cff95491e3b",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "0900b2f7a3c89e3eb08699b4bc82ce8f496b57df15021a137bffb19c6d438e73",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Hand-built scalar Wasm on macOS Node/V8: four real Workers, 64 KiB shared memory, emitter-owned static/BSS/heap/staging/private ranges and separate eight-slot per-Worker tables. Explicit process-once and owned private setup, lazy code publication, late/subsequent creation. No C linker/TLS, B compiler, full CCL object layout, GC or browser qualification."
     }
   ],
   "auxiliary_records": [
@@ -2866,6 +2880,18 @@
         "record": "stage0/claude-review.md",
         "acceptance": "Diagnostic witness only; no census gate credit. LL15-b/c remain missing."
       }
+    },
+    {
+      "id": "LL13-B-ACCEPTANCE-PACKET",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll13b-project-acceptance/packet.json",
+      "sha256": "7ce06189b373c50262e11e3ed2d5f3ebde9e4f711471213692d153e8cf7849b3",
+      "scope": "User-authorized acceptance after Claude audit 46; existing execution reused. 40 accepted, eight missing, zero unreviewed."
+    },
+    {
+      "id": "LL13-B-ACCEPTANCE-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll13b-project-acceptance/gate-result.json",
+      "sha256": "d183c6430a765f0d2637fbc455440cb34f289b4bcceeb551a7e98c5dc47a4132",
+      "scope": "User-authorized acceptance after Claude audit 46; existing execution reused. 40 accepted, eight missing, zero unreviewed."
     }
   ]
 }
