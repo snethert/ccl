@@ -860,3 +860,7 @@ The source-wide report also corrects the reproduction wording from Claude's
 latest review: address-bearing previews can differ in both native and target
 captures; work-directory prefixes are separate, disclosed comparison context.
 Stage 0 remains 39 accepted, eight missing and one unreviewed of 48.
+
+## 2026-09-14 — Claude's forty-eighth audit of the build IR joins
+
+Claude reviewed 5c1ca7b0: verifier replayed all 4,006,405 retained events against the pinned base graph with six outputs byte-identical, 22 controls and eight callback probes reproduced; call, bound and bypass arithmetic recomputed from the facts; the open computed calls characterized as functional parameters, non-lexical initializers, ioblock struct slots, dispatch vectors and hooks; U1's pass-2 bypass confirmed; packet, 19 pins and 16 catalog rows verified. No defect; one nonblocking observation (per-site global gaps inflate graph diagnostics). NATIVE-BUILD-FLOW-R1 is marked reviewed with no gate credit. Gate 39 accepted, 8 missing, 1 unreviewed of 48.

@@ -2822,9 +2822,16 @@
       "sha256": "763e8df9fd4244004322078968bce9c3197f5a77ce5c550765c39ec0152e1581",
       "scope": "Sequential native-build IR/code integration: 51,601 materialized compiler identities, 103,393 calls, 200 local bounds and exact symbols for 98,213 global calls. Eight reused callback captures and 22 controls pass; six outputs reproduce byte-identically. 1,562 computed calls and 259 unattached assembly bypasses remain open. No target qualification or gate credit.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Forty-eighth audit at 5c1ca7b0: verifier replayed the full retained stream with six outputs byte-identical, call and bound arithmetic recomputed, open computed calls characterized, U1 pass-2 bypass confirmed, packet, pins and catalog verified.",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "Diagnostic derivative only; no census gate credit. LL15-b/c remain missing."
+      }
     }
   ]
 }
