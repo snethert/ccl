@@ -492,3 +492,17 @@ packet and direct inputs; historical evidence is not rescanned.
 Claude reviewed 8670212e: verifier passed, producer re-executed with all 68 deterministic files byte-identical and re-verified, gate composites reproduced from the HEAD inventory, observations tallied against the cases file, four pins and catalog verified. No defect; one observation for the acceptance decision: the gate's role policy is inventory-driven and the production inventory requires four roles where the control exercises ten, so the list will need widening when Stage 1 produces real ABI, template and binary artifacts. STANDING-ARTIFACT-IDENTITY-CONTROL-R1 is marked reviewed and S0-LL22-a is ready for the user's acceptance decision.
 
 Claude reviewed 4feaef69: verifier passed, all six native sessions re-executed byte-identically, the four lookup-chain bodies confirmed in U1 source, 42 pins and catalog verified. No defect; one nonblocking observation (no static candidate bound beyond the traversed operators). NATIVE-TARGET-DISPATCH-R1 is marked reviewed. Gate 34 accepted, 13 missing, 1 unreviewed of 48.
+
+
+## 2026-09-14 — accept S0-LL22-a and authorize production policy, LL23 and LL24
+
+The user explicitly accepted S0-LL22-a after Claude's thirty-sixth audit at
+08151452. The separate acceptance retains the distinction between ten roles
+exercised by the control and four currently required in production. Original
+execution facts/artifacts and the earlier 34 accepted records are unchanged;
+35 current bindings, the new production slot gate and fourteen producer controls
+pass. Ledger: 35 accepted, 13 missing, zero unreviewed of 48.
+
+The same user instruction authorizes production artifact-role enhancement and
+the outstanding LL23/LL24 deliverables. Each will be separately reviewable;
+this authorization is not acceptance of those future results.

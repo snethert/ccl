@@ -1,7 +1,7 @@
 # Artifact identity control — 14 September 2026
 
 Status: executed; reviewed by Claude's thirty-sixth audit at `8670212e` without
-defect; project acceptance pending. The audit notes that the production inventory's
+defect; accepted by the user on 14 September 2026. The audit notes that the production inventory's
 required-role list is narrower than the ten roles this control exercises.
 `STANDING-ARTIFACT-IDENTITY-CONTROL-R1` is retained in
 `2026-09-14-artifact-identity-control-r1` through the
@@ -64,10 +64,11 @@ and S0-LL22-b's four R6 artifact categories remain separate work.
 Only LL22-a's runner registration changes its contract digest. All 34 accepted
 records remain current and their prior payload verification is reused. The new
 record's production slot gate blocks only for review/acceptance. The scoped
-ledger is **34 accepted, 13 missing and one unreviewed of 48**. This packet is
-ready for independent review; it is not project-accepted evidence.
+ledger after user acceptance is **35 accepted, 13 missing and zero unreviewed
+of 48**. The separate acceptance envelope preserves original execution and
+records the narrower production role policy explicitly.
 
-The next scheduled deliverable returns to census helper qualification and the
-five boundary contracts. When target registry materialization is scheduled,
+The user separately authorized production-policy enhancement and LL23/LL24
+work. Census helper qualification and the five boundary contracts remain open. When target registry materialization is scheduled,
 the plan requires an explicit census node for RESTART wrapper contents supplied
 by the target class system; serialization of the key cannot satisfy that node.

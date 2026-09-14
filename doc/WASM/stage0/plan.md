@@ -88,7 +88,9 @@ independent review and project acceptance remain separate from execution.
 12. [S0-LL22-a](artifact-identity-control.md) now executes artifact identity and
     role checks through the unchanged production gate: two complete synthetic
     builds pass and 36 defective records reject, including different installed
-    binaries sharing a template. Independent review and acceptance are pending.
+    binaries sharing a template. Claude's thirty-sixth audit found no defect;
+    the user accepted the enforcement scope on 14 September. Production-policy
+    enhancement is separately authorized.
 13. The [architecture dispatch slice](target-dispatch.md) now supplies four
     private U1 lookup bodies and joins both real architecture-macro events to
     the current target registry. Nine transition probes agree with the unchanged
@@ -150,3 +152,13 @@ The [scale, startup and granularity plan](product-risk-plan.md) makes the unmeas
 ## Evidence compatibility
 
 New acceptance producers use the [version 2 binding contract](../contracts/evidence-binding.md). Retain each execution’s original inventory snapshot and bind its test entry and transitive prerequisites, excluding only documented review/status bookkeeping. Add unrelated IDs without changing the inventory version; change that version only when global compatibility must be invalidated. Contract and policy changes update the affected semantic entry. A separate verified format upgrade can preserve compatible legacy evidence without claiming execution. Missing results and independent acceptance remain required.
+
+
+### Immediate work — user direction, 14 September 2026
+
+After accepting S0-LL22-a, add production artifact requirements per applicable
+test without rewriting earlier accepted contracts. Complete the outstanding
+S0-LL23-a structured diagnostics fixture and S0-LL24-a ledger/decision control
+as separate deliverables. S0-LL23-b remains accepted at its original frame scope.
+Independent review and user acceptance of new results remain separate steps.
+Then resume the alternating census and remaining Stage 0 work.

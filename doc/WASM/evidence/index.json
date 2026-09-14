@@ -1188,6 +1188,37 @@
         "record": "stage0/claude-review.md",
         "acceptance": "S0-LL22-a [control] is complete at its stated scope and ready for the user's acceptance decision; the production required-role list is narrower than the control and will need widening when Stage 1 produces real ABI, template and binary artifacts."
       }
+    },
+    {
+      "id": "STANDING-ARTIFACT-IDENTITY-CONTROL-R1-ACCEPTED",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll22a-project-acceptance/S0-LL22-a/accepted/accepted-results.json",
+      "sha256": "b8525f6e882adc774366155e74cdc15a3b45a4d397da80c8d303a18aa068d4cf",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll22a-project-acceptance/packet.json",
+      "packet_sha256": "3062fb05a46c595ada60c6d733c0ebe7ad334f912c8cf4a7cd6673b75e170481",
+      "timestamp": "2026-09-14T12:04:30.025964+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "cf801ca1536e662186bf73d8a2f5c67ced572fb08c1d5fa5e6f93122c444a07a",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "CONTROL EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Stage 0 artifact identity enforcement control: unchanged production gate; two complete synthetic builds and 36 rejected records across ten artifact roles. Current production inventory requires only implementation, test, schema and log; this acceptance qualifies the enforcement mechanism, not complete production-role coverage. User separately authorizes a production-policy enhancement. No compiler/runtime execution, producer authentication, semantic build consistency, source-to-binary derivation or R6 normalization claim.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Thirty-sixth audit at 8670212e: retained verifier passed; producer re-executed with all 68 deterministic files byte-identical and re-verified; the production gate on the accepted envelope against the HEAD inventory shows S0-LL22-a missing and a HEAD slot inventory shows only unreviewed; observations tallied against the cases file; packet, catalog at 1c7f11b6 with 85 new rows and all four source pins at HEAD verified; one observation for the acceptance decision (the production inventory requires four artifact roles, the control exercises ten), 2026-09-14",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "S0-LL22-a [control] is complete at its stated scope and ready for the user's acceptance decision; the production required-role list is narrower than the control and will need widening when Stage 1 produces real ABI, template and binary artifacts."
+      },
+      "note": "User explicitly accepts S0-LL22-a and separately authorizes production-policy enhancement plus LL23/LL24 work. Original execution preserved.",
+      "project_acceptance": {
+        "decision": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll22a-project-acceptance/S0-LL22-a/decision.json",
+        "sha256": "d8edd073c27cfe281fbad364c190572e795ad5ba7e0b757e56d17cf7269c61f8",
+        "timestamp": "2026-09-14T13:10:00.414378+00:00"
+      }
     }
   ],
   "auxiliary_records": [
@@ -2080,9 +2111,9 @@
     },
     {
       "id": "CURRENT-STAGE0-COMBINED",
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-ll01a-accepted-results.json",
-      "sha256": "7e42573af6a01bd355d850bd1a8a83de70eb32787aad4056ea40a37226022e31",
-      "scope": "Unchanged aggregate of 34 accepted records, including user-accepted LL01-a. Separate raw LL22-a awaits review/acceptance; scoped ledger: 13 missing, one unreviewed of 48."
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll22a-accepted-results.json",
+      "sha256": "31d91b17ba62c47b33b7050358c9711706192aadc5da8ca9a24e7a6a90ff0049",
+      "scope": "35 accepted records: prior 34 unchanged plus user-accepted S0-LL22-a at enforcement-mechanism scope. 13 missing, zero unreviewed of 48."
     },
     {
       "id": "LL02A-ACCEPTANCE-DECISION",
@@ -2366,6 +2397,24 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md"
       }
+    },
+    {
+      "id": "LL22A-PROJECT-ACCEPTANCE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll22a-project-acceptance/packet.json",
+      "sha256": "3062fb05a46c595ada60c6d733c0ebe7ad334f912c8cf4a7cd6673b75e170481",
+      "scope": "User accepts LL22-a against Claude review at 08151452; 35 accepted, 13 missing, zero unreviewed. Production role-policy gap explicit; original execution and previous accepted objects preserved."
+    },
+    {
+      "id": "LL22A-ACCEPTANCE-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll22a-project-acceptance/gate-result.json",
+      "sha256": "5c0ca6f76f27dfd9b02aad0bc7f811731f4318c2aac0864ec09eb11667f4c0e6",
+      "scope": "User accepts LL22-a against Claude review at 08151452; 35 accepted, 13 missing, zero unreviewed. Production role-policy gap explicit; original execution and previous accepted objects preserved."
+    },
+    {
+      "id": "LL22A-ACCEPTANCE-VERIFICATION",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll22a-project-acceptance/verification.json",
+      "sha256": "b2392bf4cfcf85bcf14e4c1ed368e869b5aa5fd06d6447684f49e3646da71782",
+      "scope": "User accepts LL22-a against Claude review at 08151452; 35 accepted, 13 missing, zero unreviewed. Production role-policy gap explicit; original execution and previous accepted objects preserved."
     }
   ]
 }

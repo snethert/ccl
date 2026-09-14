@@ -159,3 +159,20 @@ is reused, with no fixture rerun or historical archive scan.
 
 Stage 0 remains BLOCKED for missing work: **34 accepted, 14 missing and zero
 unreviewed required slots out of 48**.
+
+
+## Thirty-sixth-audit acceptance — S0-LL22-a, 14 September 2026
+
+The user told Codex “accept S0-LL22-a, add the production-policy enhancement,
+and proceed with LL23 and LL24”. The decision is bound to Claude's review at
+`08151452`. It accepts the tested artifact identity enforcement mechanism:
+two complete synthetic builds, 36 rejected records and ten required roles.
+The production inventory currently requires only implementation, test, schema
+and log. This acceptance does not assert complete production role coverage;
+the requested policy enhancement is separate work.
+
+The unchanged producer adds only disposition and provenance. Original execution
+and artifacts, and all 34 earlier accepted result objects, are preserved. The
+new accepted slot passes the production gate; 35 current metadata bindings and
+fourteen acceptance-producer controls pass. No runtime rerun or old-payload scan.
+Stage 0 remains BLOCKED: **35 accepted, 13 missing, zero unreviewed of 48**.
