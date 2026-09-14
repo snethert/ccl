@@ -2,21 +2,21 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "33a4b0bd25280ec92b92135dca134fdddef5774a",
+  "commit": "8f0127b148dce9c6573acf499544e46972ab3bfc",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "a487e4bf0903103e59a52c5195856d4cb61e8fa02c346432fadf7e28a36e3843",
-  "immutable_evidence_files": 160744,
+  "catalog_sha256": "cb4692a59c484056e5f716baeb33e7af42dd38a38b573d289a16189f38420698",
+  "immutable_evidence_files": 160790,
   "indexed_references_verified": 925,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped TYPEP qualification: seven native sessions, 22 constant front-end probes, two native ctype guards, two unchanged calls, five native and 22 checker controls. Retained verifier checks 42 direct source pins and unchanged traversal. Only 28 new files added; prior catalog rows preserved. No archive-wide scan, native rebuild or acceptance change.",
+  "verification": "Scoped S0-LL02-b: original/fresh five positive calls and five rejected mutants; six byte-identical modules and observations, six direct source pins, 31 accepted and one pending metadata binding. Only 46 new files; prior catalog rows unchanged. No native build or archive scan.",
   "remote": null,
   "off_machine_backup": false,
   "scope": "Separate local evidence repository; original failures retained. Thirty-one accepted records. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-13-target-predicates-r1",
-    "files": 28,
-    "bytes": 544168,
-    "prior_commit": "7f1b85fe532015e55e30f24db7eda744cf4a3b45"
+    "directory": "2026-09-13-behavioral-control-r1",
+    "files": 46,
+    "bytes": 168952,
+    "prior_commit": "33a4b0bd25280ec92b92135dca134fdddef5774a"
   }
 }

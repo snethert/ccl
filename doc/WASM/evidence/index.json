@@ -1020,6 +1020,24 @@
         "record": "stage0/claude-review.md",
         "acceptance": "S0-LL01-b [control] is complete at its stated scope and ready for the user's acceptance decision."
       }
+    },
+    {
+      "id": "STANDING-BEHAVIORAL-CONTROL-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-behavioral-control-r1/results.json",
+      "sha256": "2fbcdf182af11d6bdcb0707fb5d7ce01f6577246be5ce7bae0d71d5a2ad3b68d",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-behavioral-control-r1/packet.json",
+      "packet_sha256": "ff22d01a2bf6883fe80cd6b038beb8b739951b7ae3752e2095de6da60ba375c5",
+      "timestamp": "2026-09-14T00:38:45.816217+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "2144bcf649d9773cc47fd55dd033ae4ce4bc109fcf0d66136e02dd43b42cfca7",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "CONTROL EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "S0-LL02-b/control: five real hand-built Wasm calls pass; five mutations independently fail unchanged ordinary assertions for escaped capture, all six values and normal/exception cleanup. Fixed memory/descriptor bounds; no generated compiler, full CCL layout, GC or bootstrap claim. Awaiting independent review and acceptance."
     }
   ],
   "auxiliary_records": [
@@ -1914,7 +1932,7 @@
       "id": "CURRENT-STAGE0-COMBINED",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-ll03a-accepted-results.json",
       "sha256": "d45b9047e495e20b12d19a951776bcb54aeaee1807e1b31b61935a71c7b71c39",
-      "scope": "Unchanged aggregate of 31 accepted records. The separate S0-LL01-b raw control awaits review/acceptance; current scoped ledger: 16 missing and one unreviewed of 48."
+      "scope": "Unchanged aggregate of 31 accepted records. Separate raw S0-LL01-b and S0-LL02-b records await project acceptance; LL02-b also awaits independent review. Scoped ledger: 15 missing, two unreviewed of 48."
     },
     {
       "id": "LL02A-ACCEPTANCE-DECISION",
@@ -2087,6 +2105,18 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md"
       }
+    },
+    {
+      "id": "BEHAVIORAL-CONTROL-PACKET",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-behavioral-control-r1/packet.json",
+      "sha256": "ff22d01a2bf6883fe80cd6b038beb8b739951b7ae3752e2095de6da60ba375c5",
+      "scope": "Compact actual-Wasm semantic control, original failures, six byte-identical rebuilt modules/observations and six source pins. Scoped 31/15/2 ledger."
+    },
+    {
+      "id": "BEHAVIORAL-CONTROL-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-behavioral-control-r1/gate-result.json",
+      "sha256": "008b5151d0a7c6ea7cbe165ea721a1cdf6aa99f0674538f41878070c4be70717",
+      "scope": "Scoped slot gate and current metadata bindings: 31 accepted, 15 missing, two unreviewed of 48. No full accepted-payload rescan."
     }
   ]
 }

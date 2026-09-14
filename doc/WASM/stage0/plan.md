@@ -59,9 +59,13 @@ independent review and project acceptance remain separate from execution.
 7. The [TYPEP helper slice](target-predicates.md) corrects host membership answers
    for target fixnums/bignums, supplies the source optimizer body and preserves
    the native ctype guard. Twenty-two front-end probes, five native controls and
-   22 checker controls pass; independent review is pending. Native class objects,
-   aliases and wider inference remain open. Take a standing control next, then
-   resume helper/object qualification, boundary replacements and wider traversal.
+   22 checker controls pass. Claude's thirty-first audit reviewed it without defect;
+   aliases, native class objects and wider inference remain open.
+8. [S0-LL02-b](behavioral-control.md) now executes an escaping mutable closure,
+   all six values and nested cleanup through normal and exceptional Wasm exits.
+   Five positive calls and five semantic mutants pass; review and acceptance are
+   pending. Next witness DEFTYPE expansion before target translation, then resume
+   helper/object qualification, boundary replacements and wider traversal.
 
 The B desk record's actual inventory prerequisites are the reviewed ABI/runtime
 records; S0-ENGINE-a is not a prerequisite of S0-ABI-selection. Engine qualification
