@@ -925,3 +925,7 @@ retains one 22-file packet, NATIVE-RESIDENT-BODIES-R1, with 25 source pins,
 awaiting adversarial review. The next step is source/IR dependency traversal
 from the recovered ranges, alongside provenance for the other prototypes.
 The ledger remains 39 accepted, eight missing and one unreviewed of 48.
+
+## 2026-09-14 — Claude's fiftieth audit of the starting-image body witness
+
+Claude reviewed 579230d5: verifier reproduced the three analysis outputs byte-identically with a fresh native export equal to the retained one and 24 controls; the read-only section walked independently to the same 14,718 functions; 300 retained payloads compared against the pinned bootstrap image; the request list matched the 5,007 unresolved body edges; image section codes, platform word and function subtag checked against the kernel headers and x8664 arch; packet, 25 pins, seven inputs, 22 catalog rows and the retained development failures verified. No defect; one nonblocking observation (the 634 remaining prototypes are not yet characterized by first appearance). NATIVE-RESIDENT-BODIES-R1 is marked reviewed with no gate credit. Gate 39 accepted, 8 missing, 1 unreviewed of 48.

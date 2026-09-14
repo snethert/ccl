@@ -296,7 +296,7 @@
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
       "currency": "ORIGINAL_FAILURE",
-      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged."
+      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged."
     },
     {
       "id": "INTEGRATED-RUNTIME-r10",
@@ -2292,9 +2292,9 @@
     },
     {
       "id": "CURRENT-STAGE0-COMBINED",
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll07a-accepted-results.json",
-      "sha256": "ec6b952f735d329a5059c215a4be9756193b6bfdd7fc9f86523eaa588449e45b",
-      "scope": "39 explicitly accepted records at reviewed scope."
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll13b-accepted-results.json",
+      "sha256": "c5b5049754463d3be79cb7506906413a6dbe27c423c5189d8cb333fcf8975cf4",
+      "scope": "40 explicitly accepted records at reviewed scope."
     },
     {
       "id": "LL02A-ACCEPTANCE-DECISION",
@@ -2856,9 +2856,16 @@
       "sha256": "c6d2d7d3c6454fde7dc81d8d64487eabc6f792d557060e3c965130c008c67c1e",
       "scope": "Original bootstrap read-only body diagnostic: complete 14,718-function region anchored by 14,720 identical inventory rows. Exact full payloads for 4,373 of 5,007 open prototypes; 4,130 source ranges and 501 direct function-literal slots. Three native exports agree, three analysis outputs replay byte-identically and 24 controls reject. Dynamic suffix unjoined; no source/IR, call-bound or census gate credit.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Fiftieth audit at 579230d5: verifier reproduced three outputs byte-identically with a fresh native export equal, read-only section walked independently to the same 14,718 functions, 300 payloads compared against the pinned image, image constants checked against kernel headers, packet, 25 pins, seven inputs and 22 catalog rows verified.",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "Diagnostic witness only; no census gate credit. LL15-b/c remain missing."
+      }
     }
   ]
 }

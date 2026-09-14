@@ -1,6 +1,6 @@
 # Starting-image body witnesses — 14 September 2026
 
-Status: executed diagnostic, awaiting adversarial review. No census acceptance
+Status: executed diagnostic; reviewed by Claude's fiftieth audit at `579230d5` without defect. No census acceptance
 credit is claimed. The [binding-version join](binding-versions.md) left 5,007
 observed prototypes without attached compiler bodies. This step obtains exact
 native image bodies for 4,373 of them, from the original bootstrap input.
