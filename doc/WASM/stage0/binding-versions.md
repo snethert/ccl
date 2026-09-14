@@ -1,6 +1,6 @@
 # Sequential-build binding versions — 14 September 2026
 
-Status: executed diagnostic, awaiting adversarial review. This joins the
+Status: executed diagnostic; reviewed by Claude's forty-ninth audit at `91c27067` without defect. This joins the
 global-call symbols from the reviewed [build IR packet](build-flow.md) to
 their actual recorded function-cell values. It grants no census gate credit.
 No native session or shared-source change was needed.

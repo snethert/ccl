@@ -892,3 +892,7 @@ holds one 13-file packet, NATIVE-BINDING-VERSIONS-R1, with 18 source pins.
 No native session, shared-source edit, inventory change or accepted-envelope
 mutation occurred. The packet awaits adversarial review; LL15-b/c remain
 missing and the ledger stays 39 accepted, eight missing and one unreviewed.
+
+## 2026-09-14 — Claude's forty-ninth audit of the binding-version join
+
+Claude reviewed 91c27067: verifier replayed all 4,006,405 retained events against the pinned base graph and build-flow delta with five outputs byte-identical and 22 controls reproduced; histories and graph patch tallied independently from the retained facts; the 95 unwitnessed called symbols characterized; the macro-wrapper marker confirmed against the x8664 xloader source; packet, 18 pins, four inputs, 13 catalog rows and the three retained development failures verified. No defect; one nonblocking observation (9,744 resident-before values mean the 5,007 missing body witnesses must come from the starting image's provenance). NATIVE-BINDING-VERSIONS-R1 is marked reviewed with no gate credit. Gate 39 accepted, 8 missing, 1 unreviewed of 48.

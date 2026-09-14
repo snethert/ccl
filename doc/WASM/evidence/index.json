@@ -2839,9 +2839,16 @@
       "sha256": "daf2f67931e02c1aedbd59e8fd40c4f9d1998a5812cb4428ef2860d9442f87dd",
       "scope": "Original rich-build binding histories: 98,213 global calls join to 5,693 exact symbols; 5,598 have observed values and 95 remain unwitnessed. Earlier versions, callable roles and exact FASL generations retained; per-symbol unresolved obligations replace repeated site gaps. Five outputs replay byte-identically, 22 controls and three positive probes pass. No exhaustive runtime bound, target qualification or census gate credit.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Forty-ninth audit at 91c27067: verifier replayed the full retained stream with five outputs byte-identical, histories and graph patch tallied independently, unwitnessed symbols characterized, macro-marker pin confirmed, packet, 18 pins, four inputs and 13 catalog rows verified.",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "Diagnostic derivative only; no census gate credit. LL15-b/c remain missing."
+      }
     }
   ]
 }
