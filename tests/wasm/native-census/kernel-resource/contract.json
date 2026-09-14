@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "id": "KERNEL-RESOURCE-IDENTITY",
+  "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+  "original": {
+    "path": "lib/dumplisp.lisp",
+    "sha256": "5cd12bcbfe6164874e4cefdbd6583612725d8cd773f5d970c66b956097408b74",
+    "ordinal": 12,
+    "start": 12716,
+    "end": 13142,
+    "name": "CCL::KERNEL-PATH",
+    "first_gap": "%GET-KERNEL-GLOBAL-PTR"
+  },
+  "replacement": {
+    "path": "tests/wasm/native-census/kernel-resource/replacement.lisp",
+    "name": "CCL::KERNEL-PATH",
+    "dependency": "WASM-CENSUS-SERVICES::KERNEL-RESOURCE-IDENTITY",
+    "kind": "EXPLICIT_TARGET_SOURCE_REPLACEMENT"
+  },
+  "loader_contract": {
+    "version": 1,
+    "input": "Nonempty Lisp string without NUL naming the bootstrap resource in the host virtual namespace",
+    "ownership": "Installer snapshots the supplied string before readiness; each lookup returns an independent string",
+    "phase": "Loader supplies the input once before calling the target KERNEL-PATH replacement",
+    "interpretation": "Exact opaque name, with no native executable lookup, pathname canonicalization or foreign string decoding",
+    "refusals": ["KERNEL-RESOURCE-NOT-INSTALLED", "INVALID-KERNEL-RESOURCE", "KERNEL-RESOURCE-ALREADY-INSTALLED"]
+  },
+  "scope": "One original source boundary, one target-front-end replacement capture and a native-executed portable reference contract. No generated target execution or completed census closure.",
+  "remaining": ["Wasm string materialization and collector roots", "Process-owned loader-input storage and publication", "Target early/full condition implementation", "Integration into the complete LL15 exchange graph"]
+}

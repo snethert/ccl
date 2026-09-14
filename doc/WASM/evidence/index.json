@@ -296,7 +296,7 @@
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
       "currency": "ORIGINAL_FAILURE",
-      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged."
+      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged."
     },
     {
       "id": "INTEGRATED-RUNTIME-r10",
@@ -2756,6 +2756,16 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll07a-project-acceptance/gate-result.json",
       "sha256": "b56daf1d3e2c03e95e4947c27d706d321d8d4a74b7e4c132107bfb60a056f8bb",
       "scope": "User-authorized acceptance after Claude audit 44; existing execution reused."
+    },
+    {
+      "id": "NATIVE-KERNEL-RESOURCE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-kernel-resource-r1/packet.json",
+      "sha256": "01d7338e07782ae06862fb59f79e876837b2c36e474bd413ee7595e7fb7ac3f7",
+      "scope": "One explicit KERNEL-PATH source replacement and private native loader-service reference: 14 cases, 8 rejected service mutants, 19 checker controls; original native gap retained. No target runtime implementation or census gate credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

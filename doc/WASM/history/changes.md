@@ -721,3 +721,31 @@ objects remain identical, 39 bindings and fourteen producer controls pass, and
 the production slot gate passes. The live ledger checker reports BLOCKED at
 39 accepted, nine missing and zero unreviewed. No runtime or native build rerun,
 inventory change, acceptance-policy change or historical payload scan.
+
+## 2026-09-14 — capture the KERNEL-PATH resource replacement
+
+Following the user's acceptance of LL07-a and direction to proceed, Codex
+returned to the census startup boundaries. The new isolated fixture retains
+U1's original KERNEL-PATH pointer-macro failure and separately captures an
+explicit replacement through the registered Wasm front end. Its one call is to
+the declared loader resource-identity service. A lexical native reference
+qualifies installation once, validation, readiness and input/output string
+ownership with fourteen cases; eight native source mutants and nineteen checker
+controls reject. Two normal sessions reproduce the capture byte for byte.
+
+The initial checker incorrectly expected no macro events and rejected the
+enclosing DEFUN expansion. The original capture, log, record and exact fixture
+sources are retained; the corrected checker requires the exact U1 expander
+record under target state. Service, replacement and native driver bytes are
+unchanged between attempts. No shared compiler source, kernel or FASL changed.
+Native source and direct input pins, the retained verifier, document checks and
+the live ledger checker pass. The compact packet adds 43 catalog rows and
+146,371 bytes at evidence commit 3fc2ca3; historical payloads were not rescanned.
+
+Independent review is pending. The result is a source replacement and native
+reference witness, with Wasm string/GC storage, publication, target conditions
+and full census integration still open. Original dumplisp coverage remains
+seven definitions and five stops; no graph widening edge or gate reason is
+removed. The ledger stays 39 accepted, nine missing and zero unreviewed.
+Next under the alternating plan is S0-LL13-b late-Worker shared-state preservation,
+then the remaining startup replacements and broader source traversal.

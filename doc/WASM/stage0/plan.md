@@ -178,8 +178,13 @@ Stage 0 has 39 accepted, nine missing and zero unreviewed required slots.
 The SETF registry witness and the new lexical callback bounds below advance
 helper qualification. The [LL07-a conversion fixture](conversions.md) now passes
 272 cases, nineteen conversion mutants and ten artifact-role omissions, with
-real memory above 2 GiB. Next return to the five startup boundary replacements
-and broader source traversal. Continue the alternating remaining Stage 0 work. LL22-b now
+real memory above 2 GiB. The [KERNEL-PATH replacement](kernel-resource.md) now
+captures one explicit loader-service call and qualifies its private native
+reference with fourteen cases, eight native mutants and nineteen checker
+controls. Original source stops remain distinct from replacement progress;
+Wasm service implementation and the full census integration remain open.
+Next execute S0-LL13-b late-Worker shared-state preservation, then return to
+the remaining startup boundaries and broader source traversal. LL22-b now
 has an accepted [R6 control](r6-control.md) for the actual
 registration patch. Existing fixtures do not discharge full census closure or authorize functional shared compiler changes.
 
@@ -206,5 +211,6 @@ bindings. Eight target-front-end probes and 21 checker controls guard unknown
 parameters, assignment, captured writes, identity and scope. Two fresh sessions
 reproduce the raw captures. Claude's forty-third audit reviewed the slice without
 defect; no widening edge is removed and the broader runtime call population
-remains unbounded. With LL07-a executed,
-resume the five startup boundary replacements and general source traversal.
+remains unbounded. The new resource-identity witness advances one of the five
+startup boundary replacements without changing the historical traversal or
+claiming target runtime execution. No broad graph edge has been removed.
