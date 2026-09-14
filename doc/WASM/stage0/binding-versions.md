@@ -88,8 +88,12 @@ unobserved change. The standalone verifier replays the original stream and
 requires byte identity for all five analysis outputs. The packet retains the
 three original development failures and their executed sources.
 
-Next, resolve the 95 binding worklist entries and obtain the missing native
-body witnesses, then use the call graph for parameter-flow and registry bounds.
+The subsequent [starting-image witness](resident-bodies.md) recovers exact native
+payloads for 4,373 of these 5,007 prototypes, with 4,130 reported source ranges.
+It leaves this graph unchanged: native body bytes are inputs to the required
+source/IR traversal, not complete dependency witnesses. The remaining 634 need
+other provenance. Next, resolve those body dependencies and the 95 binding
+worklist entries, then use the call graph for parameter-flow and registry bounds.
 The rich build's 1,562 computed calls remain open; the independent file survey
 and r7 retain their separate populations. Target environment qualification,
 startup replacements, the reviewed seed integration, lowering/import/store

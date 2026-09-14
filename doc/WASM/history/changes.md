@@ -896,3 +896,32 @@ missing and the ledger stays 39 accepted, eight missing and one unreviewed.
 ## 2026-09-14 — Claude's forty-ninth audit of the binding-version join
 
 Claude reviewed 91c27067: verifier replayed all 4,006,405 retained events against the pinned base graph and build-flow delta with five outputs byte-identical and 22 controls reproduced; histories and graph patch tallied independently from the retained facts; the 95 unwitnessed called symbols characterized; the macro-wrapper marker confirmed against the x8664 xloader source; packet, 18 pins, four inputs, 13 catalog rows and the three retained development failures verified. No defect; one nonblocking observation (9,744 resident-before values mean the 5,007 missing body witnesses must come from the starting image's provenance). NATIVE-BINDING-VERSIONS-R1 is marked reviewed with no gate credit. Gate 39 accepted, 8 missing, 1 unreviewed of 48.
+
+## 2026-09-14 — Codex witnesses starting-image native bodies
+
+Following the user's supplied forty-ninth review and audit commit f6fc50ce,
+Codex identifies the original release bootstrap as the source of resident
+functions. An independent image decoder walks its 94,001 read-only objects,
+including all 14,718 functions. Fresh native inspection reproduces the first
+14,720 original inventory rows byte-for-byte. The complete dynamic suffix
+differs and is not joined or normalized into the old identity namespace.
+
+Of the 5,007 prototypes without compiler-body joins, 4,373 now have exact
+native image payloads, including their immediate words. All 3,420,096 bytes
+match the original image-file spans; 4,130 functions expose source ranges and
+501 literal slots reference other read-only functions. These are serialized
+body and object-reference witnesses, not reconstructed old runtime addresses
+or complete source/IR dependencies. The remaining 634 need other provenance.
+No census graph edge, computed-call bound or gate disposition changes.
+
+Two producer sessions agree and a separate verifier's fresh native export
+reproduces the same witness. Three analysis outputs are byte-identical;
+24 controls reject and the dynamic-suffix isolation probe passes. The packet
+retains the original failed prefix attempts and first producer, their sources,
+commands and outputs; pristine input trees and identical exports are not
+repeated. No shared source, FASL, kernel or saved image is modified, and no
+native build or historical evidence scan runs. Evidence commit c194f031
+retains one 22-file packet, NATIVE-RESIDENT-BODIES-R1, with 25 source pins,
+awaiting adversarial review. The next step is source/IR dependency traversal
+from the recovered ranges, alongside provenance for the other prototypes.
+The ledger remains 39 accepted, eight missing and one unreviewed of 48.

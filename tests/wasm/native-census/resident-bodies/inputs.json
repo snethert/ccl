@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "image_member": "dx86cl64.image",
+  "image_sha256": "326cd6fc4bf8b93d27feb88729a15d89b8ae26190f860a9b199758dbfc404e56",
+  "inputs": {
+    "source": {"path": "macos-gate0-inputs/source.tar", "sha256": "285977d985b80b1c89ca49e5598fa0e0fb2ca37175bc1ac3536fb2b7a7c1ec9e"},
+    "bootstrap": {"path": "macos-gate0-inputs/bootstrap.tar.gz", "sha256": "0eceab57e519f82bd6db011c596eb2a28e2a510abcd76e217d49a10e90f4002f"},
+    "kernel": {"path": "2026-09-12-native-census-r7/baseline/build/dx86cl64", "sha256": "2f3a9888f1bf515130e7d124831d31319386c55f3208710393b238637dcf5699"},
+    "observer": {"path": "2026-09-12-rich-census-r1/development/r4-observer.lisp", "sha256": "07f396dbeadcc62c3978ced175975ed38d065741391a1a5fcdabc82caa25b3de"},
+    "installer": {"path": "2026-09-12-rich-census-r1/development/r4-install.lisp", "sha256": "ddfd7ba4ae7899c87719095d28cf0855500e40434e45d48d2fb46c2e14be0939"},
+    "events": {"path": "2026-09-12-rich-census-r1/observed-r4.jsonl.gz", "sha256": "23b63396031cca638f845822d15d2b7af927aa8d0c5d193ae4c03df70b120a7b"},
+    "bindings": {"path": "2026-09-14-binding-versions-r1/delta.json.gz", "sha256": "4d7ec16f021de6b2c1ae3a101c5740fafdcaa02d30864f97cb816637f4e10ac1"}
+  }
+}

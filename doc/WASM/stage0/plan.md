@@ -237,8 +237,13 @@ Use the retained flat graphs and per-call worklists for the remaining work:
    5,693 exact symbols and preserves their observed versions; 5,598 have value
    witnesses and 95 remain a concrete source/disposition worklist. Repeated
    site gaps now share one unresolved obligation per symbol. Resolve those 95
-   entries, obtain the 5,007 remaining observed-prototype body witnesses, and
-   qualify the candidate bounds rather than treating observations as exhaustive.
+   entries and qualify candidate bounds rather than treating observations as
+   exhaustive. The [starting-image witness](resident-bodies.md) now supplies
+   exact native payloads for 4,373 of the 5,007 prototypes without attached
+   compiler bodies, including 4,130 reported source ranges. Use those to obtain
+   source/IR dependencies; the other 634 need dynamic-heap, installation or
+   generated-function provenance. The complete read-only image region is
+   anchored; the different dynamic replay suffix is not joined.
    Connect boot/image generations and assembly
    through witnesses, not printed names. The independent file sessions and r7's
    original 1,729 computed sites keep their own identities and counts.
