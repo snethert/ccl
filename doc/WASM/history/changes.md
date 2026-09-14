@@ -792,3 +792,38 @@ boundary replacements and broader source traversal under the alternating plan.
 ## 2026-09-14 — Claude's forty-sixth audit of the late-Worker fixture
 
 Claude reviewed 8cb81f6b: verifier passed with 289 identical files, producer re-executed with every bundle, observation and memory snapshot byte-identical, the retained snapshots inspected independently for untouched bytes outside owned regions and preserved early-Worker private state across the late instantiations, binaries disassembled, gate composites and live ledger reproduced, manifest, pins and catalog verified. Only LL13-b's contract hash changed. No defect; one nonblocking observation (the kernel's owner/process-state setup refusal is untested). LATE-WORKER-R1 is marked reviewed and S0-LL13-b awaits the user's acceptance decision. Gate 39 accepted, 8 missing, 1 unreviewed of 48.
+
+## 2026-09-14 — Codex source-wide census collection
+
+Following the user's request to finish the census, added an isolated driver
+using U1's actual file compiler, an iterative flat acode recorder, source-derived
+D1 data descriptions and a conservative lexical callback analyzer. All 164
+recorded native compilation units complete, with four included sources also
+observed. The native result contains 51,708 function observations and 104,081
+calls; 206 computed sites receive local bounds and 1,517 remain unresolved.
+Native LAP contributes 257 output functions with no Lisp-pass-2 join.
+
+The Wasm census pass has 103 successful units, 135 EOFs, 20,005 function
+observations and 56,337 calls. Its 259 caught form failures remain explicit;
+4,363 later captures carry earlier-failure markers. Reader refusals still stop
+their files. The general macro/helper environment remains unqualified, and
+native-only surfaces are not assigned invented target definitions.
+
+The source/control corpus covers actual includes, conditional reads, macros,
+local macros, structures, classes, methods, deferred initializer ownership,
+guard/publication refusals and failed-effect continuation. Thirty-four controls
+pass. Target and callback captures reproduce byte-identically. Native IR and
+emitted code repeat exactly; eight diagnostic operand previews differ only in
+printed heap addresses, with both originals retained. An unwrapped native
+session reproduces all 3,168 output code bytes across 26 corpus functions.
+All 980 disposable source/bootstrap files remain unchanged.
+
+One compact packet retains the surveys, per-call worklists, probe evidence and
+original failed experiments. The development record discloses two early
+interactive Python checker mistakes without original on-disk snapshots; it
+does not reconstruct them as evidence. This is collection progress, not closure
+acceptance: sequential build/boot correspondence, broader call bounds, target
+qualification/replacements, final graph integration and genuine omission tests
+remain. The plan now keeps the census as the priority. No inventory, criterion,
+accepted result, historical graph or shared compiler/kernel source changes.
+Ledger remains 39 accepted, eight missing and one unreviewed of 48.

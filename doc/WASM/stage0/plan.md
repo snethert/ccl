@@ -185,8 +185,8 @@ controls. Original source stops remain distinct from replacement progress;
 Wasm service implementation and the full census integration remain open.
 S0-LL13-b now has an executed [late-Worker fixture](late-worker.md): four actual
 Workers, 24 transitions with full-memory comparison, eleven policy refusals,
-nine rejected semantic mutants and ten artifact-role omissions. Independent
-review and acceptance remain open. Next return to the remaining startup
+nine rejected semantic mutants and ten artifact-role omissions. Claude's
+forty-sixth audit reviewed it without defect; user acceptance remains open. Next return to the remaining startup
 boundaries and broader source traversal. LL22-b now
 has an accepted [R6 control](r6-control.md) for the actual
 registration patch. Existing fixtures do not discharge full census closure or authorize functional shared compiler changes.
@@ -217,3 +217,35 @@ defect; no widening edge is removed and the broader runtime call population
 remains unbounded. The new resource-identity witness advances one of the five
 startup boundary replacements without changing the historical traversal or
 claiming target runtime execution. No broad graph edge has been removed.
+
+### Census completion priority — latest user direction, 14 September 2026
+
+The user asked to finish the census. Keep work on LL15-b/c rather than resume
+the alternating fixture schedule. The [source-wide collector](source-closure.md)
+now runs the actual file compiler over all 164 recorded units and four includes.
+All native units complete; the Wasm survey has 103 successful units, 259 retained
+form failures and 29 reads stopped before EOF. This completes the general driver
+and observation pass, not the qualified closure. No census slot is promoted.
+
+Use the retained flat graphs and per-call worklists for the remaining work:
+
+1. Establish explicit correspondence between the independent file-session bodies
+   and the sequential r7/boot function generations. Account for the 257 native
+   output functions that bypass Lisp pass 2. Do not substitute fresh counts for
+   the original 1,729 computed sites or equate bodies by printed name.
+2. Qualify the reached macro/helper environment and logical-function/registry
+   descriptions; complete the mandatory startup service replacements and assign
+   justified profile dispositions to native-only surfaces. The 61 incomplete
+   target units include native-only code; failure counts are not added criteria.
+3. Bound parameters, registries and other computed values. The new native
+   sessions prove 206 local callback bounds and leave 1,517 computed calls open.
+   Integrate these with the reviewed seed revision, initializer/loader witnesses,
+   lowering/import/store classifications and reconciled trace. Replace widening
+   only where the corresponding complete source edges and bounds are justified.
+4. Run the genuine joined closure and independent omission controls, then seek
+   adversarial review of LL15-b/c. Keep execution, review and user acceptance
+   separate. LL13-b remains pending its own acceptance decision.
+
+Retain one compact packet per deliverable. The source-wide packet references
+existing baseline inputs and does not repeat native builds, accepted-envelope
+hashing or historical catalog scans. Implementation still starts from pristine U1.

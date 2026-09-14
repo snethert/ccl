@@ -2798,6 +2798,16 @@
         "record": "stage0/claude-review.md",
         "acceptance": "Source replacement and native reference witness only; no census gate credit."
       }
+    },
+    {
+      "id": "NATIVE-SOURCE-CLOSURE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-source-closure-r1/packet.json",
+      "sha256": "6d77ac70633628559dc6de7ff9508f8a0aa54d4ca383f07164898e0a66cd3a59",
+      "scope": "Source-wide diagnostic: 164 independent native compilation units complete; 103 target units complete. Exact flat IR and native output joins, 206 native local callback bounds, retained unresolved calls and target failures, 34 controls. No sequential-r7 correspondence, wider target qualification or census gate credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }
