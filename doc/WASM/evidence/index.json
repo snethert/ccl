@@ -2290,8 +2290,14 @@
       "id": "NATIVE-TARGET-OBJECTS-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-target-objects-r1/packet.json",
       "sha256": "424edb30e2737ead3b9e70cbaa80070a57f1a5294f89345dc10614b41774f94a",
-      "review_disposition": "NOT_REVIEWED",
-      "scope": "Actual IOBLOCK class cell and registered RESTART wrapper from 293 source-routed restore expansions. Unchanged U1 writer/native loader: five registry roundtrips, four negative inputs, seven tiny data FASLs, sixteen checker controls. Independent full-byte decoding, sharing and wrapper-payload erasure; two native captures and all data reproduce. U1 sources, existing FASLs and registry entries unchanged. Target materialization, remaining helpers and five source stops remain open. No Wasm, full macro qualification, graph replacement or gate credit."
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+      "scope": "Actual IOBLOCK class cell and registered RESTART wrapper from 293 source-routed restore expansions. Unchanged U1 writer/native loader: five registry roundtrips, four negative inputs, seven tiny data FASLs, sixteen checker controls. Independent full-byte decoding, sharing and wrapper-payload erasure; two native captures and all data reproduce. U1 sources, existing FASLs and registry entries unchanged. Target materialization, remaining helpers and five source stops remain open. No Wasm, full macro qualification, graph replacement or gate credit.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Thirty-fifth audit at 7cb8d5af: retained verifier passed; both native sessions re-executed with all seven data FASLs, both captures, the controls and the summary byte-identical; the CLASS-CELL MAKE-LOAD-FORM, ISTRUCT-CELL-P, opcode 71 writer/loader and opcode 39 confirmed in U1 source; packet, catalog at dd52a2e6 with 20 new rows and all 47 source pins at HEAD verified; the S0-LL01-a acceptance at 6f6914a1 confirmed by a gate run on the 34-record envelope; one nonblocking observation (RESTART wrapper contents become a port obligation), 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md"
+      }
     },
     {
       "id": "LL01A-PROJECT-ACCEPTANCE",

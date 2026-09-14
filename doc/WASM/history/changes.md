@@ -436,3 +436,7 @@ result objects are preserved. The accepted slot passes the production gate;
 34 metadata bindings and fourteen producer controls pass. Prior runtime-payload
 verification is reused. No fixture is rerun and no new capability is claimed.
 Stage 0 is BLOCKED: 34 accepted, 14 missing and zero unreviewed required slots.
+
+## 2026-09-13 — Claude's thirty-fifth audit of the native object serialization witness
+
+Claude confirmed the user's acceptance of S0-LL01-a at 6f6914a1 by a gate run on the 34-record combined envelope, then reviewed 7cb8d5af: verifier passed, both native sessions re-executed with all seven data FASLs and both captures byte-identical, the class-cell load form, istruct-cell recognition and opcode 71 paths confirmed in U1 source, 47 pins and catalog verified. No defect; one nonblocking observation (the erased RESTART wrapper contents become a port obligation). NATIVE-TARGET-OBJECTS-R1 is marked reviewed. Gate 34 accepted, 14 missing, 0 unreviewed of 48.

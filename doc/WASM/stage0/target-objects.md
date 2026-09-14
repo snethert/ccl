@@ -1,6 +1,6 @@
 # Native object serialization witness — 13 September 2026
 
-Status: executed; independent review pending. Packet `NATIVE-TARGET-OBJECTS-R1`
+Status: executed; reviewed by Claude's thirty-fifth audit at `7cb8d5af` without defect. Packet `NATIVE-TARGET-OBJECTS-R1`
 is retained as `2026-09-13-target-objects-r1` through the
 [evidence index](../evidence/index.json). This is the census deliverable following
 Claude's thirty-fourth audit, alternating with the standing controls.
