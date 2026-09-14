@@ -194,3 +194,22 @@ pass. The unchanged live ledger checker passes at 37 accepted, eleven missing
 and zero unreviewed of 48. Its frozen baseline need not move: the checker
 validates the new acceptance decisions directly. No runtime rerun or old-payload
 scan was required. Census helper qualification resumes next.
+
+## Forty-second-audit acceptance — LL22-b, 14 September 2026
+
+After Claude's review of `23bb1455`, committed as `a668149c`, and Codex's
+response naming S0-LL22-b, the user instructed “accept it”. The record is
+accepted for the actual census registration patch: all four R6 categories,
+evaluated R6a, exact intentional-change accounting and 44 rejected controls.
+Native behavior reuses the accepted 12 September execution. The comparator is
+specific to the two-entry registration patch; future shared edits need their
+own explained comparison and R6 run.
+
+The unchanged acceptance producer preserves original execution facts and
+artifacts. Publication relocates only the added provenance; existing payloads
+remain in their original locations. All 37 earlier accepted result objects are
+unchanged, all 38 bindings are current, and fourteen producer controls pass.
+The new slot's production gate retains only G0's missing-record reason when
+assessed alone; the existing aggregate supplies that accepted prerequisite.
+The unchanged live ledger checker confirms **38 accepted, ten missing, zero
+unreviewed of 48**. No criterion, inventory or frozen ledger-policy change.

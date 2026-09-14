@@ -631,3 +631,17 @@ boundary contracts; functional compiler changes remain outside this scope.
 ## 2026-09-14 — Claude's forty-second audit of the R6 registration control
 
 Claude reviewed 23bb1455: verifier passed, producer re-executed with every deterministic file byte-identical and re-verified, gate composites rebuilt from the HEAD inventory, live ledger checker at 37/10/1, the two systems sources diffed to exactly the two module lines and every differing FASL byte accounted for independently, 15 pins, publication references and catalog verified. No defect; two nonblocking observations (native behaviour reused from the accepted run; the comparator profile is specific to this patch). Claude also noted f7b11c67's index relocation of the SETF diagnostic. R6-REGISTRATION-CONTROL-R1 is marked reviewed and S0-LL22-b is ready for the user's acceptance decision. Gate 37 accepted, 10 missing, 1 unreviewed of 48.
+
+### 2026-09-14 — Accept S0-LL22-b after Claude audit 42 (Codex)
+
+The user instructed “accept it” after supplying Claude’s review at a668149c
+and Codex’s response naming LL22-b. The unchanged producer adds acceptance and
+provenance only. Publication preserves all original artifact locators; existing
+native inputs are reused without duplication. All 37 prior accepted records
+remain unchanged, 38 bindings and fourteen producer controls pass, and the live
+ledger checker confirms 38 accepted, ten missing and zero unreviewed of 48.
+Native behavior remains the accepted 12 September execution; later shared edits
+need their own explained comparator profile and R6 run. No inventory, criterion
+or frozen ledger-policy change. A final composition assertion accidentally used
+an updated index dictionary; its original failure and the successful immutable-pin
+check are retained. Census helper and startup-boundary work resumes next.

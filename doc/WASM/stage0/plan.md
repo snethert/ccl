@@ -158,13 +158,15 @@ New acceptance producers use the [version 2 binding contract](../contracts/evide
 
 S0-LL22-a, S0-LL23-a and S0-LL24-a are accepted after their independent reviews
 and the user's explicit decisions. The production artifact policy is reviewed
-without defect. Stage 0 has 37 accepted, ten missing and one unreviewed required slot.
+without defect. S0-LL22-b is also accepted after Claude's forty-second audit and
+the user's explicit decision. Stage 0 has 38 accepted, ten missing and zero
+unreviewed required slots.
 
 Resume census helper qualification with the SETF expander registry and its
 computed calls in the image-restore traversal, then the five source-boundary
 contracts and broader traversal. Continue the alternating remaining Stage 0
-work. LL22-b now has an executed [R6 control](r6-control.md), awaiting independent
-review. Existing fixtures do not discharge full census closure or authorize functional shared compiler changes.
+work. LL22-b now has an accepted [R6 control](r6-control.md) for the actual
+registration patch. Existing fixtures do not discharge full census closure or authorize functional shared compiler changes.
 
 
 The [SETF lookup witness](target-setf.md) now joins all five observed lookups to
@@ -175,5 +177,5 @@ five source-boundary stops remain. Claude's forty-first audit reviewed it withou
 defect; no census gate credit. The subsequent [LL22-b control](r6-control.md)
 now compares the actual accepted registration patch under all four R6 categories
 and evaluated R6a, with one complete case and 44 rejected alterations. It reuses
-native execution and awaits independent review. Next return to census helpers
+native execution and is accepted at that reviewed scope. Next return to census helpers
 and the five boundary replacements under the alternating plan.

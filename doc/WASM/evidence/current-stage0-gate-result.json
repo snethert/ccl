@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "assessment": "SCOPED_R6_CONTROL_EXECUTION",
+  "assessment": "SCOPED_PROJECT_ACCEPTANCE",
   "date": "2026-09-14",
-  "basis": "Actual R6 comparator and 44 controls pass. Published slot passes production artifact checks, awaiting review; G0 prerequisite is supplied by unchanged 37-record accepted aggregate. All accepted metadata bindings current; prior native execution reused.",
+  "basis": "S0-LL22-b accepted after Claude audit 42 and explicit user decision. Production slot gate has only its G0 prerequisite missing, supplied by the unchanged accepted aggregate. All 37 earlier objects preserved; 38 bindings current. Existing native execution and artifacts reused.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
@@ -15,36 +15,33 @@
       "missing S0-LL15-c [native]",
       "missing S0-LL19-a [full]",
       "missing S0-LL21-c [shared-template]",
-      "missing S0-LL21-c [unshared-template]",
-      "unreviewed S0-LL22-b [control]"
+      "missing S0-LL21-c [unshared-template]"
     ]
   },
-  "counts": {
-    "accepted": 37,
-    "missing": 10,
-    "unreviewed": 1,
-    "required": 48
-  },
+  "prior_result_sha256": "f04e18f5d8c38fbdf17a80ed3ececf1e3c252700b921794f767b480c4550175f",
+  "new_results": [
+    {
+      "id": "S0-LL22-b",
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll22b-accepted-results.json",
+      "sha256": "50e645f77815ad08c556e3005b9e2a6942195d9a12f1e845afc0b9a71e8fa30c"
+    }
+  ],
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll22b-accepted-results.json",
+  "combined_results_sha256": "d906263872436c9949ab98a22ecb9d9df61f0949a9898ad5405b8a15d7b61447",
   "inventory": {
     "locator": "stage0/inventory.json",
     "sha256": "dda34ba24ddfa824c886cbe646201f467832f559ee8969e96e7af7856213d70c"
   },
   "active_results": [
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll23-ll24-accepted-results.json",
-      "sha256": "6cb349ba8a490a14a991e2fea0a5f3855c4a6448dea3add4dfee60fb9fde03be"
-    },
-    {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-r6-control-r1-results.json",
-      "sha256": "051cc012f395769ca3e016e103dbbf375720b5967cc4d071221d36faec606bf6"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll22b-accepted-results.json",
+      "sha256": "d906263872436c9949ab98a22ecb9d9df61f0949a9898ad5405b8a15d7b61447"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll23-ll24-accepted-results.json",
-  "combined_results_sha256": "6cb349ba8a490a14a991e2fea0a5f3855c4a6448dea3add4dfee60fb9fde03be",
-  "new_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-r6-control-r1-results.json",
-  "new_results_sha256": "051cc012f395769ca3e016e103dbbf375720b5967cc4d071221d36faec606bf6",
-  "record_gate": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-r6-control-r1/publication.json",
-  "record_gate_sha256": "9bbaf05962b246dc3a726e59381a2e34a2d8f46accc6ed67fc8fdb3cb0f3cbb8",
-  "binding_check": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-r6-control-r1/binding-check.json",
-  "binding_check_sha256": "4c3d12ccc9efbd744557a298d70e352b40188f35812dc936c5e9ae9f501a7d0d"
+  "counts": {
+    "accepted": 38,
+    "missing": 10,
+    "unreviewed": 0,
+    "required": 48
+  }
 }

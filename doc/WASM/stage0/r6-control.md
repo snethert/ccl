@@ -1,7 +1,7 @@
 # S0-LL22-b — actual registration R6 control, 14 September 2026
 
-Status: executed; reviewed by Claude's forty-second audit at `23bb1455` without
-defect; project acceptance pending.
+Status: accepted by the user on 14 September 2026 after Claude's forty-second
+audit of `23bb1455`, committed as `a668149c`, found no defect.
 Packet `R6-REGISTRATION-CONTROL-R1` contains one complete comparison and 44
 quarantined damaged inputs, all refused by the same comparator.
 
@@ -69,8 +69,13 @@ The original producer envelope remains in the packet as a derivation record;
 its temporary reference links can be recreated by the runner. The native source
 and bootstrap archives are not copied into another packet.
 
-The current ledger is **37 accepted, ten missing, one unreviewed of 48**. Only
-LL22-b's runner/status registration changes; accepted contracts and results are
-preserved. Next return to census helper qualification and the five explicit
+The user instructed “accept it” in response to the review and Codex's message
+naming S0-LL22-b. The acceptance preserves every original execution field and
+artifact, adding only disposition and provenance. The original artifact paths
+remain at the evidence root; native archives are not copied into the acceptance
+packet. All 37 earlier accepted result objects remain unchanged. The production
+slot gate clears the review reason, and the unchanged live ledger checker
+confirms **38 accepted, ten missing, zero unreviewed of 48**. No criterion or
+frozen ledger baseline changes. Next return to census helper qualification and the five explicit
 startup boundary replacements under the alternating plan. LL15 closure remains
 open and this control does not authorize functional compiler changes.

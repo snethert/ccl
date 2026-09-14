@@ -2,21 +2,23 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "166e04d5aa014036e75ab130d46c48b8175e1479",
+  "commit": "39a698473fa1384485be3c1cd8830f5454e7fd1d",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "92f37d0aa3f740c52806cd981a571f5b7857c050f1f240a93e38a907cbf271b3",
-  "immutable_evidence_files": 161743,
+  "catalog_sha256": "4a0937051ad9c93e5f8a1d3f6e1f4c36c0e650994eba9e34cf0c4cc3cfe2ea14",
+  "immutable_evidence_files": 161765,
   "indexed_references_verified": 925,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped S0-LL22-b: actual registration unit applied and restored; four-category R6 comparison, 44 rejected controls and six deterministic replay files. Complete changed-FASL decode plus exact byte accounting, direct retained input pins, published production slot gate and live ledger check. Native builds/tests reused; 40 new files (746256 bytes), prior catalog rows unchanged.",
+  "verification": "Scoped S0-LL22-b acceptance: unchanged producer and fourteen controls; exact acceptance/provenance delta, 46 original artifact references reused, 37 prior result objects preserved, 38 current bindings and live ledger checker PASS. No native rebuild or full historical payload scan.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository; original failures retained. Thirty-seven accepted records. Full census and generated code remain open.",
+  "scope": "Separate local evidence repository; original failures retained. Thirty-eight accepted records. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-14-r6-control-r1",
-    "files": 40,
-    "bytes": 746256,
-    "prior_commit": "dc1906c105e4d0a1d9b1c521b0beb8219c4b302d"
+    "directory": "2026-09-14-ll22b-project-acceptance",
+    "files": 22,
+    "bytes": 31039122,
+    "catalog_sha256": "4a0937051ad9c93e5f8a1d3f6e1f4c36c0e650994eba9e34cf0c4cc3cfe2ea14",
+    "immutable_evidence_files": 161765,
+    "prior_commit": "166e04d5aa014036e75ab130d46c48b8175e1479"
   }
 }
