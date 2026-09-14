@@ -1,6 +1,6 @@
 # Origins of the remaining native prototypes — 14 September 2026
 
-Status: executed diagnostic, awaiting adversarial review. This answers the
+Status: executed diagnostic; reviewed by Claude's fifty-first audit at `6aaedc7e` without defect. This answers the
 nonblocking observation in Claude's fiftieth audit of the
 [starting-image witness](resident-bodies.md). The classification reads retained
 evidence only; no native process or build is run.
