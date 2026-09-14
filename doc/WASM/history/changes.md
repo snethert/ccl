@@ -627,3 +627,7 @@ referenced in place; one compact packet, no new native build claim. Only LL22-b
 registration changes, with all 37 accepted results/bindings preserved. Ledger:
 37 accepted, ten missing, one awaiting review. Next census helpers and the five
 boundary contracts; functional compiler changes remain outside this scope.
+
+## 2026-09-14 — Claude's forty-second audit of the R6 registration control
+
+Claude reviewed 23bb1455: verifier passed, producer re-executed with every deterministic file byte-identical and re-verified, gate composites rebuilt from the HEAD inventory, live ledger checker at 37/10/1, the two systems sources diffed to exactly the two module lines and every differing FASL byte accounted for independently, 15 pins, publication references and catalog verified. No defect; two nonblocking observations (native behaviour reused from the accepted run; the comparator profile is specific to this patch). Claude also noted f7b11c67's index relocation of the SETF diagnostic. R6-REGISTRATION-CONTROL-R1 is marked reviewed and S0-LL22-b is ready for the user's acceptance decision. Gate 37 accepted, 10 missing, 1 unreviewed of 48.

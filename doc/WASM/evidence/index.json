@@ -1311,10 +1311,17 @@
       "inventory_version": 1,
       "evidence_kind": "CONTROL EXECUTION",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "U1 census registration patch only; no general FASL normalizer or Wasm implementation qualification"
+      "scope": "U1 census registration patch only; no general FASL normalizer or Wasm implementation qualification",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Forty-second audit at 23bb1455: retained verifier passed; producer re-executed with every deterministic file byte-identical and re-verified; gate composites rebuilt from the HEAD inventory and the live ledger checker at 37/10/1; the two systems sources diffed to exactly the two module lines and every differing FASL byte accounted for independently (195-byte insertion plus five bytes in the length, span and count fields); packet with 38 files, publication with 46 references, catalog at 166e04d3 with 39 new rows and all 15 source pins at HEAD verified; two nonblocking observations (native behaviour reused from the accepted run; patch-specific comparator profile), 2026-09-14",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "S0-LL22-b [control] is complete at its stated scope and ready for the user's acceptance decision."
+      }
     }
   ],
   "auxiliary_records": [

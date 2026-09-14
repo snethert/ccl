@@ -1,6 +1,7 @@
 # S0-LL22-b — actual registration R6 control, 14 September 2026
 
-Status: executed, awaiting independent review and project acceptance.
+Status: executed; reviewed by Claude's forty-second audit at `23bb1455` without
+defect; project acceptance pending.
 Packet `R6-REGISTRATION-CONTROL-R1` contains one complete comparison and 44
 quarantined damaged inputs, all refused by the same comparator.
 
