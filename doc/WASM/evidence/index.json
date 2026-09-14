@@ -1121,10 +1121,17 @@
       "inventory_version": 1,
       "evidence_kind": "CONTROL EXECUTION",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "S0-LL01-a/control: isolated Stage 0 Wasm harness, three modules/nine required initializers. One complete and eight refused bootstraps; early/middle/late exceptions, diagnostic continuation, missing required module, precise first failure and withheld publication. Four loader mutants reject. No CCL image, generated code, arbitrary manifest, GC, threads, initializer timeout or production Stage 1 qualification. Awaiting independent review and acceptance."
+      "scope": "S0-LL01-a/control: isolated Stage 0 Wasm harness, three modules/nine required initializers. One complete and eight refused bootstraps; early/middle/late exceptions, diagnostic continuation, missing required module, precise first failure and withheld publication. Four loader mutants reject. No CCL image, generated code, arbitrary manifest, GC, threads, initializer timeout or production Stage 1 qualification. Awaiting independent review and acceptance.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Thirty-fourth audit at f9cde02b: retained verifier passed with a fresh replay; producer re-executed with all 45 deterministic files byte-identical and re-verified; the slot gate rebuilt from the HEAD inventory shows only unreviewed and the production gate on the 33-record accepted envelope shows all bindings current; retained loader mutants and their one-line diffs inspected; packet, catalog at 6fa9b36c with 70 new rows and all eight source pins at HEAD verified; two nonblocking observations (initializer hang not exercised by either LL01 control; fixed three-chain manifest), 2026-09-13",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "S0-LL01-a [control] is complete at its stated scope and ready for the user's acceptance decision."
+      }
     }
   ],
   "auxiliary_records": [

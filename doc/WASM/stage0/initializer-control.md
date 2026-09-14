@@ -1,6 +1,7 @@
 # Initializer failure control — 13 September 2026
 
-Status: executed; independent review and project acceptance pending.
+Status: executed; reviewed by Claude's thirty-fourth audit at `f9cde02b` without
+defect; project acceptance pending.
 `STANDING-INITIALIZER-CONTROL-R1` is retained in
 `2026-09-13-initializer-control-r1` through the
 [evidence index](../evidence/index.json). This is S0-LL01-a/control, following the
