@@ -405,3 +405,24 @@ One compact packet adds 70 files totaling 335,684 bytes. Only the LL01-a semanti
 ## 2026-09-13 — Claude's thirty-fourth audit of the initializer failure control
 
 Claude confirmed the user's acceptance of S0-LL01-b and S0-LL02-b at d7b5b1a5 by a gate run on the 33-record combined envelope, then reviewed f9cde02b: verifier replayed, producer re-executed with all 45 deterministic files byte-identical, slot gate rebuilt from the HEAD inventory, retained loader mutants and one-line diffs inspected, eight pins and catalog verified. No defect; two nonblocking observations (an initializer that never returns is exercised by neither LL01 control; the manifest is a fixed three-chain harness). STANDING-INITIALIZER-CONTROL-R1 is marked reviewed and S0-LL01-a is ready for the user's acceptance decision. Gate 33 accepted, 14 missing, 1 unreviewed of 48.
+
+## 2026-09-13 — witness symbolic serialization of native census objects
+
+After the user supplied Claude's thirty-fourth audit at 72939647 and requested
+continuation, Codex returned to census object qualification. The new isolated
+fixture joins the actual IOBLOCK class cell and registered RESTART wrapper from
+293 source-routed restore expansions to the native registries. U1 already saves
+these through a deferred class lookup and an istruct registry key. Five native
+roundtrips witness fresh/absent registry creation and identity sharing; two
+changed wrapper payloads produce identical 132-byte data FASLs. Four altered
+inputs and sixteen checker controls reject. An independent decoder checks the
+complete symbolic bytes. No native implementation defect or Wasm materialization
+claim is made.
+
+Two fresh native sessions reproduce their captures and seven tiny data files;
+verification covers this deliverable and direct dependencies. U1 sources,
+existing FASLs, native compiler bindings and original registry entries remain
+unchanged. The compact packet retains the original development failures and
+semantic mismatch; no prior evidence is rescanned or accepted envelope rebuilt.
+This witness awaits independent review. Stage 0 remains 33 accepted, 14 missing
+and one unreviewed; S0-LL01-a's reviewed status does not imply project acceptance.

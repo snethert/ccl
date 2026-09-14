@@ -2,21 +2,21 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "6fa9b360a075ab97708534459915151122dde934",
+  "commit": "dd52a2e12dcac9f1a0e768165e6fbb8b339d58c0",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "395bfcf24571328c83deeabc55136f7c21cb7c0a881512b3b667165ed5c19330",
-  "immutable_evidence_files": 160958,
+  "catalog_sha256": "b79aec6c71abd5b843728ac56a2a969e688cfd7fabb28d0986e652dd66254c39",
+  "immutable_evidence_files": 160978,
   "indexed_references_verified": 925,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped S0-LL01-a: final/fresh one complete, eight refused bootstraps and four rejected loader mutations. 43 byte-identical replay files, three modules/thirteen observations, eight source pins and 33 accepted metadata bindings. Only 70 new files; earlier catalog rows unchanged. No native build or archive scan.",
+  "verification": "Scoped native object serialization: two native sessions, five registry roundtrips/four negative inputs each, seven identical data FASLs, sixteen checker controls and 47 direct source pins. Only 20 new files (185814 bytes); prior catalog rows unchanged. Original failures/mismatch retained. No archive scan, native rebuild or acceptance change.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository; original failures retained. Thirty-one accepted records. Full census and generated code remain open.",
+  "scope": "Separate local evidence repository; original failures retained. Thirty-three accepted records; reviewed S0-LL01-a awaits project acceptance. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-13-initializer-control-r1",
-    "files": 70,
-    "bytes": 335684,
-    "prior_commit": "2e632d1f3bac9af2e9e6b1de6579ca5789b1e02a"
+    "directory": "2026-09-13-target-objects-r1",
+    "files": 20,
+    "bytes": 185814,
+    "prior_commit": "6fa9b360a075ab97708534459915151122dde934"
   }
 }

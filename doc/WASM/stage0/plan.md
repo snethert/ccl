@@ -74,9 +74,15 @@ independent review and project acceptance remain separate from execution.
     exceptions in the Stage 0 Wasm harness. Diagnostic continuation preserves the
     first error, blocks dependents and withholds ready publication; a missing
     module refuses before initialization. One complete, eight refused bootstraps
-    and four rejected loader mutations pass. Review and acceptance are pending.
-    Next resume census object/helper qualification, boundary replacements and
-    wider traversal.
+    and four rejected loader mutations pass. Claude's thirty-fourth audit reviewed
+    it without defect; explicit project acceptance remains pending.
+11. The [native object serialization witness](target-objects.md) joins the actual
+    IOBLOCK class cell and registered RESTART wrapper to U1's symbolic FASL paths.
+    Five native registry roundtrips and four negative inputs pass; seven data
+    files reproduce and sixteen checker controls reject. This establishes the
+    native serialization behavior, with target registry materialization still
+    open. Next take another standing control, then return to remaining helpers,
+    the five boundary contracts and broader source traversal.
 
 The B desk record's actual inventory prerequisites are the reviewed ABI/runtime
 records; S0-ENGINE-a is not a prerequisite of S0-ABI-selection. Engine qualification
