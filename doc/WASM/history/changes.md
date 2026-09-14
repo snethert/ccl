@@ -645,3 +645,18 @@ need their own explained comparator profile and R6 run. No inventory, criterion
 or frozen ledger-policy change. A final composition assertion accidentally used
 an updated index dictionary; its original failure and the successful immutable-pin
 check are retained. Census helper and startup-boundary work resumes next.
+
+### 2026-09-14 — Bound two lexical expander callbacks (Codex)
+
+Following the user’s instruction to proceed after LL22-b acceptance, added a
+read-only observation of DECLAIM and APPLY before native pass 2. Actual acode
+proves singleton callback prototypes through three immutable lexical bindings.
+Eight genuine Wasm-target front-end probes preserve unresolved parameters and
+assignments, including captured writes; 21 checker mutations reject. Both fresh
+native sessions reproduce all three captures, and the retained verifier passes.
+The observer restores its entry on normal and nonlocal exits. No compiler IR,
+shared source, FASL, inventory, accepted record or gate result changes. Original
+analyzer refusals and the failed nested-write control construction are retained
+in one compact packet. Independent review pending; ledger remains 38/10/0.
+Next S0-LL07-a typed conversions, then startup boundary replacements and broader
+source traversal under the alternating plan.

@@ -2,23 +2,23 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "39a698473fa1384485be3c1cd8830f5454e7fd1d",
+  "commit": "5def2e7551c89828d7e6616c2f2772756aaeadc7",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "4a0937051ad9c93e5f8a1d3f6e1f4c36c0e650994eba9e34cf0c4cc3cfe2ea14",
-  "immutable_evidence_files": 161765,
+  "catalog_sha256": "64942c1f7f5632270457ffee78e3934b873009da4ccad52762a71ee4ac5efdf4",
+  "immutable_evidence_files": 161783,
   "indexed_references_verified": 925,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped S0-LL22-b acceptance: unchanged producer and fourteen controls; exact acceptance/provenance delta, 46 original artifact references reused, 37 prior result objects preserved, 38 current bindings and live ledger checker PASS. No native rebuild or full historical payload scan.",
+  "verification": "Scoped lexical-callback observation: two identical native sessions; two source callback bounds, eight target-front-end probes and 21 checker mutations; retained verifier and direct packet pins PASS. Gate, inventory, accepted records and policy unchanged. Eighteen new files, 452868 bytes; prior catalog rows preserved, no historical payload rescan.",
   "remote": null,
   "off_machine_backup": false,
   "scope": "Separate local evidence repository; original failures retained. Thirty-eight accepted records. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-14-ll22b-project-acceptance",
-    "files": 22,
-    "bytes": 31039122,
-    "catalog_sha256": "4a0937051ad9c93e5f8a1d3f6e1f4c36c0e650994eba9e34cf0c4cc3cfe2ea14",
-    "immutable_evidence_files": 161765,
-    "prior_commit": "166e04d5aa014036e75ab130d46c48b8175e1479"
+    "directory": "2026-09-14-lexical-callbacks-r1",
+    "files": 18,
+    "bytes": 452868,
+    "catalog_sha256": "64942c1f7f5632270457ffee78e3934b873009da4ccad52762a71ee4ac5efdf4",
+    "immutable_evidence_files": 161783,
+    "prior_commit": "39a698473fa1384485be3c1cd8830f5454e7fd1d"
   }
 }

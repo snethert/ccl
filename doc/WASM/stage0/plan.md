@@ -162,10 +162,11 @@ without defect. S0-LL22-b is also accepted after Claude's forty-second audit and
 the user's explicit decision. Stage 0 has 38 accepted, ten missing and zero
 unreviewed required slots.
 
-Resume census helper qualification with the SETF expander registry and its
-computed calls in the image-restore traversal, then the five source-boundary
-contracts and broader traversal. Continue the alternating remaining Stage 0
-work. LL22-b now has an accepted [R6 control](r6-control.md) for the actual
+The SETF registry witness and the new lexical callback bounds below advance
+helper qualification. Next execute S0-LL07-a, the remaining typed-conversion
+fixture, then return to the five startup boundary replacements and broader
+source traversal. Continue the alternating remaining Stage 0 work. LL22-b now
+has an accepted [R6 control](r6-control.md) for the actual
 registration patch. Existing fixtures do not discharge full census closure or authorize functional shared compiler changes.
 
 
@@ -177,5 +178,12 @@ five source-boundary stops remain. Claude's forty-first audit reviewed it withou
 defect; no census gate credit. The subsequent [LL22-b control](r6-control.md)
 now compares the actual accepted registration patch under all four R6 categories
 and evaluated R6a, with one complete case and 44 rejected alterations. It reuses
-native execution and is accepted at that reviewed scope. Next return to census helpers
-and the five boundary replacements under the alternating plan.
+native execution and is accepted at that reviewed scope.
+
+The [lexical callback slice](lexical-callbacks.md) now bounds the two computed
+calls inside the DECLAIM and APPLY expanders from their actual immutable LET*/FLET
+bindings. Eight target-front-end probes and 21 checker controls guard unknown
+parameters, assignment, captured writes, identity and scope. Two fresh sessions
+reproduce the raw captures. Awaiting independent review; no widening edge is
+removed and the broader runtime call population remains unbounded. After LL07-a,
+resume the five startup boundary replacements and general source traversal.

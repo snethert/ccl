@@ -2677,6 +2677,16 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll22b-project-acceptance/live-ledger-check.json",
       "sha256": "a3a5c686f09180ffca11b071fd5e9587cf7f24f5f5b7b6f0d1abb018fb393ee2",
       "scope": "Explicit user acceptance after Claude audit 42 at a668149c; 38 accepted, ten missing, zero unreviewed. Prior 37 records and original native artifacts preserved."
+    },
+    {
+      "id": "NATIVE-LEXICAL-CALLBACKS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-lexical-callbacks-r1/packet.json",
+      "sha256": "c8c18b753e3d13dfd379d9f53e7a38656ca3a10ab5800d29564f01aa35af0a50",
+      "scope": "Two DECLAIM/APPLY computed helper calls joined through three immutable lexical bindings; eight target-front-end probes, 21 checker controls. Two native captures identical. No census gate credit; independent review pending.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }
