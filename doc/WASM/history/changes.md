@@ -440,3 +440,22 @@ Stage 0 is BLOCKED: 34 accepted, 14 missing and zero unreviewed required slots.
 ## 2026-09-13 — Claude's thirty-fifth audit of the native object serialization witness
 
 Claude confirmed the user's acceptance of S0-LL01-a at 6f6914a1 by a gate run on the 34-record combined envelope, then reviewed 7cb8d5af: verifier passed, both native sessions re-executed with all seven data FASLs and both captures byte-identical, the class-cell load form, istruct-cell recognition and opcode 71 paths confirmed in U1 source, 47 pins and catalog verified. No defect; one nonblocking observation (the erased RESTART wrapper contents become a port obligation). NATIVE-TARGET-OBJECTS-R1 is marked reviewed. Gate 34 accepted, 14 missing, 0 unreviewed of 48.
+
+## 2026-09-14 — execute the artifact identity standing control
+
+After the user supplied Claude's thirty-fifth audit at 1ad418a9 and requested
+continuation, Codex implemented S0-LL22-a through the unchanged production gate.
+Two complete synthetic builds pass; 36 defective records reject across ten
+artifact roles, missing files/roles, source and contract identity, snapshot
+staleness and review. Identical template bytes with different installed module
+bytes demonstrate why each installed binary needs its own digest. No compiler,
+image, materializer or Wasm execution is claimed.
+
+The first producer, fresh repeat and retained verifier pass. The packet keeps
+all original synthetic inputs and gate refusals; prior runtime payloads are not
+rescanned. Only LL22-a's runner/status registration changes, all 34 accepted
+bindings remain current, and the scoped ledger reads 34 accepted, 13 missing and
+one unreviewed of 48. Independent review and project acceptance remain pending.
+Claude's RESTART observation is carried into the plan: when registry
+materialization is scheduled, represent target-supplied wrapper contents as a
+required census node, not as completion implied by a serialized registry key.

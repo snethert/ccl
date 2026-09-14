@@ -2,21 +2,21 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "bbf08b15cfc31c33eb165d9cfac6147b5d0e412b",
+  "commit": "1c7f11bc575c60aed7050170b0ae665a5bbaad85",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "0253b878a8f5aacb5e1d372baa78077c84d5a86cdafeb73cb29fa5e215f589d1",
-  "immutable_evidence_files": 161049,
+  "catalog_sha256": "658a54ffdda2f8b2e2e47d7e1b12b3fe1ac2ac7c2f860331a09ee029ecfa5253",
+  "immutable_evidence_files": 161134,
   "indexed_references_verified": 925,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped LL01-a acceptance: unchanged producer, accepted slot passes the production gate, fourteen producer controls, exact preservation of original execution and 33 previous result objects; 34 current metadata bindings. Only new acceptance files catalogued; prior catalog rows and payload verification reused.",
+  "verification": "Scoped S0-LL22-a: first/fresh producers and retained verifier; 2 complete inputs, 36 exact gate refusals, deterministic reproduction, four source pins and 34 accepted metadata bindings. Only 85 new files (357707 bytes); prior catalog rows unchanged. No native build, old-payload rescan or archive audit.",
   "remote": null,
   "off_machine_backup": false,
   "scope": "Separate local evidence repository; original failures retained. Thirty-four accepted records. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-13-ll01a-project-acceptance",
-    "files": 71,
-    "bytes": 31153709,
-    "prior_commit": "dd52a2e12dcac9f1a0e768165e6fbb8b339d58c0"
+    "directory": "2026-09-14-artifact-identity-control-r1",
+    "files": 85,
+    "bytes": 357707,
+    "prior_commit": "bbf08b15cfc31c33eb165d9cfac6147b5d0e412b"
   }
 }

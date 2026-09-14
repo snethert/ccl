@@ -80,9 +80,17 @@ independent review and project acceptance remain separate from execution.
     IOBLOCK class cell and registered RESTART wrapper to U1's symbolic FASL paths.
     Five native registry roundtrips and four negative inputs pass; seven data
     files reproduce and sixteen checker controls reject. This establishes the
-    native serialization behavior, with target registry materialization still
-    open. Next take another standing control, then return to remaining helpers,
-    the five boundary contracts and broader source traversal.
+    native serialization behavior, reviewed without defect by Claude's
+    thirty-fifth audit. Target registry materialization remains open. When that
+    work is scheduled, add an explicit required census node for RESTART wrapper
+    contents, supplied by the target class system at load time. The serialized
+    RESTART key alone must not mark that node implemented.
+12. [S0-LL22-a](artifact-identity-control.md) now executes artifact identity and
+    role checks through the unchanged production gate: two complete synthetic
+    builds pass and 36 defective records reject, including different installed
+    binaries sharing a template. Independent review and acceptance are pending.
+    Next return to remaining census helpers, the five boundary contracts and
+    broader source traversal.
 
 The B desk record's actual inventory prerequisites are the reviewed ABI/runtime
 records; S0-ENGINE-a is not a prerequisite of S0-ABI-selection. Engine qualification

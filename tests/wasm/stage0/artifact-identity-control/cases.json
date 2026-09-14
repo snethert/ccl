@@ -1,0 +1,415 @@
+{
+  "version": 1,
+  "test_id": "S0-LL22-a",
+  "scope": "Production-gate content identity control with quarantined synthetic source, implementation, test, ABI, template, installed binary, image, compiler, options and log files. Checks declared retained hashes and mandatory roles, source revision and current contract binding. No producer authentication, compiler/image/Wasm execution, semantic consistency, native behavior or R6 normalization claim.",
+  "cases": [
+    {
+      "name": "complete-a",
+      "mutation": "none",
+      "cohort": "a",
+      "expected": {
+        "status": "PASS",
+        "reasons": []
+      }
+    },
+    {
+      "name": "complete-b",
+      "mutation": "none",
+      "cohort": "b",
+      "expected": {
+        "status": "PASS",
+        "reasons": []
+      }
+    },
+    {
+      "name": "mixed-source",
+      "mutation": "mixed",
+      "facet": "source",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "mixed-implementation",
+      "mutation": "mixed",
+      "facet": "implementation",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "mixed-test",
+      "mutation": "mixed",
+      "facet": "test",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "mixed-abi",
+      "mutation": "mixed",
+      "facet": "abi",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "mixed-template",
+      "mutation": "mixed",
+      "facet": "template",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "mixed-installed-binary",
+      "mutation": "mixed",
+      "facet": "installed-binary",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "mixed-image",
+      "mutation": "mixed",
+      "facet": "image",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "mixed-host-compiler",
+      "mutation": "mixed",
+      "facet": "host-compiler",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "mixed-options",
+      "mutation": "mixed",
+      "facet": "options",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "mixed-log",
+      "mutation": "mixed",
+      "facet": "log",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "missing-file-source",
+      "mutation": "missing-file",
+      "facet": "source",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "missing-file-implementation",
+      "mutation": "missing-file",
+      "facet": "implementation",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "missing-file-test",
+      "mutation": "missing-file",
+      "facet": "test",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "missing-file-abi",
+      "mutation": "missing-file",
+      "facet": "abi",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "missing-file-template",
+      "mutation": "missing-file",
+      "facet": "template",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "missing-file-installed-binary",
+      "mutation": "missing-file",
+      "facet": "installed-binary",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "missing-file-image",
+      "mutation": "missing-file",
+      "facet": "image",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "missing-file-host-compiler",
+      "mutation": "missing-file",
+      "facet": "host-compiler",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "missing-file-options",
+      "mutation": "missing-file",
+      "facet": "options",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "missing-file-log",
+      "mutation": "missing-file",
+      "facet": "log",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "omit-role-source",
+      "mutation": "omit-role",
+      "facet": "source",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing artifact roles: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "omit-role-implementation",
+      "mutation": "omit-role",
+      "facet": "implementation",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing artifact roles: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "omit-role-test",
+      "mutation": "omit-role",
+      "facet": "test",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing artifact roles: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "omit-role-abi",
+      "mutation": "omit-role",
+      "facet": "abi",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing artifact roles: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "omit-role-template",
+      "mutation": "omit-role",
+      "facet": "template",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing artifact roles: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "omit-role-installed-binary",
+      "mutation": "omit-role",
+      "facet": "installed-binary",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing artifact roles: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "omit-role-image",
+      "mutation": "omit-role",
+      "facet": "image",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing artifact roles: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "omit-role-host-compiler",
+      "mutation": "omit-role",
+      "facet": "host-compiler",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing artifact roles: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "omit-role-options",
+      "mutation": "omit-role",
+      "facet": "options",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing artifact roles: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "omit-role-log",
+      "mutation": "omit-role",
+      "facet": "log",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing artifact roles: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "duplicate-masks-abi",
+      "mutation": "duplicate-masks-abi",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing artifact roles: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "template-hash-for-installed",
+      "mutation": "template-as-binary-hash",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "missing/mismatched/escaping artifact: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "wrong-source-revision",
+      "mutation": "source-revision",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "wrong source revision: CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    },
+    {
+      "name": "stale-test-contract",
+      "mutation": "changed-contract",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "current test contract or prerequisite changed: CONTROL-ARTIFACT-IDENTITY"
+        ]
+      }
+    },
+    {
+      "name": "stale-inventory-snapshot",
+      "mutation": "stale-snapshot",
+      "expected": {
+        "status": "FAIL",
+        "reasons": [
+          "retained inventory snapshot mismatch: CONTROL-ARTIFACT-IDENTITY"
+        ]
+      }
+    },
+    {
+      "name": "unreviewed-build",
+      "mutation": "unreviewed",
+      "expected": {
+        "status": "BLOCKED",
+        "reasons": [
+          "unreviewed CONTROL-ARTIFACT-IDENTITY [synthetic]"
+        ]
+      }
+    }
+  ]
+}

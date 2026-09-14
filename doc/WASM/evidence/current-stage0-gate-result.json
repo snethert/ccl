@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "assessment": "SCOPED_PROJECT_ACCEPTANCE",
-  "date": "2026-09-13",
-  "basis": "Unchanged production gate passes the newly accepted control with its direct artifacts. All 33 earlier accepted result objects are unchanged; all 34 current metadata bindings pass. Prior runtime-payload verification reused; no full combined artifact scan.",
+  "assessment": "SCOPED_CONTROL_EXECUTION",
+  "date": "2026-09-14",
+  "basis": "The unchanged production gate validates the new S0-LL22-a record and direct artifacts, blocked only for review/acceptance. All 34 accepted record bindings remain current; earlier runtime-payload verification reused.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
@@ -16,26 +16,26 @@
       "missing S0-LL19-a [full]",
       "missing S0-LL21-c [shared-template]",
       "missing S0-LL21-c [unshared-template]",
-      "missing S0-LL22-a [control]",
       "missing S0-LL22-b [control]",
       "missing S0-LL23-a [full]",
-      "missing S0-LL24-a [control]"
+      "missing S0-LL24-a [control]",
+      "unreviewed S0-LL22-a [control]"
     ]
   },
-  "prior_result_sha256": "aa58e1c38491e5b72c66145099504b1bff40b6c914c71d42f93491d3a157d72b",
-  "new_results": [
-    {
-      "id": "S0-LL01-a",
-      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-ll01a-project-acceptance/S0-LL01-a/accepted/accepted-results.json",
-      "sha256": "e591cd40d2fc48da7b32cc0c3763f843a5297d868463bd37ddad2caf51d25827"
-    }
-  ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-ll01a-accepted-results.json",
-  "combined_results_sha256": "7e42573af6a01bd355d850bd1a8a83de70eb32787aad4056ea40a37226022e31",
   "counts": {
     "accepted": 34,
-    "missing": 14,
-    "unreviewed": 0,
+    "missing": 13,
+    "unreviewed": 1,
     "required": 48
-  }
+  },
+  "prior_result": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-artifact-identity-control-r1/prior-gate-result.json",
+  "prior_result_sha256": "fc5b1853e847bb6b8b8e32efe5769cc52ab70c0cef2d462dc7a6c6d71b9409a7",
+  "new_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-artifact-identity-control-r1/results.json",
+  "new_results_sha256": "73d730ed0ebfa4a37f982edcdabc5dcd8bc6eaa134db7d0466cf732ffed9714f",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-ll01a-accepted-results.json",
+  "combined_results_sha256": "7e42573af6a01bd355d850bd1a8a83de70eb32787aad4056ea40a37226022e31",
+  "record_gate": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-artifact-identity-control-r1/slot-gate.json",
+  "record_gate_sha256": "3a1cc22622180ca76d02ed9524e1d71f4d7ff0c14e6037d101fc940c9c2d37c4",
+  "binding_check": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-artifact-identity-control-r1/binding-check.json",
+  "binding_check_sha256": "638e1b8121b507c188ac36f597bea46975f9dd10d0cbc223ef639a28105bd1d0"
 }
