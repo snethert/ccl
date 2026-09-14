@@ -146,8 +146,8 @@
           "description": "Fail early, middle and late initializers separately; reject every partial bootstrap with the first failing step identified."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/stage0/initializer-control/run.py",
       "review_disposition": "NOT_REVIEWED"
     },
     {
@@ -281,7 +281,7 @@
       "assertions": [
         {
           "id": "S0-LL05-a:contract",
-          "description": "For C, C4 and B: verify ordered arguments 0\u20136 and long overflow, nested side effects, direct/indirect/closure calls, APPLY and optional/rest/keyword binding, and every zero/one/many result. Check explicit stack/count ownership."
+          "description": "For C, C4 and B: verify ordered arguments 0–6 and long overflow, nested side effects, direct/indirect/closure calls, APPLY and optional/rest/keyword binding, and every zero/one/many result. Check explicit stack/count ownership."
         }
       ],
       "status": "IMPLEMENTED_NOT_ACCEPTED",
@@ -490,7 +490,7 @@
       "assertions": [
         {
           "id": "S0-LL15-a:contract",
-          "description": "Bind every harness initializer to prerequisite state and completion, including the loader\u2019s own dependencies. An omitted required module fails loading; a no-load path cannot satisfy a load test."
+          "description": "Bind every harness initializer to prerequisite state and completion, including the loader’s own dependencies. An omitted required module fails loading; a no-load path cannot satisfy a load test."
         }
       ],
       "status": "NOT_RUN",

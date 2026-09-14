@@ -1,0 +1,11 @@
+[
+  {"name":"complete","fail":[],"diagnostic":false,"omit":null},
+  {"name":"early","fail":[0],"diagnostic":false,"omit":null},
+  {"name":"middle","fail":[4],"diagnostic":false,"omit":null},
+  {"name":"late","fail":[8],"diagnostic":false,"omit":null},
+  {"name":"diagnostic-early","fail":[0],"diagnostic":true,"omit":null},
+  {"name":"diagnostic-middle","fail":[4],"diagnostic":true,"omit":null},
+  {"name":"diagnostic-late","fail":[8],"diagnostic":true,"omit":null},
+  {"name":"diagnostic-two-failures","fail":[0,4],"diagnostic":true,"omit":null},
+  {"name":"missing-module","fail":[],"diagnostic":false,"omit":"types"}
+]

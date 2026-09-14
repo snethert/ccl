@@ -70,8 +70,13 @@ independent review and project acceptance remain separate from execution.
    five recursive optimizer probes expose and correct inherited wrong answers;
    five native and twenty checker controls reject. Claude's thirty-third audit
    reviewed it without defect.
-   Next take another standing control, then resume object/helper qualification,
-   boundary replacements and wider traversal.
+10. [S0-LL01-a](initializer-control.md) now executes early/middle/late initializer
+    exceptions in the Stage 0 Wasm harness. Diagnostic continuation preserves the
+    first error, blocks dependents and withholds ready publication; a missing
+    module refuses before initialization. One complete, eight refused bootstraps
+    and four rejected loader mutations pass. Review and acceptance are pending.
+    Next resume census object/helper qualification, boundary replacements and
+    wider traversal.
 
 The B desk record's actual inventory prerequisites are the reviewed ABI/runtime
 records; S0-ENGINE-a is not a prerequisite of S0-ABI-selection. Engine qualification

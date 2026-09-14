@@ -1107,6 +1107,24 @@
         "sha256": "59a6ac63be2642a5087baac4e65ac51dbe0a6e35d4c96f4fd76810260d3f728c",
         "timestamp": "2026-09-14T01:19:08.700309+00:00"
       }
+    },
+    {
+      "id": "STANDING-INITIALIZER-CONTROL-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-initializer-control-r1/results.json",
+      "sha256": "18d7a99d4d4046a5890a0141bbc8ef3d6dc91b25a55977d92a68bcd9ef0a5917",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-initializer-control-r1/packet.json",
+      "packet_sha256": "2174721cf19a0bab8faab97ee4584731e9a946c83928e96e3b3a1906ce679b6f",
+      "timestamp": "2026-09-14T01:26:39.639199+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "1c4d0f043a1743c0011f5781b82d76f02e41c8bf99c4b691947f7bab605e924c",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "CONTROL EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "S0-LL01-a/control: isolated Stage 0 Wasm harness, three modules/nine required initializers. One complete and eight refused bootstraps; early/middle/late exceptions, diagnostic continuation, missing required module, precise first failure and withheld publication. Four loader mutants reject. No CCL image, generated code, arbitrary manifest, GC, threads, initializer timeout or production Stage 1 qualification. Awaiting independent review and acceptance."
     }
   ],
   "auxiliary_records": [
@@ -2001,7 +2019,7 @@
       "id": "CURRENT-STAGE0-COMBINED",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-stage0-two-controls-accepted-results.json",
       "sha256": "12bcb56b3e372350f75606fad187e6d43e73d1727851977f9a0a94fbdf24a694",
-      "scope": "33 accepted records: prior 31 unchanged plus user-accepted S0-LL01-b and S0-LL02-b. Scoped ledger: 15 missing, zero unreviewed of 48."
+      "scope": "Unchanged aggregate of 33 accepted records, including user-accepted LL01-b and LL02-b. Separate raw LL01-a awaits review/acceptance; scoped ledger: 14 missing, one unreviewed of 48."
     },
     {
       "id": "LL02A-ACCEPTANCE-DECISION",
@@ -2217,6 +2235,18 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-two-controls-project-acceptance/verification.json",
       "sha256": "6d626021e63f4326448e0dfe334f2842d4bb1d4e88bc83db06dfd74b30d330b1",
       "scope": "User accepts LL01-b and LL02-b against Claude reviews at 8a3a1d34; 33 accepted, 15 missing, zero unreviewed. Original execution and prior accepted objects preserved."
+    },
+    {
+      "id": "INITIALIZER-CONTROL-PACKET",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-initializer-control-r1/packet.json",
+      "sha256": "2174721cf19a0bab8faab97ee4584731e9a946c83928e96e3b3a1906ce679b6f",
+      "scope": "One compact initializer-control packet: original exception/module failures, four loader mutants, 43 identical replay files and eight source pins. Scoped 33/14/1 ledger."
+    },
+    {
+      "id": "INITIALIZER-CONTROL-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-13-initializer-control-r1/gate-result.json",
+      "sha256": "aa58e1c38491e5b72c66145099504b1bff40b6c914c71d42f93491d3a157d72b",
+      "scope": "New production slot gate plus 33 accepted metadata bindings: 14 missing and one unreviewed of 48. Prior payload verification reused."
     }
   ]
 }
