@@ -1,47 +1,51 @@
 {
   "version": 2,
-  "assessment": "SCOPED_PROJECT_ACCEPTANCE",
+  "assessment": "SCOPED_EXECUTION_COMPOSITE",
   "date": "2026-09-14",
-  "basis": "S0-LL22-b accepted after Claude audit 42 and explicit user decision. Production slot gate has only its G0 prerequisite missing, supplied by the unchanged accepted aggregate. All 37 earlier objects preserved; 38 bindings current. Existing native execution and artifacts reused.",
+  "basis": "LL07-a production slot gate has exactly one unreviewed reason. Its runner registration changes no accepted binding. Reuse the unchanged 38-record accepted aggregate; no full historical artifact scan or acceptance change.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
       "missing S0-CONTRACTS-a [complete-report]",
       "missing S0-ENGINE-a [complete-report]",
-      "missing S0-LL07-a [full]",
       "missing S0-LL13-b [full]",
       "missing S0-LL15-a [full]",
       "missing S0-LL15-b [native]",
       "missing S0-LL15-c [native]",
       "missing S0-LL19-a [full]",
       "missing S0-LL21-c [shared-template]",
-      "missing S0-LL21-c [unshared-template]"
+      "missing S0-LL21-c [unshared-template]",
+      "unreviewed S0-LL07-a [full]"
     ]
   },
-  "prior_result_sha256": "f04e18f5d8c38fbdf17a80ed3ececf1e3c252700b921794f767b480c4550175f",
+  "prior_result_sha256": "e4d6e189da254556dc3b6045b001d10cb1395e0cf8d24e17622b7f1064154ac4",
   "new_results": [
     {
-      "id": "S0-LL22-b",
-      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-ll22b-accepted-results.json",
-      "sha256": "50e645f77815ad08c556e3005b9e2a6942195d9a12f1e845afc0b9a71e8fa30c"
+      "id": "S0-LL07-a",
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-conversions-r1/results.json",
+      "sha256": "9776aad15a26b68b43276c99f40e159e523dd9c267216eb1dd3640b3790a6097"
     }
   ],
   "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll22b-accepted-results.json",
   "combined_results_sha256": "d906263872436c9949ab98a22ecb9d9df61f0949a9898ad5405b8a15d7b61447",
   "inventory": {
     "locator": "stage0/inventory.json",
-    "sha256": "dda34ba24ddfa824c886cbe646201f467832f559ee8969e96e7af7856213d70c"
+    "sha256": "63b4fa4cf6f14b901e782c06bc621aa24062507e1e58cb20381f5ed645df7a3a"
   },
   "active_results": [
     {
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll22b-accepted-results.json",
       "sha256": "d906263872436c9949ab98a22ecb9d9df61f0949a9898ad5405b8a15d7b61447"
+    },
+    {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-conversions-r1/results.json",
+      "sha256": "9776aad15a26b68b43276c99f40e159e523dd9c267216eb1dd3640b3790a6097"
     }
   ],
   "counts": {
     "accepted": 38,
-    "missing": 10,
-    "unreviewed": 0,
+    "missing": 9,
+    "unreviewed": 1,
     "required": 48
   }
 }

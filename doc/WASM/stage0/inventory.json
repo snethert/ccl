@@ -382,8 +382,8 @@
           "description": "Check signed fixnum, raw address, logical-ID and typed-slot conversions separately. Synthetic addresses above 2 GiB retain bits through JS; checked exhaustion rejects invalid IDs and capacities."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "IMPLEMENTED_NOT_ACCEPTED",
+      "runner": "tests/wasm/stage0/conversions/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",

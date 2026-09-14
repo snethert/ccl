@@ -124,7 +124,7 @@ The [13 September bootstrap design review](bootstrap-design-review.md) makes the
 
 The user requested this follow-up after an assessment of the [native internals manual](https://ccl.clozure.com/docs/build/internals.html). That historical description is a checklist; pinned U1 source determines the behavior to preserve. D1, B, D4 and D5 remain in force. These tasks make existing layout, census and generated-GC obligations concrete; they add no Stage 0 slot and confer no execution or acceptance credit.
 
-1. **Layout and checked conversions.** Keep S0-LL07-a next for signed fixnums, raw addresses, logical IDs and typed slots. In the remaining full layout proof, cover canonical NIL, unequal cons fields and the 24-bit uvector count boundary independently. ARRAY-TOTAL-SIZE-LIMIT is exclusive: test 2^24 - 1 versus 2^24, then separately test byte-size/alignment arithmetic and region exhaustion. Boundary arithmetic can be exercised without allocating a maximum-sized array; do not present that as successful allocation at the limit. This belongs to existing LL04/LL07/LL13 work.
+1. **Layout and checked conversions.** [S0-LL07-a](conversions.md) now executes signed fixnums, raw addresses, logical IDs and typed slots; independent review is pending. In the remaining full layout proof, cover canonical NIL, unequal cons fields and the 24-bit uvector count boundary independently. ARRAY-TOTAL-SIZE-LIMIT is exclusive: test 2^24 - 1 versus 2^24, then separately test byte-size/alignment arithmetic and region exhaustion. Boundary arithmetic can be exercised without allocating a maximum-sized array; do not present that as successful allocation at the limit. This belongs to existing LL04/LL07/LL13 work.
 2. **Census store and trap dispositions.** On returning to the startup boundaries and source traversal, join each reached store/subprimitive and trap class to its source, target lowering, dependencies and test. Separate generational bookkeeping from the actual write, type/NIL checks, atomic operations and other metadata. Classify recoverable type/bounds/arity/unbound errors, rooted allocation/GC retry, checked stack exhaustion and fatal internal faults. Record the early-to-full error-service dependency and stack reserve for signaling. A missing lowering stays unresolved; a native hardware trap is not an implementation. These records use the existing LL15 exchange format.
 3. **Hash tables under real movement.** Schedule this with the first generated moving-GC bootstrap proof under LL18/LL20. Build an EQ table with distinct heap keys, exercise cached lookups, force and witness key relocation, then check lookup presence/values, replacement without duplicate entries, deletion and counts over repeated collections. Use retained U1 behavior as the semantic oracle and separate mutants that omit moved-key/rehash notification or required cache maintenance. Arrange keys and cache accesses so the intact path passes and each omission is observable. A cons-only survival test cannot discharge this case. A different hashing design must explicitly replace the U1 protocol and pass equivalent behavior checks.
 4. **Special objects and the complete root set.** During LL15 assembly, create separate nodes with profile dispositions and explicit edges for address-based hashing, weak objects/tables and GCTWA package-symbol handling. Reachability determines which services the bootstrap needs before its first relevant collection; required semantics cannot be postponed to Stage 4. Record any omitted native optimization with its preserved semantics and test rationale. Extend generated-GC checks across the existing root inventory, including self/environment, results, locals, constants and runtime registries. No poll, host suspension or reentrant callback may expose partially constructed objects, designated stores or frames.
@@ -172,13 +172,14 @@ New acceptance producers use the [version 2 binding contract](../contracts/evide
 S0-LL22-a, S0-LL23-a and S0-LL24-a are accepted after their independent reviews
 and the user's explicit decisions. The production artifact policy is reviewed
 without defect. S0-LL22-b is also accepted after Claude's forty-second audit and
-the user's explicit decision. Stage 0 has 38 accepted, ten missing and zero
-unreviewed required slots.
+the user's explicit decision. S0-LL07-a now executes and awaits independent
+review: Stage 0 has 38 accepted, nine missing and one unreviewed required slot.
 
 The SETF registry witness and the new lexical callback bounds below advance
-helper qualification. Next execute S0-LL07-a, the remaining typed-conversion
-fixture, then return to the five startup boundary replacements and broader
-source traversal. Continue the alternating remaining Stage 0 work. LL22-b now
+helper qualification. The [LL07-a conversion fixture](conversions.md) now passes
+272 cases, nineteen conversion mutants and ten artifact-role omissions, with
+real memory above 2 GiB. Next return to the five startup boundary replacements
+and broader source traversal. Continue the alternating remaining Stage 0 work. LL22-b now
 has an accepted [R6 control](r6-control.md) for the actual
 registration patch. Existing fixtures do not discharge full census closure or authorize functional shared compiler changes.
 
@@ -205,5 +206,5 @@ bindings. Eight target-front-end probes and 21 checker controls guard unknown
 parameters, assignment, captured writes, identity and scope. Two fresh sessions
 reproduce the raw captures. Claude's forty-third audit reviewed the slice without
 defect; no widening edge is removed and the broader runtime call population
-remains unbounded. After LL07-a,
+remains unbounded. With LL07-a executed,
 resume the five startup boundary replacements and general source traversal.

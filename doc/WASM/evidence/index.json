@@ -296,7 +296,7 @@
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
       "currency": "ORIGINAL_FAILURE",
-      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged."
+      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged."
     },
     {
       "id": "INTEGRATED-RUNTIME-r10",
@@ -1336,6 +1336,24 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "R6 and evaluated R6a comparison for the actual two-entry census registration patch: fresh reversible application in pristine U1, exact source and changed-FASL accounting, native manifests, evaluated operators and ABI probe, one complete comparison and 44 refusals. Native build and test behavior reuses the accepted 12 September run. The comparator is specific to this patch; future shared edits need their own explained profile and R6 run."
+    },
+    {
+      "id": "TYPED-CONVERSIONS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-conversions-r1/results.json",
+      "sha256": "9776aad15a26b68b43276c99f40e159e523dd9c267216eb1dd3640b3790a6097",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-conversions-r1/packet.json",
+      "packet_sha256": "434b51d9932bb76224c44e316a9c3cd747689c4ae9aa78f34b47b527b4837aff",
+      "timestamp": "2026-09-14T16:13:10.961486+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "63b4fa4cf6f14b901e782c06bc621aa24062507e1e58cb20381f5ed645df7a3a",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Hand-built wasm32 conversions on macOS Node/V8, one mutator, actual memory grown to 2 GiB plus one page; checked scalar fixnums, pointers, logical IDs and typed table slots. No production allocator, GC, C linker, B compiler output, browser or full D1 object-layout claim."
     }
   ],
   "auxiliary_records": [
@@ -2693,6 +2711,18 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "record": "stage0/claude-review.md"
       }
+    },
+    {
+      "id": "TYPED-CONVERSIONS-PACKET",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-conversions-r1/packet.json",
+      "sha256": "434b51d9932bb76224c44e316a9c3cd747689c4ae9aa78f34b47b527b4837aff",
+      "scope": "272 scalar conversion cases, 19 rejected conversion mutants and 10 production-role omissions. Independent review and project acceptance pending."
+    },
+    {
+      "id": "TYPED-CONVERSIONS-GATE",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-conversions-r1/gate-result.json",
+      "sha256": "7f96bf279ca8b4901f45c9966557a9109b6440eef0456a4bb53e84d29af44546",
+      "scope": "272 scalar conversion cases, 19 rejected conversion mutants and 10 production-role omissions. Independent review and project acceptance pending."
     }
   ]
 }

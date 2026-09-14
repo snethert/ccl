@@ -681,3 +681,27 @@ with no new slot, runtime execution, evidence packet or acceptance claim.
 The DOCX reading copies and document manifest were regenerated; document
 projection, schedule, link and whitespace checks pass. Verification stayed
 within the document package and unchanged gate metadata.
+
+## 2026-09-14 — execute S0-LL07-a typed conversions
+
+At the user's direction, Codex implemented the isolated conversion fixture using
+Claude's advisory four-family plan. Two Wasm variants each pass 83 successful
+operations and 53 expected refusals; nineteen single-site mutants and ten real
+artifact-role omissions reject. Both variants grow actual memory to 2 GiB plus
+one page and read unequal cons fields and negative header displacements on both
+sides of the high-bit boundary. The final-binary element segment supplies table
+reservations, and explicit handle kinds distinguish IDs from equal-bit slots.
+
+The retained verifier reproduces 214 deterministic files. Both development
+producer attempts passed; the second finalizes status and retains failed verifier
+replays instead of deleting them. The first record, source and log remain in the
+compact packet. Shared compiler/kernel source and production tools are unchanged.
+Only LL07-a's runner contract changes; all 38 accepted bindings stay current.
+The ledger is BLOCKED at 38 accepted, nine missing and one unreviewed. Independent
+review and project acceptance remain open; census startup boundaries and wider
+source traversal are next under the alternating plan.
+
+One finalized packet and its source-index snapshot add 255 catalog rows and
+2,311,015 bytes to the evidence repository at 01db206. The live ledger checker
+passes; document projections, links and whitespace checks pass. Verification
+covers direct new artifacts and metadata without rescanning historical payloads.

@@ -1,0 +1,272 @@
+{
+  "version": 1,
+  "scope": "Scalar hand-built conversion ABI; no CCL B or production registry claim.",
+  "exports": {
+    "box": {
+      "params": [
+        "i32"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "fixnum",
+      "unsigned_result": false
+    },
+    "unbox": {
+      "params": [
+        "word"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "fixnum",
+      "unsigned_result": false
+    },
+    "raw_as_fixnum": {
+      "params": [
+        "u32"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "address",
+      "unsigned_result": false
+    },
+    "tag": {
+      "params": [
+        "u32",
+        "i32"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "address",
+      "unsigned_result": true
+    },
+    "untag": {
+      "params": [
+        "word"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "address",
+      "unsigned_result": true
+    },
+    "effective": {
+      "params": [
+        "word",
+        "i32"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "address",
+      "unsigned_result": true
+    },
+    "cons_store": {
+      "params": [
+        "u32",
+        "word",
+        "word"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "address",
+      "unsigned_result": true
+    },
+    "cons_car": {
+      "params": [
+        "word"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "address",
+      "unsigned_result": false
+    },
+    "cons_cdr": {
+      "params": [
+        "word"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "address",
+      "unsigned_result": false
+    },
+    "header_store": {
+      "params": [
+        "u32",
+        "word"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "address",
+      "unsigned_result": true
+    },
+    "header_load": {
+      "params": [
+        "word"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "address",
+      "unsigned_result": false
+    },
+    "ids_reset": {
+      "params": [
+        "i32",
+        "i32",
+        "i32"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "logical-id",
+      "unsigned_result": false
+    },
+    "id_alloc": {
+      "params": [],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "logical-id",
+      "unsigned_result": false
+    },
+    "id_encode": {
+      "params": [
+        "i32"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "logical-id",
+      "unsigned_result": false
+    },
+    "id_valid": {
+      "params": [
+        "word"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "logical-id",
+      "unsigned_result": false
+    },
+    "slots_reset": {
+      "params": [
+        "i32",
+        "i32"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "typed-slot",
+      "unsigned_result": false
+    },
+    "slot_check": {
+      "params": [
+        "i32",
+        "i32"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "typed-slot",
+      "unsigned_result": false
+    },
+    "slot_install": {
+      "params": [
+        "i32",
+        "i32",
+        "i32",
+        "i32"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "typed-slot",
+      "unsigned_result": false
+    },
+    "slot_alloc": {
+      "params": [
+        "i32",
+        "i32"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "typed-slot",
+      "unsigned_result": false
+    },
+    "slot_call": {
+      "params": [
+        "i32",
+        "i32",
+        "i32"
+      ],
+      "results": [
+        "i32",
+        "i32"
+      ],
+      "family": "typed-slot",
+      "unsigned_result": false
+    }
+  },
+  "memory": {
+    "initial_pages": 1,
+    "maximum_pages": 32769
+  },
+  "table": {
+    "initial": 8,
+    "maximum": 8
+  },
+  "entry": {
+    "signature": "(i32)->(i32)",
+    "signature_key": 1,
+    "role": 1
+  },
+  "handle_kinds": {
+    "slot": 3,
+    "logical_id": 2
+  },
+  "refusals": {
+    "success": 0,
+    "range": 1,
+    "tag": 2,
+    "alignment": 3,
+    "address_bounds": 4,
+    "id_unissued": 5,
+    "exhaustion": 6,
+    "capacity": 7,
+    "reserved": 8,
+    "handle_kind": 9,
+    "signature": 10,
+    "role": 11,
+    "uninstalled": 12,
+    "host_input": 13
+  }
+}
