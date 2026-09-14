@@ -1375,6 +1375,24 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Hand-built wasm32 conversions on macOS Node/V8, one mutator, actual memory grown to 2 GiB plus one page; checked scalar fixnums, pointers, logical IDs and typed table slots. No production allocator, GC, C linker, B compiler output, browser or full D1 object-layout claim."
+    },
+    {
+      "id": "LATE-WORKER-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-late-worker-r1/results.json",
+      "sha256": "4387fb6014197d34930639f7c5a13b5b4bdd18f02bb44e28e8036dbc79c280cb",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-late-worker-r1/packet.json",
+      "packet_sha256": "bd041a0feae027baf4b7ec7ef0d3a1ee337cbe6452534933690d11df5d05ddea",
+      "timestamp": "2026-09-14T17:55:43.593144+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "0900b2f7a3c89e3eb08699b4bc82ce8f496b57df15021a137bffb19c6d438e73",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Hand-built scalar Wasm on macOS Node/V8: four real Workers, 64 KiB shared memory, emitter-owned static/BSS/heap/staging/private ranges and separate eight-slot per-Worker tables. Explicit process-once and owned private setup, lazy code publication, late/subsequent creation. No C linker/TLS, B compiler, full CCL object layout, GC or browser qualification."
     }
   ],
   "auxiliary_records": [

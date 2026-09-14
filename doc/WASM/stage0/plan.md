@@ -173,7 +173,7 @@ S0-LL22-a, S0-LL23-a and S0-LL24-a are accepted after their independent reviews
 and the user's explicit decisions. The production artifact policy is reviewed
 without defect. S0-LL22-b is also accepted after Claude's forty-second audit and
 the user's explicit decision. S0-LL07-a is accepted after Claude's forty-fourth audit and the user's decision.
-Stage 0 has 39 accepted, nine missing and zero unreviewed required slots.
+Stage 0 has 39 accepted, eight missing and one unreviewed required slots.
 
 The SETF registry witness and the new lexical callback bounds below advance
 helper qualification. The [LL07-a conversion fixture](conversions.md) now passes
@@ -183,8 +183,11 @@ captures one explicit loader-service call and qualifies its private native
 reference with fourteen cases, eight native mutants and nineteen checker
 controls. Original source stops remain distinct from replacement progress;
 Wasm service implementation and the full census integration remain open.
-Next execute S0-LL13-b late-Worker shared-state preservation, then return to
-the remaining startup boundaries and broader source traversal. LL22-b now
+S0-LL13-b now has an executed [late-Worker fixture](late-worker.md): four actual
+Workers, 24 transitions with full-memory comparison, eleven policy refusals,
+nine rejected semantic mutants and ten artifact-role omissions. Independent
+review and acceptance remain open. Next return to the remaining startup
+boundaries and broader source traversal. LL22-b now
 has an accepted [R6 control](r6-control.md) for the actual
 registration patch. Existing fixtures do not discharge full census closure or authorize functional shared compiler changes.
 

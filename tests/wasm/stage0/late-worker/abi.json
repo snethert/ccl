@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "name": "late-worker-scalar-fixture",
+  "scope": "Emitter-owned regions and per-Worker tables; no generated B code or CCL object/TCR layout claim.",
+  "memory_pages": 1,
+  "table_slots": 8,
+  "lazy_slot": 2,
+  "private_minimums": {
+    "tls": 16,
+    "tcr": 64,
+    "cstack": 128,
+    "vstack": 128
+  },
+  "alignment": 16,
+  "publication": {
+    "digest_bytes": 32,
+    "generation": 1
+  },
+  "entry_signature": {
+    "params": [
+      "i32"
+    ],
+    "results": [
+      "i32"
+    ]
+  },
+  "kernel_exports": {
+    "process_once": {
+      "params": [],
+      "results": [
+        "i32"
+      ]
+    },
+    "setup": {
+      "params": [
+        "i32",
+        "i32"
+      ],
+      "results": [
+        "i32"
+      ]
+    },
+    "touch_private": {
+      "params": [
+        "i32"
+      ],
+      "results": []
+    },
+    "touch_shared": {
+      "params": [
+        "i32"
+      ],
+      "results": []
+    }
+  }
+}

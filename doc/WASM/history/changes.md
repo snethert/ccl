@@ -753,3 +753,38 @@ then the remaining startup replacements and broader source traversal.
 ## 2026-09-14 — Claude's forty-fifth audit of the KERNEL-PATH resource replacement
 
 Claude confirmed a8809b40 as the user's LL07-a acceptance (38 prior result objects identical, gate and ledger at 39/9/0), then reviewed e3ab84de: verifier passed, producer re-executed with all ten native captures byte-identical, the fourteen reference probes reproduced independently in a fresh native session, U1 spans for KERNEL-PATH and the DEFUN macro confirmed, manifest, pins and catalog verified. No defect; one nonblocking observation (install guard order untested by a case). NATIVE-KERNEL-RESOURCE-R1 is marked reviewed with no gate credit. Gate 39 accepted, 9 missing, 0 unreviewed of 48.
+
+## 2026-09-14 — execute S0-LL13-b late-Worker preservation
+
+After reading Claude's committed forty-fifth audit, Codex continued the planned
+LL13-b fixture. Four real Workers share one 64 KiB Wasm memory and retain
+independent instance globals and tables. The first two mutate data, BSS, heap,
+staging and private storage before the last two instantiate. Lazy code is
+published and acquired across existing and later instances. The independent
+Python oracle checks every memory byte and actual callable table values through
+24 complete transitions. Eleven invalid scenarios refuse before the relevant
+ready/code publication; nine implementation mutants produce the expected memory
+clobber or instance-state failure. Ten production artifact-role omissions reject.
+
+The first attempt exposed a control-construction issue: the reserved-slot-check
+mutant targeted an occupied slot and the independent capacity check still
+refused it. The corrected control targets reserved, empty slot zero. Original
+outputs, the run record and exact sources are retained. Loader, Wasm, worker,
+driver and oracle bytes did not change between attempts. The second producer
+passes; a fresh verifier reproduces 289 deterministic files byte for byte.
+
+Only LL13-b's runner registration changes its contract digest; all 39 accepted
+bindings remain current. The production slot gate reports only its unreviewed
+reason, and the live ledger checker passes at 39 accepted, eight missing and
+one unreviewed of 48. Shared compiler/kernel source and earlier fixtures remain
+unchanged. No CCL native rebuild or historical evidence-payload scan. The new
+packet adds 322 catalog rows and 1,901,910 bytes at evidence commit 3401d97.
+Main-source whitespace and document checks pass. Four whitespace diagnostics
+inside retained guard-removal mutants are preserved with their executed bytes.
+
+The scope remains scalar hand-built Wasm, emitter-owned storage, distinct
+per-Worker tables, one code generation and ordered creation. This does not
+qualify C linker/TLS, live suspended C stacks, generated B code, concurrent
+first initialization, Worker reuse, GC or browser behavior. Independent review
+and project acceptance remain open. Next return to the remaining startup
+boundary replacements and broader source traversal under the alternating plan.
