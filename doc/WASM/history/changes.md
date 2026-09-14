@@ -705,3 +705,7 @@ One finalized packet and its source-index snapshot add 255 catalog rows and
 2,311,015 bytes to the evidence repository at 01db206. The live ledger checker
 passes; document projections, links and whitespace checks pass. Verification
 covers direct new artifacts and metadata without rescanning historical payloads.
+
+## 2026-09-14 — Claude's forty-fourth audit of the typed-conversion fixture
+
+Claude noted f53e664d as documentation only with matching manifest hashes, then reviewed 1c1022a3: verifier passed, producer re-executed with all 216 deterministic files byte-identical and re-verified, gate composites and live ledger checker reproduced, sixty stateless expectations recomputed independently, the 2 GiB growth and unequal cons reads on both sides of the boundary confirmed from the retained observations, the harness audited for signed bitwise address arithmetic, ten pins and catalog verified. No defect; two nonblocking observations (element-segment reservations rather than a C link map; 32,769-page maximum). TYPED-CONVERSIONS-R1 is marked reviewed and S0-LL07-a is ready for the user's acceptance decision. Gate 38 accepted, 9 missing, 1 unreviewed of 48.

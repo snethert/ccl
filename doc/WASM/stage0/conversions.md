@@ -1,7 +1,7 @@
 # Typed conversions — 14 September 2026
 
-Status: S0-LL07-a/full executed, awaiting independent review and project
-acceptance. The [fixture](../../../tests/wasm/stage0/conversions/README.md) has
+Status: S0-LL07-a/full executed; reviewed by Claude's forty-fourth audit at
+`1c1022a3` without defect; awaiting project acceptance. The [fixture](../../../tests/wasm/stage0/conversions/README.md) has
 two hand-built Wasm variants, each executing 136 cases: 83 successful operations
 and 53 expected refusals. All nineteen conversion mutants and ten omissions of
 required artifact roles reject. The retained verifier reproduces 214

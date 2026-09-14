@@ -296,7 +296,7 @@
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
       "currency": "ORIGINAL_FAILURE",
-      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged."
+      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged."
     },
     {
       "id": "INTEGRATED-RUNTIME-r10",
@@ -1350,10 +1350,17 @@
       "inventory_version": 1,
       "evidence_kind": "HAND-BUILT WASM EXECUTION",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Hand-built wasm32 conversions on macOS Node/V8, one mutator, actual memory grown to 2 GiB plus one page; checked scalar fixnums, pointers, logical IDs and typed table slots. No production allocator, GC, C linker, B compiler output, browser or full D1 object-layout claim."
+      "scope": "Hand-built wasm32 conversions on macOS Node/V8, one mutator, actual memory grown to 2 GiB plus one page; checked scalar fixnums, pointers, logical IDs and typed table slots. No production allocator, GC, C linker, B compiler output, browser or full D1 object-layout claim.",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Forty-fourth audit at 1c1022a3: retained verifier passed; producer re-executed with all 216 deterministic files byte-identical and re-verified; gate composites rebuilt from the HEAD inventory and the live ledger checker at 38/9/1; sixty stateless expectations recomputed independently from the case inputs; the retained observations confirmed for memory grown to 2 GiB plus one page and unequal cons payloads read through tagged pointers on both sides of the boundary; harness audited for signed bitwise address arithmetic; packet with 253 files, catalog at 01db2064 with 254 new rows and all ten source pins at HEAD verified; f53e664d confirmed documentation-only with matching manifest hashes; two nonblocking observations (element-segment reservations in place of a C link map; 32,769-page maximum), 2026-09-14",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "S0-LL07-a [full] is complete at its stated scope and ready for the user's acceptance decision."
+      }
     }
   ],
   "auxiliary_records": [
