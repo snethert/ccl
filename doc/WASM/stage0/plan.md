@@ -55,8 +55,13 @@ independent review and project acceptance remain separate from execution.
 6. [S0-LL01-b](child-command-control.md) now exercises the production native
    aggregate with real failed, killed and timed-out children under synthetic
    command stimuli. One complete workflow passes and ten controls reject;
-   independent review and project acceptance are pending. Next resume remaining
-   helper/type/object qualification, boundary replacements and wider source traversal.
+   Claude's thirtieth audit reviewed it without defect; project acceptance is pending.
+7. The [TYPEP helper slice](target-predicates.md) corrects host membership answers
+   for target fixnums/bignums, supplies the source optimizer body and preserves
+   the native ctype guard. Twenty-two front-end probes, five native controls and
+   22 checker controls pass; independent review is pending. Native class objects,
+   aliases and wider inference remain open. Take a standing control next, then
+   resume helper/object qualification, boundary replacements and wider traversal.
 
 The B desk record's actual inventory prerequisites are the reviewed ABI/runtime
 records; S0-ENGINE-a is not a prerequisite of S0-ABI-selection. Engine qualification

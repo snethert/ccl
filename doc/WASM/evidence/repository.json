@@ -2,21 +2,21 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "7f1b85fe532015e55e30f24db7eda744cf4a3b45",
+  "commit": "33a4b0bd25280ec92b92135dca134fdddef5774a",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "1a89938aa76795d4b815258a5956c085144a36d5429bd6279dd954c2a9c88e34",
-  "immutable_evidence_files": 160716,
+  "catalog_sha256": "a487e4bf0903103e59a52c5195856d4cb61e8fa02c346432fadf7e28a36e3843",
+  "immutable_evidence_files": 160744,
   "indexed_references_verified": 925,
   "source_index_snapshot": "catalog/source-index-native-dependencies-r7.json",
   "source_index_sha256": "bb4b2d7218983ff4d85a395c1facbb70b815a8f3aaa06af7ae90bd404424f8c1",
-  "verification": "Scoped S0-LL01-b control: first producer and fresh replay pass one complete aggregate and ten required-child refusals; original command logs and partial outputs retained. Eight direct source pins and all 31 accepted metadata bindings pass. Only 29 new files added; prior catalog rows unchanged. No native build or archive-wide payload scan.",
+  "verification": "Scoped TYPEP qualification: seven native sessions, 22 constant front-end probes, two native ctype guards, two unchanged calls, five native and 22 checker controls. Retained verifier checks 42 direct source pins and unchanged traversal. Only 28 new files added; prior catalog rows preserved. No archive-wide scan, native rebuild or acceptance change.",
   "remote": null,
   "off_machine_backup": false,
   "scope": "Separate local evidence repository; original failures retained. Thirty-one accepted records. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-13-child-command-control-r1",
-    "files": 29,
-    "bytes": 596004,
-    "prior_commit": "1f15ddf2e908a9023de46dba37de6280078b3874"
+    "directory": "2026-09-13-target-predicates-r1",
+    "files": 28,
+    "bytes": 544168,
+    "prior_commit": "7f1b85fe532015e55e30f24db7eda744cf4a3b45"
   }
 }

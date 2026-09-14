@@ -17,7 +17,7 @@ status are exercised without source changes.
 | Complete synthetic workflow: all 26 commands | 1 | Exit 0, PASS, two completed synthetic runs |
 | Child exits 23 | 3 | Exit 1, FAIL, exact step and exit diagnostic |
 | Child kills itself with SIGKILL | 3 | Exit 1, FAIL, exact step and return code −9 |
-| Child blocks until the one-second timeout | 3 | Exit 1, FAIL, exact step in the timeout diagnostic |
+| Child blocks until the one-second timeout | 3 | Exit 1, FAIL, step identified by the bound command record |
 | Child exits zero without its required marker | 1 | Exit 1, FAIL, exact missing-marker diagnostic |
 
 Each of the three process failure modes runs at `run-1-kernel-build`,
@@ -33,6 +33,12 @@ adapter. It checks the literal expected step prefix, original/effective
 invocation correspondence, timeout selection, log hashes, real terminal modes,
 exact diagnostics, aggregate exit, report status and partial-run count. Every
 original failure log and partial output is retained in `quarantine.zip`.
+
+Claude's thirtieth audit distinguishes three production branches: nonzero exit
+(including SIGKILL), timeout and missing marker. The timeout report contains
+Python's raw child-argv message. Its text contains the step here because the
+synthetic argv includes it; a real timeout report needs the bound command record
+to identify the step reliably.
 
 ## Evidence boundary
 
