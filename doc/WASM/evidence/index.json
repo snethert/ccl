@@ -3104,6 +3104,17 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "authorship": "Claude Fable 5.1 fixture and generated census on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending."
+    },
+    {
+      "id": "TCR-SCHEMA-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-tcr-schema-r1/packet.json",
+      "sha256": "f591ed95839a7d9ca85bb2b30f983bba27911eac2a3ee4b3c715064000224a44",
+      "scope": "Production TCR schema v1 under D5: 47 fields in nine D5 groups with explicit offsets, widths, alignments, classification and ownership; 41 replaced native cells mapped and two deferred; all 56 fixture TCR fields mapped (25) or declared fixture-private (31); 22 fields with executed witnesses; eight refused controls. Build target, not executed proof; no gate credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "authorship": "Claude Fable 5.1 schema and checker on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending."
     }
   ]
 }
