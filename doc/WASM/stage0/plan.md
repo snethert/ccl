@@ -228,6 +228,90 @@ All native units complete; the Wasm survey has 103 successful units, 259 retaine
 form failures and 29 reads stopped before EOF. This completes the general driver
 and observation pass, not the qualified closure. No census slot is promoted.
 
+#### Closure deliverables — 15 September 2026
+
+The user supplied Claude's progress assessment after the fifty-fourth audit.
+Observation is mature; proving bounds and integrating the qualified closure are
+the remaining work. The number of reviewed diagnostic packets does not measure
+that completion. LL15-b/c still have no runner registered in the inventory.
+The following delivery order supersedes making another isolated accessor
+witness the immediate next deliverable. The detailed input references below
+remain applicable.
+
+1. **Establish the integrated closure run now.** Compose the reviewed graph
+   fragments and available qualification records through one repeatable command
+   using the existing exchange format and census checker. Report BLOCKED for
+   missing joins, qualification, dispositions and bounds; structural validity
+   alone cannot yield PASS. Do not wait until the graph is complete to expose
+   this feedback. The historical assembler remains pinned to its old seed set;
+   integrate reviewed revision 2 explicitly and preserve old outputs. A missing
+   witness must remain a named obligation, never an invented cross-run identity.
+   This development run is not an executed LL15-b/c acceptance result.
+2. **Drain the binding and body worklists in batches.** Account for all 95
+   unwitnessed called symbols with exact symbol identities, source/profile
+   evidence and resulting graph changes or explicit remaining obligations.
+   A source definition alone does not establish a function-cell value. Work
+   through the 4,373 resident payload witnesses by pinned source form/module,
+   reusing compatible retained IR where the identity link is justified and
+   traversing missing dependencies otherwise. Only 4,130 have reported source
+   ranges; the other 243 require separate provenance. Preserve construction,
+   observer-wrapper, later-installation and assembly worklists. A file traversal
+   is complete only when its qualified dependencies join into the working
+   graph; a source range or native payload is not compiler-IR completion.
+3. **Implement bounds by call family and apply them to the census.** Propagate
+   functional-argument candidates through callers, local transformations and
+   returns; account for writes, escaping closures and unknown callers. Use
+   registry construction, mutation and invalidation rules for slot/vector calls
+   and generic dispatch. The 77 accessor methods are copies of two templates,
+   not 77 missing ordinary compiler bodies. Their construction and first-call
+   reader optimization belong in this registry analysis, alongside effective
+   methods and class/combination changes. Extend the combined registry/IR capture
+   only where it supplies a specified missing witness for the larger execution.
+   If a new authoritative capture is necessary, retain its own namespace and
+   state exactly what replaces or connects to earlier inputs. No fresh ID or
+   matching name can stand in for an original rich-build object.
+4. **Apply profile and lowering dispositions during that work.** Do this before
+   spending effort reconstructing excluded native implementation details, while
+   retaining the evidence that justifies exclusion and any required shared Lisp
+   dependencies. Swink and its native clients stay excluded. Mandatory startup
+   services cannot be discarded as unsupported. A reachable unsupported
+   operation needs the implemented, tested condition path required by the
+   existing contract. Operator/lowering, store, trap, import, initializer and
+   external-trace joins remain explicit obligations.
+5. **Replace unjustified widening and run the complete omission path.** Remove
+   a broad edge only when sound replacement edges cover its required targets.
+   The contract still permits justified conservative module/package bounds;
+   it does not require every computed call to resolve to a singleton. Include
+   all possible candidates, including targets the observation never selected.
+   Check seed obligations and independently specified missing-node/edge/seed,
+   hidden-unknown-call and initializer-cycle mutants through the integrated
+   instrumentation/checker/gate path. A missing runner, unresolved required edge
+   or unimplemented required node keeps LL15-b/c blocked. Publish their results
+   only when the actual qualified closure and independent controls qualify,
+   then obtain adversarial review and the user's acceptance.
+
+Every implementation deliverable should name the closure obligation it addresses
+and show its effect on the working graph and remaining work. A targeted witness
+may still be necessary without immediately closing an edge, but it must identify
+the exact integration step it enables. Do not default to another standalone
+observation packet when the required information already exists. Keep one compact
+packet per actual evidence deliverable; this planning update creates none.
+
+Use the following dated populations for progress reports until a justified
+revision changes them. Report scope changes separately from newly proven bounds;
+do not add counts from independent executions.
+
+| Work population at the fifty-fourth audit | What remains to prove |
+| --- | --- |
+| 5,693 called symbol cells; 95 without a value witness | The other 5,598 have observed values, not exhaustive candidate bounds. Qualify contents and changes under the declared profile. |
+| 5,007 original prototypes without joined compiler bodies | 4,373 have payload witnesses, of which 4,130 have source ranges. Establish source/IR or construction dependencies; the 634 other origins retain their separate worklists. |
+| 1,762 computed sites in the rich build | 200 local bounds established; 1,562 open: 879 variable calls and 683 other computed callees. The latter include struct slots, vector slots, special variables and other expressions. |
+| 259 rich-build assembly bypasses | Supply source/lowering or justified profile dispositions; they are not ordinary Lisp pass-2 bodies. |
+| Registry and independent source-file captures | Useful mechanisms and inputs; their joins do not reduce the original build's remaining counts without an explicit execution/identity bridge. |
+| Reviewed seed revision, widening and required target dependencies | Integrate the actual fixed point and independent omission obligations. No percentage of census completion follows from the Stage 0 slot count. |
+
+#### Retained inputs and outstanding obligations
+
 Use the retained flat graphs and per-call worklists for the remaining work:
 
 1. The [retained-build IR join](build-flow.md) now uses the original rich stream
@@ -290,9 +374,9 @@ Use the retained flat graphs and per-call worklists for the remaining work:
    a real U1 inspector-source reload with 240 method additions: 163 join earlier
    compiler bodies by object identity and code bytes, while 77 retain explicit
    construction gaps. Hooks restore after normal and nonlocal exits; the native
-   method-code comparison equals the run without hooks. Next, witness those 77
-   construction paths and effective-method cache construction/invalidation,
-   then extend the combined observation to the larger census execution. The
+   method-code comparison equals the run without hooks. Witness those 77
+   construction paths and effective-method cache construction/invalidation as
+   part of the integrated registry-bound work scheduled above. The
    new namespace is not a retroactive join to the vanished rich-build objects.
    The empty-registry disposition covers any prior dcode selection, as Claude's
    fifty-third audit independently demonstrated.
