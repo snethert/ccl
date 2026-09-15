@@ -101,7 +101,7 @@
         }
       ],
       "status": "NOT_RUN",
-      "runner": null,
+      "runner": "tests/wasm/stage0/contracts/run.py",
       "review_disposition": "NOT_REVIEWED"
     },
     {

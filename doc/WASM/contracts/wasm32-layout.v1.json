@@ -1,0 +1,4694 @@
+{
+  "schema": "wasm32-layout",
+  "version": 1,
+  "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+  "sources": {
+    "compiler/X86/X8632/x8632-arch.lisp": "1491906803bac60051385c1691090a19b36b59a2868a2b41b13b1fdb91a6cfcd",
+    "lisp-kernel/x86-constants32.h": "62b154f6a89cf171e9eb2d3f26411b471f0a87459603770f41761c358bb0b434"
+  },
+  "ledger_sha256": "f44f6e58bb5f4606337dfe2c220dd096f03dbaa6f6e01932f5fa2f5d02c5066d",
+  "coordinates": "raw_offset counts bytes from the object base; tagged_displacement is the immediate added to the tagged pointer (negative displacements need explicit address adjustment on wasm32, positive ones can use the memory instruction offset)",
+  "vocabulary": {
+    "inherited": "value or layout adopted as-is under D1",
+    "replaced": "target-specific replacement, referenced",
+    "unsupported": "native-only mechanism with no target counterpart",
+    "deferred": "needs a later stage or decision, referenced",
+    "reserved": "value retained, no target use until an explicit decision"
+  },
+  "word_bytes": 4,
+  "endianness": "little",
+  "object_alignment": 8,
+  "constants": [
+    {
+      "name": "nbits-in-word",
+      "value": 32,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "nbits-in-byte",
+      "value": 8,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "ntagbits",
+      "value": 3,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "nlisptagbits",
+      "value": 2,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "nfixnumtagbits",
+      "value": 2,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "num-subtag-bits",
+      "value": 8,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtagmask",
+      "value": 255,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "fixnumshift",
+      "value": 2,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "fixnum-shift",
+      "value": 2,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "fulltagmask",
+      "value": 7,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "tagmask",
+      "value": 3,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "fixnummask",
+      "value": 3,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "ncharcodebits",
+      "value": 8,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "charcode-shift",
+      "value": 8,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "word-shift",
+      "value": 2,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "word-size-in-bytes",
+      "value": 4,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "node-size",
+      "value": 4,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "dnode-size",
+      "value": 8,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "dnode-align-bits",
+      "value": 3,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "dnode-shift",
+      "value": 3,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "bitmap-shift",
+      "value": 5,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "fixnumone",
+      "value": 4,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "fixnum-one",
+      "value": 4,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "fixnum1",
+      "value": 4,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "target-most-negative-fixnum",
+      "value": -536870912,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "target-most-positive-fixnum",
+      "value": 536870911,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "default-node-regs-mask",
+      "value": 206,
+      "disposition": "unsupported",
+      "target": "native-only mechanism",
+      "note": "native register mask; Wasm has locals and explicit stacks"
+    },
+    {
+      "name": "tag-fixnum",
+      "value": 0,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "tag-list",
+      "value": 1,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "tag-misc",
+      "value": 2,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "tag-imm",
+      "value": 3,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "fulltag-even-fixnum",
+      "value": 0,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "fulltag-cons",
+      "value": 1,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "fulltag-nodeheader",
+      "value": 2,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "fulltag-imm",
+      "value": 3,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "fulltag-odd-fixnum",
+      "value": 4,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "fulltag-tra",
+      "value": 5,
+      "disposition": "reserved",
+      "target": "decisions.md D1",
+      "note": "native tagged return address; retained value, no target use until an explicit decision"
+    },
+    {
+      "name": "fulltag-misc",
+      "value": 6,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "fulltag-immheader",
+      "value": 7,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "min-numeric-subtag",
+      "value": 7,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "max-rational-subtag",
+      "value": 10,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "min-float-subtag",
+      "value": 15,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "max-float-subtag",
+      "value": 23,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "max-real-subtag",
+      "value": 23,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "max-numeric-subtag",
+      "value": 26,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "min-16-bit-ivector-subtag",
+      "value": 215,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "max-16-bit-ivector-subtag",
+      "value": 223,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "min-8-bit-ivector-subtag",
+      "value": 199,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "max-8-bit-ivector-subtag",
+      "value": 207,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "max-32-bit-ivector-subtag",
+      "value": 191,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "min-cl-ivector-subtag",
+      "value": 159,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "min-non-numeric-imm-subtag",
+      "value": 31,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "unbound-marker",
+      "value": 51,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "undefined",
+      "value": 51,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "slot-unbound-marker",
+      "value": 83,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "illegal-marker",
+      "value": 91,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "reserved-frame-marker",
+      "value": 235,
+      "disposition": "unsupported",
+      "target": "native-only mechanism",
+      "note": "native stack frame marker"
+    },
+    {
+      "name": "function-boundary-marker",
+      "value": 251,
+      "disposition": "replaced",
+      "target": "decisions.md D5 logical code identity",
+      "note": "native code-vector boundary word; code lives outside the heap"
+    },
+    {
+      "name": "max-non-array-imm-subtag",
+      "value": 159,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "min-non-numeric-node-subtag",
+      "value": 34,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "max-non-array-node-subtag",
+      "value": 146,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "misc-header-offset",
+      "value": -6,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "misc-subtag-offset",
+      "value": -6,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "misc-data-offset",
+      "value": -2,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "misc-dfloat-offset",
+      "value": 2,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "misc-complex-dfloat-offset",
+      "value": 2,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "max-64-bit-constant-index",
+      "value": 16777216,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "max-32-bit-constant-index",
+      "value": 16777216,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "max-16-bit-constant-index",
+      "value": 16777216,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "max-8-bit-constant-index",
+      "value": 16777216,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "max-1-bit-constant-index",
+      "value": 16777216,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "canonical-nil-value",
+      "value": 77825,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "provisional schema-defined low address for canonical NIL; D1 fixes the value as a schema row, the loader supplies the object"
+    },
+    {
+      "name": "canonical-t-value",
+      "value": 77838,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "provisional; T at a recorded offset from NIL"
+    },
+    {
+      "name": "t-offset",
+      "value": 13,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "recorded NIL-to-T offset"
+    },
+    {
+      "name": "misc-bias",
+      "value": 6,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "cons-bias",
+      "value": 1,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "complex-double-float.realpart",
+      "value": 2,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "complex-double-float.imagpart",
+      "value": 10,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "nilsym-offset",
+      "value": 45,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "NIL symbol object offset from the canonical cons; fixed with the NIL/T rows"
+    },
+    {
+      "name": "arrayh.rank-cell",
+      "value": 0,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "arrayh.physsize-cell",
+      "value": 1,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "arrayh.data-vector-cell",
+      "value": 2,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "arrayh.displacement-cell",
+      "value": 3,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "arrayh.flags-cell",
+      "value": 4,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "arrayh.dim0-cell",
+      "value": 5,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "arrayh.flags-cell-bits-byte",
+      "value": {
+        "byte_size": 8,
+        "byte_position": 0
+      },
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "arrayh.flags-cell-subtag-byte",
+      "value": {
+        "byte_size": 8,
+        "byte_position": 8
+      },
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "tcr-bias",
+      "value": 0,
+      "disposition": "replaced",
+      "target": "decisions.md D5 TCR schema",
+      "note": "native TCR addressing bias; the D5 TCR is a linear-memory record with explicit field offsets"
+    },
+    {
+      "name": "interrupt-level-binding-index",
+      "value": 4,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "gf-code-size",
+      "value": 30,
+      "disposition": "deferred",
+      "target": "Stage 1 function objects",
+      "note": "native generic-function trampoline size"
+    },
+    {
+      "name": "x8632-subprims-base",
+      "value": 86016,
+      "disposition": "replaced",
+      "target": "decisions.md D4",
+      "note": "native subprimitive jump table base; subprimitives are emitted"
+    },
+    {
+      "name": "recover-fn-opcode-byte",
+      "value": 191,
+      "disposition": "unsupported",
+      "target": "native-only mechanism",
+      "note": "native machine-code self-reference recovery"
+    },
+    {
+      "name": "recover-fn-address-offset",
+      "value": 1,
+      "disposition": "unsupported",
+      "target": "native-only mechanism",
+      "note": "native machine-code self-reference recovery"
+    },
+    {
+      "name": "arg-check-trap-pc-limit",
+      "value": 7,
+      "disposition": "unsupported",
+      "target": "native-only mechanism",
+      "note": "native trap-site decoding; arity checks lower to explicit checks under D6"
+    },
+    {
+      "name": "fasl-version",
+      "value": 103,
+      "disposition": "deferred",
+      "target": "Stage 1 cross-fasloader",
+      "note": "native FASL format versions; the target cross-dump format is a Stage 1 deliverable"
+    },
+    {
+      "name": "fasl-max-version",
+      "value": 103,
+      "disposition": "deferred",
+      "target": "Stage 1 cross-fasloader",
+      "note": "native FASL format versions; the target cross-dump format is a Stage 1 deliverable"
+    },
+    {
+      "name": "fasl-min-version",
+      "value": 103,
+      "disposition": "deferred",
+      "target": "Stage 1 cross-fasloader",
+      "note": "native FASL format versions; the target cross-dump format is a Stage 1 deliverable"
+    }
+  ],
+  "subtags": [
+    {
+      "name": "subtag-bignum",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 0,
+      "value": 7,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-ratio",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 1,
+      "value": 10,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-single-float",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 1,
+      "value": 15,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-double-float",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 2,
+      "value": 23,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-complex",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 3,
+      "value": 26,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-bit-vector",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 31,
+      "value": 255,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-complex-double-float-vector",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 30,
+      "value": 247,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-complex-single-float-vector",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 29,
+      "value": 239,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-double-float-vector",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 28,
+      "value": 231,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-s16-vector",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 27,
+      "value": 223,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-u16-vector",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 26,
+      "value": 215,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-s8-vector",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 25,
+      "value": 207,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-u8-vector",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 24,
+      "value": 199,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-simple-base-string",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 23,
+      "value": 191,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-fixnum-vector",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 22,
+      "value": 183,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-s32-vector",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 21,
+      "value": 175,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-u32-vector",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 20,
+      "value": 167,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-single-float-vector",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 19,
+      "value": 159,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-arrayh",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 29,
+      "value": 234,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-vectorh",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 30,
+      "value": 242,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-simple-vector",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 31,
+      "value": 250,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-macptr",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 3,
+      "value": 31,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "layout inherited; foreign pointer semantics are a host-service disposition under D6"
+    },
+    {
+      "name": "subtag-dead-macptr",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 4,
+      "value": 39,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "layout inherited; see macptr"
+    },
+    {
+      "name": "subtag-xcode-vector",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 7,
+      "value": 63,
+      "disposition": "deferred",
+      "target": "Stage 1 cross-dump code set",
+      "note": "cross-development code container; code lives in the bootstrap code set, not the heap"
+    },
+    {
+      "name": "subtag-complex-single-float",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 8,
+      "value": 71,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-complex-double-float",
+      "tag": "fulltag-immheader",
+      "tag_value": 7,
+      "index": 9,
+      "value": 79,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-unbound",
+      "tag": "fulltag-imm",
+      "tag_value": 3,
+      "index": 6,
+      "value": 51,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-character",
+      "tag": "fulltag-imm",
+      "tag_value": 3,
+      "index": 9,
+      "value": 75,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-slot-unbound",
+      "tag": "fulltag-imm",
+      "tag_value": 3,
+      "index": 10,
+      "value": 83,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-illegal",
+      "tag": "fulltag-imm",
+      "tag_value": 3,
+      "index": 11,
+      "value": 91,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-forward-marker",
+      "tag": "fulltag-imm",
+      "tag_value": 3,
+      "index": 28,
+      "value": 227,
+      "disposition": "replaced",
+      "target": "decisions.md D4 initial copying collector",
+      "note": "forwarding word for the target collector; the native encoding is not assumed"
+    },
+    {
+      "name": "subtag-reserved-frame",
+      "tag": "fulltag-imm",
+      "tag_value": 3,
+      "index": 29,
+      "value": 235,
+      "disposition": "unsupported",
+      "target": "native-only mechanism",
+      "note": "native stack frame marker"
+    },
+    {
+      "name": "subtag-no-thread-local-binding",
+      "tag": "fulltag-imm",
+      "tag_value": 3,
+      "index": 30,
+      "value": 243,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-function-boundary-marker",
+      "tag": "fulltag-imm",
+      "tag_value": 3,
+      "index": 31,
+      "value": 251,
+      "disposition": "replaced",
+      "target": "decisions.md D5 logical code identity",
+      "note": "native code-vector boundary"
+    },
+    {
+      "name": "subtag-catch-frame",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 4,
+      "value": 34,
+      "disposition": "replaced",
+      "target": "contracts/debug-frames.md v0.1 and decisions.md D3 / abi/dynamic-call.v0.md",
+      "note": "catch/unwind-protect frames become logical frames with handler and cleanup records"
+    },
+    {
+      "name": "subtag-function",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 5,
+      "value": 42,
+      "disposition": "replaced",
+      "target": "decisions.md D5 code descriptors",
+      "note": "function objects reference code descriptors; native code vectors do not exist"
+    },
+    {
+      "name": "subtag-basic-stream",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 6,
+      "value": 50,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-symbol",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 7,
+      "value": 58,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-lock",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 8,
+      "value": 66,
+      "disposition": "replaced",
+      "target": "decisions.md D5 mailbox and atomics",
+      "note": "native kernel lock object"
+    },
+    {
+      "name": "subtag-hash-vector",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 9,
+      "value": 74,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-pool",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 10,
+      "value": 82,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-weak",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 11,
+      "value": 90,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "layout inherited; weak semantics need their own collector disposition (plan item 4)"
+    },
+    {
+      "name": "subtag-package",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 12,
+      "value": 98,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-slot-vector",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 13,
+      "value": 106,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-instance",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 14,
+      "value": 114,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-struct",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 15,
+      "value": 122,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-istruct",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 16,
+      "value": 130,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-value-cell",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 17,
+      "value": 138,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": ""
+    },
+    {
+      "name": "subtag-xfunction",
+      "tag": "fulltag-nodeheader",
+      "tag_value": 2,
+      "index": 18,
+      "value": 146,
+      "disposition": "deferred",
+      "target": "Stage 1 cross-dump code set",
+      "note": "cross-development function representation"
+    }
+  ],
+  "headers": [
+    {
+      "name": "single-float-header",
+      "element_count": 1,
+      "subtag": "subtag-single-float",
+      "value": 271,
+      "disposition": "inherited",
+      "target": "decisions.md D1"
+    },
+    {
+      "name": "double-float-header",
+      "element_count": 3,
+      "subtag": "subtag-double-float",
+      "value": 791,
+      "disposition": "inherited",
+      "target": "decisions.md D1"
+    },
+    {
+      "name": "one-digit-bignum-header",
+      "element_count": 1,
+      "subtag": "subtag-bignum",
+      "value": 263,
+      "disposition": "inherited",
+      "target": "decisions.md D1"
+    },
+    {
+      "name": "two-digit-bignum-header",
+      "element_count": 2,
+      "subtag": "subtag-bignum",
+      "value": 519,
+      "disposition": "inherited",
+      "target": "decisions.md D1"
+    },
+    {
+      "name": "three-digit-bignum-header",
+      "element_count": 3,
+      "subtag": "subtag-bignum",
+      "value": 775,
+      "disposition": "inherited",
+      "target": "decisions.md D1"
+    },
+    {
+      "name": "symbol-header",
+      "element_count": 7,
+      "subtag": "subtag-symbol",
+      "value": 1850,
+      "disposition": "inherited",
+      "target": "decisions.md D1"
+    },
+    {
+      "name": "value-cell-header",
+      "element_count": 1,
+      "subtag": "subtag-value-cell",
+      "value": 394,
+      "disposition": "inherited",
+      "target": "decisions.md D1"
+    },
+    {
+      "name": "macptr-header",
+      "element_count": 3,
+      "subtag": "subtag-macptr",
+      "value": 799,
+      "disposition": "inherited",
+      "target": "decisions.md D1"
+    }
+  ],
+  "objects": [
+    {
+      "name": "cons",
+      "tag": "tag-list",
+      "tag_value": 1,
+      "size_bytes": 8,
+      "alignment": 8,
+      "has_header": false,
+      "element_count": null,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "CDR first, CAR second; canonical NIL distinguished",
+      "cells": [
+        {
+          "name": "cdr",
+          "index": 0,
+          "raw_offset": 0,
+          "tagged_displacement": -1,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": "word 0"
+        },
+        {
+          "name": "car",
+          "index": 1,
+          "raw_offset": 4,
+          "tagged_displacement": 3,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": "word 1"
+        }
+      ]
+    },
+    {
+      "name": "ratio",
+      "tag": "fulltag-misc",
+      "tag_value": 6,
+      "size_bytes": 12,
+      "alignment": 8,
+      "has_header": true,
+      "element_count": 2,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "",
+      "cells": [
+        {
+          "name": "header",
+          "index": 0,
+          "raw_offset": 0,
+          "tagged_displacement": -6,
+          "disposition": "inherited",
+          "representation": "header",
+          "gc": "none",
+          "note": "misc header word"
+        },
+        {
+          "name": "numer",
+          "index": 1,
+          "raw_offset": 4,
+          "tagged_displacement": -2,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "denom",
+          "index": 2,
+          "raw_offset": 8,
+          "tagged_displacement": 2,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "name": "single-float",
+      "tag": "fulltag-misc",
+      "tag_value": 6,
+      "size_bytes": 8,
+      "alignment": 8,
+      "has_header": true,
+      "element_count": 1,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "",
+      "cells": [
+        {
+          "name": "header",
+          "index": 0,
+          "raw_offset": 0,
+          "tagged_displacement": -6,
+          "disposition": "inherited",
+          "representation": "header",
+          "gc": "none",
+          "note": "misc header word"
+        },
+        {
+          "name": "value",
+          "index": 1,
+          "raw_offset": 4,
+          "tagged_displacement": -2,
+          "disposition": "inherited",
+          "representation": "raw",
+          "gc": "none",
+          "note": "IEEE single payload"
+        }
+      ]
+    },
+    {
+      "name": "double-float",
+      "tag": "fulltag-misc",
+      "tag_value": 6,
+      "size_bytes": 16,
+      "alignment": 8,
+      "has_header": true,
+      "element_count": 3,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "double payload 8-byte aligned at misc-dfloat-offset",
+      "cells": [
+        {
+          "name": "header",
+          "index": 0,
+          "raw_offset": 0,
+          "tagged_displacement": -6,
+          "disposition": "inherited",
+          "representation": "header",
+          "gc": "none",
+          "note": "misc header word"
+        },
+        {
+          "name": "pad",
+          "index": 1,
+          "raw_offset": 4,
+          "tagged_displacement": -2,
+          "disposition": "inherited",
+          "representation": "raw",
+          "gc": "none",
+          "note": "alignment pad"
+        },
+        {
+          "name": "value",
+          "index": 2,
+          "raw_offset": 8,
+          "tagged_displacement": 2,
+          "disposition": "inherited",
+          "representation": "raw",
+          "gc": "none",
+          "note": "IEEE double low word"
+        },
+        {
+          "name": "val-high",
+          "index": 3,
+          "raw_offset": 12,
+          "tagged_displacement": 6,
+          "disposition": "inherited",
+          "representation": "raw",
+          "gc": "none",
+          "note": "IEEE double high word"
+        }
+      ]
+    },
+    {
+      "name": "complex-single-float",
+      "tag": "fulltag-misc",
+      "tag_value": 6,
+      "size_bytes": 16,
+      "alignment": 8,
+      "has_header": true,
+      "element_count": 3,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "",
+      "cells": [
+        {
+          "name": "header",
+          "index": 0,
+          "raw_offset": 0,
+          "tagged_displacement": -6,
+          "disposition": "inherited",
+          "representation": "header",
+          "gc": "none",
+          "note": "misc header word"
+        },
+        {
+          "name": "pad",
+          "index": 1,
+          "raw_offset": 4,
+          "tagged_displacement": -2,
+          "disposition": "inherited",
+          "representation": "raw",
+          "gc": "none",
+          "note": ""
+        },
+        {
+          "name": "realpart",
+          "index": 2,
+          "raw_offset": 8,
+          "tagged_displacement": 2,
+          "disposition": "inherited",
+          "representation": "raw",
+          "gc": "none",
+          "note": ""
+        },
+        {
+          "name": "imagpart",
+          "index": 3,
+          "raw_offset": 12,
+          "tagged_displacement": 6,
+          "disposition": "inherited",
+          "representation": "raw",
+          "gc": "none",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "name": "complex-double-float",
+      "tag": "fulltag-misc",
+      "tag_value": 6,
+      "size_bytes": 24,
+      "alignment": 8,
+      "has_header": true,
+      "element_count": 5,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "",
+      "cells": [
+        {
+          "name": "header",
+          "index": 0,
+          "raw_offset": 0,
+          "tagged_displacement": -6,
+          "disposition": "inherited",
+          "representation": "header",
+          "gc": "none",
+          "note": "misc header word"
+        },
+        {
+          "name": "pad",
+          "index": 1,
+          "raw_offset": 4,
+          "tagged_displacement": -2,
+          "disposition": "inherited",
+          "representation": "raw",
+          "gc": "none",
+          "note": ""
+        },
+        {
+          "name": "realpart-low",
+          "index": 2,
+          "raw_offset": 8,
+          "tagged_displacement": 2,
+          "disposition": "inherited",
+          "representation": "raw",
+          "gc": "none",
+          "note": ""
+        },
+        {
+          "name": "realpart-high",
+          "index": 3,
+          "raw_offset": 12,
+          "tagged_displacement": 6,
+          "disposition": "inherited",
+          "representation": "raw",
+          "gc": "none",
+          "note": ""
+        },
+        {
+          "name": "imagpart-low",
+          "index": 4,
+          "raw_offset": 16,
+          "tagged_displacement": 10,
+          "disposition": "inherited",
+          "representation": "raw",
+          "gc": "none",
+          "note": ""
+        },
+        {
+          "name": "imagpart-high",
+          "index": 5,
+          "raw_offset": 20,
+          "tagged_displacement": 14,
+          "disposition": "inherited",
+          "representation": "raw",
+          "gc": "none",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "name": "complex",
+      "tag": "fulltag-misc",
+      "tag_value": 6,
+      "size_bytes": 12,
+      "alignment": 8,
+      "has_header": true,
+      "element_count": 2,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "",
+      "cells": [
+        {
+          "name": "header",
+          "index": 0,
+          "raw_offset": 0,
+          "tagged_displacement": -6,
+          "disposition": "inherited",
+          "representation": "header",
+          "gc": "none",
+          "note": "misc header word"
+        },
+        {
+          "name": "realpart",
+          "index": 1,
+          "raw_offset": 4,
+          "tagged_displacement": -2,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "imagpart",
+          "index": 2,
+          "raw_offset": 8,
+          "tagged_displacement": 2,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "name": "macptr",
+      "tag": "fulltag-misc",
+      "tag_value": 6,
+      "size_bytes": 16,
+      "alignment": 8,
+      "has_header": true,
+      "element_count": 3,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "foreign pointer semantics deferred to the D6 host-service disposition",
+      "cells": [
+        {
+          "name": "header",
+          "index": 0,
+          "raw_offset": 0,
+          "tagged_displacement": -6,
+          "disposition": "inherited",
+          "representation": "header",
+          "gc": "none",
+          "note": "misc header word"
+        },
+        {
+          "name": "address",
+          "index": 1,
+          "raw_offset": 4,
+          "tagged_displacement": -2,
+          "disposition": "inherited",
+          "representation": "raw",
+          "gc": "none",
+          "note": "raw host address; never a Lisp reference"
+        },
+        {
+          "name": "domain",
+          "index": 2,
+          "raw_offset": 8,
+          "tagged_displacement": 2,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "type",
+          "index": 3,
+          "raw_offset": 12,
+          "tagged_displacement": 6,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "name": "xmacptr",
+      "tag": "fulltag-misc",
+      "tag_value": 6,
+      "size_bytes": 24,
+      "alignment": 8,
+      "has_header": true,
+      "element_count": 5,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "see macptr",
+      "cells": [
+        {
+          "name": "header",
+          "index": 0,
+          "raw_offset": 0,
+          "tagged_displacement": -6,
+          "disposition": "inherited",
+          "representation": "header",
+          "gc": "none",
+          "note": "misc header word"
+        },
+        {
+          "name": "address",
+          "index": 1,
+          "raw_offset": 4,
+          "tagged_displacement": -2,
+          "disposition": "inherited",
+          "representation": "raw",
+          "gc": "none",
+          "note": ""
+        },
+        {
+          "name": "domain",
+          "index": 2,
+          "raw_offset": 8,
+          "tagged_displacement": 2,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "type",
+          "index": 3,
+          "raw_offset": 12,
+          "tagged_displacement": 6,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "flags",
+          "index": 4,
+          "raw_offset": 16,
+          "tagged_displacement": 10,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "link",
+          "index": 5,
+          "raw_offset": 20,
+          "tagged_displacement": 14,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "name": "catch-frame",
+      "tag": "fulltag-misc",
+      "tag_value": 6,
+      "size_bytes": 48,
+      "alignment": 8,
+      "has_header": true,
+      "element_count": 11,
+      "disposition": "replaced",
+      "target": "contracts/debug-frames.md v0.1 and decisions.md D3 / abi/dynamic-call.v0.md",
+      "note": "no native catch frames",
+      "cells": [
+        {
+          "name": "header",
+          "index": 0,
+          "raw_offset": 0,
+          "tagged_displacement": -6,
+          "disposition": "inherited",
+          "representation": "header",
+          "gc": "none",
+          "note": "misc header word"
+        },
+        {
+          "name": "catch-tag",
+          "index": 1,
+          "raw_offset": 4,
+          "tagged_displacement": -2,
+          "disposition": "replaced",
+          "representation": "tagged",
+          "gc": "root",
+          "note": "handler record tag"
+        },
+        {
+          "name": "link",
+          "index": 2,
+          "raw_offset": 8,
+          "tagged_displacement": 2,
+          "disposition": "replaced",
+          "representation": "raw",
+          "gc": "none",
+          "note": "handler checkpoint chain"
+        },
+        {
+          "name": "mvflag",
+          "index": 3,
+          "raw_offset": 12,
+          "tagged_displacement": 6,
+          "disposition": "replaced",
+          "representation": "raw",
+          "gc": "none",
+          "note": "cleanup versus catch kind"
+        },
+        {
+          "name": "esp",
+          "index": 4,
+          "raw_offset": 16,
+          "tagged_displacement": 10,
+          "disposition": "unsupported",
+          "representation": "native",
+          "gc": "none",
+          "note": "native stack pointer"
+        },
+        {
+          "name": "ebp",
+          "index": 5,
+          "raw_offset": 20,
+          "tagged_displacement": 14,
+          "disposition": "unsupported",
+          "representation": "native",
+          "gc": "none",
+          "note": "native frame pointer"
+        },
+        {
+          "name": "foreign-sp",
+          "index": 6,
+          "raw_offset": 24,
+          "tagged_displacement": 18,
+          "disposition": "unsupported",
+          "representation": "native",
+          "gc": "none",
+          "note": "native foreign stack pointer"
+        },
+        {
+          "name": "db-link",
+          "index": 7,
+          "raw_offset": 28,
+          "tagged_displacement": 22,
+          "disposition": "replaced",
+          "representation": "raw",
+          "gc": "none",
+          "note": "binding checkpoint"
+        },
+        {
+          "name": "xframe",
+          "index": 8,
+          "raw_offset": 32,
+          "tagged_displacement": 26,
+          "disposition": "replaced",
+          "representation": "raw",
+          "gc": "none",
+          "note": "handler checkpoint"
+        },
+        {
+          "name": "pc",
+          "index": 9,
+          "raw_offset": 36,
+          "tagged_displacement": 30,
+          "disposition": "unsupported",
+          "representation": "native",
+          "gc": "none",
+          "note": "native return address"
+        },
+        {
+          "name": "nfp",
+          "index": 10,
+          "raw_offset": 40,
+          "tagged_displacement": 34,
+          "disposition": "unsupported",
+          "representation": "native",
+          "gc": "none",
+          "note": "native fp frame"
+        },
+        {
+          "name": "pad",
+          "index": 11,
+          "raw_offset": 44,
+          "tagged_displacement": 38,
+          "disposition": "unsupported",
+          "representation": "native",
+          "gc": "none",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "name": "lock",
+      "tag": "fulltag-misc",
+      "tag_value": 6,
+      "size_bytes": 28,
+      "alignment": 8,
+      "has_header": true,
+      "element_count": 6,
+      "disposition": "replaced",
+      "target": "decisions.md D5 mailbox and atomics",
+      "note": "",
+      "cells": [
+        {
+          "name": "header",
+          "index": 0,
+          "raw_offset": 0,
+          "tagged_displacement": -6,
+          "disposition": "inherited",
+          "representation": "header",
+          "gc": "none",
+          "note": "misc header word"
+        },
+        {
+          "name": "_value",
+          "index": 1,
+          "raw_offset": 4,
+          "tagged_displacement": -2,
+          "disposition": "unsupported",
+          "representation": "native",
+          "gc": "none",
+          "note": "kernel lock pointer"
+        },
+        {
+          "name": "kind",
+          "index": 2,
+          "raw_offset": 8,
+          "tagged_displacement": 2,
+          "disposition": "replaced",
+          "representation": "tagged",
+          "gc": "root",
+          "note": "lock kind"
+        },
+        {
+          "name": "writer",
+          "index": 3,
+          "raw_offset": 12,
+          "tagged_displacement": 6,
+          "disposition": "replaced",
+          "representation": "tagged",
+          "gc": "root",
+          "note": "owner identity"
+        },
+        {
+          "name": "name",
+          "index": 4,
+          "raw_offset": 16,
+          "tagged_displacement": 10,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "whostate",
+          "index": 5,
+          "raw_offset": 20,
+          "tagged_displacement": 14,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "whostate-2",
+          "index": 6,
+          "raw_offset": 24,
+          "tagged_displacement": 18,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "name": "symbol",
+      "tag": "fulltag-misc",
+      "tag_value": 6,
+      "size_bytes": 32,
+      "alignment": 8,
+      "has_header": true,
+      "element_count": 7,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "",
+      "cells": [
+        {
+          "name": "header",
+          "index": 0,
+          "raw_offset": 0,
+          "tagged_displacement": -6,
+          "disposition": "inherited",
+          "representation": "header",
+          "gc": "none",
+          "note": "misc header word"
+        },
+        {
+          "name": "pname",
+          "index": 1,
+          "raw_offset": 4,
+          "tagged_displacement": -2,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "vcell",
+          "index": 2,
+          "raw_offset": 8,
+          "tagged_displacement": 2,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": "global value cell"
+        },
+        {
+          "name": "fcell",
+          "index": 3,
+          "raw_offset": 12,
+          "tagged_displacement": 6,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": "function cell; references a function object, never code bytes"
+        },
+        {
+          "name": "package-predicate",
+          "index": 4,
+          "raw_offset": 16,
+          "tagged_displacement": 10,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "flags",
+          "index": 5,
+          "raw_offset": 20,
+          "tagged_displacement": 14,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": "fixnum flags"
+        },
+        {
+          "name": "plist",
+          "index": 6,
+          "raw_offset": 24,
+          "tagged_displacement": 18,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "binding-index",
+          "index": 7,
+          "raw_offset": 28,
+          "tagged_displacement": 22,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": "fixnum index into the dynamic-binding vector; distinct from any TCR index (D5)"
+        }
+      ]
+    },
+    {
+      "name": "vectorh",
+      "tag": "fulltag-misc",
+      "tag_value": 6,
+      "size_bytes": 24,
+      "alignment": 8,
+      "has_header": true,
+      "element_count": 5,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "",
+      "cells": [
+        {
+          "name": "header",
+          "index": 0,
+          "raw_offset": 0,
+          "tagged_displacement": -6,
+          "disposition": "inherited",
+          "representation": "header",
+          "gc": "none",
+          "note": "misc header word"
+        },
+        {
+          "name": "logsize",
+          "index": 1,
+          "raw_offset": 4,
+          "tagged_displacement": -2,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "physsize",
+          "index": 2,
+          "raw_offset": 8,
+          "tagged_displacement": 2,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "data-vector",
+          "index": 3,
+          "raw_offset": 12,
+          "tagged_displacement": 6,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "displacement",
+          "index": 4,
+          "raw_offset": 16,
+          "tagged_displacement": 10,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "flags",
+          "index": 5,
+          "raw_offset": 20,
+          "tagged_displacement": 14,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "name": "arrayh",
+      "tag": "fulltag-misc",
+      "tag_value": 6,
+      "size_bytes": 24,
+      "alignment": 8,
+      "has_header": true,
+      "element_count": null,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "dimensions follow the fixed cells",
+      "cells": [
+        {
+          "name": "header",
+          "index": 0,
+          "raw_offset": 0,
+          "tagged_displacement": -6,
+          "disposition": "inherited",
+          "representation": "header",
+          "gc": "none",
+          "note": "misc header word"
+        },
+        {
+          "name": "rank",
+          "index": 1,
+          "raw_offset": 4,
+          "tagged_displacement": -2,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "physsize",
+          "index": 2,
+          "raw_offset": 8,
+          "tagged_displacement": 2,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "data-vector",
+          "index": 3,
+          "raw_offset": 12,
+          "tagged_displacement": 6,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "displacement",
+          "index": 4,
+          "raw_offset": 16,
+          "tagged_displacement": 10,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        },
+        {
+          "name": "flags",
+          "index": 5,
+          "raw_offset": 20,
+          "tagged_displacement": 14,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "name": "value-cell",
+      "tag": "fulltag-misc",
+      "tag_value": 6,
+      "size_bytes": 8,
+      "alignment": 8,
+      "has_header": true,
+      "element_count": 1,
+      "disposition": "inherited",
+      "target": "decisions.md D1",
+      "note": "",
+      "cells": [
+        {
+          "name": "header",
+          "index": 0,
+          "raw_offset": 0,
+          "tagged_displacement": -6,
+          "disposition": "inherited",
+          "representation": "header",
+          "gc": "none",
+          "note": "misc header word"
+        },
+        {
+          "name": "value",
+          "index": 1,
+          "raw_offset": 4,
+          "tagged_displacement": -2,
+          "disposition": "inherited",
+          "representation": "tagged",
+          "gc": "root",
+          "note": ""
+        }
+      ]
+    }
+  ],
+  "layouts": [
+    {
+      "name": "lisp-frame",
+      "origin": 0,
+      "size_bytes": 12,
+      "disposition": "replaced",
+      "target": "contracts/debug-frames.md v0.1",
+      "note": "native frame with return address",
+      "cells": [
+        {
+          "name": "backptr",
+          "index": 0,
+          "offset": 0,
+          "disposition": "replaced",
+          "target": "contracts/debug-frames.md v0.1",
+          "note": "previous_frame"
+        },
+        {
+          "name": "return-address",
+          "index": 1,
+          "offset": 4,
+          "disposition": "unsupported",
+          "target": "native return address; engine frames carry control",
+          "note": ""
+        },
+        {
+          "name": "xtra",
+          "index": 2,
+          "offset": 8,
+          "disposition": "replaced",
+          "target": "contracts/debug-frames.md v0.1",
+          "note": "payload slots"
+        }
+      ]
+    },
+    {
+      "name": "tsp-frame",
+      "origin": 0,
+      "size_bytes": 8,
+      "disposition": "replaced",
+      "target": "contracts/debug-frames.md v0.1 and tests/wasm/stage0/nested-eh abi.json (S0-LL19-a)",
+      "note": "temporary-stack frames become explicit-stack records",
+      "cells": [
+        {
+          "name": "backptr",
+          "index": 0,
+          "offset": 0,
+          "disposition": "replaced",
+          "target": "contracts/debug-frames.md v0.1",
+          "note": "previous record"
+        },
+        {
+          "name": "ebp",
+          "index": 1,
+          "offset": 4,
+          "disposition": "unsupported",
+          "target": "native frame pointer",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "name": "csp-frame",
+      "origin": 0,
+      "size_bytes": 8,
+      "disposition": "replaced",
+      "target": "contracts/debug-frames.md v0.1 and tests/wasm/stage0/nested-eh abi.json (S0-LL19-a)",
+      "note": "",
+      "cells": [
+        {
+          "name": "backptr",
+          "index": 0,
+          "offset": 0,
+          "disposition": "replaced",
+          "target": "contracts/debug-frames.md v0.1",
+          "note": "previous record"
+        },
+        {
+          "name": "ebp",
+          "index": 1,
+          "offset": 4,
+          "disposition": "unsupported",
+          "target": "native frame pointer",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "name": "xcf",
+      "origin": 0,
+      "size_bytes": 44,
+      "disposition": "replaced",
+      "target": "tests/wasm/stage0/runtime-boundary contract.json (S0-LL13-c/LL19-b)",
+      "note": "exception callback frames become the emitted/C boundary contract",
+      "cells": [
+        {
+          "name": "backptr",
+          "index": 0,
+          "offset": 0,
+          "disposition": "replaced",
+          "target": "tests/wasm/stage0/runtime-boundary contract.json (S0-LL13-c/LL19-b)",
+          "note": "checkpoint chain"
+        },
+        {
+          "name": "return-address",
+          "index": 1,
+          "offset": 4,
+          "disposition": "unsupported",
+          "target": "native",
+          "note": ""
+        },
+        {
+          "name": "nominal-function",
+          "index": 2,
+          "offset": 8,
+          "disposition": "replaced",
+          "target": "contracts/debug-frames.md v0.1",
+          "note": "logical_code_id"
+        },
+        {
+          "name": "relative-pc",
+          "index": 3,
+          "offset": 12,
+          "disposition": "replaced",
+          "target": "contracts/debug-frames.md v0.1",
+          "note": "source_site_id"
+        },
+        {
+          "name": "containing-object",
+          "index": 4,
+          "offset": 16,
+          "disposition": "unsupported",
+          "target": "native code object",
+          "note": ""
+        },
+        {
+          "name": "xp",
+          "index": 5,
+          "offset": 20,
+          "disposition": "unsupported",
+          "target": "native exception context",
+          "note": ""
+        },
+        {
+          "name": "ra0",
+          "index": 6,
+          "offset": 24,
+          "disposition": "unsupported",
+          "target": "native",
+          "note": ""
+        },
+        {
+          "name": "foreign-sp",
+          "index": 7,
+          "offset": 28,
+          "disposition": "replaced",
+          "target": "tests/wasm/stage0/runtime-boundary contract.json (S0-LL13-c/LL19-b)",
+          "note": "C SP checkpoint"
+        },
+        {
+          "name": "prev-xframe",
+          "index": 8,
+          "offset": 32,
+          "disposition": "replaced",
+          "target": "tests/wasm/stage0/runtime-boundary contract.json (S0-LL13-c/LL19-b)",
+          "note": "handler checkpoint"
+        },
+        {
+          "name": "pc-low",
+          "index": 9,
+          "offset": 36,
+          "disposition": "unsupported",
+          "target": "native pc",
+          "note": ""
+        },
+        {
+          "name": "pc-high",
+          "index": 10,
+          "offset": 40,
+          "disposition": "unsupported",
+          "target": "native pc",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "name": "area",
+      "origin": 0,
+      "size_bytes": 84,
+      "disposition": "replaced",
+      "target": "decisions.md D4 owned regions with link-derived ownership",
+      "note": "no native area list",
+      "cells": [
+        {
+          "name": "pred",
+          "index": 0,
+          "offset": 0,
+          "disposition": "replaced",
+          "target": "decisions.md D4",
+          "note": "region table order"
+        },
+        {
+          "name": "succ",
+          "index": 1,
+          "offset": 4,
+          "disposition": "replaced",
+          "target": "decisions.md D4",
+          "note": "region table order"
+        },
+        {
+          "name": "low",
+          "index": 2,
+          "offset": 8,
+          "disposition": "replaced",
+          "target": "decisions.md D4",
+          "note": "region start"
+        },
+        {
+          "name": "high",
+          "index": 3,
+          "offset": 12,
+          "disposition": "replaced",
+          "target": "decisions.md D4",
+          "note": "region end"
+        },
+        {
+          "name": "active",
+          "index": 4,
+          "offset": 16,
+          "disposition": "replaced",
+          "target": "decisions.md D4",
+          "note": "allocation or stack limit"
+        },
+        {
+          "name": "softlimit",
+          "index": 5,
+          "offset": 20,
+          "disposition": "replaced",
+          "target": "decisions.md D4",
+          "note": "explicit bound"
+        },
+        {
+          "name": "hardlimit",
+          "index": 6,
+          "offset": 24,
+          "disposition": "replaced",
+          "target": "decisions.md D4",
+          "note": "explicit bound"
+        },
+        {
+          "name": "code",
+          "index": 7,
+          "offset": 28,
+          "disposition": "replaced",
+          "target": "decisions.md D4",
+          "note": "region kind"
+        },
+        {
+          "name": "markbits",
+          "index": 8,
+          "offset": 32,
+          "disposition": "unsupported",
+          "target": "mark bitmap; the initial collector copies",
+          "note": ""
+        },
+        {
+          "name": "ndnodes",
+          "index": 9,
+          "offset": 36,
+          "disposition": "replaced",
+          "target": "decisions.md D4",
+          "note": "region extent"
+        },
+        {
+          "name": "older",
+          "index": 10,
+          "offset": 40,
+          "disposition": "unsupported",
+          "target": "generational bookkeeping omitted for the initial collector",
+          "note": ""
+        },
+        {
+          "name": "younger",
+          "index": 11,
+          "offset": 44,
+          "disposition": "unsupported",
+          "target": "generational bookkeeping omitted",
+          "note": ""
+        },
+        {
+          "name": "h",
+          "index": 12,
+          "offset": 48,
+          "disposition": "unsupported",
+          "target": "native handle",
+          "note": ""
+        },
+        {
+          "name": "softprot",
+          "index": 13,
+          "offset": 52,
+          "disposition": "unsupported",
+          "target": "no guard pages; explicit bounds",
+          "note": ""
+        },
+        {
+          "name": "hardprot",
+          "index": 14,
+          "offset": 56,
+          "disposition": "unsupported",
+          "target": "no guard pages; explicit bounds",
+          "note": ""
+        },
+        {
+          "name": "owner",
+          "index": 15,
+          "offset": 60,
+          "disposition": "unsupported",
+          "target": "native library fragment",
+          "note": ""
+        },
+        {
+          "name": "refbits",
+          "index": 16,
+          "offset": 64,
+          "disposition": "unsupported",
+          "target": "intergenerational bitmap omitted; barrier designed with a later generational collector",
+          "note": ""
+        },
+        {
+          "name": "threshold",
+          "index": 17,
+          "offset": 68,
+          "disposition": "unsupported",
+          "target": "EGC threshold; lisp_egc_control keeps EGC unavailable",
+          "note": ""
+        },
+        {
+          "name": "gc-count",
+          "index": 18,
+          "offset": 72,
+          "disposition": "deferred",
+          "target": "decisions.md D4",
+          "note": "collection count is a runtime statistic"
+        },
+        {
+          "name": "static-dnodes",
+          "index": 19,
+          "offset": 76,
+          "disposition": "deferred",
+          "target": "Stage 5 images",
+          "note": "static space accounting"
+        },
+        {
+          "name": "static-used",
+          "index": 20,
+          "offset": 80,
+          "disposition": "deferred",
+          "target": "Stage 5 images",
+          "note": "static space bitmap"
+        }
+      ]
+    },
+    {
+      "name": "protected-area",
+      "origin": 0,
+      "size_bytes": 24,
+      "disposition": "unsupported",
+      "target": "native-only mechanism",
+      "note": "no guard-page protection; memory.c replacement uses checked regions",
+      "cells": [
+        {
+          "name": "next",
+          "index": 0,
+          "offset": 0,
+          "disposition": "unsupported",
+          "target": "native protection record",
+          "note": ""
+        },
+        {
+          "name": "start",
+          "index": 1,
+          "offset": 4,
+          "disposition": "unsupported",
+          "target": "native protection record",
+          "note": ""
+        },
+        {
+          "name": "end",
+          "index": 2,
+          "offset": 8,
+          "disposition": "unsupported",
+          "target": "native protection record",
+          "note": ""
+        },
+        {
+          "name": "nprot",
+          "index": 3,
+          "offset": 12,
+          "disposition": "unsupported",
+          "target": "native protection record",
+          "note": ""
+        },
+        {
+          "name": "protsize",
+          "index": 4,
+          "offset": 16,
+          "disposition": "unsupported",
+          "target": "native protection record",
+          "note": ""
+        },
+        {
+          "name": "why",
+          "index": 5,
+          "offset": 20,
+          "disposition": "unsupported",
+          "target": "native protection record",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "name": "tcr",
+      "origin": 0,
+      "size_bytes": 244,
+      "disposition": "replaced",
+      "target": "decisions.md D5 TCR schema",
+      "note": "one linear-memory record per Lisp thread with explicit widths",
+      "cells": [
+        {
+          "name": "next",
+          "index": 0,
+          "offset": 0,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "registry link"
+        },
+        {
+          "name": "prev",
+          "index": 1,
+          "offset": 4,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "registry link"
+        },
+        {
+          "name": "node-regs-mask",
+          "index": 2,
+          "offset": 8,
+          "disposition": "unsupported",
+          "target": "native register mask",
+          "note": ""
+        },
+        {
+          "name": "linear",
+          "index": 3,
+          "offset": 12,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "TCR address (raw)"
+        },
+        {
+          "name": "save0",
+          "index": 4,
+          "offset": 16,
+          "disposition": "unsupported",
+          "target": "native register spill",
+          "note": ""
+        },
+        {
+          "name": "save1",
+          "index": 5,
+          "offset": 20,
+          "disposition": "unsupported",
+          "target": "native register spill",
+          "note": ""
+        },
+        {
+          "name": "save2",
+          "index": 6,
+          "offset": 24,
+          "disposition": "unsupported",
+          "target": "native register spill",
+          "note": ""
+        },
+        {
+          "name": "save3",
+          "index": 7,
+          "offset": 28,
+          "disposition": "unsupported",
+          "target": "native register spill",
+          "note": ""
+        },
+        {
+          "name": "save-ebp",
+          "index": 8,
+          "offset": 32,
+          "disposition": "unsupported",
+          "target": "native frame pointer",
+          "note": ""
+        },
+        {
+          "name": "lisp-mxcsr",
+          "index": 9,
+          "offset": 36,
+          "disposition": "unsupported",
+          "target": "FP control word; D6 floating-point policy",
+          "note": ""
+        },
+        {
+          "name": "foreign-mxcsr",
+          "index": 10,
+          "offset": 40,
+          "disposition": "unsupported",
+          "target": "FP control word",
+          "note": ""
+        },
+        {
+          "name": "db-link",
+          "index": 11,
+          "offset": 44,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "dynamic-binding-vector pointer"
+        },
+        {
+          "name": "catch-top",
+          "index": 12,
+          "offset": 48,
+          "disposition": "replaced",
+          "target": "decisions.md D5 and contracts/debug-frames.md v0.1",
+          "note": "handler checkpoint"
+        },
+        {
+          "name": "save-vsp",
+          "index": 13,
+          "offset": 52,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "VSP and bounds"
+        },
+        {
+          "name": "save-tsp",
+          "index": 14,
+          "offset": 56,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "TSP and bounds"
+        },
+        {
+          "name": "foreign-sp",
+          "index": 15,
+          "offset": 60,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "CSP and bounds"
+        },
+        {
+          "name": "cs-area",
+          "index": 16,
+          "offset": 64,
+          "disposition": "replaced",
+          "target": "decisions.md D4",
+          "note": "owned C stack region"
+        },
+        {
+          "name": "vs-area",
+          "index": 17,
+          "offset": 68,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "value-stack region"
+        },
+        {
+          "name": "ts-area",
+          "index": 18,
+          "offset": 72,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "temporary-stack region"
+        },
+        {
+          "name": "cs-limit",
+          "index": 19,
+          "offset": 76,
+          "disposition": "replaced",
+          "target": "decisions.md D4",
+          "note": "C stack bound"
+        },
+        {
+          "name": "total-bytes-allocated-low",
+          "index": 20,
+          "offset": 80,
+          "disposition": "deferred",
+          "target": "decisions.md D4",
+          "note": "allocation statistic"
+        },
+        {
+          "name": "total-bytes-allocated-high",
+          "index": 21,
+          "offset": 84,
+          "disposition": "deferred",
+          "target": "decisions.md D4",
+          "note": "allocation statistic"
+        },
+        {
+          "name": "log2-allocation-quantum",
+          "index": 22,
+          "offset": 88,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "allocation-area bounds"
+        },
+        {
+          "name": "interrupt-pending",
+          "index": 23,
+          "offset": 92,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "atomic pending word"
+        },
+        {
+          "name": "xframe",
+          "index": 24,
+          "offset": 96,
+          "disposition": "replaced",
+          "target": "decisions.md D5 and contracts/debug-frames.md v0.1",
+          "note": "handler checkpoint"
+        },
+        {
+          "name": "errno-loc",
+          "index": 25,
+          "offset": 100,
+          "disposition": "unsupported",
+          "target": "libc errno",
+          "note": ""
+        },
+        {
+          "name": "ffi-exception",
+          "index": 26,
+          "offset": 104,
+          "disposition": "unsupported",
+          "target": "native FP exception bits",
+          "note": ""
+        },
+        {
+          "name": "osid",
+          "index": 27,
+          "offset": 108,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "Worker identity"
+        },
+        {
+          "name": "valence",
+          "index": 28,
+          "offset": 112,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "atomic state RUNNING/FOREIGN"
+        },
+        {
+          "name": "foreign-exception-status",
+          "index": 29,
+          "offset": 116,
+          "disposition": "unsupported",
+          "target": "native signal state",
+          "note": ""
+        },
+        {
+          "name": "native-thread-info",
+          "index": 30,
+          "offset": 120,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "Worker identity and lifetime generation"
+        },
+        {
+          "name": "native-thread-id",
+          "index": 31,
+          "offset": 124,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "Worker identity"
+        },
+        {
+          "name": "last-allocptr",
+          "index": 32,
+          "offset": 128,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "allocation-area bounds"
+        },
+        {
+          "name": "save-allocptr",
+          "index": 33,
+          "offset": 132,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "allocation-area bounds"
+        },
+        {
+          "name": "save-allocbase",
+          "index": 34,
+          "offset": 136,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "allocation-area bounds"
+        },
+        {
+          "name": "reset-completion",
+          "index": 35,
+          "offset": 140,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "lifecycle admission"
+        },
+        {
+          "name": "activate",
+          "index": 36,
+          "offset": 144,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "lifecycle admission"
+        },
+        {
+          "name": "suspend-count",
+          "index": 37,
+          "offset": 148,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "rendezvous state"
+        },
+        {
+          "name": "suspend-context",
+          "index": 38,
+          "offset": 152,
+          "disposition": "unsupported",
+          "target": "native signal context",
+          "note": ""
+        },
+        {
+          "name": "pending-exception-context",
+          "index": 39,
+          "offset": 156,
+          "disposition": "unsupported",
+          "target": "native signal context",
+          "note": ""
+        },
+        {
+          "name": "suspend",
+          "index": 40,
+          "offset": 160,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "mailbox wait/notify"
+        },
+        {
+          "name": "resume",
+          "index": 41,
+          "offset": 164,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "mailbox wait/notify"
+        },
+        {
+          "name": "flags",
+          "index": 42,
+          "offset": 168,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "atomic state and pending bits"
+        },
+        {
+          "name": "gc-context",
+          "index": 43,
+          "offset": 172,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "STOPPED_GC and published roots"
+        },
+        {
+          "name": "termination-semaphore",
+          "index": 44,
+          "offset": 176,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "TERMINATING protocol"
+        },
+        {
+          "name": "unwinding",
+          "index": 45,
+          "offset": 180,
+          "disposition": "replaced",
+          "target": "tests/wasm/stage0/nested-eh abi.json (S0-LL19-a)",
+          "note": "exception transfer state"
+        },
+        {
+          "name": "tlb-limit",
+          "index": 46,
+          "offset": 184,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "dynamic-binding vector bound"
+        },
+        {
+          "name": "tlb-pointer",
+          "index": 47,
+          "offset": 188,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "dynamic-binding vector pointer"
+        },
+        {
+          "name": "shutdown-count",
+          "index": 48,
+          "offset": 192,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "lifecycle"
+        },
+        {
+          "name": "next-tsp",
+          "index": 49,
+          "offset": 196,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "TSP"
+        },
+        {
+          "name": "safe-ref-address",
+          "index": 50,
+          "offset": 200,
+          "disposition": "unsupported",
+          "target": "native fault recovery",
+          "note": ""
+        },
+        {
+          "name": "ldt-selector",
+          "index": 51,
+          "offset": 204,
+          "disposition": "unsupported",
+          "target": "native segment selector",
+          "note": ""
+        },
+        {
+          "name": "scratch-mxcsr",
+          "index": 52,
+          "offset": 208,
+          "disposition": "unsupported",
+          "target": "FP control word",
+          "note": ""
+        },
+        {
+          "name": "unboxed0",
+          "index": 53,
+          "offset": 212,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "runtime-private raw scratch"
+        },
+        {
+          "name": "unboxed1",
+          "index": 54,
+          "offset": 216,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "runtime-private raw scratch"
+        },
+        {
+          "name": "next-method-context",
+          "index": 55,
+          "offset": 220,
+          "disposition": "deferred",
+          "target": "Stage 1 CLOS dispatch",
+          "note": "method context register"
+        },
+        {
+          "name": "save-eflags",
+          "index": 56,
+          "offset": 224,
+          "disposition": "unsupported",
+          "target": "native flags register",
+          "note": ""
+        },
+        {
+          "name": "allocated",
+          "index": 57,
+          "offset": 228,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "TCR storage identity"
+        },
+        {
+          "name": "pending-io-info",
+          "index": 58,
+          "offset": 232,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "mailbox request descriptor"
+        },
+        {
+          "name": "io-datum",
+          "index": 59,
+          "offset": 236,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "mailbox request descriptor"
+        },
+        {
+          "name": "nfp",
+          "index": 60,
+          "offset": 240,
+          "disposition": "unsupported",
+          "target": "native fp frame",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "name": "lockptr",
+      "origin": 0,
+      "size_bytes": 28,
+      "disposition": "replaced",
+      "target": "decisions.md D5 and decisions.md D6 synchronization rows",
+      "note": "",
+      "cells": [
+        {
+          "name": "avail",
+          "index": 0,
+          "offset": 0,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "atomic lock state"
+        },
+        {
+          "name": "owner",
+          "index": 1,
+          "offset": 4,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "atomic lock state"
+        },
+        {
+          "name": "count",
+          "index": 2,
+          "offset": 8,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "atomic lock state"
+        },
+        {
+          "name": "signal",
+          "index": 3,
+          "offset": 12,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "atomic lock state"
+        },
+        {
+          "name": "waiting",
+          "index": 4,
+          "offset": 16,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "atomic lock state"
+        },
+        {
+          "name": "malloced-ptr",
+          "index": 5,
+          "offset": 20,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "atomic lock state"
+        },
+        {
+          "name": "spinlock",
+          "index": 6,
+          "offset": 24,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "atomic lock state"
+        }
+      ]
+    },
+    {
+      "name": "rwlock",
+      "origin": 0,
+      "size_bytes": 32,
+      "disposition": "replaced",
+      "target": "decisions.md D5 and decisions.md D6 synchronization rows",
+      "note": "",
+      "cells": [
+        {
+          "name": "spin",
+          "index": 0,
+          "offset": 0,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "atomic rwlock state"
+        },
+        {
+          "name": "state",
+          "index": 1,
+          "offset": 4,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "atomic rwlock state"
+        },
+        {
+          "name": "blocked-writers",
+          "index": 2,
+          "offset": 8,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "atomic rwlock state"
+        },
+        {
+          "name": "blocked-readers",
+          "index": 3,
+          "offset": 12,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "atomic rwlock state"
+        },
+        {
+          "name": "writer",
+          "index": 4,
+          "offset": 16,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "atomic rwlock state"
+        },
+        {
+          "name": "reader-signal",
+          "index": 5,
+          "offset": 20,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "atomic rwlock state"
+        },
+        {
+          "name": "writer-signal",
+          "index": 6,
+          "offset": 24,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "atomic rwlock state"
+        },
+        {
+          "name": "malloced-ptr",
+          "index": 7,
+          "offset": 28,
+          "disposition": "replaced",
+          "target": "decisions.md D5",
+          "note": "atomic rwlock state"
+        }
+      ]
+    }
+  ],
+  "enums": [
+    {
+      "group": "registers",
+      "start": 0,
+      "step": 1,
+      "count": 54,
+      "disposition": "unsupported",
+      "target": "native x86 registers; Wasm locals, explicit stacks and the D5 TCR replace register conventions",
+      "note": "",
+      "names": [
+        {
+          "name": "eax",
+          "value": 0
+        },
+        {
+          "name": "ecx",
+          "value": 1
+        },
+        {
+          "name": "edx",
+          "value": 2
+        },
+        {
+          "name": "ebx",
+          "value": 3
+        },
+        {
+          "name": "esp",
+          "value": 4
+        },
+        {
+          "name": "ebp",
+          "value": 5
+        },
+        {
+          "name": "esi",
+          "value": 6
+        },
+        {
+          "name": "edi",
+          "value": 7
+        },
+        {
+          "name": "ax",
+          "value": 8
+        },
+        {
+          "name": "cx",
+          "value": 9
+        },
+        {
+          "name": "dx",
+          "value": 10
+        },
+        {
+          "name": "bx",
+          "value": 11
+        },
+        {
+          "name": "sp",
+          "value": 12
+        },
+        {
+          "name": "bp",
+          "value": 13
+        },
+        {
+          "name": "si",
+          "value": 14
+        },
+        {
+          "name": "di",
+          "value": 15
+        },
+        {
+          "name": "al",
+          "value": 16
+        },
+        {
+          "name": "cl",
+          "value": 17
+        },
+        {
+          "name": "dl",
+          "value": 18
+        },
+        {
+          "name": "bl",
+          "value": 19
+        },
+        {
+          "name": "ah",
+          "value": 20
+        },
+        {
+          "name": "ch",
+          "value": 21
+        },
+        {
+          "name": "dh",
+          "value": 22
+        },
+        {
+          "name": "bh",
+          "value": 23
+        },
+        {
+          "name": "xmm0",
+          "value": 24
+        },
+        {
+          "name": "xmm1",
+          "value": 25
+        },
+        {
+          "name": "xmm2",
+          "value": 26
+        },
+        {
+          "name": "xmm3",
+          "value": 27
+        },
+        {
+          "name": "xmm4",
+          "value": 28
+        },
+        {
+          "name": "xmm5",
+          "value": 29
+        },
+        {
+          "name": "xmm6",
+          "value": 30
+        },
+        {
+          "name": "xmm7",
+          "value": 31
+        },
+        {
+          "name": "mm0",
+          "value": 32
+        },
+        {
+          "name": "mm1",
+          "value": 33
+        },
+        {
+          "name": "mm2",
+          "value": 34
+        },
+        {
+          "name": "mm3",
+          "value": 35
+        },
+        {
+          "name": "mm4",
+          "value": 36
+        },
+        {
+          "name": "mm5",
+          "value": 37
+        },
+        {
+          "name": "mm6",
+          "value": 38
+        },
+        {
+          "name": "mm7",
+          "value": 39
+        },
+        {
+          "name": "st[0]",
+          "value": 40
+        },
+        {
+          "name": "st[1]",
+          "value": 41
+        },
+        {
+          "name": "st[2]",
+          "value": 42
+        },
+        {
+          "name": "st[3]",
+          "value": 43
+        },
+        {
+          "name": "st[4]",
+          "value": 44
+        },
+        {
+          "name": "st[5]",
+          "value": 45
+        },
+        {
+          "name": "st[6]",
+          "value": 46
+        },
+        {
+          "name": "st[7]",
+          "value": 47
+        },
+        {
+          "name": "cs",
+          "value": 48
+        },
+        {
+          "name": "ds",
+          "value": 49
+        },
+        {
+          "name": "ss",
+          "value": 50
+        },
+        {
+          "name": "es",
+          "value": 51
+        },
+        {
+          "name": "fs",
+          "value": 52
+        },
+        {
+          "name": "gs",
+          "value": 53
+        }
+      ]
+    },
+    {
+      "group": "kernel-import-",
+      "start": 0,
+      "step": 4,
+      "count": 65,
+      "disposition": "deferred",
+      "target": "decisions.md D6",
+      "note": "the 65 kernel import spellings are the D6 census worklist; each receives its own record",
+      "names": [
+        {
+          "name": "kernel-import-fd-setsize-bytes",
+          "value": 0
+        },
+        {
+          "name": "kernel-import-do-fd-set",
+          "value": 4
+        },
+        {
+          "name": "kernel-import-do-fd-clr",
+          "value": 8
+        },
+        {
+          "name": "kernel-import-do-fd-is-set",
+          "value": 12
+        },
+        {
+          "name": "kernel-import-do-fd-zero",
+          "value": 16
+        },
+        {
+          "name": "kernel-import-makedataexecutable",
+          "value": 20
+        },
+        {
+          "name": "kernel-import-getsharedlibrary",
+          "value": 24
+        },
+        {
+          "name": "kernel-import-findsymbol",
+          "value": 28
+        },
+        {
+          "name": "kernel-import-malloc",
+          "value": 32
+        },
+        {
+          "name": "kernel-import-free",
+          "value": 36
+        },
+        {
+          "name": "kernel-import-wait-for-signal",
+          "value": 40
+        },
+        {
+          "name": "kernel-import-tcr-frame-ptr",
+          "value": 44
+        },
+        {
+          "name": "kernel-import-register-xmacptr-dispose-function",
+          "value": 48
+        },
+        {
+          "name": "kernel-import-open-debug-output",
+          "value": 52
+        },
+        {
+          "name": "kernel-import-get-r-debug",
+          "value": 56
+        },
+        {
+          "name": "kernel-import-restore-soft-stack-limit",
+          "value": 60
+        },
+        {
+          "name": "kernel-import-egc-control",
+          "value": 64
+        },
+        {
+          "name": "kernel-import-lisp-bug",
+          "value": 68
+        },
+        {
+          "name": "kernel-import-newthread",
+          "value": 72
+        },
+        {
+          "name": "kernel-import-cooperative-thread-startup",
+          "value": 76
+        },
+        {
+          "name": "kernel-import-disposethread",
+          "value": 80
+        },
+        {
+          "name": "kernel-import-threadcurrentstackspace",
+          "value": 84
+        },
+        {
+          "name": "kernel-import-usage-exit",
+          "value": 88
+        },
+        {
+          "name": "kernel-import-save-fp-context",
+          "value": 92
+        },
+        {
+          "name": "kernel-import-restore-fp-context",
+          "value": 96
+        },
+        {
+          "name": "kernel-import-put-altivec-registers",
+          "value": 100
+        },
+        {
+          "name": "kernel-import-get-altivec-registers",
+          "value": 104
+        },
+        {
+          "name": "kernel-import-new-semaphore",
+          "value": 108
+        },
+        {
+          "name": "kernel-import-wait-on-semaphore",
+          "value": 112
+        },
+        {
+          "name": "kernel-import-signal-semaphore",
+          "value": 116
+        },
+        {
+          "name": "kernel-import-destroy-semaphore",
+          "value": 120
+        },
+        {
+          "name": "kernel-import-new-recursive-lock",
+          "value": 124
+        },
+        {
+          "name": "kernel-import-lock-recursive-lock",
+          "value": 128
+        },
+        {
+          "name": "kernel-import-unlock-recursive-lock",
+          "value": 132
+        },
+        {
+          "name": "kernel-import-destroy-recursive-lock",
+          "value": 136
+        },
+        {
+          "name": "kernel-import-suspend-other-threads",
+          "value": 140
+        },
+        {
+          "name": "kernel-import-resume-other-threads",
+          "value": 144
+        },
+        {
+          "name": "kernel-import-suspend-tcr",
+          "value": 148
+        },
+        {
+          "name": "kernel-import-resume-tcr",
+          "value": 152
+        },
+        {
+          "name": "kernel-import-rwlock-new",
+          "value": 156
+        },
+        {
+          "name": "kernel-import-rwlock-destroy",
+          "value": 160
+        },
+        {
+          "name": "kernel-import-rwlock-rlock",
+          "value": 164
+        },
+        {
+          "name": "kernel-import-rwlock-wlock",
+          "value": 168
+        },
+        {
+          "name": "kernel-import-rwlock-unlock",
+          "value": 172
+        },
+        {
+          "name": "kernel-import-recursive-lock-trylock",
+          "value": 176
+        },
+        {
+          "name": "kernel-import-foreign-name-and-offset",
+          "value": 180
+        },
+        {
+          "name": "kernel-import-lisp-read",
+          "value": 184
+        },
+        {
+          "name": "kernel-import-lisp-write",
+          "value": 188
+        },
+        {
+          "name": "kernel-import-lisp-open",
+          "value": 192
+        },
+        {
+          "name": "kernel-import-lisp-fchmod",
+          "value": 196
+        },
+        {
+          "name": "kernel-import-lisp-lseek",
+          "value": 200
+        },
+        {
+          "name": "kernel-import-lisp-close",
+          "value": 204
+        },
+        {
+          "name": "kernel-import-lisp-ftruncate",
+          "value": 208
+        },
+        {
+          "name": "kernel-import-lisp-stat",
+          "value": 212
+        },
+        {
+          "name": "kernel-import-lisp-fstat",
+          "value": 216
+        },
+        {
+          "name": "kernel-import-lisp-futex",
+          "value": 220
+        },
+        {
+          "name": "kernel-import-lisp-opendir",
+          "value": 224
+        },
+        {
+          "name": "kernel-import-lisp-readdir",
+          "value": 228
+        },
+        {
+          "name": "kernel-import-lisp-closedir",
+          "value": 232
+        },
+        {
+          "name": "kernel-import-lisp-pipe",
+          "value": 236
+        },
+        {
+          "name": "kernel-import-lisp-gettimeofday",
+          "value": 240
+        },
+        {
+          "name": "kernel-import-lisp-sigexit",
+          "value": 244
+        },
+        {
+          "name": "kernel-import-jvm-init",
+          "value": 248
+        },
+        {
+          "name": "kernel-import-lisp-lstat",
+          "value": 252
+        },
+        {
+          "name": "kernel-import-lisp-realpath",
+          "value": 256
+        }
+      ]
+    }
+  ],
+  "subprims": {
+    "base": 86016,
+    "shift": 2,
+    "count": 154,
+    "disposition": "replaced",
+    "target": "decisions.md D4",
+    "note": "native subprimitive jump table; subprimitives and adapters are Lisp-emitted with named imports for C entries",
+    "names": [
+      {
+        "name": ".SPjmpsym",
+        "index": 0,
+        "address": 86016
+      },
+      {
+        "name": ".SPjmpnfn",
+        "index": 1,
+        "address": 86020
+      },
+      {
+        "name": ".SPfuncall",
+        "index": 2,
+        "address": 86024
+      },
+      {
+        "name": ".SPmkcatch1v",
+        "index": 3,
+        "address": 86028
+      },
+      {
+        "name": ".SPmkunwind",
+        "index": 4,
+        "address": 86032
+      },
+      {
+        "name": ".SPmkcatchmv",
+        "index": 5,
+        "address": 86036
+      },
+      {
+        "name": ".SPthrow",
+        "index": 6,
+        "address": 86040
+      },
+      {
+        "name": ".SPnthrowvalues",
+        "index": 7,
+        "address": 86044
+      },
+      {
+        "name": ".SPnthrow1value",
+        "index": 8,
+        "address": 86048
+      },
+      {
+        "name": ".SPbind",
+        "index": 9,
+        "address": 86052
+      },
+      {
+        "name": ".SPbind-self",
+        "index": 10,
+        "address": 86056
+      },
+      {
+        "name": ".SPbind-nil",
+        "index": 11,
+        "address": 86060
+      },
+      {
+        "name": ".SPbind-self-boundp-check",
+        "index": 12,
+        "address": 86064
+      },
+      {
+        "name": ".SPrplaca",
+        "index": 13,
+        "address": 86068
+      },
+      {
+        "name": ".SPrplacd",
+        "index": 14,
+        "address": 86072
+      },
+      {
+        "name": ".SPconslist",
+        "index": 15,
+        "address": 86076
+      },
+      {
+        "name": ".SPconslist-star",
+        "index": 16,
+        "address": 86080
+      },
+      {
+        "name": ".SPstkconslist",
+        "index": 17,
+        "address": 86084
+      },
+      {
+        "name": ".SPstkconslist-star",
+        "index": 18,
+        "address": 86088
+      },
+      {
+        "name": ".SPmkstackv",
+        "index": 19,
+        "address": 86092
+      },
+      {
+        "name": ".SPsubtag-misc-ref",
+        "index": 20,
+        "address": 86096
+      },
+      {
+        "name": ".SPsetqsym",
+        "index": 21,
+        "address": 86100
+      },
+      {
+        "name": ".SPprogvsave",
+        "index": 22,
+        "address": 86104
+      },
+      {
+        "name": ".SPstack-misc-alloc",
+        "index": 23,
+        "address": 86108
+      },
+      {
+        "name": ".SPgvector",
+        "index": 24,
+        "address": 86112
+      },
+      {
+        "name": ".SPnvalret",
+        "index": 25,
+        "address": 86116
+      },
+      {
+        "name": ".SPmvpass",
+        "index": 26,
+        "address": 86120
+      },
+      {
+        "name": ".SPrecover-values-for-mvcall",
+        "index": 27,
+        "address": 86124
+      },
+      {
+        "name": ".SPnthvalue",
+        "index": 28,
+        "address": 86128
+      },
+      {
+        "name": ".SPvalues",
+        "index": 29,
+        "address": 86132
+      },
+      {
+        "name": ".SPdefault-optional-args",
+        "index": 30,
+        "address": 86136
+      },
+      {
+        "name": ".SPopt-supplied-p",
+        "index": 31,
+        "address": 86140
+      },
+      {
+        "name": ".SPheap-rest-arg",
+        "index": 32,
+        "address": 86144
+      },
+      {
+        "name": ".SPreq-heap-rest-arg",
+        "index": 33,
+        "address": 86148
+      },
+      {
+        "name": ".SPheap-cons-rest-arg",
+        "index": 34,
+        "address": 86152
+      },
+      {
+        "name": ".SPsimple-keywords",
+        "index": 35,
+        "address": 86156
+      },
+      {
+        "name": ".SPkeyword-args",
+        "index": 36,
+        "address": 86160
+      },
+      {
+        "name": ".SPkeyword-bind",
+        "index": 37,
+        "address": 86164
+      },
+      {
+        "name": ".SPffcall",
+        "index": 38,
+        "address": 86168
+      },
+      {
+        "name": ".SParef2",
+        "index": 39,
+        "address": 86172
+      },
+      {
+        "name": ".SPksignalerr",
+        "index": 40,
+        "address": 86176
+      },
+      {
+        "name": ".SPstack-rest-arg",
+        "index": 41,
+        "address": 86180
+      },
+      {
+        "name": ".SPreq-stack-rest-arg",
+        "index": 42,
+        "address": 86184
+      },
+      {
+        "name": ".SPstack-cons-rest-arg",
+        "index": 43,
+        "address": 86188
+      },
+      {
+        "name": ".SPpoweropen-callbackX",
+        "index": 44,
+        "address": 86192
+      },
+      {
+        "name": ".SPcall-closure",
+        "index": 45,
+        "address": 86196
+      },
+      {
+        "name": ".SPgetXlong",
+        "index": 46,
+        "address": 86200
+      },
+      {
+        "name": ".SPspreadargz",
+        "index": 47,
+        "address": 86204
+      },
+      {
+        "name": ".SPtfuncallgen",
+        "index": 48,
+        "address": 86208
+      },
+      {
+        "name": ".SPtfuncallslide",
+        "index": 49,
+        "address": 86212
+      },
+      {
+        "name": ".SPtfuncallvsp",
+        "index": 50,
+        "address": 86216
+      },
+      {
+        "name": ".SPtcallsymgen",
+        "index": 51,
+        "address": 86220
+      },
+      {
+        "name": ".SPtcallsymslide",
+        "index": 52,
+        "address": 86224
+      },
+      {
+        "name": ".SPtcallsymvsp",
+        "index": 53,
+        "address": 86228
+      },
+      {
+        "name": ".SPtcallnfngen",
+        "index": 54,
+        "address": 86232
+      },
+      {
+        "name": ".SPtcallnfnslide",
+        "index": 55,
+        "address": 86236
+      },
+      {
+        "name": ".SPtcallnfnvsp",
+        "index": 56,
+        "address": 86240
+      },
+      {
+        "name": ".SPmisc-ref",
+        "index": 57,
+        "address": 86244
+      },
+      {
+        "name": ".SPmisc-set",
+        "index": 58,
+        "address": 86248
+      },
+      {
+        "name": ".SPstkconsyz",
+        "index": 59,
+        "address": 86252
+      },
+      {
+        "name": ".SPstkvcell0",
+        "index": 60,
+        "address": 86256
+      },
+      {
+        "name": ".SPstkvcellvsp",
+        "index": 61,
+        "address": 86260
+      },
+      {
+        "name": ".SPmakestackblock",
+        "index": 62,
+        "address": 86264
+      },
+      {
+        "name": ".SPmakestackblock0",
+        "index": 63,
+        "address": 86268
+      },
+      {
+        "name": ".SPmakestacklist",
+        "index": 64,
+        "address": 86272
+      },
+      {
+        "name": ".SPstkgvector",
+        "index": 65,
+        "address": 86276
+      },
+      {
+        "name": ".SPmisc-alloc",
+        "index": 66,
+        "address": 86280
+      },
+      {
+        "name": ".SPpoweropen-ffcallX",
+        "index": 67,
+        "address": 86284
+      },
+      {
+        "name": ".SPgvset",
+        "index": 68,
+        "address": 86288
+      },
+      {
+        "name": ".SPmacro-bind",
+        "index": 69,
+        "address": 86292
+      },
+      {
+        "name": ".SPdestructuring-bind",
+        "index": 70,
+        "address": 86296
+      },
+      {
+        "name": ".SPdestructuring-bind-inner",
+        "index": 71,
+        "address": 86300
+      },
+      {
+        "name": ".SPrecover-values",
+        "index": 72,
+        "address": 86304
+      },
+      {
+        "name": ".SPvpopargregs",
+        "index": 73,
+        "address": 86308
+      },
+      {
+        "name": ".SPinteger-sign",
+        "index": 74,
+        "address": 86312
+      },
+      {
+        "name": ".SPsubtag-misc-set",
+        "index": 75,
+        "address": 86316
+      },
+      {
+        "name": ".SPspread-lexpr-z",
+        "index": 76,
+        "address": 86320
+      },
+      {
+        "name": ".SPstore-node-conditional",
+        "index": 77,
+        "address": 86324
+      },
+      {
+        "name": ".SPreset",
+        "index": 78,
+        "address": 86328
+      },
+      {
+        "name": ".SPmvslide",
+        "index": 79,
+        "address": 86332
+      },
+      {
+        "name": ".SPsave-values",
+        "index": 80,
+        "address": 86336
+      },
+      {
+        "name": ".SPadd-values",
+        "index": 81,
+        "address": 86340
+      },
+      {
+        "name": ".SPcallback",
+        "index": 82,
+        "address": 86344
+      },
+      {
+        "name": ".SPmisc-alloc-init",
+        "index": 83,
+        "address": 86348
+      },
+      {
+        "name": ".SPstack-misc-alloc-init",
+        "index": 84,
+        "address": 86352
+      },
+      {
+        "name": ".SPset-hash-key",
+        "index": 85,
+        "address": 86356
+      },
+      {
+        "name": ".SPaset2",
+        "index": 86,
+        "address": 86360
+      },
+      {
+        "name": ".SPcallbuiltin",
+        "index": 87,
+        "address": 86364
+      },
+      {
+        "name": ".SPcallbuiltin0",
+        "index": 88,
+        "address": 86368
+      },
+      {
+        "name": ".SPcallbuiltin1",
+        "index": 89,
+        "address": 86372
+      },
+      {
+        "name": ".SPcallbuiltin2",
+        "index": 90,
+        "address": 86376
+      },
+      {
+        "name": ".SPcallbuiltin3",
+        "index": 91,
+        "address": 86380
+      },
+      {
+        "name": ".SPpopj",
+        "index": 92,
+        "address": 86384
+      },
+      {
+        "name": ".SPrestorefullcontext",
+        "index": 93,
+        "address": 86388
+      },
+      {
+        "name": ".SPsavecontextvsp",
+        "index": 94,
+        "address": 86392
+      },
+      {
+        "name": ".SPsavecontext0",
+        "index": 95,
+        "address": 86396
+      },
+      {
+        "name": ".SPrestorecontext",
+        "index": 96,
+        "address": 86400
+      },
+      {
+        "name": ".SPlexpr-entry",
+        "index": 97,
+        "address": 86404
+      },
+      {
+        "name": ".SPsyscall2",
+        "index": 98,
+        "address": 86408
+      },
+      {
+        "name": ".SPbuiltin-plus",
+        "index": 99,
+        "address": 86412
+      },
+      {
+        "name": ".SPbuiltin-minus",
+        "index": 100,
+        "address": 86416
+      },
+      {
+        "name": ".SPbuiltin-times",
+        "index": 101,
+        "address": 86420
+      },
+      {
+        "name": ".SPbuiltin-div",
+        "index": 102,
+        "address": 86424
+      },
+      {
+        "name": ".SPbuiltin-eq",
+        "index": 103,
+        "address": 86428
+      },
+      {
+        "name": ".SPbuiltin-ne",
+        "index": 104,
+        "address": 86432
+      },
+      {
+        "name": ".SPbuiltin-gt",
+        "index": 105,
+        "address": 86436
+      },
+      {
+        "name": ".SPbuiltin-ge",
+        "index": 106,
+        "address": 86440
+      },
+      {
+        "name": ".SPbuiltin-lt",
+        "index": 107,
+        "address": 86444
+      },
+      {
+        "name": ".SPbuiltin-le",
+        "index": 108,
+        "address": 86448
+      },
+      {
+        "name": ".SPbuiltin-eql",
+        "index": 109,
+        "address": 86452
+      },
+      {
+        "name": ".SPbuiltin-length",
+        "index": 110,
+        "address": 86456
+      },
+      {
+        "name": ".SPbuiltin-seqtype",
+        "index": 111,
+        "address": 86460
+      },
+      {
+        "name": ".SPbuiltin-assq",
+        "index": 112,
+        "address": 86464
+      },
+      {
+        "name": ".SPbuiltin-memq",
+        "index": 113,
+        "address": 86468
+      },
+      {
+        "name": ".SPbuiltin-logbitp",
+        "index": 114,
+        "address": 86472
+      },
+      {
+        "name": ".SPbuiltin-logior",
+        "index": 115,
+        "address": 86476
+      },
+      {
+        "name": ".SPbuiltin-logand",
+        "index": 116,
+        "address": 86480
+      },
+      {
+        "name": ".SPbuiltin-ash",
+        "index": 117,
+        "address": 86484
+      },
+      {
+        "name": ".SPbuiltin-negate",
+        "index": 118,
+        "address": 86488
+      },
+      {
+        "name": ".SPbuiltin-logxor",
+        "index": 119,
+        "address": 86492
+      },
+      {
+        "name": ".SPbuiltin-aref1",
+        "index": 120,
+        "address": 86496
+      },
+      {
+        "name": ".SPbuiltin-aset1",
+        "index": 121,
+        "address": 86500
+      },
+      {
+        "name": ".SPbreakpoint",
+        "index": 122,
+        "address": 86504
+      },
+      {
+        "name": ".SPeabi-ff-call",
+        "index": 123,
+        "address": 86508
+      },
+      {
+        "name": ".SPeabi-callback",
+        "index": 124,
+        "address": 86512
+      },
+      {
+        "name": ".SPsyscall",
+        "index": 125,
+        "address": 86516
+      },
+      {
+        "name": ".SPgetu64",
+        "index": 126,
+        "address": 86520
+      },
+      {
+        "name": ".SPgets64",
+        "index": 127,
+        "address": 86524
+      },
+      {
+        "name": ".SPmakeu64",
+        "index": 128,
+        "address": 86528
+      },
+      {
+        "name": ".SPmakes64",
+        "index": 129,
+        "address": 86532
+      },
+      {
+        "name": ".SPspecref",
+        "index": 130,
+        "address": 86536
+      },
+      {
+        "name": ".SPspecset",
+        "index": 131,
+        "address": 86540
+      },
+      {
+        "name": ".SPspecrefcheck",
+        "index": 132,
+        "address": 86544
+      },
+      {
+        "name": ".SPrestoreintlevel",
+        "index": 133,
+        "address": 86548
+      },
+      {
+        "name": ".SPmakes32",
+        "index": 134,
+        "address": 86552
+      },
+      {
+        "name": ".SPmakeu32",
+        "index": 135,
+        "address": 86556
+      },
+      {
+        "name": ".SPgets32",
+        "index": 136,
+        "address": 86560
+      },
+      {
+        "name": ".SPgetu32",
+        "index": 137,
+        "address": 86564
+      },
+      {
+        "name": ".SPfix-overflow",
+        "index": 138,
+        "address": 86568
+      },
+      {
+        "name": ".SPmvpasssym",
+        "index": 139,
+        "address": 86572
+      },
+      {
+        "name": ".SParef3",
+        "index": 140,
+        "address": 86576
+      },
+      {
+        "name": ".SPaset3",
+        "index": 141,
+        "address": 86580
+      },
+      {
+        "name": ".SPffcall-return-registers",
+        "index": 142,
+        "address": 86584
+      },
+      {
+        "name": ".SPaset1",
+        "index": 143,
+        "address": 86588
+      },
+      {
+        "name": ".SPset-hash-key-conditional",
+        "index": 144,
+        "address": 86592
+      },
+      {
+        "name": ".SPunbind-interrupt-level",
+        "index": 145,
+        "address": 86596
+      },
+      {
+        "name": ".SPunbind",
+        "index": 146,
+        "address": 86600
+      },
+      {
+        "name": ".SPunbind-n",
+        "index": 147,
+        "address": 86604
+      },
+      {
+        "name": ".SPunbind-to",
+        "index": 148,
+        "address": 86608
+      },
+      {
+        "name": ".SPbind-interrupt-level-m1",
+        "index": 149,
+        "address": 86612
+      },
+      {
+        "name": ".SPbind-interrupt-level",
+        "index": 150,
+        "address": 86616
+      },
+      {
+        "name": ".SPbind-interrupt-level-0",
+        "index": 151,
+        "address": 86620
+      },
+      {
+        "name": ".SPprogvrestore",
+        "index": 152,
+        "address": 86624
+      },
+      {
+        "name": ".SPnmkunwind",
+        "index": 153,
+        "address": 86628
+      }
+    ]
+  },
+  "c_agreement": {
+    "header": "lisp-kernel/x86-constants32.h",
+    "compared": 45,
+    "agree": 44,
+    "disagreements": {
+      "max-non-array-node-subtag": {
+        "lisp": 146,
+        "c": 159,
+        "note": "x86-constants32.h line 140 spells the node bound as ((19<<ntagbits)|fulltag_immheader); the Lisp definition ((18<<3)|fulltag-nodeheader) governs the schema. The C name is unused by the kernel sources."
+      }
+    }
+  },
+  "initial_subset": {
+    "path": "doc/WASM/contracts/layout.json",
+    "derived": {
+      "fixnum_shift": 2,
+      "fixnum_min": -536870912,
+      "fixnum_max": 536870911,
+      "fulltags": {
+        "even_fixnum": 0,
+        "cons": 1,
+        "nodeheader": 2,
+        "imm": 3,
+        "odd_fixnum": 4,
+        "reserved_tra": 5,
+        "misc": 6,
+        "immheader": 7
+      },
+      "cons": {
+        "size_bytes": 8,
+        "alignment": 8,
+        "tag": 1,
+        "cdr_raw_offset": 0,
+        "car_raw_offset": 4,
+        "cdr_tagged_displacement": -1,
+        "car_tagged_displacement": 3
+      },
+      "word_bytes": 4,
+      "object_alignment": 8
+    },
+    "declared": {
+      "fixnum_shift": 2,
+      "fixnum_min": -536870912,
+      "fixnum_max": 536870911,
+      "fulltags": {
+        "even_fixnum": 0,
+        "cons": 1,
+        "nodeheader": 2,
+        "imm": 3,
+        "odd_fixnum": 4,
+        "reserved_tra": 5,
+        "misc": 6,
+        "immheader": 7
+      },
+      "cons": {
+        "size_bytes": 8,
+        "alignment": 8,
+        "tag": 1,
+        "cdr_raw_offset": 0,
+        "car_raw_offset": 4,
+        "cdr_tagged_displacement": -1,
+        "car_tagged_displacement": 3
+      },
+      "word_bytes": 4,
+      "object_alignment": 8
+    }
+  },
+  "canonical_objects": {
+    "nil": 77825,
+    "t": 77838,
+    "t_offset": 13,
+    "nil_symbol_offset": 45,
+    "note": "provisional schema rows; the loader supplies the objects and Stage 1 confirms them through generated code"
+  },
+  "counts": {
+    "constants": {
+      "inherited": 84,
+      "replaced": 3,
+      "unsupported": 5,
+      "deferred": 4,
+      "reserved": 1
+    },
+    "subtags": {
+      "inherited": 41,
+      "replaced": 5,
+      "unsupported": 1,
+      "deferred": 2,
+      "reserved": 0
+    },
+    "headers": {
+      "inherited": 8,
+      "replaced": 0,
+      "unsupported": 0,
+      "deferred": 0,
+      "reserved": 0
+    },
+    "objects": {
+      "inherited": 13,
+      "replaced": 2,
+      "unsupported": 0,
+      "deferred": 0,
+      "reserved": 0
+    },
+    "object_and_layout_cells": {
+      "inherited": 61,
+      "replaced": 80,
+      "unsupported": 49,
+      "deferred": 6,
+      "reserved": 0
+    },
+    "layouts": {
+      "inherited": 0,
+      "replaced": 8,
+      "unsupported": 1,
+      "deferred": 0,
+      "reserved": 0
+    },
+    "enums": {
+      "inherited": 0,
+      "replaced": 0,
+      "unsupported": 1,
+      "deferred": 1,
+      "reserved": 0
+    },
+    "rows_total": 377
+  }
+}

@@ -1,0 +1,858 @@
+{
+  "join": "runtime-contracts",
+  "version": 1,
+  "aggregate": {
+    "name": "2026-09-14-stage0-ll13b-accepted-results.json",
+    "records": 40
+  },
+  "prerequisites": {
+    "S0-LL04-a": true,
+    "S0-LL13-c": true,
+    "S0-LL19-b": true,
+    "S0-LL23-b": true
+  },
+  "supporting": {
+    "S0-LL20-a": true,
+    "S0-LL20-b": true,
+    "S0-LL20-c": true,
+    "S0-LL05-a": true,
+    "S0-LL07-a": true,
+    "S0-LL13-b": true,
+    "S0-LL21-a": true
+  },
+  "frames": {
+    "contract": "doc/WASM/contracts/debug-frames.md v0.1",
+    "header": {
+      "layout_version": 0,
+      "frame_bytes": 4,
+      "previous_frame": 8,
+      "frame_generation": 12,
+      "logical_code_id": 16,
+      "code_version": 20,
+      "source_site_id": 24,
+      "policy_flags": 28,
+      "binding_checkpoint": 32,
+      "handler_checkpoint": 36,
+      "root_descriptor": 40,
+      "self_slot": 44,
+      "argument_count": 48,
+      "value_count": 52,
+      "mv_descriptor": 56,
+      "reserved": 60
+    },
+    "header_bytes": 64,
+    "evidence": [
+      {
+        "test": "S0-LL23-b",
+        "artifact": "2026-09-12-ll21-project-acceptance/combined/accepted/wasm/source/debug-frames/schema.json",
+        "sha256": "561d85c462628fc44da74f0f794c184df45073e7364c727c733e9088bbb64ff0",
+        "cases": [
+          "cancel-ack-completion-after-interrupt",
+          "cancel-ack-completion-before-interrupt",
+          "cancel-ack-interrupt-during-rearm",
+          "child-handoff-final-rescan",
+          "collection-between-nonlocal-exit-and-retirement",
+          "competing-collectors",
+          "explicit-unavailable-value-policy",
+          "full-frame-capacity-through-moving-gc",
+          "generation-rejects-reused-frame-handle",
+          "host-commit-after-descriptor-reuse",
+          "io-blocked-wait",
+          "io-completion-after-interrupt",
+          "io-completion-before-interrupt",
+          "io-gc-during-wake",
+          "io-interrupt-during-rearm",
+          "io-unfinished",
+          "live-and-superseded-code-metadata",
+          "moving-install-0-values",
+          "moving-install-1-values",
+          "moving-install-6-values",
+          "nested-debugger-nonlocal-restoration",
+          "nested-debugger-six-values",
+          "nested-debugger-two-collections",
+          "nested-debugger-zero-values",
+          "nonlocal-exit-cancel-ack-lifetime",
+          "nonlocal-exit-raced-completion-lifetime",
+          "nonlocal-frame-restoration",
+          "parked-admission",
+          "randomized-raw",
+          "randomized-summary",
+          "six-values-through-moving-suspension",
+          "stopped-admission",
+          "thread-lifetime-rejects-live-frame-handle",
+          "wrap-and-new-request-during-admission",
+          "zero-values-through-moving-suspension"
+        ]
+      },
+      {
+        "test": "S0-LL05-a",
+        "variant": "full:B",
+        "artifact": "2026-09-12-ll21-project-acceptance/combined/dynamic-call/build/source/dynamic-call/schema.json",
+        "sha256": "90a889af5af14b0f724bc0159092ca69a7c20a20cd13b6ceea8b1d268e555806",
+        "frame_bytes": 512,
+        "cases": 88
+      }
+    ]
+  },
+  "roots": {
+    "record": {
+      "previous_raw_offset": 0,
+      "count_raw_offset": 4,
+      "tagged_values_offset": 8
+    },
+    "rule": "every physical slot has exactly one scanner; TCR-owned result regions carry count zero in their linked record (abi/dynamic-call.v0.md)",
+    "evidence": [
+      {
+        "test": "S0-LL13-c",
+        "artifact": "2026-09-12-ll21-project-acceptance/combined/accepted/wasm/prerequisites/prerequisites/source/contract.json",
+        "sha256": "c282806dc76e9aaf293b45c5638b0a83cc96a6f63f0c6ac8b13d3a45a8d6b55e"
+      },
+      {
+        "test": "S0-LL20-a",
+        "artifact": "2026-09-12-ll21-project-acceptance/combined/accepted/wasm/prerequisites/source/integrated-runtime/schema.json",
+        "sha256": "c6da64b07dbc11fe90d5a5ded40dd72819ce3dfc9069a21cf947bf7355624fc6",
+        "maximum_values": 8,
+        "maximum_frames": 16
+      },
+      {
+        "test": "S0-LL23-b",
+        "artifact": "2026-09-12-ll21-project-acceptance/combined/accepted/wasm/source/debug-frames/schema.json",
+        "sha256": "561d85c462628fc44da74f0f794c184df45073e7364c727c733e9088bbb64ff0",
+        "root_previous": 64,
+        "root_count": 68
+      }
+    ]
+  },
+  "tcr": {
+    "contract": "decisions.md D5 TCR schema field groups",
+    "fixture_bytes": 256,
+    "alignment": 16,
+    "fields": {
+      "token": {
+        "offset": 0,
+        "tests": [
+          "S0-LL13-c"
+        ]
+      },
+      "frame_address": {
+        "offset": 4,
+        "tests": [
+          "S0-LL13-c"
+        ]
+      },
+      "tcr_before": {
+        "offset": 8,
+        "tests": [
+          "S0-LL13-c"
+        ]
+      },
+      "tcr_after": {
+        "offset": 12,
+        "tests": [
+          "S0-LL13-c"
+        ]
+      },
+      "stack_ok": {
+        "offset": 16,
+        "tests": [
+          "S0-LL13-c"
+        ]
+      },
+      "post_exit_effect": {
+        "offset": 20,
+        "tests": [
+          "S0-LL13-c"
+        ]
+      },
+      "root_head": {
+        "offset": 24,
+        "tests": [
+          "S0-LL13-c",
+          "S0-LL20-a"
+        ]
+      },
+      "binding_depth": {
+        "offset": 28,
+        "tests": [
+          "S0-LL13-c",
+          "S0-LL20-a"
+        ]
+      },
+      "vsp": {
+        "offset": 32,
+        "tests": [
+          "S0-LL13-c",
+          "S0-LL20-a"
+        ]
+      },
+      "tsp": {
+        "offset": 36,
+        "tests": [
+          "S0-LL13-c",
+          "S0-LL20-a"
+        ]
+      },
+      "csp": {
+        "offset": 40,
+        "tests": [
+          "S0-LL13-c",
+          "S0-LL20-a"
+        ]
+      },
+      "nvalues": {
+        "offset": 44,
+        "tests": [
+          "S0-LL13-c",
+          "S0-LL20-a"
+        ]
+      },
+      "mv_base": {
+        "offset": 48,
+        "tests": [
+          "S0-LL13-c",
+          "S0-LL20-a"
+        ]
+      },
+      "mv_owner_top": {
+        "offset": 52,
+        "tests": [
+          "S0-LL13-c",
+          "S0-LL20-a"
+        ]
+      },
+      "ready": {
+        "offset": 72,
+        "tests": [
+          "S0-LL13-c"
+        ]
+      },
+      "release": {
+        "offset": 76,
+        "tests": [
+          "S0-LL13-c"
+        ]
+      },
+      "cleanup_effect": {
+        "offset": 80,
+        "tests": [
+          "S0-LL13-c"
+        ]
+      },
+      "boundary_cleanup": {
+        "offset": 80,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "catch_reason": {
+        "offset": 84,
+        "tests": [
+          "S0-LL13-c"
+        ]
+      },
+      "observed_sp": {
+        "offset": 88,
+        "tests": [
+          "S0-LL13-c"
+        ]
+      },
+      "observed_c_frame": {
+        "offset": 88,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "state": {
+        "offset": 128,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "pending": {
+        "offset": 132,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "id": {
+        "offset": 136,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "lifetime": {
+        "offset": 140,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "admitted": {
+        "offset": 144,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "requests": {
+        "offset": 148,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "root_slot": {
+        "offset": 152,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "stops": {
+        "offset": 156,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "interrupts": {
+        "offset": 160,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "reloads": {
+        "offset": 164,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "allocation_checks": {
+        "offset": 168,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "cleanup": {
+        "offset": 172,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "nested": {
+        "offset": 176,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "retire_serial": {
+        "offset": 180,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "reclaimed": {
+        "offset": 184,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "mode": {
+        "offset": 188,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "active_request": {
+        "offset": 192,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "old_root": {
+        "offset": 196,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "observed_root": {
+        "offset": 200,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "observed_raw": {
+        "offset": 204,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "continuation": {
+        "offset": 208,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "handler_cookie": {
+        "offset": 212,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "binding_cookie": {
+        "offset": 216,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "progress": {
+        "offset": 220,
+        "tests": [
+          "S0-LL20-a"
+        ]
+      },
+      "frame_head": {
+        "offset": 224,
+        "tests": [
+          "S0-LL05-a",
+          "S0-LL23-b"
+        ]
+      },
+      "frame_serial": {
+        "offset": 228,
+        "tests": [
+          "S0-LL05-a",
+          "S0-LL23-b"
+        ]
+      },
+      "abi_state": {
+        "offset": 232,
+        "tests": [
+          "S0-LL05-a"
+        ]
+      },
+      "frame_cursor": {
+        "offset": 232,
+        "tests": [
+          "S0-LL23-b"
+        ]
+      },
+      "stack_base": {
+        "offset": 236,
+        "tests": [
+          "S0-LL05-a"
+        ]
+      },
+      "frame_base": {
+        "offset": 236,
+        "tests": [
+          "S0-LL23-b"
+        ]
+      },
+      "stack_limit": {
+        "offset": 240,
+        "tests": [
+          "S0-LL05-a"
+        ]
+      },
+      "frame_limit": {
+        "offset": 240,
+        "tests": [
+          "S0-LL23-b"
+        ]
+      },
+      "reply_cursor": {
+        "offset": 244,
+        "tests": [
+          "S0-LL05-a",
+          "S0-LL23-b"
+        ]
+      },
+      "reply_limit": {
+        "offset": 248,
+        "tests": [
+          "S0-LL05-a",
+          "S0-LL23-b"
+        ]
+      },
+      "debug_policy": {
+        "offset": 252,
+        "tests": [
+          "S0-LL05-a",
+          "S0-LL23-b"
+        ]
+      }
+    },
+    "groups": {
+      "identity_and_lifetime": [
+        "id",
+        "lifetime",
+        "reclaimed",
+        "retire_serial",
+        "token"
+      ],
+      "atomic_state_and_pending": [
+        "admitted",
+        "interrupts",
+        "pending",
+        "reloads",
+        "state",
+        "stops"
+      ],
+      "allocation_area": [
+        "allocation_checks"
+      ],
+      "explicit_stacks": [
+        "csp",
+        "frame_address",
+        "observed_c_frame",
+        "observed_sp",
+        "stack_base",
+        "stack_limit",
+        "stack_ok",
+        "tsp",
+        "vsp"
+      ],
+      "dynamic_bindings": [
+        "binding_cookie",
+        "binding_depth"
+      ],
+      "multiple_values": [
+        "mv_base",
+        "mv_owner_top",
+        "nvalues"
+      ],
+      "roots_and_frames": [
+        "frame_base",
+        "frame_cursor",
+        "frame_head",
+        "frame_limit",
+        "frame_serial",
+        "observed_raw",
+        "observed_root",
+        "old_root",
+        "root_head",
+        "root_slot"
+      ],
+      "handlers_and_cleanup": [
+        "boundary_cleanup",
+        "catch_reason",
+        "cleanup",
+        "cleanup_effect",
+        "continuation",
+        "handler_cookie",
+        "mode",
+        "nested",
+        "post_exit_effect"
+      ],
+      "mailbox": [
+        "active_request",
+        "progress",
+        "ready",
+        "release",
+        "requests"
+      ],
+      "runtime_private": [
+        "abi_state",
+        "debug_policy",
+        "reply_cursor",
+        "reply_limit",
+        "tcr_after",
+        "tcr_before"
+      ]
+    },
+    "fixture_private_aliases": {
+      "80": {
+        "cleanup_effect": [
+          "S0-LL13-c"
+        ],
+        "boundary_cleanup": [
+          "S0-LL20-a"
+        ]
+      },
+      "88": {
+        "observed_sp": [
+          "S0-LL13-c"
+        ],
+        "observed_c_frame": [
+          "S0-LL20-a"
+        ]
+      },
+      "232": {
+        "abi_state": [
+          "S0-LL05-a"
+        ],
+        "frame_cursor": [
+          "S0-LL23-b"
+        ]
+      },
+      "236": {
+        "stack_base": [
+          "S0-LL05-a"
+        ],
+        "frame_base": [
+          "S0-LL23-b"
+        ]
+      },
+      "240": {
+        "stack_limit": [
+          "S0-LL05-a"
+        ],
+        "frame_limit": [
+          "S0-LL23-b"
+        ]
+      }
+    },
+    "finding": "the accepted fixtures share one 256-byte TCR with a common prefix (root_head 24 through mv_owner_top 52) and fixture-private extension fields; later fixtures reuse extension offsets under their own names. The production D5 TCR schema must assign every field once; that assignment is Stage 1 work.",
+    "evidence": [
+      {
+        "test": "S0-LL13-c",
+        "artifact": "2026-09-12-ll21-project-acceptance/combined/accepted/wasm/prerequisites/prerequisites/source/contract.json",
+        "sha256": "c282806dc76e9aaf293b45c5638b0a83cc96a6f63f0c6ac8b13d3a45a8d6b55e"
+      },
+      {
+        "test": "S0-LL20-a",
+        "artifact": "2026-09-12-ll21-project-acceptance/combined/accepted/wasm/prerequisites/source/integrated-runtime/schema.json",
+        "sha256": "c6da64b07dbc11fe90d5a5ded40dd72819ce3dfc9069a21cf947bf7355624fc6"
+      },
+      {
+        "test": "S0-LL05-a",
+        "artifact": "2026-09-12-ll21-project-acceptance/combined/dynamic-call/build/source/dynamic-call/schema.json",
+        "sha256": "90a889af5af14b0f724bc0159092ca69a7c20a20cd13b6ceea8b1d268e555806"
+      },
+      {
+        "test": "S0-LL23-b",
+        "artifact": "2026-09-12-ll21-project-acceptance/combined/accepted/wasm/source/debug-frames/schema.json",
+        "sha256": "561d85c462628fc44da74f0f794c184df45073e7364c727c733e9088bbb64ff0"
+      }
+    ]
+  },
+  "allocation_and_store": {
+    "collector": {
+      "kind": "bounded cons-only copying collector, non-generational",
+      "semispace_bytes": 4096,
+      "states": {
+        "CREATING": 0,
+        "PARKED": 1,
+        "RUNNING": 2,
+        "FOREIGN": 3,
+        "STOPPED_GC": 4,
+        "TERMINATING": 5
+      },
+      "pending": {
+        "GC": 1,
+        "INTERRUPT": 2
+      },
+      "evidence": [
+        {
+          "test": "S0-LL20-a",
+          "artifact": "2026-09-12-ll21-project-acceptance/combined/accepted/wasm/prerequisites/source/integrated-runtime/schema.json",
+          "sha256": "c6da64b07dbc11fe90d5a5ded40dd72819ce3dfc9069a21cf947bf7355624fc6",
+          "cases": [
+            "cancel-ack-completion-after-interrupt",
+            "cancel-ack-completion-before-interrupt",
+            "cancel-ack-interrupt-during-rearm",
+            "child-handoff-final-rescan",
+            "collection-between-nonlocal-exit-and-retirement",
+            "competing-collectors",
+            "host-commit-after-descriptor-reuse",
+            "io-blocked-wait",
+            "io-completion-after-interrupt",
+            "io-completion-before-interrupt",
+            "io-gc-during-wake",
+            "io-interrupt-during-rearm",
+            "io-unfinished",
+            "moving-install-0-values",
+            "moving-install-1-values",
+            "moving-install-6-values",
+            "nested-debugger-two-collections",
+            "nonlocal-exit-cancel-ack-lifetime",
+            "nonlocal-exit-raced-completion-lifetime",
+            "parked-admission",
+            "randomized-raw",
+            "randomized-summary",
+            "stopped-admission",
+            "wrap-and-new-request-during-admission"
+          ]
+        }
+      ]
+    },
+    "cons_layout": {
+      "rule": "CDR word 0, CAR word 1, canonical NIL distinguished; independent unequal fixtures with a one-sided swap rejected",
+      "evidence": [
+        {
+          "test": "S0-LL04-a",
+          "cases": [
+            "independent-cons-layout-and-graphs"
+          ]
+        }
+      ]
+    },
+    "conversions": {
+      "rule": "signed fixnum, raw address, logical-ID and typed-slot conversions are distinct checked families",
+      "evidence": [
+        {
+          "test": "S0-LL07-a",
+          "artifact": "2026-09-14-conversions-r1/bundle-a/abi.json",
+          "sha256": "a9874f467817745f1a454319435e7e8d68312d4cefd4c237d4f76896b54dc864",
+          "families": [
+            "address",
+            "fixnum",
+            "logical-id",
+            "typed-slot"
+          ]
+        }
+      ]
+    },
+    "store_lowering": {
+      "rule": "potentially relevant stores pass through a replaceable lowering; the initial collector needs no generational barrier (outline section 04)",
+      "evidence": "D4 clarification of 14 September; no Stage 0 fixture claims a barrier"
+    }
+  },
+  "c_boundary": {
+    "contract": "The emitted adapter owns restoration of C SP and root/binding/VSP/TSP/CSP checkpoints on both ordinary and exceptional return; no safepoint occurs between helper exit and completed restoration.",
+    "results": "The emitted fixture returns value0/nvalues. The TCR mv_base/count descriptor refers to a caller-owned VSP result region, not a second backing buffer. VSP grows upward; the caller reserves an aligned 32-byte region for at most six tagged values, retains it across the helper/cleanup, and releases it only after consuming the complete sequence. Zero values return fixture NIL. Candidate-specific argument placement remains D3 work.",
+    "restarts": {
+      "0": "Return all supplied values from the handler outside the unwound C helper.",
+      "1": "Propagate the original exit after restoration.",
+      "2": "Cleanup transfers again with a distinct tag after restoration."
+    },
+    "unsupported": [
+      "Resuming an unwound C activation",
+      "Implicit C epilogues on Wasm exceptional exits",
+      "Moving GC during this boundary slice",
+      "Arbitrary native CCL restart/condition semantics"
+    ],
+    "allowed_function_imports": {
+      "bridge.park": {
+        "params": [
+          "i32",
+          "i32"
+        ],
+        "results": []
+      },
+      "emitted.raise": {
+        "params": [
+          "i32"
+        ],
+        "results": []
+      }
+    },
+    "evidence": [
+      {
+        "test": "S0-LL19-b",
+        "artifact": "2026-09-12-ll21-project-acceptance/combined/accepted/wasm/prerequisites/prerequisites/C-boundary-cases.json",
+        "sha256": "0bbd583ccd0cfb8463a9274603ff4505a958bbc6307b183cf785436cab295693",
+        "cases": 12
+      },
+      {
+        "test": "S0-LL13-c",
+        "artifact": "2026-09-12-ll21-project-acceptance/combined/accepted/wasm/prerequisites/prerequisites/concurrent-C-calls.json",
+        "sha256": "80e46ddf4ab3f592abaf40e90bae590355a1328e34728bfe80151fcb99131cfe",
+        "workers": 2
+      }
+    ]
+  },
+  "ownership": {
+    "retained": {
+      "path": "2026-09-12-ll21-project-acceptance/combined/accepted/wasm/prerequisites/prerequisites/memory-ownership.json",
+      "sha256": "672f8125f6ca84480d17d668b51d7524fcdcf14b0268ec8b26b006ae52ae7a23"
+    },
+    "link_metadata": {
+      "path": "2026-09-12-ll21-project-acceptance/combined/accepted/wasm/prerequisites/prerequisites/linked-metadata.json",
+      "sha256": "7230f138ff1285f3a85eb3d5ce441410c578426f2ee1cf08e5c30eb090c2e998"
+    },
+    "contract": {
+      "path": "2026-09-12-ll21-project-acceptance/combined/accepted/wasm/prerequisites/prerequisites/source/contract.json",
+      "sha256": "c282806dc76e9aaf293b45c5638b0a83cc96a6f63f0c6ac8b13d3a45a8d6b55e"
+    },
+    "derivation": "planMemory/validateMap from the retained source/runtime.mjs over the retained linked-metadata.json",
+    "regions": [
+      {
+        "name": "fixture-lowmem",
+        "start": 64,
+        "end": 136,
+        "alignment": 8
+      },
+      {
+        "name": "kernel-static-and-default-stack",
+        "start": 1024,
+        "end": 17440,
+        "alignment": 16
+      },
+      {
+        "name": "worker-0-tls",
+        "start": 17440,
+        "end": 17444,
+        "alignment": 4
+      },
+      {
+        "name": "worker-0-tcr",
+        "start": 17456,
+        "end": 17584,
+        "alignment": 16
+      },
+      {
+        "name": "worker-0-explicit-stacks",
+        "start": 17584,
+        "end": 19632,
+        "alignment": 16
+      },
+      {
+        "name": "worker-0-C-stack",
+        "start": 19632,
+        "end": 36016,
+        "alignment": 16
+      },
+      {
+        "name": "worker-1-tls",
+        "start": 36016,
+        "end": 36020,
+        "alignment": 4
+      },
+      {
+        "name": "worker-1-tcr",
+        "start": 36032,
+        "end": 36160,
+        "alignment": 16
+      },
+      {
+        "name": "worker-1-explicit-stacks",
+        "start": 36160,
+        "end": 38208,
+        "alignment": 16
+      },
+      {
+        "name": "worker-1-C-stack",
+        "start": 38208,
+        "end": 54592,
+        "alignment": 16
+      },
+      {
+        "name": "worker-2-tls",
+        "start": 54592,
+        "end": 54596,
+        "alignment": 4
+      },
+      {
+        "name": "worker-2-tcr",
+        "start": 54608,
+        "end": 54736,
+        "alignment": 16
+      },
+      {
+        "name": "worker-2-explicit-stacks",
+        "start": 54736,
+        "end": 56784,
+        "alignment": 16
+      },
+      {
+        "name": "worker-2-C-stack",
+        "start": 56784,
+        "end": 73168,
+        "alignment": 16
+      }
+    ],
+    "workers": 3,
+    "reserved_table_slots": [
+      0,
+      1
+    ],
+    "used_end": 73168
+  }
+}

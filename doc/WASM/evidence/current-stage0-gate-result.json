@@ -2,11 +2,11 @@
   "version": 2,
   "assessment": "SCOPED_EXECUTION_COMPOSITE",
   "date": "2026-09-15",
-  "basis": "LL19-a executes nonlocal exits through nested emitted frames on Node/V8: ten cases with zero, one and six values, cleanup that throws again, a missing handler, a resumed recoverable check, a declined handler, a nested debugger and a nine-frame cleanup chain; nine semantic mutants and ten production-role omissions rejected. The ENGINE-a and LL21-c executions remain unreviewed. The unchanged production slot gate reports only the unreviewed reasons. All 40 accepted per-record bindings stay current; their execution is reused. No full historical artifact scan.",
+  "basis": "CONTRACTS-a executes the layout-schema and runtime-contract control: the 377-row wasm32 layout schema v1 and closed disposition ledger derived from the pinned U1 sources, the C-header cross-check with its one named disagreement, and the join of frames, roots, TCR fields, allocation/store, C-boundary and link-derived ownership to the accepted fixtures by artifact hash; nine synthetic controls and four production-role omissions rejected. The ENGINE-a, LL21-c and LL19-a executions remain unreviewed. The unchanged production slot gate reports only the unreviewed reasons. All 40 accepted per-record bindings stay current; their execution is reused. No full historical artifact scan.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
-      "missing S0-CONTRACTS-a [complete-report]",
+      "unreviewed S0-CONTRACTS-a [complete-report]",
       "unreviewed S0-ENGINE-a [complete-report]",
       "missing S0-LL15-a [full]",
       "missing S0-LL15-b [native]",
@@ -16,19 +16,19 @@
       "unreviewed S0-LL19-a [full]"
     ]
   },
-  "prior_result_sha256": "7f747aca941bc4cce396c4e1aa7e7147772f6c006299be9a47f9b5d647ff187f",
+  "prior_result_sha256": "00cb9fea4bdd4042a74a926873f1dd8873252b1a12633d23d839ee7083e02a71",
   "new_results": [
     {
-      "id": "S0-LL19-a",
-      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-nested-eh-r1/results.json",
-      "sha256": "86a7986456380ea0eebdd2a38a252341c194c541be495006fe48cf09b002ef84"
+      "id": "S0-CONTRACTS-a",
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-contracts-r1/results.json",
+      "sha256": "9efd94d16463d4c54276325e733218fca8440b9cd48e76b00ac9c65b570044be"
     }
   ],
   "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll13b-accepted-results.json",
   "combined_results_sha256": "c5b5049754463d3be79cb7506906413a6dbe27c423c5189d8cb333fcf8975cf4",
   "inventory": {
     "locator": "stage0/inventory.json",
-    "sha256": "c78ecbef14ba739705633b9543d2ec8b8af1ade88d06699700d07767db8834bd"
+    "sha256": "1963eb38229e4745aedf0eeee7b1c866f1979e7ab187d3a98d5181e98ecbecf2"
   },
   "active_results": [
     {
@@ -46,12 +46,16 @@
     {
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-nested-eh-r1/results.json",
       "sha256": "86a7986456380ea0eebdd2a38a252341c194c541be495006fe48cf09b002ef84"
+    },
+    {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-contracts-r1/results.json",
+      "sha256": "9efd94d16463d4c54276325e733218fca8440b9cd48e76b00ac9c65b570044be"
     }
   ],
   "counts": {
     "accepted": 40,
-    "missing": 4,
-    "unreviewed": 4,
+    "missing": 3,
+    "unreviewed": 5,
     "required": 48
   }
 }

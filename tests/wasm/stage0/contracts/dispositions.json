@@ -1,0 +1,2083 @@
+{
+ "version": 1,
+ "vocabulary": {
+  "inherited": "value or layout adopted as-is under D1",
+  "replaced": "target-specific replacement, referenced",
+  "unsupported": "native-only mechanism with no target counterpart",
+  "deferred": "needs a later stage or decision, referenced",
+  "reserved": "value retained, no target use until an explicit decision"
+ },
+ "cell_fields": [
+  "disposition",
+  "representation or target",
+  "gc treatment or note",
+  "note"
+ ],
+ "constants": {
+  "nbits-in-word": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "nbits-in-byte": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "ntagbits": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "nlisptagbits": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "nfixnumtagbits": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "num-subtag-bits": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtagmask": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "fixnumshift": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "fixnum-shift": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "fulltagmask": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "tagmask": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "fixnummask": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "ncharcodebits": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "charcode-shift": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "word-shift": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "word-size-in-bytes": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "node-size": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "dnode-size": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "dnode-align-bits": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "dnode-shift": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "bitmap-shift": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "fixnumone": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "fixnum-one": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "fixnum1": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "target-most-negative-fixnum": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "target-most-positive-fixnum": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "tag-fixnum": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "tag-list": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "tag-misc": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "tag-imm": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "fulltag-even-fixnum": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "fulltag-cons": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "fulltag-nodeheader": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "fulltag-imm": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "fulltag-odd-fixnum": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "fulltag-misc": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "fulltag-immheader": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "min-numeric-subtag": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "max-rational-subtag": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "min-float-subtag": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "max-float-subtag": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "max-real-subtag": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "max-numeric-subtag": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "min-16-bit-ivector-subtag": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "max-16-bit-ivector-subtag": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "min-8-bit-ivector-subtag": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "max-8-bit-ivector-subtag": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "max-32-bit-ivector-subtag": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "min-cl-ivector-subtag": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "min-non-numeric-imm-subtag": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "unbound-marker": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "undefined": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "slot-unbound-marker": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "illegal-marker": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "max-non-array-imm-subtag": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "min-non-numeric-node-subtag": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "max-non-array-node-subtag": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "misc-header-offset": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "misc-subtag-offset": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "misc-data-offset": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "misc-dfloat-offset": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "misc-complex-dfloat-offset": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "max-64-bit-constant-index": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "max-32-bit-constant-index": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "max-16-bit-constant-index": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "max-8-bit-constant-index": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "max-1-bit-constant-index": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "misc-bias": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "cons-bias": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "complex-double-float.realpart": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "complex-double-float.imagpart": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "arrayh.rank-cell": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "arrayh.physsize-cell": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "arrayh.data-vector-cell": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "arrayh.displacement-cell": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "arrayh.flags-cell": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "arrayh.dim0-cell": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "arrayh.flags-cell-bits-byte": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "arrayh.flags-cell-subtag-byte": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "interrupt-level-binding-index": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "fulltag-tra": [
+   "reserved",
+   "decisions.md D1",
+   "native tagged return address; retained value, no target use until an explicit decision"
+  ],
+  "default-node-regs-mask": [
+   "unsupported",
+   "native-only mechanism",
+   "native register mask; Wasm has locals and explicit stacks"
+  ],
+  "reserved-frame-marker": [
+   "unsupported",
+   "native-only mechanism",
+   "native stack frame marker"
+  ],
+  "function-boundary-marker": [
+   "replaced",
+   "decisions.md D5 logical code identity",
+   "native code-vector boundary word; code lives outside the heap"
+  ],
+  "canonical-nil-value": [
+   "inherited",
+   "decisions.md D1",
+   "provisional schema-defined low address for canonical NIL; D1 fixes the value as a schema row, the loader supplies the object"
+  ],
+  "canonical-t-value": [
+   "inherited",
+   "decisions.md D1",
+   "provisional; T at a recorded offset from NIL"
+  ],
+  "t-offset": [
+   "inherited",
+   "decisions.md D1",
+   "recorded NIL-to-T offset"
+  ],
+  "nilsym-offset": [
+   "inherited",
+   "decisions.md D1",
+   "NIL symbol object offset from the canonical cons; fixed with the NIL/T rows"
+  ],
+  "tcr-bias": [
+   "replaced",
+   "decisions.md D5 TCR schema",
+   "native TCR addressing bias; the D5 TCR is a linear-memory record with explicit field offsets"
+  ],
+  "gf-code-size": [
+   "deferred",
+   "Stage 1 function objects",
+   "native generic-function trampoline size"
+  ],
+  "x8632-subprims-base": [
+   "replaced",
+   "decisions.md D4",
+   "native subprimitive jump table base; subprimitives are emitted"
+  ],
+  "recover-fn-opcode-byte": [
+   "unsupported",
+   "native-only mechanism",
+   "native machine-code self-reference recovery"
+  ],
+  "recover-fn-address-offset": [
+   "unsupported",
+   "native-only mechanism",
+   "native machine-code self-reference recovery"
+  ],
+  "arg-check-trap-pc-limit": [
+   "unsupported",
+   "native-only mechanism",
+   "native trap-site decoding; arity checks lower to explicit checks under D6"
+  ],
+  "fasl-version": [
+   "deferred",
+   "Stage 1 cross-fasloader",
+   "native FASL format versions; the target cross-dump format is a Stage 1 deliverable"
+  ],
+  "fasl-max-version": [
+   "deferred",
+   "Stage 1 cross-fasloader",
+   "native FASL format versions; the target cross-dump format is a Stage 1 deliverable"
+  ],
+  "fasl-min-version": [
+   "deferred",
+   "Stage 1 cross-fasloader",
+   "native FASL format versions; the target cross-dump format is a Stage 1 deliverable"
+  ]
+ },
+ "subtags": {
+  "subtag-bignum": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-ratio": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-single-float": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-double-float": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-complex": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-bit-vector": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-complex-double-float-vector": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-complex-single-float-vector": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-double-float-vector": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-s16-vector": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-u16-vector": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-s8-vector": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-u8-vector": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-simple-base-string": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-fixnum-vector": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-s32-vector": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-u32-vector": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-single-float-vector": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-arrayh": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-vectorh": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-simple-vector": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-complex-single-float": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-complex-double-float": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-unbound": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-character": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-slot-unbound": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-illegal": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-no-thread-local-binding": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-basic-stream": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-symbol": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-hash-vector": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-pool": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-weak": [
+   "inherited",
+   "decisions.md D1",
+   "layout inherited; weak semantics need their own collector disposition (plan item 4)"
+  ],
+  "subtag-package": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-slot-vector": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-instance": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-struct": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-istruct": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-value-cell": [
+   "inherited",
+   "decisions.md D1",
+   ""
+  ],
+  "subtag-macptr": [
+   "inherited",
+   "decisions.md D1",
+   "layout inherited; foreign pointer semantics are a host-service disposition under D6"
+  ],
+  "subtag-dead-macptr": [
+   "inherited",
+   "decisions.md D1",
+   "layout inherited; see macptr"
+  ],
+  "subtag-xcode-vector": [
+   "deferred",
+   "Stage 1 cross-dump code set",
+   "cross-development code container; code lives in the bootstrap code set, not the heap"
+  ],
+  "subtag-forward-marker": [
+   "replaced",
+   "decisions.md D4 initial copying collector",
+   "forwarding word for the target collector; the native encoding is not assumed"
+  ],
+  "subtag-reserved-frame": [
+   "unsupported",
+   "native-only mechanism",
+   "native stack frame marker"
+  ],
+  "subtag-function-boundary-marker": [
+   "replaced",
+   "decisions.md D5 logical code identity",
+   "native code-vector boundary"
+  ],
+  "subtag-catch-frame": [
+   "replaced",
+   "contracts/debug-frames.md v0.1 and decisions.md D3 / abi/dynamic-call.v0.md",
+   "catch/unwind-protect frames become logical frames with handler and cleanup records"
+  ],
+  "subtag-function": [
+   "replaced",
+   "decisions.md D5 code descriptors",
+   "function objects reference code descriptors; native code vectors do not exist"
+  ],
+  "subtag-lock": [
+   "replaced",
+   "decisions.md D5 mailbox and atomics",
+   "native kernel lock object"
+  ],
+  "subtag-xfunction": [
+   "deferred",
+   "Stage 1 cross-dump code set",
+   "cross-development function representation"
+  ]
+ },
+ "headers": {
+  "single-float-header": [
+   "inherited",
+   "decisions.md D1",
+   "header word = element count << 8 | subtag"
+  ],
+  "double-float-header": [
+   "inherited",
+   "decisions.md D1",
+   "header word = element count << 8 | subtag"
+  ],
+  "one-digit-bignum-header": [
+   "inherited",
+   "decisions.md D1",
+   "header word = element count << 8 | subtag"
+  ],
+  "two-digit-bignum-header": [
+   "inherited",
+   "decisions.md D1",
+   "header word = element count << 8 | subtag"
+  ],
+  "three-digit-bignum-header": [
+   "inherited",
+   "decisions.md D1",
+   "header word = element count << 8 | subtag"
+  ],
+  "symbol-header": [
+   "inherited",
+   "decisions.md D1",
+   "header word = element count << 8 | subtag"
+  ],
+  "value-cell-header": [
+   "inherited",
+   "decisions.md D1",
+   "header word = element count << 8 | subtag"
+  ],
+  "macptr-header": [
+   "inherited",
+   "decisions.md D1",
+   "header word = element count << 8 | subtag"
+  ]
+ },
+ "objects": {
+  "cons": {
+   "disposition": [
+    "inherited",
+    "decisions.md D1",
+    "CDR first, CAR second; canonical NIL distinguished"
+   ],
+   "cells": {
+    "cdr": [
+     "inherited",
+     "tagged",
+     "root",
+     "word 0"
+    ],
+    "car": [
+     "inherited",
+     "tagged",
+     "root",
+     "word 1"
+    ]
+   }
+  },
+  "ratio": {
+   "disposition": [
+    "inherited",
+    "decisions.md D1",
+    ""
+   ],
+   "cells": {
+    "header": [
+     "inherited",
+     "header",
+     "none",
+     "misc header word"
+    ],
+    "numer": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "denom": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ]
+   }
+  },
+  "single-float": {
+   "disposition": [
+    "inherited",
+    "decisions.md D1",
+    ""
+   ],
+   "cells": {
+    "header": [
+     "inherited",
+     "header",
+     "none",
+     "misc header word"
+    ],
+    "value": [
+     "inherited",
+     "raw",
+     "none",
+     "IEEE single payload"
+    ]
+   }
+  },
+  "double-float": {
+   "disposition": [
+    "inherited",
+    "decisions.md D1",
+    "double payload 8-byte aligned at misc-dfloat-offset"
+   ],
+   "cells": {
+    "header": [
+     "inherited",
+     "header",
+     "none",
+     "misc header word"
+    ],
+    "pad": [
+     "inherited",
+     "raw",
+     "none",
+     "alignment pad"
+    ],
+    "value": [
+     "inherited",
+     "raw",
+     "none",
+     "IEEE double low word"
+    ],
+    "val-high": [
+     "inherited",
+     "raw",
+     "none",
+     "IEEE double high word"
+    ]
+   }
+  },
+  "complex-single-float": {
+   "disposition": [
+    "inherited",
+    "decisions.md D1",
+    ""
+   ],
+   "cells": {
+    "header": [
+     "inherited",
+     "header",
+     "none",
+     "misc header word"
+    ],
+    "pad": [
+     "inherited",
+     "raw",
+     "none",
+     ""
+    ],
+    "realpart": [
+     "inherited",
+     "raw",
+     "none",
+     ""
+    ],
+    "imagpart": [
+     "inherited",
+     "raw",
+     "none",
+     ""
+    ]
+   }
+  },
+  "complex-double-float": {
+   "disposition": [
+    "inherited",
+    "decisions.md D1",
+    ""
+   ],
+   "cells": {
+    "header": [
+     "inherited",
+     "header",
+     "none",
+     "misc header word"
+    ],
+    "pad": [
+     "inherited",
+     "raw",
+     "none",
+     ""
+    ],
+    "realpart-low": [
+     "inherited",
+     "raw",
+     "none",
+     ""
+    ],
+    "realpart-high": [
+     "inherited",
+     "raw",
+     "none",
+     ""
+    ],
+    "imagpart-low": [
+     "inherited",
+     "raw",
+     "none",
+     ""
+    ],
+    "imagpart-high": [
+     "inherited",
+     "raw",
+     "none",
+     ""
+    ]
+   }
+  },
+  "complex": {
+   "disposition": [
+    "inherited",
+    "decisions.md D1",
+    ""
+   ],
+   "cells": {
+    "header": [
+     "inherited",
+     "header",
+     "none",
+     "misc header word"
+    ],
+    "realpart": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "imagpart": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ]
+   }
+  },
+  "macptr": {
+   "disposition": [
+    "inherited",
+    "decisions.md D1",
+    "foreign pointer semantics deferred to the D6 host-service disposition"
+   ],
+   "cells": {
+    "header": [
+     "inherited",
+     "header",
+     "none",
+     "misc header word"
+    ],
+    "address": [
+     "inherited",
+     "raw",
+     "none",
+     "raw host address; never a Lisp reference"
+    ],
+    "domain": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "type": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ]
+   }
+  },
+  "xmacptr": {
+   "disposition": [
+    "inherited",
+    "decisions.md D1",
+    "see macptr"
+   ],
+   "cells": {
+    "header": [
+     "inherited",
+     "header",
+     "none",
+     "misc header word"
+    ],
+    "address": [
+     "inherited",
+     "raw",
+     "none",
+     ""
+    ],
+    "domain": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "type": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "flags": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "link": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ]
+   }
+  },
+  "catch-frame": {
+   "disposition": [
+    "replaced",
+    "contracts/debug-frames.md v0.1 and decisions.md D3 / abi/dynamic-call.v0.md",
+    "no native catch frames"
+   ],
+   "cells": {
+    "header": [
+     "inherited",
+     "header",
+     "none",
+     "misc header word"
+    ],
+    "catch-tag": [
+     "replaced",
+     "tagged",
+     "root",
+     "handler record tag"
+    ],
+    "link": [
+     "replaced",
+     "raw",
+     "none",
+     "handler checkpoint chain"
+    ],
+    "mvflag": [
+     "replaced",
+     "raw",
+     "none",
+     "cleanup versus catch kind"
+    ],
+    "esp": [
+     "unsupported",
+     "native",
+     "none",
+     "native stack pointer"
+    ],
+    "ebp": [
+     "unsupported",
+     "native",
+     "none",
+     "native frame pointer"
+    ],
+    "foreign-sp": [
+     "unsupported",
+     "native",
+     "none",
+     "native foreign stack pointer"
+    ],
+    "db-link": [
+     "replaced",
+     "raw",
+     "none",
+     "binding checkpoint"
+    ],
+    "xframe": [
+     "replaced",
+     "raw",
+     "none",
+     "handler checkpoint"
+    ],
+    "pc": [
+     "unsupported",
+     "native",
+     "none",
+     "native return address"
+    ],
+    "nfp": [
+     "unsupported",
+     "native",
+     "none",
+     "native fp frame"
+    ],
+    "pad": [
+     "unsupported",
+     "native",
+     "none",
+     ""
+    ]
+   }
+  },
+  "lock": {
+   "disposition": [
+    "replaced",
+    "decisions.md D5 mailbox and atomics",
+    ""
+   ],
+   "cells": {
+    "header": [
+     "inherited",
+     "header",
+     "none",
+     "misc header word"
+    ],
+    "_value": [
+     "unsupported",
+     "native",
+     "none",
+     "kernel lock pointer"
+    ],
+    "kind": [
+     "replaced",
+     "tagged",
+     "root",
+     "lock kind"
+    ],
+    "writer": [
+     "replaced",
+     "tagged",
+     "root",
+     "owner identity"
+    ],
+    "name": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "whostate": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "whostate-2": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ]
+   }
+  },
+  "symbol": {
+   "disposition": [
+    "inherited",
+    "decisions.md D1",
+    ""
+   ],
+   "cells": {
+    "header": [
+     "inherited",
+     "header",
+     "none",
+     "misc header word"
+    ],
+    "pname": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "vcell": [
+     "inherited",
+     "tagged",
+     "root",
+     "global value cell"
+    ],
+    "fcell": [
+     "inherited",
+     "tagged",
+     "root",
+     "function cell; references a function object, never code bytes"
+    ],
+    "package-predicate": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "flags": [
+     "inherited",
+     "tagged",
+     "root",
+     "fixnum flags"
+    ],
+    "plist": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "binding-index": [
+     "inherited",
+     "tagged",
+     "root",
+     "fixnum index into the dynamic-binding vector; distinct from any TCR index (D5)"
+    ]
+   }
+  },
+  "vectorh": {
+   "disposition": [
+    "inherited",
+    "decisions.md D1",
+    ""
+   ],
+   "cells": {
+    "header": [
+     "inherited",
+     "header",
+     "none",
+     "misc header word"
+    ],
+    "logsize": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "physsize": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "data-vector": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "displacement": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "flags": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ]
+   }
+  },
+  "arrayh": {
+   "disposition": [
+    "inherited",
+    "decisions.md D1",
+    "dimensions follow the fixed cells"
+   ],
+   "cells": {
+    "header": [
+     "inherited",
+     "header",
+     "none",
+     "misc header word"
+    ],
+    "rank": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "physsize": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "data-vector": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "displacement": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ],
+    "flags": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ]
+   }
+  },
+  "value-cell": {
+   "disposition": [
+    "inherited",
+    "decisions.md D1",
+    ""
+   ],
+   "cells": {
+    "header": [
+     "inherited",
+     "header",
+     "none",
+     "misc header word"
+    ],
+    "value": [
+     "inherited",
+     "tagged",
+     "root",
+     ""
+    ]
+   }
+  }
+ },
+ "layouts": {
+  "lisp-frame": {
+   "disposition": [
+    "replaced",
+    "contracts/debug-frames.md v0.1",
+    "native frame with return address"
+   ],
+   "cells": {
+    "backptr": [
+     "replaced",
+     "contracts/debug-frames.md v0.1",
+     "previous_frame"
+    ],
+    "return-address": [
+     "unsupported",
+     "native return address; engine frames carry control",
+     ""
+    ],
+    "xtra": [
+     "replaced",
+     "contracts/debug-frames.md v0.1",
+     "payload slots"
+    ]
+   }
+  },
+  "tsp-frame": {
+   "disposition": [
+    "replaced",
+    "contracts/debug-frames.md v0.1 and tests/wasm/stage0/nested-eh abi.json (S0-LL19-a)",
+    "temporary-stack frames become explicit-stack records"
+   ],
+   "cells": {
+    "backptr": [
+     "replaced",
+     "contracts/debug-frames.md v0.1",
+     "previous record"
+    ],
+    "ebp": [
+     "unsupported",
+     "native frame pointer",
+     ""
+    ]
+   }
+  },
+  "csp-frame": {
+   "disposition": [
+    "replaced",
+    "contracts/debug-frames.md v0.1 and tests/wasm/stage0/nested-eh abi.json (S0-LL19-a)",
+    ""
+   ],
+   "cells": {
+    "backptr": [
+     "replaced",
+     "contracts/debug-frames.md v0.1",
+     "previous record"
+    ],
+    "ebp": [
+     "unsupported",
+     "native frame pointer",
+     ""
+    ]
+   }
+  },
+  "xcf": {
+   "disposition": [
+    "replaced",
+    "tests/wasm/stage0/runtime-boundary contract.json (S0-LL13-c/LL19-b)",
+    "exception callback frames become the emitted/C boundary contract"
+   ],
+   "cells": {
+    "backptr": [
+     "replaced",
+     "tests/wasm/stage0/runtime-boundary contract.json (S0-LL13-c/LL19-b)",
+     "checkpoint chain"
+    ],
+    "return-address": [
+     "unsupported",
+     "native",
+     ""
+    ],
+    "nominal-function": [
+     "replaced",
+     "contracts/debug-frames.md v0.1",
+     "logical_code_id"
+    ],
+    "relative-pc": [
+     "replaced",
+     "contracts/debug-frames.md v0.1",
+     "source_site_id"
+    ],
+    "containing-object": [
+     "unsupported",
+     "native code object",
+     ""
+    ],
+    "xp": [
+     "unsupported",
+     "native exception context",
+     ""
+    ],
+    "ra0": [
+     "unsupported",
+     "native",
+     ""
+    ],
+    "foreign-sp": [
+     "replaced",
+     "tests/wasm/stage0/runtime-boundary contract.json (S0-LL13-c/LL19-b)",
+     "C SP checkpoint"
+    ],
+    "prev-xframe": [
+     "replaced",
+     "tests/wasm/stage0/runtime-boundary contract.json (S0-LL13-c/LL19-b)",
+     "handler checkpoint"
+    ],
+    "pc-low": [
+     "unsupported",
+     "native pc",
+     ""
+    ],
+    "pc-high": [
+     "unsupported",
+     "native pc",
+     ""
+    ]
+   }
+  },
+  "area": {
+   "disposition": [
+    "replaced",
+    "decisions.md D4 owned regions with link-derived ownership",
+    "no native area list"
+   ],
+   "cells": {
+    "pred": [
+     "replaced",
+     "decisions.md D4",
+     "region table order"
+    ],
+    "succ": [
+     "replaced",
+     "decisions.md D4",
+     "region table order"
+    ],
+    "low": [
+     "replaced",
+     "decisions.md D4",
+     "region start"
+    ],
+    "high": [
+     "replaced",
+     "decisions.md D4",
+     "region end"
+    ],
+    "active": [
+     "replaced",
+     "decisions.md D4",
+     "allocation or stack limit"
+    ],
+    "softlimit": [
+     "replaced",
+     "decisions.md D4",
+     "explicit bound"
+    ],
+    "hardlimit": [
+     "replaced",
+     "decisions.md D4",
+     "explicit bound"
+    ],
+    "code": [
+     "replaced",
+     "decisions.md D4",
+     "region kind"
+    ],
+    "markbits": [
+     "unsupported",
+     "mark bitmap; the initial collector copies",
+     ""
+    ],
+    "ndnodes": [
+     "replaced",
+     "decisions.md D4",
+     "region extent"
+    ],
+    "older": [
+     "unsupported",
+     "generational bookkeeping omitted for the initial collector",
+     ""
+    ],
+    "younger": [
+     "unsupported",
+     "generational bookkeeping omitted",
+     ""
+    ],
+    "h": [
+     "unsupported",
+     "native handle",
+     ""
+    ],
+    "softprot": [
+     "unsupported",
+     "no guard pages; explicit bounds",
+     ""
+    ],
+    "hardprot": [
+     "unsupported",
+     "no guard pages; explicit bounds",
+     ""
+    ],
+    "owner": [
+     "unsupported",
+     "native library fragment",
+     ""
+    ],
+    "refbits": [
+     "unsupported",
+     "intergenerational bitmap omitted; barrier designed with a later generational collector",
+     ""
+    ],
+    "threshold": [
+     "unsupported",
+     "EGC threshold; lisp_egc_control keeps EGC unavailable",
+     ""
+    ],
+    "gc-count": [
+     "deferred",
+     "decisions.md D4",
+     "collection count is a runtime statistic"
+    ],
+    "static-dnodes": [
+     "deferred",
+     "Stage 5 images",
+     "static space accounting"
+    ],
+    "static-used": [
+     "deferred",
+     "Stage 5 images",
+     "static space bitmap"
+    ]
+   }
+  },
+  "protected-area": {
+   "disposition": [
+    "unsupported",
+    "native-only mechanism",
+    "no guard-page protection; memory.c replacement uses checked regions"
+   ],
+   "cells": {
+    "next": [
+     "unsupported",
+     "native protection record",
+     ""
+    ],
+    "start": [
+     "unsupported",
+     "native protection record",
+     ""
+    ],
+    "end": [
+     "unsupported",
+     "native protection record",
+     ""
+    ],
+    "nprot": [
+     "unsupported",
+     "native protection record",
+     ""
+    ],
+    "protsize": [
+     "unsupported",
+     "native protection record",
+     ""
+    ],
+    "why": [
+     "unsupported",
+     "native protection record",
+     ""
+    ]
+   }
+  },
+  "tcr": {
+   "disposition": [
+    "replaced",
+    "decisions.md D5 TCR schema",
+    "one linear-memory record per Lisp thread with explicit widths"
+   ],
+   "cells": {
+    "next": [
+     "replaced",
+     "decisions.md D5",
+     "registry link"
+    ],
+    "prev": [
+     "replaced",
+     "decisions.md D5",
+     "registry link"
+    ],
+    "node-regs-mask": [
+     "unsupported",
+     "native register mask",
+     ""
+    ],
+    "linear": [
+     "replaced",
+     "decisions.md D5",
+     "TCR address (raw)"
+    ],
+    "save0": [
+     "unsupported",
+     "native register spill",
+     ""
+    ],
+    "save1": [
+     "unsupported",
+     "native register spill",
+     ""
+    ],
+    "save2": [
+     "unsupported",
+     "native register spill",
+     ""
+    ],
+    "save3": [
+     "unsupported",
+     "native register spill",
+     ""
+    ],
+    "save-ebp": [
+     "unsupported",
+     "native frame pointer",
+     ""
+    ],
+    "lisp-mxcsr": [
+     "unsupported",
+     "FP control word; D6 floating-point policy",
+     ""
+    ],
+    "foreign-mxcsr": [
+     "unsupported",
+     "FP control word",
+     ""
+    ],
+    "db-link": [
+     "replaced",
+     "decisions.md D5",
+     "dynamic-binding-vector pointer"
+    ],
+    "catch-top": [
+     "replaced",
+     "decisions.md D5 and contracts/debug-frames.md v0.1",
+     "handler checkpoint"
+    ],
+    "save-vsp": [
+     "replaced",
+     "decisions.md D5",
+     "VSP and bounds"
+    ],
+    "save-tsp": [
+     "replaced",
+     "decisions.md D5",
+     "TSP and bounds"
+    ],
+    "foreign-sp": [
+     "replaced",
+     "decisions.md D5",
+     "CSP and bounds"
+    ],
+    "cs-area": [
+     "replaced",
+     "decisions.md D4",
+     "owned C stack region"
+    ],
+    "vs-area": [
+     "replaced",
+     "decisions.md D5",
+     "value-stack region"
+    ],
+    "ts-area": [
+     "replaced",
+     "decisions.md D5",
+     "temporary-stack region"
+    ],
+    "cs-limit": [
+     "replaced",
+     "decisions.md D4",
+     "C stack bound"
+    ],
+    "total-bytes-allocated-low": [
+     "deferred",
+     "decisions.md D4",
+     "allocation statistic"
+    ],
+    "total-bytes-allocated-high": [
+     "deferred",
+     "decisions.md D4",
+     "allocation statistic"
+    ],
+    "log2-allocation-quantum": [
+     "replaced",
+     "decisions.md D5",
+     "allocation-area bounds"
+    ],
+    "interrupt-pending": [
+     "replaced",
+     "decisions.md D5",
+     "atomic pending word"
+    ],
+    "xframe": [
+     "replaced",
+     "decisions.md D5 and contracts/debug-frames.md v0.1",
+     "handler checkpoint"
+    ],
+    "errno-loc": [
+     "unsupported",
+     "libc errno",
+     ""
+    ],
+    "ffi-exception": [
+     "unsupported",
+     "native FP exception bits",
+     ""
+    ],
+    "osid": [
+     "replaced",
+     "decisions.md D5",
+     "Worker identity"
+    ],
+    "valence": [
+     "replaced",
+     "decisions.md D5",
+     "atomic state RUNNING/FOREIGN"
+    ],
+    "foreign-exception-status": [
+     "unsupported",
+     "native signal state",
+     ""
+    ],
+    "native-thread-info": [
+     "replaced",
+     "decisions.md D5",
+     "Worker identity and lifetime generation"
+    ],
+    "native-thread-id": [
+     "replaced",
+     "decisions.md D5",
+     "Worker identity"
+    ],
+    "last-allocptr": [
+     "replaced",
+     "decisions.md D5",
+     "allocation-area bounds"
+    ],
+    "save-allocptr": [
+     "replaced",
+     "decisions.md D5",
+     "allocation-area bounds"
+    ],
+    "save-allocbase": [
+     "replaced",
+     "decisions.md D5",
+     "allocation-area bounds"
+    ],
+    "reset-completion": [
+     "replaced",
+     "decisions.md D5",
+     "lifecycle admission"
+    ],
+    "activate": [
+     "replaced",
+     "decisions.md D5",
+     "lifecycle admission"
+    ],
+    "suspend-count": [
+     "replaced",
+     "decisions.md D5",
+     "rendezvous state"
+    ],
+    "suspend-context": [
+     "unsupported",
+     "native signal context",
+     ""
+    ],
+    "pending-exception-context": [
+     "unsupported",
+     "native signal context",
+     ""
+    ],
+    "suspend": [
+     "replaced",
+     "decisions.md D5",
+     "mailbox wait/notify"
+    ],
+    "resume": [
+     "replaced",
+     "decisions.md D5",
+     "mailbox wait/notify"
+    ],
+    "flags": [
+     "replaced",
+     "decisions.md D5",
+     "atomic state and pending bits"
+    ],
+    "gc-context": [
+     "replaced",
+     "decisions.md D5",
+     "STOPPED_GC and published roots"
+    ],
+    "termination-semaphore": [
+     "replaced",
+     "decisions.md D5",
+     "TERMINATING protocol"
+    ],
+    "unwinding": [
+     "replaced",
+     "tests/wasm/stage0/nested-eh abi.json (S0-LL19-a)",
+     "exception transfer state"
+    ],
+    "tlb-limit": [
+     "replaced",
+     "decisions.md D5",
+     "dynamic-binding vector bound"
+    ],
+    "tlb-pointer": [
+     "replaced",
+     "decisions.md D5",
+     "dynamic-binding vector pointer"
+    ],
+    "shutdown-count": [
+     "replaced",
+     "decisions.md D5",
+     "lifecycle"
+    ],
+    "next-tsp": [
+     "replaced",
+     "decisions.md D5",
+     "TSP"
+    ],
+    "safe-ref-address": [
+     "unsupported",
+     "native fault recovery",
+     ""
+    ],
+    "ldt-selector": [
+     "unsupported",
+     "native segment selector",
+     ""
+    ],
+    "scratch-mxcsr": [
+     "unsupported",
+     "FP control word",
+     ""
+    ],
+    "unboxed0": [
+     "replaced",
+     "decisions.md D5",
+     "runtime-private raw scratch"
+    ],
+    "unboxed1": [
+     "replaced",
+     "decisions.md D5",
+     "runtime-private raw scratch"
+    ],
+    "next-method-context": [
+     "deferred",
+     "Stage 1 CLOS dispatch",
+     "method context register"
+    ],
+    "save-eflags": [
+     "unsupported",
+     "native flags register",
+     ""
+    ],
+    "allocated": [
+     "replaced",
+     "decisions.md D5",
+     "TCR storage identity"
+    ],
+    "pending-io-info": [
+     "replaced",
+     "decisions.md D5",
+     "mailbox request descriptor"
+    ],
+    "io-datum": [
+     "replaced",
+     "decisions.md D5",
+     "mailbox request descriptor"
+    ],
+    "nfp": [
+     "unsupported",
+     "native fp frame",
+     ""
+    ]
+   }
+  },
+  "lockptr": {
+   "disposition": [
+    "replaced",
+    "decisions.md D5 and decisions.md D6 synchronization rows",
+    ""
+   ],
+   "cells": {
+    "avail": [
+     "replaced",
+     "decisions.md D5",
+     "atomic lock state"
+    ],
+    "owner": [
+     "replaced",
+     "decisions.md D5",
+     "atomic lock state"
+    ],
+    "count": [
+     "replaced",
+     "decisions.md D5",
+     "atomic lock state"
+    ],
+    "signal": [
+     "replaced",
+     "decisions.md D5",
+     "atomic lock state"
+    ],
+    "waiting": [
+     "replaced",
+     "decisions.md D5",
+     "atomic lock state"
+    ],
+    "malloced-ptr": [
+     "replaced",
+     "decisions.md D5",
+     "atomic lock state"
+    ],
+    "spinlock": [
+     "replaced",
+     "decisions.md D5",
+     "atomic lock state"
+    ]
+   }
+  },
+  "rwlock": {
+   "disposition": [
+    "replaced",
+    "decisions.md D5 and decisions.md D6 synchronization rows",
+    ""
+   ],
+   "cells": {
+    "spin": [
+     "replaced",
+     "decisions.md D5",
+     "atomic rwlock state"
+    ],
+    "state": [
+     "replaced",
+     "decisions.md D5",
+     "atomic rwlock state"
+    ],
+    "blocked-writers": [
+     "replaced",
+     "decisions.md D5",
+     "atomic rwlock state"
+    ],
+    "blocked-readers": [
+     "replaced",
+     "decisions.md D5",
+     "atomic rwlock state"
+    ],
+    "writer": [
+     "replaced",
+     "decisions.md D5",
+     "atomic rwlock state"
+    ],
+    "reader-signal": [
+     "replaced",
+     "decisions.md D5",
+     "atomic rwlock state"
+    ],
+    "writer-signal": [
+     "replaced",
+     "decisions.md D5",
+     "atomic rwlock state"
+    ],
+    "malloced-ptr": [
+     "replaced",
+     "decisions.md D5",
+     "atomic rwlock state"
+    ]
+   }
+  }
+ },
+ "enums": {
+  "registers": [
+   "unsupported",
+   "native x86 registers; Wasm locals, explicit stacks and the D5 TCR replace register conventions"
+  ],
+  "kernel-import-": [
+   "deferred",
+   "decisions.md D6",
+   "the 65 kernel import spellings are the D6 census worklist; each receives its own record"
+  ]
+ },
+ "subprims": [
+  "replaced",
+  "decisions.md D4",
+  "native subprimitive jump table; subprimitives and adapters are Lisp-emitted with named imports for C entries"
+ ]
+}
