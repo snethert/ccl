@@ -59,6 +59,9 @@ def select(image,spec,mapping,functions):
 
 def final_reads(functions,events,initial,selected):
     result=dict(functions);seen=set();changes=[]
+    mutable_registries={s['gf'] for e in events if e['kind']=='registry-checkpoint' for s in e['entries']}
+    mutable_registries.update(e['gf']['gf'] for e in events if e['kind'] in ('mutation-enter','mutation-leave'))
+    emitted={f['function'] for e in events if e['kind']=='compiler-materialization' for f in e['functions']}
     for row in events:
         if row['kind']!='final-function':continue
         i=row['id'];require(i in functions and i not in seen,'SEED_FINAL_ID');seen.add(i);old=functions[i]
@@ -73,7 +76,14 @@ def final_reads(functions,events,initial,selected):
         # Compiling definitions can legitimately update unrelated generic
         # functions. Keep their original checkpoint; never transplant that
         # changed state into the startup snapshot or a compiled-body match.
-        if i not in initial or i in selected:require(same_execution,'SEED_FINAL_EXECUTION_CHANGED')
+        if i not in initial and not same_execution:
+            # A full compile can construct new generic functions and add
+            # methods to them. Their first state is a registry observation,
+            # never a stable compiler LFUN or a replacement for an old body.
+            require(i in mutable_registries and i not in emitted and
+                    old['bits']&(1<<27) and row['bits']&(1<<27),
+                    'SEED_FINAL_EXECUTION_CHANGED')
+        if i in selected:require(same_execution,'SEED_FINAL_EXECUTION_CHANGED')
         if i in selected:
             require(all(row[k]==old[k] for k in ('bits','words','source','source_start','source_end','literals')),
                     'SEED_INITIAL_OBJECT_CHANGED')
@@ -89,7 +99,7 @@ def final_reads(functions,events,initial,selected):
                                 execution_changed=not same_execution,
                                 literal_words_changed=[ix for ix in range(row['code_words'],min(row['words'],old['words'])-1)
                                   if row['payload_hex'][16*ix:16*(ix+1)]!=old['payload_hex'][16*ix:16*(ix+1)]]))
-        if i not in initial and old['sequence']<row['sequence']:result[i]=dict(row,kind='function')
+        if i not in initial and same_execution and old['sequence']<row['sequence']:result[i]=dict(row,kind='function')
     start=min(r['sequence'] for r in events if r['kind']=='final-function')
     require({i for i,r in functions.items() if r['sequence']<start}<=seen,'SEED_FINAL_COVERAGE')
     return result,changes

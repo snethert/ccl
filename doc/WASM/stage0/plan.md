@@ -2,10 +2,15 @@
 
 This plan decomposes the existing Stage 0 exit criteria. No subgate completion removes continuing regressions or later compiler-generated obligations. `inventory.json` carries the exact expected IDs; `obligations.json` is generated from the register. Status belongs in `../STATUS.md` and identified execution records, not inferred from file existence.
 
+Current direction: the [15 September on-demand decision](on-demand-census.md)
+supersedes the earlier census-draining schedules below. Qualify the retained
+instrument and explicit worklist under v0.2; do not chase every native dynamic
+call to a static bound before Stage 0 can finish.
+
 | Subgate | Prerequisites | Concrete deliverable and exit observation |
 | --- | --- | --- |
 | 0A — baseline and controls | None | Baseline manifest, original-input hashes, retrievable evidence index, frozen test inventory and benchmark policy. Current v1.13 Gate 0 is a separate native execution prerequisite. Historical archives retain explicit missing status; current-run claims require their own complete evidence. |
-| 0B — census and closure | Current Gate 0; R6 before/after comparison for stub registration | Evaluated operators and flags; target handlers/lowerings, primitives/imports/traps/stores; function/module graph; external cold-start trace; initializer dependency order; no unresolved reachable required edge under the closure contract. |
+| 0B — census instrument and worklist | Current Gate 0; R6 before/after comparison for stub registration | Retained compiler/load/startup/registry evidence, reviewed seeds, a transitive startup worklist with explicit unknowns, identity-bound queries and reversible native call-site witnesses. Independent omission and semantic controls qualify the instrument under census contract v0.2; no exhaustive native closure claim. |
 | 0C — representation and engine foundations | 0A | Engine/version/features; layout fixtures; debugger frame maps; exact linked C memory/table ownership, per-Worker stack and initialization maps; materialized profile binaries. Independent fixtures and specified rejection cases pass. |
 | 0D — integrated control and concurrency | 0C | One hand-built harness combines moving-root restoration, competing GC requests, interruptible unfinished I/O, nested callbacks, late Workers, lazy installation and EH crossing C helpers. Deterministic and seeded schedules meet progress/resource limits. |
 | 0E — ABI decision/correctness | B correctness prerequisites | Record the B engineering choice and its reviewed correctness basis: arguments, result ownership, frames, cleanup and debugger policy. Comparative measurements are deferred; they do not block B implementation. |
@@ -21,7 +26,7 @@ Before a shared compiler edit, capture an immutable unchanged-source corpus cont
 
 ## Proof implementation order
 
-### Alternating deliverables — 13 September 2026
+### Historical alternating deliverables — 13 September 2026
 
 Following the user-supplied twenty-second Claude review and the user's instruction
 to continue through the next step, interleave census work with independently
@@ -106,7 +111,7 @@ remains a separate mandatory slot. The other non-census work also includes the
 final S0-CONTRACTS-a join, which stays last. Scheduling a control does not waive
 full source closure or authorize functional shared compiler changes.
 
-### Remaining work — user direction, 12 September 2026
+### Historical execution order — 12 September 2026, superseded below
 
 The five steps below supersede the historical implementation order that follows. Work in small commits with one deliverable each. Reuse the reviewed r7 logs, graph and Terminal r2 trace; do not rebuild or rehash their unchanged prerequisite archive for each change. The [standing rules](../../../CLAUDE.md) now require verification scoped to changed work and its dependencies. Preserve R6, original failures and independent review.
 
@@ -219,109 +224,36 @@ remains unbounded. The new resource-identity witness advances one of the five
 startup boundary replacements without changing the historical traversal or
 claiming target runtime execution. No broad graph edge has been removed.
 
-### Census completion priority — latest user direction, 14 September 2026
+### On-demand census priority — user decision, 15 September 2026
 
-The user asked to finish the census. Keep work on LL15-b/c rather than resume
-the alternating fixture schedule. The [source-wide collector](source-closure.md)
-now runs the actual file compiler over all 164 recorded units and four includes.
-All native units complete; the Wasm survey has 103 successful units, 259 retained
-form failures and 29 reads stopped before EOF. This completes the general driver
-and observation pass, not the qualified closure. No census slot is promoted.
+The user approved replacing exhaustive native census closure as the Stage 0
+prerequisite with a retained instrument, explicit startup worklist and focused
+native call-site witnesses. The [v0.2 contract](../contracts/census.md) and
+[delivery report](on-demand-census.md) state the new requirements and limits.
+This supersedes the earlier instruction to drain every binding/body/call
+worklist before publishing LL15-b/c. The complete-closure checker stays strict;
+Stage 1 still owes the working dependencies and initializers of its bootstrap.
 
-#### Closure deliverables — 15 September 2026
+Completed cut points: resolver/body work committed at `6be15c29`; correlated
+build r3 retained in the evidence repository; the last 167-unit compile passed
+with identical native output and unchanged source; the final transitive startup
+graph reaches 4,369 native functions with 272 explicit body gaps. Stop broad
+resolution here. The query driver and reversible native source-site probe are
+implemented and tested; their [README](../../../tests/wasm/native-census/query/README.md)
+provides the entry point and commands.
 
-The user supplied Claude's progress assessment after the fifty-fourth audit.
-Observation is mature; proving bounds and integrating the qualified closure are
-the remaining work. The number of reviewed diagnostic packets does not measure
-that completion. LL15-b/c still have no runner registered in the inventory.
-The following delivery order supersedes making another isolated accessor
-witness the immediate next deliverable. The detailed input references below
-remain applicable.
+Next, register the LL15-b/c qualification runner over these retained inputs and
+exercise the publication-level omission and scope-promotion controls in v0.2.
+Submit that bounded result for independent review and project acceptance. Use
+future native observations for specific implementation questions, preserving
+scenario scope and named unknowns. Do not convert witnessed targets into bounds
+or resume a zero-gap campaign. Additional native builds remain authorized when
+they are the efficient way to answer a concrete question. Implementation still
+starts from pristine U1, with the observation-only source exception unchanged.
 
-1. **Use the integrated development closure.** The [single command](closure.md)
-   now reconstructs the reviewed fragments and runs the existing exchange
-   checker. It reports BLOCKED, exit 2, with binding/body/call worklists. Revision
-   2 has a separate snapshot namespace and explicit body/execution gaps; the
-   old graph and its 13 conservative roots remain intact. The working graph
-   initially had 369,706 nodes and 1,089,937 edges. Its 109 added body gaps and five scope
-   nodes expose missing qualification, while zero original obligations close.
-   This development run is not an executed LL15-b/c acceptance result. Use its
-   before/after counts and evidence keys for subsequent graph changes.
-2. **Drain the binding and body worklists in batches.** The first
-   [95-cell definition batch](binding-definitions.md) adds exact compile-phase
-   references for 80 compiler names and five accessor declarations. Three SETF
-   cells still need inverse registry identities; seven other symbols have
-   source-only candidates. All 95 runtime values and bounds remain unwitnessed.
-   The new command integrates this delta into the same graph, now 369,710 nodes
-   and 1,090,024 edges, preserving all earlier runtime gaps. Join the required
-   load/installation and registry paths next; do not recollect the 85 compilation
-   and declaration references already established. Apply source/profile evidence
-   through graph changes or explicit remaining obligations.
-   A source definition alone does not establish a function-cell value. Work
-   through the 4,373 resident payload witnesses by pinned source form/module,
-   reusing compatible retained IR where the identity link is justified and
-   traversing missing dependencies otherwise. Only 4,130 have reported source
-   ranges; the other 243 require separate provenance. Preserve construction,
-   observer-wrapper, later-installation and assembly worklists. A file traversal
-   is complete only when its qualified dependencies join into the working
-   graph; a source range or native payload is not compiler-IR completion.
-3. **Implement bounds by call family and apply them to the census.** Propagate
-   functional-argument candidates through callers, local transformations and
-   returns; account for writes, escaping closures and unknown callers. Use
-   registry construction, mutation and invalidation rules for slot/vector calls
-   and generic dispatch. The 77 accessor methods are copies of two templates,
-   not 77 missing ordinary compiler bodies. Their construction and first-call
-   reader optimization belong in this registry analysis, alongside effective
-   methods and class/combination changes. Extend the combined registry/IR capture
-   only where it supplies a specified missing witness for the larger execution.
-   If a new authoritative capture is necessary, retain its own namespace and
-   state exactly what replaces or connects to earlier inputs. No fresh ID or
-   matching name can stand in for an original rich-build object.
-   The user explicitly permits another native build when it speeds completion.
-   Prefer a combined compiler/body/registry capture if that replaces piecemeal
-   identity recovery. Keep the observation reversible and satisfy R6; avoiding
-   a build is not a goal in itself.
-4. **Apply profile and lowering dispositions during that work.** Do this before
-   spending effort reconstructing excluded native implementation details, while
-   retaining the evidence that justifies exclusion and any required shared Lisp
-   dependencies. Swink and its native clients stay excluded. Mandatory startup
-   services cannot be discarded as unsupported. A reachable unsupported
-   operation needs the implemented, tested condition path required by the
-   existing contract. Operator/lowering, store, trap, import, initializer and
-   external-trace joins remain explicit obligations.
-5. **Replace unjustified widening and run the complete omission path.** Remove
-   a broad edge only when sound replacement edges cover its required targets.
-   The contract still permits justified conservative module/package bounds;
-   it does not require every computed call to resolve to a singleton. Include
-   all possible candidates, including targets the observation never selected.
-   Check seed obligations and independently specified missing-node/edge/seed,
-   hidden-unknown-call and initializer-cycle mutants through the integrated
-   instrumentation/checker/gate path. A missing runner, unresolved required edge
-   or unimplemented required node keeps LL15-b/c blocked. Publish their results
-   only when the actual qualified closure and independent controls qualify,
-   then obtain adversarial review and the user's acceptance.
-
-Every implementation deliverable should name the closure obligation it addresses
-and show its effect on the working graph and remaining work. A targeted witness
-may still be necessary without immediately closing an edge, but it must identify
-the exact integration step it enables. Do not default to another standalone
-observation packet when the required information already exists. Keep one compact
-packet per actual evidence deliverable. The development closure retains its
-recipe and small reports; regenerate the working graph from existing fragments
-instead of storing another complete copy.
-
-Use the following dated populations for progress reports until a justified
-revision changes them. Report scope changes separately from newly proven bounds;
-do not add counts from independent executions.
-
-| Work population at the fifty-fourth audit | What remains to prove |
-| --- | --- |
-| 5,693 called symbol cells; 95 without a value witness | The other 5,598 have observed values, not exhaustive candidate bounds. Qualify contents and changes under the declared profile. |
-| 5,007 original prototypes without joined compiler bodies | 4,373 have payload witnesses, of which 4,130 have source ranges. Establish source/IR or construction dependencies; the 634 other origins retain their separate worklists. |
-| 1,762 computed sites in the rich build | 200 local bounds established; 1,562 open: 879 variable calls and 683 other computed callees. The latter include struct slots, vector slots, special variables and other expressions. |
-| 259 rich-build assembly bypasses | Supply source/lowering or justified profile dispositions; they are not ordinary Lisp pass-2 bodies. |
-| Registry and independent source-file captures | Useful mechanisms and inputs; their joins do not reduce the original build's remaining counts without an explicit execution/identity bridge. |
-| Reviewed seed revision, widening and required target dependencies | Integrate the actual fixed point and independent omission obligations. No percentage of census completion follows from the Stage 0 slot count. |
+The following references describe retained evidence and implementation
+obligations, not an instruction to exhaust each population before Stage 0 can
+qualify the instrument. Counts belong to their respective executions.
 
 #### Retained inputs and outstanding obligations
 

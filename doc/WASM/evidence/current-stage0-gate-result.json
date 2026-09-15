@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "assessment": "SCOPED_PROJECT_ACCEPTANCE",
-  "date": "2026-09-14",
-  "basis": "S0-LL13-b accepted after Claude audit 46 and explicit user decision. The production slot gate passes. All 39 earlier objects are preserved and all 40 bindings are current. Original execution and artifact bytes are reused.",
+  "assessment": "SCOPED_AUTHORIZED_CRITERION_CHANGE",
+  "date": "2026-09-15",
+  "basis": "User authorized LL15-b/c on-demand instrument qualification. Only those two pending contract hashes change; all 40 accepted objects and bindings remain unchanged. No execution or acceptance is added.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
@@ -16,7 +16,7 @@
       "missing S0-LL21-c [unshared-template]"
     ]
   },
-  "prior_result_sha256": "0e8c376d2e10ef73fb31414c205c708a28a5a675da001d120776dfa55509cec1",
+  "prior_result_sha256": "d183c6430a765f0d2637fbc455440cb34f289b4bcceeb551a7e98c5dc47a4132",
   "new_results": [
     {
       "id": "S0-LL13-b",
@@ -28,7 +28,7 @@
   "combined_results_sha256": "c5b5049754463d3be79cb7506906413a6dbe27c423c5189d8cb333fcf8975cf4",
   "inventory": {
     "locator": "stage0/inventory.json",
-    "sha256": "0900b2f7a3c89e3eb08699b4bc82ce8f496b57df15021a137bffb19c6d438e73"
+    "sha256": "0a38b02ac232e9ef3b55578fee10b5094de2b98c4bb2541808210c9e58a9aa4d"
   },
   "active_results": [
     {
