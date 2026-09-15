@@ -1,0 +1,909 @@
+{
+  "version": 1,
+  "stage": "Stage 1: target contract and generated bootstrap",
+  "status": "DRAFT proposed by Claude on 2026-09-15; not adopted, not a criterion of any ledger; adoption is a user decision recorded like a Stage 0 criterion change",
+  "authority": "acceptance.md LL metadata (first acceptance LL06, LL09, LL10, LL11, LL12, LL14, LL16, LL17, LL18; extensions LL01, LL02, LL04, LL05, LL07, LL08, LL13, LL15, LL19, LL21; standing LL03, LL22, LL23, LL24), decisions.md D7 and outline Stage 1 exit criteria",
+  "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+  "entry_condition": "Stage 0 accepted: every required S0 variant PASS and ACCEPTED; the functional shared-compiler author authorized by the user",
+  "required_record_roles": [
+    "implementation",
+    "test",
+    "schema",
+    "log",
+    "host-compiler",
+    "options"
+  ],
+  "acceptance_note": "All listed variants are required for Stage 1. Generated tests additionally require the complete build set (source, compiler, ABI, template, module, installed binary) and image tests require the image, per stage0/artifact-policy.md. Hand-built Stage 0 evidence cannot discharge any S1 ID. S1-LL11-b and S1-LL18-b are proposed from Stage 0 findings (the U1 stale-dcode defect and plan item 3) and need the same adoption decision as the rest.",
+  "tests": [
+    {
+      "id": "S1-LL08-a",
+      "obligation": "LL08",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "HOST COMPILATION",
+      "variants": [
+        "r6"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S1-LL08-a:registration",
+          "description": "After the functional backend registration, arch file, module lists and cross-fasloader edits, the native macOS x86-64 suites, all 164 FASLs and the evaluated acode identity/flag snapshots of every existing target are unchanged under R6 and R6a; any difference is explained per file, never excluded wholesale."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "host-compiler",
+        "image",
+        "options"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL22-b",
+      "obligation": "LL22",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "CONTROL EXECUTION",
+      "variants": [
+        "control"
+      ],
+      "prerequisites": [
+        "S1-LL08-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL22-b:mixed-build",
+          "description": "The production build binds compiler, image, modules, ABI schema, templates, materialized binaries, test revision, options and logs to content hashes and rejects a mixed build, a stale artifact and an unexplained differing FASL."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "image"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL23-a",
+      "obligation": "LL23",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "generated"
+      ],
+      "prerequisites": [
+        "S1-LL08-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL23-a:diagnostics",
+          "description": "A structured fatal diagnostic raised from generated code names the exact build, logical code ID, entry kind, structural signature, table slot and faulting operation, preserves the first error, bounds output, and never labels a last-observed event as the failing frame."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL04-a",
+      "obligation": "LL04",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "generated"
+      ],
+      "prerequisites": [
+        "S1-LL08-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL04-a:layout",
+          "description": "Generated access and mutation code passes the independent unequal two-word cons fixture with NIL, dotted, nested, shared and cyclic graphs; RPLACA/RPLACD change only the intended field; a one-sided swap is rejected; every row of contracts/wasm32-layout.v1.json that generated code touches is probed by target-executed assertions."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL07-a",
+      "obligation": "LL07",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "generated"
+      ],
+      "prerequisites": [
+        "S1-LL04-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL07-a:conversions",
+          "description": "Generated code checks signed fixnum, raw address, logical code ID and typed slot conversions separately, keeps bits through synthetic addresses above 2 GiB, tests the exclusive ARRAY-TOTAL-SIZE-LIMIT boundary at 2^24 - 1 versus 2^24 by arithmetic without allocating at the limit, and refuses invalid IDs and capacities."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL05-a",
+      "obligation": "LL05",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "generated:B"
+      ],
+      "prerequisites": [
+        "S1-LL04-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL05-a:b-protocol",
+          "description": "Generated B code passes ordered arguments 0 through 6 and long overflow, nested side effects, direct, indirect and closure calls, APPLY with proper-list validation, optional, rest and keyword binding, and every zero, one and many result with explicit VSP and count ownership; bad designators and arities follow the Lisp condition path, never a Wasm trap."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL05-b",
+      "obligation": "LL05",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "generated:B"
+      ],
+      "prerequisites": [
+        "S1-LL05-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL05-b:stubs-and-tails",
+          "description": "Generated generic entries and runtime adapters are reached through matching lazy stubs for exact and variable arity, reject wrong-signature and same-type wrong-role substitutions, preserve closure self and overflow space across installation, and run cross-arity tail chains with bounded explicit-stack and root use, complete multiple values and preserved cleanup and binding extent."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL10-a",
+      "obligation": "LL10",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "generated"
+      ],
+      "prerequisites": [
+        "S1-LL04-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL10-a:constant-pools",
+          "description": "Golden constant fixtures for signed fixnums, bignum limbs, selected float bit patterns, specialized vectors, general vectors, strings and supplementary characters preserve sharing, identity, element widths and subtags through generated code and round-trip unexecuted-function constants; the generated schema is checked against contracts/wasm32-layout.v1.json by target-executed probes, not a regex extractor."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL19-a",
+      "obligation": "LL19",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "generated"
+      ],
+      "prerequisites": [
+        "S1-LL05-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL19-a:generated-eh",
+          "description": "Generated code transfers exceptions through nested frames with observable cleanup, cleanup that throws again, binding, root and VSP/TSP/CSP restoration, complete multiple values and no post-exit effect; recoverable type, bounds, arity and unbound checks reach the Lisp condition path with restarts; a missing handler before the ordinary error service activates is a structured fatal diagnostic."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL17-a",
+      "obligation": "LL17",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "generated"
+      ],
+      "prerequisites": [
+        "S1-LL19-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL17-a:bindings",
+          "description": "Compiled special access, SYMBOL-VALUE, SET and nested LET bindings agree with the native reference and are restored after errors, nonlocal exit and host suspension; unbound markers and binding-index growth work without replacing lexical closure state with process globals; the binding vector and tcr_index namespaces stay distinct per contracts/tcr.v1.json."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL18-a",
+      "obligation": "LL18",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "small-heap"
+      ],
+      "prerequisites": [
+        "S1-LL05-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL18-a:collector",
+          "description": "On a small heap the generated collector collects, visibly reclaims unreachable allocation and retains every live object reachable from temporaries, bindings, closures, constants, callbacks, multiple values, module constants and runtime registries; forced collection occurs only at legal stopping boundaries; invalid tag-like words are never roots; growth to the memory maximum and host view refresh are tested; EGC stays unavailable."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL18-b",
+      "obligation": "LL18",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "hash-tables"
+      ],
+      "prerequisites": [
+        "S1-LL18-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL18-b:moved-keys",
+          "description": "An EQ table with distinct heap keys exercises cached lookups, witnesses key relocation under forced collection, and preserves lookup presence and values, replacement without duplicates, deletion and counts over repeated collections against the retained U1 semantics; mutants omitting moved-key or rehash notification or cache maintenance fail while the intact path passes."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "stage0/plan.md native runtime semantics item 3"
+    },
+    {
+      "id": "S1-LL06-a",
+      "obligation": "LL06",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "generated"
+      ],
+      "prerequisites": [
+        "S1-LL18-a",
+        "S1-LL19-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL06-a:temporaries",
+          "description": "Generated nested PROG1/PROG2, LET, SETQ, conditionals, calls and loops preserve every live temporary and the defined evaluation order under forced allocation and legal collection between producers and consumers; spill, root reload and stack balance hold on normal and exceptional paths; an independent expected result detects a changed local allocation."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL12-a",
+      "obligation": "LL12",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "generated"
+      ],
+      "prerequisites": [
+        "S1-LL05-b"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL12-a:closures",
+          "description": "Escaping mutable closures with shared and distinct captured cells, keyword functions and callable metadata keep their environments, key vectors and debug records through installation; a truncated function object fails validation; no function is repaired with global state."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL11-a",
+      "obligation": "LL11",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "generated"
+      ],
+      "prerequisites": [
+        "S1-LL05-b"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL11-a:aliases",
+          "description": "Differently named functions sharing identical code keep every package-qualified binding and distinct closure environments; entry ranges, arity and boot manifests are validated; a missing alias, a reused reserved slot or a conflicting record fails installation; redefinition leaves old function objects callable with their own code and environments."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL11-b",
+      "obligation": "LL11",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "dispatch"
+      ],
+      "prerequisites": [
+        "S1-LL11-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL11-b:empty-registry",
+          "description": "Removing the last method of a generic function leaves no stale dispatch code: a subsequent call signals NO-APPLICABLE-METHOD through the condition path instead of running the removed method, reproducing and correcting the U1 defect retained in stage0/dispatch-registry.md; direct dcode stores and the encapsulated setter are covered."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "stage0/dispatch-registry.md U1 defect and Claude audit 53"
+    },
+    {
+      "id": "S1-LL16-a",
+      "obligation": "LL16",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "generated"
+      ],
+      "prerequisites": [
+        "S1-LL05-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL16-a:numerics",
+          "description": "The required numeric subset agrees with an independent oracle: fixnum bounds, large and negative shifts, integer length, quotient and remainder, bignum carry and borrow, mixed fixnum and float operations under compiler-policy variations; dispatch is inspected for fallback recursion; floating-point conditions follow the approved policy over the detection rules of contracts/floating-point.v1.md."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL21-a",
+      "obligation": "LL21",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "materialization"
+      ],
+      "prerequisites": [
+        "S1-LL08-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL21-a:production-path",
+          "description": "The production emitter produces the canonical explicit-maximum template and the D2 materialization yields validated shared and unshared binaries with recorded template, materializer, profile, limits, import, feature and binary identities against the S0-ENGINE-a pins; wrong bytes, hashes and features are rejected; the template hash is never the installed identity."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL21-b",
+      "obligation": "LL21",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "granularity"
+      ],
+      "prerequisites": [
+        "S1-LL21-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL21-b:granularity",
+          "description": "Bootstrap module granularity is chosen from measured bytes, compile, instantiate and install latency and retained-code growth of the generated bundles under the benchmark policy, with the chosen packaging recorded and every logical code ID mapped to slot, module, ABI and layout versions."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL09-a",
+      "obligation": "LL09",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "generated"
+      ],
+      "prerequisites": [
+        "S1-LL04-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL09-a:symbols",
+          "description": "INTERN, FIND-SYMBOL, EQ and bindings behave correctly for colliding names in distinct packages, NIL, T, keywords and uninterned symbols before and after loading; the host/target hash contract matches or triggers a defined pre-lookup rebuild; supported image bases vary and unsupported ones are rejected explicitly; nothing binds by unqualified name alone."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL15-a",
+      "obligation": "LL15",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "closure"
+      ],
+      "prerequisites": [
+        "S1-LL21-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL15-a:initializers",
+          "description": "Every initializer of the selected census closure completes in a fresh instance, bound to prerequisite state and completion with loader dependencies seeded first, in the phase order the bootstrap design review fixes; an omitted required module fails loading and a no-load path cannot pass; the accepted S0-LL15-a discipline is repeated through the real build path."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL13-a",
+      "obligation": "LL13",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "installation"
+      ],
+      "prerequisites": [
+        "S1-LL21-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL13-a:installation",
+          "description": "Generated installation separates process-once shared initialization from per-Worker setup; a late Worker preserves mutated heap and runtime sentinels and published code while initializing only its owned regions; overlap, undersized ranges and active data segments are rejected before publication."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL14-a",
+      "obligation": "LL14",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "IMAGE ROUND-TRIP",
+      "variants": [
+        "cross-dump"
+      ],
+      "prerequisites": [
+        "S1-LL09-a",
+        "S1-LL10-a",
+        "S1-LL12-a",
+        "S1-LL15-a",
+        "S1-LL13-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL14-a:fresh-load",
+          "description": "The coordinated bootstrap heap and code set load into a fresh instance with builder caches absent and no binding repair; graph ownership, pointer ranges, shared references, constants and code metadata validate; no serialized pointer refers to allocator, scratch, engine or host state; two loaded instances diverge independently and later loading still works."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary",
+        "image"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-NAMESPACE-a",
+      "obligation": "LL21",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "COMPILER-GENERATED TARGET EXECUTION",
+      "variants": [
+        "read-only"
+      ],
+      "prerequisites": [
+        "S1-LL13-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-NAMESPACE-a:namespace",
+          "description": "The read-only file namespace serves named byte sources with stat, open, positioned read and close through the mailbox in the full profile and a promise in the JSPI profile, enough for the loader manifests and LOAD of source and precompiled bundles; realpath is a pure function over the virtual namespace with no symlinks; probe-file and truename resolve against it only; foreign-types initialization needs no interface database."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary"
+      ],
+      "origin": "outline section 07 read-only namespace"
+    },
+    {
+      "id": "S1-LOADER-a",
+      "obligation": "LL14",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "IMAGE ROUND-TRIP",
+      "variants": [
+        "one-worker"
+      ],
+      "prerequisites": [
+        "S1-LL14-a",
+        "S1-NAMESPACE-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LOADER-a:loader",
+          "description": "A one-Worker image loader boots the bootstrap heap and code set to a ready state with canonical NIL, T and symbol hash behavior, the specified error-service transition, and every closure initializer complete; the ready artifact names the build, image and module identities."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "source",
+        "compiler",
+        "abi",
+        "template",
+        "module",
+        "installed-binary",
+        "image"
+      ],
+      "origin": "outline Stage 1 exit"
+    },
+    {
+      "id": "S1-LL01-a",
+      "obligation": "LL01",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "CONTROL EXECUTION",
+      "variants": [
+        "production-gate"
+      ],
+      "prerequisites": [
+        "S1-LOADER-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL01-a:fail-closed",
+          "description": "The production build and gate fail an early, a middle and a late closure initializer separately, an omitted required module, a failed child command and a timeout, with a non-passing aggregate, precise diagnostics and no accepted partial image; diagnostic continuation stays ineligible."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "image"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL02-a",
+      "obligation": "LL02",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "CONTROL EXECUTION",
+      "variants": [
+        "production-gate"
+      ],
+      "prerequisites": [
+        "S1-LOADER-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-LL02-a:inventory",
+          "description": "Omitting one required Stage 1 test ID from the production results leaves the gate BLOCKED; a mutated returned value, capture or cleanup effect in a generated test is detected and its artifacts quarantined."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL03-a",
+      "obligation": "LL03",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "CONTROL EXECUTION",
+      "variants": [
+        "control"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S1-LL03-a:evidence-kind",
+          "description": "A hand-built or synthetic record offered for compiler-generated acceptance is rejected; candidate, profile, substitution and exact artifacts are labeled independently of pass or fail."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL22-a",
+      "obligation": "LL22",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "CONTROL EXECUTION",
+      "variants": [
+        "control"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S1-LL22-a:identity",
+          "description": "Every Stage 1 record binds implementation, test, ABI schema, templates, materialized bytes, compiler, image and options to hashes; mixed builds and stale evidence are rejected."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [
+        "image"
+      ],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-LL24-a",
+      "obligation": "LL24",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "CONTROL EXECUTION",
+      "variants": [
+        "control"
+      ],
+      "prerequisites": [],
+      "assertions": [
+        {
+          "id": "S1-LL24-a:ledger",
+          "description": "One current Stage 1 ledger and a separate history; criterion changes carry explicit authorization; earlier accepted evidence scopes are preserved and delivery claims link to identified artifacts."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [],
+      "origin": "acceptance.md"
+    },
+    {
+      "id": "S1-CONTRACTS-a",
+      "obligation": "LL04",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "evidence_kind": "CONTROL EXECUTION",
+      "variants": [
+        "complete-report"
+      ],
+      "prerequisites": [
+        "S1-LL04-a",
+        "S1-LL07-a",
+        "S1-LL17-a",
+        "S1-LL18-a",
+        "S1-LL19-a",
+        "S1-LL14-a"
+      ],
+      "assertions": [
+        {
+          "id": "S1-CONTRACTS-a:finalized",
+          "description": "The object, allocation, root and TCR contracts (contracts/wasm32-layout.v1.json, contracts/tcr.v1.json, contracts/debug-frames.md, abi/dynamic-call.v0.md as confirmed by generated B) are finalized and every row is joined to a generated-code fixture that executed it; the materialization contract is confirmed on the production path."
+        }
+      ],
+      "status": "NOT_RUN",
+      "runner": null,
+      "review_disposition": "NOT_REVIEWED",
+      "required_record_roles": [],
+      "origin": "outline Stage 1 exit"
+    }
+  ]
+}
