@@ -2943,6 +2943,16 @@
         "record": "stage0/claude-review.md",
         "acceptance": "Diagnostic registry checkpoint with retained native defect; no census gate credit. LL15-b/c remain missing."
       }
+    },
+    {
+      "id": "NATIVE-REGISTRY-FLOW-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-registry-flow-r1/packet.json",
+      "sha256": "938509b0f3e5c4e2ce6a2f88f1b6fe100f35265670dcbec3d84a369452aea2e4",
+      "scope": "Native U1 inspector-source reload and private method replacement/removal: 225 compiler roots / 401 functions, 240 installations across 118 GFs, 163 same-execution compiler-body joins by EQ identity and code bytes, 77 construction gaps. Four sessions, seven byte-identical replay outputs, 24 rejected controls, reference method-code equality and exceptional hook restoration. No original-build identity join, exhaustive callee bound or gate credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

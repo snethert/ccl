@@ -77,7 +77,9 @@ In U1 `level-1/l1-clos-boot.lisp`,
 `%remove-standard-method-from-containing-gf` removes the method, updates both
 method lists, clears obsolete combined methods and calls `compute-dcode`.
 But `compute-dcode` changes dispatch inside a `when methods` form. Once the
-list is empty, it leaves the prior direct method dcode intact. The direct path
+list is empty, it leaves the prior dcode intact, whether direct or table-based.
+Claude's independent removal of both methods from a two-method GF confirms
+that the required disposition covers every empty registry. The direct path
 is selected by `dcode-for-universally-applicable-singleton` in `l1-clos.lisp`.
 The minimal [inspector-free reproduction](../../../tests/wasm/native-census/dispatch-registry/removal-probe.lisp)
 demonstrates this without the registry reader or its temporary mutations.
@@ -107,4 +109,7 @@ The port must not inherit the empty-method dispatch behavior as correct Lisp
 semantics; this case needs an explicit reviewed disposition before it enters
 native-versus-Wasm comparisons. The ledger remains **40 accepted, 8 missing,
 0 unreviewed of 48**;
-this diagnostic awaits independent review.
+the checkpoint was reviewed without defect in Claude's fifty-third audit.
+The subsequent [same-execution witness](registry-flow.md) now joins real method
+installations to compiler bodies during a native source reload; it keeps its
+new namespace separate from the original build.

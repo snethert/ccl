@@ -286,6 +286,16 @@ Use the retained flat graphs and per-call worklists for the remaining work:
    the native defect as negative evidence; the Wasm path must signal the proper
    empty-registry condition rather than inherit the stale call. No shared-source
    fix or accepted criterion is changed by this diagnostic.
+   The [same-execution registry/compiler witness](registry-flow.md) now captures
+   a real U1 inspector-source reload with 240 method additions: 163 join earlier
+   compiler bodies by object identity and code bytes, while 77 retain explicit
+   construction gaps. Hooks restore after normal and nonlocal exits; the native
+   method-code comparison equals the run without hooks. Next, witness those 77
+   construction paths and effective-method cache construction/invalidation,
+   then extend the combined observation to the larger census execution. The
+   new namespace is not a retroactive join to the vanished rich-build objects.
+   The empty-registry disposition covers any prior dcode selection, as Claude's
+   fifty-third audit independently demonstrated.
    Integrate these with the reviewed seed revision, initializer/loader witnesses,
    lowering/import/store classifications and reconciled trace. Replace widening
    only where the corresponding complete source edges and bounds are justified.
