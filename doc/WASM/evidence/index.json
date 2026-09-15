@@ -1414,6 +1414,25 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Hand-built scalar Wasm on macOS Node/V8: four real Workers, 64 KiB shared memory, emitter-owned static/BSS/heap/staging/private ranges and separate eight-slot per-Worker tables. Explicit process-once and owned private setup, lazy code publication, late/subsequent creation. No C linker/TLS, B compiler, full CCL object layout, GC or browser qualification."
+    },
+    {
+      "id": "ENGINE-MATRIX-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-engine-matrix-r1/results.json",
+      "sha256": "da712c6d2d17fd68c65daf518566e123a7cc92f2dd0d753bb56f84430694812e",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-engine-matrix-r1/packet.json",
+      "packet_sha256": "b9e13628d6886e624c243c9e4de4463ac8a31eaf98d2eb654e1726218bad3740",
+      "timestamp": "2026-09-15T17:42:35.439623+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "abc6f63a8ff15f9b4c55103307811305751039a8ca16200d92747342597fa1d2",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Hand-built wasm32 modules executed on macOS by Node/V8 as the reference engine and by Chrome, Firefox and Safari pages served over loopback with and without COOP/COEP. Records engine identity, feature detection, executed multivalue, tail-call, final exception-handling, bulk-memory and atomics semantics, the encoding pin, and the full, single-thread JSPI and precompiled-callback suspension paths. No CCL object layout, generated B code, GC, production runtime or hosting deployment is claimed.",
+      "authorship": "Claude Fable 5.1 fixture on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision."
     }
   ],
   "auxiliary_records": [

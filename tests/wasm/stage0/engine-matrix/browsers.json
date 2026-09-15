@@ -1,0 +1,21 @@
+{
+  "chrome": {
+    "application": "/Applications/Google Chrome.app",
+    "executable": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "arguments": ["--headless=new", "--disable-gpu", "--no-first-run", "--user-data-dir={profile}", "{url}"],
+    "kill": true
+  },
+  "firefox": {
+    "application": "/Applications/Firefox.app",
+    "executable": "/Applications/Firefox.app/Contents/MacOS/firefox",
+    "arguments": ["--headless", "--no-remote", "--profile", "{profile}", "{url}"],
+    "kill": true
+  },
+  "safari": {
+    "application": "/Applications/Safari.app",
+    "executable": "/usr/bin/open",
+    "arguments": ["-a", "Safari", "-g", "{url}"],
+    "kill": false,
+    "note": "Safari has no headless mode; open(1) loads the page in a background tab that stays open."
+  }
+}

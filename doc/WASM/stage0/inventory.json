@@ -128,7 +128,7 @@
         }
       ],
       "status": "NOT_RUN",
-      "runner": null,
+      "runner": "tests/wasm/stage0/engine-matrix/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",
