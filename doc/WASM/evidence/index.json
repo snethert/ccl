@@ -2960,6 +2960,16 @@
         "record": "stage0/claude-review.md",
         "acceptance": "Diagnostic same-execution witness; no census gate credit. Nonblocking: the setter hook misses the direct dcode store of the lazy reader optimization (l1-clos.lisp:2198) and the encapsulated path. LL15-b/c remain missing."
       }
+    },
+    {
+      "id": "CENSUS-DEVELOPMENT-CLOSURE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-closure-r1/packet.json",
+      "sha256": "c9327f4fb6fc9888f09d43c9e89de588ef4437c944d26eaa0854401d4fe234a1",
+      "scope": "Integrated development closure: reviewed graph reconstructed, revision-2 seeds in a separate namespace, 95 unwitnessed symbols, 5,007 original body obligations and 1,562 open computed calls. Six outputs and the optional graph reproduce; 20 integration mutations reject. Expected BLOCKED exit 2, no original obligation closed, LL15 result or gate credit.",
+      "execution_status": "BLOCKED",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

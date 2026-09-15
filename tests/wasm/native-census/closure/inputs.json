@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "inputs": {
+    "base": {
+      "repository": "evidence",
+      "path": "2026-09-12-initializer-joins-r1/census.json.gz",
+      "sha256": "62f2e8b560c723394de0129f448bf3d43f7655164a3e448997036f70358171ae"
+    },
+    "emission": {
+      "repository": "evidence",
+      "path": "2026-09-13-emission-slot-joins-r1/delta.json.gz",
+      "sha256": "251a14cfd4e8917fcc23f0c5934060b32519cb9e05e3fd12f79743aa5b57f965"
+    },
+    "boot": {
+      "repository": "evidence",
+      "path": "2026-09-13-boot-integration-r1/delta.json.gz",
+      "sha256": "05d75a5e31706b75552d73b47036ac6f7da7eaeaee0123aec7d0d8ce45ecf882"
+    },
+    "boot_materialization": {
+      "repository": "evidence",
+      "path": "2026-09-13-boot-integration-r1/materialization.json",
+      "sha256": "73b10377a007b0e5a30a65b0f66accafdb8309703a28644a85a9fd2a2a814858"
+    },
+    "wrappers": {
+      "repository": "evidence",
+      "path": "2026-09-13-boot-wrappers-r1/patch.json.gz",
+      "sha256": "697c953017f88c0014641562eb6436b7cad76ee1f0337d95f4da737ab850465d"
+    },
+    "wrapper_run": {
+      "repository": "evidence",
+      "path": "2026-09-13-boot-wrappers-r1/run.json",
+      "sha256": "ecc431a09eaa5d73ae58935a0e7ba3ee7e6af865822048a37e82e700b2627870"
+    },
+    "flow": {
+      "repository": "evidence",
+      "path": "2026-09-14-build-flow-r1/delta.json.gz",
+      "sha256": "97466105b0f07af83cdb5f69f9169e9d6d3d3c0b61587034f149b89fb64c9e20"
+    },
+    "bindings": {
+      "repository": "evidence",
+      "path": "2026-09-14-binding-versions-r1/delta.json.gz",
+      "sha256": "4d7ec16f021de6b2c1ae3a101c5740fafdcaa02d30864f97cb816637f4e10ac1"
+    },
+    "literals": {
+      "repository": "evidence",
+      "path": "2026-09-14-resident-literals-r1/delta.json.gz",
+      "sha256": "4b018475a31d0e9b526ec99dbd22ac0702e64e114ddea4da85fca70357fec6bf"
+    },
+    "prior_summary": {
+      "repository": "evidence",
+      "path": "2026-09-14-resident-literals-r1/summary.json",
+      "sha256": "c63abe68c9190e681fb8fb62820a256035c89587c9642a1f82353266f2856d0c"
+    },
+    "seed_image": {
+      "repository": "evidence",
+      "path": "2026-09-13-startup-seeds-r2/image.json.gz",
+      "sha256": "d89e4a61eecd17d23697efef54604c7fd8a29b75587d915145ce775ab41acf13"
+    },
+    "seed_candidates": {
+      "repository": "evidence",
+      "path": "2026-09-13-startup-seeds-r2/candidates.json.gz",
+      "sha256": "d5d8366d073ddb70a9735fe63b5f00433877e7c82b73d7b3225bf8505728d992"
+    },
+    "histories": {
+      "repository": "evidence",
+      "path": "2026-09-14-binding-versions-r1/histories.json.gz",
+      "sha256": "4054a5980aa83a5d22b2749f90683acab663ed3a405d9276cabd4053c544bd69"
+    },
+    "calls": {
+      "repository": "evidence",
+      "path": "2026-09-14-build-flow-r1/calls.json.gz",
+      "sha256": "203083dd3328b7d0f268799789e1d9853dc9a870a6f2a73ac271fb2f9aafdadb"
+    },
+    "bodies": {
+      "repository": "evidence",
+      "path": "2026-09-14-resident-bodies-r1/bodies.json.gz",
+      "sha256": "4e24bfc2387a7ad0e95325b42773f57059240f96fbed7b7570d597fc10b96fae"
+    },
+    "origins": {
+      "repository": "evidence",
+      "path": "2026-09-14-body-origins-r1/origins.json.gz",
+      "sha256": "8a582cc9dafe999f1c233e857d7102c4466f936bfc48b423454767581c24f8b1"
+    },
+    "survey": {
+      "repository": "evidence",
+      "path": "2026-09-14-source-closure-r1/summary.json",
+      "sha256": "98cf8871e4fafa6cdab64880f34e6abd73742f32e7abe893eaf1ff9360c44c94"
+    },
+    "registry": {
+      "repository": "evidence",
+      "path": "2026-09-15-registry-flow-r1/summary.json",
+      "sha256": "f64f31109defd238f84e887161560b41b5bfee604c5c7bb9524e416acd485e6d"
+    },
+    "seeds": {
+      "repository": "source",
+      "path": "tests/wasm/native-census/startup-closure/seeds.json",
+      "sha256": "975ff2dfa9c78cbcc4ba3ff68db8654ab52dd628d6c468b33478436705c9575a"
+    },
+    "seed_review": {
+      "repository": "source",
+      "path": "doc/WASM/stage0/seed-review.md",
+      "sha256": "14fd1983ed0e8d9cc2e71b256f198fed49a98b596035c1d2edeb49f6f6efc014"
+    }
+  },
+  "scope": "Reconstruction of reviewed fragments and seed revision 2. Direct retained inputs only; no native execution or historical artifact scan."
+}

@@ -238,15 +238,15 @@ The following delivery order supersedes making another isolated accessor
 witness the immediate next deliverable. The detailed input references below
 remain applicable.
 
-1. **Establish the integrated closure run now.** Compose the reviewed graph
-   fragments and available qualification records through one repeatable command
-   using the existing exchange format and census checker. Report BLOCKED for
-   missing joins, qualification, dispositions and bounds; structural validity
-   alone cannot yield PASS. Do not wait until the graph is complete to expose
-   this feedback. The historical assembler remains pinned to its old seed set;
-   integrate reviewed revision 2 explicitly and preserve old outputs. A missing
-   witness must remain a named obligation, never an invented cross-run identity.
-   This development run is not an executed LL15-b/c acceptance result.
+1. **Use the integrated development closure.** The [single command](closure.md)
+   now reconstructs the reviewed fragments and runs the existing exchange
+   checker. It reports BLOCKED, exit 2, with binding/body/call worklists. Revision
+   2 has a separate snapshot namespace and explicit body/execution gaps; the
+   old graph and its 13 conservative roots remain intact. The working graph
+   has 369,706 nodes and 1,089,937 edges. Its 109 added body gaps and five scope
+   nodes expose missing qualification, while zero original obligations close.
+   This development run is not an executed LL15-b/c acceptance result. Use its
+   before/after counts and evidence keys for subsequent graph changes.
 2. **Drain the binding and body worklists in batches.** Account for all 95
    unwitnessed called symbols with exact symbol identities, source/profile
    evidence and resulting graph changes or explicit remaining obligations.
@@ -270,6 +270,10 @@ remain applicable.
    If a new authoritative capture is necessary, retain its own namespace and
    state exactly what replaces or connects to earlier inputs. No fresh ID or
    matching name can stand in for an original rich-build object.
+   The user explicitly permits another native build when it speeds completion.
+   Prefer a combined compiler/body/registry capture if that replaces piecemeal
+   identity recovery. Keep the observation reversible and satisfy R6; avoiding
+   a build is not a goal in itself.
 4. **Apply profile and lowering dispositions during that work.** Do this before
    spending effort reconstructing excluded native implementation details, while
    retaining the evidence that justifies exclusion and any required shared Lisp
@@ -295,7 +299,9 @@ and show its effect on the working graph and remaining work. A targeted witness
 may still be necessary without immediately closing an edge, but it must identify
 the exact integration step it enables. Do not default to another standalone
 observation packet when the required information already exists. Keep one compact
-packet per actual evidence deliverable; this planning update creates none.
+packet per actual evidence deliverable. The development closure retains its
+recipe and small reports; regenerate the working graph from existing fragments
+instead of storing another complete copy.
 
 Use the following dated populations for progress reports until a justified
 revision changes them. Report scope changes separately from newly proven bounds;

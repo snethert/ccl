@@ -1,9 +1,10 @@
-# Current status — 2026-09-14
+# Current status — 2026-09-15
 
 Implementation baseline: upstream v1.13, `c994217adc56b3f8a564526cee4695893ac84d86`. Current document set: outline 0.17, acceptance 1.7, decisions 1.8. macOS is the sole reference host. Shared compiler and upstream kernel source remain unchanged.
 
 | Work | State | Evidence scope / remaining work |
 | --- | --- | --- |
+| Integrated development census | BLOCKED; awaiting independent review, no gate credit | [Working closure](stage0/closure.md): one command reconstructs the reviewed graph and adds revision-2 seeds in a separate namespace. 369,706 nodes / 1,089,937 edges; 95 unwitnessed symbols, 5,007 original body gaps and 1,562 open computed calls. Every earlier graph record remains unchanged. LL15-b/c qualification, execution bridges and widening replacement remain open. |
 | U1 native Gate 0 | ACCEPTED for same-host execution/repeatability | Two clean macOS x86-64 builds, 21,843 passing eligible tests per build, 75 upstream-disabled tests disclosed, 164 identical FASLs. Claude independently reproduced the results. Second-Mac reproduction is [no longer required](stage0/second-mac-decision.md). [Native summary](evidence/native-baseline-summary.json). |
 | Boundary S0-LL13-c / S0-LL19-b | ACCEPTED at retained bounds | Twelve cases and nine controls, real C stacks, TLS and exceptional restoration. |
 | Integrated S0-LL20-a/b/c | ACCEPTED at retained bounds | Cons-only moving collector, admission, lifecycle and interruptible I/O; 22 cases, 14 controls, 1,000 seeded schedules. [Runtime scope](stage0/integrated-runtime.md). |
