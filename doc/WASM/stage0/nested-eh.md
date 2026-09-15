@@ -3,7 +3,7 @@
 Status: S0-LL19-a [full] EXECUTED and PASSING at its stated scope; awaiting
 Codex's adversarial review under the 15 September role switch, then the
 user's acceptance decision. Packet `NESTED-EH-R1` in the evidence repository.
-Stage 0 is **40 accepted, three missing and five unreviewed of 48** after the later executions.
+Stage 0 is **40 accepted, two missing and six unreviewed of 48** after the later executions.
 
 Authorship: Claude Fable 5.1 wrote this fixture on branch `wasm2-claude`;
 Codex reviews it. No shared compiler or upstream kernel source changed. The

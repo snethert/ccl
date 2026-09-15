@@ -3,8 +3,9 @@
 Status: S0-CONTRACTS-a [complete-report] EXECUTED and PASSING at its stated
 scope; awaiting Codex's adversarial review under the 15 September role
 switch, then the user's acceptance decision. Packet `CONTRACTS-R1` in the
-evidence repository. Stage 0 is **40 accepted, three missing and five
-unreviewed of 48**; the three missing slots are the census's LL15-a/b/c.
+evidence repository. Stage 0 is **40 accepted, two missing and six
+unreviewed of 48** after the later LL15-a execution; the two missing slots are
+the census's LL15-b and LL15-c.
 
 Authorship: Claude Fable 5.1 wrote this fixture and the two generated
 contracts on branch `wasm2-claude`; Codex reviews them. No shared compiler or

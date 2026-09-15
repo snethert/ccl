@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "name": "stage0-initializer-closure",
+  "scope": "S0-LL15-a hand-built bootstrap closure: three phases, four modules, nine required initializers bound to prerequisite completion words and service state. Not the qualified census closure; that is S0-LL15-b/c.",
+  "phases": [
+    {"phase": 0, "name": "loader-dependencies", "rule": "loader-role modules only; every initializer here completes before any bundle is instantiated"},
+    {"phase": 1, "name": "definitions", "rule": "bundles install definitions while the early error service stays usable"},
+    {"phase": 2, "name": "activation", "rule": "ordinary error services activate after their prerequisites; finalization publishes ready"}
+  ],
+  "modules": {
+    "loader-core": {"role": "loader", "phase": 0, "imports": ["env.memory"], "exports": ["note", "complete", "completed", "entries", "init_map", "init_diagnostics", "init_install"]},
+    "bundle-a": {"role": "bundle", "phase": 1, "imports": ["env.memory", "loader.note", "loader.complete", "loader.completed"], "exports": ["init_symbols", "init_readers"]},
+    "bundle-b": {"role": "bundle", "phase": 1, "imports": ["env.memory", "loader.note", "loader.complete", "loader.completed"], "exports": ["init_errors", "activate_errors"]},
+    "bundle-c": {"role": "bundle", "phase": 1, "imports": ["env.memory", "loader.note", "loader.complete", "loader.completed"], "exports": ["init_compiler", "finalize"]}
+  },
+  "initializers": [
+    {"id": "init_map", "ordinal": 0, "module": "loader-core", "phase": 0, "prerequisites": [], "requires_state": [], "completion": 19777, "effects": {"region_table": 2048, "canonical_nil": 77824, "canonical_t": 77832}},
+    {"id": "init_diagnostics", "ordinal": 1, "module": "loader-core", "phase": 0, "prerequisites": ["init_map"], "requires_state": [], "completion": 17473, "effects": {"mode_word": 1280, "mode": 1, "fatal_sink": 1284}},
+    {"id": "init_install", "ordinal": 2, "module": "loader-core", "phase": 0, "prerequisites": ["init_map", "init_diagnostics"], "requires_state": [], "completion": 18771, "effects": {"slot_count": 1288}},
+    {"id": "init_symbols", "ordinal": 3, "module": "bundle-a", "phase": 1, "prerequisites": ["init_map", "init_diagnostics", "init_install"], "requires_state": [], "completion": 21337, "effects": {"symbol_table": 8192}},
+    {"id": "init_readers", "ordinal": 4, "module": "bundle-a", "phase": 1, "prerequisites": ["init_symbols"], "requires_state": [], "completion": 21060, "effects": {"reader_table": 8448}},
+    {"id": "init_errors", "ordinal": 5, "module": "bundle-b", "phase": 1, "prerequisites": ["init_symbols", "init_readers"], "requires_state": [{"address": 1280, "value": 1, "meaning": "error service EARLY"}], "completion": 17746, "effects": {"handler_table": 8704}},
+    {"id": "init_compiler", "ordinal": 7, "module": "bundle-c", "phase": 1, "prerequisites": ["init_errors"], "requires_state": [{"address": 1280, "value": 1, "meaning": "error service EARLY"}], "completion": 17229, "effects": {"stub_table": 8960}},
+    {"id": "activate_errors", "ordinal": 6, "module": "bundle-b", "phase": 2, "prerequisites": ["init_errors", "init_compiler"], "requires_state": [{"address": 1280, "value": 1, "meaning": "error service EARLY"}], "completion": 16707, "effects": {"mode_word": 1280, "mode": 2}},
+    {"id": "finalize", "ordinal": 8, "module": "bundle-c", "phase": 2, "prerequisites": ["activate_errors", "init_compiler"], "requires_state": [{"address": 1280, "value": 2, "meaning": "error service FULL"}], "completion": 18009, "effects": {"summary_word": 1292}}
+  ],
+  "ready": {"generation_word": 1296, "count_word": 1300, "checksum_word": 1304, "rule": "written by the loader only after every required initializer's completion word equals its declared value"}
+}

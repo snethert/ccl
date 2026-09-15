@@ -1494,6 +1494,25 @@
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Control execution on macOS: the wasm32 layout schema v1 is derived from the pinned U1 x8632 architecture source and cross-checked against the U1 C header; every derived row carries a source-to-target disposition; the initial contracts/layout.json subset agrees; the committed schema equals the regeneration. The runtime-contract join v1 verifies frames, roots, TCR fields, allocation/store protocols and C-boundary restoration against the accepted fixtures’ retained schemas and cases by artifact hash, and re-derives the link-derived memory/table ownership map from retained link metadata. Nine synthetic controls are refused. This reviews contracts against executed evidence; it executes no Wasm and confers no runtime acceptance of its own.",
       "authorship": "Claude Fable 5.1 fixture and generated contracts on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision."
+    },
+    {
+      "id": "INITIALIZER-BINDING-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-initializer-binding-r1/results.json",
+      "sha256": "917f51e7954cb2975a189c783b19266114dbb712968e8bb180be5faf6fdac37d",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-initializer-binding-r1/packet.json",
+      "packet_sha256": "53a2837b97373b93baec0d0443c3109dcab5ac324cf2174e853996218cf8b7db",
+      "timestamp": "2026-09-15T19:00:12.627155+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "2a8fb15f869c30744da100933bee615007a2fefa09c3760bbd440fff161a8019",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Hand-built bootstrap closure on macOS Node/V8: three phases, four wasm32 modules and nine required initializers. The loader validates the manifest against the supplied modules before instantiating anything, seeds its own dependencies before any bundle exists, binds every initializer to its prerequisites’ physical completion words and required service state, checks each completion physically after the initializer returns, and publishes ready only after every required initializer completed. Fourteen refusals cover omitted and wrong modules, manifest defects, wrong or unwritten completions, a raised initializer, a clobbered prerequisite and wrong service state; eight loader mutants including a no-load path are rejected by the unchanged oracle over the whole memory image. Not the qualified census closure, the production loader, image format or generated code.",
+      "authorship": "Claude Fable 5.1 fixture on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision."
     }
   ],
   "auxiliary_records": [

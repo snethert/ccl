@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "name": "initializer-binding-interface",
+  "scope": "S0-LL15-a loader/module interface: two-page unshared memory, loader services imported by every bundle, initializer exports returning their completion code, physical completion ledger and event log. Not the production loader, image format or D3 entry descriptor.",
+  "memory": {"pages": 2, "shared": false},
+  "loader_services": {
+    "note": {"params": ["i32"], "results": [], "meaning": "append an event code to the log"},
+    "complete": {"params": ["i32", "i32"], "results": [], "meaning": "write the completion word for an ordinal and increment its execution counter"},
+    "completed": {"params": ["i32"], "results": ["i32"], "meaning": "read an ordinal's completion word"}
+  },
+  "initializer_signature": {"params": [], "results": ["i32"], "meaning": "returns the completion code, or -1 after noting 900 + ordinal when a prerequisite is physically absent"},
+  "regions": {
+    "completion_words": {"base": 1024, "stride": 4, "count": 16},
+    "execution_counters": {"base": 1152, "stride": 4, "count": 16},
+    "mode_word": 1280, "fatal_sink": 1284, "slot_count": 1288, "summary_word": 1292,
+    "ready": {"generation": 1296, "count": 1300, "checksum": 1304},
+    "region_table": {"base": 2048, "entries": 3, "entry_words": ["start", "end", "kind"]},
+    "event_log": {"count": 4096, "base": 4100, "capacity": 1023},
+    "definitions": {"symbol_table": 8192, "reader_table": 8448, "handler_table": 8704, "stub_table": 8960},
+    "canonical": {"nil_cons": 77824, "nil_value": 77825, "t_header": 77832, "t_header_value": 1850}
+  },
+  "events": {
+    "module_loaded": "500 + module index in closure order", "prerequisites_checked": "200 + ordinal", "initializer_started": "300 + ordinal",
+    "initializer_ran": "100 + ordinal (written by the initializer itself)", "prerequisite_absent": "900 + ordinal (written by the initializer itself)",
+    "completion_recorded": "400 + ordinal", "ready_published": 700, "refused": 800
+  },
+  "modes": {"EARLY": 1, "FULL": 2},
+  "fixture_values": {"fatal_sink": 53670, "installable_slots": 4, "symbol_header": 1850}
+}

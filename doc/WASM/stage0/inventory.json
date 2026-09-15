@@ -517,7 +517,7 @@
         }
       ],
       "status": "NOT_RUN",
-      "runner": null,
+      "runner": "tests/wasm/stage0/initializer-binding/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",
