@@ -1,0 +1,3955 @@
+{
+  "schema": "kernel-imports",
+  "version": 1,
+  "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+  "sources": {
+    "lisp-kernel/imports.s": "3052988d1e66bec5e7de4ade5e424ef5f264e862977c7d54dccb079e069d48b1",
+    "compiler/X86/X8632/x8632-arch.lisp": "1491906803bac60051385c1691090a19b36b59a2868a2b41b13b1fdb91a6cfcd"
+  },
+  "ledger_sha256": "9fda7e6a47bf8552ebe7e1f909c43fb483e56224c16afbc178ccfa17965f877b",
+  "vocabulary": {
+    "wasm-runtime": "implemented by the freestanding C kernel or emitted runtime inside linear memory",
+    "js-host-service": "served by the host through the D5 mailbox (full) or a promise (JSPI)",
+    "atomics-memory": "implemented with Wasm atomics on owned words",
+    "unsupported": "explicitly unsupported; reachable only through the declared unsupported operation"
+  },
+  "profiles": [
+    "full",
+    "single_thread_jspi",
+    "precompiled_callback"
+  ],
+  "closure_phases": [
+    "loader",
+    "definitions",
+    "runtime",
+    "none"
+  ],
+  "counts": {
+    "imports": 65,
+    "with_x8632_callers": 42,
+    "required_in_closure": 57,
+    "by_profile": {
+      "full": {
+        "wasm-runtime": 10,
+        "js-host-service": 24,
+        "atomics-memory": 15,
+        "unsupported": 16
+      },
+      "single_thread_jspi": {
+        "wasm-runtime": 6,
+        "js-host-service": 26,
+        "atomics-memory": 10,
+        "unsupported": 23
+      },
+      "precompiled_callback": {
+        "wasm-runtime": 6,
+        "js-host-service": 6,
+        "atomics-memory": 10,
+        "unsupported": 43
+      }
+    },
+    "by_phase": {
+      "loader": 10,
+      "definitions": 3,
+      "runtime": 36,
+      "none": 16
+    },
+    "lisp_caller_sites": 63
+  },
+  "groups": {
+    "host-namespace-io": [
+      "fd_setsize_bytes",
+      "do_fd_set",
+      "do_fd_clr",
+      "do_fd_is_set",
+      "do_fd_zero",
+      "lisp_read",
+      "lisp_write",
+      "lisp_open",
+      "lisp_fchmod",
+      "lisp_lseek",
+      "lisp_close",
+      "lisp_ftruncate",
+      "lisp_stat",
+      "lisp_fstat",
+      "lisp_opendir",
+      "lisp_readdir",
+      "lisp_closedir",
+      "lisp_pipe",
+      "lisp_lstat",
+      "lisp_realpath"
+    ],
+    "native-code": [
+      "xMakeDataExecutable"
+    ],
+    "native-libraries": [
+      "xGetSharedLibrary",
+      "xFindSymbol",
+      "get_r_debug",
+      "jvm_init"
+    ],
+    "foreign-memory": [
+      "lisp_malloc",
+      "lisp_free"
+    ],
+    "signals": [
+      "wait_for_signal"
+    ],
+    "threads-lifecycle": [
+      "tcr_frame_ptr",
+      "xNewThread",
+      "do_nothing",
+      "xDisposeThread"
+    ],
+    "gc-finalization": [
+      "register_xmacptr_dispose_function"
+    ],
+    "diagnostics": [
+      "open_debug_output",
+      "lisp_bug",
+      "foreign_name_and_offset"
+    ],
+    "stacks": [
+      "restore_soft_stack_limit",
+      "xThreadCurrentStackSpace"
+    ],
+    "gc": [
+      "lisp_egc_control"
+    ],
+    "process-lifecycle": [
+      "usage_exit",
+      "lisp_sigexit"
+    ],
+    "fp-context": [
+      "save_fp_context",
+      "restore_fp_context",
+      "put_vector_registers",
+      "get_vector_registers"
+    ],
+    "synchronization": [
+      "new_semaphore",
+      "wait_on_semaphore",
+      "signal_semaphore",
+      "destroy_semaphore",
+      "new_recursive_lock",
+      "lock_recursive_lock",
+      "unlock_recursive_lock",
+      "destroy_recursive_lock",
+      "rwlock_new",
+      "rwlock_destroy",
+      "rwlock_rlock",
+      "rwlock_wlock",
+      "rwlock_unlock",
+      "recursive_lock_trylock",
+      "lisp_futex"
+    ],
+    "threads-rendezvous": [
+      "lisp_suspend_other_threads",
+      "lisp_resume_other_threads",
+      "lisp_suspend_tcr",
+      "lisp_resume_tcr"
+    ],
+    "host-clock": [
+      "lisp_gettimeofday"
+    ]
+  },
+  "imports": [
+    {
+      "index": 0,
+      "offset": 0,
+      "lisp_name": "fd-setsize-bytes",
+      "c_name": "fd_setsize_bytes",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "pmcl-kernel.c:2265"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/l1-streams.lisp",
+          "line": 5405,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+      "regression": [
+        "LL20"
+      ],
+      "note": "select() fd_set helper used by the fd readiness path in l1-streams",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:fd_setsize_bytes",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+        "evidence": "contracts/kernel-imports.v1.json#fd_setsize_bytes",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "select() fd_set helper used by the fd readiness path in l1-streams; full profile js-host-service"
+      }
+    },
+    {
+      "index": 1,
+      "offset": 4,
+      "lisp_name": "do-fd-set",
+      "c_name": "do_fd_set",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "pmcl-kernel.c:2271"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/l1-streams.lisp",
+          "line": 5429,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+      "regression": [
+        "LL20"
+      ],
+      "note": "select() fd_set helper used by the fd readiness path in l1-streams",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:do_fd_set",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+        "evidence": "contracts/kernel-imports.v1.json#do_fd_set",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "select() fd_set helper used by the fd readiness path in l1-streams; full profile js-host-service"
+      }
+    },
+    {
+      "index": 2,
+      "offset": 8,
+      "lisp_name": "do-fd-clr",
+      "c_name": "do_fd_clr",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "pmcl-kernel.c:2277"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/l1-streams.lisp",
+          "line": 5435,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+      "regression": [
+        "LL20"
+      ],
+      "note": "select() fd_set helper used by the fd readiness path in l1-streams",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:do_fd_clr",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+        "evidence": "contracts/kernel-imports.v1.json#do_fd_clr",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "select() fd_set helper used by the fd readiness path in l1-streams; full profile js-host-service"
+      }
+    },
+    {
+      "index": 3,
+      "offset": 12,
+      "lisp_name": "do-fd-is-set",
+      "c_name": "do_fd_is_set",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "pmcl-kernel.c:2283"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/l1-streams.lisp",
+          "line": 5441,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+      "regression": [
+        "LL20"
+      ],
+      "note": "select() fd_set helper used by the fd readiness path in l1-streams",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:do_fd_is_set",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+        "evidence": "contracts/kernel-imports.v1.json#do_fd_is_set",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "select() fd_set helper used by the fd readiness path in l1-streams; full profile js-host-service"
+      }
+    },
+    {
+      "index": 4,
+      "offset": 16,
+      "lisp_name": "do-fd-zero",
+      "c_name": "do_fd_zero",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "pmcl-kernel.c:2290"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/l1-streams.lisp",
+          "line": 5424,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+      "regression": [
+        "LL20"
+      ],
+      "note": "select() fd_set helper used by the fd readiness path in l1-streams",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:do_fd_zero",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+        "evidence": "contracts/kernel-imports.v1.json#do_fd_zero",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "select() fd_set helper used by the fd readiness path in l1-streams; full profile js-host-service"
+      }
+    },
+    {
+      "index": 5,
+      "offset": 20,
+      "lisp_name": "makedataexecutable",
+      "c_name": "xMakeDataExecutable",
+      "group": "native-code",
+      "c_definitions": [
+        "pmcl-kernel.c:2205"
+      ],
+      "c_call_sites": 7,
+      "lisp_callers": [
+        {
+          "file": "level-0/ARM/arm-def.lisp",
+          "line": 34,
+          "form": "ff-call",
+          "x8632": false
+        },
+        {
+          "file": "level-0/PPC/ppc-def.lisp",
+          "line": 39,
+          "form": "other",
+          "x8632": false
+        },
+        {
+          "file": "level-1/arm-callback-support.lisp",
+          "line": 37,
+          "form": "ff-call",
+          "x8632": false
+        },
+        {
+          "file": "level-1/ppc-callback-support.lisp",
+          "line": 45,
+          "form": "ff-call",
+          "x8632": false
+        }
+      ],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "unsupported",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "none",
+      "replacement": "code is installed as validated Wasm modules under D5; no data-to-code transition exists",
+      "regression": [
+        "LL21"
+      ],
+      "note": "x8632 has no caller; PPC/ARM callback support only",
+      "required_in_x8632_closure": false,
+      "census_node": {
+        "id": "import:xMakeDataExecutable",
+        "kind": "import",
+        "disposition": "unsupported",
+        "required": false,
+        "implementation": null,
+        "evidence": "contracts/kernel-imports.v1.json#xMakeDataExecutable",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "x8632 has no caller; PPC/ARM callback support only; full profile unsupported"
+      }
+    },
+    {
+      "index": 6,
+      "offset": 24,
+      "lisp_name": "getsharedlibrary",
+      "c_name": "xGetSharedLibrary",
+      "group": "native-libraries",
+      "c_definitions": [
+        "pmcl-kernel.c:2232",
+        "pmcl-kernel.c:2238",
+        "pmcl-kernel.c:2245"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-0/l0-cfm-support.lisp",
+          "line": 315,
+          "form": "ff-call",
+          "x8632": true
+        },
+        {
+          "file": "level-0/l0-cfm-support.lisp",
+          "line": 351,
+          "form": "%kernel-import",
+          "x8632": true
+        },
+        {
+          "file": "level-0/l0-cfm-support.lisp",
+          "line": 520,
+          "form": "%kernel-import",
+          "x8632": true
+        },
+        {
+          "file": "level-0/l0-cfm-support.lisp",
+          "line": 559,
+          "form": "%kernel-import",
+          "x8632": true
+        },
+        {
+          "file": "level-0/l0-cfm-support.lisp",
+          "line": 884,
+          "form": "ff-call",
+          "x8632": true
+        },
+        {
+          "file": "level-0/l0-cfm-support.lisp",
+          "line": 909,
+          "form": "%kernel-import",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 6,
+      "dispositions": {
+        "full": "unsupported",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "none",
+      "replacement": "named-import registry of declared host services (D4 allowed-import inventory); native shared libraries are out of scope",
+      "regression": [
+        "LL13"
+      ],
+      "note": "reached from shared-library revival in l0-cfm-support at startup; the closure must route those callers through this unsupported disposition explicitly",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:xGetSharedLibrary",
+        "kind": "import",
+        "disposition": "unsupported",
+        "required": true,
+        "implementation": null,
+        "evidence": "contracts/kernel-imports.v1.json#xGetSharedLibrary",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "reached from shared-library revival in l0-cfm-support at startup; the closure must route those callers through this unsupported disposition explicitly; full profile unsupported"
+      }
+    },
+    {
+      "index": 7,
+      "offset": 28,
+      "lisp_name": "findsymbol",
+      "c_name": "xFindSymbol",
+      "group": "native-libraries",
+      "c_definitions": [
+        "pmcl-kernel.c:2424"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-0/l0-cfm-support.lisp",
+          "line": 607,
+          "form": "ff-call",
+          "x8632": true
+        },
+        {
+          "file": "level-0/l0-cfm-support.lisp",
+          "line": 614,
+          "form": "ff-call",
+          "x8632": true
+        },
+        {
+          "file": "level-0/l0-cfm-support.lisp",
+          "line": 620,
+          "form": "ff-call",
+          "x8632": true
+        },
+        {
+          "file": "level-0/l0-cfm-support.lisp",
+          "line": 799,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 4,
+      "dispositions": {
+        "full": "unsupported",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "none",
+      "replacement": "named-import registry; #_ foreign-symbol resolution is out of scope (outline section 07)",
+      "regression": [
+        "LL13"
+      ],
+      "note": "l0-cfm-support foreign-symbol lookup",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:xFindSymbol",
+        "kind": "import",
+        "disposition": "unsupported",
+        "required": true,
+        "implementation": null,
+        "evidence": "contracts/kernel-imports.v1.json#xFindSymbol",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "l0-cfm-support foreign-symbol lookup; full profile unsupported"
+      }
+    },
+    {
+      "index": 8,
+      "offset": 32,
+      "lisp_name": "malloc",
+      "c_name": "lisp_malloc",
+      "group": "foreign-memory",
+      "c_definitions": [
+        "memory.c:60"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-0/l0-io.lisp",
+          "line": 295,
+          "form": "%kernel-import",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "wasm-runtime",
+        "single_thread_jspi": "wasm-runtime",
+        "precompiled_callback": "wasm-runtime"
+      },
+      "closure_phase": "loader",
+      "replacement": "C kernel arena inside linear memory with owned foreign buffers (D4/D6); no malloc/free/calloc/realloc quartet substituted",
+      "regression": [
+        "LL13",
+        "LL07"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_malloc",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "C kernel arena inside linear memory with owned foreign buffers (D4/D6); no malloc/free/calloc/realloc quartet substituted",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_malloc",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "foreign-memory; full profile wasm-runtime"
+      }
+    },
+    {
+      "index": 9,
+      "offset": 36,
+      "lisp_name": "free",
+      "c_name": "lisp_free",
+      "group": "foreign-memory",
+      "c_definitions": [
+        "memory.c:66"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-0/l0-io.lisp",
+          "line": 310,
+          "form": "%kernel-import",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "wasm-runtime",
+        "single_thread_jspi": "wasm-runtime",
+        "precompiled_callback": "wasm-runtime"
+      },
+      "closure_phase": "loader",
+      "replacement": "C kernel arena release; ownership recorded per buffer",
+      "regression": [
+        "LL13",
+        "LL07"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_free",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "C kernel arena release; ownership recorded per buffer",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_free",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "foreign-memory; full profile wasm-runtime"
+      }
+    },
+    {
+      "index": 10,
+      "offset": 40,
+      "lisp_name": "wait-for-signal",
+      "c_name": "wait_for_signal",
+      "group": "signals",
+      "c_definitions": [
+        "pmcl-kernel.c:885"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/linux-files.lisp",
+          "line": 171,
+          "form": "%kernel-import",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "unsupported",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "none",
+      "replacement": "no OS signals; interrupt delivery is the D5 mailbox INTERRUPTED wake",
+      "regression": [
+        "LL20"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:wait_for_signal",
+        "kind": "import",
+        "disposition": "unsupported",
+        "required": true,
+        "implementation": null,
+        "evidence": "contracts/kernel-imports.v1.json#wait_for_signal",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "signals; full profile unsupported"
+      }
+    },
+    {
+      "index": 11,
+      "offset": 44,
+      "lisp_name": "tcr-frame-ptr",
+      "c_name": "tcr_frame_ptr",
+      "group": "threads-lifecycle",
+      "c_definitions": [
+        "arm-exceptions.c:687",
+        "ppc-exceptions.c:660",
+        "x86-exceptions.c:1630"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/l1-lisp-threads.lisp",
+          "line": 345,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "wasm-runtime",
+        "single_thread_jspi": "wasm-runtime",
+        "precompiled_callback": "wasm-runtime"
+      },
+      "closure_phase": "runtime",
+      "replacement": "logical frame head read from the D5 TCR (contracts/debug-frames.md)",
+      "regression": [
+        "LL23"
+      ],
+      "note": "used for other-thread backtraces",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:tcr_frame_ptr",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "logical frame head read from the D5 TCR (contracts/debug-frames.md)",
+        "evidence": "contracts/kernel-imports.v1.json#tcr_frame_ptr",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "used for other-thread backtraces; full profile wasm-runtime"
+      }
+    },
+    {
+      "index": 12,
+      "offset": 48,
+      "lisp_name": "register-xmacptr-dispose-function",
+      "c_name": "register_xmacptr_dispose_function",
+      "group": "gc-finalization",
+      "c_definitions": [
+        "gc-common.c:779"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/l1-aprims.lisp",
+          "line": 1219,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "wasm-runtime",
+        "single_thread_jspi": "wasm-runtime",
+        "precompiled_callback": "wasm-runtime"
+      },
+      "closure_phase": "runtime",
+      "replacement": "finalization registry of the target collector for xmacptr disposal (plan item 4, Stage 2 weak/finalization)",
+      "regression": [
+        "LL18"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:register_xmacptr_dispose_function",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "finalization registry of the target collector for xmacptr disposal (plan item 4, Stage 2 weak/finalization)",
+        "evidence": "contracts/kernel-imports.v1.json#register_xmacptr_dispose_function",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "gc-finalization; full profile wasm-runtime"
+      }
+    },
+    {
+      "index": 13,
+      "offset": 52,
+      "lisp_name": "open-debug-output",
+      "c_name": "open_debug_output",
+      "group": "diagnostics",
+      "c_definitions": [
+        "lisp-debug.c:110"
+      ],
+      "c_call_sites": 1,
+      "lisp_callers": [
+        {
+          "file": "level-1/l1-boot-2.lisp",
+          "line": 115,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "js-host-service"
+      },
+      "closure_phase": "loader",
+      "replacement": "host diagnostic output channel opened by the early error service",
+      "regression": [
+        "LL23"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:open_debug_output",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "host diagnostic output channel opened by the early error service",
+        "evidence": "contracts/kernel-imports.v1.json#open_debug_output",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "diagnostics; full profile js-host-service"
+      }
+    },
+    {
+      "index": 14,
+      "offset": 56,
+      "lisp_name": "get-r-debug",
+      "c_name": "get_r_debug",
+      "group": "native-libraries",
+      "c_definitions": [
+        "pmcl-kernel.c:2489",
+        "pmcl-kernel.c:2507"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-0/l0-cfm-support.lisp",
+          "line": 292,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "unsupported",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "none",
+      "replacement": "no dynamic linker debug structure; host services are declared imports",
+      "regression": [
+        "LL13"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:get_r_debug",
+        "kind": "import",
+        "disposition": "unsupported",
+        "required": true,
+        "implementation": null,
+        "evidence": "contracts/kernel-imports.v1.json#get_r_debug",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "native-libraries; full profile unsupported"
+      }
+    },
+    {
+      "index": 15,
+      "offset": 60,
+      "lisp_name": "restore-soft-stack-limit",
+      "c_name": "restore_soft_stack_limit",
+      "group": "stacks",
+      "c_definitions": [
+        "arm-exceptions.c:623",
+        "ppc-exceptions.c:593",
+        "x86-exceptions.c:2443"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/ppc-error-signal.lisp",
+          "line": 151,
+          "form": "ff-call",
+          "x8632": false
+        },
+        {
+          "file": "level-1/x86-trap-support.lisp",
+          "line": 510,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "wasm-runtime",
+        "single_thread_jspi": "wasm-runtime",
+        "precompiled_callback": "wasm-runtime"
+      },
+      "closure_phase": "runtime",
+      "replacement": "explicit stack bounds with a reserve for the condition path (outline section 04; D5 explicit stacks)",
+      "regression": [
+        "LL19",
+        "LL13"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:restore_soft_stack_limit",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "explicit stack bounds with a reserve for the condition path (outline section 04; D5 explicit stacks)",
+        "evidence": "contracts/kernel-imports.v1.json#restore_soft_stack_limit",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "stacks; full profile wasm-runtime"
+      }
+    },
+    {
+      "index": 16,
+      "offset": 64,
+      "lisp_name": "egc-control",
+      "c_name": "lisp_egc_control",
+      "group": "gc",
+      "c_definitions": [
+        "memory.c:772"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "wasm-runtime",
+        "single_thread_jspi": "wasm-runtime",
+        "precompiled_callback": "wasm-runtime"
+      },
+      "closure_phase": "runtime",
+      "replacement": "returns EGC unavailable for the initial non-generational collector (D6)",
+      "regression": [
+        "LL18"
+      ],
+      "note": "no named Lisp caller; reached through the gc-trap egc-control function code",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_egc_control",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "returns EGC unavailable for the initial non-generational collector (D6)",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_egc_control",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "no named Lisp caller; reached through the gc-trap egc-control function code; full profile wasm-runtime"
+      }
+    },
+    {
+      "index": 17,
+      "offset": 68,
+      "lisp_name": "lisp-bug",
+      "c_name": "lisp_bug",
+      "group": "diagnostics",
+      "c_definitions": [
+        "lisp-debug.c:1605"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-0/l0-misc.lisp",
+          "line": 110,
+          "form": "%kernel-import",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "js-host-service"
+      },
+      "closure_phase": "loader",
+      "replacement": "structured fatal diagnostic to the host naming build, code identity and faulting operation (LL23)",
+      "regression": [
+        "LL23",
+        "LL01"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_bug",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "structured fatal diagnostic to the host naming build, code identity and faulting operation (LL23)",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_bug",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "diagnostics; full profile js-host-service"
+      }
+    },
+    {
+      "index": 18,
+      "offset": 72,
+      "lisp_name": "newthread",
+      "c_name": "xNewThread",
+      "group": "threads-lifecycle",
+      "c_definitions": [
+        "thread_manager.c:1700"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/l1-lisp-threads.lisp",
+          "line": 300,
+          "form": "%kernel-import",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "Worker creation under D5 CREATING then PARKED with rooted handoff; single-thread profiles signal unsupported",
+      "regression": [
+        "LL20",
+        "LL13"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:xNewThread",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "Worker creation under D5 CREATING then PARKED with rooted handoff; single-thread profiles signal unsupported",
+        "evidence": "contracts/kernel-imports.v1.json#xNewThread",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "threads-lifecycle; full profile js-host-service"
+      }
+    },
+    {
+      "index": 19,
+      "offset": 76,
+      "lisp_name": "cooperative-thread-startup",
+      "c_name": "do_nothing",
+      "group": "threads-lifecycle",
+      "c_definitions": [
+        "thread_manager.c:1731"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "unsupported",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "none",
+      "replacement": "C placeholder do_nothing; no Lisp caller",
+      "regression": [],
+      "note": "",
+      "required_in_x8632_closure": false,
+      "census_node": {
+        "id": "import:do_nothing",
+        "kind": "import",
+        "disposition": "unsupported",
+        "required": false,
+        "implementation": null,
+        "evidence": "contracts/kernel-imports.v1.json#do_nothing",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "threads-lifecycle; full profile unsupported"
+      }
+    },
+    {
+      "index": 20,
+      "offset": 80,
+      "lisp_name": "disposethread",
+      "c_name": "xDisposeThread",
+      "group": "threads-lifecycle",
+      "c_definitions": [
+        "thread_manager.c:1751"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "Worker retirement under the D5 TERMINATING protocol; single-thread profiles signal unsupported",
+      "regression": [
+        "LL20"
+      ],
+      "note": "no named Lisp caller; native thread exit path",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:xDisposeThread",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "Worker retirement under the D5 TERMINATING protocol; single-thread profiles signal unsupported",
+        "evidence": "contracts/kernel-imports.v1.json#xDisposeThread",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "no named Lisp caller; native thread exit path; full profile js-host-service"
+      }
+    },
+    {
+      "index": 21,
+      "offset": 84,
+      "lisp_name": "threadcurrentstackspace",
+      "c_name": "xThreadCurrentStackSpace",
+      "group": "stacks",
+      "c_definitions": [
+        "thread_manager.c:1764"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "unsupported",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "none",
+      "replacement": "explicit stack bounds live in the TCR; no native stack-space query",
+      "regression": [
+        "LL13"
+      ],
+      "note": "no Lisp caller",
+      "required_in_x8632_closure": false,
+      "census_node": {
+        "id": "import:xThreadCurrentStackSpace",
+        "kind": "import",
+        "disposition": "unsupported",
+        "required": false,
+        "implementation": null,
+        "evidence": "contracts/kernel-imports.v1.json#xThreadCurrentStackSpace",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "no Lisp caller; full profile unsupported"
+      }
+    },
+    {
+      "index": 22,
+      "offset": 88,
+      "lisp_name": "usage-exit",
+      "c_name": "usage_exit",
+      "group": "process-lifecycle",
+      "c_definitions": [
+        "pmcl-kernel.c:1166"
+      ],
+      "c_call_sites": 1,
+      "lisp_callers": [
+        {
+          "file": "level-1/l1-application.lisp",
+          "line": 70,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "js-host-service"
+      },
+      "closure_phase": "runtime",
+      "replacement": "host process-exit request with the usage report",
+      "regression": [
+        "LL01",
+        "LL23"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:usage_exit",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "host process-exit request with the usage report",
+        "evidence": "contracts/kernel-imports.v1.json#usage_exit",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "process-lifecycle; full profile js-host-service"
+      }
+    },
+    {
+      "index": 23,
+      "offset": 92,
+      "lisp_name": "save-fp-context",
+      "c_name": "save_fp_context",
+      "group": "fp-context",
+      "c_definitions": [
+        "arm-asmutils.s:202",
+        "ppc-asmutils.s:118",
+        "x86-asmutils32.s:50",
+        "x86-asmutils64.s:72"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "unsupported",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "none",
+      "replacement": "no native FP/vector register context; the D6 floating-point policy specifies explicit checks",
+      "regression": [
+        "LL16"
+      ],
+      "note": "assembly-defined in x86-asmutils32.s; no Lisp caller",
+      "required_in_x8632_closure": false,
+      "census_node": {
+        "id": "import:save_fp_context",
+        "kind": "import",
+        "disposition": "unsupported",
+        "required": false,
+        "implementation": null,
+        "evidence": "contracts/kernel-imports.v1.json#save_fp_context",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "assembly-defined in x86-asmutils32.s; no Lisp caller; full profile unsupported"
+      }
+    },
+    {
+      "index": 24,
+      "offset": 96,
+      "lisp_name": "restore-fp-context",
+      "c_name": "restore_fp_context",
+      "group": "fp-context",
+      "c_definitions": [
+        "arm-asmutils.s:205",
+        "ppc-asmutils.s:158",
+        "x86-asmutils32.s:53",
+        "x86-asmutils64.s:75"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "unsupported",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "none",
+      "replacement": "no native FP/vector register context; the D6 floating-point policy specifies explicit checks",
+      "regression": [
+        "LL16"
+      ],
+      "note": "assembly-defined in x86-asmutils32.s; no Lisp caller",
+      "required_in_x8632_closure": false,
+      "census_node": {
+        "id": "import:restore_fp_context",
+        "kind": "import",
+        "disposition": "unsupported",
+        "required": false,
+        "implementation": null,
+        "evidence": "contracts/kernel-imports.v1.json#restore_fp_context",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "assembly-defined in x86-asmutils32.s; no Lisp caller; full profile unsupported"
+      }
+    },
+    {
+      "index": 25,
+      "offset": 100,
+      "lisp_name": "put-altivec-registers",
+      "c_name": "put_vector_registers",
+      "group": "fp-context",
+      "c_definitions": [
+        "arm-asmutils.s:208",
+        "ppc-asmutils.s:280",
+        "x86-asmutils32.s:194",
+        "x86-asmutils64.s:184"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "unsupported",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "none",
+      "replacement": "no native FP/vector register context; the D6 floating-point policy specifies explicit checks",
+      "regression": [
+        "LL16"
+      ],
+      "note": "assembly-defined in x86-asmutils32.s; no Lisp caller",
+      "required_in_x8632_closure": false,
+      "census_node": {
+        "id": "import:put_vector_registers",
+        "kind": "import",
+        "disposition": "unsupported",
+        "required": false,
+        "implementation": null,
+        "evidence": "contracts/kernel-imports.v1.json#put_vector_registers",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "assembly-defined in x86-asmutils32.s; no Lisp caller; full profile unsupported"
+      }
+    },
+    {
+      "index": 26,
+      "offset": 104,
+      "lisp_name": "get-altivec-registers",
+      "c_name": "get_vector_registers",
+      "group": "fp-context",
+      "c_definitions": [
+        "arm-asmutils.s:211",
+        "ppc-asmutils.s:355",
+        "x86-asmutils32.s:190",
+        "x86-asmutils64.s:181"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "unsupported",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "none",
+      "replacement": "no native FP/vector register context; the D6 floating-point policy specifies explicit checks",
+      "regression": [
+        "LL16"
+      ],
+      "note": "assembly-defined in x86-asmutils32.s; no Lisp caller",
+      "required_in_x8632_closure": false,
+      "census_node": {
+        "id": "import:get_vector_registers",
+        "kind": "import",
+        "disposition": "unsupported",
+        "required": false,
+        "implementation": null,
+        "evidence": "contracts/kernel-imports.v1.json#get_vector_registers",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "assembly-defined in x86-asmutils32.s; no Lisp caller; full profile unsupported"
+      }
+    },
+    {
+      "index": 27,
+      "offset": 108,
+      "lisp_name": "new-semaphore",
+      "c_name": "new_semaphore",
+      "group": "synchronization",
+      "c_definitions": [
+        "thread_manager.c:680"
+      ],
+      "c_call_sites": 10,
+      "lisp_callers": [
+        {
+          "file": "level-0/l0-aprims.lisp",
+          "line": 46,
+          "form": "%kernel-import",
+          "x8632": true
+        },
+        {
+          "file": "level-0/l0-aprims.lisp",
+          "line": 195,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 2,
+      "dispositions": {
+        "full": "atomics-memory",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "definitions",
+      "replacement": "D5 owned semaphore word with wait/notify; JSPI profile waits through a promise-backed host service",
+      "regression": [
+        "LL20"
+      ],
+      "note": "created at load time by l0-aprims",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:new_semaphore",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "D5 owned semaphore word with wait/notify; JSPI profile waits through a promise-backed host service",
+        "evidence": "contracts/kernel-imports.v1.json#new_semaphore",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "created at load time by l0-aprims; full profile atomics-memory"
+      }
+    },
+    {
+      "index": 28,
+      "offset": 112,
+      "lisp_name": "wait-on-semaphore",
+      "c_name": "wait_on_semaphore",
+      "group": "synchronization",
+      "c_definitions": [
+        "thread_manager.c:468"
+      ],
+      "c_call_sites": 3,
+      "lisp_callers": [
+        {
+          "file": "level-1/linux-files.lisp",
+          "line": 105,
+          "form": "%kernel-import",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "atomics-memory",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "memory.atomic.wait32 on the owned word; JSPI profile suspends through a host promise",
+      "regression": [
+        "LL20"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:wait_on_semaphore",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "memory.atomic.wait32 on the owned word; JSPI profile suspends through a host promise",
+        "evidence": "contracts/kernel-imports.v1.json#wait_on_semaphore",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "synchronization; full profile atomics-memory"
+      }
+    },
+    {
+      "index": 29,
+      "offset": 116,
+      "lisp_name": "signal-semaphore",
+      "c_name": "signal_semaphore",
+      "group": "synchronization",
+      "c_definitions": [
+        "thread_manager.c:530"
+      ],
+      "c_call_sites": 2,
+      "lisp_callers": [
+        {
+          "file": "level-1/linux-files.lisp",
+          "line": 161,
+          "form": "%kernel-import",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "atomics-memory",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "atomic increment and notify",
+      "regression": [
+        "LL20"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:signal_semaphore",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "atomic increment and notify",
+        "evidence": "contracts/kernel-imports.v1.json#signal_semaphore",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "synchronization; full profile atomics-memory"
+      }
+    },
+    {
+      "index": 30,
+      "offset": 120,
+      "lisp_name": "destroy-semaphore",
+      "c_name": "destroy_semaphore",
+      "group": "synchronization",
+      "c_definitions": [
+        "thread_manager.c:735"
+      ],
+      "c_call_sites": 13,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "atomics-memory",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "release of the owned word",
+      "regression": [
+        "LL20"
+      ],
+      "note": "no named Lisp caller; reached from C finalization",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:destroy_semaphore",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "release of the owned word",
+        "evidence": "contracts/kernel-imports.v1.json#destroy_semaphore",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "no named Lisp caller; reached from C finalization; full profile atomics-memory"
+      }
+    },
+    {
+      "index": 31,
+      "offset": 124,
+      "lisp_name": "new-recursive-lock",
+      "c_name": "new_recursive_lock",
+      "group": "synchronization",
+      "c_definitions": [
+        "thread_manager.c:702"
+      ],
+      "c_call_sites": 5,
+      "lisp_callers": [
+        {
+          "file": "level-0/l0-aprims.lisp",
+          "line": 38,
+          "form": "%kernel-import",
+          "x8632": true
+        },
+        {
+          "file": "level-0/l0-aprims.lisp",
+          "line": 125,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 2,
+      "dispositions": {
+        "full": "atomics-memory",
+        "single_thread_jspi": "atomics-memory",
+        "precompiled_callback": "atomics-memory"
+      },
+      "closure_phase": "definitions",
+      "replacement": "D5 atomic recursive lock; single-thread profiles keep owner and count semantics without a contended wait",
+      "regression": [
+        "LL20"
+      ],
+      "note": "created at load time by l0-aprims",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:new_recursive_lock",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "D5 atomic recursive lock; single-thread profiles keep owner and count semantics without a contended wait",
+        "evidence": "contracts/kernel-imports.v1.json#new_recursive_lock",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "created at load time by l0-aprims; full profile atomics-memory"
+      }
+    },
+    {
+      "index": 32,
+      "offset": 128,
+      "lisp_name": "lock-recursive-lock",
+      "c_name": "lock_recursive_lock",
+      "group": "synchronization",
+      "c_definitions": [
+        "thread_manager.c:255",
+        "thread_manager.c:309"
+      ],
+      "c_call_sites": 1,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "atomics-memory",
+        "single_thread_jspi": "atomics-memory",
+        "precompiled_callback": "atomics-memory"
+      },
+      "closure_phase": "runtime",
+      "replacement": "D5 atomic recursive lock operations",
+      "regression": [
+        "LL20"
+      ],
+      "note": "no named Lisp caller; reached through subprimitives and C",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lock_recursive_lock",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "D5 atomic recursive lock operations",
+        "evidence": "contracts/kernel-imports.v1.json#lock_recursive_lock",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "no named Lisp caller; reached through subprimitives and C; full profile atomics-memory"
+      }
+    },
+    {
+      "index": 33,
+      "offset": 132,
+      "lisp_name": "unlock-recursive-lock",
+      "c_name": "unlock_recursive_lock",
+      "group": "synchronization",
+      "c_definitions": [
+        "thread_manager.c:328",
+        "thread_manager.c:360"
+      ],
+      "c_call_sites": 1,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "atomics-memory",
+        "single_thread_jspi": "atomics-memory",
+        "precompiled_callback": "atomics-memory"
+      },
+      "closure_phase": "runtime",
+      "replacement": "D5 atomic recursive lock operations",
+      "regression": [
+        "LL20"
+      ],
+      "note": "no named Lisp caller; reached through subprimitives and C",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:unlock_recursive_lock",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "D5 atomic recursive lock operations",
+        "evidence": "contracts/kernel-imports.v1.json#unlock_recursive_lock",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "no named Lisp caller; reached through subprimitives and C; full profile atomics-memory"
+      }
+    },
+    {
+      "index": 34,
+      "offset": 136,
+      "lisp_name": "destroy-recursive-lock",
+      "c_name": "destroy_recursive_lock",
+      "group": "synchronization",
+      "c_definitions": [
+        "thread_manager.c:381"
+      ],
+      "c_call_sites": 2,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "atomics-memory",
+        "single_thread_jspi": "atomics-memory",
+        "precompiled_callback": "atomics-memory"
+      },
+      "closure_phase": "runtime",
+      "replacement": "D5 atomic recursive lock operations",
+      "regression": [
+        "LL20"
+      ],
+      "note": "no named Lisp caller; reached through subprimitives and C",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:destroy_recursive_lock",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "D5 atomic recursive lock operations",
+        "evidence": "contracts/kernel-imports.v1.json#destroy_recursive_lock",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "no named Lisp caller; reached through subprimitives and C; full profile atomics-memory"
+      }
+    },
+    {
+      "index": 35,
+      "offset": 140,
+      "lisp_name": "suspend-other-threads",
+      "c_name": "lisp_suspend_other_threads",
+      "group": "threads-rendezvous",
+      "c_definitions": [
+        "thread_manager.c:2383"
+      ],
+      "c_call_sites": 4,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "wasm-runtime",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "D5 admission and rendezvous replace signal-based suspension; safepoints do not remove the callers, the protocol replaces them",
+      "regression": [
+        "LL20"
+      ],
+      "note": "no named Lisp caller; C-side rendezvous",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_suspend_other_threads",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "D5 admission and rendezvous replace signal-based suspension; safepoints do not remove the callers, the protocol replaces them",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_suspend_other_threads",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "no named Lisp caller; C-side rendezvous; full profile wasm-runtime"
+      }
+    },
+    {
+      "index": 36,
+      "offset": 144,
+      "lisp_name": "resume-other-threads",
+      "c_name": "lisp_resume_other_threads",
+      "group": "threads-rendezvous",
+      "c_definitions": [
+        "thread_manager.c:2403"
+      ],
+      "c_call_sites": 4,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "wasm-runtime",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "D5 admission and rendezvous replace signal-based suspension; safepoints do not remove the callers, the protocol replaces them",
+      "regression": [
+        "LL20"
+      ],
+      "note": "no named Lisp caller; C-side rendezvous",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_resume_other_threads",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "D5 admission and rendezvous replace signal-based suspension; safepoints do not remove the callers, the protocol replaces them",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_resume_other_threads",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "no named Lisp caller; C-side rendezvous; full profile wasm-runtime"
+      }
+    },
+    {
+      "index": 37,
+      "offset": 148,
+      "lisp_name": "suspend-tcr",
+      "c_name": "lisp_suspend_tcr",
+      "group": "threads-rendezvous",
+      "c_definitions": [
+        "thread_manager.c:2168"
+      ],
+      "c_call_sites": 4,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "wasm-runtime",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "D5 admission and rendezvous replace signal-based suspension; safepoints do not remove the callers, the protocol replaces them",
+      "regression": [
+        "LL20"
+      ],
+      "note": "no named Lisp caller; C-side rendezvous",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_suspend_tcr",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "D5 admission and rendezvous replace signal-based suspension; safepoints do not remove the callers, the protocol replaces them",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_suspend_tcr",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "no named Lisp caller; C-side rendezvous; full profile wasm-runtime"
+      }
+    },
+    {
+      "index": 38,
+      "offset": 152,
+      "lisp_name": "resume-tcr",
+      "c_name": "lisp_resume_tcr",
+      "group": "threads-rendezvous",
+      "c_definitions": [
+        "thread_manager.c:2266"
+      ],
+      "c_call_sites": 4,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "wasm-runtime",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "D5 admission and rendezvous replace signal-based suspension; safepoints do not remove the callers, the protocol replaces them",
+      "regression": [
+        "LL20"
+      ],
+      "note": "no named Lisp caller; C-side rendezvous",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_resume_tcr",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "D5 admission and rendezvous replace signal-based suspension; safepoints do not remove the callers, the protocol replaces them",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_resume_tcr",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "no named Lisp caller; C-side rendezvous; full profile wasm-runtime"
+      }
+    },
+    {
+      "index": 39,
+      "offset": 156,
+      "lisp_name": "rwlock-new",
+      "c_name": "rwlock_new",
+      "group": "synchronization",
+      "c_definitions": [
+        "thread_manager.c:2411"
+      ],
+      "c_call_sites": 1,
+      "lisp_callers": [
+        {
+          "file": "level-0/l0-aprims.lisp",
+          "line": 42,
+          "form": "%kernel-import",
+          "x8632": true
+        },
+        {
+          "file": "level-0/l0-aprims.lisp",
+          "line": 132,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 2,
+      "dispositions": {
+        "full": "atomics-memory",
+        "single_thread_jspi": "atomics-memory",
+        "precompiled_callback": "atomics-memory"
+      },
+      "closure_phase": "definitions",
+      "replacement": "D5 atomic rwlock",
+      "regression": [
+        "LL20"
+      ],
+      "note": "created at load time by l0-aprims",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:rwlock_new",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "D5 atomic rwlock",
+        "evidence": "contracts/kernel-imports.v1.json#rwlock_new",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "created at load time by l0-aprims; full profile atomics-memory"
+      }
+    },
+    {
+      "index": 40,
+      "offset": 160,
+      "lisp_name": "rwlock-destroy",
+      "c_name": "rwlock_destroy",
+      "group": "synchronization",
+      "c_definitions": [
+        "thread_manager.c:2750"
+      ],
+      "c_call_sites": 2,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "atomics-memory",
+        "single_thread_jspi": "atomics-memory",
+        "precompiled_callback": "atomics-memory"
+      },
+      "closure_phase": "runtime",
+      "replacement": "D5 atomic rwlock operations",
+      "regression": [
+        "LL20"
+      ],
+      "note": "no named Lisp caller; reached through subprimitives and C",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:rwlock_destroy",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "D5 atomic rwlock operations",
+        "evidence": "contracts/kernel-imports.v1.json#rwlock_destroy",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "no named Lisp caller; reached through subprimitives and C; full profile atomics-memory"
+      }
+    },
+    {
+      "index": 41,
+      "offset": 164,
+      "lisp_name": "rwlock-rlock",
+      "c_name": "rwlock_rlock",
+      "group": "synchronization",
+      "c_definitions": [
+        "thread_manager.c:2449",
+        "thread_manager.c:2480"
+      ],
+      "c_call_sites": 1,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "atomics-memory",
+        "single_thread_jspi": "atomics-memory",
+        "precompiled_callback": "atomics-memory"
+      },
+      "closure_phase": "runtime",
+      "replacement": "D5 atomic rwlock operations",
+      "regression": [
+        "LL20"
+      ],
+      "note": "no named Lisp caller; reached through subprimitives and C",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:rwlock_rlock",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "D5 atomic rwlock operations",
+        "evidence": "contracts/kernel-imports.v1.json#rwlock_rlock",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "no named Lisp caller; reached through subprimitives and C; full profile atomics-memory"
+      }
+    },
+    {
+      "index": 42,
+      "offset": 168,
+      "lisp_name": "rwlock-wlock",
+      "c_name": "rwlock_wlock",
+      "group": "synchronization",
+      "c_definitions": [
+        "thread_manager.c:2520",
+        "thread_manager.c:2553"
+      ],
+      "c_call_sites": 1,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "atomics-memory",
+        "single_thread_jspi": "atomics-memory",
+        "precompiled_callback": "atomics-memory"
+      },
+      "closure_phase": "runtime",
+      "replacement": "D5 atomic rwlock operations",
+      "regression": [
+        "LL20"
+      ],
+      "note": "no named Lisp caller; reached through subprimitives and C",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:rwlock_wlock",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "D5 atomic rwlock operations",
+        "evidence": "contracts/kernel-imports.v1.json#rwlock_wlock",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "no named Lisp caller; reached through subprimitives and C; full profile atomics-memory"
+      }
+    },
+    {
+      "index": 43,
+      "offset": 172,
+      "lisp_name": "rwlock-unlock",
+      "c_name": "rwlock_unlock",
+      "group": "synchronization",
+      "c_definitions": [
+        "thread_manager.c:2659",
+        "thread_manager.c:2702"
+      ],
+      "c_call_sites": 1,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "atomics-memory",
+        "single_thread_jspi": "atomics-memory",
+        "precompiled_callback": "atomics-memory"
+      },
+      "closure_phase": "runtime",
+      "replacement": "D5 atomic rwlock operations",
+      "regression": [
+        "LL20"
+      ],
+      "note": "no named Lisp caller; reached through subprimitives and C",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:rwlock_unlock",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "D5 atomic rwlock operations",
+        "evidence": "contracts/kernel-imports.v1.json#rwlock_unlock",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "no named Lisp caller; reached through subprimitives and C; full profile atomics-memory"
+      }
+    },
+    {
+      "index": 44,
+      "offset": 176,
+      "lisp_name": "recursive-lock-trylock",
+      "c_name": "recursive_lock_trylock",
+      "group": "synchronization",
+      "c_definitions": [
+        "thread_manager.c:397",
+        "thread_manager.c:425"
+      ],
+      "c_call_sites": 1,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "atomics-memory",
+        "single_thread_jspi": "atomics-memory",
+        "precompiled_callback": "atomics-memory"
+      },
+      "closure_phase": "runtime",
+      "replacement": "D5 atomic recursive lock operations",
+      "regression": [
+        "LL20"
+      ],
+      "note": "no named Lisp caller; reached through subprimitives and C",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:recursive_lock_trylock",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "D5 atomic recursive lock operations",
+        "evidence": "contracts/kernel-imports.v1.json#recursive_lock_trylock",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "no named Lisp caller; reached through subprimitives and C; full profile atomics-memory"
+      }
+    },
+    {
+      "index": 45,
+      "offset": 180,
+      "lisp_name": "foreign-name-and-offset",
+      "c_name": "foreign_name_and_offset",
+      "group": "diagnostics",
+      "c_definitions": [
+        "lisp-debug.c:186"
+      ],
+      "c_call_sites": 2,
+      "lisp_callers": [],
+      "x8632_callers": 0,
+      "dispositions": {
+        "full": "unsupported",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "none",
+      "replacement": "no native symbolication; code identities come from the manifest (LL23)",
+      "regression": [
+        "LL23"
+      ],
+      "note": "no Lisp caller",
+      "required_in_x8632_closure": false,
+      "census_node": {
+        "id": "import:foreign_name_and_offset",
+        "kind": "import",
+        "disposition": "unsupported",
+        "required": false,
+        "implementation": null,
+        "evidence": "contracts/kernel-imports.v1.json#foreign_name_and_offset",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "no Lisp caller; full profile unsupported"
+      }
+    },
+    {
+      "index": 46,
+      "offset": 184,
+      "lisp_name": "lisp-read",
+      "c_name": "lisp_read",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "unix-calls.c:43",
+        "windows-calls.c:433"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-0/l0-io.lisp",
+          "line": 193,
+          "form": "%kernel-import",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "loader",
+      "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "regression": [
+        "LL20",
+        "LL15"
+      ],
+      "note": "bundle and manifest loading",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_read",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_read",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "bundle and manifest loading; full profile js-host-service"
+      }
+    },
+    {
+      "index": 47,
+      "offset": 188,
+      "lisp_name": "lisp-write",
+      "c_name": "lisp_write",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "unix-calls.c:49",
+        "windows-calls.c:461"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-0/l0-io.lisp",
+          "line": 187,
+          "form": "%kernel-import",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "js-host-service"
+      },
+      "closure_phase": "loader",
+      "replacement": "host output sink for console and diagnostic streams; writes to named files are refused until the Stage 3 writable store",
+      "regression": [
+        "LL20",
+        "LL23"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_write",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "host output sink for console and diagnostic streams; writes to named files are refused until the Stage 3 writable store",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_write",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "host-namespace-io; full profile js-host-service"
+      }
+    },
+    {
+      "index": 48,
+      "offset": 192,
+      "lisp_name": "lisp-open",
+      "c_name": "lisp_open",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "unix-calls.c:55",
+        "windows-calls.c:188"
+      ],
+      "c_call_sites": 1,
+      "lisp_callers": [
+        {
+          "file": "level-0/l0-io.lisp",
+          "line": 216,
+          "form": "%kernel-import",
+          "x8632": true
+        },
+        {
+          "file": "level-0/l0-io.lisp",
+          "line": 224,
+          "form": "%kernel-import",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 2,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "loader",
+      "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "regression": [
+        "LL20",
+        "LL15"
+      ],
+      "note": "bundle and manifest loading",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_open",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_open",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "bundle and manifest loading; full profile js-host-service"
+      }
+    },
+    {
+      "index": 49,
+      "offset": 196,
+      "lisp_name": "lisp-fchmod",
+      "c_name": "lisp_fchmod",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "unix-calls.c:61",
+        "windows-calls.c:522"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-0/l0-io.lisp",
+          "line": 242,
+          "form": "int-errno-ffcall",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "unsupported",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "none",
+      "replacement": "no mode changes in the read-only namespace; writable store is Stage 3",
+      "regression": [
+        "LL20"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_fchmod",
+        "kind": "import",
+        "disposition": "unsupported",
+        "required": true,
+        "implementation": null,
+        "evidence": "contracts/kernel-imports.v1.json#lisp_fchmod",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "host-namespace-io; full profile unsupported"
+      }
+    },
+    {
+      "index": 50,
+      "offset": 200,
+      "lisp_name": "lisp-lseek",
+      "c_name": "lisp_lseek",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "unix-calls.c:67",
+        "windows-calls.c:529"
+      ],
+      "c_call_sites": 9,
+      "lisp_callers": [
+        {
+          "file": "level-0/l0-io.lisp",
+          "line": 249,
+          "form": "%kernel-import",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "loader",
+      "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "regression": [
+        "LL20",
+        "LL15"
+      ],
+      "note": "positioned read",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_lseek",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_lseek",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "positioned read; full profile js-host-service"
+      }
+    },
+    {
+      "index": 51,
+      "offset": 204,
+      "lisp_name": "lisp-close",
+      "c_name": "lisp_close",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "unix-calls.c:77",
+        "windows-calls.c:273"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-0/l0-io.lisp",
+          "line": 256,
+          "form": "int-errno-ffcall",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "loader",
+      "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "regression": [
+        "LL20",
+        "LL15"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_close",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_close",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "host-namespace-io; full profile js-host-service"
+      }
+    },
+    {
+      "index": 52,
+      "offset": 208,
+      "lisp_name": "lisp-ftruncate",
+      "c_name": "lisp_ftruncate",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "unix-calls.c:83",
+        "windows-calls.c:633"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-0/l0-io.lisp",
+          "line": 279,
+          "form": "int-errno-ffcall",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "unsupported",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "none",
+      "replacement": "no truncation in the read-only namespace; writable store is Stage 3",
+      "regression": [
+        "LL20"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_ftruncate",
+        "kind": "import",
+        "disposition": "unsupported",
+        "required": true,
+        "implementation": null,
+        "evidence": "contracts/kernel-imports.v1.json#lisp_ftruncate",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "host-namespace-io; full profile unsupported"
+      }
+    },
+    {
+      "index": 53,
+      "offset": 212,
+      "lisp_name": "lisp-stat",
+      "c_name": "lisp_stat",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "unix-calls.c:89",
+        "windows-calls.c:547"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/linux-files.lisp",
+          "line": 455,
+          "form": "int-errno-ffcall",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "regression": [
+        "LL20",
+        "LL15"
+      ],
+      "note": "probe-file over the virtual namespace",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_stat",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_stat",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "probe-file over the virtual namespace; full profile js-host-service"
+      }
+    },
+    {
+      "index": 54,
+      "offset": 216,
+      "lisp_name": "lisp-fstat",
+      "c_name": "lisp_fstat",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "unix-calls.c:95",
+        "windows-calls.c:564"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-0/l0-io.lisp",
+          "line": 267,
+          "form": "ff-call",
+          "x8632": true
+        },
+        {
+          "file": "level-1/linux-files.lisp",
+          "line": 463,
+          "form": "int-errno-ffcall",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 2,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "loader",
+      "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "regression": [
+        "LL20",
+        "LL15"
+      ],
+      "note": "size and kind",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_fstat",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_fstat",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "size and kind; full profile js-host-service"
+      }
+    },
+    {
+      "index": 55,
+      "offset": 220,
+      "lisp_name": "lisp-futex",
+      "c_name": "lisp_futex",
+      "group": "synchronization",
+      "c_definitions": [
+        "unix-calls.c:107",
+        "windows-calls.c:625"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-0/l0-misc.lisp",
+          "line": 636,
+          "form": "%kernel-import",
+          "x8632": true
+        },
+        {
+          "file": "level-0/l0-misc.lisp",
+          "line": 647,
+          "form": "%kernel-import",
+          "x8632": true
+        },
+        {
+          "file": "level-0/l0-misc.lisp",
+          "line": 656,
+          "form": "int-errno-ffcall",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 3,
+      "dispositions": {
+        "full": "atomics-memory",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "memory.atomic.wait32/notify on shared memory; unshared profiles cannot wait (S0-ENGINE-a, S0-LL21-c)",
+      "regression": [
+        "LL20",
+        "LL21"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_futex",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "memory.atomic.wait32/notify on shared memory; unshared profiles cannot wait (S0-ENGINE-a, S0-LL21-c)",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_futex",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "synchronization; full profile atomics-memory"
+      }
+    },
+    {
+      "index": 56,
+      "offset": 224,
+      "lisp_name": "lisp-opendir",
+      "c_name": "lisp_opendir",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "unix-calls.c:118",
+        "windows-calls.c:683"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/linux-files.lisp",
+          "line": 843,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "regression": [
+        "LL20",
+        "LL15"
+      ],
+      "note": "directory listing over the virtual namespace",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_opendir",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_opendir",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "directory listing over the virtual namespace; full profile js-host-service"
+      }
+    },
+    {
+      "index": 57,
+      "offset": 228,
+      "lisp_name": "lisp-readdir",
+      "c_name": "lisp_readdir",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "unix-calls.c:124",
+        "windows-calls.c:689"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/linux-files.lisp",
+          "line": 855,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "regression": [
+        "LL20",
+        "LL15"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_readdir",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_readdir",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "host-namespace-io; full profile js-host-service"
+      }
+    },
+    {
+      "index": 58,
+      "offset": 232,
+      "lisp_name": "lisp-closedir",
+      "c_name": "lisp_closedir",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "unix-calls.c:130",
+        "windows-calls.c:695"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/linux-files.lisp",
+          "line": 850,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "regression": [
+        "LL20",
+        "LL15"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_closedir",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_closedir",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "host-namespace-io; full profile js-host-service"
+      }
+    },
+    {
+      "index": 59,
+      "offset": 236,
+      "lisp_name": "lisp-pipe",
+      "c_name": "lisp_pipe",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "unix-calls.c:136",
+        "windows-calls.c:701"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/linux-files.lisp",
+          "line": 1111,
+          "form": "ff-call",
+          "x8632": true
+        },
+        {
+          "file": "level-1/linux-files.lisp",
+          "line": 1119,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 2,
+      "dispositions": {
+        "full": "unsupported",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "none",
+      "replacement": "provisionally unsupported (D6)",
+      "regression": [
+        "LL20"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_pipe",
+        "kind": "import",
+        "disposition": "unsupported",
+        "required": true,
+        "implementation": null,
+        "evidence": "contracts/kernel-imports.v1.json#lisp_pipe",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "host-namespace-io; full profile unsupported"
+      }
+    },
+    {
+      "index": 60,
+      "offset": 240,
+      "lisp_name": "lisp-gettimeofday",
+      "c_name": "lisp_gettimeofday",
+      "group": "host-clock",
+      "c_definitions": [
+        "unix-calls.c:142",
+        "windows-calls.c:721"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/l1-lisp-threads.lisp",
+          "line": 74,
+          "form": "int-errno-ffcall",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "js-host-service"
+      },
+      "closure_phase": "runtime",
+      "replacement": "host clock policy (D6)",
+      "regression": [
+        "LL16"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_gettimeofday",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "host clock policy (D6)",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_gettimeofday",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "host-clock; full profile js-host-service"
+      }
+    },
+    {
+      "index": 61,
+      "offset": 244,
+      "lisp_name": "lisp-sigexit",
+      "c_name": "lisp_sigexit",
+      "group": "process-lifecycle",
+      "c_definitions": [
+        "unix-calls.c:148",
+        "windows-calls.c:735"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/l1-events.lisp",
+          "line": 131,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "js-host-service"
+      },
+      "closure_phase": "runtime",
+      "replacement": "host exit request on a fatal signal-equivalent event",
+      "regression": [
+        "LL01"
+      ],
+      "note": "",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_sigexit",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "host exit request on a fatal signal-equivalent event",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_sigexit",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "process-lifecycle; full profile js-host-service"
+      }
+    },
+    {
+      "index": 62,
+      "offset": 248,
+      "lisp_name": "jvm-init",
+      "c_name": "jvm_init",
+      "group": "native-libraries",
+      "c_definitions": [
+        "pmcl-kernel.c:2407"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "library/jni.lisp",
+          "line": 1153,
+          "form": "ff-call",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "unsupported",
+        "single_thread_jspi": "unsupported",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "none",
+      "replacement": "no JVM",
+      "regression": [],
+      "note": "library/jni.lisp only",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:jvm_init",
+        "kind": "import",
+        "disposition": "unsupported",
+        "required": true,
+        "implementation": null,
+        "evidence": "contracts/kernel-imports.v1.json#jvm_init",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "library/jni.lisp only; full profile unsupported"
+      }
+    },
+    {
+      "index": 63,
+      "offset": 252,
+      "lisp_name": "lisp-lstat",
+      "c_name": "lisp_lstat",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "unix-calls.c:101",
+        "windows-calls.c:618"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/linux-files.lisp",
+          "line": 473,
+          "form": "int-errno-ffcall",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "regression": [
+        "LL20",
+        "LL15"
+      ],
+      "note": "no symlinks in the virtual namespace",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_lstat",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_lstat",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "no symlinks in the virtual namespace; full profile js-host-service"
+      }
+    },
+    {
+      "index": 64,
+      "offset": 256,
+      "lisp_name": "lisp-realpath",
+      "c_name": "lisp_realpath",
+      "group": "host-namespace-io",
+      "c_definitions": [
+        "unix-calls.c:167",
+        "windows-calls.c:1071"
+      ],
+      "c_call_sites": 0,
+      "lisp_callers": [
+        {
+          "file": "level-1/linux-files.lisp",
+          "line": 698,
+          "form": "%kernel-import",
+          "x8632": true
+        }
+      ],
+      "x8632_callers": 1,
+      "dispositions": {
+        "full": "js-host-service",
+        "single_thread_jspi": "js-host-service",
+        "precompiled_callback": "unsupported"
+      },
+      "closure_phase": "runtime",
+      "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "regression": [
+        "LL20",
+        "LL15"
+      ],
+      "note": "pure function over the virtual namespace",
+      "required_in_x8632_closure": true,
+      "census_node": {
+        "id": "import:lisp_realpath",
+        "kind": "import",
+        "disposition": "replaced",
+        "required": true,
+        "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+        "evidence": "contracts/kernel-imports.v1.json#lisp_realpath",
+        "tests": [
+          "S0-LL15-b",
+          "S0-LL15-c"
+        ],
+        "reason": "pure function over the virtual namespace; full profile js-host-service"
+      }
+    }
+  ],
+  "census_nodes": [
+    {
+      "id": "import:fd_setsize_bytes",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+      "evidence": "contracts/kernel-imports.v1.json#fd_setsize_bytes",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "select() fd_set helper used by the fd readiness path in l1-streams; full profile js-host-service"
+    },
+    {
+      "id": "import:do_fd_set",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+      "evidence": "contracts/kernel-imports.v1.json#do_fd_set",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "select() fd_set helper used by the fd readiness path in l1-streams; full profile js-host-service"
+    },
+    {
+      "id": "import:do_fd_clr",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+      "evidence": "contracts/kernel-imports.v1.json#do_fd_clr",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "select() fd_set helper used by the fd readiness path in l1-streams; full profile js-host-service"
+    },
+    {
+      "id": "import:do_fd_is_set",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+      "evidence": "contracts/kernel-imports.v1.json#do_fd_is_set",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "select() fd_set helper used by the fd readiness path in l1-streams; full profile js-host-service"
+    },
+    {
+      "id": "import:do_fd_zero",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+      "evidence": "contracts/kernel-imports.v1.json#do_fd_zero",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "select() fd_set helper used by the fd readiness path in l1-streams; full profile js-host-service"
+    },
+    {
+      "id": "import:xMakeDataExecutable",
+      "kind": "import",
+      "disposition": "unsupported",
+      "required": false,
+      "implementation": null,
+      "evidence": "contracts/kernel-imports.v1.json#xMakeDataExecutable",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "x8632 has no caller; PPC/ARM callback support only; full profile unsupported"
+    },
+    {
+      "id": "import:xGetSharedLibrary",
+      "kind": "import",
+      "disposition": "unsupported",
+      "required": true,
+      "implementation": null,
+      "evidence": "contracts/kernel-imports.v1.json#xGetSharedLibrary",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "reached from shared-library revival in l0-cfm-support at startup; the closure must route those callers through this unsupported disposition explicitly; full profile unsupported"
+    },
+    {
+      "id": "import:xFindSymbol",
+      "kind": "import",
+      "disposition": "unsupported",
+      "required": true,
+      "implementation": null,
+      "evidence": "contracts/kernel-imports.v1.json#xFindSymbol",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "l0-cfm-support foreign-symbol lookup; full profile unsupported"
+    },
+    {
+      "id": "import:lisp_malloc",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "C kernel arena inside linear memory with owned foreign buffers (D4/D6); no malloc/free/calloc/realloc quartet substituted",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_malloc",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "foreign-memory; full profile wasm-runtime"
+    },
+    {
+      "id": "import:lisp_free",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "C kernel arena release; ownership recorded per buffer",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_free",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "foreign-memory; full profile wasm-runtime"
+    },
+    {
+      "id": "import:wait_for_signal",
+      "kind": "import",
+      "disposition": "unsupported",
+      "required": true,
+      "implementation": null,
+      "evidence": "contracts/kernel-imports.v1.json#wait_for_signal",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "signals; full profile unsupported"
+    },
+    {
+      "id": "import:tcr_frame_ptr",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "logical frame head read from the D5 TCR (contracts/debug-frames.md)",
+      "evidence": "contracts/kernel-imports.v1.json#tcr_frame_ptr",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "used for other-thread backtraces; full profile wasm-runtime"
+    },
+    {
+      "id": "import:register_xmacptr_dispose_function",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "finalization registry of the target collector for xmacptr disposal (plan item 4, Stage 2 weak/finalization)",
+      "evidence": "contracts/kernel-imports.v1.json#register_xmacptr_dispose_function",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "gc-finalization; full profile wasm-runtime"
+    },
+    {
+      "id": "import:open_debug_output",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "host diagnostic output channel opened by the early error service",
+      "evidence": "contracts/kernel-imports.v1.json#open_debug_output",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "diagnostics; full profile js-host-service"
+    },
+    {
+      "id": "import:get_r_debug",
+      "kind": "import",
+      "disposition": "unsupported",
+      "required": true,
+      "implementation": null,
+      "evidence": "contracts/kernel-imports.v1.json#get_r_debug",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "native-libraries; full profile unsupported"
+    },
+    {
+      "id": "import:restore_soft_stack_limit",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "explicit stack bounds with a reserve for the condition path (outline section 04; D5 explicit stacks)",
+      "evidence": "contracts/kernel-imports.v1.json#restore_soft_stack_limit",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "stacks; full profile wasm-runtime"
+    },
+    {
+      "id": "import:lisp_egc_control",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "returns EGC unavailable for the initial non-generational collector (D6)",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_egc_control",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "no named Lisp caller; reached through the gc-trap egc-control function code; full profile wasm-runtime"
+    },
+    {
+      "id": "import:lisp_bug",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "structured fatal diagnostic to the host naming build, code identity and faulting operation (LL23)",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_bug",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "diagnostics; full profile js-host-service"
+    },
+    {
+      "id": "import:xNewThread",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "Worker creation under D5 CREATING then PARKED with rooted handoff; single-thread profiles signal unsupported",
+      "evidence": "contracts/kernel-imports.v1.json#xNewThread",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "threads-lifecycle; full profile js-host-service"
+    },
+    {
+      "id": "import:do_nothing",
+      "kind": "import",
+      "disposition": "unsupported",
+      "required": false,
+      "implementation": null,
+      "evidence": "contracts/kernel-imports.v1.json#do_nothing",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "threads-lifecycle; full profile unsupported"
+    },
+    {
+      "id": "import:xDisposeThread",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "Worker retirement under the D5 TERMINATING protocol; single-thread profiles signal unsupported",
+      "evidence": "contracts/kernel-imports.v1.json#xDisposeThread",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "no named Lisp caller; native thread exit path; full profile js-host-service"
+    },
+    {
+      "id": "import:xThreadCurrentStackSpace",
+      "kind": "import",
+      "disposition": "unsupported",
+      "required": false,
+      "implementation": null,
+      "evidence": "contracts/kernel-imports.v1.json#xThreadCurrentStackSpace",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "no Lisp caller; full profile unsupported"
+    },
+    {
+      "id": "import:usage_exit",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "host process-exit request with the usage report",
+      "evidence": "contracts/kernel-imports.v1.json#usage_exit",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "process-lifecycle; full profile js-host-service"
+    },
+    {
+      "id": "import:save_fp_context",
+      "kind": "import",
+      "disposition": "unsupported",
+      "required": false,
+      "implementation": null,
+      "evidence": "contracts/kernel-imports.v1.json#save_fp_context",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "assembly-defined in x86-asmutils32.s; no Lisp caller; full profile unsupported"
+    },
+    {
+      "id": "import:restore_fp_context",
+      "kind": "import",
+      "disposition": "unsupported",
+      "required": false,
+      "implementation": null,
+      "evidence": "contracts/kernel-imports.v1.json#restore_fp_context",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "assembly-defined in x86-asmutils32.s; no Lisp caller; full profile unsupported"
+    },
+    {
+      "id": "import:put_vector_registers",
+      "kind": "import",
+      "disposition": "unsupported",
+      "required": false,
+      "implementation": null,
+      "evidence": "contracts/kernel-imports.v1.json#put_vector_registers",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "assembly-defined in x86-asmutils32.s; no Lisp caller; full profile unsupported"
+    },
+    {
+      "id": "import:get_vector_registers",
+      "kind": "import",
+      "disposition": "unsupported",
+      "required": false,
+      "implementation": null,
+      "evidence": "contracts/kernel-imports.v1.json#get_vector_registers",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "assembly-defined in x86-asmutils32.s; no Lisp caller; full profile unsupported"
+    },
+    {
+      "id": "import:new_semaphore",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "D5 owned semaphore word with wait/notify; JSPI profile waits through a promise-backed host service",
+      "evidence": "contracts/kernel-imports.v1.json#new_semaphore",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "created at load time by l0-aprims; full profile atomics-memory"
+    },
+    {
+      "id": "import:wait_on_semaphore",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "memory.atomic.wait32 on the owned word; JSPI profile suspends through a host promise",
+      "evidence": "contracts/kernel-imports.v1.json#wait_on_semaphore",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "synchronization; full profile atomics-memory"
+    },
+    {
+      "id": "import:signal_semaphore",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "atomic increment and notify",
+      "evidence": "contracts/kernel-imports.v1.json#signal_semaphore",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "synchronization; full profile atomics-memory"
+    },
+    {
+      "id": "import:destroy_semaphore",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "release of the owned word",
+      "evidence": "contracts/kernel-imports.v1.json#destroy_semaphore",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "no named Lisp caller; reached from C finalization; full profile atomics-memory"
+    },
+    {
+      "id": "import:new_recursive_lock",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "D5 atomic recursive lock; single-thread profiles keep owner and count semantics without a contended wait",
+      "evidence": "contracts/kernel-imports.v1.json#new_recursive_lock",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "created at load time by l0-aprims; full profile atomics-memory"
+    },
+    {
+      "id": "import:lock_recursive_lock",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "D5 atomic recursive lock operations",
+      "evidence": "contracts/kernel-imports.v1.json#lock_recursive_lock",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "no named Lisp caller; reached through subprimitives and C; full profile atomics-memory"
+    },
+    {
+      "id": "import:unlock_recursive_lock",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "D5 atomic recursive lock operations",
+      "evidence": "contracts/kernel-imports.v1.json#unlock_recursive_lock",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "no named Lisp caller; reached through subprimitives and C; full profile atomics-memory"
+    },
+    {
+      "id": "import:destroy_recursive_lock",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "D5 atomic recursive lock operations",
+      "evidence": "contracts/kernel-imports.v1.json#destroy_recursive_lock",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "no named Lisp caller; reached through subprimitives and C; full profile atomics-memory"
+    },
+    {
+      "id": "import:lisp_suspend_other_threads",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "D5 admission and rendezvous replace signal-based suspension; safepoints do not remove the callers, the protocol replaces them",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_suspend_other_threads",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "no named Lisp caller; C-side rendezvous; full profile wasm-runtime"
+    },
+    {
+      "id": "import:lisp_resume_other_threads",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "D5 admission and rendezvous replace signal-based suspension; safepoints do not remove the callers, the protocol replaces them",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_resume_other_threads",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "no named Lisp caller; C-side rendezvous; full profile wasm-runtime"
+    },
+    {
+      "id": "import:lisp_suspend_tcr",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "D5 admission and rendezvous replace signal-based suspension; safepoints do not remove the callers, the protocol replaces them",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_suspend_tcr",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "no named Lisp caller; C-side rendezvous; full profile wasm-runtime"
+    },
+    {
+      "id": "import:lisp_resume_tcr",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "D5 admission and rendezvous replace signal-based suspension; safepoints do not remove the callers, the protocol replaces them",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_resume_tcr",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "no named Lisp caller; C-side rendezvous; full profile wasm-runtime"
+    },
+    {
+      "id": "import:rwlock_new",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "D5 atomic rwlock",
+      "evidence": "contracts/kernel-imports.v1.json#rwlock_new",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "created at load time by l0-aprims; full profile atomics-memory"
+    },
+    {
+      "id": "import:rwlock_destroy",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "D5 atomic rwlock operations",
+      "evidence": "contracts/kernel-imports.v1.json#rwlock_destroy",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "no named Lisp caller; reached through subprimitives and C; full profile atomics-memory"
+    },
+    {
+      "id": "import:rwlock_rlock",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "D5 atomic rwlock operations",
+      "evidence": "contracts/kernel-imports.v1.json#rwlock_rlock",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "no named Lisp caller; reached through subprimitives and C; full profile atomics-memory"
+    },
+    {
+      "id": "import:rwlock_wlock",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "D5 atomic rwlock operations",
+      "evidence": "contracts/kernel-imports.v1.json#rwlock_wlock",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "no named Lisp caller; reached through subprimitives and C; full profile atomics-memory"
+    },
+    {
+      "id": "import:rwlock_unlock",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "D5 atomic rwlock operations",
+      "evidence": "contracts/kernel-imports.v1.json#rwlock_unlock",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "no named Lisp caller; reached through subprimitives and C; full profile atomics-memory"
+    },
+    {
+      "id": "import:recursive_lock_trylock",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "D5 atomic recursive lock operations",
+      "evidence": "contracts/kernel-imports.v1.json#recursive_lock_trylock",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "no named Lisp caller; reached through subprimitives and C; full profile atomics-memory"
+    },
+    {
+      "id": "import:foreign_name_and_offset",
+      "kind": "import",
+      "disposition": "unsupported",
+      "required": false,
+      "implementation": null,
+      "evidence": "contracts/kernel-imports.v1.json#foreign_name_and_offset",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "no Lisp caller; full profile unsupported"
+    },
+    {
+      "id": "import:lisp_read",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_read",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "bundle and manifest loading; full profile js-host-service"
+    },
+    {
+      "id": "import:lisp_write",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "host output sink for console and diagnostic streams; writes to named files are refused until the Stage 3 writable store",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_write",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "host-namespace-io; full profile js-host-service"
+    },
+    {
+      "id": "import:lisp_open",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_open",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "bundle and manifest loading; full profile js-host-service"
+    },
+    {
+      "id": "import:lisp_fchmod",
+      "kind": "import",
+      "disposition": "unsupported",
+      "required": true,
+      "implementation": null,
+      "evidence": "contracts/kernel-imports.v1.json#lisp_fchmod",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "host-namespace-io; full profile unsupported"
+    },
+    {
+      "id": "import:lisp_lseek",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_lseek",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "positioned read; full profile js-host-service"
+    },
+    {
+      "id": "import:lisp_close",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_close",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "host-namespace-io; full profile js-host-service"
+    },
+    {
+      "id": "import:lisp_ftruncate",
+      "kind": "import",
+      "disposition": "unsupported",
+      "required": true,
+      "implementation": null,
+      "evidence": "contracts/kernel-imports.v1.json#lisp_ftruncate",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "host-namespace-io; full profile unsupported"
+    },
+    {
+      "id": "import:lisp_stat",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_stat",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "probe-file over the virtual namespace; full profile js-host-service"
+    },
+    {
+      "id": "import:lisp_fstat",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_fstat",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "size and kind; full profile js-host-service"
+    },
+    {
+      "id": "import:lisp_futex",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "memory.atomic.wait32/notify on shared memory; unshared profiles cannot wait (S0-ENGINE-a, S0-LL21-c)",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_futex",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "synchronization; full profile atomics-memory"
+    },
+    {
+      "id": "import:lisp_opendir",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_opendir",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "directory listing over the virtual namespace; full profile js-host-service"
+    },
+    {
+      "id": "import:lisp_readdir",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_readdir",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "host-namespace-io; full profile js-host-service"
+    },
+    {
+      "id": "import:lisp_closedir",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_closedir",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "host-namespace-io; full profile js-host-service"
+    },
+    {
+      "id": "import:lisp_pipe",
+      "kind": "import",
+      "disposition": "unsupported",
+      "required": true,
+      "implementation": null,
+      "evidence": "contracts/kernel-imports.v1.json#lisp_pipe",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "host-namespace-io; full profile unsupported"
+    },
+    {
+      "id": "import:lisp_gettimeofday",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "host clock policy (D6)",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_gettimeofday",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "host-clock; full profile js-host-service"
+    },
+    {
+      "id": "import:lisp_sigexit",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "host exit request on a fatal signal-equivalent event",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_sigexit",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "process-lifecycle; full profile js-host-service"
+    },
+    {
+      "id": "import:jvm_init",
+      "kind": "import",
+      "disposition": "unsupported",
+      "required": true,
+      "implementation": null,
+      "evidence": "contracts/kernel-imports.v1.json#jvm_init",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "library/jni.lisp only; full profile unsupported"
+    },
+    {
+      "id": "import:lisp_lstat",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_lstat",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "no symlinks in the virtual namespace; full profile js-host-service"
+    },
+    {
+      "id": "import:lisp_realpath",
+      "kind": "import",
+      "disposition": "replaced",
+      "required": true,
+      "implementation": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+      "evidence": "contracts/kernel-imports.v1.json#lisp_realpath",
+      "tests": [
+        "S0-LL15-b",
+        "S0-LL15-c"
+      ],
+      "reason": "pure function over the virtual namespace; full profile js-host-service"
+    }
+  ],
+  "placeholder": "the working census graph carries one unresolved node gap:imports; these 65 nodes are its resolution once the evaluated census joins reachability"
+}

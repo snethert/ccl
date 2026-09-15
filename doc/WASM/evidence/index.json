@@ -3093,6 +3093,17 @@
         "record": "stage0/claude-review.md",
         "acceptance": "Compile-phase references only, BLOCKED by design; no runtime value, bound or gate credit. LL15-b/c remain missing."
       }
+    },
+    {
+      "id": "KERNEL-IMPORTS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-kernel-imports-r1/packet.json",
+      "sha256": "3c3d90cda88355ad6ba39286412004b29ab4641ad78524eeb7501224773f627d",
+      "scope": "D6 kernel-import census: 65 U1 defimport spellings joined across the C table and the x8632 enumeration with name agreement; 63 x8632 caller sites over 42 imports; every C or assembly definition located; closed disposition ledger per profile with closure phase, replacement and regression obligations; 65 census-shaped import nodes offered for the working graph's unresolved gap:imports placeholder. Seven refused controls. Source inspection only; no reachability, no gate credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "authorship": "Claude Fable 5.1 fixture and generated census on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending."
     }
   ]
 }

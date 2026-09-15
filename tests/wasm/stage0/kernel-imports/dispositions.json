@@ -1,0 +1,1077 @@
+{
+ "version": 1,
+ "vocabulary": {
+  "wasm-runtime": "implemented by the freestanding C kernel or emitted runtime inside linear memory",
+  "js-host-service": "served by the host through the D5 mailbox (full) or a promise (JSPI)",
+  "atomics-memory": "implemented with Wasm atomics on owned words",
+  "unsupported": "explicitly unsupported; reachable only through the declared unsupported operation"
+ },
+ "profiles": [
+  "full",
+  "single_thread_jspi",
+  "precompiled_callback"
+ ],
+ "closure_phases": [
+  "loader",
+  "definitions",
+  "runtime",
+  "none"
+ ],
+ "imports": {
+  "fd-setsize-bytes": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+   "regression": [
+    "LL20"
+   ],
+   "note": "select() fd_set helper used by the fd readiness path in l1-streams",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "do-fd-set": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+   "regression": [
+    "LL20"
+   ],
+   "note": "select() fd_set helper used by the fd readiness path in l1-streams",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "do-fd-clr": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+   "regression": [
+    "LL20"
+   ],
+   "note": "select() fd_set helper used by the fd readiness path in l1-streams",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "do-fd-is-set": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+   "regression": [
+    "LL20"
+   ],
+   "note": "select() fd_set helper used by the fd readiness path in l1-streams",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "do-fd-zero": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "readiness query on the mailbox request descriptor; no select() bitmaps in linear memory",
+   "regression": [
+    "LL20"
+   ],
+   "note": "select() fd_set helper used by the fd readiness path in l1-streams",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "makedataexecutable": {
+   "group": "native-code",
+   "dispositions": {
+    "full": "unsupported",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "none",
+   "replacement": "code is installed as validated Wasm modules under D5; no data-to-code transition exists",
+   "regression": [
+    "LL21"
+   ],
+   "note": "x8632 has no caller; PPC/ARM callback support only",
+   "expected_lisp_callers": 4,
+   "expected_x8632_callers": 0
+  },
+  "getsharedlibrary": {
+   "group": "native-libraries",
+   "dispositions": {
+    "full": "unsupported",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "none",
+   "replacement": "named-import registry of declared host services (D4 allowed-import inventory); native shared libraries are out of scope",
+   "regression": [
+    "LL13"
+   ],
+   "note": "reached from shared-library revival in l0-cfm-support at startup; the closure must route those callers through this unsupported disposition explicitly",
+   "expected_lisp_callers": 6,
+   "expected_x8632_callers": 6
+  },
+  "findsymbol": {
+   "group": "native-libraries",
+   "dispositions": {
+    "full": "unsupported",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "none",
+   "replacement": "named-import registry; #_ foreign-symbol resolution is out of scope (outline section 07)",
+   "regression": [
+    "LL13"
+   ],
+   "note": "l0-cfm-support foreign-symbol lookup",
+   "expected_lisp_callers": 4,
+   "expected_x8632_callers": 4
+  },
+  "malloc": {
+   "group": "foreign-memory",
+   "dispositions": {
+    "full": "wasm-runtime",
+    "single_thread_jspi": "wasm-runtime",
+    "precompiled_callback": "wasm-runtime"
+   },
+   "closure_phase": "loader",
+   "replacement": "C kernel arena inside linear memory with owned foreign buffers (D4/D6); no malloc/free/calloc/realloc quartet substituted",
+   "regression": [
+    "LL13",
+    "LL07"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "free": {
+   "group": "foreign-memory",
+   "dispositions": {
+    "full": "wasm-runtime",
+    "single_thread_jspi": "wasm-runtime",
+    "precompiled_callback": "wasm-runtime"
+   },
+   "closure_phase": "loader",
+   "replacement": "C kernel arena release; ownership recorded per buffer",
+   "regression": [
+    "LL13",
+    "LL07"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "wait-for-signal": {
+   "group": "signals",
+   "dispositions": {
+    "full": "unsupported",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "none",
+   "replacement": "no OS signals; interrupt delivery is the D5 mailbox INTERRUPTED wake",
+   "regression": [
+    "LL20"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "tcr-frame-ptr": {
+   "group": "threads-lifecycle",
+   "dispositions": {
+    "full": "wasm-runtime",
+    "single_thread_jspi": "wasm-runtime",
+    "precompiled_callback": "wasm-runtime"
+   },
+   "closure_phase": "runtime",
+   "replacement": "logical frame head read from the D5 TCR (contracts/debug-frames.md)",
+   "regression": [
+    "LL23"
+   ],
+   "note": "used for other-thread backtraces",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "register-xmacptr-dispose-function": {
+   "group": "gc-finalization",
+   "dispositions": {
+    "full": "wasm-runtime",
+    "single_thread_jspi": "wasm-runtime",
+    "precompiled_callback": "wasm-runtime"
+   },
+   "closure_phase": "runtime",
+   "replacement": "finalization registry of the target collector for xmacptr disposal (plan item 4, Stage 2 weak/finalization)",
+   "regression": [
+    "LL18"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "open-debug-output": {
+   "group": "diagnostics",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "js-host-service"
+   },
+   "closure_phase": "loader",
+   "replacement": "host diagnostic output channel opened by the early error service",
+   "regression": [
+    "LL23"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "get-r-debug": {
+   "group": "native-libraries",
+   "dispositions": {
+    "full": "unsupported",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "none",
+   "replacement": "no dynamic linker debug structure; host services are declared imports",
+   "regression": [
+    "LL13"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "restore-soft-stack-limit": {
+   "group": "stacks",
+   "dispositions": {
+    "full": "wasm-runtime",
+    "single_thread_jspi": "wasm-runtime",
+    "precompiled_callback": "wasm-runtime"
+   },
+   "closure_phase": "runtime",
+   "replacement": "explicit stack bounds with a reserve for the condition path (outline section 04; D5 explicit stacks)",
+   "regression": [
+    "LL19",
+    "LL13"
+   ],
+   "note": "",
+   "expected_lisp_callers": 2,
+   "expected_x8632_callers": 1
+  },
+  "egc-control": {
+   "group": "gc",
+   "dispositions": {
+    "full": "wasm-runtime",
+    "single_thread_jspi": "wasm-runtime",
+    "precompiled_callback": "wasm-runtime"
+   },
+   "closure_phase": "runtime",
+   "replacement": "returns EGC unavailable for the initial non-generational collector (D6)",
+   "regression": [
+    "LL18"
+   ],
+   "note": "no named Lisp caller; reached through the gc-trap egc-control function code",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "lisp-bug": {
+   "group": "diagnostics",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "js-host-service"
+   },
+   "closure_phase": "loader",
+   "replacement": "structured fatal diagnostic to the host naming build, code identity and faulting operation (LL23)",
+   "regression": [
+    "LL23",
+    "LL01"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "newthread": {
+   "group": "threads-lifecycle",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "Worker creation under D5 CREATING then PARKED with rooted handoff; single-thread profiles signal unsupported",
+   "regression": [
+    "LL20",
+    "LL13"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "cooperative-thread-startup": {
+   "group": "threads-lifecycle",
+   "dispositions": {
+    "full": "unsupported",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "none",
+   "replacement": "C placeholder do_nothing; no Lisp caller",
+   "regression": [],
+   "note": "",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "disposethread": {
+   "group": "threads-lifecycle",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "Worker retirement under the D5 TERMINATING protocol; single-thread profiles signal unsupported",
+   "regression": [
+    "LL20"
+   ],
+   "note": "no named Lisp caller; native thread exit path",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "threadcurrentstackspace": {
+   "group": "stacks",
+   "dispositions": {
+    "full": "unsupported",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "none",
+   "replacement": "explicit stack bounds live in the TCR; no native stack-space query",
+   "regression": [
+    "LL13"
+   ],
+   "note": "no Lisp caller",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "usage-exit": {
+   "group": "process-lifecycle",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "js-host-service"
+   },
+   "closure_phase": "runtime",
+   "replacement": "host process-exit request with the usage report",
+   "regression": [
+    "LL01",
+    "LL23"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "save-fp-context": {
+   "group": "fp-context",
+   "dispositions": {
+    "full": "unsupported",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "none",
+   "replacement": "no native FP/vector register context; the D6 floating-point policy specifies explicit checks",
+   "regression": [
+    "LL16"
+   ],
+   "note": "assembly-defined in x86-asmutils32.s; no Lisp caller",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "restore-fp-context": {
+   "group": "fp-context",
+   "dispositions": {
+    "full": "unsupported",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "none",
+   "replacement": "no native FP/vector register context; the D6 floating-point policy specifies explicit checks",
+   "regression": [
+    "LL16"
+   ],
+   "note": "assembly-defined in x86-asmutils32.s; no Lisp caller",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "put-altivec-registers": {
+   "group": "fp-context",
+   "dispositions": {
+    "full": "unsupported",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "none",
+   "replacement": "no native FP/vector register context; the D6 floating-point policy specifies explicit checks",
+   "regression": [
+    "LL16"
+   ],
+   "note": "assembly-defined in x86-asmutils32.s; no Lisp caller",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "get-altivec-registers": {
+   "group": "fp-context",
+   "dispositions": {
+    "full": "unsupported",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "none",
+   "replacement": "no native FP/vector register context; the D6 floating-point policy specifies explicit checks",
+   "regression": [
+    "LL16"
+   ],
+   "note": "assembly-defined in x86-asmutils32.s; no Lisp caller",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "new-semaphore": {
+   "group": "synchronization",
+   "dispositions": {
+    "full": "atomics-memory",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "definitions",
+   "replacement": "D5 owned semaphore word with wait/notify; JSPI profile waits through a promise-backed host service",
+   "regression": [
+    "LL20"
+   ],
+   "note": "created at load time by l0-aprims",
+   "expected_lisp_callers": 2,
+   "expected_x8632_callers": 2
+  },
+  "wait-on-semaphore": {
+   "group": "synchronization",
+   "dispositions": {
+    "full": "atomics-memory",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "memory.atomic.wait32 on the owned word; JSPI profile suspends through a host promise",
+   "regression": [
+    "LL20"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "signal-semaphore": {
+   "group": "synchronization",
+   "dispositions": {
+    "full": "atomics-memory",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "atomic increment and notify",
+   "regression": [
+    "LL20"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "destroy-semaphore": {
+   "group": "synchronization",
+   "dispositions": {
+    "full": "atomics-memory",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "release of the owned word",
+   "regression": [
+    "LL20"
+   ],
+   "note": "no named Lisp caller; reached from C finalization",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "new-recursive-lock": {
+   "group": "synchronization",
+   "dispositions": {
+    "full": "atomics-memory",
+    "single_thread_jspi": "atomics-memory",
+    "precompiled_callback": "atomics-memory"
+   },
+   "closure_phase": "definitions",
+   "replacement": "D5 atomic recursive lock; single-thread profiles keep owner and count semantics without a contended wait",
+   "regression": [
+    "LL20"
+   ],
+   "note": "created at load time by l0-aprims",
+   "expected_lisp_callers": 2,
+   "expected_x8632_callers": 2
+  },
+  "lock-recursive-lock": {
+   "group": "synchronization",
+   "dispositions": {
+    "full": "atomics-memory",
+    "single_thread_jspi": "atomics-memory",
+    "precompiled_callback": "atomics-memory"
+   },
+   "closure_phase": "runtime",
+   "replacement": "D5 atomic recursive lock operations",
+   "regression": [
+    "LL20"
+   ],
+   "note": "no named Lisp caller; reached through subprimitives and C",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "unlock-recursive-lock": {
+   "group": "synchronization",
+   "dispositions": {
+    "full": "atomics-memory",
+    "single_thread_jspi": "atomics-memory",
+    "precompiled_callback": "atomics-memory"
+   },
+   "closure_phase": "runtime",
+   "replacement": "D5 atomic recursive lock operations",
+   "regression": [
+    "LL20"
+   ],
+   "note": "no named Lisp caller; reached through subprimitives and C",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "destroy-recursive-lock": {
+   "group": "synchronization",
+   "dispositions": {
+    "full": "atomics-memory",
+    "single_thread_jspi": "atomics-memory",
+    "precompiled_callback": "atomics-memory"
+   },
+   "closure_phase": "runtime",
+   "replacement": "D5 atomic recursive lock operations",
+   "regression": [
+    "LL20"
+   ],
+   "note": "no named Lisp caller; reached through subprimitives and C",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "recursive-lock-trylock": {
+   "group": "synchronization",
+   "dispositions": {
+    "full": "atomics-memory",
+    "single_thread_jspi": "atomics-memory",
+    "precompiled_callback": "atomics-memory"
+   },
+   "closure_phase": "runtime",
+   "replacement": "D5 atomic recursive lock operations",
+   "regression": [
+    "LL20"
+   ],
+   "note": "no named Lisp caller; reached through subprimitives and C",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "suspend-other-threads": {
+   "group": "threads-rendezvous",
+   "dispositions": {
+    "full": "wasm-runtime",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "D5 admission and rendezvous replace signal-based suspension; safepoints do not remove the callers, the protocol replaces them",
+   "regression": [
+    "LL20"
+   ],
+   "note": "no named Lisp caller; C-side rendezvous",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "resume-other-threads": {
+   "group": "threads-rendezvous",
+   "dispositions": {
+    "full": "wasm-runtime",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "D5 admission and rendezvous replace signal-based suspension; safepoints do not remove the callers, the protocol replaces them",
+   "regression": [
+    "LL20"
+   ],
+   "note": "no named Lisp caller; C-side rendezvous",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "suspend-tcr": {
+   "group": "threads-rendezvous",
+   "dispositions": {
+    "full": "wasm-runtime",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "D5 admission and rendezvous replace signal-based suspension; safepoints do not remove the callers, the protocol replaces them",
+   "regression": [
+    "LL20"
+   ],
+   "note": "no named Lisp caller; C-side rendezvous",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "resume-tcr": {
+   "group": "threads-rendezvous",
+   "dispositions": {
+    "full": "wasm-runtime",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "D5 admission and rendezvous replace signal-based suspension; safepoints do not remove the callers, the protocol replaces them",
+   "regression": [
+    "LL20"
+   ],
+   "note": "no named Lisp caller; C-side rendezvous",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "rwlock-new": {
+   "group": "synchronization",
+   "dispositions": {
+    "full": "atomics-memory",
+    "single_thread_jspi": "atomics-memory",
+    "precompiled_callback": "atomics-memory"
+   },
+   "closure_phase": "definitions",
+   "replacement": "D5 atomic rwlock",
+   "regression": [
+    "LL20"
+   ],
+   "note": "created at load time by l0-aprims",
+   "expected_lisp_callers": 2,
+   "expected_x8632_callers": 2
+  },
+  "rwlock-destroy": {
+   "group": "synchronization",
+   "dispositions": {
+    "full": "atomics-memory",
+    "single_thread_jspi": "atomics-memory",
+    "precompiled_callback": "atomics-memory"
+   },
+   "closure_phase": "runtime",
+   "replacement": "D5 atomic rwlock operations",
+   "regression": [
+    "LL20"
+   ],
+   "note": "no named Lisp caller; reached through subprimitives and C",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "rwlock-rlock": {
+   "group": "synchronization",
+   "dispositions": {
+    "full": "atomics-memory",
+    "single_thread_jspi": "atomics-memory",
+    "precompiled_callback": "atomics-memory"
+   },
+   "closure_phase": "runtime",
+   "replacement": "D5 atomic rwlock operations",
+   "regression": [
+    "LL20"
+   ],
+   "note": "no named Lisp caller; reached through subprimitives and C",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "rwlock-wlock": {
+   "group": "synchronization",
+   "dispositions": {
+    "full": "atomics-memory",
+    "single_thread_jspi": "atomics-memory",
+    "precompiled_callback": "atomics-memory"
+   },
+   "closure_phase": "runtime",
+   "replacement": "D5 atomic rwlock operations",
+   "regression": [
+    "LL20"
+   ],
+   "note": "no named Lisp caller; reached through subprimitives and C",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "rwlock-unlock": {
+   "group": "synchronization",
+   "dispositions": {
+    "full": "atomics-memory",
+    "single_thread_jspi": "atomics-memory",
+    "precompiled_callback": "atomics-memory"
+   },
+   "closure_phase": "runtime",
+   "replacement": "D5 atomic rwlock operations",
+   "regression": [
+    "LL20"
+   ],
+   "note": "no named Lisp caller; reached through subprimitives and C",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "foreign-name-and-offset": {
+   "group": "diagnostics",
+   "dispositions": {
+    "full": "unsupported",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "none",
+   "replacement": "no native symbolication; code identities come from the manifest (LL23)",
+   "regression": [
+    "LL23"
+   ],
+   "note": "no Lisp caller",
+   "expected_lisp_callers": 0,
+   "expected_x8632_callers": 0
+  },
+  "lisp-read": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "loader",
+   "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+   "regression": [
+    "LL20",
+    "LL15"
+   ],
+   "note": "bundle and manifest loading",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "lisp-open": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "loader",
+   "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+   "regression": [
+    "LL20",
+    "LL15"
+   ],
+   "note": "bundle and manifest loading",
+   "expected_lisp_callers": 2,
+   "expected_x8632_callers": 2
+  },
+  "lisp-lseek": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "loader",
+   "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+   "regression": [
+    "LL20",
+    "LL15"
+   ],
+   "note": "positioned read",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "lisp-close": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "loader",
+   "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+   "regression": [
+    "LL20",
+    "LL15"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "lisp-fstat": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "loader",
+   "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+   "regression": [
+    "LL20",
+    "LL15"
+   ],
+   "note": "size and kind",
+   "expected_lisp_callers": 2,
+   "expected_x8632_callers": 2
+  },
+  "lisp-stat": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+   "regression": [
+    "LL20",
+    "LL15"
+   ],
+   "note": "probe-file over the virtual namespace",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "lisp-lstat": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+   "regression": [
+    "LL20",
+    "LL15"
+   ],
+   "note": "no symlinks in the virtual namespace",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "lisp-opendir": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+   "regression": [
+    "LL20",
+    "LL15"
+   ],
+   "note": "directory listing over the virtual namespace",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "lisp-readdir": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+   "regression": [
+    "LL20",
+    "LL15"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "lisp-closedir": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+   "regression": [
+    "LL20",
+    "LL15"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "lisp-realpath": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "read-only named byte sources served through the mailbox (full) or a promise (JSPI); outline section 07 read-only namespace",
+   "regression": [
+    "LL20",
+    "LL15"
+   ],
+   "note": "pure function over the virtual namespace",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "lisp-write": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "js-host-service"
+   },
+   "closure_phase": "loader",
+   "replacement": "host output sink for console and diagnostic streams; writes to named files are refused until the Stage 3 writable store",
+   "regression": [
+    "LL20",
+    "LL23"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "lisp-fchmod": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "unsupported",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "none",
+   "replacement": "no mode changes in the read-only namespace; writable store is Stage 3",
+   "regression": [
+    "LL20"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "lisp-ftruncate": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "unsupported",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "none",
+   "replacement": "no truncation in the read-only namespace; writable store is Stage 3",
+   "regression": [
+    "LL20"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "lisp-futex": {
+   "group": "synchronization",
+   "dispositions": {
+    "full": "atomics-memory",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "runtime",
+   "replacement": "memory.atomic.wait32/notify on shared memory; unshared profiles cannot wait (S0-ENGINE-a, S0-LL21-c)",
+   "regression": [
+    "LL20",
+    "LL21"
+   ],
+   "note": "",
+   "expected_lisp_callers": 3,
+   "expected_x8632_callers": 3
+  },
+  "lisp-pipe": {
+   "group": "host-namespace-io",
+   "dispositions": {
+    "full": "unsupported",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "none",
+   "replacement": "provisionally unsupported (D6)",
+   "regression": [
+    "LL20"
+   ],
+   "note": "",
+   "expected_lisp_callers": 2,
+   "expected_x8632_callers": 2
+  },
+  "lisp-gettimeofday": {
+   "group": "host-clock",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "js-host-service"
+   },
+   "closure_phase": "runtime",
+   "replacement": "host clock policy (D6)",
+   "regression": [
+    "LL16"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "lisp-sigexit": {
+   "group": "process-lifecycle",
+   "dispositions": {
+    "full": "js-host-service",
+    "single_thread_jspi": "js-host-service",
+    "precompiled_callback": "js-host-service"
+   },
+   "closure_phase": "runtime",
+   "replacement": "host exit request on a fatal signal-equivalent event",
+   "regression": [
+    "LL01"
+   ],
+   "note": "",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  },
+  "jvm-init": {
+   "group": "native-libraries",
+   "dispositions": {
+    "full": "unsupported",
+    "single_thread_jspi": "unsupported",
+    "precompiled_callback": "unsupported"
+   },
+   "closure_phase": "none",
+   "replacement": "no JVM",
+   "regression": [],
+   "note": "library/jni.lisp only",
+   "expected_lisp_callers": 1,
+   "expected_x8632_callers": 1
+  }
+ }
+}
