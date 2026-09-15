@@ -3001,9 +3001,16 @@
       "sha256": "c1a38143e34a23c1a517b8845e430cb6721bd5f57dfa92bb2981e8eb2b733a7b",
       "scope": "Retained native observation and recovery evidence only. No exhaustive bound, Wasm qualification or gate credit.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude",
+        "record": "stage0/claude-review.md",
+        "review_commit": "e0c73b10",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "scope": "Retained native observation, R6, recovery and original failures; no exhaustive bounds or gate credit."
+      }
     },
     {
       "id": "ON-DEMAND-CENSUS-R1",
@@ -3014,6 +3021,23 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Native on-demand query/witness tools and final explicit startup worklist. No exhaustive callee bounds, Wasm execution, complete closure or LL15 acceptance."
+    },
+    {
+      "id": "CENSUS-BUILTIN-SLOTS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-builtin-slots-r1/packet.json",
+      "sha256": "4d1c3de7bc024653b164ae6f8f99046b40cb12ddbfb96f71d83f55274e0a063c",
+      "scope": "1,500 original-build calls grouped by eight operand slots; 1,562 computed calls separate. Native source interpretation and graph consolidation only; no target implementation or runtime bound qualified.",
+      "execution_status": "BLOCKED",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude",
+        "record": "stage0/claude-review.md",
+        "review_commit": "e0c73b10",
+        "disposition": "EXECUTION_REPRODUCED_NO_DEFECT",
+        "scope": "Five analysis outputs and graph reproduced with 32 rejecting controls. New publication metadata has not been independently reviewed."
+      }
     }
   ]
 }
