@@ -1,0 +1,205 @@
+{
+  "version": 1,
+  "records": [
+    {
+      "symbol_id": 88258,
+      "descriptor": {
+        "id": 88258,
+        "kind": "symbol",
+        "name": "PARSE-STANDARD-FFI-FILES",
+        "package": "CCL",
+        "setter_of": null
+      },
+      "category": "SOURCE_CANDIDATE_WITHOUT_COMPILED_IDENTITY",
+      "source": {
+        "path": "library/parse-ffi.lisp",
+        "sha256": "5f34a8e5079407462c7c52c1bdb147354ec94f90437e902b9cc16bd4bd39c8f4",
+        "byte_offset": 35488,
+        "line": 808,
+        "marker": "(defun parse-standard-ffi-files"
+      },
+      "scope": "Source lookup lead only; no object alias, profile exclusion, installation or runtime bound.",
+      "remaining": "Optional PARSE-FFI loader path; CREATE-INTERFACES invokes native interface translation. A source definition is not an original-build cell value."
+    },
+    {
+      "symbol_id": 803889,
+      "descriptor": {
+        "id": 803889,
+        "kind": "symbol",
+        "name": "%DEFINE-PPC-LAP-FUNCTION",
+        "package": "CCL",
+        "setter_of": null
+      },
+      "category": "SOURCE_CANDIDATE_WITHOUT_COMPILED_IDENTITY",
+      "source": {
+        "path": "compiler/PPC/ppc-lap.lisp",
+        "sha256": "7f69bd106ffcccdae77e862b8286702ebab7018e2745e8b2d79974755774422c",
+        "byte_offset": 2997,
+        "line": 85,
+        "marker": "(defun %define-ppc-lap-function"
+      },
+      "scope": "Source lookup lead only; no object alias, profile exclusion, installation or runtime bound.",
+      "remaining": "PPC assembler source candidate; target selection and browser disposition still require qualified branch analysis."
+    },
+    {
+      "symbol_id": 805087,
+      "descriptor": {
+        "id": 805087,
+        "kind": "symbol",
+        "name": "%DEFINE-ARM-LAP-FUNCTION",
+        "package": "CCL",
+        "setter_of": null
+      },
+      "category": "SOURCE_CANDIDATE_WITHOUT_COMPILED_IDENTITY",
+      "source": {
+        "path": "compiler/ARM/arm-lap.lisp",
+        "sha256": "dbb2b364535a0712ccacc84badfd09413bd6c555e9e8fb150e118afa0a97e9cb",
+        "byte_offset": 1785,
+        "line": 64,
+        "marker": "(defun %define-arm-lap-function"
+      },
+      "scope": "Source lookup lead only; no object alias, profile exclusion, installation or runtime bound.",
+      "remaining": "ARM assembler source candidate; target selection and browser disposition still require qualified branch analysis."
+    },
+    {
+      "symbol_id": 7959660,
+      "descriptor": {
+        "id": 7959660,
+        "kind": "symbol",
+        "name": "XLOAD-ARM-SET-ENTRYPOINT",
+        "package": "CCL",
+        "setter_of": null
+      },
+      "category": "SOURCE_CANDIDATE_WITHOUT_COMPILED_IDENTITY",
+      "source": {
+        "path": "xdump/xarmfasload.lisp",
+        "sha256": "0263e9c38ebda533c7f64c6beffbfffb771da5f4ca6ac8f2f5fdcec2f422fa4c",
+        "byte_offset": 877,
+        "line": 27,
+        "marker": "(defun xload-arm-set-entrypoint"
+      },
+      "scope": "Source lookup lead only; no object alias, profile exclusion, installation or runtime bound.",
+      "remaining": "ARM image entry planting candidate; no original-build callable witness or Wasm replacement inferred."
+    },
+    {
+      "symbol_id": 15529704,
+      "descriptor": {
+        "id": 15529704,
+        "kind": "symbol",
+        "name": "XREF-ENTRY-FULL-NAME",
+        "package": "CCL",
+        "setter_of": null
+      },
+      "category": "SOURCE_CANDIDATE_WITHOUT_COMPILED_IDENTITY",
+      "source": {
+        "path": "lib/xref.lisp",
+        "sha256": "6743a0fe2328f41df2e0822922a0c7b9b5ecd40a64309a98d2dcb069264fbfb4",
+        "byte_offset": 8708,
+        "line": 255,
+        "marker": "(defun xref-entry-full-name"
+      },
+      "scope": "Source lookup lead only; no object alias, profile exclusion, installation or runtime bound.",
+      "remaining": "XREF source candidate; its optional-module condition and loading must be joined before callable use."
+    },
+    {
+      "symbol_id": 15529706,
+      "descriptor": {
+        "id": 15529706,
+        "kind": "symbol",
+        "name": "XREF-ENTRY-TYPE",
+        "package": "CCL",
+        "setter_of": null
+      },
+      "category": "SOURCE_CANDIDATE_WITHOUT_COMPILED_IDENTITY",
+      "source": {
+        "path": "lib/xref.lisp",
+        "sha256": "6743a0fe2328f41df2e0822922a0c7b9b5ecd40a64309a98d2dcb069264fbfb4",
+        "byte_offset": 4213,
+        "line": 145,
+        "marker": "(defstruct (xref-entry"
+      },
+      "scope": "Source lookup lead only; no object alias, profile exclusion, installation or runtime bound.",
+      "remaining": "XREF defstruct source candidate for a generated accessor; constructor/registry and load identities remain open."
+    },
+    {
+      "symbol_id": 15529712,
+      "descriptor": {
+        "id": 15529712,
+        "kind": "symbol",
+        "name": "XREF-ENTRY-P",
+        "package": "CCL",
+        "setter_of": null
+      },
+      "category": "SOURCE_CANDIDATE_WITHOUT_COMPILED_IDENTITY",
+      "source": {
+        "path": "lib/xref.lisp",
+        "sha256": "6743a0fe2328f41df2e0822922a0c7b9b5ecd40a64309a98d2dcb069264fbfb4",
+        "byte_offset": 4213,
+        "line": 145,
+        "marker": "(defstruct (xref-entry"
+      },
+      "scope": "Source lookup lead only; no object alias, profile exclusion, installation or runtime bound.",
+      "remaining": "XREF defstruct source candidate for a generated predicate; constructor/registry and load identities remain open."
+    },
+    {
+      "symbol_id": 20518735,
+      "descriptor": {
+        "id": 20518735,
+        "kind": "symbol",
+        "name": "(setf PREFIXED-STREAM-PREFIX)",
+        "package": null,
+        "setter_of": "CCL::PREFIXED-STREAM-PREFIX"
+      },
+      "category": "SETF_INVERSE_IDENTITY_OPEN",
+      "source": {
+        "path": "library/prefixed-stream.lisp",
+        "sha256": "06ffec7f73656abfc1e3cf71b5191af91266cf28c07a00d1a13801ee8ed79777",
+        "byte_offset": 126,
+        "line": 7,
+        "marker": "(defclass prefixed-stream"
+      },
+      "scope": "Source lookup lead only; no object alias, profile exclusion, installation or runtime bound.",
+      "remaining": "The observed setter_of is a printed annotation. A true original-symbol to SETF-cell registry identity witness is still required."
+    },
+    {
+      "symbol_id": 20518765,
+      "descriptor": {
+        "id": 20518765,
+        "kind": "symbol",
+        "name": "(setf PREFIXED-STREAM-STREAM)",
+        "package": null,
+        "setter_of": "CCL::PREFIXED-STREAM-STREAM"
+      },
+      "category": "SETF_INVERSE_IDENTITY_OPEN",
+      "source": {
+        "path": "library/prefixed-stream.lisp",
+        "sha256": "06ffec7f73656abfc1e3cf71b5191af91266cf28c07a00d1a13801ee8ed79777",
+        "byte_offset": 126,
+        "line": 7,
+        "marker": "(defclass prefixed-stream"
+      },
+      "scope": "Source lookup lead only; no object alias, profile exclusion, installation or runtime bound.",
+      "remaining": "The observed setter_of is a printed annotation. A true original-symbol to SETF-cell registry identity witness is still required."
+    },
+    {
+      "symbol_id": 20530177,
+      "descriptor": {
+        "id": 20530177,
+        "kind": "symbol",
+        "name": "(setf TIMESTAMPED-STREAM-STREAM)",
+        "package": null,
+        "setter_of": "CCL::TIMESTAMPED-STREAM-STREAM"
+      },
+      "category": "SETF_INVERSE_IDENTITY_OPEN",
+      "source": {
+        "path": "library/timestamped-stream.lisp",
+        "sha256": "8dde76cacb117586509c36a401e5350f34b20cb20e264f6c5219805bd1c98042",
+        "byte_offset": 129,
+        "line": 7,
+        "marker": "(defclass timestamped-stream"
+      },
+      "scope": "Source lookup lead only; no object alias, profile exclusion, installation or runtime bound.",
+      "remaining": "The observed setter_of is a printed annotation. A true original-symbol to SETF-cell registry identity witness is still required."
+    }
+  ]
+}

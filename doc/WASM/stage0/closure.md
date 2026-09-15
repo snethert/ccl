@@ -78,6 +78,12 @@ working graph byte for byte, again exiting 2. The final packet has 16 files
 totaling 1,134,023 bytes. No historical payload scan, native execution or accepted
 envelope regeneration was needed. Independent review remains pending.
 
+The subsequent [binding-definition batch](binding-definitions.md) consumes this
+exact graph, adds compile-phase references for 85 of its 95 unwitnessed cells,
+and produces the next working graph through one command. This original packet,
+its graph hash and its counts remain unchanged. The derivative preserves every
+runtime-value gap and claims no newly completed call bound.
+
 The next work is to apply binding/body and call-family proofs to this graph.
 The user explicitly permits another native build when it makes completion
 faster. Prefer a combined compiler/body/registry capture when it removes costly

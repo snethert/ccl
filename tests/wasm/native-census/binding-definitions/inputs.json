@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "inputs": {
+    "stream": {
+      "path": "2026-09-12-rich-census-r1/observed-r4.jsonl.gz",
+      "sha256": "23b63396031cca638f845822d15d2b7af927aa8d0c5d193ae4c03df70b120a7b"
+    },
+    "functions": {
+      "path": "2026-09-14-build-flow-r1/functions.json.gz",
+      "sha256": "0efaf78261ff68266b0a2f7c8b734b1f18b04f33de0dc35fa97b3cebeba4879e"
+    },
+    "histories": {
+      "path": "2026-09-14-binding-versions-r1/histories.json.gz",
+      "sha256": "4054a5980aa83a5d22b2749f90683acab663ed3a405d9276cabd4053c544bd69"
+    },
+    "prior_report": {
+      "path": "2026-09-15-closure-r1/report.json",
+      "sha256": "0d061cff280750ecc01f22dfa8cb9b161d95d212e3057accf16e2c223cbaff63"
+    },
+    "prior_worklists": {
+      "path": "2026-09-15-closure-r1/worklists.json.gz",
+      "sha256": "1871ae766f1ad732f8da096b45c7f5b66ca654c688f878a203090a323740e408"
+    },
+    "prior_run": {
+      "path": "2026-09-15-closure-r1/run.json",
+      "sha256": "6b700365bff177295c7862fcaf68811ccad3d7ea12c6f676da5a41285caee41e"
+    }
+  },
+  "base_graph_sha256": "e32307c69f24172403000cb49642b528a5f937508de182f1213d240b8813ee5b",
+  "source_sha256": {
+    "library/parse-ffi.lisp": "5f34a8e5079407462c7c52c1bdb147354ec94f90437e902b9cc16bd4bd39c8f4",
+    "compiler/PPC/ppc-lap.lisp": "7f69bd106ffcccdae77e862b8286702ebab7018e2745e8b2d79974755774422c",
+    "compiler/ARM/arm-lap.lisp": "dbb2b364535a0712ccacc84badfd09413bd6c555e9e8fb150e118afa0a97e9cb",
+    "xdump/xarmfasload.lisp": "0263e9c38ebda533c7f64c6beffbfffb771da5f4ca6ac8f2f5fdcec2f422fa4c",
+    "lib/xref.lisp": "6743a0fe2328f41df2e0822922a0c7b9b5ecd40a64309a98d2dcb069264fbfb4",
+    "library/prefixed-stream.lisp": "06ffec7f73656abfc1e3cf71b5191af91266cf28c07a00d1a13801ee8ed79777",
+    "library/timestamped-stream.lisp": "8dde76cacb117586509c36a401e5350f34b20cb20e264f6c5219805bd1c98042",
+    "tools/defsystem.lisp": "bee4436e3c72ff400d765f5183898d3a97dea966890640f529a737cc99cbf736",
+    "tools/asdf.lisp": "874e8f235ea633a090c7ab2665b1f624d1910eb7f6fc10349a596085c1cbb189",
+    "lib/compile-ccl.lisp": "61480f2e75a7968beec4f3543c7fe45cb1379cf1bd44e466e2b564e53bcbc0f2",
+    "lib/nfcomp.lisp": "01dd18489697add1b6580d97782cba4c8c213554dd4f9db8a9289f45371f969c",
+    "lib/source-files.lisp": "e5d97d6e341ec6c8f1839ec7bcf6cf5eeb5059f0d66b1de934b4cfee1568a13a",
+    "compiler/nx.lisp": "8730c225eb010e526e4995639ce89271e706d92f4fa1a2162e008f2ba945c676",
+    "compiler/nx1.lisp": "a0332e9f738ab2dec49a971f537745dc9e2da58c8dcf5362b6e4eea75a752e35"
+  },
+  "scope": "Direct retained inputs and U1 interpretation/source candidates. No native build or current value lookup."
+}

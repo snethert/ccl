@@ -2970,6 +2970,16 @@
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE"
+    },
+    {
+      "id": "CENSUS-BINDING-DEFINITIONS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-binding-definitions-r1/packet.json",
+      "sha256": "98d008451657dcb298a2840d9dcc2c40e7a8a00979e512242164e85201aa3c94",
+      "scope": "Complete 95-cell batch: 80 exact compiler-name identities, five accessor declaration identities, three missing SETF inverse joins and seven source-only candidates. 88 original events, 87 new compile-phase edges and four construction gaps; all previous graph records and runtime bounds preserved. Six outputs and the graph reproduce, 22 controls reject. Expected BLOCKED exit 2; no runtime value, call-bound or gate credit.",
+      "execution_status": "BLOCKED",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

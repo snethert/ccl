@@ -243,13 +243,20 @@ remain applicable.
    checker. It reports BLOCKED, exit 2, with binding/body/call worklists. Revision
    2 has a separate snapshot namespace and explicit body/execution gaps; the
    old graph and its 13 conservative roots remain intact. The working graph
-   has 369,706 nodes and 1,089,937 edges. Its 109 added body gaps and five scope
+   initially had 369,706 nodes and 1,089,937 edges. Its 109 added body gaps and five scope
    nodes expose missing qualification, while zero original obligations close.
    This development run is not an executed LL15-b/c acceptance result. Use its
    before/after counts and evidence keys for subsequent graph changes.
-2. **Drain the binding and body worklists in batches.** Account for all 95
-   unwitnessed called symbols with exact symbol identities, source/profile
-   evidence and resulting graph changes or explicit remaining obligations.
+2. **Drain the binding and body worklists in batches.** The first
+   [95-cell definition batch](binding-definitions.md) adds exact compile-phase
+   references for 80 compiler names and five accessor declarations. Three SETF
+   cells still need inverse registry identities; seven other symbols have
+   source-only candidates. All 95 runtime values and bounds remain unwitnessed.
+   The new command integrates this delta into the same graph, now 369,710 nodes
+   and 1,090,024 edges, preserving all earlier runtime gaps. Join the required
+   load/installation and registry paths next; do not recollect the 85 compilation
+   and declaration references already established. Apply source/profile evidence
+   through graph changes or explicit remaining obligations.
    A source definition alone does not establish a function-cell value. Work
    through the 4,373 resident payload witnesses by pinned source form/module,
    reusing compatible retained IR where the identity link is justified and
