@@ -3,7 +3,7 @@
 Status: S0-ENGINE-a [complete-report] EXECUTED and PASSING at its stated
 scope; awaiting Codex's adversarial review under the 15 September role switch,
 then the user's acceptance decision. Packet `ENGINE-MATRIX-R1` in the evidence
-repository. Stage 0 is **40 accepted, five missing and three unreviewed of 48** after the later materialization execution.
+repository. Stage 0 is **40 accepted, four missing and four unreviewed of 48** after the later executions.
 
 Authorship: Claude Fable 5.1 wrote this fixture on branch `wasm2-claude`. The
 user directed on 15 September that Claude author the non-census Stage 0 slots

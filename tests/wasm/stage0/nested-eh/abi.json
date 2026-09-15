@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "name": "nested-eh-frames",
+  "scope": "S0-LL19-a fixture interface: B entry shape (self, nargs) -> (value0, nvalues) with arguments at the incoming VSP, a fixture TCR, explicit frame/root/cleanup records and a values-in-transit region. Not the production TCR, D3 descriptor, condition system or debugger.",
+  "entry": {"params": ["i32", "i32"], "results": ["i32", "i32"], "self": "fixture NIL", "arguments": ["case mode", "case argument"]},
+  "self": 65,
+  "initial_special": 7,
+  "tcr": {
+    "address": 256,
+    "fields": {"vsp": 0, "tsp": 4, "csp": 8, "special": 12, "root_head": 16, "handler_depth": 20, "cleanup_count": 24, "post_exit_effects": 28, "mv_base": 32, "mv_count": 36, "transit_base": 40, "transit_count": 44, "handler_calls": 48, "event_count": 52, "max_handler_depth": 56, "resumed": 60}
+  },
+  "regions": {"mv_base": 2048, "transit_base": 2304, "vsp_base": 4096, "tsp_base": 12288, "csp_base": 16384, "events": 20480},
+  "frame_record": {"bytes": 48, "fields": {"saved_vsp": 0, "saved_special": 4, "saved_root_head": 8, "saved_csp": 12, "depth": 16, "cleanup_values": 24}, "binding": "special := 100 + depth while the frame is live", "vsp_reserve": 8},
+  "root_record": {"bytes": 16, "fields": {"previous_head": 0, "count": 4, "slot0": 8, "slot1": 12}, "slot0": "129 + 8 * depth", "slot1": 65},
+  "cleanup_record": {"bytes": 8, "fields": {"kind": 0, "frame": 4}},
+  "transit_values": [4, -28, 44, 129, 0, 2147483644],
+  "debugger_transit_values": [2000, 2001, 2002],
+  "cleanup_values": [1000, 1001, 1002, 1003, 1004, 1005],
+  "events": {"push": "100 + depth", "cleanup": "200 + depth", "pop": "300 + depth", "post_exit_effect": "400 + depth", "lisp_exit": 50, "cleanup_exit": 52, "unhandled_exit": 53, "use_value_handler": 61, "declining_handler": 62, "lisp_caught": 63, "other_caught": 64, "resumed": 70, "debugger_enter": 80, "debugger_return": 81, "adapter_propagate": 90},
+  "tags": {"lisp": "nonlocal exit carrying the transit count", "other": "second exit raised by depth 3's cleanup in mode 2", "unhandled": "no Lisp handler; propagates to the host", "condition": "recoverable check", "use_value": "restart transfer to the check site (internal)"},
+  "cases": [
+    {"name": "normal", "mode": 0, "argument": 6},
+    {"name": "exit-0-values", "mode": 1, "argument": 0},
+    {"name": "exit-1-value", "mode": 1, "argument": 1},
+    {"name": "exit-6-values", "mode": 1, "argument": 6},
+    {"name": "cleanup-throws-again", "mode": 2, "argument": 6},
+    {"name": "missing-handler", "mode": 3, "argument": 0},
+    {"name": "recoverable-use-value", "mode": 4, "argument": 7},
+    {"name": "nested-debugger", "mode": 5, "argument": 6},
+    {"name": "deep-chain", "mode": 6, "argument": 6},
+    {"name": "recoverable-declined", "mode": 7, "argument": 7}
+  ]
+}

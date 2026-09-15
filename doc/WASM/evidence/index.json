@@ -1456,6 +1456,25 @@
       ],
       "scope": "Hand-built wasm32 Lisp-code template on macOS Node/V8: one canonical unshared explicit-maximum template materialized into the shared and unshared profile binaries by a single flag byte, with recorded template/binary hashes, offset, limits, import and export inventories, disassembly-derived feature requirements and materializer version. Engine import-limit subtyping, growth to and beyond the maximum, cross-profile link rejection, and the same template executing under the full wait-based, single-thread JSPI and precompiled-callback runtimes with identical results. Wrong records, tampered bytes, non-canonical templates, unadmitted profiles, stale identities and wrong-profile runtimes are refused. No CCL object layout, generated B code, production module granularity, image or browser deployment is claimed.",
       "authorship": "Claude Fable 5.1 fixture on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision."
+    },
+    {
+      "id": "NESTED-EH-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-nested-eh-r1/results.json",
+      "sha256": "86a7986456380ea0eebdd2a38a252341c194c541be495006fe48cf09b002ef84",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-nested-eh-r1/packet.json",
+      "packet_sha256": "88fbdae1597b940e9f9491dfcd13ddc0334d3a86d9c0d7ee2eff05626a838370",
+      "timestamp": "2026-09-15T18:09:09.219841+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "c78ecbef14ba739705633b9543d2ec8b8af1ade88d06699700d07767db8834bd",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Hand-built emitted wasm32 frames on macOS Node/V8 under the B entry shape: ten cases carry a nonlocal exit with zero, one and six values through nested frames with dynamic bindings, root records and cleanup, including a cleanup that raises a second exit, a chain of nine cleanup frames, a missing handler that reaches the host after full restoration, a recoverable check resumed by a use-value handler without unwinding, a declined handler that becomes an error, and a nested debugger exit inside the handler. VSP, TSP, CSP, the binding, the root head and the handler depth are restored after every case; cleanups run exactly once; post-exit effects are absent; every value is checked. No production TCR, condition system, debugger, GC or C boundary is claimed.",
+      "authorship": "Claude Fable 5.1 fixture on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision."
     }
   ],
   "auxiliary_records": [

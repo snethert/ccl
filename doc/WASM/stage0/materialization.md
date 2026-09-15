@@ -4,7 +4,7 @@ Status: S0-LL21-c [shared-template] and [unshared-template] EXECUTED and
 PASSING at their stated scope from one execution; awaiting Codex's
 adversarial review under the 15 September role switch, then the user's
 acceptance decision. Packet `MATERIALIZATION-R1` in the evidence repository.
-Stage 0 is **40 accepted, five missing and three unreviewed of 48**.
+Stage 0 is **40 accepted, four missing and four unreviewed of 48** after the later executions.
 
 Authorship: Claude Fable 5.1 wrote this fixture on branch `wasm2-claude`;
 Codex reviews it. No shared compiler or upstream kernel source changed.
