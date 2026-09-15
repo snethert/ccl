@@ -274,6 +274,18 @@ Use the retained flat graphs and per-call worklists for the remaining work:
 3. Bound parameters, registries and other computed values. The original rich
    build now has 200 local bounds and 1,562 computed calls still open; the
    independent file sessions separately have 206 bounds and 1,517 open sites.
+   Treat generic-function dcode and method sets as registry work alongside the
+   struct-slot/vector callees, not as source traversal. The
+   [native registry checkpoint](dispatch-registry.md) now records 581 initialized
+   GFs with 1,514 methods and one uninitialized object in a fresh namespace.
+   Method replacement/removal and four field changes are witnessed. A separate
+   inspector-free process reproduces U1's stale direct dcode after the last
+   method is removed. Installed method lists alone are not callee bounds.
+   Qualify invalidation and effective-method caches, mutable class/combination
+   state, and the execution identity bridge before claiming a bound. Preserve
+   the native defect as negative evidence; the Wasm path must signal the proper
+   empty-registry condition rather than inherit the stale call. No shared-source
+   fix or accepted criterion is changed by this diagnostic.
    Integrate these with the reviewed seed revision, initializer/loader witnesses,
    lowering/import/store classifications and reconciled trace. Replace widening
    only where the corresponding complete source edges and bounds are justified.

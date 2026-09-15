@@ -2926,6 +2926,16 @@
         "record": "stage0/claude-review.md",
         "acceptance": "Diagnostic reference join only; no census gate credit. LL15-b/c remain missing."
       }
+    },
+    {
+      "id": "NATIVE-DISPATCH-REGISTRY-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-dispatch-registry-r1/packet.json",
+      "sha256": "787b782a87a26c13ad11a445cb23ccf6466bf1e332bd76d89fd4e0a2c196284e",
+      "scope": "Fresh native registry: 581 initialized GFs, 1514 methods and one uninitialized entry. Twelve calls include one retained U1 empty-method stale-dcode defect, independently reproduced without observer/inspector. Eight stale checkpoints, four field mutations, a literal-only subtype counterexample and 23 checker controls. Six byte-identical replay outputs. No original-build dynamic identity join, exhaustive callee bound, shared-source change or gate credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }
