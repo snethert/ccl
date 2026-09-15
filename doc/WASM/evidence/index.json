@@ -2933,9 +2933,16 @@
       "sha256": "787b782a87a26c13ad11a445cb23ccf6466bf1e332bd76d89fd4e0a2c196284e",
       "scope": "Fresh native registry: 581 initialized GFs, 1514 methods and one uninitialized entry. Twelve calls include one retained U1 empty-method stale-dcode defect, independently reproduced without observer/inspector. Eight stale checkpoints, four field mutations, a literal-only subtype counterexample and 23 checker controls. Six byte-identical replay outputs. No original-build dynamic identity join, exhaustive callee bound, shared-source change or gate credit.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Fifty-third audit at 22d1a9f1: replay ran three fresh native sessions with six outputs byte-identical and 23 controls; registry counts, probe values and GF bits tallied independently; U1 sources of the stale-dcode mechanism read; the defect reproduced with an independent script and shown to follow any emptying removal; packet, twelve pins, three inputs and 21 catalog rows verified.",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "Diagnostic registry checkpoint with retained native defect; no census gate credit. LL15-b/c remain missing."
+      }
     }
   ]
 }

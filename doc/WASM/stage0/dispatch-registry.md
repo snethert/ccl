@@ -1,5 +1,7 @@
 # Native method registry checkpoint — 14 September 2026
 
+Status: executed diagnostic; reviewed by Claude's fifty-third audit at `22d1a9f1` without defect. Claude's independent reproduction shows the stale dcode follows any removal that empties the method list. No gate credit.
+
 The next registry witness captures the actual native generic-function population
 and its installed methods. It also exposes a U1 dispatch defect: removing the
 last universally applicable method leaves its direct dcode installed, so the
