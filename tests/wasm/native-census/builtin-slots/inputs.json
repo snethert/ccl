@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "inputs": {
+    "calls": {
+      "repository": "evidence",
+      "path": "2026-09-14-build-flow-r1/calls.json.gz",
+      "sha256": "203083dd3328b7d0f268799789e1d9853dc9a870a6f2a73ac271fb2f9aafdadb"
+    },
+    "functions": {
+      "repository": "evidence",
+      "path": "2026-09-14-build-flow-r1/functions.json.gz",
+      "sha256": "0efaf78261ff68266b0a2f7c8b734b1f18b04f33de0dc35fa97b3cebeba4879e"
+    },
+    "samples": {
+      "repository": "evidence",
+      "path": "2026-09-14-build-flow-r1/samples.json.gz",
+      "sha256": "c598f053c3af1427a0db86b24672f204063b38dd202f25a972cfc6aabadf79ec"
+    },
+    "definitions": {
+      "repository": "evidence",
+      "path": "2026-09-15-binding-definitions-r1/delta.json.gz",
+      "sha256": "4bbeac16a7713213e207b7ff1f972964d7ddf9338f5d6219756d721714d5f221"
+    },
+    "prior_report": {
+      "repository": "evidence",
+      "path": "2026-09-15-binding-definitions-r1/report.json",
+      "sha256": "edecb993c593063e9d15134cede17cd7486b9a724fc5d47392a73f2e61af5a86"
+    },
+    "prior_worklists": {
+      "repository": "evidence",
+      "path": "2026-09-15-closure-r1/worklists.json.gz",
+      "sha256": "1871ae766f1ad732f8da096b45c7f5b66ca654c688f878a203090a323740e408"
+    }
+  },
+  "base_graph_sha256": "55dd0d8e3f456a9c1c8d46ca90d185dbb1c37c07fcda0f6fa8cd91942c244535",
+  "closure_graph_sha256": "e32307c69f24172403000cb49642b528a5f937508de182f1213d240b8813ee5b",
+  "source_sha256": {
+    "xdump/xfasload.lisp": "70184b11180edbf69901eff60628dab250d46e9847efa101a3db0dbc0e0ab41e",
+    "compiler/X86/X8664/x8664-arch.lisp": "6f0ba6f5ae1fc8352a425ffe62b3493a31665935762632e6a9c81cc4033bef84",
+    "compiler/X86/x862.lisp": "4528b2906962603389f78a9cfe73bf8f4ba38eecb45c7246140d7bddd6267334",
+    "lisp-kernel/x86-spentry64.s": "eba75a258e27e6f3b4d748c9071bb367519ff3d59c826d0012f8191faf83292b"
+  },
+  "scope": "Reviewed original-build call/table identities and pinned U1 native source; no fresh native execution or lowering qualification."
+}

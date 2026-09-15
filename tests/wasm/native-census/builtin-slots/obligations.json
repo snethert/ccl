@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "scope": "Implementation worklist only. Native source routes and known operand numbers do not qualify Wasm lowering or callable values.",
+  "slots": [
+    {"index": 4, "name": "CCL::=-2", "status": "UNIMPLEMENTED", "required_work": ["Target numeric equality including boxed operands and condition paths; preserve the fallback dependencies."]},
+    {"index": 6, "name": "CCL::>-2", "status": "UNIMPLEMENTED", "required_work": ["Target numeric ordering including boxed operands and condition paths; preserve the fallback dependencies."]},
+    {"index": 8, "name": "CCL::<-2", "status": "UNIMPLEMENTED", "required_work": ["Target numeric ordering including boxed operands and condition paths; preserve the fallback dependencies."]},
+    {"index": 10, "name": "COMMON-LISP::EQL", "status": "UNIMPLEMENTED", "required_work": ["D1-aware EQL including boxed numbers; use EQ only under a qualified target type proof.", "Classify recursion, roots, safepoints and all supported object representations; no host-layout shortcut."]},
+    {"index": 11, "name": "COMMON-LISP::LENGTH", "status": "UNIMPLEMENTED", "required_work": ["D1 NIL, lists, simple vectors and vector headers; preserve slow-path and condition dependencies.", "Qualify traversal safepoints, roots and overflow behavior, including malformed list paths."]},
+    {"index": 12, "name": "CCL::SEQUENCE-TYPE", "status": "UNIMPLEMENTED", "required_work": ["D1 sequence classification, including NIL, specialized vectors and vector headers, with its fallback and condition paths."]},
+    {"index": 21, "name": "CCL::%AREF1", "status": "UNIMPLEMENTED", "required_work": ["Target vector indexing, bounds, element representations, displacement and fallback/condition dependencies."]},
+    {"index": 22, "name": "CCL::%ASET1", "status": "UNIMPLEMENTED", "required_work": ["Target vector stores and bounds, element conversion and fallback/condition dependencies.", "Classify every store's GC role and required write barrier before lowering or removing it."]}
+  ]
+}

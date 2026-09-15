@@ -1,0 +1,88 @@
+;;; Observe the real assembler while compiling source; never load its output.
+(defpackage :ccl-lap-census (:use :cl))
+(in-package :ccl-lap-census)
+(defvar *assembly* nil)
+(defvar *unit* nil)
+(defvar *busy* nil)
+(defvar *parsed* nil)
+
+(defun record (kind &rest fields)
+  (let ((*busy* t) (ccl-complete-census::*busy* t)
+        (ccl-rich-census::*busy* t) (*gensym-counter* *gensym-counter*))
+    (apply #'ccl-complete-census::emit kind fields)))
+
+(defun tree (form)
+  (let ((*busy* t) (ccl-complete-census::*busy* t)
+        (ccl-rich-census::*busy* t) (*gensym-counter* *gensym-counter*))
+    (ccl-rich-census::describe-value form)))
+
+(defun with-assembler-observation (thunk)
+  (let* ((names '(ccl::%define-x86-lap-function ccl::parse-x86-instruction
+                  ccl::x86-lap-macroexpand-1 ccl::x86-subprim-offset ccl::x86-generate-instruction-code))
+         (originals (mapcar #'fdefinition names))
+         (define (first originals)) (parse (second originals))
+         (expand (third originals)) (subprim (fourth originals)) (generate (fifth originals))
+         (*parsed* (make-hash-table :test #'eq))
+         (ccl::*warn-if-redefine-kernel* nil) (ccl::*warn-if-redefine* nil))
+    (unwind-protect
+      (progn
+        (setf (fdefinition (first names))
+          (lambda (name forms &optional (bits 0))
+            (if *busy* (funcall define name forms bits)
+              (let* ((entry (record "assembly-enter" "unit" *unit*
+                              "name" (tree name) "forms" (tree forms) "bits" bits))
+                     (*assembly* entry) (completed nil) (result nil))
+                (unwind-protect
+                  (multiple-value-prog1
+                    (setq result (funcall define name forms bits)) (setq completed t))
+                  (record "assembly-leave" "entry" entry "completed" (if completed :true :false)
+                    "function" (if completed (ccl-complete-census::function-id result) :null))
+                  (when completed (ccl-complete-census::drain-functions))))))
+          (fdefinition (second names))
+          (lambda (form instruction)
+            (multiple-value-prog1 (funcall parse form instruction)
+              (when (and *assembly* (not *busy*))
+                (when (gethash instruction *parsed*) (error "LAP-UNEMITTED-INSTRUCTION"))
+                (setf (gethash instruction *parsed*)
+                  (record "assembly-instruction" "assembly" *assembly* "form" (tree form))))))
+          (fdefinition (third names))
+          (lambda (form)
+            (multiple-value-bind (expansion expanded) (funcall expand form)
+              (when (and *assembly* expanded (not *busy*))
+                (record "assembly-expansion" "assembly" *assembly*
+                  "input" (tree form) "output" (tree expansion)))
+              (values expansion expanded)))
+          (fdefinition (fourth names))
+          (lambda (name)
+            (let ((offset (funcall subprim name)))
+              (when (and *assembly* (not *busy*))
+                (record "assembly-subprim" "assembly" *assembly* "name" (tree name) "offset" offset))
+              offset))
+          (fdefinition (fifth names))
+          (lambda (fragments instruction)
+            (let ((parsed (and *assembly* (not *busy*) (gethash instruction *parsed*))))
+              (when (and *assembly* (not *busy*) (not parsed)) (error "LAP-UNPARSED-EMISSION"))
+              (multiple-value-prog1 (funcall generate fragments instruction)
+                (when parsed
+                  (record "assembly-emission" "assembly" *assembly* "parsed" parsed
+                    "opcode" (x86::x86-instruction-base-opcode instruction)
+                    "template" (x86::x86-opcode-template-mnemonic (x86::x86-instruction-opcode-template instruction)))
+                  (remhash instruction *parsed*))))))
+        (funcall thunk))
+      (loop for name in names for original in originals do (setf (fdefinition name) original)))
+    (unless (zerop (hash-table-count *parsed*)) (error "LAP-INCOMPLETE-EMISSIONS"))
+    (unless (every #'eq originals (mapcar #'fdefinition names)) (error "LAP-HOOKS-NOT-RESTORED"))))
+
+(defun run ()
+  (let* ((input (ccl:getenv "CCL_LAP_INPUT")) (directory (ccl:getenv "CCL_LAP_OUTPUT"))
+         (*unit* input) (mode (ccl:getenv "CCL_LAP_MODE"))
+         (output (concatenate 'string directory "/" mode ".dx64fsl")))
+    (if (equal mode "reference")
+      (ccl-deferred-probes::compile-input input output nil)
+      (ccl-complete-census::with-build-observation
+        (concatenate 'string directory "/build.jsonl")
+        (concatenate 'string directory "/registries.jsonl")
+        (lambda ()
+          (with-assembler-observation
+            (lambda () (ccl-deferred-probes::compile-input input output t))))))
+    (format t "LAP-NATIVE-PASS~%")))
