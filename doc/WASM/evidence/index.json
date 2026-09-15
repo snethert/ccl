@@ -3038,6 +3038,16 @@
         "disposition": "EXECUTION_REPRODUCED_NO_DEFECT",
         "scope": "Five analysis outputs and graph reproduced with 32 rejecting controls. New publication metadata has not been independently reviewed."
       }
+    },
+    {
+      "id": "CENSUS-FINITE-CHAIN-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-finite-chain-r1/packet.json",
+      "sha256": "ac234dde863df2be324fcf75057370b8fc4b7fbca31e4a45af9a0a83f9c3721d",
+      "scope": "Four existing finite-expression passes replayed from one committed resolver tree: 124 proofs, 1438 unknown expressions. Symbol-cell values and target lowerings remain open; no complete census or gate credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }
