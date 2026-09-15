@@ -2916,9 +2916,16 @@
       "sha256": "9567afeac2bec71bf6f79f24f795d375c7a9f0371f41c68466b7c0ec2f9a11c5",
       "scope": "465 initial resident prototypes join seven read-only function literals and one nested function. 466 exact reference edges, six new code nodes with open body obligations and eight reported U1 source extents. All earlier graph records preserved. Four byte-identical replay outputs and 24 rejected controls. No subtype, construction, complete IR/callee or gate credit.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Fifty-second audit at 0d4a9b04: replay against the pinned base graph reproduced four outputs byte-identically with 24 controls; literal targets, counts, nested edge, source extents and delta tallied independently from the retained inputs; packet, ten pins, seven inputs and thirteen catalog rows verified.",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "Diagnostic reference join only; no census gate credit. LL15-b/c remain missing."
+      }
     }
   ]
 }
