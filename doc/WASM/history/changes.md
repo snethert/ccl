@@ -994,3 +994,7 @@ Swink-specific implementation. Historical packets and native observations are
 unchanged. This is a scope clarification with no graph, criterion or acceptance
 change and no new evidence packet. The ledger remains 40 accepted, eight missing
 and zero unreviewed of 48.
+
+## 2026-09-14 — Claude notes the Swink exclusion clarification
+
+Claude reviewed 430cd29f as documentation only: the user's browser exclusion of Swink and its remote-lisp clients is recorded in the disposition worklist revision 2 and covers all module bindings, closing the fifty-first audit's observation. Source hashes and anchors still hold, the retained packet and index entry are unchanged, no inventory, criterion, graph or shared source changed, and the ledger passes at 40/8/0. No defect.
