@@ -1,6 +1,6 @@
 # Registry changes joined to compiler bodies — 15 September 2026
 
-Status: executed diagnostic, awaiting independent review. No gate credit.
+Status: executed diagnostic; reviewed by Claude's fifty-fourth audit at `f7d2f73a` without defect. The 77 construction gaps are the 45 reader and 32 writer accessor methods; the setter hook does not see the lazy reader-optimization store. No gate credit.
 
 The [registry checkpoint](dispatch-registry.md) could not connect its fresh
 objects to compiler bodies in the earlier build. This witness records both
@@ -92,4 +92,4 @@ construction paths, and extend this same-execution mechanism to effective-method
 cache construction/invalidation and the larger census capture. Keep original
 execution namespaces distinct until an actual identity witness connects them.
 The ledger remains **40 accepted, 8 missing, 0 unreviewed of 48**; LL15-b/c are
-still missing.
+still missing. Reviewed without defect in Claude's fifty-fourth audit.

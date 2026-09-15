@@ -2950,9 +2950,16 @@
       "sha256": "938509b0f3e5c4e2ce6a2f88f1b6fe100f35265670dcbec3d84a369452aea2e4",
       "scope": "Native U1 inspector-source reload and private method replacement/removal: 225 compiler roots / 401 functions, 240 installations across 118 GFs, 163 same-execution compiler-body joins by EQ identity and code bytes, 77 construction gaps. Four sessions, seven byte-identical replay outputs, 24 rejected controls, reference method-code equality and exceptional hook restoration. No original-build identity join, exhaustive callee bound or gate credit.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Fifty-fourth audit at f7d2f73a: replay of four native sessions reproduced all seven outputs byte-identically with 24 controls; joins, gaps, reference equality and omission tallied independently; the 77 gaps are the 45 reader and 32 writer accessor methods (template copies, two code-byte strings); the 160 describe-phase joins equal the live defmethod forms; hook points confirmed as the single add/remove/setter implementations in U1.",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "Diagnostic same-execution witness; no census gate credit. Nonblocking: the setter hook misses the direct dcode store of the lazy reader optimization (l1-clos.lisp:2198) and the encapsulated path. LL15-b/c remain missing."
+      }
     }
   ]
 }
