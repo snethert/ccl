@@ -76,7 +76,8 @@ to the final retained files, with that sharing recorded explicitly.
 A fresh replay reproduces all six analysis/control outputs and the optional
 working graph byte for byte, again exiting 2. The final packet has 16 files
 totaling 1,134,023 bytes. No historical payload scan, native execution or accepted
-envelope regeneration was needed. Independent review remains pending.
+envelope regeneration was needed. Reviewed without defect in Claude's fifty-fifth
+audit at `a6da3fc3`; the 1,500 unresolved builtin-call edges should become a named population.
 
 The subsequent [binding-definition batch](binding-definitions.md) consumes this
 exact graph, adds compile-phase references for 85 of its 95 unwitnessed cells,

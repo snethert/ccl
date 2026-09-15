@@ -2967,9 +2967,16 @@
       "sha256": "c9327f4fb6fc9888f09d43c9e89de588ef4437c944d26eaa0854401d4fe234a1",
       "scope": "Integrated development closure: reviewed graph reconstructed, revision-2 seeds in a separate namespace, 95 unwitnessed symbols, 5,007 original body obligations and 1,562 open computed calls. Six outputs and the optional graph reproduce; 20 integration mutations reject. Expected BLOCKED exit 2, no original obligation closed, LL15 result or gate credit.",
       "execution_status": "BLOCKED",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Fifty-fifth audit at a6da3fc3: replay reconstructed the reviewed graph, reproduced all six outputs and the working graph at the recorded hash with 20 controls; worklist, seed and blocker counts tallied independently; wrapper-stage hash equals the base verified in earlier audits.",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "Development closure, BLOCKED by design; no census gate credit. Nonblocking: the 1,500 unresolved builtin-call edges are counted but not a named worklist population. LL15-b/c remain missing."
+      }
     },
     {
       "id": "CENSUS-BINDING-DEFINITIONS-R1",
@@ -2977,9 +2984,16 @@
       "sha256": "98d008451657dcb298a2840d9dcc2c40e7a8a00979e512242164e85201aa3c94",
       "scope": "Complete 95-cell batch: 80 exact compiler-name identities, five accessor declaration identities, three missing SETF inverse joins and seven source-only candidates. 88 original events, 87 new compile-phase edges and four construction gaps; all previous graph records and runtime bounds preserved. Six outputs and the graph reproduce, 22 controls reject. Expected BLOCKED exit 2; no runtime value, call-bound or gate credit.",
       "execution_status": "BLOCKED",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude Fable 5.1",
+        "provenance": "Fifty-fifth audit at a6da3fc3: replay re-read all 4,006,405 events without the cached base, reproduced all six outputs and the working graph at the recorded hash with 22 controls; 80 top-level compiled joins, four declaration events, seven accessor edges and ten source anchors verified independently; nfcomp compile-versus-install claim confirmed.",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "record": "stage0/claude-review.md",
+        "acceptance": "Compile-phase references only, BLOCKED by design; no runtime value, bound or gate credit. LL15-b/c remain missing."
+      }
     }
   ]
 }
