@@ -2,7 +2,7 @@
   "version": 2,
   "assessment": "SCOPED_EXECUTION_COMPOSITE",
   "date": "2026-09-15",
-  "basis": "ENGINE-a executes the engine and profile matrix on Node/V8, Chrome, Firefox and Safari: seven matrix rows, one encoding-pin refusal, seven semantic mutants and nine production-role omissions. The unchanged production slot gate reports only its unreviewed reason. All 40 accepted per-record bindings stay current; their execution is reused. No full historical artifact scan.",
+  "basis": "LL21-c executes D2 materialization for both template variants on Node/V8: one flag byte, nine engine link cases, growth, three profile suspension paths with identical results, 23 refusals, one execution witness, seven semantic mutants and ten production-role omissions. The ENGINE-a execution remains unreviewed. The unchanged production slot gate reports only the unreviewed reasons. All 40 accepted per-record bindings stay current; their execution is reused. No full historical artifact scan.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
@@ -12,23 +12,27 @@
       "missing S0-LL15-b [native]",
       "missing S0-LL15-c [native]",
       "missing S0-LL19-a [full]",
-      "missing S0-LL21-c [shared-template]",
-      "missing S0-LL21-c [unshared-template]"
+      "unreviewed S0-LL21-c [shared-template]",
+      "unreviewed S0-LL21-c [unshared-template]"
     ]
   },
-  "prior_result_sha256": "d183c6430a765f0d2637fbc455440cb34f289b4bcceeb551a7e98c5dc47a4132",
+  "prior_result_sha256": "a704d008e72cf55bee2bd5722e3ba77b5167d0bd9fbed0779d56afe540f6eb6f",
   "new_results": [
     {
-      "id": "S0-ENGINE-a",
-      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-engine-matrix-r1/results.json",
-      "sha256": "da712c6d2d17fd68c65daf518566e123a7cc92f2dd0d753bb56f84430694812e"
+      "id": "S0-LL21-c",
+      "variants": [
+        "shared-template",
+        "unshared-template"
+      ],
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-materialization-r1/results.json",
+      "sha256": "142a4fd38d35fb5ea2256f48fb86fc966b369689347fc16cfa8153df74d5eb97"
     }
   ],
   "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll13b-accepted-results.json",
   "combined_results_sha256": "c5b5049754463d3be79cb7506906413a6dbe27c423c5189d8cb333fcf8975cf4",
   "inventory": {
     "locator": "stage0/inventory.json",
-    "sha256": "abc6f63a8ff15f9b4c55103307811305751039a8ca16200d92747342597fa1d2"
+    "sha256": "808d96d354772a5017d07b6c7d9b4df72fe10cdacf0a1921545cfbe4dba3ba2b"
   },
   "active_results": [
     {
@@ -38,12 +42,16 @@
     {
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-engine-matrix-r1/results.json",
       "sha256": "da712c6d2d17fd68c65daf518566e123a7cc92f2dd0d753bb56f84430694812e"
+    },
+    {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-materialization-r1/results.json",
+      "sha256": "142a4fd38d35fb5ea2256f48fb86fc966b369689347fc16cfa8153df74d5eb97"
     }
   ],
   "counts": {
     "accepted": 40,
-    "missing": 7,
-    "unreviewed": 1,
+    "missing": 5,
+    "unreviewed": 3,
     "required": 48
   }
 }

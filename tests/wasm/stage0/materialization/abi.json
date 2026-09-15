@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "name": "materialization-template-interface",
+  "scope": "S0-LL21-c template/runtime interface for one hand-built Lisp-code stand-in. Not the production D3 entry descriptor, image ABI or module granularity.",
+  "template": {
+    "memory": {"module": "env", "name": "memory", "minimum": 1, "maximum": 4, "canonical_flags": 1, "shared_flags": 3},
+    "function_imports": {"runtime.request": {"params": ["i32"], "results": ["i32"]}},
+    "exports": {"entry": {"params": ["i32"], "results": ["i32", "i32"]}, "grow": {"params": ["i32"], "results": ["i32"]}, "size": {"params": [], "results": ["i32"]}},
+    "prohibited": ["start function", "active data segments", "wait or notify instructions", "shared memory declaration"]
+  },
+  "words": {"argument": 512, "flag": 516, "wait": 520, "answer": 524, "counter": 640},
+  "request_semantics": "request(x) returns 2x; entry(x) returns (2x + serial + 1, 2) where serial counts prior entries in the same memory",
+  "profiles": {
+    "full": {"runtime": "runtime-full", "memory": "shared", "suspension": "memory.atomic.wait32 inside the runtime, supervisor Atomics.notify", "runtime_rules": {"memory_flags": 3, "wait_allowed": true, "function_imports": []}},
+    "single_thread_jspi": {"runtime": "runtime-jspi", "memory": "unshared", "suspension": "WebAssembly.Suspending host import reached through the runtime, WebAssembly.promising on entry", "runtime_rules": {"memory_flags": 1, "wait_allowed": false, "function_imports": ["host.io"]}},
+    "precompiled_callback": {"runtime": "runtime-sync", "memory": "unshared", "suspension": "none; request completes synchronously", "runtime_rules": {"memory_flags": 1, "wait_allowed": false, "function_imports": []}}
+  },
+  "materializer_version": 2,
+  "engine_admission_source": "tests/wasm/stage0/engine-matrix/features.json"
+}
