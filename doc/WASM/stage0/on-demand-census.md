@@ -28,10 +28,13 @@ decision, not an experimentally established completeness result.
   before/after tests, recovery comparisons and two failures are retained in
   `CORRELATED-QUERY-BASE-R1` in the evidence repository. The large native event
   streams no longer depend on temporary storage.
-- The existing resolver work is committed at `6be15c29`: 124 additional bounds,
-  1,438 original rich-build computed sites still open, and the requested 4,373
-  read-only body joins finished. These are that build's populations, not counts
-  to add to the new correlated execution.
+- The [fresh finite-expression replay](finite-callees.md) now establishes 124
+  proofs and 1,438 original rich-build expressions still open from one committed
+  resolver version. The earlier claim that all 4,373 read-only body joins were
+  finished is [withdrawn as a qualified delivery](registry-history.md): the
+  complete old chain lacked executed-source provenance. Its raw artifacts are
+  retained as history. These populations are not counts to add to the new
+  correlated execution.
 - The last full source compile completed all 167 units with reference/observed
   native code identical, source unchanged and no FASLs written. Its transitive
   startup graph has 16,169 nodes and 36,848 edges, reaching 4,369 native functions:

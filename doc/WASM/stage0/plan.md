@@ -234,8 +234,10 @@ This supersedes the earlier instruction to drain every binding/body/call
 worklist before publishing LL15-b/c. The complete-closure checker stays strict;
 Stage 1 still owes the working dependencies and initializers of its bootstrap.
 
-Completed cut points: resolver/body work committed at `6be15c29`; correlated
-build r3 retained in the evidence repository; the last 167-unit compile passed
+Completed cut points: the [finite-expression chain](finite-callees.md) now has
+a fresh replay; the old all-body completion claim is withdrawn under the
+[provenance correction](registry-history.md). Correlated build r3 is retained
+in the evidence repository; the last 167-unit compile passed
 with identical native output and unchanged source; the final transitive startup
 graph reaches 4,369 native functions with 272 explicit body gaps. Stop broad
 resolution here. The query driver and reversible native source-site probe are

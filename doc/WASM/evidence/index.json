@@ -3048,6 +3048,16 @@
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE"
+    },
+    {
+      "id": "CENSUS-REGISTRY-HISTORY-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-registry-history-r1/packet.json",
+      "sha256": "302716fbbf9d17e3557509271a5c471dfa989c1c568071874d802d7a22e29835",
+      "scope": "Preserved development body/registry analyses and the earlier 84-unit startup capture; no source-version attribution where an executed snapshot is absent, no qualified 4373-body completion or gate credit.",
+      "execution_status": "HISTORICAL_UNQUALIFIED",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

@@ -4,6 +4,7 @@ Implementation baseline: upstream v1.13, `c994217adc56b3f8a564526cee4695893ac84d
 
 | Work | State | Evidence scope / remaining work |
 | --- | --- | --- |
+| Earlier registry/body analyses | HISTORICAL, UNQUALIFIED | [Provenance correction](stage0/registry-history.md): original artifacts retained; unsupported all-body completion claim withdrawn. Current startup uses the separately retained 167-unit run; no LL15 credit. |
 | Finite-callee replay | EXECUTED; review pending | [One committed resolver version](stage0/finite-callees.md): fresh 98 + 19 + 2 + 5 partition leaves 1,438 of 1,562 expressions open. All stage outputs and sources retained; cell values and lowerings remain unqualified. |
 | Builtin slot diagnostic | EXECUTION REVIEWED; publication repaired | [Eight builtin obligations](stage0/builtin-slots.md): 1,500 original call sites consolidated, 32 controls rejected. Original packet and executed sources retained separately; no target lowering or callee-bound credit. |
 | Integrated development census | BLOCKED by design; reviewed by Claude's fifty-fifth audit, no defect, no gate credit | [Working closure](stage0/closure.md): one command reconstructs the reviewed graph and adds revision-2 seeds in a separate namespace. 369,706 nodes / 1,089,937 edges; 95 unwitnessed symbols, 5,007 original body gaps and 1,562 open computed calls. Every earlier graph record remains unchanged. LL15-b/c qualification, execution bridges and widening replacement remain open. |
