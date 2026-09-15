@@ -2909,6 +2909,16 @@
         "record": "stage0/claude-review.md",
         "acceptance": "Diagnostic worklist only; no census gate credit. LL15-b/c remain missing."
       }
+    },
+    {
+      "id": "NATIVE-RESIDENT-LITERALS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-resident-literals-r1/packet.json",
+      "sha256": "9567afeac2bec71bf6f79f24f795d375c7a9f0371f41c68466b7c0ec2f9a11c5",
+      "scope": "465 initial resident prototypes join seven read-only function literals and one nested function. 466 exact reference edges, six new code nodes with open body obligations and eight reported U1 source extents. All earlier graph records preserved. Four byte-identical replay outputs and 24 rejected controls. No subtype, construction, complete IR/callee or gate credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

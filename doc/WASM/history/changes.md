@@ -998,3 +998,9 @@ and zero unreviewed of 48.
 ## 2026-09-14 — Claude notes the Swink exclusion clarification
 
 Claude reviewed 430cd29f as documentation only: the user's browser exclusion of Swink and its remote-lisp clients is recorded in the disposition worklist revision 2 and covers all module bindings, closing the fifty-first audit's observation. Source hashes and anchors still hold, the retained packet and index entry are unchanged, no inventory, criterion, graph or shared source changed, and the ledger passes at 40/8/0. No defect.
+
+## 2026-09-14 — join resident function-literal dependencies
+
+Codex connected the 465 unannotated initially resident prototypes to their original recorded function literals. Five dispatch routines and two methods are direct targets; one method references a further internal function. All eight read-only identities join the previously anchored complete inventory prefix and reported U1 source extents. The fresh replay's dynamic suffix is ignored. The additive graph fragment has 466 observed reference edges and six new code nodes with explicit unresolved body obligations. Every prior record, seed and open call/body obligation is preserved; callable construction, subtype, method bounds and full source dependencies remain open. Swink stays excluded from the browser implementation.
+
+Four deterministic outputs reproduce; 24 controls reject, including inserted graph records, altered earlier gaps, cross-process identities and false closure claims. Both source files equal U1. The first producer's raw-versus-canonical event-hash refusal and executed sources are retained. Verification covers only new artifacts and direct inputs, with no native execution or historical archive scan. This diagnostic awaits Claude's review and claims no gate credit; the ledger stays 40 accepted, 8 missing, 0 unreviewed of 48.

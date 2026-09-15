@@ -246,8 +246,13 @@ Use the retained flat graphs and per-call worklists for the remaining work:
    splits the other 634 into sixteen installer-annotated prototypes, 465
    initially resident prototypes without source annotations, and 153 later
    installations (152 in ASDF compile initializers, one in a Swink load effect).
-   Join the sixteen observer wrappers to their original operations; obtain
-   native callable-object/construction witnesses for the resident group and
+   The [resident literal join](resident-literals.md) now connects all 465
+   unannotated initial prototypes to seven read-only functions, with one nested
+   internal function. It adds 466 exact initial-state reference edges and six
+   explicit body gaps; subtype, construction and method bounds remain open.
+   Use this concentrated dispatch worklist for the callable-construction and
+   registry witnesses. Join the sixteen observer wrappers to their original
+   operations and
    follow the exact initializer contexts for the later installations. Neither
    function subtype nor heap area can be inferred from the printed name.
    The complete read-only image region is

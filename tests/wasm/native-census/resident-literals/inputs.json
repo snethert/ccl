@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "inputs": {
+    "origins": {
+      "path": "2026-09-14-body-origins-r1/origins.json.gz",
+      "sha256": "8a582cc9dafe999f1c233e857d7102c4466f936bfc48b423454767581c24f8b1"
+    },
+    "witnesses": {
+      "path": "2026-09-14-body-origins-r1/witnesses.jsonl.gz",
+      "sha256": "0a4970e954ff2d22a2dc2e20ec347ead7a9e47ea7b7041ab7f315e3c57c4880e"
+    },
+    "readonly_inventory": {
+      "path": "2026-09-14-resident-bodies-r1/first-prefix.jsonl.gz",
+      "sha256": "a068c95f976bcd6d0385520835709b35b1c7dfa15a12c50a6b7f62d641659c0e"
+    },
+    "readonly_export": {
+      "path": "2026-09-14-resident-bodies-r1/first-bodies.json.gz",
+      "sha256": "849fd457a0515eae039d0e5a410a5ddb28e8c15411323f13b3fd94b3c9197385"
+    },
+    "readonly_summary": {
+      "path": "2026-09-14-resident-bodies-r1/summary.json",
+      "sha256": "dd99471f7d234d077fbf52e9cbb0715520f3c12c00c8c739e7f3a78e9af7a546"
+    },
+    "flow_delta": {
+      "path": "2026-09-14-build-flow-r1/delta.json.gz",
+      "sha256": "97466105b0f07af83cdb5f69f9169e9d6d3d3c0b61587034f149b89fb64c9e20"
+    },
+    "binding_delta": {
+      "path": "2026-09-14-binding-versions-r1/delta.json.gz",
+      "sha256": "4d7ec16f021de6b2c1ae3a101c5740fafdcaa02d30864f97cb816637f4e10ac1"
+    },
+    "base": {
+      "producer": "2026-09-13-boot-wrappers-r1/run.json",
+      "sha256": "5ad5f785a7db7288d6db2cfc2ccefbd88722498b50b5e39348a9597aacab69ab"
+    }
+  },
+  "u1_sources": {
+    "level-1/l1-dcode.lisp": "7ea588bfa1332c6eb4aadc9425f1c3f7dc1e6dd2d0ac6ec0ac335cd4ae7a52ac",
+    "lib/describe.lisp": "aee43e17dee14decbec42ea95cf3cef8cceaefd8ec8fa6a020140770a4560a57"
+  }
+}
