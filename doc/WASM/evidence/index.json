@@ -3115,6 +3115,17 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "authorship": "Claude Fable 5.1 schema and checker on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending."
+    },
+    {
+      "id": "FLOAT-DETECTION-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-float-detection-r1/packet.json",
+      "sha256": "1753279421b7161dbfc1accf11b79deda2178a7401af4db731239974c7f9ca90",
+      "scope": "D6 floating-point detection made executable: checked f64 add, sub, mul, div, sqrt and conversion classified without engine flags (classification for overflow, division by zero and invalid; error-free witnesses with exact scaling for underflow and inexact) and the f32 default-mode slice; 1,882 corpus cases agree with exact rational rounding in status and bit pattern; eight module mutants rejected. Specification evidence, no policy decision, no gate credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "authorship": "Claude Fable 5.1 module, oracle and specification on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending."
     }
   ]
 }
