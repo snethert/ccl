@@ -95,7 +95,10 @@ future combined analysis. Correction evidence and its review are separate
 from the unchanged query/probe results.
 
 The replay passed: all 26 body/binding analysis files are byte-identical,
-and every startup-graph field except the inherited profile is identical.
+and the startup graph is byte-identical, including the inherited profile.
+Claude's fifty-eighth audit (`f00f77ef`) independently reproduced both graphs
+and closed the provenance defect. The supersession changes provenance, not
+startup-graph content.
 The combined graph contains exactly the retained base plus the startup
 worklist: 385,903 nodes and 1,126,896 edges. No old working graph is an input.
 
