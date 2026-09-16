@@ -1,10 +1,10 @@
 {
   "version": 1,
   "stage": "Stage 1: target contract and generated bootstrap",
-  "status": "DRAFT proposed by Claude on 2026-09-15; not adopted, not a criterion of any ledger; adoption is a user decision recorded like a Stage 0 criterion change",
+  "status": "DRAFT proposed by Claude on 2026-09-15 and refreshed after Codex's review for the approved on-demand LL15 policy (census contract v0.2); not adopted, not a criterion of any ledger; adoption is a user decision recorded like a Stage 0 criterion change",
   "authority": "acceptance.md LL metadata (first acceptance LL06, LL09, LL10, LL11, LL12, LL14, LL16, LL17, LL18; extensions LL01, LL02, LL04, LL05, LL07, LL08, LL13, LL15, LL19, LL21; standing LL03, LL22, LL23, LL24), decisions.md D7 and outline Stage 1 exit criteria",
   "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
-  "entry_condition": "Stage 0 accepted: every required S0 variant PASS and ACCEPTED; the functional shared-compiler author authorized by the user",
+  "entry_condition": "Stage 0 accepted: every required S0 variant PASS and ACCEPTED under the on-demand census policy, which qualifies the instrument, explicit worklist and controls rather than an exhaustive bound on native computed calls; the functional shared-compiler author authorized by the user",
   "required_record_roles": [
     "implementation",
     "test",
@@ -621,7 +621,7 @@
       "assertions": [
         {
           "id": "S1-LL15-a:initializers",
-          "description": "Every initializer of the selected census closure completes in a fresh instance, bound to prerequisite state and completion with loader dependencies seeded first, in the phase order the bootstrap design review fixes; an omitted required module fails loading and a no-load path cannot pass; the accepted S0-LL15-a discipline is repeated through the real build path."
+          "description": "Every initializer of the retained startup worklist that the bootstrap selects completes in a fresh instance, bound to prerequisite state and completion with loader dependencies seeded first, in the phase order the bootstrap design review fixes; calls the on-demand census leaves unbounded are witnessed by the query tool where the bootstrap depends on them, with unknowns preserved separately from proven bounds; an omitted required module fails loading and a no-load path cannot pass; the accepted S0-LL15-a discipline is repeated through the real build path."
         }
       ],
       "status": "NOT_RUN",

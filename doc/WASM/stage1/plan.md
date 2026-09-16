@@ -1,7 +1,7 @@
 # Stage 1 work plan — draft of 15 September 2026
 
-Status: DRAFT proposed by Claude under the 15 September role switch. Nothing
-here is adopted. The [draft inventory](inventory.draft.json) is not the
+Status: DRAFT proposed by Claude under the 15 September role switch and
+refreshed after Codex's review. Nothing here is adopted. The [draft inventory](inventory.draft.json) is not the
 criterion of any ledger; adopting it is a user decision recorded the way a
 Stage 0 criterion change is recorded, and the functional shared-compiler
 author still needs the user's authorization. Stage 0 acceptance is the entry
@@ -73,8 +73,8 @@ exit criteria, plus two entries proposed from Stage 0 findings.
 | [Nested exits](../stage0/nested-eh.md) and the boundary fixture | 1C generated EH |
 | [Initializer binding](../stage0/initializer-binding.md) | 1E closure initializers and loader |
 | [Kernel-import census](../contracts/kernel-imports.v1.md) | 1A runtime import inventory, 1E namespace and host services |
-| [Floating-point detection](../contracts/floating-point.v1.md) | 1C numerics, after the policy decision |
-| Census closure (LL15-b/c) with seeds, ranks, trap and store dispositions | 1E closure, bundle composition and module granularity |
+| [Floating-point detection](../contracts/floating-point.v1.md), specified and executed over its corpus after the near-maximum correction | 1C numerics, after the policy decision |
+| Retained startup worklist and on-demand census queries (LL15-b/c under the v0.2 contract) with seeds, ranks, trap and store dispositions; unknown callees kept separate from proven bounds | 1E closure, bundle composition and module granularity; implementation questions answered by focused native scenarios, not by an exhaustive closure |
 | Stale-dcode finding | 1C S1-LL11-b |
 
 ## Decisions the user owns before Stage 1 starts
@@ -83,9 +83,10 @@ exit criteria, plus two entries proposed from Stage 0 findings.
   requires an authorized author and a different-model reviewer.
 - Adoption of this inventory, including the two proposed entries.
 - The floating-point condition policy under D6, now that detection is
-  specified and proved.
-- Whether the single-thread JSPI profile is admitted for Stage 1 at all,
-  given that Firefox and Safari lack JSPI on the reference Mac.
+  specified and executed over its corpus.
+- Whether the single-thread JSPI profile is admitted for Stage 1 at all:
+  Node, Chrome and Firefox 156 have JSPI on the reference Mac, Safari 26.3
+  does not.
 
 ## Rules carried forward
 
