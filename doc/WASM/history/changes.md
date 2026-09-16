@@ -1248,3 +1248,8 @@ The user said “accept and proceed” after Claude’s sixty-sixth audit. The m
 ## 2026-09-16 — generate rest lists and runtime-sized APPLY calls
 
 The isolated proposal adds genuine D1 rest-list allocation and APPLY through real spread-call IR. Checked i64 extents replace the 64-argument ceiling; tests reach 1,024 arguments and 129 required parameters. Seventy-one functions pass 339 native/logical cases and 1,356 target comparisons, with 18 compiler mutants, 20 source refusals, 60 resource refusals and eight allocation boundary checks. R6/R6a covers fresh registered/removal builds against the accepted pristine baseline. Original model and WAT development failures are retained. The proposal awaits external review; no LL05 slot credit and no unreviewed integration. Result capacity, callable objects, conditions, lazy adapters and tails remain.
+
+
+## 2026-09-16 — Claude's sixty-seventh audit: binding integration and rest/APPLY
+
+Claude verified the integrated backend's byte identity with the reviewed binding unit and the hash chain from the call-core record, then replayed the rest/APPLY packet: the verifier recompiled the corpus and all eighteen mutant compilers with identical bytes, and a 38-case adversarial probe of rest-list identity and mutation, APPLY evaluation order, long required lists, escaped allocation before failure and malformed lists agreed across the Python model, native CCL and the target with matching allocation counts. No defect. The direct-link APPLY branch is unexercised by the corpus. The ledger stays at 5 accepted and 26 missing.
