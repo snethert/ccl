@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-16T18:14:26.015918+00:00",
+  "user_authorization": "I accept. integrate and proceed",
+  "review_commit": "29a3840f7b8c3db3ca5dcc6d5e84d774522a8403",
+  "review": "sixty-fifth audit; no defect",
+  "file": "compiler/WASM32/wasm32-backend.lisp",
+  "before": "ff8d874dbdd66ac0867caac943ce4fa02ea943eab4a36420215b036340294b2e",
+  "after": "75dee16c79af1fa35e9a4f605b7b198bac6e8def58477b1bbe688e773f167348",
+  "proposal_locator": "2026-09-16-stage1-b-call-core-r1/source/tests/wasm/stage1/b-calls/wasm32-backend.lisp",
+  "packet_manifest_sha256": "474f1e32d474d73b873c59152564ec5414bf6059ff9e36c23b733ae70418ad60",
+  "scope": "Required-argument B call core only; no LL05 inventory-slot acceptance.",
+  "verification": "Exact reviewed payload; reviewed independent R6/R6a runs cover these bytes. No new execution; no change to other integrated files or upstream kernel.",
+  "reverse": "Restore the accepted LL07 backend at the before hash."
+}

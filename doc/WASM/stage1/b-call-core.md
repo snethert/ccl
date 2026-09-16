@@ -1,9 +1,10 @@
 # Generated B call core — 16 September 2026
 
 The required-argument call and multiple-value core is implemented in a
-reversible proposal, ready for review with its retained verifier passing.
-It does not execute either complete LL05 slot. Shared source remains the
-reviewed, accepted LL07 backend.
+reviewed unit, accepted by the user and integrated byte for byte on
+16 September 2026. The [integration record](integration-b-call-core.json)
+binds the user decision, Claude’s sixty-fifth audit and the retained payload.
+It does not execute either complete LL05 slot.
 
 The real front end and pass 2 generate 34 functions. Eighty-eight native
 cases cover 0–6, 16, 32 and 64 arguments/results, direct and indirect calls,

@@ -1223,3 +1223,8 @@ The isolated compiler proposal now emits required-argument direct and indirect c
 ## 2026-09-16 — Claude's sixty-fifth audit: LL07 acceptance and integration, B call core reviewed, no defect
 
 Claude verified the LL07 acceptance record and the integrated backend's byte identity, then replayed the B call-core packet: the verifier recompiled the corpus and all fifteen mutant compilers with identical bytes, and a twenty-form adversarial probe of deep chains, 64-value retention, zero-value consumption and nested funcalls agreed across the Python model, native CCL and the target with 600 ownership inspections passing. No defect. The packet claims no inventory slot; the ledger stays at 5 accepted and 26 missing.
+
+
+## 2026-09-16 — accept and integrate the reviewed B call core
+
+The user said “I accept. integrate and proceed” after Claude’s sixty-fifth audit. The shared backend now equals the reviewed B call-core payload exactly; its previous bytes matched accepted LL07. The integration record pins both hashes and the review. Existing reviewed R6/R6a evidence covers the exact unit; no new execution or LL05 gate credit. Argument binding and APPLY are the next coherent extension, developed separately before review.
