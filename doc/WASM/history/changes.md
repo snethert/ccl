@@ -1359,3 +1359,11 @@ inventory, criterion or gate changes.
 ## 2026-09-16 — Claude's seventy-second audit: local-function integration and proper tail calls
 
 Claude verified the integrated backend's byte identity with the reviewed local-function unit and the hash chain from the closure record, then replayed the tail-call packet: the verifier reproduced the 270-module corpus, all nineteen mutant compilers, both regression controls and the 100,000-step chains with identical outcomes, the supplemental composition probe replayed byte-identically, and a 22-case adversarial probe of 3,000-step tail chains inside the ordinary corpus stack, stack-temporary literal APPLY chains, FLET and keyword tail calls and an escaping closure agreed across the Python model, native CCL and the target on the first run. No defect. The ledger stays at 5 accepted and 26 missing.
+
+## 2026-09-16 — Accept and integrate proper tail calls
+
+On the user’s “accept. integrate and proceed”, integrated the exact proposal
+reviewed in Claude’s seventy-second audit. The integration record binds the
+review, retained payload and predecessor; its R6/R6a evidence is reused. Tail
+legality with dynamic extents, collector support for stack callables and the
+ordinary-call context cost remain explicit obligations. No inventory slot changes.

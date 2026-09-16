@@ -334,6 +334,8 @@
 ;;; First B call unit: required arguments, ordered evaluation and complete
 ;;; multiple values, owned allocation and lexical closures. No collection or
 ;;; tail-call claim in this slice.
+(defvar *b-stack-closure* nil)
+(defvar *b-tail-position* nil)
 (defvar *b-function-vars* nil)
 (defvar *b-environments* nil)
 (defvar *b-captured* nil)
@@ -459,7 +461,10 @@
       (write-string (b-store wasm32::tcr.mv_base (b-at (b-local base) out-offset)) s)
       (write-string (b-store wasm32::tcr.mv_owner_top "(local.get $top)") s)
       (write-string (b-store wasm32::tcr.mv_count "(i32.const 0)") s)
-      (format s "(call $resolve (i32.load offset=8 (local.get ~a))) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=8 (local.get ~a) (local.get $dispatch_self)) (call_indirect (type $b_entry) (i32.load offset=8 (local.get ~a)) (i32.const ~d) (local.get $dispatch_slot))" base base base n)
+      (format s "(call $resolve (i32.load offset=8 (local.get ~a))) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=8 (local.get ~a) (local.get $dispatch_self))" base base)
+      (write-string (if *b-tail-position*
+                      (b-tail-transfer (b-at (b-local base) 16) (b-wat "(i32.const ~d)" n))
+                      (b-wat "(call_indirect (type $b_entry) (local.get $dispatch_self) (i32.const ~d) (local.get $dispatch_slot))" n)) s)
       (write-string "(local.set $count) (local.set $value)" s)
       (write-string (b-condition "(i32.gt_u (local.get $count) (local.get $capacity))" 3) s)
       (format s "(memory.copy (local.get $results) (i32.add (local.get ~a) (i32.const ~d)) (i32.mul (local.get $count) (i32.const 4)))" base out-offset)
@@ -470,6 +475,8 @@
       (write-string (b-store wasm32::tcr.root_head (b-local root)) s)
       (format s "(local.set $top (local.get ~a))" base))))
 (defun b-scalar (ir)
+  (let ((*b-tail-position* nil)) (b-scalar-inner ir)))
+(defun b-scalar-inner (ir)
   (let ((op (ccl::acode-operator-name (ccl::acode-operator ir))) (args (ccl::acode-operands ir)))
     (case op
       (ccl::lexical-reference (b-read-variable (first args)))
@@ -518,9 +525,13 @@
                (loop for var in (first args) for i from 0 do
                  (write-string (b-bind-value var (b-wat "(i32.load offset=~d ~a)" (+ 8 (* 4 i)) base)) s)))
              (write-string (b-multiple (third args)) s)))))
-      (ccl::call (if (third args)
-                    (if (eq (third args) t) (b-apply (first args) (second args)) (refuse :b-spread-kind))
-                    (b-call (first args) (second args))))
+      (ccl::call
+       (if (and (eq (ccl::acode-operator-name (ccl::acode-operator (first args))) 'ccl::immediate)
+                (eq (first (ccl::acode-operands (first args))) '%wasm-literal-apply))
+         (b-literal-apply (second args))
+         (if (third args)
+           (if (eq (third args) t) (b-apply (first args) (second args)) (refuse :b-spread-kind))
+           (b-call (first args) (second args)))))
       (ccl::values
        (let* ((forms (first args)) (n (length forms)))
          ;; Capacity is a runtime resource, not a fixed language limit.
@@ -540,7 +551,7 @@
          (concatenate 'string
            (if (eq op 'ccl::prog1)
              (b-wat "(i32.store (local.get $results) ~a) (local.set ~a (i32.const 1))" (b-scalar (first forms)) saved)
-             (b-wat "~a (local.set ~a (local.get $count))" (b-multiple (first forms)) saved))
+             (b-wat "~a (local.set ~a (local.get $count))" (let ((*b-tail-position* nil)) (b-multiple (first forms))) saved))
            (b-retained-frame (b-local saved) (lambda (base)
              (with-output-to-string (s)
                (format s "(memory.copy ~a (local.get $results) (i32.mul (local.get ~a) (i32.const 4)))" (b-at base 8) saved)
@@ -565,13 +576,13 @@
                         (loop for v in *required-vars* for i from 0 when (member v *b-bound-vars* :test #'eq) do
                           (write-string (b-bind-value v (b-wat "(i32.load offset=~d (local.get $incoming))" (* 4 i))) s)))
                       (b-binding-code arity opt keys rest)))
-           (body (b-multiple (sixth args)))
+           (body (let ((*b-tail-position* t)) (b-multiple (sixth args))))
            (restore (concatenate 'string (b-store wasm32::tcr.vsp "(local.get $incoming)")
                      (b-store wasm32::tcr.mv_base "(local.get $output)") (b-store wasm32::tcr.mv_owner_top "(local.get $owner)")
                      (b-store wasm32::tcr.root_head "(local.get $root)")))
            (entry-roots (b-runtime-roots "(local.get $frame)" (b-wat "(i32.add (local.get $capacity) (i32.const ~d))" (length *b-bound-vars*))))
            (wat (with-output-to-string (s)
-             (write-string "(module (type $b_entry (func (param i32 i32) (result i32 i32))) (import \"env\" \"memory\" (memory 1 32769 shared)) (import \"env\" \"tcr\" (global $tcr i32)) (import \"env\" \"table\" (table 0 funcref)) (import \"env\" \"code_registry\" (global $code_registry i32)) (import \"env\" \"call_error\" (tag $call_error (param i32))) (import \"env\" \"type_error\" (tag $type_error (param i32 i32)))" s)
+             (write-string "(module (type $b_entry (func (param i32 i32) (result i32 i32))) (type $tail_entry (func (param i32 i32 i32) (result i32 i32))) (import \"env\" \"memory\" (memory 1 32769 shared)) (import \"env\" \"tcr\" (global $tcr i32)) (import \"env\" \"table\" (table 0 funcref)) (import \"env\" \"tail_table\" (table $tail_slots 0 funcref)) (import \"env\" \"code_registry\" (global $code_registry i32)) (import \"env\" \"call_error\" (tag $call_error (param i32))) (import \"env\" \"type_error\" (tag $type_error (param i32 i32)))" s)
              (dolist (name (sort *b-keywords* #'string<))
                (format s "(import \"keywords\" ~s (global $key_~a i32))" name name))
              (dolist (name (sort *b-symbols* #'string<))
@@ -579,15 +590,15 @@
              (dolist (entry *b-code-imports*)
                (format s "(import \"codes\" ~s (global $code_~a i32))" (second entry) (second entry)))
              (write-string (b-object-runtime) s)
-             (write-string "(func (export \"entry\") (type $b_entry) (param $self i32) (param $nargs i32) (result i32 i32) (local $incoming i32) (local $output i32) (local $owner i32) (local $root i32) (local $old_count i32) (local $frame i32) (local $results i32) (local $top i32) (local $count i32) (local $value i32) (local $exception exnref) (local $wide i64) (local $capacity i32) (local $result_bytes i32) (local $bindings i32) (local $dispatch_self i32) (local $dispatch_slot i32) (local $closure_env i32)" s)
+             (write-string "(func $body (export \"tail_entry\") (type $tail_entry) (param $self i32) (param $nargs i32) (param $context i32) (result i32 i32) (local $incoming i32) (local $output i32) (local $owner i32) (local $root i32) (local $old_count i32) (local $frame i32) (local $results i32) (local $top i32) (local $count i32) (local $value i32) (local $exception exnref) (local $wide i64) (local $capacity i32) (local $result_bytes i32) (local $bindings i32) (local $dispatch_self i32) (local $dispatch_slot i32) (local $closure_env i32)" s)
              (dotimes (i *temporary-count*) (format s "(local $tmp~d i32)" i))
-             (format s "(local.set $incoming ~a) (local.set $output ~a) (local.set $owner ~a) (local.set $root ~a) (local.set $old_count ~a) (local.set $top (local.get $owner))"
+             (format s "(local.set $incoming ~a) (local.set $output ~a) (local.set $owner ~a) (local.set $root ~a) (local.set $old_count ~a) (local.set $top (i32.add (local.get $context) (i32.add (i32.const 48) (i32.and (i32.add (i32.mul (local.get $nargs) (i32.const 4)) (i32.const 15)) (i32.const -16))))) (local.set $top (i32.add (local.get $top) (i32.load offset=24 (local.get $context))))"
                (b-load wasm32::tcr.vsp) (b-load wasm32::tcr.mv_base) (b-load wasm32::tcr.mv_owner_top) (b-load wasm32::tcr.root_head) (b-load wasm32::tcr.mv_count))
              (write-string (b-condition (b-wat "(i32.or (i32.lt_u (local.get $nargs) (i32.const ~d)) (i32.gt_u (local.get $nargs) (i32.const ~d)))" arity (if (or keys rest) #xffffffff maximum)) 1) s)
              (write-string (b-condition "(i32.or (i32.lt_u (local.get $incoming) (i32.load offset=68 (global.get $tcr))) (i32.and (i32.or (local.get $incoming) (i32.or (local.get $output) (local.get $owner))) (i32.const 15)))" 2) s)
              (write-string (b-condition "(i32.or (i32.gt_u (local.get $output) (local.get $owner)) (i32.gt_u (local.get $owner) (i32.load offset=72 (global.get $tcr))))" 2) s)
              (write-string (b-condition "(i64.gt_u (i64.extend_i32_u (i32.load offset=72 (global.get $tcr))) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16)))" 2) s)
-             (write-string (b-condition "(i64.gt_u (i64.add (i64.extend_i32_u (local.get $incoming)) (i64.and (i64.add (i64.mul (i64.extend_i32_u (local.get $nargs)) (i64.const 4)) (i64.const 15)) (i64.const -16))) (i64.extend_i32_u (local.get $output)))" 2) s)
+             (write-string (b-condition "(i32.or (i32.ne (local.get $incoming) (i32.add (local.get $context) (i32.const 48))) (i32.ne (local.get $root) (i32.add (local.get $context) (i32.const 32))))" 2) s)
              (write-string "(block $caught (result exnref) (try_table (catch_all_ref $caught) (local.set $frame (local.get $top))" s)
              ;; At least four scratch words permit scalar evaluation even with an
              ;; empty final reservation. Child reservations inherit this budget.
@@ -605,7 +616,9 @@
              (write-string "(return (local.get $value) (local.get $count))) unreachable) (local.set $exception)" s)
              (write-string restore s)
              (write-string (b-store wasm32::tcr.mv_count "(local.get $old_count)") s)
-             (write-string "(throw_ref (local.get $exception))))" s))))
+             (write-string "(throw_ref (local.get $exception)))" s)
+             (write-string (b-entry-wrapper arity maximum (or keys rest) (length *b-bound-vars*)) s)
+             (write-char #\) s))))
       (list :name *module-name* :arity arity :wat wat :imports *b-imports* :bound-words (length *b-bound-vars*) :captures (length *b-inherited*)))))
 (defun compile-call-module (source-text name links)
   (unless (and (every (lambda (s) (and (stringp s) (<= 1 (length s) 64)
@@ -645,7 +658,7 @@
   (b-wat "(block (result i32) ~a ~a (i32.load (i32.sub ~a (i32.const 1))))"
     (b-condition (b-wat "(i32.ne (i32.and ~a (i32.const ~d)) (i32.const ~d))" node wasm32::fulltagmask wasm32::fulltag-cons) 5)
     (b-condition (b-wat "(i64.gt_u (i64.add (i64.extend_i32_u ~a) (i64.const 7)) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16)))" node) 5) node))
-(defun b-apply (callee argument-list &optional local-self)
+(defun b-apply (callee argument-list &optional local-self (ephemeral-bytes 0))
   (unless (= (length (second argument-list)) 1) (refuse :b-apply-shape))
   (let* ((prefix (first argument-list)) (n (length prefix))
          (evaluated (temporary)) (base (temporary)) (root (temporary))
@@ -680,9 +693,9 @@
       (write-string "(br $list_check)))" s)
       (format s "(local.set ~a (i32.add (local.get ~a) (i32.const ~d))) (local.set ~a (local.get $top)) (local.set $wide (i64.and (i64.add (i64.mul (i64.extend_i32_u (local.get ~a)) (i64.const 4)) (i64.const 31)) (i64.const -16)))" total length n base total)
       ;; $wide is the output offset (header/self/padding plus aligned args).
-      (write-string (b-condition (b-wat "(i64.gt_u (i64.add (i64.extend_i32_u (local.get $top)) (i64.add (local.get $wide) (i64.extend_i32_u (local.get $result_bytes)))) (i64.extend_i32_u ~a))" (b-load wasm32::tcr.vsp_limit)) 2) s)
-      (format s "(local.set ~a (i32.add (local.get $top) (i32.wrap_i64 (local.get $wide)))) (local.set ~a (i32.div_u (i32.sub (i32.wrap_i64 (local.get $wide)) (i32.const 8)) (i32.const 4))) (local.set $top (i32.add (local.get ~a) (local.get $result_bytes)))"
-        output roots output)
+      (write-string (b-condition (b-wat "(i64.gt_u (i64.add (i64.extend_i32_u (local.get $top)) (i64.add (i64.add (local.get $wide) (i64.const ~d)) (i64.extend_i32_u (local.get $result_bytes)))) (i64.extend_i32_u ~a))" ephemeral-bytes (b-load wasm32::tcr.vsp_limit)) 2) s)
+      (format s "(local.set ~a (i32.add (local.get $top) (i32.add (i32.wrap_i64 (local.get $wide)) (i32.const ~d)))) (local.set ~a (i32.div_u (i32.sub (i32.wrap_i64 (local.get $wide)) (i32.const 8)) (i32.const 4))) (local.set $top (i32.add (local.get ~a) (local.get $result_bytes)))"
+        output ephemeral-bytes roots output)
       (format s "(i32.store (local.get ~a) ~a) (i32.store offset=4 (local.get ~a) (local.get ~a)) (local.set ~a (i32.const 0)) (loop $apply_roots (i32.store (i32.add (local.get ~a) (i32.add (i32.const 8) (i32.mul (local.get ~a) (i32.const 4)))) (i32.const 77825)) (local.set ~a (i32.add (local.get ~a) (i32.const 1))) (br_if $apply_roots (i32.lt_u (local.get ~a) (local.get ~a))))"
         base (b-load wasm32::tcr.root_head) base roots index base index index index index roots)
       (write-string (b-store wasm32::tcr.root_head (b-local base)) s)
@@ -694,7 +707,10 @@
       (write-string (b-store wasm32::tcr.mv_base (b-local output)) s)
       (write-string (b-store wasm32::tcr.mv_owner_top "(local.get $top)") s)
       (write-string (b-store wasm32::tcr.mv_count "(i32.const 0)") s)
-      (format s "(call $resolve (i32.load offset=8 (local.get ~a))) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=8 (local.get ~a) (local.get $dispatch_self)) (call_indirect (type $b_entry) (i32.load offset=8 (local.get ~a)) (local.get ~a) (local.get $dispatch_slot))" base base base total)
+      (format s "(call $resolve (i32.load offset=8 (local.get ~a))) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=8 (local.get ~a) (local.get $dispatch_self))" base base)
+      (write-string (if *b-tail-position*
+                      (b-tail-transfer (b-at (b-local base) 16) (b-local total) ephemeral-bytes)
+                      (b-wat "(call_indirect (type $b_entry) (local.get $dispatch_self) ~a (local.get $dispatch_slot))" (b-local total))) s)
       (write-string "(local.set $count) (local.set $value)" s)
       (write-string (b-condition "(i32.gt_u (local.get $count) (local.get $capacity))" 3) s)
       (format s "(memory.copy (local.get $results) (local.get ~a) (i32.mul (local.get $count) (i32.const 4)))" output)
@@ -806,7 +822,7 @@
          (n (length vars)) (bytes (+ 24 (if (zerop n) 0 (* 8 (ceiling (+ 4 (* 4 n)) 8))))))
     (unless entry (refuse :b-closure-code))
     (pushnew entry *b-code-imports* :test #'eq)
-    (b-at (b-heap-block bytes
+    (b-at (funcall (if *b-stack-closure* #'b-stack-block #'b-heap-block) bytes
       (lambda (base)
         (with-output-to-string (s)
           (format s "(i32.store ~a (i32.const 1322)) (i32.store offset=4 ~a (global.get $code_~a)) (i32.store offset=8 ~a ~a) (i32.store offset=12 ~a (i32.const 4)) (i32.store offset=16 ~a (i32.const 77825)) (i32.store offset=20 ~a (i32.const 77825))"
@@ -1032,7 +1048,76 @@
                                (or (and (consp callee) (eq (car callee) 'lambda))
                                    (and (consp callee) (eq (car callee) 'function)
                                         (consp (second callee)) (eq (car (second callee)) 'lambda)))))
-                      (let ((temp (gensym "LITERAL-APPLY-")))
-                        `(let ((,temp ,(second parts))) (apply ,temp ,@(cddr parts))))
+                      `(%wasm-literal-apply ,(second parts) ,@(cddr parts))
                       parts)))))))
     (walk form)))
+
+;;; One continuation context per ordinary B call. Tail entries reuse its
+;;; argument/root area; the public B entry alone restores the caller's state.
+;;; Raw saved words 0..31, root header 32..39, SELF/padding 40..47, args 48+.
+(defun b-entry-wrapper (arity maximum open bound-words)
+  (with-output-to-string (s)
+    (write-string "(func (export \"entry\") (type $b_entry) (param $self i32) (param $nargs i32) (result i32 i32) (local $incoming i32) (local $output i32) (local $owner i32) (local $root i32) (local $old_count i32) (local $bytes i32) (local $i i32) (local $value i32) (local $count i32) (local $exception exnref)" s)
+    (format s "(local.set $incoming ~a) (local.set $output ~a) (local.set $owner ~a) (local.set $root ~a) (local.set $old_count ~a)"
+      (b-load wasm32::tcr.vsp) (b-load wasm32::tcr.mv_base) (b-load wasm32::tcr.mv_owner_top) (b-load wasm32::tcr.root_head) (b-load wasm32::tcr.mv_count))
+    (write-string (b-condition (b-wat "(i32.or (i32.lt_u (local.get $nargs) (i32.const ~d)) (i32.gt_u (local.get $nargs) (i32.const ~d)))" arity (if open #xffffffff maximum)) 1) s)
+    (write-string (b-condition "(i32.or (i32.lt_u (local.get $incoming) (i32.load offset=68 (global.get $tcr))) (i32.and (i32.or (local.get $incoming) (i32.or (local.get $output) (local.get $owner))) (i32.const 15)))" 2) s)
+    (write-string (b-condition "(i32.or (i32.gt_u (local.get $output) (local.get $owner)) (i32.gt_u (local.get $owner) (i32.load offset=72 (global.get $tcr))))" 2) s)
+    (write-string (b-condition "(i64.gt_u (i64.extend_i32_u (i32.load offset=72 (global.get $tcr))) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16)))" 2) s)
+    (write-string (b-condition "(i64.gt_u (i64.add (i64.extend_i32_u (local.get $incoming)) (i64.and (i64.add (i64.mul (i64.extend_i32_u (local.get $nargs)) (i64.const 4)) (i64.const 15)) (i64.const -16))) (i64.extend_i32_u (local.get $output)))" 2) s)
+    (write-string (b-condition "(i64.gt_u (i64.add (i64.extend_i32_u (local.get $owner)) (i64.add (i64.const 48) (i64.and (i64.add (i64.mul (i64.extend_i32_u (local.get $nargs)) (i64.const 4)) (i64.const 15)) (i64.const -16)))) (i64.extend_i32_u (i32.load offset=72 (global.get $tcr))))" 2) s)
+    (write-string (b-condition (b-wat "(i64.gt_u (i64.add (i64.extend_i32_u (local.get $owner)) (i64.add (i64.const 48) (i64.add (i64.and (i64.add (i64.mul (i64.extend_i32_u (local.get $nargs)) (i64.const 4)) (i64.const 15)) (i64.const -16)) (i64.and (i64.add (if (result i64) (i32.lt_u (i32.sub (local.get $owner) (local.get $output)) (i32.const 16)) (then (i64.const 16)) (else (i64.extend_i32_u (i32.sub (local.get $owner) (local.get $output))))) (i64.const ~d)) (i64.const -16))))) (i64.extend_i32_u ~a))" (+ 23 (* 4 bound-words)) (b-load wasm32::tcr.vsp_limit)) 2) s)
+    (write-string "(local.set $bytes (i32.and (i32.add (i32.mul (local.get $nargs) (i32.const 4)) (i32.const 15)) (i32.const -16))) (i32.store (local.get $owner) (local.get $incoming)) (i32.store offset=4 (local.get $owner) (local.get $output)) (i32.store offset=8 (local.get $owner) (local.get $owner)) (i32.store offset=12 (local.get $owner) (local.get $root)) (i32.store offset=16 (local.get $owner) (local.get $old_count)) (i32.store offset=24 (local.get $owner) (i32.const 0)) (i32.store offset=32 (local.get $owner) (local.get $root)) (i32.store offset=36 (local.get $owner) (i32.add (i32.const 2) (i32.div_u (local.get $bytes) (i32.const 4)))) (i32.store offset=40 (local.get $owner) (local.get $self)) (i32.store offset=44 (local.get $owner) (i32.const 77825)) (local.set $i (i32.const 0)) (block $pad_done (loop $pad (br_if $pad_done (i32.ge_u (local.get $i) (local.get $bytes))) (i32.store (i32.add (local.get $owner) (i32.add (i32.const 48) (local.get $i))) (i32.const 77825)) (local.set $i (i32.add (local.get $i) (i32.const 4))) (br $pad))) (memory.copy (i32.add (local.get $owner) (i32.const 48)) (local.get $incoming) (i32.mul (local.get $nargs) (i32.const 4)))" s)
+    (write-string (b-store wasm32::tcr.vsp "(i32.add (local.get $owner) (i32.const 48))") s)
+    (write-string (b-store wasm32::tcr.root_head "(i32.add (local.get $owner) (i32.const 32))") s)
+    (write-string (b-store wasm32::tcr.mv_count "(i32.const 0)") s)
+    (write-string "(block $caught (result exnref) (try_table (catch_all_ref $caught) (call $body (local.get $self) (local.get $nargs) (local.get $owner)) (local.set $count) (local.set $value)" s)
+    (write-string (b-wrapper-restore nil) s)
+    (write-string "(return (local.get $value) (local.get $count))) unreachable) (local.set $exception)" s)
+    (write-string (b-wrapper-restore t) s)
+    (write-string "(throw_ref (local.get $exception)))" s)))
+(defun b-wrapper-restore (exceptional)
+  (concatenate 'string
+    (b-store wasm32::tcr.vsp "(local.get $incoming)")
+    (b-store wasm32::tcr.mv_base "(local.get $output)")
+    (b-store wasm32::tcr.mv_owner_top "(local.get $owner)")
+    (b-store wasm32::tcr.root_head "(local.get $root)")
+    (b-store wasm32::tcr.mv_count (if exceptional "(local.get $old_count)" "(local.get $count)"))))
+(defun b-tail-transfer (arguments count &optional (ephemeral-bytes 0))
+  (let ((n (temporary)) (bytes (temporary)) (i (temporary)))
+    (with-output-to-string (s)
+      (format s "(local.set ~a ~a)" n count)
+      (write-string (b-condition "(i32.ge_u (local.get $dispatch_slot) (table.size $tail_slots))" 4) s)
+      (write-string (b-condition "(ref.is_null (table.get $tail_slots (local.get $dispatch_slot)))" 4) s)
+      (format s "(local.set ~a (i32.and (i32.add (i32.mul (local.get ~a) (i32.const 4)) (i32.const 15)) (i32.const -16)))" bytes n)
+      ;; The staged argument area already bounds N. Recheck the reusable
+      ;; destination extent in i64 before overwriting any retired frame.
+      (write-string (b-condition (b-wat "(i64.gt_u (i64.add (i64.extend_i32_u (local.get $context)) (i64.add (i64.const ~d) (i64.extend_i32_u (local.get ~a)))) (i64.extend_i32_u ~a))" (+ 48 ephemeral-bytes) bytes (b-load wasm32::tcr.vsp_limit)) 2) s)
+      (when (plusp ephemeral-bytes)
+        (format s "(memory.copy (i32.add ~a (local.get ~a)) (i32.sub (local.get $dispatch_self) (i32.const 6)) (i32.const ~d))" arguments bytes ephemeral-bytes))
+      (format s "(memory.copy (i32.add (local.get $context) (i32.const 48)) ~a ~a) (local.set ~a (i32.mul (local.get ~a) (i32.const 4))) (block $tail_pad_done (loop $tail_pad (br_if $tail_pad_done (i32.ge_u (local.get ~a) (local.get ~a))) (i32.store (i32.add (local.get $context) (i32.add (i32.const 48) (local.get ~a))) (i32.const 77825)) (local.set ~a (i32.add (local.get ~a) (i32.const 4))) (br $tail_pad)))"
+        arguments (if (plusp ephemeral-bytes) (b-wat "(i32.add (local.get ~a) (i32.const ~d))" bytes ephemeral-bytes) (b-wat "(i32.mul (local.get ~a) (i32.const 4))" n)) i n i bytes i i i)
+      (format s "(i32.store offset=24 (local.get $context) (i32.const ~d))" ephemeral-bytes)
+      (when (plusp ephemeral-bytes)
+        (format s "(local.set $dispatch_self (i32.add (local.get $context) (i32.add (i32.const 54) (local.get ~a)))) (if (i32.ne (i32.load offset=2 (local.get $dispatch_self)) (i32.const 77825)) (then (i32.store offset=2 (local.get $dispatch_self) (i32.add (local.get $dispatch_self) (i32.const 24)))))" bytes))
+      (format s "(i32.store offset=36 (local.get $context) (i32.add (i32.const 2) (i32.div_u (local.get ~a) (i32.const 4)))) (i32.store offset=40 (local.get $context) (local.get $dispatch_self)) (i32.store offset=44 (local.get $context) (i32.const 77825))" bytes)
+      (write-string (b-store wasm32::tcr.vsp "(i32.add (local.get $context) (i32.const 48))") s)
+      (write-string (b-store wasm32::tcr.mv_base "(i32.load offset=4 (local.get $context))") s)
+      (write-string (b-store wasm32::tcr.mv_owner_top "(i32.load offset=8 (local.get $context))") s)
+      (write-string (b-store wasm32::tcr.root_head "(i32.add (local.get $context) (i32.const 32))") s)
+      (write-string (b-store wasm32::tcr.mv_count "(i32.const 0)") s)
+      (format s "(return_call_indirect $tail_slots (type $tail_entry) (local.get $dispatch_self) (local.get ~a) (local.get $context) (local.get $dispatch_slot))" n))))
+(defun b-stack-block (bytes writer)
+  (let* ((p (temporary)) (size (* 16 (ceiling bytes 16))) (body (funcall writer (b-local p))))
+    (b-wat "(block (result i32) (local.set ~a (local.get $top)) ~a (memory.fill (local.get ~a) (i32.const 0) (i32.const ~d)) ~a (local.get ~a))"
+      p (b-reserve size) p size body p)))
+(defun b-literal-apply (arguments)
+  (unless (and (null (second arguments)) (>= (length (first arguments)) 2)) (refuse :literal-apply-shape))
+  (let* ((forms (first arguments)) (literal (first forms))
+         (op (ccl::acode-operator-name (ccl::acode-operator literal)))
+         (afunc (first (ccl::acode-operands literal))))
+    (unless (member op '(ccl::closed-function ccl::simple-function)) (refuse :literal-apply-function))
+    (let* ((n (length (cdr (assoc afunc *b-environments* :test #'eq))))
+           (bytes (* 16 (ceiling (+ 24 (if (zerop n) 0 (* 8 (ceiling (+ 4 (* 4 n)) 8)))) 16)))
+           (self (let ((*b-stack-closure* t)) (b-make-closure afunc))))
+      (b-apply nil (list (butlast (rest forms)) (last forms)) self bytes))))

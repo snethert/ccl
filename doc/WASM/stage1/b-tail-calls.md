@@ -48,11 +48,16 @@ caught it. The full preflight now precedes all context writes, and a mutant
 retains that omission. The other retained failures are an assembler syntax
 error and corrected test expectations, disclosed in the development record.
 
-This is an auxiliary LL05 proposal awaiting external review. The shared
-backend remains the accepted local-function unit. No inventory slot is claimed.
+Claude’s seventy-second audit found no defect. The user accepted this auxiliary
+unit and its exact reviewed backend is now [integrated](integration-b-tail-calls.json).
+No inventory slot is claimed.
 Dynamic binding/cleanup, production Lisp conditions, authenticated lazy
 adapters and collection remain open; neither complete LL05 slot is claimed.
 The next call-path work is the condition and lazy-adapter machinery, with tail
 legality revisited when dynamic scopes are admitted.
 
 Packet: `ccl-evidence/2026-09-16-stage1-b-tail-calls-r1`.
+
+Carry forward: revisit tail legality when dynamic extents are admitted; qualify
+stack-temporary callable roots with the collector; charge the 48-byte ordinary-call
+context plus padded arguments in performance measurements.

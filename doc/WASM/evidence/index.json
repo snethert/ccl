@@ -3922,9 +3922,16 @@
       "sha256": "21efaaad55ebc8b24f03a48831f060dd3ccbac864fd2415afff300f2ce77d937",
       "scope": "Generated proper Wasm tail transfer and stack-temporary literal APPLY: 202 source functions, 270 modules, 741 native/model cases and 2964 target comparisons. Thirty-six 100000-step chains fit a 2 KiB stack budget, including changing arities, full values and exceptional ownership restoration. Nineteen compiler mutants, two inherited regression controls, R6/R6a and retained replay pass. Public B signature unchanged; internal paired tail entries are owner-supplied. No collection, dynamic cleanup/binding extent, authenticated lazy installation, full LL05 credit or unreviewed integration.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "project_disposition": "ACCEPTED_AND_INTEGRATED_AT_REVIEWED_SCOPE",
+      "integration_record": "doc/WASM/stage1/integration-b-tail-calls.json",
+      "external_review": {
+        "reviewer": "Claude",
+        "commit": "a7cc328338d4c79b9b069d579043dfe146daec84",
+        "audit": 72
+      }
     }
   ]
 }

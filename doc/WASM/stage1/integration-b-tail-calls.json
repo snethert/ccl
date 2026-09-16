@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-16T22:23:23.771289+00:00",
+  "user_authorization": "accept. integrate and proceed",
+  "review_commit": "a7cc328338d4c79b9b069d579043dfe146daec84",
+  "review": "seventy-second audit; no defect",
+  "file": "compiler/WASM32/wasm32-backend.lisp",
+  "before": "a2a0b549225d9e4d673d5eb68b8315982347af1ac13d4d2f74520b8de5ee9c6c",
+  "after": "3914b220aa71dc68d14804d8f507eaeae9f767bee8bbb6b71d39eb1f78cb93b9",
+  "proposal_locator": "2026-09-16-stage1-b-tail-calls-r1/source/tests/wasm/stage1/b-tail-calls/wasm32-backend.lisp",
+  "packet_manifest_sha256": "21efaaad55ebc8b24f03a48831f060dd3ccbac864fd2415afff300f2ce77d937",
+  "scope": "Proper Wasm tail transfer and stack-temporary literal APPLY; auxiliary scope, no LL05 slot acceptance.",
+  "observations": [
+    "Revisit syntactic tail legality when dynamic binding, cleanup or handler extent is admitted.",
+    "The collector must recognize stack-temporary callable addresses in root slots or supply another placement.",
+    "Include the fixed 48-byte ordinary-call continuation plus padded arguments in performance accounting."
+  ],
+  "verification": "Exact reviewed payload; reviewed independent R6/R6a executions cover these bytes. No new native execution.",
+  "reverse": "Restore the accepted local-function payload at the before hash."
+}
