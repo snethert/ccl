@@ -1307,3 +1307,11 @@ of closure construction. No inventory or acceptance criterion changes.
 ## 2026-09-16 — Claude's seventieth audit: callable-object integration and lexical closures
 
 Claude verified the integrated backend's byte identity with the reviewed callable-object unit and the hash chain from the result-capacity record, then replayed the closure packet: the verifier recompiled the 177-module corpus and all seventeen mutant compilers with identical bytes, and a 35-case adversarial probe of captured LET, SETQ, keyword and rest bindings, grandchild captures, sibling closures in heap structures and separate activations agreed across the Python model, native CCL and the target with byte-exact allocation. No defect. The ledger stays at 5 accepted and 26 missing.
+
+## 2026-09-16 — integrate reviewed lexical closures
+
+The user said “accept, integrate and proceed” after Claude’s seventieth audit.
+The shared backend is byte-identical to the reviewed closure proposal, chained
+to callable-object integration and covered by the reviewed R6/R6a runs. The
+integration record retains the literal-lambda diagnostic, root-count oracle
+and unused inner-object observations for the next derivative. No LL05 credit.

@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-16T20:54:25.636362+00:00",
+  "user_authorization": "accept, integrate and proceed",
+  "review_commit": "dbbf136eb257f4e90822eab4ef72554e81f26e43",
+  "review": "seventieth audit; no defect",
+  "file": "compiler/WASM32/wasm32-backend.lisp",
+  "before": "ec448ae0b899eb81ba46c605789f96691c2e25bb4480ac98fd8cb292a6017227",
+  "after": "fdf6ef30bbca907999bb4242f6ca63e0a73ae3a2626a37989594273fa430ee9f",
+  "proposal_locator": "2026-09-16-stage1-b-closures-r1/source/tests/wasm/stage1/b-closures/wasm32-backend.lisp",
+  "packet_manifest_sha256": "e1399e4ba238cec91ddce6028fffc481360f0ee216e01f9503befba1e1047521",
+  "scope": "Lexical closure construction and shared mutable captures; no LL05 slot acceptance.",
+  "observations": [
+    "Directly applied literal lambdas are refused under an incidental heap-constant reason; address in the local-call derivative.",
+    "Root-count expectations currently come from the emitted module index; restore an independent count in the derivative.",
+    "Static function objects are materialized for unreferenced inner entries; remove in the derivative."
+  ],
+  "verification": "Exact reviewed payload; reviewed independent R6/R6a executions cover these bytes. No new native execution.",
+  "reverse": "Restore the accepted callable-object payload at the before hash."
+}

@@ -27,7 +27,8 @@ Stage 0 slot validator. The primitive and leaf entries remain unchanged.
 Original development failures are retained: an inert IR probe, a source-reader
 error and a corpus using the still-refused inlined LAMBDA-BIND form.
 
-This is an auxiliary execution, pending external review and integration;
+The user accepted this auxiliary unit after Claude’s seventieth audit found
+no defect. Its exact payload is [integrated](integration-b-closures.json);
 it claims no LL05 inventory slot. FLET/LABELS, inlined LAMBDA-BIND, production
 conditions, authenticated loading, lazy adapters, tail transfers and GC remain
 open. Function arity/debug slots are still NIL placeholders. Allocation has

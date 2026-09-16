@@ -3896,7 +3896,13 @@
       "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "project_disposition": {
+        "status": "ACCEPTED_AND_INTEGRATED_AUXILIARY",
+        "record": "doc/WASM/stage1/integration-b-closures.json",
+        "sha256": "63412e2992133ee5f6e4e8600e884ab621db58c21219265dcbd5f6b5e530befa",
+        "scope": "Reviewed closure unit only; no LL05 slot credit."
+      }
     }
   ]
 }
