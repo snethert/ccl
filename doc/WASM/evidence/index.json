@@ -1716,10 +1716,17 @@
       "envelope_version": 2,
       "inventory_version": 1,
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "LL15-b/c instrument qualification: 167-unit explicit startup worklist, fresh capture and native witness tests, 42 publication rejection controls and 16 production role omissions. No exhaustive closure or project acceptance."
+      "scope": "LL15-b/c instrument qualification: 167-unit explicit startup worklist, fresh capture and native witness tests, 42 publication rejection controls and 16 production role omissions. No exhaustive closure or project acceptance.",
+      "external_review": {
+        "reviewer": "Claude",
+        "record": "stage0/claude-review.md",
+        "reviewed_revision": "1f4f9829",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
+        "scope": "Fifty-ninth audit; verifier re-executed with byte-identical publication, partitions and populations recounted from pinned inputs, contract coverage checked. Acceptance is the user's decision."
+      }
     }
   ],
   "auxiliary_records": [
@@ -3572,9 +3579,16 @@
       "sha256": "7f6517fb7214b278a27515361366039398c4efbef8ea0ded8925e1dd5674769f",
       "scope": "LL15-b/c contract v0.2 instrument qualification: 167-unit explicit startup worklist; 33 capture checks, 20 native cases, 42 publication rejection controls and 16 production role omissions. Fresh verifier reproduces publication and deterministic assessments. Native observations and proven local bounds are separate from unknowns. No exhaustive closure or project acceptance.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude",
+        "record": "stage0/claude-review.md",
+        "reviewed_revision": "1f4f9829",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_NOT_ACCEPTED",
+        "scope": "Fifty-ninth audit; verifier re-executed with byte-identical publication, partitions and populations recounted from pinned inputs, contract coverage checked. Acceptance is the user's decision."
+      }
     },
     {
       "id": "TCR-SCHEMA-R3",
