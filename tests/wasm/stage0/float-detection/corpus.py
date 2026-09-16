@@ -26,6 +26,17 @@ NAMED = [
     ('mul-near-max-rounds-up-split', 'mul', (2 - 2 ** -52) * 2.0 ** 1000, 1.0), ('mul-near-max-exact', 'mul', (1 + 2 ** -30) * 2.0 ** 1020, 0.25), ('mul-near-max-inexact', 'mul', (1 + 2 ** -30) * 2.0 ** 1020, 1 + 2 ** -40),
     ('div-max-by-one', 'div', MAX, 1.0), ('div-max-by-three', 'div', MAX, 3.0), ('div-max-by-negone', 'div', MAX, -1.0), ('div-one-by-max', 'div', 1.0, MAX), ('sqrt-near-max', 'sqrt', (1 + 2 ** -30) * 2.0 ** 1022, None),
     ('add-max-half-ulp', 'add', MAX, 2.0 ** 969), ('sub-max-max', 'sub', MAX, MAX), ('add-negmax-negmax', 'add', -MAX, -MAX),
+    # the normal/subnormal boundary: results exactly 2^-1022 that are tiny after rounding (the R2 review's case), the tie, and neighbours
+    ('mul-boundary-underflow', 'mul', MIN_NORMAL, 1 - 2 ** -53), ('mul-boundary-underflow-swapped', 'mul', 1 - 2 ** -53, MIN_NORMAL),
+    ('mul-boundary-underflow-neg-a', 'mul', -MIN_NORMAL, 1 - 2 ** -53), ('mul-boundary-underflow-neg-b', 'mul', MIN_NORMAL, -(1 - 2 ** -53)), ('mul-boundary-underflow-neg-both', 'mul', -MIN_NORMAL, -(1 - 2 ** -53)),
+    ('mul-boundary-inside', 'mul', MIN_NORMAL * (1 + (2 ** 25 + 1) * 2.0 ** -52), 1 - (2 ** 25 + 1) * 2.0 ** -52),
+    ('mul-boundary-tie', 'mul', MIN_NORMAL * (1 + 2 ** -27), 1 - 2 ** -27), ('mul-boundary-above-tie', 'mul', MIN_NORMAL * (1 + (2 ** 25 - 1) * 2.0 ** -52), 1 - (2 ** 25 - 1) * 2.0 ** -52),
+    ('mul-boundary-below-half', 'mul', MIN_NORMAL * (1 + 2 ** -52), 1 - 3 * 2 ** -53), ('mul-boundary-just-below-normal', 'mul', MIN_NORMAL * (1 + 2 ** -52), 1 - 2 ** -52),
+    ('mul-boundary-exact', 'mul', MIN_NORMAL, 1.0), ('mul-boundary-exact-subnormal', 'mul', MIN_NORMAL - MIN_SUB, 1.0),
+    ('div-boundary-underflow', 'div', 1 - 2 ** -53, 2.0 ** 1022), ('div-boundary-underflow-scaled-dividend', 'div', (1 - 2 ** -53) * 2.0 ** -1000, 2.0 ** 22),
+    ('div-boundary-underflow-neg', 'div', -(1 - 2 ** -53), 2.0 ** 1022), ('div-boundary-underflow-neg-divisor', 'div', 1 - 2 ** -53, -(2.0 ** 1022)),
+    ('div-boundary-exact', 'div', 1.0, 2.0 ** 1022), ('div-boundary-exact-subnormal', 'div', 1 - 2 ** -52, 2.0 ** 1022), ('div-boundary-tie-below', 'div', 1 - 3 * 2 ** -53, 2.0 ** 1022),
+    ('div-boundary-above-inexact', 'div', MIN_NORMAL * (1 + 2 ** -51), 1 + 2 ** -52), ('div-boundary-below-inexact', 'div', MIN_NORMAL * (1 + 2 ** -52), 1 + 2 ** -51),
     ('sqrt-exact', 'sqrt', 4.0, None), ('sqrt-two', 'sqrt', 2.0, None), ('sqrt-negative', 'sqrt', -1.0, None), ('sqrt-negzero', 'sqrt', -0.0, None), ('sqrt-inf', 'sqrt', INF, None),
     ('sqrt-min-subnormal', 'sqrt', MIN_SUB, None), ('sqrt-subnormal-square', 'sqrt', 2.0 ** -1000, None), ('sqrt-subnormal-inexact', 'sqrt', 3 * MIN_SUB, None), ('sqrt-nan', 'sqrt', NAN, None),
     ('sqrt-max', 'sqrt', MAX, None), ('sqrt-tenth', 'sqrt', 0.1, None),
@@ -102,6 +113,12 @@ def build(seed=20260915):
     for op in ('add', 'sub', 'mul', 'div'):
         for k in range(300): add('%s-r%03d' % (op, k), op, random_double(g), random_double(g))
     for k in range(200): add('sqrt-r%03d' % k, 'sqrt', random_double(g), None)
+    for k in range(100):   # products straddling the normal/subnormal boundary: (1 + j 2^-52) (1 - i 2^-53) 2^-1022 with i near 2 j
+        j = g.choice(1 << 25); i = max(0, 2 * j + g.choice(5) - 2)
+        add('mul-boundary-r%03d' % k, 'mul', (-1.0 if g.choice(2) else 1.0) * MIN_NORMAL * (1 + j * 2.0 ** -52), (-1.0 if g.choice(2) else 1.0) * (1 - i * 2.0 ** -53))
+    for k in range(50):    # quotients at the boundary: a significand of ones over a power of two, through both scalings of the small-quotient witness
+        i = g.choice(9); m = g.choice(1001) - 1000
+        add('div-boundary-r%03d' % k, 'div', (-1.0 if g.choice(2) else 1.0) * (1 - i * 2.0 ** -53) * 2.0 ** m, (-1.0 if g.choice(2) else 1.0) * 2.0 ** (m + 1022))
     for k in range(100): add('trunc-r%03d' % k, 'trunc', random_double(g), None)
     for op in ('add32', 'mul32', 'div32'):
         for k in range(100): add('%s-r%03d' % (op, k), op, random_single(g), random_single(g))

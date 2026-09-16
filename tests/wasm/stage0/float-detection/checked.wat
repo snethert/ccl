@@ -16,6 +16,11 @@
 ;; division and the squared residual for sqrt. Tiny products and quotients are
 ;; witnessed on operands scaled by exact powers of two so that no partial
 ;; product underflows; a subnormal sqrt operand is scaled by 2^1074.
+;; Tininess is decided after rounding as IEEE 754 and x86 SSE define it: a
+;; result is tiny when rounding it to 53 bits with an unbounded exponent range
+;; gives a magnitude below 2^-1022. That differs from testing the final result
+;; only when the final result is exactly the smallest normal, so the witness
+;; decides that case from the exact error.
 (module
   (import "env" "memory" (memory 1 1))
   (global $INF f64 (f64.const inf))
@@ -27,6 +32,9 @@
   (global $S537 f64 (f64.const 0x1p537))              ;; two of these scale by 2^1074 exactly
   (global $S537_INV f64 (f64.const 0x1p-537))
   (global $WITNESS_MIN f64 (f64.const 0x1p-970))      ;; below this the plain witness's partial products could underflow
+  (global $S52 f64 (f64.const 0x1p52))
+  (global $QUARTER f64 (f64.const 0.25))
+  (global $ONE f64 (f64.const 1))
 
   (func $isnan (param $x f64) (result i32) (f64.ne (local.get $x) (local.get $x)))
   (func $isinf (param $x f64) (result i32) (f64.eq (f64.abs (local.get $x)) (global.get $INF)))
@@ -62,10 +70,15 @@
                                (f64.mul (local.get $ah) (local.get $bl)))
                       (f64.mul (local.get $al) (local.get $bh)))
              (f64.mul (local.get $al) (local.get $bl))))
-  ;; Status for a finite nonzero-or-zero result given whether it is exact.
-  (func $status (param $r f64) (param $exact i32) (result i32)
+  ;; Status for a finite result given whether it is exact and, for a result whose magnitude is exactly the
+  ;; smallest normal, whether it is tiny after rounding: the exact value rounded to 53 bits with an unbounded
+  ;; exponent range lies below 2^-1022 although the bounded rounding reached it. Every other tiny result is
+  ;; subnormal or zero, so the final result decides.
+  (func $status (param $r f64) (param $exact i32) (param $boundary_tiny i32) (result i32)
     (if (local.get $exact) (then (return (i32.const 0))))
-    (select (i32.const 4) (i32.const 5) (call $tiny (local.get $r))))
+    (select (i32.const 4) (i32.const 5)
+      (i32.or (call $tiny (local.get $r))
+              (i32.and (f64.eq (f64.abs (local.get $r)) (global.get $MIN_NORMAL)) (local.get $boundary_tiny)))))
   ;; Common classification for the infinite and NaN outcomes of a two-operand operation.
   ;; Returns -1 when the finite path must decide.
   (func $special2 (param $a f64) (param $b f64) (param $r f64) (result i32)
@@ -80,14 +93,14 @@
     (f64.store (i32.const 0) (local.get $r))
     (local.set $s (call $special2 (local.get $a) (local.get $b) (local.get $r)))
     (if (i32.ge_s (local.get $s) (i32.const 0)) (then (return (local.get $s))))
-    (call $status (local.get $r) (call $iszero (call $twosum_error (local.get $a) (local.get $b) (local.get $r)))))
+    (call $status (local.get $r) (call $iszero (call $twosum_error (local.get $a) (local.get $b) (local.get $r))) (i32.const 0)))
   (func (export "sub") (param $a f64) (param $b f64) (result i32) (local $r f64) (local $s i32)
     (local.set $r (f64.sub (local.get $a) (local.get $b)))
     (f64.store (i32.const 0) (local.get $r))
     (local.set $s (call $special2 (local.get $a) (local.get $b) (local.get $r)))
     (if (i32.ge_s (local.get $s) (i32.const 0)) (then (return (local.get $s))))
-    (call $status (local.get $r) (call $iszero (call $twosum_error (local.get $a) (f64.neg (local.get $b)) (local.get $r)))))
-  (func (export "mul") (param $a f64) (param $b f64) (result i32) (local $r f64) (local $s i32) (local $as f64) (local $bs f64) (local $rs f64)
+    (call $status (local.get $r) (call $iszero (call $twosum_error (local.get $a) (f64.neg (local.get $b)) (local.get $r))) (i32.const 0)))
+  (func (export "mul") (param $a f64) (param $b f64) (result i32) (local $r f64) (local $s i32) (local $as f64) (local $bs f64) (local $rs f64) (local $e f64)
     (local.set $r (f64.mul (local.get $a) (local.get $b)))
     (f64.store (i32.const 0) (local.get $r))
     (local.set $s (call $special2 (local.get $a) (local.get $b) (local.get $r)))
@@ -96,25 +109,31 @@
     (if (call $iszero (local.get $r)) (then (return (i32.const 4))))        ;; nonzero factors, zero product
     (if (call $small (local.get $r))
       (then
-        ;; scale both factors by 2^537 (exact); the scaled product is at least 2^52, so no partial product underflows
+        ;; scale both factors by 2^537 (exact); the scaled product is at least 1, so no partial product underflows
         (local.set $as (f64.mul (local.get $a) (global.get $S537)))
         (local.set $bs (f64.mul (local.get $b) (global.get $S537)))
         (local.set $rs (f64.mul (local.get $as) (local.get $bs)))
-        (return (call $status (local.get $r)
-          (call $iszero (f64.sub (f64.sub (call $up1074 (local.get $r)) (local.get $rs))
-                                 (call $twoproduct_error (local.get $as) (local.get $bs) (local.get $rs))))))))
+        ;; e = (exact product - r) * 2^1074 exactly: rs and r * 2^1074 are within a factor of two (Sterbenz) and the
+        ;; TwoProduct error is exact; e is a multiple of 2^-53 with magnitude at most 1, so the sum is exact
+        (local.set $e (f64.add (f64.sub (local.get $rs) (call $up1074 (local.get $r)))
+                               (call $twoproduct_error (local.get $as) (local.get $bs) (local.get $rs))))
+        (return (call $status (local.get $r) (call $iszero (local.get $e))
+          ;; at |r| = 2^-1022 the product is tiny after rounding iff the exact product lies more than 2^-1076 below r
+          ;; in magnitude: rounding it to 53 bits then gives 2^-1022 - 2^-1075 or less; exactly 2^-1076 below is a tie
+          ;; that rounds to even, 2^-1022
+          (f64.lt (f64.mul (local.get $e) (f64.copysign (global.get $ONE) (local.get $r))) (f64.neg (global.get $QUARTER)))))))
     ;; a small factor cannot be split exactly; scale it up by 2^537, which commutes with the rounding of a normal product
     (if (call $small (local.get $a))
       (then (local.set $as (f64.mul (local.get $a) (global.get $S537))) (local.set $rs (f64.mul (local.get $as) (local.get $b)))
             (return (call $status (local.get $r)
               (i32.and (call $iszero (call $twoproduct_error (local.get $as) (local.get $b) (local.get $rs)))
-                       (f64.eq (f64.mul (local.get $r) (global.get $S537)) (local.get $rs)))))))
+                       (f64.eq (f64.mul (local.get $r) (global.get $S537)) (local.get $rs))) (i32.const 0)))))
     (if (call $small (local.get $b))
       (then (local.set $bs (f64.mul (local.get $b) (global.get $S537))) (local.set $rs (f64.mul (local.get $a) (local.get $bs)))
             (return (call $status (local.get $r)
               (i32.and (call $iszero (call $twoproduct_error (local.get $a) (local.get $bs) (local.get $rs)))
-                       (f64.eq (f64.mul (local.get $r) (global.get $S537)) (local.get $rs)))))))
-    (call $status (local.get $r) (call $iszero (call $twoproduct_error (local.get $a) (local.get $b) (local.get $r)))))
+                       (f64.eq (f64.mul (local.get $r) (global.get $S537)) (local.get $rs))) (i32.const 0)))))
+    (call $status (local.get $r) (call $iszero (call $twoproduct_error (local.get $a) (local.get $b) (local.get $r))) (i32.const 0)))
   (func (export "div") (param $a f64) (param $b f64) (result i32) (local $r f64) (local $s i32) (local $as f64) (local $bs f64) (local $rs f64) (local $p f64)
     (local.set $r (f64.div (local.get $a) (local.get $b)))
     (f64.store (i32.const 0) (local.get $r))
@@ -135,16 +154,21 @@
         (local.set $p (f64.mul (local.get $rs) (local.get $bs)))
         (return (call $status (local.get $r)
           (i32.and (call $iszero (f64.sub (f64.sub (local.get $as) (local.get $p)) (call $twoproduct_error (local.get $rs) (local.get $bs) (local.get $p))))
-                   (f64.eq (call $up1074 (local.get $r)) (local.get $rs)))))))
+                   (f64.eq (call $up1074 (local.get $r)) (local.get $rs)))
+          ;; at |r| = 2^-1022 the quotient is tiny after rounding iff |as| < (2^52 - 1/4) |bs|: |as| - 2^52 |bs| is exact
+          ;; (Sterbenz, the scaled quotient being within half a unit of 2^52) and adding |bs| / 4 keeps the exact sign
+          (f64.lt (f64.add (f64.sub (f64.abs (local.get $as)) (f64.mul (global.get $S52) (f64.abs (local.get $bs))))
+                           (f64.mul (global.get $QUARTER) (f64.abs (local.get $bs))))
+                  (f64.const 0))))))
     ;; a small dividend with a normal quotient: scale both operands by 2^537, which leaves the quotient unchanged
     (if (call $small (local.get $a))
       (then (local.set $as (f64.mul (local.get $a) (global.get $S537))) (local.set $bs (f64.mul (local.get $b) (global.get $S537)))
             (local.set $p (f64.mul (local.get $r) (local.get $bs)))
             (return (call $status (local.get $r)
-              (call $iszero (f64.sub (f64.sub (local.get $as) (local.get $p)) (call $twoproduct_error (local.get $r) (local.get $bs) (local.get $p))))))))
+              (call $iszero (f64.sub (f64.sub (local.get $as) (local.get $p)) (call $twoproduct_error (local.get $r) (local.get $bs) (local.get $p)))) (i32.const 0)))))
     (local.set $p (f64.mul (local.get $r) (local.get $b)))
     (call $status (local.get $r)
-      (call $iszero (f64.sub (f64.sub (local.get $a) (local.get $p)) (call $twoproduct_error (local.get $r) (local.get $b) (local.get $p))))))
+      (call $iszero (f64.sub (f64.sub (local.get $a) (local.get $p)) (call $twoproduct_error (local.get $r) (local.get $b) (local.get $p)))) (i32.const 0)))
   (func (export "sqrt") (param $a f64) (result i32) (local $r f64) (local $as f64) (local $rs f64) (local $p f64)
     (local.set $r (f64.sqrt (local.get $a)))
     (f64.store (i32.const 0) (local.get $r))
@@ -156,7 +180,7 @@
       (else (local.set $as (local.get $a)) (local.set $rs (local.get $r))))
     (local.set $p (f64.mul (local.get $rs) (local.get $rs)))
     (call $status (local.get $r)
-      (call $iszero (f64.sub (f64.sub (local.get $as) (local.get $p)) (call $twoproduct_error (local.get $rs) (local.get $rs) (local.get $p))))))
+      (call $iszero (f64.sub (f64.sub (local.get $as) (local.get $p)) (call $twoproduct_error (local.get $rs) (local.get $rs) (local.get $p)))) (i32.const 0)))
 
   ;; Checked conversion toward zero: status 3 for NaN or infinity, 6 when the
   ;; truncated value is outside the fixnum range and takes the bignum path,

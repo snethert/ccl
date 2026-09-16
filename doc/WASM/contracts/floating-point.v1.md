@@ -2,11 +2,11 @@
 
 Status: specification under the D6 floating-point hypothesis, authored by
 Claude on 15 September 2026 with an executable proof
-(`tests/wasm/stage0/float-detection`), corrected after Codex's first
-review and awaiting its follow-up review. It
-specifies detection, as D6 requires before any cost is measured. It does not
-make the Stage 2 compatibility decision about which conditions the port
-signals; that remains the user's policy choice.
+(`tests/wasm/stage0/float-detection`), corrected after Codex's first and
+second reviews and awaiting its follow-up review. It specifies detection,
+as D6 requires before any cost is measured. It does not make the Stage 2
+compatibility decision about which conditions the port signals; that
+remains the user's policy choice.
 
 ## What U1 does
 
@@ -42,9 +42,19 @@ For an operation with result `r`:
   nonzero. inf ÷ 0 is exact infinity, 0 ÷ 0 is invalid.
 - Overflow: `r` is infinite and every operand is finite. An infinite
   operand yields an exact infinity.
-- Underflow: `r` is finite, |r| is below the smallest normal number
-  (tininess after rounding, as x86 does) and the result is inexact,
-  including a nonzero exact value that rounds to zero.
+- Underflow: `r` is finite, the result is tiny and inexact, including a
+  nonzero exact value that rounds to zero. Tininess is decided after
+  rounding, as IEEE 754 §7.5 defines it and as x86 SSE implements it: the
+  exact result rounded to 53 bits with an unbounded exponent range has a
+  magnitude below 2^-1022. This is not the same as testing the final
+  result. When the exact value lies in [2^-1022 − 2^-1075, 2^-1022 − 2^-1076)
+  the bounded rounding reaches 2^-1022, a normal number, while the
+  unbounded rounding stays at 2^-1022 − 2^-1075 or below: such a result is
+  tiny, and the hardware sets the underflow flag for it. At exactly
+  2^-1022 − 2^-1076 the unbounded rounding ties to even, 2^-1022, and the
+  result is not tiny. Every other tiny result is subnormal or zero, so
+  only a final result of magnitude exactly 2^-1022 needs the exact witness
+  to decide.
 - Inexact: `r` is finite, not tiny, and differs from the exact result.
 
 The first four need only classification. The last two need an exactness
@@ -65,14 +75,21 @@ witness, computed with error-free transformations:
   with `r` scaled by 2^1074 in two exact steps; a factor below 2^-970 with
   a normal product is scaled up by 2^537 alone, which commutes with
   rounding. A zero product from nonzero factors is underflow without a
-  witness.
+  witness. When |r| is exactly 2^-1022 the scaled error
+  e = (a·b − r)·2^1074 is exact (the scaled product and r·2^1074 lie within
+  a factor of two, and e is a multiple of 2^-53 of magnitude at most one),
+  and the product is tiny iff e has the sign opposite to r with |e| > ¼.
 - Division: the residual a − r·b, with r·b expanded by TwoProduct, is zero
   iff the quotient is exact. A quotient below 2^-970 is witnessed on a
   dividend scaled up by 2^1074 or a divisor scaled down by 2^1074,
   whichever is exact, and requires in addition that `r` scaled by 2^1074
   equals the scaled quotient, which catches the second rounding into the
   subnormal range. A dividend below 2^-970 with a normal quotient scales
-  both operands by 2^537, leaving the quotient unchanged.
+  both operands by 2^537, leaving the quotient unchanged. When |r| is
+  exactly 2^-1022 the quotient is tiny iff |a'| < (2^52 − ¼)|b'| on the
+  scaled operands: |a'| − 2^52|b'| is exact by Sterbenz and adding |b'|/4
+  gives an exactly signed sum. Only a dividend whose significand is all
+  ones over a power-of-two divisor can reach that region.
 - Square root: the residual a − r·r with r·r expanded by TwoProduct. A
   subnormal or small operand below 2^-970 is scaled by 2^1074, whose root
   scales by 2^537 and commutes with rounding. A square root never
@@ -87,26 +104,39 @@ algorithms with the 2^12 + 1 split and are not part of this slice.
 
 ## Proof
 
-1,898 corpus cases, 98 named boundary cases and 1,800 deterministic random
+2,069 corpus cases, 119 named boundary cases and 1,950 deterministic random
 cases over normals, subnormals, powers of two, small integers, values near
-both signs of the maximum exponent, small exact multipliers and specials,
-have expectations computed by exact rational rounding with correct
+both signs of the maximum exponent, products and quotients straddling the
+normal/subnormal boundary, small exact multipliers and specials, have
+expectations computed by exact rational rounding with correct
 tininess-after-rounding and ties-to-even, including correctly rounded
 irrational square roots. Every status and every result bit pattern agrees;
-NaN results are compared for NaN-ness only. Eight mutants of the module are
-rejected by the unchanged oracle: the divisor-zero check omitted, NaN
-propagation reported as invalid, overflow reported for any infinity, the
-large-operand scaling removed, the witness ignored, underflow reported as
-inexact, the conversion left unchecked, and the small-product scaling
-removed. The first execution classified exact results near the largest
-finite double as inexact; Codex's review found it, and the corrected
-execution supersedes it.
+NaN results are compared for NaN-ness only. The 1,646 f64 cases also
+execute natively on the macOS x86-64 reference machine through scalar SSE
+instructions with MXCSR reset before each operation, and the status taken
+from the hardware flags in x86 priority and the result bits equal the
+oracle's expectations for every case, so the oracle's definitions,
+tininess after rounding included, are the hardware's. Eleven mutants of the
+module are rejected by the unchanged oracle: the divisor-zero check
+omitted, NaN propagation reported as invalid, overflow reported for any
+infinity, the large-operand scaling removed, the witness ignored, underflow
+reported as inexact, the conversion left unchecked, the small-product
+scaling removed, tininess judged on the final result, the boundary tie
+counted as tiny, and the quotient boundary ignored. The first execution
+classified exact results near the largest finite double as inexact and the
+second judged tininess on the final result; Codex's reviews found both, and
+the corrected execution supersedes them.
 
 ## Policy inputs this leaves open
 
 Which of the six statuses signal a condition, and whether `set-fpu-mode`
 keeps its native keywords, is the D6 compatibility decision; the default
 mode needs only the three classification-based statuses and no witness.
+One nuance belongs to that decision: with underflow unmasked, x86 traps on
+every tiny result, exact subnormal results included, while the masked flag
+and this specification's underflow status require inexactness as well; a
+port that unmasks underflow natively-faithfully would need a further
+"tiny and exact" status, which the witnesses can supply.
 The cost of a witness is measurable now that its correctness is fixed.
 Comparison with NaN, rounding modes other than nearest and literal
 encodings are stated as follows: comparisons signal invalid for any NaN
