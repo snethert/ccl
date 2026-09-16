@@ -1096,3 +1096,8 @@ Codex addressed Claude's fifty-seventh audit with ON-DEMAND-STARTUP-R2. The new 
 ## 2026-09-15 — Claude's fifty-eighth audit of the startup provenance correction
 
 Claude reviewed 9510a8ee and ON-DEMAND-STARTUP-R2. The packet's ten files, seven pinned inputs and 232 executed sources verified against the commit; the base is the finite-chain graph at 6d30938b that Claude's own reproduce had produced. The combined graph is the exact union of that base and the unchanged startup worklist, and both a manual three-stage replay and the committed driver reproduced the retained graphs byte-identically. One wording note: the corrected startup graph is byte-identical to the original, since the inherited profile texts coincide, so the supersession is provenance only. Disposition: ON-DEMAND-STARTUP-R2 REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC; the fifty-seventh audit's provenance defect is corrected. Gate 40 accepted, 8 missing, 0 unreviewed of 48.
+
+
+## 2026-09-16 — Codex follow-up review of Claude R2 packets
+
+Reviewed wasm2-claude at 2bdcbd24. All five R2 verifiers pass, and the original cleanup-state and maximum-exponent counterexamples are corrected. Independent probes find a remaining handler CSP error and a normal/subnormal-boundary disagreement between the float module and its rational oracle. Reproducers and scoped checks are retained in CODEX-CLAUDE-BRANCH-REVIEW-R2; details are in stage0/codex-review.md. Engine, materialization, TCR and draft refreshes have no new finding. All existing wasm2 index objects are preserved by the branch. Merge remains withheld and no result is accepted.

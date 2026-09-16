@@ -2,22 +2,22 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "b212ade52d396b9f5edfe80c445be57eeaab0d33",
+  "commit": "7e53269126a18502e66563809262cfa0aa87a36f",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "80014cc44a7768632252d7bf0ec571ee03a6d930f3c2867a3d8477af263e7476",
-  "immutable_evidence_files": 164685,
+  "catalog_sha256": "4002883e841702f93638c566b72a347a80138a43891eb80c2b04cc187dffd4f9",
+  "immutable_evidence_files": 165739,
   "indexed_references_verified": 941,
-  "source_index_snapshot": "catalog/source-index-2026-09-15-on-demand-startup-r2.json",
-  "source_index_sha256": "388bf2a569c6781227a4bd2ad8b0fec7927ea6c493732d03b68edfff6172fd35",
+  "source_index_snapshot": "catalog/source-index-2026-09-16-codex-branch-review-r2.json",
+  "source_index_sha256": "f1008d5577823f8e3a0291e28fa0b6d66769ab7b71051244231e28a7cada7d97",
   "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
   "remote": null,
   "off_machine_backup": false,
   "scope": "Separate local evidence repository; original failures retained. Forty accepted records. LL15 instrument policy authorized, qualification results still pending. Generated code remains open.",
   "last_scoped_addition": {
-    "directory": "2026-09-15-on-demand-startup-r2",
-    "files": 12,
-    "bytes": 17674923,
-    "immutable_evidence_files": 164685,
-    "catalog_sha256": "80014cc44a7768632252d7bf0ec571ee03a6d930f3c2867a3d8477af263e7476"
+    "directory": "2026-09-16-codex-branch-review-r2",
+    "files": 26,
+    "bytes": 283257,
+    "immutable_evidence_files": 165739,
+    "catalog_sha256": "4002883e841702f93638c566b72a347a80138a43891eb80c2b04cc187dffd4f9"
   }
 }

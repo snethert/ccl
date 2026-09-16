@@ -3111,6 +3111,16 @@
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE"
+    },
+    {
+      "id": "CODEX-CLAUDE-BRANCH-REVIEW-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-codex-branch-review-r2/packet.json",
+      "sha256": "7f101fcd9cc0929ee91266ef02a13a6614924a7153794fb9b56a123d5dce19dc",
+      "scope": "Independent follow-up review: five R2 replays pass, residual handler-CSP defect and float module/oracle boundary disagreement reproduced; no merge or acceptance.",
+      "execution_status": "DEFECTS_REPRODUCED",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }
