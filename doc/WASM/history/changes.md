@@ -1258,3 +1258,8 @@ Claude verified the integrated backend's byte identity with the reviewed binding
 ## 2026-09-16 — accept and integrate rest/APPLY
 
 The user said “integrate and proceed” after Claude’s sixty-seventh audit. The shared backend is byte-identical to the reviewed payload, chained to the preceding binding integration. Reviewed R6/R6a executions cover these exact bytes; no LL05 credit or new native execution. The integration carries the untested direct-link APPLY branch and the no-intervening-execution requirement between list validation and copying. Dynamic result capacity is next.
+
+
+## 2026-09-16 — remove the fixed result-count ceiling in the B proposal
+
+The isolated result-capacity unit sizes callee scratch, root records, binding offsets and nested output reservations from the caller-owned region; MULTIPLE-VALUE-PROG1 retains the actual count. Ninety-five generated functions pass 401 native/logical cases and 1,604 target comparisons through 1,024 returned values. Sixteen compiler mutants, 19 source refusals and 36 new capacity checks cover the boundaries alongside the inherited resource/allocation checks. R6/R6a qualifies fresh registered/removal builds. Two escaped scratch-offset control attempts are retained; the exact-capacity regression rejects the mutant without a compiler correction. No automatic growth, collection or LL05 slot credit is claimed. The proposal awaits external review, with the shared backend unchanged from the accepted rest/APPLY integration.

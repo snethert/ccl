@@ -3851,6 +3851,16 @@
         "record": "stage1/integration-b-rest-apply.json",
         "scope": "User accepted exact reviewed auxiliary integration; no inventory slot accepted."
       }
+    },
+    {
+      "id": "STAGE1-B-RESULTS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-b-results-r1/packet.json",
+      "sha256": "f75e1f7b45ad7b668ba64f6d9e66811fb2cc15e2c9f7f0c36e811b64e0704bf3",
+      "scope": "Generated runtime result capacity: 95 functions, 401 native/logical cases and 1604 target comparisons through 1024 returned values. Sixteen recompiled compiler mutants, 19 source refusals, 60 inherited resource refusals, eight allocation checks and 36 result-capacity checks. R6/R6a and retained replay pass. Caller reservations supply a checked budget; no automatic growth, collection, full LL05 slot credit or unreviewed integration.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

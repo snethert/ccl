@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "c92a48a2565cb0271a05f05ad7ff296adf4f2739",
+  "commit": "46ccc302e6ea023f842ea1f1696d6d63a4eead61",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "435452ed3c84e6dce0d0c28011f7a0e0f6f5efc15358d5d8f1856e0372a6ded3",
-  "immutable_evidence_files": 170725,
-  "indexed_references_verified": 10979,
-  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-b-rest-apply.json",
-  "source_index_sha256": "cdf85d9e2df633b3beceb3ad03b0780d8d829a48492853ef970b1452d772ecb6",
+  "catalog_sha256": "da6dfda0e3a5db592da16bdba71ceba052097f73e72db8c84a04bd365af14320",
+  "immutable_evidence_files": 171291,
+  "indexed_references_verified": 11304,
+  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-b-results.json",
+  "source_index_sha256": "db2e958db78f2da9ff71d9d105d944411b8a7b41fef53cc8eefbcaaa286f718d",
   "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Binding unit integrated; rest/APPLY is an auxiliary proposal awaiting external review, without gate credit.",
+  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Rest/APPLY integrated; runtime result capacity is an auxiliary proposal awaiting external review, without gate credit.",
   "last_scoped_addition": {
-    "directory": "2026-09-16-stage1-b-rest-apply-r1",
-    "files": 446,
-    "bytes": 40513154
+    "directory": "2026-09-16-stage1-b-results-r1",
+    "files": 566,
+    "bytes": 46212101
   }
 }
