@@ -2,22 +2,25 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "e8259cf4b6e23a4fab8687641ec3356d850ce4fd",
+  "commit": "8b249e0a2b3a7680052412dbc54f0c75cacf9d12",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "4eab702bf1109237c62378e35a8b7dbb96ddbad208ba5fd4f246f74fc5794fde",
-  "immutable_evidence_files": 168588,
-  "indexed_references_verified": 6248,
-  "source_index_snapshot": "catalog/source-index-2026-09-16-codex-d6-policy-review-r1.json",
-  "source_index_sha256": "50f2219f68aefbdea7ee6fc3afdf99e0b052ecea6f2621caffae7b07e869c974",
+  "catalog_sha256": "0760b1186c1d44ba9ce866f99fb9c630357b86cee4903d7e39a6dcbc32af7fab",
+  "immutable_evidence_files": 168967,
+  "indexed_references_verified": 8415,
+  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-1a-r2.json",
+  "source_index_sha256": "3f999afa1d5f696a60c253c2f89fe3130e27d479a626fb3a1082d41b2c753b7c",
   "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository. All 48 Stage 0 records accepted at their reviewed scopes; complete census closure and generated bootstrap remain implementation obligations.",
+  "scope": "Separate local evidence repository. All 48 Stage 0 records accepted at their reviewed scopes. Stage 1A has three executed records pending adversarial review and acceptance; shared source remains unintegrated.",
   "last_scoped_addition": {
-    "directory": "2026-09-16-codex-d6-policy-review-r1",
-    "files": 15,
-    "bytes": 311543,
-    "immutable_evidence_files": 168588,
-    "catalog_sha256": "4eab702bf1109237c62378e35a8b7dbb96ddbad208ba5fd4f246f74fc5794fde"
+    "directories": [
+      "2026-09-16-stage1-1a-r1",
+      "2026-09-16-stage1-1a-r2"
+    ],
+    "files": 379,
+    "bytes": 167734194,
+    "immutable_evidence_files": 168967,
+    "catalog_sha256": "0760b1186c1d44ba9ce866f99fb9c630357b86cee4903d7e39a6dcbc32af7fab"
   }
 }

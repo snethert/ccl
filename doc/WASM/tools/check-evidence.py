@@ -14,11 +14,15 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def check(include_external=False):
+def check(include_external=False, record_id=None):
     index = json.loads((ROOT / 'evidence/index.json').read_text())
-    inventory_hash = digest(ROOT / 'stage0/inventory.json')
     checked = 0
-    for record in index['current_runs']:
+    records = index['current_runs']
+    if record_id is not None:
+        records = [r for r in records if r['id'] == record_id]
+        if len(records) != 1:
+            raise ValueError('unknown or duplicate evidence record: ' + record_id)
+    for record in records:
         external = 'path' not in record
         if external and not include_external:
             continue
@@ -26,13 +30,17 @@ def check(include_external=False):
         if not path.is_file() or digest(path) != record['sha256']:
             raise ValueError('missing or mismatched retained evidence: ' + record['id'])
         if record.get('currency') == 'CURRENT':
+            inventory_path = (ROOT / safe_path(record.get('inventory_path', 'stage0/inventory.json'))).resolve()
+            if not inventory_path.is_relative_to(ROOT.resolve()):
+                raise ValueError('escaping inventory path')
+            inventory_hash = digest(inventory_path)
             def verify(report, read_bytes):
                 if type(report.get('version')) is not int or report['version'] not in (1, 2):
                     raise ValueError('unsupported CURRENT evidence envelope: ' + record['id'])
                 if record.get('inventory_sha256') != report.get('inventory_sha256'):
                     raise ValueError('index and original inventory provenance disagree: ' + record['id'])
                 if report.get('version') == 2:
-                    current = json.loads((ROOT / 'stage0/inventory.json').read_text())
+                    current = json.loads(inventory_path.read_text())
                     errors = binding_errors(current, report, read_bytes)
                     if errors:
                         raise ValueError('CURRENT contract binding failed: ' + record['id'] + ': ' + '; '.join(errors))
@@ -55,5 +63,6 @@ def check(include_external=False):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--include-external', action='store_true', help='require and verify local external-store packs too')
+    parser.add_argument('--id', help='check only this index record and its direct binding')
     args = parser.parse_args()
-    print(f'PASS: {check(args.include_external)} retained evidence identities; CURRENT inventory bindings match.')
+    print(f'PASS: {check(args.include_external, args.id)} retained evidence identities; CURRENT inventory bindings match.')

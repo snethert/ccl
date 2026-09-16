@@ -1,14 +1,13 @@
 {
   "version": 2,
-  "assessment": "STAGE1_ADOPTION_BASELINE",
+  "assessment": "EXECUTED_NOT_ACCEPTED",
   "date": "2026-09-16",
-  "basis": "Stage 1 inventory adopted by the user on 16 September 2026; no Stage 1 execution exists. Codex is the authorized shared-compiler author, Claude the reviewer; the single-thread JSPI profile is deferred. Hand-built Stage 0 evidence discharges no S1 ID.",
+  "basis": "Adopted Stage 1 inventory; three 1A records executed and awaiting Claude review. No acceptance or shared-source integration.",
   "result": {
-    "status": "BLOCKED",
     "reasons": [
-      "missing S1-LL08-a [r6]",
-      "missing S1-LL22-b [control]",
-      "missing S1-LL23-a [generated]",
+      "unreviewed S1-LL08-a [r6]",
+      "unreviewed S1-LL22-b [control]",
+      "unreviewed S1-LL23-a [generated]",
       "missing S1-LL04-a [generated]",
       "missing S1-LL07-a [generated]",
       "missing S1-LL05-a [generated:B]",
@@ -37,17 +36,24 @@
       "missing S1-LL22-a [control]",
       "missing S1-LL24-a [control]",
       "missing S1-CONTRACTS-a [complete-report]"
-    ]
+    ],
+    "status": "BLOCKED"
   },
   "inventory": {
     "locator": "stage1/inventory.json",
-    "sha256": "f84cbae0ec1fdda9e731f27820de6e67c4142c4d2e24e05a3473e93cebd0985f"
+    "sha256": "9ce319c056bdadba9eff03becb3898d15f376a5c99b39c9cbc6a438b25eae16d"
   },
-  "active_results": [],
+  "active_results": [
+    {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-1a-r2-results.json",
+      "sha256": "5570d38c9cc9cff4acf791a3c3ff0c4017b5b2d64df23f842cbbf2679480e288"
+    }
+  ],
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-1a-r2-results.json",
   "counts": {
     "accepted": 0,
-    "missing": 31,
-    "unreviewed": 0,
+    "missing": 28,
+    "unreviewed": 3,
     "required": 31
   }
 }

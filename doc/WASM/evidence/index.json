@@ -1741,6 +1741,42 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "LL15-b/c contract v0.2: retained native census instrument, identity-bound queries, reversible native call-site witnesses and explicit 167-unit startup worklist. Independent omission and semantic controls; observations, proven local targets and unknown populations remain distinct."
+    },
+    {
+      "id": "STAGE1-1A-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-1a-r1-results.json",
+      "sha256": "0473f553c900ffc407078c710b36bda2b777502343620bcb2dc6f76877509031",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "9ce319c056bdadba9eff03becb3898d15f376a5c99b39c9cbc6a438b25eae16d",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "SUPERSEDED",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-1a-r1/packet.json",
+      "packet_sha256": "dc87765f0428e7669eb1b7c647d0e92b4195637ec5a2190673c5f1c8be1fdd15",
+      "scope": "S1-LL08-a/R6, S1-LL22-b/build binding and S1-LL23-a/generated fatal diagnostics. Disposable U1 proposal, nine nonallocating generated leaf functions; no integration, acceptance or bootstrap-heap claim.",
+      "superseded_by": "STAGE1-1A-R2",
+      "note": "Unaccepted development packet: the native tests and snapshots loaded the backend, but the full native rebuild did not. R2 adds that requirement and its omission control. Original bytes retained."
+    },
+    {
+      "id": "STAGE1-1A-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-1a-r2-results.json",
+      "sha256": "5570d38c9cc9cff4acf791a3c3ff0c4017b5b2d64df23f842cbbf2679480e288",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "9ce319c056bdadba9eff03becb3898d15f376a5c99b39c9cbc6a438b25eae16d",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-1a-r2/packet.json",
+      "packet_sha256": "6dd4d61c9ee993fdc9604a53481afbfe53196992b416760dd3f22b06e3d977cd",
+      "scope": "S1-LL08-a/R6 with the complete backend loaded before native compilation, S1-LL22-b/build binding and S1-LL23-a/generated fatal diagnostics. Disposable U1 proposal; nine nonallocating leaf functions. No integration, acceptance or bootstrap-heap claim."
     }
   ],
   "auxiliary_records": [

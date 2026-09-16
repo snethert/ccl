@@ -1,6 +1,6 @@
 # Current status — 2026-09-16
 
-Implementation baseline: upstream v1.13, `c994217adc56b3f8a564526cee4695893ac84d86`. Current document set: outline 0.17, acceptance 1.7, decisions 1.8. macOS is the sole reference host. Shared compiler and upstream kernel source remain unchanged. Under the user's 15 September role switch, Claude authors the non-census Stage 0 slots on branch `wasm2-claude` and Codex reviews them; Codex continues the census on `wasm2` and Claude reviews that.
+Implementation baseline: upstream v1.13, `c994217adc56b3f8a564526cee4695893ac84d86`. Current document set: outline 0.17, acceptance 1.7, decisions 1.8. macOS is the sole reference host. Shared compiler and upstream kernel source remain unchanged. Stage 0 is accepted. Under the user's 16 September authorization, Codex authors Stage 1 in disposable clean U1 copies; Claude reviews before integration. All work is on `wasm2`.
 
 | Work | State | Evidence scope / remaining work |
 | --- | --- | --- |
@@ -79,7 +79,8 @@ Implementation baseline: upstream v1.13, `c994217adc56b3f8a564526cee4695893ac84d
 | Stage 1 inventory and plan | ADOPTED by the user 16 Sep | [Inventory](stage1/inventory.json) of 31 tests in six subgates is the criterion of the [Stage 1 ledger](evidence/current-stage1-gate-result.json); [plan](stage1/plan.md). Author Codex, reviewer Claude; single-thread JSPI profile deferred to the profiles stage. |
 | Stage 0 acceptance | PASS | 48 required variants: 48 accepted, 0 missing and 0 unreviewed. [Current ledger](evidence/current-stage0-gate-result.json). |
 | Stage 0 exit criteria (0F) | REVIEWED; no gap needing a scope decision | [Exit-criteria review](stage0/exit-criteria-review.md): every sentence of the outline's Stage 0 section mapped to accepted slots or recorded decisions; imports, traps, direct foreign calls and barrier-sensitive stores carried into Stage 1 by name under census contract v0.2. |
-| Stage 1 acceptance | BLOCKED | 31 required variants: 0 accepted, 31 missing and 0 unreviewed. [Current ledger](evidence/current-stage1-gate-result.json). |
+| Stage 1 subgate 1A | EXECUTED; review pending | [Registration, build bindings and generated diagnostics](stage1/1a.md): S1-LL08-a, LL22-b and LL23-a; two native suites pass, all 164 FASLs restored, nine real generated functions. Proposal remains outside shared source pending Claude review. |
+| Stage 1 acceptance | BLOCKED | 31 required variants: 0 accepted, 28 missing and 3 unreviewed. [Current ledger](evidence/current-stage1-gate-result.json). |
 | On-demand census | LL15-b/c ACCEPTED under v0.2 | [Qualification](stage0/census-qualification.md) passed Claude's fifty-ninth audit (`d507f5a7`); the user accepted both records on 16 September. The 167-unit startup worklist preserves 272 body gaps and all other unknowns. Instrument qualification does not establish exhaustive bootstrap closure. |
 
 The new ABI fixture adds a separate C extension and new linked kernel. Existing boundary/runtime/frame sources remain unchanged. Fresh prerequisites execute before the ABI corpus. ABI acceptance now follows its own fourth audit and explicit eighteen-record decision. Original ABI development failures exposed duplicate result scanning and a stale frame result count. Both fixes are confined to the new fixture and have rejection controls.

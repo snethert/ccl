@@ -1,11 +1,12 @@
-# Stage 1 work plan — draft of 15 September 2026
+# Stage 1 work plan — adopted 16 September 2026
 
 Status: ADOPTED. The [inventory](inventory.json) of 31 tests is the
 criterion of the [Stage 1 ledger](../evidence/current-stage1-gate-result.json)
 by the user's decision of 16 September; Codex is the authorized author of
 the shared-compiler changes with Claude as reviewer; the single-thread JSPI
 profile is deferred. The entry condition is met: all 48 Stage 0 variants are
-accepted. The ledger starts BLOCKED with 31 missing.
+accepted. The [1A packet](1a.md) executes three records, awaiting adversarial review;
+the ledger is BLOCKED with 28 missing and 3 unreviewed.
 
 ## What Stage 1 delivers
 
@@ -15,7 +16,7 @@ runtime; finalized object, allocation, root and TCR contracts; the selected
 B ABI confirmed through generated code; a one-Worker image loader; the
 read-only file namespace; a precise single-thread collector; measured and
 chosen bootstrap module granularity; and D2's materialization confirmed on
-the production path. The draft inventory has 31 tests, one variant each,
+the production path. The adopted inventory has 31 tests, one variant each,
 derived from the register's Stage 1 metadata, D7's scheme and the outline's
 exit criteria, plus two entries proposed from Stage 0 findings.
 
@@ -23,8 +24,8 @@ exit criteria, plus two entries proposed from Stage 0 findings.
 
 1. **1A: R6-safe shared-compiler edit.** Backend registration, the wasm32
    arch file generated from [the layout schema](../contracts/wasm32-layout.v1.md),
-   module lists, systems registrations and the cross-fasloader derived
-   from the x8632 precedent, under D6's edit-site plan. S1-LL08-a proves
+   module lists, systems registrations and the cross-fasloader registration: x8632 supplies tags/NIL,
+   ARM supplies the separate-code precedent, under D6's edit-site plan. S1-LL08-a proves
    R6 and R6a for every existing target after the edit; S1-LL22-b binds
    the build; S1-LL23-a makes generated diagnostics structured from the
    first emitted function. Nothing else starts before S1-LL08-a passes.
@@ -105,6 +106,11 @@ classes for the lowering inventory (1C), and callback slot installation
 (Stage 2). The same document revises one precedent: derive the
 cross-fasloader's function handling from `xarmfasload.lisp`, not only from
 x8632.
+
+The [runtime obligations](runtime-obligations.md) carry the ARM survey into
+1A ownership and addressing, binding-vector growth, interrupt masking,
+recoverable stack exhaustion, trap lowering and Stage 2 callback installation.
+They are implementation work, not additional claims about accepted Stage 0 evidence.
 
 ## Rules carried forward
 
