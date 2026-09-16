@@ -2,7 +2,8 @@
 
 Status: specification under the D6 floating-point hypothesis, authored by
 Claude on 15 September 2026 with an executable proof
-(`tests/wasm/stage0/float-detection`) and awaiting Codex's review. It
+(`tests/wasm/stage0/float-detection`), corrected after Codex's first
+review and awaiting its follow-up review. It
 specifies detection, as D6 requires before any cost is measured. It does not
 make the Stage 2 compatibility decision about which conditions the port
 signals; that remains the user's policy choice.
@@ -51,9 +52,14 @@ witness, computed with error-free transformations:
 
 - Addition and subtraction: TwoSum gives the exact rounding error for every
   finite pair, including subnormals, so `r` is exact iff the error is zero.
-- Multiplication: Dekker's TwoProduct with the 2^27 + 1 split. The split is
-  applied to operands scaled down by 2^28 when |x| > 2^996 so it cannot
-  overflow, and scaled back up. Partial products must not underflow, so
+- Multiplication: Dekker's TwoProduct with the 2^27 + 1 split, applied only
+  to operands of magnitude at most 2^996 so the splitter product cannot
+  overflow. A larger factor is scaled down by 2^28 together with the
+  product, which commutes with the rounding of a normal product, and the
+  error is scaled back up; scaling only the split's high part back up is
+  wrong, because near the largest exponent the rounded high part reaches
+  2^996 and its rescaling overflows (the review's MAX × 1 counterexample).
+  Partial products must not underflow, so
   when |r| < 2^-970 both factors are scaled by 2^537 (exact) and the
   witness compares the scaled product, whose partials are at least 2^-53,
   with `r` scaled by 2^1074 in two exact steps; a factor below 2^-970 with
@@ -81,16 +87,20 @@ algorithms with the 2^12 + 1 split and are not part of this slice.
 
 ## Proof
 
-1,882 corpus cases, 82 named boundary cases and 1,800 deterministic random
-cases over normals, subnormals, powers of two, small integers and specials,
+1,898 corpus cases, 98 named boundary cases and 1,800 deterministic random
+cases over normals, subnormals, powers of two, small integers, values near
+both signs of the maximum exponent, small exact multipliers and specials,
 have expectations computed by exact rational rounding with correct
 tininess-after-rounding and ties-to-even, including correctly rounded
 irrational square roots. Every status and every result bit pattern agrees;
 NaN results are compared for NaN-ness only. Eight mutants of the module are
 rejected by the unchanged oracle: the divisor-zero check omitted, NaN
 propagation reported as invalid, overflow reported for any infinity, the
-split left unscaled, the witness ignored, underflow reported as inexact,
-the conversion left unchecked, and the small-product scaling removed.
+large-operand scaling removed, the witness ignored, underflow reported as
+inexact, the conversion left unchecked, and the small-product scaling
+removed. The first execution classified exact results near the largest
+finite double as inexact; Codex's review found it, and the corrected
+execution supersedes it.
 
 ## Policy inputs this leaves open
 

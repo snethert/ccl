@@ -12,14 +12,14 @@ SCOPE = ('Hand-built wasm32 checked floating-point operations on macOS Node/V8: 
          'overflow, division-by-zero, invalid, underflow or inexact without engine flags, a checked float-to-integer conversion that never '
          'traps, and the f32 default-mode slice. Overflow, division by zero and invalid come from operand and result classification; '
          'underflow and inexact from error-free witnesses (TwoSum, scaled TwoProduct, residuals) with exact power-of-two scaling for small '
-         'results and small operands. 1,882 corpus cases with expectations from exact rational rounding in Python; eight module mutants '
+         'results, small operands and operands near the largest exponent. Corpus cases with expectations from exact rational rounding in Python; eight module mutants '
          'rejected. Specification evidence for the D6 floating-point hypothesis; no policy decision, no gate credit.')
 MUTANTS = {
     'divisor-zero-check-omitted': ("    (if (call $iszero (local.get $b))\n      (then (return (select (i32.const 0) (i32.const 2) (call $isinf (local.get $a))))))   ;; finite nonzero / 0\n", ''),
     'nan-propagated-as-invalid': ("    (if (i32.or (call $isnan (local.get $a)) (call $isnan (local.get $b))) (then (return (i32.const 0))))\n    (if (call $isnan (local.get $r)) (then (return (i32.const 3))))\n    (if (call $isinf (local.get $r))\n      (then (return (select (i32.const 0) (i32.const 1) (i32.or (call $isinf (local.get $a)) (call $isinf (local.get $b)))))))\n    (i32.const -1))",
                                   "    (if (call $isnan (local.get $r)) (then (return (i32.const 3))))\n    (if (call $isinf (local.get $r))\n      (then (return (select (i32.const 0) (i32.const 1) (i32.or (call $isinf (local.get $a)) (call $isinf (local.get $b)))))))\n    (i32.const -1))"),
     'overflow-unqualified': ("      (then (return (select (i32.const 0) (i32.const 1) (i32.or (call $isinf (local.get $a)) (call $isinf (local.get $b)))))))\n    (i32.const -1))", "      (then (return (i32.const 1))))\n    (i32.const -1))"),
-    'split-unscaled': ("    (if (f64.gt (f64.abs (local.get $x)) (global.get $BIG))\n      (then\n        (local.set $scaled (f64.mul (local.get $x) (global.get $SCALE_DOWN)))\n        (local.set $t (f64.mul (global.get $SPLIT) (local.get $scaled)))\n        (return (f64.mul (f64.sub (local.get $t) (f64.sub (local.get $t) (local.get $scaled))) (global.get $SCALE_UP)))))\n", ''),
+    'large-operand-unscaled': ("    (if (f64.gt (f64.abs (local.get $a)) (global.get $BIG))\n      (then (return (f64.mul (call $twoproduct_plain (f64.mul (local.get $a) (global.get $SCALE_DOWN)) (local.get $b) (f64.mul (local.get $p) (global.get $SCALE_DOWN))) (global.get $SCALE_UP)))))\n", ''),
     'witness-ignored': ("    (if (local.get $exact) (then (return (i32.const 0))))\n    (select (i32.const 4) (i32.const 5) (call $tiny (local.get $r))))", "    (i32.const 0))"),
     'underflow-as-inexact': ("    (select (i32.const 4) (i32.const 5) (call $tiny (local.get $r))))", "    (i32.const 5))"),
     'trunc-unchecked': ("    (if (i32.or (call $isnan (local.get $a)) (call $isinf (local.get $a))) (then (return (i32.const 3))))\n    (local.set $t (f64.trunc (local.get $a)))", "    (local.set $t (f64.trunc (local.get $a)))"),

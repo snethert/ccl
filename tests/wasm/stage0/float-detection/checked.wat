@@ -40,17 +40,21 @@
   (func $twosum_error (param $a f64) (param $b f64) (param $s f64) (result f64) (local $bb f64)
     (local.set $bb (f64.sub (local.get $s) (local.get $a)))
     (f64.add (f64.sub (local.get $a) (f64.sub (local.get $s) (local.get $bb))) (f64.sub (local.get $b) (local.get $bb))))
-  ;; Dekker split, scaled when |x| is large so the split cannot overflow.
-  (func $split_hi (param $x f64) (result f64) (local $t f64) (local $scaled f64)
-    (if (f64.gt (f64.abs (local.get $x)) (global.get $BIG))
-      (then
-        (local.set $scaled (f64.mul (local.get $x) (global.get $SCALE_DOWN)))
-        (local.set $t (f64.mul (global.get $SPLIT) (local.get $scaled)))
-        (return (f64.mul (f64.sub (local.get $t) (f64.sub (local.get $t) (local.get $scaled))) (global.get $SCALE_UP)))))
+  ;; Dekker split of an operand whose magnitude is at most 2^996: the splitter product cannot overflow.
+  (func $split_hi (param $x f64) (result f64) (local $t f64)
     (local.set $t (f64.mul (global.get $SPLIT) (local.get $x)))
     (f64.sub (local.get $t) (f64.sub (local.get $t) (local.get $x))))
   ;; TwoProduct error: p = fl(a * b); returns e with p + e = a * b exactly when no partial product underflows.
+  ;; A factor above 2^996 is scaled down by 2^28 together with the product, which commutes with the
+  ;; rounding of a normal product, and the error is scaled back up. Scaling the split's high part instead
+  ;; can overflow when it rounds up to 2^1024 (the review's MAX * 1 counterexample).
   (func $twoproduct_error (param $a f64) (param $b f64) (param $p f64) (result f64)
+    (if (f64.gt (f64.abs (local.get $a)) (global.get $BIG))
+      (then (return (f64.mul (call $twoproduct_plain (f64.mul (local.get $a) (global.get $SCALE_DOWN)) (local.get $b) (f64.mul (local.get $p) (global.get $SCALE_DOWN))) (global.get $SCALE_UP)))))
+    (if (f64.gt (f64.abs (local.get $b)) (global.get $BIG))
+      (then (return (f64.mul (call $twoproduct_plain (local.get $a) (f64.mul (local.get $b) (global.get $SCALE_DOWN)) (f64.mul (local.get $p) (global.get $SCALE_DOWN))) (global.get $SCALE_UP)))))
+    (call $twoproduct_plain (local.get $a) (local.get $b) (local.get $p)))
+  (func $twoproduct_plain (param $a f64) (param $b f64) (param $p f64) (result f64)
     (local $ah f64) (local $al f64) (local $bh f64) (local $bl f64)
     (local.set $ah (call $split_hi (local.get $a))) (local.set $al (f64.sub (local.get $a) (local.get $ah)))
     (local.set $bh (call $split_hi (local.get $b))) (local.set $bl (f64.sub (local.get $b) (local.get $bh)))

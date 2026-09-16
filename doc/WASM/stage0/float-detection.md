@@ -1,9 +1,30 @@
 # Floating-point detection — 15 September 2026
 
-Status: diagnostic EXECUTED and PASSING at its stated scope; awaiting Codex's
-review under the 15 September role switch. Packet `FLOAT-DETECTION-R1` in
-the evidence repository. No inventory slot changes and no gate credit;
-Stage 0 stays at 40 accepted, two missing and six unreviewed of 48.
+Status: diagnostic EXECUTED and PASSING at its stated scope in its corrected
+form `FLOAT-DETECTION-R2`, awaiting Codex's follow-up review. The first
+execution `FLOAT-DETECTION-R1` is retained unchanged: [Codex's
+review](codex-review.md) showed that the largest finite double multiplied
+by one, by one half, and divided by one were classified inexact although
+exact. No inventory slot changes and no gate credit; Stage 0 stays at 40
+accepted, two missing and six unreviewed of 48.
+
+## Correction after review
+
+The defect: the Dekker split scaled a large operand down by 2^28 for the
+splitter multiplication and scaled the high part back up, and near the
+largest exponent the rounded high part reaches 2^996 exactly, which
+becomes 2^1024 and overflows; the error term then held infinities and the
+witness reported a nonzero residual. The correction scales the whole
+TwoProduct instead: a factor above 2^996 is scaled down by 2^28 together
+with the product, which commutes with the rounding of a normal product, the
+plain split runs on operands at most 2^996, and the error is scaled back
+up. The corpus gains sixteen named cases near both signs of the maximum
+exponent, exact and inexact, and a random population with exponents from
+990 upward paired with small exact multipliers. The mutant that removes the
+large-operand scaling is rejected at the first exact large product; the old
+high-part rescaling is no longer a distinct mutant because the operands it
+would rescale are now already bounded. Codex's boundary probe on the
+corrected module reports status 0 for all three counterexamples.
 
 Authorship: Claude Fable 5.1 wrote the module, the oracle and the
 [specification](../contracts/floating-point.v1.md) on branch
@@ -22,17 +43,17 @@ bignum path. An f32 slice covers the three default-mode conditions.
 
 A Python oracle rounds exact rationals to the nearest double or single with
 ties to even, tininess after rounding and correctly rounded irrational
-square roots, and computes the IEEE flags. Over 1,882 corpus cases every
+square roots, and computes the IEEE flags. Over 1,898 corpus cases every
 status and every result bit pattern agrees with the module.
 
 | Status | Cases |
 | --- | --- |
-| exact | 359 |
-| overflow | 97 |
+| exact | 390 |
+| overflow | 104 |
 | division by zero | 12 |
-| invalid | 125 |
-| underflow | 81 |
-| inexact | 916 |
+| invalid | 123 |
+| underflow | 77 |
+| inexact | 900 |
 | bignum path (conversion) | 37 |
 | finite, single-float slice | 255 |
 
@@ -40,9 +61,10 @@ status and every result bit pattern agrees with the module.
 
 Eight mutants are rejected by the unchanged oracle, each at the first
 corpus case that exposes it: the divisor-zero check omitted, NaN propagation
-reported as invalid, overflow reported for any infinite result, the Dekker
-split left unscaled, the witness ignored, underflow reported as inexact, the
-conversion left unchecked, and the small-product scaling removed.
+reported as invalid, overflow reported for any infinite result, the
+large-operand scaling removed, the witness ignored, underflow reported as
+inexact, the conversion left unchecked, and the small-product scaling
+removed.
 
 ## Evidence and reproduction
 

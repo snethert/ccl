@@ -22,6 +22,10 @@ NAMED = [
     ('div-tiny-inexact', 'div', 1e-308, 1e10), ('div-tiny-exact', 'div', 2.0 ** -1000, 2.0 ** 30), ('div-tiny-large-divisor', 'div', 1.0, 2.0 ** 1023 * 1.5), ('div-zero-dividend', 'div', 0.0, 7.0),
     ('div-to-zero', 'div', MIN_SUB, 4.0), ('div-nan', 'div', NAN, 0.0), ('div-subnormal-dividend', 'div', 2.0 ** -1050, 3.0), ('div-subnormal-exact', 'div', 6 * MIN_SUB, 2.0 ** -100),
     ('mul-subnormal-operand-inexact', 'mul', 3 * MIN_SUB, 1e20), ('mul-subnormal-operand-exact', 'mul', 5 * MIN_SUB, 2.0 ** 100), ('mul-subnormal-second', 'mul', 1e20, 3 * MIN_SUB),
+    ('mul-max-by-one', 'mul', MAX, 1.0), ('mul-max-by-half', 'mul', MAX, 0.5), ('mul-one-by-max', 'mul', 1.0, MAX), ('mul-negmax-by-one', 'mul', -MAX, 1.0), ('mul-max-inexact', 'mul', MAX, 0.7),
+    ('mul-near-max-rounds-up-split', 'mul', (2 - 2 ** -52) * 2.0 ** 1000, 1.0), ('mul-near-max-exact', 'mul', (1 + 2 ** -30) * 2.0 ** 1020, 0.25), ('mul-near-max-inexact', 'mul', (1 + 2 ** -30) * 2.0 ** 1020, 1 + 2 ** -40),
+    ('div-max-by-one', 'div', MAX, 1.0), ('div-max-by-three', 'div', MAX, 3.0), ('div-max-by-negone', 'div', MAX, -1.0), ('div-one-by-max', 'div', 1.0, MAX), ('sqrt-near-max', 'sqrt', (1 + 2 ** -30) * 2.0 ** 1022, None),
+    ('add-max-half-ulp', 'add', MAX, 2.0 ** 969), ('sub-max-max', 'sub', MAX, MAX), ('add-negmax-negmax', 'add', -MAX, -MAX),
     ('sqrt-exact', 'sqrt', 4.0, None), ('sqrt-two', 'sqrt', 2.0, None), ('sqrt-negative', 'sqrt', -1.0, None), ('sqrt-negzero', 'sqrt', -0.0, None), ('sqrt-inf', 'sqrt', INF, None),
     ('sqrt-min-subnormal', 'sqrt', MIN_SUB, None), ('sqrt-subnormal-square', 'sqrt', 2.0 ** -1000, None), ('sqrt-subnormal-inexact', 'sqrt', 3 * MIN_SUB, None), ('sqrt-nan', 'sqrt', NAN, None),
     ('sqrt-max', 'sqrt', MAX, None), ('sqrt-tenth', 'sqrt', 0.1, None),
@@ -49,6 +53,8 @@ def random_double(g):
     if kind == 2: return float(g.choice(2001) - 1000)                                       # small integer
     if kind == 3: return (-1.0 if g.choice(2) else 1.0) * 2.0 ** (g.choice(2046) - 1022)    # power of two
     if kind == 4: return (-1.0 if g.choice(2) else 1.0) * (1 + g.choice(1 << 20) / 2.0 ** 20) * 2.0 ** (g.choice(120) - 1080)  # near the subnormal boundary
+    if kind == 5: return (-1.0 if g.choice(2) else 1.0) * (1 + g.choice(1 << 20) / 2.0 ** 20) * 2.0 ** (990 + g.choice(34))       # near the largest exponent
+    if kind == 6: return (-1.0 if g.choice(2) else 1.0) * (1 + g.choice(8) / 8.0) * 2.0 ** (g.choice(8) - 4)                          # small exact multiplier
     exponent = g.choice(2046) + 1
     return from_bits64((g.next() % (1 << 52)) | (exponent << 52) | (g.choice(2) << 63))
 
