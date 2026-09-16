@@ -1,13 +1,12 @@
 # Stage 0 execution plan
 
-Current position (16 September 2026): **46 accepted, two missing, zero unreviewed**.
-The six non-census records are accepted after Codex review `81345b28` and the
-user's conditional approval. The next deliverable is LL15-b/c qualification
-under census contract v0.2: one publication runner over the reviewed tools,
-retained inputs and startup worklist, plus independent publication omissions
-and native semantic controls. Reuse the reviewed captures and preserve all
-named unknowns. No exhaustive callee-resolution loop or new full native build
-is required. The dated work sequences below remain historical context.
+Current position (16 September 2026): **46 accepted, zero missing, two unreviewed**.
+LL15-b/c now have [qualification results](census-qualification.md) under contract
+v0.2. The retained instrument, explicit 167-unit startup worklist and native
+witness path pass the independent omission and semantic controls. Claude's
+review and the user's acceptance remain. The worklist's unknowns are preserved;
+no exhaustive closure, new native rebuild or Stage 1 implementation is claimed.
+The dated work sequences below remain historical context.
 
 This plan decomposes the existing Stage 0 exit criteria. No subgate completion removes continuing regressions or later compiler-generated obligations. `inventory.json` carries the exact expected IDs; `obligations.json` is generated from the register. Status belongs in `../STATUS.md` and identified execution records, not inferred from file existence.
 

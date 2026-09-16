@@ -1706,6 +1706,20 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Hand-built Wasm initializer binding and execution at the retained closure and loader fixture scope, including the no-load mutant; no generated bootstrap or exhaustive census closure claim."
+    },
+    {
+      "id": "CENSUS-INSTRUMENT-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-census-instrument-r1/results.json",
+      "sha256": "5b6fa66afed51ce03528b8f98f10221d5f117d171639719cdac86020276c7ed5",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "3dd69b25a0f9cdf4af2b69030b374e09f83cd1942b0ac3468006f20fe231e6fe",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "LL15-b/c instrument qualification: 167-unit explicit startup worklist, fresh capture and native witness tests, 42 publication rejection controls and 16 production role omissions. No exhaustive closure or project acceptance."
     }
   ],
   "auxiliary_records": [
@@ -2600,7 +2614,7 @@
       "id": "CURRENT-STAGE0-COMBINED",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage0-six-slot-accepted-results.json",
       "sha256": "235712dc0094f77b9bee7872e69caed274f96c2e10b7d5247a704dcde2f00c68",
-      "scope": "46 explicitly accepted records at their reviewed scopes; only LL15-b/c missing."
+      "scope": "46 explicitly accepted records unchanged; the two new LL15 records await independent review and acceptance."
     },
     {
       "id": "LL02A-ACCEPTANCE-DECISION",
@@ -3543,6 +3557,16 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-six-slot-project-acceptance/packet.json",
       "sha256": "0e5eeed34c324adf0859d8da7e6a1036052b9b5abd974023193b6a7e3a65bc57",
       "scope": "Explicit conditional user acceptance after passing Codex review 81345b28: six Stage 0 records, forty prior accepted objects unchanged, 46 accepted and only LL15-b/c missing. No execution or policy change.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
+    },
+    {
+      "id": "CENSUS-INSTRUMENT-QUALIFICATION-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-census-instrument-r1/packet.json",
+      "sha256": "7f6517fb7214b278a27515361366039398c4efbef8ea0ded8925e1dd5674769f",
+      "scope": "LL15-b/c contract v0.2 instrument qualification: 167-unit explicit startup worklist; 33 capture checks, 20 native cases, 42 publication rejection controls and 16 production role omissions. Fresh verifier reproduces publication and deterministic assessments. Native observations and proven local bounds are separate from unknowns. No exhaustive closure or project acceptance.",
       "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
