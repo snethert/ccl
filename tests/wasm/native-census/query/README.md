@@ -125,3 +125,19 @@ answers with original native events and checks missing/reordered streams, member
 identity, namespace/query shape and damaged caches. Tests use fresh output
 directories. Their results qualify this tool's stated scope; formal LL15-b/c
 publication, independent review and project acceptance are separate steps.
+
+## Replay the retained startup analysis
+
+```sh
+python3 tests/wasm/native-census/query/replay_startup.py \
+  --evidence ../ccl-evidence --output /new/startup-replay
+```
+
+This replays the bodies, bindings and graph stages from the retained 167-unit
+capture without running native CCL. It uses the reviewed finite-chain graph
+(`6d30938b…`) as its explicit base, records each command before execution,
+and snapshots the analysis sources. It checks that the body/binding outputs
+match the original retained analysis, the startup worklist changes only its
+inherited profile text, and the combined graph is exactly the base plus that
+worklist. Original combined graphs with unretained bases are historical only.
+The replay remains a blocked diagnostic; it grants no LL15 acceptance.

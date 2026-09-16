@@ -79,7 +79,25 @@ The packet retains the 900-second full-compile timeout, the first final-registry
 refusal, the initial missing-environment probe failure, the first unkeyed-binding
 index refusal and the corrected test-oracle failure. Successful runs do not
 overwrite those originals. No shared source, kernel, production gate or census
-checker changed. The tool and final worklist await independent review.
+checker changed. Claude's fifty-seventh audit (`224a27d9`) reproduced the
+tools and startup worklist, and found one provenance defect: the combined
+graph in the original packet used an unretained intermediate base. Its
+standalone startup populations were verified; that combined artifact is
+superseded, not qualified by those checks.
+
+`ON-DEMAND-STARTUP-R2` replays all three analysis stages from the retained 167-unit
+capture on the reviewed finite-chain base `6d30938b…`. The
+`query/replay_startup.py` command records the actual analysis invocations and
+executed sources and compares the outputs to the retained worklist. It makes
+no new native-execution claim. The original packet remains immutable, including
+the defective combined graph; only the corrected graph should be used for
+future combined analysis. Correction evidence and its review are separate
+from the unchanged query/probe results.
+
+The replay passed: all 26 body/binding analysis files are byte-identical,
+and every startup-graph field except the inherited profile is identical.
+The combined graph contains exactly the retained base plus the startup
+worklist: 385,903 nodes and 1,126,896 edges. No old working graph is an input.
 
 ## Remaining publication work
 
