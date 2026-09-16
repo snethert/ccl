@@ -1328,3 +1328,8 @@ probe and expectation failures are retained with their scope disclosed.
 R6/R6a, exact restoration and the retained replay pass before commit. The
 shared backend remains the accepted closure unit; the next proposal is proper
 Wasm tail transfer. No inventory, criterion or gate changes.
+
+
+## 2026-09-16 — Claude's seventy-first audit: closure integration and local functions
+
+Claude verified the integrated backend's byte identity with the reviewed closure unit and the hash chain from the callable-object record, then replayed the local-function packet: the verifier recompiled the 241-module corpus, all sixteen mutant compilers and both development regression controls with identical outcomes, and a 37-case adversarial probe of self-referencing closures, nested FLET inside LABELS, mutual recursion through function values, literal APPLY and inline lambdas, and deep recursion at a four-word budget agreed across the Python model, native CCL and the target with byte-exact allocation. No defect. The ledger stays at 5 accepted and 26 missing.
