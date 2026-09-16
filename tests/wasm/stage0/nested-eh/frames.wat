@@ -29,7 +29,7 @@
   ;; +0 vsp  +4 tsp  +8 csp  +12 special  +16 root_head  +20 handler_depth
   ;; +24 cleanup_count  +28 post_exit_effects  +32 mv_base  +36 mv_count
   ;; +40 transit_base  +44 transit_count  +48 handler_calls  +52 event_count
-  ;; +56 max_handler_depth  +60 resumed
+  ;; +56 max_handler_depth  +60 resumed  +64 handler_witness_count
   (func $ld (param $off i32) (result i32) (i32.load (i32.add (global.get $tcr) (local.get $off))))
   (func $st (param $off i32) (param $v i32) (i32.store (i32.add (global.get $tcr) (local.get $off)) (local.get $v)))
   (func $bump (param $off i32) (call $st (local.get $off) (i32.add (call $ld (local.get $off)) (i32.const 1))))
@@ -37,7 +37,8 @@
     (i32.store (i32.add (i32.const 20480) (i32.mul (call $ld (i32.const 52)) (i32.const 4))) (local.get $code))
     (call $bump (i32.const 52)))
 
-  ;; Frame record on TSP (48 bytes): saved_vsp, saved_special, saved_root_head, saved_csp, depth, unused, noise[6]
+  ;; Frame record on TSP (48 bytes): saved_vsp, saved_special, saved_root_head, saved_csp, depth, own_csp, cleanup_values[6]
+  ;; own_csp is the CSP this frame owns: its saved CSP until it pushes a cleanup record, then that record.
   ;; Root record on TSP (16 bytes): previous_head, count, slot0, slot1
   (func $push_frame (param $depth i32) (result i32) (local $frame i32) (local $root i32)
     (local.set $frame (i32.sub (call $ld (i32.const 4)) (i32.const 48)))
@@ -46,6 +47,7 @@
     (i32.store offset=8 (local.get $frame) (call $ld (i32.const 16)))
     (i32.store offset=12 (local.get $frame) (call $ld (i32.const 8)))
     (i32.store offset=16 (local.get $frame) (local.get $depth))
+    (i32.store offset=20 (local.get $frame) (call $ld (i32.const 8)))
     (local.set $root (i32.sub (local.get $frame) (i32.const 16)))
     (i32.store (local.get $root) (call $ld (i32.const 16)))
     (i32.store offset=4 (local.get $root) (i32.const 2))
@@ -62,6 +64,7 @@
     (local.set $csp (i32.sub (call $ld (i32.const 8)) (i32.const 8)))
     (i32.store (local.get $csp) (i32.const 1))
     (i32.store offset=4 (local.get $csp) (local.get $frame))
+    (i32.store offset=20 (local.get $frame) (local.get $csp))
     (call $st (i32.const 8) (local.get $csp)))
   ;; Ordinary and exceptional exits share one restoration path.
   (func $pop_frame (param $frame i32)
@@ -72,16 +75,33 @@
     (call $st (i32.const 4) (i32.add (local.get $frame) (i32.const 48)))
     (call $event (i32.add (i32.const 300) (i32.load offset=16 (local.get $frame)))))
   ;; Unwind to a frame: every inner frame has departed, so the dynamic state
-  ;; becomes this frame's own state as of its push (its binding, its root
-  ;; record as head, its TSP, its VSP reserve and its cleanup record) before
-  ;; its cleanup or handler code runs. Ordinary return reaches the same state
-  ;; through the inner frames' own pops.
+  ;; becomes this frame's own state (its binding, its root record as head,
+  ;; its TSP, its VSP reserve and the cleanup state it owns: its own cleanup
+  ;; record if it pushed one, otherwise its saved CSP) before its cleanup or
+  ;; handler code runs. Ordinary return reaches the same state through the
+  ;; inner frames' own pops.
   (func $unwind_to (param $frame i32)
     (call $st (i32.const 12) (i32.add (i32.const 100) (i32.load offset=16 (local.get $frame))))
     (call $st (i32.const 16) (i32.sub (local.get $frame) (i32.const 16)))
     (call $st (i32.const 4) (i32.sub (local.get $frame) (i32.const 16)))
     (call $st (i32.const 0) (i32.add (i32.load (local.get $frame)) (i32.const 8)))
-    (call $st (i32.const 8) (i32.sub (i32.load offset=12 (local.get $frame)) (i32.const 8))))
+    (call $st (i32.const 8) (i32.load offset=20 (local.get $frame))))
+  ;; Handler witness: before a handler delivers values, enters the debugger or
+  ;; propagates, it records the dynamic state it observes (code, binding,
+  ;; root head, TSP, VSP, CSP, handler depth, event count) in the next
+  ;; handler-witness slot for the oracle, which expects that state from the
+  ;; frame model alone.
+  (func $handler_witness (param $code i32) (local $w i32)
+    (local.set $w (i32.add (i32.const 31000) (i32.mul (call $ld (i32.const 64)) (i32.const 32))))
+    (i32.store (local.get $w) (local.get $code))
+    (i32.store offset=4 (local.get $w) (call $ld (i32.const 12)))
+    (i32.store offset=8 (local.get $w) (call $ld (i32.const 16)))
+    (i32.store offset=12 (local.get $w) (call $ld (i32.const 4)))
+    (i32.store offset=16 (local.get $w) (call $ld (i32.const 0)))
+    (i32.store offset=20 (local.get $w) (call $ld (i32.const 8)))
+    (i32.store offset=24 (local.get $w) (call $ld (i32.const 20)))
+    (i32.store offset=28 (local.get $w) (call $ld (i32.const 52)))
+    (call $bump (i32.const 64)))
   ;; Cleanup: runs once per frame on either exit path, produces its own six
   ;; values in the frame's region, and records the dynamic state it observes
   ;; on entry (binding, root head, TSP, its frame, VSP, CSP, saved VSP and
@@ -230,6 +250,7 @@
   ;; The nested debugger: invoked from inside the outer handler while the
   ;; caught values are already secured in the caller-owned region.
   (func $debugger (local $frame i32) (local $e exnref)
+    (call $handler_witness (i32.const 80))
     (call $event (i32.const 80))
     (local.set $frame (call $push_frame (i32.const 9)))
     (call $push_cleanup (local.get $frame))
@@ -247,6 +268,7 @@
       (try_table (catch $lisp $done) (throw_ref (local.get $e)))
       (unreachable))
     (drop)
+    (call $handler_witness (i32.const 81))
     (call $event (i32.const 81)))
 
   ;; Depth 1: the handler frame. Catches $lisp and $other; $unhandled passes
@@ -266,6 +288,7 @@
       ;; $other: one value, the cleanup's payload
       (local.set $payload)
       (call $unwind_to (local.get $frame))
+      (call $handler_witness (i32.const 64))
       (call $event (i32.const 64))
       (i32.store (call $ld (i32.const 32)) (local.get $payload))
       (call $st (i32.const 36) (i32.const 1))
@@ -274,6 +297,7 @@
       (return (local.get $payload) (i32.const 1)))
     (local.set $payload)
     (call $unwind_to (local.get $frame))
+    (call $handler_witness (i32.const 63))
     (call $event (i32.const 63))
     (call $deliver_transit) (local.set $n) (local.set $v0)
     (if (i32.eq (call $arg (i32.const 0)) (i32.const 5)) (then (call $debugger)))
@@ -283,6 +307,7 @@
     (unreachable))
     (local.set $e)
     (call $unwind_to (local.get $frame))
+    (call $handler_witness (i32.const 65))
     (call $st (i32.const 20) (i32.sub (call $ld (i32.const 20)) (i32.const 1)))
     (call $pop_frame (local.get $frame))
     (throw_ref (local.get $e)))

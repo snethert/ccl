@@ -20,8 +20,9 @@ function runCase(c) {
   const x = instance.exports;
   words[W.vsp_base / 4] = c.mode; words[W.vsp_base / 4 + 1] = c.argument;
   words.fill(0, W.cleanup_witness.base / 4, W.cleanup_witness.base / 4 + 13 * W.cleanup_witness.stride / 4);
+  words.fill(0, W.handler_witness.base / 4, W.handler_witness.base / 4 + 8 * W.handler_witness.stride / 4);
   const initial = { vsp: W.vsp_base + 8, tsp: W.tsp_base, csp: W.csp_base, special: abi.initial_special, root_head: 0, handler_depth: 0,
-    cleanup_count: 0, post_exit_effects: 0, mv_base: W.mv_base, mv_count: 0, transit_base: W.transit_base, transit_count: 0, handler_calls: 0, event_count: 0, max_handler_depth: 0, resumed: 0 };
+    cleanup_count: 0, post_exit_effects: 0, mv_base: W.mv_base, mv_count: 0, transit_base: W.transit_base, transit_count: 0, handler_calls: 0, event_count: 0, max_handler_depth: 0, resumed: 0, handler_witness_count: 0 };
   for (const [name, value] of Object.entries(initial)) words[tcr + F[name] / 4] = value;
   const record = { mode: c.mode, argument: c.argument };
   try { record.returned = Array.from(x.entry(abi.self, 2)); }
@@ -38,6 +39,11 @@ function runCase(c) {
   for (let depth = 1; depth <= 12; depth++) {
     const at = (W.cleanup_witness.base + depth * W.cleanup_witness.stride) / 4;
     if (words[at + 3]) record.cleanup_witness[depth] = Object.fromEntries(W.cleanup_witness.words.map((name, k) => [name, words[at + k]]));
+  }
+  record.handler_witness = [];
+  for (let n = 0; n < Math.min(record.state.handler_witness_count, 8); n++) {
+    const at = (W.handler_witness.base + n * W.handler_witness.stride) / 4;
+    record.handler_witness.push(Object.fromEntries(W.handler_witness.words.map((name, k) => [name, words[at + k]])));
   }
   return record;
 }

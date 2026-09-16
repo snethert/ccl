@@ -12,9 +12,11 @@ SCOPE = ('Hand-built emitted wasm32 frames on macOS Node/V8 under the B entry sh
          'values through nested frames with dynamic bindings, root records and cleanup, including a cleanup that raises a second exit, a '
          'chain of nine cleanup frames, a missing handler that reaches the host after full restoration, a recoverable check resumed by a '
          'use-value handler without unwinding, a declined handler that becomes an error, and a nested debugger exit inside the handler. '
-         'VSP, TSP, CSP, the binding, the root head and the handler depth are restored after every case and, inside every cleanup, the departed '
-         'inner frames are already gone (own binding, own root record, own stacks witnessed at cleanup entry); cleanups run exactly once; '
-         'post-exit effects are absent; every value is checked. No production TCR, condition system, debugger, GC or C boundary is claimed.')
+         'VSP, TSP, CSP, the binding, the root head and the handler depth are restored after every case; inside every cleanup the departed '
+         'inner frames are already gone (own binding, own root record, own stacks witnessed at cleanup entry) and before every handler delivers '
+         'values, enters the debugger or propagates it observes only its own frame with no cleanup record, every expected address derived from '
+         'the frame model rather than from saved fields; cleanups run exactly once; post-exit effects are absent; every value is checked. '
+         'No production TCR, condition system, debugger, GC or C boundary is claimed.')
 FLAGS = ['--enable-exceptions', '--enable-tail-call']
 # case -> (old text, new text, first failure named by the unchanged oracle)
 MUTANTS = {
@@ -32,6 +34,11 @@ MUTANTS = {
     'restart-unwinds': ("(throw $use_value (i32.const 8)))", "(call $exit_with_values (i32.const 1)))", 'RESULT recoverable-use-value'),
     'unwind-omitted': ("    (local.set $e)\n    (call $unwind_to (local.get $frame))\n    (call $cleanup (local.get $frame))\n    (call $pop_frame (local.get $frame))\n    (if (i32.eq (call $arg (i32.const 0)) (i32.const 2))",
                        "    (local.set $e)\n    (call $cleanup (local.get $frame))\n    (call $pop_frame (local.get $frame))\n    (if (i32.eq (call $arg (i32.const 0)) (i32.const 2))", 'CLEANUP exit-0-values depth 3 special'),
+    # the R2 review's defect: unwinding restores the state of a frame that pushed a cleanup, so the handler-only frame sees an invented record
+    'handler-invents-cleanup-record': ("    (call $st (i32.const 8) (i32.load offset=20 (local.get $frame))))\n", "    (call $st (i32.const 8) (i32.sub (i32.load offset=12 (local.get $frame)) (i32.const 8))))\n", 'HANDLER exit-0-values 63 csp'),
+    'cleanup-record-unowned': ("    (i32.store offset=20 (local.get $frame) (local.get $csp))\n", '', 'CLEANUP exit-0-values depth 2 csp'),
+    'handler-witness-after-delivery': ("    (call $handler_witness (i32.const 63))\n    (call $event (i32.const 63))\n    (call $deliver_transit) (local.set $n) (local.set $v0)\n",
+                                       "    (call $event (i32.const 63))\n    (call $deliver_transit) (local.set $n) (local.set $v0)\n    (call $handler_witness (i32.const 63))\n", 'HANDLER exit-0-values 63 event_count'),
 }
 
 
@@ -153,7 +160,7 @@ def run(out):
         save(out / 'results.json', bind_report(report, inv, 'inventory.json', sha(out / 'inventory.json'))); save(out / 'slot-gate.json', slot(out)); omissions(out)
         require(record['source_sha256'] == {str(p.relative_to(ROOT)): sha(p) for p in sources()}, 'SOURCE_CHANGED')
         record.update(status='PASS', contract_sha256=contract_hash(inv, ID))
-        print('PASS: LL19-a, ten nested-exit cases with cleanup-entry witnesses, ten semantic mutants and ten role omissions. Review pending.')
+        print('PASS: LL19-a, ten nested-exit cases with cleanup-entry and handler-entry witnesses, thirteen semantic mutants and ten role omissions. Review pending.')
     except BaseException as e:
         record['error'] = type(e).__name__ + ': ' + str(e); raise
     finally:
