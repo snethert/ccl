@@ -1,48 +1,41 @@
 {
   "version": 2,
-  "assessment": "SCOPED_EXECUTION_COMPOSITE",
+  "assessment": "SCOPED_PROJECT_ACCEPTANCE",
   "date": "2026-09-16",
-  "basis": "LL15-b/c instrument qualification under the authorized v0.2 contract; fresh queries and native witness scenarios, independent publication controls. The forty-six accepted objects and their envelope are unchanged. Complete native/Wasm closure remains unqualified.",
+  "basis": "Explicit user acceptance after Claude audit d507f5a7. The new accepted envelope passes production validation with only the 46 absent-other-record reasons; all 46 earlier accepted objects are unchanged and all 48 metadata bindings current. Prior payload verification reused. Stage 0 instrument qualification only; no complete closure claim.",
   "result": {
-    "status": "BLOCKED",
-    "reasons": [
-      "unreviewed S0-LL15-b [native]",
-      "unreviewed S0-LL15-c [native]"
-    ]
+    "status": "PASS",
+    "reasons": []
   },
-  "prior_result_sha256": "24d1e8616ddb0ac5b208110b0c420b40ee9858099c077402cd8cb4dc2603a6eb",
+  "prior_result_sha256": "d56a28dca40acdf7bd92dfdf12b5582e98f6b043ca0a32e3a29a49b59fe618a4",
   "new_results": [
     {
       "id": "S0-LL15-b",
-      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-census-instrument-r1/results.json",
-      "sha256": "5b6fa66afed51ce03528b8f98f10221d5f117d171639719cdac86020276c7ed5"
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-ll15-project-acceptance/accepted/accepted-results.json",
+      "sha256": "f8bfdecdb637049a575f331d820fe9b054a928f9193660d8fbb8b62e7bd69c93"
     },
     {
       "id": "S0-LL15-c",
-      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-census-instrument-r1/results.json",
-      "sha256": "5b6fa66afed51ce03528b8f98f10221d5f117d171639719cdac86020276c7ed5"
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-ll15-project-acceptance/accepted/accepted-results.json",
+      "sha256": "f8bfdecdb637049a575f331d820fe9b054a928f9193660d8fbb8b62e7bd69c93"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage0-six-slot-accepted-results.json",
-  "combined_results_sha256": "235712dc0094f77b9bee7872e69caed274f96c2e10b7d5247a704dcde2f00c68",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage0-complete-accepted-results.json",
+  "combined_results_sha256": "59e52d5282de5de9aa53884ff96301483b8b2813891eb3cfdd9e1602a1159bd7",
   "inventory": {
     "locator": "stage0/inventory.json",
     "sha256": "3dd69b25a0f9cdf4af2b69030b374e09f83cd1942b0ac3468006f20fe231e6fe"
   },
   "active_results": [
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage0-six-slot-accepted-results.json",
-      "sha256": "235712dc0094f77b9bee7872e69caed274f96c2e10b7d5247a704dcde2f00c68"
-    },
-    {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-census-instrument-r1/results.json",
-      "sha256": "5b6fa66afed51ce03528b8f98f10221d5f117d171639719cdac86020276c7ed5"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage0-complete-accepted-results.json",
+      "sha256": "59e52d5282de5de9aa53884ff96301483b8b2813891eb3cfdd9e1602a1159bd7"
     }
   ],
   "counts": {
-    "accepted": 46,
+    "accepted": 48,
     "missing": 0,
-    "unreviewed": 2,
+    "unreviewed": 0,
     "required": 48
   }
 }

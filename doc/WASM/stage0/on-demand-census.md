@@ -107,7 +107,7 @@ worklist: 385,903 nodes and 1,126,896 edges. No old working graph is an input.
 [LL15-b/c qualification](census-qualification.md) is executed under v0.2.
 The one-command runner uses the reviewed inputs, startup worklist, fresh queries
 and native scenarios, with independent publication omissions and semantic
-controls. Both native records are published and await Claude's review and
-project acceptance. The complete-closure checker remains BLOCKED, and every
+controls. Both native records were accepted on 16 September after Claude's
+fifty-ninth audit (`d507f5a7`) and the user's explicit decision. The complete-closure checker remains BLOCKED, and every
 named unknown remains work. No exhaustive resolver loop or additional full
 native rebuild was needed.
