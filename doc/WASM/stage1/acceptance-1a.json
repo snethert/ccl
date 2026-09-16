@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "timestamp": "2026-09-16T16:19:16.334664+00:00",
+  "authorization": {
+    "quote": "If you agree with Claude, I accept them",
+    "provenance": "User to Codex after supplying Claude’s sixty-second audit. Codex agrees with the no-defect verdict and accepts exactly the three reviewed slots at their disclosed scope."
+  },
+  "review_commit": "3c2a38bce6cab20d10061950f718e34b53fcb388",
+  "review_sha256": "c9dff19e25fba154c136de6de3699a17cf95ba68a80b6fbbd9e00e8b9fcd0567",
+  "source_report_sha256": "5570d38c9cc9cff4acf791a3c3ff0c4017b5b2d64df23f842cbbf2679480e288",
+  "scope": "Accept S1-LL08-a [r6], S1-LL22-b [control] and S1-LL23-a [generated] at STAGE1-1A-R2 scope; registration/R6, initial generated build binding and V8 fatal diagnostics. Nine nonallocating leaf functions, 24 calls (23 distinct).",
+  "exclusions": [
+    "No general B ABI, target heap, image construction, GC, closure, ordinary Lisp arity conditions or browser stack qualification.",
+    "Runtime globals schema/accessors are required before the first generated global access; constant indexing before S1-LL10-a admits heap constants; coordinated heap/code construction remains 1E.",
+    "The runner-written leaf ABI schema is reviewed but is not a direct binding to the accepted B decision; add that binding when the generated ABI work expands."
+  ],
+  "scope_decisions": [
+    {
+      "item": "Authorship provenance",
+      "prior_question": "Does “proceed with Stage 1” authorize Codex to author functional compiler changes in disposable clean U1 copies, with Claude reviewing before those changes enter the main checkout?",
+      "prior_user_answer": "Yes—Codex implements; Claude reviews before integration",
+      "interpretation": "The recorded answer authorizes the disposable-copy workflow. Retaining proposals under tests/wasm/stage1 is Codex’s implementation choice, not a verbatim user instruction."
+    },
+    {
+      "item": "Cross-fasloader scope",
+      "decision": "Accept the reviewed registration in 1A. Preserve the full coordinated heap/code writer and loader as required 1E work. No Stage 1 inventory assertion is removed or weakened.",
+      "rationale": "This slice generates nonallocating leaves and no target heap. The adopted plan already assigns cross-dump and image loading to 1E."
+    },
+    {
+      "item": "Globals and constant indexing",
+      "decision": "Accept 1A’s ownership/addressing design and refusal boundary. Complete offsets/accessors before a generated kernel-global operation and constant indexing before heap constants in 1B/S1-LL10-a.",
+      "rationale": "The accepted leaf slice uses neither operation and refuses unsupported forms. These are explicit remaining implementation obligations, not completed tests."
+    }
+  ],
+  "records": [
+    {
+      "id": "S1-LL08-a",
+      "variant": "r6",
+      "test_revision": "46d0c4b540a5f6c979241d01263cce17cf09b14ef7e28324450f349dda692198",
+      "contract_sha256": "013145d5ce319b4bb2f4298015fa25232a9e5e26b3861848d8553f14b92c8553",
+      "scope": "Reviewed STAGE1-1A-R2 scope and exclusions above."
+    },
+    {
+      "id": "S1-LL22-b",
+      "variant": "control",
+      "test_revision": "46d0c4b540a5f6c979241d01263cce17cf09b14ef7e28324450f349dda692198",
+      "contract_sha256": "2d81e4ca0c0657645b95ddce5fa17256c06cb1fd99235dffbf5ca4bf0afe32bf",
+      "scope": "Reviewed STAGE1-1A-R2 scope and exclusions above."
+    },
+    {
+      "id": "S1-LL23-a",
+      "variant": "generated",
+      "test_revision": "46d0c4b540a5f6c979241d01263cce17cf09b14ef7e28324450f349dda692198",
+      "contract_sha256": "98e4da7fe0b8d303d45a24d45e2a5cd869e43dbe7f3d6a398220a19c80ad7a8e",
+      "scope": "Reviewed STAGE1-1A-R2 scope and exclusions above."
+    }
+  ]
+}

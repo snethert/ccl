@@ -5,8 +5,9 @@ criterion of the [Stage 1 ledger](../evidence/current-stage1-gate-result.json)
 by the user's decision of 16 September; Codex is the authorized author of
 the shared-compiler changes with Claude as reviewer; the single-thread JSPI
 profile is deferred. The entry condition is met: all 48 Stage 0 variants are
-accepted. The [1A packet](1a.md) executes three records, awaiting adversarial review;
-the ledger is BLOCKED with 28 missing and 3 unreviewed.
+accepted. The [1A packet](1a.md) has three accepted records after Claude’s review and the user’s
+[acceptance](acceptance-1a.json); the ledger is BLOCKED with 28 missing and
+no unreviewed records.
 
 ## What Stage 1 delivers
 
@@ -32,7 +33,8 @@ exit criteria, plus two entries proposed from Stage 0 findings.
 2. **1B: representation and B through generated code.** S1-LL04-a and
    S1-LL07-a repeat the Stage 0 layout and conversion fixtures through
    generated access and mutation code; S1-LL05-a and S1-LL05-b repeat the
-   B corpus, stubs, adapters and tail chains; S1-LL10-a fixes constant
+   B corpus, stubs, adapters and tail chains, binding the accepted B decision
+   directly in the generated build; S1-LL10-a fixes constant
    pools. The [engine matrix](../stage0/engine-matrix.md) pins the
    features the emitter may use.
 3. **1C: control, bindings, temporaries, closures, code identity and

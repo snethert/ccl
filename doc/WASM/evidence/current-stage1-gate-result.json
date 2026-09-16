@@ -1,13 +1,11 @@
 {
   "version": 2,
-  "assessment": "EXECUTED_NOT_ACCEPTED",
+  "assessment": "PROJECT_ACCEPTANCE_NO_EXECUTION",
   "date": "2026-09-16",
-  "basis": "Adopted Stage 1 inventory; three 1A records executed and awaiting Claude review. No acceptance or shared-source integration.",
+  "basis": "User accepts the three 1A slots following Claude audit 62 at 3c2a38bc; unchanged acceptance producer, original execution records preserved.",
   "result": {
+    "status": "BLOCKED",
     "reasons": [
-      "unreviewed S1-LL08-a [r6]",
-      "unreviewed S1-LL22-b [control]",
-      "unreviewed S1-LL23-a [generated]",
       "missing S1-LL04-a [generated]",
       "missing S1-LL07-a [generated]",
       "missing S1-LL05-a [generated:B]",
@@ -36,8 +34,7 @@
       "missing S1-LL22-a [control]",
       "missing S1-LL24-a [control]",
       "missing S1-CONTRACTS-a [complete-report]"
-    ],
-    "status": "BLOCKED"
+    ]
   },
   "inventory": {
     "locator": "stage1/inventory.json",
@@ -45,15 +42,15 @@
   },
   "active_results": [
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-1a-r2-results.json",
-      "sha256": "5570d38c9cc9cff4acf791a3c3ff0c4017b5b2d64df23f842cbbf2679480e288"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-1a-acceptance-r1/accepted-results.json",
+      "sha256": "7bfd7d5294294e258bcb9f08c2bfb57f06d6b83ee3697a18449ee2a1fa4f188e"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-1a-r2-results.json",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-1a-acceptance-r1/accepted-results.json",
   "counts": {
-    "accepted": 0,
+    "accepted": 3,
     "missing": 28,
-    "unreviewed": 3,
+    "unreviewed": 0,
     "required": 31
   }
 }

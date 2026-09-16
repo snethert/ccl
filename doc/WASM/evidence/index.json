@@ -1777,6 +1777,23 @@
       "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-1a-r2/packet.json",
       "packet_sha256": "6dd4d61c9ee993fdc9604a53481afbfe53196992b416760dd3f22b06e3d977cd",
       "scope": "S1-LL08-a/R6 with the complete backend loaded before native compilation, S1-LL22-b/build binding and S1-LL23-a/generated fatal diagnostics. Disposable U1 proposal; nine nonallocating leaf functions. No integration, acceptance or bootstrap-heap claim."
+    },
+    {
+      "id": "STAGE1-1A-ACCEPTANCE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-1a-acceptance-r1/accepted-results.json",
+      "sha256": "7bfd7d5294294e258bcb9f08c2bfb57f06d6b83ee3697a18449ee2a1fa4f188e",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "9ce319c056bdadba9eff03becb3898d15f376a5c99b39c9cbc6a438b25eae16d",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-1a-acceptance-r1/packet.json",
+      "packet_sha256": "a96079c661f1a78ce23296bc3ddeb46ae9d86901eadc128924680d091b7fe38b",
+      "scope": "User acceptance of the three reviewed 1A slots, with original execution facts preserved; no new runtime execution. Disclosed scope and remaining implementation obligations in stage1/acceptance-1a.json."
     }
   ],
   "auxiliary_records": [

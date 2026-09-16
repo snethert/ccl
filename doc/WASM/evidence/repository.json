@@ -2,25 +2,22 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "8b249e0a2b3a7680052412dbc54f0c75cacf9d12",
+  "commit": "f313138d2df4c0c03c7c76e7e5c259b24f31b1dc",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "0760b1186c1d44ba9ce866f99fb9c630357b86cee4903d7e39a6dcbc32af7fab",
-  "immutable_evidence_files": 168967,
-  "indexed_references_verified": 8415,
-  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-1a-r2.json",
-  "source_index_sha256": "3f999afa1d5f696a60c253c2f89fe3130e27d479a626fb3a1082d41b2c753b7c",
+  "catalog_sha256": "dca108755a1bab4b485a0041e7ed145fb54271a5665739a7670425fe4b404903",
+  "immutable_evidence_files": 169067,
+  "indexed_references_verified": 8732,
+  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-1a-acceptance.json",
+  "source_index_sha256": "8123edd35ee9019a2cd87849f36fdea0eb195448d2520b249789255979d5b0f7",
   "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository. All 48 Stage 0 records accepted at their reviewed scopes. Stage 1A has three executed records pending adversarial review and acceptance; shared source remains unintegrated.",
+  "scope": "Separate local evidence repository. Stage 0: 48 accepted. Stage 1: three 1A records accepted at their reviewed scopes; 28 missing.",
   "last_scoped_addition": {
-    "directories": [
-      "2026-09-16-stage1-1a-r1",
-      "2026-09-16-stage1-1a-r2"
-    ],
-    "files": 379,
-    "bytes": 167734194,
-    "immutable_evidence_files": 168967,
-    "catalog_sha256": "0760b1186c1d44ba9ce866f99fb9c630357b86cee4903d7e39a6dcbc32af7fab"
+    "directory": "2026-09-16-stage1-1a-acceptance-r1",
+    "files": 100,
+    "bytes": 32104361,
+    "immutable_evidence_files": 169067,
+    "catalog_sha256": "dca108755a1bab4b485a0041e7ed145fb54271a5665739a7670425fe4b404903"
   }
 }
