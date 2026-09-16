@@ -1243,3 +1243,8 @@ Claude verified the integrated backend's byte identity with the reviewed call co
 ## 2026-09-16 — accept and integrate optional and keyword binding
 
 The user said “accept and proceed” after Claude’s sixty-sixth audit. The main backend now equals that reviewed unit byte for byte, with the preceding B core hash checked first. Reviewed R6/R6a evidence is reused for these exact bytes. No LL05 slot credit; the 64-argument maximum is retained as a disclosed implementation limit to address in rest/APPLY work, not adopted as language policy.
+
+
+## 2026-09-16 — generate rest lists and runtime-sized APPLY calls
+
+The isolated proposal adds genuine D1 rest-list allocation and APPLY through real spread-call IR. Checked i64 extents replace the 64-argument ceiling; tests reach 1,024 arguments and 129 required parameters. Seventy-one functions pass 339 native/logical cases and 1,356 target comparisons, with 18 compiler mutants, 20 source refusals, 60 resource refusals and eight allocation boundary checks. R6/R6a covers fresh registered/removal builds against the accepted pristine baseline. Original model and WAT development failures are retained. The proposal awaits external review; no LL05 slot credit and no unreviewed integration. Result capacity, callable objects, conditions, lazy adapters and tails remain.

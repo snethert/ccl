@@ -3833,6 +3833,16 @@
         "record": "stage1/integration-b-bindings.json",
         "scope": "User accepted integration of exact reviewed auxiliary unit; no inventory slot accepted."
       }
+    },
+    {
+      "id": "STAGE1-B-REST-APPLY-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-b-rest-apply-r1/packet.json",
+      "sha256": "577ff6e152a3f3ff11461dd34f0c2fa6a59a058974c99273bfb5c0c0ea96817a",
+      "scope": "Generated rest-list construction and APPLY: 71 functions, 339 native/logical cases repeated in 1356 target comparisons, 20 source refusals, 60 resource refusals, eight allocation boundary checks and 18 recompiled compiler mutants. Runtime-sized argument frames remove the 64-argument ceiling; executed through 1024 arguments. R6/R6a and retained replay pass. Auxiliary proposal, no LL05 slot credit or integration; collection, result capacity, callable objects, conditions, lazy adapters and tails remain.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }
