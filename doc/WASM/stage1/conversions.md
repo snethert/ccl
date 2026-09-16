@@ -1,6 +1,6 @@
 # Generated typed conversions — 16 September 2026
 
-S1-LL07-a is executed and awaiting Claude review. The proposed backend stays
+S1-LL07-a is reviewed by Claude and [accepted by the user](acceptance-ll07.json). The proposed backend stays
 under `tests/wasm/stage1/conversions`; shared source remains the accepted LL04
 implementation. The verifier checks that the inherited LL04 emitter is
 unchanged apart from dispatch to the new primitive mode.

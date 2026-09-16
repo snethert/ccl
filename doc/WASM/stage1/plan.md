@@ -6,11 +6,10 @@ by the user's decision of 16 September; Codex is the authorized author of
 the shared-compiler changes with Claude as reviewer; the single-thread JSPI
 profile is deferred. The entry condition is met: all 48 Stage 0 variants are
 accepted. The [1A packet](1a.md) has three accepted records after Claude’s review and the user’s
-[acceptance](acceptance-1a.json); the ledger now has four accepted records, 26 missing and
-one unreviewed record. [LL04 generated representation](representation.md)
+[acceptance](acceptance-1a.json); the ledger now has five accepted records, 26 missing and
+zero unreviewed records. [LL04 generated representation](representation.md)
 is reviewed and accepted. The [reviewed unit](integration-1a.json) is integrated;
-[LL07’s generated typed conversions](conversions.md) are executed and awaiting
-Claude review. General B calls and adapters (LL05) follow.
+[LL07’s generated typed conversions](conversions.md) are reviewed and accepted. General B calls and adapters (LL05) follow.
 
 ## What Stage 1 delivers
 

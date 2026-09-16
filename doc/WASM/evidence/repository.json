@@ -2,20 +2,19 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "8a01ee8541edc502fd36d0e3965935277c981ca1",
+  "commit": "6c317d8c77d59eb04c186cd632059e9dcf619368",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "aa74e429ba7ce0df031e86cf15375388b5dcc43ac0ab8ff6a2d4847a8c77234e",
-  "immutable_evidence_files": 169539,
-  "indexed_references_verified": 9689,
-  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-conversions.json",
-  "source_index_sha256": "3b37534199a94a4aad24011cb4e6618fe75cbdeb14ab6c88475577667ee3b499",
+  "catalog_sha256": "e79b293e3db0adb058f15a56108e5289a2229f8222f852eb3a8d9522d89041f8",
+  "immutable_evidence_files": 169675,
+  "indexed_references_verified": 10010,
+  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-ll07-acceptance.json",
+  "source_index_sha256": "ec056397f61b550c97ac056cd004291f1cba05969318629503e888b9e3939d48",
   "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: four accepted; LL07 executed awaiting review; 26 missing.",
+  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing.",
   "last_scoped_addition": {
-    "directory": "2026-09-16-stage1-conversions-r1",
-    "files": 169,
-    "bytes": 30604851
+    "directory": "2026-09-16-stage1-ll07-acceptance-r1",
+    "files": 136
   }
 }
