@@ -143,8 +143,8 @@
           "description": "Generated code checks signed fixnum, raw address, logical code ID and typed slot conversions separately, keeps bits through synthetic addresses above 2 GiB, tests the exclusive ARRAY-TOTAL-SIZE-LIMIT boundary at 2^24 - 1 versus 2^24 by arithmetic without allocating at the limit, and refuses invalid IDs and capacities."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "EXECUTED",
+      "runner": "tests/wasm/stage1/conversions/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",

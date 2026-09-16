@@ -1831,6 +1831,23 @@
       "test_ids": [
         "S1-LL04-a"
       ]
+    },
+    {
+      "id": "STAGE1-CONVERSIONS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-conversions-r1-results.json",
+      "sha256": "f9991ef6d17e8496d1f936b29d7ba68a4bcca9497119097a53efa6a85fe689e9",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "07fa780e4c1d59f0a6387f744de35ccdffb502de6e4f9945c01b024b08fc9ef0",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-conversions-r1/packet.json",
+      "packet_sha256": "782c0f21569db26d21102dcdc5bc50efbf316bfa0f689cf75ca1de9753ff0c87",
+      "scope": "S1-LL07-a: 17 real frontend/pass-2 generated typed internal functions, 349 comparisons (129 returns/220 checked refusals), 14 static refusals, 20 compiler mutants, 12 artifact-role omissions; native R6/R6a. Separate raw ABI, not general B calls. Single-owner bounded registries; no full loader or allocation claim."
     }
   ],
   "auxiliary_records": [

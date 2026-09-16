@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "kind": "typed-internal-primitive",
+  "scope": "Compiler-owned raw machine primitives. Separate from B Lisp entry; every argument is a Wasm i32 parameter and the single result is i32. These words never enter the B root stack. Full Lisp calls remain LL05.",
+  "representations": {
+    "s32": "Signed 32-bit integer",
+    "u32": "Unsigned 32-bit quantity",
+    "address": "Unsigned byte address; high bit is meaningful",
+    "node": "D1 tagged word, validated by each conversion",
+    "code-id": "Nonnegative target fixnum proven issued in the supplied registry",
+    "slot": "Raw table index proven against kind, capacity, reserved prefix, signature, role and presence"
+  },
+  "entry_types": ["s32", "u32", "address", "node"],
+  "trusted_result_types": ["code-id", "slot"],
+  "code_registry": {
+    "fields": {"first": 0, "next": 4, "limit": 8},
+    "field_width": 4,
+    "invariant": "0 <= first <= next <= limit <= 2^29; issued IDs are [first,next)",
+    "ownership": "Single owner; stable during a primitive; no reuse or concurrent access. Initialization belongs to the caller; invalid contents are refused."
+  },
+  "slot_registry": {
+    "fields": {"capacity": 0, "reserved_prefix": 4, "entries": 8},
+    "entry_bytes": 8,
+    "entry_fields": {"signature": 0, "role": 4},
+    "slot_handle_kind": 3,
+    "logical_id_handle_kind": 2,
+    "ownership": "Caller owns metadata and actual table installation, stable during validation and use. This is not the production module-loader registry.",
+    "reserved_prefix_source": "Owner-supplied; no C linker or element-segment reservation claim."
+  },
+  "checked_refusal": {"import": "env.conversion_error", "payload": "i32 reason", "codes": {"range": 1, "tag": 2, "alignment": 3, "address_bounds": 4, "unissued": 5, "exhaustion": 6, "capacity": 7, "reserved": 8, "handle_kind": 9, "signature": 10, "role": 11, "uninstalled": 12}},
+  "array_bytes": "Count must be below 2^24, width positive, product <= 2^32-1. Computes payload bytes only, not object allocation or a header."
+}

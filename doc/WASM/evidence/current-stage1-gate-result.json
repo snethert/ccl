@@ -1,12 +1,12 @@
 {
   "version": 2,
-  "assessment": "PROJECT_ACCEPTANCE",
+  "assessment": "EXECUTION_WITH_RETAINED_ACCEPTANCES",
   "date": "2026-09-16",
-  "basis": "User acceptance after Claude’s sixty-third audit. No new execution.",
+  "basis": "Four accepted records preserved exactly; generated LL07 typed conversions executed and awaiting review.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
-      "missing S1-LL07-a [generated]",
+      "unreviewed S1-LL07-a [generated]",
       "missing S1-LL05-a [generated:B]",
       "missing S1-LL05-b [generated:B]",
       "missing S1-LL10-a [generated]",
@@ -37,19 +37,19 @@
   },
   "inventory": {
     "locator": "stage1/inventory.json",
-    "sha256": "2f56b9559b577fe22ba961b87b8ddb936aacc10eceb324daf5c8589a7b77b7de"
+    "sha256": "07fa780e4c1d59f0a6387f744de35ccdffb502de6e4f9945c01b024b08fc9ef0"
   },
   "active_results": [
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-through-ll04-accepted-results.json",
-      "sha256": "0608c87eecfaee32795c6b032ee79f8a91ac87f1a20690bf61074f0dfe2ab67a"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-through-conversions-results.json",
+      "sha256": "12a7a8fc340e1c3254e7590b5a240e583593c3f6181fd2e433e4472b523b8027"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-through-ll04-accepted-results.json",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-through-conversions-results.json",
   "counts": {
     "accepted": 4,
-    "missing": 27,
-    "unreviewed": 0,
+    "missing": 26,
+    "unreviewed": 1,
     "required": 31
   }
 }

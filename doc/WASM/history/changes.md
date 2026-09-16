@@ -1193,3 +1193,8 @@ The user conditionally accepted LL04-a after supplying audit 63; Codex agrees wi
 ## 2026-09-16 — integrate accepted LL04 backend
 
 Copied the exact reviewed representation backend over the accepted 1A backend after checking both identities. The reviewed R6/R6a runs cover these bytes; no registration or kernel edit and no new execution claimed. Next: generated LL07 typed conversions.
+
+
+## 2026-09-16 — qualify generated LL07 typed conversions
+
+Codex completed separate typed internal primitives through the real front end and pass 2: 17 functions, 349 cases, fourteen compile-time refusals and twenty recompiled compiler mutants. Native mathematical and Python models agree; real Wasm memory crosses 2 GiB and header reads use displacement -6. The exclusive array limit, arithmetic overflow, monotonic ID issuance and typed slot validation are exercised. The first overflow mutant exposed a missing exact-2^32 test, now added, with the failed run retained. Fresh registered native tests pass 21,843; all 164 FASLs match after removal. The retained verifier recompiles every variant and reproduces the results. Four accepted records are unchanged; Stage 1 has 26 missing and LL07 awaiting review. The proposed backend remains isolated.
