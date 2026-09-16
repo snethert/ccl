@@ -1,0 +1,77 @@
+;;; Private classes and copied functions only; no observation hooks installed.
+(defpackage :ccl-accessor-census-probes (:use :cl))
+(in-package :ccl-accessor-census-probes)
+
+(defclass box ()
+  ((left :initarg :left :accessor box-left)
+   (right :initarg :right :accessor box-right)))
+
+(defun method-for (name writer)
+  (find-method (fdefinition name) nil
+               (if writer (list (find-class t) (find-class 'box))
+                 (list (find-class 'box)))))
+
+(defun unexpected-reader (instance slot-id)
+  (declare (ignore instance slot-id)) -900)
+
+(defun record-case (label fn args want)
+  (let ((got (apply fn args)))
+    (unless (eql got want) (error "ACCESSOR-CASE ~s: ~s /= ~s" label got want))
+    (ccl-complete-census::emit "accessor-case" "case" label "actual" got "expected" want)))
+
+(defun run (output)
+  (let ((ccl-complete-census::*owner* ccl:*current-process*)
+        (ccl-complete-census::*serial* 0)
+        (ccl-complete-census::*native-functions* (make-hash-table :test #'eq))
+        (ccl-complete-census::*pending-functions* nil)
+        (ccl-complete-census::*parents* nil)
+        (ccl-rich-census::*sequence* 0))
+    (let ((ccl-complete-census::*output* (open output :direction :output :if-exists :error)))
+      (unwind-protect
+       (let* ((a (make-instance 'box :left 11 :right 29))
+             (b (make-instance 'box :left 43 :right 61))
+             (lr (method-for 'box-left nil)) (rr (method-for 'box-right nil))
+             (lw (method-for '(setf box-left) t)) (rw (method-for '(setf box-right) t))
+             (lf (ccl::%method.function lr)) (rf (ccl::%method.function rr))
+             (wf (ccl::%method.function lw))
+             (swap (ccl::%copy-function lf)) (wrong (ccl::%copy-function lf))
+             (code (ccl::%function-code-words lf)))
+        (dolist (row (list (list "reader" ccl::*reader-method-function-proto*)
+                          (list "writer" ccl::*writer-method-function-proto*)))
+          (ccl-complete-census::emit "accessor-template" "accessor_kind" (first row)
+             "function" (ccl-complete-census::function-id (second row))))
+        (dolist (row (list (list "reader" lr) (list "reader" rr)
+                          (list "writer" lw) (list "writer" rw)))
+          (ccl-complete-census::emit "accessor-instance" "accessor_kind" (first row)
+             "method" (ccl-startup-census::dependency-id (second row))
+             "function" (ccl-complete-census::function-id (ccl::%method.function (second row)))))
+        (record-case "reader-left-a" lf (list a) 11)
+        (record-case "reader-right-a" rf (list a) 29)
+        (record-case "reader-left-b" lf (list b) 43)
+        (record-case "writer-left-a" wf (list 73 a) 73)
+        (record-case "written-left-a" lf (list a) 73)
+        (record-case "other-slot-preserved" rf (list a) 29)
+        (record-case "other-instance-preserved" lf (list b) 43)
+        (record-case "writer-right-b" (ccl::%method.function rw) (list 89 b) 89)
+        (record-case "written-right-b" rf (list b) 89)
+        (record-case "generic-left" #'box-left (list a) 73)
+        (record-case "generic-right" #'box-right (list b) 89)
+        ;; An alternate real slot-id is a legal template parameter. It changes
+        ;; which slot is accessed and must not be mistaken for a callee bound.
+        (setf (ccl::%svref (ccl::%function-to-function-vector swap) code)
+              (ccl::%svref (ccl::%function-to-function-vector rf) code))
+        (record-case "alternate-slot-parameter" swap (list a) 29)
+        (ccl-complete-census::emit "accessor-mutation" "case" "alternate-slot"
+          "method" (ccl-startup-census::dependency-id lr)
+          "function" (ccl-complete-census::function-id swap))
+        ;; A different symbol in the callable literal produces different
+        ;; behaviour even though all machine code bytes remain unchanged.
+        (setf (ccl::%svref (ccl::%function-to-function-vector wrong) (1+ code)) 'unexpected-reader)
+        (record-case "substituted-callee" wrong (list a) -900)
+        (ccl-complete-census::emit "accessor-mutation" "case" "substituted-callee"
+          "method" (ccl-startup-census::dependency-id lr)
+          "function" (ccl-complete-census::function-id wrong))
+        (ccl-complete-census::drain-functions)
+        (ccl-complete-census::emit "accessor-complete" "completed" :true))
+       (close ccl-complete-census::*output*)))
+    (format t "ACCESSOR-NATIVE-PASS~%")))

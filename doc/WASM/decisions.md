@@ -8,6 +8,21 @@ Version 1.8 replaces v1.7. Removes remaining mandatory specialized-entry obligat
 
 R7 in the Acceptance Policy and Regression Register v1.7 governs all delivery and verification claims; recording a decision does not claim that its artifacts have been implemented or its tests run. [17]
 
+## 15 September 2026 — LL15 instrument qualification
+
+The user authorized the on-demand census policy: “I will approve the change, so
+treat it as approved”. Stage 0 LL15-b/c qualify retained native observations,
+a reviewed seed recipe and explicit transitive worklist, identity-bound queries,
+and scenario-specific native call-site witnesses with independent controls.
+Exhaustively bounding every dynamic native callee is no longer a Stage 0
+prerequisite. The rationale is to answer concrete Stage 1 questions from mature
+captures without an unbounded static-resolution effort. Witnesses remain
+observations; unknowns remain work. The conservative closure checker and generated
+bootstrap dependency/initializer obligations are unchanged. This decision grants
+no result acceptance or functional shared-compiler editing permission. The
+[delivery and next qualification step](stage0/on-demand-census.md) name the
+remaining work; the criterion snapshots are retained in the evidence repository.
+
 | ID | Decision / experiment | Decision status |
 | --- | --- | --- |
 | D1 | Use the x8632-derived data-layout subset, with explicit Wasm execution-state replacements. | Decided. |
@@ -326,8 +341,8 @@ Use S<stage>-LL<nn>-<letter> with an evidence kind and pinned test revision. The
 | --- | --- |
 | LL13 S0-LL13-a/b/c | a: reject overlap/undersized ranges before publication. b: mutate shared state, then instantiate a late Worker and preserve it while initializing only owned private regions. c: concurrent C-helper activity uses distinct C stacks/current-TCR state; wrong initialization/stack-base mutants fail. |
 | LL15 S0-LL15-a | Bind every harness initializer to prerequisite state and completion, including the loader’s own dependencies. An omitted required module fails loading; a no-load path cannot satisfy a load test. |
-| LL15 S0-LL15-b | Validate the actual qualified-compiler joined census and conservative closure under contracts/census.md; include all phases, reviewed seeds, unknown edges, required initializers and external trace reconciliation. |
-| LL15 S0-LL15-c | Independently specified missing-node/edge/seed, concealed unknown-call and cyclic initializer mutants must be rejected by the instrumentation and gate path. |
+| LL15 S0-LL15-b | Qualify the retained native census instrument, reviewed seeds, transitive startup worklist with explicit unknowns, identity-bound queries and scenario-specific native call-site witnesses under contracts/census.md v0.2. No exhaustive native callee-bound claim. |
+| LL15 S0-LL15-c | Independently reject missing required inputs/dependencies/seeds, concealed unknowns, wrong identities, witness-to-bound promotion, invalid initializer prerequisites and broken native witness semantics through the instrument publication path. |
 | LL23 S0-LL23-b | Prove frame order, lexical identities, source-site maps, unavailable-value policy, moved roots and frame restoration across suspension/nested debugging/EH under contracts/debug-frames.md. Reject stale-slot, generation and metadata mutants. |
 | LL19 S0-LL19-a/b | a: EH through nested frames and cleanup that throws restores bindings, roots and VSP/TSP/CSP, preserves all values and suppresses post-exit effects. b: test the chosen emitted/C boundary and restart/result contracts explicitly. |
 | LL20 S0-LL20-a | Suspend inside nested Lisp state, collect/install code and resume without suspension-triggered cleanup. Verify the same continuation, bindings and complete values. |

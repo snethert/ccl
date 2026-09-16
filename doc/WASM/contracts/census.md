@@ -1,8 +1,22 @@
-# Census and bootstrap closure contract v0.1
+# Census instrument and bootstrap closure contract v0.2
 
-Status: schema and acceptance algorithm specified; [reversible native observation](../stage0/native-census.md) has executed, but the complete qualified census remains open. `census.schema.json` describes the exchange format. `tools/check-census.py` checks required shape, referential integrity, conservative reachability and initializer ordering; it does not prove that compiler instrumentation discovered every edge. That coverage requires S0-LL15-b/c and their omission mutants.
+Status: the user authorized the on-demand Stage 0 policy on 15 September 2026. LL15-b/c now qualify the retained native instrument and its explicit worklist; they do not require exhaustive bounds for every computed call in the native image. Neither slot is executed or accepted by this policy change. The query tools are described in the [on-demand census report](../stage0/on-demand-census.md).
 
-## Required records
+`census.schema.json` and `tools/check-census.py` remain unchanged. They check required shape, referential integrity, conservative reachability and initializer ordering for an actual closure claim. A working graph with unresolved edges still fails that check. Passing an instrument test must never be reported as passing the complete-closure checker.
+
+## Stage 0 instrument qualification
+
+S0-LL15-b requires one reproducible entry point over retained, identity-bound compiler, load, startup, binding and registry evidence, with a native call-site witness path in a disposable pristine U1 environment. Reuse the reviewed observations and their R6 records; do not require another full build merely to query them. Retain the correlated capture outside temporary storage, its preparation recipe, exact executed sources, failures and recovery evidence.
+
+Publish the reviewed seed recipe, the compact transitive startup graph and named unresolved populations. Distinguish executions and namespaces, observed references, proven candidate bounds, missing body witnesses, unqualified lowerings, and profile dispositions. The graph must traverse actual function/cell/registry relations rather than use module membership fan-outs to conceal seed omissions. Any retained broad conservative relation must remain explicit. Do not remove an obligation merely because this instrument cannot answer it. Retain external trace reconciliation and the operator/lowering and initializer joins as identified inputs or outstanding obligations.
+
+Queries must select exact identities within a named capture, retain input hashes and answer the declared question. A printed name is a search key, not a cross-run identity. Native probes must bind a source definition and call site, run a stated scenario, record the actual selected targets, preserve argument evaluation, values and nonlocal exits, and demonstrate restoration. A private source recompilation is not proof of identity with an old resident function. An event recorded before dispatch does not prove entry or completion. Report absent, unreached, refused and truncated observations explicitly; none is a bound or an unsupported disposition. A witness remains scenario-specific even when every recorded event is valid.
+
+S0-LL15-c independently tests this publication path against known native dependencies and literal behavior oracles. Reject a missing required seed/node/edge or input, a deleted unresolved population, a wrong execution or source/site identity, a damaged artifact, promotion of observed targets to exhaustive bounds, and an invalid initializer prerequisite. Exercise omitted events, dropped values and broken nonlocal restoration in the native witness path. The suite must distinguish a valid negative answer from an incomplete positive witness. Preserve the original failures and demonstrate that omission cannot become qualified evidence simply by regenerating a matching summary. Independent adversarial review and explicit project acceptance remain required.
+
+The policy removes exhaustive native-image resolution as a Stage 0 prerequisite. It does not waive LL15-a or Stage 1's generated bootstrap requirements: every dependency and initializer actually required by the selected bootstrap must have a working implementation or replacement, correct prerequisite order and tested completion. Use the instrument to answer concrete implementation questions as they arise. Unknown dependencies remain work, and a no-load build is not a load test.
+
+## Exchange records for a closure claim
 
 - A baseline revision, profile, full instrumentation/input hashes and externally retained trace hash.
 - Reviewed seeds naming the selected cold-start entrypoints, loader dependencies, compiler/read/error entrypoints and required compile/load-time effects. A seed-set revision change invalidates the old closure result.
@@ -10,7 +24,7 @@ Status: schema and acceptance algorithm specified; [reversible native observatio
 - Edges with source/target identity, phase (`read`, `macroexpand`, `compile`, `load`, `run`, `callback`), observed-versus-conservative origin and complete candidate targets for indirect calls. Joins from operator/lowering records to functions/modules are explicit edges, not name-only matching.
 - Initializers with prerequisites, a topological initialization rank and the completion assertion. Cycles in ordinary function dependencies are allowed. Initialization cycles require an explicit seed/phase split that produces an acyclic effect schedule; ignoring a cycle is not a disposition.
 
-## Conservative fixed point
+## Conservative fixed point for a closure claim
 
 Start at all reviewed seeds and add every candidate target of each outgoing edge until the reachable set stops growing. Every possible target on an indirect edge is included, even if the observed run never selected it. For reflection, dynamic REQUIRE or computed names, either enumerate a sound bounded candidate set, widen to the containing supported module/package surface with justification, or leave the edge unresolved. An unresolved edge reachable from a required seed blocks closure acceptance.
 
@@ -22,4 +36,4 @@ Conservatively assumed edges retain the source evidence and reviewer rationale. 
 
 Record the exact macOS cold-start command, environment and external file-activity tracing command, and retain its raw output with a SHA-256 digest. Use a macOS tracer such as `fs_usage` or DTrace with adequate file-operation coverage and recorded permissions; a trace that cannot observe the process or loses events does not qualify. Trace availability is a census prerequisite, not a reason to change the reference platform. Filter and classify file operations with an identified parser revision. Compare native module/load order with the static projection, accounting explicitly for REQUIRE, conditional loads and trace-only files. Every observed module must map to a node reachable under the declared native scenario. Every static-but-unobserved required module remains included and receives a reason; absence from a trace never removes it.
 
-S0-LL15-b accepts the joined instrumented graph, not source regex counts. S0-LL15-c deletes a required edge/node, conceals an unknown indirect edge, removes a loader seed and creates an invalid initializer prerequisite in separate mutants. The complete census/gate path must reject each. The tests retain independent expected dependencies so an incomplete producer and a permissive consumer cannot agree on the same omission.
+The instrument retains these observations and their scope; it does not turn trace coverage into a proof of all possible future loads. When a later deliverable claims a complete closure, independently specified missing-edge/node/seed, concealed-unknown-call and cyclic-initializer mutants must still fail the complete checker. The unchanged checker is never made permissive to obtain instrument acceptance.

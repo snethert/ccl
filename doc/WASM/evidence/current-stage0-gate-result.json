@@ -2,22 +2,42 @@
   "version": 2,
   "assessment": "SCOPED_EXECUTION_COMPOSITE",
   "date": "2026-09-15",
-  "basis": "LL15-a executes the hand-built bootstrap closure on Node/V8: three phases, four modules and nine initializers bound to prerequisite completion words and service state, loader dependencies seeded before any bundle, fourteen named refusals including an omitted required module, eight rejected loader mutants including a no-load path, and ten production-role omissions. The ENGINE-a, LL21-c, LL19-a and CONTRACTS-a executions remain unreviewed. The unchanged production slot gate reports only the unreviewed reasons. All 40 accepted per-record bindings stay current; their execution is reused. No full historical artifact scan.",
+  "basis": "Integration of the wasm2-claude branch after Codex's review: the five Claude-executed slots (ENGINE-a, both LL21-c variants, LL19-a, CONTRACTS-a, LL15-a) enter as unreviewed executions with their original envelopes; Codex found defects in LL19-a and in the floating-point auxiliary that corrections must address before any acceptance. All 40 accepted per-record bindings stay current; their execution is reused. No full historical artifact scan.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
-      "unreviewed S0-CONTRACTS-a [complete-report]",
-      "unreviewed S0-ENGINE-a [complete-report]",
       "missing S0-LL15-b [native]",
       "missing S0-LL15-c [native]",
+      "unreviewed S0-ENGINE-a [complete-report]",
       "unreviewed S0-LL21-c [shared-template]",
       "unreviewed S0-LL21-c [unshared-template]",
       "unreviewed S0-LL19-a [full]",
+      "unreviewed S0-CONTRACTS-a [complete-report]",
       "unreviewed S0-LL15-a [full]"
     ]
   },
-  "prior_result_sha256": "32396daa40dde01647f71e67832a87428df93bab6551f5bf51c59093bab13e93",
+  "prior_result_sha256": "6b5cbc7d8fa4cbe9f33d69435cb8efe058998a83154531f499bf70836d509328",
   "new_results": [
+    {
+      "id": "S0-ENGINE-a",
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-engine-matrix-r1/results.json",
+      "sha256": "da712c6d2d17fd68c65daf518566e123a7cc92f2dd0d753bb56f84430694812e"
+    },
+    {
+      "id": "S0-LL21-c",
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-materialization-r1/results.json",
+      "sha256": "142a4fd38d35fb5ea2256f48fb86fc966b369689347fc16cfa8153df74d5eb97"
+    },
+    {
+      "id": "S0-LL19-a",
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-nested-eh-r1/results.json",
+      "sha256": "86a7986456380ea0eebdd2a38a252341c194c541be495006fe48cf09b002ef84"
+    },
+    {
+      "id": "S0-CONTRACTS-a",
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-contracts-r1/results.json",
+      "sha256": "9efd94d16463d4c54276325e733218fca8440b9cd48e76b00ac9c65b570044be"
+    },
     {
       "id": "S0-LL15-a",
       "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-initializer-binding-r1/results.json",
@@ -28,7 +48,7 @@
   "combined_results_sha256": "c5b5049754463d3be79cb7506906413a6dbe27c423c5189d8cb333fcf8975cf4",
   "inventory": {
     "locator": "stage0/inventory.json",
-    "sha256": "2a8fb15f869c30744da100933bee615007a2fefa09c3760bbd440fff161a8019"
+    "sha256": "42cc3bd7378f27882f582b9cecfbc3b6998681cee39bb47c08b84dba2aac1be3"
   },
   "active_results": [
     {

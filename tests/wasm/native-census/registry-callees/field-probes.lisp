@@ -1,0 +1,52 @@
+(in-package :census-finite-probes)
+
+(defstruct callback-box (callback '1+))
+(defun callback-producer () '1-)
+
+(defun field-run ()
+  (let* ((*captures* nil) (rows nil)
+         (backend ccl::*host-backend*) (old (ccl::backend-p2-compile backend))
+         (box (make-callback-box)) (source (make-callback-box :callback '1-)))
+    (dolist
+      (spec
+       (list
+        (list "fixed" '(lambda (box) (setf (callback-box-callback box) '1+)
+                          (funcall (callback-box-callback box) 5)) (list (list box)) '(6))
+        (list "parameter" '(lambda (box fn) (setf (callback-box-callback box) fn)
+                              (funcall (callback-box-callback box) 5))
+              (list (list box '1+) (list box '1-)) '(6 4))
+        (list "keyword" '(lambda (box &key (fn '1+)) (setf (callback-box-callback box) fn)
+                            (funcall (callback-box-callback box) 5))
+              (list (list box) (list box :fn '1-) (list box :fn '1- :fn '1+)) '(6 4 4))
+        (list "copy" '(lambda (box source)
+                         (setf (callback-box-callback box) (callback-box-callback source))
+                         (funcall (callback-box-callback box) 5))
+              (list (list box source)) '(4))
+        (list "returned" '(lambda (box) (setf (callback-box-callback box) (callback-producer))
+                             (funcall (callback-box-callback box) 5)) (list (list box)) '(4))
+        (list "mixed" '(lambda (box flag fn)
+                          (setf (callback-box-callback box) (if flag '1+ fn))
+                          (funcall (callback-box-callback box) 5))
+              (list (list box t '1-) (list box nil '1-)) '(6 4))
+        (list "assigned" '(lambda (box fn)
+                             (setq fn (callback-producer))
+                             (setf (callback-box-callback box) fn)
+                             (funcall (callback-box-callback box) 5)) (list (list box '1+)) '(4))
+        (list "error-result" '(lambda (box flag)
+              (handler-case
+                  (progn
+                    (setf (callback-box-callback box)
+                          (if flag '1+ (ccl::%err-disp ccl::$xwrongtype nil 'function)))
+                    (funcall (callback-box-callback box) 5))
+                (error () -1))) (list (list box t) (list box nil)) '(6 -1))))
+      (destructuring-bind (name form inputs expected) spec
+        (let* ((*case* name) (fn (with-observer (lambda () (compile nil form))))
+               (actual (mapcar (lambda (args) (apply fn args)) inputs)))
+          (unless (equal actual expected) (error "FIELD-NATIVE-RESULT ~s ~s" name actual))
+          (push (obj "case" name "results" actual) rows))))
+    (unless (eq old (ccl::backend-p2-compile backend)) (error "FIELD-OBSERVER-RESTORATION"))
+    (with-open-file (out (ccl:getenv "FINITE_OUTPUT") :direction :output :if-exists :error :external-format :utf-8)
+      (ccl-startup-census::json
+       (obj "captures" (reverse *captures*) "checks" (reverse rows)
+            "snapshot" (ccl-startup-census::snapshot) "restored" :true) out)
+      (terpri out))))

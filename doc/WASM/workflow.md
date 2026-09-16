@@ -6,7 +6,7 @@ The native census requires a qualified native build of the implementation revisi
 flowchart TD
     A[0A: Pin v1.13 baseline, evidence and inventories]
     A --> G[Gate 0: qualify native v1.13; capture R6 controls]
-    G --> C[0B: evaluated compiler census and conservative closure]
+    G --> C[0B: retained census instrument and explicit startup worklist]
     G --> T[External macOS cold-start file tracing]
     C --> J[Join operators, lowering, functions, modules and initialization]
     T --> J
@@ -14,7 +14,7 @@ flowchart TD
     P --> I[0D: integrated GC, I/O interrupt, EH, C stack and Worker lifecycle]
     P --> B[0E: B decision and reviewed correctness]
     I --> B
-    J --> Q[0F: close census and remaining evidence]
+    J --> Q[0F: qualify census tools and remaining evidence]
     B --> Q
     I --> Q
     Q --> S[Stage 0 accepted only when every required slice passes]
@@ -25,4 +25,4 @@ The initial harness is an implementation aid within 0C. It does not complete tha
 
 The [product-risk plan](stage0/product-risk-plan.md) retains startup, scale and module-granularity work. The [B engineering choice](stage0/abi-choice.md) removes comparative timing from the implementation path. A qualified census and an authorized experimental pass-2 slice can proceed before Stage 0 acceptance, with B as the ABI and their own evidence. This does not waive correctness or claim that Stage 1 is accepted.
 
-The next work is completing the census and generating B code. Codex's [reversible native observation](stage0/native-census.md) has executed under the 12 September standing-rule exception; independent review and complete closure remain open. Functional shared-compiler changes still require an authorized author. The implementation starts from pristine U1, without the observation patch or images. Missing workload weights do not block the B choice; use census results for coverage and later representative product workloads.
+The next census work is qualifying the [on-demand tools](stage0/on-demand-census.md) and their explicit worklist under the user's 15 September decision. Exhaustive native computed-call bounds no longer gate Stage 0; observed targets remain scenario-specific witnesses and unresolved populations stay visible. The complete-closure checker remains strict. Stage 1 must implement and execute its required bootstrap dependencies and initializers. Functional shared-compiler changes still require an authorized author. Implementation starts from pristine U1, without the observation patch or images. Missing workload weights do not block B; use the instrument for concrete dependency questions and later representative product workloads.

@@ -3095,6 +3095,80 @@
       }
     },
     {
+      "id": "CORRELATED-QUERY-BASE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-correlated-query-base-r1/packet.json",
+      "sha256": "c1a38143e34a23c1a517b8845e430cb6721bd5f57dfa92bb2981e8eb2b733a7b",
+      "scope": "Retained native observation and recovery evidence only. No exhaustive bound, Wasm qualification or gate credit.",
+      "execution_status": "PASS",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude",
+        "record": "stage0/claude-review.md",
+        "review_commit": "e0c73b10",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "scope": "Retained native observation, R6, recovery and original failures; no exhaustive bounds or gate credit."
+      }
+    },
+    {
+      "id": "ON-DEMAND-CENSUS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-on-demand-census-r1/packet.json",
+      "sha256": "6d921108479b45d152db31eff58b2fa48329a476de846b76ff72db780f26ebab",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Native on-demand query/witness tools and final explicit startup worklist. No exhaustive callee bounds, Wasm execution, complete closure or LL15 acceptance."
+    },
+    {
+      "id": "CENSUS-BUILTIN-SLOTS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-builtin-slots-r1/packet.json",
+      "sha256": "4d1c3de7bc024653b164ae6f8f99046b40cb12ddbfb96f71d83f55274e0a063c",
+      "scope": "1,500 original-build calls grouped by eight operand slots; 1,562 computed calls separate. Native source interpretation and graph consolidation only; no target implementation or runtime bound qualified.",
+      "execution_status": "BLOCKED",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude",
+        "record": "stage0/claude-review.md",
+        "review_commit": "e0c73b10",
+        "disposition": "EXECUTION_REPRODUCED_NO_DEFECT",
+        "scope": "Five analysis outputs and graph reproduced with 32 rejecting controls. New publication metadata has not been independently reviewed."
+      }
+    },
+    {
+      "id": "CENSUS-FINITE-CHAIN-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-finite-chain-r1/packet.json",
+      "sha256": "ac234dde863df2be324fcf75057370b8fc4b7fbca31e4a45af9a0a83f9c3721d",
+      "scope": "Four existing finite-expression passes replayed from one committed resolver tree: 124 proofs, 1438 unknown expressions. Symbol-cell values and target lowerings remain open; no complete census or gate credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
+    },
+    {
+      "id": "CENSUS-REGISTRY-HISTORY-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-registry-history-r1/packet.json",
+      "sha256": "302716fbbf9d17e3557509271a5c471dfa989c1c568071874d802d7a22e29835",
+      "scope": "Preserved development body/registry analyses and the earlier 84-unit startup capture; no source-version attribution where an executed snapshot is absent, no qualified 4373-body completion or gate credit.",
+      "execution_status": "HISTORICAL_UNQUALIFIED",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
+    },
+    {
+      "id": "CODEX-CLAUDE-BRANCH-REVIEW-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-codex-branch-review-r1/packet.json",
+      "sha256": "f195be814b78ac35e7420140b1776aee69abdd50c198d8343e16dc342889b962",
+      "scope": "Independent Codex review of nine Claude commits; two reproduced defects in nested unwind and optional float exactness, seven retained verifiers passing, engine replay refused after Firefox changed, current engine observations retained. No acceptance or gate credit; merge withheld.",
+      "execution_status": "DEFECTS_REPRODUCED",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
+    },
+    {
       "id": "KERNEL-IMPORTS-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-kernel-imports-r1/packet.json",
       "sha256": "3c3d90cda88355ad6ba39286412004b29ab4641ad78524eeb7501224773f627d",

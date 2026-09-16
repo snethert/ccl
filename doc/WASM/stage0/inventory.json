@@ -544,7 +544,7 @@
       "assertions": [
         {
           "id": "S0-LL15-b:contract",
-          "description": "Validate the actual qualified-compiler joined census and conservative closure under contracts/census.md; include all phases, reviewed seeds, unknown edges, required initializers and external trace reconciliation."
+          "description": "Qualify the retained native census instrument, reviewed seeds, transitive startup worklist with explicit unknowns, identity-bound queries and scenario-specific native call-site witnesses under contracts/census.md v0.2. No exhaustive native callee-bound claim."
         }
       ],
       "status": "NOT_RUN",
@@ -573,7 +573,7 @@
       "assertions": [
         {
           "id": "S0-LL15-c:contract",
-          "description": "Independently specified missing-node/edge/seed, concealed unknown-call and cyclic initializer mutants must be rejected by the instrumentation and gate path."
+          "description": "Independently reject missing required inputs/dependencies/seeds, concealed unknowns, wrong identities, witness-to-bound promotion, invalid initializer prerequisites and broken native witness semantics through the instrument publication path."
         }
       ],
       "status": "NOT_RUN",

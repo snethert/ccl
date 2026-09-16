@@ -17,6 +17,10 @@
     {
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-artifact-policy-r1/decision.json",
       "sha256": "adcfda283847909522b673cc45eeec62aef84a20a3ba93a8593c37edf4156664"
+    },
+    {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-on-demand-census-r1/decision.json",
+      "sha256": "48afa43b2a3f8e87322a145eb8d898d6445702fc983e1ca27ef1934100ff4612"
     }
   ]
 }
