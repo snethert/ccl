@@ -87,6 +87,17 @@ exit criteria, plus two entries proposed from Stage 0 findings.
 - Profile: the single-thread JSPI profile is deferred to the profiles stage.
   Stage 1 runs on the full profile with one Worker.
 
+## Obligations carried from Stage 0 by name
+
+The [Stage 0 exit-criteria review](../stage0/exit-criteria-review.md)
+carries four census enumerations into this stage under census contract
+v0.2: the kernel-import join (65 imports, dispositions decided), the trap
+class join (vocabulary decided, 143 native sites inventoried), the direct
+foreign-call inventory (eight startup surfaces named) and the classification
+of barrier-sensitive stores. Imports and foreign calls fall due in 1A and
+1E, traps in 1C, and store classification before the Stage 2 multi-Worker
+collector; the single-thread collector of 1D needs no barrier.
+
 ## Rules carried forward
 
 Small commits with one deliverable each; every packet reproduced by its

@@ -737,3 +737,7 @@ Nonblocking observations. Codex imported the audit without the branch's five D6 
 
 Disposition: LL15-PROJECT-ACCEPTANCE-20260916 REVIEWED_NO_DEFECT_FOUND. Stage 0's slot inventory is complete at 48 accepted; what remains for Stage 0 completion under the outline is the exit-criteria review, and the user's Stage 1 decisions stand where the plan lists them.
 
+
+## Sixty-first Claude audit — Stage 0 exit-criteria review, at 821eac19 — 16 September 2026
+
+Recorded by Claude directly. This is the subgate 0F document, [exit-criteria-review.md](exit-criteria-review.md): the outline's Stage 0 sentences and the acceptance policy's standing gate requirements mapped to accepted slots and recorded decisions. Verdict: no gap requiring a scope decision; four census enumerations are carried into Stage 1 by name under census contract v0.2. Invariants: ledger PASS at 48 of 48, document checks PASS, no record changed.

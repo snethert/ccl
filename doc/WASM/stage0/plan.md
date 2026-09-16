@@ -22,7 +22,7 @@ is now accepted; the remaining unknowns guide implementation work.
 | 0C — representation and engine foundations | 0A | Engine/version/features; layout fixtures; debugger frame maps; exact linked C memory/table ownership, per-Worker stack and initialization maps; materialized profile binaries. Independent fixtures and specified rejection cases pass. |
 | 0D — integrated control and concurrency | 0C | One hand-built harness combines moving-root restoration, competing GC requests, interruptible unfinished I/O, nested callbacks, late Workers, lazy installation and EH crossing C helpers. Deterministic and seeded schedules meet progress/resource limits. |
 | 0E — ABI decision/correctness | B correctness prerequisites | Record the B engineering choice and its reviewed correctness basis: arguments, result ownership, frames, cleanup and debugger policy. Comparative measurements are deferred; they do not block B implementation. |
-| 0F — acceptance | 0B–0E | All Stage 0 IDs, standing controls, outline exit criteria, source/test/artifact hashes and negative controls are present; review records actual evidence scope. Unresolved mandatory work blocks Stage 1. |
+| 0F — acceptance | 0B–0E | All Stage 0 IDs, standing controls, outline exit criteria, source/test/artifact hashes and negative controls are present; review records actual evidence scope. Unresolved mandatory work blocks Stage 1. [Exit-criteria review](exit-criteria-review.md): every outline sentence mapped to accepted evidence or a recorded decision; four census enumerations carried into Stage 1 by name. |
 
 ## Baseline qualification and R6
 
