@@ -296,7 +296,7 @@
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
       "currency": "ORIGINAL_FAILURE",
-      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged."
+      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged."
     },
     {
       "id": "INTEGRATED-RUNTIME-r10",
@@ -1498,7 +1498,7 @@
       "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Control execution on macOS: the wasm32 layout schema v1 is derived from the pinned U1 x8632 architecture source and cross-checked against the U1 C header; every derived row carries a source-to-target disposition; the initial contracts/layout.json subset agrees; the committed schema equals the regeneration. The runtime-contract join v1 verifies frames, roots, TCR fields, allocation/store protocols and C-boundary restoration against the accepted fixtures\u2019 retained schemas and cases by artifact hash, and re-derives the link-derived memory/table ownership map from retained link metadata. Nine synthetic controls are refused. This reviews contracts against executed evidence; it executes no Wasm and confers no runtime acceptance of its own.",
+      "scope": "Control execution on macOS: the wasm32 layout schema v1 is derived from the pinned U1 x8632 architecture source and cross-checked against the U1 C header; every derived row carries a source-to-target disposition; the initial contracts/layout.json subset agrees; the committed schema equals the regeneration. The runtime-contract join v1 verifies frames, roots, TCR fields, allocation/store protocols and C-boundary restoration against the accepted fixtures’ retained schemas and cases by artifact hash, and re-derives the link-derived memory/table ownership map from retained link metadata. Nine synthetic controls are refused. This reviews contracts against executed evidence; it executes no Wasm and confers no runtime acceptance of its own.",
       "authorship": "Claude Fable 5.1 fixture and generated contracts on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision.",
       "external_review": {
         "reviewer": "Codex",
@@ -1524,7 +1524,7 @@
       "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Hand-built bootstrap closure on macOS Node/V8: three phases, four wasm32 modules and nine required initializers. The loader validates the manifest against the supplied modules before instantiating anything, seeds its own dependencies before any bundle exists, binds every initializer to its prerequisites\u2019 physical completion words and required service state, checks each completion physically after the initializer returns, and publishes ready only after every required initializer completed. Fourteen refusals cover omitted and wrong modules, manifest defects, wrong or unwritten completions, a raised initializer, a clobbered prerequisite and wrong service state; eight loader mutants including a no-load path are rejected by the unchanged oracle over the whole memory image. Not the qualified census closure, the production loader, image format or generated code.",
+      "scope": "Hand-built bootstrap closure on macOS Node/V8: three phases, four wasm32 modules and nine required initializers. The loader validates the manifest against the supplied modules before instantiating anything, seeds its own dependencies before any bundle exists, binds every initializer to its prerequisites’ physical completion words and required service state, checks each completion physically after the initializer returns, and publishes ready only after every required initializer completed. Fourteen refusals cover omitted and wrong modules, manifest defects, wrong or unwritten completions, a raised initializer, a clobbered prerequisite and wrong service state; eight loader mutants including a no-load path are rejected by the unchanged oracle over the whole memory image. Not the qualified census closure, the production loader, image format or generated code.",
       "authorship": "Claude Fable 5.1 fixture on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision.",
       "external_review": {
         "reviewer": "Codex",
@@ -3486,7 +3486,7 @@
       "scope": "Production TCR schema v1 under D5: 47 fields in nine D5 field groups with explicit offsets, widths, alignments, classification and ownership, joined to every replaced or deferred native TCR cell of the wasm32 layout schema and to every TCR field the accepted fixtures use, each fixture field mapped to one production field or declared fixture-private. Control execution over the committed contracts; no Wasm executed, no gate credit. The schema is the Stage 1 build target D5 owes; it does not claim executed proof.",
       "execution_status": "PASS",
       "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
-      "currency": "CURRENT",
+      "currency": "SUPERSEDED",
       "availability": "EXTERNAL_LOCAL_STORE",
       "supersedes": "TCR-SCHEMA-R1",
       "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's review 7e941a8d; follow-up adversarial review by Codex pending.",
@@ -3496,7 +3496,9 @@
         "reviewed_revision": "6c78877d",
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "scope": "R3 follow-up and preceding R1/R2 reviews; no defect at the stated fixture or diagnostic scope. Acceptance is recorded separately."
-      }
+      },
+      "superseded_by": "TCR-SCHEMA-R3",
+      "supersession_reason": "Extended under the decided D6 policy: fp_control added at offset 200 (48 fields). R2 stays the reviewed-without-defect record of the 47-field schema."
     },
     {
       "id": "FLOAT-DETECTION-R3",
@@ -3505,7 +3507,7 @@
       "scope": "Hand-built wasm32 checked floating-point operations on macOS Node/V8: f64 add, sub, mul, div and sqrt classified as exact, overflow, division-by-zero, invalid, underflow or inexact without engine flags, a checked float-to-integer conversion that never traps, and the f32 default-mode slice. Overflow, division by zero and invalid come from operand and result classification; underflow and inexact from error-free witnesses (TwoSum, scaled TwoProduct, residuals) with exact power-of-two scaling for small results, small operands and operands near the largest exponent; tininess decided after rounding as IEEE 754 and x86 define it, including results that round up to the smallest normal. Corpus cases with expectations from exact rational rounding in Python; every f64 case also executed natively with SSE scalar instructions on this x86-64 Mac, MXCSR flags and result bits agreeing with the oracle; eleven module mutants rejected. Specification evidence for the D6 floating-point hypothesis; no policy decision, no gate credit.",
       "execution_status": "PASS",
       "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
-      "currency": "CURRENT",
+      "currency": "SUPERSEDED",
       "availability": "EXTERNAL_LOCAL_STORE",
       "supersedes": "FLOAT-DETECTION-R2",
       "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's R2 review ed54b7fa; follow-up adversarial review by Codex pending.",
@@ -3515,7 +3517,9 @@
         "reviewed_revision": "6c78877d",
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "scope": "R3 follow-up and preceding R1/R2 reviews; no defect at the stated fixture or diagnostic scope. Acceptance is recorded separately."
-      }
+      },
+      "superseded_by": "FLOAT-DETECTION-R4",
+      "supersession_reason": "Extended under the decided D6 policy: enable mask, flags per status, ARM priority and signalling comparisons executed (2,135 cases, 1,656 native, fourteen mutants). R3 stays the reviewed-without-defect detection record."
     },
     {
       "id": "CODEX-R2-PROBES-ON-R3",
@@ -3547,6 +3551,30 @@
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE"
+    },
+    {
+      "id": "TCR-SCHEMA-R3",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-tcr-schema-r3/packet.json",
+      "sha256": "4d07e1c4291b47fef8ef61a0212f9d9462de4b1c799ea5317ce59e5f0c58228a",
+      "scope": "Production TCR schema v1 under D5: 48 fields in nine D5 field groups with explicit offsets, widths, alignments, classification and ownership, joined to every replaced or deferred native TCR cell of the wasm32 layout schema and to every TCR field the accepted fixtures use, each fixture field mapped to one production field or declared fixture-private. Control execution over the committed contracts; no Wasm executed, no gate credit. The schema is the Stage 1 build target D5 owes; it does not claim executed proof.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "supersedes": "TCR-SCHEMA-R2",
+      "authorship": "Claude Fable 5.1 on branch wasm2-claude under the user's 16 September D6 policy decision; adversarial review by Codex pending."
+    },
+    {
+      "id": "FLOAT-DETECTION-R4",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-float-detection-r4/packet.json",
+      "sha256": "b8e6dc7b4c33484545c0bdfc1d44293d323f4b4c5fae1ce157cd51f93f88dd61",
+      "scope": "Hand-built wasm32 checked floating-point operations on macOS Node/V8: f64 add, sub, mul, div and sqrt classified as exact, overflow, division-by-zero, invalid, underflow or inexact without engine flags, a checked float-to-integer conversion that never traps, and the f32 default-mode slice. Overflow, division by zero and invalid come from operand and result classification; underflow and inexact from error-free witnesses (TwoSum, scaled TwoProduct, residuals) with exact power-of-two scaling for small results, small operands and operands near the largest exponent; tininess decided after rounding as IEEE 754 and x86 define it, including results that round up to the smallest normal. Corpus cases with expectations from exact rational rounding in Python; every f64 case also executed natively with SSE scalar instructions on this x86-64 Mac, MXCSR flags and result bits agreeing with the oracle. The D6 policy layer decided on 16 September (the ARM model): a logical enable mask, hardware-style flags per status, ARM priority among enabled flags, and signalling comparisons, executed for every status under seven masks and witnessed natively for comparisons; fourteen module mutants rejected. Specification evidence for D6; no gate credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "supersedes": "FLOAT-DETECTION-R3",
+      "authorship": "Claude Fable 5.1 on branch wasm2-claude under the user's 16 September D6 policy decision; adversarial review by Codex pending."
     }
   ]
 }

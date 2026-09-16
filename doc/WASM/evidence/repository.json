@@ -2,24 +2,26 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "1ce6d62c1bd5b65d07668825ec5167e71c8c1981",
+  "commit": "8fa80fa8bfea3d9e6fb87061f6cb5e7b13f6f0f6",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "f8fc1ed747e051e988de9b692ae1d28ba9b87b4a0ef45a484ea32f5517bca337",
-  "immutable_evidence_files": 167853,
+  "catalog_sha256": "e47e37b4167ab8bd1b1d01c1b4f8d90fb0fa71762cf6217ae751360c84bc7773",
+  "immutable_evidence_files": 167993,
   "indexed_references_verified": 6248,
-  "source_index_snapshot": "catalog/source-index-2026-09-16-six-slot-project-acceptance.json",
-  "source_index_sha256": "6dfef7896730aa68041fbf796e90dd7edc4ac118b7b4a649d2597c7516c028fc",
-  "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
+  "source_index_snapshot": "catalog/source-index-d6-policy.json",
+  "source_index_sha256": "2a42f61cacb161426d6a2ed869128c194c3c68c44a048b21acf2c9fcdd485bd7",
+  "verification": "Scoped addition under the D6 policy decision: 139 new catalog rows across two packets; each producer executed and verifier re-executed with deterministic files identical; earlier packets and all previous rows preserved; Codex's in-flight census-instrument directory is not catalogued here and awaits its own publication; no accepted-envelope rehash or historical payload scan.",
   "remote": null,
   "off_machine_backup": false,
   "scope": "Separate local evidence repository; original failures retained. Forty-six accepted records; only LL15-b/c instrument qualification remains missing. Generated code and production float policy remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-16-six-slot-project-acceptance",
-    "files": 1833,
-    "bytes": 7522062,
-    "immutable_evidence_files": 167853,
-    "catalog_sha256": "f8fc1ed747e051e988de9b692ae1d28ba9b87b4a0ef45a484ea32f5517bca337",
-    "aggregate": "2026-09-16-stage0-six-slot-accepted-results.json",
-    "additional_aggregate_files": 1
+    "directories": [
+      "2026-09-16-tcr-schema-r3",
+      "2026-09-16-float-detection-r4"
+    ],
+    "files": 139,
+    "bytes": 6107757,
+    "prior_commit": "1ce6d62c1bd5b65d07668825ec5167e71c8c1981",
+    "immutable_evidence_files": 167993,
+    "catalog_sha256": "e47e37b4167ab8bd1b1d01c1b4f8d90fb0fa71762cf6217ae751360c84bc7773"
   }
 }
