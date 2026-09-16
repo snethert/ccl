@@ -1091,11 +1091,16 @@ Claude reviewed b269c889, 26ab5842, 62b7b9dd and 46efc9e0 with their four eviden
 
 ## 2026-09-15 — correct the on-demand startup graph's retained base
 
-Codex addressed Claude's fifty-seventh audit with ON-DEMAND-STARTUP-R2. The new replay entry point runs bodies, bindings and graph analysis from the retained 167-unit capture, records each command before execution, and snapshots its sources. All 26 body/binding outputs are byte-identical to R1; the startup graph differs only in inherited profile text. The combined graph is now the exact union of the reviewed finite-chain base at 6d30938b and that startup worklist: 385,903 nodes and 1,126,896 edges. Original packets remain immutable; the unretained-base combined artifact is explicitly superseded. The index records the three corrective publications' actual Claude dispositions from 224a27d9 and preserves R1's narrow DEFECT_FOUND disposition. No native build, algorithm change, criterion change or gate credit is claimed.
+Codex addressed Claude's fifty-seventh audit with ON-DEMAND-STARTUP-R2. The new replay entry point runs bodies, bindings and graph analysis from the retained 167-unit capture, records each command before execution, and snapshots its sources. All 26 body/binding outputs are byte-identical to R1; the startup graph is also byte-identical, including inherited profile text. Its supersession changes provenance, not content (corrected following Claude's fifty-eighth audit). The combined graph is now the exact union of the reviewed finite-chain base at 6d30938b and that startup worklist: 385,903 nodes and 1,126,896 edges. Original packets remain immutable; the unretained-base combined artifact is explicitly superseded. The index records the three corrective publications' actual Claude dispositions from 224a27d9 and preserves R1's narrow DEFECT_FOUND disposition. No native build, algorithm change, criterion change or gate credit is claimed.
 
 ## 2026-09-15 — Claude's fifty-eighth audit of the startup provenance correction
 
 Claude reviewed 9510a8ee and ON-DEMAND-STARTUP-R2. The packet's ten files, seven pinned inputs and 232 executed sources verified against the commit; the base is the finite-chain graph at 6d30938b that Claude's own reproduce had produced. The combined graph is the exact union of that base and the unchanged startup worklist, and both a manual three-stage replay and the committed driver reproduced the retained graphs byte-identically. One wording note: the corrected startup graph is byte-identical to the original, since the inherited profile texts coincide, so the supersession is provenance only. Disposition: ON-DEMAND-STARTUP-R2 REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC; the fifty-seventh audit's provenance defect is corrected. Gate 40 accepted, 8 missing, 0 unreviewed of 48.
+
+
+## 2026-09-16 — Codex follow-up review of Claude R2 packets
+
+Reviewed wasm2-claude at 2bdcbd24. All five R2 verifiers pass, and the original cleanup-state and maximum-exponent counterexamples are corrected. Independent probes find a remaining handler CSP error and a normal/subnormal-boundary disagreement between the float module and its rational oracle. Reproducers and scoped checks are retained in CODEX-CLAUDE-BRANCH-REVIEW-R2; details are in stage0/codex-review.md. Engine, materialization, TCR and draft refreshes have no new finding. All existing wasm2 index objects are preserved by the branch. Merge remains withheld and no result is accepted.
 
 ## 2026-09-15 — correct the two review findings and refresh the engine matrix
 

@@ -1,5 +1,9 @@
 # Codex review of Claude's Stage 0 branch — 15 September 2026
 
+Latest disposition: the [16 September follow-up](#r2-follow-up--16-september-2026)
+closes the original counterexamples but finds two remaining defects. Merge
+remains withheld; the first review below is retained unchanged.
+
 Reviewed `wasm2-claude` at `b62ef7ac`, nine commits from `79e34a90` onward.
 **Two defects found; branch merge withheld.** No acceptance or criterion changes.
 The branch's ledger reproduces 40 accepted, two missing and six unreviewed;
@@ -102,3 +106,75 @@ module is assembled unchanged. Their assertions establish the defects,
 not acceptance of the implementations. Fixes need new fixture cases,
 retained executions and follow-up review; existing PASS envelopes remain
 immutable and unaccepted.
+
+## R2 follow-up — 16 September 2026
+
+Reviewed `wasm2-claude` at `2bdcbd24`, including the five R2 packets and
+the Stage 1 draft refresh. **Two findings remain; do not accept LL19-a or
+the floating-point auxiliary result yet.** No acceptance changes or merge.
+
+**1. High: unwind-to-handler invents a cleanup record.**
+`tests/wasm/stage0/nested-eh/frames.wat:84` always restores CSP to
+`saved_csp - 8`. That is the state of a frame that pushed its own cleanup.
+`$outer` pushes a frame but never calls `$push_cleanup`, then calls this
+same restoration helper before entering its handler (line 276).
+The handler therefore sees CSP 16376 instead of its saved 16384. A probe
+adding only four observation stores before event 63 reproduces this in
+the ordinary nonlocal-exit case (mode 1) and nested debugger case (mode 5).
+The final pop restores 16384 and hides the error. The debugger also saves
+the incorrect incoming CSP; its cleanup oracle checks against that saved
+value, so the new assertions pass.
+
+Restore the actual cleanup state belonging to the destination frame,
+distinguishing handler-only frames from cleanup-owning frames. Assert the
+handler's state before delivering values or entering the debugger, with an
+independent expected CSP. The original departed-frame binding/root defect
+is corrected, and all 101 deterministic R2 files reproduce, but the claimed
+restoration before handler code runs is still false.
+
+**2. Medium: floating-point implementation and rational oracle disagree at
+the normal/subnormal boundary.** The unmodified R2 module evaluates
+`2^-1022 * (1 - 2^-53)` to `2^-1022` with status 5 (inexact).
+Its own `ieee.expected` returns the same bits with status 4 (underflow).
+`checked.wat:68` tests tininess of the final result; `ieee.py:46–56` tests
+the magnitude rounded with an unbounded exponent range. The exact product
+is `2^-1022 - 2^-1075`, so this case distinguishes those definitions.
+The prose contract currently describes the module's final-result test.
+
+Resolve this policy/oracle/implementation inconsistency explicitly and add
+the boundary case to the corpus, including signs and adjacent values.
+This finding establishes a disagreement with the project's oracle, not a
+claim here about which underflow policy the project must adopt. It does
+not affect the three default-mode conditions. The original `MAX * 1`,
+`MAX * 0.5` and `MAX / 1` counterexamples now correctly report exact; all
+66 deterministic R2 files and eight mutants reproduce.
+
+The other updates have no new finding:
+
+- Engine matrix: all four engines replay; 361 deterministic files match,
+  including Firefox 156's JSPI execution.
+- Materialization: 370 deterministic files match, with Safari providing
+  the profile-not-admitted control.
+- TCR schema: 12 deterministic files match; `mv_count` now explicitly
+  includes value0 in the complete ordered sequence.
+- Stage 1 draft: on-demand census and current-machine JSPI wording are
+  refreshed, and corpus execution no longer claims general proof. The
+  draft remains unadopted.
+- Integration: all 288 index records from current `wasm2` are preserved
+  as complete objects, including historical records. LL15 inventory entries
+  are unchanged. Shared upstream source is untouched. The branch's ledger
+  and document checks pass at 40 accepted, 2 missing, 6 unreviewed.
+
+Packet `CODEX-CLAUDE-BRANCH-REVIEW-R2` retains verifier logs, scoped checks
+of all 1,022 files in the five R2 manifests, and the independent probes.
+No old evidence payloads were rescanned. Run the probes against the
+reviewed checkout with:
+
+```sh
+python3 /path/to/ccl-evidence/2026-09-16-codex-branch-review-r2/repro/reproduce.py \
+  --source /path/to/ccl-claude --output /new/output
+```
+
+The assertions expect these review counterexamples. They are not acceptance
+tests; their outputs show both the fixed max-exponent cases and the two
+remaining findings.

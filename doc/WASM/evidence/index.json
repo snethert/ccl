@@ -3293,8 +3293,25 @@
       "id": "ON-DEMAND-STARTUP-R2",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-on-demand-startup-r2/packet.json",
       "sha256": "35c3ac3ff46028fc209fecfee4f553374442bdca0b587f1e50b28d21ab3064e6",
-      "scope": "All three startup-analysis stages replayed on retained native inputs and reviewed finite-chain base; original body/binding outputs byte-identical, startup graph identical except inherited profile, combined graph exact union. Corrects the fifty-seventh audit provenance finding without changing census semantics or claiming complete closure.",
+      "scope": "All three startup-analysis stages replayed on retained native inputs and reviewed finite-chain base; original body/binding outputs byte-identical, startup graph byte-identical including inherited profile, combined graph exact union. Corrects the fifty-seventh audit provenance finding without changing census semantics or claiming complete closure.",
       "execution_status": "PASS",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude",
+        "record": "stage0/claude-review.md",
+        "review_commit": "f00f77ef",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "scope": "Fifty-eighth audit: retained-base provenance and both manual and driver replays verified; previous provenance defect closed. Startup graph supersession changes provenance, not bytes. No gate credit."
+      }
+    },
+    {
+      "id": "CODEX-CLAUDE-BRANCH-REVIEW-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-codex-branch-review-r2/packet.json",
+      "sha256": "7f101fcd9cc0929ee91266ef02a13a6614924a7153794fb9b56a123d5dce19dc",
+      "scope": "Independent follow-up review: five R2 replays pass, residual handler-CSP defect and float module/oracle boundary disagreement reproduced; no merge or acceptance.",
+      "execution_status": "DEFECTS_REPRODUCED",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE"
