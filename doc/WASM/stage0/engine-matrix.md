@@ -1,9 +1,13 @@
 # Engine and profile matrix — 15 September 2026
 
 Status: S0-ENGINE-a [complete-report] EXECUTED and PASSING at its stated
-scope; awaiting Codex's adversarial review under the 15 September role switch,
-then the user's acceptance decision. Packet `ENGINE-MATRIX-R1` in the evidence
-repository. Stage 0 is **40 accepted, two missing and six unreviewed of 48** after the later executions.
+scope in its refreshed form `ENGINE-MATRIX-R2`, awaiting Codex's follow-up
+review and then the user's acceptance decision. `ENGINE-MATRIX-R1` is
+retained: it recorded Firefox 147.0.4 without JSPI, and Codex's review found
+that Firefox had since changed to 156.0 and now executes the suspending
+import, so the retained verifier refuses on that engine. The refresh records
+the current machine. Stage 0 is **40 accepted, two missing and six
+unreviewed of 48**.
 
 Authorship: Claude Fable 5.1 wrote this fixture on branch `wasm2-claude`. The
 user directed on 15 September that Claude author the non-census Stage 0 slots
@@ -46,7 +50,7 @@ hosting constraint the outline records for the full profile.
 | --- | --- | --- | --- | --- | --- | --- |
 | Node/V8 (reference) | v25.6.1 / V8 14.1.146.11-node.19 | admitted | admitted | admitted | yes | yes |
 | Chrome (headless) | 153.0.8010.36 | admitted when isolated | admitted | admitted | yes | yes |
-| Firefox (headless) | 147.0.4 | admitted when isolated | not admitted: `WebAssembly.Suspending` absent | admitted | yes | yes |
+| Firefox (headless) | 156.0 (147.0.4 in R1, without JSPI) | admitted when isolated | admitted | admitted | yes | yes |
 | Safari | 26.3 | admitted when isolated | not admitted: `WebAssembly.Suspending` absent | admitted | yes | no |
 
 All four engines execute every required feature identically: ordered
@@ -91,7 +95,9 @@ Node executions and six browser pages; the matrix; environment identity with
 executable digests for Node, WABT and the three browsers; the bound result
 envelope; slot-gate and role-omission records. The verifier re-executes every
 engine and compared 361 deterministic files byte for byte; timings are never
-recorded. Producer and verifier each take about fifteen seconds.
+recorded. Producer and verifier each take about fifteen seconds. A browser
+update is exactly the case the verifier refuses by design: the R1 packet
+stays evidence about the old Firefox binary and R2 about the new one.
 
 Limits. Chrome and Firefox run headless; Safari runs through `open` and leaves
 its tabs open. The browsers are the versions installed on the reference Mac on

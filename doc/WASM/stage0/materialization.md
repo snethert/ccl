@@ -1,10 +1,14 @@
 # Template materialization — 15 September 2026
 
 Status: S0-LL21-c [shared-template] and [unshared-template] EXECUTED and
-PASSING at their stated scope from one execution; awaiting Codex's
-adversarial review under the 15 September role switch, then the user's
-acceptance decision. Packet `MATERIALIZATION-R1` in the evidence repository.
-Stage 0 is **40 accepted, two missing and six unreviewed of 48** after the later executions.
+PASSING at their stated scope from one execution, in the rerun
+`MATERIALIZATION-R2` that follows the engine-matrix refresh; awaiting
+Codex's follow-up review, then the user's acceptance decision. Codex found
+no defect in `MATERIALIZATION-R1`, which is retained; the rerun exists
+because the fixture pins the engine-matrix contract and its profile-not-
+admitted control now uses Safari's row, the only reference engine without
+JSPI after Firefox 156. Stage 0 is **40 accepted, two missing and six
+unreviewed of 48**.
 
 Authorship: Claude Fable 5.1 wrote this fixture on branch `wasm2-claude`;
 Codex reviews it. No shared compiler or upstream kernel source changed.
@@ -50,7 +54,7 @@ Twenty-three refusals, each with its specific reason: wrong offset, wrong
 original byte, wrong template hash, a tampered template with an appended
 custom section, wrong maximum, import and export inventory mismatches,
 feature mismatch, stale materializer version, unknown profile, a profile not
-admitted on the target engine (the single-thread JSPI profile on Firefox's
+admitted on the target engine (the single-thread JSPI profile on Safari's
 row from the engine matrix), an already-shared template, a defined rather
 than imported memory, an unbounded template, a template containing a wait, a
 wrong entry signature, a stale binary hash, the template hash offered as an

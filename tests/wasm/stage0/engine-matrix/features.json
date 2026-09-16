@@ -4,10 +4,42 @@
   "scope": "S0-ENGINE-a: engine identity, feature detection, executed feature semantics and each admitted profile suspension path, on hand-built wasm32 modules. No CCL object layout, generated B code, GC or production runtime is claimed.",
   "reference_engine": "node",
   "engines": {
-    "node": {"kind": "node", "role": "reference host for every Stage 0 fixture", "expected_profiles": {"full": true, "single_thread_jspi": true, "precompiled_callback": true}},
-    "chrome": {"kind": "browser", "role": "V8 browser embedding", "expected_profiles": {"full": true, "single_thread_jspi": true, "precompiled_callback": true}},
-    "firefox": {"kind": "browser", "role": "SpiderMonkey", "expected_profiles": {"full": true, "single_thread_jspi": false, "precompiled_callback": true}},
-    "safari": {"kind": "browser", "role": "JavaScriptCore", "expected_profiles": {"full": true, "single_thread_jspi": false, "precompiled_callback": true}}
+    "node": {
+      "kind": "node",
+      "role": "reference host for every Stage 0 fixture",
+      "expected_profiles": {
+        "full": true,
+        "single_thread_jspi": true,
+        "precompiled_callback": true
+      }
+    },
+    "chrome": {
+      "kind": "browser",
+      "role": "V8 browser embedding",
+      "expected_profiles": {
+        "full": true,
+        "single_thread_jspi": true,
+        "precompiled_callback": true
+      }
+    },
+    "firefox": {
+      "kind": "browser",
+      "role": "SpiderMonkey; JSPI present from Firefox 156",
+      "expected_profiles": {
+        "full": true,
+        "single_thread_jspi": true,
+        "precompiled_callback": true
+      }
+    },
+    "safari": {
+      "kind": "browser",
+      "role": "JavaScriptCore",
+      "expected_profiles": {
+        "full": true,
+        "single_thread_jspi": false,
+        "precompiled_callback": true
+      }
+    }
   },
   "features": {
     "multivalue": "function and block results in declared order",
@@ -31,13 +63,65 @@
     "absent": "the single-thread JSPI profile is not admitted on that engine; the full and precompiled-callback profiles stand on their own"
   },
   "profiles": {
-    "full": {"requires": ["shared wasm32 memory with explicit maximum", "SharedArrayBuffer (browser: crossOriginIsolated under COOP/COEP)", "memory.atomic.wait32 in a Worker", "Atomics.notify from the supervisor"], "records": ["waiter wake code 0 after notify", "mailbox value written before notify", "timed-out code 2", "not-equal code 1", "notify count 1", "growth keeps the old SharedArrayBuffer at its old length"]},
-    "single_thread_jspi": {"requires": ["WebAssembly.Suspending", "WebAssembly.promising"], "records": ["two suspensions through nested frames with a live local", "one suspension under a tail-called frame", "SuspendError-class failure outside promising"]},
-    "precompiled_callback": {"requires": ["unshared wasm32 memory", "final exception handling"], "records": ["atomic rmw/cmpxchg/load/store succeed on unshared memory", "memory.atomic.wait32 traps on unshared memory", "growth detaches the old ArrayBuffer"]}
+    "full": {
+      "requires": [
+        "shared wasm32 memory with explicit maximum",
+        "SharedArrayBuffer (browser: crossOriginIsolated under COOP/COEP)",
+        "memory.atomic.wait32 in a Worker",
+        "Atomics.notify from the supervisor"
+      ],
+      "records": [
+        "waiter wake code 0 after notify",
+        "mailbox value written before notify",
+        "timed-out code 2",
+        "not-equal code 1",
+        "notify count 1",
+        "growth keeps the old SharedArrayBuffer at its old length"
+      ]
+    },
+    "single_thread_jspi": {
+      "requires": [
+        "WebAssembly.Suspending",
+        "WebAssembly.promising"
+      ],
+      "records": [
+        "two suspensions through nested frames with a live local",
+        "one suspension under a tail-called frame",
+        "SuspendError-class failure outside promising"
+      ]
+    },
+    "precompiled_callback": {
+      "requires": [
+        "unshared wasm32 memory",
+        "final exception handling"
+      ],
+      "records": [
+        "atomic rmw/cmpxchg/load/store succeed on unshared memory",
+        "memory.atomic.wait32 traps on unshared memory",
+        "growth detaches the old ArrayBuffer"
+      ]
+    }
   },
   "tail_depth": 10000000,
-  "words": {"flag": 256, "wait": 260, "mailbox": 264, "timed": 268, "notEqual": 272, "counter": 276, "passages": 64},
+  "words": {
+    "flag": 256,
+    "wait": 260,
+    "mailbox": 264,
+    "timed": 268,
+    "notEqual": 272,
+    "counter": 276,
+    "passages": 64
+  },
   "seed": "ENGINE-MATRIX-SEED-2026",
-  "assembler_flags": ["--enable-threads", "--enable-exceptions", "--enable-tail-call"],
-  "probe_assembler_flags": ["--enable-threads", "--enable-exceptions", "--enable-tail-call", "--enable-memory64"]
+  "assembler_flags": [
+    "--enable-threads",
+    "--enable-exceptions",
+    "--enable-tail-call"
+  ],
+  "probe_assembler_flags": [
+    "--enable-threads",
+    "--enable-exceptions",
+    "--enable-tail-call",
+    "--enable-memory64"
+  ]
 }

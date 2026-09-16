@@ -112,7 +112,7 @@ const controls = {
   'feature-mismatch': refusal(() => M.materialize(template, bad('f', r => { r.features = ['multivalue']; }), abi, 'full', cls('template.wasm'), admission.node)),
   'stale-materializer-version': refusal(() => M.materialize(template, bad('v', r => { r.materializer_version = 1; r.version = 1; }), abi, 'full', cls('template.wasm'), admission.node)),
   'unknown-profile': refusal(() => M.materialize(template, manifest, abi, 'legacy', cls('template.wasm'), admission.node)),
-  'profile-not-admitted': refusal(() => M.materialize(template, manifest, abi, 'single_thread_jspi', cls('template.wasm'), admission.firefox)),
+  'profile-not-admitted': refusal(() => M.materialize(template, manifest, abi, 'single_thread_jspi', cls('template.wasm'), admission.safari)),
   'already-shared-template': refusal(() => M.manifest(read('controls/already-shared.wasm'), abi, cls('controls/already-shared.wasm'))),
   'defined-memory-template': refusal(() => M.manifest(read('controls/defined-memory.wasm'), abi, cls('controls/defined-memory.wasm'))),
   'unbounded-template': refusal(() => M.manifest(read('controls/unbounded.wasm'), abi, cls('controls/unbounded.wasm'))),
