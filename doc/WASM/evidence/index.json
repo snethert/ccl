@@ -3788,6 +3788,16 @@
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE"
+    },
+    {
+      "id": "STAGE1-B-CALL-CORE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-b-call-core-r1/packet.json",
+      "sha256": "474f1e32d474d73b873c59152564ec5414bf6059ff9e36c23b733ae70418ad60",
+      "scope": "Generated B required-argument calls and result ownership: 34 functions, 88 native cases repeated in 352 target comparisons, 12 source refusals, 12 resource refusals and 15 recompiled compiler mutants. R6/R6a pass. Auxiliary proposal, no LL05 gate credit; binding forms, APPLY, closure objects, complete conditions, lazy stubs and tails remain.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

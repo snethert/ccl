@@ -9,7 +9,11 @@ accepted. The [1A packet](1a.md) has three accepted records after Claude’s rev
 [acceptance](acceptance-1a.json); the ledger now has five accepted records, 26 missing and
 zero unreviewed records. [LL04 generated representation](representation.md)
 is reviewed and accepted. The [reviewed unit](integration-1a.json) is integrated;
-[LL07’s generated typed conversions](conversions.md) are reviewed and accepted. General B calls and adapters (LL05) follow.
+[LL07’s generated typed conversions](conversions.md) are reviewed, accepted and [integrated](integration-ll07.json).
+The [generated B call core](b-call-core.md) now executes required-argument
+direct/indirect calls and full values. Next: LL05 binding forms, APPLY,
+closure objects and the condition path, then lazy stubs and tails. Neither
+complete LL05 slot is claimed by this core.
 
 ## What Stage 1 delivers
 
