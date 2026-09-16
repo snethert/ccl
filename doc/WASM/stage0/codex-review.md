@@ -226,3 +226,53 @@ listed files; no historical evidence rescan or new native CCL build was
 needed. `CODEX-CLAUDE-BRANCH-REVIEW-R3` retains logs and independent probe
 outputs. The probe observation code is unchanged from R2; only its assertions
 now require corrected results.
+
+
+## D6 policy and TCR extension — 16 September 2026
+
+Reviewed `wasm2-claude` at `9b6b4605`, including the five D6 commits
+`cd6851eb`, `c799c08f`, `54e66575`, `bcbe7249` and `fe1c79d7`.
+**No defect found at the recorded scopes.** The branch, including Claude's
+sixtieth acceptance audit, was fast-forwarded into `wasm2`.
+
+Fresh verification reproduces all 110 deterministic FLOAT-DETECTION-R4 files
+and all 12 TCR-SCHEMA-R3 files. The float corpus has 2,135 cases, including
+1,656 native SSE arithmetic/comparison witnesses; all fourteen mutants reject.
+The TCR regeneration and eight controls pass. Both direct packet manifests
+were checked, without rescanning the historical evidence store.
+
+An independent probe imports no fixture oracle. Literal condition lists check
+all 256 combinations of 32 enable masks and eight status codes, including the
+secondary inexact flag for overflow and underflow. Another 224 combinations
+feed real arithmetic results into the policy, including tiny exact results,
+and 256 exercise comparison status and mask selection. New instances start
+at mask 7 and remain independent; four high-bit inputs normalize as specified
+by the fixture. All pass. This probes separate fixture instances, not a
+production per-Worker TCR implementation.
+
+Independent schema comparison preserves all 47 old field records exactly.
+The sole new field is thread-owned bounded `fp_control`, four bytes at offset
+200 with alignment 4. The reserved tail starts at 204; total size remains 256.
+This is a schema proof, not execution of thread creation or `set-fpu-mode`.
+
+U1 source supports the stated model: `thread_manager.c` initializes ARM's
+invalid/division-by-zero/overflow enables; `arm-float.lisp` keeps logical
+control in the TCR and chooses invalid, division-by-zero, overflow, underflow,
+inexact in that order; `trap-if-fpu-exception` masks the status before trapping.
+The arithmetic pass-2 paths clear pending flags before a checked operation,
+which supports using per-operation derived flags here. `nx-float-safety`
+selects safety 3 or the named policy hook. The source comparison instruction
+is signalling, matching the added explicit NaN check and native witness.
+
+Limits remain explicit: the policy fixture stores its mask in an instance
+global, produces condition codes rather than Lisp condition objects, and does
+not exercise production TCR initialization, API keyword errors or emission.
+Single-float underflow/inexact, host-math limitations, non-nearest rounding
+refusal and generated-code cost remain later implementation obligations.
+The recorded user decision is imported as a project decision; this review
+adds no policy choice or Stage 0 acceptance. The live ledger remains PASS
+with all 48 records accepted and unchanged.
+
+`CODEX-D6-POLICY-REVIEW-R1` retains the replay driver, literal probe, logs,
+source identities and direct packet checks. Reproduce with its `reproduce.py`
+using `--source`, `--evidence` and a new `--output` directory.
