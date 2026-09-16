@@ -1,12 +1,14 @@
 # LL15-b/c — on-demand census instrument qualification
 
-Execution: PASS; Claude review and project acceptance pending. Packet
+Execution: PASS; reviewed by Claude at `d507f5a7` and accepted by the user
+on 16 September 2026. Execution packet
 `CENSUS-INSTRUMENT-R1`. All 33 capture checks, 20 native cases, 42 publication
 rejection controls and 16 production artifact-role omissions pass.
 
 This qualifies the instrument under [census contract v0.2](../contracts/census.md).
 It does not qualify an exhaustive native or Wasm bootstrap closure. The two
-native records require Claude's independent review and project acceptance.
+native records are accepted at this scope; the separate acceptance envelope
+preserves their original execution facts and all 46 earlier accepted records.
 
 One [runner](../../../tests/wasm/native-census/qualification/README.md) combines
 fixed reviewed inputs with fresh capture queries and private native call-site

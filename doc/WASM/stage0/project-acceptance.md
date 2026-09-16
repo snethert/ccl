@@ -268,3 +268,25 @@ inventory, authorize a shared-compiler author, choose the floating-point
 condition policy or admit an optional Stage 1 profile. Superseded R1/R2
 failures remain unaccepted. FLOAT-DETECTION-R3 remains reviewed auxiliary
 evidence; unmasked underflow on tiny exact results remains a policy question.
+
+
+## 16 September 2026 — LL15-b/c accepted; Stage 0 complete
+
+After supplying Claude's fifty-ninth no-defect audit (`d507f5a7`), the user
+told Codex, “If you agree, accept the 2”. Codex agreed and accepted S0-LL15-b
+and S0-LL15-c at their contract v0.2 instrument scope. Claude's recorded audit
+is imported without the branch's unrelated D6/TCR changes.
+
+The unchanged producer adds acceptance and its provenance to the two native
+records. Their original execution facts remain unchanged, as do all 46 earlier
+accepted result objects. The new records pass production-gate validation;
+all 48 contract bindings and fourteen acceptance-producer controls pass. The
+live ledger checker reports **PASS: 48 accepted, zero missing, zero unreviewed**.
+No native execution or historical payload rescan was needed for this decision.
+
+Stage 0 is complete under the adopted criteria. The census publication still
+contains its named unknowns and the unchanged complete-closure checker still
+refuses it. This decision accepts the instrument, not exhaustive callee bounds,
+generated code, a complete Wasm bootstrap or Stage 1 authorship and scope.
+The audit's descriptive initializer count, shared artifact set and independence
+of the controls from the producer remain disclosed in the retained review.

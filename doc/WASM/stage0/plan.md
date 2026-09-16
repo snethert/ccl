@@ -1,19 +1,19 @@
 # Stage 0 execution plan
 
-Current position (16 September 2026): **46 accepted, zero missing, two unreviewed**.
-LL15-b/c now have [qualification results](census-qualification.md) under contract
-v0.2. The retained instrument, explicit 167-unit startup worklist and native
-witness path pass the independent omission and semantic controls. Claude's
-review and the user's acceptance remain. The worklist's unknowns are preserved;
-no exhaustive closure, new native rebuild or Stage 1 implementation is claimed.
+Current position (16 September 2026): **48 accepted, zero missing, zero unreviewed. Stage 0 PASS.**
+LL15-b/c are accepted under contract v0.2 after Claude's fifty-ninth audit
+(`d507f5a7`) and the user's instruction, “If you agree, accept the 2”.
+The [qualified instrument](census-qualification.md) retains the explicit
+167-unit startup worklist, proven local targets and named unknowns separately.
+Complete bootstrap closure and generated target code remain Stage 1 work.
+Stage 1's draft plan and authorship decisions are separate from this acceptance.
 The dated work sequences below remain historical context.
 
 This plan decomposes the existing Stage 0 exit criteria. No subgate completion removes continuing regressions or later compiler-generated obligations. `inventory.json` carries the exact expected IDs; `obligations.json` is generated from the register. Status belongs in `../STATUS.md` and identified execution records, not inferred from file existence.
 
-Current direction: the [15 September on-demand decision](on-demand-census.md)
-supersedes the earlier census-draining schedules below. Qualify the retained
-instrument and explicit worklist under v0.2; do not chase every native dynamic
-call to a static bound before Stage 0 can finish.
+The [15 September on-demand decision](on-demand-census.md) superseded the
+earlier census-draining schedules below. Instrument qualification under v0.2
+is now accepted; the remaining unknowns guide implementation work.
 
 | Subgate | Prerequisites | Concrete deliverable and exit observation |
 | --- | --- | --- |
