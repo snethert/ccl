@@ -1263,3 +1263,8 @@ The user said “integrate and proceed” after Claude’s sixty-seventh audit. 
 ## 2026-09-16 — remove the fixed result-count ceiling in the B proposal
 
 The isolated result-capacity unit sizes callee scratch, root records, binding offsets and nested output reservations from the caller-owned region; MULTIPLE-VALUE-PROG1 retains the actual count. Ninety-five generated functions pass 401 native/logical cases and 1,604 target comparisons through 1,024 returned values. Sixteen compiler mutants, 19 source refusals and 36 new capacity checks cover the boundaries alongside the inherited resource/allocation checks. R6/R6a qualifies fresh registered/removal builds. Two escaped scratch-offset control attempts are retained; the exact-capacity regression rejects the mutant without a compiler correction. No automatic growth, collection or LL05 slot credit is claimed. The proposal awaits external review, with the shared backend unchanged from the accepted rest/APPLY integration.
+
+
+## 2026-09-16 — Claude's sixty-eighth audit: rest/APPLY integration and result capacity
+
+Claude verified the integrated backend's byte identity with the reviewed rest/APPLY unit and the hash chain from the binding record, then replayed the result-capacity packet: the verifier recompiled the corpus and all sixteen mutant compilers with identical bytes, and a 41-case adversarial probe at budgets from zero to 1,028 words, including exact-fit retention, empty reservations, bindings after large discarded results and deep retained frames, agreed across the Python model, native CCL and the target. No defect. The ledger stays at 5 accepted and 26 missing.
