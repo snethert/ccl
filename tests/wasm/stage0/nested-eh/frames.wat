@@ -71,9 +71,31 @@
     (call $st (i32.const 0) (i32.load (local.get $frame)))
     (call $st (i32.const 4) (i32.add (local.get $frame) (i32.const 48)))
     (call $event (i32.add (i32.const 300) (i32.load offset=16 (local.get $frame)))))
+  ;; Unwind to a frame: every inner frame has departed, so the dynamic state
+  ;; becomes this frame's own state as of its push (its binding, its root
+  ;; record as head, its TSP, its VSP reserve and its cleanup record) before
+  ;; its cleanup or handler code runs. Ordinary return reaches the same state
+  ;; through the inner frames' own pops.
+  (func $unwind_to (param $frame i32)
+    (call $st (i32.const 12) (i32.add (i32.const 100) (i32.load offset=16 (local.get $frame))))
+    (call $st (i32.const 16) (i32.sub (local.get $frame) (i32.const 16)))
+    (call $st (i32.const 4) (i32.sub (local.get $frame) (i32.const 16)))
+    (call $st (i32.const 0) (i32.add (i32.load (local.get $frame)) (i32.const 8)))
+    (call $st (i32.const 8) (i32.sub (i32.load offset=12 (local.get $frame)) (i32.const 8))))
   ;; Cleanup: runs once per frame on either exit path, produces its own six
-  ;; values in the frame's region, and restores the dynamic binding.
-  (func $cleanup (param $frame i32) (local $i i32)
+  ;; values in the frame's region, and records the dynamic state it observes
+  ;; on entry (binding, root head, TSP, its frame, VSP, CSP, saved VSP and
+  ;; saved CSP) in the cleanup-witness region for the oracle.
+  (func $cleanup (param $frame i32) (local $i i32) (local $w i32)
+    (local.set $w (i32.add (i32.const 30000) (i32.mul (i32.load offset=16 (local.get $frame)) (i32.const 32))))
+    (i32.store (local.get $w) (call $ld (i32.const 12)))
+    (i32.store offset=4 (local.get $w) (call $ld (i32.const 16)))
+    (i32.store offset=8 (local.get $w) (call $ld (i32.const 4)))
+    (i32.store offset=12 (local.get $w) (local.get $frame))
+    (i32.store offset=16 (local.get $w) (call $ld (i32.const 0)))
+    (i32.store offset=20 (local.get $w) (call $ld (i32.const 8)))
+    (i32.store offset=24 (local.get $w) (i32.load (local.get $frame)))
+    (i32.store offset=28 (local.get $w) (i32.load offset=12 (local.get $frame)))
     (call $bump (i32.const 24))
     (call $event (i32.add (i32.const 200) (i32.load offset=16 (local.get $frame))))
     (loop $l
@@ -166,6 +188,7 @@
       (call $pop_frame (local.get $frame))
       (return (local.get $v0) (local.get $n)))
     (local.set $e)
+    (call $unwind_to (local.get $frame))
     (call $cleanup (local.get $frame))
     (call $pop_frame (local.get $frame))
     (if (i32.eq (call $arg (i32.const 0)) (i32.const 2)) (then (call $event (i32.const 52)) (throw $other (i32.const 9))))
@@ -184,6 +207,7 @@
       (call $pop_frame (local.get $frame))
       (return (local.get $v0) (local.get $n)))
     (local.set $e)
+    (call $unwind_to (local.get $frame))
     (call $cleanup (local.get $frame))
     (call $pop_frame (local.get $frame))
     (throw_ref (local.get $e)))
@@ -198,6 +222,7 @@
           (else (call $exit_with_values (i32.const 6)) (unreachable))))
       (drop) (drop) (unreachable))
     (local.set $e)
+    (call $unwind_to (local.get $frame))
     (call $cleanup (local.get $frame))
     (call $pop_frame (local.get $frame))
     (throw_ref (local.get $e)))
@@ -214,6 +239,7 @@
       (try_table (catch_all_ref $h) (call $exit_with (i32.const 3) (i32.const 1)))
       (unreachable))
     (local.set $e)
+    (call $unwind_to (local.get $frame))
     (call $cleanup (local.get $frame))
     (call $pop_frame (local.get $frame))
     (call $st (i32.const 20) (i32.sub (call $ld (i32.const 20)) (i32.const 1)))
@@ -239,6 +265,7 @@
         (return (local.get $v0) (local.get $n)))
       ;; $other: one value, the cleanup's payload
       (local.set $payload)
+      (call $unwind_to (local.get $frame))
       (call $event (i32.const 64))
       (i32.store (call $ld (i32.const 32)) (local.get $payload))
       (call $st (i32.const 36) (i32.const 1))
@@ -246,6 +273,7 @@
       (call $pop_frame (local.get $frame))
       (return (local.get $payload) (i32.const 1)))
     (local.set $payload)
+    (call $unwind_to (local.get $frame))
     (call $event (i32.const 63))
     (call $deliver_transit) (local.set $n) (local.set $v0)
     (if (i32.eq (call $arg (i32.const 0)) (i32.const 5)) (then (call $debugger)))
@@ -254,6 +282,7 @@
     (return (local.get $v0) (local.get $n)))
     (unreachable))
     (local.set $e)
+    (call $unwind_to (local.get $frame))
     (call $st (i32.const 20) (i32.sub (call $ld (i32.const 20)) (i32.const 1)))
     (call $pop_frame (local.get $frame))
     (throw_ref (local.get $e)))

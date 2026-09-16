@@ -19,6 +19,7 @@ function runCase(c) {
   const instance = new WebAssembly.Instance(new WebAssembly.Module(bytes), { env: { memory } });
   const x = instance.exports;
   words[W.vsp_base / 4] = c.mode; words[W.vsp_base / 4 + 1] = c.argument;
+  words.fill(0, W.cleanup_witness.base / 4, W.cleanup_witness.base / 4 + 13 * W.cleanup_witness.stride / 4);
   const initial = { vsp: W.vsp_base + 8, tsp: W.tsp_base, csp: W.csp_base, special: abi.initial_special, root_head: 0, handler_depth: 0,
     cleanup_count: 0, post_exit_effects: 0, mv_base: W.mv_base, mv_count: 0, transit_base: W.transit_base, transit_count: 0, handler_calls: 0, event_count: 0, max_handler_depth: 0, resumed: 0 };
   for (const [name, value] of Object.entries(initial)) words[tcr + F[name] / 4] = value;
@@ -33,6 +34,11 @@ function runCase(c) {
   record.result_region = Array.from(words.slice(W.mv_base / 4, W.mv_base / 4 + 6));
   record.transit_region = Array.from(words.slice(W.transit_base / 4, W.transit_base / 4 + 6));
   record.events = Array.from(words.slice(W.events / 4, W.events / 4 + record.state.event_count));
+  record.cleanup_witness = {};
+  for (let depth = 1; depth <= 12; depth++) {
+    const at = (W.cleanup_witness.base + depth * W.cleanup_witness.stride) / 4;
+    if (words[at + 3]) record.cleanup_witness[depth] = Object.fromEntries(W.cleanup_witness.words.map((name, k) => [name, words[at + k]]));
+  }
   return record;
 }
 const record = { version: 1, engine: { node: process.version, v8: process.versions.v8 }, cases: {} };

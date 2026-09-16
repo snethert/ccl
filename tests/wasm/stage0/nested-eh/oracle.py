@@ -70,4 +70,15 @@ def check(observed):
         require(c.get('result_region') == expected['mv'], 'VALUES ' + name + ' result-region')
         require(c.get('transit_region') == expected['transit'], 'VALUES ' + name + ' transit')
         require(st.get('event_count') == len(expected['events']) and c.get('events') == expected['events'], 'EVENTS ' + name)
-    return {'cases': len(EXPECTED), 'cleanup_frames_max': 9, 'values_max': 6, 'restored_fields': list(RESTORED)}
+        # Inside every cleanup the departed inner frames are gone: the cleanup
+        # sees its own binding, its own root record as head and TSP, its VSP
+        # reserve and its own cleanup record, on ordinary and exceptional paths.
+        witnessed = c.get('cleanup_witness') or {}
+        cleanup_depths = sorted(e - CLEAN for e in expected['events'] if CLEAN < e < CLEAN + 100)
+        require(sorted(int(d) for d in witnessed) == cleanup_depths, 'CLEANUP ' + name + ' witnessed frames')
+        for depth in cleanup_depths:
+            w = witnessed[str(depth)]
+            require(w['special'] == 100 + depth, 'CLEANUP ' + name + ' depth %d special' % depth)
+            require(w['root_head'] == w['frame'] - 16 and w['tsp'] == w['frame'] - 16, 'CLEANUP ' + name + ' depth %d roots' % depth)
+            require(w['vsp'] == w['saved_vsp'] + 8 and w['csp'] == w['saved_csp'] - 8, 'CLEANUP ' + name + ' depth %d stacks' % depth)
+    return {'cases': len(EXPECTED), 'cleanup_frames_max': 9, 'values_max': 6, 'restored_fields': list(RESTORED), 'cleanup_witness_fields': ['special', 'root_head', 'tsp', 'vsp', 'csp']}

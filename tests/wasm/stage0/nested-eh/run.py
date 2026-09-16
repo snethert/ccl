@@ -12,7 +12,8 @@ SCOPE = ('Hand-built emitted wasm32 frames on macOS Node/V8 under the B entry sh
          'values through nested frames with dynamic bindings, root records and cleanup, including a cleanup that raises a second exit, a '
          'chain of nine cleanup frames, a missing handler that reaches the host after full restoration, a recoverable check resumed by a '
          'use-value handler without unwinding, a declined handler that becomes an error, and a nested debugger exit inside the handler. '
-         'VSP, TSP, CSP, the binding, the root head and the handler depth are restored after every case; cleanups run exactly once; '
+         'VSP, TSP, CSP, the binding, the root head and the handler depth are restored after every case and, inside every cleanup, the departed '
+         'inner frames are already gone (own binding, own root record, own stacks witnessed at cleanup entry); cleanups run exactly once; '
          'post-exit effects are absent; every value is checked. No production TCR, condition system, debugger, GC or C boundary is claimed.')
 FLAGS = ['--enable-exceptions', '--enable-tail-call']
 # case -> (old text, new text, first failure named by the unchanged oracle)
@@ -20,15 +21,17 @@ MUTANTS = {
     'special-restore-omitted': ("    (call $st (i32.const 12) (i32.load offset=4 (local.get $frame)))\n", '', 'STATE normal special'),
     'vsp-restore-omitted': ("    (call $st (i32.const 0) (i32.load (local.get $frame)))\n", '', 'STATE normal vsp'),
     'root-restore-omitted': ("    (call $st (i32.const 16) (i32.load offset=8 (local.get $frame)))\n", '', 'STATE normal root_head'),
-    'cleanup-twice': ("    (local.set $e)\n    (call $cleanup (local.get $frame))\n    (call $pop_frame (local.get $frame))\n    (if (i32.eq (call $arg (i32.const 0)) (i32.const 2))",
-                      "    (local.set $e)\n    (call $cleanup (local.get $frame))\n    (call $cleanup (local.get $frame))\n    (call $pop_frame (local.get $frame))\n    (if (i32.eq (call $arg (i32.const 0)) (i32.const 2))", 'STATE exit-0-values cleanup_count'),
+    'cleanup-twice': ("    (call $unwind_to (local.get $frame))\n    (call $cleanup (local.get $frame))\n    (call $pop_frame (local.get $frame))\n    (if (i32.eq (call $arg (i32.const 0)) (i32.const 2))",
+                      "    (call $unwind_to (local.get $frame))\n    (call $cleanup (local.get $frame))\n    (call $cleanup (local.get $frame))\n    (call $pop_frame (local.get $frame))\n    (if (i32.eq (call $arg (i32.const 0)) (i32.const 2))", 'STATE exit-0-values cleanup_count'),
     'exit-swallowed': ("    (throw_ref (local.get $e)))\n  (func $f2", "    (return (i32.const 65) (i32.const 0)))\n  (func $f2", 'STATE exit-0-values post_exit_effects'),
-    'post-exit-in-cleanup': ("    (local.set $e)\n    (call $cleanup (local.get $frame))\n    (call $pop_frame (local.get $frame))\n    (if (i32.eq (call $arg (i32.const 0)) (i32.const 2))",
-                             "    (local.set $e)\n    (call $effect (i32.const 3))\n    (call $cleanup (local.get $frame))\n    (call $pop_frame (local.get $frame))\n    (if (i32.eq (call $arg (i32.const 0)) (i32.const 2))", 'STATE exit-0-values post_exit_effects'),
+    'post-exit-in-cleanup': ("    (call $unwind_to (local.get $frame))\n    (call $cleanup (local.get $frame))\n    (call $pop_frame (local.get $frame))\n    (if (i32.eq (call $arg (i32.const 0)) (i32.const 2))",
+                             "    (call $unwind_to (local.get $frame))\n    (call $effect (i32.const 3))\n    (call $cleanup (local.get $frame))\n    (call $pop_frame (local.get $frame))\n    (if (i32.eq (call $arg (i32.const 0)) (i32.const 2))", 'STATE exit-0-values post_exit_effects'),
     'transit-clobbered': ("(i32.add (local.get $frame) (i32.const 24))", "(call $ld (i32.const 40))", 'VALUES normal transit'),
     'secure-after-debugger': ("    (call $deliver_transit) (local.set $n) (local.set $v0)\n    (if (i32.eq (call $arg (i32.const 0)) (i32.const 5)) (then (call $debugger)))",
                               "    (if (i32.eq (call $arg (i32.const 0)) (i32.const 5)) (then (call $debugger)))\n    (call $deliver_transit) (local.set $n) (local.set $v0)", 'RESULT nested-debugger'),
     'restart-unwinds': ("(throw $use_value (i32.const 8)))", "(call $exit_with_values (i32.const 1)))", 'RESULT recoverable-use-value'),
+    'unwind-omitted': ("    (local.set $e)\n    (call $unwind_to (local.get $frame))\n    (call $cleanup (local.get $frame))\n    (call $pop_frame (local.get $frame))\n    (if (i32.eq (call $arg (i32.const 0)) (i32.const 2))",
+                       "    (local.set $e)\n    (call $cleanup (local.get $frame))\n    (call $pop_frame (local.get $frame))\n    (if (i32.eq (call $arg (i32.const 0)) (i32.const 2))", 'CLEANUP exit-0-values depth 3 special'),
 }
 
 
@@ -150,7 +153,7 @@ def run(out):
         save(out / 'results.json', bind_report(report, inv, 'inventory.json', sha(out / 'inventory.json'))); save(out / 'slot-gate.json', slot(out)); omissions(out)
         require(record['source_sha256'] == {str(p.relative_to(ROOT)): sha(p) for p in sources()}, 'SOURCE_CHANGED')
         record.update(status='PASS', contract_sha256=contract_hash(inv, ID))
-        print('PASS: LL19-a, ten nested-exit cases, nine semantic mutants and ten role omissions. Review pending.')
+        print('PASS: LL19-a, ten nested-exit cases with cleanup-entry witnesses, ten semantic mutants and ten role omissions. Review pending.')
     except BaseException as e:
         record['error'] = type(e).__name__ + ': ' + str(e); raise
     finally:

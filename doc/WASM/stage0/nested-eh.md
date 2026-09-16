@@ -1,9 +1,34 @@
 # Nested exception transfer — 15 September 2026
 
-Status: S0-LL19-a [full] EXECUTED and PASSING at its stated scope; awaiting
-Codex's adversarial review under the 15 September role switch, then the
-user's acceptance decision. Packet `NESTED-EH-R1` in the evidence repository.
-Stage 0 is **40 accepted, two missing and six unreviewed of 48** after the later executions.
+Status: S0-LL19-a [full] EXECUTED and PASSING at its stated scope in its
+corrected form `NESTED-EH-R2`, awaiting Codex's follow-up review and then
+the user's acceptance decision. The first execution `NESTED-EH-R1` is
+retained unchanged and unaccepted: [Codex's review](codex-review.md) found
+that a cleanup ran while the departed inner frame's binding, root record
+and TSP were still current, hidden from the original oracle by the final
+restoration. Stage 0 is **40 accepted, two missing and six unreviewed of 48**.
+
+## Correction after review
+
+The defect: `$f4` popped its frame only on ordinary return, so an exit
+raised there reached `$f3`'s cleanup with `special` still 104, and the root
+head and TSP still at depth 4's record. In Common Lisp a cleanup runs in
+the dynamic environment of its own frame, with every inner binding undone.
+The correction adds `$unwind_to`: before any cleanup or handler code runs
+on an exceptional path, the frame restores its own binding, its own root
+record as head and TSP, its VSP reserve and its own cleanup record, so the
+departed inner frames are gone before the cleanup begins. The depth-1
+handler paths and the adapter path do the same. Every cleanup now records
+the dynamic state it observes on entry (binding, root head, TSP, its
+frame, VSP, CSP and the saved VSP and CSP) in a witness region, and the
+oracle requires, for every cleanup frame in every case, `special` equal to
+that frame's binding, root head and TSP equal to its own root record, VSP
+equal to the saved VSP plus the reserve and CSP equal to its own cleanup
+record. A tenth mutant that omits the unwind is rejected at
+`CLEANUP exit-0-values depth 3 special`, which is the review's
+counterexample. Codex's retained reproducer splices its probe at the old
+`$cleanup` signature, which the correction changed; the fixture now records
+the same observation itself and the reproducer's expectations hold.
 
 Authorship: Claude Fable 5.1 wrote this fixture on branch `wasm2-claude`;
 Codex reviews it. No shared compiler or upstream kernel source changed. The
@@ -46,24 +71,24 @@ events that never appear after an exit.
 
 ## Controls
 
-Nine mutants of the module are rejected by the unchanged oracle at the named
+Ten mutants of the module are rejected by the unchanged oracle at the named
 first check: binding restoration omitted, VSP restoration omitted, root-head
 restoration omitted, a cleanup run twice on the exit path, an exit swallowed
 so the outer frame's post-exit code runs, a post-exit effect inside the exit
 path, cleanup values written over the values in transit, values secured only
-after the nested debugger, and a use-value handler that unwinds instead of
-resuming. Ten production artifact-role omissions on the genuine envelope are
+after the nested debugger, a use-value handler that unwinds instead of
+resuming, and the unwind before cleanup omitted. Ten production artifact-role omissions on the genuine envelope are
 refused by the unchanged gate, which otherwise reports only
 `unreviewed S0-LL19-a [full]`.
 
 ## Evidence and reproduction
 
-The packet holds 116 files (1.7 MB): the complete bundle with template,
-binary, disassembly, interface, options and host-compiler record; nine mutant
-bundles with their observations; the observations for all ten cases; the
-bound envelope; slot-gate and role-omission records. The verifier
-re-executes the producer and compared 92 deterministic files byte for byte
-in about two seconds.
+The corrected packet holds the complete bundle with template, binary,
+disassembly, interface, options and host-compiler record; ten mutant
+bundles with their observations; the observations for all ten cases with
+their cleanup-entry witnesses; the bound envelope; slot-gate and
+role-omission records. The verifier re-executes the producer and compared
+101 deterministic files byte for byte in about two seconds.
 
 Limits. Frames, records and the transit region are this fixture's, not the
 production TCR or D3 descriptor; the condition path is a direct handler call

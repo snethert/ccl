@@ -9,7 +9,7 @@
     "address": 256,
     "fields": {"vsp": 0, "tsp": 4, "csp": 8, "special": 12, "root_head": 16, "handler_depth": 20, "cleanup_count": 24, "post_exit_effects": 28, "mv_base": 32, "mv_count": 36, "transit_base": 40, "transit_count": 44, "handler_calls": 48, "event_count": 52, "max_handler_depth": 56, "resumed": 60}
   },
-  "regions": {"mv_base": 2048, "transit_base": 2304, "vsp_base": 4096, "tsp_base": 12288, "csp_base": 16384, "events": 20480},
+  "regions": {"mv_base": 2048, "transit_base": 2304, "vsp_base": 4096, "tsp_base": 12288, "csp_base": 16384, "events": 20480, "cleanup_witness": {"base": 30000, "stride": 32, "words": ["special", "root_head", "tsp", "frame", "vsp", "csp", "saved_vsp", "saved_csp"], "rule": "at cleanup entry the departed inner frames are gone: special is this frame's binding, root_head and tsp are its own root record, vsp is its saved VSP plus its reserve, csp is its own cleanup record"}},
   "frame_record": {"bytes": 48, "fields": {"saved_vsp": 0, "saved_special": 4, "saved_root_head": 8, "saved_csp": 12, "depth": 16, "cleanup_values": 24}, "binding": "special := 100 + depth while the frame is live", "vsp_reserve": 8},
   "root_record": {"bytes": 16, "fields": {"previous_head": 0, "count": 4, "slot0": 8, "slot1": 12}, "slot0": "129 + 8 * depth", "slot1": 65},
   "cleanup_record": {"bytes": 8, "fields": {"kind": 0, "frame": 4}},
