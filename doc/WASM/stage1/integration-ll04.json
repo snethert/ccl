@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "timestamp": "2026-09-16T17:06:19.078226+00:00",
+  "review_commit": "842b8f9c",
+  "acceptance_commit": "999111a99b3259c1b3d41ac5fa34b2e86aa847cf",
+  "file": "compiler/WASM32/wasm32-backend.lisp",
+  "before": "626ea8f1736b442ec62912386151a6b376d36b2f5ad8263591a12968f2864ef3",
+  "after": "5d12c824ca5728304626bfbddabae754ebe438cb3aa4c50c2022e1fb95d68a97",
+  "proposal_locator": "2026-09-16-stage1-representation-r1/source/tests/wasm/stage1/representation/wasm32-backend.lisp",
+  "verification": "Exact reviewed payload. Reuse independent R6/R6a runs for these bytes. Other four integrated unit files unchanged; upstream kernel untouched.",
+  "reverse": "Restore the accepted 1A backend bytes at the recorded before hash."
+}

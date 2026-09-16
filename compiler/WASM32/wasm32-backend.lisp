@@ -5,6 +5,8 @@
 (defvar *module-result-tag* nil)
 (defvar *module-name* nil)
 (defvar *required-vars* nil)
+(defvar *temporary-count* 0)
+(defvar *cons-used* nil)
 (define-condition unsupported-wasm32-code (error)
   ((operation :initarg :operation :reader unsupported-operation))
   (:report (lambda (c s) (format s "WASM32 lowering not implemented: ~s" (unsupported-operation c)))))
@@ -18,10 +20,14 @@
                  (equal (fifth args) '(nil nil)))
       (refuse :lambda-list))
     (let* ((*required-vars* (first args))
+           (*temporary-count* 0) (*cons-used* nil)
            (body (emit-expression (sixth args)))
            (arity (length *required-vars*))
-           (wat (format nil "(module~% (import ~s ~s (memory 1 32769 shared))~% (import ~s ~s (global $tcr i32))~% (func (export ~s) (param $self i32) (param $nargs i32) (result i32 i32) (local $value i32)~%  (if (i32.ne (local.get $nargs) (i32.const ~d)) (then unreachable))~%  (local.set $value ~a)~%  (i32.store (i32.load offset=~d (global.get $tcr)) (local.get $value))~%  (i32.store offset=~d (global.get $tcr) (i32.const 1))~%  (local.get $value) (i32.const 1)))~%"
-             "env" "memory" "env" "tcr" "entry" arity body wasm32::tcr.mv_base wasm32::tcr.mv_count)))
+           (wat (format nil "(module~% (import ~s ~s (memory 1 32769 shared))~% (import ~s ~s (global $tcr i32))~%~a (func (export ~s) (param $self i32) (param $nargs i32) (result i32 i32) (local $value i32)~a~%  (if (i32.ne (local.get $nargs) (i32.const ~d)) (then unreachable))~%  (local.set $value ~a)~%  (i32.store (i32.load offset=~d (global.get $tcr)) (local.get $value))~%  (i32.store offset=~d (global.get $tcr) (i32.const 1))~%  (local.get $value) (i32.const 1)))~%"
+             "env" "memory" "env" "tcr"
+             (if *cons-used* " (import \"env\" \"type_error\" (tag $type_error (param i32 i32)))" "")
+             "entry" (with-output-to-string (s) (dotimes (i *temporary-count*) (format s " (local $tmp~d i32)" i)))
+             arity body wasm32::tcr.mv_base wasm32::tcr.mv_count)))
       (throw *module-result-tag* (list :version 1 :name *module-name* :arity arity :wat wat)))))
 (defun emit-expression (ir)
   (unless (ccl::acode-p ir) (refuse :malformed-acode))
@@ -42,11 +48,36 @@
        (let ((index (position (first args) *required-vars* :test #'eq)))
          (unless index (refuse :non-argument-lexical))
          (format nil "(i32.load offset=~d (i32.load offset=~d (global.get $tcr)))" (* 4 index) wasm32::tcr.vsp)))
+      ((car cdr ccl::%car ccl::%cdr)
+       (emit-cons-read (member op '(car ccl::%car)) (first args)))
+      ((rplaca rplacd ccl::%rplaca ccl::%rplacd)
+       (emit-cons-write (member op '(rplaca ccl::%rplaca)) (first args) (second args)))
       (ccl::if
        (format nil "(if (result i32) (i32.ne ~a (i32.const ~d)) (then ~a) (else ~a))"
          (emit-expression (first args)) wasm32::canonical-nil-value
          (emit-expression (second args)) (emit-expression (third args))))
       (t (refuse op)))))
+;;; Each nested operand owns a separate local. No calls, polls or allocation
+;;; occur while these unspilled tagged temporaries are live in this slice.
+(defun temporary () (prog1 (format nil "$tmp~d" *temporary-count*) (incf *temporary-count*)))
+(defun cons-check (local expected)
+  (format nil "(if (i32.ne (i32.and (local.get ~a) (i32.const ~d)) (i32.const ~d)) (then (throw $type_error (local.get ~a) (i32.const ~d))))"
+    local wasm32::fulltagmask wasm32::fulltag-cons local expected))
+(defun emit-cons-read (car-p operand)
+  (setq *cons-used* t)
+  (let* ((ptr (temporary)) (value (emit-expression operand))
+         (offset (if car-p wasm32::cons.car wasm32::cons.cdr)))
+    (format nil "(block (result i32) (local.set ~a ~a) (if (result i32) (i32.eq (local.get ~a) (i32.const ~d)) (then (i32.const ~d)) (else ~a (i32.load (i32.add (local.get ~a) (i32.const ~d))))))"
+      ptr value ptr wasm32::canonical-nil-value wasm32::canonical-nil-value
+      (cons-check ptr 1) ptr offset)))
+(defun emit-cons-write (car-p pair value)
+  (setq *cons-used* t)
+  (let* ((ptr (temporary)) (new (temporary))
+         (pair-code (emit-expression pair)) (value-code (emit-expression value))
+         (offset (if car-p wasm32::cons.car wasm32::cons.cdr)))
+    (format nil "(block (result i32) (local.set ~a ~a) (local.set ~a ~a) (if (i32.eq (local.get ~a) (i32.const ~d)) (then (throw $type_error (local.get ~a) (i32.const 2)))) ~a (i32.store (i32.add (local.get ~a) (i32.const ~d)) (local.get ~a)) (local.get ~a))"
+      ptr pair-code new value-code ptr wasm32::canonical-nil-value ptr
+      (cons-check ptr 2) ptr offset new ptr)))
 ;;; The next unused three-bit CPU discriminator; no existing target changes.
 (defconstant ccl::platform-cpu-wasm32 (ash 4 3))
 (defconstant ccl::platform-os-wasm 7)
@@ -92,6 +123,10 @@
                         (let ((xs (items x)))
                           (cond ((and (eq (car xs) 'if) (member (length xs) '(3 4)))
                                  (dolist (part (cdr xs)) (walk part vars (1+ depth))))
+                                ((and (member (car xs) '(car cdr)) (= (length xs) 2))
+                                 (walk (second xs) vars (1+ depth)))
+                                ((and (member (car xs) '(rplaca rplacd)) (= (length xs) 3))
+                                 (walk (second xs) vars (1+ depth)) (walk (third xs) vars (1+ depth)))
                                 ((and (eq (car xs) 'quote) (= (length xs) 2) (literal (second xs))) t)
                                 (t (refuse :source-subset))))
                         (remhash x active)))

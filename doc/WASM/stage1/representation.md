@@ -1,8 +1,9 @@
 # Generated cons representation — 16 September 2026
 
 **S1-LL04-a reviewed by Claude and accepted by the user.**
-The proposed backend remains under `tests/wasm/stage1/representation`.
-The integrated 1A compiler and upstream kernel are unchanged.
+The [exact reviewed backend](integration-ll04.json) is integrated.
+Its reversible proposal remains under `tests/wasm/stage1/representation`;
+the upstream kernel is unchanged.
 
 CCL's real front end now reaches proposed CAR/CDR and RPLACA/RPLACD lowerings.
 Each operand is evaluated once, left to right, into its own local. Reads of

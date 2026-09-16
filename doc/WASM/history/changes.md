@@ -1188,3 +1188,8 @@ Claude reviewed the 1A acceptance record, confirmed the five integrated files ar
 ## 2026-09-16 — accept generated cons representation
 
 The user conditionally accepted LL04-a after supplying audit 63; Codex agrees with its no-defect verdict. The unchanged producer records acceptance, preserving the three prior accepted objects and all LL04 execution facts. Stage 1: 4 accepted, 27 missing, zero unreviewed. No new native execution.
+
+
+## 2026-09-16 — integrate accepted LL04 backend
+
+Copied the exact reviewed representation backend over the accepted 1A backend after checking both identities. The reviewed R6/R6a runs cover these bytes; no registration or kernel edit and no new execution claimed. Next: generated LL07 typed conversions.
