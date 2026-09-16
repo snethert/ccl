@@ -2,27 +2,22 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "960b59b3667850cb35542ab7cabde39115fa2d05",
+  "commit": "a77570cb93e80548f16c7016028f516c558a6ef4",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "f0a4a532221e0c03df7c3cd9d001729697debadba31cb57775a27df8faf2d5c8",
-  "immutable_evidence_files": 165998,
+  "catalog_sha256": "6c04668f1cbbcf7df9b398611fcecc4460b2d5e74c679149ecd0a20ef2138305",
+  "immutable_evidence_files": 166019,
   "indexed_references_verified": 6248,
-  "source_index_snapshot": "catalog/source-index-corrections-r3.json",
-  "source_index_sha256": "18a742d8fa1ca94f965d9bdefbe65f2a818a9ef0fd2b6cb28466d891ded31097",
-  "verification": "Scoped corrections addition: 258 new catalog rows across two R3 packets and the probe record; each producer executed and verifier re-executed with deterministic files identical; earlier packets and all previous rows preserved; no accepted-envelope rehash or historical payload scan.",
+  "source_index_snapshot": "catalog/source-index-2026-09-16-codex-branch-review-r3.json",
+  "source_index_sha256": "c04fc508aedfc1ac5cb082a3ffa918c16cef7c528488ad8123a9859be49cadb1",
+  "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
   "remote": null,
   "off_machine_backup": false,
   "scope": "Separate local evidence repository; original failures retained. Forty accepted records. LL15 instrument policy authorized, qualification results still pending. Claude-authored executions corrected twice after Codex review await follow-up review. Generated code remains open.",
   "last_scoped_addition": {
-    "directories": [
-      "2026-09-16-nested-eh-r3",
-      "2026-09-16-float-detection-r3",
-      "2026-09-16-codex-r2-probes-on-r3"
-    ],
-    "files": 258,
-    "bytes": 7030445,
-    "prior_commit": "7e53269126a18502e66563809262cfa0aa87a36f",
-    "immutable_evidence_files": 165998,
-    "catalog_sha256": "f0a4a532221e0c03df7c3cd9d001729697debadba31cb57775a27df8faf2d5c8"
+    "directory": "2026-09-16-codex-branch-review-r3",
+    "files": 21,
+    "bytes": 314843,
+    "immutable_evidence_files": 166019,
+    "catalog_sha256": "6c04668f1cbbcf7df9b398611fcecc4460b2d5e74c679149ecd0a20ef2138305"
   }
 }

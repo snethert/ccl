@@ -1,8 +1,9 @@
 # Codex review of Claude's Stage 0 branch — 15 September 2026
 
-Latest disposition: the [16 September follow-up](#r2-follow-up--16-september-2026)
-closes the original counterexamples but finds two remaining defects. Merge
-remains withheld; the first review below is retained unchanged.
+Latest disposition: the [R3 follow-up](#r3-follow-up--16-september-2026)
+closes both remaining findings. Branch merged; all six pending Stage 0 slots
+are recommended for acceptance at their recorded scopes. Earlier findings
+below remain historical records.
 
 Reviewed `wasm2-claude` at `b62ef7ac`, nine commits from `79e34a90` onward.
 **Two defects found; branch merge withheld.** No acceptance or criterion changes.
@@ -178,3 +179,50 @@ python3 /path/to/ccl-evidence/2026-09-16-codex-branch-review-r2/repro/reproduce.
 The assertions expect these review counterexamples. They are not acceptance
 tests; their outputs show both the fixed max-exponent cases and the two
 remaining findings.
+
+
+## R3 follow-up — 16 September 2026
+
+Reviewed `wasm2-claude` at `6c78877d`, including `bca2d4e9`, `e6ffc921`
+and the integration records. **No new defect found. Both R2 findings are
+closed.** The branch was fast-forwarded into `wasm2` after review.
+
+The EH frame now saves its own CSP separately and updates it when acquiring
+a cleanup record. The unwind helper restores that actual owned state.
+The oracle derives all cleanup and handler addresses from a model over its
+literal expected events, region bases and record sizes; it does not borrow
+saved addresses from observed frames. This catches the circular expectation
+that previously hid the debugger's wrong incoming CSP. Fresh verification
+reproduces 128 deterministic files and rejects all thirteen mutants.
+Our observation-only probe independently sees CSP 16384 at both handler
+entries (ordinary exit and nested debugger), equal to the required base.
+
+The float correction distinguishes the smallest-normal result using its
+scaled exact residual, including the strict quarter-unit boundary and signs.
+The division path tests the corresponding scaled numerator/divisor relation.
+Fresh verification reproduces 89 deterministic files: all 2,069 corpus cases
+and eleven rejected mutants, plus all 1,646 f64 cases checked against native
+scalar SSE status and result bits. The native witness clears MXCSR and uses
+masked exceptions with DAZ/FTZ off. Our original large-exponent probes remain
+exact, and our minimum-normal boundary now returns underflow, agreeing with
+the rational oracle. This is reviewed corpus evidence, not proof over every
+floating-point operand or approval of a production condition policy.
+
+The contract discloses the separate unmasked-underflow behavior, including
+tiny exact results. This review and the user's six-slot acceptance do not
+choose that optional policy. FLOAT-DETECTION-R3 is auxiliary evidence and
+not one of the six Stage 0 slots.
+
+The passing prior reviews of ENGINE-MATRIX-R2, MATERIALIZATION-R2,
+CONTRACTS-R1 and INITIALIZER-BINDING-R1 still apply: their executed sources
+are unchanged by this correction. The six eligible records are ENGINE-a,
+LL21-c/shared-template, LL21-c/unshared-template, LL19-a/full, CONTRACTS-a
+and LL15-a/full. Their hand-built/engine/desk-review scope stays unchanged;
+none establishes generated-code execution or census qualification.
+
+The branch ledger and document checks pass at 40 accepted, two missing and
+six unreviewed before project acceptance. The R3 packet checks cover 250
+listed files; no historical evidence rescan or new native CCL build was
+needed. `CODEX-CLAUDE-BRANCH-REVIEW-R3` retains logs and independent probe
+outputs. The probe observation code is unchanged from R2; only its assertions
+now require corrected results.

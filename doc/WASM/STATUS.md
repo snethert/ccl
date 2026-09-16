@@ -4,7 +4,7 @@ Implementation baseline: upstream v1.13, `c994217adc56b3f8a564526cee4695893ac84d
 
 | Work | State | Evidence scope / remaining work |
 | --- | --- | --- |
-| Claude's non-census branch | R2 REVIEWED; merge withheld | [Codex follow-up](stage0/codex-review.md#r2-follow-up--16-september-2026): original counterexamples fixed; handler CSP still retains an extra cleanup record and float tininess disagrees with the oracle at the normal boundary. All five R2 replays pass, including Firefox 156. No acceptance changes. |
+| Claude's non-census branch | R3 REVIEWED; merged | [Codex follow-up](stage0/codex-review.md#r3-follow-up--16-september-2026): both findings closed; nested-EH and float replays and independent probes pass. Six Stage 0 records ready for the user's conditional acceptance. |
 | Earlier registry/body analyses | HISTORICAL, UNQUALIFIED | [Provenance correction](stage0/registry-history.md): original artifacts retained; unsupported all-body completion claim withdrawn. Current startup uses the separately retained 167-unit run; no LL15 credit. |
 | On-demand startup provenance | REVIEWED; no defect found | [Startup replay](stage0/on-demand-census.md): three stages replayed from retained inputs; unchanged startup worklist combined with the reviewed finite-chain base; Claude audit 58 closes the provenance defect. Original defective combined graph retained as superseded history. No gate credit. |
 | Finite-callee replay | REVIEWED; Claude fifty-seventh audit, no defect | [One committed resolver version](stage0/finite-callees.md): fresh 98 + 19 + 2 + 5 partition leaves 1,438 of 1,562 expressions open. All stage outputs and sources retained; cell values and lowerings remain unqualified. |

@@ -296,7 +296,7 @@
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
       "currency": "ORIGINAL_FAILURE",
-      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged."
+      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged."
     },
     {
       "id": "INTEGRATED-RUNTIME-r10",
@@ -1495,11 +1495,18 @@
       "inventory_version": 1,
       "evidence_kind": "CONTROL EXECUTION",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Control execution on macOS: the wasm32 layout schema v1 is derived from the pinned U1 x8632 architecture source and cross-checked against the U1 C header; every derived row carries a source-to-target disposition; the initial contracts/layout.json subset agrees; the committed schema equals the regeneration. The runtime-contract join v1 verifies frames, roots, TCR fields, allocation/store protocols and C-boundary restoration against the accepted fixtures’ retained schemas and cases by artifact hash, and re-derives the link-derived memory/table ownership map from retained link metadata. Nine synthetic controls are refused. This reviews contracts against executed evidence; it executes no Wasm and confers no runtime acceptance of its own.",
-      "authorship": "Claude Fable 5.1 fixture and generated contracts on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision."
+      "scope": "Control execution on macOS: the wasm32 layout schema v1 is derived from the pinned U1 x8632 architecture source and cross-checked against the U1 C header; every derived row carries a source-to-target disposition; the initial contracts/layout.json subset agrees; the committed schema equals the regeneration. The runtime-contract join v1 verifies frames, roots, TCR fields, allocation/store protocols and C-boundary restoration against the accepted fixtures\u2019 retained schemas and cases by artifact hash, and re-derives the link-derived memory/table ownership map from retained link metadata. Nine synthetic controls are refused. This reviews contracts against executed evidence; it executes no Wasm and confers no runtime acceptance of its own.",
+      "authorship": "Claude Fable 5.1 fixture and generated contracts on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision.",
+      "external_review": {
+        "reviewer": "Codex",
+        "record": "stage0/codex-review.md",
+        "reviewed_revision": "6c78877d",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "scope": "R3 follow-up and preceding R1/R2 reviews; no defect at the stated fixture or diagnostic scope. Acceptance is recorded separately."
+      }
     },
     {
       "id": "INITIALIZER-BINDING-R1",
@@ -1514,11 +1521,18 @@
       "inventory_version": 1,
       "evidence_kind": "HAND-BUILT WASM EXECUTION",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Hand-built bootstrap closure on macOS Node/V8: three phases, four wasm32 modules and nine required initializers. The loader validates the manifest against the supplied modules before instantiating anything, seeds its own dependencies before any bundle exists, binds every initializer to its prerequisites’ physical completion words and required service state, checks each completion physically after the initializer returns, and publishes ready only after every required initializer completed. Fourteen refusals cover omitted and wrong modules, manifest defects, wrong or unwritten completions, a raised initializer, a clobbered prerequisite and wrong service state; eight loader mutants including a no-load path are rejected by the unchanged oracle over the whole memory image. Not the qualified census closure, the production loader, image format or generated code.",
-      "authorship": "Claude Fable 5.1 fixture on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision."
+      "scope": "Hand-built bootstrap closure on macOS Node/V8: three phases, four wasm32 modules and nine required initializers. The loader validates the manifest against the supplied modules before instantiating anything, seeds its own dependencies before any bundle exists, binds every initializer to its prerequisites\u2019 physical completion words and required service state, checks each completion physically after the initializer returns, and publishes ready only after every required initializer completed. Fourteen refusals cover omitted and wrong modules, manifest defects, wrong or unwritten completions, a raised initializer, a clobbered prerequisite and wrong service state; eight loader mutants including a no-load path are rejected by the unchanged oracle over the whole memory image. Not the qualified census closure, the production loader, image format or generated code.",
+      "authorship": "Claude Fable 5.1 fixture on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision.",
+      "external_review": {
+        "reviewer": "Codex",
+        "record": "stage0/codex-review.md",
+        "reviewed_revision": "6c78877d",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "scope": "R3 follow-up and preceding R1/R2 reviews; no defect at the stated fixture or diagnostic scope. Acceptance is recorded separately."
+      }
     },
     {
       "id": "ENGINE-MATRIX-R2",
@@ -1533,12 +1547,19 @@
       "inventory_version": 1,
       "evidence_kind": "HAND-BUILT WASM EXECUTION",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "supersedes": "ENGINE-MATRIX-R1",
       "scope": "Hand-built wasm32 modules executed on macOS by Node/V8 as the reference engine and by Chrome, Firefox and Safari pages served over loopback with and without COOP/COEP. Records engine identity, feature detection, executed multivalue, tail-call, final exception-handling, bulk-memory and atomics semantics, the encoding pin, and the full, single-thread JSPI and precompiled-callback suspension paths. No CCL object layout, generated B code, GC, production runtime or hosting deployment is claimed.",
-      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's review 7e941a8d; follow-up adversarial review by Codex pending."
+      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's review 7e941a8d; follow-up adversarial review by Codex pending.",
+      "external_review": {
+        "reviewer": "Codex",
+        "record": "stage0/codex-review.md",
+        "reviewed_revision": "6c78877d",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "scope": "R3 follow-up and preceding R1/R2 reviews; no defect at the stated fixture or diagnostic scope. Acceptance is recorded separately."
+      }
     },
     {
       "id": "MATERIALIZATION-R2",
@@ -1553,12 +1574,19 @@
       "inventory_version": 1,
       "evidence_kind": "HAND-BUILT WASM EXECUTION",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "supersedes": "MATERIALIZATION-R1",
       "scope": "Hand-built wasm32 Lisp-code template on macOS Node/V8: one canonical unshared explicit-maximum template materialized into the shared and unshared profile binaries by a single flag byte, with recorded template/binary hashes, offset, limits, import and export inventories, disassembly-derived feature requirements and materializer version. Engine import-limit subtyping, growth to and beyond the maximum, cross-profile link rejection, and the same template executing under the full wait-based, single-thread JSPI and precompiled-callback runtimes with identical results. Wrong records, tampered bytes, non-canonical templates, unadmitted profiles, stale identities and wrong-profile runtimes are refused. No CCL object layout, generated B code, production module granularity, image or browser deployment is claimed.",
-      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's review 7e941a8d; follow-up adversarial review by Codex pending."
+      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's review 7e941a8d; follow-up adversarial review by Codex pending.",
+      "external_review": {
+        "reviewer": "Codex",
+        "record": "stage0/codex-review.md",
+        "reviewed_revision": "6c78877d",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "scope": "R3 follow-up and preceding R1/R2 reviews; no defect at the stated fixture or diagnostic scope. Acceptance is recorded separately."
+      }
     },
     {
       "id": "NESTED-EH-R2",
@@ -1595,12 +1623,19 @@
       "inventory_version": 1,
       "evidence_kind": "HAND-BUILT WASM EXECUTION",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "supersedes": "NESTED-EH-R2",
       "scope": "Hand-built emitted wasm32 frames on macOS Node/V8 under the B entry shape: ten cases carry a nonlocal exit with zero, one and six values through nested frames with dynamic bindings, root records and cleanup, including a cleanup that raises a second exit, a chain of nine cleanup frames, a missing handler that reaches the host after full restoration, a recoverable check resumed by a use-value handler without unwinding, a declined handler that becomes an error, and a nested debugger exit inside the handler. VSP, TSP, CSP, the binding, the root head and the handler depth are restored after every case; inside every cleanup the departed inner frames are already gone (own binding, own root record, own stacks witnessed at cleanup entry) and before every handler delivers values, enters the debugger or propagates it observes only its own frame with no cleanup record, every expected address derived from the frame model rather than from saved fields; cleanups run exactly once; post-exit effects are absent; every value is checked. No production TCR, condition system, debugger, GC or C boundary is claimed.",
-      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's R2 review ed54b7fa; follow-up adversarial review by Codex pending."
+      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's R2 review ed54b7fa; follow-up adversarial review by Codex pending.",
+      "external_review": {
+        "reviewer": "Codex",
+        "record": "stage0/codex-review.md",
+        "reviewed_revision": "6c78877d",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "scope": "R3 follow-up and preceding R1/R2 reviews; no defect at the stated fixture or diagnostic scope. Acceptance is recorded separately."
+      }
     }
   ],
   "auxiliary_records": [
@@ -3322,10 +3357,17 @@
       "sha256": "3c3d90cda88355ad6ba39286412004b29ab4641ad78524eeb7501224773f627d",
       "scope": "D6 kernel-import census: 65 U1 defimport spellings joined across the C table and the x8632 enumeration with name agreement; 63 x8632 caller sites over 42 imports; every C or assembly definition located; closed disposition ledger per profile with closure phase, replacement and regression obligations; 65 census-shaped import nodes offered for the working graph's unresolved gap:imports placeholder. Seven refused controls. Source inspection only; no reachability, no gate credit.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "authorship": "Claude Fable 5.1 fixture and generated census on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending."
+      "authorship": "Claude Fable 5.1 fixture and generated census on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending.",
+      "external_review": {
+        "reviewer": "Codex",
+        "record": "stage0/codex-review.md",
+        "reviewed_revision": "6c78877d",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "scope": "R3 follow-up and preceding R1/R2 reviews; no defect at the stated fixture or diagnostic scope. Acceptance is recorded separately."
+      }
     },
     {
       "id": "TCR-SCHEMA-R1",
@@ -3373,11 +3415,18 @@
       "sha256": "5e673f17379b6d025890fd9a6acad4aedd560e6679b189d47ab94f8dd85fcd18",
       "scope": "Production TCR schema v1 under D5: 47 fields in nine D5 field groups with explicit offsets, widths, alignments, classification and ownership, joined to every replaced or deferred native TCR cell of the wasm32 layout schema and to every TCR field the accepted fixtures use, each fixture field mapped to one production field or declared fixture-private. Control execution over the committed contracts; no Wasm executed, no gate credit. The schema is the Stage 1 build target D5 owes; it does not claim executed proof.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "supersedes": "TCR-SCHEMA-R1",
-      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's review 7e941a8d; follow-up adversarial review by Codex pending."
+      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's review 7e941a8d; follow-up adversarial review by Codex pending.",
+      "external_review": {
+        "reviewer": "Codex",
+        "record": "stage0/codex-review.md",
+        "reviewed_revision": "6c78877d",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "scope": "R3 follow-up and preceding R1/R2 reviews; no defect at the stated fixture or diagnostic scope. Acceptance is recorded separately."
+      }
     },
     {
       "id": "FLOAT-DETECTION-R3",
@@ -3385,11 +3434,18 @@
       "sha256": "9657b82b9d1c661f451f683163b3f65ecfe2e2ecd2fc3463e9f62b3713b858e4",
       "scope": "Hand-built wasm32 checked floating-point operations on macOS Node/V8: f64 add, sub, mul, div and sqrt classified as exact, overflow, division-by-zero, invalid, underflow or inexact without engine flags, a checked float-to-integer conversion that never traps, and the f32 default-mode slice. Overflow, division by zero and invalid come from operand and result classification; underflow and inexact from error-free witnesses (TwoSum, scaled TwoProduct, residuals) with exact power-of-two scaling for small results, small operands and operands near the largest exponent; tininess decided after rounding as IEEE 754 and x86 define it, including results that round up to the smallest normal. Corpus cases with expectations from exact rational rounding in Python; every f64 case also executed natively with SSE scalar instructions on this x86-64 Mac, MXCSR flags and result bits agreeing with the oracle; eleven module mutants rejected. Specification evidence for the D6 floating-point hypothesis; no policy decision, no gate credit.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "supersedes": "FLOAT-DETECTION-R2",
-      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's R2 review ed54b7fa; follow-up adversarial review by Codex pending."
+      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's R2 review ed54b7fa; follow-up adversarial review by Codex pending.",
+      "external_review": {
+        "reviewer": "Codex",
+        "record": "stage0/codex-review.md",
+        "reviewed_revision": "6c78877d",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "scope": "R3 follow-up and preceding R1/R2 reviews; no defect at the stated fixture or diagnostic scope. Acceptance is recorded separately."
+      }
     },
     {
       "id": "CODEX-R2-PROBES-ON-R3",
@@ -3401,6 +3457,16 @@
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "authorship": "Codex's unchanged R2 probes executed by Claude Fable 5.1 against the corrected checkout; observation only."
+    },
+    {
+      "id": "CODEX-CLAUDE-BRANCH-REVIEW-R3",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-codex-branch-review-r3/packet.json",
+      "sha256": "b6d909692630c60618e7a9558895adf59efc4cd22c7b4c3a8991673f7d903ff3",
+      "scope": "Independent R3 review closes the handler CSP and float tininess findings; two fresh verifiers and independent probes pass. Prior other-slot reviews stand. No production float-policy choice or generated-code claim.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }
