@@ -1315,3 +1315,16 @@ The shared backend is byte-identical to the reviewed closure proposal, chained
 to callable-object integration and covered by the reviewed R6/R6a runs. The
 integration record retains the literal-lambda diagnostic, root-count oracle
 and unused inner-object observations for the next derivative. No LL05 credit.
+
+## 2026-09-16 — generate local functions and lexical recursion
+
+The isolated backend proposal adds FLET/LABELS, local self and mutual calls,
+inlined lambda binding and literal APPLY. Its 241 modules execute 2,748
+comparisons with native CCL and the independent environment model. Root-count
+expectations are derived independently from pre-emitter IR, and unused static
+inner-function objects are removed. Sixteen compiler mutations and two
+reproductions of development defects reject. Original rewrite, token-overlap,
+probe and expectation failures are retained with their scope disclosed.
+R6/R6a, exact restoration and the retained replay pass before commit. The
+shared backend remains the accepted closure unit; the next proposal is proper
+Wasm tail transfer. No inventory, criterion or gate changes.

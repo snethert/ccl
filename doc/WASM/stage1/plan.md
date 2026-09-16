@@ -20,8 +20,10 @@ runtime-sized arguments, removing the 64-argument ceiling. The accepted and inte
 ceiling. The accepted and integrated [callable-object unit](b-callables.md) now supplies
 checked object/symbol dispatch, live function cells and recursive calls.
 The accepted and integrated [lexical closure unit](b-closures.md) executes
-escaping shared mutable captures. Next: complete the remaining local-call forms, condition path,
-lazy adapters and tail transfers. Neither complete LL05 slot is claimed by these units.
+escaping shared mutable captures. The isolated [local-function proposal](b-local-calls.md)
+adds FLET/LABELS, lexical recursion, inline lambda calls and literal APPLY.
+Next: proper Wasm tail transfers, then the remaining condition and lazy-adapter
+work. Neither complete LL05 slot is claimed by these units.
 
 ## What Stage 1 delivers
 

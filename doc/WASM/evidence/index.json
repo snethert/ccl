@@ -3903,6 +3903,16 @@
         "sha256": "63412e2992133ee5f6e4e8600e884ab621db58c21219265dcbd5f6b5e530befa",
         "scope": "Reviewed closure unit only; no LL05 slot credit."
       }
+    },
+    {
+      "id": "STAGE1-B-LOCAL-CALLS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-b-local-calls-r1/packet.json",
+      "sha256": "00ed422f748e6761b7156b0c20ebd514f86de4940b3e07f9951945cad1278694",
+      "scope": "Generated FLET/LABELS, lexical self and mutual calls, escaping local-function groups, inline lambdas and literal APPLY: 183 source functions, 241 modules, 687 native/model cases and 2748 target comparisons. Sixteen compiler mutants, two development regression controls and 32 local checks; independent pre-emitter root contracts, R6/R6a and retained replay pass. Owner-supplied registry, no collection, authenticated lazy installation, tail transfer, full LL05 credit or unreviewed integration.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

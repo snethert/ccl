@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "a18c237c757eb660340fb7b9daff8761052440d4",
+  "commit": "6f686760d29938d42eedbc1518087a56da7babf4",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "21945baad7a8da2ac207e99f6ab1b5bc7b867e39219cbbb663e7ee63378a636b",
-  "immutable_evidence_files": 172881,
-  "indexed_references_verified": 11957,
-  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-b-closures.json",
-  "source_index_sha256": "1ff1a3f8e908a8de4f93d75045739a7b21daf3cf87acebfec73303ebe23ffe7a",
+  "catalog_sha256": "65b6491e53f23a02fe515692c0b6fc1c12f8747ddf73b5bf768ab49393820ec0",
+  "immutable_evidence_files": 174591,
+  "indexed_references_verified": 12285,
+  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-b-local-calls.json",
+  "source_index_sha256": "28979365561405fbcc8cde47bd80cd45fbafda1cb1414933b358f36069819815",
   "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Callable objects integrated; lexical closure construction is an auxiliary proposal awaiting external review, without gate credit.",
+  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Lexical closures integrated; local functions and lexical recursion are an auxiliary proposal awaiting external review, without gate credit.",
   "last_scoped_addition": {
-    "directory": "2026-09-16-stage1-b-closures-r1",
-    "files": 952,
-    "bytes": 51114758
+    "directory": "2026-09-16-stage1-b-local-calls-r1",
+    "files": 1710,
+    "bytes": 61807359
   }
 }

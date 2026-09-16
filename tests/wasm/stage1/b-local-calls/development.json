@@ -1,0 +1,34 @@
+{
+  "failures": [
+    {
+      "path": "ccl-local-ir-r1",
+      "reason": "The diagnostic included a literal APPLY with statically wrong arity; native compilation refused before the IR probe completed."
+    },
+    {
+      "path": "ccl-local-compile-r1",
+      "reason": "An unclosed LABELS in the new environment planner caused a reader EOF."
+    },
+    {
+      "path": "ccl-local-compile-r2",
+      "reason": "The inherited refusal corpus still expected FLET/LABELS and inline LAMBDA-BIND to fail; the newly supported FLET escaped that outdated refusal."
+    },
+    {
+      "path": "target-r3",
+      "reason": "Opaque keyword handles overlapped the low closure heap; a returned function decoded as :B. Keywords moved to a disjoint region. The final replay includes an exact source mutant restoring this bug."
+    },
+    {
+      "path": "target-r4",
+      "reason": "A hand-counted nested FLET allocation expected 80 bytes; native inherited data plus the added function-cell capture require 88. The retained IR determines the extra environment word and its alignment."
+    },
+    {
+      "path": "target-r6",
+      "reason": "A hand-counted LABELS default-call group expected 104 bytes but only one sibling is captured. Two cells and 40/32-byte function objects require 88. The IR witness records both functions and the single lexical call."
+    },
+    {
+      "path": "ccl-local-normalizer-counterexample",
+      "reason": "The first literal-APPLY rewrite traversed LET binding syntax as expressions. A variable named APPLY caused a malformed initialization. Syntax-directed rewriting fixes it; the exact old normalizer is a recompiled negative control."
+    }
+  ],
+  "retention": "Original logs, native commands and compiler-time source snapshots are retained. The earliest target executions read the live harness; their compiler-time snapshots do not certify its execution-time bytes. No reconstruction is presented as an original snapshot. The finalized regression controls retain exact executed sources for both real semantic defects.",
+  "superseded": "Successful development compiles and probes precede the finalized producer; no acceptance or gate credit is claimed for them."
+}
