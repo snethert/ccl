@@ -142,6 +142,7 @@
     ((:ppc32 :ppc64) *ppc-xload-modules*)
     (:x8632 *x8632-xload-modules*)
     (:x8664 *x8664-xload-modules*)
+    (:wasm32 '(xwasm32fasload xfasload))
     (:arm *arm-xload-modules*)))
 
 
@@ -198,6 +199,7 @@
     (:x8664 (append *x86-compiler-modules*
                     *x8664-compiler-backend-modules*
                     *x86-compiler-backend-modules*))
+    (:wasm32 '(wasm32-arch wasm32-backend))
     (:arm (append *arm-compiler-modules*
                   *arm-compiler-backend-modules*))))
 

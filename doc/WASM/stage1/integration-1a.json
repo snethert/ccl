@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "timestamp": "2026-09-16T16:23:07.431828+00:00",
+  "source_baseline": "c994217adc56b3f8a564526cee4695893ac84d86",
+  "review_commit": "3c2a38bce6cab20d10061950f718e34b53fcb388",
+  "acceptance_commit": "0d4090b1c485db2b483096400ab937fda1bd0cc8",
+  "acceptance_decision_sha256": "b8c40ab988fd0cbf096022a7e11904bba547bf10a7e40eaf0594130d3ac96f8d",
+  "unit_locator": "2026-09-16-stage1-1a-r2/native/proposal/unit.json",
+  "unit_sha256": "bd50198babe4bd2aea7a2d3a37906f85be36c0a66cbfc5eac4bf637287ab5cb7",
+  "files": [
+    {
+      "path": "lib/systems.lisp",
+      "before": "517c6aeb6078a4e6eac63d8dbec523da6fc033a34b2de94da48cef7fd408c0bc",
+      "after": "5cd03249a56ca6d1d8ccaa245c72b7dd2fadaf028c5ce9a1cce45a80855f3b35"
+    },
+    {
+      "path": "lib/compile-ccl.lisp",
+      "before": "61480f2e75a7968beec4f3543c7fe45cb1379cf1bd44e466e2b564e53bcbc0f2",
+      "after": "074c7c53182e4fe62b7ce24d4856f5bda8c80b05ebec8e4f445e7cb112ede010"
+    },
+    {
+      "path": "compiler/WASM32/wasm32-arch.lisp",
+      "before": null,
+      "after": "738ee8e14a75e2aa006198664b99aed93345622310092349b5e409a8d15a3aad"
+    },
+    {
+      "path": "compiler/WASM32/wasm32-backend.lisp",
+      "before": null,
+      "after": "626ea8f1736b442ec62912386151a6b376d36b2f5ad8263591a12968f2864ef3"
+    },
+    {
+      "path": "xdump/xwasm32-fasload.lisp",
+      "before": null,
+      "after": "c7619e80fc64d23f78b34e4c395817aecb978fe1515156c45d2eb844b0809395"
+    }
+  ],
+  "verification": "All five integrated files equal the exact reviewed and accepted proposal bytes. Both modified originals matched pristine U1 before copying. Upstream lisp-kernel unchanged. Reuse Codex and Claude independent three-build R6 runs; no new native execution or changed implementation.",
+  "reverse": "Restore the two modified files from the recorded U1 blobs and remove the three added files, as the retained unit removal did in both reviewed native runs."
+}

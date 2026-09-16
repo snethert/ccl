@@ -7,7 +7,8 @@ the shared-compiler changes with Claude as reviewer; the single-thread JSPI
 profile is deferred. The entry condition is met: all 48 Stage 0 variants are
 accepted. The [1A packet](1a.md) has three accepted records after Claude’s review and the user’s
 [acceptance](acceptance-1a.json); the ledger is BLOCKED with 28 missing and
-no unreviewed records.
+no unreviewed records. The [reviewed unit](integration-1a.json) is integrated;
+next is subgate 1B’s generated representation and B ABI work.
 
 ## What Stage 1 delivers
 
