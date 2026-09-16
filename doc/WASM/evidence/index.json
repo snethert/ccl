@@ -3182,10 +3182,29 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-on-demand-census-r1/packet.json",
       "sha256": "6d921108479b45d152db31eff58b2fa48329a476de846b76ff72db780f26ebab",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "DEFECT_FOUND",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Native on-demand query/witness tools and final explicit startup worklist. No exhaustive callee bounds, Wasm execution, complete closure or LL15 acceptance."
+      "scope": "Native on-demand query/witness tools and final explicit startup worklist. No exhaustive callee bounds, Wasm execution, complete closure or LL15 acceptance.",
+      "external_review": {
+        "reviewer": "Claude",
+        "record": "stage0/claude-review.md",
+        "review_commit": "224a27d9",
+        "disposition": "DEFECT_FOUND",
+        "scope": "Fifty-seventh audit; tools and startup worklist reproduced, combined graph has an unretained base."
+      },
+      "superseded_artifacts": [
+        {
+          "member": "startup-analysis.tar.gz!graph/census.json.gz",
+          "reason": "Unretained intermediate base; original immutable artifact is historical only.",
+          "replacement_packet": "ON-DEMAND-STARTUP-R2"
+        },
+        {
+          "member": "startup-graph.json.gz",
+          "reason": "Same startup contents regenerated with profile text from an explicit retained base.",
+          "replacement_packet": "ON-DEMAND-STARTUP-R2"
+        }
+      ]
     },
     {
       "id": "CENSUS-BUILTIN-SLOTS-R1",
@@ -3193,15 +3212,15 @@
       "sha256": "4d1c3de7bc024653b164ae6f8f99046b40cb12ddbfb96f71d83f55274e0a063c",
       "scope": "1,500 original-build calls grouped by eight operand slots; 1,562 computed calls separate. Native source interpretation and graph consolidation only; no target implementation or runtime bound qualified.",
       "execution_status": "BLOCKED",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
       "external_review": {
         "reviewer": "Claude",
         "record": "stage0/claude-review.md",
-        "review_commit": "e0c73b10",
-        "disposition": "EXECUTION_REPRODUCED_NO_DEFECT",
-        "scope": "Five analysis outputs and graph reproduced with 32 rejecting controls. New publication metadata has not been independently reviewed."
+        "review_commit": "224a27d9",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "scope": "Fifty-seventh audit; corrective publication and retained outputs verified at their stated scope."
       }
     },
     {
@@ -3210,9 +3229,16 @@
       "sha256": "ac234dde863df2be324fcf75057370b8fc4b7fbca31e4a45af9a0a83f9c3721d",
       "scope": "Four existing finite-expression passes replayed from one committed resolver tree: 124 proofs, 1438 unknown expressions. Symbol-cell values and target lowerings remain open; no complete census or gate credit.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude",
+        "record": "stage0/claude-review.md",
+        "review_commit": "224a27d9",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "scope": "Fifty-seventh audit; corrective publication and retained outputs verified at their stated scope."
+      }
     },
     {
       "id": "CENSUS-REGISTRY-HISTORY-R1",
@@ -3220,9 +3246,16 @@
       "sha256": "302716fbbf9d17e3557509271a5c471dfa989c1c568071874d802d7a22e29835",
       "scope": "Preserved development body/registry analyses and the earlier 84-unit startup capture; no source-version attribution where an executed snapshot is absent, no qualified 4373-body completion or gate credit.",
       "execution_status": "HISTORICAL_UNQUALIFIED",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_HISTORICAL",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude",
+        "record": "stage0/claude-review.md",
+        "review_commit": "224a27d9",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_HISTORICAL",
+        "scope": "Fifty-seventh audit; corrective publication and retained outputs verified at their stated scope."
+      }
     },
     {
       "id": "CODEX-CLAUDE-BRANCH-REVIEW-R1",
@@ -3230,6 +3263,16 @@
       "sha256": "f195be814b78ac35e7420140b1776aee69abdd50c198d8343e16dc342889b962",
       "scope": "Independent Codex review of nine Claude commits; two reproduced defects in nested unwind and optional float exactness, seven retained verifiers passing, engine replay refused after Firefox changed, current engine observations retained. No acceptance or gate credit; merge withheld.",
       "execution_status": "DEFECTS_REPRODUCED",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
+    },
+    {
+      "id": "ON-DEMAND-STARTUP-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-on-demand-startup-r2/packet.json",
+      "sha256": "35c3ac3ff46028fc209fecfee4f553374442bdca0b587f1e50b28d21ab3064e6",
+      "scope": "All three startup-analysis stages replayed on retained native inputs and reviewed finite-chain base; original body/binding outputs byte-identical, startup graph identical except inherited profile, combined graph exact union. Corrects the fifty-seventh audit provenance finding without changing census semantics or claiming complete closure.",
+      "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE"

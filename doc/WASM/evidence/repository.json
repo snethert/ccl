@@ -12,7 +12,7 @@
   "verification": "Scoped corrections addition: 1027 new catalog rows across five R2 packets; each producer executed and verifier re-executed with deterministic files identical; the R1 packets and all previous rows preserved; no native execution, accepted-envelope rehash or historical payload scan.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository; original failures retained. Forty accepted records; Claude-authored executions corrected or refreshed after Codex review await follow-up review. Full census and generated code remain open.",
+  "scope": "Separate local evidence repository; original failures retained. Forty accepted records. LL15 instrument policy authorized, qualification results still pending. Claude-authored executions corrected or refreshed after Codex review await follow-up review. Generated code remains open.",
   "last_scoped_addition": {
     "directories": [
       "2026-09-15-nested-eh-r2",
@@ -23,7 +23,7 @@
     ],
     "files": 1027,
     "bytes": 9730493,
-    "prior_commit": "80c21da9f0a0cda173136e68d8570b312c04422c",
+    "prior_commit": "b212ade52d396b9f5edfe80c445be57eeaab0d33",
     "immutable_evidence_files": 165713,
     "catalog_sha256": "ab1e2287475989e5383fcd33b86420a2b1252e81035d34497158cc887d728b83"
   }
