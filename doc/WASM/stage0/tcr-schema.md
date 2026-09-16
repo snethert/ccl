@@ -4,7 +4,7 @@ Status: diagnostic EXECUTED and PASSING at its stated scope in `TCR-SCHEMA-R3`,
 which adds the `fp_control` word under the D6 floating-point policy the
 user decided on 16 September (the ARM model keeps the logical enable mask in
 the TCR); `TCR-SCHEMA-R2`, reviewed without defect, and `TCR-SCHEMA-R1` are
-retained. Awaiting Codex's review. No inventory slot and no gate credit.
+retained. Codex reviewed R3 without defect; see the [D6 review](codex-review.md). No inventory slot and no gate credit.
 
 Authorship: Claude Fable 5.1 wrote the schema source, the checker and the
 generated [contract](../contracts/tcr.v1.md) on branch `wasm2-claude`;

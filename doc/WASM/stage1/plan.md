@@ -72,7 +72,7 @@ exit criteria, plus two entries proposed from Stage 0 findings.
 | [Nested exits](../stage0/nested-eh.md) and the boundary fixture | 1C generated EH |
 | [Initializer binding](../stage0/initializer-binding.md) | 1E closure initializers and loader |
 | [Kernel-import census](../contracts/kernel-imports.v1.md) | 1A runtime import inventory, 1E namespace and host services |
-| [Floating-point detection and policy](../contracts/floating-point.v1.md), specified and executed over its corpus with native x86 agreement; policy decided 16 September (the ARM model) | 1C numerics, after the policy decision |
+| [Floating-point detection and policy](../contracts/floating-point.v1.md), specified and executed over its corpus with native x86 agreement; policy decided 16 September (the ARM model) | 1C numerics; policy selected, implementation and cost measurement owed |
 | Retained startup worklist and on-demand census queries (LL15-b/c under the v0.2 contract) with seeds, ranks, trap and store dispositions; unknown callees kept separate from proven bounds | 1E closure, bundle composition and module granularity; implementation questions answered by focused native scenarios, not by an exhaustive closure |
 | Stale-dcode finding | 1C S1-LL11-b |
 

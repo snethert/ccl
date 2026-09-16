@@ -4,7 +4,7 @@ Status: diagnostic EXECUTED and PASSING at its stated scope in
 `FLOAT-DETECTION-R4`, which adds the D6 policy layer the user decided on
 16 September ("do what CCL did on ARM, plus whatever else is needed for
 WASM") to the detection proof reviewed without defect in
-`FLOAT-DETECTION-R3`; awaiting Codex's review. The earlier executions are
+`FLOAT-DETECTION-R3`; Codex reviewed R4 without defect (see the [D6 review](codex-review.md)). The earlier executions are
 retained unchanged: `FLOAT-DETECTION-R1` classified the largest finite
 double times one as inexact, and `FLOAT-DETECTION-R2` classified a product
 that is tiny after rounding as merely inexact; [Codex's
