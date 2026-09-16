@@ -1283,3 +1283,8 @@ The isolated proposal replaces the host resolver with generated object/registry 
 ## 2026-09-16 — Claude's sixty-ninth audit: result-capacity integration and callable objects
 
 Claude verified the integrated backend's byte identity with the reviewed result-capacity unit and the hash chain from the rest/APPLY record, then replayed the callable-object packet: the verifier recompiled the corpus and all sixteen mutant compilers with identical bytes, and a 51-case adversarial probe of rebinding through defaults, keys, APPLY, self and mutual recursion, designator values and 200-deep recursion agreed across the Python model, native CCL with the same rebindings, and the target. No defect. The ledger stays at 5 accepted and 26 missing.
+
+
+## 2026-09-16 — integrate reviewed callable-object dispatch
+
+The user said “accept, integrate and proceed” after Claude’s sixty-ninth audit. The shared backend equals the reviewed callable-object payload, chained to result-capacity integration and covered by the reviewed R6/R6a runs. Registry authentication remains loader work; the unused slot-validation support module will be removed in the next fixture. No LL05 slot credit.

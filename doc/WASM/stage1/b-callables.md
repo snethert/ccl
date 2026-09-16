@@ -34,8 +34,8 @@ A development corpus encoded binding tuples in Python syntax instead of Lisp
 lists. The reader refusal and consequent missing-module attempt are retained;
 the renderer was corrected before execution. No compiler defect was found.
 
-This proposal awaits external review, with no LL05 slot credit. The shared
-backend is the accepted result-capacity unit. Lexical closure construction
+The user accepted this unit after Claude’s sixty-ninth audit found no defect.
+The exact payload is [integrated](integration-b-callables.json), without LL05 slot credit. Lexical closure construction
 and mutation are next; full conditions, lazy adapters, tails, GC and concurrent
 publication remain. Distinct fixture objects preserving environment fields
 prove object identity and SELF forwarding, not capture semantics.

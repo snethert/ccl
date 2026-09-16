@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-16T20:15:58.584561+00:00",
+  "user_authorization": "accept, integrate and proceed",
+  "review_commit": "1ac99a8f5d3182491ee7c9d009f14c0d2f10c4a8",
+  "review": "sixty-ninth audit; no defect",
+  "file": "compiler/WASM32/wasm32-backend.lisp",
+  "before": "e654639ead9c1e80fa1b9332680d4313ad10c57465e869dd20f8f5cdfcf5674d",
+  "after": "ec448ae0b899eb81ba46c605789f96691c2e25bb4480ac98fd8cb292a6017227",
+  "proposal_locator": "2026-09-16-stage1-b-callables-r1/source/tests/wasm/stage1/b-callables/wasm32-backend.lisp",
+  "packet_manifest_sha256": "31836d2ee8160241928e64f9825b079e003b20b5d4c11134226ff6d5fb4ea6a2",
+  "scope": "Callable-object and live-binding dispatch; no LL05 slot acceptance.",
+  "observations": [
+    "Registry metadata is owner-supplied; loader authentication remains open.",
+    "The old unused slot-validation support module is retained in this exact reviewed fixture; remove it from the next derivative."
+  ],
+  "verification": "Exact reviewed payload; independent reviewed R6/R6a runs cover these bytes. No new native execution.",
+  "reverse": "Restore the accepted result-capacity payload at the before hash."
+}
