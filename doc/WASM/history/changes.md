@@ -1341,3 +1341,16 @@ audit. The shared backend equals the reviewed local-function payload, with
 the integration chain and reviewed R6/R6a coverage preserved. The next unit
 addresses proper tail transfer and the temporary closure for literal APPLY.
 No LL05 inventory credit.
+
+## 2026-09-16 — generate proper tail transfer and temporary literal APPLY
+
+The isolated proposal keeps the public B signature and adds an internal paired
+tail entry sharing a reusable continuation. Named, indirect, APPLY and local
+calls use actual Wasm tail instructions where no work remains. Literal APPLY
+callables use stack storage; escaping closures and captured cells retain their
+heap ownership. The 270-module corpus passes 2,964 comparisons and 36 chains
+of 100,000 steps within a 2 KiB Lisp-stack budget. Nineteen compiler mutants
+and two inherited regressions reject. R6/R6a, restoration and retained replay
+pass before commit. Original preflight, assembler and expectation failures are
+retained. The shared backend remains the reviewed local-function unit; no
+inventory, criterion or gate changes.

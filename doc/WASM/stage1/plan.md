@@ -22,8 +22,10 @@ checked object/symbol dispatch, live function cells and recursive calls.
 The accepted and integrated [lexical closure unit](b-closures.md) executes
 escaping shared mutable captures. The accepted and integrated [local-function unit](b-local-calls.md)
 adds FLET/LABELS, lexical recursion, inline lambda calls and literal APPLY.
-Next: proper Wasm tail transfers, then the remaining condition and lazy-adapter
-work. Neither complete LL05 slot is claimed by these units.
+The isolated [proper tail-call proposal](b-tail-calls.md) adds bounded Wasm
+tail transfers and stack-temporary literal APPLY callables. Next: the remaining
+condition and lazy-adapter work, revisiting tail legality as dynamic scopes are
+admitted. Neither complete LL05 slot is claimed by these units.
 
 ## What Stage 1 delivers
 

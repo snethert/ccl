@@ -1,0 +1,26 @@
+{
+  "failures": [
+    {
+      "path": "target-r1",
+      "reason": "The inherited resource check expected an 80-level tail recursion to exhaust the stack. Proper tail transfer now completes it, so the check was replaced with its source-defined successful result."
+    },
+    {
+      "path": "target-r2",
+      "reason": "The first revised expectation mistakenly used one NIL value; the unchanged source returns 71 and 73. Corrected from the source, not from the emitted code."
+    },
+    {
+      "path": "target-r3",
+      "reason": "The new wrapper initially wrote context metadata before discovering that its full scratch frame exceeded memory. The upper memory fence exposed those writes. A full initial-frame preflight now precedes context writes; entry-frame-preflight reproduces the original omission."
+    },
+    {
+      "path": "ccl-tail-compile-r2",
+      "reason": "The temporary-object extent edit omitted a parenthesis in generated WAT. Native compilation completed; WABT refused the first module."
+    },
+    {
+      "path": "target-r6",
+      "reason": "The long-chain oracle hand-wrote the wrong 130-value pattern for MANY. It now uses the explicit five-value source pattern repeated 26 times."
+    }
+  ],
+  "retention": "Original logs and failed compiler proposals are retained. Exact execution-time harness snapshots exist for target r1, r3 and r6. The intervening r2 expectation typo has its original log but no separate harness snapshot; no reconstructed source is represented as original.",
+  "superseded": "Successful exploratory compiles and positive runs precede the finalized producer. Two inherited regression controls also re-exercise the reviewed binding-rewrite and keyword-token defects."
+}

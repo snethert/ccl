@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "6f686760d29938d42eedbc1518087a56da7babf4",
+  "commit": "ab13524c80e549f769caa647999883be89e80892",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "65b6491e53f23a02fe515692c0b6fc1c12f8747ddf73b5bf768ab49393820ec0",
-  "immutable_evidence_files": 174591,
-  "indexed_references_verified": 12285,
-  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-b-local-calls.json",
-  "source_index_sha256": "28979365561405fbcc8cde47bd80cd45fbafda1cb1414933b358f36069819815",
+  "catalog_sha256": "37cb0c685414a7342ea802d913722c6a3a38f7321b106cac8047a3e4ae695c4c",
+  "immutable_evidence_files": 176468,
+  "indexed_references_verified": 12614,
+  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-b-tail-calls.json",
+  "source_index_sha256": "9e444dc7d1ca85a82fdc32435f6bea41f8b88f3766eb222dd550ec7e310c9325",
   "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Lexical closures integrated; local functions and lexical recursion are an auxiliary proposal awaiting external review, without gate credit.",
+  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Local functions integrated; proper tail transfer and stack-temporary literal APPLY are an auxiliary proposal awaiting external review, without gate credit.",
   "last_scoped_addition": {
-    "directory": "2026-09-16-stage1-b-local-calls-r1",
-    "files": 1710,
-    "bytes": 61807359
+    "directory": "2026-09-16-stage1-b-tail-calls-r1",
+    "files": 1877,
+    "bytes": 71240669
   }
 }
