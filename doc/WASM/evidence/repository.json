@@ -2,22 +2,29 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "80c21da9f0a0cda173136e68d8570b312c04422c",
+  "commit": "16610057ff1a07d71ab98d0f39c717e9fa7949ce",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "5b65291a0ebe03039023a0649fdd180f555eb7944acf501b6ee093a9e27a840b",
-  "immutable_evidence_files": 164673,
-  "indexed_references_verified": 941,
-  "source_index_snapshot": "catalog/source-index-2026-09-15-codex-branch-review-r1.json",
-  "source_index_sha256": "3d8a744d2ceb4e04dd71bc9e9ff33d2aecb254450ff93138b6e78988b65d1f8e",
-  "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
+  "catalog_sha256": "ab1e2287475989e5383fcd33b86420a2b1252e81035d34497158cc887d728b83",
+  "immutable_evidence_files": 165713,
+  "indexed_references_verified": 5665,
+  "source_index_snapshot": "catalog/source-index-corrections-r2.json",
+  "source_index_sha256": "50d3154748deace9d74f4de831058484d5e58752542eb991bd771e670521d8a7",
+  "verification": "Scoped corrections addition: 1027 new catalog rows across five R2 packets; each producer executed and verifier re-executed with deterministic files identical; the R1 packets and all previous rows preserved; no native execution, accepted-envelope rehash or historical payload scan.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository; original failures retained. Forty accepted records. LL15 instrument policy authorized, qualification results still pending. Generated code remains open.",
+  "scope": "Separate local evidence repository; original failures retained. Forty accepted records; Claude-authored executions corrected or refreshed after Codex review await follow-up review. Full census and generated code remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-15-codex-branch-review-r1",
-    "files": 28,
-    "bytes": 318025,
-    "immutable_evidence_files": 164673,
-    "catalog_sha256": "5b65291a0ebe03039023a0649fdd180f555eb7944acf501b6ee093a9e27a840b"
+    "directories": [
+      "2026-09-15-nested-eh-r2",
+      "2026-09-15-float-detection-r2",
+      "2026-09-15-engine-matrix-r2",
+      "2026-09-15-materialization-r2",
+      "2026-09-15-tcr-schema-r2"
+    ],
+    "files": 1027,
+    "bytes": 9730493,
+    "prior_commit": "80c21da9f0a0cda173136e68d8570b312c04422c",
+    "immutable_evidence_files": 165713,
+    "catalog_sha256": "ab1e2287475989e5383fcd33b86420a2b1252e81035d34497158cc887d728b83"
   }
 }

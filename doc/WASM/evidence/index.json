@@ -1429,10 +1429,12 @@
       "evidence_kind": "HAND-BUILT WASM EXECUTION",
       "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
-      "currency": "CURRENT",
+      "currency": "SUPERSEDED",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Hand-built wasm32 modules executed on macOS by Node/V8 as the reference engine and by Chrome, Firefox and Safari pages served over loopback with and without COOP/COEP. Records engine identity, feature detection, executed multivalue, tail-call, final exception-handling, bulk-memory and atomics semantics, the encoding pin, and the full, single-thread JSPI and precompiled-callback suspension paths. No CCL object layout, generated B code, GC, production runtime or hosting deployment is claimed.",
-      "authorship": "Claude Fable 5.1 fixture on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision."
+      "authorship": "Claude Fable 5.1 fixture on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision.",
+      "superseded_by": "ENGINE-MATRIX-R2",
+      "supersession_reason": "Firefox changed from 147.0.4 to 156.0 and gained JSPI; the refreshed execution records the current machine. The R1 packet stays evidence about the old Firefox binary."
     },
     {
       "id": "MATERIALIZATION-R1",
@@ -1448,14 +1450,16 @@
       "evidence_kind": "HAND-BUILT WASM EXECUTION",
       "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
-      "currency": "CURRENT",
+      "currency": "SUPERSEDED",
       "availability": "EXTERNAL_LOCAL_STORE",
       "variants": [
         "shared-template",
         "unshared-template"
       ],
       "scope": "Hand-built wasm32 Lisp-code template on macOS Node/V8: one canonical unshared explicit-maximum template materialized into the shared and unshared profile binaries by a single flag byte, with recorded template/binary hashes, offset, limits, import and export inventories, disassembly-derived feature requirements and materializer version. Engine import-limit subtyping, growth to and beyond the maximum, cross-profile link rejection, and the same template executing under the full wait-based, single-thread JSPI and precompiled-callback runtimes with identical results. Wrong records, tampered bytes, non-canonical templates, unadmitted profiles, stale identities and wrong-profile runtimes are refused. No CCL object layout, generated B code, production module granularity, image or browser deployment is claimed.",
-      "authorship": "Claude Fable 5.1 fixture on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision."
+      "authorship": "Claude Fable 5.1 fixture on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision.",
+      "superseded_by": "MATERIALIZATION-R2",
+      "supersession_reason": "Rerun after the engine-matrix refresh; the profile-not-admitted control now uses Safari's row."
     },
     {
       "id": "NESTED-EH-R1",
@@ -1471,10 +1475,12 @@
       "evidence_kind": "HAND-BUILT WASM EXECUTION",
       "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
-      "currency": "CURRENT",
+      "currency": "SUPERSEDED",
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Hand-built emitted wasm32 frames on macOS Node/V8 under the B entry shape: ten cases carry a nonlocal exit with zero, one and six values through nested frames with dynamic bindings, root records and cleanup, including a cleanup that raises a second exit, a chain of nine cleanup frames, a missing handler that reaches the host after full restoration, a recoverable check resumed by a use-value handler without unwinding, a declined handler that becomes an error, and a nested debugger exit inside the handler. VSP, TSP, CSP, the binding, the root head and the handler depth are restored after every case; cleanups run exactly once; post-exit effects are absent; every value is checked. No production TCR, condition system, debugger, GC or C boundary is claimed.",
-      "authorship": "Claude Fable 5.1 fixture on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision."
+      "authorship": "Claude Fable 5.1 fixture on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision.",
+      "superseded_by": "NESTED-EH-R2",
+      "supersession_reason": "Codex review finding 1 corrected: unwind to the frame before every cleanup and handler, cleanup-entry witnesses asserted, tenth mutant."
     },
     {
       "id": "CONTRACTS-R1",
@@ -1513,6 +1519,66 @@
       "availability": "EXTERNAL_LOCAL_STORE",
       "scope": "Hand-built bootstrap closure on macOS Node/V8: three phases, four wasm32 modules and nine required initializers. The loader validates the manifest against the supplied modules before instantiating anything, seeds its own dependencies before any bundle exists, binds every initializer to its prerequisites’ physical completion words and required service state, checks each completion physically after the initializer returns, and publishes ready only after every required initializer completed. Fourteen refusals cover omitted and wrong modules, manifest defects, wrong or unwritten completions, a raised initializer, a clobbered prerequisite and wrong service state; eight loader mutants including a no-load path are rejected by the unchanged oracle over the whole memory image. Not the qualified census closure, the production loader, image format or generated code.",
       "authorship": "Claude Fable 5.1 fixture on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision."
+    },
+    {
+      "id": "ENGINE-MATRIX-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-engine-matrix-r2/results.json",
+      "sha256": "d9b22dffab1873df0ae861fd8b6ebd741419c1c274906d7e4f96fde19155e436",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-engine-matrix-r2/packet.json",
+      "packet_sha256": "40a48c8e4357ebb6d0c50ba28b377f7da65e38fe9dc3285e05da0e09414874a1",
+      "timestamp": "2026-09-16T00:11:09.613248+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "42cc3bd7378f27882f582b9cecfbc3b6998681cee39bb47c08b84dba2aac1be3",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "supersedes": "ENGINE-MATRIX-R1",
+      "scope": "Hand-built wasm32 modules executed on macOS by Node/V8 as the reference engine and by Chrome, Firefox and Safari pages served over loopback with and without COOP/COEP. Records engine identity, feature detection, executed multivalue, tail-call, final exception-handling, bulk-memory and atomics semantics, the encoding pin, and the full, single-thread JSPI and precompiled-callback suspension paths. No CCL object layout, generated B code, GC, production runtime or hosting deployment is claimed.",
+      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's review 7e941a8d; follow-up adversarial review by Codex pending."
+    },
+    {
+      "id": "MATERIALIZATION-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-materialization-r2/results.json",
+      "sha256": "0573e72cfc805c7a8054f302519ca68b80ffbbb6613de877bc99d08a0099a362",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-materialization-r2/packet.json",
+      "packet_sha256": "c726343b92c855cbb62f50d04b4ce146db315ecc92ff6fbdb04768530f60ac12",
+      "timestamp": "2026-09-16T00:11:39.734959+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "42cc3bd7378f27882f582b9cecfbc3b6998681cee39bb47c08b84dba2aac1be3",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "supersedes": "MATERIALIZATION-R1",
+      "scope": "Hand-built wasm32 Lisp-code template on macOS Node/V8: one canonical unshared explicit-maximum template materialized into the shared and unshared profile binaries by a single flag byte, with recorded template/binary hashes, offset, limits, import and export inventories, disassembly-derived feature requirements and materializer version. Engine import-limit subtyping, growth to and beyond the maximum, cross-profile link rejection, and the same template executing under the full wait-based, single-thread JSPI and precompiled-callback runtimes with identical results. Wrong records, tampered bytes, non-canonical templates, unadmitted profiles, stale identities and wrong-profile runtimes are refused. No CCL object layout, generated B code, production module granularity, image or browser deployment is claimed.",
+      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's review 7e941a8d; follow-up adversarial review by Codex pending."
+    },
+    {
+      "id": "NESTED-EH-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-nested-eh-r2/results.json",
+      "sha256": "10ac6e2303197848c7fd9edbd88db17feea08b1da388e07791b7588f561a87e5",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-nested-eh-r2/packet.json",
+      "packet_sha256": "9f3b5eec02c04f9febc3a95d92d96800dc61ab7fc2043054ae4b2decc60bc1c0",
+      "timestamp": "2026-09-16T00:09:38.658145+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "42cc3bd7378f27882f582b9cecfbc3b6998681cee39bb47c08b84dba2aac1be3",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "supersedes": "NESTED-EH-R1",
+      "scope": "Hand-built emitted wasm32 frames on macOS Node/V8 under the B entry shape: ten cases carry a nonlocal exit with zero, one and six values through nested frames with dynamic bindings, root records and cleanup, including a cleanup that raises a second exit, a chain of nine cleanup frames, a missing handler that reaches the host after full restoration, a recoverable check resumed by a use-value handler without unwinding, a declined handler that becomes an error, and a nested debugger exit inside the handler. VSP, TSP, CSP, the binding, the root head and the handler depth are restored after every case and, inside every cleanup, the departed inner frames are already gone (own binding, own root record, own stacks witnessed at cleanup entry); cleanups run exactly once; post-exit effects are absent; every value is checked. No production TCR, condition system, debugger, GC or C boundary is claimed.",
+      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's review 7e941a8d; follow-up adversarial review by Codex pending."
     }
   ],
   "auxiliary_records": [
@@ -3186,9 +3252,11 @@
       "scope": "Production TCR schema v1 under D5: 47 fields in nine D5 groups with explicit offsets, widths, alignments, classification and ownership; 41 replaced native cells mapped and two deferred; all 56 fixture TCR fields mapped (25) or declared fixture-private (31); 22 fields with executed witnesses; eight refused controls. Build target, not executed proof; no gate credit.",
       "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
-      "currency": "CURRENT",
+      "currency": "SUPERSEDED",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "authorship": "Claude Fable 5.1 schema and checker on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending."
+      "authorship": "Claude Fable 5.1 schema and checker on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending.",
+      "superseded_by": "TCR-SCHEMA-R2",
+      "supersession_reason": "Wording correction: mv_count counts the complete ordered value sequence including value0."
     },
     {
       "id": "FLOAT-DETECTION-R1",
@@ -3197,9 +3265,35 @@
       "scope": "D6 floating-point detection made executable: checked f64 add, sub, mul, div, sqrt and conversion classified without engine flags (classification for overflow, division by zero and invalid; error-free witnesses with exact scaling for underflow and inexact) and the f32 default-mode slice; 1,882 corpus cases agree with exact rational rounding in status and bit pattern; eight module mutants rejected. Specification evidence, no policy decision, no gate credit.",
       "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
+      "currency": "SUPERSEDED",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "authorship": "Claude Fable 5.1 module, oracle and specification on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending.",
+      "superseded_by": "FLOAT-DETECTION-R2",
+      "supersession_reason": "Codex review finding 2 corrected: large-operand TwoProduct scaling; corpus extended near the largest exponent (1,898 cases)."
+    },
+    {
+      "id": "FLOAT-DETECTION-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-float-detection-r2/packet.json",
+      "sha256": "99c578c5ea729a32e47721a7b01fb32f52203088986522a666f592869904d49c",
+      "scope": "Hand-built wasm32 checked floating-point operations on macOS Node/V8: f64 add, sub, mul, div and sqrt classified as exact, overflow, division-by-zero, invalid, underflow or inexact without engine flags, a checked float-to-integer conversion that never traps, and the f32 default-mode slice. Overflow, division by zero and invalid come from operand and result classification; underflow and inexact from error-free witnesses (TwoSum, scaled TwoProduct, residuals) with exact power-of-two scaling for small results, small operands and operands near the largest exponent. Corpus cases with expectations from exact rational rounding in Python; eight module mutants rejected. Specification evidence for the D6 floating-point hypothesis; no policy decision, no gate credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "authorship": "Claude Fable 5.1 module, oracle and specification on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending."
+      "supersedes": "FLOAT-DETECTION-R1",
+      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's review 7e941a8d; follow-up adversarial review by Codex pending."
+    },
+    {
+      "id": "TCR-SCHEMA-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-tcr-schema-r2/packet.json",
+      "sha256": "5e673f17379b6d025890fd9a6acad4aedd560e6679b189d47ab94f8dd85fcd18",
+      "scope": "Production TCR schema v1 under D5: 47 fields in nine D5 field groups with explicit offsets, widths, alignments, classification and ownership, joined to every replaced or deferred native TCR cell of the wasm32 layout schema and to every TCR field the accepted fixtures use, each fixture field mapped to one production field or declared fixture-private. Control execution over the committed contracts; no Wasm executed, no gate credit. The schema is the Stage 1 build target D5 owes; it does not claim executed proof.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "supersedes": "TCR-SCHEMA-R1",
+      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's review 7e941a8d; follow-up adversarial review by Codex pending."
     }
   ]
 }
