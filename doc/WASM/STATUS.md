@@ -4,6 +4,7 @@ Implementation baseline: upstream v1.13, `c994217adc56b3f8a564526cee4695893ac84d
 
 | Work | State | Evidence scope / remaining work |
 | --- | --- | --- |
+| Claude's non-census branch | REVIEWED; merge withheld | [Codex review](stage0/codex-review.md): nested-EH cleanup sees an unwound frame's state; float exactness misclassifies exact large results. Reproducers retained. Other replays pass; engine refresh needed after Firefox changed. No acceptance changes. |
 | Earlier registry/body analyses | HISTORICAL, UNQUALIFIED | [Provenance correction](stage0/registry-history.md): original artifacts retained; unsupported all-body completion claim withdrawn. Current startup uses the separately retained 167-unit run; no LL15 credit. |
 | Finite-callee replay | EXECUTED; review pending | [One committed resolver version](stage0/finite-callees.md): fresh 98 + 19 + 2 + 5 partition leaves 1,438 of 1,562 expressions open. All stage outputs and sources retained; cell values and lowerings remain unqualified. |
 | Builtin slot diagnostic | EXECUTION REVIEWED; publication repaired | [Eight builtin obligations](stage0/builtin-slots.md): 1,500 original call sites consolidated, 32 controls rejected. Original packet and executed sources retained separately; no target lowering or callee-bound credit. |

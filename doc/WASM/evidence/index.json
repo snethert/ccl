@@ -3058,6 +3058,16 @@
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE"
+    },
+    {
+      "id": "CODEX-CLAUDE-BRANCH-REVIEW-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-codex-branch-review-r1/packet.json",
+      "sha256": "f195be814b78ac35e7420140b1776aee69abdd50c198d8343e16dc342889b962",
+      "scope": "Independent Codex review of nine Claude commits; two reproduced defects in nested unwind and optional float exactness, seven retained verifiers passing, engine replay refused after Firefox changed, current engine observations retained. No acceptance or gate credit; merge withheld.",
+      "execution_status": "DEFECTS_REPRODUCED",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }
