@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "failures": [
+    {
+      "run": "ccl-lazy-dev-r1",
+      "reason": "Corrupt registry-prefix is intercepted at lazy installation; code 7 differed from the existing designator code 4. Registry/table identity failures now preserve code 4.",
+      "retained": "loader, harness and original execution log"
+    },
+    {
+      "run": "ccl-lazy-dev-r2",
+      "reason": "Malformed-module builder assumed the accepted WAT ends with a newline. Normalize trailing whitespace before appending test-only declarations.",
+      "retained": "original run.py and driver log"
+    },
+    {
+      "run": "ccl-lazy-dev-r3",
+      "reason": "Instrumentation accidentally observed host calls which the prior harness intentionally left unwrapped; a deliberately overlapping resource-refusal case failed in the observer before the callee checked it. The host adapter now invokes the admitted raw B entry. Lisp table calls still use observed wrappers.",
+      "retained": "executed sources, original log and diagnostic replay"
+    },
+    {
+      "run": "ccl-lazy-dev-r4",
+      "reason": "Wrong-code control named optional.wasm instead of the corpus module opt.wasm.",
+      "retained": "executed sources and original controls log"
+    },
+    {
+      "run": "ccl-lazy-dev-r5",
+      "reason": "The alias-manifest mutant correctly made a positive case throw, but the control lacked an assertion identifying that unwanted exception. Added assert.doesNotThrow at the immutable-admission oracle.",
+      "retained": "executed sources, mutant source and log"
+    },
+    {
+      "run": "ccl-lazy-replay-failure-r1",
+      "reason": "Catalog CLI detection compared argv with the file URL pathname, which differs under macOS /var -> /private/var aliases. The command exited zero without writing the catalog; replay then failed. Use realpath plus fileURLToPath, and test a directory alias containing a space.",
+      "retained": "original verifier log, first candidate source and manifest, and an exact original-script path reproduction",
+      "retention_limit": "The first verifier used TemporaryDirectory and deleted its inner execution.log when the assertion escaped. That log is unavailable; the root failure log and independently reproduced cause are retained. The verifier now retains its whole work directory on any failure."
+    }
+  ],
+  "subsequent_checks": "The complete r6 run passed. Two further cases cover missing module retrieval and callee failure after successful installation; final replay also pins the accepted input manifest. No failure bytes were replaced."
+}

@@ -23,9 +23,16 @@ The accepted and integrated [lexical closure unit](b-closures.md) executes
 escaping shared mutable captures. The accepted and integrated [local-function unit](b-local-calls.md)
 adds FLET/LABELS, lexical recursion, inline lambda calls and literal APPLY.
 The accepted and integrated [proper tail-call unit](b-tail-calls.md) adds bounded Wasm
-tail transfers and stack-temporary literal APPLY callables. Next: the remaining
-condition and lazy-adapter work, revisiting tail legality as dynamic scopes are
-admitted. Neither complete LL05 slot is claimed by these units.
+tail transfers and stack-temporary literal APPLY callables. The isolated
+[lazy-installation proposal](b-lazy-calls.md) authenticates paired entries against
+a trusted catalog and preserves the generated corpus through first-use loading.
+Next, by the user’s 16 September direction: place compiled-call arguments
+directly in the continuation and enter the internal body, retaining the public
+wrapper at boundaries. This removes the avoidable argument copy and wrapper
+from compiled-to-compiled calls; implement it now rather than waiting for timing.
+Then resume the Lisp condition path, revisiting tail legality when handlers,
+cleanup and binding extents are admitted. Neither complete LL05 slot is claimed
+by these units.
 
 ## What Stage 1 delivers
 

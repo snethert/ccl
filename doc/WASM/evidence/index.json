@@ -3932,6 +3932,16 @@
         "commit": "a7cc328338d4c79b9b069d579043dfe146daec84",
         "audit": 72
       }
+    },
+    {
+      "id": "STAGE1-B-LAZY-CALLS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-b-lazy-calls-r1/packet.json",
+      "sha256": "0234d41eee1939990fca7a6f45bf7c0cf261153195267440d0157347e3e25067",
+      "scope": "Single Node Worker lazy installation over unchanged reviewed generated B modules. Private catalog binds code, version, slot, digest, import inventory and paired export roles; actual bytes are validated before instantiation/publication. Catalog 270 modules, 267 installed; 2964 comparisons and 36 chains of 100000 steps reproduce the eager oracle. 35 installation cases and 14 loader/stub mutants pass. Native/compiler R6 evidence reused, no new native execution. No browser qualification, concurrent publication, GC, full Lisp conditions, cleanup/binding extent or complete LL05 credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

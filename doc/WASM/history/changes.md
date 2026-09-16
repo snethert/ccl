@@ -1367,3 +1367,13 @@ reviewed in Claude’s seventy-second audit. The integration record binds the
 review, retained payload and predecessor; its R6/R6a evidence is reused. Tail
 legality with dynamic extents, collector support for stack callables and the
 ordinary-call context cost remain explicit obligations. No inventory slot changes.
+
+## 2026-09-16 — Lazy installation over reviewed generated B code
+
+Added an isolated loader and matching B/tail stubs. Pinned modules are validated
+before either table entry is replaced; failed installation can retry, and
+arguments, closure SELF, continuation and memory ownership survive loading.
+The complete target corpus remains equal to the accepted eager run. Thirty-five
+installation cases and fourteen mutants execute; failures are retained and the
+final packet is replayed. Compiler/native bytes are unchanged, so their reviewed
+R6 evidence is reused. This is auxiliary LL05 work awaiting external review.

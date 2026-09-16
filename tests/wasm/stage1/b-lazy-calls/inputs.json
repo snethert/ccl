@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "base_packet": "2026-09-16-stage1-b-tail-calls-r1",
+  "manifest_sha256": "21efaaad55ebc8b24f03a48831f060dd3ccbac864fd2415afff300f2ce77d937",
+  "compiler_sha256": "3914b220aa71dc68d14804d8f507eaeae9f767bee8bbb6b71d39eb1f78cb93b9",
+  "base_review": "a7cc3283",
+  "scope": "Reuse accepted generated B modules and native/R6 evidence; no native execution in this unit."
+}
