@@ -1233,3 +1233,8 @@ The user said “I accept. integrate and proceed” after Claude’s sixty-fifth
 ## 2026-09-16 — generate and qualify optional and keyword argument binding
 
 A separate compiler proposal consumes real front-end lambda-list IR for optional/keyword parameters, sequential defaults with nested calls, supplied-p flags, explicit aliases and first-wins keyword validation. The retained core corpus plus 17 binding functions gives 248 native/logical cases and 992 target comparisons, 16 recompiled compiler mutants, 19 source refusals and 20 resource refusals. R6/R6a reuses the pristine baseline and qualifies fresh registered/removal builds. A spelling-collision finding from final inspection is fixed by refusing unsupported keyword spellings, with the former compiler’s failing regression retained. The proposal awaits external review; no LL05 slot credit or unreviewed main-backend integration. The index also records Claude’s sixty-fifth review and the user’s accepted integration of the preceding B core.
+
+
+## 2026-09-16 — Claude's sixty-sixth audit: B call-core integration and optional/keyword binding reviewed, no defect
+
+Claude verified the integrated backend's byte identity with the reviewed call core, then replayed the binding packet: the verifier recompiled the corpus and all sixteen mutant compilers with identical bytes, and an eleven-form adversarial probe of supplied-p-dependent defaults, keyword pass-through, failing defaults and full 64-word keyword lists agreed across the Python model, native CCL and the target. No defect. The 64-argument maximum is a declared limit that diverges from native above it. The ledger stays at 5 accepted and 26 missing.
