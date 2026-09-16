@@ -17,8 +17,10 @@ adds defaults, supplied-p values and keyword validation. The
 accepted and integrated [rest/APPLY unit](b-rest-apply.md) supplies real cons allocation and
 runtime-sized arguments, removing the 64-argument ceiling. The accepted and integrated
 [runtime result-capacity unit](b-results.md) removes the fixed 64-value
-ceiling. Next: callable objects and symbol function cells,
-then the condition path, lazy adapters and tail transfers. Neither complete LL05 slot is claimed by these units.
+ceiling. The isolated [callable-object unit](b-callables.md) now supplies
+checked object/symbol dispatch, live function cells and recursive calls.
+Next: lexical closure construction and mutation, then the condition path,
+lazy adapters and tail transfers. Neither complete LL05 slot is claimed by these units.
 
 ## What Stage 1 delivers
 

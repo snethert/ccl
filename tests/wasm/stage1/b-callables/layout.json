@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "status": "PROPOSED_AUXILIARY_UNIT",
+  "function": {
+    "subtag": 42,
+    "elements": 5,
+    "bytes": 24,
+    "header": 1322,
+    "fields": {
+      "code_id": 4,
+      "environment": 8,
+      "code_version": 12,
+      "arity_metadata": 16,
+      "debug_metadata": 20
+    },
+    "representation": "all five payload words tagged; positive fixnum code ID and version"
+  },
+  "symbol": {
+    "subtag": 58,
+    "elements": 7,
+    "bytes": 32,
+    "header": 1850,
+    "function_cell": 12
+  },
+  "registry": {
+    "alignment": 8,
+    "header_bytes": 8,
+    "row_bytes": 16,
+    "fields": [
+      "slot:u32",
+      "version:tagged-fixnum",
+      "signature:u32",
+      "role:u32"
+    ],
+    "reserved_prefix": 1,
+    "generic_signature": 17,
+    "generic_role": 23,
+    "authority": "owner-supplied fixture registry, no loader-authentication claim"
+  },
+  "excluded": [
+    "native code-vector layout",
+    "lexical closure creation",
+    "GC movement",
+    "package/intern implementation",
+    "unbound-symbol condition machinery",
+    "lazy installation",
+    "concurrent publication"
+  ]
+}

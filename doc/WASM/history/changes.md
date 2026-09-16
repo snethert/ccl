@@ -1273,3 +1273,8 @@ Claude verified the integrated backend's byte identity with the reviewed rest/AP
 ## 2026-09-16 — integrate reviewed runtime result capacity
 
 The user said “accept, integrate and proceed with the next sizable work unit” after Claude’s sixty-eighth audit. The shared backend now equals the reviewed result-capacity payload, with the preceding integration hash checked. Reviewed R6/R6a evidence covers these bytes. Reservation policy and stack cost remain explicit; no LL05 slot credit.
+
+
+## 2026-09-16 — generate checked callable-object and symbol dispatch
+
+The isolated proposal replaces the host resolver with generated object/registry checks, reads live function cells, preserves old retained functions after redefinition, and supports self and mutual recursion through the table. Its 108 functions pass 456 native/model cases and 1,824 target comparisons, with 16 compiler mutants and 88 callable checks. R6/R6a covers fresh registered/removal builds. The fixture materializes a proposed logical function layout; closure allocation and loader authentication remain open. The retained development failure is a Lisp-input renderer error. No LL05 slot credit or unreviewed integration.

@@ -3869,6 +3869,16 @@
         "record": "stage1/integration-b-results.json",
         "scope": "User accepted exact auxiliary integration; no inventory slot accepted."
       }
+    },
+    {
+      "id": "STAGE1-B-CALLABLES-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-b-callables-r1/packet.json",
+      "sha256": "31836d2ee8160241928e64f9825b079e003b20b5d4c11134226ff6d5fb4ea6a2",
+      "scope": "Generated callable-object/symbol dispatch, live bindings, old function retention and recursion: 108 functions, 456 native/model cases and 1824 target comparisons. Sixteen compiler mutants and 88 callable checks; R6/R6a and retained replay pass. Objects are fixture-materialized under a proposed logical layout, with owner-supplied registry metadata. No lexical closure allocation, loader authentication, collection, complete LL05 credit or unreviewed integration.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }
