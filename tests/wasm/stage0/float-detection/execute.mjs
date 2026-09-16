@@ -15,12 +15,17 @@ const fromHex32 = h => { u32[8] = parseInt(h, 16); return f32[8]; };
 const results = [];
 for (const c of corpus.cases) {
   const single = c.op.endsWith('32');
-  const a = single ? fromHex32(c.a) : fromHex64(c.a), b = c.b === undefined ? undefined : (single ? fromHex32(c.b) : fromHex64(c.b));
+  const a = c.a === undefined ? undefined : (single ? fromHex32(c.a) : fromHex64(c.a)), b = c.b === undefined ? undefined : (single ? fromHex32(c.b) : fromHex64(c.b));
   u32[0] = 0; u32[1] = 0; u32[2] = 0; u32[4] = 0;
   let status, error = null;
-  try { status = b === undefined ? x[c.op](a) : x[c.op](a, b); } catch (e) { error = e.constructor.name; }
+  try {
+    if (c.op === 'policy') { x.set_mask(c.mask); status = x.condition(c.status_in); }
+    else status = b === undefined ? x[c.op](a) : x[c.op](a, b);
+  } catch (e) { error = e.constructor.name; }
   const rec = { id: c.id, status: error ? null : status, error };
   if (c.op === 'trunc') { rec.result = hex64(); rec.integer = i32[2]; }
+  else if (c.op === 'compare') { rec.result = hex64(); rec.ordered = i32[2]; }
+  else if (c.op === 'policy') { rec.result = hex64(); rec.mask = x.get_mask(); }
   else rec.result = single ? hex32() : hex64();
   if (rec.result !== undefined) {
     const v = c.op === 'trunc' || !single ? f64[0] : f32[4];

@@ -4,7 +4,7 @@ import math
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from ieee import DOUBLE, SINGLE, STATUS, expected, to_single, bits64, from_bits64, bits32, from_bits32
+from ieee import DOUBLE, SINGLE, STATUS, expected, to_single, bits64, from_bits64, bits32, from_bits32, condition_of, DEFAULT_MASK
 
 INF, NAN = math.inf, math.nan
 MIN_SUB = 2.0 ** -1074; MIN_NORMAL = 2.0 ** -1022; MAX = (2 - 2 ** -52) * 2.0 ** 1023
@@ -40,6 +40,10 @@ NAMED = [
     ('sqrt-exact', 'sqrt', 4.0, None), ('sqrt-two', 'sqrt', 2.0, None), ('sqrt-negative', 'sqrt', -1.0, None), ('sqrt-negzero', 'sqrt', -0.0, None), ('sqrt-inf', 'sqrt', INF, None),
     ('sqrt-min-subnormal', 'sqrt', MIN_SUB, None), ('sqrt-subnormal-square', 'sqrt', 2.0 ** -1000, None), ('sqrt-subnormal-inexact', 'sqrt', 3 * MIN_SUB, None), ('sqrt-nan', 'sqrt', NAN, None),
     ('sqrt-max', 'sqrt', MAX, None), ('sqrt-tenth', 'sqrt', 0.1, None),
+    # comparisons: the hardware compare (fcmped, comisd) raises invalid for any NaN operand; Wasm compares are quiet
+    ('compare-ordered', 'compare', 1.0, 2.0), ('compare-reversed', 'compare', 2.0, 1.0), ('compare-equal', 'compare', 1.5, 1.5), ('compare-nan-left', 'compare', NAN, 1.0),
+    ('compare-nan-right', 'compare', 1.0, NAN), ('compare-nan-both', 'compare', NAN, NAN), ('compare-inf', 'compare', -INF, INF), ('compare-zeros', 'compare', -0.0, 0.0),
+    ('compare-subnormal', 'compare', MIN_SUB, MIN_NORMAL), ('compare-max-inf', 'compare', MAX, INF),
     ('trunc-nan', 'trunc', NAN, None), ('trunc-inf', 'trunc', INF, None), ('trunc-fixnum-max', 'trunc', 2.0 ** 29 - 1, None), ('trunc-fixnum-overflow', 'trunc', 2.0 ** 29, None),
     ('trunc-fixnum-min', 'trunc', -(2.0 ** 29), None), ('trunc-fixnum-underflow', 'trunc', -(2.0 ** 29) - 1, None), ('trunc-fraction', 'trunc', 3.7, None), ('trunc-negative-fraction', 'trunc', -3.7, None),
     ('trunc-half', 'trunc', 0.5, None), ('trunc-huge', 'trunc', 1e300, None), ('trunc-negzero', 'trunc', -0.0, None),
@@ -78,7 +82,12 @@ def random_single(g):
     return from_bits32((g.next() % (1 << 23)) | (exponent << 23) | (g.choice(2) << 31))
 
 
+MASKS = {'default': DEFAULT_MASK, 'all': 31, 'none': 0, 'inexact-only': 16, 'underflow-only': 8, 'all-but-overflow': 27, 'invalid-only': 1}
+
+
 def expected_case(op, a, b):
+    if op == 'compare':
+        return (STATUS['invalid'] if (a != a or b != b) else STATUS['exact']), None, None
     if op == 'trunc':
         if a != a or a in (INF, -INF): return STATUS['invalid'], None, None
         t = math.trunc(a)
@@ -108,6 +117,7 @@ def build(seed=20260915):
         if b is not None: rec['b'] = ('%08x' % bits32(b)) if single else ('%016x' % bits64(b))
         rec['result'] = None if result is None else (('%08x' % bits32(result)) if single else ('%016x' % bits64(result)))
         if integer is not None: rec['integer'] = integer
+        if op == 'compare': rec['result'] = '0' * 16; rec['ordered'] = int(a < b)
         cases.append(rec)
     for ident, op, a, b in NAMED: add(ident, op, a, b)
     for op in ('add', 'sub', 'mul', 'div'):
@@ -122,6 +132,9 @@ def build(seed=20260915):
     for k in range(100): add('trunc-r%03d' % k, 'trunc', random_double(g), None)
     for op in ('add32', 'mul32', 'div32'):
         for k in range(100): add('%s-r%03d' % (op, k), op, random_single(g), random_single(g))
+    for mname, mask in MASKS.items():   # policy layer: every status under every mask
+        for st in range(8):
+            cases.append(dict(id='policy-%s-status%d' % (mname, st), op='policy', status_in=st, mask=mask, status=condition_of(st, mask), result='0' * 16))
     return dict(version=1, seed=seed, statuses=STATUS, cases=cases)
 
 

@@ -211,6 +211,37 @@
   (func (export "mul32") (param $a f32) (param $b f32) (result i32) (local $r f32)
     (local.set $r (f32.mul (local.get $a) (local.get $b))) (f32.store (i32.const 16) (local.get $r))
     (call $special32 (local.get $a) (local.get $b) (local.get $r)))
+  ;; D6 policy layer, the ARM model (decided 16 September 2026): a logical enable
+  ;; mask that lives in the TCR in production (a global here), hardware-style
+  ;; cumulative flags derived from the status, and the condition chosen by ARM's
+  ;; priority among the enabled flags. Flag and enable bits: invalid 1,
+  ;; division-by-zero 2, overflow 4, underflow 8, inexact 16. Overflow and
+  ;; underflow set the inexact flag as well, as the hardware does, so an inexact
+  ;; condition is signalled for them when only inexact is enabled.
+  (global $mask (mut i32) (i32.const 7))                 ;; default: invalid, division by zero, overflow
+  (func (export "set_mask") (param $m i32) (global.set $mask (i32.and (local.get $m) (i32.const 31))))
+  (func (export "get_mask") (result i32) (global.get $mask))
+  (func $flags (export "flags") (param $status i32) (result i32)
+    (if (i32.eq (local.get $status) (i32.const 3)) (then (return (i32.const 1))))
+    (if (i32.eq (local.get $status) (i32.const 2)) (then (return (i32.const 2))))
+    (if (i32.eq (local.get $status) (i32.const 1)) (then (return (i32.const 20))))   ;; overflow sets inexact too
+    (if (i32.eq (local.get $status) (i32.const 4)) (then (return (i32.const 24))))   ;; underflow sets inexact too
+    (if (i32.eq (local.get $status) (i32.const 5)) (then (return (i32.const 16))))
+    (i32.const 0))
+  (func (export "condition") (param $status i32) (result i32) (local $e i32)
+    (local.set $e (i32.and (call $flags (local.get $status)) (global.get $mask)))
+    (if (i32.and (local.get $e) (i32.const 1)) (then (return (i32.const 3))))
+    (if (i32.and (local.get $e) (i32.const 2)) (then (return (i32.const 2))))
+    (if (i32.and (local.get $e) (i32.const 4)) (then (return (i32.const 1))))
+    (if (i32.and (local.get $e) (i32.const 8)) (then (return (i32.const 4))))
+    (if (i32.and (local.get $e) (i32.const 16)) (then (return (i32.const 5))))
+    (i32.const 0))
+  ;; Comparison: Wasm compares are quiet, so the NaN check that fcmped on ARM and
+  ;; comisd on x86 perform in hardware is explicit; the ordering result is stored.
+  (func (export "compare") (param $a f64) (param $b f64) (result i32)
+    (i32.store (i32.const 8) (f64.lt (local.get $a) (local.get $b)))
+    (select (i32.const 3) (i32.const 0) (i32.or (call $isnan (local.get $a)) (call $isnan (local.get $b)))))
+
   (func (export "div32") (param $a f32) (param $b f32) (result i32) (local $r f32)
     (local.set $r (f32.div (local.get $a) (local.get $b))) (f32.store (i32.const 16) (local.get $r))
     (if (i32.or (call $isnan32 (local.get $a)) (call $isnan32 (local.get $b))) (then (return (i32.const 0))))

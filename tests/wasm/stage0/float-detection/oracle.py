@@ -19,6 +19,10 @@ def check(corpus, observed):
                 require(r['integer'] == c['integer'], 'INTEGER ' + c['id'])
             elif c['status'] == 6:
                 require(r['result'] == c['result'], 'RESULT ' + c['id'])
+        elif c['op'] == 'compare':
+            require(r['ordered'] == c['ordered'], 'ORDERED ' + c['id'])
+        elif c['op'] == 'policy':
+            require(r['mask'] == c['mask'], 'MASK ' + c['id'])
         elif c['result'] is None:
             require(r['nan'], 'RESULT ' + c['id'] + ' expected NaN')
         else:

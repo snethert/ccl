@@ -1,12 +1,13 @@
 # Floating-point detection specification v1
 
-Status: specification under the D6 floating-point hypothesis, authored by
-Claude on 15 September 2026 with an executable proof
-(`tests/wasm/stage0/float-detection`), corrected after Codex's first and
-second reviews and awaiting its follow-up review. It specifies detection,
-as D6 requires before any cost is measured. It does not make the Stage 2
-compatibility decision about which conditions the port signals; that
-remains the user's policy choice.
+Status: specification under D6, authored by Claude on 15 September 2026
+with an executable proof (`tests/wasm/stage0/float-detection`), corrected
+after Codex's first and second reviews and reviewed without defect in its
+third execution. On 16 September 2026 the user decided the condition policy
+("do what CCL did on ARM, plus whatever else is needed for WASM"); the
+policy section below records it and the fourth execution adds it to the
+proof. Detection and policy are specified; the cost of the checks in
+generated code is not yet measured.
 
 ## What U1 does
 
@@ -104,41 +105,100 @@ algorithms with the 2^12 + 1 split and are not part of this slice.
 
 ## Proof
 
-2,069 corpus cases, 119 named boundary cases and 1,950 deterministic random
-cases over normals, subnormals, powers of two, small integers, values near
-both signs of the maximum exponent, products and quotients straddling the
-normal/subnormal boundary, small exact multipliers and specials, have
-expectations computed by exact rational rounding with correct
-tininess-after-rounding and ties-to-even, including correctly rounded
-irrational square roots. Every status and every result bit pattern agrees;
-NaN results are compared for NaN-ness only. The 1,646 f64 cases also
-execute natively on the macOS x86-64 reference machine through scalar SSE
-instructions with MXCSR reset before each operation, and the status taken
-from the hardware flags in x86 priority and the result bits equal the
-oracle's expectations for every case, so the oracle's definitions,
-tininess after rounding included, are the hardware's. Eleven mutants of the
-module are rejected by the unchanged oracle: the divisor-zero check
-omitted, NaN propagation reported as invalid, overflow reported for any
-infinity, the large-operand scaling removed, the witness ignored, underflow
-reported as inexact, the conversion left unchecked, the small-product
-scaling removed, tininess judged on the final result, the boundary tie
-counted as tiny, and the quotient boundary ignored. The first execution
-classified exact results near the largest finite double as inexact and the
-second judged tininess on the final result; Codex's reviews found both, and
-the corrected execution supersedes them.
+2,135 corpus cases, 129 named cases, 1,950 deterministic random cases and
+56 policy cases, over normals, subnormals, powers of two, small integers,
+values near both signs of the maximum exponent, products and quotients
+straddling the normal/subnormal boundary, small exact multipliers,
+specials, comparisons with and without NaN operands, and every status under
+seven enable masks, have expectations computed by exact rational rounding
+with correct tininess-after-rounding and ties-to-even, including correctly
+rounded irrational square roots, and by the policy rule below. Every status,
+every result bit pattern, every comparison result and every condition
+agrees; NaN results are compared for NaN-ness only. The 1,656 f64 arithmetic
+and comparison cases also execute natively on the macOS x86-64 reference
+machine through scalar SSE instructions (`addsd`, `subsd`, `mulsd`, `divsd`,
+`sqrtsd`, `comisd`) with MXCSR reset before each operation, and the status
+taken from the hardware flags in x86 priority and the result bits equal the
+oracle's expectations for every case, so the oracle's definitions, tininess
+after rounding and signalling comparison included, are the hardware's.
+Fourteen mutants of the module are rejected by the unchanged oracle: the
+divisor-zero check omitted, NaN propagation reported as invalid, overflow
+reported for any infinity, the large-operand scaling removed, the witness
+ignored, underflow reported as inexact, the conversion left unchecked, the
+small-product scaling removed, tininess judged on the final result, the
+boundary tie counted as tiny, overflow without its inexact flag, inexact
+given priority over the other flags, a quiet comparison, and the quotient
+boundary ignored. The first execution classified exact results near the
+largest finite double as inexact and the second judged tininess on the
+final result; Codex's reviews found both, and the corrected executions
+supersede them.
 
-## Policy inputs this leaves open
+## Policy — decided 16 September 2026, the ARM model
 
-Which of the six statuses signal a condition, and whether `set-fpu-mode`
-keeps its native keywords, is the D6 compatibility decision; the default
-mode needs only the three classification-based statuses and no witness.
-One nuance belongs to that decision: with underflow unmasked, x86 traps on
-every tiny result, exact subnormal results included, while the masked flag
-and this specification's underflow status require inexactness as well; a
-port that unmasks underflow natively-faithfully would need a further
-"tiny and exact" status, which the witnesses can supply.
-The cost of a witness is measurable now that its correctness is fixed.
-Comparison with NaN, rounding modes other than nearest and literal
-encodings are stated as follows: comparisons signal invalid for any NaN
-operand under the default mode to match `comisd`; only round-to-nearest
-exists; float literals cross-dump as their bit patterns.
+Native CCL on ARM cannot trap on floating-point exceptions (the runtime
+notes that NEON does not support them and that some macOS versions rebooted
+when a process enabled one). It therefore keeps the logical enable mask in
+the TCR, stores only the rounding mode in the hardware FPSCR, and under
+float safety emits after each operation a check that reads the cumulative
+flags, ANDs them with the enabled mask and traps into the condition when
+any survive. The user chose that model for the port. Wasm removes the
+hardware flags as well, so the status computed by the detection rules
+above stands in for them. Everything else follows ARM:
+
+- **Enable mask.** A per-thread logical control word, `fp_control` in the
+  production TCR schema, with bits invalid 1, division-by-zero 2, overflow 4,
+  underflow 8 and inexact 16. The default enables invalid, division by zero
+  and overflow, as on ARM and x86. A new thread receives the default.
+  `get-fpu-mode` and `set-fpu-mode` keep their native keywords, including
+  `:underflow` and `:inexact`, and read and write the owning thread's word.
+- **Flags per status.** A hardware FPU sets the inexact flag together with
+  overflow and underflow, so the status maps to flags as overflow → overflow
+  and inexact, underflow → underflow and inexact, and the others to their
+  own flag. When only inexact is enabled, an overflowing or underflowing
+  operation therefore signals `floating-point-inexact`, as it does on ARM.
+- **Priority.** Among the enabled flags the condition is chosen in ARM's
+  order: `floating-point-invalid-operation`, `division-by-zero`,
+  `floating-point-overflow`, `floating-point-underflow`,
+  `floating-point-inexact`, each carrying `:operation` and `:operands` as
+  ARM's `%df-check-exception-2` does.
+- **Emission.** The check is emitted after a floating-point operation
+  exactly where ARM emits `trap-if-fpu-exception`: when the compiler's float
+  safety is on, that is at safety 3 or under the
+  `:detect-floating-point-exception` policy hook (`nx-float-safety`). Code
+  compiled without float safety carries no check, as on ARM. The default
+  mask needs only the classification-based statuses; the exactness witness
+  for underflow and inexact is computed only when one of those two bits is
+  enabled, which changes cost, not results.
+- **Comparisons.** ARM compares with `fcmped`/`fcmpes` and x86 with
+  `comisd`/`comiss`, both of which raise invalid for any NaN operand. Wasm
+  comparisons are quiet, so the emitted comparison checks for a NaN operand
+  and reports invalid through the same mask; the ordering result is the
+  Wasm result (false for NaN). The native `comisd` witness in the proof
+  confirms the flag.
+- **Conversions.** Float-to-integer truncation reports invalid for NaN and
+  infinity and takes the bignum path outside the fixnum range, never
+  trapping, as specified above.
+- **Tiny exact results.** ARM's hardware underflow flag, like x86's masked
+  flag and this specification, requires inexactness; a tiny exact result
+  raises nothing on ARM even with underflow enabled. The port follows ARM,
+  so this is not a deviation.
+
+Deviations from native CCL, recorded as the decision requires:
+
+1. **Rounding modes.** ARM and x86 support `:nearest`, `:positive`,
+   `:negative` and `:zero`; Wasm has round-to-nearest-even only.
+   `set-fpu-mode :rounding-mode` accepts `:nearest` and signals an error
+   naming the target for any other mode; `get-fpu-mode` reports `:nearest`.
+2. **Host mathematics.** ARM reads the FPSCR after a libm call such as `pow`
+   and raises from it. The port's transcendental functions come from the
+   host, which exposes no flags, so after a host call only classification
+   is available: a NaN result from non-NaN arguments is invalid, an infinite
+   result from finite arguments is overflow (division by zero where the
+   function defines it, such as `log` of zero), and underflow and inexact
+   are not detected for host functions even when enabled.
+
+Not decided here: the cost of the emitted checks in generated code, which
+D6 requires measured before any cheaper alternative is proposed; and
+whether Stage 1 implements any transcendental function in Lisp to remove
+deviation 2. Float literals cross-dump as their bit patterns; NaN payloads
+are outside the Wasm guarantee.

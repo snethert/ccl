@@ -7,11 +7,13 @@ specification made executable: hand-built checked f64 add, sub, mul, div and
 sqrt that classify every result as exact, overflow, division by zero,
 invalid, underflow or inexact with no engine flags, a checked
 float-to-integer conversion that never traps, and the f32 default-mode
-slice, with tininess decided after rounding as IEEE 754 and x86 define it.
-Expectations for 2,069 corpus cases come from exact rational rounding in
-Python, every f64 case also runs natively through scalar SSE instructions
-on the x86-64 reference Mac with flags and results agreeing, and eleven
-mutants of the module are rejected.
+slice, with tininess decided after rounding as IEEE 754 and x86 define it,
+plus the D6 policy layer decided on 16 September 2026 (the ARM model: enable
+mask, flags per status, priority, signalling comparisons). Expectations for
+2,135 corpus cases come from exact rational rounding and the policy rule in
+Python, every f64 arithmetic and comparison case also runs natively through
+scalar SSE instructions on the x86-64 reference Mac with flags and results
+agreeing, and fourteen mutants of the module are rejected.
 
 ```sh
 python3 tests/wasm/stage0/float-detection/run.py --output /private/tmp/ccl-float-detection-fresh

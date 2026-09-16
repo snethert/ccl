@@ -145,3 +145,23 @@ def bits64(f): return struct.unpack('<Q', struct.pack('<d', f))[0]
 def from_bits64(b): return struct.unpack('<d', struct.pack('<Q', b))[0]
 def bits32(f): return struct.unpack('<I', struct.pack('<f', f))[0]
 def from_bits32(b): return struct.unpack('<f', struct.pack('<I', b))[0]
+
+
+# D6 policy layer, the ARM model: hardware-style flags per status and the condition chosen by ARM's priority among the enabled flags.
+FLAG = {'invalid': 1, 'division-by-zero': 2, 'overflow': 4, 'underflow': 8, 'inexact': 16}
+DEFAULT_MASK = FLAG['invalid'] | FLAG['division-by-zero'] | FLAG['overflow']
+PRIORITY = (('invalid', STATUS['invalid']), ('division-by-zero', STATUS['division-by-zero']), ('overflow', STATUS['overflow']), ('underflow', STATUS['underflow']), ('inexact', STATUS['inexact']))
+
+
+def flags_of(status):
+    """Cumulative flags a hardware FPU would set for a result of this status: overflow and underflow are inexact as well."""
+    return {STATUS['invalid']: FLAG['invalid'], STATUS['division-by-zero']: FLAG['division-by-zero'], STATUS['overflow']: FLAG['overflow'] | FLAG['inexact'],
+            STATUS['underflow']: FLAG['underflow'] | FLAG['inexact'], STATUS['inexact']: FLAG['inexact']}.get(status, 0)
+
+
+def condition_of(status, mask):
+    enabled = flags_of(status) & mask
+    for name, code in PRIORITY:
+        if enabled & FLAG[name]:
+            return code
+    return STATUS['exact']

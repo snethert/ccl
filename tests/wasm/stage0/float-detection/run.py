@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import corpus as C
 from oracle import check
 HERE = Path(__file__).resolve().parent; ROOT = HERE.parents[3]
-ID = 'FLOAT-DETECTION-R3'
+ID = 'FLOAT-DETECTION-R4'
 SCOPE = ('Hand-built wasm32 checked floating-point operations on macOS Node/V8: f64 add, sub, mul, div and sqrt classified as exact, '
          'overflow, division-by-zero, invalid, underflow or inexact without engine flags, a checked float-to-integer conversion that never '
          'traps, and the f32 default-mode slice. Overflow, division by zero and invalid come from operand and result classification; '
@@ -15,7 +15,9 @@ SCOPE = ('Hand-built wasm32 checked floating-point operations on macOS Node/V8: 
          'results, small operands and operands near the largest exponent; tininess decided after rounding as IEEE 754 and x86 define it, '
          'including results that round up to the smallest normal. Corpus cases with expectations from exact rational rounding in Python; '
          'every f64 case also executed natively with SSE scalar instructions on this x86-64 Mac, MXCSR flags and result bits agreeing with '
-         'the oracle; eleven module mutants rejected. Specification evidence for the D6 floating-point hypothesis; no policy decision, no gate credit.')
+         'the oracle. The D6 policy layer decided on 16 September (the ARM model): a logical enable mask, hardware-style flags per status, '
+         'ARM priority among enabled flags, and signalling comparisons, executed for every status under seven masks and witnessed natively for '
+         'comparisons; fourteen module mutants rejected. Specification evidence for D6; no gate credit.')
 MUTANTS = {
     'divisor-zero-check-omitted': ("    (if (call $iszero (local.get $b))\n      (then (return (select (i32.const 0) (i32.const 2) (call $isinf (local.get $a))))))   ;; finite nonzero / 0\n", ''),
     'nan-propagated-as-invalid': ("    (if (i32.or (call $isnan (local.get $a)) (call $isnan (local.get $b))) (then (return (i32.const 0))))\n    (if (call $isnan (local.get $r)) (then (return (i32.const 3))))\n    (if (call $isinf (local.get $r))\n      (then (return (select (i32.const 0) (i32.const 1) (i32.or (call $isinf (local.get $a)) (call $isinf (local.get $b)))))))\n    (i32.const -1))",
@@ -29,6 +31,9 @@ MUTANTS = {
     # the R2 review's finding: tininess judged on the final result misses products and quotients that round up to the smallest normal
     'tininess-on-final-result': ("      (i32.or (call $tiny (local.get $r))\n              (i32.and (f64.eq (f64.abs (local.get $r)) (global.get $MIN_NORMAL)) (local.get $boundary_tiny)))))", "      (call $tiny (local.get $r))))"),
     'boundary-tie-tiny': ("(f64.lt (f64.mul (local.get $e) (f64.copysign (global.get $ONE) (local.get $r))) (f64.neg (global.get $QUARTER)))", "(f64.le (f64.mul (local.get $e) (f64.copysign (global.get $ONE) (local.get $r))) (f64.neg (global.get $QUARTER)))"),
+    'overflow-without-inexact': ("(then (return (i32.const 20))))   ;; overflow sets inexact too", "(then (return (i32.const 4))))   ;; overflow sets inexact too"),
+    'priority-inexact-first': ("    (if (i32.and (local.get $e) (i32.const 1)) (then (return (i32.const 3))))\n", "    (if (i32.and (local.get $e) (i32.const 16)) (then (return (i32.const 5))))\n    (if (i32.and (local.get $e) (i32.const 1)) (then (return (i32.const 3))))\n"),
+    'compare-quiet': ("    (select (i32.const 3) (i32.const 0) (i32.or (call $isnan (local.get $a)) (call $isnan (local.get $b)))))", "    (i32.const 0))"),
     'quotient-boundary-ignored': ("          (f64.lt (f64.add (f64.sub (f64.abs (local.get $as)) (f64.mul (global.get $S52) (f64.abs (local.get $bs))))\n                           (f64.mul (global.get $QUARTER) (f64.abs (local.get $bs))))\n                  (f64.const 0))))))", "          (i32.const 0)))))"),
 }
 
@@ -44,7 +49,7 @@ def sources():
     return [HERE / n for n in ('run.py', 'corpus.py', 'ieee.py', 'oracle.py', 'execute.mjs', 'checked.wat', 'native-witness.c')]
 
 
-NATIVE_OPS = ('add', 'sub', 'mul', 'div', 'sqrt')
+NATIVE_OPS = ('add', 'sub', 'mul', 'div', 'sqrt', 'compare'); NATIVE_NAME = {'compare': 'cmp'}
 
 
 def native(out, corpus, commands, environment):
@@ -54,8 +59,8 @@ def native(out, corpus, commands, environment):
     try:
         invoke([str(cc), '-O0', '-o', str(build / 'witness'), str(HERE / 'native-witness.c')], commands, out)
         listing = invoke(['/usr/bin/otool', '-tv', str(build / 'witness')], commands, out)
-        mnemonics = sorted({line.split('\t')[1] for line in listing.splitlines() if line.count('\t') >= 1 and re.fullmatch(r'(add|sub|mul|div|sqrt)sd', line.split('\t')[1])})
-        feed = ''.join('%s %s %s\n' % (c['op'], c['a'], c.get('b', '0' * 16)) for c in cases)
+        mnemonics = sorted({line.split('\t')[1] for line in listing.splitlines() if line.count('\t') >= 1 and re.fullmatch(r'(add|sub|mul|div|sqrt|comi)sd', line.split('\t')[1])})
+        feed = ''.join('%s %s %s\n' % (NATIVE_NAME.get(c['op'], c['op']), c['a'], c.get('b', '0' * 16)) for c in cases)
         p = subprocess.run([str(build / 'witness')], input=feed, capture_output=True, text=True, timeout=120)
         commands.append(dict(argv=[str(build / 'witness')], stdin_lines=len(cases), exit_code=p.returncode, stderr=p.stderr)); save(out / 'commands.json', commands)
         require(p.returncode == 0, 'NATIVE_EXIT')
@@ -63,14 +68,15 @@ def native(out, corpus, commands, environment):
         shutil.rmtree(build)
     (out / 'native').mkdir(); (out / 'native' / 'witness.txt').write_text(p.stdout)
     lines = p.stdout.splitlines(); require(len(lines) == len(cases), 'NATIVE_LINES'); counts = {}
-    require(mnemonics == ['addsd', 'divsd', 'mulsd', 'sqrtsd', 'subsd'], 'NATIVE_INSTRUCTIONS ' + repr(mnemonics))
+    require(mnemonics == ['addsd', 'comisd', 'divsd', 'mulsd', 'sqrtsd', 'subsd'], 'NATIVE_INSTRUCTIONS ' + repr(mnemonics))
     for c, line in zip(cases, lines):
         op, a, b, result, flags = line.split(); flags = int(flags, 16)
-        require(op == c['op'] and a == c['a'] and (c.get('b') is None or b == c['b']), 'NATIVE_ECHO ' + c['id'])
+        require(op == NATIVE_NAME.get(c['op'], c['op']) and a == c['a'] and (c.get('b') is None or b == c['b']), 'NATIVE_ECHO ' + c['id'])
         # IE, ZE, OE, UE, PE in x86 priority; DE (denormal operand) is not a condition
         status = 3 if flags & 1 else 2 if flags & 4 else 1 if flags & 8 else 4 if flags & 16 else 5 if flags & 32 else 0
         require(status == c['status'], 'NATIVE_STATUS %s expected %d observed %d flags %02x' % (c['id'], c['status'], status, flags))
-        if c['result'] is None: require(int(result, 16) & 0x7fffffffffffffff > 0x7ff0000000000000, 'NATIVE_NAN ' + c['id'])
+        if c['op'] == 'compare': require(C.from_bits64(int(result, 16)) == c['ordered'], 'NATIVE_ORDERED ' + c['id'])
+        elif c['result'] is None: require(int(result, 16) & 0x7fffffffffffffff > 0x7ff0000000000000, 'NATIVE_NAN ' + c['id'])
         else: require(result == c['result'], 'NATIVE_RESULT %s expected %s observed %s' % (c['id'], c['result'], result))
         counts[status] = counts.get(status, 0) + 1
     summary = dict(cases=len(cases), by_status={str(k): v for k, v in sorted(counts.items())}, scalar_double_mnemonics=mnemonics)

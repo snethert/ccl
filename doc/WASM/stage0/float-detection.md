@@ -1,12 +1,32 @@
 # Floating-point detection — 16 September 2026
 
-Status: diagnostic EXECUTED and PASSING at its stated scope in its second
-corrected form `FLOAT-DETECTION-R3`, awaiting Codex's follow-up review. The
-earlier executions are retained unchanged: `FLOAT-DETECTION-R1` classified
-the largest finite double times one as inexact, and `FLOAT-DETECTION-R2`
-classified a product that is tiny after rounding as merely inexact; [Codex's
-reviews](codex-review.md) found both. No inventory slot changes and no gate
-credit; Stage 0 stays at 40 accepted, two missing and six unreviewed of 48.
+Status: diagnostic EXECUTED and PASSING at its stated scope in
+`FLOAT-DETECTION-R4`, which adds the D6 policy layer the user decided on
+16 September ("do what CCL did on ARM, plus whatever else is needed for
+WASM") to the detection proof reviewed without defect in
+`FLOAT-DETECTION-R3`; awaiting Codex's review. The earlier executions are
+retained unchanged: `FLOAT-DETECTION-R1` classified the largest finite
+double times one as inexact, and `FLOAT-DETECTION-R2` classified a product
+that is tiny after rounding as merely inexact; [Codex's
+reviews](codex-review.md) found both. No inventory slot and no gate credit.
+
+## Policy layer, 16 September
+
+The [specification](../contracts/floating-point.v1.md) now records the
+decided policy: a logical enable mask in the TCR (`fp_control` in the
+production schema), hardware-style flags derived from each status with
+overflow and underflow setting inexact as well, ARM's priority among the
+enabled flags, checks emitted under the same float-safety rule as ARM, and
+signalling comparisons. The module makes that executable: a mask global
+with the default of invalid, division by zero and overflow, `flags` and
+`condition` exports, and a `compare` export that reports invalid for any
+NaN operand while storing Wasm's quiet ordering result. The corpus adds ten
+comparison cases and every status under seven masks, 56 policy cases, with
+expectations from an independent rule in the oracle; the comparison cases
+also run natively through `comisd`, which sets the invalid flag for the NaN
+operands exactly as the module reports. Three more mutants are rejected:
+overflow without its inexact flag at the inexact-only mask, inexact given
+priority over overflow, and a quiet comparison.
 
 ## Second correction after review
 
@@ -77,45 +97,49 @@ three default-mode conditions.
 
 A Python oracle rounds exact rationals to the nearest double or single with
 ties to even, tininess after rounding and correctly rounded irrational
-square roots, and computes the IEEE flags. Over 2,069 corpus cases every
-status and every result bit pattern agrees with the module, and over the
-1,646 f64 cases with the native x86 flags and results as well.
+square roots, computes the IEEE flags, and applies the policy rule. Over
+2,135 corpus cases every status, result bit pattern, ordering result and
+condition agrees with the module, and over the 1,656 f64 arithmetic and
+comparison cases with the native x86 flags and results as well.
 
-| Status | Cases | Of which native f64 |
+| Status or condition | Cases | Of which native f64 |
 | --- | --- | --- |
-| exact | 419 | 324 |
-| overflow | 113 | 83 |
-| division by zero | 14 | 10 |
-| invalid | 125 | 112 |
-| underflow | 145 | 145 |
-| inexact | 972 | 972 |
+| exact or no condition | 464 | 331 |
+| overflow | 115 | 83 |
+| division by zero | 17 | 10 |
+| invalid | 132 | 115 |
+| underflow | 148 | 145 |
+| inexact | 978 | 972 |
 | bignum path (conversion) | 34 | |
 | finite, single-float slice | 247 | |
 
 ## Controls
 
-Eleven mutants are rejected by the unchanged oracle, each at the first
+Fourteen mutants are rejected by the unchanged oracle, each at the first
 corpus case that exposes it: the divisor-zero check omitted, NaN propagation
 reported as invalid, overflow reported for any infinite result, the
 large-operand scaling removed, the witness ignored, underflow reported as
 inexact, the conversion left unchecked, the small-product scaling removed,
-tininess judged on the final result, the boundary tie counted as tiny, and
-the quotient boundary ignored.
+tininess judged on the final result, the boundary tie counted as tiny,
+overflow without its inexact flag, inexact given priority, a quiet
+comparison, and the quotient boundary ignored.
 
 ## Evidence and reproduction
 
 The packet holds the corpus with expectations, the complete bundle with
-source, binary, disassembly, options and host-compiler record, eleven mutant
-bundles with their observations, the native witness output with its
+source, binary, disassembly, options and host-compiler record, fourteen
+mutant bundles with their observations, the native witness output with its
 compiler record and instruction mnemonics, environment identity including
 the C compiler, and source snapshots; the verifier recompiles and
-re-executes everything, native program included, and compares 89
+re-executes everything, native program included, and compares 110
 deterministic files byte for byte in a few seconds. The native binary
 itself is not retained because Mach-O output is not byte-deterministic;
 its source, compile command and disassembled mnemonics are.
 
-Limits. This fixes detection, not policy: which statuses become conditions
-is the D6 compatibility decision. The single-float slice witnesses nothing
-beyond the default mode. Signalling NaNs and NaN payloads are outside the
+Limits. Detection and policy are specified and executed; the cost of the
+emitted checks in generated code is not measured, and the policy's two
+recorded deviations (nearest rounding only, no underflow or inexact from
+host mathematics) are stated, not exercised. The single-float slice
+witnesses nothing beyond the default mode. Signalling NaNs and NaN payloads are outside the
 Wasm guarantee. Cost is not measured here; the specification exists so that
 it can be.
