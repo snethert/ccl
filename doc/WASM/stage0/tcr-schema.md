@@ -1,8 +1,10 @@
 # Production TCR schema — 15 September 2026
 
-Status: diagnostic EXECUTED and PASSING at its stated scope; awaiting Codex's
-review under the 15 September role switch. Packet `TCR-SCHEMA-R1` in the
-evidence repository. No inventory slot changes and no gate credit; Stage 0
+Status: diagnostic EXECUTED and PASSING at its stated scope in `TCR-SCHEMA-R2`,
+which corrects the multiple-value wording Codex's review noted (mv_count
+counts the complete ordered sequence, value0 included, as the accepted B
+contract copies and scans it); `TCR-SCHEMA-R1` is retained. Awaiting Codex's
+follow-up review. No inventory slot changes and no gate credit; Stage 0
 stays at 40 accepted, two missing and six unreviewed of 48.
 
 Authorship: Claude Fable 5.1 wrote the schema source, the checker and the

@@ -21,7 +21,7 @@ exactly once. The nine groups are D5's field groups in D5's order:
 | Allocation area | alloc_pointer, alloc_limit, alloc_base, allocation_quantum_log2 |
 | Explicit stacks | vsp, vsp_base, vsp_limit, tsp, tsp_base, tsp_limit, csp, csp_base, csp_limit, stack_reserve_bytes |
 | Dynamic bindings | tlb_pointer, tlb_limit, db_link |
-| Multiple values | mv_count, mv_base, mv_owner_top |
+| Multiple values | mv_count (complete ordered sequence, value0 included), mv_base, mv_owner_top |
 | Roots and frames | root_head, frame_head, frame_generation, handler_checkpoint, foreign_descriptor, unwind_state |
 | Mailbox | active_request, request_block_base, request_count, mailbox_id |
 | Runtime private | c_stack_pointer, tls_base, tls_size, scratch0, scratch1, next_method_context, error_service_mode, debug_policy |
