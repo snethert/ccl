@@ -1278,3 +1278,8 @@ The user said “accept, integrate and proceed with the next sizable work unit�
 ## 2026-09-16 — generate checked callable-object and symbol dispatch
 
 The isolated proposal replaces the host resolver with generated object/registry checks, reads live function cells, preserves old retained functions after redefinition, and supports self and mutual recursion through the table. Its 108 functions pass 456 native/model cases and 1,824 target comparisons, with 16 compiler mutants and 88 callable checks. R6/R6a covers fresh registered/removal builds. The fixture materializes a proposed logical function layout; closure allocation and loader authentication remain open. The retained development failure is a Lisp-input renderer error. No LL05 slot credit or unreviewed integration.
+
+
+## 2026-09-16 — Claude's sixty-ninth audit: result-capacity integration and callable objects
+
+Claude verified the integrated backend's byte identity with the reviewed result-capacity unit and the hash chain from the rest/APPLY record, then replayed the callable-object packet: the verifier recompiled the corpus and all sixteen mutant compilers with identical bytes, and a 51-case adversarial probe of rebinding through defaults, keys, APPLY, self and mutual recursion, designator values and 200-deep recursion agreed across the Python model, native CCL with the same rebindings, and the target. No defect. The ledger stays at 5 accepted and 26 missing.
