@@ -90,3 +90,8 @@ derived from WABT's disassembly and supplied to the materializer by the
 runner; the materializer trusts that classification only after checking it
 against the manifest. The engine admission rows come from the engine-matrix
 contract and are pinned as a source of this fixture.
+
+
+Project acceptance recorded 16 September 2026 after Codex review `81345b28`
+and the user's conditional approval. See [acceptance scope](project-acceptance.md).
+Original execution envelopes remain unchanged.

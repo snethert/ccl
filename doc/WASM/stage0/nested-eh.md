@@ -124,3 +124,8 @@ production TCR or D3 descriptor; the condition path is a direct handler call
 with a tag-based restart, not the Common Lisp condition system; there is no
 collector, no C boundary and no host suspension inside the unwind. The engine
 facts it relies on are recorded by S0-ENGINE-a.
+
+
+Project acceptance recorded 16 September 2026 after Codex review `81345b28`
+and the user's conditional approval. See [acceptance scope](project-acceptance.md).
+Original execution envelopes remain unchanged.

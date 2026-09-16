@@ -1,75 +1,59 @@
 {
   "version": 2,
-  "assessment": "SCOPED_EXECUTION_COMPOSITE",
-  "date": "2026-09-15",
-  "basis": "Second correction after Codex's R2 review ed54b7fa: the LL19-a envelope is replaced by NESTED-EH-R3 (owned cleanup state restored by unwinding, handler-entry witnesses, frame-model oracle); R1 and R2 are retained and superseded. The floating-point auxiliary result is replaced by FLOAT-DETECTION-R3 outside the ledger. ENGINE-a, LL21-c, CONTRACTS-a and LL15-a keep their reviewed-without-defect envelopes. All 40 accepted per-record bindings stay current; counts unchanged at 40 accepted, 2 missing, 6 unreviewed. No full historical artifact scan.",
+  "assessment": "SCOPED_PROJECT_ACCEPTANCE",
+  "date": "2026-09-16",
+  "basis": "Six user-authorized acceptances after Codex R3 follow-up 81345b28 and passing prior R1/R2 reviews. Five envelopes have only the expected absent-other-record diagnostics from the production gate; forty prior accepted record objects remain byte-equal; all 46 contract bindings current. No old runtime-payload rescan.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
       "missing S0-LL15-b [native]",
-      "missing S0-LL15-c [native]",
-      "unreviewed S0-ENGINE-a [complete-report]",
-      "unreviewed S0-LL21-c [shared-template]",
-      "unreviewed S0-LL21-c [unshared-template]",
-      "unreviewed S0-LL19-a [full]",
-      "unreviewed S0-CONTRACTS-a [complete-report]",
-      "unreviewed S0-LL15-a [full]"
+      "missing S0-LL15-c [native]"
     ]
   },
-  "prior_result_sha256": "05900294b203fe58eb11993397191065cdb325989d5ad15c58c29306eef42375",
+  "prior_result_sha256": "747934c092e20f22e501a2c7a58e8036e00f358f7e7f3ef1226b5e0c82abd5eb",
   "new_results": [
     {
-      "id": "S0-ENGINE-a",
-      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-engine-matrix-r2/results.json",
-      "sha256": "d9b22dffab1873df0ae861fd8b6ebd741419c1c274906d7e4f96fde19155e436"
+      "id": "ENGINE-MATRIX-R2",
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-six-slot-project-acceptance/ENGINE-MATRIX-R2/accepted/accepted-results.json",
+      "sha256": "5e819cb6f03a412b541fe87dc7f23948238b9b1f97eb025924d427ac32e50f11"
     },
     {
-      "id": "S0-LL21-c",
-      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-materialization-r2/results.json",
-      "sha256": "0573e72cfc805c7a8054f302519ca68b80ffbbb6613de877bc99d08a0099a362"
+      "id": "MATERIALIZATION-R2",
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-six-slot-project-acceptance/MATERIALIZATION-R2/accepted/accepted-results.json",
+      "sha256": "fd91548d55731c0d6c3d0f2f989453ec5c33790cd4f04d99aab6eaeaca104b88"
     },
     {
-      "id": "S0-LL19-a",
-      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-nested-eh-r3/results.json",
-      "sha256": "62f6e0849ac1c1f689571c061472b319af3b34d1afc95d3216597d305f4dcda6"
+      "id": "NESTED-EH-R3",
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-six-slot-project-acceptance/NESTED-EH-R3/accepted/accepted-results.json",
+      "sha256": "1abff9b60dee268f4fee5e7aa97b3af295ba28ebe1ad195e00b330211cc21fc9"
+    },
+    {
+      "id": "CONTRACTS-R1",
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-six-slot-project-acceptance/CONTRACTS-R1/accepted/accepted-results.json",
+      "sha256": "b1b4bd66906f0085c315476ebc3e22d566ef1410f760532d160ca4cfcd8fe393"
+    },
+    {
+      "id": "INITIALIZER-BINDING-R1",
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-six-slot-project-acceptance/INITIALIZER-BINDING-R1/accepted/accepted-results.json",
+      "sha256": "6965c51be2064cfe3c1a63a55fdcd504216e739d614f45d3b50a7f806e44974f"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll13b-accepted-results.json",
-  "combined_results_sha256": "c5b5049754463d3be79cb7506906413a6dbe27c423c5189d8cb333fcf8975cf4",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage0-six-slot-accepted-results.json",
+  "combined_results_sha256": "235712dc0094f77b9bee7872e69caed274f96c2e10b7d5247a704dcde2f00c68",
   "inventory": {
     "locator": "stage0/inventory.json",
     "sha256": "42cc3bd7378f27882f582b9cecfbc3b6998681cee39bb47c08b84dba2aac1be3"
   },
   "active_results": [
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll13b-accepted-results.json",
-      "sha256": "c5b5049754463d3be79cb7506906413a6dbe27c423c5189d8cb333fcf8975cf4"
-    },
-    {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-engine-matrix-r2/results.json",
-      "sha256": "d9b22dffab1873df0ae861fd8b6ebd741419c1c274906d7e4f96fde19155e436"
-    },
-    {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-materialization-r2/results.json",
-      "sha256": "0573e72cfc805c7a8054f302519ca68b80ffbbb6613de877bc99d08a0099a362"
-    },
-    {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-nested-eh-r3/results.json",
-      "sha256": "62f6e0849ac1c1f689571c061472b319af3b34d1afc95d3216597d305f4dcda6"
-    },
-    {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-contracts-r1/results.json",
-      "sha256": "9efd94d16463d4c54276325e733218fca8440b9cd48e76b00ac9c65b570044be"
-    },
-    {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-initializer-binding-r1/results.json",
-      "sha256": "917f51e7954cb2975a189c783b19266114dbb712968e8bb180be5faf6fdac37d"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage0-six-slot-accepted-results.json",
+      "sha256": "235712dc0094f77b9bee7872e69caed274f96c2e10b7d5247a704dcde2f00c68"
     }
   ],
   "counts": {
-    "accepted": 40,
+    "accepted": 46,
     "missing": 2,
-    "unreviewed": 6,
+    "unreviewed": 0,
     "required": 48
   }
 }

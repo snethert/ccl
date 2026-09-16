@@ -71,3 +71,8 @@ and what Stage 1 repeats through generated code. The join proves agreement
 among the fixtures and between the fixtures and the written contracts; it
 does not qualify the production TCR, D3 descriptor, collector or image
 formats.
+
+
+Project acceptance recorded 16 September 2026 after Codex review `81345b28`
+and the user's conditional approval. See [acceptance scope](project-acceptance.md).
+Original execution envelopes remain unchanged.

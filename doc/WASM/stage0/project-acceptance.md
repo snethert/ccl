@@ -242,3 +242,29 @@ are current, and fourteen producer controls pass. The live ledger checker
 confirms **40 accepted, eight missing, zero unreviewed of 48**. Existing Wasm
 execution is reused; no inventory, criterion or frozen ledger-policy change
 and no historical payload scan is needed. Census closure remains the priority.
+
+
+## 16 September 2026 — six non-census Stage 0 records accepted
+
+The user told Codex, “If they pass, I accept them,” during the R3 follow-up.
+Codex confirmed that this meant the six pending Stage 0 records. Review
+`81345b28` found no defect at the recorded scopes, closing both earlier
+findings; the branch was merged. Accepted: S0-ENGINE-a, both S0-LL21-c
+variants, S0-LL19-a, S0-CONTRACTS-a and S0-LL15-a.
+
+Five new acceptance envelopes preserve the original execution facts and
+artifacts. The combined envelope preserves all forty prior accepted objects
+unchanged. All 46 bindings, the unchanged producer controls, the five new
+envelopes' production-gate assessments and the live ledger checker pass
+with only the two missing census records. The first composition attempt
+used an invalid prerequisite-truncated inventory; the gate refused it. A
+second wrapper attempt expected the wrong BLOCKED exit code. Both are
+retained; the completed run uses the full production inventory and the
+correct exit code, without changing any criterion or execution result.
+
+Current ledger: **46 accepted, two missing, zero unreviewed of 48**.
+LL15-b/c qualification remains. This acceptance does not adopt the Stage 1
+inventory, authorize a shared-compiler author, choose the floating-point
+condition policy or admit an optional Stage 1 profile. Superseded R1/R2
+failures remain unaccepted. FLOAT-DETECTION-R3 remains reviewed auxiliary
+evidence; unmasked underflow on tiny exact results remains a policy question.

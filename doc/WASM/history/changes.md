@@ -1116,3 +1116,8 @@ Codex's R2 review (ed54b7fa) found that unwinding restored a cleanup record the 
 ## 2026-09-16 — review R3 corrections and merge the non-census branch
 
 Codex reviewed 6c78877d: both remaining nested-EH and float findings are closed, with no new defect. Fresh verifiers reproduce 128 and 89 deterministic files; independent handler and float probes now return the expected state/status. The other four pending envelopes retain their passing prior reviews. The branch is merged, the six Stage 0 records are recommended for scoped acceptance, and float policy remains separate. Review evidence: CODEX-CLAUDE-BRANCH-REVIEW-R3.
+
+
+## 2026-09-16 — accept six reviewed non-census Stage 0 records
+
+After the user instructed “If they pass, I accept them,” Codex's passing R3 review at 81345b28 completed the condition. ENGINE-a, both LL21-c variants, LL19-a, CONTRACTS-a and LL15-a are accepted at their retained scopes. The unchanged producer preserves execution facts and artifacts; all forty prior accepted objects remain identical. Five production-envelope assessments, 46 bindings, fourteen producer controls and the live ledger checker pass at 46 accepted, two missing, zero unreviewed. Original publication-wrapper failures are retained. Only LL15-b/c qualification remains in Stage 0; no Stage 1 or optional float-policy decision is made.

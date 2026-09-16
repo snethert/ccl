@@ -87,3 +87,8 @@ initializer ranks are S0-LL15-b/c. There is no image, no cross-loader, no
 lazy installation, no collector and no Worker; the production loader will
 bind the census's initializers with the same discipline through generated
 code in Stage 1.
+
+
+Project acceptance recorded 16 September 2026 after Codex review `81345b28`
+and the user's conditional approval. See [acceptance scope](project-acceptance.md).
+Original execution envelopes remain unchanged.

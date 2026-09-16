@@ -1636,6 +1636,76 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
         "scope": "R3 follow-up and preceding R1/R2 reviews; no defect at the stated fixture or diagnostic scope. Acceptance is recorded separately."
       }
+    },
+    {
+      "id": "ENGINE-MATRIX-R2-PROJECT-ACCEPTED-20260916",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-six-slot-project-acceptance/ENGINE-MATRIX-R2/accepted/accepted-results.json",
+      "sha256": "5e819cb6f03a412b541fe87dc7f23948238b9b1f97eb025924d427ac32e50f11",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "42cc3bd7378f27882f582b9cecfbc3b6998681cee39bb47c08b84dba2aac1be3",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Engine qualification at retained macOS Node, Chrome, Firefox 156 and Safari 26.3 versions; profiles and feature refusals at that matrix only. No implied portability to other versions or adoption of the optional Stage 1 JSPI profile."
+    },
+    {
+      "id": "MATERIALIZATION-R2-PROJECT-ACCEPTED-20260916",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-six-slot-project-acceptance/MATERIALIZATION-R2/accepted/accepted-results.json",
+      "sha256": "fd91548d55731c0d6c3d0f2f989453ec5c33790cd4f04d99aab6eaeaca104b88",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "42cc3bd7378f27882f582b9cecfbc3b6998681cee39bb47c08b84dba2aac1be3",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Hand-built shared and unshared template materialization and profile/import validation under the retained engine contract. No generated-code or complete production loader claim."
+    },
+    {
+      "id": "NESTED-EH-R3-PROJECT-ACCEPTED-20260916",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-six-slot-project-acceptance/NESTED-EH-R3/accepted/accepted-results.json",
+      "sha256": "1abff9b60dee268f4fee5e7aa97b3af295ba28ebe1ad195e00b330211cc21fc9",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "42cc3bd7378f27882f582b9cecfbc3b6998681cee39bb47c08b84dba2aac1be3",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Hand-built B-shaped nested nonlocal exits, values and independently modelled cleanup/handler state, ten cases and thirteen rejecting mutants. Fixture frames only; no production TCR, condition system, GC or C-boundary claim."
+    },
+    {
+      "id": "CONTRACTS-R1-PROJECT-ACCEPTED-20260916",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-six-slot-project-acceptance/CONTRACTS-R1/accepted/accepted-results.json",
+      "sha256": "b1b4bd66906f0085c315476ebc3e22d566ef1410f760532d160ca4cfcd8fe393",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "1963eb38229e4745aedf0eeee7b1c866f1979e7ab187d3a98d5181e98ecbecf2",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Stage 0 contract consistency join at its recorded layout, ABI and ownership scope; not an implementation or execution of the production runtime."
+    },
+    {
+      "id": "INITIALIZER-BINDING-R1-PROJECT-ACCEPTED-20260916",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-six-slot-project-acceptance/INITIALIZER-BINDING-R1/accepted/accepted-results.json",
+      "sha256": "6965c51be2064cfe3c1a63a55fdcd504216e739d614f45d3b50a7f806e44974f",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "2a8fb15f869c30744da100933bee615007a2fefa09c3760bbd440fff161a8019",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "scope": "Hand-built Wasm initializer binding and execution at the retained closure and loader fixture scope, including the no-load mutant; no generated bootstrap or exhaustive census closure claim."
     }
   ],
   "auxiliary_records": [
@@ -2528,9 +2598,9 @@
     },
     {
       "id": "CURRENT-STAGE0-COMBINED",
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll13b-accepted-results.json",
-      "sha256": "c5b5049754463d3be79cb7506906413a6dbe27c423c5189d8cb333fcf8975cf4",
-      "scope": "40 explicitly accepted records at reviewed scope."
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage0-six-slot-accepted-results.json",
+      "sha256": "235712dc0094f77b9bee7872e69caed274f96c2e10b7d5247a704dcde2f00c68",
+      "scope": "46 explicitly accepted records at their reviewed scopes; only LL15-b/c missing."
     },
     {
       "id": "LL02A-ACCEPTANCE-DECISION",
@@ -3463,6 +3533,16 @@
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-codex-branch-review-r3/packet.json",
       "sha256": "b6d909692630c60618e7a9558895adf59efc4cd22c7b4c3a8991673f7d903ff3",
       "scope": "Independent R3 review closes the handler CSP and float tininess findings; two fresh verifiers and independent probes pass. Prior other-slot reviews stand. No production float-policy choice or generated-code claim.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
+    },
+    {
+      "id": "SIX-SLOT-PROJECT-ACCEPTANCE-20260916",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-six-slot-project-acceptance/packet.json",
+      "sha256": "0e5eeed34c324adf0859d8da7e6a1036052b9b5abd974023193b6a7e3a65bc57",
+      "scope": "Explicit conditional user acceptance after passing Codex review 81345b28: six Stage 0 records, forty prior accepted objects unchanged, 46 accepted and only LL15-b/c missing. No execution or policy change.",
       "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
