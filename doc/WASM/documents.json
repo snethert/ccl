@@ -16,9 +16,9 @@
     },
     {
       "source": "decisions.md",
-      "source_sha256": "1a2497fd4754e71827a4e47a1cb1bcbf25323d1dead3420485a4355e1dde5582",
+      "source_sha256": "786b2d6e55518d656d4594e4e1163c789f7fb89a98ca0ab73b78964e4a898581",
       "output": "CCL_WebAssembly_Stage0_Desk_Decisions_v1_8.docx",
-      "output_sha256": "66b1f2dd91a27def3ca537c0b31d16e17fe4bfec7219dbc175d9e72d482644d1"
+      "output_sha256": "0fde0de8277811f127bb2c0f78ecf80023e7ada84fd8281b74785e59fb2d1613"
     }
   ]
 }

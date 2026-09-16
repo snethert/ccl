@@ -1,0 +1,53 @@
+{
+  "version": 2,
+  "assessment": "STAGE1_ADOPTION_BASELINE",
+  "date": "2026-09-16",
+  "basis": "Stage 1 inventory adopted by the user on 16 September 2026; no Stage 1 execution exists. Codex is the authorized shared-compiler author, Claude the reviewer; the single-thread JSPI profile is deferred. Hand-built Stage 0 evidence discharges no S1 ID.",
+  "result": {
+    "status": "BLOCKED",
+    "reasons": [
+      "missing S1-LL08-a [r6]",
+      "missing S1-LL22-b [control]",
+      "missing S1-LL23-a [generated]",
+      "missing S1-LL04-a [generated]",
+      "missing S1-LL07-a [generated]",
+      "missing S1-LL05-a [generated:B]",
+      "missing S1-LL05-b [generated:B]",
+      "missing S1-LL10-a [generated]",
+      "missing S1-LL19-a [generated]",
+      "missing S1-LL17-a [generated]",
+      "missing S1-LL18-a [small-heap]",
+      "missing S1-LL18-b [hash-tables]",
+      "missing S1-LL06-a [generated]",
+      "missing S1-LL12-a [generated]",
+      "missing S1-LL11-a [generated]",
+      "missing S1-LL11-b [dispatch]",
+      "missing S1-LL16-a [generated]",
+      "missing S1-LL21-a [materialization]",
+      "missing S1-LL21-b [granularity]",
+      "missing S1-LL09-a [generated]",
+      "missing S1-LL15-a [closure]",
+      "missing S1-LL13-a [installation]",
+      "missing S1-LL14-a [cross-dump]",
+      "missing S1-NAMESPACE-a [read-only]",
+      "missing S1-LOADER-a [one-worker]",
+      "missing S1-LL01-a [production-gate]",
+      "missing S1-LL02-a [production-gate]",
+      "missing S1-LL03-a [control]",
+      "missing S1-LL22-a [control]",
+      "missing S1-LL24-a [control]",
+      "missing S1-CONTRACTS-a [complete-report]"
+    ]
+  },
+  "inventory": {
+    "locator": "stage1/inventory.json",
+    "sha256": "f84cbae0ec1fdda9e731f27820de6e67c4142c4d2e24e05a3473e93cebd0985f"
+  },
+  "active_results": [],
+  "counts": {
+    "accepted": 0,
+    "missing": 31,
+    "unreviewed": 0,
+    "required": 31
+  }
+}

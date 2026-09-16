@@ -1,12 +1,11 @@
 # Stage 1 work plan — draft of 15 September 2026
 
-Status: DRAFT proposed by Claude under the 15 September role switch and
-refreshed after Codex's review. Nothing here is adopted. The [draft inventory](inventory.draft.json) is not the
-criterion of any ledger; adopting it is a user decision recorded the way a
-Stage 0 criterion change is recorded, and the functional shared-compiler
-author still needs the user's authorization. Stage 0 acceptance is the entry
-condition: every required Stage 0 variant accepted, which today means the
-census's LL15-b and LL15-c plus the six executions awaiting Codex's review.
+Status: ADOPTED. The [inventory](inventory.json) of 31 tests is the
+criterion of the [Stage 1 ledger](../evidence/current-stage1-gate-result.json)
+by the user's decision of 16 September; Codex is the authorized author of
+the shared-compiler changes with Claude as reviewer; the single-thread JSPI
+profile is deferred. The entry condition is met: all 48 Stage 0 variants are
+accepted. The ledger starts BLOCKED with 31 missing.
 
 ## What Stage 1 delivers
 
@@ -77,17 +76,16 @@ exit criteria, plus two entries proposed from Stage 0 findings.
 | Retained startup worklist and on-demand census queries (LL15-b/c under the v0.2 contract) with seeds, ranks, trap and store dispositions; unknown callees kept separate from proven bounds | 1E closure, bundle composition and module granularity; implementation questions answered by focused native scenarios, not by an exhaustive closure |
 | Stale-dcode finding | 1C S1-LL11-b |
 
-## Decisions the user owns before Stage 1 starts
+## Entry decisions, all made on 16 September
 
-- Who authors the functional shared-compiler changes; the standing rule
-  requires an authorized author and a different-model reviewer.
-- Adoption of this inventory, including the two proposed entries.
-- (Decided 16 September: the floating-point condition policy is the ARM
-  model, recorded in [the specification](../contracts/floating-point.v1.md);
-  Stage 1 owes the cost measurement of the emitted checks.)
-- Whether the single-thread JSPI profile is admitted for Stage 1 at all:
-  Node, Chrome and Firefox 156 have JSPI on the reference Mac, Safari 26.3
-  does not.
+- Author: Codex, for the functional shared-compiler changes as well as the
+  fixtures, under the amended standing rule; Claude reviews.
+- Inventory: adopted as drafted, the two proposed entries included.
+- Floating-point condition policy: the ARM model, recorded in
+  [the specification](../contracts/floating-point.v1.md); Stage 1 owes the
+  cost measurement of the emitted checks.
+- Profile: the single-thread JSPI profile is deferred to the profiles stage.
+  Stage 1 runs on the full profile with one Worker.
 
 ## Rules carried forward
 

@@ -1,10 +1,10 @@
 {
   "version": 1,
   "stage": "Stage 1: target contract and generated bootstrap",
-  "status": "DRAFT proposed by Claude on 2026-09-15 and refreshed after Codex's review for the approved on-demand LL15 policy (census contract v0.2); not adopted, not a criterion of any ledger; adoption is a user decision recorded like a Stage 0 criterion change",
+  "status": "ADOPTED by the user on 2026-09-16 (\"Adopt the Stage 1 inventory\"); the criterion of the Stage 1 ledger. Drafted by Claude on 2026-09-15 and reviewed by Codex as well-formed; the two entries proposed from Stage 0 findings (S1-LL11-b, S1-LL18-b) are adopted with the rest.",
   "authority": "acceptance.md LL metadata (first acceptance LL06, LL09, LL10, LL11, LL12, LL14, LL16, LL17, LL18; extensions LL01, LL02, LL04, LL05, LL07, LL08, LL13, LL15, LL19, LL21; standing LL03, LL22, LL23, LL24), decisions.md D7 and outline Stage 1 exit criteria",
   "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
-  "entry_condition": "Stage 0 accepted: every required S0 variant PASS and ACCEPTED under the on-demand census policy, which qualifies the instrument, explicit worklist and controls rather than an exhaustive bound on native computed calls; the functional shared-compiler author authorized by the user",
+  "entry_condition": "Satisfied on 2026-09-16: all 48 Stage 0 variants accepted (ledger PASS) under the on-demand census policy, and Codex authorized by the user as the functional shared-compiler author with Claude as reviewer.",
   "required_record_roles": [
     "implementation",
     "test",
@@ -905,5 +905,12 @@
       "required_record_roles": [],
       "origin": "outline Stage 1 exit"
     }
-  ]
+  ],
+  "adoption": {
+    "date": "2026-09-16",
+    "authorization": "User: \"Adopt the Stage 1 inventory. CODEX will remain the author. We should defer JSPI.\"",
+    "draft_sha256": "55cb094479459578a27cfef1fe24f59e2c409642010762ec55ac6e038a5931ba",
+    "author": "Codex (functional shared-compiler changes; Claude reviews)",
+    "profile": "full profile with one Worker; the single-thread JSPI profile is deferred to the profiles stage and no S1 variant targets it"
+  }
 }

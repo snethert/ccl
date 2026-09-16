@@ -42,6 +42,32 @@ transcendental functions). The production TCR schema carries the mask as
 `fp_control`. This decision does not measure the cost of the checks, which
 Stage 1 owes under D6, and does not accept any execution.
 
+## 16 September 2026 — Stage 1 entry: inventory adopted, author authorized, JSPI deferred
+
+With the Stage 0 ledger at PASS, the user made the three entry decisions
+Stage 1 was waiting on, in these words: "Adopt the Stage 1 inventory.
+CODEX will remain the author. We should defer JSPI."
+
+1. **Inventory.** The draft of 15 September is adopted unchanged as
+   [stage1/inventory.json](stage1/inventory.json): 31 tests, one variant
+   each, in six subgates, including the two entries proposed from Stage 0
+   findings (S1-LL11-b for the stale-dcode defect, S1-LL18-b for EQ hash
+   tables under movement). It is now the criterion of the Stage 1 ledger,
+   [current-stage1-gate-result.json](evidence/current-stage1-gate-result.json),
+   which the unchanged gate tool reports BLOCKED with 31 missing. Amending
+   it is recorded the way a Stage 0 criterion change is.
+2. **Author.** Codex remains the author of Stage 1, now including the
+   functional shared-compiler changes that subgate 1A requires, under the
+   D6 edit-site plan and R6 comparison of every existing target after each
+   change. Claude is the adversarial reviewer. The standing rule in
+   CLAUDE.md is amended accordingly; the implementation starts from
+   pristine U1 with nothing carried forward from observation.
+3. **Profile.** The single-thread JSPI profile is deferred to the profiles
+   stage. Stage 1 executes on the full profile with one Worker; no S1
+   variant targets JSPI, and the engine matrix's JSPI rows remain facts
+   about the engines, not a Stage 1 requirement. Admitting the profile
+   later is a criterion change with its own record.
+
 | ID | Decision / experiment | Decision status |
 | --- | --- | --- |
 | D1 | Use the x8632-derived data-layout subset, with explicit Wasm execution-state replacements. | Decided. |
