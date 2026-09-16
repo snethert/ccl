@@ -1302,3 +1302,8 @@ Original probe, reader and unsupported-IR development failures are retained.
 The finalized packet replays before commit. This is auxiliary LL05 work;
 the shared backend remains the accepted callable unit pending external review
 of closure construction. No inventory or acceptance criterion changes.
+
+
+## 2026-09-16 — Claude's seventieth audit: callable-object integration and lexical closures
+
+Claude verified the integrated backend's byte identity with the reviewed callable-object unit and the hash chain from the result-capacity record, then replayed the closure packet: the verifier recompiled the 177-module corpus and all seventeen mutant compilers with identical bytes, and a 35-case adversarial probe of captured LET, SETQ, keyword and rest bindings, grandchild captures, sibling closures in heap structures and separate activations agreed across the Python model, native CCL and the target with byte-exact allocation. No defect. The ledger stays at 5 accepted and 26 missing.
