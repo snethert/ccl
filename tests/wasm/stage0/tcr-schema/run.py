@@ -4,8 +4,8 @@ import argparse, copy, hashlib, json, platform, shutil, sys, tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 HERE = Path(__file__).resolve().parent; ROOT = HERE.parents[3]; DOCS = ROOT / 'doc/WASM'
-ID = 'TCR-SCHEMA-R1'
-SCOPE = ('Production TCR schema v1 under D5: 47 fields in nine D5 field groups with explicit offsets, widths, alignments, classification and '
+ID = 'TCR-SCHEMA-R3'
+SCOPE = ('Production TCR schema v1 under D5: 48 fields in nine D5 field groups with explicit offsets, widths, alignments, classification and '
          'ownership, joined to every replaced or deferred native TCR cell of the wasm32 layout schema and to every TCR field the accepted '
          'fixtures use, each fixture field mapped to one production field or declared fixture-private. Control execution over the committed '
          'contracts; no Wasm executed, no gate credit. The schema is the Stage 1 build target D5 owes; it does not claim executed proof.')
@@ -134,7 +134,7 @@ def run(out):
         exercise(out); (out / 'source').mkdir()
         for p in sources(): (out / 'source' / p.name).write_bytes(p.read_bytes())
         require(record['source_sha256'] == {str(p.relative_to(ROOT)): sha(p) for p in sources()}, 'SOURCE_CHANGED')
-        record.update(status='PASS'); print('PASS: TCR schema v1, 47 fields, eight controls refused. Review pending; no gate credit.')
+        record.update(status='PASS'); print('PASS: TCR schema v1, 48 fields, eight controls refused. Review pending; no gate credit.')
     except BaseException as e:
         record['error'] = type(e).__name__ + ': ' + str(e); raise
     finally:

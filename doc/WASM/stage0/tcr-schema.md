@@ -1,11 +1,10 @@
 # Production TCR schema — 15 September 2026
 
-Status: diagnostic EXECUTED and PASSING at its stated scope in `TCR-SCHEMA-R2`,
-which corrects the multiple-value wording Codex's review noted (mv_count
-counts the complete ordered sequence, value0 included, as the accepted B
-contract copies and scans it); `TCR-SCHEMA-R1` is retained. Awaiting Codex's
-follow-up review. No inventory slot changes and no gate credit; Stage 0
-stays at 40 accepted, two missing and six unreviewed of 48.
+Status: diagnostic EXECUTED and PASSING at its stated scope in `TCR-SCHEMA-R3`,
+which adds the `fp_control` word under the D6 floating-point policy the
+user decided on 16 September (the ARM model keeps the logical enable mask in
+the TCR); `TCR-SCHEMA-R2`, reviewed without defect, and `TCR-SCHEMA-R1` are
+retained. Awaiting Codex's review. No inventory slot and no gate credit.
 
 Authorship: Claude Fable 5.1 wrote the schema source, the checker and the
 generated [contract](../contracts/tcr.v1.md) on branch `wasm2-claude`;
@@ -15,7 +14,7 @@ and the decided D5 text; it depends on nothing in the census.
 
 ## What executes
 
-A control execution over the committed contracts. The schema source names 47
+A control execution over the committed contracts. The schema source names 48
 fields in D5's nine groups with offsets, widths, alignments, classification,
 owner, update rule and native origin, a mapping from every replaced or
 deferred native TCR cell to production fields, and a mapping from every
@@ -28,11 +27,11 @@ tests), and the committed contract must equal the regeneration.
 
 | Fact | Value |
 | --- | --- |
-| Fields | 47 in 9 groups: 26 raw addresses, 15 bounded, 3 atomic, 2 raw scalars, 1 tagged root |
+| Fields | 48 in 9 groups: 26 raw addresses, 16 bounded, 3 atomic, 2 raw scalars, 1 tagged root |
 | Native cells | 41 mapped, 2 deferred, 18 unsupported and unmapped |
 | Fixture fields | 56: 25 mapped, 31 fixture-private |
 | Fields with an executed witness | 22 |
-| Fields without a native origin | 13, each explained |
+| Fields without a native origin | 14, each explained |
 
 ## Controls
 

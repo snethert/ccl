@@ -3,7 +3,7 @@
  "size_bytes": 256,
  "alignment": 16,
  "reserved": [
-  200,
+  204,
   256
  ],
  "classifications": {
@@ -29,7 +29,7 @@
   "multiple_values": "multiple-value descriptor",
   "roots_and_frames": "published root-frame/foreign-call descriptor",
   "mailbox": "mailbox identity",
-  "runtime_private": "runtime-private stack/TLS descriptors"
+  "runtime_private": "runtime-private stack/TLS descriptors and policy words"
  },
  "fields": [
   {
@@ -594,6 +594,18 @@
    "group": "runtime_private",
    "description": "debug availability policy for logical frames",
    "update": "bootstrap or debugger",
+   "origin": "new"
+  },
+  {
+   "name": "fp_control",
+   "offset": 200,
+   "width": 4,
+   "alignment": 4,
+   "classification": "bounded",
+   "owner": "thread",
+   "group": "runtime_private",
+   "description": "logical floating-point control word, the ARM model (D6, 16 September 2026): enable bits invalid 1, division-by-zero 2, overflow 4, underflow 8, inexact 16, rounding mode nearest only; default 7. Emitted checks compare the status they compute against these bits; nothing in hardware traps. Takes the role of native tcr.lisp_fpscr on ARM and tcr.lisp_mxcsr on x86, whose register-format images stay unsupported",
+   "update": "thread creation copies the default; set-fpu-mode writes the owning thread's word",
    "origin": "new"
   }
  ],
