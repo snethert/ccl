@@ -1377,3 +1377,14 @@ The complete target corpus remains equal to the accepted eager run. Thirty-five
 installation cases and fourteen mutants execute; failures are retained and the
 final packet is replayed. Compiler/native bytes are unchanged, so their reviewed
 R6 evidence is reused. This is auxiliary LL05 work awaiting external review.
+
+## 2026-09-16 — Prepare direct continuations for compiled B calls
+
+On the user’s direction to remove avoidable call overhead now, the isolated
+backend writes ordinary call arguments into their final continuation slots and
+enters the internal body without a public wrapper. APPLY retains only its
+necessary prefix staging. The public ABI and boundary wrapper remain. The target
+corpus runs with public table entries guarded against compiled calls; new APPLY
+cases, compiler mutants, lazy-loader composition and native R6/R6a cover the
+change. Original escaped controls are retained with their limits disclosed.
+No shared backend integration or LL05 slot credit is claimed before review.

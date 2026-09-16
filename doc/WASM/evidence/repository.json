@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "567f6c2f01612507a2000fed0b1370a6e8c2b150",
+  "commit": "ef7335f286ce32c7de78ccd50cfc9850be87119a",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "7a8555a330f7b08dd2aa33b89fb4cc0e610c5fafbb6991b6dbda84b4b6730981",
-  "immutable_evidence_files": 176554,
-  "indexed_references_verified": 12944,
-  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-b-lazy-calls.json",
-  "source_index_sha256": "6a6c5385bdca880e5f8c6b7a948d27c0568dfd5de52577d8ae52374d8f6e7480",
+  "catalog_sha256": "e513e7fb6db3aeadfb8018936fc8d6be1f0cd285e5aea49b63b8c7a137a12c0f",
+  "immutable_evidence_files": 178482,
+  "indexed_references_verified": 13275,
+  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-b-direct-context.json",
+  "source_index_sha256": "ed0377950c7052125f03b512c7d5ae524e45ed95b2525ade8932fc29ac4ca139",
   "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Proper tail calls integrated; lazy B installation is an auxiliary proposal awaiting external review, without gate credit.",
+  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Proper tail calls integrated; lazy installation and direct-continuation compiled calls are auxiliary proposals awaiting external review, without gate credit.",
   "last_scoped_addition": {
-    "directory": "2026-09-16-stage1-b-lazy-calls-r1",
-    "files": 86,
-    "bytes": 12039319
+    "directory": "2026-09-16-stage1-b-direct-context-r1",
+    "files": 1928,
+    "bytes": 82444524
   }
 }

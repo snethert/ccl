@@ -26,13 +26,12 @@ The accepted and integrated [proper tail-call unit](b-tail-calls.md) adds bounde
 tail transfers and stack-temporary literal APPLY callables. The isolated
 [lazy-installation proposal](b-lazy-calls.md) authenticates paired entries against
 a trusted catalog and preserves the generated corpus through first-use loading.
-Next, by the user’s 16 September direction: place compiled-call arguments
-directly in the continuation and enter the internal body, retaining the public
-wrapper at boundaries. This removes the avoidable argument copy and wrapper
-from compiled-to-compiled calls; implement it now rather than waiting for timing.
-Then resume the Lisp condition path, revisiting tail legality when handlers,
-cleanup and binding extents are admitted. Neither complete LL05 slot is claimed
-by these units.
+By the user’s 16 September direction, the isolated [direct-context proposal](b-direct-context.md)
+places compiled-call arguments directly in the continuation and enters the internal
+body, retaining the public wrapper at boundaries. It removes the extra argument
+copy and wrapper without waiting for timing; review precedes integration. Next:
+the Lisp condition path, revisiting tail legality when handlers, cleanup and
+binding extents are admitted. Neither complete LL05 slot is claimed by these units.
 
 ## What Stage 1 delivers
 

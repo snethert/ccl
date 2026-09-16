@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "failures": [
+    {
+      "run": "ccl-direct-run-r1",
+      "reason": "Exploratory owner-restoration mutant did not affect the corpus: restoring an empty result reservation between calls is overwritten before the next observed entry and no GC/poll runs in that interval. Its whole original build and passing mutant log are retained; it is not counted as a rejected mutant. A root-head restoration mutant exercises the observable chain invariant.",
+      "open_obligation": "Inspect all post-call descriptor words at actual safepoints when the collector/poll path is introduced."
+    },
+    {
+      "run": "ccl-direct-run-r2",
+      "reason": "The omitted APPLY-prefix copy escaped because existing non-tail APPLY cases had no prefix. Added ordinary prefixed APPLY with ordered effects, many arguments, a lexical closure, a stack-temporary literal and error paths. Same mutant remains required to reject.",
+      "retained": "original mutant build, source, passing log and result"
+    }
+  ],
+  "prototype": "The first direct-context corpus passed. APPLY saved-root metadata was then made consistent with its retired evaluation roots before the fresh R6 build. No source/kernel changes in the shared checkout."
+}

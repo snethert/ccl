@@ -3942,6 +3942,16 @@
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE"
+    },
+    {
+      "id": "STAGE1-B-DIRECT-CONTEXT-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-b-direct-context-r1/packet.json",
+      "sha256": "43d527fb343f985ac4506d01d64ce1e2d748e7dc680aab6dd230cb6d886808b8",
+      "scope": "Compiled B calls write arguments directly into their continuation and enter the internal body without a public wrapper. Public boundaries retain B and their wrapper; APPLY retains prefix staging but no second whole-vector copy. 206 source functions, 276 modules, 761 native/model cases, 3044 target comparisons, zero compiled entries through guarded public table slots, 36 long tail chains, 20 rejected compiler mutants and two inherited regression controls. Native R6/R6a and composition with the pending lazy-loader proposal pass. Exploratory unobserved owner-restoration control retained and disclosed. No GC, dynamic extents, production condition path, full LL05 credit or unreviewed shared integration.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }
