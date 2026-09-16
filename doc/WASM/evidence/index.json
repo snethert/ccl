@@ -296,7 +296,7 @@
       "review_disposition": "NOT_REVIEWED",
       "results_member": "results.json",
       "currency": "ORIGINAL_FAILURE",
-      "note": "Original reproduction of Claude\u2019s exceptional-idle collector failure, retained unchanged."
+      "note": "Original reproduction of Claude’s exceptional-idle collector failure, retained unchanged."
     },
     {
       "id": "INTEGRATED-RUNTIME-r10",
@@ -1498,7 +1498,7 @@
       "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Control execution on macOS: the wasm32 layout schema v1 is derived from the pinned U1 x8632 architecture source and cross-checked against the U1 C header; every derived row carries a source-to-target disposition; the initial contracts/layout.json subset agrees; the committed schema equals the regeneration. The runtime-contract join v1 verifies frames, roots, TCR fields, allocation/store protocols and C-boundary restoration against the accepted fixtures\u2019 retained schemas and cases by artifact hash, and re-derives the link-derived memory/table ownership map from retained link metadata. Nine synthetic controls are refused. This reviews contracts against executed evidence; it executes no Wasm and confers no runtime acceptance of its own.",
+      "scope": "Control execution on macOS: the wasm32 layout schema v1 is derived from the pinned U1 x8632 architecture source and cross-checked against the U1 C header; every derived row carries a source-to-target disposition; the initial contracts/layout.json subset agrees; the committed schema equals the regeneration. The runtime-contract join v1 verifies frames, roots, TCR fields, allocation/store protocols and C-boundary restoration against the accepted fixtures’ retained schemas and cases by artifact hash, and re-derives the link-derived memory/table ownership map from retained link metadata. Nine synthetic controls are refused. This reviews contracts against executed evidence; it executes no Wasm and confers no runtime acceptance of its own.",
       "authorship": "Claude Fable 5.1 fixture and generated contracts on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision.",
       "external_review": {
         "reviewer": "Codex",
@@ -1524,7 +1524,7 @@
       "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE",
-      "scope": "Hand-built bootstrap closure on macOS Node/V8: three phases, four wasm32 modules and nine required initializers. The loader validates the manifest against the supplied modules before instantiating anything, seeds its own dependencies before any bundle exists, binds every initializer to its prerequisites\u2019 physical completion words and required service state, checks each completion physically after the initializer returns, and publishes ready only after every required initializer completed. Fourteen refusals cover omitted and wrong modules, manifest defects, wrong or unwritten completions, a raised initializer, a clobbered prerequisite and wrong service state; eight loader mutants including a no-load path are rejected by the unchanged oracle over the whole memory image. Not the qualified census closure, the production loader, image format or generated code.",
+      "scope": "Hand-built bootstrap closure on macOS Node/V8: three phases, four wasm32 modules and nine required initializers. The loader validates the manifest against the supplied modules before instantiating anything, seeds its own dependencies before any bundle exists, binds every initializer to its prerequisites’ physical completion words and required service state, checks each completion physically after the initializer returns, and publishes ready only after every required initializer completed. Fourteen refusals cover omitted and wrong modules, manifest defects, wrong or unwritten completions, a raised initializer, a clobbered prerequisite and wrong service state; eight loader mutants including a no-load path are rejected by the unchanged oracle over the whole memory image. Not the qualified census closure, the production loader, image format or generated code.",
       "authorship": "Claude Fable 5.1 fixture on branch wasm2-claude under the 15 September 2026 role switch; adversarial review by Codex pending before any acceptance decision.",
       "external_review": {
         "reviewer": "Codex",
@@ -1811,6 +1811,26 @@
       "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-representation-r1/packet.json",
       "packet_sha256": "6341e83652a0bc70495e0defb51f8bc538c406711c707fe1d74468d54dad0b69",
       "scope": "S1-LL04-a: generated cons access/mutation, 153 native comparisons, 740 target checks and 15 recompiled compiler mutants. R6/R6a pass with accepted baseline reused; proposed backend not integrated. Wasm typed exception boundary only; no Lisp condition-system, allocation, collector or heap-loader claim."
+    },
+    {
+      "id": "STAGE1-LL04-ACCEPTANCE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-ll04-acceptance-r1/accepted-results.json",
+      "sha256": "37f6def5e8722ccf38dc5ab0f2fee8128b1ee8c1d0ea727b68cd51cb0d6ce85f",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "2f56b9559b577fe22ba961b87b8ddb936aacc10eceb324daf5c8589a7b77b7de",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-ll04-acceptance-r1/packet.json",
+      "packet_sha256": "1382c8ea0c8af2eee01db10cd7e08204d305ebb13978c922d9d2832878054150",
+      "scope": "User acceptance of reviewed S1-LL04-a; execution unchanged.",
+      "test_ids": [
+        "S1-LL04-a"
+      ]
     }
   ],
   "auxiliary_records": [

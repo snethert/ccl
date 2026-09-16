@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "timestamp": "2026-09-16T17:04:35.218125+00:00",
+  "authorization": {
+    "quote": "If you agree with Claude, I accept LL04-a. If it is fine, pleace proceed to LL07.",
+    "provenance": "User to Codex with Claude’s sixty-third audit. Codex agrees with the no-defect verdict."
+  },
+  "review_commit": "842b8f9c7091014faa9cc6c9f509aa96f5de1fe1",
+  "review_sha256": "6360e77f4fea3a6c43e60188ef5d1d615e66cf3be235aae1d51fadd949dae603",
+  "source_report_sha256": "a22536ebe5024259bd116eb0513e3920badb6717f6ae3c06659a6f3f50f5d040",
+  "scope": "Accept S1-LL04-a generated cons access and mutation at STAGE1-REPRESENTATION-R1 scope: 19 generated functions, 153 native comparisons at four placements, 128 raw-tag probes and 15 compiler mutants.",
+  "exclusions": [
+    "No allocation, collector, general calls, condition objects or target heap image. Typed exception boundary only; full conditions remain 1C.",
+    "Literal non-list operands may be refused after front-end error folding; the 2 GiB placement crosses the boundary between aligned cells."
+  ],
+  "records": [
+    {
+      "id": "S1-LL04-a",
+      "variant": "generated",
+      "test_revision": "2b5f40a15c337382f06fc1c38eaa8bc32677b38989c02d1edec393af7b2d1e0c",
+      "contract_sha256": "03a00cc24b466feaa5dd372a6c779428871aac8e6f55da8dc64a4144c6e45632",
+      "scope": "Reviewed generated cons representation scope above."
+    }
+  ]
+}

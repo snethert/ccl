@@ -1,6 +1,6 @@
 # Generated cons representation — 16 September 2026
 
-**S1-LL04-a executed; awaiting Claude review and user acceptance.**
+**S1-LL04-a reviewed by Claude and accepted by the user.**
 The proposed backend remains under `tests/wasm/stage1/representation`.
 The integrated 1A compiler and upstream kernel are unchanged.
 
@@ -14,7 +14,7 @@ and unsupported forms still refuse before front-end folding and at pass 2.
 | Generated functions | 19 |
 | Native/logical comparisons | 153: 115 returns, 38 type errors |
 | Target checks | 740: 612 repetitions of the native cases, 128 additional raw-tag probes |
-| Placements | Low, straddling 2 GiB, above 2 GiB, final aligned region of 32,769 pages |
+| Placements | Low, crossing 2 GiB between cells, above 2 GiB, final aligned region of 32,769 pages |
 | Compiler mutants | 15 rejected by the unchanged physical/native oracle |
 | Genuine-record artifact-role omissions | 12 rejected by the production gate |
 | Native suite with the proposed backend loaded | 21,843 passed, 75 upstream-disabled |
@@ -62,3 +62,7 @@ retained. The final emitter was unchanged by these corrections.
 Packet: `ccl-evidence/2026-09-16-stage1-representation-r1`. The next slot is
 S1-LL07-a: separate generated conversions for fixnums, addresses, code IDs and
 typed slots, including the exclusive array-size limit.
+
+The [acceptance decision](acceptance-ll04.json) binds audit 63. Literal non-list
+operands such as `(car 5)` can be refused because U1 folds them into an
+unsupported error-signalling form before pass 2.

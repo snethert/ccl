@@ -2,22 +2,19 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "c4005f45f8630323a61fafea4a58b4ebdb60eb56",
+  "commit": "1ae1e7d8e762fc8821671099c0bee304d336334f",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "ce321085bcfcfd5b1532819455e291822e800ab3f56803cec1b785fad17713b2",
-  "immutable_evidence_files": 169232,
-  "indexed_references_verified": 9050,
-  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-representation.json",
-  "source_index_sha256": "0351480a34da4b40b4820b0ec6717a06b2021a33e9a8cea82c9552109a70e302",
+  "catalog_sha256": "a2e1d5446d834b60a3b44949a9b1d56f7964a48fcdefe7afcf71106538e4007a",
+  "immutable_evidence_files": 169370,
+  "indexed_references_verified": 9369,
+  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-ll04-acceptance.json",
+  "source_index_sha256": "0bf33a961888b189976ed179e5bc7f2a7cb7687bcabfe7663978a255716c5e65",
   "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository. Stage 0: 48 accepted. Stage 1: three accepted 1A records, generated representation LL04 awaiting review, 27 missing.",
+  "scope": "Stage 0: 48 accepted. Stage 1: 4 accepted, 27 missing.",
   "last_scoped_addition": {
-    "directory": "2026-09-16-stage1-representation-r1",
-    "files": 165,
-    "bytes": 28538645,
-    "immutable_evidence_files": 169232,
-    "catalog_sha256": "ce321085bcfcfd5b1532819455e291822e800ab3f56803cec1b785fad17713b2"
+    "directory": "2026-09-16-stage1-ll04-acceptance-r1",
+    "files": 138
   }
 }
