@@ -14,7 +14,7 @@ The [generated B call core](b-call-core.md) now executes required-argument
 direct/indirect calls and full values and is accepted and integrated.
 The accepted and integrated [optional/keyword binding unit](b-bindings.md)
 adds defaults, supplied-p values and keyword validation. The
-[rest/APPLY proposal](b-rest-apply.md) now supplies real cons allocation and
+accepted and integrated [rest/APPLY unit](b-rest-apply.md) supplies real cons allocation and
 runtime-sized arguments, removing the 64-argument ceiling. Next: dynamic
 result capacity and callable objects, then the condition path, lazy adapters
 and tail transfers. Neither complete LL05 slot is claimed by these units.

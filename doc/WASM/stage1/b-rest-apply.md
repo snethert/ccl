@@ -30,7 +30,11 @@ mutants, twenty source refusals, sixty resource refusals and eight allocation
 boundary checks exercise the failure paths. Circular-list controls execute
 only in Wasm. R6/R6a passes with 21,843 native tests and all 164 FASLs restored.
 
-The proposal awaits external review. Function and keyword identities are
+The user accepted this unit after Claude’s sixty-seventh audit found no defect.
+The exact reviewed backend is [integrated](integration-b-rest-apply.json).
+The direct-link APPLY branch remains unexercised; validation followed by
+unchecked copying depends on no intervening execution. Revisit that invariant
+before introducing safepoints or concurrent list mutation. Function and keyword identities are
 still fixture-owned; collection, dynamic result capacity, production callable
 objects, full conditions, lazy adapters and tail transfers remain LL05/Stage 1
 work. The next unit addresses result capacity and callable objects.

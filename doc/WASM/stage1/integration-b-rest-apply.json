@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-16T19:19:39.850946+00:00",
+  "user_authorization": "integrate and proceed",
+  "review_commit": "7241f346fc43ee79f2be1a9c2fea36754f9ad83a",
+  "review": "sixty-seventh audit; no defect",
+  "file": "compiler/WASM32/wasm32-backend.lisp",
+  "before": "beadb06083d71390e5b94bae959336a763bbe21846a634e14ee59009b47ea0cc",
+  "after": "40271670e053eebe8cba49b88380d2c8c37c9e1a3f9bee42baa012c77cfe0f72",
+  "proposal_locator": "2026-09-16-stage1-b-rest-apply-r1/source/tests/wasm/stage1/b-rest-apply/wasm32-backend.lisp",
+  "packet_manifest_sha256": "577ff6e152a3f3ff11461dd34f0c2fa6a59a058974c99273bfb5c0c0ea96817a",
+  "scope": "Rest-list allocation and runtime-sized APPLY arguments; no LL05 inventory-slot acceptance. The separate 64-value result limit remains pending.",
+  "observations": [
+    "The direct-link APPLY branch is unreachable through the admitted source walker and is untested.",
+    "Validation and copying re-read the list without intervening calls, safepoints or collection. Reassess this invariant before adding those mechanisms."
+  ],
+  "verification": "Exact reviewed payload; independently reviewed R6/R6a executions cover these bytes. No new native execution; other integrated files and upstream kernel unchanged.",
+  "reverse": "Restore the accepted optional/keyword binding payload at the before hash."
+}

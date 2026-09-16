@@ -3840,9 +3840,17 @@
       "sha256": "577ff6e152a3f3ff11461dd34f0c2fa6a59a058974c99273bfb5c0c0ea96817a",
       "scope": "Generated rest-list construction and APPLY: 71 functions, 339 native/logical cases repeated in 1356 target comparisons, 20 source refusals, 60 resource refusals, eight allocation boundary checks and 18 recompiled compiler mutants. Runtime-sized argument frames remove the 64-argument ceiling; executed through 1024 arguments. R6/R6a and retained replay pass. Auxiliary proposal, no LL05 slot credit or integration; collection, result capacity, callable objects, conditions, lazy adapters and tails remain.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "commit": "7241f346fc43ee79f2be1a9c2fea36754f9ad83a",
+        "scope": "Sixty-seventh audit: retained replay and 152 further comparisons passed; direct-link APPLY is unexercised and validation/copy assumes no intervening execution."
+      },
+      "project_decision": {
+        "record": "stage1/integration-b-rest-apply.json",
+        "scope": "User accepted exact reviewed auxiliary integration; no inventory slot accepted."
+      }
     }
   ]
 }
