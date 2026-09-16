@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-16T18:41:21.847206+00:00",
+  "user_authorization": "accept and proceed",
+  "review_commit": "5142fc7360e9149795f955beb46f9db4bb793c47",
+  "review": "sixty-sixth audit; no defect",
+  "file": "compiler/WASM32/wasm32-backend.lisp",
+  "before": "75dee16c79af1fa35e9a4f605b7b198bac6e8def58477b1bbe688e773f167348",
+  "after": "beadb06083d71390e5b94bae959336a763bbe21846a634e14ee59009b47ea0cc",
+  "proposal_locator": "2026-09-16-stage1-b-bindings-r1/source/tests/wasm/stage1/b-bindings/wasm32-backend.lisp",
+  "packet_manifest_sha256": "015834cb9ff9a6c11437a41a53e338f4a2f8db80bffbf73122af330fcf0bef5a",
+  "scope": "Optional and keyword binding only; no LL05 inventory-slot acceptance. The 64-argument fixture maximum remains a limitation, not a final CCL language limit.",
+  "verification": "Exact reviewed payload; independent reviewed R6/R6a runs cover these bytes. No new execution; other integrated files and upstream kernel unchanged.",
+  "reverse": "Restore the accepted B call core at the before hash."
+}

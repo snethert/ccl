@@ -1238,3 +1238,8 @@ A separate compiler proposal consumes real front-end lambda-list IR for optional
 ## 2026-09-16 — Claude's sixty-sixth audit: B call-core integration and optional/keyword binding reviewed, no defect
 
 Claude verified the integrated backend's byte identity with the reviewed call core, then replayed the binding packet: the verifier recompiled the corpus and all sixteen mutant compilers with identical bytes, and an eleven-form adversarial probe of supplied-p-dependent defaults, keyword pass-through, failing defaults and full 64-word keyword lists agreed across the Python model, native CCL and the target. No defect. The 64-argument maximum is a declared limit that diverges from native above it. The ledger stays at 5 accepted and 26 missing.
+
+
+## 2026-09-16 — accept and integrate optional and keyword binding
+
+The user said “accept and proceed” after Claude’s sixty-sixth audit. The main backend now equals that reviewed unit byte for byte, with the preceding B core hash checked first. Reviewed R6/R6a evidence is reused for these exact bytes. No LL05 slot credit; the 64-argument maximum is retained as a disclosed implementation limit to address in rest/APPLY work, not adopted as language policy.

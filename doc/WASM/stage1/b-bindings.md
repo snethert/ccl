@@ -1,9 +1,9 @@
 # Generated optional and keyword binding — 16 September 2026
 
 The next LL05 implementation unit adds `&optional` and `&key`, supplied-p
-flags, explicit keyword aliases and `&allow-other-keys`. The proposal runs
-in disposable pristine U1 copies; the shared backend remains the accepted
-and integrated B call core until external review and user acceptance.
+flags, explicit keyword aliases and `&allow-other-keys`. The unit was reviewed without defect in Claude’s sixty-sixth audit,
+accepted by the user and integrated byte for byte. The
+[integration record](integration-b-bindings.json) pins the decision and payload.
 
 CCL's real front-end lambda-list records drive the emitter. Defaults run
 in binding order, may use earlier parameters, and can call other generated

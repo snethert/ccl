@@ -3818,9 +3818,21 @@
       "sha256": "015834cb9ff9a6c11437a41a53e338f4a2f8db80bffbf73122af330fcf0bef5a",
       "scope": "Generated optional and keyword argument binding: 51 functions including the retained required-argument corpus, 248 native cases repeated in 992 target comparisons, 19 source refusals, 20 resource refusals and 16 recompiled compiler mutants. R6/R6a and retained replay pass. Auxiliary proposal, no LL05 slot credit or integration; rest/APPLY, closure objects, full conditions, stubs and tails remain.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude",
+        "record": "stage0/claude-review.md",
+        "reviewed_revision": "b0b8c080",
+        "audit_commit": "5142fc73",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "scope": "Sixty-sixth audit: retained replay and 180 further comparisons pass. Maximum 64 arguments is disclosed; no complete LL05 credit."
+      },
+      "project_decision": {
+        "record": "stage1/integration-b-bindings.json",
+        "scope": "User accepted integration of exact reviewed auxiliary unit; no inventory slot accepted."
+      }
     }
   ]
 }
