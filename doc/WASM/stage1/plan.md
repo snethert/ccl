@@ -11,9 +11,11 @@ zero unreviewed records. [LL04 generated representation](representation.md)
 is reviewed and accepted. The [reviewed unit](integration-1a.json) is integrated;
 [LL07’s generated typed conversions](conversions.md) are reviewed, accepted and [integrated](integration-ll07.json).
 The [generated B call core](b-call-core.md) now executes required-argument
-direct/indirect calls and full values. Next: LL05 binding forms, APPLY,
-closure objects and the condition path, then lazy stubs and tails. Neither
-complete LL05 slot is claimed by this core.
+direct/indirect calls and full values and is accepted and integrated.
+The [optional/keyword binding proposal](b-bindings.md) adds defaults,
+supplied-p values and keyword validation. Next: rest-list allocation and
+APPLY, closure/function objects and the condition path, then lazy stubs and
+tails. Neither complete LL05 slot is claimed by these units.
 
 ## What Stage 1 delivers
 

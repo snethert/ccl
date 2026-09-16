@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "cef0be78d996910fbb9d44de425ccf681feeff6d",
+  "commit": "bf8db0b6e4180c4515c5b28a0643dffbcfa803d2",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "90e3c9c6545dc5dac000cccc5806c2a8a40db093a881e6f706f495cb5fb982a0",
-  "immutable_evidence_files": 169933,
-  "indexed_references_verified": 10332,
-  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-b-call-core.json",
-  "source_index_sha256": "3f47958e4f3da954cc2d6d10e57e746035e8ab7996a28d8b066a65d2c7410d28",
+  "catalog_sha256": "cb02f27efd97fad5195e04b3fb5166c59f1061b06cf75afc366033cf3650e1d0",
+  "immutable_evidence_files": 170279,
+  "indexed_references_verified": 10655,
+  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-b-bindings.json",
+  "source_index_sha256": "729156bb26ef068229177667f9bf45c5c6b97be963bdab24577fe49dc4066512",
   "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Generated B call core is an auxiliary proposal without gate credit.",
+  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. B core integrated; optional/keyword binding is an auxiliary proposal awaiting external review, without gate credit.",
   "last_scoped_addition": {
-    "directory": "2026-09-16-stage1-b-call-core-r1",
-    "files": 258,
-    "bytes": 30196406
+    "directory": "2026-09-16-stage1-b-bindings-r1",
+    "files": 346,
+    "bytes": 32136877
   }
 }

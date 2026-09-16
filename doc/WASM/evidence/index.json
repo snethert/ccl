@@ -3795,6 +3795,29 @@
       "sha256": "474f1e32d474d73b873c59152564ec5414bf6059ff9e36c23b733ae70418ad60",
       "scope": "Generated B required-argument calls and result ownership: 34 functions, 88 native cases repeated in 352 target comparisons, 12 source refusals, 12 resource refusals and 15 recompiled compiler mutants. R6/R6a pass. Auxiliary proposal, no LL05 gate credit; binding forms, APPLY, closure objects, complete conditions, lazy stubs and tails remain.",
       "execution_status": "PASS",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude",
+        "record": "stage0/claude-review.md",
+        "reviewed_revision": "790318c8",
+        "audit_commit": "29a3840f",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND_DIAGNOSTIC",
+        "scope": "Sixty-fifth audit: retained replay and additional forms pass; auxiliary required-argument B core only."
+      },
+      "project_decision": {
+        "record": "stage1/integration-b-call-core.json",
+        "commit": "d6c38794",
+        "scope": "User accepted integration of the exact reviewed unit; no LL05 inventory slot accepted."
+      }
+    },
+    {
+      "id": "STAGE1-B-BINDINGS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-b-bindings-r1/packet.json",
+      "sha256": "015834cb9ff9a6c11437a41a53e338f4a2f8db80bffbf73122af330fcf0bef5a",
+      "scope": "Generated optional and keyword argument binding: 51 functions including the retained required-argument corpus, 248 native cases repeated in 992 target comparisons, 19 source refusals, 20 resource refusals and 16 recompiled compiler mutants. R6/R6a and retained replay pass. Auxiliary proposal, no LL05 slot credit or integration; rest/APPLY, closure objects, full conditions, stubs and tails remain.",
+      "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE"
