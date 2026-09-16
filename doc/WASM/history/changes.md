@@ -1268,3 +1268,8 @@ The isolated result-capacity unit sizes callee scratch, root records, binding of
 ## 2026-09-16 — Claude's sixty-eighth audit: rest/APPLY integration and result capacity
 
 Claude verified the integrated backend's byte identity with the reviewed rest/APPLY unit and the hash chain from the binding record, then replayed the result-capacity packet: the verifier recompiled the corpus and all sixteen mutant compilers with identical bytes, and a 41-case adversarial probe at budgets from zero to 1,028 words, including exact-fit retention, empty reservations, bindings after large discarded results and deep retained frames, agreed across the Python model, native CCL and the target. No defect. The ledger stays at 5 accepted and 26 missing.
+
+
+## 2026-09-16 — integrate reviewed runtime result capacity
+
+The user said “accept, integrate and proceed with the next sizable work unit” after Claude’s sixty-eighth audit. The shared backend now equals the reviewed result-capacity payload, with the preceding integration hash checked. Reviewed R6/R6a evidence covers these bytes. Reservation policy and stack cost remain explicit; no LL05 slot credit.

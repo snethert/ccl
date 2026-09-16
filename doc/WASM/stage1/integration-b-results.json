@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-16T19:51:49.284504+00:00",
+  "user_authorization": "accept, integrate and proceed with the next sizable work unit",
+  "review_commit": "40c91e171c315eaf05bff5296e820cdb77b10017",
+  "review": "sixty-eighth audit; no defect",
+  "file": "compiler/WASM32/wasm32-backend.lisp",
+  "before": "40271670e053eebe8cba49b88380d2c8c37c9e1a3f9bee42baa012c77cfe0f72",
+  "after": "e654639ead9c1e80fa1b9332680d4313ad10c57465e869dd20f8f5cdfcf5674d",
+  "proposal_locator": "2026-09-16-stage1-b-results-r1/source/tests/wasm/stage1/b-results/wasm32-backend.lisp",
+  "packet_manifest_sha256": "f75e1f7b45ad7b668ba64f6d9e66811fb2cc15e2c9f7f0c36e811b64e0704bf3",
+  "scope": "Runtime result capacity; no LL05 slot acceptance.",
+  "observations": [
+    "Stack cost scales with caller reservation and call depth. Production adapters still need a reservation policy; no automatic growth is supplied."
+  ],
+  "verification": "Exact reviewed payload; independent reviewed R6/R6a executions cover these bytes. No new native execution.",
+  "reverse": "Restore the accepted rest/APPLY payload at the before hash."
+}

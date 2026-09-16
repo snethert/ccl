@@ -28,8 +28,8 @@ spare result words. An exact-capacity case now observes the overwritten
 optional binding and rejects it. Both escaping runs are retained; the
 proposed compiler needed no correction.
 
-The unit awaits Claude's review. The shared backend stays at the accepted
-rest/APPLY payload, and no LL05 slot is claimed. Callable objects and symbol
+The user accepted the unit after Claude’s sixty-eighth audit found no defect.
+The exact payload is [integrated](integration-b-results.json); no LL05 slot is claimed. Callable objects and symbol
 function cells are next, followed by conditions, lazy adapters and tails.
 There is no collection or safepoint claim; APPLY still requires no
 intervening execution or concurrent mutation between its two traversals.
