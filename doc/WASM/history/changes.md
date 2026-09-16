@@ -1333,3 +1333,11 @@ Wasm tail transfer. No inventory, criterion or gate changes.
 ## 2026-09-16 — Claude's seventy-first audit: closure integration and local functions
 
 Claude verified the integrated backend's byte identity with the reviewed closure unit and the hash chain from the callable-object record, then replayed the local-function packet: the verifier recompiled the 241-module corpus, all sixteen mutant compilers and both development regression controls with identical outcomes, and a 37-case adversarial probe of self-referencing closures, nested FLET inside LABELS, mutual recursion through function values, literal APPLY and inline lambdas, and deep recursion at a four-word budget agreed across the Python model, native CCL and the target with byte-exact allocation. No defect. The ledger stays at 5 accepted and 26 missing.
+
+## 2026-09-16 — integrate reviewed local functions
+
+The user said “accept, integrate and proceed” after Claude’s seventy-first
+audit. The shared backend equals the reviewed local-function payload, with
+the integration chain and reviewed R6/R6a coverage preserved. The next unit
+addresses proper tail transfer and the temporary closure for literal APPLY.
+No LL05 inventory credit.

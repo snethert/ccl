@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-16T21:37:20.491480+00:00",
+  "user_authorization": "accept, integrate and proceed",
+  "review_commit": "241120999177b8c4154213969d2ef6b22519fff6",
+  "review": "seventy-first audit; no defect",
+  "file": "compiler/WASM32/wasm32-backend.lisp",
+  "before": "fdf6ef30bbca907999bb4242f6ca63e0a73ae3a2626a37989594273fa430ee9f",
+  "after": "a2a0b549225d9e4d673d5eb68b8315982347af1ac13d4d2f74520b8de5ee9c6c",
+  "proposal_locator": "2026-09-16-stage1-b-local-calls-r1/source/tests/wasm/stage1/b-local-calls/wasm32-backend.lisp",
+  "packet_manifest_sha256": "00ed422f748e6761b7156b0c20ebd514f86de4940b3e07f9951945cad1278694",
+  "scope": "FLET/LABELS, lexical recursion, inline lambda binding and literal APPLY; no LL05 slot acceptance.",
+  "observations": [
+    "Literal APPLY currently allocates a closure where a directly called literal lambda is inlined. Address alongside proper tail transfer.",
+    "Recursive calls currently consume stack per level."
+  ],
+  "verification": "Exact reviewed payload; reviewed independent R6/R6a executions cover these bytes. No new native execution.",
+  "reverse": "Restore the accepted closure payload at the before hash."
+}

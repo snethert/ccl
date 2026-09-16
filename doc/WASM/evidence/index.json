@@ -3912,7 +3912,9 @@
       "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "project_disposition": "ACCEPTED_AND_INTEGRATED_AT_REVIEWED_SCOPE",
+      "integration_record": "doc/WASM/stage1/integration-b-local-calls.json"
     }
   ]
 }

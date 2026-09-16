@@ -35,8 +35,9 @@ controls. Two hand-counted allocation expectations were corrected using the
 retained IR’s capture identities; those failed assertions are retained too.
 
 The [fixture and replay](../../../tests/wasm/stage1/b-local-calls/README.md)
-remain an auxiliary proposal awaiting external review. No inventory slot is
-claimed. The shared backend is the accepted closure unit. Local RETURN-FROM,
+is accepted after Claude’s seventy-first audit and the user’s decision. The
+[exact reviewed payload is integrated](integration-b-local-calls.json). No
+inventory slot is claimed. Local RETURN-FROM,
 declarations, local macros, production conditions, authenticated loading,
 lazy adapters and collection remain open. Recursive calls consume ordinary
 Wasm and Lisp stack; proper Wasm tail transfer is the next substantial unit.
