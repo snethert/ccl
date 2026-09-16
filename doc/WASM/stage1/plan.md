@@ -98,6 +98,14 @@ of barrier-sensitive stores. Imports and foreign calls fall due in 1A and
 1E, traps in 1C, and store classification before the Stage 2 multi-Worker
 collector; the single-thread collector of 1D needs no barrier.
 
+The [ARM lessons](arm-lessons.md) add six more by name: the kernel
+globals block (1A), thread-local binding growth and the interrupt-level
+binding (1C), stack overflow as a condition (1C), the continuable trap
+classes for the lowering inventory (1C), and callback slot installation
+(Stage 2). The same document revises one precedent: derive the
+cross-fasloader's function handling from `xarmfasload.lisp`, not only from
+x8632.
+
 ## Rules carried forward
 
 Small commits with one deliverable each; every packet reproduced by its
