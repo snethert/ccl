@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "timestamp": "2026-09-16T17:38:44.152598+00:00",
+  "review_commit": "eba7e7b952ebe90547285be222e2348126f84828",
+  "acceptance_commit": "194b95f23a6916cf03f0f800b6ceb20286ce9ef5",
+  "file": "compiler/WASM32/wasm32-backend.lisp",
+  "before": "5d12c824ca5728304626bfbddabae754ebe438cb3aa4c50c2022e1fb95d68a97",
+  "after": "ff8d874dbdd66ac0867caac943ce4fa02ea943eab4a36420215b036340294b2e",
+  "proposal_locator": "2026-09-16-stage1-conversions-r1/source/tests/wasm/stage1/conversions/wasm32-backend.lisp",
+  "verification": "Exact reviewed LL07 payload. Reuse independent reviewed R6/R6a runs for these bytes; no new execution. Other integrated files and upstream kernel unchanged.",
+  "reverse": "Restore the accepted LL04 backend at the recorded before hash."
+}

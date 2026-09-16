@@ -11,9 +11,11 @@
   ((operation :initarg :operation :reader unsupported-operation))
   (:report (lambda (c s) (format s "WASM32 lowering not implemented: ~s" (unsupported-operation c)))))
 (defun refuse (operation) (error 'unsupported-wasm32-code :operation operation))
+(defvar *primitive-signature* nil)
 (defun wasm32-pass2 (afunc &rest ignored)
   (declare (ignore ignored))
   (unless *module-result-tag* (refuse :native-fasl-publication))
+  (when *primitive-signature* (return-from wasm32-pass2 (primitive-pass2 afunc)))
   (let* ((ir (ccl::afunc-acode afunc)) (args (ccl::acode-operands ir)))
     (unless (and (eq (ccl::acode-operator-name (ccl::acode-operator ir)) 'ccl::lambda-list)
                  (null (second args)) (null (third args)) (null (fourth args))
@@ -153,3 +155,175 @@
             (ccl::compile-named-function form :name name :target :wasm32 :policy ccl::*default-compiler-policy*)
             (error "WASM32 pass 2 failed to publish a module")))))))
 (provide "WASM32-BACKEND")
+
+;;; Typed internal primitives. These use raw Wasm parameters, not Lisp B's
+;;; node stack. Static representation checking happens on the real front-end
+;;; IR before any code is published. All checked failures precede writes.
+(defparameter *primitive-operations*
+  '((%box-s32 (:s32) :node) (%unbox-fixnum (:node) :s32)
+    (%address-fixnum (:address) :node) (%fixnum-address (:node) :address)
+    (%tag-misc (:address) :node) (%untag-misc (:node) :address)
+    (%effective-address (:address :s32) :address)
+    (%header-word (:node) :u32) (%array-bytes (:u32 :u32) :u32)
+    (%issue-code (:address) :code-id) (%validate-code (:node :address) :code-id)
+    (%code-index (:code-id) :u32)
+    (%validate-slot (:u32 :u32 :u32 :u32 :address) :slot)
+    (%slot-index (:slot) :u32)))
+(defun primitive-signature (name) (assoc name *primitive-operations* :test #'eq))
+(defun primitive-check (condition reason)
+  (format nil "(if ~a (then (throw $conversion_error (i32.const ~d))))" condition reason))
+(defun primitive-span (ptr bytes)
+  (primitive-check
+    (format nil "(i64.gt_u (i64.add (i64.extend_i32_u ~a) (i64.const ~d)) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16)))" ptr bytes) 4))
+(defun primitive-op (name values)
+  ;; Materialize operands exactly once, left to right, in disjoint locals.
+  (let* ((locals (mapcar (lambda (v) (declare (ignore v)) (temporary)) values))
+         (v (mapcar (lambda (x) (format nil "(local.get ~a)" x)) locals))
+         (a (first v)) (b (second v)) (c (third v)) (d (fourth v)) (e (fifth v)))
+    (with-output-to-string (s)
+      (write-string "(block (result i32) " s)
+      (loop for local in locals for value in values do (format s "(local.set ~a ~a) " local value))
+      (labels ((check (condition reason) (write-string (primitive-check condition reason) s))
+               (word (base offset) (format nil "(i32.load offset=~d ~a)" offset base)))
+        (case name
+          (%box-s32
+           (check (format nil "(i32.or (i32.lt_s ~a (i32.const -536870912)) (i32.gt_s ~a (i32.const 536870911)))" a a) 1)
+           (format s "(i32.shl ~a (i32.const 2))" a))
+          (%unbox-fixnum
+           (check (format nil "(i32.and ~a (i32.const 3))" a) 2)
+           (format s "(i32.shr_s ~a (i32.const 2))" a))
+          (%address-fixnum
+           (check (format nil "(i32.gt_u ~a (i32.const 536870911))" a) 1)
+           (format s "(i32.shl ~a (i32.const 2))" a))
+          (%fixnum-address
+           (check (format nil "(i32.and ~a (i32.const 3))" a) 2)
+           (check (format nil "(i32.lt_s ~a (i32.const 0))" a) 1)
+           (format s "(i32.shr_u ~a (i32.const 2))" a))
+          (%tag-misc
+           (check (format nil "(i32.and ~a (i32.const 7))" a) 3)
+           (format s "(i32.add ~a (i32.const 6))" a))
+          ((%untag-misc %header-word)
+           (check (format nil "(i32.ne (i32.and ~a (i32.const 7)) (i32.const 6))" a) 2)
+           (let ((base (format nil "(i32.sub ~a (i32.const 6))" a)))
+             (if (eq name '%header-word)
+               (progn (write-string (primitive-span base 4) s) (format s "(i32.load ~a)" base))
+               (write-string base s))))
+          (%effective-address
+           (format s "(local.set $wide (i64.add (i64.extend_i32_u ~a) (i64.extend_i32_s ~a)))" a b)
+           (check "(i64.gt_u (local.get $wide) (i64.const 4294967295))" 4)
+           (write-string "(i32.wrap_i64 (local.get $wide))" s))
+          (%array-bytes
+           (check (format nil "(i32.ge_u ~a (i32.const 16777216))" a) 1)
+           (check (format nil "(i32.eqz ~a)" b) 1)
+           (format s "(local.set $wide (i64.mul (i64.extend_i32_u ~a) (i64.extend_i32_u ~a)))" a b)
+           (check "(i64.gt_u (local.get $wide) (i64.const 4294967295))" 4)
+           (write-string "(i32.wrap_i64 (local.get $wide))" s))
+          ((%issue-code %validate-code)
+           (let* ((registry (if (eq name '%issue-code) a b))
+                  (first (word registry 0)) (next (word registry 4)) (limit (word registry 8)))
+             (write-string (primitive-span registry 12) s)
+             (check (format nil "(i32.or (i32.gt_u ~a ~a) (i32.or (i32.gt_u ~a ~a) (i32.gt_u ~a (i32.const 536870912))))" first next next limit limit) 7)
+             (if (eq name '%issue-code)
+               (progn
+                 (check (format nil "(i32.ge_u ~a ~a)" next limit) 6)
+                 (format s "(local.set $scratch ~a) (i32.store offset=4 ~a (i32.add (local.get $scratch) (i32.const 1))) (i32.shl (local.get $scratch) (i32.const 2))" next registry))
+               (progn
+                 (check (format nil "(i32.or (i32.and ~a (i32.const 3)) (i32.lt_s ~a (i32.const 0)))" a a) 2)
+                 (format s "(local.set $scratch (i32.shr_u ~a (i32.const 2)))" a)
+                 (check (format nil "(i32.or (i32.lt_u (local.get $scratch) ~a) (i32.ge_u (local.get $scratch) ~a))" first next) 5)
+                 (write-string a s)))))
+          (%code-index (format s "(i32.shr_u ~a (i32.const 2))" a))
+          (%validate-slot
+           ;; Registry: capacity, reserved prefix, then (signature, role) rows.
+           ;; The imported table's actual size is authoritative for capacity.
+           (write-string (primitive-span e 8) s)
+           (check (format nil "(i32.ne ~a (i32.const 3))" b) 9)
+           (check (format nil "(i32.or (i32.gt_u ~a (table.size $slots)) (i32.gt_u ~a ~a))" (word e 0) (word e 4) (word e 0)) 7)
+           (check (format nil "(i32.ge_u ~a ~a)" a (word e 0)) 7)
+           (check (format nil "(i32.lt_u ~a ~a)" a (word e 4)) 8)
+           (format s "(local.set $wide (i64.add (i64.extend_i32_u ~a) (i64.add (i64.const 8) (i64.mul (i64.extend_i32_u ~a) (i64.const 8)))))" e a)
+           (check "(i64.gt_u (i64.add (local.get $wide) (i64.const 8)) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16)))" 4)
+           (write-string "(local.set $scratch (i32.wrap_i64 (local.get $wide)))" s)
+           (check (format nil "(i32.or (i32.eqz ~a) (i32.ne ~a ~a))" c (word "(local.get $scratch)" 0) c) 10)
+           (check (format nil "(i32.or (i32.eqz ~a) (i32.ne ~a ~a))" d (word "(local.get $scratch)" 4) d) 11)
+           (check (format nil "(ref.is_null (table.get $slots ~a))" a) 12)
+           (write-string a s))
+          (%slot-index (write-string a s))
+          (t (refuse :primitive-operation))))
+      (write-char #\) s))))
+(defun primitive-expression (ir)
+  (unless (ccl::acode-p ir) (refuse :primitive-ir))
+  (let ((op (ccl::acode-operator-name (ccl::acode-operator ir))) (args (ccl::acode-operands ir)))
+    (case op
+      (ccl::lexical-reference
+       (let ((n (position (first args) *required-vars* :test #'eq)))
+         (unless n (refuse :primitive-variable))
+         (values (format nil "(local.get $arg~d)" n) (nth n (first *primitive-signature*)))))
+      (ccl::call
+       (let* ((callee (first args)) (arguments (second args))
+              (name (and (ccl::acode-p callee)
+                         (eq (ccl::acode-operator-name (ccl::acode-operator callee)) 'ccl::immediate)
+                         (first (ccl::acode-operands callee))))
+              (sig (primitive-signature name)))
+         (unless (and sig (null (second arguments)) (= (length (first arguments)) (length (second sig))))
+           (refuse :primitive-call))
+         (let ((codes nil))
+           (loop for arg in (first arguments) for kind in (second sig) do
+             (multiple-value-bind (code actual) (primitive-expression arg)
+               (unless (eq kind actual) (refuse (list :representation name kind actual)))
+               (push code codes)))
+           (values (primitive-op name (nreverse codes)) (third sig)))))
+      (t (refuse (list :primitive-ir op))))))
+(defun primitive-pass2 (afunc)
+  (let* ((ir (ccl::afunc-acode afunc)) (args (ccl::acode-operands ir)))
+    (unless (and (eq (ccl::acode-operator-name (ccl::acode-operator ir)) 'ccl::lambda-list)
+                 (null (second args)) (null (third args)) (null (fourth args)) (equal (fifth args) '(nil nil))
+                 (= (length (first args)) (length (first *primitive-signature*)))) (refuse :primitive-lambda))
+    (let ((*required-vars* (first args)) (*temporary-count* 0))
+      (multiple-value-bind (body kind) (primitive-expression (sixth args))
+        (unless (eq kind (second *primitive-signature*)) (refuse :primitive-result))
+        (throw *module-result-tag*
+          (list :version 1 :name *module-name* :abi :typed-internal :signature *primitive-signature*
+                :wat (format nil "(module (import ~s ~s (memory 1 32769 shared)) (import ~s ~s (table $slots 0 funcref)) (import ~s ~s (tag $conversion_error (param i32))) (func (export ~s) ~a (result i32) (local $wide i64) (local $scratch i32) ~a ~a))~%"
+                       "env" "memory" "env" "slots" "env" "conversion_error" "entry"
+                       (with-output-to-string (s) (dotimes (i (length *required-vars*)) (format s "(param $arg~d i32)" i)))
+                       (with-output-to-string (s) (dotimes (i *temporary-count*) (format s "(local $tmp~d i32)" i))) body)))))))
+(defun compile-primitive-module (source-text name argument-kinds result-kind)
+  (let ((kinds '(:s32 :u32 :node :address :code-id :slot)))
+    ;; Code IDs and slots may only be produced by checked operations, never
+    ;; admitted as unvalidated entry parameters.
+    (unless (and (every (lambda (x) (member x '(:s32 :u32 :node :address))) argument-kinds)
+                 (member result-kind kinds)) (refuse :primitive-signature)))
+  (call-with-target
+    (lambda ()
+      (let* ((*primitive-signature* (list argument-kinds result-kind))
+             (*module-result-tag* (gensym "WASM32-PRIMITIVE")) (*module-name* name)
+             (*package* (find-package "WASM32-COMPILER")) (*read-eval* nil))
+        (multiple-value-bind (form end) (read-from-string source-text)
+          (unless (every (lambda (c) (find c '(#\Space #\Tab #\Newline #\Return))) (subseq source-text end))
+            (refuse :primitive-source))
+          ;; Bounded, no macro/control/type declarations admitted. All calls
+          ;; remain ordinary acode CALLs to this exact private symbol set.
+          (let ((budget 4096))
+            (labels ((items (x)
+                       (let ((seen (make-hash-table :test #'eq)) (out nil))
+                         (loop while (consp x) do
+                           (when (or (gethash x seen) (minusp (decf budget))) (refuse :primitive-source))
+                           (setf (gethash x seen) t) (push (car x) out) (setq x (cdr x)))
+                         (when x (refuse :primitive-source)) (nreverse out)))
+                     (walk (x vars depth)
+                       (when (or (> depth 128) (minusp (decf budget))) (refuse :primitive-source))
+                       (unless (member x vars :test #'eq)
+                         (let* ((xs (items x)) (sig (primitive-signature (first xs))))
+                           (unless (and sig (= (length xs) (1+ (length (second sig))))) (refuse :primitive-source))
+                           (dolist (v (cdr xs)) (walk v vars (1+ depth))))) t))
+              (let* ((parts (items form)) (vars (items (second parts))))
+                (unless (and (= (length parts) 3) (eq (first parts) 'lambda)
+                             (= (length vars) (length argument-kinds))
+                             (every (lambda (v) (and (symbolp v) v (not (constantp v)) (not (member v lambda-list-keywords)))) vars)
+                             (= (length vars) (length (remove-duplicates vars))))
+                  (refuse :primitive-source))
+                (walk (third parts) vars 0))))
+          (catch *module-result-tag*
+            (ccl::compile-named-function form :name name :target :wasm32 :policy ccl::*default-compiler-policy*)
+            (refuse :primitive-no-output)))))))
