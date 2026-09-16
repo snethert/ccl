@@ -1288,3 +1288,17 @@ Claude verified the integrated backend's byte identity with the reviewed result-
 ## 2026-09-16 — integrate reviewed callable-object dispatch
 
 The user said “accept, integrate and proceed” after Claude’s sixty-ninth audit. The shared backend equals the reviewed callable-object payload, chained to result-capacity integration and covered by the reviewed R6/R6a runs. Registry authentication remains loader work; the unused slot-validation support module will be removed in the next fixture. No LL05 slot credit.
+
+## 2026-09-16 — generate escaping lexical closures and shared mutable captures
+
+The isolated backend proposal adds lambda values, LET/LET*, lexical SETQ and
+shared capture cells joined by CCL's inherited-variable identities. Its 149
+source functions produce 177 modules and 2,296 native/model/target comparisons;
+17 compiler mutants reject and 72 closure checks cover host-turn escape,
+malformed environments and allocation capacity. R6/R6a passes with the accepted
+baseline reused, fresh registered execution and exact restoration of all 164
+FASLs. The unused slot-validation module is removed from this derivative.
+Original probe, reader and unsupported-IR development failures are retained.
+The finalized packet replays before commit. This is auxiliary LL05 work;
+the shared backend remains the accepted callable unit pending external review
+of closure construction. No inventory or acceptance criterion changes.

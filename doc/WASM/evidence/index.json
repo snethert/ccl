@@ -3887,6 +3887,16 @@
         "record": "stage1/integration-b-callables.json",
         "scope": "User accepted exact auxiliary integration; no inventory slot accepted."
       }
+    },
+    {
+      "id": "STAGE1-B-CLOSURES-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-b-closures-r1/packet.json",
+      "sha256": "e1399e4ba238cec91ddce6028fffc481360f0ee216e01f9503befba1e1047521",
+      "scope": "Generated lexical closures, LET/LET*/SETQ and shared mutable captures: 149 source functions, 177 modules, 574 native/model cases and 2296 target comparisons. Seventeen compiler mutants and 72 closure checks; R6/R6a and retained replay pass. Environments use D1 vectors and shared cons cells; registry metadata remains owner-supplied. No collection, FLET/LABELS, inlined LAMBDA-BIND, authenticated loading, tail transfer, full LL05 credit or unreviewed integration.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }
