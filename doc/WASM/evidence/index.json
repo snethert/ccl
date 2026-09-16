@@ -1574,11 +1574,33 @@
       "evidence_kind": "HAND-BUILT WASM EXECUTION",
       "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
-      "currency": "CURRENT",
+      "currency": "SUPERSEDED",
       "availability": "EXTERNAL_LOCAL_STORE",
       "supersedes": "NESTED-EH-R1",
       "scope": "Hand-built emitted wasm32 frames on macOS Node/V8 under the B entry shape: ten cases carry a nonlocal exit with zero, one and six values through nested frames with dynamic bindings, root records and cleanup, including a cleanup that raises a second exit, a chain of nine cleanup frames, a missing handler that reaches the host after full restoration, a recoverable check resumed by a use-value handler without unwinding, a declined handler that becomes an error, and a nested debugger exit inside the handler. VSP, TSP, CSP, the binding, the root head and the handler depth are restored after every case and, inside every cleanup, the departed inner frames are already gone (own binding, own root record, own stacks witnessed at cleanup entry); cleanups run exactly once; post-exit effects are absent; every value is checked. No production TCR, condition system, debugger, GC or C boundary is claimed.",
-      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's review 7e941a8d; follow-up adversarial review by Codex pending."
+      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's review 7e941a8d; follow-up adversarial review by Codex pending.",
+      "superseded_by": "NESTED-EH-R3",
+      "supersession_reason": "Codex R2 review finding 1 corrected: frames own their cleanup state and unwinding restores it, handler-entry witnesses, frame-model oracle, thirteen mutants."
+    },
+    {
+      "id": "NESTED-EH-R3",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-nested-eh-r3/results.json",
+      "sha256": "62f6e0849ac1c1f689571c061472b319af3b34d1afc95d3216597d305f4dcda6",
+      "packet": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-nested-eh-r3/packet.json",
+      "packet_sha256": "62874d0c199963d9522e5ad6c10aaa87638818269d8a8ad59f04d75b6e356733",
+      "timestamp": "2026-09-16T12:22:54.282403+00:00",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_sha256": "42cc3bd7378f27882f582b9cecfbc3b6998681cee39bb47c08b84dba2aac1be3",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "evidence_kind": "HAND-BUILT WASM EXECUTION",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "supersedes": "NESTED-EH-R2",
+      "scope": "Hand-built emitted wasm32 frames on macOS Node/V8 under the B entry shape: ten cases carry a nonlocal exit with zero, one and six values through nested frames with dynamic bindings, root records and cleanup, including a cleanup that raises a second exit, a chain of nine cleanup frames, a missing handler that reaches the host after full restoration, a recoverable check resumed by a use-value handler without unwinding, a declined handler that becomes an error, and a nested debugger exit inside the handler. VSP, TSP, CSP, the binding, the root head and the handler depth are restored after every case; inside every cleanup the departed inner frames are already gone (own binding, own root record, own stacks witnessed at cleanup entry) and before every handler delivers values, enters the debugger or propagates it observes only its own frame with no cleanup record, every expected address derived from the frame model rather than from saved fields; cleanups run exactly once; post-exit effects are absent; every value is checked. No production TCR, condition system, debugger, GC or C boundary is claimed.",
+      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's R2 review ed54b7fa; follow-up adversarial review by Codex pending."
     }
   ],
   "auxiliary_records": [
@@ -3321,10 +3343,12 @@
       "scope": "Hand-built wasm32 checked floating-point operations on macOS Node/V8: f64 add, sub, mul, div and sqrt classified as exact, overflow, division-by-zero, invalid, underflow or inexact without engine flags, a checked float-to-integer conversion that never traps, and the f32 default-mode slice. Overflow, division by zero and invalid come from operand and result classification; underflow and inexact from error-free witnesses (TwoSum, scaled TwoProduct, residuals) with exact power-of-two scaling for small results, small operands and operands near the largest exponent. Corpus cases with expectations from exact rational rounding in Python; eight module mutants rejected. Specification evidence for the D6 floating-point hypothesis; no policy decision, no gate credit.",
       "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
-      "currency": "CURRENT",
+      "currency": "SUPERSEDED",
       "availability": "EXTERNAL_LOCAL_STORE",
       "supersedes": "FLOAT-DETECTION-R1",
-      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's review 7e941a8d; follow-up adversarial review by Codex pending."
+      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's review 7e941a8d; follow-up adversarial review by Codex pending.",
+      "superseded_by": "FLOAT-DETECTION-R3",
+      "supersession_reason": "Codex R2 review finding 2 corrected: tininess after rounding decided from the exact witness at the smallest normal; boundary corpus (2,069 cases); native x86-64 SSE agreement over every f64 case; eleven mutants."
     },
     {
       "id": "TCR-SCHEMA-R2",
@@ -3337,6 +3361,29 @@
       "availability": "EXTERNAL_LOCAL_STORE",
       "supersedes": "TCR-SCHEMA-R1",
       "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's review 7e941a8d; follow-up adversarial review by Codex pending."
+    },
+    {
+      "id": "FLOAT-DETECTION-R3",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-float-detection-r3/packet.json",
+      "sha256": "9657b82b9d1c661f451f683163b3f65ecfe2e2ecd2fc3463e9f62b3713b858e4",
+      "scope": "Hand-built wasm32 checked floating-point operations on macOS Node/V8: f64 add, sub, mul, div and sqrt classified as exact, overflow, division-by-zero, invalid, underflow or inexact without engine flags, a checked float-to-integer conversion that never traps, and the f32 default-mode slice. Overflow, division by zero and invalid come from operand and result classification; underflow and inexact from error-free witnesses (TwoSum, scaled TwoProduct, residuals) with exact power-of-two scaling for small results, small operands and operands near the largest exponent; tininess decided after rounding as IEEE 754 and x86 define it, including results that round up to the smallest normal. Corpus cases with expectations from exact rational rounding in Python; every f64 case also executed natively with SSE scalar instructions on this x86-64 Mac, MXCSR flags and result bits agreeing with the oracle; eleven module mutants rejected. Specification evidence for the D6 floating-point hypothesis; no policy decision, no gate credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "supersedes": "FLOAT-DETECTION-R2",
+      "authorship": "Claude Fable 5.1 on branch wasm2-claude after Codex's R2 review ed54b7fa; follow-up adversarial review by Codex pending."
+    },
+    {
+      "id": "CODEX-R2-PROBES-ON-R3",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-codex-r2-probes-on-r3/packet.json",
+      "sha256": "8a3c50609a91782672d7dc8cad3eee112ade0672f4995fc283c7dd4d3da7b603",
+      "scope": "Codex's R2 review probes (2026-09-16-codex-branch-review-r2/repro, unchanged) executed against the corrected wasm2-claude checkout whose fixture sources are pinned in sources.json: the handler observes CSP 16384 equal to its saved and expected value in modes 1 and 5, and the module reports the six max-exponent cases exact and the boundary case underflow. Observation only; the review's assertions, which expect the defects, are not applied.",
+      "execution_status": "OBSERVED",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "authorship": "Codex's unchanged R2 probes executed by Claude Fable 5.1 against the corrected checkout; observation only."
     }
   ]
 }

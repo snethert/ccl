@@ -2,7 +2,7 @@
   "version": 2,
   "assessment": "SCOPED_EXECUTION_COMPOSITE",
   "date": "2026-09-15",
-  "basis": "Corrections and refresh after Codex's review 7e941a8d: the LL19-a envelope is replaced by NESTED-EH-R2 (unwind before cleanup, cleanup-entry witnesses), the ENGINE-a envelope by ENGINE-MATRIX-R2 (Firefox 156 with JSPI) and the LL21-c envelope by MATERIALIZATION-R2 (control row moved to Safari); the R1 envelopes are retained and superseded. CONTRACTS-a and LL15-a keep their reviewed-without-defect envelopes. All 40 accepted per-record bindings stay current; counts unchanged at 40 accepted, 2 missing, 6 unreviewed. No full historical artifact scan.",
+  "basis": "Second correction after Codex's R2 review ed54b7fa: the LL19-a envelope is replaced by NESTED-EH-R3 (owned cleanup state restored by unwinding, handler-entry witnesses, frame-model oracle); R1 and R2 are retained and superseded. The floating-point auxiliary result is replaced by FLOAT-DETECTION-R3 outside the ledger. ENGINE-a, LL21-c, CONTRACTS-a and LL15-a keep their reviewed-without-defect envelopes. All 40 accepted per-record bindings stay current; counts unchanged at 40 accepted, 2 missing, 6 unreviewed. No full historical artifact scan.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
@@ -16,7 +16,7 @@
       "unreviewed S0-LL15-a [full]"
     ]
   },
-  "prior_result_sha256": "d275b40f0b08108d569d16782ba53f27fabbe8f47f9218b9409a92c6cd64ae37",
+  "prior_result_sha256": "05900294b203fe58eb11993397191065cdb325989d5ad15c58c29306eef42375",
   "new_results": [
     {
       "id": "S0-ENGINE-a",
@@ -30,8 +30,8 @@
     },
     {
       "id": "S0-LL19-a",
-      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-nested-eh-r2/results.json",
-      "sha256": "10ac6e2303197848c7fd9edbd88db17feea08b1da388e07791b7588f561a87e5"
+      "path": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-nested-eh-r3/results.json",
+      "sha256": "62f6e0849ac1c1f689571c061472b319af3b34d1afc95d3216597d305f4dcda6"
     }
   ],
   "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-14-stage0-ll13b-accepted-results.json",
@@ -54,8 +54,8 @@
       "sha256": "0573e72cfc805c7a8054f302519ca68b80ffbbb6613de877bc99d08a0099a362"
     },
     {
-      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-nested-eh-r2/results.json",
-      "sha256": "10ac6e2303197848c7fd9edbd88db17feea08b1da388e07791b7588f561a87e5"
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-nested-eh-r3/results.json",
+      "sha256": "62f6e0849ac1c1f689571c061472b319af3b34d1afc95d3216597d305f4dcda6"
     },
     {
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-15-contracts-r1/results.json",

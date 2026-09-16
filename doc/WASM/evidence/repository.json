@@ -2,29 +2,27 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "16610057ff1a07d71ab98d0f39c717e9fa7949ce",
+  "commit": "960b59b3667850cb35542ab7cabde39115fa2d05",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "ab1e2287475989e5383fcd33b86420a2b1252e81035d34497158cc887d728b83",
-  "immutable_evidence_files": 165713,
-  "indexed_references_verified": 5665,
-  "source_index_snapshot": "catalog/source-index-corrections-r2.json",
-  "source_index_sha256": "50d3154748deace9d74f4de831058484d5e58752542eb991bd771e670521d8a7",
-  "verification": "Scoped corrections addition: 1027 new catalog rows across five R2 packets; each producer executed and verifier re-executed with deterministic files identical; the R1 packets and all previous rows preserved; no native execution, accepted-envelope rehash or historical payload scan.",
+  "catalog_sha256": "f0a4a532221e0c03df7c3cd9d001729697debadba31cb57775a27df8faf2d5c8",
+  "immutable_evidence_files": 165998,
+  "indexed_references_verified": 6248,
+  "source_index_snapshot": "catalog/source-index-corrections-r3.json",
+  "source_index_sha256": "18a742d8fa1ca94f965d9bdefbe65f2a818a9ef0fd2b6cb28466d891ded31097",
+  "verification": "Scoped corrections addition: 258 new catalog rows across two R3 packets and the probe record; each producer executed and verifier re-executed with deterministic files identical; earlier packets and all previous rows preserved; no accepted-envelope rehash or historical payload scan.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository; original failures retained. Forty accepted records. LL15 instrument policy authorized, qualification results still pending. Claude-authored executions corrected or refreshed after Codex review await follow-up review. Generated code remains open.",
+  "scope": "Separate local evidence repository; original failures retained. Forty accepted records. LL15 instrument policy authorized, qualification results still pending. Claude-authored executions corrected twice after Codex review await follow-up review. Generated code remains open.",
   "last_scoped_addition": {
     "directories": [
-      "2026-09-15-nested-eh-r2",
-      "2026-09-15-float-detection-r2",
-      "2026-09-15-engine-matrix-r2",
-      "2026-09-15-materialization-r2",
-      "2026-09-15-tcr-schema-r2"
+      "2026-09-16-nested-eh-r3",
+      "2026-09-16-float-detection-r3",
+      "2026-09-16-codex-r2-probes-on-r3"
     ],
-    "files": 1027,
-    "bytes": 9730493,
-    "prior_commit": "b212ade52d396b9f5edfe80c445be57eeaab0d33",
-    "immutable_evidence_files": 165713,
-    "catalog_sha256": "ab1e2287475989e5383fcd33b86420a2b1252e81035d34497158cc887d728b83"
+    "files": 258,
+    "bytes": 7030445,
+    "prior_commit": "16610057ff1a07d71ab98d0f39c717e9fa7949ce",
+    "immutable_evidence_files": 165998,
+    "catalog_sha256": "f0a4a532221e0c03df7c3cd9d001729697debadba31cb57775a27df8faf2d5c8"
   }
 }
