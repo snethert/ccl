@@ -1794,6 +1794,23 @@
       "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-1a-acceptance-r1/packet.json",
       "packet_sha256": "a96079c661f1a78ce23296bc3ddeb46ae9d86901eadc128924680d091b7fe38b",
       "scope": "User acceptance of the three reviewed 1A slots, with original execution facts preserved; no new runtime execution. Disclosed scope and remaining implementation obligations in stage1/acceptance-1a.json."
+    },
+    {
+      "id": "STAGE1-REPRESENTATION-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-representation-r1-results.json",
+      "sha256": "a22536ebe5024259bd116eb0513e3920badb6717f6ae3c06659a6f3f50f5d040",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "2f56b9559b577fe22ba961b87b8ddb936aacc10eceb324daf5c8589a7b77b7de",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-representation-r1/packet.json",
+      "packet_sha256": "6341e83652a0bc70495e0defb51f8bc538c406711c707fe1d74468d54dad0b69",
+      "scope": "S1-LL04-a: generated cons access/mutation, 153 native comparisons, 740 target checks and 15 recompiled compiler mutants. R6/R6a pass with accepted baseline reused; proposed backend not integrated. Wasm typed exception boundary only; no Lisp condition-system, allocation, collector or heap-loader claim."
     }
   ],
   "auxiliary_records": [

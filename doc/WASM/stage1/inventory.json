@@ -113,8 +113,8 @@
           "description": "Generated access and mutation code passes the independent unequal two-word cons fixture with NIL, dotted, nested, shared and cyclic graphs; RPLACA/RPLACD change only the intended field; a one-sided swap is rejected; every row of contracts/wasm32-layout.v1.json that generated code touches is probed by target-executed assertions."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "EXECUTED",
+      "runner": "tests/wasm/stage1/representation/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",
