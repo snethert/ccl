@@ -2,26 +2,22 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "8fa80fa8bfea3d9e6fb87061f6cb5e7b13f6f0f6",
+  "commit": "50636d9d00d05c7933def1b61b40ab27a080ffb4",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "e47e37b4167ab8bd1b1d01c1b4f8d90fb0fa71762cf6217ae751360c84bc7773",
-  "immutable_evidence_files": 167993,
+  "catalog_sha256": "c6b3193517d56dac23324faca7e0e940c048b1311ec6239ac114783ba7a897cd",
+  "immutable_evidence_files": 168281,
   "indexed_references_verified": 6248,
-  "source_index_snapshot": "catalog/source-index-d6-policy.json",
-  "source_index_sha256": "2a42f61cacb161426d6a2ed869128c194c3c68c44a048b21acf2c9fcdd485bd7",
-  "verification": "Scoped addition under the D6 policy decision: 139 new catalog rows across two packets; each producer executed and verifier re-executed with deterministic files identical; earlier packets and all previous rows preserved; Codex's in-flight census-instrument directory is not catalogued here and awaits its own publication; no accepted-envelope rehash or historical payload scan.",
+  "source_index_snapshot": "catalog/source-index-2026-09-16-census-instrument-r1.json",
+  "source_index_sha256": "a22789b17150ed4ee4fbeb2c2bb96e33d6f4a23e5b067d22dff6cf6b814cbba7",
+  "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Separate local evidence repository; original failures retained. Forty-six accepted records; only LL15-b/c instrument qualification remains missing. Generated code and production float policy remain open.",
+  "scope": "Separate local evidence repository; original failures retained. Forty-six accepted records; LL15-b/c executed and awaiting independent review and project acceptance. The explicit startup worklist preserves unknowns; complete closure and generated code remain unqualified.",
   "last_scoped_addition": {
-    "directories": [
-      "2026-09-16-tcr-schema-r3",
-      "2026-09-16-float-detection-r4"
-    ],
-    "files": 139,
-    "bytes": 6107757,
-    "prior_commit": "1ce6d62c1bd5b65d07668825ec5167e71c8c1981",
-    "immutable_evidence_files": 167993,
-    "catalog_sha256": "e47e37b4167ab8bd1b1d01c1b4f8d90fb0fa71762cf6217ae751360c84bc7773"
+    "directory": "2026-09-16-census-instrument-r1",
+    "files": 288,
+    "bytes": 4500587,
+    "immutable_evidence_files": 168281,
+    "catalog_sha256": "c6b3193517d56dac23324faca7e0e940c048b1311ec6239ac114783ba7a897cd"
   }
 }

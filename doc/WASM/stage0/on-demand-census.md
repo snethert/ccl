@@ -102,11 +102,12 @@ startup-graph content.
 The combined graph contains exactly the retained base plus the startup
 worklist: 385,903 nodes and 1,126,896 edges. No old working graph is an input.
 
-## Remaining publication work
+## Instrument qualification
 
-LL15-b/c remain NOT_RUN with no acceptance envelope. Register a bounded
-qualification runner joining these tools and retained inputs to the v0.2
-requirements, exercise the remaining publication omissions and scope-promotion
-controls, then obtain independent review and project acceptance. Do not resume
-an exhaustive resolver loop to drive the worklist to zero. The eight missing
-Stage 0 slots and forty earlier acceptances are unchanged by this decision.
+[LL15-b/c qualification](census-qualification.md) is executed under v0.2.
+The one-command runner uses the reviewed inputs, startup worklist, fresh queries
+and native scenarios, with independent publication omissions and semantic
+controls. Both native records are published and await Claude's review and
+project acceptance. The complete-closure checker remains BLOCKED, and every
+named unknown remains work. No exhaustive resolver loop or additional full
+native rebuild was needed.

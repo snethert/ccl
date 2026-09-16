@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "packets": {
+    "capture": {
+      "id": "CORRELATED-QUERY-BASE-R1",
+      "path": "2026-09-15-correlated-query-base-r1/packet.json",
+      "sha256": "c1a38143e34a23c1a517b8845e430cb6721bd5f57dfa92bb2981e8eb2b733a7b"
+    },
+    "startup": {
+      "id": "ON-DEMAND-STARTUP-R2",
+      "path": "2026-09-15-on-demand-startup-r2/packet.json",
+      "sha256": "35c3ac3ff46028fc209fecfee4f553374442bdca0b587f1e50b28d21ab3064e6"
+    },
+    "tools": {
+      "id": "ON-DEMAND-CENSUS-R1",
+      "path": "2026-09-15-on-demand-census-r1/packet.json",
+      "sha256": "6d921108479b45d152db31eff58b2fa48329a476de846b76ff72db780f26ebab"
+    },
+    "seeds": {
+      "id": "NATIVE-STARTUP-SEEDS-R2",
+      "path": "2026-09-13-startup-seeds-r2/packet.json",
+      "sha256": "e20680f47dfcb06605e212c5c122963315fefd36566384ff1efe818bc37c05b9"
+    },
+    "initializers": {
+      "id": "NATIVE-INITIALIZER-JOINS-R1",
+      "path": "2026-09-12-initializer-joins-r1/packet.json",
+      "sha256": "678afe4f9478241861c45a4da77e029354211d34cf2da60149358eee2aa16b0d"
+    },
+    "lowering": {
+      "id": "NATIVE-EMISSION-SLOT-JOINS-R1",
+      "path": "2026-09-13-emission-slot-joins-r1/packet.json",
+      "sha256": "226ed18d4f444037fdd421cf9c3212c86aee27d0437821af9be8be983c609b5b"
+    }
+  },
+  "direct": {
+    "seed-recipe": {
+      "root": "source",
+      "path": "tests/wasm/native-census/startup-closure/seeds.json",
+      "sha256": "975ff2dfa9c78cbcc4ba3ff68db8654ab52dd628d6c468b33478436705c9575a"
+    },
+    "trace-reconciliation": {
+      "root": "source",
+      "path": "doc/WASM/evidence/native-loader-contexts.json",
+      "sha256": "54ff52e9d57fb036a632212671fd6db5178c3c05b6a4c33c6164032fe585e8ba"
+    },
+    "u1-pins": {
+      "root": "evidence",
+      "path": "macos-u1-inputs/pins.json",
+      "sha256": "b98997dd8a9e64999c36ca714c4dd558d1ba73092e8e2582c5a4aaa85d1c03e9"
+    },
+    "kernel": {
+      "root": "evidence",
+      "path": "2026-09-12-native-census-r7/baseline/build/dx86cl64",
+      "sha256": "2f3a9888f1bf515130e7d124831d31319386c55f3208710393b238637dcf5699"
+    }
+  },
+  "scope": "Fixed reviewed inputs for instrument qualification, not a complete native or Wasm closure. Historical combined graph in ON-DEMAND-CENSUS-R1 is excluded."
+}
