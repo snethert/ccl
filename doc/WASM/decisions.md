@@ -23,6 +23,25 @@ no result acceptance or functional shared-compiler editing permission. The
 [delivery and next qualification step](stage0/on-demand-census.md) name the
 remaining work; the criterion snapshots are retained in the evidence repository.
 
+## 16 September 2026 — D6 floating-point policy: the ARM model
+
+The user decided the floating-point compatibility choice D6 had left open:
+"Okay, then do what CCL did on ARM, plus whatever else is needed for WASM."
+Native CCL on ARM cannot trap on floating-point exceptions, so it keeps the
+logical enable mask in the TCR (`tcr.lisp_fpscr`), stores only the rounding
+mode in hardware, and under float safety emits a check after each operation
+that ANDs the hardware's cumulative flags against the enabled mask and traps
+into the same condition classes x86 uses, in the order invalid, division by
+zero, overflow, underflow, inexact. The Wasm port adopts that model with the
+one difference Wasm forces: there are no hardware flags, so the status is
+computed by the detection rules in [the specification](contracts/floating-point.v1.md),
+which now records the policy, the emission rule, the condition mapping,
+signalling comparisons, the host-math limitation and the two deviations
+(nearest rounding only; underflow and inexact undetectable for host
+transcendental functions). The production TCR schema carries the mask as
+`fp_control`. This decision does not measure the cost of the checks, which
+Stage 1 owes under D6, and does not accept any execution.
+
 | ID | Decision / experiment | Decision status |
 | --- | --- | --- |
 | D1 | Use the x8632-derived data-layout subset, with explicit Wasm execution-state replacements. | Decided. |
@@ -30,7 +49,7 @@ remaining work; the criterion snapshots are retained in the evidence repository.
 | D3 | Use B: all Lisp arguments on VSP, explicit self/count and the existing result protocol. | Decided for implementation on simplicity grounds; comparative timing deferred. |
 | D4 | Freestanding C kernel; Lisp-emitted subprimitives and ABI adapters; named runtime imports. | Decided. |
 | D5 | Owner-only GC generation updates; published-root admission, membership rescan, typed entries and stable mailbox storage. | Decided: protocol v1. |
-| D6 | Adopt disposition vocabulary and explicit trap lowering; complete the census and select floating-point policy separately. | Decided: vocabulary and lowering. |
+| D6 | Adopt disposition vocabulary and explicit trap lowering; complete the census and select floating-point policy separately. | Decided: vocabulary, lowering and, on 16 September, the floating-point policy (the ARM model); census under contract v0.2. |
 | D7 | Use the register-derived Stage 0 ID/inventory scheme and staged correctness/benchmark prerequisites. | Decided: scheme. |
 
 Revision scope. Applies the assessment recommendations under the recorded user authorization in history/changes.md. Historical H1 results and source links remain identified separately; R6 comparison categories are clarified in acceptance section 2. No runtime acceptance is inferred from these documents or their initial probes.
@@ -301,6 +320,8 @@ For each recoverable check, specify supplied condition data, available restart b
 The hypothesis remains to preserve required CCL floating-point conditions with explicit checks/helpers under the default policy, subject to the Stage 2 compatibility decision. Specify correct detection before benchmarking its cost. A result infinity alone does not distinguish finite overflow, division by zero and an existing infinite operand; a NaN can be propagated or newly produced by an invalid operation. Required operand/operation checks, rounding, literal encodings and the exposed condition policy must be stated. “One comparison per operation” is not an established cost. [16; LL10, LL16]
 
 An unchecked path under safety 0 is a proposed compatibility choice requiring approval, not an automatic entitlement to change semantics. Benchmark the actual correct algorithms against a documented non-trapping alternative and record the policy decision, unsupported aspects and declarations explicitly. Performance data alone cannot silently withdraw R4.
+
+Decided 16 September 2026: the policy is the ARM model, recorded in the dated section above and in the specification's policy section. Checks are emitted under the same float-safety rule as ARM, so the unchecked path exists exactly where native CCL has it, not as a new compatibility choice. Cost measurement remains owed.
 
 #### Stub-backend edit plan, not an attached patch
 
