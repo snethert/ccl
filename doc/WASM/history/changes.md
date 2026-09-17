@@ -1439,3 +1439,25 @@ record preserves the previous backend hash and carries the unpublished TCR
 chain, retention-space, exception-root and specialized-observer observations.
 Reviewed R6/R6a covers these bytes; no new native run or slot credit is claimed.
 The next unit is generated CATCH/THROW and its nonlocal transfer state.
+
+## 2026-09-16 — generated CATCH/THROW and published control records
+
+Codex followed the approved UNWIND-PROTECT integration with a disposable-U1
+CATCH/THROW proposal. Nearest EQ tags, complete value transfer, nested cleanup
+replacement and checked missing-catch refusal now use published catch/cleanup
+records and the production TCR unwind-state field. The loader proposal requires
+a distinct exit-tag capability and a new profile; compiled calls retain direct
+continuations with no public-wrapper dispatch.
+
+The final producer and retained replay pass: 275 source functions, 350 modules,
+1,110 native/model cases, 4,440 target comparisons, 19,280 control inspections,
+18 state observations, 22 corrupt/missing-chain probes, 18 rejected compiler
+mutants, two inherited regression controls, nine loader refusals and four loader
+mutants. Native R6/R6a passes with 162 unchanged FASLs, two explained registration
+artifacts, all 164 restored and 21,843 native tests; the pristine baseline is
+reused. Cold installation reproduces the corpus and long tail chains. Original
+allocation-oracle, cleanup-helper and binary-reader failures are retained, as
+are three exploratory omissions that receive no rejection credit. Exception
+roots/inspection under GC, special binding and the condition-handler system
+remain open. No inventory slot is claimed: Stage 1 stays at five accepted and
+26 missing. The proposal awaits Claude review before integration.

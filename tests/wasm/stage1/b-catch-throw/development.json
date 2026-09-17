@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "failures": [
+    {
+      "run": "ccl-catch-compile-r1 / ccl-catch-execution-r1.log",
+      "reason": "The fixture allocated 48 expected bytes for a local function whose binding is private. Actual IR needs 40: captured tag cell, function object, one-cell environment. Corrected the expected allocation; compiler unchanged."
+    },
+    {
+      "run": "ccl-catch-compile-r2 / ccl-catch-execution-r2.log",
+      "reason": "A new MULTIPLE-VALUE-PROG1 effect called the specialised uw_cleanup helper outside cleanup. Its checkpoint oracle correctly refused that layout. Replaced this ordinary effect with direct RPLACA, preserving the heap effect and retaining the cleanup-only observer."
+    },
+    {
+      "run": "ccl-catch-lazy-r1",
+      "reason": "The inherited bounded binary reader did not admit exnref as an internal function parameter. Added the final-encoding exnref type to the reader; exact imports and exports remain constrained."
+    }
+  ],
+  "unobserved_exploratory_mutants": [
+    {
+      "name": "catch-root-restore",
+      "reason": "The generic control-frame pop restores roots immediately afterward; no call or poll lies between. Kept restoration, no rejection credit."
+    },
+    {
+      "name": "control-exception-retirement",
+      "reason": "Enclosing cleanup/catch or the public wrapper restores the head before the next inspection. Kept retirement, no rejection credit; future collector inspection obligation."
+    },
+    {
+      "name": "control-header-extent",
+      "reason": "Later extent/marker checks still refuse this fault population with the same code. Kept the early guard; no claim to isolate it independently."
+    }
+  ],
+  "retention": "Original failing captures, logs and exploratory mutant runs are archived. Later complete producer and replay are the authoritative final evidence.",
+  "backend": "Native R6 qualified the same backend bytes as the final proposal; no compiler change was needed after its first successful compilation."
+}
