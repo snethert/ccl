@@ -1,37 +1,20 @@
 {
-  "scope": "Correction of all three MVC observations after the user withdrew acceptance. Original reviewed proposal and integration/withdrawal records remain retained.",
+  "scope": "R2 follow-up to the user-supplied eightieth-audit observations. Acceptance remains withdrawn. R1 and its original development failures are retained unchanged in the R1 packet.",
   "failures": [
     {
-      "attempt": "probe1",
-      "reason": "Reader error in the new emitter let bindings; no generated result claimed."
+      "attempt": "inline-probe1",
+      "reason": "The initial inline-source test bitwise-ANDed an aligned address with a boolean. That made the test false and treated stack data as an arena allocation; mvc_nested returned NIL instead of its two values. The positive corpus rejected it. The fix explicitly compares the address with zero; the same pointer/boolean check on replaced destination buffers is corrected. Exact compiler sources, generated counterexample and failing trace are retained."
     },
     {
-      "attempt": "probe4",
-      "reason": "The new captured literal case expected zero heap bytes but its shared variable cell correctly costs eight bytes. Corrected the literal expectation, not the emitter."
+      "attempt": "raw-control-failure",
+      "reason": "The new forced-arena mutant threw the intended checked exception, but the general control runner only accepts AssertionError failures. Wrapped the zero-arena positive call in assert.doesNotThrow to make that oracle explicit. The original raw-exception log and executed sources remain retained; it was not counted as a passed control."
     },
     {
-      "attempt": "probe5",
-      "reason": "The inherited mvc_closure case still charged a heap function/environment after their move to stack storage. Preserved the original cases and corrected that expectation to its eight-byte cell."
-    },
-    {
-      "attempt": "probe7",
-      "reason": "The first cursor-reclamation edit declared the high-water variable but failed to update the release body. The restored-cursor assertion rejected it; release now trims trailing free blocks."
-    },
-    {
-      "attempt": "probe9",
-      "reason": "The escaping-inner-closure case initially overcounted its two-cell environment by eight bytes. The source-derived total is 16 cell bytes, 24 function bytes and 16 environment bytes."
-    },
-    {
-      "attempt": "mixed-version-copy-probe",
-      "reason": "Observer/implementation version mismatch, retained separately."
-    },
-    {
-      "attempt": "escaped-relocation-control",
-      "reason": "Small frames did not expose missing relocation; added the independently sized 64-binding frame counterexample."
+      "attempt": "lazy-reader-failure",
+      "reason": "The first full run passed the eager corpus and copy oracle but the inherited lazy harness still accepted only arena-backed indirect roots. It rejected the new inline descriptor at mvc_mixed. Updated that harness reader to the same explicit inline extent rule as eager execution; no compiler or loader policy changed."
     }
   ],
-  "inspection_correction": "Dynamic control records take ownership of results rather than allocating a second retention buffer after the protected form succeeds. Exhaustion cases verify cleanup effects at exact temporary-storage bounds.",
-  "inherited_regressions": "Binding-data rewrite, keyword-token overlap, special-package identity and obsolete registry collision remain exercised; their original histories stay in predecessor packets.",
-  "metadata": "Compiler/runner snapshots are retained as executed. README, scope and development notes were finalized after the development runs; those do not change generated or executed bytes.",
-  "native": "Fresh R6/R6a qualification uses the exact proposed backend in a disposable pristine U1 copy."
+  "checks": "The corrected ordinary corpus ran before the new zero-arena and direct-handoff controls were added. Boundary sizes follow the 16-byte arena header plus 130 value words rounded to 16 bytes (544); a scalar cleanup no longer requires another arena block.",
+  "native": "Fresh native R6/R6a over the proposed compiler only; shared source remains at the withdrawal baseline.",
+  "metadata": "Development notes were finalized after individual attempts; executed compiler and harness sources are preserved for failures."
 }

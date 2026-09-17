@@ -1668,3 +1668,16 @@ self-calls and local functions, dynamic producers meeting static catches and
 blocks, relocated literal callables and repeated 1,024-value producers agreed
 on all 116 comparisons with the arena released after every case. No defect; no
 gate credit; renewed acceptance is the user's decision.
+
+
+## 2026-09-17 — avoid scalar arena allocation and preserve MVC producer descriptors
+
+Codex addressed the user-supplied observations from Claude’s eightieth audit in
+an isolated R2 revision of the unaccepted MVC correction. Four inline words per
+indirect descriptor avoid arena allocation for small results; overflow buffers
+retain ownership transfer. Producer descriptors now precede continuation
+arguments, direct delivery retires overwritten roots first, and publication
+precedes scope release. Zero-arena scalar/recursive/cleanup cases and direct-copy
+root inspections cover the changes, with two new rejected mutants. R1 and its
+review remain retained. Shared source stays at the withdrawal baseline; no
+acceptance, integration, collector qualification or gate credit is claimed.

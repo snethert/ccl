@@ -17,7 +17,7 @@ assert(4104+16*(mods.length+1)<=16384,'code registry exceeds fixture-owned range
 assert(196608+32*mods.length<=262144,'function symbols exceed fixture-owned range');
 const compiled=new Map(mods.map(m=>[m.name,new WebAssembly.Module(fs.readFileSync(path.join(dir,'installed',m.name+'.wasm')))]));
 let multipleValueResources=0;let lexicalExitChecks=0;let progvChecks=0;let bindingInspections=0,bindingChecks=0,peakBindings=0;let controlInspections=0,stateChecks=0,chainChecks=0,chainFault=null;let cleanupEntries=0,cleanupResources=0;let publicDispatches=0,internalEntries=0;let checks=0,peakRoots=0,activeFrame=0,activeRoots=0,topContext=0;
-function inspect(label){let head=get(128),slots=new Set(),seen=new Set(),frames=0;while(head){assert(!seen.has(head),label+': acyclic roots');seen.add(head);let n=load(head+4),pointer=head+8;if(n===0xffffffff){pointer=load(head+8);n=load(head+12);assert(pointer===0&&n===0||pointer>=get(80)+16&&pointer+4*n<=get(76),label+': dynamic result extent');if(n){assert(load(pointer-12)!==0,label+': live result owner');assert.equal(load(pointer-4),1381384241,label+': result buffer marker');assert(n<=load(pointer-8),label+': owned result extent');}}if(head===activeFrame)assert.equal(n,activeRoots,label+': bound variables are roots');assert(n<=(memory.buffer.byteLength-pointer)/4,label+': root capacity');for(let i=0;i<n;i++){let p=pointer+4*i;assert(!slots.has(p),label+': unique root scanner');assert(!(p>=get(120)&&p<get(124)),label+': output reservation is not a root record');slots.add(p);}head=load(head);frames++;}for(let i=0;i<get(116);i++)assert(!slots.has(get(120)+4*i),label+': result single scanner');let prior=get(72);for(let c=get(140);c;c=load(c)){
+function inspect(label){let head=get(128),slots=new Set(),seen=new Set(),frames=0;while(head){assert(!seen.has(head),label+': acyclic roots');seen.add(head);let n=load(head+4),pointer=head+8;if(n===0xffffffff){pointer=load(head+8);n=load(head+12);const inline=pointer===head+32&&n<=4&&head>=get(68)&&head+48<=get(72);assert(inline||pointer===0&&n===0||pointer>=get(80)+16&&pointer+4*n<=get(76),label+': dynamic result extent');if(n&&!inline){assert(load(pointer-12)!==0,label+': live result owner');assert.equal(load(pointer-4),1381384241,label+': result buffer marker');assert(n<=load(pointer-8),label+': owned result extent');}}if(head===activeFrame)assert.equal(n,activeRoots,label+': bound variables are roots');assert(n<=(memory.buffer.byteLength-pointer)/4,label+': root capacity');for(let i=0;i<n;i++){let p=pointer+4*i;assert(!slots.has(p),label+': unique root scanner');assert(!(p>=get(120)&&p<get(124)),label+': output reservation is not a root record');slots.add(p);}head=load(head);frames++;}for(let i=0;i<get(116);i++)assert(!slots.has(get(120)+4*i),label+': result single scanner');let prior=get(72);for(let c=get(140);c;c=load(c)){
  assert(c%16===0&&c>=get(68)&&c+48<=prior,label+': bounded control chain');
  const capacity=load(c+8);assert(c+48+4*capacity<=get(72),label+': control extent');
  assert.equal(load(c+24),1128483889,label+': control version');assert([1,2,3].includes(load(c+4)),label+': control kind');
@@ -111,13 +111,24 @@ for(const observed of [false,true]){
    finally {assert.deepEqual([get(64),get(120),get(124),get(128)],[start,out,owner,root],'closure host-turn ownership');assert.deepEqual([get(140),get(148)],[0,0],'host control state');inspect('closure host turn');}
   }
   installObjects();new Uint8Array(memory.buffer,heap,32768).fill(0xcd);set(48,heap);set(52,heapLimit);set(56,heap);
+  // No arena is available: nested scalar calls and four-value results must
+  // stay in inline storage, including recursion and a cleanup extent.
+  set(80,700000);set(76,700000);set(84,700000);
+  for(const [name,args,want] of [['rv_scalar',[],[28]],['rv_four',[],[4,8,12,16]],['rv_scalar_deep',[16385],[28]],['rv_scalar_protected',[16385],[28]]]){
+   store(16384,NIL);store(16388,12);
+   let inlineValues;assert.doesNotThrow(()=>{inlineValues=invoke(name,args);},name+': inline result without arena');
+   assert.deepEqual(inlineValues,want,name+': inline result values');
+   assert.equal(get(76),700000,name+': zero arena use');
+   if(name==='rv_scalar_protected')assert.equal(load(16388),844,name+': inline cleanup effect');
+   storageChecks++;
+  }
   // Demand-sized result storage has its own checked extent. Exhaustion must
   // restore all buffers and still execute an enclosing cleanup's heap effect.
   for(const name of ['rv_small','rv_cleanup'])for(const bytes of [0,32,528,544,576]){
    set(80,700000);set(76,700000);set(84,700000+bytes);
    new Uint8Array(memory.buffer,700000,200064).fill(0xa7);store(16384,NIL);store(16388,0);
    let code=0,result;try{result=invoke(name,name==='rv_cleanup'?[16385]:[]);}catch(e){assert(e instanceof WebAssembly.Exception&&e.is(call_error),'temporary storage checked refusal');code=e.getArg(call_error,0);}
-   const required=name==='rv_small'?544:576;
+   const required=544;
    assert.equal(code,bytes>=required?0:13,name+': temporary extent '+bytes);
    if(!code)assert.deepEqual(result,[0,129*4]);
    if(name==='rv_cleanup')assert.equal(load(16388),211*4,'cleanup effect survives result exhaustion');

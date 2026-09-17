@@ -171,7 +171,7 @@
     }
   },
   "temporary_results": {
-    "profile": "wasm32-shared-B-exnref-tail-mv-storage-v1",
+    "profile": "wasm32-shared-B-exnref-tail-mv-storage-v2",
     "tcr": {
       "cursor": 76,
       "base": 80,
@@ -182,14 +182,16 @@
       "recipient": 28
     },
     "root_descriptor": {
-      "bytes": 32,
+      "bytes": 48,
       "previous": 0,
       "marker": 4,
       "marker_value": 4294967295,
       "buffer": 8,
       "word_capacity": 12,
       "owner": 16,
-      "direct_flag": 20
+      "direct_flag": 20,
+      "inline_values": 32,
+      "inline_capacity": 4
     },
     "buffer_header": {
       "bytes": 16,
@@ -200,11 +202,15 @@
       "marker_value": 1381384241
     },
     "control_record": {
-      "dynamic_extent": 80,
+      "dynamic_extent": 96,
       "descriptor": 48,
       "descriptor_pointer": 28,
       "ordinary_root_slots": 2
     },
-    "ownership": "Move completed buffers between descriptors; only publication into a contiguous argument destination copies the words. No polling within handoff. Scope release reclaims buffers on return, throw and tail transfer."
+    "ownership": "Four inline words serve small results without arena allocation. Overflow arena buffers transfer ownership; inline values copy at most four words when their frame retires. Producer descriptors precede continuation arguments. Direct return retires overwritten frames to the surviving descriptor before writing; argument-root publication precedes scope release. No polling within handoff.",
+    "direct_recipient": {
+      "bytes": 32,
+      "surviving_root": 24
+    }
   }
 }

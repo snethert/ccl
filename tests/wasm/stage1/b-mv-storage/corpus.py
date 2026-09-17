@@ -1583,6 +1583,11 @@ REFUSALS += [("mvc-missing-callee","(lambda () (multiple-value-call))"),("mvb-du
 # Resource-independent producer counts: the enclosing call reserves only four
 # result words, while each producer supplies a much larger argument sequence.
 RV_FORMS={
+ 'rv_scalar':([],['multiple-value-call',['function','v1'],['v1',['v1',7]]]),
+ 'rv_four':([],['multiple-value-call',['function',['lambda',['a','b','c','d'],['values','a','b','c','d']]],['values',['v1',1],['v1',2],['v1',3],['v1',4]]]),
+ 'rv_scalar_recur':(['p'],['if','p',['values',['rv_scalar_recur',['cdr','p']]],['values',7]]),
+ 'rv_scalar_deep':(['p'],['multiple-value-call',['function','v1'],['rv_scalar_recur','p']]),
+ 'rv_scalar_protected':(['p'],['multiple-value-call',['function','v1'],['unwind-protect',['v1',['v1',7]],['rplaca','p',211]]]),
  'rv_values':([],['values',*range(130)]),
  'rv_take':([f'x{i}' for i in range(130)],['values','x0','x129']),
  'rv_small':([],['multiple-value-call',['function','rv_take'],['rv_values']]),
@@ -1619,7 +1624,7 @@ _rv_prior_cases=cases
 def cases():
  global BINDINGS
  out=_rv_prior_cases()
- for name,args,nodes in [(n,[],[]) for n in ('rv_small','rv_inline','rv_block','rv_scalar_nested','rv_small1024','rv_nested','rv_large_small_cleanup')]+[(n,['n0'],[[3,5]])for n in ('rv_cleanup','rv_saved','rv_catch','rv_repeated','rv_small_cleanup_values','rv_ordered')]+[(n,[19],[])for n in ('rv_literal','rv_literal_capture','rv_literal_wide','rv_literal_ordinary','rv_literal_escape')]+[('rv_large_dynamic',['f:rv_values'],[]),('rv_fail_cleanup',['n0',7],[[3,5]]),('rv_large_chain',['n0'],[[1,'n1'],[2,'n2'],[3,'nil']])]:
+ for name,args,nodes in [(n,[],[]) for n in ('rv_scalar','rv_four','rv_small','rv_inline','rv_block','rv_scalar_nested','rv_small1024','rv_nested','rv_large_small_cleanup')]+[(n,['n0'],[[3,5]])for n in ('rv_scalar_protected','rv_cleanup','rv_saved','rv_catch','rv_repeated','rv_small_cleanup_values','rv_ordered')]+[(n,[19],[])for n in ('rv_literal','rv_literal_capture','rv_literal_wide','rv_literal_ordinary','rv_literal_escape')]+[('rv_large_dynamic',['f:rv_values'],[]),('rv_fail_cleanup',['n0',7],[[3,5]]),('rv_large_chain',['n0'],[[1,'n1'],[2,'n2'],[3,'nil']]),('rv_scalar_deep',['n0'],[[1,'n1'],[2,'n2'],[3,'nil']])]:
   SPECIAL_VALUES.clear();SPECIAL_VALUES.update(dyn_a=101,dyn_b=103,dyn_u=UNBOUND);BINDINGS={}
   before=[r[:]for r in nodes];after=[r[:]for r in nodes]
   try:values=evaluate(name,args,after);status='RETURN'

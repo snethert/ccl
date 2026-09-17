@@ -3,7 +3,7 @@
 This replaces the withdrawn `b-multiple-values` proposal. It is not integrated
 and claims no Stage 1 inventory slot. The public candidate B signature and the
 ordinary compiled-call structure stay the same. Internal continuations now initialize the two previously unused metadata words described below. The internal profile is
-`wasm32-shared-B-exnref-tail-mv-storage-v1`; mixing its continuation metadata with
+`wasm32-shared-B-exnref-tail-mv-storage-v2`; mixing its continuation metadata with
 the previous profile is not supported.
 
 The changes address all three observations in audit 79:
@@ -29,7 +29,12 @@ The changes address all three observations in audit 79:
 Only producer evaluation and its descendants enter the dynamic-result mode.
 Continuation words 20 and 28 carry that mode and its recipient descriptor; public
 adapters clear both. Ordinary callers continue using their existing result
-reservation. A producer's recipient remains live through tail transfers.
+reservation. A producer's recipient remains live through tail transfers. Each indirect descriptor
+now includes four inline value words, so zero-to-four-value results, including
+nested scalar calls, need no arena allocation. Larger results spill to the arena.
+On frame retirement, inline values copy at most four words to their recipient;
+large buffers still transfer ownership. This trades 16 more stack bytes per
+indirect descriptor for the small-result allocation fast path.
 
 The Worker owns a temporary-result arena through TCR `tsp_base`, `tsp`, and
 `tsp_limit` (80, 76, 84). Allocation uses checked i64 extent arithmetic, initializes
@@ -38,17 +43,23 @@ buffers by their live scope owner. Trailing free storage is reclaimed. This is a
 proposal for temporary result storage, not a Lisp heap allocator or a general
 implementation of the native temp stack.
 
-A 32-byte indirect root descriptor has previous-root at 0, marker `0xffffffff`
+A 48-byte indirect root descriptor has previous-root at 0, marker `0xffffffff`
 at 4, data pointer at 8, word capacity at 12, and raw scope owner at 16. Its buffer
-is the sole scanner of those physical value slots. Descriptor word 20 is zero.
+is the sole scanner of those physical value slots. Descriptor word 20 is zero; its four inline words start at offset 32.
+The scanner follows either those words or an owned arena buffer, never both.
 A direct recipient is unlinked metadata with word 20 set, and names the argument
-destination; the continuation root takes ownership at publication. No poll or
+destination and carries the surviving root at offset 24; the continuation root
+takes ownership at publication. The producer descriptor is allocated below the
+continuation, outside its growing argument area. Direct return retires the
+callee roots before writing and restores only the surviving root. Publication
+precedes buffer release. The copy observer inspects that chain on both sides of
+the direct copy and requires the descriptor to remain byte-identical. No poll or
 Lisp call occurs between writing that destination and publishing its root range.
 
 Buffers have a 16-byte allocator header (block bytes, scope owner, usable words,
 marker). An owner of zero means free. A completed result can be reowned by its
 recipient without copying. Catch, block and cleanup records in dynamic mode use
-an indirect descriptor at offset 48, with its address in control word 28. Their
+a 48-byte descriptor at offset 48 in a 96-byte record, with its address in control word 28. Their
 ordinary tag root retains two slots. Transferring values into or out of these
 records moves ownership, including across exceptions. In particular, retaining
 a successfully completed protected form performs no allocation which could
@@ -82,3 +93,9 @@ Use fresh output paths. `verify.py --evidence ../ccl-evidence --packet PACK`
 requalifies R6/R6a, recompiles the corpus and every compiler mutant, executes the
 oracles, and replays the loader composition. The copy observer changes only its
 own derivative; those binaries are never offered to the production loader.
+
+R2 retains R1 unchanged and addresses the scalar-allocation and root-handoff
+observations supplied after audit 80. Zero-arena tests cover nested scalar calls,
+four values, recursion and cleanup. Two additional controls force small-result
+arena allocation and omit retirement before direct delivery. No renewed
+acceptance or production-collector qualification is claimed.

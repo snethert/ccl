@@ -18,7 +18,7 @@ def hydrate(packet,evidence,dest):
 
 def verify(packet,evidence):
  for name in ('loader.mjs','binary.mjs','stub.wat'):
-  expected=(HERE.parent/'b-block-exits'/name).read_text().replace('tail-block-v1','tail-mv-storage-v1')
+  expected=(HERE.parent/'b-block-exits'/name).read_text().replace('tail-block-v1','tail-mv-storage-v2')
   require((HERE/name).read_text()==expected,'PROFILE_ONLY_LOADER_CHANGE '+name)
  require((HERE/'wasm32-backend.lisp').read_text().split(';;; First B call unit:')[0]==(HERE.parent/'b-direct-context/wasm32-backend.lisp').read_text().split(';;; First B call unit:')[0],'REVIEWED_NON_B_ENTRIES_UNCHANGED')
  for name,h in read(packet/'source-pins.json').items():require(sha(ROOT/name)==h and sha(packet/'source'/name)==h,'SOURCE_PIN '+name)

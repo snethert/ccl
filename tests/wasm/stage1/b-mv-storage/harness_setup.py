@@ -16,7 +16,7 @@ def adapt(s):
 
 def storage(s):
  s=s.replace(' function installObjects(){', ' function installObjects(){\n  set(80,700000);set(76,700000);set(84,900000);')
- s=s.replace("let n=load(head+4);if(head===activeFrame)","let n=load(head+4),pointer=head+8;if(n===0xffffffff){pointer=load(head+8);n=load(head+12);assert(pointer===0&&n===0||pointer>=get(80)+16&&pointer+4*n<=get(76),label+': dynamic result extent');if(n){assert(load(pointer-12)!==0,label+': live result owner');assert.equal(load(pointer-4),1381384241,label+': result buffer marker');assert(n<=load(pointer-8),label+': owned result extent');}}if(head===activeFrame)")
+ s=s.replace("let n=load(head+4);if(head===activeFrame)","let n=load(head+4),pointer=head+8;if(n===0xffffffff){pointer=load(head+8);n=load(head+12);const inline=pointer===head+32&&n<=4&&head>=get(68)&&head+48<=get(72);assert(inline||pointer===0&&n===0||pointer>=get(80)+16&&pointer+4*n<=get(76),label+': dynamic result extent');if(n&&!inline){assert(load(pointer-12)!==0,label+': live result owner');assert.equal(load(pointer-4),1381384241,label+': result buffer marker');assert(n<=load(pointer-8),label+': owned result extent');}}if(head===activeFrame)")
  s=s.replace("assert(n<=(get(72)-head-8)/4,label+': root capacity');for(let i=0;i<n;i++){let p=head+8+4*i;", "assert(n<=(memory.buffer.byteLength-pointer)/4,label+': root capacity');for(let i=0;i<n;i++){let p=pointer+4*i;")
  s=s.replace("inspect('returned '+c.id);", "assert.equal(get(76),get(80),c.id+': temporary results released');inspect('returned '+c.id);")
  return s

@@ -5,7 +5,7 @@ from pathlib import Path
 from support import HERE,ROOT,REG,read,save,sha,require
 
 def manifest(out):
- save(out/'packet.json',{'id':'STAGE1-B-MV-STORAGE-R1','scope':'Generated MULTIPLE-VALUE-CALL and MULTIPLE-VALUE-BIND with direct continuation arguments and dynamic restoration; auxiliary execution, no LL05/LL19 gate credit, not integrated.','files':[{'path':str(p.relative_to(out)),'sha256':sha(p),'bytes':p.stat().st_size} for p in sorted(out.rglob('*')) if p.is_file() and p.name!='packet.json']})
+ save(out/'packet.json',{'id':'STAGE1-B-MV-STORAGE-R2','scope':'Generated MULTIPLE-VALUE-CALL and MULTIPLE-VALUE-BIND with direct continuation arguments and dynamic restoration; auxiliary execution, no LL05/LL19 gate credit, not integrated.','files':[{'path':str(p.relative_to(out)),'sha256':sha(p),'bytes':p.stat().st_size} for p in sorted(out.rglob('*')) if p.is_file() and p.name!='packet.json']})
 def retain(evidence,run,native,qualification,out,development):
  require(not out.exists(),'NO_OVERWRITE');require(read(run/'summary.json')['status']=='PASS','COMPLETE');out.mkdir(parents=True)
  for p in run.iterdir():

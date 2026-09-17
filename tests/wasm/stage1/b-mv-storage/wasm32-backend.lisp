@@ -678,7 +678,7 @@
       ;; CATCH evaluates its tag before establishing the extent.
       (format s "(local.set ~a ~a) (local.set ~a (local.get $top)) (local.set ~a ~a) (local.set ~a ~a)"
         value tag base root (b-load wasm32::tcr.root_head) head (b-load wasm32::tcr.handler_checkpoint))
-      (write-string (b-reserve-runtime "(if (result i64) (local.get $dynamic_results) (then (i64.const 80)) (else (i64.and (i64.add (i64.extend_i32_u (local.get $result_bytes)) (i64.const 63)) (i64.const -16))))") s)
+      (write-string (b-reserve-runtime "(if (result i64) (local.get $dynamic_results) (then (i64.const 96)) (else (i64.and (i64.add (i64.extend_i32_u (local.get $result_bytes)) (i64.const 63)) (i64.const -16))))") s)
       (format s "(i32.store (local.get ~a) (local.get ~a)) (i32.store offset=4 (local.get ~a) (i32.const ~d)) (i32.store offset=8 (local.get ~a) (if (result i32) (local.get $dynamic_results) (then (i32.const 0)) (else (local.get $capacity)))) (i32.store offset=12 (local.get ~a) (i32.const 0)) (i32.store offset=16 (local.get ~a) (i32.add (local.get ~a) (i32.const 32))) (i32.store offset=20 (local.get ~a) ~a) (i32.store offset=24 (local.get ~a) (i32.const 1128483889)) (i32.store offset=28 (local.get ~a) (i32.const 0))"
         base head base kind base base base base base (b-load wasm32::tcr.unwind_state) base base)
       (write-string (b-runtime-roots (b-at (b-local base) 32) "(if (result i32) (local.get $dynamic_results) (then (i32.const 2)) (else (i32.add (local.get $capacity) (i32.const 2))))") s)
@@ -857,17 +857,19 @@
   (let* ((base (temporary)) (output (temporary)) (callable (temporary)) (context (temporary)) (root (temporary))
          (mv (temporary)) (owner (temporary)) (vsp (temporary)) (old-count (temporary))
          (n (temporary)) (slots (temporary)) (next-slots (temporary)) (i (temporary))
-         (source (temporary)) (scope (temporary)) (target (temporary))
+         (source (temporary)) (scope (temporary)) (target (temporary)) (producer-root (temporary))
          (literal (member (ccl::acode-operator-name (ccl::acode-operator callee)) '(ccl::closed-function ccl::simple-function)))
          (ephemeral-bytes (if literal (b-ephemeral-bytes (first (ccl::acode-operands callee))) 0))
          (self (let ((*b-stack-closure* literal)) (b-scalar callee)))
-         (codes (mapcar (lambda (form) (b-producer form source scope (b-local target))) forms)))
+         (codes (mapcar (lambda (form) (b-producer form source scope (b-local target) (b-local producer-root))) forms)))
     (with-output-to-string (s)
       (format s "(local.set ~a (local.get $top)) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a)"
         base root (b-load wasm32::tcr.root_head) mv (b-load wasm32::tcr.mv_base)
         owner (b-load wasm32::tcr.mv_owner_top) vsp (b-load wasm32::tcr.vsp) old-count (b-load wasm32::tcr.mv_count))
       (format s "(local.set ~a ~a) (local.set ~a (local.get $top))" callable self target)
       (write-string (b-reserve 32) s)
+      (format s "(local.set ~a (local.get $top))" producer-root)
+      (write-string (b-reserve 48) s)
       (format s "(local.set ~a (local.get $top))" output)
       (write-string (b-reserve-runtime (if *b-tail-position* "(i64.const 48)" "(i64.add (i64.const 48) (i64.extend_i32_u (local.get $result_bytes)))")) s)
       (format s "(local.set ~a ~a)" context (if *b-tail-position* (b-local output) (b-wat "(i32.add (local.get ~a) (local.get $result_bytes))" output)))
@@ -875,15 +877,17 @@
       (format s "(i32.store offset=40 (local.get ~a) ~a) (local.set ~a (i32.const 0)) (local.set ~a (i32.const 0))" context (b-local callable) n slots)
       (dolist (code codes)
         (format s "(i32.store offset=8 (local.get ~a) (i32.add (local.get ~a) (i32.add (i32.const 48) (i32.mul (local.get ~a) (i32.const 4))))) (i32.store offset=12 (local.get ~a) (i32.const 0)) (i32.store offset=20 (local.get ~a) (i32.const 1))" target context n target target)
+        (format s "(i32.store offset=24 (local.get ~a) (local.get ~a))" target producer-root)
         (write-string code s)
         ;; Add unsigned counts and align in i64, before narrowing or writes.
         (format s "(local.set $wide (i64.and (i64.add (i64.mul (i64.add (i64.extend_i32_u (local.get ~a)) (i64.extend_i32_u (local.get $count))) (i64.const 4)) (i64.const 15)) (i64.const -16)))" n)
         (write-string (b-condition (b-wat "(i64.gt_u (i64.add (i64.add (i64.extend_i32_u (local.get ~a)) (i64.const 48)) (local.get $wide)) (i64.extend_i32_u ~a))" context (b-load wasm32::tcr.vsp_limit)) 2) s)
         (format s "(local.set ~a (i32.wrap_i64 (i64.shr_u (local.get $wide) (i64.const 2)))) (local.set $top (i32.add (local.get ~a) (i32.add (i32.const 48) (i32.wrap_i64 (local.get $wide)))))" next-slots context)
         (format s "(local.set ~a (i32.add (local.get ~a) (local.get $count))) (block $mv_fill_done (loop $mv_fill (br_if $mv_fill_done (i32.ge_u (local.get ~a) (local.get ~a))) (i32.store (i32.add (local.get ~a) (i32.add (i32.const 48) (i32.mul (local.get ~a) (i32.const 4)))) (i32.const 77825)) (local.set ~a (i32.add (local.get ~a) (i32.const 1))) (br $mv_fill)))" i n i next-slots context i i i)
-        (format s "(if (i32.ne (local.get ~a) (i32.load offset=8 (local.get ~a))) (then (memory.copy (i32.load offset=8 (local.get ~a)) (local.get ~a) (i32.mul (local.get $count) (i32.const 4))))) (call $rv_release (local.get ~a))" source target target source scope)
+        (format s "(if (i32.ne (local.get ~a) (i32.load offset=8 (local.get ~a))) (then (memory.copy (i32.load offset=8 (local.get ~a)) (local.get ~a) (i32.mul (local.get $count) (i32.const 4)))))" source target target source)
         (write-string (b-store wasm32::tcr.root_head (b-at (b-local context) 32)) s)
-        (format s "(local.set ~a (i32.add (local.get ~a) (local.get $count))) (local.set ~a (local.get ~a)) (i32.store offset=36 (local.get ~a) (i32.add (i32.const 2) (local.get ~a)))" n n slots next-slots context slots))
+        (format s "(local.set ~a (i32.add (local.get ~a) (local.get $count))) (local.set ~a (local.get ~a)) (i32.store offset=36 (local.get ~a) (i32.add (i32.const 2) (local.get ~a)))" n n slots next-slots context slots)
+        (format s "(call $rv_release (local.get ~a))" scope))
       (format s "(call $resolve (i32.load offset=40 (local.get ~a))) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=40 (local.get ~a) (local.get $dispatch_self))" context context)
       (if *b-tail-position*
         (progn
@@ -1035,11 +1039,11 @@
              (write-string "(local.set $bindings (i32.add (local.get $frame) (i32.add (i32.const 8) (local.get $result_bytes))))" s)
              (write-string "(local.set $result_scope (local.get $frame)) (local.set $results (i32.add (local.get $frame) (i32.const 8)))" s)
              (write-string "(if (local.get $dynamic_results) (then (local.set $result_descriptor (local.get $top))" s)
-             (write-string (b-reserve 32) s)
+             (write-string (b-reserve 48) s)
              (write-string (b-result-descriptor "(local.get $result_descriptor)" "(local.get $frame)") s)
              (write-string "))" s)
              (write-string code s)
-             (write-string "(if (local.get $dynamic_results) (then (local.set $output (call $rv_deliver (i32.load offset=28 (local.get $context)) (local.get $results) (local.get $count)))) (else" s)
+             (write-string "(if (local.get $dynamic_results) (then (if (i32.load offset=20 (i32.load offset=28 (local.get $context))) (then (local.set $root (i32.load offset=24 (i32.load offset=28 (local.get $context)))))) (local.set $output (call $rv_deliver (i32.load offset=28 (local.get $context)) (local.get $results) (local.get $count)))) (else" s)
              (write-string (b-condition "(i64.gt_u (i64.add (i64.extend_i32_u (local.get $output)) (i64.mul (i64.extend_i32_u (local.get $count)) (i64.const 4))) (i64.extend_i32_u (local.get $owner)))" 3) s)
              (write-string "))" s)
              (write-string "(local.set $value (if (result i32) (local.get $count) (then (i32.load (local.get $results))) (else (i32.const 77825)))) (if (i32.eqz (local.get $dynamic_results)) (then (memory.copy (local.get $output) (local.get $results) (i32.mul (local.get $count) (i32.const 4)))))" s)
@@ -1691,17 +1695,26 @@
   (if (i64.gt_u (i64.and (i64.add (i64.add (i64.extend_i32_u (local.get $old)) (i64.mul (i64.extend_i32_u (local.get $n)) (i64.const 4))) (i64.const 15)) (i64.const -16)) (i64.extend_i32_u (i32.load offset=72 (global.get $tcr)))) (then (throw $call_error (i32.const 2))))
   (i32.store offset=12 (local.get $d) (local.get $n)) (return (local.get $old))))
  (if (i32.le_u (local.get $n) (local.get $cap)) (then (return (local.get $old))))
+ (if (i32.le_u (local.get $n) (i32.const 4)) (then
+  (local.set $p (i32.add (local.get $d) (i32.const 32)))
+  (i32.store offset=8 (local.get $d) (local.get $p)) (i32.store offset=12 (local.get $d) (i32.const 4)) (return (local.get $p))))
  (local.set $p (call $rv_alloc (local.get $n) (i32.load offset=16 (local.get $d))))
  (if (local.get $cap) (then (memory.copy (local.get $p) (local.get $old) (i32.mul (local.get $cap) (i32.const 4)))
-  (i32.store (i32.sub (local.get $old) (i32.const 12)) (i32.const 0))))
+  (if (i32.ne (local.get $old) (i32.add (local.get $d) (i32.const 32))) (then (i32.store (i32.sub (local.get $old) (i32.const 12)) (i32.const 0))))))
  (i32.store offset=8 (local.get $d) (local.get $p)) (i32.store offset=12 (local.get $d) (local.get $n)) (local.get $p))
 (func $rv_deliver (param $d i32) (param $src i32) (param $n i32) (result i32) (local $dst i32)
  (if (i32.load offset=20 (local.get $d)) (then
   (local.set $dst (call $rv_ensure (local.get $d) (local.get $n)))
+  (i32.store offset=128 (global.get $tcr) (i32.load offset=24 (local.get $d)))
   (memory.copy (local.get $dst) (local.get $src) (i32.mul (local.get $n) (i32.const 4)))
   (return (local.get $dst))))
+ (if (i32.and (i32.ne (local.get $src) (i32.const 0)) (i32.and (i32.ge_u (local.get $src) (i32.load offset=68 (global.get $tcr))) (i32.lt_u (local.get $src) (i32.load offset=72 (global.get $tcr))))) (then
+  (if (i32.gt_u (local.get $n) (i32.const 4)) (then (throw $call_error (i32.const 13))))
+  (local.set $dst (call $rv_ensure (local.get $d) (local.get $n)))
+  (if (i32.ne (local.get $dst) (local.get $src)) (then (memory.copy (local.get $dst) (local.get $src) (i32.mul (local.get $n) (i32.const 4)))))
+  (return (local.get $dst))))
  (local.set $dst (i32.load offset=8 (local.get $d)))
- (if (i32.and (local.get $dst) (i32.ne (local.get $dst) (local.get $src)))
+ (if (i32.and (i32.ne (local.get $dst) (i32.add (local.get $d) (i32.const 32))) (i32.and (i32.ne (local.get $dst) (i32.const 0)) (i32.ne (local.get $dst) (local.get $src))))
   (then (i32.store (i32.sub (local.get $dst) (i32.const 12)) (i32.const 0))))
  (if (local.get $src) (then
   (i32.store (i32.sub (local.get $src) (i32.const 12)) (i32.load offset=16 (local.get $d)))
@@ -1731,8 +1744,8 @@
 ")
 
 (defun b-result-descriptor (descriptor owner)
- (b-wat "(i32.store ~a ~a) (i32.store offset=4 ~a (i32.const -1)) (i32.store offset=8 ~a (i32.const 0)) (i32.store offset=12 ~a (i32.const 0)) (i32.store offset=16 ~a ~a) (i32.store offset=20 ~a (i32.const 0)) ~a"
-  descriptor (b-load wasm32::tcr.root_head) descriptor descriptor descriptor descriptor owner descriptor (b-store wasm32::tcr.root_head descriptor)))
+ (b-wat "(i32.store ~a ~a) (i32.store offset=4 ~a (i32.const -1)) (i32.store offset=8 ~a ~a) (i32.store offset=12 ~a (i32.const 4)) (i32.store offset=16 ~a ~a) (i32.store offset=20 ~a (i32.const 0)) (i32.store offset=32 ~a (i32.const 77825)) (i32.store offset=36 ~a (i32.const 77825)) (i32.store offset=40 ~a (i32.const 77825)) (i32.store offset=44 ~a (i32.const 77825)) ~a"
+  descriptor (b-load wasm32::tcr.root_head) descriptor descriptor (b-at descriptor 32) descriptor descriptor owner descriptor descriptor descriptor descriptor descriptor (b-store wasm32::tcr.root_head descriptor)))
 (defun b-ensure-results (count)
  (b-wat "(if (local.get $dynamic_results) (then (local.set $results (call $rv_ensure (local.get $result_descriptor) ~a)) (local.set $capacity (i32.load offset=12 (local.get $result_descriptor)))) (else ~a))"
  count (b-condition (b-wat "(i32.gt_u ~a (local.get $capacity))" count) 3)))
@@ -1743,7 +1756,7 @@
 (defun b-control-values (record)
  (b-wat "(if (result i32) (i32.load offset=28 ~a) (then (i32.load offset=8 (i32.load offset=28 ~a))) (else (i32.add ~a (i32.const 48))))" record record record))
 
-(defun b-producer (form destination scope target)
+(defun b-producer (form destination scope target stable-root)
  (let ((mode (temporary)) (descriptor (temporary)) (results (temporary)) (capacity (temporary))
        (saved-scope (temporary)) (local-descriptor (temporary)) (exception (b-exception-local)))
   (let* ((op (ccl::acode-operator-name (ccl::acode-operator form)))
@@ -1751,8 +1764,8 @@
                      (*b-producer-target* (when (member op '(ccl::call ccl::self-call ccl::lexical-function-call)) target)))
                   (if (eq op 'ccl::values) (b-direct-producer-values form target) (b-multiple form))))
          (restore (b-wat "(local.set $dynamic_results (local.get ~a)) (local.set $result_descriptor (local.get ~a)) (local.set $results (local.get ~a)) (local.set $capacity (local.get ~a)) (local.set $result_scope (local.get ~a))" mode descriptor results capacity saved-scope)))
-   (b-wat "(local.set ~a (local.get $dynamic_results)) (local.set ~a (local.get $result_descriptor)) (local.set ~a (local.get $results)) (local.set ~a (local.get $capacity)) (local.set ~a (local.get $result_scope)) (local.set ~a (local.get $top)) ~a ~a (local.set $dynamic_results (i32.const 1)) (local.set $result_descriptor (local.get ~a)) (local.set $result_scope (local.get ~a)) (block $producer_ok (block $producer_failed (result exnref) (try_table (catch_all_ref $producer_failed) ~a ~a (local.set ~a (local.get $results)) (local.set ~a (local.get $result_scope)) (br $producer_ok)) unreachable) (local.set ~a) (call $rv_release (local.get ~a)) ~a (throw_ref (local.get ~a))) ~a"
-    mode descriptor results capacity saved-scope local-descriptor (b-reserve 32)
+   (b-wat "(local.set ~a (local.get $dynamic_results)) (local.set ~a (local.get $result_descriptor)) (local.set ~a (local.get $results)) (local.set ~a (local.get $capacity)) (local.set ~a (local.get $result_scope)) (local.set ~a ~a) ~a (local.set $dynamic_results (i32.const 1)) (local.set $result_descriptor (local.get ~a)) (local.set $result_scope (local.get ~a)) (block $producer_ok (block $producer_failed (result exnref) (try_table (catch_all_ref $producer_failed) ~a ~a (local.set ~a (local.get $results)) (local.set ~a (local.get $result_scope)) (br $producer_ok)) unreachable) (local.set ~a) (call $rv_release (local.get ~a)) ~a (throw_ref (local.get ~a))) ~a"
+    mode descriptor results capacity saved-scope local-descriptor stable-root
     (b-result-descriptor (b-local local-descriptor) (b-local local-descriptor)) local-descriptor local-descriptor
     "(local.set $results (i32.const 0)) (local.set $capacity (i32.const 0))" body destination scope exception local-descriptor restore exception restore))))
 
@@ -1765,7 +1778,7 @@
   (b-frame n (lambda (base)
    (with-output-to-string (s)
     (loop for f in forms for i from 0 do (format s "(i32.store offset=~d ~a ~a)" (+ 8 (* 4 i)) base (b-scalar f)))
-    (format s "(local.set $results (call $rv_ensure ~a (i32.const ~d))) (memory.copy (local.get $results) ~a (i32.const ~d)) (local.set $count (i32.const ~d))" target n (b-at base 8) (* 4 n) n))))))
+    (format s "(local.set $results (call $rv_ensure ~a (i32.const ~d))) (i32.store offset=128 (global.get $tcr) (i32.load offset=24 ~a)) (memory.copy (local.get $results) ~a (i32.const ~d)) (local.set $count (i32.const ~d))" target n target (b-at base 8) (* 4 n) n))))))
 
 (defun b-save-control (record)
  (b-wat "(if (i32.load offset=28 ~a) (then ~a (drop (call $rv_deliver (i32.load offset=28 ~a) (local.get $results) (local.get $count))) (i32.store offset=8 (local.get $result_descriptor) (i32.const 0)) (i32.store offset=12 (local.get $result_descriptor) (i32.const 0)) (local.set $results (i32.const 0)) (local.set $capacity (i32.const 0))) (else ~a (memory.copy ~a (local.get $results) (i32.mul (local.get $count) (i32.const 4)))))"

@@ -27,12 +27,14 @@ def mutations(source):
  # Semantics unchanged: copying into an intermediate caller-owned buffer is a
  # performance regression. Only the executed-copy oracle is expected to reject it.
  old=''' (local.set $dst (i32.load offset=8 (local.get $d)))
- (if (i32.and (local.get $dst)'''
+ (if (i32.and (i32.ne (local.get $dst) (i32.add (local.get $d) (i32.const 32)))'''
  new=''' (local.set $dst (call $rv_ensure (local.get $d) (local.get $n)))
  (memory.copy (local.get $dst) (local.get $src) (i32.mul (local.get $n) (i32.const 4))) (return (local.get $dst))
  (local.set $dst (i32.load offset=8 (local.get $d)))
- (if (i32.and (local.get $dst)'''
+ (if (i32.and (i32.ne (local.get $dst) (i32.add (local.get $d) (i32.const 32)))'''
  change('intermediate-result-copy','b-result-runtime',old,new)
+ change('inline-result-arena','b-result-runtime','(then (return (local.get $old))))','(then (drop (call $rv_alloc (local.get $n) (i32.load offset=16 (local.get $d)))) (return (local.get $old))))')
+ change('direct-handoff-live-retired-roots','b-result-runtime','(i32.store offset=128 (global.get $tcr) (i32.load offset=24 (local.get $d)))','(nop)')
  return result
 
 def source_regression(source):

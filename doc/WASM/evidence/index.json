@@ -4068,6 +4068,17 @@
       "scope": "Correction after withdrawn MVC acceptance: 581 generated modules, 1829 native/model cases, 7316 comparisons, 17 rejected compiler mutants and four regressions. Demand-sized producer storage independent of final output reservation, temporary literal callables with tail relocation, and buffer ownership transfer without an intermediate caller return-area copy. 40 storage-boundary checks and 16 executed-copy controls; native R6/R6a, retained replay and lazy composition pass. New internal profile, auxiliary proposal only; no acceptance, integration, collector qualification or LL05/LL19 credit.",
       "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
+      "currency": "SUPERSEDED",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "superseded_by": "STAGE1-B-MV-STORAGE-R2"
+    },
+    {
+      "id": "STAGE1-B-MV-STORAGE-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-b-mv-storage-r2/packet.json",
+      "sha256": "b5860535c753a2975ecc680583668a16c4bcceea528bab5f53b6d1c334bcf559",
+      "scope": "R2 follow-up to audit 80: 587 generated modules, 1833 native/model cases, 7332 comparisons, 19 rejected compiler mutants and four regressions. Four inline words avoid scalar arena allocation; overflow buffers transfer ownership. Producer descriptors precede continuation arguments and direct delivery retires callee roots before copying. Original fixes for producer capacity and temporary literal callables remain. 56 storage-boundary checks, 16 executed-copy cases and eight root handoff observations; native R6/R6a, retained replay and lazy composition pass. New internal profile, auxiliary proposal only; no acceptance, integration, collector qualification or LL05/LL19 credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE"
     }
