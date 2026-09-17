@@ -1784,3 +1784,16 @@ compiler/dispatcher/loader mutants, cold installation, native R6/R6a and retaine
 replay pass. Both S1-LL05-a and S1-LL05-b are executed, NOT_REVIEWED; the proposal
 stays isolated. Stage 1: 5 accepted, 24 missing, 2 unreviewed. Constants are the only
 remaining unexecuted 1B slot, per the user’s instruction. No criterion changed.
+
+
+## 2026-09-17 — eighty-fourth Claude audit: integration verified, LL05 qualification reviewed
+
+Claude verified `97326319` byte-identical to the reviewed result-scratch unit
+with an unbroken record chain, and reviewed `c9a417ad` from a detached
+worktree: the verifier replayed to PASS across the inherited, condition and
+call-error corpora, error and loader controls and cold installation, and a
+46-case probe with native-policed expectations agreed on all 184 comparisons.
+No defect against either LL05 assertion. Observation: APPLY with a non-list or
+dotted final argument is a checked type refusal where native CCL reaches a
+handler, which the unit's scope defers. Acceptance of S1-LL05-a and S1-LL05-b
+is the user's decision; the ledger is unchanged by this review.
