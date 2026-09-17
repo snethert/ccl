@@ -1816,3 +1816,16 @@ Codex completes the constants plan on the user's direction to finish S1-LL10-a. 
 The final producer and fresh verifier pass: 87 generated B modules plus one header probe, 233 comparisons, four recompiled compiler mutants, seven corrupted-image controls and twelve production artifact-role omission controls. The inherited call, condition and error corpora and all 36 installation cases / 14 loader mutants pass. Fresh native R6/R6a retains 162 of 164 unchanged registered FASLs and restores all 164, with 21,843 tests passing. The verifier reproduces 2,340 deterministic files. Original development failures, including the rejected first publication missing the options role, are retained; the earlier compiler checkpoint is superseded.
 
 Only LL10's runner/status entry changes; transitive contract hashes also change for five still-missing dependents, with every accepted binding preserved. The actual gate reads seven accepted, 23 missing and one unreviewed. LL10 awaits Claude review and project acceptance; the explicit single-owner, bounded-pool and no-moving-GC scope remains.
+
+
+## 2026-09-17 — eighty-fifth Claude audit: LL05 acceptance and integration verified, constants reviewed
+
+Claude verified the LL05 acceptance record and the call-error integration
+(byte-identical to the reviewed unit, unbroken chain), then reviewed the
+S1-LL10-a constants qualification from a detached worktree: the verifier
+replayed to PASS across native R6/R6a, 233 native-derived comparisons at
+three placements, all compiler, image, encoder, linker, snapshot and loader
+controls and the inherited corpora, and a 19-case probe at every placement
+agreed on all 57 comparisons. No defect against the assertion; observations
+recorded. Acceptance is the user's decision; the ledger is unchanged by this
+review at 7 accepted, 23 missing and 1 unreviewed.
