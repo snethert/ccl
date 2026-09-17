@@ -8,10 +8,10 @@
   "immutable_evidence_files": 222700,
   "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-b-repeated-keywords.json",
   "source_index_sha256": "48edc99fa54a7791caaac701091bc95e32cec48ad1b012ec3ada0255ba51ee87",
-  "verification": "Repeated-keyword proposal: clean retained replay matches 3,336 deterministic files and 114 source pins; native R6/R6a, 66 new native comparisons, three compiler mutants and original-validator control, inherited calls/conditions/errors/loader pass. Scoped catalog addition preserves prior rows; prior payload archive not rescanned.",
+  "verification": "Repeated-keyword integration: exact retained compiler equals its generator and reviewed native R6/R6a proposal; all 114 executed-source pins and previous integration hashes verified. Existing 3,336-file replay and Claude audit 87 reused. No new evidence payloads, catalog scan or native execution.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: eight accepted, 23 missing, zero unreviewed inventory records. Repeated keyword aliases are an executed auxiliary proposal awaiting adversarial review; accepted shared implementation unchanged.",
+  "scope": "Stage 0: 48 accepted. Stage 1: eight accepted, 23 missing, zero unreviewed inventory records. Repeated keyword aliases accepted and integrated after Claude audit 87; auxiliary extension with no inventory credit.",
   "last_scoped_addition": {
     "directory": "2026-09-17-stage1-b-repeated-keywords-r1",
     "files": 57,

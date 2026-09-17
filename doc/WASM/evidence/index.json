@@ -4233,11 +4233,13 @@
       "id": "STAGE1-B-REPEATED-KEYWORDS-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-b-repeated-keywords-r1/packet.json",
       "sha256": "aff1aab7f143583320ff058d8f1dacd509c2aa92e67e88913d4ccb0166e09c1c",
-      "scope": "Auxiliary proposal over accepted LL10: repeated formal keyword aliases follow native U1 CCL (first formal, first actual; later defaults). 22 forms / 66 new native comparisons at three placements; full 136-module constants corpus / 311 comparisons plus nine cross-function identity comparisons; three compiler mutants and original-validator refusal. Inherited calls, conditions, call errors and lazy loader pass; 1,178 inherited WAT/Wasm files unchanged. Fresh registered/reversed native build and R6/R6a qualification pass. No acceptance, integration or inventory credit.",
+      "scope": "Auxiliary proposal over accepted LL10: repeated formal keyword aliases follow native U1 CCL (first formal, first actual; later defaults). 22 forms / 66 new native comparisons at three placements; full 136-module constants corpus / 311 comparisons plus nine cross-function identity comparisons; three compiler mutants and original-validator refusal. Inherited calls, conditions, call errors and lazy loader pass; 1,178 inherited WAT/Wasm files unchanged. Fresh registered/reversed native build and R6/R6a qualification pass. Accepted by the user and integrated after Claude’s eighty-seventh audit. Native CCL compatibility, not a portable-language guarantee. No inventory credit.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AUXILIARY",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "review_commit": "4b9aed8b99bb2b8c74e64f3f6ff890ca21020219",
+      "integration": "doc/WASM/stage1/integration-b-repeated-keywords.json"
     }
   ]
 }

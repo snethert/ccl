@@ -1889,3 +1889,17 @@ files, and a 12-form probe at three placements agreed on all 36 comparisons
 with the four controls rejected. No defect; the behaviour is a native CCL
 characteristic rather than an ANSI guarantee. Acceptance is the user's
 decision; the ledger is unchanged at 8 accepted and 23 missing.
+
+
+## 2026-09-17 — accept and integrate repeated keyword aliases
+
+On the user's "accept and integrate", Codex accepted the auxiliary alias unit
+after Claude's eighty-seventh audit at 4b9aed8b and integrated the exact retained
+compiler bytes. The acceptance/integration record binds the review file, packet,
+prior LL10 integration and both compiler hashes. All 114 executed-source pins
+match; the retained generator and native R6/R6a proposal equal the integrated
+compiler. Reviewed execution is reused without another native build. Only the
+Wasm keyword admission and matching sites change; loader, reader, stub and kernel
+are unchanged. The record carries Claude's portability observation: this matches
+native CCL, and makes no portable Common Lisp guarantee for repeated aliases.
+Stage 1 remains eight accepted, 23 missing and zero unreviewed inventory records.

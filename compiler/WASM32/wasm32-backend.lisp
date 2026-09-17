@@ -517,7 +517,9 @@
             cursor start unknown allow-seen allow-value)
           (write-string (b-condition (b-wat "(i32.and (i32.gt_u (local.get $nargs) (i32.const ~d)) (i32.and (i32.sub (local.get $nargs) (i32.const ~d)) (i32.const 1)))" start start) 16) s)
           (format s "(block $keys_done (loop $keys_scan (br_if $keys_done (i32.ge_u (local.get ~a) (local.get $nargs))) (local.set ~a (i32.load (i32.add (local.get $incoming) (i32.mul (local.get ~a) (i32.const 4))))) (local.set ~a (i32.load offset=4 (i32.add (local.get $incoming) (i32.mul (local.get ~a) (i32.const 4))))) (local.set ~a (i32.const 0))" cursor key cursor value cursor known)
-          (loop for var in vars for sp in supplied for name across names do
+          (loop for var in vars for sp in supplied for name across names
+                for index from 0
+                when (= index (position name names :test #'eq)) do
             (format s "(if (i32.eq (local.get ~a) ~a) (then (local.set ~a (i32.const 1)) (if (i32.eq ~a (i32.const 77825)) (then ~a ~a))))"
               key (b-keyword name) known (b-stage-read sp)
               (b-stage-value var (b-local value)) (b-stage-value sp "(i32.const 77838)")))
@@ -1507,7 +1509,7 @@
                                 (let ((key (if (consp v)
                                              (let ((alias (items v))) (unless (= (length alias) 2) (refuse :b-source)) (setq v (second alias)) (first alias))
                                              (and (symbolp v) (intern (symbol-name v) "KEYWORD")))))
-                                  (unless (and (keywordp key) (not (member key keys))) (refuse :b-source)) (b-keyword key) (push key keys)))
+                                  (unless (keywordp key) (refuse :b-source)) (b-keyword key) (push key keys)))
                               (walk (second pair) (append vars outer) (1+ depth)) (add-var v) (when sp (add-var sp))))
                            (t (refuse :b-source)))))
                  (when (eq mode :rest) (refuse :b-source))

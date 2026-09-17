@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-17T23:06:55.991668+00:00",
+  "user_authorization": "accept and integrate",
+  "review_commit": "4b9aed8b99bb2b8c74e64f3f6ff890ca21020219",
+  "review": "Claude eighty-seventh audit; no defect in c4a9ff58.",
+  "review_record": "doc/WASM/stage0/claude-review.md",
+  "review_record_sha256": "8fc7faef66fa2e4c3484cdba3adc5f12a47cd273e3941b1f0e0ced42ec7f321d",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "428fb60e5811dfc2686312c2cc2cc98811daec4abd3a10a20804cd76fb100dd7",
+      "after": "fa875a194d7e0117f81c06210684a960b0ab694237d63cd5d96bbbfad65c9de7",
+      "proposal_locator": "2026-09-17-stage1-b-repeated-keywords-r1/wasm32-backend.lisp"
+    }
+  ],
+  "unchanged_integrated_files": [
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "sha256": "9e2be62e027a22c198be51eb464119174544f92f3f5212bb7a69ae38e0296c33"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "sha256": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "sha256": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-17-stage1-b-repeated-keywords-r1/packet.json",
+      "sha256": "aff1aab7f143583320ff058d8f1dacd509c2aa92e67e88913d4ccb0166e09c1c"
+    }
+  ],
+  "evidence_commit": "394d8df93c610ee113c35ded9963e31cec085ef0",
+  "previous_integration": "integration-ll10.json",
+  "previous_integration_sha256": "4583089f48679c1638bf7810e4a054bec086279180f4ace37ed98b8f510cba89",
+  "scope": "Accept and integrate repeated formal keyword aliases matching native U1 CCL: first formal and first actual win; later formals evaluate defaults in lambda-list order with false supplied-p flags. Duplicate variable names remain refused. Auxiliary extension; no inventory-slot or criterion change.",
+  "observations": [
+    "Native CCL compatibility is the acceptance criterion. No portable Common Lisp guarantee is claimed for repeated formal keyword aliases; portable code should not rely on this behavior."
+  ],
+  "verification": "Exact retained compiler equals the generator and the native R6/R6a proposal. All 114 executed-source pins and the prior integration hashes match. Reviewed execution and Claude replay reused; no new native build or execution claim.",
+  "reverse": "Restore compiler/WASM32/wasm32-backend.lisp from 4b9aed8b99bb2b8c74e64f3f6ff890ca21020219 at its before hash. Loader, reader, stub and upstream kernel are unchanged."
+}
