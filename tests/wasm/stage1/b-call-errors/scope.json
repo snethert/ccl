@@ -1,0 +1,34 @@
+{
+  "status": "QUALIFICATION_PROPOSAL_NOT_INTEGRATED",
+  "inventory_entries_executed": [
+    "S1-LL05-a",
+    "S1-LL05-b"
+  ],
+  "accepted_slots_unchanged": true,
+  "profile": "wasm32-shared-B-exnref-tail-mv-storage-v2",
+  "changes": [
+    "Generated B corpus qualified as one unit",
+    "Implicit arity/designator errors signal before dynamic unwinding",
+    "Keyword failures preserve native SIMPLE-CONDITION membership",
+    "Private error helper owns dynamic results and restores interrupted TCR state",
+    "Full loader refusals and mutants requalified against current generated binaries",
+    "Keyword pairs are validated and staged before any parameter special is published; defaults and bindings then run in lambda-list order. Native comparison and a premature-publication mutant cover this ordering."
+  ],
+  "condition_objects": "Six supplied proxies for explicit signalling; implicit failures allocate distinct D1 simple vectors (header 762, tagged membership mask, reason field). Private representation, not production CLOS layout. PROGRAM-ERROR, SIMPLE-PROGRAM-ERROR membership, TYPE-ERROR and UNDEFINED-FUNCTION follow native tests.",
+  "native_oracle": "Unmodified CL forms compiled natively. A fresh empty handler environment lets SIGNAL decline; *DEBUGGER-HOOK* records actual ERROR fallback without entering an interactive debugger. Literal expected values/effects are independent of target masks.",
+  "public_errors": "Arity/designator failures enter Lisp handler search before unwinding. No handler or declining handlers leave a structured fatal code; no debugger claim.",
+  "allocation": "U1 handler clusters and callable closures use existing checked allocation. Discarded handler results use R2 descriptors (four inline values, arena overflow); arena/resource bounds remain explicit.",
+  "gc": "No collector runs. Condition proxies, handler clusters, descriptors, stack callables and exception payloads remain moving-collector obligations.",
+  "limits": [
+    "Single Worker, trusted owner catalog and symbol registry",
+    "No CLOS construction/slots, arbitrary user condition classes, restarts, debugger or moving collection",
+    "Other checked type/bounds/resource failures remain separate LL19 work",
+    "General result-demand propagation remains open for unknown/large callees",
+    "Host callbacks/re-entry are outside this generated closure; host-facing B entries are exercised",
+    "Constants LL10-a remain open"
+  ],
+  "verification": "Full generated corpus, native oracle, R6/R6a, retained replay, compiler and dispatcher mutants, new error controls, full lazy-loader controls and mutants, cold composition.",
+  "source_boundary": "The corrected conditions R2 source boundary and its fourteen refusals and three controls are inherited unchanged.",
+  "result_mode": "Per-callee storage proof from CCL IR, independently checked against a pre-emitter operation witness. Unknown calls, control transfers and values counts above four retain dynamic storage. Caller delivery protocol and public B signature remain unchanged.",
+  "prerequisite": "Accepted conditions R2 and result scratch, integrated at 97326319 after audit 83."
+}

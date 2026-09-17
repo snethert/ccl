@@ -1868,6 +1868,27 @@
       "test_ids": [
         "S1-LL07-a"
       ]
+    },
+    {
+      "id": "STAGE1-LL05-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-ll05-r1-results.json",
+      "sha256": "e975836a55943b5de06e5faac6e0151510eb91c30bef1dfec88dc578f88a1ab2",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "cdb6742256b80cfcf32f4b79b9314039169e41098bc3cd70e8004be1f43e5b99",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-ll05-r1/packet.json",
+      "packet_sha256": "752ac8005c9ab4d4bec8285534399d81db7c30daf0aca7c9a79f1945b6736fba",
+      "scope": "Generated B calls, complete results, binding/closure/APPLY, implicit arity/designator conditions, matching lazy stubs/adapters and proper tails. Private conditions, trusted single-Worker owner state; production CLOS, other errors, moving GC, re-entry and constants excluded.",
+      "test_ids": [
+        "S1-LL05-a",
+        "S1-LL05-b"
+      ]
     }
   ],
   "auxiliary_records": [

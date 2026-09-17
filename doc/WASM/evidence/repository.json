@@ -2,20 +2,21 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "e045e19c9e38dc88fe0bca2fd35c7a79e2776e26",
+  "commit": "60bfa26a49aa31272d12205c30e758ba315aebe7",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "5587ba5d4d73d1f86d3f8ea2f6ba860ba3a9f803bd2e7c5216f1e19ac5cfccf4",
-  "immutable_evidence_files": 213719,
-  "indexed_references_verified": 16982,
-  "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-b-result-scratch-r1.json",
-  "source_index_sha256": "af0f9ad31a9b0031e20d8b16c8873fd153f097d537dcb38dafc226e9064d51d1",
-  "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
+  "catalog_sha256": "0c286d8f482346e3bdecc49dc7ef7205ede6aab9b3bfdb68c7761ca2c9d1d119",
+  "immutable_evidence_files": 218877,
+  "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-ll05-r1.json",
+  "source_index_sha256": "830006504ef1147627c0be31d9c632cf6a2299fc5ad6818abaf378d77f91d108",
+  "verification": "Scoped publication: new files hashed; every existing catalog row preserved exactly without rehashing prior payloads. Full LL05 execution/replay, production gate and 24 role-omission controls pass.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Conditions R2 and its per-callee result-scratch derivative are isolated, verified proposals awaiting external review and acceptance; neither is integrated.",
+  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 24 missing, two unreviewed. Reviewed conditions R2 and result scratch integrated at 97326319. Both LL05 slots executed in an isolated proposal; review and acceptance pending. Constants remain the only unexecuted 1B slot.",
   "last_scoped_addition": {
-    "directory": "2026-09-17-stage1-b-result-scratch-r1",
-    "files": 1810,
-    "bytes": 229267537
-  }
+    "directory": "2026-09-17-stage1-ll05-r1",
+    "files": 5158,
+    "bytes": 513080144
+  },
+  "prior_indexed_references_verified": 16982,
+  "new_result_artifact_references_verified": 5566
 }

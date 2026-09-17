@@ -1773,3 +1773,14 @@ decision; no gate credit.
 ## 2026-09-17 — accept and integrate conditions R2 and result scratch
 
 The user authorized acceptance and integration after Claude audit 83 (fe219e35). Codex agreed and integrated the exact reviewed cumulative backend and runtime payloads. The integration record binds both packets, the prior integration and the proof observations. No new native execution or LL05 slot credit is claimed. Next: implicit arity/designator conditions and LL05 qualification.
+
+## 2026-09-17 — execute both LL05 generated-call qualifications
+
+After integrating the accepted conditions R2 and result-scratch unit at 97326319,
+Codex completed the generated B call protocol and lazy-stub/tail qualification.
+Implicit arity/designator failures now reach Lisp handlers before unwind, with
+native keyword-condition class and parameter-binding order. The full corpus,
+compiler/dispatcher/loader mutants, cold installation, native R6/R6a and retained
+replay pass. Both S1-LL05-a and S1-LL05-b are executed, NOT_REVIEWED; the proposal
+stays isolated. Stage 1: 5 accepted, 24 missing, 2 unreviewed. Constants are the only
+remaining unexecuted 1B slot, per the user’s instruction. No criterion changed.

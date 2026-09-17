@@ -6,8 +6,8 @@ by the user's decision of 16 September; Codex is the authorized author of
 the shared-compiler changes with Claude as reviewer; the single-thread JSPI
 profile is deferred. The entry condition is met: all 48 Stage 0 variants are
 accepted. The [1A packet](1a.md) has three accepted records after Claude’s review and the user’s
-[acceptance](acceptance-1a.json); the ledger now has five accepted records, 26 missing and
-zero unreviewed records. [LL04 generated representation](representation.md)
+[acceptance](acceptance-1a.json); the ledger now has five accepted records, 24 missing and
+two unreviewed records. [LL04 generated representation](representation.md)
 is reviewed and accepted. The [reviewed unit](integration-1a.json) is integrated;
 [LL07’s generated typed conversions](conversions.md) are reviewed, accepted and [integrated](integration-ll07.json).
 The [generated B call core](b-call-core.md) now executes required-argument
@@ -45,10 +45,14 @@ The [storage correction](b-mv-storage.md) removes the inherited producer budget,
 intermediate large-result copy and nonescaping literal MVC allocation. Its R2
 follow-up adds inline small results and retires roots before destructive delivery.
 R2 is now accepted and integrated after Claude’s eighty-first audit, under the
-[new integration record](integration-b-mv-storage.json). The [explicit condition/handler proposal](b-conditions.md) now executes U1’s handler macros and SIGNAL/ERROR over supplied condition proxies. The R2 correction closes the user-CASE scope leak. The [result-scratch proposal](b-result-scratch.md) narrows inherited storage with an independently checked per-callee four-word proof, while preserving dynamic delivery. General first-value/discard propagation remains open for unknown or large-result paths; it must preserve internal multiple-value consumers and nonlocal transfers. Both units are accepted and integrated under [the integration record](integration-b-result-scratch.json). Production condition construction and implicit checked-error conversion follow;
-binding-vector growth remains required for the complete binding contract. Debugger and
-collector integration of the control records remains explicit. Neither
-complete LL05 slot is claimed by these units.
+[new integration record](integration-b-mv-storage.json). The [explicit condition/handler proposal](b-conditions.md) now executes U1’s handler macros and SIGNAL/ERROR over supplied condition proxies. The R2 correction closes the user-CASE scope leak. The [result-scratch proposal](b-result-scratch.md) narrows inherited storage with an independently checked per-callee four-word proof, while preserving dynamic delivery. General first-value/discard propagation remains open for unknown or large-result paths; it must preserve internal multiple-value consumers and nonlocal transfers. Both units are accepted and integrated under [the integration record](integration-b-result-scratch.json). The [combined LL05 qualification](ll05.md) now executes both call-protocol and
+stub/tail slots, including implicit arity/designator signalling before unwind.
+Both await Claude’s review and project acceptance; their new implementation stays
+isolated. Per the user’s “make sure to finish all but the constants,” no additional
+1B emitter slice is scheduled before that review. **Only S1-LL10-a constants remain
+unexecuted in 1B.** Production CLOS condition construction, other implicit errors,
+binding-vector growth, debugger and collector integration remain later subgates.
+
 
 ## What Stage 1 delivers
 

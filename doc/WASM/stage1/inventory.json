@@ -173,8 +173,8 @@
           "description": "Generated B code passes ordered arguments 0 through 6 and long overflow, nested side effects, direct, indirect and closure calls, APPLY with proper-list validation, optional, rest and keyword binding, and every zero, one and many result with explicit VSP and count ownership; bad designators and arities follow the Lisp condition path, never a Wasm trap."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "EXECUTED",
+      "runner": "tests/wasm/stage1/b-call-errors/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",
@@ -203,8 +203,8 @@
           "description": "Generated generic entries and runtime adapters are reached through matching lazy stubs for exact and variable arity, reject wrong-signature and same-type wrong-role substitutions, preserve closure self and overflow space across installation, and run cross-arity tail chains with bounded explicit-stack and root use, complete multiple values and preserved cleanup and binding extent."
         }
       ],
-      "status": "NOT_RUN",
-      "runner": null,
+      "status": "EXECUTED",
+      "runner": "tests/wasm/stage1/b-call-errors/run.py",
       "review_disposition": "NOT_REVIEWED",
       "required_record_roles": [
         "source",

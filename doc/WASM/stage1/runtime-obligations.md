@@ -71,3 +71,14 @@ Do not use the unfinished ARM64 kernel, abandoned Darwin ARM build,
 empty ARM trap handler, FP debug-trap stubs or absent ARM event-poll vinsn as
 working precedents. D6's approved floating-point policy and D5's explicit
 polling and allocation protocols remain in force.
+
+## LL05 qualification follow-through
+
+Implicit call errors now allocate private condition vectors and signal before
+unwinding. LL19 must replace the private representation with production condition
+construction/slots and extend the remaining checked-error paths, restarts and
+debugger boundary. The collector must scan the helper’s condition and dynamic
+result descriptor, including pending nonlocal transfers. Owner catalog/registry
+trust, host re-entry and multi-Worker publication remain loader/runtime obligations.
+General result-demand propagation remains an optimization beyond the proven-small
+per-callee scratch path; LL05 makes no timing claim.

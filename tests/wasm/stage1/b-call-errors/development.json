@@ -1,0 +1,76 @@
+{
+  "scope": "Isolated LL05 qualification derived from accepted conditions R2 and result scratch. Shared implementation unchanged after integration 97326319.",
+  "failures": [
+    {
+      "attempt": "ccl-implicit-errors-dev1",
+      "reason": "Missing PROGRAM-ERROR quoted-type admission; compiler refused.",
+      "retained": "development.tar.gz/ccl-implicit-errors-dev1"
+    },
+    {
+      "attempt": "ccl-implicit-errors-dev2",
+      "reason": "Probe used unsupported IGNORE declaration; corrected fixture.",
+      "retained": "development.tar.gz/ccl-implicit-errors-dev2"
+    },
+    {
+      "attempt": "ccl-implicit-errors-dev3",
+      "reason": "Two probe forms had excess closing parentheses; corrected fixture.",
+      "retained": "development.tar.gz/ccl-implicit-errors-dev3"
+    },
+    {
+      "attempt": "ccl-implicit-errors-dev4",
+      "reason": "Native oracle exposed missing special declaration and T undefined-function classification; corrected fixture and classifier.",
+      "retained": "development.tar.gz/ccl-implicit-errors-dev4"
+    },
+    {
+      "attempt": "ccl-implicit-errors-dev5",
+      "reason": "Real defect: bounded helper scratch could not transfer into a dynamic catch under MULTIPLE-VALUE-CALL. Replaced with rooted dynamic descriptor; implicit-bounded-transfer mutant reproduces.",
+      "retained": "development.tar.gz/ccl-implicit-errors-dev5"
+    },
+    {
+      "attempt": "ccl-implicit-errors-dev9",
+      "reason": "Keyword-scan extraction had unbalanced function boundaries and returned the nested DEFUN name; corrected parentheses.",
+      "retained": "development.tar.gz/ccl-implicit-errors-dev9"
+    },
+    {
+      "attempt": "ccl-call-errors-dev1",
+      "reason": "Initial harness lacked the new handler import; the next attempt retained a hardcoded binding-index limit after owner capacity grew. Both harness failures fixed.",
+      "retained": "development.tar.gz/ccl-call-errors-dev1",
+      "scope": "Original logs, commands and executed source snapshots; duplicate successful inherited binaries omitted."
+    },
+    {
+      "attempt": "ccl-ll05-run1",
+      "reason": "Range-table lazy fixture did not supply the newly required symbol imports.",
+      "retained": "development.tar.gz/ccl-ll05-run1",
+      "scope": "Original logs, commands and executed source snapshots; duplicate successful inherited binaries omitted."
+    },
+    {
+      "attempt": "ccl-ll05-run2",
+      "reason": "Legacy public-stub SELF mutant escaped because compiled calls now use internal entries. Added a real public closure/count case and routed both public-stub mutants through it.",
+      "retained": "development.tar.gz/ccl-ll05-run2",
+      "scope": "Original logs, commands and executed source snapshots; duplicate successful inherited binaries omitted."
+    },
+    {
+      "attempt": "ccl-ll05-run3",
+      "reason": "Scratch observer expected one descriptor assignment; implicit error helper adds a second. Instrument both. Run superseded after keyword binding-order correction.",
+      "retained": "development.tar.gz/ccl-ll05-run3",
+      "scope": "Original logs, commands and executed source snapshots; duplicate successful inherited binaries omitted."
+    },
+    {
+      "attempt": "ccl-ll05-run4",
+      "reason": "Independent model allocated a rest list before keyword validation. Native-first binding-order witness requires validation first; moved model validation before parameter publication/rest allocation. Backend unchanged.",
+      "retained": "development.tar.gz/ccl-ll05-run4"
+    }
+  ],
+  "additional_findings": [
+    {
+      "finding": "Keyword errors need SIMPLE-CONDITION membership; keyword validation must precede required-special publication.",
+      "evidence": "Native-first ce_simple_key/ce_keyword_binding cases and keyword-class-not-simple/keyword-binding-published-before-validation mutants. Original interactive native stdout was not saved; no original run record is claimed."
+    },
+    {
+      "finding": "A preflight invoked ProcessPool from stdin, which Python spawn cannot import.",
+      "evidence": "ccl-call-errors-preflight.log; subsequent runs use the CLI."
+    }
+  ],
+  "prerequisites": "Earlier-unit failures remain in immutable predecessor packs.",
+  "final": "Native R6 run3 and combined run5 are the final qualification; earlier native runs used superseded backend bytes and are not cited as final evidence."
+}
