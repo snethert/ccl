@@ -1461,3 +1461,14 @@ are three exploratory omissions that receive no rejection credit. Exception
 roots/inspection under GC, special binding and the condition-handler system
 remain open. No inventory slot is claimed: Stage 1 stays at five accepted and
 26 missing. The proposal awaits Claude review before integration.
+
+## 2026-09-16 — seventy-fifth Claude audit
+
+Claude reviewed the UNWIND-PROTECT integration (`df8dc488`) and the generated
+CATCH/THROW proposal (`3d711f76`). The integrated backend is byte-identical to
+the reviewed unit with an unbroken hash chain. The CATCH/THROW verifier replayed
+to PASS (native R6/R6a, 350 modules, 18 compiler and 4 loader mutants, lazy
+composition), and a 35-case adversarial probe of tag identity, nested and
+redirected exits, pending exits across cleanups, deep recursion and a 3,000-step
+chain inside a cleanup agreed on all 140 comparisons. No defect; no gate credit;
+integration is the user's decision.
