@@ -110,3 +110,10 @@ semantic mutants. It covers target-width integers, scalar float bits, characters
 strings and D1 specialized vectors. Shared-pool graphs, compiler integration and
 target round-trip are next; LL10 remains NOT_RUN. This bounded first commit follows
 the user’s request to conserve the remaining weekly token allowance.
+
+The identity graph linker now allocates every declared pool/object before linking,
+preserving sharing, distinct equal objects, cycles and cold pools. Immutable plans
+materialize at different wasm32 bases with separate pointer/root fixups and fixed
+external owner symbols. Six test groups and six semantic mutants pass. No Worker
+execution or materialized-target serialization is claimed yet; those and the
+compiler integration remain open. Shared source and the LL10 criterion are unchanged.

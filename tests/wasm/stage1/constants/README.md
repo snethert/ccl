@@ -49,3 +49,41 @@ than eight. Four header bytes plus four payload bytes already satisfy D1 alignme
 the encoder was correct. The original tests, encoder and failing output are in
 `development/`. Source inspection also corrected the initial, unexecuted assumption
 that fixnum-vector elements were tagged before the first test run.
+
+## Identity graph linker
+
+`compile_pool(graph, symbols, max_bytes)` in `pool.py` builds an immutable
+relocatable plan. `plan.at(base, limit)` materializes fresh bytes and tagged roots
+without writing target memory. `objects` is an ordered list of `{id, value}`
+records; `roots` is an ordered value list; `version` is 1. Pointer-free heap
+objects use the encoder descriptors. Node objects add `cons` with `car`/`cdr`
+and `general-vector` with `elements`. A value is an immediate descriptor,
+`{ref: identity}` or `{symbol: owner-key}`. Every heap object needs its own
+identity; equal contents never imply shared identity. General vectors are the
+pool representation, so references between parent and child pools use the same
+mechanism as cyclic literals.
+
+All objects are allocated before linking, including unused pools for cold
+functions. Forward references, cycles and repeated references therefore require
+no recursion or execution. D1 controls cons field order and tags. Pointer fixups
+and root fixups are separate; external symbols and canonical NIL/T words never
+relocate with the pool. Symbol words come from a trusted owner registry; this
+component does not authenticate their target object headers or install symbols.
+Malformed graphs, missing references, immediate object identities, byte-budget
+exhaustion, address overflow and overlap with referenced external object bases
+are refused. The owner must supply a region it owns; this is not a heap allocator.
+
+Run `python3 tests/wasm/stage1/constants/verify_pool.py`. Six test groups use
+literal word/byte expectations, not a read-back through the linker, and six
+semantic mutants must fail those assertions. Cases include sharing versus equal
+objects, cyclic/forward references, cold pools, exact-fit memory ends, unchanged
+external words, distinct package/case keys and refusal preserving a reusable
+plan. Tests use addresses above 2 GiB and up to the final aligned wasm32 region,
+but only materialize small host buffers; no high-address target allocation or
+Worker execution is claimed. `pool-verification.json` pins this run. The first
+run and all six controls passed without a development failure.
+
+`Pool` is an internal linker product, not an external deserialization boundary.
+Target-memory serialization/restore, ownership validation at installation,
+compiler IR extraction and generated pool loads remain open. The public B ABI
+and all shared compiler/runtime files remain unchanged.
