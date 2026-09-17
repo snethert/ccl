@@ -688,12 +688,42 @@
       (write-string (b-store wasm32::tcr.root_head (b-local root)) s)
       (format s "(local.set $top (local.get ~a))" base))))
 
+(defvar *b-blocks* nil)
 (defun b-catch (tag body)
-  (b-control-frame 1 (b-scalar tag)
+  (b-exit-frame 1 (b-scalar tag) (lambda (record) (declare (ignore record)) (b-multiple body))))
+(defun b-local-block (identity body)
+  ;; Match CCL's identity cell, never its printed block name. Closed returns
+  ;; already use U1's fresh cons tag and CATCH inside this local boundary.
+  (labels ((referenced (x)
+             (cond ((ccl::acode-p x)
+                    (or (and (eq (ccl::acode-operator-name (ccl::acode-operator x)) 'ccl::local-return-from)
+                             (eq (first (ccl::acode-operands x)) identity))
+                        (some #'referenced (ccl::acode-operands x))))
+                   ((consp x) (some #'referenced x)))))
+    (if (not (referenced body)) (b-multiple body)
+      (b-exit-frame 3 "(i32.const 77825)"
+        (lambda (record)
+          (let ((*b-blocks* (acons identity record *b-blocks*))) (b-multiple body)))))))
+(defun b-local-return (identity values)
+  (let ((record (cdr (or (assoc identity *b-blocks* :test #'eq) (refuse :b-block-identity)))))
+    (concatenate 'string
+      (let ((*b-tail-position* nil)) (b-multiple values))
+      (b-condition (b-wat "(i32.gt_u (local.get $count) (i32.load offset=8 ~a))" record) 3)
+      (b-wat "(memory.copy ~a (local.get $results) (i32.mul (local.get $count) (i32.const 4))) (i32.store offset=12 ~a (local.get $count))" (b-at record 48) record)
+      (b-store wasm32::tcr.unwind_state "(i32.const 1)")
+      (b-wat "(throw $nonlocal_exit ~a)" record))))
+(defun b-cons (car-form cdr-form)
+  (b-wat "(block (result i32) ~a)" (b-frame 2 (lambda (root)
+    (b-wat "(block (result i32) (i32.store offset=8 ~a ~a) (i32.store offset=12 ~a ~a) ~a)"
+      root (b-scalar car-form) root (b-scalar cdr-form)
+      (b-at (b-heap-block 8 (lambda (p)
+        (b-wat "(i32.store ~a (i32.load offset=12 ~a)) (i32.store offset=4 ~a (i32.load offset=8 ~a))" p root p root))) 1))))))
+(defun b-exit-frame (kind tag producer)
+  (b-control-frame kind tag
     (lambda (record)
       (let* ((top (temporary)) (root (temporary)) (vsp (temporary)) (mv (temporary)) (owner (temporary)) (count (temporary))
              (target (temporary)) (exception (b-exception-local))
-             (code (let ((*b-tail-position* nil)) (b-multiple body))))
+             (code (let ((*b-tail-position* nil)) (funcall producer record))))
         (with-output-to-string (s)
           (format s "(local.set ~a (local.get $top)) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a)"
             top root (b-load wasm32::tcr.root_head) vsp (b-load wasm32::tcr.vsp) mv (b-load wasm32::tcr.mv_base) owner (b-load wasm32::tcr.mv_owner_top) count (b-load wasm32::tcr.mv_count))
@@ -738,7 +768,7 @@
       (local.set $capacity (i32.load offset=8 (local.get $p)))
       (if (i64.gt_u (i64.add (i64.add (i64.extend_i32_u (local.get $p)) (i64.const 48)) (i64.mul (i64.extend_i32_u (local.get $capacity)) (i64.const 4))) (i64.extend_i32_u (i32.load offset=72 (global.get $tcr)))) (then (throw $call_error (i32.const 9))))
       (if (i32.or (i32.ne (i32.load offset=16 (local.get $p)) (i32.add (local.get $p) (i32.const 32))) (i32.ne (i32.load offset=36 (local.get $p)) (i32.add (local.get $capacity) (i32.const 2)))) (then (throw $call_error (i32.const 9))))
-      (if (i32.and (i32.ne (i32.load offset=4 (local.get $p)) (i32.const 1)) (i32.ne (i32.load offset=4 (local.get $p)) (i32.const 2))) (then (throw $call_error (i32.const 9))))
+      (if (i32.or (i32.lt_u (i32.load offset=4 (local.get $p)) (i32.const 1)) (i32.gt_u (i32.load offset=4 (local.get $p)) (i32.const 3))) (then (throw $call_error (i32.const 9))))
       (local.set $previous (i32.load (local.get $p)))
       (if (i32.ge_u (local.get $previous) (local.get $p)) (then (throw $call_error (i32.const 9))))
       (if (i32.and (i32.eq (i32.load offset=4 (local.get $p)) (i32.const 1)) (i32.eq (i32.load offset=40 (local.get $p)) (local.get $tag))) (then (return (local.get $p))))
@@ -785,6 +815,7 @@
   (let ((op (ccl::acode-operator-name (ccl::acode-operator ir))) (args (ccl::acode-operands ir)))
     (case op
       ((ccl::special-ref ccl::bound-special-ref) (b-wat "(call $special_read ~a)" (b-special-symbol (first args))))
+      (ccl::cons (b-cons (first args) (second args)))
       (ccl::setq-special
        (let ((value (temporary)))
          (b-wat "(block (result i32) (local.set ~a ~a) (i32.store (call $special_location ~a) (local.get ~a)) (local.get ~a))" value (b-scalar (second args)) (b-special-symbol (first args)) value value)))
@@ -800,7 +831,7 @@
              ((member (first args) *b-special-names*) (b-special-symbol (first args)))
              (t (emit-expression ir))))
       (ccl::%function (b-wat "(call $function_value ~a)" (b-symbol (first args))))
-      ((ccl::call ccl::values ccl::progn ccl::multiple-value-prog1 ccl::prog1 ccl::if ccl::let ccl::let* ccl::flet ccl::labels ccl::lambda-bind ccl::self-call ccl::lexical-function-call ccl::unwind-protect ccl::catch ccl::throw ccl::progv ccl::%decls-body)
+      ((ccl::call ccl::values ccl::progn ccl::multiple-value-prog1 ccl::prog1 ccl::if ccl::let ccl::let* ccl::flet ccl::labels ccl::lambda-bind ccl::self-call ccl::lexical-function-call ccl::unwind-protect ccl::catch ccl::throw ccl::progv ccl::local-block ccl::local-return-from ccl::%decls-body)
        (b-wat "(block (result i32) ~a (if (result i32) (local.get $count) (then (i32.load (local.get $results))) (else (i32.const ~d))))" (b-multiple ir) wasm32::canonical-nil-value))
       ((car cdr ccl::%car ccl::%cdr)
        (let* ((p (temporary)) (code (b-scalar (first args))) (offset (if (member op '(car ccl::%car)) wasm32::cons.car wasm32::cons.cdr)))
@@ -817,6 +848,8 @@
       (ccl::unwind-protect (b-unwind-protect (first args) (second args)))
       (ccl::catch (b-catch (first args) (second args)))
       (ccl::throw (b-throw (first args) (second args)))
+      (ccl::local-block (b-local-block (first args) (second args)))
+      (ccl::local-return-from (b-local-return (first args) (second args)))
       (ccl::progv (b-progv (first args) (second args) (third args)))
       ((ccl::flet ccl::labels)
        (with-output-to-string (s)
@@ -873,6 +906,7 @@
              (append (remove nil (append (first opt) (third opt) (list rest) (second keys) (third keys)))
                      (b-local-variables ir)
                      (remove-if-not #'b-captured-p *required-vars*)) :test #'eq))
+           (*b-blocks* nil)
            (arity (length *required-vars*)) (maximum (+ arity (length (first opt))))
            (dynamic-parameters (some #'b-special-p (remove nil (append *required-vars* (first opt) (third opt) (list rest) (second keys) (third keys)))))
            (code (flet ((emit-body () (concatenate 'string (or (b-environment-entry) "")
@@ -1219,7 +1253,7 @@
       (throw *module-result-tag* (first modules)))))
 
 (defun validate-b-source (form)
-  (let ((budget 8192) (local-names nil))
+  (let ((budget 8192) (local-names nil) (blocks nil))
     (labels ((items (x)
                (let ((seen (make-hash-table :test #'eq)) (out nil))
                  (loop while (consp x) do
@@ -1243,6 +1277,12 @@
                       (let* ((xs (items x)) (head (car xs)) (n (length (cdr xs))))
                         (case head
                           (lambda (lambda-form xs vars (1+ depth)))
+                          (block
+                           (unless (and (>= n 1) (symbolp (second xs))) (refuse :b-block-source))
+                           (let ((saved blocks)) (unwind-protect (progn (push (second xs) blocks) (dolist (x (cddr xs)) (walk x vars (1+ depth)))) (setq blocks saved))))
+                          (return-from
+                           (unless (and (member n '(1 2)) (member (second xs) blocks :test #'eq)) (refuse :b-return-source))
+                           (when (= n 2) (walk (third xs) vars (1+ depth))))
                           (locally (body-forms (cdr xs) vars (1+ depth)))
                           (function
                            (unless (= n 1) (refuse :b-source))
@@ -1263,7 +1303,7 @@
                              (unwind-protect
                                (progn
                                  (when (eq head 'labels) (setq local-names (append names old)))
-                                 (dolist (definition definitions) (lambda-form (cons 'lambda (cdr definition)) vars (1+ depth)))
+                                 (dolist (definition definitions) (let ((saved blocks)) (unwind-protect (progn (push (first definition) blocks) (lambda-form (cons 'lambda (cdr definition)) vars (1+ depth))) (setq blocks saved))))
                                  (setq local-names (append names old))
                                  (walk (third xs) vars (1+ depth)))
                                (setq local-names old))))
@@ -1283,7 +1323,7 @@
                              (unless (member v vars) (refuse :b-source)) (walk value vars (1+ depth))))
                           (t
                            (unless (or (and (member head '(car cdr)) (= n 1))
-                                       (and (member head '(rplaca rplacd)) (= n 2))
+                                       (and (member head '(rplaca rplacd cons)) (= n 2))
                                        (and (eq head 'if) (member n '(2 3))) (member head '(values progn))
                                        (and (member head '(prog1 multiple-value-prog1 unwind-protect catch)) (<= 1 n)) (and (eq head 'throw) (= n 2)) (and (eq head 'progv) (<= 2 n))
                                        (and (eq head 'funcall) (<= 1 n)) (and (eq head 'apply) (<= 2 n))

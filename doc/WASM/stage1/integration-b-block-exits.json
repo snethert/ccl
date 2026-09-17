@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-17T12:42:59.928725+00:00",
+  "user_authorization": "accept, integrate and proceed",
+  "review_commit": "946eb62492a00a224ef4c16455c8c72a835b9a22",
+  "review": "seventy-eighth audit; no defect",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "1ab9a691d2b8858604101bc26d24a3a8464fb676e73543b9670b38bc5d3ed0ce",
+      "after": "6bd1a7a82f9753e8edaffa5d0a2183fece328f747f33ca034603dd39ff396e8c",
+      "proposal_locator": "2026-09-17-stage1-b-block-exits-r1/source/tests/wasm/stage1/b-block-exits/wasm32-backend.lisp"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "before": "36a93df753f17d55f0068680d5dd72bde973638d3daa76a9c070909ecc7fc070",
+      "after": "0536a62d1e0b717c1c461a869f42ccc7e855b97f4cc45a9509f2493763479eeb",
+      "proposal_locator": "2026-09-17-stage1-b-block-exits-r1/source/tests/wasm/stage1/b-block-exits/loader.mjs"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "before": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507",
+      "after": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507",
+      "proposal_locator": "2026-09-17-stage1-b-block-exits-r1/source/tests/wasm/stage1/b-block-exits/binary.mjs"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "before": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097",
+      "after": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097",
+      "proposal_locator": "2026-09-17-stage1-b-block-exits-r1/source/tests/wasm/stage1/b-block-exits/stub.wat"
+    }
+  ],
+  "packet_manifest_sha256": "828191e31330329a531b38b2bac5bc6503e62cbd8324f01f3777667236d45325",
+  "scope": "Generated BLOCK/RETURN-FROM and rooted CONS at reviewed bounds; no LL05/LL19 slot acceptance.",
+  "observations": [
+    "Local RETURN-FROM uses one Wasm exception per exit, without a performance claim.",
+    "A block with a local return inhibits body tail position; recursive calls retain stack per active local exit extent.",
+    "Four unobservable restoration omissions remain collector-time obligations shared with CATCH.",
+    "The obsolete registry is removed; the 492-module corpus uses asserted finite registry and symbol ranges."
+  ],
+  "verification": "Exact reviewed retained payloads; reviewed native R6/R6a and replay cover these bytes. No new native execution.",
+  "reverse": "Restore each file at its before hash."
+}

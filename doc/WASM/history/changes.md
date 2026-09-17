@@ -1592,3 +1592,11 @@ returns from cleanups, NIL THROW past NIL blocks, closed returns from closures
 forty frames deep and inside cleanups, and CONS ordering and partial allocation
 agreed on all 88 comparisons. No defect; no gate credit; integration is the
 user's decision.
+
+## 2026-09-17 — integrate reviewed lexical exits and rooted CONS
+
+On the user’s “accept, integrate and proceed”, Codex integrated the exact
+backend and profile-only loader change reviewed in Claude’s seventy-eighth
+audit (946eb624). The binary reader and stub are unchanged. All four observations
+are carried in the integration record. Reviewed R6/R6a covers these bytes; no
+new native run or inventory acceptance is claimed.

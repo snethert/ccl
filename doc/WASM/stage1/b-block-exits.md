@@ -48,6 +48,6 @@ original producer snapshots remain retained, and replay uses the corrected model
 Condition objects, signalling, handler dispatch, MULTIPLE-VALUE-CALL,
 TAGBODY/GO, symbol installation, binding growth and collector integration
 remain open. All control records still share the explicit stack and its
-result-reservation cost. This proposal requires Claude review before integration.
+result-reservation cost. The user accepted this unit after Claude’s seventy-eighth audit; its exact reviewed bytes are integrated.
 
 Packet: `ccl-evidence/2026-09-17-stage1-b-block-exits-r1`.
