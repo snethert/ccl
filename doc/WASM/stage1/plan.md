@@ -45,7 +45,7 @@ The [storage correction](b-mv-storage.md) removes the inherited producer budget,
 intermediate large-result copy and nonescaping literal MVC allocation. Its R2
 follow-up adds inline small results and retires roots before destructive delivery.
 R2 is now accepted and integrated after Claude’s eighty-first audit, under the
-[new integration record](integration-b-mv-storage.json). Conditions and handlers follow it;
+[new integration record](integration-b-mv-storage.json). The [explicit condition/handler proposal](b-conditions.md) now executes U1’s handler macros and SIGNAL/ERROR over supplied condition proxies. Production condition construction and implicit checked-error conversion follow its review;
 binding-vector growth remains required for the complete binding contract. Debugger and
 collector integration of the control records remains explicit. Neither
 complete LL05 slot is claimed by these units.

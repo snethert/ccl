@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "cb085eac0556699bf2041153348a1aab0197b716",
+  "commit": "dc451406c039af0d0181de01d9a78aeeb0a77c62",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "00f12671a76664e588c2619d17d52b49cdf753565b72f4592542bdd5e5613f7d",
-  "immutable_evidence_files": 211108,
-  "indexed_references_verified": 15959,
-  "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-b-mv-storage-r2.json",
-  "source_index_sha256": "a17f53ba01aa41088733c3b34a2e73128440784d279b7ada020589343c3fdb04",
+  "catalog_sha256": "01088ab04729ee2e0d675d66adcedc9f42dbdf0ff68f0bb92c9bac12d26abb36",
+  "immutable_evidence_files": 211529,
+  "indexed_references_verified": 16299,
+  "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-b-conditions-r1.json",
+  "source_index_sha256": "8e6de49cc1376847d6bc96fa93cad56ec6163baddf6f5005fc3230de96358585",
   "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. MVC acceptance remains withdrawn; R2 adds inline small results and stable descriptor handoff as an unintegrated auxiliary proposal awaiting review and renewed acceptance.",
+  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. MVC storage R2 is accepted and integrated. Explicit condition/handler dispatch is an isolated auxiliary proposal awaiting external review, with no inventory credit.",
   "last_scoped_addition": {
-    "directory": "2026-09-17-stage1-b-mv-storage-r2",
-    "files": 6097,
-    "bytes": 313064699
+    "directory": "2026-09-17-stage1-b-conditions-r1",
+    "files": 421,
+    "bytes": 197374393
   }
 }

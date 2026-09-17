@@ -1,0 +1,25 @@
+{
+  "status": "PROPOSAL_NOT_ACCEPTED_OR_INTEGRATED",
+  "inventory_entries_executed": [],
+  "accepted_slots_unchanged": true,
+  "profile": "wasm32-shared-B-exnref-tail-mv-storage-v2",
+  "changes": [
+    "U1 HANDLER-BIND/HANDLER-CASE macro expansion, including indexed clauses and :NO-ERROR",
+    "Generated explicit SIGNAL/ERROR dispatcher with ordered matching and active-cluster masking",
+    "Rooted condition, cluster and handler cursors; binding-chain restoration on both paths",
+    "Handler return values use inline/spill descriptors and are discarded without imposing the final caller reservation",
+    "Generated EQ and LIST IR required by macro expansions; ordinary modules emit no condition runtime when unused"
+  ],
+  "condition_objects": "Six owner-supplied immutable simple-vector proxies, not CCL CLOS instances: header 762, tagged class-membership mask and identity field. The fixture maps each proxy to an actual native CCL condition. Nine simple class queries are qualified. This private schema is not adopted as the production condition layout. Class construction, user-defined classes, compound types and slots remain open.",
+  "native_oracle": "Unmodified CL forms compiled natively. A fresh empty handler environment lets SIGNAL decline; *DEBUGGER-HOOK* records actual ERROR fallback without entering an interactive debugger. Literal expected values/effects are independent of target masks.",
+  "public_errors": "Uncaught explicit ERROR is checked refusal 15 after all handlers decline. It is not a debugger implementation or automatic conversion of existing checked traps into condition objects.",
+  "allocation": "U1 handler clusters and callable closures use existing checked allocation. Discarded handler results use R2 descriptors (four inline values, arena overflow); arena/resource bounds remain explicit.",
+  "gc": "No collector runs. Condition proxies, handler clusters, descriptors, stack callables and exception payloads remain moving-collector obligations.",
+  "limits": [
+    "Only explicit SIGNAL/ERROR with precreated supported objects, no string/designator construction",
+    "No restarts, debugger entry, implicit type/arity trap signalling, user-defined condition classes, general TYPEP or reflection",
+    "Handler state is a reserved owner-installed special-symbol binding, not an adopted production condition registry",
+    "No new inventory credit; integration requires external review and user acceptance"
+  ],
+  "verification": "Native comparisons, independently literal expected effects, eager and cold installation, root/control/binding inspections, 10 dispatcher mutants, 19 inherited compiler mutants and R6/R6a. Cluster-visible omission is rejected by a 10-second progress deadline at its retained case."
+}
