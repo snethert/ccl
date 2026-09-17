@@ -3,7 +3,8 @@
 The [isolated proposal](../../../tests/wasm/stage1/b-special-bindings/README.md)
 adds SPECIAL declarations on LET/LET*, dynamic reads and SETQ through CCL’s real
 front end. The accepted CATCH/THROW implementation is integrated separately.
-This proposal awaits Claude review and claims no LL05/LL19 slot.
+The user accepted this unit after Claude’s seventy-sixth audit; its exact reviewed
+bytes are integrated. It claims no LL05/LL19 slot.
 
 Each symbol carries its D1 tagged binding index, distinct from the raw TCR index.
 The generated lookup validates the symbol, index and owned vector before access.

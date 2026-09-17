@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-17T10:38:22.999874+00:00",
+  "user_authorization": "accept integrate and proceed",
+  "review_commit": "fb85c42c3f3ddf9263e4eeabc1416af78c9d3ce4",
+  "review": "seventy-sixth audit; no defect",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "802393f80a4fa18507e02c1f99786bd4008b3081146c1d47f368fc37af776dce",
+      "after": "97c29bd8234b65d225658a24a0504397af0647666c96b322b7d385b91d28bce1",
+      "proposal_locator": "2026-09-16-stage1-b-special-bindings-r1/source/tests/wasm/stage1/b-special-bindings/wasm32-backend.lisp"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "before": "36a93df753f17d55f0068680d5dd72bde973638d3daa76a9c070909ecc7fc070",
+      "after": "36a93df753f17d55f0068680d5dd72bde973638d3daa76a9c070909ecc7fc070",
+      "proposal_locator": "2026-09-16-stage1-b-special-bindings-r1/source/tests/wasm/stage1/b-special-bindings/loader.mjs"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "before": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507",
+      "after": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507",
+      "proposal_locator": "2026-09-16-stage1-b-special-bindings-r1/source/tests/wasm/stage1/b-special-bindings/binary.mjs"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "before": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097",
+      "after": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097",
+      "proposal_locator": "2026-09-16-stage1-b-special-bindings-r1/source/tests/wasm/stage1/b-special-bindings/stub.wat"
+    }
+  ],
+  "packet_manifest_sha256": "95cdd1504397202444bcdee15a791df1d648c73785253f09c629c1c519d26c8f",
+  "scope": "Generated dynamic special LET/LET*, references and SETQ at reviewed bounds; no LL05/LL19 slot acceptance.",
+  "observations": [
+    "Binding-vector capacity and indices are owner-assigned; growth and general symbol installation remain open.",
+    "Specials share the function-symbol import namespace; a same-named function lacking a binding index refuses at runtime, not admission.",
+    "Special reads currently make two nested runtime calls; include this cost in later measurement.",
+    "Binding records share the explicit value stack with control records and results."
+  ],
+  "verification": "Exact reviewed retained payloads; reviewed native R6/R6a and replay cover these bytes. No new native execution.",
+  "reverse": "Restore each file at its before hash."
+}

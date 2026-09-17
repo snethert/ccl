@@ -34,10 +34,10 @@ The accepted and integrated [UNWIND-PROTECT unit](b-unwind-protect.md)
 now supplies cleanup on normal/checked-exception exits and inhibits tail transfer
 while cleanup or retained values are pending. The accepted and integrated [CATCH/THROW unit](b-catch-throw.md)
 adds generated nonlocal exits and a published catch/cleanup chain.
-The [dynamic special-binding proposal](b-special-bindings.md) now covers LET/LET*,
-references, SETQ and restoration across those exits, pending review. Next are
-the handler/signalling path, with special parameters and binding-vector growth
-still explicit prerequisites to the complete binding contract; debugger and
+The accepted and integrated [dynamic special-binding unit](b-special-bindings.md) now covers LET/LET*,
+references, SETQ and restoration across those exits. Next are special lambda
+parameters and PROGV, then the handler/signalling path; binding-vector growth
+remains required for the complete binding contract. Debugger and
 collector integration of the control records remains explicit. Neither
 complete LL05 slot is claimed by these units.
 

@@ -1510,3 +1510,11 @@ adversarial probe of 40-deep rebinding with throws and assignments, restoration
 across errors and pending exits, closures, unbound symbols and a 3,000-step
 chain under a binding agreed on all 156 comparisons. No defect; no gate credit;
 integration is the user's decision.
+
+## 2026-09-17 — integrate reviewed dynamic special bindings
+
+On the user’s “accept integrate and proceed”, Codex integrated the exact
+backend reviewed in Claude’s seventy-sixth audit (fb85c42c). Runtime files
+remain the reviewed bytes. The integration record carries all four observations
+and binds the retained payloads and prior file hashes. Reviewed R6/R6a covers
+these bytes; no new native run or inventory acceptance is claimed.

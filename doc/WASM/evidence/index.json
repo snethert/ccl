@@ -4002,9 +4002,15 @@
       "sha256": "95cdd1504397202444bcdee15a791df1d648c73785253f09c629c1c519d26c8f",
       "scope": "Generated SPECIAL LET/LET*, dynamic reads and SETQ through real CCL IR: 313 source functions, 390 modules, 1323 native/model cases and 5292 target comparisons. Rooted 32-byte binding records; reverse restoration through normal/checked/nonlocal exits, lexical shadowing and partial initialization. 8252 binding inspections, 44 metadata/capacity checks, 19 compiler mutants and three development regressions. Native R6/R6a, retained replay and unchanged-loader lazy composition pass. Private symbol namespace, preassigned binding indices and capacity; no growth, special lambda parameters, PROGV, GC, full LL05/LL19 credit or unreviewed integration.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AND_INTEGRATED_AUXILIARY",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "commit": "fb85c42c3f3ddf9263e4eeabc1416af78c9d3ce4",
+        "disposition": "NO_DEFECT_FOUND",
+        "audit": 76
+      },
+      "integration": "doc/WASM/stage1/integration-b-special-bindings.json"
     }
   ]
 }
