@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "failures": [
+    {
+      "run": "ccl-special-compile-r1",
+      "reason": "LOCALLY produced real %DECLS-BODY IR, which the first draft had not lowered; added its already source-qualified body traversal."
+    },
+    {
+      "run": "ccl-special-compile-r2",
+      "reason": "Two old source-refusal cases became supported by the new SPECIAL implementation. Removed those obsolete refusals; positive closure and cleanup cases exercise the newly admitted behavior."
+    },
+    {
+      "run": "ccl-special-compile-r3",
+      "reason": "The model treated a local SPECIAL declaration as a global proclamation affecting nested LET bindings. Native CCL correctly kept those new bindings lexical. Added declarations at the intended dynamic binding sites and corrected model lexical shadowing; explicit regression cases cover both scope directions."
+    },
+    {
+      "run": "ccl-special-compile-r4",
+      "reason": "An extra WAT parenthesis in the saved-index check was refused by the assembler; corrected before target execution."
+    },
+    {
+      "run": "ccl-special-compile-r5 / ccl-special-execution-r1.log",
+      "reason": "The 130-value binding case used the default 64-word reservation. The generated checked capacity refusal was correct; its positive case now reserves 256 words."
+    },
+    {
+      "run": "ccl-special-identity-discovery",
+      "reason": "Two distinct declared symbols, private DYN_A and CL-USER::DYN_A, compiled to the same symbol import. The two-function native compilation and original backend are retained. Restricted this private namespace explicitly and added two source refusals plus a reproduced guard-removal regression."
+    },
+    {
+      "run": "ccl-special-prefix-discovery",
+      "reason": "The retained verifier refused an unintended broad replacement in the older leaf source walker: its exact-three-part LAMBDA admission check had been loosened while changing the B walker. Restored the reviewed prefix byte-for-byte; no B emitter text changed. The original backend, source pins, unpublished packet manifest and verifier failure are retained."
+    }
+  ],
+  "preparation": "The TCR namespace probe was corrected to the schema tcr_index offset 0 before its mutant execution; the early setup wrote unused offset 12. The generated binding implementation always reads the symbol binding index.",
+  "native": "The first two native R6 runs passed for earlier drafts. The second draft failed retained verification on its changed older leaf admission check. The final native R6 run qualifies the restored-prefix compiler.",
+  "interrupted": {
+    "run": "ccl-special-run-r1",
+    "reason": "Stopped intentionally with SIGINT after positive execution and early mutants to correct package identity; no PASS claimed. Original output and backend retained."
+  }
+}

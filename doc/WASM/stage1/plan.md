@@ -29,12 +29,15 @@ a trusted catalog and preserves the generated corpus through first-use loading.
 By the user’s 16 September direction, the accepted and integrated [direct-context unit](b-direct-context.md)
 places compiled-call arguments directly in the continuation and enters the internal
 body, retaining the public wrapper at boundaries. It removes the extra argument
-copy and wrapper. Both units were approved after Claude’s seventy-third audit. Next:
-the Lisp condition path. The accepted and integrated [UNWIND-PROTECT unit](b-unwind-protect.md)
+copy and wrapper. Both units were approved after Claude’s seventy-third audit.
+The accepted and integrated [UNWIND-PROTECT unit](b-unwind-protect.md)
 now supplies cleanup on normal/checked-exception exits and inhibits tail transfer
 while cleanup or retained values are pending. The accepted and integrated [CATCH/THROW unit](b-catch-throw.md)
 adds generated nonlocal exits and a published catch/cleanup chain.
-Next are dynamic special binding and the handler/signalling path; debugger and
+The [dynamic special-binding proposal](b-special-bindings.md) now covers LET/LET*,
+references, SETQ and restoration across those exits, pending review. Next are
+the handler/signalling path, with special parameters and binding-vector growth
+still explicit prerequisites to the complete binding contract; debugger and
 collector integration of the control records remains explicit. Neither
 complete LL05 slot is claimed by these units.
 

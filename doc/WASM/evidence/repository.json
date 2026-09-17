@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "7631ac295d8a19ab53a468a458cb2a450fedca51",
+  "commit": "35a9122ead5f76b318eba157e3df09644ef2d67c",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "df38c92fbb7851273542e6f9b28b3557bc609eb2d6fd8fa63a11a92649451bbc",
-  "immutable_evidence_files": 182993,
-  "indexed_references_verified": 13940,
-  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-b-catch-throw.json",
-  "source_index_sha256": "ff735e8ea652105cf7b7ca9defc78a9773ed9ebfd1f1de0897a71eb5b08630e3",
+  "catalog_sha256": "efbbfca4e294ec05d114ae20f125a1b4c4f1a89587bfc187a29299ba704d11bd",
+  "immutable_evidence_files": 186383,
+  "indexed_references_verified": 14274,
+  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-b-special-bindings.json",
+  "source_index_sha256": "0cdfee28835e53afea7308609813d4d1bb21e3b0384c10f7c8740f00053d48ad",
   "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Generated UNWIND-PROTECT accepted and integrated. Generated CATCH/THROW and published control records are an auxiliary proposal awaiting external review, without gate credit.",
+  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Generated CATCH/THROW accepted and integrated. Generated dynamic special bindings are an auxiliary proposal awaiting external review, without gate credit.",
   "last_scoped_addition": {
-    "directory": "2026-09-16-stage1-b-catch-throw-r1",
-    "files": 2399,
-    "bytes": 145767080
+    "directory": "2026-09-16-stage1-b-special-bindings-r1",
+    "files": 3390,
+    "bytes": 150803942
   }
 }

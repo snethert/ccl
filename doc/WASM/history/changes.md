@@ -1481,3 +1481,20 @@ backend and runtime payloads reviewed in Claude’s seventy-fifth audit
 manifest and authorization, and carries the host-re-entry, shared-stack,
 classification-cost and collector-inspection observations. Reviewed R6/R6a
 covers these bytes; no new native run or inventory acceptance is claimed.
+
+## 2026-09-16 — generated dynamic special bindings
+
+Codex’s isolated proposal adds SPECIAL LET/LET*, dynamic reads and SETQ,
+with rooted binding records and reverse restoration across normal returns,
+checked failures, cleanup and nonlocal exits. The producer and retained verifier
+pass: 390 modules, 5,292 native/model comparisons, 8,252 binding inspections,
+44 metadata/capacity checks, 19 compiler mutants and three development regressions.
+Native R6/R6a and unchanged-loader lazy composition pass. Original failures,
+the package-identity collision, its guard-removal control, the intentionally
+interrupted run and the retained verifier’s non-B-prefix refusal are kept in
+one packet. The older source-admission check is restored byte-for-byte. Vector growth,
+special lambda parameters, general symbol installation and collection remain
+open. No inventory slot or unreviewed shared integration is claimed.
+
+The nonlocal-exit STATUS row is refreshed to accepted and integrated, matching
+the already committed integration record and report.

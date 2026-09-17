@@ -3995,6 +3995,16 @@
       "availability": "EXTERNAL_LOCAL_STORE",
       "integration_record": "doc/WASM/stage1/integration-b-catch-throw.json",
       "user_authorization": "accept, integrate and proceed"
+    },
+    {
+      "id": "STAGE1-B-SPECIAL-BINDINGS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-b-special-bindings-r1/packet.json",
+      "sha256": "95cdd1504397202444bcdee15a791df1d648c73785253f09c629c1c519d26c8f",
+      "scope": "Generated SPECIAL LET/LET*, dynamic reads and SETQ through real CCL IR: 313 source functions, 390 modules, 1323 native/model cases and 5292 target comparisons. Rooted 32-byte binding records; reverse restoration through normal/checked/nonlocal exits, lexical shadowing and partial initialization. 8252 binding inspections, 44 metadata/capacity checks, 19 compiler mutants and three development regressions. Native R6/R6a, retained replay and unchanged-loader lazy composition pass. Private symbol namespace, preassigned binding indices and capacity; no growth, special lambda parameters, PROGV, GC, full LL05/LL19 credit or unreviewed integration.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }
