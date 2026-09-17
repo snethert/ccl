@@ -1403,3 +1403,19 @@ packet identities and the catalog-trust, single-Worker publication and future
 post-call collector-inspection limits. The runtime lives under runtime/wasm32;
 the historical lazy replay remains pinned to its tail-call checkout. No gate
 credit or new native execution is claimed. The next unit is condition dispatch.
+
+## 2026-09-16 — execute generated UNWIND-PROTECT
+
+Codex added cleanup extents through U1's real front-end IR in a disposable
+compiler proposal. The protected form and cleanup retain their caller while
+work is pending; normal full values are rooted across cleanup, and each
+exception landing pad restores its own VSP, roots, result descriptor and stack
+cursor before running cleanup. Cleanup errors replace the original exception.
+The 307-module corpus passes 3,504 native/model comparisons, 132 cleanup-entry
+layout inspections, 12 resource/payload probes, 18 compiler mutants and the two
+inherited regression controls. Native R6/R6a and unchanged lazy composition pass;
+retained replay rebuilt the corpus and all mutants byte-identically. Original native-oracle, capacity and
+reporting failures, plus two restoration mutants that initially escaped, are
+retained. This remains auxiliary: condition classes/signalling, catch/throw,
+special bindings, published handler/control-stack state and GC are not supplied.
+The reviewed shared backend remains unchanged by this proposal.

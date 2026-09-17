@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "failures": [
+    {
+      "run": "ccl-unwind-compile-r1",
+      "reason": "Native CCL removed an unused CAR in cleanup; the model expected a type error. Replaced the fixture operation with RPLACA so the error is tied to a non-discardable mutation. The compiler was unchanged."
+    },
+    {
+      "run": "ccl-unwind-compile-r2 / ccl-unwind-execution-r2.log",
+      "reason": "The 1024-word output reservation exhausted the 32 KiB explicit stack in the large-values case. Kept the failed execution, used positive reservations through 512, and added separate checked resource-cleanup tests. No compiler limit or capacity check was weakened."
+    },
+    {
+      "run": "ccl-unwind-mutant-preflight",
+      "reason": "Omitting explicit-stack cursor or VSP restoration escaped value-only comparisons. Their original compiled modules and passing executions are retained. Added an independent ABI-derived cleanup-entry layout oracle; both same mutants remain required to reject."
+    },
+    {
+      "run": "ccl-unwind-run-r1",
+      "reason": "Manually interrupted before the mutant batch after spotting missing cleanup counters in the execution report. All cleanup assertions had run; the result object omitted their counters and the final summary would have refused it. Added those output fields, retaining the interrupted run and original executed sources."
+    }
+  ],
+  "harness_preparation": [
+    "An initial mutation selector matched two sites and refused before execution; the selector was narrowed.",
+    "A preflight imported the registration runner accidentally and stopped before producing evidence; it now loads the intended runner explicitly."
+  ],
+  "backend": "No backend change after the initial successful compilation; native R6 applies to that same compiler."
+}

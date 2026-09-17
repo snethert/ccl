@@ -3966,6 +3966,16 @@
       },
       "project_disposition": "ACCEPTED_AND_INTEGRATED_AT_REVIEWED_SCOPE",
       "integration_record": "doc/WASM/stage1/integration-b-direct-context.json"
+    },
+    {
+      "id": "STAGE1-B-UNWIND-PROTECT-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-16-stage1-b-unwind-protect-r1/packet.json",
+      "sha256": "3a88fbf4601b7cc5164dadead85cbdc24714077694b8c8a980c07e98d1eb741c",
+      "scope": "Generated UNWIND-PROTECT through real CCL IR: 234 source functions, 307 modules, 876 native/model cases and 3504 target comparisons. Normal full-value retention, ordered cleanup, exceptional checkpoint restoration, original exception identity and replacement by cleanup errors. 132 cleanup-entry layout inspections, 12 resource/payload checks, 18 rejected compiler mutants and two inherited regression controls; R6/R6a and unchanged lazy-loader composition pass. Original failures and initially unobserved restoration mutants retained. No GC, condition classes/handlers, catch/throw, special binding, published handler/control-stack chain, full LL05/LL19 credit or unreviewed integration",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }
