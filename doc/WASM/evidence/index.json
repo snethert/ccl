@@ -4027,6 +4027,16 @@
         "audit": 77
       },
       "integration": "doc/WASM/stage1/integration-b-dynamic-bindings.json"
+    },
+    {
+      "id": "STAGE1-B-BLOCK-EXITS-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-b-block-exits-r1/packet.json",
+      "sha256": "828191e31330329a531b38b2bac5bc6503e62cbd8324f01f3777667236d45325",
+      "scope": "Generated BLOCK/RETURN-FROM and rooted CONS through real CCL IR: 492 modules, 1639 native/model cases and 6556 target comparisons. Exact lexical targets distinct from dynamic catches, closed exits via U1 fresh tags, cleanup/special/PROGV restoration and zero/130 values. 20 target-only expired-exit and allocation checks; 16 compiler mutants, four regressions including the obsolete registry collision. Native R6/R6a, retained replay and compatible-profile lazy composition pass. No collector, full condition signalling, LL05/LL19 credit or unreviewed integration.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

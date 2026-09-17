@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "failures": [
+    {
+      "run": "ccl-block-compile-r1",
+      "reason": "Source admission used a fresh lexical binding for the block environment; the recursive WALK closure still saw its original binding and refused RETURN-FROM. Fixed push/restore of the shared lexical environment."
+    },
+    {
+      "run": "ccl-block-compile-r2",
+      "reason": "Extra closing parentheses in the source-admission edit caused a reader refusal."
+    },
+    {
+      "run": "ccl-block-compile-r3",
+      "reason": "The independent evaluator put the implicit FLET block outside lambda-body declarations, so inherited special-parameter cases became DESIGNATOR. Moved the implicit block inside the declaration wrapper; native/compiler behavior unchanged."
+    },
+    {
+      "run": "ccl-block-mutants-r1/block-innermost-identity",
+      "reason": "Exploratory wrong-target mutant passed: existing inner blocks had no local return and were elided. Added bl_outer_live with two live targets; the same mutant is rejected at that case in ccl-block-live-target-r1."
+    },
+    {
+      "run": "ccl-block-mutants-r1/block-unwind-state",
+      "reason": "Exploratory mutation was not observable: the exception classifier restores pending-exit state before any callback. Not counted as a rejection; direct pre-landing-pad observation remains a collector-time obligation."
+    },
+    {
+      "run": "ccl-block-mutants-r1/exit-root-restore",
+      "reason": "Exploratory root-checkpoint omission passed, as in the prior CATCH unit: the generic control-frame pop restores roots before any inspection. Kept the restoration, no rejection credit."
+    },
+    {
+      "run": "ccl-block-run-r1",
+      "reason": "The runner had imported the exploratory mutation set before its redundant root-restoration mutation was removed. That mutation, and the VSP/MV checkpoint omissions, execute without any observing call before enclosing restoration and passed. This exploratory producer is retained as incomplete; these four unobservable omissions (including unwind state) are excluded from final rejection counts. The compiler still performs all restorations."
+    },
+    {
+      "run": "scalar-model-guard",
+      "reason": "Post-producer inspection found the evaluator indexed a literal FLET/LABELS body while recognizing declaration wrappers. Added the list guard; eight model-only probes pass. Every declared case, Lisp input and source form remains byte-identical. Original producer source snapshots remain untouched; final source pins and retained replay use the corrected model. The compiler and native qualification are unchanged."
+    }
+  ],
+  "tooling": [
+    "The first preflight helper imported registration/run.py instead of this fixture runner and exited before a native session. Its short traceback was captured by the tool but the scratch log was then overwritten; development retention labels the transcription rather than claiming original bytes.",
+    "The initial serial mutant exploration was stopped after preserving its completed outcomes; qualification uses isolated subprocesses, at most three independent mutant sessions concurrently, with results written in fixed order."
+  ],
+  "inherited_regressions": "Normalizer, keyword-token overlap and package-identity controls are unchanged obligations from accepted packets. The restored unread registry is a regression for Claude audit 77.",
+  "native": "Final compiler passed native R6/R6a using the accepted pristine baseline; no native build is claimed for later harness-only edits."
+}

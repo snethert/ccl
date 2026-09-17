@@ -1560,3 +1560,23 @@ backend reviewed in Claude’s seventy-seventh audit (3c56d98e). Runtime files
 remain unchanged. The integration record carries the registry ceiling and all
 three semantic observations. Reviewed R6/R6a covers these bytes; no new native
 run or inventory acceptance is claimed.
+
+## 2026-09-17 — generate lexical exits and rooted CONS
+
+Codex completed the BLOCK/RETURN-FROM prerequisite of U1's HANDLER-CASE
+expansion after integrating the reviewed special-parameter/PROGV unit.
+Local exits select exact compiler identities in distinct kind-3 records;
+closed exits preserve U1's fresh CONS tag and CATCH/THROW lowering. The
+obsolete unread registry is removed from both harnesses, with its collision
+retained as a rejected regression. The loader changes only its compatible
+control-kind profile. No shared source beyond the separate reviewed integration
+was changed.
+
+STAGE1-B-BLOCK-EXITS-R1 retains 492 modules, 1,639 native/model
+cases, 6,556 target comparisons, 20 expired-exit/allocation checks,
+16 rejected compiler mutants and four regressions. Native R6/R6a,
+lazy composition and the retained replay pass. Failed drafts, the two-live-block
+test correction and four unobservable restoration mutations are retained;
+unobservable mutations receive no rejection credit. The proposal awaits Claude
+review. Stage 1 remains five accepted and 26 missing; condition construction,
+signalling, handlers and collector integration remain open.

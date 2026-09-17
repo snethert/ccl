@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "status": "PROPOSED_AUXILIARY_UNIT",
+  "function": {
+    "subtag": 42,
+    "elements": 5,
+    "bytes": 24,
+    "header": 1322,
+    "fields": {
+      "code_id": 4,
+      "environment": 8,
+      "code_version": 12,
+      "arity_metadata": 16,
+      "debug_metadata": 20
+    },
+    "representation": "all five payload words tagged; positive fixnum code ID and version"
+  },
+  "symbol": {
+    "subtag": 58,
+    "elements": 7,
+    "bytes": 32,
+    "header": 1850,
+    "function_cell": 12
+  },
+  "registry": {
+    "alignment": 8,
+    "header_bytes": 8,
+    "row_bytes": 16,
+    "fields": [
+      "slot:u32",
+      "version:tagged-fixnum",
+      "signature:u32",
+      "role:u32"
+    ],
+    "reserved_prefix": 1,
+    "generic_signature": 17,
+    "generic_role": 23,
+    "authority": "owner-supplied fixture registry, no loader-authentication claim"
+  },
+  "excluded": [
+    "native code-vector layout",
+    "GC movement",
+    "package/intern implementation",
+    "unbound-symbol condition machinery",
+    "concurrent publication"
+  ],
+  "closure_environment": {
+    "subtag": 250,
+    "tag": 6,
+    "header": "256 * capture_count + 250",
+    "elements": "tagged shared-cell pointers",
+    "bytes": "align8(4 + 4 * capture_count)",
+    "empty": 77825
+  },
+  "captured_cell": {
+    "representation": "D1 cons",
+    "bytes": 8,
+    "tag": 1,
+    "cdr": "NIL",
+    "car": "mutable tagged value",
+    "identity": "nx-root-var of each inherited variable; one cell per captured binding per activation"
+  },
+  "tail_entry": {
+    "public_signature": "(self:i32, nargs:i32) -> (primary:i32, count:i32)",
+    "internal_signature": "(self:i32, nargs:i32, context:raw-i32) -> (primary:i32, count:i32)",
+    "dispatch": "paired per-Worker tail table, same slot indices as B table; owner supplied, not authenticated",
+    "context_alignment": 16,
+    "context_fields": {
+      "saved_incoming": 0,
+      "saved_output": 4,
+      "saved_owner": 8,
+      "saved_root": 12,
+      "saved_count": 16,
+      "temporary_callable_bytes": 24,
+      "root_previous": 32,
+      "root_count": 36,
+      "self_root": 40,
+      "padding_root": 44,
+      "arguments": 48
+    },
+    "temporary_callable": "Immediately after padded arguments, aligned to 16 bytes; SELF and its environment pointer rebased before transfer. Payload cells remain shared heap objects.",
+    "retirement": "One public wrapper restores original caller state on normal and exceptional completion. Temporary argument/root frames are retired before return_call_indirect. No calls or polls during relocation.",
+    "reserved_words": [
+      20,
+      28
+    ]
+  },
+  "unwind_protect": {
+    "retention": "align16(48 + 4*capacity), shared control-record layout",
+    "checkpoint": "Wasm locals; explicit stack cursor, root head, VSP, MV base, owner, count",
+    "exception": "Wasm exnref local; unchanged tag and payload on successful exceptional cleanup",
+    "handler_chain": "TCR handler_checkpoint at 140; unwind_state at 148; no safepoints/GC",
+    "tail_legality": "protected and cleanup IR not tail positions"
+  },
+  "control_record": {
+    "alignment": 16,
+    "bytes": "align16(48 + 4*capacity)",
+    "fields": {
+      "previous": 0,
+      "kind": 4,
+      "capacity": 8,
+      "count": 12,
+      "root_address": 16,
+      "saved_unwind_state": 20,
+      "magic": 24,
+      "reserved": 28,
+      "root_previous": 32,
+      "root_count": 36,
+      "tag": 40,
+      "padding": 44,
+      "values": 48
+    },
+    "magic": 1128483889,
+    "kinds": {
+      "catch": 1,
+      "cleanup": 2,
+      "lexical_block": 3
+    },
+    "unwind_state": {
+      "ordinary": 0,
+      "nonlocal_exit": 1,
+      "other_exception": 2
+    },
+    "exception": "distinct shared nonlocal_exit tag carrying raw target-record address; Lisp values stay in the target root record",
+    "retirement": "pop on normal/exceptional exit; target catch remains active until cleanup finishes",
+    "lookup": "THROW: EQ tag, nearest live kind-1 catch; RETURN-FROM: exact front-end block identity and kind-3 record. Closed returns use U1 fresh cons tags and kind-1 CATCH."
+  },
+  "dynamic_bindings": {
+    "tcr": {
+      "tlb_pointer": 104,
+      "tlb_limit": 108,
+      "db_link": 112
+    },
+    "symbol": {
+      "tag": 6,
+      "header": 1850,
+      "global_value_displacement": 2,
+      "binding_index_displacement": 22,
+      "flags_displacement": 14
+    },
+    "no_thread_local_binding": 243,
+    "unbound": 51,
+    "binding_index": "positive tagged fixnum; zero reserved; distinct from raw tcr_index",
+    "vector": "owner-assigned capacity; checked current TCR pointer and capacity; no automatic growth",
+    "record": {
+      "bytes": 32,
+      "alignment": 16,
+      "previous": 0,
+      "tagged_index": 4,
+      "root_previous": 8,
+      "root_count": 12,
+      "symbol": 16,
+      "old_value": 20,
+      "magic": 24,
+      "padding": 28,
+      "magic_value": 1112425521
+    },
+    "roots": "current vector slots are TCR roots; each record roots its symbol and previous value separately",
+    "lookup": "live TLS value unless no-thread-local-binding, then symbol global value; unbound marker is a checked refusal",
+    "restoration": "reverse order on every normal or exceptional exit; restore saved TLS marker, not a sampled global value",
+    "scope": "LET/LET*, required/optional/rest/key/supplied-p SPECIAL bindings, inline and local functions, LOCALLY, references, SETQ and PROGV",
+    "progv": {
+      "flags_mask": 24,
+      "constant_bit": 1,
+      "global_bit": 2,
+      "validation": "Validate finite proper bindable-symbol list and full record budget before values; revalidate after values before binding. Owner-assigned index required.",
+      "missing_values": "unbound marker 51, not NIL",
+      "extra_values": "ignored",
+      "native_limit": "U1 CHECK-SYMBOL-LIST has a native stack-derived length limit; this target uses explicit stack extent instead. Native comparisons through 128 bindings.",
+      "refusals": "12 binding eligibility/cycle; 11 invalid owner metadata; 5 malformed list; 2 explicit stack capacity"
+    }
+  }
+}
