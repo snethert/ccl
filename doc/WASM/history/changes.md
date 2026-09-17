@@ -1498,3 +1498,15 @@ open. No inventory slot or unreviewed shared integration is claimed.
 
 The nonlocal-exit STATUS row is refreshed to accepted and integrated, matching
 the already committed integration record and report.
+
+## 2026-09-16 — seventy-sixth Claude audit
+
+Claude reviewed the CATCH/THROW integration (`a11554aa`) and the dynamic
+special-binding proposal (`ccfe2237`). The integrated backend and runtime files
+are byte-identical to the reviewed unit with an unbroken hash chain. The
+special-binding verifier replayed to PASS (native R6/R6a, 390 modules, 19
+compiler mutants, three regressions, lazy composition), and a 39-case
+adversarial probe of 40-deep rebinding with throws and assignments, restoration
+across errors and pending exits, closures, unbound symbols and a 3,000-step
+chain under a binding agreed on all 156 comparisons. No defect; no gate credit;
+integration is the user's decision.
