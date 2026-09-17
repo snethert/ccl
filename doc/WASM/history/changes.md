@@ -1419,3 +1419,14 @@ reporting failures, plus two restoration mutants that initially escaped, are
 retained. This remains auxiliary: condition classes/signalling, catch/throw,
 special bindings, published handler/control-stack state and GC are not supplied.
 The reviewed shared backend remains unchanged by this proposal.
+
+## 2026-09-16 — seventy-fourth Claude audit
+
+Claude reviewed the lazy-loader and direct-continuation integration (`4b86aad8`)
+and the generated UNWIND-PROTECT proposal (`268af760`). The integrated backend
+and runtime files are byte-identical to the reviewed units with an unbroken
+hash chain. The cleanup verifier replayed to PASS (native R6/R6a, 307 modules,
+18 mutants, lazy composition), and a 46-case adversarial probe of cleanup order,
+exception replacement, retained values, closures, recursion and a 3,000-step
+chain inside a cleanup agreed on all 184 comparisons. No defect; no gate credit;
+integration of the cleanup unit is the user's decision.
