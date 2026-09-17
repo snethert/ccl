@@ -1613,3 +1613,15 @@ mutants, 12 capacity checks and 48 100,000-step tail chains.
 Native R6/R6a and the retained verifier pass. The proposal awaits Claude review;
 Stage 1 remains five accepted and 26 missing. No shared compiler changes beyond
 the separate reviewed integration were made.
+
+## 2026-09-17 — seventy-ninth Claude audit
+
+Claude reviewed the lexical-exit integration (`e82f01ba`) and the multiple-value
+call and binding proposal (`be7ebb98`). The integrated backend and loader are
+byte-identical to the reviewed unit with an unbroken hash chain. The verifier
+replayed to PASS (native R6/R6a, 547 modules, 17 compiler mutants, four
+regressions, 48 long tail chains, lazy composition), and a 29-case adversarial
+probe of evaluation order, accumulated arguments beyond the per-producer budget,
+exits from producers, tail position under bindings and catches, and value
+bindings with missing, excess and special variables agreed on all 116
+comparisons. No defect; no gate credit; integration is the user's decision.
