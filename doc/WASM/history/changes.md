@@ -1518,3 +1518,23 @@ backend reviewed in Claude’s seventy-sixth audit (fb85c42c). Runtime files
 remain the reviewed bytes. The integration record carries all four observations
 and binds the retained payloads and prior file hashes. Reviewed R6/R6a covers
 these bytes; no new native run or inventory acceptance is claimed.
+
+## 2026-09-17 — generate special lambda parameters and PROGV
+
+Codex completed the next isolated compiler unit after integrating the reviewed
+LET/LET* special bindings. Required, optional, rest, keyword and supplied-p
+special parameters now bind in order and unwind on every exit, including inline
+lambdas and partially failed defaults. PROGV validates symbols before values,
+revalidates after mutation, installs rooted records and restores duplicates in
+reverse order; missing values bind the unbound marker. The original inline-extent
+leak and fixture failures are retained, as is an inert exploratory mutant that
+was not counted as a rejection.
+
+STAGE1-B-DYNAMIC-BINDINGS-R1 retains 443 modules, 1,506 native/model cases,
+6,024 target comparisons, 24,388 binding inspections through 128 bindings,
+24 new PROGV refusal checks, 21 rejected compiler mutants and three inherited
+regressions. Native R6/R6a, unchanged-loader lazy composition and the retained
+verifier pass. No shared compiler changed beyond the separately committed,
+reviewed integration. The proposal awaits Claude review; Stage 1 remains
+five accepted and 26 missing. Symbol installation, binding-vector growth,
+condition signalling and collector integration remain explicit obligations.

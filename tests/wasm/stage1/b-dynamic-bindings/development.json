@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "failures": [
+    {
+      "run": "ccl-dynamic-compile-r1",
+      "reason": "Extra Lisp closing parenthesis in the parameter-body refactoring; reader refused it."
+    },
+    {
+      "run": "ccl-dynamic-compile-r2 / ccl-dynamic-execution-r1.log",
+      "reason": "Special required parameter in an inlined literal lambda leaked its binding record. Added the missing extent around binding and body, after operand evaluation; inline-parameter-extent reproduces it."
+    },
+    {
+      "run": "ccl-dynamic-compile-r3",
+      "reason": "PROGV guard initially assumed a flat call-argument IR. Retained U1 IR is ((one-form) NIL); the exact compiler-inserted shape is now required."
+    },
+    {
+      "run": "ccl-dynamic-compile-r4 / ccl-dynamic-execution-r2.log",
+      "reason": "Test expected no allocation for dp_escaped. It creates an escaping closure; its explicit expectation is now 24 bytes. Same correction made for pv_escape."
+    },
+    {
+      "run": "ccl-dynamic-compile-r5 / ccl-dynamic-execution-r3.log",
+      "reason": "Forty binding recursion levels at the default 64-word result budget exhaust the 32 KiB fixture stack. The positive recursion test now requests its needed four-word result budget; the production resource check is unchanged."
+    },
+    {
+      "run": "ccl-dynamic-compile-r6 / ccl-dynamic-execution-r4.log",
+      "reason": "Test expected a captured self cell/environment for dp_labels. Self recursion uses SELF and captures nothing; expected allocation corrected from 40 to 24 bytes."
+    },
+    {
+      "run": "ccl-dynamic-run-r1",
+      "reason": "Exploratory keyword-read-dynamic mutant changed to b-read-variable, which still reads the same private slot for uncaptured specials; it was semantically inert and passed. Not counted as a rejection. Replaced with an actual read through the current dynamic binding, which is the risk the control is meant to exercise."
+    }
+  ],
+  "inherited_regressions": "The normalizer, token-overlap and package-identity regressions are inherited from accepted earlier packets; they are not new discoveries.",
+  "native": "R6/R6a qualifies the final compiler; the accepted pristine baseline is reused."
+}

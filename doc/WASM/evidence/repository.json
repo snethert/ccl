@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "35a9122ead5f76b318eba157e3df09644ef2d67c",
+  "commit": "839277aee15fd497e0880928e4786fdef3abf9a3",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "efbbfca4e294ec05d114ae20f125a1b4c4f1a89587bfc187a29299ba704d11bd",
-  "immutable_evidence_files": 186383,
-  "indexed_references_verified": 14274,
-  "source_index_snapshot": "catalog/source-index-2026-09-16-stage1-b-special-bindings.json",
-  "source_index_sha256": "0cdfee28835e53afea7308609813d4d1bb21e3b0384c10f7c8740f00053d48ad",
+  "catalog_sha256": "3c780d675074179c7666e1d4988212935ee0e6a1843444994f90f5f29348c8c8",
+  "immutable_evidence_files": 190188,
+  "indexed_references_verified": 14609,
+  "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-b-dynamic-bindings.json",
+  "source_index_sha256": "f18a37abade5d828599a29b53930aac28f3a33ffadfcba9a0cb3222041c7c265",
   "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Generated CATCH/THROW accepted and integrated. Generated dynamic special bindings are an auxiliary proposal awaiting external review, without gate credit.",
+  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Dynamic special LET/LET* bindings accepted and integrated. Special lambda parameters and PROGV are an auxiliary proposal awaiting external review, without gate credit.",
   "last_scoped_addition": {
-    "directory": "2026-09-16-stage1-b-special-bindings-r1",
-    "files": 3390,
-    "bytes": 150803942
+    "directory": "2026-09-17-stage1-b-dynamic-bindings-r1",
+    "files": 3805,
+    "bytes": 192765240
   }
 }
