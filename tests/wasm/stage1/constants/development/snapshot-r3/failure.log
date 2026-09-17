@@ -1,0 +1,37 @@
+Traceback (most recent call last):
+  File "/Users/buildsomething/Source/ccl/tests/wasm/stage1/constants/verify_snapshot.py", line 59, in <module>
+    if run.returncode==0 or diagnostic not in log: raise RuntimeError(name+'\n'+log)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: early-write
+{
+  "status": "PASS",
+  "worker_round_trip": true,
+  "source_mutation_observed": 36,
+  "restored_base": 2147483648,
+  "bytes": 272,
+  "objects": 21,
+  "controls": [
+    "digest",
+    "layout",
+    "interior-pointer",
+    "unknown-root",
+    "wrong-tag",
+    "duplicate-id",
+    "omit-cold",
+    "extra-bytes",
+    "header-count",
+    "unaligned",
+    "capacity",
+    "unknown-symbol",
+    "symbol-overlap",
+    "canonical-overlap",
+    "source-overflow",
+    "missing-field",
+    "bad-hex",
+    "root-not-word",
+    "alias-split",
+    "alias-merge"
+  ],
+  "refusal_preserves_memory": true
+}
+

@@ -87,3 +87,46 @@ run and all six controls passed without a development failure.
 Target-memory serialization/restore, ownership validation at installation,
 compiler IR extraction and generated pool loads remain open. The public B ABI
 and all shared compiler/runtime files remain unchanged.
+
+## Materialized-memory snapshot transport
+
+Run `python3 tests/wasm/stage1/constants/verify_snapshot.py`. This adds an isolated
+Node transport, `snapshot.mjs`: `capture(memory, manifest)` reads current unshared
+Wasm memory; `restore(bytes, expectedDigest, memory, base, regionBytes, symbols)`
+checks the complete snapshot before one destination write. The manifest supplies
+the complete owned interval, object identities/offsets/tags, roots and owner
+symbol identities. The snapshot binds the D1 schema and contains target bytes,
+not the original constant recipe. Its expected digest comes from the trusted
+owner; this is integrity checking, not code signing or a production loader.
+
+The reader derives object extents and pointer fields from D1 headers and the
+cons/general-vector layouts. Contiguous coverage includes cold objects. Exact
+object-start pointers relocate; interior/unknown pointers refuse. Raw numeric
+payloads, including pointer-shaped float words and NaNs, remain bits. Owner
+symbol mappings may change addresses, but cannot split aliases or merge distinct
+symbols. The owner still supplies an exclusively owned destination region and
+valid symbol objects; moving GC and concurrent/shared memory are excluded.
+
+The test creates 21 objects in one Worker, changes a cons CAR through a hand-built
+Wasm store, captures the resulting 272 target bytes, terminates that Worker, and
+restores in another Worker at 0x80000000. Actual Wasm loads check literal expected
+words, sharing, cycles, distinct equal strings, a cold pool, preserved primitive
+payloads and rebased external symbols. No original recipe enters the second
+Worker. Twenty malformed-input cases preserve every destination byte; capture
+extent and shared-memory refusals also execute. Five implementation mutants reject
+missing heap/root relocation, treating a raw float as a root, premature writes and
+skipped digest validation. `snapshot-verification.json` pins sources, schema,
+compiled probe and toolchain. The prior encoder/linker verification stays separate.
+
+Development failures are retained in `development/snapshot-r2` and `snapshot-r3`.
+The first used payload offset 120 instead of 124 in the expected mutant diagnostic;
+the mutant was already detected. The second exposed an aliased before-image in
+the refusal oracle: `Buffer.from(memory.buffer)` shared the destination. A copied
+Uint8Array-backed snapshot fixes the oracle, and the early-write mutant now fails
+at the intended assertion. R2's unchanged runtime/test pins resolve to the retained
+R3 test and current runtime files; neither failure changed the runtime behavior.
+
+This completes snapshot transport for the isolated graph representation. It is
+not generated constant-pool execution or S1-LL10-a qualification. Front-end IR
+extraction, function layout/pool loads, generated closure/tail composition and
+native R6/R6a remain before the final LL10 packet and review.

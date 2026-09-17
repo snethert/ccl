@@ -1,0 +1,27 @@
+Traceback (most recent call last):
+  File "/Users/buildsomething/Source/ccl/tests/wasm/stage1/constants/verify_snapshot.py", line 59, in <module>
+    if run.returncode==0 or diagnostic not in log: raise RuntimeError(name+'\n'+log)
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: raw-float-root
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: payload 124
++ actual - expected
+
++ 2147483689
+- 4137
+
+    at file:///private/var/folders/nx/drkw27_12d3c830w306nl_5m0000gp/T/ccl-pool-snapshot-n_qc5ou_/test_snapshot.mjs:23:10
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 2147483689,
+  expected: 4137,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v25.6.1
+

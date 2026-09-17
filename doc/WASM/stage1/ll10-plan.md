@@ -117,3 +117,11 @@ materialize at different wasm32 bases with separate pointer/root fixups and fixe
 external owner symbols. Six test groups and six semantic mutants pass. No Worker
 execution or materialized-target serialization is claimed yet; those and the
 compiler integration remain open. Shared source and the LL10 criterion are unchanged.
+
+Materialized-memory snapshot transport now restores the isolated graph in a fresh
+Node Worker at 0x80000000. A hand-built Wasm mutation before capture survives the
+round-trip; twenty malformed-input controls preserve destination memory and five
+implementation mutants are rejected. This is supporting transport evidence, not
+compiler-generated constants. The remaining implementation is front-end IR
+extraction, function layout and pool loads, then generated composition and R6/R6a
+qualification. Shared source, accepted records and LL10 NOT_RUN remain unchanged.

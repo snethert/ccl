@@ -1,0 +1,75 @@
+{
+  "status": "PASS",
+  "worker_round_trip": true,
+  "source_mutation_observed": 36,
+  "restored_base": 2147483648,
+  "bytes": 272,
+  "objects": 21,
+  "controls": [
+    "digest",
+    "layout",
+    "interior-pointer",
+    "unknown-root",
+    "wrong-tag",
+    "duplicate-id",
+    "omit-cold",
+    "extra-bytes",
+    "header-count",
+    "unaligned",
+    "capacity",
+    "unknown-symbol",
+    "symbol-overlap",
+    "canonical-overlap",
+    "source-overflow",
+    "missing-field",
+    "bad-hex",
+    "root-not-word",
+    "alias-split",
+    "alias-merge"
+  ],
+  "refusal_preserves_memory": true,
+  "mutants": [
+    {
+      "case": "lost-relocation",
+      "result": "REJECTED"
+    },
+    {
+      "case": "lost-root-relocation",
+      "result": "REJECTED"
+    },
+    {
+      "case": "raw-float-root",
+      "result": "REJECTED"
+    },
+    {
+      "case": "early-write",
+      "result": "REJECTED"
+    },
+    {
+      "case": "skip-digest",
+      "result": "REJECTED"
+    }
+  ],
+  "probe_wasm_sha256": "98d1ebf468b3535375951d63b63d7cc5c38b5fdf4f834b28d4b2ee20b0eeff02",
+  "scope": "Isolated constant snapshot transport with hand-built loads; not compiler-generated LL10 qualification.",
+  "source_pins": {
+    "encode.py": "7009534724b4ba357f3b5242edfacd1d31e339e19c3a7fa208612ebe8d72b02c",
+    "pool.py": "cffacf30a20e34c41fe481bbe9bf38aef9aba9bd84daa018085b2d9043052946",
+    "test_pool.py": "61438c2f8115e7b375f65e05ee12ab987aa7a5529f7c979341ba513077763f9a",
+    "snapshot.mjs": "153f83d6b03f79a4ab182532c3d6448cfb7cd25713b5dd01ece3d8df80acf997",
+    "snapshot-worker.mjs": "33f6f2ee19de4aad8e4461eb8cf736655d52d6e104f10d82e1ff706b622cac8d",
+    "test_snapshot.mjs": "ced29099413af3137883eef4ce754387d90999506b7d128c2f0d8af1ad7856bb",
+    "verify_snapshot.py": "f87f96c1e8dff4afe2798aea49361dd6a1caa75f1465576d3fe27fe66fddd7e5"
+  },
+  "layout_sha256": "216237406b2907e5e1791746bb5677ad78f1d8a09b0988577abd6441e50a8daa",
+  "toolchain": {
+    "node": {
+      "version": "v25.6.1",
+      "sha256": "017a599a3f5c1777cefc32360b42805c2fd6f25013423b0c57fb6138ce490bb4"
+    },
+    "wat2wasm": {
+      "version": "1.0.39",
+      "sha256": "1f6ec9bc16a530c5d83e6cdd0e9aceb27384ac1d9ca86ba6a8e3981e76e21d7d"
+    }
+  }
+}
