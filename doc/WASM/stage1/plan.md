@@ -47,7 +47,7 @@ follow-up adds inline small results and retires roots before destructive deliver
 R2 is now accepted and integrated after Claude’s eighty-first audit, under the
 [new integration record](integration-b-mv-storage.json). The [explicit condition/handler proposal](b-conditions.md) now executes U1’s handler macros and SIGNAL/ERROR over supplied condition proxies. The R2 correction closes the user-CASE scope leak. The [result-scratch proposal](b-result-scratch.md) narrows inherited storage with an independently checked per-callee four-word proof, while preserving dynamic delivery. General first-value/discard propagation remains open for unknown or large-result paths; it must preserve internal multiple-value consumers and nonlocal transfers. Both units are accepted and integrated under [the integration record](integration-b-result-scratch.json). The [combined LL05 qualification](ll05.md) now executes both call-protocol and
 stub/tail slots, including implicit arity/designator signalling before unwind.
-Both are accepted after Claude’s eighty-fourth audit under [the LL05 acceptance](acceptance-ll05.json); exact reviewed integration follows. **Only S1-LL10-a constants remain
+Both are accepted after Claude’s eighty-fourth audit under [the LL05 acceptance](acceptance-ll05.json); [the exact reviewed implementation is integrated](integration-ll05.json). **Only S1-LL10-a constants remain
 unexecuted in 1B.** The agreed [constant-pool implementation plan](ll10-plan.md) is saved for later, using shared pools; no constants implementation is claimed. Production CLOS condition construction, other implicit errors,
 binding-vector growth, debugger and collector integration remain later subgates.
 

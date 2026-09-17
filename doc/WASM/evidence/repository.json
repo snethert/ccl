@@ -11,7 +11,7 @@
   "verification": "Scoped acceptance: unchanged producer verified selected evidence; production gate and composition comparison pass. New catalog files hashed, all previous catalog rows preserved. Reviewed native execution reused; no new native run.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: seven accepted, 24 missing, zero unreviewed. Both LL05 slots accepted after Claude audit 84. Constants plan saved for later.",
+  "scope": "Stage 0: 48 accepted. Stage 1: seven accepted, 24 missing, zero unreviewed. Both LL05 slots accepted after Claude audit 84 and their exact reviewed backend integrated. Constants plan saved for later.",
   "last_scoped_addition": {
     "directory": "2026-09-17-stage1-ll05-acceptance-r1",
     "files": 2790,

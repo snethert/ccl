@@ -501,6 +501,32 @@
   (if (b-special-p var) (b-wat "(i32.store ~a ~a)" (b-bound-address var) value) (b-bind-value var value)))
 (defun b-stage-read (var)
   (if (b-special-p var) (b-wat "(i32.load ~a)" (b-bound-address var)) (b-read-variable var)))
+(defun b-keyword-scan (required opt keys)
+  ;; Validate and stage before publishing parameter bindings. A handler for
+  ;; malformed keyword arguments must still see the caller's dynamic values.
+  (when keys
+    (destructuring-bind (allow vars supplied inits names) keys
+      (declare (ignore inits))
+      (with-output-to-string (s)
+        (let* ((start (+ required (length (first opt)))) (cursor (temporary)) (key (temporary))
+               (value (temporary)) (known (temporary)) (unknown (temporary))
+               (allow-seen (temporary)) (allow-value (temporary)))
+          (format s "(local.set ~a (i32.const ~d)) (local.set ~a (i32.const 0)) (local.set ~a (i32.const 0)) (local.set ~a (i32.const 77825))"
+            cursor start unknown allow-seen allow-value)
+          (write-string (b-condition (b-wat "(i32.and (i32.gt_u (local.get $nargs) (i32.const ~d)) (i32.and (i32.sub (local.get $nargs) (i32.const ~d)) (i32.const 1)))" start start) 16) s)
+          (format s "(block $keys_done (loop $keys_scan (br_if $keys_done (i32.ge_u (local.get ~a) (local.get $nargs))) (local.set ~a (i32.load (i32.add (local.get $incoming) (i32.mul (local.get ~a) (i32.const 4))))) (local.set ~a (i32.load offset=4 (i32.add (local.get $incoming) (i32.mul (local.get ~a) (i32.const 4))))) (local.set ~a (i32.const 0))" cursor key cursor value cursor known)
+          (loop for var in vars for sp in supplied for name across names do
+            (format s "(if (i32.eq (local.get ~a) ~a) (then (local.set ~a (i32.const 1)) (if (i32.eq ~a (i32.const 77825)) (then ~a ~a))))"
+              key (b-keyword name) known (b-stage-read sp)
+              (b-stage-value var (b-local value)) (b-stage-value sp "(i32.const 77838)")))
+          ;; :ALLOW-OTHER-KEYS is itself a recognized keyword, with first-wins
+          ;; semantics even when the lambda also binds that named keyword.
+          (format s "(if (i32.eq (local.get ~a) ~a) (then (local.set ~a (i32.const 1)) (if (i32.eqz (local.get ~a)) (then (local.set ~a (i32.const 1)) (local.set ~a (local.get ~a))))))"
+            key (b-keyword :allow-other-keys) known allow-seen allow-seen allow-value value)
+          (format s "(if (i32.eqz (local.get ~a)) (then (local.set ~a (i32.const 1)))) (local.set ~a (i32.add (local.get ~a) (i32.const 2))) (br $keys_scan)))" known unknown cursor cursor)
+          (unless allow
+            (write-string (b-condition (b-wat "(i32.and (local.get ~a) (i32.eq (local.get ~a) (i32.const 77825)))" unknown allow-value) 16) s))
+)))))
 (defun b-binding-code (required opt keys rest)
   ;; Input values remain in the caller's root record. Bound values and the
   ;; supplied-p flags occupy the callee's published frame before defaults call.
@@ -514,36 +540,20 @@
     (when rest (write-string (b-rest-binding rest (+ required (length (first opt)))) s))
     (when keys
       (destructuring-bind (allow vars supplied inits names) keys
-        (let* ((start (+ required (length (first opt)))) (cursor (temporary)) (key (temporary))
-               (value (temporary)) (known (temporary)) (unknown (temporary))
-               (allow-seen (temporary)) (allow-value (temporary)))
-          (format s "(local.set ~a (i32.const ~d)) (local.set ~a (i32.const 0)) (local.set ~a (i32.const 0)) (local.set ~a (i32.const 77825))"
-            cursor start unknown allow-seen allow-value)
-          (write-string (b-condition (b-wat "(i32.and (i32.gt_u (local.get $nargs) (i32.const ~d)) (i32.and (i32.sub (local.get $nargs) (i32.const ~d)) (i32.const 1)))" start start) 1) s)
-          (format s "(block $keys_done (loop $keys_scan (br_if $keys_done (i32.ge_u (local.get ~a) (local.get $nargs))) (local.set ~a (i32.load (i32.add (local.get $incoming) (i32.mul (local.get ~a) (i32.const 4))))) (local.set ~a (i32.load offset=4 (i32.add (local.get $incoming) (i32.mul (local.get ~a) (i32.const 4))))) (local.set ~a (i32.const 0))" cursor key cursor value cursor known)
-          (loop for var in vars for sp in supplied for name across names do
-            (format s "(if (i32.eq (local.get ~a) ~a) (then (local.set ~a (i32.const 1)) (if (i32.eq ~a (i32.const 77825)) (then ~a ~a))))"
-              key (b-keyword name) known (b-stage-read sp)
-              (b-stage-value var (b-local value)) (b-stage-value sp "(i32.const 77838)")))
-          ;; :ALLOW-OTHER-KEYS is itself a recognized keyword, with first-wins
-          ;; semantics even when the lambda also binds that named keyword.
-          (format s "(if (i32.eq (local.get ~a) ~a) (then (local.set ~a (i32.const 1)) (if (i32.eqz (local.get ~a)) (then (local.set ~a (i32.const 1)) (local.set ~a (local.get ~a))))))"
-            key (b-keyword :allow-other-keys) known allow-seen allow-seen allow-value value)
-          (format s "(if (i32.eqz (local.get ~a)) (then (local.set ~a (i32.const 1)))) (local.set ~a (i32.add (local.get ~a) (i32.const 2))) (br $keys_scan)))" known unknown cursor cursor)
-          (unless allow
-            (write-string (b-condition (b-wat "(i32.and (local.get ~a) (i32.eq (local.get ~a) (i32.const 77825)))" unknown allow-value) 1) s))
         (loop for var in vars for sp in supplied for init in inits do
           (format s "(if (i32.eq ~a (i32.const 77825)) (then ~a) (else ~a))"
             (b-stage-read sp) (b-bind-value var (b-scalar init))
             (if (b-special-p var) (b-bind-value var (b-stage-read var)) ""))
-          (when (b-special-p sp) (write-string (b-bind-value sp (b-stage-read sp)) s))))))))
+          (when (b-special-p sp) (write-string (b-bind-value sp (b-stage-read sp)) s)))))))
 (defun b-wat (control &rest args) (apply #'format nil control args))
 (defun b-load (offset) (b-wat "(i32.load offset=~d (global.get $tcr))" offset))
 (defun b-store (offset value) (b-wat "(i32.store offset=~d (global.get $tcr) ~a)" offset value))
 (defun b-local (name) (b-wat "(local.get ~a)" name))
 (defun b-at (base offset) (b-wat "(i32.add ~a (i32.const ~d))" base offset))
 (defun b-condition (test kind)
-  (b-wat "(if ~a (then (throw $call_error (i32.const ~d))))" test kind))
+  (if (member kind '(1 4 16))
+    (b-wat "(if ~a (then (call $implicit_error (i32.const ~d) (local.get $top)) unreachable))" test kind)
+    (b-wat "(if ~a (then (throw $call_error (i32.const ~d))))" test kind)))
 (defun b-reserve (bytes)
   (concatenate 'string
     (b-condition (b-wat "(i64.gt_u (i64.add (i64.extend_i32_u (local.get $top)) (i64.const ~d)) (i64.extend_i32_u ~a))" bytes (b-load wasm32::tcr.vsp_limit)) 2)
@@ -599,7 +609,7 @@
       (write-string (b-store wasm32::tcr.mv_base (b-at (b-local base) out-offset)) s)
       (write-string (b-store wasm32::tcr.mv_owner_top "(local.get $top)") s)
       (write-string (b-store wasm32::tcr.mv_count "(i32.const 0)") s)
-      (format s "(call $resolve (i32.load offset=8 (local.get ~a))) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=8 (local.get ~a) (local.get $dispatch_self))" base base)
+      (format s "(call $resolve_lisp (i32.load offset=8 (local.get ~a)) (local.get $top)) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=8 (local.get ~a) (local.get $dispatch_self))" base base)
       (write-string (if *b-tail-position*
                       (b-tail-transfer (b-at (b-local base) 16) (b-wat "(i32.const ~d)" n))
                       (b-wat "(call_indirect (type $b_entry) (local.get $dispatch_self) (i32.const ~d) (local.get $dispatch_slot))" n)) s)
@@ -651,7 +661,7 @@
       (write-string (b-prepare-context (b-local context) (b-local base) (b-local root) (b-wat "(i32.const ~d)" arg-slots)) s)
       (format s "(i32.store offset=40 (local.get ~a) ~a)" context self)
       (loop for code in codes for i from 0 do (format s "(i32.store offset=~d (local.get ~a) ~a)" (+ 48 (* 4 i)) context code))
-      (format s "(call $resolve (i32.load offset=40 (local.get ~a))) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=40 (local.get ~a) (local.get $dispatch_self))" context context)
+      (format s "(call $resolve_lisp (i32.load offset=40 (local.get ~a)) (local.get $top)) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=40 (local.get ~a) (local.get $dispatch_self))" context context)
       (write-string (b-store wasm32::tcr.vsp (b-at (b-local context) 48)) s)
       (write-string (b-store wasm32::tcr.mv_base (b-local base)) s)
       (write-string (b-store wasm32::tcr.mv_owner_top (b-local context)) s)
@@ -851,12 +861,12 @@
            value (b-scalar (second args)) (b-bind-value (first args) (b-local value)) value)))
       ((ccl::closed-function ccl::simple-function) (b-make-closure (first args)))
       (ccl::immediate
-       (cond ((member (first args) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning)) (b-wat "(i32.const ~d)" (* 4 (b-condition-mask (first args)))))
+       (cond ((member (first args) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning program-error undefined-function)) (b-wat "(i32.const ~d)" (* 4 (b-condition-mask (first args)))))
              ((keywordp (first args)) (b-keyword (first args)))
              ((assoc (first args) *b-call-links*) (b-symbol (first args)))
              ((member (first args) *b-special-names*) (b-special-symbol (first args)))
              (t (emit-expression ir))))
-      (ccl::%function (b-wat "(call $function_value ~a)" (b-symbol (first args))))
+      (ccl::%function (b-wat "(call $function_value_lisp ~a (local.get $top))" (b-symbol (first args))))
       ((ccl::call ccl::values ccl::progn ccl::multiple-value-prog1 ccl::prog1 ccl::if ccl::let ccl::let* ccl::flet ccl::labels ccl::lambda-bind ccl::self-call ccl::lexical-function-call ccl::unwind-protect ccl::catch ccl::throw ccl::progv ccl::local-block ccl::local-return-from ccl::multiple-value-call ccl::multiple-value-bind ccl::%decls-body)
        (b-wat "(block (result i32) ~a (if (result i32) (local.get $count) (then (i32.load (local.get $results))) (else (i32.const ~d))))" (b-multiple ir) wasm32::canonical-nil-value))
       ((car cdr ccl::%car ccl::%cdr)
@@ -905,7 +915,7 @@
         (write-string (b-store wasm32::tcr.root_head (b-at (b-local context) 32)) s)
         (format s "(local.set ~a (i32.add (local.get ~a) (local.get $count))) (local.set ~a (local.get ~a)) (i32.store offset=36 (local.get ~a) (i32.add (i32.const 2) (local.get ~a)))" n n slots next-slots context slots)
         (format s "(call $rv_release (local.get ~a))" scope))
-      (format s "(call $resolve (i32.load offset=40 (local.get ~a))) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=40 (local.get ~a) (local.get $dispatch_self))" context context)
+      (format s "(call $resolve_lisp (i32.load offset=40 (local.get ~a)) (local.get $top)) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=40 (local.get ~a) (local.get $dispatch_self))" context context)
       (if *b-tail-position*
         (progn
           (when (plusp ephemeral-bytes) (write-string (b-reserve ephemeral-bytes) s))
@@ -1039,16 +1049,18 @@
                      (b-local-variables ir)
                      (remove-if-not #'b-captured-p *required-vars*)) :test #'eq))
            (*b-blocks* nil)
+           (implicit-runtime (b-implicit-runtime))
            (arity (length *required-vars*)) (maximum (+ arity (length (first opt))))
            (dynamic-parameters (some #'b-special-p (remove nil (append *required-vars* (first opt) (third opt) (list rest) (second keys) (third keys)))))
-           (code (flet ((emit-body () (concatenate 'string (or (b-environment-entry) "")
-                      (b-initialize-cells)
+           (code (let ((prepare (concatenate 'string (or (b-environment-entry) "") (b-initialize-cells)))
+                       (key-scan (or (b-keyword-scan arity opt keys) "")))
+                   (flet ((emit-body () (concatenate 'string
                       (with-output-to-string (s)
                         (loop for v in *required-vars* for i from 0 when (or (b-special-p v) (member v *b-bound-vars* :test #'eq)) do
                           (write-string (b-bind-value v (b-wat "(i32.load offset=~d (local.get $incoming))" (* 4 i))) s)))
                       (b-binding-code arity opt keys rest)
                       (let ((*b-tail-position* (not dynamic-parameters))) (b-multiple (sixth args))))))
-                   (if dynamic-parameters (b-special-extent #'emit-body) (emit-body))))
+                   (concatenate 'string prepare key-scan (if dynamic-parameters (b-special-extent #'emit-body) (emit-body))))))
            (restore (concatenate 'string (b-store wasm32::tcr.vsp "(local.get $incoming)")
                      (b-store wasm32::tcr.mv_base "(local.get $output)") (b-store wasm32::tcr.mv_owner_top "(local.get $owner)")
                      (b-store wasm32::tcr.root_head "(local.get $root)")))
@@ -1062,6 +1074,7 @@
              (dolist (entry *b-code-imports*)
                (format s "(import \"codes\" ~s (global $code_~a i32))" (second entry) (second entry)))
              (write-string (b-object-runtime) s)
+             (write-string implicit-runtime s)
              (when *b-condition-used* (write-string (b-condition-runtime) s))
              (write-string (b-control-runtime) s)
              (write-string (b-dynamic-runtime) s)
@@ -1195,7 +1208,7 @@
       (write-string (b-store wasm32::tcr.mv_base (b-local output)) s)
       (write-string (b-store wasm32::tcr.mv_owner_top "(local.get $top)") s)
       (write-string (b-store wasm32::tcr.mv_count "(i32.const 0)") s)
-      (format s "(call $resolve (i32.load offset=8 (local.get ~a))) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=8 (local.get ~a) (local.get $dispatch_self))" base base)
+      (format s "(call $resolve_lisp (i32.load offset=8 (local.get ~a)) (local.get $top)) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=8 (local.get ~a) (local.get $dispatch_self))" base base)
       (write-string (if *b-tail-position*
                       (b-tail-transfer (b-at (b-local base) 16) (b-local total) ephemeral-bytes)
                       (b-wat "(call_indirect (type $b_entry) (local.get $dispatch_self) ~a (local.get $dispatch_slot))" (b-local total))) s)
@@ -1254,7 +1267,7 @@
         context evaluated (b-at (b-local context) 48) (b-at (b-local evaluated) 16) (* 4 n) cursor evaluated index n)
       (format s "(block $spread_done (loop $spread_copy (br_if $spread_done (i32.eq (local.get ~a) (i32.const 77825))) (i32.store (i32.add (local.get ~a) (i32.add (i32.const 48) (i32.mul (local.get ~a) (i32.const 4)))) (i32.load offset=3 (local.get ~a))) (local.set ~a (i32.load (i32.sub (local.get ~a) (i32.const 1)))) (local.set ~a (i32.add (local.get ~a) (i32.const 1))) (br $spread_copy)))"
         cursor context index cursor cursor cursor index index)
-      (format s "(i32.store offset=12 (local.get ~a) (local.get ~a)) (i32.store offset=32 (local.get ~a) (local.get ~a)) (call $resolve (i32.load offset=40 (local.get ~a))) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=40 (local.get ~a) (local.get $dispatch_self))" context root context root context context)
+      (format s "(i32.store offset=12 (local.get ~a) (local.get ~a)) (i32.store offset=32 (local.get ~a) (local.get ~a)) (call $resolve_lisp (i32.load offset=40 (local.get ~a)) (local.get $top)) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=40 (local.get ~a) (local.get $dispatch_self))" context root context root context context)
       (write-string (b-store wasm32::tcr.vsp (b-at (b-local context) 48)) s)
       (write-string (b-store wasm32::tcr.mv_base (b-local output)) s)
       (write-string (b-store wasm32::tcr.mv_owner_top (b-local context)) s)
@@ -1437,7 +1450,7 @@
                            (if (and (consp (second xs)) (eq (car (second xs)) 'lambda))
                              (lambda-form (items (second xs)) vars (1+ depth))
                              (unless (or (member (second xs) local-names) (assoc (second xs) *b-call-links*)) (refuse :b-source))))
-                          (quote (unless (and (= n 1) (or (assoc (second xs) *b-call-links*) (member (second xs) *b-special-names*) (member (second xs) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning)))) (refuse :b-source)))
+                          (quote (unless (and (= n 1) (or (assoc (second xs) *b-call-links*) (member (second xs) *b-special-names*) (member (second xs) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning program-error undefined-function)))) (refuse :b-source)))
                           ((flet labels)
                            (unless (= n 2) (refuse :b-source))
                            (let* ((definitions (items (second xs))) (names nil) (old local-names))
@@ -1640,7 +1653,6 @@
     (format s "(local.set $incoming ~a) (local.set $output ~a) (local.set $owner ~a) (local.set $root ~a) (local.set $old_count ~a)"
       (b-load wasm32::tcr.vsp) (b-load wasm32::tcr.mv_base) (b-load wasm32::tcr.mv_owner_top) (b-load wasm32::tcr.root_head) (b-load wasm32::tcr.mv_count))
     (write-string (b-wat "(local.set $old_handler ~a) (local.set $old_unwind ~a)" (b-load wasm32::tcr.handler_checkpoint) (b-load wasm32::tcr.unwind_state)) s)
-    (write-string (b-condition (b-wat "(i32.or (i32.lt_u (local.get $nargs) (i32.const ~d)) (i32.gt_u (local.get $nargs) (i32.const ~d)))" arity (if open #xffffffff maximum)) 1) s)
     (write-string (b-condition "(i32.or (i32.lt_u (local.get $incoming) (i32.load offset=68 (global.get $tcr))) (i32.and (i32.or (local.get $incoming) (i32.or (local.get $output) (local.get $owner))) (i32.const 15)))" 2) s)
     (write-string (b-condition "(i32.or (i32.gt_u (local.get $output) (local.get $owner)) (i32.gt_u (local.get $owner) (i32.load offset=72 (global.get $tcr))))" 2) s)
     (write-string (b-condition "(i64.gt_u (i64.extend_i32_u (i32.load offset=72 (global.get $tcr))) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16)))" 2) s)
@@ -1842,7 +1854,7 @@
 ;;; are separate runtime obligations. HANDLER macros are expanded by U1 itself.
 (defun b-condition-mask (type)
   (or (cdr (assoc type '((condition . 1) (serious-condition . 2) (error . 4)
-                         (simple-condition . 8) (simple-error . 16) (type-error . 32)
+                         (simple-condition . 8) (simple-error . 16) (type-error . 32) (program-error . 512) (undefined-function . 1024)
                          (control-error . 64) (warning . 128) (simple-warning . 256))))
       (refuse :b-condition-type)))
 (defun b-expand-conditions (form)
@@ -1989,7 +2001,7 @@
    (local.set $mask (i32.shr_u (local.get $mask) (i32.const 2)))
    (if (i32.eqz (i32.or (i32.or (i32.eq (local.get $mask) (i32.const 1)) (i32.eq (local.get $mask) (i32.const 9)))
      (i32.or (i32.or (i32.eq (local.get $mask) (i32.const 31)) (i32.eq (local.get $mask) (i32.const 39)))
-             (i32.or (i32.eq (local.get $mask) (i32.const 71)) (i32.eq (local.get $mask) (i32.const 393)))))) (then (throw $call_error (i32.const 5))))
+             (i32.or (i32.eq (local.get $mask) (i32.const 71)) (i32.or (i32.eq (local.get $mask) (i32.const 393)) (i32.or (i32.or (i32.eq (local.get $mask) (i32.const 519)) (i32.eq (local.get $mask) (i32.const 527))) (i32.eq (local.get $mask) (i32.const 1031)))))))) (then (throw $call_error (i32.const 5))))
    (local.get $mask))")
 (defun b-discard-handler (handler condition)
   ;; A handler's values are discarded, so its result count cannot be limited by
@@ -2004,3 +2016,66 @@
       (b-wat "(local.set ~a (local.get $top)) (local.set ~a ~a) (local.set ~a (local.get $dynamic_results)) (local.set ~a (local.get $result_descriptor)) (local.set ~a (local.get $results)) (local.set ~a (local.get $capacity)) (local.set ~a (local.get $result_scope)) ~a ~a (local.set $dynamic_results (i32.const 1)) (local.set $result_descriptor (local.get ~a)) (local.set $result_scope (local.get ~a)) (local.set $results (i32.const 0)) (local.set $capacity (i32.const 0)) (block $handler_done (block $handler_failed (result exnref) (try_table (catch_all_ref $handler_failed) ~a (br $handler_done)) unreachable) (local.set ~a) ~a (throw_ref (local.get ~a))) ~a"
         base root (b-load wasm32::tcr.root_head) mode descriptor results capacity scope
         (b-reserve-runtime "(i64.const 48)") (b-result-descriptor (b-local base) (b-local base)) base base call exception restore exception restore))))
+
+;;; Checked call failures signal before unwinding. The private helper owns its
+;;; scratch and restores the interrupted TCR state on every transfer. Conditions
+;;; are newly allocated D1 vectors under the current condition representation;
+;;; production CLOS layout and condition slot access are separate obligations.
+(defun b-implicit-runtime ()
+  (let ((*temporary-count* 0) (*b-exception-count* 0)
+        (*b-tail-position* nil) (*b-producer-target* nil))
+    (let* ((symbol (b-special-symbol 'ccl::%handlers%))
+           (signal (b-signal (make-b-raw-code :text "(local.get $condition)") nil)))
+      (with-output-to-string (s)
+        (write-string "(func $implicit_error (param $kind i32) (param $top i32)
+          (local $incoming i32) (local $output i32) (local $owner i32) (local $root i32) (local $old_count i32)
+          (local $frame i32) (local $results i32) (local $count i32) (local $value i32)
+          (local $exception exnref) (local $wide i64) (local $capacity i32) (local $result_bytes i32)
+          (local $dispatch_self i32) (local $dispatch_slot i32) (local $dynamic_results i32)
+          (local $result_descriptor i32) (local $result_scope i32) (local $condition i32) (local $heap i32)" s)
+        (dotimes (i *temporary-count*) (format s "(local $tmp~d i32)" i))
+        (dotimes (i *b-exception-count*) (format s "(local $cleanup_exception~d exnref)" i))
+        ;; With no handlers there is no Lisp continuation to invoke. Preserve
+        ;; the structured fatal code rather than pretending a debugger exists.
+        (format s "(if (i32.eq (call $special_read ~a) (i32.const 77825)) (then (throw $call_error (if (result i32) (i32.eq (local.get $kind) (i32.const 14)) (then (i32.const 4)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 16)) (then (i32.const 1)) (else (local.get $kind))))))))" symbol)
+        (format s "(local.set $incoming ~a) (local.set $output ~a) (local.set $owner ~a) (local.set $root ~a) (local.set $old_count ~a)"
+          (b-load wasm32::tcr.vsp) (b-load wasm32::tcr.mv_base) (b-load wasm32::tcr.mv_owner_top) (b-load wasm32::tcr.root_head) (b-load wasm32::tcr.mv_count))
+        (write-string "(local.set $frame (local.get $top)) (local.set $capacity (i32.const 4)) (local.set $result_bytes (i32.const 16)) (local.set $results (i32.add (local.get $frame) (i32.const 8)))" s)
+        (write-string (b-reserve 32) s)
+        (write-string "(block $implicit_failed (result exnref) (try_table (catch_all_ref $implicit_failed)" s)
+        (write-string (b-initialize-roots "(local.get $frame)" 4) s)
+        (write-string "(local.set $dynamic_results (i32.const 1)) (local.set $result_descriptor (local.get $top)) (local.set $result_scope (local.get $frame))" s)
+        (write-string (b-reserve 48) s)
+        (write-string (b-result-descriptor "(local.get $result_descriptor)" "(local.get $frame)") s)
+        (format s "(local.set $heap ~a)" (b-load wasm32::tcr.alloc_pointer))
+        (write-string (b-condition (b-wat "(i32.or (i32.lt_u (local.get $heap) ~a) (i32.and (local.get $heap) (i32.const 7)))" (b-load wasm32::tcr.alloc_base)) 6) s)
+        (write-string (b-condition (b-wat "(i64.gt_u (i64.add (i64.extend_i32_u (local.get $heap)) (i64.const 16)) (i64.extend_i32_u ~a))" (b-load wasm32::tcr.alloc_limit)) 6) s)
+        (write-string (b-condition (b-wat "(i64.gt_u (i64.extend_i32_u ~a) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16)))" (b-load wasm32::tcr.alloc_limit)) 6) s)
+        (write-string "(i32.store (local.get $heap) (i32.const 762))
+          (i32.store offset=4 (local.get $heap) (if (result i32) (i32.eq (local.get $kind) (i32.const 1)) (then (i32.const 2076)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 14)) (then (i32.const 4124)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 16)) (then (i32.const 2108)) (else (i32.const 156))))))))
+          (i32.store offset=8 (local.get $heap) (i32.shl (local.get $kind) (i32.const 2)))
+          (i32.store offset=12 (local.get $heap) (i32.const 77825))
+          (local.set $condition (i32.add (local.get $heap) (i32.const 6)))
+          (i32.store (local.get $results) (local.get $condition))" s)
+        (write-string (b-store wasm32::tcr.alloc_pointer "(i32.add (local.get $heap) (i32.const 16))") s)
+        (write-string signal s)
+        (write-string "(throw $call_error (if (result i32) (i32.eq (local.get $kind) (i32.const 14)) (then (i32.const 4)) (else (if (result i32) (i32.eq (local.get $kind) (i32.const 16)) (then (i32.const 1)) (else (local.get $kind))))))) unreachable) (local.set $exception)" s)
+        (dolist (row (list (cons wasm32::tcr.vsp "$incoming") (cons wasm32::tcr.mv_base "$output") (cons wasm32::tcr.mv_owner_top "$owner") (cons wasm32::tcr.root_head "$root") (cons wasm32::tcr.mv_count "$old_count")))
+          (write-string (b-store (car row) (b-local (cdr row))) s))
+        (write-string "(call $rv_release (local.get $frame)) (throw_ref (local.get $exception)))
+          (func $resolve_lisp (param $node i32) (param $top i32) (result i32 i32) (local $code i32)
+            (block $bad (result i32) (try_table (catch $call_error $bad) (return (call $resolve (local.get $node)))) unreachable)
+            (local.set $code)
+            (if (i32.ne (local.get $code) (i32.const 4)) (then (throw $call_error (local.get $code))))
+            (call $implicit_error (call $designator_error_kind (local.get $node)) (local.get $top)) unreachable)
+          (func $function_value_lisp (param $node i32) (param $top i32) (result i32) (local $code i32)
+            (block $bad (result i32) (try_table (catch $call_error $bad) (return (call $function_value (local.get $node)))) unreachable)
+            (local.set $code)
+            (if (i32.ne (local.get $code) (i32.const 4)) (then (throw $call_error (local.get $code))))
+            (call $implicit_error (i32.const 14) (local.get $top)) unreachable)
+          (func $designator_error_kind (param $node i32) (result i32)
+            (if (i32.eq (local.get $node) (i32.const 77838)) (then (return (i32.const 14))))
+            (if (i32.eq (i32.and (local.get $node) (i32.const 7)) (i32.const 6)) (then
+              (if (i64.le_u (i64.add (i64.extend_i32_u (local.get $node)) (i64.const 26)) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16))) (then
+                (if (i32.eq (i32.load (i32.sub (local.get $node) (i32.const 6))) (i32.const 1850)) (then (return (i32.const 14))))))))
+            (i32.const 4))" s)))))

@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "timestamp": "2026-09-17T20:13:21.690566+00:00",
+  "user_authorization": "save that as a document for later. then process claude's response, accept and integrate.",
+  "review_commit": "e629f7d34c6d69f2f0bc95d9854c9520bbc097b4",
+  "review": "Eighty-fourth audit; no defect in either LL05 assertion or predecessor integration.",
+  "acceptance": "acceptance-ll05.json",
+  "acceptance_sha256": "a27b6286d108467463bd6b444682ea9ab34fb94cd069de9d535243e8b3870793",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "8666f75c42c2d458a0008f13587b0f3368d5196cb3cdab9ae14e82726a547b92",
+      "after": "68a5b4dbb1212bad052230a177f29fe2c64574aad1efffc86c47932379d016a0",
+      "proposal_locator": "2026-09-17-stage1-ll05-r1/source/tests/wasm/stage1/b-call-errors/wasm32-backend.lisp"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "before": "d77975e79bc0995fe32c6453b8db1929de7c36a4a0dfb44adfc5cadb843a0464",
+      "after": "d77975e79bc0995fe32c6453b8db1929de7c36a4a0dfb44adfc5cadb843a0464",
+      "proposal_locator": "2026-09-17-stage1-ll05-r1/source/tests/wasm/stage1/b-call-errors/loader.mjs"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "before": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507",
+      "after": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507",
+      "proposal_locator": "2026-09-17-stage1-ll05-r1/source/tests/wasm/stage1/b-call-errors/binary.mjs"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "before": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097",
+      "after": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097",
+      "proposal_locator": "2026-09-17-stage1-ll05-r1/source/tests/wasm/stage1/b-call-errors/stub.wat"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-17-stage1-ll05-r1/packet.json",
+      "sha256": "752ac8005c9ab4d4bec8285534399d81db7c30daf0aca7c9a79f1945b6736fba"
+    }
+  ],
+  "previous_integration": "integration-b-result-scratch.json",
+  "previous_integration_sha256": "0326c55618ab5688b5acc0b4f63c9f0f42facc9e954dae8acf41a2fcdae7493d",
+  "scope": "Integrate exactly the reviewed, accepted LL05 derivative: implicit call-error conditions and keyword staging. Runtime loader, binary reader and stub remain byte-identical.",
+  "observations": [
+    "APPLY with a non-list or dotted final argument remains a checked type refusal, not Lisp TYPE-ERROR handling; extension belongs to LL19.",
+    "Condition objects are private vectors with class masks, not production CLOS instances.",
+    "With no handler chain, the boundary is a checked exception rather than a debugger.",
+    "Moving GC, host re-entry, cross-Worker publication, other checked-error paths and constants remain later obligations."
+  ],
+  "verification": "Every integrated file equals its retained reviewed source, source pin and packet manifest. The preceding shared bytes match the prior integration record. Reviewed native R6/R6a and corpus replay cover these exact bytes; no new native execution claimed.",
+  "reverse": "Restore each changed file from 7867d132 at its before hash; runtime files are unchanged."
+}
