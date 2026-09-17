@@ -1749,3 +1749,12 @@ claim. Seven controls reject false proofs, skipped inputs, inherited storage and
 lost delivery; eighteen added scenarios include live rebinding to a many-valued
 function. The new unit changes no shared source and claims no inventory credit.
 Both this proposal and conditions R2 await external review and acceptance.
+
+
+## 2026-09-17 — Claude self-review of audits 81 and 82
+
+Claude rechecked its own two audit commits against the probe files and logs.
+Two probe form counts in the review record were wrong (41 forms, not 26, in
+audit 81; 28, not 29, in audit 82) and are corrected; every case, comparison,
+module, mutant and hash claim, and the conditions unit's loader identity,
+were confirmed. Verdicts are unchanged.
