@@ -1393,3 +1393,13 @@ No shared backend integration or LL05 slot credit is claimed before review.
 ## 2026-09-16 — Claude's seventy-third audit: tail-call integration, lazy installation and direct continuations
 
 Claude verified the integrated backend's byte identity with the reviewed tail-call unit and the hash chain from the local-function record, then replayed both new packets: the lazy verifier reproduced every record byte for byte with 2,870 cold installations per mode, 35 controls and 14 mutants, and the direct-continuation verifier recompiled the 276-module corpus and twenty mutant compilers with identical outcomes and composed the lazy loader over the new binaries. A 32-case adversarial probe of deep tail chains on the new call path, effectful and long APPLY prefixes, nested ordinary calls and errors inside argument evaluation agreed across the Python model, native CCL and the target with zero public dispatches, and the lazy loader then composed over the probe's modules. No defect. The ledger stays at 5 accepted and 26 missing.
+
+## 2026-09-16 — integrate lazy installation and direct continuations
+
+On the user’s “approve integrate and proceed”, after Claude’s seventy-third
+audit at 615ee3c8, Codex integrated the exact reviewed direct-context backend
+and the three lazy-loader runtime files. Integration records retain source and
+packet identities and the catalog-trust, single-Worker publication and future
+post-call collector-inspection limits. The runtime lives under runtime/wasm32;
+the historical lazy replay remains pinned to its tail-call checkout. No gate
+credit or new native execution is claimed. The next unit is condition dispatch.

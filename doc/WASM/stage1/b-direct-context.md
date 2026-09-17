@@ -4,8 +4,8 @@ The user directed this optimization now: eliminate avoidable argument copying
 and wrapper overhead on compiled-to-compiled calls. The
 [isolated compiler proposal](../../../tests/wasm/stage1/b-direct-context/README.md)
 does both. It preserves B and the public entry while using the existing internal
-body for ordinary compiled calls. The shared backend remains the accepted tail
-unit until external review and acceptance.
+body for ordinary compiled calls. The user approved the unit after Claude’s seventy-third audit; the shared
+backend is byte-identical to the reviewed proposal.
 
 The caller reserves results below a continuation, then evaluates arguments
 directly into that continuation's final root slots. The callee uses those slots
@@ -45,7 +45,7 @@ control, outside the twenty rejections. Actual post-call safepoint inspection
 remains an explicit collector/poll obligation. The correct restoration stores
 remain in the proposal, and no collection is claimed here.
 
-This is auxiliary LL05 work awaiting review, with no inventory slot claimed.
+This is accepted and integrated auxiliary LL05 work, with no inventory slot claimed.
 Production Lisp conditions, dynamic binding/cleanup extent and collection remain
 open. The next implementation work returns to the condition path.
 

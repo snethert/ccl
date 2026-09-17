@@ -33,7 +33,9 @@ no fresh native build or native execution is claimed. The retained verifier
 replays installation, the entire target corpus, malformed-module controls and
 all mutants from committed sources.
 
-This is an auxiliary proposal awaiting Claude's review, with no LL05 slot credit.
+The user approved this auxiliary unit after Claude’s seventy-third audit. Its
+three runtime files are integrated byte-for-byte under `runtime/wasm32`, with
+no LL05 slot credit.
 The loader is synchronous and local to one Node Worker; browser installation
 is not qualified by this packet. Collection, concurrent
 publication, asynchronous fetch, production image loading and profile
@@ -42,3 +44,8 @@ the full Lisp condition path and dynamic cleanup/binding extent remain open.
 The next implementation work is the condition path.
 
 Packet: `ccl-evidence/2026-09-16-stage1-b-lazy-calls-r1`.
+
+Historical replay: this packet’s runner checks the then-current shared tail-call
+backend. Replay it at `6ccdf05d`; the direct-context packet separately qualifies
+the unchanged loader against the newer binaries. Integration does not rewrite
+that historical producer or its retained pins.

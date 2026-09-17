@@ -23,13 +23,13 @@ The accepted and integrated [lexical closure unit](b-closures.md) executes
 escaping shared mutable captures. The accepted and integrated [local-function unit](b-local-calls.md)
 adds FLET/LABELS, lexical recursion, inline lambda calls and literal APPLY.
 The accepted and integrated [proper tail-call unit](b-tail-calls.md) adds bounded Wasm
-tail transfers and stack-temporary literal APPLY callables. The isolated
-[lazy-installation proposal](b-lazy-calls.md) authenticates paired entries against
+tail transfers and stack-temporary literal APPLY callables. The accepted and integrated
+[lazy installer](b-lazy-calls.md) authenticates paired entries against
 a trusted catalog and preserves the generated corpus through first-use loading.
-By the user’s 16 September direction, the isolated [direct-context proposal](b-direct-context.md)
+By the user’s 16 September direction, the accepted and integrated [direct-context unit](b-direct-context.md)
 places compiled-call arguments directly in the continuation and enters the internal
 body, retaining the public wrapper at boundaries. It removes the extra argument
-copy and wrapper without waiting for timing; review precedes integration. Next:
+copy and wrapper. Both units were approved after Claude’s seventy-third audit. Next:
 the Lisp condition path, revisiting tail legality when handlers, cleanup and
 binding extents are admitted. Neither complete LL05 slot is claimed by these units.
 

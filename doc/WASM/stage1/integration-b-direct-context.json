@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-17T00:22:34.256691+00:00",
+  "user_authorization": "approve integrate and proceed",
+  "review_commit": "615ee3c882a618d4cdcf1037a686f999022e9aff",
+  "review": "seventy-third audit; no defect",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "3914b220aa71dc68d14804d8f507eaeae9f767bee8bbb6b71d39eb1f78cb93b9",
+      "after": "0324f31b83d98f36d542250f62c6a7939c928c97a0b5f40b3b26adccb6a294a6",
+      "proposal_locator": "2026-09-16-stage1-b-direct-context-r1/source/tests/wasm/stage1/b-direct-context/wasm32-backend.lisp"
+    }
+  ],
+  "packet_manifest_sha256": "43d527fb343f985ac4506d01d64ce1e2d748e7dc680aab6dd230cb6d886808b8",
+  "scope": "Compiled B calls write arguments directly into their continuation and enter the internal body without a public wrapper. Public boundaries retain B and their wrapper; APPLY retains prefix staging but no second whole-vector copy. 206 source functions, 276 modules, 761 native/model cases, 3044 target comparisons, zero compiled entries through guarded public table slots, 36 long tail chains, 20 rejected compiler mutants and two inherited regression controls. Native R6/R6a and composition with the pending lazy-loader proposal pass. Exploratory unobserved owner-restoration control retained and disclosed. No GC, dynamic extents, production condition path, full LL05 credit or unreviewed shared integration.",
+  "observations": [
+    "The loader authenticates against its trusted owner catalog, not code signing.",
+    "Paired table publication is synchronous within one Worker; cross-Worker publication remains open.",
+    "A post-call MV-owner restoration mutant is unobserved without polls; collector-time inspection remains required."
+  ],
+  "verification": "Integrated files equal the reviewed retained payloads byte for byte. Reviewed R6/R6a and lazy-composition executions cover these bytes; no new native execution.",
+  "reverse": "Restore each prior file at its before hash; remove added files."
+}

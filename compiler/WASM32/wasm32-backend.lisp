@@ -438,6 +438,7 @@
       (b-reserve-runtime (b-wat "(i64.and (i64.add (i64.mul (i64.extend_i32_u ~a) (i64.const 4)) (i64.const 23)) (i64.const -16))" count))
       (b-runtime-roots (b-local base) count) body (b-store wasm32::tcr.root_head (b-local root)) base)))
 (defun b-call (callee argument-list &optional local-self)
+  (unless *b-tail-position* (return-from b-call (b-internal-call callee argument-list local-self)))
   (unless (null (second argument-list)) (refuse :b-arguments))
   (let* ((args (first argument-list)) (n (length args)) (arg-slots (* 4 (ceiling n 4)))
          (base (temporary)) (root (temporary)) (mv (temporary)) (owner (temporary)) (vsp (temporary)) (old-count (temporary))
@@ -474,6 +475,60 @@
       (write-string (b-store wasm32::tcr.mv_count (b-local old-count)) s)
       (write-string (b-store wasm32::tcr.root_head (b-local root)) s)
       (format s "(local.set $top (local.get ~a))" base))))
+
+;;; Compiled ordinary calls own their continuation directly. The result
+;;; reservation precedes it, so a later tail transfer can reuse/resize arguments.
+;;; The caller keeps its restoration state in Wasm locals across the body call.
+(defun b-prepare-context (context output previous-root argument-slots)
+  (with-output-to-string (s)
+    (format s "(i32.store ~a ~a) (i32.store offset=4 ~a ~a) (i32.store offset=8 ~a ~a) (i32.store offset=12 ~a ~a) (i32.store offset=16 ~a ~a) (i32.store offset=24 ~a (i32.const 0))"
+      context (b-load wasm32::tcr.vsp) context output context context
+      context previous-root context (b-load wasm32::tcr.mv_count) context)
+    (write-string (b-runtime-roots (b-at context 32) (b-wat "(i32.add (i32.const 2) ~a)" argument-slots)) s)
+    ;; b-runtime-roots publishes the current chain; an APPLY may retire its
+    ;; evaluation roots once their values are copied, immediately before entry.
+    (format s "(i32.store offset=32 ~a ~a)" context previous-root)))
+(defun b-internal-dispatch (context count)
+  (concatenate 'string
+    (b-condition "(i32.ge_u (local.get $dispatch_slot) (table.size $tail_slots))" 4)
+    (b-condition "(ref.is_null (table.get $tail_slots (local.get $dispatch_slot)))" 4)
+    (b-wat "(call_indirect $tail_slots (type $tail_entry) (local.get $dispatch_self) ~a ~a (local.get $dispatch_slot))" count context)))
+(defun b-internal-call (callee argument-list local-self)
+  (unless (null (second argument-list)) (refuse :b-arguments))
+  (let* ((args (first argument-list)) (n (length args)) (arg-slots (* 4 (ceiling n 4)))
+         (base (temporary)) (context (temporary)) (root (temporary)) (mv (temporary))
+         (owner (temporary)) (vsp (temporary)) (old-count (temporary))
+         (op (and callee (ccl::acode-operator-name (ccl::acode-operator callee))))
+         (name (and (eq op 'ccl::immediate) (first (ccl::acode-operands callee))))
+         (direct (and (symbolp name) (assoc name *b-call-links* :test #'eq)))
+         (self (or local-self (if direct (b-symbol name) (b-scalar callee))))
+         (codes (mapcar #'b-scalar args)))
+    (when (and name (not direct)) (refuse :b-unlinked-function))
+    (with-output-to-string (s)
+      (format s "(local.set ~a (local.get $top)) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a)"
+        base root (b-load wasm32::tcr.root_head) mv (b-load wasm32::tcr.mv_base)
+        owner (b-load wasm32::tcr.mv_owner_top) vsp (b-load wasm32::tcr.vsp) old-count (b-load wasm32::tcr.mv_count))
+      (write-string (b-reserve-runtime (b-wat "(i64.add (i64.const ~d) (i64.extend_i32_u (local.get $result_bytes)))" (+ 48 (* 4 arg-slots)))) s)
+      (format s "(local.set ~a (i32.add (local.get ~a) (local.get $result_bytes)))" context base)
+      (write-string (b-prepare-context (b-local context) (b-local base) (b-local root) (b-wat "(i32.const ~d)" arg-slots)) s)
+      (format s "(i32.store offset=40 (local.get ~a) ~a)" context self)
+      (loop for code in codes for i from 0 do (format s "(i32.store offset=~d (local.get ~a) ~a)" (+ 48 (* 4 i)) context code))
+      (format s "(call $resolve (i32.load offset=40 (local.get ~a))) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=40 (local.get ~a) (local.get $dispatch_self))" context context)
+      (write-string (b-store wasm32::tcr.vsp (b-at (b-local context) 48)) s)
+      (write-string (b-store wasm32::tcr.mv_base (b-local base)) s)
+      (write-string (b-store wasm32::tcr.mv_owner_top (b-local context)) s)
+      (write-string (b-store wasm32::tcr.mv_count "(i32.const 0)") s)
+      (write-string (b-internal-dispatch (b-local context) (b-wat "(i32.const ~d)" n)) s)
+      (write-string "(local.set $count) (local.set $value)" s)
+      (write-string (b-condition "(i32.gt_u (local.get $count) (local.get $capacity))" 3) s)
+      (format s "(memory.copy (local.get $results) (local.get ~a) (i32.mul (local.get $count) (i32.const 4)))" base)
+      (write-string (b-store wasm32::tcr.vsp (b-local vsp)) s)
+      (write-string (b-store wasm32::tcr.mv_base (b-local mv)) s)
+      (write-string (b-store wasm32::tcr.mv_owner_top (b-local owner)) s)
+      (write-string (b-store wasm32::tcr.mv_count (b-local old-count)) s)
+      (write-string (b-store wasm32::tcr.root_head (b-local root)) s)
+      (format s "(local.set $top (local.get ~a))" base))))
+
 (defun b-scalar (ir)
   (let ((*b-tail-position* nil)) (b-scalar-inner ir)))
 (defun b-scalar-inner (ir)
@@ -659,6 +714,7 @@
     (b-condition (b-wat "(i32.ne (i32.and ~a (i32.const ~d)) (i32.const ~d))" node wasm32::fulltagmask wasm32::fulltag-cons) 5)
     (b-condition (b-wat "(i64.gt_u (i64.add (i64.extend_i32_u ~a) (i64.const 7)) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16)))" node) 5) node))
 (defun b-apply (callee argument-list &optional local-self (ephemeral-bytes 0))
+  (unless *b-tail-position* (return-from b-apply (b-internal-apply callee argument-list local-self)))
   (unless (= (length (second argument-list)) 1) (refuse :b-apply-shape))
   (let* ((prefix (first argument-list)) (n (length prefix))
          (evaluated (temporary)) (base (temporary)) (root (temporary))
@@ -711,6 +767,67 @@
       (write-string (if *b-tail-position*
                       (b-tail-transfer (b-at (b-local base) 16) (b-local total) ephemeral-bytes)
                       (b-wat "(call_indirect (type $b_entry) (local.get $dispatch_self) ~a (local.get $dispatch_slot))" (b-local total))) s)
+      (write-string "(local.set $count) (local.set $value)" s)
+      (write-string (b-condition "(i32.gt_u (local.get $count) (local.get $capacity))" 3) s)
+      (format s "(memory.copy (local.get $results) (local.get ~a) (i32.mul (local.get $count) (i32.const 4)))" output)
+      (write-string (b-store wasm32::tcr.vsp (b-local vsp)) s)
+      (write-string (b-store wasm32::tcr.mv_base (b-local mv)) s)
+      (write-string (b-store wasm32::tcr.mv_owner_top (b-local owner)) s)
+      (write-string (b-store wasm32::tcr.mv_count (b-local old-count)) s)
+      (write-string (b-store wasm32::tcr.root_head (b-local root)) s)
+      (format s "(local.set $top (local.get ~a))" evaluated))))
+
+(defun b-internal-apply (callee argument-list local-self)
+  (unless (= (length (second argument-list)) 1) (refuse :b-apply-shape))
+  (let* ((prefix (first argument-list)) (n (length prefix))
+         (evaluated (temporary)) (base (temporary)) (root (temporary))
+         (mv (temporary)) (owner (temporary)) (vsp (temporary)) (old-count (temporary))
+         (cursor (temporary)) (slow (temporary)) (length (temporary)) (total (temporary))
+         (output (temporary)) (context (temporary)) (roots (temporary)) (index (temporary))
+         (op (and callee (ccl::acode-operator-name (ccl::acode-operator callee))))
+         (name (and (eq op 'ccl::immediate) (first (ccl::acode-operands callee))))
+         (direct (and (symbolp name) (assoc name *b-call-links* :test #'eq)))
+         (self (or local-self (if direct (b-symbol name) (b-scalar callee))))
+         (codes (mapcar #'b-scalar prefix)) (tail (b-scalar (first (second argument-list)))))
+    (when (and name (not direct)) (refuse :b-unlinked-function))
+
+    (with-output-to-string (s)
+      (format s "(local.set ~a (local.get $top)) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a)"
+        evaluated root (b-load wasm32::tcr.root_head) mv (b-load wasm32::tcr.mv_base)
+        owner (b-load wasm32::tcr.mv_owner_top) vsp (b-load wasm32::tcr.vsp) old-count (b-load wasm32::tcr.mv_count))
+      (write-string (b-reserve (* 16 (ceiling (+ 16 (* 4 n)) 16))) s)
+      (write-string (b-initialize-roots (b-local evaluated) (+ 2 n)) s)
+      (format s "(i32.store offset=8 (local.get ~a) ~a)" evaluated self)
+      (loop for code in codes for i from 0 do (format s "(i32.store offset=~d (local.get ~a) ~a)" (+ 16 (* 4 i)) evaluated code))
+      (format s "(i32.store offset=12 (local.get ~a) ~a) (local.set ~a (i32.load offset=12 (local.get ~a))) (local.set ~a (local.get ~a)) (local.set ~a (i32.const 0))"
+        evaluated tail cursor evaluated slow cursor length)
+      ;; One cursor advances on every step, the other on alternate steps.
+      ;; Check against the available stack on every step as well as detecting
+      ;; cycles: finite malformed input cannot wrap the count or exhaust JS.
+      (format s "(block $list_done (loop $list_check (br_if $list_done (i32.eq (local.get ~a) (i32.const 77825))) (local.set ~a ~a) (local.set ~a (i32.add (local.get ~a) (i32.const 1)))"
+        cursor cursor (b-checked-cdr (b-local cursor)) length length)
+      (write-string (b-condition (b-wat "(i64.gt_u (i64.add (i64.extend_i32_u (local.get $top)) (i64.mul (i64.add (i64.extend_i32_u (local.get ~a)) (i64.const ~d)) (i64.const 4))) (i64.extend_i32_u ~a))" length n (b-load wasm32::tcr.vsp_limit)) 2) s)
+      (format s "(if (i32.eqz (i32.and (local.get ~a) (i32.const 1))) (then (local.set ~a ~a)))" length slow (b-checked-cdr (b-local slow)))
+      (write-string (b-condition (b-wat "(i32.and (i32.ne (local.get ~a) (i32.const 77825)) (i32.eq (local.get ~a) (local.get ~a)))" cursor cursor slow) 5) s)
+      (write-string "(br $list_check)))" s)
+
+      (format s "(local.set ~a (i32.add (local.get ~a) (i32.const ~d))) (local.set ~a (local.get $top)) (local.set ~a (i32.add (local.get $top) (local.get $result_bytes)))"
+        total length n output context)
+      (write-string (b-reserve-runtime (b-wat "(i64.add (i64.extend_i32_u (local.get $result_bytes)) (i64.add (i64.const 48) (i64.and (i64.add (i64.mul (i64.extend_i32_u (local.get ~a)) (i64.const 4)) (i64.const 15)) (i64.const -16))))" total)) s)
+      (format s "(local.set ~a (i32.div_u (i32.and (i32.add (i32.mul (local.get ~a) (i32.const 4)) (i32.const 15)) (i32.const -16)) (i32.const 4)))" roots total)
+      ;; Keep the evaluation frame linked through the copy. No calls/polls occur
+      ;; until SELF, prefix and spread list values occupy their final root slots.
+      (write-string (b-prepare-context (b-local context) (b-local output) (b-local evaluated) (b-local roots)) s)
+      (format s "(i32.store offset=40 (local.get ~a) (i32.load offset=8 (local.get ~a))) (memory.copy ~a ~a (i32.const ~d)) (local.set ~a (i32.load offset=12 (local.get ~a))) (local.set ~a (i32.const ~d))"
+        context evaluated (b-at (b-local context) 48) (b-at (b-local evaluated) 16) (* 4 n) cursor evaluated index n)
+      (format s "(block $spread_done (loop $spread_copy (br_if $spread_done (i32.eq (local.get ~a) (i32.const 77825))) (i32.store (i32.add (local.get ~a) (i32.add (i32.const 48) (i32.mul (local.get ~a) (i32.const 4)))) (i32.load offset=3 (local.get ~a))) (local.set ~a (i32.load (i32.sub (local.get ~a) (i32.const 1)))) (local.set ~a (i32.add (local.get ~a) (i32.const 1))) (br $spread_copy)))"
+        cursor context index cursor cursor cursor index index)
+      (format s "(i32.store offset=12 (local.get ~a) (local.get ~a)) (i32.store offset=32 (local.get ~a) (local.get ~a)) (call $resolve (i32.load offset=40 (local.get ~a))) (local.set $dispatch_slot) (local.set $dispatch_self) (i32.store offset=40 (local.get ~a) (local.get $dispatch_self))" context root context root context context)
+      (write-string (b-store wasm32::tcr.vsp (b-at (b-local context) 48)) s)
+      (write-string (b-store wasm32::tcr.mv_base (b-local output)) s)
+      (write-string (b-store wasm32::tcr.mv_owner_top (b-local context)) s)
+      (write-string (b-store wasm32::tcr.mv_count "(i32.const 0)") s)
+      (write-string (b-internal-dispatch (b-local context) (b-local total)) s)
       (write-string "(local.set $count) (local.set $value)" s)
       (write-string (b-condition "(i32.gt_u (local.get $count) (local.get $capacity))" 3) s)
       (format s "(memory.copy (local.get $results) (local.get ~a) (i32.mul (local.get $count) (i32.const 4)))" output)

@@ -3939,9 +3939,16 @@
       "sha256": "0234d41eee1939990fca7a6f45bf7c0cf261153195267440d0157347e3e25067",
       "scope": "Single Node Worker lazy installation over unchanged reviewed generated B modules. Private catalog binds code, version, slot, digest, import inventory and paired export roles; actual bytes are validated before instantiation/publication. Catalog 270 modules, 267 installed; 2964 comparisons and 36 chains of 100000 steps reproduce the eager oracle. 35 installation cases and 14 loader/stub mutants pass. Native/compiler R6 evidence reused, no new native execution. No browser qualification, concurrent publication, GC, full Lisp conditions, cleanup/binding extent or complete LL05 credit.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude",
+        "commit": "615ee3c882a618d4cdcf1037a686f999022e9aff",
+        "audit": 73
+      },
+      "project_disposition": "ACCEPTED_AND_INTEGRATED_AT_REVIEWED_SCOPE",
+      "integration_record": "doc/WASM/stage1/integration-b-lazy-calls.json"
     },
     {
       "id": "STAGE1-B-DIRECT-CONTEXT-R1",
@@ -3949,9 +3956,16 @@
       "sha256": "43d527fb343f985ac4506d01d64ce1e2d748e7dc680aab6dd230cb6d886808b8",
       "scope": "Compiled B calls write arguments directly into their continuation and enter the internal body without a public wrapper. Public boundaries retain B and their wrapper; APPLY retains prefix staging but no second whole-vector copy. 206 source functions, 276 modules, 761 native/model cases, 3044 target comparisons, zero compiled entries through guarded public table slots, 36 long tail chains, 20 rejected compiler mutants and two inherited regression controls. Native R6/R6a and composition with the pending lazy-loader proposal pass. Exploratory unobserved owner-restoration control retained and disclosed. No GC, dynamic extents, production condition path, full LL05 credit or unreviewed shared integration.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "REVIEWED_NO_DEFECT_FOUND",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "reviewer": "Claude",
+        "commit": "615ee3c882a618d4cdcf1037a686f999022e9aff",
+        "audit": 73
+      },
+      "project_disposition": "ACCEPTED_AND_INTEGRATED_AT_REVIEWED_SCOPE",
+      "integration_record": "doc/WASM/stage1/integration-b-direct-context.json"
     }
   ]
 }
