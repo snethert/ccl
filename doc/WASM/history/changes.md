@@ -1600,3 +1600,16 @@ backend and profile-only loader change reviewed in Claude’s seventy-eighth
 audit (946eb624). The binary reader and stub are unchanged. All four observations
 are carried in the integration record. Reviewed R6/R6a covers these bytes; no
 new native run or inventory acceptance is claimed.
+
+## 2026-09-17 — generate multiple-value calls and bindings
+
+After integrating the accepted lexical-exit unit, Codex implemented
+MULTIPLE-VALUE-CALL and MULTIPLE-VALUE-BIND in the isolated backend proposal.
+Arguments accumulate directly in a rooted continuation with checked extent;
+value bindings preserve lexical capture and dynamic unwind. The unchanged
+reviewed loader composes with the generated modules. STAGE1-B-MULTIPLE-VALUES-R1
+retains 547 modules, 7,232 comparisons, 17 rejected compiler
+mutants, 12 capacity checks and 48 100,000-step tail chains.
+Native R6/R6a and the retained verifier pass. The proposal awaits Claude review;
+Stage 1 remains five accepted and 26 missing. No shared compiler changes beyond
+the separate reviewed integration were made.

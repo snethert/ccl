@@ -1,0 +1,11 @@
+{
+  "scope": "Multiple-value call and binding derivative of the accepted lexical-exit unit.",
+  "failures": [
+    {
+      "run": "ccl-multiple-run-r1",
+      "reason": "The inclusive missing-value test escaped because its unused result slots began as NIL. Added a prior two-value call so a stale second word must be cleared by missing-value binding. The value-form tail mutant also escaped because no binding value form was a direct function call; added that path with reordered results and a missing third binding. The emitter is unchanged; both original escaped builds and observations are retained."
+    }
+  ],
+  "inherited_regressions": "Normalizer, keyword-token overlap, special-package identity and obsolete registry collision remain executed controls; original development history lives in their predecessor packets.",
+  "native": "Compiler changes are qualified in a disposable pristine U1 copy against the accepted baseline and after complete removal."
+}

@@ -4043,6 +4043,16 @@
         "audit": 78
       },
       "integration": "doc/WASM/stage1/integration-b-block-exits.json"
+    },
+    {
+      "id": "STAGE1-B-MULTIPLE-VALUES-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-b-multiple-values-r1/packet.json",
+      "sha256": "d076dec9129367567e4c2db73f81dc4b80f44630266333046b2f336ca31d3ad5",
+      "scope": "Generated MULTIPLE-VALUE-CALL and MULTIPLE-VALUE-BIND through real CCL IR: 547 modules, 1808 native/model cases and 7232 target comparisons. Direct rooted continuation arguments, lexical captures, missing/excess values, special-binding unwind and true Wasm tail transfer. 12 capacity checks, 17 compiler mutants and four inherited regressions; native R6/R6a, retained replay and unchanged-loader lazy composition pass. No collector, full condition signalling, LL05/LL19 credit or unreviewed integration.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

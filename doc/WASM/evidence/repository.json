@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "d7f0303a38b62f2b02167d2c516ec953135dd683",
+  "commit": "a7629ab6c1701ea1a7b07691c4d8e0a98fbd7b86",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "0499b42037c55cac22ee0377c893c3ed4bc1f150c259bc8a6cfa3f644c242213",
-  "immutable_evidence_files": 194366,
-  "indexed_references_verified": 14945,
-  "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-b-block-exits.json",
-  "source_index_sha256": "3e1d3baf816323078cac7f0edca543ba250269629f73575a69bf9968df9e5ecc",
+  "catalog_sha256": "1b41b583062bb55dc18b92e7652a7c262e42deb618b4961c0b43156b006f4336",
+  "immutable_evidence_files": 198972,
+  "indexed_references_verified": 15282,
+  "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-b-multiple-values.json",
+  "source_index_sha256": "8ebadca33a75de19ed71367258c03ed9f682b203391950f196bf7125709c345f",
   "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Special lambda parameters and PROGV accepted and integrated. Lexical exits and rooted CONS are an auxiliary proposal awaiting external review, without gate credit.",
+  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Lexical exits and rooted CONS accepted and integrated. Multiple-value calls and bindings are an auxiliary proposal awaiting external review, without gate credit.",
   "last_scoped_addition": {
-    "directory": "2026-09-17-stage1-b-block-exits-r1",
-    "files": 4178,
-    "bytes": 192809213
+    "directory": "2026-09-17-stage1-b-multiple-values-r1",
+    "files": 4606,
+    "bytes": 213323576
   }
 }
