@@ -1836,3 +1836,14 @@ review at 7 accepted, 23 missing and 1 unreviewed.
 On the user's “proceed”, Codex addresses the three proposed test improvements. A focused follow-up preserves the reviewed R1 fixture and compiler while deriving retained test overlays: each compiler mutant reaches a mechanism-specific oracle; native CCL and generated code call separately compiled getters to compare shared and distinct literals; restored expectations change the identified native graph object, leaving another CAR-7 cons untouched. Splitting the shared literal and restoring the old blanket rewrite are rejected controls.
 
 The extended corpus passes at all three original placements (91 B modules plus a header probe, 245 native-derived comparisons and nine additional cross-function comparisons), and all four compiler mutants reject at distinct oracles. Fresh replay reproduces 1,150 deterministic files. Original harness-development failures are retained. The unchanged reviewed compiler reuses its native R6/R6a; no rebuild, acceptance, integration or new gate credit is claimed. Stage 1 remains seven accepted, 23 missing and one unreviewed.
+
+
+## 2026-09-17 — eighty-sixth Claude audit: LL10 follow-up reviewed
+
+Claude reviewed `34f1e949` from a detached worktree: the follow-up verifier
+replayed to PASS with 1,150 deterministic files, the four compiler mutants
+now fail at distinct mechanism-specific oracles, cross-function literal
+identity has a native oracle with a rejected split control, and the restore
+expectation changes only the identified cons with the blanket rewrite
+retained as a failing control. No defect; compiler unchanged; acceptance of
+S1-LL10-a remains the user's decision.
