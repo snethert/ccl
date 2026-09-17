@@ -46,10 +46,25 @@ From the repository root:
 python3 tests/wasm/stage1/b-conditions/native.py --evidence ../ccl-evidence --work /tmp/conditions-native-work --output /tmp/conditions-native
 python3 tests/wasm/stage1/registration/qualify.py --output /tmp/conditions-native --inputs ../ccl-evidence/macos-u1-inputs --kernel ../ccl-evidence/2026-09-12-native-census-r7/baseline/build/dx86cl64 --destination /tmp/conditions-qualified
 python3 tests/wasm/stage1/b-conditions/run.py --evidence ../ccl-evidence --native /tmp/conditions-native --qualification /tmp/conditions-qualified --output /tmp/conditions-run
-python3 tests/wasm/stage1/b-conditions/verify.py --evidence ../ccl-evidence --packet ../ccl-evidence/2026-09-17-stage1-b-conditions-r1
+python3 tests/wasm/stage1/b-conditions/verify.py --evidence ../ccl-evidence --packet ../ccl-evidence/2026-09-17-stage1-b-conditions-r2
 ```
 
 Use fresh output paths. The retained packet reuses byte-identical payloads from
 reviewed prerequisite packets through explicit hash references. Its development
 archive preserves original failures. R6/R6a applies and removes the proposal only
 in a disposable pristine U1 copy; no shared source is changed by these commands.
+
+R2 corrects audit 82's source-scope defect. User `CASE`, `LIST`, `POP` and `THE`
+remain refused, including inside handler bodies, clauses and defaults. Their
+macro-generated forms are processed only after user expressions have passed the
+unprivileged walk. Fourteen refusals cover this distinction; three controls
+reproduce the NIL-key wrong answer and reject both an absent form guard and a
+leaked expansion privilege. The earlier packet remains retained.
+
+`result_demand.py` is an operation-count witness, not an optimization or timing
+benchmark. Its six native/target cases show that two one-valued calls under a
+producer use two descriptors and three scope releases while allocating no arena
+blocks. A 130-value call still allocates when used as a scalar operand, a discarded
+form or a cleanup. A bounded-mode mutation fails the scalar case, so simply
+turning inheritance off would be unsound. The next implementation must separate
+result demand from the storage needed by internal multiple-value operations.

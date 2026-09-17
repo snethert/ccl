@@ -1717,3 +1717,19 @@ agreed on all 548 comparisons. One defect: the pre-expander rewrites CASE in
 user source, not only inside the handler expansions, so `(case nil (nil 1)
 (t 2))` returns 1 where native CCL returns 2. Acceptance is the user's
 decision; Claude recommends the fix first. No gate credit.
+
+## 2026-09-17 — scope handler rewrites and measure inherited result storage
+
+On the user's request following Claude's eighty-second audit (2e2ae773), Codex
+corrected the conditions proposal's pre-expander. It processes user expressions
+without expansion privileges before invoking U1's handler macros, so CASE, LIST,
+POP and THE in protected forms, handlers, clauses and defaults remain refused.
+Fourteen new source refusals and three controls cover the original NIL-key wrong
+answer and the nested-privilege escape. The six-scenario result-mode witness
+compares native and generated execution and counts descriptors, allocations and
+release visits in an observation-only derivative; it also rejects disabling
+dynamic mode in a many-valued callee used in scalar position. It changes no
+production result protocol and makes no timing claim. Native R6/R6a, both full
+corpora and their existing mutants pass. R2 is an isolated proposal, not an
+acceptance or integration; R1 remains retained with the reported defect. The
+user then directed committing the completed work and proceeding immediately.

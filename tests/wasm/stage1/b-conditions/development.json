@@ -2,54 +2,11 @@
   "scope": "Original failed development commands and executed sources are retained in development.tar.gz. Successful exploratory builds are superseded by the final run, not failures.",
   "failures": [
     {
-      "attempt": "compile-r1",
-      "reason": "Extra closing parenthesis in new dispatcher source; reader refused."
-    },
-    {
-      "attempt": "compile-r2",
-      "reason": "The new source preprocessing ran before the old validator and raised TYPE-ERROR on a deliberately dotted refusal. Added bounded proper/cyclic source checks and expression-only traversal."
-    },
-    {
-      "attempt": "suite-r1",
-      "reason": "An unbalanced test-source lambda; native reader refused."
-    },
-    {
-      "attempt": "suite-r2",
-      "reason": "The known LIST annotation on U1\u2019s %handlers% read exposed unsupported typed-form IR. Added only that exact wrapper."
-    },
-    {
-      "attempt": "suite-r3",
-      "reason": "U1 POP adds a THE LIST assertion. It is removed only within the generated macro expansion; operations keep explicit runtime checks."
-    },
-    {
-      "attempt": "suite-r4",
-      "reason": "The front end coalesces nested CONS into LIST IR; added rooted list construction."
-    },
-    {
-      "attempt": "suite-r5",
-      "reason": "An outer native HANDLER-CASE caught declining SIGNAL calls, making an incorrect oracle. Replaced it for the condition suite with the native debugger hook, which intercepts ERROR only after signalling has completed."
-    },
-    {
-      "attempt": "suite-r6",
-      "reason": "EQ IR includes a condition-code operand; the first emitter treated :EQ as a value. Corrected using U1\u2019s actual three-operand shape and checked :EQ."
-    },
-    {
-      "attempt": "suite-r7",
-      "reason": "Misparenthesized Lisp string assembly dropped the dispatch body while keeping the fatal fallback. Rewrote assembly with explicit output writes; normal and error cases now execute the dispatcher."
-    },
-    {
-      "attempt": "suite-r9",
-      "reason": "A test reserved 130 words at a boundary requiring 16-byte alignment. Changed reservation to 132 while still returning exactly 130 values."
-    },
-    {
-      "attempt": "controls-r1",
-      "reason": "Multiprocessing spawn cannot replay a stdin main module on macOS. Added a real CLI entry point."
-    },
-    {
-      "attempt": "controls-r2",
-      "reason": "Leaving the cluster visible loops at a declining handler rather than making an assertion. Retained the timeout, added the current-case progress report, and classified this one omission as a bounded progress rejection."
+      "attempt": "ccl-conditions-r2-demand-first",
+      "reason": "The exploratory scalar-mode-off mutant changed local mode while its descriptor capacity was zero, so it refused the first one-valued case before the intended many-valued case. Retained the attempt. The final counterexample changes only d_many entry mode in a labelled WAT derivative, keeping the caller and other modules unchanged."
     }
   ],
   "native": "Fresh native R6/R6a applies and removes this exact backend proposal in a pristine disposable U1 copy; shared checkout contains only accepted R2 storage.",
-  "retention": "Only unchanged bytes from reviewed prerequisite packs may be referenced by content hash; original failing artifacts remain retained."
+  "retention": "Only unchanged bytes from reviewed prerequisite packs may be referenced by content hash; original failing artifacts remain retained.",
+  "prior_failures": "The original conditions failures remain in immutable STAGE1-B-CONDITIONS-R1; this R2 does not duplicate that archive."
 }

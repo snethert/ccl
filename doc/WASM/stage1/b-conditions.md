@@ -45,8 +45,27 @@ slots, implicit checked-error conversion, restarts, debugger entry and moving
 collection remain open. An unhandled explicit ERROR is checked refusal 15 at the
 debugger boundary. Resource and collector limits inherited from R2 still apply.
 
-Packet: `ccl-evidence/2026-09-17-stage1-b-conditions-r1`. Original failed attempts
+Packet: `ccl-evidence/2026-09-17-stage1-b-conditions-r2`. Original failed attempts
 are retained, including the incorrect initial native oracle and dropped dispatch
 body. The verifier rebuilds both corpora and all mutants, replays native
 qualification, and compares cold installation. Byte-identical prerequisite
 payloads are referenced rather than copied again. No timing claim is made.
+
+R2 fixes the source-scope defect from Claude's eighty-second audit. The pre-expander
+processes user expressions without macro privileges before expanding a handler.
+This includes handler functions, protected forms, clauses, nested handlers and
+`:NO-ERROR` defaults. Only generated scaffolding may use the private CASE/LIST/POP
+rewrites. Fourteen added refusal cases pass; controls reproduce the reviewed
+NIL-key counterexample and reject both missing guards and inherited privileges.
+R1 remains retained with its defect; R2 awaits external review.
+
+The result-mode investigation executes six focused scenarios against native CCL
+and unchanged target code, then counts operations in a labelled observation
+variant. Two nested scalar calls under a producer allocate no arena blocks but
+create two callee descriptors and execute three releases. Returning 130 values
+into a scalar operand, discarded form or cleanup still allocates one block and
+performs two release visits. A callee forced to bounded mode refuses the valid
+scalar case. This is avoidable storage work, but removing it requires separating
+a call's result demand from any internal operation that consumes all values.
+The investigation changes no production mode propagation and makes no timing
+claim. Result-demand handling is the next proposal before further condition work.

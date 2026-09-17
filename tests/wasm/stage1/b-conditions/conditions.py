@@ -41,6 +41,26 @@ SOURCES['h_noerror_many']='(lambda (x) (handler-case (values '+ ' '.join(['x']*1
 TYPES={'condition':1,'serious-condition':2,'error':4,'simple-condition':8,'simple-error':16,'type-error':32,'control-error':64,'warning':128,'simple-warning':256}
 for kind in TYPES:SOURCES['h_match_'+kind]='(lambda (x) (handler-case (error x) ('+kind+' () 1) (condition () 0)))'
 REFUSALS=[('unknown-type',"(lambda (x) (handler-case (signal x) (stream-error () 1)))"),('compound-type',"(lambda (x) (handler-bind (((or error warning) (lambda (c) c))) (signal x)))"),('condition-constructor',"(lambda () (make-condition 'simple-error))"),('message-string','(lambda () (error "message"))'),('format-arguments','(lambda (x) (error x 1))'),('restart-case','(lambda (x) (restart-case (error x) (continue () 7)))')]
+# These are source syntax, never privileged macro scaffolding. Include nested
+# handler bodies and lambda-list defaults: an EXPANDING flag alone is inadequate.
+SCOPE_REFUSALS = [
+ ('user-case-nil', '(lambda (x) (case x (nil 1) (t 2)))'),
+ ('user-case-integer', '(lambda (x) (case x (1 3) (t 2)))'),
+ ('user-list', '(lambda (x) (list x))'),
+ ('user-pop', '(lambda (x) (pop x))'),
+ ('handler-protected-case', '(lambda (x) (handler-case (case x (nil 1) (t 2)) (condition () 0)))'),
+ ('handler-clause-case', '(lambda (x) (handler-case (error x) (condition (c) (case c (nil 1) (t 2)))))'),
+ ('handler-bind-body-case', '(lambda (x) (handler-bind ((condition (lambda (c) c))) (case x (nil 1) (t 2))))'),
+ ('handler-function-case', '(lambda (x) (handler-bind ((condition (lambda (c) (case c (nil 1) (t 2))))) (signal x)))'),
+ ('handler-no-error-case', '(lambda (x) (handler-case x (condition () 0) (:no-error (v) (case v (nil 1) (t 2)))))'),
+ ('handler-nested-case', '(lambda (x) (handler-case (handler-case x (condition () 0) (:no-error (v) (case v (nil 1) (t 2)))) (condition () 3)))'),
+ ('handler-default-case', '(lambda (x) (handler-case x (condition () 0) (:no-error (&optional (v (case x (nil 1) (t 2)))) v)))'),
+ ('handler-clause-list', '(lambda (x) (handler-case (error x) (condition (c) (list c))))'),
+ ('handler-clause-pop', '(lambda (x) (handler-case (error x) (condition (c) (pop x))))'),
+ ('handler-clause-the', '(lambda (x) (handler-case x (condition () 0) (:no-error (v) (the list v))))'),
+]
+REFUSALS += SCOPE_REFUSALS
+
 def modules():return [{'name':n,'source':s} for n,s in SOURCES.items()]
 def cases():
  out=[]

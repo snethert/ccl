@@ -4088,6 +4088,18 @@
       "sha256": "d9fcbd1e7ce214ab5101065a923a88db157ba4f886bde3019bc4ab8ed66802ef",
       "scope": "Generated explicit SIGNAL/ERROR and U1 handler macros: 62 new modules, 848 native comparisons, 10 rejected dispatcher mutants and 28 malformed-proxy refusals. Six owner-supplied condition proxies, nine class queries; production class construction, implicit error conversion, debugger, restarts and GC remain open. All 587 inherited modules remain byte-identical; 7332 inherited comparisons and 19 inherited mutants pass. Native R6/R6a, retained replay and cold installation pass. Auxiliary proposal only, no acceptance, integration or inventory credit.",
       "execution_status": "PASS",
+      "review_disposition": "REVIEWED_DEFECT_FOUND",
+      "currency": "SUPERSEDED",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "superseded_by": "STAGE1-B-CONDITIONS-R2",
+      "review_note": "Claude audit 82, commit 2e2ae773: user CASE was rewritten with incorrect NIL-key semantics. R1 bytes remain retained."
+    },
+    {
+      "id": "STAGE1-B-CONDITIONS-R2",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-b-conditions-r2/packet.json",
+      "sha256": "c031bf926ee3cf0a41408558297bd620d0727c78a01ae0ae797a034a2be09831",
+      "scope": "R2 scopes private CASE/LIST/POP rewrites to generated handler scaffolding after unprivileged user-expression traversal: 14 source refusals, three scope controls including the NIL-key wrong answer, and a six-case native result-mode cost witness. Production mode propagation remains unchanged. Generated explicit SIGNAL/ERROR and U1 handler macros: 62 new modules, 848 native comparisons, 10 rejected dispatcher mutants and 28 malformed-proxy refusals. Six owner-supplied condition proxies, nine class queries; production class construction, implicit error conversion, debugger, restarts and GC remain open. All 587 inherited modules remain byte-identical; 7332 inherited comparisons and 19 inherited mutants pass. Native R6/R6a, retained replay and cold installation pass. Auxiliary proposal only, no acceptance, integration or inventory credit.",
+      "execution_status": "PASS",
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE"

@@ -21,5 +21,7 @@
     "Handler state is a reserved owner-installed special-symbol binding, not an adopted production condition registry",
     "No new inventory credit; integration requires external review and user acceptance"
   ],
-  "verification": "Native comparisons, independently literal expected effects, eager and cold installation, root/control/binding inspections, 10 dispatcher mutants, 19 inherited compiler mutants and R6/R6a. Cluster-visible omission is rejected by a 10-second progress deadline at its retained case."
+  "verification": "Native comparisons, independently literal expected effects, eager and cold installation, root/control/binding inspections, 10 dispatcher mutants, 19 inherited compiler mutants and R6/R6a. Cluster-visible omission is rejected by a 10-second progress deadline at its retained case. R2 adds 14 source-boundary refusals, three source controls and 24 result-mode probe comparisons.",
+  "source_boundary": "CASE, LIST, POP and THE scaffolding are accepted only from U1 handler expansion. User handler expressions, clauses and lambda-list defaults are processed without expansion privilege before the native macro runs. Fourteen source refusals and three controls cover the scope boundary, including the concrete NIL-key miscompilation.",
+  "result_mode": "Unchanged in R2. A six-case native/target operation-count probe distinguishes no arena allocation from descriptor and release overhead, and rejects disabling dynamic mode for a 130-value callee used in scalar position. General result-demand propagation is the next implementation work; no timing claim."
 }

@@ -54,6 +54,11 @@ def verify(packet,evidence):
     require(p.read_bytes()==(temp/'condition-controls'/name/p.name).read_bytes(),'CONDITION_MUTANT_BYTES '+name+'/'+p.name)
   from condition_lazy import run as condition_lazy
   require(condition_lazy(temp/'conditions/compiled',temp/'conditions/execution.json',temp/'condition-lazy')==read(retained/'condition-lazy/summary.json'),'CONDITION_LAZY')
+  from source_scope import run as source_scope
+  require(source_scope(evidence,temp/'source-scope')==read(retained/'source-scope/controls.json'),'SOURCE_SCOPE_REPLAY')
+  from result_demand import run as result_demand
+  require(result_demand(evidence,temp/'result-demand')==read(retained/'result-demand/summary.json'),'RESULT_DEMAND_REPLAY')
+  require(read(temp/'result-demand/observed.json')==read(retained/'result-demand/observed.json'),'RESULT_DEMAND_EVENTS')
   from copy_cost import run as copy_cost
   require(copy_cost(temp/'positive',temp/'copy-cost')==read(retained/'copy-cost/summary.json'),'COPY_COST')
   from lazy_composition import run as lazy_composition

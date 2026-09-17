@@ -5,7 +5,7 @@ from pathlib import Path
 from support import HERE,ROOT,REG,read,save,sha,require
 
 def manifest(out):
- save(out/'packet.json',{'id':'STAGE1-B-CONDITIONS-R1','scope':'Generated explicit conditions and U1 handler macros over owner-supplied condition proxies; auxiliary execution, no LL05/LL19 gate credit, not integrated.','files':[{'path':str(p.relative_to(out)),'sha256':sha(p),'bytes':p.stat().st_size} for p in sorted(out.rglob('*')) if p.is_file() and p.name!='packet.json']})
+ save(out/'packet.json',{'id':'STAGE1-B-CONDITIONS-R2','scope':'Generated explicit conditions and U1 handler macros over owner-supplied condition proxies; auxiliary execution, no LL05/LL19 gate credit, not integrated.','files':[{'path':str(p.relative_to(out)),'sha256':sha(p),'bytes':p.stat().st_size} for p in sorted(out.rglob('*')) if p.is_file() and p.name!='packet.json']})
 def retain(evidence,run,native,qualification,out,development):
  require(not out.exists(),'NO_OVERWRITE');require(read(run/'summary.json')['status']=='PASS','COMPLETE');out.mkdir(parents=True)
  for p in run.iterdir():
@@ -47,8 +47,9 @@ def retain(evidence,run,native,qualification,out,development):
  save(out/'toolchain.json',tools);save(out/'scope.json',read(HERE/'scope.json'))
  # Reuse byte-identical reviewed payloads, especially the inherited corpus.
  # Source snapshots remain local so pins can be checked before hydration.
- predecessor='2026-09-17-stage1-b-mv-storage-r2'
- known={row['sha256']:predecessor+'/'+row['path'] for row in read(evidence/predecessor/'packet.json')['files']}
+ known={}
+ for predecessor in ('2026-09-17-stage1-b-mv-storage-r2','2026-09-17-stage1-b-conditions-r1'):
+  known.update({row['sha256']:predecessor+'/'+row['path'] for row in read(evidence/predecessor/'packet.json')['files']})
  for p in sorted(out.rglob('*')):
   if not p.is_file():continue
   rel=str(p.relative_to(out))

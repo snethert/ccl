@@ -1881,13 +1881,33 @@
                     (dolist (clause (if (eq (car x) 'handler-bind) (second x) (cddr x)))
                       (unless (and (listp clause) (consp clause)) (refuse :b-handler-clause))
                       (unless (eq (car clause) :no-error) (b-condition-mask (car clause))))
-                    (let ((expanding t)) (declare (special expanding)) (walk (macroexpand-1 x))))
+                    ;; Process user expressions with expansion privileges off,
+                    ;; BEFORE the macro can embed them in generated scaffolding.
+                    ;; A dynamic EXPANDING flag alone would admit user CASE in
+                    ;; a handler body or a :NO-ERROR/default expression.
+                    (let* ((input
+                            (let ((expanding nil))
+                              (declare (special expanding))
+                              (if (eq (car x) 'handler-bind)
+                                `(handler-bind
+                                   ,(mapcar (lambda (clause)
+                                              (unless (= (length clause) 2) (refuse :b-handler-clause))
+                                              (list (first clause) (walk (second clause)))) (second x))
+                                   ,@(mapcar #'walk (cddr x)))
+                                `(handler-case ,(walk (second x))
+                                   ,@(mapcar (lambda (clause)
+                                               `(,(first clause) ,(lambda-list (second clause))
+                                                 ,@(mapcar #'walk (cddr clause)))) (cddr x))))))
+                           (expanding t))
+                      (declare (special expanding))
+                      (walk (macroexpand-1 input))))
                    (the (unless (and expanding (eq (second x) 'list) (= (length x) 3)) (refuse :b-condition-assertion)) (walk (third x)))
                    (declare
                     `(declare ,@(remove-if (lambda (d) (eq (car d) 'dynamic-extent)) (cdr x))))
-                   (list (reduce (lambda (a b) `(cons ,(walk a) ,b)) (cdr x) :from-end t :initial-value nil))
-                   (pop (walk (macroexpand-1 x)))
+                   (list (unless expanding (refuse :b-condition-generated-form)) (reduce (lambda (a b) `(cons ,(walk a) ,b)) (cdr x) :from-end t :initial-value nil))
+                   (pop (unless expanding (refuse :b-condition-generated-form)) (walk (macroexpand-1 x)))
                    (case
+                    (unless expanding (refuse :b-condition-generated-form))
                     (let ((v (gensym "CONDITION-CASE")))
                       `(let ((,v ,(walk (second x))))
                          ,(reduce (lambda (clause rest)
