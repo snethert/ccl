@@ -1694,3 +1694,7 @@ producers, tail-position calls in direct callees and direct delivery over the
 callee's frame) agreed on all 268 comparisons, with 27 further cases agreeing
 under an arena limit equal to its base. No defect; no gate credit; renewed
 acceptance and integration remain the user's decision.
+
+## 2026-09-17 — accept and integrate corrected MVC storage R2
+
+On “accept, integrate and proceed,” Codex integrated the exact STAGE1-B-MV-STORAGE-R2 payloads reviewed without defect in Claude’s eighty-first audit (e3c2073b). The new integration record preserves the historical withdrawal, links the retained manifest and records every before/after hash. Reviewed R6/R6a and replay cover these bytes. Inline descriptors, inherited dynamic mode, arena costs and collector obligations remain disclosed. Stage 1 stays at five accepted and 26 missing; conditions and handlers are next.

@@ -50,3 +50,5 @@ but arena allocation is now the overflow path. Arena exhaustion remains a checke
 refusal. The collector obligations are unchanged.
 
 Packet: `ccl-evidence/2026-09-17-stage1-b-mv-storage-r2`.
+
+Renewed acceptance and exact-byte integration are recorded in [the R2 integration record](integration-b-mv-storage.json), following Claude’s eighty-first audit and the user’s “accept, integrate and proceed.” The original withdrawal and all observations remain retained. No inventory slot is accepted by this auxiliary integration.

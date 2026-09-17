@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-17T15:48:18.397505+00:00",
+  "user_authorization": "accept, integrate and proceed",
+  "review_commit": "e3c2073be4c419326dc0d351f407c31f8721b909",
+  "review": "eighty-first audit; no defect",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "6bd1a7a82f9753e8edaffa5d0a2183fece328f747f33ca034603dd39ff396e8c",
+      "after": "d083b75afc02b84c6ac5bc8c42a0e22d0e214afaddbbe8e37e0ed04baf7899fa",
+      "proposal_locator": "2026-09-17-stage1-b-mv-storage-r2/source/tests/wasm/stage1/b-mv-storage/wasm32-backend.lisp"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "before": "0536a62d1e0b717c1c461a869f42ccc7e855b97f4cc45a9509f2493763479eeb",
+      "after": "d77975e79bc0995fe32c6453b8db1929de7c36a4a0dfb44adfc5cadb843a0464",
+      "proposal_locator": "2026-09-17-stage1-b-mv-storage-r2/source/tests/wasm/stage1/b-mv-storage/loader.mjs"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "before": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507",
+      "after": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507",
+      "proposal_locator": "2026-09-17-stage1-b-mv-storage-r2/source/tests/wasm/stage1/b-mv-storage/binary.mjs"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "before": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097",
+      "after": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097",
+      "proposal_locator": "2026-09-17-stage1-b-mv-storage-r2/source/tests/wasm/stage1/b-mv-storage/stub.wat"
+    }
+  ],
+  "packet_manifest_sha256": "b5860535c753a2975ecc680583668a16c4bcceea528bab5f53b6d1c334bcf559",
+  "scope": "Renewed acceptance of corrected generated multiple-value calls and bindings, storage R2. The original acceptance remains withdrawn historically. No LL05/LL19 slot acceptance.",
+  "observations": [
+    "The handoff observer covers 130-value direct deliveries; inline direct delivery cannot overlap the callee root record but has no such observer case.",
+    "Dynamic result mode is inherited by calls under a producer.",
+    "Indirect descriptors, stack-resident callables and exception roots remain collector obligations.",
+    "Inline words add 16 bytes per descriptor; control records are 96 bytes and retirement copies at most four words. Overflow arena allocation and release scan live blocks. No timing claim."
+  ],
+  "verification": "Exact retained payloads checked against the reviewed packet. Reviewed R6/R6a and independent replay cover these bytes; no new native execution.",
+  "reverse": "Restore each file at its before hash."
+}
