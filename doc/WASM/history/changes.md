@@ -1538,3 +1538,17 @@ verifier pass. No shared compiler changed beyond the separately committed,
 reviewed integration. The proposal awaits Claude review; Stage 1 remains
 five accepted and 26 missing. Symbol installation, binding-vector growth,
 condition signalling and collector integration remain explicit obligations.
+
+## 2026-09-17 — seventy-seventh Claude audit
+
+Claude reviewed the special-binding integration (`ea3bb436`) and the
+special-parameter and PROGV proposal (`213d3e48`). The integrated backend is
+byte-identical to the reviewed unit with an unbroken hash chain. The verifier
+replayed to PASS (native R6/R6a, 443 modules, 21 compiler mutants, three
+regressions, lazy composition), and a 31-case adversarial probe of keyword
+staging order, special rest and supplied-p parameters, 40-level recursion
+through special parameters, and PROGV with duplicates, mutated symbol lists,
+missing and malformed values agreed on all 124 comparisons. The probe exposed
+a fixture ceiling: the harness's unread per-case registry at address 512
+overlaps the code registry above 447 modules; Claude relocated it in a scratch
+copy for the replay. No defect; no gate credit; integration is the user's decision.
