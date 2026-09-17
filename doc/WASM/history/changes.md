@@ -1758,3 +1758,14 @@ Two probe form counts in the review record were wrong (41 forms, not 26, in
 audit 81; 28, not 29, in audit 82) and are corrected; every case, comparison,
 module, mutant and hash claim, and the conditions unit's loader identity,
 were confirmed. Verdicts are unchanged.
+
+
+## 2026-09-17 — eighty-third Claude audit: conditions R2 and result scratch
+
+Claude reviewed `cccd5d89` and `e0ed1978` from a detached worktree. Both
+verifiers replayed to PASS; the CASE scope defect from the eighty-second audit
+is fixed with fourteen refusals and a retained counterexample control; the
+per-callee scratch proof, its witness join and seven controls were confirmed,
+and the three earlier probes (268, 108 and 548 comparisons) agreed unchanged
+against the scratch unit. No defect; acceptance of both units is the user's
+decision; no gate credit.
