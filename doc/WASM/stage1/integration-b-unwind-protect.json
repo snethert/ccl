@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-17T01:08:24.465026+00:00",
+  "user_authorization": "approve, integrate and proceed",
+  "review_commit": "2d70bf6ff462abe5c9d2f7fc56647448b74085ab",
+  "review": "seventy-fourth audit; no defect",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "0324f31b83d98f36d542250f62c6a7939c928c97a0b5f40b3b26adccb6a294a6",
+      "after": "2233a54a8a8143f0aec47d512550fbeae29a7affa3bc4ca46b6a7acbaf72d6b0",
+      "proposal_locator": "2026-09-16-stage1-b-unwind-protect-r1/source/tests/wasm/stage1/b-unwind-protect/wasm32-backend.lisp"
+    }
+  ],
+  "packet_manifest_sha256": "3a88fbf4601b7cc5164dadead85cbdc24714077694b8c8a980c07e98d1eb741c",
+  "scope": "Generated UNWIND-PROTECT at its reviewed bounds; auxiliary scope, no LL05/LL19 slot acceptance.",
+  "observations": [
+    "Checkpoints live in Wasm locals; the TCR handler/control-stack chain remains unpublished.",
+    "Each simultaneous extent reserves retention space proportional to the result budget, bounded by explicit-stack capacity.",
+    "Exception references held across cleanup need collector treatment.",
+    "The cleanup-entry observer specializes one corpus function; it is not a general oracle."
+  ],
+  "verification": "Exact reviewed retained payload; independent reviewed R6/R6a and replays cover these bytes. No new native execution.",
+  "reverse": "Restore the prior direct-continuation payload at the before hash."
+}

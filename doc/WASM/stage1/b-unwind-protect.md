@@ -3,7 +3,8 @@
 The [isolated proposal](../../../tests/wasm/stage1/b-unwind-protect/README.md)
 adds UNWIND-PROTECT through CCL's actual front-end IR. It is the first dynamic
 cleanup extent in generated B code and a prerequisite for Lisp condition
-handling. The shared backend remains the accepted direct-continuation unit.
+handling. The user approved integration after Claude’s seventy-fourth audit. The shared
+backend is byte-identical to the reviewed payload.
 
 Normal results survive cleanup in a runtime-sized tagged root record. On a
 checked exception, each extent restores its own explicit-stack cursor, roots,
@@ -48,7 +49,7 @@ case; the original failure remains retained and the positive cases use up to
 512 words. Capacity is still a checked runtime resource, with no new fixed
 argument or value ceiling.
 
-This is auxiliary execution awaiting Claude's review, with no LL05/LL19 gate
+This is accepted and integrated auxiliary execution, with no LL05/LL19 gate
 credit. Condition objects and signalling, CATCH/THROW, local RETURN-FROM, special
 bindings and TCR handler/control-stack publication remain open. No GC or poll
 is introduced; moving exception payloads and stack-temporary callable roots

@@ -1430,3 +1430,12 @@ hash chain. The cleanup verifier replayed to PASS (native R6/R6a, 307 modules,
 exception replacement, retained values, closures, recursion and a 3,000-step
 chain inside a cleanup agreed on all 184 comparisons. No defect; no gate credit;
 integration of the cleanup unit is the user's decision.
+
+## 2026-09-16 — integrate reviewed generated cleanup
+
+On the user’s “approve, integrate and proceed”, Codex integrated the exact
+UNWIND-PROTECT payload reviewed by Claude in audit 74 (2d70bf6f). The integration
+record preserves the previous backend hash and carries the unpublished TCR
+chain, retention-space, exception-root and specialized-observer observations.
+Reviewed R6/R6a covers these bytes; no new native run or slot credit is claimed.
+The next unit is generated CATCH/THROW and its nonlocal transfer state.

@@ -529,6 +529,41 @@
       (write-string (b-store wasm32::tcr.root_head (b-local root)) s)
       (format s "(local.set $top (local.get ~a))" base))))
 
+(defvar *b-exception-count* 0)
+
+(defun b-unwind-protect (protected cleanup)
+  ;; Reserve the result-retention root before entering the dynamic extent.
+  ;; Calls in either arm are ordinary: pending cleanup forbids tail transfer.
+  (let* ((exception (format nil "$cleanup_exception~d" (prog1 *b-exception-count* (incf *b-exception-count*))))
+         (saved-count (temporary)))
+    (b-retained-frame "(local.get $capacity)"
+      (lambda (retained)
+        (let* ((top (temporary)) (root (temporary)) (vsp (temporary))
+               (mv (temporary)) (owner (temporary)) (count (temporary))
+               (protected-code (let ((*b-tail-position* nil)) (b-multiple protected)))
+               (cleanup-code (let ((*b-tail-position* nil)) (b-multiple cleanup)))
+               (restore (concatenate 'string
+                          (b-wat "(local.set $top (local.get ~a))" top)
+                          (b-store wasm32::tcr.root_head (b-local root))
+                          (b-store wasm32::tcr.vsp (b-local vsp))
+                          (b-store wasm32::tcr.mv_base (b-local mv))
+                          (b-store wasm32::tcr.mv_owner_top (b-local owner))
+                          (b-store wasm32::tcr.mv_count (b-local count)))))
+          (with-output-to-string (out)
+            (format out "(local.set ~a (local.get $top)) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a)"
+              top root (b-load wasm32::tcr.root_head) vsp (b-load wasm32::tcr.vsp)
+              mv (b-load wasm32::tcr.mv_base) owner (b-load wasm32::tcr.mv_owner_top) count (b-load wasm32::tcr.mv_count))
+            ;; Only the protected form is caught here. Cleanup's own exception
+            ;; replaces this one and goes to the next enclosing extent.
+            (format out "(block $protected_normal (block $protected_error (result exnref) (try_table (catch_all_ref $protected_error) ~a (br $protected_normal)) unreachable) (local.set ~a) ~a ~a (throw_ref (local.get ~a)))"
+              protected-code exception restore cleanup-code exception)
+            (format out "(local.set ~a (local.get $count)) (memory.copy ~a (local.get $results) (i32.mul (local.get $count) (i32.const 4)))"
+              saved-count (b-at retained 8))
+            (write-string restore out)
+            (write-string cleanup-code out)
+            (format out "(local.set $count (local.get ~a)) (memory.copy (local.get $results) ~a (i32.mul (local.get $count) (i32.const 4)))"
+              saved-count (b-at retained 8))))))))
+
 (defun b-scalar (ir)
   (let ((*b-tail-position* nil)) (b-scalar-inner ir)))
 (defun b-scalar-inner (ir)
@@ -545,7 +580,7 @@
              ((assoc (first args) *b-call-links*) (b-symbol (first args)))
              (t (emit-expression ir))))
       (ccl::%function (b-wat "(call $function_value ~a)" (b-symbol (first args))))
-      ((ccl::call ccl::values ccl::progn ccl::multiple-value-prog1 ccl::prog1 ccl::if ccl::let ccl::let* ccl::flet ccl::labels ccl::lambda-bind ccl::self-call ccl::lexical-function-call)
+      ((ccl::call ccl::values ccl::progn ccl::multiple-value-prog1 ccl::prog1 ccl::if ccl::let ccl::let* ccl::flet ccl::labels ccl::lambda-bind ccl::self-call ccl::lexical-function-call ccl::unwind-protect)
        (b-wat "(block (result i32) ~a (if (result i32) (local.get $count) (then (i32.load (local.get $results))) (else (i32.const ~d))))" (b-multiple ir) wasm32::canonical-nil-value))
       ((car cdr ccl::%car ccl::%cdr)
        (let* ((p (temporary)) (code (b-scalar (first args))) (offset (if (member op '(car ccl::%car)) wasm32::cons.car wasm32::cons.cdr)))
@@ -558,6 +593,7 @@
 (defun b-multiple (ir)
   (let ((op (ccl::acode-operator-name (ccl::acode-operator ir))) (args (ccl::acode-operands ir)))
     (case op
+      (ccl::unwind-protect (b-unwind-protect (first args) (second args)))
       ((ccl::flet ccl::labels)
        (with-output-to-string (s)
          (loop for v in (first args) for f in (second args) do
@@ -617,7 +653,7 @@
   (let* ((ir (ccl::afunc-acode afunc)) (args (ccl::acode-operands ir)))
     (unless (and (eq (ccl::acode-operator-name (ccl::acode-operator ir)) 'ccl::lambda-list)
                  (not (consp (third args))) (equal (fifth args) '(nil nil))) (refuse :b-lambda))
-    (let* ((*required-vars* (first args)) (*temporary-count* 0) (*b-imports* nil) (*b-keywords* nil) (*b-symbols* nil) (*b-code-imports* nil)
+    (let* ((*required-vars* (first args)) (*temporary-count* 0) (*b-exception-count* 0) (*b-imports* nil) (*b-keywords* nil) (*b-symbols* nil) (*b-code-imports* nil)
            (*b-inherited* (cdr (assoc afunc *b-environments* :test #'eq)))
            (opt (second args)) (keys (fourth args)) (rest (third args))
            (*b-bound-vars* (remove-duplicates
@@ -647,6 +683,7 @@
              (write-string (b-object-runtime) s)
              (write-string "(func $body (export \"tail_entry\") (type $tail_entry) (param $self i32) (param $nargs i32) (param $context i32) (result i32 i32) (local $incoming i32) (local $output i32) (local $owner i32) (local $root i32) (local $old_count i32) (local $frame i32) (local $results i32) (local $top i32) (local $count i32) (local $value i32) (local $exception exnref) (local $wide i64) (local $capacity i32) (local $result_bytes i32) (local $bindings i32) (local $dispatch_self i32) (local $dispatch_slot i32) (local $closure_env i32)" s)
              (dotimes (i *temporary-count*) (format s "(local $tmp~d i32)" i))
+             (dotimes (i *b-exception-count*) (format s "(local $cleanup_exception~d exnref)" i))
              (format s "(local.set $incoming ~a) (local.set $output ~a) (local.set $owner ~a) (local.set $root ~a) (local.set $old_count ~a) (local.set $top (i32.add (local.get $context) (i32.add (i32.const 48) (i32.and (i32.add (i32.mul (local.get $nargs) (i32.const 4)) (i32.const 15)) (i32.const -16))))) (local.set $top (i32.add (local.get $top) (i32.load offset=24 (local.get $context))))"
                (b-load wasm32::tcr.vsp) (b-load wasm32::tcr.mv_base) (b-load wasm32::tcr.mv_owner_top) (b-load wasm32::tcr.root_head) (b-load wasm32::tcr.mv_count))
              (write-string (b-condition (b-wat "(i32.or (i32.lt_u (local.get $nargs) (i32.const ~d)) (i32.gt_u (local.get $nargs) (i32.const ~d)))" arity (if (or keys rest) #xffffffff maximum)) 1) s)
@@ -1023,7 +1060,7 @@
                            (unless (or (and (member head '(car cdr)) (= n 1))
                                        (and (member head '(rplaca rplacd)) (= n 2))
                                        (and (eq head 'if) (member n '(2 3))) (member head '(values progn))
-                                       (and (member head '(prog1 multiple-value-prog1)) (<= 1 n))
+                                       (and (member head '(prog1 multiple-value-prog1 unwind-protect)) (<= 1 n))
                                        (and (eq head 'funcall) (<= 1 n)) (and (eq head 'apply) (<= 2 n))
                                        (member head local-names) (assoc head *b-call-links*)
                                        (and (consp head) (eq (car head) 'lambda))) (refuse :b-source))

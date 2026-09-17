@@ -30,7 +30,7 @@ By the user’s 16 September direction, the accepted and integrated [direct-cont
 places compiled-call arguments directly in the continuation and enters the internal
 body, retaining the public wrapper at boundaries. It removes the extra argument
 copy and wrapper. Both units were approved after Claude’s seventy-third audit. Next:
-the Lisp condition path. The isolated [UNWIND-PROTECT unit](b-unwind-protect.md)
+the Lisp condition path. The accepted and integrated [UNWIND-PROTECT unit](b-unwind-protect.md)
 now supplies cleanup on normal/checked-exception exits and inhibits tail transfer
 while cleanup or retained values are pending. CATCH/THROW and handler/signalling
 work, including control-stack publication and special binding, follow. Neither
