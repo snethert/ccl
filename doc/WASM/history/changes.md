@@ -1704,3 +1704,16 @@ On “accept, integrate and proceed,” Codex integrated the exact STAGE1-B-MV-S
 After integrating accepted MVC storage R2, Codex built the next isolated proposal: explicit SIGNAL/ERROR and U1 HANDLER-BIND/HANDLER-CASE, including :NO-ERROR. The dispatcher masks the active cluster, preserves condition identity and ordered declining handlers, and restores dynamic state through cleanup and nonlocal exits. Handler values use private inline/spill storage independently of the caller's final reservation. Six owner-supplied condition proxies stand for actual native condition objects; this is not a production class layout or debugger implementation.
 
 The new 62-module corpus passes 848 comparisons, 28 damaged-proxy refusals, ten dispatcher mutants and cold installation. The inherited 587 modules are byte-identical to R2; 7,332 comparisons, nineteen compiler mutants, copy/handoff checks and four regressions pass. Native R6/R6a passes both 21,843-test runs and all 164 FASLs match after removal. Original failed experiments are retained, including the initial native oracle that caught declining SIGNALs too early. The packet references unchanged prerequisite bytes instead of copying them. The retained verifier rebuilds both corpora and their mutants. No shared compiler or kernel changes accompany this proposal, and Stage 1 remains five accepted and 26 missing. Production condition construction, implicit checked-error conversion, restarts, debugger entry and collector qualification remain open.
+
+
+## 2026-09-17 — eighty-second Claude audit: R2 integration verified, conditions unit reviewed with one defect
+
+Claude verified `ffbf34d4` byte-identical to the reviewed R2 unit with an
+unbroken record chain, and reviewed `a9f6349b` from a detached worktree: the
+verifier replayed to PASS (587 inherited and 62 condition modules, 848
+condition comparisons, 28 refusals, ten dispatcher mutants, cold
+installation), and a 137-case probe with native-policed literal expectations
+agreed on all 548 comparisons. One defect: the pre-expander rewrites CASE in
+user source, not only inside the handler expansions, so `(case nil (nil 1)
+(t 2))` returns 1 where native CCL returns 2. Acceptance is the user's
+decision; Claude recommends the fix first. No gate credit.
