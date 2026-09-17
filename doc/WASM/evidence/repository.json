@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "8d771abc6fe165cf23adbd29db9c177ad38a9ddf",
+  "commit": "394d8df93c610ee113c35ded9963e31cec085ef0",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "ba979cd384df69637cc6640c442f52068b35a1b4bec49b21f91d2151ca1c87ff",
-  "immutable_evidence_files": 222643,
-  "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-ll10-acceptance.json",
-  "source_index_sha256": "578e802b9a5c5e34efd30169f500764ebbf44e4f1451491bdb35a8123a5c310d",
-  "verification": "Scoped LL10 acceptance: unchanged producer verified original artifacts; production gate passes all eight accepted bindings and reports 23 missing only. Seven prior accepted objects preserved. Exact reviewed compiler and runtime bytes integrated under existing R6/R6a. New catalog files hashed; prior rows preserved.",
+  "catalog_sha256": "5f41f7b8580df75ca7a018390c819adab69756725d20c91ef2c9852df26c6002",
+  "immutable_evidence_files": 222700,
+  "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-b-repeated-keywords.json",
+  "source_index_sha256": "48edc99fa54a7791caaac701091bc95e32cec48ad1b012ec3ada0255ba51ee87",
+  "verification": "Repeated-keyword proposal: clean retained replay matches 3,336 deterministic files and 114 source pins; native R6/R6a, 66 new native comparisons, three compiler mutants and original-validator control, inherited calls/conditions/errors/loader pass. Scoped catalog addition preserves prior rows; prior payload archive not rescanned.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: eight accepted, 23 missing, zero unreviewed. LL10 and its oracle follow-up accepted after Claude audits 85 and 86; exact reviewed compiler and compatible loader integrated. Subgate 1B complete.",
+  "scope": "Stage 0: 48 accepted. Stage 1: eight accepted, 23 missing, zero unreviewed inventory records. Repeated keyword aliases are an executed auxiliary proposal awaiting adversarial review; accepted shared implementation unchanged.",
   "last_scoped_addition": {
-    "directory": "2026-09-17-stage1-ll10-acceptance-r1",
-    "files": 396,
-    "bytes": 56361085
+    "directory": "2026-09-17-stage1-b-repeated-keywords-r1",
+    "files": 57,
+    "bytes": 74343951
   },
-  "prior_indexed_references_verified": 16982
+  "prior_indexed_references_verified": 19055
 }

@@ -1854,3 +1854,26 @@ S1-LL10-a remains the user's decision.
 On the user's “accept and integrate”, Codex records LL10 acceptance against Claude’s eighty-fifth and eighty-sixth audits, including the strengthened mutant, cross-function identity and restoration oracles. The unchanged acceptance producer preserves the original execution record and adds disposition/provenance only; the combined envelope preserves all seven previous accepted objects. The production gate reports eight accepted, 23 missing and zero unreviewed. Quoted keyword owner registration, two validations per literal load, bounded single-owner transport and other declared scope limits remain explicit.
 
 The shared backend and constants-profile loader now equal the retained reviewed bytes; the binary reader and stub are unchanged. The integration record chains to LL05 and binds both reviewed packets. Reviewed native R6/R6a applies to these exact compiler bytes, with no new native execution claimed. Upstream kernel source is untouched. Subgate 1B is accepted and integrated; production image construction, collector and later runtime work remain in their scheduled subgates.
+
+
+## 2026-09-17 — align repeated keyword aliases with native CCL
+
+On the user's direction following the ARM source survey, Codex prepared an
+isolated two-site compiler proposal: allow repeated keyword names (distinct
+variables remain mandatory), and bind only the first formal with that name.
+Later aliases run their defaults with false supplied-p flags. The first actual
+argument still wins. Twenty-two native-derived forms cover call kinds, dependent
+defaults, special bindings, rest/APPLY and repeated :ALLOW-OTHER-KEYS. All 66 new
+comparisons pass at three placements, within 311 constants-corpus comparisons;
+three recompiled compiler mutants and the original validator are rejected.
+The inherited call, condition, error and lazy-loader suites pass, with all 1,178
+positive inherited WAT/Wasm files byte-identical to accepted LL10. The fresh
+registered native build passes 21,843 tests; reversal restores all 164 FASLs;
+R6/R6a qualification passes using the referenced accepted baseline. Packet
+STAGE1-B-REPEATED-KEYWORDS-R1 is NOT_REVIEWED, auxiliary and unintegrated. Stage 1
+remains eight accepted, 23 missing and zero unreviewed inventory records.
+
+The retained verifier recompiled and reran the unit from the final source tree;
+all 3,336 deterministic files matched, with 114 source pins checked. Evidence
+is committed as 394d8df9. The shared compiler, loader, inventory and accepted
+Stage 1 ledger remain unchanged pending adversarial review.
