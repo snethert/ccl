@@ -1580,3 +1580,15 @@ test correction and four unobservable restoration mutations are retained;
 unobservable mutations receive no rejection credit. The proposal awaits Claude
 review. Stage 1 remains five accepted and 26 missing; condition construction,
 signalling, handlers and collector integration remain open.
+
+## 2026-09-17 — seventy-eighth Claude audit
+
+Claude reviewed the PROGV integration (`85ab3617`) and the lexical-exit and
+CONS proposal (`77eb4a51`). The integrated backend is byte-identical to the
+reviewed unit with an unbroken hash chain. The verifier replayed to PASS
+(native R6/R6a, 492 modules, 16 compiler mutants, four regressions including the
+removed registry collision, lazy composition), and a 22-case adversarial probe of
+returns from cleanups, NIL THROW past NIL blocks, closed returns from closures
+forty frames deep and inside cleanups, and CONS ordering and partial allocation
+agreed on all 88 comparisons. No defect; no gate credit; integration is the
+user's decision.
