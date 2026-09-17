@@ -39,9 +39,10 @@ references, SETQ and restoration across those exits. The accepted and integrated
 [special-parameter and PROGV unit](b-dynamic-bindings.md) extends that mechanism
 to lambda lists and runtime symbol lists. The accepted and integrated [lexical-exit unit](b-block-exits.md)
 adds BLOCK/RETURN-FROM and U1’s fresh CONS tags, a prerequisite of the real
-HANDLER-CASE expansion. The accepted and integrated [multiple-value unit](b-multiple-values.md)
+HANDLER-CASE expansion. The reviewed [multiple-value unit](b-multiple-values.md), with acceptance withdrawn,
 supplies MULTIPLE-VALUE-CALL and MULTIPLE-VALUE-BIND for its :NO-ERROR path.
-The next implementation unit is the condition and handler/signalling path;
+The immediate work removes the inherited producer budget, intermediate copy and
+nonescaping literal MVC allocation; conditions and handlers follow that correction;
 binding-vector growth remains required for the complete binding contract. Debugger and
 collector integration of the control records remains explicit. Neither
 complete LL05 slot is claimed by these units.

@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "operation": "WITHDRAW_ACCEPTANCE_AND_REVERSE_INTEGRATION",
+  "timestamp": "2026-09-17T13:31:46.324388+00:00",
+  "user_authorization": "please fix them now. i withdraw my acceptance",
+  "reversed_integration_commit": "2b5459c4b4df610991b4ad6d39d4be8ab94350f2",
+  "integration_record": "doc/WASM/stage1/integration-b-multiple-values.json",
+  "reason": "User requires removal of the inherited MVC producer reservation limit, nonescaping literal MVC heap allocation and the intermediate producer value copy before renewed acceptance.",
+  "verification": "All current bytes match the integration record; all restored bytes match its before hashes. The original review remains valid at its original scope, but acceptance is withdrawn."
+}

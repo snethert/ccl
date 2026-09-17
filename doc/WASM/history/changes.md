@@ -1633,3 +1633,10 @@ backend reviewed in Claude’s seventy-ninth audit (e891e64a). The loader, reade
 and stub are unchanged. All three observations are carried in the integration
 record. Reviewed R6/R6a covers these bytes; no new native execution or inventory
 acceptance is claimed.
+
+## 2026-09-17 — withdraw MVC acceptance and reverse integration
+
+On “please fix them now. i withdraw my acceptance”, Codex restored the exact
+pre-integration backend and runtime bytes. The review is preserved, acceptance
+is withdrawn, and the three MVC costs are now required corrective work before
+renewed review and acceptance. No inventory count changed.
