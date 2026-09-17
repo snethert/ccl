@@ -102,26 +102,18 @@ image loader. The encoder and relocation interface are reusable by the later
 cross-loader. Shared-source integration follows Claude's review and the user's
 acceptance.
 
-## Implementation progress — 17 September 2026
+## Implementation completed — 17 September 2026
 
-The [pointer-free constant encoder](../../../tests/wasm/stage1/constants/README.md)
-is implemented in isolation with independent literal byte checks and five rejected
-semantic mutants. It covers target-width integers, scalar float bits, characters,
-strings and D1 specialized vectors. Shared-pool graphs, compiler integration and
-target round-trip are next; LL10 remains NOT_RUN. This bounded first commit follows
-the user’s request to conserve the remaining weekly token allowance.
+The [qualification fixture](../../../tests/wasm/stage1/constants/README.md) implements
+the plan in a disposable U1 proposal. It executes 87 generated B modules plus one
+raw header probe, 233 native-derived comparisons, restored cold pools in fresh
+Workers below and above 2 GiB, and 100,000-step pool-bearing tail chains. Shared
+pool identity, distinct closure environments, target widths, float bits and symbol
+rebinding survive the round-trip.
 
-The identity graph linker now allocates every declared pool/object before linking,
-preserving sharing, distinct equal objects, cycles and cold pools. Immutable plans
-materialize at different wasm32 bases with separate pointer/root fixups and fixed
-external owner symbols. Six test groups and six semantic mutants pass. No Worker
-execution or materialized-target serialization is claimed yet; those and the
-compiler integration remain open. Shared source and the LL10 criterion are unchanged.
-
-Materialized-memory snapshot transport now restores the isolated graph in a fresh
-Node Worker at 0x80000000. A hand-built Wasm mutation before capture survives the
-round-trip; twenty malformed-input controls preserve destination memory and five
-implementation mutants are rejected. This is supporting transport evidence, not
-compiler-generated constants. The remaining implementation is front-end IR
-extraction, function layout and pool loads, then generated composition and R6/R6a
-qualification. Shared source, accepted records and LL10 NOT_RUN remain unchanged.
+Four compiler mutants, seven materialized-image mutants, supporting encoder/linker
+and snapshot controls, and six shared-transport refusals are exercised. The complete
+inherited B, condition and call-error corpora and lazy loader controls pass with
+independent allocation expectations for the larger objects. Native R6/R6a pass.
+One final packet and replay command cover LL10; independent review and acceptance
+remain before shared integration. No accepted result or criterion is changed.

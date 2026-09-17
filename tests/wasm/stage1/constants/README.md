@@ -1,4 +1,4 @@
-# LL10 constant encoder — first component
+# LL10 constants — isolated implementation
 
 Run from the checkout root:
 
@@ -38,11 +38,9 @@ least-significant-bit-first indexing. The character code domain follows U1's
 `lib/chars.lisp`, including its full range below #x110000.
 
 This is an isolated supporting component, not S1-LL10-a execution or qualification.
-No shared compiler or kernel changed and no native/Wasm comparison is claimed.
-Pool graphs, identity/cycle linking, relocation, IR extraction, generated pool
-loads and target round-trip remain the next parts of the saved LL10 plan. Keep
-this component in that eventual final packet rather than creating a separate
-acceptance or archive for it.
+The encoder alone claims no native/Wasm comparison; later components below add
+linking, transport and generated execution. Shared source remains unchanged. All
+components feed the complete LL10 qualification packet described below.
 
 Development: the first oracle gave a two-element s16 vector sixteen bytes rather
 than eight. Four header bytes plus four payload bytes already satisfy D1 alignment;
@@ -85,8 +83,8 @@ run and all six controls passed without a development failure.
 
 `Pool` is an internal linker product, not an external deserialization boundary.
 Target-memory serialization/restore, ownership validation at installation,
-compiler IR extraction and generated pool loads remain open. The public B ABI
-and all shared compiler/runtime files remain unchanged.
+compiler IR extraction and generated loads are covered by the later checkpoint
+below. The public B ABI and shared compiler/runtime files remain unchanged.
 
 ## Materialized-memory snapshot transport
 
@@ -126,7 +124,70 @@ Uint8Array-backed snapshot fixes the oracle, and the early-write mutant now fail
 at the intended assertion. R2's unchanged runtime/test pins resolve to the retained
 R3 test and current runtime files; neither failure changed the runtime behavior.
 
-This completes snapshot transport for the isolated graph representation. It is
-not generated constant-pool execution or S1-LL10-a qualification. Front-end IR
-extraction, function layout/pool loads, generated closure/tail composition and
-native R6/R6a remain before the final LL10 packet and review.
+The snapshot component above uses hand-built Wasm. It is not itself generated
+constant-pool execution or S1-LL10-a qualification.
+
+
+## Complete S1-LL10-a qualification
+
+`compiler.py` derives the isolated proposal from the pinned, reviewed LL05
+backend. CCL's real front end supplies literal identities; the exporter preserves
+those identities rather than re-reading printed source. Each function has a pool
+shared by its activations. Parent pools retain child pools. The proposed 32-byte
+function object appends the pool pointer at raw offset 24; logical pool slot zero
+is vector offset 4. Generated loads read the current rooted SELF. Closure and
+temporary-callable construction/relocation use the larger object. Constant-free
+calls gain no pool lookup. Shared compiler/runtime source is unchanged.
+
+The generated corpus has 87 B modules and one generated raw header probe. It
+checks all supported scalar/vector families, signed limbs, NaN payloads, signed
+zero, subnormals, infinities, supplementary characters, cycles, sharing, distinct
+equal objects and owner-resolved symbols. The header probe executes the checked
+raw-primitive compiler path on returned target objects. Literal byte oracles and
+native CCL comparisons independently check subtags, counts and payload widths.
+
+There are 233 native-derived comparisons across three Worker executions: the
+origin at 1 MiB, then restored pools at 2 MiB and 0x80000000. The origin leaves the
+cold function unexecuted and mutates a cons through generated code before capture.
+Both fresh Workers receive serialized target bytes, not a builder graph, inspect
+the cold pool before installation and observe the mutation. Restored expectations
+compose native results with the separately tested mutation; the mutation is a
+persistence probe, not a portable claim about destructively modifying CL literals.
+Two closure activations have distinct environments and a shared pool. At every
+placement a 100,000-step literal-APPLY tail chain uses a 2 KiB stack and 48 heap bytes.
+
+The loader uses the new constants profile and rejects the old one. All installation
+remains lazy and free of heap-writing initialization. The owner supplies the trusted
+catalog and symbol registry. Snapshot transport copies an exclusively owned interval
+while its sole Worker is stopped, validates/restores privately, then publishes bytes.
+Six malformed restore cases preserve the entire owned region. This is not concurrent
+snapshot atomicity. Moving GC, full image loading and package construction remain
+later work. Pools have a 16 MiB resource bound; ratios, complex scalars and general
+multidimensional arrays remain unsupported.
+
+Four recompiled compiler mutants and seven target-image mutants fail at named
+oracles. Encoder, graph and standalone snapshot controls are also rerun. The
+inherited 587-module B corpus passes 7,332 comparisons, the 62-module condition
+corpus 848, and the 46-module call-error corpus 288, eagerly and with lazy loading.
+All 36 loader cases and 14 loader mutants pass. The source evaluator counts heap
+closures independently to add eight bytes per allocated function; supplemental
+literal expectations follow their source function counts. A real scope regression
+found here—admitting ERROR format strings along with string constants—is explicitly
+refused, preserving the condition slice's boundary.
+
+Native R6 reuses the accepted pristine baseline, runs a fresh registered rebuild
+and 21,843 tests, checks 162/164 unchanged FASLs with the two existing registration
+explanations, and restores all 164 after removal. R6a and its qualifier pass.
+Original failures are retained as described in `development.json`.
+
+From the repository root, replay the retained final packet into a fresh directory:
+
+```sh
+python3 tests/wasm/stage1/constants/verify_ll10.py --evidence ../ccl-evidence --packet ../ccl-evidence/2026-09-17-stage1-ll10-r1 --output /tmp/ll10-review
+```
+
+To produce independently, run `native.py --evidence ../ccl-evidence --work DIR
+--output DIR`, then `run.py --evidence ../ccl-evidence --native NATIVE_DIR --output
+RUN_DIR`. All outputs must be new directories. `retain.py` creates the single final
+packet, `verify_ll10.py` recompiles/replays it, and `publish.py` publishes only after
+that replay. Execution is complete; review, acceptance and integration are separate.

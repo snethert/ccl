@@ -1,0 +1,13 @@
+{
+  "scope": "Original failed inputs are retained; no failed execution contributes qualification credit.",
+  "earlier_checkpoint": "development-stage1-constants/compiler-r1.tar.gz retains the initial compiler development, native run and failures; it is superseded by the final LL10 packet.",
+  "inherited_r1": "The old heap-constant source refusal became obsolete. It was removed from the inherited refusal population and replaced by positive generated constant cases.",
+  "inherited_r2_r3": "The source allocation oracle initially treated a lexical variable named APPLY as syntax and then missed temporary literal MVC callables. Expression-context traversal fixes both, without changing compiler output.",
+  "inherited_r4_r5": "Two supplemental literal byte expectations were stale: the three-function local group adds 24 bytes, and one escaping closure adds eight. The source forms and failing observations are retained.",
+  "inherited_r6": "A real scope regression: admitting string constants admitted ERROR format strings, which this condition implementation does not implement. Pass 2 now explicitly refuses an immediate format string. The inherited message-string refusal and the full condition corpus pass.",
+  "wide_r4": "The first 2 KiB tail probe reserved 256 result words, leaving insufficient stack. Its complete harness and failure are retained. The final probe explicitly reserves four words for its single result and completes 100,000 steps, at each memory placement.",
+  "image_controls_r1": "The tagged-string mutant failed the native oracle, but the tail assertion lacked its case label. The labelled oracle now identifies the first failing case.",
+  "compiler_controls_wide_r1": "All four damaged emitters failed; the final mutant reached a checked pool refusal rather than the initially expected object decoder. Its expected diagnostic was corrected to the retained first failure.",
+  "native": "Accepted pristine baseline reused. Both the checkpoint and final registered/removal rebuilds are retained; only the final compiler hash is used for LL10 qualification. Each fresh registered suite passes 21,843 tests and removal restores all 164 FASLs.",
+  "publication_r1": "The complete producer and replay passed, but the combined production gate rejected the first envelope because its required options role was absent. The original publisher, rejected envelope and packet manifest are retained. The publisher now declares the executed configuration as options and checks the undamaged report before omission controls. All execution sources are unchanged; the final producer and replay were rerun."
+}

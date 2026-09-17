@@ -1807,3 +1807,12 @@ The agreed LL10 implementation plan is saved in stage1/ll10-plan.md for later, i
 ## 2026-09-17 — integrate the reviewed and accepted LL05 backend
 
 Under the same explicit user direction, Codex integrates the cumulative backend from STAGE1-LL05-R1, byte-identical to the source Claude reviewed in audit 84. The integration record chains to the accepted result-scratch record and the LL05 acceptance decision. Loader, binary reader and stub already match the reviewed packet and remain unchanged. Exact before/after and packet checks pass; the reviewed native R6/R6a runs cover these bytes, with no new native execution claimed. Stage 1 remains seven accepted, 24 missing and zero unreviewed; constants remain planned, unimplemented.
+
+
+## 2026-09-17 — complete S1-LL10-a generated constants qualification
+
+Codex completes the constants plan on the user's direction to finish S1-LL10-a. The reversible proposal uses shared target constant pools reached through a tagged field in each function object, including closure and temporary-callable paths. Native-derived golden graphs cover integer limbs, float bits, vector widths, Unicode, shared and distinct identity, cycles and unexecuted functions. Generated header reads independently check the D1 layout; fresh Workers restore the image at new bases, including 2 GiB, after the originating Worker terminates. No shared backend or upstream kernel source is changed.
+
+The final producer and fresh verifier pass: 87 generated B modules plus one header probe, 233 comparisons, four recompiled compiler mutants, seven corrupted-image controls and twelve production artifact-role omission controls. The inherited call, condition and error corpora and all 36 installation cases / 14 loader mutants pass. Fresh native R6/R6a retains 162 of 164 unchanged registered FASLs and restores all 164, with 21,843 tests passing. The verifier reproduces 2,340 deterministic files. Original development failures, including the rejected first publication missing the options role, are retained; the earlier compiler checkpoint is superseded.
+
+Only LL10's runner/status entry changes; transitive contract hashes also change for five still-missing dependents, with every accepted binding preserved. The actual gate reads seven accepted, 23 missing and one unreviewed. LL10 awaits Claude review and project acceptance; the explicit single-owner, bounded-pool and no-moving-GC scope remains.

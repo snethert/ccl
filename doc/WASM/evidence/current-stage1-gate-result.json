@@ -1,12 +1,12 @@
 {
   "version": 2,
-  "assessment": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "assessment": "EXECUTED_PENDING_REVIEW",
   "date": "2026-09-17",
-  "basis": "User accepted both LL05 slots after Claude audit 84. Five earlier accepted result objects and all execution evidence preserved.",
+  "basis": "Complete LL10 producer and independent replay passed. Prior seven accepted objects preserved; LL10 awaits Claude review and project acceptance.",
   "result": {
     "status": "BLOCKED",
     "reasons": [
-      "missing S1-LL10-a [generated]",
+      "unreviewed S1-LL10-a [generated]",
       "missing S1-LL19-a [generated]",
       "missing S1-LL17-a [generated]",
       "missing S1-LL18-a [small-heap]",
@@ -34,19 +34,23 @@
   },
   "inventory": {
     "locator": "stage1/inventory.json",
-    "sha256": "cdb6742256b80cfcf32f4b79b9314039169e41098bc3cd70e8004be1f43e5b99"
+    "sha256": "c5117815631ad2f334a811c9ebb42f393a3743bfda7b7ee2cbbbf9f2b1e00bb8"
   },
   "active_results": [
     {
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-through-ll05-accepted-results.json",
       "sha256": "b7a9e8ac5d8918d145e016fedb97a40df0baed40f41adbfdecc34d06d6258110"
+    },
+    {
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-ll10-r1-results.json",
+      "sha256": "e450087e0cf1262bf92c2473f0aaca6c251689c88151eff9b4fa378f2448d4dd"
     }
   ],
-  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-through-ll05-accepted-results.json",
+  "combined_results": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-through-ll10-results.json",
   "counts": {
     "accepted": 7,
-    "missing": 24,
-    "unreviewed": 0,
+    "missing": 23,
+    "unreviewed": 1,
     "required": 31
   }
 }

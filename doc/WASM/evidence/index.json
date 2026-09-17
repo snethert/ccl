@@ -1922,6 +1922,26 @@
         "disposition": "REVIEWED_NO_DEFECT_FOUND",
         "scope": "Eighty-fourth audit: both LL05 assertions qualified; malformed APPLY lists, private condition representation and no-handler debugger boundary carried as exclusions."
       }
+    },
+    {
+      "id": "STAGE1-LL10-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-ll10-r1-results.json",
+      "sha256": "e450087e0cf1262bf92c2473f0aaca6c251689c88151eff9b4fa378f2448d4dd",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "c5117815631ad2f334a811c9ebb42f393a3743bfda7b7ee2cbbbf9f2b1e00bb8",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-ll10-r1/packet.json",
+      "packet_sha256": "bcd0790c020039b26e671fff54ee41d15f704067cd044f8af722ff1a0a3dd151",
+      "scope": "Generated shared constant pools, target header probes, identity and cycles, native-derived comparisons, persistence across fresh Workers and high-address relocation; native R6/R6a and complete replay. Single owner; 16 MiB bounded pools; moving GC and cross-Worker snapshot atomicity excluded.",
+      "test_ids": [
+        "S1-LL10-a"
+      ]
     }
   ],
   "auxiliary_records": [

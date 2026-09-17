@@ -1,0 +1,26 @@
+{
+  "schema": "wasm32-function-constants",
+  "version": 1,
+  "status": "PROPOSED_ISOLATED",
+  "subtag": 42,
+  "elements": 6,
+  "bytes": 32,
+  "header": 1578,
+  "fields": {
+    "code_id": 4,
+    "environment": 8,
+    "code_version": 12,
+    "arity_metadata": 16,
+    "debug_metadata": 20,
+    "constant_pool": 24
+  },
+  "padding_offset": 28,
+  "pool": {
+    "empty": 77825,
+    "subtag": 250,
+    "first_element_offset": 4,
+    "element_bytes": 4
+  },
+  "representation": "All six payload words are tagged roots; pool is NIL or a D1 simple-vector. No code bytes in the object.",
+  "loader_profile": "wasm32-shared-B-exnref-tail-mv-storage-constants-v1"
+}

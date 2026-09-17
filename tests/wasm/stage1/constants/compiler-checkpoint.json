@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "status": "SUPERSEDED_DEVELOPMENT_CHECKPOINT",
+  "review_disposition": "NOT_REVIEWED",
+  "inventory_result": null,
+  "archive": "development-stage1-constants/compiler-r1.tar.gz",
+  "archive_sha256": "0eddbb29ac86e5e4fab6c34a18f41f366e85025fcd1900b81bc21b905c2481d5",
+  "archive_bytes": 10714441,
+  "summary": {
+    "backend_sha256": "4fe42e00a7809fd25cbde5ce7bae1a5ebe258645275f5b20a03ef60b4f96d3cb",
+    "modules": 22,
+    "native_comparisons": 15,
+    "native_report_sha256": "e2795be9b76b36bab83870b2d84036e907573efc7955f7a4bdc3d64d5e831b3d",
+    "qualification": {
+      "architecture_operator_tables": 5,
+      "native": {
+        "architecture_module_lists": 5,
+        "generated_calls": 24,
+        "native_tests_per_build": 21843,
+        "operator_slots": 279,
+        "reserved_slots": 12,
+        "restored_fasls": 164,
+        "target_module_profiles": 17,
+        "unchanged_fasls": 162,
+        "unsupported_refusals": 10
+      },
+      "negative_controls": 17,
+      "replayed_generated_modules": 9,
+      "status": "PASS"
+    },
+    "r6": {
+      "changed_code_functions": [
+        "CCL::TARGET-XLOAD-MODULES",
+        "CCL::TARGET-COMPILER-MODULES"
+      ],
+      "existing_architectures": 5,
+      "existing_target_module_profiles": 17,
+      "identical": 162,
+      "intentional_artifacts": [
+        "bin/compile-ccl.dx64fsl",
+        "bin/systems.dx64fsl"
+      ],
+      "native_fasls": 164,
+      "native_state_equal": true,
+      "unchanged_code_functions": 35
+    },
+    "recompiled_mutants_rejected": 4,
+    "restored_fasls": 164,
+    "scope": "Isolated compiler constants unit; no LL10 result or integration",
+    "source_refusals": 6,
+    "status": "PASS"
+  },
+  "source_pins_sha256": "9bcf986e52575b7fce5dd6fe7e5ccacecfb20231dfef4b574f871a5a7a19ee5b",
+  "scope": "Isolated pool compiler proposal in disposable U1. This checkpoint will be an input to the single final LL10 pack; it executes no gate slot. Baseline native tests reused; registered build/tests and restored build newly executed.",
+  "superseded_by": "STAGE1-LL10-R1",
+  "remaining_at_checkpoint": [
+    "Inherited full B corpus and independent allocation expectations",
+    "Broader generated constant and long tail/cold-function cases",
+    "Loader admission of the new function layout/profile",
+    "Generated snapshot round-trip with fresh Worker at high addresses",
+    "Full LL10 qualification and independent review"
+  ]
+}
