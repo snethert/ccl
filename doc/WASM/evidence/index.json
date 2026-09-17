@@ -4103,6 +4103,16 @@
       "review_disposition": "NOT_REVIEWED",
       "currency": "CURRENT",
       "availability": "EXTERNAL_LOCAL_STORE"
+    },
+    {
+      "id": "STAGE1-B-RESULT-SCRATCH-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-b-result-scratch-r1/packet.json",
+      "sha256": "c3c97864960f95cac137536db2b9296c5e0e255f6f703ae58082a1d748616eba",
+      "scope": "Per-callee four-word result-scratch proof: 112 of 587 inherited modules use bounded scratch when dynamically entered. Caller delivery remains dynamic; no assumptions about live function cells. Independent pre-emitter IR witness and seven storage controls, 72 added native comparisons, 24 mode-cost comparisons, 848 conditions and 7332 inherited comparisons pass with their mutants, R6/R6a and lazy composition. Two scalar callee descriptors become zero and three releases become one in the focused witness; no timing claim. Unknown/large paths still use dynamic storage. Auxiliary proposal derived from conditions R2; neither is accepted or integrated; no inventory credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

@@ -1,0 +1,14 @@
+{
+  "scope": "Isolated derivative of the corrected, not-yet-integrated conditions proposal. No shared source changed. Original failures are retained below when encountered.",
+  "failures": [
+    {
+      "attempt": "ccl-result-scratch-storage-r1",
+      "reason": "The new rebinding probe exposed that the condition-corpus adapter discarded each case\u2019s binding overrides before native evaluation. Native refused the mismatched arity. Forwarded those overrides unchanged; old cases carry empty overrides and are unaffected."
+    },
+    {
+      "attempt": "ccl-result-scratch-controls-r1",
+      "reason": "The wrong-delivery mutation escaped the initial corpus because direct producer destinations happened to coincide with its bounded return area. The retained scalar-nesting probe now observes the distinct recipient and rejects the omission. No production emitter change was needed."
+    }
+  ],
+  "prerequisites": "Prior development failures remain in their immutable packets."
+}

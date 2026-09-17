@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "f73815b558b88f238c1e652472e9863e3462c90c",
+  "commit": "e045e19c9e38dc88fe0bca2fd35c7a79e2776e26",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "71aa2deeadabc9c6ecb92bb62adb6515fc3b2bd40d090d3c9e855447865921a4",
-  "immutable_evidence_files": 211909,
-  "indexed_references_verified": 16640,
-  "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-b-conditions-r2.json",
-  "source_index_sha256": "a42ebfb64ebea423e486f6c874c94f2bf4467b7d6fb5fc7229bedd1bb5e567ae",
+  "catalog_sha256": "5587ba5d4d73d1f86d3f8ea2f6ba860ba3a9f803bd2e7c5216f1e19ac5cfccf4",
+  "immutable_evidence_files": 213719,
+  "indexed_references_verified": 16982,
+  "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-b-result-scratch-r1.json",
+  "source_index_sha256": "af0f9ad31a9b0031e20d8b16c8873fd153f097d537dcb38dafc226e9064d51d1",
   "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Conditions R2 corrects the reviewed source-boundary defect and retains the result-mode investigation. Isolated proposal; no acceptance or integration.",
+  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Conditions R2 and its per-callee result-scratch derivative are isolated, verified proposals awaiting external review and acceptance; neither is integrated.",
   "last_scoped_addition": {
-    "directory": "2026-09-17-stage1-b-conditions-r2",
-    "files": 380,
-    "bytes": 174753412
+    "directory": "2026-09-17-stage1-b-result-scratch-r1",
+    "files": 1810,
+    "bytes": 229267537
   }
 }

@@ -45,7 +45,7 @@ The [storage correction](b-mv-storage.md) removes the inherited producer budget,
 intermediate large-result copy and nonescaping literal MVC allocation. Its R2
 follow-up adds inline small results and retires roots before destructive delivery.
 R2 is now accepted and integrated after Claude’s eighty-first audit, under the
-[new integration record](integration-b-mv-storage.json). The [explicit condition/handler proposal](b-conditions.md) now executes U1’s handler macros and SIGNAL/ERROR over supplied condition proxies. The R2 correction closes the user-CASE scope leak. Next, narrow inherited dynamic-result storage using explicit result demand or a checked per-callee storage proof; preserve arbitrary values for internal consumers and test rebindings, cleanup, nonlocal exits and zero-arena paths. Production condition construction and implicit checked-error conversion follow;
+[new integration record](integration-b-mv-storage.json). The [explicit condition/handler proposal](b-conditions.md) now executes U1’s handler macros and SIGNAL/ERROR over supplied condition proxies. The R2 correction closes the user-CASE scope leak. The [result-scratch proposal](b-result-scratch.md) narrows inherited storage with an independently checked per-callee four-word proof, while preserving dynamic delivery. General first-value/discard propagation remains open for unknown or large-result paths; it must preserve internal multiple-value consumers and nonlocal transfers. Production condition construction and implicit checked-error conversion follow;
 binding-vector growth remains required for the complete binding contract. Debugger and
 collector integration of the control records remains explicit. Neither
 complete LL05 slot is claimed by these units.

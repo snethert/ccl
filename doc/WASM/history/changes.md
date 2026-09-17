@@ -1733,3 +1733,19 @@ production result protocol and makes no timing claim. Native R6/R6a, both full
 corpora and their existing mutants pass. R2 is an isolated proposal, not an
 acceptance or integration; R1 remains retained with the reported defect. The
 user then directed committing the completed work and proceeding immediately.
+
+## 2026-09-17 — separate result delivery from proven-small callee scratch
+
+Continuing immediately after cccd5d89, Codex added an isolated result-scratch
+proposal over conditions R2. A conservative per-function CCL IR proof includes
+initializers and lambda-list defaults and admits only operations whose scratch
+requirements fit four words. An independent pre-emitter witness checks the
+proof against the actual emitted entry. The 112 qualifying inherited modules
+retain the caller's delivery protocol but omit their own dynamic descriptor and
+arena-scope release. Unknown calls, control transfers and larger intermediate
+values keep the existing dynamic path. The six-case cost witness removes two
+callee descriptors and two releases from nested scalar calls without a timing
+claim. Seven controls reject false proofs, skipped inputs, inherited storage and
+lost delivery; eighteen added scenarios include live rebinding to a many-valued
+function. The new unit changes no shared source and claims no inventory credit.
+Both this proposal and conditions R2 await external review and acceptance.

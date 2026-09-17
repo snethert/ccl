@@ -1,0 +1,27 @@
+{
+  "status": "PROPOSAL_NOT_ACCEPTED_OR_INTEGRATED",
+  "inventory_entries_executed": [],
+  "accepted_slots_unchanged": true,
+  "profile": "wasm32-shared-B-exnref-tail-mv-storage-v2",
+  "changes": [
+    "Per-callee IR proof that every result scratch requirement fits four words, including initializer and default expressions",
+    "Separate inherited delivery mode from local dynamic storage; preserve live function-cell dispatch",
+    "Independent pre-emitter storage witness checked against the emitted entry choice",
+    "Retain dynamic storage for unknown calls, control transfers, multiple-value consumers and larger intermediate results"
+  ],
+  "condition_objects": "Six owner-supplied immutable simple-vector proxies, not CCL CLOS instances: header 762, tagged class-membership mask and identity field. The fixture maps each proxy to an actual native CCL condition. Nine simple class queries are qualified. This private schema is not adopted as the production condition layout. Class construction, user-defined classes, compound types and slots remain open.",
+  "native_oracle": "Unmodified CL forms compiled natively. A fresh empty handler environment lets SIGNAL decline; *DEBUGGER-HOOK* records actual ERROR fallback without entering an interactive debugger. Literal expected values/effects are independent of target masks.",
+  "public_errors": "Uncaught explicit ERROR is checked refusal 15 after all handlers decline. It is not a debugger implementation or automatic conversion of existing checked traps into condition objects.",
+  "allocation": "U1 handler clusters and callable closures use existing checked allocation. Discarded handler results use R2 descriptors (four inline values, arena overflow); arena/resource bounds remain explicit.",
+  "gc": "No collector runs. Condition proxies, handler clusters, descriptors, stack callables and exception payloads remain moving-collector obligations.",
+  "limits": [
+    "Only explicit SIGNAL/ERROR with precreated supported objects, no string/designator construction",
+    "No restarts, debugger entry, implicit type/arity trap signalling, user-defined condition classes, general TYPEP or reflection",
+    "Handler state is a reserved owner-installed special-symbol binding, not an adopted production condition registry",
+    "No new inventory credit; integration requires external review and user acceptance"
+  ],
+  "verification": "Native R6/R6a; inherited and condition corpora and mutants; independent IR storage-bound checks; seven storage controls; eighteen additional native scenarios; before/after result-mode operation counts and a rejected blanket-mode counterexample. Cold installation uses the unchanged loader.",
+  "source_boundary": "The corrected conditions R2 source boundary and its fourteen refusals and three controls are inherited unchanged.",
+  "result_mode": "Per-callee storage proof from CCL IR, independently checked against a pre-emitter operation witness. Unknown calls, control transfers and values counts above four retain dynamic storage. Caller delivery protocol and public B signature remain unchanged.",
+  "prerequisite": "Corrected conditions R2, auxiliary proposal at cccd5d89; neither proposal is integrated. The shared implementation remains the accepted MVC storage R2 unit."
+}
