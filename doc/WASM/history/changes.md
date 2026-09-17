@@ -1681,3 +1681,16 @@ precedes scope release. Zero-arena scalar/recursive/cleanup cases and direct-cop
 root inspections cover the changes, with two new rejected mutants. R1 and its
 review remain retained. Shared source stays at the withdrawal baseline; no
 acceptance, integration, collector qualification or gate credit is claimed.
+
+
+## 2026-09-17 — eighty-first Claude audit: MVC storage correction R2
+
+Claude reviewed `515e85ea` from a detached worktree: the R2 verifier replayed
+to PASS (587 modules, 7,332 comparisons, 19 mutants including the two new
+controls, 56 storage checks, lazy composition), and a 67-case probe (the
+eightieth audit's 29 cases plus 38 aimed at the four-word inline boundary,
+inline-to-arena growth and shrink within one frame, nested calls under direct
+producers, tail-position calls in direct callees and direct delivery over the
+callee's frame) agreed on all 268 comparisons, with 27 further cases agreeing
+under an arena limit equal to its base. No defect; no gate credit; renewed
+acceptance and integration remain the user's decision.
