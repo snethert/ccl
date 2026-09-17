@@ -2,9 +2,8 @@
 
 The [isolated proposal](../../../tests/wasm/stage1/b-conditions/README.md) adds
 `SIGNAL`, `ERROR`, `HANDLER-BIND` and `HANDLER-CASE` with `:NO-ERROR` through U1's
-real macro expansions and compiler IR. It is auxiliary work awaiting external
-review, with no LL05 or LL19 gate credit. The accepted R2 MVC storage backend is
-the shared implementation until this proposal is reviewed and accepted.
+real macro expansions and compiler IR. It is accepted and integrated auxiliary work after Claude audit 83, with no
+LL05 or LL19 gate credit.
 
 The dispatcher searches clusters in order and masks the current cluster before
 invoking a handler. Returning from a handler declines the condition. A signal
@@ -69,3 +68,5 @@ scalar case. This is avoidable storage work, but removing it requires separating
 a call's result demand from any internal operation that consumes all values.
 The investigation changes no production mode propagation and makes no timing
 claim. Result-demand handling is the next proposal before further condition work.
+
+Accepted and integrated after Claude audit 83 under the [integration record](integration-b-result-scratch.json). This supersedes the earlier proposal-only status; no inventory slot is accepted.

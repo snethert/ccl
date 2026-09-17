@@ -1769,3 +1769,7 @@ per-callee scratch proof, its witness join and seven controls were confirmed,
 and the three earlier probes (268, 108 and 548 comparisons) agreed unchanged
 against the scratch unit. No defect; acceptance of both units is the user's
 decision; no gate credit.
+
+## 2026-09-17 — accept and integrate conditions R2 and result scratch
+
+The user authorized acceptance and integration after Claude audit 83 (fe219e35). Codex agreed and integrated the exact reviewed cumulative backend and runtime payloads. The integration record binds both packets, the prior integration and the proof observations. No new native execution or LL05 slot credit is claimed. Next: implicit arity/designator conditions and LL05 qualification.

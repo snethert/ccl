@@ -4086,7 +4086,7 @@
       "id": "STAGE1-B-CONDITIONS-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-b-conditions-r1/packet.json",
       "sha256": "d9fcbd1e7ce214ab5101065a923a88db157ba4f886bde3019bc4ab8ed66802ef",
-      "scope": "Generated explicit SIGNAL/ERROR and U1 handler macros: 62 new modules, 848 native comparisons, 10 rejected dispatcher mutants and 28 malformed-proxy refusals. Six owner-supplied condition proxies, nine class queries; production class construction, implicit error conversion, debugger, restarts and GC remain open. All 587 inherited modules remain byte-identical; 7332 inherited comparisons and 19 inherited mutants pass. Native R6/R6a, retained replay and cold installation pass. Auxiliary proposal only, no acceptance, integration or inventory credit.",
+      "scope": "Generated explicit SIGNAL/ERROR and U1 handler macros: 62 new modules, 848 native comparisons, 10 rejected dispatcher mutants and 28 malformed-proxy refusals. Six owner-supplied condition proxies, nine class queries; production class construction, implicit error conversion, debugger, restarts and GC remain open. All 587 inherited modules remain byte-identical; 7332 inherited comparisons and 19 inherited mutants pass. Native R6/R6a, retained replay and cold installation pass. Accepted and integrated auxiliary unit; no inventory credit.",
       "execution_status": "PASS",
       "review_disposition": "REVIEWED_DEFECT_FOUND",
       "currency": "SUPERSEDED",
@@ -4098,21 +4098,25 @@
       "id": "STAGE1-B-CONDITIONS-R2",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-b-conditions-r2/packet.json",
       "sha256": "c031bf926ee3cf0a41408558297bd620d0727c78a01ae0ae797a034a2be09831",
-      "scope": "R2 scopes private CASE/LIST/POP rewrites to generated handler scaffolding after unprivileged user-expression traversal: 14 source refusals, three scope controls including the NIL-key wrong answer, and a six-case native result-mode cost witness. Production mode propagation remains unchanged. Generated explicit SIGNAL/ERROR and U1 handler macros: 62 new modules, 848 native comparisons, 10 rejected dispatcher mutants and 28 malformed-proxy refusals. Six owner-supplied condition proxies, nine class queries; production class construction, implicit error conversion, debugger, restarts and GC remain open. All 587 inherited modules remain byte-identical; 7332 inherited comparisons and 19 inherited mutants pass. Native R6/R6a, retained replay and cold installation pass. Auxiliary proposal only, no acceptance, integration or inventory credit.",
+      "scope": "R2 scopes private CASE/LIST/POP rewrites to generated handler scaffolding after unprivileged user-expression traversal: 14 source refusals, three scope controls including the NIL-key wrong answer, and a six-case native result-mode cost witness. Production mode propagation remains unchanged. Generated explicit SIGNAL/ERROR and U1 handler macros: 62 new modules, 848 native comparisons, 10 rejected dispatcher mutants and 28 malformed-proxy refusals. Six owner-supplied condition proxies, nine class queries; production class construction, implicit error conversion, debugger, restarts and GC remain open. All 587 inherited modules remain byte-identical; 7332 inherited comparisons and 19 inherited mutants pass. Native R6/R6a, retained replay and cold installation pass. Accepted and integrated auxiliary unit; no inventory credit.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AUXILIARY",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "review_commit": "fe219e354546b05d89d8371f81b499aeb3646f4c",
+      "integration": "doc/WASM/stage1/integration-b-result-scratch.json"
     },
     {
       "id": "STAGE1-B-RESULT-SCRATCH-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-b-result-scratch-r1/packet.json",
       "sha256": "c3c97864960f95cac137536db2b9296c5e0e255f6f703ae58082a1d748616eba",
-      "scope": "Per-callee four-word result-scratch proof: 112 of 587 inherited modules use bounded scratch when dynamically entered. Caller delivery remains dynamic; no assumptions about live function cells. Independent pre-emitter IR witness and seven storage controls, 72 added native comparisons, 24 mode-cost comparisons, 848 conditions and 7332 inherited comparisons pass with their mutants, R6/R6a and lazy composition. Two scalar callee descriptors become zero and three releases become one in the focused witness; no timing claim. Unknown/large paths still use dynamic storage. Auxiliary proposal derived from conditions R2; neither is accepted or integrated; no inventory credit.",
+      "scope": "Per-callee four-word result-scratch proof: 112 of 587 inherited modules use bounded scratch when dynamically entered. Caller delivery remains dynamic; no assumptions about live function cells. Independent pre-emitter IR witness and seven storage controls, 72 added native comparisons, 24 mode-cost comparisons, 848 conditions and 7332 inherited comparisons pass with their mutants, R6/R6a and lazy composition. Two scalar callee descriptors become zero and three releases become one in the focused witness; no timing claim. Unknown/large paths still use dynamic storage. Accepted and integrated auxiliary derivative of conditions R2; no inventory credit.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AUXILIARY",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "review_commit": "fe219e354546b05d89d8371f81b499aeb3646f4c",
+      "integration": "doc/WASM/stage1/integration-b-result-scratch.json"
     }
   ]
 }

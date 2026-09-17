@@ -29,7 +29,7 @@ result-demand protocol covering internal multiple-value consumers and nonlocal
 transfers. Disabling dynamic mode without that distinction is a tested refusal
 of otherwise valid native code.
 
-The proposal derives from [conditions R2](b-conditions.md). Both await external
-review and acceptance; the shared implementation remains accepted MVC storage
-R2. No Stage 1 inventory slot is claimed. The new packet is
+The proposal derives from [conditions R2](b-conditions.md). Both are reviewed, accepted and integrated. No Stage 1 inventory slot is claimed. The new packet is
 `ccl-evidence/2026-09-17-stage1-b-result-scratch-r1`.
+
+Accepted and integrated after Claude audit 83 under the [integration record](integration-b-result-scratch.json). This supersedes the earlier proposal-only status; no inventory slot is accepted.

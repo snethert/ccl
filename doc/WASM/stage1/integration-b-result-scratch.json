@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNITS",
+  "timestamp": "2026-09-17T18:03:47.422351+00:00",
+  "user_authorization": "If I should accept, I do. Integrate and proceed. try to close out LL05.",
+  "review_commit": "fe219e354546b05d89d8371f81b499aeb3646f4c",
+  "review": "eighty-third audit; no defect in either unit",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "d083b75afc02b84c6ac5bc8c42a0e22d0e214afaddbbe8e37e0ed04baf7899fa",
+      "after": "8666f75c42c2d458a0008f13587b0f3368d5196cb3cdab9ae14e82726a547b92",
+      "proposal_locator": "2026-09-17-stage1-b-result-scratch-r1/source/tests/wasm/stage1/b-result-scratch/wasm32-backend.lisp"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "before": "d77975e79bc0995fe32c6453b8db1929de7c36a4a0dfb44adfc5cadb843a0464",
+      "after": "d77975e79bc0995fe32c6453b8db1929de7c36a4a0dfb44adfc5cadb843a0464",
+      "proposal_locator": "2026-09-17-stage1-b-result-scratch-r1/source/tests/wasm/stage1/b-result-scratch/loader.mjs"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "before": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507",
+      "after": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507",
+      "proposal_locator": "2026-09-17-stage1-b-result-scratch-r1/source/tests/wasm/stage1/b-result-scratch/binary.mjs"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "before": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097",
+      "after": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097",
+      "proposal_locator": "2026-09-17-stage1-b-result-scratch-r1/source/tests/wasm/stage1/b-result-scratch/stub.wat"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-17-stage1-b-conditions-r2/packet.json",
+      "sha256": "c031bf926ee3cf0a41408558297bd620d0727c78a01ae0ae797a034a2be09831"
+    },
+    {
+      "locator": "2026-09-17-stage1-b-result-scratch-r1/packet.json",
+      "sha256": "c3c97864960f95cac137536db2b9296c5e0e255f6f703ae58082a1d748616eba"
+    }
+  ],
+  "previous_integration": "integration-b-mv-storage.json",
+  "previous_integration_sha256": "81a347f63428077e19c3afcb49ef1a35052d85d98584c6484d90a8858fdd6806",
+  "scope": "Accept conditions R2 and result scratch; integrate their reviewed cumulative derivative. No LL05 slot acceptance.",
+  "observations": [
+    "Five proof controls detect divergence through the witness rather than execution.",
+    "The proof excludes calls; general demand propagation remains open.",
+    "The packet retains the witness decision rather than its operator list.",
+    "Condition proxies are fixture representations; implicit checked errors and production condition construction remain open."
+  ],
+  "verification": "Exact retained payloads verified; reviewed R6/R6a covers these bytes. No new native execution.",
+  "reverse": "Restore each file at its before hash."
+}

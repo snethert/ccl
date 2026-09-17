@@ -332,6 +332,8 @@
             (refuse :primitive-no-output)))))))
 
 ;;; First B call unit: required arguments, ordered evaluation and complete
+(defstruct b-raw-code text)
+(defvar *b-condition-used* nil)
 (defvar *b-producer-target* nil)
 ;;; multiple values, owned allocation and lexical closures. No collection or
 ;;; tail-call claim in this slice.
@@ -365,6 +367,9 @@
 (defun b-special-p (var)
   (and var (logbitp ccl::$vbitspecial (ccl::nx-var-bits var))))
 (defun b-special-symbol (symbol)
+  (when (eq symbol 'ccl::%handlers%)
+    (pushnew "condition_handlers" *b-symbols* :test #'equal)
+    (return-from b-special-symbol "(global.get $symbol_condition_handlers)"))
   (unless (member symbol *b-special-names* :test #'eq) (refuse :b-undeclared-special))
   (unless (eq (symbol-package symbol) (find-package "WASM32-COMPILER")) (refuse :b-special-package))
   (let ((name (string-downcase (symbol-name symbol))))
@@ -819,10 +824,21 @@
             (format out "(local.set $count (local.get ~a)) ~a" saved-count (b-load-control retained))))))))
 
 (defun b-scalar (ir)
+  (when (b-raw-code-p ir) (return-from b-scalar (b-raw-code-text ir)))
   (let ((*b-tail-position* nil) (*b-producer-target* nil)) (b-scalar-inner ir)))
 (defun b-scalar-inner (ir)
   (let ((op (ccl::acode-operator-name (ccl::acode-operator ir))) (args (ccl::acode-operands ir)))
     (case op
+      (ccl::list
+       (b-raw-code-text (reduce (lambda (a b) (make-b-raw-code :text (b-cons a b))) (first args) :from-end t :initial-value (make-b-raw-code :text "(i32.const 77825)"))))
+      (ccl::typed-form
+       (unless (and (eq (first args) 'list)
+                    (member (ccl::acode-operator-name (ccl::acode-operator (second args))) '(ccl::special-ref ccl::bound-special-ref))
+                    (eq (first (ccl::acode-operands (second args))) 'ccl::%handlers%)) (refuse :b-condition-typed-form))
+       (b-scalar (second args)))
+      (ccl::eq
+       (unless (and (= (length args) 3) (eq (ccl::acode-immediate-operand (first args)) :eq)) (refuse :b-condition-comparison))
+       (b-wat "(if (result i32) (i32.eq ~a ~a) (then (i32.const 77838)) (else (i32.const 77825)))" (b-scalar (second args)) (b-scalar (third args))))
       ((ccl::special-ref ccl::bound-special-ref) (b-wat "(call $special_read ~a)" (b-special-symbol (first args))))
       (ccl::cons (b-cons (first args) (second args)))
       (ccl::setq-special
@@ -835,7 +851,8 @@
            value (b-scalar (second args)) (b-bind-value (first args) (b-local value)) value)))
       ((ccl::closed-function ccl::simple-function) (b-make-closure (first args)))
       (ccl::immediate
-       (cond ((keywordp (first args)) (b-keyword (first args)))
+       (cond ((member (first args) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning)) (b-wat "(i32.const ~d)" (* 4 (b-condition-mask (first args)))))
+             ((keywordp (first args)) (b-keyword (first args)))
              ((assoc (first args) *b-call-links*) (b-symbol (first args)))
              ((member (first args) *b-special-names*) (b-special-symbol (first args)))
              (t (emit-expression ir))))
@@ -925,6 +942,8 @@
               (write-string (if (some #'b-special-p (first args)) (b-special-extent #'body) (body)) s))))))))
 
 (defun b-multiple (ir)
+  (when (b-raw-code-p ir)
+    (return-from b-multiple (b-wat "(local.set $value ~a) ~a (i32.store (local.get $results) (local.get $value)) (local.set $count (i32.const 1))" (b-raw-code-text ir) (b-ensure-results "(i32.const 1)"))))
   (let ((op (ccl::acode-operator-name (ccl::acode-operator ir))) (args (ccl::acode-operands ir)))
     (case op
       (ccl::%decls-body (b-multiple (first args)))
@@ -948,6 +967,10 @@
        (b-local-call 'b-local-function (first args) (second args) (third args)))
       ((ccl::let ccl::let*) (b-let op args))
       (ccl::call
+       (when (and (eq (ccl::acode-operator-name (ccl::acode-operator (first args))) 'ccl::immediate)
+                  (member (first (ccl::acode-operands (first args))) '(signal error)))
+         (unless (and (null (third args)) (null (second (second args))) (= (length (first (second args))) 1)) (refuse :b-signal-arity))
+         (return-from b-multiple (b-signal (first (first (second args))) (eq (first (ccl::acode-operands (first args))) 'error))))
        (if (and (eq (ccl::acode-operator-name (ccl::acode-operator (first args))) 'ccl::immediate)
                 (eq (first (ccl::acode-operands (first args))) '%wasm-literal-apply))
          (b-literal-apply (second args))
@@ -980,11 +1003,35 @@
                (dolist (f (cdr forms)) (format s "(drop ~a)" (b-scalar f)))
                (format s "(local.set $count (local.get ~a)) ~a (memory.copy (local.get $results) ~a (i32.mul (local.get $count) (i32.const 4)))" saved (b-ensure-results "(local.get $count)") (b-at base 8))))))))
       (t (b-wat "(local.set $value ~a) ~a (i32.store (local.get $results) (local.get $value)) (local.set $count (i32.const 1))" (b-scalar ir) (b-ensure-results "(i32.const 1)"))))))
+;;; A callee may use ordinary four-word scratch even when its caller requests
+;;; dynamic delivery. Prove the storage bound from this function's own IR;
+;;; never infer a named callee's behavior from its current function cell.
+(defun b-small-result-scratch-p (ir)
+  (labels ((walk (x)
+             (cond ((ccl::acode-p x)
+                    (let ((op (ccl::acode-operator-name (ccl::acode-operator x)))
+                          (a (ccl::acode-operands x)))
+                      (and (member op '(nil t ccl::fixnum ccl::lambda-list ccl::immediate ccl::lexical-reference
+                                        ccl::special-ref ccl::bound-special-ref ccl::setq-lexical
+                                        ccl::setq-special ccl::%function ccl::closed-function
+                                        ccl::simple-function ccl::cons ccl::list ccl::eq
+                                        ccl::typed-form ccl::%decls-body
+                                        ccl::car ccl::cdr ccl::%car ccl::%cdr
+                                        ccl::rplaca ccl::rplacd ccl::%rplaca ccl::%rplacd
+                                        ccl::values ccl::progn ccl::if ccl::let ccl::let*
+                                        ccl::multiple-value-prog1 ccl::prog1))
+                           (or (not (eq op 'ccl::values)) (<= (length (first a)) 4))
+                           (every #'walk a))))
+                   ((consp x) (every #'walk x))
+                   (t t))))
+    (walk ir)))
 (defun b-one-module (afunc)
-  (let* ((ir (ccl::afunc-acode afunc)) (args (ccl::acode-operands ir)))
+  (let* ((ir (ccl::afunc-acode afunc)) (args (ccl::acode-operands ir))
+         (small-result-scratch (b-small-result-scratch-p ir))
+         (delivery-mode (if small-result-scratch "(i32.load offset=20 (local.get $context))" "(local.get $dynamic_results)")))
     (unless (and (eq (ccl::acode-operator-name (ccl::acode-operator ir)) 'ccl::lambda-list)
                  (not (consp (third args))) (equal (fifth args) '(nil nil))) (refuse :b-lambda))
-    (let* ((*required-vars* (first args)) (*temporary-count* 0) (*b-exception-count* 0) (*b-imports* nil) (*b-keywords* nil) (*b-symbols* nil) (*b-code-imports* nil)
+    (let* ((*required-vars* (first args)) (*temporary-count* 0) (*b-exception-count* 0) (*b-condition-used* nil) (*b-imports* nil) (*b-keywords* nil) (*b-symbols* nil) (*b-code-imports* nil)
            (*b-inherited* (cdr (assoc afunc *b-environments* :test #'eq)))
            (opt (second args)) (keys (fourth args)) (rest (third args))
            (*b-bound-vars* (remove-duplicates
@@ -1015,6 +1062,7 @@
              (dolist (entry *b-code-imports*)
                (format s "(import \"codes\" ~s (global $code_~a i32))" (second entry) (second entry)))
              (write-string (b-object-runtime) s)
+             (when *b-condition-used* (write-string (b-condition-runtime) s))
              (write-string (b-control-runtime) s)
              (write-string (b-dynamic-runtime) s)
              (write-string (b-progv-runtime) s)
@@ -1030,10 +1078,10 @@
              (write-string (b-condition "(i64.gt_u (i64.extend_i32_u (i32.load offset=72 (global.get $tcr))) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16)))" 2) s)
              (write-string (b-condition "(i32.or (i32.ne (local.get $incoming) (i32.add (local.get $context) (i32.const 48))) (i32.ne (local.get $root) (i32.add (local.get $context) (i32.const 32))))" 2) s)
              (write-string "(block $caught (result exnref) (try_table (catch_all_ref $caught) (local.set $frame (local.get $top))" s)
-             (write-string "(local.set $dynamic_results (i32.load offset=20 (local.get $context)))" s)
+             (write-string (if small-result-scratch "(local.set $dynamic_results (i32.const 0))" "(local.set $dynamic_results (i32.load offset=20 (local.get $context)))") s)
              ;; At least four scratch words permit scalar evaluation even with an
              ;; empty final reservation. Child reservations inherit this budget.
-             (write-string "(local.set $result_bytes (if (result i32) (local.get $dynamic_results) (then (i32.const 16)) (else (i32.sub (local.get $owner) (local.get $output))))) (if (i32.lt_u (local.get $result_bytes) (i32.const 16)) (then (local.set $result_bytes (i32.const 16)))) (local.set $capacity (i32.div_u (local.get $result_bytes) (i32.const 4)))" s)
+             (format s "(local.set $result_bytes (if (result i32) ~a (then (i32.const 16)) (else (i32.sub (local.get $owner) (local.get $output))))) (if (i32.lt_u (local.get $result_bytes) (i32.const 16)) (then (local.set $result_bytes (i32.const 16)))) (local.set $capacity (i32.div_u (local.get $result_bytes) (i32.const 4)))" delivery-mode)
              (write-string (b-reserve-runtime (b-wat "(i64.and (i64.add (i64.extend_i32_u (local.get $result_bytes)) (i64.const ~d)) (i64.const -16))" (+ 23 (* 4 (length *b-bound-vars*))))) s)
              (write-string entry-roots s)
              (write-string "(local.set $bindings (i32.add (local.get $frame) (i32.add (i32.const 8) (local.get $result_bytes))))" s)
@@ -1043,10 +1091,10 @@
              (write-string (b-result-descriptor "(local.get $result_descriptor)" "(local.get $frame)") s)
              (write-string "))" s)
              (write-string code s)
-             (write-string "(if (local.get $dynamic_results) (then (if (i32.load offset=20 (i32.load offset=28 (local.get $context))) (then (local.set $root (i32.load offset=24 (i32.load offset=28 (local.get $context)))))) (local.set $output (call $rv_deliver (i32.load offset=28 (local.get $context)) (local.get $results) (local.get $count)))) (else" s)
+             (format s "(if ~a (then (if (i32.load offset=20 (i32.load offset=28 (local.get $context))) (then (local.set $root (i32.load offset=24 (i32.load offset=28 (local.get $context)))))) (local.set $output (call $rv_deliver (i32.load offset=28 (local.get $context)) (local.get $results) (local.get $count)))) (else" delivery-mode)
              (write-string (b-condition "(i64.gt_u (i64.add (i64.extend_i32_u (local.get $output)) (i64.mul (i64.extend_i32_u (local.get $count)) (i64.const 4))) (i64.extend_i32_u (local.get $owner)))" 3) s)
              (write-string "))" s)
-             (write-string "(local.set $value (if (result i32) (local.get $count) (then (i32.load (local.get $results))) (else (i32.const 77825)))) (if (i32.eqz (local.get $dynamic_results)) (then (memory.copy (local.get $output) (local.get $results) (i32.mul (local.get $count) (i32.const 4)))))" s)
+             (format s "(local.set $value (if (result i32) (local.get $count) (then (i32.load (local.get $results))) (else (i32.const 77825)))) (if (i32.eqz ~a) (then (memory.copy (local.get $output) (local.get $results) (i32.mul (local.get $count) (i32.const 4)))))" delivery-mode)
              (write-string "(if (local.get $dynamic_results) (then (call $rv_release (local.get $frame))))" s)
              (write-string restore s)
              (write-string (b-store wasm32::tcr.mv_count "(local.get $count)") s)
@@ -1064,11 +1112,12 @@
                (= (length links) (length (remove-duplicates links :test #'equal)))) (refuse :b-link-names))
   (call-with-target
     (lambda ()
-      (let* ((*b-call-mode* t) (*b-special-names* nil) (*b-keywords* nil) (*module-result-tag* (gensym "B-CALL")) (*module-name* name)
+      (let* ((*b-call-mode* t) (*b-special-names* '(ccl::%handlers%)) (*b-keywords* nil) (*module-result-tag* (gensym "B-CALL")) (*module-name* name)
              (*package* (find-package "WASM32-COMPILER")) (*read-eval* nil)
              (*b-call-links* (mapcar (lambda (x) (list (intern (string-upcase x) *package*) x)) links)))
         (multiple-value-bind (form end) (read-from-string source-text)
           (unless (every (lambda (c) (find c '(#\Space #\Tab #\Newline #\Return))) (subseq source-text end)) (refuse :b-source))
+          (setq form (handler-case (b-expand-conditions form) (error () (refuse :b-condition-source))))
           (validate-b-source form)
           (catch *module-result-tag*
             (ccl::compile-named-function (b-normalize-literal-apply form) :name name :target :wasm32 :policy ccl::*default-compiler-policy*)
@@ -1388,7 +1437,7 @@
                            (if (and (consp (second xs)) (eq (car (second xs)) 'lambda))
                              (lambda-form (items (second xs)) vars (1+ depth))
                              (unless (or (member (second xs) local-names) (assoc (second xs) *b-call-links*)) (refuse :b-source))))
-                          (quote (unless (and (= n 1) (or (assoc (second xs) *b-call-links*) (member (second xs) *b-special-names*))) (refuse :b-source)))
+                          (quote (unless (and (= n 1) (or (assoc (second xs) *b-call-links*) (member (second xs) *b-special-names*) (member (second xs) '(condition serious-condition error simple-condition simple-error type-error control-error warning simple-warning)))) (refuse :b-source)))
                           ((flet labels)
                            (unless (= n 2) (refuse :b-source))
                            (let* ((definitions (items (second xs))) (names nil) (old local-names))
@@ -1429,7 +1478,8 @@
                              (unless (member v vars) (refuse :b-source)) (walk value vars (1+ depth))))
                           (t
                            (unless (or (and (member head '(car cdr)) (= n 1))
-                                       (and (member head '(rplaca rplacd cons)) (= n 2))
+                                       (and (member head '(rplaca rplacd cons eq)) (= n 2))
+                                       (and (member head '(signal error)) (= n 1))
                                        (and (eq head 'if) (member n '(2 3))) (member head '(values progn))
                                        (and (member head '(prog1 multiple-value-prog1 unwind-protect catch)) (<= 1 n)) (and (eq head 'throw) (= n 2)) (and (eq head 'progv) (<= 2 n))
                                        (and (member head '(funcall multiple-value-call)) (<= 1 n)) (and (eq head 'apply) (<= 2 n))
@@ -1461,7 +1511,7 @@
                            (t (refuse :b-source)))))
                  (when (eq mode :rest) (refuse :b-source))
                  (body-forms (cddr parts) (append vars outer) (1+ depth)))))
-      (lambda-form (items form) nil 0))))
+      (lambda-form (items form) '(ccl::%handlers%) 0))))
 
 ;;; Local calls use lexical function cells. CCL omits function-cell captures
 ;;; when a native backend can call a local entry directly; the Wasm environment
@@ -1786,3 +1836,171 @@
 (defun b-load-control (record)
  (b-wat "(if (i32.load offset=28 ~a) (then (local.set $results (call $rv_deliver (local.get $result_descriptor) ~a (local.get $count))) (local.set $capacity (i32.load offset=12 (local.get $result_descriptor))) (i32.store offset=8 (i32.load offset=28 ~a) (i32.const 0)) (i32.store offset=12 (i32.load offset=28 ~a) (i32.const 0))) (else ~a (memory.copy (local.get $results) ~a (i32.mul (local.get $count) (i32.const 4)))))"
  record (b-control-values record) record record (b-ensure-results "(local.get $count)") (b-at record 48)))
+
+;;; Explicit condition dispatch over owner-supplied condition proxies. Class
+;;; construction, restarts, the debugger and implicit trap-to-condition mapping
+;;; are separate runtime obligations. HANDLER macros are expanded by U1 itself.
+(defun b-condition-mask (type)
+  (or (cdr (assoc type '((condition . 1) (serious-condition . 2) (error . 4)
+                         (simple-condition . 8) (simple-error . 16) (type-error . 32)
+                         (control-error . 64) (warning . 128) (simple-warning . 256))))
+      (refuse :b-condition-type)))
+(defun b-expand-conditions (form)
+  ;; Check the input graph before any native macro sees it. Shared/cyclic reader
+  ;; objects and dotted lists are outside this source API.
+  (let ((work (list (cons form 0))) (seen (make-hash-table :test #'eq)) (left 32768))
+    (loop while work do
+      (let* ((entry (pop work)) (node (car entry)) (depth (cdr entry)))
+        (when (or (> depth 128) (minusp (decf left))) (refuse :b-condition-source))
+        (when (consp node)
+          (when (gethash node seen) (refuse :b-condition-source))
+          (setf (gethash node seen) t)
+          (unless (listp (cdr node)) (refuse :b-condition-source))
+          (push (cons (cdr node) depth) work)
+          (push (cons (car node) (1+ depth)) work)))))
+  (let ((budget 32768) (expanding nil) (condition-source-depth 0))
+    (declare (special expanding condition-source-depth))
+    (labels ((lambda-list (items)
+             (let ((mode :required))
+               (mapcar (lambda (item)
+                         (cond ((member item '(&optional &key &rest &allow-other-keys))
+                                (setf mode item) item)
+                               ((and (member mode '(&optional &key)) (consp item))
+                                (if (cdr item)
+                                  (cons (first item) (cons (walk (second item)) (cddr item))) item))
+                               (t item))) items)))
+           (walk (x)
+             (let ((condition-source-depth (1+ condition-source-depth)))
+               (declare (special condition-source-depth))
+               (when (> condition-source-depth 128) (refuse :b-condition-source))
+               (when (minusp (decf budget)) (refuse :b-condition-source))
+               (when (consp x)
+                 (let ((seen (make-hash-table :test #'eq)))
+                   (do ((p x (cdr p))) ((null p))
+                     (unless (consp p) (refuse :b-condition-source))
+                     (when (gethash p seen) (refuse :b-condition-source))
+                     (setf (gethash p seen) t))))
+               (if (atom x) x
+                 (case (car x)
+                   (quote x)
+                 (lambda `(lambda ,(lambda-list (second x)) ,@(mapcar #'walk (cddr x))))
+                 (function `(function ,(if (consp (second x)) (walk (second x)) (second x))))
+                 ((let let*)
+                  `(,(car x) ,(mapcar (lambda (binding)
+                                       (if (atom binding) binding
+                                         (cons (first binding) (mapcar #'walk (cdr binding))))) (second x))
+                    ,@(mapcar #'walk (cddr x))))
+                 ((flet labels)
+                  `(,(car x) ,(mapcar (lambda (definition)
+                                       `(,(first definition) ,(lambda-list (second definition))
+                                         ,@(mapcar #'walk (cddr definition)))) (second x))
+                    ,@(mapcar #'walk (cddr x))))
+                 (setq `(setq ,@(loop for (name value) on (cdr x) by #'cddr
+                                     append (list name (walk value)))))
+                 (multiple-value-bind `(multiple-value-bind ,(second x) ,@(mapcar #'walk (cddr x))))
+                 ((block return-from) `(,(car x) ,(second x) ,@(mapcar #'walk (cddr x))))
+                   ((handler-bind handler-case)
+                    ;; Validate type specifiers before invoking a native macro.
+                    ;; The source reader has disabled read-time evaluation.
+                    (dolist (clause (if (eq (car x) 'handler-bind) (second x) (cddr x)))
+                      (unless (and (listp clause) (consp clause)) (refuse :b-handler-clause))
+                      (unless (eq (car clause) :no-error) (b-condition-mask (car clause))))
+                    ;; Process user expressions with expansion privileges off,
+                    ;; BEFORE the macro can embed them in generated scaffolding.
+                    ;; A dynamic EXPANDING flag alone would admit user CASE in
+                    ;; a handler body or a :NO-ERROR/default expression.
+                    (let* ((input
+                            (let ((expanding nil))
+                              (declare (special expanding))
+                              (if (eq (car x) 'handler-bind)
+                                `(handler-bind
+                                   ,(mapcar (lambda (clause)
+                                              (unless (= (length clause) 2) (refuse :b-handler-clause))
+                                              (list (first clause) (walk (second clause)))) (second x))
+                                   ,@(mapcar #'walk (cddr x)))
+                                `(handler-case ,(walk (second x))
+                                   ,@(mapcar (lambda (clause)
+                                               `(,(first clause) ,(lambda-list (second clause))
+                                                 ,@(mapcar #'walk (cddr clause)))) (cddr x))))))
+                           (expanding t))
+                      (declare (special expanding))
+                      (walk (macroexpand-1 input))))
+                   (the (unless (and expanding (eq (second x) 'list) (= (length x) 3)) (refuse :b-condition-assertion)) (walk (third x)))
+                   (declare
+                    `(declare ,@(remove-if (lambda (d) (eq (car d) 'dynamic-extent)) (cdr x))))
+                   (list (unless expanding (refuse :b-condition-generated-form)) (reduce (lambda (a b) `(cons ,(walk a) ,b)) (cdr x) :from-end t :initial-value nil))
+                   (pop (unless expanding (refuse :b-condition-generated-form)) (walk (macroexpand-1 x)))
+                   (case
+                    (unless expanding (refuse :b-condition-generated-form))
+                    (let ((v (gensym "CONDITION-CASE")))
+                      `(let ((,v ,(walk (second x))))
+                         ,(reduce (lambda (clause rest)
+                                    (if (member (first clause) '(t otherwise)) `(progn ,@(mapcar #'walk (cdr clause)))
+                                      `(if (eq ,v ,(first clause)) (progn ,@(mapcar #'walk (cdr clause))) ,rest)))
+                                  (cddr x) :from-end t :initial-value nil))))
+                   (t (mapcar #'walk x)))))))
+      (walk form))))
+(defun b-signal (form fatal)
+  (setq *b-condition-used* t)
+  (let ((*b-tail-position* nil) (*b-producer-target* nil))
+    (b-frame 4
+      (lambda (root)
+        (let* ((condition (b-wat "(i32.load offset=8 ~a)" root))
+               (cluster (b-wat "(i32.load offset=12 ~a)" root))
+               (handlers (b-wat "(i32.load offset=16 ~a)" root))
+               (handler (b-wat "(i32.load offset=20 ~a)" root))
+               (symbol (b-special-symbol 'ccl::%handlers%))
+               (raw-condition (make-b-raw-code :text condition))
+               (raw-cluster (make-b-raw-code :text cluster)))
+          (with-output-to-string (s)
+            (write-string (b-wat "(i32.store offset=8 ~a ~a) (drop (call $condition_mask ~a))" root (b-scalar form) condition) s)
+            (write-string
+              (b-special-extent
+                (lambda ()
+                  (with-output-to-string (s)
+                    (write-string (b-bind-symbol symbol (b-wat "(call $special_read ~a)" symbol)) s)
+                    (format s "(block $signal_done (loop $signal_clusters (br_if $signal_done (i32.eq (call $special_read ~a) (i32.const 77825)))" symbol)
+                    (format s "(i32.store offset=12 ~a (i32.load offset=4 (call $handler_cons (call $special_read ~a))))" root symbol)
+                    ;; Mask the entire current cluster before calling a handler.
+                    (format s "(i32.store (call $special_location ~a) (i32.load (call $handler_cons (call $special_read ~a))))" symbol symbol)
+                    (format s "(i32.store offset=16 ~a ~a) (block $signal_next (loop $signal_handlers (br_if $signal_next (i32.eq ~a (i32.const 77825)))" root cluster handlers)
+                    (format s "(if (i32.and (call $condition_mask ~a) (i32.shr_u (i32.load offset=4 (call $handler_cons ~a)) (i32.const 2))) (then" condition handlers)
+                    (format s "(i32.store offset=20 ~a (call $handler_second ~a))" root handlers)
+                    (format s "(if (i32.eq ~a (i32.const 77825)) (then ~a))" handler (b-throw raw-cluster raw-condition))
+                    (format s "(if (i32.eqz (i32.and ~a (i32.const 3))) (then ~a))" handler
+                      (b-throw raw-cluster (make-b-raw-code :text (b-cons (make-b-raw-code :text handler) raw-condition))))
+                    (write-string (b-discard-handler handler raw-condition) s)
+                    (write-string "))" s)
+                    (format s "(i32.store offset=16 ~a (call $handler_rest ~a)) (br $signal_handlers))) (br $signal_clusters)))" root handlers)))) s)
+            (write-string (if fatal "(throw $call_error (i32.const 15))" (b-multiple (make-b-raw-code :text "(i32.const 77825)"))) s)))))))
+(defun b-condition-runtime ()
+ "(func $handler_cons (param $x i32) (result i32)
+   (if (i32.or (i32.eq (local.get $x) (i32.const 77825)) (i32.ne (i32.and (local.get $x) (i32.const 7)) (i32.const 1))) (then (throw $call_error (i32.const 12))))
+   (call $span (i32.sub (local.get $x) (i32.const 1)) (i32.const 8)) (i32.sub (local.get $x) (i32.const 1)))
+ (func $handler_second (param $x i32) (result i32) (local $tail i32)
+   (local.set $tail (i32.load (call $handler_cons (local.get $x))))
+   (if (result i32) (i32.eq (local.get $tail) (i32.const 77825)) (then (i32.const 77825)) (else (i32.load offset=4 (call $handler_cons (local.get $tail))))))
+ (func $handler_rest (param $x i32) (result i32) (local $tail i32)
+   (local.set $tail (i32.load (call $handler_cons (local.get $x))))
+   (if (result i32) (i32.eq (local.get $tail) (i32.const 77825)) (then (i32.const 77825)) (else (i32.load (call $handler_cons (local.get $tail))))))
+ (func $condition_mask (param $x i32) (result i32) (local $mask i32)
+   (local.set $mask (i32.load offset=4 (call $object_base (local.get $x) (i32.const 16) (i32.const 762))))
+   (if (i32.or (i32.and (local.get $mask) (i32.const 3)) (i32.eqz (local.get $mask))) (then (throw $call_error (i32.const 5))))
+   (local.set $mask (i32.shr_u (local.get $mask) (i32.const 2)))
+   (if (i32.eqz (i32.or (i32.or (i32.eq (local.get $mask) (i32.const 1)) (i32.eq (local.get $mask) (i32.const 9)))
+     (i32.or (i32.or (i32.eq (local.get $mask) (i32.const 31)) (i32.eq (local.get $mask) (i32.const 39)))
+             (i32.or (i32.eq (local.get $mask) (i32.const 71)) (i32.eq (local.get $mask) (i32.const 393)))))) (then (throw $call_error (i32.const 5))))
+   (local.get $mask))")
+(defun b-discard-handler (handler condition)
+  ;; A handler's values are discarded, so its result count cannot be limited by
+  ;; the caller's final output reservation. Use the reviewed inline/spill shape.
+  (let ((base (temporary)) (root (temporary)) (mode (temporary))
+        (descriptor (temporary)) (results (temporary)) (capacity (temporary))
+        (scope (temporary)) (exception (b-exception-local)))
+    (let* ((call (let ((*b-producer-target* nil) (*b-tail-position* nil))
+                   (b-call nil (list (list condition) nil) handler)))
+           (restore (b-wat "~a (call $rv_release (local.get ~a)) (local.set $dynamic_results (local.get ~a)) (local.set $result_descriptor (local.get ~a)) (local.set $results (local.get ~a)) (local.set $capacity (local.get ~a)) (local.set $result_scope (local.get ~a)) (local.set $top (local.get ~a))"
+                      (b-store wasm32::tcr.root_head (b-local root)) base mode descriptor results capacity scope base)))
+      (b-wat "(local.set ~a (local.get $top)) (local.set ~a ~a) (local.set ~a (local.get $dynamic_results)) (local.set ~a (local.get $result_descriptor)) (local.set ~a (local.get $results)) (local.set ~a (local.get $capacity)) (local.set ~a (local.get $result_scope)) ~a ~a (local.set $dynamic_results (i32.const 1)) (local.set $result_descriptor (local.get ~a)) (local.set $result_scope (local.get ~a)) (local.set $results (i32.const 0)) (local.set $capacity (i32.const 0)) (block $handler_done (block $handler_failed (result exnref) (try_table (catch_all_ref $handler_failed) ~a (br $handler_done)) unreachable) (local.set ~a) ~a (throw_ref (local.get ~a))) ~a"
+        base root (b-load wasm32::tcr.root_head) mode descriptor results capacity scope
+        (b-reserve-runtime "(i64.const 48)") (b-result-descriptor (b-local base) (b-local base)) base base call exception restore exception restore))))
