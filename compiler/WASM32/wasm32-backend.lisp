@@ -374,7 +374,9 @@
     (pushnew name *b-symbols* :test #'equal)
     (b-wat "(global.get $symbol_~a)" name)))
 (defun b-special-bind (var code)
-  (let ((value (temporary)) (base (temporary)) (slot (temporary)) (symbol (b-special-symbol (ccl::var-name var))))
+  (b-bind-symbol (b-special-symbol (ccl::var-name var)) code))
+(defun b-bind-symbol (symbol code)
+  (let ((value (temporary)) (base (temporary)) (slot (temporary)))
     (with-output-to-string (s)
       (format s "(local.set ~a ~a) (local.set ~a (call $dynamic_slot ~a)) (local.set ~a (local.get $top))" value code slot symbol base)
       (write-string (b-reserve-runtime "(i64.const 32)") s)
@@ -433,12 +435,66 @@
       (i32.store (local.get $slot) (i32.load offset=20 (local.get $p)))
       (i32.store offset=112 (global.get $tcr) (i32.load (local.get $p))) (br $pop))))")
 
+(defun b-progv (checked-symbols values body)
+  ;; U1 inserts CHECK-SYMBOL-LIST before evaluating the values form. Require
+  ;; that exact IR shape; replace only this compiler-inserted intrinsic.
+  (let* ((a (ccl::acode-operands checked-symbols)) (callee (first a)))
+    (unless (and (eq (ccl::acode-operator-name (ccl::acode-operator checked-symbols)) 'ccl::call)
+                 (ccl::acode-p callee)
+                 (eq (ccl::acode-operator-name (ccl::acode-operator callee)) 'ccl::immediate)
+                 (eq (first (ccl::acode-operands callee)) 'ccl::check-symbol-list)
+                 (null (third a)) (= (length (second a)) 2) (null (second (second a))) (= (length (first (second a))) 1)) (refuse :b-progv-guard))
+    (b-frame 2 (lambda (base)
+      (with-output-to-string (s)
+        (format s "(i32.store offset=8 ~a ~a) (drop (call $progv_symbols (i32.load offset=8 ~a) (local.get $top))) (i32.store offset=12 ~a ~a)"
+          base (b-scalar (first (first (second a)))) base base (b-scalar values))
+        (write-string (b-special-extent
+          (lambda ()
+            (let ((symbols (temporary)) (vals (temporary)) (symbol (temporary)) (value (temporary)) (next-value (temporary)))
+              (with-output-to-string (out)
+                ;; Values evaluation may have mutated the symbols list.
+                (format out "(local.set ~a (i32.load offset=8 ~a)) (local.set ~a (i32.load offset=12 ~a)) (drop (call $progv_symbols (local.get ~a) (local.get $top)))"
+                  symbols base vals base symbols)
+                (format out "(block $progv_done (loop $progv_bind (br_if $progv_done (i32.eq (local.get ~a) (i32.const 77825))) (local.set ~a (i32.load offset=3 (local.get ~a))) (local.set ~a (i32.const 51)) (if (i32.ne (local.get ~a) (i32.const 77825)) (then (local.set ~a ~a) (local.set ~a (i32.load offset=3 (local.get ~a))) (local.set ~a (local.get ~a))))"
+                  symbols symbol symbols value vals next-value (b-checked-cdr (b-local vals)) value vals vals next-value)
+                ;; Symbol cursor reload from the rooted list after the value step;
+                ;; the temporary above held only the next values pointer.
+                (write-string (b-bind-symbol (b-local symbol) (b-local value)) out)
+                (format out "(local.set ~a (i32.load offset=8 ~a)) (local.set ~a ~a) (i32.store offset=8 ~a (local.get ~a)) (br $progv_bind)))"
+                  symbols base symbols (b-checked-cdr (b-local symbols)) base symbols)
+                (write-string (b-multiple body) out))))) s))))))
+(defun b-progv-runtime ()
+  "(func $progv_slot (param $symbol i32) (result i32) (local $bits i32)
+     (if (i32.or (i32.ne (i32.and (local.get $symbol) (i32.const 7)) (i32.const 6)) (i32.lt_u (local.get $symbol) (i32.const 6))) (then (throw $call_error (i32.const 12))))
+     (if (i64.gt_u (i64.add (i64.extend_i32_u (local.get $symbol)) (i64.const 26)) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16))) (then (throw $call_error (i32.const 12))))
+     (if (i32.ne (i32.load (i32.sub (local.get $symbol) (i32.const 6))) (i32.const 1850)) (then (throw $call_error (i32.const 12))))
+     (local.set $bits (i32.load offset=14 (local.get $symbol)))
+     (if (i32.or (i32.and (local.get $bits) (i32.const 3)) (i32.and (local.get $bits) (i32.const 24))) (then (throw $call_error (i32.const 12))))
+     (call $dynamic_slot (local.get $symbol)))
+   (func $progv_cdr (param $p i32) (result i32)
+     (if (i32.ne (i32.and (local.get $p) (i32.const 7)) (i32.const 1)) (then (throw $call_error (i32.const 5))))
+     (if (i64.gt_u (i64.add (i64.extend_i32_u (local.get $p)) (i64.const 7)) (i64.shl (i64.extend_i32_u (memory.size)) (i64.const 16))) (then (throw $call_error (i32.const 5))))
+     (i32.load (i32.sub (local.get $p) (i32.const 1))))
+   (func $progv_symbols (param $p i32) (param $top i32) (result i32) (local $slow i32) (local $n i32)
+     (local.set $slow (local.get $p))
+     (block $done (loop $scan (br_if $done (i32.eq (local.get $p) (i32.const 77825)))
+       (drop (call $progv_cdr (local.get $p))) (drop (call $progv_slot (i32.load offset=3 (local.get $p))))
+       (local.set $p (call $progv_cdr (local.get $p))) (local.set $n (i32.add (local.get $n) (i32.const 1)))
+       (if (i64.gt_u (i64.add (i64.extend_i32_u (local.get $top)) (i64.mul (i64.extend_i32_u (local.get $n)) (i64.const 32))) (i64.extend_i32_u (i32.load offset=72 (global.get $tcr)))) (then (throw $call_error (i32.const 2))))
+       (if (i32.eqz (i32.and (local.get $n) (i32.const 1))) (then (local.set $slow (call $progv_cdr (local.get $slow)))))
+       (if (i32.and (i32.ne (local.get $p) (i32.const 77825)) (i32.eq (local.get $p) (local.get $slow))) (then (throw $call_error (i32.const 12))))
+       (br $scan))) (local.get $n))")
+
 (defun b-bound-address (var)
   (let ((n (position var *b-bound-vars* :test #'eq)))
     (unless n (refuse :b-bound-variable))
     (b-wat "(i32.add (local.get $bindings) (i32.const ~d))" (+ 0 (* 4 n)))))
 (defun b-bind-value (var value)
   (cond ((b-special-p var) (b-special-bind var value)) (var (b-wat "(i32.store ~a ~a)" (b-variable-address var) value)) (t "")))
+(defun b-stage-value (var value)
+  (if (b-special-p var) (b-wat "(i32.store ~a ~a)" (b-bound-address var) value) (b-bind-value var value)))
+(defun b-stage-read (var)
+  (if (b-special-p var) (b-wat "(i32.load ~a)" (b-bound-address var)) (b-read-variable var)))
 (defun b-binding-code (required opt keys rest)
   ;; Input values remain in the caller's root record. Bound values and the
   ;; supplied-p flags occupy the callee's published frame before defaults call.
@@ -461,8 +517,8 @@
           (format s "(block $keys_done (loop $keys_scan (br_if $keys_done (i32.ge_u (local.get ~a) (local.get $nargs))) (local.set ~a (i32.load (i32.add (local.get $incoming) (i32.mul (local.get ~a) (i32.const 4))))) (local.set ~a (i32.load offset=4 (i32.add (local.get $incoming) (i32.mul (local.get ~a) (i32.const 4))))) (local.set ~a (i32.const 0))" cursor key cursor value cursor known)
           (loop for var in vars for sp in supplied for name across names do
             (format s "(if (i32.eq (local.get ~a) ~a) (then (local.set ~a (i32.const 1)) (if (i32.eq ~a (i32.const 77825)) (then ~a ~a))))"
-              key (b-keyword name) known (b-read-variable sp)
-              (b-bind-value var (b-local value)) (b-bind-value sp "(i32.const 77838)")))
+              key (b-keyword name) known (b-stage-read sp)
+              (b-stage-value var (b-local value)) (b-stage-value sp "(i32.const 77838)")))
           ;; :ALLOW-OTHER-KEYS is itself a recognized keyword, with first-wins
           ;; semantics even when the lambda also binds that named keyword.
           (format s "(if (i32.eq (local.get ~a) ~a) (then (local.set ~a (i32.const 1)) (if (i32.eqz (local.get ~a)) (then (local.set ~a (i32.const 1)) (local.set ~a (local.get ~a))))))"
@@ -471,8 +527,10 @@
           (unless allow
             (write-string (b-condition (b-wat "(i32.and (local.get ~a) (i32.eq (local.get ~a) (i32.const 77825)))" unknown allow-value) 1) s))
         (loop for var in vars for sp in supplied for init in inits do
-          (format s "(if (i32.eq ~a (i32.const 77825)) (then ~a))"
-            (b-read-variable sp) (b-bind-value var (b-scalar init)))))))))
+          (format s "(if (i32.eq ~a (i32.const 77825)) (then ~a) (else ~a))"
+            (b-stage-read sp) (b-bind-value var (b-scalar init))
+            (if (b-special-p var) (b-bind-value var (b-stage-read var)) ""))
+          (when (b-special-p sp) (write-string (b-bind-value sp (b-stage-read sp)) s))))))))
 (defun b-wat (control &rest args) (apply #'format nil control args))
 (defun b-load (offset) (b-wat "(i32.load offset=~d (global.get $tcr))" offset))
 (defun b-store (offset value) (b-wat "(i32.store offset=~d (global.get $tcr) ~a)" offset value))
@@ -739,9 +797,10 @@
       (ccl::immediate
        (cond ((keywordp (first args)) (b-keyword (first args)))
              ((assoc (first args) *b-call-links*) (b-symbol (first args)))
+             ((member (first args) *b-special-names*) (b-special-symbol (first args)))
              (t (emit-expression ir))))
       (ccl::%function (b-wat "(call $function_value ~a)" (b-symbol (first args))))
-      ((ccl::call ccl::values ccl::progn ccl::multiple-value-prog1 ccl::prog1 ccl::if ccl::let ccl::let* ccl::flet ccl::labels ccl::lambda-bind ccl::self-call ccl::lexical-function-call ccl::unwind-protect ccl::catch ccl::throw ccl::%decls-body)
+      ((ccl::call ccl::values ccl::progn ccl::multiple-value-prog1 ccl::prog1 ccl::if ccl::let ccl::let* ccl::flet ccl::labels ccl::lambda-bind ccl::self-call ccl::lexical-function-call ccl::unwind-protect ccl::catch ccl::throw ccl::progv ccl::%decls-body)
        (b-wat "(block (result i32) ~a (if (result i32) (local.get $count) (then (i32.load (local.get $results))) (else (i32.const ~d))))" (b-multiple ir) wasm32::canonical-nil-value))
       ((car cdr ccl::%car ccl::%cdr)
        (let* ((p (temporary)) (code (b-scalar (first args))) (offset (if (member op '(car ccl::%car)) wasm32::cons.car wasm32::cons.cdr)))
@@ -758,6 +817,7 @@
       (ccl::unwind-protect (b-unwind-protect (first args) (second args)))
       (ccl::catch (b-catch (first args) (second args)))
       (ccl::throw (b-throw (first args) (second args)))
+      (ccl::progv (b-progv (first args) (second args) (third args)))
       ((ccl::flet ccl::labels)
        (with-output-to-string (s)
          (loop for v in (first args) for f in (second args) do
@@ -806,7 +866,6 @@
   (let* ((ir (ccl::afunc-acode afunc)) (args (ccl::acode-operands ir)))
     (unless (and (eq (ccl::acode-operator-name (ccl::acode-operator ir)) 'ccl::lambda-list)
                  (not (consp (third args))) (equal (fifth args) '(nil nil))) (refuse :b-lambda))
-    (when (some #'b-special-p (remove nil (append (first args) (first (second args)) (third (second args)) (list (third args)) (second (fourth args)) (third (fourth args))))) (refuse :b-special-parameter))
     (let* ((*required-vars* (first args)) (*temporary-count* 0) (*b-exception-count* 0) (*b-imports* nil) (*b-keywords* nil) (*b-symbols* nil) (*b-code-imports* nil)
            (*b-inherited* (cdr (assoc afunc *b-environments* :test #'eq)))
            (opt (second args)) (keys (fourth args)) (rest (third args))
@@ -815,13 +874,15 @@
                      (b-local-variables ir)
                      (remove-if-not #'b-captured-p *required-vars*)) :test #'eq))
            (arity (length *required-vars*)) (maximum (+ arity (length (first opt))))
-           (bindings (concatenate 'string (or (b-environment-entry) "")
+           (dynamic-parameters (some #'b-special-p (remove nil (append *required-vars* (first opt) (third opt) (list rest) (second keys) (third keys)))))
+           (code (flet ((emit-body () (concatenate 'string (or (b-environment-entry) "")
                       (b-initialize-cells)
                       (with-output-to-string (s)
-                        (loop for v in *required-vars* for i from 0 when (member v *b-bound-vars* :test #'eq) do
+                        (loop for v in *required-vars* for i from 0 when (or (b-special-p v) (member v *b-bound-vars* :test #'eq)) do
                           (write-string (b-bind-value v (b-wat "(i32.load offset=~d (local.get $incoming))" (* 4 i))) s)))
-                      (b-binding-code arity opt keys rest)))
-           (body (let ((*b-tail-position* t)) (b-multiple (sixth args))))
+                      (b-binding-code arity opt keys rest)
+                      (let ((*b-tail-position* (not dynamic-parameters))) (b-multiple (sixth args))))))
+                   (if dynamic-parameters (b-special-extent #'emit-body) (emit-body))))
            (restore (concatenate 'string (b-store wasm32::tcr.vsp "(local.get $incoming)")
                      (b-store wasm32::tcr.mv_base "(local.get $output)") (b-store wasm32::tcr.mv_owner_top "(local.get $owner)")
                      (b-store wasm32::tcr.root_head "(local.get $root)")))
@@ -837,6 +898,7 @@
              (write-string (b-object-runtime) s)
              (write-string (b-control-runtime) s)
              (write-string (b-dynamic-runtime) s)
+             (write-string (b-progv-runtime) s)
              (write-string "(func $body (export \"tail_entry\") (type $tail_entry) (param $self i32) (param $nargs i32) (param $context i32) (result i32 i32) (local $incoming i32) (local $output i32) (local $owner i32) (local $root i32) (local $old_count i32) (local $frame i32) (local $results i32) (local $top i32) (local $count i32) (local $value i32) (local $exception exnref) (local $wide i64) (local $capacity i32) (local $result_bytes i32) (local $bindings i32) (local $dispatch_self i32) (local $dispatch_slot i32) (local $closure_env i32)" s)
              (dotimes (i *temporary-count*) (format s "(local $tmp~d i32)" i))
              (dotimes (i *b-exception-count*) (format s "(local $cleanup_exception~d exnref)" i))
@@ -855,8 +917,7 @@
              (write-string entry-roots s)
              (write-string "(local.set $bindings (i32.add (local.get $frame) (i32.add (i32.const 8) (local.get $result_bytes))))" s)
              (write-string "(local.set $results (i32.add (local.get $frame) (i32.const 8)))" s)
-             (write-string bindings s)
-             (write-string body s)
+             (write-string code s)
              (write-string (b-condition "(i64.gt_u (i64.add (i64.extend_i32_u (local.get $output)) (i64.mul (i64.extend_i32_u (local.get $count)) (i64.const 4))) (i64.extend_i32_u (local.get $owner)))" 3) s)
              (write-string "(local.set $value (if (result i32) (local.get $count) (then (i32.load (local.get $results))) (else (i32.const 77825)))) (memory.copy (local.get $output) (local.get $results) (i32.mul (local.get $count) (i32.const 4)))" s)
              (write-string restore s)
@@ -1188,13 +1249,13 @@
                            (if (and (consp (second xs)) (eq (car (second xs)) 'lambda))
                              (lambda-form (items (second xs)) vars (1+ depth))
                              (unless (or (member (second xs) local-names) (assoc (second xs) *b-call-links*)) (refuse :b-source))))
-                          (quote (unless (and (= n 1) (assoc (second xs) *b-call-links*)) (refuse :b-source)))
+                          (quote (unless (and (= n 1) (or (assoc (second xs) *b-call-links*) (member (second xs) *b-special-names*))) (refuse :b-source)))
                           ((flet labels)
                            (unless (= n 2) (refuse :b-source))
                            (let* ((definitions (items (second xs))) (names nil) (old local-names))
                              (dolist (definition definitions)
                                (let ((parts (items definition)))
-                                 (unless (= (length parts) 3) (refuse :b-source))
+                                 (unless (>= (length parts) 2) (refuse :b-source))
                                  (variable (first parts))
                                  (when (or (member (first parts) names) (special-operator-p (first parts))
                                            (macro-function (first parts))) (refuse :b-source))
@@ -1224,7 +1285,7 @@
                            (unless (or (and (member head '(car cdr)) (= n 1))
                                        (and (member head '(rplaca rplacd)) (= n 2))
                                        (and (eq head 'if) (member n '(2 3))) (member head '(values progn))
-                                       (and (member head '(prog1 multiple-value-prog1 unwind-protect catch)) (<= 1 n)) (and (eq head 'throw) (= n 2))
+                                       (and (member head '(prog1 multiple-value-prog1 unwind-protect catch)) (<= 1 n)) (and (eq head 'throw) (= n 2)) (and (eq head 'progv) (<= 2 n))
                                        (and (eq head 'funcall) (<= 1 n)) (and (eq head 'apply) (<= 2 n))
                                        (member head local-names) (assoc head *b-call-links*)
                                        (and (consp head) (eq (car head) 'lambda))) (refuse :b-source))
@@ -1253,8 +1314,6 @@
                               (walk (second pair) (append vars outer) (1+ depth)) (add-var v) (when sp (add-var sp))))
                            (t (refuse :b-source)))))
                  (when (eq mode :rest) (refuse :b-source))
-                 (loop for f in (cddr parts) while (and (consp f) (eq (car f) 'declare)) do
-                   (dolist (d (cdr f)) (when (and (eq (car d) 'special) (intersection vars (cdr d))) (refuse :b-special-parameter))))
                  (body-forms (cddr parts) (append vars outer) (1+ depth)))))
       (lambda-form (items form) nil 0))))
 
@@ -1311,6 +1370,9 @@
         (with-output-to-string (s)
           (loop for val in vals for i from 0 do
             (format s "(i32.store offset=~d ~a ~a)" (+ 8 (* 4 i)) base (b-scalar val)))
+          (write-string
+            (funcall (if (some #'b-special-p (append required (list rest) (first auxiliary))) #'b-special-extent #'funcall)
+              (lambda () (with-output-to-string (s)
           (loop for var in required for i from 0 do
             (write-string (b-bind-value var (b-wat "(i32.load offset=~d ~a)" (+ 8 (* 4 i)) base)) s))
           (when rest
@@ -1330,7 +1392,7 @@
                 (progn (unless (<= 0 init (1- (length vals))) (refuse :b-inline-index))
                        (b-wat "(i32.load offset=~d ~a)" (+ 8 (* 4 init)) base))
                 (b-scalar init))) s))
-          (write-string (b-multiple body) s))))))
+          (write-string (b-multiple body) s)))) s))))))
 (defun b-normalize-literal-apply (form)
   ;; Rewrite expression positions only: binding names and lambda-list syntax
   ;; are data even when a variable is named APPLY. Validation runs first.

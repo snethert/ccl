@@ -4018,9 +4018,15 @@
       "sha256": "0aac8a81ce1d0307390f37287918e3fe37629e272db394b05d75b2c3d045ea2a",
       "scope": "Generated SPECIAL required/optional/rest/key/supplied-p parameters, inline/local functions and PROGV through real CCL IR: 362 source functions, 443 modules, 1506 native/model cases and 6024 target comparisons. Ordered defaults, staged keyword values, symbol-list validation before values and after mutation, missing/unbound values, reverse unwind through normal/checked/nonlocal exits. 24388 binding inspections through 128 bindings; 24 PROGV refusal checks, 44 inherited metadata checks, 21 compiler mutants and three inherited regressions. Native R6/R6a, retained replay and unchanged-loader lazy composition pass. Owner-assigned indices and capacity; no symbol installer, growth, GC, complete LL05/LL19 credit or unreviewed integration.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AND_INTEGRATED_AUXILIARY",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "external_review": {
+        "commit": "3c56d98e7ab54112b985678d018b1b82a2a9254d",
+        "disposition": "NO_DEFECT_FOUND",
+        "audit": 77
+      },
+      "integration": "doc/WASM/stage1/integration-b-dynamic-bindings.json"
     }
   ]
 }

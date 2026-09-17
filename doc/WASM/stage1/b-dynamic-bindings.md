@@ -3,8 +3,8 @@
 The [isolated proposal](../../../tests/wasm/stage1/b-dynamic-bindings/README.md)
 extends the accepted special-binding unit to required, optional, rest, keyword
 and supplied-p parameters, including inline lambdas and local functions, and to
-PROGV. The predecessor is integrated; this proposal awaits external review and
-claims no LL05/LL19 slot.
+PROGV. The user accepted this unit after Claude’s seventy-seventh audit; its exact
+reviewed bytes are integrated. It claims no LL05/LL19 slot.
 
 Defaults see the bindings established before them. Keyword lookup stages values
 and supplied flags, then binds in lambda-list order; it never publishes later

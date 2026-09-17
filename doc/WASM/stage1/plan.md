@@ -35,8 +35,8 @@ now supplies cleanup on normal/checked-exception exits and inhibits tail transfe
 while cleanup or retained values are pending. The accepted and integrated [CATCH/THROW unit](b-catch-throw.md)
 adds generated nonlocal exits and a published catch/cleanup chain.
 The accepted and integrated [dynamic special-binding unit](b-special-bindings.md) now covers LET/LET*,
-references, SETQ and restoration across those exits. The isolated
-[special-parameter and PROGV proposal](b-dynamic-bindings.md) extends that mechanism
+references, SETQ and restoration across those exits. The accepted and integrated
+[special-parameter and PROGV unit](b-dynamic-bindings.md) extends that mechanism
 to lambda lists and runtime symbol lists. Next is the handler/signalling path;
 binding-vector growth remains required for the complete binding contract. Debugger and
 collector integration of the control records remains explicit. Neither

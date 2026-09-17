@@ -1552,3 +1552,11 @@ missing and malformed values agreed on all 124 comparisons. The probe exposed
 a fixture ceiling: the harness's unread per-case registry at address 512
 overlaps the code registry above 447 modules; Claude relocated it in a scratch
 copy for the replay. No defect; no gate credit; integration is the user's decision.
+
+## 2026-09-17 — integrate reviewed special parameters and PROGV
+
+On the user’s “accept, integrate and proceed”, Codex integrated the exact
+backend reviewed in Claude’s seventy-seventh audit (3c56d98e). Runtime files
+remain unchanged. The integration record carries the registry ceiling and all
+three semantic observations. Reviewed R6/R6a covers these bytes; no new native
+run or inventory acceptance is claimed.
