@@ -1888,7 +1888,40 @@
       "test_ids": [
         "S1-LL05-a",
         "S1-LL05-b"
-      ]
+      ],
+      "external_review": {
+        "reviewer": "Claude",
+        "commit": "e629f7d34c6d69f2f0bc95d9854c9520bbc097b4",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND",
+        "scope": "Eighty-fourth audit: both LL05 assertions qualified; malformed APPLY lists, private condition representation and no-handler debugger boundary carried as exclusions."
+      }
+    },
+    {
+      "id": "STAGE1-LL05-ACCEPTANCE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-ll05-acceptance-r1/accepted-results.json",
+      "sha256": "4069ae4ce9e61fc7ceef35cb2ea3c0c51db8bd259d4c9db8d6c4b7fb1e171cee",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "cdb6742256b80cfcf32f4b79b9314039169e41098bc3cd70e8004be1f43e5b99",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-ll05-acceptance-r1/packet.json",
+      "packet_sha256": "e81850277a268105952e1fad972bc9eb3b0fae1b8a7d9f6def875320e081b471",
+      "scope": "User acceptance of reviewed S1-LL05-a and S1-LL05-b at declared scope; execution unchanged. See stage1/acceptance-ll05.json.",
+      "test_ids": [
+        "S1-LL05-a",
+        "S1-LL05-b"
+      ],
+      "external_review": {
+        "reviewer": "Claude",
+        "commit": "e629f7d34c6d69f2f0bc95d9854c9520bbc097b4",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND",
+        "scope": "Eighty-fourth audit: both LL05 assertions qualified; malformed APPLY lists, private condition representation and no-handler debugger boundary carried as exclusions."
+      }
     }
   ],
   "auxiliary_records": [

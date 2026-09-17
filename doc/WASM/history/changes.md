@@ -1797,3 +1797,9 @@ No defect against either LL05 assertion. Observation: APPLY with a non-list or
 dotted final argument is a checked type refusal where native CCL reaches a
 handler, which the unit's scope defers. Acceptance of S1-LL05-a and S1-LL05-b
 is the user's decision; the ledger is unchanged by this review.
+
+## 2026-09-17 — accept both LL05 slots and save the constants plan
+
+On the user’s “save that as a document for later. then process claude's response, accept and integrate.”, Codex records acceptance of S1-LL05-a and S1-LL05-b against Claude’s eighty-fourth audit at e629f7d3. The unchanged acceptance producer retains the raw results and adds disposition/provenance only. The combined envelope preserves all five earlier accepted objects; the production gate reports seven accepted, 24 missing and zero unreviewed. Malformed APPLY list errors, private condition vectors and the no-handler debugger boundary remain explicit LL19/runtime obligations. No execution is claimed by this acceptance.
+
+The agreed LL10 implementation plan is saved in stage1/ll10-plan.md for later, including the user-selected shared constant pools. No LL10 criterion or result changes.

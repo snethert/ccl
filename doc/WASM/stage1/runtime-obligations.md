@@ -82,3 +82,9 @@ result descriptor, including pending nonlocal transfers. Owner catalog/registry
 trust, host re-entry and multi-Worker publication remain loader/runtime obligations.
 General result-demand propagation remains an optimization beyond the proven-small
 per-callee scratch path; LL05 makes no timing claim.
+
+Claude audit 84 follow-through: LL19 must route APPLY with a non-list or dotted
+final argument through Lisp TYPE-ERROR handling. The retained counterexample is
+not covered by LL05’s designator/arity condition clause. Private class-mask
+vectors and the checked no-handler boundary also remain production condition
+and debugger obligations.

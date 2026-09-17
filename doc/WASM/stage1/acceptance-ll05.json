@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "timestamp": "2026-09-17T20:09:56.388895+00:00",
+  "authorization": {
+    "quote": "save that as a document for later. then process claude's response, accept and integrate.",
+    "provenance": "User to Codex with Claude’s eighty-fourth audit of S1-LL05-a and S1-LL05-b; subsequently directed execution with ‘go’."
+  },
+  "review_commit": "e629f7d34c6d69f2f0bc95d9854c9520bbc097b4",
+  "review_sha256": "8056ed12c5980d8cc783f9ed6dedb6dde7cf3ab2b675250e26b499eefa1f885b",
+  "source_report_sha256": "e975836a55943b5de06e5faac6e0151510eb91c30bef1dfec88dc578f88a1ab2",
+  "scope": "Accept S1-LL05-a and S1-LL05-b at the reviewed STAGE1-LL05-R1 generated B call and adapter scope, including implicit arity/designator conditions, lazy installation, proper tail transfer and reviewed native R6/R6a. No new execution claimed.",
+  "exclusions": [
+    "APPLY with a non-list or dotted final argument remains a checked type refusal, not Lisp TYPE-ERROR handling; extension belongs to LL19.",
+    "Condition objects are private vectors with class masks, not production CLOS instances.",
+    "With no handler chain, the boundary is a checked exception rather than a debugger.",
+    "Moving GC, host re-entry, cross-Worker publication, other checked-error paths and constants remain later obligations."
+  ],
+  "records": [
+    {
+      "id": "S1-LL05-a",
+      "variant": "generated:B",
+      "test_revision": "4e883075f8308e908771c14c33b0561dd6bcddbfbe83636cb0e1409c1d40fc80",
+      "contract_sha256": "f791106c53533440bc499868acbcd0285c71656a8bfb0e18a9e89ab32d6c2cd3",
+      "scope": "Reviewed LL05 qualification and exclusions above."
+    },
+    {
+      "id": "S1-LL05-b",
+      "variant": "generated:B",
+      "test_revision": "4e883075f8308e908771c14c33b0561dd6bcddbfbe83636cb0e1409c1d40fc80",
+      "contract_sha256": "146dca2d365cea8b6cbf8ba72ddb7ecbd98d69f0d37d9c3372eabd0c9b7acf98",
+      "scope": "Reviewed LL05 qualification and exclusions above."
+    }
+  ]
+}
