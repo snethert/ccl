@@ -30,7 +30,7 @@ argument count can exceed that per-producer budget. This does not provide
 unlimited memory, result growth, a collector, condition signalling or handler
 dispatch. Literal MVC lambdas use ordinary heap closures with exact allocation
 checks; the literal APPLY stack-storage optimization is not generalized here. It supplies the multiple-value prerequisite of U1's HANDLER-CASE
-:NO-ERROR expansion. No LL05/LL19 slot credit is claimed. The new backend remains
-a proposal awaiting Claude review before integration.
+:NO-ERROR expansion. No LL05/LL19 slot credit is claimed. The user accepted the unit after Claude’s seventy-ninth audit; its exact
+reviewed backend is integrated.
 
 Packet: `ccl-evidence/2026-09-17-stage1-b-multiple-values-r1`.

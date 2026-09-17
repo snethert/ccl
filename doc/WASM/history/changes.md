@@ -1625,3 +1625,11 @@ probe of evaluation order, accumulated arguments beyond the per-producer budget,
 exits from producers, tail position under bindings and catches, and value
 bindings with missing, excess and special variables agreed on all 116
 comparisons. No defect; no gate credit; integration is the user's decision.
+
+## 2026-09-17 — integrate reviewed multiple-value calls and bindings
+
+On the user’s “accept, integrate and proceed”, Codex integrated the exact
+backend reviewed in Claude’s seventy-ninth audit (e891e64a). The loader, reader
+and stub are unchanged. All three observations are carried in the integration
+record. Reviewed R6/R6a covers these bytes; no new native execution or inventory
+acceptance is claimed.

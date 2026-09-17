@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "operation": "ACCEPT_AND_INTEGRATE_REVIEWED_AUXILIARY_UNIT",
+  "timestamp": "2026-09-17T13:27:35.358474+00:00",
+  "user_authorization": "accept, integrate and proceed",
+  "review_commit": "e891e64a9b092ec452bc903085334547f360cc32",
+  "review": "seventy-ninth audit; no defect",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "6bd1a7a82f9753e8edaffa5d0a2183fece328f747f33ca034603dd39ff396e8c",
+      "after": "a20031f78eb89e5fede3902fb22f77b234f5a67b8300cfd5ee7bf18ee8dee997",
+      "proposal_locator": "2026-09-17-stage1-b-multiple-values-r1/source/tests/wasm/stage1/b-multiple-values/wasm32-backend.lisp"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "before": "0536a62d1e0b717c1c461a869f42ccc7e855b97f4cc45a9509f2493763479eeb",
+      "after": "0536a62d1e0b717c1c461a869f42ccc7e855b97f4cc45a9509f2493763479eeb",
+      "proposal_locator": "2026-09-17-stage1-b-multiple-values-r1/source/tests/wasm/stage1/b-multiple-values/loader.mjs"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "before": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507",
+      "after": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507",
+      "proposal_locator": "2026-09-17-stage1-b-multiple-values-r1/source/tests/wasm/stage1/b-multiple-values/binary.mjs"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "before": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097",
+      "after": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097",
+      "proposal_locator": "2026-09-17-stage1-b-multiple-values-r1/source/tests/wasm/stage1/b-multiple-values/stub.wat"
+    }
+  ],
+  "packet_manifest_sha256": "d076dec9129367567e4c2db73f81dc4b80f44630266333046b2f336ca31d3ad5",
+  "scope": "Generated MULTIPLE-VALUE-CALL and MULTIPLE-VALUE-BIND at reviewed bounds; no LL05/LL19 slot acceptance.",
+  "observations": [
+    "Each producer is bounded by the caller result reservation; accumulated arguments are bounded by the explicit stack.",
+    "Literal MVC lambdas use heap closures, unlike literal APPLY stack storage.",
+    "Each producer transfers values through the caller result area before appending them to the continuation."
+  ],
+  "verification": "Exact reviewed retained payloads; reviewed native R6/R6a and replay cover these bytes. No new native execution.",
+  "reverse": "Restore each file at its before hash."
+}
