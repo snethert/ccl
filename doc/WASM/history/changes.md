@@ -1655,3 +1655,16 @@ oracle, plus native R6/R6a and lazy composition. The small-frame relocation muta
 initially escaped; a larger callee frame now rejects it and the original escape
 is retained. The corrected proposal requires review and renewed acceptance;
 shared source and the Stage 1 ledger (five accepted, 26 missing) are unchanged.
+
+## 2026-09-17 — eightieth Claude audit
+
+Claude reviewed the multiple-value integration (`2b5459c4`), its withdrawal and
+reversal (`610eec09`) and the storage correction (`5a018166`). The integrated
+and restored bytes match their records. The correction's verifier replayed to
+PASS (native R6/R6a, 581 modules, 17 compiler mutants including the executed-copy
+control, four regressions, 40 storage checks, lazy composition), and a 29-case
+adversarial probe of arena reuse under recursion, direct delivery through
+self-calls and local functions, dynamic producers meeting static catches and
+blocks, relocated literal callables and repeated 1,024-value producers agreed
+on all 116 comparisons with the arena released after every case. No defect; no
+gate credit; renewed acceptance is the user's decision.
