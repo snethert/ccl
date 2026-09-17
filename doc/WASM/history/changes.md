@@ -1877,3 +1877,15 @@ The retained verifier recompiled and reran the unit from the final source tree;
 all 3,336 deterministic files matched, with 114 source pins checked. Evidence
 is committed as 394d8df9. The shared compiler, loader, inventory and accepted
 Stage 1 ledger remain unchanged pending adversarial review.
+
+
+## 2026-09-17 — eighty-seventh Claude audit: LL10 integration verified, repeated keyword aliases reviewed
+
+Claude verified the LL10 acceptance record and integration (byte-identical to
+the unit's generated compiler, unbroken chain), confirmed the repeated-alias
+behaviour on the pristine native baseline, and reviewed `c4a9ff58` from a
+detached worktree: the verifier replayed to PASS with 3,336 deterministic
+files, and a 12-form probe at three placements agreed on all 36 comparisons
+with the four controls rejected. No defect; the behaviour is a native CCL
+characteristic rather than an ANSI guarantee. Acceptance is the user's
+decision; the ledger is unchanged at 8 accepted and 23 missing.
