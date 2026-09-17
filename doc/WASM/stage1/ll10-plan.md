@@ -101,3 +101,12 @@ operations, numeric arithmetic, package construction, moving GC or the complete
 image loader. The encoder and relocation interface are reusable by the later
 cross-loader. Shared-source integration follows Claude's review and the user's
 acceptance.
+
+## Implementation progress — 17 September 2026
+
+The [pointer-free constant encoder](../../../tests/wasm/stage1/constants/README.md)
+is implemented in isolation with independent literal byte checks and five rejected
+semantic mutants. It covers target-width integers, scalar float bits, characters,
+strings and D1 specialized vectors. Shared-pool graphs, compiler integration and
+target round-trip are next; LL10 remains NOT_RUN. This bounded first commit follows
+the user’s request to conserve the remaining weekly token allowance.

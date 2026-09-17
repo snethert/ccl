@@ -1,0 +1,20 @@
+.....F
+======================================================================
+FAIL: test_strings_and_vectors (__main__.EncodingTests.test_strings_and_vectors) (spec={'kind': 'vector', 'type': 's16', 'elements': ['-32768', '32767']})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/buildsomething/Source/ccl/tests/wasm/stage1/constants/test_encode.py", line 79, in test_strings_and_vectors
+    self.golden(spec, golden)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/buildsomething/Source/ccl/tests/wasm/stage1/constants/test_encode.py", line 21, in golden
+    self.assertEqual(result.image.hex(), expected.replace(' ', ''))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'df0200000080ff7f' != 'df0200000080ff7f0000000000000000'
+- df0200000080ff7f
++ df0200000080ff7f0000000000000000
+
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.013s
+
+FAILED (failures=1)

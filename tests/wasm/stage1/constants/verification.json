@@ -1,0 +1,41 @@
+{
+  "status": "PASS",
+  "scope": "Pointer-free encoder unit only; no generated-code or LL10 qualification.",
+  "cases": [
+    {
+      "case": "positive",
+      "result": "PASS"
+    },
+    {
+      "case": "host-integer-range",
+      "result": "REJECTED"
+    },
+    {
+      "case": "float-bit-order",
+      "result": "REJECTED"
+    },
+    {
+      "case": "tagged-string",
+      "result": "REJECTED"
+    },
+    {
+      "case": "tagged-fixnum-vector",
+      "result": "REJECTED"
+    },
+    {
+      "case": "missing-vector-pad",
+      "result": "REJECTED"
+    }
+  ],
+  "source_pins": {
+    "tests/wasm/stage1/constants/encode.py": "7009534724b4ba357f3b5242edfacd1d31e339e19c3a7fa208612ebe8d72b02c",
+    "tests/wasm/stage1/constants/test_encode.py": "0158aef82296c6dff0baa8fd82cb5949c9007ce409e1fbde08a9c0590b174013",
+    "tests/wasm/stage1/constants/verify.py": "0d74e0082a5ffb7d16d94659b80f351f76e6c9b35bde2e32e6bae090033d1aa1",
+    "doc/WASM/contracts/wasm32-layout.v1.json": "216237406b2907e5e1791746bb5677ad78f1d8a09b0988577abd6441e50a8daa",
+    "compiler/X86/X8632/x8632-arch.lisp": "1491906803bac60051385c1691090a19b36b59a2868a2b41b13b1fdb91a6cfcd",
+    "compiler/X86/X8632/x8632-vinsns.lisp": "8d548c203de1f1baea0426c7784fc7063fcaad00ebd430022f2c77fa5347095a",
+    "compiler/X86/x862.lisp": "4528b2906962603389f78a9cfe73bf8f4ba38eecb45c7246140d7bddd6267334",
+    "xdump/xfasload.lisp": "70184b11180edbf69901eff60628dab250d46e9847efa101a3db0dbc0e0ab41e",
+    "lib/chars.lisp": "48f2386c5126cf1b8dec576d7e0badc25d6d8a8a4c0d319047168dfa9804ceba"
+  }
+}
