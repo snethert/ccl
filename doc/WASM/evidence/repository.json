@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "0a6c7413983a55d2fec7fec84d0091cbd20b3a65",
+  "commit": "5de34d038605cd08329239a58ac6dd35e7539700",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "781ce75503e42aeb8c76f90811068b6ea4c847f12c428f71fe115d506413eb1c",
-  "immutable_evidence_files": 222236,
-  "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-ll10.json",
-  "source_index_sha256": "f0dcb97eff12e6bf5bb6d3491a5d7d28fee309d6a749b0354a3d545b01e606f3",
-  "verification": "Complete LL10 producer and fresh retained replay pass, including native R6/R6a and 2,340 byte-identical deterministic files. Actual production gate and twelve role omissions pass. Scoped new-file hashes checked; all prior catalog rows preserved.",
+  "catalog_sha256": "e315ed421a32da44339ed2da3cd41a5d394f7a771afc2e7467552c459418c7fa",
+  "immutable_evidence_files": 222247,
+  "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-ll10-followup.json",
+  "source_index_sha256": "1b61e767b491bf34d323b9a6bb7b069ba5d2562080ebac2462212ce80554ce6c",
+  "verification": "Scoped audit 85 follow-up: fresh replay reproduces 1,150 files, four compiler mutants and two semantic controls reject. Original compiler sources and compiled compiler FASL unchanged; reviewed native R6/R6a reused. New catalog files hashed; prior rows preserved.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: seven accepted, 23 missing, one unreviewed. LL10 executed at declared scope and awaits Claude review, project acceptance and integration.",
+  "scope": "Stage 0: 48 accepted. Stage 1: seven accepted, 23 missing, one unreviewed. LL10 passed Claude audit 85; focused oracle follow-up awaits review. Acceptance and integration remain open.",
   "last_scoped_addition": {
-    "directory": "2026-09-17-stage1-ll10-r1",
-    "files": 568,
-    "bytes": 131021314
+    "directory": "2026-09-17-stage1-ll10-review-followup-r1",
+    "files": 11,
+    "bytes": 13337589
   },
   "prior_indexed_references_verified": 16982
 }

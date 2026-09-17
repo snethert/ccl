@@ -4191,6 +4191,16 @@
       "availability": "EXTERNAL_LOCAL_STORE",
       "review_commit": "fe219e354546b05d89d8371f81b499aeb3646f4c",
       "integration": "doc/WASM/stage1/integration-b-result-scratch.json"
+    },
+    {
+      "id": "STAGE1-LL10-REVIEW-FOLLOWUP-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-ll10-review-followup-r1/packet.json",
+      "sha256": "5d943ad50ef79998581af5548ba4cad82979c9f51f5979f55ea3d713a7e4438d",
+      "scope": "Audit 85 follow-up: four focused compiler mutant oracles; native cross-function EQ comparisons over shared and distinct literals; identity-based restore expectations with an untouched CAR-7 cons. 91 B modules, 245 native-derived comparisons and nine additional cross-function comparisons; four compiler and two semantic controls reject. Fresh replay reproduces 1,150 files. Reviewed compiler, original fixture and native R6/R6a unchanged. No acceptance or integration.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

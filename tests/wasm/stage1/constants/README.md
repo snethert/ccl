@@ -191,3 +191,11 @@ To produce independently, run `native.py --evidence ../ccl-evidence --work DIR
 RUN_DIR`. All outputs must be new directories. `retain.py` creates the single final
 packet, `verify_ll10.py` recompiles/replays it, and `publish.py` publishes only after
 that replay. Execution is complete; review, acceptance and integration are separate.
+
+## Audit 85 follow-up
+
+The [focused follow-up](review-followup/README.md) adds discriminating compiler
+mutant oracles, native cross-function identity comparisons and an identity-based
+restore expectation with an unrelated CAR-7 cons. Use its verifier for these
+strengthened checks; the original R1 replay above preserves the reviewed record.
+The implementation and its native R6/R6a remain unchanged.

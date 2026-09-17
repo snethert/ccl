@@ -1829,3 +1829,10 @@ controls and the inherited corpora, and a 19-case probe at every placement
 agreed on all 57 comparisons. No defect against the assertion; observations
 recorded. Acceptance is the user's decision; the ledger is unchanged by this
 review at 7 accepted, 23 missing and 1 unreviewed.
+
+
+## 2026-09-17 — strengthen LL10 qualification after audit 85
+
+On the user's “proceed”, Codex addresses the three proposed test improvements. A focused follow-up preserves the reviewed R1 fixture and compiler while deriving retained test overlays: each compiler mutant reaches a mechanism-specific oracle; native CCL and generated code call separately compiled getters to compare shared and distinct literals; restored expectations change the identified native graph object, leaving another CAR-7 cons untouched. Splitting the shared literal and restoring the old blanket rewrite are rejected controls.
+
+The extended corpus passes at all three original placements (91 B modules plus a header probe, 245 native-derived comparisons and nine additional cross-function comparisons), and all four compiler mutants reject at distinct oracles. Fresh replay reproduces 1,150 deterministic files. Original harness-development failures are retained. The unchanged reviewed compiler reuses its native R6/R6a; no rebuild, acceptance, integration or new gate credit is claimed. Stage 1 remains seven accepted, 23 missing and one unreviewed.
