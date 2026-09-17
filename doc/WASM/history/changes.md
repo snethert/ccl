@@ -1388,3 +1388,8 @@ corpus runs with public table entries guarded against compiled calls; new APPLY
 cases, compiler mutants, lazy-loader composition and native R6/R6a cover the
 change. Original escaped controls are retained with their limits disclosed.
 No shared backend integration or LL05 slot credit is claimed before review.
+
+
+## 2026-09-16 — Claude's seventy-third audit: tail-call integration, lazy installation and direct continuations
+
+Claude verified the integrated backend's byte identity with the reviewed tail-call unit and the hash chain from the local-function record, then replayed both new packets: the lazy verifier reproduced every record byte for byte with 2,870 cold installations per mode, 35 controls and 14 mutants, and the direct-continuation verifier recompiled the 276-module corpus and twenty mutant compilers with identical outcomes and composed the lazy loader over the new binaries. A 32-case adversarial probe of deep tail chains on the new call path, effectful and long APPLY prefixes, nested ordinary calls and errors inside argument evaluation agreed across the Python model, native CCL and the target with zero public dispatches, and the lazy loader then composed over the probe's modules. No defect. The ledger stays at 5 accepted and 26 missing.
