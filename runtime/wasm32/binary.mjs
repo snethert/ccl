@@ -7,7 +7,7 @@ export function inspect(bytes) {
   const leb=()=>{let n=0;for(let i=0;i<5;i++){const b=byte();if(i===4&&b>15)fail('LEB');n+=(b&127)*2**(7*i);if(!(b&128))return n;}fail('LEB');};
   const str=()=>{const n=leb();if(p+n>end)fail('NAME');const s=new TextDecoder('utf8',{fatal:true}).decode(bytes.subarray(p,p+n));p+=n;return s;};
   const vec=f=>{const n=leb();if(n>end-p)fail('VECTOR');return Array.from({length:n},f);};
-  const type=()=>{const b=byte();const t={127:'i32',126:'i64',125:'f32',124:'f64',112:'funcref'}[b];if(!t)fail('TYPE');return t;};
+  const type=()=>{const b=byte();const t={127:'i32',126:'i64',125:'f32',124:'f64',112:'funcref',105:'exnref'}[b];if(!t)fail('TYPE');return t;};
   const limits=()=>{const flags=leb();if(flags>3)fail('LIMITS');return {flags,minimum:leb(),maximum:flags&1?leb():null};};
   const m={types:[],imports:[],functions:[],exports:[],sections:[]},seen=new Set();
   while(p<bytes.length){end=bytes.length;const id=byte(),n=leb();end=p+n;if(end>bytes.length)fail('SECTION');

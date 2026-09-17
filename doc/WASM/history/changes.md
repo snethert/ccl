@@ -1472,3 +1472,12 @@ composition), and a 35-case adversarial probe of tag identity, nested and
 redirected exits, pending exits across cleanups, deep recursion and a 3,000-step
 chain inside a cleanup agreed on all 140 comparisons. No defect; no gate credit;
 integration is the user's decision.
+
+## 2026-09-16 — integrate reviewed CATCH/THROW and loader policy
+
+On the user’s “accept, integrate and proceed”, Codex integrated the exact
+backend and runtime payloads reviewed in Claude’s seventy-fifth audit
+(a3759409). The integration record binds all before/after hashes, the retained
+manifest and authorization, and carries the host-re-entry, shared-stack,
+classification-cost and collector-inspection observations. Reviewed R6/R6a
+covers these bytes; no new native run or inventory acceptance is claimed.

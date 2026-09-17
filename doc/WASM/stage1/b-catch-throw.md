@@ -2,8 +2,9 @@
 
 The [isolated proposal](../../../tests/wasm/stage1/b-catch-throw/README.md)
 adds CATCH/THROW through CCL's real front end and publishes catch/cleanup records
-in the production TCR's handler checkpoint. This is auxiliary execution pending
-Claude review; it claims no LL05 or LL19 slot and is not integrated.
+in the production TCR's handler checkpoint. The user accepted this auxiliary unit after Claude’s seventy-fifth audit;
+the backend and loader files are integrated byte-identically. No LL05 or LL19
+slot is claimed.
 
 A tag is evaluated before the catch is established. THROW evaluates its tag and
 all values, searches for the nearest live EQ tag, stores values in that catch's
@@ -61,3 +62,8 @@ binding, separate control-stack bounds or condition-handler dispatch. Local
 RETURN-FROM also remains open. Engine traps cannot provide Lisp cleanup semantics.
 
 Packet: `ccl-evidence/2026-09-16-stage1-b-catch-throw-r1`.
+
+The audit also carries a host-re-entry obligation: a nonlocal exit crossing a
+public wrapper currently restores its incoming unwind state. Generated code
+cannot re-enter the host today; settle in-flight state before adding that path.
+The exit classifier rethrows once, a cost for later measurement.

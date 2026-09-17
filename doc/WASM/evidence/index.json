@@ -3990,9 +3990,11 @@
       "sha256": "5ba38fac443721b10e4dd4dd1e31d46f5e3a00f6d92d9dc851e2a1ae7057246c",
       "scope": "Generated CATCH/THROW and published catch/cleanup records through real CCL IR: 275 source functions, 350 modules, 1110 native/model cases and 4440 target comparisons. Nearest EQ tag, complete value transfer, nested cleanup replacement, checked missing-catch refusal, TCR control-head and unwind-state restoration. 19280 control inspections, 18 state checks, 22 corrupt/missing-chain probes, 18 rejected compiler mutants and two inherited regression controls. Distinct loader exit-tag/profile policy: nine refusals, four loader mutants, complete lazy composition. Native R6/R6a and retained replay pass. Three uncounted exploratory omissions and original failures retained. No condition classes/handlers, special binding, GC, full LL05/LL19 credit or unreviewed integration.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AND_INTEGRATED_AUXILIARY",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "integration_record": "doc/WASM/stage1/integration-b-catch-throw.json",
+      "user_authorization": "accept, integrate and proceed"
     }
   ]
 }

@@ -32,8 +32,8 @@ body, retaining the public wrapper at boundaries. It removes the extra argument
 copy and wrapper. Both units were approved after Claude’s seventy-third audit. Next:
 the Lisp condition path. The accepted and integrated [UNWIND-PROTECT unit](b-unwind-protect.md)
 now supplies cleanup on normal/checked-exception exits and inhibits tail transfer
-while cleanup or retained values are pending. The [CATCH/THROW proposal](b-catch-throw.md)
-adds generated nonlocal exits and a published catch/cleanup chain, pending review.
+while cleanup or retained values are pending. The accepted and integrated [CATCH/THROW unit](b-catch-throw.md)
+adds generated nonlocal exits and a published catch/cleanup chain.
 Next are dynamic special binding and the handler/signalling path; debugger and
 collector integration of the control records remains explicit. Neither
 complete LL05 slot is claimed by these units.

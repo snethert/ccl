@@ -531,12 +531,95 @@
 
 (defvar *b-exception-count* 0)
 
+(defun b-exception-local ()
+  (format nil "$cleanup_exception~d" (prog1 *b-exception-count* (incf *b-exception-count*))))
+
+(defun b-control-frame (kind tag body-function)
+  (let* ((base (temporary)) (root (temporary)) (head (temporary)) (value (temporary))
+         (exception (b-exception-local)) (body (funcall body-function (b-local base))))
+    (with-output-to-string (s)
+      ;; CATCH evaluates its tag before establishing the extent.
+      (format s "(local.set ~a ~a) (local.set ~a (local.get $top)) (local.set ~a ~a) (local.set ~a ~a)"
+        value tag base root (b-load wasm32::tcr.root_head) head (b-load wasm32::tcr.handler_checkpoint))
+      (write-string (b-reserve-runtime "(i64.and (i64.add (i64.extend_i32_u (local.get $result_bytes)) (i64.const 63)) (i64.const -16))") s)
+      (format s "(i32.store (local.get ~a) (local.get ~a)) (i32.store offset=4 (local.get ~a) (i32.const ~d)) (i32.store offset=8 (local.get ~a) (local.get $capacity)) (i32.store offset=12 (local.get ~a) (i32.const 0)) (i32.store offset=16 (local.get ~a) (i32.add (local.get ~a) (i32.const 32))) (i32.store offset=20 (local.get ~a) ~a) (i32.store offset=24 (local.get ~a) (i32.const 1128483889)) (i32.store offset=28 (local.get ~a) (i32.const 0))"
+        base head base kind base base base base base (b-load wasm32::tcr.unwind_state) base base)
+      (write-string (b-runtime-roots (b-at (b-local base) 32) "(i32.add (local.get $capacity) (i32.const 2))") s)
+      (format s "(i32.store offset=40 (local.get ~a) (local.get ~a))" base value)
+      (write-string (b-store wasm32::tcr.handler_checkpoint (b-local base)) s)
+      (format s "(block $control_normal (block $control_error (result exnref) (try_table (catch_all_ref $control_error) ~a (br $control_normal)) unreachable) (local.set ~a)" body exception)
+      (write-string (b-store wasm32::tcr.handler_checkpoint (b-local head)) s)
+      (write-string (b-store wasm32::tcr.root_head (b-local root)) s)
+      (write-string (b-store wasm32::tcr.unwind_state (b-wat "(call $exit_state (local.get ~a))" exception)) s)
+      (format s "(local.set $top (local.get ~a)) (throw_ref (local.get ~a)))" base exception)
+      (write-string (b-store wasm32::tcr.handler_checkpoint (b-local head)) s)
+      (write-string (b-store wasm32::tcr.unwind_state (b-wat "(i32.load offset=20 (local.get ~a))" base)) s)
+      (write-string (b-store wasm32::tcr.root_head (b-local root)) s)
+      (format s "(local.set $top (local.get ~a))" base))))
+
+(defun b-catch (tag body)
+  (b-control-frame 1 (b-scalar tag)
+    (lambda (record)
+      (let* ((top (temporary)) (root (temporary)) (vsp (temporary)) (mv (temporary)) (owner (temporary)) (count (temporary))
+             (target (temporary)) (exception (b-exception-local))
+             (code (let ((*b-tail-position* nil)) (b-multiple body))))
+        (with-output-to-string (s)
+          (format s "(local.set ~a (local.get $top)) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a)"
+            top root (b-load wasm32::tcr.root_head) vsp (b-load wasm32::tcr.vsp) mv (b-load wasm32::tcr.mv_base) owner (b-load wasm32::tcr.mv_owner_top) count (b-load wasm32::tcr.mv_count))
+          (format s "(block $catch_normal (block $catch_exit (result i32 exnref) (try_table (catch_ref $nonlocal_exit $catch_exit) ~a (br $catch_normal)) unreachable) (local.set ~a) (local.set ~a) (if (i32.ne (local.get ~a) ~a) (then (throw_ref (local.get ~a))))"
+            code exception target target record exception)
+          (format s "(local.set $top (local.get ~a))" top)
+          (write-string (b-store wasm32::tcr.root_head (b-local root)) s)
+          (write-string (b-store wasm32::tcr.vsp (b-local vsp)) s)
+          (write-string (b-store wasm32::tcr.mv_base (b-local mv)) s)
+          (write-string (b-store wasm32::tcr.mv_owner_top (b-local owner)) s)
+          (write-string (b-store wasm32::tcr.mv_count (b-local count)) s)
+          (format s "(local.set $count (i32.load offset=12 ~a))" record)
+          (write-string (b-condition "(i32.gt_u (local.get $count) (local.get $capacity))" 3) s)
+          (format s "(memory.copy (local.get $results) ~a (i32.mul (local.get $count) (i32.const 4))))" (b-at record 48)))))))
+
+(defun b-throw (tag values)
+  (b-frame 1
+    (lambda (root)
+      (let ((target (temporary)))
+        (concatenate 'string
+          (b-wat "(i32.store offset=8 ~a ~a)" root (b-scalar tag))
+          (let ((*b-tail-position* nil)) (b-multiple values))
+          (b-wat "(local.set ~a (call $find_catch (i32.load offset=8 ~a)))" target root)
+          (b-condition (b-wat "(i32.gt_u (local.get $count) (i32.load offset=8 (local.get ~a)))" target) 3)
+          (b-wat "(memory.copy (i32.add (local.get ~a) (i32.const 48)) (local.get $results) (i32.mul (local.get $count) (i32.const 4))) (i32.store offset=12 (local.get ~a) (local.get $count))" target target)
+          (b-store wasm32::tcr.unwind_state "(i32.const 1)")
+          (b-wat "(throw $nonlocal_exit (local.get ~a))" target))))))
+
+(defun b-control-runtime ()
+  "(func $exit_state (param $exception exnref) (result i32)
+    (block $nonlocal (result i32)
+      (block $ordinary
+        (try_table (catch $nonlocal_exit $nonlocal) (catch_all $ordinary) (throw_ref (local.get $exception))) unreachable)
+      (return (i32.const 2))) drop (i32.const 1))
+  (func $find_catch (param $tag i32) (result i32) (local $p i32) (local $previous i32) (local $capacity i32)
+    (local.set $p (i32.load offset=140 (global.get $tcr)))
+    (block $missing (loop $search
+      (br_if $missing (i32.eqz (local.get $p)))
+      (if (i32.or (i32.and (local.get $p) (i32.const 15)) (i32.lt_u (local.get $p) (i32.load offset=68 (global.get $tcr)))) (then (throw $call_error (i32.const 9))))
+      (if (i64.gt_u (i64.add (i64.extend_i32_u (local.get $p)) (i64.const 48)) (i64.extend_i32_u (i32.load offset=72 (global.get $tcr)))) (then (throw $call_error (i32.const 9))))
+      (if (i32.ne (i32.load offset=24 (local.get $p)) (i32.const 1128483889)) (then (throw $call_error (i32.const 9))))
+      (local.set $capacity (i32.load offset=8 (local.get $p)))
+      (if (i64.gt_u (i64.add (i64.add (i64.extend_i32_u (local.get $p)) (i64.const 48)) (i64.mul (i64.extend_i32_u (local.get $capacity)) (i64.const 4))) (i64.extend_i32_u (i32.load offset=72 (global.get $tcr)))) (then (throw $call_error (i32.const 9))))
+      (if (i32.or (i32.ne (i32.load offset=16 (local.get $p)) (i32.add (local.get $p) (i32.const 32))) (i32.ne (i32.load offset=36 (local.get $p)) (i32.add (local.get $capacity) (i32.const 2)))) (then (throw $call_error (i32.const 9))))
+      (if (i32.and (i32.ne (i32.load offset=4 (local.get $p)) (i32.const 1)) (i32.ne (i32.load offset=4 (local.get $p)) (i32.const 2))) (then (throw $call_error (i32.const 9))))
+      (local.set $previous (i32.load (local.get $p)))
+      (if (i32.ge_u (local.get $previous) (local.get $p)) (then (throw $call_error (i32.const 9))))
+      (if (i32.and (i32.eq (i32.load offset=4 (local.get $p)) (i32.const 1)) (i32.eq (i32.load offset=40 (local.get $p)) (local.get $tag))) (then (return (local.get $p))))
+      (local.set $p (local.get $previous)) (br $search)))
+    (throw $call_error (i32.const 8)))")
+
 (defun b-unwind-protect (protected cleanup)
   ;; Reserve the result-retention root before entering the dynamic extent.
   ;; Calls in either arm are ordinary: pending cleanup forbids tail transfer.
   (let* ((exception (format nil "$cleanup_exception~d" (prog1 *b-exception-count* (incf *b-exception-count*))))
          (saved-count (temporary)))
-    (b-retained-frame "(local.get $capacity)"
+    (b-control-frame 2 "(i32.const 77825)"
       (lambda (retained)
         (let* ((top (temporary)) (root (temporary)) (vsp (temporary))
                (mv (temporary)) (owner (temporary)) (count (temporary))
@@ -548,7 +631,8 @@
                           (b-store wasm32::tcr.vsp (b-local vsp))
                           (b-store wasm32::tcr.mv_base (b-local mv))
                           (b-store wasm32::tcr.mv_owner_top (b-local owner))
-                          (b-store wasm32::tcr.mv_count (b-local count)))))
+                          (b-store wasm32::tcr.mv_count (b-local count))
+                          (b-store wasm32::tcr.handler_checkpoint retained))))
           (with-output-to-string (out)
             (format out "(local.set ~a (local.get $top)) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a) (local.set ~a ~a)"
               top root (b-load wasm32::tcr.root_head) vsp (b-load wasm32::tcr.vsp)
@@ -556,13 +640,13 @@
             ;; Only the protected form is caught here. Cleanup's own exception
             ;; replaces this one and goes to the next enclosing extent.
             (format out "(block $protected_normal (block $protected_error (result exnref) (try_table (catch_all_ref $protected_error) ~a (br $protected_normal)) unreachable) (local.set ~a) ~a ~a (throw_ref (local.get ~a)))"
-              protected-code exception restore cleanup-code exception)
+              protected-code exception (concatenate 'string restore (b-store wasm32::tcr.unwind_state (b-wat "(call $exit_state (local.get ~a))" exception))) cleanup-code exception)
             (format out "(local.set ~a (local.get $count)) (memory.copy ~a (local.get $results) (i32.mul (local.get $count) (i32.const 4)))"
-              saved-count (b-at retained 8))
+              saved-count (b-at retained 48))
             (write-string restore out)
             (write-string cleanup-code out)
             (format out "(local.set $count (local.get ~a)) (memory.copy (local.get $results) ~a (i32.mul (local.get $count) (i32.const 4)))"
-              saved-count (b-at retained 8))))))))
+              saved-count (b-at retained 48))))))))
 
 (defun b-scalar (ir)
   (let ((*b-tail-position* nil)) (b-scalar-inner ir)))
@@ -580,7 +664,7 @@
              ((assoc (first args) *b-call-links*) (b-symbol (first args)))
              (t (emit-expression ir))))
       (ccl::%function (b-wat "(call $function_value ~a)" (b-symbol (first args))))
-      ((ccl::call ccl::values ccl::progn ccl::multiple-value-prog1 ccl::prog1 ccl::if ccl::let ccl::let* ccl::flet ccl::labels ccl::lambda-bind ccl::self-call ccl::lexical-function-call ccl::unwind-protect)
+      ((ccl::call ccl::values ccl::progn ccl::multiple-value-prog1 ccl::prog1 ccl::if ccl::let ccl::let* ccl::flet ccl::labels ccl::lambda-bind ccl::self-call ccl::lexical-function-call ccl::unwind-protect ccl::catch ccl::throw)
        (b-wat "(block (result i32) ~a (if (result i32) (local.get $count) (then (i32.load (local.get $results))) (else (i32.const ~d))))" (b-multiple ir) wasm32::canonical-nil-value))
       ((car cdr ccl::%car ccl::%cdr)
        (let* ((p (temporary)) (code (b-scalar (first args))) (offset (if (member op '(car ccl::%car)) wasm32::cons.car wasm32::cons.cdr)))
@@ -594,6 +678,8 @@
   (let ((op (ccl::acode-operator-name (ccl::acode-operator ir))) (args (ccl::acode-operands ir)))
     (case op
       (ccl::unwind-protect (b-unwind-protect (first args) (second args)))
+      (ccl::catch (b-catch (first args) (second args)))
+      (ccl::throw (b-throw (first args) (second args)))
       ((ccl::flet ccl::labels)
        (with-output-to-string (s)
          (loop for v in (first args) for f in (second args) do
@@ -673,7 +759,7 @@
                      (b-store wasm32::tcr.root_head "(local.get $root)")))
            (entry-roots (b-runtime-roots "(local.get $frame)" (b-wat "(i32.add (local.get $capacity) (i32.const ~d))" (length *b-bound-vars*))))
            (wat (with-output-to-string (s)
-             (write-string "(module (type $b_entry (func (param i32 i32) (result i32 i32))) (type $tail_entry (func (param i32 i32 i32) (result i32 i32))) (import \"env\" \"memory\" (memory 1 32769 shared)) (import \"env\" \"tcr\" (global $tcr i32)) (import \"env\" \"table\" (table 0 funcref)) (import \"env\" \"tail_table\" (table $tail_slots 0 funcref)) (import \"env\" \"code_registry\" (global $code_registry i32)) (import \"env\" \"call_error\" (tag $call_error (param i32))) (import \"env\" \"type_error\" (tag $type_error (param i32 i32)))" s)
+             (write-string "(module (type $b_entry (func (param i32 i32) (result i32 i32))) (type $tail_entry (func (param i32 i32 i32) (result i32 i32))) (import \"env\" \"memory\" (memory 1 32769 shared)) (import \"env\" \"tcr\" (global $tcr i32)) (import \"env\" \"table\" (table 0 funcref)) (import \"env\" \"tail_table\" (table $tail_slots 0 funcref)) (import \"env\" \"code_registry\" (global $code_registry i32)) (import \"env\" \"call_error\" (tag $call_error (param i32))) (import \"env\" \"type_error\" (tag $type_error (param i32 i32))) (import \"env\" \"nonlocal_exit\" (tag $nonlocal_exit (param i32)))" s)
              (dolist (name (sort *b-keywords* #'string<))
                (format s "(import \"keywords\" ~s (global $key_~a i32))" name name))
              (dolist (name (sort *b-symbols* #'string<))
@@ -681,6 +767,7 @@
              (dolist (entry *b-code-imports*)
                (format s "(import \"codes\" ~s (global $code_~a i32))" (second entry) (second entry)))
              (write-string (b-object-runtime) s)
+             (write-string (b-control-runtime) s)
              (write-string "(func $body (export \"tail_entry\") (type $tail_entry) (param $self i32) (param $nargs i32) (param $context i32) (result i32 i32) (local $incoming i32) (local $output i32) (local $owner i32) (local $root i32) (local $old_count i32) (local $frame i32) (local $results i32) (local $top i32) (local $count i32) (local $value i32) (local $exception exnref) (local $wide i64) (local $capacity i32) (local $result_bytes i32) (local $bindings i32) (local $dispatch_self i32) (local $dispatch_slot i32) (local $closure_env i32)" s)
              (dotimes (i *temporary-count*) (format s "(local $tmp~d i32)" i))
              (dotimes (i *b-exception-count*) (format s "(local $cleanup_exception~d exnref)" i))
@@ -1060,7 +1147,7 @@
                            (unless (or (and (member head '(car cdr)) (= n 1))
                                        (and (member head '(rplaca rplacd)) (= n 2))
                                        (and (eq head 'if) (member n '(2 3))) (member head '(values progn))
-                                       (and (member head '(prog1 multiple-value-prog1 unwind-protect)) (<= 1 n))
+                                       (and (member head '(prog1 multiple-value-prog1 unwind-protect catch)) (<= 1 n)) (and (eq head 'throw) (= n 2))
                                        (and (eq head 'funcall) (<= 1 n)) (and (eq head 'apply) (<= 2 n))
                                        (member head local-names) (assoc head *b-call-links*)
                                        (and (consp head) (eq (car head) 'lambda))) (refuse :b-source))
@@ -1211,9 +1298,10 @@
 ;;; Raw saved words 0..31, root header 32..39, SELF/padding 40..47, args 48+.
 (defun b-entry-wrapper (arity maximum open bound-words)
   (with-output-to-string (s)
-    (write-string "(func (export \"entry\") (type $b_entry) (param $self i32) (param $nargs i32) (result i32 i32) (local $incoming i32) (local $output i32) (local $owner i32) (local $root i32) (local $old_count i32) (local $bytes i32) (local $i i32) (local $value i32) (local $count i32) (local $exception exnref)" s)
+    (write-string "(func (export \"entry\") (type $b_entry) (param $self i32) (param $nargs i32) (result i32 i32) (local $incoming i32) (local $output i32) (local $owner i32) (local $root i32) (local $old_count i32) (local $bytes i32) (local $i i32) (local $value i32) (local $count i32) (local $exception exnref) (local $old_handler i32) (local $old_unwind i32)" s)
     (format s "(local.set $incoming ~a) (local.set $output ~a) (local.set $owner ~a) (local.set $root ~a) (local.set $old_count ~a)"
       (b-load wasm32::tcr.vsp) (b-load wasm32::tcr.mv_base) (b-load wasm32::tcr.mv_owner_top) (b-load wasm32::tcr.root_head) (b-load wasm32::tcr.mv_count))
+    (write-string (b-wat "(local.set $old_handler ~a) (local.set $old_unwind ~a)" (b-load wasm32::tcr.handler_checkpoint) (b-load wasm32::tcr.unwind_state)) s)
     (write-string (b-condition (b-wat "(i32.or (i32.lt_u (local.get $nargs) (i32.const ~d)) (i32.gt_u (local.get $nargs) (i32.const ~d)))" arity (if open #xffffffff maximum)) 1) s)
     (write-string (b-condition "(i32.or (i32.lt_u (local.get $incoming) (i32.load offset=68 (global.get $tcr))) (i32.and (i32.or (local.get $incoming) (i32.or (local.get $output) (local.get $owner))) (i32.const 15)))" 2) s)
     (write-string (b-condition "(i32.or (i32.gt_u (local.get $output) (local.get $owner)) (i32.gt_u (local.get $owner) (i32.load offset=72 (global.get $tcr))))" 2) s)
@@ -1232,6 +1320,8 @@
     (write-string "(throw_ref (local.get $exception)))" s)))
 (defun b-wrapper-restore (exceptional)
   (concatenate 'string
+    (b-store wasm32::tcr.handler_checkpoint "(local.get $old_handler)")
+    (b-store wasm32::tcr.unwind_state "(local.get $old_unwind)")
     (b-store wasm32::tcr.vsp "(local.get $incoming)")
     (b-store wasm32::tcr.mv_base "(local.get $output)")
     (b-store wasm32::tcr.mv_owner_top "(local.get $owner)")

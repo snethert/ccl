@@ -4,7 +4,7 @@ export const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 const need=(ok,reason)=>{if(!ok)throw Error(reason);};
 const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const B={params:['i32','i32'],results:['i32','i32']},TAIL={params:['i32','i32','i32'],results:['i32','i32']};
-export const PROFILE='wasm32-shared-B-exnref-tail-v1';
+export const PROFILE='wasm32-shared-B-exnref-tail-catch-v1';
 
 export function validate(bytes,record) {
   need(sha(bytes)===record.sha256,'BINARY_DIGEST');
@@ -18,7 +18,8 @@ export function validate(bytes,record) {
     {module:'env',name:'tail_table',kind:'table',element:'funcref',flags:0,minimum:0,maximum:null},
     {module:'env',name:'code_registry',kind:'global',type:'i32',mutable:0},
     {module:'env',name:'call_error',kind:'tag',signature:{params:['i32'],results:[]}},
-    {module:'env',name:'type_error',kind:'tag',signature:{params:['i32','i32'],results:[]}}
+    {module:'env',name:'type_error',kind:'tag',signature:{params:['i32','i32'],results:[]}},
+    {module:'env',name:'nonlocal_exit',kind:'tag',signature:{params:['i32'],results:[]}}
   ];
   const fixed=m.imports.filter(i=>i.module==='env');need(same(fixed,expected),'ENV_IMPORTS');
   const keys=new Set();
@@ -41,6 +42,7 @@ export class LazyLoader {
   constructor(options){
     this.#o=options;this.events=[];
     need(options.table!==options.tail_table,'DISTINCT_TABLES');
+    need(options.nonlocal_exit instanceof WebAssembly.Tag&&options.nonlocal_exit!==options.call_error,'DISTINCT_EXIT_TAG');
     const seen=new Set();
     for(const source of options.catalog){const r=structuredClone(source);
       need(Number.isInteger(r.slot)&&r.slot>0&&r.slot<options.table.length&&r.slot<options.tail_table.length,'SLOT');
@@ -57,7 +59,7 @@ export class LazyLoader {
     const clean=Object.create(null);
     for(const [namespace,nd] of Object.entries(Object.getOwnPropertyDescriptors(imports))){need('value'in nd,'IMPORT_GETTER');const fields=nd.value;clean[namespace]=Object.create(null);
       for(const [key,d] of Object.entries(Object.getOwnPropertyDescriptors(fields))){need('value'in d,'IMPORT_GETTER');clean[namespace][key]=d.value;}}
-    need(clean.env.memory===o.memory&&clean.env.table===o.table&&clean.env.tail_table===o.tail_table&&clean.env.call_error===o.call_error,'CAPABILITIES');
+    need(clean.env.memory===o.memory&&clean.env.table===o.table&&clean.env.tail_table===o.tail_table&&clean.env.call_error===o.call_error&&clean.env.nonlocal_exit===o.nonlocal_exit,'CAPABILITIES');
     need(Number.isInteger(clean.env.tcr)&&Number.isInteger(clean.env.code_registry),'RAW_GLOBALS');
     for(const ns of ['symbols','keywords','codes'])for(const value of Object.values(clean[ns]??{}))need(Number.isInteger(value)&&value>=0&&value<=4294967295,'IDENTITY_GLOBAL');
     row.imports=clean;row.observe=observe;
