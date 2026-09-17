@@ -115,5 +115,9 @@ Four compiler mutants, seven materialized-image mutants, supporting encoder/link
 and snapshot controls, and six shared-transport refusals are exercised. The complete
 inherited B, condition and call-error corpora and lazy loader controls pass with
 independent allocation expectations for the larger objects. Native R6/R6a pass.
-One final packet and replay command cover LL10; independent review and acceptance
-remain before shared integration. No accepted result or criterion is changed.
+The original qualification and the focused audit-85 follow-up passed Claude’s
+audits 85 and 86. On “accept and integrate”, the user accepted LL10 at its stated
+scope. The [acceptance](acceptance-ll10.json) and [integration](integration-ll10.json)
+bind the exact compiler and compatible loader bytes. Subgate 1B is now accepted
+and integrated; Stage 1 has eight accepted records, 23 missing and zero unreviewed.
+The inventory criterion is unchanged.

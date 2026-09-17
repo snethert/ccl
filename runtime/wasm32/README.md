@@ -1,7 +1,8 @@
 # Wasm32 runtime
 
 `loader.mjs`, `binary.mjs` and `stub.wat` are the accepted single-Worker lazy
-installer from `tests/wasm/stage1/b-lazy-calls`, integrated without source changes.
+installer, updated through the accepted LL10 constants profile using the exact
+reviewed bytes.
 The Worker owner supplies the trusted catalog, memory, paired tables, exception
 tags and synchronous byte provider. The catalog is an integrity authority, not
 code signing. The implementation currently imports Node's hashing service.
@@ -19,5 +20,13 @@ entry. Publication is synchronous within one Worker. Concurrent publication,
 browser byte delivery and production image construction remain separate work.
 
 The integration record is
-[here](../../doc/WASM/stage1/integration-b-lazy-calls.json). The reviewed fixture
-and direct-context composition retain the executable examples and verification.
+[here](../../doc/WASM/stage1/integration-ll10.json). The
+[constants fixture](../../tests/wasm/stage1/constants/README.md) and its reviewed
+follow-up retain the executable examples and verification.
+
+The current profile is `wasm32-shared-B-exnref-tail-mv-storage-constants-v1`.
+Its function objects occupy 32 bytes, with a tagged shared-pool pointer at raw
+offset 24; logical pool index zero is vector offset 4. Owners must provide objects
+and catalogs for this layout. Prior-profile declarations are refused. The
+[retained layout](../../tests/wasm/stage1/constants/function-layout.json) and
+[acceptance](../../doc/WASM/stage1/acceptance-ll10.json) bind the representation.

@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "operation": "PROJECT_ACCEPTANCE_NO_EXECUTION",
+  "timestamp": "2026-09-17T22:09:41.618535+00:00",
+  "authorization": {
+    "quote": "accept and integrate",
+    "provenance": "User to Codex after supplying Claude’s eighty-sixth audit, which confirms the follow-up and the eighty-fifth audit of LL10."
+  },
+  "review_commit": "3b6a26554a69ca194d5588f3640dcbe42ab20f3a",
+  "review_sha256": "baa715a6049c3a8253386c3d518eced8a5438e3678fd48762c9163379983f678",
+  "source_report_sha256": "e450087e0cf1262bf92c2473f0aaca6c251689c88151eff9b4fa378f2448d4dd",
+  "scope": "Accept S1-LL10-a at the reviewed generated constant-pool and persistence scope, including the focused oracle follow-up reviewed in audit 86. Reuse native R6/R6a for identical compiler bytes; no new execution claimed.",
+  "exclusions": [
+    "Quoted keywords inside literal data require owner registration; the fixture refuses missing owner entries.",
+    "Each literal load performs two header validations; no performance claim or optimization is included.",
+    "Single-owner snapshot transport and 16 MiB bounded pools; moving GC, cross-Worker snapshot atomicity, full image loading and package construction remain later work.",
+    "Ratios, complex scalar constants and general multidimensional arrays remain outside the admitted constant families.",
+    "Literal mutation is a persistence probe, not a portable Common Lisp semantic claim."
+  ],
+  "records": [
+    {
+      "id": "S1-LL10-a",
+      "variant": "generated",
+      "test_revision": "302cfb43737ac1b6ad9afd5bf1649b0124989ac81d9555b21250e795892fbf6a",
+      "contract_sha256": "019c2752f1db768ad8d39f8aec729de86db3b51cdac4602b374ac8b945a25269",
+      "scope": "Reviewed LL10 qualification, audit-86 oracle follow-up and exclusions above."
+    }
+  ],
+  "additional_qualification": {
+    "packet_locator": "2026-09-17-stage1-ll10-review-followup-r1/packet.json",
+    "packet_sha256": "5d943ad50ef79998581af5548ba4cad82979c9f51f5979f55ea3d713a7e4438d",
+    "source_commit": "34f1e949",
+    "review_commit": "3b6a26554a69ca194d5588f3640dcbe42ab20f3a"
+  }
+}

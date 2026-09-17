@@ -1,4 +1,8 @@
-# LL10 constants — isolated implementation
+# LL10 constants — reviewed qualification fixture
+
+S1-LL10-a is accepted and the reviewed compiler and compatible loader are
+[integrated](../../../../doc/WASM/stage1/integration-ll10.json). This directory
+retains the reproducible qualification sources and supporting tools.
 
 Run from the checkout root:
 

@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "operation": "INTEGRATE_REVIEWED_ACCEPTED_UNIT",
+  "timestamp": "2026-09-17T22:11:04.084077+00:00",
+  "user_authorization": "accept and integrate",
+  "review_commit": "3b6a26554a69ca194d5588f3640dcbe42ab20f3a",
+  "review": "Claude audits 85 and 86; no defect in LL10 or the focused oracle follow-up.",
+  "acceptance": "acceptance-ll10.json",
+  "acceptance_sha256": "8fcd617771d6115112d65cc1519fc9b52f25ab0c4e42c4d7c3b7175522a22ebf",
+  "files": [
+    {
+      "file": "compiler/WASM32/wasm32-backend.lisp",
+      "before": "68a5b4dbb1212bad052230a177f29fe2c64574aad1efffc86c47932379d016a0",
+      "after": "428fb60e5811dfc2686312c2cc2cc98811daec4abd3a10a20804cd76fb100dd7",
+      "proposal_locator": "2026-09-17-stage1-ll10-r1/positive/proposal/files/compiler/WASM32/wasm32-backend.lisp"
+    },
+    {
+      "file": "runtime/wasm32/loader.mjs",
+      "before": "d77975e79bc0995fe32c6453b8db1929de7c36a4a0dfb44adfc5cadb843a0464",
+      "after": "9e2be62e027a22c198be51eb464119174544f92f3f5212bb7a69ae38e0296c33",
+      "proposal_locator": "2026-09-17-stage1-ll10-r1/source/tests/wasm/stage1/constants/loader.mjs"
+    },
+    {
+      "file": "runtime/wasm32/binary.mjs",
+      "before": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507",
+      "after": "95fdb2635eaaf575dfdddd5fe058be85f572460e7228e94e4656202bfbf42507",
+      "proposal_locator": "2026-09-17-stage1-ll10-r1/source/tests/wasm/stage1/constants/binary.mjs"
+    },
+    {
+      "file": "runtime/wasm32/stub.wat",
+      "before": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097",
+      "after": "d9b4c73a6150e9de286c06951a5914a289581ebf8420638169f87f1b76413097",
+      "proposal_locator": "2026-09-17-stage1-ll10-r1/source/tests/wasm/stage1/constants/stub.wat"
+    }
+  ],
+  "packets": [
+    {
+      "locator": "2026-09-17-stage1-ll10-r1/packet.json",
+      "sha256": "bcd0790c020039b26e671fff54ee41d15f704067cd044f8af722ff1a0a3dd151"
+    },
+    {
+      "locator": "2026-09-17-stage1-ll10-review-followup-r1/packet.json",
+      "sha256": "5d943ad50ef79998581af5548ba4cad82979c9f51f5979f55ea3d713a7e4438d"
+    }
+  ],
+  "previous_integration": "integration-ll05.json",
+  "previous_integration_sha256": "1997975091f22ed93ea8822f56f2844c5a741ca436805d84f8e6ca4d95f3e8ae",
+  "scope": "Exact reviewed compiler with shared constant pools and 32-byte function objects, plus the compatible constants loader profile. Binary reader and stub remain byte-identical. Supporting encoder/linker/transport remain the reviewed isolated tools pending production image construction.",
+  "observations": [
+    "Quoted keywords inside literal data require owner registration; the fixture refuses missing owner entries.",
+    "Each literal load performs two header validations; no performance claim or optimization is included.",
+    "Single-owner snapshot transport and 16 MiB bounded pools; moving GC, cross-Worker snapshot atomicity, full image loading and package construction remain later work.",
+    "Ratios, complex scalar constants and general multidimensional arrays remain outside the admitted constant families.",
+    "Literal mutation is a persistence probe, not a portable Common Lisp semantic claim."
+  ],
+  "verification": "Each integrated file equals its retained reviewed bytes and manifest. Generated compiler and native R6/R6a proposal agree byte-for-byte. Prior shared bytes match integration-ll05.json. Accepted execution reused; no new native run.",
+  "reverse": "Restore each changed file from 3b6a2655 at its before hash; binary reader and stub are unchanged."
+}

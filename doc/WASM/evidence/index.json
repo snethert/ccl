@@ -1942,6 +1942,32 @@
       "test_ids": [
         "S1-LL10-a"
       ]
+    },
+    {
+      "id": "STAGE1-LL10-ACCEPTANCE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-ll10-acceptance-r1/accepted-results.json",
+      "sha256": "ca08a0aa02c1061defcdf3595a6b5d6353617c8146b16009f2fff63bbc730d51",
+      "source_revision": "c994217adc56b3f8a564526cee4695893ac84d86",
+      "inventory_path": "stage1/inventory.json",
+      "inventory_sha256": "c5117815631ad2f334a811c9ebb42f393a3743bfda7b7ee2cbbbf9f2b1e00bb8",
+      "envelope_version": 2,
+      "inventory_version": 1,
+      "execution_status": "PASS",
+      "review_disposition": "ACCEPTED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "packet_locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-ll10-acceptance-r1/packet.json",
+      "packet_sha256": "38aa24cbd04b306f1fab311f826e0ee5f2bdc055672ba6132ea7a61cb19a588b",
+      "scope": "Accept S1-LL10-a at the reviewed generated constant-pool and persistence scope, including the focused oracle follow-up reviewed in audit 86. Reuse native R6/R6a for identical compiler bytes; no new execution claimed.",
+      "test_ids": [
+        "S1-LL10-a"
+      ],
+      "external_review": {
+        "reviewer": "Claude",
+        "commit": "3b6a26554a69ca194d5588f3640dcbe42ab20f3a",
+        "disposition": "REVIEWED_NO_DEFECT_FOUND",
+        "scope": "Audits 85 and 86; original qualification and focused oracle follow-up."
+      }
     }
   ],
   "auxiliary_records": [
@@ -4196,11 +4222,12 @@
       "id": "STAGE1-LL10-REVIEW-FOLLOWUP-R1",
       "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-ll10-review-followup-r1/packet.json",
       "sha256": "5d943ad50ef79998581af5548ba4cad82979c9f51f5979f55ea3d713a7e4438d",
-      "scope": "Audit 85 follow-up: four focused compiler mutant oracles; native cross-function EQ comparisons over shared and distinct literals; identity-based restore expectations with an untouched CAR-7 cons. 91 B modules, 245 native-derived comparisons and nine additional cross-function comparisons; four compiler and two semantic controls reject. Fresh replay reproduces 1,150 files. Reviewed compiler, original fixture and native R6/R6a unchanged. No acceptance or integration.",
+      "scope": "Audit 85 follow-up: four focused compiler mutant oracles; native cross-function EQ comparisons over shared and distinct literals; identity-based restore expectations with an untouched CAR-7 cons. 91 B modules, 245 native-derived comparisons and nine additional cross-function comparisons; four compiler and two semantic controls reject. Fresh replay reproduces 1,150 files. Reviewed compiler, original fixture and native R6/R6a unchanged. Accepted as supplemental LL10 qualification; see acceptance-ll10.json.",
       "execution_status": "PASS",
-      "review_disposition": "NOT_REVIEWED",
+      "review_disposition": "ACCEPTED_AUXILIARY",
       "currency": "CURRENT",
-      "availability": "EXTERNAL_LOCAL_STORE"
+      "availability": "EXTERNAL_LOCAL_STORE",
+      "acceptance": "doc/WASM/stage1/acceptance-ll10.json"
     }
   ]
 }

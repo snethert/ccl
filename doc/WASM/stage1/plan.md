@@ -6,7 +6,7 @@ by the user's decision of 16 September; Codex is the authorized author of
 the shared-compiler changes with Claude as reviewer; the single-thread JSPI
 profile is deferred. The entry condition is met: all 48 Stage 0 variants are
 accepted. The [1A packet](1a.md) has three accepted records after Claude’s review and the user’s
-[acceptance](acceptance-1a.json); the ledger now has seven accepted records, 24 missing and
+[acceptance](acceptance-1a.json); the ledger now has eight accepted records, 23 missing and
 zero unreviewed records. [LL04 generated representation](representation.md)
 is reviewed and accepted. The [reviewed unit](integration-1a.json) is integrated;
 [LL07’s generated typed conversions](conversions.md) are reviewed, accepted and [integrated](integration-ll07.json).
@@ -47,7 +47,7 @@ follow-up adds inline small results and retires roots before destructive deliver
 R2 is now accepted and integrated after Claude’s eighty-first audit, under the
 [new integration record](integration-b-mv-storage.json). The [explicit condition/handler proposal](b-conditions.md) now executes U1’s handler macros and SIGNAL/ERROR over supplied condition proxies. The R2 correction closes the user-CASE scope leak. The [result-scratch proposal](b-result-scratch.md) narrows inherited storage with an independently checked per-callee four-word proof, while preserving dynamic delivery. General first-value/discard propagation remains open for unknown or large-result paths; it must preserve internal multiple-value consumers and nonlocal transfers. Both units are accepted and integrated under [the integration record](integration-b-result-scratch.json). The [combined LL05 qualification](ll05.md) now executes both call-protocol and
 stub/tail slots, including implicit arity/designator signalling before unwind.
-Both are accepted after Claude’s eighty-fourth audit under [the LL05 acceptance](acceptance-ll05.json); [the exact reviewed implementation is integrated](integration-ll05.json). **S1-LL10-a constants completes the implementation work in 1B and is pending review.** The [constant-pool plan and qualification](ll10-plan.md) cover shared pools, generated loads, fresh-Worker persistence and the inherited corpus. Shared integration follows review and acceptance. Production CLOS condition construction, other implicit errors,
+Both are accepted after Claude’s eighty-fourth audit under [the LL05 acceptance](acceptance-ll05.json); [the exact reviewed implementation is integrated](integration-ll05.json). **Subgate 1B is accepted and integrated, including S1-LL10-a constants after Claude audits 85 and 86.** The [constant-pool plan and qualification](ll10-plan.md) cover shared pools, generated loads, fresh-Worker persistence and the inherited corpus. The [acceptance](acceptance-ll10.json) and [integration](integration-ll10.json) bind the exact reviewed bytes. Production CLOS condition construction, other implicit errors,
 binding-vector growth, debugger and collector integration remain later subgates.
 
 

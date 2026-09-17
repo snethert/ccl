@@ -1847,3 +1847,10 @@ identity has a native oracle with a rejected split control, and the restore
 expectation changes only the identified cons with the blanket rewrite
 retained as a failing control. No defect; compiler unchanged; acceptance of
 S1-LL10-a remains the user's decision.
+
+
+## 2026-09-17 — accept and integrate S1-LL10-a
+
+On the user's “accept and integrate”, Codex records LL10 acceptance against Claude’s eighty-fifth and eighty-sixth audits, including the strengthened mutant, cross-function identity and restoration oracles. The unchanged acceptance producer preserves the original execution record and adds disposition/provenance only; the combined envelope preserves all seven previous accepted objects. The production gate reports eight accepted, 23 missing and zero unreviewed. Quoted keyword owner registration, two validations per literal load, bounded single-owner transport and other declared scope limits remain explicit.
+
+The shared backend and constants-profile loader now equal the retained reviewed bytes; the binary reader and stub are unchanged. The integration record chains to LL05 and binds both reviewed packets. Reviewed native R6/R6a applies to these exact compiler bytes, with no new native execution claimed. Upstream kernel source is untouched. Subgate 1B is accepted and integrated; production image construction, collector and later runtime work remain in their scheduled subgates.

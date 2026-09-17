@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "5de34d038605cd08329239a58ac6dd35e7539700",
+  "commit": "8d771abc6fe165cf23adbd29db9c177ad38a9ddf",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "e315ed421a32da44339ed2da3cd41a5d394f7a771afc2e7467552c459418c7fa",
-  "immutable_evidence_files": 222247,
-  "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-ll10-followup.json",
-  "source_index_sha256": "1b61e767b491bf34d323b9a6bb7b069ba5d2562080ebac2462212ce80554ce6c",
-  "verification": "Scoped audit 85 follow-up: fresh replay reproduces 1,150 files, four compiler mutants and two semantic controls reject. Original compiler sources and compiled compiler FASL unchanged; reviewed native R6/R6a reused. New catalog files hashed; prior rows preserved.",
+  "catalog_sha256": "ba979cd384df69637cc6640c442f52068b35a1b4bec49b21f91d2151ca1c87ff",
+  "immutable_evidence_files": 222643,
+  "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-ll10-acceptance.json",
+  "source_index_sha256": "578e802b9a5c5e34efd30169f500764ebbf44e4f1451491bdb35a8123a5c310d",
+  "verification": "Scoped LL10 acceptance: unchanged producer verified original artifacts; production gate passes all eight accepted bindings and reports 23 missing only. Seven prior accepted objects preserved. Exact reviewed compiler and runtime bytes integrated under existing R6/R6a. New catalog files hashed; prior rows preserved.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: seven accepted, 23 missing, one unreviewed. LL10 passed Claude audit 85; focused oracle follow-up awaits review. Acceptance and integration remain open.",
+  "scope": "Stage 0: 48 accepted. Stage 1: eight accepted, 23 missing, zero unreviewed. LL10 and its oracle follow-up accepted after Claude audits 85 and 86; exact reviewed compiler and compatible loader integrated. Subgate 1B complete.",
   "last_scoped_addition": {
-    "directory": "2026-09-17-stage1-ll10-review-followup-r1",
-    "files": 11,
-    "bytes": 13337589
+    "directory": "2026-09-17-stage1-ll10-acceptance-r1",
+    "files": 396,
+    "bytes": 56361085
   },
   "prior_indexed_references_verified": 16982
 }
