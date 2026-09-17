@@ -1,0 +1,29 @@
+{
+  "status": "PROPOSAL_NOT_ACCEPTED_OR_INTEGRATED",
+  "inventory_entries_executed": [],
+  "accepted_slots_unchanged": true,
+  "supersedes": "Withdrawn b-multiple-values acceptance, not its retained historical execution",
+  "profile": "wasm32-shared-B-exnref-tail-mv-storage-v1",
+  "changes": [
+    "MVC producers and their descendants use demand-sized temporary buffers independently of the final public output reservation",
+    "Literal MVC callable objects and environments use nonescaping stack storage, including relocation on tail transfer",
+    "Completed result buffers change owner without an intermediate caller-buffer copy; contiguous continuation publication copies once",
+    "Direct call and VALUES producers can target the continuation argument destination",
+    "Dynamic catch, block and cleanup retention transfers buffer ownership without a post-protected-form allocation"
+  ],
+  "ordinary_calls": "Remain direct internal calls with no public wrapper or extra argument copy. Two formerly unused continuation words now carry result mode and recipient metadata. Ordinary mode retains the existing output reservation and needs no temporary-result allocation.",
+  "public_results": "Final public return counts are bounded by the caller-owned reservation. MVC producer counts are not bounded by that reservation. Runtime memory extents and the existing bounded source reader remain finite resources.",
+  "temporary_storage": "Thread-owned arena using the production TCR tsp/base/limit fields; checked i64 extent arithmetic, NIL initialization, unique scanner descriptors, scoped ownership, free-block reuse/coalescing and trailing reclamation. This is not a Lisp heap collector or a complete native temp-stack implementation.",
+  "roots": "Existing inline roots plus explicitly tagged indirect temporary-buffer descriptors. Physical single-scanner checks include buffer ownership and extent. No poll or Lisp call occurs during recipient/root publication.",
+  "callables": "Temporary outer callable and environment live on the stack. Captured variable cells and escaping inner closures remain heap objects. Their exact allocations are checked separately.",
+  "cost_oracle": "Actual memory.copy invocations counted in a separately identified observation derivative. It executes the same copy instruction after reporting operands. The derivative is not sent to the production loader and does not support a timing claim.",
+  "control_independence": "Native CCL, Python semantic model, literal region/ownership assertions, and an executed-copy oracle. Compiler mutants are author-written and separate from the producer path; external review remains required.",
+  "remaining": [
+    "Claude review and renewed user acceptance before integration",
+    "Collector support for indirect temporary roots and stack callable objects",
+    "Production ownership-map admission of the temporary arena and general temp-stack integration",
+    "Condition class construction, signalling and handler dispatch",
+    "Host re-entry and exception payload relocation",
+    "Production adapter policy for final public output reservations"
+  ]
+}

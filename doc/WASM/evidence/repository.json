@@ -2,20 +2,20 @@
   "version": 1,
   "path": "/Users/buildsomething/Source/ccl-evidence",
   "branch": "main",
-  "commit": "a7629ab6c1701ea1a7b07691c4d8e0a98fbd7b86",
+  "commit": "6e3251b8107fa322539b5437b8ce840170a1de0c",
   "catalog": "catalog/files.json",
-  "catalog_sha256": "1b41b583062bb55dc18b92e7652a7c262e42deb618b4961c0b43156b006f4336",
-  "immutable_evidence_files": 198972,
-  "indexed_references_verified": 15282,
-  "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-b-multiple-values.json",
-  "source_index_sha256": "8ebadca33a75de19ed71367258c03ed9f682b203391950f196bf7125709c345f",
+  "catalog_sha256": "9940326b2b7bf52c91a0f5865f8bda816d708197f98b7a57b00a233de2f78b43",
+  "immutable_evidence_files": 205011,
+  "indexed_references_verified": 15620,
+  "source_index_snapshot": "catalog/source-index-2026-09-17-stage1-b-mv-storage.json",
+  "source_index_sha256": "1e3869c2f900fdaa6a86f537b721d6455da3a3f80c10682aa9584ebb5d996d8c",
   "verification": "Scoped publication: new files hashed and all existing catalog rows preserved without rescanning old payloads.",
   "remote": null,
   "off_machine_backup": false,
-  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Lexical exits and rooted CONS accepted and integrated. Multiple-value calls and bindings are an auxiliary proposal awaiting external review, without gate credit.",
+  "scope": "Stage 0: 48 accepted. Stage 1: five accepted, 26 missing. Original multiple-value acceptance withdrawn and integration reversed. Corrected MVC storage is an auxiliary proposal awaiting review and renewed acceptance, without gate credit.",
   "last_scoped_addition": {
-    "directory": "2026-09-17-stage1-b-multiple-values-r1",
-    "files": 4606,
-    "bytes": 213323576
+    "directory": "2026-09-17-stage1-b-mv-storage-r1",
+    "files": 6039,
+    "bytes": 292065147
   }
 }

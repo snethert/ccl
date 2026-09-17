@@ -41,8 +41,9 @@ to lambda lists and runtime symbol lists. The accepted and integrated [lexical-e
 adds BLOCK/RETURN-FROM and U1’s fresh CONS tags, a prerequisite of the real
 HANDLER-CASE expansion. The reviewed [multiple-value unit](b-multiple-values.md), with acceptance withdrawn,
 supplies MULTIPLE-VALUE-CALL and MULTIPLE-VALUE-BIND for its :NO-ERROR path.
-The immediate work removes the inherited producer budget, intermediate copy and
-nonescaping literal MVC allocation; conditions and handlers follow that correction;
+The [storage correction](b-mv-storage.md) removes the inherited producer budget,
+intermediate copy and nonescaping literal MVC allocation. It awaits Claude review
+and renewed acceptance before integration; conditions and handlers follow it;
 binding-vector growth remains required for the complete binding contract. Debugger and
 collector integration of the control records remains explicit. Neither
 complete LL05 slot is claimed by these units.

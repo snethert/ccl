@@ -1640,3 +1640,18 @@ On “please fix them now. i withdraw my acceptance”, Codex restored the exact
 pre-integration backend and runtime bytes. The review is preserved, acceptance
 is withdrawn, and the three MVC costs are now required corrective work before
 renewed review and acceptance. No inventory count changed.
+
+## 2026-09-17 — correct multiple-value storage after withdrawn acceptance
+
+On the user's “please fix them now. i withdraw my acceptance”, Codex reversed
+the multiple-value integration in `610eec09` and produced a separate correction.
+MVC producers no longer inherit the enclosing return reservation. Temporary
+buffers transfer ownership without an intermediate return-area copy, and literal
+MVC callables use stack storage with tail relocation. Dynamic control retention
+also transfers ownership, preserving cleanup on storage exhaustion.
+STAGE1-B-MV-STORAGE-R1 retains 581 modules, 7,316 comparisons,
+17 rejected compiler mutants, 40 storage checks and an executed-copy
+oracle, plus native R6/R6a and lazy composition. The small-frame relocation mutant
+initially escaped; a larger callee frame now rejects it and the original escape
+is retained. The corrected proposal requires review and renewed acceptance;
+shared source and the Stage 1 ledger (five accepted, 26 missing) are unchanged.

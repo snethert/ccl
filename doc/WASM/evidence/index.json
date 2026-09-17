@@ -4060,6 +4060,16 @@
       },
       "integration": "doc/WASM/stage1/integration-b-multiple-values.json",
       "withdrawal": "doc/WASM/stage1/withdrawal-b-multiple-values.json"
+    },
+    {
+      "id": "STAGE1-B-MV-STORAGE-R1",
+      "locator": "/Users/buildsomething/Source/ccl-evidence/2026-09-17-stage1-b-mv-storage-r1/packet.json",
+      "sha256": "92d8715f4d19aba3d8a13b584c96cac8a75961d8d651135574d7116973d5660e",
+      "scope": "Correction after withdrawn MVC acceptance: 581 generated modules, 1829 native/model cases, 7316 comparisons, 17 rejected compiler mutants and four regressions. Demand-sized producer storage independent of final output reservation, temporary literal callables with tail relocation, and buffer ownership transfer without an intermediate caller return-area copy. 40 storage-boundary checks and 16 executed-copy controls; native R6/R6a, retained replay and lazy composition pass. New internal profile, auxiliary proposal only; no acceptance, integration, collector qualification or LL05/LL19 credit.",
+      "execution_status": "PASS",
+      "review_disposition": "NOT_REVIEWED",
+      "currency": "CURRENT",
+      "availability": "EXTERNAL_LOCAL_STORE"
     }
   ]
 }

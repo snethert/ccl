@@ -1,0 +1,37 @@
+{
+  "scope": "Correction of all three MVC observations after the user withdrew acceptance. Original reviewed proposal and integration/withdrawal records remain retained.",
+  "failures": [
+    {
+      "attempt": "probe1",
+      "reason": "Reader error in the new emitter let bindings; no generated result claimed."
+    },
+    {
+      "attempt": "probe4",
+      "reason": "The new captured literal case expected zero heap bytes but its shared variable cell correctly costs eight bytes. Corrected the literal expectation, not the emitter."
+    },
+    {
+      "attempt": "probe5",
+      "reason": "The inherited mvc_closure case still charged a heap function/environment after their move to stack storage. Preserved the original cases and corrected that expectation to its eight-byte cell."
+    },
+    {
+      "attempt": "probe7",
+      "reason": "The first cursor-reclamation edit declared the high-water variable but failed to update the release body. The restored-cursor assertion rejected it; release now trims trailing free blocks."
+    },
+    {
+      "attempt": "probe9",
+      "reason": "The escaping-inner-closure case initially overcounted its two-cell environment by eight bytes. The source-derived total is 16 cell bytes, 24 function bytes and 16 environment bytes."
+    },
+    {
+      "attempt": "mixed-version-copy-probe",
+      "reason": "Observer/implementation version mismatch, retained separately."
+    },
+    {
+      "attempt": "escaped-relocation-control",
+      "reason": "Small frames did not expose missing relocation; added the independently sized 64-binding frame counterexample."
+    }
+  ],
+  "inspection_correction": "Dynamic control records take ownership of results rather than allocating a second retention buffer after the protected form succeeds. Exhaustion cases verify cleanup effects at exact temporary-storage bounds.",
+  "inherited_regressions": "Binding-data rewrite, keyword-token overlap, special-package identity and obsolete registry collision remain exercised; their original histories stay in predecessor packets.",
+  "metadata": "Compiler/runner snapshots are retained as executed. README, scope and development notes were finalized after the development runs; those do not change generated or executed bytes.",
+  "native": "Fresh R6/R6a qualification uses the exact proposed backend in a disposable pristine U1 copy."
+}
