@@ -493,66 +493,104 @@ it is ever wanted, means a second image, never an activity.
 **G44. The activity list is where attention is claimed.**
 A break, a finished run, or output written while you were elsewhere marks its
 activity in the list. A process that needs you becomes visible without
-stealing the screen — which is the structure §15.1 needs to hang a
-notification policy on.
+stealing the screen — which is what §15 hangs its policy on.
 
 ---
 
-## 15. Not yet addressed
+## 15. Attention
 
-Lisp Machine properties this design wants and does not yet have. These are
-gaps, not rejections: nothing here has been argued against. Two former
-entries — interrupting a computation, and activities — became §13 and §14.
+**G45. Background output is never lost.**
+Output written to a pane the current layout does not show is retained and its
+activity marked. A pane is not a place output can fall out of.
 
-**15.1 Notifications and background attention.** A process that breaks,
-finishes, or wants to print while its pane is not on screen. Genera posted a
-notification, and output to a hidden window was a decision the window made
-(permit, notify, expose), never silently lost. G15 halts one process without
-stopping the system, but nothing carries that break to the user, and nothing
-says what happens to output written to a pane the current layout does not
-show.
+**G46. A break does not take the screen.**
+A process that breaks halts, marks its activity, and waits. What you are
+looking at changes when you change it, never because something else wanted
+you. There is no exception for urgency.
 
-**15.2 Compiler warnings as presentations.** The design never says where a
-warning goes. Compilation produces conditions about specific source ranges,
-and they should be presentations anchored there with verbs — go to it, explain
-it, mute this one — and walkable as a set, not a log that scrolls past. This
-is the natural companion to G31's changed-definition list.
-
-**15.3 Image snapshot and resume.** The band. Save the heap, come back to it.
-In a browser this is both feasible — persist the linear memory — and
-load-bearing: screen 14's "in the image only, lost on restart" stops being a
-hazard the moment the image survives a restart. It interacts with the wasm32
-ceiling and with storage eviction (§17).
-
-**15.4 Command history as re-executable objects.** The ring holds objects
-(G11); commands are not in it. Past commands should be presentations you can
-edit and re-run, with their arguments still live objects rather than printed
-text.
-
-**15.5 Generated dialogs for whole argument sets.** G25 derives an editor for
-one setting from its type. CLIM's `accepting-values` does the same for a set
-of typed values at once, which is the right answer for commands with more
-arguments than a single command line carries comfortably. Stated for settings,
-not yet for commands.
-
-**15.6 The inspector as a place with history.** Inspection verbs exist and
-views render inline, but there is no navigable inspector: descend into a slot,
-go back, keep the trail. Deep exploration without a trail loses its way.
-
-**15.7 Undo, and its honest limits.** No goal addresses it. Three substrates
-behave differently: editor text is undoable; image state largely is not,
-though G31's record of changed definitions supports *revert to loaded*; git
-has revert. The design should say plainly which is which rather than implying
-a single undo stack.
-
-**15.8 Live system health.** Peek showed processes, storage and network,
-updating continuously. With a hard heap ceiling and a single worker, headroom,
-collection activity and worker liveness are facts the user needs before they
-become failures.
+**G47. Attention has one channel.**
+The activity list (G44) and the right end of the documentation line. No toast,
+no notification centre, no second queue to check.
 
 ---
 
-## 16. Visual system
+## 16. Warnings
+
+**G48. A warning is a presentation on a source range.**
+Compilation produces conditions about specific places, so they are drawn
+there, with verbs — go to it, explain it, define the missing thing, mute it
+here. Not a log that scrolls past.
+
+**G49. Warnings are a set you can walk.**
+Per compilation, grouped by file and definition, with a position in the set
+and a count. Muting is recorded where the warning applies, carries a reason,
+and survives recompilation — so a mute is a statement someone made, not a
+setting hidden elsewhere.
+
+---
+
+## 17. The image itself
+
+**G50. The image is an object with a surface.**
+Heap headroom against the wasm32 ceiling, collection rate and pause,
+rendezvous health, Worker states, and the storage the clone, the session log
+and the snapshots occupy. These are facts before they are failures, and the
+ceiling is what makes headroom worth a permanent place.
+
+**G51. Snapshots are objects.**
+Taken automatically before anything that can destroy the image, hourly, and on
+demand; each labelled with what it contains — systems loaded, definitions that
+exist in no file, history depth — and resumable, pinnable, deletable.
+
+**G52. A snapshot is what makes the image survivable.**
+It is the answer to G31's "in the image only" and the reason G41's force quit
+can name what a restart would recover. Without snapshots, both are just
+warnings about loss.
+
+---
+
+## 18. History, dialogs and inspection
+
+**G53. Commands are re-executable objects.**
+A past command keeps its arguments as live objects, not printed text. Edit one
+and run it again; the ring (G11) holds values, the command history holds
+invocations, and they are different lists on purpose.
+
+**G54. A command with more arguments than the line carries gets a dialog.**
+Derived from the argument types by the same machinery as a setting's editor
+(G25) — CLIM's `accepting-values` — with defaults shown, values fillable by
+pointing at a presentation, and a complaint attached to the argument that is
+wrong rather than to the dialog.
+
+**G55. A dialog can hand you the form instead of running it.**
+The assembled call goes into the transcript, where it is ordinary source you
+can keep, edit, or put in a file. A dialog is a form-builder that happens to
+be able to execute.
+
+**G56. Inspection keeps a trail.**
+Descending into a slot replaces the pane and extends a visible trail; back and
+forward restore exactly what was there. It does not open a window (G22), and a
+deep exploration can be retraced rather than reconstructed.
+
+---
+
+## 19. Undo
+
+**G57. Undo is per substrate, and the interface says which.**
+Editor text undoes. A definition compiled into the image reverts to the loaded
+one (G31). A setting drops a layer (G26). A commit resets or reverts. A
+deleted file comes back from the session log (G10.1). Four mechanisms, named
+where they apply.
+
+**G58. What cannot be taken back says so, before and after.**
+A push others have pulled is not undoable; the honest offer is to revert
+forward. The interface never presents a single undo stack, because there
+isn't one — and a snapshot (G51) is the only thing that takes back everything
+the image holds at once.
+
+---
+
+## 20. Visual system
 
 - **Two typefaces.** One for interface text, one monospace for code and data.
 - **One ground, one panel, one divider.** Separation is a single pixel line;
@@ -569,7 +607,7 @@ become failures.
 
 ---
 
-## 17. Budgets
+## 21. Budgets
 
 - **Interaction:** no interaction may require a client↔image round trip per
   animation frame. Highlighting, scrolling, pointer documentation and drag
@@ -584,7 +622,7 @@ become failures.
 
 ---
 
-## 18. Non-goals and rejected alternatives
+## 22. Non-goals and rejected alternatives
 
 - **Emacs compatibility.** The model is borrowed; the vocabulary's opacity and
   the elisp ecosystem are not.
@@ -604,7 +642,7 @@ become failures.
 
 ---
 
-## 19. Open questions
+## 23. Open questions
 
 1. **Heap ceiling.** Does a realistic image survive WebContent's memory limits
    and backgrounding? This decides whether the embedded-runtime fallback is
@@ -636,7 +674,7 @@ become failures.
 
 ---
 
-## 20. Reference screens
+## 24. Reference screens
 
 1. At rest — the three surfaces; nothing marked but the pointer's object.
 2. Type-directed narrowing — `Trace` wants a function name.
@@ -660,3 +698,9 @@ become failures.
 17. Interrupting a computation — the running computation as an object, with a
     heartbeat and three graduated ways to stop it.
 18. Activities — six contexts, one image, and where a process claims attention.
+19. Warnings as presentations — anchored, walkable, mutable with a reason.
+20. The inspector keeps a trail — descend in place, step back.
+21. A dialog from the argument types — six arguments, generated editors.
+22. The image, and its snapshots — headroom, Workers, and what a restart
+    recovers.
+23. Undo, honestly — four substrates, four reversals, one with none.
